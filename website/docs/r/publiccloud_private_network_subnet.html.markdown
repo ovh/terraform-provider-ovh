@@ -65,6 +65,7 @@ The following attributes are exported:
 * `end` - See Argument Reference above.
 * `network` - See Argument Reference above.
 * `region` - See Argument Reference above.
+* `gateway_ip` - The IP of the gateway
 * `no_gateway` - See Argument Reference above.
 * `cidr` - Ip Block representing the subnet cidr.
 * `ip_pools` - List of ip pools allocated in the subnet.
