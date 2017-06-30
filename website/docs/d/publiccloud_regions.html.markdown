@@ -24,9 +24,10 @@ data "ovh_publiccloud_regions" "regions" {
 * `project_id` - (Required) The id of the public cloud project. If omitted,
     the `OVH_PROJECT_ID` environment variable is used.
 
+
 ## Attributes Reference
 
 `id` is set to the ID of the project. In addition, the following attributes
 are exported:
 
-* `regions` - The list of regions associated with the project
+* `names` - The list of regions associated with the project
