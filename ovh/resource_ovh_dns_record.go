@@ -33,7 +33,7 @@ func resourceOVHDomainZoneRecord() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"id": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				Computed: true,
 			},
 			"zone": {
@@ -45,9 +45,9 @@ func resourceOVHDomainZoneRecord() *schema.Resource {
 				Required: true,
 			},
 			"ttl": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  "3600",
+				Default:  3600,
 			},
 			"fieldType": {
 				Type:     schema.TypeString,
@@ -69,9 +69,8 @@ func resourceOVHRecordCreate(d *schema.ResourceData, meta interface{}) error {
 		FieldType: d.Get("fieldType").(string),
 		SubDomain: d.Get("subDomain").(string),
 		Target:    d.Get("target").(string),
+		Ttl:       d.Get("ttl").(int),
 	}
-
-	newRecord.Ttl, _ = strconv.Atoi(d.Get("ttl").(string))
 
 	log.Printf("[DEBUG] OVH Record create configuration: %#v", newRecord)
 
@@ -87,8 +86,9 @@ func resourceOVHRecordCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Failed to create OVH Record: %s", err)
 	}
 
+	d.Set("id", resultRecord.Id)
 	d.SetId(strconv.Itoa(resultRecord.Id))
-	d.Set("id", strconv.Itoa(resultRecord.Id))
+
 	log.Printf("[INFO] OVH Record ID: %s", d.Id())
 
 	return resourceOVHRecordRead(d, meta)
@@ -97,14 +97,9 @@ func resourceOVHRecordCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceOVHRecordRead(d *schema.ResourceData, meta interface{}) error {
 	provider := meta.(*Config)
 
-	recordID, err := strconv.Atoi(d.Id())
-	if err != nil {
-		return fmt.Errorf("Error converting Record ID: %s", err)
-	}
-
 	record := Record{}
-	err = provider.OVHClient.Get(
-		fmt.Sprintf("/domain/zone/%s/record/%d", d.Get("zone").(string), recordID),
+	err := provider.OVHClient.Get(
+		fmt.Sprintf("/domain/zone/%s/record/%s", d.Get("zone").(string), d.Id()),
 		&record,
 	)
 
@@ -117,7 +112,7 @@ func resourceOVHRecordRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("zone", record.Zone)
 	d.Set("fieldType", record.FieldType)
 	d.Set("subDomain", record.SubDomain)
-	d.Set("ttl", strconv.Itoa(record.Ttl))
+	d.Set("ttl", record.Ttl)
 	d.Set("target", record.Target)
 
 	return nil
@@ -125,11 +120,6 @@ func resourceOVHRecordRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceOVHRecordUpdate(d *schema.ResourceData, meta interface{}) error {
 	provider := meta.(*Config)
-
-	recordID, err := strconv.Atoi(d.Id())
-	if err != nil {
-		return fmt.Errorf("Error converting Record ID: %s", err)
-	}
 
 	record := NewRecord{}
 
@@ -143,13 +133,13 @@ func resourceOVHRecordUpdate(d *schema.ResourceData, meta interface{}) error {
 		record.Target = attr.(string)
 	}
 	if attr, ok := d.GetOk("ttl"); ok {
-		record.Ttl, _ = strconv.Atoi(attr.(string))
+		record.Ttl, _ = attr.(int)
 	}
 
 	log.Printf("[DEBUG] OVH Record update configuration: %#v", record)
 
-	err = provider.OVHClient.Put(
-		fmt.Sprintf("/domain/zone/%s/record/%d", d.Get("zone").(string), recordID),
+	err := provider.OVHClient.Put(
+		fmt.Sprintf("/domain/zone/%s/record/%s", d.Get("zone").(string), d.Id()),
 		record,
 		nil,
 	)
@@ -165,13 +155,8 @@ func resourceOVHRecordDelete(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[INFO] Deleting OVH Record: %s.%s, %s", d.Get("zone").(string), d.Get("subDomain").(string), d.Id())
 
-	recordID, err := strconv.Atoi(d.Id())
-	if err != nil {
-		return fmt.Errorf("Error converting Record ID: %s", err)
-	}
-
-	err = provider.OVHClient.Delete(
-		fmt.Sprintf("/domain/zone/%s/record/%d", d.Get("zone").(string), recordID),
+	err := provider.OVHClient.Delete(
+		fmt.Sprintf("/domain/zone/%s/record/%s", d.Get("zone").(string), d.Id()),
 		nil,
 	)
 
