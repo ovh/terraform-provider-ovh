@@ -49,11 +49,11 @@ func resourceOVHDomainZoneRecord() *schema.Resource {
 				Optional: true,
 				Default:  3600,
 			},
-			"fieldType": {
+			"fieldtype": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"subDomain": {
+			"subdomain": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -66,8 +66,8 @@ func resourceOVHRecordCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Create the new record
 	newRecord := &NewRecord{
-		FieldType: d.Get("fieldType").(string),
-		SubDomain: d.Get("subDomain").(string),
+		FieldType: d.Get("fieldtype").(string),
+		SubDomain: d.Get("subdomain").(string),
 		Target:    d.Get("target").(string),
 		Ttl:       d.Get("ttl").(int),
 	}
@@ -110,8 +110,8 @@ func resourceOVHRecordRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("id", record.Id)
 	d.Set("zone", record.Zone)
-	d.Set("fieldType", record.FieldType)
-	d.Set("subDomain", record.SubDomain)
+	d.Set("fieldtype", record.FieldType)
+	d.Set("subdomain", record.SubDomain)
 	d.Set("ttl", record.Ttl)
 	d.Set("target", record.Target)
 
@@ -123,10 +123,10 @@ func resourceOVHRecordUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	record := NewRecord{}
 
-	if attr, ok := d.GetOk("subDomain"); ok {
+	if attr, ok := d.GetOk("subdomain"); ok {
 		record.SubDomain = attr.(string)
 	}
-	if attr, ok := d.GetOk("fieldType"); ok {
+	if attr, ok := d.GetOk("fieldtype"); ok {
 		record.FieldType = attr.(string)
 	}
 	if attr, ok := d.GetOk("target"); ok {
@@ -153,7 +153,7 @@ func resourceOVHRecordUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceOVHRecordDelete(d *schema.ResourceData, meta interface{}) error {
 	provider := meta.(*Config)
 
-	log.Printf("[INFO] Deleting OVH Record: %s.%s, %s", d.Get("zone").(string), d.Get("subDomain").(string), d.Id())
+	log.Printf("[INFO] Deleting OVH Record: %s.%s, %s", d.Get("zone").(string), d.Get("subdomain").(string), d.Id())
 
 	err := provider.OVHClient.Delete(
 		fmt.Sprintf("/domain/zone/%s/record/%s", d.Get("zone").(string), d.Id()),

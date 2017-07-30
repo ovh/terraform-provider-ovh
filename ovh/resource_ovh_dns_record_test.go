@@ -25,7 +25,7 @@ func TestAccOVHRecord_Basic(t *testing.T) {
 					testAccCheckOVHRecordExists("ovh_domain_zone_record.foobar", &record),
 					testAccCheckOVHRecordAttributes(&record),
 					resource.TestCheckResourceAttr(
-						"ovh_domain_zone_record.foobar", "subDomain", "terraform"),
+						"ovh_domain_zone_record.foobar", "subdomain", "terraform"),
 					resource.TestCheckResourceAttr(
 						"ovh_domain_zone_record.foobar", "zone", zone),
 					resource.TestCheckResourceAttr(
@@ -53,7 +53,7 @@ func TestAccOVHRecord_Updated(t *testing.T) {
 					testAccCheckOVHRecordExists("ovh_domain_zone_record.foobar", &record),
 					testAccCheckOVHRecordAttributes(&record),
 					resource.TestCheckResourceAttr(
-						"ovh_domain_zone_record.foobar", "subDomain", "terraform"),
+						"ovh_domain_zone_record.foobar", "subdomain", "terraform"),
 					resource.TestCheckResourceAttr(
 						"ovh_domain_zone_record.foobar", "zone", zone),
 					resource.TestCheckResourceAttr(
@@ -68,7 +68,7 @@ func TestAccOVHRecord_Updated(t *testing.T) {
 					testAccCheckOVHRecordExists("ovh_domain_zone_record.foobar", &record),
 					testAccCheckOVHRecordAttributesUpdated_1(&record),
 					resource.TestCheckResourceAttr(
-						"ovh_domain_zone_record.foobar", "subDomain", "terraform"),
+						"ovh_domain_zone_record.foobar", "subdomain", "terraform"),
 					resource.TestCheckResourceAttr(
 						"ovh_domain_zone_record.foobar", "zone", zone),
 					resource.TestCheckResourceAttr(
@@ -83,7 +83,7 @@ func TestAccOVHRecord_Updated(t *testing.T) {
 					testAccCheckOVHRecordExists("ovh_domain_zone_record.foobar", &record),
 					testAccCheckOVHRecordAttributesUpdated_2(&record),
 					resource.TestCheckResourceAttr(
-						"ovh_domain_zone_record.foobar", "subDomain", "terraform2"),
+						"ovh_domain_zone_record.foobar", "subdomain", "terraform2"),
 					resource.TestCheckResourceAttr(
 						"ovh_domain_zone_record.foobar", "zone", zone),
 					resource.TestCheckResourceAttr(
@@ -98,7 +98,7 @@ func TestAccOVHRecord_Updated(t *testing.T) {
 					testAccCheckOVHRecordExists("ovh_domain_zone_record.foobar", &record),
 					testAccCheckOVHRecordAttributesUpdated_3(&record),
 					resource.TestCheckResourceAttr(
-						"ovh_domain_zone_record.foobar", "subDomain", "terraform3"),
+						"ovh_domain_zone_record.foobar", "subdomain", "terraform3"),
 					resource.TestCheckResourceAttr(
 						"ovh_domain_zone_record.foobar", "zone", zone),
 					resource.TestCheckResourceAttr(
@@ -224,35 +224,35 @@ func testAccCheckOVHRecordAttributesUpdated_3(record *Record) resource.TestCheck
 const testAccCheckOVHRecordConfig_basic = `
 resource "ovh_domain_zone_record" "foobar" {
 	zone = "%s"
-	subDomain = "terraform"
+	subdomain = "terraform"
 	target = "192.168.0.10"
-	fieldType = "A"
+	fieldtype = "A"
 	ttl = 3600
 }`
 
 const testAccCheckOVHRecordConfig_new_value_1 = `
 resource "ovh_domain_zone_record" "foobar" {
 	zone = "%s"
-	subDomain = "terraform"
+	subdomain = "terraform"
 	target = "192.168.0.11"
-	fieldType = "A"
+	fieldtype = "A"
 	ttl = 3600
 }
 `
 const testAccCheckOVHRecordConfig_new_value_2 = `
 resource "ovh_domain_zone_record" "foobar" {
 	zone = "%s"
-	subDomain = "terraform2"
+	subdomain = "terraform2"
 	target = "192.168.0.11"
-	fieldType = "A"
+	fieldtype = "A"
 	ttl = 3600
 }
 `
 const testAccCheckOVHRecordConfig_new_value_3 = `
 resource "ovh_domain_zone_record" "foobar" {
 	zone = "%s"
-	subDomain = "terraform3"
+	subdomain = "terraform3"
 	target = "192.168.0.13"
-	fieldType = "A"
+	fieldtype = "A"
 	ttl = 3604
 }`
