@@ -12,7 +12,7 @@ Provides a OVH domain zone record.
 
 ## Example Usage
 
-``hcl
+```hcl
 # Add a record to a sub-domain
 resource "ovh_domain_zone_record" "test" {
     zone = "testdemo.ovh"
@@ -21,7 +21,7 @@ resource "ovh_domain_zone_record" "test" {
     ttl = "3600"
     target = "0.0.0.0"
 }
-``
+```
                             
 ## Argument Reference
                             
