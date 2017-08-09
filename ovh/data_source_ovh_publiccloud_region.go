@@ -43,11 +43,21 @@ func dataSourcePublicCloudRegion() *schema.Resource {
 			},
 
 			"continentCode": &schema.Schema{
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "Deprecated, use continent_code instead.",
+			},
+			"datacenterLocation": &schema.Schema{
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "Deprecated, use datacenter_location instead.",
+			},
+
+			"continent_code": &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"datacenterLocation": &schema.Schema{
+			"datacenter_location": &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -71,8 +81,12 @@ func dataSourcePublicCloudRegionRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("Error calling %s:\n\t %q", endpoint, err)
 	}
 
+	// TODO: Deprecated - remove in next major release
 	d.Set("datacenterLocation", response.DatacenterLocation)
 	d.Set("continentCode", response.ContinentCode)
+
+	d.Set("datacenter_location", response.DatacenterLocation)
+	d.Set("continent_code", response.ContinentCode)
 
 	services := &schema.Set{
 		F: publicCloudServiceHash,
