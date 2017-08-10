@@ -34,10 +34,12 @@ project.
 `id` is set to the ID of the project concatenated with the name of the region.
 In addition, the following attributes are exported:
 
-* `continentCode` - the code of the geographic continent the region is running.
+* `continent_code` - the code of the geographic continent the region is running.
 E.g.: EU for Europe, US for America...
-* `datacenterLocation` - The location code of the datacenter.
+* `datacenter_location` - The location code of the datacenter.
 E.g.: "GRA", meaning Gravelines, for region "GRA1"
+* `continentCode` - (Deprecated) Use `continent_code` instead.
+* `datacenterLocation` - (Deprecated) Use `datacenter_location` instead.
 * `services` - The list of public cloud services running within the region
   * `name` - the name of the public cloud service
   * `status` - the status of the service
