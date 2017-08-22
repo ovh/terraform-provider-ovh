@@ -41,7 +41,7 @@ The following attributes are exported:
 
 * `project_id` - See Argument Reference above.
 * `name` - See Argument Reference above.
-* `vland_id` - See Argument Reference above.
+* `vlan_id` - See Argument Reference above.
 * `regions` - See Argument Reference above.
 * `regions_status` - A map representing the status of the network per region.
 * `regions_status/region` - The id of the region.
