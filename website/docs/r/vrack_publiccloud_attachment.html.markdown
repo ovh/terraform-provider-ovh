@@ -27,7 +27,7 @@ The following arguments are supported:
     environment variable is used.
 
 * `project_id` - (Required) The id of the public cloud project. If omitted,
-    the `OVH_VRACK_ID` environment variable is used.
+    the `OVH_PROJECT_ID` environment variable is used.
 
 ## Attributes Reference
 
