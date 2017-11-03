@@ -91,7 +91,7 @@ func resourceOVHRecordCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[INFO] OVH Record ID: %s", d.Id())
 
-    OVHZoneRefresh(d, meta)
+	OVHZoneRefresh(d, meta)
 
 	return resourceOVHRecordRead(d, meta)
 }
@@ -149,7 +149,7 @@ func resourceOVHRecordUpdate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Failed to update OVH Record: %s", err)
 	}
 
-    OVHZoneRefresh(d, meta)
+	OVHZoneRefresh(d, meta)
 
 	return resourceOVHRecordRead(d, meta)
 }
@@ -168,7 +168,7 @@ func resourceOVHRecordDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error deleting OVH Record: %s", err)
 	}
 
-    OVHZoneRefresh(d, meta)
+	OVHZoneRefresh(d, meta)
 
 	return nil
 }
@@ -181,7 +181,7 @@ func OVHZoneRefresh(d *schema.ResourceData, meta interface{}) error {
 	err := provider.OVHClient.Post(
 		fmt.Sprintf("/domain/zone/%s/refresh", d.Get("zone").(string)),
 		nil,
-        nil,
+		nil,
 	)
 
 	if err != nil {
