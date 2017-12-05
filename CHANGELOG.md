@@ -6,6 +6,10 @@ BACKWARDS INCOMPATIBILITIES / NOTES:
   with lowercase & underscore convention (`continentCode`, `datacenterLocation`).
   Use `continent_code` and `datacenter_location` instead. [GH-4]
 
+FEATURES
+
+* __New Resource:__ `ovh_domain_zone_record` ([#3](https://github.com/terraform-providers/terraform-provider-ovh/issues/3))
+
 ## 0.1.0 (June 21, 2017)
 
 NOTES:
