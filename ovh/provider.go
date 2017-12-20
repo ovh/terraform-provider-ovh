@@ -1,6 +1,13 @@
 package ovh
 
 import (
+	"fmt"
+	"log"
+	"os"
+	"os/user"
+
+	ini "gopkg.in/ini.v1"
+
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -17,19 +24,19 @@ func Provider() terraform.ResourceProvider {
 			},
 			"application_key": &schema.Schema{
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("OVH_APPLICATION_KEY", ""),
 				Description: descriptions["application_key"],
 			},
 			"application_secret": &schema.Schema{
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("OVH_APPLICATION_SECRET", ""),
 				Description: descriptions["application_secret"],
 			},
 			"consumer_key": &schema.Schema{
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("OVH_CONSUMER_KEY", ""),
 				Description: descriptions["consumer_key"],
 			},
@@ -66,11 +73,36 @@ func init() {
 }
 
 func configureProvider(d *schema.ResourceData) (interface{}, error) {
+	usr, err := user.Current()
+	if err != nil {
+		log.Fatal(err)
+	}
 	config := Config{
-		Endpoint:          d.Get("endpoint").(string),
-		ApplicationKey:    d.Get("application_key").(string),
-		ApplicationSecret: d.Get("application_secret").(string),
-		ConsumerKey:       d.Get("consumer_key").(string),
+		Endpoint: d.Get("endpoint").(string),
+	}
+	configFile := fmt.Sprintf("%s/.ovh.conf", usr.HomeDir)
+	if _, err := os.Stat(configFile); err == nil {
+		c, err := ini.Load(configFile)
+		if err != nil {
+			return nil, err
+		}
+
+		section, err := c.GetSection(d.Get("endpoint").(string))
+		if err != nil {
+			return nil, err
+		}
+		config.ApplicationKey = section.Key("application_key").String()
+		config.ApplicationSecret = section.Key("application_secret").String()
+		config.ConsumerKey = section.Key("consumer_key").String()
+	}
+	if v, ok := d.GetOk("application_key"); ok {
+		config.ApplicationKey = v.(string)
+	}
+	if v, ok := d.GetOk("application_secret"); ok {
+		config.ApplicationSecret = v.(string)
+	}
+	if v, ok := d.GetOk("consumer_key"); ok {
+		config.ConsumerKey = v.(string)
 	}
 
 	if err := config.loadAndValidate(); err != nil {
