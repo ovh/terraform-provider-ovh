@@ -10,6 +10,10 @@ FEATURES
 
 * __New Resource:__ `ovh_domain_zone_record` ([#3](https://github.com/terraform-providers/terraform-provider-ovh/issues/3))
 
+IMPROVEMENTS
+
+* The provider config can now source its credentials from `~/.ovh.conf`  [GH-10]
+
 ## 0.1.0 (June 21, 2017)
 
 NOTES:
