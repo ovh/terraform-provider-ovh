@@ -12,7 +12,7 @@ FEATURES
 
 IMPROVEMENTS
 
-* The provider config can now source its credentials from `~/.ovh.conf`  [GH-10]
+* The provider config can now source its credentials from `~/.ovh.conf` ([#10](https://github.com/terraform-providers/terraform-provider-ovh/issues/10))
 
 ## 0.1.0 (June 21, 2017)
 
