@@ -1,10 +1,10 @@
-## 0.2.0 (Unreleased)
+## 0.2.0 (January 10, 2018)
 
 BACKWARDS INCOMPATIBILITIES / NOTES:
 
 * d/ovh_publiccloud_region: Deprecated fields which don't comply
   with lowercase & underscore convention (`continentCode`, `datacenterLocation`).
-  Use `continent_code` and `datacenter_location` instead. [GH-4]
+  Use `continent_code` and `datacenter_location` instead. ([#4](https://github.com/terraform-providers/terraform-provider-ovh/issues/4))
 
 FEATURES
 
