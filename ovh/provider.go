@@ -53,6 +53,7 @@ func Provider() terraform.ResourceProvider {
 			"ovh_publiccloud_user":                   resourcePublicCloudUser(),
 			"ovh_vrack_publiccloud_attachment":       resourceVRackPublicCloudAttachment(),
 			"ovh_domain_zone_record":                 resourceOVHDomainZoneRecord(),
+			"ovh_publiccloud_billing_monthly":        resourcePublicCloudBillingMonthly(),
 		},
 
 		ConfigureFunc: configureProvider,

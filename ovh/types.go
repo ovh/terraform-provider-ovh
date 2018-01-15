@@ -116,10 +116,114 @@ type VRackAttachOpts struct {
 	Project string `json:"project"`
 }
 
+// Opts
+type BillingMonthlyOpts struct {
+	Project    string `json:"project"`
+	InstanceId string `json:"instanceId"`
+}
+
 // Task Opts
 type TaskOpts struct {
 	ServiceName string `json:"serviceName"`
 	TaskId      string `json:"taskId"`
+}
+
+type PublicCloudMonthlyBilling struct {
+	Since  time.Time `json:"since"`
+	Status string    `json:"status"`
+}
+
+func (p *PublicCloudMonthlyBilling) String() string {
+	return fmt.Sprintf("Since:%s, Status: %s", p.Since, p.Status)
+}
+
+type BillingMonthlyTaskResponse struct {
+	Id              string                     `json:"id"`
+	Status          string                     `json:"status"`
+	Name            string                     `json:"name"`
+	MonthlyBilling  *PublicCloudMonthlyBilling `json:"monthlyBilling"`
+	Flavor          *PublicCloudFlavor         `json:"flavor"`
+}
+
+type PublicCloudInstance struct {
+	Id             string                     `json:"id"`
+	Status         string                     `json:"status"`         // Instance status
+	Name           string                     `json:"name"`           // Instance name
+	Region         string                     `json:"region"`         // Instance region
+	PlanCode       *string 					  `json:"planCode"`       // Order plan code
+	ImageId        string                     `json:"imageId"`        // Instance image id
+	Created        time.Time                  `json:"created"`
+	FlavorId       string                     `json:"flavorId"`       // Instance flavor id
+	MonthlyBilling *PublicCloudMonthlyBilling `json:"monthlyBilling"`             
+	SSHKeyId       *string                    `json:"sshKeyId"`       // Instance ssh key id
+	IpAddresses    []*PublicCloudIpAddress    `json:"ipAddresses"`
+}
+
+type PublicCloudInstanceDetail struct {
+	Id             string                     `json:"id"`
+	Status         string                     `json:"status"`         // Instance status
+	Name           string                     `json:"name"`           // Instance name
+	Region         string                     `json:"region"`         // Instance region
+	PlanCode       *string 					  `json:"planCode"`       // Order plan code
+	Image          PublicCloudImage           `json:"image"`          // Instance image id
+	Created        time.Time                  `json:"created"`       
+	SSHKey         string                     `json:"sshKey"`         // Instance ssh key id
+	MonthlyBilling *PublicCloudMonthlyBilling `json:"monthlyBilling"`      
+	IpAddresses    []PublicCloudIpAddress     `json:"ipAddresses"`
+    Flavor         PublicCloudFlavor          `json:"flavor"`
+}
+
+type PublicCloudSSHKeyDetail struct {
+	Id          string   `json:"id"`
+	FingerPrint string   `json:"fingerPrint"` 
+	Name        string   `json:"name"`        
+	Regions     []string `json:"regions"`     
+	PublicKey   string   `json:"publicKey"`   
+}
+
+type PublicCloudImage struct {
+	Id           string    `json:"id"`
+	Visibility   string    `json:"visibility"` 
+	FlavorType   *string   `json:"flavorType"`              
+	Status       string    `json:"status"`              
+	Name         string    `json:"name"`            
+	Region       string    `json:"region"`
+	PlanCode     *string   `json:"planCode"`
+	MinDisk      int64     `json:"minDisk"`
+	Size         float64   `json:"size"`         // Image size (in GiB)
+	Tags         []*string `json:"tags"`
+	MinRam       int64     `json:"minRam"`
+	CreationDate string    `json:"creationDate"`
+	User         string    `json:"user"`
+	Type         string    `json:"type"`
+}
+
+type PublicCloudIpAddress struct {
+	GatewayIp *string `json:"gatewayIp"`
+	NetworkId string  `json:"networkId"`
+	Ip        string  `json:"ip"`
+	Version   int64   `json:"version"` // IP version
+	Type      string  `json:"type"`    // Instance IP address type
+}
+
+type PublicCloudFlavor struct {
+	Id                string                     `json:"id"`
+	OutboundBandwidth *int64                     `json:"outboundBandwidth"` // Max capacity of outbound traffic in Mbit/s
+	Disk              int64                      `json:"disk"`              // Number of disks
+	Name              string                     `json:"name"`              // Flavor name
+	Region            string                     `json:"region"`            // Flavor region
+	PlanCodes         *PublicCloudFlavorPlanCode `json:"planCodes"`
+	OSType            string                     `json:"osType"`
+	InboundBandwidth  *int64                     `json:"inboundBandwidth"`
+	VCPUs             int32                      `json:"vcpus"`             // Number of VCPUs
+	Type              string                     `json:"type"`
+	Ram               int64                      `json:"ram"`
+	Available         bool                       `json:"available"`
+}
+
+type PublicCloudFlavorPlanCode struct {
+	Hourly  string `json:"hourly"`    // Plan code to order hourly instance
+	Monthly string `json:"monthly"`   // Plan code to order monthly instance
 }
 
 type VRackAttachTaskResponse struct {
