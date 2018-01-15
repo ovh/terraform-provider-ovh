@@ -69,7 +69,7 @@ func resourcePublicCloudBillingMonthlyRead(d *schema.ResourceData, meta interfac
 	params := BillingMonthlyOpts{Project: projectId, InstanceId: instanceId}
 	r := PublicCloudInstanceDetail{}
 	
-	endpoint := fmt.Sprintf("/cloud/project/%s/instance/%s", instanceId, params.Project)
+	endpoint := fmt.Sprintf("/cloud/project/%s/instance/%s", projectId, instanceId)
 
 	err := config.OVHClient.Get(endpoint, &r)
 	if err != nil {
