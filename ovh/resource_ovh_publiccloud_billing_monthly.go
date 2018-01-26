@@ -52,7 +52,7 @@ func resourcePublicCloudBillingMonthlyCreate(d *schema.ResourceData, meta interf
 		}
 	}
 
-	log.Printf("[DEBUG] Switched instance to monthly billing Task id %d: Instance %s ->  PublicCloud %s", r.Id, instanceId, params.Project)
+	log.Printf("[DEBUG] Switched instance to monthly billing Task id %s: Instance %s ->  PublicCloud %s", r.Id, instanceId, params.Project)
 
 	//set id
 	d.SetId(fmt.Sprintf("instance_%s-cloudproject_%s-billing_monthly", instanceId, params.Project))
