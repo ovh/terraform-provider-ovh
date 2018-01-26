@@ -138,59 +138,59 @@ func (p *PublicCloudMonthlyBilling) String() string {
 }
 
 type BillingMonthlyTaskResponse struct {
-	Id              string                     `json:"id"`
-	Status          string                     `json:"status"`
-	Name            string                     `json:"name"`
-	MonthlyBilling  *PublicCloudMonthlyBilling `json:"monthlyBilling"`
-	Flavor          *PublicCloudFlavor         `json:"flavor"`
+	Id             string                     `json:"id"`
+	Status         string                     `json:"status"`
+	Name           string                     `json:"name"`
+	MonthlyBilling *PublicCloudMonthlyBilling `json:"monthlyBilling"`
+	Flavor         *PublicCloudFlavor         `json:"flavor"`
 }
 
 type PublicCloudInstance struct {
 	Id             string                     `json:"id"`
-	Status         string                     `json:"status"`         // Instance status
-	Name           string                     `json:"name"`           // Instance name
-	Region         string                     `json:"region"`         // Instance region
-	PlanCode       *string 					  `json:"planCode"`       // Order plan code
-	ImageId        string                     `json:"imageId"`        // Instance image id
+	Status         string                     `json:"status"`   // Instance status
+	Name           string                     `json:"name"`     // Instance name
+	Region         string                     `json:"region"`   // Instance region
+	PlanCode       *string                    `json:"planCode"` // Order plan code
+	ImageId        string                     `json:"imageId"`  // Instance image id
 	Created        time.Time                  `json:"created"`
-	FlavorId       string                     `json:"flavorId"`       // Instance flavor id
-	MonthlyBilling *PublicCloudMonthlyBilling `json:"monthlyBilling"`             
-	SSHKeyId       *string                    `json:"sshKeyId"`       // Instance ssh key id
+	FlavorId       string                     `json:"flavorId"` // Instance flavor id
+	MonthlyBilling *PublicCloudMonthlyBilling `json:"monthlyBilling"`
+	SSHKeyId       *string                    `json:"sshKeyId"` // Instance ssh key id
 	IpAddresses    []*PublicCloudIpAddress    `json:"ipAddresses"`
 }
 
 type PublicCloudInstanceDetail struct {
 	Id             string                     `json:"id"`
-	Status         string                     `json:"status"`         // Instance status
-	Name           string                     `json:"name"`           // Instance name
-	Region         string                     `json:"region"`         // Instance region
-	PlanCode       *string 					  `json:"planCode"`       // Order plan code
-	Image          PublicCloudImage           `json:"image"`          // Instance image id
-	Created        time.Time                  `json:"created"`       
-	SSHKey         string                     `json:"sshKey"`         // Instance ssh key id
-	MonthlyBilling *PublicCloudMonthlyBilling `json:"monthlyBilling"`      
+	Status         string                     `json:"status"`   // Instance status
+	Name           string                     `json:"name"`     // Instance name
+	Region         string                     `json:"region"`   // Instance region
+	PlanCode       *string                    `json:"planCode"` // Order plan code
+	Image          PublicCloudImage           `json:"image"`    // Instance image id
+	Created        time.Time                  `json:"created"`
+	SSHKey         string                     `json:"sshKey"` // Instance ssh key id
+	MonthlyBilling *PublicCloudMonthlyBilling `json:"monthlyBilling"`
 	IpAddresses    []PublicCloudIpAddress     `json:"ipAddresses"`
-    Flavor         PublicCloudFlavor          `json:"flavor"`
+	Flavor         PublicCloudFlavor          `json:"flavor"`
 }
 
 type PublicCloudSSHKeyDetail struct {
 	Id          string   `json:"id"`
-	FingerPrint string   `json:"fingerPrint"` 
-	Name        string   `json:"name"`        
-	Regions     []string `json:"regions"`     
-	PublicKey   string   `json:"publicKey"`   
+	FingerPrint string   `json:"fingerPrint"`
+	Name        string   `json:"name"`
+	Regions     []string `json:"regions"`
+	PublicKey   string   `json:"publicKey"`
 }
 
 type PublicCloudImage struct {
 	Id           string    `json:"id"`
-	Visibility   string    `json:"visibility"` 
-	FlavorType   *string   `json:"flavorType"`              
-	Status       string    `json:"status"`              
-	Name         string    `json:"name"`            
+	Visibility   string    `json:"visibility"`
+	FlavorType   *string   `json:"flavorType"`
+	Status       string    `json:"status"`
+	Name         string    `json:"name"`
 	Region       string    `json:"region"`
 	PlanCode     *string   `json:"planCode"`
 	MinDisk      int64     `json:"minDisk"`
-	Size         float64   `json:"size"`         // Image size (in GiB)
+	Size         float64   `json:"size"` // Image size (in GiB)
 	Tags         []*string `json:"tags"`
 	MinRam       int64     `json:"minRam"`
 	CreationDate string    `json:"creationDate"`
@@ -215,15 +215,15 @@ type PublicCloudFlavor struct {
 	PlanCodes         *PublicCloudFlavorPlanCode `json:"planCodes"`
 	OSType            string                     `json:"osType"`
 	InboundBandwidth  *int64                     `json:"inboundBandwidth"`
-	VCPUs             int32                      `json:"vcpus"`             // Number of VCPUs
+	VCPUs             int32                      `json:"vcpus"` // Number of VCPUs
 	Type              string                     `json:"type"`
 	Ram               int64                      `json:"ram"`
 	Available         bool                       `json:"available"`
 }
 
 type PublicCloudFlavorPlanCode struct {
-	Hourly  string `json:"hourly"`    // Plan code to order hourly instance
-	Monthly string `json:"monthly"`   // Plan code to order monthly instance
+	Hourly  string `json:"hourly"`  // Plan code to order hourly instance
+	Monthly string `json:"monthly"` // Plan code to order monthly instance
 }
 
 type VRackAttachTaskResponse struct {

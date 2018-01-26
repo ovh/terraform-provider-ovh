@@ -13,17 +13,17 @@ func resourcePublicCloudBillingMonthly() *schema.Resource {
 		Create: resourcePublicCloudBillingMonthlyCreate,
 		Read:   resourcePublicCloudBillingMonthlyRead,
 		Delete: resourcePublicCloudBillingMonthlyDelete,
-		
+
 		Schema: map[string]*schema.Schema{
 			"project_id": &schema.Schema{
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			"instance_id": &schema.Schema{
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 		},
 	}
@@ -62,13 +62,13 @@ func resourcePublicCloudBillingMonthlyCreate(d *schema.ResourceData, meta interf
 
 func resourcePublicCloudBillingMonthlyRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-	
+
 	projectId := d.Get("project_id").(string)
 	instanceId := d.Get("instance_id").(string)
-	
+
 	params := BillingMonthlyOpts{Project: projectId, InstanceId: instanceId}
 	r := PublicCloudInstanceDetail{}
-	
+
 	endpoint := fmt.Sprintf("/cloud/project/%s/instance/%s", projectId, instanceId)
 
 	err := config.OVHClient.Get(endpoint, &r)
@@ -76,19 +76,19 @@ func resourcePublicCloudBillingMonthlyRead(d *schema.ResourceData, meta interfac
 		return err
 	}
 	log.Printf("[DEBUG] Read billing interval for instance %s ->  PublicCloud %s", instanceId, params.Project)
-	
+
 	if r.MonthlyBilling == nil {
 		d.SetId("")
 		return nil
 	}
-	
+
 	return nil
 }
 
 func resourcePublicCloudBillingMonthlyDelete(d *schema.ResourceData, meta interface{}) error {
 	projectId := d.Get("project_id").(string)
 	instanceId := d.Get("instance_id").(string)
-	
+
 	log.Printf("[DEBUG] Cannot actually reverse monthly billing back to hourly billing until the instance %s is recreated -> PublicCloud %s", instanceId, projectId)
 
 	d.SetId("")
