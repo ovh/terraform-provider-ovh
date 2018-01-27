@@ -4,7 +4,7 @@ page_title: "OVH: ovh_domain_zone_record"
 sidebar_current: "docs-ovh-domain-zone-record"
 description: |-
   Provides a OVH domain zone resource.
-  ---
+---
 
 # ovh_domain_zone_record
 
