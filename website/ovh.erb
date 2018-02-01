@@ -9,7 +9,28 @@
         <li<%= sidebar_current("docs-ovh-index") %>>
           <a href="/docs/providers/ovh/index.html">OVH Provider</a>
         </li>
+		
+        <li<%= sidebar_current("docs-ovh-datasource") %>>
+          <a href="#">Data Sources</a>
+          <ul class="nav nav-visible">
+            <li<%= sidebar_current("docs-ovh-datasource-publiccloud-region") %>>
+              <a href="/docs/providers/ovh/d/publiccloud_region.html">ovh_publiccloud_region</a>
+            </li>
+            <li<%= sidebar_current("docs-ovh-datasource-publiccloud-regions") %>>
+              <a href="/docs/providers/ovh/d/publiccloud_regions.html">ovh_publiccloud_regions</a>
+            </li>
+          </ul>
+        </li>
 
+        <li<%= sidebar_current("docs-ovh-resource-domain") %>>
+          <a href="#">DNS Resources</a>
+          <ul class="nav nav-visible">
+            <li<%= sidebar_current("docs-ovh-resource-domain-zone-record") %>>
+              <a href="/docs/providers/ovh/r/ovh_domain_zone_record.html">ovh_domain_zone_record</a>
+            </li>
+          </ul>
+        </li>
+		
         <li<%= sidebar_current("docs-ovh-resource-vrack") %>>
           <a href="#">VRack Resources</a>
           <ul class="nav nav-visible">
@@ -19,7 +40,7 @@
           </ul>
         </li>
 
-        <li<%= sidebar_current("docs-ovh-publiccloud") %>>
+        <li<%= sidebar_current("docs-ovh-resource-publiccloud") %>>
           <a href="#">Public Cloud Resources</a>
           <ul class="nav nav-visible">
             <li<%= sidebar_current("docs-ovh-resource-publiccloud-private-network") %>>
