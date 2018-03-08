@@ -16,8 +16,8 @@ Provides a OVH domain zone record.
 # Add a record to a sub-domain
 resource "ovh_domain_zone_record" "test" {
     zone = "testdemo.ovh"
-    subDomain = "test"
-    fieldType = "A"
+    subdomain = "test"
+    fieldtype = "A"
     ttl = "3600"
     target = "0.0.0.0"
 }
@@ -28,9 +28,9 @@ resource "ovh_domain_zone_record" "test" {
 The following arguments are supported:
                             
 * `zone` - (Required) The domain to add the record to
-* `subDomain` - (Required) The name of the record
+* `subdomain` - (Required) The name of the record
 * `target` - (Required) The value of the record
-* `fieldType` - (Required) The type of the record
+* `fieldtype` - (Required) The type of the record
 * `ttl` - (Optional) The TTL of the record
 
 
