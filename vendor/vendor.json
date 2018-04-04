@@ -544,10 +544,10 @@
 			"revisionTime": "2016-10-03T17:45:16Z"
 		},
 		{
-			"checksumSHA1": "9vQ5+o0oO/0deG+uokvvdpeSv0Y=",
+			"checksumSHA1": "4z9IbsXouZYOlRwg++yZclGRs3w=",
 			"path": "github.com/ovh/go-ovh/ovh",
-			"revision": "d2207178e10e4527e8f222fd8707982df8c3af17",
-			"revisionTime": "2017-01-02T12:05:21Z"
+			"revision": "34b9ffdf98692f9e9b57724d180549f88725b605",
+			"revisionTime": "2018-04-04T10:28:07Z"
 		},
 		{
 			"checksumSHA1": "u5s2PZ7fzCOqQX7bVPf9IJ+qNLQ=",
