@@ -73,14 +73,14 @@ func init() {
 }
 
 func configureProvider(d *schema.ResourceData) (interface{}, error) {
-	usr, err := user.Current()
+	userHome, err := currentUserHome()
 	if err != nil {
 		log.Fatal(err)
 	}
 	config := Config{
 		Endpoint: d.Get("endpoint").(string),
 	}
-	configFile := fmt.Sprintf("%s/.ovh.conf", usr.HomeDir)
+	configFile := fmt.Sprintf("%s/.ovh.conf", userHome)
 	if _, err := os.Stat(configFile); err == nil {
 		c, err := ini.Load(configFile)
 		if err != nil {
@@ -110,4 +110,20 @@ func configureProvider(d *schema.ResourceData) (interface{}, error) {
 	}
 
 	return &config, nil
+}
+
+// currentUserHome attempts to get current user's home directory
+func currentUserHome() (string, error) {
+	userHome := ""
+	usr, err := user.Current()
+	if err != nil {
+		// Fallback by trying to read $HOME
+		userHome = os.Getenv("HOME")
+		if userHome != "" {
+			err = nil
+		}
+	} else {
+		userHome = usr.HomeDir
+	}
+	return userHome, nil
 }
