@@ -272,6 +272,7 @@ func OVHVPS_getType(offertype string, model_name string, model_version string) s
 	offertypeToOfferPrefix["cloud"] = "ceph-nvme"
 	offertypeToOfferPrefix["cloud-ram"] = "ceph-nvme-ram"
 	offertypeToOfferPrefix["ssd"] = "ssd"
+	offertypeToOfferPrefix["classic"] = "classic"
 	return (fmt.Sprintf("vps_%s_%s_%s", offertypeToOfferPrefix[offertype],
 		model_name,
 		model_version))
