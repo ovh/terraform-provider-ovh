@@ -97,4 +97,10 @@ You will also need to [generate an OVH token](https://api.ovh.com/createToken/?G
 
  * `OVH_CONSUMER_KEY`
 
+* `OVH_VPS_ID` - The vps id to import (vps-xxxx)
+
+* `OVH_VPS_DISPLAYNAME` - The display name of the imported vps
+
+* `OVH_VPS_TYPE` - The type of the imported vps
+
 You should be able to use any OVH environment to develop on as long as the above environment variables are set.
