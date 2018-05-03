@@ -50,6 +50,7 @@ func Provider() terraform.ResourceProvider {
 			"ovh_publiccloud_region":  dataSourcePublicCloudRegion(),
 			"ovh_publiccloud_regions": dataSourcePublicCloudRegions(),
 			"ovh_credit_card":         dataSourceCreditCard(),
+			"ovh_bank_account":        dataSourceBankAccount(),
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
