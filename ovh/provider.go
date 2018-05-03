@@ -49,6 +49,7 @@ func Provider() terraform.ResourceProvider {
 			// Legacy naming schema (new datasources should not be added here)
 			"ovh_publiccloud_region":  dataSourcePublicCloudRegion(),
 			"ovh_publiccloud_regions": dataSourcePublicCloudRegions(),
+			"ovh_credit_card":         dataSourceCreditCard(),
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
