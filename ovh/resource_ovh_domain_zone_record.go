@@ -8,34 +8,23 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-type NewRecord struct {
+type OvhDomainZoneRecord struct {
+	Id        int    `json:"id,omitempty"`
+	Zone      string `json:"zone,omitempty"`
 	Target    string `json:"target"`
-	Ttl       int    `json:"ttl"`
+	Ttl       int    `json:"ttl,omitempty"`
 	FieldType string `json:"fieldType"`
-	SubDomain string `json:"subDomain"`
+	SubDomain string `json:"subDomain,omitempty"`
 }
 
-type Record struct {
-	Id        int    `json:"id"`
-	Zone      string `json:"zone"`
-	Target    string `json:"target"`
-	Ttl       int    `json:"ttl"`
-	FieldType string `json:"fieldType"`
-	SubDomain string `json:"subDomain"`
-}
-
-func resourceOVHDomainZoneRecord() *schema.Resource {
+func resourceOvhDomainZoneRecord() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceOVHRecordCreate,
-		Read:   resourceOVHRecordRead,
-		Update: resourceOVHRecordUpdate,
-		Delete: resourceOVHRecordDelete,
+		Create: resourceOvhDomainZoneRecordCreate,
+		Read:   resourceOvhDomainZoneRecordRead,
+		Update: resourceOvhDomainZoneRecordUpdate,
+		Delete: resourceOvhDomainZoneRecordDelete,
 
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
 			"zone": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -61,11 +50,11 @@ func resourceOVHDomainZoneRecord() *schema.Resource {
 	}
 }
 
-func resourceOVHRecordCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceOvhDomainZoneRecordCreate(d *schema.ResourceData, meta interface{}) error {
 	provider := meta.(*Config)
 
 	// Create the new record
-	newRecord := &NewRecord{
+	newRecord := &OvhDomainZoneRecord{
 		FieldType: d.Get("fieldtype").(string),
 		SubDomain: d.Get("subdomain").(string),
 		Target:    d.Get("target").(string),
@@ -74,7 +63,7 @@ func resourceOVHRecordCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] OVH Record create configuration: %#v", newRecord)
 
-	resultRecord := Record{}
+	resultRecord := OvhDomainZoneRecord{}
 
 	err := provider.OVHClient.Post(
 		fmt.Sprintf("/domain/zone/%s/record", d.Get("zone").(string)),
@@ -86,20 +75,19 @@ func resourceOVHRecordCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Failed to create OVH Record: %s", err)
 	}
 
-	d.Set("id", resultRecord.Id)
 	d.SetId(strconv.Itoa(resultRecord.Id))
 
 	log.Printf("[INFO] OVH Record ID: %s", d.Id())
 
-	OVHZoneRefresh(d, meta)
+	OvhDomainZoneRefresh(d, meta)
 
-	return resourceOVHRecordRead(d, meta)
+	return resourceOvhDomainZoneRecordRead(d, meta)
 }
 
-func resourceOVHRecordRead(d *schema.ResourceData, meta interface{}) error {
+func resourceOvhDomainZoneRecordRead(d *schema.ResourceData, meta interface{}) error {
 	provider := meta.(*Config)
 
-	record := Record{}
+	record := OvhDomainZoneRecord{}
 	err := provider.OVHClient.Get(
 		fmt.Sprintf("/domain/zone/%s/record/%s", d.Get("zone").(string), d.Id()),
 		&record,
@@ -110,7 +98,6 @@ func resourceOVHRecordRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	d.Set("id", record.Id)
 	d.Set("zone", record.Zone)
 	d.Set("fieldtype", record.FieldType)
 	d.Set("subdomain", record.SubDomain)
@@ -120,10 +107,10 @@ func resourceOVHRecordRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceOVHRecordUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceOvhDomainZoneRecordUpdate(d *schema.ResourceData, meta interface{}) error {
 	provider := meta.(*Config)
 
-	record := NewRecord{}
+	record := OvhDomainZoneRecord{}
 
 	if attr, ok := d.GetOk("subdomain"); ok {
 		record.SubDomain = attr.(string)
@@ -149,12 +136,12 @@ func resourceOVHRecordUpdate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Failed to update OVH Record: %s", err)
 	}
 
-	OVHZoneRefresh(d, meta)
+	OvhDomainZoneRefresh(d, meta)
 
-	return resourceOVHRecordRead(d, meta)
+	return resourceOvhDomainZoneRecordRead(d, meta)
 }
 
-func resourceOVHRecordDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceOvhDomainZoneRecordDelete(d *schema.ResourceData, meta interface{}) error {
 	provider := meta.(*Config)
 
 	log.Printf("[INFO] Deleting OVH Record: %s.%s, %s", d.Get("zone").(string), d.Get("subdomain").(string), d.Id())
@@ -168,12 +155,12 @@ func resourceOVHRecordDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error deleting OVH Record: %s", err)
 	}
 
-	OVHZoneRefresh(d, meta)
+	OvhDomainZoneRefresh(d, meta)
 
 	return nil
 }
 
-func OVHZoneRefresh(d *schema.ResourceData, meta interface{}) error {
+func OvhDomainZoneRefresh(d *schema.ResourceData, meta interface{}) error {
 	provider := meta.(*Config)
 
 	log.Printf("[INFO] Refresh OVH Zone: %s", d.Get("zone").(string))
