@@ -3,6 +3,7 @@ package ovh
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/ovh/go-ovh/ovh"
 )
@@ -15,10 +16,15 @@ type Config struct {
 	OVHClient         *ovh.Client
 }
 
-/* type used to verify client access to ovh api
- */
-type PartialMe struct {
-	Firstname string `json:"firstname"`
+type OvhAuthCurrentCredential struct {
+	OvhSupport    bool             `json:"ovhSupport"`
+	Status        string           `json:"status"`
+	ApplicationId int64            `json:"applicationId"`
+	CredentialId  int64            `json:"credentialId"`
+	Rules         []ovh.AccessRule `json:"rules"`
+	Expiration    time.Time        `json:"expiration"`
+	LastUse       time.Time        `json:"lastUse"`
+	Creation      time.Time        `json:"creation"`
 }
 
 func clientDefault(c *Config) (*ovh.Client, error) {
@@ -54,13 +60,13 @@ func (c *Config) loadAndValidate() error {
 		return fmt.Errorf("Error getting ovh client: %q\n", err)
 	}
 
-	var me PartialMe
-	err = targetClient.Get("/me", &me)
+	var cred OvhAuthCurrentCredential
+	err = targetClient.Get("/auth/currentCredential", &cred)
 	if err != nil {
 		return fmt.Errorf("OVH client seems to be misconfigured: %q\n", err)
 	}
 
-	log.Printf("[DEBUG] Logged in on OVH API as %s!", me.Firstname)
+	log.Printf("[DEBUG] Logged in on OVH API")
 	c.OVHClient = targetClient
 
 	return nil
