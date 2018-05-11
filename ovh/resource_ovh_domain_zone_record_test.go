@@ -11,7 +11,7 @@ import (
 )
 
 func TestAccOVHRecord_Basic(t *testing.T) {
-	var record Record
+	var record OvhDomainZoneRecord
 	zone := os.Getenv("OVH_ZONE")
 
 	resource.Test(t, resource.TestCase{
@@ -39,7 +39,7 @@ func TestAccOVHRecord_Basic(t *testing.T) {
 }
 
 func TestAccOVHRecord_Updated(t *testing.T) {
-	record := Record{}
+	record := OvhDomainZoneRecord{}
 	zone := os.Getenv("OVH_ZONE")
 
 	resource.Test(t, resource.TestCase{
@@ -120,7 +120,7 @@ func testAccCheckOVHRecordDestroy(s *terraform.State) error {
 			continue
 		}
 
-		resultRecord := Record{}
+		resultRecord := OvhDomainZoneRecord{}
 		err := provider.OVHClient.Get(
 			fmt.Sprintf("/domain/zone/%s/record/%s", zone, rs.Primary.ID),
 			&resultRecord,
@@ -134,7 +134,7 @@ func testAccCheckOVHRecordDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckOVHRecordExists(n string, record *Record) resource.TestCheckFunc {
+func testAccCheckOVHRecordExists(n string, record *OvhDomainZoneRecord) resource.TestCheckFunc {
 	zone := os.Getenv("OVH_ZONE")
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -166,7 +166,7 @@ func testAccCheckOVHRecordExists(n string, record *Record) resource.TestCheckFun
 	}
 }
 
-func testAccCheckOVHRecordAttributes(record *Record) resource.TestCheckFunc {
+func testAccCheckOVHRecordAttributes(record *OvhDomainZoneRecord) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
 		if record.Target != "192.168.0.10" {
@@ -177,7 +177,7 @@ func testAccCheckOVHRecordAttributes(record *Record) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckOVHRecordAttributesUpdated_1(record *Record) resource.TestCheckFunc {
+func testAccCheckOVHRecordAttributesUpdated_1(record *OvhDomainZoneRecord) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
 		if record.Target != "192.168.0.11" {
@@ -188,7 +188,7 @@ func testAccCheckOVHRecordAttributesUpdated_1(record *Record) resource.TestCheck
 	}
 }
 
-func testAccCheckOVHRecordAttributesUpdated_2(record *Record) resource.TestCheckFunc {
+func testAccCheckOVHRecordAttributesUpdated_2(record *OvhDomainZoneRecord) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
 		if record.Target != "192.168.0.11" {
@@ -203,7 +203,7 @@ func testAccCheckOVHRecordAttributesUpdated_2(record *Record) resource.TestCheck
 	}
 }
 
-func testAccCheckOVHRecordAttributesUpdated_3(record *Record) resource.TestCheckFunc {
+func testAccCheckOVHRecordAttributesUpdated_3(record *OvhDomainZoneRecord) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 
 		if record.Target != "192.168.0.13" {
