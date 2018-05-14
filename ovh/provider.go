@@ -43,16 +43,26 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
+			// New naming schema (issue #23)
+			"ovh_cloud_region":  dataSourcePublicCloudRegion(),
+			"ovh_cloud_regions": dataSourcePublicCloudRegions(),
+			// Legacy naming schema (new datasources should not be added here)
 			"ovh_publiccloud_region":  dataSourcePublicCloudRegion(),
 			"ovh_publiccloud_regions": dataSourcePublicCloudRegions(),
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
+			"ovh_domain_zone_record": resourceOvhDomainZoneRecord(),
+			// New naming schema (issue #23)
+			"ovh_cloud_network_private":        resourcePublicCloudPrivateNetwork(),
+			"ovh_cloud_network_private_subnet": resourcePublicCloudPrivateNetworkSubnet(),
+			"ovh_cloud_user":                   resourcePublicCloudUser(),
+			"ovh_vrack_cloudproject":           resourceVRackPublicCloudAttachment(),
+			// Legacy naming schema (new resources should not be added here)
 			"ovh_publiccloud_private_network":        resourcePublicCloudPrivateNetwork(),
 			"ovh_publiccloud_private_network_subnet": resourcePublicCloudPrivateNetworkSubnet(),
 			"ovh_publiccloud_user":                   resourcePublicCloudUser(),
 			"ovh_vrack_publiccloud_attachment":       resourceVRackPublicCloudAttachment(),
-			"ovh_domain_zone_record":                 resourceOvhDomainZoneRecord(),
 		},
 
 		ConfigureFunc: configureProvider,
