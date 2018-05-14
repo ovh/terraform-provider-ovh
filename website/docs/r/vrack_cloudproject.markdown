@@ -1,20 +1,19 @@
 ---
 layout: "ovh"
-page_title: "OVH: vrack_publiccloud_attachment"
-sidebar_current: "docs-ovh-resource-vrack-publiccloud-attachment"
+page_title: "OVH: vrack_cloudproject"
+sidebar_current: "docs-ovh-resource-vrack-cloudproject"
 description: |-
-  Attach an existing PublicCloud project to an existing VRack.
+  Attach an existing public cloud project to an existing VRack.
 ---
 
-# ovh_vrack\_publiccloud\_attachment
+# ovh_vrack_cloudproject
 
-__DEPRECATED__ use `ovh_vrack_cloudproject` instead.
-Attach an existing PublicCloud project to an existing VRack.
+Attach an existing public cloud project to an existing VRack.
 
 ## Example Usage
 
 ```
-resource "ovh_vrack_publiccloud_attachment" "attach" {
+resource "ovh_vrack_cloudproject" "attach" {
   vrack_id   = "12345"
   project_id = "67890"
 }
