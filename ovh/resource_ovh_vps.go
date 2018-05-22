@@ -247,7 +247,7 @@ func resourceOVHVPSUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("Unknown wanted state")
 		}
 		err := provider.OVHClient.Post(
-			fmt.Sprintf("/vos/%s/%s", d.Id(), command),
+			fmt.Sprintf("/vps/%s/%s", d.Id(), command),
 			nil,
 			nil,
 		)
