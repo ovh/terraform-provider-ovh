@@ -55,10 +55,6 @@ func resourceOVHVPS() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"type": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -177,8 +173,7 @@ func resourceOVHVPSRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	d.Set("id", vps.Name)
-	d.Set("id", vps.Name)
+	d.SetId(vps.Name)
 	d.Set("zone", vps.Zone)
 	d.Set("state", vps.State)
 	d.Set("vcore", vps.Vcore)
@@ -194,7 +189,7 @@ func resourceOVHVPSRead(d *schema.ResourceData, meta interface{}) error {
 	model["offer"] = vps.Model.Offer
 	model["version"] = vps.Model.Version
 	d.Set("model", model)
-	d.Set("type", OVHVPS_getType(vps.OfferType, vps.Model.Name, vps.Model.Version))
+	d.Set("type", ovhvps_getType(vps.OfferType, vps.Model.Name, vps.Model.Version))
 
 	ips := []string{}
 	err = provider.OVHClient.Get(
@@ -267,7 +262,7 @@ func resourceOVHVPSDelete(d *schema.ResourceData, meta interface{}) error {
 	return fmt.Errorf("Deletion is not supported at the moment, please terminate manually and terraform state rm")
 }
 
-func OVHVPS_getType(offertype string, model_name string, model_version string) string {
+func ovhvps_getType(offertype string, model_name string, model_version string) string {
 	var offertypeToOfferPrefix = make(map[string]string)
 	offertypeToOfferPrefix["cloud"] = "ceph-nvme"
 	offertypeToOfferPrefix["cloud-ram"] = "ceph-nvme-ram"
