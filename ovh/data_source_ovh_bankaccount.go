@@ -55,42 +55,6 @@ func dataSourceBankAccount() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"validation_document_link": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"unique_reference": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"creation_date": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"mandate_signature_date": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"owner_name": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"owner_address": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"iban": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bic": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"id": &schema.Schema{
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
 			"default": &schema.Schema{
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -167,16 +131,7 @@ func dataSourceBankAccountRead(d *schema.ResourceData, meta interface{}) error {
 	// Set data
 	d.Set("description", (*the_bank_account).Description)
 	d.Set("state", (*the_bank_account).State)
-	d.Set("id", (*the_bank_account).Id)
 	d.Set("default", (*the_bank_account).Default)
-	d.Set("validation_document_link", (*the_bank_account).ValidationDocumentLink)
-	d.Set("unique_reference", (*the_bank_account).UniqueReference)
-	d.Set("creation_date", (*the_bank_account).CreationDate)
-	d.Set("mandate_signature_date", (*the_bank_account).MandateSignatureDate)
-	d.Set("owner_name", (*the_bank_account).OwnerName)
-	d.Set("owner_address", (*the_bank_account).OwnerAddress)
-	d.Set("iban", (*the_bank_account).Iban)
-	d.Set("bic", (*the_bank_account).Bic)
 
 	d.SetId(fmt.Sprintf("%d", (*the_bank_account).Id))
 	return nil
