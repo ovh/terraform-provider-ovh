@@ -1,20 +1,19 @@
 ---
 layout: "ovh"
-page_title: "OVH: publiccloud_private_network"
-sidebar_current: "docs-ovh-resource-publiccloud-private-network"
+page_title: "OVH: cloud_network_private"
+sidebar_current: "docs-ovh-resource-cloud-network-private"
 description: |-
   Creates a private network in a public cloud project.
 ---
 
-# ovh_publiccloud\_private_network
+# ovh_cloud_network_private
 
-__DEPRECATED__ use `ovh_cloud_network_private` instead.
 Creates a private network in a public cloud project.
 
 ## Example Usage
 
 ```
-resource "ovh_publiccloud_private_network" "net" {
+resource "ovh_cloud_network_private" "net" {
    project_id = "67890"
    name       = "admin_network"
    regions    = ["GRA1", "BHS1"]

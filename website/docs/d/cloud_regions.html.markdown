@@ -1,21 +1,19 @@
 ---
 layout: "ovh"
-page_title: "OVH: publiccloud_regions"
-sidebar_current: "docs-ovh-datasource-publiccloud-regions"
+page_title: "OVH: cloud_regions"
+sidebar_current: "docs-ovh-datasource-cloud-regions"
 description: |-
   Get the list of regions associated with a public cloud project.
 ---
 
-# publiccloud\_regions
-
-__DEPRECATED__ use `ovh_cloud_regions` instead.
+# cloud_regions
 
 Use this data source to get the regions of a public cloud project.
 
 ## Example Usage
 
 ```hcl
-data "ovh_publiccloud_regions" "regions" {
+data "ovh_cloud_regions" "regions" {
   project_id = "XXXXXX"
 }
 ```
