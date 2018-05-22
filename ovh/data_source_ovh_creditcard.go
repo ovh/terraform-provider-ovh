@@ -53,31 +53,11 @@ func dataSourceCreditCard() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"number": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"expiration_date": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"type": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"state": &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"id": &schema.Schema{
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
 			"default": &schema.Schema{
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"threeds_validated": &schema.Schema{
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -164,13 +144,8 @@ func dataSourceCreditCardRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	// Set data
 	d.Set("description", (*the_credit_card).Description)
-	d.Set("number", (*the_credit_card).Number)
-	d.Set("expiration_date", (*the_credit_card).Expiration)
-	d.Set("type", (*the_credit_card).Type)
 	d.Set("state", (*the_credit_card).State)
-	d.Set("id", (*the_credit_card).Id)
 	d.Set("default", (*the_credit_card).Default)
-	d.Set("threeds_validated", (*the_credit_card).ThreeDSValidated)
 	d.SetId(fmt.Sprintf("%d", (*the_credit_card).Id))
 	return nil
 }
