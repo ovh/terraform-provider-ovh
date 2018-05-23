@@ -55,6 +55,7 @@ func Provider() terraform.ResourceProvider {
 			"ovh_iploadbalancing_tcp_farm":        resourceIpLoadbalancingTcpFarm(),
 			"ovh_iploadbalancing_tcp_farm_server": resourceIpLoadbalancingTcpFarmServer(),
 			"ovh_iploadbalancing_http_route":      resourceIPLoadbalancingRouteHTTP(),
+			"ovh_iploadbalancing_http_route_rule": resourceIPLoadbalancingRouteHTTPRule(),
 			"ovh_domain_zone_record":              resourceOvhDomainZoneRecord(),
 			"ovh_domain_zone_redirection":         resourceOvhDomainZoneRedirection(),
 			// New naming schema (issue #23)
