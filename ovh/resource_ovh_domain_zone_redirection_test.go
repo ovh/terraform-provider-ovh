@@ -23,7 +23,6 @@ func TestAccOvhDomainZoneRedirection_Basic(t *testing.T) {
 				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRedirectionConfig_basic, zone),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOvhDomainZoneRedirectionExists("ovh_domain_zone_redirection.foobar", &redirection),
-					testAccCheckOvhDomainZoneRedirectionAttributes(&redirection),
 					resource.TestCheckResourceAttr(
 						"ovh_domain_zone_redirection.foobar", "subdomain", "terraform"),
 					resource.TestCheckResourceAttr(
@@ -51,60 +50,48 @@ func TestAccOvhDomainZoneRedirection_Updated(t *testing.T) {
 				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRedirectionConfig_basic, zone),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOvhDomainZoneRedirectionExists("ovh_domain_zone_redirection.foobar", &redirection),
-					testAccCheckOvhDomainZoneRedirectionAttributes(&redirection),
 					resource.TestCheckResourceAttr(
 						"ovh_domain_zone_redirection.foobar", "subdomain", "terraform"),
 					resource.TestCheckResourceAttr(
 						"ovh_domain_zone_redirection.foobar", "zone", zone),
 					resource.TestCheckResourceAttr(
 						"ovh_domain_zone_redirection.foobar", "target", "https://terraform.net"),
-					resource.TestCheckResourceAttr(
-						"ovh_domain_zone_redirection.foobar", "ttl", "3600"),
 				),
 			},
 			resource.TestStep{
 				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRedirectionConfig_new_value_1, zone),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOvhDomainZoneRedirectionExists("ovh_domain_zone_redirection.foobar", &redirection),
-					testAccCheckOvhDomainZoneRedirectionAttributesUpdated_1(&redirection),
 					resource.TestCheckResourceAttr(
 						"ovh_domain_zone_redirection.foobar", "subdomain", "terraform"),
 					resource.TestCheckResourceAttr(
 						"ovh_domain_zone_redirection.foobar", "zone", zone),
 					resource.TestCheckResourceAttr(
 						"ovh_domain_zone_redirection.foobar", "target", "https://terraform.io"),
-					resource.TestCheckResourceAttr(
-						"ovh_domain_zone_redirection.foobar", "ttl", "3600"),
 				),
 			},
 			resource.TestStep{
 				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRedirectionConfig_new_value_2, zone),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOvhDomainZoneRedirectionExists("ovh_domain_zone_redirection.foobar", &redirection),
-					testAccCheckOvhDomainZoneRedirectionAttributesUpdated_2(&redirection),
 					resource.TestCheckResourceAttr(
 						"ovh_domain_zone_redirection.foobar", "subdomain", "terraform2"),
 					resource.TestCheckResourceAttr(
 						"ovh_domain_zone_redirection.foobar", "zone", zone),
 					resource.TestCheckResourceAttr(
 						"ovh_domain_zone_redirection.foobar", "target", "https://terraform.io"),
-					resource.TestCheckResourceAttr(
-						"ovh_domain_zone_redirection.foobar", "ttl", "3600"),
 				),
 			},
 			resource.TestStep{
 				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRedirectionConfig_new_value_3, zone),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOvhDomainZoneRedirectionExists("ovh_domain_zone_redirection.foobar", &redirection),
-					testAccCheckOvhDomainZoneRedirectionAttributesUpdated_3(&redirection),
 					resource.TestCheckResourceAttr(
 						"ovh_domain_zone_redirection.foobar", "subdomain", "terraform3"),
 					resource.TestCheckResourceAttr(
 						"ovh_domain_zone_redirection.foobar", "zone", zone),
 					resource.TestCheckResourceAttr(
 						"ovh_domain_zone_redirection.foobar", "target", "https://terraform.com"),
-					resource.TestCheckResourceAttr(
-						"ovh_domain_zone_redirection.foobar", "ttl", "3604"),
 				),
 			},
 		},
@@ -166,68 +153,12 @@ func testAccCheckOvhDomainZoneRedirectionExists(n string, redirection *OvhDomain
 	}
 }
 
-func testAccCheckOvhDomainZoneRedirectionAttributes(redirection *OvhDomainZoneRedirection) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
-		if redirection.Target != "https://terraform.com" {
-			return fmt.Errorf("Bad content: %#v", redirection)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckOvhDomainZoneRedirectionAttributesUpdated_1(redirection *OvhDomainZoneRedirection) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
-		if redirection.Target != "https://terraform.io" {
-			return fmt.Errorf("Bad content: %#v", redirection)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckOvhDomainZoneRedirectionAttributesUpdated_2(redirection *OvhDomainZoneRedirection) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
-		if redirection.Target != "https://terraform.io" {
-			return fmt.Errorf("Bad content: %#v", redirection)
-		}
-
-		if redirection.SubDomain != "terraform2" {
-			return fmt.Errorf("Bad content: %#v", redirection)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckOvhDomainZoneRedirectionAttributesUpdated_3(redirection *OvhDomainZoneRedirection) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
-		if redirection.Target != "https://terraform.com" {
-			return fmt.Errorf("Bad content: %#v", redirection)
-		}
-
-		if redirection.SubDomain != "terraform3" {
-			return fmt.Errorf("Bad content: %#v", redirection)
-		}
-
-		if redirection.Type != "visible" {
-			return fmt.Errorf("Bad content: %#v", redirection)
-		}
-		return nil
-	}
-}
-
 const testAccCheckOvhDomainZoneRedirectionConfig_basic = `
 resource "ovh_domain_zone_redirection" "foobar" {
 	zone = "%s"
 	subdomain = "terraform"
 	target = "https://terraform.net"
 	type = "visible"
-	ttl = 3600
 }`
 
 const testAccCheckOvhDomainZoneRedirectionConfig_new_value_1 = `
@@ -236,23 +167,22 @@ resource "ovh_domain_zone_redirection" "foobar" {
 	subdomain = "terraform"
 	target = "https://terraform.io"
 	type = "visible"
-	ttl = 3600
 }
 `
+
 const testAccCheckOvhDomainZoneRedirectionConfig_new_value_2 = `
 resource "ovh_domain_zone_redirection" "foobar" {
 	zone = "%s"
 	subdomain = "terraform2"
 	target = "https://terraform.io"
 	type = "visible"
-	ttl = 3600
 }
 `
+
 const testAccCheckOvhDomainZoneRedirectionConfig_new_value_3 = `
 resource "ovh_domain_zone_redirection" "foobar" {
 	zone = "%s"
 	subdomain = "terraform3"
 	target = "https://terraform.com"
 	type = "visible"
-	ttl = 3604
 }`
