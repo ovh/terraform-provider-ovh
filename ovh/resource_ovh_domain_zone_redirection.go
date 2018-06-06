@@ -15,7 +15,7 @@ type OvhDomainZoneRedirection struct {
 	SubDomain   string `json:"subDomain"`
 	Type        string `json:"type,omitempty"`
 	Description string `json:"description"`
-	Keyword     string `json:"keyword"`
+	Keywords    string `json:"keywords"`
 	Title       string `json:"title"`
 }
 
@@ -37,6 +37,7 @@ func resourceOvhDomainZoneRedirection() *schema.Resource {
 			},
 			"subdomain": {
 				Type:     schema.TypeString,
+				ForceNew: true,
 				Optional: true,
 			},
 			"type": {
@@ -47,7 +48,7 @@ func resourceOvhDomainZoneRedirection() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"keyword": {
+			"keywords": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -68,7 +69,7 @@ func resourceOvhDomainZoneRedirectionCreate(d *schema.ResourceData, meta interfa
 		SubDomain:   d.Get("subdomain").(string),
 		Target:      d.Get("target").(string),
 		Description: d.Get("description").(string),
-		Keyword:     d.Get("keyword").(string),
+		Keywords:    d.Get("keywords").(string),
 		Title:       d.Get("title").(string),
 	}
 
@@ -114,7 +115,7 @@ func resourceOvhDomainZoneRedirectionRead(d *schema.ResourceData, meta interface
 	d.Set("subdomain", redirection.SubDomain)
 	d.Set("description", redirection.Description)
 	d.Set("target", redirection.Target)
-	d.Set("keyword", redirection.Keyword)
+	d.Set("keywords", redirection.Keywords)
 	d.Set("title", redirection.Title)
 
 	return nil
@@ -137,8 +138,8 @@ func resourceOvhDomainZoneRedirectionUpdate(d *schema.ResourceData, meta interfa
 	if attr, ok := d.GetOk("description"); ok {
 		redirection.Description, _ = attr.(string)
 	}
-	if attr, ok := d.GetOk("keyword"); ok {
-		redirection.Keyword, _ = attr.(string)
+	if attr, ok := d.GetOk("keywords"); ok {
+		redirection.Keywords, _ = attr.(string)
 	}
 	if attr, ok := d.GetOk("title"); ok {
 		redirection.Title, _ = attr.(string)
