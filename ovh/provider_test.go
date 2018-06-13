@@ -122,3 +122,20 @@ func testAccCheckPublicCloudExists(t *testing.T) {
 	t.Logf("Read Cloud Project %s -> status: '%s', desc: '%s'", endpoint, r.Status, r.Description)
 
 }
+
+func testAccCheckDomainZoneExists(t *testing.T) {
+	type domainZoneResponse struct {
+		NameServers []string `json:"nameServers"`
+	}
+
+	r := domainZoneResponse{}
+
+	endpoint := fmt.Sprintf("/domain/zone/%s", os.Getenv("OVH_ZONE"))
+
+	err := testAccOVHClient.Get(endpoint, &r)
+	if err != nil {
+		t.Fatalf("Error: %q\n", err)
+	}
+	t.Logf("Read Domain Zone %s -> nameservers: '%v'", endpoint, r.NameServers)
+
+}
