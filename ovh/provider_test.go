@@ -70,6 +70,11 @@ func testAccPreCheck(t *testing.T) {
 		t.Fatal("OVH_ZONE must be set for acceptance tests")
 	}
 
+	v = os.Getenv("OVH_IPLB_SERVICE")
+	if v == "" {
+		t.Fatal("OVH_IPLB_SERVICE must be set for acceptance tests")
+	}
+
 	if testAccOVHClient == nil {
 		config := Config{
 			Endpoint:          os.Getenv("OVH_ENDPOINT"),
@@ -123,6 +128,26 @@ func testAccCheckPublicCloudExists(t *testing.T) {
 
 }
 
+func testAccCheckIpLoadbalancingExists(t *testing.T) {
+	type iplbResponse struct {
+		ServiceName string `json:"serviceName"`
+		State       string `json:"state"`
+	}
+
+	r := iplbResponse{}
+
+	endpoint := fmt.Sprintf("/ipLoadbalancing/%s", os.Getenv("OVH_IPLB_SERVICE"))
+
+
+	err := testAccOVHClient.Get(endpoint, &r)
+	if err != nil {
+		t.Fatalf("Error: %q\n", err)
+	}
+	t.Logf("Read IPLB service %s -> state: '%s', serviceName: '%s'", endpoint, r.State, r.ServiceName)
+
+}
+
+
 func testAccCheckDomainZoneExists(t *testing.T) {
 	type domainZoneResponse struct {
 		NameServers []string `json:"nameServers"`
@@ -136,6 +161,7 @@ func testAccCheckDomainZoneExists(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error: %q\n", err)
 	}
+
 	t.Logf("Read Domain Zone %s -> nameservers: '%v'", endpoint, r.NameServers)
 
 }
