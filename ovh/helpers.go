@@ -3,10 +3,32 @@ package ovh
 import (
 	"bytes"
 	"fmt"
+	"net"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/ovh/go-ovh/ovh"
 )
+
+func validateIp(value string) error {
+	if ip := net.ParseIP(value); ip != nil {
+		return nil
+	}
+	return fmt.Errorf("Value %s is not a valid IP", value)
+}
+
+func validateIpV6(value string) error {
+	if ip := net.ParseIP(value); ip != nil && ip.To4() == nil && ip.To16() != nil {
+		return nil
+	}
+	return fmt.Errorf("Value %s is not a valid IPv6", value)
+}
+
+func validateIpV4(value string) error {
+	if ip := net.ParseIP(value); ip != nil && ip.To4() != nil {
+		return nil
+	}
+	return fmt.Errorf("Value %s is not a valid IPv4", value)
+}
 
 func validateStringEnum(value string, enum []string) error {
 	missing := true
