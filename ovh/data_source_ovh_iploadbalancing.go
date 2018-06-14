@@ -1,0 +1,308 @@
+package ovh
+
+import (
+	"fmt"
+	"log"
+
+	"github.com/hashicorp/terraform/helper/hashcode"
+	"github.com/hashicorp/terraform/helper/schema"
+)
+
+func dataSourceIpLoadbalancing() *schema.Resource {
+	return &schema.Resource{
+		Read: dataSourceIpLoadbalancingRead,
+		Schema: map[string]*schema.Schema{
+			"ipv6": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+					err := validateIpV6(v.(string))
+					if err != nil {
+						errors = append(errors, err)
+					}
+					return
+				},
+			},
+			"ipv4": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+					err := validateIpV4(v.(string))
+					if err != nil {
+						errors = append(errors, err)
+					}
+					return
+				},
+			},
+
+			"zone": &schema.Schema{
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
+			"offer": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"service_name": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"ip_loadbalancing": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+					err := validateIp(v.(string))
+					if err != nil {
+						errors = append(errors, err)
+					}
+					return
+				},
+			},
+			"state": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+					err := validateStringEnum(v.(string), []string{"blacklisted", "deleted", "free", "ok", "quarantined", "suspended"})
+					if err != nil {
+						errors = append(errors, err)
+					}
+					return
+				},
+			},
+
+			"vrack_eligibility": &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"vrack_name": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"display_name": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"ssl_configuration": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+					err := validateStringEnum(v.(string), []string{"intermediate", "modern"})
+					if err != nil {
+						errors = append(errors, err)
+					}
+					return
+				},
+			},
+
+			// additional exported attributes
+			"metrics_token": &schema.Schema{
+				Type:      schema.TypeString,
+				Sensitive: true,
+				Computed:  true,
+			},
+			"orderable_zone": &schema.Schema{
+				Type:     schema.TypeSet,
+				Computed: true,
+				Set:      orderableZoneHash,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": &schema.Schema{
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"plan_code": &schema.Schema{
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+type IpLoadbalancing struct {
+	IPv6             string                          `json:"ipv6,omitempty"`
+	IPv4             string                          `json:"ipv4,omitempty"`
+	MetricsToken     string                          `json:"metricsToken,omitempty"`
+	Zone             []string                        `json:"zone"`
+	Offer            string                          `json:"offer"`
+	ServiceName      string                          `json:"serviceName"`
+	IpLoadbalancing  string                          `json:"ipLoadbalancing"`
+	State            string                          `json:"state"`
+	OrderableZones   []*IpLoadbalancingOrderableZone `json:"orderableZone"`
+	VrackEligibility bool                            `json:"vrackEligibility"`
+	VrackName        string                          `json:"vrackName"`
+	SslConfiguration string                          `json:"sslConfiguration"`
+	DisplayName      string                          `json:"displayName"`
+}
+
+type IpLoadbalancingOrderableZone struct {
+	Name     string `json:"name"`
+	PlanCode string `json:"plan_code"`
+}
+
+func dataSourceIpLoadbalancingRead(d *schema.ResourceData, meta interface{}) error {
+	config := meta.(*Config)
+	log.Printf("[DEBUG] Will list available iploadbalancing services")
+
+	response := []string{}
+	err := config.OVHClient.Get("/ipLoadbalancing", &response)
+
+	if err != nil {
+		return fmt.Errorf("Error calling /ipLoadbalancing:\n\t %q", err)
+	}
+
+	filtered_iplbs := []*IpLoadbalancing{}
+
+	for _, serviceName := range response {
+		iplb := &IpLoadbalancing{}
+		err := config.OVHClient.Get(fmt.Sprintf("/ipLoadbalancing/%s", serviceName), &iplb)
+
+		if err != nil {
+			return fmt.Errorf("Error calling /ipLoadbalancing/%s:\n\t %q", serviceName, err)
+		}
+
+		if v, ok := d.GetOk("ipv6"); ok && v.(string) != iplb.IPv6 {
+			continue
+		}
+		if v, ok := d.GetOk("ipv4"); ok && v.(string) != iplb.IPv4 {
+			continue
+		}
+		if v, ok := d.GetOk("zone"); ok && !zonesEquals(v.([]string), iplb.Zone) {
+			continue
+		}
+		if v, ok := d.GetOk("offer"); ok && v.(string) != iplb.Offer {
+			continue
+		}
+		if v, ok := d.GetOk("service_name"); ok && v.(string) != iplb.ServiceName {
+			continue
+		}
+		if v, ok := d.GetOk("ip_loadbalancing"); ok && v.(string) != iplb.IpLoadbalancing {
+			continue
+		}
+		if v, ok := d.GetOk("state"); ok && v.(string) != iplb.State {
+			continue
+		}
+		if v, ok := d.GetOk("vrack_eligibility"); ok && v.(bool) != iplb.VrackEligibility {
+			continue
+		}
+		if v, ok := d.GetOk("vrack_name"); ok && v.(string) != iplb.VrackName {
+			continue
+		}
+		if v, ok := d.GetOk("display_name"); ok && v.(string) != iplb.DisplayName {
+			continue
+		}
+		if v, ok := d.GetOk("ssl_configuration"); ok && v.(string) != iplb.SslConfiguration {
+			continue
+		}
+		filtered_iplbs = append(filtered_iplbs, iplb)
+	}
+
+	if len(filtered_iplbs) < 1 {
+		return fmt.Errorf("Your query returned no results. " +
+			"Please change your search criteria and try again.")
+	}
+
+	if len(filtered_iplbs) > 1 {
+		return fmt.Errorf("Your query returned more than one result." +
+			" Please try a more specific search criteria")
+	}
+
+	dataSourceIpLoadbalancingAttributes(d, filtered_iplbs[0])
+
+	return nil
+}
+
+// dataSourceIpLoadbalancingAttributes populates the fields of an ipLoadbalancing datasource.
+func dataSourceIpLoadbalancingAttributes(d *schema.ResourceData, iplb *IpLoadbalancing) error {
+	log.Printf("[DEBUG] ovh_iploadbalancing details: %#v", iplb)
+
+	if iplb.ServiceName == "" {
+		return fmt.Errorf("serviceName cannot be empty")
+	}
+	if iplb.Zone == nil {
+		return fmt.Errorf("zone cannot be nil")
+	}
+	if iplb.Offer == "" {
+		return fmt.Errorf("offer cannot be empty")
+	}
+	if iplb.IpLoadbalancing == "" {
+		return fmt.Errorf("ipLoadbalancing cannot be empty")
+	}
+	if iplb.State == "" {
+		return fmt.Errorf("state cannot be empty")
+	}
+
+	d.SetId(iplb.ServiceName)
+	d.Set("ipv6", iplb.IPv6)
+	d.Set("ipv4", iplb.IPv4)
+	d.Set("zone", iplb.Zone)
+	d.Set("offer", iplb.Offer)
+	d.Set("service_name", iplb.ServiceName)
+	d.Set("ip_loadbalancing", iplb.IpLoadbalancing)
+	d.Set("state", iplb.State)
+	d.Set("vrack_eligibility", iplb.VrackEligibility)
+	d.Set("vrack_name", iplb.VrackName)
+	d.Set("display_name", iplb.DisplayName)
+	d.Set("ssl_configuration", iplb.SslConfiguration)
+	d.Set("metrics_token", iplb.MetricsToken)
+
+	// Set the orderable_zone
+	var orderableZone []map[string]interface{}
+	for _, v := range iplb.OrderableZones {
+		zone := make(map[string]interface{})
+		zone["name"] = v.Name
+		zone["plan_code"] = v.PlanCode
+
+		orderableZone = append(orderableZone, zone)
+	}
+	err := d.Set("orderable_zone", orderableZone)
+	if err != nil {
+		log.Printf("[DEBUG] Unable to set orderable_zone: %s", err)
+	}
+
+	return nil
+}
+
+func orderableZoneHash(v interface{}) int {
+	r := v.(map[string]interface{})
+	return hashcode.String(r["name"].(string))
+}
+
+func zonesEquals(a, b []string) bool {
+	if a == nil && b == nil {
+		return true
+	}
+
+	if a == nil || b == nil {
+		return false
+	}
+
+	if len(a) != len(b) {
+		return false
+	}
+
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+
+	return true
+}
