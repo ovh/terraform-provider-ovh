@@ -3,6 +3,9 @@ package ovh
 import (
 	"bytes"
 	"fmt"
+
+	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/ovh/go-ovh/ovh"
 )
 
 func validateStringEnum(value string, enum []string) error {
@@ -61,4 +64,15 @@ func conditionalAttributeBool(buff *bytes.Buffer, name string, val *bool) {
 	if val != nil {
 		buff.WriteString(fmt.Sprintf("  %s = %v\n", name, *val))
 	}
+}
+
+// CheckDeleted checks the error to see if it's a 404 (Not Found) and, if so,
+// sets the resource ID to the empty string instead of throwing an error.
+func CheckDeleted(d *schema.ResourceData, err error, endpoint string) error {
+	if err.(*ovh.APIError).Code == 404 {
+		d.SetId("")
+		return nil
+	}
+
+	return fmt.Errorf("calling %s:\n\t %s", endpoint, err.Error())
 }
