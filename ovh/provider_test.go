@@ -138,9 +138,30 @@ func testAccCheckIpLoadbalancingExists(t *testing.T) {
 
 	endpoint := fmt.Sprintf("/ipLoadbalancing/%s", os.Getenv("OVH_IPLB_SERVICE"))
 
+
 	err := testAccOVHClient.Get(endpoint, &r)
 	if err != nil {
 		t.Fatalf("Error: %q\n", err)
 	}
 	t.Logf("Read IPLB service %s -> state: '%s', serviceName: '%s'", endpoint, r.State, r.ServiceName)
+
+}
+
+
+func testAccCheckDomainZoneExists(t *testing.T) {
+	type domainZoneResponse struct {
+		NameServers []string `json:"nameServers"`
+	}
+
+	r := domainZoneResponse{}
+
+	endpoint := fmt.Sprintf("/domain/zone/%s", os.Getenv("OVH_ZONE"))
+
+	err := testAccOVHClient.Get(endpoint, &r)
+	if err != nil {
+		t.Fatalf("Error: %q\n", err)
+	}
+
+	t.Logf("Read Domain Zone %s -> nameservers: '%v'", endpoint, r.NameServers)
+
 }
