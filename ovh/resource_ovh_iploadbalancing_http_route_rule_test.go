@@ -74,7 +74,7 @@ func testAccCheckIPLoadbalancingRouteHTTPRuleDestroy(state *terraform.State) err
 
 		config := testAccProvider.Meta().(*Config)
 		endpoint := fmt.Sprintf(
-			"/ipLoadbalancing/%s/http/route/%d/rule/%s",
+			"/ipLoadbalancing/%s/http/route/%s/rule/%s",
 			os.Getenv("OVH_IPLB_SERVICE"),
 			resource.Primary.Attributes["route_id"],
 			resource.Primary.ID,
