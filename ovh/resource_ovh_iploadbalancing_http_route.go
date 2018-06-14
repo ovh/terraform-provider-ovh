@@ -6,23 +6,6 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-// IPLoadbalancingRouteHTTPAction Action triggered when all rules match
-type IPLoadbalancingRouteHTTPAction struct {
-	Target string `json:"target,omitempty"` // Farm ID for "farm" action type or URL template for "redirect" action. You may use ${uri}, ${protocol}, ${host}, ${port} and ${path} variables in redirect target
-	Status int    `json:"status,omitempty"` // HTTP status code for "redirect" and "reject" actions
-	Type   string `json:"type,omitempty"`   // Action to trigger if all the rules of this route matches
-}
-
-//IPLoadbalancingRouteHTTP HTTP Route
-type IPLoadbalancingRouteHTTP struct {
-	Status      string                          `json:"status,omitempty"`      //Route status. Routes in "ok" state are ready to operate
-	Weight      int                             `json:"weight,omitempty"`      //Route priority ([0..255]). 0 if null. Highest priority routes are evaluated first. Only the first matching route will trigger an action
-	Action      *IPLoadbalancingRouteHTTPAction `json:"action,omitempty"`      //Action triggered when all rules match
-	RouteID     int                             `json:"routeId,omitempty"`     //Id of your route
-	DisplayName string                          `json:"displayName,omitempty"` //Human readable name for your route, this field is for you
-	FrontendID  int                             `json:"frontendId,omitempty"`  //Route traffic for this frontend
-}
-
 func resourceIPLoadbalancingRouteHTTP() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceIPLoadbalancingRouteHTTPCreate,
@@ -74,6 +57,23 @@ func resourceIPLoadbalancingRouteHTTP() *schema.Resource {
 	}
 }
 
+// IPLoadbalancingRouteHTTPAction Action triggered when all rules match
+type IPLoadbalancingRouteHTTPAction struct {
+	Target string `json:"target,omitempty"` // Farm ID for "farm" action type or URL template for "redirect" action. You may use ${uri}, ${protocol}, ${host}, ${port} and ${path} variables in redirect target
+	Status int    `json:"status,omitempty"` // HTTP status code for "redirect" and "reject" actions
+	Type   string `json:"type,omitempty"`   // Action to trigger if all the rules of this route matches
+}
+
+//IPLoadbalancingRouteHTTP HTTP Route
+type IPLoadbalancingRouteHTTP struct {
+	Status      string                          `json:"status,omitempty"`      //Route status. Routes in "ok" state are ready to operate
+	Weight      int                             `json:"weight,omitempty"`      //Route priority ([0..255]). 0 if null. Highest priority routes are evaluated first. Only the first matching route will trigger an action
+	Action      *IPLoadbalancingRouteHTTPAction `json:"action,omitempty"`      //Action triggered when all rules match
+	RouteID     int                             `json:"routeId,omitempty"`     //Id of your route
+	DisplayName string                          `json:"displayName,omitempty"` //Human readable name for your route, this field is for you
+	FrontendID  int                             `json:"frontendId,omitempty"`  //Route traffic for this frontend
+}
+
 func resourceIPLoadbalancingRouteHTTPCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
@@ -102,7 +102,7 @@ func resourceIPLoadbalancingRouteHTTPCreate(d *schema.ResourceData, meta interfa
 
 	d.SetId(fmt.Sprintf("%d", resp.RouteID))
 
-	return nil
+	return resourceIPLoadbalancingRouteHTTPRead(d, meta)
 }
 
 func resourceIPLoadbalancingRouteHTTPRead(d *schema.ResourceData, meta interface{}) error {
@@ -148,7 +148,7 @@ func resourceIPLoadbalancingRouteHTTPUpdate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("calling %s:\n\t %s", endpoint, err.Error())
 	}
 
-	return nil
+	return resourceIPLoadbalancingRouteHTTPRead(d, meta)
 }
 
 func resourceIPLoadbalancingRouteHTTPDelete(d *schema.ResourceData, meta interface{}) error {

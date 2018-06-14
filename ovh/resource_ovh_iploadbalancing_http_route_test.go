@@ -3,101 +3,65 @@ package ovh
 import (
 	"fmt"
 	"os"
-	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
 
-type TestAccIPLoadbalancingRouteHTTPActionResponse struct {
-	Target string `json:"target,omitempty"`
-	Status int    `json:"status,omitempty"`
-	Type   string `json:"type"`
-}
-
-type TestAccIPLoadbalancingRouteHTTPResponse struct {
-	Weight      int                                           `json:"weight"`
-	Action      TestAccIPLoadbalancingRouteHTTPActionResponse `json:"action"`
-	RouteID     int                                           `json:"routeId"`
-	DisplayName string                                        `json:"displayName"`
-	FrontendID  int                                           `json:"frontendId"`
-}
-
-func (r *TestAccIPLoadbalancingRouteHTTPResponse) Equals(c *TestAccIPLoadbalancingRouteHTTPResponse) bool {
-	r.RouteID = 0
-	if reflect.DeepEqual(r, c) {
-		return true
-	}
-	return false
-}
-
-func testAccIPLoadbalancingRouteHTTPTestStep(name string, weight int, actionStatus int, actionTarget string, actionType string) resource.TestStep {
-	expected := &TestAccIPLoadbalancingRouteHTTPResponse{
-		Weight:      weight,
-		DisplayName: name,
-		Action: TestAccIPLoadbalancingRouteHTTPActionResponse{
-			Target: actionTarget,
-			Status: actionStatus,
-			Type:   actionType,
-		},
-	}
-
-	config := fmt.Sprintf(`
-	resource "ovh_iploadbalancing_http_route" "testroute" {
-		service_name = "%s"
-		display_name = "%s"
-		weight = %d
-
-		action {
-		  status = %d
-		  target = "%s"
-		  type = "%s"
-		}
-	}
-	`, os.Getenv("OVH_IPLB_SERVICE"), name, weight, actionStatus, actionTarget, actionType)
-
-	return resource.TestStep{
-		Config: config,
-		Check: resource.ComposeTestCheckFunc(
-			testAccCheckIPLoadbalancingRouteHTTPMatches(expected),
-		),
-	}
-}
-
 func TestAccIPLoadbalancingRouteHTTPBasicCreate(t *testing.T) {
+	serviceName := os.Getenv("OVH_IPLB_SERVICE")
+	name := "test-route-redirect-https"
+	weight := "0"
+	actionStatus := "302"
+	actionTarget := "https://$${host}$${path}$${arguments}"
+	actionType := "redirect"
+
+	config := fmt.Sprintf(
+		testAccCheckOvhIpLoadbalancingHttpRouteConfig_basic,
+		serviceName,
+		name,
+		weight,
+		actionStatus,
+		actionTarget,
+		actionType,
+	)
+
 	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccCheckIpLoadbalancingRouteHTTPPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIPLoadbalancingRouteHTTPDestroy,
 		Steps: []resource.TestStep{
-			testAccIPLoadbalancingRouteHTTPTestStep("test-route-redirect-https", 0, 302, "https://${host}${path}${arguments}", "redirect"),
+			resource.TestStep{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"ovh_iploadbalancing_http_route.testroute", "service_name", serviceName),
+					resource.TestCheckResourceAttr(
+						"ovh_iploadbalancing_http_route.testroute", "display_name", name),
+					resource.TestCheckResourceAttr(
+						"ovh_iploadbalancing_http_route.testroute", "weight", weight),
+					resource.TestCheckResourceAttr(
+						"ovh_iploadbalancing_http_route.testroute", "action.#", "1"),
+					resource.TestCheckResourceAttr(
+						"ovh_iploadbalancing_http_route.testroute", "action.859787636.status", actionStatus),
+					resource.TestCheckResourceAttr(
+						"ovh_iploadbalancing_http_route.testroute", "action.859787636.target", strings.Replace(actionTarget, "$$", "$", -1)),
+					resource.TestCheckResourceAttr(
+						"ovh_iploadbalancing_http_route.testroute", "action.859787636.type", actionType),
+				),
+			},
 		},
 	})
 }
 
-func testAccCheckIPLoadbalancingRouteHTTPMatches(expected *TestAccIPLoadbalancingRouteHTTPResponse) resource.TestCheckFunc {
-	return func(state *terraform.State) error {
-		name := "ovh_iploadbalancing_http_route.testroute"
-		resource, ok := state.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-		config := testAccProvider.Meta().(*Config)
-		endpoint := fmt.Sprintf("/ipLoadbalancing/%s/http/route/%s", os.Getenv("OVH_IPLB_SERVICE"), resource.Primary.ID)
-		response := &TestAccIPLoadbalancingRouteHTTPResponse{}
-		err := config.OVHClient.Get(endpoint, response)
-		if err != nil {
-			return fmt.Errorf("calling GET %s :\n\t %s", endpoint, err.Error())
-		}
-		if !response.Equals(expected) {
-			return fmt.Errorf("%s %s state differs from expected", name, resource.Primary.ID)
-		}
-		return nil
-	}
+func testAccCheckIpLoadbalancingRouteHTTPPreCheck(t *testing.T) {
+	testAccPreCheck(t)
+	testAccCheckIpLoadbalancingExists(t)
 }
 
 func testAccCheckIPLoadbalancingRouteHTTPDestroy(state *terraform.State) error {
-	leftovers := false
 	for _, resource := range state.RootModule().Resources {
 		if resource.Type != "ovh_iploadbalancing_http_route" {
 			continue
@@ -107,11 +71,22 @@ func testAccCheckIPLoadbalancingRouteHTTPDestroy(state *terraform.State) error {
 		endpoint := fmt.Sprintf("/ipLoadbalancing/%s/http/route/%s", os.Getenv("OVH_IPLB_SERVICE"), resource.Primary.ID)
 		err := config.OVHClient.Get(endpoint, nil)
 		if err == nil {
-			leftovers = true
+			return fmt.Errorf("IpLoadbalancing route still exists")
 		}
-	}
-	if leftovers {
-		return fmt.Errorf("IpLoadbalancing route still exists")
 	}
 	return nil
 }
+
+const testAccCheckOvhIpLoadbalancingHttpRouteConfig_basic = `
+resource "ovh_iploadbalancing_http_route" "testroute" {
+	service_name = "%s"
+	display_name = "%s"
+	weight = %s
+
+	action {
+	  status = %s
+	  target = "%s"
+	  type = "%s"
+	}
+}
+`
