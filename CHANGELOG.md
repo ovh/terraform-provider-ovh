@@ -12,7 +12,7 @@ in next release.
 * r/ovh_publiccloud_private_network_subnet: Deprecated in favor of r/ovh_cloud_network_private_subnet ([#31](https://github.com/terraform-providers/terraform-provider-ovh/pull/31))
 * r/ovh_publiccloud_user: Deprecated in favor of r/ovh_cloud_user ([#31](https://github.com/terraform-providers/terraform-provider-ovh/pull/31))
 * r/ovh_vrack_publiccloud_attachment: Deprecated in favor of r/ovh_vrack_cloudproject ([#31](https://github.com/terraform-providers/terraform-provider-ovh/pull/31))
--
+
 FEATURES
 
 * __New Datasource:__ `ovh_bank_account` ([#34](https://github.com/terraform-providers/terraform-provider-ovh/pull/34))
@@ -40,7 +40,6 @@ BUG FIXES:
 
 * r/ovh_domain_zone_record: Fixes #25 by id removal, cleans up naming and struct repetition for domain zone record resource
 * provider: Fixes #27 by switching to /auth/currentCredential for client validation
-
 
 ## 0.2.0 (January 10, 2018)
 
