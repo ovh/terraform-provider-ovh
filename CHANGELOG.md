@@ -1,4 +1,47 @@
 ## 0.2.1 (Unreleased)
+
+BACKWARDS INCOMPATIBILITIES / NOTES:
+
+Resources and datasources names now reflects the OVH API endpoints. As such,
+resources & datasources that doesn't comply are now deprecated and will be removed
+in next release.
+
+* d/ovh_publiccloud_region: Deprecated in favor of d/ovh_cloud_region ([#31](https://github.com/terraform-providers/terraform-provider-ovh/pull/31))
+* d/ovh_publiccloud_regions: Deprecated in favor of d/ovh_cloud_regions ([#31](https://github.com/terraform-providers/terraform-provider-ovh/pull/31))
+* r/ovh_publiccloud_private_network: Deprecated in favor of r/ovh_cloud_network_private ([#31](https://github.com/terraform-providers/terraform-provider-ovh/pull/31))
+* r/ovh_publiccloud_private_network_subnet: Deprecated in favor of r/ovh_cloud_network_private_subnet ([#31](https://github.com/terraform-providers/terraform-provider-ovh/pull/31))
+* r/ovh_publiccloud_user: Deprecated in favor of r/ovh_cloud_user ([#31](https://github.com/terraform-providers/terraform-provider-ovh/pull/31))
+* r/ovh_vrack_publiccloud_attachment: Deprecated in favor of r/ovh_vrack_cloudproject ([#31](https://github.com/terraform-providers/terraform-provider-ovh/pull/31))
+-
+FEATURES
+
+* __New Datasource:__ `ovh_bank_account` ([#34](https://github.com/terraform-providers/terraform-provider-ovh/pull/34))
+* __New Datasource:__ `ovh_cloud_region` ([#31](https://github.com/terraform-providers/terraform-provider-ovh/pull/31))
+* __New Datasource:__ `ovh_cloud_regions` ([#31](https://github.com/terraform-providers/terraform-provider-ovh/pull/31))
+* __New Datasource:__ `ovh_credit_card` ([#34](https://github.com/terraform-providers/terraform-provider-ovh/pull/34))
+* __New Datasource:__ `ovh_domain_zone` ([#39](https://github.com/terraform-providers/terraform-provider-ovh/pull/39))
+* __New Datasource:__ `ovh_iploadbalancing` ([#40](https://github.com/terraform-providers/terraform-provider-ovh/pull/40))
+* __New Resource:__ `ovh_iploadbalancing_tcp_farm` ([#32](https://github.com/terraform-providers/terraform-provider-ovh/pull/32))
+* __New Resource:__ `ovh_iploadbalancing_tcp_farm_server` ([#33](https://github.com/terraform-providers/terraform-provider-ovh/pull/33))
+* __New Resource:__ `ovh_iploadbalancing_http_route` ([#35](https://github.com/terraform-providers/terraform-provider-ovh/pull/35))
+* __New Resource:__ `ovh_iploadbalancing_http_route_rule` ([#35](https://github.com/terraform-providers/terraform-provider-ovh/pull/35))
+* __New Resource:__ `ovh_domain_zone_redirection` ([#36](https://github.com/terraform-providers/terraform-provider-ovh/pull/36))
+* __New Resource:__ `ovh_cloud_network_private` ([#31](https://github.com/terraform-providers/terraform-provider-ovh/pull/31))
+* __New Resource:__ `ovh_cloud_network_private_subnet` ([#31](https://github.com/terraform-providers/terraform-provider-ovh/pull/31))
+* __New Resource:__ `ovh_cloud_user` ([#31](https://github.com/terraform-providers/terraform-provider-ovh/pull/31))
+* __New Resource:__ `ovh_vrack_cloudproject` ([#31](https://github.com/terraform-providers/terraform-provider-ovh/pull/31))
+
+IMPROVEMENTS
+
+* Various doc improvements ([#14](https://github.com/terraform-providers/terraform-provider-ovh/pull/14)),([#16](https://github.com/terraform-providers/terraform-provider-ovh/pull/16)),([#17](https://github.com/terraform-providers/terraform-provider-ovh/pull/17)),([#26](https://github.com/terraform-providers/terraform-provider-ovh/pull/26))
+* provider: Fallback to get current home directory ([#19](https://github.com/terraform-providers/terraform-provider-ovh/pull/19))
+
+BUG FIXES:
+
+* r/ovh_domain_zone_record: fixes #25 by id removal, cleans up naming and struct repetition for domain zone record resource
+* provider: fixes #27 by switching to /auth/currentCredential for client validation
+
+
 ## 0.2.0 (January 10, 2018)
 
 BACKWARDS INCOMPATIBILITIES / NOTES:
