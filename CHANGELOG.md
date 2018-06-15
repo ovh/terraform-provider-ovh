@@ -6,12 +6,12 @@ Resources and datasources names now reflects the OVH API endpoints. As such,
 resources & datasources that doesn't comply are now deprecated and will be removed
 in next release.
 
-* d/ovh_publiccloud_region: Deprecated in favor of d/ovh_cloud_region ([#31](https://github.com/terraform-providers/terraform-provider-ovh/pull/31))
-* d/ovh_publiccloud_regions: Deprecated in favor of d/ovh_cloud_regions ([#31](https://github.com/terraform-providers/terraform-provider-ovh/pull/31))
-* r/ovh_publiccloud_private_network: Deprecated in favor of r/ovh_cloud_network_private ([#31](https://github.com/terraform-providers/terraform-provider-ovh/pull/31))
-* r/ovh_publiccloud_private_network_subnet: Deprecated in favor of r/ovh_cloud_network_private_subnet ([#31](https://github.com/terraform-providers/terraform-provider-ovh/pull/31))
-* r/ovh_publiccloud_user: Deprecated in favor of r/ovh_cloud_user ([#31](https://github.com/terraform-providers/terraform-provider-ovh/pull/31))
-* r/ovh_vrack_publiccloud_attachment: Deprecated in favor of r/ovh_vrack_cloudproject ([#31](https://github.com/terraform-providers/terraform-provider-ovh/pull/31))
+* data-source/ovh_publiccloud_region: Deprecated in favor of data-source/ovh_cloud_region ([#31](https://github.com/terraform-providers/terraform-provider-ovh/pull/31))
+* data-source/ovh_publiccloud_regions: Deprecated in favor of data-source/ovh_cloud_regions ([#31](https://github.com/terraform-providers/terraform-provider-ovh/pull/31))
+* resource/ovh_publiccloud_private_network: Deprecated in favor of resource/ovh_cloud_network_private ([#31](https://github.com/terraform-providers/terraform-provider-ovh/pull/31))
+* resource/ovh_publiccloud_private_network_subnet: Deprecated in favor of resource/ovh_cloud_network_private_subnet ([#31](https://github.com/terraform-providers/terraform-provider-ovh/pull/31))
+* resource/ovh_publiccloud_user: Deprecated in favor of resource/ovh_cloud_user ([#31](https://github.com/terraform-providers/terraform-provider-ovh/pull/31))
+* resource/ovh_vrack_publiccloud_attachment: Deprecated in favor of resource/ovh_vrack_cloudproject ([#31](https://github.com/terraform-providers/terraform-provider-ovh/pull/31))
 
 FEATURES
 
@@ -38,8 +38,8 @@ IMPROVEMENTS
 
 BUG FIXES:
 
-* r/ovh_domain_zone_record: Fixes #25 by id removal, cleans up naming and struct repetition for domain zone record resource
-* provider: Fixes #27 by switching to /auth/currentCredential for client validation
+* resource/ovh_domain_zone_record: Fixes [GH-25] by id removal, cleans up naming and struct repetition for domain zone record resource
+* provider: Fixes [GH-27] by switching to `/auth/currentCredential` for client validation
 
 ## 0.2.0 (January 10, 2018)
 
