@@ -1,4 +1,4 @@
-## 0.2.1 (Unreleased)
+## 0.3.0 (Unreleased)
 
 BACKWARDS INCOMPATIBILITIES / NOTES:
 
@@ -38,8 +38,8 @@ IMPROVEMENTS
 
 BUG FIXES:
 
-* r/ovh_domain_zone_record: fixes #25 by id removal, cleans up naming and struct repetition for domain zone record resource
-* provider: fixes #27 by switching to /auth/currentCredential for client validation
+* r/ovh_domain_zone_record: Fixes #25 by id removal, cleans up naming and struct repetition for domain zone record resource
+* provider: Fixes #27 by switching to /auth/currentCredential for client validation
 
 
 ## 0.2.0 (January 10, 2018)
