@@ -1,6 +1,6 @@
 ## 0.3.0 (Unreleased)
 
-BACKWARDS INCOMPATIBILITIES / NOTES:
+DEPRECATIONS / NOTES:
 
 Resources and datasources names now reflects the OVH API endpoints. As such,
 resources & datasources that doesn't comply are now deprecated and will be removed
