@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"net"
+	"strings"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/ovh/go-ovh/ovh"
@@ -117,4 +118,11 @@ func stringsFromSchema(d *schema.ResourceData, id string) []string {
 		}
 	}
 	return xs
+}
+
+func normalizeIPSubnet(ip string) (string, error) {
+	if !strings.Contains(ip, "/") {
+		ip += "/32"
+	}
+	return ip, nil
 }
