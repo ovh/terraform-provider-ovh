@@ -13,10 +13,6 @@ import (
 	"time"
 )
 
-const (
-	test_prefix = "testacc-terraform"
-)
-
 func init() {
 	resource.AddTestSweepers("ovh_domain_zone_record", &resource.Sweeper{
 		Name: "ovh_domain_zone_record",
