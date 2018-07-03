@@ -8,7 +8,88 @@ import (
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"log"
+	"strings"
+	"time"
 )
+
+const (
+	test_prefix = "testacc-terraform"
+)
+
+func init() {
+	resource.AddTestSweepers("ovh_domain_zone_record", &resource.Sweeper{
+		Name: "ovh_domain_zone_record",
+		F:    testSweepDomainZoneRecord,
+	})
+}
+
+func testSweepDomainZoneRecord(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	zoneName := os.Getenv("OVH_ZONE")
+	if zoneName == "" {
+		return fmt.Errorf("OVH_ZONE must be set")
+	}
+
+	dz := &DomainZone{}
+
+	if err := client.Get(fmt.Sprintf("/domain/zone/%s", zoneName), &dz); err != nil {
+		return fmt.Errorf("Error calling /domain/zone/%s:\n\t %q", zoneName, err)
+	}
+
+	records := make([]int64, 0)
+	if err := client.Get(fmt.Sprintf("/domain/zone/%s/record", zoneName), &records); err != nil {
+		return fmt.Errorf("Error calling /domain/zone/%s:\n\t %q", zoneName, err)
+	}
+
+	if len(records) == 0 {
+		log.Print("[DEBUG] No record to sweep")
+		return nil
+	}
+
+	for _, rec := range records {
+		record := &OvhDomainZoneRecord{}
+
+		if err := client.Get(fmt.Sprintf("/domain/zone/%s/record/%v", zoneName, rec), &record); err != nil {
+			return fmt.Errorf("Error calling /domain/zone/%s/record/%v:\n\t %q", zoneName, rec, err)
+		}
+
+		if !strings.HasPrefix(record.SubDomain, test_prefix) {
+			continue
+		}
+
+		err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+			if err := client.Delete(fmt.Sprintf("/domain/zone/%s/record/%v", zoneName, rec), nil); err != nil {
+				return resource.RetryableError(err)
+			}
+			// Successful delete
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+		err := client.Post(
+			fmt.Sprintf("/domain/zone/%s/refresh", zoneName),
+			nil,
+			nil,
+		)
+
+		if err != nil {
+			return resource.RetryableError(fmt.Errorf("Error refresh OVH Zone: %s", err))
+		}
+		// Successful refresh
+		return nil
+	})
+
+	return nil
+}
 
 func TestAccOvhDomainZoneRecord_Basic(t *testing.T) {
 	var record OvhDomainZoneRecord
@@ -20,12 +101,11 @@ func TestAccOvhDomainZoneRecord_Basic(t *testing.T) {
 		CheckDestroy: testAccCheckOvhDomainZoneRecordDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRecordConfig_basic, zone),
+				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRecordConfig_basic, zone, test_prefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOvhDomainZoneRecordExists("ovh_domain_zone_record.foobar", &record),
-					testAccCheckOvhDomainZoneRecordAttributes(&record),
 					resource.TestCheckResourceAttr(
-						"ovh_domain_zone_record.foobar", "subdomain", "terraform"),
+						"ovh_domain_zone_record.foobar", "subdomain", test_prefix),
 					resource.TestCheckResourceAttr(
 						"ovh_domain_zone_record.foobar", "zone", zone),
 					resource.TestCheckResourceAttr(
@@ -48,12 +128,11 @@ func TestAccOvhDomainZoneRecord_Updated(t *testing.T) {
 		CheckDestroy: testAccCheckOvhDomainZoneRecordDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRecordConfig_basic, zone),
+				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRecordConfig_basic, zone, test_prefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOvhDomainZoneRecordExists("ovh_domain_zone_record.foobar", &record),
-					testAccCheckOvhDomainZoneRecordAttributes(&record),
 					resource.TestCheckResourceAttr(
-						"ovh_domain_zone_record.foobar", "subdomain", "terraform"),
+						"ovh_domain_zone_record.foobar", "subdomain", test_prefix),
 					resource.TestCheckResourceAttr(
 						"ovh_domain_zone_record.foobar", "zone", zone),
 					resource.TestCheckResourceAttr(
@@ -63,12 +142,11 @@ func TestAccOvhDomainZoneRecord_Updated(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRecordConfig_new_value_1, zone),
+				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRecordConfig_new_value_1, zone, test_prefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOvhDomainZoneRecordExists("ovh_domain_zone_record.foobar", &record),
-					testAccCheckOvhDomainZoneRecordAttributesUpdated_1(&record),
 					resource.TestCheckResourceAttr(
-						"ovh_domain_zone_record.foobar", "subdomain", "terraform"),
+						"ovh_domain_zone_record.foobar", "subdomain", test_prefix),
 					resource.TestCheckResourceAttr(
 						"ovh_domain_zone_record.foobar", "zone", zone),
 					resource.TestCheckResourceAttr(
@@ -78,12 +156,11 @@ func TestAccOvhDomainZoneRecord_Updated(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRecordConfig_new_value_2, zone),
+				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRecordConfig_new_value_2, zone, test_prefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOvhDomainZoneRecordExists("ovh_domain_zone_record.foobar", &record),
-					testAccCheckOvhDomainZoneRecordAttributesUpdated_2(&record),
 					resource.TestCheckResourceAttr(
-						"ovh_domain_zone_record.foobar", "subdomain", "terraform2"),
+						"ovh_domain_zone_record.foobar", "subdomain", fmt.Sprintf("%s2", test_prefix)),
 					resource.TestCheckResourceAttr(
 						"ovh_domain_zone_record.foobar", "zone", zone),
 					resource.TestCheckResourceAttr(
@@ -93,12 +170,11 @@ func TestAccOvhDomainZoneRecord_Updated(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRecordConfig_new_value_3, zone),
+				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRecordConfig_new_value_3, zone, test_prefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOvhDomainZoneRecordExists("ovh_domain_zone_record.foobar", &record),
-					testAccCheckOvhDomainZoneRecordAttributesUpdated_3(&record),
 					resource.TestCheckResourceAttr(
-						"ovh_domain_zone_record.foobar", "subdomain", "terraform3"),
+						"ovh_domain_zone_record.foobar", "subdomain", fmt.Sprintf("%s3", test_prefix)),
 					resource.TestCheckResourceAttr(
 						"ovh_domain_zone_record.foobar", "zone", zone),
 					resource.TestCheckResourceAttr(
@@ -166,65 +242,10 @@ func testAccCheckOvhDomainZoneRecordExists(n string, record *OvhDomainZoneRecord
 	}
 }
 
-func testAccCheckOvhDomainZoneRecordAttributes(record *OvhDomainZoneRecord) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
-		if record.Target != "192.168.0.10" {
-			return fmt.Errorf("Bad content: %#v", record)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckOvhDomainZoneRecordAttributesUpdated_1(record *OvhDomainZoneRecord) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
-		if record.Target != "192.168.0.11" {
-			return fmt.Errorf("Bad content: %#v", record)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckOvhDomainZoneRecordAttributesUpdated_2(record *OvhDomainZoneRecord) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
-		if record.Target != "192.168.0.11" {
-			return fmt.Errorf("Bad content: %#v", record)
-		}
-
-		if record.SubDomain != "terraform2" {
-			return fmt.Errorf("Bad content: %#v", record)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckOvhDomainZoneRecordAttributesUpdated_3(record *OvhDomainZoneRecord) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
-		if record.Target != "192.168.0.13" {
-			return fmt.Errorf("Bad content: %#v", record)
-		}
-
-		if record.SubDomain != "terraform3" {
-			return fmt.Errorf("Bad content: %#v", record)
-		}
-
-		if record.Ttl != 3604 {
-			return fmt.Errorf("Bad content: %#v", record)
-		}
-		return nil
-	}
-}
-
 const testAccCheckOvhDomainZoneRecordConfig_basic = `
 resource "ovh_domain_zone_record" "foobar" {
 	zone = "%s"
-	subdomain = "terraform"
+	subdomain = "%s"
 	target = "192.168.0.10"
 	fieldtype = "A"
 	ttl = 3600
@@ -233,7 +254,7 @@ resource "ovh_domain_zone_record" "foobar" {
 const testAccCheckOvhDomainZoneRecordConfig_new_value_1 = `
 resource "ovh_domain_zone_record" "foobar" {
 	zone = "%s"
-	subdomain = "terraform"
+	subdomain = "%s"
 	target = "192.168.0.11"
 	fieldtype = "A"
 	ttl = 3600
@@ -242,7 +263,7 @@ resource "ovh_domain_zone_record" "foobar" {
 const testAccCheckOvhDomainZoneRecordConfig_new_value_2 = `
 resource "ovh_domain_zone_record" "foobar" {
 	zone = "%s"
-	subdomain = "terraform2"
+	subdomain = "%s2"
 	target = "192.168.0.11"
 	fieldtype = "A"
 	ttl = 3600
@@ -251,7 +272,7 @@ resource "ovh_domain_zone_record" "foobar" {
 const testAccCheckOvhDomainZoneRecordConfig_new_value_3 = `
 resource "ovh_domain_zone_record" "foobar" {
 	zone = "%s"
-	subdomain = "terraform3"
+	subdomain = "%s3"
 	target = "192.168.0.13"
 	fieldtype = "A"
 	ttl = 3604
