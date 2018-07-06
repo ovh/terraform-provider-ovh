@@ -42,7 +42,7 @@ If you wish to work on the provider, you'll first need [Go](http://www.golang.or
 To compile the provider, run `make build`. This will build the provider and put the provider binary in the `$GOPATH/bin` directory.
 
 ```sh
-$ make bin
+$ make build
 ...
 $ $GOPATH/bin/terraform-provider-ovh
 ...
@@ -55,7 +55,7 @@ $ make test
 ```
 
 In order to run the full suite of Acceptance tests, run `make testacc`.
-
+You will need to setup some environment variable, see [doc/index.html](website/docs/index.html.markdown) for more information.
 *Note:* Acceptance tests create real resources, and often cost money to run.
 
 ```sh

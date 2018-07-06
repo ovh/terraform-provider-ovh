@@ -79,11 +79,22 @@ The following arguments are supported:
 In order to run the Acceptance Tests for development, the following environment
 variables must also be set:
 
+* `OVH_ENDPOINT` - possible value are: ovh-eu, ovh-ca, ovh-us, soyoustart-eu, soyoustart-ca, kimsufi-ca, kimsufi-eu, runabove-ca
+
+* `OVH_IPLB_SERVICE` - The id of the iplb you use
+
 * `OVH_VRACK` - The id of the vrack to use.
 
 * `OVH_PUBLIC_CLOUD` - The id of the public cloud project.
 
 * `OVH_ZONE` - The domain you own to test the domain_zone ressource.
 
-You should be able to use any OVH environment to develop on as long as the
-above environment variables are set.
+You will also need to [generate an ovh token](https://api.ovh.com/createToken/?GET=/*&POST=/*&PUT=/*&DELETE=/*) and use it to set the following environment variables:
+
+ * `OVH_APPLICATION_KEY`
+
+ * `OVH_APPLICATION_SECRET`
+
+ * `OVH_CONSUMER_KEY`
+
+You should be able to use any OVH environment to develop on as long as the above environment variables are set.
