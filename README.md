@@ -55,7 +55,7 @@ $ make test
 ```
 
 In order to run the full suite of Acceptance tests, run `make testacc`.
-
+You will need to setup some environment variable, see [doc/index.html](website/docs/index.html.markdown) for more information.
 *Note:* Acceptance tests create real resources, and often cost money to run.
 
 ```sh
