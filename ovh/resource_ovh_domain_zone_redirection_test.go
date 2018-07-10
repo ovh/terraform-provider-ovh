@@ -8,7 +8,84 @@ import (
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"log"
+	"strings"
+	"time"
 )
+
+func init() {
+	resource.AddTestSweepers("ovh_domain_zone_redirection", &resource.Sweeper{
+		Name: "ovh_domain_zone_redirection",
+		F:    testSweepDomainZoneRedirection,
+	})
+}
+
+func testSweepDomainZoneRedirection(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	zoneName := os.Getenv("OVH_ZONE")
+	if zoneName == "" {
+		return fmt.Errorf("OVH_ZONE must be set")
+	}
+
+	dz := &DomainZone{}
+
+	if err := client.Get(fmt.Sprintf("/domain/zone/%s", zoneName), &dz); err != nil {
+		return fmt.Errorf("Error calling /domain/zone/%s:\n\t %q", zoneName, err)
+	}
+
+	redirections := make([]int64, 0)
+	if err := client.Get(fmt.Sprintf("/domain/zone/%s/redirection", zoneName), &redirections); err != nil {
+		return fmt.Errorf("Error calling /domain/zone/%s:\n\t %q", zoneName, err)
+	}
+
+	if len(redirections) == 0 {
+		log.Print("[DEBUG] No redirection to sweep")
+		return nil
+	}
+
+	for _, rec := range redirections {
+		redirection := &OvhDomainZoneRedirection{}
+
+		if err := client.Get(fmt.Sprintf("/domain/zone/%s/redirection/%v", zoneName, rec), &redirection); err != nil {
+			return fmt.Errorf("Error calling /domain/zone/%s/redirection/%v:\n\t %q", zoneName, rec, err)
+		}
+
+		if !strings.HasPrefix(redirection.SubDomain, test_prefix) {
+			continue
+		}
+
+		err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+			if err := client.Delete(fmt.Sprintf("/domain/zone/%s/redirection/%v", zoneName, rec), nil); err != nil {
+				return resource.RetryableError(err)
+			}
+			// Successful delete
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+		err := client.Post(
+			fmt.Sprintf("/domain/zone/%s/refresh", zoneName),
+			nil,
+			nil,
+		)
+
+		if err != nil {
+			return resource.RetryableError(fmt.Errorf("Error refresh OVH Zone: %s", err))
+		}
+		// Successful refresh
+		return nil
+	})
+
+	return nil
+}
 
 func TestAccOvhDomainZoneRedirection_Basic(t *testing.T) {
 	var redirection OvhDomainZoneRedirection
@@ -20,11 +97,11 @@ func TestAccOvhDomainZoneRedirection_Basic(t *testing.T) {
 		CheckDestroy: testAccCheckOvhDomainZoneRedirectionDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRedirectionConfig_basic, zone),
+				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRedirectionConfig_basic, zone, test_prefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOvhDomainZoneRedirectionExists("ovh_domain_zone_redirection.foobar", &redirection),
 					resource.TestCheckResourceAttr(
-						"ovh_domain_zone_redirection.foobar", "subdomain", "terraform"),
+						"ovh_domain_zone_redirection.foobar", "subdomain", test_prefix),
 					resource.TestCheckResourceAttr(
 						"ovh_domain_zone_redirection.foobar", "zone", zone),
 					resource.TestCheckResourceAttr(
@@ -47,11 +124,11 @@ func TestAccOvhDomainZoneRedirection_Updated(t *testing.T) {
 		CheckDestroy: testAccCheckOvhDomainZoneRedirectionDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRedirectionConfig_basic, zone),
+				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRedirectionConfig_basic, zone, test_prefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOvhDomainZoneRedirectionExists("ovh_domain_zone_redirection.foobar", &redirection),
 					resource.TestCheckResourceAttr(
-						"ovh_domain_zone_redirection.foobar", "subdomain", "terraform"),
+						"ovh_domain_zone_redirection.foobar", "subdomain", test_prefix),
 					resource.TestCheckResourceAttr(
 						"ovh_domain_zone_redirection.foobar", "zone", zone),
 					resource.TestCheckResourceAttr(
@@ -59,11 +136,11 @@ func TestAccOvhDomainZoneRedirection_Updated(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRedirectionConfig_new_value_1, zone),
+				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRedirectionConfig_new_value_1, zone, test_prefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOvhDomainZoneRedirectionExists("ovh_domain_zone_redirection.foobar", &redirection),
 					resource.TestCheckResourceAttr(
-						"ovh_domain_zone_redirection.foobar", "subdomain", "terraform"),
+						"ovh_domain_zone_redirection.foobar", "subdomain", test_prefix),
 					resource.TestCheckResourceAttr(
 						"ovh_domain_zone_redirection.foobar", "zone", zone),
 					resource.TestCheckResourceAttr(
@@ -71,11 +148,11 @@ func TestAccOvhDomainZoneRedirection_Updated(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRedirectionConfig_new_value_2, zone),
+				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRedirectionConfig_new_value_2, zone, test_prefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOvhDomainZoneRedirectionExists("ovh_domain_zone_redirection.foobar", &redirection),
 					resource.TestCheckResourceAttr(
-						"ovh_domain_zone_redirection.foobar", "subdomain", "terraform2"),
+						"ovh_domain_zone_redirection.foobar", "subdomain", fmt.Sprintf("%s2", test_prefix)),
 					resource.TestCheckResourceAttr(
 						"ovh_domain_zone_redirection.foobar", "zone", zone),
 					resource.TestCheckResourceAttr(
@@ -83,11 +160,11 @@ func TestAccOvhDomainZoneRedirection_Updated(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRedirectionConfig_new_value_3, zone),
+				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRedirectionConfig_new_value_3, zone, test_prefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOvhDomainZoneRedirectionExists("ovh_domain_zone_redirection.foobar", &redirection),
 					resource.TestCheckResourceAttr(
-						"ovh_domain_zone_redirection.foobar", "subdomain", "terraform3"),
+						"ovh_domain_zone_redirection.foobar", "subdomain", fmt.Sprintf("%s3", test_prefix)),
 					resource.TestCheckResourceAttr(
 						"ovh_domain_zone_redirection.foobar", "zone", zone),
 					resource.TestCheckResourceAttr(
@@ -156,7 +233,7 @@ func testAccCheckOvhDomainZoneRedirectionExists(n string, redirection *OvhDomain
 const testAccCheckOvhDomainZoneRedirectionConfig_basic = `
 resource "ovh_domain_zone_redirection" "foobar" {
 	zone = "%s"
-	subdomain = "terraform"
+	subdomain = "%s"
 	target = "https://terraform.net"
 	type = "visible"
 }`
@@ -164,7 +241,7 @@ resource "ovh_domain_zone_redirection" "foobar" {
 const testAccCheckOvhDomainZoneRedirectionConfig_new_value_1 = `
 resource "ovh_domain_zone_redirection" "foobar" {
 	zone = "%s"
-	subdomain = "terraform"
+	subdomain = "%s"
 	target = "https://terraform.io"
 	type = "visible"
 }
@@ -173,7 +250,7 @@ resource "ovh_domain_zone_redirection" "foobar" {
 const testAccCheckOvhDomainZoneRedirectionConfig_new_value_2 = `
 resource "ovh_domain_zone_redirection" "foobar" {
 	zone = "%s"
-	subdomain = "terraform2"
+	subdomain = "%s2"
 	target = "https://terraform.io"
 	type = "visible"
 }
@@ -182,7 +259,7 @@ resource "ovh_domain_zone_redirection" "foobar" {
 const testAccCheckOvhDomainZoneRedirectionConfig_new_value_3 = `
 resource "ovh_domain_zone_redirection" "foobar" {
 	zone = "%s"
-	subdomain = "terraform3"
+	subdomain = "%s3"
 	target = "https://terraform.com"
 	type = "visible"
 }`
