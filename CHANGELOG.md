@@ -33,8 +33,12 @@ FEATURES
 
 IMPROVEMENTS
 
-* Various doc improvements ([#14](https://github.com/terraform-providers/terraform-provider-ovh/pull/14)),([#16](https://github.com/terraform-providers/terraform-provider-ovh/pull/16)),([#17](https://github.com/terraform-providers/terraform-provider-ovh/pull/17)),([#26](https://github.com/terraform-providers/terraform-provider-ovh/pull/26))
+* Various doc improvements ([#14](https://github.com/terraform-providers/terraform-provider-ovh/pull/14)),([#16](https://github.com/terraform-providers/terraform-provider-ovh/pull/16)),([#17](https://github.com/terraform-providers/terraform-provider-ovh/pull/17)),([#26](https://github.com/terraform-providers/terraform-provider-ovh/pull/26),([#51](https://github.com/terraform-providers/terraform-provider-ovh/pull/51))
 * provider: Fallback to get current home directory ([#19](https://github.com/terraform-providers/terraform-provider-ovh/pull/19))
+* provider: bump to terraform v0.10.8 ([#49](https://github.com/terraform-providers/terraform-provider-ovh/pull/49))
+* r/ovh_domain_zone_record: add sweeper ([#50](https://github.com/terraform-providers/terraform-provider-ovh/pull/50))
+* r/ovh_domain_zone_redirection: add sweeper ([#50](https://github.com/terraform-providers/terraform-provider-ovh/pull/50))
+
 
 BUG FIXES:
 
