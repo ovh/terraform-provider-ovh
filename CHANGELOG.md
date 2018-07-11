@@ -1,3 +1,4 @@
+## 0.4.0 (Unreleased)
 ## 0.3.0 (July 11, 2018)
 
 DEPRECATIONS / NOTES:
