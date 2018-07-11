@@ -15,12 +15,12 @@ in next release.
 
 FEATURES
 
-* __New Datasource:__ `ovh_bank_account` ([#34](https://github.com/terraform-providers/terraform-provider-ovh/pull/34))
 * __New Datasource:__ `ovh_cloud_region` ([#31](https://github.com/terraform-providers/terraform-provider-ovh/pull/31))
 * __New Datasource:__ `ovh_cloud_regions` ([#31](https://github.com/terraform-providers/terraform-provider-ovh/pull/31))
-* __New Datasource:__ `ovh_credit_card` ([#34](https://github.com/terraform-providers/terraform-provider-ovh/pull/34))
 * __New Datasource:__ `ovh_domain_zone` ([#39](https://github.com/terraform-providers/terraform-provider-ovh/pull/39))
 * __New Datasource:__ `ovh_iploadbalancing` ([#40](https://github.com/terraform-providers/terraform-provider-ovh/pull/40))
+* __New Datasource:__ `ovh_me_paymentmean_creditcard` ([#34](https://github.com/terraform-providers/terraform-provider-ovh/pull/34),[#52](https://github.com/terraform-providers/terraform-provider-ovh/pull/52))
+* __New Datasource:__ `ovh_me_paymentmean_bankaccount` ([#34](https://github.com/terraform-providers/terraform-provider-ovh/pull/34),[#52](https://github.com/terraform-providers/terraform-provider-ovh/pull/52))
 * __New Resource:__ `ovh_iploadbalancing_tcp_farm` ([#32](https://github.com/terraform-providers/terraform-provider-ovh/pull/32))
 * __New Resource:__ `ovh_iploadbalancing_tcp_farm_server` ([#33](https://github.com/terraform-providers/terraform-provider-ovh/pull/33))
 * __New Resource:__ `ovh_iploadbalancing_http_route` ([#35](https://github.com/terraform-providers/terraform-provider-ovh/pull/35))
@@ -33,7 +33,7 @@ FEATURES
 
 IMPROVEMENTS
 
-* Various doc improvements ([#14](https://github.com/terraform-providers/terraform-provider-ovh/pull/14)),([#16](https://github.com/terraform-providers/terraform-provider-ovh/pull/16)),([#17](https://github.com/terraform-providers/terraform-provider-ovh/pull/17)),([#26](https://github.com/terraform-providers/terraform-provider-ovh/pull/26),([#51](https://github.com/terraform-providers/terraform-provider-ovh/pull/51))
+* Various doc improvements ([#14](https://github.com/terraform-providers/terraform-provider-ovh/pull/14),[#16](https://github.com/terraform-providers/terraform-provider-ovh/pull/16),[#17](https://github.com/terraform-providers/terraform-provider-ovh/pull/17),[#26](https://github.com/terraform-providers/terraform-provider-ovh/pull/26),[#51](https://github.com/terraform-providers/terraform-provider-ovh/pull/51))
 * provider: Fallback to get current home directory ([#19](https://github.com/terraform-providers/terraform-provider-ovh/pull/19))
 * provider: bump to terraform v0.10.8 ([#49](https://github.com/terraform-providers/terraform-provider-ovh/pull/49))
 * r/ovh_domain_zone_record: add sweeper ([#50](https://github.com/terraform-providers/terraform-provider-ovh/pull/50))
