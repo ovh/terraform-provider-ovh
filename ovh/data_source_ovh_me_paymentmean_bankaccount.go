@@ -23,9 +23,9 @@ type BankAccount struct {
 	Bic                    string `json:"bic"`
 }
 
-func dataSourceBankAccount() *schema.Resource {
+func dataSourceMePaymentmeanBankaccount() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceBankAccountRead,
+		Read: dataSourceMePaymentmeanBankaccountRead,
 		Schema: map[string]*schema.Schema{
 			"description_regexp": &schema.Schema{
 				Type:     schema.TypeString,
@@ -63,7 +63,7 @@ func dataSourceBankAccount() *schema.Resource {
 	}
 }
 
-func dataSourceBankAccountRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceMePaymentmeanBankaccountRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	state, state_ok := d.GetOk("state")
 	description_regexp := regexp.MustCompile(d.Get("description_regexp").(string))

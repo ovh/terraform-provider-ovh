@@ -19,9 +19,9 @@ type CreditCard struct {
 	Type             string `json:"type"`
 }
 
-func dataSourceCreditCard() *schema.Resource {
+func dataSourceMePaymentmeanCreditcard() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceCreditCardRead,
+		Read: dataSourceMePaymentmeanCreditcardRead,
 		Schema: map[string]*schema.Schema{
 			"description_regexp": &schema.Schema{
 				Type:     schema.TypeString,
@@ -65,7 +65,7 @@ func dataSourceCreditCard() *schema.Resource {
 	}
 }
 
-func dataSourceCreditCardRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceMePaymentmeanCreditcardRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	states_val, states_ok := d.GetOk("states")
 	description_regexp := regexp.MustCompile(d.Get("description_regexp").(string))
