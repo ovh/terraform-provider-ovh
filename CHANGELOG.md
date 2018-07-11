@@ -1,4 +1,4 @@
-## 0.3.0 (Unreleased)
+## 0.3.0 (July 11, 2018)
 
 DEPRECATIONS / NOTES:
 
@@ -42,8 +42,8 @@ IMPROVEMENTS
 
 BUG FIXES:
 
-* resource/ovh_domain_zone_record: Fixes [GH-25] by id removal, cleans up naming and struct repetition for domain zone record resource
-* provider: Fixes [GH-27] by switching to `/auth/currentCredential` for client validation
+* resource/ovh_domain_zone_record: Fixes [[#25](https://github.com/terraform-providers/terraform-provider-ovh/issues/25)] by id removal, cleans up naming and struct repetition for domain zone record resource
+* provider: Fixes [[#27](https://github.com/terraform-providers/terraform-provider-ovh/issues/27)] by switching to `/auth/currentCredential` for client validation
 
 ## 0.2.0 (January 10, 2018)
 
