@@ -6,17 +6,22 @@ description: |-
   Creates a backend server group (farm).
 ---
 
-# ovh_iploadbalancing_tcp_farm
+# ovh\_iploadbalancing\_tcp_farm
 
 Creates a backend server group (farm) to be used by loadbalancing frontend(s)
 
 ## Example Usage
 
 ```
-resource "ovh_iploadbalancing_tcp_farm" "farm-gra" {
-   service_name = "ip-123.123.123.123"
-   display_name       = "ingress-8080-gra"
-   zone = "GRA"
+data "ovh_iploadbalancing" "lb" {
+  service_name = "ip-1.2.3.4"
+   state       = "ok"  
+}
+
+resource "ovh_iploadbalancing_tcp_farm" "farmname" {
+  service_name = "${data.ovh_iploadbalancing.lb.id}"
+  display_name = "ingress-8080-gra"
+  zone = "GRA"
 }
 ```
 
