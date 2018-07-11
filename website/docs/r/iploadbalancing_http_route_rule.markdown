@@ -1,7 +1,7 @@
 ---
 layout: "ovh"
 page_title: "OVH: ovh_iploadbalancing_http_route_rule"
-sidebar_current: "docs-ovh-resource-iploadbalancing-http-route"
+sidebar_current: "docs-ovh-resource-iploadbalancing-http-route-rule"
 description: |-
   Manage rules for HTTP route.
 ---
@@ -18,8 +18,8 @@ Route which redirect all url to https for example.com (Vhost).
 resource "ovh_iploadbalancing_http_route" "httpsredirect" {
   service_name = "loadbalancer-xxxxxxxxxxxxxxxxxx"
   display_name = "Redirect to HTTPS"
-  weight = 1
-  frontend_id = 11111
+  weight       = 1
+  frontend_id  = 11111
 
   action {
     status = 302
@@ -30,12 +30,12 @@ resource "ovh_iploadbalancing_http_route" "httpsredirect" {
 
 resource "ovh_iploadbalancing_http_route_rule" "examplerule" {
   service_name = "loadbalancer-xxxxxxxxxxxxxxxxxx"
-  route_id  = "${ovh_iploadbalancing_http_route.httpsredirect.id}"
+  route_id     = "${ovh_iploadbalancing_http_route.httpsredirect.id}"
   display_name = "Match example.com host"
-  field = "host"
-  match = "is"
-  negate = false
-  pattern = "example.com"
+  field        = "host"
+  match        = "is"
+  negate       = false
+  pattern      = "example.com"
 }
 ```
 
@@ -44,13 +44,13 @@ Rule which match a specific header (same effect as the host match above).
 ```hcl
 resource "ovh_iploadbalancing_http_route_rule" "examplerule" {
   service_name = "loadbalancer-xxxxxxxxxxxxxxxxxx"
-  route_id  = "${ovh_iploadbalancing_http_route.httpsredirect.id}"
+  route_id     = "${ovh_iploadbalancing_http_route.httpsredirect.id}"
   display_name = "Match example.com Host header"
-  field = "headers"
-  match = "is"
-  negate = false
-  pattern = "example.com"
-  sub_field = "Host"
+  field        = "headers"
+  match        = "is"
+  negate       = false
+  pattern      = "example.com"
+  sub_field    = "Host"
 }
 ```
 
