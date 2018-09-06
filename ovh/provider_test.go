@@ -75,6 +75,21 @@ func testAccPreCheck(t *testing.T) {
 		t.Fatal("OVH_IPLB_SERVICE must be set for acceptance tests")
 	}
 
+	v = os.Getenv("OVH_IP_BLOCK")
+	if v == "" {
+		t.Fatal("OVH_IP_BLOCK must be set for acceptance tests")
+	}
+
+	v = os.Getenv("OVH_IP")
+	if v == "" {
+		t.Fatal("OVH_IP must be set for acceptance tests")
+	}
+
+	v = os.Getenv("OVH_IP_REVERSE")
+	if v == "" {
+		t.Fatal("OVH_IP_REVERSE must be set for acceptance tests")
+	}
+
 	if testAccOVHClient == nil {
 		config := Config{
 			Endpoint:          os.Getenv("OVH_ENDPOINT"),
