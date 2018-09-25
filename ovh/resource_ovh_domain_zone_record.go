@@ -2,10 +2,11 @@ package ovh
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform/helper/logging"
+	"github.com/hashicorp/terraform/helper/schema"
 	"log"
 	"strconv"
-
-	"github.com/hashicorp/terraform/helper/schema"
+	"strings"
 )
 
 type OvhDomainZoneRecord struct {
@@ -17,6 +18,21 @@ type OvhDomainZoneRecord struct {
 	SubDomain string `json:"subDomain,omitempty"`
 }
 
+func resourceOvhDomainZoneImportState(
+	d *schema.ResourceData,
+	meta interface{}) ([]*schema.ResourceData, error) {
+	givenId := d.Id()
+	splitId := strings.SplitN(givenId, ".", 2)
+	if len(splitId) != 2 {
+		return nil, fmt.Errorf("Import Id is not OVH_ID.zone formatted")
+	}
+	d.SetId(splitId[0])
+	d.Set("zone", splitId[1])
+	results := make([]*schema.ResourceData, 1)
+	results[0] = d
+	return results, nil
+}
+
 func resourceOvhDomainZoneRecord() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceOvhDomainZoneRecordCreate,
@@ -24,7 +40,7 @@ func resourceOvhDomainZoneRecord() *schema.Resource {
 		Update: resourceOvhDomainZoneRecordUpdate,
 		Delete: resourceOvhDomainZoneRecordDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: resourceOvhDomainZoneImportState,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -91,6 +107,9 @@ func resourceOvhDomainZoneRecordRead(d *schema.ResourceData, meta interface{}) e
 	provider := meta.(*Config)
 
 	record := OvhDomainZoneRecord{}
+	if logging.IsDebugOrHigher() {
+		log.Printf("[DEBUG] OVH Get Record ID: %s in zone %s", d.Id(), d.Get("zone").(string))
+	}
 	err := provider.OVHClient.Get(
 		fmt.Sprintf("/domain/zone/%s/record/%s", d.Get("zone").(string), d.Id()),
 		&record,

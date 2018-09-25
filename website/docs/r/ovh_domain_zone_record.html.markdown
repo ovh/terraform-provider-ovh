@@ -45,3 +45,10 @@ The following attributes are exported:
 * `fieldType` - The type of the record
 * `ttl` - The TTL of the record
 
+## Import
+
+OVH record can be imported using the `id` and the `zone`, eg:
+
+```
+$ terraform import aws_domain_zone_record.test 1234OVH_ID.zone.tld
+```
