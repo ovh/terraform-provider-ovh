@@ -23,6 +23,9 @@ func resourceOvhDomainZoneRecord() *schema.Resource {
 		Read:   resourceOvhDomainZoneRecordRead,
 		Update: resourceOvhDomainZoneRecordUpdate,
 		Delete: resourceOvhDomainZoneRecordDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"zone": {
