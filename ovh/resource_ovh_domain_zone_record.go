@@ -2,7 +2,6 @@ package ovh
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform/helper/logging"
 	"github.com/hashicorp/terraform/helper/schema"
 	"log"
 	"strconv"
@@ -107,9 +106,6 @@ func resourceOvhDomainZoneRecordRead(d *schema.ResourceData, meta interface{}) e
 	provider := meta.(*Config)
 
 	record := OvhDomainZoneRecord{}
-	if logging.IsDebugOrHigher() {
-		log.Printf("[DEBUG] OVH Get Record ID: %s in zone %s", d.Id(), d.Get("zone").(string))
-	}
 	err := provider.OVHClient.Get(
 		fmt.Sprintf("/domain/zone/%s/record/%s", d.Get("zone").(string), d.Id()),
 		&record,
