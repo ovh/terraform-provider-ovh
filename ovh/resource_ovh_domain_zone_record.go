@@ -2,10 +2,10 @@ package ovh
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform/helper/schema"
 	"log"
 	"strconv"
-
-	"github.com/hashicorp/terraform/helper/schema"
+	"strings"
 )
 
 type OvhDomainZoneRecord struct {
@@ -17,6 +17,21 @@ type OvhDomainZoneRecord struct {
 	SubDomain string `json:"subDomain,omitempty"`
 }
 
+func resourceOvhDomainZoneRecordImportState(
+	d *schema.ResourceData,
+	meta interface{}) ([]*schema.ResourceData, error) {
+	givenId := d.Id()
+	splitId := strings.SplitN(givenId, ".", 2)
+	if len(splitId) != 2 {
+		return nil, fmt.Errorf("Import Id is not OVH_ID.zone formatted")
+	}
+	d.SetId(splitId[0])
+	d.Set("zone", splitId[1])
+	results := make([]*schema.ResourceData, 1)
+	results[0] = d
+	return results, nil
+}
+
 func resourceOvhDomainZoneRecord() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceOvhDomainZoneRecordCreate,
@@ -24,7 +39,7 @@ func resourceOvhDomainZoneRecord() *schema.Resource {
 		Update: resourceOvhDomainZoneRecordUpdate,
 		Delete: resourceOvhDomainZoneRecordDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: resourceOvhDomainZoneRecordImportState,
 		},
 
 		Schema: map[string]*schema.Schema{
