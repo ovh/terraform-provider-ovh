@@ -18,7 +18,7 @@ type OvhDomainZoneRecord struct {
 	SubDomain string `json:"subDomain,omitempty"`
 }
 
-func resourceOvhDomainZoneImportState(
+func resourceOvhDomainZoneRecordImportState(
 	d *schema.ResourceData,
 	meta interface{}) ([]*schema.ResourceData, error) {
 	givenId := d.Id()
@@ -40,7 +40,7 @@ func resourceOvhDomainZoneRecord() *schema.Resource {
 		Update: resourceOvhDomainZoneRecordUpdate,
 		Delete: resourceOvhDomainZoneRecordDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceOvhDomainZoneImportState,
+			State: resourceOvhDomainZoneRecordImportState,
 		},
 
 		Schema: map[string]*schema.Schema{
