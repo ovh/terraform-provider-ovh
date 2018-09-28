@@ -63,6 +63,7 @@ func Provider() terraform.ResourceProvider {
 			"ovh_iploadbalancing_http_route_rule": resourceIPLoadbalancingRouteHTTPRule(),
 			"ovh_domain_zone_record":              resourceOvhDomainZoneRecord(),
 			"ovh_domain_zone_redirection":         resourceOvhDomainZoneRedirection(),
+			"ovh_ip_reverse":                      resourceOvhIpReverse(),
 			// New naming schema (issue #23)
 			"ovh_cloud_network_private":        resourcePublicCloudPrivateNetwork(),
 			"ovh_cloud_network_private_subnet": resourcePublicCloudPrivateNetworkSubnet(),
