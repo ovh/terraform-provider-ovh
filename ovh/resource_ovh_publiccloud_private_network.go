@@ -87,7 +87,7 @@ func resourcePublicCloudPrivateNetworkCreate(d *schema.ResourceData, meta interf
 		ProjectId: d.Get("project_id").(string),
 		VlanId:    d.Get("vlan_id").(int),
 		Name:      d.Get("name").(string),
-		Regions:   regionsOptsFromSchema(d),
+		Regions:   stringsFromSchema(d, "regions"),
 	}
 
 	r := &PublicCloudPrivateNetworkResponse{}
@@ -206,19 +206,6 @@ func resourcePublicCloudPrivateNetworkDelete(d *schema.ResourceData, meta interf
 
 	log.Printf("[DEBUG] Deleted Public Cloud %s Private Network %s", projectId, id)
 	return nil
-}
-
-func regionsOptsFromSchema(d *schema.ResourceData) []string {
-	var regions []string
-	if v := d.Get("regions"); v != nil {
-		rs := v.(*schema.Set).List()
-		if len(rs) > 0 {
-			for _, v := range v.(*schema.Set).List() {
-				regions = append(regions, v.(string))
-			}
-		}
-	}
-	return regions
 }
 
 func readPublicCloudPrivateNetwork(config *Config, d *schema.ResourceData, r *PublicCloudPrivateNetworkResponse) error {

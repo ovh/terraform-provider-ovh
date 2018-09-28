@@ -59,6 +59,7 @@ func Provider() terraform.ResourceProvider {
 		ResourcesMap: map[string]*schema.Resource{
 			"ovh_iploadbalancing_tcp_farm":        resourceIpLoadbalancingTcpFarm(),
 			"ovh_iploadbalancing_tcp_farm_server": resourceIpLoadbalancingTcpFarmServer(),
+			"ovh_iploadbalancing_tcp_frontend":    resourceIpLoadbalancingTcpFrontend(),
 			"ovh_iploadbalancing_http_route":      resourceIPLoadbalancingRouteHTTP(),
 			"ovh_iploadbalancing_http_route_rule": resourceIPLoadbalancingRouteHTTPRule(),
 			"ovh_domain_zone_record":              resourceOvhDomainZoneRecord(),
