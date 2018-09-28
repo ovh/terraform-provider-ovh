@@ -9,6 +9,13 @@ import (
 	"github.com/ovh/go-ovh/ovh"
 )
 
+func validateIpBlock(value string) error {
+	if _, _, err := net.ParseCIDR(value); err != nil {
+		return fmt.Errorf("Value %s is not a valid IP block", value)
+	}
+	return nil
+}
+
 func validateIp(value string) error {
 	if ip := net.ParseIP(value); ip != nil {
 		return nil
