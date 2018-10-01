@@ -125,7 +125,6 @@ func resourceIpLoadbalancingTcpFrontendCreate(d *schema.ResourceData, meta inter
 	}
 
 	service := d.Get("service_name").(string)
-	frontend.DefaultFarmId = nil
 	resp := &IpLoadbalancingTcpFrontend{}
 	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/tcp/frontend", service)
 

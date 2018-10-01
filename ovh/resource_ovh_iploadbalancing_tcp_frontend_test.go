@@ -118,6 +118,8 @@ func TestAccOvhIpLoadbalancingTcpFrontend_withfarm(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
 						"ovh_iploadbalancing_tcp_frontend.testfrontend", "display_name", test_prefix),
+					resource.TestCheckResourceAttrSet(
+						"ovh_iploadbalancing_tcp_frontend.testfrontend", "default_farm_id"),
 				),
 			},
 		},
@@ -129,7 +131,7 @@ resource "ovh_iploadbalancing_tcp_frontend" "testfrontend" {
    service_name = "%s"
    display_name = "%s"
    zone = "all"
-   port = "80,443"
+   port = "22280,22443"
    disabled = true
    ssl = true
 }
@@ -139,7 +141,7 @@ resource "ovh_iploadbalancing_tcp_frontend" "testfrontend" {
    service_name = "%s"
    display_name = "%s"
    zone = "all"
-   port = "80,443"
+   port = "22280,22443"
 }
 `
 
@@ -152,14 +154,14 @@ resource "ovh_iploadbalancing_tcp_farm" "farm" {
    service_name = "${data.ovh_iploadbalancing.iplb.service_name}"
    display_name = "%s"
    zone = "all"
-   port = 80
+   port = 22280
 }
 
 resource "ovh_iploadbalancing_tcp_frontend" "testfrontend" {
    service_name = "${data.ovh_iploadbalancing.iplb.service_name}"
    display_name = "%s"
    zone = "all"
-   port = "80,443"
+   port = "22280,22443"
    default_farm_id = "${ovh_iploadbalancing_tcp_farm.farm.id}"
 }
 `
