@@ -105,3 +105,16 @@ func CheckDeleted(d *schema.ResourceData, err error, endpoint string) error {
 
 	return fmt.Errorf("calling %s:\n\t %s", endpoint, err.Error())
 }
+
+func stringsFromSchema(d *schema.ResourceData, id string) []string {
+	var xs []string
+	if v := d.Get(id); v != nil {
+		rs := v.(*schema.Set).List()
+		if len(rs) > 0 {
+			for _, v := range v.(*schema.Set).List() {
+				xs = append(xs, v.(string))
+			}
+		}
+	}
+	return xs
+}
