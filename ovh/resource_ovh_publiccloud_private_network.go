@@ -3,6 +3,7 @@ package ovh
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -11,6 +12,21 @@ import (
 	"github.com/ovh/go-ovh/ovh"
 )
 
+func resourceOvhCloudNetworkPrivateImportState(
+	d *schema.ResourceData,
+	meta interface{}) ([]*schema.ResourceData, error) {
+	givenId := d.Id()
+	splitId := strings.SplitN(givenId, "/", 2)
+	if len(splitId) != 2 {
+		return nil, fmt.Errorf("Import Id is not OVH_PROJECT_ID/network_id formatted")
+	}
+	d.SetId(splitId[1])
+	d.Set("project_id", splitId[0])
+	results := make([]*schema.ResourceData, 1)
+	results[0] = d
+	return results, nil
+}
+
 func resourcePublicCloudPrivateNetwork() *schema.Resource {
 	return &schema.Resource{
 		Create: resourcePublicCloudPrivateNetworkCreate,
@@ -18,9 +34,7 @@ func resourcePublicCloudPrivateNetwork() *schema.Resource {
 		Update: resourcePublicCloudPrivateNetworkUpdate,
 		Delete: resourcePublicCloudPrivateNetworkDelete,
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				return []*schema.ResourceData{d}, nil
-			},
+			State: resourceOvhCloudNetworkPrivateImportState,
 		},
 
 		Schema: map[string]*schema.Schema{
