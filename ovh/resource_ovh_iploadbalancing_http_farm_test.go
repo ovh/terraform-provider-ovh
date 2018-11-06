@@ -81,8 +81,8 @@ func TestAccIpLoadbalancingHttpFarmBasicCreate(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIpLoadbalancingHttpFarmDestroy,
 		Steps: []resource.TestStep{
-			testAccIpLoadbalancingHttpFarmTestStep("test-farm-v1", "all", 8080, 8888, 35, "tcp"),
-			testAccIpLoadbalancingHttpFarmTestStep("test-farm-v2", "all", 8080, 9999, 60, "tcp"),
+			testAccIpLoadbalancingHttpFarmTestStep("test-farm-v1", "all", 8080, 8888, 35, "http"),
+			testAccIpLoadbalancingHttpFarmTestStep("test-farm-v2", "all", 8080, 9999, 60, "http"),
 		},
 	})
 }

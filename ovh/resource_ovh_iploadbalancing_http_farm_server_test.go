@@ -58,7 +58,7 @@ func (w *TestAccIpLoadbalancingHttpFarmServerWrapper) Config() string {
 	  probe {
 	    port = 8080
 	    interval = 30
-	    type = "tcp"
+	    type = "http"
 	  }
 	}
 	resource "ovh_iploadbalancing_http_farm_server" "testacc" {

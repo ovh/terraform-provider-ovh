@@ -150,7 +150,7 @@ func resourceIpLoadbalancingHttpFarm() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-								err := validateStringEnum(v.(string), []string{"http", "internal", "mysql", "oko", "pgsql", "smtp", "tcp"})
+								err := validateStringEnum(v.(string), []string{"http", "internal", "mysql", "oko", "pgsql", "smtp", "http"})
 								if err != nil {
 									errors = append(errors, err)
 								}
@@ -210,7 +210,7 @@ func resourceIpLoadbalancingHttpFarmRead(d *schema.ResourceData, meta interface{
 	config := meta.(*Config)
 	service := d.Get("service_name").(string)
 	r := &IpLoadbalancingHttpFarm{}
-	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/tcp/farm/%s", service, d.Id())
+	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/http/farm/%s", service, d.Id())
 
 	err := config.OVHClient.Get(endpoint, &r)
 	if err != nil {

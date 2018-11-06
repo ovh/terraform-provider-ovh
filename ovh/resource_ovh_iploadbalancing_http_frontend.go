@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-type IpLoadbalancingTcpFrontend struct {
+type IpLoadbalancingHttpFrontend struct {
 	FrontendId    int      `json:"frontendId,omitempty"`
 	Port          string   `json:"port"`
 	Zone          string   `json:"zone"`
@@ -19,12 +19,12 @@ type IpLoadbalancingTcpFrontend struct {
 	DisplayName   string   `json:"displayName,omitempty"`
 }
 
-func resourceIpLoadbalancingTcpFrontend() *schema.Resource {
+func resourceIpLoadbalancinghttpFrontend() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceIpLoadbalancingTcpFrontendCreate,
-		Read:   resourceIpLoadbalancingTcpFrontendRead,
-		Update: resourceIpLoadbalancingTcpFrontendUpdate,
-		Delete: resourceIpLoadbalancingTcpFrontendDelete,
+		Create: resourceIpLoadbalancinghttpFrontendCreate,
+		Read:   resourceIpLoadbalancinghttpFrontendRead,
+		Update: resourceIpLoadbalancinghttpFrontendUpdate,
+		Delete: resourceIpLoadbalancinghttpFrontendDelete,
 
 		Schema: map[string]*schema.Schema{
 			"service_name": &schema.Schema{
@@ -89,7 +89,7 @@ func resourceIpLoadbalancingTcpFrontend() *schema.Resource {
 	}
 }
 
-func resourceIpLoadbalancingTcpFrontendCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceIpLoadbalancinghttpFrontendCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
 	allowedSources := stringsFromSchema(d, "allowed_source")
@@ -107,7 +107,7 @@ func resourceIpLoadbalancingTcpFrontendCreate(d *schema.ResourceData, meta inter
 		}
 	}
 
-	frontend := &IpLoadbalancingTcpFrontend{
+	frontend := &IpLoadbalancinghttpFrontend{
 		Port:          d.Get("port").(string),
 		Zone:          d.Get("zone").(string),
 		AllowedSource: allowedSources,
@@ -125,34 +125,34 @@ func resourceIpLoadbalancingTcpFrontendCreate(d *schema.ResourceData, meta inter
 	}
 
 	service := d.Get("service_name").(string)
-	resp := &IpLoadbalancingTcpFrontend{}
-	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/tcp/frontend", service)
+	resp := &IpLoadbalancinghttpFrontend{}
+	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/http/frontend", service)
 
 	err := config.OVHClient.Post(endpoint, frontend, resp)
 	if err != nil {
 		return fmt.Errorf("calling POST %s:\n\t %s", endpoint, err.Error())
 	}
-	return readIpLoadbalancingTcpFrontend(resp, d)
+	return readIpLoadbalancinghttpFrontend(resp, d)
 
 }
 
-func resourceIpLoadbalancingTcpFrontendRead(d *schema.ResourceData, meta interface{}) error {
+func resourceIpLoadbalancinghttpFrontendRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	service := d.Get("service_name").(string)
-	r := &IpLoadbalancingTcpFrontend{}
-	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/tcp/frontend/%s", service, d.Id())
+	r := &IpLoadbalancinghttpFrontend{}
+	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/http/frontend/%s", service, d.Id())
 
 	err := config.OVHClient.Get(endpoint, &r)
 	if err != nil {
 		return fmt.Errorf("calling %s:\n\t %s", endpoint, err.Error())
 	}
-	return readIpLoadbalancingTcpFrontend(r, d)
+	return readIpLoadbalancinghttpFrontend(r, d)
 }
 
-func resourceIpLoadbalancingTcpFrontendUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceIpLoadbalancinghttpFrontendUpdate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	service := d.Get("service_name").(string)
-	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/tcp/frontend/%s", service, d.Id())
+	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/http/frontend/%s", service, d.Id())
 
 	allowedSources := stringsFromSchema(d, "allowed_source")
 	dedicatedIpFo := stringsFromSchema(d, "dedicated_ipfo")
@@ -169,7 +169,7 @@ func resourceIpLoadbalancingTcpFrontendUpdate(d *schema.ResourceData, meta inter
 		}
 	}
 
-	frontend := &IpLoadbalancingTcpFrontend{
+	frontend := &IpLoadbalancinghttpFrontend{
 		Port:          d.Get("port").(string),
 		Zone:          d.Get("zone").(string),
 		AllowedSource: allowedSources,
@@ -193,7 +193,7 @@ func resourceIpLoadbalancingTcpFrontendUpdate(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func readIpLoadbalancingTcpFrontend(r *IpLoadbalancingTcpFrontend, d *schema.ResourceData) error {
+func readIpLoadbalancinghttpFrontend(r *IpLoadbalancinghttpFrontend, d *schema.ResourceData) error {
 	d.Set("display_name", r.DisplayName)
 	d.Set("port", r.Port)
 	d.Set("zone", r.Zone)
@@ -229,12 +229,12 @@ func readIpLoadbalancingTcpFrontend(r *IpLoadbalancingTcpFrontend, d *schema.Res
 	return nil
 }
 
-func resourceIpLoadbalancingTcpFrontendDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceIpLoadbalancinghttpFrontendDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
 	service := d.Get("service_name").(string)
-	r := &IpLoadbalancingTcpFrontend{}
-	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/tcp/frontend/%s", service, d.Id())
+	r := &IpLoadbalancinghttpFrontend{}
+	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/http/frontend/%s", service, d.Id())
 
 	err := config.OVHClient.Delete(endpoint, &r)
 	if err != nil {
