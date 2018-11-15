@@ -50,6 +50,8 @@ The following arguments are supported:
 * `default_ssl_id` - Default ssl served to your customer
 * `disabled` - Disable your frontend. Default: 'false'
 * `ssl` - SSL deciphering. Default: 'false'
+* `hsts` - HTTP Strict Transport Security. Default: 'false'
+* `httpHeader` - Add header to your frontend. Useful variables admitted : %ci <=> client_ip, %cp <=> client_port
 
 
 ## Attributes Reference

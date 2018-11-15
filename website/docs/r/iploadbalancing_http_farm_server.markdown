@@ -26,7 +26,7 @@ resource "ovh_iploadbalancing_http_farm" "farmname" {
 
 resource "ovh_iploadbalancing_http_farm_server" "backend" {
   service_name           = "${data.ovh_iploadbalancing.lb.id}"
-  farm_id                = "${ovh_iploadbalancing_tcp_farm.farmname.id}"
+  farm_id                = "${ovh_iploadbalancing_http_farm.farmname.id}"
   display_name           = "mybackend"
   address                = "4.5.6.7"
   status                 = "active"
