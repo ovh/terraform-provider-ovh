@@ -16,7 +16,7 @@ public cloud project. The region must be associated with the project.
 ```hcl
 data "ovh_cloud_region" "GRA1" {
    project_id = "XXXXXX"
-   region = "GRA1"
+   name = "GRA1"
 }
 ```
 
@@ -26,7 +26,7 @@ data "ovh_cloud_region" "GRA1" {
 * `project_id` - (Required) The id of the public cloud project. If omitted,
     the `OVH_PROJECT_ID` environment variable is used.
 
-* `region` - (Required) The name of the region associated with the public cloud
+* `name` - (Required) The name of the region associated with the public cloud
 project.
 
 ## Attributes Reference
