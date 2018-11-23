@@ -57,7 +57,7 @@ type PublicCloudPrivateNetworksCreateOpts struct {
 }
 
 func (p *PublicCloudPrivateNetworksCreateOpts) String() string {
-	return fmt.Sprintf("PCPNSCreateOpts[projectId: %s, networkId:%s, dchp: %v, noGateway: %v, network: %s, start: %s, end: %s, region: %s]",
+	return fmt.Sprintf("PCPNSCreateOpts[projectId: %s, networkId:%s, dhcp: %v, noGateway: %v, network: %s, start: %s, end: %s, region: %s]",
 		p.ProjectId, p.NetworkId, p.Dhcp, p.NoGateway, p.Network, p.Start, p.End, p.Region)
 }
 
