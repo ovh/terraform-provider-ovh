@@ -16,25 +16,25 @@ import (
 func Provider() terraform.ResourceProvider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
-			"endpoint": &schema.Schema{
+			"endpoint": {
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("OVH_ENDPOINT", nil),
 				Description: descriptions["endpoint"],
 			},
-			"application_key": &schema.Schema{
+			"application_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("OVH_APPLICATION_KEY", ""),
 				Description: descriptions["application_key"],
 			},
-			"application_secret": &schema.Schema{
+			"application_secret": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("OVH_APPLICATION_SECRET", ""),
 				Description: descriptions["application_secret"],
 			},
-			"consumer_key": &schema.Schema{
+			"consumer_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("OVH_CONSUMER_KEY", ""),

@@ -27,17 +27,17 @@ func resourceIpLoadbalancingTcpFrontend() *schema.Resource {
 		Delete: resourceIpLoadbalancingTcpFrontendDelete,
 
 		Schema: map[string]*schema.Schema{
-			"service_name": &schema.Schema{
+			"service_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"port": &schema.Schema{
+			"port": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: false,
 			},
-			"zone": &schema.Schema{
+			"zone": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: false,
@@ -56,31 +56,31 @@ func resourceIpLoadbalancingTcpFrontend() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"default_farm_id": &schema.Schema{
+			"default_farm_id": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: false,
 			},
-			"default_ssl_id": &schema.Schema{
+			"default_ssl_id": {
 				Type:     schema.TypeInt,
 				Computed: true,
 				Optional: true,
 				ForceNew: false,
 			},
-			"disabled": &schema.Schema{
+			"disabled": {
 				Type:     schema.TypeBool,
 				Default:  false,
 				Optional: true,
 				ForceNew: false,
 			},
-			"ssl": &schema.Schema{
+			"ssl": {
 				Type:     schema.TypeBool,
 				Default:  false,
 				Optional: true,
 				ForceNew: false,
 			},
-			"display_name": &schema.Schema{
+			"display_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: false,

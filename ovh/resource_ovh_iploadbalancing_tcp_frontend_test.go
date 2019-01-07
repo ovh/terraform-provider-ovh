@@ -72,7 +72,7 @@ func TestAccOvhIpLoadbalancingTcpFrontend_basic(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccCheckOvhIpLoadbalancingTcpFrontendConfig_basic, iplb, test_prefix),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
@@ -87,7 +87,7 @@ func TestAccOvhIpLoadbalancingTcpFrontend_basic(t *testing.T) {
 						"ovh_iploadbalancing_tcp_frontend.testfrontend", "disabled", "true"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccCheckOvhIpLoadbalancingTcpFrontendConfig_update, iplb, test_prefix),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
@@ -113,7 +113,7 @@ func TestAccOvhIpLoadbalancingTcpFrontend_withfarm(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccCheckOvhIpLoadbalancingTcpFrontendConfig_withfarm, iplb, test_prefix, test_prefix),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(

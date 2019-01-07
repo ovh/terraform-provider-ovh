@@ -96,7 +96,7 @@ func TestAccOvhDomainZoneRecord_Basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckOvhDomainZoneRecordDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRecordConfig_basic, zone, test_prefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOvhDomainZoneRecordExists("ovh_domain_zone_record.foobar", &record),
@@ -123,7 +123,7 @@ func TestAccOvhDomainZoneRecord_Updated(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckOvhDomainZoneRecordDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRecordConfig_basic, zone, test_prefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOvhDomainZoneRecordExists("ovh_domain_zone_record.foobar", &record),
@@ -137,7 +137,7 @@ func TestAccOvhDomainZoneRecord_Updated(t *testing.T) {
 						"ovh_domain_zone_record.foobar", "ttl", "3600"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRecordConfig_new_value_1, zone, test_prefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOvhDomainZoneRecordExists("ovh_domain_zone_record.foobar", &record),
@@ -151,7 +151,7 @@ func TestAccOvhDomainZoneRecord_Updated(t *testing.T) {
 						"ovh_domain_zone_record.foobar", "ttl", "3600"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRecordConfig_new_value_2, zone, test_prefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOvhDomainZoneRecordExists("ovh_domain_zone_record.foobar", &record),
@@ -165,7 +165,7 @@ func TestAccOvhDomainZoneRecord_Updated(t *testing.T) {
 						"ovh_domain_zone_record.foobar", "ttl", "3600"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRecordConfig_new_value_3, zone, test_prefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOvhDomainZoneRecordExists("ovh_domain_zone_record.foobar", &record),

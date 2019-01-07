@@ -23,25 +23,25 @@ func dataSourceMePaymentmeanCreditcard() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceMePaymentmeanCreditcardRead,
 		Schema: map[string]*schema.Schema{
-			"description_regexp": &schema.Schema{
+			"description_regexp": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
 				Default:  ".*",
 			},
-			"use_default": &schema.Schema{
+			"use_default": {
 				Type:     schema.TypeBool,
 				ForceNew: true,
 				Optional: true,
 				Default:  false,
 			},
-			"use_last_to_expire": &schema.Schema{
+			"use_last_to_expire": {
 				Type:     schema.TypeBool,
 				ForceNew: true,
 				Optional: true,
 				Default:  false,
 			},
-			"states": &schema.Schema{
+			"states": {
 				Type: schema.TypeSet,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -49,15 +49,15 @@ func dataSourceMePaymentmeanCreditcard() *schema.Resource {
 				Optional: true,
 			},
 			// Computed
-			"description": &schema.Schema{
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"default": &schema.Schema{
+			"default": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},

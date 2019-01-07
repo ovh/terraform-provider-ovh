@@ -34,7 +34,7 @@ func TestAccIPLoadbalancingRouteHTTPRuleBasicCreate(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIPLoadbalancingRouteHTTPRuleDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(

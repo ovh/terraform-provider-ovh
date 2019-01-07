@@ -38,24 +38,24 @@ func resourcePublicCloudPrivateNetwork() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"project_id": &schema.Schema{
+			"project_id": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
 				DefaultFunc: schema.EnvDefaultFunc("OVH_PROJECT_ID", nil),
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: false,
 			},
-			"vlan_id": &schema.Schema{
+			"vlan_id": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,
 				Default:  0,
 			},
-			"regions": &schema.Schema{
+			"regions": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -64,28 +64,28 @@ func resourcePublicCloudPrivateNetwork() *schema.Resource {
 				Set:      schema.HashString,
 			},
 
-			"regions_status": &schema.Schema{
+			"regions_status": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"status": &schema.Schema{
+						"status": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 
-						"region": &schema.Schema{
+						"region": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"status": &schema.Schema{
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},

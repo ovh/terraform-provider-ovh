@@ -37,12 +37,12 @@ func resourceIpLoadbalancingTcpFarm() *schema.Resource {
 		Delete: resourceIpLoadbalancingTcpFarmDelete,
 
 		Schema: map[string]*schema.Schema{
-			"service_name": &schema.Schema{
+			"service_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"balance": &schema.Schema{
+			"balance": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: false,
@@ -54,17 +54,17 @@ func resourceIpLoadbalancingTcpFarm() *schema.Resource {
 					return
 				},
 			},
-			"display_name": &schema.Schema{
+			"display_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: false,
 			},
-			"port": &schema.Schema{
+			"port": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: false,
 			},
-			"stickiness": &schema.Schema{
+			"stickiness": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: false,
@@ -76,23 +76,23 @@ func resourceIpLoadbalancingTcpFarm() *schema.Resource {
 					return
 				},
 			},
-			"vrack_network_id": &schema.Schema{
+			"vrack_network_id": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: false,
 			},
-			"zone": &schema.Schema{
+			"zone": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"probe": &schema.Schema{
+			"probe": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: false,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"match": &schema.Schema{
+						"match": {
 							Type:     schema.TypeString,
 							Optional: true,
 							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
@@ -103,11 +103,11 @@ func resourceIpLoadbalancingTcpFarm() *schema.Resource {
 								return
 							},
 						},
-						"port": &schema.Schema{
+						"port": {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						"interval": &schema.Schema{
+						"interval": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Default:  30,
@@ -119,23 +119,23 @@ func resourceIpLoadbalancingTcpFarm() *schema.Resource {
 								return
 							},
 						},
-						"negate": &schema.Schema{
+						"negate": {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
-						"pattern": &schema.Schema{
+						"pattern": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"force_ssl": &schema.Schema{
+						"force_ssl": {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
-						"url": &schema.Schema{
+						"url": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"method": &schema.Schema{
+						"method": {
 							Type:     schema.TypeString,
 							Optional: true,
 							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
@@ -146,7 +146,7 @@ func resourceIpLoadbalancingTcpFarm() *schema.Resource {
 								return
 							},
 						},
-						"type": &schema.Schema{
+						"type": {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {

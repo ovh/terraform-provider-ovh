@@ -14,42 +14,42 @@ func resourceIPLoadbalancingRouteHTTP() *schema.Resource {
 		Delete: resourceIPLoadbalancingRouteHTTPDelete,
 
 		Schema: map[string]*schema.Schema{
-			"service_name": &schema.Schema{
+			"service_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"action": &schema.Schema{
+			"action": {
 				Type:     schema.TypeSet,
 				Required: true,
 				ForceNew: false,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"status": &schema.Schema{
+						"status": {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						"target": &schema.Schema{
+						"target": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"type": &schema.Schema{
+						"type": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 					},
 				},
 			},
-			"display_name": &schema.Schema{
+			"display_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"frontend_id": &schema.Schema{
+			"frontend_id": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"weight": &schema.Schema{
+			"weight": {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
