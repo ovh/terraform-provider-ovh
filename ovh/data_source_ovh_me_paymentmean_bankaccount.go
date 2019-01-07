@@ -27,35 +27,35 @@ func dataSourceMePaymentmeanBankaccount() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceMePaymentmeanBankaccountRead,
 		Schema: map[string]*schema.Schema{
-			"description_regexp": &schema.Schema{
+			"description_regexp": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
 				Default:  ".*",
 			},
-			"use_default": &schema.Schema{
+			"use_default": {
 				Type:     schema.TypeBool,
 				ForceNew: true,
 				Optional: true,
 				Default:  false,
 			},
-			"use_oldest": &schema.Schema{
+			"use_oldest": {
 				Type:     schema.TypeBool,
 				ForceNew: true,
 				Optional: true,
 				Default:  false,
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
 			// Computed
-			"description": &schema.Schema{
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"default": &schema.Schema{
+			"default": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},

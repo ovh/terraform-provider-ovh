@@ -22,7 +22,7 @@ func TestAccPublicCloudUser_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckPublicCloudUserDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccPublicCloudUserConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPublicCloudUserExists("ovh_publiccloud_user.user", t),

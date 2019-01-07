@@ -23,84 +23,84 @@ func resourcePublicCloudPrivateNetworkSubnet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"project_id": &schema.Schema{
+			"project_id": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
 				DefaultFunc: schema.EnvDefaultFunc("OVH_PROJECT_ID", ""),
 			},
-			"network_id": &schema.Schema{
+			"network_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"dhcp": &schema.Schema{
+			"dhcp": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
 				Default:  false,
 			},
-			"start": &schema.Schema{
+			"start": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: resourcePubliccloudPrivateNetworkSubnetValidateIP,
 			},
-			"end": &schema.Schema{
+			"end": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: resourcePubliccloudPrivateNetworkSubnetValidateIP,
 			},
-			"network": &schema.Schema{
+			"network": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: resourcePubliccloudPrivateNetworkSubnetValidateNetwork,
 			},
-			"region": &schema.Schema{
+			"region": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"no_gateway": &schema.Schema{
+			"no_gateway": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
 				Default:  false,
 			},
-			"gateway_ip": &schema.Schema{
+			"gateway_ip": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			"cidr": &schema.Schema{
+			"cidr": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			"ip_pools": &schema.Schema{
+			"ip_pools": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"network": &schema.Schema{
+						"network": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"region": &schema.Schema{
+						"region": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"dhcp": &schema.Schema{
+						"dhcp": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"end": &schema.Schema{
+						"end": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"start": &schema.Schema{
+						"start": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

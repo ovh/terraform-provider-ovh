@@ -14,7 +14,7 @@ func TestAccPublicCloudRegionsDataSource_basic(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccPublicCloudRegionsDatasourceConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccPublicCloudRegionsDatasource("data.ovh_publiccloud_regions.regions"),

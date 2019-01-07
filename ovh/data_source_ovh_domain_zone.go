@@ -10,27 +10,27 @@ func dataSourceDomainZone() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceDomainZoneRead,
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
 
 			// Computed
-			"has_dns_anycast": &schema.Schema{
+			"has_dns_anycast": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"dnssec_supported": &schema.Schema{
+			"dnssec_supported": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"name_servers": &schema.Schema{
+			"name_servers": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"last_update": &schema.Schema{
+			"last_update": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
