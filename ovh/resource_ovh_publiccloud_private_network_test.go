@@ -39,7 +39,7 @@ func TestAccPublicCloudPrivateNetwork_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckPublicCloudPrivateNetworkDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccPublicCloudPrivateNetworkConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVRackPublicCloudAttachmentExists("ovh_vrack_publiccloud_attachment.attach", t),

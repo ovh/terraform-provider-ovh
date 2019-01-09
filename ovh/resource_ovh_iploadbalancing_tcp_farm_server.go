@@ -33,21 +33,21 @@ func resourceIpLoadbalancingTcpFarmServer() *schema.Resource {
 		Update: resourceIpLoadbalancingTcpFarmServerUpdate,
 		Delete: resourceIpLoadbalancingTcpFarmServerDelete,
 		Schema: map[string]*schema.Schema{
-			"service_name": &schema.Schema{
+			"service_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"farm_id": &schema.Schema{
+			"farm_id": {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: true,
 			},
-			"display_name": &schema.Schema{
+			"display_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"address": &schema.Schema{
+			"address": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -59,20 +59,20 @@ func resourceIpLoadbalancingTcpFarmServer() *schema.Resource {
 					return
 				},
 			},
-			"ssl": &schema.Schema{
+			"ssl": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-			"cookie": &schema.Schema{
+			"cookie": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"port": &schema.Schema{
+			"port": {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
-			"proxy_protocol_version": &schema.Schema{
+			"proxy_protocol_version": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
@@ -83,26 +83,26 @@ func resourceIpLoadbalancingTcpFarmServer() *schema.Resource {
 					return
 				},
 			},
-			"chain": &schema.Schema{
+			"chain": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"weight": &schema.Schema{
+			"weight": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  1,
 			},
-			"probe": &schema.Schema{
+			"probe": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-			"backup": &schema.Schema{
+			"backup": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-			"status": &schema.Schema{
+			"status": {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {

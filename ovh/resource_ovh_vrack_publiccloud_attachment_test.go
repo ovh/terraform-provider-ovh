@@ -22,7 +22,7 @@ func TestAccVRackPublicCloudAttachment_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVRackPublicCloudAttachmentDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVRackPublicCloudAttachmentConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVRackPublicCloudAttachmentExists("ovh_vrack_publiccloud_attachment.attach", t),

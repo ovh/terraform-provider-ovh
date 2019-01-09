@@ -11,13 +11,13 @@ func dataSourcePublicCloudRegions() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourcePublicCloudRegionsRead,
 		Schema: map[string]*schema.Schema{
-			"project_id": &schema.Schema{
+			"project_id": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
 				DefaultFunc: schema.EnvDefaultFunc("OVH_PROJECT_ID", nil),
 			},
-			"names": &schema.Schema{
+			"names": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},

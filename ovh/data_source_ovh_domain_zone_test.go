@@ -18,7 +18,7 @@ func TestAccDomainZoneDataSource_basic(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t); testAccCheckDomainZoneExists(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainZoneHasNameServers("data.ovh_domain_zone.rootzone", t),

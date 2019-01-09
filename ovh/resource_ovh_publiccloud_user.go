@@ -26,35 +26,35 @@ func resourcePublicCloudUser() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"project_id": &schema.Schema{
+			"project_id": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
 				DefaultFunc: schema.EnvDefaultFunc("OVH_PROJECT_ID", nil),
 			},
-			"description": &schema.Schema{
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"username": &schema.Schema{
+			"username": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"password": &schema.Schema{
+			"password": {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
 			},
-			"status": &schema.Schema{
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_date": &schema.Schema{
+			"creation_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"openstack_rc": &schema.Schema{
+			"openstack_rc": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Computed: true,
