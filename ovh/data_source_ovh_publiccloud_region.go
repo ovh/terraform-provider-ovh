@@ -12,29 +12,29 @@ func dataSourcePublicCloudRegion() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourcePublicCloudRegionRead,
 		Schema: map[string]*schema.Schema{
-			"project_id": &schema.Schema{
+			"project_id": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
 				DefaultFunc: schema.EnvDefaultFunc("OVH_PROJECT_ID", nil),
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"services": &schema.Schema{
+			"services": {
 				Type:     schema.TypeSet,
 				Set:      publicCloudServiceHash,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": &schema.Schema{
+						"name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 
-						"status": &schema.Schema{
+						"status": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -42,22 +42,22 @@ func dataSourcePublicCloudRegion() *schema.Resource {
 				},
 			},
 
-			"continentCode": &schema.Schema{
+			"continentCode": {
 				Type:       schema.TypeString,
 				Computed:   true,
 				Deprecated: "Deprecated, use continent_code instead.",
 			},
-			"datacenterLocation": &schema.Schema{
+			"datacenterLocation": {
 				Type:       schema.TypeString,
 				Computed:   true,
 				Deprecated: "Deprecated, use datacenter_location instead.",
 			},
 
-			"continent_code": &schema.Schema{
+			"continent_code": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"datacenter_location": &schema.Schema{
+			"datacenter_location": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},

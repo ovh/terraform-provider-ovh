@@ -96,7 +96,7 @@ func TestAccOvhDomainZoneRedirection_Basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckOvhDomainZoneRedirectionDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRedirectionConfig_basic, zone, test_prefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOvhDomainZoneRedirectionExists("ovh_domain_zone_redirection.foobar", &redirection),
@@ -123,7 +123,7 @@ func TestAccOvhDomainZoneRedirection_Updated(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckOvhDomainZoneRedirectionDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRedirectionConfig_basic, zone, test_prefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOvhDomainZoneRedirectionExists("ovh_domain_zone_redirection.foobar", &redirection),
@@ -135,7 +135,7 @@ func TestAccOvhDomainZoneRedirection_Updated(t *testing.T) {
 						"ovh_domain_zone_redirection.foobar", "target", "https://terraform.net"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRedirectionConfig_new_value_1, zone, test_prefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOvhDomainZoneRedirectionExists("ovh_domain_zone_redirection.foobar", &redirection),
@@ -147,7 +147,7 @@ func TestAccOvhDomainZoneRedirection_Updated(t *testing.T) {
 						"ovh_domain_zone_redirection.foobar", "target", "https://terraform.io"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRedirectionConfig_new_value_2, zone, test_prefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOvhDomainZoneRedirectionExists("ovh_domain_zone_redirection.foobar", &redirection),
@@ -159,7 +159,7 @@ func TestAccOvhDomainZoneRedirection_Updated(t *testing.T) {
 						"ovh_domain_zone_redirection.foobar", "target", "https://terraform.io"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRedirectionConfig_new_value_3, zone, test_prefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOvhDomainZoneRedirectionExists("ovh_domain_zone_redirection.foobar", &redirection),

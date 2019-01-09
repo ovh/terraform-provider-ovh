@@ -17,13 +17,13 @@ func resourceVRackPublicCloudAttachment() *schema.Resource {
 		Delete: resourceVRackPublicCloudAttachmentDelete,
 
 		Schema: map[string]*schema.Schema{
-			"vrack_id": &schema.Schema{
+			"vrack_id": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
 				DefaultFunc: schema.EnvDefaultFunc("OVH_VRACK_ID", ""),
 			},
-			"project_id": &schema.Schema{
+			"project_id": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,

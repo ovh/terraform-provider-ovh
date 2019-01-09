@@ -17,7 +17,7 @@ func TestAccMePaymentmeanBankaccountDataSource_basic(t *testing.T) {
 			PreCheck:  func() { testAccPreCheck(t) },
 			Providers: testAccProviders,
 			Steps: []resource.TestStep{
-				resource.TestStep{
+				{
 					Config: testAccMePaymentmeanBankaccountDatasourceConfig,
 					Check: resource.ComposeTestCheckFunc(
 						resource.TestCheckResourceAttr(

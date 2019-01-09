@@ -12,7 +12,7 @@ func dataSourceIpLoadbalancing() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceIpLoadbalancingRead,
 		Schema: map[string]*schema.Schema{
-			"ipv6": &schema.Schema{
+			"ipv6": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -24,7 +24,7 @@ func dataSourceIpLoadbalancing() *schema.Resource {
 					return
 				},
 			},
-			"ipv4": &schema.Schema{
+			"ipv4": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -37,7 +37,7 @@ func dataSourceIpLoadbalancing() *schema.Resource {
 				},
 			},
 
-			"zone": &schema.Schema{
+			"zone": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -45,17 +45,17 @@ func dataSourceIpLoadbalancing() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"offer": &schema.Schema{
+			"offer": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"service_name": &schema.Schema{
+			"service_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ip_loadbalancing": &schema.Schema{
+			"ip_loadbalancing": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -67,7 +67,7 @@ func dataSourceIpLoadbalancing() *schema.Resource {
 					return
 				},
 			},
-			"state": &schema.Schema{
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -80,22 +80,22 @@ func dataSourceIpLoadbalancing() *schema.Resource {
 				},
 			},
 
-			"vrack_eligibility": &schema.Schema{
+			"vrack_eligibility": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"vrack_name": &schema.Schema{
+			"vrack_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"display_name": &schema.Schema{
+			"display_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ssl_configuration": &schema.Schema{
+			"ssl_configuration": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -109,23 +109,23 @@ func dataSourceIpLoadbalancing() *schema.Resource {
 			},
 
 			// additional exported attributes
-			"metrics_token": &schema.Schema{
+			"metrics_token": {
 				Type:      schema.TypeString,
 				Sensitive: true,
 				Computed:  true,
 			},
-			"orderable_zone": &schema.Schema{
+			"orderable_zone": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Set:      orderableZoneHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": &schema.Schema{
+						"name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 
-						"plan_code": &schema.Schema{
+						"plan_code": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

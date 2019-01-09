@@ -14,25 +14,25 @@ func resourceIPLoadbalancingRouteHTTPRule() *schema.Resource {
 		Delete: resourceIPLoadbalancingRouteHTTPRuleDelete,
 
 		Schema: map[string]*schema.Schema{
-			"service_name": &schema.Schema{
+			"service_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"route_id": &schema.Schema{
+			"route_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"display_name": &schema.Schema{
+			"display_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"field": &schema.Schema{
+			"field": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"match": &schema.Schema{
+			"match": {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
@@ -43,15 +43,15 @@ func resourceIPLoadbalancingRouteHTTPRule() *schema.Resource {
 					return
 				},
 			},
-			"negate": &schema.Schema{
+			"negate": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"pattern": &schema.Schema{
+			"pattern": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"sub_field": &schema.Schema{
+			"sub_field": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},

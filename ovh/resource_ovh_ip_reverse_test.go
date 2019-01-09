@@ -27,7 +27,7 @@ func TestAccIpReverse_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIpReverseDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccIpReverseConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIpReverseExists("ovh_ip_reverse.reverse", t),

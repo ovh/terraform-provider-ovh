@@ -32,7 +32,7 @@ func resourceIPLoadbalancingRefresh() *schema.Resource {
 		Delete: resourceIPLoadbalancingRefreshDelete,
 
 		Schema: map[string]*schema.Schema{
-			"service_name": &schema.Schema{
+			"service_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
