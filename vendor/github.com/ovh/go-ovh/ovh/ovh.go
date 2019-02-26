@@ -3,6 +3,7 @@ package ovh
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha1"
 	"encoding/json"
 	"errors"
@@ -21,7 +22,7 @@ const DefaultTimeout = 180 * time.Second
 const (
 	OvhEU        = "https://eu.api.ovh.com/1.0"
 	OvhCA        = "https://ca.api.ovh.com/1.0"
-	OvhUS        = "https://api.ovh.us/1.0"
+	OvhUS        = "https://api.us.ovhcloud.com/1.0"
 	KimsufiEU    = "https://eu.api.kimsufi.com/1.0"
 	KimsufiCA    = "https://ca.api.kimsufi.com/1.0"
 	SoyoustartEU = "https://eu.api.soyoustart.com/1.0"
@@ -64,6 +65,9 @@ type Client struct {
 
 	// Client is the underlying HTTP client used to run the requests. It may be overloaded but a default one is instanciated in ``NewClient`` by default.
 	Client *http.Client
+
+	// Logger is used to log HTTP requests and responses.
+	Logger Logger
 
 	// Ensures that the timeDelta function is only ran once
 	// sync.Once would consider init done, even in case of error
@@ -172,12 +176,55 @@ func (c *Client) DeleteUnAuth(url string, resType interface{}) error {
 	return c.CallAPI("DELETE", url, nil, resType, false)
 }
 
+// GetWithContext is a wrapper for the GET method
+func (c *Client) GetWithContext(ctx context.Context, url string, resType interface{}) error {
+	return c.CallAPIWithContext(ctx, "GET", url, nil, resType, true)
+}
+
+// GetUnAuthWithContext is a wrapper for the unauthenticated GET method
+func (c *Client) GetUnAuthWithContext(ctx context.Context, url string, resType interface{}) error {
+	return c.CallAPIWithContext(ctx, "GET", url, nil, resType, false)
+}
+
+// PostWithContext is a wrapper for the POST method
+func (c *Client) PostWithContext(ctx context.Context, url string, reqBody, resType interface{}) error {
+	return c.CallAPIWithContext(ctx, "POST", url, reqBody, resType, true)
+}
+
+// PostUnAuthWithContext is a wrapper for the unauthenticated POST method
+func (c *Client) PostUnAuthWithContext(ctx context.Context, url string, reqBody, resType interface{}) error {
+	return c.CallAPIWithContext(ctx, "POST", url, reqBody, resType, false)
+}
+
+// PutWithContext is a wrapper for the PUT method
+func (c *Client) PutWithContext(ctx context.Context, url string, reqBody, resType interface{}) error {
+	return c.CallAPIWithContext(ctx, "PUT", url, reqBody, resType, true)
+}
+
+// PutUnAuthWithContext is a wrapper for the unauthenticated PUT method
+func (c *Client) PutUnAuthWithContext(ctx context.Context, url string, reqBody, resType interface{}) error {
+	return c.CallAPIWithContext(ctx, "PUT", url, reqBody, resType, false)
+}
+
+// DeleteWithContext is a wrapper for the DELETE method
+func (c *Client) DeleteWithContext(ctx context.Context, url string, resType interface{}) error {
+	return c.CallAPIWithContext(ctx, "DELETE", url, nil, resType, true)
+}
+
+// DeleteUnAuthWithContext is a wrapper for the unauthenticated DELETE method
+func (c *Client) DeleteUnAuthWithContext(ctx context.Context, url string, resType interface{}) error {
+	return c.CallAPIWithContext(ctx, "DELETE", url, nil, resType, false)
+}
+
 // timeDelta returns the time  delta between the host and the remote API
 func (c *Client) getTimeDelta() (time.Duration, error) {
 
 	if !c.timeDeltaDone {
 		// Ensure only one thread is updating
 		c.timeDeltaMutex.Lock()
+
+		// Ensure that the mutex will be released on return
+		defer c.timeDeltaMutex.Unlock()
 
 		// Did we wait ? Maybe no more needed
 		if !c.timeDeltaDone {
@@ -189,7 +236,6 @@ func (c *Client) getTimeDelta() (time.Duration, error) {
 			c.timeDelta = time.Since(*ovhTime)
 			c.timeDeltaDone = true
 		}
-		c.timeDeltaMutex.Unlock()
 	}
 
 	return c.timeDelta, nil
@@ -279,7 +325,17 @@ func (c *Client) NewRequest(method, path string, reqBody interface{}, needAuth b
 
 // Do sends an HTTP request and returns an HTTP response
 func (c *Client) Do(req *http.Request) (*http.Response, error) {
-	return c.Client.Do(req)
+	if c.Logger != nil {
+		c.Logger.LogRequest(req)
+	}
+	resp, err := c.Client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	if c.Logger != nil {
+		c.Logger.LogResponse(resp)
+	}
+	return resp, nil
 }
 
 // CallAPI is the lowest level call helper. If needAuth is true,
@@ -301,16 +357,40 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 // If everything went fine, unmarshall response into resType and return nil
 // otherwise, return the error
 func (c *Client) CallAPI(method, path string, reqBody, resType interface{}, needAuth bool) error {
+	return c.CallAPIWithContext(context.Background(), method, path, reqBody, resType, needAuth)
+}
+
+// CallAPIWithContext is the lowest level call helper. If needAuth is true,
+// inject authentication headers and sign the request.
+//
+// Request signature is a sha1 hash on following fields, joined by '+':
+// - applicationSecret (from Client instance)
+// - consumerKey (from Client instance)
+// - capitalized method (from arguments)
+// - full request url, including any query string argument
+// - full serialized request body
+// - server current time (takes time delta into account)
+//
+// Context is used by http.Client to handle context cancelation
+//
+// Call will automatically assemble the target url from the endpoint
+// configured in the client instance and the path argument. If the reqBody
+// argument is not nil, it will also serialize it as json and inject
+// the required Content-Type header.
+//
+// If everything went fine, unmarshall response into resType and return nil
+// otherwise, return the error
+func (c *Client) CallAPIWithContext(ctx context.Context, method, path string, reqBody, resType interface{}, needAuth bool) error {
 	req, err := c.NewRequest(method, path, reqBody, needAuth)
 	if err != nil {
 		return err
 	}
+	req = req.WithContext(ctx)
 	response, err := c.Do(req)
 	if err != nil {
 		return err
 	}
 	return c.UnmarshalResponse(response, resType)
-
 }
 
 // UnmarshalResponse checks the response and unmarshals it into the response

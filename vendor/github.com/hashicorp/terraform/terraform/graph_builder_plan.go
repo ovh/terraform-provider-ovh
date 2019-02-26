@@ -84,6 +84,12 @@ func (b *PlanGraphBuilder) Steps() []GraphTransformer {
 			Module:   b.Module,
 		},
 
+		// Create orphan output nodes
+		&OrphanOutputTransformer{
+			Module: b.Module,
+			State:  b.State,
+		},
+
 		// Attach the configuration to any resources
 		&AttachResourceConfigTransformer{Module: b.Module},
 
@@ -93,12 +99,7 @@ func (b *PlanGraphBuilder) Steps() []GraphTransformer {
 		// Add root variables
 		&RootVariableTransformer{Module: b.Module},
 
-		// Create all the providers
-		&MissingProviderTransformer{Providers: b.Providers, Concrete: b.ConcreteProvider},
-		&ProviderTransformer{},
-		&DisableProviderTransformer{},
-		&ParentProviderTransformer{},
-		&AttachProviderConfigTransformer{Module: b.Module},
+		TransformProviders(b.Providers, b.ConcreteProvider, b.Module),
 
 		// Provisioner-related transformations. Only add these if requested.
 		GraphTransformIf(
@@ -113,6 +114,9 @@ func (b *PlanGraphBuilder) Steps() []GraphTransformer {
 		&ModuleVariableTransformer{
 			Module: b.Module,
 		},
+
+		// Remove modules no longer present in the config
+		&RemovedModuleTransformer{Module: b.Module, State: b.State},
 
 		// Connect so that the references are ready for targeting. We'll
 		// have to connect again later for providers and so on.
