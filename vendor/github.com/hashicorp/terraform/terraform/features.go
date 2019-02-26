@@ -1,9 +1,7 @@
 package terraform
 
-import (
-	"os"
-)
+import "os"
 
 // This file holds feature flags for the next release
 
-var featureOutputErrors = os.Getenv("TF_OUTPUT_ERRORS") != ""
+var flagWarnOutputErrors = os.Getenv("TF_WARN_OUTPUT_ERRORS") != ""
