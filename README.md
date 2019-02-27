@@ -1,4 +1,4 @@
-Terraform Provider
+Terraform OVH Provider
 ==================
 
 - Website: https://www.terraform.io
@@ -32,7 +32,10 @@ $ make build
 
 Using the provider
 ----------------------
-## Fill in for each provider
+
+Please see the documentation at [terraform.io](https://www.terraform.io/docs/providers/ovh/index.html).
+
+Or you can browse the documentation within this repo [here](https://github.com/terraform-providers/terraform-provider-ovh/tree/master/website/docs).
 
 Developing the Provider
 ---------------------------
@@ -48,16 +51,72 @@ $ $GOPATH/bin/terraform-provider-ovh
 ...
 ```
 
+Testing the Provider
+--------------------
+
 In order to test the provider, you can simply run `make test`.
 
 ```sh
 $ make test
 ```
 
-In order to run the full suite of Acceptance tests, run `make testacc`.
-You will need to setup some environment variable, see [doc/index.html](website/docs/index.html.markdown) for more information.
-*Note:* Acceptance tests create real resources, and often cost money to run.
+In order to run the full suite of Acceptance tests you will need to have the following list of OVH products attached to your account:
+
+- a [Vrack](https://www.ovh.ie/solutions/vrack/)
+- a [Load Balancer](https://www.ovh.ie/solutions/load-balancer/)
+- a registered [Domain](https://www.ovh.ie/domains/)
+- a [cloud project](https://www.ovh.ie/public-cloud/instances/)
+
+You will also need to setup your [OVH api](https://api.ovh.com) credentials. (see [documentation](https://www.terraform.io/docs/providers/ovh/index.html#configuration-reference))
+
+Once setup, please follow these steps to prepare an environment for running the Acceptance tests:
+
+```sh
+$ cat > ~/.ovhrc <<EOF
+# setup ovh api credentials
+export OVH_ENDPOINT="ovh-eu"
+export OVH_APPLICATION_KEY="..."
+export OVH_APPLICATION_SECRET="..."
+export OVH_CONSUMER_KEY="..."
+
+# ovh public cloud project id
+export OVH_PUBLIC_CLOUD=...
+
+# ovh vrack id
+export OVH_VRACK=...
+
+# ovh zone name
+export OVH_ZONE=...
+
+# ovh load balancer service id
+export OVH_IPLB_SERVICE=loadbalancer-...
+
+# if you have a load balancer attached to your account
+# you can use its public ipv4 to use for testing the
+# ip reverse feature as follows.
+# otherwise, you shall order a public IP and register it within
+# your ovh managed zone.
+export OVH_IP_BLOCK=A.B.C.D/32
+export OVH_IP=A.B.C.D
+export OVH_IP_REVERSE=ipD.ip-A-B-C.eu.
+EOF
+$ source ~/.ovhrc
+```
+
+In order for all the tests to pass you can run:
 
 ```sh
 $ make testacc
+```
+
+To filter acceptance test, you can run:
+
+```sh
+$ make testacc TESTARGS="-run TestAccPublicCloudPrivateNetwork"
+```
+
+To remove dangling resources, you can run:
+
+```sh
+$ make testacc TESTARGS="-sweep"
 ```
