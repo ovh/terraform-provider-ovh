@@ -163,8 +163,7 @@ func resourceOvhIpReverseDelete(d *schema.ResourceData, meta interface{}) error 
 
 func resourceOvhIpReverseExists(ip, ipreverse string, c *ovh.Client) error {
 	reverse := OvhIpReverse{}
-
-	endpoint := fmt.Sprintf("/ip/%s/reverse/%s", ip, ipreverse)
+	endpoint := fmt.Sprintf("/ip/%s/reverse/%s", strings.Replace(ip, "/", "%2F", 1), ipreverse)
 
 	err := c.Get(endpoint, &reverse)
 	if err != nil {
