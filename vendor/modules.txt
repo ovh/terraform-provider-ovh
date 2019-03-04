@@ -97,16 +97,16 @@ github.com/hashicorp/hil/parser
 github.com/hashicorp/hil/scanner
 # github.com/hashicorp/logutils v0.0.0-20150609070431-0dc08b1671f3
 github.com/hashicorp/logutils
-# github.com/hashicorp/terraform v0.0.0-20190214175014-182daa619826
+# github.com/hashicorp/terraform v0.0.0-20190227065421-fc531f54a878
 github.com/hashicorp/terraform/plugin
 github.com/hashicorp/terraform/helper/hashcode
+github.com/hashicorp/terraform/helper/logging
 github.com/hashicorp/terraform/helper/resource
 github.com/hashicorp/terraform/helper/schema
 github.com/hashicorp/terraform/terraform
 github.com/hashicorp/terraform/plugin/discovery
 github.com/hashicorp/terraform/config/module
 github.com/hashicorp/terraform/helper/config
-github.com/hashicorp/terraform/helper/logging
 github.com/hashicorp/terraform/config
 github.com/hashicorp/terraform/config/configschema
 github.com/hashicorp/terraform/dag
