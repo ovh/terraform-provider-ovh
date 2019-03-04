@@ -55,11 +55,13 @@ func testSweepDomainZoneRecord(region string) error {
 			return fmt.Errorf("Error calling /domain/zone/%s/record/%v:\n\t %q", zoneName, rec, err)
 		}
 
+		log.Printf("[DEBUG] record found %v", record)
 		if !strings.HasPrefix(record.SubDomain, test_prefix) {
 			continue
 		}
 
 		err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+			log.Printf("[INFO] Deleting record %v", record)
 			if err := client.Delete(fmt.Sprintf("/domain/zone/%s/record/%v", zoneName, rec), nil); err != nil {
 				return resource.RetryableError(err)
 			}
@@ -72,6 +74,8 @@ func testSweepDomainZoneRecord(region string) error {
 	}
 
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+		log.Printf("[DEBUG] Refreshing zone %s", zoneName)
+
 		err := client.Post(
 			fmt.Sprintf("/domain/zone/%s/refresh", zoneName),
 			nil,
