@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 	"log"
@@ -90,6 +91,7 @@ func testSweepDomainZoneRedirection(region string) error {
 func TestAccOvhDomainZoneRedirection_Basic(t *testing.T) {
 	var redirection OvhDomainZoneRedirection
 	zone := os.Getenv("OVH_ZONE")
+	subdomain := acctest.RandomWithPrefix(test_prefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -97,11 +99,11 @@ func TestAccOvhDomainZoneRedirection_Basic(t *testing.T) {
 		CheckDestroy: testAccCheckOvhDomainZoneRedirectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRedirectionConfig_basic, zone, test_prefix),
+				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRedirectionConfig_basic, zone, subdomain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOvhDomainZoneRedirectionExists("ovh_domain_zone_redirection.foobar", &redirection),
 					resource.TestCheckResourceAttr(
-						"ovh_domain_zone_redirection.foobar", "subdomain", test_prefix),
+						"ovh_domain_zone_redirection.foobar", "subdomain", subdomain),
 					resource.TestCheckResourceAttr(
 						"ovh_domain_zone_redirection.foobar", "zone", zone),
 					resource.TestCheckResourceAttr(
@@ -117,6 +119,7 @@ func TestAccOvhDomainZoneRedirection_Basic(t *testing.T) {
 func TestAccOvhDomainZoneRedirection_Updated(t *testing.T) {
 	redirection := OvhDomainZoneRedirection{}
 	zone := os.Getenv("OVH_ZONE")
+	subdomain := acctest.RandomWithPrefix(test_prefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -124,11 +127,11 @@ func TestAccOvhDomainZoneRedirection_Updated(t *testing.T) {
 		CheckDestroy: testAccCheckOvhDomainZoneRedirectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRedirectionConfig_basic, zone, test_prefix),
+				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRedirectionConfig_basic, zone, subdomain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOvhDomainZoneRedirectionExists("ovh_domain_zone_redirection.foobar", &redirection),
 					resource.TestCheckResourceAttr(
-						"ovh_domain_zone_redirection.foobar", "subdomain", test_prefix),
+						"ovh_domain_zone_redirection.foobar", "subdomain", subdomain),
 					resource.TestCheckResourceAttr(
 						"ovh_domain_zone_redirection.foobar", "zone", zone),
 					resource.TestCheckResourceAttr(
@@ -136,11 +139,11 @@ func TestAccOvhDomainZoneRedirection_Updated(t *testing.T) {
 				),
 			},
 			{
-				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRedirectionConfig_new_value_1, zone, test_prefix),
+				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRedirectionConfig_new_value_1, zone, subdomain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOvhDomainZoneRedirectionExists("ovh_domain_zone_redirection.foobar", &redirection),
 					resource.TestCheckResourceAttr(
-						"ovh_domain_zone_redirection.foobar", "subdomain", test_prefix),
+						"ovh_domain_zone_redirection.foobar", "subdomain", subdomain),
 					resource.TestCheckResourceAttr(
 						"ovh_domain_zone_redirection.foobar", "zone", zone),
 					resource.TestCheckResourceAttr(
@@ -148,11 +151,11 @@ func TestAccOvhDomainZoneRedirection_Updated(t *testing.T) {
 				),
 			},
 			{
-				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRedirectionConfig_new_value_2, zone, test_prefix),
+				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRedirectionConfig_new_value_2, zone, subdomain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOvhDomainZoneRedirectionExists("ovh_domain_zone_redirection.foobar", &redirection),
 					resource.TestCheckResourceAttr(
-						"ovh_domain_zone_redirection.foobar", "subdomain", fmt.Sprintf("%s2", test_prefix)),
+						"ovh_domain_zone_redirection.foobar", "subdomain", fmt.Sprintf("%s2", subdomain)),
 					resource.TestCheckResourceAttr(
 						"ovh_domain_zone_redirection.foobar", "zone", zone),
 					resource.TestCheckResourceAttr(
@@ -160,11 +163,11 @@ func TestAccOvhDomainZoneRedirection_Updated(t *testing.T) {
 				),
 			},
 			{
-				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRedirectionConfig_new_value_3, zone, test_prefix),
+				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRedirectionConfig_new_value_3, zone, subdomain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOvhDomainZoneRedirectionExists("ovh_domain_zone_redirection.foobar", &redirection),
 					resource.TestCheckResourceAttr(
-						"ovh_domain_zone_redirection.foobar", "subdomain", fmt.Sprintf("%s3", test_prefix)),
+						"ovh_domain_zone_redirection.foobar", "subdomain", fmt.Sprintf("%s3", subdomain)),
 					resource.TestCheckResourceAttr(
 						"ovh_domain_zone_redirection.foobar", "zone", zone),
 					resource.TestCheckResourceAttr(
