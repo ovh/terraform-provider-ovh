@@ -97,16 +97,16 @@ github.com/hashicorp/hil/parser
 github.com/hashicorp/hil/scanner
 # github.com/hashicorp/logutils v0.0.0-20150609070431-0dc08b1671f3
 github.com/hashicorp/logutils
-# github.com/hashicorp/terraform v0.0.0-20190214175014-182daa619826
+# github.com/hashicorp/terraform v0.0.0-20190227065421-fc531f54a878
 github.com/hashicorp/terraform/plugin
 github.com/hashicorp/terraform/helper/hashcode
+github.com/hashicorp/terraform/helper/logging
 github.com/hashicorp/terraform/helper/resource
 github.com/hashicorp/terraform/helper/schema
 github.com/hashicorp/terraform/terraform
 github.com/hashicorp/terraform/plugin/discovery
 github.com/hashicorp/terraform/config/module
 github.com/hashicorp/terraform/helper/config
-github.com/hashicorp/terraform/helper/logging
 github.com/hashicorp/terraform/config
 github.com/hashicorp/terraform/config/configschema
 github.com/hashicorp/terraform/dag
@@ -116,6 +116,7 @@ github.com/hashicorp/terraform/httpclient
 github.com/hashicorp/terraform/moduledeps
 github.com/hashicorp/terraform/tfdiags
 github.com/hashicorp/terraform/version
+github.com/hashicorp/terraform/helper/acctest
 github.com/hashicorp/terraform/registry
 github.com/hashicorp/terraform/registry/regsrc
 github.com/hashicorp/terraform/registry/response
@@ -170,13 +171,19 @@ github.com/zclconf/go-cty/cty/json
 # golang.org/x/crypto v0.0.0-20180211211603-9de5f2eaf759
 golang.org/x/crypto/openpgp
 golang.org/x/crypto/bcrypt
+golang.org/x/crypto/ssh
 golang.org/x/crypto/openpgp/armor
 golang.org/x/crypto/openpgp/errors
 golang.org/x/crypto/openpgp/packet
 golang.org/x/crypto/openpgp/s2k
 golang.org/x/crypto/blowfish
+golang.org/x/crypto/curve25519
+golang.org/x/crypto/ed25519
+golang.org/x/crypto/internal/chacha20
+golang.org/x/crypto/poly1305
 golang.org/x/crypto/cast5
 golang.org/x/crypto/openpgp/elgamal
+golang.org/x/crypto/ed25519/internal/edwards25519
 # golang.org/x/net v0.0.0-20171004034648-a04bdaca5b32
 golang.org/x/net/context
 golang.org/x/net/html

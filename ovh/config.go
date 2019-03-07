@@ -5,6 +5,8 @@ import (
 	"log"
 	"time"
 
+	cleanhttp "github.com/hashicorp/go-cleanhttp"
+	"github.com/hashicorp/terraform/helper/logging"
 	"github.com/ovh/go-ovh/ovh"
 )
 
@@ -59,6 +61,14 @@ func (c *Config) loadAndValidate() error {
 	if err != nil {
 		return fmt.Errorf("Error getting ovh client: %q\n", err)
 	}
+
+	// decorating the OVH http client with logs
+	httpClient := targetClient.Client
+	if targetClient.Client.Transport == nil {
+		targetClient.Client.Transport = cleanhttp.DefaultTransport()
+	}
+
+	httpClient.Transport = logging.NewTransport("OVH", httpClient.Transport)
 
 	var cred OvhAuthCurrentCredential
 	err = targetClient.Get("/auth/currentCredential", &cred)
