@@ -91,7 +91,9 @@ func resourceOvhDomainZoneRedirectionCreate(d *schema.ResourceData, meta interfa
 
 	log.Printf("[INFO] OVH Redirection ID: %s", d.Id())
 
-	OvhDomainZoneRefresh(d, meta)
+	if err := ovhDomainZoneRefresh(d, meta); err != nil {
+		log.Printf("[WARN] OVH Domain zone refresh after redirection creation failed: %s", err)
+	}
 
 	return resourceOvhDomainZoneRedirectionRead(d, meta)
 }
@@ -156,7 +158,9 @@ func resourceOvhDomainZoneRedirectionUpdate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("Failed to update OVH Redirection: %s", err)
 	}
 
-	OvhDomainZoneRefresh(d, meta)
+	if err := ovhDomainZoneRefresh(d, meta); err != nil {
+		log.Printf("[WARN] OVH Domain zone refresh after redirection update failed: %s", err)
+	}
 
 	return resourceOvhDomainZoneRedirectionRead(d, meta)
 }
@@ -175,7 +179,9 @@ func resourceOvhDomainZoneRedirectionDelete(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("Error deleting OVH Redirection: %s", err)
 	}
 
-	OvhDomainZoneRefresh(d, meta)
+	if err := ovhDomainZoneRefresh(d, meta); err != nil {
+		log.Printf("[WARN] OVH Domain zone refresh after redirection deletion failed: %s", err)
+	}
 
 	return nil
 }

@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 	"log"
@@ -54,11 +55,13 @@ func testSweepDomainZoneRecord(region string) error {
 			return fmt.Errorf("Error calling /domain/zone/%s/record/%v:\n\t %q", zoneName, rec, err)
 		}
 
+		log.Printf("[DEBUG] record found %v", record)
 		if !strings.HasPrefix(record.SubDomain, test_prefix) {
 			continue
 		}
 
 		err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+			log.Printf("[INFO] Deleting record %v", record)
 			if err := client.Delete(fmt.Sprintf("/domain/zone/%s/record/%v", zoneName, rec), nil); err != nil {
 				return resource.RetryableError(err)
 			}
@@ -71,6 +74,8 @@ func testSweepDomainZoneRecord(region string) error {
 	}
 
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+		log.Printf("[DEBUG] Refreshing zone %s", zoneName)
+
 		err := client.Post(
 			fmt.Sprintf("/domain/zone/%s/refresh", zoneName),
 			nil,
@@ -90,6 +95,7 @@ func testSweepDomainZoneRecord(region string) error {
 func TestAccOvhDomainZoneRecord_Basic(t *testing.T) {
 	var record OvhDomainZoneRecord
 	zone := os.Getenv("OVH_ZONE")
+	subdomain := acctest.RandomWithPrefix(test_prefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -97,11 +103,11 @@ func TestAccOvhDomainZoneRecord_Basic(t *testing.T) {
 		CheckDestroy: testAccCheckOvhDomainZoneRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRecordConfig_basic, zone, test_prefix),
+				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRecordConfig_basic, zone, subdomain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOvhDomainZoneRecordExists("ovh_domain_zone_record.foobar", &record),
 					resource.TestCheckResourceAttr(
-						"ovh_domain_zone_record.foobar", "subdomain", test_prefix),
+						"ovh_domain_zone_record.foobar", "subdomain", subdomain),
 					resource.TestCheckResourceAttr(
 						"ovh_domain_zone_record.foobar", "zone", zone),
 					resource.TestCheckResourceAttr(
@@ -117,6 +123,7 @@ func TestAccOvhDomainZoneRecord_Basic(t *testing.T) {
 func TestAccOvhDomainZoneRecord_Updated(t *testing.T) {
 	record := OvhDomainZoneRecord{}
 	zone := os.Getenv("OVH_ZONE")
+	subdomain := acctest.RandomWithPrefix(test_prefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -124,11 +131,11 @@ func TestAccOvhDomainZoneRecord_Updated(t *testing.T) {
 		CheckDestroy: testAccCheckOvhDomainZoneRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRecordConfig_basic, zone, test_prefix),
+				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRecordConfig_basic, zone, subdomain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOvhDomainZoneRecordExists("ovh_domain_zone_record.foobar", &record),
 					resource.TestCheckResourceAttr(
-						"ovh_domain_zone_record.foobar", "subdomain", test_prefix),
+						"ovh_domain_zone_record.foobar", "subdomain", subdomain),
 					resource.TestCheckResourceAttr(
 						"ovh_domain_zone_record.foobar", "zone", zone),
 					resource.TestCheckResourceAttr(
@@ -138,11 +145,11 @@ func TestAccOvhDomainZoneRecord_Updated(t *testing.T) {
 				),
 			},
 			{
-				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRecordConfig_new_value_1, zone, test_prefix),
+				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRecordConfig_new_value_1, zone, subdomain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOvhDomainZoneRecordExists("ovh_domain_zone_record.foobar", &record),
 					resource.TestCheckResourceAttr(
-						"ovh_domain_zone_record.foobar", "subdomain", test_prefix),
+						"ovh_domain_zone_record.foobar", "subdomain", subdomain),
 					resource.TestCheckResourceAttr(
 						"ovh_domain_zone_record.foobar", "zone", zone),
 					resource.TestCheckResourceAttr(
@@ -152,11 +159,11 @@ func TestAccOvhDomainZoneRecord_Updated(t *testing.T) {
 				),
 			},
 			{
-				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRecordConfig_new_value_2, zone, test_prefix),
+				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRecordConfig_new_value_2, zone, subdomain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOvhDomainZoneRecordExists("ovh_domain_zone_record.foobar", &record),
 					resource.TestCheckResourceAttr(
-						"ovh_domain_zone_record.foobar", "subdomain", fmt.Sprintf("%s2", test_prefix)),
+						"ovh_domain_zone_record.foobar", "subdomain", fmt.Sprintf("%s2", subdomain)),
 					resource.TestCheckResourceAttr(
 						"ovh_domain_zone_record.foobar", "zone", zone),
 					resource.TestCheckResourceAttr(
@@ -166,11 +173,11 @@ func TestAccOvhDomainZoneRecord_Updated(t *testing.T) {
 				),
 			},
 			{
-				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRecordConfig_new_value_3, zone, test_prefix),
+				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRecordConfig_new_value_3, zone, subdomain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOvhDomainZoneRecordExists("ovh_domain_zone_record.foobar", &record),
 					resource.TestCheckResourceAttr(
-						"ovh_domain_zone_record.foobar", "subdomain", fmt.Sprintf("%s3", test_prefix)),
+						"ovh_domain_zone_record.foobar", "subdomain", fmt.Sprintf("%s3", subdomain)),
 					resource.TestCheckResourceAttr(
 						"ovh_domain_zone_record.foobar", "zone", zone),
 					resource.TestCheckResourceAttr(
