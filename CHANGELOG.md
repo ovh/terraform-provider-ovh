@@ -1,4 +1,14 @@
 ## 0.4.0 (Unreleased)
+
+IMPROVEMENTS:
+
+* provider: Enable request/response logging in `>=DEBUG` mode [GH-77]
+
+BUG FIXES:
+
+* resource/ovh_domain_zone_record: Attempt retries to avoid errors caused by eventual consistency after creation/update/deletion [GH-77]
+* resource/ovh_domain_zone_redirection: Return errors from refreshing after creation/update/deletion [GH-77]
+
 ## 0.3.0 (July 11, 2018)
 
 DEPRECATIONS / NOTES:
