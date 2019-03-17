@@ -1,7 +1,7 @@
 ---
 layout: "ovh"
 page_title: "OVH: ovh_iploadbalancing_http_route"
-sidebar_current: "docs-ovh-resource-iploadbalancing-http-route"
+sidebar_current: "docs-ovh-resource-iploadbalancing-http-route-x"
 description: |-
   Manage http route for a loadbalancer service.
 ---

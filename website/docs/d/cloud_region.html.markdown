@@ -1,7 +1,7 @@
 ---
 layout: "ovh"
 page_title: "OVH: cloud_region"
-sidebar_current: "docs-ovh-datasource-cloud-region"
+sidebar_current: "docs-ovh-datasource-cloud-region-x"
 description: |-
   Get information & status of a region associated with a public cloud project.
 ---
