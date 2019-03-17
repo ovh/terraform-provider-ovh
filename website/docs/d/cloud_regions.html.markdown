@@ -6,7 +6,7 @@ description: |-
   Get the list of regions associated with a public cloud project.
 ---
 
-# ovh\_cloud\_regions
+# ovh_cloud_regions
 
 Use this data source to get the regions of a public cloud project.
 
