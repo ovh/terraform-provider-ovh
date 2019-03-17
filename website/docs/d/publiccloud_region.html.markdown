@@ -6,7 +6,7 @@ description: |-
   Get information & status of a region associated with a public cloud project.
 ---
 
-# publiccloud\_region
+# ovh_publiccloud_region
 
 __DEPRECATED__ use `ovh_cloud_region` instead.
 

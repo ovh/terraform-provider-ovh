@@ -6,7 +6,7 @@ description: |-
   Get information & status of a region associated with a public cloud project.
 ---
 
-# cloud_region
+# ovh_cloud_region
 
 Use this data source to retrieve information about a region associated with a
 public cloud project. The region must be associated with the project.
