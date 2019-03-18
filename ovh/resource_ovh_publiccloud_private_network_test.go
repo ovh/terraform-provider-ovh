@@ -22,12 +22,6 @@ data "ovh_publiccloud_regions" "regions" {
   project_id = "${ovh_vrack_publiccloud_attachment.attach.project_id}"
 }
 
-data "ovh_publiccloud_region" "region_attr" {
-  count = 2
-  project_id = "${data.ovh_publiccloud_regions.regions.project_id}"
-  name = "${element(data.ovh_publiccloud_regions.regions.names, count.index)}"
-}
-
 resource "ovh_publiccloud_private_network" "network" {
   project_id  = "${ovh_vrack_publiccloud_attachment.attach.project_id}"
   vlan_id = 0
