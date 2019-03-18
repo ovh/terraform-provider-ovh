@@ -12,7 +12,7 @@ Creates a subnet in a private network of a public cloud project.
 
 ## Example Usage
 
-```
+```hcl
 resource "ovh_cloud_network_private_subnet" "subnet" {
    project_id = "67890"
    network_id = "0234543"

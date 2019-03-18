@@ -6,7 +6,7 @@ description: |-
   Creates a subnet in a private network of a public cloud project.
 ---
 
-# ovh_publiccloud\_private_network\_subnet
+# ovh_publiccloud_private_network_subnet
 
 ~> __DEPRECATED:__ Use [`ovh_cloud_network_private_subnet`](./cloud_network_private_subnet.html) instead.
 
@@ -14,7 +14,7 @@ Creates a subnet in a private network of a public cloud project.
 
 ## Example Usage
 
-```
+```hcl
 resource "ovh_publiccloud_private_network_subnet" "subnet" {
    project_id = "67890"
    network_id = "0234543"
