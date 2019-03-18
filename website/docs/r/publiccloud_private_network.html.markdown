@@ -1,7 +1,7 @@
 ---
 layout: "ovh"
 page_title: "OVH: publiccloud_private_network"
-sidebar_current: "docs-ovh-resource-publiccloud-private-network"
+sidebar_current: "docs-ovh-resource-publiccloud-private-network-x"
 description: |-
   Creates a private network in a public cloud project.
 ---
