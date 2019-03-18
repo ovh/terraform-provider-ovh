@@ -50,6 +50,6 @@ data "ovh_publiccloud_regions" "regions" {
 data "ovh_publiccloud_region" "region_attr" {
   count = 3
   project_id = "${data.ovh_publiccloud_regions.regions.project_id}"
-  name = "${element(data.ovh_publiccloud_regions.regions.names, count.index)}"
+  name = "${element(sort(data.ovh_publiccloud_regions.regions.names), count.index)}"
 }
 `, os.Getenv("OVH_PUBLIC_CLOUD"))
