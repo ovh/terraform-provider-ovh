@@ -6,13 +6,13 @@ description: |-
   Creates a frontend for an IP Load balancing service.
 ---
 
-# ovh\_iploadbalancing\_tcp_frontend
+# ovh_iploadbalancing_tcp_frontend
 
 Creates a backend server group (frontend) to be used by loadbalancing frontend(s)
 
 ## Example Usage
 
-```
+```hcl
 data "ovh_iploadbalancing" "lb" {
   service_name = "ip-1.2.3.4"
   state       = "ok"

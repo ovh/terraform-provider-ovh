@@ -50,7 +50,7 @@ Or let the provider fetching them from your environment (see "[Configuration ref
 
 ## Example Usage
 
-```
+```hcl
 # Create a public cloud user
 resource "ovh_publiccloud_user" "user-test" {
   # ...
