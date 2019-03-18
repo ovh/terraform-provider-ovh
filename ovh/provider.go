@@ -43,7 +43,6 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
-			// New naming schema (issue #23)
 			"ovh_cloud_region":               dataSourcePublicCloudRegion(),
 			"ovh_cloud_regions":              dataSourcePublicCloudRegions(),
 			"ovh_domain_zone":                dataSourceDomainZone(),
@@ -51,9 +50,11 @@ func Provider() terraform.ResourceProvider {
 			"ovh_me_paymentmean_bankaccount": dataSourceMePaymentmeanBankaccount(),
 			"ovh_me_paymentmean_creditcard":  dataSourceMePaymentmeanCreditcard(),
 
-			// Legacy naming schema (new datasources should not be added here)
-			"ovh_publiccloud_region":  dataSourcePublicCloudRegion(),
-			"ovh_publiccloud_regions": dataSourcePublicCloudRegions(),
+			// Legacy naming schema (publiccloud)
+			"ovh_publiccloud_region": deprecated(dataSourcePublicCloudRegion(),
+				"Use ovh_cloud_region data source instead"),
+			"ovh_publiccloud_regions": deprecated(dataSourcePublicCloudRegions(),
+				"Use ovh_cloud_regions data source instead"),
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
@@ -66,16 +67,20 @@ func Provider() terraform.ResourceProvider {
 			"ovh_domain_zone_record":              resourceOvhDomainZoneRecord(),
 			"ovh_domain_zone_redirection":         resourceOvhDomainZoneRedirection(),
 			"ovh_ip_reverse":                      resourceOvhIpReverse(),
-			// New naming schema (issue #23)
-			"ovh_cloud_network_private":        resourcePublicCloudPrivateNetwork(),
-			"ovh_cloud_network_private_subnet": resourcePublicCloudPrivateNetworkSubnet(),
-			"ovh_cloud_user":                   resourcePublicCloudUser(),
-			"ovh_vrack_cloudproject":           resourceVRackPublicCloudAttachment(),
-			// Legacy naming schema (new resources should not be added here)
-			"ovh_publiccloud_private_network":        resourcePublicCloudPrivateNetwork(),
-			"ovh_publiccloud_private_network_subnet": resourcePublicCloudPrivateNetworkSubnet(),
-			"ovh_publiccloud_user":                   resourcePublicCloudUser(),
-			"ovh_vrack_publiccloud_attachment":       resourceVRackPublicCloudAttachment(),
+			"ovh_cloud_network_private":           resourcePublicCloudPrivateNetwork(),
+			"ovh_cloud_network_private_subnet":    resourcePublicCloudPrivateNetworkSubnet(),
+			"ovh_cloud_user":                      resourcePublicCloudUser(),
+			"ovh_vrack_cloudproject":              resourceVRackPublicCloudAttachment(),
+
+			// Legacy naming schema (publiccloud)
+			"ovh_publiccloud_private_network": deprecated(resourcePublicCloudPrivateNetwork(),
+				"Use ovh_cloud_network_private resource instead"),
+			"ovh_publiccloud_private_network_subnet": deprecated(resourcePublicCloudPrivateNetworkSubnet(),
+				"Use ovh_cloud_network_private_subnet resource instead"),
+			"ovh_publiccloud_user": deprecated(resourcePublicCloudUser(),
+				"Use ovh_cloud_user resource instead"),
+			"ovh_vrack_publiccloud_attachment": deprecated(resourceVRackPublicCloudAttachment(),
+				"Use ovh_vrack_cloudproject resource instead"),
 		},
 
 		ConfigureFunc: configureProvider,
@@ -133,6 +138,11 @@ func configureProvider(d *schema.ResourceData) (interface{}, error) {
 	}
 
 	return &config, nil
+}
+
+func deprecated(r *schema.Resource, msg string) *schema.Resource {
+	r.DeprecationMessage = msg
+	return r
 }
 
 // currentUserHome attempts to get current user's home directory
