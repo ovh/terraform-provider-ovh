@@ -14,7 +14,7 @@ Attach an existing PublicCloud project to an existing VRack.
 
 ## Example Usage
 
-```
+```hcl
 resource "ovh_vrack_publiccloud_attachment" "attach" {
   vrack_id   = "12345"
   project_id = "67890"

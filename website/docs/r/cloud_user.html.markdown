@@ -12,7 +12,7 @@ Creates a user in a public cloud project.
 
 ## Example Usage
 
-```
+```hcl
 resource "ovh_cloud_user" "user1" {
    project_id = "67890"
 }
