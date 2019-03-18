@@ -6,9 +6,10 @@ description: |-
   Creates a user in a public cloud project.
 ---
 
-# ovh_publiccloud\_user
+# ovh_publiccloud_user
 
-__DEPRECATED__ use `ovh_cloud_user` instead.
+~> __DEPRECATED:__ Use [`ovh_cloud_user`](./cloud_user.html) instead.
+
 Creates a user in a public cloud project.
 
 ## Example Usage
