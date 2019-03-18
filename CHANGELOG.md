@@ -1,5 +1,9 @@
 ## 0.4.0 (Unreleased)
 
+NOTES/DEPRECATIONS:
+
+* `*/ovh_publiccloud_*`: Deprecate `publiccloud` data sources & resources (to issue warnings when used) [GH-81]
+
 FEATURES:
 
 * __New Resource:__ `ovh_iploadbalancing_tcp_frontend` [GH-58]
