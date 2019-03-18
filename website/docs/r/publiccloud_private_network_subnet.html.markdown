@@ -8,7 +8,8 @@ description: |-
 
 # ovh_publiccloud\_private_network\_subnet
 
-__DEPRECATED__ use `ovh_cloud_network_private_subnet` instead.
+~> __DEPRECATED:__ Use [`ovh_cloud_network_private_subnet`](./cloud_network_private_subnet.html) instead.
+
 Creates a subnet in a private network of a public cloud project.
 
 ## Example Usage
