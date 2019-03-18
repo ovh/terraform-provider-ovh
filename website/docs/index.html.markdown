@@ -61,9 +61,9 @@ resource "ovh_publiccloud_user" "user-test" {
 
 The following arguments are supported:
 
-* `endpoint` - (Required) Specify which API  endpoint to use.
+* `endpoint` - (Required) Specify which API endpoint to use.
   It can be set using the `OVH_ENDPOINT` environment
-  variable. Value can be set to either "ovh-eu" or "ovh-ca".
+  variable. e.g. `ovh-eu` or `ovh-ca`.
 
 * `application_key` - (Optional) The API Application Key. If omitted,
   the `OVH_APPLICATION_KEY` environment variable is used.
@@ -79,17 +79,17 @@ The following arguments are supported:
 In order to run the Acceptance Tests for development, the following environment
 variables must also be set:
 
-* `OVH_ENDPOINT` - possible value are: ovh-eu, ovh-ca, ovh-us, soyoustart-eu, soyoustart-ca, kimsufi-ca, kimsufi-eu, runabove-ca
+* `OVH_ENDPOINT` - possible value are: `ovh-eu`, `ovh-ca`, `ovh-us`, `soyoustart-eu`, `soyoustart-ca`, `kimsufi-ca`, `kimsufi-eu`, `runabove-ca`
 
-* `OVH_IPLB_SERVICE` - The id of the iplb you use
+* `OVH_IPLB_SERVICE` - The ID of the IP Load Balancer to use
 
-* `OVH_VRACK` - The id of the vrack to use.
+* `OVH_VRACK` - The ID of the vRack to use.
 
-* `OVH_PUBLIC_CLOUD` - The id of the public cloud project.
+* `OVH_PUBLIC_CLOUD` - The ID of your public cloud project.
 
-* `OVH_ZONE` - The domain you own to test the domain_zone ressource.
+* `OVH_ZONE` - The domain you own to test the domain_zone resource.
 
-You will also need to [generate an ovh token](https://api.ovh.com/createToken/?GET=/*&POST=/*&PUT=/*&DELETE=/*) and use it to set the following environment variables:
+You will also need to [generate an OVH token](https://api.ovh.com/createToken/?GET=/*&POST=/*&PUT=/*&DELETE=/*) and use it to set the following environment variables:
 
  * `OVH_APPLICATION_KEY`
 
