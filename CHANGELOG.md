@@ -1,5 +1,9 @@
 ## 0.4.0 (Unreleased)
 
+FEATURES:
+
+* __New Resource:__ `ovh_iploadbalancing_tcp_frontend` [GH-58]
+
 IMPROVEMENTS:
 
 * provider: Enable request/response logging in `>=DEBUG` mode [GH-77]
