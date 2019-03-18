@@ -6,9 +6,10 @@ description: |-
   Creates a private network in a public cloud project.
 ---
 
-# ovh_publiccloud\_private_network
+# ovh_publiccloud_private_network
 
-__DEPRECATED__ use `ovh_cloud_network_private` instead.
+~> __DEPRECATED:__ Use [`ovh_cloud_network_private`](./cloud_network_private.html) instead.
+
 Creates a private network in a public cloud project.
 
 ## Example Usage

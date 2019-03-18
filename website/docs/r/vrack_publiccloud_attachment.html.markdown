@@ -6,9 +6,10 @@ description: |-
   Attach an existing PublicCloud project to an existing VRack.
 ---
 
-# ovh_vrack\_publiccloud\_attachment
+# ovh_vrack_publiccloud_attachment
 
-__DEPRECATED__ use `ovh_vrack_cloudproject` instead.
+~> __DEPRECATED:__ Use [`ovh_vrack_cloudproject`](./vrack_cloudproject.html) instead.
+
 Attach an existing PublicCloud project to an existing VRack.
 
 ## Example Usage
