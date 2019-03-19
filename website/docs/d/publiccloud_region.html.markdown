@@ -1,14 +1,14 @@
 ---
 layout: "ovh"
 page_title: "OVH: publiccloud_region"
-sidebar_current: "docs-ovh-datasource-publiccloud-region"
+sidebar_current: "docs-ovh-datasource-publiccloud-region-x"
 description: |-
   Get information & status of a region associated with a public cloud project.
 ---
 
-# publiccloud\_region
+# ovh_publiccloud_region
 
-__DEPRECATED__ use `ovh_cloud_region` instead.
+~> __DEPRECATED:__ Use [`ovh_cloud_region`](./cloud_region.html) instead.
 
 Use this data source to retrieve information about a region associated with a
 public cloud project. The region must be associated with the project.

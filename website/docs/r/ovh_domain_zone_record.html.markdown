@@ -49,6 +49,6 @@ The following attributes are exported:
 
 OVH record can be imported using the `id` and the `zone`, eg:
 
-```
+```sh
 $ terraform import ovh_domain_zone_record.test 1234OVH_ID.zone.tld
 ```

@@ -12,7 +12,7 @@ Applies changes from other ovh_iploadbalancing_* resourcesto the production conf
 
 ## Example Usage
 
-```
+```hcl
 data "ovh_iploadbalancing" "lb" {
   service_name = "ip-1.2.3.4"
    state       = "ok"  
