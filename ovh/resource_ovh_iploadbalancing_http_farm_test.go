@@ -23,14 +23,14 @@ type TestAccIpLoadbalancingHttpFarmBackendProbeResponse struct {
 }
 
 type TestAccIpLoadbalancingHttpFarmResponse struct {
-	Zone           string                                            `json:"zone"`
-	VrackNetworkId int                                               `json:"vrackNetworkId"`
-	Port           int                                               `json:"port"`
-	Stickiness     string                                            `json:"stickiness"`
-	FarmId         int                                               `json:"farmId"`
-	Balance        string                                            `json:"balance"`
+	Zone           string                                             `json:"zone"`
+	VrackNetworkId int                                                `json:"vrackNetworkId"`
+	Port           int                                                `json:"port"`
+	Stickiness     string                                             `json:"stickiness"`
+	FarmId         int                                                `json:"farmId"`
+	Balance        string                                             `json:"balance"`
 	Probe          TestAccIpLoadbalancingHttpFarmBackendProbeResponse `json:"probe"`
-	DisplayName    string                                            `json:"displayName"`
+	DisplayName    string                                             `json:"displayName"`
 }
 
 func (r *TestAccIpLoadbalancingHttpFarmResponse) Equals(c *TestAccIpLoadbalancingHttpFarmResponse) bool {
