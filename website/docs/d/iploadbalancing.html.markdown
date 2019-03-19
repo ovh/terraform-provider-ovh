@@ -3,12 +3,12 @@ layout: "ovh"
 page_title: "OVH: iploadbalancing"
 sidebar_current: "docs-ovh-datasource-iploadbalancing"
 description: |-
-  Get information & status of a iploadbalancing product.
+  Get information & status of an IP Load Balancing product.
 ---
 
-# iploadbalancing
+# ovh_iploadbalancing
 
-Use this data source to retrieve information about an iploadbalancing product.
+Use this data source to retrieve information about an IP Load Balancing product
 
 ## Example Usage
 

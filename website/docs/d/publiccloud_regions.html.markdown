@@ -6,9 +6,9 @@ description: |-
   Get the list of regions associated with a public cloud project.
 ---
 
-# publiccloud\_regions
+# ovh_publiccloud_regions
 
-__DEPRECATED__ use `ovh_cloud_regions` instead.
+~> __DEPRECATED:__ Use [`ovh_cloud_regions`](./cloud_regions.html) instead.
 
 Use this data source to get the regions of a public cloud project.
 

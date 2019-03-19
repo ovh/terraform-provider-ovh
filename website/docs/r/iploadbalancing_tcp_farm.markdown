@@ -1,18 +1,18 @@
 ---
 layout: "ovh"
 page_title: "OVH: iploadbalancing_tcp_farm"
-sidebar_current: "docs-ovh-resource-iploadbalancing-tcp-farm"
+sidebar_current: "docs-ovh-resource-iploadbalancing-tcp-farm-x"
 description: |-
   Creates a backend server group (farm).
 ---
 
-# ovh\_iploadbalancing\_tcp_farm
+# ovh_iploadbalancing_tcp_farm
 
 Creates a backend server group (farm) to be used by loadbalancing frontend(s)
 
 ## Example Usage
 
-```
+```hcl
 data "ovh_iploadbalancing" "lb" {
   service_name = "ip-1.2.3.4"
    state       = "ok"  
