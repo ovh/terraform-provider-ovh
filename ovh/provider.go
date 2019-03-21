@@ -2,14 +2,12 @@ package ovh
 
 import (
 	"fmt"
-	"log"
 	"os"
-	"os/user"
-
-	ini "gopkg.in/ini.v1"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/mitchellh/go-homedir"
+	ini "gopkg.in/ini.v1"
 )
 
 // Provider returns a schema.Provider for OVH.
@@ -101,16 +99,18 @@ func init() {
 }
 
 func configureProvider(d *schema.ResourceData) (interface{}, error) {
-	userHome, err := currentUserHome()
-	if err != nil {
-		log.Fatal(err)
-	}
 	config := Config{
 		Endpoint: d.Get("endpoint").(string),
 	}
-	configFile := fmt.Sprintf("%s/.ovh.conf", userHome)
-	if _, err := os.Stat(configFile); err == nil {
-		c, err := ini.Load(configFile)
+
+	rawPath := "~/.ovh.conf"
+	configPath, err := homedir.Expand(rawPath)
+	if err != nil {
+		return &config, fmt.Errorf("Failed to expand config path %q: %s", rawPath, err)
+	}
+
+	if _, err := os.Stat(configPath); err == nil {
+		c, err := ini.Load(configPath)
 		if err != nil {
 			return nil, err
 		}
@@ -123,6 +123,7 @@ func configureProvider(d *schema.ResourceData) (interface{}, error) {
 		config.ApplicationSecret = section.Key("application_secret").String()
 		config.ConsumerKey = section.Key("consumer_key").String()
 	}
+
 	if v, ok := d.GetOk("application_key"); ok {
 		config.ApplicationKey = v.(string)
 	}
@@ -143,20 +144,4 @@ func configureProvider(d *schema.ResourceData) (interface{}, error) {
 func deprecated(r *schema.Resource, msg string) *schema.Resource {
 	r.DeprecationMessage = msg
 	return r
-}
-
-// currentUserHome attempts to get current user's home directory
-func currentUserHome() (string, error) {
-	userHome := ""
-	usr, err := user.Current()
-	if err != nil {
-		// Fallback by trying to read $HOME
-		userHome = os.Getenv("HOME")
-		if userHome != "" {
-			err = nil
-		}
-	} else {
-		userHome = usr.HomeDir
-	}
-	return userHome, nil
 }
