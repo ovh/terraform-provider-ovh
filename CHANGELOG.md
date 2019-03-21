@@ -11,6 +11,7 @@ FEATURES:
 IMPROVEMENTS:
 
 * provider: Enable request/response logging in `>=DEBUG` mode [GH-77]
+* provider: Make homedir detection more robust [GH-82]
 
 BUG FIXES:
 
