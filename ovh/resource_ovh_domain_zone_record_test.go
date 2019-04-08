@@ -103,7 +103,7 @@ func TestAccOvhDomainZoneRecord_Basic(t *testing.T) {
 		CheckDestroy: testAccCheckOvhDomainZoneRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRecordConfig_basic, zone, subdomain),
+				Config: testAccCheckOvhDomainZoneRecordConfig_A(zone, subdomain, "192.168.0.10", 3600),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOvhDomainZoneRecordExists("ovh_domain_zone_record.foobar", &record),
 					resource.TestCheckResourceAttr(
@@ -131,7 +131,7 @@ func TestAccOvhDomainZoneRecord_Updated(t *testing.T) {
 		CheckDestroy: testAccCheckOvhDomainZoneRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRecordConfig_basic, zone, subdomain),
+				Config: testAccCheckOvhDomainZoneRecordConfig_A(zone, subdomain, "192.168.0.10", 3600),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOvhDomainZoneRecordExists("ovh_domain_zone_record.foobar", &record),
 					resource.TestCheckResourceAttr(
@@ -145,7 +145,7 @@ func TestAccOvhDomainZoneRecord_Updated(t *testing.T) {
 				),
 			},
 			{
-				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRecordConfig_new_value_1, zone, subdomain),
+				Config: testAccCheckOvhDomainZoneRecordConfig_A(zone, subdomain, "192.168.0.11", 3600),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOvhDomainZoneRecordExists("ovh_domain_zone_record.foobar", &record),
 					resource.TestCheckResourceAttr(
@@ -159,7 +159,8 @@ func TestAccOvhDomainZoneRecord_Updated(t *testing.T) {
 				),
 			},
 			{
-				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRecordConfig_new_value_2, zone, subdomain),
+				Config: testAccCheckOvhDomainZoneRecordConfig_A(zone, fmt.Sprintf("%s2", subdomain),
+					"192.168.0.11", 3600),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOvhDomainZoneRecordExists("ovh_domain_zone_record.foobar", &record),
 					resource.TestCheckResourceAttr(
@@ -173,7 +174,8 @@ func TestAccOvhDomainZoneRecord_Updated(t *testing.T) {
 				),
 			},
 			{
-				Config: fmt.Sprintf(testAccCheckOvhDomainZoneRecordConfig_new_value_3, zone, subdomain),
+				Config: testAccCheckOvhDomainZoneRecordConfig_A(zone, fmt.Sprintf("%s3", subdomain),
+					"192.168.0.13", 3604),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOvhDomainZoneRecordExists("ovh_domain_zone_record.foobar", &record),
 					resource.TestCheckResourceAttr(
@@ -245,38 +247,13 @@ func testAccCheckOvhDomainZoneRecordExists(n string, record *OvhDomainZoneRecord
 	}
 }
 
-const testAccCheckOvhDomainZoneRecordConfig_basic = `
+func testAccCheckOvhDomainZoneRecordConfig_A(zone, subdomain, target string, ttl int) string {
+	return fmt.Sprintf(`
 resource "ovh_domain_zone_record" "foobar" {
 	zone = "%s"
 	subdomain = "%s"
-	target = "192.168.0.10"
+	target = "%s"
 	fieldtype = "A"
-	ttl = 3600
-}`
-
-const testAccCheckOvhDomainZoneRecordConfig_new_value_1 = `
-resource "ovh_domain_zone_record" "foobar" {
-	zone = "%s"
-	subdomain = "%s"
-	target = "192.168.0.11"
-	fieldtype = "A"
-	ttl = 3600
+	ttl = %d
+}`, zone, subdomain, target, ttl)
 }
-`
-const testAccCheckOvhDomainZoneRecordConfig_new_value_2 = `
-resource "ovh_domain_zone_record" "foobar" {
-	zone = "%s"
-	subdomain = "%s2"
-	target = "192.168.0.11"
-	fieldtype = "A"
-	ttl = 3600
-}
-`
-const testAccCheckOvhDomainZoneRecordConfig_new_value_3 = `
-resource "ovh_domain_zone_record" "foobar" {
-	zone = "%s"
-	subdomain = "%s3"
-	target = "192.168.0.13"
-	fieldtype = "A"
-	ttl = 3604
-}`
