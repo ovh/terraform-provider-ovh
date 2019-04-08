@@ -192,6 +192,52 @@ func TestAccOvhDomainZoneRecord_Updated(t *testing.T) {
 	})
 }
 
+func TestAccOvhDomainZoneRecord_updateType(t *testing.T) {
+	record := OvhDomainZoneRecord{}
+	zone := os.Getenv("OVH_ZONE")
+	subdomain := acctest.RandomWithPrefix(test_prefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckOvhDomainZoneRecordDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCheckOvhDomainZoneRecordConfig_A(zone, subdomain, "192.168.0.1", 3600),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOvhDomainZoneRecordExists("ovh_domain_zone_record.foobar", &record),
+					resource.TestCheckResourceAttr(
+						"ovh_domain_zone_record.foobar", "subdomain", subdomain),
+					resource.TestCheckResourceAttr(
+						"ovh_domain_zone_record.foobar", "zone", zone),
+					resource.TestCheckResourceAttr(
+						"ovh_domain_zone_record.foobar", "target", "192.168.0.1"),
+					resource.TestCheckResourceAttr(
+						"ovh_domain_zone_record.foobar", "fieldtype", "A"),
+					resource.TestCheckResourceAttr(
+						"ovh_domain_zone_record.foobar", "ttl", "3600"),
+				),
+			},
+			{
+				Config: testAccCheckOvhDomainZoneRecordConfig_CNAME(zone, subdomain, "google.com.", 3600),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOvhDomainZoneRecordExists("ovh_domain_zone_record.foobar", &record),
+					resource.TestCheckResourceAttr(
+						"ovh_domain_zone_record.foobar", "subdomain", subdomain),
+					resource.TestCheckResourceAttr(
+						"ovh_domain_zone_record.foobar", "zone", zone),
+					resource.TestCheckResourceAttr(
+						"ovh_domain_zone_record.foobar", "target", "google.com."),
+					resource.TestCheckResourceAttr(
+						"ovh_domain_zone_record.foobar", "fieldtype", "CNAME"),
+					resource.TestCheckResourceAttr(
+						"ovh_domain_zone_record.foobar", "ttl", "3600"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckOvhDomainZoneRecordDestroy(s *terraform.State) error {
 	provider := testAccProvider.Meta().(*Config)
 	zone := os.Getenv("OVH_ZONE")
@@ -254,6 +300,17 @@ resource "ovh_domain_zone_record" "foobar" {
 	subdomain = "%s"
 	target = "%s"
 	fieldtype = "A"
+	ttl = %d
+}`, zone, subdomain, target, ttl)
+}
+
+func testAccCheckOvhDomainZoneRecordConfig_CNAME(zone, subdomain, target string, ttl int) string {
+	return fmt.Sprintf(`
+resource "ovh_domain_zone_record" "foobar" {
+	zone = "%s"
+	subdomain = "%s"
+	target = "%s"
+	fieldtype = "CNAME"
 	ttl = %d
 }`, zone, subdomain, target, ttl)
 }
