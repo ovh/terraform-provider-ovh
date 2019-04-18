@@ -16,6 +16,7 @@ IMPROVEMENTS:
 BUG FIXES:
 
 * resource/ovh_domain_zone_record: Attempt retries to avoid errors caused by eventual consistency after creation/update/deletion [GH-77]
+* resource/ovh_domain_zone_record: Make fieldtype non-updatable [GH-84]
 * resource/ovh_domain_zone_redirection: Return errors from refreshing after creation/update/deletion [GH-77]
 
 ## 0.3.0 (July 11, 2018)
