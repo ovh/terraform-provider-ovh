@@ -75,6 +75,7 @@ func resourceOvhDomainZoneRecord() *schema.Resource {
 			"fieldtype": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"subdomain": {
 				Type:     schema.TypeString,
