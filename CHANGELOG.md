@@ -1,4 +1,9 @@
 ## 0.5.0 (Unreleased)
+
+NOTES:
+
+* provider: This release includes only a Terraform SDK upgrade with compatibility for Terraform v0.12. The provider remains backwards compatible with Terraform v0.11 and this update should have no significant changes in behavior for the provider. [GH-86]
+
 ## 0.4.0 (May 22, 2019)
 
 NOTES/DEPRECATIONS:
