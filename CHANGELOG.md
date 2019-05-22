@@ -1,23 +1,23 @@
-## 0.4.0 (Unreleased)
+## 0.4.0 (May 22, 2019)
 
 NOTES/DEPRECATIONS:
 
-* `*/ovh_publiccloud_*`: Deprecate `publiccloud` data sources & resources (to issue warnings when used) [GH-81]
+* `*/ovh_publiccloud_*`: Deprecate `publiccloud` data sources & resources (to issue warnings when used) ([#81](https://github.com/terraform-providers/terraform-provider-ovh/issues/81))
 
 FEATURES:
 
-* __New Resource:__ `ovh_iploadbalancing_tcp_frontend` [GH-58]
+* __New Resource:__ `ovh_iploadbalancing_tcp_frontend` ([#58](https://github.com/terraform-providers/terraform-provider-ovh/issues/58))
 
 IMPROVEMENTS:
 
-* provider: Enable request/response logging in `>=DEBUG` mode [GH-77]
-* provider: Make homedir detection more robust [GH-82]
+* provider: Enable request/response logging in `>=DEBUG` mode ([#77](https://github.com/terraform-providers/terraform-provider-ovh/issues/77))
+* provider: Make homedir detection more robust ([#82](https://github.com/terraform-providers/terraform-provider-ovh/issues/82))
 
 BUG FIXES:
 
-* resource/ovh_domain_zone_record: Attempt retries to avoid errors caused by eventual consistency after creation/update/deletion [GH-77]
-* resource/ovh_domain_zone_record: Make fieldtype non-updatable [GH-84]
-* resource/ovh_domain_zone_redirection: Return errors from refreshing after creation/update/deletion [GH-77]
+* resource/ovh_domain_zone_record: Attempt retries to avoid errors caused by eventual consistency after creation/update/deletion ([#77](https://github.com/terraform-providers/terraform-provider-ovh/issues/77))
+* resource/ovh_domain_zone_record: Make fieldtype non-updatable ([#84](https://github.com/terraform-providers/terraform-provider-ovh/issues/84))
+* resource/ovh_domain_zone_redirection: Return errors from refreshing after creation/update/deletion ([#77](https://github.com/terraform-providers/terraform-provider-ovh/issues/77))
 
 ## 0.3.0 (July 11, 2018)
 
