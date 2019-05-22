@@ -13,21 +13,22 @@ import (
 )
 
 var testAccPublicCloudPrivateNetworkConfig = fmt.Sprintf(`
-resource "ovh_vrack_publiccloud_attachment" "attach" {
-  vrack_id = "%s"
+resource "ovh_vrack_cloudproject" "attach" {
+  vrack_id   = "%s"
   project_id = "%s"
 }
 
-data "ovh_publiccloud_regions" "regions" {
-  project_id = "${ovh_vrack_publiccloud_attachment.attach.project_id}"
+data "ovh_cloud_regions" "regions" {
+  project_id = ovh_vrack_cloudproject.attach.project_id
 }
 
-resource "ovh_publiccloud_private_network" "network" {
-  project_id  = "${ovh_vrack_publiccloud_attachment.attach.project_id}"
-  vlan_id = 0
-  name = "terraform_testacc_private_net"
-  regions     = ["${data.ovh_publiccloud_regions.regions.names}"]
+resource "ovh_cloud_network_private" "network" {
+  project_id = ovh_vrack_cloudproject.attach.project_id
+  vlan_id    = 0
+  name       = "terraform_testacc_private_net"
+  regions    = tolist(data.ovh_cloud_regions.regions.names)
 }
+
 `, os.Getenv("OVH_VRACK"), os.Getenv("OVH_PUBLIC_CLOUD"))
 
 func init() {
@@ -111,8 +112,8 @@ func TestAccPublicCloudPrivateNetwork_basic(t *testing.T) {
 			{
 				Config: testAccPublicCloudPrivateNetworkConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVRackPublicCloudAttachmentExists("ovh_vrack_publiccloud_attachment.attach", t),
-					testAccCheckPublicCloudPrivateNetworkExists("ovh_publiccloud_private_network.network", t),
+					testAccCheckVRackPublicCloudAttachmentExists("ovh_vrack_cloudproject.attach", t),
+					testAccCheckPublicCloudPrivateNetworkExists("ovh_cloud_network_private.network", t),
 				),
 			},
 		},
@@ -148,7 +149,7 @@ func testAccCheckPublicCloudPrivateNetworkExists(n string, t *testing.T) resourc
 func testAccCheckPublicCloudPrivateNetworkDestroy(s *terraform.State) error {
 	config := testAccProvider.Meta().(*Config)
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "ovh_publiccloud_private_network" {
+		if rs.Type != "ovh_cloud_network_private" {
 			continue
 		}
 
