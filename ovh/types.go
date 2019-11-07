@@ -152,3 +152,24 @@ type PublicCloudServiceStatusResponse struct {
 func (s *PublicCloudServiceStatusResponse) String() string {
 	return fmt.Sprintf("%s: %s", s.Name, s.Status)
 }
+
+// MeSshKey Opts
+type MeSshKeyCreateOpts struct {
+	KeyName string `json:"keyName"`
+	Key     string `json:"key"`
+}
+
+type MeSshKeyResponse struct {
+	KeyName string `json:"keyName"`
+	Key     string `json:"key"`
+	Default bool   `json:"default"`
+}
+
+func (s *MeSshKeyResponse) String() string {
+	return fmt.Sprintf("SSH Key: %s, key:%s, default:%t",
+		s.Key, s.KeyName, s.Default)
+}
+
+type MeSshKeyUpdateOpts struct {
+	Default bool `json:"default"`
+}
