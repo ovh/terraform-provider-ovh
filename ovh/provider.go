@@ -47,6 +47,8 @@ func Provider() terraform.ResourceProvider {
 			"ovh_iploadbalancing":            dataSourceIpLoadbalancing(),
 			"ovh_me_paymentmean_bankaccount": dataSourceMePaymentmeanBankaccount(),
 			"ovh_me_paymentmean_creditcard":  dataSourceMePaymentmeanCreditcard(),
+			"ovh_me_ssh_key":                 dataSourceMeSshKey(),
+			"ovh_me_ssh_keys":                dataSourceMeSshKeys(),
 
 			// Legacy naming schema (publiccloud)
 			"ovh_publiccloud_region": deprecated(dataSourcePublicCloudRegion(),
@@ -71,6 +73,7 @@ func Provider() terraform.ResourceProvider {
 			"ovh_cloud_network_private":            resourcePublicCloudPrivateNetwork(),
 			"ovh_cloud_network_private_subnet":     resourcePublicCloudPrivateNetworkSubnet(),
 			"ovh_cloud_user":                       resourcePublicCloudUser(),
+			"ovh_me_ssh_key":                       resourceMeSshKey(),
 			"ovh_vrack_cloudproject":               resourceVRackPublicCloudAttachment(),
 
 			// Legacy naming schema (publiccloud)
