@@ -11,7 +11,7 @@ import (
 
 func TestAccPublicCloudRegionsDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheckPublicCloud(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{

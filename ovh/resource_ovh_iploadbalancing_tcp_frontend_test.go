@@ -69,7 +69,7 @@ func TestAccOvhIpLoadbalancingTcpFrontend_basic(t *testing.T) {
 	iplb := os.Getenv("OVH_IPLB_SERVICE")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheckIpLoadbalancing(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -110,7 +110,7 @@ func TestAccOvhIpLoadbalancingTcpFrontend_withfarm(t *testing.T) {
 	iplb := os.Getenv("OVH_IPLB_SERVICE")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheckIpLoadbalancing(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{

@@ -18,7 +18,7 @@ resource "ovh_publiccloud_user" "user" {
 
 func TestAccPublicCloudUser_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccCheckPublicCloudUserPreCheck(t) },
+		PreCheck:     func() { testAccPreCheckPublicCloud(t); testAccCheckPublicCloudExists(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckPublicCloudUserDestroy,
 		Steps: []resource.TestStep{
@@ -31,11 +31,6 @@ func TestAccPublicCloudUser_basic(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckPublicCloudUserPreCheck(t *testing.T) {
-	testAccPreCheck(t)
-	testAccCheckPublicCloudExists(t)
 }
 
 func testAccCheckPublicCloudUserExists(n string, t *testing.T) resource.TestCheckFunc {

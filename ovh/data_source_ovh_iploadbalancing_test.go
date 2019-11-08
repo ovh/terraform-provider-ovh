@@ -13,7 +13,7 @@ func TestAccIpLoadbalancingDataSource_basic(t *testing.T) {
 	config := fmt.Sprintf(testAccIpLoadbalancingDatasourceConfig_Basic, serviceName)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheckIpLoadbalancing(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -34,7 +34,7 @@ func TestAccIpLoadbalancingDataSource_statevrack(t *testing.T) {
 	config := fmt.Sprintf(testAccIpLoadbalancingDatasourceConfig_StateAndVrack, serviceName)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheckIpLoadbalancing(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{

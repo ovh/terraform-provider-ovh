@@ -98,7 +98,7 @@ func TestAccOvhDomainZoneRecord_Basic(t *testing.T) {
 	subdomain := acctest.RandomWithPrefix(test_prefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheckDomain(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckOvhDomainZoneRecordDestroy,
 		Steps: []resource.TestStep{
@@ -126,7 +126,7 @@ func TestAccOvhDomainZoneRecord_Updated(t *testing.T) {
 	subdomain := acctest.RandomWithPrefix(test_prefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheckDomain(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckOvhDomainZoneRecordDestroy,
 		Steps: []resource.TestStep{
@@ -198,7 +198,7 @@ func TestAccOvhDomainZoneRecord_updateType(t *testing.T) {
 	subdomain := acctest.RandomWithPrefix(test_prefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheckDomain(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckOvhDomainZoneRecordDestroy,
 		Steps: []resource.TestStep{

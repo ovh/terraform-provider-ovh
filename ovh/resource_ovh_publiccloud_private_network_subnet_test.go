@@ -59,7 +59,7 @@ func TestAccPublicCloudPrivateNetworkSubnet_basic(t *testing.T) {
 }
 
 func testAccCheckPublicCloudPrivateNetworkSubnetPreCheck(t *testing.T) {
-	testAccPreCheck(t)
+	testAccPreCheckPublicCloud(t)
 	testAccCheckPublicCloudExists(t)
 }
 
