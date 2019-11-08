@@ -237,6 +237,7 @@ func TestAccIpLoadbalancingTcpFarmServerBasicCreate(t *testing.T) {
 			steps = append(steps, w.TestStep(tcase))
 		}
 		resource.Test(t, resource.TestCase{
+			PreCheck:     func() { testAccPreCheckIpLoadbalancing(t) },
 			Providers:    testAccProviders,
 			CheckDestroy: w.TestDestroy,
 			Steps:        steps,

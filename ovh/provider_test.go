@@ -34,61 +34,19 @@ func TestProvider_impl(t *testing.T) {
 	var _ terraform.ResourceProvider = Provider()
 }
 
-func testAccPreCheck(t *testing.T) {
-	v := os.Getenv("OVH_ENDPOINT")
-	if v == "" {
-		t.Fatal("OVH_ENDPOINT must be set for acceptance tests")
+func checkEnv(t *testing.T, e string) {
+	if os.Getenv(e) == "" {
+		t.Fatalf("%s must be set for acceptance tests", e)
 	}
+}
 
-	v = os.Getenv("OVH_APPLICATION_KEY")
-	if v == "" {
-		t.Fatal("OVH_APPLICATION_KEY must be set for acceptance tests")
-	}
-
-	v = os.Getenv("OVH_APPLICATION_SECRET")
-	if v == "" {
-		t.Fatal("OVH_APPLICATION_SECRET must be set for acceptance tests")
-	}
-
-	v = os.Getenv("OVH_CONSUMER_KEY")
-	if v == "" {
-		t.Fatal("OVH_CONSUMER_KEY must be set for acceptance tests")
-	}
-
-	v = os.Getenv("OVH_VRACK")
-	if v == "" {
-		t.Fatal("OVH_VRACK must be set for acceptance tests")
-	}
-
-	v = os.Getenv("OVH_PUBLIC_CLOUD")
-	if v == "" {
-		t.Fatal("OVH_PUBLIC_CLOUD must be set for acceptance tests")
-	}
-
-	v = os.Getenv("OVH_ZONE")
-	if v == "" {
-		t.Fatal("OVH_ZONE must be set for acceptance tests")
-	}
-
-	v = os.Getenv("OVH_IPLB_SERVICE")
-	if v == "" {
-		t.Fatal("OVH_IPLB_SERVICE must be set for acceptance tests")
-	}
-
-	v = os.Getenv("OVH_IP_BLOCK")
-	if v == "" {
-		t.Fatal("OVH_IP_BLOCK must be set for acceptance tests")
-	}
-
-	v = os.Getenv("OVH_IP")
-	if v == "" {
-		t.Fatal("OVH_IP must be set for acceptance tests")
-	}
-
-	v = os.Getenv("OVH_IP_REVERSE")
-	if v == "" {
-		t.Fatal("OVH_IP_REVERSE must be set for acceptance tests")
-	}
+// Checks that the environment variables needed to create the OVH API client
+// are set and create the client right away.
+func testAccPreCheckCredentials(t *testing.T) {
+	checkEnv(t, "OVH_ENDPOINT")
+	checkEnv(t, "OVH_APPLICATION_KEY")
+	checkEnv(t, "OVH_APPLICATION_SECRET")
+	checkEnv(t, "OVH_CONSUMER_KEY")
 
 	if testAccOVHClient == nil {
 		config := Config{
@@ -99,11 +57,55 @@ func testAccPreCheck(t *testing.T) {
 		}
 
 		if err := config.loadAndValidate(); err != nil {
-			t.Fatalf("couln't load OVH Client: %s", err)
+			t.Fatalf("Couldn't load OVH Client: %s", err)
 		} else {
 			testAccOVHClient = config.OVHClient
 		}
 	}
+}
+
+// Checks that the environment variables needed for the /ip acceptance tests
+// are set.
+func testAccPreCheckIp(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnv(t, "OVH_IP")
+	checkEnv(t, "OVH_IP_BLOCK")
+	checkEnv(t, "OVH_IP_REVERSE")
+}
+
+// Checks that the environment variables needed for the /domain acceptance tests
+// are set.
+func testAccPreCheckDomain(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnv(t, "OVH_ZONE")
+}
+
+// Checks that the environment variables needed for the /cloud acceptance tests
+// are set.
+func testAccPreCheckPublicCloud(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnv(t, "OVH_PUBLIC_CLOUD")
+}
+
+// Checks that the environment variables needed for the /ipLoadbalacing acceptance tests
+// are set.
+func testAccPreCheckIpLoadbalancing(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnv(t, "OVH_IPLB_SERVICE")
+}
+
+// Checks that the environment variables needed for the /vrack acceptance tests
+// are set.
+func testAccPreCheckVRack(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnv(t, "OVH_VRACK")
+}
+
+// Checks that the environment variables needed for the /me/paymentMean acceptance tests
+// are set.
+func testAccPreCheckMePaymentMean(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnv(t, "OVH_TEST_BANKACCOUNT")
 }
 
 func testAccCheckVRackExists(t *testing.T) {

@@ -121,7 +121,7 @@ func TestAccPublicCloudPrivateNetwork_basic(t *testing.T) {
 }
 
 func testAccCheckPublicCloudPrivateNetworkPreCheck(t *testing.T) {
-	testAccPreCheck(t)
+	testAccPreCheckPublicCloud(t)
 	testAccCheckPublicCloudExists(t)
 }
 

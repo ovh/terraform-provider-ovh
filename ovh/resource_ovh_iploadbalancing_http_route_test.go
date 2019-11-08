@@ -57,7 +57,7 @@ func TestAccIPLoadbalancingRouteHTTPBasicCreate(t *testing.T) {
 }
 
 func testAccCheckIpLoadbalancingRouteHTTPPreCheck(t *testing.T) {
-	testAccPreCheck(t)
+	testAccPreCheckIpLoadbalancing(t)
 	testAccCheckIpLoadbalancingExists(t)
 }
 
