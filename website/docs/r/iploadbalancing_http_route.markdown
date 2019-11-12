@@ -22,7 +22,7 @@ resource "ovh_iploadbalancing_http_route" "httpsredirect" {
 
   action {
     status = 302
-    target = "https://${host}${path}${arguments}"
+    target = "https://$${host}$${path}$${arguments}"
     type = "redirect"
   }
 }
