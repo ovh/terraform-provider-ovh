@@ -14,7 +14,7 @@ func TestAccMePaymentmeanBankaccountDataSource_basic(t *testing.T) {
 	v := os.Getenv("OVH_TEST_BANKACCOUNT")
 	if v == "1" {
 		resource.Test(t, resource.TestCase{
-			PreCheck:  func() { testAccPreCheck(t) },
+			PreCheck:  func() { testAccPreCheckMePaymentMean(t) },
 			Providers: testAccProviders,
 			Steps: []resource.TestStep{
 				{

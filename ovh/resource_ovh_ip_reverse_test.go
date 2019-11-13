@@ -17,13 +17,9 @@ resource "ovh_ip_reverse" "reverse" {
 }
 `, os.Getenv("OVH_IP_BLOCK"), os.Getenv("OVH_IP"), os.Getenv("OVH_IP_REVERSE"))
 
-func testAccCheckIpReversePreCheck(t *testing.T) {
-	testAccPreCheck(t)
-}
-
 func TestAccIpReverse_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccCheckIpReversePreCheck(t) },
+		PreCheck:     func() { testAccPreCheckIp(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIpReverseDestroy,
 		Steps: []resource.TestStep{

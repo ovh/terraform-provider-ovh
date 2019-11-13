@@ -78,6 +78,7 @@ func testAccIpLoadbalancingHttpFarmTestStep(name, zone string, port, probePort, 
 
 func TestAccIpLoadbalancingHttpFarmBasicCreate(t *testing.T) {
 	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheckIpLoadbalancing(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIpLoadbalancingHttpFarmDestroy,
 		Steps: []resource.TestStep{

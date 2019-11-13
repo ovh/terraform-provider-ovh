@@ -33,7 +33,7 @@ func TestAccVRackPublicCloudAttachment_basic(t *testing.T) {
 }
 
 func testAccCheckVRackPublicCloudAttachmentPreCheck(t *testing.T) {
-	testAccPreCheck(t)
+	testAccPreCheckVRack(t)
 	testAccCheckVRackExists(t)
 	testAccCheckPublicCloudExists(t)
 }
