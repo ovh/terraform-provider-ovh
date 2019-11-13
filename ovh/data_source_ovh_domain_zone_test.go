@@ -15,7 +15,7 @@ func TestAccDomainZoneDataSource_basic(t *testing.T) {
 	config := fmt.Sprintf(testAccDomainZoneDatasourceConfig_Basic, zoneName)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t); testAccCheckDomainZoneExists(t) },
+		PreCheck:  func() { testAccPreCheckDomain(t); testAccCheckDomainZoneExists(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{

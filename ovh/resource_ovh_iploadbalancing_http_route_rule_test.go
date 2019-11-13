@@ -62,7 +62,7 @@ func TestAccIPLoadbalancingRouteHTTPRuleBasicCreate(t *testing.T) {
 }
 
 func testAccCheckIpLoadbalancingRouteHTTPRulePreCheck(t *testing.T) {
-	testAccPreCheck(t)
+	testAccPreCheckIpLoadbalancing(t)
 	testAccCheckIpLoadbalancingExists(t)
 }
 

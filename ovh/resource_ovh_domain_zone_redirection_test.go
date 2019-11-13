@@ -94,7 +94,7 @@ func TestAccOvhDomainZoneRedirection_Basic(t *testing.T) {
 	subdomain := acctest.RandomWithPrefix(test_prefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheckDomain(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckOvhDomainZoneRedirectionDestroy,
 		Steps: []resource.TestStep{
@@ -122,7 +122,7 @@ func TestAccOvhDomainZoneRedirection_Updated(t *testing.T) {
 	subdomain := acctest.RandomWithPrefix(test_prefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheckDomain(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckOvhDomainZoneRedirectionDestroy,
 		Steps: []resource.TestStep{
