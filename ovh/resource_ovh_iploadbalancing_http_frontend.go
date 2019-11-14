@@ -3,7 +3,7 @@ package ovh
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 type IpLoadbalancingHttpFrontend struct {
