@@ -60,6 +60,96 @@ func validateBootType(value string) error {
 	})
 }
 
+func validateLanguageCode(value string) error {
+	// accepted language code for dedicated servers
+	return validateStringEnum(value, []string{
+		"ar",
+		"bg",
+		"cs",
+		"da",
+		"de",
+		"el",
+		"en",
+		"es",
+		"et",
+		"fi",
+		"fr",
+		"he",
+		"hr",
+		"hu",
+		"it",
+		"ja",
+		"ko",
+		"lt",
+		"lv",
+		"nb",
+		"nl",
+		"no",
+		"pl",
+		"pt",
+		"ro",
+		"ru",
+		"sk",
+		"sl",
+		"sr",
+		"sv",
+		"th",
+		"tr",
+		"tu",
+		"uk",
+		"zh-Hans-CN",
+		"zh-Hans-HK",
+	})
+}
+
+func validateRAIDMode(value string) error {
+	// accepted raid modes for installation templates hardware specs
+	return validateStringEnum(value, []string{
+		"raid0",
+		"raid1",
+		"raid10",
+		"raid5",
+		"raid50",
+		"raid6",
+		"raid60",
+	})
+}
+
+func validatePartitionType(value string) error {
+	// accepted partition types for installation templates
+	return validateStringEnum(value, []string{
+		"lv",
+		"primary",
+		"logical",
+	})
+}
+
+func validatePartitionRAIDMode(value string) error {
+	// accepted raid modes for installation templates partitions specs
+	return validateStringEnum(value, []string{
+		"raid0",
+		"raid1",
+		"raid10",
+		"raid5",
+		"raid6",
+	})
+}
+
+func validateFilesystem(value string) error {
+	// accepted filesystem types for installation templates partitions specs
+	return validateStringEnum(value, []string{
+		"btrfs",
+		"ext3",
+		"ext4",
+		"ntfs",
+		"reiserfs",
+		"swap",
+		"ufs",
+		"xfs",
+		"zfs",
+	})
+}
+
 func getNilBoolPointer(val interface{}) *bool {
 	if val == nil {
 		return nil
