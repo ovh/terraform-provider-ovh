@@ -1,155 +1,162 @@
-<% wrap_layout :inner do %>
-  <% content_for :sidebar do %>
-    <div class="docs-sidebar hidden-print affix-top" role="complementary">
-      <ul class="nav docs-sidenav">
-        <li<%= sidebar_current("docs-home") %>>
-          <a href="/docs/providers/index.html">&laquo; Documentation Home</a>
+<% wrap_layout :inner do %>
+<% content_for :sidebar do %>
+<div class="docs-sidebar hidden-print affix-top" role="complementary">
+  <ul class="nav docs-sidenav">
+    <li<%= sidebar_current("docs-home") %>>
+      <a href="/docs/providers/index.html">&laquo; Documentation Home</a>
+    </li>
+
+    <li<%= sidebar_current("docs-ovh-index") %>>
+      <a href="/docs/providers/ovh/index.html">OVH Provider</a>
+    </li>
+
+    <li<%= sidebar_current("docs-ovh-datasource") %>>
+      <a href="#">Data Sources</a>
+      <ul class="nav nav-visible">
+        <li<%= sidebar_current("docs-ovh-datasource-cloud-region-x") %>>
+          <a href="/docs/providers/ovh/d/cloud_region.html">ovh_cloud_region</a>
         </li>
-
-        <li<%= sidebar_current("docs-ovh-index") %>>
-          <a href="/docs/providers/ovh/index.html">OVH Provider</a>
+        <li<%= sidebar_current("docs-ovh-datasource-cloud-regions") %>>
+          <a href="/docs/providers/ovh/d/cloud_regions.html">ovh_cloud_regions</a>
         </li>
-
-        <li<%= sidebar_current("docs-ovh-datasource") %>>
-          <a href="#">Data Sources</a>
-          <ul class="nav nav-visible">
-              <li<%= sidebar_current("docs-ovh-datasource-cloud-region-x") %>>
-                  <a href="/docs/providers/ovh/d/cloud_region.html">ovh_cloud_region</a>
-              </li>
-              <li<%= sidebar_current("docs-ovh-datasource-cloud-regions") %>>
-                  <a href="/docs/providers/ovh/d/cloud_regions.html">ovh_cloud_regions</a>
-              </li>
-            <li<%= sidebar_current("docs-ovh-datasource-domain-zone") %>>
-              <a href="/docs/providers/ovh/d/domain_zone.html">ovh_domain_zone</a>
-            </li>
-            <li<%= sidebar_current("docs-ovh-datasource-iploadbalancing") %>>
-              <a href="/docs/providers/ovh/d/iploadbalancing.html">ovh_iploadbalancing</a>
-            </li>
-            <li<%= sidebar_current("docs-ovh-datasource-me-paymentmean-bankaccount") %>>
-                <a href="/docs/providers/ovh/d/me_paymentmean_bankaccount.html">ovh_me_paymentmean_bankaccount</a>
-            </li>
-            <li<%= sidebar_current("docs-ovh-datasource-me-paymentmean-creditcard") %>>
-                <a href="/docs/providers/ovh/d/me_paymentmean_creditcard.html">ovh_me_paymentmean_creditcard</a>
-            </li>
-            <li<%= sidebar_current("docs-ovh-datasource-me-ssh-key-x") %>>
-                <a href="/docs/providers/ovh/d/me_ssh_key.html">ovh_me_ssh_key</a>
-            </li>
-            <li<%= sidebar_current("docs-ovh-datasource-me-ssh-keys") %>>
-                <a href="/docs/providers/ovh/d/me_ssh_keys.html">ovh_me_ssh_keys</a>
-            </li>
-            <li<%= sidebar_current("docs-ovh-datasource-publiccloud-region-x") %>>
-              <a href="/docs/providers/ovh/d/publiccloud_region.html">ovh_publiccloud_region</a>
-            </li>
-            <li<%= sidebar_current("docs-ovh-datasource-publiccloud-regions") %>>
-              <a href="/docs/providers/ovh/d/publiccloud_regions.html">ovh_publiccloud_regions</a>
-            </li>
-          </ul>
+        <li<%= sidebar_current("docs-ovh-datasource-dedicated-installation-templates") %>>
+          <a href="/docs/providers/ovh/d/dedicated_installation_templates.html">ovh_dedicated_installation_templates</a>
         </li>
-
-        <li<%= sidebar_current("docs-ovh-resource-cloud") %>>
-            <a href="#">Cloud Resources</a>
-            <ul class="nav nav-visible">
-                <li<%= sidebar_current("docs-ovh-resource-cloud-network-private-x") %>>
-                    <a href="/docs/providers/ovh/r/cloud_network_private.html">ovh_cloud_network_private</a>
-                </li>
-                <li<%= sidebar_current("docs-ovh-resource-cloud-network-private-subnet") %>>
-                    <a href="/docs/providers/ovh/r/cloud_network_private_subnet.html">ovh_cloud_network_private_subnet</a>
-                </li>
-                <li<%= sidebar_current("docs-ovh-resource-cloud-user") %>>
-                    <a href="/docs/providers/ovh/r/cloud_user.html">ovh_cloud_user</a>
-                </li>
-
-                <li<%= sidebar_current("docs-ovh-resource-publiccloud-private-network-x") %>>
-                    <a href="/docs/providers/ovh/r/publiccloud_private_network.html">ovh_publiccloud_private_network</a>
-                </li>
-                <li<%= sidebar_current("docs-ovh-resource-publiccloud-private-network-subnet") %>>
-                    <a href="/docs/providers/ovh/r/publiccloud_private_network_subnet.html">ovh_publiccloud_private_network_subnet</a>
-                </li>
-                <li<%= sidebar_current("docs-ovh-resource-publiccloud-user") %>>
-                    <a href="/docs/providers/ovh/r/publiccloud_user.html">ovh_publiccloud_user</a>
-                </li>
-            </ul>
+        <li<%= sidebar_current("docs-ovh-datasource-domain-zone") %>>
+          <a href="/docs/providers/ovh/d/domain_zone.html">ovh_domain_zone</a>
         </li>
-
-        <li<%= sidebar_current("docs-ovh-resource-domain") %>>
-          <a href="#">Domain Resources</a>
-          <ul class="nav nav-visible">
-            <li<%= sidebar_current("docs-ovh-resource-domain-zone-record") %>>
-              <a href="/docs/providers/ovh/r/ovh_domain_zone_record.html">ovh_domain_zone_record</a>
-            </li>
-            <li<%= sidebar_current("docs-ovh-resource-domain-zone-redirection") %>>
-              <a href="/docs/providers/ovh/r/ovh_domain_zone_redirection.html">ovh_domain_zone_redirection</a>
-            </li>
-          </ul>
+        <li<%= sidebar_current("docs-ovh-datasource-iploadbalancing") %>>
+          <a href="/docs/providers/ovh/d/iploadbalancing.html">ovh_iploadbalancing</a>
         </li>
-
-        <li<%= sidebar_current("docs-ovh-resource-ip") %>>
-          <a href="#">IP Resources</a>
-          <ul class="nav nav-visible">
-            <li<%= sidebar_current("docs-ovh-resource-ip-reverse") %>>
-              <a href="/docs/providers/ovh/r/ip_reverse.html">ovh_ip_reverse</a>
-            </li>
-          </ul>
+        <li<%= sidebar_current("docs-ovh-datasource-me-paymentmean-bankaccount") %>>
+          <a href="/docs/providers/ovh/d/me_paymentmean_bankaccount.html">ovh_me_paymentmean_bankaccount</a>
         </li>
-
-        <li<%= sidebar_current("docs-ovh-resource-iploadbalancing") %>>
-            <a href="#">IP Load Balancing Resources</a>
-            <ul class="nav nav-visible">
-                <li<%= sidebar_current("docs-ovh-resource-iploadbalancing-http-farm-x") %>>
-                    <a href="/docs/providers/ovh/r/iploadbalancing_http_farm.html">ovh_iploadbalancing_http_farm</a>
-                </li>
-                <li<%= sidebar_current("docs-ovh-resource-iploadbalancing-tcp-farm-x") %>>
-                    <a href="/docs/providers/ovh/r/iploadbalancing_tcp_farm.html">ovh_iploadbalancing_tcp_farm</a>
-                </li>
-                <li<%= sidebar_current("docs-ovh-resource-iploadbalancing-http-farm-server") %>>
-                    <a href="/docs/providers/ovh/r/iploadbalancing_http_farm_server.html">ovh_iploadbalancing_http_farm_server</a>
-                </li>
-                <li<%= sidebar_current("docs-ovh-resource-iploadbalancing-tcp-farm-server") %>>
-                    <a href="/docs/providers/ovh/r/iploadbalancing_tcp_farm_server.html">ovh_iploadbalancing_tcp_farm_server</a>
-                </li>
-                <li<%= sidebar_current("docs-ovh-resource-iploadbalancing-http-frontend") %>>
-                    <a href="/docs/providers/ovh/r/iploadbalancing_http_frontend.html">ovh_iploadbalancing_http_frontend</a>
-                </li>
-                <li<%= sidebar_current("docs-ovh-resource-iploadbalancing-tcp-frontend") %>>
-                    <a href="/docs/providers/ovh/r/iploadbalancing_tcp_frontend.html">ovh_iploadbalancing_tcp_frontend</a>
-                </li>
-                <li<%= sidebar_current("docs-ovh-resource-iploadbalancing-http-route-x") %>>
-                    <a href="/docs/providers/ovh/r/iploadbalancing_http_route.html">ovh_iploadbalancing_http_route</a>
-                </li>
-                <li<%= sidebar_current("docs-ovh-resource-iploadbalancing-http-route-rule") %>>
-                    <a href="/docs/providers/ovh/r/iploadbalancing_http_route_rule.html">ovh_iploadbalancing_http_route_rule</a>
-                </li>
-                <li<%= sidebar_current("docs-ovh-resource-iploadbalancing-refresh") %>>
-                    <a href="/docs/providers/ovh/r/iploadbalancing_refresh.html">ovh_iploadbalancing_refresh</a>
-                </li>
-            </ul>
+        <li<%= sidebar_current("docs-ovh-datasource-me-paymentmean-creditcard") %>>
+          <a href="/docs/providers/ovh/d/me_paymentmean_creditcard.html">ovh_me_paymentmean_creditcard</a>
         </li>
-
-        <li<%= sidebar_current("docs-ovh-resource-me") %>>
-          <a href="#">Me Resources</a>
-          <ul class="nav nav-visible">
-              <li<%= sidebar_current("docs-ovh-resource-me-ssh-key") %>>
-                  <a href="/docs/providers/ovh/r/me_ssh_key.html">ovh_me_ssh_key</a>
-              </li>
-          </ul>
+        <li<%= sidebar_current("docs-ovh-datasource-me-ssh-key-x") %>>
+          <a href="/docs/providers/ovh/d/me_ssh_key.html">ovh_me_ssh_key</a>
         </li>
-
-        <li<%= sidebar_current("docs-ovh-resource-vrack") %>>
-          <a href="#">vRack Resources</a>
-          <ul class="nav nav-visible">
-              <li<%= sidebar_current("docs-ovh-resource-vrack-cloudproject") %>>
-                  <a href="/docs/providers/ovh/r/vrack_cloudproject.html">ovh_vrack_cloudproject</a>
-              </li>
-            <li<%= sidebar_current("docs-ovh-resource-vrack-publicloud-attachment") %>>
-              <a href="/docs/providers/ovh/r/vrack_publiccloud_attachment.html">ovh_vrack_publiccloud_attachment</a>
-            </li>
-          </ul>
+        <li<%= sidebar_current("docs-ovh-datasource-me-ssh-keys") %>>
+          <a href="/docs/providers/ovh/d/me_ssh_keys.html">ovh_me_ssh_keys</a>
         </li>
-
-
+        <li<%= sidebar_current("docs-ovh-datasource-publiccloud-region-x") %>>
+          <a href="/docs/providers/ovh/d/publiccloud_region.html">ovh_publiccloud_region</a>
+        </li>
+        <li<%= sidebar_current("docs-ovh-datasource-publiccloud-regions") %>>
+          <a href="/docs/providers/ovh/d/publiccloud_regions.html">ovh_publiccloud_regions</a>
+        </li>
       </ul>
-    </div>
-  <% end %>
+    </li>
+    <li<%= sidebar_current("docs-ovh-datasource-publiccloud-region-x") %>>
+      <a href="/docs/providers/ovh/d/publiccloud_region.html">ovh_publiccloud_region</a>
+    </li>
+    <li<%= sidebar_current("docs-ovh-datasource-publiccloud-regions") %>>
+      <a href="/docs/providers/ovh/d/publiccloud_regions.html">ovh_publiccloud_regions</a>
+    </li>
+  </ul>
 
-  <%= yield %>
-  <% end %>
+  <li<%= sidebar_current("docs-ovh-resource-cloud") %>>
+    <a href="#">Cloud Resources</a>
+    <ul class="nav nav-visible">
+      <li<%= sidebar_current("docs-ovh-resource-cloud-network-private-x") %>>
+        <a href="/docs/providers/ovh/r/cloud_network_private.html">ovh_cloud_network_private</a>
+      </li>
+      <li<%= sidebar_current("docs-ovh-resource-cloud-network-private-subnet") %>>
+        <a href="/docs/providers/ovh/r/cloud_network_private_subnet.html">ovh_cloud_network_private_subnet</a>
+      </li>
+      <li<%= sidebar_current("docs-ovh-resource-cloud-user") %>>
+        <a href="/docs/providers/ovh/r/cloud_user.html">ovh_cloud_user</a>
+      </li>
+
+      <li<%= sidebar_current("docs-ovh-resource-publiccloud-private-network-x") %>>
+        <a href="/docs/providers/ovh/r/publiccloud_private_network.html">ovh_publiccloud_private_network</a>
+      </li>
+      <li<%= sidebar_current("docs-ovh-resource-publiccloud-private-network-subnet") %>>
+        <a href="/docs/providers/ovh/r/publiccloud_private_network_subnet.html">ovh_publiccloud_private_network_subnet</a>
+      </li>
+      <li<%= sidebar_current("docs-ovh-resource-publiccloud-user") %>>
+        <a href="/docs/providers/ovh/r/publiccloud_user.html">ovh_publiccloud_user</a>
+      </li>
+    </ul>
+  </li>
+
+  <li<%= sidebar_current("docs-ovh-resource-domain") %>>
+    <a href="#">Domain Resources</a>
+    <ul class="nav nav-visible">
+      <li<%= sidebar_current("docs-ovh-resource-domain-zone-record") %>>
+        <a href="/docs/providers/ovh/r/ovh_domain_zone_record.html">ovh_domain_zone_record</a>
+      </li>
+      <li<%= sidebar_current("docs-ovh-resource-domain-zone-redirection") %>>
+        <a href="/docs/providers/ovh/r/ovh_domain_zone_redirection.html">ovh_domain_zone_redirection</a>
+      </li>
+    </ul>
+  </li>
+
+  <li<%= sidebar_current("docs-ovh-resource-ip") %>>
+    <a href="#">IP Resources</a>
+    <ul class="nav nav-visible">
+      <li<%= sidebar_current("docs-ovh-resource-ip-reverse") %>>
+        <a href="/docs/providers/ovh/r/ip_reverse.html">ovh_ip_reverse</a>
+      </li>
+    </ul>
+  </li>
+
+  <li<%= sidebar_current("docs-ovh-resource-iploadbalancing") %>>
+    <a href="#">IP Load Balancing Resources</a>
+    <ul class="nav nav-visible">
+      <li<%= sidebar_current("docs-ovh-resource-iploadbalancing-http-farm-x") %>>
+        <a href="/docs/providers/ovh/r/iploadbalancing_http_farm.html">ovh_iploadbalancing_http_farm</a>
+      </li>
+      <li<%= sidebar_current("docs-ovh-resource-iploadbalancing-tcp-farm-x") %>>
+        <a href="/docs/providers/ovh/r/iploadbalancing_tcp_farm.html">ovh_iploadbalancing_tcp_farm</a>
+      </li>
+      <li<%= sidebar_current("docs-ovh-resource-iploadbalancing-http-farm-server") %>>
+        <a href="/docs/providers/ovh/r/iploadbalancing_http_farm_server.html">ovh_iploadbalancing_http_farm_server</a>
+      </li>
+      <li<%= sidebar_current("docs-ovh-resource-iploadbalancing-tcp-farm-server") %>>
+        <a href="/docs/providers/ovh/r/iploadbalancing_tcp_farm_server.html">ovh_iploadbalancing_tcp_farm_server</a>
+      </li>
+      <li<%= sidebar_current("docs-ovh-resource-iploadbalancing-http-frontend") %>>
+        <a href="/docs/providers/ovh/r/iploadbalancing_http_frontend.html">ovh_iploadbalancing_http_frontend</a>
+      </li>
+      <li<%= sidebar_current("docs-ovh-resource-iploadbalancing-tcp-frontend") %>>
+        <a href="/docs/providers/ovh/r/iploadbalancing_tcp_frontend.html">ovh_iploadbalancing_tcp_frontend</a>
+      </li>
+      <li<%= sidebar_current("docs-ovh-resource-iploadbalancing-http-route-x") %>>
+        <a href="/docs/providers/ovh/r/iploadbalancing_http_route.html">ovh_iploadbalancing_http_route</a>
+      </li>
+      <li<%= sidebar_current("docs-ovh-resource-iploadbalancing-http-route-rule") %>>
+        <a href="/docs/providers/ovh/r/iploadbalancing_http_route_rule.html">ovh_iploadbalancing_http_route_rule</a>
+      </li>
+      <li<%= sidebar_current("docs-ovh-resource-iploadbalancing-refresh") %>>
+        <a href="/docs/providers/ovh/r/iploadbalancing_refresh.html">ovh_iploadbalancing_refresh</a>
+      </li>
+    </ul>
+  </li>
+
+  <li<%= sidebar_current("docs-ovh-resource-me") %>>
+    <a href="#">Me Resources</a>
+    <ul class="nav nav-visible">
+      <li<%= sidebar_current("docs-ovh-resource-me-ssh-key") %>>
+        <a href="/docs/providers/ovh/r/me_ssh_key.html">ovh_me_ssh_key</a>
+      </li>
+    </ul>
+  </li>
+
+  <li<%= sidebar_current("docs-ovh-resource-vrack") %>>
+    <a href="#">vRack Resources</a>
+    <ul class="nav nav-visible">
+      <li<%= sidebar_current("docs-ovh-resource-vrack-cloudproject") %>>
+        <a href="/docs/providers/ovh/r/vrack_cloudproject.html">ovh_vrack_cloudproject</a>
+      </li>
+      <li<%= sidebar_current("docs-ovh-resource-vrack-publicloud-attachment") %>>
+        <a href="/docs/providers/ovh/r/vrack_publiccloud_attachment.html">ovh_vrack_publiccloud_attachment</a>
+      </li>
+    </ul>
+  </li>
+</div>
+<% end %>
+
+<%= yield %>
+<% end %>
