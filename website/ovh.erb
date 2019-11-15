@@ -1,4 +1,4 @@
-<% wrap_layout :inner do %>
+<% wrap_layout :inner do %>
 <% content_for :sidebar do %>
 <div class="docs-sidebar hidden-print affix-top" role="complementary">
   <ul class="nav docs-sidenav">
@@ -22,11 +22,14 @@
         <li<%= sidebar_current("docs-ovh-datasource-dedicated-installation-templates") %>>
           <a href="/docs/providers/ovh/d/dedicated_installation_templates.html">ovh_dedicated_installation_templates</a>
         </li>
-        <li<%= sidebar_current("docs-ovh-datasource-dedicated-servers") %>>
-          <a href="/docs/providers/ovh/d/dedicated_servers.html">ovh_dedicated_servers</a>
-        </li>
         <li<%= sidebar_current("docs-ovh-datasource-dedicated-server-x") %>>
           <a href="/docs/providers/ovh/d/dedicated_server.html">ovh_dedicated_server</a>
+        </li>
+        <li<%= sidebar_current("docs-ovh-datasource-dedicated-server-boots") %>>
+          <a href="/docs/providers/ovh/d/dedicated_server_boots.html">ovh_dedicated_server_boots</a>
+        </li>
+        <li<%= sidebar_current("docs-ovh-datasource-dedicated-servers") %>>
+          <a href="/docs/providers/ovh/d/dedicated_servers.html">ovh_dedicated_servers</a>
         </li>
         <li<%= sidebar_current("docs-ovh-datasource-domain-zone") %>>
           <a href="/docs/providers/ovh/d/domain_zone.html">ovh_domain_zone</a>
@@ -77,7 +80,6 @@
       <li<%= sidebar_current("docs-ovh-resource-cloud-user") %>>
         <a href="/docs/providers/ovh/r/cloud_user.html">ovh_cloud_user</a>
       </li>
-
       <li<%= sidebar_current("docs-ovh-resource-publiccloud-private-network-x") %>>
         <a href="/docs/providers/ovh/r/publiccloud_private_network.html">ovh_publiccloud_private_network</a>
       </li>

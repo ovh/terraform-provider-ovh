@@ -50,6 +50,16 @@ func validateStringEnum(value string, enum []string) error {
 	return nil
 }
 
+func validateBootType(value string) error {
+	return validateStringEnum(value, []string{
+		"harddisk",
+		"internal",
+		"ipxeCustomerScript",
+		"network",
+		"rescue",
+	})
+}
+
 func getNilBoolPointer(val interface{}) *bool {
 	if val == nil {
 		return nil
