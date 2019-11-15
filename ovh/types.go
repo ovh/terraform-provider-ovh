@@ -165,3 +165,16 @@ func (s *MeSshKeyResponse) String() string {
 type MeSshKeyUpdateOpts struct {
 	Default bool `json:"default"`
 }
+
+type UnitAndValue struct {
+	Unit  string `json:"unit"`
+	Value int    `json:"value"`
+}
+
+func (v UnitAndValue) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+	obj["unit"] = v.Unit
+	obj["value"] = v.Value
+
+	return obj
+}
