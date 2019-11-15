@@ -34,19 +34,25 @@ func TestProvider_impl(t *testing.T) {
 	var _ terraform.ResourceProvider = Provider()
 }
 
-func checkEnv(t *testing.T, e string) {
+func checkEnvOrFail(t *testing.T, e string) {
 	if os.Getenv(e) == "" {
 		t.Fatalf("%s must be set for acceptance tests", e)
+	}
+}
+
+func checkEnvOrSkip(t *testing.T, e string) {
+	if os.Getenv(e) == "" {
+		t.Skipf("[WARN] %s must be set for acceptance tests. Skipping.", e)
 	}
 }
 
 // Checks that the environment variables needed to create the OVH API client
 // are set and create the client right away.
 func testAccPreCheckCredentials(t *testing.T) {
-	checkEnv(t, "OVH_ENDPOINT")
-	checkEnv(t, "OVH_APPLICATION_KEY")
-	checkEnv(t, "OVH_APPLICATION_SECRET")
-	checkEnv(t, "OVH_CONSUMER_KEY")
+	checkEnvOrFail(t, "OVH_ENDPOINT")
+	checkEnvOrFail(t, "OVH_APPLICATION_KEY")
+	checkEnvOrFail(t, "OVH_APPLICATION_SECRET")
+	checkEnvOrFail(t, "OVH_CONSUMER_KEY")
 
 	if testAccOVHClient == nil {
 		config := Config{
@@ -68,44 +74,44 @@ func testAccPreCheckCredentials(t *testing.T) {
 // are set.
 func testAccPreCheckIp(t *testing.T) {
 	testAccPreCheckCredentials(t)
-	checkEnv(t, "OVH_IP")
-	checkEnv(t, "OVH_IP_BLOCK")
-	checkEnv(t, "OVH_IP_REVERSE")
+	checkEnvOrSkip(t, "OVH_IP")
+	checkEnvOrSkip(t, "OVH_IP_BLOCK")
+	checkEnvOrSkip(t, "OVH_IP_REVERSE")
 }
 
 // Checks that the environment variables needed for the /domain acceptance tests
 // are set.
 func testAccPreCheckDomain(t *testing.T) {
 	testAccPreCheckCredentials(t)
-	checkEnv(t, "OVH_ZONE")
+	checkEnvOrSkip(t, "OVH_ZONE")
 }
 
 // Checks that the environment variables needed for the /cloud acceptance tests
 // are set.
 func testAccPreCheckPublicCloud(t *testing.T) {
 	testAccPreCheckCredentials(t)
-	checkEnv(t, "OVH_PUBLIC_CLOUD")
+	checkEnvOrSkip(t, "OVH_PUBLIC_CLOUD")
 }
 
 // Checks that the environment variables needed for the /ipLoadbalacing acceptance tests
 // are set.
 func testAccPreCheckIpLoadbalancing(t *testing.T) {
 	testAccPreCheckCredentials(t)
-	checkEnv(t, "OVH_IPLB_SERVICE")
+	checkEnvOrSkip(t, "OVH_IPLB_SERVICE")
 }
 
 // Checks that the environment variables needed for the /vrack acceptance tests
 // are set.
 func testAccPreCheckVRack(t *testing.T) {
 	testAccPreCheckCredentials(t)
-	checkEnv(t, "OVH_VRACK")
+	checkEnvOrSkip(t, "OVH_VRACK")
 }
 
 // Checks that the environment variables needed for the /me/paymentMean acceptance tests
 // are set.
 func testAccPreCheckMePaymentMean(t *testing.T) {
 	testAccPreCheckCredentials(t)
-	checkEnv(t, "OVH_TEST_BANKACCOUNT")
+	checkEnvOrSkip(t, "OVH_TEST_BANKACCOUNT")
 }
 
 func testAccCheckVRackExists(t *testing.T) {
@@ -142,7 +148,6 @@ func testAccCheckPublicCloudExists(t *testing.T) {
 		t.Fatalf("Error: %q\n", err)
 	}
 	t.Logf("Read Cloud Project %s -> status: '%s', desc: '%s'", endpoint, r.Status, r.Description)
-
 }
 
 func testAccCheckIpLoadbalancingExists(t *testing.T) {
@@ -160,7 +165,6 @@ func testAccCheckIpLoadbalancingExists(t *testing.T) {
 		t.Fatalf("Error: %q\n", err)
 	}
 	t.Logf("Read IPLB service %s -> state: '%s', serviceName: '%s'", endpoint, r.State, r.ServiceName)
-
 }
 
 func testAccCheckDomainZoneExists(t *testing.T) {
