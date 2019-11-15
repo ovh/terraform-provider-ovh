@@ -23,7 +23,7 @@ resource "ovh_ip_reverse" "reverse" {
 `, os.Getenv("OVH_IP_BLOCK"), os.Getenv("OVH_IP"), os.Getenv("OVH_IP_REVERSE"))
 
 func init() {
-	resource.AddTestSweepers("ovh_me_installation_template", &resource.Sweeper{
+	resource.AddTestSweepers("ovh_ip_reverse", &resource.Sweeper{
 		Name: "ovh_ip_reverse",
 		F:    testSweepIpReverse,
 	})
