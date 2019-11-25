@@ -14,7 +14,7 @@ import (
 )
 
 type OvhDomainZoneRecord struct {
-	Id        int    `json:"id,omitempty"`
+	Id        int64  `json:"id,omitempty"`
 	Zone      string `json:"zone,omitempty"`
 	Target    string `json:"target"`
 	Ttl       int    `json:"ttl,omitempty"`
@@ -144,7 +144,7 @@ func resourceOvhDomainZoneRecordCreate(d *schema.ResourceData, meta interface{})
 
 	}
 
-	d.SetId(strconv.Itoa(resultRecord.Id))
+	d.SetId(strconv.FormatInt(resultRecord.Id, 10))
 
 	if err := ovhDomainZoneRefresh(d, meta); err != nil {
 		log.Printf("[WARN] OVH Domain zone refresh after record creation failed: %s", err)
