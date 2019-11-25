@@ -285,7 +285,7 @@ func testAccCheckOvhDomainZoneRecordExists(n string, record *OvhDomainZoneRecord
 			return err
 		}
 
-		if strconv.Itoa(record.Id) != rs.Primary.ID {
+		if strconv.FormatInt(record.Id, 10) != rs.Primary.ID {
 			return fmt.Errorf("Record not found")
 		}
 
