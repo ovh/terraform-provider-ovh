@@ -188,6 +188,10 @@ type PublicCloudKubernetesClusterResponse struct {
 	Version                string   `json:"version"`
 }
 
+func (s *PublicCloudKubernetesClusterResponse) String() string {
+	return fmt.Sprintf("%s(%s): %s", s.Name, s.Id, s.Status)
+}
+
 type PublicCloudKubernetesKubeConfigResponse struct {
 	Content string `json:"content"`
 }

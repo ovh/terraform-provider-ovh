@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	clientcmd "k8s.io/client-go/tools/clientcmd"
 )
 
 func dataSourceCloudKubernetesCluster() *schema.Resource {
@@ -80,7 +79,7 @@ func dataSourceCloudKubernetesCluster() *schema.Resource {
 				Computed:  true,
 				Sensitive: true,
 			},
-			"version": {
+			"kubernetes_version": {
 				Type:     schema.TypeString,
 				Computed: true,
 				ForceNew: true,
@@ -103,35 +102,11 @@ func dataSourceCloudKubernetesClusterRead(d *schema.ResourceData, meta interface
 		return err
 	}
 
-	_ = d.Set("control_plane_is_up_to_date", cluster.ControlPlaneIsUpToDate)
-	_ = d.Set("is_up_to_date", cluster.IsUpToDate)
-	_ = d.Set("name", cluster.Name)
-	_ = d.Set("next_upgrade_versions", cluster.NextUpgradeVersions)
-	_ = d.Set("nodes_url", cluster.NodesUrl)
-	_ = d.Set("region", cluster.Region)
-	_ = d.Set("status", cluster.Status)
-	_ = d.Set("update_policy", cluster.UpdatePolicy)
-	_ = d.Set("url", cluster.Url)
-	_ = d.Set("version", cluster.Version)
-
-	kubeconfig_raw := PublicCloudKubernetesKubeConfigResponse{}
-	endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/kubeconfig", projectId, cluster.Id)
-	err = config.OVHClient.Post(endpoint, nil, &kubeconfig_raw)
+	err = readCloudKubernetesCluster(projectId, config, d, &cluster)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error while reading cloud config: %s", err)
 	}
-
-	kubeconfig, err := clientcmd.Load([]byte(kubeconfig_raw.Content))
-	if err != nil {
-		return err
-	}
-	currentContext := kubeconfig.CurrentContext
-	currentUser := kubeconfig.Contexts[currentContext].AuthInfo
-	currentCluster := kubeconfig.Contexts[currentContext].Cluster
-	_ = d.Set("client_certificate", string(kubeconfig.AuthInfos[currentUser].ClientCertificateData))
-	_ = d.Set("client_key", string(kubeconfig.AuthInfos[currentUser].ClientKeyData))
-	_ = d.Set("cluster_ca_certificate", string(kubeconfig.Clusters[currentCluster].CertificateAuthorityData))
 
 	d.Partial(false)
 	d.SetId(cluster.Id)
