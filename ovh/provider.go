@@ -43,6 +43,7 @@ func Provider() terraform.ResourceProvider {
 		DataSourcesMap: map[string]*schema.Resource{
 			"ovh_cloud_region":               dataSourcePublicCloudRegion(),
 			"ovh_cloud_regions":              dataSourcePublicCloudRegions(),
+			"ovh_cloud_kubernetes_cluster":   dataSourceCloudKubernetesCluster(),
 			"ovh_domain_zone":                dataSourceDomainZone(),
 			"ovh_iploadbalancing":            dataSourceIpLoadbalancing(),
 			"ovh_me_paymentmean_bankaccount": dataSourceMePaymentmeanBankaccount(),

@@ -173,3 +173,21 @@ func (s *MeSshKeyResponse) String() string {
 type MeSshKeyUpdateOpts struct {
 	Default bool `json:"default"`
 }
+
+type PublicCloudKubernetesClusterResponse struct {
+	ControlPlaneIsUpToDate bool     `json:"controlPlaneIsUpToDate"`
+	Id                     string   `json:"id"`
+	IsUpToDate             bool     `json:"isUpToDate"`
+	Name                   string   `json:"name"`
+	NextUpgradeVersions    []string `json:"nextUpgradeVersions"`
+	NodesUrl               string   `json:"nodesUrl"`
+	Region                 string   `json:"region"`
+	Status                 string   `json:"status"`
+	UpdatePolicy           string   `json:"updatePolicy"`
+	Url                    string   `json:"url"`
+	Version                string   `json:"version"`
+}
+
+type PublicCloudKubernetesKubeConfigResponse struct {
+	Content string `json:"content"`
+}

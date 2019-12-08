@@ -66,6 +66,7 @@ In order to run the full suite of Acceptance tests you will need to have the fol
 - a [Load Balancer](https://www.ovh.ie/solutions/load-balancer/)
 - a registered [Domain](https://www.ovh.ie/domains/)
 - a [cloud project](https://www.ovh.ie/public-cloud/instances/)
+- a [kubernetes cluster](https://www.ovh.com/fr/public-cloud/kubernetes/)
 
 You will also need to setup your [OVH api](https://api.ovh.com) credentials. (see [documentation](https://www.terraform.io/docs/providers/ovh/index.html#configuration-reference))
 
@@ -81,6 +82,9 @@ export OVH_CONSUMER_KEY="..."
 
 # ovh public cloud project id
 export OVH_PUBLIC_CLOUD=...
+
+# ovh cloud kubernetes cluster name
+export OVH_KUBERNETES_CLUSTER_NAME=...
 
 # ovh vrack id
 export OVH_VRACK=...

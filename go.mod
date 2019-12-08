@@ -10,6 +10,7 @@ require (
 	github.com/smartystreets/assertions v0.0.0-20190116191733-b6c0e53d7304 // indirect
 	github.com/smartystreets/goconvey v0.0.0-20181108003508-044398e4856c // indirect
 	gopkg.in/ini.v1 v1.42.0
+	k8s.io/client-go v0.0.0-20191114101535-6c5935290e33
 )
 
 go 1.13
