@@ -35,7 +35,7 @@ func TestAccPublicCloudKubernetesNode_basic(t *testing.T) {
 			{
 				Config: testAccPublicCloudKubernetesNodeConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPublicCloudKubernetesNodeExists("ovh_cloud_kubernetes_cluster.cluster", t),
+					testAccCheckPublicCloudKubernetesNodeExists("ovh_cloud_kubernetes_node.node", t),
 				),
 			},
 		},
