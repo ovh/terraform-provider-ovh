@@ -18,7 +18,7 @@ resource "ovh_cloud_kubernetes_node" "node" {
 	project_id  = "%s"
 	cluster_id = data.ovh_cloud_kubernetes_cluster.cluster.id
   	name = "acceptance-node"
-	flavor = "B2-7"
+	flavor = "b2-7"
 }
 `, os.Getenv("OVH_PUBLIC_CLOUD"), os.Getenv("OVH_KUBERNETES_CLUSTER_NAME"), os.Getenv("OVH_PUBLIC_CLOUD"))
 
