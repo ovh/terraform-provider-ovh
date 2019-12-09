@@ -195,3 +195,23 @@ func (s *PublicCloudKubernetesClusterResponse) String() string {
 type PublicCloudKubernetesKubeConfigResponse struct {
 	Content string `json:"content"`
 }
+
+type PublicCloudKubernetesNodeResponse struct {
+	Id         string `json:"id"`
+	ProjectId  string `json:"projectId"`
+	InstanceId string `json:"instanceId"`
+	IsUpToDate bool   `json:"isUpToDate"`
+	Name       string `json:"name"`
+	Flavor     string `json:"flavor"`
+	Status     string `json:"status"`
+	Version    string `json:"version"`
+}
+
+func (n *PublicCloudKubernetesNodeResponse) String() string {
+	return fmt.Sprintf("%s(%s): %s", n.Name, n.Id, n.Status)
+}
+
+type PublicCloudKubernetesNodeCreationRequest struct {
+	FlavorName string `json:"flavorName"`
+	Name       string `json:"name"`
+}

@@ -75,6 +75,7 @@ func Provider() terraform.ResourceProvider {
 			"ovh_cloud_network_private_subnet":     resourcePublicCloudPrivateNetworkSubnet(),
 			"ovh_cloud_user":                       resourcePublicCloudUser(),
 			"ovh_cloud_kubernetes_cluster":         resourceCloudKubernetesCluster(),
+			"ovh_cloud_kubernetes_node":            resourceCloudKubernetesNode(),
 			"ovh_me_ssh_key":                       resourceMeSshKey(),
 			"ovh_vrack_cloudproject":               resourceVRackPublicCloudAttachment(),
 
