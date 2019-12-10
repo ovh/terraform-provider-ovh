@@ -3,9 +3,12 @@ package ovh
 import (
 	"fmt"
 	"log"
+	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+
+	"github.com/ovh/go-ovh/ovh"
 )
 
 func dataSourcePublicCloudRegion() *schema.Resource {
@@ -71,40 +74,50 @@ func dataSourcePublicCloudRegionRead(d *schema.ResourceData, meta interface{}) e
 	name := d.Get("name").(string)
 
 	log.Printf("[DEBUG] Will read public cloud region %s for project: %s", name, projectId)
-	d.Partial(true)
 
-	response := &PublicCloudRegionResponse{}
-	endpoint := fmt.Sprintf("/cloud/project/%s/region/%s", projectId, name)
-	err := config.OVHClient.Get(endpoint, response)
-
+	region, err := getCloudRegion(projectId, name, config.OVHClient)
 	if err != nil {
-		return fmt.Errorf("Error calling %s:\n\t %q", endpoint, err)
+		return err
 	}
 
 	// TODO: Deprecated - remove in next major release
-	d.Set("datacenterLocation", response.DatacenterLocation)
-	d.Set("continentCode", response.ContinentCode)
-
-	d.Set("datacenter_location", response.DatacenterLocation)
-	d.Set("continent_code", response.ContinentCode)
+	d.Set("datacenterLocation", region.DatacenterLocation)
+	d.Set("continentCode", region.ContinentCode)
+	d.Set("datacenter_location", region.DatacenterLocation)
+	d.Set("continent_code", region.ContinentCode)
 
 	services := &schema.Set{
 		F: publicCloudServiceHash,
 	}
-	for i := range response.Services {
+	for i := range region.Services {
 		service := map[string]interface{}{
-			"name":   response.Services[i].Name,
-			"status": response.Services[i].Status,
+			"name":   region.Services[i].Name,
+			"status": region.Services[i].Status,
 		}
 		services.Add(service)
 	}
 
 	d.Set("services", services)
-
-	d.Partial(false)
 	d.SetId(fmt.Sprintf("%s_%s", projectId, name))
 
 	return nil
+}
+
+func getCloudRegion(projectId, region string, client *ovh.Client) (*PublicCloudRegionResponse, error) {
+	log.Printf("[DEBUG] Will read public cloud region %s for project: %s", region, projectId)
+
+	response := &PublicCloudRegionResponse{}
+	endpoint := fmt.Sprintf(
+		"/cloud/project/%s/region/%s",
+		url.PathEscape(projectId),
+		url.PathEscape(region),
+	)
+	err := client.Get(endpoint, response)
+
+	if err != nil {
+		return nil, fmt.Errorf("Error calling %s:\n\t %q", endpoint, err)
+	}
+	return response, nil
 }
 
 func publicCloudServiceHash(v interface{}) int {
