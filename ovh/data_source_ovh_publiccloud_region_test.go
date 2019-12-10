@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccPublicCloudRegionDataSource_basic(t *testing.T) {
@@ -17,39 +16,26 @@ func TestAccPublicCloudRegionDataSource_basic(t *testing.T) {
 			{
 				Config: testAccPublicCloudRegionDatasourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccPublicCloudRegionDatasource("data.ovh_publiccloud_region.region_attr.0"),
-					testAccPublicCloudRegionDatasource("data.ovh_publiccloud_region.region_attr.1"),
-					testAccPublicCloudRegionDatasource("data.ovh_publiccloud_region.region_attr.2"),
+					resource.TestCheckResourceAttrSet("data.ovh_cloud_region.region_attr.0", "name"),
+					resource.TestCheckResourceAttrSet("data.ovh_cloud_region.region_attr.0", "services.#"),
+					resource.TestCheckResourceAttrSet("data.ovh_cloud_region.region_attr.1", "name"),
+					resource.TestCheckResourceAttrSet("data.ovh_cloud_region.region_attr.1", "services.#"),
+					resource.TestCheckResourceAttrSet("data.ovh_cloud_region.region_attr.2", "name"),
+					resource.TestCheckResourceAttrSet("data.ovh_cloud_region.region_attr.2", "services.#"),
 				),
 			},
 		},
 	})
 }
 
-func testAccPublicCloudRegionDatasource(n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-
-		if !ok {
-			return fmt.Errorf("Can't find regions data source: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("Cannot find region attributes for project %s and region %s", rs.Primary.Attributes["project_id"], rs.Primary.Attributes["region"])
-		}
-
-		return nil
-	}
-}
-
 var testAccPublicCloudRegionDatasourceConfig = fmt.Sprintf(`
-data "ovh_publiccloud_regions" "regions" {
+data "ovh_cloud_regions" "regions" {
   project_id = "%s"
 }
 
-data "ovh_publiccloud_region" "region_attr" {
+data "ovh_cloud_region" "region_attr" {
   count = 3
-  project_id = "${data.ovh_publiccloud_regions.regions.project_id}"
-  name = "${element(sort(data.ovh_publiccloud_regions.regions.names), count.index)}"
+  project_id = data.ovh_cloud_regions.regions.project_id
+  name = element(sort(data.ovh_cloud_regions.regions.names), count.index)
 }
 `, os.Getenv("OVH_PUBLIC_CLOUD"))

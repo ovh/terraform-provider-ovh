@@ -3,6 +3,7 @@ package ovh
 import (
 	"fmt"
 	"log"
+	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
@@ -16,6 +17,12 @@ func dataSourcePublicCloudRegions() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 				DefaultFunc: schema.EnvDefaultFunc("OVH_PROJECT_ID", nil),
+			},
+			"has_services_up": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
 			},
 			"names": {
 				Type:     schema.TypeSet,
@@ -32,9 +39,12 @@ func dataSourcePublicCloudRegionsRead(d *schema.ResourceData, meta interface{}) 
 	projectId := d.Get("project_id").(string)
 
 	log.Printf("[DEBUG] Will read public cloud regions for project: %s", projectId)
-	d.Partial(true)
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/region", projectId)
+	endpoint := fmt.Sprintf(
+		"/cloud/project/%s/region",
+		url.PathEscape(projectId),
+	)
+
 	names := make([]string, 0)
 	err := config.OVHClient.Get(endpoint, &names)
 
@@ -42,10 +52,34 @@ func dataSourcePublicCloudRegionsRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("Error calling %s:\n\t %q", endpoint, err)
 	}
 
-	d.Set("names", names)
-	d.Partial(false)
 	d.SetId(projectId)
 
-	log.Printf("[DEBUG] Read Public Cloud Regions %s", names)
+	var services []interface{}
+	if servicesVal, ok := d.GetOk("has_services_up"); ok {
+		services = servicesVal.(*schema.Set).List()
+	}
+
+	// no filtering on services
+	if len(services) < 1 {
+		d.Set("names", names)
+		return nil
+	}
+
+	filtered_names := make([]string, 0)
+	for _, n := range names {
+		region, err := getCloudRegion(projectId, n, config.OVHClient)
+		if err != nil {
+			return err
+		}
+
+		for _, service := range services {
+			if region.HasServiceUp(service.(string)) {
+				filtered_names = append(filtered_names, n)
+			}
+		}
+	}
+
+	d.Set("names", filtered_names)
+
 	return nil
 }

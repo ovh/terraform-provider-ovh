@@ -144,6 +144,15 @@ func (r *PublicCloudRegionResponse) String() string {
 	return fmt.Sprintf("Region: %s, Services: %s", r.Name, r.Services)
 }
 
+func (r *PublicCloudRegionResponse) HasServiceUp(service string) bool {
+	for _, s := range r.Services {
+		if s.Name == service && s.Status == "UP" {
+			return true
+		}
+	}
+	return false
+}
+
 type PublicCloudServiceStatusResponse struct {
 	Status string `json:"status"`
 	Name   string `json:"name"`
