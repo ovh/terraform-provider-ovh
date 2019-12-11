@@ -114,6 +114,11 @@ func testAccPreCheckMePaymentMean(t *testing.T) {
 	checkEnvOrSkip(t, "OVH_TEST_BANKACCOUNT")
 }
 
+func testAccPreCheckDedicatedServer(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_DEDICATED_SERVER_SERVICE_NAME")
+}
+
 func testAccCheckVRackExists(t *testing.T) {
 	type vrackResponse struct {
 		Name        string `json:"name"`
