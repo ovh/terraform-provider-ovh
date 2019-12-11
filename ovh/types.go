@@ -2,7 +2,6 @@ package ovh
 
 import (
 	"fmt"
-	"time"
 )
 
 // Opts
@@ -111,26 +110,10 @@ type PublicCloudUserOpenstackRC struct {
 	Content string `json:"content"`
 }
 
-// Opts
-type VRackAttachOpts struct {
-	Project string `json:"project"`
-}
-
 // Task Opts
 type TaskOpts struct {
 	ServiceName string `json:"serviceName"`
 	TaskId      string `json:"taskId"`
-}
-
-type VRackAttachTaskResponse struct {
-	Id           int       `json:"id"`
-	Function     string    `json:"function"`
-	TargetDomain string    `json:"targetDomain"`
-	Status       string    `json:"status"`
-	ServiceName  string    `json:"serviceName"`
-	OrderId      int       `json:"orderId"`
-	LastUpdate   time.Time `json:"lastUpdate"`
-	TodoDate     time.Time `json:"TodoDate"`
 }
 
 type PublicCloudRegionResponse struct {
