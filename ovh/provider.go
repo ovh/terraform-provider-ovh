@@ -78,6 +78,7 @@ func Provider() terraform.ResourceProvider {
 			"ovh_cloud_user":                       resourcePublicCloudUser(),
 			"ovh_me_ssh_key":                       resourceMeSshKey(),
 			"ovh_vrack_cloudproject":               resourceVrackCloudProject(),
+			"ovh_vrack_dedicated_server":           resourceVrackDedicatedServer(),
 
 			// Legacy naming schema (publiccloud)
 			"ovh_publiccloud_private_network": deprecated(resourcePublicCloudPrivateNetwork(),
