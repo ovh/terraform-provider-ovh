@@ -1,0 +1,28 @@
+---
+layout: "ovh"
+page_title: "OVH: ovh_vracks"
+sidebar_current: "docs-ovh-vracks"
+description: |-
+  Get the list of Vrack ids available for your OVH account.
+---
+
+# ovh_vracks
+
+Use this data source to get the list of Vrack ids available for your OVH account.
+
+## Example Usage
+
+```hcl
+data ovh_vracks vracks {}
+```
+
+## Argument Reference
+
+This datasource takes no argument.
+
+## Attributes Reference
+
+The following attributes are exported:
+
+*  - The list of vrack IDs available for your OVH account.
+
