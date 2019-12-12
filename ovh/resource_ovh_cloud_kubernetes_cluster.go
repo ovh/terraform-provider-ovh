@@ -20,7 +20,8 @@ func resourceCloudKubernetesCluster() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				return []*schema.ResourceData{d}, nil
+				err := resourceCloudKubernetesClusterRead(d, meta)
+				return []*schema.ResourceData{d}, err
 			},
 		},
 
@@ -140,7 +141,7 @@ func resourceCloudKubernetesClusterCreate(d *schema.ResourceData, meta interface
 		Pending:    []string{"NOT_FOUND"},
 		Target:     []string{"FOUND"},
 		Refresh:    waitForCloudKubernetesClusterToBeReal(config.OVHClient, projectId, r.Id),
-		Timeout:    2 * time.Minute,
+		Timeout:    30 * time.Minute,
 		Delay:      5 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -154,7 +155,7 @@ func resourceCloudKubernetesClusterCreate(d *schema.ResourceData, meta interface
 		Pending:    []string{"INSTALLING"},
 		Target:     []string{"READY"},
 		Refresh:    waitForCloudKubernetesClusterActive(config.OVHClient, projectId, r.Id),
-		Timeout:    10 * time.Minute,
+		Timeout:    20 * time.Minute,
 		Delay:      5 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
