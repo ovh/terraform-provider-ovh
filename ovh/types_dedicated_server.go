@@ -1,6 +1,9 @@
 package ovh
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 type DedicatedServer struct {
 	Name            string `json:"name"`
@@ -50,6 +53,7 @@ func (vni DedicatedServerVNI) String() string {
 		vni.Enabled,
 	)
 }
+
 func (v DedicatedServerVNI) ToMap() map[string]interface{} {
 	obj := make(map[string]interface{})
 	obj["enabled"] = v.Enabled
@@ -64,4 +68,25 @@ func (v DedicatedServerVNI) ToMap() map[string]interface{} {
 	}
 
 	return obj
+}
+
+type DedicatedServerBoot struct {
+	BootId      int    `json:"bootId"`
+	BootType    string `json:"bootType"`
+	Description string `json:"description"`
+	Kernel      string `json:"kernel"`
+}
+
+type DedicatedServerUpdateOpts struct {
+	BootId int `json:"bootId"`
+}
+
+type DedicatedServerTask struct {
+	Id         int64     `json:"taskId"`
+	Function   string    `json:"function"`
+	Comment    string    `json:"comment"`
+	Status     string    `json:"status"`
+	LastUpdate time.Time `json:"lastUpdate"`
+	doneDate   time.Time `json:"doneDate"`
+	startDate  time.Time `json:"startDate"`
 }
