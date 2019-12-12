@@ -3,6 +3,8 @@ package ovh
 import (
 	"fmt"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 type DedicatedServer struct {
@@ -32,6 +34,19 @@ func (ds DedicatedServer) String() string {
 		ds.Datacenter,
 		ds.State,
 	)
+}
+
+type DedicatedServerUpdateOpts struct {
+	BootId     *int64  `json:"bootId,omitempty"`
+	Monitoring *bool   `json:"monitoring,omitempty"`
+	State      *string `json:"state,omitempty"`
+}
+
+func (opts *DedicatedServerUpdateOpts) FromResource(d *schema.ResourceData) *DedicatedServerUpdateOpts {
+	opts.BootId = getNilInt64Pointer(d.Get("boot_id"))
+	opts.Monitoring = getNilBoolPointer(d.Get("monitoring"))
+	opts.State = getNilStringPointer(d.Get("state"))
+	return opts
 }
 
 type DedicatedServerVNI struct {
@@ -75,10 +90,6 @@ type DedicatedServerBoot struct {
 	BootType    string `json:"bootType"`
 	Description string `json:"description"`
 	Kernel      string `json:"kernel"`
-}
-
-type DedicatedServerUpdateOpts struct {
-	BootId int `json:"bootId"`
 }
 
 type DedicatedServerTask struct {
