@@ -87,6 +87,14 @@ func getNilIntPointer(val interface{}) *int {
 	return &value
 }
 
+func getNilInt64Pointer(val interface{}) *int64 {
+	if val == nil {
+		return nil
+	}
+	value := int64(val.(int))
+	return &value
+}
+
 func conditionalAttributeInt(buff *bytes.Buffer, name string, val *int) {
 	if val != nil {
 		buff.WriteString(fmt.Sprintf("  %s = %d\n", name, *val))
