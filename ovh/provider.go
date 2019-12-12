@@ -77,7 +77,9 @@ func Provider() terraform.ResourceProvider {
 			"ovh_cloud_network_private_subnet":     resourcePublicCloudPrivateNetworkSubnet(),
 			"ovh_cloud_user":                       resourcePublicCloudUser(),
 			"ovh_me_ssh_key":                       resourceMeSshKey(),
-			"ovh_vrack_cloudproject":               resourceVRackPublicCloudAttachment(),
+			"ovh_vrack_cloudproject":               resourceVrackCloudProject(),
+			"ovh_vrack_dedicated_server":           resourceVrackDedicatedServer(),
+			"ovh_vrack_dedicated_server_interface": resourceVrackDedicatedServerInterface(),
 
 			// Legacy naming schema (publiccloud)
 			"ovh_publiccloud_private_network": deprecated(resourcePublicCloudPrivateNetwork(),
@@ -86,7 +88,7 @@ func Provider() terraform.ResourceProvider {
 				"Use ovh_cloud_network_private_subnet resource instead"),
 			"ovh_publiccloud_user": deprecated(resourcePublicCloudUser(),
 				"Use ovh_cloud_user resource instead"),
-			"ovh_vrack_publiccloud_attachment": deprecated(resourceVRackPublicCloudAttachment(),
+			"ovh_vrack_publiccloud_attachment": deprecated(resourceVrackCloudProject(),
 				"Use ovh_vrack_cloudproject resource instead"),
 		},
 

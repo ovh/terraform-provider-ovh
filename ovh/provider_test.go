@@ -116,7 +116,7 @@ func testAccPreCheckMePaymentMean(t *testing.T) {
 
 func testAccPreCheckDedicatedServer(t *testing.T) {
 	testAccPreCheckCredentials(t)
-	checkEnvOrSkip(t, "OVH_DEDICATED_SERVER_SERVICE_NAME")
+	checkEnvOrSkip(t, "OVH_DEDICATED_SERVER")
 }
 
 func testAccCheckVRackExists(t *testing.T) {

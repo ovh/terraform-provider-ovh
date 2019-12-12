@@ -9,7 +9,7 @@ import (
 )
 
 func TestAccDedicatedServerDataSource_basic(t *testing.T) {
-	dedicated_server := os.Getenv("OVH_DEDICATED_SERVER_SERVICE_NAME")
+	dedicated_server := os.Getenv("OVH_DEDICATED_SERVER")
 	config := fmt.Sprintf(testAccDedicatedServerDatasourceConfig_Basic, dedicated_server)
 
 	resource.Test(t, resource.TestCase{
