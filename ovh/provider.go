@@ -52,6 +52,7 @@ func Provider() terraform.ResourceProvider {
 			"ovh_me_paymentmean_creditcard":        dataSourceMePaymentmeanCreditcard(),
 			"ovh_me_ssh_key":                       dataSourceMeSshKey(),
 			"ovh_me_ssh_keys":                      dataSourceMeSshKeys(),
+			"ovh_vracks":                           dataSourceVracks(),
 
 			// Legacy naming schema (publiccloud)
 			"ovh_publiccloud_region": deprecated(dataSourcePublicCloudRegion(),
