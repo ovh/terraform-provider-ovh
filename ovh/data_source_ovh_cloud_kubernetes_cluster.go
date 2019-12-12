@@ -79,6 +79,11 @@ func dataSourceCloudKubernetesCluster() *schema.Resource {
 				Computed:  true,
 				Sensitive: true,
 			},
+			"kubeconfig": {
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
+			},
 			"kubernetes_version": {
 				Type:     schema.TypeString,
 				Computed: true,

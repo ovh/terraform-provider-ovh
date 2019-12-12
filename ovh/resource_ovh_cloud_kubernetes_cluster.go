@@ -90,6 +90,11 @@ func resourceCloudKubernetesCluster() *schema.Resource {
 				Computed:  true,
 				Sensitive: true,
 			},
+			"kubeconfig": {
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
+			},
 			"version": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -271,6 +276,7 @@ func readCloudKubernetesCluster(projectId string, config *Config, d *schema.Reso
 	if err != nil {
 		return err
 	}
+	_ = d.Set("kubeconfig", kubeconfigRaw.Content)
 
 	kubeconfig, err := clientcmd.Load([]byte(kubeconfigRaw.Content))
 	if err != nil {
