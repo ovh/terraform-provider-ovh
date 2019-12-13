@@ -21,8 +21,6 @@ func TestAccDedicatedServerUpdate_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckOutput("test", "true"),
 					resource.TestCheckResourceAttr(
-						"ovh_dedicated_server_update.server", "state", "ok"),
-					resource.TestCheckResourceAttr(
 						"ovh_dedicated_server_update.server", "monitoring", "true"),
 					resource.TestCheckResourceAttr(
 						"ovh_dedicated_server_update.server", "state", "ok"),
@@ -32,8 +30,6 @@ func TestAccDedicatedServerUpdate_basic(t *testing.T) {
 				Config: testAccDedicatedServerUpdateConfig(true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckOutput("test", "true"),
-					resource.TestCheckResourceAttr(
-						"ovh_dedicated_server_update.server", "state", "ok"),
 					resource.TestCheckResourceAttr(
 						"ovh_dedicated_server_update.server", "monitoring", "false"),
 					resource.TestCheckResourceAttr(
