@@ -1,0 +1,51 @@
+---
+layout: "ovh"
+page_title: "OVH: dedicated_server_update"
+sidebar_current: "docs-ovh-resource-dedicated-server-update"
+description: |-
+  Update various properties of your Dedicated Server
+---
+
+# ovh_dedicated_server_update
+
+Update various properties of your Dedicated Server.
+
+> NOTE: `rescue_mail` and `root_device` properties aren't
+updated consistently. This is an issue on the OVH API which 
+has been reported. Meanwhile, these properties aren't not mapped
+on this terraform resource.
+
+## Example Usage
+
+```hcl
+data ovh_dedicated_server_boots "rescue" {
+  service_name = "ns00000.ip-1-2-3.eu"
+  boot_type    = "rescue"
+  kernel       = "rescue64-pro"
+}
+
+resource ovh_dedicated_server_update "server" {
+  service_name = "ns00000.ip-1-2-3.eu"
+  boot_id      = data.ovh_dedicated_server_boots.rescue.result[0]
+  monitoring   = true
+  state        = "ok"
+}
+```
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `service_name` - (Required) The service_name of your dedicated server.
+* `boot_id` - boot id of the server
+* `monitoring` - Icmp monitoring state
+* `state` - error, hacked, hackedBlocked, ok
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `service_name` - See Argument Reference above.
+* `boot_id` - See Argument Reference above.
+* `monitoring` - See Argument Reference above.
+* `state` - See Argument Reference above.

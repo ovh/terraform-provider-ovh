@@ -1,6 +1,11 @@
 package ovh
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+)
 
 type DedicatedServer struct {
 	Name            string `json:"name"`
@@ -31,6 +36,19 @@ func (ds DedicatedServer) String() string {
 	)
 }
 
+type DedicatedServerUpdateOpts struct {
+	BootId     *int64  `json:"bootId,omitempty"`
+	Monitoring *bool   `json:"monitoring,omitempty"`
+	State      *string `json:"state,omitempty"`
+}
+
+func (opts *DedicatedServerUpdateOpts) FromResource(d *schema.ResourceData) *DedicatedServerUpdateOpts {
+	opts.BootId = getNilInt64Pointer(d.Get("boot_id"))
+	opts.Monitoring = getNilBoolPointer(d.Get("monitoring"))
+	opts.State = getNilStringPointer(d.Get("state"))
+	return opts
+}
+
 type DedicatedServerVNI struct {
 	Enabled    bool     `json:"enabled"`
 	Mode       string   `json:"mode"`
@@ -50,6 +68,7 @@ func (vni DedicatedServerVNI) String() string {
 		vni.Enabled,
 	)
 }
+
 func (v DedicatedServerVNI) ToMap() map[string]interface{} {
 	obj := make(map[string]interface{})
 	obj["enabled"] = v.Enabled
@@ -64,4 +83,21 @@ func (v DedicatedServerVNI) ToMap() map[string]interface{} {
 	}
 
 	return obj
+}
+
+type DedicatedServerBoot struct {
+	BootId      int    `json:"bootId"`
+	BootType    string `json:"bootType"`
+	Description string `json:"description"`
+	Kernel      string `json:"kernel"`
+}
+
+type DedicatedServerTask struct {
+	Id         int64     `json:"taskId"`
+	Function   string    `json:"function"`
+	Comment    string    `json:"comment"`
+	Status     string    `json:"status"`
+	LastUpdate time.Time `json:"lastUpdate"`
+	DoneDate   time.Time `json:"doneDate"`
+	StartDate  time.Time `json:"startDate"`
 }
