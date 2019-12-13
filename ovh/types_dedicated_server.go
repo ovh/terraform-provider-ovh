@@ -98,6 +98,6 @@ type DedicatedServerTask struct {
 	Comment    string    `json:"comment"`
 	Status     string    `json:"status"`
 	LastUpdate time.Time `json:"lastUpdate"`
-	doneDate   time.Time `json:"doneDate"`
-	startDate  time.Time `json:"startDate"`
+	DoneDate   time.Time `json:"doneDate"`
+	StartDate  time.Time `json:"startDate"`
 }
