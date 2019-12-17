@@ -48,6 +48,7 @@ In addition, the following attributes are exported:
   * `enabled` - VirtualNetworkInterface activation state
   * `mode` - VirtualNetworkInterface mode (public,vrack,vrack_aggregation)
   * `name` - User defined VirtualNetworkInterface name
+  * `server_name` - Server bound to this VirtualNetworkInterface
   * `uuid` - VirtualNetworkInterface unique id
   * `vrack` - vRack name
   * `ncis` - NetworkInterfaceControllers bound to this VirtualNetworkInterface

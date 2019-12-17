@@ -98,7 +98,6 @@ func dataSourceDedicatedServer() *schema.Resource {
 				Computed:    true,
 				Description: "Dedicated server support level (critical, fastpath, gs, pro)",
 			},
-
 			"vnis": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -124,16 +123,23 @@ func dataSourceDedicatedServer() *schema.Resource {
 							Computed:    true,
 							Description: "VirtualNetworkInterface unique id",
 						},
+						"server_name": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "server name",
+						},
 						"vrack": {
 							Type:        schema.TypeString,
 							Computed:    true,
 							Description: "vRack name",
 						},
-						"ncis": {
-							Type:        schema.TypeString,
-							Elem:        &schema.Schema{Type: schema.TypeString},
+						"nics": {
+							Type:        schema.TypeList,
 							Computed:    true,
 							Description: "NetworkInterfaceControllers bound to this VirtualNetworkInterface",
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
 						},
 					},
 				},
