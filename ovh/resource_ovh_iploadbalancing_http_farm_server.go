@@ -121,16 +121,16 @@ func resourceIpLoadbalancingHttpFarmServerCreate(d *schema.ResourceData, meta in
 	config := meta.(*Config)
 
 	newBackendServer := &IpLoadbalancingHttpFarmServer{
-		DisplayName:          getNilStringPointer(d.Get("display_name").(string)),
-		Address:              getNilStringPointer(d.Get("address").(string)),
-		Port:                 getNilIntPointer(d.Get("port").(int)),
-		ProxyProtocolVersion: getNilStringPointer(d.Get("proxy_protocol_version").(string)),
-		Chain:                getNilStringPointer(d.Get("chain").(string)),
-		Weight:               getNilIntPointer(d.Get("weight").(int)),
-		Probe:                getNilBoolPointer(d.Get("probe").(bool)),
-		Ssl:                  getNilBoolPointer(d.Get("ssl").(bool)),
-		Backup:               getNilBoolPointer(d.Get("backup").(bool)),
-		Status:               getNilStringPointer(d.Get("status").(string)),
+		DisplayName:          getNilStringPointerFromData(d, "display_name"),
+		Address:              getNilStringPointerFromData(d, "address"),
+		Port:                 getNilIntPointerFromData(d, "port"),
+		ProxyProtocolVersion: getNilStringPointerFromData(d, "proxy_protocol_version"),
+		Chain:                getNilStringPointerFromData(d, "chain"),
+		Weight:               getNilIntPointerFromData(d, "weight"),
+		Probe:                getNilBoolPointerFromData(d, "probe"),
+		Ssl:                  getNilBoolPointerFromData(d, "ssl"),
+		Backup:               getNilBoolPointerFromData(d, "backup"),
+		Status:               getNilStringPointerFromData(d, "status"),
 	}
 
 	service := d.Get("service_name").(string)
@@ -191,16 +191,16 @@ func resourceIpLoadbalancingHttpFarmServerUpdate(d *schema.ResourceData, meta in
 	config := meta.(*Config)
 
 	update := &IpLoadbalancingHttpFarmServer{
-		DisplayName:          getNilStringPointer(d.Get("display_name").(string)),
-		Address:              getNilStringPointer(d.Get("address").(string)),
-		Port:                 getNilIntPointer(d.Get("port").(int)),
-		ProxyProtocolVersion: getNilStringPointer(d.Get("proxy_protocol_version").(string)),
-		Chain:                getNilStringPointer(d.Get("chain").(string)),
-		Weight:               getNilIntPointer(d.Get("weight").(int)),
-		Probe:                getNilBoolPointer(d.Get("probe").(bool)),
-		Ssl:                  getNilBoolPointer(d.Get("ssl").(bool)),
-		Backup:               getNilBoolPointer(d.Get("backup").(bool)),
-		Status:               getNilStringPointer(d.Get("status").(string)),
+		DisplayName:          getNilStringPointerFromData(d, "display_name"),
+		Address:              getNilStringPointerFromData(d, "address"),
+		Port:                 getNilIntPointerFromData(d, "port"),
+		ProxyProtocolVersion: getNilStringPointerFromData(d, "proxy_protocol_version"),
+		Chain:                getNilStringPointerFromData(d, "chain"),
+		Weight:               getNilIntPointerFromData(d, "weight"),
+		Probe:                getNilBoolPointerFromData(d, "probe"),
+		Ssl:                  getNilBoolPointerFromData(d, "ssl"),
+		Backup:               getNilBoolPointerFromData(d, "backup"),
+		Status:               getNilStringPointerFromData(d, "status"),
 	}
 
 	service := d.Get("service_name").(string)

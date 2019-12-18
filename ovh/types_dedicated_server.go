@@ -43,9 +43,9 @@ type DedicatedServerUpdateOpts struct {
 }
 
 func (opts *DedicatedServerUpdateOpts) FromResource(d *schema.ResourceData) *DedicatedServerUpdateOpts {
-	opts.BootId = getNilInt64Pointer(d.Get("boot_id"))
-	opts.Monitoring = getNilBoolPointer(d.Get("monitoring"))
-	opts.State = getNilStringPointer(d.Get("state"))
+	opts.BootId = getNilInt64PointerFromData(d, "boot_id")
+	opts.Monitoring = getNilBoolPointerFromData(d, "monitoring")
+	opts.State = getNilStringPointerFromData(d, "state")
 	return opts
 }
 

@@ -112,17 +112,13 @@ func resourceIpLoadbalancingTcpFrontendCreate(d *schema.ResourceData, meta inter
 		Zone:          d.Get("zone").(string),
 		AllowedSource: allowedSources,
 		DedicatedIpFo: dedicatedIpFo,
-		Disabled:      getNilBoolPointer(d.Get("disabled").(bool)),
-		Ssl:           getNilBoolPointer(d.Get("ssl").(bool)),
+		Disabled:      getNilBoolPointerFromData(d, "disabled"),
+		Ssl:           getNilBoolPointerFromData(d, "ssl"),
 		DisplayName:   d.Get("display_name").(string),
 	}
 
-	if farmId, ok := d.GetOk("default_farm_id"); ok {
-		frontend.DefaultFarmId = getNilIntPointer(farmId.(int))
-	}
-	if sslId, ok := d.GetOk("default_ssl_id"); ok {
-		frontend.DefaultSslId = getNilIntPointer(sslId.(int))
-	}
+	frontend.DefaultFarmId = getNilIntPointerFromData(d, "default_farm_id")
+	frontend.DefaultSslId = getNilIntPointerFromData(d, "default_ssl_id")
 
 	service := d.Get("service_name").(string)
 	resp := &IpLoadbalancingTcpFrontend{}
@@ -174,17 +170,13 @@ func resourceIpLoadbalancingTcpFrontendUpdate(d *schema.ResourceData, meta inter
 		Zone:          d.Get("zone").(string),
 		AllowedSource: allowedSources,
 		DedicatedIpFo: dedicatedIpFo,
-		Disabled:      getNilBoolPointer(d.Get("disabled").(bool)),
-		Ssl:           getNilBoolPointer(d.Get("ssl").(bool)),
+		Disabled:      getNilBoolPointerFromData(d, "disabled"),
+		Ssl:           getNilBoolPointerFromData(d, "ssl"),
 		DisplayName:   d.Get("display_name").(string),
 	}
 
-	if farmId, ok := d.GetOk("default_farm_id"); ok {
-		frontend.DefaultFarmId = getNilIntPointer(farmId.(int))
-	}
-	if sslId, ok := d.GetOk("default_ssl_id"); ok {
-		frontend.DefaultSslId = getNilIntPointer(sslId.(int))
-	}
+	frontend.DefaultFarmId = getNilIntPointerFromData(d, "default_farm_id")
+	frontend.DefaultSslId = getNilIntPointerFromData(d, "default_ssl_id")
 
 	err := config.OVHClient.Put(endpoint, frontend, nil)
 	if err != nil {
