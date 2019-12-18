@@ -18,7 +18,7 @@ type InstallationTemplate struct {
 	Description                string                             `json:"description"`
 	Distribution               string                             `json:"distribution"`
 	Family                     string                             `json:"family"`
-	Filesystems                []string                           `json:filesystems`
+	Filesystems                []string                           `json:"filesystems"`
 	HardRaidConfiguration      *bool                              `json:"hardRaidConfigurtion,omitempty"`
 	LastModification           *string                            `json:"last_modification"`
 	LvmReady                   *bool                              `json:"lvmReady,omitempty"`
@@ -120,9 +120,7 @@ func (opts *InstallationTemplateUpdateOpts) FromResource(d *schema.ResourceData)
 
 	customizations := d.Get("customization").([]interface{})
 	if customizations != nil && len(customizations) == 1 {
-		opts.Customization = (&InstallationTemplateCustomization{}).FromMap(
-			customizations[0].(map[string]interface{}),
-		)
+		opts.Customization = (&InstallationTemplateCustomization{}).FromResource(d, "customization.0")
 	}
 
 	return opts
@@ -185,14 +183,14 @@ func (v InstallationTemplateCustomization) ToMap() map[string]interface{} {
 	return nil
 }
 
-func (opts *InstallationTemplateCustomization) FromMap(data map[string]interface{}) *InstallationTemplateCustomization {
-	opts.ChangeLog = getNilStringPointer(data["change_log"])
-	opts.CustomHostname = getNilStringPointer(data["custom_hostname"])
-	opts.PostInstallationScriptLink = getNilStringPointer(data["post_installation_script_link"])
-	opts.PostInstallationScriptReturn = getNilStringPointer(data["post_installation_script_return"])
-	opts.Rating = getNilIntPointer(data["rating"])
-	opts.SshKeyName = getNilStringPointer(data["ssh_key_name"])
-	opts.UseDistributionKernel = getNilBoolPointer(data["use_distribution_kernel"])
+func (opts *InstallationTemplateCustomization) FromResource(d *schema.ResourceData, parent string) *InstallationTemplateCustomization {
+	opts.ChangeLog = getNilStringPointerFromData(d, fmt.Sprintf("%s.change_log", parent))
+	opts.CustomHostname = getNilStringPointerFromData(d, fmt.Sprintf("%s.custom_hostname", parent))
+	opts.PostInstallationScriptLink = getNilStringPointerFromData(d, fmt.Sprintf("%s.post_installation_script_link", parent))
+	opts.PostInstallationScriptReturn = getNilStringPointerFromData(d, fmt.Sprintf("%s.post_installation_script_return", parent))
+	opts.Rating = getNilIntPointerFromData(d, fmt.Sprintf("%s.rating", parent))
+	opts.SshKeyName = getNilStringPointerFromData(d, fmt.Sprintf("%s.ssh_key_name", parent))
+	opts.UseDistributionKernel = getNilBoolPointerFromData(d, fmt.Sprintf("%s.use_distribution_kernel", parent))
 
 	return opts
 }
@@ -243,14 +241,14 @@ func (opts *PartitionCreateOpts) FromResource(d *schema.ResourceData) *Partition
 	opts.Mountpoint = d.Get("mountpoint").(string)
 	opts.Step = d.Get("order").(int)
 
-	if raid := getNilStringPointer(d.Get("raid")); raid != nil {
+	if raid := getNilStringPointerFromData(d, "raid"); raid != nil {
 		raidValue := strings.ReplaceAll(*raid, "raid", "")
 		opts.Raid = &raidValue
 	}
 
 	opts.Size = d.Get("size").(int)
 	opts.Type = d.Get("type").(string)
-	opts.VolumeName = getNilStringPointer(d.Get("volume_name"))
+	opts.VolumeName = getNilStringPointerFromData(d, "volume_name")
 	return opts
 }
 
@@ -263,7 +261,7 @@ func (opts *PartitionUpdateOpts) FromResource(d *schema.ResourceData) *Partition
 	opts.Mountpoint = d.Get("mountpoint").(string)
 	opts.Order = d.Get("order").(int)
 
-	if raid := getNilStringPointer(d.Get("raid")); raid != nil {
+	if raid := getNilStringPointerFromData(d, "raid"); raid != nil {
 		raidValue := strings.ReplaceAll(*raid, "raid", "")
 		opts.Raid = &raidValue
 	}
@@ -274,7 +272,7 @@ func (opts *PartitionUpdateOpts) FromResource(d *schema.ResourceData) *Partition
 	}
 
 	opts.Type = d.Get("type").(string)
-	opts.VolumeName = getNilStringPointer(d.Get("volume_name"))
+	opts.VolumeName = getNilStringPointerFromData(d, "volume_name")
 	return opts
 }
 
