@@ -101,3 +101,55 @@ type DedicatedServerTask struct {
 	DoneDate   time.Time `json:"doneDate"`
 	StartDate  time.Time `json:"startDate"`
 }
+
+type DedicatedServerInstallTaskCreateOpts struct {
+	TemplateName        string                             `json:"templateName"`
+	PartitionSchemeName *string                            `json:"partitionSchemeName,omitempty"`
+	Details             *DedicatedServerInstallTaskDetails `json:"details"`
+}
+
+func (opts *DedicatedServerInstallTaskCreateOpts) FromResource(d *schema.ResourceData) *DedicatedServerInstallTaskCreateOpts {
+	opts.TemplateName = d.Get("template_name").(string)
+	opts.PartitionSchemeName = getNilStringPointerFromData(d, "partition_scheme_name")
+
+	details := d.Get("details").([]interface{})
+	if details != nil && len(details) == 1 {
+		opts.Details = (&DedicatedServerInstallTaskDetails{}).FromResource(d, "details.0")
+
+	}
+	return opts
+}
+
+type DedicatedServerInstallTaskDetails struct {
+	CustomHostname               *string `json:"customHostname,omitempty"`
+	DiskGroupId                  *int64  `json:"diskGroupId,omitempty"`
+	InstallRTM                   *bool   `json:"installRTM,omitempty"`
+	InstallSqlServer             *bool   `json:"installSqlServer,omitempty"`
+	Language                     *string `json:"language,omitempty"`
+	NoRaid                       *bool   `json:"noRaid,omitempty"`
+	PostInstallationScriptLink   *string `json:"postInstallationScriptLink,omitempty"`
+	PostInstallationScriptReturn *string `json:"postInstallationScriptReturn,omitempty"`
+	ResetHwRaid                  *bool   `json:"resetHwRaid,omitempty"`
+	SoftRaidDevices              *int64  `json:"softRaidDevices,omitempty"`
+	SshKeyName                   *string `json:"sshKeyName,omitempty"`
+	UseDistribKernel             *bool   `json:"useDistribKernel,omitempty"`
+	UseSpla                      *bool   `json:"useSpla,omitempty"`
+}
+
+func (opts *DedicatedServerInstallTaskDetails) FromResource(d *schema.ResourceData, parent string) *DedicatedServerInstallTaskDetails {
+	opts.CustomHostname = getNilStringPointerFromData(d, fmt.Sprintf("%s.custom_hostname", parent))
+	opts.DiskGroupId = getNilInt64PointerFromData(d, fmt.Sprintf("%s.disk_group_id", parent))
+	opts.InstallRTM = getNilBoolPointerFromData(d, fmt.Sprintf("%s.install_rtm", parent))
+	opts.InstallSqlServer = getNilBoolPointerFromData(d, fmt.Sprintf("%s.install_sql_server", parent))
+	opts.Language = getNilStringPointerFromData(d, fmt.Sprintf("%s.language", parent))
+	opts.NoRaid = getNilBoolPointerFromData(d, fmt.Sprintf("%s.no_raid", parent))
+	opts.PostInstallationScriptLink = getNilStringPointerFromData(d, fmt.Sprintf("%s.post_installation_script_link", parent))
+	opts.PostInstallationScriptReturn = getNilStringPointerFromData(d, fmt.Sprintf("%s.post_installation_script_return", parent))
+	opts.ResetHwRaid = getNilBoolPointerFromData(d, fmt.Sprintf("%s.reset_hw_raid", parent))
+	opts.SoftRaidDevices = getNilInt64PointerFromData(d, fmt.Sprintf("%s.soft_raid_devices", parent))
+	opts.SshKeyName = getNilStringPointerFromData(d, fmt.Sprintf("%s.ssh_key_name", parent))
+	opts.UseDistribKernel = getNilBoolPointerFromData(d, fmt.Sprintf("%s.use_distrib_kernel", parent))
+	opts.UseSpla = getNilBoolPointerFromData(d, fmt.Sprintf("%s.use_spla", parent))
+
+	return opts
+}
