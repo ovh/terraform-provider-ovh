@@ -69,6 +69,7 @@ func Provider() terraform.ResourceProvider {
 			"ovh_cloud_network_private_subnet":                            resourcePublicCloudPrivateNetworkSubnet(),
 			"ovh_cloud_user":                                              resourcePublicCloudUser(),
 			"ovh_dedicated_server_update":                                 resourceDedicatedServerUpdate(),
+			"ovh_dedicated_server_install_task":                           resourceDedicatedServerInstallTask(),
 			"ovh_dedicated_server_reboot_task":                            resourceDedicatedServerRebootTask(),
 			"ovh_domain_zone_record":                                      resourceOvhDomainZoneRecord(),
 			"ovh_domain_zone_redirection":                                 resourceOvhDomainZoneRedirection(),

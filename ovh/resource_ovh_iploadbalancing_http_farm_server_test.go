@@ -49,6 +49,19 @@ type TestAccIpLoadbalancingHttpFarmServerWrapper struct {
 
 func (w *TestAccIpLoadbalancingHttpFarmServerWrapper) Config() string {
 	var config bytes.Buffer
+	var address, status string
+	if w.Expected.Address == nil {
+		address = ""
+	} else {
+		address = *w.Expected.Address
+	}
+
+	if w.Expected.Status == nil {
+		status = ""
+	} else {
+		status = *w.Expected.Status
+	}
+
 	config.WriteString(fmt.Sprintf(`
     resource "ovh_iploadbalancing_http_farm" "testacc" {
 	  service_name = "%s"
@@ -68,8 +81,10 @@ func (w *TestAccIpLoadbalancingHttpFarmServerWrapper) Config() string {
 	  status = "%s"
 	`, w.Expected.ServiceName,
 		w.Expected.ServiceName,
-		*w.Expected.Address,
-		*w.Expected.Status))
+		address,
+		status,
+	))
+
 	conditionalAttributeString(&config, "display_name", w.Expected.DisplayName)
 	conditionalAttributeInt(&config, "port", w.Expected.Port)
 	conditionalAttributeString(&config, "proxy_protocol_version", w.Expected.ProxyProtocolVersion)
@@ -121,36 +136,16 @@ type TestAccIpLoadbalancingHttpFarmServerStep struct {
 }
 
 func (w *TestAccIpLoadbalancingHttpFarmServerWrapper) TestStep(c map[string]interface{}) resource.TestStep {
-	if val, ok := c["DisplayName"]; ok {
-		w.Expected.DisplayName = getNilStringPointer(val)
-	}
-	if val, ok := c["Address"]; ok {
-		w.Expected.Address = getNilStringPointer(val)
-	}
-	if val, ok := c["Port"]; ok {
-		w.Expected.Port = getNilIntPointer(val)
-	}
-	if val, ok := c["ProxyProtocolVersion"]; ok {
-		w.Expected.ProxyProtocolVersion = getNilStringPointer(val)
-	}
-	if val, ok := c["Chain"]; ok {
-		w.Expected.Chain = getNilStringPointer(val)
-	}
-	if val, ok := c["Weight"]; ok {
-		w.Expected.Weight = getNilIntPointer(val)
-	}
-	if val, ok := c["Probe"]; ok {
-		w.Expected.Probe = getNilBoolPointer(val)
-	}
-	if val, ok := c["Ssl"]; ok {
-		w.Expected.Ssl = getNilBoolPointer(val)
-	}
-	if val, ok := c["Backup"]; ok {
-		w.Expected.Backup = getNilBoolPointer(val)
-	}
-	if val, ok := c["Status"]; ok {
-		w.Expected.Status = getNilStringPointer(val)
-	}
+	w.Expected.DisplayName = getNilStringPointerFromData(c, "DisplayName")
+	w.Expected.Address = getNilStringPointerFromData(c, "Address")
+	w.Expected.Port = getNilIntPointerFromData(c, "Port")
+	w.Expected.ProxyProtocolVersion = getNilStringPointerFromData(c, "ProxyProtocolVersion")
+	w.Expected.Chain = getNilStringPointerFromData(c, "Chain")
+	w.Expected.Weight = getNilIntPointerFromData(c, "Weight")
+	w.Expected.Probe = getNilBoolPointerFromData(c, "Probe")
+	w.Expected.Ssl = getNilBoolPointerFromData(c, "Ssl")
+	w.Expected.Backup = getNilBoolPointerFromData(c, "Backup")
+	w.Expected.Status = getNilStringPointerFromData(c, "Status")
 
 	expected := *w.Expected
 
