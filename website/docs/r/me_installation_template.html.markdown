@@ -27,8 +27,14 @@ resource "ovh_me_installation_template" "mytemplate" {
 * `beta`: This distribution is new and, although tested and functional, may still display odd behaviour.
 * `bit_format`: This template bit format (32 or 64).
 * `category`: Category of this template (informative only). (basic, customer, hosting, other, readyToUse, virtualisation).
-* `customization`: the customization block is described below.
-H Kernel.
+* `customization`:
+  * `change_log`: Template change log details.
+  * `custom_hostname`: Set up the server using the provided hostname instead of the default hostname.
+  * `post_installation_script_link`: Indicate the URL where your postinstall customisation script is located.
+  * `post_installation_script_return`: indicate the string returned by your postinstall customisation script on successful execution. Advice: your script should return a unique validation string in case of succes. A good example is 'loh1Xee7eo OK OK OK UGh8Ang1Gu'.
+  * `rating`: Rating.
+  * `ssh_key_name`: Name of the ssh key that should be installed. Password login will be disabled.
+  * `use_distribution_kernel`: Use the distribution's native kernel instead of the recommended OV
 * `default_language`: (Required)  The default language of this template.
 * `deprecated`: is this distribution deprecated.
 * `description`: information about this template.
@@ -45,15 +51,6 @@ H Kernel.
 * `supports_uefi`: This distribution supports UEFI setup (no,only,yes).
 * `template_name`: (Required)  This template name.
 
-The `customization` block supports:
-
-* `change_log`: Template change log details.
-* `custom_hostname`: Set up the server using the provided hostname instead of the default hostname.
-* `post_installation_script_link`: Indicate the URL where your postinstall customisation script is located.
-* `post_installation_script_return`: indicate the string returned by your postinstall customisation script on successful execution. Advice: your script should return a unique validation string in case of succes. A good example is 'loh1Xee7eo OK OK OK UGh8Ang1Gu'.
-* `rating`: Rating.
-* `ssh_key_name`: Name of the ssh key that should be installed. Password login will be disabled.
-* `use_distribution_kernel`: Use the distribution's native kernel instead of the recommended OV
 
 ## Attributes Reference
 
