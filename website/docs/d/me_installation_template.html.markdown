@@ -50,18 +50,18 @@ The following attributes are exported:
   * `name`: name of this partitioning scheme.
   * `priority`: on a reinstall, if a partitioning scheme is not specified, the one with the higher priority will be used by default, among all the compatible partitioning schemes (given the underlying hardware specifications).
   * `hardware_raid`: 
-    * `name`: Hardware RAID name.
-    * `disks`: Disk List. Syntax is cX:dY for disks and [cX:dY,cX:dY] for groups. With X and Y resp. the controller id and the disk id.
-    * `mode`: RAID mode (raid0, raid1, raid10, raid5, raid50, raid6, raid60).
-    * `step`: Specifies the creation order of the hardware RAID.
+     * `name`: Hardware RAID name.
+     * `disks`: Disk List. Syntax is cX:dY for disks and [cX:dY,cX:dY] for groups. With X and Y resp. the controller id and the disk id.
+     * `mode`: RAID mode (raid0, raid1, raid10, raid5, raid50, raid6, raid60).
+     * `step`: Specifies the creation order of the hardware RAID.
   * `partition`:
-    * `filesystem`: Partition filesystem.
-    * `mountpoint`: partition mount point.
-    * `raid`: raid partition type.
-    * `size`: size of partition in MB, 0 => rest of the space.
-    * `order`: step or order. specifies the creation order of the partition on the disk
-    * `type`: partition type.
-    * `volume_name`: The volume name needed for proxmox distribution
+     * `filesystem`: Partition filesystem.
+     * `mountpoint`: partition mount point.
+     * `raid`: raid partition type.
+     * `size`: size of partition in MB, 0 => rest of the space.
+     * `order`: step or order. specifies the creation order of the partition on the disk
+     * `type`: partition type.
+     * `volume_name`: The volume name needed for proxmox distribution
 * `supports_distribution_kernel`: This distribution supports installation using the distribution's native kernel instead of the recommended OVH kernel.
 * `supports_gpt_label`: This distribution supports the GUID Partition Table (GPT), providing up to 128 partitions that can have more than 2TB.
 * `supports_rtm`: This distribution supports RTM software.
