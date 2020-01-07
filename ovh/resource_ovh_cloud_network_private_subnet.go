@@ -11,15 +11,35 @@ import (
 	"github.com/ovh/go-ovh/ovh"
 )
 
+func resourceOvhCloudNetworkPrivateSubnetImportState(
+	d *schema.ResourceData,
+	meta interface{}) ([]*schema.ResourceData, error) {
+	givenId := d.Id()
+	splitId := strings.SplitN(givenId, "/", 3)
+	if len(splitId) != 3 {
+		return nil, fmt.Errorf("Import Id is not OVH_PROJECT_ID/network_id/subnet_id formatted")
+	}
+	d.SetId(splitId[2])
+	d.Set("network_id", splitId[1])
+	d.Set("project_id", splitId[0])
+	results := make([]*schema.ResourceData, 1)
+	results[0] = d
+	log.Printf(
+		"[DEBUG] Will Import ovh_cloud_network_private_subnet with project %s, network %s, id %s",
+		d.Get("project_id"),
+		d.Get("network_id"),
+		d.Id(),
+	)
+	return results, nil
+}
+
 func resourceCloudNetworkPrivateSubnet() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceCloudNetworkPrivateSubnetCreate,
 		Read:   resourceCloudNetworkPrivateSubnetRead,
 		Delete: resourceCloudNetworkPrivateSubnetDelete,
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				return []*schema.ResourceData{d}, nil
-			},
+			State: resourceOvhCloudNetworkPrivateSubnetImportState,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -136,7 +156,7 @@ func resourceCloudNetworkPrivateSubnetCreate(d *schema.ResourceData, meta interf
 
 	err := config.OVHClient.Post(endpoint, params, r)
 	if err != nil {
-		return fmt.Errorf("calling %s with params %s:\n\t %q", endpoint, params, err)
+		return fmt.Errorf("calling POST %s with params %s:\n\t %q", endpoint, params, err)
 	}
 
 	log.Printf("[DEBUG] Created Private Network Subnet %s", r)
@@ -161,7 +181,7 @@ func resourceCloudNetworkPrivateSubnetRead(d *schema.ResourceData, meta interfac
 
 	err := config.OVHClient.Get(endpoint, &r)
 	if err != nil {
-		return fmt.Errorf("calling %s:\n\t %q", endpoint, err)
+		return fmt.Errorf("calling GET %s:\n\t %q", endpoint, err)
 	}
 
 	err = readCloudNetworkPrivateSubnet(d, r)
@@ -186,7 +206,7 @@ func resourceCloudNetworkPrivateSubnetDelete(d *schema.ResourceData, meta interf
 
 	err := config.OVHClient.Delete(endpoint, nil)
 	if err != nil {
-		return fmt.Errorf("calling %s:\n\t %q", endpoint, err)
+		return fmt.Errorf("calling DELETE %s:\n\t %q", endpoint, err)
 	}
 
 	d.SetId("")
@@ -204,7 +224,7 @@ func cloudNetworkPrivateSubnetExists(projectId, networkId, id string, c *ovh.Cli
 
 	err := c.Get(endpoint, &r)
 	if err != nil {
-		return fmt.Errorf("calling %s:\n\t %q", endpoint, err)
+		return fmt.Errorf("calling GET %s:\n\t %q", endpoint, err)
 	}
 
 	s := findCloudNetworkPrivateSubnet(r, id)
