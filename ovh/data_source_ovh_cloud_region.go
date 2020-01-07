@@ -11,9 +11,9 @@ import (
 	"github.com/ovh/go-ovh/ovh"
 )
 
-func dataSourcePublicCloudRegion() *schema.Resource {
+func dataSourceCloudRegion() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourcePublicCloudRegionRead,
+		Read: dataSourceCloudRegionRead,
 		Schema: map[string]*schema.Schema{
 			"project_id": {
 				Type:        schema.TypeString,
@@ -28,7 +28,7 @@ func dataSourcePublicCloudRegion() *schema.Resource {
 			},
 			"services": {
 				Type:     schema.TypeSet,
-				Set:      publicCloudServiceHash,
+				Set:      cloudServiceHash,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -68,7 +68,7 @@ func dataSourcePublicCloudRegion() *schema.Resource {
 	}
 }
 
-func dataSourcePublicCloudRegionRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceCloudRegionRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	projectId := d.Get("project_id").(string)
 	name := d.Get("name").(string)
@@ -87,7 +87,7 @@ func dataSourcePublicCloudRegionRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("continent_code", region.ContinentCode)
 
 	services := &schema.Set{
-		F: publicCloudServiceHash,
+		F: cloudServiceHash,
 	}
 	for i := range region.Services {
 		service := map[string]interface{}{
@@ -103,10 +103,10 @@ func dataSourcePublicCloudRegionRead(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func getCloudRegion(projectId, region string, client *ovh.Client) (*PublicCloudRegionResponse, error) {
+func getCloudRegion(projectId, region string, client *ovh.Client) (*CloudRegionResponse, error) {
 	log.Printf("[DEBUG] Will read public cloud region %s for project: %s", region, projectId)
 
-	response := &PublicCloudRegionResponse{}
+	response := &CloudRegionResponse{}
 	endpoint := fmt.Sprintf(
 		"/cloud/project/%s/region/%s",
 		url.PathEscape(projectId),
@@ -120,7 +120,7 @@ func getCloudRegion(projectId, region string, client *ovh.Client) (*PublicCloudR
 	return response, nil
 }
 
-func publicCloudServiceHash(v interface{}) int {
+func cloudServiceHash(v interface{}) int {
 	r := v.(map[string]interface{})
 	return hashcode.String(r["name"].(string))
 }

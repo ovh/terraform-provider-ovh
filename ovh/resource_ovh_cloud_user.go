@@ -13,11 +13,11 @@ import (
 	"github.com/ovh/go-ovh/ovh"
 )
 
-func resourcePublicCloudUser() *schema.Resource {
+func resourceCloudUser() *schema.Resource {
 	return &schema.Resource{
-		Create: resourcePublicCloudUserCreate,
-		Read:   resourcePublicCloudUserRead,
-		Delete: resourcePublicCloudUserDelete,
+		Create: resourceCloudUserCreate,
+		Read:   resourceCloudUserRead,
+		Delete: resourceCloudUserDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -63,16 +63,16 @@ func resourcePublicCloudUser() *schema.Resource {
 	}
 }
 
-func resourcePublicCloudUserCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudUserCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
 	projectId := d.Get("project_id").(string)
-	params := &PublicCloudUserCreateOpts{
+	params := &CloudUserCreateOpts{
 		ProjectId:   projectId,
 		Description: d.Get("description").(string),
 	}
 
-	r := &PublicCloudUserResponse{}
+	r := &CloudUserResponse{}
 
 	log.Printf("[DEBUG] Will create public cloud user: %s", params)
 
@@ -91,7 +91,7 @@ func resourcePublicCloudUserCreate(d *schema.ResourceData, meta interface{}) err
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"creating"},
 		Target:     []string{"ok"},
-		Refresh:    waitForPublicCloudUserActive(config.OVHClient, projectId, strconv.Itoa(r.Id)),
+		Refresh:    waitForCloudUserActive(config.OVHClient, projectId, strconv.Itoa(r.Id)),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -103,10 +103,10 @@ func resourcePublicCloudUserCreate(d *schema.ResourceData, meta interface{}) err
 	}
 	log.Printf("[DEBUG] Created User %s", r)
 
-	readPublicCloudUser(d, r, true)
+	readCloudUser(d, r, true)
 
 	openstackrc := make(map[string]string)
-	err = publicCloudUserGetOpenstackRC(projectId, d.Id(), config.OVHClient, openstackrc)
+	err = cloudUserGetOpenstackRC(projectId, d.Id(), config.OVHClient, openstackrc)
 	if err != nil {
 		return fmt.Errorf("Creating openstack creds for user %s: %s", d.Id(), err)
 	}
@@ -118,13 +118,13 @@ func resourcePublicCloudUserCreate(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func resourcePublicCloudUserRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudUserRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
 	projectId := d.Get("project_id").(string)
 
 	d.Partial(true)
-	r := &PublicCloudUserResponse{}
+	r := &CloudUserResponse{}
 
 	log.Printf("[DEBUG] Will read public cloud user %s from project: %s", d.Id(), projectId)
 
@@ -135,10 +135,10 @@ func resourcePublicCloudUserRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("calling Get %s:\n\t %q", endpoint, err)
 	}
 
-	readPublicCloudUser(d, r, false)
+	readCloudUser(d, r, false)
 
 	openstackrc := make(map[string]string)
-	err = publicCloudUserGetOpenstackRC(projectId, d.Id(), config.OVHClient, openstackrc)
+	err = cloudUserGetOpenstackRC(projectId, d.Id(), config.OVHClient, openstackrc)
 	if err != nil {
 		return fmt.Errorf("Reading openstack creds for user %s: %s", d.Id(), err)
 	}
@@ -149,7 +149,7 @@ func resourcePublicCloudUserRead(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func resourcePublicCloudUserDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudUserDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
 	projectId := d.Get("project_id").(string)
@@ -169,7 +169,7 @@ func resourcePublicCloudUserDelete(d *schema.ResourceData, meta interface{}) err
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"deleting"},
 		Target:     []string{"deleted"},
-		Refresh:    waitForPublicCloudUserDelete(config.OVHClient, projectId, id),
+		Refresh:    waitForCloudUserDelete(config.OVHClient, projectId, id),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -186,8 +186,8 @@ func resourcePublicCloudUserDelete(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func publicCloudUserExists(projectId, id string, c *ovh.Client) error {
-	r := &PublicCloudUserResponse{}
+func cloudUserExists(projectId, id string, c *ovh.Client) error {
+	r := &CloudUserResponse{}
 
 	log.Printf("[DEBUG] Will read public cloud user for project: %s, id: %s", projectId, id)
 
@@ -202,36 +202,36 @@ func publicCloudUserExists(projectId, id string, c *ovh.Client) error {
 	return nil
 }
 
-var publicCloudUserOSTenantName = regexp.MustCompile("export OS_TENANT_NAME=\"?([[:alnum:]]+)\"?")
-var publicCloudUserOSTenantId = regexp.MustCompile("export OS_TENANT_ID=\"??([[:alnum:]]+)\"??")
-var publicCloudUserOSAuthURL = regexp.MustCompile("export OS_AUTH_URL=\"??([[:^space:]]+)\"??")
-var publicCloudUserOSUsername = regexp.MustCompile("export OS_USERNAME=\"?([[:alnum:]]+)\"?")
+var cloudUserOSTenantName = regexp.MustCompile("export OS_TENANT_NAME=\"?([[:alnum:]]+)\"?")
+var cloudUserOSTenantId = regexp.MustCompile("export OS_TENANT_ID=\"??([[:alnum:]]+)\"??")
+var cloudUserOSAuthURL = regexp.MustCompile("export OS_AUTH_URL=\"??([[:^space:]]+)\"??")
+var cloudUserOSUsername = regexp.MustCompile("export OS_USERNAME=\"?([[:alnum:]]+)\"?")
 
-func publicCloudUserGetOpenstackRC(projectId, id string, c *ovh.Client, rc map[string]string) error {
+func cloudUserGetOpenstackRC(projectId, id string, c *ovh.Client, rc map[string]string) error {
 	log.Printf("[DEBUG] Will read public cloud user openstack rc for project: %s, id: %s", projectId, id)
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/user/%s/openrc?region=to_be_overriden", projectId, id)
 
-	r := &PublicCloudUserOpenstackRC{}
+	r := &CloudUserOpenstackRC{}
 
 	err := c.Get(endpoint, r)
 	if err != nil {
 		return fmt.Errorf("calling Get %s:\n\t %q", endpoint, err)
 	}
 
-	authURL := publicCloudUserOSAuthURL.FindStringSubmatch(r.Content)
+	authURL := cloudUserOSAuthURL.FindStringSubmatch(r.Content)
 	if authURL == nil {
 		return fmt.Errorf("couln't extract OS_AUTH_URL from content: \n\t%s", r.Content)
 	}
-	tenantName := publicCloudUserOSTenantName.FindStringSubmatch(r.Content)
+	tenantName := cloudUserOSTenantName.FindStringSubmatch(r.Content)
 	if tenantName == nil {
 		return fmt.Errorf("couln't extract OS_TENANT_NAME from content: \n\t%s", r.Content)
 	}
-	tenantId := publicCloudUserOSTenantId.FindStringSubmatch(r.Content)
+	tenantId := cloudUserOSTenantId.FindStringSubmatch(r.Content)
 	if tenantId == nil {
 		return fmt.Errorf("couln't extract OS_TENANT_ID from content: \n\t%s", r.Content)
 	}
-	username := publicCloudUserOSUsername.FindStringSubmatch(r.Content)
+	username := cloudUserOSUsername.FindStringSubmatch(r.Content)
 	if username == nil {
 		return fmt.Errorf("couln't extract OS_USERNAME from content: \n\t%s", r.Content)
 	}
@@ -244,7 +244,7 @@ func publicCloudUserGetOpenstackRC(projectId, id string, c *ovh.Client, rc map[s
 	return nil
 }
 
-func readPublicCloudUser(d *schema.ResourceData, r *PublicCloudUserResponse, setPassword bool) {
+func readCloudUser(d *schema.ResourceData, r *CloudUserResponse, setPassword bool) {
 	d.Set("description", r.Description)
 	d.Set("status", r.Status)
 	d.Set("creation_date", r.CreationDate)
@@ -255,10 +255,10 @@ func readPublicCloudUser(d *schema.ResourceData, r *PublicCloudUserResponse, set
 	d.SetId(strconv.Itoa(r.Id))
 }
 
-func waitForPublicCloudUserActive(c *ovh.Client, projectId, PublicCloudUserId string) resource.StateRefreshFunc {
+func waitForCloudUserActive(c *ovh.Client, projectId, CloudUserId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		r := &PublicCloudUserResponse{}
-		endpoint := fmt.Sprintf("/cloud/project/%s/user/%s", projectId, PublicCloudUserId)
+		r := &CloudUserResponse{}
+		endpoint := fmt.Sprintf("/cloud/project/%s/user/%s", projectId, CloudUserId)
 		err := c.Get(endpoint, r)
 		if err != nil {
 			return r, "", err
@@ -269,14 +269,14 @@ func waitForPublicCloudUserActive(c *ovh.Client, projectId, PublicCloudUserId st
 	}
 }
 
-func waitForPublicCloudUserDelete(c *ovh.Client, projectId, PublicCloudUserId string) resource.StateRefreshFunc {
+func waitForCloudUserDelete(c *ovh.Client, projectId, CloudUserId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		r := &PublicCloudUserResponse{}
-		endpoint := fmt.Sprintf("/cloud/project/%s/user/%s", projectId, PublicCloudUserId)
+		r := &CloudUserResponse{}
+		endpoint := fmt.Sprintf("/cloud/project/%s/user/%s", projectId, CloudUserId)
 		err := c.Get(endpoint, r)
 		if err != nil {
 			if err.(*ovh.APIError).Code == 404 {
-				log.Printf("[DEBUG] user id %s on project %s deleted", PublicCloudUserId, projectId)
+				log.Printf("[DEBUG] user id %s on project %s deleted", CloudUserId, projectId)
 				return r, "deleted", nil
 			} else {
 				return r, "", err
