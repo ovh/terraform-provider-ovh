@@ -16,7 +16,7 @@ resource "ovh_vrack_cloudproject" "vcp" {
 `, os.Getenv("OVH_VRACK"), os.Getenv("OVH_PUBLIC_CLOUD"))
 
 var testAccVrackCloudProjectConfig_legacy = fmt.Sprintf(`
-resource "ovh_vrack_publiccloud_attachment" "attach" {
+resource "ovh_vrack_cloudproject" "attach" {
   vrack_id = "%s"
   project_id = "%s"
 }
@@ -46,8 +46,8 @@ func TestAccVrackCloudProject_legacy(t *testing.T) {
 			{
 				Config: testAccVrackCloudProjectConfig_legacy,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_vrack_publiccloud_attachment.attach", "vrack_id", os.Getenv("OVH_VRACK")),
-					resource.TestCheckResourceAttr("ovh_vrack_publiccloud_attachment.attach", "project_id", os.Getenv("OVH_PUBLIC_CLOUD")),
+					resource.TestCheckResourceAttr("ovh_vrack_cloudproject.attach", "vrack_id", os.Getenv("OVH_VRACK")),
+					resource.TestCheckResourceAttr("ovh_vrack_cloudproject.attach", "project_id", os.Getenv("OVH_PUBLIC_CLOUD")),
 				),
 			},
 		},
@@ -57,5 +57,5 @@ func TestAccVrackCloudProject_legacy(t *testing.T) {
 func testAccCheckVrackCloudProjectPreCheck(t *testing.T) {
 	testAccPreCheckVRack(t)
 	testAccCheckVRackExists(t)
-	testAccCheckPublicCloudExists(t)
+	testAccCheckCloudExists(t)
 }

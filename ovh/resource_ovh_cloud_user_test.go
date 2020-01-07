@@ -9,31 +9,31 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-var testAccPublicCloudUserConfig = fmt.Sprintf(`
-resource "ovh_publiccloud_user" "user" {
+var testAccCloudUserConfig = fmt.Sprintf(`
+resource "ovh_cloud_user" "user" {
 	project_id  = "%s"
   description = "my user for acceptance tests"
 }
 `, os.Getenv("OVH_PUBLIC_CLOUD"))
 
-func TestAccPublicCloudUser_basic(t *testing.T) {
+func TestAccCloudUser_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheckPublicCloud(t); testAccCheckPublicCloudExists(t) },
+		PreCheck:     func() { testAccPreCheckCloud(t); testAccCheckCloudExists(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckPublicCloudUserDestroy,
+		CheckDestroy: testAccCheckCloudUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPublicCloudUserConfig,
+				Config: testAccCloudUserConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPublicCloudUserExists("ovh_publiccloud_user.user", t),
-					testAccCheckPublicCloudUserOpenRC("ovh_publiccloud_user.user", t),
+					testAccCheckCloudUserExists("ovh_cloud_user.user", t),
+					testAccCheckCloudUserOpenRC("ovh_cloud_user.user", t),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckPublicCloudUserExists(n string, t *testing.T) resource.TestCheckFunc {
+func testAccCheckCloudUserExists(n string, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		config := testAccProvider.Meta().(*Config)
 
@@ -50,11 +50,11 @@ func testAccCheckPublicCloudUserExists(n string, t *testing.T) resource.TestChec
 			return fmt.Errorf("No Project ID is set")
 		}
 
-		return publicCloudUserExists(rs.Primary.Attributes["project_id"], rs.Primary.ID, config.OVHClient)
+		return cloudUserExists(rs.Primary.Attributes["project_id"], rs.Primary.ID, config.OVHClient)
 	}
 }
 
-func testAccCheckPublicCloudUserOpenRC(n string, t *testing.T) resource.TestCheckFunc {
+func testAccCheckCloudUserOpenRC(n string, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -85,14 +85,14 @@ func testAccCheckPublicCloudUserOpenRC(n string, t *testing.T) resource.TestChec
 	}
 }
 
-func testAccCheckPublicCloudUserDestroy(s *terraform.State) error {
+func testAccCheckCloudUserDestroy(s *terraform.State) error {
 	config := testAccProvider.Meta().(*Config)
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "ovh_publiccloud_user" {
+		if rs.Type != "ovh_cloud_user" {
 			continue
 		}
 
-		err := publicCloudUserExists(rs.Primary.Attributes["project_id"], rs.Primary.ID, config.OVHClient)
+		err := cloudUserExists(rs.Primary.Attributes["project_id"], rs.Primary.ID, config.OVHClient)
 		if err == nil {
 			return fmt.Errorf("VRack > Public Cloud User still exists")
 		}

@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-var testAccPublicCloudPrivateNetworkSubnetConfig_attachVrack = `
+var testAccCloudNetworkPrivateSubnetConfig_attachVrack = `
 resource "ovh_vrack_cloudproject" "attach" {
   vrack_id   = "%s"
   project_id = "%s"
@@ -21,7 +21,7 @@ data "ovh_cloud_regions" "regions" {
 }
 `
 
-var testAccPublicCloudPrivateNetworkSubnetConfig_noAttachVrack = `
+var testAccCloudNetworkPrivateSubnetConfig_noAttachVrack = `
 data "ovh_cloud_regions" "regions" {
   project_id = "%s"
 
@@ -29,7 +29,7 @@ data "ovh_cloud_regions" "regions" {
 }
 `
 
-var testAccPublicCloudPrivateNetworkSubnetConfig_basic = `
+var testAccCloudNetworkPrivateSubnetConfig_basic = `
 %s
 
 resource "ovh_cloud_network_private" "network" {
@@ -53,37 +53,37 @@ resource "ovh_cloud_network_private_subnet" "subnet" {
 }
 `
 
-func testAccPublicCloudPrivateNetworkSubnetConfig() string {
+func testAccCloudNetworkPrivateSubnetConfig() string {
 	attachVrack := fmt.Sprintf(
-		testAccPublicCloudPrivateNetworkSubnetConfig_attachVrack,
+		testAccCloudNetworkPrivateSubnetConfig_attachVrack,
 		os.Getenv("OVH_VRACK"),
 		os.Getenv("OVH_PUBLIC_CLOUD"),
 	)
 	noAttachVrack := fmt.Sprintf(
-		testAccPublicCloudPrivateNetworkSubnetConfig_noAttachVrack,
+		testAccCloudNetworkPrivateSubnetConfig_noAttachVrack,
 		os.Getenv("OVH_PUBLIC_CLOUD"),
 	)
 
 	if os.Getenv("OVH_ATTACH_VRACK") == "0" {
 		return fmt.Sprintf(
-			testAccPublicCloudPrivateNetworkSubnetConfig_basic,
+			testAccCloudNetworkPrivateSubnetConfig_basic,
 			noAttachVrack,
 		)
 	}
 
 	return fmt.Sprintf(
-		testAccPublicCloudPrivateNetworkSubnetConfig_basic,
+		testAccCloudNetworkPrivateSubnetConfig_basic,
 		attachVrack,
 	)
 }
 
-func TestAccPublicCloudPrivateNetworkSubnet_basic(t *testing.T) {
+func TestAcccCloudNetworkPrivateSubnet_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccCheckPublicCloudPrivateNetworkSubnetPreCheck(t) },
+		PreCheck:  func() { testAccCheckcCloudNetworkPrivateSubnetPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPublicCloudPrivateNetworkSubnetConfig(),
+				Config: testAccCloudNetworkPrivateSubnetConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("ovh_cloud_network_private_subnet.subnet", "project_id"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_network_private_subnet.subnet", "network_id"),
@@ -96,8 +96,8 @@ func TestAccPublicCloudPrivateNetworkSubnet_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckPublicCloudPrivateNetworkSubnetPreCheck(t *testing.T) {
-	testAccPreCheckPublicCloud(t)
-	testAccCheckPublicCloudExists(t)
+func testAccCheckcCloudNetworkPrivateSubnetPreCheck(t *testing.T) {
+	testAccPreCheckCloud(t)
+	testAccCheckCloudExists(t)
 	testAccPreCheckVRack(t)
 }

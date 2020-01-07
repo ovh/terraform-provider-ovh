@@ -8,9 +8,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-func dataSourcePublicCloudRegions() *schema.Resource {
+func dataSourceCloudRegions() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourcePublicCloudRegionsRead,
+		Read: dataSourceCloudRegionsRead,
 		Schema: map[string]*schema.Schema{
 			"project_id": {
 				Type:        schema.TypeString,
@@ -34,7 +34,7 @@ func dataSourcePublicCloudRegions() *schema.Resource {
 	}
 }
 
-func dataSourcePublicCloudRegionsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceCloudRegionsRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	projectId := d.Get("project_id").(string)
 
