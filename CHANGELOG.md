@@ -1,4 +1,47 @@
-## 0.6.0 (Unreleased)
+## 0.7.0 (Unreleased)
+
+## 0.6.0 (?)
+
+FEATURES:
+
+* __New Datasource:__ `ovh_dedicated_server` ([#100](https://github.com/terraform-providers/terraform-provider-ovh/pull/100))
+* __New Datasource:__ `ovh_dedicated_servers` ([#100](https://github.com/terraform-providers/terraform-provider-ovh/pull/100))
+* __New Datasource:__ `ovh_dedicated_server_boots` ([#105](https://github.com/terraform-providers/terraform-provider-ovh/pull/105))
+* __New Datasource:__ `ovh_dedicated_server_boots` ([#105](https://github.com/terraform-providers/terraform-provider-ovh/pull/105))
+* __New Datasource:__ `ovh_dedicated_server_installation_templates` ([#101](https://github.com/terraform-providers/terraform-provider-ovh/pull/101))
+* __New Datasource:__ `ovh_me_installation_template` ([#103](https://github.com/terraform-providers/terraform-provider-ovh/pull/103))
+* __New Datasource:__ `ovh_me_installation_templates` ([#103](https://github.com/terraform-providers/terraform-provider-ovh/pull/103))
+* __New Datasource:__ `ovh_me_ssh_key` ([#93](https://github.com/terraform-providers/terraform-provider-ovh/pull/93))
+* __New Datasource:__ `ovh_me_ssh_keys` ([#93](https://github.com/terraform-providers/terraform-provider-ovh/pull/93))
+* __New Datasource:__ `ovh_vracks` ([#114](https://github.com/terraform-providers/terraform-provider-ovh/pull/114))
+* __New Resource:__ `ovh_dedicated_server_install_task` ([#117](https://github.com/terraform-providers/terraform-provider-ovh/pull/117))
+* __New Resource:__ `ovh_dedicated_server_reboot_task` ([#116](https://github.com/terraform-providers/terraform-provider-ovh/pull/116))
+* __New Resource:__ `ovh_dedicated_server_update` ([#116](https://github.com/terraform-providers/terraform-provider-ovh/pull/116))
+* __New Resource:__ `ovh_me_installation_template` ([#103](https://github.com/terraform-providers/terraform-provider-ovh/pull/103))
+* __New Resource:__ `ovh_me_installation_template_partition_scheme` ([#103](https://github.com/terraform-providers/terraform-provider-ovh/pull/103))
+* __New Resource:__ `ovh_me_installation_template_partition_scheme_partition` ([#103](https://github.com/terraform-providers/terraform-provider-ovh/pull/103))
+* __New Resource:__ `ovh_me_installation_template_partition_scheme_hardware_raid` ([#103](https://github.com/terraform-providers/terraform-provider-ovh/pull/103))
+* __New Resource:__ `ovh_me_ssh_key` ([#93](https://github.com/terraform-providers/terraform-provider-ovh/pull/93))
+* __New Resource:__ `ovh_vrack_dedicated_server` ([#115](https://github.com/terraform-providers/terraform-provider-ovh/pull/115))
+* __New Resource:__ `ovh_vrack_dedicated_server_interface` ([#115](https://github.com/terraform-providers/terraform-provider-ovh/pull/115))
+
+IMPROVEMENTS:
+
+* provider: bump to go 1.13 ([#104](https://github.com/terraform-providers/terraform-provider-ovh/pull/104),[#118](https://github.com/terraform-providers/terraform-provider-ovh/pull/118))
+* provider: migrate to terraform-plugin-sdk ([#98](https://github.com/terraform-providers/terraform-provider-ovh/pull/98))
+* provider: skip testacc if required env vars are missing ([#106](https://github.com/terraform-providers/terraform-provider-ovh/pull/106))
+* d/cloud_regions: add "has_services_up" filter ([#112](https://github.com/terraform-providers/terraform-provider-ovh/pull/112))
+* r/ip_reverse: add sweeper (([#99](https://github.com/terraform-providers/terraform-provider-ovh/pull/99), [#102](https://github.com/terraform-providers/terraform-provider-ovh/pull/102))
+* acceptance tests: Add PreCheck for HTTP Loadbalancing ([#94](https://github.com/terraform-providers/terraform-provider-ovh/pull/94))
+
+BUG FIXES:
+
+* helpers: Fix nil pointer funcs which return wrong golang values in case of HCL nil values ([#120](https://github.com/terraform-providers/terraform-provider-ovh/pull/120))
+* r/cloud_network_private, r/cloud_network_private_subnet: fix acctest & rework ([#113](https://github.com/terraform-providers/terraform-provider-ovh/pull/113))
+* handle record id bigger than 32bits ([#109](https://github.com/terraform-providers/terraform-provider-ovh/pull/109))
+* docs: Correct variable escaping in ovh_iploadbalancing_http_route example ([#97](https://github.com/terraform-providers/terraform-provider-ovh/pull/97))
+* docs: Add "ovh_iploadbalancing_refresh" to the website sidebar ([#96](https://github.com/terraform-providers/terraform-provider-ovh/pull/96))
+
 ## 0.5.0 (May 22, 2019)
 
 NOTES:
