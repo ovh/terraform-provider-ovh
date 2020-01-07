@@ -10,8 +10,8 @@ Terraform OVH Provider
 Requirements
 ------------
 
--	[Terraform](https://www.terraform.io/downloads.html) 0.10.x
--	[Go](https://golang.org/doc/install) 1.8 (to build the provider plugin)
+-	[Terraform](https://www.terraform.io/downloads.html) 0.12.x
+-	[Go](https://golang.org/doc/install) 1.13 (to build the provider plugin)
 
 Building The Provider
 ---------------------
@@ -78,27 +78,6 @@ export OVH_ENDPOINT="ovh-eu"
 export OVH_APPLICATION_KEY="..."
 export OVH_APPLICATION_SECRET="..."
 export OVH_CONSUMER_KEY="..."
-
-# ovh public cloud project id
-export OVH_PUBLIC_CLOUD=...
-
-# ovh vrack id
-export OVH_VRACK=...
-
-# ovh zone name
-export OVH_ZONE=...
-
-# ovh load balancer service id
-export OVH_IPLB_SERVICE=loadbalancer-...
-
-# if you have a load balancer attached to your account
-# you can use its public ipv4 to use for testing the
-# ip reverse feature as follows.
-# otherwise, you shall order a public IP and register it within
-# your ovh managed zone.
-export OVH_IP_BLOCK=A.B.C.D/32
-export OVH_IP=A.B.C.D
-export OVH_IP_REVERSE=ipD.ip-A-B-C.eu.
 EOF
 $ source ~/.ovhrc
 ```
