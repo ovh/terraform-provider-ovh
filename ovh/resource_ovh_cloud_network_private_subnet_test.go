@@ -19,6 +19,13 @@ data "ovh_cloud_regions" "regions" {
 
   has_services_up = ["network"]
 }
+
+resource "ovh_cloud_network_private" "network" {
+  project_id = ovh_vrack_cloudproject.attach.project_id
+  vlan_id    = 0
+  name       = "terraform_testacc_private_net"
+  regions    = tolist(data.ovh_cloud_regions.regions.names)
+}
 `
 
 var testAccCloudNetworkPrivateSubnetConfig_noAttachVrack = `
@@ -27,10 +34,6 @@ data "ovh_cloud_regions" "regions" {
 
   has_services_up = ["network"]
 }
-`
-
-var testAccCloudNetworkPrivateSubnetConfig_basic = `
-%s
 
 resource "ovh_cloud_network_private" "network" {
   project_id = data.ovh_cloud_regions.regions.project_id
@@ -38,6 +41,10 @@ resource "ovh_cloud_network_private" "network" {
   name       = "terraform_testacc_private_net"
   regions    = tolist(data.ovh_cloud_regions.regions.names)
 }
+`
+
+var testAccCloudNetworkPrivateSubnetConfig_basic = `
+%s
 
 resource "ovh_cloud_network_private_subnet" "subnet" {
   project_id = ovh_cloud_network_private.network.project_id
@@ -77,7 +84,7 @@ func testAccCloudNetworkPrivateSubnetConfig() string {
 	)
 }
 
-func TestAcccCloudNetworkPrivateSubnet_basic(t *testing.T) {
+func TestAccCloudNetworkPrivateSubnet_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccCheckcCloudNetworkPrivateSubnetPreCheck(t) },
 		Providers: testAccProviders,
