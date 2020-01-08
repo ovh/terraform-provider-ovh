@@ -6,19 +6,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-type IpLoadbalancingTcpFrontend struct {
-	FrontendId    int      `json:"frontendId,omitempty"`
-	Port          string   `json:"port"`
-	Zone          string   `json:"zone"`
-	AllowedSource []string `json:"allowedSource,omitempty"`
-	DedicatedIpFo []string `json:"dedicatedIpfo,omitempty"`
-	DefaultFarmId *int     `json:"defaultFarmId,omitempty"`
-	DefaultSslId  *int     `json:"defaultSslId,omitempty"`
-	Disabled      *bool    `json:"disabled"`
-	Ssl           *bool    `json:"ssl"`
-	DisplayName   string   `json:"displayName,omitempty"`
-}
-
 func resourceIpLoadbalancingTcpFrontend() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceIpLoadbalancingTcpFrontendCreate,

@@ -6,29 +6,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-type IpLoadbalancingTcpFarmBackendProbe struct {
-	Match    string `json:"match,omitempty"`
-	Port     int    `json:"port,omitempty"`
-	Interval int    `json:"interval,omitempty"`
-	Negate   bool   `json:"negate,omitempty"`
-	Pattern  string `json:"pattern,omitempty"`
-	ForceSsl bool   `json:"forceSsl,omitempty"`
-	URL      string `json:"url,omitempty"`
-	Method   string `json:"method,omitempty"`
-	Type     string `json:"type,omitempty"`
-}
-
-type IpLoadbalancingTcpFarm struct {
-	FarmId         int                                 `json:"farmId,omitempty"`
-	Zone           string                              `json:"zone,omitempty"`
-	VrackNetworkId int                                 `json:"vrackNetworkId,omitempty"`
-	Port           int                                 `json:"port,omitempty"`
-	Stickiness     string                              `json:"stickiness,omitempty"`
-	Balance        string                              `json:"balance,omitempty"`
-	Probe          *IpLoadbalancingTcpFarmBackendProbe `json:"probe,omitempty"`
-	DisplayName    string                              `json:"displayName,omitempty"`
-}
-
 func resourceIpLoadbalancingTcpFarm() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceIpLoadbalancingTcpFarmCreate,
