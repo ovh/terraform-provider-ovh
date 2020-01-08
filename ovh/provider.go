@@ -41,8 +41,8 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
-			"ovh_cloud_region":                     dataSourcePublicCloudRegion(),
-			"ovh_cloud_regions":                    dataSourcePublicCloudRegions(),
+			"ovh_cloud_region":                     dataSourceCloudRegion(),
+			"ovh_cloud_regions":                    dataSourceCloudRegions(),
 			"ovh_dedicated_installation_templates": dataSourceDedicatedInstallationTemplates(),
 			"ovh_dedicated_server":                 dataSourceDedicatedServer(),
 			"ovh_dedicated_server_boots":           dataSourceDedicatedServerBoots(),
@@ -58,16 +58,16 @@ func Provider() terraform.ResourceProvider {
 			"ovh_vracks":                           dataSourceVracks(),
 
 			// Legacy naming schema (publiccloud)
-			"ovh_publiccloud_region": deprecated(dataSourcePublicCloudRegion(),
+			"ovh_publiccloud_region": deprecated(dataSourceCloudRegion(),
 				"Use ovh_cloud_region data source instead"),
-			"ovh_publiccloud_regions": deprecated(dataSourcePublicCloudRegions(),
+			"ovh_publiccloud_regions": deprecated(dataSourceCloudRegions(),
 				"Use ovh_cloud_regions data source instead"),
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
-			"ovh_cloud_network_private":                                   resourcePublicCloudPrivateNetwork(),
-			"ovh_cloud_network_private_subnet":                            resourcePublicCloudPrivateNetworkSubnet(),
-			"ovh_cloud_user":                                              resourcePublicCloudUser(),
+			"ovh_cloud_network_private":                                   resourceCloudNetworkPrivate(),
+			"ovh_cloud_network_private_subnet":                            resourceCloudNetworkPrivateSubnet(),
+			"ovh_cloud_user":                                              resourceCloudUser(),
 			"ovh_dedicated_server_update":                                 resourceDedicatedServerUpdate(),
 			"ovh_dedicated_server_install_task":                           resourceDedicatedServerInstallTask(),
 			"ovh_dedicated_server_reboot_task":                            resourceDedicatedServerRebootTask(),
@@ -93,11 +93,11 @@ func Provider() terraform.ResourceProvider {
 			"ovh_vrack_dedicated_server_interface":                        resourceVrackDedicatedServerInterface(),
 
 			// Legacy naming schema (publiccloud)
-			"ovh_publiccloud_private_network": deprecated(resourcePublicCloudPrivateNetwork(),
+			"ovh_publiccloud_private_network": deprecated(resourceCloudNetworkPrivate(),
 				"Use ovh_cloud_network_private resource instead"),
-			"ovh_publiccloud_private_network_subnet": deprecated(resourcePublicCloudPrivateNetworkSubnet(),
+			"ovh_publiccloud_private_network_subnet": deprecated(resourceCloudNetworkPrivateSubnet(),
 				"Use ovh_cloud_network_private_subnet resource instead"),
-			"ovh_publiccloud_user": deprecated(resourcePublicCloudUser(),
+			"ovh_publiccloud_user": deprecated(resourceCloudUser(),
 				"Use ovh_cloud_user resource instead"),
 			"ovh_vrack_publiccloud_attachment": deprecated(resourceVrackCloudProject(),
 				"Use ovh_vrack_cloudproject resource instead"),

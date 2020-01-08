@@ -88,7 +88,7 @@ func testAccPreCheckDomain(t *testing.T) {
 
 // Checks that the environment variables needed for the /cloud acceptance tests
 // are set.
-func testAccPreCheckPublicCloud(t *testing.T) {
+func testAccPreCheckCloud(t *testing.T) {
 	testAccPreCheckCredentials(t)
 	checkEnvOrSkip(t, "OVH_PUBLIC_CLOUD")
 }
@@ -137,7 +137,7 @@ func testAccCheckVRackExists(t *testing.T) {
 
 }
 
-func testAccCheckPublicCloudExists(t *testing.T) {
+func testAccCheckCloudExists(t *testing.T) {
 	type cloudProjectResponse struct {
 		ID          string `json:"project_id"`
 		Status      string `json:"status"`

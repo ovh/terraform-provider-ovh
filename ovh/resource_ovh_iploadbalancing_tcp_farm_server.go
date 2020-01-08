@@ -14,7 +14,7 @@ type IpLoadbalancingTcpFarmServer struct {
 	ServerId             int     `json:"serverId,omitempty"`
 	FarmId               int     `json:"farmId,omitempty"`
 	DisplayName          *string `json:"displayName,omitempty"`
-	Address              *string `json:"address"`
+	Address              string  `json:"address"`
 	Cookie               *string `json:"cookie,omitempty"`
 	Port                 *int    `json:"port"`
 	ProxyProtocolVersion *string `json:"proxyProtocolVersion"`
@@ -23,7 +23,7 @@ type IpLoadbalancingTcpFarmServer struct {
 	Probe                *bool   `json:"probe"`
 	Ssl                  *bool   `json:"ssl"`
 	Backup               *bool   `json:"backup"`
-	Status               *string `json:"status"`
+	Status               string  `json:"status"`
 }
 
 func resourceIpLoadbalancingTcpFarmServer() *schema.Resource {
@@ -122,7 +122,7 @@ func resourceIpLoadbalancingTcpFarmServerCreate(d *schema.ResourceData, meta int
 
 	newBackendServer := &IpLoadbalancingTcpFarmServer{
 		DisplayName:          getNilStringPointerFromData(d, "display_name"),
-		Address:              getNilStringPointerFromData(d, "address"),
+		Address:              d.Get("address").(string),
 		Port:                 getNilIntPointerFromData(d, "port"),
 		ProxyProtocolVersion: getNilStringPointerFromData(d, "proxy_protocol_version"),
 		Chain:                getNilStringPointerFromData(d, "chain"),
@@ -130,7 +130,7 @@ func resourceIpLoadbalancingTcpFarmServerCreate(d *schema.ResourceData, meta int
 		Probe:                getNilBoolPointerFromData(d, "probe"),
 		Ssl:                  getNilBoolPointerFromData(d, "ssl"),
 		Backup:               getNilBoolPointerFromData(d, "backup"),
-		Status:               getNilStringPointerFromData(d, "status"),
+		Status:               d.Get("status").(string),
 	}
 
 	service := d.Get("service_name").(string)
@@ -167,7 +167,7 @@ func resourceIpLoadbalancingTcpFarmServerRead(d *schema.ResourceData, meta inter
 	d.Set("probe", *r.Probe)
 	d.Set("ssl", *r.Ssl)
 	d.Set("backup", *r.Backup)
-	d.Set("address", *r.Address)
+	d.Set("address", r.Address)
 	if r.DisplayName != nil {
 		d.Set("display_name", *r.DisplayName)
 	}
@@ -182,7 +182,7 @@ func resourceIpLoadbalancingTcpFarmServerRead(d *schema.ResourceData, meta inter
 		d.Set("chain", *r.Chain)
 	}
 	d.Set("weight", *r.Weight)
-	d.Set("status", *r.Status)
+	d.Set("status", r.Status)
 
 	return nil
 }
@@ -192,7 +192,7 @@ func resourceIpLoadbalancingTcpFarmServerUpdate(d *schema.ResourceData, meta int
 
 	update := &IpLoadbalancingTcpFarmServer{
 		DisplayName:          getNilStringPointerFromData(d, "display_name"),
-		Address:              getNilStringPointerFromData(d, "address"),
+		Address:              d.Get("address").(string),
 		Port:                 getNilIntPointerFromData(d, "port"),
 		ProxyProtocolVersion: getNilStringPointerFromData(d, "proxy_protocol_version"),
 		Chain:                getNilStringPointerFromData(d, "chain"),
@@ -200,7 +200,7 @@ func resourceIpLoadbalancingTcpFarmServerUpdate(d *schema.ResourceData, meta int
 		Probe:                getNilBoolPointerFromData(d, "probe"),
 		Ssl:                  getNilBoolPointerFromData(d, "ssl"),
 		Backup:               getNilBoolPointerFromData(d, "backup"),
-		Status:               getNilStringPointerFromData(d, "status"),
+		Status:               d.Get("status").(string),
 	}
 
 	service := d.Get("service_name").(string)

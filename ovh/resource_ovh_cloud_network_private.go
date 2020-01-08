@@ -27,12 +27,12 @@ func resourceOvhCloudNetworkPrivateImportState(
 	return results, nil
 }
 
-func resourcePublicCloudPrivateNetwork() *schema.Resource {
+func resourceCloudNetworkPrivate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourcePublicCloudPrivateNetworkCreate,
-		Read:   resourcePublicCloudPrivateNetworkRead,
-		Update: resourcePublicCloudPrivateNetworkUpdate,
-		Delete: resourcePublicCloudPrivateNetworkDelete,
+		Create: resourceCloudNetworkPrivateCreate,
+		Read:   resourceCloudNetworkPrivateRead,
+		Update: resourceCloudNetworkPrivateUpdate,
+		Delete: resourceCloudNetworkPrivateDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceOvhCloudNetworkPrivateImportState,
 		},
@@ -93,18 +93,18 @@ func resourcePublicCloudPrivateNetwork() *schema.Resource {
 	}
 }
 
-func resourcePublicCloudPrivateNetworkCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudNetworkPrivateCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
 	projectId := d.Get("project_id").(string)
-	params := &PublicCloudPrivateNetworkCreateOpts{
+	params := &CloudNetworkPrivateCreateOpts{
 		ProjectId: d.Get("project_id").(string),
 		VlanId:    d.Get("vlan_id").(int),
 		Name:      d.Get("name").(string),
 		Regions:   stringsFromSchema(d, "regions"),
 	}
 
-	r := &PublicCloudPrivateNetworkResponse{}
+	r := &CloudNetworkPrivateResponse{}
 
 	log.Printf("[DEBUG] Will create public cloud private network: %s", params)
 
@@ -120,7 +120,7 @@ func resourcePublicCloudPrivateNetworkCreate(d *schema.ResourceData, meta interf
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"BUILDING"},
 		Target:     []string{"ACTIVE"},
-		Refresh:    waitForPublicCloudPrivateNetworkActive(config.OVHClient, projectId, r.Id),
+		Refresh:    waitForCloudNetworkPrivateActive(config.OVHClient, projectId, r.Id),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -138,12 +138,12 @@ func resourcePublicCloudPrivateNetworkCreate(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourcePublicCloudPrivateNetworkRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudNetworkPrivateRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
 	projectId := d.Get("project_id").(string)
 
-	r := &PublicCloudPrivateNetworkResponse{}
+	r := &CloudNetworkPrivateResponse{}
 
 	log.Printf("[DEBUG] Will read public cloud private network for project: %s, id: %s", projectId, d.Id())
 
@@ -155,7 +155,7 @@ func resourcePublicCloudPrivateNetworkRead(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("Error calling %s:\n\t %q", endpoint, err)
 	}
 
-	err = readPublicCloudPrivateNetwork(config, d, r)
+	err = readCloudNetworkPrivate(config, d, r)
 	if err != nil {
 		return err
 	}
@@ -165,11 +165,11 @@ func resourcePublicCloudPrivateNetworkRead(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourcePublicCloudPrivateNetworkUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudNetworkPrivateUpdate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
 	projectId := d.Get("project_id").(string)
-	params := &PublicCloudPrivateNetworkUpdateOpts{
+	params := &CloudNetworkPrivateUpdateOpts{
 		Name: d.Get("name").(string),
 	}
 
@@ -184,10 +184,10 @@ func resourcePublicCloudPrivateNetworkUpdate(d *schema.ResourceData, meta interf
 
 	log.Printf("[DEBUG] Updated Public cloud %s Private Network %s:", projectId, d.Id())
 
-	return resourcePublicCloudPrivateNetworkRead(d, meta)
+	return resourceCloudNetworkPrivateRead(d, meta)
 }
 
-func resourcePublicCloudPrivateNetworkDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudNetworkPrivateDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
 	projectId := d.Get("project_id").(string)
@@ -205,7 +205,7 @@ func resourcePublicCloudPrivateNetworkDelete(d *schema.ResourceData, meta interf
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"DELETING"},
 		Target:     []string{"DELETED"},
-		Refresh:    waitForPublicCloudPrivateNetworkDelete(config.OVHClient, projectId, id),
+		Refresh:    waitForCloudNetworkPrivateDelete(config.OVHClient, projectId, id),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -222,7 +222,7 @@ func resourcePublicCloudPrivateNetworkDelete(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func readPublicCloudPrivateNetwork(config *Config, d *schema.ResourceData, r *PublicCloudPrivateNetworkResponse) error {
+func readCloudNetworkPrivate(config *Config, d *schema.ResourceData, r *CloudNetworkPrivateResponse) error {
 	d.Set("name", r.Name)
 	d.Set("status", r.Status)
 	d.Set("type", r.Type)
@@ -245,8 +245,8 @@ func readPublicCloudPrivateNetwork(config *Config, d *schema.ResourceData, r *Pu
 	return nil
 }
 
-func publicCloudPrivateNetworkExists(projectId, id string, c *ovh.Client) error {
-	r := &PublicCloudPrivateNetworkResponse{}
+func cloudNetworkPrivateExists(projectId, id string, c *ovh.Client) error {
+	r := &CloudNetworkPrivateResponse{}
 
 	log.Printf("[DEBUG] Will read public cloud private network for project: %s, id: %s", projectId, id)
 
@@ -263,10 +263,10 @@ func publicCloudPrivateNetworkExists(projectId, id string, c *ovh.Client) error 
 
 // AttachmentStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch
 // an Attachment Task.
-func waitForPublicCloudPrivateNetworkActive(c *ovh.Client, projectId, PublicCloudPrivateNetworkId string) resource.StateRefreshFunc {
+func waitForCloudNetworkPrivateActive(c *ovh.Client, projectId, CloudNetworkPrivateId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		r := &PublicCloudPrivateNetworkResponse{}
-		endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s", projectId, PublicCloudPrivateNetworkId)
+		r := &CloudNetworkPrivateResponse{}
+		endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s", projectId, CloudNetworkPrivateId)
 		err := c.Get(endpoint, r)
 		if err != nil {
 			return r, "", err
@@ -279,14 +279,14 @@ func waitForPublicCloudPrivateNetworkActive(c *ovh.Client, projectId, PublicClou
 
 // AttachmentStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch
 // an Attachment Task.
-func waitForPublicCloudPrivateNetworkDelete(c *ovh.Client, projectId, PublicCloudPrivateNetworkId string) resource.StateRefreshFunc {
+func waitForCloudNetworkPrivateDelete(c *ovh.Client, projectId, CloudNetworkPrivateId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		r := &PublicCloudPrivateNetworkResponse{}
-		endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s", projectId, PublicCloudPrivateNetworkId)
+		r := &CloudNetworkPrivateResponse{}
+		endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s", projectId, CloudNetworkPrivateId)
 		err := c.Get(endpoint, r)
 		if err != nil {
 			if err.(*ovh.APIError).Code == 404 {
-				log.Printf("[DEBUG] private network id %s on project %s deleted", PublicCloudPrivateNetworkId, projectId)
+				log.Printf("[DEBUG] private network id %s on project %s deleted", CloudNetworkPrivateId, projectId)
 				return r, "DELETED", nil
 			} else {
 				return r, "", err
