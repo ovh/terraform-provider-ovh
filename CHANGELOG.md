@@ -33,6 +33,7 @@ IMPROVEMENTS:
 * d/cloud_regions: add "has_services_up" filter ([#112](https://github.com/terraform-providers/terraform-provider-ovh/pull/112))
 * r/ip_reverse: add sweeper (([#99](https://github.com/terraform-providers/terraform-provider-ovh/pull/99), [#102](https://github.com/terraform-providers/terraform-provider-ovh/pull/102))
 * acceptance tests: Add PreCheck for HTTP Loadbalancing ([#94](https://github.com/terraform-providers/terraform-provider-ovh/pull/94))
+* r/cloud_network_private_subnet: add importer ([#124](https://github.com/terraform-providers/terraform-provider-ovh/pull/124))
 
 BUG FIXES:
 
