@@ -8,13 +8,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-func TestAccPublicCloudRegionDataSource_basic(t *testing.T) {
+func TestAccCloudRegionDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheckPublicCloud(t) },
+		PreCheck:  func() { testAccPreCheckCloud(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPublicCloudRegionDatasourceConfig,
+				Config: testAccCloudRegionDatasourceConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.ovh_cloud_region.region_attr.0", "name"),
 					resource.TestCheckResourceAttrSet("data.ovh_cloud_region.region_attr.0", "services.#"),
@@ -28,7 +28,7 @@ func TestAccPublicCloudRegionDataSource_basic(t *testing.T) {
 	})
 }
 
-var testAccPublicCloudRegionDatasourceConfig = fmt.Sprintf(`
+var testAccCloudRegionDatasourceConfig = fmt.Sprintf(`
 data "ovh_cloud_regions" "regions" {
   project_id = "%s"
 }

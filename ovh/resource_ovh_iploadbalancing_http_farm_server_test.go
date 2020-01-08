@@ -13,15 +13,61 @@ import (
 
 var TestAccIpLoadbalancingHttpFarmServerPlan = [][]map[string]interface{}{
 	{
-		{"Status": "active", "Address": "10.0.0.11", "Port": 80, "Weight": 3, "DisplayName": "testBackendA"},
-		{"Port": 8080, "Probe": true, "Backup": true},
-		{"Port": 8080, "Probe": false, "Backup": false, "Weight": 2, "DisplayName": "testBackendB"},
+		{
+			"Status":      "active",
+			"Address":     "10.0.0.11",
+			"Port":        80,
+			"Weight":      3,
+			"DisplayName": "testBackendA",
+		},
+		{
+			"Status":      "active",
+			"Address":     "10.0.0.11",
+			"Port":        8080,
+			"Weight":      3,
+			"DisplayName": "testBackendA",
+			"Probe":       true,
+			"Backup":      true,
+		},
+		{
+			"Status":      "active",
+			"Address":     "10.0.0.11",
+			"Port":        8080,
+			"Weight":      2,
+			"DisplayName": "testBackendB",
+			"Probe":       false,
+			"Backup":      false,
+		},
 	},
 	{
-		{"Status": "inactive", "Address": "10.0.0.12", "Port": 80},
-		{"Port": 8080, "ProxyProtocolVersion": "v2", "Ssl": true},
-		{"Port": 8080, "ProxyProtocolVersion": "v1", "Ssl": true, "Backup": false},
-		{"Port": 8080, "ProxyProtocolVersion": nil, "Ssl": true, "Backup": true, "Status": "active"},
+		{
+			"Status":  "inactive",
+			"Address": "10.0.0.12",
+			"Port":    80,
+		},
+		{
+			"Status":               "active",
+			"Address":              "10.0.0.11",
+			"Port":                 8080,
+			"ProxyProtocolVersion": "v2",
+			"Ssl":                  true,
+		},
+		{
+			"Status":               "active",
+			"Address":              "10.0.0.11",
+			"Port":                 8080,
+			"ProxyProtocolVersion": "v1",
+			"Ssl":                  true,
+			"Backup":               false,
+		},
+		{
+			"Status":               "active",
+			"Address":              "10.0.0.11",
+			"Port":                 8080,
+			"ProxyProtocolVersion": nil,
+			"Ssl":                  true,
+			"Backup":               true,
+		},
 	},
 }
 
@@ -31,7 +77,7 @@ type TestAccIpLoadbalancingHttpFarmServer struct {
 	BackendId            int     `json:"backendId"`
 	FarmId               int     `json:"farmId"`
 	DisplayName          *string `json:"displayName"`
-	Address              *string `json:"address"`
+	Address              string  `json:"address"`
 	Cookie               *string `json:"cookie"`
 	Port                 *int    `json:"port"`
 	ProxyProtocolVersion *string `json:"proxyProtocolVersion"`
@@ -40,7 +86,7 @@ type TestAccIpLoadbalancingHttpFarmServer struct {
 	Probe                *bool   `json:"probe"`
 	Ssl                  *bool   `json:"ssl"`
 	Backup               *bool   `json:"backup"`
-	Status               *string `json:"status"`
+	Status               string  `json:"status"`
 }
 
 type TestAccIpLoadbalancingHttpFarmServerWrapper struct {
@@ -49,18 +95,6 @@ type TestAccIpLoadbalancingHttpFarmServerWrapper struct {
 
 func (w *TestAccIpLoadbalancingHttpFarmServerWrapper) Config() string {
 	var config bytes.Buffer
-	var address, status string
-	if w.Expected.Address == nil {
-		address = ""
-	} else {
-		address = *w.Expected.Address
-	}
-
-	if w.Expected.Status == nil {
-		status = ""
-	} else {
-		status = *w.Expected.Status
-	}
 
 	config.WriteString(fmt.Sprintf(`
     resource "ovh_iploadbalancing_http_farm" "testacc" {
@@ -81,8 +115,8 @@ func (w *TestAccIpLoadbalancingHttpFarmServerWrapper) Config() string {
 	  status = "%s"
 	`, w.Expected.ServiceName,
 		w.Expected.ServiceName,
-		address,
-		status,
+		w.Expected.Address,
+		w.Expected.Status,
 	))
 
 	conditionalAttributeString(&config, "display_name", w.Expected.DisplayName)
@@ -137,7 +171,7 @@ type TestAccIpLoadbalancingHttpFarmServerStep struct {
 
 func (w *TestAccIpLoadbalancingHttpFarmServerWrapper) TestStep(c map[string]interface{}) resource.TestStep {
 	w.Expected.DisplayName = getNilStringPointerFromData(c, "DisplayName")
-	w.Expected.Address = getNilStringPointerFromData(c, "Address")
+	w.Expected.Address = c["Address"].(string)
 	w.Expected.Port = getNilIntPointerFromData(c, "Port")
 	w.Expected.ProxyProtocolVersion = getNilStringPointerFromData(c, "ProxyProtocolVersion")
 	w.Expected.Chain = getNilStringPointerFromData(c, "Chain")
@@ -145,7 +179,7 @@ func (w *TestAccIpLoadbalancingHttpFarmServerWrapper) TestStep(c map[string]inte
 	w.Expected.Probe = getNilBoolPointerFromData(c, "Probe")
 	w.Expected.Ssl = getNilBoolPointerFromData(c, "Ssl")
 	w.Expected.Backup = getNilBoolPointerFromData(c, "Backup")
-	w.Expected.Status = getNilStringPointerFromData(c, "Status")
+	w.Expected.Status = c["Status"].(string)
 
 	expected := *w.Expected
 

@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-var testAccPublicCloudPrivateNetworkConfig_attachVrack = `
+var testAccCloudNetworkPrivateConfig_attachVrack = `
 resource "ovh_vrack_cloudproject" "attach" {
   vrack_id   = "%s"
   project_id = "%s"
@@ -24,7 +24,7 @@ data "ovh_cloud_regions" "regions" {
 }
 `
 
-var testAccPublicCloudPrivateNetworkConfig_noAttachVrack = `
+var testAccCloudNetworkPrivateConfig_noAttachVrack = `
 data "ovh_cloud_regions" "regions" {
   project_id = "%s"
 
@@ -32,7 +32,7 @@ data "ovh_cloud_regions" "regions" {
 }
 `
 
-var testAccPublicCloudPrivateNetworkConfig_basic = `
+var testAccCloudNetworkPrivateConfig_basic = `
 %s
 
 resource "ovh_cloud_network_private" "network" {
@@ -43,26 +43,26 @@ resource "ovh_cloud_network_private" "network" {
 }
 `
 
-func testAccPublicCloudPrivateNetworkConfig() string {
+func testAccCloudNetworkPrivateConfig() string {
 	attachVrack := fmt.Sprintf(
-		testAccPublicCloudPrivateNetworkConfig_attachVrack,
+		testAccCloudNetworkPrivateConfig_attachVrack,
 		os.Getenv("OVH_VRACK"),
 		os.Getenv("OVH_PUBLIC_CLOUD"),
 	)
 	noAttachVrack := fmt.Sprintf(
-		testAccPublicCloudPrivateNetworkConfig_noAttachVrack,
+		testAccCloudNetworkPrivateConfig_noAttachVrack,
 		os.Getenv("OVH_PUBLIC_CLOUD"),
 	)
 
 	if os.Getenv("OVH_ATTACH_VRACK") == "0" {
 		return fmt.Sprintf(
-			testAccPublicCloudPrivateNetworkConfig_basic,
+			testAccCloudNetworkPrivateConfig_basic,
 			noAttachVrack,
 		)
 	}
 
 	return fmt.Sprintf(
-		testAccPublicCloudPrivateNetworkConfig_basic,
+		testAccCloudNetworkPrivateConfig_basic,
 		attachVrack,
 	)
 }
@@ -97,7 +97,7 @@ func testSweepCloudNetworkPrivate(region string) error {
 	}
 
 	for _, n := range networkIds {
-		r := &PublicCloudPrivateNetworkResponse{}
+		r := &CloudNetworkPrivateResponse{}
 		err = client.Get(fmt.Sprintf("/cloud/project/%s/network/private/%s", projectId, n), r)
 		if err != nil {
 			return fmt.Errorf("error getting private network %q for project %q:\n\t %q", n, projectId, err)
@@ -139,13 +139,13 @@ func testSweepCloudNetworkPrivate(region string) error {
 	return nil
 }
 
-func TestAccPublicCloudPrivateNetwork_basic(t *testing.T) {
+func TestAccCloudNetworkPrivate_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccCheckPublicCloudPrivateNetworkPreCheck(t) },
+		PreCheck:  func() { testAccCheckCloudNetworkPrivatePreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPublicCloudPrivateNetworkConfig(),
+				Config: testAccCloudNetworkPrivateConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("ovh_cloud_network_private.network", "project_id"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_network_private.network", "id"),
@@ -156,8 +156,8 @@ func TestAccPublicCloudPrivateNetwork_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckPublicCloudPrivateNetworkPreCheck(t *testing.T) {
-	testAccPreCheckPublicCloud(t)
-	testAccCheckPublicCloudExists(t)
+func testAccCheckCloudNetworkPrivatePreCheck(t *testing.T) {
+	testAccPreCheckCloud(t)
+	testAccCheckCloudExists(t)
 	testAccPreCheckVRack(t)
 }
