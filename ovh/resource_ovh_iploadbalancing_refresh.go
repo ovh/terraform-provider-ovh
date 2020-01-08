@@ -8,23 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-type IPLoadbalancingRefreshTask struct {
-	CreationDate string   `json:"creationDate"`
-	Status       string   `json:"status"`
-	Progress     int      `json:"progress"`
-	Action       string   `json:"action"`
-	ID           int      `json:"id"`
-	DoneDate     string   `json:"doneDate"`
-	Zones        []string `json:"zones"`
-}
-
-type IPLoadbalancingRefreshPending struct {
-	Number int    `json:"number"`
-	Zone   string `json:"zone"`
-}
-
-type IPLoadbalancingRefreshPendings []IPLoadbalancingRefreshPending
-
 func resourceIPLoadbalancingRefresh() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceIPLoadbalancingRefreshCreate,
