@@ -172,3 +172,44 @@ type IpLoadbalancingHttpFarmServer struct {
 	Backup               *bool   `json:"backup"`
 	Status               string  `json:"status"`
 }
+
+type IpLoadbalancingDefinedFarm struct {
+	Type string `json:"type"`
+	Id   int64  `json:"id"`
+}
+
+func (v IpLoadbalancingDefinedFarm) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+	obj["type"] = v.Type
+	obj["id"] = v.Id
+	return obj
+}
+
+type IpLoadbalancingVrackNetwork struct {
+	Subnet         string                       `json:"subnet"`
+	Vlan           int64                        `json:"vlan"`
+	VrackNetworkId int64                        `json:"vrackNetworkId"`
+	FarmId         []IpLoadbalancingDefinedFarm `json:"farmId`
+	DisplayName    *string                      `json:"displayName,omitempty"`
+	NatIp          string                       `json:"natIp"`
+}
+
+func (v IpLoadbalancingVrackNetwork) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+	obj["subnet"] = v.Subnet
+	obj["vlan"] = v.Vlan
+	obj["nat_ip"] = v.NatIp
+	obj["vrack_network_id"] = v.VrackNetworkId
+
+	if v.DisplayName != nil {
+		obj["display_name"] = *v.DisplayName
+	}
+
+	ids := make([]interface{}, len(v.FarmId))
+	for i, farm := range v.FarmId {
+		ids[i] = farm.ToMap()
+	}
+	obj["farm_id"] = ids
+
+	return obj
+}
