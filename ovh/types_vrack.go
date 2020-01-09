@@ -48,6 +48,20 @@ func (opts *VrackCloudProjectCreateOpts) FromResource(d *schema.ResourceData) *V
 	return opts
 }
 
+type VrackIpLoadbalancing struct {
+	Vrack           string `json:"vrack"`
+	IpLoadbalancing string `json:"ipLoadbalancing"`
+}
+
+type VrackIpLoadbalancingCreateOpts struct {
+	IpLoadbalancing string `json:"ipLoadbalancing"`
+}
+
+func (opts *VrackIpLoadbalancingCreateOpts) FromResource(d *schema.ResourceData) *VrackIpLoadbalancingCreateOpts {
+	opts.IpLoadbalancing = d.Get("ip_loadbalancing").(string)
+	return opts
+}
+
 type VrackTask struct {
 	Id           int       `json:"id"`
 	Function     string    `json:"function"`
