@@ -93,6 +93,7 @@ func Provider() terraform.ResourceProvider {
 			"ovh_vrack_cloudproject":                                      resourceVrackCloudProject(),
 			"ovh_vrack_dedicated_server":                                  resourceVrackDedicatedServer(),
 			"ovh_vrack_dedicated_server_interface":                        resourceVrackDedicatedServerInterface(),
+			"ovh_vrack_iploadbalancing":                                   resourceVrackIpLoadbalancing(),
 
 			// Legacy naming schema (publiccloud)
 			"ovh_publiccloud_private_network": deprecated(resourceCloudNetworkPrivate(),
