@@ -136,27 +136,6 @@ func dataSourceIpLoadbalancing() *schema.Resource {
 	}
 }
 
-type IpLoadbalancing struct {
-	IPv6             string                          `json:"ipv6,omitempty"`
-	IPv4             string                          `json:"ipv4,omitempty"`
-	MetricsToken     string                          `json:"metricsToken,omitempty"`
-	Zone             []string                        `json:"zone"`
-	Offer            string                          `json:"offer"`
-	ServiceName      string                          `json:"serviceName"`
-	IpLoadbalancing  string                          `json:"ipLoadbalancing"`
-	State            string                          `json:"state"`
-	OrderableZones   []*IpLoadbalancingOrderableZone `json:"orderableZone"`
-	VrackEligibility bool                            `json:"vrackEligibility"`
-	VrackName        string                          `json:"vrackName"`
-	SslConfiguration string                          `json:"sslConfiguration"`
-	DisplayName      string                          `json:"displayName"`
-}
-
-type IpLoadbalancingOrderableZone struct {
-	Name     string `json:"name"`
-	PlanCode string `json:"plan_code"`
-}
-
 func dataSourceIpLoadbalancingRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	log.Printf("[DEBUG] Will list available iploadbalancing services")
