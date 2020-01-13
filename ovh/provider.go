@@ -85,6 +85,7 @@ func Provider() terraform.ResourceProvider {
 			"ovh_iploadbalancing_http_route":                              resourceIPLoadbalancingRouteHTTP(),
 			"ovh_iploadbalancing_http_route_rule":                         resourceIPLoadbalancingRouteHTTPRule(),
 			"ovh_iploadbalancing_refresh":                                 resourceIPLoadbalancingRefresh(),
+			"ovh_iploadbalancing_vrack_network":                           resourceIPLoadbalancingVrackNetwork(),
 			"ovh_me_installation_template":                                resourceMeInstallationTemplate(),
 			"ovh_me_installation_template_partition_scheme":               resourceMeInstallationTemplatePartitionScheme(),
 			"ovh_me_installation_template_partition_scheme_partition":     resourceMeInstallationTemplatePartitionSchemePartition(),

@@ -1,5 +1,9 @@
 package ovh
 
+import (
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+)
+
 type IpLoadbalancing struct {
 	IPv6             string                          `json:"ipv6,omitempty"`
 	IPv4             string                          `json:"ipv4,omitempty"`
@@ -212,4 +216,60 @@ func (v IpLoadbalancingVrackNetwork) ToMap() map[string]interface{} {
 	obj["farm_id"] = ids
 
 	return obj
+}
+
+type IpLoadbalancingVrackNetworkCreateOpts struct {
+	Subnet      string   `json:"subnet"`
+	Vlan        *int64   `json:"vlan,omitempty"`
+	FarmId      *[]int64 `json:"farmId,omitempty"`
+	DisplayName *string  `json:"displayName,omitempty"`
+	NatIp       string   `json:"natIp"`
+}
+
+func (opts *IpLoadbalancingVrackNetworkCreateOpts) FromResource(d *schema.ResourceData) *IpLoadbalancingVrackNetworkCreateOpts {
+	opts.Subnet = d.Get("subnet").(string)
+	opts.NatIp = d.Get("nat_ip").(string)
+	opts.DisplayName = getNilStringPointerFromData(d, "display_name")
+	opts.Vlan = getNilInt64PointerFromData(d, "vlan")
+
+	if val, ok := d.GetOkExists("farm_id"); ok {
+		farmId := val.([]interface{})
+		arr := make([]int64, len(farmId))
+		for i, id := range farmId {
+			arr[i] = int64(id.(int))
+		}
+
+		opts.FarmId = &arr
+	}
+
+	return opts
+}
+
+type IpLoadbalancingVrackNetworkUpdateOpts struct {
+	Vlan        *int64  `json:"vlan,omitempty"`
+	DisplayName *string `json:"displayName,omitempty"`
+	NatIp       *string `json:"natIp,omitempty"`
+}
+
+func (opts *IpLoadbalancingVrackNetworkUpdateOpts) FromResource(d *schema.ResourceData) *IpLoadbalancingVrackNetworkUpdateOpts {
+	opts.NatIp = getNilStringPointerFromData(d, "nat_ip")
+	opts.DisplayName = getNilStringPointerFromData(d, "display_name")
+	opts.Vlan = getNilInt64PointerFromData(d, "vlan")
+
+	return opts
+}
+
+type IpLoadbalancingVrackNetworkFarmIdUpdateOpts struct {
+	FarmId []int64 `json:"farmId"`
+}
+
+func (opts *IpLoadbalancingVrackNetworkFarmIdUpdateOpts) FromResource(d *schema.ResourceData) *IpLoadbalancingVrackNetworkFarmIdUpdateOpts {
+	opts.FarmId = []int64{}
+
+	if val, ok := d.GetOkExists("farm_id"); ok {
+		farmId := val.([]int64)
+		opts.FarmId = farmId
+	}
+
+	return opts
 }
