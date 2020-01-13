@@ -49,8 +49,10 @@ func Provider() terraform.ResourceProvider {
 			"ovh_dedicated_servers":                dataSourceDedicatedServers(),
 			"ovh_domain_zone":                      dataSourceDomainZone(),
 			"ovh_iploadbalancing":                  dataSourceIpLoadbalancing(),
-			"ovh_me_installation_templates":        dataSourceMeInstallationTemplates(),
+			"ovh_iploadbalancing_vrack_network":    dataSourceIpLoadbalancingVrackNetwork(),
+			"ovh_iploadbalancing_vrack_networks":   dataSourceIpLoadbalancingVrackNetworks(),
 			"ovh_me_installation_template":         dataSourceMeInstallationTemplate(),
+			"ovh_me_installation_templates":        dataSourceMeInstallationTemplates(),
 			"ovh_me_paymentmean_bankaccount":       dataSourceMePaymentmeanBankaccount(),
 			"ovh_me_paymentmean_creditcard":        dataSourceMePaymentmeanCreditcard(),
 			"ovh_me_ssh_key":                       dataSourceMeSshKey(),
@@ -83,6 +85,7 @@ func Provider() terraform.ResourceProvider {
 			"ovh_iploadbalancing_http_route":                              resourceIPLoadbalancingRouteHTTP(),
 			"ovh_iploadbalancing_http_route_rule":                         resourceIPLoadbalancingRouteHTTPRule(),
 			"ovh_iploadbalancing_refresh":                                 resourceIPLoadbalancingRefresh(),
+			"ovh_iploadbalancing_vrack_network":                           resourceIPLoadbalancingVrackNetwork(),
 			"ovh_me_installation_template":                                resourceMeInstallationTemplate(),
 			"ovh_me_installation_template_partition_scheme":               resourceMeInstallationTemplatePartitionScheme(),
 			"ovh_me_installation_template_partition_scheme_partition":     resourceMeInstallationTemplatePartitionSchemePartition(),
@@ -91,6 +94,7 @@ func Provider() terraform.ResourceProvider {
 			"ovh_vrack_cloudproject":                                      resourceVrackCloudProject(),
 			"ovh_vrack_dedicated_server":                                  resourceVrackDedicatedServer(),
 			"ovh_vrack_dedicated_server_interface":                        resourceVrackDedicatedServerInterface(),
+			"ovh_vrack_iploadbalancing":                                   resourceVrackIpLoadbalancing(),
 
 			// Legacy naming schema (publiccloud)
 			"ovh_publiccloud_private_network": deprecated(resourceCloudNetworkPrivate(),

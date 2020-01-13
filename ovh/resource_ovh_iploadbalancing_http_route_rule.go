@@ -59,18 +59,6 @@ func resourceIPLoadbalancingRouteHTTPRule() *schema.Resource {
 	}
 }
 
-//IPLoadbalancingRouteHTTPRule HTTP Route Rule
-type IPLoadbalancingRouteHTTPRule struct {
-	RuleID      int    `json:"ruleId,omitempty"`      //Id of your rule
-	RouteID     int    `json:"routeId,omitempty"`     //Id of your route
-	DisplayName string `json:"displayName,omitempty"` //Human readable name for your rule
-	Field       string `json:"field,omitempty"`       //Name of the field to match like "protocol" or "host". See "/ipLoadbalancing/{serviceName}/availableRouteRules" for a list of available rules
-	Match       string `json:"match,omitempty"`       //Matching operator. Not all operators are available for all fields. See "/ipLoadbalancing/{serviceName}/availableRouteRules"
-	Negate      bool   `json:"negate,omitempty"`      //Invert the matching operator effect
-	Pattern     string `json:"pattern,omitempty"`     //Value to match against this match. Interpretation if this field depends on the match and field
-	SubField    string `json:"subField,omitempty"`    //Name of sub-field, if applicable. This may be a Cookie or Header name for instance
-}
-
 func resourceIPLoadbalancingRouteHTTPRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 

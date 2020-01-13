@@ -9,23 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-type IpLoadbalancingTcpFarmServer struct {
-	BackendId            int     `json:"backendId,omitempty"`
-	ServerId             int     `json:"serverId,omitempty"`
-	FarmId               int     `json:"farmId,omitempty"`
-	DisplayName          *string `json:"displayName,omitempty"`
-	Address              string  `json:"address"`
-	Cookie               *string `json:"cookie,omitempty"`
-	Port                 *int    `json:"port"`
-	ProxyProtocolVersion *string `json:"proxyProtocolVersion"`
-	Chain                *string `json:"chain"`
-	Weight               *int    `json:"weight"`
-	Probe                *bool   `json:"probe"`
-	Ssl                  *bool   `json:"ssl"`
-	Backup               *bool   `json:"backup"`
-	Status               string  `json:"status"`
-}
-
 func resourceIpLoadbalancingTcpFarmServer() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceIpLoadbalancingTcpFarmServerCreate,
