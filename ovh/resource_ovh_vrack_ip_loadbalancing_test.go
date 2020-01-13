@@ -24,8 +24,9 @@ resource "ovh_vrack_iploadbalancing" "viplb" {
 
 func init() {
 	resource.AddTestSweepers("ovh_vrack_iploadbalancing", &resource.Sweeper{
-		Name: "ovh_vrack_iploadbalancing",
-		F:    testSweepVrackIpLoadbalancing,
+		Name:         "ovh_vrack_iploadbalancing",
+		Dependencies: []string{"ovh_iploadbalancing_vrack_network"},
+		F:            testSweepVrackIpLoadbalancing,
 	})
 }
 

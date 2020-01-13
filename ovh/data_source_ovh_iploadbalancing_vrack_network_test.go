@@ -17,10 +17,10 @@ func TestAccIpLoadbalancingVrackNetworkDataSource_basic(t *testing.T) {
 				Config: testAccIpLoadbalancingVrackNetworkDatasourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.ovh_iploadbalancing.iplb", "vrack_eligibility", "true"),
-					resource.TestCheckResourceAttrSet("data.ovh_iploadbalancing_vrack_network.network", "subnet"),
-					resource.TestCheckResourceAttrSet("data.ovh_iploadbalancing_vrack_network.network", "vlan"),
+					resource.TestCheckResourceAttr("data.ovh_iploadbalancing_vrack_network.network", "subnet", ipLoadbalancingVrackNetworkSubnet),
+					resource.TestCheckResourceAttr("data.ovh_iploadbalancing_vrack_network.network", "vlan", ipLoadbalancingVrackNetworkVlan),
 					resource.TestCheckResourceAttrSet("data.ovh_iploadbalancing_vrack_network.network", "id"),
-					resource.TestCheckResourceAttrSet("data.ovh_iploadbalancing_vrack_network.network", "nat_ip"),
+					resource.TestCheckResourceAttr("data.ovh_iploadbalancing_vrack_network.network", "nat_ip", ipLoadbalancingVrackNetworkNatIp),
 					resource.TestCheckResourceAttrSet("data.ovh_iploadbalancing_vrack_network.network", "farm_id.#"),
 				),
 			},
@@ -33,12 +33,27 @@ data ovh_iploadbalancing "iplb" {
   service_name = "%s"
 }
 
-data ovh_iploadbalancing_vrack_networks "networks" {
-  service_name = data.ovh_iploadbalancing.iplb.service_name
+resource "ovh_vrack_iploadbalancing" "viplb" {
+  service_name     = "%s"
+  ip_loadbalancing = data.ovh_iploadbalancing.iplb.service_name
+}
+
+resource ovh_iploadbalancing_vrack_network "network" {
+  service_name = ovh_vrack_iploadbalancing.viplb.ip_loadbalancing
+  subnet       = "%s"
+  vlan         = %s
+  nat_ip       = "%s"
+  display_name = "terraform_testacc"
 }
 
 data ovh_iploadbalancing_vrack_network "network" {
   service_name = data.ovh_iploadbalancing.iplb.service_name
-  vrack_network_id  = data.ovh_iploadbalancing_vrack_networks.networks.result[0]
+  vrack_network_id  = ovh_iploadbalancing_vrack_network.network.vrack_network_id
 }
-`, os.Getenv("OVH_IPLB_SERVICE"))
+`,
+	os.Getenv("OVH_IPLB_SERVICE"),
+	os.Getenv("OVH_VRACK"),
+	ipLoadbalancingVrackNetworkSubnet,
+	ipLoadbalancingVrackNetworkVlan,
+	ipLoadbalancingVrackNetworkNatIp,
+)
