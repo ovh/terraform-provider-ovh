@@ -9,6 +9,8 @@ FEATURES:
 * __New Datasource:__ `ovh_dedicated_server_boots` ([#105](https://github.com/terraform-providers/terraform-provider-ovh/pull/105))
 * __New Datasource:__ `ovh_dedicated_server_boots` ([#105](https://github.com/terraform-providers/terraform-provider-ovh/pull/105))
 * __New Datasource:__ `ovh_dedicated_server_installation_templates` ([#101](https://github.com/terraform-providers/terraform-provider-ovh/pull/101))
+* __New Datasource:__ `ovh_iploadbalancing_vrack_network` ([#127](https://github.com/terraform-providers/terraform-provider-ovh/pull/127))
+* __New Datasource:__ `ovh_iploadbalancing_vrack_networks` ([#127](https://github.com/terraform-providers/terraform-provider-ovh/pull/127))
 * __New Datasource:__ `ovh_me_installation_template` ([#103](https://github.com/terraform-providers/terraform-provider-ovh/pull/103))
 * __New Datasource:__ `ovh_me_installation_templates` ([#103](https://github.com/terraform-providers/terraform-provider-ovh/pull/103))
 * __New Datasource:__ `ovh_me_ssh_key` ([#93](https://github.com/terraform-providers/terraform-provider-ovh/pull/93))
@@ -17,6 +19,7 @@ FEATURES:
 * __New Resource:__ `ovh_dedicated_server_install_task` ([#117](https://github.com/terraform-providers/terraform-provider-ovh/pull/117))
 * __New Resource:__ `ovh_dedicated_server_reboot_task` ([#116](https://github.com/terraform-providers/terraform-provider-ovh/pull/116))
 * __New Resource:__ `ovh_dedicated_server_update` ([#116](https://github.com/terraform-providers/terraform-provider-ovh/pull/116))
+* __New Resource:__ `ovh_iploadbalancing_vrack_network` ([#127](https://github.com/terraform-providers/terraform-provider-ovh/pull/127))
 * __New Resource:__ `ovh_me_installation_template` ([#103](https://github.com/terraform-providers/terraform-provider-ovh/pull/103))
 * __New Resource:__ `ovh_me_installation_template_partition_scheme` ([#103](https://github.com/terraform-providers/terraform-provider-ovh/pull/103))
 * __New Resource:__ `ovh_me_installation_template_partition_scheme_partition` ([#103](https://github.com/terraform-providers/terraform-provider-ovh/pull/103))
@@ -24,6 +27,7 @@ FEATURES:
 * __New Resource:__ `ovh_me_ssh_key` ([#93](https://github.com/terraform-providers/terraform-provider-ovh/pull/93))
 * __New Resource:__ `ovh_vrack_dedicated_server` ([#115](https://github.com/terraform-providers/terraform-provider-ovh/pull/115))
 * __New Resource:__ `ovh_vrack_dedicated_server_interface` ([#115](https://github.com/terraform-providers/terraform-provider-ovh/pull/115))
+* __New Resource:__ `ovh_vrack_iploadbalancing` ([#127](https://github.com/terraform-providers/terraform-provider-ovh/pull/127))
 
 IMPROVEMENTS:
 
