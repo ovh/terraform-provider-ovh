@@ -19,9 +19,36 @@ func init() {
 }
 
 const (
-	ipLoadbalancingVrackNetworkVlan   = "1001"
-	ipLoadbalancingVrackNetworkSubnet = "10.0.1.0/24"
-	ipLoadbalancingVrackNetworkNatIp  = "10.0.1.0/27"
+	testAccIpLoadbalancingVrackNetworkVlan1001 = "1001"
+	testAccIpLoadbalancingVrackNetworkVlan1002 = "1002"
+	testAccIpLoadbalancingVrackNetworkSubnet   = "10.0.1.0/24"
+	testAccIpLoadbalancingVrackNetworkNatIp    = "10.0.1.0/27"
+	testAccIpLoadbalancingVrackNetworkConfig   = `
+data ovh_iploadbalancing "iplb" {
+  service_name = "%s"
+}
+
+resource "ovh_vrack_iploadbalancing" "viplb" {
+  service_name     = "%s"
+  ip_loadbalancing = data.ovh_iploadbalancing.iplb.service_name
+}
+
+resource ovh_iploadbalancing_vrack_network "network" {
+  service_name = ovh_vrack_iploadbalancing.viplb.ip_loadbalancing
+  subnet       = "%s"
+  vlan         = %s
+  nat_ip       = "%s"
+  display_name = "terraform_testacc"
+}
+
+resource "ovh_iploadbalancing_tcp_farm" "testfarm" {
+  service_name     = data.ovh_iploadbalancing.iplb.service_name
+  display_name     = "terraform_testacc"
+  port             = 80
+  vrack_network_id = ovh_iploadbalancing_vrack_network.network.vrack_network_id
+  zone             = tolist(data.ovh_iploadbalancing.iplb.zone)[0]
+}
+`
 )
 
 func testSweepIpLoadbalancingVrackNetwork(region string) error {
@@ -35,10 +62,9 @@ func testSweepIpLoadbalancingVrackNetwork(region string) error {
 	}
 
 	endpoint := fmt.Sprintf(
-		"/ipLoadbalancing/%s/vrack/network?subnet=%s&vlan=%s",
+		"/ipLoadbalancing/%s/vrack/network?subnet=%s",
 		url.PathEscape(serviceName),
-		url.PathEscape(ipLoadbalancingVrackNetworkSubnet),
-		url.PathEscape(ipLoadbalancingVrackNetworkVlan),
+		url.PathEscape(testAccIpLoadbalancingVrackNetworkSubnet),
 	)
 
 	result := make([]int64, 0)
@@ -97,45 +123,38 @@ func TestAccIpLoadbalancingVrackNetwork_basic(t *testing.T) {
 				Config: testAccIpLoadbalancingVrackNetworkConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.ovh_iploadbalancing.iplb", "vrack_eligibility", "true"),
-					resource.TestCheckResourceAttr("ovh_iploadbalancing_vrack_network.network", "subnet", ipLoadbalancingVrackNetworkSubnet),
-					resource.TestCheckResourceAttr("ovh_iploadbalancing_vrack_network.network", "vlan", ipLoadbalancingVrackNetworkVlan),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_vrack_network.network", "subnet", testAccIpLoadbalancingVrackNetworkSubnet),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_vrack_network.network", "vlan", testAccIpLoadbalancingVrackNetworkVlan1001),
 					resource.TestCheckResourceAttrSet("ovh_iploadbalancing_vrack_network.network", "id"),
-					resource.TestCheckResourceAttr("ovh_iploadbalancing_vrack_network.network", "nat_ip", ipLoadbalancingVrackNetworkNatIp),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_vrack_network.network", "nat_ip", testAccIpLoadbalancingVrackNetworkNatIp),
+				),
+			},
+			{
+				Config: testAccIpLoadbalancingVrackNetworkConfig_update,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.ovh_iploadbalancing.iplb", "vrack_eligibility", "true"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_vrack_network.network", "subnet", testAccIpLoadbalancingVrackNetworkSubnet),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_vrack_network.network", "vlan", testAccIpLoadbalancingVrackNetworkVlan1002),
+					resource.TestCheckResourceAttrSet("ovh_iploadbalancing_vrack_network.network", "id"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_vrack_network.network", "nat_ip", testAccIpLoadbalancingVrackNetworkNatIp),
 				),
 			},
 		},
 	})
 }
 
-var testAccIpLoadbalancingVrackNetworkConfig_basic = fmt.Sprintf(`
-data ovh_iploadbalancing "iplb" {
-  service_name = "%s"
-}
-
-resource "ovh_vrack_iploadbalancing" "viplb" {
-  service_name     = "%s"
-  ip_loadbalancing = data.ovh_iploadbalancing.iplb.service_name
-}
-
-resource ovh_iploadbalancing_vrack_network "network" {
-  service_name = ovh_vrack_iploadbalancing.viplb.ip_loadbalancing
-  subnet       = "%s"
-  vlan         = %s
-  nat_ip       = "%s"
-  display_name = "terraform_testacc"
-}
-
-resource "ovh_iploadbalancing_tcp_farm" "testfarm" {
-  service_name     = data.ovh_iploadbalancing.iplb.service_name
-  display_name     = "terraform_testacc"
-  port             = 80
-  vrack_network_id = ovh_iploadbalancing_vrack_network.network.vrack_network_id
-  zone             = tolist(data.ovh_iploadbalancing.iplb.zone)[0]
-}
-`,
+var testAccIpLoadbalancingVrackNetworkConfig_basic = fmt.Sprintf(testAccIpLoadbalancingVrackNetworkConfig,
 	os.Getenv("OVH_IPLB_SERVICE"),
 	os.Getenv("OVH_VRACK"),
-	ipLoadbalancingVrackNetworkSubnet,
-	ipLoadbalancingVrackNetworkVlan,
-	ipLoadbalancingVrackNetworkNatIp,
+	testAccIpLoadbalancingVrackNetworkSubnet,
+	testAccIpLoadbalancingVrackNetworkVlan1001,
+	testAccIpLoadbalancingVrackNetworkNatIp,
+)
+
+var testAccIpLoadbalancingVrackNetworkConfig_update = fmt.Sprintf(testAccIpLoadbalancingVrackNetworkConfig,
+	os.Getenv("OVH_IPLB_SERVICE"),
+	os.Getenv("OVH_VRACK"),
+	testAccIpLoadbalancingVrackNetworkSubnet,
+	testAccIpLoadbalancingVrackNetworkVlan1002,
+	testAccIpLoadbalancingVrackNetworkNatIp,
 )
