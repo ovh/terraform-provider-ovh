@@ -125,8 +125,9 @@ func resourceIPLoadbalancingVrackNetworkUpdate(d *schema.ResourceData, meta inte
 	opts := (&IpLoadbalancingVrackNetworkUpdateOpts{}).FromResource(d)
 
 	endpoint := fmt.Sprintf(
-		"/ipLoadbalancing/%s/vrack/network",
+		"/ipLoadbalancing/%s/vrack/network/%d",
 		url.PathEscape(serviceName),
+		d.Get("vrack_network_id").(int),
 	)
 
 	// start of update procedure (put + post)
