@@ -1,6 +1,6 @@
 ## 0.7.0 (Unreleased)
 
-## 0.6.0 (?)
+## 0.6.0 (January 15, 2020)
 
 FEATURES:
 
@@ -19,7 +19,7 @@ FEATURES:
 * __New Resource:__ `ovh_dedicated_server_install_task` ([#117](https://github.com/terraform-providers/terraform-provider-ovh/pull/117))
 * __New Resource:__ `ovh_dedicated_server_reboot_task` ([#116](https://github.com/terraform-providers/terraform-provider-ovh/pull/116))
 * __New Resource:__ `ovh_dedicated_server_update` ([#116](https://github.com/terraform-providers/terraform-provider-ovh/pull/116))
-* __New Resource:__ `ovh_iploadbalancing_vrack_network` ([#127](https://github.com/terraform-providers/terraform-provider-ovh/pull/127))
+* __New Resource:__ `ovh_iploadbalancing_vrack_network` ([#127](https://github.com/terraform-providers/terraform-provider-ovh/pull/127),[#129](https://github.com/terraform-providers/terraform-provider-ovh/pull/129))
 * __New Resource:__ `ovh_me_installation_template` ([#103](https://github.com/terraform-providers/terraform-provider-ovh/pull/103))
 * __New Resource:__ `ovh_me_installation_template_partition_scheme` ([#103](https://github.com/terraform-providers/terraform-provider-ovh/pull/103))
 * __New Resource:__ `ovh_me_installation_template_partition_scheme_partition` ([#103](https://github.com/terraform-providers/terraform-provider-ovh/pull/103))
