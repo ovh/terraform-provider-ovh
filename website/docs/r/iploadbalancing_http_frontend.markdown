@@ -40,8 +40,8 @@ The following arguments are supported:
 
 * `service_name` - (Required) The internal name of your IP load balancing
 * `display_name` - Human readable name for your frontend, this field is for you
-* `port` - Port(s) attached to your frontend. Supports single port (numerical value), 
-   range (2 dash-delimited increasing ports) and comma-separated list of 'single port' 
+* `port` - Port(s) attached to your frontend. Supports single port (numerical value),
+   range (2 dash-delimited increasing ports) and comma-separated list of 'single port'
    and/or 'range'. Each port must be in the [1;49151] range
 * `zone` - (Required) Zone where the frontend will be defined (ie. `gra`, `bhs` also supports `all`)
 * `allowed_source` - Restrict IP Load Balancing access to these ip block. No restriction if null. List of IP blocks.
@@ -50,7 +50,7 @@ The following arguments are supported:
 * `default_ssl_id` - Default ssl served to your customer
 * `disabled` - Disable your frontend. Default: 'false'
 * `ssl` - SSL deciphering. Default: 'false'
-
+* `redirect_location` - Redirection HTTP'
 
 ## Attributes Reference
 
@@ -64,4 +64,3 @@ The following attributes are exported:
 * `default_ssl_id` - See Argument Reference above.
 * `disabled` - See Argument Reference above.
 * `ssl` - See Argument Reference above.
-
