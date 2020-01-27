@@ -67,6 +67,11 @@ func resourceIpLoadbalancingHttpFrontend() *schema.Resource {
 				Optional: true,
 				ForceNew: false,
 			},
+			"redirect_location": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: false,
+			},
 			"display_name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -95,13 +100,14 @@ func resourceIpLoadbalancingHttpFrontendCreate(d *schema.ResourceData, meta inte
 	}
 
 	frontend := &IpLoadbalancingHttpFrontend{
-		Port:          d.Get("port").(string),
-		Zone:          d.Get("zone").(string),
-		AllowedSource: allowedSources,
-		DedicatedIpFo: dedicatedIpFo,
-		Disabled:      getNilBoolPointerFromData(d, "disabled"),
-		Ssl:           getNilBoolPointerFromData(d, "ssl"),
-		DisplayName:   d.Get("display_name").(string),
+		Port:             d.Get("port").(string),
+		Zone:             d.Get("zone").(string),
+		AllowedSource:    allowedSources,
+		DedicatedIpFo:    dedicatedIpFo,
+		Disabled:         getNilBoolPointerFromData(d, "disabled"),
+		Ssl:              getNilBoolPointerFromData(d, "ssl"),
+		RedirectLocation: d.Get("redirect_location").(string),
+		DisplayName:      d.Get("display_name").(string),
 	}
 
 	frontend.DefaultFarmId = getNilIntPointerFromData(d, "default_farm_id")
@@ -153,13 +159,14 @@ func resourceIpLoadbalancingHttpFrontendUpdate(d *schema.ResourceData, meta inte
 	}
 
 	frontend := &IpLoadbalancingHttpFrontend{
-		Port:          d.Get("port").(string),
-		Zone:          d.Get("zone").(string),
-		AllowedSource: allowedSources,
-		DedicatedIpFo: dedicatedIpFo,
-		Disabled:      getNilBoolPointerFromData(d, "disabled"),
-		Ssl:           getNilBoolPointerFromData(d, "ssl"),
-		DisplayName:   d.Get("display_name").(string),
+		Port:             d.Get("port").(string),
+		Zone:             d.Get("zone").(string),
+		AllowedSource:    allowedSources,
+		DedicatedIpFo:    dedicatedIpFo,
+		Disabled:         getNilBoolPointerFromData(d, "disabled"),
+		Ssl:              getNilBoolPointerFromData(d, "ssl"),
+		RedirectLocation: d.Get("redirect_location").(string),
+		DisplayName:      d.Get("display_name").(string),
 	}
 
 	frontend.DefaultFarmId = getNilIntPointerFromData(d, "default_farm_id")
@@ -176,6 +183,7 @@ func readIpLoadbalancingHttpFrontend(r *IpLoadbalancingHttpFrontend, d *schema.R
 	d.Set("display_name", r.DisplayName)
 	d.Set("port", r.Port)
 	d.Set("zone", r.Zone)
+	d.Set("redirect_location", r.RedirectLocation)
 
 	allowedSources := make([]string, 0)
 	for _, s := range r.AllowedSource {
