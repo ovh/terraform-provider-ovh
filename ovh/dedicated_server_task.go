@@ -15,9 +15,33 @@ func waitForDedicatedServerTask(serviceName string, task *DedicatedServerTask, c
 	taskId := task.Id
 
 	refreshFunc := func() (interface{}, string, error) {
-		task, err := getDedicatedServerTask(serviceName, taskId, c)
-		if err != nil {
-			return taskId, "", err
+		var taskErr error
+		var task *DedicatedServerTask
+
+		// The Dedicated Server API often returns 500/404 errors
+		// in such case we retry to retrieve task status
+		// 404 may happen because of some inconsistency between the
+		// api endpoint call and the target region executing the task
+		retryErr := resource.Retry(5*time.Minute, func() *resource.RetryError {
+			var err error
+			task, err = getDedicatedServerTask(serviceName, taskId, c)
+			if err != nil {
+				if err.(*ovh.APIError).Code == 500 || err.(*ovh.APIError).Code == 404 {
+					// retry
+					return resource.RetryableError(err)
+				}
+				// other error dont retry and fail
+				taskErr = err
+			}
+			return nil
+		})
+
+		if retryErr != nil {
+			return taskId, "", retryErr
+		}
+
+		if taskErr != nil {
+			return taskId, "", taskErr
 		}
 
 		log.Printf("[INFO] Pending Task id %d on Dedicated %s status: %s", taskId, serviceName, task.Status)
