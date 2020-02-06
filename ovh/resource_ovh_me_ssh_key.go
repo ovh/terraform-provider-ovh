@@ -24,6 +24,7 @@ func resourceMeSshKey() *schema.Resource {
 			"key_name": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "Name of this public Ssh key",
 			},
 			"key": {
