@@ -90,43 +90,37 @@ func testSweepCloudNetworkPrivate(region string) error {
 		return fmt.Errorf("OVH_PUBLIC_CLOUD must be set")
 	}
 
-	networkIds := []string{}
-	err = client.Get(fmt.Sprintf("/cloud/project/%s/network/private", projectId), &networkIds)
+	networks := []CloudNetworkPrivateResponse{}
+	err = client.Get(fmt.Sprintf("/cloud/project/%s/network/private", projectId), &networks)
 	if err != nil {
 		return fmt.Errorf("error listing private networks for project %q:\n\t %q", projectId, err)
 	}
 
-	for _, n := range networkIds {
-		r := &CloudNetworkPrivateResponse{}
-		err = client.Get(fmt.Sprintf("/cloud/project/%s/network/private/%s", projectId, n), r)
-		if err != nil {
-			return fmt.Errorf("error getting private network %q for project %q:\n\t %q", n, projectId, err)
-		}
-
-		if !strings.HasPrefix(r.Name, test_prefix) {
+	for _, n := range networks {
+		if !strings.HasPrefix(n.Name, test_prefix) {
 			continue
 		}
 
-		log.Printf("[DEBUG] found dangling network & subnets for project: %s, id: %s", projectId, n)
+		log.Printf("[DEBUG] found dangling network & subnets for project: %s, id: %s", projectId, n.Id)
 		err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 			subnetIds := []string{}
-			err = client.Get(fmt.Sprintf("/cloud/project/%s/network/private/%s/subnet", projectId, n), &subnetIds)
+			err = client.Get(fmt.Sprintf("/cloud/project/%s/network/private/%s/subnet", projectId, n.Id), &subnetIds)
 			if err != nil {
 				return resource.RetryableError(fmt.Errorf("error listing private network subnets for project %q:\n\t %q", projectId, err))
 			}
 
 			for _, s := range subnetIds {
-				if err := client.Delete(fmt.Sprintf("/cloud/project/%s/network/private/%s/subnet/%s", projectId, n, s), nil); err != nil {
+				if err := client.Delete(fmt.Sprintf("/cloud/project/%s/network/private/%s/subnet/%s", projectId, n.Id, s), nil); err != nil {
 					return resource.RetryableError(err)
 				}
 			}
 
-			if err := client.Delete(fmt.Sprintf("/cloud/project/%s/network/private/%s", projectId, n), nil); err != nil {
+			if err := client.Delete(fmt.Sprintf("/cloud/project/%s/network/private/%s", projectId, n.Id), nil); err != nil {
 				return resource.RetryableError(err)
 			}
 
 			// Successful cascade delete
-			log.Printf("[DEBUG] successful cascade delete of network & subnets for project: %s, id: %s", projectId, n)
+			log.Printf("[DEBUG] successful cascade delete of network & subnets for project: %s, id: %s", projectId, n.Id)
 			return nil
 		})
 
