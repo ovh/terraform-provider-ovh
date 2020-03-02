@@ -1,4 +1,21 @@
-## 0.6.1 (Unreleased)
+## 0.7.0 (Unreleased)
+
+FEATURES:
+
+* __New Datasource:__ `ovh_vps` ([#126](https://github.com/terraform-providers/terraform-provider-ovh/pull/126))
+
+IMPROVEMENTS:
+
+* r/iploadbalancing_http_farm: add cookie stickiness ([#133](https://github.com/terraform-providers/terraform-provider-ovh/pull/133))
+* r/dedicated_server_reboot_task, r/dedicated_server_install_task: retry task on 500/404 errors due to API unstability ([#134](https://github.com/terraform-providers/terraform-provider-ovh/pull/134))
+
+BUG FIXES:
+
+* r/dedicated_server_reboot_task, r/dedicated_server_install_task: fix missing ForcesNew attributes ([#135](https://github.com/terraform-providers/terraform-provider-ovh/pull/135))
+* r/me_ssh_key: fix missing ForcesNew attribute ([#136](https://github.com/terraform-providers/terraform-provider-ovh/pull/136))
+* r/domain_zone_record, domain_zone_redirection: don't fail sweepers on missing OVH_ZONE env var. ([#138](https://github.com/terraform-providers/terraform-provider-ovh/pull/138))
+* r/cloud_network_private: fix sweeper. ([#138](https://github.com/terraform-providers/terraform-provider-ovh/pull/138))
+
 ## 0.6.0 (January 15, 2020)
 
 FEATURES:
