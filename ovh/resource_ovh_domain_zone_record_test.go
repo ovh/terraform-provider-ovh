@@ -29,7 +29,8 @@ func testSweepDomainZoneRecord(region string) error {
 
 	zoneName := os.Getenv("OVH_ZONE")
 	if zoneName == "" {
-		return fmt.Errorf("OVH_ZONE must be set")
+		log.Print("[DEBUG] OVH_ZONE is not set. No zone to sweep")
+		return nil
 	}
 
 	dz := &DomainZone{}
