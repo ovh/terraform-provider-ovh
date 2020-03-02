@@ -119,6 +119,11 @@ func testAccPreCheckDedicatedServer(t *testing.T) {
 	checkEnvOrSkip(t, "OVH_DEDICATED_SERVER")
 }
 
+func testAccPreCheckVPS(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_VPS")
+}
+
 func testAccCheckVRackExists(t *testing.T) {
 	type vrackResponse struct {
 		Name        string `json:"name"`
