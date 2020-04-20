@@ -2,6 +2,7 @@ package ovh
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
@@ -12,6 +13,9 @@ func resourceIPLoadbalancingRouteHTTP() *schema.Resource {
 		Read:   resourceIPLoadbalancingRouteHTTPRead,
 		Update: resourceIPLoadbalancingRouteHTTPUpdate,
 		Delete: resourceIPLoadbalancingRouteHTTPDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceIpLoadbalancingHttpRouteImportState,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"service_name": {
@@ -57,6 +61,22 @@ func resourceIPLoadbalancingRouteHTTP() *schema.Resource {
 	}
 }
 
+func resourceIpLoadbalancingHttpRouteImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	givenId := d.Id()
+	splitId := strings.SplitN(givenId, "/", 2)
+	if len(splitId) != 2 {
+		return nil, fmt.Errorf("Import Id is not service_name/route id formatted")
+	}
+	serviceName := splitId[0]
+	routeId := splitId[1]
+	d.SetId(routeId)
+	d.Set("service_name", serviceName)
+
+	results := make([]*schema.ResourceData, 1)
+	results[0] = d
+	return results, nil
+}
+
 func resourceIPLoadbalancingRouteHTTPCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
@@ -99,10 +119,18 @@ func resourceIPLoadbalancingRouteHTTPRead(d *schema.ResourceData, meta interface
 		return CheckDeleted(d, err, endpoint)
 	}
 
+	actions := make([]map[string]interface{}, 0)
+	action := make(map[string]interface{})
+	action["status"] = r.Action.Status
+	action["target"] = r.Action.Target
+	action["type"] = r.Action.Type
+	actions = append(actions, action)
+
 	d.Set("status", r.Status)
 	d.Set("weight", r.Weight)
 	d.Set("display_name", r.DisplayName)
 	d.Set("frontend_id", r.FrontendID)
+	d.Set("action", actions)
 
 	return nil
 }

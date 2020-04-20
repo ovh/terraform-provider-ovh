@@ -2,6 +2,7 @@ package ovh
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
@@ -12,6 +13,9 @@ func resourceIpLoadbalancingTcpFrontend() *schema.Resource {
 		Read:   resourceIpLoadbalancingTcpFrontendRead,
 		Update: resourceIpLoadbalancingTcpFrontendUpdate,
 		Delete: resourceIpLoadbalancingTcpFrontendDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceIpLoadbalancingTcpFrontendImportState,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"service_name": {
@@ -74,6 +78,22 @@ func resourceIpLoadbalancingTcpFrontend() *schema.Resource {
 			},
 		},
 	}
+}
+
+func resourceIpLoadbalancingTcpFrontendImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	givenId := d.Id()
+	splitId := strings.SplitN(givenId, "/", 2)
+	if len(splitId) != 2 {
+		return nil, fmt.Errorf("Import Id is not service_name/frontend id formatted")
+	}
+	serviceName := splitId[0]
+	frontendId := splitId[1]
+	d.SetId(frontendId)
+	d.Set("service_name", serviceName)
+
+	results := make([]*schema.ResourceData, 1)
+	results[0] = d
+	return results, nil
 }
 
 func resourceIpLoadbalancingTcpFrontendCreate(d *schema.ResourceData, meta interface{}) error {
@@ -178,15 +198,11 @@ func readIpLoadbalancingTcpFrontend(r *IpLoadbalancingTcpFrontend, d *schema.Res
 	d.Set("zone", r.Zone)
 
 	allowedSources := make([]string, 0)
-	for _, s := range r.AllowedSource {
-		allowedSources = append(allowedSources, s)
-	}
+	allowedSources = append(allowedSources, r.AllowedSource...)
 	d.Set("allowed_source", allowedSources)
 
 	dedicatedIpFos := make([]string, 0)
-	for _, s := range r.DedicatedIpFo {
-		dedicatedIpFos = append(dedicatedIpFos, s)
-	}
+	dedicatedIpFos = append(dedicatedIpFos, r.DedicatedIpFo...)
 	d.Set("dedicated_ipfo", dedicatedIpFos)
 
 	if r.DefaultFarmId != nil {
