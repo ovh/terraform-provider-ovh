@@ -2,6 +2,7 @@ package ovh
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
@@ -12,6 +13,9 @@ func resourceIpLoadbalancingTcpFarm() *schema.Resource {
 		Read:   resourceIpLoadbalancingTcpFarmRead,
 		Update: resourceIpLoadbalancingTcpFarmUpdate,
 		Delete: resourceIpLoadbalancingTcpFarmDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceIpLoadbalancingTcpFarmImportState,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"service_name": {
@@ -127,7 +131,7 @@ func resourceIpLoadbalancingTcpFarm() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-								err := validateStringEnum(v.(string), []string{"http", "internal", "mysql", "oko", "pgsql", "smtp", "tcp"})
+								err := validateStringEnum(v.(string), []string{"http", "internal", "mysql", "oco", "pgsql", "smtp", "tcp"})
 								if err != nil {
 									errors = append(errors, err)
 								}
@@ -139,6 +143,22 @@ func resourceIpLoadbalancingTcpFarm() *schema.Resource {
 			},
 		},
 	}
+}
+
+func resourceIpLoadbalancingTcpFarmImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	givenId := d.Id()
+	splitId := strings.SplitN(givenId, "/", 2)
+	if len(splitId) != 2 {
+		return nil, fmt.Errorf("Import Id is not service_name/farm id formatted")
+	}
+	serviceName := splitId[0]
+	farmId := splitId[1]
+	d.SetId(farmId)
+	d.Set("service_name", serviceName)
+
+	results := make([]*schema.ResourceData, 1)
+	results[0] = d
+	return results, nil
 }
 
 func resourceIpLoadbalancingTcpFarmCreate(d *schema.ResourceData, meta interface{}) error {
@@ -193,9 +213,26 @@ func resourceIpLoadbalancingTcpFarmRead(d *schema.ResourceData, meta interface{}
 	if err != nil {
 		return fmt.Errorf("calling %s:\n\t %s", endpoint, err.Error())
 	}
+	probes := make([]map[string]interface{}, 0)
+	probe := make(map[string]interface{})
+	probe["match"] = r.Probe.Match
+	probe["port"] = r.Probe.Port
+	probe["interval"] = r.Probe.Interval
+	probe["negate"] = r.Probe.Negate
+	probe["pattern"] = r.Probe.Pattern
+	probe["force_ssl"] = r.Probe.ForceSsl
+	probe["url"] = r.Probe.URL
+	probe["method"] = r.Probe.Method
+	probe["type"] = r.Probe.Type
+	probes = append(probes, probe)
 
 	d.Set("display_name", r.DisplayName)
-
+	d.Set("zone", r.Zone)
+	d.Set("port", r.Port)
+	d.Set("balance", r.Balance)
+	d.Set("probe", probes)
+	d.Set("vrack_network_id", r.VrackNetworkId)
+	d.Set("stickinesss", r.Stickiness)
 	return nil
 }
 
