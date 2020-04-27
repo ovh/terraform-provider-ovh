@@ -2,6 +2,7 @@ package ovh
 
 import (
 	"fmt"
+	"log"
 	"net/url"
 	"os"
 	"testing"
@@ -40,7 +41,16 @@ func testSweepVrackCloudProject(region string) error {
 	}
 
 	vrackId := os.Getenv("OVH_VRACK")
+	if vrackId == "" {
+		log.Print("[DEBUG] OVH_VRACK is not set. No vrack_cloud_project to sweep")
+		return nil
+	}
+
 	projectId := os.Getenv("OVH_PUBLIC_CLOUD")
+	if projectId == "" {
+		log.Print("[DEBUG] OVH_PUBLIC_CLOUD is not set. No vrack_cloud_project to sweep")
+		return nil
+	}
 
 	endpoint := fmt.Sprintf("/vrack/%s/cloudProject/%s",
 		url.PathEscape(vrackId),
