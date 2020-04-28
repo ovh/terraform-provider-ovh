@@ -2,6 +2,7 @@ package ovh
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
@@ -12,6 +13,9 @@ func resourceIPLoadbalancingRouteHTTPRule() *schema.Resource {
 		Read:   resourceIPLoadbalancingRouteHTTPRuleRead,
 		Update: resourceIPLoadbalancingRouteHTTPRuleUpdate,
 		Delete: resourceIPLoadbalancingRouteHTTPRuleDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceIpLoadbalancingHttpRouteRuleImportState,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"service_name": {
@@ -59,6 +63,25 @@ func resourceIPLoadbalancingRouteHTTPRule() *schema.Resource {
 	}
 }
 
+func resourceIpLoadbalancingHttpRouteRuleImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	givenId := d.Id()
+	splitId := strings.SplitN(givenId, "/", 3)
+	if len(splitId) != 3 {
+		return nil, fmt.Errorf("Import Id is not service_name/route_id/rule id formatted")
+	}
+	serviceName := splitId[0]
+	routeID := splitId[1]
+	ruleID := splitId[2]
+
+	d.SetId(ruleID)
+	d.Set("route_id", routeID)
+	d.Set("service_name", serviceName)
+
+	results := make([]*schema.ResourceData, 1)
+	results[0] = d
+	return results, nil
+}
+
 func resourceIPLoadbalancingRouteHTTPRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
@@ -92,11 +115,17 @@ func resourceIPLoadbalancingRouteHTTPRuleRead(d *schema.ResourceData, meta inter
 	routeID := d.Get("route_id").(string)
 	r := &IPLoadbalancingRouteHTTPRule{}
 	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/http/route/%s/rule/%s", service, routeID, d.Id())
-
 	err := config.OVHClient.Get(endpoint, &r)
 	if err != nil {
 		return CheckDeleted(d, err, endpoint)
 	}
+
+	d.Set("display_name", r.DisplayName)
+	d.Set("field", r.Field)
+	d.Set("match", r.Match)
+	d.Set("negate", r.Negate)
+	d.Set("pattern", r.Pattern)
+	d.Set("sub_field", r.SubField)
 
 	return nil
 }
