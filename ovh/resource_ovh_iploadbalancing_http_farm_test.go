@@ -35,10 +35,8 @@ type TestAccIpLoadbalancingHttpFarmResponse struct {
 
 func (r *TestAccIpLoadbalancingHttpFarmResponse) Equals(c *TestAccIpLoadbalancingHttpFarmResponse) bool {
 	r.FarmId = 0
-	if reflect.DeepEqual(r, c) {
-		return true
-	}
-	return false
+
+	return reflect.DeepEqual(r, c)
 }
 
 func testAccIpLoadbalancingHttpFarmTestStep(name, zone string, port, probePort, probeInterval int, probeType string) resource.TestStep {

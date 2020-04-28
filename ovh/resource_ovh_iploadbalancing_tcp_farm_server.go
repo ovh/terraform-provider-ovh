@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"strconv"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
@@ -15,6 +17,10 @@ func resourceIpLoadbalancingTcpFarmServer() *schema.Resource {
 		Read:   resourceIpLoadbalancingTcpFarmServerRead,
 		Update: resourceIpLoadbalancingTcpFarmServerUpdate,
 		Delete: resourceIpLoadbalancingTcpFarmServerDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceIpLoadbalancingTcpFarmServerImportState,
+		},
+
 		Schema: map[string]*schema.Schema{
 			"service_name": {
 				Type:     schema.TypeString,
@@ -100,6 +106,28 @@ func resourceIpLoadbalancingTcpFarmServer() *schema.Resource {
 	}
 }
 
+func resourceIpLoadbalancingTcpFarmServerImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	givenId := d.Id()
+	splitId := strings.SplitN(givenId, "/", 3)
+	if len(splitId) != 3 {
+		return nil, fmt.Errorf("Import Id is not service_name/farm_id/server id formatted")
+	}
+	serviceName := splitId[0]
+	farmId, err := strconv.Atoi(splitId[1])
+	if err != nil {
+		return nil, fmt.Errorf("Couldn't cast farmId %d to int: %s", farmId, err.Error())
+	}
+	serverId := splitId[2]
+
+	d.SetId(serverId)
+	d.Set("farm_id", farmId)
+	d.Set("service_name", serviceName)
+
+	results := make([]*schema.ResourceData, 1)
+	results[0] = d
+	return results, nil
+}
+
 func resourceIpLoadbalancingTcpFarmServerCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
@@ -157,7 +185,9 @@ func resourceIpLoadbalancingTcpFarmServerRead(d *schema.ResourceData, meta inter
 	if r.Cookie != nil {
 		d.Set("cookie", *r.Cookie)
 	}
-	d.Set("port", *r.Port)
+	if r.Port != nil {
+		d.Set("port", *r.Port)
+	}
 	if r.ProxyProtocolVersion != nil {
 		d.Set("proxy_protocol_version", *r.ProxyProtocolVersion)
 	}
