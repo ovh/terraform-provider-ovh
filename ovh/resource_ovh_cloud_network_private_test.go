@@ -82,12 +82,14 @@ func testSweepCloudNetworkPrivate(region string) error {
 
 	vrack := os.Getenv("OVH_VRACK")
 	if vrack == "" {
-		return fmt.Errorf("OVH_VRACK must be set")
+		log.Print("[DEBUG] OVH_VRACK is not set. No cloud_network_private to sweep")
+		return nil
 	}
 
 	projectId := os.Getenv("OVH_PUBLIC_CLOUD")
 	if projectId == "" {
-		return fmt.Errorf("OVH_PUBLIC_CLOUD must be set")
+		log.Print("[DEBUG] OVH_PUBLIC_CLOUD is not set. No cloud_network_private to sweep")
+		return nil
 	}
 
 	networks := []CloudNetworkPrivateResponse{}

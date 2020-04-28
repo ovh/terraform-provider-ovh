@@ -2,6 +2,7 @@ package ovh
 
 import (
 	"fmt"
+	"log"
 	"net/url"
 	"os"
 	"testing"
@@ -56,48 +57,86 @@ func testSweepIpLoadbalancingVrackNetwork(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
+
 	serviceName := os.Getenv("OVH_IPLB_SERVICE")
 	if serviceName == "" {
-		return fmt.Errorf("OVH_IPLB_SERVICE env var is required")
+		log.Print("[DEBUG] OVH_IPLB_SERVICE is not set. No iploadbalancing_vrack_network to sweep")
+		return nil
 	}
 
-	endpoint := fmt.Sprintf(
-		"/ipLoadbalancing/%s/vrack/network?subnet=%s",
-		url.PathEscape(serviceName),
-		url.PathEscape(testAccIpLoadbalancingVrackNetworkSubnet),
-	)
+	log.Print("[DEBUG] Sweeping iploadbalancing_vrack_network")
 
-	result := make([]int64, 0)
-
-	if err := client.Get(endpoint, result); err != nil {
-		if err.(*ovh.APIError).Code == 404 {
-			return nil
-		}
-		return err
-	}
-
-	for _, id := range result {
-		// delete farms, then delete vrack network
-		endpoint = fmt.Sprintf(
-			"/ipLoadbalancing/%s/tcp/farm?vrackNetworkId=%d",
+	get_network_ids := func(vlanId string) ([]int64, error) {
+		endpoint := fmt.Sprintf(
+			"/ipLoadbalancing/%s/vrack/network?vlan=%s",
 			url.PathEscape(serviceName),
-			id,
+			url.PathEscape(vlanId),
 		)
 
-		farms := make([]int64, 0)
-		if err := client.Get(endpoint, farms); err != nil && !(err.(*ovh.APIError).Code == 404) {
+		result := make([]int64, 0)
+
+		if err := client.Get(endpoint, &result); err != nil {
+			if err.(*ovh.APIError).Code == 404 {
+				return nil, nil
+			}
+			return nil, err
+		}
+
+		return result, nil
+	}
+
+	delete_farms := func(farmType string, networkId int64) error {
+		endpoint := fmt.Sprintf(
+			"/ipLoadbalancing/%s/%s/farm?vrackNetworkId=%d",
+			url.PathEscape(serviceName),
+			url.PathEscape(farmType),
+			networkId,
+		)
+
+		result := make([]int64, 0)
+
+		if err := client.Get(endpoint, &result); err != nil {
+			if err.(*ovh.APIError).Code == 404 {
+				return nil
+			}
 			return err
 		}
-		for _, farmId := range farms {
-			endpoint = fmt.Sprintf(
-				"/ipLoadbalancing/%s/tcp/farm/%d",
+
+		for _, farmId := range result {
+			endpoint := fmt.Sprintf(
+				"/ipLoadbalancing/%s/%s/farm/%d",
 				url.PathEscape(serviceName),
+				url.PathEscape(farmType),
 				farmId,
 			)
 			// delete the farm
+			log.Printf("[DEBUG] Calling DELETE on %v", endpoint)
 			if err := client.Delete(endpoint, nil); err != nil {
 				return fmt.Errorf("Error calling DELETE %s:\n\t %q", endpoint, err)
 			}
+		}
+		return nil
+	}
+
+	resultVlan1001, err := get_network_ids(testAccIpLoadbalancingVrackNetworkVlan1001)
+	if err != nil {
+		return err
+	}
+
+	resultVlan1002, err := get_network_ids(testAccIpLoadbalancingVrackNetworkVlan1002)
+	if err != nil {
+		return err
+	}
+
+	result := append(resultVlan1001, resultVlan1002...)
+	for _, id := range result {
+		// delete farms, then delete vrack network
+		if err := delete_farms("http", id); err != nil {
+			return err
+		}
+
+		if err := delete_farms("tcp", id); err != nil {
+			return err
 		}
 
 		// delete the vrack network
@@ -106,6 +145,8 @@ func testSweepIpLoadbalancingVrackNetwork(region string) error {
 			url.PathEscape(serviceName),
 			id,
 		)
+
+		log.Printf("[DEBUG] Calling DELETE on %v", endpoint)
 		if err := client.Delete(endpoint, nil); err != nil {
 			return fmt.Errorf("Error calling DELETE %s:\n\t %q", endpoint, err)
 		}

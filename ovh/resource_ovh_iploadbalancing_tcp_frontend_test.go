@@ -26,7 +26,8 @@ func testSweepIploadbalancingTcpFrontend(region string) error {
 
 	iplb := os.Getenv("OVH_IPLB_SERVICE")
 	if iplb == "" {
-		return fmt.Errorf("OVH_IPLB_SERVICE must be set")
+		log.Print("[DEBUG] OVH_IPLB_SERVICE is not set. No iploadbalancing_vrack_network to sweep")
+		return nil
 	}
 
 	frontends := make([]int64, 0)
