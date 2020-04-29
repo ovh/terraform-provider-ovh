@@ -1,6 +1,8 @@
 package ovh
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -42,50 +44,99 @@ type IPLoadbalancingRefreshPending struct {
 
 type IPLoadbalancingRefreshPendings []IPLoadbalancingRefreshPending
 
-type IpLoadbalancingTcpFarmBackendProbe struct {
-	Match    string `json:"match,omitempty"`
-	Port     int    `json:"port,omitempty"`
-	Interval int    `json:"interval,omitempty"`
-	Negate   bool   `json:"negate,omitempty"`
-	Pattern  string `json:"pattern,omitempty"`
-	ForceSsl bool   `json:"forceSsl,omitempty"`
-	URL      string `json:"url,omitempty"`
-	Method   string `json:"method,omitempty"`
-	Type     string `json:"type,omitempty"`
-}
-
 type IpLoadbalancingTcpFarm struct {
-	FarmId         int                                 `json:"farmId,omitempty"`
-	Zone           string                              `json:"zone,omitempty"`
-	VrackNetworkId int                                 `json:"vrackNetworkId,omitempty"`
-	Port           int                                 `json:"port,omitempty"`
-	Stickiness     string                              `json:"stickiness,omitempty"`
-	Balance        string                              `json:"balance,omitempty"`
-	Probe          *IpLoadbalancingTcpFarmBackendProbe `json:"probe,omitempty"`
-	DisplayName    string                              `json:"displayName,omitempty"`
+	FarmId         int                              `json:"farmId,omitempty"`
+	Zone           string                           `json:"zone,omitempty"`
+	VrackNetworkId int                              `json:"vrackNetworkId,omitempty"`
+	Port           int                              `json:"port,omitempty"`
+	Stickiness     string                           `json:"stickiness,omitempty"`
+	Balance        string                           `json:"balance,omitempty"`
+	Probe          *IpLoadbalancingFarmBackendProbe `json:"probe,omitempty"`
+	DisplayName    string                           `json:"displayName,omitempty"`
 }
 
-type IpLoadbalancingHttpFarmBackendProbe struct {
-	Match    string `json:"match,omitempty"`
-	Port     int    `json:"port,omitempty"`
-	Interval int    `json:"interval,omitempty"`
-	Negate   bool   `json:"negate,omitempty"`
-	Pattern  string `json:"pattern,omitempty"`
-	ForceSsl bool   `json:"forceSsl,omitempty"`
-	URL      string `json:"url,omitempty"`
-	Method   string `json:"method,omitempty"`
-	Type     string `json:"type,omitempty"`
+type IpLoadbalancingFarmBackendProbe struct {
+	Match    *string `json:"match,omitempty"`
+	Port     *int    `json:"port,omitempty"`
+	Interval *int    `json:"interval,omitempty"`
+	Negate   *bool   `json:"negate,omitempty"`
+	Pattern  *string `json:"pattern,omitempty"`
+	ForceSsl *bool   `json:"forceSsl,omitempty"`
+	URL      *string `json:"url,omitempty"`
+	Method   *string `json:"method,omitempty"`
+	Type     *string `json:"type,omitempty"`
+}
+
+func (opts *IpLoadbalancingFarmBackendProbe) FromResource(d *schema.ResourceData, parent string) *IpLoadbalancingFarmBackendProbe {
+	opts.Match = getNilStringPointerFromData(d, fmt.Sprintf("%s.match", parent))
+	opts.Port = getNilIntPointerFromData(d, fmt.Sprintf("%s.port", parent))
+	opts.Interval = getNilIntPointerFromData(d, fmt.Sprintf("%s.interval", parent))
+	opts.Negate = getNilBoolPointerFromData(d, fmt.Sprintf("%s.negate", parent))
+	opts.Pattern = getNilStringPointerFromData(d, fmt.Sprintf("%s.pattern", parent))
+	opts.ForceSsl = getNilBoolPointerFromData(d, fmt.Sprintf("%s.force_ssl", parent))
+	opts.URL = getNilStringPointerFromData(d, fmt.Sprintf("%s.url", parent))
+	opts.Method = getNilStringPointerFromData(d, fmt.Sprintf("%s.method", parent))
+	opts.Type = getNilStringPointerFromData(d, fmt.Sprintf("%s.type", parent))
+	return opts
+}
+
+func (v IpLoadbalancingFarmBackendProbe) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+
+	isNil := true
+	if v.Match != nil {
+		isNil = false
+		obj["match"] = *v.Match
+	}
+	if v.Port != nil {
+		isNil = false
+		obj["port"] = *v.Port
+	}
+	if v.Interval != nil {
+		isNil = false
+		obj["interval"] = *v.Interval
+	}
+	if v.Negate != nil {
+		isNil = false
+		obj["negate"] = *v.Negate
+	}
+	if v.Pattern != nil {
+		isNil = false
+		obj["pattern"] = *v.Pattern
+	}
+	if v.ForceSsl != nil {
+		isNil = false
+		obj["force_ssl"] = *v.ForceSsl
+	}
+	if v.URL != nil {
+		isNil = false
+		obj["url"] = *v.URL
+	}
+	if v.Method != nil {
+		isNil = false
+		obj["method"] = *v.Method
+	}
+	if v.Type != nil {
+		isNil = false
+		obj["type"] = *v.Type
+	}
+
+	if isNil {
+		return nil
+	}
+
+	return obj
 }
 
 type IpLoadbalancingHttpFarm struct {
-	FarmId         int                                  `json:"farmId,omitempty"`
-	Zone           string                               `json:"zone,omitempty"`
-	VrackNetworkId int                                  `json:"vrackNetworkId,omitempty"`
-	Port           int                                  `json:"port,omitempty"`
-	Stickiness     string                               `json:"stickiness,omitempty"`
-	Balance        string                               `json:"balance,omitempty"`
-	Probe          *IpLoadbalancingHttpFarmBackendProbe `json:"probe,omitempty"`
-	DisplayName    string                               `json:"displayName,omitempty"`
+	FarmId         int                              `json:"farmId,omitempty"`
+	Zone           string                           `json:"zone,omitempty"`
+	VrackNetworkId int                              `json:"vrackNetworkId,omitempty"`
+	Port           int                              `json:"port,omitempty"`
+	Stickiness     string                           `json:"stickiness,omitempty"`
+	Balance        string                           `json:"balance,omitempty"`
+	Probe          *IpLoadbalancingFarmBackendProbe `json:"probe,omitempty"`
+	DisplayName    string                           `json:"displayName,omitempty"`
 }
 
 // IPLoadbalancingRouteHTTPAction Action triggered when all rules match
