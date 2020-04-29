@@ -152,17 +152,17 @@ data "ovh_iploadbalancing" "iplb" {
 }
 
 resource "ovh_iploadbalancing_tcp_farm" "farm" {
-   service_name = "${data.ovh_iploadbalancing.iplb.service_name}"
+   service_name = data.ovh_iploadbalancing.iplb.service_name
    display_name = "%s"
    zone = "all"
    port = 22280
 }
 
 resource "ovh_iploadbalancing_tcp_frontend" "testfrontend" {
-   service_name = "${data.ovh_iploadbalancing.iplb.service_name}"
+   service_name = data.ovh_iploadbalancing.iplb.service_name
    display_name = "%s"
    zone = "all"
    port = "22280,22443"
-   default_farm_id = "${ovh_iploadbalancing_tcp_farm.farm.id}"
+   default_farm_id = ovh_iploadbalancing_tcp_farm.farm.id
 }
 `
