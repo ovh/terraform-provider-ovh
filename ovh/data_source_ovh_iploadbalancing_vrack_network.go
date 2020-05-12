@@ -24,23 +24,6 @@ func dataSourceIpLoadbalancingVrackNetwork() *schema.Resource {
 			},
 
 			//Computed
-			"farm_id": {
-				Type:        schema.TypeList,
-				Description: "Farm id your vRack network is attached to and their type",
-				Computed:    true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"id": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-					},
-				},
-			},
 			"display_name": {
 				Type:        schema.TypeString,
 				Description: "Human readable name for your vrack network",
