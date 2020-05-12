@@ -77,6 +77,7 @@ func resourceIpLoadbalancingTcpFarm() *schema.Resource {
 						"match": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Default:  "default",
 							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
 								err := validateStringEnum(v.(string), []string{"contains", "default", "internal", "matches", "status"})
 								if err != nil {
@@ -104,6 +105,7 @@ func resourceIpLoadbalancingTcpFarm() *schema.Resource {
 						"negate": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							Default:  false,
 						},
 						"pattern": {
 							Type:     schema.TypeString,
@@ -112,6 +114,7 @@ func resourceIpLoadbalancingTcpFarm() *schema.Resource {
 						"force_ssl": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							Default:  false,
 						},
 						"url": {
 							Type:     schema.TypeString,
@@ -165,22 +168,9 @@ func resourceIpLoadbalancingTcpFarmImportState(d *schema.ResourceData, meta inte
 func resourceIpLoadbalancingTcpFarmCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
-	farm := &IpLoadbalancingTcpFarm{
-		Zone:           d.Get("zone").(string),
-		VrackNetworkId: d.Get("vrack_network_id").(int),
-		Port:           d.Get("port").(int),
-		Stickiness:     d.Get("stickiness").(string),
-		Balance:        d.Get("balance").(string),
-		DisplayName:    d.Get("display_name").(string),
-	}
-
-	probe := d.Get("probe").([]interface{})
-	if probe != nil && len(probe) == 1 {
-		farm.Probe = (&IpLoadbalancingFarmBackendProbe{}).FromResource(d, "probe.0")
-	}
-
+	farm := (&IpLoadbalancingFarmCreateOrUpdateOpts{}).FromResource(d)
 	service := d.Get("service_name").(string)
-	resp := &IpLoadbalancingTcpFarm{}
+	resp := &IpLoadbalancingFarm{}
 	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/tcp/farm", service)
 
 	err := config.OVHClient.Post(endpoint, farm, resp)
@@ -196,10 +186,10 @@ func resourceIpLoadbalancingTcpFarmCreate(d *schema.ResourceData, meta interface
 func resourceIpLoadbalancingTcpFarmRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	service := d.Get("service_name").(string)
-	r := &IpLoadbalancingTcpFarm{}
 	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/tcp/farm/%s", service, d.Id())
+	r := &IpLoadbalancingFarm{}
 
-	err := config.OVHClient.Get(endpoint, &r)
+	err := config.OVHClient.Get(endpoint, r)
 	if err != nil {
 		return fmt.Errorf("calling %s:\n\t %s", endpoint, err.Error())
 	}
@@ -224,18 +214,7 @@ func resourceIpLoadbalancingTcpFarmUpdate(d *schema.ResourceData, meta interface
 	service := d.Get("service_name").(string)
 	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/tcp/farm/%s", service, d.Id())
 
-	farm := &IpLoadbalancingTcpFarm{
-		VrackNetworkId: d.Get("vrack_network_id").(int),
-		Port:           d.Get("port").(int),
-		Stickiness:     d.Get("stickiness").(string),
-		Balance:        d.Get("balance").(string),
-		DisplayName:    d.Get("display_name").(string),
-	}
-
-	probe := d.Get("probe").([]interface{})
-	if probe != nil && len(probe) == 1 {
-		farm.Probe = (&IpLoadbalancingFarmBackendProbe{}).FromResource(d, "probe.0")
-	}
+	farm := (&IpLoadbalancingFarmCreateOrUpdateOpts{}).FromResource(d)
 
 	err := config.OVHClient.Put(endpoint, farm, nil)
 	if err != nil {
@@ -249,7 +228,7 @@ func resourceIpLoadbalancingTcpFarmDelete(d *schema.ResourceData, meta interface
 	config := meta.(*Config)
 
 	service := d.Get("service_name").(string)
-	r := &IpLoadbalancingTcpFarm{}
+	r := &IpLoadbalancingFarm{}
 	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/tcp/farm/%s", service, d.Id())
 
 	err := config.OVHClient.Delete(endpoint, &r)

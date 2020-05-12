@@ -5,37 +5,21 @@ import (
 	"os"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-const (
-	testAccIpLoadbalancingTcpFarmConfig = `
-data "ovh_iploadbalancing" "iplb" {
-  service_name = "%s"
-}
-
-resource "ovh_iploadbalancing_tcp_farm" "testfarm" {
-  service_name     = data.ovh_iploadbalancing.iplb.id
-  display_name     = "%s"
-  port             = "%d"
-  zone             = "%s"
-  balance 		   = "roundrobin"
-  probe {
-        interval = 30
-        type = "oco"
-  }
-}
-`
-)
-
 func TestAccIpLoadbalancingTcpFarm_importBasic(t *testing.T) {
+	displayName := acctest.RandomWithPrefix(test_prefix)
+	config := fmt.Sprintf(testAccIpLoadbalancingTcpFarmConfig,
+		os.Getenv("OVH_IPLB_SERVICE"), displayName, 12345, "all")
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheckIpLoadbalancing(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIpLoadbalancingTcpFarmConfig_basic,
+				Config: config,
 			},
 			{
 				ResourceName:      "ovh_iploadbalancing_tcp_farm.testfarm",
@@ -60,6 +44,3 @@ func testAccIpLoadbalancingTcpFarmImportId(resourceName string) resource.ImportS
 		), nil
 	}
 }
-
-var testAccIpLoadbalancingTcpFarmConfig_basic = fmt.Sprintf(testAccIpLoadbalancingTcpFarmConfig,
-	os.Getenv("OVH_IPLB_SERVICE"), "testfarm", 12345, "all")

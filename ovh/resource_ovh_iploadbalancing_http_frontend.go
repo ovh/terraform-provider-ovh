@@ -119,8 +119,8 @@ func resourceIpLoadbalancingHttpFrontendCreate(d *schema.ResourceData, meta inte
 		Zone:          d.Get("zone").(string),
 		AllowedSource: allowedSources,
 		DedicatedIpFo: dedicatedIpFo,
-		Disabled:      getNilBoolPointerFromData(d, "disabled"),
-		Ssl:           getNilBoolPointerFromData(d, "ssl"),
+		Disabled:      getNilBoolPointer(d.Get("disabled")),
+		Ssl:           getNilBoolPointer(d.Get("ssl")),
 		DisplayName:   d.Get("display_name").(string),
 	}
 
@@ -177,8 +177,8 @@ func resourceIpLoadbalancingHttpFrontendUpdate(d *schema.ResourceData, meta inte
 		Zone:          d.Get("zone").(string),
 		AllowedSource: allowedSources,
 		DedicatedIpFo: dedicatedIpFo,
-		Disabled:      getNilBoolPointerFromData(d, "disabled"),
-		Ssl:           getNilBoolPointerFromData(d, "ssl"),
+		Disabled:      getNilBoolPointer(d.Get("disabled")),
+		Ssl:           getNilBoolPointer(d.Get("ssl")),
 		DisplayName:   d.Get("display_name").(string),
 	}
 

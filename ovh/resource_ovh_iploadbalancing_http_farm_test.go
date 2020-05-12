@@ -3,126 +3,71 @@ package ovh
 import (
 	"fmt"
 	"os"
-	"reflect"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-type TestAccIpLoadbalancingHttpFarmBackendProbeResponse struct {
-	Match    string `json:"match"`
-	Port     int    `json:"port"`
-	Interval int    `json:"interval"`
-	Negate   bool   `json:"negate"`
-	Pattern  string `json:"pattern"`
-	ForceSsl bool   `json:"forceSsl"`
-	URL      string `json:"url"`
-	Method   string `json:"method"`
-	Type     string `json:"type"`
+const (
+	testAccIpLoadbalancingHttpFarmConfig = `
+data "ovh_iploadbalancing" "iplb" {
+  service_name = "%s"
 }
-
-type TestAccIpLoadbalancingHttpFarmResponse struct {
-	Zone           string                                             `json:"zone"`
-	VrackNetworkId int                                                `json:"vrackNetworkId"`
-	Port           int                                                `json:"port"`
-	Stickiness     string                                             `json:"stickiness"`
-	FarmId         int                                                `json:"farmId"`
-	Balance        string                                             `json:"balance"`
-	Probe          TestAccIpLoadbalancingHttpFarmBackendProbeResponse `json:"probe"`
-	DisplayName    string                                             `json:"displayName"`
+resource "ovh_iploadbalancing_http_farm" "testfarm" {
+  service_name     = data.ovh_iploadbalancing.iplb.id
+  display_name     = "%s"
+  port             = "%d"
+  zone             = "%s"
+  balance 		   = "roundrobin"
+  probe {
+        interval = 30
+        type = "oco"
+  }
 }
-
-func (r *TestAccIpLoadbalancingHttpFarmResponse) Equals(c *TestAccIpLoadbalancingHttpFarmResponse) bool {
-	r.FarmId = 0
-
-	return reflect.DeepEqual(r, c)
-}
-
-func testAccIpLoadbalancingHttpFarmTestStep(name, zone string, port, probePort, probeInterval int, probeType string) resource.TestStep {
-	expected := &TestAccIpLoadbalancingHttpFarmResponse{
-		Zone:        zone,
-		Port:        port,
-		DisplayName: name,
-		Probe: TestAccIpLoadbalancingHttpFarmBackendProbeResponse{
-			Port:     probePort,
-			Interval: probeInterval,
-			Type:     probeType,
-		},
-	}
-
-	config := fmt.Sprintf(`
-	resource "ovh_iploadbalancing_http_farm" "testfarm" {
-		service_name = "%s"
-		display_name = "%s"
-		port = %d
-		zone = "%s"
-	  
-		probe {
-		  port = %d
-		  interval = %d
-		  type = "%s"
-		}	  
-	}
-	`, os.Getenv("OVH_IPLB_SERVICE"), name, port, zone, probePort, probeInterval, probeType)
-
-	return resource.TestStep{
-		Config: config,
-		Check: resource.ComposeTestCheckFunc(
-			testAccCheckIpLoadbalancingHttpFarmMatches(expected),
-		),
-	}
-}
+`
+)
 
 func TestAccIpLoadbalancingHttpFarmBasicCreate(t *testing.T) {
+	displayName1 := acctest.RandomWithPrefix(test_prefix)
+	displayName2 := acctest.RandomWithPrefix(test_prefix)
+	config1 := fmt.Sprintf(
+		testAccIpLoadbalancingHttpFarmConfig,
+		os.Getenv("OVH_IPLB_SERVICE"),
+		displayName1,
+		12345,
+		"all",
+	)
+	config2 := fmt.Sprintf(
+		testAccIpLoadbalancingHttpFarmConfig,
+		os.Getenv("OVH_IPLB_SERVICE"),
+		displayName2,
+		12346,
+		"all",
+	)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheckIpLoadbalancing(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckIpLoadbalancingHttpFarmDestroy,
+		PreCheck:  func() { testAccPreCheckIpLoadbalancing(t) },
+		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			testAccIpLoadbalancingHttpFarmTestStep("test-farm-v1", "all", 8080, 8888, 35, "http"),
-			testAccIpLoadbalancingHttpFarmTestStep("test-farm-v2", "all", 8080, 9999, 60, "http"),
+			{
+				Config: config1,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm.testfarm", "display_name", displayName1),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm.testfarm", "zone", "all"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm.testfarm", "port", "12345"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm.testfarm", "probe.0.interval", "30"),
+				),
+			},
+			{
+				Config: config2,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm.testfarm", "display_name", displayName2),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm.testfarm", "zone", "all"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm.testfarm", "port", "12346"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm.testfarm", "probe.0.interval", "30"),
+				),
+			},
 		},
 	})
-}
-
-func testAccCheckIpLoadbalancingHttpFarmMatches(expected *TestAccIpLoadbalancingHttpFarmResponse) resource.TestCheckFunc {
-	return func(state *terraform.State) error {
-		name := "ovh_iploadbalancing_http_farm.testfarm"
-		resource, ok := state.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-		config := testAccProvider.Meta().(*Config)
-		endpoint := fmt.Sprintf("/ipLoadbalancing/%s/http/farm/%s", os.Getenv("OVH_IPLB_SERVICE"), resource.Primary.ID)
-		response := &TestAccIpLoadbalancingHttpFarmResponse{}
-		err := config.OVHClient.Get(endpoint, response)
-		if err != nil {
-			return fmt.Errorf("calling GET %s :\n\t %s", endpoint, err.Error())
-		}
-		if !response.Equals(expected) {
-			return fmt.Errorf("%s %s state differs from expected", name, resource.Primary.ID)
-		}
-		return nil
-	}
-}
-
-func testAccCheckIpLoadbalancingHttpFarmDestroy(state *terraform.State) error {
-	leftovers := false
-	for _, resource := range state.RootModule().Resources {
-		if resource.Type != "ovh_iploadbalancing_http_farm" {
-			continue
-		}
-
-		config := testAccProvider.Meta().(*Config)
-		endpoint := fmt.Sprintf("/ipLoadbalancing/%s/http/farm/%s", os.Getenv("OVH_IPLB_SERVICE"), resource.Primary.ID)
-		err := config.OVHClient.Get(endpoint, nil)
-		if err == nil {
-			leftovers = true
-		}
-	}
-	if leftovers {
-		return fmt.Errorf("IpLoadbalancing farm still exists")
-	}
-	return nil
 }

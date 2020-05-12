@@ -89,7 +89,7 @@ func testSweepDomainZoneRedirection(region string) error {
 	return nil
 }
 
-func TestAccOvhDomainZoneRedirection_Basic(t *testing.T) {
+func TestAccDomainZoneRedirection_Basic(t *testing.T) {
 	var redirection OvhDomainZoneRedirection
 	zone := os.Getenv("OVH_ZONE")
 	subdomain := acctest.RandomWithPrefix(test_prefix)
@@ -117,7 +117,7 @@ func TestAccOvhDomainZoneRedirection_Basic(t *testing.T) {
 	})
 }
 
-func TestAccOvhDomainZoneRedirection_Updated(t *testing.T) {
+func TestAccDomainZoneRedirection_Updated(t *testing.T) {
 	redirection := OvhDomainZoneRedirection{}
 	zone := os.Getenv("OVH_ZONE")
 	subdomain := acctest.RandomWithPrefix(test_prefix)

@@ -66,7 +66,7 @@ func testSweepIploadbalancingTcpFrontend(region string) error {
 	return nil
 }
 
-func TestAccOvhIpLoadbalancingTcpFrontend_basic(t *testing.T) {
+func TestAccIpLoadbalancingTcpFrontend_basic(t *testing.T) {
 	iplb := os.Getenv("OVH_IPLB_SERVICE")
 
 	resource.Test(t, resource.TestCase{
@@ -107,7 +107,7 @@ func TestAccOvhIpLoadbalancingTcpFrontend_basic(t *testing.T) {
 	})
 }
 
-func TestAccOvhIpLoadbalancingTcpFrontend_withfarm(t *testing.T) {
+func TestAccIpLoadbalancingTcpFrontend_withfarm(t *testing.T) {
 	iplb := os.Getenv("OVH_IPLB_SERVICE")
 
 	resource.Test(t, resource.TestCase{
