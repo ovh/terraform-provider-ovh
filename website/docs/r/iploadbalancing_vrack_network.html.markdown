@@ -37,7 +37,6 @@ resource "ovh_iploadbalancing_tcp_farm" "testfarm" {
   vrack_network_id = ovh_iploadbalancing_vrack_network.network.vrack_network_id
   zone             = tolist(data.ovh_iploadbalancing.iplb.zone)[0]
 }
-
 ```
 
 ## Argument Reference
@@ -46,7 +45,7 @@ The following arguments are supported:
 
 * `service_name` - (Required) The internal name of your IP load balancing
 * `display_name` - Human readable name for your vrack network
-* `farm_id` - List of existing farm ids your vRack network is attached to
+* `farm_id` - This attribute is there for documentation purpose only and isnt passed to the OVH API as it may conflicts with http/tcp farms `vrack_network_id` attribute
 * `nat_ip` - (Required) An IP block used as a pool of IPs by this Load Balancer to connect to the servers in this private network. The blck must be in the private network and reserved for the Load Balancer
 * `subnet` - (Required) IP block of the private network in the vRack
 * `vlan` - VLAN of the private network in the vRack. 0 if the private network is not in a VLAN
