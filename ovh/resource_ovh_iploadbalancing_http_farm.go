@@ -77,6 +77,7 @@ func resourceIpLoadbalancingHttpFarm() *schema.Resource {
 						"match": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
 								err := validateStringEnum(v.(string), []string{"contains", "default", "internal", "matches", "status"})
 								if err != nil {
@@ -88,6 +89,7 @@ func resourceIpLoadbalancingHttpFarm() *schema.Resource {
 						"port": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							Computed: true,
 						},
 						"interval": {
 							Type:     schema.TypeInt,
@@ -108,6 +110,7 @@ func resourceIpLoadbalancingHttpFarm() *schema.Resource {
 						"pattern": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 						},
 						"force_ssl": {
 							Type:     schema.TypeBool,
@@ -116,10 +119,12 @@ func resourceIpLoadbalancingHttpFarm() *schema.Resource {
 						"url": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 						},
 						"method": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
 								err := validateStringEnum(v.(string), []string{"GET", "HEAD", "OPTIONS", "internal"})
 								if err != nil {
@@ -165,22 +170,9 @@ func resourceIpLoadbalancingHttpFarmImportState(d *schema.ResourceData, meta int
 func resourceIpLoadbalancingHttpFarmCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
-	farm := &IpLoadbalancingHttpFarm{
-		Zone:           d.Get("zone").(string),
-		VrackNetworkId: d.Get("vrack_network_id").(int),
-		Port:           d.Get("port").(int),
-		Stickiness:     d.Get("stickiness").(string),
-		Balance:        d.Get("balance").(string),
-		DisplayName:    d.Get("display_name").(string),
-	}
-
-	probe := d.Get("probe").([]interface{})
-	if probe != nil && len(probe) == 1 {
-		farm.Probe = (&IpLoadbalancingFarmBackendProbe{}).FromResource(d, "probe.0")
-	}
-
+	farm := (&IpLoadbalancingFarmCreateOrUpdateOpts{}).FromResource(d)
 	service := d.Get("service_name").(string)
-	resp := &IpLoadbalancingHttpFarm{}
+	resp := &IpLoadbalancingFarm{}
 	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/http/farm", service)
 
 	err := config.OVHClient.Post(endpoint, farm, resp)
@@ -196,12 +188,12 @@ func resourceIpLoadbalancingHttpFarmCreate(d *schema.ResourceData, meta interfac
 func resourceIpLoadbalancingHttpFarmRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	service := d.Get("service_name").(string)
-	r := &IpLoadbalancingHttpFarm{}
+	r := &IpLoadbalancingFarm{}
 	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/http/farm/%s", service, d.Id())
 
 	err := config.OVHClient.Get(endpoint, &r)
 	if err != nil {
-		return fmt.Errorf("calling %s:\n\t %s", endpoint, err.Error())
+		return fmt.Errorf("calling GET %s:\n\t %s", endpoint, err.Error())
 	}
 
 	probes := make([]map[string]interface{}, 0)
@@ -214,7 +206,10 @@ func resourceIpLoadbalancingHttpFarmRead(d *schema.ResourceData, meta interface{
 	d.Set("port", r.Port)
 	d.Set("balance", r.Balance)
 	d.Set("probe", probes)
-	d.Set("vrack_network_id", r.VrackNetworkId)
+
+	if r.VrackNetworkId != nil {
+		d.Set("vrack_network_id", *r.VrackNetworkId)
+	}
 	d.Set("stickinesss", r.Stickiness)
 
 	return nil
@@ -225,23 +220,13 @@ func resourceIpLoadbalancingHttpFarmUpdate(d *schema.ResourceData, meta interfac
 	service := d.Get("service_name").(string)
 	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/http/farm/%s", service, d.Id())
 
-	farm := &IpLoadbalancingHttpFarm{
-		VrackNetworkId: d.Get("vrack_network_id").(int),
-		Port:           d.Get("port").(int),
-		Stickiness:     d.Get("stickiness").(string),
-		Balance:        d.Get("balance").(string),
-		DisplayName:    d.Get("display_name").(string),
-	}
-
-	probe := d.Get("probe").([]interface{})
-	if probe != nil && len(probe) == 1 {
-		farm.Probe = (&IpLoadbalancingFarmBackendProbe{}).FromResource(d, "probe.0")
-	}
+	farm := (&IpLoadbalancingFarmCreateOrUpdateOpts{}).FromResource(d)
 
 	err := config.OVHClient.Put(endpoint, farm, nil)
 	if err != nil {
-		return fmt.Errorf("calling %s:\n\t %s", endpoint, err.Error())
+		return fmt.Errorf("calling PUT %s:\n\t %s", endpoint, err.Error())
 	}
+
 	return resourceIpLoadbalancingHttpFarmRead(d, meta)
 
 }
@@ -250,12 +235,12 @@ func resourceIpLoadbalancingHttpFarmDelete(d *schema.ResourceData, meta interfac
 	config := meta.(*Config)
 
 	service := d.Get("service_name").(string)
-	r := &IpLoadbalancingHttpFarm{}
+	r := &IpLoadbalancingFarm{}
 	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/http/farm/%s", service, d.Id())
 
 	err := config.OVHClient.Delete(endpoint, &r)
 	if err != nil {
-		return fmt.Errorf("Error calling %s: %s \n", endpoint, err.Error())
+		return fmt.Errorf("calling DELETE %s: %s \n", endpoint, err.Error())
 	}
 
 	d.SetId("")

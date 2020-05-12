@@ -37,7 +37,7 @@ resource "ovh_iploadbalancing_tcp_frontend" "testfrontend" {
 `
 )
 
-func TestAccOvhIpLoadbalancingTcpFrontend_importBasic(t *testing.T) {
+func TestAccIpLoadbalancingTcpFrontend_importBasic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheckIpLoadbalancing(t) },
 		Providers: testAccProviders,

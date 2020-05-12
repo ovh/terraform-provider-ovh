@@ -93,7 +93,7 @@ func testSweepDomainZoneRecord(region string) error {
 	return nil
 }
 
-func TestAccOvhDomainZoneRecord_Basic(t *testing.T) {
+func TestAccDomainZoneRecord_Basic(t *testing.T) {
 	var record OvhDomainZoneRecord
 	zone := os.Getenv("OVH_ZONE")
 	subdomain := acctest.RandomWithPrefix(test_prefix)
@@ -121,7 +121,7 @@ func TestAccOvhDomainZoneRecord_Basic(t *testing.T) {
 	})
 }
 
-func TestAccOvhDomainZoneRecord_Updated(t *testing.T) {
+func TestAccDomainZoneRecord_Updated(t *testing.T) {
 	record := OvhDomainZoneRecord{}
 	zone := os.Getenv("OVH_ZONE")
 	subdomain := acctest.RandomWithPrefix(test_prefix)
@@ -193,7 +193,7 @@ func TestAccOvhDomainZoneRecord_Updated(t *testing.T) {
 	})
 }
 
-func TestAccOvhDomainZoneRecord_updateType(t *testing.T) {
+func TestAccDomainZoneRecord_updateType(t *testing.T) {
 	record := OvhDomainZoneRecord{}
 	zone := os.Getenv("OVH_ZONE")
 	subdomain := acctest.RandomWithPrefix(test_prefix)
