@@ -119,8 +119,8 @@ func resourceIpLoadbalancingTcpFrontendCreate(d *schema.ResourceData, meta inter
 		Zone:          d.Get("zone").(string),
 		AllowedSource: allowedSources,
 		DedicatedIpFo: dedicatedIpFo,
-		Disabled:      getNilBoolPointerFromData(d, "disabled"),
-		Ssl:           getNilBoolPointerFromData(d, "ssl"),
+		Disabled:      getNilBoolPointer(d.Get("disabled")),
+		Ssl:           getNilBoolPointer(d.Get("ssl")),
 		DisplayName:   d.Get("display_name").(string),
 	}
 
@@ -147,7 +147,7 @@ func resourceIpLoadbalancingTcpFrontendRead(d *schema.ResourceData, meta interfa
 
 	err := config.OVHClient.Get(endpoint, &r)
 	if err != nil {
-		return fmt.Errorf("calling %s:\n\t %s", endpoint, err.Error())
+		return fmt.Errorf("calling GET %s:\n\t %s", endpoint, err.Error())
 	}
 	return readIpLoadbalancingTcpFrontend(r, d)
 }
@@ -177,8 +177,8 @@ func resourceIpLoadbalancingTcpFrontendUpdate(d *schema.ResourceData, meta inter
 		Zone:          d.Get("zone").(string),
 		AllowedSource: allowedSources,
 		DedicatedIpFo: dedicatedIpFo,
-		Disabled:      getNilBoolPointerFromData(d, "disabled"),
-		Ssl:           getNilBoolPointerFromData(d, "ssl"),
+		Disabled:      getNilBoolPointer(d.Get("disabled")),
+		Ssl:           getNilBoolPointer(d.Get("ssl")),
 		DisplayName:   d.Get("display_name").(string),
 	}
 
@@ -187,7 +187,7 @@ func resourceIpLoadbalancingTcpFrontendUpdate(d *schema.ResourceData, meta inter
 
 	err := config.OVHClient.Put(endpoint, frontend, nil)
 	if err != nil {
-		return fmt.Errorf("calling %s:\n\t %s", endpoint, err.Error())
+		return fmt.Errorf("calling PUT %s:\n\t %s", endpoint, err.Error())
 	}
 	return nil
 }
@@ -233,7 +233,7 @@ func resourceIpLoadbalancingTcpFrontendDelete(d *schema.ResourceData, meta inter
 
 	err := config.OVHClient.Delete(endpoint, &r)
 	if err != nil {
-		return fmt.Errorf("Error calling %s: %s \n", endpoint, err.Error())
+		return fmt.Errorf("calling DELETE %s: %s \n", endpoint, err.Error())
 	}
 
 	return nil

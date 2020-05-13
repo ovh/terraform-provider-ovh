@@ -3,7 +3,7 @@ module github.com/terraform-providers/terraform-provider-ovh
 require (
 	github.com/gopherjs/gopherjs v0.0.0-20181103185306-d547d1d9531e // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.1
-	github.com/hashicorp/terraform-plugin-sdk v1.0.0
+	github.com/hashicorp/terraform-plugin-sdk v1.12.0
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/ovh/go-ovh v0.0.0-20181109152953-ba5adb4cf014

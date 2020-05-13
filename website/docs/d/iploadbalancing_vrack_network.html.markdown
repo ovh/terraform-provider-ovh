@@ -32,9 +32,6 @@ data ovh_iploadbalancing_vrack_network "lb_network" {
 The following attributes are exported:
 
 * `display_name` - Human readable name for your vrack network
-* `farm_id` - Farm id your vRack network is attached to and their type
-  * `type` - farm type
-  * `id` - farm id
 * `nat_ip` - An IP block used as a pool of IPs by this Load Balancer to connect to the servers in this private network. The blck must be in the private network and reserved for the Load Balancer
 * `subnet` - IP block of the private network in the vRack
 * `vlan` - VLAN of the private network in the vRack. 0 if the private network is not in a VLAN

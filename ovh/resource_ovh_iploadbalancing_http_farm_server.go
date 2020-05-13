@@ -1,9 +1,7 @@
 package ovh
 
 import (
-	"encoding/json"
 	"fmt"
-	"log"
 	"net"
 	"strconv"
 	"strings"
@@ -131,33 +129,33 @@ func resourceIpLoadbalancingHttpFarmServerImportState(d *schema.ResourceData, me
 func resourceIpLoadbalancingHttpFarmServerCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
-	newBackendServer := &IpLoadbalancingHttpFarmServer{
+	newBackendServer := &IpLoadbalancingFarmServerCreateOpts{
 		DisplayName:          getNilStringPointerFromData(d, "display_name"),
 		Address:              d.Get("address").(string),
 		Port:                 getNilIntPointerFromData(d, "port"),
 		ProxyProtocolVersion: getNilStringPointerFromData(d, "proxy_protocol_version"),
 		Chain:                getNilStringPointerFromData(d, "chain"),
 		Weight:               getNilIntPointerFromData(d, "weight"),
-		Probe:                getNilBoolPointerFromData(d, "probe"),
-		Ssl:                  getNilBoolPointerFromData(d, "ssl"),
-		Backup:               getNilBoolPointerFromData(d, "backup"),
+		Probe:                getNilBoolPointer(d.Get("probe")),
+		Ssl:                  getNilBoolPointer(d.Get("ssl")),
+		Backup:               getNilBoolPointer(d.Get("backup")),
 		Status:               d.Get("status").(string),
 	}
 
 	service := d.Get("service_name").(string)
 	farmid := d.Get("farm_id").(int)
-	r := &IpLoadbalancingHttpFarmServer{}
+	r := &IpLoadbalancingFarmServer{}
 	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/http/farm/%d/server", service, farmid)
 
 	err := config.OVHClient.Post(endpoint, newBackendServer, r)
 	if err != nil {
-		return fmt.Errorf("calling %s with %d:\n\t %s", endpoint, farmid, err.Error())
+		return fmt.Errorf("calling POST %s with %d:\n\t %s", endpoint, farmid, err.Error())
 	}
 
 	//set id
 	d.SetId(fmt.Sprintf("%d", r.ServerId))
 
-	return nil
+	return resourceIpLoadbalancingHttpFarmServerRead(d, meta)
 }
 
 func resourceIpLoadbalancingHttpFarmServerRead(d *schema.ResourceData, meta interface{}) error {
@@ -165,37 +163,19 @@ func resourceIpLoadbalancingHttpFarmServerRead(d *schema.ResourceData, meta inte
 
 	service := d.Get("service_name").(string)
 	farmid := d.Get("farm_id").(int)
-	r := &IpLoadbalancingHttpFarmServer{}
+	r := &IpLoadbalancingFarmServer{}
 
 	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/http/farm/%d/server/%s", service, farmid, d.Id())
 
 	err := config.OVHClient.Get(endpoint, r)
 	if err != nil {
-		return fmt.Errorf("calling %s :\n\t %q", endpoint, err)
+		return fmt.Errorf("calling GET %s :\n\t %q", endpoint, err)
 	}
-	log.Printf("[DEBUG] Response object from OVH : %v", r)
 
-	d.Set("probe", *r.Probe)
-	d.Set("ssl", *r.Ssl)
-	d.Set("backup", *r.Backup)
-	d.Set("address", r.Address)
-	if r.DisplayName != nil {
-		d.Set("display_name", *r.DisplayName)
+	// set resource attributes
+	for k, v := range r.ToMap() {
+		d.Set(k, v)
 	}
-	if r.Cookie != nil {
-		d.Set("cookie", *r.Cookie)
-	}
-	if r.Port != nil {
-		d.Set("port", *r.Port)
-	}
-	if r.ProxyProtocolVersion != nil {
-		d.Set("proxy_protocol_version", *r.ProxyProtocolVersion)
-	}
-	if r.Chain != nil {
-		d.Set("chain", *r.Chain)
-	}
-	d.Set("weight", *r.Weight)
-	d.Set("status", r.Status)
 
 	return nil
 }
@@ -203,30 +183,29 @@ func resourceIpLoadbalancingHttpFarmServerRead(d *schema.ResourceData, meta inte
 func resourceIpLoadbalancingHttpFarmServerUpdate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
-	update := &IpLoadbalancingHttpFarmServer{
+	update := &IpLoadbalancingFarmServerUpdateOpts{
 		DisplayName:          getNilStringPointerFromData(d, "display_name"),
-		Address:              d.Get("address").(string),
+		Address:              getNilStringPointerFromData(d, "address"),
 		Port:                 getNilIntPointerFromData(d, "port"),
 		ProxyProtocolVersion: getNilStringPointerFromData(d, "proxy_protocol_version"),
 		Chain:                getNilStringPointerFromData(d, "chain"),
 		Weight:               getNilIntPointerFromData(d, "weight"),
-		Probe:                getNilBoolPointerFromData(d, "probe"),
-		Ssl:                  getNilBoolPointerFromData(d, "ssl"),
-		Backup:               getNilBoolPointerFromData(d, "backup"),
-		Status:               d.Get("status").(string),
+		Probe:                getNilBoolPointer(d.Get("probe")),
+		Ssl:                  getNilBoolPointer(d.Get("ssl")),
+		Backup:               getNilBoolPointer(d.Get("backup")),
+		Status:               getNilStringPointerFromData(d, "status"),
 	}
 
 	service := d.Get("service_name").(string)
 	farmid := d.Get("farm_id").(int)
-	r := &IpLoadbalancingHttpFarmServer{}
+	r := &IpLoadbalancingFarmServer{}
 	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/http/farm/%d/server/%s", service, farmid, d.Id())
-	js, _ := json.Marshal(update)
-	log.Printf("[DEBUG] PUT %s : %v", endpoint, string(js))
+
 	err := config.OVHClient.Put(endpoint, update, r)
 	if err != nil {
-		return fmt.Errorf("calling %s with %d:\n\t %s", endpoint, farmid, err.Error())
+		return fmt.Errorf("calling PUT %s with %d:\n\t %s", endpoint, farmid, err.Error())
 	}
-	return nil
+	return resourceIpLoadbalancingHttpFarmServerRead(d, meta)
 }
 
 func resourceIpLoadbalancingHttpFarmServerDelete(d *schema.ResourceData, meta interface{}) error {
@@ -235,13 +214,14 @@ func resourceIpLoadbalancingHttpFarmServerDelete(d *schema.ResourceData, meta in
 	service := d.Get("service_name").(string)
 	farmid := d.Get("farm_id").(int)
 
-	r := &IpLoadbalancingHttpFarmServer{}
+	r := &IpLoadbalancingFarmServer{}
 	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/http/farm/%d/server/%s", service, farmid, d.Id())
 
 	err := config.OVHClient.Delete(endpoint, r)
 	if err != nil {
-		return fmt.Errorf("calling %s :\n\t %s", endpoint, err.Error())
+		return fmt.Errorf("calling DELETE %s :\n\t %s", endpoint, err.Error())
 	}
 
+	d.SetId("")
 	return nil
 }

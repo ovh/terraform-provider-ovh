@@ -1,4 +1,26 @@
 ## 0.8.0 (Unreleased)
+
+FEATURES:
+
+* __New Datasource:__ `ovh_me_ipxe_script` ([#141](https://github.com/terraform-providers/terraform-provider-ovh/pull/141))
+* __New Datasource:__ `ovh_me_ipxe_scripts` ([#141](https://github.com/terraform-providers/terraform-provider-ovh/pull/141))
+* __New Resource:__ `ovh_me_ipxe_script` ([#141](https://github.com/terraform-providers/terraform-provider-ovh/pull/141))
+
+IMPROVEMENTS:
+
+* Stop failing sweepers if mandatory env vars are missing. ([#142](https://github.com/terraform-providers/terraform-provider-ovh/pull/142))
+* r/iploadbalancing_*: Add importers and tests([#140](https://github.com/terraform-providers/terraform-provider-ovh/pull/140))
+* r/iploadbalancing_tcp_farm, r/iploadbalancing_http_farm: Extend read function to get all values ([#140](https://github.com/terraform-providers/terraform-provider-ovh/pull/140))
+* r/iploadbalancing_http_route: Extend read function to get action value ([#140](https://github.com/terraform-providers/terraform-provider-ovh/pull/140))
+* r/iploadbalancing_http_route_rule: Read all values ([#140](https://github.com/terraform-providers/terraform-provider-ovh/pull/140))
+* r/iploadbalancing_tcp_frontend, r/iploadbalancing_http_frontend: Some code refactoring according to linter ([#140](https://github.com/terraform-providers/terraform-provider-ovh/pull/140))
+
+BUG FIXES:
+
+* r/iploadbalancing_vrack_network: fix sweepers ([#142](https://github.com/terraform-providers/terraform-provider-ovh/pull/142))
+* r/iploadbalancing_tcp_farm, r/iploadbalancing_http_farm: Fix typo in 'oco' probe type ([#140](https://github.com/terraform-providers/terraform-provider-ovh/pull/140))
+* r/iploadbalancing_tcp_farm_server, r/iploadbalancing_http_farm_server: Allow port to have a nil value  ([#140](https://github.com/terraform-providers/terraform-provider-ovh/pull/140))
+
 ## 0.7.0 (March 02, 2020)
 
 FEATURES:
