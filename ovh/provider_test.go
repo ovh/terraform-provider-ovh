@@ -138,8 +138,6 @@ func testAccCheckVRackExists(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error: %q\n", err)
 	}
-	t.Logf("Read VRack %s -> name:'%s', desc:'%s' ", endpoint, r.Name, r.Description)
-
 }
 
 func testAccCheckCloudExists(t *testing.T) {

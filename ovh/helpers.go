@@ -152,7 +152,7 @@ func validateFilesystem(value string) error {
 
 func getNilBoolPointerFromData(data interface{}, id string) *bool {
 	if resourceData, tok := data.(*schema.ResourceData); tok {
-		if val, ok := resourceData.GetOkExists(id); ok {
+		if val, ok := resourceData.GetOk(id); ok {
 			return getNilBoolPointer(val)
 		}
 	} else if mapData, tok := data.(map[string]interface{}); tok {
@@ -166,7 +166,7 @@ func getNilBoolPointerFromData(data interface{}, id string) *bool {
 
 func getNilStringPointerFromData(data interface{}, id string) *string {
 	if resourceData, tok := data.(*schema.ResourceData); tok {
-		if val, ok := resourceData.GetOkExists(id); ok {
+		if val, ok := resourceData.GetOk(id); ok {
 			return getNilStringPointer(val)
 		}
 	} else if mapData, tok := data.(map[string]interface{}); tok {
@@ -180,7 +180,7 @@ func getNilStringPointerFromData(data interface{}, id string) *string {
 
 func getNilIntPointerFromData(data interface{}, id string) *int {
 	if resourceData, tok := data.(*schema.ResourceData); tok {
-		if val, ok := resourceData.GetOkExists(id); ok {
+		if val, ok := resourceData.GetOk(id); ok {
 			return getNilIntPointer(val)
 		}
 	} else if mapData, tok := data.(map[string]interface{}); tok {
@@ -194,7 +194,7 @@ func getNilIntPointerFromData(data interface{}, id string) *int {
 
 func getNilInt64PointerFromData(data interface{}, id string) *int64 {
 	if resourceData, tok := data.(*schema.ResourceData); tok {
-		if val, ok := resourceData.GetOkExists(id); ok {
+		if val, ok := resourceData.GetOk(id); ok {
 			return getNilInt64Pointer(val)
 		}
 	} else if mapData, tok := data.(map[string]interface{}); tok {

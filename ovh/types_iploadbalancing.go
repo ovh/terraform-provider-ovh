@@ -1,6 +1,8 @@
 package ovh
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -42,50 +44,115 @@ type IPLoadbalancingRefreshPending struct {
 
 type IPLoadbalancingRefreshPendings []IPLoadbalancingRefreshPending
 
-type IpLoadbalancingTcpFarmBackendProbe struct {
-	Match    string `json:"match,omitempty"`
-	Port     int    `json:"port,omitempty"`
-	Interval int    `json:"interval,omitempty"`
-	Negate   bool   `json:"negate,omitempty"`
-	Pattern  string `json:"pattern,omitempty"`
-	ForceSsl bool   `json:"forceSsl,omitempty"`
-	URL      string `json:"url,omitempty"`
-	Method   string `json:"method,omitempty"`
-	Type     string `json:"type,omitempty"`
+type IpLoadbalancingFarmCreateOrUpdateOpts struct {
+	Balance        *string                          `json:"balance,omitempty"`
+	DisplayName    *string                          `json:"displayName,omitempty"`
+	Port           *int                             `json:"port,omitempty"`
+	Probe          *IpLoadbalancingFarmBackendProbe `json:"probe,omitempty"`
+	Stickiness     *string                          `json:"stickiness,omitempty"`
+	VrackNetworkId *int64                           `json:"vrackNetworkId,omitempty"`
+	Zone           string                           `json:"zone"`
 }
 
-type IpLoadbalancingTcpFarm struct {
-	FarmId         int                                 `json:"farmId,omitempty"`
-	Zone           string                              `json:"zone,omitempty"`
-	VrackNetworkId int                                 `json:"vrackNetworkId,omitempty"`
-	Port           int                                 `json:"port,omitempty"`
-	Stickiness     string                              `json:"stickiness,omitempty"`
-	Balance        string                              `json:"balance,omitempty"`
-	Probe          *IpLoadbalancingTcpFarmBackendProbe `json:"probe,omitempty"`
-	DisplayName    string                              `json:"displayName,omitempty"`
+func (opts *IpLoadbalancingFarmCreateOrUpdateOpts) FromResource(d *schema.ResourceData) *IpLoadbalancingFarmCreateOrUpdateOpts {
+	opts.Balance = getNilStringPointerFromData(d, "balance")
+	opts.DisplayName = getNilStringPointerFromData(d, "display_name")
+	opts.Port = getNilIntPointerFromData(d, "port")
+	opts.Stickiness = getNilStringPointerFromData(d, "stickiness")
+	opts.VrackNetworkId = getNilInt64PointerFromData(d, "vrack_network_id")
+	opts.Zone = d.Get("zone").(string)
+
+	probe := d.Get("probe").([]interface{})
+	if probe != nil && len(probe) == 1 {
+		opts.Probe = (&IpLoadbalancingFarmBackendProbe{}).FromResource(d, "probe.0")
+	}
+
+	return opts
 }
 
-type IpLoadbalancingHttpFarmBackendProbe struct {
-	Match    string `json:"match,omitempty"`
-	Port     int    `json:"port,omitempty"`
-	Interval int    `json:"interval,omitempty"`
-	Negate   bool   `json:"negate,omitempty"`
-	Pattern  string `json:"pattern,omitempty"`
-	ForceSsl bool   `json:"forceSsl,omitempty"`
-	URL      string `json:"url,omitempty"`
-	Method   string `json:"method,omitempty"`
-	Type     string `json:"type,omitempty"`
+type IpLoadbalancingFarm struct {
+	Balance        *string                          `json:"balance,omitempty"`
+	DisplayName    *string                          `json:"displayName,omitempty"`
+	FarmId         int                              `json:"farmId"`
+	Port           *int                             `json:"port,omitempty"`
+	Probe          *IpLoadbalancingFarmBackendProbe `json:"probe,omitempty"`
+	Stickiness     *string                          `json:"stickiness,omitempty"`
+	VrackNetworkId *int64                           `json:"vrackNetworkId,omitempty"`
+	Zone           string                           `json:"zone"`
 }
 
-type IpLoadbalancingHttpFarm struct {
-	FarmId         int                                  `json:"farmId,omitempty"`
-	Zone           string                               `json:"zone,omitempty"`
-	VrackNetworkId int                                  `json:"vrackNetworkId,omitempty"`
-	Port           int                                  `json:"port,omitempty"`
-	Stickiness     string                               `json:"stickiness,omitempty"`
-	Balance        string                               `json:"balance,omitempty"`
-	Probe          *IpLoadbalancingHttpFarmBackendProbe `json:"probe,omitempty"`
-	DisplayName    string                               `json:"displayName,omitempty"`
+type IpLoadbalancingFarmBackendProbe struct {
+	ForceSsl *bool   `json:"forceSsl"`
+	Interval *int    `json:"interval,omitempty"`
+	Match    *string `json:"match,omitempty"`
+	Method   *string `json:"method,omitempty"`
+	Negate   *bool   `json:"negate"`
+	Pattern  *string `json:"pattern,omitempty"`
+	Port     *int    `json:"port,omitempty"`
+	Type     *string `json:"type,omitempty"`
+	URL      *string `json:"url,omitempty"`
+}
+
+func (opts *IpLoadbalancingFarmBackendProbe) FromResource(d *schema.ResourceData, parent string) *IpLoadbalancingFarmBackendProbe {
+	opts.Match = getNilStringPointerFromData(d, fmt.Sprintf("%s.match", parent))
+	opts.Port = getNilIntPointerFromData(d, fmt.Sprintf("%s.port", parent))
+	opts.Interval = getNilIntPointerFromData(d, fmt.Sprintf("%s.interval", parent))
+	opts.Negate = getNilBoolPointerFromData(d, fmt.Sprintf("%s.negate", parent))
+	opts.Pattern = getNilStringPointerFromData(d, fmt.Sprintf("%s.pattern", parent))
+	opts.ForceSsl = getNilBoolPointerFromData(d, fmt.Sprintf("%s.force_ssl", parent))
+	opts.URL = getNilStringPointerFromData(d, fmt.Sprintf("%s.url", parent))
+	opts.Method = getNilStringPointerFromData(d, fmt.Sprintf("%s.method", parent))
+	opts.Type = getNilStringPointerFromData(d, fmt.Sprintf("%s.type", parent))
+	return opts
+}
+
+func (v IpLoadbalancingFarmBackendProbe) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+
+	isNil := true
+	if v.Match != nil {
+		isNil = false
+		obj["match"] = *v.Match
+	}
+	if v.Port != nil {
+		isNil = false
+		obj["port"] = *v.Port
+	}
+	if v.Interval != nil {
+		isNil = false
+		obj["interval"] = *v.Interval
+	}
+	if v.Negate != nil {
+		isNil = false
+		obj["negate"] = *v.Negate
+	}
+
+	if v.Pattern != nil {
+		isNil = false
+		obj["pattern"] = *v.Pattern
+	}
+	if v.ForceSsl != nil {
+		isNil = false
+		obj["force_ssl"] = *v.ForceSsl
+	}
+	if v.URL != nil {
+		isNil = false
+		obj["url"] = *v.URL
+	}
+	if v.Method != nil {
+		isNil = false
+		obj["method"] = *v.Method
+	}
+	if v.Type != nil {
+		isNil = false
+		obj["type"] = *v.Type
+	}
+
+	if isNil {
+		return nil
+	}
+
+	return obj
 }
 
 // IPLoadbalancingRouteHTTPAction Action triggered when all rules match
@@ -113,9 +180,9 @@ type IpLoadbalancingTcpFrontend struct {
 	DedicatedIpFo []string `json:"dedicatedIpfo,omitempty"`
 	DefaultFarmId *int     `json:"defaultFarmId,omitempty"`
 	DefaultSslId  *int     `json:"defaultSslId,omitempty"`
-	Disabled      *bool    `json:"disabled"`
-	Ssl           *bool    `json:"ssl"`
-	DisplayName   string   `json:"displayName,omitempty"`
+	Disabled      *bool    `json:"disabled,omitempty"`
+	Ssl           *bool    `json:"ssl,omitempty"`
+	DisplayName   string   `json:"displayName"`
 }
 
 type IpLoadbalancingHttpFrontend struct {
@@ -126,9 +193,9 @@ type IpLoadbalancingHttpFrontend struct {
 	DedicatedIpFo []string `json:"dedicatedIpfo,omitempty"`
 	DefaultFarmId *int     `json:"defaultFarmId,omitempty"`
 	DefaultSslId  *int     `json:"defaultSslId,omitempty"`
-	Disabled      *bool    `json:"disabled"`
-	Ssl           *bool    `json:"ssl"`
-	DisplayName   string   `json:"displayName,omitempty"`
+	Disabled      *bool    `json:"disabled,omitempty"`
+	Ssl           *bool    `json:"ssl,omitempty"`
+	DisplayName   string   `json:"displayName"`
 }
 
 //IPLoadbalancingRouteHTTPRule HTTP Route Rule
@@ -143,38 +210,85 @@ type IPLoadbalancingRouteHTTPRule struct {
 	SubField    string `json:"subField,omitempty"`    //Name of sub-field, if applicable. This may be a Cookie or Header name for instance
 }
 
-type IpLoadbalancingTcpFarmServer struct {
-	BackendId            int     `json:"backendId,omitempty"`
-	ServerId             int     `json:"serverId,omitempty"`
-	FarmId               int     `json:"farmId,omitempty"`
-	DisplayName          *string `json:"displayName,omitempty"`
+type IpLoadbalancingFarmServerCreateOpts struct {
 	Address              string  `json:"address"`
-	Cookie               *string `json:"cookie,omitempty"`
-	Port                 *int    `json:"port"`
-	ProxyProtocolVersion *string `json:"proxyProtocolVersion"`
-	Chain                *string `json:"chain"`
-	Weight               *int    `json:"weight"`
-	Probe                *bool   `json:"probe"`
-	Ssl                  *bool   `json:"ssl"`
 	Backup               *bool   `json:"backup"`
+	Chain                *string `json:"chain,omitempty"`
+	Cookie               *string `json:"cookie,omitempty"`
+	DisplayName          *string `json:"displayName,omitempty"`
+	Port                 *int    `json:"port,omitempty"`
+	Probe                *bool   `json:"probe"`
+	ProxyProtocolVersion *string `json:"proxyProtocolVersion,omitempty"`
+	Ssl                  *bool   `json:"ssl"`
 	Status               string  `json:"status"`
+	Weight               *int    `json:"weight,omitempty"`
 }
 
-type IpLoadbalancingHttpFarmServer struct {
-	BackendId            int     `json:"backendId,omitempty"`
-	ServerId             int     `json:"serverId,omitempty"`
-	FarmId               int     `json:"farmId,omitempty"`
-	DisplayName          *string `json:"displayName,omitempty"`
-	Address              string  `json:"address"`
-	Cookie               *string `json:"cookie,omitempty"`
-	Port                 *int    `json:"port"`
-	ProxyProtocolVersion *string `json:"proxyProtocolVersion"`
-	Chain                *string `json:"chain"`
-	Weight               *int    `json:"weight"`
-	Probe                *bool   `json:"probe"`
-	Ssl                  *bool   `json:"ssl"`
+type IpLoadbalancingFarmServerUpdateOpts struct {
+	Address              *string `json:"address"`
 	Backup               *bool   `json:"backup"`
+	Chain                *string `json:"chain"`
+	Cookie               *string `json:"cookie,omitempty"`
+	DisplayName          *string `json:"displayName"`
+	Port                 *int    `json:"port,omitempty"`
+	Probe                *bool   `json:"probe"`
+	ProxyProtocolVersion *string `json:"proxyProtocolVersion"`
+	Ssl                  *bool   `json:"ssl"`
+	Status               *string `json:"status"`
+	Weight               *int    `json:"weight,omitempty"`
+}
+
+type IpLoadbalancingFarmServer struct {
+	Address              string  `json:"address"`
+	Backup               *bool   `json:"backup"`
+	Chain                *string `json:"chain"`
+	Cookie               *string `json:"cookie"`
+	DisplayName          *string `json:"displayName"`
+	FarmId               int     `json:"backendId"`
+	Port                 *int    `json:"port"`
+	Probe                *bool   `json:"probe"`
+	ProxyProtocolVersion *string `json:"proxyProtocolVersion"`
+	ServerId             int     `json:"serverId"`
+	Ssl                  *bool   `json:"ssl"`
 	Status               string  `json:"status"`
+	Weight               *int    `json:"weight"`
+}
+
+func (v IpLoadbalancingFarmServer) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+
+	obj["address"] = v.Address
+	obj["backup"] = v.Backup
+	obj["farm_id"] = v.FarmId
+	obj["probe"] = v.Probe
+	obj["ssl"] = v.Ssl
+	obj["status"] = v.Status
+
+	if v.Chain != nil {
+		obj["chain"] = *v.Chain
+	}
+
+	if v.Cookie != nil {
+		obj["cookie"] = *v.Cookie
+	}
+
+	if v.DisplayName != nil {
+		obj["display_name"] = *v.DisplayName
+	}
+
+	if v.Port != nil {
+		obj["port"] = *v.Port
+	}
+
+	if v.ProxyProtocolVersion != nil {
+		obj["proxy_protocol_version"] = *v.ProxyProtocolVersion
+	}
+
+	if v.Weight != nil {
+		obj["weight"] = *v.Weight
+	}
+
+	return obj
 }
 
 type IpLoadbalancingDefinedFarm struct {
@@ -190,12 +304,11 @@ func (v IpLoadbalancingDefinedFarm) ToMap() map[string]interface{} {
 }
 
 type IpLoadbalancingVrackNetwork struct {
-	Subnet         string                       `json:"subnet"`
-	Vlan           int64                        `json:"vlan"`
-	VrackNetworkId int64                        `json:"vrackNetworkId"`
-	FarmId         []IpLoadbalancingDefinedFarm `json:"farmId`
-	DisplayName    *string                      `json:"displayName,omitempty"`
-	NatIp          string                       `json:"natIp"`
+	Subnet         string  `json:"subnet"`
+	Vlan           int64   `json:"vlan"`
+	VrackNetworkId int64   `json:"vrackNetworkId"`
+	DisplayName    *string `json:"displayName,omitempty"`
+	NatIp          string  `json:"natIp"`
 }
 
 func (v IpLoadbalancingVrackNetwork) ToMap() map[string]interface{} {
@@ -209,21 +322,14 @@ func (v IpLoadbalancingVrackNetwork) ToMap() map[string]interface{} {
 		obj["display_name"] = *v.DisplayName
 	}
 
-	ids := make([]interface{}, len(v.FarmId))
-	for i, farm := range v.FarmId {
-		ids[i] = farm.ToMap()
-	}
-	obj["farm_id"] = ids
-
 	return obj
 }
 
 type IpLoadbalancingVrackNetworkCreateOpts struct {
-	Subnet      string   `json:"subnet"`
-	Vlan        *int64   `json:"vlan,omitempty"`
-	FarmId      *[]int64 `json:"farmId,omitempty"`
-	DisplayName *string  `json:"displayName,omitempty"`
-	NatIp       string   `json:"natIp"`
+	Subnet      string  `json:"subnet"`
+	Vlan        *int64  `json:"vlan,omitempty"`
+	DisplayName *string `json:"displayName,omitempty"`
+	NatIp       string  `json:"natIp"`
 }
 
 func (opts *IpLoadbalancingVrackNetworkCreateOpts) FromResource(d *schema.ResourceData) *IpLoadbalancingVrackNetworkCreateOpts {
@@ -231,16 +337,6 @@ func (opts *IpLoadbalancingVrackNetworkCreateOpts) FromResource(d *schema.Resour
 	opts.NatIp = d.Get("nat_ip").(string)
 	opts.DisplayName = getNilStringPointerFromData(d, "display_name")
 	opts.Vlan = getNilInt64PointerFromData(d, "vlan")
-
-	if val, ok := d.GetOkExists("farm_id"); ok {
-		farmId := val.([]interface{})
-		arr := make([]int64, len(farmId))
-		for i, id := range farmId {
-			arr[i] = int64(id.(int))
-		}
-
-		opts.FarmId = &arr
-	}
 
 	return opts
 }
@@ -255,21 +351,6 @@ func (opts *IpLoadbalancingVrackNetworkUpdateOpts) FromResource(d *schema.Resour
 	opts.NatIp = getNilStringPointerFromData(d, "nat_ip")
 	opts.DisplayName = getNilStringPointerFromData(d, "display_name")
 	opts.Vlan = getNilInt64PointerFromData(d, "vlan")
-
-	return opts
-}
-
-type IpLoadbalancingVrackNetworkFarmIdUpdateOpts struct {
-	FarmId []int64 `json:"farmId"`
-}
-
-func (opts *IpLoadbalancingVrackNetworkFarmIdUpdateOpts) FromResource(d *schema.ResourceData) *IpLoadbalancingVrackNetworkFarmIdUpdateOpts {
-	opts.FarmId = []int64{}
-
-	if val, ok := d.GetOkExists("farm_id"); ok {
-		farmId := val.([]int64)
-		opts.FarmId = farmId
-	}
 
 	return opts
 }

@@ -68,14 +68,16 @@ func resourceIpLoadbalancingTcpFarm() *schema.Resource {
 				ForceNew: true,
 			},
 			"probe": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: false,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"match": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Default:  "default",
 							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
 								err := validateStringEnum(v.(string), []string{"contains", "default", "internal", "matches", "status"})
 								if err != nil {
@@ -103,6 +105,7 @@ func resourceIpLoadbalancingTcpFarm() *schema.Resource {
 						"negate": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							Default:  false,
 						},
 						"pattern": {
 							Type:     schema.TypeString,
@@ -111,6 +114,7 @@ func resourceIpLoadbalancingTcpFarm() *schema.Resource {
 						"force_ssl": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							Default:  false,
 						},
 						"url": {
 							Type:     schema.TypeString,
@@ -164,33 +168,9 @@ func resourceIpLoadbalancingTcpFarmImportState(d *schema.ResourceData, meta inte
 func resourceIpLoadbalancingTcpFarmCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
-	probe := &IpLoadbalancingTcpFarmBackendProbe{}
-	probeSet := d.Get("probe").(*schema.Set)
-	if probeSet.Len() > 0 {
-		probeData := probeSet.List()[0].(map[string]interface{})
-		probe.Match = probeData["match"].(string)
-		probe.Port = probeData["port"].(int)
-		probe.Interval = probeData["interval"].(int)
-		probe.Negate = probeData["negate"].(bool)
-		probe.Pattern = probeData["pattern"].(string)
-		probe.ForceSsl = probeData["force_ssl"].(bool)
-		probe.URL = probeData["url"].(string)
-		probe.Method = probeData["method"].(string)
-		probe.Type = probeData["type"].(string)
-	}
-
-	farm := &IpLoadbalancingTcpFarm{
-		Zone:           d.Get("zone").(string),
-		VrackNetworkId: d.Get("vrack_network_id").(int),
-		Port:           d.Get("port").(int),
-		Stickiness:     d.Get("stickiness").(string),
-		Balance:        d.Get("balance").(string),
-		Probe:          probe,
-		DisplayName:    d.Get("display_name").(string),
-	}
-
+	farm := (&IpLoadbalancingFarmCreateOrUpdateOpts{}).FromResource(d)
 	service := d.Get("service_name").(string)
-	resp := &IpLoadbalancingTcpFarm{}
+	resp := &IpLoadbalancingFarm{}
 	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/tcp/farm", service)
 
 	err := config.OVHClient.Post(endpoint, farm, resp)
@@ -200,31 +180,24 @@ func resourceIpLoadbalancingTcpFarmCreate(d *schema.ResourceData, meta interface
 
 	d.SetId(fmt.Sprintf("%d", resp.FarmId))
 
-	return nil
+	return resourceIpLoadbalancingTcpFarmRead(d, meta)
 }
 
 func resourceIpLoadbalancingTcpFarmRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	service := d.Get("service_name").(string)
-	r := &IpLoadbalancingTcpFarm{}
 	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/tcp/farm/%s", service, d.Id())
+	r := &IpLoadbalancingFarm{}
 
-	err := config.OVHClient.Get(endpoint, &r)
+	err := config.OVHClient.Get(endpoint, r)
 	if err != nil {
 		return fmt.Errorf("calling %s:\n\t %s", endpoint, err.Error())
 	}
+
 	probes := make([]map[string]interface{}, 0)
-	probe := make(map[string]interface{})
-	probe["match"] = r.Probe.Match
-	probe["port"] = r.Probe.Port
-	probe["interval"] = r.Probe.Interval
-	probe["negate"] = r.Probe.Negate
-	probe["pattern"] = r.Probe.Pattern
-	probe["force_ssl"] = r.Probe.ForceSsl
-	probe["url"] = r.Probe.URL
-	probe["method"] = r.Probe.Method
-	probe["type"] = r.Probe.Type
-	probes = append(probes, probe)
+	if r.Probe != nil && r.Probe.ToMap() != nil {
+		probes = append(probes, r.Probe.ToMap())
+	}
 
 	d.Set("display_name", r.DisplayName)
 	d.Set("zone", r.Zone)
@@ -241,43 +214,21 @@ func resourceIpLoadbalancingTcpFarmUpdate(d *schema.ResourceData, meta interface
 	service := d.Get("service_name").(string)
 	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/tcp/farm/%s", service, d.Id())
 
-	probe := &IpLoadbalancingTcpFarmBackendProbe{}
-	probeSet := d.Get("probe").(*schema.Set)
-	if probeSet.Len() > 0 {
-		probeData := probeSet.List()[0].(map[string]interface{})
-		probe.Match = probeData["match"].(string)
-		probe.Port = probeData["port"].(int)
-		probe.Interval = probeData["interval"].(int)
-		probe.Negate = probeData["negate"].(bool)
-		probe.Pattern = probeData["pattern"].(string)
-		probe.ForceSsl = probeData["force_ssl"].(bool)
-		probe.URL = probeData["url"].(string)
-		probe.Method = probeData["method"].(string)
-		probe.Type = probeData["type"].(string)
-	}
-
-	farm := &IpLoadbalancingTcpFarm{
-		VrackNetworkId: d.Get("vrack_network_id").(int),
-		Port:           d.Get("port").(int),
-		Stickiness:     d.Get("stickiness").(string),
-		Balance:        d.Get("balance").(string),
-		Probe:          probe,
-		DisplayName:    d.Get("display_name").(string),
-	}
+	farm := (&IpLoadbalancingFarmCreateOrUpdateOpts{}).FromResource(d)
 
 	err := config.OVHClient.Put(endpoint, farm, nil)
 	if err != nil {
 		return fmt.Errorf("calling %s:\n\t %s", endpoint, err.Error())
 	}
 
-	return nil
+	return resourceIpLoadbalancingTcpFarmRead(d, meta)
 }
 
 func resourceIpLoadbalancingTcpFarmDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
 	service := d.Get("service_name").(string)
-	r := &IpLoadbalancingTcpFarm{}
+	r := &IpLoadbalancingFarm{}
 	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/tcp/farm/%s", service, d.Id())
 
 	err := config.OVHClient.Delete(endpoint, &r)
@@ -285,5 +236,6 @@ func resourceIpLoadbalancingTcpFarmDelete(d *schema.ResourceData, meta interface
 		return fmt.Errorf("Error calling %s: %s \n", endpoint, err.Error())
 	}
 
+	d.SetId("")
 	return nil
 }

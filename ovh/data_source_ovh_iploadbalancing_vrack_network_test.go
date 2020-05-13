@@ -21,7 +21,6 @@ func TestAccIpLoadbalancingVrackNetworkDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.ovh_iploadbalancing_vrack_network.network", "vlan", testAccIpLoadbalancingVrackNetworkVlan1001),
 					resource.TestCheckResourceAttrSet("data.ovh_iploadbalancing_vrack_network.network", "id"),
 					resource.TestCheckResourceAttr("data.ovh_iploadbalancing_vrack_network.network", "nat_ip", testAccIpLoadbalancingVrackNetworkNatIp),
-					resource.TestCheckResourceAttrSet("data.ovh_iploadbalancing_vrack_network.network", "farm_id.#"),
 				),
 			},
 		},
