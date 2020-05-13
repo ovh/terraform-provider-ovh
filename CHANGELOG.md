@@ -1,5 +1,9 @@
 ## 0.8.0 (Unreleased)
 
+NOTES/DEPRECATIONS:
+
+* `*/ovh_iploadbalancing_vrack_network_*`: Deprecate `farm_id` attribute as it conflicts with other resources. ([#144](https://github.com/terraform-providers/terraform-provider-ovh/issues/144))
+
 FEATURES:
 
 * __New Datasource:__ `ovh_me_ipxe_script` ([#141](https://github.com/terraform-providers/terraform-provider-ovh/pull/141))
