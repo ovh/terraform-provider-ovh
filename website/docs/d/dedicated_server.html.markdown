@@ -32,6 +32,7 @@ In addition, the following attributes are exported:
 * `commercial_range` - dedicater server commercial range
 * `datacenter` - dedicated datacenter localisation (bhs1,bhs2,...)
 * `ip` - dedicated server ip (IPv4)
+* `ips` - dedicated server ip blocks
 * `link_speed` - link speed of the server
 * `monitoring` - Icmp monitoring state
 * `name` - dedicated server name
