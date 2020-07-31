@@ -43,6 +43,7 @@ func Provider() terraform.ResourceProvider {
 		DataSourcesMap: map[string]*schema.Resource{
 			"ovh_cloud_region":                     dataSourceCloudRegion(),
 			"ovh_cloud_regions":                    dataSourceCloudRegions(),
+			"ovh_dedicated_ceph":                   dataSourceDedicatedCeph(),
 			"ovh_dedicated_installation_templates": dataSourceDedicatedInstallationTemplates(),
 			"ovh_dedicated_server":                 dataSourceDedicatedServer(),
 			"ovh_dedicated_server_boots":           dataSourceDedicatedServerBoots(),
@@ -73,6 +74,7 @@ func Provider() terraform.ResourceProvider {
 			"ovh_cloud_network_private":                                   resourceCloudNetworkPrivate(),
 			"ovh_cloud_network_private_subnet":                            resourceCloudNetworkPrivateSubnet(),
 			"ovh_cloud_user":                                              resourceCloudUser(),
+			"ovh_dedicated_ceph_acl":                                      resourceDedicatedCephACL(),
 			"ovh_dedicated_server_install_task":                           resourceDedicatedServerInstallTask(),
 			"ovh_dedicated_server_reboot_task":                            resourceDedicatedServerRebootTask(),
 			"ovh_dedicated_server_update":                                 resourceDedicatedServerUpdate(),
