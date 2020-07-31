@@ -21,7 +21,6 @@ resource "ovh_dedicated_ceph_acl" "my-acl" {
   service_name = data.ovh_dedicated_ceph.my-ceph.id
   network      = "1.2.3.4"
   netmask      = "255.255.255.255"
-  family       = "IPv4"
 }
 ```
 
@@ -32,7 +31,6 @@ The following arguments are supported:
 * `service_name` - (Required) The internal name of your dedicated CEPH
 * `network` - (Required) The network IP to authorize 
 * `netmask` - (Required) The network mask to apply
-* `family` - (Required) IP family. `IPv4` or `IPv6`
 
 ## Attributes Reference
 
@@ -41,4 +39,4 @@ The following attributes are exported:
 * `service_name` - See Argument Reference above.
 * `network` - See Argument Reference above.
 * `netmask` - See Argument Reference above.
-* `family` - See Argument Reference above.
+* `family` - IP family. `IPv4` or `IPv6`

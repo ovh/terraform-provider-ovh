@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"log"
 	"strings"
 	"time"
 )
@@ -105,13 +104,11 @@ func resourceDedicatedCephACLCreate(d *schema.ResourceData, meta interface{}) er
 		Target: []string{"DONE"},
 		Refresh: func() (interface{}, string, error) {
 			url = fmt.Sprintf("/dedicated/ceph/%s/task/%s", serviceName, taskId)
-			log.Printf("[DEBUG] Calling %s", url)
 			var stateResp []DedicatedCephTask
 			err := config.OVHClient.Get(url, &stateResp)
 			if err != nil {
 				return nil, "", err
 			}
-			log.Printf("[DEBUG] Task %s", stateResp)
 			return d, stateResp[0].State, nil
 		},
 		Timeout:    10 * time.Minute,
@@ -129,10 +126,8 @@ func resourceDedicatedCephACLCreate(d *schema.ResourceData, meta interface{}) er
 	if err != nil {
 		return err
 	}
-	log.Printf("[DEBUG] ACL %v", acls)
 	found := false
 	for _, item := range acls {
-		log.Printf("[DEBUG] ACL %v for netmask %s and net %s", item, d.Get("netmask"), d.Get("network"))
 		if item.Netmask == d.Get("netmask") && item.Network == d.Get("network") {
 			d.SetId(fmt.Sprintf("%d", item.Id))
 			found = true
@@ -182,7 +177,6 @@ func resourceDedicatedCephACLDelete(d *schema.ResourceData, meta interface{}) er
 			if err != nil {
 				return nil, "", err
 			}
-			log.Printf("[DEBUG] Delete task %s", stateResp)
 			return d, stateResp[0].State, nil
 		},
 		Timeout:    10 * time.Minute,
