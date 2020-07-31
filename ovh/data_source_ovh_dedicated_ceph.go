@@ -15,7 +15,7 @@ func dataSourceDedicatedCeph() *schema.Resource {
 				Optional: false,
 				Computed: true,
 				Elem: &schema.Schema{
-					Type:     schema.TypeString,
+					Type: schema.TypeString,
 				},
 			},
 			"ceph_version": {
