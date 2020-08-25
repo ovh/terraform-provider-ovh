@@ -11,21 +11,44 @@ import (
 
 var testAccCloudUserConfig = fmt.Sprintf(`
 resource "ovh_cloud_user" "user" {
-	project_id  = "%s"
+ service_name = "%s"
+ description  = "my user for acceptance tests"
+}
+`, os.Getenv("OVH_PUBLIC_CLOUD"))
+
+var testAccCloudUserWithRoleConfig = fmt.Sprintf(`
+resource "ovh_cloud_user" "user" {
+ service_name = "%s"
+ description  = "my user for acceptance tests"
+ role_name    = "administrator"
+}
+`, os.Getenv("OVH_PUBLIC_CLOUD"))
+
+var testAccCloudUserWithRolesConfig = fmt.Sprintf(`
+resource "ovh_cloud_user" "user" {
+ service_name = "%s"
+ description  = "my user for acceptance tests"
+ role_names   = ["administrator", "compute_operator"]
+}
+`, os.Getenv("OVH_PUBLIC_CLOUD"))
+
+var testAccCloudUserDeprecatedConfig = fmt.Sprintf(`
+resource "ovh_cloud_user" "user" {
+  project_id  = "%s"
   description = "my user for acceptance tests"
 }
 `, os.Getenv("OVH_PUBLIC_CLOUD"))
 
 func TestAccCloudUser_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheckCloud(t); testAccCheckCloudExists(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckCloudUserDestroy,
+		PreCheck:  func() { testAccPreCheckCloud(t); testAccCheckCloudExists(t) },
+		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCloudUserConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudUserExists("ovh_cloud_user.user", t),
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_user.user", "description", "my user for acceptance tests"),
 					testAccCheckCloudUserOpenRC("ovh_cloud_user.user", t),
 				),
 			},
@@ -33,25 +56,59 @@ func TestAccCloudUser_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckCloudUserExists(n string, t *testing.T) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		config := testAccProvider.Meta().(*Config)
+func TestAccCloudUserDeprecated_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheckCloud(t); testAccCheckCloudExists(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCloudUserDeprecatedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_user.user", "description", "my user for acceptance tests"),
+					testAccCheckCloudUserOpenRC("ovh_cloud_user.user", t),
+				),
+			},
+		},
+	})
+}
 
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
+func TestAccCloudUser_withRole(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheckCloud(t); testAccCheckCloudExists(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCloudUserWithRoleConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_user.user", "description", "my user for acceptance tests"),
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_user.user", "roles.0.name", "administrator"),
+					testAccCheckCloudUserOpenRC("ovh_cloud_user.user", t),
+				),
+			},
+		},
+	})
+}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		if rs.Primary.Attributes["project_id"] == "" {
-			return fmt.Errorf("No Project ID is set")
-		}
-
-		return cloudUserExists(rs.Primary.Attributes["project_id"], rs.Primary.ID, config.OVHClient)
-	}
+func TestAccCloudUser_withRoles(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheckCloud(t); testAccCheckCloudExists(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCloudUserWithRolesConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_user.user", "description", "my user for acceptance tests"),
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_user.user", "roles.#", "2"),
+					testAccCheckCloudUserOpenRC("ovh_cloud_user.user", t),
+				),
+			},
+		},
+	})
 }
 
 func testAccCheckCloudUserOpenRC(n string, t *testing.T) resource.TestCheckFunc {
@@ -83,20 +140,4 @@ func testAccCheckCloudUserOpenRC(n string, t *testing.T) resource.TestCheckFunc 
 
 		return nil
 	}
-}
-
-func testAccCheckCloudUserDestroy(s *terraform.State) error {
-	config := testAccProvider.Meta().(*Config)
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "ovh_cloud_user" {
-			continue
-		}
-
-		err := cloudUserExists(rs.Primary.Attributes["project_id"], rs.Primary.ID, config.OVHClient)
-		if err == nil {
-			return fmt.Errorf("VRack > Public Cloud User still exists")
-		}
-
-	}
-	return nil
 }

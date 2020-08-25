@@ -271,7 +271,7 @@ func CheckDeleted(d *schema.ResourceData, err error, endpoint string) error {
 }
 
 func stringsFromSchema(d *schema.ResourceData, id string) []string {
-	var xs []string
+	xs := []string{}
 	if v := d.Get(id); v != nil {
 		rs := v.(*schema.Set).List()
 		if len(rs) > 0 {
