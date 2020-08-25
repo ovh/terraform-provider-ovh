@@ -3,7 +3,8 @@ package ovh
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-ovh/ovh/helpers"
 )
 
 type IpLoadbalancing struct {
@@ -55,11 +56,11 @@ type IpLoadbalancingFarmCreateOrUpdateOpts struct {
 }
 
 func (opts *IpLoadbalancingFarmCreateOrUpdateOpts) FromResource(d *schema.ResourceData) *IpLoadbalancingFarmCreateOrUpdateOpts {
-	opts.Balance = getNilStringPointerFromData(d, "balance")
-	opts.DisplayName = getNilStringPointerFromData(d, "display_name")
-	opts.Port = getNilIntPointerFromData(d, "port")
-	opts.Stickiness = getNilStringPointerFromData(d, "stickiness")
-	opts.VrackNetworkId = getNilInt64PointerFromData(d, "vrack_network_id")
+	opts.Balance = helpers.GetNilStringPointerFromData(d, "balance")
+	opts.DisplayName = helpers.GetNilStringPointerFromData(d, "display_name")
+	opts.Port = helpers.GetNilIntPointerFromData(d, "port")
+	opts.Stickiness = helpers.GetNilStringPointerFromData(d, "stickiness")
+	opts.VrackNetworkId = helpers.GetNilInt64PointerFromData(d, "vrack_network_id")
 	opts.Zone = d.Get("zone").(string)
 
 	probe := d.Get("probe").([]interface{})
@@ -94,15 +95,15 @@ type IpLoadbalancingFarmBackendProbe struct {
 }
 
 func (opts *IpLoadbalancingFarmBackendProbe) FromResource(d *schema.ResourceData, parent string) *IpLoadbalancingFarmBackendProbe {
-	opts.Match = getNilStringPointerFromData(d, fmt.Sprintf("%s.match", parent))
-	opts.Port = getNilIntPointerFromData(d, fmt.Sprintf("%s.port", parent))
-	opts.Interval = getNilIntPointerFromData(d, fmt.Sprintf("%s.interval", parent))
-	opts.Negate = getNilBoolPointerFromData(d, fmt.Sprintf("%s.negate", parent))
-	opts.Pattern = getNilStringPointerFromData(d, fmt.Sprintf("%s.pattern", parent))
-	opts.ForceSsl = getNilBoolPointerFromData(d, fmt.Sprintf("%s.force_ssl", parent))
-	opts.URL = getNilStringPointerFromData(d, fmt.Sprintf("%s.url", parent))
-	opts.Method = getNilStringPointerFromData(d, fmt.Sprintf("%s.method", parent))
-	opts.Type = getNilStringPointerFromData(d, fmt.Sprintf("%s.type", parent))
+	opts.Match = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.match", parent))
+	opts.Port = helpers.GetNilIntPointerFromData(d, fmt.Sprintf("%s.port", parent))
+	opts.Interval = helpers.GetNilIntPointerFromData(d, fmt.Sprintf("%s.interval", parent))
+	opts.Negate = helpers.GetNilBoolPointerFromData(d, fmt.Sprintf("%s.negate", parent))
+	opts.Pattern = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.pattern", parent))
+	opts.ForceSsl = helpers.GetNilBoolPointerFromData(d, fmt.Sprintf("%s.force_ssl", parent))
+	opts.URL = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.url", parent))
+	opts.Method = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.method", parent))
+	opts.Type = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.type", parent))
 	return opts
 }
 
@@ -335,8 +336,8 @@ type IpLoadbalancingVrackNetworkCreateOpts struct {
 func (opts *IpLoadbalancingVrackNetworkCreateOpts) FromResource(d *schema.ResourceData) *IpLoadbalancingVrackNetworkCreateOpts {
 	opts.Subnet = d.Get("subnet").(string)
 	opts.NatIp = d.Get("nat_ip").(string)
-	opts.DisplayName = getNilStringPointerFromData(d, "display_name")
-	opts.Vlan = getNilInt64PointerFromData(d, "vlan")
+	opts.DisplayName = helpers.GetNilStringPointerFromData(d, "display_name")
+	opts.Vlan = helpers.GetNilInt64PointerFromData(d, "vlan")
 
 	return opts
 }
@@ -348,9 +349,9 @@ type IpLoadbalancingVrackNetworkUpdateOpts struct {
 }
 
 func (opts *IpLoadbalancingVrackNetworkUpdateOpts) FromResource(d *schema.ResourceData) *IpLoadbalancingVrackNetworkUpdateOpts {
-	opts.NatIp = getNilStringPointerFromData(d, "nat_ip")
-	opts.DisplayName = getNilStringPointerFromData(d, "display_name")
-	opts.Vlan = getNilInt64PointerFromData(d, "vlan")
+	opts.NatIp = helpers.GetNilStringPointerFromData(d, "nat_ip")
+	opts.DisplayName = helpers.GetNilStringPointerFromData(d, "display_name")
+	opts.Vlan = helpers.GetNilInt64PointerFromData(d, "vlan")
 
 	return opts
 }

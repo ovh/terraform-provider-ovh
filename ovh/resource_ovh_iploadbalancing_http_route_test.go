@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccIPLoadbalancingRouteHTTPBasicCreate(t *testing.T) {
@@ -45,11 +45,11 @@ func TestAccIPLoadbalancingRouteHTTPBasicCreate(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"ovh_iploadbalancing_http_route.testroute", "action.#", "1"),
 					resource.TestCheckResourceAttr(
-						"ovh_iploadbalancing_http_route.testroute", "action.859787636.status", actionStatus),
+						"ovh_iploadbalancing_http_route.testroute", "action.0.status", actionStatus),
 					resource.TestCheckResourceAttr(
-						"ovh_iploadbalancing_http_route.testroute", "action.859787636.target", strings.Replace(actionTarget, "$$", "$", -1)),
+						"ovh_iploadbalancing_http_route.testroute", "action.0.target", strings.Replace(actionTarget, "$$", "$", -1)),
 					resource.TestCheckResourceAttr(
-						"ovh_iploadbalancing_http_route.testroute", "action.859787636.type", actionType),
+						"ovh_iploadbalancing_http_route.testroute", "action.0.type", actionType),
 				),
 			},
 		},

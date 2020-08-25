@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-ovh/ovh/helpers"
 )
 
 func resourceIpLoadbalancingTcpFarm() *schema.Resource {
@@ -28,7 +29,7 @@ func resourceIpLoadbalancingTcpFarm() *schema.Resource {
 				Optional: true,
 				ForceNew: false,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					err := validateStringEnum(v.(string), []string{"first", "leastconn", "roundrobin", "source"})
+					err := helpers.ValidateStringEnum(v.(string), []string{"first", "leastconn", "roundrobin", "source"})
 					if err != nil {
 						errors = append(errors, err)
 					}
@@ -50,7 +51,7 @@ func resourceIpLoadbalancingTcpFarm() *schema.Resource {
 				Optional: true,
 				ForceNew: false,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					err := validateStringEnum(v.(string), []string{"sourceIp"})
+					err := helpers.ValidateStringEnum(v.(string), []string{"sourceIp"})
 					if err != nil {
 						errors = append(errors, err)
 					}
@@ -79,7 +80,7 @@ func resourceIpLoadbalancingTcpFarm() *schema.Resource {
 							Optional: true,
 							Default:  "default",
 							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-								err := validateStringEnum(v.(string), []string{"contains", "default", "internal", "matches", "status"})
+								err := helpers.ValidateStringEnum(v.(string), []string{"contains", "default", "internal", "matches", "status"})
 								if err != nil {
 									errors = append(errors, err)
 								}
@@ -124,7 +125,7 @@ func resourceIpLoadbalancingTcpFarm() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-								err := validateStringEnum(v.(string), []string{"GET", "HEAD", "OPTIONS", "internal"})
+								err := helpers.ValidateStringEnum(v.(string), []string{"GET", "HEAD", "OPTIONS", "internal"})
 								if err != nil {
 									errors = append(errors, err)
 								}
@@ -135,7 +136,7 @@ func resourceIpLoadbalancingTcpFarm() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-								err := validateStringEnum(v.(string), []string{"http", "internal", "mysql", "oco", "pgsql", "smtp", "tcp"})
+								err := helpers.ValidateStringEnum(v.(string), []string{"http", "internal", "mysql", "oco", "pgsql", "smtp", "tcp"})
 								if err != nil {
 									errors = append(errors, err)
 								}
@@ -205,7 +206,7 @@ func resourceIpLoadbalancingTcpFarmRead(d *schema.ResourceData, meta interface{}
 	d.Set("balance", r.Balance)
 	d.Set("probe", probes)
 	d.Set("vrack_network_id", r.VrackNetworkId)
-	d.Set("stickinesss", r.Stickiness)
+	d.Set("stickiness", r.Stickiness)
 	return nil
 }
 

@@ -2,7 +2,9 @@ package ovh
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-ovh/ovh/helpers"
 )
 
 type DedicatedCephCrushTunable string
@@ -62,8 +64,8 @@ type DedicatedCephTask struct {
 }
 
 func (opts *DedicatedCephACLCreateOpts) FromResource(d *schema.ResourceData) *DedicatedCephACLCreateOpts {
-	network := getNilStringPointerFromData(d, "network")
-	netmask := getNilStringPointerFromData(d, "netmask")
+	network := helpers.GetNilStringPointerFromData(d, "network")
+	netmask := helpers.GetNilStringPointerFromData(d, "netmask")
 	opts.AclList = []string{fmt.Sprintf("%s/%s", *network, *netmask)}
 	return opts
 }

@@ -5,7 +5,8 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-ovh/ovh/helpers"
 
 	"github.com/ovh/go-ovh/ovh"
 )
@@ -33,7 +34,7 @@ func resourceMeInstallationTemplate() *schema.Resource {
 				ForceNew:    true,
 				Description: "The default language of this template",
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					err := validateLanguageCode(v.(string))
+					err := helpers.ValidateLanguageCode(v.(string))
 					if err != nil {
 						errors = append(errors, err)
 					}
@@ -116,7 +117,7 @@ func resourceMeInstallationTemplate() *schema.Resource {
 				Description: "This template bit format (32 or 64)",
 			},
 			"category": {
-				Type:        schema.TypeInt,
+				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Category of this template (informative only). (basic, customer, hosting, other, readyToUse, virtualisation)",
 			},
@@ -157,6 +158,11 @@ func resourceMeInstallationTemplate() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Date of last modification of the base image",
+			},
+			"lvm_ready": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "This distribution supports Logical Volumes (Linux LVM)",
 			},
 			"supports_distribution_kernel": {
 				Type:        schema.TypeBool,
@@ -214,14 +220,9 @@ func resourceMeInstallationTemplateCreate(d *schema.ResourceData, meta interface
 	// the resource is created via the POST endpoint, then updated
 	// via the PUT endpoint to apply customizations.
 	// Thus we need to enable the Partial mode
-	d.Partial(true)
 	if err := config.OVHClient.Post(endpoint, opts, nil); err != nil {
 		return fmt.Errorf("Error calling POST %s with opts %v:\n\t %q", endpoint, opts, err)
 	}
-
-	d.SetPartial("template_name")
-	d.SetPartial("base_template_name")
-	d.SetPartial("default_language")
 
 	d.SetId(d.Get("template_name").(string))
 
@@ -235,7 +236,6 @@ func resourceMeInstallationTemplateCreate(d *schema.ResourceData, meta interface
 	if err := config.OVHClient.Put(endpoint, updateOpts, nil); err != nil {
 		return fmt.Errorf("Error calling PUT %s with opts %v:\n\t %q", endpoint, opts, err)
 	}
-	d.SetPartial("customization")
 
 	// handle remove_default_partitions option
 	removeDefaultPartitions := false
@@ -244,7 +244,7 @@ func resourceMeInstallationTemplateCreate(d *schema.ResourceData, meta interface
 		removeDefaultPartitions = v.(bool)
 	}
 
-	d.Set("remove_default_partitions", removeDefaultPartitions)
+	d.Set("remove_default_partition_schemes", removeDefaultPartitions)
 
 	if removeDefaultPartitions {
 		templateName := d.Get("template_name").(string)
@@ -265,8 +265,6 @@ func resourceMeInstallationTemplateCreate(d *schema.ResourceData, meta interface
 			}
 		}
 	}
-
-	d.Partial(false)
 
 	return resourceMeInstallationTemplateRead(d, meta)
 }

@@ -5,7 +5,8 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-ovh/ovh/helpers"
 )
 
 func dataSourceIpLoadbalancingVrackNetworks() *schema.Resource {
@@ -23,7 +24,7 @@ func dataSourceIpLoadbalancingVrackNetworks() *schema.Resource {
 				Description: "Filters on subnet",
 				Optional:    true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					err := validateIpBlock(v.(string))
+					err := helpers.ValidateIpBlock(v.(string))
 					if err != nil {
 						errors = append(errors, err)
 					}

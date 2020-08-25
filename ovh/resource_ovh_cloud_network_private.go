@@ -6,8 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-ovh/ovh/helpers"
 
 	"github.com/ovh/go-ovh/ovh"
 )
@@ -97,11 +98,13 @@ func resourceCloudNetworkPrivateCreate(d *schema.ResourceData, meta interface{})
 	config := meta.(*Config)
 
 	projectId := d.Get("project_id").(string)
+	regions, _ := helpers.StringsFromSchema(d, "regions")
+
 	params := &CloudNetworkPrivateCreateOpts{
-		ProjectId: d.Get("project_id").(string),
+		ProjectId: projectId,
 		VlanId:    d.Get("vlan_id").(int),
 		Name:      d.Get("name").(string),
-		Regions:   stringsFromSchema(d, "regions"),
+		Regions:   regions,
 	}
 
 	r := &CloudNetworkPrivateResponse{}

@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-ovh/ovh/helpers"
 )
 
 func resourceIPLoadbalancingRouteHTTPRule() *schema.Resource {
@@ -40,7 +41,7 @@ func resourceIPLoadbalancingRouteHTTPRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					err := validateStringEnum(v.(string), []string{"contains", "endswith", "exists", "in", "internal", "is", "matches", "startswith"})
+					err := helpers.ValidateStringEnum(v.(string), []string{"contains", "endswith", "exists", "in", "internal", "is", "matches", "startswith"})
 					if err != nil {
 						errors = append(errors, err)
 					}
@@ -117,7 +118,7 @@ func resourceIPLoadbalancingRouteHTTPRuleRead(d *schema.ResourceData, meta inter
 	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/http/route/%s/rule/%s", service, routeID, d.Id())
 	err := config.OVHClient.Get(endpoint, &r)
 	if err != nil {
-		return CheckDeleted(d, err, endpoint)
+		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
 	d.Set("display_name", r.DisplayName)

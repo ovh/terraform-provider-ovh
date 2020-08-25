@@ -6,7 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-ovh/ovh/helpers"
 )
 
 func resourceIPLoadbalancingVrackNetwork() *schema.Resource {
@@ -42,7 +43,7 @@ func resourceIPLoadbalancingVrackNetwork() *schema.Resource {
 				Description: "An IP block used as a pool of IPs by this Load Balancer to connect to the servers in this private network. The blck must be in the private network and reserved for the Load Balancer",
 				Required:    true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					err := validateIpBlock(v.(string))
+					err := helpers.ValidateIpBlock(v.(string))
 					if err != nil {
 						errors = append(errors, err)
 					}
@@ -54,7 +55,7 @@ func resourceIPLoadbalancingVrackNetwork() *schema.Resource {
 				Description: "IP block of the private network in the vRack",
 				Required:    true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					err := validateIpBlock(v.(string))
+					err := helpers.ValidateIpBlock(v.(string))
 					if err != nil {
 						errors = append(errors, err)
 					}
