@@ -2,10 +2,12 @@ package ovh
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"strings"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-ovh/ovh/helpers"
 )
 
 func resourceDedicatedCephACL() *schema.Resource {
@@ -34,7 +36,7 @@ func resourceDedicatedCephACL() *schema.Resource {
 				Computed: false,
 				ForceNew: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					err := validateIp(v.(string))
+					err := helpers.ValidateIp(v.(string))
 					if err != nil {
 						errors = append(errors, err)
 					}
@@ -47,7 +49,7 @@ func resourceDedicatedCephACL() *schema.Resource {
 				Computed: false,
 				ForceNew: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					err := validateIp(v.(string))
+					err := helpers.ValidateIp(v.(string))
 					if err != nil {
 						errors = append(errors, err)
 					}
@@ -167,6 +169,7 @@ func resourceDedicatedCephACLDelete(d *schema.ResourceData, meta interface{}) er
 	if err != nil {
 		return fmt.Errorf("Error calling DELETE %s:\n\t%q", url, err)
 	}
+
 	// monitor task execution
 	stateConf := &resource.StateChangeConf{
 		Target: []string{"DONE"},

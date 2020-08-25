@@ -6,7 +6,8 @@ import (
 	"net"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-ovh/ovh/helpers"
 
 	"github.com/ovh/go-ovh/ovh"
 )
@@ -28,7 +29,7 @@ func resourceOvhIpReverse() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					err := validateIpBlock(v.(string))
+					err := helpers.ValidateIpBlock(v.(string))
 					if err != nil {
 						errors = append(errors, err)
 					}
@@ -39,7 +40,7 @@ func resourceOvhIpReverse() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					err := validateIp(v.(string))
+					err := helpers.ValidateIp(v.(string))
 					if err != nil {
 						errors = append(errors, err)
 					}

@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-ovh/ovh/helpers"
+	"github.com/terraform-providers/terraform-provider-ovh/ovh/helpers/hashcode"
 )
 
 func dataSourceIpLoadbalancing() *schema.Resource {
@@ -17,7 +18,7 @@ func dataSourceIpLoadbalancing() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					err := validateIpV6(v.(string))
+					err := helpers.ValidateIpV6(v.(string))
 					if err != nil {
 						errors = append(errors, err)
 					}
@@ -29,7 +30,7 @@ func dataSourceIpLoadbalancing() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					err := validateIpV4(v.(string))
+					err := helpers.ValidateIpV4(v.(string))
 					if err != nil {
 						errors = append(errors, err)
 					}
@@ -60,7 +61,7 @@ func dataSourceIpLoadbalancing() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					err := validateIp(v.(string))
+					err := helpers.ValidateIp(v.(string))
 					if err != nil {
 						errors = append(errors, err)
 					}
@@ -72,7 +73,7 @@ func dataSourceIpLoadbalancing() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					err := validateStringEnum(v.(string), []string{"blacklisted", "deleted", "free", "ok", "quarantined", "suspended"})
+					err := helpers.ValidateStringEnum(v.(string), []string{"blacklisted", "deleted", "free", "ok", "quarantined", "suspended"})
 					if err != nil {
 						errors = append(errors, err)
 					}
@@ -100,7 +101,7 @@ func dataSourceIpLoadbalancing() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					err := validateStringEnum(v.(string), []string{"intermediate", "modern"})
+					err := helpers.ValidateStringEnum(v.(string), []string{"intermediate", "modern"})
 					if err != nil {
 						errors = append(errors, err)
 					}

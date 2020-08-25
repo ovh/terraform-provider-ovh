@@ -7,7 +7,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-ovh/ovh/helpers"
 
 	"github.com/ovh/go-ovh/ovh"
 )
@@ -245,7 +246,7 @@ func resourceDedicatedServerInstallTaskUpdate(d *schema.ResourceData, meta inter
 
 func resourceDedicatedServerInstallTaskDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-	bootId := getNilIntPointerFromData(d, "bootid_on_destroy")
+	bootId := helpers.GetNilIntPointerFromData(d, "bootid_on_destroy")
 
 	if bootId != nil {
 		serviceName := d.Get("service_name").(string)

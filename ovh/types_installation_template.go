@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-ovh/ovh/helpers"
 )
 
 type InstallationTemplate struct {
@@ -184,13 +185,13 @@ func (v InstallationTemplateCustomization) ToMap() map[string]interface{} {
 }
 
 func (opts *InstallationTemplateCustomization) FromResource(d *schema.ResourceData, parent string) *InstallationTemplateCustomization {
-	opts.ChangeLog = getNilStringPointerFromData(d, fmt.Sprintf("%s.change_log", parent))
-	opts.CustomHostname = getNilStringPointerFromData(d, fmt.Sprintf("%s.custom_hostname", parent))
-	opts.PostInstallationScriptLink = getNilStringPointerFromData(d, fmt.Sprintf("%s.post_installation_script_link", parent))
-	opts.PostInstallationScriptReturn = getNilStringPointerFromData(d, fmt.Sprintf("%s.post_installation_script_return", parent))
-	opts.Rating = getNilIntPointerFromData(d, fmt.Sprintf("%s.rating", parent))
-	opts.SshKeyName = getNilStringPointerFromData(d, fmt.Sprintf("%s.ssh_key_name", parent))
-	opts.UseDistributionKernel = getNilBoolPointerFromData(d, fmt.Sprintf("%s.use_distribution_kernel", parent))
+	opts.ChangeLog = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.change_log", parent))
+	opts.CustomHostname = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.custom_hostname", parent))
+	opts.PostInstallationScriptLink = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.post_installation_script_link", parent))
+	opts.PostInstallationScriptReturn = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.post_installation_script_return", parent))
+	opts.Rating = helpers.GetNilIntPointerFromData(d, fmt.Sprintf("%s.rating", parent))
+	opts.SshKeyName = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.ssh_key_name", parent))
+	opts.UseDistributionKernel = helpers.GetNilBoolPointerFromData(d, fmt.Sprintf("%s.use_distribution_kernel", parent))
 
 	return opts
 }
@@ -241,14 +242,14 @@ func (opts *PartitionCreateOpts) FromResource(d *schema.ResourceData) *Partition
 	opts.Mountpoint = d.Get("mountpoint").(string)
 	opts.Step = d.Get("order").(int)
 
-	if raid := getNilStringPointerFromData(d, "raid"); raid != nil {
+	if raid := helpers.GetNilStringPointerFromData(d, "raid"); raid != nil {
 		raidValue := strings.ReplaceAll(*raid, "raid", "")
 		opts.Raid = &raidValue
 	}
 
 	opts.Size = d.Get("size").(int)
 	opts.Type = d.Get("type").(string)
-	opts.VolumeName = getNilStringPointerFromData(d, "volume_name")
+	opts.VolumeName = helpers.GetNilStringPointerFromData(d, "volume_name")
 	return opts
 }
 
@@ -261,7 +262,7 @@ func (opts *PartitionUpdateOpts) FromResource(d *schema.ResourceData) *Partition
 	opts.Mountpoint = d.Get("mountpoint").(string)
 	opts.Order = d.Get("order").(int)
 
-	if raid := getNilStringPointerFromData(d, "raid"); raid != nil {
+	if raid := helpers.GetNilStringPointerFromData(d, "raid"); raid != nil {
 		raidValue := strings.ReplaceAll(*raid, "raid", "")
 		opts.Raid = &raidValue
 	}
@@ -272,7 +273,7 @@ func (opts *PartitionUpdateOpts) FromResource(d *schema.ResourceData) *Partition
 	}
 
 	opts.Type = d.Get("type").(string)
-	opts.VolumeName = getNilStringPointerFromData(d, "volume_name")
+	opts.VolumeName = helpers.GetNilStringPointerFromData(d, "volume_name")
 	return opts
 }
 
