@@ -3,6 +3,7 @@ package ovh
 import (
 	"fmt"
 	"log"
+	"net/url"
 	"regexp"
 	"strconv"
 	"time"
@@ -27,29 +28,40 @@ func resourceCloudUser() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"project_id": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				DefaultFunc: schema.EnvDefaultFunc("OVH_PROJECT_ID", nil),
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				DefaultFunc:   schema.EnvDefaultFunc("OVH_PROJECT_ID", nil),
+				Description:   "Id of the cloud project. DEPRECATED, use `service_name` instead",
+				ConflictsWith: []string{"service_name"},
+			},
+			"service_name": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				Description:   "Service name of the resource representing the id of the cloud project.",
+				ConflictsWith: []string{"project_id"},
 			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"username": {
-				Type:     schema.TypeString,
-				Computed: true,
+			"role_name": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validateCloudUserRoleFunc,
 			},
-			"password": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
+			"role_names": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
 			},
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+
+			// Computed
 			"creation_date": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -59,39 +71,115 @@ func resourceCloudUser() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"password": {
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
+			},
+			"roles": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"description": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"permissions": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"username": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
+}
+
+func validateCloudUserRoleFunc(v interface{}, k string) (ws []string, errors []error) {
+	err := validateStringEnum(v.(string), []string{
+		"administrator",
+		"ai_training_operator",
+		"authentication",
+		"backup_operator",
+		"compute_operator",
+		"image_operator",
+		"infrastructure_supervisor",
+		"network_operator",
+		"network_security_operator",
+		"objectstore_operator",
+		"volume_operator",
+	})
+
+	if err != nil {
+		errors = append(errors, err)
+	}
+	return
 }
 
 func resourceCloudUserCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
-	projectId := d.Get("project_id").(string)
-	params := &CloudUserCreateOpts{
-		ProjectId:   projectId,
-		Description: d.Get("description").(string),
+	projectId := getNilStringPointerFromData(d, "project_id")
+	serviceNamePtr := getNilStringPointerFromData(d, "service_name")
+
+	if serviceNamePtr == nil && projectId != nil && *projectId != "" {
+		serviceNamePtr = projectId
 	}
 
-	r := &CloudUserResponse{}
+	if serviceNamePtr == nil || *serviceNamePtr == "" {
+		return fmt.Errorf("service_name attribute is mandatory.")
+	}
+
+	serviceName := *serviceNamePtr
+
+	params := (&CloudUserCreateOpts{}).FromResource(d)
+
+	for _, role := range params.Roles {
+		if _, errs := validateCloudUserRoleFunc(role, ""); errs != nil {
+			return fmt.Errorf("roles contains unsupported value: %s.", role)
+		}
+	}
+
+	r := &CloudUser{}
 
 	log.Printf("[DEBUG] Will create public cloud user: %s", params)
-
-	// Resource is partial because we will also compute Openstack RC & creds
-	d.Partial(true)
-
-	endpoint := fmt.Sprintf("/cloud/project/%s/user", params.ProjectId)
-
+	endpoint := fmt.Sprintf(
+		"/cloud/project/%s/user",
+		url.PathEscape(serviceName),
+	)
 	err := config.OVHClient.Post(endpoint, params, r)
 	if err != nil {
 		return fmt.Errorf("calling Post %s with params %s:\n\t %q", endpoint, params, err)
 	}
+
+	// Set Password only at creation time
+	d.Set("password", r.Password)
+	d.SetId(strconv.Itoa(r.Id))
 
 	log.Printf("[DEBUG] Waiting for User %s:", r)
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"creating"},
 		Target:     []string{"ok"},
-		Refresh:    waitForCloudUserActive(config.OVHClient, projectId, strconv.Itoa(r.Id)),
+		Refresh:    waitForCloudUser(config.OVHClient, serviceName, d.Id()),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -103,73 +191,93 @@ func resourceCloudUserCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 	log.Printf("[DEBUG] Created User %s", r)
 
-	readCloudUser(d, r, true)
-
-	openstackrc := make(map[string]string)
-	err = cloudUserGetOpenstackRC(projectId, d.Id(), config.OVHClient, openstackrc)
-	if err != nil {
-		return fmt.Errorf("Creating openstack creds for user %s: %s", d.Id(), err)
-	}
-
-	d.Set("openstack_rc", &openstackrc)
-
-	d.Partial(false)
-
-	return nil
+	return resourceCloudUserRead(d, meta)
 }
 
 func resourceCloudUserRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
-	projectId := d.Get("project_id").(string)
+	projectId := getNilStringPointerFromData(d, "project_id")
+	serviceNamePtr := getNilStringPointerFromData(d, "service_name")
 
-	d.Partial(true)
-	r := &CloudUserResponse{}
+	if serviceNamePtr == nil && projectId != nil && *projectId != "" {
+		serviceNamePtr = projectId
+	}
 
-	log.Printf("[DEBUG] Will read public cloud user %s from project: %s", d.Id(), projectId)
+	if serviceNamePtr == nil || *serviceNamePtr == "" {
+		return fmt.Errorf("service_name attribute is mandatory.")
+	}
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/user/%s", projectId, d.Id())
+	serviceName := *serviceNamePtr
 
-	err := config.OVHClient.Get(endpoint, r)
+	user := &CloudUser{}
+
+	log.Printf("[DEBUG] Will read public cloud user %s from project: %s", d.Id(), serviceName)
+
+	endpoint := fmt.Sprintf(
+		"/cloud/project/%s/user/%s",
+		url.PathEscape(serviceName),
+		d.Id(),
+	)
+
+	err := config.OVHClient.Get(endpoint, user)
 	if err != nil {
 		return fmt.Errorf("calling Get %s:\n\t %q", endpoint, err)
 	}
 
-	readCloudUser(d, r, false)
+	// set resource attributes
+	for k, v := range user.ToMap() {
+		d.Set(k, v)
+	}
 
 	openstackrc := make(map[string]string)
-	err = cloudUserGetOpenstackRC(projectId, d.Id(), config.OVHClient, openstackrc)
+	err = cloudUserGetOpenstackRC(serviceName, d.Id(), config.OVHClient, openstackrc)
 	if err != nil {
 		return fmt.Errorf("Reading openstack creds for user %s: %s", d.Id(), err)
 	}
 
 	d.Set("openstack_rc", &openstackrc)
-	d.Partial(false)
-	log.Printf("[DEBUG] Read Public Cloud User %s", r)
+	log.Printf("[DEBUG] Read Public Cloud User %s", user)
 	return nil
 }
 
 func resourceCloudUserDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
-	projectId := d.Get("project_id").(string)
+	projectId := getNilStringPointerFromData(d, "project_id")
+	serviceNamePtr := getNilStringPointerFromData(d, "service_name")
+
+	if serviceNamePtr == nil && projectId != nil && *projectId != "" {
+		serviceNamePtr = projectId
+	}
+
+	if serviceNamePtr == nil || *serviceNamePtr == "" {
+		return fmt.Errorf("service_name attribute is mandatory.")
+	}
+
+	serviceName := *serviceNamePtr
+
 	id := d.Id()
 
-	log.Printf("[DEBUG] Will delete public cloud user %s from project: %s", id, projectId)
+	log.Printf("[DEBUG] Will delete public cloud user %s from project: %s", id, serviceName)
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/user/%s", projectId, id)
+	endpoint := fmt.Sprintf(
+		"/cloud/project/%s/user/%s",
+		url.PathEscape(serviceName),
+		id,
+	)
 
 	err := config.OVHClient.Delete(endpoint, nil)
 	if err != nil {
 		return fmt.Errorf("calling Delete %s:\n\t %q", endpoint, err)
 	}
 
-	log.Printf("[DEBUG] Deleting Public Cloud User %s from project %s:", id, projectId)
+	log.Printf("[DEBUG] Deleting Public Cloud User %s from project %s:", id, serviceName)
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"deleting"},
 		Target:     []string{"deleted"},
-		Refresh:    waitForCloudUserDelete(config.OVHClient, projectId, id),
+		Refresh:    waitForCloudUser(config.OVHClient, serviceName, id),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -177,27 +285,11 @@ func resourceCloudUserDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err = stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf("Deleting Public Cloud user %s from project %s", id, projectId)
+		return fmt.Errorf("Deleting Public Cloud user %s from project %s", id, serviceName)
 	}
-	log.Printf("[DEBUG] Deleted Public Cloud User %s from project %s", id, projectId)
+	log.Printf("[DEBUG] Deleted Public Cloud User %s from project %s", id, serviceName)
 
 	d.SetId("")
-
-	return nil
-}
-
-func cloudUserExists(projectId, id string, c *ovh.Client) error {
-	r := &CloudUserResponse{}
-
-	log.Printf("[DEBUG] Will read public cloud user for project: %s, id: %s", projectId, id)
-
-	endpoint := fmt.Sprintf("/cloud/project/%s/user/%s", projectId, id)
-
-	err := c.Get(endpoint, r)
-	if err != nil {
-		return fmt.Errorf("calling Get %s:\n\t %q", endpoint, err)
-	}
-	log.Printf("[DEBUG] Read public cloud user: %s", r)
 
 	return nil
 }
@@ -207,10 +299,14 @@ var cloudUserOSTenantId = regexp.MustCompile("export OS_TENANT_ID=\"??([[:alnum:
 var cloudUserOSAuthURL = regexp.MustCompile("export OS_AUTH_URL=\"??([[:^space:]]+)\"??")
 var cloudUserOSUsername = regexp.MustCompile("export OS_USERNAME=\"?([[:alnum:]]+)\"?")
 
-func cloudUserGetOpenstackRC(projectId, id string, c *ovh.Client, rc map[string]string) error {
-	log.Printf("[DEBUG] Will read public cloud user openstack rc for project: %s, id: %s", projectId, id)
+func cloudUserGetOpenstackRC(serviceName, id string, c *ovh.Client, rc map[string]string) error {
+	log.Printf("[DEBUG] Will read public cloud user openstack rc for project: %s, id: %s", serviceName, id)
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/user/%s/openrc?region=to_be_overriden", projectId, id)
+	endpoint := fmt.Sprintf(
+		"/cloud/project/%s/user/%s/openrc?region=to_be_overriden",
+		url.PathEscape(serviceName),
+		id,
+	)
 
 	r := &CloudUserOpenstackRC{}
 
@@ -244,39 +340,18 @@ func cloudUserGetOpenstackRC(projectId, id string, c *ovh.Client, rc map[string]
 	return nil
 }
 
-func readCloudUser(d *schema.ResourceData, r *CloudUserResponse, setPassword bool) {
-	d.Set("description", r.Description)
-	d.Set("status", r.Status)
-	d.Set("creation_date", r.CreationDate)
-	d.Set("username", r.Username)
-	if setPassword {
-		d.Set("password", r.Password)
-	}
-	d.SetId(strconv.Itoa(r.Id))
-}
-
-func waitForCloudUserActive(c *ovh.Client, projectId, CloudUserId string) resource.StateRefreshFunc {
+func waitForCloudUser(c *ovh.Client, serviceName, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		r := &CloudUserResponse{}
-		endpoint := fmt.Sprintf("/cloud/project/%s/user/%s", projectId, CloudUserId)
-		err := c.Get(endpoint, r)
-		if err != nil {
-			return r, "", err
-		}
-
-		log.Printf("[DEBUG] Pending User: %s", r)
-		return r, r.Status, nil
-	}
-}
-
-func waitForCloudUserDelete(c *ovh.Client, projectId, CloudUserId string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		r := &CloudUserResponse{}
-		endpoint := fmt.Sprintf("/cloud/project/%s/user/%s", projectId, CloudUserId)
+		r := &CloudUser{}
+		endpoint := fmt.Sprintf(
+			"/cloud/project/%s/user/%s",
+			url.PathEscape(serviceName),
+			id,
+		)
 		err := c.Get(endpoint, r)
 		if err != nil {
 			if err.(*ovh.APIError).Code == 404 {
-				log.Printf("[DEBUG] user id %s on project %s deleted", CloudUserId, projectId)
+				log.Printf("[DEBUG] user id %s on project %s deleted", id, serviceName)
 				return r, "deleted", nil
 			} else {
 				return r, "", err
