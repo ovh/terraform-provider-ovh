@@ -35,18 +35,14 @@ func resourceIpLoadbalancingTcpFrontend() *schema.Resource {
 				ForceNew: false,
 			},
 			"allowed_source": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
-				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
 			"dedicated_ipfo": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
-				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
 			"default_farm_id": {
 				Type:     schema.TypeInt,
@@ -64,13 +60,11 @@ func resourceIpLoadbalancingTcpFrontend() *schema.Resource {
 				Type:     schema.TypeBool,
 				Default:  false,
 				Optional: true,
-				ForceNew: false,
 			},
 			"ssl": {
 				Type:     schema.TypeBool,
 				Default:  false,
 				Optional: true,
-				ForceNew: false,
 			},
 			"display_name": {
 				Type:     schema.TypeString,
@@ -120,8 +114,8 @@ func resourceIpLoadbalancingTcpFrontendCreate(d *schema.ResourceData, meta inter
 		Zone:          d.Get("zone").(string),
 		AllowedSource: allowedSources,
 		DedicatedIpFo: dedicatedIpFo,
-		Disabled:      helpers.GetNilBoolPointer(d.Get("disabled")),
-		Ssl:           helpers.GetNilBoolPointer(d.Get("ssl")),
+		Disabled:      d.Get("disabled").(bool),
+		Ssl:           d.Get("ssl").(bool),
 		DisplayName:   d.Get("display_name").(string),
 	}
 
@@ -136,8 +130,10 @@ func resourceIpLoadbalancingTcpFrontendCreate(d *schema.ResourceData, meta inter
 	if err != nil {
 		return fmt.Errorf("calling POST %s:\n\t %s", endpoint, err.Error())
 	}
-	return readIpLoadbalancingTcpFrontend(resp, d)
 
+	d.SetId(fmt.Sprintf("%d", resp.FrontendId))
+
+	return resourceIpLoadbalancingTcpFrontendRead(d, meta)
 }
 
 func resourceIpLoadbalancingTcpFrontendRead(d *schema.ResourceData, meta interface{}) error {
@@ -150,7 +146,26 @@ func resourceIpLoadbalancingTcpFrontendRead(d *schema.ResourceData, meta interfa
 	if err != nil {
 		return fmt.Errorf("calling GET %s:\n\t %s", endpoint, err.Error())
 	}
-	return readIpLoadbalancingTcpFrontend(r, d)
+
+	d.SetId(fmt.Sprintf("%d", r.FrontendId))
+
+	allowedSources := make([]string, 0)
+	allowedSources = append(allowedSources, r.AllowedSource...)
+
+	dedicatedIpFos := make([]string, 0)
+	dedicatedIpFos = append(dedicatedIpFos, r.DedicatedIpFo...)
+
+	d.Set("dedicated_ipfo", dedicatedIpFos)
+	d.Set("default_farm_id", r.DefaultFarmId)
+	d.Set("default_ssl_id", r.DefaultSslId)
+	d.Set("disabled", r.Disabled)
+	d.Set("display_name", r.DisplayName)
+	d.Set("port", r.Port)
+	d.Set("ssl", r.Ssl)
+	d.Set("zone", r.Zone)
+	d.Set("allowed_source", allowedSources)
+
+	return nil
 }
 
 func resourceIpLoadbalancingTcpFrontendUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -178,8 +193,8 @@ func resourceIpLoadbalancingTcpFrontendUpdate(d *schema.ResourceData, meta inter
 		Zone:          d.Get("zone").(string),
 		AllowedSource: allowedSources,
 		DedicatedIpFo: dedicatedIpFo,
-		Disabled:      helpers.GetNilBoolPointer(d.Get("disabled")),
-		Ssl:           helpers.GetNilBoolPointer(d.Get("ssl")),
+		Disabled:      d.Get("disabled").(bool),
+		Ssl:           d.Get("ssl").(bool),
 		DisplayName:   d.Get("display_name").(string),
 	}
 
@@ -190,52 +205,21 @@ func resourceIpLoadbalancingTcpFrontendUpdate(d *schema.ResourceData, meta inter
 	if err != nil {
 		return fmt.Errorf("calling PUT %s:\n\t %s", endpoint, err.Error())
 	}
-	return nil
-}
 
-func readIpLoadbalancingTcpFrontend(r *IpLoadbalancingTcpFrontend, d *schema.ResourceData) error {
-	d.Set("display_name", r.DisplayName)
-	d.Set("port", r.Port)
-	d.Set("zone", r.Zone)
-
-	allowedSources := make([]string, 0)
-	allowedSources = append(allowedSources, r.AllowedSource...)
-	d.Set("allowed_source", allowedSources)
-
-	dedicatedIpFos := make([]string, 0)
-	dedicatedIpFos = append(dedicatedIpFos, r.DedicatedIpFo...)
-	d.Set("dedicated_ipfo", dedicatedIpFos)
-
-	if r.DefaultFarmId != nil {
-		d.Set("default_farm_id", r.DefaultFarmId)
-	}
-
-	if r.DefaultSslId != nil {
-		d.Set("default_ssl_id", r.DefaultSslId)
-	}
-	if r.Disabled != nil {
-		d.Set("disabled", r.Disabled)
-	}
-	if r.Ssl != nil {
-		d.Set("ssl", r.Ssl)
-	}
-
-	d.SetId(fmt.Sprintf("%d", r.FrontendId))
-
-	return nil
+	return resourceIpLoadbalancingTcpFrontendRead(d, meta)
 }
 
 func resourceIpLoadbalancingTcpFrontendDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
 	service := d.Get("service_name").(string)
-	r := &IpLoadbalancingTcpFrontend{}
 	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/tcp/frontend/%s", service, d.Id())
 
-	err := config.OVHClient.Delete(endpoint, &r)
+	err := config.OVHClient.Delete(endpoint, nil)
 	if err != nil {
 		return fmt.Errorf("calling DELETE %s: %s \n", endpoint, err.Error())
 	}
 
+	d.SetId("")
 	return nil
 }
