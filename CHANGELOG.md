@@ -1,4 +1,23 @@
 ## 0.9.0 (Unreleased)
+
+BREAKING CHANGES:
+
+* provider: This release includes a Terraform SDK upgrade with compatibility for Terraform >= v0.12. The provider is not compatible with Terraform < v0.12 anymore. This update should have no significant changes in behavior for the provider. ([#154](https://github.com/terraform-providers/terraform-provider-ovh/pull/154))
+
+FEATURES:
+
+* __New Datasource:__ `ovh_dedicated_ceph` ([#150](https://github.com/terraform-providers/terraform-provider-ovh/pull/150))
+* __New Resource:__ `ovh_dedicated_ceph_acl` ([#150](https://github.com/terraform-providers/terraform-provider-ovh/pull/150))
+
+IMPROVEMENTS:
+
+* Fetch all IPs for dedicated servers. ([#149](https://github.com/terraform-providers/terraform-provider-ovh/pull/149))
+* r/ovh_cloud_user: Add roles/service_name attributes. Deprecate project_id attribute. ([#151](https://github.com/terraform-providers/terraform-provider-ovh/pull/151))
+
+BUG FIXES:
+
+* r/iploadbalancing_tcp_frontend, r/iploadbalancing_http_frontend: Fix allowed_source,dedicated_ipfo updates ([#155](https://github.com/terraform-providers/terraform-provider-ovh/pull/155))
+
 ## 0.8.0 (May 28, 2020)
 
 NOTES/DEPRECATIONS:
