@@ -1,4 +1,4 @@
-## 0.9.0 (Unreleased)
+## 0.9.0 (August 26, 2020)
 
 BREAKING CHANGES:
 
