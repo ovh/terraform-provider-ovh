@@ -6,8 +6,9 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-ovh/ovh/helpers"
+	"github.com/terraform-providers/terraform-provider-ovh/ovh/helpers/hashcode"
 )
 
 func dataSourceDedicatedServerBoots() *schema.Resource {
@@ -25,7 +26,7 @@ func dataSourceDedicatedServerBoots() *schema.Resource {
 				Optional:    true,
 				Description: "Filter the value of bootType property",
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					err := validateBootType(v.(string))
+					err := helpers.ValidateBootType(v.(string))
 					if err != nil {
 						errors = append(errors, err)
 					}

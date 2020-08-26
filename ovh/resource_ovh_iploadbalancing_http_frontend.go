@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-ovh/ovh/helpers"
 )
 
 func resourceIpLoadbalancingHttpFrontend() *schema.Resource {
@@ -99,17 +100,17 @@ func resourceIpLoadbalancingHttpFrontendImportState(d *schema.ResourceData, meta
 func resourceIpLoadbalancingHttpFrontendCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
-	allowedSources := stringsFromSchema(d, "allowed_source")
-	dedicatedIpFo := stringsFromSchema(d, "dedicated_ipfo")
+	allowedSources, _ := helpers.StringsFromSchema(d, "allowed_source")
+	dedicatedIpFo, _ := helpers.StringsFromSchema(d, "dedicated_ipfo")
 
 	for _, s := range allowedSources {
-		if err := validateIpBlock(s); err != nil {
+		if err := helpers.ValidateIpBlock(s); err != nil {
 			return fmt.Errorf("Error validating `allowed_source` value: %s", err)
 		}
 	}
 
 	for _, s := range dedicatedIpFo {
-		if err := validateIpBlock(s); err != nil {
+		if err := helpers.ValidateIpBlock(s); err != nil {
 			return fmt.Errorf("Error validating `dedicated_ipfo` value: %s", err)
 		}
 	}
@@ -119,13 +120,13 @@ func resourceIpLoadbalancingHttpFrontendCreate(d *schema.ResourceData, meta inte
 		Zone:          d.Get("zone").(string),
 		AllowedSource: allowedSources,
 		DedicatedIpFo: dedicatedIpFo,
-		Disabled:      getNilBoolPointer(d.Get("disabled")),
-		Ssl:           getNilBoolPointer(d.Get("ssl")),
+		Disabled:      helpers.GetNilBoolPointer(d.Get("disabled")),
+		Ssl:           helpers.GetNilBoolPointer(d.Get("ssl")),
 		DisplayName:   d.Get("display_name").(string),
 	}
 
-	frontend.DefaultFarmId = getNilIntPointerFromData(d, "default_farm_id")
-	frontend.DefaultSslId = getNilIntPointerFromData(d, "default_ssl_id")
+	frontend.DefaultFarmId = helpers.GetNilIntPointerFromData(d, "default_farm_id")
+	frontend.DefaultSslId = helpers.GetNilIntPointerFromData(d, "default_ssl_id")
 
 	service := d.Get("service_name").(string)
 	resp := &IpLoadbalancingHttpFrontend{}
@@ -157,17 +158,17 @@ func resourceIpLoadbalancingHttpFrontendUpdate(d *schema.ResourceData, meta inte
 	service := d.Get("service_name").(string)
 	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/http/frontend/%s", service, d.Id())
 
-	allowedSources := stringsFromSchema(d, "allowed_source")
-	dedicatedIpFo := stringsFromSchema(d, "dedicated_ipfo")
+	allowedSources, _ := helpers.StringsFromSchema(d, "allowed_source")
+	dedicatedIpFo, _ := helpers.StringsFromSchema(d, "dedicated_ipfo")
 
 	for _, s := range allowedSources {
-		if err := validateIpBlock(s); err != nil {
+		if err := helpers.ValidateIpBlock(s); err != nil {
 			return fmt.Errorf("Error validating `allowed_source` value: %s", err)
 		}
 	}
 
 	for _, s := range dedicatedIpFo {
-		if err := validateIpBlock(s); err != nil {
+		if err := helpers.ValidateIpBlock(s); err != nil {
 			return fmt.Errorf("Error validating `dedicated_ipfo` value: %s", err)
 		}
 	}
@@ -177,13 +178,13 @@ func resourceIpLoadbalancingHttpFrontendUpdate(d *schema.ResourceData, meta inte
 		Zone:          d.Get("zone").(string),
 		AllowedSource: allowedSources,
 		DedicatedIpFo: dedicatedIpFo,
-		Disabled:      getNilBoolPointer(d.Get("disabled")),
-		Ssl:           getNilBoolPointer(d.Get("ssl")),
+		Disabled:      helpers.GetNilBoolPointer(d.Get("disabled")),
+		Ssl:           helpers.GetNilBoolPointer(d.Get("ssl")),
 		DisplayName:   d.Get("display_name").(string),
 	}
 
-	frontend.DefaultFarmId = getNilIntPointerFromData(d, "default_farm_id")
-	frontend.DefaultSslId = getNilIntPointerFromData(d, "default_ssl_id")
+	frontend.DefaultFarmId = helpers.GetNilIntPointerFromData(d, "default_farm_id")
+	frontend.DefaultSslId = helpers.GetNilIntPointerFromData(d, "default_ssl_id")
 
 	err := config.OVHClient.Put(endpoint, frontend, nil)
 	if err != nil {

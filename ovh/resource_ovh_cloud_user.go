@@ -8,8 +8,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-ovh/ovh/helpers"
 
 	"github.com/ovh/go-ovh/ovh"
 )
@@ -54,11 +55,10 @@ func resourceCloudUser() *schema.Resource {
 				ValidateFunc: validateCloudUserRoleFunc,
 			},
 			"role_names": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
 
 			// Computed
@@ -114,7 +114,7 @@ func resourceCloudUser() *schema.Resource {
 }
 
 func validateCloudUserRoleFunc(v interface{}, k string) (ws []string, errors []error) {
-	err := validateStringEnum(v.(string), []string{
+	err := helpers.ValidateStringEnum(v.(string), []string{
 		"administrator",
 		"ai_training_operator",
 		"authentication",
@@ -137,8 +137,8 @@ func validateCloudUserRoleFunc(v interface{}, k string) (ws []string, errors []e
 func resourceCloudUserCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
-	projectId := getNilStringPointerFromData(d, "project_id")
-	serviceNamePtr := getNilStringPointerFromData(d, "service_name")
+	projectId := helpers.GetNilStringPointerFromData(d, "project_id")
+	serviceNamePtr := helpers.GetNilStringPointerFromData(d, "service_name")
 
 	if serviceNamePtr == nil && projectId != nil && *projectId != "" {
 		serviceNamePtr = projectId
@@ -197,8 +197,8 @@ func resourceCloudUserCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceCloudUserRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
-	projectId := getNilStringPointerFromData(d, "project_id")
-	serviceNamePtr := getNilStringPointerFromData(d, "service_name")
+	projectId := helpers.GetNilStringPointerFromData(d, "project_id")
+	serviceNamePtr := helpers.GetNilStringPointerFromData(d, "service_name")
 
 	if serviceNamePtr == nil && projectId != nil && *projectId != "" {
 		serviceNamePtr = projectId
@@ -225,6 +225,7 @@ func resourceCloudUserRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("calling Get %s:\n\t %q", endpoint, err)
 	}
 
+	d.SetId(strconv.Itoa(user.Id))
 	// set resource attributes
 	for k, v := range user.ToMap() {
 		d.Set(k, v)
@@ -244,8 +245,8 @@ func resourceCloudUserRead(d *schema.ResourceData, meta interface{}) error {
 func resourceCloudUserDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
-	projectId := getNilStringPointerFromData(d, "project_id")
-	serviceNamePtr := getNilStringPointerFromData(d, "service_name")
+	projectId := helpers.GetNilStringPointerFromData(d, "project_id")
+	serviceNamePtr := helpers.GetNilStringPointerFromData(d, "service_name")
 
 	if serviceNamePtr == nil && projectId != nil && *projectId != "" {
 		serviceNamePtr = projectId

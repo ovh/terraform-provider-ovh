@@ -3,7 +3,8 @@ package ovh
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-ovh/ovh/helpers"
 )
 
 // Opts
@@ -90,9 +91,9 @@ func (p *CloudUserCreateOpts) String() string {
 }
 
 func (opts *CloudUserCreateOpts) FromResource(d *schema.ResourceData) *CloudUserCreateOpts {
-	opts.Description = getNilStringPointerFromData(d, "description")
-	opts.Role = getNilStringPointerFromData(d, "role_name")
-	opts.Roles = stringsFromSchema(d, "role_names")
+	opts.Description = helpers.GetNilStringPointerFromData(d, "description")
+	opts.Role = helpers.GetNilStringPointerFromData(d, "role_name")
+	opts.Roles, _ = helpers.StringsFromSchema(d, "role_names")
 	return opts
 }
 
@@ -114,7 +115,6 @@ func (u CloudUser) ToMap() map[string]interface{} {
 	obj := make(map[string]interface{})
 	obj["creation_date"] = u.CreationDate
 	obj["description"] = u.Description
-	obj["id"] = u.Id
 	//Dont set password as it must be set only at creation time
 	obj["status"] = u.Status
 	obj["username"] = u.Username

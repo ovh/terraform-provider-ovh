@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-ovh/ovh/helpers"
 )
 
 type DedicatedServer struct {
@@ -43,9 +44,9 @@ type DedicatedServerUpdateOpts struct {
 }
 
 func (opts *DedicatedServerUpdateOpts) FromResource(d *schema.ResourceData) *DedicatedServerUpdateOpts {
-	opts.BootId = getNilInt64PointerFromData(d, "boot_id")
-	opts.Monitoring = getNilBoolPointerFromData(d, "monitoring")
-	opts.State = getNilStringPointerFromData(d, "state")
+	opts.BootId = helpers.GetNilInt64PointerFromData(d, "boot_id")
+	opts.Monitoring = helpers.GetNilBoolPointerFromData(d, "monitoring")
+	opts.State = helpers.GetNilStringPointerFromData(d, "state")
 	return opts
 }
 
@@ -110,7 +111,7 @@ type DedicatedServerInstallTaskCreateOpts struct {
 
 func (opts *DedicatedServerInstallTaskCreateOpts) FromResource(d *schema.ResourceData) *DedicatedServerInstallTaskCreateOpts {
 	opts.TemplateName = d.Get("template_name").(string)
-	opts.PartitionSchemeName = getNilStringPointerFromData(d, "partition_scheme_name")
+	opts.PartitionSchemeName = helpers.GetNilStringPointerFromData(d, "partition_scheme_name")
 
 	details := d.Get("details").([]interface{})
 	if details != nil && len(details) == 1 {
@@ -137,19 +138,19 @@ type DedicatedServerInstallTaskDetails struct {
 }
 
 func (opts *DedicatedServerInstallTaskDetails) FromResource(d *schema.ResourceData, parent string) *DedicatedServerInstallTaskDetails {
-	opts.CustomHostname = getNilStringPointerFromData(d, fmt.Sprintf("%s.custom_hostname", parent))
-	opts.DiskGroupId = getNilInt64PointerFromData(d, fmt.Sprintf("%s.disk_group_id", parent))
-	opts.InstallRTM = getNilBoolPointerFromData(d, fmt.Sprintf("%s.install_rtm", parent))
-	opts.InstallSqlServer = getNilBoolPointerFromData(d, fmt.Sprintf("%s.install_sql_server", parent))
-	opts.Language = getNilStringPointerFromData(d, fmt.Sprintf("%s.language", parent))
-	opts.NoRaid = getNilBoolPointerFromData(d, fmt.Sprintf("%s.no_raid", parent))
-	opts.PostInstallationScriptLink = getNilStringPointerFromData(d, fmt.Sprintf("%s.post_installation_script_link", parent))
-	opts.PostInstallationScriptReturn = getNilStringPointerFromData(d, fmt.Sprintf("%s.post_installation_script_return", parent))
-	opts.ResetHwRaid = getNilBoolPointerFromData(d, fmt.Sprintf("%s.reset_hw_raid", parent))
-	opts.SoftRaidDevices = getNilInt64PointerFromData(d, fmt.Sprintf("%s.soft_raid_devices", parent))
-	opts.SshKeyName = getNilStringPointerFromData(d, fmt.Sprintf("%s.ssh_key_name", parent))
-	opts.UseDistribKernel = getNilBoolPointerFromData(d, fmt.Sprintf("%s.use_distrib_kernel", parent))
-	opts.UseSpla = getNilBoolPointerFromData(d, fmt.Sprintf("%s.use_spla", parent))
+	opts.CustomHostname = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.custom_hostname", parent))
+	opts.DiskGroupId = helpers.GetNilInt64PointerFromData(d, fmt.Sprintf("%s.disk_group_id", parent))
+	opts.InstallRTM = helpers.GetNilBoolPointerFromData(d, fmt.Sprintf("%s.install_rtm", parent))
+	opts.InstallSqlServer = helpers.GetNilBoolPointerFromData(d, fmt.Sprintf("%s.install_sql_server", parent))
+	opts.Language = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.language", parent))
+	opts.NoRaid = helpers.GetNilBoolPointerFromData(d, fmt.Sprintf("%s.no_raid", parent))
+	opts.PostInstallationScriptLink = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.post_installation_script_link", parent))
+	opts.PostInstallationScriptReturn = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.post_installation_script_return", parent))
+	opts.ResetHwRaid = helpers.GetNilBoolPointerFromData(d, fmt.Sprintf("%s.reset_hw_raid", parent))
+	opts.SoftRaidDevices = helpers.GetNilInt64PointerFromData(d, fmt.Sprintf("%s.soft_raid_devices", parent))
+	opts.SshKeyName = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.ssh_key_name", parent))
+	opts.UseDistribKernel = helpers.GetNilBoolPointerFromData(d, fmt.Sprintf("%s.use_distrib_kernel", parent))
+	opts.UseSpla = helpers.GetNilBoolPointerFromData(d, fmt.Sprintf("%s.use_spla", parent))
 
 	return opts
 }
