@@ -192,3 +192,8 @@ func testAccCheckDomainZoneExists(t *testing.T) {
 	t.Logf("Read Domain Zone %s -> nameservers: '%v'", endpoint, r.NameServers)
 
 }
+
+func testAccPreCheckDedicatedCeph(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_DEDICATED_CEPH")
+}

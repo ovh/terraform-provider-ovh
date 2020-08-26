@@ -150,6 +150,36 @@ func validateFilesystem(value string) error {
 	})
 }
 
+func validateDedicatedCephCrushTunables(value string) error {
+	return validateStringEnum(value, []string{
+		"OPTIMAL",
+		"DEFAULT",
+		"LEGACY",
+		"BOBTAIL",
+		"ARGONAUT",
+		"FIREFLY",
+		"HAMMER",
+		"JEWEL",
+	})
+}
+
+func validateDedicatedCephStatus(value string) error {
+	return validateStringEnum(value, []string{
+		"CREATING",
+		"INSTALLED",
+		"DELETING",
+		"DELETED",
+		"TASK_IN_PROGRESS",
+	})
+}
+
+func validateDedicatedCephACLFamily(value string) error {
+	return validateStringEnum(value, []string{
+		"IPv4",
+		"IPv6",
+	})
+}
+
 func getNilBoolPointerFromData(data interface{}, id string) *bool {
 	if resourceData, tok := data.(*schema.ResourceData); tok {
 		if val, ok := resourceData.GetOk(id); ok {
