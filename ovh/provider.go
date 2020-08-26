@@ -4,14 +4,13 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/mitchellh/go-homedir"
 	ini "gopkg.in/ini.v1"
 )
 
-// Provider returns a schema.Provider for OVH.
-func Provider() terraform.ResourceProvider {
+// Provider returns a *schema.Provider for OVH.
+func Provider() *schema.Provider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"endpoint": {

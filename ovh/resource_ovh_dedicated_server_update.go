@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-ovh/ovh/helpers"
 )
 
 func resourceDedicatedServerUpdate() *schema.Resource {
@@ -39,7 +40,7 @@ func resourceDedicatedServerUpdate() *schema.Resource {
 				Optional:    true,
 				Description: "error, hacked, hackedBlocked, ok",
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					err := validateStringEnum(v.(string), []string{"error", "hacked", "hackedBlocked", "ok"})
+					err := helpers.ValidateStringEnum(v.(string), []string{"error", "hacked", "hackedBlocked", "ok"})
 					if err != nil {
 						errors = append(errors, err)
 					}

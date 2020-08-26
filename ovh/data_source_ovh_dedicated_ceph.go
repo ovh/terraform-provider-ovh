@@ -2,8 +2,10 @@ package ovh
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-ovh/ovh/helpers"
 )
 
 func dataSourceDedicatedCeph() *schema.Resource {
@@ -59,7 +61,7 @@ func dataSourceDedicatedCeph() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					err := validateDedicatedCephStatus(v.(string))
+					err := helpers.ValidateDedicatedCephStatus(v.(string))
 					if err != nil {
 						errors = append(errors, err)
 					}

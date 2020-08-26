@@ -6,7 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-ovh/ovh/helpers"
 )
 
 func resourceIpLoadbalancingHttpFarmServer() *schema.Resource {
@@ -63,7 +64,7 @@ func resourceIpLoadbalancingHttpFarmServer() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					err := validateStringEnum(v.(string), []string{"v1", "v2", "v2-ssl", "v2-ssl-cn"})
+					err := helpers.ValidateStringEnum(v.(string), []string{"v1", "v2", "v2-ssl", "v2-ssl-cn"})
 					if err != nil {
 						errors = append(errors, err)
 					}
@@ -93,7 +94,7 @@ func resourceIpLoadbalancingHttpFarmServer() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					err := validateStringEnum(v.(string), []string{"active", "inactive"})
+					err := helpers.ValidateStringEnum(v.(string), []string{"active", "inactive"})
 					if err != nil {
 						errors = append(errors, err)
 					}
@@ -130,15 +131,15 @@ func resourceIpLoadbalancingHttpFarmServerCreate(d *schema.ResourceData, meta in
 	config := meta.(*Config)
 
 	newBackendServer := &IpLoadbalancingFarmServerCreateOpts{
-		DisplayName:          getNilStringPointerFromData(d, "display_name"),
+		DisplayName:          helpers.GetNilStringPointerFromData(d, "display_name"),
 		Address:              d.Get("address").(string),
-		Port:                 getNilIntPointerFromData(d, "port"),
-		ProxyProtocolVersion: getNilStringPointerFromData(d, "proxy_protocol_version"),
-		Chain:                getNilStringPointerFromData(d, "chain"),
-		Weight:               getNilIntPointerFromData(d, "weight"),
-		Probe:                getNilBoolPointer(d.Get("probe")),
-		Ssl:                  getNilBoolPointer(d.Get("ssl")),
-		Backup:               getNilBoolPointer(d.Get("backup")),
+		Port:                 helpers.GetNilIntPointerFromData(d, "port"),
+		ProxyProtocolVersion: helpers.GetNilStringPointerFromData(d, "proxy_protocol_version"),
+		Chain:                helpers.GetNilStringPointerFromData(d, "chain"),
+		Weight:               helpers.GetNilIntPointerFromData(d, "weight"),
+		Probe:                helpers.GetNilBoolPointer(d.Get("probe")),
+		Ssl:                  helpers.GetNilBoolPointer(d.Get("ssl")),
+		Backup:               helpers.GetNilBoolPointer(d.Get("backup")),
 		Status:               d.Get("status").(string),
 	}
 
@@ -184,16 +185,16 @@ func resourceIpLoadbalancingHttpFarmServerUpdate(d *schema.ResourceData, meta in
 	config := meta.(*Config)
 
 	update := &IpLoadbalancingFarmServerUpdateOpts{
-		DisplayName:          getNilStringPointerFromData(d, "display_name"),
-		Address:              getNilStringPointerFromData(d, "address"),
-		Port:                 getNilIntPointerFromData(d, "port"),
-		ProxyProtocolVersion: getNilStringPointerFromData(d, "proxy_protocol_version"),
-		Chain:                getNilStringPointerFromData(d, "chain"),
-		Weight:               getNilIntPointerFromData(d, "weight"),
-		Probe:                getNilBoolPointer(d.Get("probe")),
-		Ssl:                  getNilBoolPointer(d.Get("ssl")),
-		Backup:               getNilBoolPointer(d.Get("backup")),
-		Status:               getNilStringPointerFromData(d, "status"),
+		DisplayName:          helpers.GetNilStringPointerFromData(d, "display_name"),
+		Address:              helpers.GetNilStringPointerFromData(d, "address"),
+		Port:                 helpers.GetNilIntPointerFromData(d, "port"),
+		ProxyProtocolVersion: helpers.GetNilStringPointerFromData(d, "proxy_protocol_version"),
+		Chain:                helpers.GetNilStringPointerFromData(d, "chain"),
+		Weight:               helpers.GetNilIntPointerFromData(d, "weight"),
+		Probe:                helpers.GetNilBoolPointer(d.Get("probe")),
+		Ssl:                  helpers.GetNilBoolPointer(d.Get("ssl")),
+		Backup:               helpers.GetNilBoolPointer(d.Get("backup")),
+		Status:               helpers.GetNilStringPointerFromData(d, "status"),
 	}
 
 	service := d.Get("service_name").(string)
