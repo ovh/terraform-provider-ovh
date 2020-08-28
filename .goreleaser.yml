@@ -40,6 +40,10 @@ signs:
       # if you are using this is a GitHub action or some other automated pipeline, you 
       # need to pass the batch flag to indicate its not interactive.
       - "--batch"
+      - "--yes"
+      - "--no-tty"
+      - "--pinentry-mode"
+      - "loopback"
       - "--local-user"
       - "{{ .Env.GPG_FINGERPRINT }}" # set this environment variable for your signing key
       - "--output"
@@ -47,7 +51,7 @@ signs:
       - "--detach-sign"
       - "${artifact}"
 release:
-  # Visit your project's GitHub Releases page to publish this release.
-  draft: true
-#changelog:
-#  skip: true
+  # If you want to manually examine the release before its live, uncomment this line:                                
+  # draft: true
+changelog:
+  skip: true
