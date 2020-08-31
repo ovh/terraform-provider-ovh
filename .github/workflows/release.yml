@@ -36,19 +36,6 @@ jobs:
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           PASSPHRASE: ${{ secrets.PASSPHRASE }}
-      # -
-      #   name: Reload gpg agent
-      #   id: reload-gpg-agent
-      #   run: |
-      #     /bin/sh -c 'gpg --version; dpkg -l | grep -e gnupg -e gpg ; gpg-connect-agent reloadagent /bye; cat ~/.gnupg/gpg-agent.conf'
-      # -
-      #   name: Preset passphrase
-      #   id: preset_gpg_passphrase
-      #   run: |
-      #     /bin/sh -c 'for i in $(gpg --list-keys --with-keygrip --with-colons "$GPG_FINGERPRINT" | grep "^grp:" | cut -d: -f10); do echo "$GPG_PASSPHRASE" | /usr/lib/gnupg/gpg-preset-passphrase --preset $i; done'
-      #   env:
-      #     GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
-      #     PASSPHRASE: ${{ secrets.PASSPHRASE }}
       -
         name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
