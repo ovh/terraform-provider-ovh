@@ -73,6 +73,8 @@ func TestAccMeSshKey_basic(t *testing.T) {
 						"ovh_me_ssh_key.key_1", "key_name", sshKeyName),
 					resource.TestCheckResourceAttr(
 						"ovh_me_ssh_key.key_1", "key", sshKey),
+					resource.TestCheckResourceAttr(
+						"ovh_me_ssh_key.key_1", "default", "true"),
 				),
 			},
 		},
@@ -83,5 +85,6 @@ const testAccMeSshKeyConfig = `
 resource "ovh_me_ssh_key" "key_1" {
 	key_name = "%s"
 	key      = "%s"
+	default  = true
 }
 `
