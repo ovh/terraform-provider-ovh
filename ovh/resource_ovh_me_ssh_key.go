@@ -55,6 +55,12 @@ func resourceMeSshKeyRead(d *schema.ResourceData, meta interface{}) error {
 		sshKey,
 	)
 	if err != nil {
+		if err.(*ovh.APIError).Code == 404 {
+			d.SetId("")
+
+			return nil
+		}
+
 		return fmt.Errorf("Unable to find SSH key named %s:\n\t %q", id, err)
 	}
 
