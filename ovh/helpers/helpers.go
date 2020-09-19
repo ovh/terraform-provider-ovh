@@ -173,6 +173,20 @@ func ValidateDedicatedCephStatus(value string) error {
 	})
 }
 
+func ValidateEnterpriseCloudDBStatus(value string) error {
+	return ValidateStringEnum(value, []string{
+		"created",
+		"creating",
+		"deleting",
+		"reopening",
+		"restarting",
+		"scaling",
+		"suspended",
+		"suspending",
+		"updating",
+	})
+}
+
 func ValidateDedicatedCephACLFamily(value string) error {
 	return ValidateStringEnum(value, []string{
 		"IPv4",
