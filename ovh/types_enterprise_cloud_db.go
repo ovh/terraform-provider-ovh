@@ -5,53 +5,53 @@ import (
 	"github.com/terraform-providers/terraform-provider-ovh/ovh/helpers"
 )
 
-type EnterpriseCloudDBStatus string
-type EnterpriseCloudDBSecurityGroupStatus string
-type EnterpriseCloudDBSecurityGroupRuleStatus string
+type CloudDBEnterpriseStatus string
+type CloudDBEnterpriseSecurityGroupStatus string
+type CloudDBEnterpriseSecurityGroupRuleStatus string
 
 const (
-	EnterpriseCloudDBStatusCreated    EnterpriseCloudDBStatus = "created"
-	EnterpriseCloudDBStatusCreating   EnterpriseCloudDBStatus = "creating"
-	EnterpriseCloudDBStatusDeleting   EnterpriseCloudDBStatus = "deleting"
-	EnterpriseCloudDBStatusReopening  EnterpriseCloudDBStatus = "reopening"
-	EnterpriseCloudDBStatusRestarting EnterpriseCloudDBStatus = "restarting"
-	EnterpriseCloudDBStatusScaling    EnterpriseCloudDBStatus = "scaling"
-	EnterpriseCloudDBStatusSuspended  EnterpriseCloudDBStatus = "suspended"
-	EnterpriseCloudDBStatusSuspending EnterpriseCloudDBStatus = "suspending"
-	EnterpriseCloudDBStatusUpdating   EnterpriseCloudDBStatus = "updating"
+	CloudDBEnterpriseStatusCreated    CloudDBEnterpriseStatus = "created"
+	CloudDBEnterpriseStatusCreating   CloudDBEnterpriseStatus = "creating"
+	CloudDBEnterpriseStatusDeleting   CloudDBEnterpriseStatus = "deleting"
+	CloudDBEnterpriseStatusReopening  CloudDBEnterpriseStatus = "reopening"
+	CloudDBEnterpriseStatusRestarting CloudDBEnterpriseStatus = "restarting"
+	CloudDBEnterpriseStatusScaling    CloudDBEnterpriseStatus = "scaling"
+	CloudDBEnterpriseStatusSuspended  CloudDBEnterpriseStatus = "suspended"
+	CloudDBEnterpriseStatusSuspending CloudDBEnterpriseStatus = "suspending"
+	CloudDBEnterpriseStatusUpdating   CloudDBEnterpriseStatus = "updating"
 
-	EnterpriseCloudDBSecurityGroupStatusCreated  EnterpriseCloudDBSecurityGroupStatus = "created"
-	EnterpriseCloudDBSecurityGroupStatusCreating EnterpriseCloudDBSecurityGroupStatus = "creating"
-	EnterpriseCloudDBSecurityGroupStatusDeleting EnterpriseCloudDBSecurityGroupStatus = "deleting"
-	EnterpriseCloudDBSecurityGroupStatusUpdated  EnterpriseCloudDBSecurityGroupStatus = "updated"
-	EnterpriseCloudDBSecurityGroupStatusUpdating EnterpriseCloudDBSecurityGroupStatus = "updating"
+	CloudDBEnterpriseSecurityGroupStatusCreated  CloudDBEnterpriseSecurityGroupStatus = "created"
+	CloudDBEnterpriseSecurityGroupStatusCreating CloudDBEnterpriseSecurityGroupStatus = "creating"
+	CloudDBEnterpriseSecurityGroupStatusDeleting CloudDBEnterpriseSecurityGroupStatus = "deleting"
+	CloudDBEnterpriseSecurityGroupStatusUpdated  CloudDBEnterpriseSecurityGroupStatus = "updated"
+	CloudDBEnterpriseSecurityGroupStatusUpdating CloudDBEnterpriseSecurityGroupStatus = "updating"
 
-	EnterpriseCloudDBSecurityGroupRuleStatusCreated  EnterpriseCloudDBSecurityGroupRuleStatus = "created"
-	EnterpriseCloudDBSecurityGroupRuleStatusCreating EnterpriseCloudDBSecurityGroupRuleStatus = "creating"
-	EnterpriseCloudDBSecurityGroupRuleStatusDeleting EnterpriseCloudDBSecurityGroupRuleStatus = "deleting"
-	EnterpriseCloudDBSecurityGroupRuleStatusUpdated  EnterpriseCloudDBSecurityGroupRuleStatus = "updated"
-	EnterpriseCloudDBSecurityGroupRuleStatusUpdating EnterpriseCloudDBSecurityGroupRuleStatus = "updating"
+	CloudDBEnterpriseSecurityGroupRuleStatusCreated  CloudDBEnterpriseSecurityGroupRuleStatus = "created"
+	CloudDBEnterpriseSecurityGroupRuleStatusCreating CloudDBEnterpriseSecurityGroupRuleStatus = "creating"
+	CloudDBEnterpriseSecurityGroupRuleStatusDeleting CloudDBEnterpriseSecurityGroupRuleStatus = "deleting"
+	CloudDBEnterpriseSecurityGroupRuleStatusUpdated  CloudDBEnterpriseSecurityGroupRuleStatus = "updated"
+	CloudDBEnterpriseSecurityGroupRuleStatusUpdating CloudDBEnterpriseSecurityGroupRuleStatus = "updating"
 )
 
-type EnterpriseCloudDB struct {
+type CloudDBEnterprise struct {
 	Id         string                  `json:"id"`
-	Status     EnterpriseCloudDBStatus `json:"status"`
+	Status     CloudDBEnterpriseStatus `json:"status"`
 	RegionName string                  `json:"regionName"`
 }
 
-type EnterpriseCloudDBSecurityGroupCreateUpdateOpts struct {
+type CloudDBEnterpriseSecurityGroupCreateUpdateOpts struct {
 	Name      string `json:"name"`
 	ClusterId string `json:"clusterId"`
 }
 
-type EnterpriseCloudDBSecurityGroup struct {
+type CloudDBEnterpriseSecurityGroup struct {
 	Id     string                  `json:"id"`
 	Name   string                  `json:"name"`
-	Status EnterpriseCloudDBStatus `json:"status"`
+	Status CloudDBEnterpriseStatus `json:"status"`
 	TaskId string                  `json:"taskId"`
 }
 
-func (opts *EnterpriseCloudDBSecurityGroupCreateUpdateOpts) FromResource(d *schema.ResourceData) *EnterpriseCloudDBSecurityGroupCreateUpdateOpts {
+func (opts *CloudDBEnterpriseSecurityGroupCreateUpdateOpts) FromResource(d *schema.ResourceData) *CloudDBEnterpriseSecurityGroupCreateUpdateOpts {
 	name := helpers.GetNilStringPointerFromData(d, "name")
 	opts.Name = *name
 	clusterId := helpers.GetNilStringPointerFromData(d, "cluster_id")
@@ -59,18 +59,18 @@ func (opts *EnterpriseCloudDBSecurityGroupCreateUpdateOpts) FromResource(d *sche
 	return opts
 }
 
-type EnterpriseCloudDBSecurityGroupRuleCreateUpdateOpts struct {
+type CloudDBEnterpriseSecurityGroupRuleCreateUpdateOpts struct {
 	Source string `json:"source"`
 }
 
-type EnterpriseCloudDBSecurityGroupRule struct {
+type CloudDBEnterpriseSecurityGroupRule struct {
 	Id     string                                   `json:"id"`
 	Source string                                   `json:"source"`
-	Status EnterpriseCloudDBSecurityGroupRuleStatus `json:"status"`
+	Status CloudDBEnterpriseSecurityGroupRuleStatus `json:"status"`
 	TaskId string                                   `json:"taskId"`
 }
 
-func (opts *EnterpriseCloudDBSecurityGroupRuleCreateUpdateOpts) FromResource(d *schema.ResourceData) *EnterpriseCloudDBSecurityGroupRuleCreateUpdateOpts {
+func (opts *CloudDBEnterpriseSecurityGroupRuleCreateUpdateOpts) FromResource(d *schema.ResourceData) *CloudDBEnterpriseSecurityGroupRuleCreateUpdateOpts {
 	source := helpers.GetNilStringPointerFromData(d, "source")
 	opts.Source = *source
 	return opts

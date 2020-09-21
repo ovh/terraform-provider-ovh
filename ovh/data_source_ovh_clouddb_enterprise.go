@@ -8,11 +8,11 @@ import (
 	"github.com/terraform-providers/terraform-provider-ovh/ovh/helpers"
 )
 
-const EnterpriseCloudDBBaseUrl = "/cloudDB/enterprise/cluster/%s"
+const CloudDBEnterpriseBaseUrl = "/cloudDB/enterprise/cluster/%s"
 
-func dataSourceEnterpriseCloudDb() *schema.Resource {
+func dataSourceCloudDBEnterprise() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceEnterpriseCloudDB,
+		Read: dataSourceCloudDBEnterpriseRead,
 		Schema: map[string]*schema.Schema{
 			"region": {
 				Type:     schema.TypeString,
@@ -29,7 +29,7 @@ func dataSourceEnterpriseCloudDb() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					err := helpers.ValidateEnterpriseCloudDBStatus(v.(string))
+					err := helpers.ValidateCloudDBEnterpriseStatus(v.(string))
 					if err != nil {
 						errors = append(errors, err)
 					}
@@ -40,14 +40,14 @@ func dataSourceEnterpriseCloudDb() *schema.Resource {
 	}
 }
 
-func dataSourceEnterpriseCloudDB(d *schema.ResourceData, meta interface{}) error {
+func dataSourceCloudDBEnterpriseRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	clusterId := d.Get("cluster_id").(string)
 	log.Printf("[DEBUG] Will retrieve enterprise cloud db %s", clusterId)
 
-	db := &EnterpriseCloudDB{}
-	if err := config.OVHClient.Get(fmt.Sprintf(EnterpriseCloudDBBaseUrl, clusterId), &db); err != nil {
-		return fmt.Errorf("Error calling %s/%s:\n\t %q", EnterpriseCloudDBBaseUrl, clusterId, err)
+	db := &CloudDBEnterprise{}
+	if err := config.OVHClient.Get(fmt.Sprintf(CloudDBEnterpriseBaseUrl, clusterId), &db); err != nil {
+		return fmt.Errorf("Error calling %s/%s:\n\t %q", CloudDBEnterpriseBaseUrl, clusterId, err)
 	}
 	d.SetId(db.Id)
 	d.Set("region", db.RegionName)

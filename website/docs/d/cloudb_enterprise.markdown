@@ -13,7 +13,7 @@ Use this data source to retrieve information about an Enterprise Cloud DB Instan
 ## Example Usage
 
 ```hcl
-data "ovh_enterprise_cloud_db" "my-db" {
+data "ovh_clouddb_enterprise" "my-db" {
    cluster_id = "XXXXXX"
 }
 ```

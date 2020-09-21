@@ -13,15 +13,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-const EnterpriseCloudDBSecurityGroupRuleBaseUrl = EnterpriseCloudDBSecurityGroupBaseUrl + "/%s/rule"
+const CloudDBEnterpriseSecurityGroupRuleBaseUrl = CloudDBEnterpriseSecurityGroupBaseUrl + "/%s/rule"
 
-func resourceEnterpriseCloudDBSecurityGroupRule() *schema.Resource {
+func resourceCloudDBEnterpriseSecurityGroupRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceEnterpriseCloudDBSecurityGroupRuleCreate,
-		Read:   resourceEnterpriseCloudDBSecurityGroupRuleRead,
-		Delete: resourceEnterpriseCloudDBSecurityGroupRuleDelete,
+		Create: resourceCloudDBEnterpriseSecurityGroupRuleCreate,
+		Read:   resourceCloudDBEnterpriseSecurityGroupRuleRead,
+		Delete: resourceCloudDBEnterpriseSecurityGroupRuleDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceEnterpriseCloudDBSecurityGroupRuleImportState,
+			State: resourceCloudDBEnterpriseSecurityGroupRuleImportState,
 		},
 		Schema: map[string]*schema.Schema{
 			"cluster_id": {
@@ -53,14 +53,14 @@ func resourceEnterpriseCloudDBSecurityGroupRule() *schema.Resource {
 	}
 }
 
-func resourceEnterpriseCloudDBSecurityGroupRuleCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudDBEnterpriseSecurityGroupRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-	sg := (&EnterpriseCloudDBSecurityGroupRuleCreateUpdateOpts{}).FromResource(d)
+	sg := (&CloudDBEnterpriseSecurityGroupRuleCreateUpdateOpts{}).FromResource(d)
 	clusterId := d.Get("cluster_id").(string)
 	securityGroupId := d.Get("security_group_id").(string)
 
-	url := fmt.Sprintf(EnterpriseCloudDBSecurityGroupRuleBaseUrl, clusterId, securityGroupId)
-	var securityGroupRule EnterpriseCloudDBSecurityGroupRule
+	url := fmt.Sprintf(CloudDBEnterpriseSecurityGroupRuleBaseUrl, clusterId, securityGroupId)
+	var securityGroupRule CloudDBEnterpriseSecurityGroupRule
 
 	// monitor POST/PUT
 	stateCreation := &resource.StateChangeConf{
@@ -86,13 +86,13 @@ func resourceEnterpriseCloudDBSecurityGroupRuleCreate(d *schema.ResourceData, me
 		return fmt.Errorf("Error waiting for DB Entreprise Security Group creation:\n\t %q", err)
 	}
 
-	getUrl := fmt.Sprintf(EnterpriseCloudDBSecurityGroupRuleBaseUrl+"/%s", clusterId, securityGroupId, securityGroupRule.Id)
+	getUrl := fmt.Sprintf(CloudDBEnterpriseSecurityGroupRuleBaseUrl+"/%s", clusterId, securityGroupId, securityGroupRule.Id)
 
 	// monitor task execution
 	stateConf := &resource.StateChangeConf{
-		Target: []string{string(EnterpriseCloudDBSecurityGroupRuleStatusCreated)},
+		Target: []string{string(CloudDBEnterpriseSecurityGroupRuleStatusCreated)},
 		Refresh: func() (interface{}, string, error) {
-			var resp EnterpriseCloudDBSecurityGroupRule
+			var resp CloudDBEnterpriseSecurityGroupRule
 			if err := config.OVHClient.Get(getUrl, &resp); err != nil {
 				return nil, "", err
 			}
@@ -109,10 +109,10 @@ func resourceEnterpriseCloudDBSecurityGroupRuleCreate(d *schema.ResourceData, me
 
 	d.SetId(securityGroupRule.Id)
 
-	return resourceEnterpriseCloudDBSecurityGroupRuleRead(d, meta)
+	return resourceCloudDBEnterpriseSecurityGroupRuleRead(d, meta)
 }
 
-func resourceEnterpriseCloudDBSecurityGroupRuleImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceCloudDBEnterpriseSecurityGroupRuleImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	givenId := d.Id()
 	splitId := strings.SplitN(givenId, "/", 3)
 	if len(splitId) != 3 {
@@ -127,12 +127,12 @@ func resourceEnterpriseCloudDBSecurityGroupRuleImportState(d *schema.ResourceDat
 	return results, nil
 }
 
-func resourceEnterpriseCloudDBSecurityGroupRuleRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudDBEnterpriseSecurityGroupRuleRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	clusterId := d.Get("cluster_id").(string)
 	securityGroupId := d.Get("security_group_id").(string)
-	url := fmt.Sprintf(EnterpriseCloudDBSecurityGroupRuleBaseUrl+"/%s", clusterId, securityGroupId, d.Id())
-	resp := &EnterpriseCloudDBSecurityGroupRule{}
+	url := fmt.Sprintf(CloudDBEnterpriseSecurityGroupRuleBaseUrl+"/%s", clusterId, securityGroupId, d.Id())
+	resp := &CloudDBEnterpriseSecurityGroupRule{}
 
 	if err := config.OVHClient.Get(url, resp); err != nil {
 		id := err.(*ovh.APIError).QueryID
@@ -142,12 +142,12 @@ func resourceEnterpriseCloudDBSecurityGroupRuleRead(d *schema.ResourceData, meta
 	return nil
 }
 
-func resourceEnterpriseCloudDBSecurityGroupRuleDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudDBEnterpriseSecurityGroupRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
 	clusterId := d.Get("cluster_id").(string)
 	securityGroupId := d.Get("security_group_id").(string)
-	url := fmt.Sprintf(EnterpriseCloudDBSecurityGroupRuleBaseUrl+"/%s", clusterId, securityGroupId, d.Id())
+	url := fmt.Sprintf(CloudDBEnterpriseSecurityGroupRuleBaseUrl+"/%s", clusterId, securityGroupId, d.Id())
 
 	// monitor POST/PUT
 	stateCreation := &resource.StateChangeConf{
@@ -173,7 +173,7 @@ func resourceEnterpriseCloudDBSecurityGroupRuleDelete(d *schema.ResourceData, me
 		return fmt.Errorf("Error execution DB Entreprise Security Group Deletion:\n\t %q", err)
 	}
 
-	getUrl := fmt.Sprintf(EnterpriseCloudDBSecurityGroupRuleBaseUrl+"/%s", clusterId, securityGroupId, d.Id())
+	getUrl := fmt.Sprintf(CloudDBEnterpriseSecurityGroupRuleBaseUrl+"/%s", clusterId, securityGroupId, d.Id())
 
 	// monitor task execution
 	stateConf := &resource.StateChangeConf{

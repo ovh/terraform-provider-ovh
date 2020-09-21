@@ -173,7 +173,7 @@ func ValidateDedicatedCephStatus(value string) error {
 	})
 }
 
-func ValidateEnterpriseCloudDBStatus(value string) error {
+func ValidateCloudDBEnterpriseStatus(value string) error {
 	return ValidateStringEnum(value, []string{
 		"created",
 		"creating",
