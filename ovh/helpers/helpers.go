@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"net"
+	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/go-ovh/ovh"
 )
@@ -348,4 +350,17 @@ func GetVrackServiceName(d *schema.ResourceData) (string, error) {
 	}
 
 	return *serviceNamePtr, nil
+}
+
+// WaitAvailable wait for a ressource to become available in the API (aka non 404)
+func WaitAvailable(client *ovh.Client, endpoint string, timeout time.Duration) error {
+	return resource.Retry(timeout, func() *resource.RetryError {
+		if err := client.Get(endpoint, nil); err != nil {
+			if err.(*ovh.APIError).Code == 404 {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
 }
