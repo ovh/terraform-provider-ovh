@@ -98,9 +98,7 @@ func resourceCloudKubernetesNodePoolUpdate(ctx context.Context, d *schema.Resour
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/nodepool/%s", projectId, clusterId, poolId)
 
-	r := &CloudKubernetesNodePoolResponse{}
-
-	err := config.OVHClient.Put(endpoint, params, r)
+	err := config.OVHClient.Put(endpoint, params, nil)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity:      diag.Error,
@@ -111,12 +109,12 @@ func resourceCloudKubernetesNodePoolUpdate(ctx context.Context, d *schema.Resour
 		return
 	}
 
-	log.Printf("[DEBUG] Waiting for Node %s:", r)
+	log.Printf("[DEBUG] Waiting for Node %s:", poolId)
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"INSTALLING", "UPDATING", "REDEPLOYING", "RESIZING"},
 		Target:     []string{"READY"},
-		Refresh:    waitForCloudKubernetesNodePoolActive(config.OVHClient, projectId, clusterId, r.Id),
+		Refresh:    waitForCloudKubernetesNodePoolActive(config.OVHClient, projectId, clusterId, poolId),
 		Timeout:    45 * time.Minute,
 		Delay:      5 * time.Second,
 		MinTimeout: 3 * time.Second,
