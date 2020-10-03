@@ -75,7 +75,7 @@ func Provider() *schema.Provider {
 			"ovh_cloud_network_private_subnet":                            resourceCloudNetworkPrivateSubnet(),
 			"ovh_cloud_user":                                              resourceCloudUser(),
 			"ovh_cloud_kubernetes_cluster":                                resourceCloudKubernetesCluster(),
-			"ovh_cloud_kubernetes_node":                                   resourceCloudKubernetesNode(),
+			"ovh_cloud_kubernetes_node_pool":                              resourceCloudKubernetesNodePool(),
 			"ovh_dedicated_ceph_acl":                                      resourceDedicatedCephACL(),
 			"ovh_dedicated_server_install_task":                           resourceDedicatedServerInstallTask(),
 			"ovh_dedicated_server_reboot_task":                            resourceDedicatedServerRebootTask(),

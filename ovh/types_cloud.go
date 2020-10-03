@@ -176,3 +176,80 @@ type CloudServiceStatusResponse struct {
 func (s *CloudServiceStatusResponse) String() string {
 	return fmt.Sprintf("%s: %s", s.Name, s.Status)
 }
+
+type PublicCloudKubernetesClusterResponse struct {
+	ControlPlaneIsUpToDate bool     `json:"controlPlaneIsUpToDate"`
+	Id                     string   `json:"id"`
+	IsUpToDate             bool     `json:"isUpToDate"`
+	Name                   string   `json:"name"`
+	NextUpgradeVersions    []string `json:"nextUpgradeVersions"`
+	NodesUrl               string   `json:"nodesUrl"`
+	Region                 string   `json:"region"`
+	Status                 string   `json:"status"`
+	UpdatePolicy           string   `json:"updatePolicy"`
+	Url                    string   `json:"url"`
+	Version                string   `json:"version"`
+}
+
+func (s *PublicCloudKubernetesClusterResponse) String() string {
+	return fmt.Sprintf("%s(%s): %s", s.Name, s.Id, s.Status)
+}
+
+type CloudKubernetesKubeConfigResponse struct {
+	Content string `json:"content"`
+}
+
+type CloudKubernetesNodeResponse struct {
+	Id         string `json:"id"`
+	ProjectId  string `json:"projectId"`
+	InstanceId string `json:"instanceId"`
+	IsUpToDate bool   `json:"isUpToDate"`
+	Name       string `json:"name"`
+	Flavor     string `json:"flavor"`
+	Status     string `json:"status"`
+	Version    string `json:"version"`
+}
+
+func (n *CloudKubernetesNodeResponse) String() string {
+	return fmt.Sprintf("%s(%s): %s", n.Name, n.Id, n.Status)
+}
+
+type CloudKubernetesNodeCreationRequest struct {
+	FlavorName string `json:"flavorName"`
+	Name       string `json:"name"`
+}
+
+type CloudKubernetesNodePoolCreationRequest struct {
+	DesiredNodes  int    `json:"desiredNodes"`
+	MaxNodes      int    `json:"maxNodes"`
+	MinNodes      int    `json:"minNodes"`
+	FlavorName    string `json:"flavorName"`
+	Name          string `json:"name"`
+	MonthlyBilled bool   `json:"monthlyBilled"`
+	AntiAffinity  bool   `json:"antiAffinity"`
+}
+
+type CloudKubernetesNodePoolUpdateRequest struct {
+	DesiredNodes int `json:"desiredNodes"`
+	MaxNodes     int `json:"maxNodes"`
+	MinNodes     int `json:"minNodes"`
+}
+
+type CloudKubernetesNodePoolResponse struct {
+	Id             string `json:"id"`
+	ProjectId      string `json:"projectId"`
+	Name           string `json:"name"`
+	AntiAffinity   bool   `json:"antiAffinity"`
+	AvailableNodes int    `json:"availableNodes"`
+	CreatedAt      string `json:"createdAt"`
+	CurrentNodes   string `json:"currentNodes"`
+	DesiredNodes   int    `json:"desiredNodes"`
+	Flavor         string `json:"flavor"`
+	MaxNodes       int    `json:"maxNodes"`
+	MinNodes       int    `json:"minNodes"`
+	MonthlyBilled  bool   `json:"monthlyBilled"`
+	SizeStatus     string `json:"sizeStatus"`
+	Status         string `json:"status"`
+	UpToDateNodes  int    `json:"upToDateNodes"`
+	UpdatedAt      string `json:"updatedAt"`
+}

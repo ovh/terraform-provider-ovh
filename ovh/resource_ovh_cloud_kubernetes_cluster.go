@@ -270,7 +270,7 @@ func readCloudKubernetesCluster(projectId string, config *Config, d *schema.Reso
 	_ = d.Set("url", cluster.Url)
 	_ = d.Set("kubernetes_version", cluster.Version)
 
-	kubeconfigRaw := PublicCloudKubernetesKubeConfigResponse{}
+	kubeconfigRaw := CloudKubernetesKubeConfigResponse{}
 	endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/kubeconfig", projectId, cluster.Id)
 	err = config.OVHClient.Post(endpoint, nil, &kubeconfigRaw)
 

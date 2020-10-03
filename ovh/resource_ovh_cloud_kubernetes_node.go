@@ -72,13 +72,13 @@ func resourceCloudKubernetesNodeCreate(d *schema.ResourceData, meta interface{})
 
 	projectId := d.Get("project_id").(string)
 	clusterId := d.Get("cluster_id").(string)
-	params := &PublicCloudKubernetesNodeCreationRequest{
+	params := &CloudKubernetesNodeCreationRequest{
 		Name: d.Get("name").(string),
 		// TODO: Write check to ensure flavor is supported
 		FlavorName: d.Get("flavor").(string),
 	}
 
-	r := &PublicCloudKubernetesNodeResponse{}
+	r := &CloudKubernetesNodeResponse{}
 
 	log.Printf("[DEBUG] Will create public cloud kubernetes cluster: %s", params)
 
@@ -140,7 +140,7 @@ func resourceCloudKubernetesNodeRead(d *schema.ResourceData, meta interface{}) e
 	clusterId := d.Get("cluster_id").(string)
 
 	d.Partial(true)
-	r := &PublicCloudKubernetesNodeResponse{}
+	r := &CloudKubernetesNodeResponse{}
 
 	log.Printf("[DEBUG] Will read public cloud kubernetes cluster %s from project: %s", d.Id(), projectId)
 
@@ -200,7 +200,7 @@ func resourceCloudKubernetesNodeDelete(d *schema.ResourceData, meta interface{})
 }
 
 func cloudKubernetesNodeExists(projectId string, clusterId string, id string, c *ovh.Client) error {
-	r := &PublicCloudKubernetesNodeResponse{}
+	r := &CloudKubernetesNodeResponse{}
 
 	log.Printf("[DEBUG] Will read public cloud Kubernetes Node for project: %s, id: %s", projectId, id)
 
@@ -215,7 +215,7 @@ func cloudKubernetesNodeExists(projectId string, clusterId string, id string, c 
 	return nil
 }
 
-func readCloudKubernetesNode(projectId string, config *Config, d *schema.ResourceData, cluster *PublicCloudKubernetesNodeResponse) (err error) {
+func readCloudKubernetesNode(projectId string, config *Config, d *schema.ResourceData, cluster *CloudKubernetesNodeResponse) (err error) {
 	_ = d.Set("is_up_to_date", cluster.IsUpToDate)
 	_ = d.Set("name", cluster.Name)
 	_ = d.Set("status", cluster.Status)
@@ -226,7 +226,7 @@ func readCloudKubernetesNode(projectId string, config *Config, d *schema.Resourc
 
 func waitForCloudKubernetesNodeActive(c *ovh.Client, projectId, clusterId string, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		r := &PublicCloudKubernetesNodeResponse{}
+		r := &CloudKubernetesNodeResponse{}
 		endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/node/%s", projectId, clusterId, id)
 		err := c.Get(endpoint, r)
 		if err != nil {
@@ -240,7 +240,7 @@ func waitForCloudKubernetesNodeActive(c *ovh.Client, projectId, clusterId string
 
 func waitForCloudKubernetesNodeDelete(c *ovh.Client, projectId, clusterId string, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		r := &PublicCloudKubernetesNodeResponse{}
+		r := &CloudKubernetesNodeResponse{}
 		endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/node/%s", projectId, clusterId, id)
 		err := c.Get(endpoint, r)
 		if err != nil {
@@ -259,7 +259,7 @@ func waitForCloudKubernetesNodeDelete(c *ovh.Client, projectId, clusterId string
 
 func waitForCloudKubernetesNodeToBeReal(client *ovh.Client, projectId string, clusterId string, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		r := &PublicCloudKubernetesNodeResponse{}
+		r := &CloudKubernetesNodeResponse{}
 		endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/node/%s", projectId, clusterId, id)
 		err := client.Get(endpoint, r)
 		if err != nil {
