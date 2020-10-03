@@ -176,3 +176,82 @@ type CloudServiceStatusResponse struct {
 func (s *CloudServiceStatusResponse) String() string {
 	return fmt.Sprintf("%s: %s", s.Name, s.Status)
 }
+
+type CloudProjectKubeCreateOpts struct {
+	Name    string `json:"name"`
+	Region  string `json:"region"`
+	Version string `json:"version"`
+}
+
+func (s *CloudProjectKubeCreateOpts) String() string {
+	return fmt.Sprintf("%s(%s): %s", s.Name, s.Region, s.Version)
+}
+
+type CloudProjectKubeResponse struct {
+	ControlPlaneIsUpToDate bool     `json:"controlPlaneIsUpToDate"`
+	Id                     string   `json:"id"`
+	IsUpToDate             bool     `json:"isUpToDate"`
+	Name                   string   `json:"name"`
+	NextUpgradeVersions    []string `json:"nextUpgradeVersions"`
+	NodesUrl               string   `json:"nodesUrl"`
+	Region                 string   `json:"region"`
+	Status                 string   `json:"status"`
+	UpdatePolicy           string   `json:"updatePolicy"`
+	Url                    string   `json:"url"`
+	Version                string   `json:"version"`
+}
+
+func (s *CloudProjectKubeResponse) String() string {
+	return fmt.Sprintf("%s(%s): %s", s.Name, s.Id, s.Status)
+}
+
+type CloudProjectKubeKubeConfigResponse struct {
+	Content string `json:"content"`
+}
+
+type CloudProjectKubeNodePoolCreateOpts struct {
+	DesiredNodes  int    `json:"desiredNodes"`
+	MaxNodes      int    `json:"maxNodes"`
+	MinNodes      int    `json:"minNodes"`
+	FlavorName    string `json:"flavorName"`
+	Name          string `json:"name"`
+	MonthlyBilled bool   `json:"monthlyBilled"`
+	AntiAffinity  bool   `json:"antiAffinity"`
+}
+
+func (s *CloudProjectKubeNodePoolCreateOpts) String() string {
+	return fmt.Sprintf("%s(%s): %d/%d/%d", s.Name, s.FlavorName, s.DesiredNodes, s.MinNodes, s.MaxNodes)
+}
+
+type CloudProjectKubeNodePoolUpdateOpts struct {
+	DesiredNodes int `json:"desiredNodes"`
+	MaxNodes     int `json:"maxNodes"`
+	MinNodes     int `json:"minNodes"`
+}
+
+func (s *CloudProjectKubeNodePoolUpdateOpts) String() string {
+	return fmt.Sprintf("%d/%d/%d", s.DesiredNodes, s.MinNodes, s.MaxNodes)
+}
+
+type CloudProjectKubeNodePoolResponse struct {
+	Id             string `json:"id"`
+	ProjectId      string `json:"projectId"`
+	Name           string `json:"name"`
+	AntiAffinity   bool   `json:"antiAffinity"`
+	AvailableNodes int    `json:"availableNodes"`
+	CreatedAt      string `json:"createdAt"`
+	CurrentNodes   int    `json:"currentNodes"`
+	DesiredNodes   int    `json:"desiredNodes"`
+	Flavor         string `json:"flavor"`
+	MaxNodes       int    `json:"maxNodes"`
+	MinNodes       int    `json:"minNodes"`
+	MonthlyBilled  bool   `json:"monthlyBilled"`
+	SizeStatus     string `json:"sizeStatus"`
+	Status         string `json:"status"`
+	UpToDateNodes  int    `json:"upToDateNodes"`
+	UpdatedAt      string `json:"updatedAt"`
+}
+
+func (n *CloudProjectKubeNodePoolResponse) String() string {
+	return fmt.Sprintf("%s(%s): %s", n.Name, n.Id, n.Status)
+}

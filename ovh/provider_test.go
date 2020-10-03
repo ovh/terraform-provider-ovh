@@ -92,6 +92,15 @@ func testAccPreCheckCloud(t *testing.T) {
 	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_SERVICE_TEST")
 }
 
+// Checks that the environment variables needed for the /cloud/{cloudId}/kube acceptance tests
+// are set.
+func testAccPreCheckKubernetes(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	testAccPreCheckCloud(t)
+	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_KUBE_REGION_TEST")
+	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_KUBE_VERSION_TEST")
+}
+
 // Checks that the environment variables needed for the /ipLoadbalacing acceptance tests
 // are set.
 func testAccPreCheckIpLoadbalancing(t *testing.T) {
