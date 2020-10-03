@@ -19,9 +19,9 @@ resource "ovh_cloud_kubernetes_node_pool" "pool" {
 	cluster_id = data.ovh_cloud_kubernetes_cluster.cluster.id
   	name = "acceptance-node"
 	flavor = "b2-7"
-	desiredSize = 1
-	minSize = 0
-	maxSize = 1
+	desired_size = 1
+	min_size = 0
+	max_size = 1
 }
 `, os.Getenv("OVH_PUBLIC_CLOUD"), os.Getenv("OVH_KUBERNETES_CLUSTER_NAME"), os.Getenv("OVH_PUBLIC_CLOUD"))
 

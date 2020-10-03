@@ -50,22 +50,22 @@ func resourceCloudKubernetesNodePool() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"desiredNodes": {
+			"desired_nodes": {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: false,
 			},
-			"maxNodes": {
+			"max_nodes": {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: false,
 			},
-			"minNodes": {
+			"min_nodes": {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: false,
 			},
-			"monthlyBilled": {
+			"monthly_billed": {
 				Type:     schema.TypeBool,
 				Required: false,
 				Default:  false,
@@ -87,9 +87,9 @@ func resourceCloudKubernetesNodePoolUpdate(ctx context.Context, d *schema.Resour
 	poolId := d.Id()
 
 	params := &CloudKubernetesNodePoolUpdateRequest{
-		DesiredNodes: d.Get("desiredNodes").(int),
-		MaxNodes:     d.Get("maxNodes").(int),
-		MinNodes:     d.Get("minNodes").(int),
+		DesiredNodes: d.Get("desired_nodes").(int),
+		MaxNodes:     d.Get("max_nodes").(int),
+		MinNodes:     d.Get("min_nodes").(int),
 	}
 
 	d.Partial(true)
@@ -159,10 +159,10 @@ func resourceCloudKubernetesNodePoolCreate(ctx context.Context, d *schema.Resour
 	params := &CloudKubernetesNodePoolCreationRequest{
 		Name:          d.Get("name").(string),
 		FlavorName:    d.Get("flavor").(string),
-		DesiredNodes:  d.Get("desiredNodes").(int),
-		MaxNodes:      d.Get("maxNodes").(int),
-		MinNodes:      d.Get("minNodes").(int),
-		MonthlyBilled: d.Get("monthlyBilled").(bool),
+		DesiredNodes:  d.Get("desired_nodes").(int),
+		MaxNodes:      d.Get("max_nodes").(int),
+		MinNodes:      d.Get("min_nodes").(int),
+		MonthlyBilled: d.Get("monthly_billed").(bool),
 	}
 
 	r := &CloudKubernetesNodePoolResponse{}
@@ -329,10 +329,10 @@ func cloudKubernetesNodePoolExists(projectId string, clusterId string, id string
 func readCloudKubernetesNodePool(projectId string, config *Config, d *schema.ResourceData, cluster *CloudKubernetesNodePoolResponse) (err error) {
 	_ = d.Set("name", cluster.Name)
 	_ = d.Set("flavor", cluster.Flavor)
-	_ = d.Set("desiredNodes", cluster.DesiredNodes)
-	_ = d.Set("maxNodes", cluster.MaxNodes)
-	_ = d.Set("minNodes", cluster.MinNodes)
-	_ = d.Set("monthlyBilled", cluster.MonthlyBilled)
+	_ = d.Set("desired_nodes", cluster.DesiredNodes)
+	_ = d.Set("max_nodes", cluster.MaxNodes)
+	_ = d.Set("min_nodes", cluster.MinNodes)
+	_ = d.Set("monthly_billed", cluster.MonthlyBilled)
 	_ = d.Set("status", cluster.Status)
 	d.SetId(cluster.Id)
 	err = nil
