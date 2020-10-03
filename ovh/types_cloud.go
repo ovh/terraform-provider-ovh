@@ -242,7 +242,7 @@ type CloudKubernetesNodePoolResponse struct {
 	AntiAffinity   bool   `json:"antiAffinity"`
 	AvailableNodes int    `json:"availableNodes"`
 	CreatedAt      string `json:"createdAt"`
-	CurrentNodes   string `json:"currentNodes"`
+	CurrentNodes   int    `json:"currentNodes"`
 	DesiredNodes   int    `json:"desiredNodes"`
 	Flavor         string `json:"flavor"`
 	MaxNodes       int    `json:"maxNodes"`
