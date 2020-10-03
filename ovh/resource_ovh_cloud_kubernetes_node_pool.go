@@ -68,7 +68,9 @@ func resourceCloudKubernetesNodePool() *schema.Resource {
 			"monthly_billed": {
 				Type:     schema.TypeBool,
 				Required: false,
-				Default:  false,
+				Optional: true,
+				Default:  "false",
+
 				ForceNew: true,
 			},
 			"status": {
