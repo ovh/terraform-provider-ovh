@@ -53,19 +53,16 @@ func resourceCloudKubernetesNodePool() *schema.Resource {
 			"desiredNodes": {
 				Type:     schema.TypeInt,
 				Required: true,
-				Default:  1,
 				ForceNew: false,
 			},
 			"maxNodes": {
 				Type:     schema.TypeInt,
 				Required: true,
-				Default:  1,
 				ForceNew: false,
 			},
 			"minNodes": {
 				Type:     schema.TypeInt,
 				Required: true,
-				Default:  1,
 				ForceNew: false,
 			},
 			"monthlyBilled": {
