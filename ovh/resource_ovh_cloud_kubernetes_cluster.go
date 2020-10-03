@@ -270,25 +270,29 @@ func readCloudKubernetesCluster(projectId string, config *Config, d *schema.Reso
 	_ = d.Set("url", cluster.Url)
 	_ = d.Set("kubernetes_version", cluster.Version)
 
-	kubeconfigRaw := CloudKubernetesKubeConfigResponse{}
-	endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/kubeconfig", projectId, cluster.Id)
-	err = config.OVHClient.Post(endpoint, nil, &kubeconfigRaw)
+	if d.IsNewResource() {
 
-	if err != nil {
-		return err
-	}
-	_ = d.Set("kubeconfig", kubeconfigRaw.Content)
+		kubeconfigRaw := CloudKubernetesKubeConfigResponse{}
+		endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/kubeconfig", projectId, cluster.Id)
+		err = config.OVHClient.Post(endpoint, nil, &kubeconfigRaw)
 
-	kubeconfig, err := clientcmd.Load([]byte(kubeconfigRaw.Content))
-	if err != nil {
-		return err
+		if err != nil {
+			return err
+		}
+		_ = d.Set("kubeconfig", kubeconfigRaw.Content)
+
+		kubeconfig, err := clientcmd.Load([]byte(kubeconfigRaw.Content))
+		if err != nil {
+			return err
+		}
+		currentContext := kubeconfig.CurrentContext
+		currentUser := kubeconfig.Contexts[currentContext].AuthInfo
+		currentCluster := kubeconfig.Contexts[currentContext].Cluster
+		_ = d.Set("client_certificate", string(kubeconfig.AuthInfos[currentUser].ClientCertificateData))
+		_ = d.Set("client_key", string(kubeconfig.AuthInfos[currentUser].ClientKeyData))
+		_ = d.Set("cluster_ca_certificate", string(kubeconfig.Clusters[currentCluster].CertificateAuthorityData))
+
 	}
-	currentContext := kubeconfig.CurrentContext
-	currentUser := kubeconfig.Contexts[currentContext].AuthInfo
-	currentCluster := kubeconfig.Contexts[currentContext].Cluster
-	_ = d.Set("client_certificate", string(kubeconfig.AuthInfos[currentUser].ClientCertificateData))
-	_ = d.Set("client_key", string(kubeconfig.AuthInfos[currentUser].ClientKeyData))
-	_ = d.Set("cluster_ca_certificate", string(kubeconfig.Clusters[currentCluster].CertificateAuthorityData))
 
 	err = nil
 	return
