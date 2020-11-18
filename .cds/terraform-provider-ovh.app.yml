@@ -1,0 +1,7 @@
+version: v1.0
+name: terraform-provider-ovh
+vcs_server: github
+repo: ovh/terraform-provider-ovh
+vcs_connection_type: ssh
+vcs_ssh_key: proj-ssh-tfproviderovh
+vcs_pgp_key: proj-pgp-tfproviderovh
