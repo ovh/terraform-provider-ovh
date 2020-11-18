@@ -1,0 +1,16 @@
+version: v1.0
+name: terraform-provider-ovh-check
+jobs:
+- job: checks
+  steps:
+  - name: Get the sources of the project
+    checkout: '{{.cds.workspace}}'
+  - name: checks
+    script: |
+      #!/usr/bin/env bash
+      set -eEuo pipefail
+      make test
+      make vet
+
+  requirements:
+  - model: shared.infra/Go-official-1.13-buster

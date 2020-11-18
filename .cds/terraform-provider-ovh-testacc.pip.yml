@@ -1,0 +1,15 @@
+version: v1.0
+name: terraform-provider-ovh-testacc
+jobs:
+- job: checks
+  steps:
+  - name: Get the sources of the project
+    checkout: '{{.cds.workspace}}'
+  - name: run acceptance tests
+    script: |
+      #!/usr/bin/env bash
+      set -eEuo pipefail
+      make testacc
+
+  requirements:
+  - model: shared.infra/Go-official-1.13-buster
