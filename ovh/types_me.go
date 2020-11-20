@@ -4,6 +4,33 @@ import (
 	"fmt"
 )
 
+type MeIdentityUserResponse struct {
+	Creation           string `json:"creation"`
+	Description        string `json:"description"`
+	Email              string `json:"email"`
+	Group              string `json:"group"`
+	LastUpdate         string `json:"lastUpdate"`
+	Login              string `json:"login"`
+	PasswordLastUpdate string `json:"passwordLastUpdate"`
+	Status             string `json:"status"`
+}
+
+// MeIdentityUser Opts
+type MeIdentityUserCreateOpts struct {
+	Description string `json:"description"`
+	Email       string `json:"email"`
+	Group       string `json:"group"`
+	Login       string `json:"login"`
+	Password    string `json:"password"`
+}
+
+type MeIdentityUserUpdateOpts struct {
+	Login       string `json:"user"`
+	Description string `json:"description"`
+	Email       string `json:"email"`
+	Group       string `json:"group"`
+}
+
 // MeSshKey Opts
 type MeSshKeyCreateOpts struct {
 	KeyName string `json:"keyName"`
