@@ -2,8 +2,11 @@ package ovh
 
 import (
 	"fmt"
+	"log"
 	"os"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -129,6 +132,73 @@ resource ovh_iploadbalancing_tcp_farm_server testacc {
 }
 `
 )
+
+func init() {
+	resource.AddTestSweepers("ovh_iploadbalancing_tcp_farm_server", &resource.Sweeper{
+		Name: "ovh_iploadbalancing_tcp_farm_server",
+		F:    testSweepIploadbalancingTcpFarmServer,
+	})
+}
+
+func testSweepIploadbalancingTcpFarmServer(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	iplb := os.Getenv("OVH_IPLB_SERVICE")
+	if iplb == "" {
+		log.Print("[DEBUG] OVH_IPLB_SERVICE is not set. No iploadbalancing_vrack_network to sweep")
+		return nil
+	}
+
+	farms := make([]int64, 0)
+	if err := client.Get(fmt.Sprintf("/ipLoadbalancing/%s/tcp/farm", iplb), &farms); err != nil {
+		return fmt.Errorf("Error calling GET /ipLoadbalancing/%s/tcp/farm:\n\t %q", iplb, err)
+	}
+
+	if len(farms) == 0 {
+		log.Print("[DEBUG] No tcp farm to sweep")
+		return nil
+	}
+
+	for _, f := range farms {
+		farm := &IpLoadbalancingFarm{}
+
+		if err := client.Get(fmt.Sprintf("/ipLoadbalancing/%s/tcp/farm/%d", iplb, f), &farm); err != nil {
+			return fmt.Errorf("Error calling GET /ipLoadbalancing/%s/tcp/farm/%d:\n\t %q", iplb, f, err)
+		}
+
+		if !strings.HasPrefix(*farm.DisplayName, test_prefix) {
+			continue
+		}
+
+		servers := make([]int64, 0)
+		if err := client.Get(fmt.Sprintf("/ipLoadbalancing/%s/tcp/farm/%d/server", iplb, f), &servers); err != nil {
+			return fmt.Errorf("Error calling GET /ipLoadbalancing/%s/tcp/farm/%d/server:\n\t %q", iplb, f, err)
+		}
+
+		if len(servers) == 0 {
+			log.Printf("[DEBUG] No server to sweep on tcp farm %s/tcp/farm/%d", iplb, f)
+			return nil
+		}
+
+		for _, s := range servers {
+			err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+				if err := client.Delete(fmt.Sprintf("/ipLoadbalancing/%s/tcp/farm/%d/server/%d", iplb, f, s), nil); err != nil {
+					return resource.RetryableError(err)
+				}
+				// Successful delete
+				return nil
+			})
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
 
 func TestAccIpLoadbalancingTcpFarmServerBasic(t *testing.T) {
 	displayName := acctest.RandomWithPrefix(test_prefix)

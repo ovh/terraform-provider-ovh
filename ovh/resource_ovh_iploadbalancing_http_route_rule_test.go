@@ -2,16 +2,87 @@ package ovh
 
 import (
 	"fmt"
+	"log"
 	"os"
+	"strings"
 	"testing"
+	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
+func init() {
+	resource.AddTestSweepers("ovh_iploadbalancing_http_route_rule", &resource.Sweeper{
+		Name: "ovh_iploadbalancing_http_route_rule",
+		F:    testSweepIploadbalancingHttpRouteRule,
+	})
+}
+
+func testSweepIploadbalancingHttpRouteRule(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	iplb := os.Getenv("OVH_IPLB_SERVICE")
+	if iplb == "" {
+		log.Print("[DEBUG] OVH_IPLB_SERVICE is not set. No iploadbalancing_vrack_network to sweep")
+		return nil
+	}
+
+	routes := make([]int64, 0)
+	if err := client.Get(fmt.Sprintf("/ipLoadbalancing/%s/http/route", iplb), &routes); err != nil {
+		return fmt.Errorf("Error calling GET /ipLoadbalancing/%s/http/route:\n\t %q", iplb, err)
+	}
+
+	if len(routes) == 0 {
+		log.Print("[DEBUG] No http route to sweep")
+		return nil
+	}
+
+	for _, f := range routes {
+		route := &IPLoadbalancingRouteHTTP{}
+
+		if err := client.Get(fmt.Sprintf("/ipLoadbalancing/%s/http/route/%d", iplb, f), &route); err != nil {
+			return fmt.Errorf("Error calling GET /ipLoadbalancing/%s/http/route/%d:\n\t %q", iplb, f, err)
+		}
+
+		if !strings.HasPrefix(route.DisplayName, test_prefix) {
+			continue
+		}
+
+		rules := make([]int64, 0)
+		if err := client.Get(fmt.Sprintf("/ipLoadbalancing/%s/http/route/%d/rule", iplb, f), &rules); err != nil {
+			return fmt.Errorf("Error calling GET /ipLoadbalancing/%s/http/route/%d/rule:\n\t %q", iplb, f, err)
+		}
+
+		if len(rules) == 0 {
+			log.Printf("[DEBUG] No rule to sweep on http route %s/http/route/%d", iplb, f)
+			return nil
+		}
+
+		for _, s := range rules {
+			err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+				if err := client.Delete(fmt.Sprintf("/ipLoadbalancing/%s/http/route/%d/rule/%d", iplb, f, s), nil); err != nil {
+					return resource.RetryableError(err)
+				}
+				// Successful delete
+				return nil
+			})
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 func TestAccIPLoadbalancingRouteHTTPRuleBasicCreate(t *testing.T) {
 	serviceName := os.Getenv("OVH_IPLB_SERVICE")
-	displayName := "Test rule"
+	displayName := acctest.RandomWithPrefix(test_prefix)
 	field := "header"
 	match := "is"
 	negate := "false"
