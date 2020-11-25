@@ -5,7 +5,7 @@ import (
 	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-ovh/ovh/helpers"
+	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
 func resourceDedicatedServerUpdate() *schema.Resource {
