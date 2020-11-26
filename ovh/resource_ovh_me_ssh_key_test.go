@@ -73,7 +73,22 @@ func TestAccMeSshKey_basic(t *testing.T) {
 						"ovh_me_ssh_key.key_1", "key_name", sshKeyName),
 					resource.TestCheckResourceAttr(
 						"ovh_me_ssh_key.key_1", "key", sshKey),
+					resource.TestCheckResourceAttr(
+						"ovh_me_ssh_key.key_1", "default", "true"),
 				),
+			},
+			{
+				Config: config,
+				PreConfig: func() {
+					err := testAccOVHClient.Delete(
+						fmt.Sprintf("/me/sshKey/%s", sshKeyName),
+						nil,
+					)
+					if err != nil {
+						t.Fatalf("removing SSH key %q: %v", sshKeyName, err)
+					}
+				},
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -83,5 +98,6 @@ const testAccMeSshKeyConfig = `
 resource "ovh_me_ssh_key" "key_1" {
 	key_name = "%s"
 	key      = "%s"
+	default  = true
 }
 `
