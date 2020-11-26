@@ -7,6 +7,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"github.com/ovh/go-ovh/ovh"
@@ -15,7 +16,13 @@ import (
 func init() {
 	resource.AddTestSweepers("ovh_iploadbalancing_vrack_network", &resource.Sweeper{
 		Name: "ovh_iploadbalancing_vrack_network",
-		F:    testSweepIpLoadbalancingVrackNetwork,
+		Dependencies: []string{
+			"ovh_iploadbalancing_http_farm",
+			"ovh_iploadbalancing_http_frontend",
+			"ovh_iploadbalancing_http_route",
+			"ovh_iploadbalancing_tcp_farm",
+		},
+		F: testSweepIpLoadbalancingVrackNetwork,
 	})
 }
 
@@ -39,12 +46,12 @@ resource ovh_iploadbalancing_vrack_network "network" {
   subnet       = "%s"
   vlan         = %s
   nat_ip       = "%s"
-  display_name = "terraform_testacc"
+  display_name = "%s"
 }
 
 resource "ovh_iploadbalancing_tcp_farm" "testfarm" {
   service_name     = data.ovh_iploadbalancing.iplb.service_name
-  display_name     = "terraform_testacc"
+  display_name     = "%s"
   port             = 80
   vrack_network_id = ovh_iploadbalancing_vrack_network.network.vrack_network_id
   zone             = tolist(data.ovh_iploadbalancing.iplb.zone)[0]
@@ -85,39 +92,6 @@ func testSweepIpLoadbalancingVrackNetwork(region string) error {
 		return result, nil
 	}
 
-	delete_farms := func(farmType string, networkId int64) error {
-		endpoint := fmt.Sprintf(
-			"/ipLoadbalancing/%s/%s/farm?vrackNetworkId=%d",
-			url.PathEscape(serviceName),
-			url.PathEscape(farmType),
-			networkId,
-		)
-
-		result := make([]int64, 0)
-
-		if err := client.Get(endpoint, &result); err != nil {
-			if err.(*ovh.APIError).Code == 404 {
-				return nil
-			}
-			return err
-		}
-
-		for _, farmId := range result {
-			endpoint := fmt.Sprintf(
-				"/ipLoadbalancing/%s/%s/farm/%d",
-				url.PathEscape(serviceName),
-				url.PathEscape(farmType),
-				farmId,
-			)
-			// delete the farm
-			log.Printf("[DEBUG] Calling DELETE on %v", endpoint)
-			if err := client.Delete(endpoint, nil); err != nil {
-				return fmt.Errorf("Error calling DELETE %s:\n\t %q", endpoint, err)
-			}
-		}
-		return nil
-	}
-
 	resultVlan1001, err := get_network_ids(testAccIpLoadbalancingVrackNetworkVlan1001)
 	if err != nil {
 		return err
@@ -130,15 +104,6 @@ func testSweepIpLoadbalancingVrackNetwork(region string) error {
 
 	result := append(resultVlan1001, resultVlan1002...)
 	for _, id := range result {
-		// delete farms, then delete vrack network
-		if err := delete_farms("http", id); err != nil {
-			return err
-		}
-
-		if err := delete_farms("tcp", id); err != nil {
-			return err
-		}
-
 		// delete the vrack network
 		endpoint := fmt.Sprintf(
 			"/ipLoadbalancing/%s/vrack/network/%d",
@@ -184,12 +149,16 @@ func TestAccIpLoadbalancingVrackNetwork_basic(t *testing.T) {
 	})
 }
 
+var displayName = acctest.RandomWithPrefix(test_prefix)
+
 var testAccIpLoadbalancingVrackNetworkConfig_basic = fmt.Sprintf(testAccIpLoadbalancingVrackNetworkConfig,
 	os.Getenv("OVH_IPLB_SERVICE"),
 	os.Getenv("OVH_VRACK"),
 	testAccIpLoadbalancingVrackNetworkSubnet,
 	testAccIpLoadbalancingVrackNetworkVlan1001,
 	testAccIpLoadbalancingVrackNetworkNatIp,
+	displayName,
+	displayName,
 )
 
 var testAccIpLoadbalancingVrackNetworkConfig_update = fmt.Sprintf(testAccIpLoadbalancingVrackNetworkConfig,
@@ -198,4 +167,6 @@ var testAccIpLoadbalancingVrackNetworkConfig_update = fmt.Sprintf(testAccIpLoadb
 	testAccIpLoadbalancingVrackNetworkSubnet,
 	testAccIpLoadbalancingVrackNetworkVlan1002,
 	testAccIpLoadbalancingVrackNetworkNatIp,
+	displayName,
+	displayName,
 )
