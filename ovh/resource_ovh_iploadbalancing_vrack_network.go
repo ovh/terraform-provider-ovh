@@ -6,7 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-ovh/ovh/helpers"
 )
 
 func resourceIPLoadbalancingVrackNetwork() *schema.Resource {
@@ -29,7 +30,7 @@ func resourceIPLoadbalancingVrackNetwork() *schema.Resource {
 			"farm_id": {
 				Type:        schema.TypeList,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
-				Description: "Farm id your vRack network is attached to and their type",
+				Description: "This attribute is there for documentation purpose only and isnt passed to the OVH API as it may conflicts with http/tcp farms `vrack_network_id` attribute",
 				Optional:    true,
 			},
 			"display_name": {
@@ -42,7 +43,7 @@ func resourceIPLoadbalancingVrackNetwork() *schema.Resource {
 				Description: "An IP block used as a pool of IPs by this Load Balancer to connect to the servers in this private network. The blck must be in the private network and reserved for the Load Balancer",
 				Required:    true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					err := validateIpBlock(v.(string))
+					err := helpers.ValidateIpBlock(v.(string))
 					if err != nil {
 						errors = append(errors, err)
 					}
@@ -54,7 +55,7 @@ func resourceIPLoadbalancingVrackNetwork() *schema.Resource {
 				Description: "IP block of the private network in the vRack",
 				Required:    true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					err := validateIpBlock(v.(string))
+					err := helpers.ValidateIpBlock(v.(string))
 					if err != nil {
 						errors = append(errors, err)
 					}
@@ -130,29 +131,9 @@ func resourceIPLoadbalancingVrackNetworkUpdate(d *schema.ResourceData, meta inte
 		d.Get("vrack_network_id").(int),
 	)
 
-	// start of update procedure (put + post)
-	d.Partial(true)
-
 	if err := config.OVHClient.Put(endpoint, opts, nil); err != nil {
 		return fmt.Errorf("Error calling PUT %s with opts %v:\n\t %q", endpoint, opts, err)
 	}
-
-	d.SetPartial("nat_ip")
-	d.SetPartial("display_name")
-	d.SetPartial("vlan")
-
-	// update farm id
-	farmIdOpts := (&IpLoadbalancingVrackNetworkFarmIdUpdateOpts{}).FromResource(d)
-	vrackNetwork := &IpLoadbalancingVrackNetwork{}
-
-	endpoint = fmt.Sprintf("%s/updateFarmId", endpoint)
-	if err := config.OVHClient.Post(endpoint, farmIdOpts, vrackNetwork); err != nil {
-		return fmt.Errorf("Error calling POST %s with opts %v:\n\t %q", endpoint, farmIdOpts, err)
-	}
-	d.SetPartial("farm_id")
-
-	// end of update procedure
-	d.Partial(false)
 
 	return resourceIPLoadbalancingVrackNetworkRead(d, meta)
 }
@@ -161,28 +142,8 @@ func resourceIPLoadbalancingVrackNetworkDelete(d *schema.ResourceData, meta inte
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 
-	// start of delete procedure (put + post)
-	d.Partial(true)
-
-	// update farm id to remove all farm ids from vrack network
-	farmIdOpts := &IpLoadbalancingVrackNetworkFarmIdUpdateOpts{
-		FarmId: []int64{},
-	}
-
-	endpoint := fmt.Sprintf(
-		"/ipLoadbalancing/%s/vrack/network/%d/updateFarmId",
-		url.PathEscape(serviceName),
-		d.Get("vrack_network_id").(int),
-	)
-	if err := config.OVHClient.Post(endpoint, farmIdOpts, nil); err != nil {
-		return fmt.Errorf("Error calling POST %s with opts %v:\n\t %q", endpoint, farmIdOpts, err)
-	}
-
-	d.Set("farm_id", nil)
-	d.SetPartial("farm_id")
-
 	// delete network
-	endpoint = fmt.Sprintf(
+	endpoint := fmt.Sprintf(
 		"/ipLoadbalancing/%s/vrack/network/%d",
 		url.PathEscape(serviceName),
 		d.Get("vrack_network_id").(int),
@@ -191,8 +152,6 @@ func resourceIPLoadbalancingVrackNetworkDelete(d *schema.ResourceData, meta inte
 	if err := config.OVHClient.Delete(endpoint, nil); err != nil {
 		return fmt.Errorf("Error calling DELETE %s: %s \n", endpoint, err.Error())
 	}
-	// end of update procedure
-	d.Partial(false)
 
 	d.SetId("")
 	return nil

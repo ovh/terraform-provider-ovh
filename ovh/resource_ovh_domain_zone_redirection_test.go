@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"log"
 	"strings"
 	"time"
@@ -29,7 +29,8 @@ func testSweepDomainZoneRedirection(region string) error {
 
 	zoneName := os.Getenv("OVH_ZONE")
 	if zoneName == "" {
-		return fmt.Errorf("OVH_ZONE must be set")
+		log.Print("[DEBUG] OVH_ZONE is not set. No zone to sweep")
+		return nil
 	}
 
 	dz := &DomainZone{}
@@ -88,7 +89,7 @@ func testSweepDomainZoneRedirection(region string) error {
 	return nil
 }
 
-func TestAccOvhDomainZoneRedirection_Basic(t *testing.T) {
+func TestAccDomainZoneRedirection_Basic(t *testing.T) {
 	var redirection OvhDomainZoneRedirection
 	zone := os.Getenv("OVH_ZONE")
 	subdomain := acctest.RandomWithPrefix(test_prefix)
@@ -116,7 +117,7 @@ func TestAccOvhDomainZoneRedirection_Basic(t *testing.T) {
 	})
 }
 
-func TestAccOvhDomainZoneRedirection_Updated(t *testing.T) {
+func TestAccDomainZoneRedirection_Updated(t *testing.T) {
 	redirection := OvhDomainZoneRedirection{}
 	zone := os.Getenv("OVH_ZONE")
 	subdomain := acctest.RandomWithPrefix(test_prefix)

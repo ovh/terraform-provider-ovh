@@ -2,8 +2,10 @@ package ovh
 
 import (
 	"fmt"
+	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-ovh/ovh/helpers"
 )
 
 func resourceIpLoadbalancingHttpFarm() *schema.Resource {
@@ -12,6 +14,9 @@ func resourceIpLoadbalancingHttpFarm() *schema.Resource {
 		Read:   resourceIpLoadbalancingHttpFarmRead,
 		Update: resourceIpLoadbalancingHttpFarmUpdate,
 		Delete: resourceIpLoadbalancingHttpFarmDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceIpLoadbalancingHttpFarmImportState,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"service_name": {
@@ -24,7 +29,7 @@ func resourceIpLoadbalancingHttpFarm() *schema.Resource {
 				Optional: true,
 				ForceNew: false,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					err := validateStringEnum(v.(string), []string{"first", "leastconn", "roundrobin", "source"})
+					err := helpers.ValidateStringEnum(v.(string), []string{"first", "leastconn", "roundrobin", "source"})
 					if err != nil {
 						errors = append(errors, err)
 					}
@@ -46,7 +51,7 @@ func resourceIpLoadbalancingHttpFarm() *schema.Resource {
 				Optional: true,
 				ForceNew: false,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					err := validateStringEnum(v.(string), []string{"sourceIp"})
+					err := helpers.ValidateStringEnum(v.(string), []string{"sourceIp", "cookie"})
 					if err != nil {
 						errors = append(errors, err)
 					}
@@ -64,16 +69,18 @@ func resourceIpLoadbalancingHttpFarm() *schema.Resource {
 				ForceNew: true,
 			},
 			"probe": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: false,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"match": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-								err := validateStringEnum(v.(string), []string{"contains", "default", "internal", "matches", "status"})
+								err := helpers.ValidateStringEnum(v.(string), []string{"contains", "default", "internal", "matches", "status"})
 								if err != nil {
 									errors = append(errors, err)
 								}
@@ -83,6 +90,7 @@ func resourceIpLoadbalancingHttpFarm() *schema.Resource {
 						"port": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							Computed: true,
 						},
 						"interval": {
 							Type:     schema.TypeInt,
@@ -103,6 +111,7 @@ func resourceIpLoadbalancingHttpFarm() *schema.Resource {
 						"pattern": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 						},
 						"force_ssl": {
 							Type:     schema.TypeBool,
@@ -111,12 +120,14 @@ func resourceIpLoadbalancingHttpFarm() *schema.Resource {
 						"url": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 						},
 						"method": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-								err := validateStringEnum(v.(string), []string{"GET", "HEAD", "OPTIONS", "internal"})
+								err := helpers.ValidateStringEnum(v.(string), []string{"GET", "HEAD", "OPTIONS", "internal"})
 								if err != nil {
 									errors = append(errors, err)
 								}
@@ -127,7 +138,7 @@ func resourceIpLoadbalancingHttpFarm() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-								err := validateStringEnum(v.(string), []string{"http", "internal", "mysql", "oko", "pgsql", "smtp", "tcp"})
+								err := helpers.ValidateStringEnum(v.(string), []string{"http", "internal", "mysql", "oco", "pgsql", "smtp", "tcp"})
 								if err != nil {
 									errors = append(errors, err)
 								}
@@ -141,36 +152,28 @@ func resourceIpLoadbalancingHttpFarm() *schema.Resource {
 	}
 }
 
+func resourceIpLoadbalancingHttpFarmImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	givenId := d.Id()
+	splitId := strings.SplitN(givenId, "/", 2)
+	if len(splitId) != 2 {
+		return nil, fmt.Errorf("Import Id is not service_name/farm id formatted")
+	}
+	serviceName := splitId[0]
+	farmId := splitId[1]
+	d.SetId(farmId)
+	d.Set("service_name", serviceName)
+
+	results := make([]*schema.ResourceData, 1)
+	results[0] = d
+	return results, nil
+}
+
 func resourceIpLoadbalancingHttpFarmCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
-	probe := &IpLoadbalancingHttpFarmBackendProbe{}
-	probeSet := d.Get("probe").(*schema.Set)
-	if probeSet.Len() > 0 {
-		probeData := probeSet.List()[0].(map[string]interface{})
-		probe.Match = probeData["match"].(string)
-		probe.Port = probeData["port"].(int)
-		probe.Interval = probeData["interval"].(int)
-		probe.Negate = probeData["negate"].(bool)
-		probe.Pattern = probeData["pattern"].(string)
-		probe.ForceSsl = probeData["force_ssl"].(bool)
-		probe.URL = probeData["url"].(string)
-		probe.Method = probeData["method"].(string)
-		probe.Type = probeData["type"].(string)
-	}
-
-	farm := &IpLoadbalancingHttpFarm{
-		Zone:           d.Get("zone").(string),
-		VrackNetworkId: d.Get("vrack_network_id").(int),
-		Port:           d.Get("port").(int),
-		Stickiness:     d.Get("stickiness").(string),
-		Balance:        d.Get("balance").(string),
-		Probe:          probe,
-		DisplayName:    d.Get("display_name").(string),
-	}
-
+	farm := (&IpLoadbalancingFarmCreateOrUpdateOpts{}).FromResource(d)
 	service := d.Get("service_name").(string)
-	resp := &IpLoadbalancingHttpFarm{}
+	resp := &IpLoadbalancingFarm{}
 	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/http/farm", service)
 
 	err := config.OVHClient.Post(endpoint, farm, resp)
@@ -180,21 +183,35 @@ func resourceIpLoadbalancingHttpFarmCreate(d *schema.ResourceData, meta interfac
 
 	d.SetId(fmt.Sprintf("%d", resp.FarmId))
 
-	return nil
+	return resourceIpLoadbalancingHttpFarmRead(d, meta)
 }
 
 func resourceIpLoadbalancingHttpFarmRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	service := d.Get("service_name").(string)
-	r := &IpLoadbalancingHttpFarm{}
+	r := &IpLoadbalancingFarm{}
 	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/http/farm/%s", service, d.Id())
 
 	err := config.OVHClient.Get(endpoint, &r)
 	if err != nil {
-		return fmt.Errorf("calling %s:\n\t %s", endpoint, err.Error())
+		return fmt.Errorf("calling GET %s:\n\t %s", endpoint, err.Error())
+	}
+
+	probes := make([]map[string]interface{}, 0)
+	if r.Probe != nil && r.Probe.ToMap() != nil {
+		probes = append(probes, r.Probe.ToMap())
 	}
 
 	d.Set("display_name", r.DisplayName)
+	d.Set("zone", r.Zone)
+	d.Set("port", r.Port)
+	d.Set("balance", r.Balance)
+	d.Set("probe", probes)
+
+	if r.VrackNetworkId != nil {
+		d.Set("vrack_network_id", *r.VrackNetworkId)
+	}
+	d.Set("stickiness", r.Stickiness)
 
 	return nil
 }
@@ -204,49 +221,29 @@ func resourceIpLoadbalancingHttpFarmUpdate(d *schema.ResourceData, meta interfac
 	service := d.Get("service_name").(string)
 	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/http/farm/%s", service, d.Id())
 
-	probe := &IpLoadbalancingHttpFarmBackendProbe{}
-	probeSet := d.Get("probe").(*schema.Set)
-	if probeSet.Len() > 0 {
-		probeData := probeSet.List()[0].(map[string]interface{})
-		probe.Match = probeData["match"].(string)
-		probe.Port = probeData["port"].(int)
-		probe.Interval = probeData["interval"].(int)
-		probe.Negate = probeData["negate"].(bool)
-		probe.Pattern = probeData["pattern"].(string)
-		probe.ForceSsl = probeData["force_ssl"].(bool)
-		probe.URL = probeData["url"].(string)
-		probe.Method = probeData["method"].(string)
-		probe.Type = probeData["type"].(string)
-	}
-
-	farm := &IpLoadbalancingHttpFarm{
-		VrackNetworkId: d.Get("vrack_network_id").(int),
-		Port:           d.Get("port").(int),
-		Stickiness:     d.Get("stickiness").(string),
-		Balance:        d.Get("balance").(string),
-		Probe:          probe,
-		DisplayName:    d.Get("display_name").(string),
-	}
+	farm := (&IpLoadbalancingFarmCreateOrUpdateOpts{}).FromResource(d)
 
 	err := config.OVHClient.Put(endpoint, farm, nil)
 	if err != nil {
-		return fmt.Errorf("calling %s:\n\t %s", endpoint, err.Error())
+		return fmt.Errorf("calling PUT %s:\n\t %s", endpoint, err.Error())
 	}
 
-	return nil
+	return resourceIpLoadbalancingHttpFarmRead(d, meta)
+
 }
 
 func resourceIpLoadbalancingHttpFarmDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
 	service := d.Get("service_name").(string)
-	r := &IpLoadbalancingHttpFarm{}
+	r := &IpLoadbalancingFarm{}
 	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/http/farm/%s", service, d.Id())
 
 	err := config.OVHClient.Delete(endpoint, &r)
 	if err != nil {
-		return fmt.Errorf("Error calling %s: %s \n", endpoint, err.Error())
+		return fmt.Errorf("calling DELETE %s: %s \n", endpoint, err.Error())
 	}
 
+	d.SetId("")
 	return nil
 }

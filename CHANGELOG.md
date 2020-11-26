@@ -1,4 +1,69 @@
-## 0.6.1 (Unreleased)
+## 0.10.0 (Unreleased)
+## 0.9.0 (August 26, 2020)
+
+BREAKING CHANGES:
+
+* provider: This release includes a Terraform SDK upgrade with compatibility for Terraform >= v0.12. The provider is not compatible with Terraform < v0.12 anymore. This update should have no significant changes in behavior for the provider. ([#154](https://github.com/terraform-providers/terraform-provider-ovh/pull/154))
+
+FEATURES:
+
+* __New Datasource:__ `ovh_dedicated_ceph` ([#150](https://github.com/terraform-providers/terraform-provider-ovh/pull/150))
+* __New Resource:__ `ovh_dedicated_ceph_acl` ([#150](https://github.com/terraform-providers/terraform-provider-ovh/pull/150))
+
+IMPROVEMENTS:
+
+* Fetch all IPs for dedicated servers. ([#149](https://github.com/terraform-providers/terraform-provider-ovh/pull/149))
+* r/ovh_cloud_user: Add roles/service_name attributes. Deprecate project_id attribute. ([#151](https://github.com/terraform-providers/terraform-provider-ovh/pull/151))
+
+BUG FIXES:
+
+* r/iploadbalancing_tcp_frontend, r/iploadbalancing_http_frontend: Fix allowed_source,dedicated_ipfo updates ([#155](https://github.com/terraform-providers/terraform-provider-ovh/pull/155))
+
+## 0.8.0 (May 28, 2020)
+
+NOTES/DEPRECATIONS:
+
+* `*/ovh_iploadbalancing_vrack_network_*`: Deprecate `farm_id` attribute as it conflicts with other resources. ([#144](https://github.com/terraform-providers/terraform-provider-ovh/issues/144))
+
+FEATURES:
+
+* __New Datasource:__ `ovh_me_ipxe_script` ([#141](https://github.com/terraform-providers/terraform-provider-ovh/pull/141))
+* __New Datasource:__ `ovh_me_ipxe_scripts` ([#141](https://github.com/terraform-providers/terraform-provider-ovh/pull/141))
+* __New Resource:__ `ovh_me_ipxe_script` ([#141](https://github.com/terraform-providers/terraform-provider-ovh/pull/141))
+
+IMPROVEMENTS:
+
+* Stop failing sweepers if mandatory env vars are missing. ([#142](https://github.com/terraform-providers/terraform-provider-ovh/pull/142))
+* r/iploadbalancing_*: Add importers and tests([#140](https://github.com/terraform-providers/terraform-provider-ovh/pull/140))
+* r/iploadbalancing_tcp_farm, r/iploadbalancing_http_farm: Extend read function to get all values ([#140](https://github.com/terraform-providers/terraform-provider-ovh/pull/140))
+* r/iploadbalancing_http_route: Extend read function to get action value ([#140](https://github.com/terraform-providers/terraform-provider-ovh/pull/140))
+* r/iploadbalancing_http_route_rule: Read all values ([#140](https://github.com/terraform-providers/terraform-provider-ovh/pull/140))
+* r/iploadbalancing_tcp_frontend, r/iploadbalancing_http_frontend: Some code refactoring according to linter ([#140](https://github.com/terraform-providers/terraform-provider-ovh/pull/140))
+
+BUG FIXES:
+
+* r/iploadbalancing_vrack_network: fix sweepers ([#142](https://github.com/terraform-providers/terraform-provider-ovh/pull/142))
+* r/iploadbalancing_tcp_farm, r/iploadbalancing_http_farm: Fix typo in 'oco' probe type ([#140](https://github.com/terraform-providers/terraform-provider-ovh/pull/140))
+* r/iploadbalancing_tcp_farm_server, r/iploadbalancing_http_farm_server: Allow port to have a nil value  ([#140](https://github.com/terraform-providers/terraform-provider-ovh/pull/140))
+
+## 0.7.0 (March 02, 2020)
+
+FEATURES:
+
+* __New Datasource:__ `ovh_vps` ([#126](https://github.com/terraform-providers/terraform-provider-ovh/pull/126))
+
+IMPROVEMENTS:
+
+* r/iploadbalancing_http_farm: add cookie stickiness ([#133](https://github.com/terraform-providers/terraform-provider-ovh/pull/133))
+* r/dedicated_server_reboot_task, r/dedicated_server_install_task: retry task on 500/404 errors due to API unstability ([#134](https://github.com/terraform-providers/terraform-provider-ovh/pull/134))
+
+BUG FIXES:
+
+* r/dedicated_server_reboot_task, r/dedicated_server_install_task: fix missing ForcesNew attributes ([#135](https://github.com/terraform-providers/terraform-provider-ovh/pull/135))
+* r/me_ssh_key: fix missing ForcesNew attribute ([#136](https://github.com/terraform-providers/terraform-provider-ovh/pull/136))
+* r/domain_zone_record, domain_zone_redirection: don't fail sweepers on missing OVH_ZONE env var. ([#138](https://github.com/terraform-providers/terraform-provider-ovh/pull/138))
+* r/cloud_network_private: fix sweeper. ([#138](https://github.com/terraform-providers/terraform-provider-ovh/pull/138))
+
 ## 0.6.0 (January 15, 2020)
 
 FEATURES:

@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/url"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceDedicatedServer() *schema.Resource {
@@ -37,6 +37,14 @@ func dataSourceDedicatedServer() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "dedicated server ip (IPv4)",
+			},
+			"ips": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "dedicated server ip blocks",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 			"link_speed": {
 				Type:        schema.TypeInt,
@@ -204,6 +212,25 @@ func dataSourceDedicatedServerRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("server_id", ds.ServerId)
 	d.Set("state", ds.State)
 	d.Set("support_level", ds.SupportLevel)
+
+	dsIps := &[]string{}
+	err = config.OVHClient.Get(
+		fmt.Sprintf(
+			"/dedicated/server/%s/ips",
+			url.PathEscape(serviceName),
+		),
+		&dsIps,
+	)
+
+	if err != nil {
+		return fmt.Errorf(
+			"Error reading Dedicated Server IPs for %s: %q",
+			serviceName,
+			err,
+		)
+	}
+
+	d.Set("ips", dsIps)
 
 	// Set VNIs attributes
 	vnis, err := getDedicatedServerVNIs(d, meta)

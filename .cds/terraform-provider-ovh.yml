@@ -1,0 +1,53 @@
+name: terraform-provider-ovh
+version: v2.0
+workflow:
+
+  terraform-provider-ovh:
+    application: terraform-provider-ovh
+
+  terraform-provider-ovh-check:
+    pipeline: terraform-provider-ovh-check
+    application: terraform-provider-ovh
+    depends_on:
+      - terraform-provider-ovh
+
+  terraform-provider-ovh-website-test:
+    pipeline: terraform-provider-ovh-website-test
+    application: terraform-provider-ovh
+    depends_on:
+      - terraform-provider-ovh
+
+  terraform-provider-ovh-testacc:
+    pipeline: terraform-provider-ovh-testacc
+    application: terraform-provider-ovh
+    environment: acctests
+    conditions:
+      script: return git_branch == "master"
+    depends_on:
+      - terraform-provider-ovh-check
+
+metadata:
+  default_tags: git.branch,git.author
+
+retention_policy: return (git_branch_exist == "false" and run_days_before < 2) or run_days_before < 365
+
+hooks:
+  terraform-provider-ovh:
+  - type: Scheduler
+    config:
+      cron: 0 0 * * *
+      payload: '{}'
+      timezone: UTC    
+
+notifications:
+- type: vcs
+  settings:
+    on_success: always
+- type: email
+  pipelines:
+  - terraform-provider-ovh-testacc
+  settings:
+    on_success: never
+    send_to_author: false
+    recipients:
+    - nic-cf-dev@interne.ovh.net

@@ -5,7 +5,8 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-ovh/ovh/helpers"
 
 	"github.com/ovh/go-ovh/ovh"
 )
@@ -42,7 +43,7 @@ func resourceMeInstallationTemplatePartitionSchemePartition() *schema.Resource {
 				Required:    true,
 				Description: "Partition filesystem",
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					err := validateFilesystem(v.(string))
+					err := helpers.ValidateFilesystem(v.(string))
 					if err != nil {
 						errors = append(errors, err)
 					}
@@ -64,7 +65,7 @@ func resourceMeInstallationTemplatePartitionSchemePartition() *schema.Resource {
 				Required:    true,
 				Description: "partition type",
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					err := validatePartitionType(v.(string))
+					err := helpers.ValidatePartitionType(v.(string))
 					if err != nil {
 						errors = append(errors, err)
 					}
@@ -79,7 +80,7 @@ func resourceMeInstallationTemplatePartitionSchemePartition() *schema.Resource {
 				Optional:    true,
 				Description: "raid partition type",
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					err := validatePartitionRAIDMode(v.(string))
+					err := helpers.ValidatePartitionRAIDMode(v.(string))
 					if err != nil {
 						errors = append(errors, err)
 					}

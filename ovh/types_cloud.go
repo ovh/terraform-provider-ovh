@@ -2,6 +2,9 @@ package ovh
 
 import (
 	"fmt"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-ovh/ovh/helpers"
 )
 
 // Opts
@@ -73,25 +76,72 @@ func (p *CloudNetworkPrivatesResponse) String() string {
 
 // Opts
 type CloudUserCreateOpts struct {
-	ProjectId   string `json:"serviceName"`
-	Description string `json:"description"`
+	Description *string  `json:"description,omitempty"`
+	Role        *string  `json:"role,omitempty"`
+	Roles       []string `json:"roles"`
 }
 
 func (p *CloudUserCreateOpts) String() string {
-	return fmt.Sprintf("UserOpts[projectId: %s, description:%s]", p.ProjectId, p.Description)
+	return fmt.Sprintf(
+		"CloudUserCreateOpts[description:%v, role:%v, roles:%s]",
+		p.Description,
+		p.Role,
+		p.Roles,
+	)
 }
 
-type CloudUserResponse struct {
-	Id           int    `json:"id"`
-	Username     string `json:"username"`
-	Status       string `json:"status"`
-	Description  string `json:"description"`
-	Password     string `json:"password"`
-	CreationDate string `json:"creationDate"`
+func (opts *CloudUserCreateOpts) FromResource(d *schema.ResourceData) *CloudUserCreateOpts {
+	opts.Description = helpers.GetNilStringPointerFromData(d, "description")
+	opts.Role = helpers.GetNilStringPointerFromData(d, "role_name")
+	opts.Roles, _ = helpers.StringsFromSchema(d, "role_names")
+	return opts
 }
 
-func (p *CloudUserResponse) String() string {
-	return fmt.Sprintf("UserResponse[Id: %v, Username: %s, Status: %s, Description: %s, CreationDate: %s]", p.Id, p.Username, p.Status, p.Description, p.CreationDate)
+type CloudUser struct {
+	CreationDate string           `json:"creationDate"`
+	Description  string           `json:"description"`
+	Id           int              `json:"id"`
+	Password     string           `json:"password"`
+	Roles        []*CloudUserRole `json:"roles"`
+	Status       string           `json:"status"`
+	Username     string           `json:"username"`
+}
+
+func (u *CloudUser) String() string {
+	return fmt.Sprintf("UserResponse[Id: %v, Username: %s, Status: %s, Description: %s, CreationDate: %s]", u.Id, u.Username, u.Status, u.Description, u.CreationDate)
+}
+
+func (u CloudUser) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+	obj["creation_date"] = u.CreationDate
+	obj["description"] = u.Description
+	//Dont set password as it must be set only at creation time
+	obj["status"] = u.Status
+	obj["username"] = u.Username
+
+	// Set the roles
+	var roles []map[string]interface{}
+	for _, r := range u.Roles {
+		roles = append(roles, r.ToMap())
+	}
+	obj["roles"] = roles
+	return obj
+}
+
+type CloudUserRole struct {
+	Description string   `json:"description"`
+	Id          string   `json:"id"`
+	Name        string   `json:"name"`
+	Permissions []string `json:"permissions"`
+}
+
+func (r CloudUserRole) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+	obj["description"] = r.Description
+	obj["id"] = r.Id
+	obj["name"] = r.Name
+	obj["permissions"] = r.Permissions
+	return obj
 }
 
 type CloudUserOpenstackRC struct {

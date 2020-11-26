@@ -6,7 +6,7 @@ import (
 	"time"
 
 	cleanhttp "github.com/hashicorp/go-cleanhttp"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/logging"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging"
 	"github.com/ovh/go-ovh/ovh"
 )
 
@@ -45,7 +45,7 @@ func clientDefault(c *Config) (*ovh.Client, error) {
 func (c *Config) loadAndValidate() error {
 	validEndpoint := false
 
-	ovhEndpoints := [3]string{ovh.OvhEU, ovh.OvhCA, ovh.OvhUS}
+	ovhEndpoints := [7]string{ovh.OvhEU, ovh.OvhCA, ovh.OvhUS, ovh.KimsufiEU, ovh.KimsufiCA, ovh.SoyoustartEU, ovh.SoyoustartCA}
 
 	for _, e := range ovhEndpoints {
 		if ovh.Endpoints[c.Endpoint] == e {
