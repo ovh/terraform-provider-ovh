@@ -55,6 +55,12 @@ func resourceMeSshKeyRead(d *schema.ResourceData, meta interface{}) error {
 		sshKey,
 	)
 	if err != nil {
+		if err.(*ovh.APIError).Code == 404 {
+			d.SetId("")
+
+			return nil
+		}
+
 		return fmt.Errorf("Unable to find SSH key named %s:\n\t %q", id, err)
 	}
 
@@ -91,8 +97,8 @@ func resourceMeSshKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 	err = config.OVHClient.Put(
 		fmt.Sprintf("/me/sshKey/%s", keyName),
-		nil,
 		putParams,
+		nil,
 	)
 	if err != nil {
 		return fmt.Errorf("Unable to update SSH key named %s:\n\t %q", keyName, err)
@@ -110,8 +116,8 @@ func resourceMeSshKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 	err := config.OVHClient.Put(
 		fmt.Sprintf("/me/sshKey/%s", keyName),
-		nil,
 		params,
+		nil,
 	)
 	if err != nil {
 		return fmt.Errorf("Unable to update SSH key named %s:\n\t %q", keyName, err)
