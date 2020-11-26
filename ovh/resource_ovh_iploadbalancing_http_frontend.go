@@ -66,6 +66,11 @@ func resourceIpLoadbalancingHttpFrontend() *schema.Resource {
 				Default:  false,
 				Optional: true,
 			},
+			"redirect_location": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: false,
+			},
 			"display_name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -110,13 +115,14 @@ func resourceIpLoadbalancingHttpFrontendCreate(d *schema.ResourceData, meta inte
 	}
 
 	frontend := &IpLoadbalancingHttpFrontend{
-		Port:          d.Get("port").(string),
-		Zone:          d.Get("zone").(string),
-		AllowedSource: allowedSources,
-		DedicatedIpFo: dedicatedIpFo,
-		Disabled:      d.Get("disabled").(bool),
-		Ssl:           d.Get("ssl").(bool),
-		DisplayName:   d.Get("display_name").(string),
+		Port:             d.Get("port").(string),
+		Zone:             d.Get("zone").(string),
+		AllowedSource:    allowedSources,
+		DedicatedIpFo:    dedicatedIpFo,
+		Disabled:         d.Get("disabled").(bool),
+		Ssl:              d.Get("ssl").(bool),
+		RedirectLocation: d.Get("redirect_location").(string),
+		DisplayName:      d.Get("display_name").(string),
 	}
 
 	frontend.DefaultFarmId = helpers.GetNilIntPointerFromData(d, "default_farm_id")
@@ -164,6 +170,7 @@ func resourceIpLoadbalancingHttpFrontendRead(d *schema.ResourceData, meta interf
 	d.Set("port", r.Port)
 	d.Set("ssl", r.Ssl)
 	d.Set("zone", r.Zone)
+ 	d.Set("redirect_location", r.RedirectLocation)
 
 	return nil
 }
@@ -189,13 +196,14 @@ func resourceIpLoadbalancingHttpFrontendUpdate(d *schema.ResourceData, meta inte
 	}
 
 	frontend := &IpLoadbalancingHttpFrontend{
-		Port:          d.Get("port").(string),
-		Zone:          d.Get("zone").(string),
-		AllowedSource: allowedSources,
-		DedicatedIpFo: dedicatedIpFo,
-		Disabled:      d.Get("disabled").(bool),
-		Ssl:           d.Get("ssl").(bool),
-		DisplayName:   d.Get("display_name").(string),
+		Port:             d.Get("port").(string),
+		Zone:             d.Get("zone").(string),
+		AllowedSource:    allowedSources,
+		DedicatedIpFo:    dedicatedIpFo,
+		Disabled:         d.Get("disabled").(bool),
+		Ssl:              d.Get("ssl").(bool),
+		RedirectLocation: d.Get("redirect_location").(string),
+		DisplayName:      d.Get("display_name").(string),
 	}
 
 	frontend.DefaultFarmId = helpers.GetNilIntPointerFromData(d, "default_farm_id")

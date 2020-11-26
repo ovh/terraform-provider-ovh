@@ -187,16 +187,17 @@ type IpLoadbalancingTcpFrontend struct {
 }
 
 type IpLoadbalancingHttpFrontend struct {
-	FrontendId    int      `json:"frontendId,omitempty"`
-	Port          string   `json:"port"`
-	Zone          string   `json:"zone"`
-	AllowedSource []string `json:"allowedSource"`
-	DedicatedIpFo []string `json:"dedicatedIpfo"`
-	DefaultFarmId *int     `json:"defaultFarmId,omitempty"`
-	DefaultSslId  *int     `json:"defaultSslId,omitempty"`
-	Disabled      bool     `json:"disabled"`
-	Ssl           bool     `json:"ssl"`
-	DisplayName   string   `json:"displayName"`
+	FrontendId       int      `json:"frontendId,omitempty"`
+	Port             string   `json:"port"`
+	Zone             string   `json:"zone"`
+	AllowedSource    []string `json:"allowedSource"`
+	DedicatedIpFo    []string `json:"dedicatedIpfo"`
+	DefaultFarmId    *int     `json:"defaultFarmId,omitempty"`
+	DefaultSslId     *int     `json:"defaultSslId,omitempty"`
+	Disabled         bool     `json:"disabled"`
+	Ssl              bool     `json:"ssl"`
+	RedirectLocation string   `json:"redirectLocation,omitempty"`
+	DisplayName      string   `json:"displayName,omitempty"`
 }
 
 //IPLoadbalancingRouteHTTPRule HTTP Route Rule
