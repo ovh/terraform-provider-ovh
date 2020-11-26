@@ -121,7 +121,7 @@ func resourceIpLoadbalancingHttpFrontendCreate(d *schema.ResourceData, meta inte
 		DedicatedIpFo:    dedicatedIpFo,
 		Disabled:         d.Get("disabled").(bool),
 		Ssl:              d.Get("ssl").(bool),
-    RedirectLocation: d.Get("redirect_location").(string),
+		RedirectLocation: d.Get("redirect_location").(string),
 		DisplayName:      d.Get("display_name").(string),
 	}
 
@@ -172,7 +172,6 @@ func resourceIpLoadbalancingHttpFrontendRead(d *schema.ResourceData, meta interf
 	d.Set("zone", r.Zone)
  	d.Set("redirect_location", r.RedirectLocation)
 
-
 	return nil
 }
 
@@ -201,7 +200,7 @@ func resourceIpLoadbalancingHttpFrontendUpdate(d *schema.ResourceData, meta inte
 		Zone:             d.Get("zone").(string),
 		AllowedSource:    allowedSources,
 		DedicatedIpFo:    dedicatedIpFo,
-    Disabled:         d.Get("disabled").(bool),
+		Disabled:         d.Get("disabled").(bool),
 		Ssl:              d.Get("ssl").(bool),
 		RedirectLocation: d.Get("redirect_location").(string),
 		DisplayName:      d.Get("display_name").(string),
