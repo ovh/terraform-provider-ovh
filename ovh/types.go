@@ -22,27 +22,6 @@ type TaskOpts struct {
 	TaskId      string `json:"taskId"`
 }
 
-// MeSshKey Opts
-type MeSshKeyCreateOpts struct {
-	KeyName string `json:"keyName"`
-	Key     string `json:"key"`
-}
-
-type MeSshKeyResponse struct {
-	KeyName string `json:"keyName"`
-	Key     string `json:"key"`
-	Default bool   `json:"default"`
-}
-
-func (s *MeSshKeyResponse) String() string {
-	return fmt.Sprintf("SSH Key: %s, key:%s, default:%t",
-		s.Key, s.KeyName, s.Default)
-}
-
-type MeSshKeyUpdateOpts struct {
-	Default bool `json:"default"`
-}
-
 type UnitAndValue struct {
 	Unit  string `json:"unit"`
 	Value int    `json:"value"`

@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func init() {
@@ -26,7 +26,8 @@ func testSweepIploadbalancingTcpFrontend(region string) error {
 
 	iplb := os.Getenv("OVH_IPLB_SERVICE")
 	if iplb == "" {
-		return fmt.Errorf("OVH_IPLB_SERVICE must be set")
+		log.Print("[DEBUG] OVH_IPLB_SERVICE is not set. No iploadbalancing_vrack_network to sweep")
+		return nil
 	}
 
 	frontends := make([]int64, 0)
@@ -65,7 +66,7 @@ func testSweepIploadbalancingTcpFrontend(region string) error {
 	return nil
 }
 
-func TestAccOvhIpLoadbalancingTcpFrontend_basic(t *testing.T) {
+func TestAccIpLoadbalancingTcpFrontend_basic(t *testing.T) {
 	iplb := os.Getenv("OVH_IPLB_SERVICE")
 
 	resource.Test(t, resource.TestCase{
@@ -77,14 +78,14 @@ func TestAccOvhIpLoadbalancingTcpFrontend_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
 						"ovh_iploadbalancing_tcp_frontend.testfrontend", "display_name", test_prefix),
-					resource.TestCheckNoResourceAttr(
-						"ovh_iploadbalancing_tcp_frontend.testfrontend", "default_farm_id"),
-					resource.TestCheckNoResourceAttr(
-						"ovh_iploadbalancing_tcp_frontend.testfrontend", "default_ssl_id"),
 					resource.TestCheckResourceAttr(
 						"ovh_iploadbalancing_tcp_frontend.testfrontend", "ssl", "true"),
 					resource.TestCheckResourceAttr(
+						"ovh_iploadbalancing_tcp_frontend.testfrontend", "port", "22280"),
+					resource.TestCheckResourceAttr(
 						"ovh_iploadbalancing_tcp_frontend.testfrontend", "disabled", "true"),
+					resource.TestCheckResourceAttr(
+						"ovh_iploadbalancing_tcp_frontend.testfrontend", "allowed_source.#", "0"),
 				),
 			},
 			{
@@ -92,21 +93,36 @@ func TestAccOvhIpLoadbalancingTcpFrontend_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
 						"ovh_iploadbalancing_tcp_frontend.testfrontend", "display_name", test_prefix),
-					resource.TestCheckNoResourceAttr(
-						"ovh_iploadbalancing_tcp_frontend.testfrontend", "default_farm_id"),
-					resource.TestCheckNoResourceAttr(
-						"ovh_iploadbalancing_tcp_frontend.testfrontend", "default_ssl_id"),
 					resource.TestCheckResourceAttr(
 						"ovh_iploadbalancing_tcp_frontend.testfrontend", "ssl", "false"),
 					resource.TestCheckResourceAttr(
+						"ovh_iploadbalancing_tcp_frontend.testfrontend", "port", "22280,22443"),
+					resource.TestCheckResourceAttr(
 						"ovh_iploadbalancing_tcp_frontend.testfrontend", "disabled", "false"),
+					resource.TestCheckResourceAttr(
+						"ovh_iploadbalancing_tcp_frontend.testfrontend", "allowed_source.#", "1"),
+				),
+			},
+			{
+				Config: fmt.Sprintf(testAccCheckOvhIpLoadbalancingTcpFrontendConfig_basic, iplb, test_prefix),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"ovh_iploadbalancing_tcp_frontend.testfrontend", "display_name", test_prefix),
+					resource.TestCheckResourceAttr(
+						"ovh_iploadbalancing_tcp_frontend.testfrontend", "ssl", "true"),
+					resource.TestCheckResourceAttr(
+						"ovh_iploadbalancing_tcp_frontend.testfrontend", "port", "22280"),
+					resource.TestCheckResourceAttr(
+						"ovh_iploadbalancing_tcp_frontend.testfrontend", "disabled", "true"),
+					resource.TestCheckResourceAttr(
+						"ovh_iploadbalancing_tcp_frontend.testfrontend", "allowed_source.#", "0"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccOvhIpLoadbalancingTcpFrontend_withfarm(t *testing.T) {
+func TestAccIpLoadbalancingTcpFrontend_withfarm(t *testing.T) {
 	iplb := os.Getenv("OVH_IPLB_SERVICE")
 
 	resource.Test(t, resource.TestCase{
@@ -130,18 +146,19 @@ const testAccCheckOvhIpLoadbalancingTcpFrontendConfig_basic = `
 resource "ovh_iploadbalancing_tcp_frontend" "testfrontend" {
    service_name = "%s"
    display_name = "%s"
-   zone = "all"
-   port = "22280,22443"
+   zone     = "all"
+   port     = "22280"
    disabled = true
-   ssl = true
+   ssl      = true
 }
 `
 const testAccCheckOvhIpLoadbalancingTcpFrontendConfig_update = `
 resource "ovh_iploadbalancing_tcp_frontend" "testfrontend" {
-   service_name = "%s"
-   display_name = "%s"
-   zone = "all"
-   port = "22280,22443"
+   service_name   = "%s"
+   display_name   = "%s"
+   zone           = "all"
+   port           = "22280,22443"
+   allowed_source = ["8.8.8.8/32"]
 }
 `
 
@@ -151,17 +168,17 @@ data "ovh_iploadbalancing" "iplb" {
 }
 
 resource "ovh_iploadbalancing_tcp_farm" "farm" {
-   service_name = "${data.ovh_iploadbalancing.iplb.service_name}"
+   service_name = data.ovh_iploadbalancing.iplb.service_name
    display_name = "%s"
-   zone = "all"
-   port = 22280
+   zone         = "all"
+   port         = 22280
 }
 
 resource "ovh_iploadbalancing_tcp_frontend" "testfrontend" {
-   service_name = "${data.ovh_iploadbalancing.iplb.service_name}"
-   display_name = "%s"
-   zone = "all"
-   port = "22280,22443"
-   default_farm_id = "${ovh_iploadbalancing_tcp_farm.farm.id}"
+   service_name    = data.ovh_iploadbalancing.iplb.service_name
+   display_name    = "%s"
+   zone            = "all"
+   port            = "22280,22443"
+   default_farm_id = ovh_iploadbalancing_tcp_farm.farm.id
 }
 `

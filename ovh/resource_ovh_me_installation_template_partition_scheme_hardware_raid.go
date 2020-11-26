@@ -5,7 +5,8 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-ovh/ovh/helpers"
 
 	"github.com/ovh/go-ovh/ovh"
 )
@@ -50,7 +51,7 @@ func resourceMeInstallationTemplatePartitionSchemeHardwareRaid() *schema.Resourc
 				Required:    true,
 				Description: "RAID mode (raid0, raid1, raid10, raid5, raid50, raid6, raid60)",
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					err := validateRAIDMode(v.(string))
+					err := helpers.ValidateRAIDMode(v.(string))
 					if err != nil {
 						errors = append(errors, err)
 					}

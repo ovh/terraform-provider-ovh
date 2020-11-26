@@ -1,7 +1,7 @@
 package ovh
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceMeInstallationTemplate() *schema.Resource {
@@ -23,7 +23,6 @@ func dataSourceMeInstallationTemplate() *schema.Resource {
 			"customization": {
 				Type:     schema.TypeList,
 				Computed: true,
-				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"change_log": {
@@ -177,7 +176,7 @@ func dataSourceMeInstallationTemplate() *schema.Resource {
 				Description: "This template bit format (32 or 64)",
 			},
 			"category": {
-				Type:        schema.TypeInt,
+				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Category of this template (informative only). (basic, customer, hosting, other, readyToUse, virtualisation)",
 			},
@@ -218,6 +217,11 @@ func dataSourceMeInstallationTemplate() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Date of last modification of the base image",
+			},
+			"lvm_ready": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "This distribution supports Logical Volumes (Linux LVM)",
 			},
 			"supports_distribution_kernel": {
 				Type:        schema.TypeBool,

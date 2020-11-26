@@ -15,7 +15,7 @@ Creates a http backend server group (farm) to be used by loadbalancing frontend(
 ```
 data "ovh_iploadbalancing" "lb" {
   service_name = "ip-1.2.3.4"
-   state       = "ok"  
+   state       = "ok"
 }
 
 resource "ovh_iploadbalancing_http_farm" "farmname" {
@@ -33,7 +33,7 @@ The following arguments are supported:
 * `balance` - Load balancing algorithm. `roundrobin` if null (`first`, `leastconn`, `roundrobin`, `source`)
 * `display_name` - Readable label for loadbalancer farm
 * `port` - Port attached to your farm ([1..49151]). Inherited from frontend if null
-* `stickiness` - 	Stickiness type. No stickiness if null (`sourceIp`)
+* `stickiness` - 	Stickiness type. No stickiness if null (`sourceIp`, `cookie`)
 * `vrack_network_id` - Internal Load Balancer identifier of the vRack private network to attach to your farm, mandatory when your Load Balancer is attached to a vRack
 * `zone` - (Required) Zone where the farm will be defined (ie. `GRA`, `BHS` also supports `ALL`)
 * `probe` - define a backend healthcheck probe

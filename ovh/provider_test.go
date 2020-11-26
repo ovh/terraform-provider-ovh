@@ -6,32 +6,31 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/ovh/go-ovh/ovh"
 )
 
-var testAccProviders map[string]terraform.ResourceProvider
+var testAccProviders map[string]*schema.Provider
 var testAccProvider *schema.Provider
 var testAccOVHClient *ovh.Client
 
 func init() {
 	log.SetOutput(os.Stdout)
-	testAccProvider = Provider().(*schema.Provider)
-	testAccProviders = map[string]terraform.ResourceProvider{
+	testAccProvider = Provider()
+	testAccProviders = map[string]*schema.Provider{
 		"ovh": testAccProvider,
 	}
 }
 
 func TestProvider(t *testing.T) {
-	if err := Provider().(*schema.Provider).InternalValidate(); err != nil {
+	if err := Provider().InternalValidate(); err != nil {
 		t.Fatalf("err: %s", err)
 	}
 }
 
 func TestProvider_impl(t *testing.T) {
-	var _ terraform.ResourceProvider = Provider()
+	var _ *schema.Provider = Provider()
 }
 
 func checkEnvOrFail(t *testing.T, e string) {
@@ -119,6 +118,11 @@ func testAccPreCheckDedicatedServer(t *testing.T) {
 	checkEnvOrSkip(t, "OVH_DEDICATED_SERVER")
 }
 
+func testAccPreCheckVPS(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_VPS")
+}
+
 func testAccCheckVRackExists(t *testing.T) {
 	type vrackResponse struct {
 		Name        string `json:"name"`
@@ -133,8 +137,6 @@ func testAccCheckVRackExists(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error: %q\n", err)
 	}
-	t.Logf("Read VRack %s -> name:'%s', desc:'%s' ", endpoint, r.Name, r.Description)
-
 }
 
 func testAccCheckCloudExists(t *testing.T) {
@@ -188,4 +190,9 @@ func testAccCheckDomainZoneExists(t *testing.T) {
 
 	t.Logf("Read Domain Zone %s -> nameservers: '%v'", endpoint, r.NameServers)
 
+}
+
+func testAccPreCheckDedicatedCeph(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_DEDICATED_CEPH")
 }

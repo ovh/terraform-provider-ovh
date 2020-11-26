@@ -1,275 +1,295 @@
 package ovh
 
 import (
-	"bytes"
 	"fmt"
+	"log"
 	"os"
-	"reflect"
+	"strings"
 	"testing"
+	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-var TestAccIpLoadbalancingTcpFarmServerPlan = [][]map[string]interface{}{
-	{
-		{
-			"Status":      "active",
-			"Address":     "10.0.0.11",
-			"Port":        80,
-			"Weight":      3,
-			"DisplayName": "testBackendA",
-		},
-		{
-			"Status":      "active",
-			"Address":     "10.0.0.11",
-			"Port":        8080,
-			"Weight":      3,
-			"DisplayName": "testBackendA",
-			"Probe":       true,
-			"Backup":      true,
-		},
-		{
-			"Status":      "active",
-			"Address":     "10.0.0.11",
-			"Port":        8080,
-			"Weight":      2,
-			"DisplayName": "testBackendB",
-			"Probe":       false,
-			"Backup":      false,
-		},
-	},
-	{
-		{
-			"Status":  "inactive",
-			"Address": "10.0.0.12",
-			"Port":    80,
-		},
-		{
-			"Status":               "active",
-			"Address":              "10.0.0.11",
-			"Port":                 8080,
-			"ProxyProtocolVersion": "v2",
-			"Ssl":                  true,
-		},
-		{
-			"Status":               "active",
-			"Address":              "10.0.0.11",
-			"Port":                 8080,
-			"ProxyProtocolVersion": "v1",
-			"Ssl":                  true,
-			"Backup":               false,
-		},
-		{
-			"Status":               "active",
-			"Address":              "10.0.0.11",
-			"Port":                 8080,
-			"ProxyProtocolVersion": nil,
-			"Ssl":                  true,
-			"Backup":               true,
-		},
-	},
+const (
+	testAccIpLoadbalancingTcpFarmServerConfig_templ = `
+data ovh_iploadbalancing iplb {
+  service_name = "%s"
 }
 
-type TestAccIpLoadbalancingTcpFarmServer struct {
-	ServiceName          string
-	ServerId             int     `json:"serverId"`
-	BackendId            int     `json:"backendId"`
-	FarmId               int     `json:"farmId"`
-	DisplayName          *string `json:"displayName"`
-	Address              string  `json:"address"`
-	Cookie               *string `json:"cookie"`
-	Port                 *int    `json:"port"`
-	ProxyProtocolVersion *string `json:"proxyProtocolVersion"`
-	Chain                *string `json:"chain"`
-	Weight               *int    `json:"weight"`
-	Probe                *bool   `json:"probe"`
-	Ssl                  *bool   `json:"ssl"`
-	Backup               *bool   `json:"backup"`
-	Status               string  `json:"status"`
+resource ovh_iploadbalancing_tcp_farm testacc {
+  service_name     = data.ovh_iploadbalancing.iplb.id
+  display_name     = "%s"
+  port = 8080
+  zone = "all"
+  probe {
+    port     = 8080
+    interval = 30
+    type     = "tcp"
+  }
+}
+`
+	testAccIpLoadbalancingTcpFarmServerConfig_step0 = `
+%s
+
+resource ovh_iploadbalancing_tcp_farm_server testacc {
+  service_name = data.ovh_iploadbalancing.iplb.id
+  farm_id      = ovh_iploadbalancing_tcp_farm.testacc.id
+  address      = "10.0.0.11"
+  status       = "active"
+  display_name = "testBackendA"
+  port         = 80
+  weight       = 3
+}
+`
+	testAccIpLoadbalancingTcpFarmServerConfig_step1 = `
+%s
+
+resource ovh_iploadbalancing_tcp_farm_server testacc {
+  service_name     = data.ovh_iploadbalancing.iplb.id
+  farm_id = ovh_iploadbalancing_tcp_farm.testacc.id
+  address = "10.0.0.11"
+  status = "active"
+  display_name = "testBackendA"
+  port = 8080
+  weight = 3
+  probe = false
+  backup = false
+}
+`
+	testAccIpLoadbalancingTcpFarmServerConfig_step2 = `
+%s
+
+resource ovh_iploadbalancing_tcp_farm_server testacc {
+  service_name     = data.ovh_iploadbalancing.iplb.id
+  farm_id = ovh_iploadbalancing_tcp_farm.testacc.id
+  address = "10.0.0.11"
+  status = "active"
+  display_name = "testBackendB"
+  port = 8080
+  weight = 2
+  probe = true
+  backup = true
+}
+`
+	testAccIpLoadbalancingTcpFarmServerConfig_step3 = `
+%s
+
+resource ovh_iploadbalancing_tcp_farm_server testacc {
+  service_name     = data.ovh_iploadbalancing.iplb.id
+  farm_id = ovh_iploadbalancing_tcp_farm.testacc.id
+  address = "10.0.0.11"
+  status = "inactive"
+  display_name = "testBackendB"
+  port = 80
+  probe = false
+  backup = false
+}
+`
+	testAccIpLoadbalancingTcpFarmServerConfig_step4 = `
+%s
+
+resource ovh_iploadbalancing_tcp_farm_server testacc {
+  service_name     = data.ovh_iploadbalancing.iplb.id
+  farm_id = ovh_iploadbalancing_tcp_farm.testacc.id
+  address = "10.0.0.11"
+  status = "active"
+  display_name = "testBackendB"
+  port = 8080
+  proxy_protocol_version = "v2"
+  ssl = true
+  weight = 2
+}
+`
+	testAccIpLoadbalancingTcpFarmServerConfig_step5 = `
+%s
+
+resource ovh_iploadbalancing_tcp_farm_server testacc {
+  service_name     = data.ovh_iploadbalancing.iplb.id
+  farm_id = ovh_iploadbalancing_tcp_farm.testacc.id
+  address = "10.0.0.11"
+  status = "active"
+  display_name = "testBackendB"
+  port = 8080
+  proxy_protocol_version = "v1"
+  ssl    = true
+  backup = false
+}
+`
+	testAccIpLoadbalancingTcpFarmServerConfig_step6 = `
+%s
+
+resource ovh_iploadbalancing_tcp_farm_server testacc {
+  service_name     = data.ovh_iploadbalancing.iplb.id
+  farm_id = ovh_iploadbalancing_tcp_farm.testacc.id
+  address = "10.0.0.11"
+  status = "active"
+  display_name = "testBackendB"
+  port = 8080
+  ssl = true
+  backup = true
+}
+`
+)
+
+func init() {
+	resource.AddTestSweepers("ovh_iploadbalancing_tcp_farm_server", &resource.Sweeper{
+		Name: "ovh_iploadbalancing_tcp_farm_server",
+		F:    testSweepIploadbalancingTcpFarmServer,
+	})
 }
 
-type TestAccIpLoadbalancingTcpFarmServerWrapper struct {
-	Expected *TestAccIpLoadbalancingTcpFarmServer
-}
-
-func (w *TestAccIpLoadbalancingTcpFarmServerWrapper) Config() string {
-	var config bytes.Buffer
-
-	config.WriteString(fmt.Sprintf(`
-    resource "ovh_iploadbalancing_tcp_farm" "testacc" {
-	  service_name = "%s"
-	  display_name = "testacc"
-	  port = 8080
-	  zone = "all"
-	  probe {
-	    port = 8080
-	    interval = 30
-	    type = "tcp"
-	  }
-	}
-	resource "ovh_iploadbalancing_tcp_farm_server" "testacc" {
-	  service_name = "%s"
-	  farm_id = "${ovh_iploadbalancing_tcp_farm.testacc.id}"
-	  address = "%s"
-	  status = "%s"
-	`, w.Expected.ServiceName,
-		w.Expected.ServiceName,
-		w.Expected.Address,
-		w.Expected.Status,
-	))
-
-	conditionalAttributeString(&config, "display_name", w.Expected.DisplayName)
-	conditionalAttributeInt(&config, "port", w.Expected.Port)
-	conditionalAttributeString(&config, "proxy_protocol_version", w.Expected.ProxyProtocolVersion)
-	conditionalAttributeInt(&config, "weight", w.Expected.Weight)
-	conditionalAttributeBool(&config, "probe", w.Expected.Probe)
-	conditionalAttributeBool(&config, "ssl", w.Expected.Ssl)
-	conditionalAttributeBool(&config, "backup", w.Expected.Backup)
-	config.WriteString(`}`)
-	return config.String()
-}
-
-func (server *TestAccIpLoadbalancingTcpFarmServer) MustEqual(compared *TestAccIpLoadbalancingTcpFarmServer) error {
-	if !reflect.DeepEqual(server.DisplayName, compared.DisplayName) {
-		return fmt.Errorf("DisplayName differs")
-	}
-	if !reflect.DeepEqual(server.Address, compared.Address) {
-		return fmt.Errorf("Address differs")
-	}
-	if !reflect.DeepEqual(server.Port, compared.Port) {
-		return fmt.Errorf("Port differs")
-	}
-	if !reflect.DeepEqual(server.ProxyProtocolVersion, compared.ProxyProtocolVersion) {
-		return fmt.Errorf("ProxyProtocolVersion differs")
-	}
-	if !reflect.DeepEqual(server.Chain, compared.Chain) {
-		return fmt.Errorf("Chain differs")
-	}
-	if !reflect.DeepEqual(server.Weight, compared.Weight) {
-		return fmt.Errorf("Weight differs")
-	}
-	if !reflect.DeepEqual(server.Probe, compared.Probe) {
-		return fmt.Errorf("Probe differs")
-	}
-	if !reflect.DeepEqual(server.Ssl, compared.Ssl) {
-		return fmt.Errorf("Ssl differs")
-	}
-	if !reflect.DeepEqual(server.Backup, compared.Backup) {
-		return fmt.Errorf("Backup differs")
-	}
-	if !reflect.DeepEqual(server.Status, compared.Status) {
-		return fmt.Errorf("Status differs")
-	}
-	return nil
-}
-
-type TestAccIpLoadbalancingTcpFarmServerStep struct {
-	Response *TestAccIpLoadbalancingTcpFarmServer
-	Expected *TestAccIpLoadbalancingTcpFarmServer
-}
-
-func (w *TestAccIpLoadbalancingTcpFarmServerWrapper) TestStep(c map[string]interface{}) resource.TestStep {
-	w.Expected.DisplayName = getNilStringPointerFromData(c, "DisplayName")
-	w.Expected.Address = c["Address"].(string)
-	w.Expected.Port = getNilIntPointerFromData(c, "Port")
-	w.Expected.ProxyProtocolVersion = getNilStringPointerFromData(c, "ProxyProtocolVersion")
-	w.Expected.Chain = getNilStringPointerFromData(c, "Chain")
-	w.Expected.Weight = getNilIntPointerFromData(c, "Weight")
-	w.Expected.Probe = getNilBoolPointerFromData(c, "Probe")
-	w.Expected.Ssl = getNilBoolPointerFromData(c, "Ssl")
-	w.Expected.Backup = getNilBoolPointerFromData(c, "Backup")
-	w.Expected.Status = c["Status"].(string)
-
-	expected := *w.Expected
-
-	// set OVH API defaults instead of nil before checking
-	if expected.Probe == nil {
-		val := false
-		expected.Probe = &val
-	}
-	if expected.Ssl == nil {
-		val := false
-		expected.Ssl = &val
-	}
-	if expected.Backup == nil {
-		val := false
-		expected.Backup = &val
-	}
-	if expected.Weight == nil {
-		val := 1
-		expected.Weight = &val
+func testSweepIploadbalancingTcpFarmServer(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	return resource.TestStep{
-		Config: w.Config(),
-		Check: resource.ComposeTestCheckFunc(
-			w.TestCheck(expected),
-		),
-	}
-}
-
-func (w *TestAccIpLoadbalancingTcpFarmServerWrapper) TestCheck(expected TestAccIpLoadbalancingTcpFarmServer) resource.TestCheckFunc {
-	return func(state *terraform.State) error {
-		response := &TestAccIpLoadbalancingTcpFarmServer{}
-		name := "ovh_iploadbalancing_tcp_farm_server.testacc"
-		resource, ok := state.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-		config := testAccProvider.Meta().(*Config)
-		endpoint := fmt.Sprintf("/ipLoadbalancing/%s/tcp/farm/%s/server/%s", os.Getenv("OVH_IPLB_SERVICE"), resource.Primary.Attributes["farm_id"], resource.Primary.ID)
-		err := config.OVHClient.Get(endpoint, response)
-		if err != nil {
-			return fmt.Errorf("calling GET %s :\n\t %s", endpoint, err.Error())
-		}
-
-		err = expected.MustEqual(response)
-		if err != nil {
-			return fmt.Errorf("%s %s state differs from expected : %s", name, resource.Primary.ID, err.Error())
-		}
+	iplb := os.Getenv("OVH_IPLB_SERVICE")
+	if iplb == "" {
+		log.Print("[DEBUG] OVH_IPLB_SERVICE is not set. No iploadbalancing_vrack_network to sweep")
 		return nil
 	}
-}
 
-func (w *TestAccIpLoadbalancingTcpFarmServerWrapper) TestDestroy(state *terraform.State) error {
-	leftovers := false
-	for _, resource := range state.RootModule().Resources {
-		if resource.Type != "ovh_iploadbalancing_tcp_farm_server" {
+	farms := make([]int64, 0)
+	if err := client.Get(fmt.Sprintf("/ipLoadbalancing/%s/tcp/farm", iplb), &farms); err != nil {
+		return fmt.Errorf("Error calling GET /ipLoadbalancing/%s/tcp/farm:\n\t %q", iplb, err)
+	}
+
+	if len(farms) == 0 {
+		log.Print("[DEBUG] No tcp farm to sweep")
+		return nil
+	}
+
+	for _, f := range farms {
+		farm := &IpLoadbalancingFarm{}
+
+		if err := client.Get(fmt.Sprintf("/ipLoadbalancing/%s/tcp/farm/%d", iplb, f), &farm); err != nil {
+			return fmt.Errorf("Error calling GET /ipLoadbalancing/%s/tcp/farm/%d:\n\t %q", iplb, f, err)
+		}
+
+		if !strings.HasPrefix(*farm.DisplayName, test_prefix) {
 			continue
 		}
 
-		config := testAccProvider.Meta().(*Config)
-		endpoint := fmt.Sprintf("/ipLoadbalancing/%s/tcp/farm/%d/server/%s", os.Getenv("OVH_IPLB_SERVICE"), w.Expected.FarmId, resource.Primary.ID)
-		err := config.OVHClient.Get(endpoint, nil)
-		if err == nil {
-			leftovers = true
+		servers := make([]int64, 0)
+		if err := client.Get(fmt.Sprintf("/ipLoadbalancing/%s/tcp/farm/%d/server", iplb, f), &servers); err != nil {
+			return fmt.Errorf("Error calling GET /ipLoadbalancing/%s/tcp/farm/%d/server:\n\t %q", iplb, f, err)
+		}
+
+		if len(servers) == 0 {
+			log.Printf("[DEBUG] No server to sweep on tcp farm %s/tcp/farm/%d", iplb, f)
+			return nil
+		}
+
+		for _, s := range servers {
+			err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+				if err := client.Delete(fmt.Sprintf("/ipLoadbalancing/%s/tcp/farm/%d/server/%d", iplb, f, s), nil); err != nil {
+					return resource.RetryableError(err)
+				}
+				// Successful delete
+				return nil
+			})
+			if err != nil {
+				return err
+			}
 		}
 	}
-	if leftovers {
-		return fmt.Errorf("IpLoadbalancing farm still exists")
-	}
+
 	return nil
 }
 
-func newTestAccIpLoadbalancingTcpFarmServerWrapper() *TestAccIpLoadbalancingTcpFarmServerWrapper {
-	return &TestAccIpLoadbalancingTcpFarmServerWrapper{
-		Expected: &TestAccIpLoadbalancingTcpFarmServer{ServiceName: os.Getenv("OVH_IPLB_SERVICE")},
-	}
-}
+func TestAccIpLoadbalancingTcpFarmServerBasic(t *testing.T) {
+	displayName := acctest.RandomWithPrefix(test_prefix)
+	prefix := fmt.Sprintf(
+		testAccIpLoadbalancingTcpFarmServerConfig_templ,
+		os.Getenv("OVH_IPLB_SERVICE"),
+		displayName,
+	)
 
-func TestAccIpLoadbalancingTcpFarmServerBasicCreate(t *testing.T) {
-	for _, plan := range TestAccIpLoadbalancingTcpFarmServerPlan {
-		w := newTestAccIpLoadbalancingTcpFarmServerWrapper()
-		var steps []resource.TestStep
-		for _, tcase := range plan {
-			steps = append(steps, w.TestStep(tcase))
-		}
-		resource.Test(t, resource.TestCase{
-			PreCheck:     func() { testAccPreCheckIpLoadbalancing(t) },
-			Providers:    testAccProviders,
-			CheckDestroy: w.TestDestroy,
-			Steps:        steps,
-		})
-	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheckIpLoadbalancing(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(testAccIpLoadbalancingTcpFarmServerConfig_step0, prefix),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "display_name", "testBackendA"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "address", "10.0.0.11"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "status", "active"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "port", "80"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "weight", "3"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "probe", "false"),
+				),
+			},
+			{
+				Config: fmt.Sprintf(testAccIpLoadbalancingTcpFarmServerConfig_step1, prefix),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "display_name", "testBackendA"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "address", "10.0.0.11"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "status", "active"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "port", "8080"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "weight", "3"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "probe", "false"),
+				),
+			},
+			{
+				Config: fmt.Sprintf(testAccIpLoadbalancingTcpFarmServerConfig_step2, prefix),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "display_name", "testBackendB"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "address", "10.0.0.11"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "status", "active"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "port", "8080"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "weight", "2"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "probe", "true"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "backup", "true"),
+				),
+			},
+			{
+				Config: fmt.Sprintf(testAccIpLoadbalancingTcpFarmServerConfig_step3, prefix),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "address", "10.0.0.11"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "status", "inactive"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "port", "80"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "probe", "false"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "backup", "false"),
+				),
+			},
+			{
+				Config: fmt.Sprintf(testAccIpLoadbalancingTcpFarmServerConfig_step4, prefix),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "address", "10.0.0.11"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "status", "active"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "port", "8080"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "weight", "2"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "ssl", "true"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "proxy_protocol_version", "v2"),
+				),
+			},
+			{
+				Config: fmt.Sprintf(testAccIpLoadbalancingTcpFarmServerConfig_step5, prefix),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "address", "10.0.0.11"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "status", "active"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "port", "8080"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "weight", "1"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "ssl", "true"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "backup", "false"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "proxy_protocol_version", "v1"),
+				),
+			},
+			{
+				Config: fmt.Sprintf(testAccIpLoadbalancingTcpFarmServerConfig_step6, prefix),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "address", "10.0.0.11"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "status", "active"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "port", "8080"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "weight", "1"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "ssl", "true"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "backup", "true"),
+				),
+			},
+		},
+	})
 }

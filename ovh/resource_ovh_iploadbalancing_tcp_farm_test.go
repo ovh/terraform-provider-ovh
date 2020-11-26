@@ -2,129 +2,133 @@ package ovh
 
 import (
 	"fmt"
+	"log"
 	"os"
-	"reflect"
+	"strings"
 	"testing"
+	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-type TestAccIpLoadbalancingTcpFarmBackendProbeResponse struct {
-	Match    string `json:"match"`
-	Port     int    `json:"port"`
-	Interval int    `json:"interval"`
-	Negate   bool   `json:"negate"`
-	Pattern  string `json:"pattern"`
-	ForceSsl bool   `json:"forceSsl"`
-	URL      string `json:"url"`
-	Method   string `json:"method"`
-	Type     string `json:"type"`
+const (
+	testAccIpLoadbalancingTcpFarmConfig = `
+data "ovh_iploadbalancing" "iplb" {
+  service_name = "%s"
 }
-
-type TestAccIpLoadbalancingTcpFarmResponse struct {
-	Zone           string                                            `json:"zone"`
-	VrackNetworkId int                                               `json:"vrackNetworkId"`
-	Port           int                                               `json:"port"`
-	Stickiness     string                                            `json:"stickiness"`
-	FarmId         int                                               `json:"farmId"`
-	Balance        string                                            `json:"balance"`
-	Probe          TestAccIpLoadbalancingTcpFarmBackendProbeResponse `json:"probe"`
-	DisplayName    string                                            `json:"displayName"`
+resource "ovh_iploadbalancing_tcp_farm" "testfarm" {
+  service_name     = data.ovh_iploadbalancing.iplb.id
+  display_name     = "%s"
+  port             = "%d"
+  zone             = "%s"
+  balance 		   = "roundrobin"
+  probe {
+        interval = 30
+        type = "oco"
+  }
 }
+`
+)
 
-func (r *TestAccIpLoadbalancingTcpFarmResponse) Equals(c *TestAccIpLoadbalancingTcpFarmResponse) bool {
-	r.FarmId = 0
-	if reflect.DeepEqual(r, c) {
-		return true
-	}
-	return false
-}
-
-func testAccIpLoadbalancingTcpFarmTestStep(name, zone string, port, probePort, probeInterval int, probeType string) resource.TestStep {
-	expected := &TestAccIpLoadbalancingTcpFarmResponse{
-		Zone:        zone,
-		Port:        port,
-		DisplayName: name,
-		Probe: TestAccIpLoadbalancingTcpFarmBackendProbeResponse{
-			Port:     probePort,
-			Interval: probeInterval,
-			Type:     probeType,
+func init() {
+	resource.AddTestSweepers("ovh_iploadbalancing_tcp_farm", &resource.Sweeper{
+		Name: "ovh_iploadbalancing_tcp_farm",
+		Dependencies: []string{
+			"ovh_iploadbalancing_tcp_farm_server",
 		},
-	}
-
-	config := fmt.Sprintf(`
-	resource "ovh_iploadbalancing_tcp_farm" "testfarm" {
-		service_name = "%s"
-		display_name = "%s"
-		port = %d
-		zone = "%s"
-	  
-		probe {
-		  port = %d
-		  interval = %d
-		  type = "%s"
-		}	  
-	}
-	`, os.Getenv("OVH_IPLB_SERVICE"), name, port, zone, probePort, probeInterval, probeType)
-
-	return resource.TestStep{
-		Config: config,
-		Check: resource.ComposeTestCheckFunc(
-			testAccCheckIpLoadbalancingTcpFarmMatches(expected),
-		),
-	}
-}
-
-func TestAccIpLoadbalancingTcpFarmBasicCreate(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		Providers:    testAccProviders,
-		PreCheck:     func() { testAccPreCheckIpLoadbalancing(t) },
-		CheckDestroy: testAccCheckIpLoadbalancingTcpFarmDestroy,
-		Steps: []resource.TestStep{
-			testAccIpLoadbalancingTcpFarmTestStep("test-farm-v1", "all", 8080, 8888, 35, "tcp"),
-			testAccIpLoadbalancingTcpFarmTestStep("test-farm-v2", "all", 8080, 9999, 60, "tcp"),
-		},
+		F: testSweepIploadbalancingTcpFarm,
 	})
 }
 
-func testAccCheckIpLoadbalancingTcpFarmMatches(expected *TestAccIpLoadbalancingTcpFarmResponse) resource.TestCheckFunc {
-	return func(state *terraform.State) error {
-		name := "ovh_iploadbalancing_tcp_farm.testfarm"
-		resource, ok := state.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-		config := testAccProvider.Meta().(*Config)
-		endpoint := fmt.Sprintf("/ipLoadbalancing/%s/tcp/farm/%s", os.Getenv("OVH_IPLB_SERVICE"), resource.Primary.ID)
-		response := &TestAccIpLoadbalancingTcpFarmResponse{}
-		err := config.OVHClient.Get(endpoint, response)
-		if err != nil {
-			return fmt.Errorf("calling GET %s :\n\t %s", endpoint, err.Error())
-		}
-		if !response.Equals(expected) {
-			return fmt.Errorf("%s %s state differs from expected", name, resource.Primary.ID)
-		}
+func testSweepIploadbalancingTcpFarm(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	iplb := os.Getenv("OVH_IPLB_SERVICE")
+	if iplb == "" {
+		log.Print("[DEBUG] OVH_IPLB_SERVICE is not set. No iploadbalancing_vrack_network to sweep")
 		return nil
 	}
-}
 
-func testAccCheckIpLoadbalancingTcpFarmDestroy(state *terraform.State) error {
-	leftovers := false
-	for _, resource := range state.RootModule().Resources {
-		if resource.Type != "ovh_iploadbalancing_tcp_farm" {
+	farms := make([]int64, 0)
+	if err := client.Get(fmt.Sprintf("/ipLoadbalancing/%s/tcp/farm", iplb), &farms); err != nil {
+		return fmt.Errorf("Error calling /ipLoadbalancing/%s/tcp/farm:\n\t %q", iplb, err)
+	}
+
+	if len(farms) == 0 {
+		log.Print("[DEBUG] No tcp farm to sweep")
+		return nil
+	}
+
+	for _, f := range farms {
+		farm := &IpLoadbalancingFarm{}
+
+		if err := client.Get(fmt.Sprintf("/ipLoadbalancing/%s/tcp/farm/%d", iplb, f), &farm); err != nil {
+			return fmt.Errorf("Error calling /ipLoadbalancing/%s/tcp/farm/%d:\n\t %q", iplb, f, err)
+		}
+
+		if !strings.HasPrefix(*farm.DisplayName, test_prefix) {
 			continue
 		}
 
-		config := testAccProvider.Meta().(*Config)
-		endpoint := fmt.Sprintf("/ipLoadbalancing/%s/tcp/farm/%s", os.Getenv("OVH_IPLB_SERVICE"), resource.Primary.ID)
-		err := config.OVHClient.Get(endpoint, nil)
-		if err == nil {
-			leftovers = true
+		err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+			if err := client.Delete(fmt.Sprintf("/ipLoadbalancing/%s/tcp/farm/%d", iplb, f), nil); err != nil {
+				return resource.RetryableError(err)
+			}
+			// Successful delete
+			return nil
+		})
+		if err != nil {
+			return err
 		}
 	}
-	if leftovers {
-		return fmt.Errorf("IpLoadbalancing farm still exists")
-	}
+
 	return nil
+}
+
+func TestAccIpLoadbalancingTcpFarmBasicCreate(t *testing.T) {
+	displayName1 := acctest.RandomWithPrefix(test_prefix)
+	displayName2 := acctest.RandomWithPrefix(test_prefix)
+	config1 := fmt.Sprintf(
+		testAccIpLoadbalancingTcpFarmConfig,
+		os.Getenv("OVH_IPLB_SERVICE"),
+		displayName1,
+		12345,
+		"all",
+	)
+	config2 := fmt.Sprintf(
+		testAccIpLoadbalancingTcpFarmConfig,
+		os.Getenv("OVH_IPLB_SERVICE"),
+		displayName2,
+		12346,
+		"all",
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheckIpLoadbalancing(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: config1,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm.testfarm", "display_name", displayName1),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm.testfarm", "zone", "all"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm.testfarm", "port", "12345"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm.testfarm", "probe.0.interval", "30"),
+				),
+			},
+			{
+				Config: config2,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm.testfarm", "display_name", displayName2),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm.testfarm", "zone", "all"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm.testfarm", "port", "12346"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm.testfarm", "probe.0.interval", "30"),
+				),
+			},
+		},
+	})
 }

@@ -4,14 +4,13 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/mitchellh/go-homedir"
 	ini "gopkg.in/ini.v1"
 )
 
-// Provider returns a schema.Provider for OVH.
-func Provider() terraform.ResourceProvider {
+// Provider returns a *schema.Provider for OVH.
+func Provider() *schema.Provider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"endpoint": {
@@ -43,6 +42,7 @@ func Provider() terraform.ResourceProvider {
 		DataSourcesMap: map[string]*schema.Resource{
 			"ovh_cloud_region":                     dataSourceCloudRegion(),
 			"ovh_cloud_regions":                    dataSourceCloudRegions(),
+			"ovh_dedicated_ceph":                   dataSourceDedicatedCeph(),
 			"ovh_dedicated_installation_templates": dataSourceDedicatedInstallationTemplates(),
 			"ovh_dedicated_server":                 dataSourceDedicatedServer(),
 			"ovh_dedicated_server_boots":           dataSourceDedicatedServerBoots(),
@@ -53,10 +53,13 @@ func Provider() terraform.ResourceProvider {
 			"ovh_iploadbalancing_vrack_networks":   dataSourceIpLoadbalancingVrackNetworks(),
 			"ovh_me_installation_template":         dataSourceMeInstallationTemplate(),
 			"ovh_me_installation_templates":        dataSourceMeInstallationTemplates(),
+			"ovh_me_ipxe_script":                   dataSourceMeIpxeScript(),
+			"ovh_me_ipxe_scripts":                  dataSourceMeIpxeScripts(),
 			"ovh_me_paymentmean_bankaccount":       dataSourceMePaymentmeanBankaccount(),
 			"ovh_me_paymentmean_creditcard":        dataSourceMePaymentmeanCreditcard(),
 			"ovh_me_ssh_key":                       dataSourceMeSshKey(),
 			"ovh_me_ssh_keys":                      dataSourceMeSshKeys(),
+			"ovh_vps":                              dataSourceVPS(),
 			"ovh_vracks":                           dataSourceVracks(),
 
 			// Legacy naming schema (publiccloud)
@@ -70,26 +73,28 @@ func Provider() terraform.ResourceProvider {
 			"ovh_cloud_network_private":                                   resourceCloudNetworkPrivate(),
 			"ovh_cloud_network_private_subnet":                            resourceCloudNetworkPrivateSubnet(),
 			"ovh_cloud_user":                                              resourceCloudUser(),
-			"ovh_dedicated_server_update":                                 resourceDedicatedServerUpdate(),
+			"ovh_dedicated_ceph_acl":                                      resourceDedicatedCephACL(),
 			"ovh_dedicated_server_install_task":                           resourceDedicatedServerInstallTask(),
 			"ovh_dedicated_server_reboot_task":                            resourceDedicatedServerRebootTask(),
+			"ovh_dedicated_server_update":                                 resourceDedicatedServerUpdate(),
 			"ovh_domain_zone_record":                                      resourceOvhDomainZoneRecord(),
 			"ovh_domain_zone_redirection":                                 resourceOvhDomainZoneRedirection(),
 			"ovh_ip_reverse":                                              resourceOvhIpReverse(),
-			"ovh_iploadbalancing_tcp_farm":                                resourceIpLoadbalancingTcpFarm(),
-			"ovh_iploadbalancing_tcp_farm_server":                         resourceIpLoadbalancingTcpFarmServer(),
-			"ovh_iploadbalancing_tcp_frontend":                            resourceIpLoadbalancingTcpFrontend(),
 			"ovh_iploadbalancing_http_farm":                               resourceIpLoadbalancingHttpFarm(),
 			"ovh_iploadbalancing_http_farm_server":                        resourceIpLoadbalancingHttpFarmServer(),
 			"ovh_iploadbalancing_http_frontend":                           resourceIpLoadbalancingHttpFrontend(),
 			"ovh_iploadbalancing_http_route":                              resourceIPLoadbalancingRouteHTTP(),
 			"ovh_iploadbalancing_http_route_rule":                         resourceIPLoadbalancingRouteHTTPRule(),
 			"ovh_iploadbalancing_refresh":                                 resourceIPLoadbalancingRefresh(),
+			"ovh_iploadbalancing_tcp_farm":                                resourceIpLoadbalancingTcpFarm(),
+			"ovh_iploadbalancing_tcp_farm_server":                         resourceIpLoadbalancingTcpFarmServer(),
+			"ovh_iploadbalancing_tcp_frontend":                            resourceIpLoadbalancingTcpFrontend(),
 			"ovh_iploadbalancing_vrack_network":                           resourceIPLoadbalancingVrackNetwork(),
 			"ovh_me_installation_template":                                resourceMeInstallationTemplate(),
 			"ovh_me_installation_template_partition_scheme":               resourceMeInstallationTemplatePartitionScheme(),
-			"ovh_me_installation_template_partition_scheme_partition":     resourceMeInstallationTemplatePartitionSchemePartition(),
 			"ovh_me_installation_template_partition_scheme_hardware_raid": resourceMeInstallationTemplatePartitionSchemeHardwareRaid(),
+			"ovh_me_installation_template_partition_scheme_partition":     resourceMeInstallationTemplatePartitionSchemePartition(),
+			"ovh_me_ipxe_script":                                          resourceMeIpxeScript(),
 			"ovh_me_ssh_key":                                              resourceMeSshKey(),
 			"ovh_vrack_cloudproject":                                      resourceVrackCloudProject(),
 			"ovh_vrack_dedicated_server":                                  resourceVrackDedicatedServer(),

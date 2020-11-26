@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceMeSshKey() *schema.Resource {
@@ -24,6 +24,7 @@ func resourceMeSshKey() *schema.Resource {
 			"key_name": {
 				Type:        schema.TypeString,
 				Required:    true,
+				ForceNew:    true,
 				Description: "Name of this public Ssh key",
 			},
 			"key": {
@@ -76,16 +77,12 @@ func resourceMeSshKeyCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Will create Ssh key: %s", params)
 
-	d.Partial(true)
-
 	err := config.OVHClient.Post("/me/sshKey", params, nil)
 	if err != nil {
 		return fmt.Errorf("Error creating SSH Key with params %s:\n\t %q", params, err)
 	}
 
 	d.SetId(keyName)
-	d.SetPartial("key_name")
-	d.SetPartial("key")
 
 	// Update the resource in all cases in order to set Default if it is
 	// different from default value (false)
@@ -100,8 +97,6 @@ func resourceMeSshKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("Unable to update SSH key named %s:\n\t %q", keyName, err)
 	}
-
-	d.Partial(false)
 
 	return resourceMeSshKeyRead(d, meta)
 }

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccMeInstallationTemplateDataSource_basic(t *testing.T) {
@@ -57,6 +57,7 @@ resource "ovh_me_installation_template" "template" {
 }
 
 data "ovh_me_installation_template" "template" {
-  template_name      = ovh_me_installation_template.template.template_name
+  template_name = ovh_me_installation_template.template.template_name
+  depends_on    = [ovh_me_installation_template.template]
 }
 `

@@ -2,8 +2,10 @@ package ovh
 
 import (
 	"fmt"
+	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-ovh/ovh/helpers"
 )
 
 func resourceIPLoadbalancingRouteHTTP() *schema.Resource {
@@ -12,6 +14,9 @@ func resourceIPLoadbalancingRouteHTTP() *schema.Resource {
 		Read:   resourceIPLoadbalancingRouteHTTPRead,
 		Update: resourceIPLoadbalancingRouteHTTPUpdate,
 		Delete: resourceIPLoadbalancingRouteHTTPDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceIpLoadbalancingHttpRouteImportState,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"service_name": {
@@ -20,9 +25,10 @@ func resourceIPLoadbalancingRouteHTTP() *schema.Resource {
 				ForceNew: true,
 			},
 			"action": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: false,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"status": {
@@ -57,11 +63,27 @@ func resourceIPLoadbalancingRouteHTTP() *schema.Resource {
 	}
 }
 
+func resourceIpLoadbalancingHttpRouteImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	givenId := d.Id()
+	splitId := strings.SplitN(givenId, "/", 2)
+	if len(splitId) != 2 {
+		return nil, fmt.Errorf("Import Id is not service_name/route id formatted")
+	}
+	serviceName := splitId[0]
+	routeId := splitId[1]
+	d.SetId(routeId)
+	d.Set("service_name", serviceName)
+
+	results := make([]*schema.ResourceData, 1)
+	results[0] = d
+	return results, nil
+}
+
 func resourceIPLoadbalancingRouteHTTPCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
 	action := &IPLoadbalancingRouteHTTPAction{}
-	actionSet := d.Get("action").(*schema.Set).List()[0].(map[string]interface{})
+	actionSet := d.Get("action").([]interface{})[0].(map[string]interface{})
 
 	action.Status = actionSet["status"].(int)
 	action.Target = actionSet["target"].(string)
@@ -96,13 +118,22 @@ func resourceIPLoadbalancingRouteHTTPRead(d *schema.ResourceData, meta interface
 
 	err := config.OVHClient.Get(endpoint, &r)
 	if err != nil {
-		return CheckDeleted(d, err, endpoint)
+		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
-	d.Set("status", r.Status)
+	d.SetId(fmt.Sprintf("%d", r.RouteID))
+
+	actions := make([]map[string]interface{}, 0)
+	action := make(map[string]interface{})
+	action["status"] = r.Action.Status
+	action["target"] = r.Action.Target
+	action["type"] = r.Action.Type
+	actions = append(actions, action)
+
 	d.Set("weight", r.Weight)
 	d.Set("display_name", r.DisplayName)
 	d.Set("frontend_id", r.FrontendID)
+	d.Set("action", actions)
 
 	return nil
 }
@@ -113,7 +144,7 @@ func resourceIPLoadbalancingRouteHTTPUpdate(d *schema.ResourceData, meta interfa
 	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/http/route/%s", service, d.Id())
 
 	action := &IPLoadbalancingRouteHTTPAction{}
-	actionSet := d.Get("action").(*schema.Set).List()[0].(map[string]interface{})
+	actionSet := d.Get("action").([]interface{})[0].(map[string]interface{})
 
 	action.Status = actionSet["status"].(int)
 	action.Target = actionSet["target"].(string)
@@ -146,5 +177,6 @@ func resourceIPLoadbalancingRouteHTTPDelete(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("Error calling %s: %s \n", endpoint, err.Error())
 	}
 
+	d.SetId("")
 	return nil
 }
