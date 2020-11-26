@@ -170,7 +170,7 @@ func resourceIpLoadbalancingHttpFrontendRead(d *schema.ResourceData, meta interf
 	d.Set("port", r.Port)
 	d.Set("ssl", r.Ssl)
 	d.Set("zone", r.Zone)
- 	d.Set("redirect_location", r.RedirectLocation)
+	d.Set("redirect_location", r.RedirectLocation)
 
 	return nil
 }
