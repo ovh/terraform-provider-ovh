@@ -65,24 +65,11 @@ func dataSourceVPS() *schema.Resource {
 				Computed: true,
 			},
 			"model": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"offer": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"version": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
+				Type: schema.TypeMap,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
+				Computed: true,
 			},
 			"ips": {
 				Type:     schema.TypeSet,
@@ -92,20 +79,11 @@ func dataSourceVPS() *schema.Resource {
 				},
 			},
 			"datacenter": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"longname": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
+				Type: schema.TypeMap,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
+				Computed: true,
 			},
 		},
 	}
