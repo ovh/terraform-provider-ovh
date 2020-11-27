@@ -70,4 +70,4 @@ func testAccIpLoadbalancingHttpFrontendImportId(resourceName string) resource.Im
 }
 
 var testAccIpLoadbalancingHttpFrontendConfig_basic = fmt.Sprintf(testAccIpLoadbalancingHttpFrontendConfig,
-	os.Getenv("OVH_IPLB_SERVICE"), "testfarm", 12345, "all", "testfrontend")
+	os.Getenv("OVH_IPLB_SERVICE_TEST"), "testfarm", 12345, "all", "testfrontend")

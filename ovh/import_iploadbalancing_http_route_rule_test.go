@@ -16,7 +16,7 @@ func TestAccIpLoadbalancingHttpRouteRule_importBasic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(testAccCheckOvhIpLoadbalancingHttpRouteRuleConfig_basic, os.Getenv("OVH_IPLB_SERVICE"), "Test rule", "header", "is", "false", "example.com", "Host"),
+				Config: fmt.Sprintf(testAccCheckOvhIpLoadbalancingHttpRouteRuleConfig_basic, os.Getenv("OVH_IPLB_SERVICE_TEST"), "Test rule", "header", "is", "false", "example.com", "Host"),
 			},
 			{
 				ResourceName:      "ovh_iploadbalancing_http_route_rule.testrule",

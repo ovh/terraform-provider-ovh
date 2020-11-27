@@ -75,4 +75,4 @@ func testAccIpLoadbalancingHttpFarmServerImportId(resourceName string) resource.
 // ping.ovh.net ip is used for test purposes
 var httpServerAddress = "198.27.92.1"
 var testAccIpLoadbalancingHttpFarmServerConfig_basic = fmt.Sprintf(testAccIpLoadbalancingHttpFarmServerConfig,
-	os.Getenv("OVH_IPLB_SERVICE"), "testfarm", 12345, "all", "testserver", httpServerAddress)
+	os.Getenv("OVH_IPLB_SERVICE_TEST"), "testfarm", 12345, "all", "testserver", httpServerAddress)

@@ -14,10 +14,10 @@ data "ovh_dedicated_server" "server" {
 }
 
 resource "ovh_vrack_dedicated_server_interface" "vdsi" {
-  vrack_id = "%s"
+  service_name = "%s"
   interface_id = data.ovh_dedicated_server.server.enabled_vrack_vnis[0]
 }
-`, os.Getenv("OVH_DEDICATED_SERVER"), os.Getenv("OVH_VRACK"))
+`, os.Getenv("OVH_DEDICATED_SERVER"), os.Getenv("OVH_VRACK_SERVICE_TEST"))
 
 func TestAccVrackDedicatedServerInterface_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
@@ -27,7 +27,7 @@ func TestAccVrackDedicatedServerInterface_basic(t *testing.T) {
 			{
 				Config: testAccVrackDedicatedServerInterfaceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_vrack_dedicated_server_interface.vdsi", "vrack_id", os.Getenv("OVH_VRACK")),
+					resource.TestCheckResourceAttr("ovh_vrack_dedicated_server_interface.vdsi", "service_name", os.Getenv("OVH_VRACK_SERVICE_TEST")),
 					resource.TestCheckResourceAttrSet("ovh_vrack_dedicated_server_interface.vdsi", "interface_id"),
 				),
 			},

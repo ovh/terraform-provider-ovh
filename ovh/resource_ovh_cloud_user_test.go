@@ -14,7 +14,7 @@ resource "ovh_cloud_user" "user" {
  service_name = "%s"
  description  = "my user for acceptance tests"
 }
-`, os.Getenv("OVH_PUBLIC_CLOUD"))
+`, os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"))
 
 var testAccCloudUserWithRoleConfig = fmt.Sprintf(`
 resource "ovh_cloud_user" "user" {
@@ -22,7 +22,7 @@ resource "ovh_cloud_user" "user" {
  description  = "my user for acceptance tests"
  role_name    = "administrator"
 }
-`, os.Getenv("OVH_PUBLIC_CLOUD"))
+`, os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"))
 
 var testAccCloudUserWithRolesConfig = fmt.Sprintf(`
 resource "ovh_cloud_user" "user" {
@@ -30,14 +30,14 @@ resource "ovh_cloud_user" "user" {
  description  = "my user for acceptance tests"
  role_names   = ["administrator", "compute_operator"]
 }
-`, os.Getenv("OVH_PUBLIC_CLOUD"))
+`, os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"))
 
 var testAccCloudUserDeprecatedConfig = fmt.Sprintf(`
 resource "ovh_cloud_user" "user" {
-  project_id  = "%s"
-  description = "my user for acceptance tests"
+  project_id   = "%s"
+  description  = "my user for acceptance tests"
 }
-`, os.Getenv("OVH_PUBLIC_CLOUD"))
+`, os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"))
 
 func TestAccCloudUser_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{

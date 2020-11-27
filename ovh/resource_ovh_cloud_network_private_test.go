@@ -13,12 +13,12 @@ import (
 
 var testAccCloudNetworkPrivateConfig_attachVrack = `
 resource "ovh_vrack_cloudproject" "attach" {
-  vrack_id   = "%s"
-  project_id = "%s"
+  service_name = "%s"
+  project_id   = "%s"
 }
 
 data "ovh_cloud_regions" "regions" {
-  project_id = ovh_vrack_cloudproject.attach.project_id
+  service_name = ovh_vrack_cloudproject.attach.project_id
 
   has_services_up = ["network"]
 }
@@ -26,7 +26,7 @@ data "ovh_cloud_regions" "regions" {
 
 var testAccCloudNetworkPrivateConfig_noAttachVrack = `
 data "ovh_cloud_regions" "regions" {
-  project_id = "%s"
+  service_name = "%s"
 
   has_services_up = ["network"]
 }
@@ -36,33 +36,44 @@ var testAccCloudNetworkPrivateConfig_basic = `
 %s
 
 resource "ovh_cloud_network_private" "network" {
-  project_id = data.ovh_cloud_regions.regions.project_id
+  service_name = data.ovh_cloud_regions.regions.service_name
   vlan_id    = 0
   name       = "terraform_testacc_private_net"
-  regions    = tolist(data.ovh_cloud_regions.regions.names)
+  regions    = slice(sort(tolist(data.ovh_cloud_regions.regions.names)), 0, 3)
 }
 `
 
-func testAccCloudNetworkPrivateConfig() string {
+var testAccCloudNetworkPrivateDeprecatedConfig_basic = `
+%s
+
+resource "ovh_cloud_network_private" "network" {
+  project_id = data.ovh_cloud_regions.regions.service_name
+  vlan_id    = 0
+  name       = "terraform_testacc_private_net"
+  regions    = slice(sort(tolist(data.ovh_cloud_regions.regions.names)), 0, 3)
+}
+`
+
+func testAccCloudNetworkPrivateConfig(config string) string {
 	attachVrack := fmt.Sprintf(
 		testAccCloudNetworkPrivateConfig_attachVrack,
-		os.Getenv("OVH_VRACK"),
-		os.Getenv("OVH_PUBLIC_CLOUD"),
+		os.Getenv("OVH_VRACK_SERVICE_TEST"),
+		os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"),
 	)
 	noAttachVrack := fmt.Sprintf(
 		testAccCloudNetworkPrivateConfig_noAttachVrack,
-		os.Getenv("OVH_PUBLIC_CLOUD"),
+		os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"),
 	)
 
 	if os.Getenv("OVH_ATTACH_VRACK") == "0" {
 		return fmt.Sprintf(
-			testAccCloudNetworkPrivateConfig_basic,
+			config,
 			noAttachVrack,
 		)
 	}
 
 	return fmt.Sprintf(
-		testAccCloudNetworkPrivateConfig_basic,
+		config,
 		attachVrack,
 	)
 }
@@ -80,15 +91,15 @@ func testSweepCloudNetworkPrivate(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	vrack := os.Getenv("OVH_VRACK")
+	vrack := os.Getenv("OVH_VRACK_SERVICE_TEST")
 	if vrack == "" {
-		log.Print("[DEBUG] OVH_VRACK is not set. No cloud_network_private to sweep")
+		log.Print("[DEBUG] OVH_VRACK_SERVICE_TEST is not set. No cloud_network_private to sweep")
 		return nil
 	}
 
-	projectId := os.Getenv("OVH_PUBLIC_CLOUD")
+	projectId := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
 	if projectId == "" {
-		log.Print("[DEBUG] OVH_PUBLIC_CLOUD is not set. No cloud_network_private to sweep")
+		log.Print("[DEBUG] OVH_CLOUD_PROJECT_SERVICE_TEST is not set. No cloud_network_private to sweep")
 		return nil
 	}
 
@@ -141,9 +152,26 @@ func TestAccCloudNetworkPrivate_basic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCloudNetworkPrivateConfig(),
+				Config: testAccCloudNetworkPrivateConfig(testAccCloudNetworkPrivateConfig_basic),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("ovh_cloud_network_private.network", "project_id"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_network_private.network", "service_name"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_network_private.network", "id"),
+					resource.TestCheckResourceAttr("ovh_cloud_network_private.network", "vlan_id", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCloudNetworkPrivateDeprecated_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccCheckCloudNetworkPrivatePreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCloudNetworkPrivateConfig(testAccCloudNetworkPrivateDeprecatedConfig_basic),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("ovh_cloud_network_private.network", "service_name"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_network_private.network", "id"),
 					resource.TestCheckResourceAttr("ovh_cloud_network_private.network", "vlan_id", "0"),
 				),

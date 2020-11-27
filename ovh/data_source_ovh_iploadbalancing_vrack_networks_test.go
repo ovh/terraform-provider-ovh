@@ -49,7 +49,7 @@ data ovh_iploadbalancing_vrack_networks "networks" {
   service_name = data.ovh_iploadbalancing.iplb.service_name
   subnet = "10.0.0.0/24"
 }
-`, os.Getenv("OVH_IPLB_SERVICE"))
+`, os.Getenv("OVH_IPLB_SERVICE_TEST"))
 
 var testAccIpLoadbalancingVrackNetworksDatasourceConfig_withFilters = fmt.Sprintf(`
 data ovh_iploadbalancing "iplb" {
@@ -61,4 +61,4 @@ data ovh_iploadbalancing_vrack_networks "networks" {
   subnet       = "10.0.0.0/24"
   vlan_id      = 0
 }
-`, os.Getenv("OVH_IPLB_SERVICE"))
+`, os.Getenv("OVH_IPLB_SERVICE_TEST"))

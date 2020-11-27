@@ -24,9 +24,9 @@ func testSweepIploadbalancingTcpFrontend(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	iplb := os.Getenv("OVH_IPLB_SERVICE")
+	iplb := os.Getenv("OVH_IPLB_SERVICE_TEST")
 	if iplb == "" {
-		log.Print("[DEBUG] OVH_IPLB_SERVICE is not set. No iploadbalancing_vrack_network to sweep")
+		log.Print("[DEBUG] OVH_IPLB_SERVICE_TEST is not set. No iploadbalancing_vrack_network to sweep")
 		return nil
 	}
 
@@ -67,7 +67,7 @@ func testSweepIploadbalancingTcpFrontend(region string) error {
 }
 
 func TestAccIpLoadbalancingTcpFrontend_basic(t *testing.T) {
-	iplb := os.Getenv("OVH_IPLB_SERVICE")
+	iplb := os.Getenv("OVH_IPLB_SERVICE_TEST")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheckIpLoadbalancing(t) },
@@ -123,7 +123,7 @@ func TestAccIpLoadbalancingTcpFrontend_basic(t *testing.T) {
 }
 
 func TestAccIpLoadbalancingTcpFrontend_withfarm(t *testing.T) {
-	iplb := os.Getenv("OVH_IPLB_SERVICE")
+	iplb := os.Getenv("OVH_IPLB_SERVICE_TEST")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheckIpLoadbalancing(t) },

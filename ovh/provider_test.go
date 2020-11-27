@@ -82,28 +82,28 @@ func testAccPreCheckIp(t *testing.T) {
 // are set.
 func testAccPreCheckDomain(t *testing.T) {
 	testAccPreCheckCredentials(t)
-	checkEnvOrSkip(t, "OVH_ZONE")
+	checkEnvOrSkip(t, "OVH_ZONE_TEST")
 }
 
 // Checks that the environment variables needed for the /cloud acceptance tests
 // are set.
 func testAccPreCheckCloud(t *testing.T) {
 	testAccPreCheckCredentials(t)
-	checkEnvOrSkip(t, "OVH_PUBLIC_CLOUD")
+	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_SERVICE_TEST")
 }
 
 // Checks that the environment variables needed for the /ipLoadbalacing acceptance tests
 // are set.
 func testAccPreCheckIpLoadbalancing(t *testing.T) {
 	testAccPreCheckCredentials(t)
-	checkEnvOrSkip(t, "OVH_IPLB_SERVICE")
+	checkEnvOrSkip(t, "OVH_IPLB_SERVICE_TEST")
 }
 
 // Checks that the environment variables needed for the /vrack acceptance tests
 // are set.
 func testAccPreCheckVRack(t *testing.T) {
 	testAccPreCheckCredentials(t)
-	checkEnvOrSkip(t, "OVH_VRACK")
+	checkEnvOrSkip(t, "OVH_VRACK_SERVICE_TEST")
 }
 
 // Checks that the environment variables needed for the /me/paymentMean acceptance tests
@@ -131,7 +131,7 @@ func testAccCheckVRackExists(t *testing.T) {
 
 	r := vrackResponse{}
 
-	endpoint := fmt.Sprintf("/vrack/%s", os.Getenv("OVH_VRACK"))
+	endpoint := fmt.Sprintf("/vrack/%s", os.Getenv("OVH_VRACK_SERVICE_TEST"))
 
 	err := testAccOVHClient.Get(endpoint, &r)
 	if err != nil {
@@ -148,7 +148,7 @@ func testAccCheckCloudExists(t *testing.T) {
 
 	r := cloudProjectResponse{}
 
-	endpoint := fmt.Sprintf("/cloud/project/%s", os.Getenv("OVH_PUBLIC_CLOUD"))
+	endpoint := fmt.Sprintf("/cloud/project/%s", os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"))
 
 	err := testAccOVHClient.Get(endpoint, &r)
 	if err != nil {
@@ -165,7 +165,7 @@ func testAccCheckIpLoadbalancingExists(t *testing.T) {
 
 	r := iplbResponse{}
 
-	endpoint := fmt.Sprintf("/ipLoadbalancing/%s", os.Getenv("OVH_IPLB_SERVICE"))
+	endpoint := fmt.Sprintf("/ipLoadbalancing/%s", os.Getenv("OVH_IPLB_SERVICE_TEST"))
 
 	err := testAccOVHClient.Get(endpoint, &r)
 	if err != nil {
@@ -181,7 +181,7 @@ func testAccCheckDomainZoneExists(t *testing.T) {
 
 	r := domainZoneResponse{}
 
-	endpoint := fmt.Sprintf("/domain/zone/%s", os.Getenv("OVH_ZONE"))
+	endpoint := fmt.Sprintf("/domain/zone/%s", os.Getenv("OVH_ZONE_TEST"))
 
 	err := testAccOVHClient.Get(endpoint, &r)
 	if err != nil {
