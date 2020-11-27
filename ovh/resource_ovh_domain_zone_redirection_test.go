@@ -27,9 +27,9 @@ func testSweepDomainZoneRedirection(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	zoneName := os.Getenv("OVH_ZONE")
+	zoneName := os.Getenv("OVH_ZONE_TEST")
 	if zoneName == "" {
-		log.Print("[DEBUG] OVH_ZONE is not set. No zone to sweep")
+		log.Print("[DEBUG] OVH_ZONE_TEST is not set. No zone to sweep")
 		return nil
 	}
 
@@ -91,7 +91,7 @@ func testSweepDomainZoneRedirection(region string) error {
 
 func TestAccDomainZoneRedirection_Basic(t *testing.T) {
 	var redirection OvhDomainZoneRedirection
-	zone := os.Getenv("OVH_ZONE")
+	zone := os.Getenv("OVH_ZONE_TEST")
 	subdomain := acctest.RandomWithPrefix(test_prefix)
 
 	resource.Test(t, resource.TestCase{
@@ -119,7 +119,7 @@ func TestAccDomainZoneRedirection_Basic(t *testing.T) {
 
 func TestAccDomainZoneRedirection_Updated(t *testing.T) {
 	redirection := OvhDomainZoneRedirection{}
-	zone := os.Getenv("OVH_ZONE")
+	zone := os.Getenv("OVH_ZONE_TEST")
 	subdomain := acctest.RandomWithPrefix(test_prefix)
 
 	resource.Test(t, resource.TestCase{
@@ -181,7 +181,7 @@ func TestAccDomainZoneRedirection_Updated(t *testing.T) {
 
 func testAccCheckOvhDomainZoneRedirectionDestroy(s *terraform.State) error {
 	provider := testAccProvider.Meta().(*Config)
-	zone := os.Getenv("OVH_ZONE")
+	zone := os.Getenv("OVH_ZONE_TEST")
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "ovh_domain_zone_redirection" {
@@ -203,7 +203,7 @@ func testAccCheckOvhDomainZoneRedirectionDestroy(s *terraform.State) error {
 }
 
 func testAccCheckOvhDomainZoneRedirectionExists(n string, redirection *OvhDomainZoneRedirection) resource.TestCheckFunc {
-	zone := os.Getenv("OVH_ZONE")
+	zone := os.Getenv("OVH_ZONE_TEST")
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 

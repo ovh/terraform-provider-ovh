@@ -11,7 +11,7 @@ import (
 )
 
 func TestAccDomainZoneDataSource_basic(t *testing.T) {
-	zoneName := os.Getenv("OVH_ZONE")
+	zoneName := os.Getenv("OVH_ZONE_TEST")
 	config := fmt.Sprintf(testAccDomainZoneDatasourceConfig_Basic, zoneName)
 
 	resource.Test(t, resource.TestCase{

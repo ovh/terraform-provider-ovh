@@ -23,7 +23,14 @@ resource "ovh_vrack_dedicated_server" "vds" {
 
 The following arguments are supported:
 
-* `vrack_id` - (Required) The id of the vrack.
+* `vrack_id` - (Optional) Deprecated. The id of the vrack. If omitted,
+    the `OVH_VRACK_ID` environment variable is used.
+    One of `service_name` or `vrack_id` is required. Conflits with `service_name`.
+
+* `service_name` - (Optional) The id of the vrack. If omitted,
+    the `OVH_VRACK_SERVICE` environment variable is used. 
+    One of `service_name` or `vrack_id` is required. Conflits with `vrack_id`.
+
 * `server_id` - (Required) The id of the dedicated server. 
 
 ## Attributes Reference
@@ -31,4 +38,5 @@ The following arguments are supported:
 The following attributes are exported:
 
 * `vrack_id` - See Argument Reference above.
+* `service_name` - See Argument Reference above.
 * `server_id` - See Argument Reference above.

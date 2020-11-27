@@ -19,9 +19,10 @@ func resourceOvhCloudNetworkPrivateImportState(
 	givenId := d.Id()
 	splitId := strings.SplitN(givenId, "/", 2)
 	if len(splitId) != 2 {
-		return nil, fmt.Errorf("Import Id is not OVH_PROJECT_ID/network_id formatted")
+		return nil, fmt.Errorf("Import Id is not OVH_CLOUD_PROJECT/network_id formatted")
 	}
 	d.SetId(splitId[1])
+	d.Set("service_name", splitId[0])
 	d.Set("project_id", splitId[0])
 	results := make([]*schema.ResourceData, 1)
 	results[0] = d
@@ -40,10 +41,22 @@ func resourceCloudNetworkPrivate() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"project_id": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				DefaultFunc: schema.EnvDefaultFunc("OVH_PROJECT_ID", nil),
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				DefaultFunc:   schema.EnvDefaultFunc("OVH_PROJECT_ID", nil),
+				Description:   "Id of the cloud project. DEPRECATED, use `service_name` instead",
+				ConflictsWith: []string{"service_name"},
+			},
+			"service_name": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				DefaultFunc:   schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
+				Description:   "Service name of the resource representing the id of the cloud project.",
+				ConflictsWith: []string{"project_id"},
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -97,23 +110,27 @@ func resourceCloudNetworkPrivate() *schema.Resource {
 func resourceCloudNetworkPrivateCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
-	projectId := d.Get("project_id").(string)
+	serviceName, err := helpers.GetCloudProjectServiceName(d)
+	if err != nil {
+		return err
+	}
+
 	regions, _ := helpers.StringsFromSchema(d, "regions")
 
 	params := &CloudNetworkPrivateCreateOpts{
-		ProjectId: projectId,
-		VlanId:    d.Get("vlan_id").(int),
-		Name:      d.Get("name").(string),
-		Regions:   regions,
+		ServiceName: serviceName,
+		VlanId:      d.Get("vlan_id").(int),
+		Name:        d.Get("name").(string),
+		Regions:     regions,
 	}
 
 	r := &CloudNetworkPrivateResponse{}
 
 	log.Printf("[DEBUG] Will create public cloud private network: %s", params)
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/network/private", params.ProjectId)
+	endpoint := fmt.Sprintf("/cloud/project/%s/network/private", params.ServiceName)
 
-	err := config.OVHClient.Post(endpoint, params, r)
+	err = config.OVHClient.Post(endpoint, params, r)
 	if err != nil {
 		return fmt.Errorf("calling %s with params %s:\n\t %q", endpoint, params, err)
 	}
@@ -123,7 +140,7 @@ func resourceCloudNetworkPrivateCreate(d *schema.ResourceData, meta interface{})
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"BUILDING"},
 		Target:     []string{"ACTIVE"},
-		Refresh:    waitForCloudNetworkPrivateActive(config.OVHClient, projectId, r.Id),
+		Refresh:    waitForCloudNetworkPrivateActive(config.OVHClient, serviceName, r.Id),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -138,22 +155,24 @@ func resourceCloudNetworkPrivateCreate(d *schema.ResourceData, meta interface{})
 	//set id
 	d.SetId(r.Id)
 
-	return nil
+	return resourceCloudNetworkPrivateRead(d, meta)
 }
 
 func resourceCloudNetworkPrivateRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
-	projectId := d.Get("project_id").(string)
+	serviceName, err := helpers.GetCloudProjectServiceName(d)
+	if err != nil {
+		return err
+	}
 
 	r := &CloudNetworkPrivateResponse{}
 
-	log.Printf("[DEBUG] Will read public cloud private network for project: %s, id: %s", projectId, d.Id())
+	log.Printf("[DEBUG] Will read public cloud private network for project: %s, id: %s", serviceName, d.Id())
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s", projectId, d.Id())
+	endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s", serviceName, d.Id())
 
-	d.Partial(true)
-	err := config.OVHClient.Get(endpoint, r)
+	err = config.OVHClient.Get(endpoint, r)
 	if err != nil {
 		return fmt.Errorf("Error calling %s:\n\t %q", endpoint, err)
 	}
@@ -162,7 +181,9 @@ func resourceCloudNetworkPrivateRead(d *schema.ResourceData, meta interface{}) e
 	if err != nil {
 		return err
 	}
-	d.Partial(false)
+
+	d.Set("service_name", serviceName)
+	d.Set("project_id", serviceName)
 
 	log.Printf("[DEBUG] Read Public Cloud Private Network %s", r)
 	return nil
@@ -170,37 +191,42 @@ func resourceCloudNetworkPrivateRead(d *schema.ResourceData, meta interface{}) e
 
 func resourceCloudNetworkPrivateUpdate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-
-	projectId := d.Get("project_id").(string)
+	serviceName, err := helpers.GetCloudProjectServiceName(d)
+	if err != nil {
+		return err
+	}
 	params := &CloudNetworkPrivateUpdateOpts{
 		Name: d.Get("name").(string),
 	}
 
 	log.Printf("[DEBUG] Will update public cloud private network: %s", params)
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s", projectId, d.Id())
+	endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s", serviceName, d.Id())
 
-	err := config.OVHClient.Put(endpoint, params, nil)
+	err = config.OVHClient.Put(endpoint, params, nil)
 	if err != nil {
 		return fmt.Errorf("calling %s with params %s:\n\t %q", endpoint, params, err)
 	}
 
-	log.Printf("[DEBUG] Updated Public cloud %s Private Network %s:", projectId, d.Id())
+	log.Printf("[DEBUG] Updated Public cloud %s Private Network %s:", serviceName, d.Id())
 
 	return resourceCloudNetworkPrivateRead(d, meta)
 }
 
 func resourceCloudNetworkPrivateDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
+	serviceName, err := helpers.GetCloudProjectServiceName(d)
+	if err != nil {
+		return err
+	}
 
-	projectId := d.Get("project_id").(string)
 	id := d.Id()
 
-	log.Printf("[DEBUG] Will delete public cloud private network for project: %s, id: %s", projectId, id)
+	log.Printf("[DEBUG] Will delete public cloud private network for project: %s, id: %s", serviceName, id)
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s", projectId, id)
+	endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s", serviceName, id)
 
-	err := config.OVHClient.Delete(endpoint, nil)
+	err = config.OVHClient.Delete(endpoint, nil)
 	if err != nil {
 		return fmt.Errorf("calling %s:\n\t %q", endpoint, err)
 	}
@@ -208,7 +234,7 @@ func resourceCloudNetworkPrivateDelete(d *schema.ResourceData, meta interface{})
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"DELETING"},
 		Target:     []string{"DELETED"},
-		Refresh:    waitForCloudNetworkPrivateDelete(config.OVHClient, projectId, id),
+		Refresh:    waitForCloudNetworkPrivateDelete(config.OVHClient, serviceName, id),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -221,7 +247,7 @@ func resourceCloudNetworkPrivateDelete(d *schema.ResourceData, meta interface{})
 
 	d.SetId("")
 
-	log.Printf("[DEBUG] Deleted Public Cloud %s Private Network %s", projectId, id)
+	log.Printf("[DEBUG] Deleted Public Cloud %s Private Network %s", serviceName, id)
 	return nil
 }
 
@@ -248,12 +274,12 @@ func readCloudNetworkPrivate(config *Config, d *schema.ResourceData, r *CloudNet
 	return nil
 }
 
-func cloudNetworkPrivateExists(projectId, id string, c *ovh.Client) error {
+func cloudNetworkPrivateExists(serviceName, id string, c *ovh.Client) error {
 	r := &CloudNetworkPrivateResponse{}
 
-	log.Printf("[DEBUG] Will read public cloud private network for project: %s, id: %s", projectId, id)
+	log.Printf("[DEBUG] Will read public cloud private network for project: %s, id: %s", serviceName, id)
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s", projectId, id)
+	endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s", serviceName, id)
 
 	err := c.Get(endpoint, r)
 	if err != nil {
@@ -266,10 +292,10 @@ func cloudNetworkPrivateExists(projectId, id string, c *ovh.Client) error {
 
 // AttachmentStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch
 // an Attachment Task.
-func waitForCloudNetworkPrivateActive(c *ovh.Client, projectId, CloudNetworkPrivateId string) resource.StateRefreshFunc {
+func waitForCloudNetworkPrivateActive(c *ovh.Client, serviceName, CloudNetworkPrivateId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		r := &CloudNetworkPrivateResponse{}
-		endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s", projectId, CloudNetworkPrivateId)
+		endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s", serviceName, CloudNetworkPrivateId)
 		err := c.Get(endpoint, r)
 		if err != nil {
 			return r, "", err
@@ -282,14 +308,14 @@ func waitForCloudNetworkPrivateActive(c *ovh.Client, projectId, CloudNetworkPriv
 
 // AttachmentStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch
 // an Attachment Task.
-func waitForCloudNetworkPrivateDelete(c *ovh.Client, projectId, CloudNetworkPrivateId string) resource.StateRefreshFunc {
+func waitForCloudNetworkPrivateDelete(c *ovh.Client, serviceName, CloudNetworkPrivateId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		r := &CloudNetworkPrivateResponse{}
-		endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s", projectId, CloudNetworkPrivateId)
+		endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s", serviceName, CloudNetworkPrivateId)
 		err := c.Get(endpoint, r)
 		if err != nil {
 			if err.(*ovh.APIError).Code == 404 {
-				log.Printf("[DEBUG] private network id %s on project %s deleted", CloudNetworkPrivateId, projectId)
+				log.Printf("[DEBUG] private network id %s on project %s deleted", CloudNetworkPrivateId, serviceName)
 				return r, "DELETED", nil
 			} else {
 				return r, "", err

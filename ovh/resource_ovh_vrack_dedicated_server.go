@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
 func resourceVrackDedicatedServer() *schema.Resource {
@@ -19,9 +20,22 @@ func resourceVrackDedicatedServer() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"vrack_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				DefaultFunc:   schema.EnvDefaultFunc("OVH_VRACK_ID", nil),
+				Description:   "Id of the vrack. DEPRECATED, use `service_name` instead",
+				ConflictsWith: []string{"service_name"},
+			},
+			"service_name": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				DefaultFunc:   schema.EnvDefaultFunc("OVH_VRACK_SERVICE", nil),
+				Description:   "Service name of the resource representing the id of the cloud project.",
+				ConflictsWith: []string{"vrack_id"},
 			},
 			"server_id": {
 				Type:     schema.TypeString,
@@ -36,12 +50,13 @@ func resourceVrackDedicatedServerImportState(d *schema.ResourceData, meta interf
 	givenId := d.Id()
 	splitId := strings.SplitN(givenId, "/", 2)
 	if len(splitId) != 2 {
-		return nil, fmt.Errorf("Import Id is not VRACK_ID/SERVER_ID formatted")
+		return nil, fmt.Errorf("Import Id is not SERVICE_NAME/SERVER_ID formatted")
 	}
-	vrackId := splitId[0]
+	serviceName := splitId[0]
 	serverId := splitId[1]
-	d.SetId(fmt.Sprintf("vrack_%s-dedicatedserver_%s", vrackId, serverId))
-	d.Set("vrack_id", vrackId)
+	d.SetId(fmt.Sprintf("vrack_%s-dedicatedserver_%s", serviceName, serverId))
+	d.Set("service_name", serviceName)
+	d.Set("vrack_id", serviceName)
 	d.Set("server_id", serverId)
 
 	results := make([]*schema.ResourceData, 1)
@@ -52,22 +67,26 @@ func resourceVrackDedicatedServerImportState(d *schema.ResourceData, meta interf
 func resourceVrackDedicatedServerCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
-	vrackId := d.Get("vrack_id").(string)
+	serviceName, err := helpers.GetVrackServiceName(d)
+	if err != nil {
+		return err
+	}
+
 	opts := (&VrackDedicatedServerCreateOpts{}).FromResource(d)
 	task := &VrackTask{}
 
-	endpoint := fmt.Sprintf("/vrack/%s/dedicatedServer", vrackId)
+	endpoint := fmt.Sprintf("/vrack/%s/dedicatedServer", serviceName)
 
 	if err := config.OVHClient.Post(endpoint, opts, task); err != nil {
 		return fmt.Errorf("Error calling POST %s with opts %v:\n\t %q", endpoint, opts, err)
 	}
 
 	if err := waitForVrackTask(task, config.OVHClient); err != nil {
-		return fmt.Errorf("Error waiting for vrack (%s) to attach dedicated server %v: %s", vrackId, opts, err)
+		return fmt.Errorf("Error waiting for vrack (%s) to attach dedicated server %v: %s", serviceName, opts, err)
 	}
 
 	//set id
-	d.SetId(fmt.Sprintf("vrack_%s-dedicatedserver_%s", vrackId, opts.DedicatedServer))
+	d.SetId(fmt.Sprintf("vrack_%s-dedicatedserver_%s", serviceName, opts.DedicatedServer))
 
 	return resourceVrackDedicatedServerRead(d, meta)
 }
@@ -76,21 +95,24 @@ func resourceVrackDedicatedServerRead(d *schema.ResourceData, meta interface{}) 
 	config := meta.(*Config)
 
 	vds := &VrackDedicatedServer{}
-
-	vrackId := d.Get("vrack_id").(string)
+	serviceName, err := helpers.GetVrackServiceName(d)
+	if err != nil {
+		return err
+	}
 	serverId := d.Get("server_id").(string)
 
 	endpoint := fmt.Sprintf("/vrack/%s/dedicatedServer/%s",
-		url.PathEscape(vrackId),
+		url.PathEscape(serviceName),
 		url.PathEscape(serverId),
 	)
 
-	err := config.OVHClient.Get(endpoint, vds)
+	err = config.OVHClient.Get(endpoint, vds)
 	if err != nil {
 		return err
 	}
 
-	d.Set("vrack_id", vds.Vrack)
+	d.Set("service_name", vds.Vrack)
+	d.Set("vrack_id", serviceName)
 	d.Set("server_id", vds.DedicatedServer)
 
 	return nil
@@ -99,21 +121,24 @@ func resourceVrackDedicatedServerRead(d *schema.ResourceData, meta interface{}) 
 func resourceVrackDedicatedServerDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
-	vrackId := d.Get("vrack_id").(string)
+	serviceName, err := helpers.GetVrackServiceName(d)
+	if err != nil {
+		return err
+	}
 	serverId := d.Get("server_id").(string)
 
 	task := &VrackTask{}
 	endpoint := fmt.Sprintf("/vrack/%s/dedicatedServer/%s",
-		url.PathEscape(vrackId),
+		url.PathEscape(serviceName),
 		url.PathEscape(serverId),
 	)
 
 	if err := config.OVHClient.Delete(endpoint, task); err != nil {
-		return fmt.Errorf("Error calling DELETE %s with %s/%s:\n\t %q", endpoint, vrackId, serverId, err)
+		return fmt.Errorf("Error calling DELETE %s with %s/%s:\n\t %q", endpoint, serviceName, serverId, err)
 	}
 
 	if err := waitForVrackTask(task, config.OVHClient); err != nil {
-		return fmt.Errorf("Error waiting for vrack (%s) to detach dedicated server (%s): %s", vrackId, serverId, err)
+		return fmt.Errorf("Error waiting for vrack (%s) to detach dedicated server (%s): %s", serviceName, serverId, err)
 	}
 
 	d.SetId("")
