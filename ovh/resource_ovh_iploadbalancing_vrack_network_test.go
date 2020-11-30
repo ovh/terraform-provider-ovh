@@ -65,9 +65,9 @@ func testSweepIpLoadbalancingVrackNetwork(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	serviceName := os.Getenv("OVH_IPLB_SERVICE")
+	serviceName := os.Getenv("OVH_IPLB_SERVICE_TEST")
 	if serviceName == "" {
-		log.Print("[DEBUG] OVH_IPLB_SERVICE is not set. No iploadbalancing_vrack_network to sweep")
+		log.Print("[DEBUG] OVH_IPLB_SERVICE_TEST is not set. No iploadbalancing_vrack_network to sweep")
 		return nil
 	}
 
@@ -152,8 +152,8 @@ func TestAccIpLoadbalancingVrackNetwork_basic(t *testing.T) {
 var displayName = acctest.RandomWithPrefix(test_prefix)
 
 var testAccIpLoadbalancingVrackNetworkConfig_basic = fmt.Sprintf(testAccIpLoadbalancingVrackNetworkConfig,
-	os.Getenv("OVH_IPLB_SERVICE"),
-	os.Getenv("OVH_VRACK"),
+	os.Getenv("OVH_IPLB_SERVICE_TEST"),
+	os.Getenv("OVH_VRACK_SERVICE_TEST"),
 	testAccIpLoadbalancingVrackNetworkSubnet,
 	testAccIpLoadbalancingVrackNetworkVlan1001,
 	testAccIpLoadbalancingVrackNetworkNatIp,
@@ -162,8 +162,8 @@ var testAccIpLoadbalancingVrackNetworkConfig_basic = fmt.Sprintf(testAccIpLoadba
 )
 
 var testAccIpLoadbalancingVrackNetworkConfig_update = fmt.Sprintf(testAccIpLoadbalancingVrackNetworkConfig,
-	os.Getenv("OVH_IPLB_SERVICE"),
-	os.Getenv("OVH_VRACK"),
+	os.Getenv("OVH_IPLB_SERVICE_TEST"),
+	os.Getenv("OVH_VRACK_SERVICE_TEST"),
 	testAccIpLoadbalancingVrackNetworkSubnet,
 	testAccIpLoadbalancingVrackNetworkVlan1002,
 	testAccIpLoadbalancingVrackNetworkNatIp,

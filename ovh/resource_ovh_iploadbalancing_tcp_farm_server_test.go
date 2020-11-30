@@ -146,9 +146,9 @@ func testSweepIploadbalancingTcpFarmServer(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	iplb := os.Getenv("OVH_IPLB_SERVICE")
+	iplb := os.Getenv("OVH_IPLB_SERVICE_TEST")
 	if iplb == "" {
-		log.Print("[DEBUG] OVH_IPLB_SERVICE is not set. No iploadbalancing_vrack_network to sweep")
+		log.Print("[DEBUG] OVH_IPLB_SERVICE_TEST is not set. No iploadbalancing_vrack_network to sweep")
 		return nil
 	}
 
@@ -204,7 +204,7 @@ func TestAccIpLoadbalancingTcpFarmServerBasic(t *testing.T) {
 	displayName := acctest.RandomWithPrefix(test_prefix)
 	prefix := fmt.Sprintf(
 		testAccIpLoadbalancingTcpFarmServerConfig_templ,
-		os.Getenv("OVH_IPLB_SERVICE"),
+		os.Getenv("OVH_IPLB_SERVICE_TEST"),
 		displayName,
 	)
 

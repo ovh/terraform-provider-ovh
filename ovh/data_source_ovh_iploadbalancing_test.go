@@ -9,7 +9,7 @@ import (
 )
 
 func TestAccIpLoadbalancingDataSource_basic(t *testing.T) {
-	serviceName := os.Getenv("OVH_IPLB_SERVICE")
+	serviceName := os.Getenv("OVH_IPLB_SERVICE_TEST")
 	config := fmt.Sprintf(testAccIpLoadbalancingDatasourceConfig_Basic, serviceName)
 
 	resource.Test(t, resource.TestCase{
@@ -30,7 +30,7 @@ func TestAccIpLoadbalancingDataSource_basic(t *testing.T) {
 }
 
 func TestAccIpLoadbalancingDataSource_statevrack(t *testing.T) {
-	serviceName := os.Getenv("OVH_IPLB_SERVICE")
+	serviceName := os.Getenv("OVH_IPLB_SERVICE_TEST")
 	config := fmt.Sprintf(testAccIpLoadbalancingDatasourceConfig_StateAndVrack, serviceName)
 
 	resource.Test(t, resource.TestCase{

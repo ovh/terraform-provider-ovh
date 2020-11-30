@@ -6,6 +6,7 @@ import (
 	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
 func dataSourceCloudRegions() *schema.Resource {
@@ -13,16 +14,27 @@ func dataSourceCloudRegions() *schema.Resource {
 		Read: dataSourceCloudRegionsRead,
 		Schema: map[string]*schema.Schema{
 			"project_id": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				DefaultFunc: schema.EnvDefaultFunc("OVH_PROJECT_ID", nil),
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				DefaultFunc:   schema.EnvDefaultFunc("OVH_PROJECT_ID", nil),
+				Description:   "Id of the cloud project. DEPRECATED, use `service_name` instead",
+				ConflictsWith: []string{"service_name"},
+			},
+			"service_name": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				DefaultFunc:   schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
+				Description:   "Service name of the resource representing the id of the cloud project.",
+				ConflictsWith: []string{"project_id"},
 			},
 			"has_services_up": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
 			"names": {
 				Type:     schema.TypeSet,
@@ -36,27 +48,32 @@ func dataSourceCloudRegions() *schema.Resource {
 
 func dataSourceCloudRegionsRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-	projectId := d.Get("project_id").(string)
+	serviceName, err := helpers.GetCloudProjectServiceName(d)
+	if err != nil {
+		return err
+	}
 
-	log.Printf("[DEBUG] Will read public cloud regions for project: %s", projectId)
+	log.Printf("[DEBUG] Will read public cloud regions for project: %s", serviceName)
 
 	endpoint := fmt.Sprintf(
 		"/cloud/project/%s/region",
-		url.PathEscape(projectId),
+		url.PathEscape(serviceName),
 	)
 
 	names := make([]string, 0)
-	err := config.OVHClient.Get(endpoint, &names)
+	err = config.OVHClient.Get(endpoint, &names)
 
 	if err != nil {
 		return fmt.Errorf("Error calling %s:\n\t %q", endpoint, err)
 	}
 
-	d.SetId(projectId)
+	d.SetId(serviceName)
+	d.Set("service_name", serviceName)
+	d.Set("project_id", serviceName)
 
 	var services []interface{}
 	if servicesVal, ok := d.GetOk("has_services_up"); ok {
-		services = servicesVal.(*schema.Set).List()
+		services = servicesVal.([]interface{})
 	}
 
 	// no filtering on services
@@ -67,7 +84,7 @@ func dataSourceCloudRegionsRead(d *schema.ResourceData, meta interface{}) error 
 
 	filtered_names := make([]string, 0)
 	for _, n := range names {
-		region, err := getCloudRegion(projectId, n, config.OVHClient)
+		region, err := getCloudRegion(serviceName, n, config.OVHClient)
 		if err != nil {
 			return err
 		}

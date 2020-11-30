@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 
 	"github.com/ovh/go-ovh/ovh"
 )
@@ -17,16 +18,16 @@ func resourceOvhCloudNetworkPrivateSubnetImportState(
 	givenId := d.Id()
 	splitId := strings.SplitN(givenId, "/", 3)
 	if len(splitId) != 3 {
-		return nil, fmt.Errorf("Import Id is not OVH_PROJECT_ID/network_id/subnet_id formatted")
+		return nil, fmt.Errorf("Import Id is not service_name/network_id/subnet_id formatted")
 	}
 	d.SetId(splitId[2])
 	d.Set("network_id", splitId[1])
-	d.Set("project_id", splitId[0])
+	d.Set("service_name", splitId[0])
 	results := make([]*schema.ResourceData, 1)
 	results[0] = d
 	log.Printf(
 		"[DEBUG] Will Import ovh_cloud_network_private_subnet with project %s, network %s, id %s",
-		d.Get("project_id"),
+		d.Get("service_name"),
 		d.Get("network_id"),
 		d.Id(),
 	)
@@ -44,10 +45,22 @@ func resourceCloudNetworkPrivateSubnet() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"project_id": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				DefaultFunc: schema.EnvDefaultFunc("OVH_PROJECT_ID", ""),
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				DefaultFunc:   schema.EnvDefaultFunc("OVH_PROJECT_ID", nil),
+				Description:   "Id of the cloud project. DEPRECATED, use `service_name` instead",
+				ConflictsWith: []string{"service_name"},
+			},
+			"service_name": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				DefaultFunc:   schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
+				Description:   "Service name of the resource representing the id of the cloud project.",
+				ConflictsWith: []string{"project_id"},
 			},
 			"network_id": {
 				Type:     schema.TypeString,
@@ -134,27 +147,30 @@ func resourceCloudNetworkPrivateSubnet() *schema.Resource {
 func resourceCloudNetworkPrivateSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
-	projectId := d.Get("project_id").(string)
+	serviceName, err := helpers.GetCloudProjectServiceName(d)
+	if err != nil {
+		return err
+	}
 	networkId := d.Get("network_id").(string)
 
 	params := &CloudNetworkPrivatesCreateOpts{
-		ProjectId: projectId,
-		NetworkId: networkId,
-		Dhcp:      d.Get("dhcp").(bool),
-		NoGateway: d.Get("no_gateway").(bool),
-		Start:     d.Get("start").(string),
-		End:       d.Get("end").(string),
-		Network:   d.Get("network").(string),
-		Region:    d.Get("region").(string),
+		ServiceName: serviceName,
+		NetworkId:   networkId,
+		Dhcp:        d.Get("dhcp").(bool),
+		NoGateway:   d.Get("no_gateway").(bool),
+		Start:       d.Get("start").(string),
+		End:         d.Get("end").(string),
+		Network:     d.Get("network").(string),
+		Region:      d.Get("region").(string),
 	}
 
 	r := &CloudNetworkPrivatesResponse{}
 
 	log.Printf("[DEBUG] Will create public cloud private network subnet: %s", params)
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s/subnet", projectId, networkId)
+	endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s/subnet", serviceName, networkId)
 
-	err := config.OVHClient.Post(endpoint, params, r)
+	err = config.OVHClient.Post(endpoint, params, r)
 	if err != nil {
 		return fmt.Errorf("calling POST %s with params %s:\n\t %q", endpoint, params, err)
 	}
@@ -164,22 +180,25 @@ func resourceCloudNetworkPrivateSubnetCreate(d *schema.ResourceData, meta interf
 	//set id
 	d.SetId(r.Id)
 
-	return nil
+	return resourceCloudNetworkPrivateSubnetRead(d, meta)
 }
 
 func resourceCloudNetworkPrivateSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
+	serviceName, err := helpers.GetCloudProjectServiceName(d)
+	if err != nil {
+		return err
+	}
 
-	projectId := d.Get("project_id").(string)
 	networkId := d.Get("network_id").(string)
 
 	r := []*CloudNetworkPrivatesResponse{}
 
-	log.Printf("[DEBUG] Will read public cloud private network subnet for project: %s, network: %s, id: %s", projectId, networkId, d.Id())
+	log.Printf("[DEBUG] Will read public cloud private network subnet for project: %s, network: %s, id: %s", serviceName, networkId, d.Id())
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s/subnet", projectId, networkId)
+	endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s/subnet", serviceName, networkId)
 
-	err := config.OVHClient.Get(endpoint, &r)
+	err = config.OVHClient.Get(endpoint, &r)
 	if err != nil {
 		return fmt.Errorf("calling GET %s:\n\t %q", endpoint, err)
 	}
@@ -189,6 +208,9 @@ func resourceCloudNetworkPrivateSubnetRead(d *schema.ResourceData, meta interfac
 		return err
 	}
 
+	d.Set("service_name", serviceName)
+	d.Set("project_id", serviceName)
+
 	log.Printf("[DEBUG] Read Public Cloud Private Network %v", r)
 	return nil
 }
@@ -196,31 +218,35 @@ func resourceCloudNetworkPrivateSubnetRead(d *schema.ResourceData, meta interfac
 func resourceCloudNetworkPrivateSubnetDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
-	projectId := d.Get("project_id").(string)
+	serviceName, err := helpers.GetCloudProjectServiceName(d)
+	if err != nil {
+		return err
+	}
+
 	networkId := d.Get("network_id").(string)
 	id := d.Id()
 
-	log.Printf("[DEBUG] Will delete public cloud private network subnet for project: %s, network: %s, id: %s", projectId, networkId, id)
+	log.Printf("[DEBUG] Will delete public cloud private network subnet for project: %s, network: %s, id: %s", serviceName, networkId, id)
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s/subnet/%s", projectId, id, id)
+	endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s/subnet/%s", serviceName, id, id)
 
-	err := config.OVHClient.Delete(endpoint, nil)
+	err = config.OVHClient.Delete(endpoint, nil)
 	if err != nil {
 		return fmt.Errorf("calling DELETE %s:\n\t %q", endpoint, err)
 	}
 
 	d.SetId("")
 
-	log.Printf("[DEBUG] Deleted Public Cloud %s Private Network %s Subnet %s", projectId, networkId, id)
+	log.Printf("[DEBUG] Deleted Public Cloud %s Private Network %s Subnet %s", serviceName, networkId, id)
 	return nil
 }
 
-func cloudNetworkPrivateSubnetExists(projectId, networkId, id string, c *ovh.Client) error {
+func cloudNetworkPrivateSubnetExists(serviceName, networkId, id string, c *ovh.Client) error {
 	r := []*CloudNetworkPrivatesResponse{}
 
-	log.Printf("[DEBUG] Will read public cloud private network subnet for project: %s, network: %s, id: %s", projectId, networkId, id)
+	log.Printf("[DEBUG] Will read public cloud private network subnet for project: %s, network: %s, id: %s", serviceName, networkId, id)
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s/subnet", projectId, networkId)
+	endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s/subnet", serviceName, networkId)
 
 	err := c.Get(endpoint, &r)
 	if err != nil {
@@ -229,7 +255,7 @@ func cloudNetworkPrivateSubnetExists(projectId, networkId, id string, c *ovh.Cli
 
 	s := findCloudNetworkPrivateSubnet(r, id)
 	if s == nil {
-		return fmt.Errorf("Subnet %s doesn't exists for project %s and network %s", id, projectId, networkId)
+		return fmt.Errorf("Subnet %s doesn't exists for project %s and network %s", id, serviceName, networkId)
 	}
 
 	return nil

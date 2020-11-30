@@ -25,7 +25,7 @@ resource "ovh_vrack_publiccloud_attachment" "attach" {
 
 The following arguments are supported:
 
-* `vrack_id` - (Required) The id of the vrack. If omitted, the `OVH_VRACK_ID`
+* `vrack_id` - (Required) The id of the vrack. If omitted, the `OVH_VRACK_SERVICE_ID`
     environment variable is used.
 
 * `project_id` - (Required) The id of the public cloud project. If omitted,

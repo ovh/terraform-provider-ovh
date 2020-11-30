@@ -27,9 +27,9 @@ func testSweepDomainZoneRecord(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	zoneName := os.Getenv("OVH_ZONE")
+	zoneName := os.Getenv("OVH_ZONE_TEST")
 	if zoneName == "" {
-		log.Print("[DEBUG] OVH_ZONE is not set. No zone to sweep")
+		log.Print("[DEBUG] OVH_ZONE_TEST is not set. No zone to sweep")
 		return nil
 	}
 
@@ -95,7 +95,7 @@ func testSweepDomainZoneRecord(region string) error {
 
 func TestAccDomainZoneRecord_Basic(t *testing.T) {
 	var record OvhDomainZoneRecord
-	zone := os.Getenv("OVH_ZONE")
+	zone := os.Getenv("OVH_ZONE_TEST")
 	subdomain := acctest.RandomWithPrefix(test_prefix)
 
 	resource.Test(t, resource.TestCase{
@@ -123,7 +123,7 @@ func TestAccDomainZoneRecord_Basic(t *testing.T) {
 
 func TestAccDomainZoneRecord_Updated(t *testing.T) {
 	record := OvhDomainZoneRecord{}
-	zone := os.Getenv("OVH_ZONE")
+	zone := os.Getenv("OVH_ZONE_TEST")
 	subdomain := acctest.RandomWithPrefix(test_prefix)
 
 	resource.Test(t, resource.TestCase{
@@ -195,7 +195,7 @@ func TestAccDomainZoneRecord_Updated(t *testing.T) {
 
 func TestAccDomainZoneRecord_updateType(t *testing.T) {
 	record := OvhDomainZoneRecord{}
-	zone := os.Getenv("OVH_ZONE")
+	zone := os.Getenv("OVH_ZONE_TEST")
 	subdomain := acctest.RandomWithPrefix(test_prefix)
 
 	resource.Test(t, resource.TestCase{
@@ -241,7 +241,7 @@ func TestAccDomainZoneRecord_updateType(t *testing.T) {
 
 func testAccCheckOvhDomainZoneRecordDestroy(s *terraform.State) error {
 	provider := testAccProvider.Meta().(*Config)
-	zone := os.Getenv("OVH_ZONE")
+	zone := os.Getenv("OVH_ZONE_TEST")
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "ovh_domain_zone_record" {
@@ -263,7 +263,7 @@ func testAccCheckOvhDomainZoneRecordDestroy(s *terraform.State) error {
 }
 
 func testAccCheckOvhDomainZoneRecordExists(n string, record *OvhDomainZoneRecord) resource.TestCheckFunc {
-	zone := os.Getenv("OVH_ZONE")
+	zone := os.Getenv("OVH_ZONE_TEST")
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 

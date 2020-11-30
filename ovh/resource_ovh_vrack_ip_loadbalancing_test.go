@@ -20,7 +20,7 @@ resource "ovh_vrack_iploadbalancing" "viplb" {
   service_name     = "%s"
   ip_loadbalancing = data.ovh_iploadbalancing.iplb.service_name
 }
-`, os.Getenv("OVH_IPLB_SERVICE"), os.Getenv("OVH_VRACK"))
+`, os.Getenv("OVH_IPLB_SERVICE_TEST"), os.Getenv("OVH_VRACK_SERVICE_TEST"))
 
 func init() {
 	resource.AddTestSweepers("ovh_vrack_iploadbalancing", &resource.Sweeper{
@@ -36,8 +36,8 @@ func testSweepVrackIpLoadbalancing(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	serviceName := os.Getenv("OVH_VRACK")
-	ipLoadbalancing := os.Getenv("OVH_IPLB_SERVICE")
+	serviceName := os.Getenv("OVH_VRACK_SERVICE_TEST")
+	ipLoadbalancing := os.Getenv("OVH_IPLB_SERVICE_TEST")
 
 	endpoint := fmt.Sprintf("/vrack/%s/ipLoadbalancing/%s",
 		url.PathEscape(serviceName),
@@ -74,8 +74,8 @@ func TestAccVrackIpLoadbalancing_basic(t *testing.T) {
 			{
 				Config: testAccVrackIpLoadbalancingConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_vrack_iploadbalancing.viplb", "service_name", os.Getenv("OVH_VRACK")),
-					resource.TestCheckResourceAttr("ovh_vrack_iploadbalancing.viplb", "ip_loadbalancing", os.Getenv("OVH_IPLB_SERVICE")),
+					resource.TestCheckResourceAttr("ovh_vrack_iploadbalancing.viplb", "service_name", os.Getenv("OVH_VRACK_SERVICE_TEST")),
+					resource.TestCheckResourceAttr("ovh_vrack_iploadbalancing.viplb", "ip_loadbalancing", os.Getenv("OVH_IPLB_SERVICE_TEST")),
 				),
 			},
 		},

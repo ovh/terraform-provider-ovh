@@ -31,6 +31,7 @@ func resourceCloudUser() *schema.Resource {
 			"project_id": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				DefaultFunc:   schema.EnvDefaultFunc("OVH_PROJECT_ID", nil),
 				Description:   "Id of the cloud project. DEPRECATED, use `service_name` instead",
@@ -39,7 +40,9 @@ func resourceCloudUser() *schema.Resource {
 			"service_name": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
+				DefaultFunc:   schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
 				Description:   "Service name of the resource representing the id of the cloud project.",
 				ConflictsWith: []string{"project_id"},
 			},
@@ -136,19 +139,10 @@ func validateCloudUserRoleFunc(v interface{}, k string) (ws []string, errors []e
 
 func resourceCloudUserCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-
-	projectId := helpers.GetNilStringPointerFromData(d, "project_id")
-	serviceNamePtr := helpers.GetNilStringPointerFromData(d, "service_name")
-
-	if serviceNamePtr == nil && projectId != nil && *projectId != "" {
-		serviceNamePtr = projectId
+	serviceName, err := helpers.GetCloudProjectServiceName(d)
+	if err != nil {
+		return err
 	}
-
-	if serviceNamePtr == nil || *serviceNamePtr == "" {
-		return fmt.Errorf("service_name attribute is mandatory.")
-	}
-
-	serviceName := *serviceNamePtr
 
 	params := (&CloudUserCreateOpts{}).FromResource(d)
 
@@ -165,7 +159,7 @@ func resourceCloudUserCreate(d *schema.ResourceData, meta interface{}) error {
 		"/cloud/project/%s/user",
 		url.PathEscape(serviceName),
 	)
-	err := config.OVHClient.Post(endpoint, params, r)
+	err = config.OVHClient.Post(endpoint, params, r)
 	if err != nil {
 		return fmt.Errorf("calling Post %s with params %s:\n\t %q", endpoint, params, err)
 	}
@@ -196,19 +190,10 @@ func resourceCloudUserCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceCloudUserRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-
-	projectId := helpers.GetNilStringPointerFromData(d, "project_id")
-	serviceNamePtr := helpers.GetNilStringPointerFromData(d, "service_name")
-
-	if serviceNamePtr == nil && projectId != nil && *projectId != "" {
-		serviceNamePtr = projectId
+	serviceName, err := helpers.GetCloudProjectServiceName(d)
+	if err != nil {
+		return err
 	}
-
-	if serviceNamePtr == nil || *serviceNamePtr == "" {
-		return fmt.Errorf("service_name attribute is mandatory.")
-	}
-
-	serviceName := *serviceNamePtr
 
 	user := &CloudUser{}
 
@@ -220,7 +205,7 @@ func resourceCloudUserRead(d *schema.ResourceData, meta interface{}) error {
 		d.Id(),
 	)
 
-	err := config.OVHClient.Get(endpoint, user)
+	err = config.OVHClient.Get(endpoint, user)
 	if err != nil {
 		return fmt.Errorf("calling Get %s:\n\t %q", endpoint, err)
 	}
@@ -238,25 +223,19 @@ func resourceCloudUserRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("openstack_rc", &openstackrc)
+	d.Set("service_name", serviceName)
+	d.Set("project_id", serviceName)
+
 	log.Printf("[DEBUG] Read Public Cloud User %s", user)
 	return nil
 }
 
 func resourceCloudUserDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-
-	projectId := helpers.GetNilStringPointerFromData(d, "project_id")
-	serviceNamePtr := helpers.GetNilStringPointerFromData(d, "service_name")
-
-	if serviceNamePtr == nil && projectId != nil && *projectId != "" {
-		serviceNamePtr = projectId
+	serviceName, err := helpers.GetCloudProjectServiceName(d)
+	if err != nil {
+		return err
 	}
-
-	if serviceNamePtr == nil || *serviceNamePtr == "" {
-		return fmt.Errorf("service_name attribute is mandatory.")
-	}
-
-	serviceName := *serviceNamePtr
 
 	id := d.Id()
 
@@ -268,7 +247,7 @@ func resourceCloudUserDelete(d *schema.ResourceData, meta interface{}) error {
 		id,
 	)
 
-	err := config.OVHClient.Delete(endpoint, nil)
+	err = config.OVHClient.Delete(endpoint, nil)
 	if err != nil {
 		return fmt.Errorf("calling Delete %s:\n\t %q", endpoint, err)
 	}
