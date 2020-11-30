@@ -9,8 +9,10 @@ jobs:
     script: |
       #!/usr/bin/env bash
       set -eEuo pipefail
+      export GOFLAGS=-mod=vendor
+      export GO111MODULE=on
+
       make test
       make vet
-
   requirements:
   - model: shared.infra/Go-official-1.13-buster

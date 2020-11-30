@@ -11,18 +11,18 @@ workflow:
     depends_on:
       - terraform-provider-ovh
 
-  terraform-provider-ovh-website-test:
-    pipeline: terraform-provider-ovh-website-test
-    application: terraform-provider-ovh
-    depends_on:
-      - terraform-provider-ovh
+  # terraform-provider-ovh-website-test:
+  #   pipeline: terraform-provider-ovh-website-test
+  #   application: terraform-provider-ovh
+  #   depends_on:
+  #     - terraform-provider-ovh
 
   terraform-provider-ovh-testacc:
     pipeline: terraform-provider-ovh-testacc
     application: terraform-provider-ovh
     environment: acctests
     conditions:
-      script: return git_branch == "master"
+      script: return git_hook == "push"
     depends_on:
       - terraform-provider-ovh-check
 
@@ -38,11 +38,17 @@ hooks:
       cron: 0 0 * * *
       payload: '{}'
       timezone: UTC    
+  - type: RepositoryWebHook
+    config:
+      eventFilter: push, pull_request
 
 notifications:
 - type: vcs
   settings:
     on_success: always
+  pipelines:
+  - terraform-provider-ovh-check
+  - terraform-provider-ovh-testacc
 - type: email
   pipelines:
   - terraform-provider-ovh-testacc
@@ -50,4 +56,5 @@ notifications:
     on_success: never
     send_to_author: false
     recipients:
-    - nic-cf-dev@interne.ovh.net
+    - yann.degat@ovhcloud.com
+    - pierre.gaxatte@ovhcloud.com
