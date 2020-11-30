@@ -17,7 +17,7 @@ func TestAccCloudNetworkPrivateSubnet_importBasic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCloudNetworkPrivateSubnetConfig(),
+				Config: testAccCloudNetworkPrivateSubnetConfig(testAccCloudNetworkPrivateSubnetConfig_basic),
 			},
 			{
 				ResourceName:      "ovh_cloud_network_private_subnet.subnet",
@@ -38,7 +38,7 @@ func testAccCloudNetworkPrivateSubnetImportId(resourceName string) resource.Impo
 
 		return fmt.Sprintf(
 			"%s/%s/%s",
-			subnet.Primary.Attributes["project_id"],
+			subnet.Primary.Attributes["service_name"],
 			subnet.Primary.Attributes["network_id"],
 			subnet.Primary.ID,
 		), nil

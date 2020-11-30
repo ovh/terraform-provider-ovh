@@ -13,7 +13,7 @@ import (
 func TestAccIpLoadbalancingHttpFarm_importBasic(t *testing.T) {
 	displayName := acctest.RandomWithPrefix(test_prefix)
 	config := fmt.Sprintf(testAccIpLoadbalancingHttpFarmConfig,
-		os.Getenv("OVH_IPLB_SERVICE"), displayName, 12345, "all")
+		os.Getenv("OVH_IPLB_SERVICE_TEST"), displayName, 12345, "all")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheckIpLoadbalancing(t) },

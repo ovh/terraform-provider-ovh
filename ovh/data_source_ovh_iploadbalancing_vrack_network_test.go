@@ -50,8 +50,8 @@ data ovh_iploadbalancing_vrack_network "network" {
   vrack_network_id  = ovh_iploadbalancing_vrack_network.network.vrack_network_id
 }
 `,
-	os.Getenv("OVH_IPLB_SERVICE"),
-	os.Getenv("OVH_VRACK"),
+	os.Getenv("OVH_IPLB_SERVICE_TEST"),
+	os.Getenv("OVH_VRACK_SERVICE_TEST"),
 	testAccIpLoadbalancingVrackNetworkSubnet,
 	testAccIpLoadbalancingVrackNetworkVlan1001,
 	testAccIpLoadbalancingVrackNetworkNatIp,

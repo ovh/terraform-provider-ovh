@@ -81,13 +81,15 @@ variables must also be set:
 
 * `OVH_ENDPOINT` - possible value are: `ovh-eu`, `ovh-ca`, `ovh-us`, `soyoustart-eu`, `soyoustart-ca`, `kimsufi-ca`, `kimsufi-eu`, `runabove-ca`
 
-* `OVH_IPLB_SERVICE` - The ID of the IP Load Balancer to use
+* `OVH_IPLB_SERVICE_TEST` - The ID of the IP Load Balancer to use
 
-* `OVH_VRACK` - The ID of the vRack to use.
+* `OVH_VRACK_SERVICE_TEST` - The ID of the vRack to use.
 
-* `OVH_PUBLIC_CLOUD` - The ID of your public cloud project.
+* `OVH_CLOUD_PROJECT_SERVICE_TEST` - The ID of your public cloud project.
 
-* `OVH_ZONE` - The domain you own to test the domain_zone resource.
+* `OVH_ZONE_TEST` - The domain you own to test the domain_zone resource.
+
+* `OVH_IP_TEST`, `OVH_IP_BLOCK_TEST`, `OVH_IP_REVERSE_TEST` - The values you have to set for testing ip reverse resources.
 
 You will also need to [generate an OVH token](https://api.ovh.com/createToken/?GET=/*&POST=/*&PUT=/*&DELETE=/*) and use it to set the following environment variables:
 

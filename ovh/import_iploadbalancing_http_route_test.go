@@ -15,7 +15,7 @@ func TestAccIpLoadbalancingHttpRoute_importBasic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(testAccCheckOvhIpLoadbalancingHttpRouteConfig_basic, os.Getenv("OVH_IPLB_SERVICE"), "testroute", "0", "302", "https://test.url", "redirect"),
+				Config: fmt.Sprintf(testAccCheckOvhIpLoadbalancingHttpRouteConfig_basic, os.Getenv("OVH_IPLB_SERVICE_TEST"), "testroute", "0", "302", "https://test.url", "redirect"),
 			},
 			{
 				ResourceName:      "ovh_iploadbalancing_http_route.testroute",

@@ -29,9 +29,9 @@ func testSweepIploadbalancingHttpRoute(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	iplb := os.Getenv("OVH_IPLB_SERVICE")
+	iplb := os.Getenv("OVH_IPLB_SERVICE_TEST")
 	if iplb == "" {
-		log.Print("[DEBUG] OVH_IPLB_SERVICE is not set. No iploadbalancing_vrack_network to sweep")
+		log.Print("[DEBUG] OVH_IPLB_SERVICE_TEST is not set. No iploadbalancing_vrack_network to sweep")
 		return nil
 	}
 
@@ -72,7 +72,7 @@ func testSweepIploadbalancingHttpRoute(region string) error {
 }
 
 func TestAccIPLoadbalancingRouteHTTPBasicCreate(t *testing.T) {
-	serviceName := os.Getenv("OVH_IPLB_SERVICE")
+	serviceName := os.Getenv("OVH_IPLB_SERVICE_TEST")
 	name := acctest.RandomWithPrefix(test_prefix)
 	weight := "0"
 	actionStatus := "302"
@@ -129,7 +129,7 @@ func testAccCheckIPLoadbalancingRouteHTTPDestroy(state *terraform.State) error {
 		}
 
 		config := testAccProvider.Meta().(*Config)
-		endpoint := fmt.Sprintf("/ipLoadbalancing/%s/http/route/%s", os.Getenv("OVH_IPLB_SERVICE"), resource.Primary.ID)
+		endpoint := fmt.Sprintf("/ipLoadbalancing/%s/http/route/%s", os.Getenv("OVH_IPLB_SERVICE_TEST"), resource.Primary.ID)
 		err := config.OVHClient.Get(endpoint, nil)
 		if err == nil {
 			return fmt.Errorf("IpLoadbalancing route still exists")

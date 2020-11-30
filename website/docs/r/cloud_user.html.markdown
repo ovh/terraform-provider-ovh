@@ -24,8 +24,13 @@ The following arguments are supported:
 
 * `description` - A description associated with the user.
 
-* `project_id` - The id of the public cloud project. If omitted,
-    the `OVH_PROJECT_ID` environment variable is used. DEPRECATED. Use `service_name` instead.
+* `project_id` - (Optional) Deprecated. The id of the public cloud project. If omitted,
+    the `OVH_PROJECT_ID` environment variable is used.
+    One of `service_name` or `project_id` is required. Conflits with `service_name`.
+
+* `service_name` - (Optional) The id of the public cloud project. If omitted,
+    the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used. 
+    One of `service_name` or `project_id` is required. Conflits with `project_id`.
 
 * `role_name` -  The name of a role. See `role_names`.
 

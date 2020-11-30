@@ -9,14 +9,14 @@ import (
 
 // Opts
 type CloudNetworkPrivateCreateOpts struct {
-	ProjectId string   `json:"serviceName"`
-	VlanId    int      `json:"vlanId"`
-	Name      string   `json:"name"`
-	Regions   []string `json:"regions"`
+	ServiceName string   `json:"serviceName"`
+	VlanId      int      `json:"vlanId"`
+	Name        string   `json:"name"`
+	Regions     []string `json:"regions"`
 }
 
 func (p *CloudNetworkPrivateCreateOpts) String() string {
-	return fmt.Sprintf("projectId: %s, vlanId:%d, name: %s, regions: %s", p.ProjectId, p.VlanId, p.Name, p.Regions)
+	return fmt.Sprintf("projectId: %s, vlanId:%d, name: %s, regions: %s", p.ServiceName, p.VlanId, p.Name, p.Regions)
 }
 
 // Opts
@@ -48,19 +48,19 @@ func (p *CloudNetworkPrivateResponse) String() string {
 
 // Opts
 type CloudNetworkPrivatesCreateOpts struct {
-	ProjectId string `json:"serviceName"`
-	NetworkId string `json:"networkId"`
-	Dhcp      bool   `json:"dhcp"`
-	NoGateway bool   `json:"noGateway"`
-	Start     string `json:"start"`
-	End       string `json:"end"`
-	Network   string `json:"network"`
-	Region    string `json:"region"`
+	ServiceName string `json:"serviceName"`
+	NetworkId   string `json:"networkId"`
+	Dhcp        bool   `json:"dhcp"`
+	NoGateway   bool   `json:"noGateway"`
+	Start       string `json:"start"`
+	End         string `json:"end"`
+	Network     string `json:"network"`
+	Region      string `json:"region"`
 }
 
 func (p *CloudNetworkPrivatesCreateOpts) String() string {
 	return fmt.Sprintf("PCPNSCreateOpts[projectId: %s, networkId:%s, dhcp: %v, noGateway: %v, network: %s, start: %s, end: %s, region: %s]",
-		p.ProjectId, p.NetworkId, p.Dhcp, p.NoGateway, p.Network, p.Start, p.End, p.Region)
+		p.ServiceName, p.NetworkId, p.Dhcp, p.NoGateway, p.Network, p.Start, p.End, p.Region)
 }
 
 type CloudNetworkPrivatesResponse struct {

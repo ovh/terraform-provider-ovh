@@ -6,9 +6,9 @@ import (
 	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/ovh/terraform-provider-ovh/ovh/helpers/hashcode"
-
 	"github.com/ovh/go-ovh/ovh"
+	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
+	"github.com/ovh/terraform-provider-ovh/ovh/helpers/hashcode"
 )
 
 func dataSourceCloudRegion() *schema.Resource {
@@ -16,10 +16,22 @@ func dataSourceCloudRegion() *schema.Resource {
 		Read: dataSourceCloudRegionRead,
 		Schema: map[string]*schema.Schema{
 			"project_id": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				DefaultFunc: schema.EnvDefaultFunc("OVH_PROJECT_ID", nil),
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				DefaultFunc:   schema.EnvDefaultFunc("OVH_PROJECT_ID", nil),
+				Description:   "Id of the cloud project. DEPRECATED, use `service_name` instead",
+				ConflictsWith: []string{"service_name"},
+			},
+			"service_name": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				DefaultFunc:   schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
+				Description:   "Service name of the resource representing the id of the cloud project.",
+				ConflictsWith: []string{"project_id"},
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -70,12 +82,16 @@ func dataSourceCloudRegion() *schema.Resource {
 
 func dataSourceCloudRegionRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-	projectId := d.Get("project_id").(string)
+	serviceName, err := helpers.GetCloudProjectServiceName(d)
+	if err != nil {
+		return err
+	}
+
 	name := d.Get("name").(string)
 
-	log.Printf("[DEBUG] Will read public cloud region %s for project: %s", name, projectId)
+	log.Printf("[DEBUG] Will read public cloud region %s for project: %s", name, serviceName)
 
-	region, err := getCloudRegion(projectId, name, config.OVHClient)
+	region, err := getCloudRegion(serviceName, name, config.OVHClient)
 	if err != nil {
 		return err
 	}
@@ -98,18 +114,20 @@ func dataSourceCloudRegionRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("services", services)
-	d.SetId(fmt.Sprintf("%s_%s", projectId, name))
+	d.Set("service_name", serviceName)
+	d.Set("project_id", serviceName)
+	d.SetId(fmt.Sprintf("%s_%s", serviceName, name))
 
 	return nil
 }
 
-func getCloudRegion(projectId, region string, client *ovh.Client) (*CloudRegionResponse, error) {
-	log.Printf("[DEBUG] Will read public cloud region %s for project: %s", region, projectId)
+func getCloudRegion(serviceName, region string, client *ovh.Client) (*CloudRegionResponse, error) {
+	log.Printf("[DEBUG] Will read public cloud region %s for project: %s", region, serviceName)
 
 	response := &CloudRegionResponse{}
 	endpoint := fmt.Sprintf(
 		"/cloud/project/%s/region/%s",
-		url.PathEscape(projectId),
+		url.PathEscape(serviceName),
 		url.PathEscape(region),
 	)
 	err := client.Get(endpoint, response)
