@@ -11,6 +11,8 @@ workflow:
     depends_on:
       - terraform-provider-ovh
 
+  # TODO: the website-test make target is broken.
+  # pipeline is disable and further investigation is required
   # terraform-provider-ovh-website-test:
   #   pipeline: terraform-provider-ovh-website-test
   #   application: terraform-provider-ovh
@@ -22,8 +24,6 @@ workflow:
     one_at_a_time: true
     application: terraform-provider-ovh
     environment: acctests
-    conditions:
-      script: return git_hook == "push" or cds_manual == "true" or cds_triggered_by_username == "cds.scheduler"
     depends_on:
       - terraform-provider-ovh-check
 
@@ -41,7 +41,8 @@ hooks:
       timezone: UTC    
   - type: RepositoryWebHook
     config:
-      eventFilter: push;pull_request
+      # don't trigger build on PRs
+      eventFilter: push
 
 notifications:
 - type: vcs
