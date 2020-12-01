@@ -1,21 +1,21 @@
 ---
 layout: "ovh"
-page_title: "OVH: publiccloud_private_network_subnet"
-sidebar_current: "docs-ovh-resource-publiccloud-private-network-subnet"
+page_title: "OVH: cloud_private_network_subnet"
+sidebar_current: "docs-ovh-resource-cloud-private-network-subnet"
 description: |-
   Creates a subnet in a private network of a public cloud project.
 ---
 
-# ovh_publiccloud_private_network_subnet
+# ovh_cloud_private_network_subnet
 
-~> __DEPRECATED:__ Use [`ovh_cloud_network_private_subnet`](./cloud_network_private_subnet.html) instead.
+~> __DEPRECATED:__ Use [`ovh_cloud_project_network_private_subnet`](./cloud_project_network_private_subnet.html) instead.
 
 Creates a subnet in a private network of a public cloud project.
 
 ## Example Usage
 
 ```hcl
-resource "ovh_publiccloud_private_network_subnet" "subnet" {
+resource "ovh_cloud_private_network_subnet" "subnet" {
    project_id = "67890"
    network_id = "0234543"
    region     = "GRA1"

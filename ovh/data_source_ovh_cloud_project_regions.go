@@ -9,9 +9,9 @@ import (
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
-func dataSourceCloudRegions() *schema.Resource {
+func dataSourceCloudProjectRegions() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceCloudRegionsRead,
+		Read: dataSourceCloudProjectRegionsRead,
 		Schema: map[string]*schema.Schema{
 			"project_id": {
 				Type:          schema.TypeString,
@@ -46,7 +46,7 @@ func dataSourceCloudRegions() *schema.Resource {
 	}
 }
 
-func dataSourceCloudRegionsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceCloudProjectRegionsRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName, err := helpers.GetCloudProjectServiceName(d)
 	if err != nil {
@@ -84,7 +84,7 @@ func dataSourceCloudRegionsRead(d *schema.ResourceData, meta interface{}) error 
 
 	filtered_names := make([]string, 0)
 	for _, n := range names {
-		region, err := getCloudRegion(serviceName, n, config.OVHClient)
+		region, err := getCloudProjectRegion(serviceName, n, config.OVHClient)
 		if err != nil {
 			return err
 		}

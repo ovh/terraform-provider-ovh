@@ -12,7 +12,7 @@ import (
 	"github.com/ovh/go-ovh/ovh"
 )
 
-func resourceOvhCloudNetworkPrivateSubnetImportState(
+func resourceOvhCloudProjectNetworkPrivateSubnetImportState(
 	d *schema.ResourceData,
 	meta interface{}) ([]*schema.ResourceData, error) {
 	givenId := d.Id()
@@ -26,7 +26,7 @@ func resourceOvhCloudNetworkPrivateSubnetImportState(
 	results := make([]*schema.ResourceData, 1)
 	results[0] = d
 	log.Printf(
-		"[DEBUG] Will Import ovh_cloud_network_private_subnet with project %s, network %s, id %s",
+		"[DEBUG] Will Import ovh_cloud_project_network_private_subnet with project %s, network %s, id %s",
 		d.Get("service_name"),
 		d.Get("network_id"),
 		d.Id(),
@@ -34,13 +34,13 @@ func resourceOvhCloudNetworkPrivateSubnetImportState(
 	return results, nil
 }
 
-func resourceCloudNetworkPrivateSubnet() *schema.Resource {
+func resourceCloudProjectNetworkPrivateSubnet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCloudNetworkPrivateSubnetCreate,
-		Read:   resourceCloudNetworkPrivateSubnetRead,
-		Delete: resourceCloudNetworkPrivateSubnetDelete,
+		Create: resourceCloudProjectNetworkPrivateSubnetCreate,
+		Read:   resourceCloudProjectNetworkPrivateSubnetRead,
+		Delete: resourceCloudProjectNetworkPrivateSubnetDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceOvhCloudNetworkPrivateSubnetImportState,
+			State: resourceOvhCloudProjectNetworkPrivateSubnetImportState,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -77,19 +77,19 @@ func resourceCloudNetworkPrivateSubnet() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: resourceCloudNetworkPrivateSubnetValidateIP,
+				ValidateFunc: resourceCloudProjectNetworkPrivateSubnetValidateIP,
 			},
 			"end": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: resourceCloudNetworkPrivateSubnetValidateIP,
+				ValidateFunc: resourceCloudProjectNetworkPrivateSubnetValidateIP,
 			},
 			"network": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: resourceCloudNetworkPrivateSubnetValidateNetwork,
+				ValidateFunc: resourceCloudProjectNetworkPrivateSubnetValidateNetwork,
 			},
 			"region": {
 				Type:     schema.TypeString,
@@ -144,7 +144,7 @@ func resourceCloudNetworkPrivateSubnet() *schema.Resource {
 	}
 }
 
-func resourceCloudNetworkPrivateSubnetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectNetworkPrivateSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
 	serviceName, err := helpers.GetCloudProjectServiceName(d)
@@ -153,7 +153,7 @@ func resourceCloudNetworkPrivateSubnetCreate(d *schema.ResourceData, meta interf
 	}
 	networkId := d.Get("network_id").(string)
 
-	params := &CloudNetworkPrivatesCreateOpts{
+	params := &CloudProjectNetworkPrivatesCreateOpts{
 		ServiceName: serviceName,
 		NetworkId:   networkId,
 		Dhcp:        d.Get("dhcp").(bool),
@@ -164,7 +164,7 @@ func resourceCloudNetworkPrivateSubnetCreate(d *schema.ResourceData, meta interf
 		Region:      d.Get("region").(string),
 	}
 
-	r := &CloudNetworkPrivatesResponse{}
+	r := &CloudProjectNetworkPrivatesResponse{}
 
 	log.Printf("[DEBUG] Will create public cloud private network subnet: %s", params)
 
@@ -180,10 +180,10 @@ func resourceCloudNetworkPrivateSubnetCreate(d *schema.ResourceData, meta interf
 	//set id
 	d.SetId(r.Id)
 
-	return resourceCloudNetworkPrivateSubnetRead(d, meta)
+	return resourceCloudProjectNetworkPrivateSubnetRead(d, meta)
 }
 
-func resourceCloudNetworkPrivateSubnetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectNetworkPrivateSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName, err := helpers.GetCloudProjectServiceName(d)
 	if err != nil {
@@ -192,7 +192,7 @@ func resourceCloudNetworkPrivateSubnetRead(d *schema.ResourceData, meta interfac
 
 	networkId := d.Get("network_id").(string)
 
-	r := []*CloudNetworkPrivatesResponse{}
+	r := []*CloudProjectNetworkPrivatesResponse{}
 
 	log.Printf("[DEBUG] Will read public cloud private network subnet for project: %s, network: %s, id: %s", serviceName, networkId, d.Id())
 
@@ -203,7 +203,7 @@ func resourceCloudNetworkPrivateSubnetRead(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("calling GET %s:\n\t %q", endpoint, err)
 	}
 
-	err = readCloudNetworkPrivateSubnet(d, r)
+	err = readCloudProjectNetworkPrivateSubnet(d, r)
 	if err != nil {
 		return err
 	}
@@ -215,7 +215,7 @@ func resourceCloudNetworkPrivateSubnetRead(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceCloudNetworkPrivateSubnetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectNetworkPrivateSubnetDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
 	serviceName, err := helpers.GetCloudProjectServiceName(d)
@@ -242,7 +242,7 @@ func resourceCloudNetworkPrivateSubnetDelete(d *schema.ResourceData, meta interf
 }
 
 func cloudNetworkPrivateSubnetExists(serviceName, networkId, id string, c *ovh.Client) error {
-	r := []*CloudNetworkPrivatesResponse{}
+	r := []*CloudProjectNetworkPrivatesResponse{}
 
 	log.Printf("[DEBUG] Will read public cloud private network subnet for project: %s, network: %s, id: %s", serviceName, networkId, id)
 
@@ -253,7 +253,7 @@ func cloudNetworkPrivateSubnetExists(serviceName, networkId, id string, c *ovh.C
 		return fmt.Errorf("calling GET %s:\n\t %q", endpoint, err)
 	}
 
-	s := findCloudNetworkPrivateSubnet(r, id)
+	s := findCloudProjectNetworkPrivateSubnet(r, id)
 	if s == nil {
 		return fmt.Errorf("Subnet %s doesn't exists for project %s and network %s", id, serviceName, networkId)
 	}
@@ -261,7 +261,7 @@ func cloudNetworkPrivateSubnetExists(serviceName, networkId, id string, c *ovh.C
 	return nil
 }
 
-func findCloudNetworkPrivateSubnet(rs []*CloudNetworkPrivatesResponse, id string) *CloudNetworkPrivatesResponse {
+func findCloudProjectNetworkPrivateSubnet(rs []*CloudProjectNetworkPrivatesResponse, id string) *CloudProjectNetworkPrivatesResponse {
 	for i := range rs {
 		if rs[i].Id == id {
 			return rs[i]
@@ -271,8 +271,8 @@ func findCloudNetworkPrivateSubnet(rs []*CloudNetworkPrivatesResponse, id string
 	return nil
 }
 
-func readCloudNetworkPrivateSubnet(d *schema.ResourceData, rs []*CloudNetworkPrivatesResponse) error {
-	r := findCloudNetworkPrivateSubnet(rs, d.Id())
+func readCloudProjectNetworkPrivateSubnet(d *schema.ResourceData, rs []*CloudProjectNetworkPrivatesResponse) error {
+	r := findCloudProjectNetworkPrivateSubnet(rs, d.Id())
 	if r == nil {
 		return fmt.Errorf("%s subnet not found", d.Id())
 	}
@@ -308,7 +308,7 @@ func readCloudNetworkPrivateSubnet(d *schema.ResourceData, rs []*CloudNetworkPri
 	return nil
 }
 
-func resourceCloudNetworkPrivateSubnetValidateIP(v interface{}, k string) (ws []string, errors []error) {
+func resourceCloudProjectNetworkPrivateSubnetValidateIP(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	ip := net.ParseIP(value)
 	if ip == nil {
@@ -317,7 +317,7 @@ func resourceCloudNetworkPrivateSubnetValidateIP(v interface{}, k string) (ws []
 	return
 }
 
-func resourceCloudNetworkPrivateSubnetValidateNetwork(v interface{}, k string) (ws []string, errors []error) {
+func resourceCloudProjectNetworkPrivateSubnetValidateNetwork(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	_, _, err := net.ParseCIDR(value)
 	if err != nil {

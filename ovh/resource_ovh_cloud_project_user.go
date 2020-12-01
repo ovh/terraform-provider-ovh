@@ -15,11 +15,11 @@ import (
 	"github.com/ovh/go-ovh/ovh"
 )
 
-func resourceCloudUser() *schema.Resource {
+func resourceCloudProjectUser() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCloudUserCreate,
-		Read:   resourceCloudUserRead,
-		Delete: resourceCloudUserDelete,
+		Create: resourceCloudProjectUserCreate,
+		Read:   resourceCloudProjectUserRead,
+		Delete: resourceCloudProjectUserDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -55,7 +55,7 @@ func resourceCloudUser() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateCloudUserRoleFunc,
+				ValidateFunc: validateCloudProjectUserRoleFunc,
 			},
 			"role_names": {
 				Type:     schema.TypeList,
@@ -116,7 +116,7 @@ func resourceCloudUser() *schema.Resource {
 	}
 }
 
-func validateCloudUserRoleFunc(v interface{}, k string) (ws []string, errors []error) {
+func validateCloudProjectUserRoleFunc(v interface{}, k string) (ws []string, errors []error) {
 	err := helpers.ValidateStringEnum(v.(string), []string{
 		"administrator",
 		"ai_training_operator",
@@ -137,22 +137,22 @@ func validateCloudUserRoleFunc(v interface{}, k string) (ws []string, errors []e
 	return
 }
 
-func resourceCloudUserCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectUserCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName, err := helpers.GetCloudProjectServiceName(d)
 	if err != nil {
 		return err
 	}
 
-	params := (&CloudUserCreateOpts{}).FromResource(d)
+	params := (&CloudProjectUserCreateOpts{}).FromResource(d)
 
 	for _, role := range params.Roles {
-		if _, errs := validateCloudUserRoleFunc(role, ""); errs != nil {
+		if _, errs := validateCloudProjectUserRoleFunc(role, ""); errs != nil {
 			return fmt.Errorf("roles contains unsupported value: %s.", role)
 		}
 	}
 
-	r := &CloudUser{}
+	r := &CloudProjectUser{}
 
 	log.Printf("[DEBUG] Will create public cloud user: %s", params)
 	endpoint := fmt.Sprintf(
@@ -173,7 +173,7 @@ func resourceCloudUserCreate(d *schema.ResourceData, meta interface{}) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"creating"},
 		Target:     []string{"ok"},
-		Refresh:    waitForCloudUser(config.OVHClient, serviceName, d.Id()),
+		Refresh:    waitForCloudProjectUser(config.OVHClient, serviceName, d.Id()),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -185,17 +185,17 @@ func resourceCloudUserCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 	log.Printf("[DEBUG] Created User %s", r)
 
-	return resourceCloudUserRead(d, meta)
+	return resourceCloudProjectUserRead(d, meta)
 }
 
-func resourceCloudUserRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectUserRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName, err := helpers.GetCloudProjectServiceName(d)
 	if err != nil {
 		return err
 	}
 
-	user := &CloudUser{}
+	user := &CloudProjectUser{}
 
 	log.Printf("[DEBUG] Will read public cloud user %s from project: %s", d.Id(), serviceName)
 
@@ -230,7 +230,7 @@ func resourceCloudUserRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceCloudUserDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectUserDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName, err := helpers.GetCloudProjectServiceName(d)
 	if err != nil {
@@ -257,7 +257,7 @@ func resourceCloudUserDelete(d *schema.ResourceData, meta interface{}) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"deleting"},
 		Target:     []string{"deleted"},
-		Refresh:    waitForCloudUser(config.OVHClient, serviceName, id),
+		Refresh:    waitForCloudProjectUser(config.OVHClient, serviceName, id),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -288,7 +288,7 @@ func cloudUserGetOpenstackRC(serviceName, id string, c *ovh.Client, rc map[strin
 		id,
 	)
 
-	r := &CloudUserOpenstackRC{}
+	r := &CloudProjectUserOpenstackRC{}
 
 	err := c.Get(endpoint, r)
 	if err != nil {
@@ -320,9 +320,9 @@ func cloudUserGetOpenstackRC(serviceName, id string, c *ovh.Client, rc map[strin
 	return nil
 }
 
-func waitForCloudUser(c *ovh.Client, serviceName, id string) resource.StateRefreshFunc {
+func waitForCloudProjectUser(c *ovh.Client, serviceName, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		r := &CloudUser{}
+		r := &CloudProjectUser{}
 		endpoint := fmt.Sprintf(
 			"/cloud/project/%s/user/%s",
 			url.PathEscape(serviceName),

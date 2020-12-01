@@ -11,57 +11,57 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-var testAccCloudNetworkPrivateConfig_attachVrack = `
+var testAccCloudProjectNetworkPrivateConfig_attachVrack = `
 resource "ovh_vrack_cloudproject" "attach" {
   service_name = "%s"
   project_id   = "%s"
 }
 
-data "ovh_cloud_regions" "regions" {
+data "ovh_cloud_project_regions" "regions" {
   service_name = ovh_vrack_cloudproject.attach.project_id
 
   has_services_up = ["network"]
 }
 `
 
-var testAccCloudNetworkPrivateConfig_noAttachVrack = `
-data "ovh_cloud_regions" "regions" {
+var testAccCloudProjectNetworkPrivateConfig_noAttachVrack = `
+data "ovh_cloud_project_regions" "regions" {
   service_name = "%s"
 
   has_services_up = ["network"]
 }
 `
 
-var testAccCloudNetworkPrivateConfig_basic = `
+var testAccCloudProjectNetworkPrivateConfig_basic = `
 %s
 
-resource "ovh_cloud_network_private" "network" {
-  service_name = data.ovh_cloud_regions.regions.service_name
+resource "ovh_cloud_project_network_private" "network" {
+  service_name = data.ovh_cloud_project_regions.regions.service_name
   vlan_id    = 0
   name       = "terraform_testacc_private_net"
-  regions    = slice(sort(tolist(data.ovh_cloud_regions.regions.names)), 0, 3)
+  regions    = slice(sort(tolist(data.ovh_cloud_project_regions.regions.names)), 0, 3)
 }
 `
 
-var testAccCloudNetworkPrivateDeprecatedConfig_basic = `
+var testAccCloudProjectNetworkPrivateDeprecatedConfig_basic = `
 %s
 
-resource "ovh_cloud_network_private" "network" {
-  project_id = data.ovh_cloud_regions.regions.service_name
+resource "ovh_cloud_project_network_private" "network" {
+  project_id = data.ovh_cloud_project_regions.regions.service_name
   vlan_id    = 0
   name       = "terraform_testacc_private_net"
-  regions    = slice(sort(tolist(data.ovh_cloud_regions.regions.names)), 0, 3)
+  regions    = slice(sort(tolist(data.ovh_cloud_project_regions.regions.names)), 0, 3)
 }
 `
 
-func testAccCloudNetworkPrivateConfig(config string) string {
+func testAccCloudProjectNetworkPrivateConfig(config string) string {
 	attachVrack := fmt.Sprintf(
-		testAccCloudNetworkPrivateConfig_attachVrack,
+		testAccCloudProjectNetworkPrivateConfig_attachVrack,
 		os.Getenv("OVH_VRACK_SERVICE_TEST"),
 		os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"),
 	)
 	noAttachVrack := fmt.Sprintf(
-		testAccCloudNetworkPrivateConfig_noAttachVrack,
+		testAccCloudProjectNetworkPrivateConfig_noAttachVrack,
 		os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"),
 	)
 
@@ -79,13 +79,13 @@ func testAccCloudNetworkPrivateConfig(config string) string {
 }
 
 func init() {
-	resource.AddTestSweepers("ovh_cloud_network_private", &resource.Sweeper{
-		Name: "ovh_cloud_network_private",
-		F:    testSweepCloudNetworkPrivate,
+	resource.AddTestSweepers("ovh_cloud_project_network_private", &resource.Sweeper{
+		Name: "ovh_cloud_project_network_private",
+		F:    testSweepCloudProjectNetworkPrivate,
 	})
 }
 
-func testSweepCloudNetworkPrivate(region string) error {
+func testSweepCloudProjectNetworkPrivate(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -103,7 +103,7 @@ func testSweepCloudNetworkPrivate(region string) error {
 		return nil
 	}
 
-	networks := []CloudNetworkPrivateResponse{}
+	networks := []CloudProjectNetworkPrivateResponse{}
 	err = client.Get(fmt.Sprintf("/cloud/project/%s/network/private", projectId), &networks)
 	if err != nil {
 		return fmt.Errorf("error listing private networks for project %q:\n\t %q", projectId, err)
@@ -146,42 +146,42 @@ func testSweepCloudNetworkPrivate(region string) error {
 	return nil
 }
 
-func TestAccCloudNetworkPrivate_basic(t *testing.T) {
+func TestAccCloudProjectNetworkPrivate_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccCheckCloudNetworkPrivatePreCheck(t) },
+		PreCheck:  func() { testAccCheckCloudProjectNetworkPrivatePreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCloudNetworkPrivateConfig(testAccCloudNetworkPrivateConfig_basic),
+				Config: testAccCloudProjectNetworkPrivateConfig(testAccCloudProjectNetworkPrivateConfig_basic),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("ovh_cloud_network_private.network", "service_name"),
-					resource.TestCheckResourceAttrSet("ovh_cloud_network_private.network", "id"),
-					resource.TestCheckResourceAttr("ovh_cloud_network_private.network", "vlan_id", "0"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_network_private.network", "service_name"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_network_private.network", "id"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_network_private.network", "vlan_id", "0"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccCloudNetworkPrivateDeprecated_basic(t *testing.T) {
+func TestAccCloudProjectNetworkPrivateDeprecated_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccCheckCloudNetworkPrivatePreCheck(t) },
+		PreCheck:  func() { testAccCheckCloudProjectNetworkPrivatePreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCloudNetworkPrivateConfig(testAccCloudNetworkPrivateDeprecatedConfig_basic),
+				Config: testAccCloudProjectNetworkPrivateConfig(testAccCloudProjectNetworkPrivateDeprecatedConfig_basic),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("ovh_cloud_network_private.network", "service_name"),
-					resource.TestCheckResourceAttrSet("ovh_cloud_network_private.network", "id"),
-					resource.TestCheckResourceAttr("ovh_cloud_network_private.network", "vlan_id", "0"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_network_private.network", "service_name"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_network_private.network", "id"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_network_private.network", "vlan_id", "0"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckCloudNetworkPrivatePreCheck(t *testing.T) {
+func testAccCheckCloudProjectNetworkPrivatePreCheck(t *testing.T) {
 	testAccPreCheckCloud(t)
-	testAccCheckCloudExists(t)
+	testAccCheckCloudProjectExists(t)
 	testAccPreCheckVRack(t)
 }

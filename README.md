@@ -85,13 +85,21 @@ $ source ~/.ovhrc
 In order for all the tests to pass you can run:
 
 ```sh
+export OVH_IP_TEST="..."
+export OVH_IP_BLOCK_TEST="..."
+export OVH_IP_REVERSE_TEST="..."
+export OVH_IPLB_SERVICE_TEST="..."
+export OVH_CLOUD_PROJECT_SERVICE_TEST="..."
+export OVH_VRACK_SERVICE_TEST="..."
+export OVH_ZONE_TEST="..."
+
 $ make testacc
 ```
 
 To filter acceptance test, you can run:
 
 ```sh
-$ make testacc TESTARGS="-run TestAccPublicCloudPrivateNetwork"
+$ make testacc TESTARGS="-run TestAccCloudProjectPrivateNetwork"
 ```
 
 To remove dangling resources, you can run:
