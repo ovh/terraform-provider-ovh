@@ -8,6 +8,8 @@ description: |-
 
 # ovh_cloud_region
 
+~> __DEPRECATED:__ Use [`ovh_cloud_project_region`](./cloud_project_region.html) instead.
+
 Use this data source to retrieve information about a region associated with a
 public cloud project. The region must be associated with the project.
 
@@ -16,22 +18,17 @@ public cloud project. The region must be associated with the project.
 ```hcl
 data "ovh_cloud_region" "GRA1" {
    project_id = "XXXXXX"
-   name = "GRA1"
+   region = "GRA1"
 }
 ```
 
 ## Argument Reference
 
 
-* `project_id` - (Optional) Deprecated. The id of the public cloud project. If omitted,
+* `project_id` - (Required) The id of the public cloud project. If omitted,
     the `OVH_PROJECT_ID` environment variable is used.
-    One of `service_name` or `project_id` is required. Conflits with `service_name`.
 
-* `service_name` - (Optional) The id of the public cloud project. If omitted,
-    the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used. 
-    One of `service_name` or `project_id` is required. Conflits with `project_id`.
-
-* `name` - (Required) The name of the region associated with the public cloud
+* `region` - (Required) The name of the region associated with the public cloud
 project.
 
 ## Attributes Reference

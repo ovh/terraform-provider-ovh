@@ -139,7 +139,7 @@ func testAccCheckVRackExists(t *testing.T) {
 	}
 }
 
-func testAccCheckCloudExists(t *testing.T) {
+func testAccCheckCloudProjectExists(t *testing.T) {
 	type cloudProjectResponse struct {
 		ID          string `json:"project_id"`
 		Status      string `json:"status"`

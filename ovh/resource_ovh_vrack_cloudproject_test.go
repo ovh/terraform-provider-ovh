@@ -29,7 +29,7 @@ resource "ovh_vrack_cloudproject" "attach" {
 func init() {
 	resource.AddTestSweepers("ovh_vrack_cloudproject", &resource.Sweeper{
 		Name:         "ovh_vrack_cloudproject",
-		Dependencies: []string{"ovh_cloud_network_private"},
+		Dependencies: []string{"ovh_cloud_project_network_private"},
 		F:            testSweepVrackCloudProject,
 	})
 }
@@ -114,5 +114,5 @@ func TestAccVrackCloudProjectDeprecated_basic(t *testing.T) {
 func testAccCheckVrackCloudProjectPreCheck(t *testing.T) {
 	testAccPreCheckVRack(t)
 	testAccCheckVRackExists(t)
-	testAccCheckCloudExists(t)
+	testAccCheckCloudProjectExists(t)
 }

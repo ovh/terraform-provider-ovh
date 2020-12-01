@@ -8,28 +8,28 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccCloudNetworkPrivateSubnet_importBasic(t *testing.T) {
+func TestAccCloudProjectNetworkPrivateSubnet_importBasic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckCredentials(t)
-			testAccCheckcCloudNetworkPrivateSubnetPreCheck(t)
+			testAccCheckcCloudProjectNetworkPrivateSubnetPreCheck(t)
 		},
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCloudNetworkPrivateSubnetConfig(testAccCloudNetworkPrivateSubnetConfig_basic),
+				Config: testAccCloudProjectNetworkPrivateSubnetConfig(testAccCloudProjectNetworkPrivateSubnetConfig_basic),
 			},
 			{
-				ResourceName:      "ovh_cloud_network_private_subnet.subnet",
+				ResourceName:      "ovh_cloud_project_network_private_subnet.subnet",
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateIdFunc: testAccCloudNetworkPrivateSubnetImportId("ovh_cloud_network_private_subnet.subnet"),
+				ImportStateIdFunc: testAccCloudProjectNetworkPrivateSubnetImportId("ovh_cloud_project_network_private_subnet.subnet"),
 			},
 		},
 	})
 }
 
-func testAccCloudNetworkPrivateSubnetImportId(resourceName string) resource.ImportStateIdFunc {
+func testAccCloudProjectNetworkPrivateSubnetImportId(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		subnet, ok := s.RootModule().Resources[resourceName]
 		if !ok {

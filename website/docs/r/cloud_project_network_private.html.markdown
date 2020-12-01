@@ -1,19 +1,19 @@
 ---
 layout: "ovh"
-page_title: "OVH: cloud_network_private"
-sidebar_current: "docs-ovh-resource-cloud-network-private-x"
+page_title: "OVH: cloud_project_network_private"
+sidebar_current: "docs-ovh-resource-cloud-project-network-private-x"
 description: |-
   Creates a private network in a public cloud project.
 ---
 
-# ovh_cloud_network_private
+# ovh_cloud_project_network_private
 
 Creates a private network in a public cloud project.
 
 ## Example Usage
 
 ```hcl
-resource "ovh_cloud_network_private" "net" {
+resource "ovh_cloud_project_network_private" "net" {
    project_id = "67890"
    name       = "admin_network"
    regions    = ["GRA1", "BHS1"]

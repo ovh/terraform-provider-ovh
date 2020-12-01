@@ -1,21 +1,19 @@
 ---
 layout: "ovh"
-page_title: "OVH: publiccloud_regions"
-sidebar_current: "docs-ovh-datasource-publiccloud-regions"
+page_title: "OVH: cloud_project_regions"
+sidebar_current: "docs-ovh-datasource-cloud-project-regions"
 description: |-
   Get the list of regions associated with a public cloud project.
 ---
 
-# ovh_publiccloud_regions
-
-~> __DEPRECATED:__ Use [`ovh_cloud_regions`](./cloud_regions.html) instead.
+# ovh_cloud_project_regions
 
 Use this data source to get the regions of a public cloud project.
 
 ## Example Usage
 
 ```hcl
-data "ovh_publiccloud_regions" "regions" {
+data "ovh_cloud_project_regions" "regions" {
   project_id = "XXXXXX"
   
   has_services_up = ["network"]
@@ -25,8 +23,13 @@ data "ovh_publiccloud_regions" "regions" {
 ## Argument Reference
 
 
-* `project_id` - (Required) The id of the public cloud project. If omitted,
+* `project_id` - (Optional) Deprecated. The id of the public cloud project. If omitted,
     the `OVH_PROJECT_ID` environment variable is used.
+    One of `service_name` or `project_id` is required. Conflits with `service_name`.
+
+* `service_name` - (Optional) The id of the public cloud project. If omitted,
+    the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used. 
+    One of `service_name` or `project_id` is required. Conflits with `project_id`.
 
 * `has_services_up` - (Optional) List of services which has to be UP in regions.
    Example: "image", "instance", "network", "storage", "volume", "workflow", ...
