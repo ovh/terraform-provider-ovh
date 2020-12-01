@@ -52,7 +52,7 @@ Or let the provider fetching them from your environment (see "[Configuration ref
 
 ```hcl
 # Create a public cloud user
-resource "ovh_publiccloud_user" "user-test" {
+resource "ovh_cloud_project_user" "user-test" {
   # ...
 }
 ```

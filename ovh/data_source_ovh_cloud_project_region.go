@@ -11,9 +11,9 @@ import (
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers/hashcode"
 )
 
-func dataSourceCloudRegion() *schema.Resource {
+func dataSourceCloudProjectRegion() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceCloudRegionRead,
+		Read: dataSourceCloudProjectRegionRead,
 		Schema: map[string]*schema.Schema{
 			"project_id": {
 				Type:          schema.TypeString,
@@ -80,7 +80,7 @@ func dataSourceCloudRegion() *schema.Resource {
 	}
 }
 
-func dataSourceCloudRegionRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceCloudProjectRegionRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName, err := helpers.GetCloudProjectServiceName(d)
 	if err != nil {
@@ -91,7 +91,7 @@ func dataSourceCloudRegionRead(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Will read public cloud region %s for project: %s", name, serviceName)
 
-	region, err := getCloudRegion(serviceName, name, config.OVHClient)
+	region, err := getCloudProjectRegion(serviceName, name, config.OVHClient)
 	if err != nil {
 		return err
 	}
@@ -121,10 +121,10 @@ func dataSourceCloudRegionRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func getCloudRegion(serviceName, region string, client *ovh.Client) (*CloudRegionResponse, error) {
+func getCloudProjectRegion(serviceName, region string, client *ovh.Client) (*CloudProjectRegionResponse, error) {
 	log.Printf("[DEBUG] Will read public cloud region %s for project: %s", region, serviceName)
 
-	response := &CloudRegionResponse{}
+	response := &CloudProjectRegionResponse{}
 	endpoint := fmt.Sprintf(
 		"/cloud/project/%s/region/%s",
 		url.PathEscape(serviceName),
