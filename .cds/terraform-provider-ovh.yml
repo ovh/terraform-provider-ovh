@@ -19,10 +19,11 @@ workflow:
 
   terraform-provider-ovh-testacc:
     pipeline: terraform-provider-ovh-testacc
+    one_at_a_time: true
     application: terraform-provider-ovh
     environment: acctests
     conditions:
-      script: return git_hook == "push"
+      script: return git_hook == "push" or cds_manual == "true" or cds_triggered_by_username == "cds.scheduler"
     depends_on:
       - terraform-provider-ovh-check
 
