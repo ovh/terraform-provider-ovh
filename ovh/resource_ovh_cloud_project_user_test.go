@@ -9,109 +9,109 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-var testAccCloudUserConfig = fmt.Sprintf(`
-resource "ovh_cloud_user" "user" {
+var testAccCloudProjectUserConfig = fmt.Sprintf(`
+resource "ovh_cloud_project_user" "user" {
  service_name = "%s"
  description  = "my user for acceptance tests"
 }
 `, os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"))
 
-var testAccCloudUserWithRoleConfig = fmt.Sprintf(`
-resource "ovh_cloud_user" "user" {
+var testAccCloudProjectUserWithRoleConfig = fmt.Sprintf(`
+resource "ovh_cloud_project_user" "user" {
  service_name = "%s"
  description  = "my user for acceptance tests"
  role_name    = "administrator"
 }
 `, os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"))
 
-var testAccCloudUserWithRolesConfig = fmt.Sprintf(`
-resource "ovh_cloud_user" "user" {
+var testAccCloudProjectUserWithRolesConfig = fmt.Sprintf(`
+resource "ovh_cloud_project_user" "user" {
  service_name = "%s"
  description  = "my user for acceptance tests"
  role_names   = ["administrator", "compute_operator"]
 }
 `, os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"))
 
-var testAccCloudUserDeprecatedConfig = fmt.Sprintf(`
-resource "ovh_cloud_user" "user" {
+var testAccCloudProjectUserDeprecatedConfig = fmt.Sprintf(`
+resource "ovh_cloud_project_user" "user" {
   project_id   = "%s"
   description  = "my user for acceptance tests"
 }
 `, os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"))
 
-func TestAccCloudUser_basic(t *testing.T) {
+func TestAccCloudProjectUser_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheckCloud(t); testAccCheckCloudExists(t) },
+		PreCheck:  func() { testAccPreCheckCloud(t); testAccCheckCloudProjectExists(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCloudUserConfig,
+				Config: testAccCloudProjectUserConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
-						"ovh_cloud_user.user", "description", "my user for acceptance tests"),
-					testAccCheckCloudUserOpenRC("ovh_cloud_user.user", t),
+						"ovh_cloud_project_user.user", "description", "my user for acceptance tests"),
+					testAccCheckCloudProjectUserOpenRC("ovh_cloud_project_user.user", t),
 				),
 			},
 		},
 	})
 }
 
-func TestAccCloudUserDeprecated_basic(t *testing.T) {
+func TestAccCloudProjectUserDeprecated_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheckCloud(t); testAccCheckCloudExists(t) },
+		PreCheck:  func() { testAccPreCheckCloud(t); testAccCheckCloudProjectExists(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCloudUserDeprecatedConfig,
+				Config: testAccCloudProjectUserDeprecatedConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
-						"ovh_cloud_user.user", "description", "my user for acceptance tests"),
-					testAccCheckCloudUserOpenRC("ovh_cloud_user.user", t),
+						"ovh_cloud_project_user.user", "description", "my user for acceptance tests"),
+					testAccCheckCloudProjectUserOpenRC("ovh_cloud_project_user.user", t),
 				),
 			},
 		},
 	})
 }
 
-func TestAccCloudUser_withRole(t *testing.T) {
+func TestAccCloudProjectUser_withRole(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheckCloud(t); testAccCheckCloudExists(t) },
+		PreCheck:  func() { testAccPreCheckCloud(t); testAccCheckCloudProjectExists(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCloudUserWithRoleConfig,
+				Config: testAccCloudProjectUserWithRoleConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
-						"ovh_cloud_user.user", "description", "my user for acceptance tests"),
+						"ovh_cloud_project_user.user", "description", "my user for acceptance tests"),
 					resource.TestCheckResourceAttr(
-						"ovh_cloud_user.user", "roles.0.name", "administrator"),
-					testAccCheckCloudUserOpenRC("ovh_cloud_user.user", t),
+						"ovh_cloud_project_user.user", "roles.0.name", "administrator"),
+					testAccCheckCloudProjectUserOpenRC("ovh_cloud_project_user.user", t),
 				),
 			},
 		},
 	})
 }
 
-func TestAccCloudUser_withRoles(t *testing.T) {
+func TestAccCloudProjectUser_withRoles(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheckCloud(t); testAccCheckCloudExists(t) },
+		PreCheck:  func() { testAccPreCheckCloud(t); testAccCheckCloudProjectExists(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCloudUserWithRolesConfig,
+				Config: testAccCloudProjectUserWithRolesConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
-						"ovh_cloud_user.user", "description", "my user for acceptance tests"),
+						"ovh_cloud_project_user.user", "description", "my user for acceptance tests"),
 					resource.TestCheckResourceAttr(
-						"ovh_cloud_user.user", "roles.#", "2"),
-					testAccCheckCloudUserOpenRC("ovh_cloud_user.user", t),
+						"ovh_cloud_project_user.user", "roles.#", "2"),
+					testAccCheckCloudProjectUserOpenRC("ovh_cloud_project_user.user", t),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckCloudUserOpenRC(n string, t *testing.T) resource.TestCheckFunc {
+func testAccCheckCloudProjectUserOpenRC(n string, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

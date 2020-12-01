@@ -40,8 +40,8 @@ func Provider() *schema.Provider {
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
-			"ovh_cloud_region":                     dataSourceCloudRegion(),
-			"ovh_cloud_regions":                    dataSourceCloudRegions(),
+			"ovh_cloud_project_region":             dataSourceCloudProjectRegion(),
+			"ovh_cloud_project_regions":            dataSourceCloudProjectRegions(),
 			"ovh_dedicated_ceph":                   dataSourceDedicatedCeph(),
 			"ovh_dedicated_installation_templates": dataSourceDedicatedInstallationTemplates(),
 			"ovh_dedicated_server":                 dataSourceDedicatedServer(),
@@ -64,17 +64,17 @@ func Provider() *schema.Provider {
 			"ovh_vps":                              dataSourceVPS(),
 			"ovh_vracks":                           dataSourceVracks(),
 
-			// Legacy naming schema (publiccloud)
-			"ovh_publiccloud_region": deprecated(dataSourceCloudRegion(),
-				"Use ovh_cloud_region data source instead"),
-			"ovh_publiccloud_regions": deprecated(dataSourceCloudRegions(),
-				"Use ovh_cloud_regions data source instead"),
+			// Legacy naming schema (ovh_cloud)
+			"ovh_cloud_region": deprecated(dataSourceCloudProjectRegion(),
+				"use ovh_cloud_project_region instead"),
+			"ovh_cloud_regions": deprecated(dataSourceCloudProjectRegions(),
+				"use ovh_cloud_project_regions instead"),
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
-			"ovh_cloud_network_private":                                   resourceCloudNetworkPrivate(),
-			"ovh_cloud_network_private_subnet":                            resourceCloudNetworkPrivateSubnet(),
-			"ovh_cloud_user":                                              resourceCloudUser(),
+			"ovh_cloud_project_network_private":                           resourceCloudProjectNetworkPrivate(),
+			"ovh_cloud_project_network_private_subnet":                    resourceCloudProjectNetworkPrivateSubnet(),
+			"ovh_cloud_project_user":                                      resourceCloudProjectUser(),
 			"ovh_dedicated_ceph_acl":                                      resourceDedicatedCephACL(),
 			"ovh_dedicated_server_install_task":                           resourceDedicatedServerInstallTask(),
 			"ovh_dedicated_server_reboot_task":                            resourceDedicatedServerRebootTask(),
@@ -104,15 +104,13 @@ func Provider() *schema.Provider {
 			"ovh_vrack_dedicated_server_interface":                        resourceVrackDedicatedServerInterface(),
 			"ovh_vrack_iploadbalancing":                                   resourceVrackIpLoadbalancing(),
 
-			// Legacy naming schema (publiccloud)
-			"ovh_publiccloud_private_network": deprecated(resourceCloudNetworkPrivate(),
-				"Use ovh_cloud_network_private resource instead"),
-			"ovh_publiccloud_private_network_subnet": deprecated(resourceCloudNetworkPrivateSubnet(),
-				"Use ovh_cloud_network_private_subnet resource instead"),
-			"ovh_publiccloud_user": deprecated(resourceCloudUser(),
-				"Use ovh_cloud_user resource instead"),
-			"ovh_vrack_publiccloud_attachment": deprecated(resourceVrackCloudProject(),
-				"Use ovh_vrack_cloudproject resource instead"),
+			// Legacy naming schema (ovh_cloud)
+			"ovh_cloud_network_private": deprecated(resourceCloudProjectNetworkPrivate(),
+				"use ovh_cloud_project_network_private instead"),
+			"ovh_cloud_network_private_subnet": deprecated(resourceCloudProjectNetworkPrivateSubnet(),
+				"use ovh_cloud_project_network_private_subnet instead"),
+			"ovh_cloud_user": deprecated(resourceCloudProjectUser(),
+				"use ovh_cloud_project_user"),
 		},
 
 		ConfigureFunc: configureProvider,

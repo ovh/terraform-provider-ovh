@@ -13,7 +13,7 @@ import (
 	"github.com/ovh/go-ovh/ovh"
 )
 
-func resourceOvhCloudNetworkPrivateImportState(
+func resourceOvhCloudProjectNetworkPrivateImportState(
 	d *schema.ResourceData,
 	meta interface{}) ([]*schema.ResourceData, error) {
 	givenId := d.Id()
@@ -29,14 +29,14 @@ func resourceOvhCloudNetworkPrivateImportState(
 	return results, nil
 }
 
-func resourceCloudNetworkPrivate() *schema.Resource {
+func resourceCloudProjectNetworkPrivate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCloudNetworkPrivateCreate,
-		Read:   resourceCloudNetworkPrivateRead,
-		Update: resourceCloudNetworkPrivateUpdate,
-		Delete: resourceCloudNetworkPrivateDelete,
+		Create: resourceCloudProjectNetworkPrivateCreate,
+		Read:   resourceCloudProjectNetworkPrivateRead,
+		Update: resourceCloudProjectNetworkPrivateUpdate,
+		Delete: resourceCloudProjectNetworkPrivateDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceOvhCloudNetworkPrivateImportState,
+			State: resourceOvhCloudProjectNetworkPrivateImportState,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -107,7 +107,7 @@ func resourceCloudNetworkPrivate() *schema.Resource {
 	}
 }
 
-func resourceCloudNetworkPrivateCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectNetworkPrivateCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
 	serviceName, err := helpers.GetCloudProjectServiceName(d)
@@ -117,14 +117,14 @@ func resourceCloudNetworkPrivateCreate(d *schema.ResourceData, meta interface{})
 
 	regions, _ := helpers.StringsFromSchema(d, "regions")
 
-	params := &CloudNetworkPrivateCreateOpts{
+	params := &CloudProjectNetworkPrivateCreateOpts{
 		ServiceName: serviceName,
 		VlanId:      d.Get("vlan_id").(int),
 		Name:        d.Get("name").(string),
 		Regions:     regions,
 	}
 
-	r := &CloudNetworkPrivateResponse{}
+	r := &CloudProjectNetworkPrivateResponse{}
 
 	log.Printf("[DEBUG] Will create public cloud private network: %s", params)
 
@@ -140,7 +140,7 @@ func resourceCloudNetworkPrivateCreate(d *schema.ResourceData, meta interface{})
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"BUILDING"},
 		Target:     []string{"ACTIVE"},
-		Refresh:    waitForCloudNetworkPrivateActive(config.OVHClient, serviceName, r.Id),
+		Refresh:    waitForCloudProjectNetworkPrivateActive(config.OVHClient, serviceName, r.Id),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -155,10 +155,10 @@ func resourceCloudNetworkPrivateCreate(d *schema.ResourceData, meta interface{})
 	//set id
 	d.SetId(r.Id)
 
-	return resourceCloudNetworkPrivateRead(d, meta)
+	return resourceCloudProjectNetworkPrivateRead(d, meta)
 }
 
-func resourceCloudNetworkPrivateRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectNetworkPrivateRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
 	serviceName, err := helpers.GetCloudProjectServiceName(d)
@@ -166,7 +166,7 @@ func resourceCloudNetworkPrivateRead(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	r := &CloudNetworkPrivateResponse{}
+	r := &CloudProjectNetworkPrivateResponse{}
 
 	log.Printf("[DEBUG] Will read public cloud private network for project: %s, id: %s", serviceName, d.Id())
 
@@ -177,7 +177,7 @@ func resourceCloudNetworkPrivateRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("Error calling %s:\n\t %q", endpoint, err)
 	}
 
-	err = readCloudNetworkPrivate(config, d, r)
+	err = readCloudProjectNetworkPrivate(config, d, r)
 	if err != nil {
 		return err
 	}
@@ -189,13 +189,13 @@ func resourceCloudNetworkPrivateRead(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func resourceCloudNetworkPrivateUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectNetworkPrivateUpdate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName, err := helpers.GetCloudProjectServiceName(d)
 	if err != nil {
 		return err
 	}
-	params := &CloudNetworkPrivateUpdateOpts{
+	params := &CloudProjectNetworkPrivateUpdateOpts{
 		Name: d.Get("name").(string),
 	}
 
@@ -210,10 +210,10 @@ func resourceCloudNetworkPrivateUpdate(d *schema.ResourceData, meta interface{})
 
 	log.Printf("[DEBUG] Updated Public cloud %s Private Network %s:", serviceName, d.Id())
 
-	return resourceCloudNetworkPrivateRead(d, meta)
+	return resourceCloudProjectNetworkPrivateRead(d, meta)
 }
 
-func resourceCloudNetworkPrivateDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectNetworkPrivateDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName, err := helpers.GetCloudProjectServiceName(d)
 	if err != nil {
@@ -234,7 +234,7 @@ func resourceCloudNetworkPrivateDelete(d *schema.ResourceData, meta interface{})
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"DELETING"},
 		Target:     []string{"DELETED"},
-		Refresh:    waitForCloudNetworkPrivateDelete(config.OVHClient, serviceName, id),
+		Refresh:    waitForCloudProjectNetworkPrivateDelete(config.OVHClient, serviceName, id),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -251,7 +251,7 @@ func resourceCloudNetworkPrivateDelete(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func readCloudNetworkPrivate(config *Config, d *schema.ResourceData, r *CloudNetworkPrivateResponse) error {
+func readCloudProjectNetworkPrivate(config *Config, d *schema.ResourceData, r *CloudProjectNetworkPrivateResponse) error {
 	d.Set("name", r.Name)
 	d.Set("status", r.Status)
 	d.Set("type", r.Type)
@@ -275,7 +275,7 @@ func readCloudNetworkPrivate(config *Config, d *schema.ResourceData, r *CloudNet
 }
 
 func cloudNetworkPrivateExists(serviceName, id string, c *ovh.Client) error {
-	r := &CloudNetworkPrivateResponse{}
+	r := &CloudProjectNetworkPrivateResponse{}
 
 	log.Printf("[DEBUG] Will read public cloud private network for project: %s, id: %s", serviceName, id)
 
@@ -292,10 +292,10 @@ func cloudNetworkPrivateExists(serviceName, id string, c *ovh.Client) error {
 
 // AttachmentStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch
 // an Attachment Task.
-func waitForCloudNetworkPrivateActive(c *ovh.Client, serviceName, CloudNetworkPrivateId string) resource.StateRefreshFunc {
+func waitForCloudProjectNetworkPrivateActive(c *ovh.Client, serviceName, CloudProjectNetworkPrivateId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		r := &CloudNetworkPrivateResponse{}
-		endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s", serviceName, CloudNetworkPrivateId)
+		r := &CloudProjectNetworkPrivateResponse{}
+		endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s", serviceName, CloudProjectNetworkPrivateId)
 		err := c.Get(endpoint, r)
 		if err != nil {
 			return r, "", err
@@ -308,14 +308,14 @@ func waitForCloudNetworkPrivateActive(c *ovh.Client, serviceName, CloudNetworkPr
 
 // AttachmentStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch
 // an Attachment Task.
-func waitForCloudNetworkPrivateDelete(c *ovh.Client, serviceName, CloudNetworkPrivateId string) resource.StateRefreshFunc {
+func waitForCloudProjectNetworkPrivateDelete(c *ovh.Client, serviceName, CloudProjectNetworkPrivateId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		r := &CloudNetworkPrivateResponse{}
-		endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s", serviceName, CloudNetworkPrivateId)
+		r := &CloudProjectNetworkPrivateResponse{}
+		endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s", serviceName, CloudProjectNetworkPrivateId)
 		err := c.Get(endpoint, r)
 		if err != nil {
 			if err.(*ovh.APIError).Code == 404 {
-				log.Printf("[DEBUG] private network id %s on project %s deleted", CloudNetworkPrivateId, serviceName)
+				log.Printf("[DEBUG] private network id %s on project %s deleted", CloudProjectNetworkPrivateId, serviceName)
 				return r, "DELETED", nil
 			} else {
 				return r, "", err
