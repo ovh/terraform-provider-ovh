@@ -40,7 +40,7 @@ hooks:
       timezone: UTC    
   - type: RepositoryWebHook
     config:
-      eventFilter: push, pull_request
+      eventFilter: push;pull_request
 
 notifications:
 - type: vcs
