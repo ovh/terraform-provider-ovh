@@ -107,9 +107,8 @@ func resourceVrackCloudProjectRead(d *schema.ResourceData, meta interface{}) err
 		url.PathEscape(projectId),
 	)
 
-	err = config.OVHClient.Get(endpoint, vcp)
-	if err != nil {
-		return err
+	if err := config.OVHClient.Get(endpoint, vcp); err != nil {
+		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
 	d.Set("service_name", vcp.Vrack)

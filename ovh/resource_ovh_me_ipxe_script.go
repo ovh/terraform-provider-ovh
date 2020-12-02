@@ -6,6 +6,7 @@ import (
 	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
 func resourceMeIpxeScript() *schema.Resource {
@@ -47,19 +48,16 @@ func resourceMeIpxeScript() *schema.Resource {
 func resourceMeIpxeScriptRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
-	ipxeScript := &MeIpxeScriptResponse{}
+	r := &MeIpxeScriptResponse{}
 
-	id := d.Id()
-	err := config.OVHClient.Get(
-		fmt.Sprintf("/me/ipxeScript/%s", url.PathEscape(id)),
-		ipxeScript,
-	)
-	if err != nil {
-		return fmt.Errorf("Unable to find IpxeScript named %s:\n\t %q", id, err)
+	endpoint := fmt.Sprintf("/me/ipxeScript/%s", url.PathEscape(d.Id()))
+
+	if err := config.OVHClient.Get(endpoint, r); err != nil {
+		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
-	d.Set("name", ipxeScript.Name)
-	d.Set("script", ipxeScript.Script)
+	d.Set("name", r.Name)
+	d.Set("script", r.Script)
 
 	return nil
 }

@@ -1,7 +1,11 @@
 package ovh
 
 import (
+	"fmt"
+	"net/url"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/go-ovh/ovh"
 )
 
 func dataSourceMeInstallationTemplate() *schema.Resource {
@@ -254,9 +258,7 @@ func dataSourceMeInstallationTemplate() *schema.Resource {
 
 func dataSourceMeInstallationTemplateRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-	name := d.Get("template_name").(string)
-
-	template, err := getInstallationTemplate(name, config.OVHClient)
+	template, err := getInstallationTemplate(d, config.OVHClient)
 	if err != nil {
 		return err
 	}
@@ -272,6 +274,7 @@ func dataSourceMeInstallationTemplateRead(d *schema.ResourceData, meta interface
 		return err
 	}
 
+	name := d.Get("template_name").(string)
 	d.SetId(name)
 
 	return nil
@@ -321,4 +324,139 @@ func partialMeInstallationTemplatePartitionSchemesRead(d *schema.ResourceData, m
 	d.Set("partition_scheme", partitionSchemes)
 
 	return nil
+}
+
+func getPartitionSchemes(template string, client *ovh.Client) ([]*PartitionScheme, error) {
+	schemes, err := getPartitionSchemeIds(template, client)
+	if err != nil {
+		return nil, err
+	}
+
+	partitionSchemes := []*PartitionScheme{}
+	for _, scheme := range schemes {
+		partitionScheme, err := getPartitionScheme(template, scheme, client)
+		if err != nil {
+			return nil, err
+		}
+
+		partitionSchemes = append(partitionSchemes, partitionScheme)
+	}
+
+	return partitionSchemes, nil
+}
+
+func getPartitionScheme(template, scheme string, client *ovh.Client) (*PartitionScheme, error) {
+	r := &PartitionScheme{}
+
+	endpoint := fmt.Sprintf(
+		"/me/installationTemplate/%s/partitionScheme/%s",
+		url.PathEscape(template),
+		url.PathEscape(scheme),
+	)
+
+	if err := client.Get(endpoint, r); err != nil {
+		return nil, fmt.Errorf("Error calling GET %s: %s \n", endpoint, err.Error())
+	}
+
+	return r, nil
+}
+
+func getPartitionSchemeIds(template string, client *ovh.Client) ([]string, error) {
+	schemes := []string{}
+	endpoint := fmt.Sprintf(
+		"/me/installationTemplate/%s/partitionScheme",
+		url.PathEscape(template),
+	)
+	err := client.Get(endpoint, &schemes)
+
+	if err != nil {
+		return nil, fmt.Errorf("Error calling GET %s: %s \n", endpoint, err.Error())
+	}
+	return schemes, nil
+}
+
+func getPartitionSchemePartitions(template, scheme string, client *ovh.Client) ([]*Partition, error) {
+	mountPoints := []string{}
+	endpoint := fmt.Sprintf(
+		"/me/installationTemplate/%s/partitionScheme/%s/partition",
+		url.PathEscape(template),
+		url.PathEscape(scheme),
+	)
+	err := client.Get(endpoint, &mountPoints)
+
+	if err != nil {
+		return nil, fmt.Errorf("Error calling GET %s: %s \n", endpoint, err.Error())
+	}
+
+	partitions := []*Partition{}
+	for _, mountPoint := range mountPoints {
+		partition, err := getPartitionSchemePartition(template, scheme, mountPoint, client)
+		if err != nil {
+			return nil, err
+		}
+
+		partitions = append(partitions, partition)
+	}
+
+	return partitions, nil
+}
+
+func getPartitionSchemePartition(template, scheme, mountPoint string, client *ovh.Client) (*Partition, error) {
+	r := &Partition{}
+
+	endpoint := fmt.Sprintf(
+		"/me/installationTemplate/%s/partitionScheme/%s/partition/%s",
+		url.PathEscape(template),
+		url.PathEscape(scheme),
+		url.PathEscape(mountPoint),
+	)
+
+	if err := client.Get(endpoint, r); err != nil {
+		return nil, fmt.Errorf("Calling GET %s: %s \n", endpoint, err.Error())
+	}
+
+	return r, nil
+}
+
+func getPartitionSchemeHardwareRaids(template, scheme string, client *ovh.Client) ([]*HardwareRaid, error) {
+	names := []string{}
+	endpoint := fmt.Sprintf(
+		"/me/installationTemplate/%s/partitionScheme/%s/hardwareRaid",
+		url.PathEscape(template),
+		url.PathEscape(scheme),
+	)
+	err := client.Get(endpoint, &names)
+
+	if err != nil {
+		return nil, fmt.Errorf("Error calling GET %s: %s \n", endpoint, err.Error())
+	}
+
+	hardwareRaids := []*HardwareRaid{}
+	for _, name := range names {
+		hardwareRaid, err := getPartitionSchemeHardwareRaid(template, scheme, name, client)
+		if err != nil {
+			return nil, err
+		}
+
+		hardwareRaids = append(hardwareRaids, hardwareRaid)
+	}
+
+	return hardwareRaids, nil
+}
+
+func getPartitionSchemeHardwareRaid(template, scheme, name string, client *ovh.Client) (*HardwareRaid, error) {
+	r := &HardwareRaid{}
+
+	endpoint := fmt.Sprintf(
+		"/me/installationTemplate/%s/partitionScheme/%s/hardwareRaid/%s",
+		url.PathEscape(template),
+		url.PathEscape(scheme),
+		url.PathEscape(name),
+	)
+
+	if err := client.Get(endpoint, r); err != nil {
+		return nil, fmt.Errorf("Error calling %s: %s \n", endpoint, err.Error())
+	}
+
+	return r, nil
 }
