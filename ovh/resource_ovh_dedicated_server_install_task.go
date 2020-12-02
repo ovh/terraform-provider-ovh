@@ -218,7 +218,7 @@ func resourceDedicatedServerInstallTaskRead(d *schema.ResourceData, meta interfa
 
 	task, err := getDedicatedServerTask(serviceName, id, config.OVHClient)
 	if err != nil {
-		//After some delay, if the task is marked as `done`, the Provider
+		// After some delay, if the task is marked as `done`, the Provider
 		// may purge it. To avoid raising errors when terraform refreshes its plan,
 		// 404 errors are ignored on Resource Read, thus some information may be lost
 		// after a while.

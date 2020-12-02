@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/go-ovh/ovh"
+	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
 type OvhDomainZoneRecord struct {
@@ -128,7 +129,7 @@ func resourceOvhDomainZoneRecordCreate(d *schema.ResourceData, meta interface{})
 		// reverse order to keep the last item if found
 		sort.Sort(sort.Reverse(sort.IntSlice(records)))
 		for _, rec := range records {
-			record, err := ovhDomainZoneRecord(provider.OVHClient, zone, strconv.Itoa(rec), true)
+			record, err := ovhDomainZoneRecord(provider.OVHClient, d, strconv.Itoa(rec), true)
 			if err != nil {
 				return fmt.Errorf("Error calling /domain/zone/%s. Zone may have been left with orphan records!:\n\t %q", zone, err)
 			}
@@ -156,9 +157,10 @@ func resourceOvhDomainZoneRecordCreate(d *schema.ResourceData, meta interface{})
 func resourceOvhDomainZoneRecordRead(d *schema.ResourceData, meta interface{}) error {
 	provider := meta.(*Config)
 
-	record, err := ovhDomainZoneRecord(provider.OVHClient, d.Get("zone").(string), d.Id(), d.IsNewResource())
+	record, err := ovhDomainZoneRecord(provider.OVHClient, d, d.Id(), d.IsNewResource())
+
 	if err != nil {
-		return fmt.Errorf("Unable to find zone record %s after retries: %s", d.Id(), err)
+		return err
 	}
 
 	d.Set("zone", record.Zone)
@@ -246,12 +248,15 @@ func ovhDomainZoneRefresh(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func ovhDomainZoneRecord(client *ovh.Client, zone string, id string, retry bool) (*OvhDomainZoneRecord, error) {
+func ovhDomainZoneRecord(client *ovh.Client, d *schema.ResourceData, id string, retry bool) (*OvhDomainZoneRecord, error) {
 	rec := &OvhDomainZoneRecord{}
+	zone := d.Get("zone").(string)
+
+	endpoint := fmt.Sprintf("/domain/zone/%s/record/%s", zone, id)
 
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		err := client.Get(
-			fmt.Sprintf("/domain/zone/%s/record/%s", zone, id),
+			endpoint,
 			rec,
 		)
 		if err != nil {
@@ -262,9 +267,10 @@ func ovhDomainZoneRecord(client *ovh.Client, zone string, id string, retry bool)
 		}
 		return nil
 	})
+
 	if err != nil {
-		return nil, fmt.Errorf("Unable to find zone record %s/%s after retries: %s", zone, id, err)
+		return nil, helpers.CheckDeleted(d, err, endpoint)
 	}
 
-	return rec, nil
+	return rec, err
 }

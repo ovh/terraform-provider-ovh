@@ -142,9 +142,8 @@ func resourceIpLoadbalancingTcpFrontendRead(d *schema.ResourceData, meta interfa
 	r := &IpLoadbalancingTcpFrontend{}
 	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/tcp/frontend/%s", service, d.Id())
 
-	err := config.OVHClient.Get(endpoint, &r)
-	if err != nil {
-		return fmt.Errorf("calling GET %s:\n\t %s", endpoint, err.Error())
+	if err := config.OVHClient.Get(endpoint, r); err != nil {
+		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
 	d.SetId(fmt.Sprintf("%d", r.FrontendId))
