@@ -133,9 +133,9 @@ func resourceIpLoadbalancingTcpFarmServerCreate(d *schema.ResourceData, meta int
 		ProxyProtocolVersion: helpers.GetNilStringPointerFromData(d, "proxy_protocol_version"),
 		Chain:                helpers.GetNilStringPointerFromData(d, "chain"),
 		Weight:               helpers.GetNilIntPointerFromData(d, "weight"),
-		Probe:                helpers.GetNilBoolPointer(d.Get("probe")),
-		Ssl:                  helpers.GetNilBoolPointer(d.Get("ssl")),
-		Backup:               helpers.GetNilBoolPointer(d.Get("backup")),
+		Probe:                helpers.GetNilBoolPointerFromData(d, "probe"),
+		Ssl:                  helpers.GetNilBoolPointerFromData(d, "ssl"),
+		Backup:               helpers.GetNilBoolPointerFromData(d, "backup"),
 		Status:               d.Get("status").(string),
 	}
 
@@ -187,9 +187,9 @@ func resourceIpLoadbalancingTcpFarmServerUpdate(d *schema.ResourceData, meta int
 		ProxyProtocolVersion: helpers.GetNilStringPointerFromData(d, "proxy_protocol_version"),
 		Chain:                helpers.GetNilStringPointerFromData(d, "chain"),
 		Weight:               helpers.GetNilIntPointerFromData(d, "weight"),
-		Probe:                helpers.GetNilBoolPointer(d.Get("probe")),
-		Ssl:                  helpers.GetNilBoolPointer(d.Get("ssl")),
-		Backup:               helpers.GetNilBoolPointer(d.Get("backup")),
+		Probe:                helpers.GetNilBoolPointerFromData(d, "probe"),
+		Ssl:                  helpers.GetNilBoolPointerFromData(d, "ssl"),
+		Backup:               helpers.GetNilBoolPointerFromData(d, "backup"),
 		Status:               helpers.GetNilStringPointerFromData(d, "status"),
 	}
 
