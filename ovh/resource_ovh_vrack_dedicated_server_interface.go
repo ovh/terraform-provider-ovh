@@ -107,9 +107,8 @@ func resourceVrackDedicatedServerInterfaceRead(d *schema.ResourceData, meta inte
 		url.PathEscape(interfaceId),
 	)
 
-	err = config.OVHClient.Get(endpoint, vds)
-	if err != nil {
-		return err
+	if err := config.OVHClient.Get(endpoint, vds); err != nil {
+		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
 	d.Set("service_name", vds.Vrack)

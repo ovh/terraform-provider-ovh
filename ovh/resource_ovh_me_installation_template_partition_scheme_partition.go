@@ -7,8 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
-
-	"github.com/ovh/go-ovh/ovh"
 )
 
 func resourceMeInstallationTemplatePartitionSchemePartition() *schema.Resource {
@@ -188,34 +186,25 @@ func resourceMeInstallationTemplatePartitionSchemePartitionRead(d *schema.Resour
 	schemeName := d.Get("scheme_name").(string)
 	mountpoint := d.Get("mountpoint").(string)
 
-	partition, err := getPartitionSchemePartition(templateName, schemeName, mountpoint, config.OVHClient)
-	if err != nil {
-		return err
+	r := &Partition{}
+
+	endpoint := fmt.Sprintf(
+		"/me/installationTemplate/%s/partitionScheme/%s/partition/%s",
+		url.PathEscape(templateName),
+		url.PathEscape(schemeName),
+		url.PathEscape(mountpoint),
+	)
+
+	if err := config.OVHClient.Get(endpoint, r); err != nil {
+		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
 	// set resource attributes
-	for k, v := range partition.ToMap() {
+	for k, v := range r.ToMap() {
 		d.Set(k, v)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s/%s", templateName, schemeName, mountpoint))
 
 	return nil
-}
-
-func getPartitionSchemePartition(template, scheme, mountPoint string, client *ovh.Client) (*Partition, error) {
-	r := &Partition{}
-
-	endpoint := fmt.Sprintf(
-		"/me/installationTemplate/%s/partitionScheme/%s/partition/%s",
-		url.PathEscape(template),
-		url.PathEscape(scheme),
-		url.PathEscape(mountPoint),
-	)
-
-	if err := client.Get(endpoint, &r); err != nil {
-		return nil, fmt.Errorf("Calling GET %s: %s \n", endpoint, err.Error())
-	}
-
-	return r, nil
 }

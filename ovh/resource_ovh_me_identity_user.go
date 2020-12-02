@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
 func resourceMeIdentityUser() *schema.Resource {
@@ -78,13 +79,9 @@ func resourceMeIdentityUserRead(d *schema.ResourceData, meta interface{}) error 
 
 	identityUser := &MeIdentityUserResponse{}
 
-	id := d.Id()
-	err := config.OVHClient.Get(
-		fmt.Sprintf("/me/identity/user/%s", id),
-		identityUser,
-	)
-	if err != nil {
-		return fmt.Errorf("Unable to find identity user %s:\n\t %q", id, err)
+	endpoint := fmt.Sprintf("/me/identity/user/%s", d.Id())
+	if err := config.OVHClient.Get(endpoint, identityUser); err != nil {
+		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
 	d.Set("login", identityUser.Login)

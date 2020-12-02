@@ -7,8 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
-
-	"github.com/ovh/go-ovh/ovh"
 )
 
 func resourceMeInstallationTemplatePartitionSchemeHardwareRaid() *schema.Resource {
@@ -159,34 +157,25 @@ func resourceMeInstallationTemplatePartitionSchemeHardwareRaidRead(d *schema.Res
 	schemeName := d.Get("scheme_name").(string)
 	name := d.Get("name").(string)
 
-	hardwareRaid, err := getPartitionSchemeHardwareRaid(templateName, schemeName, name, config.OVHClient)
-	if err != nil {
-		return err
+	r := &HardwareRaid{}
+
+	endpoint := fmt.Sprintf(
+		"/me/installationTemplate/%s/partitionScheme/%s/hardwareRaid/%s",
+		url.PathEscape(templateName),
+		url.PathEscape(schemeName),
+		url.PathEscape(name),
+	)
+
+	if err := config.OVHClient.Get(endpoint, r); err != nil {
+		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
 	// set resource attributes
-	for k, v := range hardwareRaid.ToMap() {
+	for k, v := range r.ToMap() {
 		d.Set(k, v)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s/%s", templateName, schemeName, name))
 
 	return nil
-}
-
-func getPartitionSchemeHardwareRaid(template, scheme, name string, client *ovh.Client) (*HardwareRaid, error) {
-	r := &HardwareRaid{}
-
-	endpoint := fmt.Sprintf(
-		"/me/installationTemplate/%s/partitionScheme/%s/hardwareRaid/%s",
-		url.PathEscape(template),
-		url.PathEscape(scheme),
-		url.PathEscape(name),
-	)
-
-	if err := client.Get(endpoint, &r); err != nil {
-		return nil, fmt.Errorf("Error calling %s: %s \n", endpoint, err.Error())
-	}
-
-	return r, nil
 }

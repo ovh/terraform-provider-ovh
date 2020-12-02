@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/ovh/go-ovh/ovh"
+	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
 func resourceMeSshKey() *schema.Resource {
@@ -48,26 +48,16 @@ func resourceMeSshKey() *schema.Resource {
 func resourceMeSshKeyRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
-	sshKey := &MeSshKeyResponse{}
+	r := &MeSshKeyResponse{}
+	endpoint := fmt.Sprintf("/me/sshKey/%s", d.Id())
 
-	id := d.Id()
-	err := config.OVHClient.Get(
-		fmt.Sprintf("/me/sshKey/%s", id),
-		sshKey,
-	)
-	if err != nil {
-		if err.(*ovh.APIError).Code == 404 {
-			d.SetId("")
-
-			return nil
-		}
-
-		return fmt.Errorf("Unable to find SSH key named %s:\n\t %q", id, err)
+	if err := config.OVHClient.Get(endpoint, r); err != nil {
+		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
-	d.Set("key_name", sshKey.KeyName)
-	d.Set("key", sshKey.Key)
-	d.Set("default", sshKey.Default)
+	d.Set("key_name", r.KeyName)
+	d.Set("key", r.Key)
+	d.Set("default", r.Default)
 
 	return nil
 }

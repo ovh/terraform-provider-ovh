@@ -103,14 +103,14 @@ func resourceOvhIpReverseRead(d *schema.ResourceData, meta interface{}) error {
 	provider := meta.(*Config)
 
 	reverse := OvhIpReverse{}
-	err := provider.OVHClient.Get(
-		fmt.Sprintf("/ip/%s/reverse/%s", strings.Replace(d.Get("ip").(string), "/", "%2F", 1), d.Get("ipreverse").(string)),
-		&reverse,
+	endpoint := fmt.Sprintf(
+		"/ip/%s/reverse/%s",
+		strings.Replace(d.Get("ip").(string), "/", "%2F", 1),
+		d.Get("ipreverse").(string),
 	)
 
-	if err != nil {
-		d.SetId("")
-		return nil
+	if err := provider.OVHClient.Get(endpoint, &reverse); err != nil {
+		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
 	d.Set("ipreverse", reverse.IpReverse)

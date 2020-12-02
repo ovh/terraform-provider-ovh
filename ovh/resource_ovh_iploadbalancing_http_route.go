@@ -116,8 +116,7 @@ func resourceIPLoadbalancingRouteHTTPRead(d *schema.ResourceData, meta interface
 	r := &IPLoadbalancingRouteHTTP{}
 	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/http/route/%s", service, d.Id())
 
-	err := config.OVHClient.Get(endpoint, &r)
-	if err != nil {
+	if err := config.OVHClient.Get(endpoint, r); err != nil {
 		return helpers.CheckDeleted(d, err, endpoint)
 	}
 

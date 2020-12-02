@@ -8,8 +8,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
-
-	"github.com/ovh/go-ovh/ovh"
 )
 
 func resourceOvhCloudProjectNetworkPrivateSubnetImportState(
@@ -192,21 +190,56 @@ func resourceCloudProjectNetworkPrivateSubnetRead(d *schema.ResourceData, meta i
 
 	networkId := d.Get("network_id").(string)
 
-	r := []*CloudProjectNetworkPrivatesResponse{}
+	subnets := []*CloudProjectNetworkPrivatesResponse{}
 
 	log.Printf("[DEBUG] Will read public cloud private network subnet for project: %s, network: %s, id: %s", serviceName, networkId, d.Id())
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s/subnet", serviceName, networkId)
 
-	err = config.OVHClient.Get(endpoint, &r)
-	if err != nil {
-		return fmt.Errorf("calling GET %s:\n\t %q", endpoint, err)
+	if err := config.OVHClient.Get(endpoint, &subnets); err != nil {
+		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
-	err = readCloudProjectNetworkPrivateSubnet(d, r)
-	if err != nil {
-		return err
+	var r *CloudProjectNetworkPrivatesResponse
+	for i := range subnets {
+		if subnets[i].Id == d.Id() {
+			r = subnets[i]
+		}
 	}
+
+	if r == nil {
+		d.SetId("")
+		return nil
+	}
+
+	d.Set("gateway_ip", r.GatewayIp)
+	d.Set("cidr", r.Cidr)
+
+	ippools := make([]map[string]interface{}, 0)
+	for i := range r.IPPools {
+		ippool := make(map[string]interface{})
+		ippool["network"] = r.IPPools[i].Network
+		ippool["region"] = r.IPPools[i].Region
+		ippool["dhcp"] = r.IPPools[i].Dhcp
+		ippool["start"] = r.IPPools[i].Start
+		ippool["end"] = r.IPPools[i].End
+		ippools = append(ippools, ippool)
+	}
+
+	d.Set("network", ippools[0]["network"])
+	d.Set("region", ippools[0]["region"])
+	d.Set("dhcp", ippools[0]["dhcp"])
+	d.Set("start", ippools[0]["start"])
+	d.Set("end", ippools[0]["end"])
+	d.Set("ip_pools", ippools)
+
+	if r.GatewayIp == "" {
+		d.Set("no_gateway", true)
+	} else {
+		d.Set("no_gateway", false)
+	}
+
+	d.SetId(r.Id)
 
 	d.Set("service_name", serviceName)
 	d.Set("project_id", serviceName)
@@ -238,73 +271,6 @@ func resourceCloudProjectNetworkPrivateSubnetDelete(d *schema.ResourceData, meta
 	d.SetId("")
 
 	log.Printf("[DEBUG] Deleted Public Cloud %s Private Network %s Subnet %s", serviceName, networkId, id)
-	return nil
-}
-
-func cloudNetworkPrivateSubnetExists(serviceName, networkId, id string, c *ovh.Client) error {
-	r := []*CloudProjectNetworkPrivatesResponse{}
-
-	log.Printf("[DEBUG] Will read public cloud private network subnet for project: %s, network: %s, id: %s", serviceName, networkId, id)
-
-	endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s/subnet", serviceName, networkId)
-
-	err := c.Get(endpoint, &r)
-	if err != nil {
-		return fmt.Errorf("calling GET %s:\n\t %q", endpoint, err)
-	}
-
-	s := findCloudProjectNetworkPrivateSubnet(r, id)
-	if s == nil {
-		return fmt.Errorf("Subnet %s doesn't exists for project %s and network %s", id, serviceName, networkId)
-	}
-
-	return nil
-}
-
-func findCloudProjectNetworkPrivateSubnet(rs []*CloudProjectNetworkPrivatesResponse, id string) *CloudProjectNetworkPrivatesResponse {
-	for i := range rs {
-		if rs[i].Id == id {
-			return rs[i]
-		}
-	}
-
-	return nil
-}
-
-func readCloudProjectNetworkPrivateSubnet(d *schema.ResourceData, rs []*CloudProjectNetworkPrivatesResponse) error {
-	r := findCloudProjectNetworkPrivateSubnet(rs, d.Id())
-	if r == nil {
-		return fmt.Errorf("%s subnet not found", d.Id())
-	}
-
-	d.Set("gateway_ip", r.GatewayIp)
-	d.Set("cidr", r.Cidr)
-
-	ippools := make([]map[string]interface{}, 0)
-	for i := range r.IPPools {
-		ippool := make(map[string]interface{})
-		ippool["network"] = r.IPPools[i].Network
-		ippool["region"] = r.IPPools[i].Region
-		ippool["dhcp"] = r.IPPools[i].Dhcp
-		ippool["start"] = r.IPPools[i].Start
-		ippool["end"] = r.IPPools[i].End
-		ippools = append(ippools, ippool)
-	}
-
-	d.Set("network", ippools[0]["network"])
-	d.Set("region", ippools[0]["region"])
-	d.Set("dhcp", ippools[0]["dhcp"])
-	d.Set("start", ippools[0]["start"])
-	d.Set("end", ippools[0]["end"])
-	d.Set("ip_pools", ippools)
-
-	if r.GatewayIp == "" {
-		d.Set("no_gateway", true)
-	} else {
-		d.Set("no_gateway", false)
-	}
-
-	d.SetId(r.Id)
 	return nil
 }
 

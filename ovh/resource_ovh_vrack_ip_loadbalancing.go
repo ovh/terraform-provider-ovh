@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
 func resourceVrackIpLoadbalancing() *schema.Resource {
@@ -87,9 +88,8 @@ func resourceVrackIpLoadbalancingRead(d *schema.ResourceData, meta interface{}) 
 		url.PathEscape(ipLoadbalancing),
 	)
 
-	err := config.OVHClient.Get(endpoint, vds)
-	if err != nil {
-		return err
+	if err := config.OVHClient.Get(endpoint, vds); err != nil {
+		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
 	d.Set("service_name", vds.Vrack)

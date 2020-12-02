@@ -190,9 +190,8 @@ func resourceIpLoadbalancingTcpFarmRead(d *schema.ResourceData, meta interface{}
 	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/tcp/farm/%s", service, d.Id())
 	r := &IpLoadbalancingFarm{}
 
-	err := config.OVHClient.Get(endpoint, r)
-	if err != nil {
-		return fmt.Errorf("calling %s:\n\t %s", endpoint, err.Error())
+	if err := config.OVHClient.Get(endpoint, r); err != nil {
+		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
 	probes := make([]map[string]interface{}, 0)
