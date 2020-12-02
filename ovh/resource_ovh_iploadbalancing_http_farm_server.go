@@ -168,9 +168,8 @@ func resourceIpLoadbalancingHttpFarmServerRead(d *schema.ResourceData, meta inte
 
 	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/http/farm/%d/server/%s", service, farmid, d.Id())
 
-	err := config.OVHClient.Get(endpoint, r)
-	if err != nil {
-		return fmt.Errorf("calling GET %s :\n\t %q", endpoint, err)
+	if err := config.OVHClient.Get(endpoint, r); err != nil {
+		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
 	// set resource attributes

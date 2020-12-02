@@ -205,9 +205,8 @@ func resourceCloudProjectUserRead(d *schema.ResourceData, meta interface{}) erro
 		d.Id(),
 	)
 
-	err = config.OVHClient.Get(endpoint, user)
-	if err != nil {
-		return fmt.Errorf("calling Get %s:\n\t %q", endpoint, err)
+	if err := config.OVHClient.Get(endpoint, user); err != nil {
+		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
 	d.SetId(strconv.Itoa(user.Id))

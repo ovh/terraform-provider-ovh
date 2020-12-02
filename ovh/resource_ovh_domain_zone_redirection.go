@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
 type OvhDomainZoneRedirection struct {
@@ -102,14 +103,10 @@ func resourceOvhDomainZoneRedirectionRead(d *schema.ResourceData, meta interface
 	provider := meta.(*Config)
 
 	redirection := OvhDomainZoneRedirection{}
-	err := provider.OVHClient.Get(
-		fmt.Sprintf("/domain/zone/%s/redirection/%s", d.Get("zone").(string), d.Id()),
-		&redirection,
-	)
+	endpoint := fmt.Sprintf("/domain/zone/%s/redirection/%s", d.Get("zone").(string), d.Id())
 
-	if err != nil {
-		d.SetId("")
-		return nil
+	if err := provider.OVHClient.Get(endpoint, &redirection); err != nil {
+		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
 	d.Set("zone", redirection.Zone)

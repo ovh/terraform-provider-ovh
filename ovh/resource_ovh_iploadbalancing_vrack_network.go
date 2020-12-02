@@ -177,8 +177,8 @@ func resourceIPLoadbalancingVrackNetworkRead(d *schema.ResourceData, meta interf
 	)
 
 	vn := &IpLoadbalancingVrackNetwork{}
-	if err := config.OVHClient.Get(endpoint, &vn); err != nil {
-		return fmt.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
+	if err := config.OVHClient.Get(endpoint, vn); err != nil {
+		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
 	if networkId != vn.VrackNetworkId {

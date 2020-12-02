@@ -149,10 +149,10 @@ func resourceDedicatedCephACLRead(d *schema.ResourceData, meta interface{}) erro
 	url := fmt.Sprintf("/dedicated/ceph/%s/acl/%s", id, d.Id())
 	resp := &DedicatedCephACL{}
 
-	err := config.OVHClient.Get(url, resp)
-	if err != nil {
-		return fmt.Errorf("Error calling GET %s:\n\t%q", url, err)
+	if err := config.OVHClient.Get(url, resp); err != nil {
+		return helpers.CheckDeleted(d, err, url)
 	}
+
 	d.Set("netmask", resp.Netmask)
 	d.Set("family", resp.Family)
 	d.Set("network", resp.Network)
