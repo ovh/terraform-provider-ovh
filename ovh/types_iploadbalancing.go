@@ -104,6 +104,12 @@ func (opts *IpLoadbalancingFarmBackendProbe) FromResource(d *schema.ResourceData
 	opts.URL = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.url", parent))
 	opts.Method = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.method", parent))
 	opts.Type = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.type", parent))
+
+	// Error 400: "A probe can not negate without a match"
+	if opts.Match == nil {
+		opts.Negate = nil
+	}
+
 	return opts
 }
 
