@@ -182,13 +182,9 @@ func ValidateDedicatedCephACLFamily(value string) error {
 
 func GetNilBoolPointerFromData(data interface{}, id string) *bool {
 	if resourceData, tok := data.(*schema.ResourceData); tok {
-		if val, ok := resourceData.GetOk(id); ok {
-			return GetNilBoolPointer(val)
-		}
+		return GetNilBoolPointer(resourceData.Get(id).(bool))
 	} else if mapData, tok := data.(map[string]interface{}); tok {
-		if val, ok := mapData[id]; ok {
-			return GetNilBoolPointer(val)
-		}
+		return GetNilBoolPointer(mapData[id].(bool))
 	}
 
 	return nil
@@ -236,11 +232,7 @@ func GetNilInt64PointerFromData(data interface{}, id string) *int64 {
 	return nil
 }
 
-func GetNilBoolPointer(val interface{}) *bool {
-	if val == nil {
-		return nil
-	}
-	value := val.(bool)
+func GetNilBoolPointer(value bool) *bool {
 	return &value
 }
 
