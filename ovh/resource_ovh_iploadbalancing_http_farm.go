@@ -105,8 +105,10 @@ func resourceIpLoadbalancingHttpFarm() *schema.Resource {
 							},
 						},
 						"negate": {
-							Type:     schema.TypeBool,
-							Optional: true,
+							Type:         schema.TypeBool,
+							Default:      false,
+							RequiredWith: []string{"probe.0.match"},
+							Optional:     true,
 						},
 						"pattern": {
 							Type:     schema.TypeString,

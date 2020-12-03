@@ -78,7 +78,7 @@ func resourceIpLoadbalancingTcpFarm() *schema.Resource {
 						"match": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "default",
+							Computed: true,
 							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
 								err := helpers.ValidateStringEnum(v.(string), []string{"contains", "default", "internal", "matches", "status"})
 								if err != nil {
@@ -104,9 +104,10 @@ func resourceIpLoadbalancingTcpFarm() *schema.Resource {
 							},
 						},
 						"negate": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
+							Type:         schema.TypeBool,
+							Default:      false,
+							RequiredWith: []string{"probe.0.match"},
+							Optional:     true,
 						},
 						"pattern": {
 							Type:     schema.TypeString,
