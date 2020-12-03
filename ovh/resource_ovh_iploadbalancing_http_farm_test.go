@@ -17,6 +17,7 @@ const (
 data "ovh_iploadbalancing" "iplb" {
   service_name = "%s"
 }
+
 resource "ovh_iploadbalancing_http_farm" "testfarm" {
   service_name     = data.ovh_iploadbalancing.iplb.id
   display_name     = "%s"
@@ -26,6 +27,25 @@ resource "ovh_iploadbalancing_http_farm" "testfarm" {
   probe {
         interval = 30
         type = "oco"
+  }
+}
+`
+	testAccIpLoadbalancingHttpFarmProbeMatchConfig = `
+data "ovh_iploadbalancing" "iplb" {
+  service_name = "%s"
+}
+
+resource "ovh_iploadbalancing_http_farm" "testfarm" {
+  service_name     = data.ovh_iploadbalancing.iplb.id
+  display_name     = "%s"
+  port             = "%d"
+  zone             = "%s"
+  balance 		   = "roundrobin"
+
+  probe {
+        interval = 30
+        type     = "oco"
+        match    = "default"
   }
 }
 `
@@ -106,6 +126,13 @@ func TestAccIpLoadbalancingHttpFarmBasicCreate(t *testing.T) {
 		12346,
 		"all",
 	)
+	config3 := fmt.Sprintf(
+		testAccIpLoadbalancingHttpFarmProbeMatchConfig,
+		os.Getenv("OVH_IPLB_SERVICE_TEST"),
+		displayName2,
+		12346,
+		"all",
+	)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheckIpLoadbalancing(t) },
@@ -127,6 +154,16 @@ func TestAccIpLoadbalancingHttpFarmBasicCreate(t *testing.T) {
 					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm.testfarm", "zone", "all"),
 					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm.testfarm", "port", "12346"),
 					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm.testfarm", "probe.0.interval", "30"),
+				),
+			},
+			{
+				Config: config3,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm.testfarm", "display_name", displayName2),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm.testfarm", "zone", "all"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm.testfarm", "port", "12346"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm.testfarm", "probe.0.interval", "30"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm.testfarm", "probe.0.match", "default"),
 				),
 			},
 		},
