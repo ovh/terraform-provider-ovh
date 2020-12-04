@@ -1,4 +1,41 @@
 ## 0.10.0 (Unreleased)
+
+BREAKING CHANGES:
+
+* d/publiccloud*: all datasources ovh_publiccloud_* are removed in favor of ovh_cloud_project_* ([#175](https://github.com/ovh/terraform-provider-ovh/pull/175))
+* r/publiccloud*: all resources ovh_publiccloud_* are removed in favor of ovh_cloud_project_* ([#175](https://github.com/ovh/terraform-provider-ovh/pull/175))
+
+NOTES/DEPRECATIONS:
+
+* d/cloud*: all datasources ovh_cloud_* are deprecated in favor of ovh_cloud_project_* ([#175](https://github.com/ovh/terraform-provider-ovh/pull/175))
+* r/cloud*: all resources ovh_cloud_* are deprecated in favor of ovh_cloud_project_* ([#175](https://github.com/ovh/terraform-provider-ovh/pull/175))
+* d/cloud*: use service_name for identifier ([#173](https://github.com/ovh/terraform-provider-ovh/pull/173))
+* r/cloud*: use service_name for identifier ([#173](https://github.com/ovh/terraform-provider-ovh/pull/173))
+
+FEATURES:
+
+* __New Datasource:__ `ovh_me_identity_user` ([#166](https://github.com/ovh/terraform-provider-ovh/pull/166))
+* __New Datasource:__ `ovh_me_identity_users` ([#166](https://github.com/ovh/terraform-provider-ovh/pull/166))
+* __New Resource:__ `ovh_me_identity_user` ([#166](https://github.com/ovh/terraform-provider-ovh/pull/166))
+
+IMPROVEMENTS:
+
+* enforce CheckDeleted on all resources read operations ([#176](https://github.com/ovh/terraform-provider-ovh/pull/176))
+ * cicd acceptance tests now run on OVH CDS build system, travis is removed ([#174](https://github.com/ovh/terraform-provider-ovh/pull/174))
+* migrate to new lib ovh/terraform-ovh-provider ([#172](https://github.com/ovh/terraform-provider-ovh/pull/172))
+* r/iploadbalancing*: add missing sweepers ([#171](https://github.com/ovh/terraform-provider-ovh/pull/171))
+* go-ovh lib: bump to v1.1.0 ([#170](https://github.com/ovh/terraform-provider-ovh/pull/170))
+* add freebsd support ([#164](https://github.com/ovh/terraform-provider-ovh/pull/164))
+
+BUG FIXES:
+
+* r/iploadbalancing_http_farm: fix probe handling ([#178](https://github.com/ovh/terraform-provider-ovh/pull/178))
+* r/iploadbalancing_tcp_farm: fix probe handling ([#178](https://github.com/ovh/terraform-provider-ovh/pull/178))
+* r/dedicated_server_update: fix monitoring update ([#178](https://github.com/ovh/terraform-provider-ovh/pull/178))
+* d/vps: Fix erroneous types([#164](https://github.com/ovh/terraform-provider-ovh/pull/164))
+* r/me_ssh_key: fix setting key default property and handle key not found error ([#158](https://github.com/ovh/terraform-provider-ovh/pull/158))
+
+
 ## 0.9.0 (August 26, 2020)
 
 BREAKING CHANGES:
