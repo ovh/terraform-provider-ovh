@@ -21,11 +21,12 @@ FEATURES:
 IMPROVEMENTS:
 
 * enforce CheckDeleted on all resources read operations ([#176](https://github.com/ovh/terraform-provider-ovh/pull/176))
- * cicd acceptance tests now run on OVH CDS build system, travis is removed ([#174](https://github.com/ovh/terraform-provider-ovh/pull/174))
+* cicd acceptance tests now run on OVH CDS build system, travis-ci is removed ([#174](https://github.com/ovh/terraform-provider-ovh/pull/174))
 * migrate to new lib ovh/terraform-ovh-provider ([#172](https://github.com/ovh/terraform-provider-ovh/pull/172))
 * r/iploadbalancing*: add missing sweepers ([#171](https://github.com/ovh/terraform-provider-ovh/pull/171))
 * go-ovh lib: bump to v1.1.0 ([#170](https://github.com/ovh/terraform-provider-ovh/pull/170))
 * add freebsd support ([#164](https://github.com/ovh/terraform-provider-ovh/pull/164))
+* increase vrack task timeout to 20 minutes ([#38b610e](https://github.com/ovh/terraform-provider-ovh/commit/38b610e310b7478d5cbe53bdc2e3dd09581b1340))
 
 BUG FIXES:
 
