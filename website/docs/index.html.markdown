@@ -82,6 +82,10 @@ variables must also be set:
 
 * `OVH_CLOUD_PROJECT_SERVICE_TEST` - The ID of your public cloud project.
 
+* `OVH_CLOUD_PROJECT_KUBE_REGION_TEST` - The region of your public cloud kubernetes project.
+
+* `OVH_CLOUD_PROJECT_KUBE_VERSION_TEST` - The version of your public cloud kubernetes project.
+
 * `OVH_ZONE_TEST` - The domain you own to test the domain_zone resource.
 
 * `OVH_IP_TEST`, `OVH_IP_BLOCK_TEST`, `OVH_IP_REVERSE_TEST` - The values you have to set for testing ip reverse resources.
