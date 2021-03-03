@@ -1,4 +1,19 @@
-## 0.10.0 (Unreleased)
+## 0.12.0 (Unreleased)
+
+## 0.11.0 (March 3, 2021)
+
+FEATURES:
+
+* __New Datasource:__ `ovh_cloud_project_kube` ([#180](https://github.com/ovh/terraform-provider-ovh/pull/180))
+* __New Resource:__ `ovh_cloud_project_kube` ([#180](https://github.com/ovh/terraform-provider-ovh/pull/180))
+* __New Resource:__ `ovh_cloud_project_kube_nodepool` ([#180](https://github.com/ovh/terraform-provider-ovh/pull/180))
+
+IMPROVEMENTS:
+
+* Documentation improvements on provider setup ([#181](https://github.com/ovh/terraform-provider-ovh/pull/181))
+
+
+## 0.10.0 (December 7, 2020)
 
 BREAKING CHANGES:
 
