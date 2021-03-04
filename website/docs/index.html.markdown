@@ -6,9 +6,9 @@ description: |-
   The OVH provider is used to interact with the many resources supported by OVHcloud. The provider needs to be configured with the proper credentials before it can be used.
 ---
 
-# OVHcloud Provider
+# OVH Provider
 
-The OVHcloud provider is used to interact with the many resources supported by OVHcloud. 
+The OVH provider is used to interact with the many resources supported by OVHcloud. 
 The provider needs to be configured with the proper credentials before it can be used.
 
 Use the navigation to the left to read about the available resources.
