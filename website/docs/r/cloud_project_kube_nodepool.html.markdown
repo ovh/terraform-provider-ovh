@@ -17,8 +17,10 @@ resource "ovh_cloud_project_kube_nodepool" "pool" {
    service_name  = "94d423da0e5545f29812836460a19939"
    kube_id       = "9260267d-2bf9-4d9a-bb6e-24b8969f65e2 "
    name          = "my_pool"
-   flavor        = "b2-7"
+   flavor_name   = "b2-7"
    desired_nodes = 3
+   max_nodes     = 3
+   min_nodes     = 3
 }
 ```
 
@@ -34,21 +36,20 @@ The following arguments are supported:
 * `name` - (Optional) The name of the nodepool.
    Changing this value recreates the resource.
 
-* `flavor` - a valid OVH public cloud flavor ID in which the nodes will be start.
-   cluster will be available. Ex.: "GRA1". Defaults to all public cloud regions.
-   Changing this value recreates the resource.
+* `flavor_name` - a valid OVH public cloud flavor ID in which the nodes will be start.
+   cluster will be available. Ex.: "b2-7". Changing this value recreates the resource.
 
-* `desired_nodes` - (Optional) number of nodes to start.
+* `desired_nodes` - number of nodes to start.
 
-* `max_nodes` - (Optional) maximum number of nodes allowde in the pool.
+* `max_nodes` - maximum number of nodes allowde in the pool.
    Setting `desired_nodes` over this value will raise an error.
 
-* `min_nodes` - (Optional) minimum number of nodes allowde in the pool.
+* `min_nodes` - minimum number of nodes allowde in the pool.
    Setting `desired_nodes` under this value will raise an error.
 
-* `monthly_billed` - (Optional) should the nodes be billed on a monthly basis.
+* `monthly_billed` - (Optional) should the nodes be billed on a monthly basis. Default to `false`.
 
-* `anti_affinity` - (Optional) should the pool use the anti-affinity feature.
+* `anti_affinity` - (Optional) should the pool use the anti-affinity feature. Default to `false`.
 
 ## Attributes Reference
 
