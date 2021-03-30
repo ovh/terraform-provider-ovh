@@ -83,7 +83,7 @@ func testSweepIpLoadbalancingVrackNetwork(region string) error {
 		result := make([]int64, 0)
 
 		if err := client.Get(endpoint, &result); err != nil {
-			if err.(*ovh.APIError).Code == 404 {
+			if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
 				return nil, nil
 			}
 			return nil, err

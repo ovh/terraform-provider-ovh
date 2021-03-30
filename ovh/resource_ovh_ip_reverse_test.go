@@ -40,7 +40,7 @@ func testSweepIpReverse(region string) error {
 	testIpReverse := os.Getenv("OVH_IP")
 	endpoint := fmt.Sprintf("/ip/%s/reverse/%s", strings.Replace(testIp, "/", "%2F", 1), testIpReverse)
 	if err := client.Get(endpoint, &reverse); err != nil {
-		if err.(*ovh.APIError).Code == 404 {
+		if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
 			// no ip reverse set, nothing to sweep
 			return nil
 		}

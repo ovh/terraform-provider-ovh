@@ -260,7 +260,7 @@ func ovhDomainZoneRecord(client *ovh.Client, d *schema.ResourceData, id string, 
 			rec,
 		)
 		if err != nil {
-			if err.(*ovh.APIError).Code == 404 && retry {
+			if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
