@@ -24,7 +24,7 @@ func waitForVrackTask(task *VrackTask, c *ovh.Client) error {
 
 		err := c.Get(endpoint, task)
 		if err != nil {
-			if err.(*ovh.APIError).Code == 404 {
+			if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
 				log.Printf("[DEBUG] Task id %d on Vrack %s completed", taskId, vrackId)
 				return taskId, "completed", nil
 			} else {

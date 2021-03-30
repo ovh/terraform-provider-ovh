@@ -228,7 +228,7 @@ func waitForCloudProjectKubeDeleted(client *ovh.Client, serviceName, kubeId stri
 			endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s", serviceName, kubeId)
 			err := client.Get(endpoint, res)
 			if err != nil {
-				if err.(*ovh.APIError).Code == 404 {
+				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
 					return res, "DELETED", nil
 				} else {
 					return res, "", err

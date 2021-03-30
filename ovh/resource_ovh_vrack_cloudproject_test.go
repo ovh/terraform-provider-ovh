@@ -60,7 +60,7 @@ func testSweepVrackCloudProject(region string) error {
 	vcp := &VrackCloudProject{}
 
 	if err := client.Get(endpoint, vcp); err != nil {
-		if err.(*ovh.APIError).Code == 404 {
+		if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
 			return nil
 		}
 		return err
