@@ -2,15 +2,12 @@ package ovh
 
 import (
 	"fmt"
-	"log"
 	"net/url"
 	"strconv"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
-
-	"github.com/ovh/go-ovh/ovh"
 )
 
 func resourceDedicatedServerInstallTask() *schema.Resource {
@@ -218,15 +215,11 @@ func resourceDedicatedServerInstallTaskRead(d *schema.ResourceData, meta interfa
 
 	task, err := getDedicatedServerTask(serviceName, id, config.OVHClient)
 	if err != nil {
-		// After some delay, if the task is marked as `done`, the Provider
-		// may purge it. To avoid raising errors when terraform refreshes its plan,
-		// 404 errors are ignored on Resource Read, thus some information may be lost
-		// after a while.
-		if err.(*ovh.APIError).Code == 404 {
-			log.Printf("[WARNING] Task id %d on Dedicated Server %s not found. It may have been purged by the Provider", id, serviceName)
-			return nil
-		}
-		return err
+		return helpers.CheckDeleted(d, err, fmt.Sprintf(
+			"dedicated server task %s/%s",
+			serviceName,
+			d.Id(),
+		))
 	}
 
 	d.Set("function", task.Function)

@@ -288,7 +288,7 @@ func waitForCloudProjectNetworkPrivateDelete(c *ovh.Client, serviceName, CloudPr
 		endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s", serviceName, CloudProjectNetworkPrivateId)
 		err := c.Get(endpoint, r)
 		if err != nil {
-			if err.(*ovh.APIError).Code == 404 {
+			if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
 				log.Printf("[DEBUG] private network id %s on project %s deleted", CloudProjectNetworkPrivateId, serviceName)
 				return r, "DELETED", nil
 			} else {

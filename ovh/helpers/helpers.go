@@ -286,7 +286,7 @@ func ConditionalAttributeBool(buff *bytes.Buffer, name string, val *bool) {
 // CheckDeleted checks the error to see if it's a 404 (Not Found) and, if so,
 // sets the resource ID to the empty string instead of throwing an error.
 func CheckDeleted(d *schema.ResourceData, err error, endpoint string) error {
-	if err.(*ovh.APIError).Code == 404 {
+	if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
 		d.SetId("")
 		return nil
 	}
@@ -356,7 +356,7 @@ func GetVrackServiceName(d *schema.ResourceData) (string, error) {
 func WaitAvailable(client *ovh.Client, endpoint string, timeout time.Duration) error {
 	return resource.Retry(timeout, func() *resource.RetryError {
 		if err := client.Get(endpoint, nil); err != nil {
-			if err.(*ovh.APIError).Code == 404 {
+			if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)

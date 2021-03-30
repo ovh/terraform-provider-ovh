@@ -26,8 +26,7 @@ func waitForDedicatedServerTask(serviceName string, task *DedicatedServerTask, c
 			var err error
 			task, err = getDedicatedServerTask(serviceName, taskId, c)
 			if err != nil {
-				if err.(*ovh.APIError).Code == 500 || err.(*ovh.APIError).Code == 404 {
-					// retry
+				if errOvh, ok := err.(*ovh.APIError); ok && (errOvh.Code == 404 || errOvh.Code == 500) {
 					return resource.RetryableError(err)
 				}
 				// other error dont retry and fail
