@@ -47,7 +47,7 @@ func testSweepVrackIpLoadbalancing(region string) error {
 	viplb := &VrackIpLoadbalancing{}
 
 	if err := client.Get(endpoint, viplb); err != nil {
-		if err.(*ovh.APIError).Code == 404 {
+		if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
 			return nil
 		}
 		return err

@@ -329,7 +329,7 @@ func waitForCloudProjectUser(c *ovh.Client, serviceName, id string) resource.Sta
 		)
 		err := c.Get(endpoint, r)
 		if err != nil {
-			if err.(*ovh.APIError).Code == 404 {
+			if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
 				log.Printf("[DEBUG] user id %s on project %s deleted", id, serviceName)
 				return r, "deleted", nil
 			} else {
