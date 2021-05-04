@@ -30,6 +30,10 @@ func dataSourceCloudProjectKube() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"private_network_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"control_plane_is_up_to_date": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -93,6 +97,7 @@ func dataSourceCloudProjectKubeRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("name", res.Name)
 	d.Set("next_upgrade_versions", res.NextUpgradeVersions)
 	d.Set("nodes_url", res.NodesUrl)
+	d.Set("private_network_id", res.PrivateNetworkId)
 	d.Set("region", res.Region)
 	d.Set("status", res.Status)
 	d.Set("update_policy", res.UpdatePolicy)

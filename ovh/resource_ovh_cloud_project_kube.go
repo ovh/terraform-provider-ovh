@@ -43,6 +43,11 @@ func resourceCloudProjectKube() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"private_network_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"control_plane_is_up_to_date": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -144,6 +149,7 @@ func resourceCloudProjectKubeRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("name", res.Name)
 	d.Set("next_upgrade_versions", res.NextUpgradeVersions)
 	d.Set("nodes_url", res.NodesUrl)
+	d.Set("private_network_id", res.PrivateNetworkId)
 	d.Set("region", res.Region)
 	d.Set("status", res.Status)
 	d.Set("update_policy", res.UpdatePolicy)

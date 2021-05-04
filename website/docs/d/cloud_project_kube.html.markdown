@@ -37,6 +37,7 @@ The following attributes are exported:
 * `name` - The name of the managed kubernetes cluster.
 * `region` - The OVH public cloud region ID of the managed kubernetes cluster.
 * `version` - Kubernetes version of the managed kubernetes cluster.
+* `private_network_id` - OpenStack private network (or vrack) ID to use.
 * `control_plane_is_up_to_date` - True if control-plane is up to date.
 * `is_up_to_date` - True if all nodes and control-plane are up to date.
 * `next_upgrade_versions` - Kubernetes versions available for upgrade.

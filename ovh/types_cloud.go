@@ -194,6 +194,7 @@ type CloudProjectKubeResponse struct {
 	Name                   string   `json:"name"`
 	NextUpgradeVersions    []string `json:"nextUpgradeVersions"`
 	NodesUrl               string   `json:"nodesUrl"`
+	PrivateNetworkId       string   `json:"privateNetworkId"`
 	Region                 string   `json:"region"`
 	Status                 string   `json:"status"`
 	UpdatePolicy           string   `json:"updatePolicy"`
