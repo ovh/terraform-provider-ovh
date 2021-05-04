@@ -44,6 +44,7 @@ The following attributes are exported:
 * `name` - See Argument Reference above.
 * `region` - See Argument Reference above.
 * `version` - See Argument Reference above.
+* `private_network_id` - OpenStack private network (or vrack) ID to use.
 * `control_plane_is_up_to_date` - True if control-plane is up to date.
 * `is_up_to_date` - True if all nodes and control-plane are up to date.
 * `next_upgrade_versions` - Kubernetes versions available for upgrade.
