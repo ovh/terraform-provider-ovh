@@ -1,4 +1,30 @@
-## 0.12.0 (Unreleased)
+## 0.13.0 (Unreleased)
+
+## 0.12.0 (May 7, 2021)
+
+FEATURES:
+
+* __New Datasource:__ `ovh_cloud_project_capabilities_containerregistry` ([#184](https://github.com/ovh/terraform-provider-ovh/pull/184))
+* __New Datasource:__ `ovh_cloud_project_capabilities_containerregistry_filter` ([#184](https://github.com/ovh/terraform-provider-ovh/pull/184))
+* __New Datasource:__ `ovh_cloud_project_containerregistries` ([#184](https://github.com/ovh/terraform-provider-ovh/pull/184))
+* __New Datasource:__ `ovh_cloud_project_containerregistry` ([#184](https://github.com/ovh/terraform-provider-ovh/pull/184))
+* __New Datasource:__ `ovh_cloud_project_containerregistry_users` ([#184](https://github.com/ovh/terraform-provider-ovh/pull/184))
+* __New Resource:__ `ovh_cloud_project_containerregistry` ([#184](https://github.com/ovh/terraform-provider-ovh/pull/184))
+* __New Resource:__ `ovh_cloud_project_containerregistry_user` ([#184](https://github.com/ovh/terraform-provider-ovh/pull/184))
+
+IMPROVEMENTS:
+
+* Various documentation fixes, improvements. ([#182](https://github.com/ovh/terraform-provider-ovh/pull/182), [#185](https://github.com/ovh/terraform-provider-ovh/pull/185))
+* Better handle error type casting for ovh api errors ([#186](https://github.com/ovh/terraform-provider-ovh/pull/186))
+* Add `private_network_id` and `autoscale` arguments to ovh_cloud_project_kube resources.
+([#189](https://github.com/ovh/terraform-provider-ovh/pull/189))
+* Add missing attributes to ovh_cloud_project_kube_nodepool resource.
+([#189](https://github.com/ovh/terraform-provider-ovh/pull/189))
+
+BUG FIXES:
+
+* Updated the GPG key used to verify Terraform installs in response to the Terraform GPG key rotation. ([#750](https://github-redirect.dependabot.com/hashicorp/terraform-plugin-sdk/issues/739))
+cf [Terraform Updates for HCSEC-2021-12](https://discuss.hashicorp.com/t/terraform-updates-for-hcsec-2021-12/23570)
 
 ## 0.11.0 (March 3, 2021)
 
