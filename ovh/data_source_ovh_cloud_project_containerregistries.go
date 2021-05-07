@@ -95,7 +95,7 @@ func dataSourceCloudProjectContainerRegistriesRead(d *schema.ResourceData, meta 
 	)
 	err := config.OVHClient.Get(endpoint, &regs)
 	if err != nil {
-		return fmt.Errorf("Error calling %s:\n\t %q", endpoint, err)
+		return fmt.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
 	}
 
 	mapregs := make([]map[string]interface{}, len(regs))

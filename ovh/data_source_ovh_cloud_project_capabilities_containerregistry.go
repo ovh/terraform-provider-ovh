@@ -119,7 +119,7 @@ func dataSourceCloudProjectCapabilitiesContainerRegistryRead(d *schema.ResourceD
 	)
 	err := config.OVHClient.Get(endpoint, &capregs)
 	if err != nil {
-		return fmt.Errorf("Error calling %s:\n\t %q", endpoint, err)
+		return fmt.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
 	}
 
 	mapcapregs := make([]map[string]interface{}, len(capregs))

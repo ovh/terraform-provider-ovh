@@ -195,7 +195,7 @@ func resourceCloudProjectContainerRegistryCreate(d *schema.ResourceData, meta in
 		Pending:    []string{"INSTALLING"},
 		Target:     []string{"READY"},
 		Refresh:    waitForCloudProjectContainerRegistry(config.OVHClient, serviceName, d.Id()),
-		Timeout:    10 * time.Minute,
+		Timeout:    60 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -312,7 +312,7 @@ func cloudProjectContainerRegistryPlanUpdate(d *schema.ResourceData, meta interf
 		Pending:    []string{"UPDATING"},
 		Target:     []string{"READY"},
 		Refresh:    waitForCloudProjectContainerRegistry(config.OVHClient, serviceName, d.Id()),
-		Timeout:    10 * time.Minute,
+		Timeout:    30 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -345,7 +345,7 @@ func resourceCloudProjectContainerRegistryDelete(d *schema.ResourceData, meta in
 		Pending:    []string{"DELETING"},
 		Target:     []string{"DELETED", "deleted"},
 		Refresh:    waitForCloudProjectContainerRegistry(config.OVHClient, serviceName, d.Id()),
-		Timeout:    10 * time.Minute,
+		Timeout:    30 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
