@@ -22,9 +22,10 @@ func TestAccMeIdentityUser_importBasic(t *testing.T) {
 				Config: fmt.Sprintf(testAccMeIdentityUserConfig_import, login, password),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
 			},
 		},
 	})

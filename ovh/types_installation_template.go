@@ -128,11 +128,9 @@ func (opts *InstallationTemplateUpdateOpts) FromResource(d *schema.ResourceData)
 }
 
 type InstallationTemplateCustomization struct {
-	ChangeLog                    *string `json:"changeLog,omitempty"`
 	CustomHostname               *string `json:"customHostname,omitempty"`
 	PostInstallationScriptLink   *string `json:"postInstallationScriptLink,omitempty"`
 	PostInstallationScriptReturn *string `json:"postInstallationScriptReturn,omitempty"`
-	Rating                       *int    `json:"rating,omitempty"`
 	SshKeyName                   *string `json:"sshKeyName,omitempty"`
 	UseDistributionKernel        *bool   `json:"useDistributionKernel,omitempty"`
 }
@@ -140,11 +138,6 @@ type InstallationTemplateCustomization struct {
 func (v InstallationTemplateCustomization) ToMap() map[string]interface{} {
 	obj := make(map[string]interface{})
 	custom_attr_set := false
-
-	if v.ChangeLog != nil {
-		obj["change_log"] = *v.ChangeLog
-		custom_attr_set = true
-	}
 
 	if v.CustomHostname != nil {
 		obj["custom_hostname"] = *v.CustomHostname
@@ -158,11 +151,6 @@ func (v InstallationTemplateCustomization) ToMap() map[string]interface{} {
 
 	if v.PostInstallationScriptReturn != nil {
 		obj["post_installation_script_return"] = *v.PostInstallationScriptReturn
-		custom_attr_set = true
-	}
-
-	if v.Rating != nil {
-		obj["rating"] = *v.Rating
 		custom_attr_set = true
 	}
 
@@ -185,11 +173,9 @@ func (v InstallationTemplateCustomization) ToMap() map[string]interface{} {
 }
 
 func (opts *InstallationTemplateCustomization) FromResource(d *schema.ResourceData, parent string) *InstallationTemplateCustomization {
-	opts.ChangeLog = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.change_log", parent))
 	opts.CustomHostname = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.custom_hostname", parent))
 	opts.PostInstallationScriptLink = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.post_installation_script_link", parent))
 	opts.PostInstallationScriptReturn = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.post_installation_script_return", parent))
-	opts.Rating = helpers.GetNilIntPointerFromData(d, fmt.Sprintf("%s.rating", parent))
 	opts.SshKeyName = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.ssh_key_name", parent))
 	opts.UseDistributionKernel = helpers.GetNilBoolPointerFromData(d, fmt.Sprintf("%s.use_distribution_kernel", parent))
 

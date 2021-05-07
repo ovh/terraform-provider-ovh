@@ -55,7 +55,7 @@ func resourceDedicatedServerInstallTask() *schema.Resource {
 						"change_log": {
 							Type:        schema.TypeString,
 							Optional:    true,
-							ForceNew:    true,
+							Deprecated:  "field is not used anymore",
 							Description: "Template change log details",
 						},
 						"custom_hostname": {

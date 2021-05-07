@@ -32,6 +32,7 @@ func dataSourceMeInstallationTemplate() *schema.Resource {
 						"change_log": {
 							Type:        schema.TypeString,
 							Computed:    true,
+							Deprecated:  "field is not used anymore",
 							Description: "Template change log details",
 						},
 						"custom_hostname": {
@@ -50,8 +51,9 @@ func dataSourceMeInstallationTemplate() *schema.Resource {
 							Description: "indicate the string returned by your postinstall customisation script on successful execution. Advice: your script should return a unique validation string in case of succes. A good example is 'loh1Xee7eo OK OK OK UGh8Ang1Gu'",
 						},
 						"rating": {
-							Type:     schema.TypeInt,
-							Computed: true,
+							Type:       schema.TypeInt,
+							Deprecated: "field is not used anymore",
+							Computed:   true,
 						},
 						"ssh_key_name": {
 							Type:        schema.TypeString,
