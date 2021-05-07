@@ -51,17 +51,19 @@ The following arguments are supported:
 
 * `anti_affinity` - (Optional) should the pool use the anti-affinity feature. Default to `false`.
 
+* `autoscale` - (Optional) Enable auto-scaling for the pool. Default to `false`.
+
 ## Attributes Reference
 
-The following attributes are exported:
+In addition, the following attributes are exported:
 
-* `service_name` - See Argument Reference above.
-* `kube_id` - See Argument Reference above.
-* `name` - See Argument Reference above.
-* `flavor` - See Argument Reference above.
-* `desired_nodes` - See Argument Reference above.
-* `max_nodes` - See Argument Reference above.
-* `min_nodes` - See Argument Reference above.
-* `monthly_billed` - See Argument Reference above.
-* `anti_affinity` - See Argument Reference above.
-* `status` - Nodepool status. Should be normally set to 'READY'.
+* `available_nodes` - Number of nodes which are actually ready in the pool
+* `created_at` - Creation date
+* `current_nodes` - Number of nodes present in the pool
+* `desired_nodes` - Number of nodes you desire in the pool
+* `flavor` - Flavor name
+* `project_id` - Project id
+* `size_status` - Status describing the state between number of nodes wanted and available ones
+* `status` - Current status
+* `up_to_date_nodes` - Number of nodes with latest version installed in the pool
+* `updated_at` - Last update date
