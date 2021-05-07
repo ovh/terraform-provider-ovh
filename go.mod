@@ -2,8 +2,8 @@ module github.com/ovh/terraform-provider-ovh
 
 require (
 	github.com/gopherjs/gopherjs v0.0.0-20181103185306-d547d1d9531e // indirect
-	github.com/hashicorp/go-cleanhttp v0.5.1
-	github.com/hashicorp/terraform-plugin-sdk/v2 v2.0.1
+	github.com/hashicorp/go-cleanhttp v0.5.2
+	github.com/hashicorp/terraform-plugin-sdk/v2 v2.6.1
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/ovh/go-ovh v1.1.0
 	github.com/smartystreets/assertions v0.0.0-20190116191733-b6c0e53d7304 // indirect
