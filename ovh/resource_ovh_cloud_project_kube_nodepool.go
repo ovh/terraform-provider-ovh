@@ -30,52 +30,111 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"service_name": {
 				Type:        schema.TypeString,
+				Description: "Service name",
 				Required:    true,
 				ForceNew:    true,
 				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
 			},
 			"kube_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Description: "Kube ID",
+				Required:    true,
+				ForceNew:    true,
 			},
-			"name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"flavor_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"desired_nodes": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"max_nodes": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"min_nodes": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"monthly_billed": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Default:  "false",
+			"autoscale": {
+				Type:        schema.TypeBool,
+				Description: "Enable auto-scaling for the pool",
+				Optional:    true,
+				ForceNew:    true,
+				Default:     "false",
 			},
 			"anti_affinity": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Default:  "false",
+				Type:        schema.TypeBool,
+				Description: "Enable anti affinity groups for nodes in the pool",
+				Optional:    true,
+				ForceNew:    true,
+				Default:     "false",
+			},
+			"flavor_name": {
+				Type:        schema.TypeString,
+				Description: "Flavor name",
+				Required:    true,
+				ForceNew:    true,
+			},
+			"desired_nodes": {
+				Type:        schema.TypeInt,
+				Description: "Number of nodes you desire in the pool",
+				Optional:    true,
+			},
+			"name": {
+				Type:        schema.TypeString,
+				Description: "NodePool resource name",
+				Optional:    true,
+				ForceNew:    true,
+			},
+			"max_nodes": {
+				Type:        schema.TypeInt,
+				Description: "Number of nodes you desire in the pool",
+				Optional:    true,
+			},
+			"min_nodes": {
+				Type:        schema.TypeInt,
+				Description: "Number of nodes you desire in the pool",
+				Optional:    true,
+			},
+			"monthly_billed": {
+				Type:        schema.TypeBool,
+				Description: "Enable monthly billing on all nodes in the pool",
+				Optional:    true,
+				ForceNew:    true,
+				Default:     "false",
+			},
+
+			// computed
+			"available_nodes": {
+				Type:        schema.TypeInt,
+				Description: "Number of nodes which are actually ready in the pool",
+				Computed:    true,
+			},
+			"created_at": {
+				Type:        schema.TypeString,
+				Description: "Creation date",
+				Computed:    true,
+			},
+			"current_nodes": {
+				Type:        schema.TypeInt,
+				Description: "Number of nodes present in the pool",
+				Computed:    true,
+			},
+			"flavor": {
+				Type:        schema.TypeString,
+				Description: "Flavor name",
+				Computed:    true,
+			},
+			"project_id": {
+				Type:        schema.TypeString,
+				Description: "Project id",
+				Computed:    true,
+			},
+			"size_status": {
+				Type:        schema.TypeString,
+				Description: "Status describing the state between number of nodes wanted and available ones",
+				Computed:    true,
 			},
 			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Description: "Current status",
+				Computed:    true,
+			},
+			"up_to_date_nodes": {
+				Type:        schema.TypeInt,
+				Description: "Number of nodes with latest version installed in the pool",
+				Computed:    true,
+			},
+			"updated_at": {
+				Type:        schema.TypeString,
+				Description: "Last update date",
+				Computed:    true,
 			},
 		},
 	}
@@ -87,15 +146,7 @@ func resourceCloudProjectKubeNodePoolCreate(d *schema.ResourceData, meta interfa
 	kubeId := d.Get("kube_id").(string)
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/nodepool", serviceName, kubeId)
-	params := &CloudProjectKubeNodePoolCreateOpts{
-		Name:          d.Get("name").(string),
-		FlavorName:    d.Get("flavor_name").(string),
-		DesiredNodes:  d.Get("desired_nodes").(int),
-		MaxNodes:      d.Get("max_nodes").(int),
-		MinNodes:      d.Get("min_nodes").(int),
-		MonthlyBilled: d.Get("monthly_billed").(bool),
-		AntiAffinity:  d.Get("anti_affinity").(bool),
-	}
+	params := (&CloudProjectKubeNodePoolCreateOpts{}).FromResource(d)
 	res := &CloudProjectKubeNodePoolResponse{}
 
 	log.Printf("[DEBUG] Will create nodepool: %+v", params)
@@ -137,15 +188,13 @@ func resourceCloudProjectKubeNodePoolRead(d *schema.ResourceData, meta interface
 		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
-	d.SetId(res.Id)
-	d.Set("name", res.Name)
-	d.Set("flavor_name", res.Flavor)
-	d.Set("desired_nodes", res.DesiredNodes)
-	d.Set("max_nodes", res.MaxNodes)
-	d.Set("min_nodes", res.MinNodes)
-	d.Set("monthly_billed", res.MonthlyBilled)
-	d.Set("anti_affinity", res.AntiAffinity)
-	d.Set("status", res.Status)
+	for k, v := range res.ToMap() {
+		if k != "id" {
+			d.Set(k, v)
+		} else {
+			d.SetId(fmt.Sprint(v))
+		}
+	}
 
 	log.Printf("[DEBUG] Read nodepool: %+v", res)
 	return nil
@@ -157,11 +206,7 @@ func resourceCloudProjectKubeNodePoolUpdate(d *schema.ResourceData, meta interfa
 	kubeId := d.Get("kube_id").(string)
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/nodepool/%s", serviceName, kubeId, d.Id())
-	params := &CloudProjectKubeNodePoolUpdateOpts{
-		DesiredNodes: d.Get("desired_nodes").(int),
-		MaxNodes:     d.Get("max_nodes").(int),
-		MinNodes:     d.Get("min_nodes").(int),
-	}
+	params := (&CloudProjectKubeNodePoolUpdateOpts{}).FromResource(d)
 
 	log.Printf("[DEBUG] Will update nodepool: %+v", params)
 	err := config.OVHClient.Put(endpoint, params, nil)
@@ -205,7 +250,7 @@ func resourceCloudProjectKubeNodePoolDelete(d *schema.ResourceData, meta interfa
 }
 
 func cloudProjectKubeNodePoolExists(serviceName, kubeId, id string, client *ovh.Client) error {
-	res := &CloudProjectKubeResponse{}
+	res := &CloudProjectKubeNodePoolResponse{}
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/nodepool/%s", serviceName, kubeId, id)
 	return client.Get(endpoint, res)
@@ -216,7 +261,7 @@ func waitForCloudProjectKubeNodePoolReady(client *ovh.Client, serviceName, kubeI
 		Pending: []string{"INSTALLING", "UPDATING", "REDEPLOYING", "RESIZING"},
 		Target:  []string{"READY"},
 		Refresh: func() (interface{}, string, error) {
-			res := &CloudProjectKubeResponse{}
+			res := &CloudProjectKubeNodePoolResponse{}
 			endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/nodepool/%s", serviceName, kubeId, id)
 			err := client.Get(endpoint, res)
 			if err != nil {
@@ -239,7 +284,7 @@ func waitForCloudProjectKubeNodePoolDeleted(client *ovh.Client, serviceName, kub
 		Pending: []string{"DELETING"},
 		Target:  []string{"DELETED"},
 		Refresh: func() (interface{}, string, error) {
-			res := &CloudProjectKubeResponse{}
+			res := &CloudProjectKubeNodePoolResponse{}
 			endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/nodepool/%s", serviceName, kubeId, id)
 			err := client.Get(endpoint, res)
 			if err != nil {

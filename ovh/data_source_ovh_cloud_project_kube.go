@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/url"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -91,18 +90,13 @@ func dataSourceCloudProjectKubeRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("Error calling %s:\n\t %q", endpoint, err)
 	}
 
-	d.SetId(res.Id)
-	d.Set("control_plane_is_up_to_date", res.ControlPlaneIsUpToDate)
-	d.Set("is_up_to_date", res.IsUpToDate)
-	d.Set("name", res.Name)
-	d.Set("next_upgrade_versions", res.NextUpgradeVersions)
-	d.Set("nodes_url", res.NodesUrl)
-	d.Set("private_network_id", res.PrivateNetworkId)
-	d.Set("region", res.Region)
-	d.Set("status", res.Status)
-	d.Set("update_policy", res.UpdatePolicy)
-	d.Set("url", res.Url)
-	d.Set("version", res.Version[:strings.LastIndex(res.Version, ".")])
+	for k, v := range res.ToMap() {
+		if k != "id" {
+			d.Set(k, v)
+		} else {
+			d.SetId(fmt.Sprint(v))
+		}
+	}
 
 	return nil
 }
