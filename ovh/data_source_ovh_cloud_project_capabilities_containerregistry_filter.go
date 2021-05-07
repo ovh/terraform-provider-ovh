@@ -101,7 +101,7 @@ func dataSourceCloudProjectCapabilitiesContainerRegistryFilterRead(d *schema.Res
 	)
 	err := config.OVHClient.Get(endpoint, &capregs)
 	if err != nil {
-		return fmt.Errorf("Error calling %s:\n\t %q", endpoint, err)
+		return fmt.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
 	}
 
 	match := false

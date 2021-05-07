@@ -39,7 +39,7 @@ func testSweepCloudProjectContainerRegistry(region string) error {
 		url.PathEscape(serviceName),
 	)
 	if err := client.Get(endpoint, &regs); err != nil {
-		return fmt.Errorf("Error calling %s:\n\t %q", endpoint, err)
+		return fmt.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
 	}
 
 	if len(regs) == 0 {

@@ -70,7 +70,7 @@ func dataSourceCloudProjectContainerRegistryUsersRead(d *schema.ResourceData, me
 
 	err := config.OVHClient.Get(endpoint, &users)
 	if err != nil {
-		return fmt.Errorf("Error calling %s:\n\t %q", endpoint, err)
+		return fmt.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
 	}
 
 	mapusers := make([]map[string]interface{}, len(users))
