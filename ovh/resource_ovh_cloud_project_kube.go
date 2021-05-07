@@ -3,7 +3,6 @@ package ovh
 import (
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -43,6 +42,18 @@ func resourceCloudProjectKube() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"private_network_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"region": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+
+			// Computed
 			"control_plane_is_up_to_date": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -61,11 +72,6 @@ func resourceCloudProjectKube() *schema.Resource {
 			"nodes_url": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"region": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
 			},
 			"status": {
 				Type:     schema.TypeString,
@@ -93,11 +99,7 @@ func resourceCloudProjectKubeCreate(d *schema.ResourceData, meta interface{}) er
 	serviceName := d.Get("service_name").(string)
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/kube", serviceName)
-	params := &CloudProjectKubeCreateOpts{
-		Name:    d.Get("name").(string),
-		Region:  d.Get("region").(string),
-		Version: d.Get("version").(string),
-	}
+	params := (&CloudProjectKubeCreateOpts{}).FromResource(d)
 	res := &CloudProjectKubeResponse{}
 
 	log.Printf("[DEBUG] Will create kube: %+v", params)
@@ -137,18 +139,13 @@ func resourceCloudProjectKubeRead(d *schema.ResourceData, meta interface{}) erro
 	if err := config.OVHClient.Get(endpoint, res); err != nil {
 		return helpers.CheckDeleted(d, err, endpoint)
 	}
-
-	d.SetId(res.Id)
-	d.Set("control_plane_is_up_to_date", res.ControlPlaneIsUpToDate)
-	d.Set("is_up_to_date", res.IsUpToDate)
-	d.Set("name", res.Name)
-	d.Set("next_upgrade_versions", res.NextUpgradeVersions)
-	d.Set("nodes_url", res.NodesUrl)
-	d.Set("region", res.Region)
-	d.Set("status", res.Status)
-	d.Set("update_policy", res.UpdatePolicy)
-	d.Set("url", res.Url)
-	d.Set("version", res.Version[:strings.LastIndex(res.Version, ".")])
+	for k, v := range res.ToMap() {
+		if k != "id" {
+			d.Set(k, v)
+		} else {
+			d.SetId(fmt.Sprint(v))
+		}
+	}
 
 	if d.IsNewResource() {
 		kubeconfigRaw := CloudProjectKubeKubeConfigResponse{}
