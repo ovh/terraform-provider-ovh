@@ -62,6 +62,7 @@ func resourceMeInstallationTemplate() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"change_log": {
 							Type:        schema.TypeString,
+							Deprecated:  "field is not used anymore",
 							Optional:    true,
 							Description: "Template change log details",
 						},
@@ -81,8 +82,9 @@ func resourceMeInstallationTemplate() *schema.Resource {
 							Description: "indicate the string returned by your postinstall customisation script on successful execution. Advice: your script should return a unique validation string in case of succes. A good example is 'loh1Xee7eo OK OK OK UGh8Ang1Gu'",
 						},
 						"rating": {
-							Type:     schema.TypeInt,
-							Optional: true,
+							Type:       schema.TypeInt,
+							Deprecated: "field is not used anymore",
+							Optional:   true,
 						},
 						"ssh_key_name": {
 							Type:        schema.TypeString,
@@ -219,7 +221,6 @@ func resourceMeInstallationTemplateCreate(d *schema.ResourceData, meta interface
 
 	// the resource is created via the POST endpoint, then updated
 	// via the PUT endpoint to apply customizations.
-	// Thus we need to enable the Partial mode
 	if err := config.OVHClient.Post(endpoint, opts, nil); err != nil {
 		return fmt.Errorf("Error calling POST %s with opts %v:\n\t %q", endpoint, opts, err)
 	}

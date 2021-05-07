@@ -115,7 +115,6 @@ resource "ovh_me_installation_template" "debian" {
   default_language   = "en"
 
   customization {
-     change_log                      = "v1"
      custom_hostname                 = "mytest"
      ssh_key_name                    = ovh_me_ssh_key.key.key_name
   }
@@ -156,7 +155,6 @@ resource "ovh_me_installation_template" "debian" {
   default_language   = "en"
 
   customization {
-     change_log                      = "v1"
      custom_hostname                 = "mytest"
      ssh_key_name                    = ovh_me_ssh_key.key.key_name
   }

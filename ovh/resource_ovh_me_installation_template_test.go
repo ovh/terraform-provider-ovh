@@ -106,11 +106,6 @@ func TestAccMeInstallationTemplateResource_customization(t *testing.T) {
 
 					resource.TestCheckResourceAttr(
 						"ovh_me_installation_template.template",
-						"customization.0.change_log",
-						"v1",
-					),
-					resource.TestCheckResourceAttr(
-						"ovh_me_installation_template.template",
 						"customization.0.custom_hostname",
 						"mytest",
 					),
@@ -128,11 +123,6 @@ func TestAccMeInstallationTemplateResource_customization(t *testing.T) {
 						"ovh_me_installation_template.template",
 						"customization.0.post_installation_script_return",
 						"returned_string",
-					),
-					resource.TestCheckResourceAttr(
-						"ovh_me_installation_template.template",
-						"customization.0.rating",
-						"2",
 					),
 					resource.TestCheckResourceAttr(
 						"ovh_me_installation_template.template",
@@ -163,14 +153,11 @@ resource "ovh_me_installation_template" "template" {
   default_language   = "en"
 
   customization {
-     change_log                      = "v1"
      custom_hostname                 = "mytest"
      ssh_key_name                    = "test"
      post_installation_script_link   = "http://mylink.org"
      post_installation_script_return = "returned_string"
-     rating                          = 2
      use_distribution_kernel         = true
   }
-
 }
 `
