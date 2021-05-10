@@ -196,10 +196,10 @@ func resourceDedicatedServerInstallTaskCreate(d *schema.ResourceData, meta inter
 
 	d.SetId(fmt.Sprintf("%d", task.Id))
 
-	return resourceDedicatedServerInstallTaskRead(d, meta)
+	return dedicatedServerInstallTaskRead(d, meta)
 }
 
-func resourceDedicatedServerInstallTaskRead(d *schema.ResourceData, meta interface{}) error {
+func dedicatedServerInstallTaskRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 
@@ -235,6 +235,19 @@ func resourceDedicatedServerInstallTaskRead(d *schema.ResourceData, meta interfa
 func resourceDedicatedServerInstallTaskUpdate(d *schema.ResourceData, meta interface{}) error {
 	// nothing to do on update
 	return resourceDedicatedServerInstallTaskRead(d, meta)
+}
+
+func resourceDedicatedServerInstallTaskRead(d *schema.ResourceData, meta interface{}) error {
+	// Nothing to do on READ
+	//
+	// IMPORTANT: This resource doesn't represent a real resource
+	// but instead a task on a dedicated server. OVH may clean its tasks database after a while
+	// so that the API may return a 404 on a task id. If we hit a 404 on a READ, then
+	// terraform will understand that it has to recreate the resource, and consequently
+	// will trigger new install task on the dedicated server.
+	// This is something we must avoid!
+	//
+	return nil
 }
 
 func resourceDedicatedServerInstallTaskDelete(d *schema.ResourceData, meta interface{}) error {
