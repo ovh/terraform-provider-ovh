@@ -19,13 +19,6 @@ resource "ovh_vrack_cloudproject" "vcp" {
 }
 `, os.Getenv("OVH_VRACK_SERVICE_TEST"), os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"))
 
-var testAccVrackCloudProjectDeprecatedConfig = fmt.Sprintf(`
-resource "ovh_vrack_cloudproject" "attach" {
-  vrack_id   = "%s"
-  project_id = "%s"
-}
-`, os.Getenv("OVH_VRACK_SERVICE_TEST"), os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"))
-
 func init() {
 	resource.AddTestSweepers("ovh_vrack_cloudproject", &resource.Sweeper{
 		Name:         "ovh_vrack_cloudproject",
@@ -88,23 +81,6 @@ func TestAccVrackCloudProject_basic(t *testing.T) {
 				Config: testAccVrackCloudProjectConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("ovh_vrack_cloudproject.vcp", "service_name", os.Getenv("OVH_VRACK_SERVICE_TEST")),
-					resource.TestCheckResourceAttr("ovh_vrack_cloudproject.vcp", "project_id", os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")),
-				),
-			},
-		},
-	})
-}
-
-func TestAccVrackCloudProjectDeprecated_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccCheckVrackCloudProjectPreCheck(t) },
-		Providers: testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVrackCloudProjectDeprecatedConfig,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_vrack_cloudproject.attach", "service_name", os.Getenv("OVH_VRACK_SERVICE_TEST")),
-					resource.TestCheckResourceAttr("ovh_vrack_cloudproject.attach", "project_id", os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")),
 				),
 			},
 		},

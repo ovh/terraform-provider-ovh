@@ -19,23 +19,12 @@ func resourceVrackDedicatedServer() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"vrack_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				DefaultFunc:   schema.EnvDefaultFunc("OVH_VRACK_ID", nil),
-				Description:   "Id of the vrack. DEPRECATED, use `service_name` instead",
-				ConflictsWith: []string{"service_name"},
-			},
 			"service_name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				DefaultFunc:   schema.EnvDefaultFunc("OVH_VRACK_SERVICE", nil),
-				Description:   "Service name of the resource representing the id of the cloud project.",
-				ConflictsWith: []string{"vrack_id"},
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				DefaultFunc: schema.EnvDefaultFunc("OVH_VRACK_SERVICE", nil),
+				Description: "Service name of the resource representing the id of the cloud project.",
 			},
 			"server_id": {
 				Type:     schema.TypeString,
@@ -56,7 +45,6 @@ func resourceVrackDedicatedServerImportState(d *schema.ResourceData, meta interf
 	serverId := splitId[1]
 	d.SetId(fmt.Sprintf("vrack_%s-dedicatedserver_%s", serviceName, serverId))
 	d.Set("service_name", serviceName)
-	d.Set("vrack_id", serviceName)
 	d.Set("server_id", serverId)
 
 	results := make([]*schema.ResourceData, 1)
@@ -67,10 +55,7 @@ func resourceVrackDedicatedServerImportState(d *schema.ResourceData, meta interf
 func resourceVrackDedicatedServerCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
-	serviceName, err := helpers.GetVrackServiceName(d)
-	if err != nil {
-		return err
-	}
+	serviceName := d.Get("service_name").(string)
 
 	opts := (&VrackDedicatedServerCreateOpts{}).FromResource(d)
 	task := &VrackTask{}
@@ -95,10 +80,7 @@ func resourceVrackDedicatedServerRead(d *schema.ResourceData, meta interface{}) 
 	config := meta.(*Config)
 
 	vds := &VrackDedicatedServer{}
-	serviceName, err := helpers.GetVrackServiceName(d)
-	if err != nil {
-		return err
-	}
+	serviceName := d.Get("service_name").(string)
 	serverId := d.Get("server_id").(string)
 
 	endpoint := fmt.Sprintf("/vrack/%s/dedicatedServer/%s",
@@ -111,7 +93,6 @@ func resourceVrackDedicatedServerRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	d.Set("service_name", vds.Vrack)
-	d.Set("vrack_id", serviceName)
 	d.Set("server_id", vds.DedicatedServer)
 
 	return nil
@@ -120,10 +101,7 @@ func resourceVrackDedicatedServerRead(d *schema.ResourceData, meta interface{}) 
 func resourceVrackDedicatedServerDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
-	serviceName, err := helpers.GetVrackServiceName(d)
-	if err != nil {
-		return err
-	}
+	serviceName := d.Get("service_name").(string)
 	serverId := d.Get("server_id").(string)
 
 	task := &VrackTask{}

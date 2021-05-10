@@ -21,19 +21,6 @@ func TestAccCloudProjectRegionsDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccCloudProjectRegionsDeprecatedDataSource_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheckCloud(t) },
-		Providers: testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCloudProjectRegionsDatasourceDeprecatedConfig,
-				Check:  resource.TestCheckResourceAttrSet("data.ovh_cloud_project_regions.regions", "names.#"),
-			},
-		},
-	})
-}
-
 func TestAccCloudProjectRegionsDataSource_withNetworkUp(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheckCloud(t) },
@@ -50,12 +37,6 @@ func TestAccCloudProjectRegionsDataSource_withNetworkUp(t *testing.T) {
 var testAccCloudProjectRegionsDatasourceConfig = fmt.Sprintf(`
 data "ovh_cloud_project_regions" "regions" {
   service_name = "%s"
-}
-`, os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"))
-
-var testAccCloudProjectRegionsDatasourceDeprecatedConfig = fmt.Sprintf(`
-data "ovh_cloud_project_regions" "regions" {
-  project_id = "%s"
 }
 `, os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"))
 

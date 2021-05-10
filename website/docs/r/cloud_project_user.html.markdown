@@ -14,7 +14,7 @@ Creates a user in a public cloud project.
 
 ```hcl
 resource "ovh_cloud_project_user" "user1" {
-   project_id = "67890"
+   service_name = "XXX"
 }
 ```
 
@@ -24,13 +24,8 @@ The following arguments are supported:
 
 * `description` - A description associated with the user.
 
-* `project_id` - (Optional) Deprecated. The id of the public cloud project. If omitted,
-    the `OVH_PROJECT_ID` environment variable is used.
-    One of `service_name` or `project_id` is required. Conflits with `service_name`.
-
-* `service_name` - (Optional) The id of the public cloud project. If omitted,
+* `service_name` - (Required) The id of the public cloud project. If omitted,
     the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used. 
-    One of `service_name` or `project_id` is required. Conflits with `project_id`.
 
 * `role_name` -  The name of a role. See `role_names`.
 
@@ -47,9 +42,6 @@ The following arguments are supported:
   - objectstore_operator
   - volume_operator
 
-* `service_name` -  The id of the public cloud project. Conflicts with `project_id`.
-
-
 ## Attributes Reference
 
 The following attributes are exported:
@@ -61,7 +53,6 @@ The following attributes are exported:
 * `password` - (Sensitive) the password generated for the user. The password can
    be used with the Openstack API. This attribute is sensitive and will only be
    retrieve once during creation.
-* `project_id` - See Argument Reference above.
 * `roles` - A list of roles associated with the user.
   * `description` - description of the role
   * `id` - id of the role

@@ -81,6 +81,7 @@ type CloudProjectContainerRegistry struct {
 	Id        string `json:"id"`
 	Name      string `json:"name"`
 	ProjectID string `json:"projectID"`
+	Region    string `json:"region"`
 	Size      int64  `json:"size"`
 	Status    string `json:"status"`
 	UpdatedAt string `json:"updatedAt"`
@@ -104,6 +105,7 @@ func (r CloudProjectContainerRegistry) ToMap() map[string]interface{} {
 	obj["id"] = r.Id
 	obj["name"] = r.Name
 	obj["project_id"] = r.ProjectID
+	obj["region"] = r.Region
 	obj["size"] = r.Size
 	obj["status"] = r.Status
 	obj["updated_at"] = r.UpdatedAt

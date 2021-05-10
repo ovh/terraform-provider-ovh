@@ -14,7 +14,7 @@ Use this data source to get the regions of a public cloud project.
 
 ```hcl
 data "ovh_cloud_project_regions" "regions" {
-  project_id = "XXXXXX"
+  service_name = "XXXXXX"
   
   has_services_up = ["network"]
 }
@@ -23,17 +23,12 @@ data "ovh_cloud_project_regions" "regions" {
 ## Argument Reference
 
 
-* `project_id` - (Optional) Deprecated. The id of the public cloud project. If omitted,
-    the `OVH_PROJECT_ID` environment variable is used.
-    One of `service_name` or `project_id` is required. Conflits with `service_name`.
-
-* `service_name` - (Optional) The id of the public cloud project. If omitted,
+* `service_name` - (Required) The id of the public cloud project. If omitted,
     the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used. 
-    One of `service_name` or `project_id` is required. Conflits with `project_id`.
 
 * `has_services_up` - (Optional) List of services which has to be UP in regions.
    Example: "image", "instance", "network", "storage", "volume", "workflow", ...
-   If left blank, returns all regions associated with the project_id.
+   If left blank, returns all regions associated with the service_name.
 
 
 ## Attributes Reference
