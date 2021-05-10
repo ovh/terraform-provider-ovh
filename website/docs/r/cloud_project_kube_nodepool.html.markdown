@@ -41,10 +41,10 @@ The following arguments are supported:
 
 * `desired_nodes` - number of nodes to start.
 
-* `max_nodes` - maximum number of nodes allowde in the pool.
+* `max_nodes` - maximum number of nodes allowed in the pool.
    Setting `desired_nodes` over this value will raise an error.
 
-* `min_nodes` - minimum number of nodes allowde in the pool.
+* `min_nodes` - minimum number of nodes allowed in the pool.
    Setting `desired_nodes` under this value will raise an error.
 
 * `monthly_billed` - (Optional) should the nodes be billed on a monthly basis. Default to `false`.
