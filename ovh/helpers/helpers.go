@@ -318,40 +318,6 @@ func StringsFromSchema(d *schema.ResourceData, id string) ([]string, error) {
 	return xs, nil
 }
 
-// This function shall be removed as soon as the deprecated project_id
-// attribute is removed from schemas
-func GetCloudProjectServiceName(d *schema.ResourceData) (string, error) {
-	projectId := GetNilStringPointerFromData(d, "project_id")
-	serviceNamePtr := GetNilStringPointerFromData(d, "service_name")
-
-	if serviceNamePtr == nil && projectId != nil && *projectId != "" {
-		serviceNamePtr = projectId
-	}
-
-	if serviceNamePtr == nil || *serviceNamePtr == "" {
-		return "", fmt.Errorf("service_name attribute is mandatory.")
-	}
-
-	return *serviceNamePtr, nil
-}
-
-// This function shall be removed as soon as the deprecated vrack_id
-// attribute is removed from schemas
-func GetVrackServiceName(d *schema.ResourceData) (string, error) {
-	vrackId := GetNilStringPointerFromData(d, "vrack_id")
-	serviceNamePtr := GetNilStringPointerFromData(d, "service_name")
-
-	if serviceNamePtr == nil && vrackId != nil && *vrackId != "" {
-		serviceNamePtr = vrackId
-	}
-
-	if serviceNamePtr == nil || *serviceNamePtr == "" {
-		return "", fmt.Errorf("service_name attribute is mandatory.")
-	}
-
-	return *serviceNamePtr, nil
-}
-
 // WaitAvailable wait for a ressource to become available in the API (aka non 404)
 func WaitAvailable(client *ovh.Client, endpoint string, timeout time.Duration) error {
 	return resource.Retry(timeout, func() *resource.RetryError {

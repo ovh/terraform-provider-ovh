@@ -14,7 +14,7 @@ Attach a Dedicated Server Network Interface to a VRack.
 
 ```hcl
 resource "ovh_vrack_dedicated_server_interface" "vdsi" {
-  vrack_id   = "12345"
+  service_name = "12345"
   interface_id = "67890"
 }
 ```
@@ -23,13 +23,8 @@ resource "ovh_vrack_dedicated_server_interface" "vdsi" {
 
 The following arguments are supported:
 
-* `vrack_id` - (Optional) Deprecated. The id of the vrack. If omitted,
-    the `OVH_VRACK_ID` environment variable is used.
-    One of `service_name` or `vrack_id` is required. Conflits with `service_name`.
-
-* `service_name` - (Optional) The id of the vrack. If omitted,
+* `service_name` - (Required) The id of the vrack. If omitted,
     the `OVH_VRACK_SERVICE` environment variable is used. 
-    One of `service_name` or `vrack_id` is required. Conflits with `vrack_id`.
 
 * `interface_id` - (Required) The id of dedicated server network interface.
 
@@ -37,6 +32,5 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `vrack_id` - See Argument Reference above.
 * `service_name` - See Argument Reference above.
 * `interface_id` - See Argument Reference above.

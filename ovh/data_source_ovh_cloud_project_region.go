@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/go-ovh/ovh"
-	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers/hashcode"
 )
 
@@ -15,23 +14,12 @@ func dataSourceCloudProjectRegion() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceCloudProjectRegionRead,
 		Schema: map[string]*schema.Schema{
-			"project_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				DefaultFunc:   schema.EnvDefaultFunc("OVH_PROJECT_ID", nil),
-				Description:   "Id of the cloud project. DEPRECATED, use `service_name` instead",
-				ConflictsWith: []string{"service_name"},
-			},
 			"service_name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				DefaultFunc:   schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
-				Description:   "Service name of the resource representing the id of the cloud project.",
-				ConflictsWith: []string{"project_id"},
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
+				Description: "Service name of the resource representing the id of the cloud project.",
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -57,17 +45,6 @@ func dataSourceCloudProjectRegion() *schema.Resource {
 				},
 			},
 
-			"continentCode": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "Deprecated, use continent_code instead.",
-			},
-			"datacenterLocation": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "Deprecated, use datacenter_location instead.",
-			},
-
 			"continent_code": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -82,10 +59,7 @@ func dataSourceCloudProjectRegion() *schema.Resource {
 
 func dataSourceCloudProjectRegionRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-	serviceName, err := helpers.GetCloudProjectServiceName(d)
-	if err != nil {
-		return err
-	}
+	serviceName := d.Get("service_name").(string)
 
 	name := d.Get("name").(string)
 
@@ -96,9 +70,6 @@ func dataSourceCloudProjectRegionRead(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
-	// TODO: Deprecated - remove in next major release
-	d.Set("datacenterLocation", region.DatacenterLocation)
-	d.Set("continentCode", region.ContinentCode)
 	d.Set("datacenter_location", region.DatacenterLocation)
 	d.Set("continent_code", region.ContinentCode)
 
@@ -115,7 +86,6 @@ func dataSourceCloudProjectRegionRead(d *schema.ResourceData, meta interface{}) 
 
 	d.Set("services", services)
 	d.Set("service_name", serviceName)
-	d.Set("project_id", serviceName)
 	d.SetId(fmt.Sprintf("%s_%s", serviceName, name))
 
 	return nil

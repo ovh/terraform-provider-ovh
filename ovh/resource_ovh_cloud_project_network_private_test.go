@@ -43,17 +43,6 @@ resource "ovh_cloud_project_network_private" "network" {
 }
 `
 
-var testAccCloudProjectNetworkPrivateDeprecatedConfig_basic = `
-%s
-
-resource "ovh_cloud_project_network_private" "network" {
-  project_id = data.ovh_cloud_project_regions.regions.service_name
-  vlan_id    = 0
-  name       = "terraform_testacc_private_net"
-  regions    = slice(sort(tolist(data.ovh_cloud_project_regions.regions.names)), 0, 3)
-}
-`
-
 func testAccCloudProjectNetworkPrivateConfig(config string) string {
 	attachVrack := fmt.Sprintf(
 		testAccCloudProjectNetworkPrivateConfig_attachVrack,
@@ -153,23 +142,6 @@ func TestAccCloudProjectNetworkPrivate_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCloudProjectNetworkPrivateConfig(testAccCloudProjectNetworkPrivateConfig_basic),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("ovh_cloud_project_network_private.network", "service_name"),
-					resource.TestCheckResourceAttrSet("ovh_cloud_project_network_private.network", "id"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_network_private.network", "vlan_id", "0"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccCloudProjectNetworkPrivateDeprecated_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccCheckCloudProjectNetworkPrivatePreCheck(t) },
-		Providers: testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCloudProjectNetworkPrivateConfig(testAccCloudProjectNetworkPrivateDeprecatedConfig_basic),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_network_private.network", "service_name"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_network_private.network", "id"),
