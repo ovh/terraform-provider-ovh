@@ -29,11 +29,10 @@ func TestAccCloudProjectContainerRegistry_importBasic(t *testing.T) {
 				Config: config,
 			},
 			{
-				ResourceName:            "ovh_cloud_project_containerregistry.reg",
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"plan_id"},
-				ImportStateIdFunc:       testAccCloudProjectContainerRegistryImportId("ovh_cloud_project_containerregistry.reg"),
+				ResourceName:      "ovh_cloud_project_containerregistry.reg",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccCloudProjectContainerRegistryImportId("ovh_cloud_project_containerregistry.reg"),
 			},
 		},
 	})
