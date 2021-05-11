@@ -72,6 +72,13 @@ resource "ovh_cloud_project_kube" "cluster" {
 	version = "%s"
 }
 `
+var testAccCloudProjectKubeEmptyVersionConfig = `
+resource "ovh_cloud_project_kube" "cluster" {
+	service_name  = "%s"
+    name          = "%s"
+	region        = "%s"
+}
+`
 
 func TestAccCloudProjectKube_basic(t *testing.T) {
 	name := acctest.RandomWithPrefix(test_prefix)
@@ -104,6 +111,41 @@ func TestAccCloudProjectKube_basic(t *testing.T) {
 						"ovh_cloud_project_kube.cluster", "name", name),
 					resource.TestCheckResourceAttr(
 						"ovh_cloud_project_kube.cluster", "version", version),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCloudProjectKubeEmptyVersion_basic(t *testing.T) {
+	name := acctest.RandomWithPrefix(test_prefix)
+	region := os.Getenv("OVH_CLOUD_PROJECT_KUBE_REGION_TEST")
+	config := fmt.Sprintf(
+		testAccCloudProjectKubeEmptyVersionConfig,
+		os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"),
+		name,
+		region,
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloud(t)
+			testAccCheckCloudProjectExists(t)
+			testAccPreCheckKubernetes(t)
+		},
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_project_kube.cluster", "region", region),
+					resource.TestCheckResourceAttrSet(
+						"ovh_cloud_project_kube.cluster", "kubeconfig"),
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_project_kube.cluster", "name", name),
+					resource.TestCheckResourceAttrSet(
+						"ovh_cloud_project_kube.cluster", "version"),
 				),
 			},
 		},
