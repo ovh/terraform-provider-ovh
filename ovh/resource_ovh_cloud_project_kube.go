@@ -40,6 +40,7 @@ func resourceCloudProjectKube() *schema.Resource {
 			"version": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 			},
 			"private_network_id": {
