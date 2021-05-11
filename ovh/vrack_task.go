@@ -42,7 +42,7 @@ func waitForVrackTask(task *VrackTask, c *ovh.Client) error {
 		Pending:    []string{"init", "todo", "doing"},
 		Target:     []string{"completed"},
 		Refresh:    refreshFunc,
-		Timeout:    20 * time.Minute,
+		Timeout:    60 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
