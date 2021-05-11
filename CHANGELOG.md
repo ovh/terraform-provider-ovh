@@ -1,4 +1,30 @@
-## 0.13.0 (Unreleased)
+## 0.14.0 (Unreleased)
+
+## 0.13.0 (May 11, 2021)
+
+BREAKING CHANGES:
+
+`OVH_VRACK_ID` and `OVH_PROJECT_ID` environment variables support are removed in favor of `OVH_VRACK_SERVICE` and `OVH_CLOUD_PROJECT_SERVICE`. Accordingly, `project_id` and `vrack_id` arguments are removed from resources in favor of `service_name`.
+
+* `d/cloud_region`: removed ([#193](https://github.com/ovh/terraform-provider-ovh/pull/193))
+* `d/cloud_regions`: removed ([#193](https://github.com/ovh/terraform-provider-ovh/pull/193))
+* `r/cloud_private_network`: removed ([#193](https://github.com/ovh/terraform-provider-ovh/pull/193))
+* `r/cloud_private_network_subnet`: removed ([#193](https://github.com/ovh/terraform-provider-ovh/pull/193))
+* `r/cloud_user`: removed ([#193](https://github.com/ovh/terraform-provider-ovh/pull/193))
+
+Improvements:
+
+* increase vrack task timeouts fomr 20m to 60m
+
+BUG FIXES:
+
+* `r/cloud_project_containerregistry`: fix region and plan_id arguments issue ([#193](https://github.com/ovh/terraform-provider-ovh/pull/193))
+* `r/dedicated_server_install_task`: fix issue when OVH cleans its tasks database ([#193](https://github.com/ovh/terraform-provider-ovh/pull/193))
+* `r/dedicated_server_reboot_task`: fix issue when OVH cleans its tasks database ([#193](https://github.com/ovh/terraform-provider-ovh/pull/193))
+* `r/cloud_project_kube`: fix issue with empty version([#194](https://github.com/ovh/terraform-provider-ovh/pull/194))
+* `r/cloud_project_kube_nodepool`: fix issue with computed arguments 
+* Documentation: fix typo ([#191](https://github.com/ovh/terraform-provider-ovh/pull/191))
+
 
 ## 0.12.0 (May 7, 2021)
 
