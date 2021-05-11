@@ -14,7 +14,7 @@ Creates a subnet in a private network of a public cloud project.
 
 ```hcl
 resource "ovh_cloud_project_network_private_subnet" "subnet" {
-   project_id = "67890"
+   service_name = "xxxxx"
    network_id = "0234543"
    region     = "GRA1"
    start      = "192.168.168.100"
@@ -29,13 +29,8 @@ resource "ovh_cloud_project_network_private_subnet" "subnet" {
 
 The following arguments are supported:
 
-* `project_id` - (Optional) Deprecated. The id of the public cloud project. If omitted,
-    the `OVH_PROJECT_ID` environment variable is used.
-    One of `service_name` or `project_id` is required. Conflits with `service_name`.
-
-* `service_name` - (Optional) The id of the public cloud project. If omitted,
+* `service_name` - (Required) The id of the public cloud project. If omitted,
     the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used. 
-    One of `service_name` or `project_id` is required. Conflits with `project_id`.
 
 * `network_id` - (Required) The id of the network.
    Changing this forces a new resource to be created.
@@ -62,7 +57,6 @@ _
 
 The following attributes are exported:
 
-* `project_id` - See Argument Reference above.
 * `service_name` - See Argument Reference above.
 * `network_id` - See Argument Reference above.
 * `dhcp_id` - See Argument Reference above.

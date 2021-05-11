@@ -19,23 +19,12 @@ func resourceVrackCloudProject() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"vrack_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				DefaultFunc:   schema.EnvDefaultFunc("OVH_VRACK_ID", nil),
-				Description:   "Id of the vrack. DEPRECATED, use `service_name` instead",
-				ConflictsWith: []string{"service_name"},
-			},
 			"service_name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				DefaultFunc:   schema.EnvDefaultFunc("OVH_VRACK_SERVICE", nil),
-				Description:   "Service name of the resource representing the id of the cloud project.",
-				ConflictsWith: []string{"vrack_id"},
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				DefaultFunc: schema.EnvDefaultFunc("OVH_VRACK_SERVICE", nil),
+				Description: "Service name of the resource representing the id of the cloud project.",
 			},
 			"project_id": {
 				Type:        schema.TypeString,
@@ -57,7 +46,6 @@ func resourceVrackCloudProjectImportState(d *schema.ResourceData, meta interface
 	projectId := splitId[1]
 	d.SetId(fmt.Sprintf("vrack_%s-cloudproject_%s", serviceName, projectId))
 	d.Set("service_name", serviceName)
-	d.Set("vrack_id", serviceName)
 	d.Set("project_id", projectId)
 
 	results := make([]*schema.ResourceData, 1)
@@ -68,17 +56,14 @@ func resourceVrackCloudProjectImportState(d *schema.ResourceData, meta interface
 func resourceVrackCloudProjectCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
-	serviceName, err := helpers.GetVrackServiceName(d)
-	if err != nil {
-		return err
-	}
+	serviceName := d.Get("service_name").(string)
 
 	opts := (&VrackCloudProjectCreateOpts{}).FromResource(d)
 	task := &VrackTask{}
 
 	endpoint := fmt.Sprintf("/vrack/%s/cloudProject", serviceName)
 
-	if err = config.OVHClient.Post(endpoint, opts, task); err != nil {
+	if err := config.OVHClient.Post(endpoint, opts, task); err != nil {
 		return fmt.Errorf("Error calling POST %s with opts %v:\n\t %q", endpoint, opts, err)
 	}
 
@@ -96,10 +81,7 @@ func resourceVrackCloudProjectRead(d *schema.ResourceData, meta interface{}) err
 	config := meta.(*Config)
 
 	vcp := &VrackCloudProject{}
-	serviceName, err := helpers.GetVrackServiceName(d)
-	if err != nil {
-		return err
-	}
+	serviceName := d.Get("service_name").(string)
 	projectId := d.Get("project_id").(string)
 
 	endpoint := fmt.Sprintf("/vrack/%s/cloudProject/%s",
@@ -112,7 +94,6 @@ func resourceVrackCloudProjectRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	d.Set("service_name", vcp.Vrack)
-	d.Set("vrack_id", serviceName)
 	d.Set("project_id", vcp.Project)
 
 	return nil
@@ -121,11 +102,7 @@ func resourceVrackCloudProjectRead(d *schema.ResourceData, meta interface{}) err
 func resourceVrackCloudProjectDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
-	serviceName, err := helpers.GetVrackServiceName(d)
-	if err != nil {
-		return err
-	}
-
+	serviceName := d.Get("service_name").(string)
 	projectId := d.Get("project_id").(string)
 
 	task := &VrackTask{}
@@ -134,7 +111,7 @@ func resourceVrackCloudProjectDelete(d *schema.ResourceData, meta interface{}) e
 		url.PathEscape(projectId),
 	)
 
-	if err = config.OVHClient.Delete(endpoint, task); err != nil {
+	if err := config.OVHClient.Delete(endpoint, task); err != nil {
 		return fmt.Errorf("Error calling DELETE %s with %s/%s:\n\t %q", endpoint, serviceName, projectId, err)
 	}
 

@@ -69,12 +69,6 @@ func Provider() *schema.Provider {
 			"ovh_me_ssh_keys":                                         dataSourceMeSshKeys(),
 			"ovh_vps":                                                 dataSourceVPS(),
 			"ovh_vracks":                                              dataSourceVracks(),
-
-			// Legacy naming schema (ovh_cloud)
-			"ovh_cloud_region": deprecated(dataSourceCloudProjectRegion(),
-				"use ovh_cloud_project_region instead"),
-			"ovh_cloud_regions": deprecated(dataSourceCloudProjectRegions(),
-				"use ovh_cloud_project_regions instead"),
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
@@ -113,14 +107,6 @@ func Provider() *schema.Provider {
 			"ovh_vrack_dedicated_server":                                  resourceVrackDedicatedServer(),
 			"ovh_vrack_dedicated_server_interface":                        resourceVrackDedicatedServerInterface(),
 			"ovh_vrack_iploadbalancing":                                   resourceVrackIpLoadbalancing(),
-
-			// Legacy naming schema (ovh_cloud)
-			"ovh_cloud_network_private": deprecated(resourceCloudProjectNetworkPrivate(),
-				"use ovh_cloud_project_network_private instead"),
-			"ovh_cloud_network_private_subnet": deprecated(resourceCloudProjectNetworkPrivateSubnet(),
-				"use ovh_cloud_project_network_private_subnet instead"),
-			"ovh_cloud_user": deprecated(resourceCloudProjectUser(),
-				"use ovh_cloud_project_user"),
 		},
 
 		ConfigureFunc: configureProvider,
