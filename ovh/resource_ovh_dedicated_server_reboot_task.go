@@ -89,10 +89,10 @@ func resourceDedicatedServerRebootTaskCreate(d *schema.ResourceData, meta interf
 
 	d.SetId(fmt.Sprintf("%d", task.Id))
 
-	return resourceDedicatedServerRebootTaskRead(d, meta)
+	return dedicatedServerRebootTaskRead(d, meta)
 }
 
-func resourceDedicatedServerRebootTaskRead(d *schema.ResourceData, meta interface{}) error {
+func dedicatedServerRebootTaskRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 
@@ -121,6 +121,19 @@ func resourceDedicatedServerRebootTaskRead(d *schema.ResourceData, meta interfac
 	d.Set("last_update", task.LastUpdate.Format(time.RFC3339))
 	d.Set("done_date", task.DoneDate.Format(time.RFC3339))
 	d.Set("start_date", task.StartDate.Format(time.RFC3339))
+
+	return nil
+}
+
+func resourceDedicatedServerRebootTaskRead(d *schema.ResourceData, meta interface{}) error {
+	// Nothing to do on READ
+	//
+	// IMPORTANT: This resource doesn't represent a real resource
+	// but instead a task on a dedicated server. OVH may clean its tasks database after a while
+	// so that the API may return a 404 on a task id. If we hit a 404 on a READ, then
+	// terraform will understand that it has to recreate the resource, and consequently
+	// will trigger new reboot task on the dedicated server.
+	// This is something we must avoid!
 
 	return nil
 }

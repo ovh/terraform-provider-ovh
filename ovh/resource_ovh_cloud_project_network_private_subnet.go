@@ -42,23 +42,12 @@ func resourceCloudProjectNetworkPrivateSubnet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"project_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				DefaultFunc:   schema.EnvDefaultFunc("OVH_PROJECT_ID", nil),
-				Description:   "Id of the cloud project. DEPRECATED, use `service_name` instead",
-				ConflictsWith: []string{"service_name"},
-			},
 			"service_name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				DefaultFunc:   schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
-				Description:   "Service name of the resource representing the id of the cloud project.",
-				ConflictsWith: []string{"project_id"},
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
+				Description: "Service name of the resource representing the id of the cloud project.",
 			},
 			"network_id": {
 				Type:     schema.TypeString,
@@ -145,10 +134,7 @@ func resourceCloudProjectNetworkPrivateSubnet() *schema.Resource {
 func resourceCloudProjectNetworkPrivateSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
-	serviceName, err := helpers.GetCloudProjectServiceName(d)
-	if err != nil {
-		return err
-	}
+	serviceName := d.Get("service_name").(string)
 	networkId := d.Get("network_id").(string)
 
 	params := &CloudProjectNetworkPrivatesCreateOpts{
@@ -168,8 +154,7 @@ func resourceCloudProjectNetworkPrivateSubnetCreate(d *schema.ResourceData, meta
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s/subnet", serviceName, networkId)
 
-	err = config.OVHClient.Post(endpoint, params, r)
-	if err != nil {
+	if err := config.OVHClient.Post(endpoint, params, r); err != nil {
 		return fmt.Errorf("calling POST %s with params %s:\n\t %q", endpoint, params, err)
 	}
 
@@ -183,11 +168,7 @@ func resourceCloudProjectNetworkPrivateSubnetCreate(d *schema.ResourceData, meta
 
 func resourceCloudProjectNetworkPrivateSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-	serviceName, err := helpers.GetCloudProjectServiceName(d)
-	if err != nil {
-		return err
-	}
-
+	serviceName := d.Get("service_name").(string)
 	networkId := d.Get("network_id").(string)
 
 	subnets := []*CloudProjectNetworkPrivatesResponse{}
@@ -242,8 +223,6 @@ func resourceCloudProjectNetworkPrivateSubnetRead(d *schema.ResourceData, meta i
 	d.SetId(r.Id)
 
 	d.Set("service_name", serviceName)
-	d.Set("project_id", serviceName)
-
 	log.Printf("[DEBUG] Read Public Cloud Private Network %v", r)
 	return nil
 }
@@ -251,11 +230,7 @@ func resourceCloudProjectNetworkPrivateSubnetRead(d *schema.ResourceData, meta i
 func resourceCloudProjectNetworkPrivateSubnetDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
-	serviceName, err := helpers.GetCloudProjectServiceName(d)
-	if err != nil {
-		return err
-	}
-
+	serviceName := d.Get("service_name").(string)
 	networkId := d.Get("network_id").(string)
 	id := d.Id()
 
@@ -263,8 +238,7 @@ func resourceCloudProjectNetworkPrivateSubnetDelete(d *schema.ResourceData, meta
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s/subnet/%s", serviceName, id, id)
 
-	err = config.OVHClient.Delete(endpoint, nil)
-	if err != nil {
+	if err := config.OVHClient.Delete(endpoint, nil); err != nil {
 		return fmt.Errorf("calling DELETE %s:\n\t %q", endpoint, err)
 	}
 

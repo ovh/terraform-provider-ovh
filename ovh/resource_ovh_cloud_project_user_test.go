@@ -32,13 +32,6 @@ resource "ovh_cloud_project_user" "user" {
 }
 `, os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"))
 
-var testAccCloudProjectUserDeprecatedConfig = fmt.Sprintf(`
-resource "ovh_cloud_project_user" "user" {
-  project_id   = "%s"
-  description  = "my user for acceptance tests"
-}
-`, os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"))
-
 func TestAccCloudProjectUser_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheckCloud(t); testAccCheckCloudProjectExists(t) },
@@ -46,23 +39,6 @@ func TestAccCloudProjectUser_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCloudProjectUserConfig,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_user.user", "description", "my user for acceptance tests"),
-					testAccCheckCloudProjectUserOpenRC("ovh_cloud_project_user.user", t),
-				),
-			},
-		},
-	})
-}
-
-func TestAccCloudProjectUserDeprecated_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheckCloud(t); testAccCheckCloudProjectExists(t) },
-		Providers: testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCloudProjectUserDeprecatedConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
 						"ovh_cloud_project_user.user", "description", "my user for acceptance tests"),

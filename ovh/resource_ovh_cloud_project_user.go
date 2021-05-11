@@ -28,23 +28,12 @@ func resourceCloudProjectUser() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"project_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				DefaultFunc:   schema.EnvDefaultFunc("OVH_PROJECT_ID", nil),
-				Description:   "Id of the cloud project. DEPRECATED, use `service_name` instead",
-				ConflictsWith: []string{"service_name"},
-			},
 			"service_name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				DefaultFunc:   schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
-				Description:   "Service name of the resource representing the id of the cloud project.",
-				ConflictsWith: []string{"project_id"},
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
+				Description: "Service name of the resource representing the id of the cloud project.",
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -139,10 +128,7 @@ func validateCloudProjectUserRoleFunc(v interface{}, k string) (ws []string, err
 
 func resourceCloudProjectUserCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-	serviceName, err := helpers.GetCloudProjectServiceName(d)
-	if err != nil {
-		return err
-	}
+	serviceName := d.Get("service_name").(string)
 
 	params := (&CloudProjectUserCreateOpts{}).FromResource(d)
 
@@ -159,8 +145,8 @@ func resourceCloudProjectUserCreate(d *schema.ResourceData, meta interface{}) er
 		"/cloud/project/%s/user",
 		url.PathEscape(serviceName),
 	)
-	err = config.OVHClient.Post(endpoint, params, r)
-	if err != nil {
+
+	if err := config.OVHClient.Post(endpoint, params, r); err != nil {
 		return fmt.Errorf("calling Post %s with params %s:\n\t %q", endpoint, params, err)
 	}
 
@@ -179,8 +165,7 @@ func resourceCloudProjectUserCreate(d *schema.ResourceData, meta interface{}) er
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, err = stateConf.WaitForState()
-	if err != nil {
+	if _, err := stateConf.WaitForState(); err != nil {
 		return fmt.Errorf("waiting for user (%s): %s", params, err)
 	}
 	log.Printf("[DEBUG] Created User %s", r)
@@ -190,10 +175,7 @@ func resourceCloudProjectUserCreate(d *schema.ResourceData, meta interface{}) er
 
 func resourceCloudProjectUserRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-	serviceName, err := helpers.GetCloudProjectServiceName(d)
-	if err != nil {
-		return err
-	}
+	serviceName := d.Get("service_name").(string)
 
 	user := &CloudProjectUser{}
 
@@ -216,14 +198,12 @@ func resourceCloudProjectUserRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	openstackrc := make(map[string]string)
-	err = cloudUserGetOpenstackRC(serviceName, d.Id(), config.OVHClient, openstackrc)
-	if err != nil {
+	if err := cloudUserGetOpenstackRC(serviceName, d.Id(), config.OVHClient, openstackrc); err != nil {
 		return fmt.Errorf("Reading openstack creds for user %s: %s", d.Id(), err)
 	}
 
 	d.Set("openstack_rc", &openstackrc)
 	d.Set("service_name", serviceName)
-	d.Set("project_id", serviceName)
 
 	log.Printf("[DEBUG] Read Public Cloud User %s", user)
 	return nil
@@ -231,10 +211,7 @@ func resourceCloudProjectUserRead(d *schema.ResourceData, meta interface{}) erro
 
 func resourceCloudProjectUserDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-	serviceName, err := helpers.GetCloudProjectServiceName(d)
-	if err != nil {
-		return err
-	}
+	serviceName := d.Get("service_name").(string)
 
 	id := d.Id()
 
@@ -246,8 +223,7 @@ func resourceCloudProjectUserDelete(d *schema.ResourceData, meta interface{}) er
 		id,
 	)
 
-	err = config.OVHClient.Delete(endpoint, nil)
-	if err != nil {
+	if err := config.OVHClient.Delete(endpoint, nil); err != nil {
 		return fmt.Errorf("calling Delete %s:\n\t %q", endpoint, err)
 	}
 
@@ -262,8 +238,7 @@ func resourceCloudProjectUserDelete(d *schema.ResourceData, meta interface{}) er
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, err = stateConf.WaitForState()
-	if err != nil {
+	if _, err := stateConf.WaitForState(); err != nil {
 		return fmt.Errorf("Deleting Public Cloud user %s from project %s", id, serviceName)
 	}
 	log.Printf("[DEBUG] Deleted Public Cloud User %s from project %s", id, serviceName)
@@ -289,8 +264,7 @@ func cloudUserGetOpenstackRC(serviceName, id string, c *ovh.Client, rc map[strin
 
 	r := &CloudProjectUserOpenstackRC{}
 
-	err := c.Get(endpoint, r)
-	if err != nil {
+	if err := c.Get(endpoint, r); err != nil {
 		return fmt.Errorf("calling Get %s:\n\t %q", endpoint, err)
 	}
 
@@ -327,8 +301,7 @@ func waitForCloudProjectUser(c *ovh.Client, serviceName, id string) resource.Sta
 			url.PathEscape(serviceName),
 			id,
 		)
-		err := c.Get(endpoint, r)
-		if err != nil {
+		if err := c.Get(endpoint, r); err != nil {
 			if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
 				log.Printf("[DEBUG] user id %s on project %s deleted", id, serviceName)
 				return r, "deleted", nil

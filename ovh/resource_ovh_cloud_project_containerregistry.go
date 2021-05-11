@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"regexp"
 	"strings"
 	"time"
 
@@ -44,6 +45,7 @@ func resourceCloudProjectContainerRegistry() *schema.Resource {
 				Type:        schema.TypeString,
 				Description: "Plan ID of the registry.",
 				Optional:    true,
+				Computed:    true,
 			},
 
 			// Computed
@@ -184,8 +186,7 @@ func resourceCloudProjectContainerRegistryCreate(d *schema.ResourceData, meta in
 		url.PathEscape(serviceName),
 	)
 
-	err := config.OVHClient.Post(endpoint, opts, reg)
-	if err != nil {
+	if err := config.OVHClient.Post(endpoint, opts, reg); err != nil {
 		return fmt.Errorf("Error calling post %s:\n\t %q", endpoint, err)
 	}
 
@@ -200,8 +201,7 @@ func resourceCloudProjectContainerRegistryCreate(d *schema.ResourceData, meta in
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, err = stateConf.WaitForState()
-	if err != nil {
+	if _, err := stateConf.WaitForState(); err != nil {
 		return fmt.Errorf("waiting for registry (%s): %s", d.Id(), err)
 	}
 
@@ -258,6 +258,17 @@ func resourceCloudProjectContainerRegistryRead(d *schema.ResourceData, meta inte
 		}
 	}
 
+	// OVH API Bug: the api doesn't set the region attribute value.
+	// As a temp workaround, if the API sets an empty string for the region attr
+	// we override it by extracting the region from the URL
+	if d.Get("region").(string) == "" {
+		urlRegionRx := regexp.MustCompile(`^https://[[:alnum:]]+\.([[:alpha:]]+)[0-9]+\.container-registry\.ovh\.net`)
+		matches := urlRegionRx.FindStringSubmatch(reg.Url)
+		if len(matches) > 1 {
+			d.Set("region", strings.ToUpper(matches[1]))
+		}
+	}
+
 	return cloudProjectContainerRegistryPlanRead(d, meta)
 }
 
@@ -281,6 +292,7 @@ func cloudProjectContainerRegistryPlanRead(d *schema.ResourceData, meta interfac
 	}
 
 	d.Set("plan", []interface{}{plan.ToMap()})
+	d.Set("plan_id", plan.Id)
 
 	return nil
 }
