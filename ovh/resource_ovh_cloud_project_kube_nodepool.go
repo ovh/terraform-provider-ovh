@@ -65,21 +65,25 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 				Type:        schema.TypeInt,
 				Description: "Number of nodes you desire in the pool",
 				Optional:    true,
+				Computed:    true,
 			},
 			"name": {
 				Type:        schema.TypeString,
 				Description: "NodePool resource name",
 				Optional:    true,
+				Computed:    true,
 				ForceNew:    true,
 			},
 			"max_nodes": {
 				Type:        schema.TypeInt,
 				Description: "Number of nodes you desire in the pool",
+				Computed:    true,
 				Optional:    true,
 			},
 			"min_nodes": {
 				Type:        schema.TypeInt,
 				Description: "Number of nodes you desire in the pool",
+				Computed:    true,
 				Optional:    true,
 			},
 			"monthly_billed": {
