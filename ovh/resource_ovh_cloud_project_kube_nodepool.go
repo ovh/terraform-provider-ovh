@@ -1,9 +1,9 @@
 package ovh
 
 import (
-	"context"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -21,10 +21,7 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 		Update: resourceCloudProjectKubeNodePoolUpdate,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				err := resourceCloudProjectKubeNodePoolRead(d, meta)
-				return []*schema.ResourceData{d}, err
-			},
+			State: resourceCloudProjectKubeNodePoolImportState,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -142,6 +139,24 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 			},
 		},
 	}
+}
+
+func resourceCloudProjectKubeNodePoolImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	givenId := d.Id()
+	splitId := strings.SplitN(givenId, "/", 3)
+	if len(splitId) != 3 {
+		return nil, fmt.Errorf("Import Id is not service_name/kubeid/poolid formatted")
+	}
+	serviceName := splitId[0]
+	kubeId := splitId[1]
+	id := splitId[2]
+	d.SetId(id)
+	d.Set("kube_id", kubeId)
+	d.Set("service_name", serviceName)
+
+	results := make([]*schema.ResourceData, 1)
+	results[0] = d
+	return results, nil
 }
 
 func resourceCloudProjectKubeNodePoolCreate(d *schema.ResourceData, meta interface{}) error {
