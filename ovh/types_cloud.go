@@ -315,6 +315,7 @@ func (v CloudProjectKubeNodePoolResponse) ToMap() map[string]interface{} {
 	obj["current_nodes"] = v.CurrentNodes
 	obj["desired_nodes"] = v.DesiredNodes
 	obj["flavor"] = v.Flavor
+	obj["flavor_name"] = v.Flavor
 	obj["id"] = v.Id
 	obj["max_nodes"] = v.MaxNodes
 	obj["min_nodes"] = v.MinNodes

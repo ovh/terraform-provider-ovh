@@ -3,6 +3,7 @@ package ovh
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -19,10 +20,7 @@ func resourceCloudProjectKube() *schema.Resource {
 		Delete: resourceCloudProjectKubeDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				err := resourceCloudProjectKubeRead(d, meta)
-				return []*schema.ResourceData{d}, err
-			},
+			State: resourceCloudProjectKubeNodePoolImportState,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -93,6 +91,22 @@ func resourceCloudProjectKube() *schema.Resource {
 			},
 		},
 	}
+}
+
+func resourceCloudProjectKubeImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	givenId := d.Id()
+	splitId := strings.SplitN(givenId, "/", 2)
+	if len(splitId) != 3 {
+		return nil, fmt.Errorf("Import Id is not service_name/kubeid formatted")
+	}
+	serviceName := splitId[0]
+	id := splitId[1]
+	d.SetId(id)
+	d.Set("service_name", serviceName)
+
+	results := make([]*schema.ResourceData, 1)
+	results[0] = d
+	return results, nil
 }
 
 func resourceCloudProjectKubeCreate(d *schema.ResourceData, meta interface{}) error {
