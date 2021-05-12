@@ -36,6 +36,9 @@ The following arguments are supported:
 * `version` - (Optional) kubernetes version to use.
    Changing this value recreates the resource. Defaults to latest available.
 
+* `private_network_id` - (Optional) OpenStack private network (or vrack) ID to use.
+   Changing this value recreates the resource. Defaults - not use private network.
+
 ## Attributes Reference
 
 The following attributes are exported:
