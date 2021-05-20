@@ -139,13 +139,18 @@ func dataSourceIpLoadbalancing() *schema.Resource {
 
 func dataSourceIpLoadbalancingRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-	log.Printf("[DEBUG] Will list available iploadbalancing services")
 
 	response := []string{}
-	err := config.OVHClient.Get("/ipLoadbalancing", &response)
-
-	if err != nil {
-		return fmt.Errorf("Error calling /ipLoadbalancing:\n\t %q", err)
+	v, exists := d.GetOk("service_name")
+	if exists {
+		log.Printf("[DEBUG] Will use provided iploadbalancing service")
+		response = append(response, v.(string))
+	} else {
+		log.Printf("[DEBUG] Will list available iploadbalancing services")
+		err := config.OVHClient.Get("/ipLoadbalancing", &response)
+		if err != nil {
+			return fmt.Errorf("Error calling /ipLoadbalancing:\n\t %q", err)
+		}
 	}
 
 	filtered_iplbs := []*IpLoadbalancing{}
