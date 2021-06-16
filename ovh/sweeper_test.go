@@ -14,9 +14,9 @@ func TestMain(m *testing.M) {
 	resource.TestMain(m)
 }
 
-// sharedClientForRegion returns a common OVHClient setup needed for the sweeper
+// sharedConfigForRegion returns a common Config setup needed for the sweeper
 // functions for a given region
-func sharedClientForRegion(region string) (*ovh.Client, error) {
+func sharedConfigForRegion(region string) (*Config, error) {
 	v := os.Getenv("OVH_ENDPOINT")
 	if v == "" {
 		return nil, fmt.Errorf("OVH_ENDPOINT must be set")
@@ -49,5 +49,15 @@ func sharedClientForRegion(region string) (*ovh.Client, error) {
 
 	}
 
+	return &config, nil
+}
+
+// sharedClientForRegion returns a common OVHClient setup needed for the sweeper
+// functions for a given region
+func sharedClientForRegion(region string) (*ovh.Client, error) {
+	config, err := sharedConfigForRegion(region)
+	if err != nil {
+		return nil, err
+	}
 	return config.OVHClient, nil
 }
