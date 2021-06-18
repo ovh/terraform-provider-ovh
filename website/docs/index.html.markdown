@@ -90,6 +90,22 @@ variables must also be set:
 
 * `OVH_IP_TEST`, `OVH_IP_BLOCK_TEST`, `OVH_IP_REVERSE_TEST` - The values you have to set for testing ip reverse resources.
 
+* `OVH_DBAAS_LOGS_SERVICE_TEST` - The name of your Dbaas logs service.
+
+* `OVH_TESTACC_ORDER_VRACK` - set this variable to "yes" will order vracks.
+
+* `OVH_TESTACC_ORDER_CLOUDPROJECT` - set this variable to "yes" will order cloud projects.
+
+* `OVH_TESTACC_ORDER_DOMAIN` - set this variable to "mydomain.ovh" to run tests for domain zones.
+
+### Used by OVH internal account only:
+
+* `OVH_TESTACC_ORDER_IPLOADBALANCING` - set this variable to "yes" will order ip loadbalancing.
+
+* `OVH_TESTACC_IP` - set this variable to "yes" will order public ip blocks.
+
+### Credentials
+
 You will also need to [generate an OVHcloud token](https://api.ovh.com/createToken/?GET=/*&POST=/*&PUT=/*&DELETE=/*) and use it to set the following environment variables:
 
  * `OVH_APPLICATION_KEY`

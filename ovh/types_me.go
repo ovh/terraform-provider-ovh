@@ -67,3 +67,47 @@ type MeIpxeScriptResponse struct {
 func (s *MeIpxeScriptResponse) String() string {
 	return fmt.Sprintf("IpxeScript: %s", s.Name)
 }
+
+type MePaymentMeanBankAccount struct {
+	Bic                    string             `json:"bic"`
+	CreationDate           string             `json:"creationDate"`
+	DefaultPaymentMean     bool               `json:"defaultPaymentMean"`
+	Description            *string            `json:"description"'`
+	Iban                   string             `json:"iban"`
+	Icon                   *MePaymentMeanIcon `json:"icon"`
+	Id                     int64              `json:"id"`
+	MandateSignatureDate   *string            `json:"mandateSignatureDate"`
+	OwnerAddress           string             `json:"ownerAddress"`
+	OwnerName              string             `json:"ownerName"`
+	State                  string             `json:"state"`
+	UniqueReference        string             `json:"uniqueReference"`
+	ValidationDocumentLink *string            `json:"validationDocumentLink"`
+}
+
+type MePaymentMeanCreditCard struct {
+	DefaultPaymentMean bool               `json:"defaultPaymentMean"`
+	Description        *string            `json:"description"'`
+	ExpirationDate     string             `json:"expirationDate"`
+	Icon               *MePaymentMeanIcon `json:"icon"`
+	Id                 int64              `json:"id"`
+	Number             string             `json:"number"`
+	State              string             `json:"state"`
+	ThreeDsValidated   string             `json:"threeDsValidated"`
+	Type               string             `json:"type"`
+}
+
+type MePaymentMeanPaypal struct {
+	AgreementId        string             `json:"agreementId"`
+	CreationDate       string             `json:"creationDate"`
+	DefaultPaymentMean bool               `json:"defaultPaymentMean"`
+	Description        *string            `json:"description"'`
+	Email              string             `json:"email"`
+	Icon               *MePaymentMeanIcon `json:"icon"`
+	Id                 int64              `json:"id"`
+	State              string             `json:"state"`
+}
+
+type MePaymentMeanIcon struct {
+	Data *string `json:"data"`
+	Name *string `json:"name"`
+}

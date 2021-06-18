@@ -3,6 +3,7 @@ package ovh
 import (
 	"fmt"
 	"os"
+	"sync"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/mitchellh/go-homedir"
@@ -48,12 +49,15 @@ func Provider() *schema.Provider {
 			"ovh_cloud_project_kube":                                  dataSourceCloudProjectKube(),
 			"ovh_cloud_project_region":                                dataSourceCloudProjectRegion(),
 			"ovh_cloud_project_regions":                               dataSourceCloudProjectRegions(),
+			"ovh_dbaas_logs_input_engine":                             dataSourceDbaasLogsInputEngine(),
+			"ovh_dbaas_logs_output_graylog_stream":                    dataSourceDbaasLogsOutputGraylogStream(),
 			"ovh_dedicated_ceph":                                      dataSourceDedicatedCeph(),
 			"ovh_dedicated_installation_templates":                    dataSourceDedicatedInstallationTemplates(),
 			"ovh_dedicated_server":                                    dataSourceDedicatedServer(),
 			"ovh_dedicated_server_boots":                              dataSourceDedicatedServerBoots(),
 			"ovh_dedicated_servers":                                   dataSourceDedicatedServers(),
 			"ovh_domain_zone":                                         dataSourceDomainZone(),
+			"ovh_ip_service":                                          dataSourceIpService(),
 			"ovh_iploadbalancing":                                     dataSourceIpLoadbalancing(),
 			"ovh_iploadbalancing_vrack_network":                       dataSourceIpLoadbalancingVrackNetwork(),
 			"ovh_iploadbalancing_vrack_networks":                      dataSourceIpLoadbalancingVrackNetworks(),
@@ -67,11 +71,17 @@ func Provider() *schema.Provider {
 			"ovh_me_paymentmean_creditcard":                           dataSourceMePaymentmeanCreditcard(),
 			"ovh_me_ssh_key":                                          dataSourceMeSshKey(),
 			"ovh_me_ssh_keys":                                         dataSourceMeSshKeys(),
+			"ovh_order_cart":                                          dataSourceOrderCart(),
+			"ovh_order_cart_product":                                  dataSourceOrderCartProduct(),
+			"ovh_order_cart_product_options":                          dataSourceOrderCartProductOptions(),
+			"ovh_order_cart_product_options_plan":                     dataSourceOrderCartProductOptionsPlan(),
+			"ovh_order_cart_product_plan":                             dataSourceOrderCartProductPlan(),
 			"ovh_vps":                                                 dataSourceVPS(),
 			"ovh_vracks":                                              dataSourceVracks(),
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
+			"ovh_cloud_project":                                           resourceCloudProject(),
 			"ovh_cloud_project_containerregistry":                         resourceCloudProjectContainerRegistry(),
 			"ovh_cloud_project_containerregistry_user":                    resourceCloudProjectContainerRegistryUser(),
 			"ovh_cloud_project_kube":                                      resourceCloudProjectKube(),
@@ -79,13 +89,18 @@ func Provider() *schema.Provider {
 			"ovh_cloud_project_network_private":                           resourceCloudProjectNetworkPrivate(),
 			"ovh_cloud_project_network_private_subnet":                    resourceCloudProjectNetworkPrivateSubnet(),
 			"ovh_cloud_project_user":                                      resourceCloudProjectUser(),
+			"ovh_dbaas_logs_input":                                        resourceDbaasLogsInput(),
+			"ovh_dbaas_logs_output_graylog_stream":                        resourceDbaasLogsOutputGraylogStream(),
 			"ovh_dedicated_ceph_acl":                                      resourceDedicatedCephACL(),
 			"ovh_dedicated_server_install_task":                           resourceDedicatedServerInstallTask(),
 			"ovh_dedicated_server_reboot_task":                            resourceDedicatedServerRebootTask(),
 			"ovh_dedicated_server_update":                                 resourceDedicatedServerUpdate(),
+			"ovh_domain_zone":                                             resourceDomainZone(),
 			"ovh_domain_zone_record":                                      resourceOvhDomainZoneRecord(),
 			"ovh_domain_zone_redirection":                                 resourceOvhDomainZoneRedirection(),
 			"ovh_ip_reverse":                                              resourceOvhIpReverse(),
+			"ovh_ip_service":                                              resourceIpService(),
+			"ovh_iploadbalancing":                                         resourceIpLoadbalancing(),
 			"ovh_iploadbalancing_http_farm":                               resourceIpLoadbalancingHttpFarm(),
 			"ovh_iploadbalancing_http_farm_server":                        resourceIpLoadbalancingHttpFarmServer(),
 			"ovh_iploadbalancing_http_frontend":                           resourceIpLoadbalancingHttpFrontend(),
@@ -103,9 +118,11 @@ func Provider() *schema.Provider {
 			"ovh_me_installation_template_partition_scheme_partition":     resourceMeInstallationTemplatePartitionSchemePartition(),
 			"ovh_me_ipxe_script":                                          resourceMeIpxeScript(),
 			"ovh_me_ssh_key":                                              resourceMeSshKey(),
+			"ovh_vrack":                                                   resourceVrack(),
 			"ovh_vrack_cloudproject":                                      resourceVrackCloudProject(),
 			"ovh_vrack_dedicated_server":                                  resourceVrackDedicatedServer(),
 			"ovh_vrack_dedicated_server_interface":                        resourceVrackDedicatedServerInterface(),
+			"ovh_vrack_ip":                                                resourceVrackIp(),
 			"ovh_vrack_iploadbalancing":                                   resourceVrackIpLoadbalancing(),
 		},
 
@@ -129,6 +146,7 @@ func init() {
 func configureProvider(d *schema.ResourceData) (interface{}, error) {
 	config := Config{
 		Endpoint: d.Get("endpoint").(string),
+		lockAuth: &sync.Mutex{},
 	}
 
 	rawPath := "~/.ovh.conf"

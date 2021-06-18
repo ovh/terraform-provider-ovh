@@ -4,7 +4,64 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
+
+type Vrack struct {
+	Description *string `json:"description"`
+	Name        *string `json:"name"`
+}
+
+func (v Vrack) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+
+	if v.Description != nil {
+		obj["description"] = *v.Description
+	}
+
+	if v.Name != nil {
+		obj["name"] = *v.Name
+	}
+
+	return obj
+}
+
+type VrackUpdateOpts struct {
+	Description *string `json:"description,omitempty"`
+	Name        *string `json:"name,omitempty"`
+}
+
+func (opts *VrackUpdateOpts) FromResource(d *schema.ResourceData) *VrackUpdateOpts {
+	opts.Description = helpers.GetNilStringPointerFromData(d, "description")
+	opts.Name = helpers.GetNilStringPointerFromData(d, "name")
+
+	return opts
+}
+
+type VrackIp struct {
+	Gateway string `json:"gateway"`
+	Ip      string `json:"ip"`
+	Zone    string `json:"zone"`
+}
+
+func (v VrackIp) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+
+	obj["gateway"] = v.Gateway
+	obj["ip"] = v.Ip
+	obj["zone"] = v.Zone
+
+	return obj
+}
+
+type VrackIpCreateOpts struct {
+	Block string `json:"block"`
+}
+
+func (opts *VrackIpCreateOpts) FromResource(d *schema.ResourceData) *VrackIpCreateOpts {
+	opts.Block = d.Get("block").(string)
+	return opts
+}
 
 type VrackDedicatedServerInterface struct {
 	Vrack                    string `json:"vrack"`
