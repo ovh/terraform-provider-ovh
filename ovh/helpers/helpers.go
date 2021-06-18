@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"net"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -328,5 +329,26 @@ func WaitAvailable(client *ovh.Client, endpoint string, timeout time.Duration) e
 			return resource.NonRetryableError(err)
 		}
 		return nil
+	})
+}
+
+func ValidateSubsidiary(v string) error {
+	return ValidateStringEnum(strings.ToLower(v), []string{
+		"cz",
+		"de",
+		"es",
+		"eu",
+		"fi",
+		"fr",
+		"gb",
+		"ie",
+		"it",
+		"lt",
+		"ma",
+		"nl",
+		"pl",
+		"pt",
+		"sn",
+		"tn",
 	})
 }

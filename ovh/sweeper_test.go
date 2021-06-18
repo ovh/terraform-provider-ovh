@@ -3,6 +3,7 @@ package ovh
 import (
 	"fmt"
 	"os"
+	"sync"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -42,6 +43,7 @@ func sharedConfigForRegion(region string) (*Config, error) {
 		ApplicationKey:    os.Getenv("OVH_APPLICATION_KEY"),
 		ApplicationSecret: os.Getenv("OVH_APPLICATION_SECRET"),
 		ConsumerKey:       os.Getenv("OVH_CONSUMER_KEY"),
+		lockAuth:          &sync.Mutex{},
 	}
 
 	if err := config.loadAndValidate(); err != nil {

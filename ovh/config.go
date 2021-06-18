@@ -3,6 +3,7 @@ package ovh
 import (
 	"fmt"
 	"log"
+	"sync"
 	"time"
 
 	cleanhttp "github.com/hashicorp/go-cleanhttp"
@@ -16,6 +17,9 @@ type Config struct {
 	ApplicationSecret string
 	ConsumerKey       string
 	OVHClient         *ovh.Client
+	authenticated     bool
+	authFailed        error
+	lockAuth          *sync.Mutex
 }
 
 type OvhAuthCurrentCredential struct {
@@ -43,6 +47,31 @@ func clientDefault(c *Config) (*ovh.Client, error) {
 }
 
 func (c *Config) loadAndValidate() error {
+	if err := c.load(); err != nil {
+		return err
+	}
+
+	c.lockAuth.Lock()
+	defer c.lockAuth.Unlock()
+
+	if c.authFailed != nil {
+		return c.authFailed
+	}
+
+	if !c.authenticated {
+		var cred OvhAuthCurrentCredential
+		if err := c.OVHClient.Get("/auth/currentCredential", &cred); err != nil {
+			c.authFailed = fmt.Errorf("OVH client seems to be misconfigured: %q\n", err)
+			return c.authFailed
+		}
+
+		log.Printf("[DEBUG] Logged in on OVH API")
+		c.authenticated = true
+	}
+	return nil
+}
+
+func (c *Config) load() error {
 	validEndpoint := false
 
 	ovhEndpoints := [7]string{ovh.OvhEU, ovh.OvhCA, ovh.OvhUS, ovh.KimsufiEU, ovh.KimsufiCA, ovh.SoyoustartEU, ovh.SoyoustartCA}
@@ -69,14 +98,6 @@ func (c *Config) loadAndValidate() error {
 	}
 
 	httpClient.Transport = logging.NewTransport("OVH", httpClient.Transport)
-
-	var cred OvhAuthCurrentCredential
-	err = targetClient.Get("/auth/currentCredential", &cred)
-	if err != nil {
-		return fmt.Errorf("OVH client seems to be misconfigured: %q\n", err)
-	}
-
-	log.Printf("[DEBUG] Logged in on OVH API")
 	c.OVHClient = targetClient
 
 	return nil
