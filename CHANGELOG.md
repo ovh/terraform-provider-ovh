@@ -1,4 +1,37 @@
-## 0.14.0 (Unreleased)
+## 0.15.0 (Unreleased)
+
+## 0.14.0 (June 23, 2021)
+
+IMPORTANT: This release introduces a new kind of resources which are able to order and terminate OVH products.
+OVH products are generally not on demand products, and thus may generate heavy costs. To use these
+resources, you have to register a default payment mean on your account. These resources are still in
+beta, and should be used with care.
+
+
+FEATURES:
+
+* __New Datasource:__ `d/dbaas_logs_input_engine` ([#202](https://github.com/ovh/terraform-provider-ovh/pull/202))
+* __New Datasource:__ `d/dbaas_logs_output_graylog_stream` ([#202](https://github.com/ovh/terraform-provider-ovh/pull/202))
+* __New Datasource:__ `d/ip_service` ([#202](https://github.com/ovh/terraform-provider-ovh/pull/202))
+* __New Datasource:__ `d/order_cart` ([#202](https://github.com/ovh/terraform-provider-ovh/pull/202))
+* __New Datasource:__ `d/order_cart_product` ([#202](https://github.com/ovh/terraform-provider-ovh/pull/202))
+* __New Datasource:__ `d/order_cart_product_options` ([#202](https://github.com/ovh/terraform-provider-ovh/pull/202))
+* __New Datasource:__ `d/order_cart_product_options_plan` ([#202](https://github.com/ovh/terraform-provider-ovh/pull/202))
+* __New Datasource:__ `d/order_cart_product_plan` ([#202](https://github.com/ovh/terraform-provider-ovh/pull/202))
+* __New Resource:__ `r/cloud_project` ([#202](https://github.com/ovh/terraform-provider-ovh/pull/202))
+* __New Resource:__ `r/dbaas_logs_input` ([#202](https://github.com/ovh/terraform-provider-ovh/pull/202))
+* __New Resource:__ `r/dbaas_logs_output_graylog_stream` ([#202](https://github.com/ovh/terraform-provider-ovh/pull/202))
+* __New Resource:__ `r/domain_zone` ([#202](https://github.com/ovh/terraform-provider-ovh/pull/202))
+* __New Resource:__ `r/ip_service` ([#202](https://github.com/ovh/terraform-provider-ovh/pull/202))
+* __New Resource:__ `r/iploadbalancing` ([#202](https://github.com/ovh/terraform-provider-ovh/pull/202))
+* __New Resource:__ `r/vrack` ([#202](https://github.com/ovh/terraform-provider-ovh/pull/202))
+* __New Resource:__ `r/vrack_ip` ([#202](https://github.com/ovh/terraform-provider-ovh/pull/202))
+
+
+Improvements:
+
+* Forgotten documentation change about private networking in Kubernetes. ([#195](https://github.com/ovh/terraform-provider-ovh/pull/195))
+* Do not search for iploadbalancing service when exact service name was passed ([#200](https://github.com/ovh/terraform-provider-ovh/pull/200))
 
 ## 0.13.0 (May 11, 2021)
 
