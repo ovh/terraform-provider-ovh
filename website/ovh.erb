@@ -34,6 +34,12 @@
         <li<%= sidebar_current("docs-ovh-datasource-cloud-project-regions") %>>
           <a href="/docs/providers/ovh/d/cloud_project_regions.html">ovh_cloud_project_regions</a>
         </li>
+        <li<%= sidebar_current("docs-ovh-datasource-dbaas-logs-input-engine-x") %>>
+          <a href="/docs/providers/ovh/d/dbaas_logs_input_engine.html">ovh_dbaas_logs_input_engine</a>
+        </li>
+        <li<%= sidebar_current("docs-ovh-datasource-dbaas-logs-output-graylog-stream-x") %>>
+          <a href="/docs/providers/ovh/d/dbaas_logs_output_graylog_stream.html">ovh_dbaas_logs_output_graylog_stream</a>
+        </li>
         <li<%= sidebar_current("docs-ovh-datasource-dedicated-ceph-x") %>>
           <a href="/docs/providers/ovh/d/dedicated_ceph.html">ovh_dedicated_ceph</a>
         </li>
@@ -60,6 +66,9 @@
         </li>
         <li<%= sidebar_current("docs-ovh-datasource-iploadbalancing-vrack-networks") %>>
           <a href="/docs/providers/ovh/d/iploadbalancing_vrack_networks.html">ovh_iploadbalancing_vrack_networks</a>
+        </li>
+        <li<%= sidebar_current("docs-ovh-datasource-ip-service-x") %>>
+          <a href="/docs/providers/ovh/d/ip_service.html">ovh_ip_service</a>
         </li>
         <li<%= sidebar_current("docs-ovh-datasource-me-installation-template-x") %>>
           <a href="/docs/providers/ovh/d/me_installation_template.html">ovh_me_installation_template</a>
@@ -91,6 +100,21 @@
         <li<%= sidebar_current("docs-ovh-datasource-me-ssh-keys") %>>
           <a href="/docs/providers/ovh/d/me_ssh_keys.html">ovh_me_ssh_keys</a>
         </li>
+        <li<%= sidebar_current("docs-ovh-datasource-order-cart-x") %>>
+          <a href="/docs/providers/ovh/d/order_cart.html">ovh_order_cart</a>
+        </li>
+        <li<%= sidebar_current("docs-ovh-datasource-order-cart-product-x") %>>
+          <a href="/docs/providers/ovh/d/order_cart_product.html">ovh_order_cart_product</a>
+        </li>
+        <li<%= sidebar_current("docs-ovh-datasource-order-cart-product-options-x") %>>
+          <a href="/docs/providers/ovh/d/order_cart_product_options.html">ovh_order_cart_product_options</a>
+        </li>
+        <li<%= sidebar_current("docs-ovh-datasource-order-cart-product-options-plan-x") %>>
+          <a href="/docs/providers/ovh/d/order_cart_product_options_plan.html">ovh_order_cart_product_options_plan</a>
+        </li>
+        <li<%= sidebar_current("docs-ovh-datasource-order-cart-product-plan-x") %>>
+          <a href="/docs/providers/ovh/d/order_cart_product_plan.html">ovh_order_cart_product_plan</a>
+        </li>
         <li<%= sidebar_current("docs-ovh-vracks") %>>
           <a href="/docs/providers/ovh/d/vracks.html">ovh_vracks</a>
         </li>
@@ -100,6 +124,9 @@
     <li<%= sidebar_current("docs-ovh-resource-cloud") %>>
       <a href="#">Cloud Resources</a>
       <ul class="nav nav-visible">
+        <li<%= sidebar_current("docs-ovh-resource-cloud-project-x") %>>
+          <a href="/docs/providers/ovh/r/cloud_project.html">ovh_cloud_project</a>
+        </li>
         <li<%= sidebar_current("docs-ovh-resource-cloud-project-containerregistry-x") %>>
           <a href="/docs/providers/ovh/r/cloud_project_containerregistry.html">ovh_cloud_project_containerregistry</a>
         </li>
@@ -116,6 +143,18 @@
           <a href="/docs/providers/ovh/r/cloud_project_user.html">ovh_cloud_project_user</a>
         </li>
 
+      </ul>
+    </li>
+
+    <li<%= sidebar_current("docs-ovh-resource-dbaas") %>>
+      <a href="#">Database as a service</a>
+      <ul class="nav nav-visible">
+        <li<%= sidebar_current("docs-ovh-resource-dbaas-logs-input-x") %>>
+          <a href="/docs/providers/ovh/r/dbaas_logs_input.html">ovh_dbaas_logs_input</a>
+        </li>
+        <li<%= sidebar_current("docs-ovh-resource-dbaas-logs-output-graylog-stream-x") %>>
+          <a href="/docs/providers/ovh/r/dbaas_logs_output_graylog_stream.html">ovh_dbaas_logs_output_graylog_stream</a>
+        </li>
       </ul>
     </li>
 
@@ -143,6 +182,9 @@
     <li<%= sidebar_current("docs-ovh-resource-domain") %>>
       <a href="#">Domain Resources</a>
       <ul class="nav nav-visible">
+        <li<%= sidebar_current("docs-ovh-resource-domain-zone-x") %>>
+          <a href="/docs/providers/ovh/r/ovh_domain_zone.html">ovh_domain_zone</a>
+        </li>
         <li<%= sidebar_current("docs-ovh-resource-domain-zone-record") %>>
           <a href="/docs/providers/ovh/r/ovh_domain_zone_record.html">ovh_domain_zone_record</a>
         </li>
@@ -158,12 +200,18 @@
         <li<%= sidebar_current("docs-ovh-resource-ip-reverse") %>>
           <a href="/docs/providers/ovh/r/ip_reverse.html">ovh_ip_reverse</a>
         </li>
+        <li<%= sidebar_current("docs-ovh-resource-ip-service-x") %>>
+          <a href="/docs/providers/ovh/r/ip_service.html">ovh_ip_service</a>
+        </li>
       </ul>
     </li>
 
     <li<%= sidebar_current("docs-ovh-resource-iploadbalancing") %>>
       <a href="#">IP Load Balancing Resources</a>
       <ul class="nav nav-visible">
+        <li<%= sidebar_current("docs-ovh-resource-iploadbalancing-x") %>>
+          <a href="/docs/providers/ovh/r/iploadbalancing.html">ovh_iploadbalancing</a>
+        </li>
         <li<%= sidebar_current("docs-ovh-resource-iploadbalancing-http-farm-x") %>>
           <a href="/docs/providers/ovh/r/iploadbalancing_http_farm.html">ovh_iploadbalancing_http_farm</a>
         </li>
@@ -227,6 +275,9 @@
     <li<%= sidebar_current("docs-ovh-resource-vrack") %>>
       <a href="#">vRack Resources</a>
       <ul class="nav nav-visible">
+        <li<%= sidebar_current("docs-ovh-resource-vrack-x") %>>
+          <a href="/docs/providers/ovh/r/vrack.html">ovh_vrack</a>
+        </li>
         <li<%= sidebar_current("docs-ovh-resource-vrack-cloudproject") %>>
           <a href="/docs/providers/ovh/r/vrack_cloudproject.html">ovh_vrack_cloudproject</a>
         </li>

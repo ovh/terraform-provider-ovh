@@ -8,24 +8,94 @@ import (
 )
 
 type IpLoadbalancing struct {
-	IPv6             string                          `json:"ipv6,omitempty"`
-	IPv4             string                          `json:"ipv4,omitempty"`
-	MetricsToken     string                          `json:"metricsToken,omitempty"`
-	Zone             []string                        `json:"zone"`
-	Offer            string                          `json:"offer"`
-	ServiceName      string                          `json:"serviceName"`
+	DisplayName      *string                         `json:"displayName"`
+	IPv4             *string                         `json:"ipv4,omitempty"`
+	IPv6             *string                         `json:"ipv6,omitempty"`
 	IpLoadbalancing  string                          `json:"ipLoadbalancing"`
-	State            string                          `json:"state"`
+	MetricsToken     *string                         `json:"metricsToken,omitempty"`
+	Offer            string                          `json:"offer"`
 	OrderableZones   []*IpLoadbalancingOrderableZone `json:"orderableZone"`
+	ServiceName      string                          `json:"serviceName"`
+	SslConfiguration *string                         `json:"sslConfiguration"`
+	State            string                          `json:"state"`
 	VrackEligibility bool                            `json:"vrackEligibility"`
-	VrackName        string                          `json:"vrackName"`
-	SslConfiguration string                          `json:"sslConfiguration"`
-	DisplayName      string                          `json:"displayName"`
+	VrackName        *string                         `json:"vrackName"`
+	Zone             []string                        `json:"zone"`
+}
+
+func (v IpLoadbalancing) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+
+	obj["zone"] = v.Zone
+	obj["offer"] = v.Offer
+	obj["service_name"] = v.ServiceName
+	obj["ip_loadbalancing"] = v.IpLoadbalancing
+	obj["state"] = v.State
+	obj["vrack_eligibility"] = v.VrackEligibility
+	obj["display_name"] = v.DisplayName
+
+	if v.IPv4 != nil {
+		obj["ipv4"] = *v.IPv4
+	}
+
+	if v.IPv6 != nil {
+		obj["ipv6"] = *v.IPv6
+	}
+
+	if v.DisplayName != nil {
+		obj["display_name"] = *v.DisplayName
+	}
+
+	if v.MetricsToken != nil {
+		obj["metrics_token"] = *v.MetricsToken
+	}
+
+	if v.VrackName != nil {
+		obj["vrack_name"] = *v.VrackName
+	}
+
+	if v.SslConfiguration != nil {
+		obj["ssl_configuration"] = *v.SslConfiguration
+	}
+
+	if v.OrderableZones != nil {
+		var orderableZone []map[string]interface{}
+		for _, z := range v.OrderableZones {
+			orderableZone = append(orderableZone, z.ToMap())
+		}
+
+		obj["orderable_zone"] = orderableZone
+	}
+
+	return obj
 }
 
 type IpLoadbalancingOrderableZone struct {
 	Name     string `json:"name"`
 	PlanCode string `json:"plan_code"`
+}
+
+func (v IpLoadbalancingOrderableZone) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+	obj["name"] = v.Name
+	obj["plan_code"] = v.PlanCode
+	return obj
+}
+
+type IpLoadbalancingUpdateOpts struct {
+	DisplayName      *string `json:"displayName,omitempty"`
+	SslConfiguration *string `json:"sslConfiguration,omitempty"`
+}
+
+func (opts *IpLoadbalancingUpdateOpts) FromResource(d *schema.ResourceData) *IpLoadbalancingUpdateOpts {
+	opts.DisplayName = helpers.GetNilStringPointerFromData(d, "display_name")
+	opts.SslConfiguration = helpers.GetNilStringPointerFromData(d, "ssl_configuration")
+
+	return opts
+}
+
+type IpLoadbalancingConfirmTerminationOpts struct {
+	Token string `json:"token"`
 }
 
 type IPLoadbalancingRefreshTask struct {

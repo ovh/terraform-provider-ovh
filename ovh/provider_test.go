@@ -61,7 +61,7 @@ func testAccPreCheckCredentials(t *testing.T) {
 			ConsumerKey:       os.Getenv("OVH_CONSUMER_KEY"),
 		}
 
-		if err := config.loadAndValidate(); err != nil {
+		if err := config.load(); err != nil {
 			t.Fatalf("Couldn't load OVH Client: %s", err)
 		} else {
 			testAccOVHClient = config.OVHClient
@@ -78,11 +78,39 @@ func testAccPreCheckIp(t *testing.T) {
 	checkEnvOrSkip(t, "OVH_IP_REVERSE")
 }
 
+// Checks that the environment variables needed to order /ip/service for acceptance tests
+// are set.
+func testAccPreCheckOrderIpService(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_TESTACC_ORDER_IP_SERVICE")
+}
+
+// Checks that the environment variables needed to order /cloud/project for acceptance tests
+// are set.
+func testAccPreCheckOrderCloudProject(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_TESTACC_ORDER_CLOUD_PROJECT")
+}
+
 // Checks that the environment variables needed for the /domain acceptance tests
 // are set.
 func testAccPreCheckDomain(t *testing.T) {
 	testAccPreCheckCredentials(t)
 	checkEnvOrSkip(t, "OVH_ZONE_TEST")
+}
+
+// Checks that the environment variables needed to order /domain for acceptance tests
+// are set.
+func testAccPreCheckOrderDomainZone(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_TESTACC_ORDER_DOMAIN")
+}
+
+// Checks that the environment variables needed for the /cloud acceptance tests
+// are set.
+func testAccPreCheckDbaasLogs(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_DBAAS_LOGS_SERVICE_TEST")
 }
 
 // Checks that the environment variables needed for the /cloud acceptance tests
@@ -106,6 +134,20 @@ func testAccPreCheckKubernetes(t *testing.T) {
 func testAccPreCheckIpLoadbalancing(t *testing.T) {
 	testAccPreCheckCredentials(t)
 	checkEnvOrSkip(t, "OVH_IPLB_SERVICE_TEST")
+}
+
+// Checks that the environment variables needed to order /ipLoadbalacing for acceptance tests
+// are set.
+func testAccPreCheckOrderIpLoadbalancing(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_TESTACC_ORDER_IPLOADBALANCING")
+}
+
+// Checks that the environment variables needed to order /vrack for acceptance tests
+// are set.
+func testAccPreCheckOrderVrack(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_TESTACC_ORDER_VRACK")
 }
 
 // Checks that the environment variables needed for the /vrack acceptance tests
