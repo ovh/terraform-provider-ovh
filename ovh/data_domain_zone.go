@@ -38,13 +38,6 @@ func dataSourceDomainZone() *schema.Resource {
 	}
 }
 
-type DomainZone struct {
-	LastUpdate      string   `json:"lastUpdate"`
-	NameServers     []string `json:"nameServers"`
-	HasDnsAnycast   bool     `json:"hasDnsAnycast"`
-	DnssecSupported bool     `json:"dnssecSupported"`
-}
-
 func dataSourceDomainZoneRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	zoneName := d.Get("name").(string)

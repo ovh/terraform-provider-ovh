@@ -118,7 +118,10 @@ func dataSourceIpLoadbalancing() *schema.Resource {
 			"orderable_zone": {
 				Type:     schema.TypeSet,
 				Computed: true,
-				Set:      orderableZoneHash,
+				Set: func(v interface{}) int {
+					r := v.(map[string]interface{})
+					return hashcode.String(r["name"].(string))
+				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -163,12 +166,14 @@ func dataSourceIpLoadbalancingRead(d *schema.ResourceData, meta interface{}) err
 			return fmt.Errorf("Error calling /ipLoadbalancing/%s:\n\t %q", serviceName, err)
 		}
 
-		if v, ok := d.GetOk("ipv6"); ok && v.(string) != iplb.IPv6 {
+		if v, ok := d.GetOk("ipv6"); ok && (iplb.IPv6 == nil || v.(string) != *iplb.IPv6) {
 			continue
 		}
-		if v, ok := d.GetOk("ipv4"); ok && v.(string) != iplb.IPv4 {
+
+		if v, ok := d.GetOk("ipv4"); ok && (iplb.IPv4 == nil || v.(string) != *iplb.IPv4) {
 			continue
 		}
+
 		if v, ok := d.GetOk("zone"); ok && !zonesEquals(v.([]string), iplb.Zone) {
 			continue
 		}
@@ -187,13 +192,13 @@ func dataSourceIpLoadbalancingRead(d *schema.ResourceData, meta interface{}) err
 		if v, ok := d.GetOk("vrack_eligibility"); ok && v.(bool) != iplb.VrackEligibility {
 			continue
 		}
-		if v, ok := d.GetOk("vrack_name"); ok && v.(string) != iplb.VrackName {
+		if v, ok := d.GetOk("vrack_name"); ok && (iplb.VrackName == nil || v.(string) != *iplb.VrackName) {
 			continue
 		}
-		if v, ok := d.GetOk("display_name"); ok && v.(string) != iplb.DisplayName {
+		if v, ok := d.GetOk("display_name"); ok && (iplb.DisplayName == nil || v.(string) != *iplb.DisplayName) {
 			continue
 		}
-		if v, ok := d.GetOk("ssl_configuration"); ok && v.(string) != iplb.SslConfiguration {
+		if v, ok := d.GetOk("ssl_configuration"); ok && (iplb.SslConfiguration == nil || v.(string) != *iplb.SslConfiguration) {
 			continue
 		}
 		filtered_iplbs = append(filtered_iplbs, iplb)
@@ -263,11 +268,6 @@ func dataSourceIpLoadbalancingAttributes(d *schema.ResourceData, iplb *IpLoadbal
 	}
 
 	return nil
-}
-
-func orderableZoneHash(v interface{}) int {
-	r := v.(map[string]interface{})
-	return hashcode.String(r["name"].(string))
 }
 
 func zonesEquals(a, b []string) bool {
