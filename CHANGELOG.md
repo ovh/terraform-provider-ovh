@@ -1,5 +1,18 @@
 ## 0.15.0 (Unreleased)
 
+
+## 0.13.1 (June 28, 2021)
+
+NOTE:
+
+This release fixes the v0.13.0 release, which should have included #194 patchset, but
+due to an issue during the release process, the resulting binaries published
+on the terraform registry didn't include it.
+
+BUG FIXES:
+
+* `r/cloud_project_kube`: fix issue with empty version([#194](https://github.com/ovh/terraform-provider-ovh/pull/194))
+
 ## 0.14.0 (June 23, 2021)
 
 IMPORTANT: This release introduces a new kind of resources which are able to order and terminate OVH products.
