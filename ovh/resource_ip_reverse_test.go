@@ -3,8 +3,8 @@ package ovh
 import (
 	"fmt"
 	"log"
+	"net/url"
 	"os"
-	"strings"
 	"testing"
 	"time"
 
@@ -14,13 +14,13 @@ import (
 	"github.com/ovh/go-ovh/ovh"
 )
 
-var testAccIpReverseConfig = fmt.Sprintf(`
+var testAccIpReverseConfig = `
 resource "ovh_ip_reverse" "reverse" {
     ip = "%s"
-    ipreverse = "%s"
+    ip_reverse = "%s"
     reverse = "%s"
 }
-`, os.Getenv("OVH_IP_BLOCK"), os.Getenv("OVH_IP"), os.Getenv("OVH_IP_REVERSE"))
+`
 
 func init() {
 	resource.AddTestSweepers("ovh_ip_reverse", &resource.Sweeper{
@@ -35,10 +35,13 @@ func testSweepIpReverse(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	reverse := OvhIpReverse{}
-	testIp := os.Getenv("OVH_IP_BLOCK")
-	testIpReverse := os.Getenv("OVH_IP")
-	endpoint := fmt.Sprintf("/ip/%s/reverse/%s", strings.Replace(testIp, "/", "%2F", 1), testIpReverse)
+	reverse := IpReverse{}
+	testIp := os.Getenv("OVH_IP_BLOCK_TEST")
+	testIpReverse := os.Getenv("OVH_IP_TEST")
+	endpoint := fmt.Sprintf("/ip/%s/reverse/%s",
+		url.PathEscape(testIp),
+		url.PathEscape(testIpReverse),
+	)
 	if err := client.Get(endpoint, &reverse); err != nil {
 		if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
 			// no ip reverse set, nothing to sweep
@@ -65,53 +68,63 @@ func testSweepIpReverse(region string) error {
 }
 
 func TestAccIpReverse_basic(t *testing.T) {
+	block := os.Getenv("OVH_IP_BLOCK_TEST")
+	ip := os.Getenv("OVH_IP_TEST")
+	reverse := os.Getenv("OVH_IP_REVERSE_TEST")
+
+	config := fmt.Sprintf(testAccIpReverseConfig, block, ip, reverse)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheckIp(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckIpReverseDestroy,
+		PreCheck:  func() { testAccPreCheckIp(t) },
+		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIpReverseConfig,
+				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIpReverseExists("ovh_ip_reverse.reverse", t),
+					resource.TestCheckResourceAttr("ovh_ip_reverse.reverse", "ip", block),
+					resource.TestCheckResourceAttr("ovh_ip_reverse.reverse", "ip_reverse", ip),
+					resource.TestCheckResourceAttr("ovh_ip_reverse.reverse", "reverse", reverse),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckIpReverseExists(n string, t *testing.T) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		config := testAccProvider.Meta().(*Config)
+func TestAccIpReverse_importBasic(t *testing.T) {
+	block := os.Getenv("OVH_IP_BLOCK_TEST")
+	ip := os.Getenv("OVH_IP_TEST")
+	reverse := os.Getenv("OVH_IP_REVERSE_TEST")
 
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
+	config := fmt.Sprintf(testAccIpReverseConfig, block, ip, reverse)
 
-		if rs.Primary.Attributes["ip"] == "" {
-			return fmt.Errorf("No IP block is set")
-		}
-
-		if rs.Primary.Attributes["ipreverse"] == "" {
-			return fmt.Errorf("No IP is set")
-		}
-
-		return resourceOvhIpReverseExists(rs.Primary.Attributes["ip"], rs.Primary.Attributes["ipreverse"], config.OVHClient)
-	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheckIp(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+			},
+			{
+				ResourceName:      "ovh_ip_reverse.reverse",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccIpReverseImportId("ovh_ip_reverse.reverse"),
+			},
+		},
+	})
 }
 
-func testAccCheckIpReverseDestroy(s *terraform.State) error {
-	config := testAccProvider.Meta().(*Config)
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "ovh_ip_reverse" {
-			continue
+func testAccIpReverseImportId(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		subnet, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		err := resourceOvhIpReverseExists(rs.Primary.Attributes["ip"], rs.Primary.Attributes["ipreverse"], config.OVHClient)
-		if err == nil {
-			return fmt.Errorf("IP Reverse still exists")
-		}
+		return fmt.Sprintf(
+			"%s:%s",
+			subnet.Primary.Attributes["ip"],
+			subnet.Primary.Attributes["ip_reverse"],
+		), nil
 	}
-	return nil
 }

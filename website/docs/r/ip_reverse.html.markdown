@@ -16,7 +16,7 @@ Provides a OVH IP reverse.
 # Set the reverse of an IP
 resource "ovh_ip_reverse" "test" {
     ip = "192.0.2.0/24"
-    ipreverse = "192.0.2.1"
+    ip_reverse = "192.0.2.1"
     reverse = "example.com"
 }
 ```
@@ -27,11 +27,8 @@ The following arguments are supported:
 
 * `ip` - (Required) The IP block to which the IP belongs
 * `reverse` - (Required) The value of the reverse
-* `ipreverse` - (Optional) The IP to set the reverse of, default to `ip` if `ip` is a /32 (IPv4) or a /128 (IPv6)
+* `ip_reverse` - (Required) The IP to set the reverse of
 
 ## Attributes Reference
 
-The following attributes are exported:
-
-* `ipreverse` - The IP to set the reverse of
-* `reverse` - The value of the reverse
+The id is set to the value of ip_reverse.

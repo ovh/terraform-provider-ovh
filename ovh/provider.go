@@ -98,7 +98,7 @@ func Provider() *schema.Provider {
 			"ovh_domain_zone":                                             resourceDomainZone(),
 			"ovh_domain_zone_record":                                      resourceOvhDomainZoneRecord(),
 			"ovh_domain_zone_redirection":                                 resourceOvhDomainZoneRedirection(),
-			"ovh_ip_reverse":                                              resourceOvhIpReverse(),
+			"ovh_ip_reverse":                                              resourceIpReverse(),
 			"ovh_ip_service":                                              resourceIpService(),
 			"ovh_iploadbalancing":                                         resourceIpLoadbalancing(),
 			"ovh_iploadbalancing_http_farm":                               resourceIpLoadbalancingHttpFarm(),
