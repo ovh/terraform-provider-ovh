@@ -16,11 +16,8 @@ func resourceDbaasLogsInput() *schema.Resource {
 		Update: resourceDbaasLogsInputUpdate,
 		Read:   resourceDbaasLogsInputRead,
 		Delete: resourceDbaasLogsInputDelete,
-
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				return []*schema.ResourceData{d}, nil
-			},
+			State: resourceDbaasLogsInputImportState,
 		},
 
 		Schema: resourceDbaasLogsInputSchema(),
