@@ -28,4 +28,4 @@ jobs:
       TF_ACC=1 go test ./ovh/ -v -sweep=1
 
   requirements:
-  - model: shared.infra/Go-official-1.13-buster
+  - model: shared.infra/Go-official-1.16-buster
