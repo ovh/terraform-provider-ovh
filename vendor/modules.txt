@@ -74,11 +74,14 @@ github.com/golang/protobuf/ptypes/empty
 github.com/golang/protobuf/ptypes/timestamp
 # github.com/googleapis/gax-go/v2 v2.0.5
 github.com/googleapis/gax-go/v2
+# github.com/gopherjs/gopherjs v0.0.0-20181103185306-d547d1d9531e
+## explicit
 # github.com/hashicorp/errwrap v1.0.0
 github.com/hashicorp/errwrap
 # github.com/hashicorp/go-checkpoint v0.5.0
 github.com/hashicorp/go-checkpoint
 # github.com/hashicorp/go-cleanhttp v0.5.2
+## explicit
 github.com/hashicorp/go-cleanhttp
 # github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 github.com/hashicorp/go-cty/cty
@@ -123,6 +126,7 @@ github.com/hashicorp/terraform-plugin-go/tfprotov5/internal/toproto
 github.com/hashicorp/terraform-plugin-go/tfprotov5/server
 github.com/hashicorp/terraform-plugin-go/tftypes
 # github.com/hashicorp/terraform-plugin-sdk/v2 v2.6.1
+## explicit
 github.com/hashicorp/terraform-plugin-sdk/v2/diag
 github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest
 github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging
@@ -160,6 +164,7 @@ github.com/mattn/go-isatty
 # github.com/mitchellh/copystructure v1.0.0
 github.com/mitchellh/copystructure
 # github.com/mitchellh/go-homedir v1.1.0
+## explicit
 github.com/mitchellh/go-homedir
 # github.com/mitchellh/go-testing-interface v1.0.4
 github.com/mitchellh/go-testing-interface
@@ -172,7 +177,10 @@ github.com/mitchellh/reflectwalk
 # github.com/oklog/run v1.0.0
 github.com/oklog/run
 # github.com/ovh/go-ovh v1.1.0
+## explicit
 github.com/ovh/go-ovh/ovh
+# github.com/smartystreets/assertions v0.0.0-20190116191733-b6c0e53d7304
+## explicit
 # github.com/ulikunitz/xz v0.5.8
 github.com/ulikunitz/xz
 github.com/ulikunitz/xz/internal/hash
@@ -254,6 +262,7 @@ golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 # golang.org/x/tools v0.0.0-20201118030313-598b068a9102
+## explicit
 golang.org/x/tools/cmd/goimports
 golang.org/x/tools/go/ast/astutil
 golang.org/x/tools/go/gcexportdata
@@ -384,4 +393,5 @@ google.golang.org/protobuf/types/known/emptypb
 google.golang.org/protobuf/types/known/timestamppb
 google.golang.org/protobuf/types/pluginpb
 # gopkg.in/ini.v1 v1.57.0
+## explicit
 gopkg.in/ini.v1
