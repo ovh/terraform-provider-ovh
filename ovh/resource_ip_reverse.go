@@ -3,31 +3,27 @@ package ovh
 import (
 	"fmt"
 	"log"
-	"net"
+	"net/url"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
-
-	"github.com/ovh/go-ovh/ovh"
 )
 
-type OvhIpReverse struct {
-	IpReverse string `json:"ipReverse"`
-	Reverse   string `json:"reverse"`
-}
-
-func resourceOvhIpReverse() *schema.Resource {
+func resourceIpReverse() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceOvhIpReverseCreate,
-		Read:   resourceOvhIpReverseRead,
-		Update: resourceOvhIpReverseUpdate,
-		Delete: resourceOvhIpReverseDelete,
+		Create: resourceIpReverseCreate,
+		Read:   resourceIpReverseRead,
+		Delete: resourceIpReverseDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceIpReverseImportState,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"ip": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
 					err := helpers.ValidateIpBlock(v.(string))
 					if err != nil {
@@ -36,9 +32,11 @@ func resourceOvhIpReverse() *schema.Resource {
 					return
 				},
 			},
-			"ipreverse": {
+
+			"ip_reverse": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
+				ForceNew: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
 					err := helpers.ValidateIp(v.(string))
 					if err != nil {
@@ -47,130 +45,92 @@ func resourceOvhIpReverse() *schema.Resource {
 					return
 				},
 			},
+
 			"reverse": {
 				Type:     schema.TypeString,
+				ForceNew: true,
 				Required: true,
 			},
 		},
 	}
 }
 
-func resourceOvhIpReverseCreate(d *schema.ResourceData, meta interface{}) error {
-	provider := meta.(*Config)
+func resourceIpReverseImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	givenId := d.Id()
+	splitId := strings.SplitN(givenId, ":", 2)
+	if len(splitId) != 2 {
+		return nil, fmt.Errorf("Import Id is not ip:ip_reverse formatted")
+	}
+	ip := splitId[0]
+	ipReverse := splitId[1]
+	d.SetId(ipReverse)
+	d.Set("ip", ip)
+
+	results := make([]*schema.ResourceData, 1)
+	results[0] = d
+	return results, nil
+}
+
+func resourceIpReverseCreate(d *schema.ResourceData, meta interface{}) error {
+	config := meta.(*Config)
 
 	// Create the new reverse
-	newIp := d.Get("ip").(string)
-	newReverse := &OvhIpReverse{
-		Reverse: d.Get("reverse").(string),
-	}
+	ip := d.Get("ip").(string)
+	opts := (&IpReverseCreateOpts{}).FromResource(d)
+	res := &IpReverse{}
 
-	newIpReverse, ok := d.GetOk("ipreverse")
-	if !ok || newIpReverse == "" {
-		ipAddr, ipNet, _ := net.ParseCIDR(newIp)
-		prefixSize, _ := ipNet.Mask.Size()
-
-		if ipAddr.To4() != nil && prefixSize != 32 {
-			return fmt.Errorf("ipreverse must be set if ip (%s) is not a /32", newIp)
-		} else if ipAddr.To4() == nil && prefixSize != 128 {
-			return fmt.Errorf("ipreverse must be set if ip (%s) is not a /128", newIp)
-		}
-
-		newIpReverse = ipAddr.String()
-		d.Set("ipreverse", newIpReverse)
-	}
-
-	newReverse.IpReverse = newIpReverse.(string)
-
-	log.Printf("[DEBUG] OVH IP Reverse create configuration: %#v", newReverse)
-
-	resultReverse := OvhIpReverse{}
-
-	err := provider.OVHClient.Post(
-		fmt.Sprintf("/ip/%s/reverse", strings.Replace(newIp, "/", "%2F", 1)),
-		newReverse,
-		&resultReverse,
+	err := config.OVHClient.Post(
+		fmt.Sprintf("/ip/%s/reverse", url.PathEscape(ip)),
+		opts,
+		&res,
 	)
 	if err != nil {
 		return fmt.Errorf("Failed to create OVH IP Reverse: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s_%s", newIp, resultReverse.IpReverse))
+	d.SetId(res.IpReverse)
 
-	return resourceOvhIpReverseRead(d, meta)
+	return resourceIpReverseRead(d, meta)
 }
 
-func resourceOvhIpReverseRead(d *schema.ResourceData, meta interface{}) error {
-	provider := meta.(*Config)
+func resourceIpReverseRead(d *schema.ResourceData, meta interface{}) error {
+	config := meta.(*Config)
 
-	reverse := OvhIpReverse{}
+	ip := d.Get("ip").(string)
+
+	res := &IpReverse{}
 	endpoint := fmt.Sprintf(
 		"/ip/%s/reverse/%s",
-		strings.Replace(d.Get("ip").(string), "/", "%2F", 1),
-		d.Get("ipreverse").(string),
+		url.PathEscape(ip),
+		url.PathEscape(d.Id()),
 	)
 
-	if err := provider.OVHClient.Get(endpoint, &reverse); err != nil {
+	if err := config.OVHClient.Get(endpoint, &res); err != nil {
 		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
-	d.Set("ipreverse", reverse.IpReverse)
-	d.Set("reverse", reverse.Reverse)
-
-	return nil
-}
-
-func resourceOvhIpReverseUpdate(d *schema.ResourceData, meta interface{}) error {
-	provider := meta.(*Config)
-
-	reverse := OvhIpReverse{}
-
-	if attr, ok := d.GetOk("ipreverse"); ok {
-		reverse.IpReverse = attr.(string)
-	}
-	if attr, ok := d.GetOk("reverse"); ok {
-		reverse.Reverse = attr.(string)
-	}
-
-	log.Printf("[DEBUG] OVH IP Reverse update configuration: %#v", reverse)
-
-	err := provider.OVHClient.Post(
-		fmt.Sprintf("/ip/%s/reverse", strings.Replace(d.Get("ip").(string), "/", "%2F", 1)),
-		reverse,
-		nil,
-	)
-	if err != nil {
-		return fmt.Errorf("Failed to update OVH IP Reverse: %s", err)
-	}
-
-	return resourceOvhIpReverseRead(d, meta)
-}
-
-func resourceOvhIpReverseDelete(d *schema.ResourceData, meta interface{}) error {
-	provider := meta.(*Config)
-
-	log.Printf("[INFO] Deleting OVH IP Reverse: %s->%s", d.Get("reverse").(string), d.Get("ipreverse").(string))
-
-	err := provider.OVHClient.Delete(
-		fmt.Sprintf("/ip/%s/reverse/%s", strings.Replace(d.Get("ip").(string), "/", "%2F", 1), d.Get("ipreverse").(string)),
-		nil,
-	)
-
-	if err != nil {
-		return fmt.Errorf("Error deleting OVH IP Reverse: %s", err)
+	for k, v := range res.ToMap() {
+		d.Set(k, v)
 	}
 
 	return nil
 }
 
-func resourceOvhIpReverseExists(ip, ipreverse string, c *ovh.Client) error {
-	reverse := OvhIpReverse{}
-	endpoint := fmt.Sprintf("/ip/%s/reverse/%s", strings.Replace(ip, "/", "%2F", 1), ipreverse)
+func resourceIpReverseDelete(d *schema.ResourceData, meta interface{}) error {
+	config := meta.(*Config)
 
-	err := c.Get(endpoint, &reverse)
-	if err != nil {
-		return fmt.Errorf("calling %s:\n\t %q", endpoint, err)
+	log.Printf("[INFO] Deleting OVH IP Reverse: %s->%s", d.Get("reverse").(string), d.Get("ip_reverse").(string))
+	ip := d.Get("ip").(string)
+	endpoint := fmt.Sprintf(
+		"/ip/%s/reverse/%s",
+		url.PathEscape(ip),
+		url.PathEscape(d.Id()),
+	)
+
+	if err := config.OVHClient.Delete(endpoint, nil); err != nil {
+		return helpers.CheckDeleted(d, err, endpoint)
 	}
-	log.Printf("[DEBUG] Read IP reverse: %s", reverse)
 
+	d.SetId("")
 	return nil
 }
