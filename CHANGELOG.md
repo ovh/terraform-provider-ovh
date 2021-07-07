@@ -1,4 +1,19 @@
-## 0.15.0 (Unreleased)
+## 0.16.0 (Unreleased)
+
+## 0.15.0 (July 7, 2021)
+
+BREAKING CHANGES:
+
+* `r/ip_reverse`: `ipreverse` is renamed `ip_reverse` and is now mandatory ([#209](https://github.com/ovh/terraform-provider-ovh/pull/209))
+
+
+BUG FIXES:
+
+* `r/dbaas_logs_input`: fix import function ([#205](https://github.com/ovh/terraform-provider-ovh/pull/205))
+
+Improvements:
+
+* Provider is now built against go v1.16. ([#206](https://github.com/ovh/terraform-provider-ovh/pull/206))
 
 
 ## 0.13.1 (June 28, 2021)
