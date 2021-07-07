@@ -73,9 +73,9 @@ func testAccPreCheckCredentials(t *testing.T) {
 // are set.
 func testAccPreCheckIp(t *testing.T) {
 	testAccPreCheckCredentials(t)
-	checkEnvOrSkip(t, "OVH_IP")
-	checkEnvOrSkip(t, "OVH_IP_BLOCK")
-	checkEnvOrSkip(t, "OVH_IP_REVERSE")
+	checkEnvOrSkip(t, "OVH_IP_TEST")
+	checkEnvOrSkip(t, "OVH_IP_BLOCK_TEST")
+	checkEnvOrSkip(t, "OVH_IP_REVERSE_TEST")
 }
 
 // Checks that the environment variables needed to order /ip/service for acceptance tests
