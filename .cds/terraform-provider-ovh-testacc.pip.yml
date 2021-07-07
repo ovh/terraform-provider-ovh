@@ -1,5 +1,10 @@
 version: v1.0
 name: terraform-provider-ovh-testacc
+parameters:
+  testargs:
+    type: string
+    description: additional testargs
+
 jobs:
 - job: checks
   steps:
@@ -21,7 +26,7 @@ jobs:
   - name: Run acceptance tests
     script: |
       #!/usr/bin/env bash
-      make testacc TESTARGS="-parallel=1"
+      make testacc TESTARGS="-parallel=1 ${CDS_PIP_TESTARGS}"
 
   - name: Run post sweepers
     script: |

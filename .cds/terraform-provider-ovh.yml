@@ -4,6 +4,9 @@ workflow:
 
   terraform-provider-ovh:
     application: terraform-provider-ovh
+    pipeline: terraform-provider-ovh
+    parameters:
+      testargs: ""
 
   terraform-provider-ovh-check:
     pipeline: terraform-provider-ovh-check
@@ -24,6 +27,8 @@ workflow:
     one_at_a_time: true
     application: terraform-provider-ovh
     environment: acctests
+    parameters:
+      testargs: "{{ .workflow.terraform-provider-ovh.pip.testargs }}"
     depends_on:
       - terraform-provider-ovh-check
 

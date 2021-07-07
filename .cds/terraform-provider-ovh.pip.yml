@@ -1,0 +1,10 @@
+---
+version: v1.0
+name: terraform-provider-ovh
+description: |
+  Empty pipeline to use as root node for the workflow allowing the use of parameters from the UI
+parameters:
+  testargs:
+    type: string
+    default: ""
+    description: additional testacc arguments
