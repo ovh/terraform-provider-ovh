@@ -160,6 +160,10 @@ func resourceOvhDomainZoneRecordRead(d *schema.ResourceData, meta interface{}) e
 	record, err := ovhDomainZoneRecord(provider.OVHClient, d, d.Id(), d.IsNewResource())
 
 	if err != nil {
+		if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
 
@@ -220,7 +224,9 @@ func resourceOvhDomainZoneRecordDelete(d *schema.ResourceData, meta interface{})
 	)
 
 	if err != nil {
-		return fmt.Errorf("Error deleting OVH Record: %s", err)
+		if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code != 404 {
+			return fmt.Errorf("Error deleting OVH Record: %s", err)
+		}
 	}
 
 	if err := ovhDomainZoneRefresh(d, meta); err != nil {
@@ -261,6 +267,9 @@ func ovhDomainZoneRecord(client *ovh.Client, d *schema.ResourceData, id string, 
 		)
 		if err != nil {
 			if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
+				if retry == false {
+					return resource.NonRetryableError(err)
+				}
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -269,6 +278,9 @@ func ovhDomainZoneRecord(client *ovh.Client, d *schema.ResourceData, id string, 
 	})
 
 	if err != nil {
+		if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
+			return nil, err
+		}
 		return nil, helpers.CheckDeleted(d, err, endpoint)
 	}
 
