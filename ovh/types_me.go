@@ -72,7 +72,7 @@ type MePaymentMeanBankAccount struct {
 	Bic                    string             `json:"bic"`
 	CreationDate           string             `json:"creationDate"`
 	DefaultPaymentMean     bool               `json:"defaultPaymentMean"`
-	Description            *string            `json:"description"'`
+	Description            *string            `json:"description"`
 	Iban                   string             `json:"iban"`
 	Icon                   *MePaymentMeanIcon `json:"icon"`
 	Id                     int64              `json:"id"`
@@ -86,7 +86,7 @@ type MePaymentMeanBankAccount struct {
 
 type MePaymentMeanCreditCard struct {
 	DefaultPaymentMean bool               `json:"defaultPaymentMean"`
-	Description        *string            `json:"description"'`
+	Description        *string            `json:"description"`
 	ExpirationDate     string             `json:"expirationDate"`
 	Icon               *MePaymentMeanIcon `json:"icon"`
 	Id                 int64              `json:"id"`
@@ -100,7 +100,7 @@ type MePaymentMeanPaypal struct {
 	AgreementId        string             `json:"agreementId"`
 	CreationDate       string             `json:"creationDate"`
 	DefaultPaymentMean bool               `json:"defaultPaymentMean"`
-	Description        *string            `json:"description"'`
+	Description        *string            `json:"description"`
 	Email              string             `json:"email"`
 	Icon               *MePaymentMeanIcon `json:"icon"`
 	Id                 int64              `json:"id"`

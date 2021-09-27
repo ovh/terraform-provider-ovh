@@ -22,7 +22,7 @@ type OrderCartItemDomainSettings struct {
 }
 
 type OrderCartItemConfiguration struct {
-	Id    int64  `json:id`
+	Id    int64  `json:"id"`
 	Label string `json:"label"`
 	Value string `json:"value"`
 }
