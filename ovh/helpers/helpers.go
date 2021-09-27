@@ -350,5 +350,6 @@ func ValidateSubsidiary(v string) error {
 		"pt",
 		"sn",
 		"tn",
+		"us",
 	})
 }
