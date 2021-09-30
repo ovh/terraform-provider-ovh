@@ -46,13 +46,13 @@ func testSweepIploadbalancingHttpRoute(region string) error {
 	}
 
 	for _, f := range routes {
-		route := &IPLoadbalancingRouteHTTP{}
+		route := &IPLoadbalancingHttpRoute{}
 
 		if err := client.Get(fmt.Sprintf("/ipLoadbalancing/%s/http/route/%d", iplb, f), &route); err != nil {
 			return fmt.Errorf("Error calling /ipLoadbalancing/%s/http/route/%d:\n\t %q", iplb, f, err)
 		}
 
-		if !strings.HasPrefix(route.DisplayName, test_prefix) {
+		if !strings.HasPrefix(*route.DisplayName, test_prefix) {
 			continue
 		}
 
@@ -71,7 +71,7 @@ func testSweepIploadbalancingHttpRoute(region string) error {
 	return nil
 }
 
-func TestAccIPLoadbalancingRouteHTTPBasicCreate(t *testing.T) {
+func TestAccIPLoadbalancingHttpRouteBasicCreate(t *testing.T) {
 	serviceName := os.Getenv("OVH_IPLB_SERVICE_TEST")
 	name := acctest.RandomWithPrefix(test_prefix)
 	weight := "0"
@@ -90,9 +90,9 @@ func TestAccIPLoadbalancingRouteHTTPBasicCreate(t *testing.T) {
 	)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccCheckIpLoadbalancingRouteHTTPPreCheck(t) },
+		PreCheck:     func() { testAccCheckIpLoadbalancingHttpRoutePreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckIPLoadbalancingRouteHTTPDestroy,
+		CheckDestroy: testAccCheckIPLoadbalancingHttpRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -117,12 +117,12 @@ func TestAccIPLoadbalancingRouteHTTPBasicCreate(t *testing.T) {
 	})
 }
 
-func testAccCheckIpLoadbalancingRouteHTTPPreCheck(t *testing.T) {
+func testAccCheckIpLoadbalancingHttpRoutePreCheck(t *testing.T) {
 	testAccPreCheckIpLoadbalancing(t)
 	testAccCheckIpLoadbalancingExists(t)
 }
 
-func testAccCheckIPLoadbalancingRouteHTTPDestroy(state *terraform.State) error {
+func testAccCheckIPLoadbalancingHttpRouteDestroy(state *terraform.State) error {
 	for _, resource := range state.RootModule().Resources {
 		if resource.Type != "ovh_iploadbalancing_http_route" {
 			continue

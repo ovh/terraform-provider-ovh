@@ -232,21 +232,261 @@ func (v IpLoadbalancingFarmBackendProbe) ToMap() map[string]interface{} {
 	return obj
 }
 
-// IPLoadbalancingRouteHTTPAction Action triggered when all rules match
-type IPLoadbalancingRouteHTTPAction struct {
-	Target string `json:"target,omitempty"` // Farm ID for "farm" action type or URL template for "redirect" action. You may use ${uri}, ${protocol}, ${host}, ${port} and ${path} variables in redirect target
-	Status int    `json:"status,omitempty"` // HTTP status code for "redirect" and "reject" actions
-	Type   string `json:"type,omitempty"`   // Action to trigger if all the rules of this route matches
+// IPLoadbalancingHttpRouteAction Action triggered when all rules match
+type IPLoadbalancingHttpRouteActionOpts struct {
+	Target *string `json:"target,omitempty"` // Farm ID for "farm" action type or URL template for "redirect" action. You may use ${uri}, ${protocol}, ${host}, ${port} and ${path} variables in redirect target
+	Status *int64  `json:"status,omitempty"` // HTTP status code for "redirect" and "reject" actions
+	Type   string  `json:"type"`             // Action to trigger if all the rules of this route matches
 }
 
-//IPLoadbalancingRouteHTTP HTTP Route
-type IPLoadbalancingRouteHTTP struct {
-	Status      string                          `json:"status,omitempty"`      //Route status. Routes in "ok" state are ready to operate
-	Weight      int                             `json:"weight,omitempty"`      //Route priority ([0..255]). 0 if null. Highest priority routes are evaluated first. Only the first matching route will trigger an action
-	Action      *IPLoadbalancingRouteHTTPAction `json:"action,omitempty"`      //Action triggered when all rules match
-	RouteID     int                             `json:"routeId,omitempty"`     //Id of your route
-	DisplayName string                          `json:"displayName,omitempty"` //Human readable name for your route, this field is for you
-	FrontendID  int                             `json:"frontendId,omitempty"`  //Route traffic for this frontend
+func (opts *IPLoadbalancingHttpRouteActionOpts) FromResource(d *schema.ResourceData, parent string) *IPLoadbalancingHttpRouteActionOpts {
+	opts.Target = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.target", parent))
+	opts.Status = helpers.GetNilInt64PointerFromData(d, fmt.Sprintf("%s.status", parent))
+	opts.Type = d.Get(fmt.Sprintf("%s.type", parent)).(string)
+	return opts
+}
+
+//IPLoadbalancingHttpRoute HTTP Route
+type IPLoadbalancingHttpRouteOpts struct {
+	Action      IPLoadbalancingHttpRouteActionOpts `json:"action"`                //Action triggered when all rules match
+	DisplayName *string                            `json:"displayName,omitempty"` //Human readable name for your route, this field is for you
+	FrontendId  *int64                             `json:"frontendId,omitempty"`  //Route traffic for this frontend
+	Weight      *int64                             `json:"weight,omitempty"`      //Route priority ([0..255]). 0 if null. Highest priority routes are evaluated first. Only the first matching route will trigger an action
+}
+
+func (opts *IPLoadbalancingHttpRouteOpts) FromResource(d *schema.ResourceData) *IPLoadbalancingHttpRouteOpts {
+	opts.DisplayName = helpers.GetNilStringPointerFromData(d, "display_name")
+
+	actions := d.Get("action").([]interface{})
+	if actions != nil && len(actions) == 1 {
+		opts.Action = *((&IPLoadbalancingHttpRouteActionOpts{}).FromResource(d, "action.0"))
+	}
+
+	opts.FrontendId = helpers.GetNilInt64PointerFromData(d, "frontend_id")
+	opts.Weight = helpers.GetNilInt64PointerFromData(d, "weight")
+
+	return opts
+}
+
+// IPLoadbalancingHttpRouteAction Action triggered when all rules match
+type IPLoadbalancingHttpRouteAction struct {
+	Target *string `json:"target"` // Farm ID for "farm" action type or URL template for "redirect" action. You may use ${uri}, ${protocol}, ${host}, ${port} and ${path} variables in redirect target
+	Status *int64  `json:"status"` // HTTP status code for "redirect" and "reject" actions
+	Type   string  `json:"type"`   // Action to trigger if all the rules of this route matches
+}
+
+func (v IPLoadbalancingHttpRouteAction) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+
+	if v.Target != nil {
+		obj["target"] = *v.Target
+	}
+
+	if v.Status != nil {
+		obj["status"] = *v.Status
+	}
+
+	obj["type"] = v.Type
+
+	return obj
+}
+
+//IPLoadbalancingHttpRoute HTTP Route
+type IPLoadbalancingHttpRoute struct {
+	Action      IPLoadbalancingHttpRouteAction `json:"action"`      //Action triggered when all rules match
+	DisplayName *string                        `json:"displayName"` //Human readable name for your route, this field is for you
+	FrontendId  *int64                         `json:"frontendId"`  //Route traffic for this frontend
+	RouteId     int64                          `json:"routeId"`     //Id of your route
+	Rules       []*IPLoadbalancingRouteRule    `json:"rules"`       //List of rules to match to trigger action
+	Status      string                         `json:"status"`      //Route status. Routes in "ok" state are ready to operate
+	Weight      int64                          `json:"weight"`      //Route priority ([0..255]). 0 if null. Highest priority routes are evaluated first. Only the first matching route will trigger an action
+}
+
+func (v IPLoadbalancingHttpRoute) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+
+	obj["action"] = []interface{}{v.Action.ToMap()}
+
+	if v.DisplayName != nil {
+		obj["display_name"] = *v.DisplayName
+	}
+
+	if v.FrontendId != nil {
+		obj["frontend_id"] = *v.FrontendId
+	}
+
+	obj["route_id"] = v.RouteId
+
+	var rules []map[string]interface{}
+	for _, r := range v.Rules {
+		rules = append(rules, r.ToMapForRoutes())
+	}
+	obj["rules"] = rules
+
+	obj["status"] = v.Status
+	obj["weight"] = v.Weight
+
+	return obj
+}
+
+// IPLoadbalancingTcpRouteAction Action triggered when all rules match
+type IPLoadbalancingTcpRouteActionOpts struct {
+	Target *string `json:"target,omitempty"` // Farm ID for "farm" action type, empty for others
+	Type   string  `json:"type"`             // Action to trigger if all the rules of this route matches
+}
+
+func (opts *IPLoadbalancingTcpRouteActionOpts) FromResource(d *schema.ResourceData, parent string) *IPLoadbalancingTcpRouteActionOpts {
+	opts.Target = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.target", parent))
+	opts.Type = d.Get(fmt.Sprintf("%s.type", parent)).(string)
+	return opts
+}
+
+//IPLoadbalancingTcpRoute HTTP Route
+type IPLoadbalancingTcpRouteOpts struct {
+	Action      IPLoadbalancingTcpRouteActionOpts `json:"action"`                //Action triggered when all rules match
+	DisplayName *string                           `json:"displayName,omitempty"` //Human readable name for your route, this field is for you
+	FrontendId  *int64                            `json:"frontendId,omitempty"`  //Route traffic for this frontend
+	Weight      *int64                            `json:"weight,omitempty"`      //Route priority ([0..255]). 0 if null. Highest priority routes are evaluated first. Only the first matching route will trigger an action
+}
+
+func (opts *IPLoadbalancingTcpRouteOpts) FromResource(d *schema.ResourceData) *IPLoadbalancingTcpRouteOpts {
+	opts.DisplayName = helpers.GetNilStringPointerFromData(d, "display_name")
+
+	actions := d.Get("action").([]interface{})
+	if actions != nil && len(actions) == 1 {
+		opts.Action = *((&IPLoadbalancingTcpRouteActionOpts{}).FromResource(d, "action.0"))
+	}
+
+	opts.FrontendId = helpers.GetNilInt64PointerFromData(d, "frontend_id")
+	opts.Weight = helpers.GetNilInt64PointerFromData(d, "weight")
+
+	return opts
+}
+
+// IPLoadbalancingTcpRouteAction Action triggered when all rules match
+type IPLoadbalancingTcpRouteAction struct {
+	Target *string `json:"target"` // Farm ID for "farm" action type or URL template for "redirect" action. You may use ${uri}, ${protocol}, ${host}, ${port} and ${path} variables in redirect target
+	Type   string  `json:"type"`   // Action to trigger if all the rules of this route matches
+}
+
+func (v IPLoadbalancingTcpRouteAction) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+
+	if v.Target != nil {
+		obj["target"] = *v.Target
+	}
+
+	obj["type"] = v.Type
+
+	return obj
+}
+
+//IPLoadbalancingTcpRoute HTTP Route
+type IPLoadbalancingTcpRoute struct {
+	Action      IPLoadbalancingTcpRouteAction `json:"action"`      //Action triggered when all rules match
+	DisplayName *string                       `json:"displayName"` //Human readable name for your route, this field is for you
+	FrontendId  *int64                        `json:"frontendId"`  //Route traffic for this frontend
+	RouteId     int64                         `json:"routeId"`     //Id of your route
+	Rules       []*IPLoadbalancingRouteRule   `json:"rules"`       //List of rules to match to trigger action
+	Status      string                        `json:"status"`      //Route status. Routes in "ok" state are ready to operate
+	Weight      int64                         `json:"weight"`      //Route priority ([0..255]). 0 if null. Highest priority routes are evaluated first. Only the first matching route will trigger an action
+}
+
+func (v IPLoadbalancingTcpRoute) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+
+	obj["action"] = []interface{}{v.Action.ToMap()}
+
+	if v.DisplayName != nil {
+		obj["display_name"] = *v.DisplayName
+	}
+
+	if v.FrontendId != nil {
+		obj["frontend_id"] = *v.FrontendId
+	}
+
+	obj["route_id"] = v.RouteId
+
+	var rules []map[string]interface{}
+	for _, r := range v.Rules {
+		rules = append(rules, r.ToMapForRoutes())
+	}
+	obj["rules"] = rules
+
+	obj["status"] = v.Status
+	obj["weight"] = v.Weight
+
+	return obj
+}
+
+//IPLoadbalancingRouteRule Route Rule
+type IPLoadbalancingRouteRule struct {
+	DisplayName *string `json:"displayName"` //Human readable name for your rule
+	Field       string  `json:"field"`       //Name of the field to match like "protocol" or "host". See "/ipLoadbalancing/{serviceName}/availableRouteRules" for a list of available rules
+	Match       string  `json:"match"`       //Matching operator. Not all operators are available for all fields. See "/ipLoadbalancing/{serviceName}/availableRouteRules"
+	Negate      bool    `json:"negate"`      //Invert the matching operator effect
+	Pattern     *string `json:"pattern"`     //Value to match against this match. Interpretation if this field depends on the match and field
+	RuleId      int64   `json:"ruleId"`      //Id of your rule
+	SubField    *string `json:"subField"`    //Name of sub-field, if applicable. This may be a Cookie or Header name for instance
+}
+
+func (v IPLoadbalancingRouteRule) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+
+	if v.DisplayName != nil {
+		obj["display_name"] = *v.DisplayName
+	}
+
+	obj["field"] = v.Field
+	obj["match"] = v.Match
+	obj["negate"] = v.Negate
+
+	if v.Pattern != nil {
+		obj["pattern"] = *v.Pattern
+	}
+
+	obj["rule_id"] = v.RuleId
+	obj["sub_field"] = v.SubField
+
+	return obj
+}
+
+func (v IPLoadbalancingRouteRule) ToMapForRoutes() map[string]interface{} {
+	obj := make(map[string]interface{})
+
+	obj["field"] = v.Field
+	obj["match"] = v.Match
+	obj["negate"] = v.Negate
+
+	if v.Pattern != nil {
+		obj["pattern"] = *v.Pattern
+	}
+
+	obj["rule_id"] = v.RuleId
+	obj["sub_field"] = v.SubField
+
+	return obj
+}
+
+//IPLoadbalancingRouteRule Route Rule
+type IPLoadbalancingRouteRuleOpts struct {
+	DisplayName *string `json:"displayName,omitempty"` //Human readable name for your rule
+	Field       string  `json:"field"`                 //Name of the field to match like "protocol" or "host". See "/ipLoadbalancing/{serviceName}/availableRouteRules" for a list of available rules
+	Match       string  `json:"match"`                 //Matching operator. Not all operators are available for all fields. See "/ipLoadbalancing/{serviceName}/availableRouteRules"
+	Negate      *bool   `json:"negate,omitempty"`      //Invert the matching operator effect
+	Pattern     *string `json:"pattern,omitempty"`     //Value to match against this match. Interpretation if this field depends on the match and field
+	SubField    *string `json:"subField,omitempty"`    //Name of sub-field, if applicable. This may be a Cookie or Header name for instance
+}
+
+func (opts *IPLoadbalancingRouteRuleOpts) FromResource(d *schema.ResourceData) *IPLoadbalancingRouteRuleOpts {
+	opts.DisplayName = helpers.GetNilStringPointerFromData(d, "display_name")
+	opts.Field = d.Get("field").(string)
+	opts.Match = d.Get("match").(string)
+	opts.Negate = helpers.GetNilBoolPointerFromData(d, "negate")
+	opts.Pattern = helpers.GetNilStringPointerFromData(d, "pattern")
+	opts.SubField = helpers.GetNilStringPointerFromData(d, "sub_field")
+
+	return opts
 }
 
 type IpLoadbalancingTcpFrontend struct {
@@ -274,18 +514,6 @@ type IpLoadbalancingHttpFrontend struct {
 	Ssl              bool     `json:"ssl"`
 	RedirectLocation string   `json:"redirectLocation,omitempty"`
 	DisplayName      string   `json:"displayName,omitempty"`
-}
-
-//IPLoadbalancingRouteHTTPRule HTTP Route Rule
-type IPLoadbalancingRouteHTTPRule struct {
-	RuleID      int    `json:"ruleId,omitempty"`      //Id of your rule
-	RouteID     int    `json:"routeId,omitempty"`     //Id of your route
-	DisplayName string `json:"displayName,omitempty"` //Human readable name for your rule
-	Field       string `json:"field,omitempty"`       //Name of the field to match like "protocol" or "host". See "/ipLoadbalancing/{serviceName}/availableRouteRules" for a list of available rules
-	Match       string `json:"match,omitempty"`       //Matching operator. Not all operators are available for all fields. See "/ipLoadbalancing/{serviceName}/availableRouteRules"
-	Negate      bool   `json:"negate,omitempty"`      //Invert the matching operator effect
-	Pattern     string `json:"pattern,omitempty"`     //Value to match against this match. Interpretation if this field depends on the match and field
-	SubField    string `json:"subField,omitempty"`    //Name of sub-field, if applicable. This may be a Cookie or Header name for instance
 }
 
 type IpLoadbalancingFarmServerCreateOpts struct {

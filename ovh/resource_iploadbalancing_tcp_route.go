@@ -9,14 +9,14 @@ import (
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
-func resourceIPLoadbalancingHttpRoute() *schema.Resource {
+func resourceIPLoadbalancingTcpRoute() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceIPLoadbalancingHttpRouteCreate,
-		Read:   resourceIPLoadbalancingHttpRouteRead,
-		Update: resourceIPLoadbalancingHttpRouteUpdate,
-		Delete: resourceIPLoadbalancingHttpRouteDelete,
+		Create: resourceIPLoadbalancingTcpRouteCreate,
+		Read:   resourceIPLoadbalancingTcpRouteRead,
+		Update: resourceIPLoadbalancingTcpRouteUpdate,
+		Delete: resourceIPLoadbalancingTcpRouteDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceIpLoadbalancingHttpRouteImportState,
+			State: resourceIpLoadbalancingTcpRouteImportState,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -34,14 +34,9 @@ func resourceIPLoadbalancingHttpRoute() *schema.Resource {
 				MaxItems:    1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"status": {
-							Type:        schema.TypeInt,
-							Description: "HTTP status code for \"redirect\" and \"reject\" actions",
-							Optional:    true,
-						},
 						"target": {
 							Type:        schema.TypeString,
-							Description: "Farm ID for \"farm\" action type or URL template for \"redirect\" action. You may use ${uri}, ${protocol}, ${host}, ${port} and ${path} variables in redirect target",
+							Description: "Farm ID for \"farm\" action type, empty for others",
 							Optional:    true,
 						},
 						"type": {
@@ -119,7 +114,7 @@ func resourceIPLoadbalancingHttpRoute() *schema.Resource {
 	}
 }
 
-func resourceIpLoadbalancingHttpRouteImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceIpLoadbalancingTcpRouteImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	givenId := d.Id()
 	splitId := strings.SplitN(givenId, "/", 2)
 	if len(splitId) != 2 {
@@ -135,13 +130,13 @@ func resourceIpLoadbalancingHttpRouteImportState(d *schema.ResourceData, meta in
 	return results, nil
 }
 
-func resourceIPLoadbalancingHttpRouteCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceIPLoadbalancingTcpRouteCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
 	serviceName := d.Get("service_name").(string)
-	route := (&IPLoadbalancingHttpRouteOpts{}).FromResource(d)
-	resp := &IPLoadbalancingHttpRoute{}
-	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/http/route",
+	route := (&IPLoadbalancingTcpRouteOpts{}).FromResource(d)
+	resp := &IPLoadbalancingTcpRoute{}
+	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/tcp/route",
 		url.PathEscape(serviceName),
 	)
 
@@ -151,14 +146,14 @@ func resourceIPLoadbalancingHttpRouteCreate(d *schema.ResourceData, meta interfa
 
 	d.SetId(fmt.Sprintf("%d", resp.RouteId))
 
-	return resourceIPLoadbalancingHttpRouteRead(d, meta)
+	return resourceIPLoadbalancingTcpRouteRead(d, meta)
 }
 
-func resourceIPLoadbalancingHttpRouteRead(d *schema.ResourceData, meta interface{}) error {
+func resourceIPLoadbalancingTcpRouteRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
-	r := &IPLoadbalancingHttpRoute{}
-	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/http/route/%s",
+	r := &IPLoadbalancingTcpRoute{}
+	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/tcp/route/%s",
 		url.PathEscape(serviceName),
 		url.PathEscape(d.Id()),
 	)
@@ -176,12 +171,12 @@ func resourceIPLoadbalancingHttpRouteRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceIPLoadbalancingHttpRouteUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceIPLoadbalancingTcpRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
-	route := (&IPLoadbalancingHttpRouteOpts{}).FromResource(d)
+	route := (&IPLoadbalancingTcpRouteOpts{}).FromResource(d)
 
-	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/http/route/%s",
+	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/tcp/route/%s",
 		url.PathEscape(serviceName),
 		url.PathEscape(d.Id()),
 	)
@@ -190,13 +185,13 @@ func resourceIPLoadbalancingHttpRouteUpdate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("calling PUT %s:\n\t %s", endpoint, err.Error())
 	}
 
-	return resourceIPLoadbalancingHttpRouteRead(d, meta)
+	return resourceIPLoadbalancingTcpRouteRead(d, meta)
 }
 
-func resourceIPLoadbalancingHttpRouteDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceIPLoadbalancingTcpRouteDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
-	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/http/route/%s",
+	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/tcp/route/%s",
 		url.PathEscape(serviceName),
 		url.PathEscape(d.Id()),
 	)

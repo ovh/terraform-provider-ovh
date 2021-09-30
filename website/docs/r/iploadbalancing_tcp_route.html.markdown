@@ -1,29 +1,24 @@
 ---
 layout: "ovh"
-page_title: "OVH: ovh_iploadbalancing_http_route"
-sidebar_current: "docs-ovh-resource-iploadbalancing-http-route-x"
+page_title: "OVH: ovh_iploadbalancing_tcp_route"
+sidebar_current: "docs-ovh-resource-iploadbalancing-tcp-route-x"
 description: |-
-  Manage http route for a loadbalancer service.
+  Manage tcp route for a loadbalancer service.
 ---
 
-# ovh_iploadbalancing_http_route
+# ovh_iploadbalancing_tcp_route
 
-Manage http route for a loadbalancer service
+Manage tcp route for a loadbalancer service
 
 ## Example Usage
 
-Route which redirect all url to https.
-
 ```hcl
-resource "ovh_iploadbalancing_http_route" "httpsredirect" {
+resource "ovh_iploadbalancing_tcp_route" "tcpreject" {
   service_name = "loadbalancer-xxxxxxxxxxxxxxxxxx"
-  display_name = "Redirect to HTTPS"
   weight = 1
 
   action {
-    status = 302
-    target = "https://$${host}$${path}$${arguments}"
-    type = "redirect"
+    type = "reject"
   }
 }
 ```
@@ -33,8 +28,7 @@ resource "ovh_iploadbalancing_http_route" "httpsredirect" {
 The following arguments are supported:
 
 * `action` - (Required) Action triggered when all rules match
-   * `status` - HTTP status code for "redirect" and "reject" actions
-   * `target` - Farm ID for "farm" action type or URL template for "redirect" action. You may use ${uri}, ${protocol}, ${host}, ${port} and ${path} variables in redirect target
+   * `target` - Farm ID for "farm" action type, empty for others.
    * `type` - (Required) Action to trigger if all the rules of this route matches
 * `display_name` - Human readable name for your route, this field is for you
 * `frontend_id` - Route traffic for this frontend
