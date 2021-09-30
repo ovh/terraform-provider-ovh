@@ -43,13 +43,13 @@ func testSweepIploadbalancingHttpRouteRule(region string) error {
 	}
 
 	for _, f := range routes {
-		route := &IPLoadbalancingRouteHTTP{}
+		route := &IPLoadbalancingHttpRoute{}
 
 		if err := client.Get(fmt.Sprintf("/ipLoadbalancing/%s/http/route/%d", iplb, f), &route); err != nil {
 			return fmt.Errorf("Error calling GET /ipLoadbalancing/%s/http/route/%d:\n\t %q", iplb, f, err)
 		}
 
-		if !strings.HasPrefix(route.DisplayName, test_prefix) {
+		if !strings.HasPrefix(*route.DisplayName, test_prefix) {
 			continue
 		}
 
@@ -80,7 +80,7 @@ func testSweepIploadbalancingHttpRouteRule(region string) error {
 	return nil
 }
 
-func TestAccIPLoadbalancingRouteHTTPRuleBasicCreate(t *testing.T) {
+func TestAccIPLoadbalancingHttpRouteRuleBasicCreate(t *testing.T) {
 	serviceName := os.Getenv("OVH_IPLB_SERVICE_TEST")
 	displayName := acctest.RandomWithPrefix(test_prefix)
 	field := "header"
@@ -101,9 +101,9 @@ func TestAccIPLoadbalancingRouteHTTPRuleBasicCreate(t *testing.T) {
 	)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccCheckIpLoadbalancingRouteHTTPRulePreCheck(t) },
+		PreCheck:     func() { testAccCheckIpLoadbalancingHttpRouteRulePreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckIPLoadbalancingRouteHTTPRuleDestroy,
+		CheckDestroy: testAccCheckIPLoadbalancingHttpRouteRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -132,12 +132,12 @@ func TestAccIPLoadbalancingRouteHTTPRuleBasicCreate(t *testing.T) {
 	})
 }
 
-func testAccCheckIpLoadbalancingRouteHTTPRulePreCheck(t *testing.T) {
+func testAccCheckIpLoadbalancingHttpRouteRulePreCheck(t *testing.T) {
 	testAccPreCheckIpLoadbalancing(t)
 	testAccCheckIpLoadbalancingExists(t)
 }
 
-func testAccCheckIPLoadbalancingRouteHTTPRuleDestroy(state *terraform.State) error {
+func testAccCheckIPLoadbalancingHttpRouteRuleDestroy(state *terraform.State) error {
 	for _, resource := range state.RootModule().Resources {
 		if resource.Type != "ovh_iploadbalancing_http_route_rule" {
 			continue
