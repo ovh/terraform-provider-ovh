@@ -334,6 +334,9 @@ func WaitAvailable(client *ovh.Client, endpoint string, timeout time.Duration) e
 
 func ValidateSubsidiary(v string) error {
 	return ValidateStringEnum(strings.ToLower(v), []string{
+		"asia",
+		"au",
+		"ca",
 		"cz",
 		"de",
 		"es",
@@ -348,7 +351,12 @@ func ValidateSubsidiary(v string) error {
 		"nl",
 		"pl",
 		"pt",
+		"qc",
+		"sg",
 		"sn",
 		"tn",
+		"us",
+		"we",
+		"ws",
 	})
 }
