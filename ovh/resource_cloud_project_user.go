@@ -1,11 +1,14 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/url"
+	"os"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -22,9 +25,7 @@ func resourceCloudProjectUser() *schema.Resource {
 		Delete: resourceCloudProjectUserDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				return []*schema.ResourceData{d}, nil
-			},
+			StateContext: resourceCloudProjectUserImportState,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -103,6 +104,27 @@ func resourceCloudProjectUser() *schema.Resource {
 			},
 		},
 	}
+}
+
+func resourceCloudProjectUserImportState(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	userId := d.Id()
+	// Fallback to the environment variable if service_name not given
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE")
+
+	splitId := strings.SplitN(userId, "/", 2)
+	if len(splitId) == 2 {
+		serviceName = splitId[0]
+		userId = splitId[1]
+	}
+
+	if serviceName == "" || userId == "" {
+		return nil, fmt.Errorf("Import Id is not service_name/id formatted")
+	}
+
+	d.SetId(userId)
+	d.Set("service_name", serviceName)
+
+	return []*schema.ResourceData{d}, nil
 }
 
 func validateCloudProjectUserRoleFunc(v interface{}, k string) (ws []string, errors []error) {
