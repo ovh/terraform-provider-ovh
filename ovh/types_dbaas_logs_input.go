@@ -10,20 +10,20 @@ import (
 
 type DbaasLogsInput struct {
 	AllowedNetworks   []string `json:"allowedNetworks"`
-	CreatedAt         string   `json:createdAt`
+	CreatedAt         string   `json:"createdAt"`
 	Description       string   `json:"description"`
 	EngineId          string   `json:"engineId"`
 	ExposedPort       *string  `json:"exposedPort"`
-	Hostname          string   `json:hostname`
-	InputId           string   `json:inputId`
-	IsRestartRequired bool     `json:isRestartRequired`
+	Hostname          string   `json:"hostname"`
+	InputId           string   `json:"inputId"`
+	IsRestartRequired bool     `json:"isRestartRequired"`
 	NbInstance        *int64   `json:"nbInstance"`
-	PublicAddress     string   `json:publicAddress`
-	SslCertificate    string   `json:sslCertificate`
-	Status            string   `json:status`
+	PublicAddress     string   `json:"publicAddress"`
+	SslCertificate    string   `json:"sslCertificate"`
+	Status            string   `json:"status"`
 	StreamId          string   `json:"streamId"`
 	Title             string   `json:"title"`
-	UpdatedAt         string   `json:updatedAt`
+	UpdatedAt         string   `json:"updatedAt"`
 }
 
 func (v DbaasLogsInput) ToMap() map[string]interface{} {
