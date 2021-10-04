@@ -74,7 +74,7 @@ func (c *Config) loadAndValidate() error {
 func (c *Config) load() error {
 	validEndpoint := false
 
-	ovhEndpoints := [7]string{ovh.OvhEU, ovh.OvhCA, ovh.OvhUS, ovh.KimsufiEU, ovh.KimsufiCA, ovh.SoyoustartEU, ovh.SoyoustartCA}
+	ovhEndpoints := [3]string{ovh.OvhEU, ovh.OvhCA, ovh.OvhUS}
 
 	for _, e := range ovhEndpoints {
 		if ovh.Endpoints[c.Endpoint] == e {
