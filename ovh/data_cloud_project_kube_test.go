@@ -21,7 +21,7 @@ func TestAccCloudProjectKubeDataSource_basic(t *testing.T) {
 		region,
 		version,
 	)
-	matchVersion := regexp.MustCompile(`^` + version + `\..*$`)
+	matchVersion := regexp.MustCompile(`^` + version + `(\..*)?$`)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
