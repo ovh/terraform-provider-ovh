@@ -6,7 +6,7 @@ description: |-
   Get the details of Vrack network available for your IPLoadbalancer associated with your OVH account.
 ---
 
-# ovh_iploadbalancing_vrack_network
+# ovh_iploadbalancing_vrack_network (Data Source)
 
 Use this data source to get the details of Vrack network available for your IPLoadbalancer associated with your OVH account.
 
@@ -14,7 +14,7 @@ Use this data source to get the details of Vrack network available for your IPLo
 
 ```hcl
 data ovh_iploadbalancing_vrack_network "lb_network" {
-  service_name = "xxx"
+  service_name = "XXXXXX"
   vrack_network_id = "yyy"
 }
 ```

@@ -6,7 +6,7 @@ description: |-
   Get information & status of an ovh credit card payment mean
 ---
 
-# ovh_me_paymentmean_creditcard
+# ovh_me_paymentmean_creditcard (Data Source)
 
 Use this data source to retrieve information about a credit card
 payment mean associated with an OVH account.

@@ -6,7 +6,7 @@ description: |-
   Get the list of regions associated with a public cloud project.
 ---
 
-# ovh_cloud_project_regions
+# ovh_cloud_project_regions (Data Source)
 
 Use this data source to get the regions of a public cloud project.
 
@@ -15,7 +15,6 @@ Use this data source to get the regions of a public cloud project.
 ```hcl
 data "ovh_cloud_project_regions" "regions" {
   service_name = "XXXXXX"
-  
   has_services_up = ["network"]
 }
 ```

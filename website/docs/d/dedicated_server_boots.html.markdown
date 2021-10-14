@@ -6,7 +6,7 @@ description: |-
   Get the list of compatible netboots for a dedicated server associated with your OVH Account.
 ---
 
-# ovh_me_dedicated_server_boots
+# ovh_me_dedicated_server_boots (Data Source)
 
 Use this data source to get the list of compatible netboots for a dedicated server associated with your OVH Account.
 

@@ -6,7 +6,7 @@ description: |-
   Get the list of the IPXE Scripts of the account.
 ---
 
-# ovh_me_ipxe_scripts
+# ovh_me_ipxe_scripts (Data Source)
 
 Use this data source to retrieve a list of the names of the account's IPXE Scripts.
 

@@ -3,19 +3,23 @@ layout: "ovh"
 page_title: "OVH: cloud_project_kube"
 sidebar_current: "docs-ovh-datasource-cloud-project-kube-x"
 description: |-
-  Get information & status of a kubernetes managed cluster in a public cloud project.
+  Get information & status of a Kubernetes managed cluster in a public cloud project.
 ---
 
-# ovh_cloud_project_kube
+# ovh_cloud_project_kube (Data Source)
 
-Creates a kubernetes managed cluster in a public cloud project.
+Use this data source to get a OVH Managed Kubernetes Service cluster.
 
 ## Example Usage
 
 ```hcl
-resource "ovh_cloud_project_kube" "mykube" {
-   service_name = "94d423da0e5545f29812836460a19939"
-   kube_id      = "9260267d-2bf9-4d9a-bb6e-24b8969f65e2 "
+data "ovh_cloud_project_kube" "my_kube_cluster" {
+  service_name = "XXXXXX"
+  kube_id      = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx"
+}
+
+output "version" {
+  value = data.ovh_cloud_project_kube.my_kube_cluster.version
 }
 ```
 

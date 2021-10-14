@@ -6,7 +6,7 @@ description: |-
   Get information about identity User.
 ---
 
-# ovh_me_identity_user
+# ovh_me_identity_user (Data Source)
 
 Use this data source to retrieve information about an identity user.
 

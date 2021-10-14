@@ -6,9 +6,9 @@ description: |-
   Get information about a container registry associated with a public cloud project.
 ---
 
-# ovh_cloud_project_containerregistry
+# ovh_cloud_project_containerregistry (Data Source)
 
-Get information about a container registry associated with a public cloud project.
+Use this data source to get information about a container registry associated with a public cloud project.
 
 ## Example Usage
 

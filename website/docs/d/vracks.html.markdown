@@ -6,9 +6,9 @@ description: |-
   Get the list of Vrack ids available for your OVH account.
 ---
 
-# ovh_vracks
+# ovh_vracks  (Data Source)
 
-Use this data source to get the list of Vrack ids available for your OVH account.
+Use this data source to get the list of Vrack IDs available for your OVH account.
 
 ## Example Usage
 

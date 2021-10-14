@@ -8,13 +8,13 @@ description: |-
 
 # ovh_cloud_project_kube
 
-Creates a kubernetes managed cluster in a public cloud project.
+Creates a OVH Managed Kubernetes Service cluster in a public cloud project.
 
 ## Example Usage
 
 ```hcl
 resource "ovh_cloud_project_kube" "mykube" {
-   service_name = "94d423da0e5545f29812836460a19939"
+   service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
    name         = "my_kube_cluster"
    region       = "GRA7"
 }
