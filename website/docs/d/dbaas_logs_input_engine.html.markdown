@@ -6,7 +6,7 @@ description: |-
   Get information & status of a DBaas logs input engine.
 ---
 
-# ovh_dbaas_logs_input_engine
+# ovh_dbaas_logs_input_engine (Data Source)
 
 Use this data source to retrieve information about a DBaas logs input engine.
 

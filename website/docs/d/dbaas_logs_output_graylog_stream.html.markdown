@@ -6,7 +6,7 @@ description: |-
   Get information & status of a DBaas logs output graylog stream.
 ---
 
-# ovh_dbaas_logs_output_graylog_stream
+# ovh_dbaas_logs_output_graylog_stream (Data Source)
 
 Use this data source to retrieve information about a DBaas logs output graylog stream.
 
@@ -15,7 +15,7 @@ Use this data source to retrieve information about a DBaas logs output graylog s
 ```hcl
 
 data "ovh_dbaas_logs_output_graylog_stream" "stream" {
- service_name = "..."
+ service_name = "XXXXXX"
  title        = "my stream"
 }
 ```

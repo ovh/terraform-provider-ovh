@@ -8,15 +8,15 @@ description: |-
 
 # ovh_cloud_project_kube_nodepool
 
-Creates a nodepool in a kubernetes managed cluster.
+Creates a nodepool in a OVH Managed Kubernetes Service cluster.
 
 ## Example Usage
 
 ```hcl
 resource "ovh_cloud_project_kube_nodepool" "pool" {
-   service_name  = "94d423da0e5545f29812836460a19939"
-   kube_id       = "9260267d-2bf9-4d9a-bb6e-24b8969f65e2 "
-   name          = "my_pool"
+   service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+   kube_id       = "xxxxxxxx-2bf9-xxxx-xxxx-xxxxxxxxxxxx"
+   name          = "my-pool"
    flavor_name   = "b2-7"
    desired_nodes = 3
    max_nodes     = 3
@@ -35,9 +35,11 @@ The following arguments are supported:
 
 * `name` - (Optional) The name of the nodepool.
    Changing this value recreates the resource.
+   Warning: "_" char is not allowed!
 
-* `flavor_name` - a valid OVH public cloud flavor ID in which the nodes will be start.
-   cluster will be available. Ex.: "b2-7". Changing this value recreates the resource.
+* `flavor_name` - a valid OVH public cloud flavor ID in which the nodes will be started.
+   Ex: "b2-7". Changing this value recreates the resource.
+   You can find the list of flavor IDs: https://www.ovhcloud.com/fr/public-cloud/prices/
 
 * `desired_nodes` - number of nodes to start.
 

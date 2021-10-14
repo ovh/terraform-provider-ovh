@@ -7,11 +7,9 @@ description: |-
   to match one and only one capability.
 ---
 
-# ovh_cloud_project_capabilities_containerregistry_filter
+# ovh_cloud_project_capabilities_containerregistry_filter (Data Source)
 
-Use this data source to filter the list of container registry capabilities 
-associated with a public cloud project to match one and only one capability.
-
+Use this data source to filter the list of container registry capabilities associated with a public cloud project to match one and only one capability.
 
 ## Example Usage
 

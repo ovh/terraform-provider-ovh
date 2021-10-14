@@ -6,9 +6,9 @@ description: |-
   Get the list of users of a container registry associated with a public cloud project.
 ---
 
-# ovh_cloud_project_containerregistry_users
+# ovh_cloud_project_containerregistry_users (Data Source)
 
-Get the list of users of a container registry associated with a public cloud project.
+Use this data source to get the list of users of a container registry associated with a public cloud project.
 
 ## Example Usage
 

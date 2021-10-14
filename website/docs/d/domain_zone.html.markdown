@@ -6,7 +6,7 @@ description: |-
   Get information & status of a domain zone.
 ---
 
-# ovh_domain_zone
+# ovh_domain_zone (Data Source)
 
 Use this data source to retrieve information about a domain zone.
 

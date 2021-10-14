@@ -6,7 +6,7 @@ description: |-
   Retrieve information of order cart product options.
 ---
 
-# ovh_order_cart_product_options
+# ovh_order_cart_product_options (Data Source)
 
 Use this data source to retrieve information of order cart product options.
 
