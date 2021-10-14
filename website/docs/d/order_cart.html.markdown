@@ -6,7 +6,7 @@ description: |-
   Create a temporary order cart to retrieve information order cart products.
 ---
 
-# ovh_order_cart
+# ovh_order_cart (Data Source)
 
 Use this data source to create a temporary order cart to retrieve information order cart products.
 

@@ -6,7 +6,7 @@ description: |-
   Get the list of container registries associated with a public cloud project.
 ---
 
-# ovh_cloud_project_containerregistries
+# ovh_cloud_project_containerregistries (Data Source)
 
 Use this data source to get the container registries of a public cloud project.
 

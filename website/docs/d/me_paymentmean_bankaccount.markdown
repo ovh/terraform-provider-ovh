@@ -6,7 +6,7 @@ description: |-
   Get information & status of an ovh bank account payment mean
 ---
 
-# ovh_me_paymentmean_bankaccount
+# ovh_me_paymentmean_bankaccount (Data Source)
 
 Use this data source to retrieve information about a bank account
 payment mean associated with an OVH account.

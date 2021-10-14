@@ -6,7 +6,7 @@ description: |-
   Get the list of container registry capabilities associated with a public cloud project.
 ---
 
-# ovh_cloud_project_capabilities_containerregistry
+# ovh_cloud_project_capabilities_containerregistry (Data Source)
 
 Use this data source to get the container registry capabilities of a public cloud project.
 

@@ -6,7 +6,7 @@ description: |-
   Get the list of the SSH keys of the account.
 ---
 
-# ovh_me_ssh_keys
+# ovh_me_ssh_keys (Data Source)
 
 Use this data source to retrieve list of names of the account's SSH keys.
 

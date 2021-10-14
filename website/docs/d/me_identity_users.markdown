@@ -6,7 +6,7 @@ description: |-
   Get the list of the identity users for the account.
 ---
 
-# ovh_me_identity_users
+# ovh_me_identity_users (Data Source)
 
 Use this data source to retrieve list of user logins of the account's identity users.
 

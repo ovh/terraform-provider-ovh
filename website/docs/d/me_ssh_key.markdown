@@ -6,7 +6,7 @@ description: |-
   Get information & status of an SSH key.
 ---
 
-# ovh_me_ssh_key
+# ovh_me_ssh_key (Data Source)
 
 Use this data source to retrieve information about an SSH key.
 
