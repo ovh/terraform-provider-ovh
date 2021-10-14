@@ -6,7 +6,7 @@ description: |-
   Get information & status of an IP Load Balancing product.
 ---
 
-# ovh_iploadbalancing
+# ovh_iploadbalancing (Data Source)
 
 Use this data source to retrieve information about an IP Load Balancing product
 
@@ -14,7 +14,7 @@ Use this data source to retrieve information about an IP Load Balancing product
 
 ```hcl
 data "ovh_iploadbalancing" "lb" {
-   service_name = "xxx"
+   service_name = "XXXXXX"
    state        = "ok"
 }
 ```

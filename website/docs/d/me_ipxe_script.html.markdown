@@ -6,7 +6,7 @@ description: |-
   Get information & status of an IPXE Script.
 ---
 
-# ovh_me_ipxe_script
+# ovh_me_ipxe_script (Data Source)
 
 Use this data source to retrieve information about an IPXE Script.
 

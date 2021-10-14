@@ -6,7 +6,7 @@ description: |-
   Get the list of dedicated servers associated with your OVH Account.
 ---
 
-# ovh_dedicated_servers
+# ovh_dedicated_servers (Data Source)
 
 Use this data source to get the list of dedicated servers associated with your OVH Account.
 

@@ -6,7 +6,7 @@ description: |-
   Get information & status of a dedicated CEPH instance.
 ---
 
-# ovh_dedicated_ceph
+# ovh_dedicated_ceph (Data Source)
 
 Use this data source to retrieve information about a dedicated CEPH. 
 

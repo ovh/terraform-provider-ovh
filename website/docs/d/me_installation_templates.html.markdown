@@ -6,7 +6,7 @@ description: |-
   Get the list of custom installation templates available for dedicated servers.
 ---
 
-# ovh_me_installation_templates
+# ovh_me_installation_templates (Data Source)
 
 Use this data source to get the list of custom installation templates available for dedicated servers.
 

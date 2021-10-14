@@ -6,10 +6,9 @@ description: |-
   Get information of a dedicated server associated with your OVH Account.
 ---
 
-# ovh_dedicated_server
+# ovh_dedicated_server (Data Source)
 
-Use this data source to retrieve information about a dedicated server associated with 
-your OVH Account.
+Use this data source to retrieve information about a dedicated server associated with your OVH Account.
 
 ## Example Usage
 

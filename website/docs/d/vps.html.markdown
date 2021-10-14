@@ -6,10 +6,9 @@ description: |-
   Get information of a vps associatd with your OVJ Account
 ---
 
-# ovh\_vps
+# ovh\_vps (Data Source)
 
-Use this data source to retrieve information about a vps associated with 
-your OVH Account.
+Use this data source to retrieve information about a vps associated with your OVH Account.
 
 ## Example Usage
 

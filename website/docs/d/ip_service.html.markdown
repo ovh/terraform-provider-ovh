@@ -6,7 +6,7 @@ description: |-
   Get information & status of a ip service.
 ---
 
-# ovh_ip_service
+# ovh_ip_service (Data Source)
 
 Use this data source to retrieve information about an ip service.
 
@@ -14,7 +14,7 @@ Use this data source to retrieve information about an ip service.
 
 ```hcl
 data "ovh_ip_service" "myip" {
- service_name  = "..."
+ service_name  = "XXXXXX"
 }
 ```
 
