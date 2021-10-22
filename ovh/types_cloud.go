@@ -26,8 +26,9 @@ type CloudProjectNetworkPrivateUpdateOpts struct {
 }
 
 type CloudProjectNetworkPrivateRegion struct {
-	Status string `json:"status"`
-	Region string `json:"region"`
+	Status      string `json:"status"`
+	Region      string `json:"region"`
+	OpenStackId string `json:"openstackId"`
 }
 
 func (p *CloudProjectNetworkPrivateRegion) String() string {
