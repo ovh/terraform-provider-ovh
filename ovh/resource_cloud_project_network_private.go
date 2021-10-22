@@ -58,17 +58,19 @@ func resourceCloudProjectNetworkPrivate() *schema.Resource {
 				Default:  0,
 			},
 			"regions": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
+				Type:       schema.TypeSet,
+				Optional:   true,
+				Computed:   true,
+				Deprecated: "use the regions_attributes field instead",
+				ForceNew:   true,
+				Elem:       &schema.Schema{Type: schema.TypeString},
+				Set:        schema.HashString,
 			},
 
 			"regions_status": {
-				Type:     schema.TypeSet,
-				Computed: true,
+				Type:       schema.TypeSet,
+				Computed:   true,
+				Deprecated: "use the regions_attributes field instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"status": {
