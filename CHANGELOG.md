@@ -1,4 +1,25 @@
-## 0.16.0 (Unreleased)
+## 0.17.0 (Unreleased)
+
+## 0.16.0 (October 25, 2021)
+
+
+FEATURES:
+
+* __New Resources:__ `r/ovh_iploadbalancing_tcp_route`, `r/ovh_iploadbalancing_tcp_route_rule` ([#222](https://github.com/ovh/terraform-provider-ovh/pull/222))
+
+Improvements:
+
+* Add regions regions_status deprecation. ([#198](https://github.com/ovh/terraform-provider-ovh/pull/198), [#227](https://github.com/ovh/terraform-provider-ovh/pull/198))
+* fix & improve: data sources and kubernetes resources ([#226](https://github.com/ovh/terraform-provider-ovh/pull/226))
+* `r/cloud_project_user`: add importer ([#220](https://github.com/ovh/terraform-provider-ovh/pull/220))
+* Add missing Ovh subsidiaries ([#224](https://github.com/ovh/terraform-provider-ovh/pull/224))
+
+BUG FIXES:
+
+* fix: use the right json annotation ([#218](https://github.com/ovh/terraform-provider-ovh/pull/218))
+* data/cloud/project/kube: fix acctest match on version ([#223](https://github.com/ovh/terraform-provider-ovh/pull/223))
+
+
 
 ## 0.15.0 (July 7, 2021)
 
