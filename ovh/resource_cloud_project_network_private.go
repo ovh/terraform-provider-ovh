@@ -190,12 +190,17 @@ func resourceCloudProjectNetworkPrivateRead(d *schema.ResourceData, meta interfa
 	regions := make([]string, 0)
 
 	for i := range r.Regions {
-		region := make(map[string]interface{})
-		region["region"] = r.Regions[i].Region
-		region["status"] = r.Regions[i].Status
-		region["openstackid"] = r.Regions[i].OpenStackId
-		regions_attributes = append(regions_attributes, region)
-		regions_status = append(regions_status, region)
+		region_attributes := make(map[string]interface{})
+		region_attributes["region"] = r.Regions[i].Region
+		region_attributes["status"] = r.Regions[i].Status
+		region_attributes["openstackid"] = r.Regions[i].OpenStackId
+		regions_attributes = append(regions_attributes, region_attributes)
+
+		region_status := make(map[string]interface{})
+		region_status["region"] = r.Regions[i].Region
+		region_status["status"] = r.Regions[i].Status
+		regions_status = append(regions_status, region_status)
+
 		regions = append(regions, fmt.Sprintf(r.Regions[i].Region))
 	}
 	d.Set("regions_attributes", regions_attributes)
