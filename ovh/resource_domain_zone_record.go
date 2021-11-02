@@ -134,6 +134,11 @@ func resourceOvhDomainZoneRecordCreate(d *schema.ResourceData, meta interface{})
 				return fmt.Errorf("Error calling /domain/zone/%s. Zone may have been left with orphan records!:\n\t %q", zone, err)
 			}
 
+			if record == nil {
+				log.Printf("[DEBUG] record %v has been deleted.", record)
+				continue
+			}
+
 			log.Printf("[DEBUG] record found %v", record)
 			if record.Target == newRecord.Target &&
 				record.SubDomain == newRecord.SubDomain &&
@@ -161,6 +166,10 @@ func resourceOvhDomainZoneRecordRead(d *schema.ResourceData, meta interface{}) e
 
 	if err != nil {
 		return err
+	}
+
+	if record == nil {
+		return fmt.Errorf("record %v has been deleted.", d.Id())
 	}
 
 	d.Set("zone", record.Zone)
