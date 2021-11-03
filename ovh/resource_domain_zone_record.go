@@ -87,7 +87,7 @@ func resourceOvhDomainZoneRecord() *schema.Resource {
 }
 
 func resourceOvhDomainZoneRecordCreate(d *schema.ResourceData, meta interface{}) error {
-	provider := meta.(*Config)
+	config := meta.(*Config)
 	zone := d.Get("zone").(string)
 
 	// Create the new record
@@ -102,7 +102,7 @@ func resourceOvhDomainZoneRecordCreate(d *schema.ResourceData, meta interface{})
 
 	resultRecord := &OvhDomainZoneRecord{}
 
-	err := provider.OVHClient.Post(
+	err := config.OVHClient.Post(
 		fmt.Sprintf("/domain/zone/%s/record", zone),
 		newRecord,
 		resultRecord,
@@ -119,7 +119,7 @@ func resourceOvhDomainZoneRecordCreate(d *schema.ResourceData, meta interface{})
 	if resultRecord.Id == 0 {
 		log.Printf("[WARN] Known OVH API Bug with Inconsistency API result (id = 0): %v", resultRecord)
 		records := make([]int, 0)
-		if err := provider.OVHClient.CallAPI("GET", fmt.Sprintf("/domain/zone/%s/record", zone), newRecord, &records, true); err != nil {
+		if err := config.OVHClient.CallAPI("GET", fmt.Sprintf("/domain/zone/%s/record", zone), newRecord, &records, true); err != nil {
 			return fmt.Errorf("Error calling /domain/zone/%s. Zone may have been left with orphan records!:\n\t %q", zone, err)
 		}
 
@@ -129,7 +129,7 @@ func resourceOvhDomainZoneRecordCreate(d *schema.ResourceData, meta interface{})
 		// reverse order to keep the last item if found
 		sort.Sort(sort.Reverse(sort.IntSlice(records)))
 		for _, rec := range records {
-			record, err := ovhDomainZoneRecord(provider.OVHClient, d, strconv.Itoa(rec), true)
+			record, err := ovhDomainZoneRecord(config.OVHClient, d, strconv.Itoa(rec), true)
 			if err != nil {
 				return fmt.Errorf("Error calling /domain/zone/%s. Zone may have been left with orphan records!:\n\t %q", zone, err)
 			}
@@ -160,9 +160,9 @@ func resourceOvhDomainZoneRecordCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceOvhDomainZoneRecordRead(d *schema.ResourceData, meta interface{}) error {
-	provider := meta.(*Config)
+	config := meta.(*Config)
 
-	record, err := ovhDomainZoneRecord(provider.OVHClient, d, d.Id(), d.IsNewResource())
+	record, err := ovhDomainZoneRecord(config.OVHClient, d, d.Id(), d.IsNewResource())
 
 	if err != nil {
 		return err
@@ -182,7 +182,7 @@ func resourceOvhDomainZoneRecordRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceOvhDomainZoneRecordUpdate(d *schema.ResourceData, meta interface{}) error {
-	provider := meta.(*Config)
+	config := meta.(*Config)
 
 	record := OvhDomainZoneRecord{}
 
@@ -201,7 +201,7 @@ func resourceOvhDomainZoneRecordUpdate(d *schema.ResourceData, meta interface{})
 
 	log.Printf("[DEBUG] OVH Record update configuration: %#v", record)
 
-	err := provider.OVHClient.Put(
+	err := config.OVHClient.Put(
 		fmt.Sprintf("/domain/zone/%s/record/%s", d.Get("zone").(string), d.Id()),
 		record,
 		nil,
@@ -219,18 +219,16 @@ func resourceOvhDomainZoneRecordUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceOvhDomainZoneRecordDelete(d *schema.ResourceData, meta interface{}) error {
-	provider := meta.(*Config)
+	config := meta.(*Config)
 
 	log.Printf("[INFO] Deleting OVH Record: %s.%s, %s", d.Get("zone").(string), d.Get("subdomain").(string), d.Id())
 
-	err := provider.OVHClient.Delete(
-		fmt.Sprintf("/domain/zone/%s/record/%s", d.Get("zone").(string), d.Id()),
-		nil,
-	)
-
-	if err != nil {
-		return fmt.Errorf("Error deleting OVH Record: %s", err)
+	endpoint := fmt.Sprintf("/domain/zone/%s/record/%s", d.Get("zone").(string), d.Id())
+	if err := config.OVHClient.Delete(endpoint, nil); err != nil {
+		return helpers.CheckDeleted(d, err, endpoint)
 	}
+
+	d.SetId("")
 
 	if err := ovhDomainZoneRefresh(d, meta); err != nil {
 		log.Printf("[WARN] OVH Domain zone refresh after record deletion failed: %s", err)
@@ -240,11 +238,11 @@ func resourceOvhDomainZoneRecordDelete(d *schema.ResourceData, meta interface{})
 }
 
 func ovhDomainZoneRefresh(d *schema.ResourceData, meta interface{}) error {
-	provider := meta.(*Config)
+	config := meta.(*Config)
 
 	log.Printf("[INFO] Refresh OVH Zone: %s", d.Get("zone").(string))
 
-	err := provider.OVHClient.Post(
+	err := config.OVHClient.Post(
 		fmt.Sprintf("/domain/zone/%s/refresh", d.Get("zone").(string)),
 		nil,
 		nil,
@@ -269,7 +267,7 @@ func ovhDomainZoneRecord(client *ovh.Client, d *schema.ResourceData, id string, 
 			rec,
 		)
 		if err != nil {
-			if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
+			if errOvh, ok := err.(*ovh.APIError); retry && ok && errOvh.Code == 404 {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
