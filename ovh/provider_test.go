@@ -120,6 +120,16 @@ func testAccPreCheckCloud(t *testing.T) {
 	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_SERVICE_TEST")
 }
 
+// Checks that the environment variables needed for the /cloud/project/{projectId}/ip/failover acceptance tests
+// are set.
+func testAccPreCheckFailoverIpAttach(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	testAccPreCheckCloud(t)
+	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_FAILOVER_IP_TEST")
+	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_FAILOVER_IP_ROUTED_TO_1_TEST")
+	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_FAILOVER_IP_ROUTED_TO_2_TEST")
+}
+
 // Checks that the environment variables needed for the /cloud/{cloudId}/kube acceptance tests
 // are set.
 func testAccPreCheckKubernetes(t *testing.T) {
