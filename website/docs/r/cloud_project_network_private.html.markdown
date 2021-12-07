@@ -44,8 +44,9 @@ The following attributes are exported:
 * `name` - See Argument Reference above.
 * `vlan_id` - See Argument Reference above.
 * `regions` - See Argument Reference above.
-* `regions_status` - A map representing the status of the network per region.
-* `regions_status/region` - The id of the region.
-* `regions_status/status` - The status of the network in the region.
+* `regions_attributes` - A map representing information about the region.
+* `regions_attributes/region` - The id of the region.
+* `regions_attributes/status` - The status of the network in the region.
+* `regions_attributes/openstackid` - The private network id in the region.
 * `status` - the status of the network. should be normally set to 'ACTIVE'.
 * `type` - the type of the network. Either 'private' or 'public'. 
