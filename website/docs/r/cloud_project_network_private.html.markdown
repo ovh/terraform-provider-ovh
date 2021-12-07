@@ -48,5 +48,8 @@ The following attributes are exported:
 * `regions_attributes/region` - The id of the region.
 * `regions_attributes/status` - The status of the network in the region.
 * `regions_attributes/openstackid` - The private network id in the region.
+* `regions_status` - (Deprecated) A map representing the status of the network per region.
+* `regions_status/region` - (Deprecated) The id of the region.
+* `regions_status/status` - (Deprecated) The status of the network in the region.
 * `status` - the status of the network. should be normally set to 'ACTIVE'.
 * `type` - the type of the network. Either 'private' or 'public'. 
