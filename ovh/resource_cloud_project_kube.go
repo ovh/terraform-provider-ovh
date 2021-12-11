@@ -20,7 +20,7 @@ func resourceCloudProjectKube() *schema.Resource {
 		Delete: resourceCloudProjectKubeDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceCloudProjectKubeNodePoolImportState,
+			State: resourceCloudProjectKubeImportState,
 		},
 
 		Schema: map[string]*schema.Schema{
