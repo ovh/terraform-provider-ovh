@@ -37,7 +37,7 @@ The following arguments are supported:
 * `vrack_network_id` - Internal Load Balancer identifier of the vRack private network to attach to your farm, mandatory when your Load Balancer is attached to a vRack
 * `zone` - (Required) Zone where the farm will be defined (ie. `GRA`, `BHS` also supports `ALL`)
 * `probe` - define a backend healthcheck probe
-  * `type` - (Required) Valid values : `http`, `internal`, `mysql`, `oko`, `pgsql`, `smtp`, `tcp`
+  * `type` - (Required) Valid values : `http`, `internal`, `mysql`, `oco`, `pgsql`, `smtp`, `tcp`
   * `interval` - probe interval, Value between 30 and 3600 seconds, default 30
   * `match` - What to mach `pattern` against (`contains`, `default`, `internal`, `matches`, `status`)
   * `port` - Port for backends to recieve traffic on.
