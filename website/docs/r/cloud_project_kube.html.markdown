@@ -43,6 +43,7 @@ The following arguments are supported:
 
 The following attributes are exported:
 
+* `id` - Managed Kubernetes Service ID
 * `service_name` - See Argument Reference above.
 * `name` - See Argument Reference above.
 * `region` - See Argument Reference above.
