@@ -36,6 +36,7 @@ provider "ovh" {
 
 Alternatively the secret keys can be retrieved from your environment.
 
+ * `OVH_ENDPOINT`
  * `OVH_APPLICATION_KEY`
  * `OVH_APPLICATION_SECRET`
  * `OVH_CONSUMER_KEY` 
