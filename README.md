@@ -5,7 +5,7 @@ Terraform OVH Provider
 - [![Gitter chat](https://badges.gitter.im/hashicorp-terraform/Lobby.png)](https://gitter.im/hashicorp-terraform/Lobby)
 - Mailing list: [Google Groups](http://groups.google.com/group/terraform-tool)
 
-<img src="https://cdn.rawgit.com/hashicorp/terraform-website/master/content/source/assets/images/logo-hashicorp.svg" width="600px">
+<img alt="chat on gitter" src="https://cdn.rawgit.com/hashicorp/terraform-website/master/content/source/assets/images/logo-hashicorp.svg" width="600px">
 
 Requirements
 ------------
@@ -90,6 +90,9 @@ export OVH_IP_BLOCK_TEST="..."
 export OVH_IP_REVERSE_TEST="..."
 export OVH_IPLB_SERVICE_TEST="..."
 export OVH_CLOUD_PROJECT_SERVICE_TEST="..."
+export OVH_CLOUD_PROJECT_FAILOVER_IP_TEST="..."
+export OVH_CLOUD_PROJECT_FAILOVER_IP_ROUTED_TO_1_TEST="..."
+export OVH_CLOUD_PROJECT_FAILOVER_IP_ROUTED_TO_2_TEST="..."
 export OVH_VRACK_SERVICE_TEST="..."
 export OVH_ZONE_TEST="..."
 
