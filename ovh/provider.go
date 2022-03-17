@@ -57,6 +57,7 @@ func Provider() *schema.Provider {
 			"ovh_dedicated_server":                                    dataSourceDedicatedServer(),
 			"ovh_dedicated_server_boots":                              dataSourceDedicatedServerBoots(),
 			"ovh_dedicated_servers":                                   dataSourceDedicatedServers(),
+			"ovh_hosting_privatedatabase":                             dataSourceHostingPrivateDatabase(),
 			"ovh_domain_zone":                                         dataSourceDomainZone(),
 			"ovh_ip_service":                                          dataSourceIpService(),
 			"ovh_iploadbalancing":                                     dataSourceIpLoadbalancing(),
