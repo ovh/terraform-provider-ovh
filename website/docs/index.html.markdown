@@ -167,6 +167,8 @@ variables must also be set:
 
 * `OVH_HOSTING_PRIVATEDATABASE_SERVICE_TEST` - Set a Webhosting database service name to test
 
+* `OVH_HOSTING_PRIVATEDATABASE_NAME_TEST` - Set a database name to test
+
 ### Used by OVHcloud internal account only:
 
 * `OVH_TESTACC_ORDER_IPLOADBALANCING` - set this variable to "yes" will order ip loadbalancing.

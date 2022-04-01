@@ -64,3 +64,63 @@ func (opts *HostingPrivateDatabaseOpts) FromResource(d *schema.ResourceData) *Ho
 type HostingPrivateDatabaseConfirmTerminationOpts struct {
 	Token string `json:"token"`
 }
+
+type DataSourceHostingPrivateDatabaseDatabase struct {
+	BackupTime   string                                           `json:"backupTime"`
+	QuotaUsed    *UnitAndValue                                    `json:"quotaUsed"`
+	CreationDate string                                           `json:"creationDate"`
+	Users        []*DataSourceHostingPrivateDatabaseDatabaseUsers `json:"users"`
+}
+
+func (v DataSourceHostingPrivateDatabaseDatabase) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+	obj["backup_time"] = v.BackupTime
+	obj["quota_used"] = v.QuotaUsed.Value
+	obj["creation_date"] = v.CreationDate
+
+	var users []map[string]interface{}
+	for _, r := range v.Users {
+		users = append(users, r.ToMap())
+	}
+	obj["users"] = users
+	return obj
+}
+
+type DataSourceHostingPrivateDatabaseDatabaseUsers struct {
+	UserName  string `json:"userName"`
+	GrantType string `json:"grantType"`
+}
+
+func (v DataSourceHostingPrivateDatabaseDatabaseUsers) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+	obj["user_name"] = v.UserName
+	obj["grant_type"] = v.GrantType
+	return obj
+}
+
+type HostingPrivateDatabaseDatabase struct {
+	DoneDate     string `json:"doneDate"`
+	LastUpdate   string `json:"lastUpdate"`
+	UserName     string `json:"userName"`
+	DumpId       string `json:"dumpId"`
+	DatabaseName string `json:"databaseName"`
+	TaskId       int    `json:"id"`
+	StartDate    string `json:"startDate"`
+	Status       string `json:"status"`
+}
+
+func (v HostingPrivateDatabaseDatabase) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+	obj["database_name"] = v.DatabaseName
+	return obj
+}
+
+type HostingPrivateDatabaseDatabaseCreateOpts struct {
+	DatabaseName string `json:"databaseName"`
+}
+
+func (opts *HostingPrivateDatabaseDatabaseCreateOpts) FromResource(d *schema.ResourceData) *HostingPrivateDatabaseDatabaseCreateOpts {
+	opts.DatabaseName = d.Get("database_name").(string)
+
+	return opts
+}
