@@ -173,6 +173,8 @@ variables must also be set:
 
 * `OVH_HOSTING_PRIVATEDATABASE_PASSWORD_TEST` - The password of your private database's user to test
 
+* `OVH_HOSTING_PRIVATEDATABASE_GRANT_TEST` - The grant of your private database's user to test
+
 ### Used by OVHcloud internal account only:
 
 * `OVH_TESTACC_ORDER_IPLOADBALANCING` - set this variable to "yes" will order ip loadbalancing.
