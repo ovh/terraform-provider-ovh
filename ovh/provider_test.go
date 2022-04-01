@@ -148,6 +148,19 @@ func testAccPreCheckHostingPrivateDatabaseUserGrant(t *testing.T) {
 	checkEnvOrSkip(t, "OVH_HOSTING_PRIVATEDATABASE_GRANT_TEST")
 }
 
+// Checks that the environment variables needed for the /hosting/privatedatabase acceptance tests
+// are set.
+func testAccPreCheckHostingPrivateDatabaseWhitelist(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_HOSTING_PRIVATEDATABASE_ENGINE_TEST")
+	checkEnvOrSkip(t, "OVH_HOSTING_PRIVATEDATABASE_DC_TEST")
+	checkEnvOrSkip(t, "OVH_HOSTING_PRIVATEDATABASE_SERVICE_TEST")
+	checkEnvOrSkip(t, "OVH_HOSTING_PRIVATEDATABASE_WHITELIST_IP_TEST")
+	checkEnvOrSkip(t, "OVH_HOSTING_PRIVATEDATABASE_WHITELIST_NAME_TEST")
+	checkEnvOrSkip(t, "OVH_HOSTING_PRIVATEDATABASE_WHITELIST_SERVICE_TEST")
+	checkEnvOrSkip(t, "OVH_HOSTING_PRIVATEDATABASE_WHITELIST_SFTP_TEST")
+}
+
 // Checks that the environment variables needed for the /cloud acceptance tests
 // are set.
 func testAccPreCheckDbaasLogs(t *testing.T) {

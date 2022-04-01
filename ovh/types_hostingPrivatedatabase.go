@@ -223,3 +223,64 @@ func (v DataSourceHostingPrivateDatabaseUserGrant) ToMap() map[string]interface{
 
 	return obj
 }
+
+type HostingPrivateDatabaseWhitelist struct {
+	CreationDate string `json:"creationDate"`
+	LastUpdate   string `json:"lastUpdate"`
+	Name         string `json:"name"`
+	Service      bool   `json:"service"`
+	Sftp         bool   `json:"sftp"`
+	Status       string `json:"status"`
+	TaskId       int    `json:"id"`
+}
+
+func (v HostingPrivateDatabaseWhitelist) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+	obj["name"] = v.Name
+	obj["service"] = v.Service
+	obj["sftp"] = v.Sftp
+
+	return obj
+}
+
+func (v HostingPrivateDatabaseWhitelist) DataSourceToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+	obj["name"] = v.Name
+	obj["service"] = v.Service
+	obj["sftp"] = v.Sftp
+	obj["creation_date"] = v.CreationDate
+	obj["last_update"] = v.LastUpdate
+	obj["status"] = v.Status
+
+	return obj
+}
+
+type HostingPrivateDatabaseWhitelistCreateOpts struct {
+	Ip      string `json:"ip"`
+	Name    string `json:"name"`
+	Service bool   `json:"service"`
+	Sftp    bool   `json:"sftp"`
+}
+
+func (opts *HostingPrivateDatabaseWhitelistCreateOpts) FromResource(d *schema.ResourceData) *HostingPrivateDatabaseWhitelistCreateOpts {
+	opts.Ip = d.Get("ip").(string)
+	opts.Name = d.Get("name").(string)
+	opts.Service = d.Get("service").(bool)
+	opts.Sftp = d.Get("sftp").(bool)
+
+	return opts
+}
+
+type HostingPrivateDatabaseWhitelistUpdateOpts struct {
+	Name    string `json:"name"`
+	Service bool   `json:"service"`
+	Sftp    bool   `json:"sftp"`
+}
+
+func (opts *HostingPrivateDatabaseWhitelistUpdateOpts) FromResource(d *schema.ResourceData) *HostingPrivateDatabaseWhitelistUpdateOpts {
+	opts.Name = d.Get("name").(string)
+	opts.Service = d.Get("service").(bool)
+	opts.Sftp = d.Get("sftp").(bool)
+
+	return opts
+}
