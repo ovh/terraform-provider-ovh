@@ -181,3 +181,45 @@ func (opts *HostingPrivateDatabaseUserCreateOpts) FromResource(d *schema.Resourc
 
 	return opts
 }
+
+type HostingPrivateDatabaseUserGrant struct {
+	LastUpdate   string `json:"lastUpdate"`
+	DoneDate     string `json:"doneDate"`
+	Status       string `json:"status"`
+	StartDate    string `json:"startDate"`
+	DatabaseName string `json:"databaseName"`
+	UserName     string `json:"userName"`
+	TaskId       int    `json:"id"`
+}
+
+type HostingPrivateDatabaseUserGrantCreateOpts struct {
+	DatabaseName string `json:"databaseName"`
+	Grant        string `json:"grant"`
+}
+
+func (opts *HostingPrivateDatabaseUserGrantCreateOpts) FromResource(d *schema.ResourceData) *HostingPrivateDatabaseUserGrantCreateOpts {
+	opts.DatabaseName = d.Get("database_name").(string)
+	opts.Grant = d.Get("grant").(string)
+
+	return opts
+}
+
+func (v HostingPrivateDatabaseUserGrantCreateOpts) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+	obj["grant"] = v.Grant
+	obj["database_name"] = v.DatabaseName
+	return obj
+}
+
+type DataSourceHostingPrivateDatabaseUserGrant struct {
+	CreationDate string `json:"creationDate"`
+	Grant        string `json:"grant"`
+}
+
+func (v DataSourceHostingPrivateDatabaseUserGrant) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+	obj["creation_date"] = v.CreationDate
+	obj["grant"] = v.Grant
+
+	return obj
+}
