@@ -175,6 +175,14 @@ variables must also be set:
 
 * `OVH_HOSTING_PRIVATEDATABASE_GRANT_TEST` - The grant of your private database's user to test
 
+* `OVH_HOSTING_PRIVATEDATABASE_WHITELIST_IP_TEST` - Whitelist an IP address to connect to your instance
+
+* `OVH_HOSTING_PRIVATEDATABASE_WHITELIST_NAME_TEST` - Set a custom label to your whitelisted IP address
+
+* `OVH_HOSTING_PRIVATEDATABASE_WHITELIST_SERVICE_TEST` - Set this variable to `true` to authorize service access the whitelisted IP address
+
+* `OVH_HOSTING_PRIVATEDATABASE_WHITELIST_SFTP_TEST` - Set this variable to `true` to authorize SFTP access to a whitelisted IP address
+
 ### Used by OVHcloud internal account only:
 
 * `OVH_TESTACC_ORDER_IPLOADBALANCING` - set this variable to "yes" will order ip loadbalancing.
