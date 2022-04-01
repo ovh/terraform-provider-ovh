@@ -165,6 +165,8 @@ variables must also be set:
 
 * `OVH_TESTACC_ORDER_DOMAIN` - set this variable to "mydomain.ovh" to run tests for domain zones.
 
+* `OVH_HOSTING_PRIVATEDATABASE_SERVICE_TEST` - Set a Webhosting database service name to test
+
 ### Used by OVHcloud internal account only:
 
 * `OVH_TESTACC_ORDER_IPLOADBALANCING` - set this variable to "yes" will order ip loadbalancing.
