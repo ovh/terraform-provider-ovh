@@ -124,3 +124,60 @@ func (opts *HostingPrivateDatabaseDatabaseCreateOpts) FromResource(d *schema.Res
 
 	return opts
 }
+
+type DataSourceHostingPrivateDatabaseUser struct {
+	CreationDate string                                           `json:"creationDate"`
+	Databases    []*DataSourceHostingPrivateDatabaseUserDatabases `json:"databases"`
+}
+
+func (v DataSourceHostingPrivateDatabaseUser) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+	obj["creation_date"] = v.CreationDate
+
+	var databases []map[string]interface{}
+	for _, r := range v.Databases {
+		databases = append(databases, r.ToMap())
+	}
+	obj["databases"] = databases
+	return obj
+}
+
+type DataSourceHostingPrivateDatabaseUserDatabases struct {
+	DatabaseName string `json:"databaseName"`
+	GrantType    string `json:"grantType"`
+}
+
+func (v DataSourceHostingPrivateDatabaseUserDatabases) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+	obj["database_name"] = v.DatabaseName
+	obj["grant_type"] = v.GrantType
+	return obj
+}
+
+type HostingPrivateDatabaseUser struct {
+	LastUpdate   string `json:"lastUpdate"`
+	DoneDate     string `json:"doneDate"`
+	Status       string `json:"status"`
+	StartDate    string `json:"startDate"`
+	DatabaseName string `json:"databaseName"`
+	UserName     string `json:"userName"`
+	TaskId       int    `json:"id"`
+}
+
+func (v HostingPrivateDatabaseUser) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+	obj["user_name"] = v.UserName
+	return obj
+}
+
+type HostingPrivateDatabaseUserCreateOpts struct {
+	Password string `json:"password"`
+	UserName string `json:"userName"`
+}
+
+func (opts *HostingPrivateDatabaseUserCreateOpts) FromResource(d *schema.ResourceData) *HostingPrivateDatabaseUserCreateOpts {
+	opts.Password = d.Get("password").(string)
+	opts.UserName = d.Get("user_name").(string)
+
+	return opts
+}

@@ -167,7 +167,11 @@ variables must also be set:
 
 * `OVH_HOSTING_PRIVATEDATABASE_SERVICE_TEST` - Set a Webhosting database service name to test
 
-* `OVH_HOSTING_PRIVATEDATABASE_NAME_TEST` - Set a database name to test
+* `OVH_HOSTING_PRIVATEDATABASE_NAME_TEST` - The database name created of your service name
+
+* `OVH_HOSTING_PRIVATEDATABASE_USER_TEST` - The username of your private database to test
+
+* `OVH_HOSTING_PRIVATEDATABASE_PASSWORD_TEST` - The password of your private database's user to test
 
 ### Used by OVHcloud internal account only:
 
