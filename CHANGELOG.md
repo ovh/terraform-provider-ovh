@@ -1,4 +1,27 @@
-## 0.17.0 (Unreleased)
+## 0.18.0 (Unreleased)
+
+## 0.17.0 (April 6, 2022)
+
+
+Improvements:
+
+* Adding failover IP address data and resource blocks for lookup and attachment to existing instances ([#234](https://github.com/ovh/terraform-provider-ovh/pull/234))
+
+BUG FIXES:
+
+* `r/domain_zone_record`: fix panic when del. outside tf ([#231](https://github.com/ovh/terraform-provider-ovh/pull/231))
+* `r/domain_zone_record`: dont raise error when deleting a missing resource ([#232](https://github.com/ovh/terraform-provider-ovh/pull/232))
+* `r/cloud_project_network_private`: remove deprecated regions with mising regions_attributes ([#238](https://github.com/ovh/terraform-provider-ovh/pull/238))
+* `r/cloud_project_kube`: correct the import method ([#239](https://github.com/ovh/terraform-provider-ovh/pull/239))
+
+Documentation:
+
+* `r/cloud_project_kube`: Add missing `id` attribute ([#236](https://github.com/ovh/terraform-provider-ovh/pull/236))
+* `r/cloud_project_network_private`: fix & improve the list of exported attributes ([#238](https://github.com/ovh/terraform-provider-ovh/pull/238))
+* `r/iploadbalancing_http_farm`: fix `oko` to `oco` typo ([#243](https://github.com/ovh/terraform-provider-ovh/pull/243))
+* `r/iploadbalancing_tcp_farm`: fix `oko` to `oco` typo ([#243](https://github.com/ovh/terraform-provider-ovh/pull/243))
+* Home Page: add OVH_ENDPOINT in alternative configuration of the provider ([#244](https://github.com/ovh/terraform-provider-ovh/pull/244))
+* Home Page: define the provider configuration for terraform CLI version 0.12- and 0.13+ ([#248](https://github.com/ovh/terraform-provider-ovh/pull/248))
 
 ## 0.16.0 (October 25, 2021)
 
