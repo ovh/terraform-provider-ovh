@@ -1,5 +1,17 @@
 ## 0.18.0 (Unreleased)
 
+
+## 0.17.1 (April 6, 2022)
+
+NOTE:
+
+This release fixes the v0.17.0 release.
+
+Documentation:
+
+* Home Page: add missing end of blockquote ([#249](https://github.com/ovh/terraform-provider-ovh/pull/249))
+
+
 ## 0.17.0 (April 6, 2022)
 
 
