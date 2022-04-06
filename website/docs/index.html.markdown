@@ -13,7 +13,7 @@ The provider needs to be configured with the proper credentials before it can be
 
 Use the navigation to the left to read about the available resources.
 
-## Configuration of the provider
+## Provider configuration
 
 Requests to OVHcloud APIs require a set of secrets keys and the definition of the API end point. 
 See [First Steps with the API](https://docs.ovh.com/gb/en/customer/first-steps-with-ovh-api/) (or the French version, [Premiers pas avec les API OVHcloud](https://docs.ovh.com/fr/api/api-premiers-pas/)) for a detailed explanation.
@@ -23,16 +23,35 @@ These keys can be generated via the [OVH token generation page](https://api.ovh.
 
 These parameters can be configured directly in the provider block as shown hereafter.
 
+Terraform 0.13 and later:
+
+```hcl
+terraform {
+  required_providers {
+    ovh = {
+      source  = "ovh/ovh"
+    }
+  }
+}
+
+provider "ovh" {
+  endpoint           = "ovh-eu"
+  application_key    = "xxxxxxxxx"
+  application_secret = "yyyyyyyyy"
+  consumer_key       = "zzzzzzzzzzzzzz"
+}
+```
+
+Terraform 0.12 and earlier:
 
 ```hcl
 # Configure the OVHcloud Provider
 provider "ovh" {
   endpoint           = "ovh-eu"
-  application_key    = "yyyyyy"
-  application_secret = "xxxxxxxxxxxxxx"
+  application_key    = "xxxxxxxxx"
+  application_secret = "yyyyyyyyy"
   consumer_key       = "zzzzzzzzzzzzzz"
 }
-```
 
 Alternatively the secret keys can be retrieved from your environment.
 
@@ -47,9 +66,27 @@ This later method (or a similar alternative) is recommended to avoid storing sec
 ## Example Usage
 
 ```hcl
-# Create a public cloud user
-resource "ovh_cloud_project_user" "user-test" {
-  # ...
+variable "service_name" {
+  default = "wwwwwww"
+}
+
+# Create an OVHcloud Managed Kubernetes cluster
+resource "ovh_cloud_project_kube" "my_kube_cluster" {
+  service_name = var.service_name
+  name         = "my-super-kube-cluster"
+  region       = "GRA5"
+  version      = "1.22"
+}
+
+# Create a Node Pool for our Kubernetes clusterx
+resource "ovh_cloud_project_kube_nodepool" "node_pool" {
+  service_name  = var.service_name
+  kube_id       = ovh_cloud_project_kube.my_kube_cluster.id
+  name          = "my-pool" //Warning: "_" char is not allowed!
+  flavor_name   = "b2-7"
+  desired_nodes = 3
+  max_nodes     = 3
+  min_nodes     = 3
 }
 ```
 
