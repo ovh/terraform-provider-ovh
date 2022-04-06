@@ -52,6 +52,7 @@ provider "ovh" {
   application_secret = "yyyyyyyyy"
   consumer_key       = "zzzzzzzzzzzzzz"
 }
+```
 
 Alternatively the secret keys can be retrieved from your environment.
 
