@@ -388,15 +388,21 @@ func orderCartGenericProductPlanRead(d *schema.ResourceData, meta interface{}) e
 	planCode := d.Get("plan_code").(string)
 	priceCapacity := d.Get("price_capacity").(string)
 	product := d.Get("product").(string)
+	catalogName := d.Get("catalog_name").(string)
 
 	log.Printf("[DEBUG] Will read order cart %s for cart: %s", product, cartId)
 
 	res := []OrderCartGenericProduct{}
 
+	if catalogName != "" {
+		catalogName = fmt.Sprintf("?catalogName=%s", catalogName)
+	}
+
 	endpoint := fmt.Sprintf(
-		"/order/cart/%s/%s",
+		"/order/cart/%s/%s%s",
 		url.PathEscape(cartId),
 		product,
+		catalogName,
 	)
 
 	if err := config.OVHClient.Get(endpoint, &res); err != nil {
