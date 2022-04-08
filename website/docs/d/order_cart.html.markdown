@@ -24,6 +24,7 @@ data "ovh_order_cart" "mycart" {
 
 * `ovh_subsidiary` - (Required) Ovh Subsidiary
 * `description` - Description of your cart
+* `assign` - Assign a shopping cart to an loggedin client. Values can be `true` or `false`. 
 * `expire` - Expiration time (format: 2006-01-02T15:04:05+00:00)
 
 

@@ -19,6 +19,14 @@ data "ovh_order_cart" "mycart" {
 }
 `
 
+const testAccOrderCartAssignBasic = `
+data "ovh_order_cart" "mycart" {
+ ovh_subsidiary = "fr"
+ description    = "%s"
+ assign         = true
+}
+`
+
 func init() {
 	resource.AddTestSweepers("ovh_order_cart", &resource.Sweeper{
 		Name: "ovh_order_cart",
@@ -77,6 +85,30 @@ func TestAccDataSourceOrderCart_basic(t *testing.T) {
 	desc := acctest.RandomWithPrefix(test_prefix)
 	config := fmt.Sprintf(
 		testAccOrderCartBasic,
+		desc,
+	)
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { testAccPreCheckCredentials(t) },
+
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"data.ovh_order_cart.mycart", "description", desc),
+					resource.TestCheckResourceAttrSet(
+						"data.ovh_order_cart.mycart", "id"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataSourceOrderCartAssign_basic(t *testing.T) {
+	desc := acctest.RandomWithPrefix(test_prefix)
+	config := fmt.Sprintf(
+		testAccOrderCartAssignBasic,
 		desc,
 	)
 	resource.Test(t, resource.TestCase{
