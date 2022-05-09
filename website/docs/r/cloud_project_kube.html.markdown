@@ -57,3 +57,11 @@ The following attributes are exported:
 * `update_policy` - Cluster update policy. Choose between [ALWAYS_UPDATE,MINIMAL_DOWNTIME,NEVER_UPDATE]'.
 * `url` - Management URL of your cluster.
 * `kubeconfig` - The kubeconfig file. Use this file to connect to your kubernetes cluster.
+
+## Import
+
+OVHcloud Managed Kubernetes Service clusters can be imported using the `serviceName` and the `id` of the cluster, separated by "/" E.g.,
+
+```
+$ terraform import ovh_cloud_project_kube.my_kube_cluster a6678gggjh76hggjh7f59/a123bc45-a1b2-34c5-678d-678ghg7676ebc
+```
