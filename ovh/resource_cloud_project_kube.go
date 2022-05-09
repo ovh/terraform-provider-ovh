@@ -96,7 +96,7 @@ func resourceCloudProjectKube() *schema.Resource {
 func resourceCloudProjectKubeImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	givenId := d.Id()
 	splitId := strings.SplitN(givenId, "/", 2)
-	if len(splitId) != 3 {
+	if len(splitId) != 2 {
 		return nil, fmt.Errorf("Import Id is not service_name/kubeid formatted")
 	}
 	serviceName := splitId[0]
