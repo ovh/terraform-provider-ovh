@@ -79,6 +79,7 @@ func Provider() *schema.Provider {
 			"ovh_order_cart_product_plan":                             dataSourceOrderCartProductPlan(),
 			"ovh_vps":                                                 dataSourceVPS(),
 			"ovh_vracks":                                              dataSourceVracks(),
+			"ovh_vrack_cloud_project":                                 dataSourceVrackCloudProject(),
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
