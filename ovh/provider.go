@@ -62,6 +62,7 @@ func Provider() *schema.Provider {
 			"ovh_iploadbalancing":                                     dataSourceIpLoadbalancing(),
 			"ovh_iploadbalancing_vrack_network":                       dataSourceIpLoadbalancingVrackNetwork(),
 			"ovh_iploadbalancing_vrack_networks":                      dataSourceIpLoadbalancingVrackNetworks(),
+			"ovh_me":                                                  dataSourceMe(),
 			"ovh_me_identity_user":                                    dataSourceMeIdentityUser(),
 			"ovh_me_identity_users":                                   dataSourceMeIdentityUsers(),
 			"ovh_me_installation_template":                            dataSourceMeInstallationTemplate(),
