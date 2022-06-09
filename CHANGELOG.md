@@ -1,4 +1,19 @@
-## 0.18.0 (Unreleased)
+## 0.19.0 (Unreleased)
+
+## 0.18.0 (June 9, 2022)
+
+FEATURES:
+
+* __New Datasource:__ `d/ovh_me` ([#262](https://github.com/ovh/terraform-provider-ovh/pull/262))
+
+
+BUG FIXES:
+
+* `r/cloud_project_kube`: fix kubernetes cluster import. ([#257](https://github.com/ovh/terraform-provider-ovh/pull/257), [#258](https://github.com/ovh/terraform-provider-ovh/pull/258))
+
+Documentation:
+
+* Home Page: add instructions on how to use a locally built provider ([#264](https://github.com/ovh/terraform-provider-ovh/pull/264))
 
 
 ## 0.17.1 (April 6, 2022)
