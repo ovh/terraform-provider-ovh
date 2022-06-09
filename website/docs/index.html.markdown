@@ -160,3 +160,38 @@ You will also need to [generate an OVHcloud token](https://api.ovh.com/createTok
  * `OVH_CONSUMER_KEY`
 
 You should be able to use any OVHcloud environment to develop on as long as the above environment variables are set.
+
+### Using a locally built terraform-provider-ovh
+
+If you wish to test the provider from the local version you just built, you can try the following method.
+
+First install the terraform provider binary into your local plugin repository:
+
+```sh
+$ make install
+...
+$ mkdir -p ~/.terraform.d/plugins/terraform.local/local/ovh/0.0.1/linux_amd64
+$ cp $GOPATH/bin/terraform-provider-ovh ~/.terraform.d/plugins/terraform.local/local/ovh/0.0.1/linux_amd64/terraform-provider-ovh_v0.0.1
+```
+
+Then create a terraform configuration using this exact provider:
+
+```hcl
+terraform {
+  required_providers {
+    ovh = {
+      source = "terraform.local/local/ovh"
+      version = "0.0.1"
+    }
+  }
+}
+
+data "ovh_me" "me" {}
+
+output "me" {
+  value = data.ovh_me.me
+}
+```
+
+This allows you to use your unreleased version of the provider.
+The version number is not important and you can use whatever you like in this example but you need to stay coherent between the configuration, the directory structure and the binary filename.
