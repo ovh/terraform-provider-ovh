@@ -1,5 +1,12 @@
 ## 0.19.0 (Unreleased)
 
+## 0.18.1 (June 14, 2022)
+
+BUG FIXES:
+
+* `r/dbaas_logs_output_graylog_stream`: Fix typo in `cold_storage_content` validation list. ([#266](https://github.com/ovh/terraform-provider-ovh/pull/266))
+
+
 ## 0.18.0 (June 9, 2022)
 
 FEATURES:
