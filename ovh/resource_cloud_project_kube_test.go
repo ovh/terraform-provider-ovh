@@ -72,6 +72,7 @@ resource "ovh_cloud_project_kube" "cluster" {
 	version = "%s"
 }
 `
+
 var testAccCloudProjectKubeEmptyVersionConfig = `
 resource "ovh_cloud_project_kube" "cluster" {
 	service_name  = "%s"
