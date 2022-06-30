@@ -120,6 +120,17 @@ func testAccPreCheckCloud(t *testing.T) {
 	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_SERVICE_TEST")
 }
 
+// Checks that the environment variables needed for the /cloud/project/{projectId}/database/ acceptance tests are set.
+func testAccPreCheckCloudDatabase(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	testAccPreCheckCloud(t)
+	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_DATABASE_ENGINE_TEST")
+	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST")
+	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_DATABASE_REGION_TEST")
+	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_DATABASE_FLAVOR_TEST")
+
+}
+
 // Checks that the environment variables needed for the /cloud/project/{projectId}/ip/failover acceptance tests
 // are set.
 func testAccPreCheckFailoverIpAttach(t *testing.T) {
