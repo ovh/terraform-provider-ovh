@@ -42,7 +42,7 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 				Type:        schema.TypeBool,
 				Description: "Enable auto-scaling for the pool",
 				Optional:    true,
-				ForceNew:    true,
+				ForceNew:    false,
 				Default:     "false",
 			},
 			"anti_affinity": {
@@ -136,6 +136,67 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 				Type:        schema.TypeString,
 				Description: "Last update date",
 				Computed:    true,
+			},
+			"template": {
+				Description: "Node pool template",
+				Optional:    true,
+				Type:        schema.TypeSet,
+				MaxItems:    1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"metadata": {
+							Description: "metadata",
+							Optional:    true,
+							Type:        schema.TypeSet,
+							MaxItems:    1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"finalizers": {
+										Description: "finalizers",
+										Optional:    true,
+										Type:        schema.TypeList,
+										Elem:        &schema.Schema{Type: schema.TypeString},
+									},
+									"labels": {
+										Description: "labels",
+										Optional:    true,
+										Type:        schema.TypeMap,
+										Elem:        &schema.Schema{Type: schema.TypeString},
+									},
+									"annotations": {
+										Description: "annotations",
+										Optional:    true,
+										Type:        schema.TypeMap,
+										Elem:        &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+						"spec": {
+							Description: "spec",
+							Optional:    true,
+							Type:        schema.TypeSet,
+							MaxItems:    1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"unschedulable": {
+										Description: "unschedulable",
+										Optional:    true,
+										Type:        schema.TypeBool,
+									},
+									"taints": {
+										Description: "taints",
+										Optional:    true,
+										Type:        schema.TypeList,
+										Elem: &schema.Schema{
+											Type: schema.TypeMap,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 		},
 	}

@@ -117,7 +117,7 @@ func (u CloudProjectUser) ToMap() map[string]interface{} {
 	obj := make(map[string]interface{})
 	obj["creation_date"] = u.CreationDate
 	obj["description"] = u.Description
-	//Dont set password as it must be set only at creation time
+	// Dont set password as it must be set only at creation time
 	obj["status"] = u.Status
 	obj["username"] = u.Username
 
@@ -246,14 +246,15 @@ type CloudProjectKubeKubeConfigResponse struct {
 }
 
 type CloudProjectKubeNodePoolCreateOpts struct {
-	AntiAffinity  *bool   `json:"antiAffinity,omitempty"`
-	Autoscale     *bool   `json:"autoscale,omitempty"`
-	DesiredNodes  *int    `json:"desiredNodes,omitempty"`
-	FlavorName    string  `json:"flavorName"`
-	MaxNodes      *int    `json:"maxNodes,omitempty"`
-	MinNodes      *int    `json:"minNodes,omitempty"`
-	MonthlyBilled *bool   `json:"monthlyBilled,omitempty"`
-	Name          *string `json:"name,omitempty"`
+	AntiAffinity  *bool                             `json:"antiAffinity,omitempty"`
+	Autoscale     *bool                             `json:"autoscale,omitempty"`
+	DesiredNodes  *int                              `json:"desiredNodes,omitempty"`
+	FlavorName    string                            `json:"flavorName"`
+	MaxNodes      *int                              `json:"maxNodes,omitempty"`
+	MinNodes      *int                              `json:"minNodes,omitempty"`
+	MonthlyBilled *bool                             `json:"monthlyBilled,omitempty"`
+	Name          *string                           `json:"name,omitempty"`
+	Template      *CloudProjectKubeNodePoolTemplate `json:"template,omitempty"`
 }
 
 func (opts *CloudProjectKubeNodePoolCreateOpts) FromResource(d *schema.ResourceData) *CloudProjectKubeNodePoolCreateOpts {
@@ -265,19 +266,104 @@ func (opts *CloudProjectKubeNodePoolCreateOpts) FromResource(d *schema.ResourceD
 	opts.MinNodes = helpers.GetNilIntPointerFromData(d, "min_nodes")
 	opts.MonthlyBilled = helpers.GetNilBoolPointerFromData(d, "monthly_billed")
 	opts.Name = helpers.GetNilStringPointerFromData(d, "name")
+	opts.Template = loadNodelPoolTemplateFromResource(d.Get("template"))
 
 	return opts
+}
+
+func loadNodelPoolTemplateFromResource(i interface{}) *CloudProjectKubeNodePoolTemplate {
+	template := CloudProjectKubeNodePoolTemplate{
+		Metadata: &CloudProjectKubeNodePoolTemplateMetadata{
+			Annotations: map[string]string{},
+			Finalizers:  []string{},
+			Labels:      map[string]string{},
+		},
+		Spec: &CloudProjectKubeNodePoolTemplateSpec{
+			Taints:        []Taint{},
+			Unschedulable: false,
+		},
+	}
+
+	templateSet := i.(*schema.Set).List()
+	for _, inter := range templateSet {
+
+		metadataSet := inter.(map[string]interface{})["metadata"].(*schema.Set).List()
+		for _, meta := range metadataSet {
+
+			annotations := meta.(map[string]interface{})["annotations"].(map[string]interface{})
+			template.Metadata.Annotations = make(map[string]string)
+			for k, v := range annotations {
+				template.Metadata.Annotations[k] = v.(string)
+			}
+
+			labels := meta.(map[string]interface{})["labels"].(map[string]interface{})
+			template.Metadata.Labels = make(map[string]string)
+			for k, v := range labels {
+				template.Metadata.Labels[k] = v.(string)
+			}
+
+			finalizers := meta.(map[string]interface{})["finalizers"].([]interface{})
+			for _, finalizer := range finalizers {
+				template.Metadata.Finalizers = append(template.Metadata.Finalizers, finalizer.(string))
+			}
+
+		}
+
+		specSet := inter.(map[string]interface{})["spec"].(*schema.Set).List()
+		for _, spec := range specSet {
+
+			taints := spec.(map[string]interface{})["taints"].([]interface{})
+			for _, taint := range taints {
+				template.Spec.Taints = append(template.Spec.Taints, Taint{
+					Effect: taint.(map[string]interface{})["effect"].(string),
+					Key:    taint.(map[string]interface{})["key"].(string),
+					Value:  taint.(map[string]interface{})["value"].(string),
+				})
+			}
+
+			unschedulable := spec.(map[string]interface{})["unschedulable"].(bool)
+			template.Spec.Unschedulable = unschedulable
+
+		}
+	}
+
+	return &template
 }
 
 func (s *CloudProjectKubeNodePoolCreateOpts) String() string {
 	return fmt.Sprintf("%s(%s): %d/%d/%d", *s.Name, s.FlavorName, *s.DesiredNodes, *s.MinNodes, *s.MaxNodes)
 }
 
+type Taint struct {
+	//"NoExecute"
+	//"NoSchedule"
+	//"PreferNoSchedule"
+	Effect string `json:"effect,omitempty"`
+	Key    string `json:"key,omitempty"`
+	Value  string `json:"value,omitempty"`
+}
+type CloudProjectKubeNodePoolTemplateMetadata struct {
+	Annotations map[string]string `json:"annotations"`
+	Finalizers  []string          `json:"finalizers"`
+	Labels      map[string]string `json:"labels"`
+}
+
+type CloudProjectKubeNodePoolTemplateSpec struct {
+	Taints        []Taint `json:"taints"`
+	Unschedulable bool    `json:"unschedulable"`
+}
+
+type CloudProjectKubeNodePoolTemplate struct {
+	Metadata *CloudProjectKubeNodePoolTemplateMetadata `json:"metadata,omitempty"`
+	Spec     *CloudProjectKubeNodePoolTemplateSpec     `json:"spec,omitempty"`
+}
+
 type CloudProjectKubeNodePoolUpdateOpts struct {
-	Autoscale    *bool `json:"autoscale,omitempty"`
-	DesiredNodes *int  `json:"desiredNodes,omitempty"`
-	MaxNodes     *int  `json:"maxNodes,omitempty"`
-	MinNodes     *int  `json:"minNodes,omitempty"`
+	Autoscale    *bool                             `json:"autoscale,omitempty"`
+	DesiredNodes *int                              `json:"desiredNodes,omitempty"`
+	MaxNodes     *int                              `json:"maxNodes,omitempty"`
+	MinNodes     *int                              `json:"minNodes,omitempty"`
+	Template     *CloudProjectKubeNodePoolTemplate `json:"template,omitempty"`
 }
 
 func (opts *CloudProjectKubeNodePoolUpdateOpts) FromResource(d *schema.ResourceData) *CloudProjectKubeNodePoolUpdateOpts {
@@ -285,6 +371,8 @@ func (opts *CloudProjectKubeNodePoolUpdateOpts) FromResource(d *schema.ResourceD
 	opts.DesiredNodes = helpers.GetNilIntPointerFromData(d, "desired_nodes")
 	opts.MaxNodes = helpers.GetNilIntPointerFromData(d, "max_nodes")
 	opts.MinNodes = helpers.GetNilIntPointerFromData(d, "min_nodes")
+	opts.Template = loadNodelPoolTemplateFromResource(d.Get("template"))
+
 	return opts
 }
 
