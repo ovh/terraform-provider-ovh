@@ -179,6 +179,11 @@ func (s *CloudServiceStatusResponse) String() string {
 	return fmt.Sprintf("%s: %s", s.Name, s.Status)
 }
 
+// CloudProjectKubePutOpts update cluster options
+type CloudProjectKubePutOpts struct {
+	Name *string `json:"name,omitempty"`
+}
+
 type CloudProjectKubeCreateOpts struct {
 	Name             *string `json:"name,omitempty"`
 	PrivateNetworkId *string `json:"privateNetworkId,omitempty"`
