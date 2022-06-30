@@ -13,11 +13,14 @@ import (
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
+const kubeClusterNameKey = "name"
+
 func resourceCloudProjectKube() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceCloudProjectKubeCreate,
 		Read:   resourceCloudProjectKubeRead,
 		Delete: resourceCloudProjectKubeDelete,
+		Update: resourceCloudProjectKubeUpdate,
 
 		Importer: &schema.ResourceImporter{
 			State: resourceCloudProjectKubeImportState,
@@ -30,10 +33,10 @@ func resourceCloudProjectKube() *schema.Resource {
 				ForceNew:    true,
 				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
 			},
-			"name": {
+			kubeClusterNameKey: {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
+				ForceNew: false,
 			},
 			"version": {
 				Type:     schema.TypeString,
@@ -197,6 +200,27 @@ func resourceCloudProjectKubeDelete(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG] kube %s is DELETED", d.Id())
 
 	d.SetId("")
+
+	return nil
+}
+
+func resourceCloudProjectKubeUpdate(d *schema.ResourceData, meta interface{}) error {
+	config := meta.(*Config)
+	serviceName := d.Get("service_name").(string)
+
+	if d.HasChange(kubeClusterNameKey) {
+		_, newValue := d.GetChange(kubeClusterNameKey)
+		value := newValue.(string)
+
+		endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s", serviceName, d.Id())
+		err := config.OVHClient.Put(endpoint, CloudProjectKubePutOpts{
+			Name: &value,
+		}, nil)
+
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
