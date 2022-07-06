@@ -129,7 +129,7 @@ func resourceCloudProjectKubeOIDCDelete(d *schema.ResourceData, meta interface{}
 	log.Printf("[DEBUG] Will delete OIDC")
 	err := config.OVHClient.Delete(endpoint, nil)
 	if err != nil {
-		return fmt.Errorf("calling delete %s with params %s %q", endpoint, err)
+		return fmt.Errorf("calling delete %s %q", endpoint, err)
 	}
 
 	log.Printf("[DEBUG] Waiting for kube %s to be READY", kubeID)
