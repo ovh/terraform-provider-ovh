@@ -15,7 +15,8 @@ import (
 
 const (
 	kubeClusterNameKey = "name"
-	kubeClusterPNCKey  = "private_network_id"
+	kubeClusterPNIKey  = "private_network_id"
+	kubeClusterPNCKey  = "private_network_configuration"
 )
 
 func resourceCloudProjectKube() *schema.Resource {
@@ -47,10 +48,29 @@ func resourceCloudProjectKube() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			kubeClusterPNCKey: {
+			kubeClusterPNIKey: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: false,
+			},
+			kubeClusterPNCKey: {
+				Type:     schema.TypeSet,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"default_vrack_gateway": {
+							Required:    true,
+							Type:        schema.TypeString,
+							Description: "If defined, all egress traffic will be routed towards this IP address, which should belong to the private network. Empty string means disabled.",
+						},
+						"private_network_routing_as_default": {
+							Type:        schema.TypeBool,
+							Required:    true,
+							Description: "Defines whether routing should default to using the nodes' private interface, instead of their public interface. Default is false.",
+						},
+					},
+				},
 			},
 			"region": {
 				Type:     schema.TypeString,
@@ -222,8 +242,8 @@ func resourceCloudProjectKubeUpdate(d *schema.ResourceData, meta interface{}) er
 			return err
 		}
 	}
-	if d.HasChange(kubeClusterPNCKey) {
-		_, newValue := d.GetChange(kubeClusterPNCKey)
+	if d.HasChange(kubeClusterPNIKey) {
+		_, newValue := d.GetChange(kubeClusterPNIKey)
 		value := newValue.(string)
 
 		endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/reset", serviceName, d.Id())
@@ -241,6 +261,34 @@ func resourceCloudProjectKubeUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 		log.Printf("[DEBUG] kube %s is READY", d.Id())
 
+	}
+
+	if d.HasChange(kubeClusterPNCKey) {
+		_, newValue := d.GetChange(kubeClusterPNCKey)
+		pncOutput := privateNetworkConfiguration{}
+
+		pncSet := newValue.(*schema.Set).List()
+		for _, pnc := range pncSet {
+			mapping := pnc.(map[string]interface{})
+			pncOutput.DefaultVrackGateway = mapping["default_vrack_gateway"].(string)
+			pncOutput.PrivateNetworkRoutingAsDefault = mapping["private_network_routing_as_default"].(bool)
+		}
+
+		endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/privateNetworkConfiguration", serviceName, d.Id())
+		err := config.OVHClient.Put(endpoint, CloudProjectKubeUpdatePNCOpts{
+			DefaultVrackGateway:            pncOutput.DefaultVrackGateway,
+			PrivateNetworkRoutingAsDefault: pncOutput.PrivateNetworkRoutingAsDefault,
+		}, nil)
+		if err != nil {
+			return err
+		}
+
+		log.Printf("[DEBUG] Waiting for kube %s to be READY", d.Id())
+		err = waitForCloudProjectKubeReady(config.OVHClient, serviceName, d.Id(), []string{"REDEPLOYING", "RESETTING"}, []string{"READY"})
+		if err != nil {
+			return fmt.Errorf("timeout while waiting kube %s to be READY: %v", d.Id(), err)
+		}
+		log.Printf("[DEBUG] kube %s is READY", d.Id())
 	}
 
 	return nil
