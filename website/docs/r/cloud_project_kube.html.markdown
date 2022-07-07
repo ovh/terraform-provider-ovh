@@ -17,6 +17,18 @@ resource "ovh_cloud_project_kube" "mykube" {
    service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
    name         = "my_kube_cluster"
    region       = "GRA7"
+   
+   private_network_id = xxx-xxx-xxx-xxx-xxx
+
+   private_network_configuration {
+     default_vrack_gateway              = "10.4.0.1"
+     private_network_routing_as_default = true
+   }
+
+   depends_on = [
+     ovh_cloud_project_network_private.network1
+   ]
+     
 }
 ```
 
@@ -36,8 +48,12 @@ The following arguments are supported:
 * `version` - (Optional) kubernetes version to use.
    Changing this value recreates the resource. Defaults to latest available.
 
-* `private_network_id` - (Optional) OpenStack private network (or vrack) ID to use.
+* `private_network_id` - (Optional) OpenStack private network ID to use.
    Changing this value recreates the resource. Defaults - not use private network.
+
+* `private_network_configuration` - (Optional) The private network configuration
+  * default_vrack_gateway - If defined, all egress traffic will be routed towards this IP address, which should belong to the private network. Empty string means disabled.
+  * private_network_routing_as_default - Defines whether routing should default to using the nodes' private interface, instead of their public interface. Default is false.
 
 ## Attributes Reference
 
