@@ -13,11 +13,17 @@ type CloudProjectKubePutOpts struct {
 	Name *string `json:"name,omitempty"`
 }
 
+type privateNetworkConfiguration struct {
+	DefaultVrackGateway            string `json:"defaultVrackGateway"`
+	PrivateNetworkRoutingAsDefault bool   `json:"privateNetworkRoutingAsDefault"`
+}
+
 type CloudProjectKubeCreateOpts struct {
-	Name             *string `json:"name,omitempty"`
-	PrivateNetworkId *string `json:"privateNetworkId,omitempty"`
-	Region           string  `json:"region"`
-	Version          *string `json:"version,omitempty"`
+	Name                        *string                      `json:"name,omitempty"`
+	PrivateNetworkId            *string                      `json:"privateNetworkId,omitempty"`
+	PrivateNetworkConfiguration *privateNetworkConfiguration `json:"privateNetworkConfiguration,omitempty"`
+	Region                      string                       `json:"region"`
+	Version                     *string                      `json:"version,omitempty"`
 }
 
 func (opts *CloudProjectKubeCreateOpts) FromResource(d *schema.ResourceData) *CloudProjectKubeCreateOpts {
@@ -25,10 +31,24 @@ func (opts *CloudProjectKubeCreateOpts) FromResource(d *schema.ResourceData) *Cl
 	opts.Version = helpers.GetNilStringPointerFromData(d, "version")
 	opts.Name = helpers.GetNilStringPointerFromData(d, "name")
 	opts.PrivateNetworkId = helpers.GetNilStringPointerFromData(d, "private_network_id")
-
+	opts.PrivateNetworkConfiguration = loadPrivateNetworkConfiguration(d.Get("private_network_configuration"))
 	return opts
 }
 
+func loadPrivateNetworkConfiguration(i interface{}) *privateNetworkConfiguration {
+	if i == nil {
+		return nil
+	}
+	pncOutput := privateNetworkConfiguration{}
+
+	pncSet := i.(*schema.Set).List()
+	for _, pnc := range pncSet {
+		mapping := pnc.(map[string]interface{})
+		pncOutput.DefaultVrackGateway = mapping["default_vrack_gateway"].(string)
+		pncOutput.PrivateNetworkRoutingAsDefault = mapping["private_network_routing_as_default"].(bool)
+	}
+	return &pncOutput
+}
 func (s *CloudProjectKubeCreateOpts) String() string {
 	return fmt.Sprintf("%s(%s): %s", *s.Name, s.Region, *s.Version)
 }
@@ -76,4 +96,9 @@ type CloudProjectKubeKubeConfigResponse struct {
 
 type CloudProjectKubeResetOpts struct {
 	PrivateNetworkId *string `json:"privateNetworkId,omitempty"`
+}
+
+type CloudProjectKubeUpdatePNCOpts struct {
+	DefaultVrackGateway            string `json:"defaultVrackGateway"`
+	PrivateNetworkRoutingAsDefault bool   `json:"privateNetworkRoutingAsDefault"`
 }
