@@ -8,6 +8,10 @@ import (
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
+type CloudProjectKubeUpdatePolicyOpts struct {
+	UpdatePolicy string `json:"updatePolicy"`
+}
+
 // CloudProjectKubePutOpts update cluster options
 type CloudProjectKubePutOpts struct {
 	Name *string `json:"name,omitempty"`

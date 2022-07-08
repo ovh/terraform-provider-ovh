@@ -55,6 +55,8 @@ The following arguments are supported:
   * default_vrack_gateway - If defined, all egress traffic will be routed towards this IP address, which should belong to the private network. Empty string means disabled.
   * private_network_routing_as_default - Defines whether routing should default to using the nodes' private interface, instead of their public interface. Default is false.
 
+* `update_policy` - Cluster update policy. Choose between [ALWAYS_UPDATE,MINIMAL_DOWNTIME,NEVER_UPDATE]'.
+
 ## Attributes Reference
 
 The following attributes are exported:
@@ -70,7 +72,6 @@ The following attributes are exported:
 * `next_upgrade_versions` - Kubernetes versions available for upgrade.
 * `nodes_url` - Cluster nodes URL.
 * `status` - Cluster status. Should be normally set to 'READY'.
-* `update_policy` - Cluster update policy. Choose between [ALWAYS_UPDATE,MINIMAL_DOWNTIME,NEVER_UPDATE]'.
 * `url` - Management URL of your cluster.
 * `kubeconfig` - The kubeconfig file. Use this file to connect to your kubernetes cluster.
 
