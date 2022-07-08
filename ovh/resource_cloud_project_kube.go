@@ -14,9 +14,10 @@ import (
 )
 
 const (
-	kubeClusterNameKey = "name"
-	kubeClusterPNIKey  = "private_network_id"
-	kubeClusterPNCKey  = "private_network_configuration"
+	kubeClusterNameKey         = "name"
+	kubeClusterPNIKey          = "private_network_id"
+	kubeClusterPNCKey          = "private_network_configuration"
+	kubeClusterUpdatePolicyKey = "update_policy"
 )
 
 func resourceCloudProjectKube() *schema.Resource {
@@ -102,9 +103,9 @@ func resourceCloudProjectKube() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"update_policy": {
+			kubeClusterUpdatePolicyKey: {
 				Type:     schema.TypeString,
-				Computed: true,
+				Optional: true,
 			},
 			"url": {
 				Type:     schema.TypeString,
@@ -229,6 +230,20 @@ func resourceCloudProjectKubeDelete(d *schema.ResourceData, meta interface{}) er
 func resourceCloudProjectKubeUpdate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
+
+	if d.HasChange(kubeClusterUpdatePolicyKey) {
+		_, newValue := d.GetChange(kubeClusterUpdatePolicyKey)
+		value := newValue.(string)
+
+		endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/updatePolicy", serviceName, d.Id())
+		err := config.OVHClient.Put(endpoint, CloudProjectKubeUpdatePolicyOpts{
+			UpdatePolicy: value,
+		}, nil)
+
+		if err != nil {
+			return err
+		}
+	}
 
 	if d.HasChange(kubeClusterNameKey) {
 		_, newValue := d.GetChange(kubeClusterNameKey)

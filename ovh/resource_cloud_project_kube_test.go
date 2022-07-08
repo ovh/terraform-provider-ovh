@@ -67,6 +67,15 @@ func testSweepCloudProjectKube(region string) error {
 	return nil
 }
 
+var testAccCloudProjectKubeUpdatePolicyConfig = `
+resource "ovh_cloud_project_kube" "cluster" {
+	service_name  = "%s"
+    name          = "%s"
+	region        = "%s"
+	update_policy = "%s"
+}
+`
+
 var testAccCloudProjectKubeConfig = `
 resource "ovh_cloud_project_kube" "cluster" {
 	service_name  = "%s"
@@ -314,6 +323,65 @@ func TestAccCloudProjectKubeEmptyVersion_basic(t *testing.T) {
 						"ovh_cloud_project_kube.cluster", kubeClusterNameKey, updatedName),
 					resource.TestCheckResourceAttrSet(
 						"ovh_cloud_project_kube.cluster", "version"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCloudProjectKubeUpdatePolicy_basic(t *testing.T) {
+	region := os.Getenv("OVH_CLOUD_PROJECT_KUBE_REGION_TEST")
+
+	name := acctest.RandomWithPrefix(test_prefix)
+	config := fmt.Sprintf(
+		testAccCloudProjectKubeUpdatePolicyConfig,
+		os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"),
+		name,
+		region,
+		"ALWAYS_UPDATE",
+	)
+
+	updatedName := acctest.RandomWithPrefix(test_prefix)
+	updatedConfig := fmt.Sprintf(
+		testAccCloudProjectKubeUpdatePolicyConfig,
+		os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"),
+		updatedName,
+		region,
+		"NEVER_UPDATE",
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloud(t)
+			testAccCheckCloudProjectExists(t)
+			testAccPreCheckKubernetes(t)
+		},
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_project_kube.cluster", "region", region),
+					resource.TestCheckResourceAttrSet(
+						"ovh_cloud_project_kube.cluster", "kubeconfig"),
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_project_kube.cluster", "update_policy", "ALWAYS_UPDATE"),
+				),
+			},
+			{
+				Config: updatedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_project_kube.cluster", "region", region),
+					resource.TestCheckResourceAttrSet(
+						"ovh_cloud_project_kube.cluster", "kubeconfig"),
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_project_kube.cluster", kubeClusterNameKey, updatedName),
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_project_kube.cluster", "update_policy", "NEVER_UPDATE"),
 				),
 			},
 		},
