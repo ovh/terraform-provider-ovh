@@ -387,3 +387,66 @@ func TestAccCloudProjectKubeUpdatePolicy_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccCloudProjectKubeUpdateVersion_basic(t *testing.T) {
+	region := os.Getenv("OVH_CLOUD_PROJECT_KUBE_REGION_TEST")
+
+	name := acctest.RandomWithPrefix(test_prefix)
+	updatedName := acctest.RandomWithPrefix(test_prefix)
+
+	version1 := "1.22"
+	version2 := "1.22"
+
+	config := fmt.Sprintf(
+		testAccCloudProjectKubeConfig,
+		os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"),
+		name,
+		region,
+		version1,
+	)
+
+	updatedConfig := fmt.Sprintf(
+		testAccCloudProjectKubeConfig,
+		os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"),
+		updatedName,
+		region,
+		version2,
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloud(t)
+			testAccCheckCloudProjectExists(t)
+			testAccPreCheckKubernetes(t)
+		},
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_project_kube.cluster", "region", region),
+					resource.TestCheckResourceAttrSet(
+						"ovh_cloud_project_kube.cluster", "kubeconfig"),
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_project_kube.cluster", kubeClusterVersionKey, version1),
+				),
+			},
+			{
+				Config: updatedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_project_kube.cluster", "region", region),
+					resource.TestCheckResourceAttrSet(
+						"ovh_cloud_project_kube.cluster", "kubeconfig"),
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_project_kube.cluster", kubeClusterNameKey, updatedName),
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_project_kube.cluster", kubeClusterVersionKey, version2),
+				),
+			},
+		},
+	})
+}

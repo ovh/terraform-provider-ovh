@@ -28,12 +28,14 @@ type CloudProjectKubeCreateOpts struct {
 	PrivateNetworkConfiguration *privateNetworkConfiguration `json:"privateNetworkConfiguration,omitempty"`
 	Region                      string                       `json:"region"`
 	Version                     *string                      `json:"version,omitempty"`
+	UpdatePolicy                *string                      `json:"updatePolicy,omitempty"`
 }
 
 func (opts *CloudProjectKubeCreateOpts) FromResource(d *schema.ResourceData) *CloudProjectKubeCreateOpts {
 	opts.Region = d.Get("region").(string)
 	opts.Version = helpers.GetNilStringPointerFromData(d, "version")
 	opts.Name = helpers.GetNilStringPointerFromData(d, "name")
+	opts.UpdatePolicy = helpers.GetNilStringPointerFromData(d, "update_policy")
 	opts.PrivateNetworkId = helpers.GetNilStringPointerFromData(d, "private_network_id")
 	opts.PrivateNetworkConfiguration = loadPrivateNetworkConfiguration(d.Get("private_network_configuration"))
 	return opts
@@ -96,6 +98,10 @@ func (s *CloudProjectKubeResponse) String() string {
 
 type CloudProjectKubeKubeConfigResponse struct {
 	Content string `json:"content"`
+}
+
+type CloudProjectKubeUpdateOpts struct {
+	Strategy string `json:"strategy"`
 }
 
 type CloudProjectKubeResetOpts struct {
