@@ -3,6 +3,8 @@ package ovh
 import (
 	"fmt"
 	"log"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -18,6 +20,7 @@ const (
 	kubeClusterPNIKey          = "private_network_id"
 	kubeClusterPNCKey          = "private_network_configuration"
 	kubeClusterUpdatePolicyKey = "update_policy"
+	kubeClusterVersionKey      = "version"
 )
 
 func resourceCloudProjectKube() *schema.Resource {
@@ -43,11 +46,10 @@ func resourceCloudProjectKube() *schema.Resource {
 				Optional: true,
 				ForceNew: false,
 			},
-			"version": {
+			kubeClusterVersionKey: {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
-				ForceNew: true,
+				ForceNew: false,
 			},
 			kubeClusterPNIKey: {
 				Type:     schema.TypeString,
@@ -105,6 +107,7 @@ func resourceCloudProjectKube() *schema.Resource {
 			},
 			kubeClusterUpdatePolicyKey: {
 				Type:     schema.TypeString,
+				Computed: true,
 				Optional: true,
 			},
 			"url": {
@@ -230,6 +233,51 @@ func resourceCloudProjectKubeDelete(d *schema.ResourceData, meta interface{}) er
 func resourceCloudProjectKubeUpdate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
+
+	if d.HasChange(kubeClusterVersionKey) {
+		oldValueI, newValueI := d.GetChange(kubeClusterVersionKey)
+		oldValue := oldValueI.(string)
+		newValue := newValueI.(string)
+
+		regex := "^1\\.\\d\\d$"
+		r := regexp.MustCompile(regex)
+		match := r.Match([]byte(newValue))
+		if !match {
+			return fmt.Errorf("version %s does not match regex: %s", newValue, regex)
+		}
+
+		oldVersion, err := strconv.Atoi(oldValue[2:4])
+		if err != nil {
+			return err
+		}
+		newVersion, err := strconv.Atoi(newValue[2:4])
+		if err != nil {
+			return err
+		}
+
+		if newVersion < oldVersion {
+			return fmt.Errorf("cannot downgrade cluster from %s to %s", oldValue, newValue)
+		}
+
+		if oldVersion+1 != newVersion {
+			return fmt.Errorf("cannot upgrade cluster from %s to %s, only next minor version is authorized", oldValue, newValue)
+		}
+
+		endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/update", serviceName, d.Id())
+		err = config.OVHClient.Post(endpoint, CloudProjectKubeUpdateOpts{
+			Strategy: "NEXT_MINOR",
+		}, nil)
+		if err != nil {
+			return err
+		}
+
+		log.Printf("[DEBUG] Waiting for kube %s to be READY", d.Id())
+		err = waitForCloudProjectKubeReady(config.OVHClient, serviceName, d.Id(), []string{"UPDATING", "REDEPLOYING", "RESETTING"}, []string{"READY"})
+		if err != nil {
+			return fmt.Errorf("timeout while waiting kube %s to be READY: %v", d.Id(), err)
+		}
+		log.Printf("[DEBUG] kube %s is READY", d.Id())
+	}
 
 	if d.HasChange(kubeClusterUpdatePolicyKey) {
 		_, newValue := d.GetChange(kubeClusterUpdatePolicyKey)

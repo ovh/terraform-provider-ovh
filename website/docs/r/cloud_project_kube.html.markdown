@@ -46,7 +46,7 @@ The following arguments are supported:
    Changing this value recreates the resource.
 
 * `version` - (Optional) kubernetes version to use.
-   Changing this value recreates the resource. Defaults to latest available.
+   Changing this value updates the resource. Defaults to latest available.
 
 * `private_network_id` - (Optional) OpenStack private network ID to use.
    Changing this value recreates the resource. Defaults - not use private network.
