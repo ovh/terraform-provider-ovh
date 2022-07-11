@@ -48,6 +48,7 @@ func resourceCloudProjectKube() *schema.Resource {
 			},
 			kubeClusterVersionKey: {
 				Type:     schema.TypeString,
+				Computed: true,
 				Optional: true,
 				ForceNew: false,
 			},
