@@ -50,6 +50,9 @@ The following arguments are supported:
 
 * `private_network_id` - (Optional) OpenStack private network ID to use.
    Changing this value recreates the resource. Defaults - not use private network.
+   
+   
+**WARNING: update private network id reset the cluster so all user data are deleted**
 
 * `private_network_configuration` - (Optional) The private network configuration
   * default_vrack_gateway - If defined, all egress traffic will be routed towards this IP address, which should belong to the private network. Empty string means disabled.
