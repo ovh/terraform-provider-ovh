@@ -305,6 +305,8 @@ func resourceCloudProjectKubeUpdate(d *schema.ResourceData, meta interface{}) er
 			return err
 		}
 	}
+
+	//TODO WARNING: update private network id reset the cluster so all user data are deleted
 	if d.HasChange(kubeClusterPNIKey) {
 		_, newValue := d.GetChange(kubeClusterPNIKey)
 		value := newValue.(string)
