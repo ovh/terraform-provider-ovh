@@ -55,7 +55,7 @@ func resourceCloudProjectKube() *schema.Resource {
 			kubeClusterPNIKey: {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: false,
+				ForceNew: true,
 			},
 			kubeClusterPNCKey: {
 				Type:     schema.TypeSet,
@@ -305,28 +305,6 @@ func resourceCloudProjectKubeUpdate(d *schema.ResourceData, meta interface{}) er
 		if err != nil {
 			return err
 		}
-	}
-
-	//TODO WARNING: update private network id reset the cluster so all user data are deleted
-	if d.HasChange(kubeClusterPNIKey) {
-		_, newValue := d.GetChange(kubeClusterPNIKey)
-		value := newValue.(string)
-
-		endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/reset", serviceName, d.Id())
-		err := config.OVHClient.Post(endpoint, CloudProjectKubeResetOpts{
-			PrivateNetworkId: &value,
-		}, nil)
-		if err != nil {
-			return err
-		}
-
-		log.Printf("[DEBUG] Waiting for kube %s to be READY", d.Id())
-		err = waitForCloudProjectKubeReady(config.OVHClient, serviceName, d.Id(), []string{"REDEPLOYING", "RESETTING"}, []string{"READY"})
-		if err != nil {
-			return fmt.Errorf("timeout while waiting kube %s to be READY: %v", d.Id(), err)
-		}
-		log.Printf("[DEBUG] kube %s is READY", d.Id())
-
 	}
 
 	if d.HasChange(kubeClusterPNCKey) {

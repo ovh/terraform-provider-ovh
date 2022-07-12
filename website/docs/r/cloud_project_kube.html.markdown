@@ -49,7 +49,7 @@ The following arguments are supported:
    Changing this value updates the resource. Defaults to latest available.
 
 * `private_network_id` - (Optional) OpenStack private network ID to use.
-   Changing this value recreates the resource. Defaults - not use private network.
+   Changing this value delete the resource(including ETCD user data). Defaults - not use private network.
    
    
 **WARNING: update private network id reset the cluster so all user data are deleted**
