@@ -77,7 +77,7 @@ resource "ovh_cloud_project_kube" "cluster" {
 	service_name  = "%s"
     name          = "%s"
 	region        = "%s"
-	version = "%s"
+	version 	  = "%s"
 }
 
 resource "ovh_cloud_project_kube_nodepool" "pool" {
@@ -117,7 +117,7 @@ resource "ovh_cloud_project_kube" "cluster" {
 	service_name  = "%s"
     name          = "%s"
 	region        = "%s"
-	version = "%s"
+	version 	  = "%s"
 }
 
 resource "ovh_cloud_project_kube_nodepool" "pool" {
