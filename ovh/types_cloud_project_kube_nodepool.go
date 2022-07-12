@@ -47,9 +47,9 @@ func loadNodelPoolTemplateFromResource(i interface{}) *CloudProjectKubeNodePoolT
 	}
 
 	templateSet := i.(*schema.Set).List()
-	for _, inter := range templateSet {
+	for _, templateObject := range templateSet {
 
-		metadataSet := inter.(map[string]interface{})["metadata"].(*schema.Set).List()
+		metadataSet := templateObject.(map[string]interface{})["metadata"].(*schema.Set).List()
 		for _, meta := range metadataSet {
 
 			annotations := meta.(map[string]interface{})["annotations"].(map[string]interface{})
@@ -71,7 +71,7 @@ func loadNodelPoolTemplateFromResource(i interface{}) *CloudProjectKubeNodePoolT
 
 		}
 
-		specSet := inter.(map[string]interface{})["spec"].(*schema.Set).List()
+		specSet := templateObject.(map[string]interface{})["spec"].(*schema.Set).List()
 		for _, spec := range specSet {
 
 			taints := spec.(map[string]interface{})["taints"].([]interface{})
@@ -100,6 +100,7 @@ type Taint struct {
 	//"NoExecute"
 	//"NoSchedule"
 	//"PreferNoSchedule"
+	//TODO ENUM
 	Effect string `json:"effect,omitempty"`
 	Key    string `json:"key,omitempty"`
 	Value  string `json:"value,omitempty"`
