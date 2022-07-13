@@ -51,7 +51,7 @@ func resourceCloudProjectKubeOIDCCreate(d *schema.ResourceData, meta interface{}
 	log.Printf("[DEBUG] Will create OIDC: %+v", params)
 	err := config.OVHClient.Post(endpoint, params, res)
 	if err != nil {
-		return fmt.Errorf("calling Post %s with params %s:\n\t %q", endpoint, params, err)
+		return fmt.Errorf("calling Post %s with params %s:\n\t %w", endpoint, params, err)
 	}
 
 	d.SetId(kubeID + "-" + params.ClientID + "-" + params.IssuerUrl)
@@ -78,7 +78,7 @@ func resourceCloudProjectKubeOIDCRead(d *schema.ResourceData, meta interface{}) 
 	log.Printf("[DEBUG] Will read oidc from kube %s and project: %s", kubeID, serviceName)
 	err := config.OVHClient.Get(endpoint, res)
 	if err != nil {
-		return fmt.Errorf("calling get %s %q", endpoint, err)
+		return fmt.Errorf("calling get %s %w", endpoint, err)
 	}
 	for k, v := range res.ToMap() {
 		if k != "id" {
@@ -105,7 +105,7 @@ func resourceCloudProjectKubeOIDCUpdate(d *schema.ResourceData, meta interface{}
 	log.Printf("[DEBUG] Will update OIDC: %+v", params)
 	err := config.OVHClient.Put(endpoint, params, res)
 	if err != nil {
-		return fmt.Errorf("calling Put %s with params %s:\n\t %q", endpoint, params, err)
+		return fmt.Errorf("calling Put %s with params %s:\n\t %w", endpoint, params, err)
 	}
 
 	log.Printf("[DEBUG] Waiting for kube %s to be READY", kubeID)
@@ -129,7 +129,7 @@ func resourceCloudProjectKubeOIDCDelete(d *schema.ResourceData, meta interface{}
 	log.Printf("[DEBUG] Will delete OIDC")
 	err := config.OVHClient.Delete(endpoint, nil)
 	if err != nil {
-		return fmt.Errorf("calling delete %s %q", endpoint, err)
+		return fmt.Errorf("calling delete %s %w", endpoint, err)
 	}
 
 	log.Printf("[DEBUG] Waiting for kube %s to be READY", kubeID)
