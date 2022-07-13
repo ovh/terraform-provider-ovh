@@ -59,7 +59,7 @@ func resourceCloudProjectKubeOIDCCreate(d *schema.ResourceData, meta interface{}
 	log.Printf("[DEBUG] Waiting for kube %s to be READY", kubeID)
 	err = waitForCloudProjectKubeReady(config.OVHClient, serviceName, kubeID, []string{"REDEPLOYING"}, []string{"READY"})
 	if err != nil {
-		return fmt.Errorf("timeout while waiting kube %s to be READY: %v", kubeID, err)
+		return fmt.Errorf("timeout while waiting kube %s to be READY: %w", kubeID, err)
 	}
 	log.Printf("[DEBUG] kube %s is READY", kubeID)
 
@@ -111,7 +111,7 @@ func resourceCloudProjectKubeOIDCUpdate(d *schema.ResourceData, meta interface{}
 	log.Printf("[DEBUG] Waiting for kube %s to be READY", kubeID)
 	err = waitForCloudProjectKubeReady(config.OVHClient, serviceName, kubeID, []string{"REDEPLOYING"}, []string{"READY"})
 	if err != nil {
-		return fmt.Errorf("timeout while waiting kube %s to be READY: %v", kubeID, err)
+		return fmt.Errorf("timeout while waiting kube %s to be READY: %w", kubeID, err)
 	}
 	log.Printf("[DEBUG] kube %s is READY", kubeID)
 
@@ -135,7 +135,7 @@ func resourceCloudProjectKubeOIDCDelete(d *schema.ResourceData, meta interface{}
 	log.Printf("[DEBUG] Waiting for kube %s to be READY", kubeID)
 	err = waitForCloudProjectKubeReady(config.OVHClient, serviceName, kubeID, []string{"REDEPLOYING"}, []string{"READY"})
 	if err != nil {
-		return fmt.Errorf("timeout while waiting kube %s to be READY: %v", kubeID, err)
+		return fmt.Errorf("timeout while waiting kube %s to be READY: %w", kubeID, err)
 	}
 	log.Printf("[DEBUG] kube %s is READY", kubeID)
 
