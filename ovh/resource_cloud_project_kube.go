@@ -159,7 +159,7 @@ func resourceCloudProjectKubeCreate(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG] Will create kube: %+v", params)
 	err := config.OVHClient.Post(endpoint, params, res)
 	if err != nil {
-		return fmt.Errorf("calling Post %s with params %s:\n\t %q", endpoint, params, err)
+		return fmt.Errorf("calling Post %s with params %s:\n\t %w", endpoint, params, err)
 	}
 
 	// This is a fix for a weird bug where the kube is not immediately available on API
@@ -173,7 +173,7 @@ func resourceCloudProjectKubeCreate(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG] Waiting for kube %s to be READY", res.Id)
 	err = waitForCloudProjectKubeReady(config.OVHClient, serviceName, res.Id, []string{"INSTALLING"}, []string{"READY"})
 	if err != nil {
-		return fmt.Errorf("timeout while waiting kube %s to be READY: %v", res.Id, err)
+		return fmt.Errorf("timeout while waiting kube %s to be READY: %w", res.Id, err)
 	}
 	log.Printf("[DEBUG] kube %s is READY", res.Id)
 
@@ -230,7 +230,7 @@ func resourceCloudProjectKubeDelete(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG] Waiting for kube %s to be DELETED", d.Id())
 	err = waitForCloudProjectKubeDeleted(config.OVHClient, serviceName, d.Id())
 	if err != nil {
-		return fmt.Errorf("timeout while waiting kube %s to be DELETED: %v", d.Id(), err)
+		return fmt.Errorf("timeout while waiting kube %s to be DELETED: %w", d.Id(), err)
 	}
 	log.Printf("[DEBUG] kube %s is DELETED", d.Id())
 
@@ -281,7 +281,7 @@ func resourceCloudProjectKubeUpdate(d *schema.ResourceData, meta interface{}) er
 		log.Printf("[DEBUG] Waiting for kube %s to be READY", d.Id())
 		err = waitForCloudProjectKubeReady(config.OVHClient, serviceName, d.Id(), []string{"UPDATING", "REDEPLOYING", "RESETTING"}, []string{"READY"})
 		if err != nil {
-			return fmt.Errorf("timeout while waiting kube %s to be READY: %v", d.Id(), err)
+			return fmt.Errorf("timeout while waiting kube %s to be READY: %w", d.Id(), err)
 		}
 		log.Printf("[DEBUG] kube %s is READY", d.Id())
 	}
@@ -335,7 +335,7 @@ func resourceCloudProjectKubeUpdate(d *schema.ResourceData, meta interface{}) er
 		log.Printf("[DEBUG] Waiting for kube %s to be READY", d.Id())
 		err = waitForCloudProjectKubeReady(config.OVHClient, serviceName, d.Id(), []string{"REDEPLOYING", "RESETTING"}, []string{"READY"})
 		if err != nil {
-			return fmt.Errorf("timeout while waiting kube %s to be READY: %v", d.Id(), err)
+			return fmt.Errorf("timeout while waiting kube %s to be READY: %w", d.Id(), err)
 		}
 		log.Printf("[DEBUG] kube %s is READY", d.Id())
 	}
