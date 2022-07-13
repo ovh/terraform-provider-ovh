@@ -3,14 +3,12 @@ package ovh
 import (
 	"fmt"
 	"log"
-	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-
 	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
@@ -22,14 +20,6 @@ const (
 	kubeClusterUpdatePolicyKey                = "update_policy"
 	kubeClusterVersionKey                     = "version"
 )
-
-var kubeVersionRegexCompiled *regexp.Regexp
-
-const kubeVersionRegex = "^1\\.\\d\\d$"
-
-func init() {
-	kubeVersionRegexCompiled = regexp.MustCompile(kubeVersionRegex)
-}
 
 func resourceCloudProjectKube() *schema.Resource {
 	return &schema.Resource{
@@ -156,6 +146,10 @@ func resourceCloudProjectKubeCreate(d *schema.ResourceData, meta interface{}) er
 	params := (&CloudProjectKubeCreateOpts{}).FromResource(d)
 	res := &CloudProjectKubeResponse{}
 
+	if params.UpdatePolicy != nil {
+		return fmt.Errorf("actually this attribute update_policy cannot be set at object creation time, once the object created this attribute can be set and/or updated. This is a temporary bug on our OVH APIV6 side")
+	}
+
 	log.Printf("[DEBUG] Will create kube: %+v", params)
 	err := config.OVHClient.Post(endpoint, params, res)
 	if err != nil {
@@ -245,28 +239,34 @@ func resourceCloudProjectKubeUpdate(d *schema.ResourceData, meta interface{}) er
 
 	if d.HasChange(kubeClusterVersionKey) {
 		oldValueI, newValueI := d.GetChange(kubeClusterVersionKey)
+
 		oldValue := oldValueI.(string)
 		newValue := newValueI.(string)
 
-		match := kubeVersionRegexCompiled.Match([]byte(newValue))
-		if !match {
-			return fmt.Errorf("version %s does not match regex: %s", newValue, kubeVersionRegex)
+		oldVersion, err := version.NewVersion(oldValueI.(string))
+		if err != nil {
+			return fmt.Errorf("version %s does not match a semver", oldValue)
+		}
+		newVersion, err := version.NewVersion(newValueI.(string))
+		if err != nil {
+			return fmt.Errorf("version %s does not match a semver", newValue)
 		}
 
-		oldVersion, err := strconv.Atoi(oldValue[2:4])
-		if err != nil {
-			return err
+		oldVersionSegments := oldVersion.Segments()
+		newVersionSegments := oldVersion.Segments()
+
+		if oldVersionSegments[0] != 1 || newVersionSegments[0] != 1 {
+			return fmt.Errorf("major supported version is 1")
 		}
-		newVersion, err := strconv.Atoi(newValue[2:4])
-		if err != nil {
-			return err
+		if len(oldVersionSegments) != 2 || len(newVersionSegments) != 2 {
+			return fmt.Errorf("only one minor version is supported, not patch version")
 		}
 
-		if newVersion < oldVersion {
+		if newVersion.LessThan(oldVersion) {
 			return fmt.Errorf("cannot downgrade cluster from %s to %s", oldValue, newValue)
 		}
 
-		if oldVersion+1 != newVersion {
+		if oldVersionSegments[1]+1 != newVersionSegments[1] {
 			return fmt.Errorf("cannot upgrade cluster from %s to %s, only next minor version is authorized", oldValue, newValue)
 		}
 
