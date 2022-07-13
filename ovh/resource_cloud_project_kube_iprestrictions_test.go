@@ -12,8 +12,8 @@ import (
 var testAccCloudProjectKubeIpRestrictionsConfig = `
 resource "ovh_cloud_project_kube" "cluster" {
 	service_name  = "%s"
-    name          = "%s"
-	region        = "%s"	
+	name          = "%s"
+	region        = "%s"
 }
 
 resource "ovh_cloud_project_kube_iprestrictions" "iprestrictions" {
