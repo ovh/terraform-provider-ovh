@@ -37,6 +37,7 @@ func resourceCloudProjectKubeOIDC() *schema.Resource {
 		},
 	}
 }
+
 func resourceCloudProjectKubeOIDCCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
@@ -89,7 +90,6 @@ func resourceCloudProjectKubeOIDCRead(d *schema.ResourceData, meta interface{}) 
 
 	log.Printf("[DEBUG] Read kube %+v", res)
 	return nil
-
 }
 
 func resourceCloudProjectKubeOIDCUpdate(d *schema.ResourceData, meta interface{}) error {
