@@ -55,6 +55,7 @@ func loadPrivateNetworkConfiguration(i interface{}) *privateNetworkConfiguration
 	}
 	return &pncOutput
 }
+
 func (s *CloudProjectKubeCreateOpts) String() string {
 	return fmt.Sprintf("%s(%s): %s", *s.Name, s.Region, *s.Version)
 }
