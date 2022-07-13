@@ -169,7 +169,6 @@ func resourceCloudProjectKubeRead(d *schema.ResourceData, meta interface{}) erro
 		kubeconfigRaw := CloudProjectKubeKubeConfigResponse{}
 		endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/kubeconfig", serviceName, res.Id)
 		err := config.OVHClient.Post(endpoint, nil, &kubeconfigRaw)
-
 		if err != nil {
 			return err
 		}
@@ -216,7 +215,6 @@ func resourceCloudProjectKubeUpdate(d *schema.ResourceData, meta interface{}) er
 		err := config.OVHClient.Put(endpoint, CloudProjectKubePutOpts{
 			Name: &value,
 		}, nil)
-
 		if err != nil {
 			return err
 		}
