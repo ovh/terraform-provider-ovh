@@ -70,7 +70,7 @@ func testSweepCloudProjectKube(region string) error {
 var testAccCloudProjectKubeUpdatePolicyConfig = `
 resource "ovh_cloud_project_kube" "cluster" {
 	service_name  = "%s"
-    name          = "%s"
+	name          = "%s"
 	region        = "%s"
 	update_policy = "%s"
 }
@@ -79,7 +79,7 @@ resource "ovh_cloud_project_kube" "cluster" {
 var testAccCloudProjectKubeConfig = `
 resource "ovh_cloud_project_kube" "cluster" {
 	service_name  = "%s"
-    name          = "%s"
+	name          = "%s"
 	region        = "%s"
 	version = "%s"
 }
@@ -88,17 +88,17 @@ resource "ovh_cloud_project_kube" "cluster" {
 var testAccCloudProjectKubeEmptyVersionConfig = `
 resource "ovh_cloud_project_kube" "cluster" {
 	service_name  = "%s"
-    name          = "%s"
+	name          = "%s"
 	region        = "%s"
 }
 `
 
 var testAccCloudProjectKubeVRackConfig = `
 resource "ovh_cloud_project_network_private" "network1" {
-  service_name = "{{ .ServiceName }}"
-  name         = "dhcp-default-gateway"
-  regions      = {{ .Regions }}
-  vlan_id      = "{{ .Vlanid }}"
+	service_name = "{{ .ServiceName }}"
+	name         = "dhcp-default-gateway"
+	regions      = {{ .Regions }}
+	vlan_id      = "{{ .Vlanid }}"
 }
 
 resource "ovh_cloud_project_network_private_subnet" "network1subnetSBG5" {
@@ -115,19 +115,19 @@ resource "ovh_cloud_project_network_private_subnet" "network1subnetSBG5" {
 
 resource "ovh_cloud_project_kube" "cluster" {
 	service_name  = "{{ .ServiceName }}"
-    name          = "{{ .Name }}"
+	name          = "{{ .Name }}"
 	region        = "{{ .Region }}"
 
-    private_network_id = ovh_cloud_project_network_private.network1.regions_attributes[index(ovh_cloud_project_network_private.network1.regions_attributes.*.region, "{{ .Region }}")].openstackid
+	private_network_id = ovh_cloud_project_network_private.network1.regions_attributes[index(ovh_cloud_project_network_private.network1.regions_attributes.*.region, "{{ .Region }}")].openstackid
 
-    private_network_configuration {
-      default_vrack_gateway              = "{{ .DefaultVrackGateway }}"
-      private_network_routing_as_default = {{ .PrivateNetworkRoutingAsDefault }}
-    }
+	private_network_configuration {
+		default_vrack_gateway              = "{{ .DefaultVrackGateway }}"
+		private_network_routing_as_default = {{ .PrivateNetworkRoutingAsDefault }}
+	}
 
-    depends_on = [
-      ovh_cloud_project_network_private.network1
-    ]
+	depends_on = [
+		ovh_cloud_project_network_private.network1
+	]
 }
 `
 
