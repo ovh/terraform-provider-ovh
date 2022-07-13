@@ -16,11 +16,11 @@ import (
 )
 
 const (
-	kubeClusterNameKey         = "name"
-	kubeClusterPNIKey          = "private_network_id"
-	kubeClusterPNCKey          = "private_network_configuration"
-	kubeClusterUpdatePolicyKey = "update_policy"
-	kubeClusterVersionKey      = "version"
+	kubeClusterNameKey                        = "name"
+	kubeClusterPrivateNetworkIDKey            = "private_network_id"
+	kubeClusterPrivateNetworkConfigurationKey = "private_network_configuration"
+	kubeClusterUpdatePolicyKey                = "update_policy"
+	kubeClusterVersionKey                     = "version"
 )
 
 func resourceCloudProjectKube() *schema.Resource {
@@ -52,12 +52,12 @@ func resourceCloudProjectKube() *schema.Resource {
 				Optional: true,
 				ForceNew: false,
 			},
-			kubeClusterPNIKey: {
+			kubeClusterPrivateNetworkIDKey: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			kubeClusterPNCKey: {
+			kubeClusterPrivateNetworkConfigurationKey: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				MaxItems: 1,
@@ -288,7 +288,6 @@ func resourceCloudProjectKubeUpdate(d *schema.ResourceData, meta interface{}) er
 		err := config.OVHClient.Put(endpoint, CloudProjectKubeUpdatePolicyOpts{
 			UpdatePolicy: value,
 		}, nil)
-
 		if err != nil {
 			return err
 		}
@@ -307,8 +306,8 @@ func resourceCloudProjectKubeUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	if d.HasChange(kubeClusterPNCKey) {
-		_, newValue := d.GetChange(kubeClusterPNCKey)
+	if d.HasChange(kubeClusterPrivateNetworkConfigurationKey) {
+		_, newValue := d.GetChange(kubeClusterPrivateNetworkConfigurationKey)
 		pncOutput := privateNetworkConfiguration{}
 
 		pncSet := newValue.(*schema.Set).List()
