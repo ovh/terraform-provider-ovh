@@ -1,6 +1,8 @@
 package ovh
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -77,7 +79,7 @@ func loadNodelPoolTemplateFromResource(i interface{}) *CloudProjectKubeNodePoolT
 			taints := spec.(map[string]interface{})["taints"].([]interface{})
 			for _, taint := range taints {
 				template.Spec.Taints = append(template.Spec.Taints, Taint{
-					Effect: taint.(map[string]interface{})["effect"].(string),
+					Effect: EffecTypetoID[taint.(map[string]interface{})["effect"].(string)],
 					Key:    taint.(map[string]interface{})["key"].(string),
 					Value:  taint.(map[string]interface{})["value"].(string),
 				})
@@ -96,14 +98,54 @@ func (s *CloudProjectKubeNodePoolCreateOpts) String() string {
 	return fmt.Sprintf("%s(%s): %d/%d/%d", *s.Name, s.FlavorName, *s.DesiredNodes, *s.MinNodes, *s.MaxNodes)
 }
 
+type EffectType int
+
+const (
+	NoExecute EffectType = iota
+	NoSchedule
+	PreferNoSchedule
+)
+
+func (e EffectType) String() string {
+	return toString[e]
+}
+
+var toString = map[EffectType]string{
+	NoExecute:        "NoExecute",
+	NoSchedule:       "NoSchedule",
+	PreferNoSchedule: "PreferNoSchedule",
+}
+
+var EffecTypetoID = map[string]EffectType{
+	"NoExecute":        NoExecute,
+	"NoSchedule":       NoSchedule,
+	"PreferNoSchedule": PreferNoSchedule,
+}
+
+// MarshalJSON marshals the enum as a quoted json string
+func (e EffectType) MarshalJSON() ([]byte, error) {
+	buffer := bytes.NewBufferString(`"`)
+	buffer.WriteString(toString[e])
+	buffer.WriteString(`"`)
+	return buffer.Bytes(), nil
+}
+
+// UnmarshalJSON unmashals a quoted json string to the enum value
+func (e *EffectType) UnmarshalJSON(b []byte) error {
+	var j string
+	err := json.Unmarshal(b, &j)
+	if err != nil {
+		return err
+	}
+	// Note that if the string cannot be found then it will be set to the zero value, 'Created' in this case.
+	*e = EffecTypetoID[j]
+	return nil
+}
+
 type Taint struct {
-	//"NoExecute"
-	//"NoSchedule"
-	//"PreferNoSchedule"
-	//TODO ENUM
-	Effect string `json:"effect,omitempty"`
-	Key    string `json:"key,omitempty"`
-	Value  string `json:"value,omitempty"`
+	Effect EffectType `json:"effect,omitempty"`
+	Key    string     `json:"key,omitempty"`
+	Value  string     `json:"value,omitempty"`
 }
 
 type CloudProjectKubeNodePoolTemplateMetadata struct {
