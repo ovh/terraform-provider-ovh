@@ -101,6 +101,7 @@ func resourceCloudProjectKubeIpRestrictionsCreateOrUpdate(d *schema.ResourceData
 
 	return output
 }
+
 func resourceCloudProjectKubeIpRestrictionsDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
@@ -109,11 +110,9 @@ func resourceCloudProjectKubeIpRestrictionsDelete(d *schema.ResourceData, meta i
 	return resourceCloudProjectKubeIpRestrictionsUpdate(config, serviceName, kubeId, &CloudProjectKubeIpRestrictionsCreateOrUpdateOpts{
 		Ips: []string{},
 	})
-
 }
 
 func resourceCloudProjectKubeIpRestrictionsUpdate(config *Config, serviceName string, kubeId string, params *CloudProjectKubeIpRestrictionsCreateOrUpdateOpts) error {
-
 	endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/ipRestrictions", url.PathEscape(serviceName), url.PathEscape(kubeId))
 	res := make(CloudProjectKubeIpRestrictionsResponse, 0)
 
