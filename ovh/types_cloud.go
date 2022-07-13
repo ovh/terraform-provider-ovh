@@ -117,7 +117,7 @@ func (u CloudProjectUser) ToMap() map[string]interface{} {
 	obj := make(map[string]interface{})
 	obj["creation_date"] = u.CreationDate
 	obj["description"] = u.Description
-	//Dont set password as it must be set only at creation time
+	// Dont set password as it must be set only at creation time
 	obj["status"] = u.Status
 	obj["username"] = u.Username
 
