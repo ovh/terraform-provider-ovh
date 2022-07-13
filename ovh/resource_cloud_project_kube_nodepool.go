@@ -232,7 +232,7 @@ func resourceCloudProjectKubeNodePoolCreate(d *schema.ResourceData, meta interfa
 	log.Printf("[DEBUG] Will create nodepool: %+v", params)
 	err := config.OVHClient.Post(endpoint, params, res)
 	if err != nil {
-		return fmt.Errorf("calling Post %s with params %s:\n\t %q", endpoint, params, err)
+		return fmt.Errorf("calling Post %s with params %s:\n\t %w", endpoint, params, err)
 	}
 
 	// This is a fix for a weird bug where the nodepool is not immediately available on API
@@ -246,7 +246,7 @@ func resourceCloudProjectKubeNodePoolCreate(d *schema.ResourceData, meta interfa
 	log.Printf("[DEBUG] Waiting for nodepool %s to be READY", res.Id)
 	err = waitForCloudProjectKubeNodePoolReady(config.OVHClient, serviceName, kubeId, res.Id)
 	if err != nil {
-		return fmt.Errorf("timeout while waiting nodepool %s to be READY: %v", res.Id, err)
+		return fmt.Errorf("timeout while waiting nodepool %s to be READY: %w", res.Id, err)
 	}
 	log.Printf("[DEBUG] nodepool %s is READY", res.Id)
 
@@ -291,13 +291,13 @@ func resourceCloudProjectKubeNodePoolUpdate(d *schema.ResourceData, meta interfa
 	log.Printf("[DEBUG] Will update nodepool: %+v", params)
 	err := config.OVHClient.Put(endpoint, params, nil)
 	if err != nil {
-		return fmt.Errorf("calling Put %s with params %s:\n\t %q", endpoint, params, err)
+		return fmt.Errorf("calling Put %s with params %s:\n\t %w", endpoint, params, err)
 	}
 
 	log.Printf("[DEBUG] Waiting for nodepool %s to be READY", d.Id())
 	err = waitForCloudProjectKubeNodePoolReady(config.OVHClient, serviceName, kubeId, d.Id())
 	if err != nil {
-		return fmt.Errorf("timeout while waiting nodepool %s to be READY: %v", d.Id(), err)
+		return fmt.Errorf("timeout while waiting nodepool %s to be READY: %w", d.Id(), err)
 	}
 	log.Printf("[DEBUG] nodepool %s is READY", d.Id())
 
