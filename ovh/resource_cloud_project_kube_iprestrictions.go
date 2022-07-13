@@ -40,7 +40,7 @@ func resourceCloudProjectKubeIpRestrictions() *schema.Resource {
 				Type:        schema.TypeSet,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Set:         schema.HashString,
-				Description: "List of ip restrictions for the cluster",
+				Description: "List of IP restrictions for the cluster",
 				Required:    true,
 			},
 		},
