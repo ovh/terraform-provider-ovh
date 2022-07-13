@@ -23,6 +23,14 @@ const (
 	kubeClusterVersionKey                     = "version"
 )
 
+var kubeVersionRegexCompiled *regexp.Regexp
+
+const kubeVersionRegex = "^1\\.\\d\\d$"
+
+func init() {
+	kubeVersionRegexCompiled = regexp.MustCompile(kubeVersionRegex)
+}
+
 func resourceCloudProjectKube() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceCloudProjectKubeCreate,
@@ -240,11 +248,9 @@ func resourceCloudProjectKubeUpdate(d *schema.ResourceData, meta interface{}) er
 		oldValue := oldValueI.(string)
 		newValue := newValueI.(string)
 
-		regex := "^1\\.\\d\\d$"
-		r := regexp.MustCompile(regex)
-		match := r.Match([]byte(newValue))
+		match := kubeVersionRegexCompiled.Match([]byte(newValue))
 		if !match {
-			return fmt.Errorf("version %s does not match regex: %s", newValue, regex)
+			return fmt.Errorf("version %s does not match regex: %s", newValue, kubeVersionRegex)
 		}
 
 		oldVersion, err := strconv.Atoi(oldValue[2:4])
