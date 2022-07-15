@@ -3,7 +3,7 @@ layout: "ovh"
 page_title: "OVH: cloud_project_database"
 sidebar_current: "docs-ovh-resource-cloud-project-database-x"
 description: |-
-Creates a managed database in a public cloud project.
+  Creates a managed database cluster in a public cloud project.
 ---
 
 # ovh_cloud_project_database
@@ -45,9 +45,9 @@ resource "ovh_cloud_project_database" "postgresql" {
 
 To deploy an enterprise MongoDB service with three nodes on private network:
 ```hcl
-resource "ovh_cloud_project_database" "postgresql" {
+resource "ovh_cloud_project_database" "mongodb" {
   service_name = var.openstack_infos.project_id
-  description  = "my-first-postgresql"
+  description  = "my-first-mongodb"
   engine       = "mongodb"
   version      = "5.0"
   plan         = "enterprise"
@@ -124,3 +124,11 @@ The following attributes are exported:
 * `plan` - See Argument Reference above.
 * `status` - Current status of the cluster.
 * `version` - See Argument Reference above.
+
+## Import
+
+OVHcloud Managed database clusters can be imported using the `service_name`, `engine`, `id` of the cluster, separated by "/" E.g.,
+
+```
+$ terraform import ovh_cloud_project_database.my_database_cluster <service_name>/<engine>/<id>
+```

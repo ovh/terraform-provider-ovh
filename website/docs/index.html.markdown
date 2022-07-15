@@ -129,6 +129,8 @@ variables must also be set:
 
 * `OVH_CLOUD_PROJECT_DATABASE_FLAVOR_TEST` - The node flavor of the database service to test.
 
+* `OVH_CLOUD_PROJECT_DATABASE_IP_RESTRICTION_IP_TEST` - The IP restriction to test.
+
 * `OVH_CLOUD_PROJECT_FAILOVER_IP_TEST` - The ip address of your public cloud failover ip.
 
 * `OVH_CLOUD_PROJECT_FAILOVER_IP_ROUTED_TO_1_TEST` - The GUID of an instance to which failover IP addresses can be attached
