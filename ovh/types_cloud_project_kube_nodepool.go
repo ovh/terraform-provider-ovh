@@ -65,7 +65,7 @@ var toString = map[TaintEffectType]string{
 	PreferNoSchedule: "PreferNoSchedule",
 }
 
-var TaintEffecTypetoID = map[string]TaintEffectType{
+var TaintEffecTypeToID = map[string]TaintEffectType{
 	"NoExecute":        NoExecute,
 	"NoSchedule":       NoSchedule,
 	"PreferNoSchedule": PreferNoSchedule,
@@ -129,7 +129,7 @@ func loadNodelPoolTemplateFromResource(i interface{}) *CloudProjectKubeNodePoolT
 			taints := spec.(map[string]interface{})["taints"].([]interface{})
 			for _, taint := range taints {
 				template.Spec.Taints = append(template.Spec.Taints, Taint{
-					Effect: TaintEffecTypetoID[taint.(map[string]interface{})["effect"].(string)],
+					Effect: TaintEffecTypeToID[taint.(map[string]interface{})["effect"].(string)],
 					Key:    taint.(map[string]interface{})["key"].(string),
 					Value:  taint.(map[string]interface{})["value"].(string),
 				})
@@ -168,7 +168,7 @@ func (e *TaintEffectType) UnmarshalJSON(b []byte) error {
 		return err
 	}
 	// Note that if the string cannot be found then it will be set to the zero value, 'Created' in this case.
-	*e = TaintEffecTypetoID[j]
+	*e = TaintEffecTypeToID[j]
 	return nil
 }
 
