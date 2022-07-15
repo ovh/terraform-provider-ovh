@@ -11,6 +11,8 @@ type CloudProjectKubeIpRestrictionsCreateOrUpdateOpts struct {
 	Ips []string `json:"ips"`
 }
 
+type CloudProjectKubeIpRestrictionsResponse = []string
+
 func (opts *CloudProjectKubeIpRestrictionsCreateOrUpdateOpts) FromResource(d *schema.ResourceData) *CloudProjectKubeIpRestrictionsCreateOrUpdateOpts {
 	opts.Ips, _ = helpers.StringsFromSchema(d, "ips")
 	return opts
@@ -19,5 +21,3 @@ func (opts *CloudProjectKubeIpRestrictionsCreateOrUpdateOpts) FromResource(d *sc
 func (s *CloudProjectKubeIpRestrictionsCreateOrUpdateOpts) String() string {
 	return fmt.Sprintf("%s", s.Ips)
 }
-
-type CloudProjectKubeIpRestrictionsResponse = []string
