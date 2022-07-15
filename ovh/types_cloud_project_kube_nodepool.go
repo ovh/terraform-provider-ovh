@@ -9,6 +9,12 @@ import (
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
+const (
+	NoExecute TaintEffectType = iota
+	NoSchedule
+	PreferNoSchedule
+)
+
 type CloudProjectKubeNodePoolCreateOpts struct {
 	AntiAffinity  *bool                             `json:"antiAffinity,omitempty"`
 	Autoscale     *bool                             `json:"autoscale,omitempty"`
@@ -19,6 +25,50 @@ type CloudProjectKubeNodePoolCreateOpts struct {
 	MonthlyBilled *bool                             `json:"monthlyBilled,omitempty"`
 	Name          *string                           `json:"name,omitempty"`
 	Template      *CloudProjectKubeNodePoolTemplate `json:"template,omitempty"`
+}
+
+type TaintEffectType int
+
+type Taint struct {
+	Effect TaintEffectType `json:"effect,omitempty"`
+	Key    string          `json:"key,omitempty"`
+	Value  string          `json:"value,omitempty"`
+}
+
+type CloudProjectKubeNodePoolTemplateMetadata struct {
+	Annotations map[string]string `json:"annotations"`
+	Finalizers  []string          `json:"finalizers"`
+	Labels      map[string]string `json:"labels"`
+}
+
+type CloudProjectKubeNodePoolTemplateSpec struct {
+	Taints        []Taint `json:"taints"`
+	Unschedulable bool    `json:"unschedulable"`
+}
+
+type CloudProjectKubeNodePoolTemplate struct {
+	Metadata *CloudProjectKubeNodePoolTemplateMetadata `json:"metadata,omitempty"`
+	Spec     *CloudProjectKubeNodePoolTemplateSpec     `json:"spec,omitempty"`
+}
+
+type CloudProjectKubeNodePoolUpdateOpts struct {
+	Autoscale    *bool                             `json:"autoscale,omitempty"`
+	DesiredNodes *int                              `json:"desiredNodes,omitempty"`
+	MaxNodes     *int                              `json:"maxNodes,omitempty"`
+	MinNodes     *int                              `json:"minNodes,omitempty"`
+	Template     *CloudProjectKubeNodePoolTemplate `json:"template,omitempty"`
+}
+
+var toString = map[TaintEffectType]string{
+	NoExecute:        "NoExecute",
+	NoSchedule:       "NoSchedule",
+	PreferNoSchedule: "PreferNoSchedule",
+}
+
+var TaintEffecTypetoID = map[string]TaintEffectType{
+	"NoExecute":        NoExecute,
+	"NoSchedule":       NoSchedule,
+	"PreferNoSchedule": PreferNoSchedule,
 }
 
 func (opts *CloudProjectKubeNodePoolCreateOpts) FromResource(d *schema.ResourceData) *CloudProjectKubeNodePoolCreateOpts {
@@ -79,7 +129,7 @@ func loadNodelPoolTemplateFromResource(i interface{}) *CloudProjectKubeNodePoolT
 			taints := spec.(map[string]interface{})["taints"].([]interface{})
 			for _, taint := range taints {
 				template.Spec.Taints = append(template.Spec.Taints, Taint{
-					Effect: EffecTypetoID[taint.(map[string]interface{})["effect"].(string)],
+					Effect: TaintEffecTypetoID[taint.(map[string]interface{})["effect"].(string)],
 					Key:    taint.(map[string]interface{})["key"].(string),
 					Value:  taint.(map[string]interface{})["value"].(string),
 				})
@@ -98,32 +148,12 @@ func (s *CloudProjectKubeNodePoolCreateOpts) String() string {
 	return fmt.Sprintf("%s(%s): %d/%d/%d", *s.Name, s.FlavorName, *s.DesiredNodes, *s.MinNodes, *s.MaxNodes)
 }
 
-type EffectType int
-
-const (
-	NoExecute EffectType = iota
-	NoSchedule
-	PreferNoSchedule
-)
-
-func (e EffectType) String() string {
+func (e TaintEffectType) String() string {
 	return toString[e]
 }
 
-var toString = map[EffectType]string{
-	NoExecute:        "NoExecute",
-	NoSchedule:       "NoSchedule",
-	PreferNoSchedule: "PreferNoSchedule",
-}
-
-var EffecTypetoID = map[string]EffectType{
-	"NoExecute":        NoExecute,
-	"NoSchedule":       NoSchedule,
-	"PreferNoSchedule": PreferNoSchedule,
-}
-
 // MarshalJSON marshals the enum as a quoted json string
-func (e EffectType) MarshalJSON() ([]byte, error) {
+func (e TaintEffectType) MarshalJSON() ([]byte, error) {
 	buffer := bytes.NewBufferString(`"`)
 	buffer.WriteString(toString[e])
 	buffer.WriteString(`"`)
@@ -131,45 +161,15 @@ func (e EffectType) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON unmashals a quoted json string to the enum value
-func (e *EffectType) UnmarshalJSON(b []byte) error {
+func (e *TaintEffectType) UnmarshalJSON(b []byte) error {
 	var j string
 	err := json.Unmarshal(b, &j)
 	if err != nil {
 		return err
 	}
 	// Note that if the string cannot be found then it will be set to the zero value, 'Created' in this case.
-	*e = EffecTypetoID[j]
+	*e = TaintEffecTypetoID[j]
 	return nil
-}
-
-type Taint struct {
-	Effect EffectType `json:"effect,omitempty"`
-	Key    string     `json:"key,omitempty"`
-	Value  string     `json:"value,omitempty"`
-}
-
-type CloudProjectKubeNodePoolTemplateMetadata struct {
-	Annotations map[string]string `json:"annotations"`
-	Finalizers  []string          `json:"finalizers"`
-	Labels      map[string]string `json:"labels"`
-}
-
-type CloudProjectKubeNodePoolTemplateSpec struct {
-	Taints        []Taint `json:"taints"`
-	Unschedulable bool    `json:"unschedulable"`
-}
-
-type CloudProjectKubeNodePoolTemplate struct {
-	Metadata *CloudProjectKubeNodePoolTemplateMetadata `json:"metadata,omitempty"`
-	Spec     *CloudProjectKubeNodePoolTemplateSpec     `json:"spec,omitempty"`
-}
-
-type CloudProjectKubeNodePoolUpdateOpts struct {
-	Autoscale    *bool                             `json:"autoscale,omitempty"`
-	DesiredNodes *int                              `json:"desiredNodes,omitempty"`
-	MaxNodes     *int                              `json:"maxNodes,omitempty"`
-	MinNodes     *int                              `json:"minNodes,omitempty"`
-	Template     *CloudProjectKubeNodePoolTemplate `json:"template,omitempty"`
 }
 
 func (opts *CloudProjectKubeNodePoolUpdateOpts) FromResource(d *schema.ResourceData) *CloudProjectKubeNodePoolUpdateOpts {
