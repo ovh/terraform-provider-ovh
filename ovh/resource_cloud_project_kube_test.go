@@ -193,37 +193,23 @@ func TestAccCloudProjectKubeVRack(t *testing.T) {
 			{
 				Config: config.String(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube.cluster", "region", region),
-					resource.TestCheckResourceAttrSet(
-						"ovh_cloud_project_kube.cluster", "kubeconfig"),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
-					resource.TestCheckResourceAttrSet(
-						"ovh_cloud_project_kube.cluster", "version"),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube.cluster", "private_network_configuration.0.default_vrack_gateway", configData1.DefaultVrackGateway),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube.cluster",
-						"private_network_configuration.0.private_network_routing_as_default", strconv.FormatBool(configData1.PrivateNetworkRoutingAsDefault)),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "version"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "private_network_configuration.0.default_vrack_gateway", configData1.DefaultVrackGateway),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "private_network_configuration.0.private_network_routing_as_default", strconv.FormatBool(configData1.PrivateNetworkRoutingAsDefault)),
 				),
 			},
 			{
 				Config: configUpdated.String(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube.cluster", "region", region),
-					resource.TestCheckResourceAttrSet(
-						"ovh_cloud_project_kube.cluster", "kubeconfig"),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
-					resource.TestCheckResourceAttrSet(
-						"ovh_cloud_project_kube.cluster", "version"),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube.cluster", "private_network_configuration.0.default_vrack_gateway", configData2.DefaultVrackGateway),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube.cluster",
-						"private_network_configuration.0.private_network_routing_as_default", strconv.FormatBool(configData2.PrivateNetworkRoutingAsDefault)),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "version"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "private_network_configuration.0.default_vrack_gateway", configData2.DefaultVrackGateway),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "private_network_configuration.0.private_network_routing_as_default", strconv.FormatBool(configData2.PrivateNetworkRoutingAsDefault)),
 				),
 			},
 		},
@@ -253,14 +239,10 @@ func TestAccCloudProjectKube_basic(t *testing.T) {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube.cluster", "region", region),
-					resource.TestCheckResourceAttrSet(
-						"ovh_cloud_project_kube.cluster", "kubeconfig"),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube.cluster", "version", version),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "version", version),
 				),
 			},
 		},
@@ -302,27 +284,19 @@ func TestAccCloudProjectKubeEmptyVersion_basic(t *testing.T) {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube.cluster", "region", region),
-					resource.TestCheckResourceAttrSet(
-						"ovh_cloud_project_kube.cluster", "kubeconfig"),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
-					resource.TestCheckResourceAttrSet(
-						"ovh_cloud_project_kube.cluster", "version"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "version"),
 				),
 			},
 			{
 				Config: updatedConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube.cluster", "region", region),
-					resource.TestCheckResourceAttrSet(
-						"ovh_cloud_project_kube.cluster", "kubeconfig"),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube.cluster", kubeClusterNameKey, updatedName),
-					resource.TestCheckResourceAttrSet(
-						"ovh_cloud_project_kube.cluster", "version"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, updatedName),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "version"),
 				),
 			},
 		},
@@ -361,27 +335,19 @@ func TestAccCloudProjectKubeUpdatePolicy_basic(t *testing.T) {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube.cluster", "region", region),
-					resource.TestCheckResourceAttrSet(
-						"ovh_cloud_project_kube.cluster", "kubeconfig"),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube.cluster", "update_policy", "ALWAYS_UPDATE"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "update_policy", "ALWAYS_UPDATE"),
 				),
 			},
 			{
 				Config: updatedConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube.cluster", "region", region),
-					resource.TestCheckResourceAttrSet(
-						"ovh_cloud_project_kube.cluster", "kubeconfig"),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube.cluster", kubeClusterNameKey, updatedName),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube.cluster", "update_policy", "NEVER_UPDATE"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, updatedName),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "update_policy", "NEVER_UPDATE"),
 				),
 			},
 		},
@@ -424,27 +390,19 @@ func TestAccCloudProjectKubeUpdateVersion_basic(t *testing.T) {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube.cluster", "region", region),
-					resource.TestCheckResourceAttrSet(
-						"ovh_cloud_project_kube.cluster", "kubeconfig"),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube.cluster", kubeClusterVersionKey, version1),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterVersionKey, version1),
 				),
 			},
 			{
 				Config: updatedConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube.cluster", "region", region),
-					resource.TestCheckResourceAttrSet(
-						"ovh_cloud_project_kube.cluster", "kubeconfig"),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube.cluster", kubeClusterNameKey, updatedName),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube.cluster", kubeClusterVersionKey, version2),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, updatedName),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterVersionKey, version2),
 				),
 			},
 		},
