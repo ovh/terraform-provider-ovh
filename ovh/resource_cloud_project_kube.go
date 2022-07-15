@@ -147,7 +147,7 @@ func resourceCloudProjectKubeCreate(d *schema.ResourceData, meta interface{}) er
 	res := &CloudProjectKubeResponse{}
 
 	if params.UpdatePolicy != nil {
-		return fmt.Errorf("actually this attribute update_policy cannot be set at object creation time, once the object created this attribute can be set and/or updated. This is a temporary bug on our OVH APIV6 side")
+		return fmt.Errorf("the attribute update_policy cannot be set at cluster creation time. Once the cluster is created this attribute can be set and/or updated. This is a temporary bug on our OVH APIV6 side")
 	}
 
 	log.Printf("[DEBUG] Will create kube: %+v", params)
@@ -256,10 +256,10 @@ func resourceCloudProjectKubeUpdate(d *schema.ResourceData, meta interface{}) er
 		newVersionSegments := oldVersion.Segments()
 
 		if oldVersionSegments[0] != 1 || newVersionSegments[0] != 1 {
-			return fmt.Errorf("major supported version is 1")
+			return fmt.Errorf("the only supported major version is 1")
 		}
 		if len(oldVersionSegments) != 2 || len(newVersionSegments) != 2 {
-			return fmt.Errorf("only one minor version is supported, not patch version")
+			return fmt.Errorf("the version should only specify the major and minor versions (e.g. \\\"1.20\\\")")
 		}
 
 		if newVersion.LessThan(oldVersion) {
