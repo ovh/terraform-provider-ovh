@@ -146,7 +146,7 @@ func TestAccCloudProjectKubeVRack(t *testing.T) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
 
 	name := acctest.RandomWithPrefix(test_prefix)
-	tmp, err := template.New("config").Parse(testAccCloudProjectKubeVRackConfig)
+	tmpl, err := template.New("config").Parse(testAccCloudProjectKubeVRackConfig)
 	if err != nil {
 		panic(err)
 	}
@@ -172,12 +172,12 @@ func TestAccCloudProjectKubeVRack(t *testing.T) {
 		PrivateNetworkRoutingAsDefault: true,
 	}
 
-	err = tmp.Execute(&config, &configData1)
+	err = tmpl.Execute(&config, &configData1)
 	if err != nil {
 		panic(err)
 	}
 
-	err = tmp.Execute(&configUpdated, &configData2)
+	err = tmpl.Execute(&configUpdated, &configData2)
 	if err != nil {
 		panic(err)
 	}
