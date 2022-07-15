@@ -75,69 +75,69 @@ func testSweepCloudProjectKubeNodePool(region string) error {
 var testAccCloudProjectKubeNodePoolConfig = `
 resource "ovh_cloud_project_kube" "cluster" {
 	service_name  = "%s"
-    name          = "%s"
+	name          = "%s"
 	region        = "%s"
-	version 	  = "%s"
+	version       = "%s"
 }
 
 resource "ovh_cloud_project_kube_nodepool" "pool" {
 	service_name  = ovh_cloud_project_kube.cluster.service_name
 	kube_id       = ovh_cloud_project_kube.cluster.id
-    name          = ovh_cloud_project_kube.cluster.name
+	name          = ovh_cloud_project_kube.cluster.name
 	flavor_name   = "b2-7"
 	desired_nodes = 1
 	min_nodes     = 0
 	max_nodes     = 1
-    template {
-  	  metadata {
-	    annotations = {
-		  a1 = "av1"
-	    }
-	    finalizers = ["F1"]
-	    labels = {
- 		  l1 = "lv1"
-	    }
-	  }
-	  spec {
-	    unschedulable = false
-	    taints = [
-		  {
-		    effect = "PreferNoSchedule"
-		    key    = "t1"
-		    value  = "tv1"
-		  }
-	    ]
-	  }
-    }
+	template {
+		metadata {
+			annotations = {
+				a1 = "av1"
+			}
+			finalizers = ["F1"]
+			labels = {
+				l1 = "lv1"
+			}
+		}
+		spec {
+			unschedulable = false
+			taints = [
+			{
+				effect = "PreferNoSchedule"
+				key    = "t1"
+				value  = "tv1"
+			}
+			]
+		}
+	}
 }
 `
 
 var testAccCloudProjectKubeNodePoolConfigUpdated = `
 resource "ovh_cloud_project_kube" "cluster" {
 	service_name  = "%s"
-    name          = "%s"
+	name          = "%s"
 	region        = "%s"
-	version 	  = "%s"
+	version       = "%s"
 }
 
 resource "ovh_cloud_project_kube_nodepool" "pool" {
-	service_name  = ovh_cloud_project_kube.cluster.service_name
-	kube_id       = ovh_cloud_project_kube.cluster.id
-    name          = ovh_cloud_project_kube.cluster.name
-	flavor_name   = "b2-7"
-	desired_nodes = 1
-	min_nodes     = 0
-	max_nodes     = 1
-    template {
-  	  metadata {
-	    annotations = {
-		  a2 = "av2"
-	    }
-	    labels = {
- 		  l2 = "lv2"
-	    }
-	  }
-    }
+	service_name	= ovh_cloud_project_kube.cluster.service_name
+	kube_id			= ovh_cloud_project_kube.cluster.id
+	name			= ovh_cloud_project_kube.cluster.name
+	flavor_name		= "b2-7"
+	desired_nodes	= 1
+	min_nodes		= 0
+	max_nodes		= 1
+	template {
+		metadata {
+			annotations = {
+				a2 = "av2"
+			}
+			labels = {
+				l2 = "lv2"
+			}
+		}
+	}
 }
 `
 
