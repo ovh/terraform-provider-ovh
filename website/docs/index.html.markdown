@@ -125,6 +125,8 @@ variables must also be set:
 
 * `OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST` - The version of the database engine to test.
 
+* `OVH_CLOUD_PROJECT_DATABASE_POSTGRESQL_VERSION_TEST` - The version of the postgresql to test. if not set `OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST` is use.
+
 * `OVH_CLOUD_PROJECT_DATABASE_REGION_TEST` - The region of the database service to test.
 
 * `OVH_CLOUD_PROJECT_DATABASE_FLAVOR_TEST` - The node flavor of the database service to test.
