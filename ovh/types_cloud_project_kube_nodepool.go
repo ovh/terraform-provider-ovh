@@ -100,7 +100,6 @@ func loadNodelPoolTemplateFromResource(i interface{}) *CloudProjectKubeNodePoolT
 
 	templateSet := i.(*schema.Set).List()
 	for _, templateObject := range templateSet {
-
 		metadataSet := templateObject.(map[string]interface{})["metadata"].(*schema.Set).List()
 		for _, meta := range metadataSet {
 
