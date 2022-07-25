@@ -57,7 +57,7 @@ func TestAccCloudProjectKubeOIDC_full(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube_oidc.my-oidc", "client_id", "xxx"),
+						"ovh_cloud_project_kube_oidc.my-oidc", "client_id", "my-oidc-client-id"),
 					resource.TestCheckResourceAttr(
 						"ovh_cloud_project_kube_oidc.my-oidc", "issuer_url", "https://ovh.com"),
 				),
