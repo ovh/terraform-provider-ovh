@@ -25,7 +25,7 @@ resource "ovh_cloud_project_kube_oidc" "my-oidc" {
 
 The following arguments are supported:
 
-* `service_name` - (required) The id of the public cloud project. If omitted,
+* `service_name` - (required) The ID of the public cloud project. If omitted,
   the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 
 * `kube_id` - The id of the managed kubernetes cluster.
