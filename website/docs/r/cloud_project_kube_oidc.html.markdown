@@ -28,7 +28,7 @@ The following arguments are supported:
 * `service_name` - (required) The ID of the public cloud project. If omitted,
   the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 
-* `kube_id` - The id of the managed kubernetes cluster.
+* `kube_id` - The ID of the managed kubernetes cluster.
 
 * `client_id` - The OIDC client ID.
 
