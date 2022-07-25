@@ -8,7 +8,7 @@ Creates an OIDC configuration in an OVHcloud Managed Kubernetes cluster.
 
 # ovh_cloud_project_kube_oidc
 
-Creates a oidc configuration in a OVH Managed Kubernetes Service cluster.
+Creates an OIDC configuration in an OVHcloud Managed Kubernetes cluster.
 
 ## Example Usage
 
