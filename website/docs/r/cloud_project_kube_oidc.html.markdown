@@ -3,7 +3,7 @@ layout: "ovh"
 page_title: "OVH: cloud_project_kube_oidc"
 sidebar_current: "docs-ovh-resource-cloud-project-kube-oidc"
 description: |-
-Creates an oidc configuration in a kubernetes managed cluster.
+Creates an OIDC configuration in an OVHcloud Managed Kubernetes cluster.
 ---
 
 # ovh_cloud_project_kube_oidc
