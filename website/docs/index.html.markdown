@@ -176,10 +176,12 @@ If you wish to test the provider from the local version you just built, you can 
 First install the terraform provider binary into your local plugin repository:
 
 ```sh
-$ make install
+# Set your target environment (OS_architecture): linux_amd64, darwin_amd64...
+$ export ENV="linux_amd64"
+$ make build
 ...
-$ mkdir -p ~/.terraform.d/plugins/terraform.local/local/ovh/0.0.1/linux_amd64
-$ cp $GOPATH/bin/terraform-provider-ovh ~/.terraform.d/plugins/terraform.local/local/ovh/0.0.1/linux_amd64/terraform-provider-ovh_v0.0.1
+$ mkdir -p ~/.terraform.d/plugins/terraform.local/local/ovh/0.0.1/$ENV
+$ cp $GOPATH/bin/terraform-provider-ovh ~/.terraform.d/plugins/terraform.local/local/ovh/0.0.1/$ENV/terraform-provider-ovh_v0.0.1
 ```
 
 Then create a terraform configuration using this exact provider:
