@@ -72,6 +72,7 @@ resource "ovh_cloud_project_kube" "cluster" {
 	version = "%s"
 }
 `
+
 var testAccCloudProjectKubeEmptyVersionConfig = `
 resource "ovh_cloud_project_kube" "cluster" {
 	service_name  = "%s"
@@ -108,7 +109,7 @@ func TestAccCloudProjectKube_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(
 						"ovh_cloud_project_kube.cluster", "kubeconfig"),
 					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube.cluster", "name", name),
+						"ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
 					resource.TestCheckResourceAttr(
 						"ovh_cloud_project_kube.cluster", "version", version),
 				),
@@ -117,13 +118,27 @@ func TestAccCloudProjectKube_basic(t *testing.T) {
 	})
 }
 
+// TestAccCloudProjectKubeEmptyVersion_basic
+// create a public cluster
+// check some properties
+// update cluster name
+// check some properties && cluster updated name
 func TestAccCloudProjectKubeEmptyVersion_basic(t *testing.T) {
-	name := acctest.RandomWithPrefix(test_prefix)
 	region := os.Getenv("OVH_CLOUD_PROJECT_KUBE_REGION_TEST")
+
+	name := acctest.RandomWithPrefix(test_prefix)
 	config := fmt.Sprintf(
 		testAccCloudProjectKubeEmptyVersionConfig,
 		os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"),
 		name,
+		region,
+	)
+
+	updatedName := acctest.RandomWithPrefix(test_prefix)
+	updatedConfig := fmt.Sprintf(
+		testAccCloudProjectKubeEmptyVersionConfig,
+		os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"),
+		updatedName,
 		region,
 	)
 
@@ -143,7 +158,20 @@ func TestAccCloudProjectKubeEmptyVersion_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(
 						"ovh_cloud_project_kube.cluster", "kubeconfig"),
 					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube.cluster", "name", name),
+						"ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
+					resource.TestCheckResourceAttrSet(
+						"ovh_cloud_project_kube.cluster", "version"),
+				),
+			},
+			{
+				Config: updatedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_project_kube.cluster", "region", region),
+					resource.TestCheckResourceAttrSet(
+						"ovh_cloud_project_kube.cluster", "kubeconfig"),
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_project_kube.cluster", kubeClusterNameKey, updatedName),
 					resource.TestCheckResourceAttrSet(
 						"ovh_cloud_project_kube.cluster", "version"),
 				),
