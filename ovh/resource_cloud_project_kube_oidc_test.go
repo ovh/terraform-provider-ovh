@@ -32,7 +32,7 @@ func TestAccCloudProjectKubeOIDC_full(t *testing.T) {
 		os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"),
 		name,
 		region,
-		"xxx",
+		"my-oidc-client-id",
 		"https://ovh.com",
 	)
 
