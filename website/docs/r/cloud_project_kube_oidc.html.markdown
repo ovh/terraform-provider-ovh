@@ -15,7 +15,7 @@ Creates an OIDC configuration in an OVHcloud Managed Kubernetes cluster.
 ```hcl
 resource "ovh_cloud_project_kube_oidc" "my-oidc" {
   service_name = var.projectid
-  kube_id      = ovh_cloud_project_kube. mykube.id
+  kube_id      = ovh_cloud_project_kube.mykube.id
   client_id    = "xxx"
   issuer_url   = "https://ovh.com"
 }
