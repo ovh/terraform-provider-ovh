@@ -8,7 +8,7 @@ description: |-
 
 # ovh_cloud_project_kube_iprestrictions
 
-Apply IP restrictions to a managed Kubernetes cluster.
+Apply IP restrictions to an OVHcloud Managed Kubernetes cluster.
 
 ## Example Usage
 
