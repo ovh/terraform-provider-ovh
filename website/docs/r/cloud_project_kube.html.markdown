@@ -18,7 +18,7 @@ resource "ovh_cloud_project_kube" "mykube" {
    name         = "my_kube_cluster"
    region       = "GRA7"
    
-   private_network_id = xxx-xxx-xxx-xxx-xxx
+   private_network_id = xxxxxxxx-xxxx-xxxx-xxxxx-xxxxxxxxxxxx #ovh_cloud_project_network_private.network1.regions_attributes[index(ovh_cloud_project_network_private.network1.regions_attributes.*.region, "GRA7")].openstackid
 
    private_network_configuration {
      default_vrack_gateway              = "10.4.0.1"
