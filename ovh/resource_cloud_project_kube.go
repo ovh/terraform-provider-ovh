@@ -135,7 +135,7 @@ func resourceCloudProjectKubeCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	log.Printf("[DEBUG] Waiting for kube %s to be READY", res.Id)
-	err = waitForCloudProjectKubeReady(config.OVHClient, serviceName, res.Id)
+	err = waitForCloudProjectKubeReady(config.OVHClient, serviceName, res.Id, []string{"INSTALLING"}, []string{"READY"})
 	if err != nil {
 		return fmt.Errorf("timeout while waiting kube %s to be READY: %v", res.Id, err)
 	}
@@ -230,10 +230,10 @@ func cloudProjectKubeExists(serviceName, id string, client *ovh.Client) error {
 	return client.Get(endpoint, res)
 }
 
-func waitForCloudProjectKubeReady(client *ovh.Client, serviceName, kubeId string) error {
+func waitForCloudProjectKubeReady(client *ovh.Client, serviceName, kubeId string, pending []string, target []string) error {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"INSTALLING"},
-		Target:  []string{"READY"},
+		Pending: pending,
+		Target:  target,
 		Refresh: func() (interface{}, string, error) {
 			res := &CloudProjectKubeResponse{}
 			endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s", serviceName, kubeId)
