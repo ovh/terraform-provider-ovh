@@ -3,7 +3,7 @@ layout: "ovh"
 page_title: "OVH: cloud_project_kube_iprestrictions"
 sidebar_current: "docs-ovh-resource-cloud-project-kube-iprestrictions-x"
 description: |-
-  Apply IP restrictions to a managed Kubernetes cluster.
+  Apply IP restrictions to an OVHcloud Managed Kubernetes cluster.
 ---
 
 # ovh_cloud_project_kube_iprestrictions
