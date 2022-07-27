@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
@@ -111,19 +110,16 @@ func resourceCloudProjectDatabase() *schema.Resource {
 						"path": {
 							Type:        schema.TypeString,
 							Description: "Path of the endpoint",
-							Optional:    true,
 							Computed:    true,
 						},
 						"port": {
 							Type:        schema.TypeInt,
 							Description: "Connection port for the endpoint",
-							Optional:    true,
 							Computed:    true,
 						},
 						"scheme": {
 							Type:        schema.TypeString,
 							Description: "Scheme used to generate the URI",
-							Optional:    true,
 							Computed:    true,
 						},
 						"ssl": {
@@ -134,13 +130,11 @@ func resourceCloudProjectDatabase() *schema.Resource {
 						"ssl_mode": {
 							Type:        schema.TypeString,
 							Description: "SSL mode used to connect to the service if the SSL is enabled",
-							Optional:    true,
 							Computed:    true,
 						},
 						"uri": {
 							Type:        schema.TypeString,
 							Description: "URI of the endpoint",
-							Optional:    true,
 							Computed:    true,
 						},
 					},
@@ -205,7 +199,7 @@ func resourceCloudProjectDatabaseCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	log.Printf("[DEBUG] Waiting for database %s to be READY", res.Id)
-	err = waitForCloudProjectDatabaseReady(config.OVHClient, serviceName, engine, res.Id, 20*time.Minute)
+	err = waitForCloudProjectDatabaseReady(config.OVHClient, serviceName, engine, res.Id, 20*time.Minute, 30*time.Second)
 	if err != nil {
 		return fmt.Errorf("timeout while waiting database %s to be READY: %v", res.Id, err)
 	}
@@ -283,7 +277,7 @@ func resourceCloudProjectDatabaseUpdate(d *schema.ResourceData, meta interface{}
 	}
 
 	log.Printf("[DEBUG] Waiting for database %s to be READY", d.Id())
-	err = waitForCloudProjectDatabaseReady(config.OVHClient, serviceName, engine, d.Id(), 40*time.Minute)
+	err = waitForCloudProjectDatabaseReady(config.OVHClient, serviceName, engine, d.Id(), 40*time.Minute, 30*time.Second)
 	if err != nil {
 		return fmt.Errorf("timeout while waiting database %s to be READY: %v", d.Id(), err)
 	}
@@ -326,63 +320,4 @@ func cloudProjectDatabaseExists(serviceName, engine string, id string, client *o
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s", serviceName, engine, id)
 	return client.Get(endpoint, res)
-}
-
-func waitForCloudProjectDatabaseReady(client *ovh.Client, serviceName, engine string, databaseId string, timeOut time.Duration) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "CREATING", "UPDATING"},
-		Target:  []string{"READY"},
-		Refresh: func() (interface{}, string, error) {
-			res := &CloudProjectDatabaseResponse{}
-			endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s",
-				url.PathEscape(serviceName),
-				url.PathEscape(engine),
-				url.PathEscape(databaseId),
-			)
-			err := client.Get(endpoint, res)
-			if err != nil {
-				return res, "", err
-			}
-
-			return res, res.Status, nil
-		},
-		Timeout:    timeOut,
-		Delay:      30 * time.Second,
-		MinTimeout: 10 * time.Second,
-	}
-
-	_, err := stateConf.WaitForState()
-	return err
-}
-
-func waitForCloudProjectDatabaseDeleted(client *ovh.Client, serviceName, engine string, databaseId string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"DELETING"},
-		Target:  []string{"DELETED"},
-		Refresh: func() (interface{}, string, error) {
-			res := &CloudProjectDatabaseResponse{}
-			endpoint := fmt.Sprintf("/cloud/project/%s/%s/%s",
-				url.PathEscape(serviceName),
-				url.PathEscape(engine),
-				url.PathEscape(databaseId),
-			)
-			err := client.Get(endpoint, res)
-			if err != nil {
-				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
-					return res, "DELETED", nil
-				} else {
-					return res, "", err
-				}
-			}
-
-			return res, res.Status, nil
-		},
-		Timeout:      30 * time.Minute,
-		Delay:        30 * time.Second,
-		MinTimeout:   3 * time.Second,
-		PollInterval: 20 * time.Second,
-	}
-
-	_, err := stateConf.WaitForState()
-	return err
 }
