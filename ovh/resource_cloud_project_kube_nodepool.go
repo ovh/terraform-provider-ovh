@@ -42,7 +42,7 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 				Type:        schema.TypeBool,
 				Description: "Enable auto-scaling for the pool",
 				Optional:    true,
-				ForceNew:    true,
+				ForceNew:    false,
 				Default:     "false",
 			},
 			"anti_affinity": {
@@ -137,6 +137,67 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 				Description: "Last update date",
 				Computed:    true,
 			},
+			"template": {
+				Description: "Node pool template",
+				Optional:    true,
+				Type:        schema.TypeSet,
+				MaxItems:    1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"metadata": {
+							Description: "metadata",
+							Optional:    true,
+							Type:        schema.TypeSet,
+							MaxItems:    1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"finalizers": {
+										Description: "finalizers",
+										Optional:    true,
+										Type:        schema.TypeList,
+										Elem:        &schema.Schema{Type: schema.TypeString},
+									},
+									"labels": {
+										Description: "labels",
+										Optional:    true,
+										Type:        schema.TypeMap,
+										Elem:        &schema.Schema{Type: schema.TypeString},
+									},
+									"annotations": {
+										Description: "annotations",
+										Optional:    true,
+										Type:        schema.TypeMap,
+										Elem:        &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+						"spec": {
+							Description: "spec",
+							Optional:    true,
+							Type:        schema.TypeSet,
+							MaxItems:    1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"unschedulable": {
+										Description: "unschedulable",
+										Optional:    true,
+										Type:        schema.TypeBool,
+									},
+									"taints": {
+										Description: "taints",
+										Optional:    true,
+										Type:        schema.TypeList,
+										Elem: &schema.Schema{
+											Type: schema.TypeMap,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -171,7 +232,7 @@ func resourceCloudProjectKubeNodePoolCreate(d *schema.ResourceData, meta interfa
 	log.Printf("[DEBUG] Will create nodepool: %+v", params)
 	err := config.OVHClient.Post(endpoint, params, res)
 	if err != nil {
-		return fmt.Errorf("calling Post %s with params %s:\n\t %q", endpoint, params, err)
+		return fmt.Errorf("calling Post %s with params %s:\n\t %w", endpoint, params, err)
 	}
 
 	// This is a fix for a weird bug where the nodepool is not immediately available on API
@@ -185,7 +246,7 @@ func resourceCloudProjectKubeNodePoolCreate(d *schema.ResourceData, meta interfa
 	log.Printf("[DEBUG] Waiting for nodepool %s to be READY", res.Id)
 	err = waitForCloudProjectKubeNodePoolReady(config.OVHClient, serviceName, kubeId, res.Id)
 	if err != nil {
-		return fmt.Errorf("timeout while waiting nodepool %s to be READY: %v", res.Id, err)
+		return fmt.Errorf("timeout while waiting nodepool %s to be READY: %w", res.Id, err)
 	}
 	log.Printf("[DEBUG] nodepool %s is READY", res.Id)
 
@@ -230,13 +291,13 @@ func resourceCloudProjectKubeNodePoolUpdate(d *schema.ResourceData, meta interfa
 	log.Printf("[DEBUG] Will update nodepool: %+v", params)
 	err := config.OVHClient.Put(endpoint, params, nil)
 	if err != nil {
-		return fmt.Errorf("calling Put %s with params %s:\n\t %q", endpoint, params, err)
+		return fmt.Errorf("calling Put %s with params %s:\n\t %w", endpoint, params, err)
 	}
 
 	log.Printf("[DEBUG] Waiting for nodepool %s to be READY", d.Id())
 	err = waitForCloudProjectKubeNodePoolReady(config.OVHClient, serviceName, kubeId, d.Id())
 	if err != nil {
-		return fmt.Errorf("timeout while waiting nodepool %s to be READY: %v", d.Id(), err)
+		return fmt.Errorf("timeout while waiting nodepool %s to be READY: %w", d.Id(), err)
 	}
 	log.Printf("[DEBUG] nodepool %s is READY", d.Id())
 

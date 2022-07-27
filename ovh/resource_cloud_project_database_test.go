@@ -98,11 +98,7 @@ func TestAccCloudProjectDatabase_basic(t *testing.T) {
 	)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheckCloud(t)
-			testAccCheckCloudProjectExists(t)
-			testAccPreCheckCloudDatabase(t)
-		},
+		PreCheck:  func() { testAccPreCheckCloudDatabase(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -113,6 +109,18 @@ func TestAccCloudProjectDatabase_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(
 						"ovh_cloud_project_database.db", "created_at"),
 					resource.TestCheckResourceAttr(
+						"ovh_cloud_project_database.db", "description", description),
+					resource.TestCheckResourceAttrSet(
+						"ovh_cloud_project_database.db", "endpoints.#"),
+					resource.TestCheckResourceAttrSet(
+						"ovh_cloud_project_database.db", "endpoints.0.component"),
+					resource.TestCheckResourceAttrSet(
+						"ovh_cloud_project_database.db", "endpoints.0.domain"),
+					resource.TestCheckResourceAttrSet(
+						"ovh_cloud_project_database.db", "endpoints.0.ssl"),
+					resource.TestCheckResourceAttrSet(
+						"ovh_cloud_project_database.db", "endpoints.0.ssl_mode"),
+					resource.TestCheckResourceAttr(
 						"ovh_cloud_project_database.db", "engine", engine),
 					resource.TestCheckResourceAttr(
 						"ovh_cloud_project_database.db", "description", description),
@@ -122,6 +130,10 @@ func TestAccCloudProjectDatabase_basic(t *testing.T) {
 						"ovh_cloud_project_database.db", "maintenance_time"),
 					resource.TestCheckResourceAttrSet(
 						"ovh_cloud_project_database.db", "network_type"),
+					resource.TestCheckResourceAttrSet(
+						"ovh_cloud_project_database.db", "nodes.#"),
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_project_database.db", "nodes.0.region", region),
 					resource.TestCheckResourceAttr(
 						"ovh_cloud_project_database.db", "plan", "essential"),
 					resource.TestCheckResourceAttr(
