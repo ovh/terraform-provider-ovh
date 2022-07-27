@@ -50,10 +50,19 @@ resource "ovh_cloud_project_kube_iprestrictions" "iprestrictions" {
 	service_name  = ovh_cloud_project_kube.cluster.service_name
 	kube_id       = ovh_cloud_project_kube.cluster.id
 	ips           = ["10.42.0.0/16"]
+
+	depends_on = [
+		ovh_cloud_project_kube.cluster
+	]
+
 }
 
 data "ovh_cloud_project_kube_iprestrictions" "iprestrictionsData" {
   service_name = ovh_cloud_project_kube.cluster.service_name
   kube_id = ovh_cloud_project_kube.cluster.id
+
+	depends_on = [
+		ovh_cloud_project_kube_iprestrictions.iprestrictions
+	]
 }
 `

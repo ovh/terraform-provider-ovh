@@ -43,7 +43,7 @@ func dataSourceCloudProjectKubeIpRestrictionsRead(d *schema.ResourceData, meta i
 	kubeId := d.Get("kube_id").(string)
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/ipRestrictions", url.PathEscape(serviceName), url.PathEscape(kubeId))
-	res := make(CloudProjectKubeIpRestrictionsResponse, 0)
+	var res CloudProjectKubeIpRestrictionsResponse
 
 	log.Printf("[DEBUG] Will read iprestrictions from cluster %s in project %s", kubeId, serviceName)
 	if err := config.OVHClient.Get(endpoint, &res); err != nil {
