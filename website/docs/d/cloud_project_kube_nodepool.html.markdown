@@ -20,7 +20,7 @@ data "ovh_cloud_project_kube_nodepool" "nodepool" {
 }
 
 output "max_nodes" {
-  value = data.ovh_cloud_project_kube_nodepool.poolDataSource.max_nodes
+  value = data.ovh_cloud_project_kube_nodepool.nodepool.max_nodes
 }
 ```
 
