@@ -14,9 +14,9 @@ Use this data source to get a OVH Managed Kubernetes node pool.
 
 ```hcl
 data "ovh_cloud_project_kube_nodepool" "poolDataSource" {
-  service_name  = ovh_cloud_project_kube.cluster.service_name
-  kube_id       = ovh_cloud_project_kube.cluster.id
-  name          = ovh_cloud_project_kube.cluster.name
+  service_name  = XXXXXX
+  kube_id       = xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxx
+  name          = xxxxxx
 }
 
 output "max_nodes" {
