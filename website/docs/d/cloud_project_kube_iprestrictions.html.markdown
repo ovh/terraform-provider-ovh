@@ -19,7 +19,7 @@ data "ovh_cloud_project_kube_iprestrictions" "iprestrictions" {
 }
 
 output "ips" {
-  value = data.ovh_cloud_project_kube_iprestrictions.iprestrictionsData.ips
+  value = data.ovh_cloud_project_kube_iprestrictions.iprestrictions.ips
 }
 ```
 
