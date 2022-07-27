@@ -14,7 +14,7 @@ Use this data source to get a OVH Managed Kubernetes Service cluster IP restrict
 
 ```hcl
 data "ovh_cloud_project_kube_iprestrictions" "iprestrictions" {
-  service_name = ovh_cloud_project_kube.cluster.service_name
+  service_name = "XXXXXX"
   kube_id = ovh_cloud_project_kube.cluster.id
 }
 
