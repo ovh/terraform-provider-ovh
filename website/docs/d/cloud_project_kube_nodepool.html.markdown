@@ -13,7 +13,7 @@ Use this data source to get a OVH Managed Kubernetes node pool.
 ## Example Usage
 
 ```hcl
-data "ovh_cloud_project_kube_nodepool" "poolDataSource" {
+data "ovh_cloud_project_kube_nodepool" "nodepool" {
   service_name  = XXXXXX
   kube_id       = xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxx
   name          = xxxxxx
