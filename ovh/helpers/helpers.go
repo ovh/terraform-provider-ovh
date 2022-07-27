@@ -209,9 +209,7 @@ func GetNilStringPointerFromData(data interface{}, id string) *string {
 
 func GetNilIntPointerFromData(data interface{}, id string) *int {
 	if resourceData, tok := data.(*schema.ResourceData); tok {
-		if val, ok := resourceData.GetOk(id); ok {
-			return GetNilIntPointer(val)
-		}
+		return GetNilIntPointer(resourceData.Get(id))
 	} else if mapData, tok := data.(map[string]interface{}); tok {
 		if val, ok := mapData[id]; ok {
 			return GetNilIntPointer(val)

@@ -135,11 +135,11 @@ func testAccPreCheckCloudDatabaseNoEngine(t *testing.T) {
 	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_DATABASE_FLAVOR_TEST")
 }
 
-// // Checks that the environment variables needed for the /cloud/project/{projectId}/database/{engine}/{clusterId}/user/ acceptance tests are set.
-// func testAccPreCheckCloudDatabaseUser(t *testing.T) {
-// 	testAccPreCheckCloudDatabase(t)
-// 	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_DATABASE_USER_NAME")
-// }
+// Checks that the environment variables needed for the /cloud/project/{projectId}/database/{engine}/{clusterId}/ipRestriction/ acceptance tests are set.
+func testAccPreCheckCloudDatabaseIpRestriction(t *testing.T) {
+	testAccPreCheckCloudDatabase(t)
+	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_DATABASE_IP_RESTRICTION_IP_TEST")
+}
 
 // Checks that the environment variables needed for the /cloud/project/{projectId}/ip/failover acceptance tests
 // are set.

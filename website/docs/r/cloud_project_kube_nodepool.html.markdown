@@ -21,6 +21,29 @@ resource "ovh_cloud_project_kube_nodepool" "pool" {
    desired_nodes = 3
    max_nodes     = 3
    min_nodes     = 3
+   template {
+     metadata {
+       annotations = {
+         k1 = "v1"
+         k2 = "v2"
+       }
+       finalizers = ["F1", "F2"]
+       labels = {
+         k3 = "v3"
+         k4 = "v4"
+       }
+     }
+     spec {
+       unschedulable = false
+       taints = [
+         {
+           effect = "PreferNoSchedule"
+           key    = "k"
+           value  = "v"
+         }
+       ]
+     }
+  }
 }
 ```
 
@@ -54,6 +77,15 @@ The following arguments are supported:
 * `anti_affinity` - (Optional) should the pool use the anti-affinity feature. Default to `false`.
 
 * `autoscale` - (Optional) Enable auto-scaling for the pool. Default to `false`.
+
+* `template ` - (Optional) Managed Kubernetes nodepool template, which is a complex object constituted by two main nested objects:
+  * metadata (Optional) Metadata of each nodes in the pool
+    * annotations (Optional) Annotations to apply to each nodes
+    * finalizers (Optional) Finalizers to apply to each nodes
+    * labels (Optional) Labels to apply to each nodes
+  * spec (Optional) Spec of each nodes in the pool
+    * taints (Optional) Taints to apply to each nodes
+    * unschedulable (Optional) If true, set nodes as un-schedulable
 
 ## Attributes Reference
 

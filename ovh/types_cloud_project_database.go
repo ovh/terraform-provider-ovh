@@ -286,7 +286,7 @@ func waitForCloudProjectDatabaseDeleted(client *ovh.Client, serviceName, engine 
 		Target:  []string{"DELETED"},
 		Refresh: func() (interface{}, string, error) {
 			res := &CloudProjectDatabaseResponse{}
-			endpoint := fmt.Sprintf("/cloud/project/%s/%s/%s",
+			endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s",
 				url.PathEscape(serviceName),
 				url.PathEscape(engine),
 				url.PathEscape(databaseId),
@@ -310,6 +310,51 @@ func waitForCloudProjectDatabaseDeleted(client *ovh.Client, serviceName, engine 
 
 	_, err := stateConf.WaitForState()
 	return err
+}
+
+type CloudProjectDatabaseIpRestrictionResponse struct {
+	Description string `json:"description"`
+	Ip          string `json:"ip"`
+	Status      string `json:"status"`
+}
+
+func (p *CloudProjectDatabaseIpRestrictionResponse) String() string {
+	return fmt.Sprintf(
+		"IP: %s, Status: %s, Description: %s",
+		p.Ip,
+		p.Status,
+		p.Description,
+	)
+}
+
+func (v CloudProjectDatabaseIpRestrictionResponse) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+
+	obj["description"] = v.Description
+	obj["ip"] = v.Ip
+	obj["status"] = v.Status
+
+	return obj
+}
+
+type CloudProjectDatabaseIpRestrictionCreateOpts struct {
+	Description string `json:"description"`
+	Ip          string `json:"ip"`
+}
+
+func (opts *CloudProjectDatabaseIpRestrictionCreateOpts) FromResource(d *schema.ResourceData) *CloudProjectDatabaseIpRestrictionCreateOpts {
+	opts.Description = d.Get("description").(string)
+	opts.Ip = d.Get("ip").(string)
+	return opts
+}
+
+type CloudProjectDatabaseIpRestrictionUpdateOpts struct {
+	Description string `json:"description"`
+}
+
+func (opts *CloudProjectDatabaseIpRestrictionUpdateOpts) FromResource(d *schema.ResourceData) *CloudProjectDatabaseIpRestrictionUpdateOpts {
+	opts.Description = d.Get("description").(string)
+	return opts
 }
 
 var (

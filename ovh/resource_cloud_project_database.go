@@ -110,19 +110,16 @@ func resourceCloudProjectDatabase() *schema.Resource {
 						"path": {
 							Type:        schema.TypeString,
 							Description: "Path of the endpoint",
-							Optional:    true,
 							Computed:    true,
 						},
 						"port": {
 							Type:        schema.TypeInt,
 							Description: "Connection port for the endpoint",
-							Optional:    true,
 							Computed:    true,
 						},
 						"scheme": {
 							Type:        schema.TypeString,
 							Description: "Scheme used to generate the URI",
-							Optional:    true,
 							Computed:    true,
 						},
 						"ssl": {
@@ -133,13 +130,11 @@ func resourceCloudProjectDatabase() *schema.Resource {
 						"ssl_mode": {
 							Type:        schema.TypeString,
 							Description: "SSL mode used to connect to the service if the SSL is enabled",
-							Optional:    true,
 							Computed:    true,
 						},
 						"uri": {
 							Type:        schema.TypeString,
 							Description: "URI of the endpoint",
-							Optional:    true,
 							Computed:    true,
 						},
 					},
