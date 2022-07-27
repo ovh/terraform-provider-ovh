@@ -63,6 +63,6 @@ The following attributes are exported:
 * `project_id` - Project id
 * `size_status` - Status describing the state between number of nodes wanted and available ones
 * `status` - Current status
-* `up_to_date_nodes` - Number of nodes with latest version installed in the pool
+* `up_to_date_nodes` - Number of nodes with the latest version installed in the pool
 * `updated_at` - Last update date
 
