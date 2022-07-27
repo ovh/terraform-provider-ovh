@@ -3,7 +3,12 @@ package ovh
 import (
 	"errors"
 	"fmt"
+	"net/url"
+	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
@@ -246,4 +251,108 @@ func checkNodesEquality(nodes []CloudProjectDatabaseNodes) error {
 		}
 	}
 	return nil
+}
+
+func waitForCloudProjectDatabaseReady(client *ovh.Client, serviceName, engine string, databaseId string, timeOut time.Duration, delay time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"PENDING", "CREATING", "UPDATING"},
+		Target:  []string{"READY"},
+		Refresh: func() (interface{}, string, error) {
+			res := &CloudProjectDatabaseResponse{}
+			endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s",
+				url.PathEscape(serviceName),
+				url.PathEscape(engine),
+				url.PathEscape(databaseId),
+			)
+			err := client.Get(endpoint, res)
+			if err != nil {
+				return res, "", err
+			}
+
+			return res, res.Status, nil
+		},
+		Timeout:    timeOut,
+		Delay:      delay,
+		MinTimeout: 10 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+	return err
+}
+
+func waitForCloudProjectDatabaseDeleted(client *ovh.Client, serviceName, engine string, databaseId string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"DELETING"},
+		Target:  []string{"DELETED"},
+		Refresh: func() (interface{}, string, error) {
+			res := &CloudProjectDatabaseResponse{}
+			endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s",
+				url.PathEscape(serviceName),
+				url.PathEscape(engine),
+				url.PathEscape(databaseId),
+			)
+			err := client.Get(endpoint, res)
+			if err != nil {
+				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
+					return res, "DELETED", nil
+				} else {
+					return res, "", err
+				}
+			}
+
+			return res, res.Status, nil
+		},
+		Timeout:      30 * time.Minute,
+		Delay:        30 * time.Second,
+		MinTimeout:   3 * time.Second,
+		PollInterval: 20 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+	return err
+}
+
+type CloudProjectDatabaseIpRestrictionResponse struct {
+	Description string `json:"description"`
+	Ip          string `json:"ip"`
+	Status      string `json:"status"`
+}
+
+func (p *CloudProjectDatabaseIpRestrictionResponse) String() string {
+	return fmt.Sprintf(
+		"IP: %s, Status: %s, Description: %s",
+		p.Ip,
+		p.Status,
+		p.Description,
+	)
+}
+
+func (v CloudProjectDatabaseIpRestrictionResponse) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+
+	obj["description"] = v.Description
+	obj["ip"] = v.Ip
+	obj["status"] = v.Status
+
+	return obj
+}
+
+type CloudProjectDatabaseIpRestrictionCreateOpts struct {
+	Description string `json:"description"`
+	Ip          string `json:"ip"`
+}
+
+func (opts *CloudProjectDatabaseIpRestrictionCreateOpts) FromResource(d *schema.ResourceData) *CloudProjectDatabaseIpRestrictionCreateOpts {
+	opts.Description = d.Get("description").(string)
+	opts.Ip = d.Get("ip").(string)
+	return opts
+}
+
+type CloudProjectDatabaseIpRestrictionUpdateOpts struct {
+	Description string `json:"description"`
+}
+
+func (opts *CloudProjectDatabaseIpRestrictionUpdateOpts) FromResource(d *schema.ResourceData) *CloudProjectDatabaseIpRestrictionUpdateOpts {
+	opts.Description = d.Get("description").(string)
+	return opts
 }
