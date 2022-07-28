@@ -38,7 +38,7 @@ output "pguser_roles" {
 The following attributes are exported:
 
 * `created_at` - Date of the creation of the user.
-* `id` - Public Cloud Database Service ID.
+* `id` - ID of the user.
 * `roles` - Roles the user belongs to.
 * `status` - Current status of the user.
 * `name` - Name of the user.
