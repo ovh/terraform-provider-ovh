@@ -40,3 +40,4 @@ output "cluster_ids" {
 the following attributes are exported:
 
 * `cluster_ids` - The list of managed databases ids of the project.
+* `service_name` - See Argument Reference above.

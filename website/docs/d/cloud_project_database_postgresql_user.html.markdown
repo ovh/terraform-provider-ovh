@@ -6,7 +6,7 @@ description: |-
   Get information about a user of a postgresql cluster associated with a public cloud project.
 ---
 
-# cloud_project_database_postgresql_user (Data Source)
+# ovh_cloud_project_database_postgresql_user (Data Source)
 
 Use this data source to get information about a user of a postgresql cluster associated with a public cloud project.
 
@@ -37,8 +37,10 @@ output "pguser_roles" {
 
 The following attributes are exported:
 
+* `cluster_id` - See Argument Reference above.
 * `created_at` - Date of the creation of the user.
 * `id` - ID of the user.
 * `roles` - Roles the user belongs to.
+* `service_name` - Current status of the user.
 * `status` - Current status of the user.
 * `name` - Name of the user.

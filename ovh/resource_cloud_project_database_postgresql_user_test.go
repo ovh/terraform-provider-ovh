@@ -24,7 +24,7 @@ resource "ovh_cloud_project_database_postgresql_user" "user" {
 	service_name = ovh_cloud_project_database.db.service_name
 	cluster_id   = ovh_cloud_project_database.db.id
 	name		 = "%s"
-	roles = ["replication"]
+	roles 		 = ["%s"]
 }
 `
 
@@ -37,6 +37,7 @@ func TestAccCloudProjectDatabasePostgresqlUser_basic(t *testing.T) {
 	region := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_REGION_TEST")
 	flavor := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_FLAVOR_TEST")
 	name := "johndoe"
+	replication := "replication"
 
 	config := fmt.Sprintf(
 		testAccCloudProjectDatabasePostgresqlUserConfig,
@@ -45,6 +46,7 @@ func TestAccCloudProjectDatabasePostgresqlUser_basic(t *testing.T) {
 		region,
 		flavor,
 		name,
+		replication,
 	)
 
 	resource.Test(t, resource.TestCase{
@@ -60,6 +62,8 @@ func TestAccCloudProjectDatabasePostgresqlUser_basic(t *testing.T) {
 						"ovh_cloud_project_database_postgresql_user.user", "password"),
 					resource.TestCheckResourceAttrSet(
 						"ovh_cloud_project_database_postgresql_user.user", "roles.#"),
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_project_database_postgresql_user.user", "roles.0", replication),
 					resource.TestCheckResourceAttrSet(
 						"ovh_cloud_project_database_postgresql_user.user", "status"),
 					resource.TestCheckResourceAttr(

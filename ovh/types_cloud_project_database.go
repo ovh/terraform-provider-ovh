@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -20,13 +21,13 @@ type CloudProjectDatabaseResponse struct {
 	Flavor          string                         `json:"flavor"`
 	Id              string                         `json:"id"`
 	MaintenanceTime string                         `json:"maintenanceTime"`
-	NetworkId       *string                        `json:"networkId,omitempty"`
+	NetworkId       string                         `json:"networkId"`
 	NetworkType     string                         `json:"networkType"`
 	Plan            string                         `json:"plan"`
 	NodeNumber      int                            `json:"nodeNumber"`
 	Region          string                         `json:"region"`
 	Status          string                         `json:"status"`
-	SubnetId        *string                        `json:"subnetId,omitempty"`
+	SubnetId        string                         `json:"subnetId"`
 	Version         string                         `json:"version"`
 }
 
@@ -70,14 +71,14 @@ func (v CloudProjectDatabaseResponse) ToMap() map[string]interface{} {
 }
 
 type CloudProjectDatabaseEndpoint struct {
-	Component string  `json:"component"`
-	Domain    string  `json:"domain"`
-	Path      *string `json:"path,omitempty"`
-	Port      *int    `json:"port,omitempty"`
-	Scheme    *string `json:"scheme,omitempty"`
-	Ssl       *bool   `json:"ssl,omitempty"`
-	SslMode   *string `json:"sslMode,omitempty"`
-	Uri       *string `json:"uri,omitempty"`
+	Component string `json:"component"`
+	Domain    string `json:"domain"`
+	Path      string `json:"path"`
+	Port      int    `json:"port"`
+	Scheme    string `json:"scheme"`
+	Ssl       bool   `json:"ssl"`
+	SslMode   string `json:"sslMode"`
+	Uri       string `json:"uri"`
 }
 
 func (v CloudProjectDatabaseEndpoint) ToMap() map[string]interface{} {
@@ -85,44 +86,26 @@ func (v CloudProjectDatabaseEndpoint) ToMap() map[string]interface{} {
 
 	obj["component"] = v.Component
 	obj["domain"] = v.Domain
-
-	if v.Path != nil {
-		obj["path"] = v.Path
-	}
-
-	if v.Port != nil {
-		obj["port"] = v.Port
-	}
-
-	if v.Scheme != nil {
-		obj["scheme"] = v.Scheme
-	}
-
-	if v.Ssl != nil {
-		obj["ssl"] = v.Ssl
-	}
-
-	if v.SslMode != nil {
-		obj["ssl_mode"] = v.SslMode
-	}
-
-	if v.Uri != nil {
-		obj["uri"] = v.Uri
-	}
+	obj["path"] = v.Path
+	obj["port"] = v.Port
+	obj["scheme"] = v.Scheme
+	obj["ssl"] = v.Ssl
+	obj["ssl_mode"] = v.SslMode
+	obj["uri"] = v.Uri
 
 	return obj
 }
 
 type CloudProjectDatabaseNodes struct {
-	NetworkId *string `json:"networkId,omitempty"`
-	Region    string  `json:"region"`
-	SubnetId  *string `json:"subnetId,omitempty"`
+	NetworkId string `json:"networkId,omitempty"`
+	Region    string `json:"region"`
+	SubnetId  string `json:"subnetId,omitempty"`
 }
 
 func (opts *CloudProjectDatabaseNodes) FromResourceWithPath(d *schema.ResourceData, path string) *CloudProjectDatabaseNodes {
 	opts.Region = d.Get(fmt.Sprintf("%s.region", path)).(string)
-	opts.NetworkId = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.network_id", path))
-	opts.SubnetId = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.subnet_id", path))
+	opts.NetworkId = d.Get(fmt.Sprintf("%s.network_id", path)).(string)
+	opts.SubnetId = d.Get(fmt.Sprintf("%s.subnet_id", path)).(string)
 
 	return opts
 }
@@ -130,25 +113,19 @@ func (opts *CloudProjectDatabaseNodes) FromResourceWithPath(d *schema.ResourceDa
 func (v CloudProjectDatabaseNodes) ToMap() map[string]interface{} {
 	obj := make(map[string]interface{})
 
-	if v.NetworkId != nil {
-		obj["network_id"] = v.NetworkId
-	}
-
+	obj["network_id"] = v.NetworkId
 	obj["region"] = v.Region
-
-	if v.SubnetId != nil {
-		obj["subnet_id"] = v.SubnetId
-	}
+	obj["subnet_id"] = v.SubnetId
 
 	return obj
 }
 
 type CloudProjectDatabaseCreateOpts struct {
-	Description  *string                          `json:"description,omitempty"`
-	NetworkId    *string                          `json:"networkId,omitempty"`
+	Description  string                           `json:"description,omitempty"`
+	NetworkId    string                           `json:"networkId,omitempty"`
 	NodesPattern CloudProjectDatabaseNodesPattern `json:"nodesPattern,omitempty"`
 	Plan         string                           `json:"plan"`
-	SubnetId     *string                          `json:"subnetId,omitempty"`
+	SubnetId     string                           `json:"subnetId,omitempty"`
 	Version      string                           `json:"version"`
 }
 
@@ -159,7 +136,7 @@ type CloudProjectDatabaseNodesPattern struct {
 }
 
 func (opts *CloudProjectDatabaseCreateOpts) FromResource(d *schema.ResourceData) (error, *CloudProjectDatabaseCreateOpts) {
-	opts.Description = helpers.GetNilStringPointerFromData(d, "description")
+	opts.Description = d.Get("description").(string)
 	opts.Plan = d.Get("plan").(string)
 
 	nodes := []CloudProjectDatabaseNodes{}
@@ -183,10 +160,6 @@ func (opts *CloudProjectDatabaseCreateOpts) FromResource(d *schema.ResourceData)
 	opts.Version = d.Get("version").(string)
 
 	return nil, opts
-}
-
-func (s *CloudProjectDatabaseCreateOpts) String() string {
-	return fmt.Sprintf("%s: %s", *s.Description, s.Version)
 }
 
 type CloudProjectDatabaseUpdateOpts struct {
@@ -227,26 +200,20 @@ func checkNodesEquality(nodes []CloudProjectDatabaseNodes) error {
 		return nil
 	}
 
-	networkId := ""
-	if nodes[0].NetworkId != nil {
-		networkId = *nodes[0].NetworkId
-	}
+	networkId := nodes[0].NetworkId
 
 	region := nodes[0].Region
 
-	subnetId := ""
-	if nodes[0].SubnetId != nil {
-		subnetId = *nodes[0].SubnetId
-	}
+	subnetId := nodes[0].SubnetId
 
 	for _, n := range nodes[1:] {
-		if (n.NetworkId == nil && networkId != "") || (n.NetworkId != nil && networkId != *n.NetworkId) {
+		if n.NetworkId != networkId {
 			return errors.New("network_id is not the same across nodes")
 		}
 		if region != n.Region {
 			return errors.New("region is not the same across nodes")
 		}
-		if (n.SubnetId == nil && subnetId != "") || (n.SubnetId != nil && subnetId != *n.SubnetId) {
+		if n.SubnetId != subnetId {
 			return errors.New("subnet_id is not the same across nodes")
 		}
 	}
@@ -295,22 +262,22 @@ func waitForCloudProjectDatabaseDeleted(client *ovh.Client, serviceName, engine 
 			if err != nil {
 				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
 					return res, "DELETED", nil
-				} else {
-					return res, "", err
 				}
+				return res, "", err
 			}
 
 			return res, res.Status, nil
 		},
 		Timeout:      30 * time.Minute,
 		Delay:        30 * time.Second,
-		MinTimeout:   3 * time.Second,
 		PollInterval: 20 * time.Second,
 	}
 
 	_, err := stateConf.WaitForState()
 	return err
 }
+
+// IP Restriction
 
 type CloudProjectDatabaseIpRestrictionResponse struct {
 	Description string `json:"description"`
@@ -338,7 +305,7 @@ func (v CloudProjectDatabaseIpRestrictionResponse) ToMap() map[string]interface{
 }
 
 type CloudProjectDatabaseIpRestrictionCreateOpts struct {
-	Description string `json:"description"`
+	Description string `json:"description,omitempty"`
 	Ip          string `json:"ip"`
 }
 
@@ -349,7 +316,7 @@ func (opts *CloudProjectDatabaseIpRestrictionCreateOpts) FromResource(d *schema.
 }
 
 type CloudProjectDatabaseIpRestrictionUpdateOpts struct {
-	Description string `json:"description"`
+	Description string `json:"description,omitempty"`
 }
 
 func (opts *CloudProjectDatabaseIpRestrictionUpdateOpts) FromResource(d *schema.ResourceData) *CloudProjectDatabaseIpRestrictionUpdateOpts {
@@ -357,14 +324,66 @@ func (opts *CloudProjectDatabaseIpRestrictionUpdateOpts) FromResource(d *schema.
 	return opts
 }
 
-var (
-	genericEngineUserEndpoint = map[string]struct{}{
-		"cassandra":    {},
-		"mysql":        {},
-		"kafka":        {},
-		"kafkaConnect": {},
+func waitForCloudProjectDatabaseIpRestrictionReady(client *ovh.Client, serviceName, engine string, databaseId string, ip string, timeOut time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"PENDING", "CREATING", "UPDATING"},
+		Target:  []string{"READY"},
+		Refresh: func() (interface{}, string, error) {
+			res := &CloudProjectDatabaseIpRestrictionResponse{}
+			endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/ipRestriction/%s",
+				url.PathEscape(serviceName),
+				url.PathEscape(engine),
+				url.PathEscape(databaseId),
+				url.PathEscape(ip),
+			)
+			err := client.Get(endpoint, res)
+			if err != nil {
+				return res, "", err
+			}
+
+			return res, res.Status, nil
+		},
+		Timeout:    timeOut,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
 	}
-)
+
+	_, err := stateConf.WaitForState()
+	return err
+}
+
+func waitForCloudProjectDatabaseIpRestrictionDeleted(client *ovh.Client, serviceName, engine string, databaseId string, ip string, timeOut time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"DELETING"},
+		Target:  []string{"DELETED"},
+		Refresh: func() (interface{}, string, error) {
+			res := &CloudProjectDatabaseResponse{}
+			endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/ipRestriction/%s",
+				url.PathEscape(serviceName),
+				url.PathEscape(engine),
+				url.PathEscape(databaseId),
+				url.PathEscape(ip),
+			)
+			err := client.Get(endpoint, res)
+			if err != nil {
+				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
+					return res, "DELETED", nil
+				}
+				return res, "", err
+			}
+
+			return res, res.Status, nil
+		},
+		Timeout:    timeOut,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+	return err
+}
+
+// User
 
 type CloudProjectDatabaseUserResponse struct {
 	CreatedAt string `json:"createdAt"`
@@ -403,12 +422,21 @@ func (opts *CloudProjectDatabaseUserCreateOpts) FromResource(d *schema.ResourceD
 	return opts
 }
 
-func mustGenericEngineUserEndpoint(engine string) error {
-	if _, ok := genericEngineUserEndpoint[engine]; !ok {
-		return fmt.Errorf("Engine %s do not use the generic user endpoint", engine)
+func validateCloudProjectDatabaseUserEngineFunc(v interface{}, k string) (ws []string, errors []error) {
+	err := helpers.ValidateStringEnum(v.(string), []string{
+		"cassandra",
+		"mysql",
+		"kafka",
+		"kafkaConnect",
+	})
+
+	if err != nil {
+		errors = append(errors, err)
 	}
-	return nil
+	return
 }
+
+// PostgresqlUser
 
 type CloudProjectDatabasePostgresqlUserResponse struct {
 	CreatedAt string   `json:"createdAt"`
@@ -442,7 +470,7 @@ func (v CloudProjectDatabasePostgresqlUserResponse) ToMap() map[string]interface
 
 type CloudProjectDatabasePostgresqlUserCreateOpts struct {
 	Name  string   `json:"name"`
-	Roles []string `json:"roles"`
+	Roles []string `json:"roles,omitempty"`
 }
 
 func (opts *CloudProjectDatabasePostgresqlUserCreateOpts) FromResource(d *schema.ResourceData) *CloudProjectDatabasePostgresqlUserCreateOpts {
@@ -458,7 +486,7 @@ func (opts *CloudProjectDatabasePostgresqlUserCreateOpts) FromResource(d *schema
 }
 
 type CloudProjectDatabasePostgresqlUserUpdateOpts struct {
-	Roles []string `json:"roles"`
+	Roles []string `json:"roles,omitempty"`
 }
 
 func (opts *CloudProjectDatabasePostgresqlUserUpdateOpts) FromResource(d *schema.ResourceData) *CloudProjectDatabasePostgresqlUserUpdateOpts {
@@ -468,4 +496,225 @@ func (opts *CloudProjectDatabasePostgresqlUserUpdateOpts) FromResource(d *schema
 		opts.Roles[i] = e.(string)
 	}
 	return opts
+}
+
+// MongoDBUser
+
+type CloudProjectDatabaseMongodbUserResponse struct {
+	CreatedAt string   `json:"createdAt"`
+	Id        string   `json:"id"`
+	Password  string   `json:"password"`
+	Roles     []string `json:"roles"`
+	Status    string   `json:"status"`
+	Username  string   `json:"username"`
+}
+
+func (p *CloudProjectDatabaseMongodbUserResponse) String() string {
+	return fmt.Sprintf(
+		"Id: %s, User: %s, Status: %s",
+		p.Id,
+		p.Username,
+		p.Status,
+	)
+}
+
+func (v CloudProjectDatabaseMongodbUserResponse) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+
+	obj["created_at"] = v.CreatedAt
+	obj["id"] = v.Id
+	obj["name"] = v.Username
+	obj["status"] = v.Status
+	for i := range v.Roles {
+		v.Roles[i] = strings.TrimSuffix(v.Roles[i], "@admin")
+	}
+	obj["roles"] = v.Roles
+
+	return obj
+}
+
+type CloudProjectDatabaseMongodbUserCreateOpts struct {
+	Name  string   `json:"name"`
+	Roles []string `json:"roles"`
+}
+
+func (p *CloudProjectDatabaseMongodbUserCreateOpts) String() string {
+	return fmt.Sprintf(
+		"Name: %s, Password: <sensitive>, Roles: %v",
+		p.Name,
+		p.Roles,
+	)
+}
+
+func (opts *CloudProjectDatabaseMongodbUserCreateOpts) FromResource(d *schema.ResourceData) *CloudProjectDatabaseMongodbUserCreateOpts {
+	opts.Name = d.Get("name").(string)
+	roles := d.Get("roles").(*schema.Set).List()
+	opts.Roles = make([]string, len(roles))
+	for i, e := range roles {
+		if e != nil {
+			opts.Roles[i] = e.(string)
+		}
+	}
+	return opts
+}
+
+type CloudProjectDatabaseMongodbUserUpdateOpts struct {
+	Roles []string `json:"roles"`
+}
+
+func (p *CloudProjectDatabaseMongodbUserUpdateOpts) String() string {
+	return fmt.Sprintf(
+		"Password: <sensitive>, Roles: %v",
+		p.Roles,
+	)
+}
+
+func (opts *CloudProjectDatabaseMongodbUserUpdateOpts) FromResource(d *schema.ResourceData) *CloudProjectDatabaseMongodbUserUpdateOpts {
+	roles := d.Get("roles").(*schema.Set).List()
+	opts.Roles = make([]string, len(roles))
+	for i, e := range roles {
+		opts.Roles[i] = e.(string)
+	}
+	return opts
+}
+
+// RedisUser
+
+type CloudProjectDatabaseRedisUserResponse struct {
+	Categories []string `json:"categories"`
+	Channels   []string `json:"channels"`
+	Commands   []string `json:"commands"`
+	CreatedAt  string   `json:"createdAt"`
+	Id         string   `json:"id"`
+	Keys       []string `json:"keys"`
+	Password   string   `json:"password"`
+	Status     string   `json:"status"`
+	Username   string   `json:"username"`
+}
+
+func (p *CloudProjectDatabaseRedisUserResponse) String() string {
+	return fmt.Sprintf(
+		"Id: %s, User: %s, Status: %s",
+		p.Id,
+		p.Username,
+		p.Status,
+	)
+}
+
+func (v CloudProjectDatabaseRedisUserResponse) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+
+	obj["categories"] = v.Categories
+	obj["channels"] = v.Channels
+	obj["commands"] = v.Commands
+	obj["created_at"] = v.CreatedAt
+	obj["id"] = v.Id
+	obj["keys"] = v.Keys
+	obj["name"] = v.Username
+	obj["status"] = v.Status
+
+	return obj
+}
+
+type CloudProjectDatabaseRedisUserCreateOpts struct {
+	Categories []string `json:"categories,omitempty"`
+	Channels   []string `json:"channels,omitempty"`
+	Commands   []string `json:"commands,omitempty"`
+	Keys       []string `json:"keys,omitempty"`
+	Name       string   `json:"name"`
+}
+
+func getStringSlice(i interface{}) []string {
+	iarr := i.([]interface{})
+	arr := make([]string, len(iarr))
+	for i, e := range iarr {
+		if e != nil {
+			arr[i] = e.(string)
+		}
+	}
+	return arr
+}
+
+func (opts *CloudProjectDatabaseRedisUserCreateOpts) FromResource(d *schema.ResourceData) *CloudProjectDatabaseRedisUserCreateOpts {
+	opts.Name = d.Get("name").(string)
+	opts.Categories = getStringSlice(d.Get("categories"))
+	opts.Channels = getStringSlice(d.Get("channels"))
+	opts.Commands = getStringSlice(d.Get("commands"))
+	opts.Keys = getStringSlice(d.Get("keys"))
+
+	return opts
+}
+
+type CloudProjectDatabaseRedisUserUpdateOpts struct {
+	Categories []string `json:"categories,omitempty"`
+	Channels   []string `json:"channels,omitempty"`
+	Commands   []string `json:"commands,omitempty"`
+	Keys       []string `json:"keys,omitempty"`
+}
+
+func (opts *CloudProjectDatabaseRedisUserUpdateOpts) FromResource(d *schema.ResourceData) *CloudProjectDatabaseRedisUserUpdateOpts {
+	opts.Categories = getStringSlice(d.Get("categories"))
+	opts.Channels = getStringSlice(d.Get("channels"))
+	opts.Commands = getStringSlice(d.Get("commands"))
+	opts.Keys = getStringSlice(d.Get("keys"))
+	return opts
+}
+
+func waitForCloudProjectDatabaseUserReady(client *ovh.Client, serviceName, engine string, databaseId string, userId string, timeOut time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"PENDING", "CREATING", "UPDATING"},
+		Target:  []string{"READY"},
+		Refresh: func() (interface{}, string, error) {
+			res := &CloudProjectDatabaseUserResponse{}
+			endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/user/%s",
+				url.PathEscape(serviceName),
+				url.PathEscape(engine),
+				url.PathEscape(databaseId),
+				url.PathEscape(userId),
+			)
+			err := client.Get(endpoint, res)
+			if err != nil {
+				return res, "", err
+			}
+
+			return res, res.Status, nil
+		},
+		Timeout:    timeOut,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+	return err
+}
+
+func waitForCloudProjectDatabaseUserDeleted(client *ovh.Client, serviceName, engine string, databaseId string, userId string, timeOut time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"DELETING"},
+		Target:  []string{"DELETED"},
+		Refresh: func() (interface{}, string, error) {
+			res := &CloudProjectDatabaseResponse{}
+			endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/user/%s",
+				url.PathEscape(serviceName),
+				url.PathEscape(engine),
+				url.PathEscape(databaseId),
+				url.PathEscape(userId),
+			)
+			err := client.Get(endpoint, res)
+			if err != nil {
+				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
+					return res, "DELETED", nil
+				}
+				return res, "", err
+			}
+
+			return res, res.Status, nil
+		},
+		Timeout:    timeOut,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+	return err
 }

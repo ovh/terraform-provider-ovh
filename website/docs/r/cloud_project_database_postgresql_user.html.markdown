@@ -6,7 +6,7 @@ description: |-
   Creates an user for a postgresql cluster associated with a public cloud project.
 ---
 
-# cloud_project_database_postgresql_user
+# ovh_cloud_project_database_postgresql_user
 
 Creates an user for a postgresql cluster associated with a public cloud project.
 
@@ -40,17 +40,17 @@ The following arguments are supported:
 
 * `roles` - (Optional: if omit, default role) Roles the user belongs to. Possible values:
   * `["replication"]`
-  * `[]` (default role)
-
 
 ## Attributes Reference
 
 The following attributes are exported:
 
+* `cluster_id` - See Argument Reference above.
 * `created_at` - Date of the creation of the user.
-* `id` - Public Cloud Database Service ID.
+* `id` - ID of the user.
 * `password` - Password of the user.
 * `roles` - Roles the user belongs to.
+* `service_name` - See Argument Reference above.
 * `status` - Current status of the user.
 * `name` - See Argument Reference above.
 
