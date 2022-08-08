@@ -6,7 +6,7 @@ description: |-
   Creates an user for a database cluster associated with a public cloud project.
 ---
 
-# cloud_project_database_user
+# ovh_cloud_project_database_user
 
 Creates an user for a database cluster associated with a public cloud project.
 
@@ -57,9 +57,11 @@ Available engines for this resource (other have specific resource):
 
 The following attributes are exported:
 
+* `cluster_id` - See Argument Reference above.
 * `created_at` - Date of the creation of the user.
-* `id` - Public Cloud Database Service ID.
+* `id` - ID of the user.
 * `password` - Password of the user.
+* `service_name` - See Argument Reference above.
 * `status` - Current status of the user.
 * `name` - See Argument Reference above.
 

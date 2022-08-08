@@ -6,7 +6,7 @@ description: |-
   Get the list of users of a database cluster associated with a public cloud project.
 ---
 
-# cloud_project_database_users (Data Source)
+# ovh_cloud_project_database_users (Data Source)
 
 Use this data source to get the list of users of a database cluster associated with a public cloud project.
 
@@ -38,4 +38,6 @@ output "user_ids" {
 
 The following attributes are exported:
 
+* `cluster_id` - See Argument Reference above.
+* `service_name` - See Argument Reference above.
 * `user_ids` - The list of users ids of the database cluster associated with the project.
