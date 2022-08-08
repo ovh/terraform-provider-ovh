@@ -321,7 +321,7 @@ func cloudProjectContainerRegistryPlanUpdate(d *schema.ResourceData, meta interf
 	}
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"UPDATING"},
+		Pending:    []string{"SCALING_UP"},
 		Target:     []string{"READY"},
 		Refresh:    waitForCloudProjectContainerRegistry(config.OVHClient, serviceName, d.Id()),
 		Timeout:    30 * time.Minute,
