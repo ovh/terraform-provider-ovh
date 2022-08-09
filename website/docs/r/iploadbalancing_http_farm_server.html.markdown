@@ -49,7 +49,7 @@ The following arguments are supported:
 * `address` - Address of the backend server (IP from either internal or OVH network)
 * `status` - backend status - `active` or `inactive`
 * `port` - Port that backend will respond on
-* `proxy_protocol_version` - version of the PROXY protocol used to pass origin connection information from loadbalancer to recieving service (`v1`, `v2`, `v2-ssl`, `v2-ssl-cn`)
+* `proxy_protocol_version` - version of the PROXY protocol used to pass origin connection information from loadbalancer to receiving service (`v1`, `v2`, `v2-ssl`, `v2-ssl-cn`)
 * `weight` - used in loadbalancing algorithm
 * `probe` - defines if backend will be probed to determine health and keep as active in farm if healthy
 * `ssl` - is the connection ciphered with SSL (TLS)
