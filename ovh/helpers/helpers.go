@@ -358,3 +358,25 @@ func ValidateSubsidiary(v string) error {
 		"ws",
 	})
 }
+
+// HashMapRegionAttributes creates an hash for the region attributes.
+func HashMapRegionAttributes(v interface{}) int {
+	attributes, ok := v.(map[string]interface{})
+	if !ok {
+		return 0
+	}
+
+	builder := strings.Builder{}
+
+	for _, key := range []string{"status", "region", "openstackid"} {
+		value, inMap := attributes[key]
+		if inMap {
+			stringValue, ok := value.(string)
+			if ok {
+				builder.WriteString(stringValue)
+			}
+		}
+	}
+
+	return schema.HashString(builder.String())
+}
