@@ -23,7 +23,7 @@ resource "ovh_vrack_cloudproject" "vcp" {
 
 The following arguments are supported:
 
-* `service_name` - (Required) The id of the vrack. If omitted,
+* `service_name` - (Required) The service name of the vrack. If omitted,
     the `OVH_VRACK_SERVICE` environment variable is used. 
 
 * `project_id` - (Required) The id of the public cloud project. If omitted,

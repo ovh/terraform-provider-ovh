@@ -3,12 +3,12 @@ layout: "ovh"
 page_title: "OVH: iploadbalancing_refresh"
 sidebar_current: "docs-ovh-resource-iploadbalancing-refresh"
 description: |-
-  Applies changes from other ovh_iploadbalancing_* resourcesto the production configuration of loadbalancers.
+  Applies changes from other ovh_iploadbalancing_* resources to the production configuration of loadbalancers.
 ---
 
 # ovh\_iploadbalancing\_refresh
 
-Applies changes from other ovh_iploadbalancing_* resourcesto the production configuration of loadbalancers.
+Applies changes from other ovh_iploadbalancing_* resources to the production configuration of loadbalancers.
 
 ## Example Usage
 
@@ -51,7 +51,7 @@ resource "ovh_iploadbalancing_refresh" "mylb" {
 The following arguments are supported:
 
 * `service_name` - (Required) The internal name of your IP load balancing
-* `keepers` - List of values traccked to trigger refresh, used also to form implicit dependencies
+* `keepers` - List of values tracked to trigger refresh, used also to form implicit dependencies
 
 ## Attributes Reference
 

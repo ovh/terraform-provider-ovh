@@ -40,6 +40,7 @@ The following arguments are supported:
 
 The following attributes are exported:
 
+* `id` - The id of the network
 * `service_name` - See Argument Reference above.
 * `name` - See Argument Reference above.
 * `vlan_id` - See Argument Reference above.
