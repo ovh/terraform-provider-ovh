@@ -39,8 +39,8 @@ The following arguments are supported:
 * `probe` - define a backend healthcheck probe
   * `type` - (Required) Valid values : `http`, `internal`, `mysql`, `oco`, `pgsql`, `smtp`, `tcp`
   * `interval` - probe interval, Value between 30 and 3600 seconds, default 30
-  * `match` - What to mach `pattern` against (`contains`, `default`, `internal`, `matches`, `status`)
-  * `port` - Port for backends to recieve traffic on.
+  * `match` - What to match `pattern` against (`contains`, `default`, `internal`, `matches`, `status`)
+  * `port` - Port for backends to receive traffic on.
   * `negate` - Negate probe result
   * `pattern` - Pattern to match against `match`
   * `force_ssl` - Force use of SSL (TLS)

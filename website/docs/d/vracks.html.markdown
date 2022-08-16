@@ -24,5 +24,5 @@ This datasource takes no argument.
 
 The following attributes are exported:
 
-*  - The list of vrack IDs available for your OVH account.
+* `result` - The list of vrack service name available for your OVH account.
 

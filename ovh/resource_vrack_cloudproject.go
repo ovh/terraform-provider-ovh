@@ -24,7 +24,7 @@ func resourceVrackCloudProject() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 				DefaultFunc: schema.EnvDefaultFunc("OVH_VRACK_SERVICE", nil),
-				Description: "Service name of the resource representing the id of the cloud project.",
+				Description: "Service name of the vrack resource.",
 			},
 			"project_id": {
 				Type:        schema.TypeString,
