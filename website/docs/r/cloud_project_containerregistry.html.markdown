@@ -27,6 +27,8 @@ resource "ovh_cloud_project_containerregistry" "reg" {
 }
 ```
 
+Warning: You can update and migrate to a higher plan at any time but not the contrary.
+
 ## Argument Reference
 
 
