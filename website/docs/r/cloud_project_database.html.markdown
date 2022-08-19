@@ -94,7 +94,7 @@ The following arguments are supported:
   * `subnet_id` - Private subnet ID in which the node is.
 
 * `plan` - List of nodes object.
-  Enum: "esential", "business", "enterprise".
+  Enum: "essential", "business", "enterprise".
 
 * `version` - The version of the engine in which the service should be deployed
 
