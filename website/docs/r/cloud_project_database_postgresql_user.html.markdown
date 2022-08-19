@@ -6,7 +6,7 @@ description: |-
   Creates an user for a postgresql cluster associated with a public cloud project.
 ---
 
-# cloud_project_database_postgresql_user
+# ovh_cloud_project_database_postgresql_user
 
 Creates an user for a postgresql cluster associated with a public cloud project.
 

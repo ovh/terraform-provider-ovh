@@ -6,7 +6,7 @@ description: |-
   Get information about a user of a postgresql cluster associated with a public cloud project.
 ---
 
-# cloud_project_database_postgresql_user (Data Source)
+# ovh_cloud_project_database_postgresql_user (Data Source)
 
 Use this data source to get information about a user of a postgresql cluster associated with a public cloud project.
 

@@ -8,7 +8,7 @@ description: |-
 
 # ovh_vrack_ip
 
-Attach a Ip block to a VRack.
+Attach an IP block to a VRack.
 
 ## Example Usage
 
