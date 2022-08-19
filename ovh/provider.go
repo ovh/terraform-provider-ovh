@@ -58,6 +58,7 @@ func Provider() *schema.Provider {
 			"ovh_cloud_project_kube_nodepool":                         dataSourceCloudProjectKubeNodepool(),
 			"ovh_cloud_project_region":                                dataSourceCloudProjectRegion(),
 			"ovh_cloud_project_regions":                               dataSourceCloudProjectRegions(),
+			"ovh_cloud_project_user_s3_credentials":                   dataCloudProjectUserS3Credentials(),
 			"ovh_dbaas_logs_input_engine":                             dataSourceDbaasLogsInputEngine(),
 			"ovh_dbaas_logs_output_graylog_stream":                    dataSourceDbaasLogsOutputGraylogStream(),
 			"ovh_dedicated_ceph":                                      dataSourceDedicatedCeph(),
