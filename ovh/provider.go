@@ -106,6 +106,7 @@ func Provider() *schema.Provider {
 			"ovh_cloud_project_network_private":                           resourceCloudProjectNetworkPrivate(),
 			"ovh_cloud_project_network_private_subnet":                    resourceCloudProjectNetworkPrivateSubnet(),
 			"ovh_cloud_project_user":                                      resourceCloudProjectUser(),
+			"ovh_cloud_project_user_s3_credential":                        resourceCloudProjectUserS3Credential(),
 			"ovh_dbaas_logs_input":                                        resourceDbaasLogsInput(),
 			"ovh_dbaas_logs_output_graylog_stream":                        resourceDbaasLogsOutputGraylogStream(),
 			"ovh_dedicated_ceph_acl":                                      resourceDedicatedCephACL(),
