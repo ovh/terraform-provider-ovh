@@ -6,7 +6,7 @@ description: |-
   Get information about a managed database cluster in a public cloud project.
 ---
 
-# cloud_project_database (Data Source)
+# ovh_cloud_project_database (Data Source)
 
 Use this data source to get the managed database of a public cloud project.
 

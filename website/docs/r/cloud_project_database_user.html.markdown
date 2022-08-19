@@ -6,7 +6,7 @@ description: |-
   Creates an user for a database cluster associated with a public cloud project.
 ---
 
-# cloud_project_database_user
+# ovh_cloud_project_database_user
 
 Creates an user for a database cluster associated with a public cloud project.
 
