@@ -6,7 +6,7 @@ description: |-
   Get the list of users of a database cluster associated with a public cloud project.
 ---
 
-# cloud_project_database_users (Data Source)
+# ovh_cloud_project_database_users (Data Source)
 
 Use this data source to get the list of users of a database cluster associated with a public cloud project.
 
