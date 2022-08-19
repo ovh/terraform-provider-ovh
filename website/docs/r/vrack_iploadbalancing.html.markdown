@@ -8,7 +8,7 @@ description: |-
 
 # ovh_vrack_iploadbalancing
 
-Attach a ip loadbalancing to a VRack.
+Attach an IP Load Balancing to a VRack.
 
 ## Example Usage
 
@@ -24,7 +24,7 @@ resource "ovh_vrack_iploadbalancing" "viplb" {
 The following arguments are supported:
 
 * `service_name` - (Required) The id of the vrack.
-* `ip_loadbalancing` - (Required) The id of the ip loadbalancing. 
+* `ip_loadbalancing` - (Required) The id of the IP Load Balancing. 
 
 ## Attributes Reference
 

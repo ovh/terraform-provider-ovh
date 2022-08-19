@@ -10,7 +10,7 @@ description: |-
 
 Update various properties of your Dedicated Server.
 
-~> __WARNING__: `rescue_mail` and `root_device` properties aren't
+~> __WARNING__ `rescue_mail` and `root_device` properties aren't
 updated consistently. This is an issue on the OVH API which 
 has been reported. Meanwhile, these properties aren't not mapped
 on this terraform resource.
