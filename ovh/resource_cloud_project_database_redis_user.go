@@ -10,15 +10,15 @@ import (
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
-func resourceCloudProjectDatabasepPostgresqlUser() *schema.Resource {
+func resourceCloudProjectDatabasepRedisUser() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCloudProjectDatabasePostgresqlUserCreate,
-		Read:   resourceCloudProjectDatabasePostgresqlUserRead,
-		Delete: resourceCloudProjectDatabasePostgresqlUserDelete,
-		Update: resourceCloudProjectDatabasePostgresqlUserUpdate,
+		Create: resourceCloudProjectDatabaseRedisUserCreate,
+		Read:   resourceCloudProjectDatabaseRedisUserRead,
+		Delete: resourceCloudProjectDatabaseRedisUserDelete,
+		Update: resourceCloudProjectDatabaseRedisUserUpdate,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceCloudProjectDatabasePostgresqlUserImportState,
+			State: resourceCloudProjectDatabaseRedisUserImportState,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -34,17 +34,39 @@ func resourceCloudProjectDatabasepPostgresqlUser() *schema.Resource {
 				ForceNew:    true,
 				Required:    true,
 			},
+			"categories": {
+				Type:        schema.TypeList,
+				Description: "Categories of the user",
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"commands": {
+				Type:        schema.TypeList,
+				Description: "Commands of the user",
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"keys": {
+				Type:        schema.TypeList,
+				Description: "Keys of the user",
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 			"name": {
 				Type:        schema.TypeString,
 				Description: "Name of the user",
 				ForceNew:    true,
 				Required:    true,
 			},
-			"roles": {
+
+			//Optional/Computed
+			"channels": {
 				Type:        schema.TypeList,
-				Description: "Roles the user belongs to",
+				Description: "Channels of the user",
 				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
+				// If no channels list, channels = ["*"] is computed at creation
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
 			//Computed
@@ -68,7 +90,7 @@ func resourceCloudProjectDatabasepPostgresqlUser() *schema.Resource {
 	}
 }
 
-func resourceCloudProjectDatabasePostgresqlUserImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceCloudProjectDatabaseRedisUserImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	givenId := d.Id()
 	n := 3
 	splitId := strings.SplitN(givenId, "/", n)
@@ -87,17 +109,17 @@ func resourceCloudProjectDatabasePostgresqlUserImportState(d *schema.ResourceDat
 	return results, nil
 }
 
-func resourceCloudProjectDatabasePostgresqlUserCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseRedisUserCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/database/postgresql/%s/user",
+	endpoint := fmt.Sprintf("/cloud/project/%s/database/redis/%s/user",
 		url.PathEscape(serviceName),
 		url.PathEscape(clusterId),
 	)
-	params := (&CloudProjectDatabasePostgresqlUserCreateOpts{}).FromResource(d)
-	res := &CloudProjectDatabasePostgresqlUserResponse{}
+	params := (&CloudProjectDatabaseRedisUserCreateOpts{}).FromResource(d)
+	res := &CloudProjectDatabaseRedisUserResponse{}
 
 	log.Printf("[DEBUG] Will create user: %+v for cluster %s from project %s", params, clusterId, serviceName)
 	err := config.OVHClient.Post(endpoint, params, res)
@@ -106,7 +128,7 @@ func resourceCloudProjectDatabasePostgresqlUserCreate(d *schema.ResourceData, me
 	}
 
 	log.Printf("[DEBUG] Waiting for user %s to be READY", res.Id)
-	err = waitForCloudProjectDatabaseUserReady(config.OVHClient, serviceName, "postgresql", clusterId, res.Id, d.Timeout(schema.TimeoutCreate))
+	err = waitForCloudProjectDatabaseUserReady(config.OVHClient, serviceName, "redis", clusterId, res.Id, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return fmt.Errorf("timeout while waiting user %s to be READY: %w", res.Id, err)
 	}
@@ -115,21 +137,21 @@ func resourceCloudProjectDatabasePostgresqlUserCreate(d *schema.ResourceData, me
 	d.SetId(res.Id)
 	d.Set("password", res.Password)
 
-	return resourceCloudProjectDatabasePostgresqlUserRead(d, meta)
+	return resourceCloudProjectDatabaseRedisUserRead(d, meta)
 }
 
-func resourceCloudProjectDatabasePostgresqlUserRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseRedisUserRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
 	id := d.Id()
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/database/postgresql/%s/user/%s",
+	endpoint := fmt.Sprintf("/cloud/project/%s/database/redis/%s/user/%s",
 		url.PathEscape(serviceName),
 		url.PathEscape(clusterId),
 		url.PathEscape(id),
 	)
-	res := &CloudProjectDatabasePostgresqlUserResponse{}
+	res := &CloudProjectDatabaseRedisUserResponse{}
 
 	log.Printf("[DEBUG] Will read user %s from cluster %s from project %s", id, clusterId, serviceName)
 	if err := config.OVHClient.Get(endpoint, res); err != nil {
@@ -148,18 +170,18 @@ func resourceCloudProjectDatabasePostgresqlUserRead(d *schema.ResourceData, meta
 	return nil
 }
 
-func resourceCloudProjectDatabasePostgresqlUserUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseRedisUserUpdate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
 	id := d.Id()
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/database/postgresql/%s/user/%s",
+	endpoint := fmt.Sprintf("/cloud/project/%s/database/redis/%s/user/%s",
 		url.PathEscape(serviceName),
 		url.PathEscape(clusterId),
 		url.PathEscape(id),
 	)
-	params := (&CloudProjectDatabasePostgresqlUserUpdateOpts{}).FromResource(d)
+	params := (&CloudProjectDatabaseRedisUserUpdateOpts{}).FromResource(d)
 
 	log.Printf("[DEBUG] Will update user: %+v from cluster %s from project %s", params, clusterId, serviceName)
 	err := config.OVHClient.Put(endpoint, params, nil)
@@ -168,22 +190,22 @@ func resourceCloudProjectDatabasePostgresqlUserUpdate(d *schema.ResourceData, me
 	}
 
 	log.Printf("[DEBUG] Waiting for user %s to be READY", id)
-	err = waitForCloudProjectDatabaseUserReady(config.OVHClient, serviceName, "postgresql", clusterId, id, d.Timeout(schema.TimeoutUpdate))
+	err = waitForCloudProjectDatabaseUserReady(config.OVHClient, serviceName, "redis", clusterId, id, d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
 		return fmt.Errorf("timeout while waiting user %s to be READY: %w", id, err)
 	}
 	log.Printf("[DEBUG] user %s is READY", id)
 
-	return resourceCloudProjectDatabasePostgresqlUserRead(d, meta)
+	return resourceCloudProjectDatabaseRedisUserRead(d, meta)
 }
 
-func resourceCloudProjectDatabasePostgresqlUserDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseRedisUserDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
 	id := d.Id()
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/database/postgresql/%s/user/%s",
+	endpoint := fmt.Sprintf("/cloud/project/%s/database/redis/%s/user/%s",
 		url.PathEscape(serviceName),
 		url.PathEscape(clusterId),
 		url.PathEscape(id),
@@ -196,7 +218,7 @@ func resourceCloudProjectDatabasePostgresqlUserDelete(d *schema.ResourceData, me
 	}
 
 	log.Printf("[DEBUG] Waiting for user %s to be DELETED", id)
-	err = waitForCloudProjectDatabaseUserDeleted(config.OVHClient, serviceName, "postgresql", clusterId, id, d.Timeout(schema.TimeoutDelete))
+	err = waitForCloudProjectDatabaseUserDeleted(config.OVHClient, serviceName, "redis", clusterId, id, d.Timeout(schema.TimeoutDelete))
 	if err != nil {
 		return fmt.Errorf("timeout while waiting user %s to be DELETED: %w", id, err)
 	}

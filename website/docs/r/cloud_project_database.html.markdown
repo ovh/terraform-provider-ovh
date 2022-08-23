@@ -46,7 +46,7 @@ resource "ovh_cloud_project_database" "postgresql" {
 To deploy an enterprise MongoDB service with three nodes on private network:
 ```hcl
 resource "ovh_cloud_project_database" "mongodb" {
-  service_name = var.openstack_infos.project_id
+  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
   description  = "my-first-mongodb"
   engine       = "mongodb"
   version      = "5.0"

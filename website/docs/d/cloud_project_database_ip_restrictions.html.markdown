@@ -41,4 +41,6 @@ output "ips" {
 `id` is set to the md5 sum of the list of all IP restrictions. In addition,
 the following attributes are exported:
 
+* `cluster_id` - See Argument Reference above.
 * `ips` - The list of IP restriction of the database associated with the project.
+* `service_name` - See Argument Reference above.
