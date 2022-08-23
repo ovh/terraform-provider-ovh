@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
@@ -29,10 +28,11 @@ func resourceCloudProjectDatabaseUser() *schema.Resource {
 				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
 			},
 			"engine": {
-				Type:        schema.TypeString,
-				Description: "Name of the engine of the service",
-				ForceNew:    true,
-				Required:    true,
+				Type:         schema.TypeString,
+				Description:  "Name of the engine of the service",
+				ForceNew:     true,
+				Required:     true,
+				ValidateFunc: validateCloudProjectDatabaseUserEngineFunc,
 			},
 			"cluster_id": {
 				Type:        schema.TypeString,
@@ -70,8 +70,9 @@ func resourceCloudProjectDatabaseUser() *schema.Resource {
 
 func resourceCloudProjectDatabaseUserImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	givenId := d.Id()
-	splitId := strings.SplitN(givenId, "/", 4)
-	if len(splitId) != 3 {
+	n := 4
+	splitId := strings.SplitN(givenId, "/", n)
+	if len(splitId) != n {
 		return nil, fmt.Errorf("Import Id is not service_name/engine/cluster_id/id formatted")
 	}
 	serviceName := splitId[0]
@@ -100,26 +101,21 @@ func resourceCloudProjectDatabaseUserCreate(d *schema.ResourceData, meta interfa
 		url.PathEscape(clusterId),
 	)
 
-	err := mustGenericEngineUserEndpoint(engine)
-	if err != nil {
-		return fmt.Errorf("Calling Post %s :\n\t %q", endpoint, err)
-	}
-
 	params := (&CloudProjectDatabaseUserCreateOpts{}).FromResource(d)
 	res := &CloudProjectDatabaseUserResponse{}
 
 	log.Printf("[DEBUG] Will create user: %+v for cluster %s from project %s", params, clusterId, serviceName)
-	err = config.OVHClient.Post(endpoint, params, res)
+	err := config.OVHClient.Post(endpoint, params, res)
 	if err != nil {
-		return fmt.Errorf("calling Post %s with params %s:\n\t %q", endpoint, params, err)
+		return fmt.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
 	}
 
-	log.Printf("[DEBUG] Waiting for database %s to be READY", clusterId)
-	err = waitForCloudProjectDatabaseReady(config.OVHClient, serviceName, engine, clusterId, 30*time.Second, 5*time.Second)
+	log.Printf("[DEBUG] Waiting for user %s to be READY", res.Id)
+	err = waitForCloudProjectDatabaseUserReady(config.OVHClient, serviceName, engine, clusterId, res.Id, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
-		return fmt.Errorf("timeout while waiting database %s to be READY: %v", clusterId, err)
+		return fmt.Errorf("timeout while waiting user %s to be READY: %w", res.Id, err)
 	}
-	log.Printf("[DEBUG] database %s is READY", clusterId)
+	log.Printf("[DEBUG] user %s is READY", res.Id)
 
 	d.SetId(res.Id)
 	d.Set("password", res.Password)
@@ -140,11 +136,6 @@ func resourceCloudProjectDatabaseUserRead(d *schema.ResourceData, meta interface
 		url.PathEscape(clusterId),
 		url.PathEscape(id),
 	)
-
-	err := mustGenericEngineUserEndpoint(engine)
-	if err != nil {
-		return fmt.Errorf("Calling Get %s :\n\t %q", endpoint, err)
-	}
 
 	res := &CloudProjectDatabaseUserResponse{}
 
@@ -178,23 +169,18 @@ func resourceCloudProjectDatabaseUserDelete(d *schema.ResourceData, meta interfa
 		url.PathEscape(id),
 	)
 
-	err := mustGenericEngineUserEndpoint(engine)
-	if err != nil {
-		return fmt.Errorf("Calling Delete %s :\n\t %q", endpoint, err)
-	}
-
 	log.Printf("[DEBUG] Will delete user %s from cluster %s from project %s", id, clusterId, serviceName)
-	err = config.OVHClient.Delete(endpoint, nil)
+	err := config.OVHClient.Delete(endpoint, nil)
 	if err != nil {
 		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
-	log.Printf("[DEBUG] Waiting for database %s to be READY", clusterId)
-	err = waitForCloudProjectDatabaseReady(config.OVHClient, serviceName, engine, clusterId, 20*time.Second, 1*time.Second)
+	log.Printf("[DEBUG] Waiting for user %s to be DELETED", id)
+	err = waitForCloudProjectDatabaseUserDeleted(config.OVHClient, serviceName, engine, clusterId, id, d.Timeout(schema.TimeoutDelete))
 	if err != nil {
-		return fmt.Errorf("timeout while waiting database %s to be READY: %v", clusterId, err)
+		return fmt.Errorf("timeout while waiting user %s to be DELETED: %w", id, err)
 	}
-	log.Printf("[DEBUG] database %s is READY", clusterId)
+	log.Printf("[DEBUG] user %s is DELETED", id)
 
 	d.SetId("")
 

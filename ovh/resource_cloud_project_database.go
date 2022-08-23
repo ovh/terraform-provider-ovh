@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
@@ -26,6 +25,7 @@ func resourceCloudProjectDatabase() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"service_name": {
 				Type:        schema.TypeString,
+				ForceNew:    true,
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
 			},
@@ -37,6 +37,7 @@ func resourceCloudProjectDatabase() *schema.Resource {
 			"engine": {
 				Type:        schema.TypeString,
 				Description: "Name of the engine of the service",
+				ForceNew:    true,
 				Required:    true,
 			},
 			"flavor": {
@@ -54,11 +55,13 @@ func resourceCloudProjectDatabase() *schema.Resource {
 						"network_id": {
 							Type:        schema.TypeString,
 							Description: "Private network ID in which the node is",
+							ForceNew:    true,
 							Optional:    true,
 						},
 						"region": {
 							Type:        schema.TypeString,
 							Description: "Region of the node",
+							ForceNew:    true,
 							Required:    true,
 						},
 						"subnet_id": {
@@ -161,8 +164,9 @@ func resourceCloudProjectDatabase() *schema.Resource {
 
 func resourceCloudProjectDatabaseImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	givenId := d.Id()
-	splitId := strings.SplitN(givenId, "/", 3)
-	if len(splitId) != 3 {
+	n := 3
+	splitId := strings.SplitN(givenId, "/", n)
+	if len(splitId) != n {
 		return nil, fmt.Errorf("Import Id is not service_name/engine/databaseId formatted")
 	}
 	serviceName := splitId[0]
@@ -195,13 +199,13 @@ func resourceCloudProjectDatabaseCreate(d *schema.ResourceData, meta interface{}
 	log.Printf("[DEBUG] Will create Database: %+v", params)
 	err = config.OVHClient.Post(endpoint, params, res)
 	if err != nil {
-		return fmt.Errorf("calling Post %s with params %s:\n\t %q", endpoint, params, err)
+		return fmt.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
 	}
 
 	log.Printf("[DEBUG] Waiting for database %s to be READY", res.Id)
 	err = waitForCloudProjectDatabaseReady(config.OVHClient, serviceName, engine, res.Id, 20*time.Minute, 30*time.Second)
 	if err != nil {
-		return fmt.Errorf("timeout while waiting database %s to be READY: %v", res.Id, err)
+		return fmt.Errorf("timeout while waiting database %s to be READY: %w", res.Id, err)
 	}
 	log.Printf("[DEBUG] database %s is READY", res.Id)
 
@@ -279,7 +283,7 @@ func resourceCloudProjectDatabaseUpdate(d *schema.ResourceData, meta interface{}
 	log.Printf("[DEBUG] Waiting for database %s to be READY", d.Id())
 	err = waitForCloudProjectDatabaseReady(config.OVHClient, serviceName, engine, d.Id(), 40*time.Minute, 30*time.Second)
 	if err != nil {
-		return fmt.Errorf("timeout while waiting database %s to be READY: %v", d.Id(), err)
+		return fmt.Errorf("timeout while waiting database %s to be READY: %w", d.Id(), err)
 	}
 	log.Printf("[DEBUG] database %s is READY", d.Id())
 
@@ -313,11 +317,4 @@ func resourceCloudProjectDatabaseDelete(d *schema.ResourceData, meta interface{}
 	d.SetId("")
 
 	return nil
-}
-
-func cloudProjectDatabaseExists(serviceName, engine string, id string, client *ovh.Client) error {
-	res := &CloudProjectDatabaseResponse{}
-
-	endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s", serviceName, engine, id)
-	return client.Get(endpoint, res)
 }

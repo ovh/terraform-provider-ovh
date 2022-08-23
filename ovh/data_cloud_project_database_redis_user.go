@@ -8,24 +8,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func dataSourceCloudProjectDatabaseUser() *schema.Resource {
+func dataSourceCloudProjectDatabaseRedisUser() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceCloudProjectDatabaseUserRead,
+		Read: dataSourceCloudProjectDatabaseRedisUserRead,
 		Schema: map[string]*schema.Schema{
 			"service_name": {
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
 			},
-			"engine": {
-				Type:         schema.TypeString,
-				Description:  "Name of the engine of the service",
-				Required:     true,
-				ValidateFunc: validateCloudProjectDatabaseUserEngineFunc,
-			},
 			"cluster_id": {
 				Type:        schema.TypeString,
-				Description: "Cluster ID",
+				Description: "Id of the database cluster",
 				Required:    true,
 			},
 			"name": {
@@ -35,10 +29,34 @@ func dataSourceCloudProjectDatabaseUser() *schema.Resource {
 			},
 
 			//Computed
+			"categories": {
+				Type:        schema.TypeList,
+				Description: "Categories of the user",
+				Computed:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"channels": {
+				Type:        schema.TypeList,
+				Description: "Channels of the user",
+				Computed:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"commands": {
+				Type:        schema.TypeList,
+				Description: "Commands of the user",
+				Computed:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 			"created_at": {
 				Type:        schema.TypeString,
 				Description: "Date of the creation of the user",
 				Computed:    true,
+			},
+			"keys": {
+				Type:        schema.TypeList,
+				Description: "Keys of the user",
+				Computed:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"status": {
 				Type:        schema.TypeString,
@@ -49,16 +67,13 @@ func dataSourceCloudProjectDatabaseUser() *schema.Resource {
 	}
 }
 
-func dataSourceCloudProjectDatabaseUserRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceCloudProjectDatabaseRedisUserRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
-	engine := d.Get("engine").(string)
 	clusterId := d.Get("cluster_id").(string)
-	name := d.Get("name").(string)
 
-	listEndpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/user",
+	listEndpoint := fmt.Sprintf("/cloud/project/%s/database/redis/%s/user",
 		url.PathEscape(serviceName),
-		url.PathEscape(engine),
 		url.PathEscape(clusterId),
 	)
 
@@ -69,15 +84,14 @@ func dataSourceCloudProjectDatabaseUserRead(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("Error calling GET %s:\n\t %q", listEndpoint, err)
 	}
 
+	name := d.Get("name").(string)
 	for _, id := range listRes {
-		endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/user/%s",
+		endpoint := fmt.Sprintf("/cloud/project/%s/database/redis/%s/user/%s",
 			url.PathEscape(serviceName),
-			url.PathEscape(engine),
 			url.PathEscape(clusterId),
 			url.PathEscape(id),
 		)
-
-		res := &CloudProjectDatabaseUserResponse{}
+		res := &CloudProjectDatabaseRedisUserResponse{}
 
 		log.Printf("[DEBUG] Will read user %s from cluster %s from project %s", id, clusterId, serviceName)
 		if err := config.OVHClient.Get(endpoint, res); err != nil {

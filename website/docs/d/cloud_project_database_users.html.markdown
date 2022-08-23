@@ -38,4 +38,6 @@ output "user_ids" {
 
 The following attributes are exported:
 
+* `cluster_id` - See Argument Reference above.
+* `service_name` - See Argument Reference above.
 * `user_ids` - The list of users ids of the database cluster associated with the project.
