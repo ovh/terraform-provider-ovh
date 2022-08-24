@@ -146,10 +146,6 @@ func resourceCloudProjectKubeCreate(d *schema.ResourceData, meta interface{}) er
 	params := (&CloudProjectKubeCreateOpts{}).FromResource(d)
 	res := &CloudProjectKubeResponse{}
 
-	if params.UpdatePolicy != nil {
-		return fmt.Errorf("the attribute update_policy cannot be set at cluster creation time. Once the cluster is created this attribute can be set and/or updated. This is a temporary bug on our OVH APIV6 side")
-	}
-
 	log.Printf("[DEBUG] Will create kube: %+v", params)
 	err := config.OVHClient.Post(endpoint, params, res)
 	if err != nil {
