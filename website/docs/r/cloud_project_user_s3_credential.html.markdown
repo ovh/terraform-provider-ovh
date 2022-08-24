@@ -16,9 +16,12 @@ Creates an S3 Credential for a user in a public cloud project.
 resource "ovh_cloud_project_user" "user" {
  service_name = "XXX
  description  = "my user for acceptance tests"
+ role_names   = [
+  "objectstore_operator"
+ ]
 }
 
-resource "ovh_cloud_project_user_s3_credential" "s3_credential" {
+resource "ovh_cloud_project_user_s3_credential" "my_s3_credentials" {
  service_name = ovh_cloud_project_user.user.service_name
  user_id      = ovh_cloud_project_user.user.id
 }
@@ -28,10 +31,10 @@ resource "ovh_cloud_project_user_s3_credential" "s3_credential" {
 
 The following arguments are supported:
 
-- `service_name` - (Required) The id of the public cloud project. If omitted,
+- `service_name` - (Required) The ID of the public cloud project. If omitted,
   the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 
-- `user_id` - (Required) The id of a public cloud project's user.
+- `user_id` - (Required) The ID of a public cloud project's user.
 
 ## Attributes Reference
 
