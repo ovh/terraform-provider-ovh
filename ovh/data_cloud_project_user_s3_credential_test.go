@@ -24,16 +24,10 @@ resource "ovh_cloud_project_user_s3_credential" "s3_cred_2" {
  user_id      = ovh_cloud_project_user.user.id
 }
 
-data "ovh_cloud_project_user_s3_credentials" "keys" {
- service_name = ovh_cloud_project_user.user.service_name
- user_id      = ovh_cloud_project_user.user.id
- depends_on   = [ovh_cloud_project_user_s3_credential.s3_cred_1, ovh_cloud_project_user_s3_credential.s3_cred_2]
-}
-
 data "ovh_cloud_project_user_s3_credential" "s3_cred_key_2" {
  service_name  = ovh_cloud_project_user.user.service_name
  user_id       = ovh_cloud_project_user.user.id
- access_key_id = data.ovh_cloud_project_user_s3_credentials.keys.access_key_ids[1]
+ access_key_id = ovh_cloud_project_user_s3_credential.s3_cred_2.access_key_id
  depends_on    = [ovh_cloud_project_user_s3_credential.s3_cred_1, ovh_cloud_project_user_s3_credential.s3_cred_2]
 }
 
@@ -63,6 +57,14 @@ func TestAccDataCloudProjectUserS3Credential_basic(t *testing.T) {
 			{
 				Config: testAccDataCloudProjectUserS3CredentialConfig,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(
+						"data.ovh_cloud_project_user_s3_credential.s3_cred_key_1",
+						"secret_access_key",
+					),
+					resource.TestCheckResourceAttrSet(
+						"data.ovh_cloud_project_user_s3_credential.s3_cred_key_2",
+						"secret_access_key",
+					),
 					resource.TestCheckOutput(
 						"same_secret_key_cred_1", "true"),
 					resource.TestCheckOutput(
