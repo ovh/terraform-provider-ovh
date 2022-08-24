@@ -361,11 +361,7 @@ func ValidateSubsidiary(v string) error {
 
 // HashMapRegionAttributes creates an hash for the region attributes.
 func HashMapRegionAttributes(v interface{}) int {
-	attributes, ok := v.(map[string]interface{})
-	if !ok {
-		return 0
-	}
-
+	attributes := v.(map[string]interface{})
 	builder := strings.Builder{}
 
 	for _, key := range []string{"status", "region", "openstackid"} {
