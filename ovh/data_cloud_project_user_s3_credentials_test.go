@@ -38,6 +38,10 @@ func TestAccDataCloudProjectUserS3Credentials_basic(t *testing.T) {
 			{
 				Config: testAccDataCloudProjectUserS3CredentialsConfig,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(
+						"data.ovh_cloud_project_user_s3_credentials.keys",
+						"access_key_ids.#",
+					),
 					resource.TestCheckOutput(
 						"access_key_ids_count", "1"),
 				),
