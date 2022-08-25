@@ -1,6 +1,7 @@
 package ovh
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -12,6 +13,36 @@ import (
 
 	"github.com/ovh/go-ovh/ovh"
 )
+
+// RegionAttributesHash creates an hash for the region attributes.
+func RegionAttributesHash(v interface{}) int {
+	attributes, ok := v.(map[string]interface{})
+	if !ok {
+		err := errors.New("bad casting of region attributes")
+		log.Printf("[ERROR] %s: %v ", err, v)
+
+		panic(err)
+	}
+
+	builder := strings.Builder{}
+
+	for _, key := range []string{"status", "region", "openstackid"} {
+		value, inMap := attributes[key]
+		if inMap {
+			stringValue, ok := value.(string)
+			if ok {
+				builder.WriteString(stringValue)
+			} else {
+				err := errors.New("bad casting of value in region attributes")
+				log.Printf("[ERROR] %s on key %s with current value: %v ", err, key, value)
+
+				panic(err)
+			}
+		}
+	}
+
+	return schema.HashString(builder.String())
+}
 
 func resourceOvhCloudProjectNetworkPrivateImportState(
 	d *schema.ResourceData,
@@ -105,7 +136,7 @@ func resourceCloudProjectNetworkPrivate() *schema.Resource {
 						},
 					},
 				},
-				Set: helpers.HashMapRegionAttributes,
+				Set: RegionAttributesHash,
 			},
 			"status": {
 				Type:     schema.TypeString,
