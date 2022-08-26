@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-var testAccDataCloudProjectUserS3CredentialsConfig = fmt.Sprintf(`
+const testAccDataCloudProjectUserS3CredentialsConfig_basic = `
 resource "ovh_cloud_project_user" "user" {
  service_name = "%s"
  description  = "my user for acceptance tests"
@@ -28,15 +28,19 @@ data "ovh_cloud_project_user_s3_credentials" "keys" {
 output "access_key_ids_count" {
     value = length(data.ovh_cloud_project_user_s3_credentials.keys.access_key_ids)
 }
-`, os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"))
+`
 
 func TestAccDataCloudProjectUserS3Credentials_basic(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+
+	config := fmt.Sprintf(testAccDataCloudProjectUserS3CredentialsConfig_basic, serviceName)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheckCredentials(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataCloudProjectUserS3CredentialsConfig,
+				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(
 						"data.ovh_cloud_project_user_s3_credentials.keys",
