@@ -17,7 +17,7 @@ func dataCloudProjectUserS3Credentials() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
-				Description: "Service name of the resource representing the id of the cloud project.",
+				Description: "Service name of the resource representing the ID of the cloud project.",
 			},
 			"user_id": {
 				Type:        schema.TypeString,
