@@ -105,6 +105,7 @@ func resourceCloudProjectNetworkPrivate() *schema.Resource {
 						},
 					},
 				},
+				Set: RegionAttributesHash,
 			},
 			"status": {
 				Type:     schema.TypeString,
