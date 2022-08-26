@@ -149,6 +149,26 @@ type CloudProjectUserOpenstackRC struct {
 	Content string `json:"content"`
 }
 
+type CloudProjectUserS3Credential struct {
+	Access      string `json:"access"`
+	Secret      string `json:"secret"`
+	ServiceName string `json:"tenantId"`
+	UserId      string `json:"userId"`
+}
+
+func (u *CloudProjectUserS3Credential) String() string {
+	return fmt.Sprintf("CloudProjectUserS3Credential[ServiceName:%s, UserId: %s, Access: %s]", u.ServiceName, u.UserId, u.Access)
+}
+
+func (u CloudProjectUserS3Credential) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+	obj["access_key_id"] = u.Access
+	obj["secret_access_key"] = u.Secret
+	obj["service_name"] = u.ServiceName
+	obj["internal_user_id"] = u.UserId
+	return obj
+}
+
 type CloudProjectRegionResponse struct {
 	ContinentCode      string                       `json:"continentCode"`
 	DatacenterLocation string                       `json:"datacenterLocation"`
