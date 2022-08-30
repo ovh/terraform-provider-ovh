@@ -14,8 +14,8 @@ Set the S3 Policy of a public cloud project user.
 
 ```hcl
 resource "ovh_cloud_project_user" "user" {
- service_name = "XXX
- description  = "my user for acceptance tests"
+ service_name = "XXX"
+ description  = "my user"
  role_names   = [
   "objectstore_operator"
  ]
@@ -38,7 +38,6 @@ resource "ovh_cloud_project_user_s3_policy" "policy" {
   }]
  })
 }
-
 ```
 
 ## Argument Reference
