@@ -62,6 +62,7 @@ func Provider() *schema.Provider {
 			"ovh_cloud_project_regions":                               dataSourceCloudProjectRegions(),
 			"ovh_cloud_project_user_s3_credential":                    dataCloudProjectUserS3Credential(),
 			"ovh_cloud_project_user_s3_credentials":                   dataCloudProjectUserS3Credentials(),
+			"ovh_cloud_project_user_s3_policy":                        dataCloudProjectUserS3Policy(),
 			"ovh_dbaas_logs_input_engine":                             dataSourceDbaasLogsInputEngine(),
 			"ovh_dbaas_logs_output_graylog_stream":                    dataSourceDbaasLogsOutputGraylogStream(),
 			"ovh_dedicated_ceph":                                      dataSourceDedicatedCeph(),
