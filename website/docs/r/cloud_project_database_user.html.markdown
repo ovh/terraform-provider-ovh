@@ -38,10 +38,10 @@ resource "ovh_cloud_project_database_user" "user" {
 
 The following arguments are supported:
 
-* `service_name` - The id of the public cloud project. If omitted,
+* `service_name` - (Required, Forces new resource) The id of the public cloud project. If omitted,
   the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 
-* `engine` - The engine of the database cluster you want to add. To get a full list of available engine visit :
+* `engine` - (Required, Forces new resource) The engine of the database cluster you want to add. To get a full list of available engine visit :
 [public documentation](https://docs.ovh.com/gb/en/publiccloud/databases).\
 Available engines for this resource (other have specific resource):
   * `cassandra`
@@ -49,9 +49,9 @@ Available engines for this resource (other have specific resource):
   * `kafkaConnect`
   * `mysql`
 
-* `cluster_id` - Cluster ID.
+* `cluster_id` - (Required, Forces new resource) Cluster ID.
 
-* `name` - Name of the user.
+* `name` - (Required, Forces new resource) Name of the user.
 
 ## Attributes Reference
 
@@ -60,7 +60,7 @@ The following attributes are exported:
 * `cluster_id` - See Argument Reference above.
 * `created_at` - Date of the creation of the user.
 * `id` - ID of the user.
-* `password` - Password of the user.
+* `password` - (Sensitive) Password of the user.
 * `service_name` - See Argument Reference above.
 * `status` - Current status of the user.
 * `name` - See Argument Reference above.

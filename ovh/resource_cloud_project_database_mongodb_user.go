@@ -12,7 +12,7 @@ import (
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
-func resourceCloudProjectDatabasepMongodbUser() *schema.Resource {
+func resourceCloudProjectDatabaseMongodbUser() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceCloudProjectDatabaseMongodbUserCreate,
 		Read:   resourceCloudProjectDatabaseMongodbUserRead,
@@ -223,7 +223,7 @@ func resourceCloudProjectDatabaseMongodbUserDelete(d *schema.ResourceData, meta 
 			}
 			err = helpers.CheckDeleted(d, err, endpoint)
 			if err != nil {
-				resource.NonRetryableError(err)
+				return resource.NonRetryableError(err)
 			}
 			return nil
 		}

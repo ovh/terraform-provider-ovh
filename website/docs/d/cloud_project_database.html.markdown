@@ -28,13 +28,13 @@ output "cluster_id" {
 ## Argument Reference
 
 
-* `service_name` - The id of the public cloud project. If omitted,
+* `service_name` - (Required) The id of the public cloud project. If omitted,
   the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 
-* `engine` - The database engine you want to get information. To get a full list of available engine visit.
+* `engine` - (Required) The database engine you want to get information. To get a full list of available engine visit.
 [public documentation](https://docs.ovh.com/gb/en/publiccloud/databases).
 
-* `cluster_id` - Cluster ID
+* `id` - (Required) Cluster ID
 
 
 ## Attributes Reference
@@ -42,7 +42,7 @@ output "cluster_id" {
 
 The following attributes are exported:
 
-* `id` - Public Cloud Database Service ID
+* `id` - See Argument Reference above.
 * `service_name` - See Argument Reference above.
 * `backup_time` - Time on which backups start every day.
 * `created_at` - Date of the creation of the cluster.

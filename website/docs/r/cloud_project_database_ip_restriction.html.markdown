@@ -29,15 +29,15 @@ resource "ovh_cloud_project_database_ip_restriction" "iprestriction" {
 
 ## Argument Reference
 
-* `service_name` - The id of the public cloud project. If omitted,
+* `service_name` - (Required, Forces new resource) The id of the public cloud project. If omitted,
   the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 
-* `engine` - The engine of the database cluster you want to add an IP restriction. To get a full list of available engine visit.
+* `engine` - (Required, Forces new resource) The engine of the database cluster you want to add an IP restriction. To get a full list of available engine visit.
 [public documentation](https://docs.ovh.com/gb/en/publiccloud/databases).
 
-* `cluster_id` - Cluster ID.
+* `cluster_id` - (Required, Forces new resource) Cluster ID.
 
-* `ip` - Authorized IP.
+* `ip` - (Required, Forces new resource) Authorized IP.
 
 * `description` - (Optional) Description of the IP restriction.
 

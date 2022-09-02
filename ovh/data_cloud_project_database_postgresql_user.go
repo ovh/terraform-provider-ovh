@@ -35,7 +35,7 @@ func dataSourceCloudProjectDatabasePostgresqlUser() *schema.Resource {
 				Computed:    true,
 			},
 			"roles": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Description: "Roles the user belongs to",
 				Computed:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},

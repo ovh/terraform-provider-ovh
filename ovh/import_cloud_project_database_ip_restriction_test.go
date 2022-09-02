@@ -22,6 +22,7 @@ func TestAccCloudProjectDatabaseIpRestriction_importBasic(t *testing.T) {
 	config := fmt.Sprintf(
 		testAccCloudProjectDatabaseIpRestrictionConfig,
 		serviceName,
+		description,
 		engine,
 		version,
 		region,
