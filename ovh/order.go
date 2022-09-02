@@ -422,7 +422,7 @@ func orderDelete(d *schema.ResourceData, meta interface{}, terminate TerminateFu
 
 	var email *NotificationEmail
 	// wait for email
-	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(30*time.Minute, func() *resource.RetryError {
 		email, err = getNewNotificationEmail(matches, oldEmailsIds, meta)
 		if err != nil {
 			log.Printf("[DEBUG] error while getting email notification. retry: %v", err)
