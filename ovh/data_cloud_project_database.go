@@ -22,7 +22,7 @@ func dataSourceCloudProjectDatabase() *schema.Resource {
 				Description: "Name of the engine of the service",
 				Required:    true,
 			},
-			"cluster_id": {
+			"id": {
 				Type:        schema.TypeString,
 				Description: "Cluster ID",
 				Required:    true,
@@ -155,7 +155,7 @@ func dataSourceCloudProjectDatabaseRead(d *schema.ResourceData, meta interface{}
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	engine := d.Get("engine").(string)
-	id := d.Get("cluster_id").(string)
+	id := d.Get("id").(string)
 
 	serviceEndpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s",
 		url.PathEscape(serviceName),

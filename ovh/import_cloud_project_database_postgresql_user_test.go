@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
@@ -17,12 +18,14 @@ func TestAccCloudProjectDatabasePostgresqlUser_importBasic(t *testing.T) {
 	}
 	region := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_REGION_TEST")
 	flavor := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_FLAVOR_TEST")
+	description := acctest.RandomWithPrefix(test_prefix)
 	name := "johndoe"
 	replication := "replication"
 
 	config := fmt.Sprintf(
 		testAccCloudProjectDatabasePostgresqlUserConfig,
 		serviceName,
+		description,
 		version,
 		region,
 		flavor,

@@ -10,7 +10,7 @@ import (
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
-func resourceCloudProjectDatabasepRedisUser() *schema.Resource {
+func resourceCloudProjectDatabaseRedisUser() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceCloudProjectDatabaseRedisUserCreate,
 		Read:   resourceCloudProjectDatabaseRedisUserRead,
@@ -35,19 +35,19 @@ func resourceCloudProjectDatabasepRedisUser() *schema.Resource {
 				Required:    true,
 			},
 			"categories": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Description: "Categories of the user",
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"commands": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Description: "Commands of the user",
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"keys": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Description: "Keys of the user",
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
@@ -61,7 +61,7 @@ func resourceCloudProjectDatabasepRedisUser() *schema.Resource {
 
 			//Optional/Computed
 			"channels": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Description: "Channels of the user",
 				Optional:    true,
 				// If no channels list, channels = ["*"] is computed at creation

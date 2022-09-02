@@ -1,0 +1,48 @@
+---
+layout: "ovh"
+page_title: "OVH: cloud_project_database_opensearch_user"
+sidebar_current: "docs-ovh-datasource-cloud-project-database-opensearch-user"
+description: |-
+  Get information about a user of a opensearch cluster associated with a public cloud project.
+---
+
+# ovh_cloud_project_database_opensearch_user (Data Source)
+
+Use this data source to get information about a user of a opensearch cluster associated with a public cloud project.
+
+## Example Usage
+
+```hcl
+data "ovh_cloud_project_database_opensearch_user" "osuser" {
+  service_name  = "XXX"
+  cluster_id    = "YYY"
+  name          = "ZZZ"
+}
+
+output "osuser_acls" {
+  value = data.ovh_cloud_project_database_opensearch_user.osuser.acls
+}
+```
+
+## Argument Reference
+
+* `service_name` - (Required) The id of the public cloud project. If omitted,
+  the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
+
+* `cluster_id` - (Required) Cluster ID
+
+* `name` - (Required) Name of the user.
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `cluster_id` - See Argument Reference above.
+* `created_at` - Date of the creation of the user.
+* `id` - ID of the user.
+* `acls` - Acls of the user.
+  * `pattern` - Pattern of the ACL.
+  * `permission` - Permission of the ACL.
+* `service_name` - Current status of the user.
+* `status` - Current status of the user.
+* `name` - Name of the user.

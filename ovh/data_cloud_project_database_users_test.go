@@ -5,12 +5,14 @@ import (
 	"os"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 const testAccCloudProjectDatabaseUsersDatasourceConfig_Basic = `
 resource "ovh_cloud_project_database" "db" {
 	service_name = "%s"
+	description  = "%s"
 	engine       = "%s"
 	version      = "%s"
 	plan         = "essential"
@@ -40,10 +42,12 @@ func TestAccCloudProjectDatabaseUsersDataSource_basic(t *testing.T) {
 	version := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST")
 	region := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_REGION_TEST")
 	flavor := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_FLAVOR_TEST")
+	description := acctest.RandomWithPrefix(test_prefix)
 
 	config := fmt.Sprintf(
 		testAccCloudProjectDatabaseUsersDatasourceConfig_Basic,
 		serviceName,
+		description,
 		engine,
 		version,
 		region,

@@ -11,11 +11,11 @@ import (
 )
 
 func TestAccCloudProjectDatabase_importBasic(t *testing.T) {
-	description := acctest.RandomWithPrefix(test_prefix)
 	engine := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_ENGINE_TEST")
 	version := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST")
 	region := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_REGION_TEST")
 	flavor := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_FLAVOR_TEST")
+	description := acctest.RandomWithPrefix(test_prefix)
 
 	config := fmt.Sprintf(
 		testAccCloudProjectDatabaseConfig,

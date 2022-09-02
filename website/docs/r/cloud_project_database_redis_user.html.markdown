@@ -34,20 +34,20 @@ resource "ovh_cloud_project_database_redis_user" "user" {
 
 The following arguments are supported:
 
-* `service_name` - The id of the public cloud project. If omitted,
+* `service_name` - (Required, Forces new resource) The id of the public cloud project. If omitted,
   the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 
-* `cluster_id` - Cluster ID.
+* `cluster_id` - (Required, Forces new resource) Cluster ID.
 
-* `categories` - Categories of the user.
+* `categories` - (Optional) Categories of the user.
 
-* `channels` - Channels of the user.
+* `channels` - (Optional: if omit, all channels) Channels of the user.
 
-* `commands` - Commands of the user.
+* `commands` - (Optional) Commands of the user.
 
-* `keys` - Keys of the user.
+* `keys` - (Optional) Keys of the user.
 
-* `name` - Name of the user.
+* `name` - (Required, Forces new resource) Name of the user.
 
 ## Attributes Reference
 
@@ -61,7 +61,7 @@ The following attributes are exported:
 * `id` - ID of the user.
 * `keys` - See Argument Reference above.
 * `name` - See Argument Reference above.
-* `password` - Password of the user.
+* `password` - (Sensitive) Password of the user.
 * `service_name` - See Argument Reference above.
 * `status` - Current status of the user.
 
