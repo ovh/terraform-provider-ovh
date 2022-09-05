@@ -40,6 +40,9 @@ The following arguments are supported:
 
 ## Attributes Reference
 
+`id` is set with the user_id of the user.
+In addition, the following attributes are exported:
+
 - `creation_date` - the date the user was created.
 - `description` - See Argument Reference above.
 - `roles` - A list of roles associated with the user.
