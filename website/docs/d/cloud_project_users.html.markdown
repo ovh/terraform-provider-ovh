@@ -19,26 +19,12 @@ data "ovh_cloud_project_users" "project_users" {
 
 locals {
   # Get the user ID of a previously created user with the description "S3-User"
-  users = [for user in data.ovh_cloud_project_users.project_users.users : user.user_id if user.description == "S3-User"]
-  s3_user_id = users[0]
+  users      = [for user in data.ovh_cloud_project_users.project_users.users : user.user_id if user.description == "S3-User"]
+  s3_user_id = local.users[0]
 }
 
-resource "ovh_cloud_project_user_s3_credential" "my_s3_credentials" {
- service_name = data.ovh_cloud_project_users.project_users.service_name
- user_id      = local.s3_user_id
-}
-
-resource "ovh_cloud_project_user_s3_policy" "policy" {
- service_name = data.ovh_cloud_project_users.project_users.service_name
- user_id      = local.s3_user_id
- policy       = jsonencode({
-  "Statement":[{
-    "Sid": "RWContainer",
-    "Effect": "Allow",
-    "Action":["s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:ListBucket", "s3:ListMultipartUploadParts", "s3:ListBucketMultipartUploads", "s3:AbortMultipartUpload", "s3:GetBucketLocation"],
-    "Resource":["arn:aws:s3:::hp-bucket", "arn:aws:s3:::hp-bucket/*"]
-  }]
- })
+output "user_id" {
+    value = local.s3_user_id
 }
 ```
 

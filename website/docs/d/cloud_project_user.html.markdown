@@ -13,17 +13,19 @@ Get the user details of a previously created public cloud project user.
 ## Example Usage
 
 ```hcl
-resource "ovh_cloud_project_user" "user" {
- service_name = "XXX"
- description  = "my user"
- role_names   = [
-  "objectstore_operator"
- ]
+data "ovh_cloud_project_users" "project_users" {
+  service_name = "XXX"
+}
+
+locals {
+  # Get the user ID of a previously created user with the description "S3-User"
+  users      = [for user in data.ovh_cloud_project_users.project_users.users : user.user_id if user.description == "S3-User"]
+  s3_user_id = local.users[0]
 }
 
 data "ovh_cloud_project_user" "my_user" {
- service_name = ovh_cloud_project_user.user.service_name
- user_id      = ovh_cloud_project_user.user.id
+  service_name = data.ovh_cloud_project_users.project_users.service_name
+  user_id      = local.s3_user_id
 }
 ```
 

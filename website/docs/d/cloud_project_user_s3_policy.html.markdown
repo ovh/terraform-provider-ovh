@@ -13,35 +13,19 @@ Get the S3 Policy of a public cloud project user. The policy can be set by using
 ## Example Usage
 
 ```hcl
-resource "ovh_cloud_project_user" "user" {
- service_name = "XXX"
- description  = "my user"
- role_names   = [
-  "objectstore_operator"
- ]
+data "ovh_cloud_project_users" "project_users" {
+  service_name = "XXX"
 }
 
-resource "ovh_cloud_project_user_s3_credential" "my_s3_credentials" {
- service_name = ovh_cloud_project_user.user.service_name
- user_id      = ovh_cloud_project_user.user.id
-}
-
-resource "ovh_cloud_project_user_s3_policy" "policy" {
- service_name = ovh_cloud_project_user.user.service_name
- user_id      = ovh_cloud_project_user.user.id
- policy       = jsonencode({
-  "Statement":[{
-    "Sid": "RWContainer",
-    "Effect": "Allow",
-    "Action":["s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:ListBucket", "s3:ListMultipartUploadParts", "s3:ListBucketMultipartUploads", "s3:AbortMultipartUpload", "s3:GetBucketLocation"],
-    "Resource":["arn:aws:s3:::hp-bucket", "arn:aws:s3:::hp-bucket/*"]
-  }]
- })
+locals {
+  # Get the user ID of a previously created user with the description "S3-User"
+  users      = [for user in data.ovh_cloud_project_users.project_users.users : user.user_id if user.description == "S3-User"]
+  s3_user_id = local.users[0]
 }
 
 data "ovh_cloud_project_user_s3_policy" "policy" {
- service_name = ovh_cloud_project_user.user.service_name
- user_id      = ovh_cloud_project_user.user.id
+  service_name = data.ovh_cloud_project_users.project_users.service_name
+  user_id      = local.s3_user_id
 }
 ```
 
