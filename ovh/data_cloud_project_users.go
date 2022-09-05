@@ -75,10 +75,6 @@ func datasourceCloudProjectUsers() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"openstack_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 					},
 				},
 			},
