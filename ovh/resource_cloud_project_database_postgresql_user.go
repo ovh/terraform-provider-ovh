@@ -10,7 +10,7 @@ import (
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
-func resourceCloudProjectDatabasepPostgresqlUser() *schema.Resource {
+func resourceCloudProjectDatabasePostgresqlUser() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceCloudProjectDatabasePostgresqlUserCreate,
 		Read:   resourceCloudProjectDatabasePostgresqlUserRead,
@@ -41,7 +41,7 @@ func resourceCloudProjectDatabasepPostgresqlUser() *schema.Resource {
 				Required:    true,
 			},
 			"roles": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Description: "Roles the user belongs to",
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},

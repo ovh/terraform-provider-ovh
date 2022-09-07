@@ -213,7 +213,7 @@ func resourceCloudProjectDatabaseIpRestrictionDelete(d *schema.ResourceData, met
 			}
 			err = helpers.CheckDeleted(d, err, endpoint)
 			if err != nil {
-				resource.NonRetryableError(err)
+				return resource.NonRetryableError(err)
 			}
 			return nil
 		}

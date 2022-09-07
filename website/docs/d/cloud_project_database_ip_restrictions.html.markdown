@@ -27,13 +27,13 @@ output "ips" {
 
 ## Argument Reference
 
-* `service_name` - The id of the public cloud project. If omitted,
+* `service_name` - (Required) The id of the public cloud project. If omitted,
   the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 
-* `engine` - The engine of the database cluster you want to list IP restrictions. To get a full list of available engine visit.
+* `engine` - (Required) The engine of the database cluster you want to list IP restrictions. To get a full list of available engine visit.
 [public documentation](https://docs.ovh.com/gb/en/publiccloud/databases).
 
-* `cluster_id` - Cluster ID
+* `cluster_id` - (Required) Cluster ID
 
 
 ## Attributes Reference

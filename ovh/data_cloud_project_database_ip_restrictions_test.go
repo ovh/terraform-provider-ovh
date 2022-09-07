@@ -5,12 +5,14 @@ import (
 	"os"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 const testAccCloudProjectDatabaseIpRestrictionsDatasourceConfig_Basic = `
 resource "ovh_cloud_project_database" "db" {
 	service_name = "%s"
+	description  = "%s"
 	engine       = "%s"
 	version      = "%s"
 	plan         = "essential"
@@ -41,10 +43,12 @@ func TestAccCloudProjectDatabaseIpRestrictionsDataSource_basic(t *testing.T) {
 	region := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_REGION_TEST")
 	flavor := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_FLAVOR_TEST")
 	ip := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_IP_RESTRICTION_IP_TEST")
+	description := acctest.RandomWithPrefix(test_prefix)
 
 	config := fmt.Sprintf(
 		testAccCloudProjectDatabaseIpRestrictionsDatasourceConfig_Basic,
 		serviceName,
+		description,
 		engine,
 		version,
 		region,

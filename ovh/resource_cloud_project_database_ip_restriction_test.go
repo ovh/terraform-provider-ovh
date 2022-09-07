@@ -12,6 +12,7 @@ import (
 const testAccCloudProjectDatabaseIpRestrictionConfig = `
 resource "ovh_cloud_project_database" "db" {
 	service_name = "%s"
+	description  = "%s"
 	engine       = "%s"
 	version      = "%s"
 	plan         = "essential"
@@ -42,6 +43,7 @@ func TestAccCloudProjectDatabaseIpRestriction_basic(t *testing.T) {
 	config := fmt.Sprintf(
 		testAccCloudProjectDatabaseIpRestrictionConfig,
 		serviceName,
+		description,
 		engine,
 		version,
 		region,
