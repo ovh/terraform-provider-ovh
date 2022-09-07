@@ -29,6 +29,20 @@ type CloudProjectKubeCreateOpts struct {
 	Region                      string                       `json:"region"`
 	Version                     *string                      `json:"version,omitempty"`
 	UpdatePolicy                *string                      `json:"updatePolicy,omitempty"`
+	Customization               *Customization               `json:"customization,omitempty"`
+}
+
+type Customization struct {
+	APIServer *APIServer `json:"apiServer,omitempty"`
+}
+
+type APIServer struct {
+	AdmissionPlugins *AdmissionPlugins `json:"admissionPlugins,omitempty"`
+}
+
+type AdmissionPlugins struct {
+	Enabled  *[]string `json:"enabled,omitempty"`
+	Disabled *[]string `json:"disabled,omitempty"`
 }
 
 func (opts *CloudProjectKubeCreateOpts) FromResource(d *schema.ResourceData) *CloudProjectKubeCreateOpts {
@@ -38,7 +52,47 @@ func (opts *CloudProjectKubeCreateOpts) FromResource(d *schema.ResourceData) *Cl
 	opts.UpdatePolicy = helpers.GetNilStringPointerFromData(d, "update_policy")
 	opts.PrivateNetworkId = helpers.GetNilStringPointerFromData(d, "private_network_id")
 	opts.PrivateNetworkConfiguration = loadPrivateNetworkConfiguration(d.Get("private_network_configuration"))
+	opts.Customization = loadCustomization(d.Get("customization"))
 	return opts
+}
+
+func loadCustomization(i interface{}) *Customization {
+	if i == nil {
+		return nil
+	}
+
+	customizationOutput := Customization{
+		APIServer: &APIServer{
+			AdmissionPlugins: &AdmissionPlugins{},
+		},
+	}
+
+	customizationSet := i.(*schema.Set).List()
+	for _, customization := range customizationSet {
+		apiServerSet := customization.(map[string]interface{})["apiserver"].(*schema.Set).List()
+		for _, apiServer := range apiServerSet {
+			admissionPluginsSet := apiServer.(map[string]interface{})["admissionplugins"].(*schema.Set).List()
+			for _, admissionPlugins := range admissionPluginsSet {
+
+				stringArray := admissionPlugins.(map[string]interface{})["enabled"].([]interface{})
+				enabled := []string{}
+				for _, s := range stringArray {
+					enabled = append(enabled, s.(string))
+				}
+				customizationOutput.APIServer.AdmissionPlugins.Enabled = &enabled
+
+				stringArray = admissionPlugins.(map[string]interface{})["disabled"].([]interface{})
+				disabled := []string{}
+				for _, s := range stringArray {
+					disabled = append(disabled, s.(string))
+				}
+				customizationOutput.APIServer.AdmissionPlugins.Disabled = &disabled
+
+			}
+		}
+	}
+
+	return &customizationOutput
 }
 
 func loadPrivateNetworkConfiguration(i interface{}) *privateNetworkConfiguration {
@@ -61,18 +115,19 @@ func (s *CloudProjectKubeCreateOpts) String() string {
 }
 
 type CloudProjectKubeResponse struct {
-	ControlPlaneIsUpToDate bool     `json:"controlPlaneIsUpToDate"`
-	Id                     string   `json:"id"`
-	IsUpToDate             bool     `json:"isUpToDate"`
-	Name                   string   `json:"name"`
-	NextUpgradeVersions    []string `json:"nextUpgradeVersions"`
-	NodesUrl               string   `json:"nodesUrl"`
-	PrivateNetworkId       string   `json:"privateNetworkId"`
-	Region                 string   `json:"region"`
-	Status                 string   `json:"status"`
-	UpdatePolicy           string   `json:"updatePolicy"`
-	Url                    string   `json:"url"`
-	Version                string   `json:"version"`
+	ControlPlaneIsUpToDate bool          `json:"controlPlaneIsUpToDate"`
+	Id                     string        `json:"id"`
+	IsUpToDate             bool          `json:"isUpToDate"`
+	Name                   string        `json:"name"`
+	NextUpgradeVersions    []string      `json:"nextUpgradeVersions"`
+	NodesUrl               string        `json:"nodesUrl"`
+	PrivateNetworkId       string        `json:"privateNetworkId"`
+	Region                 string        `json:"region"`
+	Status                 string        `json:"status"`
+	UpdatePolicy           string        `json:"updatePolicy"`
+	Url                    string        `json:"url"`
+	Version                string        `json:"version"`
+	Customization          Customization `json:"customization"`
 }
 
 func (v CloudProjectKubeResponse) ToMap() map[string]interface{} {
@@ -89,7 +144,20 @@ func (v CloudProjectKubeResponse) ToMap() map[string]interface{} {
 	obj["update_policy"] = v.UpdatePolicy
 	obj["url"] = v.Url
 	obj["version"] = v.Version[:strings.LastIndex(v.Version, ".")]
-
+	obj["customization"] = []map[string]interface{}{
+		{
+			"apiserver": []map[string]interface{}{
+				{
+					"admissionplugins": []map[string]interface{}{
+						{
+							"enabled":  v.Customization.APIServer.AdmissionPlugins.Enabled,
+							"disabled": v.Customization.APIServer.AdmissionPlugins.Disabled,
+						},
+					},
+				},
+			},
+		},
+	}
 	return obj
 }
 
@@ -112,4 +180,8 @@ type CloudProjectKubeResetOpts struct {
 type CloudProjectKubeUpdatePNCOpts struct {
 	DefaultVrackGateway            string `json:"defaultVrackGateway"`
 	PrivateNetworkRoutingAsDefault bool   `json:"privateNetworkRoutingAsDefault"`
+}
+
+type CloudProjectKubeUpdateCustomizationOpts struct {
+	APIServer *APIServer `json:"apiServer"`
 }
