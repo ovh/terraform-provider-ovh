@@ -39,7 +39,7 @@ output "my_access_key_id" {
 }
 
 output "my_secret_access_key" {
-  value     = ovh_cloud_project_user_s3_credential.my_s3_credential.secret_access_key
+  value     = data.ovh_cloud_project_user_s3_credential.my_s3_credential.secret_access_key
   sensitive = true
 }
 ```
