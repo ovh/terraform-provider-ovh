@@ -19,6 +19,7 @@ const (
 	kubeClusterPrivateNetworkConfigurationKey = "private_network_configuration"
 	kubeClusterUpdatePolicyKey                = "update_policy"
 	kubeClusterVersionKey                     = "version"
+	kubeClusterCustomizationKey               = "customization"
 )
 
 func resourceCloudProjectKube() *schema.Resource {
@@ -49,6 +50,53 @@ func resourceCloudProjectKube() *schema.Resource {
 				Computed: true,
 				Optional: true,
 				ForceNew: false,
+			},
+			kubeClusterCustomizationKey: {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Optional: true,
+				ForceNew: false,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"apiserver": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Optional: true,
+							ForceNew: false,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"admissionplugins": {
+										Type:     schema.TypeSet,
+										Computed: true,
+										Optional: true,
+										ForceNew: false,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"enabled": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Optional: true,
+													ForceNew: false,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"disabled": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Optional: true,
+													ForceNew: false,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 			kubeClusterPrivateNetworkIDKey: {
 				Type:     schema.TypeString,
@@ -232,6 +280,26 @@ func resourceCloudProjectKubeDelete(d *schema.ResourceData, meta interface{}) er
 func resourceCloudProjectKubeUpdate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
+
+	if d.HasChange(kubeClusterCustomizationKey) {
+		_, newValueI := d.GetChange(kubeClusterCustomizationKey)
+		customization := loadCustomization(newValueI)
+
+		endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/customization", serviceName, d.Id())
+		err := config.OVHClient.Put(endpoint, CloudProjectKubeUpdateCustomizationOpts{
+			APIServer: customization.APIServer,
+		}, nil)
+		if err != nil {
+			return err
+		}
+
+		log.Printf("[DEBUG] Waiting for kube %s to be READY", d.Id())
+		err = waitForCloudProjectKubeReady(config.OVHClient, serviceName, d.Id(), []string{"REDEPLOYING", "RESETTING"}, []string{"READY"})
+		if err != nil {
+			return fmt.Errorf("timeout while waiting kube %s to be READY: %w", d.Id(), err)
+		}
+		log.Printf("[DEBUG] kube %s is READY", d.Id())
+	}
 
 	if d.HasChange(kubeClusterVersionKey) {
 		oldValueI, newValueI := d.GetChange(kubeClusterVersionKey)
