@@ -26,12 +26,12 @@ output "mongouser_roles" {
 
 ## Argument Reference
 
-* `service_name` - The id of the public cloud project. If omitted,
+* `service_name` - (Required) The id of the public cloud project. If omitted,
   the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 
-* `cluster_id` - Cluster ID
+* `cluster_id` - (Required) Cluster ID
 
-* `name` - Name of the user with the authentication database in the format name@authDB, for example: johndoe@admin
+* `name` - (Required) Name of the user with the authentication database in the format name@authDB, for example: johndoe@admin
 
 ## Attributes Reference
 

@@ -31,12 +31,12 @@ resource "ovh_cloud_project_database_postgresql_user" "user" {
 
 The following arguments are supported:
 
-* `service_name` - The id of the public cloud project. If omitted,
+* `service_name` - (Required, Forces new resource) The id of the public cloud project. If omitted,
   the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 
-* `cluster_id` - Cluster ID.
+* `cluster_id` - (Required, Forces new resource) Cluster ID.
 
-* `name` - Name of the user.
+* `name` - (Required, Forces new resource) Name of the user.
 
 * `roles` - (Optional: if omit, default role) Roles the user belongs to. Possible values:
   * `["replication"]`
@@ -48,7 +48,7 @@ The following attributes are exported:
 * `cluster_id` - See Argument Reference above.
 * `created_at` - Date of the creation of the user.
 * `id` - ID of the user.
-* `password` - Password of the user.
+* `password` - (Sensitive) Password of the user.
 * `roles` - Roles the user belongs to.
 * `service_name` - See Argument Reference above.
 * `status` - Current status of the user.

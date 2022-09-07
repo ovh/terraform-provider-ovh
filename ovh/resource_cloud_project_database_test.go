@@ -82,14 +82,16 @@ resource "ovh_cloud_project_database" "db" {
 `
 
 func TestAccCloudProjectDatabase_basic(t *testing.T) {
-	description := acctest.RandomWithPrefix(test_prefix)
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
 	engine := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_ENGINE_TEST")
 	version := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST")
 	region := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_REGION_TEST")
 	flavor := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_FLAVOR_TEST")
+	description := acctest.RandomWithPrefix(test_prefix)
+
 	config := fmt.Sprintf(
 		testAccCloudProjectDatabaseConfig,
-		os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"),
+		serviceName,
 		description,
 		engine,
 		version,
@@ -118,8 +120,6 @@ func TestAccCloudProjectDatabase_basic(t *testing.T) {
 						"ovh_cloud_project_database.db", "endpoints.0.domain"),
 					resource.TestCheckResourceAttrSet(
 						"ovh_cloud_project_database.db", "endpoints.0.ssl"),
-					resource.TestCheckResourceAttrSet(
-						"ovh_cloud_project_database.db", "endpoints.0.ssl_mode"),
 					resource.TestCheckResourceAttr(
 						"ovh_cloud_project_database.db", "engine", engine),
 					resource.TestCheckResourceAttr(

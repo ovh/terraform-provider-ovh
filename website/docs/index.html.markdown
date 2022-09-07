@@ -125,7 +125,11 @@ variables must also be set:
 
 * `OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST` - The version of the database engine to test.
 
+* `OVH_CLOUD_PROJECT_DATABASE_KAFKA_VERSION_TEST` - The version of the kafka to test. if not set `OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST` is use.
+
 * `OVH_CLOUD_PROJECT_DATABASE_MONGODB_VERSION_TEST` - The version of the mongodb to test. if not set `OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST` is use.
+
+* `OVH_CLOUD_PROJECT_DATABASE_OPENSEARCH_VERSION_TEST` - The version of the opensearch to test. if not set `OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST` is use.
 
 * `OVH_CLOUD_PROJECT_DATABASE_POSTGRESQL_VERSION_TEST` - The version of the postgresql to test. if not set `OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST` is use.
 

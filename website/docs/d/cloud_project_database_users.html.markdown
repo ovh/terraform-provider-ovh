@@ -26,17 +26,18 @@ output "user_ids" {
 
 ## Argument Reference
 
-* `service_name` - The id of the public cloud project. If omitted,
+* `service_name` - (Required) The id of the public cloud project. If omitted,
   the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 
-* `engine` - The engine of the database cluster you want to list users. To get a full list of available engine visit.
+* `engine` - (Required) The engine of the database cluster you want to list users. To get a full list of available engine visit.
 [public documentation](https://docs.ovh.com/gb/en/publiccloud/databases).
 
-* `cluster_id` - Cluster ID
+* `cluster_id` - (Required) Cluster ID
 
 ## Attributes Reference
 
-The following attributes are exported:
+`id` is set to the md5 sum of the list of all user ids. In addition,
+the following attributes are exported:
 
 * `cluster_id` - See Argument Reference above.
 * `service_name` - See Argument Reference above.

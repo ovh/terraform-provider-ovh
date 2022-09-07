@@ -25,7 +25,7 @@ resource "ovh_cloud_project_database" "db" {
 data "ovh_cloud_project_database" "db" {
   service_name = ovh_cloud_project_database.db.service_name
   engine 	   = ovh_cloud_project_database.db.engine
-  cluster_id   = ovh_cloud_project_database.db.id
+  id           = ovh_cloud_project_database.db.id
 }
 `
 
@@ -68,8 +68,6 @@ func TestAccCloudProjectDatabaseDataSource_basic(t *testing.T) {
 						"data.ovh_cloud_project_database.db", "endpoints.0.domain"),
 					resource.TestCheckResourceAttrSet(
 						"data.ovh_cloud_project_database.db", "endpoints.0.ssl"),
-					resource.TestCheckResourceAttrSet(
-						"data.ovh_cloud_project_database.db", "endpoints.0.ssl_mode"),
 					resource.TestCheckResourceAttr(
 						"data.ovh_cloud_project_database.db", "engine", engine),
 					resource.TestCheckResourceAttr(

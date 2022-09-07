@@ -357,7 +357,7 @@ func waitForCloudProjectDatabaseIpRestrictionDeleted(client *ovh.Client, service
 		Pending: []string{"DELETING"},
 		Target:  []string{"DELETED"},
 		Refresh: func() (interface{}, string, error) {
-			res := &CloudProjectDatabaseResponse{}
+			res := &CloudProjectDatabaseIpRestrictionResponse{}
 			endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/ipRestriction/%s",
 				url.PathEscape(serviceName),
 				url.PathEscape(engine),
@@ -436,6 +436,65 @@ func validateCloudProjectDatabaseUserEngineFunc(v interface{}, k string) (ws []s
 	return
 }
 
+func waitForCloudProjectDatabaseUserReady(client *ovh.Client, serviceName, engine string, databaseId string, userId string, timeOut time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"PENDING", "CREATING", "UPDATING"},
+		Target:  []string{"READY"},
+		Refresh: func() (interface{}, string, error) {
+			res := &CloudProjectDatabaseUserResponse{}
+			endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/user/%s",
+				url.PathEscape(serviceName),
+				url.PathEscape(engine),
+				url.PathEscape(databaseId),
+				url.PathEscape(userId),
+			)
+			err := client.Get(endpoint, res)
+			if err != nil {
+				return res, "", err
+			}
+
+			return res, res.Status, nil
+		},
+		Timeout:    timeOut,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+	return err
+}
+
+func waitForCloudProjectDatabaseUserDeleted(client *ovh.Client, serviceName, engine string, databaseId string, userId string, timeOut time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"DELETING"},
+		Target:  []string{"DELETED"},
+		Refresh: func() (interface{}, string, error) {
+			res := &CloudProjectDatabaseUserResponse{}
+			endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/user/%s",
+				url.PathEscape(serviceName),
+				url.PathEscape(engine),
+				url.PathEscape(databaseId),
+				url.PathEscape(userId),
+			)
+			err := client.Get(endpoint, res)
+			if err != nil {
+				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
+					return res, "DELETED", nil
+				}
+				return res, "", err
+			}
+
+			return res, res.Status, nil
+		},
+		Timeout:    timeOut,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+	return err
+}
+
 // PostgresqlUser
 
 type CloudProjectDatabasePostgresqlUserResponse struct {
@@ -475,7 +534,7 @@ type CloudProjectDatabasePostgresqlUserCreateOpts struct {
 
 func (opts *CloudProjectDatabasePostgresqlUserCreateOpts) FromResource(d *schema.ResourceData) *CloudProjectDatabasePostgresqlUserCreateOpts {
 	opts.Name = d.Get("name").(string)
-	roles := d.Get("roles").([]interface{})
+	roles := d.Get("roles").(*schema.Set).List()
 	opts.Roles = make([]string, len(roles))
 	for i, e := range roles {
 		if e != nil {
@@ -490,7 +549,7 @@ type CloudProjectDatabasePostgresqlUserUpdateOpts struct {
 }
 
 func (opts *CloudProjectDatabasePostgresqlUserUpdateOpts) FromResource(d *schema.ResourceData) *CloudProjectDatabasePostgresqlUserUpdateOpts {
-	roles := d.Get("roles").([]interface{})
+	roles := d.Get("roles").(*schema.Set).List()
 	opts.Roles = make([]string, len(roles))
 	for i, e := range roles {
 		opts.Roles[i] = e.(string)
@@ -625,7 +684,7 @@ type CloudProjectDatabaseRedisUserCreateOpts struct {
 }
 
 func getStringSlice(i interface{}) []string {
-	iarr := i.([]interface{})
+	iarr := i.(*schema.Set).List()
 	arr := make([]string, len(iarr))
 	for i, e := range iarr {
 		if e != nil {
@@ -660,24 +719,153 @@ func (opts *CloudProjectDatabaseRedisUserUpdateOpts) FromResource(d *schema.Reso
 	return opts
 }
 
-func waitForCloudProjectDatabaseUserReady(client *ovh.Client, serviceName, engine string, databaseId string, userId string, timeOut time.Duration) error {
+// Opensearch
+
+// // User
+
+type CloudProjectDatabaseOpensearchUserAcl struct {
+	Pattern    string `json:"pattern"`
+	Permission string `json:"permission"`
+}
+
+func (v CloudProjectDatabaseOpensearchUserAcl) ToMap() map[string]string {
+	obj := make(map[string]string)
+
+	obj["pattern"] = v.Pattern
+	obj["permission"] = v.Permission
+
+	return obj
+}
+
+type CloudProjectDatabaseOpensearchUserResponse struct {
+	Acls      []CloudProjectDatabaseOpensearchUserAcl `json:"acls"`
+	CreatedAt string                                  `json:"createdAt"`
+	Id        string                                  `json:"id"`
+	Password  string                                  `json:"password"`
+	Status    string                                  `json:"status"`
+	Username  string                                  `json:"username"`
+}
+
+func (p *CloudProjectDatabaseOpensearchUserResponse) String() string {
+	return fmt.Sprintf(
+		"Id: %s, User: %s, Status: %s",
+		p.Id,
+		p.Username,
+		p.Status,
+	)
+}
+
+func (v CloudProjectDatabaseOpensearchUserResponse) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+
+	var acls []map[string]string
+	for _, e := range v.Acls {
+		acls = append(acls, e.ToMap())
+	}
+
+	obj["acls"] = acls
+	obj["created_at"] = v.CreatedAt
+	obj["id"] = v.Id
+	obj["name"] = v.Username
+	obj["status"] = v.Status
+
+	return obj
+}
+
+type CloudProjectDatabaseOpensearchUserCreateOpts struct {
+	Acls []CloudProjectDatabaseOpensearchUserAcl `json:"acls,omitempty"`
+	Name string                                  `json:"name"`
+}
+
+func (opts *CloudProjectDatabaseOpensearchUserCreateOpts) FromResource(d *schema.ResourceData) *CloudProjectDatabaseOpensearchUserCreateOpts {
+	opts.Name = d.Get("name").(string)
+	acls := d.Get("acls").(*schema.Set).List()
+	opts.Acls = make([]CloudProjectDatabaseOpensearchUserAcl, len(acls))
+	for i, e := range acls {
+		aclMap := e.(map[string]interface{})
+		opts.Acls[i] = CloudProjectDatabaseOpensearchUserAcl{
+			Pattern:    aclMap["pattern"].(string),
+			Permission: aclMap["permission"].(string),
+		}
+	}
+	return opts
+}
+
+type CloudProjectDatabaseOpensearchUserUpdateOpts struct {
+	Acls []CloudProjectDatabaseOpensearchUserAcl `json:"acls,omitempty"`
+}
+
+func (opts *CloudProjectDatabaseOpensearchUserUpdateOpts) FromResource(d *schema.ResourceData) *CloudProjectDatabaseOpensearchUserUpdateOpts {
+	acls := d.Get("acls").(*schema.Set).List()
+	opts.Acls = make([]CloudProjectDatabaseOpensearchUserAcl, len(acls))
+	for i, e := range acls {
+		aclMap := e.(map[string]interface{})
+		opts.Acls[i] = CloudProjectDatabaseOpensearchUserAcl{
+			Pattern:    aclMap["pattern"].(string),
+			Permission: aclMap["permission"].(string),
+		}
+	}
+	return opts
+}
+
+// // Pattern
+
+type CloudProjectDatabaseOpensearchPatternResponse struct {
+	Id            string `json:"id"`
+	MaxIndexCount int    `json:"maxIndexCount"`
+	Pattern       string `json:"pattern"`
+}
+
+func (p *CloudProjectDatabaseOpensearchPatternResponse) String() string {
+	return fmt.Sprintf(
+		"Id: %s, Pattern: %s, MaxIndexCount: %d",
+		p.Id,
+		p.Pattern,
+		p.MaxIndexCount,
+	)
+}
+
+func (v CloudProjectDatabaseOpensearchPatternResponse) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+
+	obj["id"] = v.Id
+	obj["max_index_count"] = v.MaxIndexCount
+	obj["pattern"] = v.Pattern
+
+	return obj
+}
+
+type CloudProjectDatabaseOpensearchPatternCreateOpts struct {
+	MaxIndexCount int    `json:"maxIndexCount,omitempty"`
+	Pattern       string `json:"pattern"`
+}
+
+func (opts *CloudProjectDatabaseOpensearchPatternCreateOpts) FromResource(d *schema.ResourceData) *CloudProjectDatabaseOpensearchPatternCreateOpts {
+	opts.MaxIndexCount = d.Get("max_index_count").(int)
+	opts.Pattern = d.Get("pattern").(string)
+
+	return opts
+}
+
+func waitForCloudProjectDatabaseOpensearchPatternReady(client *ovh.Client, serviceName, databaseId string, patternId string, timeOut time.Duration) error {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "CREATING", "UPDATING"},
+		Pending: []string{"PENDING"},
 		Target:  []string{"READY"},
 		Refresh: func() (interface{}, string, error) {
-			res := &CloudProjectDatabaseUserResponse{}
-			endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/user/%s",
+			res := &CloudProjectDatabaseOpensearchPatternResponse{}
+			endpoint := fmt.Sprintf("/cloud/project/%s/database/opensearch/%s/pattern/%s",
 				url.PathEscape(serviceName),
-				url.PathEscape(engine),
 				url.PathEscape(databaseId),
-				url.PathEscape(userId),
+				url.PathEscape(patternId),
 			)
 			err := client.Get(endpoint, res)
 			if err != nil {
+				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
+					return res, "PENDING", nil
+				}
 				return res, "", err
 			}
-
-			return res, res.Status, nil
+			return res, "READY", nil
 		},
 		Timeout:    timeOut,
 		Delay:      10 * time.Second,
@@ -688,17 +876,16 @@ func waitForCloudProjectDatabaseUserReady(client *ovh.Client, serviceName, engin
 	return err
 }
 
-func waitForCloudProjectDatabaseUserDeleted(client *ovh.Client, serviceName, engine string, databaseId string, userId string, timeOut time.Duration) error {
+func waitForCloudProjectDatabaseOpensearchPatternDeleted(client *ovh.Client, serviceName, databaseId string, patternId string, timeOut time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"DELETING"},
 		Target:  []string{"DELETED"},
 		Refresh: func() (interface{}, string, error) {
-			res := &CloudProjectDatabaseResponse{}
-			endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/user/%s",
+			res := &CloudProjectDatabaseOpensearchPatternResponse{}
+			endpoint := fmt.Sprintf("/cloud/project/%s/database/opensearch/%s/pattern/%s",
 				url.PathEscape(serviceName),
-				url.PathEscape(engine),
 				url.PathEscape(databaseId),
-				url.PathEscape(userId),
+				url.PathEscape(patternId),
 			)
 			err := client.Get(endpoint, res)
 			if err != nil {
@@ -708,7 +895,7 @@ func waitForCloudProjectDatabaseUserDeleted(client *ovh.Client, serviceName, eng
 				return res, "", err
 			}
 
-			return res, res.Status, nil
+			return res, "DELETING", nil
 		},
 		Timeout:    timeOut,
 		Delay:      10 * time.Second,
@@ -717,4 +904,234 @@ func waitForCloudProjectDatabaseUserDeleted(client *ovh.Client, serviceName, eng
 
 	_, err := stateConf.WaitForState()
 	return err
+}
+
+// Kafka
+
+// // Certificates
+
+type CloudProjectDatabaseKafkaCertificatesResponse struct {
+	Ca string `json:"ca"`
+}
+
+func (p *CloudProjectDatabaseKafkaCertificatesResponse) String() string {
+	return fmt.Sprintf(
+		"Ca: %s",
+		p.Ca,
+	)
+}
+
+func (v CloudProjectDatabaseKafkaCertificatesResponse) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+
+	obj["ca"] = v.Ca
+
+	return obj
+}
+
+// // Topic
+
+type CloudProjectDatabaseKafkaTopicResponse struct {
+	Id                string `json:"id"`
+	MinInsyncReplicas int    `json:"minInsyncReplicas"`
+	Name              string `json:"name"`
+	Partitions        int    `json:"partitions"`
+	Replication       int    `json:"replication"`
+	RetentionBytes    int    `json:"retentionBytes"`
+	RetentionHours    int    `json:"retentionHours"`
+}
+
+func (p *CloudProjectDatabaseKafkaTopicResponse) String() string {
+	return fmt.Sprintf(
+		"Id: %s, Name: %s",
+		p.Id,
+		p.Name,
+	)
+}
+
+func (v CloudProjectDatabaseKafkaTopicResponse) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+
+	obj["id"] = v.Id
+	obj["min_insync_replicas"] = v.MinInsyncReplicas
+	obj["name"] = v.Name
+	obj["partitions"] = v.Partitions
+	obj["replication"] = v.Replication
+	obj["retention_bytes"] = v.RetentionBytes
+	obj["retention_hours"] = v.RetentionHours
+
+	return obj
+}
+
+type CloudProjectDatabaseKafkaTopicCreateOpts struct {
+	MinInsyncReplicas int    `json:"minInsyncReplicas"`
+	Name              string `json:"name,omitempty"`
+	Partitions        int    `json:"partitions"`
+	Replication       int    `json:"replication"`
+	RetentionBytes    int    `json:"retentionBytes"`
+	RetentionHours    int    `json:"retentionHours"`
+}
+
+func (opts *CloudProjectDatabaseKafkaTopicCreateOpts) FromResource(d *schema.ResourceData) *CloudProjectDatabaseKafkaTopicCreateOpts {
+	opts.MinInsyncReplicas = d.Get("min_insync_replicas").(int)
+	opts.Name = d.Get("name").(string)
+	opts.Partitions = d.Get("partitions").(int)
+	opts.Replication = d.Get("replication").(int)
+	opts.RetentionBytes = d.Get("retention_bytes").(int)
+	opts.RetentionHours = d.Get("retention_hours").(int)
+
+	return opts
+}
+
+func validateIsSupEqual(v, min int) (errors []error) {
+	if v < min {
+		errors = append(errors, fmt.Errorf("Value %d is inferior of min value %d", v, min))
+	}
+	return
+}
+
+func validateCloudProjectDatabaseKafkaTopicMinInsyncReplicasFunc(v interface{}, k string) (ws []string, errors []error) {
+	errors = validateIsSupEqual(v.(int), 1)
+	return
+}
+
+func validateCloudProjectDatabaseKafkaTopicPartitionsFunc(v interface{}, k string) (ws []string, errors []error) {
+	errors = validateIsSupEqual(v.(int), 1)
+	return
+}
+
+func validateCloudProjectDatabaseKafkaTopicReplicationFunc(v interface{}, k string) (ws []string, errors []error) {
+	errors = validateIsSupEqual(v.(int), 2)
+	return
+}
+
+func validateCloudProjectDatabaseKafkaTopicRetentionHoursFunc(v interface{}, k string) (ws []string, errors []error) {
+	errors = validateIsSupEqual(v.(int), -1)
+	return
+}
+
+func waitForCloudProjectDatabaseKafkaTopicReady(client *ovh.Client, serviceName, databaseId string, topicId string, timeOut time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"PENDING"},
+		Target:  []string{"READY"},
+		Refresh: func() (interface{}, string, error) {
+			res := &CloudProjectDatabaseKafkaTopicResponse{}
+			endpoint := fmt.Sprintf("/cloud/project/%s/database/kafka/%s/topic/%s",
+				url.PathEscape(serviceName),
+				url.PathEscape(databaseId),
+				url.PathEscape(topicId),
+			)
+			err := client.Get(endpoint, res)
+			if err != nil {
+				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
+					return res, "PENDING", nil
+				}
+				return res, "", err
+			}
+			return res, "READY", nil
+		},
+		Timeout:    timeOut,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+	return err
+}
+
+func waitForCloudProjectDatabaseKafkaTopicDeleted(client *ovh.Client, serviceName, databaseId string, topicId string, timeOut time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"DELETING"},
+		Target:  []string{"DELETED"},
+		Refresh: func() (interface{}, string, error) {
+			res := &CloudProjectDatabaseKafkaTopicResponse{}
+			endpoint := fmt.Sprintf("/cloud/project/%s/database/kafka/%s/topic/%s",
+				url.PathEscape(serviceName),
+				url.PathEscape(databaseId),
+				url.PathEscape(topicId),
+			)
+			err := client.Get(endpoint, res)
+			if err != nil {
+				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
+					return res, "DELETED", nil
+				}
+				return res, "", err
+			}
+
+			return res, "DELETING", nil
+		},
+		Timeout:    timeOut,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+	return err
+}
+
+// // ACL
+
+type CloudProjectDatabaseKafkaAclResponse struct {
+	Id         string `json:"id"`
+	Permission string `json:"permission"`
+	Topic      string `json:"topic"`
+	Username   string `json:"username"`
+}
+
+func (p *CloudProjectDatabaseKafkaAclResponse) String() string {
+	return fmt.Sprintf(
+		"Id: %s, Permission: %s, affected User: %s, affected Topic %s",
+		p.Id,
+		p.Permission,
+		p.Username,
+		p.Topic,
+	)
+}
+
+func (v CloudProjectDatabaseKafkaAclResponse) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+
+	obj["id"] = v.Id
+	obj["permission"] = v.Permission
+	obj["topic"] = v.Topic
+	obj["username"] = v.Username
+
+	return obj
+}
+
+type CloudProjectDatabaseKafkaAclCreateOpts struct {
+	Permission string `json:"permission"`
+	Topic      string `json:"topic"`
+	Username   string `json:"username"`
+}
+
+func (opts *CloudProjectDatabaseKafkaAclCreateOpts) FromResource(d *schema.ResourceData) *CloudProjectDatabaseKafkaAclCreateOpts {
+	opts.Permission = d.Get("permission").(string)
+	opts.Topic = d.Get("topic").(string)
+	opts.Username = d.Get("username").(string)
+
+	return opts
+}
+
+// // User Access
+
+type CloudProjectDatabaseKafkaUserAccessResponse struct {
+	Cert string `json:"cert"`
+	Key  string `json:"key"`
+}
+
+func (p *CloudProjectDatabaseKafkaUserAccessResponse) String() string {
+	return fmt.Sprintf(
+		"Cert: %s",
+		p.Cert,
+	)
+}
+
+func (v CloudProjectDatabaseKafkaUserAccessResponse) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+
+	obj["cert"] = v.Cert
+	obj["key"] = v.Key
+
+	return obj
 }

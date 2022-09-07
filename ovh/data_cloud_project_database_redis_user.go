@@ -30,19 +30,19 @@ func dataSourceCloudProjectDatabaseRedisUser() *schema.Resource {
 
 			//Computed
 			"categories": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Description: "Categories of the user",
 				Computed:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"channels": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Description: "Channels of the user",
 				Computed:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"commands": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Description: "Commands of the user",
 				Computed:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
@@ -53,7 +53,7 @@ func dataSourceCloudProjectDatabaseRedisUser() *schema.Resource {
 				Computed:    true,
 			},
 			"keys": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Description: "Keys of the user",
 				Computed:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},

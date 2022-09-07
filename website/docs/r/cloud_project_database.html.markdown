@@ -24,6 +24,105 @@ interact directly with the team that builds our databases services and terraform
 
 ## Example Usage
 
+Minimum settings for each engine (region choice is up to the user):
+```hcl
+resource "ovh_cloud_project_database" "cassandradb" {
+	service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+	description  = "my-first-cassandra"
+	engine       = "cassandra"
+	version      = "4.0"
+	plan         = "essential"
+	nodes {
+		region     = "BHS"
+	}
+  nodes {
+		region     = "BHS"
+	}
+  nodes {
+		region     = "BHS"
+	}
+	flavor = "db1-4"
+}
+
+resource "ovh_cloud_project_database" "kafkadb" {
+	service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+	description  = "my-first-kafka"
+	engine       = "kafka"
+	version      = "3.1"
+	plan         = "business"
+	nodes {
+		region     = "DE"
+	}
+	nodes {
+		region     = "DE"
+	}
+	nodes {
+		region     = "DE"
+	}
+	flavor = "db1-4"
+}
+
+resource "ovh_cloud_project_database" "mongodb" {
+	service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+	description  = "my-first-mongodb"
+	engine       = "mongodb"
+	version      = "5.0"
+	plan         = "essential"
+	nodes {
+		region     = "GRA"
+	}
+	flavor = "db1-2"
+}
+
+resource "ovh_cloud_project_database" "mysqldb" {
+	service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+	description  = "my-first-mysql"
+	engine       = "mysql"
+	version      = "8"
+	plan         = "essential"
+	nodes {
+		region     = "SBG"
+	}
+	flavor = "db1-4"
+}
+
+resource "ovh_cloud_project_database" "opensearchdb" {
+	service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+	description  = "my-first-opensearch"
+	engine       = "opensearch"
+	version      = "1"
+	plan         = "essential"
+	nodes {
+		region     = "UK"
+	}
+	flavor = "db1-4"
+}
+
+resource "ovh_cloud_project_database" "pgsqldb" {
+	service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+	description  = "my-first-postgresql"
+	engine       = "postgresql"
+	version      = "14"
+	plan         = "essential"
+	nodes {
+		region     = "WAW"
+	}
+	flavor = "db1-4"
+}
+
+resource "ovh_cloud_project_database" "redisdb" {
+	service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+	description  = "my-first-redis"
+	engine       = "redis"
+	version      = "6.2"
+	plan         = "essential"
+	nodes {
+		region     = "BHS"
+	}
+	flavor = "db1-4"
+}
+```
+
 To deploy a business PostgreSQL service with two nodes on public network:
 ```hcl
 resource "ovh_cloud_project_database" "postgresql" {
@@ -74,29 +173,29 @@ resource "ovh_cloud_project_database" "mongodb" {
 
 The following arguments are supported:
 
-* `service_name` - The id of the public cloud project. If omitted,
+* `service_name` - (Required, Forces new resource) The id of the public cloud project. If omitted,
   the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 
 * `description` - (Optional) Small description of the database service.
 
-* `engine` - The database engine you want to deploy. To get a full list of available engine visit.
+* `engine` - (Required, Forces new resource) The database engine you want to deploy. To get a full list of available engine visit.
 [public documentation](https://docs.ovh.com/gb/en/publiccloud/databases).
 
-* `flavor` -  a valid OVH public cloud database flavor name in which the nodes will be started.
+* `flavor` -  (Required) A valid OVH public cloud database flavor name in which the nodes will be started.
   Ex: "db1-7". Changing this value upgrade the nodes with the new flavor.
   You can find the list of flavor names: https://www.ovhcloud.com/fr/public-cloud/prices/
 
-* `nodes` - List of nodes object.
+* `nodes` - (Required, Minimum Items: 1) List of nodes object.
   Multi region cluster are not yet available, all node should be identical.
-  * `network_id` - Private network id in which the node should be deployed.
-  * `region` - Public cloud region in which the node should be deployed.
+  * `network_id` - (Optional, Forces new resource) Private network id in which the node should be deployed.
+  * `region` - (Required, Forces new resource) Public cloud region in which the node should be deployed.
     Ex: "GRA'.
-  * `subnet_id` - Private subnet ID in which the node is.
+  * `subnet_id` - (Optional, Forces new resource) Private subnet ID in which the node is.
 
-* `plan` - List of nodes object.
+* `plan` - (Required) List of nodes object.
   Enum: "essential", "business", "enterprise".
 
-* `version` - The version of the engine in which the service should be deployed
+* `version` - (Required) The version of the engine in which the service should be deployed
 
 ## Attributes Reference
 
