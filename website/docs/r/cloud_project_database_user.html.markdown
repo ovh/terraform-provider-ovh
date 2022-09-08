@@ -23,13 +23,13 @@ With this resource you can create a user for the following database engine:
 data "ovh_cloud_project_database" "db" {
   service_name  = "XXXX"
   engine        = "YYYY"
-  cluster_id    = "ZZZZ"
+  id            = "ZZZZ"
 }
 
 resource "ovh_cloud_project_database_user" "user" {
-  service_name  = ovh_cloud_project_database.db.service_name
-  engine        = ovh_cloud_project_database.db.engine
-  cluster_id    = ovh_cloud_project_database.db.id
+  service_name  = data.ovh_cloud_project_database.db.service_name
+  engine        = data.ovh_cloud_project_database.db.engine
+  cluster_id    = data.ovh_cloud_project_database.db.id
   name          = "johndoe"
 }
 ```
@@ -70,4 +70,4 @@ The following attributes are exported:
 OVHcloud Managed database clusters users can be imported using the `service_name`, `engine`, `cluster_id` and `id` of the user, separated by "/" E.g.,
 
 ```
-$ terraform import ovh_cloud_project_database_user.my_user <service_name>/<engine>/<cluster_id>/<id>
+$ terraform import ovh_cloud_project_database_user.my_user service_name/engine/cluster_id/id

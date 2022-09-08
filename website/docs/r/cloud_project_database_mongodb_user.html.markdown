@@ -14,14 +14,14 @@ Creates an user for a mongodb cluster associated with a public cloud project.
 
 ```hcl
 data "ovh_cloud_project_database" "mongodb" {
-  service_name  = "XXXX"
+  service_name  = "XXX"
   engine        = "mongodb"
-  cluster_id    = "ZZZZ"
+  id            = "ZZZ"
 }
 
 resource "ovh_cloud_project_database_mongodb_user" "user" {
-  service_name  = ovh_cloud_project_database.mongodb.service_name
-  cluster_id    = ovh_cloud_project_database.mongodb.id
+  service_name  = data.ovh_cloud_project_database.mongodb.service_name
+  cluster_id    = data.ovh_cloud_project_database.mongodb.id
   name          = "johndoe"
   roles         = ["backup", "readAnyDatabase"]
 }
@@ -66,4 +66,4 @@ The following attributes are exported:
 OVHcloud Managed mongodb clusters users can be imported using the `service_name`, `cluster_id` and `id` of the user, separated by "/" E.g.,
 
 ```
-$ terraform import ovh_cloud_project_database_mongodb_user.my_user <service_name>/<cluster_id>/<id>
+$ terraform import ovh_cloud_project_database_mongodb_user.my_user service_name/cluster_id/id

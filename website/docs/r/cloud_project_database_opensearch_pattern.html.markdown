@@ -16,12 +16,12 @@ Creates a pattern for a opensearch cluster associated with a public cloud projec
 data "ovh_cloud_project_database" "opensearch" {
   service_name  = "XXX"
   engine        = "opensearch"
-  cluster_id    = "ZZZ"
+  id            = "ZZZ"
 }
 
 resource "ovh_cloud_project_database_opensearch_pattern" "pattern" {
-  service_name = ovh_cloud_project_database.opensearch.service_name
-  cluster_id   = ovh_cloud_project_database.opensearch.id
+  service_name = data.ovh_cloud_project_database.opensearch.service_name
+  cluster_id   = data.ovh_cloud_project_database.opensearch.id
   max_index_count = 2
   pattern = "logs_*"
 }
@@ -55,4 +55,4 @@ The following attributes are exported:
 OVHcloud Managed opensearch clusters patterns can be imported using the `service_name`, `cluster_id` and `id` of the pattern, separated by "/" E.g.,
 
 ```
-$ terraform import ovh_cloud_project_database_opensearch_pattern.my_pattern <service_name>/<cluster_id>/<id>
+$ terraform import ovh_cloud_project_database_opensearch_pattern.my_pattern service_name/cluster_id/id

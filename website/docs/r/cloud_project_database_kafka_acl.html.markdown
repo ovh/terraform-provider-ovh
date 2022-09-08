@@ -16,15 +16,15 @@ Creates an ACL for a kafka cluster associated with a public cloud project.
 data "ovh_cloud_project_database" "kafka" {
   service_name  = "XXX"
   engine        = "kafka"
-  cluster_id    = "ZZZ"
+  id            = "ZZZ"
 }
 
 resource "ovh_cloud_project_database_kafka_acl" "acl" {
-	service_name = ovh_cloud_project_database.kafka.service_name
-	cluster_id   = ovh_cloud_project_database.kafka.id
-	permission	 = "read"
-	topic 		 = "mytopic"
-	username 	 = "johndoe"
+  service_name   = data.ovh_cloud_project_database.kafka.service_name
+  cluster_id     = data.ovh_cloud_project_database.kafka.id
+  permission  	 = "read"
+  topic          = "mytopic"
+  username 	     = "johndoe"
 }
 ```
 
@@ -63,4 +63,4 @@ The following attributes are exported:
 OVHcloud Managed kafka clusters ACLs can be imported using the `service_name`, `cluster_id` and `id` of the acl, separated by "/" E.g.,
 
 ```
-$ terraform import ovh_cloud_project_database_kafka_acl.my_acl <service_name>/<cluster_id>/<id>
+$ terraform import ovh_cloud_project_database_kafka_acl.my_acl service_name/cluster_id/id

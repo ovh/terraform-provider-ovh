@@ -16,12 +16,12 @@ Creates an user for a postgresql cluster associated with a public cloud project.
 data "ovh_cloud_project_database" "postgresql" {
   service_name  = "XXXX"
   engine        = "postgresql"
-  cluster_id    = "ZZZZ"
+  id            = "ZZZZ"
 }
 
 resource "ovh_cloud_project_database_postgresql_user" "user" {
-  service_name  = ovh_cloud_project_database.postgresql.service_name
-  cluster_id    = ovh_cloud_project_database.postgresql.id
+  service_name  = data.ovh_cloud_project_database.postgresql.service_name
+  cluster_id    = data.ovh_cloud_project_database.postgresql.id
   name          = "johndoe"
   roles         = ["replication"]
 }
@@ -59,4 +59,4 @@ The following attributes are exported:
 OVHcloud Managed postgresql clusters users can be imported using the `service_name`, `cluster_id` and `id` of the user, separated by "/" E.g.,
 
 ```
-$ terraform import ovh_cloud_project_database_postgresql_user.my_user <service_name>/<cluster_id>/<id>
+$ terraform import ovh_cloud_project_database_postgresql_user.my_user service_name/cluster_id/id
