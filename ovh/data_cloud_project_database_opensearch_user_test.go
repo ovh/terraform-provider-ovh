@@ -74,7 +74,7 @@ func TestAccCloudProjectDatabaseOpensearchUserDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(
 						"data.ovh_cloud_project_database_opensearch_user.user", "created_at"),
 					resource.TestCheckResourceAttrSet(
-						"ovh_cloud_project_database_opensearch_user.user", "acls.#"),
+						"data.ovh_cloud_project_database_opensearch_user.user", "acls.#"),
 					resource.TestCheckResourceAttrSet(
 						"data.ovh_cloud_project_database_opensearch_user.user", "status"),
 					resource.TestCheckResourceAttr(
