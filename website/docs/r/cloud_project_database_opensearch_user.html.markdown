@@ -16,12 +16,12 @@ Creates an user for a opensearch cluster associated with a public cloud project.
 data "ovh_cloud_project_database" "opensearch" {
   service_name  = "XXX"
   engine        = "opensearch"
-  cluster_id    = "ZZZ"
+  id            = "ZZZ"
 }
 
 resource "ovh_cloud_project_database_opensearch_user" "user" {
-  service_name  = ovh_cloud_project_database.opensearch.service_name
-  cluster_id    = ovh_cloud_project_database.opensearch.id
+  service_name  = data.ovh_cloud_project_database.opensearch.service_name
+  cluster_id    = data.ovh_cloud_project_database.opensearch.id
   acls {
 		pattern = "logs_*"
 		permission = "read"
@@ -74,4 +74,4 @@ The following attributes are exported:
 OVHcloud Managed opensearch clusters users can be imported using the `service_name`, `cluster_id` and `id` of the user, separated by "/" E.g.,
 
 ```
-$ terraform import ovh_cloud_project_database_opensearch_user.my_user <service_name>/<cluster_id>/<id>
+$ terraform import ovh_cloud_project_database_opensearch_user.my_user service_name/cluster_id/id

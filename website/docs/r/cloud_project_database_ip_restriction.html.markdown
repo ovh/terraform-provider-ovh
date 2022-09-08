@@ -16,13 +16,13 @@ Apply IP restrictions to an OVHcloud Managed Database cluster.
 data "ovh_cloud_project_database" "db" {
   service_name = "XXXX"
   engine = "YYYY"
-  cluster_id  = "ZZZZ"
+  id  = "ZZZZ"
 }
 
 resource "ovh_cloud_project_database_ip_restriction" "iprestriction" {
-  service_name = ovh_cloud_project_database.db.service_name
-  engine       = ovh_cloud_project_database.db.engine
-  cluster_id   = ovh_cloud_project_database.db.cluster_id
+  service_name = data.ovh_cloud_project_database.db.service_name
+  engine       = data.ovh_cloud_project_database.db.engine
+  cluster_id   = data.ovh_cloud_project_database.db.id
   ip           = "178.97.6.0/24"
 }
 ```
@@ -54,5 +54,5 @@ The following attributes are exported:
 OVHcloud Managed database cluster IP restrictions can be imported using the `service_name`, `engine`, `cluster_id` and the `ip`, separated by "/" E.g.,
 
 ```
-$ terraform import ovh_cloud_project_database_ip_restriction.my_ip_restriction <service_name>/<engine>/<cluster_id>/178.97.6.0/24
+$ terraform import ovh_cloud_project_database_ip_restriction.my_ip_restriction service_name/engine/cluster_id/178.97.6.0/24
 ```

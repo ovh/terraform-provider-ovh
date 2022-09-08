@@ -16,12 +16,12 @@ Creates an user for a redis cluster associated with a public cloud project.
 data "ovh_cloud_project_database" "redis" {
   service_name  = "XXXX"
   engine        = "redis"
-  cluster_id    = "ZZZZ"
+  id            = "ZZZZ"
 }
 
 resource "ovh_cloud_project_database_redis_user" "user" {
-  service_name  = ovh_cloud_project_database.redis.service_name
-  cluster_id    = ovh_cloud_project_database.redis.id
+  service_name  = data.ovh_cloud_project_database.redis.service_name
+  cluster_id    = data.ovh_cloud_project_database.redis.id
   categories    = ["+@set", "+@sortedset"]
   channels      = ["*"]
   commands	    = ["+get", "-set"]
@@ -70,4 +70,4 @@ The following attributes are exported:
 OVHcloud Managed redis clusters users can be imported using the `service_name`, `cluster_id` and `id` of the user, separated by "/" E.g.,
 
 ```
-$ terraform import ovh_cloud_project_database_redis_user.my_user <service_name>/<cluster_id>/<id>
+$ terraform import ovh_cloud_project_database_redis_user.my_user service_name/cluster_id/id
