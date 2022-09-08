@@ -1,4 +1,106 @@
-## 0.20.0 (Unreleased)
+## 0.21.0 (Unreleased)
+
+## 0.20.0 (September 8, 2022)
+
+🎉 Features:
+
+* New resource: `r/ovh_cloud_project_database_kafka_acl` ([#296](https://github.com/ovh/terraform-provider-ovh/pull/296))
+* New resource: `r/ovh_cloud_project_database_kafka_topic` ([#296](https://github.com/ovh/terraform-provider-ovh/pull/296))
+* New resource: `r/ovh_cloud_project_database_opensearch_pattern` ([#296](https://github.com/ovh/terraform-provider-ovh/pull/296))
+* New resource: `r/ovh_cloud_project_database_opensearch_user` ([#296](https://github.com/ovh/terraform-provider-ovh/pull/296))
+* New resource: `r/ovh_cloud_project_user_s3_policy` ([#294](https://github.com/ovh/terraform-provider-ovh/pull/294))
+* New resource: `r/ovh_cloud_project_user_s3_credential` ([#291](https://github.com/ovh/terraform-provider-ovh/pull/291))
+* New resource: `r/ovh_cloud_project_database_mongodb_user` ([#283](https://github.com/ovh/terraform-provider-ovh/pull/283))
+* New resource: `r/ovh_cloud_project_database_redis_user` ([#283](https://github.com/ovh/terraform-provider-ovh/pull/283))
+
+* New datasource: `d/ovh_cloud_project_database_kafka_acl` ([#296](https://github.com/ovh/terraform-provider-ovh/pull/296))
+* New datasource: `d/ovh_cloud_project_database_kafka_acls` ([#296](https://github.com/ovh/terraform-provider-ovh/pull/296))
+* New datasource: `d/ovh_cloud_project_database_kafka_certificates` ([#296](https://github.com/ovh/terraform-provider-ovh/pull/296))
+* New datasource: `d/ovh_cloud_project_database_kafka_topic` ([#296](https://github.com/ovh/terraform-provider-ovh/pull/296))
+* New datasource: `d/ovh_cloud_project_database_kafka_topics` ([#296](https://github.com/ovh/terraform-provider-ovh/pull/296))
+* New datasource: `d/ovh_cloud_project_database_kafka_user_access` ([#296](https://github.com/ovh/terraform-provider-ovh/pull/296))
+* New datasource: `d/ovh_cloud_project_database_opensearch_pattern` ([#296](https://github.com/ovh/terraform-provider-ovh/pull/296))
+* New datasource: `d/ovh_cloud_project_database_opensearch_patterns` ([#296](https://github.com/ovh/terraform-provider-ovh/pull/296))
+* New datasource: `d/ovh_cloud_project_database_opensearch_user` ([#296](https://github.com/ovh/terraform-provider-ovh/pull/296))
+* New datasource: `d/ovh_cloud_project_user` ([#294](https://github.com/ovh/terraform-provider-ovh/pull/294))
+* New datasource: `d/ovh_cloud_project_users` ([#294](https://github.com/ovh/terraform-provider-ovh/pull/294))
+* New datasource: `d/ovh_cloud_project_user_s3_policy` ([#294](https://github.com/ovh/terraform-provider-ovh/pull/294))
+* New datasource: `d/ovh_cloud_project_user_s3_credential` ([#291](https://github.com/ovh/terraform-provider-ovh/pull/291))
+* New datasource: `d/ovh_cloud_project_user_s3_credentials` ([#291](https://github.com/ovh/terraform-provider-ovh/pull/291))
+* New datasource: `d/ovh_cloud_project_database_mongodb_user` ([#283](https://github.com/ovh/terraform-provider-ovh/pull/283))
+* New datasource: `d/ovh_cloud_project_database_redis_user` ([#283](https://github.com/ovh/terraform-provider-ovh/pull/283))
+
+💪 Improvements:
+
+* Extend terminate product timeout ([#295](https://github.com/ovh/terraform-provider-ovh/pull/295))
+* Improved resource `r/ovh_cloud_project_kube`: update_policy attribute can now be used at cluster creation ([#293](https://github.com/ovh/terraform-provider-ovh/pull/293))
+
+🐜 Bug fixes:
+
+* `r/ovh_cloud_project_network_private`: region_attributes now contains all the regions not only one ([#286](https://github.com/ovh/terraform-provider-ovh/pull/286))
+* `r/ovh_cloud_project_containerregistry`: updating a container registry now will no longer trigger error on terraform side ([#282](https://github.com/ovh/terraform-provider-ovh/pull/282))
+
+
+📚 Documentation:
+
+* `r/ovh_cloud_project_databases`: Update documentation page ([#296](https://github.com/ovh/terraform-provider-ovh/pull/296))
+* `r/ovh_cloud_project_database_ip_restriction`: Update documentation page ([#296](https://github.com/ovh/terraform-provider-ovh/pull/296))
+* `r/ovh_cloud_project_database_kafka_acl` : Add documentation page ([#296](https://github.com/ovh/terraform-provider-ovh/pull/296))
+* `r/ovh_cloud_project_database_kafka_topic` : Add documentation page ([#296](https://github.com/ovh/terraform-provider-ovh/pull/296))
+* `r/ovh_cloud_project_database_opensearch_pattern` : Add documentation page ([#296](https://github.com/ovh/terraform-provider-ovh/pull/296))
+* `r/ovh_cloud_project_database_opensearch_user` : Add documentation page ([#296](https://github.com/ovh/terraform-provider-ovh/pull/296))
+* `r/ovh_cloud_project_database_postgresql_user`: Update documentation page ([#296](https://github.com/ovh/terraform-provider-ovh/pull/296))
+* `r/ovh_cloud_project_database_user`: Update documentation page ([#296](https://github.com/ovh/terraform-provider-ovh/pull/296))
+* `r/ovh_cloud_project_user_s3_policy` : Add documentation page ([#294](https://github.com/ovh/terraform-provider-ovh/pull/294))
+* `r/ovh_cloud_project_kube`: Update documentation page ([#293](https://github.com/ovh/terraform-provider-ovh/pull/293))
+* `r/ovh_cloud_project_user_s3_credential` : Add documentation page ([#291](https://github.com/ovh/terraform-provider-ovh/pull/291))
+* `r/ovh_cloud_project_database`: Update documentation page ([#290](https://github.com/ovh/terraform-provider-ovh/pull/290))
+* `r/ovh_cloud_project_database_user`: Update documentation page ([#289](https://github.com/ovh/terraform-provider-ovh/pull/289))
+* `r/ovh_dedicated_server_reboot_task`: Update documentation page ([#289](https://github.com/ovh/terraform-provider-ovh/pull/289))
+* `r/ovh_dedicated_server_update`: Update documentation page ([#289](https://github.com/ovh/terraform-provider-ovh/pull/289))
+* `r/ovh_vrack_ip`: Update documentation page ([#289](https://github.com/ovh/terraform-provider-ovh/pull/289))
+* `r/ovh_vrack_ip_loadbalancing`: Update documentation page ([#289](https://github.com/ovh/terraform-provider-ovh/pull/289))
+* `r/ovh_vracks`: Update documentation page ([#284](https://github.com/ovh/terraform-provider-ovh/pull/284))
+* `r/ovh_cloud_project_network_private`: Update documentation page ([#284](https://github.com/ovh/terraform-provider-ovh/pull/284))
+* `r/ovh_iploadbalancing_http_farm`: Update documentation page ([#284](https://github.com/ovh/terraform-provider-ovh/pull/284))
+* `r/ovh_iploadbalancing_http_farm_server`: Update documentation page ([#284](https://github.com/ovh/terraform-provider-ovh/pull/284))
+* `r/ovh_iploadbalancing_refresh`: Update documentation page ([#284](https://github.com/ovh/terraform-provider-ovh/pull/284))
+* `r/ovh_iploadbalancing_tcp_farm`: Update documentation page ([#284](https://github.com/ovh/terraform-provider-ovh/pull/284))
+* `r/ovh_iploadbalancing_tcp_farm_server`: Update documentation page ([#284](https://github.com/ovh/terraform-provider-ovh/pull/284))
+* `r/ovh_vrack_cloudproject`: Update documentation page ([#284](https://github.com/ovh/terraform-provider-ovh/pull/284))
+* `r/ovh_vrack_dedicated_server`: Update documentation page ([#284](https://github.com/ovh/terraform-provider-ovh/pull/284))
+* `r/ovh_cloud_project_database_mongodb_user`: Add documentation page ([#283](https://github.com/ovh/terraform-provider-ovh/pull/283))
+* `r/ovh_cloud_project_database_redis_user`: Add documentation page ([#283](https://github.com/ovh/terraform-provider-ovh/pull/283))
+
+
+* `d/ovh_cloud_project_database`: Update documentation page ([#296](https://github.com/ovh/terraform-provider-ovh/pull/296))
+* `d/ovh_cloud_project_database_ip_restrictions`: Update documentation page ([#296](https://github.com/ovh/terraform-provider-ovh/pull/296))
+* `d/ovh_cloud_project_database_kafka_acl` : Add documentation page ([#296](https://github.com/ovh/terraform-provider-ovh/pull/296))
+* `d/ovh_cloud_project_database_kafka_acls` : Add documentation page ([#296](https://github.com/ovh/terraform-provider-ovh/pull/296))
+* `d/ovh_cloud_project_database_kafka_certificates` : Add documentation page ([#296](https://github.com/ovh/terraform-provider-ovh/pull/296))
+* `d/ovh_cloud_project_database_kafka_topic` : Add documentation page ([#296](https://github.com/ovh/terraform-provider-ovh/pull/296))
+* `d/ovh_cloud_project_database_kafka_topics` : Add documentation page ([#296](https://github.com/ovh/terraform-provider-ovh/pull/296))
+* `d/ovh_cloud_project_database_kafka_user_access` : Add documentation page ([#296](https://github.com/ovh/terraform-provider-ovh/pull/296))
+* `d/ovh_cloud_project_database_postgresql_user`: Update documentation page ([#296](https://github.com/ovh/terraform-provider-ovh/pull/296))
+* `d/ovh_cloud_project_database_user`: Update documentation page ([#296](https://github.com/ovh/terraform-provider-ovh/pull/296))
+* `d/ovh_cloud_project_database_users`: Update documentation page ([#296](https://github.com/ovh/terraform-provider-ovh/pull/296))
+* `d/ovh_cloud_project_databases`: Update documentation page ([#296](https://github.com/ovh/terraform-provider-ovh/pull/296))
+* `d/ovh_cloud_project_database_opensearch_pattern` : Add documentation page ([#296](https://github.com/ovh/terraform-provider-ovh/pull/296))
+* `d/ovh_cloud_project_database_opensearch_patterns` : Add documentation page ([#296](https://github.com/ovh/terraform-provider-ovh/pull/296))
+* `d/ovh_cloud_project_database_opensearch_user` : Add documentation page ([#296](https://github.com/ovh/terraform-provider-ovh/pull/296))
+* `d/ovh_cloud_project_user` : Add documentation page ([#294](https://github.com/ovh/terraform-provider-ovh/pull/294))
+* `d/ovh_cloud_project_users` : Add documentation page ([#294](https://github.com/ovh/terraform-provider-ovh/pull/294))
+* `d/ovh_cloud_project_user_s3_policy` : Add documentation page ([#294](https://github.com/ovh/terraform-provider-ovh/pull/294))
+* `d/ovh_cloud_project_user_s3_credential` : Add documentation page ([#291](https://github.com/ovh/terraform-provider-ovh/pull/291))
+* `d/ovh_cloud_project_user_s3_credentials` : Add documentation page ([#291](https://github.com/ovh/terraform-provider-ovh/pull/291))
+* `d/ovh_dedicated_server_boots`: Update documentation page ([#289](https://github.com/ovh/terraform-provider-ovh/pull/289))
+* `d/ovh_cloud_project_capabilities_containerregistry_filter`: Update documentation page ([#287](https://github.com/ovh/terraform-provider-ovh/pull/287))
+* `d/ovh_cloud_project_capabilities_containerregistry`: Update documentation page ([#287](https://github.com/ovh/terraform-provider-ovh/pull/287))
+* `d/ovh_cloud_project_database_mongodb_user`: Add documentation page ([#283](https://github.com/ovh/terraform-provider-ovh/pull/283))
+* `d/ovh_cloud_project_database_redis_user`: Update documentation page ([#283](https://github.com/ovh/terraform-provider-ovh/pull/283))
+
+❤️ Thanks for your contributions ❤️
+
 
 ## 0.19.0 (July 28, 2022)
 
