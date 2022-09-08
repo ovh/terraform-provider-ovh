@@ -17,11 +17,11 @@ To get information of a database cluster service:
 data "ovh_cloud_project_database" "db" {
   service_name  = "XXXXXX"
   engine        = "YYYY"
-  cluster_id    = "ZZZZ"
+  id            = "ZZZZ"
 }
 
 output "cluster_id" {
-  value = data.ovh_cloud_project_database.db.cluster_id
+  value = data.ovh_cloud_project_database.db.id
 }
 ```
 

@@ -27,99 +27,99 @@ interact directly with the team that builds our databases services and terraform
 Minimum settings for each engine (region choice is up to the user):
 ```hcl
 resource "ovh_cloud_project_database" "cassandradb" {
-	service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-	description  = "my-first-cassandra"
-	engine       = "cassandra"
-	version      = "4.0"
-	plan         = "essential"
-	nodes {
-		region     = "BHS"
-	}
+  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  description  = "my-first-cassandra"
+  engine       = "cassandra"
+  version      = "4.0"
+  plan         = "essential"
   nodes {
-		region     = "BHS"
-	}
+    region     = "BHS"
+  }
   nodes {
-		region     = "BHS"
-	}
-	flavor = "db1-4"
+    region     = "BHS"
+  }
+  nodes {
+    region     = "BHS"
+  }
+  flavor = "db1-4"
 }
 
 resource "ovh_cloud_project_database" "kafkadb" {
-	service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-	description  = "my-first-kafka"
-	engine       = "kafka"
-	version      = "3.1"
-	plan         = "business"
-	nodes {
-		region     = "DE"
-	}
-	nodes {
-		region     = "DE"
-	}
-	nodes {
-		region     = "DE"
-	}
+  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  description  = "my-first-kafka"
+  engine       = "kafka"
+  version      = "3.1"
+  plan         = "business"
+  nodes {
+    region     = "DE"
+  }
+  nodes {
+    region     = "DE"
+  }
+  nodes {
+    region     = "DE"
+  }
 	flavor = "db1-4"
 }
 
 resource "ovh_cloud_project_database" "mongodb" {
-	service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-	description  = "my-first-mongodb"
-	engine       = "mongodb"
-	version      = "5.0"
-	plan         = "essential"
-	nodes {
-		region     = "GRA"
-	}
-	flavor = "db1-2"
+  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  description  = "my-first-mongodb"
+  engine       = "mongodb"
+  version      = "5.0"
+  plan         = "essential"
+  nodes {
+    region     = "GRA"
+  }
+  flavor = "db1-2"
 }
 
 resource "ovh_cloud_project_database" "mysqldb" {
-	service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-	description  = "my-first-mysql"
-	engine       = "mysql"
-	version      = "8"
-	plan         = "essential"
-	nodes {
-		region     = "SBG"
-	}
-	flavor = "db1-4"
+  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  description  = "my-first-mysql"
+  engine       = "mysql"
+  version      = "8"
+  plan         = "essential"
+  nodes {
+    region     = "SBG"
+  }
+  flavor = "db1-4"
 }
 
 resource "ovh_cloud_project_database" "opensearchdb" {
-	service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-	description  = "my-first-opensearch"
-	engine       = "opensearch"
-	version      = "1"
-	plan         = "essential"
-	nodes {
-		region     = "UK"
-	}
-	flavor = "db1-4"
+  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  description  = "my-first-opensearch"
+  engine       = "opensearch"
+  version      = "1"
+  plan         = "essential"
+  nodes {
+    region     = "UK"
+  }
+  flavor = "db1-4"
 }
 
 resource "ovh_cloud_project_database" "pgsqldb" {
-	service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-	description  = "my-first-postgresql"
-	engine       = "postgresql"
-	version      = "14"
-	plan         = "essential"
-	nodes {
-		region     = "WAW"
-	}
-	flavor = "db1-4"
+  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  description  = "my-first-postgresql"
+  engine       = "postgresql"
+  version      = "14"
+  plan         = "essential"
+  nodes {
+    region     = "WAW"
+  }
+  flavor = "db1-4"
 }
 
 resource "ovh_cloud_project_database" "redisdb" {
-	service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-	description  = "my-first-redis"
-	engine       = "redis"
-	version      = "6.2"
-	plan         = "essential"
-	nodes {
-		region     = "BHS"
-	}
-	flavor = "db1-4"
+  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  description  = "my-first-redis"
+  engine       = "redis"
+  version      = "6.2"
+  plan         = "essential"
+  nodes {
+  region     = "BHS"
+  }
+  flavor = "db1-4"
 }
 ```
 
@@ -229,5 +229,5 @@ The following attributes are exported:
 OVHcloud Managed database clusters can be imported using the `service_name`, `engine`, `id` of the cluster, separated by "/" E.g.,
 
 ```
-$ terraform import ovh_cloud_project_database.my_database_cluster <service_name>/<engine>/<id>
+$ terraform import ovh_cloud_project_database.my_database_cluster service_name/engine/id
 ```
