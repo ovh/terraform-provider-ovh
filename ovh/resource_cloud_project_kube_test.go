@@ -132,6 +132,37 @@ resource "ovh_cloud_project_kube" "cluster" {
 }
 `
 
+var testAccCloudProjectKubeCustomizationApiServerAdmissionPluginsCreateConfig = `
+resource "ovh_cloud_project_kube" "cluster" {
+	service_name  = "%s"
+	name          = "%s"
+	region        = "%s"
+	customization {
+		apiserver {
+			admissionplugins {
+				enabled = ["NodeRestriction"]
+				disabled = ["AlwaysPullImages"]
+			}
+		}
+	}
+}
+`
+
+var testAccCloudProjectKubeCustomizationApiServerAdmissionPluginsUpdateConfig = `
+resource "ovh_cloud_project_kube" "cluster" {
+	service_name  = "%s"
+	name          = "%s"
+	region        = "%s"
+	customization {
+		apiserver {
+			admissionplugins {
+				enabled = ["AlwaysPullImages","NodeRestriction"]
+			}
+		}
+	}
+}
+`
+
 type configData struct {
 	Region                         string
 	Regions                        string
@@ -140,6 +171,53 @@ type configData struct {
 	Name                           string
 	DefaultVrackGateway            string
 	PrivateNetworkRoutingAsDefault bool
+}
+
+func TestAccCloudProjectKubeCustomizationApiServerAdmissionPlugins(t *testing.T) {
+	region := os.Getenv("OVH_CLOUD_PROJECT_KUBE_REGION_TEST")
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	name := acctest.RandomWithPrefix(test_prefix)
+
+	config := fmt.Sprintf(
+		testAccCloudProjectKubeCustomizationApiServerAdmissionPluginsCreateConfig,
+		serviceName,
+		name,
+		region,
+	)
+	updatedConfig := fmt.Sprintf(
+		testAccCloudProjectKubeCustomizationApiServerAdmissionPluginsUpdateConfig,
+		serviceName,
+		name,
+		region,
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloud(t)
+			testAccCheckCloudProjectExists(t)
+			testAccPreCheckKubernetes(t)
+		},
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization.0.apiserver.0.admissionplugins.0.enabled.0", "NodeRestriction"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization.0.apiserver.0.admissionplugins.0.disabled.0", "AlwaysPullImages"),
+				),
+			},
+			{
+				Config: updatedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization.0.apiserver.0.admissionplugins.0.enabled.0", "AlwaysPullImages"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization.0.apiserver.0.admissionplugins.0.enabled.1", "NodeRestriction"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization.0.apiserver.0.admissionplugins.0.disabled.#", "0"),
+				),
+			},
+		},
+	})
 }
 
 func TestAccCloudProjectKubeVRack(t *testing.T) {

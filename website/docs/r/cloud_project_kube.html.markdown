@@ -17,7 +17,16 @@ resource "ovh_cloud_project_kube" "mykube" {
    service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
    name         = "my_kube_cluster"
    region       = "GRA7"
-   
+
+   customization {
+     apiserver {
+       admissionplugins{
+         enabled = ["NodeRestriction"]
+         disabled = ["AlwaysPullImages"]
+       }
+     }
+   }
+     
    private_network_id = xxxxxxxx-xxxx-xxxx-xxxxx-xxxxxxxxxxxx #ovh_cloud_project_network_private.network1.regions_attributes[index(ovh_cloud_project_network_private.network1.regions_attributes.*.region, "GRA7")].openstackid
 
    private_network_configuration {
@@ -47,6 +56,12 @@ The following arguments are supported:
 
 * `version` - (Optional) kubernetes version to use.
    Changing this value updates the resource. Defaults to latest available.
+
+* `customization` - (Optional) Customer customization object
+  * apiserver - Kubernetes API server customization
+    * admissionplugins - (Optional) Kubernetes API server admission plugins customization
+        * enabled - (Optional) Array of admission plugins enabled, default is ["NodeRestriction","AlwaysPulImages"] and only these admission plugins can be enabled at this time. 
+        * disabled - (Optional) Array of admission plugins disabled, default is [] and only AlwaysPulImages can be disabled at this time.
 
 * `private_network_id` - (Optional) OpenStack private network ID to use.
    Changing this value delete the resource(including ETCD user data). Defaults - not use private network.
