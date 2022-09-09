@@ -46,7 +46,6 @@ The following arguments are supported:
   * `restore`
   * `userAdminAnyDatabase`
 
-
 ## Attributes Reference
 
 The following attributes are exported:
@@ -60,6 +59,23 @@ The following attributes are exported:
 * `service_name` - See Argument Reference above.
 * `status` - Current status of the user.
 * `name` - Name of the user with the authentication database in the format name@authDB
+
+## Timeouts
+
+```hcl
+resource "ovh_cloud_project_database_mongodb_user" "user" {
+  # ...
+
+  timeouts {
+    create = "1h"
+    update = "45m"
+    delete = "50s"
+  }
+}
+```
+* `create` - (Default 20m)
+* `update` - (Default 20m)
+* `delete` - (Default 20m)
 
 ## Import
 

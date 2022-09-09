@@ -49,6 +49,23 @@ The following attributes are exported:
 * `ip` - See Argument Reference above.
 * `status` - Current status of the IP restriction.
 
+## Timeouts
+
+```hcl
+resource "ovh_cloud_project_database_ip_restriction" "iprestriction" {
+  # ...
+
+  timeouts {
+    create = "1h"
+    update = "45m"
+    delete = "50s"
+  }
+}
+```
+* `create` - (Default 20m)
+* `update` - (Default 20m)
+* `delete` - (Default 20m)
+
 ## Import
 
 OVHcloud Managed database cluster IP restrictions can be imported using the `service_name`, `engine`, `cluster_id` and the `ip`, separated by "/" E.g.,

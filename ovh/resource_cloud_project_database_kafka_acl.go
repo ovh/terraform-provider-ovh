@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
@@ -18,6 +19,11 @@ func resourceCloudProjectDatabaseKafkaAcl() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			State: resourceCloudProjectDatabaseKafkaAclImportState,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(20 * time.Minute),
+			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -92,6 +98,13 @@ func resourceCloudProjectDatabaseKafkaAclCreate(d *schema.ResourceData, meta int
 		return fmt.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
 	}
 
+	log.Printf("[DEBUG] Waiting for acl %s to be READY", res.Id)
+	err = waitForCloudProjectDatabaseKafkaAclReady(config.OVHClient, serviceName, clusterId, res.Id, d.Timeout(schema.TimeoutCreate))
+	if err != nil {
+		return fmt.Errorf("timeout while waiting acl %s to be READY: %w", res.Id, err)
+	}
+	log.Printf("[DEBUG] acl %s is READY", res.Id)
+
 	d.SetId(res.Id)
 
 	return resourceCloudProjectDatabaseKafkaAclRead(d, meta)
@@ -144,6 +157,13 @@ func resourceCloudProjectDatabaseKafkaAclDelete(d *schema.ResourceData, meta int
 	if err != nil {
 		return helpers.CheckDeleted(d, err, endpoint)
 	}
+
+	log.Printf("[DEBUG] Waiting for acl %s to be DELETED", id)
+	err = waitForCloudProjectDatabaseKafkaAclDeleted(config.OVHClient, serviceName, clusterId, id, d.Timeout(schema.TimeoutDelete))
+	if err != nil {
+		return fmt.Errorf("timeout while waiting acl %s to be DELETED: %w", id, err)
+	}
+	log.Printf("[DEBUG] acl %s is DELETED", id)
 
 	d.SetId("")
 

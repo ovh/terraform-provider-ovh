@@ -22,6 +22,12 @@ func resourceCloudProjectDatabase() *schema.Resource {
 			State: resourceCloudProjectDatabaseImportState,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(20 * time.Minute),
+			Update: schema.DefaultTimeout(40 * time.Minute),
+			Delete: schema.DefaultTimeout(20 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"service_name": {
 				Type:        schema.TypeString,
@@ -203,7 +209,7 @@ func resourceCloudProjectDatabaseCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	log.Printf("[DEBUG] Waiting for database %s to be READY", res.Id)
-	err = waitForCloudProjectDatabaseReady(config.OVHClient, serviceName, engine, res.Id, 20*time.Minute, 30*time.Second)
+	err = waitForCloudProjectDatabaseReady(config.OVHClient, serviceName, engine, res.Id, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return fmt.Errorf("timeout while waiting database %s to be READY: %w", res.Id, err)
 	}
@@ -281,7 +287,7 @@ func resourceCloudProjectDatabaseUpdate(d *schema.ResourceData, meta interface{}
 	}
 
 	log.Printf("[DEBUG] Waiting for database %s to be READY", d.Id())
-	err = waitForCloudProjectDatabaseReady(config.OVHClient, serviceName, engine, d.Id(), 40*time.Minute, 30*time.Second)
+	err = waitForCloudProjectDatabaseReady(config.OVHClient, serviceName, engine, d.Id(), d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
 		return fmt.Errorf("timeout while waiting database %s to be READY: %w", d.Id(), err)
 	}
@@ -308,7 +314,7 @@ func resourceCloudProjectDatabaseDelete(d *schema.ResourceData, meta interface{}
 	}
 
 	log.Printf("[DEBUG] Waiting for database %s to be DELETED", d.Id())
-	err = waitForCloudProjectDatabaseDeleted(config.OVHClient, serviceName, engine, d.Id())
+	err = waitForCloudProjectDatabaseDeleted(config.OVHClient, serviceName, engine, d.Id(), d.Timeout(schema.TimeoutDelete))
 	if err != nil {
 		return fmt.Errorf("timeout while waiting database %s to be DELETED: %v", d.Id(), err)
 	}
