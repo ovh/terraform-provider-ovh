@@ -69,6 +69,23 @@ The following attributes are exported:
 * `service_name` - See Argument Reference above.
 * `status` - Current status of the user.
 
+## Timeouts
+
+```hcl
+resource "ovh_cloud_project_database_opensearch_user" "user" {
+  # ...
+
+  timeouts {
+    create = "1h"
+    update = "45m"
+    delete = "50s"
+  }
+}
+```
+* `create` - (Default 20m)
+* `update` - (Default 20m)
+* `delete` - (Default 20m)
+
 ## Import
 
 OVHcloud Managed opensearch clusters users can be imported using the `service_name`, `cluster_id` and `id` of the user, separated by "/" E.g.,

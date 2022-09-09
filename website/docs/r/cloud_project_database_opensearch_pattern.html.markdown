@@ -50,6 +50,21 @@ The following attributes are exported:
 * `pattern` - See Argument Reference above.
 * `service_name` - See Argument Reference above.
 
+## Timeouts
+
+```hcl
+resource "ovh_cloud_project_database_opensearch_pattern" "pattern" {
+  # ...
+
+  timeouts {
+    create = "1h"
+    delete = "45m"
+  }
+}
+```
+* `create` - (Default 20m)
+* `delete` - (Default 20m)
+
 ## Import
 
 OVHcloud Managed opensearch clusters patterns can be imported using the `service_name`, `cluster_id` and `id` of the pattern, separated by "/" E.g.,
