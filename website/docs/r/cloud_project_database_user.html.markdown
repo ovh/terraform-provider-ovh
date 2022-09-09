@@ -65,6 +65,21 @@ The following attributes are exported:
 * `status` - Current status of the user.
 * `name` - See Argument Reference above.
 
+## Timeouts
+
+```hcl
+resource "ovh_cloud_project_database_user" "user" {
+  # ...
+
+  timeouts {
+    create = "1h"
+    delete = "45m"
+  }
+}
+```
+* `create` - (Default 20m)
+* `delete` - (Default 20m)
+
 ## Import
 
 OVHcloud Managed database clusters users can be imported using the `service_name`, `engine`, `cluster_id` and `id` of the user, separated by "/" E.g.,

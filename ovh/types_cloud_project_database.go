@@ -220,7 +220,7 @@ func checkNodesEquality(nodes []CloudProjectDatabaseNodes) error {
 	return nil
 }
 
-func waitForCloudProjectDatabaseReady(client *ovh.Client, serviceName, engine string, databaseId string, timeOut time.Duration, delay time.Duration) error {
+func waitForCloudProjectDatabaseReady(client *ovh.Client, serviceName, engine string, databaseId string, timeOut time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "CREATING", "UPDATING"},
 		Target:  []string{"READY"},
@@ -239,7 +239,7 @@ func waitForCloudProjectDatabaseReady(client *ovh.Client, serviceName, engine st
 			return res, res.Status, nil
 		},
 		Timeout:    timeOut,
-		Delay:      delay,
+		Delay:      30 * time.Second,
 		MinTimeout: 10 * time.Second,
 	}
 
@@ -247,7 +247,7 @@ func waitForCloudProjectDatabaseReady(client *ovh.Client, serviceName, engine st
 	return err
 }
 
-func waitForCloudProjectDatabaseDeleted(client *ovh.Client, serviceName, engine string, databaseId string) error {
+func waitForCloudProjectDatabaseDeleted(client *ovh.Client, serviceName, engine string, databaseId string, timeOut time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"DELETING"},
 		Target:  []string{"DELETED"},
@@ -268,7 +268,7 @@ func waitForCloudProjectDatabaseDeleted(client *ovh.Client, serviceName, engine 
 
 			return res, res.Status, nil
 		},
-		Timeout:      30 * time.Minute,
+		Timeout:      timeOut,
 		Delay:        30 * time.Second,
 		PollInterval: 20 * time.Second,
 	}
@@ -1111,6 +1111,65 @@ func (opts *CloudProjectDatabaseKafkaAclCreateOpts) FromResource(d *schema.Resou
 	opts.Username = d.Get("username").(string)
 
 	return opts
+}
+
+func waitForCloudProjectDatabaseKafkaAclReady(client *ovh.Client, serviceName, databaseId string, aclId string, timeOut time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"PENDING"},
+		Target:  []string{"READY"},
+		Refresh: func() (interface{}, string, error) {
+			res := &CloudProjectDatabaseKafkaTopicResponse{}
+			endpoint := fmt.Sprintf("/cloud/project/%s/database/kafka/%s/acl/%s",
+				url.PathEscape(serviceName),
+				url.PathEscape(databaseId),
+				url.PathEscape(aclId),
+			)
+			err := client.Get(endpoint, res)
+			if err != nil {
+				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
+					return res, "PENDING", nil
+				}
+				return res, "", err
+			}
+			return res, "READY", nil
+		},
+		Timeout:    timeOut,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+	return err
+}
+
+func waitForCloudProjectDatabaseKafkaAclDeleted(client *ovh.Client, serviceName, databaseId string, aclId string, timeOut time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"DELETING"},
+		Target:  []string{"DELETED"},
+		Refresh: func() (interface{}, string, error) {
+			res := &CloudProjectDatabaseKafkaTopicResponse{}
+			endpoint := fmt.Sprintf("/cloud/project/%s/database/kafka/%s/acl/%s",
+				url.PathEscape(serviceName),
+				url.PathEscape(databaseId),
+				url.PathEscape(aclId),
+			)
+			err := client.Get(endpoint, res)
+			if err != nil {
+				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
+					return res, "DELETED", nil
+				}
+				return res, "", err
+			}
+
+			return res, "DELETING", nil
+		},
+		Timeout:    timeOut,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+	return err
 }
 
 // // User Access

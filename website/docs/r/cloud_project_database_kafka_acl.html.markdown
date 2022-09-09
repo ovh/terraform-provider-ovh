@@ -58,6 +58,21 @@ The following attributes are exported:
 * `topic` - See Argument Reference above.
 * `username` - See Argument Reference above.
 
+## Timeouts
+
+```hcl
+resource "ovh_cloud_project_database_kafka_acl" "acl" {
+  # ...
+
+  timeouts {
+    create = "1h"
+    delete = "45m"
+  }
+}
+```
+* `create` - (Default 20m)
+* `delete` - (Default 20m)
+
 ## Import
 
 OVHcloud Managed kafka clusters ACLs can be imported using the `service_name`, `cluster_id` and `id` of the acl, separated by "/" E.g.,

@@ -52,8 +52,6 @@ The following arguments are supported:
 
 * `retention_hours` - (Optional, Forces new resource) Number of hours for the retention of the data for this topic. Should be superior to -2. Inferior to 0 means unlimited
 
-
-
 ## Attributes Reference
 
 The following attributes are exported:
@@ -67,6 +65,21 @@ The following attributes are exported:
 * `retention_bytes` - See Argument Reference above.
 * `retention_hours` - See Argument Reference above.
 * `service_name` - See Argument Reference above.
+
+## Timeouts
+
+```hcl
+resource "ovh_cloud_project_database_kafka_topic" "topic" {
+  # ...
+
+  timeouts {
+    create = "1h"
+    delete = "45m"
+  }
+}
+```
+* `create` - (Default 20m)
+* `delete` - (Default 20m)
 
 ## Import
 
