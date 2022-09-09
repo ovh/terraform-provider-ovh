@@ -54,6 +54,23 @@ The following attributes are exported:
 * `status` - Current status of the user.
 * `name` - See Argument Reference above.
 
+## Timeouts
+
+```hcl
+resource "ovh_cloud_project_database_postgresql_user" "user" {
+  # ...
+
+  timeouts {
+    create = "1h"
+    update = "45m"
+    delete = "50s"
+  }
+}
+```
+* `create` - (Default 20m)
+* `update` - (Default 20m)
+* `delete` - (Default 20m)
+
 ## Import
 
 OVHcloud Managed postgresql clusters users can be imported using the `service_name`, `cluster_id` and `id` of the user, separated by "/" E.g.,

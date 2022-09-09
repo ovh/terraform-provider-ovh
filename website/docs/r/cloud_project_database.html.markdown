@@ -224,6 +224,23 @@ The following attributes are exported:
 * `status` - Current status of the cluster.
 * `version` - See Argument Reference above.
 
+## Timeouts
+
+```hcl
+resource "ovh_cloud_project_database" "db" {
+  # ...
+
+  timeouts {
+    create = "1h"
+    update = "45m"
+    delete = "50s"
+  }
+}
+```
+* `create` - (Default 20m)
+* `update` - (Default 40m)
+* `delete` - (Default 20m)
+
 ## Import
 
 OVHcloud Managed database clusters can be imported using the `service_name`, `engine`, `id` of the cluster, separated by "/" E.g.,

@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -22,6 +23,12 @@ func resourceCloudProjectDatabaseIpRestriction() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			State: resourceCloudProjectDatabaseIpRestrictionImportState,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(20 * time.Minute),
+			Update: schema.DefaultTimeout(20 * time.Minute),
+			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -181,6 +188,13 @@ func resourceCloudProjectDatabaseIpRestrictionUpdate(d *schema.ResourceData, met
 			}
 			return resource.NonRetryableError(fmt.Errorf("calling Put %s with params %+v:\n\t %q", endpoint, params, err))
 		}
+
+		log.Printf("[DEBUG] Waiting for IP restriction %s to be READY", ip)
+		err = waitForCloudProjectDatabaseIpRestrictionReady(config.OVHClient, serviceName, engine, clusterId, ip, d.Timeout(schema.TimeoutUpdate))
+		if err != nil {
+			return resource.NonRetryableError(fmt.Errorf("timeout while waiting IP restriction %s to be READY: %w", ip, err))
+		}
+		log.Printf("[DEBUG] IP restriction %s is READY", ip)
 
 		err = resourceCloudProjectDatabaseIpRestrictionRead(d, meta)
 		if err != nil {
