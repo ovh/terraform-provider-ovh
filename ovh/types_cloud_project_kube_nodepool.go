@@ -74,10 +74,10 @@ var TaintEffecTypeToID = map[string]TaintEffectType{
 func (opts *CloudProjectKubeNodePoolCreateOpts) FromResource(d *schema.ResourceData) *CloudProjectKubeNodePoolCreateOpts {
 	opts.Autoscale = helpers.GetNilBoolPointerFromData(d, "autoscale")
 	opts.AntiAffinity = helpers.GetNilBoolPointerFromData(d, "anti_affinity")
-	opts.DesiredNodes = helpers.GetNilIntPointerFromData(d, "desired_nodes")
+	opts.DesiredNodes = helpers.GetNilIntPointerFromDataAndNilIfNotPresent(d, "desired_nodes")
 	opts.FlavorName = d.Get("flavor_name").(string)
-	opts.MaxNodes = helpers.GetNilIntPointerFromData(d, "max_nodes")
-	opts.MinNodes = helpers.GetNilIntPointerFromData(d, "min_nodes")
+	opts.MaxNodes = helpers.GetNilIntPointerFromDataAndNilIfNotPresent(d, "max_nodes")
+	opts.MinNodes = helpers.GetNilIntPointerFromDataAndNilIfNotPresent(d, "min_nodes")
 	opts.MonthlyBilled = helpers.GetNilBoolPointerFromData(d, "monthly_billed")
 	opts.Name = helpers.GetNilStringPointerFromData(d, "name")
 	opts.Template = loadNodelPoolTemplateFromResource(d.Get("template"))
@@ -173,9 +173,9 @@ func (e *TaintEffectType) UnmarshalJSON(b []byte) error {
 
 func (opts *CloudProjectKubeNodePoolUpdateOpts) FromResource(d *schema.ResourceData) *CloudProjectKubeNodePoolUpdateOpts {
 	opts.Autoscale = helpers.GetNilBoolPointerFromData(d, "autoscale")
-	opts.DesiredNodes = helpers.GetNilIntPointerFromData(d, "desired_nodes")
-	opts.MaxNodes = helpers.GetNilIntPointerFromData(d, "max_nodes")
-	opts.MinNodes = helpers.GetNilIntPointerFromData(d, "min_nodes")
+	opts.DesiredNodes = helpers.GetNilIntPointerFromDataAndNilIfNotPresent(d, "desired_nodes")
+	opts.MaxNodes = helpers.GetNilIntPointerFromDataAndNilIfNotPresent(d, "max_nodes")
+	opts.MinNodes = helpers.GetNilIntPointerFromDataAndNilIfNotPresent(d, "min_nodes")
 	opts.Template = loadNodelPoolTemplateFromResource(d.Get("template"))
 
 	return opts
