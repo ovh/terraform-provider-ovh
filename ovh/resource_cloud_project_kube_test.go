@@ -119,7 +119,7 @@ resource "ovh_cloud_project_kube" "cluster" {
 	name          = "{{ .Name }}"
 	region        = "{{ .Region }}"
 
-	private_network_id = ovh_cloud_project_network_private.network1.regions_attributes[index(ovh_cloud_project_network_private.network1.regions_attributes.*.region, "{{ .Region }}")].openstackid
+	private_network_id = tolist(ovh_cloud_project_network_private.network1.regions_attributes)[index(ovh_cloud_project_network_private.network1.regions_attributes.*.region, "{{ .Region }}")].openstackid
 
 	private_network_configuration {
 		default_vrack_gateway              = "{{ .DefaultVrackGateway }}"
@@ -157,7 +157,7 @@ func TestAccCloudProjectKubeVRack(t *testing.T) {
 	configData1 := configData{
 		Region:                         region,
 		Regions:                        `["` + region + `"]`,
-		Vlanid:                         "6",
+		Vlanid:                         "8",
 		ServiceName:                    serviceName,
 		Name:                           name,
 		DefaultVrackGateway:            "",
@@ -166,7 +166,7 @@ func TestAccCloudProjectKubeVRack(t *testing.T) {
 	configData2 := configData{
 		Region:                         region,
 		Regions:                        `["` + region + `"]`,
-		Vlanid:                         "6",
+		Vlanid:                         "8",
 		ServiceName:                    serviceName,
 		Name:                           name,
 		DefaultVrackGateway:            "10.4.0.1",
