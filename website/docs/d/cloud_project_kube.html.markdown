@@ -49,3 +49,8 @@ The following attributes are exported:
 * `status` - Cluster status. Should be normally set to 'READY'.
 * `update_policy` - Cluster update policy. Choose between [ALWAYS_UPDATE,MINIMAL_DOWNTIME,NEVER_UPDATE]'.
 * `url` - Management URL of your cluster.
+* `customization` - Customer customization object
+    * apiserver - Kubernetes API server customization
+        * admissionplugins - Kubernetes API server admission plugins customization
+            * enabled - Array of admission plugins enabled, default is ["NodeRestriction","AlwaysPulImages"] and only these admission plugins can be enabled at this time.
+            * disabled - Array of admission plugins disabled, default is [] and only AlwaysPulImages can be disabled at this time.
