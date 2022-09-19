@@ -33,7 +33,7 @@ The following arguments are supported:
 * `vlan_id` - a vlan id to associate with the network.
    Changing this value recreates the resource. Defaults to 0.
 
-* `regions` - an array of valid OVH public cloud region ID in which the network
+* `regions` - an array of valid OVHcloud public cloud region ID in which the network
    will be available. Ex.: "GRA1". Defaults to all public cloud regions.
 
 ## Attributes Reference

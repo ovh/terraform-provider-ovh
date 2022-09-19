@@ -8,12 +8,9 @@ description: |-
 
 # ovh_cloud_project_database
 
-Creates a OVH Managed Database Service in a public cloud project.
+Creates a OVHcloud Managed Database Service in a public cloud project.
 
 ## Important
-
-This resource is in beta state, you should use it with care.
-
 
 To learn more about OVHcloud Public Cloud Database please visit our 
 [public documentation](https://docs.ovh.com/gb/en/publiccloud/databases).
@@ -181,7 +178,7 @@ The following arguments are supported:
 * `engine` - (Required, Forces new resource) The database engine you want to deploy. To get a full list of available engine visit.
 [public documentation](https://docs.ovh.com/gb/en/publiccloud/databases).
 
-* `flavor` -  (Required) A valid OVH public cloud database flavor name in which the nodes will be started.
+* `flavor` -  (Required) A valid OVHcloud public cloud database flavor name in which the nodes will be started.
   Ex: "db1-7". Changing this value upgrade the nodes with the new flavor.
   You can find the list of flavor names: https://www.ovhcloud.com/fr/public-cloud/prices/
 
@@ -245,6 +242,6 @@ resource "ovh_cloud_project_database" "db" {
 
 OVHcloud Managed database clusters can be imported using the `service_name`, `engine`, `id` of the cluster, separated by "/" E.g.,
 
-```
+```bash
 $ terraform import ovh_cloud_project_database.my_database_cluster service_name/engine/id
 ```

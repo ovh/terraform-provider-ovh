@@ -3,12 +3,12 @@ layout: "ovh"
 page_title: "OVH: ovh_vracks"
 sidebar_current: "docs-ovh-vracks"
 description: |-
-  Get the list of Vrack ids available for your OVH account.
+  Get the list of Vrack ids available for your OVHcloud account.
 ---
 
 # ovh_vracks  (Data Source)
 
-Use this data source to get the list of Vrack IDs available for your OVH account.
+Use this data source to get the list of Vrack IDs available for your OVHcloud account.
 
 ## Example Usage
 
@@ -24,5 +24,5 @@ This datasource takes no argument.
 
 The following attributes are exported:
 
-* `result` - The list of vrack service name available for your OVH account.
+* `result` - The list of vrack service name available for your OVHcloud account.
 

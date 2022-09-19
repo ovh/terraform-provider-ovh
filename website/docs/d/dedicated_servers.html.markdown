@@ -3,12 +3,12 @@ layout: "ovh"
 page_title: "OVH: dedicated_servers"
 sidebar_current: "docs-ovh-datasource-dedicated-servers"
 description: |-
-  Get the list of dedicated servers associated with your OVH Account.
+  Get the list of dedicated servers associated with your OVHcloud Account.
 ---
 
 # ovh_dedicated_servers (Data Source)
 
-Use this data source to get the list of dedicated servers associated with your OVH Account.
+Use this data source to get the list of dedicated servers associated with your OVHcloud Account.
 
 ## Example Usage
 
@@ -24,4 +24,4 @@ This datasource takes no argument.
 
 The following attributes are exported:
 
-* `result` - The list of dedicated servers IDs associated with your OVH Account.
+* `result` - The list of dedicated servers IDs associated with your OVHcloud Account.

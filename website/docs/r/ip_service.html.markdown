@@ -13,7 +13,7 @@ Orders an ip service.
 
 ## Important
 
-This resource orders an OVH product for a long period of time and may generate heavy costs !
+This resource orders an OVHcloud product for a long period of time and may generate heavy costs !
 Use with caution.
 
 __NOTE__ 1: the "default-payment-mean" will scan your registered bank accounts, credit card and paypal payment means to find your default payment mean.
@@ -59,8 +59,8 @@ resource "ovh_ip_service" "ipblock" {
 The following arguments are supported:
 
 * `description` - Custom description on your ip.
-* `ovh_subsidiary` - (Required) Ovh Subsidiary
-* `payment_mean` - (Required) Ovh payment mode (One of "default-payment-mean", "fidelity", "ovh-account")
+* `ovh_subsidiary` - (Required) OVHcloud Subsidiary
+* `payment_mean` - (Required) OVHcloud payment mode (One of "default-payment-mean", "fidelity", "ovh-account")
 * `plan` - (Required) Product Plan to order
   * `duration` - (Required) duration
   * `plan_code` - (Required) Plan code

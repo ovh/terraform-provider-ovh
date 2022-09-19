@@ -3,12 +3,12 @@ layout: "ovh"
 page_title: "OVH: ovh_ip_reverse"
 sidebar_current: "docs-ovh-resource-ip-reverse"
 description: |-
-    Provides a OVH IP reverse resource.
+    Provides a OVHcloud IP reverse resource.
 ---
 
 # ovh_ip_reverse
 
-Provides a OVH IP reverse.
+Provides a OVHcloud IP reverse.
 
 ## Example Usage
 

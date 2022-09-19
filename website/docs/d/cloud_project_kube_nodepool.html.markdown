@@ -8,7 +8,7 @@ Get information & status of a Kubernetes managed node pool in a public cloud pro
 
 # ovh_cloud_project_kube_nodepool (Data Source)
 
-Use this data source to get a OVH Managed Kubernetes node pool.
+Use this data source to get a OVHcloud Managed Kubernetes node pool.
 
 ## Example Usage
 
@@ -44,7 +44,7 @@ The following attributes are exported:
 * `name` - (Optional) The name of the nodepool.
   Changing this value recreates the resource.
   Warning: "_" char is not allowed!
-* `flavor_name` - a valid OVH public cloud flavor ID in which the nodes will be started.
+* `flavor_name` - a valid OVHcloud public cloud flavor ID in which the nodes will be started.
   Ex: "b2-7". Changing this value recreates the resource.
   You can find the list of flavor IDs: https://www.ovhcloud.com/fr/public-cloud/prices/
 * `desired_nodes` - number of nodes to start.
