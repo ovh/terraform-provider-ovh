@@ -12,9 +12,6 @@ Creates a OVH Managed Database Service in a public cloud project.
 
 ## Important
 
-This resource is in beta state, you should use it with care.
-
-
 To learn more about OVHcloud Public Cloud Database please visit our 
 [public documentation](https://docs.ovh.com/gb/en/publiccloud/databases).
 
@@ -245,6 +242,6 @@ resource "ovh_cloud_project_database" "db" {
 
 OVHcloud Managed database clusters can be imported using the `service_name`, `engine`, `id` of the cluster, separated by "/" E.g.,
 
-```
+```bash
 $ terraform import ovh_cloud_project_database.my_database_cluster service_name/engine/id
 ```

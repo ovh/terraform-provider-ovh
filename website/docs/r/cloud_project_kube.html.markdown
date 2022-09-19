@@ -66,8 +66,7 @@ The following arguments are supported:
 * `private_network_id` - (Optional) OpenStack private network ID to use.
    Changing this value delete the resource(including ETCD user data). Defaults - not use private network.
    
-   
-**WARNING: update private network id reset the cluster so all user data are deleted**
+~> __WARNING__ Updating the private network ID resets the cluster so that all user data is deleted.
 
 * `private_network_configuration` - (Optional) The private network configuration
   * default_vrack_gateway - If defined, all egress traffic will be routed towards this IP address, which should belong to the private network. Empty string means disabled.
@@ -97,6 +96,6 @@ The following attributes are exported:
 
 OVHcloud Managed Kubernetes Service clusters can be imported using the `serviceName` and the `id` of the cluster, separated by "/" E.g.,
 
-```
+```bash
 $ terraform import ovh_cloud_project_kube.my_kube_cluster a6678gggjh76hggjh7f59/a123bc45-a1b2-34c5-678d-678ghg7676ebc
 ```

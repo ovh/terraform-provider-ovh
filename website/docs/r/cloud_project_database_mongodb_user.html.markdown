@@ -81,5 +81,6 @@ resource "ovh_cloud_project_database_mongodb_user" "user" {
 
 OVHcloud Managed mongodb clusters users can be imported using the `service_name`, `cluster_id` and `id` of the user, separated by "/" E.g.,
 
-```
+```bash
 $ terraform import ovh_cloud_project_database_mongodb_user.my_user service_name/cluster_id/id
+```
