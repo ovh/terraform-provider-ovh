@@ -41,4 +41,8 @@ The following attributes are exported in addition to the arguments above:
 
 ## Import
 
-Use the fake id format to import the resource : `template_name/name`
+The resource can be imported using the `template_name`, `name` of the cluster, separated by "/" E.g.,
+
+```bash
+$ terraform import ovh_me_installation_template_partition_scheme.scheme template_name/name
+```

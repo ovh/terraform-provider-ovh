@@ -8,7 +8,7 @@ description: |-
 
 # ovh\_iploadbalancing\_http_farm\_server
 
-Creates a backend server entry linked to http loadbalancing group (farm)
+Creates a backend server entry linked to HTTP loadbalancing group (farm)
 
 ## Example Usage
 

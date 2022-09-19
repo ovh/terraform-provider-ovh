@@ -60,4 +60,8 @@ The following attributes are exported in addition to the arguments above:
 
 ## Import
 
-Use the following id format to import the resource : `base_template_name/template_name`
+Custom installation template available for dedicated servers can be imported using the `base_template_name`, `template_name` of the cluster, separated by "/" E.g.,
+
+```bash
+$ terraform import ovh_me_installation_template.mytemplate base_template_name/template_name
+```

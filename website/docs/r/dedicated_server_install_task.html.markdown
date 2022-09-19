@@ -10,7 +10,7 @@ description: |-
 
 Install your Dedicated Server.
 
-> NOTE: After some delay, if the task is marked as `done`, the Provider
+~> __WARNING__ After some delay, if the task is marked as `done`, the Provider
 may purge it. To avoid raising errors when terraform refreshes its plan, 
 404 errors are ignored on Resource Read, thus some information may be lost
 after a while.

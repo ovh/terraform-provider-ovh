@@ -12,7 +12,7 @@ Creates a domain zone.
 
 ## Important
 
-This resource is in beta state. Use with caution.
+~> __WARNING__ This resource is in beta state. Use with caution.
 
 ## Example Usage
 

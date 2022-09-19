@@ -12,12 +12,10 @@ Orders an IP load balancing.
 
 ## Important
 
-This resource orders an OVH product for a long period of time and may generate heavy costs !
+~> __WARNING__ This resource orders an OVHcloud product for a long period of time and may generate heavy costs!
 Use with caution.
 
-__NOTE__ 1: the "default-payment-mean" will scan your registered bank accounts, credit card and paypal payment means to find your default payment mean.
-
-__NOTE__ 2: this resource is in beta state. Use with caution.
+-> __NOTE__ The "default-payment-mean" will scan your registered bank accounts, credit card and paypal payment means to find your default payment mean.
 
 ## Example Usage
 

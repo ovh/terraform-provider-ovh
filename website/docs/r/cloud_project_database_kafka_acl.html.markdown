@@ -77,5 +77,6 @@ resource "ovh_cloud_project_database_kafka_acl" "acl" {
 
 OVHcloud Managed kafka clusters ACLs can be imported using the `service_name`, `cluster_id` and `id` of the acl, separated by "/" E.g.,
 
-```
+```bash
 $ terraform import ovh_cloud_project_database_kafka_acl.my_acl service_name/cluster_id/id
+```

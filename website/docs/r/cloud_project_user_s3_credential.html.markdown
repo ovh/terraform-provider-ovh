@@ -49,6 +49,6 @@ The following attributes are exported:
 
 OVHcloud User S3 Credentials can be imported using the `service_name`, `user_id` and `access_key_id` of the credential, separated by "/" E.g.,
 
-```
+```bash
 $ terraform import ovh_cloud_project_user_s3_credential.s3_credential service_name/user_id/access_key_id
 ```
