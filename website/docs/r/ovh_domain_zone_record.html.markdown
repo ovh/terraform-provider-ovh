@@ -3,12 +3,12 @@ layout: "ovh"
 page_title: "OVH: ovh_domain_zone_record"
 sidebar_current: "docs-ovh-resource-domain-zone-record"
 description: |-
-  Provides a OVH domain zone resource.
+  Provides a OVHcloud domain zone resource.
 ---
 
 # ovh_domain_zone_record
 
-Provides a OVH domain zone record.
+Provides a OVHcloud domain zone record.
 
 ## Example Usage
 

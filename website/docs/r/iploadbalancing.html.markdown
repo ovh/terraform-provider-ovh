@@ -64,8 +64,8 @@ resource "ovh_iploadbalancing" "iplb-lb1" {
 The following arguments are supported:
 
 * `display_name` - Set the name displayed in ManagerV6 for your iplb (max 50 chars)
-* `ovh_subsidiary` - (Required) Ovh Subsidiary
-* `payment_mean` - (Required) Ovh payment mode (One of "default-payment-mean", "fidelity", "ovh-account")
+* `ovh_subsidiary` - (Required) OVHcloud Subsidiary
+* `payment_mean` - (Required) OVHcloud payment mode (One of "default-payment-mean", "fidelity", "ovh-account")
 * `plan` - (Required) Product Plan to order
   * `duration` - (Required) duration
   * `plan_code` - (Required) Plan code
