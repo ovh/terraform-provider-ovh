@@ -63,6 +63,6 @@ The following attributes are exported:
 
 OVHcloud User S3 Policy can be imported using the `service_name`, `user_id` of the policy, separated by "/" E.g.,
 
-```
+```bash
 $ terraform import ovh_cloud_project_user_s3_policy.policy service_name/user_id
 ```

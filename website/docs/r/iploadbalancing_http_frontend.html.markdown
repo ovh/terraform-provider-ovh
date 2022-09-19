@@ -8,7 +8,7 @@ description: |-
 
 # ovh\_iploadbalancing\_http_frontend
 
-Creates a backend http server group (frontend) to be used by loadbalancing frontend(s)
+Creates a backend HTTP server group (frontend) to be used by loadbalancing frontend(s)
 
 ## Example Usage
 

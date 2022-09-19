@@ -8,7 +8,7 @@ description: |-
 
 # ovh_ip_service (Data Source)
 
-Use this data source to retrieve information about an ip service.
+Use this data source to retrieve information about an IP service.
 
 ## Example Usage
 

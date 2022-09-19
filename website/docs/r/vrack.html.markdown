@@ -12,9 +12,9 @@ Orders a vrack.
 
 ## Important
 
-This resource is in beta state. Use with caution.
+~> __WARNING__ This resource is in beta state. Use with caution.
 
-__NOTE__ : Currently, the OVH api doesn't support Vrack termination. You have to open a support ticket to ask for vrack termination. Otherwise, you may hit vrack quota issues.
+-> __NOTE__ Currently, the OVHcloud API doesn't support Vrack termination. You have to open a support ticket to ask for vrack termination. Otherwise, you may hit vrack quota issues.
 
 ## Example Usage
 
@@ -50,8 +50,8 @@ resource "ovh_vrack" "vrack" {
 The following arguments are supported:
 * `description` - yourvrackdescription
 * `name` - yourvrackname
-* `ovh_subsidiary` - (Required) Ovh Subsidiary
-* `payment_mean` - (Required) Ovh payment mode (One of "default-payment-mean", "fidelity", "ovh-account")
+* `ovh_subsidiary` - (Required) OVHcloud Subsidiary
+* `payment_mean` - (Required) OVHcloud payment mode (One of "default-payment-mean", "fidelity", "ovh-account")
 * `plan` - (Required) Product Plan to order
   * `duration` - (Required) duration
   * `plan_code` - (Required) Plan code

@@ -10,7 +10,7 @@ description: |-
 
 Install your Dedicated Server.
 
-> NOTE: After some delay, if the task is marked as `done`, the Provider
+~> __WARNING__ After some delay, if the task is marked as `done`, the Provider
 may purge it. To avoid raising errors when terraform refreshes its plan, 
 404 errors are ignored on Resource Read, thus some information may be lost
 after a while.
@@ -72,7 +72,7 @@ The `details` block supports:
 * `soft_raid_devices` - soft raid devices.
 * `ssh_key_name` - Name of the ssh key that should be installed. Password login will be disabled.
 * `use_spla` - set to true to use SPLA.
-* `use_distrib_kernel` - Use the distribution's native kernel instead of the recommended OVH Kernel.
+* `use_distrib_kernel` - Use the distribution's native kernel instead of the recommended OVHcloud Kernel.
 
 ## Attributes Reference
 

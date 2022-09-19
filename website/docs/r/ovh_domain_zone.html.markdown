@@ -12,7 +12,7 @@ Creates a domain zone.
 
 ## Important
 
-This resource is in beta state. Use with caution.
+~> __WARNING__ This resource is in beta state. Use with caution.
 
 ## Example Usage
 
@@ -54,8 +54,8 @@ resource "ovh_domain_zone" "zone" {
 
 The following arguments are supported:
 
-* `ovh_subsidiary` - (Required) Ovh Subsidiary
-* `payment_mean` - (Required) Ovh payment mode (One of "default-payment-mean", "fidelity", "ovh-account")
+* `ovh_subsidiary` - (Required) OVHcloud Subsidiary
+* `payment_mean` - (Required) OVHcloud payment mode (One of "default-payment-mean", "fidelity", "ovh-account")
 * `plan` - (Required) Product Plan to order
   * `duration` - (Required) duration
   * `plan_code` - (Required) Plan code
