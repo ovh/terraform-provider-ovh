@@ -235,7 +235,7 @@ func TestAccCloudProjectKubeVRack(t *testing.T) {
 	configData1 := configData{
 		Region:                         region,
 		Regions:                        `["` + region + `"]`,
-		Vlanid:                         "8",
+		Vlanid:                         "6",
 		ServiceName:                    serviceName,
 		Name:                           name,
 		DefaultVrackGateway:            "",
@@ -244,7 +244,7 @@ func TestAccCloudProjectKubeVRack(t *testing.T) {
 	configData2 := configData{
 		Region:                         region,
 		Regions:                        `["` + region + `"]`,
-		Vlanid:                         "8",
+		Vlanid:                         "6",
 		ServiceName:                    serviceName,
 		Name:                           name,
 		DefaultVrackGateway:            "10.4.0.1",
