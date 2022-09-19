@@ -8,7 +8,7 @@ description: |-
 
 # ovh_cloud_project_kube_nodepool
 
-Creates a nodepool in a OVH Managed Kubernetes Service cluster.
+Creates a nodepool in a OVHcloud Managed Kubernetes Service cluster.
 
 ## Example Usage
 
@@ -60,7 +60,7 @@ The following arguments are supported:
    Changing this value recreates the resource.
    Warning: "_" char is not allowed!
 
-* `flavor_name` - a valid OVH public cloud flavor ID in which the nodes will be started.
+* `flavor_name` - a valid OVHcloud public cloud flavor ID in which the nodes will be started.
    Ex: "b2-7". Changing this value recreates the resource.
    You can find the list of flavor IDs: https://www.ovhcloud.com/fr/public-cloud/prices/
 

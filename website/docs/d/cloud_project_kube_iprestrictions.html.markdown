@@ -8,7 +8,7 @@ Get information & status of a Kubernetes managed cluster IP restrictions in a pu
 
 # ovh_cloud_project_kube_iprestrictions (Data Source)
 
-Use this data source to get a OVH Managed Kubernetes Service cluster IP restrictions.
+Use this data source to get a OVHcloud Managed Kubernetes Service cluster IP restrictions.
 
 ## Example Usage
 

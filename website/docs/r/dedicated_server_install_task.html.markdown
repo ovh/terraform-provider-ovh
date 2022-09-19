@@ -72,7 +72,7 @@ The `details` block supports:
 * `soft_raid_devices` - soft raid devices.
 * `ssh_key_name` - Name of the ssh key that should be installed. Password login will be disabled.
 * `use_spla` - set to true to use SPLA.
-* `use_distrib_kernel` - Use the distribution's native kernel instead of the recommended OVH Kernel.
+* `use_distrib_kernel` - Use the distribution's native kernel instead of the recommended OVHcloud Kernel.
 
 ## Attributes Reference
 

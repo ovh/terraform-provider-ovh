@@ -23,7 +23,7 @@ resource "ovh_me_installation_template" "mytemplate" {
 ## Argument Reference
 
 * `available_languages`: List of all language available for this template.
-* `base_template_name`: (Required) OVH template name yours will be based on, choose one among the list given by compatibleTemplates function.
+* `base_template_name`: (Required) OVHcloud template name yours will be based on, choose one among the list given by compatibleTemplates function.
 * `beta`: This distribution is new and, although tested and functional, may still display odd behaviour.
 * `bit_format`: This template bit format (32 or 64).
 * `category`: Category of this template (informative only). (basic, customer, hosting, other, readyToUse, virtualisation).
@@ -41,10 +41,10 @@ resource "ovh_me_installation_template" "mytemplate" {
 * `distribution`: the distribution this template is based on.
 * `family`: this template family type (bsd,linux,solaris,windows).
 * `filesystems`: Filesystems available (btrfs,ext3,ext4,ntfs,reiserfs,swap,ufs,xfs,zfs).
-* `hard_raid_configuration`: This distribution supports hardware raid configuration through the OVH API.
+* `hard_raid_configuration`: This distribution supports hardware raid configuration through the OVHcloud API.
 * `last_modification`: Date of last modification of the base image.
 * `remove_default_partition_schemes`: (Required) Remove default partition schemes at creation.
-* `supports_distribution_kernel`: This distribution supports installation using the distribution's native kernel instead of the recommended OVH kernel.
+* `supports_distribution_kernel`: This distribution supports installation using the distribution's native kernel instead of the recommended OVHcloud kernel.
 * `supports_gpt_label`: This distribution supports the GUID Partition Table (GPT), providing up to 128 partitions that can have more than 2TB.
 * `supports_rtm`: This distribution supports RTM software.
 * `supports_sql_server`: This distribution supports the microsoft SQL server.

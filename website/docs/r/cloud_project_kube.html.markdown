@@ -8,7 +8,7 @@ description: |-
 
 # ovh_cloud_project_kube
 
-Creates a OVH Managed Kubernetes Service cluster in a public cloud project.
+Creates a OVHcloud Managed Kubernetes Service cluster in a public cloud project.
 
 ## Example Usage
 
@@ -50,7 +50,7 @@ The following arguments are supported:
 
 * `name` - (Optional) The name of the kubernetes cluster.
 
-* `region` - a valid OVH public cloud region ID in which the kubernetes
+* `region` - a valid OVHcloud public cloud region ID in which the kubernetes
    cluster will be available. Ex.: "GRA1". Defaults to all public cloud regions.
    Changing this value recreates the resource.
 

@@ -8,7 +8,7 @@ description: |-
 
 # ovh_cloud_project_kube (Data Source)
 
-Use this data source to get a OVH Managed Kubernetes Service cluster.
+Use this data source to get a OVHcloud Managed Kubernetes Service cluster.
 
 ## Example Usage
 
@@ -39,7 +39,7 @@ The following attributes are exported:
 * `service_name` - See Argument Reference above.
 * `kube_id` - See Argument Reference above.
 * `name` - The name of the managed kubernetes cluster.
-* `region` - The OVH public cloud region ID of the managed kubernetes cluster.
+* `region` - The OVHcloud public cloud region ID of the managed kubernetes cluster.
 * `version` - Kubernetes version of the managed kubernetes cluster.
 * `private_network_id` - OpenStack private network (or vrack) ID to use.
 * `control_plane_is_up_to_date` - True if control-plane is up to date.
