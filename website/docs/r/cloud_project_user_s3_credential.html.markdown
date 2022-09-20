@@ -14,16 +14,16 @@ Creates an S3 Credential for a user in a public cloud project.
 
 ```hcl
 resource "ovh_cloud_project_user" "user" {
- service_name = "XXX
- description  = "my user for acceptance tests"
- role_names   = [
-  "objectstore_operator"
- ]
+  service_name = "XXX
+  description  = "my user for acceptance tests"
+  role_names   = [
+    "objectstore_operator"
+  ]
 }
 
 resource "ovh_cloud_project_user_s3_credential" "my_s3_credentials" {
- service_name = ovh_cloud_project_user.user.service_name
- user_id      = ovh_cloud_project_user.user.id
+  service_name = ovh_cloud_project_user.user.service_name
+  user_id      = ovh_cloud_project_user.user.id
 }
 ```
 

@@ -15,7 +15,7 @@ Attach a dedicated server to a VRack.
 ```hcl
 resource "ovh_vrack_dedicated_server" "vds" {
   service_name = "XXXX"
-  server_id = "67890"
+  server_id    = "67890"
 }
 ```
 

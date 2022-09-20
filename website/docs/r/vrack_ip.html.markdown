@@ -14,28 +14,28 @@ Attach an IP block to a VRack.
 
 ```hcl
 data "ovh_order_cart" "mycart" {
- ovh_subsidiary = "fr"
- description    = "my cart"
+  ovh_subsidiary = "fr"
+  description    = "my cart"
 }
 
 data "ovh_order_cart_product_plan" "vrack" {
- cart_id        = data.ovh_order_cart.mycart.id
- price_capacity = "renew"
- product        = "vrack"
- plan_code      = "vrack"
+  cart_id        = data.ovh_order_cart.mycart.id
+  price_capacity = "renew"
+  product        = "vrack"
+  plan_code      = "vrack"
 }
 
 resource "ovh_vrack" "vrack" {
- description    = data.ovh_order_cart.mycart.description
- name           = data.ovh_order_cart.mycart.description
- ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
- payment_mean   = "fidelity"
+  description    = data.ovh_order_cart.mycart.description
+  name           = data.ovh_order_cart.mycart.description
+  ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
+  payment_mean   = "fidelity"
 
- plan {
-   duration     = data.ovh_order_cart_product_plan.vrack.selected_price.0.duration
-   plan_code    = data.ovh_order_cart_product_plan.vrack.plan_code
-   pricing_mode = data.ovh_order_cart_product_plan.vrack.selected_price.0.pricing_mode
- }
+  plan {
+    duration     = data.ovh_order_cart_product_plan.vrack.selected_price.0.duration
+    plan_code    = data.ovh_order_cart_product_plan.vrack.plan_code
+    pricing_mode = data.ovh_order_cart_product_plan.vrack.selected_price.0.pricing_mode
+  }
 }
 
 data "ovh_order_cart_product_plan" "ipblock" {
@@ -51,15 +51,15 @@ resource "ovh_ip_service" "ipblock" {
   description    = data.ovh_order_cart.mycart.description
 
   plan {
-   duration     = data.ovh_order_cart_product_plan.ipblock.selected_price.0.duration
-   plan_code    = data.ovh_order_cart_product_plan.ipblock.plan_code
-   pricing_mode = data.ovh_order_cart_product_plan.ipblock.selected_price.0.pricing_mode
+    duration     = data.ovh_order_cart_product_plan.ipblock.selected_price.0.duration
+    plan_code    = data.ovh_order_cart_product_plan.ipblock.plan_code
+    pricing_mode = data.ovh_order_cart_product_plan.ipblock.selected_price.0.pricing_mode
 
-   configuration {
-     label = "country"
-     value = "FR"
-   }
- }
+    configuration {
+      label = "country"
+      value = "FR"
+    }
+  }
 }
 
 resource "ovh_vrack_ip" "vrackblock" {
