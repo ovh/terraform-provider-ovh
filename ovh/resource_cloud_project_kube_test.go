@@ -95,11 +95,16 @@ resource "ovh_cloud_project_kube" "cluster" {
 `
 
 var testAccCloudProjectKubeVRackConfig = `
+resource "ovh_vrack_cloudproject" "attach" {
+	service_name = "{{ .VrackService }}"
+	project_id   = "{{ .ServiceName }}"
+}
+
 resource "ovh_cloud_project_network_private" "network1" {
-	service_name = "{{ .ServiceName }}"
-	name         = "dhcp-default-gateway"
-	regions      = {{ .Regions }}
-	vlan_id      = "{{ .Vlanid }}"
+	service_name = ovh_vrack_cloudproject.attach.project_id
+	vlan_id    = 0
+	name       = "terraform_testacc_private_net"
+	regions    = {{ .Regions }}
 }
 
 resource "ovh_cloud_project_network_private_subnet" "network1subnetSBG5" {
@@ -168,6 +173,7 @@ type configData struct {
 	Regions                        string
 	Vlanid                         string
 	ServiceName                    string
+	VrackService                   string
 	Name                           string
 	DefaultVrackGateway            string
 	PrivateNetworkRoutingAsDefault bool
@@ -223,6 +229,7 @@ func TestAccCloudProjectKubeCustomizationApiServerAdmissionPlugins(t *testing.T)
 func TestAccCloudProjectKubeVRack(t *testing.T) {
 	region := os.Getenv("OVH_CLOUD_PROJECT_KUBE_REGION_TEST")
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	vrackService := os.Getenv("OVH_VRACK_SERVICE_TEST")
 
 	name := acctest.RandomWithPrefix(test_prefix)
 	tmpl, err := template.New("config").Parse(testAccCloudProjectKubeVRackConfig)
@@ -240,6 +247,7 @@ func TestAccCloudProjectKubeVRack(t *testing.T) {
 		Name:                           name,
 		DefaultVrackGateway:            "",
 		PrivateNetworkRoutingAsDefault: false,
+		VrackService:                   vrackService,
 	}
 	configData2 := configData{
 		Region:                         region,
@@ -249,6 +257,7 @@ func TestAccCloudProjectKubeVRack(t *testing.T) {
 		Name:                           name,
 		DefaultVrackGateway:            "10.4.0.1",
 		PrivateNetworkRoutingAsDefault: true,
+		VrackService:                   vrackService,
 	}
 
 	err = tmpl.Execute(&config, &configData1)
@@ -266,6 +275,7 @@ func TestAccCloudProjectKubeVRack(t *testing.T) {
 			testAccPreCheckCloud(t)
 			testAccCheckCloudProjectExists(t)
 			testAccPreCheckKubernetes(t)
+			testAccPreCheckKubernetesVRack(t)
 		},
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
