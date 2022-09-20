@@ -29,24 +29,24 @@ data "ovh_order_cart_product_plan" "zone" {
 }
 
 resource "ovh_domain_zone" "zone" {
- ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
- payment_mean   = "fidelity"
+  ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
+  payment_mean   = "fidelity"
 
- plan {
-   duration     = data.ovh_order_cart_product_plan.zone.selected_price.0.duration
-   plan_code    = data.ovh_order_cart_product_plan.zone.plan_code
-   pricing_mode = data.ovh_order_cart_product_plan.zone.selected_price.0.pricing_mode
+  plan {
+    duration     = data.ovh_order_cart_product_plan.zone.selected_price.0.duration
+    plan_code    = data.ovh_order_cart_product_plan.zone.plan_code
+    pricing_mode = data.ovh_order_cart_product_plan.zone.selected_price.0.pricing_mode
 
-   configuration {
-     label = "zone"
-     value = "myzone.mydomain.com"
-   }
+    configuration {
+      label = "zone"
+      value = "myzone.mydomain.com"
+    }
 
-   configuration {
-     label = "template"
-     value = "minimized"
-   }
- }
+    configuration {
+      label = "template"
+      value = "minimized"
+    }
+  }
 }
 ```
 

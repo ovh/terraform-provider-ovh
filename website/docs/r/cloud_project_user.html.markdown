@@ -14,7 +14,7 @@ Creates a user in a public cloud project.
 
 ```hcl
 resource "ovh_cloud_project_user" "user1" {
-   service_name = "XXX"
+  service_name = "XXX"
 }
 ```
 

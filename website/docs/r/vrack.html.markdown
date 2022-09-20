@@ -20,28 +20,28 @@ Orders a vrack.
 
 ```hcl
 data "ovh_order_cart" "mycart" {
- ovh_subsidiary = "fr"
- description    = "my vrack order cart"
+  ovh_subsidiary = "fr"
+  description    = "my vrack order cart"
 }
 
 data "ovh_order_cart_product_plan" "vrack" {
- cart_id        = data.ovh_order_cart.mycart.id
- price_capacity = "renew"
- product        = "vrack"
- plan_code      = "vrack"
+  cart_id        = data.ovh_order_cart.mycart.id
+  price_capacity = "renew"
+  product        = "vrack"
+  plan_code      = "vrack"
 }
 
 resource "ovh_vrack" "vrack" {
- ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
- name          = "my vrack"
- payment_mean  = "fidelity"
- description   = "my vrack"
+  ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
+  name           = "my vrack"
+  payment_mean   = "fidelity"
+  description    = "my vrack"
 
- plan {
-   duration     = data.ovh_order_cart_product_plan.vrack.selected_price.0.duration
-   plan_code    = data.ovh_order_cart_product_plan.vrack.plan_code
-   pricing_mode = data.ovh_order_cart_product_plan.vrack.selected_price.0.pricing_mode
- }
+  plan {
+    duration     = data.ovh_order_cart_product_plan.vrack.selected_price.0.duration
+    plan_code    = data.ovh_order_cart_product_plan.vrack.plan_code
+    pricing_mode = data.ovh_order_cart_product_plan.vrack.selected_price.0.pricing_mode
+  }
 }
 ```
 

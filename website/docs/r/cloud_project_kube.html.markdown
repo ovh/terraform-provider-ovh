@@ -14,30 +14,30 @@ Creates a OVHcloud Managed Kubernetes Service cluster in a public cloud project.
 
 ```hcl
 resource "ovh_cloud_project_kube" "mykube" {
-   service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-   name         = "my_kube_cluster"
-   region       = "GRA7"
+  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  name         = "my_kube_cluster"
+  region       = "GRA7"
 
-   customization {
-     apiserver {
-       admissionplugins{
-         enabled = ["NodeRestriction"]
-         disabled = ["AlwaysPullImages"]
-       }
-     }
-   }
-     
-   private_network_id = xxxxxxxx-xxxx-xxxx-xxxxx-xxxxxxxxxxxx #ovh_cloud_project_network_private.network1.regions_attributes[index(ovh_cloud_project_network_private.network1.regions_attributes.*.region, "GRA7")].openstackid
+  customization {
+    apiserver {
+      admissionplugins{
+        enabled  = ["NodeRestriction"]
+        disabled = ["AlwaysPullImages"]
+      }
+    }
+  }
 
-   private_network_configuration {
-     default_vrack_gateway              = "10.4.0.1"
-     private_network_routing_as_default = true
-   }
+  private_network_id = xxxxxxxx-xxxx-xxxx-xxxxx-xxxxxxxxxxxx #ovh_cloud_project_network_private.network1.regions_attributes[index(ovh_cloud_project_network_private.network1.regions_attributes.*.region, "GRA7")].openstackid
 
-   depends_on = [
-     ovh_cloud_project_network_private.network1
-   ]
-     
+  private_network_configuration {
+    default_vrack_gateway              = "10.4.0.1"
+    private_network_routing_as_default = true
+  }
+
+  depends_on = [
+    ovh_cloud_project_network_private.network1
+  ]
+
 }
 ```
 

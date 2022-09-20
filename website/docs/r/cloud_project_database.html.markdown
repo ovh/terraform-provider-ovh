@@ -30,15 +30,15 @@ resource "ovh_cloud_project_database" "cassandradb" {
   version      = "4.0"
   plan         = "essential"
   nodes {
-    region     = "BHS"
+    region = "BHS"
   }
   nodes {
-    region     = "BHS"
+    region = "BHS"
   }
   nodes {
-    region     = "BHS"
+    region = "BHS"
   }
-  flavor = "db1-4"
+  flavor       = "db1-4"
 }
 
 resource "ovh_cloud_project_database" "kafkadb" {
@@ -48,15 +48,15 @@ resource "ovh_cloud_project_database" "kafkadb" {
   version      = "3.1"
   plan         = "business"
   nodes {
-    region     = "DE"
+    region = "DE"
   }
   nodes {
-    region     = "DE"
+    region = "DE"
   }
   nodes {
-    region     = "DE"
+    region = "DE"
   }
-	flavor = "db1-4"
+  flavor       = "db1-4"
 }
 
 resource "ovh_cloud_project_database" "mongodb" {
@@ -66,9 +66,9 @@ resource "ovh_cloud_project_database" "mongodb" {
   version      = "5.0"
   plan         = "essential"
   nodes {
-    region     = "GRA"
+    region = "GRA"
   }
-  flavor = "db1-2"
+  flavor       = "db1-2"
 }
 
 resource "ovh_cloud_project_database" "mysqldb" {
@@ -78,9 +78,9 @@ resource "ovh_cloud_project_database" "mysqldb" {
   version      = "8"
   plan         = "essential"
   nodes {
-    region     = "SBG"
+    region = "SBG"
   }
-  flavor = "db1-4"
+  flavor       = "db1-4"
 }
 
 resource "ovh_cloud_project_database" "opensearchdb" {
@@ -90,9 +90,9 @@ resource "ovh_cloud_project_database" "opensearchdb" {
   version      = "1"
   plan         = "essential"
   nodes {
-    region     = "UK"
+    region = "UK"
   }
-  flavor = "db1-4"
+  flavor       = "db1-4"
 }
 
 resource "ovh_cloud_project_database" "pgsqldb" {
@@ -102,9 +102,9 @@ resource "ovh_cloud_project_database" "pgsqldb" {
   version      = "14"
   plan         = "essential"
   nodes {
-    region     = "WAW"
+    region = "WAW"
   }
-  flavor = "db1-4"
+  flavor       = "db1-4"
 }
 
 resource "ovh_cloud_project_database" "redisdb" {
@@ -114,9 +114,9 @@ resource "ovh_cloud_project_database" "redisdb" {
   version      = "6.2"
   plan         = "essential"
   nodes {
-  region     = "BHS"
+    region = "BHS"
   }
-  flavor = "db1-4"
+  flavor       = "db1-4"
 }
 ```
 
@@ -129,12 +129,12 @@ resource "ovh_cloud_project_database" "postgresql" {
   version      = "14"
   plan         = "business"
   nodes {
-    region     = "GRA"
+    region = "GRA"
   }
   nodes {
-    region     = "GRA"
+    region = "GRA"
   }
-  flavor = "db1-15"
+  flavor       = "db1-15"
 }
 ```
 
@@ -150,19 +150,19 @@ resource "ovh_cloud_project_database" "mongodb" {
   nodes {
     region     = "SBG"
     subnet_id  = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
-    network_id  = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"  
+    network_id = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
   }
   nodes {
     region     = "SBG"
     subnet_id  = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
-    network_id  = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+    network_id = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
   }
   nodes {
     region     = "SBG"
     subnet_id  = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
-    network_id  = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+    network_id = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
   }
-  flavor = "db1-30"
+  flavor       = "db1-30"
 }
 ```
 
