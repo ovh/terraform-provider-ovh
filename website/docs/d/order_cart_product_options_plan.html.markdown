@@ -14,16 +14,16 @@ Use this data source to retrieve information of order cart product options plan.
 
 ```hcl
 data "ovh_order_cart" "mycart" {
- ovh_subsidiary = "fr"
- description    = "my cart"
+  ovh_subsidiary = "fr"
+  description    = "my cart"
 }
 
 data "ovh_order_cart_product_options_plan" "plan" {
- cart_id           = data.ovh_order_cart.mycart.id
- price_capacity    = "renew"
- product           = "cloud"
- plan_code         = "project"
- options_plan_code = "vrack"
+  cart_id           = data.ovh_order_cart.mycart.id
+  price_capacity    = "renew"
+  product           = "cloud"
+  plan_code         = "project"
+  options_plan_code = "vrack"
 }
 ```
 

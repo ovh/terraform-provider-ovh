@@ -42,4 +42,3 @@ The following attributes are exported:
 * `max_index_count` - Maximum number of index for this pattern.
 * `pattern` - Pattern format.
 * `service_name` - Current status of the pattern.
-

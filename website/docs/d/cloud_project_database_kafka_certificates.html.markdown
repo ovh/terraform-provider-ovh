@@ -40,4 +40,3 @@ the following attributes are exported:
 * `cluster_id` - See Argument Reference above.
 * `service_name` - See Argument Reference above.
 * `ca` - CA certificate used for the service.
-
