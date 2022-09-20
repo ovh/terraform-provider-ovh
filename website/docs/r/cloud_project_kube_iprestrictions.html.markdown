@@ -37,8 +37,8 @@ No additional attributes than the ones provided are exported.
 
 ## Import
 
-OVHcloud Managed Kubernetes Service cluster IP restrictions can be imported using the `id` of the IP restrictions (which is the same ID as the kubernetes which it depends on),
+OVHcloud Managed Kubernetes Service cluster IP restrictions can be imported using the `service_name` and the `id` of the cluster, separated by "/" E.g.,
 
 ```bash
-$ terraform import ovh_cloud_project_kube_iprestrictions.iprestrictions xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+$ terraform import ovh_cloud_project_kube_iprestrictions.iprestrictions service_name/kube_id
 ```
