@@ -101,3 +101,11 @@ In addition, the following attributes are exported:
 * `status` - Current status
 * `up_to_date_nodes` - Number of nodes with latest version installed in the pool
 * `updated_at` - Last update date
+
+## Import
+
+OVHcloud Managed Kubernetes Service cluster node pool can be imported using the `service_name`, the `id` of the cluster, and the `id` of the nodepool separated by "/" E.g.,
+
+```bash
+$ terraform import ovh_cloud_project_kube.my_kube_cluster service_name/kube_id/poolid
+```
