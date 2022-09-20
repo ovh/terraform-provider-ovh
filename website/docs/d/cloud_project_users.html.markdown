@@ -14,7 +14,7 @@ Get the list of all users of a public cloud project.
 
 ```hcl
 data "ovh_cloud_project_users" "project_users" {
- service_name = "XXX"
+  service_name = "XXX"
 }
 
 locals {
@@ -24,7 +24,7 @@ locals {
 }
 
 output "user_id" {
-    value = local.s3_user_id
+  value = local.s3_user_id
 }
 ```
 

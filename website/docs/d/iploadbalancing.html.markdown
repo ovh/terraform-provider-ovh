@@ -14,8 +14,8 @@ Use this data source to retrieve information about an IP Load Balancing product
 
 ```hcl
 data "ovh_iploadbalancing" "lb" {
-   service_name = "XXXXXX"
-   state        = "ok"
+  service_name = "XXXXXX"
+  state        = "ok"
 }
 ```
 

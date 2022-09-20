@@ -14,7 +14,7 @@ Use this data source to retrieve information about an IP service.
 
 ```hcl
 data "ovh_ip_service" "myip" {
- service_name  = "XXXXXX"
+  service_name  = "XXXXXX"
 }
 ```
 
@@ -34,4 +34,3 @@ data "ovh_ip_service" "myip" {
 * `routed_to` - Routage information
    * `service_name` - Service where ip is routed to
 * `type` - Possible values for ip type (    "cdn", "cloud", "dedicated", "failover", "hosted_ssl", "housing", "loadBalancing", "mail", "overthebox", "pcc", "pci", "private", "vpn", "vps", "vrack", "xdsl")
-

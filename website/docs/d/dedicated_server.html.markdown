@@ -14,7 +14,7 @@ Use this data source to retrieve information about a dedicated server associated
 
 ```hcl
 data "ovh_dedicated_server" "server" {
-   service_name = "XXXXXX"
+  service_name = "XXXXXX"
 }
 ```
 

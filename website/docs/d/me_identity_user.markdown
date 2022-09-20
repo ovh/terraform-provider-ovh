@@ -14,7 +14,7 @@ Use this data source to retrieve information about an identity user.
 
 ```hcl
 data "ovh_me_identity_user" "my_user" {
-   user = "my_user_login"
+  user = "my_user_login"
 }
 ```
 
