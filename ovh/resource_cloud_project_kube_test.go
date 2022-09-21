@@ -132,7 +132,7 @@ resource "ovh_cloud_project_kube" "cluster" {
 	name          = "{{ .Name }}"
 	region        = element(tolist(sort(data.ovh_cloud_project_regions.regions.names)), 0)
 
-	private_network_id = one(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)
+	private_network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
 
 	private_network_configuration {
 		default_vrack_gateway              = "{{ .DefaultVrackGateway }}"
