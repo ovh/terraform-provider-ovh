@@ -14,13 +14,13 @@ Use this data source to retrieve information of order cart product products.
 
 ```hcl
 data "ovh_order_cart" "mycart" {
- ovh_subsidiary = "fr"
- description    = "my cart"
+  ovh_subsidiary = "fr"
+  description    = "my cart"
 }
 
 data "ovh_order_cart_product" "plans" {
- cart_id = data.ovh_order_cart.mycart.id
- product = "..."
+  cart_id = data.ovh_order_cart.mycart.id
+  product = "..."
 }
 ```
 

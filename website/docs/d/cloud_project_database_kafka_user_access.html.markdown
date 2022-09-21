@@ -43,4 +43,3 @@ the following attributes are exported:
 * `key` - (Sensitive) User key for the cert.
 * `service_name` - See Argument Reference above.
 * `user_id` - See Argument Reference above.
-

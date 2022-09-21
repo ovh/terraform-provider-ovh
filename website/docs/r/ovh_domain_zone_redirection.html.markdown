@@ -15,10 +15,10 @@ Provides a OVHcloud domain zone redirection.
 ```hcl
 # Add a redirection to a sub-domain
 resource "ovh_domain_zone_redirection" "test" {
-    zone = "testdemo.ovh"
-    subdomain = "test"
-    type = "visiblePermanent"
-    target = "http://www.ovh"
+  zone      = "testdemo.ovh"
+  subdomain = "test"
+  type      = "visiblePermanent"
+  target    = "http://www.ovh"
 }
 ```
 

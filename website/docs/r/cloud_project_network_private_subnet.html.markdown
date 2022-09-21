@@ -14,14 +14,14 @@ Creates a subnet in a private network of a public cloud project.
 
 ```hcl
 resource "ovh_cloud_project_network_private_subnet" "subnet" {
-   service_name = "xxxxx"
-   network_id = "0234543"
-   region     = "GRA1"
-   start      = "192.168.168.100"
-   end        = "192.168.168.200"
-   network    = "192.168.168.0/24"
-   dhcp       = true
-   no_gateway = false
+  service_name = "xxxxx"
+  network_id   = "0234543"
+  region       = "GRA1"
+  start        = "192.168.168.100"
+  end          = "192.168.168.200"
+  network      = "192.168.168.0/24"
+  dhcp         = true
+  no_gateway   = false
 }
 ```
 
@@ -73,4 +73,3 @@ The following attributes are exported:
 * `ip_pools/dhcp` - DHCP enabled.
 * `ip_pools/end` - Last ip for this region.
 * `ip_pools/start` - First ip for this region.
-

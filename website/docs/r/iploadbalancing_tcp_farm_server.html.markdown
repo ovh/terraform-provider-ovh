@@ -15,13 +15,13 @@ Creates a backend server entry linked to loadbalancing group (farm)
 ```hcl
 data "ovh_iploadbalancing" "lb" {
   service_name = "ip-1.2.3.4"
-   state       = "ok"  
+  state        = "ok"
 }
 
 resource "ovh_iploadbalancing_tcp_farm" "farmname" {
   service_name = "${data.ovh_iploadbalancing.lb.id}"
-  port = 8080
-  zone = "all"
+  port         = 8080
+  zone         = "all"
 }
 
 resource "ovh_iploadbalancing_tcp_farm_server" "backend" {

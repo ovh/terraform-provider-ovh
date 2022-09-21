@@ -29,7 +29,7 @@ Terraform 0.13 and later:
 terraform {
   required_providers {
     ovh = {
-      source  = "ovh/ovh"
+      source = "ovh/ovh"
     }
   }
 }

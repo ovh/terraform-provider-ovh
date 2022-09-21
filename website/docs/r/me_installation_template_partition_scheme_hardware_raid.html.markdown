@@ -20,9 +20,9 @@ resource "ovh_me_installation_template" "mytemplate" {
 }
 
 resource "ovh_me_installation_template_partition_scheme" "scheme" {
-  template_name      = ovh_me_installation_template.mytemplate.template_name
-  name               = "myscheme"
-  priority           = 1
+  template_name = ovh_me_installation_template.mytemplate.template_name
+  name          = "myscheme"
+  priority      = 1
 }
 
 resource "ovh_me_installation_template_partition_scheme_hardware_raid" "group1" {
@@ -33,7 +33,6 @@ resource "ovh_me_installation_template_partition_scheme_hardware_raid" "group1" 
   mode          = "raid50"
   step          = 1
 }
-
 ```
 
 ## Argument Reference

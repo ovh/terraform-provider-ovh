@@ -15,8 +15,8 @@ Use this data source to retrieve information about a DBaas logs output graylog s
 ```hcl
 
 data "ovh_dbaas_logs_output_graylog_stream" "stream" {
- service_name = "XXXXXX"
- title        = "my stream"
+  service_name = "XXXXXX"
+  title        = "my stream"
 }
 ```
 

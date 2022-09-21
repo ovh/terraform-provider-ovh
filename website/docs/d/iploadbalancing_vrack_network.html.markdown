@@ -14,7 +14,7 @@ Use this data source to get the details of Vrack network available for your IPLo
 
 ```hcl
 data ovh_iploadbalancing_vrack_network "lb_network" {
-  service_name = "XXXXXX"
+  service_name     = "XXXXXX"
   vrack_network_id = "yyy"
 }
 ```
