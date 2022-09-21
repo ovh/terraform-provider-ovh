@@ -14,35 +14,35 @@ Creates a nodepool in a OVHcloud Managed Kubernetes Service cluster.
 
 ```hcl
 resource "ovh_cloud_project_kube_nodepool" "pool" {
-   service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-   kube_id       = "xxxxxxxx-2bf9-xxxx-xxxx-xxxxxxxxxxxx"
-   name          = "my-pool"
-   flavor_name   = "b2-7"
-   desired_nodes = 3
-   max_nodes     = 3
-   min_nodes     = 3
-   template {
-     metadata {
-       annotations = {
-         k1 = "v1"
-         k2 = "v2"
-       }
-       finalizers = ["F1", "F2"]
-       labels = {
-         k3 = "v3"
-         k4 = "v4"
-       }
-     }
-     spec {
-       unschedulable = false
-       taints = [
-         {
-           effect = "PreferNoSchedule"
-           key    = "k"
-           value  = "v"
-         }
-       ]
-     }
+  service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  kube_id       = "xxxxxxxx-2bf9-xxxx-xxxx-xxxxxxxxxxxx"
+  name          = "my-pool"
+  flavor_name   = "b2-7"
+  desired_nodes = 3
+  max_nodes     = 3
+  min_nodes     = 3
+  template {
+    metadata {
+      annotations = {
+        k1 = "v1"
+        k2 = "v2"
+      }
+      finalizers = ["F1", "F2"]
+      labels = {
+        k3 = "v3"
+        k4 = "v4"
+      }
+    }
+    spec {
+      unschedulable = false
+      taints = [
+        {
+          effect = "PreferNoSchedule"
+          key    = "k"
+          value  = "v"
+        }
+      ]
+    }
   }
 }
 ```

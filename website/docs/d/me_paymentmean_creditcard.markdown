@@ -15,7 +15,7 @@ payment mean associated with an OVHcloud account.
 
 ```hcl
 data "ovh_me_paymentmean_creditcard" "cc" {
-   use_default = true
+  use_default = true
 }
 ```
 

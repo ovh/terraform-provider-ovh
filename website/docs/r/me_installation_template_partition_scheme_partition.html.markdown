@@ -20,9 +20,9 @@ resource "ovh_me_installation_template" "mytemplate" {
 }
 
 resource "ovh_me_installation_template_partition_scheme" "scheme" {
-  template_name      = ovh_me_installation_template.mytemplate.template_name
-  name               = "myscheme"
-  priority           = 1
+  template_name = ovh_me_installation_template.mytemplate.template_name
+  name          = "myscheme"
+  priority      = 1
 }
 
 resource "ovh_me_installation_template_partition_scheme_partition" "root" {
@@ -34,7 +34,6 @@ resource "ovh_me_installation_template_partition_scheme_partition" "root" {
   order         = 1
   type          = "primary"
 }
-
 ```
 
 ## Argument Reference

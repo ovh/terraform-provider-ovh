@@ -14,9 +14,9 @@ Use this data source to retrieve information about a DBaas logs input engine.
 
 ```hcl
 data "ovh_dbaas_logs_input_engine" "logstash" {
- name          = "logstash"
- version       = "6.8"
- is_deprecated = true
+  name          = "logstash"
+  version       = "6.8"
+  is_deprecated = true
 }
 ```
 

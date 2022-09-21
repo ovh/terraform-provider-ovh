@@ -46,4 +46,3 @@ The following attributes are exported:
 * `retention_bytes` - Number of bytes for the retention of the data for this topic. Inferior to 0 mean Unlimited
 * `retention_hours` - Number of hours for the retention of the data for this topic. Inferior to 0 mean Unlimited
 * `service_name` - See Argument Reference above.
-

@@ -14,9 +14,9 @@ Attaches a failover IP address to a compute instance
 
 ```hcl
 resource "ovh_cloud_project_failover_ip_attach" "myfailoverip" {
- service_name = "XXXXXX"
- ip = "XXXXXX"
- routed_to = "XXXXXX"
+  service_name = "XXXXXX"
+  ip           = "XXXXXX"
+  routed_to    = "XXXXXX"
 }
 ```
 

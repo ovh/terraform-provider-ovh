@@ -25,4 +25,3 @@ This datasource takes no argument.
 The following attributes are exported:
 
 * `result` - The list of vrack service name available for your OVHcloud account.
-

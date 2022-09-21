@@ -14,7 +14,7 @@ Use this data source to retrieve information about an IPXE Script.
 
 ```hcl
 data "ovh_me_ipxe_script" "script" {
-   name = "myscript"
+  name = "myscript"
 }
 ```
 

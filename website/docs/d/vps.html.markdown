@@ -14,7 +14,7 @@ Use this data source to retrieve information about a vps associated with your OV
 
 ```hcl
 data "ovh_vps" "server" {
-   service_name = "XXXXXX"
+  service_name = "XXXXXX"
 }
 ```
 

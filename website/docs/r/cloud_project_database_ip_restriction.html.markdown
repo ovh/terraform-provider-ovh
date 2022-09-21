@@ -15,8 +15,8 @@ Apply IP restrictions to an OVHcloud Managed Database cluster.
 ```hcl
 data "ovh_cloud_project_database" "db" {
   service_name = "XXXX"
-  engine = "YYYY"
-  id  = "ZZZZ"
+  engine       = "YYYY"
+  id           = "ZZZZ"
 }
 
 resource "ovh_cloud_project_database_ip_restriction" "iprestriction" {

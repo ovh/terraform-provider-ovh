@@ -14,7 +14,7 @@ Use this data source to retrieve information about an SSH key.
 
 ```hcl
 data "ovh_me_ssh_key" "mykey" {
-   key_name = "mykey"
+  key_name = "mykey"
 }
 ```
 

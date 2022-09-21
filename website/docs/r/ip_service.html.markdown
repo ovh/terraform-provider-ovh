@@ -39,17 +39,17 @@ data "ovh_order_cart_product_plan" "ipblock" {
 resource "ovh_ip_service" "ipblock" {
   ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
   payment_mean   = "ovh-account"
-  description   = "my ip block"
+  description    = "my ip block"
 
  plan {
-   duration     = data.ovh_order_cart_product_plan.ipblock.selected_price.0.duration
-   plan_code    = data.ovh_order_cart_product_plan.ipblock.plan_code
-   pricing_mode = data.ovh_order_cart_product_plan.ipblock.selected_price.0.pricing_mode
+  duration     = data.ovh_order_cart_product_plan.ipblock.selected_price.0.duration
+  plan_code    = data.ovh_order_cart_product_plan.ipblock.plan_code
+  pricing_mode = data.ovh_order_cart_product_plan.ipblock.selected_price.0.pricing_mode
 
-   configuration {
-     label = "country"
-     value = "FR"
-   }
+  configuration {
+    label = "country"
+    value = "FR"
+  }
  }
 }
 ```

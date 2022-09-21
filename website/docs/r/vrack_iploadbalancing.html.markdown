@@ -14,7 +14,7 @@ Attach an IP Load Balancing to a VRack.
 
 ```hcl
 resource "ovh_vrack_iploadbalancing" "viplb" {
-  service_name   = "xxx"
+  service_name     = "xxx"
   ip_loadbalancing = "yyy"
 }
 ```
