@@ -11,14 +11,14 @@ import (
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
-func resourceCloudProjectDatabaseUser() *schema.Resource {
+func resourceCloudProjectDatabaseDatabase() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCloudProjectDatabaseUserCreate,
-		Read:   resourceCloudProjectDatabaseUserRead,
-		Delete: resourceCloudProjectDatabaseUserDelete,
+		Create: resourceCloudProjectDatabaseDatabaseCreate,
+		Read:   resourceCloudProjectDatabaseDatabaseRead,
+		Delete: resourceCloudProjectDatabaseDatabaseDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceCloudProjectDatabaseUserImportState,
+			State: resourceCloudProjectDatabaseDatabaseImportState,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -38,7 +38,7 @@ func resourceCloudProjectDatabaseUser() *schema.Resource {
 				Description:  "Name of the engine of the service",
 				ForceNew:     true,
 				Required:     true,
-				ValidateFunc: helpers.ValidateEnum([]string{"cassandra", "mysql", "kafka", "kafkaConnect"}), //validateCloudProjectDatabaseUserEngineFunc,
+				ValidateFunc: helpers.ValidateEnum([]string{"mysql", "postgresql"}),
 			},
 			"cluster_id": {
 				Type:        schema.TypeString,
@@ -48,33 +48,22 @@ func resourceCloudProjectDatabaseUser() *schema.Resource {
 			},
 			"name": {
 				Type:        schema.TypeString,
-				Description: "Name of the user",
+				Description: "Database name",
 				ForceNew:    true,
 				Required:    true,
 			},
 
 			//Computed
-			"created_at": {
-				Type:        schema.TypeString,
-				Description: "Date of the creation of the user",
-				Computed:    true,
-			},
-			"password": {
-				Type:        schema.TypeString,
-				Description: "Password of the user",
-				Sensitive:   true,
-				Computed:    true,
-			},
-			"status": {
-				Type:        schema.TypeString,
-				Description: "Current status of the user",
+			"default": {
+				Type:        schema.TypeBool,
+				Description: "Defines if the database has been created by default",
 				Computed:    true,
 			},
 		},
 	}
 }
 
-func resourceCloudProjectDatabaseUserImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceCloudProjectDatabaseDatabaseImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	givenId := d.Id()
 	n := 4
 	splitId := strings.SplitN(givenId, "/", n)
@@ -95,57 +84,56 @@ func resourceCloudProjectDatabaseUserImportState(d *schema.ResourceData, meta in
 	return results, nil
 }
 
-func resourceCloudProjectDatabaseUserCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	engine := d.Get("engine").(string)
 	clusterId := d.Get("cluster_id").(string)
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/user",
+	endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/database",
 		url.PathEscape(serviceName),
 		url.PathEscape(engine),
 		url.PathEscape(clusterId),
 	)
 
-	params := (&CloudProjectDatabaseUserCreateOpts{}).FromResource(d)
-	res := &CloudProjectDatabaseUserResponse{}
+	params := (&CloudProjectDatabaseDatabaseCreateOpts{}).FromResource(d)
+	res := &CloudProjectDatabaseDatabaseResponse{}
 
-	log.Printf("[DEBUG] Will create user: %+v for cluster %s from project %s", params, clusterId, serviceName)
+	log.Printf("[DEBUG] Will create database: %+v for cluster %s from project %s", params, clusterId, serviceName)
 	err := config.OVHClient.Post(endpoint, params, res)
 	if err != nil {
 		return fmt.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
 	}
 
-	log.Printf("[DEBUG] Waiting for user %s to be READY", res.Id)
-	err = waitForCloudProjectDatabaseUserReady(config.OVHClient, serviceName, engine, clusterId, res.Id, d.Timeout(schema.TimeoutCreate))
+	log.Printf("[DEBUG] Waiting for database %s to be READY", res.Id)
+	err = waitForCloudProjectDatabaseDatabaseReady(config.OVHClient, serviceName, engine, clusterId, res.Id, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
-		return fmt.Errorf("timeout while waiting user %s to be READY: %w", res.Id, err)
+		return fmt.Errorf("timeout while waiting database %s to be READY: %w", res.Id, err)
 	}
-	log.Printf("[DEBUG] user %s is READY", res.Id)
+	log.Printf("[DEBUG] database %s is READY", res.Id)
 
 	d.SetId(res.Id)
-	d.Set("password", res.Password)
 
-	return resourceCloudProjectDatabaseUserRead(d, meta)
+	return resourceCloudProjectDatabaseDatabaseRead(d, meta)
 }
 
-func resourceCloudProjectDatabaseUserRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseDatabaseRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	engine := d.Get("engine").(string)
 	clusterId := d.Get("cluster_id").(string)
 	id := d.Id()
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/user/%s",
+	endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/database/%s",
 		url.PathEscape(serviceName),
 		url.PathEscape(engine),
 		url.PathEscape(clusterId),
 		url.PathEscape(id),
 	)
 
-	res := &CloudProjectDatabaseUserResponse{}
+	res := &CloudProjectDatabaseDatabaseResponse{}
 
-	log.Printf("[DEBUG] Will read user %s from cluster %s from project %s", id, clusterId, serviceName)
+	log.Printf("[DEBUG] Will read database %s from cluster %s from project %s", id, clusterId, serviceName)
 	if err := config.OVHClient.Get(endpoint, res); err != nil {
 		return helpers.CheckDeleted(d, err, endpoint)
 	}
@@ -161,32 +149,32 @@ func resourceCloudProjectDatabaseUserRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceCloudProjectDatabaseUserDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	engine := d.Get("engine").(string)
 	clusterId := d.Get("cluster_id").(string)
 	id := d.Id()
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/user/%s",
+	endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/database/%s",
 		url.PathEscape(serviceName),
 		url.PathEscape(engine),
 		url.PathEscape(clusterId),
 		url.PathEscape(id),
 	)
 
-	log.Printf("[DEBUG] Will delete user %s from cluster %s from project %s", id, clusterId, serviceName)
+	log.Printf("[DEBUG] Will delete database %s from cluster %s from project %s", id, clusterId, serviceName)
 	err := config.OVHClient.Delete(endpoint, nil)
 	if err != nil {
 		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
-	log.Printf("[DEBUG] Waiting for user %s to be DELETED", id)
-	err = waitForCloudProjectDatabaseUserDeleted(config.OVHClient, serviceName, engine, clusterId, id, d.Timeout(schema.TimeoutDelete))
+	log.Printf("[DEBUG] Waiting for database %s to be DELETED", id)
+	err = waitForCloudProjectDatabaseDatabaseDeleted(config.OVHClient, serviceName, engine, clusterId, id, d.Timeout(schema.TimeoutDelete))
 	if err != nil {
-		return fmt.Errorf("timeout while waiting user %s to be DELETED: %w", id, err)
+		return fmt.Errorf("timeout while waiting database %s to be DELETED: %w", id, err)
 	}
-	log.Printf("[DEBUG] user %s is DELETED", id)
+	log.Printf("[DEBUG] database %s is DELETED", id)
 
 	d.SetId("")
 

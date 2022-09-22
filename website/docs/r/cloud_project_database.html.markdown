@@ -50,6 +50,7 @@ resource "ovh_cloud_project_database" "kafkadb" {
   engine       = "kafka"
   version      = "3.1"
   plan         = "business"
+  kafka_rest_api = true
   nodes {
     region     = "DE"
   }
@@ -60,6 +61,18 @@ resource "ovh_cloud_project_database" "kafkadb" {
     region     = "DE"
   }
 	flavor = "db1-4"
+}
+
+resource "ovh_cloud_project_database" "m3db" {
+  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  description  = "my-first-m3db"
+  engine       = "m3db"
+  version      = "1.2"
+  plan         = "essential"
+  nodes {
+  region     = "BHS"
+  }
+  flavor = "db1-7"
 }
 
 resource "ovh_cloud_project_database" "mongodb" {
@@ -92,6 +105,7 @@ resource "ovh_cloud_project_database" "opensearchdb" {
   engine       = "opensearch"
   version      = "1"
   plan         = "essential"
+  opensearch_acls_enabled = true
   nodes {
     region     = "UK"
   }
@@ -185,12 +199,16 @@ The following arguments are supported:
   Ex: "db1-7". Changing this value upgrade the nodes with the new flavor.
   You can find the list of flavor names: https://www.ovhcloud.com/fr/public-cloud/prices/
 
+* `kafka_rest_api` -  (Optional) Defines whether the REST API is enabled on a kafka cluster
+
 * `nodes` - (Required, Minimum Items: 1) List of nodes object.
   Multi region cluster are not yet available, all node should be identical.
   * `network_id` - (Optional, Forces new resource) Private network id in which the node should be deployed.
   * `region` - (Required, Forces new resource) Public cloud region in which the node should be deployed.
     Ex: "GRA'.
   * `subnet_id` - (Optional, Forces new resource) Private subnet ID in which the node is.
+
+* `opensearch_acls_enabled` -  (Optional) Defines whether the acls are enabled on an Opensearch cluster
 
 * `plan` - (Required) List of nodes object.
   Enum: "essential", "business", "enterprise".
@@ -217,9 +235,11 @@ The following attributes are exported:
   * `uri` - URI of the endpoint.
 * `engine` - See Argument Reference above.
 * `flavor` - See Argument Reference above.
+* `kafka_rest_api` - See Argument Reference above.
 * `maintenance_time` - Time on which maintenances can start every day.
 * `network_type` - Type of network of the cluster.
 * `nodes` - See Argument Reference above.
+* `opensearch_acls_enabled` - See Argument Reference above.
 * `plan` - See Argument Reference above.
 * `status` - Current status of the cluster.
 * `version` - See Argument Reference above.
@@ -245,6 +265,6 @@ resource "ovh_cloud_project_database" "db" {
 
 OVHcloud Managed database clusters can be imported using the `service_name`, `engine`, `id` of the cluster, separated by "/" E.g.,
 
-```
+```bash
 $ terraform import ovh_cloud_project_database.my_database_cluster service_name/engine/id
 ```

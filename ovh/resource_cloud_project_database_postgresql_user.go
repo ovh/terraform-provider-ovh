@@ -196,7 +196,7 @@ func resourceCloudProjectDatabasePostgresqlUserDelete(d *schema.ResourceData, me
 		url.PathEscape(id),
 	)
 
-	log.Printf("[DEBUG] Will delete useruser %s from cluster %s from project %s", id, clusterId, serviceName)
+	log.Printf("[DEBUG] Will delete user %s from cluster %s from project %s", id, clusterId, serviceName)
 	err := config.OVHClient.Delete(endpoint, nil)
 	if err != nil {
 		return helpers.CheckDeleted(d, err, endpoint)
