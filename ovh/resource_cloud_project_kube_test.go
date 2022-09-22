@@ -100,16 +100,12 @@ resource "ovh_vrack_cloudproject" "attach" {
 	project_id   = "{{ .ServiceName }}"
 }
 
-data "ovh_cloud_project_regions" "regions" {
-	service_name = ovh_vrack_cloudproject.attach.project_id
-	has_services_up = ["network"]
-}
-
 resource "ovh_cloud_project_network_private" "network" {
-	service_name = data.ovh_cloud_project_regions.regions.service_name
+	service_name = "{{ .ServiceName }}"
 	vlan_id    = 0
 	name       = "terraform_testacc_private_net"
-	regions    = slice(sort(tolist(data.ovh_cloud_project_regions.regions.names)), 0, 1)#3?
+	regions    = ["GRA5"]
+	depends_on = [ovh_vrack_cloudproject.attach]
 }
 
 resource "ovh_cloud_project_network_private_subnet" "networksubnet" {
@@ -117,7 +113,7 @@ resource "ovh_cloud_project_network_private_subnet" "networksubnet" {
   network_id   = ovh_cloud_project_network_private.network.id
 
   # whatever region, for test purpose
-  region     = element(tolist(sort(data.ovh_cloud_project_regions.regions.names)), 0)
+  region     = "GRA5"
   start      = "192.168.168.100"
   end        = "192.168.168.200"
   network    = "192.168.168.0/24"
@@ -130,7 +126,7 @@ resource "ovh_cloud_project_network_private_subnet" "networksubnet" {
 resource "ovh_cloud_project_kube" "cluster" {
 	service_name  = "{{ .ServiceName }}"
 	name          = "{{ .Name }}"
-	region        = element(tolist(sort(data.ovh_cloud_project_regions.regions.names)), 0)
+	region        = "GRA5"
 
 	private_network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
 
