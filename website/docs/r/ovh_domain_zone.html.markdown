@@ -12,7 +12,7 @@ Creates a domain zone.
 
 ## Important
 
-This resource is in beta state. Use with caution.
+~> __WARNING__ This resource is in beta state. Use with caution.
 
 ## Example Usage
 
@@ -29,24 +29,24 @@ data "ovh_order_cart_product_plan" "zone" {
 }
 
 resource "ovh_domain_zone" "zone" {
- ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
- payment_mean   = "fidelity"
+  ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
+  payment_mean   = "fidelity"
 
- plan {
-   duration     = data.ovh_order_cart_product_plan.zone.selected_price.0.duration
-   plan_code    = data.ovh_order_cart_product_plan.zone.plan_code
-   pricing_mode = data.ovh_order_cart_product_plan.zone.selected_price.0.pricing_mode
+  plan {
+    duration     = data.ovh_order_cart_product_plan.zone.selected_price.0.duration
+    plan_code    = data.ovh_order_cart_product_plan.zone.plan_code
+    pricing_mode = data.ovh_order_cart_product_plan.zone.selected_price.0.pricing_mode
 
-   configuration {
-     label = "zone"
-     value = "myzone.mydomain.com"
-   }
+    configuration {
+      label = "zone"
+      value = "myzone.mydomain.com"
+    }
 
-   configuration {
-     label = "template"
-     value = "minimized"
-   }
- }
+    configuration {
+      label = "template"
+      value = "minimized"
+    }
+  }
 }
 ```
 
@@ -54,8 +54,8 @@ resource "ovh_domain_zone" "zone" {
 
 The following arguments are supported:
 
-* `ovh_subsidiary` - (Required) Ovh Subsidiary
-* `payment_mean` - (Required) Ovh payment mode (One of "default-payment-mean", "fidelity", "ovh-account")
+* `ovh_subsidiary` - (Required) OVHcloud Subsidiary
+* `payment_mean` - (Required) OVHcloud payment mode (One of "default-payment-mean", "fidelity", "ovh-account")
 * `plan` - (Required) Product Plan to order
   * `duration` - (Required) duration
   * `plan_code` - (Required) Plan code

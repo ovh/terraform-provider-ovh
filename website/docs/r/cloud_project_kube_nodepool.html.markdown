@@ -8,41 +8,41 @@ description: |-
 
 # ovh_cloud_project_kube_nodepool
 
-Creates a nodepool in a OVH Managed Kubernetes Service cluster.
+Creates a nodepool in a OVHcloud Managed Kubernetes Service cluster.
 
 ## Example Usage
 
 ```hcl
 resource "ovh_cloud_project_kube_nodepool" "pool" {
-   service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-   kube_id       = "xxxxxxxx-2bf9-xxxx-xxxx-xxxxxxxxxxxx"
-   name          = "my-pool"
-   flavor_name   = "b2-7"
-   desired_nodes = 3
-   max_nodes     = 3
-   min_nodes     = 3
-   template {
-     metadata {
-       annotations = {
-         k1 = "v1"
-         k2 = "v2"
-       }
-       finalizers = ["F1", "F2"]
-       labels = {
-         k3 = "v3"
-         k4 = "v4"
-       }
-     }
-     spec {
-       unschedulable = false
-       taints = [
-         {
-           effect = "PreferNoSchedule"
-           key    = "k"
-           value  = "v"
-         }
-       ]
-     }
+  service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  kube_id       = "xxxxxxxx-2bf9-xxxx-xxxx-xxxxxxxxxxxx"
+  name          = "my-pool"
+  flavor_name   = "b2-7"
+  desired_nodes = 3
+  max_nodes     = 3
+  min_nodes     = 3
+  template {
+    metadata {
+      annotations = {
+        k1 = "v1"
+        k2 = "v2"
+      }
+      finalizers = ["F1", "F2"]
+      labels = {
+        k3 = "v3"
+        k4 = "v4"
+      }
+    }
+    spec {
+      unschedulable = false
+      taints = [
+        {
+          effect = "PreferNoSchedule"
+          key    = "k"
+          value  = "v"
+        }
+      ]
+    }
   }
 }
 ```
@@ -60,7 +60,7 @@ The following arguments are supported:
    Changing this value recreates the resource.
    Warning: "_" char is not allowed!
 
-* `flavor_name` - a valid OVH public cloud flavor ID in which the nodes will be started.
+* `flavor_name` - a valid OVHcloud public cloud flavor ID in which the nodes will be started.
    Ex: "b2-7". Changing this value recreates the resource.
    You can find the list of flavor IDs: https://www.ovhcloud.com/fr/public-cloud/prices/
 
@@ -101,3 +101,11 @@ In addition, the following attributes are exported:
 * `status` - Current status
 * `up_to_date_nodes` - Number of nodes with latest version installed in the pool
 * `updated_at` - Last update date
+
+## Import
+
+OVHcloud Managed Kubernetes Service cluster node pool can be imported using the `service_name`, the `id` of the cluster, and the `id` of the nodepool separated by "/" E.g.,
+
+```bash
+$ terraform import ovh_cloud_project_kube.my_kube_cluster service_name/kube_id/poolid
+```

@@ -8,12 +8,9 @@ description: |-
 
 # ovh_cloud_project_database
 
-Creates a OVH Managed Database Service in a public cloud project.
+Creates a OVHcloud Managed Database Service in a public cloud project.
 
 ## Important
-
-This resource is in beta state, you should use it with care.
-
 
 To learn more about OVHcloud Public Cloud Database please visit our 
 [public documentation](https://docs.ovh.com/gb/en/publiccloud/databases).
@@ -33,15 +30,15 @@ resource "ovh_cloud_project_database" "cassandradb" {
   version      = "4.0"
   plan         = "essential"
   nodes {
-    region     = "BHS"
+    region = "BHS"
   }
   nodes {
-    region     = "BHS"
+    region = "BHS"
   }
   nodes {
-    region     = "BHS"
+    region = "BHS"
   }
-  flavor = "db1-4"
+  flavor       = "db1-4"
 }
 
 resource "ovh_cloud_project_database" "kafkadb" {
@@ -52,15 +49,15 @@ resource "ovh_cloud_project_database" "kafkadb" {
   plan         = "business"
   kafka_rest_api = true
   nodes {
-    region     = "DE"
+    region = "DE"
   }
   nodes {
-    region     = "DE"
+    region = "DE"
   }
   nodes {
-    region     = "DE"
+    region = "DE"
   }
-	flavor = "db1-4"
+  flavor       = "db1-4"
 }
 
 resource "ovh_cloud_project_database" "m3db" {
@@ -82,9 +79,9 @@ resource "ovh_cloud_project_database" "mongodb" {
   version      = "5.0"
   plan         = "essential"
   nodes {
-    region     = "GRA"
+    region = "GRA"
   }
-  flavor = "db1-2"
+  flavor       = "db1-2"
 }
 
 resource "ovh_cloud_project_database" "mysqldb" {
@@ -94,9 +91,9 @@ resource "ovh_cloud_project_database" "mysqldb" {
   version      = "8"
   plan         = "essential"
   nodes {
-    region     = "SBG"
+    region = "SBG"
   }
-  flavor = "db1-4"
+  flavor       = "db1-4"
 }
 
 resource "ovh_cloud_project_database" "opensearchdb" {
@@ -107,9 +104,9 @@ resource "ovh_cloud_project_database" "opensearchdb" {
   plan         = "essential"
   opensearch_acls_enabled = true
   nodes {
-    region     = "UK"
+    region = "UK"
   }
-  flavor = "db1-4"
+  flavor       = "db1-4"
 }
 
 resource "ovh_cloud_project_database" "pgsqldb" {
@@ -119,9 +116,9 @@ resource "ovh_cloud_project_database" "pgsqldb" {
   version      = "14"
   plan         = "essential"
   nodes {
-    region     = "WAW"
+    region = "WAW"
   }
-  flavor = "db1-4"
+  flavor       = "db1-4"
 }
 
 resource "ovh_cloud_project_database" "redisdb" {
@@ -131,9 +128,9 @@ resource "ovh_cloud_project_database" "redisdb" {
   version      = "6.2"
   plan         = "essential"
   nodes {
-  region     = "BHS"
+    region = "BHS"
   }
-  flavor = "db1-4"
+  flavor       = "db1-4"
 }
 ```
 
@@ -146,12 +143,12 @@ resource "ovh_cloud_project_database" "postgresql" {
   version      = "14"
   plan         = "business"
   nodes {
-    region     = "GRA"
+    region = "GRA"
   }
   nodes {
-    region     = "GRA"
+    region = "GRA"
   }
-  flavor = "db1-15"
+  flavor       = "db1-15"
 }
 ```
 
@@ -167,19 +164,19 @@ resource "ovh_cloud_project_database" "mongodb" {
   nodes {
     region     = "SBG"
     subnet_id  = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
-    network_id  = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"  
+    network_id = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
   }
   nodes {
     region     = "SBG"
     subnet_id  = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
-    network_id  = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+    network_id = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
   }
   nodes {
     region     = "SBG"
     subnet_id  = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
-    network_id  = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+    network_id = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
   }
-  flavor = "db1-30"
+  flavor       = "db1-30"
 }
 ```
 
@@ -195,7 +192,7 @@ The following arguments are supported:
 * `engine` - (Required, Forces new resource) The database engine you want to deploy. To get a full list of available engine visit.
 [public documentation](https://docs.ovh.com/gb/en/publiccloud/databases).
 
-* `flavor` -  (Required) A valid OVH public cloud database flavor name in which the nodes will be started.
+* `flavor` -  (Required) A valid OVHcloud public cloud database flavor name in which the nodes will be started.
   Ex: "db1-7". Changing this value upgrade the nodes with the new flavor.
   You can find the list of flavor names: https://www.ovhcloud.com/fr/public-cloud/prices/
 

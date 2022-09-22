@@ -8,36 +8,36 @@ description: |-
 
 # ovh_cloud_project_kube
 
-Creates a OVH Managed Kubernetes Service cluster in a public cloud project.
+Creates a OVHcloud Managed Kubernetes Service cluster in a public cloud project.
 
 ## Example Usage
 
 ```hcl
 resource "ovh_cloud_project_kube" "mykube" {
-   service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-   name         = "my_kube_cluster"
-   region       = "GRA7"
+  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  name         = "my_kube_cluster"
+  region       = "GRA7"
 
-   customization {
-     apiserver {
-       admissionplugins{
-         enabled = ["NodeRestriction"]
-         disabled = ["AlwaysPullImages"]
-       }
-     }
-   }
-     
-   private_network_id = xxxxxxxx-xxxx-xxxx-xxxxx-xxxxxxxxxxxx #ovh_cloud_project_network_private.network1.regions_attributes[index(ovh_cloud_project_network_private.network1.regions_attributes.*.region, "GRA7")].openstackid
+  customization {
+    apiserver {
+      admissionplugins{
+        enabled  = ["NodeRestriction"]
+        disabled = ["AlwaysPullImages"]
+      }
+    }
+  }
 
-   private_network_configuration {
-     default_vrack_gateway              = "10.4.0.1"
-     private_network_routing_as_default = true
-   }
+  private_network_id = xxxxxxxx-xxxx-xxxx-xxxxx-xxxxxxxxxxxx #ovh_cloud_project_network_private.network1.regions_attributes[index(ovh_cloud_project_network_private.network1.regions_attributes.*.region, "GRA7")].openstackid
 
-   depends_on = [
-     ovh_cloud_project_network_private.network1
-   ]
-     
+  private_network_configuration {
+    default_vrack_gateway              = "10.4.0.1"
+    private_network_routing_as_default = true
+  }
+
+  depends_on = [
+    ovh_cloud_project_network_private.network1
+  ]
+
 }
 ```
 
@@ -50,7 +50,7 @@ The following arguments are supported:
 
 * `name` - (Optional) The name of the kubernetes cluster.
 
-* `region` - a valid OVH public cloud region ID in which the kubernetes
+* `region` - a valid OVHcloud public cloud region ID in which the kubernetes
    cluster will be available. Ex.: "GRA1". Defaults to all public cloud regions.
    Changing this value recreates the resource.
 
@@ -66,8 +66,7 @@ The following arguments are supported:
 * `private_network_id` - (Optional) OpenStack private network ID to use.
    Changing this value delete the resource(including ETCD user data). Defaults - not use private network.
    
-   
-**WARNING: update private network id reset the cluster so all user data are deleted**
+~> __WARNING__ Updating the private network ID resets the cluster so that all user data is deleted.
 
 * `private_network_configuration` - (Optional) The private network configuration
   * default_vrack_gateway - If defined, all egress traffic will be routed towards this IP address, which should belong to the private network. Empty string means disabled.
@@ -95,8 +94,8 @@ The following attributes are exported:
 
 ## Import
 
-OVHcloud Managed Kubernetes Service clusters can be imported using the `serviceName` and the `id` of the cluster, separated by "/" E.g.,
+OVHcloud Managed Kubernetes Service clusters can be imported using the `service_name` and the `id` of the cluster, separated by "/" E.g.,
 
-```
-$ terraform import ovh_cloud_project_kube.my_kube_cluster a6678gggjh76hggjh7f59/a123bc45-a1b2-34c5-678d-678ghg7676ebc
+```bash
+$ terraform import ovh_cloud_project_kube.my_kube_cluster service_name/kube_id
 ```

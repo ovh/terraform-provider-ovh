@@ -8,13 +8,13 @@ description: |-
 
 # ovh\_vps (Data Source)
 
-Use this data source to retrieve information about a vps associated with your OVH Account.
+Use this data source to retrieve information about a vps associated with your OVHcloud Account.
 
 ## Example Usage
 
 ```hcl
 data "ovh_vps" "server" {
-   service_name = "XXXXXX"
+  service_name = "XXXXXX"
 }
 ```
 
@@ -28,11 +28,11 @@ data "ovh_vps" "server" {
 
 In addition, the following attributes are exported:
 
-* `cluster` - The ovh cluster the vps is in
+* `cluster` - The OVHcloud cluster the vps is in
 * `datacenter` - The datacenter in which the vps is located
   * `datacenter.longname` - The fullname of the datacenter (ex: "Strasbourg SBG1")
   * `datacenter.name` - The short name of the datacenter (ex: "sbg1)
-* `displayname` - The displayed name in the ovh web admin
+* `displayname` - The displayed name in the OVHcloud web admin
 * `ips` - The list of IPs addresses attached to the vps
 * `keymap` - The keymap for the ip kvm, valid values "", "fr", "us"
 * `memory` - The amount of memory in MB of the vps. 
@@ -42,8 +42,8 @@ In addition, the following attributes are exported:
 * `model.version` - The model version (ex: "2017v2")
 * `netbootmode` - The source of the boot kernel
 * `offertype` - The type of offer (ssd, cloud, classic)
-* `slamonitoring` - A boolean to indicate if OVH sla monitoring is active.
+* `slamonitoring` - A boolean to indicate if OVHcloud SLA monitoring is active.
 * `state` -  The state of the vps
 * `type` - The type of server
 * `vcore` - The number of vcore of the vps
-* `zone` - The OVH zone where the vps is
+* `zone` - The OVHcloud zone where the vps is

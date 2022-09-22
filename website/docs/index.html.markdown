@@ -19,7 +19,7 @@ Requests to OVHcloud APIs require a set of secrets keys and the definition of th
 See [First Steps with the API](https://docs.ovh.com/gb/en/customer/first-steps-with-ovh-api/) (or the French version, [Premiers pas avec les API OVHcloud](https://docs.ovh.com/fr/api/api-premiers-pas/)) for a detailed explanation.
 
 Besides the API end-point, the required keys are the `application_key`, the `application_secret`, and the `consumer_key`.
-These keys can be generated via the [OVH token generation page](https://api.ovh.com/createToken/?GET=/*&POST=/*&PUT=/*&DELETE=/*). 
+These keys can be generated via the [OVHcloud token generation page](https://api.ovh.com/createToken/?GET=/*&POST=/*&PUT=/*&DELETE=/*). 
 
 These parameters can be configured directly in the provider block as shown hereafter.
 
@@ -29,7 +29,7 @@ Terraform 0.13 and later:
 terraform {
   required_providers {
     ovh = {
-      source  = "ovh/ovh"
+      source = "ovh/ovh"
     }
   }
 }
@@ -163,7 +163,7 @@ variables must also be set:
 
 * `OVH_TESTACC_ORDER_DOMAIN` - set this variable to "mydomain.ovh" to run tests for domain zones.
 
-### Used by OVH internal account only:
+### Used by OVHcloud internal account only:
 
 * `OVH_TESTACC_ORDER_IPLOADBALANCING` - set this variable to "yes" will order ip loadbalancing.
 

@@ -43,4 +43,3 @@ The following attributes are exported:
 * `service_name` - See Argument Reference above.
 * `topic` - Topic affected by this ACL.
 * `username` - Username affected by this ACL.
-
