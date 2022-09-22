@@ -205,7 +205,7 @@ The following arguments are supported:
     Ex: "GRA'.
   * `subnet_id` - (Optional, Forces new resource) Private subnet ID in which the node is.
 
-* `opensearch_acls_enabled` -  (Optional) Defines whether the acls are enabled on an Opensearch cluster
+* `opensearch_acls_enabled` -  (Optional) Defines whether the ACLs are enabled on an OpenSearch cluster
 
 * `plan` - (Required) List of nodes object.
   Enum: "essential", "business", "enterprise".

@@ -3,12 +3,12 @@ layout: "ovh"
 page_title: "OVH: cloud_project_database_m3db_namespace"
 sidebar_current: "docs-ovh-datasource-cloud-project-database-m3db-namespace"
 description: |-
-  Get information about a namespace of a m3db cluster associated with a public cloud project.
+  Get information about a namespace of a M3DB cluster associated with a public cloud project.
 ---
 
 # ovh_cloud_project_database_m3db_namespace (Data Source)
 
-Use this data source to get information about a namespace of a m3db cluster associated with a public cloud project.
+Use this data source to get information about a namespace of a M3DB cluster associated with a public cloud project.
 
 ## Example Usage
 
@@ -49,4 +49,4 @@ The following attributes are exported:
 * `service_name` - See Argument Reference above.
 * `snapshot_enabled`- SDefines whether M3db will create snapshot files for this namespace.
 * `type` - Type of namespace.
-* `writes_to_commit_log_enabled` - Defines whether M3db will include writes to this namespace in the commit log.
+* `writes_to_commit_log_enabled` - Defines whether M3DB will include writes to this namespace in the commit log.

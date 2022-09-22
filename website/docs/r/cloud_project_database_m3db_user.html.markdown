@@ -3,12 +3,12 @@ layout: "ovh"
 page_title: "OVH: cloud_project_database_m3db_user"
 sidebar_current: "docs-ovh-resource-cloud-project-database-m3db-user"
 description: |-
-  Creates an user for a m3db cluster associated with a public cloud project.
+  Creates an user for a M3DB cluster associated with a public cloud project.
 ---
 
 # ovh_cloud_project_database_m3db_user
 
-Creates an user for a m3db cluster associated with a public cloud project.
+Creates an user for a M3DB cluster associated with a public cloud project.
 
 ## Example Usage
 
@@ -72,7 +72,7 @@ resource "ovh_cloud_project_database_m3db_user" "user" {
 
 ## Import
 
-OVHcloud Managed m3db clusters users can be imported using the `service_name`, `cluster_id` and `id` of the user, separated by "/" E.g.,
+OVHcloud Managed M3DB clusters users can be imported using the `service_name`, `cluster_id` and `id` of the user, separated by "/" E.g.,
 
 ```bash
 $ terraform import ovh_cloud_project_database_m3db_user.my_user service_name/cluster_id/id

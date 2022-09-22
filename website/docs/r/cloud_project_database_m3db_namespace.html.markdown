@@ -3,12 +3,12 @@ layout: "ovh"
 page_title: "OVH: cloud_project_database_m3db_namespace"
 sidebar_current: "docs-ovh-resource-cloud-project-database-m3db-namespace"
 description: |-
-  Creates a namespace for a m3db cluster associated with a public cloud project.
+  Creates a namespace for a M3DB cluster associated with a public cloud project.
 ---
 
 # ovh_cloud_project_database_m3db_namespace
 
-Creates a namespace for a m3db cluster associated with a public cloud project.
+Creates a namespace for a M3DB cluster associated with a public cloud project.
 
 ## Example Usage
 
@@ -20,10 +20,11 @@ data "ovh_cloud_project_database" "m3db" {
 }
 
 resource "ovh_cloud_project_database_m3db_namespace" "namespace" {
-  service_name  = data.ovh_cloud_project_database.m3db.service_name
-  cluster_id    = data.ovh_cloud_project_database.m3db.id
-  group         = "mygroup"
-  name          = "johndoe"
+  service_name              = data.ovh_cloud_project_database.m3db.service_name
+  cluster_id                = data.ovh_cloud_project_database.m3db.id
+  name                      = "mynamespace"
+  resolution                = "P2D"
+  retention_period_duration = "PT48H"
 }
 ```
 
@@ -38,21 +39,21 @@ The following arguments are supported:
 
 * `name` - (Required, Forces new resource) Name of the namespace.
 
-* `resolution` - (Optional) Resolution for an aggregated namespace.
+* `resolution` - (Optional) Resolution for an aggregated namespace. Should follow Rfc3339 e.g P2D, PT48H.
 
-* `retention_block_data_expiration_duration` - (Optional) Controls how long we wait before expiring stale data.
+* `retention_block_data_expiration_duration` - (Optional) Controls how long we wait before expiring stale data. Should follow Rfc3339 e.g P2D, PT48H.
 
-* `retention_block_size_duration` - (Optional) Controls how long to keep a block in memory before flushing to a fileset on disk.
+* `retention_block_size_duration` - (Optional) Controls how long to keep a block in memory before flushing to a fileset on disk. Should follow Rfc3339 e.g P2D, PT48H.
 
-* `retention_buffer_future_duration` - (Optional) Controls how far into the future writes to the namespace will be accepted.
+* `retention_buffer_future_duration` - (Optional) Controls how far into the future writes to the namespace will be accepted. Should follow Rfc3339 e.g P2D, PT48H.
 
-* `retention_buffer_past_duration` - (Optional) Controls how far into the past writes to the namespace will be accepted.
+* `retention_buffer_past_duration` - (Optional) Controls how far into the past writes to the namespace will be accepted. Should follow Rfc3339 e.g P2D, PT48H.
 
-* `retention_period_duration` - (Required) Controls the duration of time that M3DB will retain data for the namespace.
+* `retention_period_duration` - (Required) Controls the duration of time that M3DB will retain data for the namespace. Should follow Rfc3339 e.g P2D, PT48H.
 
-* `snapshot_enabled` - (Optional) Defines whether M3db will create snapshot files for this namespace.
+* `snapshot_enabled` - (Optional) Defines whether M3DB will create snapshot files for this namespace.
 
-* `writes_to_commit_log_enabled` - (Optional) Defines whether M3db will include writes to this namespace in the commit log.
+* `writes_to_commit_log_enabled` - (Optional) Defines whether M3DB will include writes to this namespace in the commit log.
 
 ## Attributes Reference
 
@@ -91,7 +92,7 @@ resource "ovh_cloud_project_database_m3db_namespace" "namespace" {
 
 ## Import
 
-OVHcloud Managed m3db clusters namespaces can be imported using the `service_name`, `cluster_id` and `id` of the namespace, separated by "/" E.g.,
+OVHcloud Managed M3DB clusters namespaces can be imported using the `service_name`, `cluster_id` and `id` of the namespace, separated by "/" E.g.,
 
 ```bash
 $ terraform import ovh_cloud_project_database_m3db_namespace.my_namespace service_name/cluster_id/id

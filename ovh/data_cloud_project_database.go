@@ -100,7 +100,7 @@ func dataSourceCloudProjectDatabase() *schema.Resource {
 			},
 			"kafka_rest_api": {
 				Type:        schema.TypeBool,
-				Description: "Defines whether the REST API is enabled on a kafka cluster",
+				Description: "Defines whether the REST API is enabled on a Kafka cluster",
 				Computed:    true,
 			},
 			"maintenance_time": {
@@ -139,7 +139,7 @@ func dataSourceCloudProjectDatabase() *schema.Resource {
 			},
 			"opensearch_acls_enabled": {
 				Type:        schema.TypeBool,
-				Description: "Defines whether the acls are enabled on an Opensearch cluster",
+				Description: "Defines whether the ACLs are enabled on an Opensearch cluster",
 				Computed:    true,
 			},
 			"plan": {
