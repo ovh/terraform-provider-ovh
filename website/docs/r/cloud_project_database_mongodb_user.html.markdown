@@ -53,12 +53,11 @@ The following attributes are exported:
 * `cluster_id` - See Argument Reference above.
 * `created_at` - Date of the creation of the user.
 * `id` - ID of the user.
-* `name` - See Argument Reference above.
+* `name` - Name of the user with the authentication database in the format name@authDB
 * `password` - (Sensitive) Password of the user.
 * `roles` - See Argument Reference above.
 * `service_name` - See Argument Reference above.
 * `status` - Current status of the user.
-* `name` - Name of the user with the authentication database in the format name@authDB
 
 ## Timeouts
 
@@ -81,5 +80,6 @@ resource "ovh_cloud_project_database_mongodb_user" "user" {
 
 OVHcloud Managed mongodb clusters users can be imported using the `service_name`, `cluster_id` and `id` of the user, separated by "/" E.g.,
 
-```
+```bash
 $ terraform import ovh_cloud_project_database_mongodb_user.my_user service_name/cluster_id/id
+```

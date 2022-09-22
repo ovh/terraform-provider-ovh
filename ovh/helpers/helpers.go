@@ -53,6 +53,16 @@ func ValidateStringEnum(value string, enum []string) error {
 	return nil
 }
 
+func ValidateEnum(enum []string) schema.SchemaValidateFunc {
+	return func(v interface{}, k string) (ws []string, errors []error) {
+		err := ValidateStringEnum(v.(string), enum)
+		if err != nil {
+			errors = append(errors, err)
+		}
+		return
+	}
+}
+
 func ValidateBootType(value string) error {
 	return ValidateStringEnum(value, []string{
 		"harddisk",
