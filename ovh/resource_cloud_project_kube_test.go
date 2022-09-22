@@ -104,7 +104,7 @@ resource "ovh_cloud_project_network_private" "network" {
 	service_name = "{{ .ServiceName }}"
 	vlan_id    = 0
 	name       = "terraform_testacc_private_net"
-	regions    = ["GRA5"]
+	regions    = ["{{ .Region }}"]
 	depends_on = [ovh_vrack_cloudproject.attach]
 }
 
@@ -113,7 +113,7 @@ resource "ovh_cloud_project_network_private_subnet" "networksubnet" {
   network_id   = ovh_cloud_project_network_private.network.id
 
   # whatever region, for test purpose
-  region     = "GRA5"
+  region     = "{{ .Region }}"
   start      = "192.168.168.100"
   end        = "192.168.168.200"
   network    = "192.168.168.0/24"
@@ -126,7 +126,7 @@ resource "ovh_cloud_project_network_private_subnet" "networksubnet" {
 resource "ovh_cloud_project_kube" "cluster" {
 	service_name  = "{{ .ServiceName }}"
 	name          = "{{ .Name }}"
-	region        = "GRA5"
+	region        = "{{ .Region }}"
 
 	private_network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
 
@@ -245,6 +245,7 @@ func TestAccCloudProjectKubeVRack(t *testing.T) {
 		ServiceName:                    serviceName,
 		VrackID:                        vrackID,
 		Name:                           name,
+		Region:                         "GRA5",
 		DefaultVrackGateway:            "",
 		PrivateNetworkRoutingAsDefault: false,
 	}
@@ -252,6 +253,7 @@ func TestAccCloudProjectKubeVRack(t *testing.T) {
 		ServiceName:                    serviceName,
 		VrackID:                        vrackID,
 		Name:                           name,
+		Region:                         "GRA5",
 		DefaultVrackGateway:            "10.4.0.1",
 		PrivateNetworkRoutingAsDefault: true,
 	}
