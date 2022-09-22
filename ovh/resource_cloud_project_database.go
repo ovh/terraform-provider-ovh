@@ -53,7 +53,7 @@ func resourceCloudProjectDatabase() *schema.Resource {
 			},
 			"kafka_rest_api": {
 				Type:        schema.TypeBool,
-				Description: "Defines whether the REST API is enabled on a kafka cluster",
+				Description: "Defines whether the REST API is enabled on a Kafka cluster",
 				Optional:    true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					return d.Get("engine").(string) != "kafka" || new == old
@@ -88,7 +88,7 @@ func resourceCloudProjectDatabase() *schema.Resource {
 			},
 			"opensearch_acls_enabled": {
 				Type:        schema.TypeBool,
-				Description: "Defines whether the acls are enabled on an Opensearch cluster",
+				Description: "Defines whether the ACLs are enabled on an Opensearch cluster",
 				Optional:    true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					return d.Get("engine").(string) != "opensearch" || new == old

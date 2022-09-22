@@ -15,7 +15,7 @@ Use this data source to get information about a database of a database cluster a
 ```hcl
 data "ovh_cloud_project_database_database" "database" {
   service_name  = "XXX"
-  engine	      = "YYY"
+  engine        = "YYY"
   cluster_id    = "ZZZ"
   name          = "UUU"
 }
@@ -30,7 +30,7 @@ output "database_name" {
 * `service_name` - (Required) The id of the public cloud project. If omitted,
   the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 
-* `engine` - (Required) The engine of the database cluster you want database information. To get a full list of available engine visit :
+* `engine` - (Required) The engine of the database cluster you want database information. To get a full list of available engine visit:
 [public documentation](https://docs.ovh.com/gb/en/publiccloud/databases).\
 Available engines for this resource (other have specific resource):
   * `mysql`

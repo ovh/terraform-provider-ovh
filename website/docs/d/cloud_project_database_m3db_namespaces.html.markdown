@@ -3,12 +3,12 @@ layout: "ovh"
 page_title: "OVH: cloud_project_database_m3db_namespaces"
 sidebar_current: "docs-ovh-datasource-cloud-project-database-m3db-namespaces"
 description: |-
-  Get the list of namespaces of a m3db cluster associated with a public cloud project.
+  Get the list of namespaces of a M3DB cluster associated with a public cloud project.
 ---
 
 # ovh_cloud_project_database_m3db_namespaces (Data Source)
 
-Use this data source to get the list of namespaces of a m3db cluster associated with a public cloud project.
+Use this data source to get the list of namespaces of a M3DB cluster associated with a public cloud project.
 
 ## Example Usage
 
@@ -37,4 +37,4 @@ the following attributes are exported:
 
 * `cluster_id` - See Argument Reference above.
 * `service_name` - See Argument Reference above.
-* `namespace_ids` - The list of namespaces ids of the m3db cluster associated with the project.
+* `namespace_ids` - The list of namespaces ids of the M3DB cluster associated with the project.

@@ -22,7 +22,7 @@ func dataSourceCloudProjectDatabaseUser() *schema.Resource {
 				Type:         schema.TypeString,
 				Description:  "Name of the engine of the service",
 				Required:     true,
-				ValidateFunc: helpers.ValidateEnum([]string{"cassandra", "mysql", "kafka", "kafkaConnect"}), //validateCloudProjectDatabaseUserEngineFunc,
+				ValidateFunc: helpers.ValidateEnum([]string{"cassandra", "mysql", "kafka", "kafkaConnect"}),
 			},
 			"cluster_id": {
 				Type:        schema.TypeString,

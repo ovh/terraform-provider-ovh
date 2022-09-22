@@ -15,7 +15,7 @@ Use this data source to get the list of databases of a database cluster associat
 ```hcl
 data "ovh_cloud_project_database_databases" "databases" {
   service_name = "XXXX"
-  engine	   = "YYYY"
+  engine       = "YYYY"
   cluster_id   = "ZZZ"
 }
 
@@ -29,7 +29,7 @@ output "database_ids" {
 * `service_name` - (Required) The id of the public cloud project. If omitted,
   the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 
-* `engine` - (Required) The engine of the database cluster you want to list databases. To get a full list of available engine visit.
+* `engine` - (Required) The engine of the database cluster you want to list databases. To get a full list of available engine visit:
 [public documentation](https://docs.ovh.com/gb/en/publiccloud/databases).
 
 * `cluster_id` - (Required) Cluster ID

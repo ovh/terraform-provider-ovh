@@ -41,8 +41,7 @@ The following arguments are supported:
 * `service_name` - (Required, Forces new resource) The id of the public cloud project. If omitted,
   the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 
-* `engine` - (Required, Forces new resource) The engine of the database cluster you want to add. To get a full list of available engine visit :
-[public documentation](https://docs.ovh.com/gb/en/publiccloud/databases).\
+* `engine` - (Required, Forces new resource) The engine of the database cluster you want to add. You can find the complete list of available engine in the [public documentation](https://docs.ovh.com/gb/en/publiccloud/databases).
 Available engines for this resource (other have specific resource):
   * `cassandra`
   * `kafka`

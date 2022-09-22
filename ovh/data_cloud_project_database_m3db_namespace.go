@@ -61,7 +61,7 @@ func dataSourceCloudProjectDatabaseM3dbNamespace() *schema.Resource {
 			},
 			"snapshot_enabled": {
 				Type:        schema.TypeBool,
-				Description: "Defines whether M3db will create snapshot files for this namespace",
+				Description: "Defines whether M3DB will create snapshot files for this namespace",
 				Computed:    true,
 			},
 			"type": {
@@ -71,7 +71,7 @@ func dataSourceCloudProjectDatabaseM3dbNamespace() *schema.Resource {
 			},
 			"writes_to_commit_log_enabled": {
 				Type:        schema.TypeBool,
-				Description: "Defines whether M3db will include writes to this namespace in the commit log",
+				Description: "Defines whether M3DB will include writes to this namespace in the commit log",
 				Computed:    true,
 			},
 		},

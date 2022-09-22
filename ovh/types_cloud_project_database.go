@@ -181,7 +181,7 @@ func (opts *CloudProjectDatabaseUpdateOpts) FromResource(d *schema.ResourceData)
 		opts.AclsEnabled = d.Get("opensearch_acls_enabled").(bool)
 	}
 	if engine == "kafka" {
-		opts.AclsEnabled = d.Get("kafka_rest_api").(bool)
+		opts.RestApi = d.Get("kafka_rest_api").(bool)
 	}
 
 	opts.Description = d.Get("description").(string)
@@ -340,54 +340,11 @@ func (v CloudProjectDatabaseCapabilitiesPlan) ToMap() map[string]interface{} {
 	return obj
 }
 
-type CloudProjectDatabaseAvailability struct {
-	Backup            string `json:"backup"`
-	Default           bool   `json:"default"`
-	EndOfLife         string `json:"endOfLife"`
-	Engine            string `json:"engine"`
-	Flavor            string `json:"flavor"`
-	MaxDiskSize       int    `json:"maxDiskSize"`
-	MaxNodeNumber     int    `json:"maxNodeNumber"`
-	MinDiskSize       int    `json:"minDiskSize"`
-	MinNodeNumber     int    `json:"minNodeNumber"`
-	Network           string `json:"network"`
-	Plan              string `json:"plan"`
-	Region            string `json:"region"`
-	StartDate         string `json:"startDate"`
-	Status            string `json:"status"`
-	StepDiskSize      int    `json:"stepDiskSize"`
-	UpstreamEndOfLife string `json:"upstreamEndOfLife"`
-	Version           string `json:"version"`
-}
-
-func (v CloudProjectDatabaseAvailability) ToMap() map[string]interface{} {
-	obj := make(map[string]interface{})
-	obj["backup"] = v.Backup
-	obj["default"] = v.Default
-	obj["end_of_life"] = v.EndOfLife
-	obj["engine"] = v.Engine
-	obj["flavor"] = v.Flavor
-	obj["max_disk_size"] = v.MaxDiskSize
-	obj["max_node_number"] = v.MaxNodeNumber
-	obj["min_disk_size"] = v.MinDiskSize
-	obj["min_node_number"] = v.MinNodeNumber
-	obj["network"] = v.Network
-	obj["plan"] = v.Plan
-	obj["region"] = v.Region
-	obj["start_date"] = v.StartDate
-	obj["status"] = v.Status
-	obj["step_disk_size"] = v.StepDiskSize
-	obj["upstream_end_of_life"] = v.UpstreamEndOfLife
-	obj["version"] = v.Version
-	return obj
-}
-
 type CloudProjectDatabaseCapabilitiesResponse struct {
-	Engines      []CloudProjectDatabaseCapabilitiesEngine `json:"engines"`
-	Flavors      []CloudProjectDatabaseCapabilitiesFlavor `json:"flavors"`
-	Options      []CloudProjectDatabaseCapabilitiesOption `json:"options"`
-	Plans        []CloudProjectDatabaseCapabilitiesPlan   `json:"plans"`
-	Availability []CloudProjectDatabaseAvailability
+	Engines []CloudProjectDatabaseCapabilitiesEngine `json:"engines"`
+	Flavors []CloudProjectDatabaseCapabilitiesFlavor `json:"flavors"`
+	Options []CloudProjectDatabaseCapabilitiesOption `json:"options"`
+	Plans   []CloudProjectDatabaseCapabilitiesPlan   `json:"plans"`
 }
 
 func (v CloudProjectDatabaseCapabilitiesResponse) ToMap() map[string]interface{} {
@@ -416,11 +373,6 @@ func (v CloudProjectDatabaseCapabilitiesResponse) ToMap() map[string]interface{}
 	}
 	obj["plans"] = plans
 
-	var availability []map[string]interface{}
-	for _, e := range v.Availability {
-		availability = append(availability, e.ToMap())
-	}
-	obj["availability"] = availability
 	return obj
 }
 
