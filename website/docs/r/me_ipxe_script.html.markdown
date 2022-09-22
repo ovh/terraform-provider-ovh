@@ -23,7 +23,7 @@ resource "ovh_me_ipxe_script" "script" {
 
 The following arguments are supported:
 
-* `description` - For documentation purpose only. This attribute is not passed to the OVH API as it cannot be retrieved back. Instead a fake description ('$name auto description') is passed at creation time.
+* `description` - For documentation purpose only. This attribute is not passed to the OVHcloud API as it cannot be retrieved back. Instead a fake description ('$name auto description') is passed at creation time.
 
 * `name` - (Required) The name of the IPXE Script.
 

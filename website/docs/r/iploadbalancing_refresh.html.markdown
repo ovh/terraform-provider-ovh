@@ -8,20 +8,20 @@ description: |-
 
 # ovh\_iploadbalancing\_refresh
 
-Applies changes from other ovh_iploadbalancing_* resources to the production configuration of loadbalancers.
+Applies changes from other `ovh_iploadbalancing_*` resources to the production configuration of loadbalancers.
 
 ## Example Usage
 
 ```hcl
 data "ovh_iploadbalancing" "lb" {
   service_name = "ip-1.2.3.4"
-   state       = "ok"  
+  state        = "ok"
 }
 
 resource "ovh_iploadbalancing_tcp_farm" "farmname" {
   service_name = "${data.ovh_iploadbalancing.lb.id}"
-  port = 8080
-  zone = "all"
+  port         = 8080
+  zone         = "all"
 }
 
 resource "ovh_iploadbalancing_tcp_farm_server" "backend" {
@@ -42,7 +42,7 @@ resource "ovh_iploadbalancing_refresh" "mylb" {
   service_name = "${data.ovh_iploadbalancing.lb.id}"
   keepers = [
     "${ovh_iploadbalancing_tcp_farm_server.backend.*.address}",
-    ]
+  ]
 }
 ```
 

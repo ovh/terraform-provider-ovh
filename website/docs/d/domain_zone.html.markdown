@@ -14,7 +14,7 @@ Use this data source to retrieve information about a domain zone.
 
 ```hcl
 data "ovh_domain_zone" "rootzone" {
-    name = "mysite.ovh"
+  name = "mysite.ovh"
 }
 ```
 

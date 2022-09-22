@@ -37,13 +37,13 @@ The following attributes are exported:
   * `post_installation_script_return`: indicate the string returned by your postinstall customisation script on successful execution. Advice: your script should return a unique validation string in case of succes. A good example is 'loh1Xee7eo OK OK OK UGh8Ang1Gu'.
   * `rating`: (DEPRECATED) Rating.
   * `ssh_key_name`: Name of the ssh key that should be installed. Password login will be disabled.
-  * `use_distribution_kernel`: Use the distribution's native kernel instead of the recommended OVH Kernel.
+  * `use_distribution_kernel`: Use the distribution's native kernel instead of the recommended OVHcloud Kernel.
 * `default_language`: The default language of this template.
 * `deprecated`: is this distribution deprecated.
 * `description`: information about this template.
 * `distribution`: the distribution this template is based on.
 * `family`: this template family type (bsd,linux,solaris,windows).
-* `hard_raid_configuration`: This distribution supports hardware raid configuration through the OVH API.
+* `hard_raid_configuration`: This distribution supports hardware raid configuration through the OVHcloud API.
 * `filesystems`: Filesystems available (btrfs,ext3,ext4,ntfs,reiserfs,swap,ufs,xfs,zfs).
 * `last_modification`: Date of last modification of the base image.
 * `partition_scheme`: 
@@ -62,7 +62,7 @@ The following attributes are exported:
      * `order`: step or order. specifies the creation order of the partition on the disk
      * `type`: partition type.
      * `volume_name`: The volume name needed for proxmox distribution
-* `supports_distribution_kernel`: This distribution supports installation using the distribution's native kernel instead of the recommended OVH kernel.
+* `supports_distribution_kernel`: This distribution supports installation using the distribution's native kernel instead of the recommended OVHcloud kernel.
 * `supports_gpt_label`: This distribution supports the GUID Partition Table (GPT), providing up to 128 partitions that can have more than 2TB.
 * `supports_rtm`: This distribution supports RTM software.
 * `supports_sql_server`: This distribution supports the microsoft SQL server.

@@ -15,8 +15,8 @@ Apply IP restrictions to an OVHcloud Managed Database cluster.
 ```hcl
 data "ovh_cloud_project_database" "db" {
   service_name = "XXXX"
-  engine = "YYYY"
-  id  = "ZZZZ"
+  engine       = "YYYY"
+  id           = "ZZZZ"
 }
 
 resource "ovh_cloud_project_database_ip_restriction" "iprestriction" {
@@ -70,6 +70,6 @@ resource "ovh_cloud_project_database_ip_restriction" "iprestriction" {
 
 OVHcloud Managed database cluster IP restrictions can be imported using the `service_name`, `engine`, `cluster_id` and the `ip`, separated by "/" E.g.,
 
-```
+```bash
 $ terraform import ovh_cloud_project_database_ip_restriction.my_ip_restriction service_name/engine/cluster_id/178.97.6.0/24
 ```

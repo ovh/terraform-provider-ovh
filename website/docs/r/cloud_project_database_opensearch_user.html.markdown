@@ -23,11 +23,11 @@ resource "ovh_cloud_project_database_opensearch_user" "user" {
   service_name  = data.ovh_cloud_project_database.opensearch.service_name
   cluster_id    = data.ovh_cloud_project_database.opensearch.id
   acls {
-		pattern = "logs_*"
+		pattern    = "logs_*"
 		permission = "read"
 	}
 	acls {
-		pattern = "data_*"
+		pattern    = "data_*"
 		permission = "deny"
 	}
   name          = "johndoe"
@@ -90,5 +90,6 @@ resource "ovh_cloud_project_database_opensearch_user" "user" {
 
 OVHcloud Managed opensearch clusters users can be imported using the `service_name`, `cluster_id` and `id` of the user, separated by "/" E.g.,
 
-```
+```bash
 $ terraform import ovh_cloud_project_database_opensearch_user.my_user service_name/cluster_id/id
+```

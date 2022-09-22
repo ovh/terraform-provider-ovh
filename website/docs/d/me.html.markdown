@@ -3,12 +3,12 @@ layout: "ovh"
 page_title: "OVH: me"
 sidebar_current: "docs-ovh-datasource-me"
 description: |-
-  Get information about the current OVH account
+  Get information about the current OVHcloud account
 ---
 
 # ovh_me (Data Source)
 
-Use this data source to get information about the current OVH account.
+Use this data source to get information about the current OVHcloud account.
 
 ## Example Usage
 
@@ -46,8 +46,8 @@ The following attributes are exported:
 * `national_identification_number`: National Identification Number of this account
 * `nichandle`: Nic handle / customer identifier
 * `organisation`: Name of the organisation for this account
-* `ovh_company`: OVH subsidiary
-* `ovh_subsidiary`: OVH subsidiary
+* `ovh_company`: OVHcloud subsidiary
+* `ovh_subsidiary`: OVHcloud subsidiary
 * `phone`: Phone number
 * `phone_country`: Country code of the phone number
 * `sex`: Gender of the account holder

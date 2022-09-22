@@ -14,9 +14,9 @@ Apply IP restrictions to an OVHcloud Managed Kubernetes cluster.
 
 ```hcl
 resource "ovh_cloud_project_kube_iprestrictions" "vrack_only" {
-   service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-   kube_id      = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx"
-   ips          = ["10.42.0.0/16"]
+  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  kube_id      = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx"
+  ips          = ["10.42.0.0/16"]
 }
 ```
 
@@ -37,8 +37,8 @@ No additional attributes than the ones provided are exported.
 
 ## Import
 
-OVHcloud Managed Kubernetes Service cluster IP restrictions can be imported using the `id` of the IP restrictions (which is the same ID as the kubernetes which it depends on),
+OVHcloud Managed Kubernetes Service cluster IP restrictions can be imported using the `service_name` and the `id` of the cluster, separated by "/" E.g.,
 
-```
-$ terraform import ovh_cloud_project_kube_iprestrictions.iprestrictions xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+```bash
+$ terraform import ovh_cloud_project_kube_iprestrictions.iprestrictions service_name/kube_id
 ```

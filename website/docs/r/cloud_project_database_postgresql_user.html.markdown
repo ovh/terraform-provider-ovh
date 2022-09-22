@@ -75,5 +75,6 @@ resource "ovh_cloud_project_database_postgresql_user" "user" {
 
 OVHcloud Managed postgresql clusters users can be imported using the `service_name`, `cluster_id` and `id` of the user, separated by "/" E.g.,
 
-```
+```bash
 $ terraform import ovh_cloud_project_database_postgresql_user.my_user service_name/cluster_id/id
+```

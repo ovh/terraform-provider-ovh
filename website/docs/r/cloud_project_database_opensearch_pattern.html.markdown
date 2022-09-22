@@ -20,10 +20,10 @@ data "ovh_cloud_project_database" "opensearch" {
 }
 
 resource "ovh_cloud_project_database_opensearch_pattern" "pattern" {
-  service_name = data.ovh_cloud_project_database.opensearch.service_name
-  cluster_id   = data.ovh_cloud_project_database.opensearch.id
+  service_name    = data.ovh_cloud_project_database.opensearch.service_name
+  cluster_id      = data.ovh_cloud_project_database.opensearch.id
   max_index_count = 2
-  pattern = "logs_*"
+  pattern         = "logs_*"
 }
 ```
 
@@ -69,5 +69,6 @@ resource "ovh_cloud_project_database_opensearch_pattern" "pattern" {
 
 OVHcloud Managed opensearch clusters patterns can be imported using the `service_name`, `cluster_id` and `id` of the pattern, separated by "/" E.g.,
 
-```
+```bash
 $ terraform import ovh_cloud_project_database_opensearch_pattern.my_pattern service_name/cluster_id/id
+```

@@ -20,9 +20,9 @@ resource "ovh_me_installation_template" "mytemplate" {
 }
 
 resource "ovh_me_installation_template_partition_scheme" "scheme" {
-  template_name      = ovh_me_installation_template.mytemplate.template_name
-  name               = "myscheme"
-  priority           = 1
+  template_name = ovh_me_installation_template.mytemplate.template_name
+  name          = "myscheme"
+  priority      = 1
 }
 
 resource "ovh_me_installation_template_partition_scheme_partition" "root" {
@@ -34,7 +34,6 @@ resource "ovh_me_installation_template_partition_scheme_partition" "root" {
   order         = 1
   type          = "primary"
 }
-
 ```
 
 ## Argument Reference
@@ -58,4 +57,8 @@ The following attributes are exported in addition to the arguments above:
 
 ## Import
 
-Use the fake id format to import the resource : `template_name/scheme_name/mountpoint` (example: "mytemplate/myscheme//").
+The resource can be imported using the `template_name`, `scheme_name`, `mountpoint` of the cluster, separated by "/" E.g.,
+
+```bash
+$ terraform import ovh_me_installation_template_partition_scheme_partition.root template_name/scheme_name/mountpoint
+```

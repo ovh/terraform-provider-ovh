@@ -14,7 +14,7 @@ Use this data source to retrieve information about a dedicated CEPH.
 
 ```hcl
 data "ovh_dedicated_ceph" "my-ceph" {
-   service_name = "XXXXXX"
+  service_name = "XXXXXX"
 }
 ```
 

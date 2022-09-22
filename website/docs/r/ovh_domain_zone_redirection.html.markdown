@@ -3,22 +3,22 @@ layout: "ovh"
 page_title: "OVH: ovh_domain_zone_redirection"
 sidebar_current: "docs-ovh-resource-domain-zone-redirection"
 description: |-
-  Provides a OVH domain zone resource.
+  Provides a OVHcloud domain zone resource.
 ---
 
 # ovh_domain_zone_redirection
 
-Provides a OVH domain zone redirection.
+Provides a OVHcloud domain zone redirection.
 
 ## Example Usage
 
 ```hcl
 # Add a redirection to a sub-domain
 resource "ovh_domain_zone_redirection" "test" {
-    zone = "testdemo.ovh"
-    subdomain = "test"
-    type = "visiblePermanent"
-    target = "http://www.ovh"
+  zone      = "testdemo.ovh"
+  subdomain = "test"
+  type      = "visiblePermanent"
+  target    = "http://www.ovh"
 }
 ```
 

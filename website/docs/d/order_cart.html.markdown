@@ -14,15 +14,15 @@ Use this data source to create a temporary order cart to retrieve information or
 
 ```hcl
 data "ovh_order_cart" "mycart" {
- ovh_subsidiary = "fr"
- description    = "..."
+  ovh_subsidiary = "fr"
+  description    = "..."
 }
 ```
 
 ## Argument Reference
 
 
-* `ovh_subsidiary` - (Required) Ovh Subsidiary
+* `ovh_subsidiary` - (Required) OVHcloud Subsidiary
 * `description` - Description of your cart
 * `expire` - Expiration time (format: 2006-01-02T15:04:05+00:00)
 

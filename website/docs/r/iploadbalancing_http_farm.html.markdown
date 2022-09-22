@@ -8,20 +8,20 @@ description: |-
 
 # ovh\_iploadbalancing\_http_farm
 
-Creates a http backend server group (farm) to be used by loadbalancing frontend(s)
+Creates a HTTP backend server group (farm) to be used by loadbalancing frontend(s)
 
 ## Example Usage
 
 ```
 data "ovh_iploadbalancing" "lb" {
   service_name = "ip-1.2.3.4"
-   state       = "ok"
+  state        = "ok"
 }
 
 resource "ovh_iploadbalancing_http_farm" "farmname" {
   service_name = "${data.ovh_iploadbalancing.lb.id}"
   display_name = "ingress-8080-gra"
-  zone = "GRA"
+  zone         = "GRA"
 }
 ```
 
