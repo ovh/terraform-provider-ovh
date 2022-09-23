@@ -48,6 +48,9 @@ func resourceCloudProjectDatabaseMongodbUser() *schema.Resource {
 				Description: "Name of the user",
 				ForceNew:    true,
 				Required:    true,
+				StateFunc: func(new interface{}) string {
+					return new.(string) + "@admin"
+				},
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					return new+"@admin" == old
 				},
@@ -222,7 +225,7 @@ func resourceCloudProjectDatabaseMongodbUserDelete(d *schema.ResourceData, meta 
 	)
 
 	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		log.Printf("[DEBUG] Will delete useruser %s from cluster %s from project %s", id, clusterId, serviceName)
+		log.Printf("[DEBUG] Will delete user %s from cluster %s from project %s", id, clusterId, serviceName)
 		err := config.OVHClient.Delete(endpoint, nil)
 		if err != nil {
 			if errOvh, ok := err.(*ovh.APIError); ok && (errOvh.Code == 409) {

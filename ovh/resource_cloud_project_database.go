@@ -51,6 +51,14 @@ func resourceCloudProjectDatabase() *schema.Resource {
 				Description: "The node flavor used for this cluster",
 				Required:    true,
 			},
+			"kafka_rest_api": {
+				Type:        schema.TypeBool,
+				Description: "Defines whether the REST API is enabled on a Kafka cluster",
+				Optional:    true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return d.Get("engine").(string) != "kafka" || new == old
+				},
+			},
 			"nodes": {
 				Type:        schema.TypeList,
 				Description: "List of nodes composing the service",
@@ -76,6 +84,14 @@ func resourceCloudProjectDatabase() *schema.Resource {
 							Optional:    true,
 						},
 					},
+				},
+			},
+			"opensearch_acls_enabled": {
+				Type:        schema.TypeBool,
+				Description: "Defines whether the ACLs are enabled on an Opensearch cluster",
+				Optional:    true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return d.Get("engine").(string) != "opensearch" || new == old
 				},
 			},
 			"plan": {
@@ -216,6 +232,10 @@ func resourceCloudProjectDatabaseCreate(d *schema.ResourceData, meta interface{}
 	log.Printf("[DEBUG] database %s is READY", res.Id)
 
 	d.SetId(res.Id)
+
+	if (engine == "kafka" && d.Get("kafka_rest_api").(bool)) || (engine == "opensearch" && d.Get("opensearch_acls_enabled").(bool)) {
+		return resourceCloudProjectDatabaseUpdate(d, meta)
+	}
 
 	return resourceCloudProjectDatabaseRead(d, meta)
 }

@@ -1,21 +1,19 @@
 ---
 layout: "ovh"
-page_title: "OVH: cloud_project_database_user"
-sidebar_current: "docs-ovh-resource-cloud-project-database-user"
+page_title: "OVH: cloud_project_database_database"
+sidebar_current: "docs-ovh-resource-cloud-project-database-database"
 description: |-
-  Creates an user for a database cluster associated with a public cloud project.
+  Creates an database for a database cluster associated with a public cloud project.
 ---
 
-# ovh_cloud_project_database_user
+# ovh_cloud_project_database_database
 
-Creates an user for a database cluster associated with a public cloud project.
+Creates a database for a database cluster associated with a public cloud project.
 
-With this resource you can create a user for the following database engine:
+With this resource you can create a database for the following database engine:
 
-  * `cassandra`
-  * `kafka`
-  * `kafkaConnect`
   * `mysql`
+  * `postgresql`
 
 ## Example Usage
 
@@ -26,11 +24,11 @@ data "ovh_cloud_project_database" "db" {
   id            = "ZZZZ"
 }
 
-resource "ovh_cloud_project_database_user" "user" {
+resource "ovh_cloud_project_database_database" "database" {
   service_name  = data.ovh_cloud_project_database.db.service_name
   engine        = data.ovh_cloud_project_database.db.engine
   cluster_id    = data.ovh_cloud_project_database.db.id
-  name          = "johndoe"
+  name          = "mydatabase"
 }
 ```
 
@@ -43,31 +41,27 @@ The following arguments are supported:
 
 * `engine` - (Required, Forces new resource) The engine of the database cluster you want to add. You can find the complete list of available engine in the [public documentation](https://docs.ovh.com/gb/en/publiccloud/databases).
 Available engines for this resource (other have specific resource):
-  * `cassandra`
-  * `kafka`
-  * `kafkaConnect`
   * `mysql`
+  * `postgresql`
 
 * `cluster_id` - (Required, Forces new resource) Cluster ID.
 
-* `name` - (Required, Forces new resource) Name of the user.
+* `name` - (Required, Forces new resource) Name of the database.
 
 ## Attributes Reference
 
 The following attributes are exported:
 
 * `cluster_id` - See Argument Reference above.
-* `created_at` - Date of the creation of the user.
-* `id` - ID of the user.
-* `password` - (Sensitive) Password of the user.
+* `default` - Defines if the database has been created by default.
+* `id` - ID of the database.
 * `service_name` - See Argument Reference above.
-* `status` - Current status of the user.
 * `name` - See Argument Reference above.
 
 ## Timeouts
 
 ```hcl
-resource "ovh_cloud_project_database_user" "user" {
+resource "ovh_cloud_project_database_database" "database" {
   # ...
 
   timeouts {
@@ -81,8 +75,8 @@ resource "ovh_cloud_project_database_user" "user" {
 
 ## Import
 
-OVHcloud Managed database clusters users can be imported using the `service_name`, `engine`, `cluster_id` and `id` of the user, separated by "/" E.g.,
+OVHcloud Managed database clusters databases can be imported using the `service_name`, `engine`, `cluster_id` and `id` of the database, separated by "/" E.g.,
 
 ```bash
-$ terraform import ovh_cloud_project_database_user.my_user service_name/engine/cluster_id/id
+$ terraform import ovh_cloud_project_database_database.my_database service_name/engine/cluster_id/id
 ```
