@@ -68,7 +68,7 @@ func resourceCloudProjectDatabase() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"network_id": {
 							Type:        schema.TypeString,
-							Description: "Private network ID in which the node is",
+							Description: "Private network ID in which the node is. It's the regional openstackId of the private network.",
 							ForceNew:    true,
 							Optional:    true,
 						},

@@ -46,7 +46,7 @@ The following attributes are exported:
 * `service_name` - See Argument Reference above.
 * `backup_time` - Time on which backups start every day.
 * `created_at` - Date of the creation of the cluster.
-* `description` - See Argument Reference above.
+* `description` - Small description of the database service.
 * `endpoints` - List of all endpoints objects of the service.
   * `component` - Type of component the URI relates to.
   * `domain` - Domain of the cluster.
@@ -57,10 +57,14 @@ The following attributes are exported:
   * `ssl_mode` - SSL mode used to connect to the service if the SSL is enabled.
   * `uri` - URI of the endpoint.
 * `engine` - See Argument Reference above.
-* `flavor` - See Argument Reference above.
+* `flavor` - A valid OVHcloud public cloud database flavor name in which the nodes will be started.
+* `kafka_rest_api` - Defines whether the REST API is enabled on a kafka cluster.
 * `maintenance_time` - Time on which maintenances can start every day.
 * `network_type` - Type of network of the cluster.
-* `nodes` - See Argument Reference above.
-* `plan` - See Argument Reference above.
+* `nodes` - List of nodes object.
+  * `network_id` - Private network id in which the node should be deployed. It's the regional openstackId of the private network
+  * `region` - Public cloud region in which the node should be deployed.
+  * `subnet_id` -  Private subnet ID in which the node is.
+* `plan` - Plan of the cluster.
 * `status` - Current status of the cluster.
-* `version` - See Argument Reference above.
+* `version` - The version of the engine in which the service should be deployed
