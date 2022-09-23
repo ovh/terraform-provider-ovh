@@ -174,12 +174,19 @@ func resourceCloudProjectKubeImportState(d *schema.ResourceData, meta interface{
 	givenId := d.Id()
 	splitId := strings.SplitN(givenId, "/", 2)
 	if len(splitId) != 2 {
-		return nil, fmt.Errorf("Import Id is not service_name/kubeid formatted")
+		return nil, fmt.Errorf("import Id is not service_name/kubeid formatted")
 	}
 	serviceName := splitId[0]
 	id := splitId[1]
 	d.SetId(id)
 	d.Set("service_name", serviceName)
+
+	// add kubeconfig in state
+	kubeConfig, err := getKubeconfig(meta.(*Config), serviceName, d.Id())
+	if err != nil {
+		return nil, err
+	}
+	d.Set("kubeconfig", kubeConfig)
 
 	results := make([]*schema.ResourceData, 1)
 	results[0] = d
@@ -240,13 +247,11 @@ func resourceCloudProjectKubeRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if d.IsNewResource() {
-		kubeconfigRaw := CloudProjectKubeKubeConfigResponse{}
-		endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/kubeconfig", serviceName, res.Id)
-		err := config.OVHClient.Post(endpoint, nil, &kubeconfigRaw)
+		kubeConfig, err := getKubeconfig(config, serviceName, res.Id)
 		if err != nil {
 			return err
 		}
-		d.Set("kubeconfig", kubeconfigRaw.Content)
+		d.Set("kubeconfig", kubeConfig)
 	}
 
 	log.Printf("[DEBUG] Read kube %+v", res)
