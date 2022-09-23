@@ -95,23 +95,32 @@ resource "ovh_cloud_project_kube" "cluster" {
 `
 
 var testAccCloudProjectKubeVRackConfig = `
-resource "ovh_cloud_project_network_private" "network1" {
-	service_name = "{{ .ServiceName }}"
-	name         = "dhcp-default-gateway"
-	regions      = {{ .Regions }}
-	vlan_id      = "{{ .Vlanid }}"
+resource "ovh_vrack_cloudproject" "attach" {
+	service_name = "{{ .VrackID }}"
+	project_id   = "{{ .ServiceName }}"
 }
 
-resource "ovh_cloud_project_network_private_subnet" "network1subnetSBG5" {
-  service_name = "{{ .ServiceName }}"
-  network_id   = ovh_cloud_project_network_private.network1.id
-  start        = "10.6.0.2" #first ip is burn for gateway ip
-  end          = "10.6.255.254"
-  network      = "10.6.0.0/16"
-  dhcp         = true
-  region       = "{{ .Region }}"
-  no_gateway   = false
-  depends_on   = [ovh_cloud_project_network_private.network1]
+resource "ovh_cloud_project_network_private" "network" {
+	service_name = "{{ .ServiceName }}"
+	vlan_id    = 0
+	name       = "terraform_testacc_private_net"
+	regions    = ["{{ .Region }}"]
+	depends_on = [ovh_vrack_cloudproject.attach]
+}
+
+resource "ovh_cloud_project_network_private_subnet" "networksubnet" {
+  service_name = ovh_cloud_project_network_private.network.service_name
+  network_id   = ovh_cloud_project_network_private.network.id
+
+  # whatever region, for test purpose
+  region     = "{{ .Region }}"
+  start      = "192.168.168.100"
+  end        = "192.168.168.200"
+  network    = "192.168.168.0/24"
+  dhcp       = true
+  no_gateway = false
+
+  depends_on   = [ovh_cloud_project_network_private.network]
 }
 
 resource "ovh_cloud_project_kube" "cluster" {
@@ -119,7 +128,7 @@ resource "ovh_cloud_project_kube" "cluster" {
 	name          = "{{ .Name }}"
 	region        = "{{ .Region }}"
 
-	private_network_id = tolist(ovh_cloud_project_network_private.network1.regions_attributes)[index(ovh_cloud_project_network_private.network1.regions_attributes.*.region, "{{ .Region }}")].openstackid
+	private_network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
 
 	private_network_configuration {
 		default_vrack_gateway              = "{{ .DefaultVrackGateway }}"
@@ -127,7 +136,7 @@ resource "ovh_cloud_project_kube" "cluster" {
 	}
 
 	depends_on = [
-		ovh_cloud_project_network_private.network1
+		ovh_cloud_project_network_private.network
 	]
 }
 `
@@ -166,8 +175,8 @@ resource "ovh_cloud_project_kube" "cluster" {
 type configData struct {
 	Region                         string
 	Regions                        string
-	Vlanid                         string
 	ServiceName                    string
+	VrackID                        string
 	Name                           string
 	DefaultVrackGateway            string
 	PrivateNetworkRoutingAsDefault bool
@@ -221,8 +230,8 @@ func TestAccCloudProjectKubeCustomizationApiServerAdmissionPlugins(t *testing.T)
 }
 
 func TestAccCloudProjectKubeVRack(t *testing.T) {
-	region := os.Getenv("OVH_CLOUD_PROJECT_KUBE_REGION_TEST")
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	vrackID := os.Getenv("OVH_VRACK_SERVICE_TEST")
 
 	name := acctest.RandomWithPrefix(test_prefix)
 	tmpl, err := template.New("config").Parse(testAccCloudProjectKubeVRackConfig)
@@ -233,20 +242,18 @@ func TestAccCloudProjectKubeVRack(t *testing.T) {
 	var config bytes.Buffer
 	var configUpdated bytes.Buffer
 	configData1 := configData{
-		Region:                         region,
-		Regions:                        `["` + region + `"]`,
-		Vlanid:                         "8",
 		ServiceName:                    serviceName,
+		VrackID:                        vrackID,
 		Name:                           name,
+		Region:                         "GRA5",
 		DefaultVrackGateway:            "",
 		PrivateNetworkRoutingAsDefault: false,
 	}
 	configData2 := configData{
-		Region:                         region,
-		Regions:                        `["` + region + `"]`,
-		Vlanid:                         "8",
 		ServiceName:                    serviceName,
+		VrackID:                        vrackID,
 		Name:                           name,
+		Region:                         "GRA5",
 		DefaultVrackGateway:            "10.4.0.1",
 		PrivateNetworkRoutingAsDefault: true,
 	}
@@ -266,13 +273,13 @@ func TestAccCloudProjectKubeVRack(t *testing.T) {
 			testAccPreCheckCloud(t)
 			testAccCheckCloudProjectExists(t)
 			testAccPreCheckKubernetes(t)
+			testAccPreCheckKubernetesVRack(t)
 		},
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: config.String(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "version"),
@@ -283,7 +290,6 @@ func TestAccCloudProjectKubeVRack(t *testing.T) {
 			{
 				Config: configUpdated.String(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "version"),
