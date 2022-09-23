@@ -10,10 +10,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/go-ovh/ovh"
-	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
+	"github.com/ybriffa/rfc3339"
 )
 
 type CloudProjectDatabaseResponse struct {
+	AclsEnabled     bool                           `json:"aclsEnabled"`
 	BackupTime      string                         `json:"backupTime"`
 	CreatedAt       string                         `json:"createdAt"`
 	Description     string                         `json:"description"`
@@ -26,6 +27,7 @@ type CloudProjectDatabaseResponse struct {
 	Plan            string                         `json:"plan"`
 	NodeNumber      int                            `json:"nodeNumber"`
 	Region          string                         `json:"region"`
+	RestApi         bool                           `json:"restApi"`
 	Status          string                         `json:"status"`
 	SubnetId        string                         `json:"subnetId"`
 	Version         string                         `json:"version"`
@@ -49,6 +51,7 @@ func (v CloudProjectDatabaseResponse) ToMap() map[string]interface{} {
 	obj["endpoints"] = endpoints
 
 	obj["flavor"] = v.Flavor
+	obj["kafka_rest_api"] = v.RestApi
 	obj["maintenance_time"] = v.MaintenanceTime
 	obj["network_type"] = v.NetworkType
 
@@ -63,6 +66,7 @@ func (v CloudProjectDatabaseResponse) ToMap() map[string]interface{} {
 	}
 	obj["nodes"] = nodes
 
+	obj["opensearch_acls_enabled"] = v.AclsEnabled
 	obj["plan"] = v.Plan
 	obj["status"] = v.Status
 	obj["version"] = v.Version
@@ -163,30 +167,27 @@ func (opts *CloudProjectDatabaseCreateOpts) FromResource(d *schema.ResourceData)
 }
 
 type CloudProjectDatabaseUpdateOpts struct {
+	AclsEnabled bool   `json:"aclsEnabled,omitempty"`
 	Description string `json:"description,omitempty"`
 	Flavor      string `json:"flavor,omitempty"`
-	NodeNumber  int    `json:"nodeNumber,omitempty"`
 	Plan        string `json:"plan,omitempty"`
+	RestApi     bool   `json:"restApi,omitempty"`
 	Version     string `json:"version,omitempty"`
 }
 
 func (opts *CloudProjectDatabaseUpdateOpts) FromResource(d *schema.ResourceData) (error, *CloudProjectDatabaseUpdateOpts) {
+	engine := d.Get("engine").(string)
+	if engine == "opensearch" {
+		opts.AclsEnabled = d.Get("opensearch_acls_enabled").(bool)
+	}
+	if engine == "kafka" {
+		opts.RestApi = d.Get("kafka_rest_api").(bool)
+	}
+
 	opts.Description = d.Get("description").(string)
 	opts.Plan = d.Get("plan").(string)
-
-	nodes := []CloudProjectDatabaseNodes{}
-	nbOfNodes := d.Get("nodes.#").(int)
-	for i := 0; i < nbOfNodes; i++ {
-		nodes = append(nodes, *(&CloudProjectDatabaseNodes{}).FromResourceWithPath(d, fmt.Sprintf("nodes.%d", i)))
-	}
-
-	if err := checkNodesEquality(nodes); err != nil {
-		return err, nil
-	}
 	opts.Flavor = d.Get("flavor").(string)
-	opts.NodeNumber = nbOfNodes
 	opts.Version = d.Get("version").(string)
-
 	return nil, opts
 }
 
@@ -275,6 +276,104 @@ func waitForCloudProjectDatabaseDeleted(client *ovh.Client, serviceName, engine 
 
 	_, err := stateConf.WaitForState()
 	return err
+}
+
+// Capabilities
+
+type CloudProjectDatabaseCapabilitiesEngine struct {
+	DefaultVersion string   `json:"defaultVersion"`
+	Description    string   `json:"description"`
+	Name           string   `json:"name"`
+	SslModes       []string `json:"sslModes"`
+	Versions       []string `json:"versions"`
+}
+
+func (v CloudProjectDatabaseCapabilitiesEngine) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+	obj["default_version"] = v.DefaultVersion
+	obj["description"] = v.Description
+	obj["name"] = v.Name
+	obj["ssl_modes"] = v.SslModes
+	obj["versions"] = v.Versions
+	return obj
+}
+
+type CloudProjectDatabaseCapabilitiesFlavor struct {
+	Core    int    `json:"core"`
+	Memory  int    `json:"memory"`
+	Name    string `json:"name"`
+	Storage int    `json:"storage"`
+}
+
+func (v CloudProjectDatabaseCapabilitiesFlavor) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+	obj["core"] = v.Core
+	obj["memory"] = v.Memory
+	obj["name"] = v.Name
+	obj["storage"] = v.Storage
+	return obj
+}
+
+type CloudProjectDatabaseCapabilitiesOption struct {
+	Name string `json:"name"`
+	Type string `json:"type"`
+}
+
+func (v CloudProjectDatabaseCapabilitiesOption) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+	obj["name"] = v.Name
+	obj["type"] = v.Type
+	return obj
+}
+
+type CloudProjectDatabaseCapabilitiesPlan struct {
+	BackupRetention string `json:"backupRetention"`
+	Description     string `json:"description"`
+	Name            string `json:"name"`
+}
+
+func (v CloudProjectDatabaseCapabilitiesPlan) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+	obj["backup_retention"] = v.BackupRetention
+	obj["description"] = v.Description
+	obj["name"] = v.Name
+	return obj
+}
+
+type CloudProjectDatabaseCapabilitiesResponse struct {
+	Engines []CloudProjectDatabaseCapabilitiesEngine `json:"engines"`
+	Flavors []CloudProjectDatabaseCapabilitiesFlavor `json:"flavors"`
+	Options []CloudProjectDatabaseCapabilitiesOption `json:"options"`
+	Plans   []CloudProjectDatabaseCapabilitiesPlan   `json:"plans"`
+}
+
+func (v CloudProjectDatabaseCapabilitiesResponse) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+	var engines []map[string]interface{}
+	for _, e := range v.Engines {
+		engines = append(engines, e.ToMap())
+	}
+	obj["engines"] = engines
+
+	var flavors []map[string]interface{}
+	for _, e := range v.Flavors {
+		flavors = append(flavors, e.ToMap())
+	}
+	obj["flavors"] = flavors
+
+	var options []map[string]interface{}
+	for _, e := range v.Options {
+		options = append(options, e.ToMap())
+	}
+	obj["options"] = options
+
+	var plans []map[string]interface{}
+	for _, e := range v.Plans {
+		plans = append(plans, e.ToMap())
+	}
+	obj["plans"] = plans
+
+	return obj
 }
 
 // IP Restriction
@@ -422,20 +521,6 @@ func (opts *CloudProjectDatabaseUserCreateOpts) FromResource(d *schema.ResourceD
 	return opts
 }
 
-func validateCloudProjectDatabaseUserEngineFunc(v interface{}, k string) (ws []string, errors []error) {
-	err := helpers.ValidateStringEnum(v.(string), []string{
-		"cassandra",
-		"mysql",
-		"kafka",
-		"kafkaConnect",
-	})
-
-	if err != nil {
-		errors = append(errors, err)
-	}
-	return
-}
-
 func waitForCloudProjectDatabaseUserReady(client *ovh.Client, serviceName, engine string, databaseId string, userId string, timeOut time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "CREATING", "UPDATING"},
@@ -485,6 +570,103 @@ func waitForCloudProjectDatabaseUserDeleted(client *ovh.Client, serviceName, eng
 			}
 
 			return res, res.Status, nil
+		},
+		Timeout:    timeOut,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+	return err
+}
+
+// Database
+
+type CloudProjectDatabaseDatabaseResponse struct {
+	Default bool   `json:"default"`
+	Id      string `json:"id"`
+	Name    string `json:"name"`
+}
+
+func (p *CloudProjectDatabaseDatabaseResponse) String() string {
+	return fmt.Sprintf(
+		"Id: %s, Database: %s, Default: %t",
+		p.Id,
+		p.Name,
+		p.Default,
+	)
+}
+
+func (v CloudProjectDatabaseDatabaseResponse) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+
+	obj["default"] = v.Default
+	obj["id"] = v.Id
+	obj["name"] = v.Name
+
+	return obj
+}
+
+type CloudProjectDatabaseDatabaseCreateOpts struct {
+	Name string `json:"name"`
+}
+
+func (opts *CloudProjectDatabaseDatabaseCreateOpts) FromResource(d *schema.ResourceData) *CloudProjectDatabaseDatabaseCreateOpts {
+	opts.Name = d.Get("name").(string)
+	return opts
+}
+
+func waitForCloudProjectDatabaseDatabaseReady(client *ovh.Client, serviceName, engine string, serviceId string, databaseId string, timeOut time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"PENDING"},
+		Target:  []string{"READY"},
+		Refresh: func() (interface{}, string, error) {
+			res := &CloudProjectDatabaseDatabaseResponse{}
+			endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/database/%s",
+				url.PathEscape(serviceName),
+				url.PathEscape(engine),
+				url.PathEscape(serviceId),
+				url.PathEscape(databaseId),
+			)
+			err := client.Get(endpoint, res)
+			if err != nil {
+				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
+					return res, "PENDING", nil
+				}
+				return res, "", err
+			}
+			return res, "READY", nil
+		},
+		Timeout:    timeOut,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+	return err
+}
+
+func waitForCloudProjectDatabaseDatabaseDeleted(client *ovh.Client, serviceName, engine string, serviceId string, databaseId string, timeOut time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"DELETING"},
+		Target:  []string{"DELETED"},
+		Refresh: func() (interface{}, string, error) {
+			res := &CloudProjectDatabaseDatabaseResponse{}
+			endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/database/%s",
+				url.PathEscape(serviceName),
+				url.PathEscape(engine),
+				url.PathEscape(serviceId),
+				url.PathEscape(databaseId),
+			)
+			err := client.Get(endpoint, res)
+			if err != nil {
+				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
+					return res, "DELETED", nil
+				}
+				return res, "", err
+			}
+
+			return res, "DELETING", nil
 		},
 		Timeout:    timeOut,
 		Delay:      10 * time.Second,
@@ -717,6 +899,216 @@ func (opts *CloudProjectDatabaseRedisUserUpdateOpts) FromResource(d *schema.Reso
 	opts.Commands = getStringSlice(d.Get("commands"))
 	opts.Keys = getStringSlice(d.Get("keys"))
 	return opts
+}
+
+// M3DB
+
+// // User
+
+type CloudProjectDatabaseM3dbUserResponse struct {
+	CreatedAt string `json:"createdAt"`
+	Group     string `json:"group"`
+	Id        string `json:"id"`
+	Password  string `json:"password"`
+	Status    string `json:"status"`
+	Username  string `json:"username"`
+}
+
+func (p *CloudProjectDatabaseM3dbUserResponse) String() string {
+	return fmt.Sprintf(
+		"Id: %s, User: %s, Status: %s",
+		p.Id,
+		p.Username,
+		p.Status,
+	)
+}
+
+func (v CloudProjectDatabaseM3dbUserResponse) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+
+	obj["created_at"] = v.CreatedAt
+	obj["group"] = v.Group
+	obj["id"] = v.Id
+	obj["name"] = v.Username
+	obj["status"] = v.Status
+
+	return obj
+}
+
+type CloudProjectDatabaseM3dbUserCreateOpts struct {
+	Group string `json:"group,omitempty"`
+	Name  string `json:"name"`
+}
+
+func (opts *CloudProjectDatabaseM3dbUserCreateOpts) FromResource(d *schema.ResourceData) *CloudProjectDatabaseM3dbUserCreateOpts {
+	opts.Group = d.Get("group").(string)
+	opts.Name = d.Get("name").(string)
+	return opts
+}
+
+type CloudProjectDatabaseM3dbUserUpdateOpts struct {
+	Group string `json:"group,omitempty"`
+}
+
+func (opts *CloudProjectDatabaseM3dbUserUpdateOpts) FromResource(d *schema.ResourceData) *CloudProjectDatabaseM3dbUserUpdateOpts {
+	opts.Group = d.Get("group").(string)
+	return opts
+}
+
+// // Namespace
+
+func DiffDurationRfc3339(k, old, new string, d *schema.ResourceData) bool {
+	newD, _ := rfc3339.ParseDuration(new)
+	oldD, _ := rfc3339.ParseDuration(old)
+	return newD == oldD
+}
+
+type CloudProjectDatabaseM3dbNamespaceRetention struct {
+	BlockDataExpirationDuration string `json:"blockDataExpirationDuration,omitempty"`
+	BlockSizeDuration           string `json:"blockSizeDuration,omitempty"`
+	BufferFutureDuration        string `json:"bufferFutureDuration,omitempty"`
+	BufferPastDuration          string `json:"bufferPastDuration,omitempty"`
+	PeriodDuration              string `json:"periodDuration,omitempty"`
+}
+
+type CloudProjectDatabaseM3dbNamespaceResponse struct {
+	Id                       string                                     `json:"id"`
+	Name                     string                                     `json:"name"`
+	Resolution               string                                     `json:"resolution"`
+	Retention                CloudProjectDatabaseM3dbNamespaceRetention `json:"retention"`
+	SnapshotEnabled          bool                                       `json:"snapshotEnabled"`
+	Type                     string                                     `json:"type"`
+	WritesToCommitLogEnabled bool                                       `json:"writesToCommitLogEnabled"`
+}
+
+func (p *CloudProjectDatabaseM3dbNamespaceResponse) String() string {
+	return fmt.Sprintf(
+		"Id: %s, Namespace: %s, Type: %s",
+		p.Id,
+		p.Name,
+		p.Type,
+	)
+}
+
+func (v CloudProjectDatabaseM3dbNamespaceResponse) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+	obj["id"] = v.Id
+	obj["name"] = v.Name
+	obj["resolution"] = v.Resolution
+	obj["retention_block_data_expiration_duration"] = v.Retention.BlockDataExpirationDuration
+	obj["retention_block_size_duration"] = v.Retention.BlockSizeDuration
+	obj["retention_buffer_future_duration"] = v.Retention.BufferFutureDuration
+	obj["retention_buffer_past_duration"] = v.Retention.BufferPastDuration
+	obj["retention_period_duration"] = v.Retention.PeriodDuration
+	obj["snapshot_enabled"] = v.SnapshotEnabled
+	obj["type"] = v.Type
+	obj["writes_to_commit_log_enabled"] = v.WritesToCommitLogEnabled
+	return obj
+}
+
+type CloudProjectDatabaseM3dbNamespaceCreateOpts struct {
+	Name                     string                                     `json:"name"`
+	Resolution               string                                     `json:"resolution,omitempty"`
+	Retention                CloudProjectDatabaseM3dbNamespaceRetention `json:"retention,omitempty"`
+	SnapshotEnabled          bool                                       `json:"snapshotEnabled"`
+	Type                     string                                     `json:"type"`
+	WritesToCommitLogEnabled bool                                       `json:"writesToCommitLogEnabled"`
+}
+
+func (opts *CloudProjectDatabaseM3dbNamespaceCreateOpts) FromResource(d *schema.ResourceData) *CloudProjectDatabaseM3dbNamespaceCreateOpts {
+	opts.Name = d.Get("name").(string)
+	opts.Resolution = d.Get("resolution").(string)
+	opts.Retention = CloudProjectDatabaseM3dbNamespaceRetention{
+		BlockDataExpirationDuration: d.Get("retention_block_data_expiration_duration").(string),
+		BlockSizeDuration:           d.Get("retention_block_size_duration").(string),
+		BufferFutureDuration:        d.Get("retention_buffer_future_duration").(string),
+		BufferPastDuration:          d.Get("retention_buffer_past_duration").(string),
+		PeriodDuration:              d.Get("retention_period_duration").(string),
+	}
+	opts.SnapshotEnabled = d.Get("snapshot_enabled").(bool)
+	opts.Type = "aggregated"
+	opts.WritesToCommitLogEnabled = d.Get("writes_to_commit_log_enabled").(bool)
+	return opts
+}
+
+type CloudProjectDatabaseM3dbNamespaceUpdateOpts struct {
+	Resolution               string                                     `json:"resolution,omitempty"`
+	Retention                CloudProjectDatabaseM3dbNamespaceRetention `json:"retention,omitempty"`
+	SnapshotEnabled          bool                                       `json:"snapshotEnabled,omitempty"`
+	WritesToCommitLogEnabled bool                                       `json:"writesToCommitLogEnabled,omitempty"`
+}
+
+func (opts *CloudProjectDatabaseM3dbNamespaceUpdateOpts) FromResource(d *schema.ResourceData) *CloudProjectDatabaseM3dbNamespaceUpdateOpts {
+	opts.Resolution = d.Get("resolution").(string)
+	opts.Retention = CloudProjectDatabaseM3dbNamespaceRetention{
+		BlockDataExpirationDuration: d.Get("retention_block_data_expiration_duration").(string),
+		BlockSizeDuration:           d.Get("retention_block_size_duration").(string),
+		BufferFutureDuration:        d.Get("retention_buffer_future_duration").(string),
+		BufferPastDuration:          d.Get("retention_buffer_past_duration").(string),
+		PeriodDuration:              d.Get("retention_period_duration").(string),
+	}
+	opts.SnapshotEnabled = d.Get("snapshot_enabled").(bool)
+	opts.WritesToCommitLogEnabled = d.Get("writes_to_commit_log_enabled").(bool)
+	return opts
+}
+
+func waitForCloudProjectDatabaseM3dbNamespaceReady(client *ovh.Client, serviceName, databaseId string, namespaceId string, timeOut time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"PENDING"},
+		Target:  []string{"READY"},
+		Refresh: func() (interface{}, string, error) {
+			res := &CloudProjectDatabaseM3dbNamespaceResponse{}
+			endpoint := fmt.Sprintf("/cloud/project/%s/database/m3db/%s/namespace/%s",
+				url.PathEscape(serviceName),
+				url.PathEscape(databaseId),
+				url.PathEscape(namespaceId),
+			)
+			err := client.Get(endpoint, res)
+			if err != nil {
+				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
+					return res, "PENDING", nil
+				}
+				return res, "", err
+			}
+			return res, "READY", nil
+		},
+		Timeout:    timeOut,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+	return err
+}
+
+func waitForCloudProjectDatabaseM3dbNamespaceDeleted(client *ovh.Client, serviceName, databaseId string, namespaceId string, timeOut time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"DELETING"},
+		Target:  []string{"DELETED"},
+		Refresh: func() (interface{}, string, error) {
+			res := &CloudProjectDatabaseM3dbNamespaceResponse{}
+			endpoint := fmt.Sprintf("/cloud/project/%s/database/m3db/%s/namespace/%s",
+				url.PathEscape(serviceName),
+				url.PathEscape(databaseId),
+				url.PathEscape(namespaceId),
+			)
+			err := client.Get(endpoint, res)
+			if err != nil {
+				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
+					return res, "DELETED", nil
+				}
+				return res, "", err
+			}
+
+			return res, "DELETING", nil
+		},
+		Timeout:    timeOut,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+	return err
 }
 
 // Opensearch

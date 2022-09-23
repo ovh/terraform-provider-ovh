@@ -11,15 +11,15 @@ import (
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
-func resourceCloudProjectDatabaseOpensearchUser() *schema.Resource {
+func resourceCloudProjectDatabaseM3dbUser() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCloudProjectDatabaseOpensearchUserCreate,
-		Read:   resourceCloudProjectDatabaseOpensearchUserRead,
-		Delete: resourceCloudProjectDatabaseOpensearchUserDelete,
-		Update: resourceCloudProjectDatabaseOpensearchUserUpdate,
+		Create: resourceCloudProjectDatabaseM3dbUserCreate,
+		Read:   resourceCloudProjectDatabaseM3dbUserRead,
+		Delete: resourceCloudProjectDatabaseM3dbUserDelete,
+		Update: resourceCloudProjectDatabaseM3dbUserUpdate,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceCloudProjectDatabaseOpensearchUserImportState,
+			State: resourceCloudProjectDatabaseM3dbUserImportState,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -41,24 +41,10 @@ func resourceCloudProjectDatabaseOpensearchUser() *schema.Resource {
 				ForceNew:    true,
 				Required:    true,
 			},
-			"acls": {
-				Type:        schema.TypeSet,
-				Description: "Acls of the user",
+			"group": {
+				Type:        schema.TypeString,
+				Description: "Group of the user",
 				Optional:    true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"pattern": {
-							Type:        schema.TypeString,
-							Description: "Pattern of the ACL",
-							Required:    true,
-						},
-						"permission": {
-							Type:        schema.TypeString,
-							Description: "Permission of the ACL",
-							Required:    true,
-						},
-					},
-				},
 			},
 			"name": {
 				Type:        schema.TypeString,
@@ -88,7 +74,7 @@ func resourceCloudProjectDatabaseOpensearchUser() *schema.Resource {
 	}
 }
 
-func resourceCloudProjectDatabaseOpensearchUserImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceCloudProjectDatabaseM3dbUserImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	givenId := d.Id()
 	n := 3
 	splitId := strings.SplitN(givenId, "/", n)
@@ -107,17 +93,17 @@ func resourceCloudProjectDatabaseOpensearchUserImportState(d *schema.ResourceDat
 	return results, nil
 }
 
-func resourceCloudProjectDatabaseOpensearchUserCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseM3dbUserCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/database/opensearch/%s/user",
+	endpoint := fmt.Sprintf("/cloud/project/%s/database/m3db/%s/user",
 		url.PathEscape(serviceName),
 		url.PathEscape(clusterId),
 	)
-	params := (&CloudProjectDatabaseOpensearchUserCreateOpts{}).FromResource(d)
-	res := &CloudProjectDatabaseOpensearchUserResponse{}
+	params := (&CloudProjectDatabaseM3dbUserCreateOpts{}).FromResource(d)
+	res := &CloudProjectDatabaseM3dbUserResponse{}
 
 	log.Printf("[DEBUG] Will create user: %+v for cluster %s from project %s", params, clusterId, serviceName)
 	err := config.OVHClient.Post(endpoint, params, res)
@@ -126,7 +112,7 @@ func resourceCloudProjectDatabaseOpensearchUserCreate(d *schema.ResourceData, me
 	}
 
 	log.Printf("[DEBUG] Waiting for user %s to be READY", res.Id)
-	err = waitForCloudProjectDatabaseUserReady(config.OVHClient, serviceName, "opensearch", clusterId, res.Id, d.Timeout(schema.TimeoutCreate))
+	err = waitForCloudProjectDatabaseUserReady(config.OVHClient, serviceName, "m3db", clusterId, res.Id, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return fmt.Errorf("timeout while waiting user %s to be READY: %w", res.Id, err)
 	}
@@ -135,21 +121,21 @@ func resourceCloudProjectDatabaseOpensearchUserCreate(d *schema.ResourceData, me
 	d.SetId(res.Id)
 	d.Set("password", res.Password)
 
-	return resourceCloudProjectDatabaseOpensearchUserRead(d, meta)
+	return resourceCloudProjectDatabaseM3dbUserRead(d, meta)
 }
 
-func resourceCloudProjectDatabaseOpensearchUserRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseM3dbUserRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
 	id := d.Id()
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/database/opensearch/%s/user/%s",
+	endpoint := fmt.Sprintf("/cloud/project/%s/database/m3db/%s/user/%s",
 		url.PathEscape(serviceName),
 		url.PathEscape(clusterId),
 		url.PathEscape(id),
 	)
-	res := &CloudProjectDatabaseOpensearchUserResponse{}
+	res := &CloudProjectDatabaseM3dbUserResponse{}
 
 	log.Printf("[DEBUG] Will read user %s from cluster %s from project %s", id, clusterId, serviceName)
 	if err := config.OVHClient.Get(endpoint, res); err != nil {
@@ -168,18 +154,18 @@ func resourceCloudProjectDatabaseOpensearchUserRead(d *schema.ResourceData, meta
 	return nil
 }
 
-func resourceCloudProjectDatabaseOpensearchUserUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseM3dbUserUpdate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
 	id := d.Id()
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/database/opensearch/%s/user/%s",
+	endpoint := fmt.Sprintf("/cloud/project/%s/database/m3db/%s/user/%s",
 		url.PathEscape(serviceName),
 		url.PathEscape(clusterId),
 		url.PathEscape(id),
 	)
-	params := (&CloudProjectDatabaseOpensearchUserUpdateOpts{}).FromResource(d)
+	params := (&CloudProjectDatabaseM3dbUserUpdateOpts{}).FromResource(d)
 
 	log.Printf("[DEBUG] Will update user: %+v from cluster %s from project %s", params, clusterId, serviceName)
 	err := config.OVHClient.Put(endpoint, params, nil)
@@ -188,22 +174,22 @@ func resourceCloudProjectDatabaseOpensearchUserUpdate(d *schema.ResourceData, me
 	}
 
 	log.Printf("[DEBUG] Waiting for user %s to be READY", id)
-	err = waitForCloudProjectDatabaseUserReady(config.OVHClient, serviceName, "opensearch", clusterId, id, d.Timeout(schema.TimeoutUpdate))
+	err = waitForCloudProjectDatabaseUserReady(config.OVHClient, serviceName, "m3db", clusterId, id, d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
 		return fmt.Errorf("timeout while waiting user %s to be READY: %w", id, err)
 	}
 	log.Printf("[DEBUG] user %s is READY", id)
 
-	return resourceCloudProjectDatabaseOpensearchUserRead(d, meta)
+	return resourceCloudProjectDatabaseM3dbUserRead(d, meta)
 }
 
-func resourceCloudProjectDatabaseOpensearchUserDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseM3dbUserDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
 	id := d.Id()
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/database/opensearch/%s/user/%s",
+	endpoint := fmt.Sprintf("/cloud/project/%s/database/m3db/%s/user/%s",
 		url.PathEscape(serviceName),
 		url.PathEscape(clusterId),
 		url.PathEscape(id),
@@ -216,7 +202,7 @@ func resourceCloudProjectDatabaseOpensearchUserDelete(d *schema.ResourceData, me
 	}
 
 	log.Printf("[DEBUG] Waiting for user %s to be DELETED", id)
-	err = waitForCloudProjectDatabaseUserDeleted(config.OVHClient, serviceName, "opensearch", clusterId, id, d.Timeout(schema.TimeoutDelete))
+	err = waitForCloudProjectDatabaseUserDeleted(config.OVHClient, serviceName, "m3db", clusterId, id, d.Timeout(schema.TimeoutDelete))
 	if err != nil {
 		return fmt.Errorf("timeout while waiting user %s to be DELETED: %w", id, err)
 	}

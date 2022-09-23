@@ -201,6 +201,9 @@ github.com/ulikunitz/xz/lzma
 # github.com/vmihailenco/msgpack v4.0.4+incompatible
 github.com/vmihailenco/msgpack
 github.com/vmihailenco/msgpack/codes
+# github.com/ybriffa/rfc3339 v0.0.0-20220203155318-1789e3fd6e70
+## explicit
+github.com/ybriffa/rfc3339
 # github.com/zclconf/go-cty v1.9.1
 github.com/zclconf/go-cty/cty
 github.com/zclconf/go-cty/cty/convert

@@ -98,6 +98,11 @@ func dataSourceCloudProjectDatabase() *schema.Resource {
 				Description: "The node flavor used for this cluster",
 				Computed:    true,
 			},
+			"kafka_rest_api": {
+				Type:        schema.TypeBool,
+				Description: "Defines whether the REST API is enabled on a Kafka cluster",
+				Computed:    true,
+			},
 			"maintenance_time": {
 				Type:        schema.TypeString,
 				Description: "Time on which maintenances can start every day",
@@ -131,6 +136,11 @@ func dataSourceCloudProjectDatabase() *schema.Resource {
 						},
 					},
 				},
+			},
+			"opensearch_acls_enabled": {
+				Type:        schema.TypeBool,
+				Description: "Defines whether the ACLs are enabled on an Opensearch cluster",
+				Computed:    true,
 			},
 			"plan": {
 				Type:        schema.TypeString,
