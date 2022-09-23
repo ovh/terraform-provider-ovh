@@ -12,32 +12,84 @@ Creates a OVHcloud Managed Kubernetes Service cluster in a public cloud project.
 
 ## Example Usage
 
+Simple Kubernetes cluster creation:
+
 ```hcl
-resource "ovh_cloud_project_kube" "mykube" {
+resource "ovh_cloud_project_kube" "mycluster" {
   service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
   name         = "my_kube_cluster"
   region       = "GRA7"
+}
+```
 
-  customization {
-    apiserver {
-      admissionplugins{
-        enabled  = ["NodeRestriction"]
-        disabled = ["AlwaysPullImages"]
-      }
-    }
-  }
+Kubernetes cluster creation with API Server AdmissionPlugins configuration:
 
-  private_network_id = xxxxxxxx-xxxx-xxxx-xxxxx-xxxxxxxxxxxx #ovh_cloud_project_network_private.network1.regions_attributes[index(ovh_cloud_project_network_private.network1.regions_attributes.*.region, "GRA7")].openstackid
+```hcl
+resource "ovh_cloud_project_kube" "mycluster" {
+  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+	name          = "my_kube_cluster"
+	region        = "GRA5"
+	customization {
+		apiserver {
+			admissionplugins {
+				enabled = ["NodeRestriction"]
+				disabled = ["AlwaysPullImages"]
+			}
+		}
+	}
+}
+```
 
-  private_network_configuration {
-    default_vrack_gateway              = "10.4.0.1"
-    private_network_routing_as_default = true
-  }
+Kubernetes cluster creation attached to a VRack in `GRA5` region:
 
-  depends_on = [
-    ovh_cloud_project_network_private.network1
-  ]
+```hcl
+resource "ovh_vrack_cloudproject" "attach" {
+	service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" # vrack ID
+	project_id   = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" # Public Cloud service name
+}
 
+resource "ovh_cloud_project_network_private" "network" {
+	service_name = ovh_vrack_cloudproject.attach.service_name
+	vlan_id    = 0
+	name       = "terraform_testacc_private_net"
+	regions    = ["GRA5"]
+	depends_on = [ovh_vrack_cloudproject.attach]
+}
+
+resource "ovh_cloud_project_network_private_subnet" "networksubnet" {
+  service_name = ovh_cloud_project_network_private.network.service_name
+  network_id   = ovh_cloud_project_network_private.network.id
+
+  # whatever region, for test purpose
+  region     = "GRA5"
+  start      = "192.168.168.100"
+  end        = "192.168.168.200"
+  network    = "192.168.168.0/24"
+  dhcp       = true
+  no_gateway = false
+
+  depends_on   = [ovh_cloud_project_network_private.network]
+}
+
+output "openstackID" {
+    value = one(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)
+}
+
+resource "ovh_cloud_project_kube" "mycluster" {
+	service_name  = var.service_name
+	name          = "test-kube-attach"
+	region        = "GRA5"
+
+	private_network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
+   
+	private_network_configuration {
+		default_vrack_gateway              = ""
+		private_network_routing_as_default = false
+	}
+
+	depends_on = [
+		ovh_cloud_project_network_private.network
+	]
 }
 ```
 
