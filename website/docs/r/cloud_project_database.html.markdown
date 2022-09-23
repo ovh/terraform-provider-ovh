@@ -200,14 +200,14 @@ The following arguments are supported:
 
 * `nodes` - (Required, Minimum Items: 1) List of nodes object.
   Multi region cluster are not yet available, all node should be identical.
-  * `network_id` - (Optional, Forces new resource) Private network id in which the node should be deployed.
+  * `network_id` - (Optional, Forces new resource) Private network id in which the node should be deployed. It's the regional openstackId of the private network
   * `region` - (Required, Forces new resource) Public cloud region in which the node should be deployed.
     Ex: "GRA'.
   * `subnet_id` - (Optional, Forces new resource) Private subnet ID in which the node is.
 
 * `opensearch_acls_enabled` -  (Optional) Defines whether the ACLs are enabled on an OpenSearch cluster
 
-* `plan` - (Required) List of nodes object.
+* `plan` - (Required) Plan of the cluster.
   Enum: "essential", "business", "enterprise".
 
 * `version` - (Required) The version of the engine in which the service should be deployed
@@ -236,6 +236,9 @@ The following attributes are exported:
 * `maintenance_time` - Time on which maintenances can start every day.
 * `network_type` - Type of network of the cluster.
 * `nodes` - See Argument Reference above.
+  * `network_id` - See Argument Reference above.
+  * `region` - See Argument Reference above.
+  * `subnet_id` - See Argument Reference above.
 * `opensearch_acls_enabled` - See Argument Reference above.
 * `plan` - See Argument Reference above.
 * `status` - Current status of the cluster.
