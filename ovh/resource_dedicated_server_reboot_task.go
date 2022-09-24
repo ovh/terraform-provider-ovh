@@ -19,8 +19,9 @@ func resourceDedicatedServerRebootTask() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"service_name": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				ForceNew:    true,
+				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
 				Description: "The internal name of your dedicated server.",
 			},
 			"keepers": {

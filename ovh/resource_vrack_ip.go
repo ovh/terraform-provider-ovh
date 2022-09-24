@@ -21,7 +21,7 @@ func resourceVrackIp() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"service_name": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				ForceNew:    true,
 				Description: "The internal name of your vrack",
 			},

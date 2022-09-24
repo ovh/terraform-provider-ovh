@@ -31,7 +31,7 @@ func resourceCloudProjectUser() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"service_name": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				ForceNew:    true,
 				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
 				Description: "Service name of the resource representing the id of the cloud project.",

@@ -18,8 +18,9 @@ func resourceDedicatedServerUpdate() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"service_name": {
 				Type:        schema.TypeString,
+				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
 				Description: "The internal name of your dedicated server.",
-				Required:    true,
+				Optional:    true,
 			},
 
 			"boot_id": {

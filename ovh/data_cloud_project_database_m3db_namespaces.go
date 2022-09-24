@@ -16,7 +16,7 @@ func dataSourceCloudProjectDatabaseM3dbNamespaces() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"service_name": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
 			},
 			"cluster_id": {
