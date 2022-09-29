@@ -446,7 +446,7 @@ func TestAccCloudProjectKubeUpdateVersion_basic(t *testing.T) {
 	updatedName := acctest.RandomWithPrefix(test_prefix)
 
 	version1 := "1.22"
-	version2 := "1.22"
+	version2 := "1.23"
 
 	config := fmt.Sprintf(
 		testAccCloudProjectKubeConfig,
