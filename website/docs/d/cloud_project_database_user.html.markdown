@@ -31,8 +31,8 @@ output "user_name" {
   the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 
 * `engine` - (Required) The engine of the database cluster you want user information. To get a full list of available engine visit :
-[public documentation](https://docs.ovh.com/gb/en/publiccloud/databases).\
-Available engines for this resource (other have specific resource):
+[public documentation](https://docs.ovh.com/gb/en/publiccloud/databases).
+Available engines:
   * `cassandra`
   * `kafka`
   * `kafkaConnect`
@@ -48,6 +48,7 @@ The following attributes are exported:
 
 * `cluster_id` - See Argument Reference above.
 * `created_at` - Date of the creation of the user.
+* `engine` - See Argument Reference above.
 * `id` - ID of the user.
 * `service_name` - See Argument Reference above.
 * `status` - Current status of the user.

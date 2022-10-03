@@ -55,6 +55,11 @@ func resourceCloudProjectDatabaseMongodbUser() *schema.Resource {
 					return new+"@admin" == old
 				},
 			},
+			"password_reset": {
+				Type:        schema.TypeString,
+				Description: "Arbitrary string to change to trigger a password update",
+				Optional:    true,
+			},
 			"roles": {
 				Type:        schema.TypeSet,
 				Description: "Roles the user belongs to (without authentication database)",
@@ -105,7 +110,6 @@ func resourceCloudProjectDatabaseMongodbUserImportState(d *schema.ResourceData, 
 }
 
 func resourceCloudProjectDatabaseMongodbUserCreate(d *schema.ResourceData, meta interface{}) error {
-	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
 
@@ -114,28 +118,19 @@ func resourceCloudProjectDatabaseMongodbUserCreate(d *schema.ResourceData, meta 
 		url.PathEscape(clusterId),
 	)
 	params := (&CloudProjectDatabaseMongodbUserCreateOpts{}).FromResource(d)
-	res := &CloudProjectDatabaseMongodbUserResponse{}
+	res := &CloudProjectDatabaseUserResponse{}
 
 	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		log.Printf("[DEBUG] Will create user: %+v for cluster %s from project %s", params, clusterId, serviceName)
-		err := config.OVHClient.Post(endpoint, params, res)
+		err := postCloudProjectDatabaseUser(d, meta, "mongodb", endpoint, params, res, schema.TimeoutCreate)
 		if err != nil {
 			if errOvh, ok := err.(*ovh.APIError); ok && (errOvh.Code == 409) {
 				return resource.RetryableError(err)
 			}
-			return resource.NonRetryableError(fmt.Errorf("calling Post %s with params %s:\n\t %q", endpoint, params, err))
+			return resource.NonRetryableError(err)
 		}
-
-		log.Printf("[DEBUG] Waiting for user %s to be READY", res.Id)
-		err = waitForCloudProjectDatabaseUserReady(config.OVHClient, serviceName, "mongodb", clusterId, res.Id, d.Timeout(schema.TimeoutCreate))
-		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("timeout while waiting user %s to be READY: %w", res.Id, err))
-		}
-		log.Printf("[DEBUG] user %s is READY", res.Id)
 
 		d.SetId(res.Id)
-		d.Set("password", res.Password)
-
 		err = resourceCloudProjectDatabaseMongodbUserRead(d, meta)
 		if err != nil {
 			return resource.NonRetryableError(err)
@@ -178,6 +173,7 @@ func resourceCloudProjectDatabaseMongodbUserUpdate(d *schema.ResourceData, meta 
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
+	passwordReset := d.HasChange("password_reset")
 	id := d.Id()
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/database/mongodb/%s/user/%s",
@@ -203,6 +199,19 @@ func resourceCloudProjectDatabaseMongodbUserUpdate(d *schema.ResourceData, meta 
 			return resource.NonRetryableError(fmt.Errorf("timeout while waiting user %s to be READY: %w", id, err))
 		}
 		log.Printf("[DEBUG] user %s is READY", id)
+
+		if passwordReset {
+			pwdResetEndpoint := endpoint + "/credentials/reset"
+			res := &CloudProjectDatabaseUserResponse{}
+			log.Printf("[DEBUG] Will update user password for cluster %s from project %s", clusterId, serviceName)
+			err := postCloudProjectDatabaseUser(d, meta, "mongodb", pwdResetEndpoint, nil, res, schema.TimeoutUpdate)
+			if err != nil {
+				if errOvh, ok := err.(*ovh.APIError); ok && (errOvh.Code == 409) {
+					return resource.RetryableError(err)
+				}
+				return resource.NonRetryableError(err)
+			}
+		}
 
 		err = resourceCloudProjectDatabaseMongodbUserRead(d, meta)
 		if err != nil {

@@ -29,8 +29,13 @@ output "user_ids" {
 * `service_name` - (Required) The id of the public cloud project. If omitted,
   the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 
-* `engine` - (Required) The engine of the database cluster you want to list users. To get a full list of available engine visit.
+* `engine` - (Required) The engine of the database cluster you want to list users. To get a full list of available engine visit:
 [public documentation](https://docs.ovh.com/gb/en/publiccloud/databases).
+Available engines:
+  * `cassandra`
+  * `kafka`
+  * `kafkaConnect`
+  * `mysql`
 
 * `cluster_id` - (Required) Cluster ID
 
@@ -40,5 +45,6 @@ output "user_ids" {
 the following attributes are exported:
 
 * `cluster_id` - See Argument Reference above.
+* `engine` - See Argument Reference above.
 * `service_name` - See Argument Reference above.
 * `user_ids` - The list of users ids of the database cluster associated with the project.

@@ -3,15 +3,17 @@ layout: "ovh"
 page_title: "OVH: cloud_project_database_redis_user"
 sidebar_current: "docs-ovh-resource-cloud-project-database-redis-user"
 description: |-
-  Creates an user for a redis cluster associated with a public cloud project.
+  Creates an user for a Redis cluster associated with a public cloud project.
 ---
 
 # ovh_cloud_project_database_redis_user
 
-Creates an user for a redis cluster associated with a public cloud project.
+Creates an user for a Redis cluster associated with a public cloud project.
 
 ## Example Usage
 
+Create a user johndoe in a Redis database.
+Output the user generated password with command `terraform output user_password`.
 ```hcl
 data "ovh_cloud_project_database" "redis" {
   service_name  = "XXXX"
@@ -24,9 +26,40 @@ resource "ovh_cloud_project_database_redis_user" "user" {
   cluster_id    = data.ovh_cloud_project_database.redis.id
   categories    = ["+@set", "+@sortedset"]
   channels      = ["*"]
-  commands	    = ["+get", "-set"]
-  keys		      = ["data", "properties"]
+  commands      = ["+get", "-set"]
+  keys          = ["data", "properties"]
   name          = "johndoe"
+}
+
+output "user_password" {
+    value = ovh_cloud_project_database_redis_user.user.password
+    sensitive = true
+}
+```
+
+-> __NOTE__ To reset password of the user previously created, update the `password_reset` attribute.
+Use the `terraform refresh` command after executing `terraform apply` to update the output with the new password.
+```hcl
+data "ovh_cloud_project_database" "redis" {
+  service_name  = "XXXX"
+  engine        = "redis"
+  id            = "ZZZZ"
+}
+
+resource "ovh_cloud_project_database_redis_user" "user" {
+  service_name    = data.ovh_cloud_project_database.redis.service_name
+  cluster_id      = data.ovh_cloud_project_database.redis.id
+  categories      = ["+@set", "+@sortedset"]
+  channels        = ["*"]
+  commands        = ["+get", "-set"]
+  keys            = ["data", "properties"]
+  name            = "johndoe"
+  password_reset  = "reset1"
+}
+
+output "user_password" {
+    value = ovh_cloud_project_database_redis_user.user.password
+    sensitive = true
 }
 ```
 
@@ -49,6 +82,8 @@ The following arguments are supported:
 
 * `name` - (Required, Forces new resource) Name of the user.
 
+* `password_reset` - (Optional) Arbitrary string to change to trigger a password update. Use the `terraform refresh` command after executing `terraform apply` to update the output with the new password.
+
 ## Attributes Reference
 
 The following attributes are exported:
@@ -62,6 +97,7 @@ The following attributes are exported:
 * `keys` - See Argument Reference above.
 * `name` - See Argument Reference above.
 * `password` - (Sensitive) Password of the user.
+* `password_reset` - Arbitrary string to change to trigger a password update.
 * `service_name` - See Argument Reference above.
 * `status` - Current status of the user.
 
@@ -84,7 +120,7 @@ resource "ovh_cloud_project_database_redis_user" "user" {
 
 ## Import
 
-OVHcloud Managed redis clusters users can be imported using the `service_name`, `cluster_id` and `id` of the user, separated by "/" E.g.,
+OVHcloud Managed Redis clusters users can be imported using the `service_name`, `cluster_id` and `id` of the user, separated by "/" E.g.,
 
 ```bash
 $ terraform import ovh_cloud_project_database_redis_user.my_user service_name/cluster_id/id

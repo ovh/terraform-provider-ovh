@@ -31,6 +31,9 @@ output "database_ids" {
 
 * `engine` - (Required) The engine of the database cluster you want to list databases. To get a full list of available engine visit:
 [public documentation](https://docs.ovh.com/gb/en/publiccloud/databases).
+Available engines:
+  * `mysql`
+  * `postgresql`
 
 * `cluster_id` - (Required) Cluster ID
 
@@ -40,5 +43,6 @@ output "database_ids" {
 the following attributes are exported:
 
 * `cluster_id` - See Argument Reference above.
-* `service_name` - See Argument Reference above.
 * `database_ids` - The list of databases ids of the database cluster associated with the project.
+* `engine` - See Argument Reference above.
+* `service_name` - See Argument Reference above.
