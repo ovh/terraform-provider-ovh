@@ -312,6 +312,8 @@ func resourceCloudProjectKubeUpdate(d *schema.ResourceData, meta interface{}) er
 		oldValue := oldValueI.(string)
 		newValue := newValueI.(string)
 
+		log.Printf("[DEBUG] cluster version change from %s to %s", oldValue, newValue)
+
 		oldVersion, err := version.NewVersion(oldValueI.(string))
 		if err != nil {
 			return fmt.Errorf("version %s does not match a semver", oldValue)
@@ -322,12 +324,13 @@ func resourceCloudProjectKubeUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 
 		oldVersionSegments := oldVersion.Segments()
-		newVersionSegments := oldVersion.Segments()
+		newVersionSegments := newVersion.Segments()
 
 		if oldVersionSegments[0] != 1 || newVersionSegments[0] != 1 {
 			return fmt.Errorf("the only supported major version is 1")
 		}
-		if len(oldVersionSegments) != 2 || len(newVersionSegments) != 2 {
+		if len(oldVersionSegments) < 2 || len(newVersionSegments) < 2 {
+			log.Printf("[DEBUG] old version segments: %#v new version segments: %#v", oldVersionSegments, newVersionSegments)
 			return fmt.Errorf("the version should only specify the major and minor versions (e.g. \\\"1.20\\\")")
 		}
 
