@@ -12,6 +12,8 @@ Creates an user for a M3DB cluster associated with a public cloud project.
 
 ## Example Usage
 
+Create a user johndoe in a M3DB database.
+Output the user generated password with command `terraform output user_password`.
 ```hcl
 data "ovh_cloud_project_database" "m3db" {
   service_name  = "XXX"
@@ -24,6 +26,35 @@ resource "ovh_cloud_project_database_m3db_user" "user" {
   cluster_id    = data.ovh_cloud_project_database.m3db.id
   group         = "mygroup"
   name          = "johndoe"
+}
+
+output "user_password" {
+    value = ovh_cloud_project_database_m3db_user.user.password
+    sensitive = true
+}
+```
+
+-> __NOTE__ To reset password of the user previously created, update the `password_reset` attribute.
+Use the `terraform refresh` command after executing `terraform apply` to update the output with the new password.
+```hcl
+data "ovh_cloud_project_database" "m3db" {
+  service_name  = "XXX"
+  engine        = "m3db"
+  id            = "ZZZ"
+}
+
+# change password_reset each time you want to reset the password to trigger an update
+resource "ovh_cloud_project_database_m3db_user" "user" {
+  service_name    = data.ovh_cloud_project_database.m3db.service_name
+  cluster_id      = data.ovh_cloud_project_database.m3db.id
+  group           = "mygroup"
+  name            = "johndoe"
+  password_reset  = "reset1"
+}
+
+output "user_password" {
+    value = ovh_cloud_project_database_m3db_user.user.password
+    sensitive = true
 }
 ```
 
@@ -40,6 +71,8 @@ The following arguments are supported:
 
 * `name` - (Required, Forces new resource) Name of the user.
 
+* `password_reset` - (Optional) Arbitrary string to change to trigger a password update. Use the `terraform refresh` command after executing `terraform apply` to update the output with the new password.
+
 ## Attributes Reference
 
 The following attributes are exported:
@@ -50,6 +83,7 @@ The following attributes are exported:
 * `group` - See Argument Reference above.
 * `name` - See Argument Reference above.
 * `password` - (Sensitive) Password of the user.
+* `password_reset` - See Argument Reference above.
 * `service_name` - See Argument Reference above.
 * `status` - Current status of the user.
 

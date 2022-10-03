@@ -31,7 +31,7 @@ output "cluster_id" {
 * `service_name` - (Required) The id of the public cloud project. If omitted,
   the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 
-* `engine` - (Required) The database engine you want to get information. To get a full list of available engine visit.
+* `engine` - (Required) The database engine you want to get information. To get a full list of available engine visit:
 [public documentation](https://docs.ovh.com/gb/en/publiccloud/databases).
 
 * `id` - (Required) Cluster ID

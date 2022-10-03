@@ -3,15 +3,17 @@ layout: "ovh"
 page_title: "OVH: cloud_project_database_opensearch_user"
 sidebar_current: "docs-ovh-resource-cloud-project-database-opensearch-user"
 description: |-
-  Creates an user for a opensearch cluster associated with a public cloud project.
+  Creates an user for a OpenSearch cluster associated with a public cloud project.
 ---
 
 # ovh_cloud_project_database_opensearch_user
 
-Creates an user for a opensearch cluster associated with a public cloud project.
+Creates an user for a OpenSearch cluster associated with a public cloud project.
 
 ## Example Usage
 
+Create a user johndoe in a OpenSearch database.
+Output the user generated password with command `terraform output user_password`.
 ```hcl
 data "ovh_cloud_project_database" "opensearch" {
   service_name  = "XXX"
@@ -32,6 +34,41 @@ resource "ovh_cloud_project_database_opensearch_user" "user" {
 	}
   name          = "johndoe"
 }
+
+output "user_password" {
+    value = ovh_cloud_project_database_opensearch_user.user.password
+    sensitive = true
+}
+```
+
+-> __NOTE__ To reset password of the user previously created, update the `password_reset` attribute.
+Use the `terraform refresh` command after executing `terraform apply` to update the output with the new password.
+```hcl
+data "ovh_cloud_project_database" "opensearch" {
+  service_name  = "XXX"
+  engine        = "opensearch"
+  id            = "ZZZ"
+}
+
+resource "ovh_cloud_project_database_opensearch_user" "user" {
+  service_name  = data.ovh_cloud_project_database.opensearch.service_name
+  cluster_id    = data.ovh_cloud_project_database.opensearch.id
+  acls {
+		pattern    = "logs_*"
+		permission = "read"
+	}
+	acls {
+		pattern    = "data_*"
+		permission = "deny"
+	}
+  name            = "johndoe"
+  password_reset  = "reset1"
+}
+
+output "user_password" {
+    value = ovh_cloud_project_database_opensearch_user.user.password
+    sensitive = true
+}
 ```
 
 ## Argument Reference
@@ -45,7 +82,8 @@ The following arguments are supported:
 
 * `acls` - (Optional) Acls of the user.
   * `pattern` - (Required) Pattern of the ACL.
-  * `permission` - (Required) Permission of the ACL:
+  * `permission` - (Required) Permission of the ACL
+  Available permission:
     * `admin`
     * `read`
     * `write`
@@ -53,6 +91,8 @@ The following arguments are supported:
     * `deny`
 
 * `name` - (Required, Forces new resource) Username affected by this acl.
+
+* `password_reset` - (Optional) Arbitrary string to change to trigger a password update. Use the `terraform refresh` command after executing `terraform apply` to update the output with the new password.
 
 ## Attributes Reference
 
@@ -66,6 +106,7 @@ The following attributes are exported:
 * `id` - ID of the user.
 * `name` - See Argument Reference above.
 * `password` - (Sensitive) Password of the user.
+* `password_reset` - See Argument Reference above.
 * `service_name` - See Argument Reference above.
 * `status` - Current status of the user.
 
@@ -88,7 +129,7 @@ resource "ovh_cloud_project_database_opensearch_user" "user" {
 
 ## Import
 
-OVHcloud Managed opensearch clusters users can be imported using the `service_name`, `cluster_id` and `id` of the user, separated by "/" E.g.,
+OVHcloud Managed OpenSearch clusters users can be imported using the `service_name`, `cluster_id` and `id` of the user, separated by "/" E.g.,
 
 ```bash
 $ terraform import ovh_cloud_project_database_opensearch_user.my_user service_name/cluster_id/id

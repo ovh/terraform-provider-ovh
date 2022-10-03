@@ -31,8 +31,8 @@ output "database_name" {
   the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 
 * `engine` - (Required) The engine of the database cluster you want database information. To get a full list of available engine visit:
-[public documentation](https://docs.ovh.com/gb/en/publiccloud/databases).\
-Available engines for this resource (other have specific resource):
+[public documentation](https://docs.ovh.com/gb/en/publiccloud/databases).
+Available engines:
   * `mysql`
   * `postgresql`
 
@@ -47,6 +47,7 @@ The following attributes are exported:
 * `cluster_id` - See Argument Reference above.
 * `created_at` - Date of the creation of the database.
 * `default` - Defines if the database has been created by default.
+* `engine` - See Argument Reference above.
 * `id` - ID of the database.
-* `service_name` - Current status of the database.
 * `name` - Name of the database.
+* `service_name` - Current status of the database.

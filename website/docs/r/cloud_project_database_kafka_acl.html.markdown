@@ -37,7 +37,8 @@ The following arguments are supported:
 
 * `cluster_id` - (Required, Forces new resource) Cluster ID.
 
-* `permission` - (Required, Forces new resource) Permission to give to this username on this topic:
+* `permission` - (Required, Forces new resource) Permission to give to this username on this topic.
+Available permissions:
   * `admin`
   * `read`
   * `write`
