@@ -256,6 +256,16 @@ func resourceDedicatedServerInstallTaskDelete(d *schema.ResourceData, meta inter
 
 	if bootId != nil {
 		serviceName := d.Get("service_name").(string)
+
+		// before reboot, update bootId accordingly
+		bootIdEndpoint := fmt.Sprintf("/dedicated/server/%s", url.PathEscape(serviceName))
+		bootIdReqBody := make(map[string]int)
+		bootIdReqBody["bootId"] = *bootId
+		if err := config.OVHClient.Put(bootIdEndpoint, bootIdReqBody, nil); err != nil {
+			return fmt.Errorf("Error calling PUT %s:\n\t %q", bootIdEndpoint, err)
+		}
+
+		// reboot
 		endpoint := fmt.Sprintf(
 			"/dedicated/server/%s/reboot",
 			url.PathEscape(serviceName),
