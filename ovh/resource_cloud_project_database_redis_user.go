@@ -65,6 +65,11 @@ func resourceCloudProjectDatabaseRedisUser() *schema.Resource {
 				ForceNew:    true,
 				Required:    true,
 			},
+			"password_reset": {
+				Type:        schema.TypeString,
+				Description: "Arbitrary string to change to trigger a password update",
+				Optional:    true,
+			},
 
 			//Optional/Computed
 			"channels": {
@@ -117,7 +122,6 @@ func resourceCloudProjectDatabaseRedisUserImportState(d *schema.ResourceData, me
 }
 
 func resourceCloudProjectDatabaseRedisUserCreate(d *schema.ResourceData, meta interface{}) error {
-	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
 
@@ -126,24 +130,15 @@ func resourceCloudProjectDatabaseRedisUserCreate(d *schema.ResourceData, meta in
 		url.PathEscape(clusterId),
 	)
 	params := (&CloudProjectDatabaseRedisUserCreateOpts{}).FromResource(d)
-	res := &CloudProjectDatabaseRedisUserResponse{}
+	res := &CloudProjectDatabaseUserResponse{}
 
 	log.Printf("[DEBUG] Will create user: %+v for cluster %s from project %s", params, clusterId, serviceName)
-	err := config.OVHClient.Post(endpoint, params, res)
+	err := postCloudProjectDatabaseUser(d, meta, "redis", endpoint, params, res, schema.TimeoutCreate)
 	if err != nil {
-		return fmt.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
+		return err
 	}
-
-	log.Printf("[DEBUG] Waiting for user %s to be READY", res.Id)
-	err = waitForCloudProjectDatabaseUserReady(config.OVHClient, serviceName, "redis", clusterId, res.Id, d.Timeout(schema.TimeoutCreate))
-	if err != nil {
-		return fmt.Errorf("timeout while waiting user %s to be READY: %w", res.Id, err)
-	}
-	log.Printf("[DEBUG] user %s is READY", res.Id)
 
 	d.SetId(res.Id)
-	d.Set("password", res.Password)
-
 	return resourceCloudProjectDatabaseRedisUserRead(d, meta)
 }
 
@@ -181,6 +176,7 @@ func resourceCloudProjectDatabaseRedisUserUpdate(d *schema.ResourceData, meta in
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
+	passwordReset := d.HasChange("password_reset")
 	id := d.Id()
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/database/redis/%s/user/%s",
@@ -202,6 +198,17 @@ func resourceCloudProjectDatabaseRedisUserUpdate(d *schema.ResourceData, meta in
 		return fmt.Errorf("timeout while waiting user %s to be READY: %w", id, err)
 	}
 	log.Printf("[DEBUG] user %s is READY", id)
+
+	if passwordReset {
+		pwdResetEndpoint := endpoint + "/credentials/reset"
+		res := &CloudProjectDatabaseUserResponse{}
+
+		log.Printf("[DEBUG] Will update user password for cluster %s from project %s", clusterId, serviceName)
+		err := postCloudProjectDatabaseUser(d, meta, "redis", pwdResetEndpoint, nil, res, schema.TimeoutUpdate)
+		if err != nil {
+			return err
+		}
+	}
 
 	return resourceCloudProjectDatabaseRedisUserRead(d, meta)
 }

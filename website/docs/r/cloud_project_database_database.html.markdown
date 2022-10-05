@@ -40,7 +40,7 @@ The following arguments are supported:
   the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 
 * `engine` - (Required, Forces new resource) The engine of the database cluster you want to add. You can find the complete list of available engine in the [public documentation](https://docs.ovh.com/gb/en/publiccloud/databases).
-Available engines for this resource (other have specific resource):
+Available engines:
   * `mysql`
   * `postgresql`
 
@@ -54,6 +54,7 @@ The following attributes are exported:
 
 * `cluster_id` - See Argument Reference above.
 * `default` - Defines if the database has been created by default.
+* `engine` - See Argument Reference above.
 * `id` - ID of the database.
 * `service_name` - See Argument Reference above.
 * `name` - See Argument Reference above.

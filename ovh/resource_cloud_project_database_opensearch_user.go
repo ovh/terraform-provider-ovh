@@ -66,6 +66,11 @@ func resourceCloudProjectDatabaseOpensearchUser() *schema.Resource {
 				ForceNew:    true,
 				Required:    true,
 			},
+			"password_reset": {
+				Type:        schema.TypeString,
+				Description: "Arbitrary string to change to trigger a password update",
+				Optional:    true,
+			},
 
 			//Computed
 			"created_at": {
@@ -108,7 +113,6 @@ func resourceCloudProjectDatabaseOpensearchUserImportState(d *schema.ResourceDat
 }
 
 func resourceCloudProjectDatabaseOpensearchUserCreate(d *schema.ResourceData, meta interface{}) error {
-	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
 
@@ -117,24 +121,15 @@ func resourceCloudProjectDatabaseOpensearchUserCreate(d *schema.ResourceData, me
 		url.PathEscape(clusterId),
 	)
 	params := (&CloudProjectDatabaseOpensearchUserCreateOpts{}).FromResource(d)
-	res := &CloudProjectDatabaseOpensearchUserResponse{}
+	res := &CloudProjectDatabaseUserResponse{}
 
 	log.Printf("[DEBUG] Will create user: %+v for cluster %s from project %s", params, clusterId, serviceName)
-	err := config.OVHClient.Post(endpoint, params, res)
+	err := postCloudProjectDatabaseUser(d, meta, "opensearch", endpoint, params, res, schema.TimeoutCreate)
 	if err != nil {
-		return fmt.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
+		return err
 	}
-
-	log.Printf("[DEBUG] Waiting for user %s to be READY", res.Id)
-	err = waitForCloudProjectDatabaseUserReady(config.OVHClient, serviceName, "opensearch", clusterId, res.Id, d.Timeout(schema.TimeoutCreate))
-	if err != nil {
-		return fmt.Errorf("timeout while waiting user %s to be READY: %w", res.Id, err)
-	}
-	log.Printf("[DEBUG] user %s is READY", res.Id)
 
 	d.SetId(res.Id)
-	d.Set("password", res.Password)
-
 	return resourceCloudProjectDatabaseOpensearchUserRead(d, meta)
 }
 
@@ -172,6 +167,7 @@ func resourceCloudProjectDatabaseOpensearchUserUpdate(d *schema.ResourceData, me
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
+	passwordReset := d.HasChange("password_reset")
 	id := d.Id()
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/database/opensearch/%s/user/%s",
@@ -193,6 +189,16 @@ func resourceCloudProjectDatabaseOpensearchUserUpdate(d *schema.ResourceData, me
 		return fmt.Errorf("timeout while waiting user %s to be READY: %w", id, err)
 	}
 	log.Printf("[DEBUG] user %s is READY", id)
+
+	if passwordReset {
+		pwdResetEndpoint := endpoint + "/credentials/reset"
+		res := &CloudProjectDatabaseUserResponse{}
+		log.Printf("[DEBUG] Will update user password for cluster %s from project %s", clusterId, serviceName)
+		err := postCloudProjectDatabaseUser(d, meta, "opensearch", pwdResetEndpoint, nil, res, schema.TimeoutUpdate)
+		if err != nil {
+			return err
+		}
+	}
 
 	return resourceCloudProjectDatabaseOpensearchUserRead(d, meta)
 }
