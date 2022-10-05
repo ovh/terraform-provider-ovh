@@ -45,8 +45,11 @@ resource "ovh_cloud_project_database_ip_restriction" "iprestriction" {
 
 The following attributes are exported:
 
+* `cluster_id` - See Argument Reference above.
 * `description` - See Argument Reference above.
+* `engine` - See Argument Reference above.
 * `ip` - See Argument Reference above.
+* `service_name` - See Argument Reference above.
 * `status` - Current status of the IP restriction.
 
 ## Timeouts

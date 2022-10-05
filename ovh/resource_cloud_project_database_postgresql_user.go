@@ -53,6 +53,11 @@ func resourceCloudProjectDatabasePostgresqlUser() *schema.Resource {
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
+			"password_reset": {
+				Type:        schema.TypeString,
+				Description: "Arbitrary string to change to trigger a password update",
+				Optional:    true,
+			},
 
 			//Computed
 			"created_at": {
@@ -95,7 +100,6 @@ func resourceCloudProjectDatabasePostgresqlUserImportState(d *schema.ResourceDat
 }
 
 func resourceCloudProjectDatabasePostgresqlUserCreate(d *schema.ResourceData, meta interface{}) error {
-	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
 
@@ -104,24 +108,15 @@ func resourceCloudProjectDatabasePostgresqlUserCreate(d *schema.ResourceData, me
 		url.PathEscape(clusterId),
 	)
 	params := (&CloudProjectDatabasePostgresqlUserCreateOpts{}).FromResource(d)
-	res := &CloudProjectDatabasePostgresqlUserResponse{}
+	res := &CloudProjectDatabaseUserResponse{}
 
 	log.Printf("[DEBUG] Will create user: %+v for cluster %s from project %s", params, clusterId, serviceName)
-	err := config.OVHClient.Post(endpoint, params, res)
+	err := postCloudProjectDatabaseUser(d, meta, "postgresql", endpoint, params, res, schema.TimeoutCreate)
 	if err != nil {
-		return fmt.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
+		return err
 	}
-
-	log.Printf("[DEBUG] Waiting for user %s to be READY", res.Id)
-	err = waitForCloudProjectDatabaseUserReady(config.OVHClient, serviceName, "postgresql", clusterId, res.Id, d.Timeout(schema.TimeoutCreate))
-	if err != nil {
-		return fmt.Errorf("timeout while waiting user %s to be READY: %w", res.Id, err)
-	}
-	log.Printf("[DEBUG] user %s is READY", res.Id)
 
 	d.SetId(res.Id)
-	d.Set("password", res.Password)
-
 	return resourceCloudProjectDatabasePostgresqlUserRead(d, meta)
 }
 
@@ -159,6 +154,7 @@ func resourceCloudProjectDatabasePostgresqlUserUpdate(d *schema.ResourceData, me
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
+	passwordReset := d.HasChange("password_reset")
 	id := d.Id()
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/database/postgresql/%s/user/%s",
@@ -180,6 +176,16 @@ func resourceCloudProjectDatabasePostgresqlUserUpdate(d *schema.ResourceData, me
 		return fmt.Errorf("timeout while waiting user %s to be READY: %w", id, err)
 	}
 	log.Printf("[DEBUG] user %s is READY", id)
+
+	if passwordReset {
+		pwdResetEndpoint := endpoint + "/credentials/reset"
+		res := &CloudProjectDatabaseUserResponse{}
+		log.Printf("[DEBUG] Will update user password for cluster %s from project %s", clusterId, serviceName)
+		err := postCloudProjectDatabaseUser(d, meta, "postgresql", pwdResetEndpoint, nil, res, schema.TimeoutUpdate)
+		if err != nil {
+			return err
+		}
+	}
 
 	return resourceCloudProjectDatabasePostgresqlUserRead(d, meta)
 }

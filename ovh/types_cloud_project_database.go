@@ -3,6 +3,7 @@ package ovh
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/url"
 	"strings"
 	"time"
@@ -521,6 +522,29 @@ func (opts *CloudProjectDatabaseUserCreateOpts) FromResource(d *schema.ResourceD
 	return opts
 }
 
+func postCloudProjectDatabaseUser(d *schema.ResourceData, meta interface{}, engine string, endpoint string, params interface{}, res *CloudProjectDatabaseUserResponse, timeout string) error {
+	config := meta.(*Config)
+	serviceName := d.Get("service_name").(string)
+	clusterId := d.Get("cluster_id").(string)
+	err := config.OVHClient.Post(endpoint, params, res)
+	if err != nil {
+		if errOvh, ok := err.(*ovh.APIError); engine == "mongodb" && ok && (errOvh.Code == 409) {
+			return err
+		}
+		return fmt.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
+	}
+
+	log.Printf("[DEBUG] Waiting for user %s to be READY", res.Id)
+	err = waitForCloudProjectDatabaseUserReady(config.OVHClient, serviceName, engine, clusterId, res.Id, d.Timeout(timeout))
+	if err != nil {
+		return fmt.Errorf("timeout while waiting user %s to be READY: %w", res.Id, err)
+	}
+	log.Printf("[DEBUG] user %s is READY", res.Id)
+
+	d.Set("password", res.Password)
+	return nil
+}
+
 func waitForCloudProjectDatabaseUserReady(client *ovh.Client, serviceName, engine string, databaseId string, userId string, timeOut time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "CREATING", "UPDATING"},
@@ -677,6 +701,141 @@ func waitForCloudProjectDatabaseDatabaseDeleted(client *ovh.Client, serviceName,
 	return err
 }
 
+// Integration
+
+type CloudProjectDatabaseIntegrationResponse struct {
+	DestinationServiceId string            `json:"destinationServiceId"`
+	Id                   string            `json:"id"`
+	Parameters           map[string]string `json:"parameters"`
+	SourceServiceId      string            `json:"sourceServiceId"`
+	Status               string            `json:"status"`
+	Type                 string            `json:"type"`
+}
+
+func (p *CloudProjectDatabaseIntegrationResponse) String() string {
+	return fmt.Sprintf(
+		"Id: %s, Type: %s ,SourceServiceId: %s, DestinationServiceId: %s",
+		p.Id,
+		p.Type,
+		p.SourceServiceId,
+		p.DestinationServiceId,
+	)
+}
+
+func (v CloudProjectDatabaseIntegrationResponse) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+
+	obj["destination_service_id"] = v.DestinationServiceId
+	obj["id"] = v.Id
+	obj["parameters"] = v.Parameters
+	obj["source_service_id"] = v.SourceServiceId
+	obj["status"] = v.Status
+	obj["type"] = v.Type
+
+	return obj
+}
+
+type CloudProjectDatabaseIntegrationCreateOpts struct {
+	DestinationServiceId string            `json:"destinationServiceId"`
+	Parameters           map[string]string `json:"parameters,omitempty"`
+	SourceServiceId      string            `json:"sourceServiceId"`
+	Type                 string            `json:"type,omitempty"`
+}
+
+func (opts *CloudProjectDatabaseIntegrationCreateOpts) FromResource(d *schema.ResourceData) *CloudProjectDatabaseIntegrationCreateOpts {
+	opts.DestinationServiceId = d.Get("destination_service_id").(string)
+	opts.Parameters = make(map[string]string)
+	parameters := d.Get("parameters").(map[string]interface{})
+	for k, v := range parameters {
+		opts.Parameters[k] = v.(string)
+	}
+	opts.SourceServiceId = d.Get("source_service_id").(string)
+	opts.Type = d.Get("type").(string)
+	return opts
+}
+
+func waitForCloudProjectDatabaseIntegrationReady(client *ovh.Client, serviceName, engine string, serviceId string, integrationId string, timeOut time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"PENDING"},
+		Target:  []string{"READY"},
+		Refresh: func() (interface{}, string, error) {
+			res := &CloudProjectDatabaseDatabaseResponse{}
+			endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/integration/%s",
+				url.PathEscape(serviceName),
+				url.PathEscape(engine),
+				url.PathEscape(serviceId),
+				url.PathEscape(integrationId),
+			)
+			err := client.Get(endpoint, res)
+			if err != nil {
+				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
+					return res, "PENDING", nil
+				}
+				return res, "", err
+			}
+			return res, "READY", nil
+		},
+		Timeout:    timeOut,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+	return err
+}
+
+func waitForCloudProjectDatabaseIntegrationDeleted(client *ovh.Client, serviceName, engine string, serviceId string, integrationId string, timeOut time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"DELETING"},
+		Target:  []string{"DELETED"},
+		Refresh: func() (interface{}, string, error) {
+			res := &CloudProjectDatabaseDatabaseResponse{}
+			endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/integration/%s",
+				url.PathEscape(serviceName),
+				url.PathEscape(engine),
+				url.PathEscape(serviceId),
+				url.PathEscape(integrationId),
+			)
+			err := client.Get(endpoint, res)
+			if err != nil {
+				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
+					return res, "DELETED", nil
+				}
+				return res, "", err
+			}
+
+			return res, "DELETING", nil
+		},
+		Timeout:    timeOut,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+	return err
+}
+
+// Certificates
+
+type CloudProjectDatabaseCertificatesResponse struct {
+	Ca string `json:"ca"`
+}
+
+func (p *CloudProjectDatabaseCertificatesResponse) String() string {
+	return fmt.Sprintf(
+		"Ca: %s",
+		p.Ca,
+	)
+}
+
+func (v CloudProjectDatabaseCertificatesResponse) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+
+	obj["ca"] = v.Ca
+
+	return obj
+}
+
 // PostgresqlUser
 
 type CloudProjectDatabasePostgresqlUserResponse struct {
@@ -819,7 +978,7 @@ func (opts *CloudProjectDatabaseMongodbUserUpdateOpts) FromResource(d *schema.Re
 	return opts
 }
 
-// RedisUser
+// Redis User
 
 type CloudProjectDatabaseRedisUserResponse struct {
 	Categories []string `json:"categories"`
@@ -1299,27 +1458,6 @@ func waitForCloudProjectDatabaseOpensearchPatternDeleted(client *ovh.Client, ser
 }
 
 // Kafka
-
-// // Certificates
-
-type CloudProjectDatabaseKafkaCertificatesResponse struct {
-	Ca string `json:"ca"`
-}
-
-func (p *CloudProjectDatabaseKafkaCertificatesResponse) String() string {
-	return fmt.Sprintf(
-		"Ca: %s",
-		p.Ca,
-	)
-}
-
-func (v CloudProjectDatabaseKafkaCertificatesResponse) ToMap() map[string]interface{} {
-	obj := make(map[string]interface{})
-
-	obj["ca"] = v.Ca
-
-	return obj
-}
 
 // // Topic
 
