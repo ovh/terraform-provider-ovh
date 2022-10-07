@@ -13,9 +13,13 @@ Attach a Dedicated Server Network Interface to a VRack.
 ## Example Usage
 
 ```hcl
+data "ovh_dedicated_server" "server" {
+  service_name = "ns00000.ip-1-2-3.eu"
+}
+
 resource "ovh_vrack_dedicated_server_interface" "vdsi" {
   service_name = "12345"
-  interface_id = "67890"
+  interface_id = data.ovh_dedicated_server.server.enabled_vrack_vnis[0]
 }
 ```
 
