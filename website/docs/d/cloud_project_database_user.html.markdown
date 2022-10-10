@@ -15,7 +15,7 @@ Use this data source to get information about a user of a database cluster assoc
 ```hcl
 data "ovh_cloud_project_database_user" "user" {
   service_name  = "XXX"
-  engine	      = "YYY"
+  engine        = "YYY"
   cluster_id    = "ZZZ"
   name          = "UUU"
 }

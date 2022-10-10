@@ -14,9 +14,9 @@ Use this data source to get information about certificates of a cluster associat
 
 ```hcl
 data "ovh_cloud_project_database_certificates" "certificates" {
-  service_name = "XXX"
-  engine       = "YYY"
-  cluster_id   = "ZZZ"
+  service_name  = "XXX"
+  engine        = "YYY"
+  cluster_id    = "ZZZ"
 }
 
 output "certificates_ca" {

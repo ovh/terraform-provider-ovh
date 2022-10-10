@@ -29,8 +29,8 @@ resource "ovh_cloud_project_database_postgresql_user" "user" {
 }
 
 output "user_password" {
-    value = ovh_cloud_project_database_postgresql_user.user.password
-    sensitive = true
+  value     = ovh_cloud_project_database_postgresql_user.user.password
+  sensitive = true
 }
 ```
 
@@ -52,8 +52,8 @@ resource "ovh_cloud_project_database_postgresql_user" "user" {
 }
 
 output "user_password" {
-    value = ovh_cloud_project_database_postgresql_user.user.password
-    sensitive = true
+  value     = ovh_cloud_project_database_postgresql_user.user.password
+  sensitive = true
 }
 ```
 

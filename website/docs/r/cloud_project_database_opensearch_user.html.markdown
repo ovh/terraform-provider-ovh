@@ -25,19 +25,19 @@ resource "ovh_cloud_project_database_opensearch_user" "user" {
   service_name  = data.ovh_cloud_project_database.opensearch.service_name
   cluster_id    = data.ovh_cloud_project_database.opensearch.id
   acls {
-		pattern    = "logs_*"
-		permission = "read"
-	}
-	acls {
-		pattern    = "data_*"
-		permission = "deny"
-	}
+    pattern    = "logs_*"
+    permission = "read"
+  }
+  acls {
+    pattern    = "data_*"
+    permission = "deny"
+  }
   name          = "johndoe"
 }
 
 output "user_password" {
-    value = ovh_cloud_project_database_opensearch_user.user.password
-    sensitive = true
+  value     = ovh_cloud_project_database_opensearch_user.user.password
+  sensitive = true
 }
 ```
 
@@ -51,23 +51,23 @@ data "ovh_cloud_project_database" "opensearch" {
 }
 
 resource "ovh_cloud_project_database_opensearch_user" "user" {
-  service_name  = data.ovh_cloud_project_database.opensearch.service_name
-  cluster_id    = data.ovh_cloud_project_database.opensearch.id
+  service_name    = data.ovh_cloud_project_database.opensearch.service_name
+  cluster_id      = data.ovh_cloud_project_database.opensearch.id
   acls {
-		pattern    = "logs_*"
-		permission = "read"
-	}
-	acls {
-		pattern    = "data_*"
-		permission = "deny"
-	}
+    pattern    = "logs_*"
+    permission = "read"
+  }
+  acls {
+    pattern    = "data_*"
+    permission = "deny"
+  }
   name            = "johndoe"
   password_reset  = "reset1"
 }
 
 output "user_password" {
-    value = ovh_cloud_project_database_opensearch_user.user.password
-    sensitive = true
+  value     = ovh_cloud_project_database_opensearch_user.user.password
+  sensitive = true
 }
 ```
 
