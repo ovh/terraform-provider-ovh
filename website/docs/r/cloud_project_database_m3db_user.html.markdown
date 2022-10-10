@@ -29,8 +29,8 @@ resource "ovh_cloud_project_database_m3db_user" "user" {
 }
 
 output "user_password" {
-    value = ovh_cloud_project_database_m3db_user.user.password
-    sensitive = true
+  value     = ovh_cloud_project_database_m3db_user.user.password
+  sensitive = true
 }
 ```
 

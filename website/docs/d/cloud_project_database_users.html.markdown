@@ -14,9 +14,9 @@ Use this data source to get the list of users of a database cluster associated w
 
 ```hcl
 data "ovh_cloud_project_database_users" "users" {
-  service_name = "XXXX"
-  engine	     = "YYYY"
-  cluster_id   = "ZZZ"
+  service_name  = "XXXX"
+  engine        = "YYYY"
+  cluster_id    = "ZZZ"
 }
 
 output "user_ids" {

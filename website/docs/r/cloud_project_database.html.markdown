@@ -24,131 +24,131 @@ interact directly with the team that builds our databases services and terraform
 Minimum settings for each engine (region choice is up to the user):
 ```hcl
 resource "ovh_cloud_project_database" "cassandradb" {
-  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  description  = "my-first-cassandra"
-  engine       = "cassandra"
-  version      = "4.0"
-  plan         = "essential"
+  service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  description   = "my-first-cassandra"
+  engine        = "cassandra"
+  version       = "4.0"
+  plan          = "essential"
   nodes {
-    region = "BHS"
+    region  = "BHS"
   }
   nodes {
-    region = "BHS"
+    region  = "BHS"
   }
   nodes {
-    region = "BHS"
+    region  = "BHS"
   }
-  flavor       = "db1-4"
+  flavor        = "db1-4"
 }
 
 resource "ovh_cloud_project_database" "kafkadb" {
-  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  description  = "my-first-kafka"
-  engine       = "kafka"
-  version      = "3.1"
-  plan         = "business"
-  kafka_rest_api = true
+  service_name    = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  description     = "my-first-kafka"
+  engine          = "kafka"
+  version         = "3.1"
+  plan            = "business"
+  kafka_rest_api  = true
   nodes {
-    region = "DE"
+    region  = "DE"
   }
   nodes {
-    region = "DE"
+    region  = "DE"
   }
   nodes {
-    region = "DE"
+    region  = "DE"
   }
-  flavor       = "db1-4"
+  flavor           = "db1-4"
 }
 
 resource "ovh_cloud_project_database" "m3db" {
-  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  description  = "my-first-m3db"
-  engine       = "m3db"
-  version      = "1.2"
-  plan         = "essential"
+  service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  description   = "my-first-m3db"
+  engine        = "m3db"
+  version       = "1.2"
+  plan          = "essential"
   nodes {
-  region     = "BHS"
+    region  = "BHS"
   }
-  flavor = "db1-7"
+  flavor        = "db1-7"
 }
 
 resource "ovh_cloud_project_database" "mongodb" {
-  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  description  = "my-first-mongodb"
-  engine       = "mongodb"
-  version      = "5.0"
-  plan         = "essential"
+  service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  description   = "my-first-mongodb"
+  engine        = "mongodb"
+  version       = "5.0"
+  plan          = "essential"
   nodes {
-    region = "GRA"
+    region =  "GRA"
   }
-  flavor       = "db1-2"
+  flavor        = "db1-2"
 }
 
 resource "ovh_cloud_project_database" "mysqldb" {
-  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  description  = "my-first-mysql"
-  engine       = "mysql"
-  version      = "8"
-  plan         = "essential"
+  service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  description   = "my-first-mysql"
+  engine        = "mysql"
+  version       = "8"
+  plan          = "essential"
   nodes {
-    region = "SBG"
+    region  = "SBG"
   }
-  flavor       = "db1-4"
+  flavor        = "db1-4"
 }
 
 resource "ovh_cloud_project_database" "opensearchdb" {
-  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  description  = "my-first-opensearch"
-  engine       = "opensearch"
-  version      = "1"
-  plan         = "essential"
+  service_name            = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  description             = "my-first-opensearch"
+  engine                  = "opensearch"
+  version                 = "1"
+  plan                    = "essential"
   opensearch_acls_enabled = true
   nodes {
     region = "UK"
   }
-  flavor       = "db1-4"
+  flavor                  = "db1-4"
 }
 
 resource "ovh_cloud_project_database" "pgsqldb" {
-  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  description  = "my-first-postgresql"
-  engine       = "postgresql"
-  version      = "14"
-  plan         = "essential"
+  service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  description   = "my-first-postgresql"
+  engine        = "postgresql"
+  version       = "14"
+  plan          = "essential"
   nodes {
-    region = "WAW"
+    region  = "WAW"
   }
-  flavor       = "db1-4"
+  flavor        = "db1-4"
 }
 
 resource "ovh_cloud_project_database" "redisdb" {
-  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  description  = "my-first-redis"
-  engine       = "redis"
-  version      = "6.2"
-  plan         = "essential"
+  service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  description   = "my-first-redis"
+  engine        = "redis"
+  version       = "6.2"
+  plan          = "essential"
   nodes {
-    region = "BHS"
+    region  = "BHS"
   }
-  flavor       = "db1-4"
+  flavor        = "db1-4"
 }
 ```
 
 To deploy a business PostgreSQL service with two nodes on public network:
 ```hcl
 resource "ovh_cloud_project_database" "postgresql" {
-  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  description  = "my-first-postgresql"
-  engine       = "postgresql"
-  version      = "14"
-  plan         = "business"
+  service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  description   = "my-first-postgresql"
+  engine        = "postgresql"
+  version       = "14"
+  plan          = "business"
   nodes {
-    region = "GRA"
+    region  = "GRA"
   }
   nodes {
-    region = "GRA"
+    region  = "GRA"
   }
-  flavor       = "db1-15"
+  flavor        = "db1-15"
 }
 ```
 
@@ -156,27 +156,27 @@ resource "ovh_cloud_project_database" "postgresql" {
 To deploy an enterprise MongoDB service with three nodes on private network:
 ```hcl
 resource "ovh_cloud_project_database" "mongodb" {
-  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  description  = "my-first-mongodb"
-  engine       = "mongodb"
-  version      = "5.0"
-  plan         = "enterprise"
+  service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  description   = "my-first-mongodb"
+  engine        = "mongodb"
+  version       = "5.0"
+  plan          = "enterprise"
   nodes {
-    region     = "SBG"
-    subnet_id  = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
-    network_id = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+    region      = "SBG"
+    subnet_id   = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+    network_id  = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
   }
   nodes {
-    region     = "SBG"
-    subnet_id  = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
-    network_id = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+    region      = "SBG"
+    subnet_id   = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+    network_id  = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
   }
   nodes {
-    region     = "SBG"
-    subnet_id  = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
-    network_id = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+    region      = "SBG"
+    subnet_id   = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+    network_id  = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
   }
-  flavor       = "db1-30"
+  flavor        = "db1-30"
 }
 ```
 

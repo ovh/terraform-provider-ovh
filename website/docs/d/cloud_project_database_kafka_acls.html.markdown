@@ -14,8 +14,8 @@ Use this data source to get the list of ACLs of a kafka cluster associated with 
 
 ```hcl
 data "ovh_cloud_project_database_kafka_acls" "acls" {
-  service_name = "XXX"
-  cluster_id   = "YYY"
+  service_name  = "XXX"
+  cluster_id    = "YYY"
 }
 
 output "acl_ids" {
