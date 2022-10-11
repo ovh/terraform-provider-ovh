@@ -14,9 +14,9 @@ Use this data source to get information about a topic of a kafka cluster associa
 
 ```hcl
 data "ovh_cloud_project_database_kafka_topic" "topic" {
-  service_name = "XXX"
-  cluster_id   = "YYY"
-  id           = "ZZZ"
+  service_name  = "XXX"
+  cluster_id    = "YYY"
+  id            = "ZZZ"
 }
 
 output "topic_name" {

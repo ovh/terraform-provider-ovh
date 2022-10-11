@@ -14,8 +14,8 @@ Use this data source to get the list of namespaces of a M3DB cluster associated 
 
 ```hcl
 data "ovh_cloud_project_database_m3db_namespaces" "namespaces" {
-  service_name = "XXX"
-  cluster_id   = "YYY"
+  service_name  = "XXX"
+  cluster_id    = "YYY"
 }
 
 output "namespace_ids" {
