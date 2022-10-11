@@ -14,9 +14,9 @@ Use this data source to get the list of databases of a database cluster associat
 
 ```hcl
 data "ovh_cloud_project_database_databases" "databases" {
-  service_name = "XXXX"
-  engine       = "YYYY"
-  cluster_id   = "ZZZ"
+  service_name  = "XXXX"
+  engine        = "YYYY"
+  cluster_id    = "ZZZ"
 }
 
 output "database_ids" {

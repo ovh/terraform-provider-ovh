@@ -14,8 +14,8 @@ Use this data source to get the list of pattern of a opensearch cluster associat
 
 ```hcl
 data "ovh_cloud_project_database_opensearch_patterns" "patterns" {
-  service_name = "XXX"
-  cluster_id   = "YYY"
+  service_name  = "XXX"
+  cluster_id    = "YYY"
 }
 
 output "pattern_ids" {
