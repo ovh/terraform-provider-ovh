@@ -54,3 +54,11 @@ The following attributes are exported:
 * `regions_status/status` - (Deprecated) The status of the network in the region.
 * `status` - the status of the network. should be normally set to 'ACTIVE'.
 * `type` - the type of the network. Either 'private' or 'public'. 
+
+## Import
+
+Private network in a public cloud project can be imported using the `project_id` and `network_id`, separated by "/" E.g.,
+
+```bash
+$ terraform import ovh_cloud_project_network_private.mynet ookie9mee8Shaeghaeleeju7Xeghohv6e/pn-12345678_90
+```
