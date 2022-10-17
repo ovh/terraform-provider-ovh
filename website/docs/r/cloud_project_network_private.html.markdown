@@ -60,5 +60,5 @@ The following attributes are exported:
 Private network in a public cloud project can be imported using the `project_id` and `network_id`, separated by "/" E.g.,
 
 ```bash
-$ terraform import ovh_cloud_project_network_private.mynet ookie9mee8Shaeghaeleeju7Xeghohv6e/pn-12345678_90
+$ terraform import ovh_cloud_project_network_private.mynet ookie9mee8Shaeghaeleeju7Xeghohv6e/pn-12345678
 ```
