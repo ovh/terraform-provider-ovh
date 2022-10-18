@@ -125,9 +125,9 @@ resource "ovh_cloud_project_kube_nodepool" "pool" {
 	kube_id			= ovh_cloud_project_kube.cluster.id
 	name			= ovh_cloud_project_kube.cluster.name
 	flavor_name		= "b2-7"
-	desired_nodes	= 1
+	desired_nodes	= 2
 	min_nodes		= 0
-	max_nodes		= 1
+	max_nodes		= 2
 	template {
 		metadata {
 			annotations = {
@@ -221,11 +221,11 @@ func TestAccCloudProjectKubeNodePool_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"ovh_cloud_project_kube_nodepool.pool", "flavor_name", "b2-7"),
 					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube_nodepool.pool", "desired_nodes", "1"),
+						"ovh_cloud_project_kube_nodepool.pool", "desired_nodes", "2"),
 					resource.TestCheckResourceAttr(
 						"ovh_cloud_project_kube_nodepool.pool", "min_nodes", "0"),
 					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube_nodepool.pool", "max_nodes", "1"),
+						"ovh_cloud_project_kube_nodepool.pool", "max_nodes", "2"),
 					resource.TestCheckResourceAttr(
 						"ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.annotations.a2", "av2"),
 					resource.TestCheckResourceAttr(
