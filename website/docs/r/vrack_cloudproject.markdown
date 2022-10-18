@@ -36,3 +36,11 @@ The following attributes are exported:
 
 * `service_name` - See Argument Reference above.
 * `project_id` - See Argument Reference above.
+
+## Import
+
+Attachment of a public cloud project and a VRack can be imported using the `project_id`, the `service_name` (vRackID) and the `attach_id`, separated by "/" E.g.,
+
+```bash
+$ terraform import ovh_vrack_cloudproject.myattach ookie9mee8Shaeghaeleeju7Xeghohv6e/pn-12345678/vrack_pn-12345678-cloudproject_ookie9mee8Shaeghaeleeju7Xeghohv6e-attach
+```
