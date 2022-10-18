@@ -338,7 +338,7 @@ func cloudProjectKubeNodePoolExists(serviceName, kubeId, id string, client *ovh.
 
 func waitForCloudProjectKubeNodePoolReady(client *ovh.Client, serviceName, kubeId, id string) error {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"INSTALLING", "UPDATING", "REDEPLOYING", "RESIZING"},
+		Pending: []string{"INSTALLING", "UPDATING", "REDEPLOYING", "RESIZING", "DOWNSCALING", "UPSCALING"},
 		Target:  []string{"READY"},
 		Refresh: func() (interface{}, string, error) {
 			res := &CloudProjectKubeNodePoolResponse{}
