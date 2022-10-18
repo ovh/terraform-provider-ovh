@@ -93,7 +93,7 @@ resource "ovh_cloud_project_kube_nodepool" "pool" {
 			annotations = {
 				a1 = "av1"
 			}
-			finalizers = ["F1"]
+			finalizers = ["finalizer.extensions/v1beta1"]
 			labels = {
 				l1 = "lv1"
 			}
@@ -141,7 +141,7 @@ resource "ovh_cloud_project_kube_nodepool" "pool" {
 }
 `
 
-func TestAccCloudProjectKubeNodePool_basic(t *testing.T) {
+func TestAccCloudProjectKubeNodePool(t *testing.T) {
 	name := acctest.RandomWithPrefix(test_prefix)
 	region := os.Getenv("OVH_CLOUD_PROJECT_KUBE_REGION_TEST")
 	version := os.Getenv("OVH_CLOUD_PROJECT_KUBE_VERSION_TEST")
@@ -192,7 +192,7 @@ func TestAccCloudProjectKubeNodePool_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.annotations.a1", "av1"),
 					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.finalizers.0", "F1"),
+						"ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.finalizers.0", "finalizer.extensions/v1beta1"),
 					resource.TestCheckResourceAttr(
 						"ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.labels.l1", "lv1"),
 					resource.TestCheckResourceAttr(
