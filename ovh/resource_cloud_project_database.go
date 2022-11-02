@@ -180,6 +180,11 @@ func resourceCloudProjectDatabase() *schema.Resource {
 				Description: "Current status of the cluster",
 				Computed:    true,
 			},
+			"disk_size": {
+				Type:        schema.TypeInt,
+				Description: "Disk size attributes of the cluster",
+				Optional:    true,
+			},
 		},
 	}
 }
