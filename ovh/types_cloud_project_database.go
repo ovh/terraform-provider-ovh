@@ -129,9 +129,14 @@ type CloudProjectDatabaseCreateOpts struct {
 	Description  string                           `json:"description,omitempty"`
 	NetworkId    string                           `json:"networkId,omitempty"`
 	NodesPattern CloudProjectDatabaseNodesPattern `json:"nodesPattern,omitempty"`
+	Disk         CloudProjectDatabaseDisk         `json:"disk,omitempty"`
 	Plan         string                           `json:"plan"`
 	SubnetId     string                           `json:"subnetId,omitempty"`
 	Version      string                           `json:"version"`
+}
+
+type CloudProjectDatabaseDisk struct {
+	Size int `json:"size"`
 }
 
 type CloudProjectDatabaseNodesPattern struct {
@@ -164,6 +169,13 @@ func (opts *CloudProjectDatabaseCreateOpts) FromResource(d *schema.ResourceData)
 	opts.SubnetId = nodes[0].SubnetId
 	opts.Version = d.Get("version").(string)
 
+	diskSize, ok := d.Get("disk_size").(int)
+	if ok {
+		if diskSize < 0 {
+			return fmt.Errorf("the disk size needs to be positive"), nil
+		}
+		opts.Disk = CloudProjectDatabaseDisk{diskSize}
+	}
 	return nil, opts
 }
 

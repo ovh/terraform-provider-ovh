@@ -207,6 +207,8 @@ The following arguments are supported:
 
 * `opensearch_acls_enabled` -  (Optional) Defines whether the ACLs are enabled on an OpenSearch cluster
 
+* `disk_size` -  (Optional) Defines the disk size of the database service.
+
 * `plan` - (Required) Plan of the cluster.
   Enum: "essential", "business", "enterprise".
 
@@ -243,6 +245,7 @@ The following attributes are exported:
 * `plan` - See Argument Reference above.
 * `status` - Current status of the cluster.
 * `version` - See Argument Reference above.
+* `disk_size` - See Argument Reference above.
 
 ## Timeouts
 
