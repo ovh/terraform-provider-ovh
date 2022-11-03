@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/go-ovh/ovh"
+	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 	"github.com/ybriffa/rfc3339"
 )
 
@@ -32,6 +33,7 @@ type CloudProjectDatabaseResponse struct {
 	Status          string                         `json:"status"`
 	SubnetId        string                         `json:"subnetId"`
 	Version         string                         `json:"version"`
+	Disk            CloudProjectDatabaseDisk       `json:"disk"`
 }
 
 func (s *CloudProjectDatabaseResponse) String() string {
@@ -71,6 +73,7 @@ func (v CloudProjectDatabaseResponse) ToMap() map[string]interface{} {
 	obj["plan"] = v.Plan
 	obj["status"] = v.Status
 	obj["version"] = v.Version
+	obj["disk"] = v.Disk.ToMap()
 
 	return obj
 }
@@ -136,7 +139,20 @@ type CloudProjectDatabaseCreateOpts struct {
 }
 
 type CloudProjectDatabaseDisk struct {
-	Size int `json:"size"`
+	Type string `json:"type,omitempty"`
+	Size *int   `json:"size,omitempty"`
+}
+
+func (cpdd *CloudProjectDatabaseDisk) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+	obj["size"] = cpdd.Size
+	obj["type"] = cpdd.Type
+	return obj
+}
+
+func validateCloudProjectDatabaseDiskSize(v interface{}, k string) (ws []string, errors []error) {
+	errors = validateIsSupEqual(v.(int), 0)
+	return
 }
 
 type CloudProjectDatabaseNodesPattern struct {
@@ -168,24 +184,18 @@ func (opts *CloudProjectDatabaseCreateOpts) FromResource(d *schema.ResourceData)
 	opts.NetworkId = nodes[0].NetworkId
 	opts.SubnetId = nodes[0].SubnetId
 	opts.Version = d.Get("version").(string)
-
-	diskSize, ok := d.Get("disk_size").(int)
-	if ok {
-		if diskSize < 0 {
-			return fmt.Errorf("the disk size needs to be positive"), nil
-		}
-		opts.Disk = CloudProjectDatabaseDisk{diskSize}
-	}
+	opts.Disk = CloudProjectDatabaseDisk{Size: helpers.GetNilIntPointer(d.Get("disk_size"))}
 	return nil, opts
 }
 
 type CloudProjectDatabaseUpdateOpts struct {
-	AclsEnabled bool   `json:"aclsEnabled,omitempty"`
-	Description string `json:"description,omitempty"`
-	Flavor      string `json:"flavor,omitempty"`
-	Plan        string `json:"plan,omitempty"`
-	RestApi     bool   `json:"restApi,omitempty"`
-	Version     string `json:"version,omitempty"`
+	AclsEnabled bool                     `json:"aclsEnabled,omitempty"`
+	Description string                   `json:"description,omitempty"`
+	Flavor      string                   `json:"flavor,omitempty"`
+	Plan        string                   `json:"plan,omitempty"`
+	RestApi     bool                     `json:"restApi,omitempty"`
+	Version     string                   `json:"version,omitempty"`
+	Disk        CloudProjectDatabaseDisk `json:"disk,omitempty"`
 }
 
 func (opts *CloudProjectDatabaseUpdateOpts) FromResource(d *schema.ResourceData) (error, *CloudProjectDatabaseUpdateOpts) {
@@ -201,6 +211,7 @@ func (opts *CloudProjectDatabaseUpdateOpts) FromResource(d *schema.ResourceData)
 	opts.Plan = d.Get("plan").(string)
 	opts.Flavor = d.Get("flavor").(string)
 	opts.Version = d.Get("version").(string)
+	opts.Disk = CloudProjectDatabaseDisk{Size: helpers.GetNilIntPointer(d.Get("disk_size"))}
 	return nil, opts
 }
 
