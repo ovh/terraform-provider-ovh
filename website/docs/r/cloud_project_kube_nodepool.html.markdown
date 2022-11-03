@@ -107,5 +107,5 @@ In addition, the following attributes are exported:
 OVHcloud Managed Kubernetes Service cluster node pool can be imported using the `service_name`, the `id` of the cluster, and the `id` of the nodepool separated by "/" E.g.,
 
 ```bash
-$ terraform import ovh_cloud_project_kube.my_kube_cluster service_name/kube_id/poolid
+$ terraform import ovh_cloud_project_kube_nodepool.pool service_name/kube_id/poolid
 ```
