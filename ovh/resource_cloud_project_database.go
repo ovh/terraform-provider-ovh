@@ -186,6 +186,11 @@ func resourceCloudProjectDatabase() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validateCloudProjectDatabaseDiskSize,
 			},
+			"disk_type": {
+				Type:        schema.TypeInt,
+				Description: "Disk type attributes of the cluster",
+				Computed:    true,
+			},
 		},
 	}
 }

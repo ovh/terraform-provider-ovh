@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/go-ovh/ovh"
-	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 	"github.com/ybriffa/rfc3339"
 )
 
@@ -73,7 +72,8 @@ func (v CloudProjectDatabaseResponse) ToMap() map[string]interface{} {
 	obj["plan"] = v.Plan
 	obj["status"] = v.Status
 	obj["version"] = v.Version
-	obj["disk"] = v.Disk.ToMap()
+	obj["disk_size"] = v.Disk.Size
+	obj["disk_type"] = v.Disk.Type
 
 	return obj
 }
@@ -140,14 +140,7 @@ type CloudProjectDatabaseCreateOpts struct {
 
 type CloudProjectDatabaseDisk struct {
 	Type string `json:"type,omitempty"`
-	Size *int   `json:"size,omitempty"`
-}
-
-func (cpdd *CloudProjectDatabaseDisk) ToMap() map[string]interface{} {
-	obj := make(map[string]interface{})
-	obj["size"] = cpdd.Size
-	obj["type"] = cpdd.Type
-	return obj
+	Size int    `json:"size,omitempty"`
 }
 
 func validateCloudProjectDatabaseDiskSize(v interface{}, k string) (ws []string, errors []error) {
@@ -184,7 +177,7 @@ func (opts *CloudProjectDatabaseCreateOpts) FromResource(d *schema.ResourceData)
 	opts.NetworkId = nodes[0].NetworkId
 	opts.SubnetId = nodes[0].SubnetId
 	opts.Version = d.Get("version").(string)
-	opts.Disk = CloudProjectDatabaseDisk{Size: helpers.GetNilIntPointer(d.Get("disk_size"))}
+	opts.Disk = CloudProjectDatabaseDisk{Size: d.Get("disk_size").(int)}
 	return nil, opts
 }
 
@@ -211,7 +204,7 @@ func (opts *CloudProjectDatabaseUpdateOpts) FromResource(d *schema.ResourceData)
 	opts.Plan = d.Get("plan").(string)
 	opts.Flavor = d.Get("flavor").(string)
 	opts.Version = d.Get("version").(string)
-	opts.Disk = CloudProjectDatabaseDisk{Size: helpers.GetNilIntPointer(d.Get("disk_size"))}
+	opts.Disk = CloudProjectDatabaseDisk{Size: d.Get("disk_size").(int)}
 	return nil, opts
 }
 

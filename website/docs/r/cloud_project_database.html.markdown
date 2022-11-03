@@ -246,6 +246,7 @@ The following attributes are exported:
 * `status` - Current status of the cluster.
 * `version` - See Argument Reference above.
 * `disk_size` - See Argument Reference above.
+* `disk_type` -  Defines the disk type of the database service.
 
 ## Timeouts
 
