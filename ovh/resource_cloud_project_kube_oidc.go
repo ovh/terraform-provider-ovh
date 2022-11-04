@@ -34,6 +34,44 @@ func resourceCloudProjectKubeOIDC() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"oidc_username_claim": {
+				Type:     schema.TypeString,
+				Required: false,
+				Optional: true,
+			},
+			"oidc_username_prefix": {
+				Type:     schema.TypeString,
+				Required: false,
+				Optional: true,
+			},
+			"oidc_groups_claim": {
+				Type:     schema.TypeList,
+				Required: false,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"oidc_groups_prefix": {
+				Type:     schema.TypeString,
+				Required: false,
+				Optional: true,
+			},
+			"oidc_required_claim": {
+				Type:     schema.TypeList,
+				Required: false,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"oidc_signing_algs": {
+				Type:     schema.TypeList,
+				Required: false,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"oidc_ca_content": {
+				Type:     schema.TypeString,
+				Required: false,
+				Optional: true,
+			},
 		},
 	}
 }
