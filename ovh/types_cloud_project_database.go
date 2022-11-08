@@ -32,6 +32,7 @@ type CloudProjectDatabaseResponse struct {
 	Status          string                         `json:"status"`
 	SubnetId        string                         `json:"subnetId"`
 	Version         string                         `json:"version"`
+	Disk            CloudProjectDatabaseDisk       `json:"disk"`
 }
 
 func (s *CloudProjectDatabaseResponse) String() string {
@@ -71,6 +72,8 @@ func (v CloudProjectDatabaseResponse) ToMap() map[string]interface{} {
 	obj["plan"] = v.Plan
 	obj["status"] = v.Status
 	obj["version"] = v.Version
+	obj["disk_size"] = v.Disk.Size
+	obj["disk_type"] = v.Disk.Type
 
 	return obj
 }
@@ -129,9 +132,20 @@ type CloudProjectDatabaseCreateOpts struct {
 	Description  string                           `json:"description,omitempty"`
 	NetworkId    string                           `json:"networkId,omitempty"`
 	NodesPattern CloudProjectDatabaseNodesPattern `json:"nodesPattern,omitempty"`
+	Disk         CloudProjectDatabaseDisk         `json:"disk,omitempty"`
 	Plan         string                           `json:"plan"`
 	SubnetId     string                           `json:"subnetId,omitempty"`
 	Version      string                           `json:"version"`
+}
+
+type CloudProjectDatabaseDisk struct {
+	Type string `json:"type,omitempty"`
+	Size int    `json:"size,omitempty"`
+}
+
+func validateCloudProjectDatabaseDiskSize(v interface{}, k string) (ws []string, errors []error) {
+	errors = validateIsSupEqual(v.(int), 0)
+	return
 }
 
 type CloudProjectDatabaseNodesPattern struct {
@@ -163,17 +177,18 @@ func (opts *CloudProjectDatabaseCreateOpts) FromResource(d *schema.ResourceData)
 	opts.NetworkId = nodes[0].NetworkId
 	opts.SubnetId = nodes[0].SubnetId
 	opts.Version = d.Get("version").(string)
-
+	opts.Disk = CloudProjectDatabaseDisk{Size: d.Get("disk_size").(int), Type: d.Get("disk_type").(string)}
 	return nil, opts
 }
 
 type CloudProjectDatabaseUpdateOpts struct {
-	AclsEnabled bool   `json:"aclsEnabled,omitempty"`
-	Description string `json:"description,omitempty"`
-	Flavor      string `json:"flavor,omitempty"`
-	Plan        string `json:"plan,omitempty"`
-	RestApi     bool   `json:"restApi,omitempty"`
-	Version     string `json:"version,omitempty"`
+	AclsEnabled bool                     `json:"aclsEnabled,omitempty"`
+	Description string                   `json:"description,omitempty"`
+	Flavor      string                   `json:"flavor,omitempty"`
+	Plan        string                   `json:"plan,omitempty"`
+	RestApi     bool                     `json:"restApi,omitempty"`
+	Version     string                   `json:"version,omitempty"`
+	Disk        CloudProjectDatabaseDisk `json:"disk,omitempty"`
 }
 
 func (opts *CloudProjectDatabaseUpdateOpts) FromResource(d *schema.ResourceData) (error, *CloudProjectDatabaseUpdateOpts) {
@@ -189,6 +204,7 @@ func (opts *CloudProjectDatabaseUpdateOpts) FromResource(d *schema.ResourceData)
 	opts.Plan = d.Get("plan").(string)
 	opts.Flavor = d.Get("flavor").(string)
 	opts.Version = d.Get("version").(string)
+	opts.Disk = CloudProjectDatabaseDisk{Size: d.Get("disk_size").(int), Type: d.Get("disk_type").(string)}
 	return nil, opts
 }
 

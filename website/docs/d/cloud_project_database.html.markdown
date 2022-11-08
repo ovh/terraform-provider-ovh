@@ -68,3 +68,5 @@ The following attributes are exported:
 * `plan` - Plan of the cluster.
 * `status` - Current status of the cluster.
 * `version` - The version of the engine in which the service should be deployed
+* `disk_size` - The disk size (in GB) of the database service.
+* `disk_type` -  The disk type of the database service.

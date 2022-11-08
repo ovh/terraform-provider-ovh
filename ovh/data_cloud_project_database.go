@@ -157,6 +157,16 @@ func dataSourceCloudProjectDatabase() *schema.Resource {
 				Description: "Version of the engine deployed on the cluster",
 				Computed:    true,
 			},
+			"disk_size": {
+				Type:        schema.TypeInt,
+				Description: "Disk size attributes of the cluster",
+				Computed:    true,
+			},
+			"disk_type": {
+				Type:        schema.TypeString,
+				Description: "Disk type attributes of the cluster",
+				Computed:    true,
+			},
 		},
 	}
 }
