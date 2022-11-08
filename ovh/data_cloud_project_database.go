@@ -163,7 +163,7 @@ func dataSourceCloudProjectDatabase() *schema.Resource {
 				Computed:    true,
 			},
 			"disk_type": {
-				Type:        schema.TypeInt,
+				Type:        schema.TypeString,
 				Description: "Disk type attributes of the cluster",
 				Computed:    true,
 			},
