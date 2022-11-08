@@ -207,7 +207,7 @@ The following arguments are supported:
 
 * `opensearch_acls_enabled` -  (Optional) Defines whether the ACLs are enabled on an OpenSearch cluster
 
-* `disk_size` -  (Optional) Defines the disk size of the database service.
+* `disk_size` -  (Optional) The disk size (in GB) of the database service.
 
 * `plan` - (Required) Plan of the cluster.
   Enum: "essential", "business", "enterprise".
