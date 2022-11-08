@@ -177,7 +177,7 @@ func (opts *CloudProjectDatabaseCreateOpts) FromResource(d *schema.ResourceData)
 	opts.NetworkId = nodes[0].NetworkId
 	opts.SubnetId = nodes[0].SubnetId
 	opts.Version = d.Get("version").(string)
-	opts.Disk = CloudProjectDatabaseDisk{Size: d.Get("disk_size").(int)}
+	opts.Disk = CloudProjectDatabaseDisk{Size: d.Get("disk_size").(int), Type: d.Get("disk_type").(string)}
 	return nil, opts
 }
 
@@ -204,7 +204,7 @@ func (opts *CloudProjectDatabaseUpdateOpts) FromResource(d *schema.ResourceData)
 	opts.Plan = d.Get("plan").(string)
 	opts.Flavor = d.Get("flavor").(string)
 	opts.Version = d.Get("version").(string)
-	opts.Disk = CloudProjectDatabaseDisk{Size: d.Get("disk_size").(int)}
+	opts.Disk = CloudProjectDatabaseDisk{Size: d.Get("disk_size").(int), Type: d.Get("disk_type").(string)}
 	return nil, opts
 }
 
