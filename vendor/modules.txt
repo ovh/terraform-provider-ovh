@@ -188,7 +188,7 @@ github.com/mitchellh/mapstructure
 github.com/mitchellh/reflectwalk
 # github.com/oklog/run v1.0.0
 github.com/oklog/run
-# github.com/ovh/go-ovh v1.1.0
+# github.com/ovh/go-ovh v1.3.0
 ## explicit
 github.com/ovh/go-ovh/ovh
 # github.com/smartystreets/assertions v0.0.0-20190116191733-b6c0e53d7304
