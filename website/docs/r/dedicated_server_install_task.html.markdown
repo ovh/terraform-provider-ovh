@@ -18,8 +18,8 @@ after a while.
 ## Example Usage
 
 ```hcl
-data "ovh_dedicated_server_boots" "rescue" {
-  service_name = "nsxxxxxxx.ip-xx-xx-xx.eu"
+data ovh_dedicated_server_boots "rescue" {
+  service_name = "ns00000.ip-1-2-3.eu"
   boot_type    = "rescue"
 }
 
@@ -29,23 +29,21 @@ resource "ovh_me_ssh_key" "key" {
 }
 
 resource "ovh_me_installation_template" "debian" {
-  base_template_name = "debian11_64"
+  base_template_name = "debian10_64"
   template_name      = "mydebian10"
   default_language   = "en"
 
   customization {
+    change_log      = "v1"
+    custom_hostname = "mytest"
     ssh_key_name    = ovh_me_ssh_key.key.key_name
   }
 }
 
-resource "ovh_dedicated_server_install_task" "server_install" {
-  service_name      = "nsxxxxxxx.ip-xx-xx-xx.eu"
+resource ovh_dedicated_server_install_task "server_install" {
+  service_name      = "ns00000.ip-1-2-3.eu"
   template_name     = ovh_me_installation_template.debian.template_name
   bootid_on_destroy = data.ovh_dedicated_server_boots.rescue.result[0]
-
-  details {
-      custom_hostname = "mytest"
-  }
 }
 ```
 
