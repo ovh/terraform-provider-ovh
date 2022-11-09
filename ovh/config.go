@@ -11,6 +11,8 @@ import (
 	"github.com/ovh/go-ovh/ovh"
 )
 
+var providerVersion, providerCommit string
+
 type Config struct {
 	Endpoint          string
 	ApplicationKey    string
@@ -43,6 +45,8 @@ func clientDefault(c *Config) (*ovh.Client, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	client.UserAgent = "Terraform/" + providerVersion + "/" + providerCommit
 	return client, nil
 }
 

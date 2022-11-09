@@ -6,7 +6,7 @@ require (
 	github.com/hashicorp/go-version v1.6.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.9.0
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/ovh/go-ovh v1.1.0
+	github.com/ovh/go-ovh v1.3.0
 	github.com/smartystreets/assertions v0.0.0-20190116191733-b6c0e53d7304 // indirect
 	github.com/ybriffa/rfc3339 v0.0.0-20220203155318-1789e3fd6e70
 	golang.org/x/tools v0.0.0-20201118030313-598b068a9102 // indirect
