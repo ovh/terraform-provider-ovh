@@ -175,6 +175,7 @@ func Provider() *schema.Provider {
 			"ovh_me_ssh_key":                                              resourceMeSshKey(),
 			"ovh_vrack":                                                   resourceVrack(),
 			"ovh_vrack_cloudproject":                                      resourceVrackCloudProject(),
+			"ovh_vrack_dedicated_server":                                  resourceVrackDedicatedServer(),
 			"ovh_vrack_dedicated_server_interface":                        resourceVrackDedicatedServerInterface(),
 			"ovh_vrack_ip":                                                resourceVrackIp(),
 			"ovh_vrack_iploadbalancing":                                   resourceVrackIpLoadbalancing(),
