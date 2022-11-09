@@ -9,7 +9,7 @@ description: |-
 # ovh_vrack_dedicated_server
 
 ~> **NOTE:** The resource `ovh_vrack_dedicated_server` is DEPRECATED and will be removed in a future version.
-Use the resource ['ovh_vrack_dedicated_server_interface'](vrack_dedicated_server_interface.html.markdown) instead.
+Use the resource [`ovh_vrack_dedicated_server_interface`](vrack_dedicated_server_interface.html.markdown) instead.
 
 Attach a dedicated server to a VRack.
 
