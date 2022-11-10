@@ -18,20 +18,20 @@ after a while.
 ## Example Usage
 
 ```hcl
-data ovh_dedicated_server_boots "rescue" {
-  service_name = "ns00000.ip-1-2-3.eu"
+data "ovh_dedicated_server_boots" "rescue" {
+  service_name = "nsxxxxxxx.ip-xx-xx-xx.eu"
   boot_type    = "rescue"
   kernel       = "rescue64-pro"
 }
 
-resource ovh_dedicated_server_update "server_on_rescue" {
-  service_name = "ns00000.ip-1-2-3.eu"
+resource "ovh_dedicated_server_update" "server_on_rescue" {
+  service_name = "nsxxxxxxx.ip-xx-xx-xx.eu"
   boot_id      = data.ovh_dedicated_server_boots.rescue.result[0]
   monitoring   = true
   state        = "ok"
 }
 
-resource ovh_dedicated_server_reboot_task "server_reboot" {
+resource "ovh_dedicated_server_reboot_task" "server_reboot" {
   service_name = data.ovh_dedicated_server_boots.rescue.service_name
 
   keepers = [
@@ -45,7 +45,7 @@ resource ovh_dedicated_server_reboot_task "server_reboot" {
 The following arguments are supported:
 
 * `service_name` - (Required) The service_name of your dedicated server.
-* `keepers` - List of values traccked to trigger reboot, used also to form implicit dependencies
+* `keepers` - List of values tracked to trigger reboot, used also to form implicit dependencies.
 
 ## Attributes Reference
 
