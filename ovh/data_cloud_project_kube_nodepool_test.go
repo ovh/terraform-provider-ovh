@@ -61,7 +61,7 @@ resource "ovh_cloud_project_kube_nodepool" "pool" {
 data "ovh_cloud_project_kube_nodepool" "poolDataSource" {
   service_name  = ovh_cloud_project_kube.cluster.service_name
   kube_id       = ovh_cloud_project_kube.cluster.id
-  name          = ovh_cloud_project_kube.cluster.name
+  name          = ovh_cloud_project_kube_nodepool.pool.name
 
   depends_on = [
     ovh_cloud_project_kube_nodepool.pool

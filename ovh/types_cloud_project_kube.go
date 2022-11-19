@@ -185,3 +185,35 @@ type CloudProjectKubeUpdatePNCOpts struct {
 type CloudProjectKubeUpdateCustomizationOpts struct {
 	APIServer *APIServer `json:"apiServer"`
 }
+
+type CloudProjectKubeNodeResponse struct {
+	CreatedAt  string `json:"createdAt"`
+	UpdatedAt  string `json:"updatedAt"`
+	DeployedAt string `json:"deployedAt"`
+	Flavor     string `json:"flavor"`
+	Id         string `json:"id"`
+	InstanceId string `json:"instanceId"`
+	IsUpToDate bool   `json:"isUpToDate"`
+	Name       string `json:"name"`
+	NodePoolId string `json:"nodePoolId"`
+	ProjectId  string `json:"projectId"`
+	Status     string `json:"status"`
+	Version    string `json:"version"`
+}
+
+func (v CloudProjectKubeNodeResponse) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+	obj["created_at"] = v.CreatedAt
+	obj["deployed_at"] = v.DeployedAt
+	obj["flavor"] = v.Flavor
+	obj["id"] = v.Id
+	obj["instance_id"] = v.InstanceId
+	obj["is_up_to_date"] = v.IsUpToDate
+	obj["name"] = v.Name
+	obj["node_pool_id"] = v.NodePoolId
+	obj["project_id"] = v.ProjectId
+	obj["status"] = v.Status
+	obj["updated_at"] = v.UpdatedAt
+	obj["version"] = v.Version
+	return obj
+}
