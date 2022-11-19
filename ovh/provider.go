@@ -74,6 +74,7 @@ func Provider() *schema.Provider {
 			"ovh_cloud_project_failover_ip_attach":                    dataSourceCloudProjectFailoverIpAttach(),
 			"ovh_cloud_project_kube":                                  dataSourceCloudProjectKube(),
 			"ovh_cloud_project_kube_iprestrictions":                   dataSourceCloudProjectKubeIPRestrictions(),
+			"ovh_cloud_project_kube_nodepool_nodes":                   dataSourceCloudProjectKubeNodepoolNodes(),
 			"ovh_cloud_project_kube_nodepool":                         dataSourceCloudProjectKubeNodepool(),
 			"ovh_cloud_project_kube_nodes":                            dataSourceCloudProjectKubeNodes(),
 			"ovh_cloud_project_region":                                dataSourceCloudProjectRegion(),
