@@ -84,7 +84,7 @@ func dataSourceCloudProjectKubeOIDCRead(d *schema.ResourceData, meta interface{}
 	endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/openIdConnect", serviceName, kubeId)
 	res := &CloudProjectKubeOIDCResponse{}
 
-	log.Printf("[DEBUG] Will read oidc from kube %s and project: %s", kubeId, serviceName)
+	log.Printf("[DEBUG] Will read OIDC from kube %s and project: %s", kubeId, serviceName)
 	err := config.OVHClient.Get(endpoint, res)
 	if err != nil {
 		return fmt.Errorf("calling get %s %w", endpoint, err)
@@ -96,6 +96,6 @@ func dataSourceCloudProjectKubeOIDCRead(d *schema.ResourceData, meta interface{}
 	}
 	d.SetId(kubeId + "-" + res.ClientID + "-" + res.IssuerUrl)
 
-	log.Printf("[DEBUG] Read oidc %+v", res)
+	log.Printf("[DEBUG] Read OIDC %+v", res)
 	return nil
 }
