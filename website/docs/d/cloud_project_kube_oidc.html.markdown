@@ -19,7 +19,7 @@ data "ovh_cloud_project_kube_oidc" "oidc" {
 }
 
 output "oidc-val" {
-  value = data.ovh_cloud_project_kube_iprestrictions.oidc.client_id
+  value = data.ovh_cloud_project_kube_oidc.oidc.client_id
 }
 ```
 

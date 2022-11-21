@@ -30,7 +30,7 @@ func TestAccCloudProjectKubeOIDCDataSource_basic(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
-						"data.ovh_cloud_project_kube_oidc.oidcData", "client_id", "toto"),
+						"data.ovh_cloud_project_kube_oidc.oidcData", "client_id", "my-oidc-client-id"),
 					resource.TestCheckResourceAttr(
 						"data.ovh_cloud_project_kube_oidc.oidcData", "issuer_url", "https://www.ovhcloud.com/fr/"),
 					resource.TestCheckResourceAttr(
@@ -66,7 +66,7 @@ resource "ovh_cloud_project_kube_oidc" "oidc" {
 	service_name  = ovh_cloud_project_kube.cluster.service_name
 	kube_id       = ovh_cloud_project_kube.cluster.id
 	
-	client_id = "toto"
+	client_id = "my-oidc-client-id"
 	issuer_url = "https://www.ovhcloud.com/fr/"
 	oidc_username_claim = "usrClaim"
 	oidc_username_prefix = "usrPrefix"

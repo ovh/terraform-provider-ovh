@@ -13,6 +13,9 @@ func resourceCloudProjectKubeOIDC() *schema.Resource {
 		Read:   resourceCloudProjectKubeOIDCRead,
 		Delete: resourceCloudProjectKubeOIDCDelete,
 		Update: resourceCloudProjectKubeOIDCUpdate,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"service_name": {
