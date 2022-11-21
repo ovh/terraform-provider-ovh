@@ -22,7 +22,7 @@ resource "ovh_cloud_project_kube_oidc" "my-oidc" {
   issuer_url   = "https://ovh.com"
 
   #optional field
-  oidc_username_claim  = "email"
+  oidc_username_claim  = "an-email"
   oidc_username_prefix = "ovh:"
   oidc_groups_claim    = ["groups"]
   oidc_groups_prefix   = "ovh:"
@@ -47,14 +47,14 @@ The following arguments are supported:
 
 * `oidcUsernameClaim` - JWT claim to use as the user name. By default sub, which is expected to be a unique identifier of the end user. Admins can choose other claims, such as email or name, depending on their provider. However, claims other than email will be prefixed with the issuer URL to prevent naming clashes with other plugins.
 
-* `oidcUsernamePrefix` - Prefix prepended to username claims to prevent clashes with existing names (such as system: users). For example, the value oidc: will create usernames like oidc:jane.doe. If this field isn't set and oidcUsernameClaim is a value other than email the prefix defaults to ( Issuer URL )# where ( Issuer URL ) is the value of oidcIssuerUrl. The value - can be used to disable all prefixing.
+* `oidcUsernamePrefix` - Prefix prepended to username claims to prevent clashes with existing names (such as `system:users`). For example, the value `oidc:` will create usernames like `oidc:jane.doe`. If this field isn't set and `oidcUsernameClaim` is a value other than email the prefix defaults to `issuer_url` where `issuer_url` is the value of `oidcIssuerUrl.` The value - can be used to disable all prefixing.
 
 * `oidcGroupsClaim` - Array of JWT claim to use as the user's group. If the claim is present it must be an array of strings.
 
-* `oidcGroupsPrefix` - Prefix prepended to group claims to prevent clashes with existing names (such as system: groups). For example, the value oidc: will create group names like oidc:engineering and oidc:infra.
+* `oidcGroupsPrefix` - Prefix prepended to group claims to prevent clashes with existing names (such as `system:groups`). For example, the value `oidc:` will create group names like `oidc:engineering` and `oidc:infra`.
 
-* `oidcRequiredClaim` - Array of key=value pairs that describe required claims in the ID Token. If set, the claims are verified to be present in the ID Token with a matching value."
+* `oidcRequiredClaim` - Array of `key=value` pairs that describe required claims in the ID Token. If set, the claims are verified to be present in the ID Token with a matching value."
 
-* `oidcSigningAlgs` - Array of signing algorithms accepted. Default is \"RS256\".
+* `oidcSigningAlgs` - Array of signing algorithms accepted. Default is `RS256`.
       
-* `oidcCaContent` - Content of the certificate for the CA, in base64 format, that signed your identity provider's web certificate. Defaults to the host's root CAs.
+* `oidcCaContent` - Content of the certificate for the CA, in Base64 format, that signed your identity provider's web certificate. Defaults to the host's root CAs.
