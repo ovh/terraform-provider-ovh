@@ -58,3 +58,11 @@ The following arguments are supported:
 * `oidcSigningAlgs` - Array of signing algorithms accepted. Default is `RS256`.
       
 * `oidcCaContent` - Content of the certificate for the CA, in Base64 format, that signed your identity provider's web certificate. Defaults to the host's root CAs.
+
+## Import
+
+OVHcloud Managed Kubernetes Service cluster OIDC can be imported using the tenant `service_name` and cluster id `kube_id` separated by "/" E.g.,
+
+```bash
+$ terraform import ovh_cloud_project_kube_oidc.my-oidc service_name/kube_id
+```
