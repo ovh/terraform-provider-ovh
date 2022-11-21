@@ -3,6 +3,7 @@ package ovh
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -14,7 +15,7 @@ func resourceCloudProjectKubeOIDC() *schema.Resource {
 		Delete: resourceCloudProjectKubeOIDCDelete,
 		Update: resourceCloudProjectKubeOIDCUpdate,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: resourceCloudProjectKubeOIDCImportState,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -79,6 +80,23 @@ func resourceCloudProjectKubeOIDC() *schema.Resource {
 	}
 }
 
+func resourceCloudProjectKubeOIDCImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	givenId := d.Id()
+	splitId := strings.SplitN(givenId, "/", 3)
+	if len(splitId) != 2 {
+		return nil, fmt.Errorf("Import Id is not service_name/kubeid formatted")
+	}
+	serviceName := splitId[0]
+	kubeId := splitId[1]
+	d.SetId(kubeId)
+	d.Set("kube_id", kubeId)
+	d.Set("service_name", serviceName)
+
+	results := make([]*schema.ResourceData, 1)
+	results[0] = d
+	return results, nil
+}
+
 func resourceCloudProjectKubeOIDCCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
@@ -95,7 +113,7 @@ func resourceCloudProjectKubeOIDCCreate(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("calling Post %s with params %s:\n\t %w", endpoint, params, err)
 	}
 
-	d.SetId(kubeID + "-" + params.ClientID + "-" + params.IssuerUrl)
+	d.SetId(serviceName + "/" + kubeID)
 
 	log.Printf("[DEBUG] Waiting for kube %s to be READY", kubeID)
 	err = waitForCloudProjectKubeReady(config.OVHClient, serviceName, kubeID, []string{"REDEPLOYING"}, []string{"READY"})
@@ -125,7 +143,7 @@ func resourceCloudProjectKubeOIDCRead(d *schema.ResourceData, meta interface{}) 
 		if k != "id" {
 			d.Set(k, v)
 		} else {
-			d.SetId(kubeID + "-" + res.ClientID + "-" + res.IssuerUrl)
+			d.SetId(serviceName + "/" + kubeID)
 		}
 	}
 
