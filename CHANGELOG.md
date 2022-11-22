@@ -1,4 +1,50 @@
-## 0.23.0 (Unreleased)
+## 0.24.0 (Unreleased)
+
+## 0.23.0 (November 22, 2022)
+
+⚠️ Deprecation:
+
+* `r/ovh_vrack_dedicated_server`: this resource is now deprecated, please use `ovh_vrack_dedicated_server_interface` instead ([#337](https://github.com/ovh/terraform-provider-ovh/pull/337))
+
+🎉 Features:
+
+* New resource: `r/ovh_cloud_project_region_storage_presign` ([#326](https://github.com/ovh/terraform-provider-ovh/pull/326))
+* New datasource: `d/ovh_cloud_project_kube_oidc` ([#339](https://github.com/ovh/terraform-provider-ovh/pull/339))
+
+💪 Improvements:
+
+* `r/ovh_cloud_project_kube_oidc`: Add more OIDC parameters to configure ([#339](https://github.com/ovh/terraform-provider-ovh/pull/339))
+* `r/ovh_cloud_project_database`: Add `disk_size` and `disk_type` information ([#333](https://github.com/ovh/terraform-provider-ovh/pull/333))
+* `r/ovh_cloud_project_kube_nodepool`: Replace resizing to upscaling/downscaling ([#328](https://github.com/ovh/terraform-provider-ovh/pull/328))
+* `d/ovh_cloud_project_database`: Add `disk_size` and `disk_type` information ([#333](https://github.com/ovh/terraform-provider-ovh/pull/333))
+
+* Add User-Agent on go-ovh client to identify calls that comes from Terraform ([#338](https://github.com/ovh/terraform-provider-ovh/pull/338))
+
+🐜 Bug fixes:
+
+* `r/ovh_cloud_xxxx`: Fix the import ([#334](https://github.com/ovh/terraform-provider-ovh/pull/334))
+
+📚 Documentation:
+
+* `r/ovh_cloud_project_kube_oidc`: Update documentation page ([#339](https://github.com/ovh/terraform-provider-ovh/pull/339))
+* `r/ovh_vrack_dedicated_server`: Update documentation page ([#337](https://github.com/ovh/terraform-provider-ovh/pull/337))
+* `r/ovh_vrack_dedicated_server_interface`: Update documentation page ([#337](https://github.com/ovh/terraform-provider-ovh/pull/337))
+* `r/ovh_dedicated_server_update`: Update documentation page ([#337](https://github.com/ovh/terraform-provider-ovh/pull/337))
+* `r/ovh_dedicated_server_reboot_task`: Update documentation page ([#337](https://github.com/ovh/terraform-provider-ovh/pull/337))
+* `r/ovh_dedicated_server_install_task`: Update documentation page ([#337](https://github.com/ovh/terraform-provider-ovh/pull/337))
+* `r/ovh_cloud_project_kube_nodepool`: Fix the import in the documentation page ([#334](https://github.com/ovh/terraform-provider-ovh/pull/334))
+* `r/ovh_vrack_cloudproject`: Update documentation page ([#327](https://github.com/ovh/terraform-provider-ovh/pull/327))
+* `r/ovh_cloud_project_network_private_subnet`: Update documentation page ([#327](https://github.com/ovh/terraform-provider-ovh/pull/327))
+* `r/cloud_project_network_private`: Update documentation page ([#327](https://github.com/ovh/terraform-provider-ovh/pull/327))
+* `r/ovh_cloud_project_database`: Update documentation page ([#333](https://github.com/ovh/terraform-provider-ovh/pull/333))
+* `r/ovh_cloud_project_region_storage_presign`: Add documentation page ([#326](https://github.com/ovh/terraform-provider-ovh/pull/326))
+
+* `d/ovh_cloud_project_kube_oidc`: Add documentation page ([#339](https://github.com/ovh/terraform-provider-ovh/pull/339))
+* `d/ovh_cloud_project_database`: Update documentation page ([#333](https://github.com/ovh/terraform-provider-ovh/pull/333))
+
+* Fix indent in many documentation pages ([#324](https://github.com/ovh/terraform-provider-ovh/pull/324))
+
+❤️ Thanks for your contributions ❤️
 
 ## 0.22.0 (October 6, 2022)
 
