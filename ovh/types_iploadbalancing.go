@@ -246,7 +246,7 @@ func (opts *IPLoadbalancingHttpRouteActionOpts) FromResource(d *schema.ResourceD
 	return opts
 }
 
-//IPLoadbalancingHttpRoute HTTP Route
+// IPLoadbalancingHttpRoute HTTP Route
 type IPLoadbalancingHttpRouteOpts struct {
 	Action      IPLoadbalancingHttpRouteActionOpts `json:"action"`                //Action triggered when all rules match
 	DisplayName *string                            `json:"displayName,omitempty"` //Human readable name for your route, this field is for you
@@ -291,7 +291,7 @@ func (v IPLoadbalancingHttpRouteAction) ToMap() map[string]interface{} {
 	return obj
 }
 
-//IPLoadbalancingHttpRoute HTTP Route
+// IPLoadbalancingHttpRoute HTTP Route
 type IPLoadbalancingHttpRoute struct {
 	Action      IPLoadbalancingHttpRouteAction `json:"action"`      //Action triggered when all rules match
 	DisplayName *string                        `json:"displayName"` //Human readable name for your route, this field is for you
@@ -341,7 +341,7 @@ func (opts *IPLoadbalancingTcpRouteActionOpts) FromResource(d *schema.ResourceDa
 	return opts
 }
 
-//IPLoadbalancingTcpRoute HTTP Route
+// IPLoadbalancingTcpRoute HTTP Route
 type IPLoadbalancingTcpRouteOpts struct {
 	Action      IPLoadbalancingTcpRouteActionOpts `json:"action"`                //Action triggered when all rules match
 	DisplayName *string                           `json:"displayName,omitempty"` //Human readable name for your route, this field is for you
@@ -381,7 +381,7 @@ func (v IPLoadbalancingTcpRouteAction) ToMap() map[string]interface{} {
 	return obj
 }
 
-//IPLoadbalancingTcpRoute HTTP Route
+// IPLoadbalancingTcpRoute HTTP Route
 type IPLoadbalancingTcpRoute struct {
 	Action      IPLoadbalancingTcpRouteAction `json:"action"`      //Action triggered when all rules match
 	DisplayName *string                       `json:"displayName"` //Human readable name for your route, this field is for you
@@ -419,7 +419,7 @@ func (v IPLoadbalancingTcpRoute) ToMap() map[string]interface{} {
 	return obj
 }
 
-//IPLoadbalancingRouteRule Route Rule
+// IPLoadbalancingRouteRule Route Rule
 type IPLoadbalancingRouteRule struct {
 	DisplayName *string `json:"displayName"` //Human readable name for your rule
 	Field       string  `json:"field"`       //Name of the field to match like "protocol" or "host". See "/ipLoadbalancing/{serviceName}/availableRouteRules" for a list of available rules
@@ -468,7 +468,7 @@ func (v IPLoadbalancingRouteRule) ToMapForRoutes() map[string]interface{} {
 	return obj
 }
 
-//IPLoadbalancingRouteRule Route Rule
+// IPLoadbalancingRouteRule Route Rule
 type IPLoadbalancingRouteRuleOpts struct {
 	DisplayName *string `json:"displayName,omitempty"` //Human readable name for your rule
 	Field       string  `json:"field"`                 //Name of the field to match like "protocol" or "host". See "/ipLoadbalancing/{serviceName}/availableRouteRules" for a list of available rules
