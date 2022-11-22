@@ -28,6 +28,8 @@ func dataSourceCloudProjectKubeNodepool() *schema.Resource {
 				Description: "NodePool resource name",
 				Required:    true,
 			},
+
+			// computed
 			"autoscale": {
 				Type:        schema.TypeBool,
 				Description: "Enable auto-scaling for the pool",
@@ -48,26 +50,21 @@ func dataSourceCloudProjectKubeNodepool() *schema.Resource {
 				Description: "Number of nodes you desire in the pool",
 				Computed:    true,
 			},
-
 			"max_nodes": {
 				Type:        schema.TypeInt,
 				Description: "Number of nodes you desire in the pool",
 				Computed:    true,
-				Optional:    true,
 			},
 			"min_nodes": {
 				Type:        schema.TypeInt,
 				Description: "Number of nodes you desire in the pool",
 				Computed:    true,
-				Optional:    true,
 			},
 			"monthly_billed": {
 				Type:        schema.TypeBool,
 				Description: "Enable monthly billing on all nodes in the pool",
 				Computed:    true,
 			},
-
-			// computed
 			"available_nodes": {
 				Type:        schema.TypeInt,
 				Description: "Number of nodes which are actually ready in the pool",
