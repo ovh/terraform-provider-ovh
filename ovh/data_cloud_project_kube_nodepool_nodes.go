@@ -76,7 +76,7 @@ func dataSourceCloudProjectKubeNodepoolNodes() *schema.Resource {
 						},
 						"node_pool_id": {
 							Type:        schema.TypeString,
-							Description: "NodePool parent id",
+							Description: "NodePool parent ID",
 							Computed:    true,
 						},
 						"project_id": {
