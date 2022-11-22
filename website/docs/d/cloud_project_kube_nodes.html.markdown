@@ -6,7 +6,7 @@ description: |-
 Get information & status of a Kubernetes managed nodes in a public cloud project.
 ---
 
-# ovh_cloud_project_kube_nodepool (Data Source)
+# ovh_cloud_project_kube_nodes (Data Source)
 
 Use this data source to get a list of OVHcloud Managed Kubernetes nodes.
 
