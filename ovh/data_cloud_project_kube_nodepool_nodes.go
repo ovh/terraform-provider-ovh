@@ -61,7 +61,7 @@ func dataSourceCloudProjectKubeNodepoolNodes() *schema.Resource {
 						},
 						"instance_id": {
 							Type:        schema.TypeString,
-							Description: "Public Cloud instance id",
+							Description: "Public Cloud instance ID",
 							Computed:    true,
 						},
 						"is_up_to_date": {
