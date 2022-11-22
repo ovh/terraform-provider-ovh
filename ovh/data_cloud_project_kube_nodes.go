@@ -56,7 +56,7 @@ func dataSourceCloudProjectKubeNodes() *schema.Resource {
 						},
 						"instance_id": {
 							Type:        schema.TypeString,
-							Description: "Public Cloud instance id",
+							Description: "Public Cloud instance ID",
 							Computed:    true,
 						},
 						"is_up_to_date": {
@@ -71,12 +71,12 @@ func dataSourceCloudProjectKubeNodes() *schema.Resource {
 						},
 						"node_pool_id": {
 							Type:        schema.TypeString,
-							Description: "NodePool parent id",
+							Description: "NodePool parent ID",
 							Computed:    true,
 						},
 						"project_id": {
 							Type:        schema.TypeString,
-							Description: "Project id",
+							Description: "Project ID",
 							Computed:    true,
 						},
 						"status": {

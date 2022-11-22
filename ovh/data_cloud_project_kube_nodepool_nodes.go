@@ -129,7 +129,7 @@ func dataSourceCloudProjectKubeNodePoolNodesRead(d *schema.ResourceData, meta in
 	}
 
 	if nodepoolTarget == nil {
-		return fmt.Errorf("the nodepool named %s cannot be found for cluster %s in project %s", name, kubeId, serviceName)
+		return fmt.Errorf("The nodepool named %s cannot be found for cluster %s in project %s", name, kubeId, serviceName)
 	}
 
 	endpointNodepoolNodes := fmt.Sprintf("/cloud/project/%s/kube/%s/nodepool/%s/nodes",

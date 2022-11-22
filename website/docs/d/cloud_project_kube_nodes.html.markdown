@@ -30,7 +30,7 @@ The following arguments are supported:
 * `service_name` - (Optional) The id of the public cloud project. If omitted,
   the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 
-* `kube_id` - The id of the managed kubernetes cluster.
+* `kube_id` - The ID of the managed kubernetes cluster.
 
 ## Attributes Reference
 
@@ -42,12 +42,12 @@ The following attributes are exported:
   * `created_at` - Creation date
   * `deployed_at` - (Optional) Date of the effective deployment
   * `flavor` - Flavor name
-  * `id` - Id of the node
-  * `instance_id` - Openstack id of the underlying VM of the node
+  * `id` - ID of the node
+  * `instance_id` - Openstack ID of the underlying VM of the node
   * `is_up_to_date` - Is the node in the target version of the cluster
   * `name` - Name of the node
-  * `node_pool_id` - Managed kubernetes node pool id
-  * `project_id` - Public cloud project id 
+  * `node_pool_id` - Managed kubernetes node pool ID
+  * `project_id` - Public cloud project ID 
   * `status` - Current status
   * `updated_at` - Last update date
   * `version` - Version in which the node is
