@@ -15,7 +15,7 @@ Use this data source to create a temporary order cart to retrieve information or
 ```hcl
 data "ovh_order_cart" "mycart" {
  ovh_subsidiary = "fr"
- description    = "..."
+ description    = "my cart"
 }
 ```
 
