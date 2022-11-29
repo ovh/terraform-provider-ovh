@@ -165,6 +165,24 @@ variables must also be set:
 
 * `OVH_TESTACC_ORDER_DOMAIN` - set this variable to "mydomain.ovh" to run tests for domain zones.
 
+* `OVH_HOSTING_PRIVATEDATABASE_SERVICE_TEST` - Set a Webhosting database service name to test
+
+* `OVH_HOSTING_PRIVATEDATABASE_NAME_TEST` - The database name created of your service name
+
+* `OVH_HOSTING_PRIVATEDATABASE_USER_TEST` - The username of your private database to test
+
+* `OVH_HOSTING_PRIVATEDATABASE_PASSWORD_TEST` - The password of your private database's user to test
+
+* `OVH_HOSTING_PRIVATEDATABASE_GRANT_TEST` - The grant of your private database's user to test
+
+* `OVH_HOSTING_PRIVATEDATABASE_WHITELIST_IP_TEST` - Whitelist an IP address to connect to your instance
+
+* `OVH_HOSTING_PRIVATEDATABASE_WHITELIST_NAME_TEST` - Set a custom label to your whitelisted IP address
+
+* `OVH_HOSTING_PRIVATEDATABASE_WHITELIST_SERVICE_TEST` - Set this variable to `true` to authorize service access the whitelisted IP address
+
+* `OVH_HOSTING_PRIVATEDATABASE_WHITELIST_SFTP_TEST` - Set this variable to `true` to authorize SFTP access to a whitelisted IP address
+
 ### Used by OVHcloud internal account only:
 
 * `OVH_TESTACC_ORDER_IPLOADBALANCING` - set this variable to "yes" will order ip loadbalancing.

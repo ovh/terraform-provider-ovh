@@ -385,3 +385,12 @@ func ValidateSubsidiary(v string) error {
 		"ws",
 	})
 }
+
+func ValidateHostingPrivateDatabaseUserGrant(value string) error {
+	return ValidateStringEnum(value, []string{
+		"admin",
+		"none",
+		"ro",
+		"rw",
+	})
+}
