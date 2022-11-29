@@ -32,6 +32,7 @@ func resourceVrackDedicatedServer() *schema.Resource {
 				ForceNew: true,
 			},
 		},
+		DeprecationMessage: "Use ovh_vrack_dedicated_server_interface instead.",
 	}
 }
 

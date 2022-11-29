@@ -13,7 +13,7 @@ Orders an ip service.
 
 ## Important
 
-This resource orders an OVH product for a long period of time and may generate heavy costs !
+This resource orders an OVHcloud product for a long period of time and may generate heavy costs !
 Use with caution.
 
 __NOTE__ 1: the "default-payment-mean" will scan your registered bank accounts, credit card and paypal payment means to find your default payment mean.
@@ -39,17 +39,17 @@ data "ovh_order_cart_product_plan" "ipblock" {
 resource "ovh_ip_service" "ipblock" {
   ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
   payment_mean   = "ovh-account"
-  description   = "my ip block"
+  description    = "my ip block"
 
  plan {
-   duration     = data.ovh_order_cart_product_plan.ipblock.selected_price.0.duration
-   plan_code    = data.ovh_order_cart_product_plan.ipblock.plan_code
-   pricing_mode = data.ovh_order_cart_product_plan.ipblock.selected_price.0.pricing_mode
+  duration     = data.ovh_order_cart_product_plan.ipblock.selected_price.0.duration
+  plan_code    = data.ovh_order_cart_product_plan.ipblock.plan_code
+  pricing_mode = data.ovh_order_cart_product_plan.ipblock.selected_price.0.pricing_mode
 
-   configuration {
-     label = "country"
-     value = "FR"
-   }
+  configuration {
+    label = "country"
+    value = "FR"
+  }
  }
 }
 ```
@@ -59,8 +59,8 @@ resource "ovh_ip_service" "ipblock" {
 The following arguments are supported:
 
 * `description` - Custom description on your ip.
-* `ovh_subsidiary` - (Required) Ovh Subsidiary
-* `payment_mean` - (Required) Ovh payment mode (One of "default-payment-mean", "fidelity", "ovh-account")
+* `ovh_subsidiary` - (Required) OVHcloud Subsidiary
+* `payment_mean` - (Required) OVHcloud payment mode (One of "default-payment-mean", "fidelity", "ovh-account")
 * `plan` - (Required) Product Plan to order
   * `duration` - (Required) duration
   * `plan_code` - (Required) Plan code

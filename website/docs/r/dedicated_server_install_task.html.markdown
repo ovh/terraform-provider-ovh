@@ -10,7 +10,7 @@ description: |-
 
 Install your Dedicated Server.
 
-> NOTE: After some delay, if the task is marked as `done`, the Provider
+~> __WARNING__ After some delay, if the task is marked as `done`, the Provider
 may purge it. To avoid raising errors when terraform refreshes its plan, 
 404 errors are ignored on Resource Read, thus some information may be lost
 after a while.
@@ -19,31 +19,33 @@ after a while.
 
 ```hcl
 data ovh_dedicated_server_boots "rescue" {
-  service_name = "ns00000.ip-1-2-3.eu"
+  service_name = "nsxxxxxxx.ip-xx-xx-xx.eu"
   boot_type    = "rescue"
 }
 
 resource "ovh_me_ssh_key" "key" {
-	key_name = "mykey"
-    key      = "ssh-ed25519 AAAAC3..."
+  key_name = "mykey"
+  key      = "ssh-ed25519 AAAAC3..."
 }
 
 resource "ovh_me_installation_template" "debian" {
-  base_template_name = "debian10_64"
-  template_name      = "mydebian10"
+  base_template_name = "debian11_64"
+  template_name      = "mydebian11"
   default_language   = "en"
 
   customization {
-     change_log                      = "v1"
-     custom_hostname                 = "mytest"
-     ssh_key_name                    = ovh_me_ssh_key.key.key_name
+    ssh_key_name    = ovh_me_ssh_key.key.key_name
   }
 }
 
-resource ovh_dedicated_server_install_task "server_install" {
-  service_name      = "ns00000.ip-1-2-3.eu"
+resource "ovh_dedicated_server_install_task" "server_install" {
+  service_name      = "nsxxxxxxx.ip-xx-xx-xx.eu"
   template_name     = ovh_me_installation_template.debian.template_name
   bootid_on_destroy = data.ovh_dedicated_server_boots.rescue.result[0]
+
+  details {
+      custom_hostname = "mytest"
+  }
 }
 ```
 
@@ -72,7 +74,7 @@ The `details` block supports:
 * `soft_raid_devices` - soft raid devices.
 * `ssh_key_name` - Name of the ssh key that should be installed. Password login will be disabled.
 * `use_spla` - set to true to use SPLA.
-* `use_distrib_kernel` - Use the distribution's native kernel instead of the recommended OVH Kernel.
+* `use_distrib_kernel` - Use the distribution's native kernel instead of the recommended OVHcloud Kernel.
 
 ## Attributes Reference
 

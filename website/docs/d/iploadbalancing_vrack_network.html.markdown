@@ -3,18 +3,18 @@ layout: "ovh"
 page_title: "OVH: ovh_iploadbalancing_vrack_network"
 sidebar_current: "docs-ovh-iploadbalancing-vrack-network"
 description: |-
-  Get the details of Vrack network available for your IPLoadbalancer associated with your OVH account.
+  Get the details of Vrack network available for your IPLoadbalancer associated with your OVHcloud account.
 ---
 
 # ovh_iploadbalancing_vrack_network (Data Source)
 
-Use this data source to get the details of Vrack network available for your IPLoadbalancer associated with your OVH account.
+Use this data source to get the details of Vrack network available for your IPLoadbalancer associated with your OVHcloud account.
 
 ## Example Usage
 
 ```hcl
 data ovh_iploadbalancing_vrack_network "lb_network" {
-  service_name = "XXXXXX"
+  service_name     = "XXXXXX"
   vrack_network_id = "yyy"
 }
 ```

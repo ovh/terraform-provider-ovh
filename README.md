@@ -5,13 +5,11 @@ Terraform OVH Provider
 - [![Gitter chat](https://badges.gitter.im/hashicorp-terraform/Lobby.png)](https://gitter.im/hashicorp-terraform/Lobby)
 - Mailing list: [Google Groups](http://groups.google.com/group/terraform-tool)
 
-<img alt="chat on gitter" src="https://cdn.rawgit.com/hashicorp/terraform-website/master/content/source/assets/images/logo-hashicorp.svg" width="600px">
-
 Requirements
 ------------
 
--	[Terraform](https://www.terraform.io/downloads.html) 0.12.x
--	[Go](https://golang.org/doc/install) 1.13 (to build the provider plugin)
+- [Terraform](https://www.terraform.io/downloads.html) 0.12.x
+- [Go](https://golang.org/doc/install) 1.13 (to build the provider plugin)
 
 Building The Provider
 ---------------------
@@ -36,6 +34,54 @@ Using the provider
 Please see the documentation at [terraform.io](https://www.terraform.io/docs/providers/ovh/index.html).
 
 Or you can browse the documentation within this repo [here](https://github.com/ovh/terraform-provider-ovh/tree/master/website/docs).
+
+Using the locally built provider
+----------------------
+
+If you wish to test the provider from the local version you just built, you can try the following method.
+
+First install the terraform provider binary into your local plugin repository:
+
+```sh
+# Set your target environment (OS_architecture): linux_amd64, darwin_amd64...
+$ export ENV="linux_amd64"
+$ make build
+...
+$ mkdir -p ~/.terraform.d/plugins/terraform.local/local/ovh/0.0.1/$ENV
+$ cp $GOPATH/bin/terraform-provider-ovh ~/.terraform.d/plugins/terraform.local/local/ovh/0.0.1/$ENV/terraform-provider-ovh_v0.0.1
+```
+
+Then create a terraform configuration using this exact provider:
+
+```sh
+$ mkdir ~/test-terraform-provider-ovh
+$ cd ~/test-terraform-provider-ovh
+$ cat > main.tf <<EOF
+terraform {
+  required_providers {
+    ovh = {
+      source = "terraform.local/local/ovh"
+      version = "0.0.1"
+    }
+  }
+}
+
+data "ovh_me" "me" {}
+
+output "me" {
+  value = data.ovh_me.me
+}
+EOF
+$ export OVH_ENDPOINT="..."
+$ export OVH_APPLICATION_KEY="..."
+$ export OVH_APPLICATION_SECRET="..."
+$ export OVH_CONSUMER_KEY="..."
+$ terraform init
+...
+$ terraform apply
+...
+```
+
 
 Developing the Provider
 ---------------------------

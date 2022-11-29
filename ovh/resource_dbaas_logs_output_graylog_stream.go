@@ -79,7 +79,7 @@ func resourceDbaasLogsOutputGraylogStream() *schema.Resource {
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
 					err := helpers.ValidateStringEnum(strings.ToUpper(v.(string)), []string{
 						"ALL",
-						"GLEF",
+						"GELF",
 						"PLAIN",
 					})
 					if err != nil {

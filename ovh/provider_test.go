@@ -120,6 +120,27 @@ func testAccPreCheckCloud(t *testing.T) {
 	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_SERVICE_TEST")
 }
 
+// Checks that the environment variables needed for the /cloud/project/{projectId}/database/ acceptance tests are set.
+func testAccPreCheckCloudDatabase(t *testing.T) {
+	testAccPreCheckCloudDatabaseNoEngine(t)
+	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_DATABASE_ENGINE_TEST")
+}
+
+// Checks that the environment variables needed for the /cloud/project/{projectId}/database/<engine>/ acceptance tests are set.
+func testAccPreCheckCloudDatabaseNoEngine(t *testing.T) {
+	testAccPreCheckCloud(t)
+	testAccCheckCloudProjectExists(t)
+	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST")
+	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_DATABASE_REGION_TEST")
+	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_DATABASE_FLAVOR_TEST")
+}
+
+// Checks that the environment variables needed for the /cloud/project/{projectId}/database/{engine}/{clusterId}/ipRestriction/ acceptance tests are set.
+func testAccPreCheckCloudDatabaseIpRestriction(t *testing.T) {
+	testAccPreCheckCloudDatabase(t)
+	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_DATABASE_IP_RESTRICTION_IP_TEST")
+}
+
 // Checks that the environment variables needed for the /cloud/project/{projectId}/ip/failover acceptance tests
 // are set.
 func testAccPreCheckFailoverIpAttach(t *testing.T) {
@@ -137,6 +158,13 @@ func testAccPreCheckKubernetes(t *testing.T) {
 	testAccPreCheckCloud(t)
 	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_KUBE_REGION_TEST")
 	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_KUBE_VERSION_TEST")
+}
+
+// Checks that the environment variables needed for the /vrack/{service}/cloudProject acceptance tests
+// are set.
+func testAccPreCheckKubernetesVRack(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_VRACK_SERVICE_TEST")
 }
 
 // Checks that the environment variables needed for the /ipLoadbalacing acceptance tests

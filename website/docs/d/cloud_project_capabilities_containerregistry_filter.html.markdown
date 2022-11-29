@@ -27,7 +27,7 @@ data "ovh_cloud_project_capabilities_containerregistry_filter" "capability" {
 * `service_name` - The id of the public cloud project. If omitted,
     the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used. 
 * `region` - The region name
-* `plan_name` - The plan name
+* `plan_name` - The plan name. It can be 'SMALL', 'MEDIUM' or 'LARGE'.
 
 ## Attributes Reference
 

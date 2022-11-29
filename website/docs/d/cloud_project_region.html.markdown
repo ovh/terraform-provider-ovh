@@ -14,8 +14,8 @@ Use this data source to retrieve information about a region associated with a pu
 
 ```hcl
 data "ovh_cloud_project_region" "GRA1" {
-   service_name = "XXXXXX"
-   name = "GRA1"
+  service_name = "XXXXXX"
+  name         = "GRA1"
 }
 ```
 

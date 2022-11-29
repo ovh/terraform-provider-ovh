@@ -14,7 +14,7 @@ builds:
   flags:
     - -trimpath
   ldflags:
-    - '-s -w -X main.version={{.Version}} -X main.commit={{.Commit}}'
+    - '-s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X github.com/ovh/terraform-provider-ovh/ovh.providerVersion={{.Version}} -X github.com/ovh/terraform-provider-ovh/ovh.providerCommit={{.Commit}}'
   goos:
     - freebsd
     - windows
@@ -28,6 +28,8 @@ builds:
   ignore:
     - goos: darwin
       goarch: '386'
+    - goos: windows
+      goarch: 'arm64'
   binary: '{{ .ProjectName }}_v{{ .Version }}'
 archives:
 - format: zip

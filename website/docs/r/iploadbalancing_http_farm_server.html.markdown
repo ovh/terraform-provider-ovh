@@ -8,20 +8,20 @@ description: |-
 
 # ovh\_iploadbalancing\_http_farm\_server
 
-Creates a backend server entry linked to http loadbalancing group (farm)
+Creates a backend server entry linked to HTTP loadbalancing group (farm)
 
 ## Example Usage
 
 ```
 data "ovh_iploadbalancing" "lb" {
   service_name = "ip-1.2.3.4"
-   state       = "ok"  
+  state        = "ok"
 }
 
 resource "ovh_iploadbalancing_http_farm" "farmname" {
   service_name = "${data.ovh_iploadbalancing.lb.id}"
-  port = 8080
-  zone = "all"
+  port         = 8080
+  zone         = "all"
 }
 
 resource "ovh_iploadbalancing_http_farm_server" "backend" {
@@ -46,10 +46,10 @@ The following arguments are supported:
 * `service_name` - (Required) The internal name of your IP load balancing
 * `farm_id` - ID of the farm this server is attached to
 * `display_name` - Label for the server
-* `address` - Address of the backend server (IP from either internal or OVH network)
+* `address` - Address of the backend server (IP from either internal or OVHcloud network)
 * `status` - backend status - `active` or `inactive`
 * `port` - Port that backend will respond on
-* `proxy_protocol_version` - version of the PROXY protocol used to pass origin connection information from loadbalancer to recieving service (`v1`, `v2`, `v2-ssl`, `v2-ssl-cn`)
+* `proxy_protocol_version` - version of the PROXY protocol used to pass origin connection information from loadbalancer to receiving service (`v1`, `v2`, `v2-ssl`, `v2-ssl-cn`)
 * `weight` - used in loadbalancing algorithm
 * `probe` - defines if backend will be probed to determine health and keep as active in farm if healthy
 * `ssl` - is the connection ciphered with SSL (TLS)

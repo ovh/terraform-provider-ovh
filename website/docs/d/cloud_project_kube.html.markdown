@@ -8,7 +8,7 @@ description: |-
 
 # ovh_cloud_project_kube (Data Source)
 
-Use this data source to get a OVH Managed Kubernetes Service cluster.
+Use this data source to get a OVHcloud Managed Kubernetes Service cluster.
 
 ## Example Usage
 
@@ -39,7 +39,7 @@ The following attributes are exported:
 * `service_name` - See Argument Reference above.
 * `kube_id` - See Argument Reference above.
 * `name` - The name of the managed kubernetes cluster.
-* `region` - The OVH public cloud region ID of the managed kubernetes cluster.
+* `region` - The OVHcloud public cloud region ID of the managed kubernetes cluster.
 * `version` - Kubernetes version of the managed kubernetes cluster.
 * `private_network_id` - OpenStack private network (or vrack) ID to use.
 * `control_plane_is_up_to_date` - True if control-plane is up to date.
@@ -49,3 +49,8 @@ The following attributes are exported:
 * `status` - Cluster status. Should be normally set to 'READY'.
 * `update_policy` - Cluster update policy. Choose between [ALWAYS_UPDATE,MINIMAL_DOWNTIME,NEVER_UPDATE]'.
 * `url` - Management URL of your cluster.
+* `customization` - Customer customization object
+    * apiserver - Kubernetes API server customization
+        * admissionplugins - Kubernetes API server admission plugins customization
+            * enabled - Array of admission plugins enabled, default is ["NodeRestriction","AlwaysPulImages"] and only these admission plugins can be enabled at this time.
+            * disabled - Array of admission plugins disabled, default is [] and only AlwaysPulImages can be disabled at this time.

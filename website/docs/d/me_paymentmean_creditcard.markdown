@@ -3,19 +3,19 @@ layout: "ovh"
 page_title: "OVH: me_paymentmean_creditcard"
 sidebar_current: "docs-ovh-datasource-me-paymentmean-creditcard"
 description: |-
-  Get information & status of an ovh credit card payment mean
+  Get information & status of an OVHcloud credit card payment mean
 ---
 
 # ovh_me_paymentmean_creditcard (Data Source)
 
 Use this data source to retrieve information about a credit card
-payment mean associated with an OVH account.
+payment mean associated with an OVHcloud account.
 
 ## Example Usage
 
 ```hcl
 data "ovh_me_paymentmean_creditcard" "cc" {
-   use_default = true
+  use_default = true
 }
 ```
 
