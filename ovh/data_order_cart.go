@@ -50,6 +50,12 @@ func dataSourceOrderCart() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"assign": {
+				Type:        schema.TypeBool,
+				Description: "Assign a shopping cart to an loggedin client",
+				Optional:    true,
+				Default:     false,
+			},
 
 			// Computed
 			"cart_id": {
@@ -76,13 +82,14 @@ func dataSourceOrderCart() *schema.Resource {
 
 func dataSourceOrderCartRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
+	assign := d.Get("assign").(bool)
 
 	var r *OrderCart
 
 	// to be created
 	if d.Id() == "" {
 		params := (&OrderCartCreateOpts{}).FromResource(d)
-		newCart, err := orderCartCreate(meta, params, false)
+		newCart, err := orderCartCreate(meta, params, assign)
 		if err != nil {
 			return err
 		}
