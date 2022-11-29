@@ -12,7 +12,7 @@ Manage rules for HTTP route.
 
 ## Example Usage
 
-Route which redirect all url to https for example.com (Vhost).
+Route which redirect all URL to HTTPs for example.com (Vhost).
 
 ```hcl
 resource "ovh_iploadbalancing_http_route" "httpsredirect" {
@@ -24,7 +24,7 @@ resource "ovh_iploadbalancing_http_route" "httpsredirect" {
   action {
     status = 302
     target = "https://$${host}$${path}$${arguments}"
-    type = "redirect"
+    type   = "redirect"
   }
 }
 

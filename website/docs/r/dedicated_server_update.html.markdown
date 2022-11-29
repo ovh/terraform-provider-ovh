@@ -10,22 +10,22 @@ description: |-
 
 Update various properties of your Dedicated Server.
 
-~> __WARNING__: `rescue_mail` and `root_device` properties aren't
-updated consistently. This is an issue on the OVH API which 
-has been reported. Meanwhile, these properties aren't not mapped
+~> __WARNING__ `rescue_mail` and `root_device` properties aren't
+updated consistently. This is an issue on the OVHcloud API which 
+has been reported. Meanwhile, these properties are not mapped
 on this terraform resource.
 
 ## Example Usage
 
 ```hcl
-data ovh_dedicated_server_boots "rescue" {
-  service_name = "ns00000.ip-1-2-3.eu"
+data "ovh_dedicated_server_boots" "rescue" {
+  service_name = "nsxxxxxxx.ip-xx-xx-xx.eu"
   boot_type    = "rescue"
   kernel       = "rescue64-pro"
 }
 
-resource ovh_dedicated_server_update "server" {
-  service_name = "ns00000.ip-1-2-3.eu"
+resource "ovh_dedicated_server_update" "server" {
+  service_name = "nsxxxxxxx.ip-xx-xx-xx.eu"
   boot_id      = data.ovh_dedicated_server_boots.rescue.result[0]
   monitoring   = true
   state        = "ok"

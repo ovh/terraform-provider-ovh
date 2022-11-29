@@ -110,7 +110,8 @@ github.com/hashicorp/go-plugin/internal/plugin
 github.com/hashicorp/go-safetemp
 # github.com/hashicorp/go-uuid v1.0.1
 github.com/hashicorp/go-uuid
-# github.com/hashicorp/go-version v1.3.0
+# github.com/hashicorp/go-version v1.6.0
+## explicit
 github.com/hashicorp/go-version
 # github.com/hashicorp/hcl/v2 v2.3.0
 github.com/hashicorp/hcl/v2
@@ -187,7 +188,7 @@ github.com/mitchellh/mapstructure
 github.com/mitchellh/reflectwalk
 # github.com/oklog/run v1.0.0
 github.com/oklog/run
-# github.com/ovh/go-ovh v1.1.0
+# github.com/ovh/go-ovh v1.3.0
 ## explicit
 github.com/ovh/go-ovh/ovh
 # github.com/smartystreets/assertions v0.0.0-20190116191733-b6c0e53d7304
@@ -200,6 +201,9 @@ github.com/ulikunitz/xz/lzma
 # github.com/vmihailenco/msgpack v4.0.4+incompatible
 github.com/vmihailenco/msgpack
 github.com/vmihailenco/msgpack/codes
+# github.com/ybriffa/rfc3339 v0.0.0-20220203155318-1789e3fd6e70
+## explicit
+github.com/ybriffa/rfc3339
 # github.com/zclconf/go-cty v1.9.1
 github.com/zclconf/go-cty/cty
 github.com/zclconf/go-cty/cty/convert

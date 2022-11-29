@@ -8,7 +8,7 @@ description: |-
 
 # ovh_iploadbalancing_http_route
 
-Manage http route for a loadbalancer service
+Manage HTTP route for a loadbalancer service
 
 ## Example Usage
 
@@ -23,7 +23,7 @@ resource "ovh_iploadbalancing_http_route" "httpsredirect" {
   action {
     status = 302
     target = "https://$${host}$${path}$${arguments}"
-    type = "redirect"
+    type   = "redirect"
   }
 }
 ```

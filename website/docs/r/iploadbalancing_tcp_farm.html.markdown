@@ -15,13 +15,13 @@ Creates a backend server group (farm) to be used by loadbalancing frontend(s)
 ```hcl
 data "ovh_iploadbalancing" "lb" {
   service_name = "ip-1.2.3.4"
-   state       = "ok"  
+  state        = "ok"
 }
 
 resource "ovh_iploadbalancing_tcp_farm" "farmname" {
   service_name = "${data.ovh_iploadbalancing.lb.id}"
   display_name = "ingress-8080-gra"
-  zone = "GRA"
+  zone         = "GRA"
 }
 ```
 
@@ -39,8 +39,8 @@ The following arguments are supported:
 * `probe` - define a backend healthcheck probe
   * `type` - (Required) Valid values : `http`, `internal`, `mysql`, `oco`, `pgsql`, `smtp`, `tcp`
   * `interval` - probe interval, Value between 30 and 3600 seconds, default 30
-  * `match` - What to mach `pattern` against (`contains`, `default`, `internal`, `matches`, `status`)
-  * `port` - Port for backends to recieve traffic on.
+  * `match` - What to match `pattern` against (`contains`, `default`, `internal`, `matches`, `status`)
+  * `port` - Port for backends to receive traffic on.
   * `negate` - Negate probe result
   * `pattern` - Pattern to match against `match`
   * `force_ssl` - Force use of SSL (TLS)

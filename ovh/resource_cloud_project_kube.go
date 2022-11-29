@@ -6,11 +6,20 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-
 	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
+)
+
+const (
+	kubeClusterNameKey                        = "name"
+	kubeClusterPrivateNetworkIDKey            = "private_network_id"
+	kubeClusterPrivateNetworkConfigurationKey = "private_network_configuration"
+	kubeClusterUpdatePolicyKey                = "update_policy"
+	kubeClusterVersionKey                     = "version"
+	kubeClusterCustomizationKey               = "customization"
 )
 
 func resourceCloudProjectKube() *schema.Resource {
@@ -18,6 +27,7 @@ func resourceCloudProjectKube() *schema.Resource {
 		Create: resourceCloudProjectKubeCreate,
 		Read:   resourceCloudProjectKubeRead,
 		Delete: resourceCloudProjectKubeDelete,
+		Update: resourceCloudProjectKubeUpdate,
 
 		Importer: &schema.ResourceImporter{
 			State: resourceCloudProjectKubeImportState,
@@ -30,21 +40,87 @@ func resourceCloudProjectKube() *schema.Resource {
 				ForceNew:    true,
 				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
 			},
-			"name": {
+			kubeClusterNameKey: {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
+				ForceNew: false,
 			},
-			"version": {
+			kubeClusterVersionKey: {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
-				ForceNew: true,
+				Optional: true,
+				ForceNew: false,
 			},
-			"private_network_id": {
+			kubeClusterCustomizationKey: {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Optional: true,
+				ForceNew: false,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"apiserver": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Optional: true,
+							ForceNew: false,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"admissionplugins": {
+										Type:     schema.TypeSet,
+										Computed: true,
+										Optional: true,
+										ForceNew: false,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"enabled": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Optional: true,
+													ForceNew: false,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"disabled": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Optional: true,
+													ForceNew: false,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			kubeClusterPrivateNetworkIDKey: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+			},
+			kubeClusterPrivateNetworkConfigurationKey: {
+				Type:     schema.TypeSet,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"default_vrack_gateway": {
+							Required:    true,
+							Type:        schema.TypeString,
+							Description: "If defined, all egress traffic will be routed towards this IP address, which should belong to the private network. Empty string means disabled.",
+						},
+						"private_network_routing_as_default": {
+							Type:        schema.TypeBool,
+							Required:    true,
+							Description: "Defines whether routing should default to using the nodes' private interface, instead of their public interface. Default is false.",
+						},
+					},
+				},
 			},
 			"region": {
 				Type:     schema.TypeString,
@@ -76,9 +152,10 @@ func resourceCloudProjectKube() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"update_policy": {
+			kubeClusterUpdatePolicyKey: {
 				Type:     schema.TypeString,
 				Computed: true,
+				Optional: true,
 			},
 			"url": {
 				Type:     schema.TypeString,
@@ -96,13 +173,20 @@ func resourceCloudProjectKube() *schema.Resource {
 func resourceCloudProjectKubeImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	givenId := d.Id()
 	splitId := strings.SplitN(givenId, "/", 2)
-	if len(splitId) != 3 {
-		return nil, fmt.Errorf("Import Id is not service_name/kubeid formatted")
+	if len(splitId) != 2 {
+		return nil, fmt.Errorf("import Id is not service_name/kubeid formatted")
 	}
 	serviceName := splitId[0]
 	id := splitId[1]
 	d.SetId(id)
 	d.Set("service_name", serviceName)
+
+	// add kubeconfig in state
+	kubeConfig, err := getKubeconfig(meta.(*Config), serviceName, d.Id())
+	if err != nil {
+		return nil, err
+	}
+	d.Set("kubeconfig", kubeConfig)
 
 	results := make([]*schema.ResourceData, 1)
 	results[0] = d
@@ -120,7 +204,7 @@ func resourceCloudProjectKubeCreate(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG] Will create kube: %+v", params)
 	err := config.OVHClient.Post(endpoint, params, res)
 	if err != nil {
-		return fmt.Errorf("calling Post %s with params %s:\n\t %q", endpoint, params, err)
+		return fmt.Errorf("calling Post %s with params %s:\n\t %w", endpoint, params, err)
 	}
 
 	// This is a fix for a weird bug where the kube is not immediately available on API
@@ -132,9 +216,9 @@ func resourceCloudProjectKubeCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	log.Printf("[DEBUG] Waiting for kube %s to be READY", res.Id)
-	err = waitForCloudProjectKubeReady(config.OVHClient, serviceName, res.Id)
+	err = waitForCloudProjectKubeReady(config.OVHClient, serviceName, res.Id, []string{"INSTALLING"}, []string{"READY"})
 	if err != nil {
-		return fmt.Errorf("timeout while waiting kube %s to be READY: %v", res.Id, err)
+		return fmt.Errorf("timeout while waiting kube %s to be READY: %w", res.Id, err)
 	}
 	log.Printf("[DEBUG] kube %s is READY", res.Id)
 
@@ -163,14 +247,11 @@ func resourceCloudProjectKubeRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if d.IsNewResource() {
-		kubeconfigRaw := CloudProjectKubeKubeConfigResponse{}
-		endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/kubeconfig", serviceName, res.Id)
-		err := config.OVHClient.Post(endpoint, nil, &kubeconfigRaw)
-
+		kubeConfig, err := getKubeconfig(config, serviceName, res.Id)
 		if err != nil {
 			return err
 		}
-		d.Set("kubeconfig", kubeconfigRaw.Content)
+		d.Set("kubeconfig", kubeConfig)
 	}
 
 	log.Printf("[DEBUG] Read kube %+v", res)
@@ -192,11 +273,144 @@ func resourceCloudProjectKubeDelete(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG] Waiting for kube %s to be DELETED", d.Id())
 	err = waitForCloudProjectKubeDeleted(config.OVHClient, serviceName, d.Id())
 	if err != nil {
-		return fmt.Errorf("timeout while waiting kube %s to be DELETED: %v", d.Id(), err)
+		return fmt.Errorf("timeout while waiting kube %s to be DELETED: %w", d.Id(), err)
 	}
 	log.Printf("[DEBUG] kube %s is DELETED", d.Id())
 
 	d.SetId("")
+
+	return nil
+}
+
+func resourceCloudProjectKubeUpdate(d *schema.ResourceData, meta interface{}) error {
+	config := meta.(*Config)
+	serviceName := d.Get("service_name").(string)
+
+	if d.HasChange(kubeClusterCustomizationKey) {
+		_, newValueI := d.GetChange(kubeClusterCustomizationKey)
+		customization := loadCustomization(newValueI)
+
+		endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/customization", serviceName, d.Id())
+		err := config.OVHClient.Put(endpoint, CloudProjectKubeUpdateCustomizationOpts{
+			APIServer: customization.APIServer,
+		}, nil)
+		if err != nil {
+			return err
+		}
+
+		log.Printf("[DEBUG] Waiting for kube %s to be READY", d.Id())
+		err = waitForCloudProjectKubeReady(config.OVHClient, serviceName, d.Id(), []string{"REDEPLOYING", "RESETTING"}, []string{"READY"})
+		if err != nil {
+			return fmt.Errorf("timeout while waiting kube %s to be READY: %w", d.Id(), err)
+		}
+		log.Printf("[DEBUG] kube %s is READY", d.Id())
+	}
+
+	if d.HasChange(kubeClusterVersionKey) {
+		oldValueI, newValueI := d.GetChange(kubeClusterVersionKey)
+
+		oldValue := oldValueI.(string)
+		newValue := newValueI.(string)
+
+		log.Printf("[DEBUG] cluster version change from %s to %s", oldValue, newValue)
+
+		oldVersion, err := version.NewVersion(oldValueI.(string))
+		if err != nil {
+			return fmt.Errorf("version %s does not match a semver", oldValue)
+		}
+		newVersion, err := version.NewVersion(newValueI.(string))
+		if err != nil {
+			return fmt.Errorf("version %s does not match a semver", newValue)
+		}
+
+		oldVersionSegments := oldVersion.Segments()
+		newVersionSegments := newVersion.Segments()
+
+		if oldVersionSegments[0] != 1 || newVersionSegments[0] != 1 {
+			return fmt.Errorf("the only supported major version is 1")
+		}
+		if len(oldVersionSegments) < 2 || len(newVersionSegments) < 2 {
+			log.Printf("[DEBUG] old version segments: %#v new version segments: %#v", oldVersionSegments, newVersionSegments)
+			return fmt.Errorf("the version should only specify the major and minor versions (e.g. \\\"1.20\\\")")
+		}
+
+		if newVersion.LessThan(oldVersion) {
+			return fmt.Errorf("cannot downgrade cluster from %s to %s", oldValue, newValue)
+		}
+
+		if oldVersionSegments[1]+1 != newVersionSegments[1] {
+			return fmt.Errorf("cannot upgrade cluster from %s to %s, only next minor version is authorized", oldValue, newValue)
+		}
+
+		endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/update", serviceName, d.Id())
+		err = config.OVHClient.Post(endpoint, CloudProjectKubeUpdateOpts{
+			Strategy: "NEXT_MINOR",
+		}, nil)
+		if err != nil {
+			return err
+		}
+
+		log.Printf("[DEBUG] Waiting for kube %s to be READY", d.Id())
+		err = waitForCloudProjectKubeReady(config.OVHClient, serviceName, d.Id(), []string{"UPDATING", "REDEPLOYING", "RESETTING"}, []string{"READY"})
+		if err != nil {
+			return fmt.Errorf("timeout while waiting kube %s to be READY: %w", d.Id(), err)
+		}
+		log.Printf("[DEBUG] kube %s is READY", d.Id())
+	}
+
+	if d.HasChange(kubeClusterUpdatePolicyKey) {
+		_, newValue := d.GetChange(kubeClusterUpdatePolicyKey)
+		value := newValue.(string)
+
+		endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/updatePolicy", serviceName, d.Id())
+		err := config.OVHClient.Put(endpoint, CloudProjectKubeUpdatePolicyOpts{
+			UpdatePolicy: value,
+		}, nil)
+		if err != nil {
+			return err
+		}
+	}
+
+	if d.HasChange(kubeClusterNameKey) {
+		_, newValue := d.GetChange(kubeClusterNameKey)
+		value := newValue.(string)
+
+		endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s", serviceName, d.Id())
+		err := config.OVHClient.Put(endpoint, CloudProjectKubePutOpts{
+			Name: &value,
+		}, nil)
+		if err != nil {
+			return err
+		}
+	}
+
+	if d.HasChange(kubeClusterPrivateNetworkConfigurationKey) {
+		_, newValue := d.GetChange(kubeClusterPrivateNetworkConfigurationKey)
+		pncOutput := privateNetworkConfiguration{}
+
+		pncSet := newValue.(*schema.Set).List()
+		for _, pnc := range pncSet {
+			mapping := pnc.(map[string]interface{})
+			pncOutput.DefaultVrackGateway = mapping["default_vrack_gateway"].(string)
+			pncOutput.PrivateNetworkRoutingAsDefault = mapping["private_network_routing_as_default"].(bool)
+		}
+
+		endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/privateNetworkConfiguration", serviceName, d.Id())
+		err := config.OVHClient.Put(endpoint, CloudProjectKubeUpdatePNCOpts{
+			DefaultVrackGateway:            pncOutput.DefaultVrackGateway,
+			PrivateNetworkRoutingAsDefault: pncOutput.PrivateNetworkRoutingAsDefault,
+		}, nil)
+		if err != nil {
+			return err
+		}
+
+		log.Printf("[DEBUG] Waiting for kube %s to be READY", d.Id())
+		err = waitForCloudProjectKubeReady(config.OVHClient, serviceName, d.Id(), []string{"REDEPLOYING", "RESETTING"}, []string{"READY"})
+		if err != nil {
+			return fmt.Errorf("timeout while waiting kube %s to be READY: %w", d.Id(), err)
+		}
+		log.Printf("[DEBUG] kube %s is READY", d.Id())
+	}
 
 	return nil
 }
@@ -208,10 +422,10 @@ func cloudProjectKubeExists(serviceName, id string, client *ovh.Client) error {
 	return client.Get(endpoint, res)
 }
 
-func waitForCloudProjectKubeReady(client *ovh.Client, serviceName, kubeId string) error {
+func waitForCloudProjectKubeReady(client *ovh.Client, serviceName, kubeId string, pending []string, target []string) error {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"INSTALLING"},
-		Target:  []string{"READY"},
+		Pending: pending,
+		Target:  target,
 		Refresh: func() (interface{}, string, error) {
 			res := &CloudProjectKubeResponse{}
 			endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s", serviceName, kubeId)

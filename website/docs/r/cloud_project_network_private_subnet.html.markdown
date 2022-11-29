@@ -14,14 +14,14 @@ Creates a subnet in a private network of a public cloud project.
 
 ```hcl
 resource "ovh_cloud_project_network_private_subnet" "subnet" {
-   service_name = "xxxxx"
-   network_id = "0234543"
-   region     = "GRA1"
-   start      = "192.168.168.100"
-   end        = "192.168.168.200"
-   network    = "192.168.168.0/24"
-   dhcp       = true
-   no_gateway = false
+  service_name = "xxxxx"
+  network_id   = "0234543"
+  region       = "GRA1"
+  start        = "192.168.168.100"
+  end          = "192.168.168.200"
+  network      = "192.168.168.0/24"
+  dhcp         = true
+  no_gateway   = false
 }
 ```
 
@@ -74,3 +74,10 @@ The following attributes are exported:
 * `ip_pools/end` - Last ip for this region.
 * `ip_pools/start` - First ip for this region.
 
+## Import
+
+Subnet in a private network of a public cloud project can be imported using the `service_name` , the `network_id` and the `subnet_id`, separated by "/" E.g.,
+
+```bash
+$ terraform import ovh_cloud_project_network_private_subnet.mysubnet ookie9mee8Shaeghaeleeju7Xeghohv6e/pn-12345678/0f0b73a4-403b-45e4-86d0-b438f1291909
+```

@@ -8,29 +8,29 @@ description: |-
 
 # ovh\_iploadbalancing\_http_frontend
 
-Creates a backend http server group (frontend) to be used by loadbalancing frontend(s)
+Creates a backend HTTP server group (frontend) to be used by loadbalancing frontend(s)
 
 ## Example Usage
 
 ```
 data "ovh_iploadbalancing" "lb" {
   service_name = "ip-1.2.3.4"
-  state       = "ok"
+  state        = "ok"
 }
 
 resource "ovh_iploadbalancing_http_farm" "farm80" {
-   service_name = "${data.ovh_iploadbalancing.lb.service_name}"
-   display_name = "ingress-8080-gra"
-   zone = "all"
-   port = 80
+  service_name = "${data.ovh_iploadbalancing.lb.service_name}"
+  display_name = "ingress-8080-gra"
+  zone         = "all"
+  port         = 80
 }
 
 resource "ovh_iploadbalancing_http_frontend" "testfrontend" {
-   service_name = "${data.ovh_iploadbalancing.lb.service_name}"
-   display_name = "ingress-8080-gra"
-   zone = "all"
-   port = "80,443"
-   default_farm_id = "${ovh_iploadbalancing_http_farm.farm80.id}"
+  service_name    = "${data.ovh_iploadbalancing.lb.service_name}"
+  display_name    = "ingress-8080-gra"
+  zone            = "all"
+  port            = "80,443"
+  default_farm_id = "${ovh_iploadbalancing_http_farm.farm80.id}"
 }
 ```
 

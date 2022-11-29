@@ -8,6 +8,9 @@ description: |-
 
 # ovh_vrack_dedicated_server
 
+~> **NOTE:** The resource `ovh_vrack_dedicated_server` is DEPRECATED and will be removed in a future version.
+Use the resource [`ovh_vrack_dedicated_server_interface`](vrack_dedicated_server_interface.html.markdown) instead.
+
 Attach a dedicated server to a VRack.
 
 ## Example Usage
@@ -15,7 +18,7 @@ Attach a dedicated server to a VRack.
 ```hcl
 resource "ovh_vrack_dedicated_server" "vds" {
   service_name = "XXXX"
-  server_id = "67890"
+  server_id    = "67890"
 }
 ```
 
@@ -23,7 +26,7 @@ resource "ovh_vrack_dedicated_server" "vds" {
 
 The following arguments are supported:
 
-* `service_name` - (Required) The id of the vrack. If omitted,
+* `service_name` - (Required) The service name of the vrack. If omitted,
     the `OVH_VRACK_SERVICE` environment variable is used. 
 
 * `server_id` - (Required) The id of the dedicated server. 

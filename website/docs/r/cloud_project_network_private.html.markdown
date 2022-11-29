@@ -14,9 +14,9 @@ Creates a private network in a public cloud project.
 
 ```hcl
 resource "ovh_cloud_project_network_private" "net" {
-   service_name = "XXXXXX"
-   name       = "admin_network"
-   regions    = ["GRA1", "BHS1"]
+  service_name = "XXXXXX"
+  name         = "admin_network"
+  regions      = ["GRA1", "BHS1"]
 }
 ```
 
@@ -33,13 +33,14 @@ The following arguments are supported:
 * `vlan_id` - a vlan id to associate with the network.
    Changing this value recreates the resource. Defaults to 0.
 
-* `regions` - an array of valid OVH public cloud region ID in which the network
+* `regions` - an array of valid OVHcloud public cloud region ID in which the network
    will be available. Ex.: "GRA1". Defaults to all public cloud regions.
 
 ## Attributes Reference
 
 The following attributes are exported:
 
+* `id` - The id of the network
 * `service_name` - See Argument Reference above.
 * `name` - See Argument Reference above.
 * `vlan_id` - See Argument Reference above.
@@ -53,3 +54,11 @@ The following attributes are exported:
 * `regions_status/status` - (Deprecated) The status of the network in the region.
 * `status` - the status of the network. should be normally set to 'ACTIVE'.
 * `type` - the type of the network. Either 'private' or 'public'. 
+
+## Import
+
+Private network in a public cloud project can be imported using the `service_name` and the `network_id`, separated by "/" E.g.,
+
+```bash
+$ terraform import ovh_cloud_project_network_private.mynet ookie9mee8Shaeghaeleeju7Xeghohv6e/pn-12345678
+```

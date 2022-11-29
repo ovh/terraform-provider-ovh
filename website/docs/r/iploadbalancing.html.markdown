@@ -12,12 +12,10 @@ Orders an IP load balancing.
 
 ## Important
 
-This resource orders an OVH product for a long period of time and may generate heavy costs !
+~> __WARNING__ This resource orders an OVHcloud product for a long period of time and may generate heavy costs!
 Use with caution.
 
-__NOTE__ 1: the "default-payment-mean" will scan your registered bank accounts, credit card and paypal payment means to find your default payment mean.
-
-__NOTE__ 2: this resource is in beta state. Use with caution.
+-> __NOTE__ The "default-payment-mean" will scan your registered bank accounts, credit card and paypal payment means to find your default payment mean.
 
 ## Example Usage
 
@@ -28,36 +26,36 @@ data "ovh_order_cart" "mycart" {
 }
 
 data "ovh_order_cart_product_plan" "iplb" {
- cart_id        = data.ovh_order_cart.mycart.id
- price_capacity = "renew"
- product        = "ipLoadbalancing"
- plan_code      = "iplb-lb1"
+  cart_id        = data.ovh_order_cart.mycart.id
+  price_capacity = "renew"
+  product        = "ipLoadbalancing"
+  plan_code      = "iplb-lb1"
 }
 
 data "ovh_order_cart_product_options_plan" "bhs" {
- cart_id           = data.ovh_order_cart_product_plan.iplb.cart_id
- price_capacity    = data.ovh_order_cart_product_plan.iplb.price_capacity
- product           = data.ovh_order_cart_product_plan.iplb.product
- plan_code         = data.ovh_order_cart_product_plan.iplb.plan_code
- options_plan_code = "iplb-zone-lb1-rbx"
+  cart_id           = data.ovh_order_cart_product_plan.iplb.cart_id
+  price_capacity    = data.ovh_order_cart_product_plan.iplb.price_capacity
+  product           = data.ovh_order_cart_product_plan.iplb.product
+  plan_code         = data.ovh_order_cart_product_plan.iplb.plan_code
+  options_plan_code = "iplb-zone-lb1-rbx"
 }
 
 resource "ovh_iploadbalancing" "iplb-lb1" {
- ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
- display_name   = "my ip loadbalancing"
- payment_mean   = "ovh-account"
+  ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
+  display_name   = "my ip loadbalancing"
+  payment_mean   = "ovh-account"
 
- plan {
-   duration     = data.ovh_order_cart_product_plan.iplb.selected_price.0.duration
-   plan_code    = data.ovh_order_cart_product_plan.iplb.plan_code
-   pricing_mode = data.ovh_order_cart_product_plan.iplb.selected_price.0.pricing_mode
- }
+  plan {
+    duration     = data.ovh_order_cart_product_plan.iplb.selected_price.0.duration
+    plan_code    = data.ovh_order_cart_product_plan.iplb.plan_code
+    pricing_mode = data.ovh_order_cart_product_plan.iplb.selected_price.0.pricing_mode
+  }
 
- plan_option {
-   duration     = data.ovh_order_cart_product_options_plan.bhs.selected_price.0.duration
-   plan_code    = data.ovh_order_cart_product_options_plan.bhs.plan_code
-   pricing_mode = data.ovh_order_cart_product_options_plan.bhs.selected_price.0.pricing_mode
- }
+  plan_option {
+    duration     = data.ovh_order_cart_product_options_plan.bhs.selected_price.0.duration
+    plan_code    = data.ovh_order_cart_product_options_plan.bhs.plan_code
+    pricing_mode = data.ovh_order_cart_product_options_plan.bhs.selected_price.0.pricing_mode
+  }
 }
 ```
 
@@ -66,8 +64,8 @@ resource "ovh_iploadbalancing" "iplb-lb1" {
 The following arguments are supported:
 
 * `display_name` - Set the name displayed in ManagerV6 for your iplb (max 50 chars)
-* `ovh_subsidiary` - (Required) Ovh Subsidiary
-* `payment_mean` - (Required) Ovh payment mode (One of "default-payment-mean", "fidelity", "ovh-account")
+* `ovh_subsidiary` - (Required) OVHcloud Subsidiary
+* `payment_mean` - (Required) OVHcloud payment mode (One of "default-payment-mean", "fidelity", "ovh-account")
 * `plan` - (Required) Product Plan to order
   * `duration` - (Required) duration
   * `plan_code` - (Required) Plan code

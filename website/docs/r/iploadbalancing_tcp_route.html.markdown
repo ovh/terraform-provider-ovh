@@ -8,7 +8,7 @@ description: |-
 
 # ovh_iploadbalancing_tcp_route
 
-Manage tcp route for a loadbalancer service
+Manage TCP route for a loadbalancer service
 
 ## Example Usage
 

@@ -11,7 +11,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
-	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -42,7 +42,7 @@ var Endpoints = map[string]string{
 
 // Errors
 var (
-	ErrAPIDown = errors.New("go-vh: the OVH API is down, it does't respond to /time anymore")
+	ErrAPIDown = errors.New("go-ovh: the OVH API is not reachable: failed to get /auth/time response")
 )
 
 // Client represents a client to call the OVH API
@@ -70,22 +70,23 @@ type Client struct {
 	// Ensures that the timeDelta function is only ran once
 	// sync.Once would consider init done, even in case of error
 	// hence a good old flag
-	timeDeltaMutex *sync.Mutex
-	timeDeltaDone  bool
-	timeDelta      time.Duration
-	Timeout        time.Duration
+	timeDelta atomic.Value
+
+	// Timeout configures the maximum duration to wait for an API requests to complete
+	Timeout time.Duration
+
+	// UserAgent configures the user-agent indication that will be sent in the requests to OVHcloud API
+	UserAgent string
 }
 
 // NewClient represents a new client to call the API
 func NewClient(endpoint, appKey, appSecret, consumerKey string) (*Client, error) {
 	client := Client{
-		AppKey:         appKey,
-		AppSecret:      appSecret,
-		ConsumerKey:    consumerKey,
-		Client:         &http.Client{},
-		timeDeltaMutex: &sync.Mutex{},
-		timeDeltaDone:  false,
-		Timeout:        time.Duration(DefaultTimeout),
+		AppKey:      appKey,
+		AppSecret:   appSecret,
+		ConsumerKey: consumerKey,
+		Client:      &http.Client{},
+		Timeout:     time.Duration(DefaultTimeout),
 	}
 
 	// Get and check the configuration
@@ -214,29 +215,22 @@ func (c *Client) DeleteUnAuthWithContext(ctx context.Context, url string, resTyp
 	return c.CallAPIWithContext(ctx, "DELETE", url, nil, resType, false)
 }
 
-// timeDelta returns the time  delta between the host and the remote API
+// timeDelta returns the time delta between the host and the remote API
 func (c *Client) getTimeDelta() (time.Duration, error) {
-
-	if !c.timeDeltaDone {
-		// Ensure only one thread is updating
-		c.timeDeltaMutex.Lock()
-
-		// Ensure that the mutex will be released on return
-		defer c.timeDeltaMutex.Unlock()
-
-		// Did we wait ? Maybe no more needed
-		if !c.timeDeltaDone {
-			ovhTime, err := c.getTime()
-			if err != nil {
-				return 0, err
-			}
-
-			c.timeDelta = time.Since(*ovhTime)
-			c.timeDeltaDone = true
-		}
+	d, ok := c.timeDelta.Load().(time.Duration)
+	if ok {
+		return d, nil
 	}
 
-	return c.timeDelta, nil
+	ovhTime, err := c.getTime()
+	if err != nil {
+		return 0, err
+	}
+
+	d = time.Since(*ovhTime)
+	c.timeDelta.Store(d)
+
+	return d, nil
 }
 
 // getTime t returns time from for a given api client endpoint
@@ -317,6 +311,12 @@ func (c *Client) NewRequest(method, path string, reqBody interface{}, needAuth b
 
 	// Send the request with requested timeout
 	c.Client.Timeout = c.Timeout
+
+	if c.UserAgent != "" {
+		req.Header.Set("User-Agent", "github.com/ovh/go-ovh ("+c.UserAgent+")")
+	} else {
+		req.Header.Set("User-Agent", "github.com/ovh/go-ovh")
+	}
 
 	return req, nil
 }
