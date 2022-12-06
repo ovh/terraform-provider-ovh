@@ -1,4 +1,52 @@
-## 0.24.0 (Unreleased)
+## 0.25.0 (Unreleased)
+
+## 0.24.0 (December 6, 2022)
+
+🎉 Features:
+
+* New resource: `r/ovh_hosting_privatedatabase` ([#247](https://github.com/ovh/terraform-provider-ovh/pull/247))
+* New resource: `r/ovh_hosting_privatedatabase_database` ([#247](https://github.com/ovh/terraform-provider-ovh/pull/247))
+* New resource: `r/ovh_hosting_privatedatabase_user` ([#247](https://github.com/ovh/terraform-provider-ovh/pull/247))
+* New resource: `r/ovh_hosting_privatedatabase_user_grant` ([#247](https://github.com/ovh/terraform-provider-ovh/pull/247))
+* New resource: `r/ovh_hosting_privatedatabase_whitelist` ([#247](https://github.com/ovh/terraform-provider-ovh/pull/247))
+
+* New datasource: `d/ovh_hosting_privatedatabase` ([#247](https://github.com/ovh/terraform-provider-ovh/pull/247))
+* New datasource: `d/ovh_hosting_privatedatabase_database` ([#247](https://github.com/ovh/terraform-provider-ovh/pull/247))
+* New datasource: `d/ovh_hosting_privatedatabase_user` ([#247](https://github.com/ovh/terraform-provider-ovh/pull/247))
+* New datasource: `d/ovh_hosting_privatedatabase_user_grant` ([#247](https://github.com/ovh/terraform-provider-ovh/pull/247))
+* New datasource: `d/ovh_hosting_privatedatabase_whitelist` ([#247](https://github.com/ovh/terraform-provider-ovh/pull/247))
+* New datasource: `d/ovh_cloud_project_kube_nodepool_nodes` ([#340](https://github.com/ovh/terraform-provider-ovh/pull/340))
+* New datasource: `d/ovh_cloud_project_kube_nodes` ([#340](https://github.com/ovh/terraform-provider-ovh/pull/340))
+
+💪 Improvements:
+
+* `d/ovh_order_cart`: Add feature to set catalogName ([#250](https://github.com/ovh/terraform-provider-ovh/pull/250))
+
+🐜 Bug fixes:
+
+* `r/ovh_cloud_project_database`: Fix disk type and size ([#341](https://github.com/ovh/terraform-provider-ovh/pull/341))
+
+📚 Documentation:
+
+* Homepage: new environment variables ([#247](https://github.com/ovh/terraform-provider-ovh/pull/247))
+
+* `r/ovh_hosting_privatedatabase`: Add documentation page ([#247](https://github.com/ovh/terraform-provider-ovh/pull/247))
+* `r/ovh_hosting_privatedatabase_database`: Add documentation page ([#247](https://github.com/ovh/terraform-provider-ovh/pull/247))
+* `r/ovh_hosting_privatedatabase_user`: Add documentation page ([#247](https://github.com/ovh/terraform-provider-ovh/pull/247))
+* `r/ovh_hosting_privatedatabase_user_grant`: Add documentation page ([#247](https://github.com/ovh/terraform-provider-ovh/pull/247))
+* `r/ovh_hosting_privatedatabase_whitelist`: Add documentation page ([#247](https://github.com/ovh/terraform-provider-ovh/pull/247))
+
+* `d/ovh_hosting_privatedatabase`: Add documentation page ([#247](https://github.com/ovh/terraform-provider-ovh/pull/247))
+* `d/ovh_hosting_privatedatabase_database`: Add documentation page ([#247](https://github.com/ovh/terraform-provider-ovh/pull/247))
+* `d/ovh_hosting_privatedatabase_user`: Add documentation page ([#247](https://github.com/ovh/terraform-provider-ovh/pull/247))
+* `d/ovh_hosting_privatedatabase_user_grant`: Add documentation page ([#247](https://github.com/ovh/terraform-provider-ovh/pull/247))
+* `d/ovh_hosting_privatedatabase_whitelist`: Add documentation page ([#247](https://github.com/ovh/terraform-provider-ovh/pull/247))
+* `d/ovh_cloud_project_kube_nodepool_nodes`: Add documentation page ([#340](https://github.com/ovh/terraform-provider-ovh/pull/340))
+* `d/ovh_cloud_project_kube_nodes`: Add documentation page ([#340](https://github.com/ovh/terraform-provider-ovh/pull/340))
+* `d/order_cart`: Update documentation page ([#250](https://github.com/ovh/terraform-provider-ovh/pull/250))
+
+❤️ Thanks for your contributions ❤️
+
 
 ## 0.23.0 (November 22, 2022)
 
@@ -22,7 +70,7 @@
 
 🐜 Bug fixes:
 
-* `r/ovh_cloud_xxxx`: Fix the import ([#334](https://github.com/ovh/terraform-provider-ovh/pull/334))
+* `r/ovh_cloud_project_kube_nodepool`: Fix the import ([#334](https://github.com/ovh/terraform-provider-ovh/pull/334))
 
 📚 Documentation:
 
