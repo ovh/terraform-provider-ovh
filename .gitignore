@@ -26,6 +26,10 @@ website/node_modules
 
 website/vendor
 
+# Local build exclusion
+
+terraform-provider-ovh
 # Test exclusions
 !command/test-fixtures/**/*.tfstate
 !command/test-fixtures/**/.terraform/
+
