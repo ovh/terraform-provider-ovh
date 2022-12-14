@@ -15,14 +15,14 @@ Use this data source to retrieve information about a DBaas logs output graylog s
 ```hcl
 
 data "ovh_dbaas_logs_output_graylog_stream" "stream" {
-  service_name = "XXXXXX"
+  service_name = "ldp-xx-xxxxx"
   title        = "my stream"
 }
 ```
 
 ## Argument Reference
 
-* `service_name` - The service name
+* `service_name` - The service name. It's the ID of your Logs Data Platform instance.
 * `title` - Stream description
 
 ## Attributes Reference

@@ -1,6 +1,8 @@
 package ovh
 
 import (
+	"fmt"
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -8,26 +10,40 @@ import (
 
 const testAccDataSourceDbaasLogsInputEngine_deprecated = `
 data "ovh_dbaas_logs_input_engine" "logstash" {
- name          = "logstash"
- version       = "6.8"
- is_deprecated = true
+ service_name  = "%s"
+ name          = "%s"
+ version       = "%s"
+ is_deprecated = "%s"
 }
 `
+
 const testAccDataSourceDbaasLogsInputEngine_basic = `
 data "ovh_dbaas_logs_input_engine" "logstash" {
- name          = "logstash"
- version       = "7.x"
+ service_name  = "%s"
+ name          = "%s"
+ version       = "%s"
 }
 `
 
 func TestAccDataSourceDbaasLogsInputEngine_basic(t *testing.T) {
+	serviceName := os.Getenv("OVH_DBAAS_LOGS_SERVICE_TEST")
+	name := "LOGSTASH"
+	version := "7.x"
+
+	config := fmt.Sprintf(
+		testAccDataSourceDbaasLogsInputEngine_basic,
+		serviceName,
+		name,
+		version,
+	)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { testAccPreCheckCredentials(t) },
+		PreCheck: func() { testAccPreCheckDbaasLogs(t) },
 
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceDbaasLogsInputEngine_basic,
+				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
 						"data.ovh_dbaas_logs_input_engine.logstash",
@@ -46,13 +62,25 @@ func TestAccDataSourceDbaasLogsInputEngine_basic(t *testing.T) {
 }
 
 func TestAccDataSourceDbaasLogsInputEngine_deprecated(t *testing.T) {
+	serviceName := os.Getenv("OVH_DBAAS_LOGS_SERVICE_TEST")
+	name := "LOGSTASH"
+	version := "6.8"
+	is_deprecated := "true"
+
+	config := fmt.Sprintf(
+		testAccDataSourceDbaasLogsInputEngine_deprecated,
+		serviceName,
+		name,
+		version,
+		is_deprecated,
+	)
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { testAccPreCheckCredentials(t) },
+		PreCheck: func() { testAccPreCheckDbaasLogs(t) },
 
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceDbaasLogsInputEngine_deprecated,
+				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
 						"data.ovh_dbaas_logs_input_engine.logstash",

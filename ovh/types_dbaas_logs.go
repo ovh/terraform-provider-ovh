@@ -26,6 +26,7 @@ type DbaasLogsOperation struct {
 	InputId     *string `json:"inputId"`
 	KibanaId    *string `json:"kibanaId"`
 	OperationId string  `json:"operationId"`
+	OsdId       *string `json:"osdId"`
 	RoleId      *string `json:"roleId"`
 	State       string  `json:"state"`
 	StreamId    *string `json:"streamId"`

@@ -133,7 +133,7 @@ func dataSourceDbaasLogsOutputGraylogStream() *schema.Resource {
 				Computed:    true,
 			},
 			"web_socket_enabled": {
-				Type:        schema.TypeString,
+				Type:        schema.TypeBool,
 				Description: "Enable Websocket",
 				Computed:    true,
 			},
@@ -192,9 +192,10 @@ func dataSourceDbaasLogsOutputGraylogStreamRead(d *schema.ResourceData, meta int
 	}
 
 	for k, v := range streams[0].ToMap() {
-		if k != "id" {
+		if k != "stream_id" {
 			d.Set(k, v)
 		} else {
+			d.Set("stream_id", fmt.Sprint(v))
 			d.SetId(fmt.Sprint(v))
 		}
 	}
