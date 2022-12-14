@@ -3,7 +3,7 @@ layout: "ovh"
 page_title: "OVH: vps"
 sidebar_current: "docs-ovh-datasource-vps-x"
 description: |-
-  Get information of a vps associatd with your OVJ Account
+  Get information of a vps associatd with your OVH Account
 ---
 
 # ovh\_vps (Data Source)
