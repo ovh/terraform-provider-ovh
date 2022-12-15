@@ -26,6 +26,11 @@ func dataSourceDbaasLogsInputEngine() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"service_name": {
+				Type:        schema.TypeString,
+				Description: "The service name",
+				Required:    true,
+			},
 			"version": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -38,9 +43,16 @@ func dataSourceDbaasLogsInputEngine() *schema.Resource {
 func dataSourceDbaasLogsInputEngineRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
+	serviceName := d.Get("service_name").(string)
+
 	log.Printf("[DEBUG] Will read dbaas logs input engines")
 	res := []string{}
-	endpoint := fmt.Sprintf("/dbaas/logs/input/engine")
+
+	endpoint := fmt.Sprintf(
+		"/dbaas/logs/%s/input/engine",
+		url.PathEscape(serviceName),
+	)
+
 	if err := config.OVHClient.Get(endpoint, &res); err != nil {
 		return fmt.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
 	}
@@ -52,10 +64,14 @@ func dataSourceDbaasLogsInputEngineRead(d *schema.ResourceData, meta interface{}
 	engines := []*DbaasLogsInputEngine{}
 
 	for _, id := range res {
-		log.Printf("[DEBUG] Will read dbaas logs input engine %s", id)
-		endpoint := fmt.Sprintf("/dbaas/logs/input/engine/%s",
+		log.Printf("[DEBUG] Will read dbaas logs input engine %s/%s", serviceName, id)
+
+		endpoint := fmt.Sprintf(
+			"/dbaas/logs/%s/input/engine/%s",
+			url.PathEscape(serviceName),
 			url.PathEscape(id),
 		)
+
 		engine := &DbaasLogsInputEngine{}
 		if err := config.OVHClient.Get(endpoint, &engine); err != nil {
 			return fmt.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
