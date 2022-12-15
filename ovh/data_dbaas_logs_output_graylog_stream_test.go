@@ -45,7 +45,7 @@ func TestAccDataSourceDbaasLogsOutputGraylogStream_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"data.ovh_dbaas_logs_output_graylog_stream.stream",
 						"description",
-						title,
+						desc,
 					),
 					resource.TestCheckResourceAttr(
 						"data.ovh_dbaas_logs_output_graylog_stream.stream",
