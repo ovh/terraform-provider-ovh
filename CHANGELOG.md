@@ -1,4 +1,29 @@
-## 0.25.0 (Unreleased)
+## 0.26.0 (Unreleased)
+
+## 0.25.0 (December 16, 2022)
+
+🎉 Features:
+
+* New datasource: `d/vpss` ([#345](https://github.com/ovh/terraform-provider-ovh/pull/345))
+
+💪 Improvements:
+
+* `d/ovh_dbaas_logs_input_engine`: Now take in account a required service_name ([#347](https://github.com/ovh/terraform-provider-ovh/pull/347))
+
+
+🐜 Bug fixes:
+
+* `d/ovh_dbaas_logs_output_graylog_stream`: Fix acceptance test ([#347](https://github.com/ovh/terraform-provider-ovh/pull/347))
+
+📚 Documentation:
+
+* `d/ovh_dbaas_logs_input_engine`: Update documentation page ([#347](https://github.com/ovh/terraform-provider-ovh/pull/347))
+* `d/ovh_dbaas_logs_output_graylog_stream`: Update documentation page ([#347](https://github.com/ovh/terraform-provider-ovh/pull/347))
+ovh_dbaas_logs_output_graylog_stream
+* `d/vpss`: Add documentation page ([#345](https://github.com/ovh/terraform-provider-ovh/pull/345))
+* `d/vps`: Update documentation page ([#345](https://github.com/ovh/terraform-provider-ovh/pull/345))
+
+❤️ Thanks for your contributions ❤️
 
 ## 0.24.0 (December 6, 2022)
 
