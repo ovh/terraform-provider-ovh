@@ -10,6 +10,7 @@ import (
 
 type DedicatedNASHAPartition struct {
 	Name            string `json:"partitionName,omitempty"`
+	Description     string `json:"partitionDescription,omitempty"`
 	Protocol        string `json:"protocol,omitempty"`
 	Size            int    `json:"size,omitempty"`
 	Capacity        int    `json:"partitionCapacity,omitempty"`
@@ -18,7 +19,11 @@ type DedicatedNASHAPartition struct {
 
 type DedicatedNASHAPartitionAccess struct {
 	IP   string `json:"ip"`
-	Type string `json:"type,omitempty"`
+	Type string `json:"type,omitempty"` // readonly, readwrite
+}
+
+type DedicatedNASHAPartitionSnapshot struct {
+	Type string `json:"snapshotType"` // day-1, day-2, day-3, day-7, hour-1, hour-6
 }
 
 type DedicatedNASHATask struct {
