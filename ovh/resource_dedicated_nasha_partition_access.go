@@ -16,9 +16,7 @@ func resourceDedicatedNASHAPartitionAccess() *schema.Resource {
 		ReadContext:   resourceDedicatedNASHAPartitionAccessRead,
 		DeleteContext: resourceDedicatedNASHAPartitionAccessDelete,
 		Importer: &schema.ResourceImporter{
-			StateContext: func(c context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				return []*schema.ResourceData{d}, nil
-			},
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -39,6 +37,7 @@ func resourceDedicatedNASHAPartitionAccess() *schema.Resource {
 			},
 			"type": &schema.Schema{
 				Type:     schema.TypeString,
+				Default:  "readwrite",
 				Optional: true,
 				ForceNew: true,
 			},
@@ -63,18 +62,18 @@ func resourceDedicatedNASHAPartitionAccessCreate(c context.Context, d *schema.Re
 
 	err := config.OVHClient.Post(endpoint, access, resp)
 	if err != nil {
-		return diag.Errorf("calling %s with params %s:\n\t %q", endpoint, access, err)
+		return diag.Errorf("calling %s with params %v:\n\t %q", endpoint, access, err)
 	}
 
 	stateConf := resp.StateChangeConf(d, meta)
 
 	_, err = stateConf.WaitForStateContext(c)
 	if err != nil {
-		return diag.Errorf("waiting for NASHA partition access (%s): %s", access, err)
+		return diag.Errorf("waiting for NASHA partition access (%v): %s", access, err)
 	}
 	log.Printf("[DEBUG] Created NASHA partition access")
 
-	d.SetId(fmt.Sprintf("dedicated_nasha_%s_partition_%s_access_%s", serviceName, partitionName, ipsubnet))
+	d.SetId(fmt.Sprintf("%s/%s/%s", serviceName, partitionName, ipsubnet))
 
 	return nil
 }

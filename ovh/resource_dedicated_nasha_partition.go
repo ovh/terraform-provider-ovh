@@ -3,10 +3,11 @@ package ovh
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"log"
+	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -17,32 +18,39 @@ func resourceDedicatedNASHAPartition() *schema.Resource {
 		ReadContext:   resourceDedicatedNASHAPartitionRead,
 		UpdateContext: resourceDedicatedNASHAPartitionUpdate,
 		DeleteContext: resourceDedicatedNASHAPartitionDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 
 		Schema: map[string]*schema.Schema{
-			"service_name": &schema.Schema{
+			"service_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"name": &schema.Schema{
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"protocol": &schema.Schema{
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"protocol": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"size": &schema.Schema{
+			"size": {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
-			"capacity": &schema.Schema{
+			"capacity": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"used_by_snapshots": &schema.Schema{
+			"used_by_snapshots": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -56,9 +64,10 @@ func resourceDedicatedNASHAPartitionCreate(c context.Context, d *schema.Resource
 	name := d.Get("name").(string)
 
 	partition := &DedicatedNASHAPartition{
-		Name:     name,
-		Protocol: d.Get("protocol").(string),
-		Size:     d.Get("size").(int),
+		Name:        name,
+		Description: d.Get("description").(string),
+		Protocol:    d.Get("protocol").(string),
+		Size:        d.Get("size").(int),
 	}
 
 	resp := &DedicatedNASHATask{}
@@ -78,15 +87,24 @@ func resourceDedicatedNASHAPartitionCreate(c context.Context, d *schema.Resource
 	}
 	log.Printf("[DEBUG] Created NASHA partition")
 
-	d.SetId(fmt.Sprintf("dedicated_nasha_%s_partition_%s", serviceName, name))
-
-	// resourceDedicatedNASHAPartitionRead(d, meta)
+	d.SetId(fmt.Sprintf("%s/%s", serviceName, name))
 
 	return nil
 }
 
 func resourceDedicatedNASHAPartitionRead(c context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
+
+	if strings.Contains(d.Id(), "/") {
+		tab := strings.Split(d.Id(), "/")
+		if len(tab) != 2 {
+			return diag.Errorf("cant parse partition id: %s", d.Id())
+		}
+
+		d.Set("service_name", tab[0])
+		d.Set("name", tab[1])
+	}
+
 	serviceName := d.Get("service_name").(string)
 	name := d.Get("name").(string)
 
@@ -104,6 +122,7 @@ func resourceDedicatedNASHAPartitionRead(c context.Context, d *schema.ResourceDa
 		}
 	}
 
+	d.Set("description", resp.Description)
 	d.Set("size", resp.Size)
 	d.Set("protocol", resp.Protocol)
 	d.Set("capacity", resp.Capacity)
@@ -118,7 +137,8 @@ func resourceDedicatedNASHAPartitionUpdate(c context.Context, d *schema.Resource
 	name := d.Get("name").(string)
 
 	partition := &DedicatedNASHAPartition{
-		Size: d.Get("size").(int),
+		Size:        d.Get("size").(int),
+		Description: d.Get("description").(string),
 	}
 	resp := &DedicatedNASHAPartition{}
 
