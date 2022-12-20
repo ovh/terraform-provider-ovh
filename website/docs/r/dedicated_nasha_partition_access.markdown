@@ -38,3 +38,8 @@ The following attributes are exported:
 * `partition_name` - See Argument Reference above.
 * `ip` - See Argument Reference above.
 * `type` - See Argument Reference above.
+
+## Import
+
+NASHA partition access can be imported using the `{service_name}/{partition_name}/{ip}`, e.g.  
+`$ terraform import ovh_dedicated_nasha_partition_access.foo zpool-12345/foo/123.123.123.123%2F32`

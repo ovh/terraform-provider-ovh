@@ -40,3 +40,8 @@ The following attributes are exported:
 * `protocol` - See Argument Reference above.
 * `capacity` - Reports stroage space useage in %.
 * `used_by_snapshots` - Reports storage space used by snapshots in %.
+
+## Import
+
+NASHA can be imported using the `{service_name}/{name}`, e.g.  
+`$ terraform import ovh_dedicated_nasha_partition.foo zpool-12345/foo`
