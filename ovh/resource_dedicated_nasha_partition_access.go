@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"log"
 	"net/url"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -80,6 +81,19 @@ func resourceDedicatedNASHAPartitionAccessCreate(c context.Context, d *schema.Re
 
 func resourceDedicatedNASHAPartitionAccessRead(c context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
+
+	if strings.Contains(d.Id(), "/") {
+		tab := strings.Split(d.Id(), "/")
+		if len(tab) != 3 {
+			return diag.Errorf("cant parse access partition id: %s", d.Id())
+		}
+
+		d.Set("service_name", tab[0])
+		d.Set("partition_name", tab[1])
+		ip, _ := url.PathUnescape(tab[2])
+		d.Set("ip", ip)
+	}
+
 	serviceName := d.Get("service_name").(string)
 	partitionName := d.Get("partition_name").(string)
 	ipsubnet, _ := d.Get("ip").(string)
