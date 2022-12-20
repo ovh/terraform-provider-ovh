@@ -8,6 +8,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+type DedicatedNASHA struct {
+	ServiceName        string `json:"serviceName,omitempty"`
+	Monitored          bool   `json:"monitored,omitempty"`
+	ZpoolSize          int    `json:"zpoolSize,omitempty"`
+	CustomName         string `json:"customName,omitempty"`
+	Datacenter         string `json:"datacenter,omitempty"`
+	DiskType           string `json:"diskType,omitempty"`
+	CanCreatePartition bool   `json:"canCreatePartition,omitempty"`
+	Ip                 string `json:"ip,omitempty"`
+	ZpoolCapacity      int    `json:"zpoolCapacity,omitempty"`
+}
+
 type DedicatedNASHAPartition struct {
 	Name            string `json:"partitionName,omitempty"`
 	Description     string `json:"partitionDescription,omitempty"`
