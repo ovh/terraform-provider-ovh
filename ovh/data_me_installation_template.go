@@ -234,11 +234,6 @@ func dataSourceMeInstallationTemplate() *schema.Resource {
 				Computed:    true,
 				Description: "This distribution supports installation using the distribution's native kernel instead of the recommended OVH kernel",
 			},
-			"supports_gpt_label": {
-				Type:        schema.TypeBool,
-				Computed:    true,
-				Description: "This distribution supports the GUID Partition Table (GPT), providing up to 128 partitions that can have more than 2TB",
-			},
 			"supports_rtm": {
 				Type:        schema.TypeBool,
 				Computed:    true,
@@ -248,11 +243,6 @@ func dataSourceMeInstallationTemplate() *schema.Resource {
 				Type:        schema.TypeBool,
 				Computed:    true,
 				Description: "This distribution supports the microsoft SQL server",
-			},
-			"supports_uefi": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "This distribution supports UEFI setup (no,only,yes)",
 			},
 		},
 	}
