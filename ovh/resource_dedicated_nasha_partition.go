@@ -83,9 +83,9 @@ func resourceDedicatedNASHAPartitionCreate(c context.Context, d *schema.Resource
 
 	_, err = stateConf.WaitForStateContext(c)
 	if err != nil {
-		return diag.Errorf("waiting for NASHA partition (%q): %s", partition, err.Error())
+		return diag.Errorf("waiting for HA-NAS partition (%q): %s", partition, err.Error())
 	}
-	log.Printf("[DEBUG] Created NASHA partition")
+	log.Printf("[DEBUG] Created HA-NAS partition")
 
 	d.SetId(fmt.Sprintf("%s/%s", serviceName, name))
 
@@ -98,7 +98,7 @@ func resourceDedicatedNASHAPartitionRead(c context.Context, d *schema.ResourceDa
 	if strings.Contains(d.Id(), "/") {
 		tab := strings.Split(d.Id(), "/")
 		if len(tab) != 2 {
-			return diag.Errorf("cant parse partition id: %s", d.Id())
+			return diag.Errorf("can't parse partition ID: %s", d.Id())
 		}
 
 		d.Set("service_name", tab[0])
@@ -166,7 +166,7 @@ func resourceDedicatedNASHAPartitionUpdate(c context.Context, d *schema.Resource
 
 	_, err = stateConf.WaitForStateContext(c)
 	if err != nil {
-		return diag.Errorf("waiting for NASHA partition update: %s", err)
+		return diag.Errorf("waiting for HA-NAS partition update: %s", err)
 	}
 
 	return nil
@@ -190,10 +190,10 @@ func resourceDedicatedNASHAPartitionDelete(c context.Context, d *schema.Resource
 
 	_, err = stateConf.WaitForStateContext(c)
 	if err != nil {
-		return diag.Errorf("waiting for NASHA partition delete: %s", err)
+		return diag.Errorf("waiting for HA-NAS partition delete: %s", err)
 	}
 
-	log.Printf("[DEBUG] Deleted NASHA partition")
+	log.Printf("[DEBUG] Deleted HA-NAS partition")
 
 	return nil
 }
