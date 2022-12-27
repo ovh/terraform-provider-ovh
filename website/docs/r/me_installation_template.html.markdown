@@ -16,14 +16,14 @@ Use this resource to create a custom installation template available for dedicat
 resource "ovh_me_installation_template" "mytemplate" {
   base_template_name = "centos7_64"
   template_name      = "mytemplate"
-  default_language   = "fr"
+  default_language   = "en"
 }
 ```
 
 ## Argument Reference
 
 * `available_languages`: List of all language available for this template.
-* `base_template_name`: (Required) OVHcloud template name yours will be based on, choose one among the list given by compatibleTemplates function.
+* `base_template_name`: (Required) The name of an existing installation template, choose one among the list given by `ovh_dedicated_installation_templates` datasource.
 * `beta`: This distribution is new and, although tested and functional, may still display odd behaviour.
 * `bit_format`: This template bit format (32 or 64).
 * `category`: Category of this template (informative only). (basic, customer, hosting, other, readyToUse, virtualisation).
@@ -45,12 +45,9 @@ resource "ovh_me_installation_template" "mytemplate" {
 * `last_modification`: Date of last modification of the base image.
 * `remove_default_partition_schemes`: (Required) Remove default partition schemes at creation.
 * `supports_distribution_kernel`: This distribution supports installation using the distribution's native kernel instead of the recommended OVHcloud kernel.
-* `supports_gpt_label`: This distribution supports the GUID Partition Table (GPT), providing up to 128 partitions that can have more than 2TB.
 * `supports_rtm`: This distribution supports RTM software.
 * `supports_sql_server`: This distribution supports the microsoft SQL server.
-* `supports_uefi`: This distribution supports UEFI setup (no,only,yes).
 * `template_name`: (Required)  This template name.
-
 
 ## Attributes Reference
 
