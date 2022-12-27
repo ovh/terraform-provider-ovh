@@ -10,12 +10,10 @@ import (
 
 func TestAccDedicatedNashaData(t *testing.T) {
 	serviceName := os.Getenv("OVH_NASHA_SERVICE_TEST")
-	nashaIp := os.Getenv("OVH_NASHA_SERVICE_IP_TEST")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			checkEnvOrFail(t, "OVH_NASHA_SERVICE_TEST")
-			checkEnvOrFail(t, "OVH_NASHA_SERVICE_IP_TEST")
 			testAccPreCheckCredentials(t)
 		},
 		Providers: testAccProviders,
@@ -28,8 +26,7 @@ func TestAccDedicatedNashaData(t *testing.T) {
 				`, serviceName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.ovh_dedicated_nasha.testacc", "disk_type", "ssd"),
-					resource.TestCheckResourceAttr("data.ovh_dedicated_nasha.testacc", "zpool_size", "3000"),
-					resource.TestCheckResourceAttr("data.ovh_dedicated_nasha.testacc", "ip", nashaIp),
+					resource.TestCheckResourceAttr("data.ovh_dedicated_nasha.testacc", "service_name", serviceName),
 				),
 			},
 		},
