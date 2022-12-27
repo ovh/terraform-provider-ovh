@@ -3,12 +3,12 @@ layout: "ovh"
 page_title: "OVH: dedicated_nasha_partition"
 sidebar_current: "docs-ovh-resource-dedicated-nasha-partition"
 description: |-
-  Provides a resource for managing partitions on NASHA services
+  Provides a resource for managing partitions on HA-NAS services
 ---
 
 # ovh_dedicated_nasha_partition
 
-Provides a resource for managing partitions on NASHA services
+Provides a resource for managing partitions on HA-NAS services
 
 ## Example Usage
 
@@ -25,7 +25,7 @@ resource "ovh_dedicated_nasha_partition" "foo" {
 
 The following arguments are supported:
 
-* `service_name` - (Required) The internal name of your NASHA (it has to be ordered via OVH interface)
+* `service_name` - (Required) The internal name of your HA-NAS (it has to be ordered via OVH interface)
 * `name` - (Required) name of the partition
 * `size` - (Required) size of the partition in GB
 * `protocol` - (Required) one of "NFS", "CIFS" or "NFS_CIFS"
@@ -43,5 +43,5 @@ The following attributes are exported:
 
 ## Import
 
-NASHA can be imported using the `{service_name}/{name}`, e.g.  
+HA-NAS can be imported using the `{service_name}/{name}`, e.g.  
 `$ terraform import ovh_dedicated_nasha_partition.foo zpool-12345/foo`

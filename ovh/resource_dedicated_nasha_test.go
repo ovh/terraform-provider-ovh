@@ -82,10 +82,10 @@ func testAccNashaPartitionCheck(n string) resource.TestCheckFunc {
 		partitionResponse := &DedicatedNASHAPartition{}
 		err := config.OVHClient.Get(endpoint, partitionResponse)
 		if err != nil {
-			return fmt.Errorf("calling GET %s :\n\t %s", endpoint, err.Error())
+			return fmt.Errorf("calling GET %s:\n\t %s", endpoint, err.Error())
 		}
 
-		fmt.Printf("NASHA partition : %+v\n", partitionResponse)
+		fmt.Printf("HA-NAS partition: %+v\n", partitionResponse)
 
 		return nil
 	}
@@ -107,10 +107,10 @@ func testAccNashaPartitionSnapshotCheck(n string) resource.TestCheckFunc {
 		partitionSnapshotResponse := &DedicatedNASHAPartitionSnapshot{}
 		err := config.OVHClient.Get(endpoint, partitionSnapshotResponse)
 		if err != nil {
-			return fmt.Errorf("calling GET %s :\n\t %s", endpoint, err.Error())
+			return fmt.Errorf("calling GET %s:\n\t %s", endpoint, err.Error())
 		}
 
-		fmt.Printf("NASHA partition snapshot : %+v\n", partitionSnapshotResponse)
+		fmt.Printf("HA-NAS partition snapshot: %+v\n", partitionSnapshotResponse)
 
 		return nil
 	}
@@ -132,10 +132,10 @@ func testAccNashaPartitionAccessCheck(n string) resource.TestCheckFunc {
 		partitionAccessResponse := &DedicatedNASHAPartitionAccess{}
 		err := config.OVHClient.Get(endpoint, partitionAccessResponse)
 		if err != nil {
-			return fmt.Errorf("calling GET %s :\n\t %s", endpoint, err.Error())
+			return fmt.Errorf("calling GET %s:\n\t %s", endpoint, err.Error())
 		}
 
-		fmt.Printf("NASHA partition access : %+v\n", partitionAccessResponse)
+		fmt.Printf("HA-NAS partition access:%+v\n", partitionAccessResponse)
 
 		return nil
 	}
@@ -149,14 +149,14 @@ func testAccNashaPartitionDestroy(n string) resource.TestCheckFunc {
 		}
 
 		serviceName := nashaPartitionAccessResource.Primary.Attributes["service_name"]
-		parititionName := nashaPartitionAccessResource.Primary.Attributes["name"]
+		partitionName := nashaPartitionAccessResource.Primary.Attributes["name"]
 
 		config := testAccProvider.Meta().(*Config)
-		endpoint := fmt.Sprintf("/dedicated/nasha/%s/partition/%s", serviceName, parititionName)
+		endpoint := fmt.Sprintf("/dedicated/nasha/%s/partition/%s", serviceName, partitionName)
 
 		err := config.OVHClient.Get(endpoint, nil)
 		if err == nil {
-			return fmt.Errorf("NASHA Partition (%s) still exists", parititionName)
+			return fmt.Errorf("HA-NAS Partition (%s) still exists", partitionName)
 		}
 
 		return nil

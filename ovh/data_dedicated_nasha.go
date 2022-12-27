@@ -23,27 +23,27 @@ func dataSourceDedicatedNasha() *schema.Resource {
 			"can_create_partition": {
 				Type:        schema.TypeBool,
 				Computed:    true,
-				Description: "True, if partition creation is allowed on this nas HA",
+				Description: "True, if partition creation is allowed on this HA-NAS",
 			},
 			"custom_name": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "The name you give to the nas",
+				Description: "The name you give to the HA-NAS",
 			},
 			"datacenter": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "area of nas",
+				Description: "area of HA-NAS",
 			},
 			"disk_type": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "the disk type of the nasHa",
+				Description: "the disk type of the HA-NAS",
 			},
 			"ip": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "Access ip of nas",
+				Description: "Access IP of HA-NAS",
 			},
 			"monitored": {
 				Type:        schema.TypeBool,
@@ -53,12 +53,12 @@ func dataSourceDedicatedNasha() *schema.Resource {
 			"zpool_capacity": {
 				Type:        schema.TypeFloat,
 				Computed:    true,
-				Description: "percentage of nas space used in %",
+				Description: "percentage of HA-NAS space used in %",
 			},
 			"zpool_size": {
 				Type:        schema.TypeFloat,
 				Computed:    true,
-				Description: "the size of the nas",
+				Description: "the size of the HA-NAS",
 			},
 		},
 	}

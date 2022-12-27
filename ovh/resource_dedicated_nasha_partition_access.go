@@ -70,9 +70,9 @@ func resourceDedicatedNASHAPartitionAccessCreate(c context.Context, d *schema.Re
 
 	_, err = stateConf.WaitForStateContext(c)
 	if err != nil {
-		return diag.Errorf("waiting for NASHA partition access (%v): %s", access, err)
+		return diag.Errorf("waiting for HA-NAS partition access (%v): %s", access, err)
 	}
-	log.Printf("[DEBUG] Created NASHA partition access")
+	log.Printf("[DEBUG] Created HA-NAS partition access")
 
 	d.SetId(fmt.Sprintf("%s/%s/%s", serviceName, partitionName, ipsubnet))
 
@@ -85,7 +85,7 @@ func resourceDedicatedNASHAPartitionAccessRead(c context.Context, d *schema.Reso
 	if strings.Contains(d.Id(), "/") {
 		tab := strings.Split(d.Id(), "/")
 		if len(tab) != 3 {
-			return diag.Errorf("cant parse access partition id: %s", d.Id())
+			return diag.Errorf("can't parse access partition ID: %s", d.Id())
 		}
 
 		d.Set("service_name", tab[0])
@@ -136,7 +136,7 @@ func resourceDedicatedNASHAPartitionAccessDelete(c context.Context, d *schema.Re
 
 	_, err = stateConf.WaitForStateContext(c)
 	if err != nil {
-		return diag.Errorf("waiting for NASHA partition access: %s", err)
+		return diag.Errorf("waiting for HA-NAS partition access: %s", err)
 	}
 
 	return nil

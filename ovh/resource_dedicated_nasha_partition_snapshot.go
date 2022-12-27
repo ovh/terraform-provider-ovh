@@ -61,9 +61,9 @@ func resourceDedicatedNASHAPartitionSnapshotCreate(c context.Context, d *schema.
 
 	_, err = stateConf.WaitForStateContext(c)
 	if err != nil {
-		return diag.Errorf("waiting for NASHA snapshot (%q): %s", snapshot, err.Error())
+		return diag.Errorf("waiting for HA-NAS snapshot (%q): %s", snapshot, err.Error())
 	}
-	log.Printf("[DEBUG] Created NASHA snapshot")
+	log.Printf("[DEBUG] Created HA-NAS snapshot")
 
 	d.SetId(fmt.Sprintf("%s/%s/%s", serviceName, partitionName, snapshotType))
 
@@ -76,7 +76,7 @@ func resourceDedicatedNASHAPartitionSnapshotRead(c context.Context, d *schema.Re
 	if strings.Contains(d.Id(), "/") {
 		tab := strings.Split(d.Id(), "/")
 		if len(tab) != 3 {
-			return diag.Errorf("cant parse snapshot id: %s", d.Id())
+			return diag.Errorf("can't parse snapshot ID: %s", d.Id())
 		}
 
 		d.Set("service_name", tab[0])
@@ -124,10 +124,10 @@ func resourceDedicatedNASHAPartitionSnapshotDelete(c context.Context, d *schema.
 
 	_, err = stateConf.WaitForStateContext(c)
 	if err != nil {
-		return diag.Errorf("waiting for NASHA shapshot delete: %s", err)
+		return diag.Errorf("waiting for HA-NAS shapshot delete: %s", err)
 	}
 
-	log.Printf("[DEBUG] Deleted NASHA shapshot")
+	log.Printf("[DEBUG] Deleted HA-NAS shapshot")
 
 	return nil
 }
