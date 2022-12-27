@@ -74,7 +74,7 @@ func resourceDedicatedNASHAPartitionAccessCreate(c context.Context, d *schema.Re
 	}
 	log.Printf("[DEBUG] Created HA-NAS partition access")
 
-	d.SetId(fmt.Sprintf("%s/%s/%s", serviceName, partitionName, ipsubnet))
+	d.SetId(fmt.Sprintf("%s/%s/%s", serviceName, partitionName, url.PathEscape(ipsubnet)))
 
 	return nil
 }
