@@ -47,7 +47,7 @@ func resourceIPLoadbalancingRefreshCreate(d *schema.ResourceData, meta interface
 				endpoint := fmt.Sprintf("/ipLoadbalancing/%s/task?action=refreshIplb&status=%s", service, state)
 				err := config.OVHClient.Get(endpoint, taskResp)
 				if err != nil {
-					return d, "error", fmt.Errorf("calling GET %s :\n\t %s", endpoint, err.Error())
+					return d, "error", fmt.Errorf("calling GET %s:\n\t %s", endpoint, err.Error())
 				}
 				if len(*taskResp) > 0 {
 					return d, "exists", nil
@@ -72,7 +72,7 @@ func resourceIPLoadbalancingRefreshCreate(d *schema.ResourceData, meta interface
 
 	err = config.OVHClient.Get(endpoint, checkResp)
 	if err != nil {
-		return fmt.Errorf("calling GET %s :\n\t %s", endpoint, err.Error())
+		return fmt.Errorf("calling GET %s:\n\t %s", endpoint, err.Error())
 	}
 
 	// no changes detected, return successfull creation/refresh

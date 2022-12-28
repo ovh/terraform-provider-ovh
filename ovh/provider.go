@@ -1,13 +1,14 @@
 package ovh
 
 import (
-	"fmt"
+	"context"
+	ini "gopkg.in/ini.v1"
 	"os"
 	"sync"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/mitchellh/go-homedir"
-	ini "gopkg.in/ini.v1"
 )
 
 // Provider returns a *schema.Provider for OVH.
@@ -89,6 +90,7 @@ func Provider() *schema.Provider {
 			"ovh_dbaas_logs_output_graylog_stream":                    dataSourceDbaasLogsOutputGraylogStream(),
 			"ovh_dedicated_ceph":                                      dataSourceDedicatedCeph(),
 			"ovh_dedicated_installation_templates":                    dataSourceDedicatedInstallationTemplates(),
+			"ovh_dedicated_nasha":                                     dataSourceDedicatedNasha(),
 			"ovh_dedicated_server":                                    dataSourceDedicatedServer(),
 			"ovh_dedicated_server_boots":                              dataSourceDedicatedServerBoots(),
 			"ovh_dedicated_servers":                                   dataSourceDedicatedServers(),
@@ -155,6 +157,9 @@ func Provider() *schema.Provider {
 			"ovh_dbaas_logs_input":                                        resourceDbaasLogsInput(),
 			"ovh_dbaas_logs_output_graylog_stream":                        resourceDbaasLogsOutputGraylogStream(),
 			"ovh_dedicated_ceph_acl":                                      resourceDedicatedCephACL(),
+			"ovh_dedicated_nasha_partition":                               resourceDedicatedNASHAPartition(),
+			"ovh_dedicated_nasha_partition_access":                        resourceDedicatedNASHAPartitionAccess(),
+			"ovh_dedicated_nasha_partition_snapshot":                      resourceDedicatedNASHAPartitionSnapshot(),
 			"ovh_dedicated_server_install_task":                           resourceDedicatedServerInstallTask(),
 			"ovh_dedicated_server_reboot_task":                            resourceDedicatedServerRebootTask(),
 			"ovh_dedicated_server_update":                                 resourceDedicatedServerUpdate(),
@@ -196,7 +201,7 @@ func Provider() *schema.Provider {
 			"ovh_vrack_iploadbalancing":                                   resourceVrackIpLoadbalancing(),
 		},
 
-		ConfigureFunc: configureProvider,
+		ConfigureContextFunc: ConfigureContextFunc,
 	}
 }
 
@@ -213,7 +218,7 @@ func init() {
 	}
 }
 
-func configureProvider(d *schema.ResourceData) (interface{}, error) {
+func ConfigureContextFunc(context context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	config := Config{
 		Endpoint: d.Get("endpoint").(string),
 		lockAuth: &sync.Mutex{},
@@ -222,18 +227,18 @@ func configureProvider(d *schema.ResourceData) (interface{}, error) {
 	rawPath := "~/.ovh.conf"
 	configPath, err := homedir.Expand(rawPath)
 	if err != nil {
-		return &config, fmt.Errorf("Failed to expand config path %q: %s", rawPath, err)
+		return &config, diag.Errorf("Failed to expand config path %q: %s", rawPath, err)
 	}
 
 	if _, err := os.Stat(configPath); err == nil {
 		c, err := ini.Load(configPath)
 		if err != nil {
-			return nil, err
+			return nil, diag.FromErr(err)
 		}
 
 		section, err := c.GetSection(d.Get("endpoint").(string))
 		if err != nil {
-			return nil, err
+			return nil, diag.FromErr(err)
 		}
 		config.ApplicationKey = section.Key("application_key").String()
 		config.ApplicationSecret = section.Key("application_secret").String()
@@ -251,13 +256,8 @@ func configureProvider(d *schema.ResourceData) (interface{}, error) {
 	}
 
 	if err := config.loadAndValidate(); err != nil {
-		return nil, err
+		return nil, diag.FromErr(err)
 	}
 
 	return &config, nil
-}
-
-func deprecated(r *schema.Resource, msg string) *schema.Resource {
-	r.DeprecationMessage = msg
-	return r
 }
