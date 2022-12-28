@@ -13,7 +13,7 @@ Provides a resource for managing **snapshot** to partitions on HA-NAS services
 ## Example Usage
 
 ```
-resource "ovh_dedicated_nasha_partition_snapshot" "foo" {
+resource "ovh_dedicated_nasha_partition_snapshot" "my-partition" {
   service_name = "zpool-12345"
   partition_name = "my-partition"
   type = "day-3"
