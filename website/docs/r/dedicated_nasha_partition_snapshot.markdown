@@ -39,4 +39,4 @@ The following attributes are exported:
 ## Import
 
 HA-NAS partition snapshot can be imported using the `{service_name}/{partition_name}/{type}`, e.g.  
-`$ terraform import ovh_dedicated_nasha_partition_snapshot.foo zpool-12345/my-partition/day-3`
+`$ terraform import ovh_dedicated_nasha_partition_snapshot.my-partition zpool-12345/my-partition/day-3`

@@ -46,4 +46,4 @@ The following attributes are exported:
 ## Import
 
 HA-NAS can be imported using the `{service_name}/{name}`, e.g.  
-`$ terraform import ovh_dedicated_nasha_partition.foo zpool-12345/my-partition`
+`$ terraform import ovh_dedicated_nasha_partition.my-partition zpool-12345/my-partition`
