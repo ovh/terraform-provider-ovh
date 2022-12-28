@@ -42,4 +42,4 @@ The following attributes are exported:
 ## Import
 
 HA-NAS partition access can be imported using the `{service_name}/{partition_name}/{ip}`, e.g.  
-`$ terraform import ovh_dedicated_nasha_partition_access.foo zpool-12345/my-partition/123.123.123.123%2F32`
+`$ terraform import ovh_dedicated_nasha_partition_access.my-partition zpool-12345/my-partition/123.123.123.123%2F32`
