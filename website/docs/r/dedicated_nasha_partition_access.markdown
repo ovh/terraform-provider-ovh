@@ -15,9 +15,9 @@ Provides a resource for managing access rights to partitions on HA-NAS services
 ```
 resource "ovh_dedicated_nasha_partition_access" "foo" {
   service_name = "zpool-12345"
-  partition_name = "foo"
+  partition_name = "my-partition"
   ip = "123.123.123.123/32"
-  protocol = "NFS"
+  type = "readwrite"
 }
 ```
 
@@ -25,7 +25,7 @@ resource "ovh_dedicated_nasha_partition_access" "foo" {
 
 The following arguments are supported:
 
-* `service_name` - (Required) The internal name of your HA-NAS (it has to be ordered via OVH interface)
+* `service_name` - (Required) The internal name of your HA-NAS (it has to be ordered via OVHcloud interface)
 * `partition_name` - (Required) name of the partition
 * `ip` - (Required) ip block in x.x.x.x/x format
 * `type` - (Required) one of "readwrite", "readonly"
@@ -42,4 +42,4 @@ The following attributes are exported:
 ## Import
 
 HA-NAS partition access can be imported using the `{service_name}/{partition_name}/{ip}`, e.g.  
-`$ terraform import ovh_dedicated_nasha_partition_access.foo zpool-12345/foo/123.123.123.123%2F32`
+`$ terraform import ovh_dedicated_nasha_partition_access.foo zpool-12345/my-partition/123.123.123.123%2F32`

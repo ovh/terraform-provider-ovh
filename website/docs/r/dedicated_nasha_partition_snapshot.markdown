@@ -15,7 +15,7 @@ Provides a resource for managing **snapshot** to partitions on HA-NAS services
 ```
 resource "ovh_dedicated_nasha_partition_snapshot" "foo" {
   service_name = "zpool-12345"
-  partition_name = "foo"
+  partition_name = "my-partition"
   type = "day-3"
 }
 ```
@@ -24,7 +24,7 @@ resource "ovh_dedicated_nasha_partition_snapshot" "foo" {
 
 The following arguments are supported:
 
-* `service_name` - (Required) The internal name of your HA-NAS (it has to be ordered via OVH interface)
+* `service_name` - (Required) The internal name of your HA-NAS (it has to be ordered via OVHcloud interface)
 * `partition_name` - (Required) name of the partition
 * `type` - (Required) Snapshot interval, allowed : day-1, day-2, day-3, day-7, hour-1, hour-6
 
@@ -39,4 +39,4 @@ The following attributes are exported:
 ## Import
 
 HA-NAS partition snapshot can be imported using the `{service_name}/{partition_name}/{type}`, e.g.  
-`$ terraform import ovh_dedicated_nasha_partition_snapshot.foo zpool-12345/foo/day-3`
+`$ terraform import ovh_dedicated_nasha_partition_snapshot.foo zpool-12345/my-partition/day-3`
