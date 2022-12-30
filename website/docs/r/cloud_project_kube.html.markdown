@@ -12,7 +12,7 @@ Creates a OVHcloud Managed Kubernetes Service cluster in a public cloud project.
 
 ## Example Usage
 
-Simple Kubernetes cluster creation:
+Create a simple Kubernetes cluster in `GRA7` region:
 
 ```hcl
 resource "ovh_cloud_project_kube" "mycluster" {
@@ -22,7 +22,22 @@ resource "ovh_cloud_project_kube" "mycluster" {
 }
 ```
 
-Kubernetes cluster creation with API Server AdmissionPlugins configuration:
+Create a simple Kubernetes cluster in `GRA7` region and export its kubeconfig file:
+
+```hcl
+resource "ovh_cloud_project_kube" "mycluster" {
+  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  name         = "my_kube_cluster"
+  region       = "GRA7"
+}
+
+resource "local_file" "kubeconfig" {
+  content     = ovh_cloud_project_kube.mycluster.kubeconfig
+  filename = "mycluster.yml"
+}
+```
+
+Create a Kubernetes cluster in `GRA5` region with API Server AdmissionPlugins configuration:
 
 ```hcl
 resource "ovh_cloud_project_kube" "mycluster" {
