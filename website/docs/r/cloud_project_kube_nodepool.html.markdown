@@ -12,10 +12,26 @@ Creates a nodepool in a OVHcloud Managed Kubernetes Service cluster.
 
 ## Example Usage
 
+Create a simple node pool in your Kubernetes cluster:
+
+```hcl
+resource "ovh_cloud_project_kube_nodepool" "node_pool" {
+  service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  kube_id       = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+  name          = "my-pool-1" //Warning: "_" char is not allowed!
+  flavor_name   = "b2-7"
+  desired_nodes = 3
+  max_nodes     = 3
+  min_nodes     = 3
+}
+```
+
+Create an advanced node pool in your Kubernetes cluster:
+
 ```hcl
 resource "ovh_cloud_project_kube_nodepool" "pool" {
   service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  kube_id       = "xxxxxxxx-2bf9-xxxx-xxxx-xxxxxxxxxxxx"
+  kube_id       = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
   name          = "my-pool"
   flavor_name   = "b2-7"
   desired_nodes = 3
