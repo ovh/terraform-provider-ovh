@@ -153,6 +153,8 @@ variables must also be set:
 
 * `OVH_CLOUD_PROJECT_KUBE_VERSION_TEST` - The version of your public cloud kubernetes project.
 
+* `OVH_DEDICATED_SERVER` - The name of the dedicated server to test dedicated_server_networking resource.
+
 * `OVH_NASHA_SERVICE_TEST` - The name of your HA-NAS service.
 
 * `OVH_ZONE_TEST` - The domain you own to test the domain_zone resource.
