@@ -32,3 +32,11 @@ The following arguments are supported:
 ## Attributes Reference
 
 The id is set to the value of ip_reverse.
+
+## Import
+
+The resource can be imported using the `ip`, `ip_reverse` of the address, separated by "|" E.g.,
+
+```bash
+$ terraform import ovh_ip_reverse.my_reverse '2001:0db8:c0ff:ee::/64|2001:0db8:c0ff:ee::42'
+```

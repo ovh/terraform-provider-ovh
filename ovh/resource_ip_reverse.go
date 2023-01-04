@@ -57,9 +57,9 @@ func resourceIpReverse() *schema.Resource {
 
 func resourceIpReverseImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	givenId := d.Id()
-	splitId := strings.SplitN(givenId, ":", 2)
+	splitId := strings.SplitN(givenId, "|", 2)
 	if len(splitId) != 2 {
-		return nil, fmt.Errorf("Import Id is not ip:ip_reverse formatted")
+		return nil, fmt.Errorf("Import Id is not ip|ip_reverse formatted")
 	}
 	ip := splitId[0]
 	ipReverse := splitId[1]
