@@ -227,14 +227,12 @@ func (v CloudProjectKubeNodePoolResponse) ToMap() map[string]interface{} {
 	obj["up_to_date_nodes"] = v.UpToDateNodes
 	obj["updated_at"] = v.UpdatedAt
 
-	var taints [][]map[string]interface{}
+	var taints []map[string]interface{}
 	for _, taint := range *v.Template.Spec.Taints {
-		t := []map[string]interface{}{
-			{
-				"effect": taint.Effect,
-				"key":    taint.Key,
-				"value":  taint.Value,
-			},
+		t := map[string]interface{}{
+			"effect": taint.Effect.String(),
+			"key":    taint.Key,
+			"value":  taint.Value,
 		}
 
 		taints = append(taints, t)
