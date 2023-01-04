@@ -46,7 +46,7 @@ The following attributes are exported:
 * `ttl` - The TTL of the record
 
 ## Import
-In order to import in terraform an existing zone record, you will need its _{id}_ which can be retrieved by using [OVH API portal](https://api.ovh.com/console/#/domain/zone/%7BzoneName%7D/record~GET)
+OVHcloud domain zone record can be imported using the `id`, which can be retrieved by using [OVH API portal](https://api.ovh.com/console/#/domain/zone/%7BzoneName%7D/record~GET), and the `zone`, separated by "." E.g.,
 
 
 ```bash
