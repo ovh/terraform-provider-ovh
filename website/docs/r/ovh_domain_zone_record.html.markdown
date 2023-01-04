@@ -46,9 +46,9 @@ The following attributes are exported:
 * `ttl` - The TTL of the record
 
 ## Import
+OVHcloud domain zone record can be imported using the `id`, which can be retrieved by using [OVH API portal](https://api.ovh.com/console/#/domain/zone/%7BzoneName%7D/record~GET), and the `zone`, separated by "." E.g.,
 
-OVHcloud record can be imported using the `id` and the `zone`, eg:
 
 ```bash
-$ terraform import ovh_domain_zone_record.test 1234OVH_ID.zone.tld
+$ terraform import ovh_domain_zone_record.test id.zone
 ```
