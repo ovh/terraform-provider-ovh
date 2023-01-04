@@ -50,5 +50,5 @@ OVHcloud domain zone record can be imported using the `id`, which can be retriev
 
 
 ```bash
-$ terraform import ovh_domain_zone_record.test {id}.{zone}
+$ terraform import ovh_domain_zone_record.test id.zone
 ```
