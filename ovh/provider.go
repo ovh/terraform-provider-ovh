@@ -163,6 +163,7 @@ func Provider() *schema.Provider {
 			"ovh_dedicated_server_install_task":                           resourceDedicatedServerInstallTask(),
 			"ovh_dedicated_server_reboot_task":                            resourceDedicatedServerRebootTask(),
 			"ovh_dedicated_server_update":                                 resourceDedicatedServerUpdate(),
+			"ovh_dedicated_server_networking":                             resourceDedicatedServerNetworking(),
 			"ovh_domain_zone":                                             resourceDomainZone(),
 			"ovh_domain_zone_record":                                      resourceOvhDomainZoneRecord(),
 			"ovh_domain_zone_redirection":                                 resourceOvhDomainZoneRedirection(),
