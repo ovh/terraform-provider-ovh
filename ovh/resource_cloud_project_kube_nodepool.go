@@ -231,11 +231,14 @@ func resourceCloudProjectKubeNodePoolCreate(d *schema.ResourceData, meta interfa
 	kubeId := d.Get("kube_id").(string)
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/nodepool", serviceName, kubeId)
-	params := (&CloudProjectKubeNodePoolCreateOpts{}).FromResource(d)
+	params, err := (&CloudProjectKubeNodePoolCreateOpts{}).FromResource(d)
+	if err != nil {
+		return err
+	}
 	res := &CloudProjectKubeNodePoolResponse{}
 
 	log.Printf("[DEBUG] Will create nodepool: %+v", params)
-	err := config.OVHClient.Post(endpoint, params, res)
+	err = config.OVHClient.Post(endpoint, params, res)
 	if err != nil {
 		return fmt.Errorf("calling Post %s with params %s:\n\t %w", endpoint, params, err)
 	}
@@ -291,10 +294,13 @@ func resourceCloudProjectKubeNodePoolUpdate(d *schema.ResourceData, meta interfa
 	kubeId := d.Get("kube_id").(string)
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/nodepool/%s", serviceName, kubeId, d.Id())
-	params := (&CloudProjectKubeNodePoolUpdateOpts{}).FromResource(d)
+	params, err := (&CloudProjectKubeNodePoolUpdateOpts{}).FromResource(d)
+	if err != nil {
+		return err
+	}
 
 	log.Printf("[DEBUG] Will update nodepool: %+v", *params)
-	err := config.OVHClient.Put(endpoint, params, nil)
+	err = config.OVHClient.Put(endpoint, params, nil)
 	if err != nil {
 		return fmt.Errorf("calling Put %s with params %s:\n\t %w", endpoint, *params, err)
 	}
