@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-
 	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
@@ -142,6 +141,12 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 				Optional:    true,
 				Type:        schema.TypeSet,
 				MaxItems:    1,
+				Set: func(i interface{}) int {
+					out := fmt.Sprintf("%#v", i)
+					hash := int(schema.HashString(out))
+
+					return hash
+				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"metadata": {
@@ -288,10 +293,10 @@ func resourceCloudProjectKubeNodePoolUpdate(d *schema.ResourceData, meta interfa
 	endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/nodepool/%s", serviceName, kubeId, d.Id())
 	params := (&CloudProjectKubeNodePoolUpdateOpts{}).FromResource(d)
 
-	log.Printf("[DEBUG] Will update nodepool: %+v", params)
+	log.Printf("[DEBUG] Will update nodepool: %+v", *params)
 	err := config.OVHClient.Put(endpoint, params, nil)
 	if err != nil {
-		return fmt.Errorf("calling Put %s with params %s:\n\t %w", endpoint, params, err)
+		return fmt.Errorf("calling Put %s with params %s:\n\t %w", endpoint, *params, err)
 	}
 
 	log.Printf("[DEBUG] Waiting for nodepool %s to be READY", d.Id())

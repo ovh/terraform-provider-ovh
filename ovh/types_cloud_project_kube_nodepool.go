@@ -42,8 +42,8 @@ type CloudProjectKubeNodePoolTemplateMetadata struct {
 }
 
 type CloudProjectKubeNodePoolTemplateSpec struct {
-	Taints        []Taint `json:"taints"`
-	Unschedulable bool    `json:"unschedulable"`
+	Taints        *[]Taint `json:"taints,omitempty"`
+	Unschedulable *bool    `json:"unschedulable,omitempty"`
 }
 
 type CloudProjectKubeNodePoolTemplate struct {
@@ -93,8 +93,8 @@ func loadNodelPoolTemplateFromResource(i interface{}) *CloudProjectKubeNodePoolT
 			Labels:      map[string]string{},
 		},
 		Spec: &CloudProjectKubeNodePoolTemplateSpec{
-			Taints:        []Taint{},
-			Unschedulable: false,
+			Taints:        &[]Taint{},
+			Unschedulable: helpers.GetNilBoolPointer(false),
 		},
 	}
 
@@ -127,7 +127,7 @@ func loadNodelPoolTemplateFromResource(i interface{}) *CloudProjectKubeNodePoolT
 
 			taints := spec.(map[string]interface{})["taints"].([]interface{})
 			for _, taint := range taints {
-				template.Spec.Taints = append(template.Spec.Taints, Taint{
+				*template.Spec.Taints = append(*template.Spec.Taints, Taint{
 					Effect: TaintEffecTypeToID[taint.(map[string]interface{})["effect"].(string)],
 					Key:    taint.(map[string]interface{})["key"].(string),
 					Value:  taint.(map[string]interface{})["value"].(string),
@@ -135,7 +135,7 @@ func loadNodelPoolTemplateFromResource(i interface{}) *CloudProjectKubeNodePoolT
 			}
 
 			unschedulable := spec.(map[string]interface{})["unschedulable"].(bool)
-			template.Spec.Unschedulable = unschedulable
+			template.Spec.Unschedulable = &unschedulable
 
 		}
 	}
@@ -186,23 +186,24 @@ func (s *CloudProjectKubeNodePoolUpdateOpts) String() string {
 }
 
 type CloudProjectKubeNodePoolResponse struct {
-	Autoscale      bool   `json:"autoscale"`
-	AntiAffinity   bool   `json:"antiAffinity"`
-	AvailableNodes int    `json:"availableNodes"`
-	CreatedAt      string `json:"createdAt"`
-	CurrentNodes   int    `json:"currentNodes"`
-	DesiredNodes   int    `json:"desiredNodes"`
-	Flavor         string `json:"flavor"`
-	Id             string `json:"id"`
-	MaxNodes       int    `json:"maxNodes"`
-	MinNodes       int    `json:"minNodes"`
-	MonthlyBilled  bool   `json:"monthlyBilled"`
-	Name           string `json:"name"`
-	ProjectId      string `json:"projectId"`
-	SizeStatus     string `json:"sizeStatus"`
-	Status         string `json:"status"`
-	UpToDateNodes  int    `json:"upToDateNodes"`
-	UpdatedAt      string `json:"updatedAt"`
+	Autoscale      bool                             `json:"autoscale"`
+	AntiAffinity   bool                             `json:"antiAffinity"`
+	AvailableNodes int                              `json:"availableNodes"`
+	CreatedAt      string                           `json:"createdAt"`
+	CurrentNodes   int                              `json:"currentNodes"`
+	DesiredNodes   int                              `json:"desiredNodes"`
+	Flavor         string                           `json:"flavor"`
+	Id             string                           `json:"id"`
+	MaxNodes       int                              `json:"maxNodes"`
+	MinNodes       int                              `json:"minNodes"`
+	MonthlyBilled  bool                             `json:"monthlyBilled"`
+	Name           string                           `json:"name"`
+	ProjectId      string                           `json:"projectId"`
+	SizeStatus     string                           `json:"sizeStatus"`
+	Status         string                           `json:"status"`
+	UpToDateNodes  int                              `json:"upToDateNodes"`
+	UpdatedAt      string                           `json:"updatedAt"`
+	Template       CloudProjectKubeNodePoolTemplate `json:"template"`
 }
 
 func (v CloudProjectKubeNodePoolResponse) ToMap() map[string]interface{} {
@@ -225,6 +226,37 @@ func (v CloudProjectKubeNodePoolResponse) ToMap() map[string]interface{} {
 	obj["status"] = v.Status
 	obj["up_to_date_nodes"] = v.UpToDateNodes
 	obj["updated_at"] = v.UpdatedAt
+
+	var taints [][]map[string]interface{}
+	for _, taint := range *v.Template.Spec.Taints {
+		t := []map[string]interface{}{
+			{
+				"effect": taint.Effect,
+				"key":    taint.Key,
+				"value":  taint.Value,
+			},
+		}
+
+		taints = append(taints, t)
+	}
+
+	obj["template"] = []map[string]interface{}{
+		{
+			"metadata": []map[string]interface{}{
+				{
+					"finalizers":  v.Template.Metadata.Finalizers,
+					"labels":      v.Template.Metadata.Labels,
+					"annotations": v.Template.Metadata.Annotations,
+				},
+			},
+			"spec": []map[string]interface{}{
+				{
+					"unschedulable": v.Template.Spec.Unschedulable,
+					"taints":        taints,
+				},
+			},
+		},
+	}
 
 	return obj
 }
