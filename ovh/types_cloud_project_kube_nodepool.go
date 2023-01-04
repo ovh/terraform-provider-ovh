@@ -3,6 +3,7 @@ package ovh
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -10,7 +11,8 @@ import (
 )
 
 const (
-	NoExecute TaintEffectType = iota
+	NotATaint TaintEffectType = iota
+	NoExecute
 	NoSchedule
 	PreferNoSchedule
 )
@@ -60,18 +62,20 @@ type CloudProjectKubeNodePoolUpdateOpts struct {
 }
 
 var toString = map[TaintEffectType]string{
+	NotATaint:        "",
 	NoExecute:        "NoExecute",
 	NoSchedule:       "NoSchedule",
 	PreferNoSchedule: "PreferNoSchedule",
 }
 
 var TaintEffecTypeToID = map[string]TaintEffectType{
+	"":                 NotATaint,
 	"NoExecute":        NoExecute,
 	"NoSchedule":       NoSchedule,
 	"PreferNoSchedule": PreferNoSchedule,
 }
 
-func (opts *CloudProjectKubeNodePoolCreateOpts) FromResource(d *schema.ResourceData) *CloudProjectKubeNodePoolCreateOpts {
+func (opts *CloudProjectKubeNodePoolCreateOpts) FromResource(d *schema.ResourceData) (*CloudProjectKubeNodePoolCreateOpts, error) {
 	opts.Autoscale = helpers.GetNilBoolPointerFromData(d, "autoscale")
 	opts.AntiAffinity = helpers.GetNilBoolPointerFromData(d, "anti_affinity")
 	opts.DesiredNodes = helpers.GetNilIntPointerFromDataAndNilIfNotPresent(d, "desired_nodes")
@@ -80,12 +84,16 @@ func (opts *CloudProjectKubeNodePoolCreateOpts) FromResource(d *schema.ResourceD
 	opts.MinNodes = helpers.GetNilIntPointerFromDataAndNilIfNotPresent(d, "min_nodes")
 	opts.MonthlyBilled = helpers.GetNilBoolPointerFromData(d, "monthly_billed")
 	opts.Name = helpers.GetNilStringPointerFromData(d, "name")
-	opts.Template = loadNodelPoolTemplateFromResource(d.Get("template"))
+	template, err := loadNodelPoolTemplateFromResource(d.Get("template"))
+	if err != nil {
+		return nil, err
+	}
+	opts.Template = template
 
-	return opts
+	return opts, nil
 }
 
-func loadNodelPoolTemplateFromResource(i interface{}) *CloudProjectKubeNodePoolTemplate {
+func loadNodelPoolTemplateFromResource(i interface{}) (*CloudProjectKubeNodePoolTemplate, error) {
 	template := CloudProjectKubeNodePoolTemplate{
 		Metadata: &CloudProjectKubeNodePoolTemplateMetadata{
 			Annotations: map[string]string{},
@@ -127,8 +135,14 @@ func loadNodelPoolTemplateFromResource(i interface{}) *CloudProjectKubeNodePoolT
 
 			taints := spec.(map[string]interface{})["taints"].([]interface{})
 			for _, taint := range taints {
+				effectString := taint.(map[string]interface{})["effect"].(string)
+				effect := TaintEffecTypeToID[effectString]
+				if effect == NotATaint {
+					return nil, errors.New(fmt.Sprintf("Effect: %s is not a allowable taint %#v", effectString, TaintEffecTypeToID))
+				}
+
 				*template.Spec.Taints = append(*template.Spec.Taints, Taint{
-					Effect: TaintEffecTypeToID[taint.(map[string]interface{})["effect"].(string)],
+					Effect: effect,
 					Key:    taint.(map[string]interface{})["key"].(string),
 					Value:  taint.(map[string]interface{})["value"].(string),
 				})
@@ -140,7 +154,7 @@ func loadNodelPoolTemplateFromResource(i interface{}) *CloudProjectKubeNodePoolT
 		}
 	}
 
-	return &template
+	return &template, nil
 }
 
 func (s *CloudProjectKubeNodePoolCreateOpts) String() string {
@@ -171,14 +185,18 @@ func (e *TaintEffectType) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func (opts *CloudProjectKubeNodePoolUpdateOpts) FromResource(d *schema.ResourceData) *CloudProjectKubeNodePoolUpdateOpts {
+func (opts *CloudProjectKubeNodePoolUpdateOpts) FromResource(d *schema.ResourceData) (*CloudProjectKubeNodePoolUpdateOpts, error) {
 	opts.Autoscale = helpers.GetNilBoolPointerFromData(d, "autoscale")
 	opts.DesiredNodes = helpers.GetNilIntPointerFromDataAndNilIfNotPresent(d, "desired_nodes")
 	opts.MaxNodes = helpers.GetNilIntPointerFromDataAndNilIfNotPresent(d, "max_nodes")
 	opts.MinNodes = helpers.GetNilIntPointerFromDataAndNilIfNotPresent(d, "min_nodes")
-	opts.Template = loadNodelPoolTemplateFromResource(d.Get("template"))
+	template, err := loadNodelPoolTemplateFromResource(d.Get("template"))
+	if err != nil {
+		return nil, err
+	}
+	opts.Template = template
 
-	return opts
+	return opts, nil
 }
 
 func (s *CloudProjectKubeNodePoolUpdateOpts) String() string {
