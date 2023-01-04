@@ -130,7 +130,7 @@ The following arguments are supported:
         * enabled - (Optional) Array of admission plugins enabled, default is ["NodeRestriction","AlwaysPulImages"] and only these admission plugins can be enabled at this time. 
         * disabled - (Optional) Array of admission plugins disabled, default is [] and only AlwaysPulImages can be disabled at this time.
 
-* `private_network_id` - (Optional) OpenStack private network ID to use.
+* `private_network_id` - (Optional) OpenStack private network (or vrack) ID to use.
    Changing this value delete the resource(including ETCD user data). Defaults - not use private network.
    
 ~> __WARNING__ Updating the private network ID resets the cluster so that all user data is deleted.
@@ -145,19 +145,22 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `id` - Managed Kubernetes Service ID
-* `service_name` - See Argument Reference above.
-* `name` - See Argument Reference above.
-* `region` - See Argument Reference above.
-* `version` - See Argument Reference above.
-* `private_network_id` - OpenStack private network (or vrack) ID to use.
 * `control_plane_is_up_to_date` - True if control-plane is up to date.
+* `id` - Managed Kubernetes Service ID
 * `is_up_to_date` - True if all nodes and control-plane are up to date.
+* `kubeconfig` - The kubeconfig file. Use this file to connect to your kubernetes cluster.
+* `name` - See Argument Reference above.
 * `next_upgrade_versions` - Kubernetes versions available for upgrade.
 * `nodes_url` - Cluster nodes URL.
+* `private_network_configuration` - See Argument Reference above.
+* `private_network_id` - See Argument Reference above.
+* `region` - See Argument Reference above.
+* `service_name` - See Argument Reference above.
 * `status` - Cluster status. Should be normally set to 'READY'.
+* `update_policy` - See Argument Reference above.
 * `url` - Management URL of your cluster.
-* `kubeconfig` - The kubeconfig file. Use this file to connect to your kubernetes cluster.
+* `version` - See Argument Reference above.
+* `customization` - See Argument Reference above.
 
 ## Import
 
