@@ -108,7 +108,7 @@ func loadNodelPoolTemplateFromResource(i interface{}) (*CloudProjectKubeNodePool
 
 	templateSet := i.(*schema.Set).List()
 	if len(templateSet) == 0 {
-		return &template, nil
+		return nil, nil
 	}
 	templateObject := templateSet[0]
 
@@ -298,6 +298,37 @@ func (v CloudProjectKubeNodePoolResponse) ToMap() map[string]interface{} {
 				},
 			},
 		},
+	}
+
+	if len(obj["template"].([]map[string]interface{})[0]["metadata"].([]map[string]interface{})[0]["finalizers"].([]string)) == 0 {
+		obj["template"].([]map[string]interface{})[0]["metadata"].([]map[string]interface{})[0]["finalizers"] = nil
+	}
+	if len(obj["template"].([]map[string]interface{})[0]["metadata"].([]map[string]interface{})[0]["labels"].(map[string]string)) == 0 {
+		obj["template"].([]map[string]interface{})[0]["metadata"].([]map[string]interface{})[0]["labels"] = nil
+	}
+	if len(obj["template"].([]map[string]interface{})[0]["metadata"].([]map[string]interface{})[0]["annotations"].(map[string]string)) == 0 {
+		obj["template"].([]map[string]interface{})[0]["metadata"].([]map[string]interface{})[0]["annotations"] = nil
+	}
+	if obj["template"].([]map[string]interface{})[0]["metadata"].([]map[string]interface{})[0]["finalizers"] == nil &&
+		obj["template"].([]map[string]interface{})[0]["metadata"].([]map[string]interface{})[0]["labels"] == nil &&
+		obj["template"].([]map[string]interface{})[0]["metadata"].([]map[string]interface{})[0]["annotations"] == nil {
+		obj["template"].([]map[string]interface{})[0]["metadata"] = nil
+	}
+	if obj["template"].([]map[string]interface{})[0]["spec"].([]map[string]interface{})[0]["unschedulable"].(bool) == false {
+		obj["template"].([]map[string]interface{})[0]["spec"].([]map[string]interface{})[0]["unschedulable"] = nil
+	}
+	if len(obj["template"].([]map[string]interface{})[0]["spec"].([]map[string]interface{})[0]["taints"].([]map[string]interface{})) == 0 {
+		obj["template"].([]map[string]interface{})[0]["spec"].([]map[string]interface{})[0]["taints"] = nil
+	}
+
+	if obj["template"].([]map[string]interface{})[0]["spec"].([]map[string]interface{})[0]["unschedulable"] == nil &&
+		obj["template"].([]map[string]interface{})[0]["spec"].([]map[string]interface{})[0]["taints"] == nil {
+		obj["template"].([]map[string]interface{})[0]["spec"] = nil
+	}
+
+	if obj["template"].([]map[string]interface{})[0]["metadata"] == nil &&
+		obj["template"].([]map[string]interface{})[0]["spec"] == nil {
+		return nil
 	}
 
 	return obj
