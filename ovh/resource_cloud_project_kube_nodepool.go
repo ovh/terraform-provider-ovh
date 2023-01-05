@@ -41,15 +41,15 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 				Type:        schema.TypeBool,
 				Description: "Enable auto-scaling for the pool",
 				Optional:    true,
+				Computed:    true,
 				ForceNew:    false,
-				Default:     "false",
 			},
 			"anti_affinity": {
 				Type:        schema.TypeBool,
 				Description: "Enable anti affinity groups for nodes in the pool",
 				Optional:    true,
+				Computed:    true,
 				ForceNew:    true,
-				Default:     "false",
 			},
 			"flavor_name": {
 				Type:        schema.TypeString,
@@ -86,8 +86,8 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 				Type:        schema.TypeBool,
 				Description: "Enable monthly billing on all nodes in the pool",
 				Optional:    true,
+				Computed:    true,
 				ForceNew:    true,
-				Default:     "false",
 			},
 
 			// computed
@@ -139,12 +139,12 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 			"template": {
 				Description: "Node pool template",
 				Optional:    true,
+				Computed:    true,
 				Type:        schema.TypeSet,
 				MaxItems:    1,
 				Set: func(i interface{}) int {
 					out := fmt.Sprintf("%#v", i)
 					hash := int(schema.HashString(out))
-
 					return hash
 				},
 				Elem: &schema.Resource{
@@ -152,27 +152,38 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 						"metadata": {
 							Description: "metadata",
 							Optional:    true,
+							Computed:    true,
 							Type:        schema.TypeSet,
 							MaxItems:    1,
+							Set: func(i interface{}) int {
+								out := fmt.Sprintf("%#v", i)
+								hash := int(schema.HashString(out))
+								return hash
+							},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"finalizers": {
 										Description: "finalizers",
 										Optional:    true,
+										Computed:    true,
 										Type:        schema.TypeList,
 										Elem:        &schema.Schema{Type: schema.TypeString},
 									},
 									"labels": {
 										Description: "labels",
 										Optional:    true,
+										Computed:    true,
 										Type:        schema.TypeMap,
 										Elem:        &schema.Schema{Type: schema.TypeString},
+										Set:         schema.HashString,
 									},
 									"annotations": {
 										Description: "annotations",
 										Optional:    true,
+										Computed:    true,
 										Type:        schema.TypeMap,
 										Elem:        &schema.Schema{Type: schema.TypeString},
+										Set:         schema.HashString,
 									},
 								},
 							},
@@ -180,21 +191,30 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 						"spec": {
 							Description: "spec",
 							Optional:    true,
+							Computed:    true,
 							Type:        schema.TypeSet,
 							MaxItems:    1,
+							Set: func(i interface{}) int {
+								out := fmt.Sprintf("%#v", i)
+								hash := int(schema.HashString(out))
+								return hash
+							},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"unschedulable": {
 										Description: "unschedulable",
 										Optional:    true,
+										Computed:    true,
 										Type:        schema.TypeBool,
 									},
 									"taints": {
 										Description: "taints",
 										Optional:    true,
+										Computed:    true,
 										Type:        schema.TypeList,
 										Elem: &schema.Schema{
 											Type: schema.TypeMap,
+											Set:  schema.HashString,
 										},
 									},
 								},
