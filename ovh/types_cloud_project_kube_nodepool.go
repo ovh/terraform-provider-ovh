@@ -44,8 +44,8 @@ type CloudProjectKubeNodePoolTemplateMetadata struct {
 }
 
 type CloudProjectKubeNodePoolTemplateSpec struct {
-	Taints        *[]Taint `json:"taints,omitempty"`
-	Unschedulable *bool    `json:"unschedulable,omitempty"`
+	Taints        []Taint `json:"taints"`
+	Unschedulable bool    `json:"unschedulable"`
 }
 
 type CloudProjectKubeNodePoolTemplate struct {
@@ -101,57 +101,83 @@ func loadNodelPoolTemplateFromResource(i interface{}) (*CloudProjectKubeNodePool
 			Labels:      map[string]string{},
 		},
 		Spec: &CloudProjectKubeNodePoolTemplateSpec{
-			Taints:        &[]Taint{},
-			Unschedulable: helpers.GetNilBoolPointer(false),
+			Taints:        []Taint{},
+			Unschedulable: false,
 		},
 	}
 
 	templateSet := i.(*schema.Set).List()
-	for _, templateObject := range templateSet {
-		metadataSet := templateObject.(map[string]interface{})["metadata"].(*schema.Set).List()
-		for _, meta := range metadataSet {
+	if len(templateSet) == 0 {
+		return &template, nil
+	}
+	templateObject := templateSet[0]
 
-			annotations := meta.(map[string]interface{})["annotations"].(map[string]interface{})
-			template.Metadata.Annotations = make(map[string]string)
-			for k, v := range annotations {
-				template.Metadata.Annotations[k] = v.(string)
-			}
+	// when updating the nested object template there is two objects, one is empty, take the not empty one
+	if len(templateSet) > 1 {
+		for _, to := range templateSet {
+			metadata := to.(map[string]interface{})["metadata"].(*schema.Set).List()[0]
+			annotations := metadata.(map[string]interface{})["annotations"].(map[string]interface{})
+			labels := metadata.(map[string]interface{})["labels"].(map[string]interface{})
+			finalizers := metadata.(map[string]interface{})["finalizers"].([]interface{})
 
-			labels := meta.(map[string]interface{})["labels"].(map[string]interface{})
-			template.Metadata.Labels = make(map[string]string)
-			for k, v := range labels {
-				template.Metadata.Labels[k] = v.(string)
-			}
-
-			finalizers := meta.(map[string]interface{})["finalizers"].([]interface{})
-			for _, finalizer := range finalizers {
-				template.Metadata.Finalizers = append(template.Metadata.Finalizers, finalizer.(string))
-			}
-
-		}
-
-		specSet := templateObject.(map[string]interface{})["spec"].(*schema.Set).List()
-		for _, spec := range specSet {
-
+			spec := templateObject.(map[string]interface{})["spec"].(*schema.Set).List()[0]
 			taints := spec.(map[string]interface{})["taints"].([]interface{})
-			for _, taint := range taints {
-				effectString := taint.(map[string]interface{})["effect"].(string)
-				effect := TaintEffecTypeToID[effectString]
-				if effect == NotATaint {
-					return nil, errors.New(fmt.Sprintf("Effect: %s is not a allowable taint %#v", effectString, TaintEffecTypeToID))
-				}
+			unschedulable := spec.(map[string]interface{})["unschedulable"].(bool)
 
-				*template.Spec.Taints = append(*template.Spec.Taints, Taint{
-					Effect: effect,
-					Key:    taint.(map[string]interface{})["key"].(string),
-					Value:  taint.(map[string]interface{})["value"].(string),
-				})
+			if len(annotations) == 0 && len(labels) == 0 && len(finalizers) == 0 && len(taints) == 0 && unschedulable == false {
+				// is empty
+			} else {
+				templateObject = to
+				break
+			}
+		}
+	}
+	if len(templateSet) > 2 {
+		return nil, errors.New("resource template cannot have more than 2 elements")
+	}
+
+	metadataSet := templateObject.(map[string]interface{})["metadata"].(*schema.Set).List()
+	for _, meta := range metadataSet {
+
+		annotations := meta.(map[string]interface{})["annotations"].(map[string]interface{})
+		template.Metadata.Annotations = make(map[string]string)
+		for k, v := range annotations {
+			template.Metadata.Annotations[k] = v.(string)
+		}
+
+		labels := meta.(map[string]interface{})["labels"].(map[string]interface{})
+		template.Metadata.Labels = make(map[string]string)
+		for k, v := range labels {
+			template.Metadata.Labels[k] = v.(string)
+		}
+
+		finalizers := meta.(map[string]interface{})["finalizers"].([]interface{})
+		for _, finalizer := range finalizers {
+			template.Metadata.Finalizers = append(template.Metadata.Finalizers, finalizer.(string))
+		}
+
+	}
+
+	specSet := templateObject.(map[string]interface{})["spec"].(*schema.Set).List()
+	for _, spec := range specSet {
+
+		taints := spec.(map[string]interface{})["taints"].([]interface{})
+		for _, taint := range taints {
+			effectString := taint.(map[string]interface{})["effect"].(string)
+			effect := TaintEffecTypeToID[effectString]
+			if effect == NotATaint {
+				return nil, errors.New(fmt.Sprintf("Effect: %s is not a allowable taint %#v", effectString, TaintEffecTypeToID))
 			}
 
-			unschedulable := spec.(map[string]interface{})["unschedulable"].(bool)
-			template.Spec.Unschedulable = &unschedulable
-
+			template.Spec.Taints = append(template.Spec.Taints, Taint{
+				Effect: effect,
+				Key:    taint.(map[string]interface{})["key"].(string),
+				Value:  taint.(map[string]interface{})["value"].(string),
+			})
 		}
+
+		template.Spec.Unschedulable = spec.(map[string]interface{})["unschedulable"].(bool)
+
 	}
 
 	return &template, nil
@@ -204,24 +230,24 @@ func (s *CloudProjectKubeNodePoolUpdateOpts) String() string {
 }
 
 type CloudProjectKubeNodePoolResponse struct {
-	Autoscale      bool                             `json:"autoscale"`
-	AntiAffinity   bool                             `json:"antiAffinity"`
-	AvailableNodes int                              `json:"availableNodes"`
-	CreatedAt      string                           `json:"createdAt"`
-	CurrentNodes   int                              `json:"currentNodes"`
-	DesiredNodes   int                              `json:"desiredNodes"`
-	Flavor         string                           `json:"flavor"`
-	Id             string                           `json:"id"`
-	MaxNodes       int                              `json:"maxNodes"`
-	MinNodes       int                              `json:"minNodes"`
-	MonthlyBilled  bool                             `json:"monthlyBilled"`
-	Name           string                           `json:"name"`
-	ProjectId      string                           `json:"projectId"`
-	SizeStatus     string                           `json:"sizeStatus"`
-	Status         string                           `json:"status"`
-	UpToDateNodes  int                              `json:"upToDateNodes"`
-	UpdatedAt      string                           `json:"updatedAt"`
-	Template       CloudProjectKubeNodePoolTemplate `json:"template"`
+	Autoscale      bool                              `json:"autoscale"`
+	AntiAffinity   bool                              `json:"antiAffinity"`
+	AvailableNodes int                               `json:"availableNodes"`
+	CreatedAt      string                            `json:"createdAt"`
+	CurrentNodes   int                               `json:"currentNodes"`
+	DesiredNodes   int                               `json:"desiredNodes"`
+	Flavor         string                            `json:"flavor"`
+	Id             string                            `json:"id"`
+	MaxNodes       int                               `json:"maxNodes"`
+	MinNodes       int                               `json:"minNodes"`
+	MonthlyBilled  bool                              `json:"monthlyBilled"`
+	Name           string                            `json:"name"`
+	ProjectId      string                            `json:"projectId"`
+	SizeStatus     string                            `json:"sizeStatus"`
+	Status         string                            `json:"status"`
+	UpToDateNodes  int                               `json:"upToDateNodes"`
+	UpdatedAt      string                            `json:"updatedAt"`
+	Template       *CloudProjectKubeNodePoolTemplate `json:"template,omitempty"`
 }
 
 func (v CloudProjectKubeNodePoolResponse) ToMap() map[string]interface{} {
@@ -246,7 +272,7 @@ func (v CloudProjectKubeNodePoolResponse) ToMap() map[string]interface{} {
 	obj["updated_at"] = v.UpdatedAt
 
 	var taints []map[string]interface{}
-	for _, taint := range *v.Template.Spec.Taints {
+	for _, taint := range v.Template.Spec.Taints {
 		t := map[string]interface{}{
 			"effect": taint.Effect.String(),
 			"key":    taint.Key,
