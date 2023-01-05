@@ -139,7 +139,6 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 			"template": {
 				Description: "Node pool template",
 				Optional:    true,
-				Computed:    true,
 				Type:        schema.TypeSet,
 				MaxItems:    1,
 				Set: func(i interface{}) int {
@@ -152,7 +151,6 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 						"metadata": {
 							Description: "metadata",
 							Optional:    true,
-							Computed:    true,
 							Type:        schema.TypeSet,
 							MaxItems:    1,
 							Set: func(i interface{}) int {
@@ -165,14 +163,12 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 									"finalizers": {
 										Description: "finalizers",
 										Optional:    true,
-										Computed:    true,
 										Type:        schema.TypeList,
 										Elem:        &schema.Schema{Type: schema.TypeString},
 									},
 									"labels": {
 										Description: "labels",
 										Optional:    true,
-										Computed:    true,
 										Type:        schema.TypeMap,
 										Elem:        &schema.Schema{Type: schema.TypeString},
 										Set:         schema.HashString,
@@ -180,7 +176,6 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 									"annotations": {
 										Description: "annotations",
 										Optional:    true,
-										Computed:    true,
 										Type:        schema.TypeMap,
 										Elem:        &schema.Schema{Type: schema.TypeString},
 										Set:         schema.HashString,
@@ -191,7 +186,6 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 						"spec": {
 							Description: "spec",
 							Optional:    true,
-							Computed:    true,
 							Type:        schema.TypeSet,
 							MaxItems:    1,
 							Set: func(i interface{}) int {
@@ -204,13 +198,11 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 									"unschedulable": {
 										Description: "unschedulable",
 										Optional:    true,
-										Computed:    true,
 										Type:        schema.TypeBool,
 									},
 									"taints": {
 										Description: "taints",
 										Optional:    true,
-										Computed:    true,
 										Type:        schema.TypeList,
 										Elem: &schema.Schema{
 											Type: schema.TypeMap,
