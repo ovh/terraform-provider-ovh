@@ -514,6 +514,7 @@ type IpLoadbalancingHttpFrontend struct {
 	Ssl              bool     `json:"ssl"`
 	RedirectLocation string   `json:"redirectLocation,omitempty"`
 	DisplayName      string   `json:"displayName,omitempty"`
+	HttpHeader       []string `json:"httpHeader"`
 }
 
 type IpLoadbalancingFarmServerCreateOpts struct {

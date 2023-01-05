@@ -34,6 +34,31 @@ resource "ovh_iploadbalancing_http_frontend" "testfrontend" {
 }
 ```
 
+## Example Usage with HTTP header
+
+```
+data "ovh_iploadbalancing" "lb" {
+  service_name = "ip-1.2.3.4"
+  state        = "ok"
+}
+
+resource "ovh_iploadbalancing_http_farm" "farm80" {
+  service_name = "${data.ovh_iploadbalancing.lb.service_name}"
+  display_name = "ingress-8080-gra"
+  zone         = "all"
+  port         = 80
+}
+
+resource "ovh_iploadbalancing_http_frontend" "testfrontend" {
+  service_name    = "${data.ovh_iploadbalancing.lb.service_name}"
+  display_name    = "ingress-8080-gra"
+  zone            = "all"
+  port            = "80,443"
+  default_farm_id = "${ovh_iploadbalancing_http_farm.farm80.id}"
+  http_header     = ["X-Ip-Header %%ci", "X-Port-Header %%cp"]
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -51,12 +76,17 @@ The following arguments are supported:
 * `disabled` - Disable your frontend. Default: 'false'
 * `ssl` - SSL deciphering. Default: 'false'
 * `redirect_location` - Redirection HTTP'
+* `http_header` - HTTP headers to add to the frontend. List of string.
 
 ## Attributes Reference
 
 The following attributes are exported:
 
 * `id` - Id of your frontend
+* `service_name` - See Argument Reference above.
+* `port` - See Argument Reference above.
+* `zone` - See Argument Reference above.
+* `http_header` - See Argument Reference above.
 * `display_name` - See Argument Reference above.
 * `allowed_source` - See Argument Reference above.
 * `dedicated_ipfo` - See Argument Reference above.
