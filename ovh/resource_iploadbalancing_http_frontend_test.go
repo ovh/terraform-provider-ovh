@@ -159,6 +159,7 @@ resource "ovh_iploadbalancing_http_frontend" "testfrontend" {
    zone           = "all"
    port           = "22280,22443"
    allowed_source = ["8.8.8.8/32"]
+   http_header    = ["X-Ip-Header %%ci", "X-Port-Header %%cp"]
 }
 `
 

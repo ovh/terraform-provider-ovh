@@ -44,6 +44,11 @@ func resourceIpLoadbalancingHttpFrontend() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"http_header": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"default_farm_id": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -101,6 +106,7 @@ func resourceIpLoadbalancingHttpFrontendCreate(d *schema.ResourceData, meta inte
 
 	allowedSources, _ := helpers.StringsFromSchema(d, "allowed_source")
 	dedicatedIpFo, _ := helpers.StringsFromSchema(d, "dedicated_ipfo")
+	httpHeader, _ := helpers.StringsFromSchema(d, "http_header")
 
 	for _, s := range allowedSources {
 		if err := helpers.ValidateIpBlock(s); err != nil {
@@ -123,6 +129,7 @@ func resourceIpLoadbalancingHttpFrontendCreate(d *schema.ResourceData, meta inte
 		Ssl:              d.Get("ssl").(bool),
 		RedirectLocation: d.Get("redirect_location").(string),
 		DisplayName:      d.Get("display_name").(string),
+		HttpHeader:       httpHeader,
 	}
 
 	frontend.DefaultFarmId = helpers.GetNilIntPointerFromData(d, "default_farm_id")
@@ -160,6 +167,9 @@ func resourceIpLoadbalancingHttpFrontendRead(d *schema.ResourceData, meta interf
 	dedicatedIpFos := make([]string, 0)
 	dedicatedIpFos = append(dedicatedIpFos, r.DedicatedIpFo...)
 
+	httpHeader := make([]string, 0)
+	httpHeader = append(httpHeader, r.HttpHeader...)
+
 	d.Set("allowed_source", allowedSources)
 	d.Set("dedicated_ipfo", dedicatedIpFos)
 	d.Set("default_farm_id", r.DefaultFarmId)
@@ -170,6 +180,7 @@ func resourceIpLoadbalancingHttpFrontendRead(d *schema.ResourceData, meta interf
 	d.Set("ssl", r.Ssl)
 	d.Set("zone", r.Zone)
 	d.Set("redirect_location", r.RedirectLocation)
+	d.Set("http_header", httpHeader)
 
 	return nil
 }
@@ -181,6 +192,7 @@ func resourceIpLoadbalancingHttpFrontendUpdate(d *schema.ResourceData, meta inte
 
 	allowedSources, _ := helpers.StringsFromSchema(d, "allowed_source")
 	dedicatedIpFo, _ := helpers.StringsFromSchema(d, "dedicated_ipfo")
+	httpHeader, _ := helpers.StringsFromSchema(d, "http_header")
 
 	for _, s := range allowedSources {
 		if err := helpers.ValidateIpBlock(s); err != nil {
@@ -203,6 +215,7 @@ func resourceIpLoadbalancingHttpFrontendUpdate(d *schema.ResourceData, meta inte
 		Ssl:              d.Get("ssl").(bool),
 		RedirectLocation: d.Get("redirect_location").(string),
 		DisplayName:      d.Get("display_name").(string),
+		HttpHeader:       httpHeader,
 	}
 
 	frontend.DefaultFarmId = helpers.GetNilIntPointerFromData(d, "default_farm_id")
