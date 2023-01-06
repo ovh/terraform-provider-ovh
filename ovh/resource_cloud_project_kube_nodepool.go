@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-
 	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
@@ -42,15 +41,15 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 				Type:        schema.TypeBool,
 				Description: "Enable auto-scaling for the pool",
 				Optional:    true,
+				Computed:    true,
 				ForceNew:    false,
-				Default:     "false",
 			},
 			"anti_affinity": {
 				Type:        schema.TypeBool,
 				Description: "Enable anti affinity groups for nodes in the pool",
 				Optional:    true,
+				Computed:    true,
 				ForceNew:    true,
-				Default:     "false",
 			},
 			"flavor_name": {
 				Type:        schema.TypeString,
@@ -87,8 +86,8 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 				Type:        schema.TypeBool,
 				Description: "Enable monthly billing on all nodes in the pool",
 				Optional:    true,
+				Computed:    true,
 				ForceNew:    true,
-				Default:     "false",
 			},
 
 			// computed
@@ -142,6 +141,11 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 				Optional:    true,
 				Type:        schema.TypeSet,
 				MaxItems:    1,
+				Set: func(i interface{}) int {
+					out := fmt.Sprintf("%#v", i)
+					hash := int(schema.HashString(out))
+					return hash
+				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"metadata": {
@@ -149,6 +153,11 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 							Optional:    true,
 							Type:        schema.TypeSet,
 							MaxItems:    1,
+							Set: func(i interface{}) int {
+								out := fmt.Sprintf("%#v", i)
+								hash := int(schema.HashString(out))
+								return hash
+							},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"finalizers": {
@@ -162,12 +171,14 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 										Optional:    true,
 										Type:        schema.TypeMap,
 										Elem:        &schema.Schema{Type: schema.TypeString},
+										Set:         schema.HashString,
 									},
 									"annotations": {
 										Description: "annotations",
 										Optional:    true,
 										Type:        schema.TypeMap,
 										Elem:        &schema.Schema{Type: schema.TypeString},
+										Set:         schema.HashString,
 									},
 								},
 							},
@@ -177,6 +188,11 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 							Optional:    true,
 							Type:        schema.TypeSet,
 							MaxItems:    1,
+							Set: func(i interface{}) int {
+								out := fmt.Sprintf("%#v", i)
+								hash := int(schema.HashString(out))
+								return hash
+							},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"unschedulable": {
@@ -190,6 +206,7 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 										Type:        schema.TypeList,
 										Elem: &schema.Schema{
 											Type: schema.TypeMap,
+											Set:  schema.HashString,
 										},
 									},
 								},
@@ -226,11 +243,14 @@ func resourceCloudProjectKubeNodePoolCreate(d *schema.ResourceData, meta interfa
 	kubeId := d.Get("kube_id").(string)
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/nodepool", serviceName, kubeId)
-	params := (&CloudProjectKubeNodePoolCreateOpts{}).FromResource(d)
+	params, err := (&CloudProjectKubeNodePoolCreateOpts{}).FromResource(d)
+	if err != nil {
+		return err
+	}
 	res := &CloudProjectKubeNodePoolResponse{}
 
 	log.Printf("[DEBUG] Will create nodepool: %+v", params)
-	err := config.OVHClient.Post(endpoint, params, res)
+	err = config.OVHClient.Post(endpoint, params, res)
 	if err != nil {
 		return fmt.Errorf("calling Post %s with params %s:\n\t %w", endpoint, params, err)
 	}
@@ -286,12 +306,15 @@ func resourceCloudProjectKubeNodePoolUpdate(d *schema.ResourceData, meta interfa
 	kubeId := d.Get("kube_id").(string)
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/nodepool/%s", serviceName, kubeId, d.Id())
-	params := (&CloudProjectKubeNodePoolUpdateOpts{}).FromResource(d)
-
-	log.Printf("[DEBUG] Will update nodepool: %+v", params)
-	err := config.OVHClient.Put(endpoint, params, nil)
+	params, err := (&CloudProjectKubeNodePoolUpdateOpts{}).FromResource(d)
 	if err != nil {
-		return fmt.Errorf("calling Put %s with params %s:\n\t %w", endpoint, params, err)
+		return err
+	}
+
+	log.Printf("[DEBUG] Will update nodepool: %+v", *params)
+	err = config.OVHClient.Put(endpoint, params, nil)
+	if err != nil {
+		return fmt.Errorf("calling Put %s with params %s:\n\t %w", endpoint, *params, err)
 	}
 
 	log.Printf("[DEBUG] Waiting for nodepool %s to be READY", d.Id())
