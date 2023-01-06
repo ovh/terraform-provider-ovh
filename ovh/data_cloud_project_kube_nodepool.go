@@ -115,6 +115,11 @@ func dataSourceCloudProjectKubeNodepool() *schema.Resource {
 				Optional:    true,
 				Type:        schema.TypeSet,
 				MaxItems:    1,
+				Set: func(i interface{}) int {
+					out := fmt.Sprintf("%#v", i)
+					hash := int(schema.HashString(out))
+					return hash
+				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"metadata": {
@@ -122,6 +127,11 @@ func dataSourceCloudProjectKubeNodepool() *schema.Resource {
 							Optional:    true,
 							Type:        schema.TypeSet,
 							MaxItems:    1,
+							Set: func(i interface{}) int {
+								out := fmt.Sprintf("%#v", i)
+								hash := int(schema.HashString(out))
+								return hash
+							},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"finalizers": {
@@ -135,12 +145,14 @@ func dataSourceCloudProjectKubeNodepool() *schema.Resource {
 										Optional:    true,
 										Type:        schema.TypeMap,
 										Elem:        &schema.Schema{Type: schema.TypeString},
+										Set:         schema.HashString,
 									},
 									"annotations": {
 										Description: "annotations",
 										Optional:    true,
 										Type:        schema.TypeMap,
 										Elem:        &schema.Schema{Type: schema.TypeString},
+										Set:         schema.HashString,
 									},
 								},
 							},
@@ -150,6 +162,11 @@ func dataSourceCloudProjectKubeNodepool() *schema.Resource {
 							Optional:    true,
 							Type:        schema.TypeSet,
 							MaxItems:    1,
+							Set: func(i interface{}) int {
+								out := fmt.Sprintf("%#v", i)
+								hash := int(schema.HashString(out))
+								return hash
+							},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"unschedulable": {
@@ -163,6 +180,7 @@ func dataSourceCloudProjectKubeNodepool() *schema.Resource {
 										Type:        schema.TypeList,
 										Elem: &schema.Schema{
 											Type: schema.TypeMap,
+											Set:  schema.HashString,
 										},
 									},
 								},
