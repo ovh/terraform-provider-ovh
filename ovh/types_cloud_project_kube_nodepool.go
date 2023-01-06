@@ -328,7 +328,7 @@ func (v CloudProjectKubeNodePoolResponse) ToMap() map[string]interface{} {
 
 	if obj["template"].([]map[string]interface{})[0]["metadata"] == nil &&
 		obj["template"].([]map[string]interface{})[0]["spec"] == nil {
-		return nil
+		obj["template"] = nil
 	}
 
 	return obj
