@@ -311,10 +311,10 @@ func resourceCloudProjectKubeNodePoolUpdate(d *schema.ResourceData, meta interfa
 		return err
 	}
 
-	log.Printf("[DEBUG] Will update nodepool: %+v", *params)
+	log.Printf("[DEBUG] Will update nodepool: %#v", *params)
 	err = config.OVHClient.Put(endpoint, params, nil)
 	if err != nil {
-		return fmt.Errorf("calling Put %s with params %s:\n\t %w", endpoint, *params, err)
+		return fmt.Errorf("calling Put %s with params %#v:\n\t %w", endpoint, *params, err)
 	}
 
 	log.Printf("[DEBUG] Waiting for nodepool %s to be READY", d.Id())
