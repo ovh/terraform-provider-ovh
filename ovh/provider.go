@@ -144,6 +144,8 @@ func Provider() *schema.Provider {
 			"ovh_cloud_project_database_redis_user":                       resourceCloudProjectDatabaseRedisUser(),
 			"ovh_cloud_project_database_user":                             resourceCloudProjectDatabaseUser(),
 			"ovh_cloud_project_failover_ip_attach":                        resourceCloudProjectFailoverIpAttach(),
+			"ovh_cloud_project_gateway":                                   resourceCloudProjectGateway(),
+			"ovh_cloud_project_gateway_interface":                         resourceCloudProjectGatewayInterface(),
 			"ovh_cloud_project_kube":                                      resourceCloudProjectKube(),
 			"ovh_cloud_project_kube_nodepool":                             resourceCloudProjectKubeNodePool(),
 			"ovh_cloud_project_kube_oidc":                                 resourceCloudProjectKubeOIDC(),
