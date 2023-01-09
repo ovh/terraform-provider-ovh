@@ -1,4 +1,46 @@
-## 0.26.0 (Unreleased)
+## 0.27.0 (Unreleased)
+
+## 0.26.0 (January 9, 2023)
+
+First of all, we wish you a happy new year 🎉.
+
+🎉 Features:
+
+* New resource: `dedicated_server_networking` ([#351](https://github.com/ovh/terraform-provider-ovh/pull/351))
+* New resource: `dedicated_nasha_partition` ([#349](https://github.com/ovh/terraform-provider-ovh/pull/349))
+* New resource: `dedicated_nasha_partition_access` ([#349](https://github.com/ovh/terraform-provider-ovh/pull/349))
+* New resource: `dedicated_nasha_partition_snapshot` ([#349](https://github.com/ovh/terraform-provider-ovh/pull/349))
+
+* New datasource: `dedicated_nasha` ([#349](https://github.com/ovh/terraform-provider-ovh/pull/349))
+
+💪 Improvements:
+
+* `r/iploadbalancing_http_frontend`: Add support for HTTP header ([#356](https://github.com/ovh/terraform-provider-ovh/pull/356))
+* `r/installation_template`: Remove UEFI & GPT support for installation template ([#352](https://github.com/ovh/terraform-provider-ovh/pull/352))
+* `d/installation_template`: Remove UEFI & GPT support for installation template ([#352](https://github.com/ovh/terraform-provider-ovh/pull/352))
+
+🐜 Bug fixes:
+
+* `d/cloud_project_kube_nodepool`: Fix Node Pool read template ([#354](https://github.com/ovh/terraform-provider-ovh/pull/354))
+* `r/ip_reverse`: Fix import with IPv6 ([#346](https://github.com/ovh/terraform-provider-ovh/pull/346))
+
+📚 Documentation:
+
+* `r/iploadbalancing_http_frontend`: Update documentation page ([#356](https://github.com/ovh/terraform-provider-ovh/pull/356))
+* `r/cloud_project_kube`: Update documentation page ([#355](https://github.com/ovh/terraform-provider-ovh/pull/355))
+* `r/cloud_project_kube_nodepool`: Update documentation page ([#353](https://github.com/ovh/terraform-provider-ovh/pull/353))
+* `r/me_installation_template`: Update documentation page ([#352](https://github.com/ovh/terraform-provider-ovh/pull/352))
+* `r/ovh_dedicated_server_networking`: Add documentation page ([#351](https://github.com/ovh/terraform-provider-ovh/pull/351))
+* `r/dedicated_nasha_partition`: Add documentation page ([#349](https://github.com/ovh/terraform-provider-ovh/pull/349))
+* `r/dedicated_nasha_partition_access`: Add documentation page ([#349](https://github.com/ovh/terraform-provider-ovh/pull/349))
+* `r/dedicated_nasha_partition_snapshot`: Add documentation page ([#349](https://github.com/ovh/terraform-provider-ovh/pull/349))
+* `r/ovh_domain_zone_record`: Update documentation page ([#348](https://github.com/ovh/terraform-provider-ovh/pull/348))
+* `r/ip_reverse`: Update documentation page ([#346](https://github.com/ovh/terraform-provider-ovh/pull/346))
+
+* `d/me_installation_template`: Update documentation page ([#352](https://github.com/ovh/terraform-provider-ovh/pull/352))
+* `d/dedicated_nasha`: Add documentation page ([#349](https://github.com/ovh/terraform-provider-ovh/pull/349))
+
+❤️ Thanks for your contributions ❤️
 
 ## 0.25.0 (December 16, 2022)
 
