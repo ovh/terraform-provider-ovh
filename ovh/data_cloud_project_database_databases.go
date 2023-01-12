@@ -7,6 +7,7 @@ import (
 	"sort"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers/hashcode"
 )
 
@@ -20,9 +21,10 @@ func dataSourceCloudProjectDatabaseDatabases() *schema.Resource {
 				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
 			},
 			"engine": {
-				Type:        schema.TypeString,
-				Description: "Name of the engine of the service",
-				Required:    true,
+				Type:         schema.TypeString,
+				Description:  "Name of the engine of the service",
+				Required:     true,
+				ValidateFunc: helpers.ValidateEnum([]string{"mysql", "postgresql"}),
 			},
 			"cluster_id": {
 				Type:        schema.TypeString,

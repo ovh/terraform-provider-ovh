@@ -94,6 +94,10 @@ resource "ovh_cloud_project_database" "mysqldb" {
     region  = "SBG"
   }
   flavor        = "db1-4"
+  advanced_configuration = {
+    "mysql.sql_mode": "ANSI,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION,NO_ZERO_DATE,NO_ZERO_IN_DATE,STRICT_ALL_TABLES",
+    "mysql.sql_require_primary_key": "true"
+  }
 }
 
 resource "ovh_cloud_project_database" "opensearchdb" {
@@ -209,6 +213,8 @@ The following arguments are supported:
 
 * `disk_size` -  (Optional) The disk size (in GB) of the database service.
 
+* `advanced_configuration` -  (Optional) Advanced configuration key / value.
+
 * `plan` - (Required) Plan of the cluster.
   Enum: "essential", "business", "enterprise".
 
@@ -247,6 +253,9 @@ The following attributes are exported:
 * `version` - See Argument Reference above.
 * `disk_size` - See Argument Reference above.
 * `disk_type` -  Defines the disk type of the database service.
+* `advanced_configuration` - Advanced configuration key / value.
+
+
 
 ## Timeouts
 

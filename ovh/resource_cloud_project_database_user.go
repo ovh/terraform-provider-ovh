@@ -103,27 +103,11 @@ func resourceCloudProjectDatabaseUserImportState(d *schema.ResourceData, meta in
 }
 
 func resourceCloudProjectDatabaseUserCreate(d *schema.ResourceData, meta interface{}) error {
-	serviceName := d.Get("service_name").(string)
 	engine := d.Get("engine").(string)
-	clusterId := d.Get("cluster_id").(string)
-
-	endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/user",
-		url.PathEscape(serviceName),
-		url.PathEscape(engine),
-		url.PathEscape(clusterId),
-	)
-
-	params := (&CloudProjectDatabaseUserCreateOpts{}).FromResource(d)
-	res := &CloudProjectDatabaseUserResponse{}
-
-	log.Printf("[DEBUG] Will create user: %+v for cluster %s from project %s", params, clusterId, serviceName)
-	err := postCloudProjectDatabaseUser(d, meta, engine, endpoint, params, res, schema.TimeoutCreate)
-	if err != nil {
-		return err
+	f := func() interface{} {
+		return (&CloudProjectDatabaseUserCreateOpts{}).FromResource(d)
 	}
-
-	d.SetId(res.Id)
-	return resourceCloudProjectDatabaseUserRead(d, meta)
+	return postCloudProjectDatabaseUser(d, meta, engine, dataSourceCloudProjectDatabaseUserRead, resourceCloudProjectDatabaseUserRead, resourceCloudProjectDatabaseUserUpdate, f)
 }
 
 func resourceCloudProjectDatabaseUserRead(d *schema.ResourceData, meta interface{}) error {
@@ -164,49 +148,23 @@ func resourceCloudProjectDatabaseUserUpdate(d *schema.ResourceData, meta interfa
 	clusterId := d.Get("cluster_id").(string)
 	id := d.Id()
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/database/postgresql/%s/user/%s/credentials/reset",
-		url.PathEscape(serviceName),
-		url.PathEscape(clusterId),
-		url.PathEscape(id),
-	)
-	res := &CloudProjectDatabaseUserResponse{}
-	log.Printf("[DEBUG] Will update user password for cluster %s from project %s", clusterId, serviceName)
-	err := postCloudProjectDatabaseUser(d, meta, engine, endpoint, nil, res, schema.TimeoutUpdate)
-	if err != nil {
-		return err
-	}
-
-	return resourceCloudProjectDatabasePostgresqlUserRead(d, meta)
-}
-
-func resourceCloudProjectDatabaseUserDelete(d *schema.ResourceData, meta interface{}) error {
-	config := meta.(*Config)
-	serviceName := d.Get("service_name").(string)
-	engine := d.Get("engine").(string)
-	clusterId := d.Get("cluster_id").(string)
-	id := d.Id()
-
-	endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/user/%s",
+	endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/user/%s/credentials/reset",
 		url.PathEscape(serviceName),
 		url.PathEscape(engine),
 		url.PathEscape(clusterId),
 		url.PathEscape(id),
 	)
-
-	log.Printf("[DEBUG] Will delete user %s from cluster %s from project %s", id, clusterId, serviceName)
-	err := config.OVHClient.Delete(endpoint, nil)
+	res := &CloudProjectDatabaseUserResponse{}
+	log.Printf("[DEBUG] Will update user password for cluster %s from project %s", clusterId, serviceName)
+	err := postFuncCloudProjectDatabaseUser(d, meta, engine, endpoint, nil, res, schema.TimeoutUpdate)
 	if err != nil {
-		return helpers.CheckDeleted(d, err, endpoint)
+		return err
 	}
 
-	log.Printf("[DEBUG] Waiting for user %s to be DELETED", id)
-	err = waitForCloudProjectDatabaseUserDeleted(config.OVHClient, serviceName, engine, clusterId, id, d.Timeout(schema.TimeoutDelete))
-	if err != nil {
-		return fmt.Errorf("timeout while waiting user %s to be DELETED: %w", id, err)
-	}
-	log.Printf("[DEBUG] user %s is DELETED", id)
+	return resourceCloudProjectDatabaseUserRead(d, meta)
+}
 
-	d.SetId("")
-
-	return nil
+func resourceCloudProjectDatabaseUserDelete(d *schema.ResourceData, meta interface{}) error {
+	engine := d.Get("engine").(string)
+	return deleteCloudProjectDatabaseUser(d, meta, engine)
 }

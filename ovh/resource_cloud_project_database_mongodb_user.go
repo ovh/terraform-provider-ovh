@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -91,22 +90,7 @@ func resourceCloudProjectDatabaseMongodbUser() *schema.Resource {
 }
 
 func resourceCloudProjectDatabaseMongodbUserImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	givenId := d.Id()
-	n := 3
-	splitId := strings.SplitN(givenId, "/", n)
-	if len(splitId) != n {
-		return nil, fmt.Errorf("Import Id is not service_name/cluster_id/id formatted")
-	}
-	serviceName := splitId[0]
-	clusterId := splitId[1]
-	id := splitId[2]
-	d.SetId(id)
-	d.Set("cluster_id", clusterId)
-	d.Set("service_name", serviceName)
-
-	results := make([]*schema.ResourceData, 1)
-	results[0] = d
-	return results, nil
+	return importCloudProjectDatabaseUser(d, meta)
 }
 
 func resourceCloudProjectDatabaseMongodbUserCreate(d *schema.ResourceData, meta interface{}) error {
@@ -122,7 +106,7 @@ func resourceCloudProjectDatabaseMongodbUserCreate(d *schema.ResourceData, meta 
 
 	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		log.Printf("[DEBUG] Will create user: %+v for cluster %s from project %s", params, clusterId, serviceName)
-		err := postCloudProjectDatabaseUser(d, meta, "mongodb", endpoint, params, res, schema.TimeoutCreate)
+		err := postFuncCloudProjectDatabaseUser(d, meta, "mongodb", endpoint, params, res, schema.TimeoutCreate)
 		if err != nil {
 			if errOvh, ok := err.(*ovh.APIError); ok && (errOvh.Code == 409) {
 				return resource.RetryableError(err)
@@ -204,7 +188,7 @@ func resourceCloudProjectDatabaseMongodbUserUpdate(d *schema.ResourceData, meta 
 			pwdResetEndpoint := endpoint + "/credentials/reset"
 			res := &CloudProjectDatabaseUserResponse{}
 			log.Printf("[DEBUG] Will update user password for cluster %s from project %s", clusterId, serviceName)
-			err := postCloudProjectDatabaseUser(d, meta, "mongodb", pwdResetEndpoint, nil, res, schema.TimeoutUpdate)
+			err := postFuncCloudProjectDatabaseUser(d, meta, "mongodb", pwdResetEndpoint, nil, res, schema.TimeoutUpdate)
 			if err != nil {
 				if errOvh, ok := err.(*ovh.APIError); ok && (errOvh.Code == 409) {
 					return resource.RetryableError(err)

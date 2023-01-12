@@ -167,6 +167,14 @@ func dataSourceCloudProjectDatabase() *schema.Resource {
 				Description: "Disk type attributes of the cluster",
 				Computed:    true,
 			},
+			"advanced_configuration": {
+				Type: schema.TypeMap,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Description: "Advanced configuration key / value",
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -205,6 +213,15 @@ func dataSourceCloudProjectDatabaseRead(d *schema.ResourceData, meta interface{}
 	}
 
 	res.Region = node.Region
+
+	if engine != "mongodb" {
+		advancedConfigEndpoint := fmt.Sprintf("%s/advancedConfiguration", serviceEndpoint)
+		advancedConfigMap := &map[string]string{}
+		if err := config.OVHClient.Get(advancedConfigEndpoint, advancedConfigMap); err != nil {
+			return fmt.Errorf("unable to get database %s advanced configuration: %v", res.Id, err)
+		}
+		res.AdvancedConfiguration = *advancedConfigMap
+	}
 
 	for k, v := range res.ToMap() {
 		if k != "id" {
