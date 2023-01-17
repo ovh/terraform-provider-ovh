@@ -29,7 +29,7 @@ data "ovh_order_cart_product_plan" "cloud" {
   plan_code      = "project.2018"
 }
 
-resource "ovh_cloud_project" "cloud" {
+resource "ovh_cloud_project" "my_cloud_project" {
   ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
   description    = "my cloud project"
   payment_mean   = "fidelity"
@@ -84,3 +84,9 @@ Id is set to the order Id. In addition, the following attributes are exported:
 * `project_name` - openstack project name
 * `project_id` - openstack project id
 * `status` - project status
+
+## Import
+Cloud project can be imported using the `order_id` that can be retrieved in the [order page](https://www.ovh.com/manager/#/dedicated/billing/orders/orders) at the creation time of the public cloud project 
+```bash
+$ terraform import ovh_cloud_project_database.my_cloud_project order_id
+```
