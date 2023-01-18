@@ -410,3 +410,6 @@ google.golang.org/protobuf/types/pluginpb
 # gopkg.in/ini.v1 v1.57.0
 ## explicit
 gopkg.in/ini.v1
+# gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
+## explicit
+gopkg.in/yaml.v3

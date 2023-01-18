@@ -112,43 +112,34 @@ resource "ovh_cloud_project_kube" "mycluster" {
 
 The following arguments are supported:
 
-* `service_name` - (Optional) The id of the public cloud project. If omitted,
-    the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
-
+* `service_name` - (Optional) The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 * `name` - (Optional) The name of the kubernetes cluster.
-
-* `region` - a valid OVHcloud public cloud region ID in which the kubernetes
-   cluster will be available. Ex.: "GRA1". Defaults to all public cloud regions.
-   Changing this value recreates the resource.
-
-* `version` - (Optional) kubernetes version to use.
-   Changing this value updates the resource. Defaults to latest available.
-
+* `region` - a valid OVHcloud public cloud region ID in which the kubernetes cluster will be available. Ex.: "GRA1". Defaults to all public cloud regions. Changing this value recreates the resource.
+* `version` - (Optional) kubernetes version to use. Changing this value updates the resource. Defaults to the latest available.
 * `customization` - (Optional) Customer customization object
-  * apiserver - Kubernetes API server customization
-    * admissionplugins - (Optional) Kubernetes API server admission plugins customization
-        * enabled - (Optional) Array of admission plugins enabled, default is ["NodeRestriction","AlwaysPulImages"] and only these admission plugins can be enabled at this time. 
-        * disabled - (Optional) Array of admission plugins disabled, default is [] and only AlwaysPulImages can be disabled at this time.
-
-* `private_network_id` - (Optional) OpenStack private network (or vrack) ID to use.
-   Changing this value delete the resource(including ETCD user data). Defaults - not use private network.
-   
-~> __WARNING__ Updating the private network ID resets the cluster so that all user data is deleted.
-
+  * `apiserver` - Kubernetes API server customization
+    * `admissionplugins` - (Optional) Kubernetes API server admission plugins customization
+        * `enabled` - (Optional) Array of admission plugins enabled, default is ["NodeRestriction","AlwaysPulImages"] and only these admission plugins can be enabled at this time. 
+        * `disabled` - (Optional) Array of admission plugins disabled, default is [] and only AlwaysPulImages can be disabled at this time.
+* `private_network_id` - (Optional) OpenStack private network (or vrack) ID to use. Changing this value delete the resource (including ETCD user data). Defaults - not use private network. ~> __WARNING__ Updating the private network ID resets the cluster so that all user data is deleted.
 * `private_network_configuration` - (Optional) The private network configuration
-  * default_vrack_gateway - If defined, all egress traffic will be routed towards this IP address, which should belong to the private network. Empty string means disabled.
-  * private_network_routing_as_default - Defines whether routing should default to using the nodes' private interface, instead of their public interface. Default is false.
-
+  * `default_vrack_gateway` - If defined, all egress traffic will be routed towards this IP address, which should belong to the private network. Empty string means disabled.
+  * `private_network_routing_as_default` - Defines whether routing should default to using the nodes' private interface, instead of their public interface. Default is false.
 * `update_policy` - Cluster update policy. Choose between [ALWAYS_UPDATE, MINIMAL_DOWNTIME, NEVER_UPDATE].
 
 ## Attributes Reference
 
 The following attributes are exported:
 
-* `control_plane_is_up_to_date` - True if control-plane is up to date.
+* `control_plane_is_up_to_date` - True if control-plane is up-to-date.
 * `id` - Managed Kubernetes Service ID
-* `is_up_to_date` - True if all nodes and control-plane are up to date.
+* `is_up_to_date` - True if all nodes and control-plane are up-to-date.
 * `kubeconfig` - The kubeconfig file. Use this file to connect to your kubernetes cluster.
+* `kubeconfig_attributes` - The kubeconfig file attributes.
+  * `host` - The kubernetes API server URL.
+  * `cluster_ca_certificate` - The kubernetes API server CA certificate.
+  * `client_certificate` - The kubernetes API server client certificate.
+  * `client_key` - The kubernetes API server client key.
 * `name` - See Argument Reference above.
 * `next_upgrade_versions` - Kubernetes versions available for upgrade.
 * `nodes_url` - Cluster nodes URL.

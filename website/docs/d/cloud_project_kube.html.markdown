@@ -27,9 +27,7 @@ output "version" {
 
 The following arguments are supported:
 
-* `service_name` - (Optional) The id of the public cloud project. If omitted,
-    the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
-
+* `service_name` - (Optional) The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 * `kube_id` - The id of the managed kubernetes cluster.
 
 ## Attributes Reference
@@ -50,7 +48,7 @@ The following attributes are exported:
 * `update_policy` - Cluster update policy. Choose between [ALWAYS_UPDATE,MINIMAL_DOWNTIME,NEVER_UPDATE]'.
 * `url` - Management URL of your cluster.
 * `customization` - Customer customization object
-    * apiserver - Kubernetes API server customization
-        * admissionplugins - Kubernetes API server admission plugins customization
-            * enabled - Array of admission plugins enabled, default is ["NodeRestriction","AlwaysPulImages"] and only these admission plugins can be enabled at this time.
-            * disabled - Array of admission plugins disabled, default is [] and only AlwaysPulImages can be disabled at this time.
+    * `apiserver` - Kubernetes API server customization
+        * `admissionplugins` - Kubernetes API server admission plugins customization
+            * `enabled` - Array of admission plugins enabled, default is ["NodeRestriction","AlwaysPulImages"] and only these admission plugins can be enabled at this time.
+            * `disabled` - Array of admission plugins disabled, default is [] and only AlwaysPulImages can be disabled at this time.
