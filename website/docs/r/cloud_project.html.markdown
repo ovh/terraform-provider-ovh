@@ -69,12 +69,13 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-Id is set to the order Id. In addition, the following attributes are exported:
+`id` is set to the order Id. In addition, the following attributes are exported:
 
-* `access` - project access
-* `order` - Details about an Order
+* `access` - project access right for the identity that trigger the terraform script.
+* `description` - Project description
+* `order` - Details about the order that was used to create the public cloud project
   * `date` - date
-  * `order_id` - order id
+  * `order_id` - order id, the same as the `id`
   * `expiration_date` - expiration date
   * `details` - Information about a Bill entry
     * `description` - description
