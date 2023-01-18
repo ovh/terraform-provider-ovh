@@ -86,7 +86,7 @@ Id is set to the order Id. In addition, the following attributes are exported:
 * `status` - project status
 
 ## Import
-Cloud project can be imported using the `order_id` that can be retrieved in the [order page](https://www.ovh.com/manager/#/dedicated/billing/orders/orders) at the creation time of the public cloud project 
+Cloud project can be imported using the `order_id` that can be retrieved in the [order page](https://www.ovh.com/manager/#/dedicated/billing/orders/orders) at the creation time of the Public Cloud project. 
 ```bash
 $ terraform import ovh_cloud_project.my_cloud_project order_id
 ```
