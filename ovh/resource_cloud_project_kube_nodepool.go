@@ -264,7 +264,7 @@ func resourceCloudProjectKubeNodePoolCreate(d *schema.ResourceData, meta interfa
 	}
 
 	log.Printf("[DEBUG] Waiting for nodepool %s to be READY", res.Id)
-	err = waitForCloudProjectKubeNodePoolReady(config.OVHClient, serviceName, kubeId, res.Id)
+	err = waitForCloudProjectKubeNodePoolReady(config.OVHClient, serviceName, kubeId, res.Id, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return fmt.Errorf("timeout while waiting nodepool %s to be READY: %w", res.Id, err)
 	}
@@ -318,7 +318,7 @@ func resourceCloudProjectKubeNodePoolUpdate(d *schema.ResourceData, meta interfa
 	}
 
 	log.Printf("[DEBUG] Waiting for nodepool %s to be READY", d.Id())
-	err = waitForCloudProjectKubeNodePoolReady(config.OVHClient, serviceName, kubeId, d.Id())
+	err = waitForCloudProjectKubeNodePoolReady(config.OVHClient, serviceName, kubeId, d.Id(), d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
 		return fmt.Errorf("timeout while waiting nodepool %s to be READY: %w", d.Id(), err)
 	}
@@ -341,7 +341,7 @@ func resourceCloudProjectKubeNodePoolDelete(d *schema.ResourceData, meta interfa
 	}
 
 	log.Printf("[DEBUG] Waiting for nodepool %s to be DELETED", d.Id())
-	err = waitForCloudProjectKubeNodePoolDeleted(config.OVHClient, serviceName, kubeId, d.Id())
+	err = waitForCloudProjectKubeNodePoolDeleted(config.OVHClient, serviceName, kubeId, d.Id(), d.Timeout(schema.TimeoutDelete))
 	if err != nil {
 		return fmt.Errorf("timeout while waiting nodepool %s to be DELETED: %v", d.Id(), err)
 	}
@@ -359,7 +359,7 @@ func cloudProjectKubeNodePoolExists(serviceName, kubeId, id string, client *ovh.
 	return client.Get(endpoint, res)
 }
 
-func waitForCloudProjectKubeNodePoolReady(client *ovh.Client, serviceName, kubeId, id string) error {
+func waitForCloudProjectKubeNodePoolReady(client *ovh.Client, serviceName, kubeId, id string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"INSTALLING", "UPDATING", "REDEPLOYING", "RESIZING", "DOWNSCALING", "UPSCALING"},
 		Target:  []string{"READY"},
@@ -373,7 +373,7 @@ func waitForCloudProjectKubeNodePoolReady(client *ovh.Client, serviceName, kubeI
 
 			return res, res.Status, nil
 		},
-		Timeout:    20 * time.Minute,
+		Timeout:    timeout,
 		Delay:      5 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -382,7 +382,7 @@ func waitForCloudProjectKubeNodePoolReady(client *ovh.Client, serviceName, kubeI
 	return err
 }
 
-func waitForCloudProjectKubeNodePoolDeleted(client *ovh.Client, serviceName, kubeId, id string) error {
+func waitForCloudProjectKubeNodePoolDeleted(client *ovh.Client, serviceName, kubeId, id string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"DELETING"},
 		Target:  []string{"DELETED"},
@@ -400,7 +400,7 @@ func waitForCloudProjectKubeNodePoolDeleted(client *ovh.Client, serviceName, kub
 
 			return res, res.Status, nil
 		},
-		Timeout:    20 * time.Minute,
+		Timeout:    timeout,
 		Delay:      5 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
