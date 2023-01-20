@@ -512,6 +512,7 @@ type IpLoadbalancingHttpFrontend struct {
 	DefaultSslId     *int     `json:"defaultSslId,omitempty"`
 	Disabled         bool     `json:"disabled"`
 	Ssl              bool     `json:"ssl"`
+	Hsts             bool     `json:"hsts"`
 	RedirectLocation string   `json:"redirectLocation,omitempty"`
 	DisplayName      string   `json:"displayName,omitempty"`
 	HttpHeader       []string `json:"httpHeader"`
