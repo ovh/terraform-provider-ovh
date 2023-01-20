@@ -71,6 +71,11 @@ func resourceIpLoadbalancingHttpFrontend() *schema.Resource {
 				Default:  false,
 				Optional: true,
 			},
+			"hsts": {
+				Type:     schema.TypeBool,
+				Default:  false,
+				Optional: true,
+			},
 			"redirect_location": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -127,6 +132,7 @@ func resourceIpLoadbalancingHttpFrontendCreate(d *schema.ResourceData, meta inte
 		DedicatedIpFo:    dedicatedIpFo,
 		Disabled:         d.Get("disabled").(bool),
 		Ssl:              d.Get("ssl").(bool),
+		Hsts:             d.Get("hsts").(bool),
 		RedirectLocation: d.Get("redirect_location").(string),
 		DisplayName:      d.Get("display_name").(string),
 		HttpHeader:       httpHeader,
@@ -178,6 +184,7 @@ func resourceIpLoadbalancingHttpFrontendRead(d *schema.ResourceData, meta interf
 	d.Set("display_name", r.DisplayName)
 	d.Set("port", r.Port)
 	d.Set("ssl", r.Ssl)
+	d.Set("hsts", r.Hsts)
 	d.Set("zone", r.Zone)
 	d.Set("redirect_location", r.RedirectLocation)
 	d.Set("http_header", httpHeader)
@@ -213,6 +220,7 @@ func resourceIpLoadbalancingHttpFrontendUpdate(d *schema.ResourceData, meta inte
 		DedicatedIpFo:    dedicatedIpFo,
 		Disabled:         d.Get("disabled").(bool),
 		Ssl:              d.Get("ssl").(bool),
+		Hsts:             d.Get("hsts").(bool),
 		RedirectLocation: d.Get("redirect_location").(string),
 		DisplayName:      d.Get("display_name").(string),
 		HttpHeader:       httpHeader,

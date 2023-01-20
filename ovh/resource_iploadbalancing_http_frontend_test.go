@@ -81,6 +81,8 @@ func TestAccIpLoadbalancingHttpFrontend_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"ovh_iploadbalancing_http_frontend.testfrontend", "ssl", "true"),
 					resource.TestCheckResourceAttr(
+						"ovh_iploadbalancing_http_frontend.testfrontend", "hsts", "true"),
+					resource.TestCheckResourceAttr(
 						"ovh_iploadbalancing_http_frontend.testfrontend", "port", "22280"),
 					resource.TestCheckResourceAttr(
 						"ovh_iploadbalancing_http_frontend.testfrontend", "disabled", "true"),
@@ -96,6 +98,8 @@ func TestAccIpLoadbalancingHttpFrontend_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"ovh_iploadbalancing_http_frontend.testfrontend", "ssl", "false"),
 					resource.TestCheckResourceAttr(
+						"ovh_iploadbalancing_http_frontend.testfrontend", "hsts", "false"),
+					resource.TestCheckResourceAttr(
 						"ovh_iploadbalancing_http_frontend.testfrontend", "port", "22280,22443"),
 					resource.TestCheckResourceAttr(
 						"ovh_iploadbalancing_http_frontend.testfrontend", "disabled", "false"),
@@ -110,6 +114,8 @@ func TestAccIpLoadbalancingHttpFrontend_basic(t *testing.T) {
 						"ovh_iploadbalancing_http_frontend.testfrontend", "display_name", test_prefix),
 					resource.TestCheckResourceAttr(
 						"ovh_iploadbalancing_http_frontend.testfrontend", "ssl", "true"),
+					resource.TestCheckResourceAttr(
+						"ovh_iploadbalancing_http_frontend.testfrontend", "hsts", "true"),
 					resource.TestCheckResourceAttr(
 						"ovh_iploadbalancing_http_frontend.testfrontend", "port", "22280"),
 					resource.TestCheckResourceAttr(
@@ -150,6 +156,7 @@ resource "ovh_iploadbalancing_http_frontend" "testfrontend" {
    port     = "22280"
    disabled = true
    ssl      = true
+   hsts     = true
 }
 `
 const testAccCheckOvhIpLoadbalancingHttpFrontendConfig_update = `
