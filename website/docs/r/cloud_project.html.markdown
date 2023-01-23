@@ -29,7 +29,7 @@ data "ovh_order_cart_product_plan" "cloud" {
   plan_code      = "project.2018"
 }
 
-resource "ovh_cloud_project" "cloud" {
+resource "ovh_cloud_project" "my_cloud_project" {
   ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
   description    = "my cloud project"
   payment_mean   = "fidelity"
@@ -69,12 +69,13 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-Id is set to the order Id. In addition, the following attributes are exported:
+`id` is set to the order Id. In addition, the following attributes are exported:
 
-* `access` - project access
-* `order` - Details about an Order
+* `access` - project access right for the identity that trigger the terraform script.
+* `description` - Project description
+* `order` - Details about the order that was used to create the public cloud project
   * `date` - date
-  * `order_id` - order id
+  * `order_id` - order id, the same as the `id`
   * `expiration_date` - expiration date
   * `details` - Information about a Bill entry
     * `description` - description
@@ -84,3 +85,9 @@ Id is set to the order Id. In addition, the following attributes are exported:
 * `project_name` - openstack project name
 * `project_id` - openstack project id
 * `status` - project status
+
+## Import
+Cloud project can be imported using the `order_id` that can be retrieved in the [order page](https://www.ovh.com/manager/#/dedicated/billing/orders/orders) at the creation time of the Public Cloud project. 
+```bash
+$ terraform import ovh_cloud_project.my_cloud_project order_id
+```
