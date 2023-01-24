@@ -14,9 +14,10 @@ import (
 )
 
 const testAccResourceDbaasLogsInput_basic = `
-data "ovh_dbaas_logs_input_engine" "logstash" {
- name          = "logstash"
- version       = "7.x"
+data "ovh_dbaas_logs_input_engine" "logstash" {	
+	service_name  = "%s"
+	name          = "%s"
+	version       = "%s"
 }
 
 resource "ovh_dbaas_logs_output_graylog_stream" "stream" {
@@ -152,11 +153,16 @@ func testSweepDbaasInput(region string) error {
 
 func TestAccResourceDbaasLogsInput_basic(t *testing.T) {
 	serviceName := os.Getenv("OVH_DBAAS_LOGS_SERVICE_TEST")
+	name := "LOGSTASH"
+	version := "7.x"
 	title := acctest.RandomWithPrefix(test_prefix)
 	desc := acctest.RandomWithPrefix(test_prefix)
 
 	config := fmt.Sprintf(
 		testAccResourceDbaasLogsInput_basic,
+		serviceName,
+		name,
+		version,
 		serviceName,
 		title,
 		desc,
