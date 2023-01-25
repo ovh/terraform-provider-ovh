@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/go-ovh/ovh"
+	"github.com/ybriffa/rfc3339"
 )
 
 func ValidateIpBlock(value string) error {
@@ -184,6 +185,14 @@ func ValidateDedicatedCephStatus(value string) error {
 		"DELETED",
 		"TASK_IN_PROGRESS",
 	})
+}
+
+// ValidateRFC3339Duration implements schema.SchemaValidateFunc for RFC3339 durations.
+func ValidateRFC3339Duration(i interface{}, _ string) (_ []string, errors []error) {
+	if _, err := rfc3339.ParseDuration(i.(string)); err != nil {
+		errors = append(errors, err)
+	}
+	return
 }
 
 func ValidateDedicatedCephACLFamily(value string) error {
