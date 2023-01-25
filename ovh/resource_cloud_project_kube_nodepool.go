@@ -149,11 +149,7 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 				Optional:    true,
 				Type:        schema.TypeSet,
 				MaxItems:    1,
-				Set: func(i interface{}) int {
-					out := fmt.Sprintf("%#v", i)
-					hash := int(schema.HashString(out))
-					return hash
-				},
+				Set:         CustomSchemaSetFunc(false),
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"metadata": {
@@ -161,11 +157,7 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 							Optional:    true,
 							Type:        schema.TypeSet,
 							MaxItems:    1,
-							Set: func(i interface{}) int {
-								out := fmt.Sprintf("%#v", i)
-								hash := int(schema.HashString(out))
-								return hash
-							},
+							Set:         CustomSchemaSetFunc(false),
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"finalizers": {
@@ -196,11 +188,7 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 							Optional:    true,
 							Type:        schema.TypeSet,
 							MaxItems:    1,
-							Set: func(i interface{}) int {
-								out := fmt.Sprintf("%#v", i)
-								hash := int(schema.HashString(out))
-								return hash
-							},
+							Set:         CustomSchemaSetFunc(false),
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"unschedulable": {
@@ -322,7 +310,7 @@ func resourceCloudProjectKubeNodePoolUpdate(d *schema.ResourceData, meta interfa
 	log.Printf("[DEBUG] Will update nodepool: %#v", *params)
 	err = config.OVHClient.Put(endpoint, params, nil)
 	if err != nil {
-		return fmt.Errorf("calling Put %s with params %#v:\n\t %w", endpoint, *params, err)
+		return fmt.Errorf("calling Put %s with params %v:\n\t %w", endpoint, *params, err)
 	}
 
 	log.Printf("[DEBUG] Waiting for nodepool %s to be READY", d.Id())
