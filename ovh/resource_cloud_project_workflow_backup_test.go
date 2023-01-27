@@ -52,9 +52,14 @@ func testSweepCloudProjectWorkflowBackup(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
+	region = os.Getenv(WORKFLOW_BACKUP_TEST_REGION_ENV_VAR)
+	if region == "" {
+		log.Printf("[DEBUG] No region in env variable => no sweeping")
+		return nil
+	}
 	wfToSweep := make([]CloudProjectWorkflowBackupResponse, 0)
 	var endpoint = fmt.Sprintf(OVH_CLOUD_PROJECT_WORKFLOW_BACKUP_ENDPOINT, os.Getenv(CLOUD_PROJECT_TEST_ENV_VAR),
-		os.Getenv(WORKFLOW_BACKUP_TEST_REGION_ENV_VAR))
+		region)
 
 	if err := client.Get(endpoint, &wfToSweep); err != nil {
 		return fmt.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
