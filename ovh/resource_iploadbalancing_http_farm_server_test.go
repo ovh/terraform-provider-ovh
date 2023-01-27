@@ -131,6 +131,21 @@ resource ovh_iploadbalancing_http_farm_server testacc {
   backup = true
 }
 `
+	testAccIpLoadbalancingHttpFarmServerConfig_step7 = `
+%s
+
+resource ovh_iploadbalancing_http_farm_server testacc {
+  service_name     = data.ovh_iploadbalancing.iplb.id
+  farm_id = ovh_iploadbalancing_http_farm.testacc.id
+  address = "10.0.0.11"
+  status = "active"
+  display_name = "testBackendB"
+  port = 8080
+  ssl = true
+  backup = true
+  on_marked_down = "shutdown-sessions"
+}
+`
 )
 
 func init() {
@@ -288,6 +303,18 @@ func TestAccIpLoadbalancingHttpFarmServerBasic(t *testing.T) {
 					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "weight", "1"),
 					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "ssl", "true"),
 					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "backup", "true"),
+				),
+			},
+			{
+				Config: fmt.Sprintf(testAccIpLoadbalancingHttpFarmServerConfig_step7, prefix),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "address", "10.0.0.11"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "status", "active"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "port", "8080"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "weight", "1"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "ssl", "true"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "backup", "true"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "on_marked_down", "shutdown-sessions"),
 				),
 			},
 		},
