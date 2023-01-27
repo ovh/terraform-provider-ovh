@@ -71,6 +71,19 @@ func resourceIpLoadbalancingHttpFarmServer() *schema.Resource {
 					return
 				},
 			},
+			"on_marked_down": {
+				Type:     schema.TypeString,
+				Optional: true,
+				// There is only one valid value for now, keep string enum
+				// to be able to add a new value easily.
+				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+					err := helpers.ValidateStringEnum(v.(string), []string{"shutdown-sessions"})
+					if err != nil {
+						errors = append(errors, err)
+					}
+					return
+				},
+			},
 			"chain": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -135,6 +148,7 @@ func resourceIpLoadbalancingHttpFarmServerCreate(d *schema.ResourceData, meta in
 		Address:              d.Get("address").(string),
 		Port:                 helpers.GetNilIntPointerFromData(d, "port"),
 		ProxyProtocolVersion: helpers.GetNilStringPointerFromData(d, "proxy_protocol_version"),
+		OnMarkedDown:         helpers.GetNilStringPointerFromData(d, "on_marked_down"),
 		Chain:                helpers.GetNilStringPointerFromData(d, "chain"),
 		Weight:               helpers.GetNilIntPointerFromData(d, "weight"),
 		Probe:                helpers.GetNilBoolPointerFromData(d, "probe"),
@@ -188,6 +202,7 @@ func resourceIpLoadbalancingHttpFarmServerUpdate(d *schema.ResourceData, meta in
 		Address:              helpers.GetNilStringPointerFromData(d, "address"),
 		Port:                 helpers.GetNilIntPointerFromData(d, "port"),
 		ProxyProtocolVersion: helpers.GetNilStringPointerFromData(d, "proxy_protocol_version"),
+		OnMarkedDown:         helpers.GetNilStringPointerFromData(d, "on_marked_down"),
 		Chain:                helpers.GetNilStringPointerFromData(d, "chain"),
 		Weight:               helpers.GetNilIntPointerFromData(d, "weight"),
 		Probe:                helpers.GetNilBoolPointerFromData(d, "probe"),
