@@ -340,3 +340,8 @@ func testAccPreCheckDedicatedCeph(t *testing.T) {
 	testAccPreCheckCredentials(t)
 	checkEnvOrSkip(t, "OVH_DEDICATED_CEPH")
 }
+
+func testAccPreCheckWorkflowBackup(t *testing.T) {
+	checkEnvOrSkip(t, WORKFLOW_BACKUP_TEST_INSTANCE_ID_ENV_VAR)
+	checkEnvOrSkip(t, WORKFLOW_BACKUP_TEST_REGION_ENV_VAR)
+}
