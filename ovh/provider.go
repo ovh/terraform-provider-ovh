@@ -2,13 +2,18 @@ package ovh
 
 import (
 	"context"
-	ini "gopkg.in/ini.v1"
 	"os"
 	"sync"
+
+	ini "gopkg.in/ini.v1"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/mitchellh/go-homedir"
+)
+
+const (
+	SERVICE_NAME_ATT = "service_name"
 )
 
 // Provider returns a *schema.Provider for OVH.
@@ -154,6 +159,7 @@ func Provider() *schema.Provider {
 			"ovh_cloud_project_user":                                      resourceCloudProjectUser(),
 			"ovh_cloud_project_user_s3_credential":                        resourceCloudProjectUserS3Credential(),
 			"ovh_cloud_project_user_s3_policy":                            resourceCloudProjectUserS3Policy(),
+			"ovh_cloud_project_workflow_backup":                           resourceCloudProjectWorkflowBackup(),
 			"ovh_dbaas_logs_input":                                        resourceDbaasLogsInput(),
 			"ovh_dbaas_logs_output_graylog_stream":                        resourceDbaasLogsOutputGraylogStream(),
 			"ovh_dedicated_ceph_acl":                                      resourceDedicatedCephACL(),
