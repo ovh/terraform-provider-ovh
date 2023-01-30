@@ -206,77 +206,81 @@ func (v CloudProjectKubeResponse) ToMap() map[string]interface{} {
 	obj["version"] = v.Version[:strings.LastIndex(v.Version, ".")]
 	obj[kubeClusterProxyModeKey] = v.KubeProxyMode
 
-	obj["customization_apiserver"] = []map[string]interface{}{
-		{
-			"admissionplugins": []map[string]interface{}{
-				{
-					"enabled":  v.Customization.APIServer.AdmissionPlugins.Enabled,
-					"disabled": v.Customization.APIServer.AdmissionPlugins.Disabled,
+	if v.Customization.APIServer != nil {
+		obj["customization_apiserver"] = []map[string]interface{}{
+			{
+				"admissionplugins": []map[string]interface{}{
+					{
+						"enabled":  v.Customization.APIServer.AdmissionPlugins.Enabled,
+						"disabled": v.Customization.APIServer.AdmissionPlugins.Disabled,
+					},
 				},
 			},
-		},
+		}
 	}
 
-	obj["customization_kube_proxy"] = []map[string]interface{}{
-		{
-			"iptables": []map[string]interface{}{
-				{
-					"min_sync_period": v.Customization.KubeProxy.IPTables.MinSyncPeriod,
-					"sync_period":     v.Customization.KubeProxy.IPTables.SyncPeriod,
-				},
+	if v.Customization.KubeProxy != nil {
+		obj["customization_kube_proxy"] = []map[string]interface{}{
+			{
+				"iptables": nil,
+				"ipvs":     nil,
 			},
-			"ipvs": []map[string]interface{}{
-				{
-					"min_sync_period": v.Customization.KubeProxy.IPVS.MinSyncPeriod,
-					"scheduler":       v.Customization.KubeProxy.IPVS.Scheduler,
-					"sync_period":     v.Customization.KubeProxy.IPVS.SyncPeriod,
-					"tcp_fin_timeout": v.Customization.KubeProxy.IPVS.TCPFinTimeout,
-					"tcp_timeout":     v.Customization.KubeProxy.IPVS.TCPTimeout,
-					"udp_timeout":     v.Customization.KubeProxy.IPVS.UDPTimeout,
-				},
-			},
-		},
-	}
+		}
 
-	if len(obj["customization_kube_proxy"].([]map[string]interface{})) > 0 {
+		if v.Customization.KubeProxy.IPTables != nil {
+			data := make(map[string]interface{})
+			if d := v.Customization.KubeProxy.IPTables.MinSyncPeriod; d != nil && *d != "" {
+				data["min_sync_period"] = d
+			}
 
-		if len(obj["customization_kube_proxy"].([]map[string]interface{})[0]["iptables"].([]map[string]interface{})) > 0 {
-			if obj["customization_kube_proxy"].([]map[string]interface{})[0]["iptables"].([]map[string]interface{})[0]["min_sync_period"].(*string) == nil {
-				delete(obj["customization_kube_proxy"].([]map[string]interface{})[0]["iptables"].([]map[string]interface{})[0], "min_sync_period")
+			if d := v.Customization.KubeProxy.IPTables.SyncPeriod; d != nil && *d != "" {
+				data["sync_period"] = d
 			}
-			if obj["customization_kube_proxy"].([]map[string]interface{})[0]["iptables"].([]map[string]interface{})[0]["sync_period"].(*string) == nil {
-				delete(obj["customization_kube_proxy"].([]map[string]interface{})[0]["iptables"].([]map[string]interface{})[0], "sync_period")
-			}
-			if len(obj["customization_kube_proxy"].([]map[string]interface{})[0]["iptables"].([]map[string]interface{})[0]) == 0 {
-				delete(obj["customization_kube_proxy"].([]map[string]interface{})[0], "iptables")
+
+			if len(data) > 0 {
+				obj["customization_kube_proxy"].([]map[string]interface{})[0]["iptables"] = []map[string]interface{}{data}
 			}
 		}
 
-		if len(obj["customization_kube_proxy"].([]map[string]interface{})[0]["ipvs"].([]map[string]interface{})) > 0 {
-			if obj["customization_kube_proxy"].([]map[string]interface{})[0]["ipvs"].([]map[string]interface{})[0]["min_sync_period"].(*string) == nil ||
-				*obj["customization_kube_proxy"].([]map[string]interface{})[0]["ipvs"].([]map[string]interface{})[0]["min_sync_period"].(*string) == "" {
-				delete(obj["customization_kube_proxy"].([]map[string]interface{})[0]["ipvs"].([]map[string]interface{})[0], "min_sync_period")
+		if v.Customization.KubeProxy.IPVS != nil {
+			data := make(map[string]interface{})
+			if d := v.Customization.KubeProxy.IPVS.MinSyncPeriod; d != nil && *d != "" {
+				data["min_sync_period"] = d
 			}
-			if obj["customization_kube_proxy"].([]map[string]interface{})[0]["ipvs"].([]map[string]interface{})[0]["scheduler"].(*string) == nil {
-				delete(obj["customization_kube_proxy"].([]map[string]interface{})[0]["ipvs"].([]map[string]interface{})[0], "scheduler")
+
+			if d := v.Customization.KubeProxy.IPVS.Scheduler; d != nil && *d != "" {
+				data["scheduler"] = d
 			}
-			if obj["customization_kube_proxy"].([]map[string]interface{})[0]["ipvs"].([]map[string]interface{})[0]["sync_period"].(*string) == nil {
-				delete(obj["customization_kube_proxy"].([]map[string]interface{})[0]["ipvs"].([]map[string]interface{})[0], "sync_period")
+
+			if d := v.Customization.KubeProxy.IPVS.SyncPeriod; d != nil && *d != "" {
+				data["sync_period"] = d
 			}
-			if obj["customization_kube_proxy"].([]map[string]interface{})[0]["ipvs"].([]map[string]interface{})[0]["tcp_fin_timeout"].(*string) == nil {
-				delete(obj["customization_kube_proxy"].([]map[string]interface{})[0]["ipvs"].([]map[string]interface{})[0], "tcp_fin_timeout")
+
+			if d := v.Customization.KubeProxy.IPVS.TCPFinTimeout; d != nil && *d != "" {
+				data["tcp_fin_timeout"] = d
 			}
-			if obj["customization_kube_proxy"].([]map[string]interface{})[0]["ipvs"].([]map[string]interface{})[0]["tcp_timeout"].(*string) == nil {
-				delete(obj["customization_kube_proxy"].([]map[string]interface{})[0]["ipvs"].([]map[string]interface{})[0], "tcp_timeout")
+
+			if d := v.Customization.KubeProxy.IPVS.TCPTimeout; d != nil && *d != "" {
+				data["tcp_timeout"] = d
 			}
-			if obj["customization_kube_proxy"].([]map[string]interface{})[0]["ipvs"].([]map[string]interface{})[0]["udp_timeout"].(*string) == nil {
-				delete(obj["customization_kube_proxy"].([]map[string]interface{})[0]["ipvs"].([]map[string]interface{})[0], "udp_timeout")
+
+			if d := v.Customization.KubeProxy.IPVS.UDPTimeout; d != nil && *d != "" {
+				data["udp_timeout"] = d
 			}
-			if len(obj["customization_kube_proxy"].([]map[string]interface{})[0]["ipvs"].([]map[string]interface{})[0]) == 0 {
-				delete(obj["customization_kube_proxy"].([]map[string]interface{})[0], "ipvs")
+
+			if len(data) > 0 {
+				obj["customization_kube_proxy"].([]map[string]interface{})[0]["ipvs"] = []map[string]interface{}{data}
 			}
 		}
 
+		// Remove empty fields
+		for k, x := range obj["customization_kube_proxy"].([]map[string]interface{})[0] {
+			if x == nil {
+				delete(obj["customization_kube_proxy"].([]map[string]interface{})[0], k)
+			}
+		}
+
+		// Delete entire customization_kube_proxy if empty
 		if len(obj["customization_kube_proxy"].([]map[string]interface{})[0]) == 0 {
 			delete(obj, "customization_kube_proxy")
 		}

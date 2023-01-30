@@ -22,8 +22,6 @@ const (
 
 	kubeClusterProxyModeKey = "kube_proxy_mode"
 
-	kubeClusterCustomizationKey = "customization"
-
 	kubeClusterCustomizationApiServerKey = "customization_apiserver"
 	kubeClusterCustomizationKubeProxyKey = "customization_kube_proxy"
 )
@@ -69,27 +67,22 @@ func resourceCloudProjectKube() *schema.Resource {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Optional: true,
-				// Required: true,
 				ForceNew: false,
-				// MaxItems: 1,
-				Set: CustomSchemaSetFunc(),
+				Set:      CustomSchemaSetFunc(),
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"admissionplugins": {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Optional: true,
-							// Required: true,
 							ForceNew: false,
-							// MaxItems: 1,
-							Set: CustomSchemaSetFunc(),
+							Set:      CustomSchemaSetFunc(),
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"enabled": {
 										Type:     schema.TypeList,
 										Computed: true,
 										Optional: true,
-										// Required: true,
 										ForceNew: false,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
@@ -97,7 +90,6 @@ func resourceCloudProjectKube() *schema.Resource {
 										Type:     schema.TypeList,
 										Computed: true,
 										Optional: true,
-										// Required: true,
 										ForceNew: false,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
@@ -114,7 +106,6 @@ func resourceCloudProjectKube() *schema.Resource {
 				Optional: true,
 				ForceNew: false,
 				MaxItems: 1,
-				// Set:      CustomSchemaSetFunc(true),
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"iptables": {
@@ -123,8 +114,7 @@ func resourceCloudProjectKube() *schema.Resource {
 							Optional: true,
 							ForceNew: false,
 							MaxItems: 1,
-							Set:      CustomIPtablesSchemaSetFunc(false),
-
+							Set:      CustomIPVSIPTablesSchemaSetFunc(),
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"min_sync_period": {
@@ -148,7 +138,7 @@ func resourceCloudProjectKube() *schema.Resource {
 							Optional: true,
 							ForceNew: false,
 							MaxItems: 1,
-							Set:      CustomIPVSSchemaSetFunc(true),
+							Set:      CustomIPVSIPTablesSchemaSetFunc(),
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"min_sync_period": {
@@ -272,40 +262,14 @@ func resourceCloudProjectKube() *schema.Resource {
 	}
 }
 
-func CustomIPtablesSchemaSetFunc(output bool) schema.SchemaSetFunc {
+// CustomIPVSIPTablesSchemaSetFunc is a custom schema set function for IPVS and IPTables.
+// It is required because the API returns "P0D" and we want PT0S.
+func CustomIPVSIPTablesSchemaSetFunc() schema.SchemaSetFunc {
 	return func(i interface{}) int {
-		if i.(map[string]interface{})["min_sync_period"] == "P0D" {
-			i.(map[string]interface{})["min_sync_period"] = "PT0S"
-		}
-		if i.(map[string]interface{})["sync_period"] == "P0D" {
-			i.(map[string]interface{})["sync_period"] = "PT0S"
-		}
-
-		out := fmt.Sprintf("%#v", i)
-		hash := schema.HashString(out)
-		if output {
-			log.Printf(">>>>>>>%d %s\n", hash, out)
-		}
-		return hash
-	}
-}
-
-func CustomIPVSSchemaSetFunc(output bool) schema.SchemaSetFunc {
-	return func(i interface{}) int {
-		if i.(map[string]interface{})["min_sync_period"] == "P0D" {
-			i.(map[string]interface{})["min_sync_period"] = "PT0S"
-		}
-		if i.(map[string]interface{})["sync_period"] == "P0D" {
-			i.(map[string]interface{})["sync_period"] = "PT0S"
-		}
-		if i.(map[string]interface{})["tcp_fin_timeout"] == "P0D" {
-			i.(map[string]interface{})["tcp_fin_timeout"] = "PT0S"
-		}
-		if i.(map[string]interface{})["tcp_timeout"] == "P0D" {
-			i.(map[string]interface{})["tcp_timeout"] = "PT0S"
-		}
-		if i.(map[string]interface{})["udp_timeout"] == "P0D" {
-			i.(map[string]interface{})["udp_timeout"] = "PT0S"
+		for k, v := range i.(map[string]interface{}) {
+			if v == "P0D" {
+				i.(map[string]interface{})[k] = "PT0S"
+			}
 		}
 
 		out := fmt.Sprintf("%#v", i)
