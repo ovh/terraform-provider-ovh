@@ -92,8 +92,7 @@ func dataSourceCloudProjectKube() *schema.Resource {
 							Optional: true,
 							ForceNew: false,
 							MaxItems: 1,
-							Set:      CustomIPtablesSchemaSetFunc(false),
-
+							Set:      CustomIPVSIPTablesSchemaSetFunc(),
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"min_sync_period": {
@@ -117,7 +116,7 @@ func dataSourceCloudProjectKube() *schema.Resource {
 							Optional: true,
 							ForceNew: false,
 							MaxItems: 1,
-							Set:      CustomIPVSSchemaSetFunc(true),
+							Set:      CustomIPVSIPTablesSchemaSetFunc(),
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"min_sync_period": {
