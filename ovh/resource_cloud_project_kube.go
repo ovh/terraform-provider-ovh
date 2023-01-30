@@ -72,7 +72,7 @@ func resourceCloudProjectKube() *schema.Resource {
 				// Required: true,
 				ForceNew: false,
 				// MaxItems: 1,
-				Set: CustomSchemaSetFunc(false),
+				Set: CustomSchemaSetFunc(),
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"admissionplugins": {
@@ -82,7 +82,7 @@ func resourceCloudProjectKube() *schema.Resource {
 							// Required: true,
 							ForceNew: false,
 							// MaxItems: 1,
-							Set: CustomSchemaSetFunc(false),
+							Set: CustomSchemaSetFunc(),
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"enabled": {
@@ -203,6 +203,7 @@ func resourceCloudProjectKube() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+				Computed: true,
 			},
 			kubeClusterPrivateNetworkConfigurationKey: {
 				Type:     schema.TypeSet,
@@ -308,22 +309,14 @@ func CustomIPVSSchemaSetFunc(output bool) schema.SchemaSetFunc {
 		}
 
 		out := fmt.Sprintf("%#v", i)
-		hash := schema.HashString(out)
-		if output {
-			log.Printf(">>>>>>>%d %s\n", hash, out)
-		}
-		return hash
+		return schema.HashString(out)
 	}
 }
 
-func CustomSchemaSetFunc(output bool) schema.SchemaSetFunc {
+func CustomSchemaSetFunc() schema.SchemaSetFunc {
 	return func(i interface{}) int {
 		out := fmt.Sprintf("%#v", i)
-		hash := schema.HashString(out)
-		if output {
-			log.Printf(">>>>>>>%d %s\n", hash, out)
-		}
-		return hash
+		return schema.HashString(out)
 	}
 }
 
