@@ -1,9 +1,7 @@
 package ovh
 
 import (
-	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -32,7 +30,7 @@ type CloudProjectKubeCreateOpts struct {
 	Version                     *string                      `json:"version,omitempty"`
 	UpdatePolicy                *string                      `json:"updatePolicy,omitempty"`
 	Customization               *Customization               `json:"customization,omitempty"`
-	KubeProxyMode               *string                      `json:"kubeProxyMode"`
+	KubeProxyMode               *string                      `json:"kubeProxyMode,omitempty"`
 }
 
 type Customization struct {
@@ -283,11 +281,6 @@ func (v CloudProjectKubeResponse) ToMap() map[string]interface{} {
 			delete(obj, "customization_kube_proxy")
 		}
 	}
-
-	i, _ := json.MarshalIndent(v, "", "  ")
-	o, _ := json.MarshalIndent(obj, "", "  ")
-
-	log.Printf("##### %s\n\n%s\n\n%s\n\n", i, o)
 
 	return obj
 }

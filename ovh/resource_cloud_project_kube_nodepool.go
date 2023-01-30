@@ -149,7 +149,7 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 				Optional:    true,
 				Type:        schema.TypeSet,
 				MaxItems:    1,
-				Set:         CustomSchemaSetFunc(false),
+				Set:         CustomSchemaSetFunc(),
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"metadata": {
@@ -157,7 +157,7 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 							Optional:    true,
 							Type:        schema.TypeSet,
 							MaxItems:    1,
-							Set:         CustomSchemaSetFunc(false),
+							Set:         CustomSchemaSetFunc(),
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"finalizers": {
@@ -188,7 +188,7 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 							Optional:    true,
 							Type:        schema.TypeSet,
 							MaxItems:    1,
-							Set:         CustomSchemaSetFunc(false),
+							Set:         CustomSchemaSetFunc(),
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"unschedulable": {

@@ -41,7 +41,7 @@ func dataSourceCloudProjectKube() *schema.Resource {
 				// Required: true,
 				ForceNew: false,
 				// MaxItems: 1,
-				Set: CustomSchemaSetFunc(false),
+				Set: CustomSchemaSetFunc(),
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"admissionplugins": {
@@ -51,7 +51,7 @@ func dataSourceCloudProjectKube() *schema.Resource {
 							// Required: true,
 							ForceNew: false,
 							// MaxItems: 1,
-							Set: CustomSchemaSetFunc(false),
+							Set: CustomSchemaSetFunc(),
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"enabled": {
@@ -92,7 +92,7 @@ func dataSourceCloudProjectKube() *schema.Resource {
 							Optional: true,
 							ForceNew: false,
 							MaxItems: 1,
-							Set:      CustomSchemaSetFunc(false),
+							Set:      CustomIPtablesSchemaSetFunc(false),
 
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -117,7 +117,7 @@ func dataSourceCloudProjectKube() *schema.Resource {
 							Optional: true,
 							ForceNew: false,
 							MaxItems: 1,
-							Set:      CustomSchemaSetFunc(false),
+							Set:      CustomIPVSSchemaSetFunc(true),
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"min_sync_period": {
