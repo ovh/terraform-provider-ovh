@@ -13,7 +13,7 @@ Use this data source to get the list of VPS associated with your OVH Account.
 ## Example Usage
 
 ```hcl
-data "vpss" "servers" {}
+data "ovh_vpss" "servers" {}
 ```
 
 ## Argument Reference
