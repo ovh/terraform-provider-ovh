@@ -83,7 +83,6 @@ func dataSourceCloudProjectKube() *schema.Resource {
 				Optional: true,
 				ForceNew: false,
 				MaxItems: 1,
-				// Set:      CustomSchemaSetFunc(true),
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"iptables": {
