@@ -262,8 +262,16 @@ func resourceCloudProjectKube() *schema.Resource {
 	}
 }
 
-// CustomIPVSIPTablesSchemaSetFunc is a custom schema set function for IPVS and IPTables.
-// It is required because the API returns "P0D" and we want PT0S.
+// CustomIPVSIPTablesSchemaSetFunc is a custom schema.SchemaSetFunc for IPVS and IPTables
+// block configuration.
+//
+// Even if setting in the API `PT0S`, it returns `P0D` which is exactly the same duration but
+// induce issue when calculating hashset.
+//
+// Moreover, we cannot use DiffSuppressFunc because even if the diff is removed the hashset is still different.
+//
+// Using schema.StateFunc does not help because of internal terraform execution diff calculation
+// order.
 func CustomIPVSIPTablesSchemaSetFunc() schema.SchemaSetFunc {
 	return func(i interface{}) int {
 		for k, v := range i.(map[string]interface{}) {
