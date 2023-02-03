@@ -121,28 +121,25 @@ The following arguments are supported:
    cluster will be available. Ex.: "GRA1". Defaults to all public cloud regions.
    Changing this value recreates the resource.
 
-* `version` - (Optional) kubernetes version to use.
-   Changing this value updates the resource. Defaults to latest available.
+* `version` - (Optional) kubernetes version to use. Changing this value updates the resource. Defaults to the latest available.
 
-* `kube_proxy_mode` - (Optional) Selected mode for kube-proxy.
-   Changing this value recreates the resource.
+* `kube_proxy_mode` - (Optional) Selected mode for kube-proxy. **Changing this value recreates the resource. This will result in the loss of all data stored in the etcd.** Defaults to `iptables`.
 
-* `customization` - (Optional) Customer customization object
-  * `apiserver` - Kubernetes API server customization
-    * `admissionplugins` - (Optional) Kubernetes API server admission plugins customization
-        * `enabled` - (Optional) Array of admission plugins enabled, default is ["NodeRestriction","AlwaysPulImages"] and only these admission plugins can be enabled at this time. 
-        * `disabled` - (Optional) Array of admission plugins disabled, default is [] and only AlwaysPulImages can be disabled at this time.
-  * `kube_proxy` - Kubernetes kube-proxy customization
-    * `iptables` - (Optional) Kubernetes cluster kube-proxy customization of iptables specific config (durations format is RFC3339 duration, e.g. `PT60S`)
-        * `sync_period` - (Optional) Minimum period that iptables rules are refreshed, in [RFC3339](https://www.rfc-editor.org/rfc/rfc3339) duration format (e.g. `PT60S`).
-        * `min_sync_period` - (Optional) Period that iptables rules are refreshed, in [RFC3339](https://www.rfc-editor.org/rfc/rfc3339) duration format (e.g. `PT60S`). Must be greater than 0.
-    * `ipvs` - (Optional) Kubernetes cluster kube-proxy customization of IPVS specific config (durations format is [RFC3339](https://www.rfc-editor.org/rfc/rfc3339) duration, e.g. `PT60S`)
-        * `sync_period` - (Optional) Minimum period that IPVS rules are refreshed, in [RFC3339](https://www.rfc-editor.org/rfc/rfc3339) duration format (e.g. `PT60S`).
-        * `min_sync_period` - (Optional) Minimum period that IPVS rules are refreshed in [RFC3339](https://www.rfc-editor.org/rfc/rfc3339) duration (e.g. `PT60S`).
-        * `scheduler` - (Optional) IPVS scheduler.
-        * `tcp_timeout` - (Optional) Timeout value used for idle IPVS TCP sessions in [RFC3339](https://www.rfc-editor.org/rfc/rfc3339) duration (e.g. `PT60S`). The default value is `PT0S`, which preserves the current timeout value on the system.
-        * `tcp_fin_timeout` - (Optional) Timeout value used for IPVS TCP sessions after receiving a FIN in RFC3339 duration (e.g. `PT60S`). The default value is `PT0S`, which preserves the current timeout value on the system.
-        * `udp_timeout` - (Optional) timeout value used for IPVS UDP packets in [RFC3339](https://www.rfc-editor.org/rfc/rfc3339) duration (e.g. `PT60S`). The default value is `PT0S`, which preserves the current timeout value on the system.
+* `customization_apiserver` - Kubernetes API server customization
+  * `admissionplugins` - (Optional) Kubernetes API server admission plugins customization
+      * `enabled` - (Optional) Array of admission plugins enabled, default is ["NodeRestriction","AlwaysPulImages"] and only these admission plugins can be enabled at this time. 
+      * `disabled` - (Optional) Array of admission plugins disabled, default is [] and only AlwaysPulImages can be disabled at this time.
+* `customization_kube_proxy` - Kubernetes kube-proxy customization
+  * `iptables` - (Optional) Kubernetes cluster kube-proxy customization of iptables specific config (durations format is RFC3339 duration, e.g. `PT60S`)
+      * `sync_period` - (Optional) Minimum period that iptables rules are refreshed, in [RFC3339](https://www.rfc-editor.org/rfc/rfc3339) duration format (e.g. `PT60S`).
+      * `min_sync_period` - (Optional) Period that iptables rules are refreshed, in [RFC3339](https://www.rfc-editor.org/rfc/rfc3339) duration format (e.g. `PT60S`). Must be greater than 0.
+  * `ipvs` - (Optional) Kubernetes cluster kube-proxy customization of IPVS specific config (durations format is [RFC3339](https://www.rfc-editor.org/rfc/rfc3339) duration, e.g. `PT60S`)
+      * `sync_period` - (Optional) Minimum period that IPVS rules are refreshed, in [RFC3339](https://www.rfc-editor.org/rfc/rfc3339) duration format (e.g. `PT60S`).
+      * `min_sync_period` - (Optional) Minimum period that IPVS rules are refreshed in [RFC3339](https://www.rfc-editor.org/rfc/rfc3339) duration (e.g. `PT60S`).
+      * `scheduler` - (Optional) IPVS scheduler.
+      * `tcp_timeout` - (Optional) Timeout value used for idle IPVS TCP sessions in [RFC3339](https://www.rfc-editor.org/rfc/rfc3339) duration (e.g. `PT60S`). The default value is `PT0S`, which preserves the current timeout value on the system.
+      * `tcp_fin_timeout` - (Optional) Timeout value used for IPVS TCP sessions after receiving a FIN in RFC3339 duration (e.g. `PT60S`). The default value is `PT0S`, which preserves the current timeout value on the system.
+      * `udp_timeout` - (Optional) timeout value used for IPVS UDP packets in [RFC3339](https://www.rfc-editor.org/rfc/rfc3339) duration (e.g. `PT60S`). The default value is `PT0S`, which preserves the current timeout value on the system.
 
 * `private_network_id` - (Optional) OpenStack private network (or vrack) ID to use.
    Changing this value delete the resource(including ETCD user data). Defaults - not use private network.
@@ -159,9 +156,9 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `control_plane_is_up_to_date` - True if control-plane is up to date.
+* `control_plane_is_up_to_date` - True if control-plane is up-to-date.
 * `id` - Managed Kubernetes Service ID
-* `is_up_to_date` - True if all nodes and control-plane are up to date.
+* `is_up_to_date` - True if all nodes and control-plane are up-to-date.
 * `kubeconfig` - The kubeconfig file. Use this file to connect to your kubernetes cluster.
 * `name` - See Argument Reference above.
 * `next_upgrade_versions` - Kubernetes versions available for upgrade.
