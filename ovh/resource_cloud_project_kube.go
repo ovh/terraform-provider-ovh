@@ -33,6 +33,14 @@ func resourceCloudProjectKube() *schema.Resource {
 			State: resourceCloudProjectKubeImportState,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Create:  schema.DefaultTimeout(15 * time.Minute),
+			Update:  schema.DefaultTimeout(10 * time.Minute),
+			Delete:  schema.DefaultTimeout(10 * time.Minute),
+			Read:    schema.DefaultTimeout(5 * time.Minute),
+			Default: schema.DefaultTimeout(10 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"service_name": {
 				Type:        schema.TypeString,
