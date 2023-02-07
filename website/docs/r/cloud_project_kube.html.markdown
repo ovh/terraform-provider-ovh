@@ -33,7 +33,7 @@ resource "ovh_cloud_project_kube" "mycluster" {
 
 resource "local_file" "kubeconfig" {
   content     = ovh_cloud_project_kube.mycluster.kubeconfig
-  filename = "mycluster.yml"
+  filename    = "mycluster.yml"
 }
 ```
 
@@ -41,17 +41,42 @@ Create a Kubernetes cluster in `GRA5` region with API Server AdmissionPlugins co
 
 ```hcl
 resource "ovh_cloud_project_kube" "mycluster" {
-  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-	name          = "my_kube_cluster"
-	region        = "GRA5"
-	customization {
-		apiserver {
-			admissionplugins {
-				enabled = ["NodeRestriction"]
-				disabled = ["AlwaysPullImages"]
-			}
-		}
-	}
+  service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  name          = "my_kube_cluster"
+  region        = "GRA5"
+  customization_apiserver {
+      admissionplugins {
+        enabled = ["NodeRestriction"]
+        disabled = ["AlwaysPullImages"]
+      }
+  }
+}
+```
+
+Create a Kubernetes cluster in `GRA5` region with Kube proxy configuration, by specifying iptables or ipvs configurations:
+
+```hcl
+resource "ovh_cloud_project_kube" "mycluster" {
+  service_name    = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  name            = "my_kube_cluster"
+  region          = "GRA5"
+  kube_proxy_mode = "ipvs" # or "iptables"	
+	
+  customization_kube_proxy {
+    iptables {
+      min_sync_period = "PT0S"
+      sync_period = "PT0S"
+    }
+        
+    ipvs {
+      min_sync_period = "PT0S"
+      sync_period = "PT0S"
+      scheduler = "rr"
+      tcp_timeout = "PT0S"
+      tcp_fin_timeout = "PT0S"
+      udp_timeout = "PT0S"
+    }
+  }
 }
 ```
 
@@ -59,16 +84,16 @@ Kubernetes cluster creation attached to a VRack in `GRA5` region:
 
 ```hcl
 resource "ovh_vrack_cloudproject" "attach" {
-	service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" # vrack ID
-	project_id   = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" # Public Cloud service name
+  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" # vrack ID
+  project_id   = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" # Public Cloud service name
 }
 
 resource "ovh_cloud_project_network_private" "network" {
-	service_name = ovh_vrack_cloudproject.attach.service_name
-	vlan_id    = 0
-	name       = "terraform_testacc_private_net"
-	regions    = ["GRA5"]
-	depends_on = [ovh_vrack_cloudproject.attach]
+  service_name = ovh_vrack_cloudproject.attach.service_name
+  vlan_id    = 0
+  name       = "terraform_testacc_private_net"
+  regions    = ["GRA5"]
+  depends_on = [ovh_vrack_cloudproject.attach]
 }
 
 resource "ovh_cloud_project_network_private_subnet" "networksubnet" {
@@ -87,24 +112,22 @@ resource "ovh_cloud_project_network_private_subnet" "networksubnet" {
 }
 
 output "openstackID" {
-    value = one(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)
+  value = one(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)
 }
 
 resource "ovh_cloud_project_kube" "mycluster" {
-	service_name  = var.service_name
-	name          = "test-kube-attach"
-	region        = "GRA5"
+  service_name  = var.service_name
+  name          = "test-kube-attach"
+  region        = "GRA5"
 
-	private_network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
-   
-	private_network_configuration {
-		default_vrack_gateway              = ""
-		private_network_routing_as_default = false
-	}
+  private_network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
 
-	depends_on = [
-		ovh_cloud_project_network_private.network
-	]
+  private_network_configuration {
+      default_vrack_gateway              = ""
+      private_network_routing_as_default = false
+  }
+
+  depends_on = [ovh_cloud_project_network_private.network]
 }
 ```
 
@@ -171,7 +194,8 @@ The following attributes are exported:
 * `update_policy` - See Argument Reference above.
 * `url` - Management URL of your cluster.
 * `version` - See Argument Reference above.
-* `customization` - See Argument Reference above.
+* `customization_apiserver` - See Argument Reference above.
+* `customization_kube_proxy` - See Argument Reference above.
 
 ## Timeouts
 
