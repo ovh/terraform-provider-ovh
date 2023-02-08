@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
@@ -20,6 +21,14 @@ func resourceCloudProjectKubeIpRestrictions() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			State: resourceCloudProjectKubeIpRestrictionsImportState,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create:  schema.DefaultTimeout(10 * time.Minute),
+			Update:  schema.DefaultTimeout(5 * time.Minute),
+			Delete:  schema.DefaultTimeout(5 * time.Minute),
+			Read:    schema.DefaultTimeout(5 * time.Minute),
+			Default: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -91,7 +100,7 @@ func resourceCloudProjectKubeIpRestrictionsCreateOrUpdate(d *schema.ResourceData
 
 	params := (&CloudProjectKubeIpRestrictionsCreateOrUpdateOpts{}).FromResource(d)
 
-	err := resourceCloudProjectKubeIpRestrictionsUpdate(config, serviceName, kubeId, params)
+	err := resourceCloudProjectKubeIpRestrictionsUpdate(d, config, serviceName, kubeId, params)
 	if err != nil {
 		return err
 	}
@@ -107,12 +116,12 @@ func resourceCloudProjectKubeIpRestrictionsDelete(d *schema.ResourceData, meta i
 	serviceName := d.Get("service_name").(string)
 	kubeId := d.Get("kube_id").(string)
 
-	return resourceCloudProjectKubeIpRestrictionsUpdate(config, serviceName, kubeId, &CloudProjectKubeIpRestrictionsCreateOrUpdateOpts{
+	return resourceCloudProjectKubeIpRestrictionsUpdate(d, config, serviceName, kubeId, &CloudProjectKubeIpRestrictionsCreateOrUpdateOpts{
 		Ips: []string{},
 	})
 }
 
-func resourceCloudProjectKubeIpRestrictionsUpdate(config *Config, serviceName string, kubeId string, params *CloudProjectKubeIpRestrictionsCreateOrUpdateOpts) error {
+func resourceCloudProjectKubeIpRestrictionsUpdate(d *schema.ResourceData, config *Config, serviceName string, kubeId string, params *CloudProjectKubeIpRestrictionsCreateOrUpdateOpts) error {
 	endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/ipRestrictions", url.PathEscape(serviceName), url.PathEscape(kubeId))
 	res := make(CloudProjectKubeIpRestrictionsResponse, 0)
 
@@ -123,7 +132,7 @@ func resourceCloudProjectKubeIpRestrictionsUpdate(config *Config, serviceName st
 	}
 
 	log.Printf("[DEBUG] Waiting for kube %s to be READY", kubeId)
-	err = waitForCloudProjectKubeReady(config.OVHClient, serviceName, kubeId, []string{"REDEPLOYING", "RESETTING"}, []string{"READY"})
+	err = waitForCloudProjectKubeReady(config.OVHClient, serviceName, kubeId, []string{"REDEPLOYING", "RESETTING"}, []string{"READY"}, d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
 		return fmt.Errorf("timeout while waiting kube %s to be READY: %v", kubeId, err)
 	}
