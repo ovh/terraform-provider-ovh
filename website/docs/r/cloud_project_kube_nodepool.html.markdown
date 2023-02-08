@@ -118,6 +118,23 @@ In addition, the following attributes are exported:
 * `up_to_date_nodes` - Number of nodes with latest version installed in the pool
 * `updated_at` - Last update date
 
+## Timeouts
+
+```hcl
+resource "ovh_cloud_project_kube_nodepool" "pool" {
+  # ...
+
+  timeouts {
+    create = "1h"
+    update = "45m"
+    delete = "50s"
+  }
+}
+```
+* `create` - (Default 20m)
+* `update` - (Default 10m)
+* `delete` - (Default 10m)
+
 ## Import
 
 OVHcloud Managed Kubernetes Service cluster node pool can be imported using the `service_name`, the `id` of the cluster, and the `id` of the nodepool separated by "/" E.g.,
