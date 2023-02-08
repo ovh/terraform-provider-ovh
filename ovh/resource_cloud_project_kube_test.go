@@ -164,6 +164,22 @@ resource "ovh_cloud_project_kube" "cluster" {
 }
 `
 
+var testAccCloudProjectKubeDeprecatedCustomizationApiServerAdmissionPluginsUpdateConfigEnabledAndDisabled = `
+resource "ovh_cloud_project_kube" "cluster" {
+	service_name  = "%s"
+	name          = "%s"
+	region        = "%s"
+	customization {
+		apiserver {
+			admissionplugins {
+				enabled = ["NodeRestriction"]
+				disabled = ["AlwaysPullImages"]
+			}
+		}
+	}
+}
+`
+
 type configData struct {
 	Region                         string
 	Regions                        string
@@ -219,6 +235,49 @@ func TestAccCloudProjectKubeCustomizationApiServerAdmissionPlugins(t *testing.T)
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "service_name", serviceName),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_apiserver.0.admissionplugins.0.enabled.0", "NodeRestriction"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_apiserver.0.admissionplugins.0.disabled.0", "AlwaysPullImages"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccCloudProjectKubeDeprecatedCustomizationApiServerAdmissionPlugins aims to test that
+// values are the same between customization_apiserver.admissionplugins are the same and customization.apiserver.admissionplugins.
+// This is deprecated and will be removed in the future.
+func TestAccCloudProjectKubeDeprecatedCustomizationApiServerAdmissionPlugins(t *testing.T) {
+	region := os.Getenv("OVH_CLOUD_PROJECT_KUBE_REGION_TEST")
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	name := acctest.RandomWithPrefix(test_prefix)
+
+	createConfig := fmt.Sprintf(
+		testAccCloudProjectKubeDeprecatedCustomizationApiServerAdmissionPluginsUpdateConfigEnabledAndDisabled,
+		serviceName,
+		name,
+		region,
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloud(t)
+			testAccCheckCloudProjectExists(t)
+			testAccPreCheckKubernetes(t)
+		},
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: createConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "service_name", serviceName),
+
+					// Deprecated configuration
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization.0.apiserver.0.admissionplugins.0.enabled.0", "NodeRestriction"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization.0.apiserver.0.admissionplugins.0.disabled.0", "AlwaysPullImages"),
+
+					// New configuration
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_apiserver.0.admissionplugins.0.enabled.0", "NodeRestriction"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_apiserver.0.admissionplugins.0.disabled.0", "AlwaysPullImages"),
 				),

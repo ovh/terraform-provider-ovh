@@ -73,12 +73,12 @@ func (opts *CloudProjectKubeCreateOpts) FromResource(d *schema.ResourceData) *Cl
 	opts.UpdatePolicy = helpers.GetNilStringPointerFromData(d, "update_policy")
 	opts.PrivateNetworkId = helpers.GetNilStringPointerFromData(d, "private_network_id")
 	opts.PrivateNetworkConfiguration = loadPrivateNetworkConfiguration(d.Get("private_network_configuration"))
-	opts.Customization = loadCustomization(d.Get(kubeClusterCustomizationApiServerKey), d.Get(kubeClusterCustomizationKubeProxyKey))
+	opts.Customization = loadCustomization(d.Get(kubeClusterCustomization), d.Get(kubeClusterCustomizationApiServerKey), d.Get(kubeClusterCustomizationKubeProxyKey))
 	opts.KubeProxyMode = helpers.GetNilStringPointerFromData(d, kubeClusterProxyModeKey)
 	return opts
 }
 
-func loadCustomization(apiServerAdmissionPlugins interface{}, kubeProxyCustomizationInterface interface{}) *Customization {
+func loadCustomization(oldCustomizationInterface, apiServerAdmissionPlugins, kubeProxyCustomizationInterface interface{}) *Customization {
 	if apiServerAdmissionPlugins == nil && kubeProxyCustomizationInterface == nil {
 		return nil
 	}
@@ -118,6 +118,59 @@ func loadCustomization(apiServerAdmissionPlugins interface{}, kubeProxyCustomiza
 				disabled = append(disabled, s.(string))
 			}
 			customizationOutput.APIServer.AdmissionPlugins.Disabled = &disabled
+		}
+	}
+
+	// Old apiserver customization.
+	// Deprecated, should be removed in the future
+	if oldCustomizationInterface != nil {
+		oldCustomizationSet := oldCustomizationInterface.(*schema.Set).List()
+		if len(oldCustomizationSet) > 0 {
+			oldApiServerCustomization := oldCustomizationSet[0].(map[string]interface{})
+			oldApiServerCustomizationSet := oldApiServerCustomization["apiserver"].(*schema.Set).List()
+
+			if len(oldApiServerCustomizationSet) > 0 {
+				oldApiServerCustomizationAdmissionPlugins := oldApiServerCustomizationSet[0].(map[string]interface{})
+				oldApiServerCustomizationAdmissionPluginsSet := oldApiServerCustomizationAdmissionPlugins["admissionplugins"].(*schema.Set).List()
+				admissionPlugins := oldApiServerCustomizationAdmissionPluginsSet[0].(map[string]interface{})
+
+				containsString := func(s []string, e string) bool {
+					for _, a := range s {
+						if a == e {
+							return true
+						}
+					}
+					return false
+				}
+
+				// Enabled admission plugins
+				{
+					stringArray := admissionPlugins["enabled"].([]interface{})
+					for _, s := range stringArray {
+						if customizationOutput.APIServer.AdmissionPlugins.Enabled == nil {
+							customizationOutput.APIServer.AdmissionPlugins.Enabled = new([]string)
+						}
+
+						if !containsString(*customizationOutput.APIServer.AdmissionPlugins.Enabled, s.(string)) {
+							*customizationOutput.APIServer.AdmissionPlugins.Enabled = append(*customizationOutput.APIServer.AdmissionPlugins.Enabled, s.(string))
+						}
+					}
+				}
+
+				// Disabled admission plugins
+				{
+					stringArray := admissionPlugins["disabled"].([]interface{})
+					for _, s := range stringArray {
+						if customizationOutput.APIServer.AdmissionPlugins.Disabled == nil {
+							customizationOutput.APIServer.AdmissionPlugins.Disabled = new([]string)
+						}
+
+						if !containsString(*customizationOutput.APIServer.AdmissionPlugins.Disabled, s.(string)) {
+							*customizationOutput.APIServer.AdmissionPlugins.Disabled = append(*customizationOutput.APIServer.AdmissionPlugins.Disabled, s.(string))
+						}
+					}
+				}
+			}
 		}
 	}
 
