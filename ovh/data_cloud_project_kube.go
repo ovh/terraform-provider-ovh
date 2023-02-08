@@ -76,7 +76,55 @@ func dataSourceCloudProjectKube() *schema.Resource {
 					},
 				},
 			},
-
+			kubeClusterCustomization: {
+				Type:       schema.TypeSet,
+				Computed:   true,
+				Optional:   true,
+				ForceNew:   false,
+				Set:        CustomSchemaSetFunc(),
+				Deprecated: fmt.Sprintf("Use %s instead", kubeClusterCustomizationApiServerKey),
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"apiserver": {
+							Type:       schema.TypeSet,
+							Computed:   true,
+							Optional:   true,
+							ForceNew:   false,
+							Set:        CustomSchemaSetFunc(),
+							Deprecated: fmt.Sprintf("Use %s instead", kubeClusterCustomizationApiServerKey),
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"admissionplugins": {
+										Type:     schema.TypeSet,
+										Computed: true,
+										Optional: true,
+										ForceNew: false,
+										Set:      CustomSchemaSetFunc(),
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"enabled": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Optional: true,
+													ForceNew: false,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+												"disabled": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Optional: true,
+													ForceNew: false,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			kubeClusterCustomizationKubeProxyKey: {
 				Type:     schema.TypeSet,
 				Computed: false,
