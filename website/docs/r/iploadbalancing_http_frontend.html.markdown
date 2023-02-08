@@ -75,6 +75,7 @@ The following arguments are supported:
 * `default_ssl_id` - Default ssl served to your customer
 * `disabled` - Disable your frontend. Default: 'false'
 * `ssl` - SSL deciphering. Default: 'false'
+* `hsts` - HTTP Strict Transport Security. Default: 'false'
 * `redirect_location` - Redirection HTTP'
 * `http_header` - HTTP headers to add to the frontend. List of string.
 
@@ -94,3 +95,4 @@ The following attributes are exported:
 * `default_ssl_id` - See Argument Reference above.
 * `disabled` - See Argument Reference above.
 * `ssl` - See Argument Reference above.
+* `hsts` - See Argument Reference above.
