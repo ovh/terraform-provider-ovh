@@ -162,6 +162,23 @@ The following attributes are exported:
 * `version` - See Argument Reference above.
 * `customization` - See Argument Reference above.
 
+## Timeouts
+
+```hcl
+resource "ovh_cloud_project_kube" "my_kube_cluster" {
+  # ...
+
+  timeouts {
+    create = "1h"
+    update = "45m"
+    delete = "50s"
+  }
+}
+```
+* `create` - (Default 10m)
+* `update` - (Default 10m)
+* `delete` - (Default 10m)
+
 ## Import
 
 OVHcloud Managed Kubernetes Service clusters can be imported using the `service_name` and the `id` of the cluster, separated by "/" E.g.,

@@ -35,6 +35,23 @@ The following arguments are supported:
 
 No additional attributes than the ones provided are exported.
 
+## Timeouts
+
+```hcl
+resource "ovh_cloud_project_kube_iprestrictions" "vrack_only" {
+  # ...
+
+  timeouts {
+    create = "1h"
+    update = "45m"
+    delete = "50s"
+  }
+}
+```
+* `create` - (Default 10m)
+* `update` - (Default 5m)
+* `delete` - (Default 5m)
+
 ## Import
 
 OVHcloud Managed Kubernetes Service cluster IP restrictions can be imported using the `service_name` and the `id` of the cluster, separated by "/" E.g.,
