@@ -42,14 +42,17 @@ The following attributes are exported:
 * `region` - The OVHcloud public cloud region ID of the managed kubernetes cluster.
 * `version` - Kubernetes version of the managed kubernetes cluster.
 * `private_network_id` - OpenStack private network (or vrack) ID to use.
-* `control_plane_is_up_to_date` - True if control-plane is up to date.
-* `is_up_to_date` - True if all nodes and control-plane are up to date.
+* `control_plane_is_up_to_date` - True if control-plane is up-to-date.
+* `is_up_to_date` - True if all nodes and control-plane are up-to-date.
 * `next_upgrade_versions` - Kubernetes versions available for upgrade.
 * `nodes_url` - Cluster nodes URL.
 * `status` - Cluster status. Should be normally set to 'READY'.
 * `update_policy` - Cluster update policy. Choose between [ALWAYS_UPDATE,MINIMAL_DOWNTIME,NEVER_UPDATE]'.
 * `url` - Management URL of your cluster.
 * `kube_proxy_mode` - Selected mode for kube-proxy.
+* `customization` - **Deprecated** (Optional) Use `customization_apiserver` and `customization_kube_proxy` instead. Kubernetes cluster customization
+    * `apiserver` - Kubernetes API server customization
+    * `kube_proxy` - Kubernetes kube-proxy customization
 * `customization_apiserver` - Kubernetes API server customization
     * `admissionplugins` - Kubernetes API server admission plugins customization
       * `enabled` - Array of admission plugins enabled, default is ["NodeRestriction","AlwaysPulImages"] and only these admission plugins can be enabled at this time.

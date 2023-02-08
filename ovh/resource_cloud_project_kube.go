@@ -65,11 +65,12 @@ func resourceCloudProjectKube() *schema.Resource {
 				ForceNew: false,
 			},
 			kubeClusterCustomizationApiServerKey: {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Optional: true,
-				ForceNew: false,
-				Set:      CustomSchemaSetFunc(),
+				Type:          schema.TypeSet,
+				Computed:      true,
+				Optional:      true,
+				ForceNew:      false,
+				Set:           CustomSchemaSetFunc(),
+				ConflictsWith: []string{kubeClusterCustomization},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"admissionplugins": {
@@ -101,12 +102,13 @@ func resourceCloudProjectKube() *schema.Resource {
 				},
 			},
 			kubeClusterCustomization: {
-				Type:       schema.TypeSet,
-				Computed:   true,
-				Optional:   true,
-				ForceNew:   false,
-				Set:        CustomSchemaSetFunc(),
-				Deprecated: fmt.Sprintf("Use %s instead", kubeClusterCustomizationApiServerKey),
+				Type:          schema.TypeSet,
+				Computed:      true,
+				Optional:      true,
+				ForceNew:      false,
+				Set:           CustomSchemaSetFunc(),
+				ConflictsWith: []string{kubeClusterCustomizationApiServerKey},
+				Deprecated:    fmt.Sprintf("Use %s instead", kubeClusterCustomizationApiServerKey),
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"apiserver": {
@@ -460,8 +462,9 @@ func resourceCloudProjectKubeUpdate(d *schema.ResourceData, meta interface{}) er
 	if d.HasChange(kubeClusterCustomizationApiServerKey) || d.HasChange(kubeClusterCustomizationKubeProxyKey) {
 		_, apiServerAdmissionPlugins := d.GetChange(kubeClusterCustomizationApiServerKey)
 		_, kubeProxyCustomization := d.GetChange(kubeClusterCustomizationKubeProxyKey)
+		_, oldApiServerCustomization := d.GetChange(kubeClusterCustomization)
 
-		customization := loadCustomization(apiServerAdmissionPlugins, kubeProxyCustomization)
+		customization := loadCustomization(oldApiServerCustomization, apiServerAdmissionPlugins, kubeProxyCustomization)
 
 		params := &CloudProjectKubeUpdateCustomizationOpts{
 			APIServer: customization.APIServer,

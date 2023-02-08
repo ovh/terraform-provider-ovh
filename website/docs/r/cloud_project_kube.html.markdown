@@ -135,19 +135,14 @@ resource "ovh_cloud_project_kube" "mycluster" {
 
 The following arguments are supported:
 
-* `service_name` - (Optional) The id of the public cloud project. If omitted,
-    the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
-
+* `service_name` - (Optional) The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 * `name` - (Optional) The name of the kubernetes cluster.
-
-* `region` - a valid OVHcloud public cloud region ID in which the kubernetes
-   cluster will be available. Ex.: "GRA1". Defaults to all public cloud regions.
-   Changing this value recreates the resource.
-
+* `region` - a valid OVHcloud public cloud region ID in which the kubernetes cluster will be available. Ex.: "GRA1". Defaults to all public cloud regions. Changing this value recreates the resource.
 * `version` - (Optional) kubernetes version to use. Changing this value updates the resource. Defaults to the latest available.
-
 * `kube_proxy_mode` - (Optional) Selected mode for kube-proxy. **Changing this value recreates the resource. This will result in the loss of all data stored in the etcd.** Defaults to `iptables`.
-
+* `customization` - **Deprecated** (Optional) Use `customization_apiserver` and `customization_kube_proxy` instead. Kubernetes cluster customization
+  * `apiserver` - Kubernetes API server customization
+  * `kube_proxy` - Kubernetes kube-proxy customization
 * `customization_apiserver` - Kubernetes API server customization
   * `admissionplugins` - (Optional) Kubernetes API server admission plugins customization
       * `enabled` - (Optional) Array of admission plugins enabled, default is ["NodeRestriction","AlwaysPulImages"] and only these admission plugins can be enabled at this time. 
@@ -163,7 +158,6 @@ The following arguments are supported:
       * `tcp_timeout` - (Optional) Timeout value used for idle IPVS TCP sessions in [RFC3339](https://www.rfc-editor.org/rfc/rfc3339) duration (e.g. `PT60S`). The default value is `PT0S`, which preserves the current timeout value on the system.
       * `tcp_fin_timeout` - (Optional) Timeout value used for IPVS TCP sessions after receiving a FIN in RFC3339 duration (e.g. `PT60S`). The default value is `PT0S`, which preserves the current timeout value on the system.
       * `udp_timeout` - (Optional) timeout value used for IPVS UDP packets in [RFC3339](https://www.rfc-editor.org/rfc/rfc3339) duration (e.g. `PT60S`). The default value is `PT0S`, which preserves the current timeout value on the system.
-
 * `private_network_id` - (Optional) OpenStack private network (or vrack) ID to use.
    Changing this value delete the resource(including ETCD user data). Defaults - not use private network.
    
@@ -172,7 +166,6 @@ The following arguments are supported:
 * `private_network_configuration` - (Optional) The private network configuration
   * default_vrack_gateway - If defined, all egress traffic will be routed towards this IP address, which should belong to the private network. Empty string means disabled.
   * private_network_routing_as_default - Defines whether routing should default to using the nodes' private interface, instead of their public interface. Default is false.
-
 * `update_policy` - Cluster update policy. Choose between [ALWAYS_UPDATE, MINIMAL_DOWNTIME, NEVER_UPDATE].
 
 ## Attributes Reference
