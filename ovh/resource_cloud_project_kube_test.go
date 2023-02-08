@@ -232,6 +232,7 @@ func TestAccCloudProjectKubeCustomizationApiServerAdmissionPlugins(t *testing.T)
 func TestAccCloudProjectKubeVRack(t *testing.T) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
 	vrackID := os.Getenv("OVH_VRACK_SERVICE_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
 
 	name := acctest.RandomWithPrefix(test_prefix)
 	tmpl, err := template.New("config").Parse(testAccCloudProjectKubeVRackConfig)
@@ -245,7 +246,7 @@ func TestAccCloudProjectKubeVRack(t *testing.T) {
 		ServiceName:                    serviceName,
 		VrackID:                        vrackID,
 		Name:                           name,
-		Region:                         "GRA5",
+		Region:                         region,
 		DefaultVrackGateway:            "",
 		PrivateNetworkRoutingAsDefault: false,
 	}
@@ -253,7 +254,7 @@ func TestAccCloudProjectKubeVRack(t *testing.T) {
 		ServiceName:                    serviceName,
 		VrackID:                        vrackID,
 		Name:                           name,
-		Region:                         "GRA5",
+		Region:                         region,
 		DefaultVrackGateway:            "10.4.0.1",
 		PrivateNetworkRoutingAsDefault: true,
 	}
