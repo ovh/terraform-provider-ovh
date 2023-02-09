@@ -219,7 +219,7 @@ func resourceCloudProjectKubeNodePoolImportState(d *schema.ResourceData, meta in
 	givenId := d.Id()
 	splitId := strings.SplitN(givenId, "/", 3)
 	if len(splitId) != 3 {
-		return nil, fmt.Errorf("Import Id is not service_name/kubeid/poolid formatted")
+		return nil, fmt.Errorf("import Id is not service_name/kubeid/poolid formatted")
 	}
 	serviceName := splitId[0]
 	kubeId := splitId[1]
