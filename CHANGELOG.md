@@ -1,4 +1,36 @@
-## 0.27.0 (Unreleased)
+## 0.28.0 (Unreleased)
+
+## 0.27.0 (February 9, 2023)
+
+💪 Improvements:
+
+* `r/cloud_project_kube`: Add customized timeouts ([#374](https://github.com/ovh/terraform-provider-ovh/pull/374))
+* `r/cloud_project_kube_nodepool`: Add customized timeouts ([#374](https://github.com/ovh/terraform-provider-ovh/pull/374))
+* `r/cloud_project_kube_iprestrictions`: Add customized timeouts ([#374](https://github.com/ovh/terraform-provider-ovh/pull/374))
+* `r/cloud_project_kube_oidc`: Add customized timeouts ([#374](https://github.com/ovh/terraform-provider-ovh/pull/374))
+* `r/iploadbalancing_http_farm_server`: Add `on_marked_down` attribute ([#369](https://github.com/ovh/terraform-provider-ovh/pull/369))
+* `r/iploadbalancing_tcp_farm_server`: Add `on_marked_down` attribute ([#369](https://github.com/ovh/terraform-provider-ovh/pull/369))
+* `r/iploadbalancing_http_frontend`: Add `hsts` attribute ([#365](https://github.com/ovh/terraform-provider-ovh/pull/365))
+
+🐜 Bug fixes:
+
+* `d/order_cart`: Update expire time format to RFC3339 constant to avoid local time issues ([#363](https://github.com/ovh/terraform-provider-ovh/pull/363))
+
+📚 Documentation:
+
+* `r/iploadbalancing_http_farm_server`: Update documentation page ([#375](https://github.com/ovh/terraform-provider-ovh/pull/375))
+* `r/iploadbalancing_tcp_farm_server`: Update documentation page ([#375](https://github.com/ovh/terraform-provider-ovh/pull/375))
+* `r/iploadbalancing_refresh`: Update documentation page ([#375](https://github.com/ovh/terraform-provider-ovh/pull/375))
+* `r/cloud_project_kube`: Update documentation page ([#374](https://github.com/ovh/terraform-provider-ovh/pull/374))
+* `r/cloud_project_kube_iprestrictions`: Update documentation page ([#374](https://github.com/ovh/terraform-provider-ovh/pull/374))
+* `r/cloud_project_kube_nodepool`: Update documentation page ([#374](https://github.com/ovh/terraform-provider-ovh/pull/374))
+* `r/cloud_project_kube_oidc`: Update documentation page ([#374](https://github.com/ovh/terraform-provider-ovh/pull/374))
+* `r/iploadbalancing_http_frontend`: Update documentation page ([#365](https://github.com/ovh/terraform-provider-ovh/pull/365))
+* `r/cloud_project`: Update documentation page ([#361](https://github.com/ovh/terraform-provider-ovh/pull/361))
+
+* `d/vpss`: Update documentation page ([#372](https://github.com/ovh/terraform-provider-ovh/pull/372))
+
+❤️ Thanks for your contributions ❤️
 
 ## 0.26.0 (January 9, 2023)
 
