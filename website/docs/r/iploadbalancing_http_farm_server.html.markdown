@@ -31,7 +31,7 @@ resource "ovh_iploadbalancing_http_farm_server" "backend" {
   address                = "4.5.6.7"
   status                 = "active"
   port                   = 80
-  proxy_protocol_version = v2
+  proxy_protocol_version = "v2"
   weight                 = 2
   probe                  = true
   ssl                    = false
