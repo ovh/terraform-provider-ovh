@@ -10,6 +10,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -145,6 +146,7 @@ func TestAccCloudProjectKubeNodePool(t *testing.T) {
 	name := acctest.RandomWithPrefix(test_prefix)
 	region := os.Getenv("OVH_CLOUD_PROJECT_KUBE_REGION_TEST")
 	version := os.Getenv("OVH_CLOUD_PROJECT_KUBE_VERSION_TEST")
+	resourceName := "ovh_cloud_project_kube_nodepool.pool"
 	config := fmt.Sprintf(
 		testAccCloudProjectKubeNodePoolConfig,
 		os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"),
@@ -171,70 +173,51 @@ func TestAccCloudProjectKubeNodePool(t *testing.T) {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube.cluster", "region", region),
-					resource.TestCheckResourceAttrSet(
-						"ovh_cloud_project_kube.cluster", "kubeconfig"),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube.cluster", "name", name),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube.cluster", "version", version),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube_nodepool.pool", "name", name),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube_nodepool.pool", "flavor_name", "b2-7"),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube_nodepool.pool", "desired_nodes", "1"),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube_nodepool.pool", "min_nodes", "0"),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube_nodepool.pool", "max_nodes", "1"),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.annotations.a1", "av1"),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.finalizers.0", "finalizer.extensions/v1beta1"),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.labels.l1", "lv1"),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube_nodepool.pool", "template.0.spec.0.taints.0.effect", "PreferNoSchedule"),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube_nodepool.pool", "template.0.spec.0.taints.0.key", "t1"),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube_nodepool.pool", "template.0.spec.0.taints.0.value", "tv1"),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube_nodepool.pool", "template.0.spec.0.unschedulable", "false"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "version", version),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "name", name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "flavor_name", "b2-7"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "desired_nodes", "1"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "min_nodes", "0"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "max_nodes", "1"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.annotations.a1", "av1"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.finalizers.0", "finalizer.extensions/v1beta1"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.labels.l1", "lv1"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.spec.0.taints.0.effect", "PreferNoSchedule"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.spec.0.taints.0.key", "t1"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.spec.0.taints.0.value", "tv1"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.spec.0.unschedulable", "false"),
 				),
 			},
 			{
 				Config: configUpdated,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube.cluster", "region", region),
-					resource.TestCheckResourceAttrSet(
-						"ovh_cloud_project_kube.cluster", "kubeconfig"),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube.cluster", "name", name),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube.cluster", "version", version),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube_nodepool.pool", "name", name),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube_nodepool.pool", "flavor_name", "b2-7"),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube_nodepool.pool", "desired_nodes", "2"),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube_nodepool.pool", "min_nodes", "0"),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube_nodepool.pool", "max_nodes", "2"),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.annotations.a2", "av2"),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.finalizers.#", "0"),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.labels.l2", "lv2"),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube_nodepool.pool", "template.0.spec.0.taints.#", "0"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "version", version),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "name", name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "flavor_name", "b2-7"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "desired_nodes", "2"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "min_nodes", "0"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "max_nodes", "2"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.annotations.a2", "av2"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.finalizers.#", "0"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.labels.l2", "lv2"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.spec.0.taints.#", "0"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: func(state *terraform.State) (string, error) {
+					poolId := state.RootModule().Resources[resourceName].Primary.ID
+					kubernetesClusterID := state.RootModule().Resources["ovh_cloud_project_kube.cluster"].Primary.ID
+					return fmt.Sprintf("%s/%s/%s", os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"), kubernetesClusterID, poolId), nil
+				},
 			},
 		},
 	})
