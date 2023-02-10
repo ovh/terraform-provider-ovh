@@ -168,6 +168,12 @@ func testAccPreCheckDbaasLogs(t *testing.T) {
 	checkEnvOrSkip(t, "OVH_DBAAS_LOGS_SERVICE_TEST")
 }
 
+func testAccPreCheckDbaasLogsInput(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_DBAAS_LOGS_SERVICE_TEST")
+	checkEnvOrSkip(t, "OVH_DBAAS_LOGS_LOGSTASH_VERSION_TEST")
+}
+
 // Checks that the environment variables needed for the /cloud acceptance tests
 // are set.
 func testAccPreCheckCloud(t *testing.T) {

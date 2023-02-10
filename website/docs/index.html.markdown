@@ -163,6 +163,8 @@ variables must also be set:
 
 * `OVH_DBAAS_LOGS_SERVICE_TEST` - The name of your Dbaas logs service.
 
+* `OVH_DBAAS_LOGS_LOGSTASH_VERSION_TEST` - The name of your Dbaas logs Logstash version.
+
 * `OVH_TESTACC_ORDER_VRACK` - set this variable to "yes" will order vracks.
 
 * `OVH_TESTACC_ORDER_CLOUDPROJECT` - set this variable to "yes" will order cloud projects.

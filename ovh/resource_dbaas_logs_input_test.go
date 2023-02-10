@@ -154,7 +154,7 @@ func testSweepDbaasInput(region string) error {
 func TestAccResourceDbaasLogsInput_basic(t *testing.T) {
 	serviceName := os.Getenv("OVH_DBAAS_LOGS_SERVICE_TEST")
 	name := "LOGSTASH"
-	version := "7.x"
+	version := os.Getenv("OVH_DBAAS_LOGS_LOGSTASH_VERSION_TEST")
 	title := acctest.RandomWithPrefix(test_prefix)
 	desc := acctest.RandomWithPrefix(test_prefix)
 
@@ -169,7 +169,7 @@ func TestAccResourceDbaasLogsInput_basic(t *testing.T) {
 	)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { testAccPreCheckDbaasLogs(t) },
+		PreCheck: func() { testAccPreCheckDbaasLogsInput(t) },
 
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
