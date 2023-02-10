@@ -280,7 +280,7 @@ func resourceCloudProjectKubeRead(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	if d.IsNewResource() {
+	if d.IsNewResource() || d.Get("kubeconfig") == "" || len(d.Get("kubeconfig_attributes").([]interface{})) == 0 {
 		// add kubeconfig in state
 		if err := setKubeconfig(d, meta); err != nil {
 			return err
