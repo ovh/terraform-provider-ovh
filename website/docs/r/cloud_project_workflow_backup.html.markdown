@@ -33,7 +33,7 @@ The following arguments are supported:
 
 * `region_name` - (Mandatory) The name of the openstack region. 
 
-* `cron` - (Mandatory) the cron periodicity at which the backup workflow is scheduled
+* `cron` - (Mandatory) The cron periodicity at which the backup workflow is scheduled
 
 * `instanceId` the id of the instance to back up
 
