@@ -39,6 +39,6 @@ The following arguments are supported:
 
 * `max_execution_count` - (Optional) The number of times the worflow is run. Default value is `0` which means that the workflow will be scheduled continously until its deletion
 
-* `name` - (Mandatory) the worflow name that is used in the UI 
+* `name` - (Mandatory) The worflow name that is used in the UI 
 * `rotation`- (Mandatory) the number of backup that are retained. 
 * `backup_name` - (Optional) the name of the backup files that are created. If empty, the `name` attribute is used. 
