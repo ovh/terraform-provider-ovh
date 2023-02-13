@@ -37,7 +37,7 @@ The following arguments are supported:
 
 * `instanceId` the id of the instance to back up
 
-* `max_execution_count` - (Optional) the number of time the worflow is run. Default value is `0` which means that the workflow will be scheduled continously until its deletion
+* `max_execution_count` - (Optional) The number of times the worflow is run. Default value is `0` which means that the workflow will be scheduled continously until its deletion
 
 * `name` - (Mandatory) the worflow name that is used in the UI 
 * `rotation`- (Mandatory) the number of backup that are retained. 
