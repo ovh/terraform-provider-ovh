@@ -30,35 +30,14 @@ type CloudProjectKubeCreateOpts struct {
 	Version                     *string                      `json:"version,omitempty"`
 	UpdatePolicy                *string                      `json:"updatePolicy,omitempty"`
 	Customization               *Customization               `json:"customization,omitempty"`
-	KubeProxyMode               *string                      `json:"kubeProxyMode,omitempty"`
 }
 
 type Customization struct {
-	APIServer *APIServer              `json:"apiServer,omitempty"`
-	KubeProxy *kubeProxyCustomization `json:"kubeProxy,omitempty"`
+	APIServer *APIServer `json:"apiServer,omitempty"`
 }
 
 type APIServer struct {
 	AdmissionPlugins *AdmissionPlugins `json:"admissionPlugins,omitempty"`
-}
-
-type kubeProxyCustomization struct {
-	IPTables *kubeProxyCustomizationIPTables `json:"iptables,omitempty"`
-	IPVS     *kubeProxyCustomizationIPVS     `json:"ipvs,omitempty"`
-}
-
-type kubeProxyCustomizationIPTables struct {
-	MinSyncPeriod *string `json:"minSyncPeriod,omitempty"`
-	SyncPeriod    *string `json:"syncPeriod,omitempty"`
-}
-
-type kubeProxyCustomizationIPVS struct {
-	MinSyncPeriod *string `json:"minSyncPeriod,omitempty"`
-	Scheduler     *string `json:"scheduler,omitempty"`
-	SyncPeriod    *string `json:"syncPeriod,omitempty"`
-	TCPFinTimeout *string `json:"tcpFinTimeout,omitempty"`
-	TCPTimeout    *string `json:"tcpTimeout,omitempty"`
-	UDPTimeout    *string `json:"udpTimeout,omitempty"`
 }
 
 type AdmissionPlugins struct {
@@ -73,13 +52,12 @@ func (opts *CloudProjectKubeCreateOpts) FromResource(d *schema.ResourceData) *Cl
 	opts.UpdatePolicy = helpers.GetNilStringPointerFromData(d, "update_policy")
 	opts.PrivateNetworkId = helpers.GetNilStringPointerFromData(d, "private_network_id")
 	opts.PrivateNetworkConfiguration = loadPrivateNetworkConfiguration(d.Get("private_network_configuration"))
-	opts.Customization = loadCustomization(d.Get(kubeClusterCustomization), d.Get(kubeClusterCustomizationApiServerKey), d.Get(kubeClusterCustomizationKubeProxyKey))
-	opts.KubeProxyMode = helpers.GetNilStringPointerFromData(d, kubeClusterProxyModeKey)
+	opts.Customization = loadCustomization(d.Get("customization"))
 	return opts
 }
 
-func loadCustomization(oldCustomizationInterface, apiServerAdmissionPlugins, kubeProxyCustomizationInterface interface{}) *Customization {
-	if apiServerAdmissionPlugins == nil && kubeProxyCustomizationInterface == nil {
+func loadCustomization(i interface{}) *Customization {
+	if i == nil {
 		return nil
 	}
 
@@ -87,119 +65,29 @@ func loadCustomization(oldCustomizationInterface, apiServerAdmissionPlugins, kub
 		APIServer: &APIServer{
 			AdmissionPlugins: &AdmissionPlugins{},
 		},
-		KubeProxy: &kubeProxyCustomization{
-			IPTables: &kubeProxyCustomizationIPTables{},
-			IPVS:     &kubeProxyCustomizationIPVS{},
-		},
 	}
 
-	// Customization
-	customizationSet := apiServerAdmissionPlugins.(*schema.Set).List()
-	if len(customizationSet) > 0 {
-		customization := customizationSet[0].(map[string]interface{})
-		admissionPluginsSet := customization["admissionplugins"].(*schema.Set).List()
-		admissionPlugins := admissionPluginsSet[0].(map[string]interface{})
+	customizationSet := i.(*schema.Set).List()
+	for _, customization := range customizationSet {
+		apiServerSet := customization.(map[string]interface{})["apiserver"].(*schema.Set).List()
+		for _, apiServer := range apiServerSet {
+			admissionPluginsSet := apiServer.(map[string]interface{})["admissionplugins"].(*schema.Set).List()
+			for _, admissionPlugins := range admissionPluginsSet {
 
-		// Enabled admission plugins
-		{
-			stringArray := admissionPlugins["enabled"].([]interface{})
-			enabled := []string{}
-			for _, s := range stringArray {
-				enabled = append(enabled, s.(string))
-			}
-			customizationOutput.APIServer.AdmissionPlugins.Enabled = &enabled
-		}
-
-		// Disabled admission plugins
-		{
-			stringArray := admissionPlugins["disabled"].([]interface{})
-			disabled := []string{}
-			for _, s := range stringArray {
-				disabled = append(disabled, s.(string))
-			}
-			customizationOutput.APIServer.AdmissionPlugins.Disabled = &disabled
-		}
-	}
-
-	// Old apiserver customization.
-	// Deprecated, should be removed in the future
-	if oldCustomizationInterface != nil {
-		oldCustomizationSet := oldCustomizationInterface.(*schema.Set).List()
-		if len(oldCustomizationSet) > 0 {
-			oldApiServerCustomization := oldCustomizationSet[0].(map[string]interface{})
-			oldApiServerCustomizationSet := oldApiServerCustomization["apiserver"].(*schema.Set).List()
-
-			if len(oldApiServerCustomizationSet) > 0 {
-				oldApiServerCustomizationAdmissionPlugins := oldApiServerCustomizationSet[0].(map[string]interface{})
-				oldApiServerCustomizationAdmissionPluginsSet := oldApiServerCustomizationAdmissionPlugins["admissionplugins"].(*schema.Set).List()
-				admissionPlugins := oldApiServerCustomizationAdmissionPluginsSet[0].(map[string]interface{})
-
-				containsString := func(s []string, e string) bool {
-					for _, a := range s {
-						if a == e {
-							return true
-						}
-					}
-					return false
+				stringArray := admissionPlugins.(map[string]interface{})["enabled"].([]interface{})
+				enabled := []string{}
+				for _, s := range stringArray {
+					enabled = append(enabled, s.(string))
 				}
+				customizationOutput.APIServer.AdmissionPlugins.Enabled = &enabled
 
-				// Enabled admission plugins
-				{
-					stringArray := admissionPlugins["enabled"].([]interface{})
-					for _, s := range stringArray {
-						if customizationOutput.APIServer.AdmissionPlugins.Enabled == nil {
-							customizationOutput.APIServer.AdmissionPlugins.Enabled = new([]string)
-						}
-
-						if !containsString(*customizationOutput.APIServer.AdmissionPlugins.Enabled, s.(string)) {
-							*customizationOutput.APIServer.AdmissionPlugins.Enabled = append(*customizationOutput.APIServer.AdmissionPlugins.Enabled, s.(string))
-						}
-					}
+				stringArray = admissionPlugins.(map[string]interface{})["disabled"].([]interface{})
+				disabled := []string{}
+				for _, s := range stringArray {
+					disabled = append(disabled, s.(string))
 				}
+				customizationOutput.APIServer.AdmissionPlugins.Disabled = &disabled
 
-				// Disabled admission plugins
-				{
-					stringArray := admissionPlugins["disabled"].([]interface{})
-					for _, s := range stringArray {
-						if customizationOutput.APIServer.AdmissionPlugins.Disabled == nil {
-							customizationOutput.APIServer.AdmissionPlugins.Disabled = new([]string)
-						}
-
-						if !containsString(*customizationOutput.APIServer.AdmissionPlugins.Disabled, s.(string)) {
-							*customizationOutput.APIServer.AdmissionPlugins.Disabled = append(*customizationOutput.APIServer.AdmissionPlugins.Disabled, s.(string))
-						}
-					}
-				}
-			}
-		}
-	}
-
-	// Nested KubeProxy customization
-	kubeProxySet := kubeProxyCustomizationInterface.(*schema.Set).List()
-	if len(kubeProxySet) > 0 {
-		kubeProxy := kubeProxySet[0].(map[string]interface{})
-
-		// Nested IPTables customization
-		{
-			ipTablesSet := kubeProxy["iptables"].(*schema.Set).List()
-			if len(ipTablesSet) > 0 {
-				ipTables := ipTablesSet[0].(map[string]interface{})
-				customizationOutput.KubeProxy.IPTables.MinSyncPeriod = helpers.GetNilStringPointerFromData(ipTables, "min_sync_period")
-				customizationOutput.KubeProxy.IPTables.SyncPeriod = helpers.GetNilStringPointerFromData(ipTables, "sync_period")
-			}
-		}
-
-		// Nested IPVS customization
-		{
-			ipvsSet := kubeProxy["ipvs"].(*schema.Set).List()
-			if len(ipvsSet) > 0 {
-				ipvs := ipvsSet[0].(map[string]interface{})
-				customizationOutput.KubeProxy.IPVS.MinSyncPeriod = helpers.GetNilStringPointerFromData(ipvs, "min_sync_period")
-				customizationOutput.KubeProxy.IPVS.Scheduler = helpers.GetNilStringPointerFromData(ipvs, "scheduler")
-				customizationOutput.KubeProxy.IPVS.SyncPeriod = helpers.GetNilStringPointerFromData(ipvs, "sync_period")
-				customizationOutput.KubeProxy.IPVS.TCPFinTimeout = helpers.GetNilStringPointerFromData(ipvs, "tcp_fin_timeout")
-				customizationOutput.KubeProxy.IPVS.TCPTimeout = helpers.GetNilStringPointerFromData(ipvs, "tcp_timeout")
-				customizationOutput.KubeProxy.IPVS.UDPTimeout = helpers.GetNilStringPointerFromData(ipvs, "udp_timeout")
 			}
 		}
 	}
@@ -240,7 +128,6 @@ type CloudProjectKubeResponse struct {
 	Url                    string        `json:"url"`
 	Version                string        `json:"version"`
 	Customization          Customization `json:"customization"`
-	KubeProxyMode          string        `json:"kubeProxyMode"`
 }
 
 func (v CloudProjectKubeResponse) ToMap() map[string]interface{} {
@@ -257,88 +144,20 @@ func (v CloudProjectKubeResponse) ToMap() map[string]interface{} {
 	obj["update_policy"] = v.UpdatePolicy
 	obj["url"] = v.Url
 	obj["version"] = v.Version[:strings.LastIndex(v.Version, ".")]
-	obj[kubeClusterProxyModeKey] = v.KubeProxyMode
-
-	if v.Customization.APIServer != nil {
-		obj["customization_apiserver"] = []map[string]interface{}{
-			{
-				"admissionplugins": []map[string]interface{}{
-					{
-						"enabled":  v.Customization.APIServer.AdmissionPlugins.Enabled,
-						"disabled": v.Customization.APIServer.AdmissionPlugins.Disabled,
+	obj["customization"] = []map[string]interface{}{
+		{
+			"apiserver": []map[string]interface{}{
+				{
+					"admissionplugins": []map[string]interface{}{
+						{
+							"enabled":  v.Customization.APIServer.AdmissionPlugins.Enabled,
+							"disabled": v.Customization.APIServer.AdmissionPlugins.Disabled,
+						},
 					},
 				},
 			},
-		}
+		},
 	}
-
-	if v.Customization.KubeProxy != nil {
-		obj["customization_kube_proxy"] = []map[string]interface{}{
-			{
-				"iptables": nil,
-				"ipvs":     nil,
-			},
-		}
-
-		if v.Customization.KubeProxy.IPTables != nil {
-			data := make(map[string]interface{})
-			if d := v.Customization.KubeProxy.IPTables.MinSyncPeriod; d != nil && *d != "" {
-				data["min_sync_period"] = d
-			}
-
-			if d := v.Customization.KubeProxy.IPTables.SyncPeriod; d != nil && *d != "" {
-				data["sync_period"] = d
-			}
-
-			if len(data) > 0 {
-				obj["customization_kube_proxy"].([]map[string]interface{})[0]["iptables"] = []map[string]interface{}{data}
-			}
-		}
-
-		if v.Customization.KubeProxy.IPVS != nil {
-			data := make(map[string]interface{})
-			if d := v.Customization.KubeProxy.IPVS.MinSyncPeriod; d != nil && *d != "" {
-				data["min_sync_period"] = d
-			}
-
-			if d := v.Customization.KubeProxy.IPVS.Scheduler; d != nil && *d != "" {
-				data["scheduler"] = d
-			}
-
-			if d := v.Customization.KubeProxy.IPVS.SyncPeriod; d != nil && *d != "" {
-				data["sync_period"] = d
-			}
-
-			if d := v.Customization.KubeProxy.IPVS.TCPFinTimeout; d != nil && *d != "" {
-				data["tcp_fin_timeout"] = d
-			}
-
-			if d := v.Customization.KubeProxy.IPVS.TCPTimeout; d != nil && *d != "" {
-				data["tcp_timeout"] = d
-			}
-
-			if d := v.Customization.KubeProxy.IPVS.UDPTimeout; d != nil && *d != "" {
-				data["udp_timeout"] = d
-			}
-
-			if len(data) > 0 {
-				obj["customization_kube_proxy"].([]map[string]interface{})[0]["ipvs"] = []map[string]interface{}{data}
-			}
-		}
-
-		// Remove empty fields
-		for k, x := range obj["customization_kube_proxy"].([]map[string]interface{})[0] {
-			if x == nil {
-				delete(obj["customization_kube_proxy"].([]map[string]interface{})[0], k)
-			}
-		}
-
-		// Delete entire customization_kube_proxy if empty
-		if len(obj["customization_kube_proxy"].([]map[string]interface{})[0]) == 0 {
-			delete(obj, "customization_kube_proxy")
-		}
-	}
-
 	return obj
 }
 
@@ -364,8 +183,7 @@ type CloudProjectKubeUpdatePNCOpts struct {
 }
 
 type CloudProjectKubeUpdateCustomizationOpts struct {
-	APIServer *APIServer              `json:"apiServer,omitempty"`
-	KubeProxy *kubeProxyCustomization `json:"kubeProxy,omitempty"`
+	APIServer *APIServer `json:"apiServer"`
 }
 
 type CloudProjectKubeNodeResponse struct {

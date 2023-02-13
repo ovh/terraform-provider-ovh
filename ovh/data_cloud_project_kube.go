@@ -29,69 +29,20 @@ func dataSourceCloudProjectKube() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			kubeClusterProxyModeKey: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			kubeClusterCustomizationApiServerKey: {
+			kubeClusterCustomizationKey: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Optional: true,
-				// Required: true,
 				ForceNew: false,
-				// MaxItems: 1,
-				Set: CustomSchemaSetFunc(),
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"admissionplugins": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Optional: true,
-							// Required: true,
-							ForceNew: false,
-							// MaxItems: 1,
-							Set: CustomSchemaSetFunc(),
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"enabled": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Optional: true,
-										// Required: true,
-										ForceNew: false,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"disabled": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Optional: true,
-										// Required: true,
-										ForceNew: false,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			kubeClusterCustomization: {
-				Type:       schema.TypeSet,
-				Computed:   true,
-				Optional:   true,
-				ForceNew:   false,
-				Set:        CustomSchemaSetFunc(),
-				Deprecated: fmt.Sprintf("Use %s instead", kubeClusterCustomizationApiServerKey),
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"apiserver": {
-							Type:       schema.TypeSet,
-							Computed:   true,
-							Optional:   true,
-							ForceNew:   false,
-							Set:        CustomSchemaSetFunc(),
-							Deprecated: fmt.Sprintf("Use %s instead", kubeClusterCustomizationApiServerKey),
+							Type:     schema.TypeSet,
+							Computed: true,
+							Optional: true,
+							ForceNew: false,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"admissionplugins": {
@@ -99,7 +50,7 @@ func dataSourceCloudProjectKube() *schema.Resource {
 										Computed: true,
 										Optional: true,
 										ForceNew: false,
-										Set:      CustomSchemaSetFunc(),
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"enabled": {
@@ -125,90 +76,6 @@ func dataSourceCloudProjectKube() *schema.Resource {
 					},
 				},
 			},
-			kubeClusterCustomizationKubeProxyKey: {
-				Type:     schema.TypeSet,
-				Computed: false,
-				Optional: true,
-				ForceNew: false,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"iptables": {
-							Type:     schema.TypeSet,
-							Computed: false,
-							Optional: true,
-							ForceNew: false,
-							MaxItems: 1,
-							Set:      CustomIPVSIPTablesSchemaSetFunc(),
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"min_sync_period": {
-										Type:     schema.TypeString,
-										Computed: false,
-										Optional: true,
-										ForceNew: false,
-									},
-									"sync_period": {
-										Type:     schema.TypeString,
-										Computed: false,
-										Optional: true,
-										ForceNew: false,
-									},
-								},
-							},
-						},
-						"ipvs": {
-							Type:     schema.TypeSet,
-							Computed: false,
-							Optional: true,
-							ForceNew: false,
-							MaxItems: 1,
-							Set:      CustomIPVSIPTablesSchemaSetFunc(),
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"min_sync_period": {
-										Type:     schema.TypeString,
-										Computed: false,
-										Optional: true,
-										ForceNew: false,
-									},
-									"sync_period": {
-										Type:     schema.TypeString,
-										Computed: false,
-										Optional: true,
-										ForceNew: false,
-									},
-									"scheduler": {
-										Type:     schema.TypeString,
-										Computed: false,
-										Optional: true,
-										ForceNew: false,
-									},
-									"tcp_fin_timeout": {
-										Type:     schema.TypeString,
-										Computed: false,
-										Optional: true,
-										ForceNew: false,
-									},
-									"tcp_timeout": {
-										Type:     schema.TypeString,
-										Computed: false,
-										Optional: true,
-										ForceNew: false,
-									},
-									"udp_timeout": {
-										Type:     schema.TypeString,
-										Computed: false,
-										Optional: true,
-										ForceNew: false,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-
 			"private_network_id": {
 				Type:     schema.TypeString,
 				Computed: true,
