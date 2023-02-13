@@ -41,4 +41,4 @@ The following arguments are supported:
 
 * `name` - (Mandatory) The worflow name that is used in the UI 
 * `rotation`- (Mandatory) the number of backup that are retained. 
-* `backup_name` - (Optional) the name of the backup files that are created. If empty, the `name` attribute is used. 
+* `backup_name` - (Optional) The name of the backup files that are created. If empty, the `name` attribute is used. 
