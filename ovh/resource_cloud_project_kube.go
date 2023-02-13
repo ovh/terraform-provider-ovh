@@ -177,6 +177,7 @@ func resourceCloudProjectKube() *schema.Resource {
 			"kubeconfig_attributes": {
 				Type:        schema.TypeList,
 				Computed:    true,
+				Sensitive:   true,
 				Description: "The kubeconfig configuration file of the Kubernetes cluster",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
