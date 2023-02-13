@@ -19,12 +19,7 @@ const (
 	kubeClusterPrivateNetworkConfigurationKey = "private_network_configuration"
 	kubeClusterUpdatePolicyKey                = "update_policy"
 	kubeClusterVersionKey                     = "version"
-
-	kubeClusterProxyModeKey = "kube_proxy_mode"
-
-	kubeClusterCustomization             = "customization" // Deprecated
-	kubeClusterCustomizationApiServerKey = "customization_apiserver"
-	kubeClusterCustomizationKubeProxyKey = "customization_kube_proxy"
+	kubeClusterCustomizationKey               = "customization"
 )
 
 func resourceCloudProjectKube() *schema.Resource {
@@ -64,60 +59,20 @@ func resourceCloudProjectKube() *schema.Resource {
 				Optional: true,
 				ForceNew: false,
 			},
-			kubeClusterCustomizationApiServerKey: {
-				Type:          schema.TypeSet,
-				Computed:      true,
-				Optional:      true,
-				ForceNew:      false,
-				Set:           CustomSchemaSetFunc(),
-				ConflictsWith: []string{kubeClusterCustomization},
+			kubeClusterCustomizationKey: {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Optional: true,
+				ForceNew: false,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"admissionplugins": {
+						"apiserver": {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Optional: true,
 							ForceNew: false,
-							Set:      CustomSchemaSetFunc(),
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"enabled": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Optional: true,
-										ForceNew: false,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"disabled": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Optional: true,
-										ForceNew: false,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			kubeClusterCustomization: {
-				Type:          schema.TypeSet,
-				Computed:      true,
-				Optional:      true,
-				ForceNew:      false,
-				Set:           CustomSchemaSetFunc(),
-				ConflictsWith: []string{kubeClusterCustomizationApiServerKey},
-				Deprecated:    fmt.Sprintf("Use %s instead", kubeClusterCustomizationApiServerKey),
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"apiserver": {
-							Type:       schema.TypeSet,
-							Computed:   true,
-							Optional:   true,
-							ForceNew:   false,
-							Set:        CustomSchemaSetFunc(),
-							Deprecated: fmt.Sprintf("Use %s instead", kubeClusterCustomizationApiServerKey),
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"admissionplugins": {
@@ -125,7 +80,7 @@ func resourceCloudProjectKube() *schema.Resource {
 										Computed: true,
 										Optional: true,
 										ForceNew: false,
-										Set:      CustomSchemaSetFunc(),
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"enabled": {
@@ -151,100 +106,10 @@ func resourceCloudProjectKube() *schema.Resource {
 					},
 				},
 			},
-			kubeClusterCustomizationKubeProxyKey: {
-				Type:     schema.TypeSet,
-				Computed: false,
-				Optional: true,
-				ForceNew: false,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"iptables": {
-							Type:     schema.TypeSet,
-							Computed: false,
-							Optional: true,
-							ForceNew: false,
-							MaxItems: 1,
-							Set:      CustomIPVSIPTablesSchemaSetFunc(),
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"min_sync_period": {
-										Type:     schema.TypeString,
-										Computed: false,
-										Optional: true,
-										ForceNew: false,
-									},
-									"sync_period": {
-										Type:     schema.TypeString,
-										Computed: false,
-										Optional: true,
-										ForceNew: false,
-									},
-								},
-							},
-						},
-						"ipvs": {
-							Type:     schema.TypeSet,
-							Computed: false,
-							Optional: true,
-							ForceNew: false,
-							MaxItems: 1,
-							Set:      CustomIPVSIPTablesSchemaSetFunc(),
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"min_sync_period": {
-										Type:     schema.TypeString,
-										Computed: false,
-										Optional: true,
-										ForceNew: false,
-									},
-									"sync_period": {
-										Type:     schema.TypeString,
-										Computed: false,
-										Optional: true,
-										ForceNew: false,
-									},
-									"scheduler": {
-										Type:     schema.TypeString,
-										Computed: false,
-										Optional: true,
-										ForceNew: false,
-									},
-									"tcp_fin_timeout": {
-										Type:     schema.TypeString,
-										Computed: false,
-										Optional: true,
-										ForceNew: false,
-									},
-									"tcp_timeout": {
-										Type:     schema.TypeString,
-										Computed: false,
-										Optional: true,
-										ForceNew: false,
-									},
-									"udp_timeout": {
-										Type:     schema.TypeString,
-										Computed: false,
-										Optional: true,
-										ForceNew: false,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-
 			kubeClusterPrivateNetworkIDKey: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
-			},
-			kubeClusterProxyModeKey: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
 			},
 			kubeClusterPrivateNetworkConfigurationKey: {
 				Type:     schema.TypeSet,
@@ -310,36 +175,6 @@ func resourceCloudProjectKube() *schema.Resource {
 				Sensitive: true,
 			},
 		},
-	}
-}
-
-// CustomIPVSIPTablesSchemaSetFunc is a custom schema.SchemaSetFunc for IPVS and IPTables
-// block configuration.
-//
-// Even if setting in the API `PT0S`, it returns `P0D` which is exactly the same duration but
-// induce issue when calculating hashset.
-//
-// Moreover, we cannot use DiffSuppressFunc because even if the diff is removed the hashset is still different.
-//
-// Using schema.StateFunc does not help because of internal terraform execution diff calculation
-// order.
-func CustomIPVSIPTablesSchemaSetFunc() schema.SchemaSetFunc {
-	return func(i interface{}) int {
-		for k, v := range i.(map[string]interface{}) {
-			if v == "P0D" {
-				i.(map[string]interface{})[k] = "PT0S"
-			}
-		}
-
-		out := fmt.Sprintf("%#v", i)
-		return schema.HashString(out)
-	}
-}
-
-func CustomSchemaSetFunc() schema.SchemaSetFunc {
-	return func(i interface{}) int {
-		out := fmt.Sprintf("%#v", i)
-		return schema.HashString(out)
 	}
 }
 
@@ -459,20 +294,14 @@ func resourceCloudProjectKubeUpdate(d *schema.ResourceData, meta interface{}) er
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 
-	if d.HasChange(kubeClusterCustomizationApiServerKey) || d.HasChange(kubeClusterCustomizationKubeProxyKey) {
-		_, apiServerAdmissionPlugins := d.GetChange(kubeClusterCustomizationApiServerKey)
-		_, kubeProxyCustomization := d.GetChange(kubeClusterCustomizationKubeProxyKey)
-		_, oldApiServerCustomization := d.GetChange(kubeClusterCustomization)
-
-		customization := loadCustomization(oldApiServerCustomization, apiServerAdmissionPlugins, kubeProxyCustomization)
-
-		params := &CloudProjectKubeUpdateCustomizationOpts{
-			APIServer: customization.APIServer,
-			KubeProxy: customization.KubeProxy,
-		}
+	if d.HasChange(kubeClusterCustomizationKey) {
+		_, newValueI := d.GetChange(kubeClusterCustomizationKey)
+		customization := loadCustomization(newValueI)
 
 		endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/customization", serviceName, d.Id())
-		err := config.OVHClient.Put(endpoint, params, nil)
+		err := config.OVHClient.Put(endpoint, CloudProjectKubeUpdateCustomizationOpts{
+			APIServer: customization.APIServer,
+		}, nil)
 		if err != nil {
 			return err
 		}
