@@ -37,6 +37,59 @@ resource "local_file" "kubeconfig" {
 }
 ```
 
+Create a simple Kubernetes cluster in `GRA7` region and read kubeconfig attributes:
+
+-> Sensitive attributes cannot be displayed using `terraform ouput` command. You need to specify the output's name: `terraform ouput mycluster-host`.
+
+```hcl
+resource "ovh_cloud_project_kube" "mycluster" {
+  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  name         = "my_kube_cluster"
+  region       = "GRA7"
+}
+
+output "mycluster-host" {
+  value = ovh_cloud_project_kube.mycluster.kubeconfig_attributes[0].host
+  sensitive = true
+}
+
+output "mycluster-cluster-ca-certificate" {
+  value = ovh_cloud_project_kube.mycluster.kubeconfig_attributes[0].cluster_ca_certificate
+  sensitive = true
+}
+
+output "mycluster-client-certificate" {
+  value = ovh_cloud_project_kube.mycluster.kubeconfig_attributes[0].client_certificate
+  sensitive = true
+}
+
+output "mycluster-client-key" {
+  value = ovh_cloud_project_kube.mycluster.kubeconfig_attributes[0].client_key
+  sensitive = true
+}
+```
+
+Create a simple Kubernetes cluster in `GRA7` region and use kubeconfig with [Helm provider](https://registry.terraform.io/providers/hashicorp/helm/latest/docs):
+
+```hcl
+resource "ovh_cloud_project_kube" "mycluster" {
+  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  name         = "my_kube_cluster"
+  region       = "GRA7"
+}
+
+provider "helm" {
+  kubernetes {
+    host                    = ovh_cloud_project_kube.mycluster.kubeconfig_attributes[0].host
+    client_certificate      = ovh_cloud_project_kube.mycluster.kubeconfig_attributes[0].client_certificate
+    client_key              = ovh_cloud_project_kube.mycluster.kubeconfig_attributes[0].client_key
+    cluster_ca_certificate  = ovh_cloud_project_kube.mycluster.kubeconfig_attributes[0].cluster_ca_certificate
+  }
+}
+
+# Ready to use Helm provider
+```
+
 Create a Kubernetes cluster in `GRA5` region with API Server AdmissionPlugins configuration:
 
 ```hcl
