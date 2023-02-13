@@ -13,7 +13,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func init() {
@@ -142,29 +141,7 @@ resource "ovh_cloud_project_kube" "cluster" {
 }
 `
 
-var testAccCloudProjectKubeCustomizationApiServerAdmissionPluginsCreateConfigDefaultValues = `
-resource "ovh_cloud_project_kube" "cluster" {
-	service_name  = "%s"
-	name          = "%s"
-	region        = "%s"
-}
-`
-
-var testAccCloudProjectKubeCustomizationApiServerAdmissionPluginsUpdateConfigEnabledAndDisabled = `
-resource "ovh_cloud_project_kube" "cluster" {
-	service_name  = "%s"
-	name          = "%s"
-	region        = "%s"
-	customization_apiserver {
-		admissionplugins {
-			enabled = ["NodeRestriction"]
-			disabled = ["AlwaysPullImages"]
-		}
-	}
-}
-`
-
-var testAccCloudProjectKubeDeprecatedCustomizationApiServerAdmissionPluginsUpdateConfigEnabledAndDisabled = `
+var testAccCloudProjectKubeCustomizationApiServerAdmissionPluginsCreateConfig = `
 resource "ovh_cloud_project_kube" "cluster" {
 	service_name  = "%s"
 	name          = "%s"
@@ -174,6 +151,21 @@ resource "ovh_cloud_project_kube" "cluster" {
 			admissionplugins {
 				enabled = ["NodeRestriction"]
 				disabled = ["AlwaysPullImages"]
+			}
+		}
+	}
+}
+`
+
+var testAccCloudProjectKubeCustomizationApiServerAdmissionPluginsUpdateConfig = `
+resource "ovh_cloud_project_kube" "cluster" {
+	service_name  = "%s"
+	name          = "%s"
+	region        = "%s"
+	customization {
+		apiserver {
+			admissionplugins {
+				enabled = ["AlwaysPullImages","NodeRestriction"]
 			}
 		}
 	}
@@ -195,64 +187,14 @@ func TestAccCloudProjectKubeCustomizationApiServerAdmissionPlugins(t *testing.T)
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
 	name := acctest.RandomWithPrefix(test_prefix)
 
-	createConfig := fmt.Sprintf(
-		testAccCloudProjectKubeCustomizationApiServerAdmissionPluginsCreateConfigDefaultValues,
+	config := fmt.Sprintf(
+		testAccCloudProjectKubeCustomizationApiServerAdmissionPluginsCreateConfig,
 		serviceName,
 		name,
 		region,
 	)
-
-	updatedConfigEnabledAndDisabled := fmt.Sprintf(
-		testAccCloudProjectKubeCustomizationApiServerAdmissionPluginsUpdateConfigEnabledAndDisabled,
-		serviceName,
-		name,
-		region,
-	)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheckCloud(t)
-			testAccCheckCloudProjectExists(t)
-			testAccPreCheckKubernetes(t)
-		},
-		Providers: testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				// no apiserver customization, should contain default values from API
-				Config: createConfig,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "service_name", serviceName),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_apiserver.0.admissionplugins.0.disabled.#", "0"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_apiserver.0.admissionplugins.0.enabled.0", "AlwaysPullImages"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_apiserver.0.admissionplugins.0.enabled.1", "NodeRestriction"),
-				),
-			},
-			{
-				Config: updatedConfigEnabledAndDisabled,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "service_name", serviceName),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_apiserver.0.admissionplugins.0.enabled.0", "NodeRestriction"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_apiserver.0.admissionplugins.0.disabled.0", "AlwaysPullImages"),
-				),
-			},
-		},
-	})
-}
-
-// TestAccCloudProjectKubeDeprecatedCustomizationApiServerAdmissionPlugins aims to test that
-// values are the same between customization_apiserver.admissionplugins are the same and customization.apiserver.admissionplugins.
-// This is deprecated and will be removed in the future.
-func TestAccCloudProjectKubeDeprecatedCustomizationApiServerAdmissionPlugins(t *testing.T) {
-	region := os.Getenv("OVH_CLOUD_PROJECT_KUBE_REGION_TEST")
-	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
-	name := acctest.RandomWithPrefix(test_prefix)
-
-	createConfig := fmt.Sprintf(
-		testAccCloudProjectKubeDeprecatedCustomizationApiServerAdmissionPluginsUpdateConfigEnabledAndDisabled,
+	updatedConfig := fmt.Sprintf(
+		testAccCloudProjectKubeCustomizationApiServerAdmissionPluginsUpdateConfig,
 		serviceName,
 		name,
 		region,
@@ -267,304 +209,20 @@ func TestAccCloudProjectKubeDeprecatedCustomizationApiServerAdmissionPlugins(t *
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: createConfig,
+				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "service_name", serviceName),
-
-					// Deprecated configuration
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization.0.apiserver.0.admissionplugins.0.enabled.0", "NodeRestriction"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization.0.apiserver.0.admissionplugins.0.disabled.0", "AlwaysPullImages"),
-
-					// New configuration
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_apiserver.0.admissionplugins.0.enabled.0", "NodeRestriction"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_apiserver.0.admissionplugins.0.disabled.0", "AlwaysPullImages"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccCloudProjectKube_kube_proxy_iptables(t *testing.T) {
-	region := os.Getenv("OVH_CLOUD_PROJECT_KUBE_REGION_TEST")
-	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
-	name := acctest.RandomWithPrefix(test_prefix)
-
-	config := fmt.Sprintf(`
-resource "ovh_cloud_project_kube" "cluster" {
-	service_name  = "%s"
-	name          = "%s"
-	region        = "%s"
-}
-`,
-		serviceName,
-		name,
-		region,
-	)
-
-	updatedConfig := fmt.Sprintf(`
-resource "ovh_cloud_project_kube" "cluster" {
-	service_name    = "%s"
-	name            = "%s"
-	region          = "%s"
-	
-	kube_proxy_mode = "iptables"
-	customization_kube_proxy {
-		iptables {
-        	min_sync_period = "PT0S"
-		}
-    }
-}
-`,
-		serviceName,
-		name,
-		region,
-	)
-
-	updatedConfigWithDifferentTime := fmt.Sprintf(`
-resource "ovh_cloud_project_kube" "cluster" {
-	service_name    = "%s"
-	name            = "%s"
-	region          = "%s"
-	
-	kube_proxy_mode = "iptables"
-	customization_kube_proxy {
-		iptables {
-        	min_sync_period = "P0D"
-		}
-    }
-}
-`,
-		serviceName,
-		name,
-		region,
-	)
-
-	updatedConfigNewArgument := fmt.Sprintf(`
-resource "ovh_cloud_project_kube" "cluster" {
-	service_name    = "%s"
-	name            = "%s"
-	region          = "%s"
-	
-	kube_proxy_mode = "iptables"
-	customization_kube_proxy {
-		iptables {
-        	min_sync_period = "PT30S"
-			sync_period = "PT30S"
-		}
-    }
-}
-`,
-		serviceName,
-		name,
-		region,
-	)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheckCloud(t)
-			testAccCheckCloudProjectExists(t)
-			testAccPreCheckKubernetes(t)
-		},
-		Providers: testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				// no kube proxy mode specified, should contain default values from API
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "service_name", serviceName),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "kube_proxy_mode", "iptables"),
-					resource.TestCheckNoResourceAttr("ovh_cloud_project_kube.cluster", "customization_kube_proxy"),
 				),
 			},
 			{
 				Config: updatedConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "service_name", serviceName),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "kube_proxy_mode", "iptables"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_kube_proxy.0.iptables.0.min_sync_period", "PT0S"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_kube_proxy.0.iptables.0.sync_period", ""),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_kube_proxy.0.ipvs.#", "0"),
-				),
-			},
-			{
-				Config: updatedConfigWithDifferentTime,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "service_name", serviceName),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "kube_proxy_mode", "iptables"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_kube_proxy.0.iptables.0.min_sync_period", "PT0S"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_kube_proxy.0.iptables.0.sync_period", ""),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_kube_proxy.0.ipvs.#", "0"),
-				),
-			},
-			{
-				Config: updatedConfigNewArgument,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "service_name", serviceName),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "kube_proxy_mode", "iptables"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_kube_proxy.0.iptables.0.min_sync_period", "PT30S"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_kube_proxy.0.iptables.0.sync_period", "PT30S"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_kube_proxy.0.ipvs.#", "0"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccCloudProjectKube_kube_proxy_ipvs(t *testing.T) {
-	region := os.Getenv("OVH_CLOUD_PROJECT_KUBE_REGION_TEST")
-	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
-	name := acctest.RandomWithPrefix(test_prefix)
-
-	config := fmt.Sprintf(`
-resource "ovh_cloud_project_kube" "cluster" {
-	service_name  = "%s"
-	name          = "%s"
-	region        = "%s"
-	kube_proxy_mode = "ipvs"
-}
-`,
-		serviceName,
-		name,
-		region,
-	)
-
-	updatedConfig := fmt.Sprintf(`
-resource "ovh_cloud_project_kube" "cluster" {
-	service_name    = "%s"
-	name            = "%s"
-	region          = "%s"
-	
-	kube_proxy_mode = "ipvs"
-	customization_kube_proxy {
-		ipvs {
-        	min_sync_period = "PT0S"
-		}
-    }
-}
-`,
-		serviceName,
-		name,
-		region,
-	)
-
-	updatedConfigWithDifferentTime := fmt.Sprintf(`
-resource "ovh_cloud_project_kube" "cluster" {
-	service_name    = "%s"
-	name            = "%s"
-	region          = "%s"
-	
-	kube_proxy_mode = "ipvs"
-	customization_kube_proxy {
-		ipvs {
-        	min_sync_period = "P0D"
-		}
-    }
-}
-`,
-		serviceName,
-		name,
-		region,
-	)
-
-	updatedConfigAllArguments := fmt.Sprintf(`
-resource "ovh_cloud_project_kube" "cluster" {
-	service_name    = "%s"
-	name            = "%s"
-	region          = "%s"
-	
-	kube_proxy_mode = "ipvs"
-	customization_kube_proxy {
-		ipvs {
-        	min_sync_period = "PT30S"
-			sync_period = "PT30S"
-			scheduler = "rr"
-			tcp_fin_timeout = "PT30S"
-			tcp_timeout = "PT30S"
-			udp_timeout = "PT30S"
-		}
-    }
-}
-`,
-		serviceName,
-		name,
-		region,
-	)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheckCloud(t)
-			testAccCheckCloudProjectExists(t)
-			testAccPreCheckKubernetes(t)
-		},
-		Providers: testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				// no kube proxy mode specified, should contain default values from API
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "service_name", serviceName),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "kube_proxy_mode", "ipvs"),
-					resource.TestCheckNoResourceAttr("ovh_cloud_project_kube.cluster", "customization_kube_proxy"),
-				),
-			},
-			{
-				Config: updatedConfig,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "service_name", serviceName),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "kube_proxy_mode", "ipvs"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_kube_proxy.0.ipvs.0.min_sync_period", "PT0S"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_kube_proxy.0.ipvs.0.sync_period", ""),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_kube_proxy.0.ipvs.0.scheduler", ""),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_kube_proxy.0.ipvs.0.tcp_fin_timeout", ""),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_kube_proxy.0.ipvs.0.tcp_timeout", ""),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_kube_proxy.0.ipvs.0.udp_timeout", ""),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_kube_proxy.0.iptables.#", "0"),
-				),
-			},
-			{
-				Config: updatedConfigWithDifferentTime,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "service_name", serviceName),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "kube_proxy_mode", "ipvs"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_kube_proxy.0.ipvs.0.min_sync_period", "PT0S"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_kube_proxy.0.ipvs.0.sync_period", ""),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_kube_proxy.0.ipvs.0.scheduler", ""),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_kube_proxy.0.ipvs.0.tcp_fin_timeout", ""),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_kube_proxy.0.ipvs.0.tcp_timeout", ""),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_kube_proxy.0.ipvs.0.udp_timeout", ""),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_kube_proxy.0.iptables.#", "0"),
-				),
-			},
-			{
-				Config: updatedConfigAllArguments,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "service_name", serviceName),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "kube_proxy_mode", "ipvs"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_kube_proxy.0.ipvs.0.min_sync_period", "PT30S"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_kube_proxy.0.ipvs.0.sync_period", "PT30S"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_kube_proxy.0.ipvs.0.scheduler", "rr"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_kube_proxy.0.ipvs.0.tcp_fin_timeout", "PT30S"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_kube_proxy.0.ipvs.0.tcp_timeout", "PT30S"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_kube_proxy.0.ipvs.0.udp_timeout", "PT30S"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_kube_proxy.0.iptables.#", "0"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization.0.apiserver.0.admissionplugins.0.enabled.0", "AlwaysPullImages"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization.0.apiserver.0.admissionplugins.0.enabled.1", "NodeRestriction"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization.0.apiserver.0.admissionplugins.0.disabled.#", "0"),
 				),
 			},
 		},
@@ -834,53 +492,4 @@ func TestAccCloudProjectKubeUpdateVersion_basic(t *testing.T) {
 			},
 		},
 	})
-}
-
-func TestCustomIPVSIPTablesSchemaSetFunc(t *testing.T) {
-	tests := []struct {
-		name        string
-		input       map[string]interface{}
-		expected    map[string]interface{}
-		expectedHex string
-	}{
-		{
-			name: "Input with P0D value",
-			input: map[string]interface{}{
-				"key1": "P0D",
-				"key2": "value2",
-			},
-			expected: map[string]interface{}{
-				"key1": "PT0S",
-				"key2": "value2",
-			},
-			expectedHex: fmt.Sprintf("%#v", map[string]interface{}{
-				"key1": "PT0S",
-				"key2": "value2",
-			}),
-		},
-		{
-			name: "Input without P0D value",
-			input: map[string]interface{}{
-				"key1": "value1",
-				"key2": "value2",
-			},
-			expected: map[string]interface{}{
-				"key1": "value1",
-				"key2": "value2",
-			},
-			expectedHex: fmt.Sprintf("%#v", map[string]interface{}{
-				"key1": "value1",
-				"key2": "value2",
-			}),
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			expectedHash := schema.HashString(tt.expectedHex)
-			if got := CustomIPVSIPTablesSchemaSetFunc()(tt.input); got != expectedHash {
-				t.Errorf("CustomIPVSIPTablesSchemaSetFunc() = %v, want %v", got, expectedHash)
-			}
-		})
-	}
 }
