@@ -187,6 +187,9 @@ variables must also be set:
 
 * `OVH_HOSTING_PRIVATEDATABASE_WHITELIST_SFTP_TEST` - Set this variable to `true` to authorize SFTP access to a whitelisted IP address
 
+* `OVH_CLOUD_PROJECT_WORKFLOW_BACKUP_REGION_TEST` - The openstack region in which the workflow will be defined
+* `OVH_CLOUD_PROJECT_WORKFLOW_BACKUP_INSTANCE_ID_TEST` - The openstack id of the instance to backup
+
 ### Used by OVHcloud internal account only:
 
 * `OVH_TESTACC_ORDER_IPLOADBALANCING` - set this variable to "yes" will order ip loadbalancing.
