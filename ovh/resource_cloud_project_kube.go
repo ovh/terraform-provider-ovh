@@ -174,6 +174,35 @@ func resourceCloudProjectKube() *schema.Resource {
 				Computed:  true,
 				Sensitive: true,
 			},
+			"kubeconfig_attributes": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Sensitive:   true,
+				Description: "The kubeconfig configuration file of the Kubernetes cluster",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"host": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"cluster_ca_certificate": {
+							Type:      schema.TypeString,
+							Computed:  true,
+							Sensitive: true,
+						},
+						"client_certificate": {
+							Type:      schema.TypeString,
+							Computed:  true,
+							Sensitive: true,
+						},
+						"client_key": {
+							Type:      schema.TypeString,
+							Computed:  true,
+							Sensitive: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -190,11 +219,9 @@ func resourceCloudProjectKubeImportState(d *schema.ResourceData, meta interface{
 	d.Set("service_name", serviceName)
 
 	// add kubeconfig in state
-	kubeConfig, err := getKubeconfig(meta.(*Config), serviceName, d.Id())
-	if err != nil {
+	if err := setKubeconfig(d, meta); err != nil {
 		return nil, err
 	}
-	d.Set("kubeconfig", kubeConfig)
 
 	results := make([]*schema.ResourceData, 1)
 	results[0] = d
@@ -254,12 +281,11 @@ func resourceCloudProjectKubeRead(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	if d.IsNewResource() {
-		kubeConfig, err := getKubeconfig(config, serviceName, res.Id)
-		if err != nil {
+	if d.IsNewResource() || d.Get("kubeconfig") == "" || len(d.Get("kubeconfig_attributes").([]interface{})) == 0 {
+		// add kubeconfig in state
+		if err := setKubeconfig(d, meta); err != nil {
 			return err
 		}
-		d.Set("kubeconfig", kubeConfig)
 	}
 
 	log.Printf("[DEBUG] Read kube %+v", res)
@@ -478,4 +504,29 @@ func waitForCloudProjectKubeDeleted(d *schema.ResourceData, client *ovh.Client, 
 
 	_, err := stateConf.WaitForState()
 	return err
+}
+
+func setKubeconfig(d *schema.ResourceData, meta interface{}) error {
+	serviceName := d.Get("service_name").(string)
+	kubeConfig, err := getKubeconfig(meta.(*Config), serviceName, d.Id())
+	if err != nil {
+		return err
+	}
+
+	if len(kubeConfig.Clusters) == 0 || len(kubeConfig.Users) == 0 {
+		return fmt.Errorf("kubeconfig is invalid")
+	}
+
+	// raw kubeconfig
+	d.Set("kubeconfig", kubeConfig.Raw)
+
+	// kubeconfig attributes
+	kubeconf := map[string]interface{}{}
+	kubeconf["host"] = kubeConfig.Clusters[0].Cluster.Server
+	kubeconf["cluster_ca_certificate"] = kubeConfig.Clusters[0].Cluster.CertificateAuthorityData
+	kubeconf["client_certificate"] = kubeConfig.Users[0].User.ClientCertificateData
+	kubeconf["client_key"] = kubeConfig.Users[0].User.ClientKeyData
+	_ = d.Set("kubeconfig_attributes", []map[string]interface{}{kubeconf})
+
+	return nil
 }
