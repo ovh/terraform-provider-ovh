@@ -116,6 +116,11 @@ func TestAccCloudProjectWorkflowBackup(t *testing.T) {
 					resource.TestCheckResourceAttr(WORKFLOW_BACKUP_RESOURCE_NAME, "instance_id", instanceId),
 				),
 			},
+			{
+				ResourceName:      WORKFLOW_BACKUP_RESOURCE_NAME,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
