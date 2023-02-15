@@ -51,9 +51,8 @@ resource "ovh_hosting_privatedatabase" "database" {
 
 func init() {
 	resource.AddTestSweepers("ovh_hosting_privatedatabase", &resource.Sweeper{
-		Name:         "ovh_hosting_privatedatabase",
-		Dependencies: []string{"ovh_hosting_privatedatabase"},
-		F:            testSweepHostingPrivateDatabase,
+		Name: "ovh_hosting_privatedatabase",
+		F:    testSweepHostingPrivateDatabase,
 	})
 }
 

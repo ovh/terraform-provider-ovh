@@ -2,6 +2,7 @@ package ovh
 
 import (
 	"fmt"
+	"log"
 	"net/url"
 	"os"
 	"testing"
@@ -37,8 +38,15 @@ func testSweepVrackIpLoadbalancing(region string) error {
 	}
 
 	serviceName := os.Getenv("OVH_VRACK_SERVICE_TEST")
+	if serviceName == "" {
+		log.Print("[DEBUG] OVH_VRACK_SERVICE_TEST is not set. Unable to sweep VrackIpLoadbalancing")
+		return nil
+	}
 	ipLoadbalancing := os.Getenv("OVH_IPLB_SERVICE_TEST")
-
+	if ipLoadbalancing == "" {
+		log.Print("[DEBUG] OVH_IPLB_SERVICE_TEST is not set. Unable to sweep VrackIpLoadbalancing")
+		return nil
+	}
 	endpoint := fmt.Sprintf("/vrack/%s/ipLoadbalancing/%s",
 		url.PathEscape(serviceName),
 		url.PathEscape(ipLoadbalancing),
