@@ -11,28 +11,30 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/go-ovh/ovh"
+	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 	"github.com/ybriffa/rfc3339"
 )
 
 type CloudProjectDatabaseResponse struct {
-	AclsEnabled     bool                           `json:"aclsEnabled"`
-	BackupTime      string                         `json:"backupTime"`
-	CreatedAt       string                         `json:"createdAt"`
-	Description     string                         `json:"description"`
-	Endpoints       []CloudProjectDatabaseEndpoint `json:"endpoints"`
-	Flavor          string                         `json:"flavor"`
-	Id              string                         `json:"id"`
-	MaintenanceTime string                         `json:"maintenanceTime"`
-	NetworkId       string                         `json:"networkId"`
-	NetworkType     string                         `json:"networkType"`
-	Plan            string                         `json:"plan"`
-	NodeNumber      int                            `json:"nodeNumber"`
-	Region          string                         `json:"region"`
-	RestApi         bool                           `json:"restApi"`
-	Status          string                         `json:"status"`
-	SubnetId        string                         `json:"subnetId"`
-	Version         string                         `json:"version"`
-	Disk            CloudProjectDatabaseDisk       `json:"disk"`
+	AclsEnabled           bool                           `json:"aclsEnabled"`
+	BackupTime            string                         `json:"backupTime"`
+	CreatedAt             string                         `json:"createdAt"`
+	Description           string                         `json:"description"`
+	Endpoints             []CloudProjectDatabaseEndpoint `json:"endpoints"`
+	Flavor                string                         `json:"flavor"`
+	Id                    string                         `json:"id"`
+	MaintenanceTime       string                         `json:"maintenanceTime"`
+	NetworkId             string                         `json:"networkId"`
+	NetworkType           string                         `json:"networkType"`
+	Plan                  string                         `json:"plan"`
+	NodeNumber            int                            `json:"nodeNumber"`
+	Region                string                         `json:"region"`
+	RestApi               bool                           `json:"restApi"`
+	Status                string                         `json:"status"`
+	SubnetId              string                         `json:"subnetId"`
+	Version               string                         `json:"version"`
+	Disk                  CloudProjectDatabaseDisk       `json:"disk"`
+	AdvancedConfiguration map[string]string              `json:"advancedConfiguration"`
 }
 
 func (s *CloudProjectDatabaseResponse) String() string {
@@ -74,6 +76,7 @@ func (v CloudProjectDatabaseResponse) ToMap() map[string]interface{} {
 	obj["version"] = v.Version
 	obj["disk_size"] = v.Disk.Size
 	obj["disk_type"] = v.Disk.Type
+	obj["advanced_configuration"] = v.AdvancedConfiguration
 
 	return obj
 }
@@ -538,7 +541,59 @@ func (opts *CloudProjectDatabaseUserCreateOpts) FromResource(d *schema.ResourceD
 	return opts
 }
 
-func postCloudProjectDatabaseUser(d *schema.ResourceData, meta interface{}, engine string, endpoint string, params interface{}, res *CloudProjectDatabaseUserResponse, timeout string) error {
+func importCloudProjectDatabaseUser(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	givenId := d.Id()
+	n := 3
+	splitId := strings.SplitN(givenId, "/", n)
+	if len(splitId) != n {
+		return nil, fmt.Errorf("Import Id is not service_name/cluster_id/id formatted")
+	}
+	serviceName := splitId[0]
+	clusterId := splitId[1]
+	id := splitId[2]
+	d.SetId(id)
+	d.Set("cluster_id", clusterId)
+	d.Set("service_name", serviceName)
+
+	results := make([]*schema.ResourceData, 1)
+	results[0] = d
+	return results, nil
+}
+
+func postCloudProjectDatabaseUser(d *schema.ResourceData, meta interface{}, engine string, dsReadFunc, readFunc schema.ReadFunc, updateFunc schema.UpdateFunc, f func() interface{}) error {
+	name := d.Get("name").(string)
+	if name == "avnadmin" && engine != "redis" {
+		err := dsReadFunc(d, meta)
+		if err != nil {
+			return err
+		}
+		return updateFunc(d, meta)
+	}
+
+	serviceName := d.Get("service_name").(string)
+	clusterId := d.Get("cluster_id").(string)
+
+	endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/user",
+		url.PathEscape(serviceName),
+		url.PathEscape(engine),
+		url.PathEscape(clusterId),
+	)
+
+	params := f()
+	res := &CloudProjectDatabaseUserResponse{}
+
+	log.Printf("[DEBUG] Will create user: %+v for cluster %s from project %s", params, clusterId, serviceName)
+	err := postFuncCloudProjectDatabaseUser(d, meta, engine, endpoint, params, res, schema.TimeoutCreate)
+	if err != nil {
+		return err
+	}
+
+	d.SetId(res.Id)
+	return readFunc(d, meta)
+
+}
+
+func postFuncCloudProjectDatabaseUser(d *schema.ResourceData, meta interface{}, engine string, endpoint string, params interface{}, res *CloudProjectDatabaseUserResponse, timeout string) error {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
@@ -558,6 +613,89 @@ func postCloudProjectDatabaseUser(d *schema.ResourceData, meta interface{}, engi
 	log.Printf("[DEBUG] user %s is READY", res.Id)
 
 	d.Set("password", res.Password)
+	return nil
+}
+
+func updateCloudProjectDatabaseUser(d *schema.ResourceData, meta interface{}, engine string, readFunc schema.ReadFunc, f func() interface{}) error {
+	config := meta.(*Config)
+	serviceName := d.Get("service_name").(string)
+	clusterId := d.Get("cluster_id").(string)
+	isAvnAdmin := d.Get("name").(string) == "avnadmin"
+	// The M3DB condition must be remove when avnadmin password reset will be possible on this engine
+	passwordReset := d.HasChange("password_reset") || (d.IsNewResource() && isAvnAdmin && engine != "m3db")
+	id := d.Id()
+
+	endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/user/%s",
+		url.PathEscape(serviceName),
+		url.PathEscape(engine),
+		url.PathEscape(clusterId),
+		url.PathEscape(id),
+	)
+
+	if !(isAvnAdmin && engine == "postgresql") {
+		params := f()
+
+		log.Printf("[DEBUG] Will update user: %+v from cluster %s from project %s", params, clusterId, serviceName)
+		err := config.OVHClient.Put(endpoint, params, nil)
+		if err != nil {
+			return fmt.Errorf("calling Put %s with params %+v:\n\t %q", endpoint, params, err)
+		}
+
+		log.Printf("[DEBUG] Waiting for user %s to be READY", id)
+		err = waitForCloudProjectDatabaseUserReady(config.OVHClient, serviceName, engine, clusterId, id, d.Timeout(schema.TimeoutUpdate))
+		if err != nil {
+			return fmt.Errorf("timeout while waiting user %s to be READY: %w", id, err)
+		}
+		log.Printf("[DEBUG] user %s is READY", id)
+	}
+
+	if passwordReset {
+		pwdResetEndpoint := endpoint + "/credentials/reset"
+		res := &CloudProjectDatabaseUserResponse{}
+		log.Printf("[DEBUG] Will update user password for cluster %s from project %s", clusterId, serviceName)
+		err := postFuncCloudProjectDatabaseUser(d, meta, engine, pwdResetEndpoint, nil, res, schema.TimeoutUpdate)
+		if err != nil {
+			return err
+		}
+	}
+
+	return readFunc(d, meta)
+}
+
+func deleteCloudProjectDatabaseUser(d *schema.ResourceData, meta interface{}, engine string) error {
+	name := d.Get("name").(string)
+	if name == "avnadmin" && engine != "redis" {
+		d.SetId("")
+		return nil
+	}
+
+	config := meta.(*Config)
+	serviceName := d.Get("service_name").(string)
+	clusterId := d.Get("cluster_id").(string)
+	id := d.Id()
+
+	endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/user/%s",
+		url.PathEscape(serviceName),
+		url.PathEscape(engine),
+		url.PathEscape(clusterId),
+		url.PathEscape(id),
+	)
+
+	log.Printf("[DEBUG] Will delete user %s from cluster %s from project %s", id, clusterId, serviceName)
+	err := config.OVHClient.Delete(endpoint, nil)
+	if err != nil {
+		return helpers.CheckDeleted(d, err, endpoint)
+	}
+
+	log.Printf("[DEBUG] Waiting for user %s to be DELETED", id)
+	err = waitForCloudProjectDatabaseUserDeleted(config.OVHClient, serviceName, engine, clusterId, id, d.Timeout(schema.TimeoutDelete))
+	if err != nil {
+		return fmt.Errorf("timeout while waiting user %s to be DELETED: %w", id, err)
+	}
+	log.Printf("[DEBUG] user %s is DELETED", id)
+
+	d.SetId("")
+
 	return nil
 }
 

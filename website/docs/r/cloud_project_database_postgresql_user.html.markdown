@@ -66,7 +66,7 @@ The following arguments are supported:
 
 * `cluster_id` - (Required, Forces new resource) Cluster ID.
 
-* `name` - (Required, Forces new resource) Name of the user.
+* `name` - (Required, Forces new resource) Name of the user. A user named "avnadmin" is map with already created admin user and reset his password instead of create a new user.
 
 * `roles` - (Optional: if omit, default role) Roles the user belongs to.
   Available roles:
