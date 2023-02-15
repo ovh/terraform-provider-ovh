@@ -90,7 +90,7 @@ The following arguments are supported:
     * `readwrite`
     * `deny`
 
-* `name` - (Required, Forces new resource) Username affected by this acl.
+* `name` - (Required, Forces new resource) Username affected by this acl. A user named "avnadmin" is map with already created admin user and reset his password instead of create a new user.
 
 * `password_reset` - (Optional) Arbitrary string to change to trigger a password update. Use the `terraform refresh` command after executing `terraform apply` to update the output with the new password.
 
