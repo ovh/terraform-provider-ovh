@@ -3,6 +3,7 @@ package ovh
 import (
 	"fmt"
 	"log"
+	"sort"
 	"strings"
 	"time"
 
@@ -19,7 +20,12 @@ const (
 	kubeClusterPrivateNetworkConfigurationKey = "private_network_configuration"
 	kubeClusterUpdatePolicyKey                = "update_policy"
 	kubeClusterVersionKey                     = "version"
-	kubeClusterCustomizationKey               = "customization"
+
+	kubeClusterProxyModeKey = "kube_proxy_mode"
+
+	kubeClusterCustomization             = "customization" // Deprecated
+	kubeClusterCustomizationApiServerKey = "customization_apiserver"
+	kubeClusterCustomizationKubeProxyKey = "customization_kube_proxy"
 )
 
 func resourceCloudProjectKube() *schema.Resource {
@@ -59,20 +65,60 @@ func resourceCloudProjectKube() *schema.Resource {
 				Optional: true,
 				ForceNew: false,
 			},
-			kubeClusterCustomizationKey: {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Optional: true,
-				ForceNew: false,
-				MaxItems: 1,
+			kubeClusterCustomizationApiServerKey: {
+				Type:          schema.TypeSet,
+				Computed:      true,
+				Optional:      true,
+				ForceNew:      false,
+				Set:           CustomSchemaSetFunc(),
+				ConflictsWith: []string{kubeClusterCustomization},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"apiserver": {
+						"admissionplugins": {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Optional: true,
 							ForceNew: false,
-							MaxItems: 1,
+							Set:      CustomApiServerAdmissionPluginsSchemaSetFunc(),
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"enabled": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Optional: true,
+										ForceNew: false,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									"disabled": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Optional: true,
+										ForceNew: false,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			kubeClusterCustomization: {
+				Type:          schema.TypeSet,
+				Computed:      true,
+				Optional:      true,
+				ForceNew:      false,
+				Set:           CustomSchemaSetFunc(),
+				ConflictsWith: []string{kubeClusterCustomizationApiServerKey},
+				Deprecated:    fmt.Sprintf("Use %s instead", kubeClusterCustomizationApiServerKey),
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"apiserver": {
+							Type:       schema.TypeSet,
+							Computed:   true,
+							Optional:   true,
+							ForceNew:   false,
+							Set:        CustomSchemaSetFunc(),
+							Deprecated: fmt.Sprintf("Use %s instead", kubeClusterCustomizationApiServerKey),
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"admissionplugins": {
@@ -80,7 +126,7 @@ func resourceCloudProjectKube() *schema.Resource {
 										Computed: true,
 										Optional: true,
 										ForceNew: false,
-										MaxItems: 1,
+										Set:      CustomApiServerAdmissionPluginsSchemaSetFunc(),
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"enabled": {
@@ -106,10 +152,109 @@ func resourceCloudProjectKube() *schema.Resource {
 					},
 				},
 			},
+			kubeClusterCustomizationKubeProxyKey: {
+				Type:     schema.TypeSet,
+				Computed: false,
+				Optional: true,
+				ForceNew: false,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"iptables": {
+							Type:     schema.TypeSet,
+							Computed: false,
+							Optional: true,
+							ForceNew: false,
+							MaxItems: 1,
+							Set:      CustomIPVSIPTablesSchemaSetFunc(),
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"min_sync_period": {
+										Type:         schema.TypeString,
+										Computed:     false,
+										Optional:     true,
+										ForceNew:     false,
+										ValidateFunc: helpers.ValidateRFC3339Duration,
+									},
+									"sync_period": {
+										Type:         schema.TypeString,
+										Computed:     false,
+										Optional:     true,
+										ForceNew:     false,
+										ValidateFunc: helpers.ValidateRFC3339Duration,
+									},
+								},
+							},
+						},
+						"ipvs": {
+							Type:     schema.TypeSet,
+							Computed: false,
+							Optional: true,
+							ForceNew: false,
+							MaxItems: 1,
+							Set:      CustomIPVSIPTablesSchemaSetFunc(),
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"min_sync_period": {
+										Type:         schema.TypeString,
+										Computed:     false,
+										Optional:     true,
+										ForceNew:     false,
+										ValidateFunc: helpers.ValidateRFC3339Duration,
+									},
+									"sync_period": {
+										Type:         schema.TypeString,
+										Computed:     false,
+										Optional:     true,
+										ForceNew:     false,
+										ValidateFunc: helpers.ValidateRFC3339Duration,
+									},
+									"scheduler": {
+										Type:         schema.TypeString,
+										Computed:     false,
+										Optional:     true,
+										ForceNew:     false,
+										ValidateFunc: helpers.ValidateEnum([]string{"rr", "lc", "dh", "sh", "sed", "nq"}),
+									},
+									"tcp_fin_timeout": {
+										Type:         schema.TypeString,
+										Computed:     false,
+										Optional:     true,
+										ForceNew:     false,
+										ValidateFunc: helpers.ValidateRFC3339Duration,
+									},
+									"tcp_timeout": {
+										Type:         schema.TypeString,
+										Computed:     false,
+										Optional:     true,
+										ForceNew:     false,
+										ValidateFunc: helpers.ValidateRFC3339Duration,
+									},
+									"udp_timeout": {
+										Type:         schema.TypeString,
+										Computed:     false,
+										Optional:     true,
+										ForceNew:     false,
+										ValidateFunc: helpers.ValidateRFC3339Duration,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+
 			kubeClusterPrivateNetworkIDKey: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+			},
+			kubeClusterProxyModeKey: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Computed:     true,
+				ValidateFunc: helpers.ValidateEnum([]string{"iptables", "ipvs"}),
 			},
 			kubeClusterPrivateNetworkConfigurationKey: {
 				Type:     schema.TypeSet,
@@ -207,6 +352,60 @@ func resourceCloudProjectKube() *schema.Resource {
 	}
 }
 
+// CustomIPVSIPTablesSchemaSetFunc is a custom schema.SchemaSetFunc for IPVS and IPTables
+// block configuration.
+//
+// Even if setting in the API `PT0S`, it returns `P0D` which is exactly the same duration but
+// induce issue when calculating hashset.
+//
+// Moreover, we cannot use DiffSuppressFunc because even if the diff is removed the hashset is still different.
+//
+// Using schema.StateFunc does not help because of internal terraform execution diff calculation
+// order.
+func CustomIPVSIPTablesSchemaSetFunc() schema.SchemaSetFunc {
+	return func(i interface{}) int {
+		for k, v := range i.(map[string]interface{}) {
+			if v == "P0D" {
+				i.(map[string]interface{})[k] = "PT0S"
+			}
+		}
+
+		out := fmt.Sprintf("%#v", i)
+		return schema.HashString(out)
+	}
+}
+
+func CustomSchemaSetFunc() schema.SchemaSetFunc {
+	return func(i interface{}) int {
+		out := fmt.Sprintf("%#v", i)
+		return schema.HashString(out)
+	}
+}
+
+// CustomApiServerAdmissionPluginsSchemaSetFunc is a custom schema.SchemaSetFunc for api_server.admission_plugins
+// It orders plugins by alphabetical order to avoid hashset diff
+func CustomApiServerAdmissionPluginsSchemaSetFunc() schema.SchemaSetFunc {
+	return func(i interface{}) int {
+		enabled := i.(map[string]interface{})["enabled"].([]interface{})
+		disabled := i.(map[string]interface{})["disabled"].([]interface{})
+
+		orderSliceByAlphabeticalOrder := func(s []interface{}) {
+			sort.Slice(s, func(i, j int) bool {
+				return s[i].(string) < s[j].(string)
+			})
+		}
+
+		orderSliceByAlphabeticalOrder(enabled)
+		orderSliceByAlphabeticalOrder(disabled)
+
+		i.(map[string]interface{})["enabled"] = enabled
+		i.(map[string]interface{})["disabled"] = disabled
+
+		out := fmt.Sprintf("%#v", i)
+		return schema.HashString(out)
+	}
+}
+
 func resourceCloudProjectKubeImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	givenId := d.Id()
 	splitId := strings.SplitN(givenId, "/", 2)
@@ -232,31 +431,29 @@ func resourceCloudProjectKubeCreate(d *schema.ResourceData, meta interface{}) er
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/kube", serviceName)
-	params := (&CloudProjectKubeCreateOpts{}).FromResource(d)
+	params := new(CloudProjectKubeCreateOpts)
+	params.FromResource(d)
+
 	res := &CloudProjectKubeResponse{}
 
-	log.Printf("[DEBUG] Will create kube: %+v", params)
-	err := config.OVHClient.Post(endpoint, params, res)
-	if err != nil {
+	log.Printf("[DEBUG] Will create kube: %s", params)
+	endpoint := fmt.Sprintf("/cloud/project/%s/kube", serviceName)
+	if err := config.OVHClient.Post(endpoint, params, res); err != nil {
 		return fmt.Errorf("calling Post %s with params %s:\n\t %w", endpoint, params, err)
 	}
 
-	// This is a fix for a weird bug where the kube is not immediately available on API
 	log.Printf("[DEBUG] Waiting for kube %s to be available", res.Id)
 	endpoint = fmt.Sprintf("/cloud/project/%s/kube/%s", serviceName, res.Id)
-	err = helpers.WaitAvailable(config.OVHClient, endpoint, 2*time.Minute)
-	if err != nil {
+	if err := helpers.WaitAvailable(config.OVHClient, endpoint, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return err
 	}
 
 	log.Printf("[DEBUG] Waiting for kube %s to be READY", res.Id)
-	err = waitForCloudProjectKubeReady(config.OVHClient, serviceName, res.Id, []string{"INSTALLING"}, []string{"READY"}, d.Timeout(schema.TimeoutCreate))
-	if err != nil {
+	if err := waitForCloudProjectKubeReady(config.OVHClient, serviceName, res.Id, []string{"INSTALLING"}, []string{"READY"}, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("timeout while waiting kube %s to be READY: %w", res.Id, err)
 	}
-	log.Printf("[DEBUG] kube %s is READY", res.Id)
 
+	log.Printf("[DEBUG] kube %s is READY", res.Id)
 	d.SetId(res.Id)
 
 	return resourceCloudProjectKubeRead(d, meta)
@@ -273,7 +470,8 @@ func resourceCloudProjectKubeRead(d *schema.ResourceData, meta interface{}) erro
 	if err := config.OVHClient.Get(endpoint, res); err != nil {
 		return helpers.CheckDeleted(d, err, endpoint)
 	}
-	for k, v := range res.ToMap() {
+	for k, v := range res.ToMap(d) {
+		log.Printf("[DEBUG] Will set %s to %v", k, v)
 		if k != "id" {
 			d.Set(k, v)
 		} else {
@@ -320,23 +518,40 @@ func resourceCloudProjectKubeUpdate(d *schema.ResourceData, meta interface{}) er
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 
-	if d.HasChange(kubeClusterCustomizationKey) {
-		_, newValueI := d.GetChange(kubeClusterCustomizationKey)
-		customization := loadCustomization(newValueI)
+	// if customization has changed, update it
+	if d.HasChange(kubeClusterCustomizationApiServerKey) || d.HasChange(kubeClusterCustomization) || d.HasChange(kubeClusterCustomizationKubeProxyKey) {
+		customization := new(Customization)
+
+		if d.HasChange(kubeClusterCustomizationKubeProxyKey) {
+			customization.KubeProxy = loadKubeProxyCustomization(d.Get(kubeClusterCustomizationKubeProxyKey))
+		}
+
+		if d.HasChange(kubeClusterCustomizationApiServerKey) {
+			_, apiServerCustomization := d.GetChange(kubeClusterCustomizationApiServerKey)
+			customization.APIServer = loadApiServerCustomization(apiServerCustomization)
+		}
+
+		// deprecated api server customization
+		if d.HasChange(kubeClusterCustomization) {
+			_, oldApiServerCustomization := d.GetChange(kubeClusterCustomization)
+			customization.APIServer = loadDeprecatedApiServerCustomization(oldApiServerCustomization)
+		}
+
+		params := &CloudProjectKubeUpdateCustomizationOpts{
+			APIServer: customization.APIServer,
+			KubeProxy: customization.KubeProxy,
+		}
 
 		endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/customization", serviceName, d.Id())
-		err := config.OVHClient.Put(endpoint, CloudProjectKubeUpdateCustomizationOpts{
-			APIServer: customization.APIServer,
-		}, nil)
-		if err != nil {
+		if err := config.OVHClient.Put(endpoint, params, nil); err != nil {
 			return err
 		}
 
 		log.Printf("[DEBUG] Waiting for kube %s to be READY", d.Id())
-		err = waitForCloudProjectKubeReady(config.OVHClient, serviceName, d.Id(), []string{"REDEPLOYING", "RESETTING"}, []string{"READY"}, d.Timeout(schema.TimeoutUpdate))
-		if err != nil {
+		if err := waitForCloudProjectKubeReady(config.OVHClient, serviceName, d.Id(), []string{"REDEPLOYING", "RESETTING"}, []string{"READY"}, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("timeout while waiting kube %s to be READY: %w", d.Id(), err)
 		}
+
 		log.Printf("[DEBUG] kube %s is READY", d.Id())
 	}
 
