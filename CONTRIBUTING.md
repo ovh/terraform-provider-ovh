@@ -25,3 +25,7 @@ This project accepts contributions. In order to contribute, you should pay atten
 ## Submitting Modifications:
 
 The contributions should be submitted through new GitHub Pull Requests.
+
+## Submiting an Issue:
+
+In addition to contributions, we welcome [bug reports](https://github.com/ovh/terraform-provider-ovh/issues/new?assignees=&labels=&template=Bug_Report.md) and [feature requests](https://github.com/ovh/terraform-provider-ovh/issues/new?assignees=&labels=enhancement&template=Feature_Request.md).
