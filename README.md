@@ -156,3 +156,14 @@ To remove dangling resources, you can run:
 ```sh
 $ make testacc TESTARGS="-sweep"
 ```
+
+# Contributing
+
+Please read the [contributing guide](./CONTRIBUTING.md) to learn about how you can contribute to the OVHcloud Terraform provider ;-).<br/>
+There is no small contribution, don't hesitate!
+
+Our awesome contributors:
+
+<a href="https://github.com/ovh/terraform-provider-ovh/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=ovh/terraform-provider-ovh" />
+</a>
