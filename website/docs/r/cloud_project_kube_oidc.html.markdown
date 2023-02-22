@@ -36,8 +36,8 @@ resource "ovh_cloud_project_kube_oidc" "my-oidc" {
 
 The following arguments are supported:
 
-* `service_name` - (required) The ID of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
-* `kube_id` - The ID of the managed kubernetes cluster.
+* `service_name` - The ID of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used. **Changing this value recreates the resource.**
+* `kube_id` - The ID of the managed kubernetes cluster. **Changing this value recreates the resource.**
 * `client_id` - The OIDC client ID.
 * `issuer_url` - The OIDC issuer url.
 * `oidcUsernameClaim` - JWT claim to use as the username. By default, sub, which is expected to be a unique identifier of the end user. Admins can choose other claims, such as email or name, depending on their provider. However, claims other than email will be prefixed with the issuer URL to prevent naming clashes with other plugins.
