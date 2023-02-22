@@ -1,4 +1,57 @@
-## 0.28.0 (Unreleased)
+## 0.29.0 (Unreleased)
+
+## 0.28.0 (February 22, 2023)
+
+⚠️ Deprecation:
+
+* `r/cloud_project_kube`: TypeSet `customization.apiserver` is now deprecated in favor of `customization_apiserver` ([#381](https://github.com/ovh/terraform-provider-ovh/pull/381))
+* `d/cloud_project_kube`: TypeSet `customization.apiserver` is now deprecated in favor of `customization_apiserver` ([#381](https://github.com/ovh/terraform-provider-ovh/pull/381))
+
+🎉 Features:
+
+* New resource: `ovh_cloud_project_workflow_backup` ([#368](https://github.com/ovh/terraform-provider-ovh/pull/368))
+* New resource: `ovh_dbaas_logs_cluster` ([#364](https://github.com/ovh/terraform-provider-ovh/pull/364))
+* New datasource: `ovh_dbaas_logs_cluster` ([#364](https://github.com/ovh/terraform-provider-ovh/pull/364))
+
+💪 Improvements:
+
+* `r/cloud_project_kube`: Add kube proxy configuration ([#381](https://github.com/ovh/terraform-provider-ovh/pull/381))
+* `r/cloud_project_kube`: Make kubeconfig attributes available as resource output ([#378](https://github.com/ovh/terraform-provider-ovh/pull/378))
+* `r/dbaas_logs_input`: Improve acceptance test ([#366](https://github.com/ovh/terraform-provider-ovh/pull/366))
+* `r/cloud_project_database`: Add Advanced Configuration & Manage avnadmin user ([#360](https://github.com/ovh/terraform-provider-ovh/pull/360))
+* `r/cloud_project_database_m3db_user`: Add Advanced Configuration & Manage avnadmin user ([#360](https://github.com/ovh/terraform-provider-ovh/pull/360))
+* `r/cloud_project_database_mongodb_user`: Add Advanced Configuration & Manage avnadmin user ([#360](https://github.com/ovh/terraform-provider-ovh/pull/360))
+* `r/cloud_project_database_opensearch_user`: Add Advanced Configuration & Manage avnadmin user ([#360](https://github.com/ovh/terraform-provider-ovh/pull/360))
+* `r/cloud_project_database_postgresql_user`: Add Advanced Configuration & Manage avnadmin user ([#360](https://github.com/ovh/terraform-provider-ovh/pull/360))
+* `r/cloud_project_database_redis_user`: Add Advanced Configuration & Manage avnadmin user ([#360](https://github.com/ovh/terraform-provider-ovh/pull/360))
+* `r/cloud_project_database_user`: Add Advanced Configuration & Manage avnadmin user ([#360](https://github.com/ovh/terraform-provider-ovh/pull/360))
+
+* `d/cloud_project_kube`: Add kube proxy configuration ([#381](https://github.com/ovh/terraform-provider-ovh/pull/381))
+* `d/cloud_project_kube`: Make kubeconfig attributes available as resource output ([#378](https://github.com/ovh/terraform-provider-ovh/pull/378))
+* `d/dbaas_logs_input_engine`: Improve acceptance test ([#366](https://github.com/ovh/terraform-provider-ovh/pull/366))
+* `d/cloud_project_database`: Add Advanced Configuration ([#360](https://github.com/ovh/terraform-provider-ovh/pull/360))
+
+📚 Documentation:
+
+* `r/cloud_project_kube`: Update documentation page ([#381](https://github.com/ovh/terraform-provider-ovh/pull/381))
+* `r/cloud_project_kube_iprestrictions`: Update documentation page ([#386](https://github.com/ovh/terraform-provider-ovh/pull/386))
+* `r/cloud_project_kube_nodepool`: Update documentation page ([#386](https://github.com/ovh/terraform-provider-ovh/pull/386))
+* `r/cloud_project_kube_oidc`: Update documentation page ([#386](https://github.com/ovh/terraform-provider-ovh/pull/386))
+* `r/cloud_project_workflow_backup`: Add documentation page ([#368](https://github.com/ovh/terraform-provider-ovh/pull/368))
+* `r/ovh_dbaas_logs_cluster`: Add documentation page ([#364](https://github.com/ovh/terraform-provider-ovh/pull/364))
+* `r/cloud_project_database`: Update documentation page ([#360](https://github.com/ovh/terraform-provider-ovh/pull/360))
+* `r/cloud_project_database_m3db_user`: Update documentation page ([#360](https://github.com/ovh/terraform-provider-ovh/pull/360))
+* `r/cloud_project_database_opensearch_user`: Update documentation page ([#360](https://github.com/ovh/terraform-provider-ovh/pull/360))
+* `r/cloud_project_database_postgresql_user`: Update documentation page ([#360](https://github.com/ovh/terraform-provider-ovh/pull/360))
+* `r/cloud_project_database_redis_user`: Update documentation page ([#360](https://github.com/ovh/terraform-provider-ovh/pull/360))
+* `r/cloud_project_database_user`: Update documentation page ([#360](https://github.com/ovh/terraform-provider-ovh/pull/360))
+
+* `d/cloud_project_kube`: Update documentation page ([#381](https://github.com/ovh/terraform-provider-ovh/pull/381))
+* `d/ovh_dbaas_logs_cluster`: Add documentation page ([#364](https://github.com/ovh/terraform-provider-ovh/pull/364))
+* `d/cloud_project_database`: Update documentation page ([#360](https://github.com/ovh/terraform-provider-ovh/pull/360))
+* `d/cloud_project_database_users`: Update documentation page ([#360](https://github.com/ovh/terraform-provider-ovh/pull/360))
+
+❤️ Thanks for your contributions ❤️
 
 ## 0.27.0 (February 9, 2023)
 
