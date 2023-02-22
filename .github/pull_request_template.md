@@ -24,7 +24,7 @@ Please describe the tests that you ran to verify your changes. Provide instructi
 **Test Configuration**:
 * Terraform version: `terraform version`: Terraform vx.y.z
 * Existing HCL configuration you used: 
-```
+```hcl
 resource "" "" {
  xx = "yy"
  zz = "aa"
