@@ -1,16 +1,18 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/url"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceCloudProjectDatabase() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceCloudProjectDatabaseRead,
+		ReadContext: dataSourceCloudProjectDatabaseRead,
 		Schema: map[string]*schema.Schema{
 			"service_name": {
 				Type:        schema.TypeString,
@@ -179,7 +181,7 @@ func dataSourceCloudProjectDatabase() *schema.Resource {
 	}
 }
 
-func dataSourceCloudProjectDatabaseRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceCloudProjectDatabaseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	engine := d.Get("engine").(string)
@@ -194,22 +196,22 @@ func dataSourceCloudProjectDatabaseRead(d *schema.ResourceData, meta interface{}
 
 	log.Printf("[DEBUG] Will read database %s from project: %s", id, serviceName)
 	if err := config.OVHClient.Get(serviceEndpoint, res); err != nil {
-		return fmt.Errorf("Error calling GET %s:\n\t %q", serviceEndpoint, err)
+		return diag.Errorf("Error calling GET %s:\n\t %q", serviceEndpoint, err)
 	}
 
 	nodesEndpoint := fmt.Sprintf("%s/node", serviceEndpoint)
 	nodeList := &[]string{}
 	if err := config.OVHClient.Get(nodesEndpoint, nodeList); err != nil {
-		return fmt.Errorf("unable to get database %s nodes: %v", res.Id, err)
+		return diag.Errorf("unable to get database %s nodes: %v", res.Id, err)
 	}
 
 	if len(*nodeList) == 0 {
-		return fmt.Errorf("no node found for database %s", res.Id)
+		return diag.Errorf("no node found for database %s", res.Id)
 	}
 	nodeEndpoint := fmt.Sprintf("%s/%s", nodesEndpoint, url.PathEscape((*nodeList)[0]))
 	node := &CloudProjectDatabaseNodes{}
 	if err := config.OVHClient.Get(nodeEndpoint, node); err != nil {
-		return fmt.Errorf("unable to get database %s node %s: %v", res.Id, (*nodeList)[0], err)
+		return diag.Errorf("unable to get database %s node %s: %v", res.Id, (*nodeList)[0], err)
 	}
 
 	res.Region = node.Region
@@ -218,7 +220,7 @@ func dataSourceCloudProjectDatabaseRead(d *schema.ResourceData, meta interface{}
 		advancedConfigEndpoint := fmt.Sprintf("%s/advancedConfiguration", serviceEndpoint)
 		advancedConfigMap := &map[string]string{}
 		if err := config.OVHClient.Get(advancedConfigEndpoint, advancedConfigMap); err != nil {
-			return fmt.Errorf("unable to get database %s advanced configuration: %v", res.Id, err)
+			return diag.Errorf("unable to get database %s advanced configuration: %v", res.Id, err)
 		}
 		res.AdvancedConfiguration = *advancedConfigMap
 	}

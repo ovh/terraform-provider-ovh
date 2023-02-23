@@ -1,17 +1,19 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/url"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
 func dataSourceCloudProjectDatabaseKafkaTopic() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceCloudProjectDatabaseKafkaTopicRead,
+		ReadContext: dataSourceCloudProjectDatabaseKafkaTopicRead,
 		Schema: map[string]*schema.Schema{
 			"service_name": {
 				Type:        schema.TypeString,
@@ -64,7 +66,7 @@ func dataSourceCloudProjectDatabaseKafkaTopic() *schema.Resource {
 	}
 }
 
-func dataSourceCloudProjectDatabaseKafkaTopicRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceCloudProjectDatabaseKafkaTopicRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
@@ -79,7 +81,7 @@ func dataSourceCloudProjectDatabaseKafkaTopicRead(d *schema.ResourceData, meta i
 
 	log.Printf("[DEBUG] Will read topic %s from cluster %s from project %s", id, clusterId, serviceName)
 	if err := config.OVHClient.Get(endpoint, res); err != nil {
-		return helpers.CheckDeleted(d, err, endpoint)
+		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
 	for k, v := range res.ToMap() {

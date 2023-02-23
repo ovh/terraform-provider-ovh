@@ -1,18 +1,20 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/url"
 	"sort"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers/hashcode"
 )
 
 func dataSourceCloudProjectDatabases() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceCloudProjectDatabasesRead,
+		ReadContext: dataSourceCloudProjectDatabasesRead,
 		Schema: map[string]*schema.Schema{
 			"service_name": {
 				Type:        schema.TypeString,
@@ -36,7 +38,7 @@ func dataSourceCloudProjectDatabases() *schema.Resource {
 	}
 }
 
-func dataSourceCloudProjectDatabasesRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceCloudProjectDatabasesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	engine := d.Get("engine").(string)
@@ -49,7 +51,7 @@ func dataSourceCloudProjectDatabasesRead(d *schema.ResourceData, meta interface{
 
 	log.Printf("[DEBUG] Will list databases from project: %s", serviceName)
 	if err := config.OVHClient.Get(serviceEndpoint, &res); err != nil {
-		return fmt.Errorf("Error calling GET %s:\n\t %q", serviceEndpoint, err)
+		return diag.Errorf("Error calling GET %s:\n\t %q", serviceEndpoint, err)
 	}
 
 	// sort.Strings sorts in place, returns nothing

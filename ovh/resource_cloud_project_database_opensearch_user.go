@@ -1,21 +1,23 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/url"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
 func resourceCloudProjectDatabaseOpensearchUser() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCloudProjectDatabaseOpensearchUserCreate,
-		Read:   resourceCloudProjectDatabaseOpensearchUserRead,
-		Delete: resourceCloudProjectDatabaseOpensearchUserDelete,
-		Update: resourceCloudProjectDatabaseOpensearchUserUpdate,
+		CreateContext: resourceCloudProjectDatabaseOpensearchUserCreate,
+		ReadContext:   resourceCloudProjectDatabaseOpensearchUserRead,
+		DeleteContext: resourceCloudProjectDatabaseOpensearchUserDelete,
+		UpdateContext: resourceCloudProjectDatabaseOpensearchUserUpdate,
 
 		Importer: &schema.ResourceImporter{
 			State: resourceCloudProjectDatabaseOpensearchUserImportState,
@@ -96,14 +98,14 @@ func resourceCloudProjectDatabaseOpensearchUserImportState(d *schema.ResourceDat
 	return importCloudProjectDatabaseUser(d, meta)
 }
 
-func resourceCloudProjectDatabaseOpensearchUserCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseOpensearchUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	f := func() interface{} {
 		return (&CloudProjectDatabaseOpensearchUserCreateOpts{}).FromResource(d)
 	}
-	return postCloudProjectDatabaseUser(d, meta, "opensearch", dataSourceCloudProjectDatabaseOpensearchUserRead, resourceCloudProjectDatabaseOpensearchUserRead, resourceCloudProjectDatabaseOpensearchUserUpdate, f)
+	return postCloudProjectDatabaseUser(ctx, d, meta, "opensearch", dataSourceCloudProjectDatabaseOpensearchUserRead, resourceCloudProjectDatabaseOpensearchUserRead, resourceCloudProjectDatabaseOpensearchUserUpdate, f)
 }
 
-func resourceCloudProjectDatabaseOpensearchUserRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseOpensearchUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
@@ -118,7 +120,7 @@ func resourceCloudProjectDatabaseOpensearchUserRead(d *schema.ResourceData, meta
 
 	log.Printf("[DEBUG] Will read user %s from cluster %s from project %s", id, clusterId, serviceName)
 	if err := config.OVHClient.Get(endpoint, res); err != nil {
-		return helpers.CheckDeleted(d, err, endpoint)
+		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
 	for k, v := range res.ToMap() {
@@ -133,13 +135,13 @@ func resourceCloudProjectDatabaseOpensearchUserRead(d *schema.ResourceData, meta
 	return nil
 }
 
-func resourceCloudProjectDatabaseOpensearchUserUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseOpensearchUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	f := func() interface{} {
 		return (&CloudProjectDatabaseOpensearchUserUpdateOpts{}).FromResource(d)
 	}
-	return updateCloudProjectDatabaseUser(d, meta, "opensearch", resourceCloudProjectDatabaseOpensearchUserRead, f)
+	return updateCloudProjectDatabaseUser(ctx, d, meta, "opensearch", resourceCloudProjectDatabaseOpensearchUserRead, f)
 }
 
-func resourceCloudProjectDatabaseOpensearchUserDelete(d *schema.ResourceData, meta interface{}) error {
-	return deleteCloudProjectDatabaseUser(d, meta, "opensearch")
+func resourceCloudProjectDatabaseOpensearchUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return deleteCloudProjectDatabaseUser(ctx, d, meta, "opensearch")
 }

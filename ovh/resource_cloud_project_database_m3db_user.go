@@ -1,21 +1,23 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/url"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
 func resourceCloudProjectDatabaseM3dbUser() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCloudProjectDatabaseM3dbUserCreate,
-		Read:   resourceCloudProjectDatabaseM3dbUserRead,
-		Delete: resourceCloudProjectDatabaseM3dbUserDelete,
-		Update: resourceCloudProjectDatabaseM3dbUserUpdate,
+		CreateContext: resourceCloudProjectDatabaseM3dbUserCreate,
+		ReadContext:   resourceCloudProjectDatabaseM3dbUserRead,
+		DeleteContext: resourceCloudProjectDatabaseM3dbUserDelete,
+		UpdateContext: resourceCloudProjectDatabaseM3dbUserUpdate,
 
 		Importer: &schema.ResourceImporter{
 			State: resourceCloudProjectDatabaseM3dbUserImportState,
@@ -82,14 +84,14 @@ func resourceCloudProjectDatabaseM3dbUserImportState(d *schema.ResourceData, met
 	return importCloudProjectDatabaseUser(d, meta)
 }
 
-func resourceCloudProjectDatabaseM3dbUserCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseM3dbUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	f := func() interface{} {
 		return (&CloudProjectDatabaseM3dbUserCreateOpts{}).FromResource(d)
 	}
-	return postCloudProjectDatabaseUser(d, meta, "m3db", dataSourceCloudProjectDatabaseM3dbUserRead, resourceCloudProjectDatabaseM3dbUserRead, resourceCloudProjectDatabaseM3dbUserUpdate, f)
+	return postCloudProjectDatabaseUser(ctx, d, meta, "m3db", dataSourceCloudProjectDatabaseM3dbUserRead, resourceCloudProjectDatabaseM3dbUserRead, resourceCloudProjectDatabaseM3dbUserUpdate, f)
 }
 
-func resourceCloudProjectDatabaseM3dbUserRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseM3dbUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
@@ -104,7 +106,7 @@ func resourceCloudProjectDatabaseM3dbUserRead(d *schema.ResourceData, meta inter
 
 	log.Printf("[DEBUG] Will read user %s from cluster %s from project %s", id, clusterId, serviceName)
 	if err := config.OVHClient.Get(endpoint, res); err != nil {
-		return helpers.CheckDeleted(d, err, endpoint)
+		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
 	for k, v := range res.ToMap() {
@@ -119,13 +121,13 @@ func resourceCloudProjectDatabaseM3dbUserRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceCloudProjectDatabaseM3dbUserUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseM3dbUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	f := func() interface{} {
 		return (&CloudProjectDatabaseM3dbUserUpdateOpts{}).FromResource(d)
 	}
-	return updateCloudProjectDatabaseUser(d, meta, "m3db", resourceCloudProjectDatabaseM3dbUserRead, f)
+	return updateCloudProjectDatabaseUser(ctx, d, meta, "m3db", resourceCloudProjectDatabaseM3dbUserRead, f)
 }
 
-func resourceCloudProjectDatabaseM3dbUserDelete(d *schema.ResourceData, meta interface{}) error {
-	return deleteCloudProjectDatabaseUser(d, meta, "m3db")
+func resourceCloudProjectDatabaseM3dbUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return deleteCloudProjectDatabaseUser(ctx, d, meta, "m3db")
 }
