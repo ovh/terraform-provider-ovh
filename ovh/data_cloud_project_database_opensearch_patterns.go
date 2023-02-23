@@ -1,11 +1,13 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/url"
 	"sort"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers/hashcode"
@@ -13,7 +15,7 @@ import (
 
 func dataSourceCloudProjectDatabaseOpensearchPatterns() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceCloudProjectDatabaseOpensearchPatternsRead,
+		ReadContext: dataSourceCloudProjectDatabaseOpensearchPatternsRead,
 		Schema: map[string]*schema.Schema{
 			"service_name": {
 				Type:        schema.TypeString,
@@ -37,7 +39,7 @@ func dataSourceCloudProjectDatabaseOpensearchPatterns() *schema.Resource {
 	}
 }
 
-func dataSourceCloudProjectDatabaseOpensearchPatternsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceCloudProjectDatabaseOpensearchPatternsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
@@ -50,7 +52,7 @@ func dataSourceCloudProjectDatabaseOpensearchPatternsRead(d *schema.ResourceData
 
 	log.Printf("[DEBUG] Will read patterns from cluster %s from project %s", clusterId, serviceName)
 	if err := config.OVHClient.Get(endpoint, &res); err != nil {
-		return helpers.CheckDeleted(d, err, endpoint)
+		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
 	// sort.Strings sorts in place, returns nothing

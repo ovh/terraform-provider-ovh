@@ -1,21 +1,23 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/url"
 	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
 func resourceCloudProjectDatabaseKafkaTopic() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCloudProjectDatabaseKafkaTopicCreate,
-		Read:   resourceCloudProjectDatabaseKafkaTopicRead,
-		Delete: resourceCloudProjectDatabaseKafkaTopicDelete,
+		CreateContext: resourceCloudProjectDatabaseKafkaTopicCreate,
+		ReadContext:   resourceCloudProjectDatabaseKafkaTopicRead,
+		DeleteContext: resourceCloudProjectDatabaseKafkaTopicDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: resourceCloudProjectDatabaseKafkaTopicImportState,
@@ -109,7 +111,7 @@ func resourceCloudProjectDatabaseKafkaTopicImportState(d *schema.ResourceData, m
 	return results, nil
 }
 
-func resourceCloudProjectDatabaseKafkaTopicCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseKafkaTopicCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
@@ -124,26 +126,22 @@ func resourceCloudProjectDatabaseKafkaTopicCreate(d *schema.ResourceData, meta i
 	log.Printf("[DEBUG] Will create topic: %+v for cluster %s from project %s", params, clusterId, serviceName)
 	err := config.OVHClient.Post(endpoint, params, res)
 	if err != nil {
-		return err
+		return diag.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
 	}
 
 	log.Printf("[DEBUG] Waiting for topic %s to be READY", res.Id)
-	err = waitForCloudProjectDatabaseKafkaTopicReady(config.OVHClient, serviceName, clusterId, res.Id, d.Timeout(schema.TimeoutCreate))
+	err = waitForCloudProjectDatabaseKafkaTopicReady(ctx, config.OVHClient, serviceName, clusterId, res.Id, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
-		return fmt.Errorf("timeout while waiting topic %s to be READY: %w", res.Id, err)
+		return diag.Errorf("timeout while waiting topic %s to be READY: %s", res.Id, err.Error())
 	}
 	log.Printf("[DEBUG] topic %s is READY", res.Id)
 
 	d.SetId(res.Id)
 
-	err = resourceCloudProjectDatabaseKafkaTopicRead(d, meta)
-	if err != nil {
-		return err
-	}
-	return nil
+	return resourceCloudProjectDatabaseKafkaTopicRead(ctx, d, meta)
 }
 
-func resourceCloudProjectDatabaseKafkaTopicRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseKafkaTopicRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
@@ -158,22 +156,27 @@ func resourceCloudProjectDatabaseKafkaTopicRead(d *schema.ResourceData, meta int
 
 	log.Printf("[DEBUG] Will read topic %s from cluster %s from project %s", id, clusterId, serviceName)
 	if err := config.OVHClient.Get(endpoint, res); err != nil {
-		return helpers.CheckDeleted(d, err, endpoint)
+		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
+	diags := make(diag.Diagnostics, 0)
+	warnAttr := []string{"min_insync_replicas", "partitions", "replication", "retention_bytes", "retention_hours"}
 	for k, v := range res.ToMap() {
 		if k != "id" {
+			warningFactory(warnAttr, d, k, v, &diags)
 			d.Set(k, v)
 		} else {
 			d.SetId(fmt.Sprint(v))
 		}
 	}
 
-	log.Printf("[DEBUG] Read topic %+v", res)
+	if len(diags) > 0 {
+		return diags
+	}
 	return nil
 }
 
-func resourceCloudProjectDatabaseKafkaTopicDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseKafkaTopicDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
@@ -188,17 +191,13 @@ func resourceCloudProjectDatabaseKafkaTopicDelete(d *schema.ResourceData, meta i
 	log.Printf("[DEBUG] Will delete topic  %s from cluster %s from project %s", id, clusterId, serviceName)
 	err := config.OVHClient.Delete(endpoint, nil)
 	if err != nil {
-		err = helpers.CheckDeleted(d, err, endpoint)
-		if err != nil {
-			return err
-		}
-		return nil
+		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
 	log.Printf("[DEBUG] Waiting for topic %s to be DELETED", id)
-	err = waitForCloudProjectDatabaseKafkaTopicDeleted(config.OVHClient, serviceName, clusterId, id, d.Timeout(schema.TimeoutDelete))
+	err = waitForCloudProjectDatabaseKafkaTopicDeleted(ctx, config.OVHClient, serviceName, clusterId, id, d.Timeout(schema.TimeoutDelete))
 	if err != nil {
-		return fmt.Errorf("timeout while waiting topic %s to be DELETED: %w", id, err)
+		return diag.Errorf("timeout while waiting topic %s to be DELETED: %s", id, err.Error())
 	}
 	log.Printf("[DEBUG] topic %s is DELETED", id)
 

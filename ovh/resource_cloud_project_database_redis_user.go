@@ -1,21 +1,23 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/url"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
 func resourceCloudProjectDatabaseRedisUser() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCloudProjectDatabaseRedisUserCreate,
-		Read:   resourceCloudProjectDatabaseRedisUserRead,
-		Delete: resourceCloudProjectDatabaseRedisUserDelete,
-		Update: resourceCloudProjectDatabaseRedisUserUpdate,
+		CreateContext: resourceCloudProjectDatabaseRedisUserCreate,
+		ReadContext:   resourceCloudProjectDatabaseRedisUserRead,
+		DeleteContext: resourceCloudProjectDatabaseRedisUserDelete,
+		UpdateContext: resourceCloudProjectDatabaseRedisUserUpdate,
 
 		Importer: &schema.ResourceImporter{
 			State: resourceCloudProjectDatabaseRedisUserImportState,
@@ -105,14 +107,14 @@ func resourceCloudProjectDatabaseRedisUserImportState(d *schema.ResourceData, me
 	return importCloudProjectDatabaseUser(d, meta)
 }
 
-func resourceCloudProjectDatabaseRedisUserCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseRedisUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	f := func() interface{} {
 		return (&CloudProjectDatabaseRedisUserCreateOpts{}).FromResource(d)
 	}
-	return postCloudProjectDatabaseUser(d, meta, "redis", dataSourceCloudProjectDatabaseRedisUserRead, resourceCloudProjectDatabaseRedisUserRead, resourceCloudProjectDatabaseRedisUserUpdate, f)
+	return postCloudProjectDatabaseUser(ctx, d, meta, "redis", dataSourceCloudProjectDatabaseRedisUserRead, resourceCloudProjectDatabaseRedisUserRead, resourceCloudProjectDatabaseRedisUserUpdate, f)
 }
 
-func resourceCloudProjectDatabaseRedisUserRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseRedisUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
@@ -127,28 +129,33 @@ func resourceCloudProjectDatabaseRedisUserRead(d *schema.ResourceData, meta inte
 
 	log.Printf("[DEBUG] Will read user %s from cluster %s from project %s", id, clusterId, serviceName)
 	if err := config.OVHClient.Get(endpoint, res); err != nil {
-		return helpers.CheckDeleted(d, err, endpoint)
+		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
+	diags := make(diag.Diagnostics, 0)
+	warnAttr := []string{"channels"}
 	for k, v := range res.ToMap() {
 		if k != "id" {
+			warningFactory(warnAttr, d, k, v, &diags)
 			d.Set(k, v)
 		} else {
 			d.SetId(fmt.Sprint(v))
 		}
 	}
 
-	log.Printf("[DEBUG] Read user %+v", res)
+	if len(diags) > 0 {
+		return diags
+	}
 	return nil
 }
 
-func resourceCloudProjectDatabaseRedisUserUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseRedisUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	f := func() interface{} {
 		return (&CloudProjectDatabaseRedisUserUpdateOpts{}).FromResource(d)
 	}
-	return updateCloudProjectDatabaseUser(d, meta, "redis", resourceCloudProjectDatabaseRedisUserRead, f)
+	return updateCloudProjectDatabaseUser(ctx, d, meta, "redis", resourceCloudProjectDatabaseRedisUserRead, f)
 }
 
-func resourceCloudProjectDatabaseRedisUserDelete(d *schema.ResourceData, meta interface{}) error {
-	return deleteCloudProjectDatabaseUser(d, meta, "redis")
+func resourceCloudProjectDatabaseRedisUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return deleteCloudProjectDatabaseUser(ctx, d, meta, "redis")
 }

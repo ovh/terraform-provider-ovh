@@ -1,17 +1,19 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/url"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
-func dataSourceCloudProjectDatabaseKafkaAcl() *schema.Resource {
+func dataSourceCloudProjectDatabaseKafkaACL() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceCloudProjectDatabaseKafkaAclRead,
+		ReadContext: dataSourceCloudProjectDatabaseKafkaACLRead,
 		Schema: map[string]*schema.Schema{
 			"service_name": {
 				Type:        schema.TypeString,
@@ -49,22 +51,22 @@ func dataSourceCloudProjectDatabaseKafkaAcl() *schema.Resource {
 	}
 }
 
-func dataSourceCloudProjectDatabaseKafkaAclRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceCloudProjectDatabaseKafkaACLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
-	clusterId := d.Get("cluster_id").(string)
+	clusterID := d.Get("cluster_id").(string)
 	id := d.Get("id").(string)
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/database/kafka/%s/acl/%s",
 		url.PathEscape(serviceName),
-		url.PathEscape(clusterId),
+		url.PathEscape(clusterID),
 		url.PathEscape(id),
 	)
 	res := &CloudProjectDatabaseKafkaAclResponse{}
 
-	log.Printf("[DEBUG] Will read acl %s from cluster %s from project %s", id, clusterId, serviceName)
+	log.Printf("[DEBUG] Will read acl %s from cluster %s from project %s", id, clusterID, serviceName)
 	if err := config.OVHClient.Get(endpoint, res); err != nil {
-		return helpers.CheckDeleted(d, err, endpoint)
+		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
 	for k, v := range res.ToMap() {
