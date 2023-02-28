@@ -43,7 +43,6 @@ data "ovh_order_cart_product_options_plan" "bhs" {
 resource "ovh_iploadbalancing" "iplb-lb1" {
   ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
   display_name   = "my ip loadbalancing"
-  payment_mean   = "ovh-account"
 
   plan {
     duration     = data.ovh_order_cart_product_plan.iplb.selected_price.0.duration
@@ -65,7 +64,6 @@ The following arguments are supported:
 
 * `display_name` - Set the name displayed in ManagerV6 for your iplb (max 50 chars)
 * `ovh_subsidiary` - (Required) OVHcloud Subsidiary
-* `payment_mean` - (Required) OVHcloud payment mode (One of "default-payment-mean", "fidelity", "ovh-account")
 * `plan` - (Required) Product Plan to order
   * `duration` - (Required) duration
   * `plan_code` - (Required) Plan code

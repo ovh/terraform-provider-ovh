@@ -37,7 +37,6 @@ data "ovh_order_cart_product_options_plan" "bhs" {
 resource "ovh_iploadbalancing" "iplb-lb1" {
  ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
  display_name   = "%s"
- payment_mean   = "ovh-account"
 
  plan {
    duration     = data.ovh_order_cart_product_plan.iplb.selected_price.0.duration
@@ -57,7 +56,6 @@ const testAccIpLoadbalancingInternal = `
 resource "ovh_iploadbalancing" "iplb-internal" {
  ovh_subsidiary = "fr"
  display_name   = "%s"
- payment_mean   = "fidelity"
 
  plan {
    catalog_name = "iplb_private_beta"

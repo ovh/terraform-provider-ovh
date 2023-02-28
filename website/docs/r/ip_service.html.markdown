@@ -38,7 +38,6 @@ data "ovh_order_cart_product_plan" "ipblock" {
 
 resource "ovh_ip_service" "ipblock" {
   ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
-  payment_mean   = "ovh-account"
   description    = "my ip block"
 
  plan {
@@ -60,7 +59,6 @@ The following arguments are supported:
 
 * `description` - Custom description on your ip.
 * `ovh_subsidiary` - (Required) OVHcloud Subsidiary
-* `payment_mean` - (Required) OVHcloud payment mode (One of "default-payment-mean", "fidelity", "ovh-account")
 * `plan` - (Required) Product Plan to order
   * `duration` - (Required) duration
   * `plan_code` - (Required) Plan code
