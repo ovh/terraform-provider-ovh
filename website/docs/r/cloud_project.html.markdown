@@ -32,7 +32,6 @@ data "ovh_order_cart_product_plan" "cloud" {
 resource "ovh_cloud_project" "my_cloud_project" {
   ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
   description    = "my cloud project"
-  payment_mean   = "fidelity"
 
   plan {
     duration     = data.ovh_order_cart_product_plan.cloud.selected_price.0.duration
@@ -48,7 +47,6 @@ The following arguments are supported:
 
 * `description` - A description associated with the user.
 * `ovh_subsidiary` - (Required) OVHcloud Subsidiary
-* `payment_mean` - (Required) OVHcloud payment mode (One of "default-payment-mean", "fidelity", "ovh-account")
 * `plan` - (Required) Product Plan to order
   * `duration` - (Required) duration
   * `plan_code` - (Required) Plan code

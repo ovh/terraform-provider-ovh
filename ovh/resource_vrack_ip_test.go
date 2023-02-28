@@ -30,7 +30,6 @@ resource "ovh_vrack" "vrack" {
  description    = data.ovh_order_cart.mycart.description
  name           = data.ovh_order_cart.mycart.description
  ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
- payment_mean   = "fidelity"
 
  plan {
    duration     = data.ovh_order_cart_product_plan.vrack.selected_price.0.duration
@@ -48,7 +47,6 @@ data "ovh_order_cart_product_plan" "ipblock" {
 
 resource "ovh_ip_service" "ipblock" {
   ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
-  payment_mean   = "ovh-account"
   description    = data.ovh_order_cart.mycart.description
 
   plan {

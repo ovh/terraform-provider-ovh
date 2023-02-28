@@ -30,7 +30,6 @@ data "ovh_order_cart_product_plan" "zone" {
 
 resource "ovh_domain_zone" "zone" {
   ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
-  payment_mean   = "fidelity"
 
   plan {
     duration     = data.ovh_order_cart_product_plan.zone.selected_price.0.duration
@@ -55,7 +54,6 @@ resource "ovh_domain_zone" "zone" {
 The following arguments are supported:
 
 * `ovh_subsidiary` - (Required) OVHcloud Subsidiary
-* `payment_mean` - (Required) OVHcloud payment mode (One of "default-payment-mean", "fidelity", "ovh-account")
 * `plan` - (Required) Product Plan to order
   * `duration` - (Required) duration
   * `plan_code` - (Required) Plan code
