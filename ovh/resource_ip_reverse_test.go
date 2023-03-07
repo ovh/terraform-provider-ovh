@@ -122,7 +122,7 @@ func testAccIpReverseImportId(resourceName string) resource.ImportStateIdFunc {
 		}
 
 		return fmt.Sprintf(
-			"%s:%s",
+			"%s|%s",
 			subnet.Primary.Attributes["ip"],
 			subnet.Primary.Attributes["ip_reverse"],
 		), nil
