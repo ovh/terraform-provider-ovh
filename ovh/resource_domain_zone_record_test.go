@@ -6,12 +6,14 @@ import (
 	"strconv"
 	"testing"
 
+	"log"
+	"regexp"
+	"strings"
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"log"
-	"strings"
-	"time"
 )
 
 func init() {
@@ -103,6 +105,11 @@ func TestAccDomainZoneRecord_Basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckOvhDomainZoneRecordDestroy,
 		Steps: []resource.TestStep{
+			// provider shall send an error if the TTL is less than 60
+			{
+				Config:      testAccCheckOvhDomainZoneRecordConfig_CNAME(zone, subdomain, "google.com.", 10),
+				ExpectError: regexp.MustCompile(`must be above`),
+			},
 			{
 				Config: testAccCheckOvhDomainZoneRecordConfig_A(zone, subdomain, "192.168.0.10", 3600),
 				Check: resource.ComposeTestCheckFunc(
