@@ -35,6 +35,9 @@ func testSweepHostingPrivateDatabaseUser(region string) error {
 	ds := HostingPrivateDatabaseUser{}
 	serviceName := os.Getenv("OVH_HOSTING_PRIVATEDATABASE_SERVICE_TEST")
 	userName := os.Getenv("OVH_HOSTING_PRIVATEDATABASE_NAME_TEST")
+	if serviceName == "" || userName == "" {
+		return nil
+	}
 	endpoint := fmt.Sprintf("/hosting/privateDatabase/%s/user/%s", url.PathEscape(serviceName), url.PathEscape(userName))
 
 	if err := client.Get(endpoint, &ds); err != nil {
