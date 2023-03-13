@@ -6,6 +6,7 @@ import (
 	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
 func dataSourceCloudProjectKube() *schema.Resource {
@@ -29,20 +30,70 @@ func dataSourceCloudProjectKube() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			kubeClusterCustomizationKey: {
+			kubeClusterProxyModeKey: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: helpers.ValidateEnum([]string{"iptables", "ipvs"}),
+			},
+			kubeClusterCustomizationApiServerKey: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Optional: true,
+				// Required: true,
 				ForceNew: false,
-				MaxItems: 1,
+				// MaxItems: 1,
+				Set: CustomSchemaSetFunc(),
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"apiserver": {
+						"admissionplugins": {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Optional: true,
+							// Required: true,
 							ForceNew: false,
-							MaxItems: 1,
+							// MaxItems: 1,
+							Set: CustomSchemaSetFunc(),
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"enabled": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Optional: true,
+										// Required: true,
+										ForceNew: false,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									"disabled": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Optional: true,
+										// Required: true,
+										ForceNew: false,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			kubeClusterCustomization: {
+				Type:       schema.TypeSet,
+				Computed:   true,
+				Optional:   true,
+				ForceNew:   false,
+				Set:        CustomSchemaSetFunc(),
+				Deprecated: fmt.Sprintf("Use %s instead", kubeClusterCustomizationApiServerKey),
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"apiserver": {
+							Type:       schema.TypeSet,
+							Computed:   true,
+							Optional:   true,
+							ForceNew:   false,
+							Set:        CustomSchemaSetFunc(),
+							Deprecated: fmt.Sprintf("Use %s instead", kubeClusterCustomizationApiServerKey),
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"admissionplugins": {
@@ -50,7 +101,7 @@ func dataSourceCloudProjectKube() *schema.Resource {
 										Computed: true,
 										Optional: true,
 										ForceNew: false,
-										MaxItems: 1,
+										Set:      CustomSchemaSetFunc(),
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"enabled": {
@@ -76,6 +127,98 @@ func dataSourceCloudProjectKube() *schema.Resource {
 					},
 				},
 			},
+			kubeClusterCustomizationKubeProxyKey: {
+				Type:     schema.TypeSet,
+				Computed: false,
+				Optional: true,
+				ForceNew: false,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"iptables": {
+							Type:     schema.TypeSet,
+							Computed: false,
+							Optional: true,
+							ForceNew: false,
+							MaxItems: 1,
+							Set:      CustomIPVSIPTablesSchemaSetFunc(),
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"min_sync_period": {
+										Type:         schema.TypeString,
+										Computed:     false,
+										Optional:     true,
+										ForceNew:     false,
+										ValidateFunc: helpers.ValidateRFC3339Duration,
+									},
+									"sync_period": {
+										Type:         schema.TypeString,
+										Computed:     false,
+										Optional:     true,
+										ForceNew:     false,
+										ValidateFunc: helpers.ValidateRFC3339Duration,
+									},
+								},
+							},
+						},
+						"ipvs": {
+							Type:     schema.TypeSet,
+							Computed: false,
+							Optional: true,
+							ForceNew: false,
+							MaxItems: 1,
+							Set:      CustomIPVSIPTablesSchemaSetFunc(),
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"min_sync_period": {
+										Type:         schema.TypeString,
+										Computed:     false,
+										Optional:     true,
+										ForceNew:     false,
+										ValidateFunc: helpers.ValidateRFC3339Duration,
+									},
+									"sync_period": {
+										Type:         schema.TypeString,
+										Computed:     false,
+										Optional:     true,
+										ForceNew:     false,
+										ValidateFunc: helpers.ValidateRFC3339Duration,
+									},
+									"scheduler": {
+										Type:         schema.TypeString,
+										Computed:     false,
+										Optional:     true,
+										ForceNew:     false,
+										ValidateFunc: helpers.ValidateEnum([]string{"rr", "lc", "dh", "sh", "sed", "nq"}),
+									},
+									"tcp_fin_timeout": {
+										Type:         schema.TypeString,
+										Computed:     false,
+										Optional:     true,
+										ForceNew:     false,
+										ValidateFunc: helpers.ValidateRFC3339Duration,
+									},
+									"tcp_timeout": {
+										Type:         schema.TypeString,
+										Computed:     false,
+										Optional:     true,
+										ForceNew:     false,
+										ValidateFunc: helpers.ValidateRFC3339Duration,
+									},
+									"udp_timeout": {
+										Type:         schema.TypeString,
+										Computed:     false,
+										Optional:     true,
+										ForceNew:     false,
+										ValidateFunc: helpers.ValidateRFC3339Duration,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+
 			"private_network_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -132,12 +275,11 @@ func dataSourceCloudProjectKubeRead(d *schema.ResourceData, meta interface{}) er
 		url.PathEscape(serviceName),
 		url.PathEscape(kubeId),
 	)
-	err := config.OVHClient.Get(endpoint, res)
-	if err != nil {
+	if err := config.OVHClient.Get(endpoint, res); err != nil {
 		return fmt.Errorf("Error calling %s:\n\t %q", endpoint, err)
 	}
 
-	for k, v := range res.ToMap() {
+	for k, v := range res.ToMap(d) {
 		if k != "id" {
 			d.Set(k, v)
 		} else {

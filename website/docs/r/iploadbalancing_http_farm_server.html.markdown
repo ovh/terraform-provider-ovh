@@ -31,7 +31,7 @@ resource "ovh_iploadbalancing_http_farm_server" "backend" {
   address                = "4.5.6.7"
   status                 = "active"
   port                   = 80
-  proxy_protocol_version = v2
+  proxy_protocol_version = "v2"
   weight                 = 2
   probe                  = true
   ssl                    = false
@@ -50,6 +50,7 @@ The following arguments are supported:
 * `status` - backend status - `active` or `inactive`
 * `port` - Port that backend will respond on
 * `proxy_protocol_version` - version of the PROXY protocol used to pass origin connection information from loadbalancer to receiving service (`v1`, `v2`, `v2-ssl`, `v2-ssl-cn`)
+* `on_marked_down` - enable action when backend marked down. (`shutdown-sessions`)
 * `weight` - used in loadbalancing algorithm
 * `probe` - defines if backend will be probed to determine health and keep as active in farm if healthy
 * `ssl` - is the connection ciphered with SSL (TLS)
@@ -66,6 +67,7 @@ The following attributes are exported:
 * `status` - See Argument Reference above.
 * `port` - See Argument Reference above.
 * `proxy_protocol_version` - See Argument Reference above.
+* `on_marked_down` - See Argument Reference above.
 * `weight` - See Argument Reference above.
 * `probe` - See Argument Reference above.
 * `ssl` - See Argument Reference above.

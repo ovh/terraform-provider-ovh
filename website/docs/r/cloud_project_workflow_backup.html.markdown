@@ -14,14 +14,14 @@ Note that upon deletion, the workflow is deleted but any backups that have been 
 ## Example Usage
 
 ```hcl
-resource "ovh_cloud_project_workflow_backup" "my_backup"{
-	service_name		= "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-	region_name				= "GRA11"
-	cron				= "50 4 * * *"
-	instance_id			= "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx"
-	max_execution_count	= "0"
-	name				= "Backup workflow for instance"
-	rotation			= "7"
+resource "ovh_cloud_project_workflow_backup" "my_backup" {
+  service_name        = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  region_name         = "GRA11"
+  cron                = "50 4 * * *"
+  instance_id         = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxx"
+  max_execution_count = "0"
+  name                = "Backup workflow for instance"
+  rotation            = "7"
 }
 ```
 
@@ -33,12 +33,12 @@ The following arguments are supported:
 
 * `region_name` - (Mandatory) The name of the openstack region. 
 
-* `cron` - (Mandatory) the cron periodicity at which the backup workflow is scheduled
+* `cron` - (Mandatory) The cron periodicity at which the backup workflow is scheduled
 
 * `instanceId` the id of the instance to back up
 
-* `max_execution_count` - (Optional) the number of time the worflow is run. Default value is `0` which means that the workflow will be scheduled continously until its deletion
+* `max_execution_count` - (Optional) The number of times the worflow is run. Default value is `0` which means that the workflow will be scheduled continously until its deletion
 
-* `name` - (Mandatory) the worflow name that is used in the UI 
-* `rotation`- (Mandatory) the number of backup that are retained. 
-* `backup_name` - (Optional) the name of the backup files that are created. If empty, the `name` attribute is used. 
+* `name` - (Mandatory) The worflow name that is used in the UI 
+* `rotation`- (Mandatory) The number of backup that are retained. 
+* `backup_name` - (Optional) The name of the backup files that are created. If empty, the `name` attribute is used. 

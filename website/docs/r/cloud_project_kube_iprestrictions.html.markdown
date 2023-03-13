@@ -24,16 +24,30 @@ resource "ovh_cloud_project_kube_iprestrictions" "vrack_only" {
 
 The following arguments are supported:
 
-* `service_name` - (Optional) The id of the public cloud project. If omitted,
-    the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
-
-* `kube_id` - The id of the managed Kubernetes cluster.
-
+* `service_name` - The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used. **Changing this value recreates the resource.**
+* `kube_id` - The id of the managed Kubernetes cluster. **Changing this value recreates the resource.**
 * `ips` - List of CIDR authorized to interact with the managed Kubernetes cluster.
 
 ## Attributes Reference
 
 No additional attributes than the ones provided are exported.
+
+## Timeouts
+
+```hcl
+resource "ovh_cloud_project_kube_iprestrictions" "vrack_only" {
+  # ...
+
+  timeouts {
+    create = "1h"
+    update = "45m"
+    delete = "50s"
+  }
+}
+```
+* `create` - (Default 10m)
+* `update` - (Default 5m)
+* `delete` - (Default 5m)
 
 ## Import
 

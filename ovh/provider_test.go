@@ -161,11 +161,17 @@ func testAccPreCheckHostingPrivateDatabaseWhitelist(t *testing.T) {
 	checkEnvOrSkip(t, "OVH_HOSTING_PRIVATEDATABASE_WHITELIST_SFTP_TEST")
 }
 
-// Checks that the environment variables needed for the /cloud acceptance tests
+// Checks that the environment variables needed for the /dbaas acceptance tests
 // are set.
 func testAccPreCheckDbaasLogs(t *testing.T) {
 	testAccPreCheckCredentials(t)
 	checkEnvOrSkip(t, "OVH_DBAAS_LOGS_SERVICE_TEST")
+}
+
+func testAccPreCheckDbaasLogsInput(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_DBAAS_LOGS_SERVICE_TEST")
+	checkEnvOrSkip(t, "OVH_DBAAS_LOGS_LOGSTASH_VERSION_TEST")
 }
 
 // Checks that the environment variables needed for the /cloud acceptance tests
