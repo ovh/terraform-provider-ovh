@@ -80,7 +80,7 @@ The following arguments are supported:
 
 * `keys` - (Optional) Keys of the user.
 
-* `name` - (Required, Forces new resource) Name of the user.
+* `name` - (Required, Forces new resource) Name of the user. A user named "avnadmin" is map with already created admin user and reset his password instead of create a new user.
 
 * `password_reset` - (Optional) Arbitrary string to change to trigger a password update. Use the `terraform refresh` command after executing `terraform apply` to update the output with the new password.
 

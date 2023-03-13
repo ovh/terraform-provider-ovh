@@ -512,6 +512,7 @@ type IpLoadbalancingHttpFrontend struct {
 	DefaultSslId     *int     `json:"defaultSslId,omitempty"`
 	Disabled         bool     `json:"disabled"`
 	Ssl              bool     `json:"ssl"`
+	Hsts             bool     `json:"hsts"`
 	RedirectLocation string   `json:"redirectLocation,omitempty"`
 	DisplayName      string   `json:"displayName,omitempty"`
 	HttpHeader       []string `json:"httpHeader"`
@@ -526,6 +527,7 @@ type IpLoadbalancingFarmServerCreateOpts struct {
 	Port                 *int    `json:"port,omitempty"`
 	Probe                *bool   `json:"probe"`
 	ProxyProtocolVersion *string `json:"proxyProtocolVersion,omitempty"`
+	OnMarkedDown         *string `json:"onMarkedDown"`
 	Ssl                  *bool   `json:"ssl"`
 	Status               string  `json:"status"`
 	Weight               *int    `json:"weight,omitempty"`
@@ -540,6 +542,7 @@ type IpLoadbalancingFarmServerUpdateOpts struct {
 	Port                 *int    `json:"port,omitempty"`
 	Probe                *bool   `json:"probe"`
 	ProxyProtocolVersion *string `json:"proxyProtocolVersion"`
+	OnMarkedDown         *string `json:"onMarkedDown"`
 	Ssl                  *bool   `json:"ssl"`
 	Status               *string `json:"status"`
 	Weight               *int    `json:"weight,omitempty"`
@@ -555,6 +558,7 @@ type IpLoadbalancingFarmServer struct {
 	Port                 *int    `json:"port"`
 	Probe                *bool   `json:"probe"`
 	ProxyProtocolVersion *string `json:"proxyProtocolVersion"`
+	OnMarkedDown         *string `json:"onMarkedDown"`
 	ServerId             int     `json:"serverId"`
 	Ssl                  *bool   `json:"ssl"`
 	Status               string  `json:"status"`
@@ -589,6 +593,10 @@ func (v IpLoadbalancingFarmServer) ToMap() map[string]interface{} {
 
 	if v.ProxyProtocolVersion != nil {
 		obj["proxy_protocol_version"] = *v.ProxyProtocolVersion
+	}
+
+	if v.OnMarkedDown != nil {
+		obj["on_marked_down"] = *v.OnMarkedDown
 	}
 
 	if v.Weight != nil {

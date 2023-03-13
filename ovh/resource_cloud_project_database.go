@@ -113,6 +113,18 @@ func resourceCloudProjectDatabase() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validateCloudProjectDatabaseDiskSize,
 			},
+			"advanced_configuration": {
+				Type: schema.TypeMap,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Description: "Advanced configuration key / value",
+				Optional:    true,
+				Computed:    true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return d.Get("engine").(string) == "mongodb" || new == old
+				},
+			},
 
 			//Computed
 			"backup_time": {
@@ -247,7 +259,9 @@ func resourceCloudProjectDatabaseCreate(d *schema.ResourceData, meta interface{}
 
 	d.SetId(res.Id)
 
-	if (engine == "kafka" && d.Get("kafka_rest_api").(bool)) || (engine == "opensearch" && d.Get("opensearch_acls_enabled").(bool)) {
+	if (engine != "mongodb" && len(d.Get("advanced_configuration").(map[string]interface{})) > 0) ||
+		(engine == "kafka" && d.Get("kafka_rest_api").(bool)) ||
+		(engine == "opensearch" && d.Get("opensearch_acls_enabled").(bool)) {
 		return resourceCloudProjectDatabaseUpdate(d, meta)
 	}
 
@@ -288,6 +302,15 @@ func resourceCloudProjectDatabaseRead(d *schema.ResourceData, meta interface{}) 
 
 	res.Region = node.Region
 
+	if engine != "mongodb" {
+		advancedConfigEndpoint := fmt.Sprintf("%s/advancedConfiguration", serviceEndpoint)
+		advancedConfigMap := &map[string]string{}
+		if err := config.OVHClient.Get(advancedConfigEndpoint, advancedConfigMap); err != nil {
+			return fmt.Errorf("unable to get database %s advanced configuration: %v", res.Id, err)
+		}
+		res.AdvancedConfiguration = *advancedConfigMap
+	}
+
 	for k, v := range res.ToMap() {
 		if k != "id" {
 			d.Set(k, v)
@@ -325,6 +348,18 @@ func resourceCloudProjectDatabaseUpdate(d *schema.ResourceData, meta interface{}
 	if err != nil {
 		return fmt.Errorf("timeout while waiting database %s to be READY: %w", d.Id(), err)
 	}
+
+	if d.HasChanges("advanced_configuration") {
+		acParams := d.Get("advanced_configuration").(map[string]interface{})
+
+		advancedConfigEndpoint := fmt.Sprintf("%s/advancedConfiguration", endpoint)
+
+		err = config.OVHClient.Put(advancedConfigEndpoint, acParams, nil)
+		if err != nil {
+			return fmt.Errorf("calling Put %s with params %v:\n\t %q", advancedConfigEndpoint, acParams, err)
+		}
+	}
+
 	log.Printf("[DEBUG] database %s is READY", d.Id())
 
 	return resourceCloudProjectDatabaseRead(d, meta)

@@ -1,9 +1,9 @@
 Terraform OVH Provider
 ==================
 
-- Website: https://www.terraform.io
-- [![Gitter chat](https://badges.gitter.im/hashicorp-terraform/Lobby.png)](https://gitter.im/hashicorp-terraform/Lobby)
-- Mailing list: [Google Groups](http://groups.google.com/group/terraform-tool)
+The OVH Provider allows Terraform to manage [OVH](https://www.ovhcloud.com/) resources.
+
+- Website: [https://www.terraform.io](https://registry.terraform.io/providers/ovh/ovh/latest/docs)
 
 Requirements
 ------------
@@ -31,7 +31,7 @@ $ make build
 Using the provider
 ----------------------
 
-Please see the documentation at [terraform.io](https://www.terraform.io/docs/providers/ovh/index.html).
+Please see the documentation in the [Terraform registry](https://www.terraform.io/docs/providers/ovh/index.html).
 
 Or you can browse the documentation within this repo [here](https://github.com/ovh/terraform-provider-ovh/tree/master/website/docs).
 
@@ -156,3 +156,14 @@ To remove dangling resources, you can run:
 ```sh
 $ make testacc TESTARGS="-sweep"
 ```
+
+# Contributing
+
+Please read the [contributing guide](./CONTRIBUTING.md) to learn about how you can contribute to the OVHcloud Terraform provider ;-).<br/>
+There is no small contribution, don't hesitate!
+
+Our awesome contributors:
+
+<a href="https://github.com/ovh/terraform-provider-ovh/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=ovh/terraform-provider-ovh" />
+</a>

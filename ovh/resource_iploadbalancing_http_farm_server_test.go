@@ -132,6 +132,21 @@ resource ovh_iploadbalancing_http_farm_server testacc {
   backup = true
 }
 `
+	testAccIpLoadbalancingHttpFarmServerConfig_step7 = `
+%s
+resource ovh_iploadbalancing_http_farm_server testacc {
+  service_name     = data.ovh_iploadbalancing.iplb.id
+  farm_id = ovh_iploadbalancing_http_farm.testacc.id
+  address = "10.0.0.11"
+  status = "active"
+  display_name = "testBackendB"
+  port = 8080
+  ssl = true
+  backup = true
+  on_marked_down = "shutdown-sessions"
+  proxy_protocol_version = "v1"
+}
+`
 	TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME = "ovh_iploadbalancing_http_farm_server.testacc"
 )
 
@@ -293,7 +308,18 @@ func TestAccIpLoadbalancingHttpFarmServerBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "proxy_protocol_version", "v1"),
 				),
 			},
-
+			{
+				Config: fmt.Sprintf(testAccIpLoadbalancingHttpFarmServerConfig_step7, prefix),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "address", "10.0.0.11"),
+					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "status", "active"),
+					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "port", "8080"),
+					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "weight", "1"),
+					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "ssl", "true"),
+					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "backup", "true"),
+					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "on_marked_down", "shutdown-sessions"),
+				),
+			},
 			{
 				ResourceName:      TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME,
 				ImportState:       true,

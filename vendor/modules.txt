@@ -351,3 +351,6 @@ google.golang.org/protobuf/types/known/timestamppb
 # gopkg.in/ini.v1 v1.57.0
 ## explicit
 gopkg.in/ini.v1
+# gopkg.in/yaml.v3 v3.0.1
+## explicit
+gopkg.in/yaml.v3

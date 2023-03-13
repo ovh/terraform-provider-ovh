@@ -31,11 +31,6 @@ output "user_ids" {
 
 * `engine` - (Required) The engine of the database cluster you want to list users. To get a full list of available engine visit:
 [public documentation](https://docs.ovh.com/gb/en/publiccloud/databases).
-Available engines:
-  * `cassandra`
-  * `kafka`
-  * `kafkaConnect`
-  * `mysql`
 
 * `cluster_id` - (Required) Cluster ID
 
