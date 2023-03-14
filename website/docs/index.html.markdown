@@ -191,6 +191,7 @@ variables must also be set:
 
 * `OVH_CLOUD_PROJECT_WORKFLOW_BACKUP_REGION_TEST` - The openstack region in which the workflow will be defined
 * `OVH_CLOUD_PROJECT_WORKFLOW_BACKUP_INSTANCE_ID_TEST` - The openstack id of the instance to backup
+* `OVH_CLOUD_PROJECT_ACTIVE_MONTHLY_BILLING_INSTANCE_ID_TEST` - The openstack id of the instance to activate monthly billing
 
 ### Used by OVHcloud internal account only:
 
