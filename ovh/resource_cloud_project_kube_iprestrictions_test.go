@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 var testAccCloudProjectKubeIpRestrictionsConfig = `
@@ -26,6 +27,7 @@ resource "ovh_cloud_project_kube_iprestrictions" "iprestrictions" {
 func TestAccCloudProjectKubeIpRestrictions_basic(t *testing.T) {
 	name := acctest.RandomWithPrefix(test_prefix)
 	region := os.Getenv("OVH_CLOUD_PROJECT_KUBE_REGION_TEST")
+	resourceName := "ovh_cloud_project_kube_iprestrictions.iprestrictions"
 
 	ips1 := `["10.42.0.0/16"]`
 	config1 := fmt.Sprintf(
@@ -56,28 +58,28 @@ func TestAccCloudProjectKubeIpRestrictions_basic(t *testing.T) {
 			{
 				Config: config1,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube.cluster", "region", region),
-					resource.TestCheckResourceAttrSet(
-						"ovh_cloud_project_kube.cluster", "kubeconfig"),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube.cluster", "name", name),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube_iprestrictions.iprestrictions", "ips.0", "10.42.0.0/16"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_iprestrictions.iprestrictions", "ips.0", "10.42.0.0/16"),
 				),
 			},
 			{
 				Config: config2,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube.cluster", "region", region),
-					resource.TestCheckResourceAttrSet(
-						"ovh_cloud_project_kube.cluster", "kubeconfig"),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube.cluster", "name", name),
-					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_kube_iprestrictions.iprestrictions", "ips.1", "10.43.0.0/16"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_iprestrictions.iprestrictions", "ips.1", "10.43.0.0/16"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: func(state *terraform.State) (string, error) {
+					return fmt.Sprintf("%s/%s", os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"), state.RootModule().Resources[resourceName].Primary.ID), nil
+				},
 			},
 		},
 	})
