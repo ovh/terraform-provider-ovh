@@ -108,7 +108,7 @@ func TestAccDomainZoneRecord_Basic(t *testing.T) {
 			// provider shall send an error if the TTL is less than 60
 			{
 				Config:      testAccCheckOvhDomainZoneRecordConfig_CNAME(zone, subdomain, "google.com.", 10),
-				ExpectError: regexp.MustCompile(`must be above`),
+				ExpectError: regexp.MustCompile(`must be greater`),
 			},
 			{
 				Config: testAccCheckOvhDomainZoneRecordConfig_A(zone, subdomain, "192.168.0.10", 3600),

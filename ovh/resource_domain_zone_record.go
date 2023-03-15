@@ -75,7 +75,7 @@ func resourceOvhDomainZoneRecord() *schema.Resource {
 				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
 					v := val.(int)
 					if v < 60 {
-						errs = append(errs, fmt.Errorf("%q must be above 60 inclusive, got: %d", key, v))
+						errs = append(errs, fmt.Errorf("%q must be greater than or equal to 60, got: %d", key, v))		
 					}
 					return
 				},
