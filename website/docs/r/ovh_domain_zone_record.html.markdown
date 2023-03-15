@@ -31,7 +31,7 @@ The following arguments are supported:
 * `subdomain` - (Required) The name of the record
 * `target` - (Required) The value of the record
 * `fieldtype` - (Required) The type of the record
-* `ttl` - (Optional) The TTL of the record
+* `ttl` - (Optional) The TTL of the record, it shall be >= to 60.
 
 
 ## Attributes Reference
