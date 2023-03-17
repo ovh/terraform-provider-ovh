@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: dedicated_server"
-sidebar_current: "docs-ovh-datasource-dedicated-server-x"
-description: |-
-  Get information of a dedicated server associated with your OVHcloud Account.
+subcategory : "Dedicated Server"
 ---
 
 # ovh_dedicated_server (Data Source)

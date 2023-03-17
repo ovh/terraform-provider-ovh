@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: cloud_project_database_kafka_user_acces"
-sidebar_current: "docs-ovh-datasource-cloud-project-database-kafka-user-acces"
-description: |-
-  Get information about user acces of a kafka cluster associated with a public cloud project.
+subcategory : "Managed Databases"
 ---
 
 # ovh_cloud_project_database_kafka_user_access (Data Source)

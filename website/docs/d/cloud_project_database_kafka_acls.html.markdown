@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: cloud_project_database_kafka_acls"
-sidebar_current: "docs-ovh-datasource-cloud-project-database-kafka-acls"
-description: |-
-  Get the list of ACLS of a kafka cluster associated with a public cloud project.
+subcategory : "Managed Databases"
 ---
 
 # ovh_cloud_project_database_kafka_acls (Data Source)

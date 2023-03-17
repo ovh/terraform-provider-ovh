@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: ovh_me_installation_template_partition_scheme"
-sidebar_current: "docs-ovh-resource-me-installation-template-partition-scheme-x"
-description: |-
-  Creates a partition scheme for a custom installation template available for dedicated servers.
+subcategory : "Dedicated Server"
 ---
 
 # ovh_me_installation_template_partition_scheme

@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: cloud_project_database"
-sidebar_current: "docs-ovh-resource-cloud-project-database-x"
-description: |-
-  Creates a managed database cluster in a public cloud project.
+subcategory : "Managed Databases"
 ---
 
 # ovh_cloud_project_database

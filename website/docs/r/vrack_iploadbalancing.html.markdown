@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: vrack_iploadbalancing"
-sidebar_current: "docs-ovh-resource-vrack-ip-loadbalancing"
-description: |-
-  Attach a IP Loadbalanging to a VRack.
+subcategory : "vRack"
 ---
 
 # ovh_vrack_iploadbalancing

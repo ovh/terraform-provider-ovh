@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: me_ipxe_script"
-sidebar_current: "docs-ovh-datasource-ipxe-script-x"
-description: |-
-  Get information & status of an IPXE Script.
+subcategory : "Dedicated Server"
 ---
 
 # ovh_me_ipxe_script (Data Source)

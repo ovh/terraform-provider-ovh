@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: ovh_hosting_privatedatabase_user"
-sidebar_current: "docs-ovh-datasource-hosting-privatedatabase-user"
-description: |-
-  Get information & status of an hosting privatedatabase user.
+subcategory : "Web Cloud Private SQL"
 ---
 
 # ovh_hosting_privatedatabase_user (Data Source)

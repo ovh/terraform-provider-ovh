@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: ovh_domain_zone"
-sidebar_current: "docs-ovh-resource-domain-zone-x"
-description: |-
-  Creates a domain zone.
+subcategory : "Domain names"
 ---
 
 # ovh_domain_zone

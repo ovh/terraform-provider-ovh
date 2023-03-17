@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: dedicated_nasha_partition"
-sidebar_current: "docs-ovh-resource-dedicated-nasha-partition"
-description: |-
-  Provides a resource for managing partitions on HA-NAS services
+subcategory : "NAS-HA"
 ---
 
 # ovh_dedicated_nasha_partition

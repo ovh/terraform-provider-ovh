@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: cloud_project_database_kafka_topics"
-sidebar_current: "docs-ovh-datasource-cloud-project-database-kafka-topics"
-description: |-
-  Get the list of topics of a kafka cluster associated with a public cloud project.
+subcategory : "Managed Databases"
 ---
 
 # ovh_cloud_project_database_kafka_topics (Data Source)

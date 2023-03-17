@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: me_paymentmean_bankaccount"
-sidebar_current: "docs-ovh-datasource-me-paymentmean-bankaccount"
-description: |-
-  Get information & status of an OVHcloud bank account payment mean
+subcategory : "Account Management"
 ---
 
 # ovh_me_paymentmean_bankaccount (Data Source)

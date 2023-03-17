@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: vrack_cloudproject"
-sidebar_current: "docs-ovh-resource-vrack-cloudproject"
-description: |-
-  Attach a Public Cloud Project to a VRack.
+subcategory : "vRack"
 ---
 
 # ovh_vrack_cloudproject

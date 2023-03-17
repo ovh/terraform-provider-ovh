@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: vpss"
-sidebar_current: "docs-ovh-datasource-vpss"
-description: |-
-  Get the list of VPS associated with your OVH Account.
+subcategory : "VPS"
 ---
 
 # vpss (Data Source)
