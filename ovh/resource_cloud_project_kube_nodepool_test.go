@@ -142,6 +142,35 @@ resource "ovh_cloud_project_kube_nodepool" "pool" {
 }
 `
 
+var testAccCloudProjectKubeNodePoolConfigUpdatedScaleToZero = `
+resource "ovh_cloud_project_kube" "cluster" {
+	service_name  = "%s"
+	name          = "%s"
+	region        = "%s"
+	version       = "%s"
+}
+
+resource "ovh_cloud_project_kube_nodepool" "pool" {
+	service_name	= ovh_cloud_project_kube.cluster.service_name
+	kube_id			= ovh_cloud_project_kube.cluster.id
+	name			= ovh_cloud_project_kube.cluster.name
+	flavor_name		= "b2-7"
+	desired_nodes	= 0
+	min_nodes		= 0
+	max_nodes		= 2
+	template {
+		metadata {
+			annotations = {
+				a2 = "av2"
+			}
+			labels = {
+				l2 = "lv2"
+			}
+		}
+	}
+}
+`
+
 func TestAccCloudProjectKubeNodePool(t *testing.T) {
 	name := acctest.RandomWithPrefix(test_prefix)
 	region := os.Getenv("OVH_CLOUD_PROJECT_KUBE_REGION_TEST")
@@ -156,6 +185,13 @@ func TestAccCloudProjectKubeNodePool(t *testing.T) {
 	)
 	configUpdated := fmt.Sprintf(
 		testAccCloudProjectKubeNodePoolConfigUpdated,
+		os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"),
+		name,
+		region,
+		version,
+	)
+	configUpdatedScaleToZero := fmt.Sprintf(
+		testAccCloudProjectKubeNodePoolConfigUpdatedScaleToZero,
 		os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"),
 		name,
 		region,
@@ -201,6 +237,24 @@ func TestAccCloudProjectKubeNodePool(t *testing.T) {
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "name", name),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "flavor_name", "b2-7"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "desired_nodes", "2"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "min_nodes", "0"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "max_nodes", "2"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.annotations.a2", "av2"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.finalizers.#", "0"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.labels.l2", "lv2"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.spec.0.taints.#", "0"),
+				),
+			},
+			{
+				Config: configUpdatedScaleToZero,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "version", version),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "name", name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "flavor_name", "b2-7"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "desired_nodes", "0"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "min_nodes", "0"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "max_nodes", "2"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.annotations.a2", "av2"),
