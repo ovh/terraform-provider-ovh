@@ -10,6 +10,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -174,6 +175,7 @@ func TestAccCloudProjectKubeNodePool(t *testing.T) {
 	name := acctest.RandomWithPrefix(test_prefix)
 	region := os.Getenv("OVH_CLOUD_PROJECT_KUBE_REGION_TEST")
 	version := os.Getenv("OVH_CLOUD_PROJECT_KUBE_VERSION_TEST")
+	resourceName := "ovh_cloud_project_kube_nodepool.pool"
 	config := fmt.Sprintf(
 		testAccCloudProjectKubeNodePoolConfig,
 		os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"),
@@ -260,6 +262,16 @@ func TestAccCloudProjectKubeNodePool(t *testing.T) {
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.labels.l2", "lv2"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.spec.0.taints.#", "0"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: func(state *terraform.State) (string, error) {
+					poolId := state.RootModule().Resources[resourceName].Primary.ID
+					kubernetesClusterID := state.RootModule().Resources["ovh_cloud_project_kube.cluster"].Primary.ID
+					return fmt.Sprintf("%s/%s/%s", os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"), kubernetesClusterID, poolId), nil
+				},
 			},
 		},
 	})
