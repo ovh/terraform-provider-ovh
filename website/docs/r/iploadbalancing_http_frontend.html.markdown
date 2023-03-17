@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: iploadbalancing_http_frontend"
-sidebar_current: "docs-ovh-resource-iploadbalancing-http-frontend"
-description: |-
-  Creates a frontend for an IP Load balancing service.
+subcategory : "Load Balancer (IPLB)"
 ---
 
 # ovh\_iploadbalancing\_http_frontend

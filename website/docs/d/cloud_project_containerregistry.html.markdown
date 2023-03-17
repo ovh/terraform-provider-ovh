@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: cloud_project_containerregistry"
-sidebar_current: "docs-ovh-datasource-cloud-project-containerregistry-x"
-description: |-
-  Get information about a container registry associated with a public cloud project.
+subcategory : "Managed Private Registry"
 ---
 
 # ovh_cloud_project_containerregistry (Data Source)

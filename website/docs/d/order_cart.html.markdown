@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: order_cart"
-sidebar_current: "docs-ovh-datasource-order-cart"
-description: |-
-  Create a temporary order cart to retrieve information order cart products.
+subcategory : "Order"
 ---
 
 # ovh_order_cart (Data Source)

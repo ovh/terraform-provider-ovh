@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: cloud_project_database_redis_user"
-sidebar_current: "docs-ovh-datasource-cloud-project-database-redis-user"
-description: |-
-  Get information about a user of a redis cluster associated with a public cloud project.
+subcategory : "Managed Databases"
 ---
 
 # ovh_cloud_project_database_redis_user (Data Source)

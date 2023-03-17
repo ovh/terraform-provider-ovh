@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: ovh_ip_reverse"
-sidebar_current: "docs-ovh-resource-ip-reverse"
-description: |-
-    Provides a OVHcloud IP reverse resource.
+subcategory : "Additional IP"
 ---
 
 # ovh_ip_reverse

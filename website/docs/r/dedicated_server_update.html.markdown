@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: dedicated_server_update"
-sidebar_current: "docs-ovh-resource-dedicated-server-update"
-description: |-
-  Update various properties of your Dedicated Server
+subcategory : "Dedicated Server"
 ---
 
 # ovh_dedicated_server_update

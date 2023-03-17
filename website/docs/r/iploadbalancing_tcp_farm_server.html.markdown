@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: iploadbalancing_tcp_farm_server"
-sidebar_current: "docs-ovh-resource-iploadbalancing-tcp-farm-server"
-description: |-
-  Creates a backend server entry linked to farm.
+subcategory : "Load Balancer (IPLB)"
 ---
 
 # ovh\_iploadbalancing\_tcp_farm\_server

@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: ip_service"
-sidebar_current: "docs-ovh-datasource-dbaas-logs-ip-service"
-description: |-
-  Get information & status of a ip service.
+subcategory : "Additional IP"
 ---
 
 # ovh_ip_service (Data Source)

@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: cloud_region"
-sidebar_current: "docs-ovh-datasource-dedicated-ceph-x"
-description: |-
-  Get information & status of a dedicated CEPH instance.
+subcategory : "Cloud Disk Array"
 ---
 
 # ovh_dedicated_ceph (Data Source)

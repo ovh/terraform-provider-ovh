@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: cloud_project_database_certificates"
-sidebar_current: "docs-ovh-datasource-cloud-project-database-certificates"
-description: |-
-  Get information about certificates of a cluster associated with a public cloud project.
+subcategory : "Managed Databases"
 ---
 
 # ovh_cloud_project_database_certificates (Data Source)

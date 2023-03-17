@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: cloud_project_capabilities_containerregistry"
-sidebar_current: "docs-ovh-datasource-cloud-project-capabilities-containerregistry-x"
-description: |-
-  Get the list of container registry capabilities associated with a public cloud project.
+subcategory : "Managed Private Registry"
 ---
 
 # ovh_cloud_project_capabilities_containerregistry (Data Source)

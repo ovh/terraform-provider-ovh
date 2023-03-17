@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: dedicated_nasha_partition_access"
-sidebar_current: "docs-ovh-resource-dedicated-nasha-partition-access"
-description: |-
-  Provides a resource for managing access rights to partitions on HA-NAS services
+subcategory : "NAS-HA"
 ---
 
 # ovh_dedicated_nasha_partition_access

@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: iploadbalancing_refresh"
-sidebar_current: "docs-ovh-resource-iploadbalancing-refresh"
-description: |-
-  Applies changes from other ovh_iploadbalancing_* resources to the production configuration of loadbalancers.
+subcategory : "Load Balancer (IPLB)"
 ---
 
 # ovh\_iploadbalancing\_refresh

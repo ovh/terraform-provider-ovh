@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: iploadbalancing_http_farm"
-sidebar_current: "docs-ovh-resource-iploadbalancing-http-farm"
-description: |-
-  Creates a backend server group (farm).
+subcategory : "Load Balancer (IPLB)"
 ---
 
 # ovh\_iploadbalancing\_http_farm

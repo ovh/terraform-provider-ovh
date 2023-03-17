@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: ovh_iploadbalancing_tcp_route"
-sidebar_current: "docs-ovh-resource-iploadbalancing-tcp-route-x"
-description: |-
-  Manage tcp route for a loadbalancer service.
+subcategory : "Load Balancer (IPLB)"
 ---
 
 # ovh_iploadbalancing_tcp_route

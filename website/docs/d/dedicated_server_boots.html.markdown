@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: dedicated_server_boots"
-sidebar_current: "docs-ovh-datasource-dedicated-server-boots"
-description: |-
-  Get the list of compatible netboots for a dedicated server associated with your OVHcloud Account.
+subcategory : "Dedicated Server"
 ---
 
 # ovh_dedicated_server_boots (Data Source)

@@ -1,10 +1,7 @@
 ---
-layout: "ovh"
-page_title: "OVH: ovh_hosting_privatedatabase_database"
-sidebar_current: "docs-ovh-datasource-hosting-privatedatabase-database"
-description: |-
-  Get information & status of an hosting privatedatabase.
+subcategory : "Web Cloud Private SQL"
 ---
+
 
 # ovh_hosting_privatedatabase_database (Data Source)
 

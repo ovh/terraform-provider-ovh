@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: cloud_project_kube_iprestrictions"
-sidebar_current: "docs-ovh-datasource-cloud-project-kube-iprestrictions-x"
-description: |-
-Get information & status of a Kubernetes managed cluster IP restrictions in a public cloud project.
+subcategory : "Managed Kubernetes Service"
 ---
 
 # ovh_cloud_project_kube_iprestrictions (Data Source)
