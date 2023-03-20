@@ -6,7 +6,7 @@ description: |-
   Manage a workflow that schedules backups of public cloud instance 
 ---
 
-# ovh_cloud_project_user
+# ovh_cloud_project_workflow_backup
 
 Manage a worflow that schedules backups of public cloud instance.
 Note that upon deletion, the workflow is deleted but any backups that have been created by this workflow are not. 

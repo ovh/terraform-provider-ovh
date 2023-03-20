@@ -232,6 +232,7 @@ func GetNilIntPointerFromDataAndNilIfNotPresent(data interface{}, id string) *in
 		if val, ok := resourceData.GetOk(id); ok {
 			return GetNilIntPointer(val)
 		}
+		return GetNilIntPointer(resourceData.Get(id)) // read the 0 value
 	} else if mapData, tok := data.(map[string]interface{}); tok {
 		if val, ok := mapData[id]; ok {
 			return GetNilIntPointer(val)
