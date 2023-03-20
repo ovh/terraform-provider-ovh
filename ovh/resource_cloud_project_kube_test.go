@@ -384,7 +384,7 @@ resource "ovh_cloud_project_kube" "cluster" {
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "service_name", serviceName),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "kube_proxy_mode", "iptables"),
-					resource.TestCheckNoResourceAttr("ovh_cloud_project_kube.cluster", "customization_kube_proxy"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", ".customization_kube_proxy.#", "0"),
 				),
 			},
 			{
@@ -523,7 +523,7 @@ resource "ovh_cloud_project_kube" "cluster" {
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "service_name", serviceName),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "kube_proxy_mode", "ipvs"),
-					resource.TestCheckNoResourceAttr("ovh_cloud_project_kube.cluster", "customization_kube_proxy"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", ".customization_kube_proxy.#", "0"),
 				),
 			},
 			{
@@ -1166,8 +1166,8 @@ func TestAccCloudProjectKubeUpdateVersion_basic(t *testing.T) {
 	name := acctest.RandomWithPrefix(test_prefix)
 	updatedName := acctest.RandomWithPrefix(test_prefix)
 
-	version1 := "1.22"
-	version2 := "1.23"
+	version1 := "1.24"
+	version2 := "1.25"
 
 	config := fmt.Sprintf(
 		testAccCloudProjectKubeConfig,
