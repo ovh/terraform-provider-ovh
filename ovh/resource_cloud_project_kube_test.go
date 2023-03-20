@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func init() {
@@ -1010,6 +1011,7 @@ func TestAccCloudProjectKube_basic(t *testing.T) {
 	name := acctest.RandomWithPrefix(test_prefix)
 	region := os.Getenv("OVH_CLOUD_PROJECT_KUBE_REGION_TEST")
 	version := os.Getenv("OVH_CLOUD_PROJECT_KUBE_VERSION_TEST")
+	resourceName := "ovh_cloud_project_kube.cluster"
 	config := fmt.Sprintf(
 		testAccCloudProjectKubeConfig,
 		os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"),
@@ -1039,6 +1041,15 @@ func TestAccCloudProjectKube_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig_attributes.0.client_certificate"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig_attributes.0.client_key"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: func(state *terraform.State) (string, error) {
+					return fmt.Sprintf("%s/%s", os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"), state.RootModule().Resources[resourceName].Primary.ID), nil
+				},
+				ImportStateVerifyIgnore: []string{"kubeconfig"}, // we must ignore kubeconfig because certificate is not the same
 			},
 		},
 	})
