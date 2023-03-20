@@ -14,6 +14,7 @@ This project accepts contributions. In order to contribute, you should pay atten
 - Code must be formatted with `make fmt` command
 - Name your resources and datasources according to the API endpoint
 - Check your documentation through [Terraform Doc Preview Tool](https://registry.terraform.io/tools/doc-preview)
+- When adding a documentation page, use the `subcategory:` tag in the [YAML Frontmatter](https://developer.hashicorp.com/terraform/registry/providers/docs#yaml-frontmatter) with a value equals to the product name defined in the [product map](https://www.product-map.ovh/)
 
 ## Acceptance tests:
 
