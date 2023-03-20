@@ -19,7 +19,7 @@ data "ovh_iploadbalancing" "lb" {
 }
 
 resource "ovh_iploadbalancing_http_farm" "farmname" {
-  service_name = "${data.ovh_iploadbalancing.lb.id}"
+  service_name = "${data.ovh_iploadbalancing.lb.service_name}"
   display_name = "ingress-8080-gra"
   zone         = "GRA"
 }

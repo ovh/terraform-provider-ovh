@@ -19,13 +19,13 @@ data "ovh_iploadbalancing" "lb" {
 }
 
 resource "ovh_iploadbalancing_tcp_farm" "farmname" {
-  service_name = "${data.ovh_iploadbalancing.lb.id}"
+  service_name = "${data.ovh_iploadbalancing.lb.service_name}"
   port         = 8080
   zone         = "all"
 }
 
 resource "ovh_iploadbalancing_tcp_farm_server" "backend" {
-  service_name           = "${data.ovh_iploadbalancing.lb.id}"
+  service_name           = "${data.ovh_iploadbalancing.lb.service_name}"
   farm_id                = "${ovh_iploadbalancing_tcp_farm.farmname.id}"
   display_name           = "mybackend"
   address                = "4.5.6.7"
