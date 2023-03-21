@@ -17,6 +17,7 @@ With this resource you can create a user for the following database engine:
 
 Create a user johndoe in a database.
 Output the user generated password with command `terraform output user_password`.
+
 ```hcl
 data "ovh_cloud_project_database" "db" {
   service_name  = "XXXX"

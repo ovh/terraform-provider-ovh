@@ -9,6 +9,7 @@ Use the list of IP restrictions associated with a public cloud project.
 ## Example Usage
 
 To get the list of IP restriction on a database cluster service:
+
 ```hcl
 data "ovh_cloud_project_database_ip_restrictions" "iprestrictions" {
   service_name  = "XXXXXX"

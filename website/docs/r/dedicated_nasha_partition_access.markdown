@@ -8,7 +8,7 @@ Provides a resource for managing access rights to partitions on HA-NAS services
 
 ## Example Usage
 
-```
+```hcl
 resource "ovh_dedicated_nasha_partition_access" "my-partition" {
   service_name = "zpool-12345"
   partition_name = "my-partition"

@@ -8,7 +8,7 @@ Provides a resource for managing partitions on HA-NAS services
 
 ## Example Usage
 
-```
+```hcl
 resource "ovh_dedicated_nasha_partition" "my-partition" {
   service_name = "zpool-12345"
   name = "my-partition"

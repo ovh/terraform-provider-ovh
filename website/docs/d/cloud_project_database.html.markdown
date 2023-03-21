@@ -9,6 +9,7 @@ Use this data source to get the managed database of a public cloud project.
 ## Example Usage
 
 To get information of a database cluster service:
+
 ```hcl
 data "ovh_cloud_project_database" "db" {
   service_name  = "XXXXXX"
