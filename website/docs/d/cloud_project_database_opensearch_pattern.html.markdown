@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: cloud_project_database_opensearch_pattern"
-sidebar_current: "docs-ovh-datasource-cloud-project-database-opensearch-pattern"
-description: |-
-  Get information about a pattern of a opensearch cluster associated with a public cloud project.
+subcategory : "Managed Databases"
 ---
 
 # ovh_cloud_project_database_opensearch_pattern (Data Source)

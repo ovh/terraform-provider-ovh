@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: ovh_hosting_privatedatabase_whitelist"
-sidebar_current: "docs-ovh-datasource-hosting-privatedatabase-whitelist"
-description: |-
-  Get information & status of an hosting privatedatabase whitelist.
+subcategory : "Web Cloud Private SQL"
 ---
 
 # ovh_hosting_privatedatabase_whitelist (Data Source)

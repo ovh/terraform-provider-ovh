@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: dbaas_logs_input_engine"
-sidebar_current: "docs-ovh-datasource-dbaas-logs-input-engine"
-description: |-
-  Get information & status of a DBaas logs input engine.
+subcategory : "Logs Data Platform"
 ---
 
 # ovh_dbaas_logs_input_engine (Data Source)

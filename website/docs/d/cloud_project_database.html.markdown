@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: cloud_project_database"
-sidebar_current: "docs-ovh-datasource-cloud-project-database-x"
-description: |-
-  Get information about a managed database cluster in a public cloud project.
+subcategory : "Managed Databases"
 ---
 
 # ovh_cloud_project_database (Data Source)

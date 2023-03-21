@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: cloud_project_failover_ip_attach"
-sidebar_current: "docs-ovh-datasource-cloud-project-failover-ip-attach-x"
-description: |-
-  Reads failover ip addresses for a service
+subcategory : "Additional IP"
 ---
 
 # ovh_cloud_project_failover_ip_attach (Data Source)

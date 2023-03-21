@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: cloud_project_database_m3db_namespace"
-sidebar_current: "docs-ovh-datasource-cloud-project-database-m3db-namespace"
-description: |-
-  Get information about a namespace of a M3DB cluster associated with a public cloud project.
+subcategory : "Managed Databases"
 ---
 
 # ovh_cloud_project_database_m3db_namespace (Data Source)

@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: ovh_dedicated_nasha_partition_snapshot"
-sidebar_current: "docs-ovh-resource-dedicated-nasha-partition-snapshot"
-description: |-
-  Provides a resource for managing snapshot to partitions on HA-NAS services
+subcategory : "NAS-HA"
 ---
 
 # ovh_dedicated_nasha_partition_snapshot

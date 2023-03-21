@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: iploadbalancing"
-sidebar_current: "docs-ovh-datasource-iploadbalancing"
-description: |-
-  Get information & status of an IP Load Balancing product.
+subcategory : "Load Balancer (IPLB)"
 ---
 
 # ovh_iploadbalancing (Data Source)

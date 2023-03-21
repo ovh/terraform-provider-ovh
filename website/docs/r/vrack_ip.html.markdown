@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: vrack_ip"
-sidebar_current: "docs-ovh-resource-vrack-ip"
-description: |-
-  Attach an Ip block to a VRack.
+subcategory : "vRack"
 ---
 
 # ovh_vrack_ip

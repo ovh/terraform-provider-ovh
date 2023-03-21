@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: ovh_cloud_project_user_s3_credential"
-sidebar_current: "docs-ovh-resource-cloud-project-user-s3-credential"
-description: |-
-  Creates an S3 Credential for a user in a public cloud project.
+subcategory : "Account Management"
 ---
 
 # ovh_cloud_project_user_s3_credential

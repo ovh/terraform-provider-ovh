@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: cloud_project_kube_nodepool_nodes"
-sidebar_current: "docs-ovh-datasource-cloud-project-kube-nodepool-nodes-x"
-description: |-
-Get information & status of a Kubernetes managed nodes of a specific node pool in a public cloud project.
+subcategory : "Managed Kubernetes Service"
 ---
 
 # ovh_cloud_project_kube_nodepool_nodes (Data Source)

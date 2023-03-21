@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: order_cart_product"
-sidebar_current: "docs-ovh-datasource-order-cart-product"
-description: |-
-  Retrieve information of order cart product products.
+subcategory : "Order"
 ---
 
 # ovh_order_cart_product (Data Source)

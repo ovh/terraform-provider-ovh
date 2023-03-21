@@ -1,10 +1,7 @@
 ---
-layout: "ovh"
-page_title: "OVH: dedicated_ceph_acl"
-sidebar_current: "docs-ovh-resource-dedicated-ceph-acl"
-description: |-
-  Creates a new ACL for dedicated CEPH cluster.
+subcategory : "Cloud Disk Array"
 ---
+
 
 # ovh_dedicated_ceph_acl
 

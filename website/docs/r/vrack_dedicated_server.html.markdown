@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: vrack_dedicated_server"
-sidebar_current: "docs-ovh-resource-vrack-dedicated-server"
-description: |-
-  Attach a Dedicated Server to a VRack.
+subcategory : "vRack"
 ---
 
 # ovh_vrack_dedicated_server

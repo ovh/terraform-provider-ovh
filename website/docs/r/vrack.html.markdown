@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: ovh_vrack"
-sidebar_current: "docs-ovh-resource-vrack-x"
-description: |-
-  Orders a vrack.
+subcategory : "vRack"
 ---
 
 # ovh_vrack

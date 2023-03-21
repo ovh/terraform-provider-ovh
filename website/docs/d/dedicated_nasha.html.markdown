@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: dedicated_nasha"
-sidebar_current: "docs-ovh-datasource-dedicated-nasha"
-description: |-
-  Get information of a dedicated HA-NAS.
+subcategory : "NAS-HA"
 ---
 
 # ovh_dedicated_nasha (Data Source)

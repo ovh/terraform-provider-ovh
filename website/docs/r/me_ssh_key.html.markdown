@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: ovh_me_ssh_key"
-sidebar_current: "docs-ovh-resource-me-ssh-key"
-description: |-
-  Creates an SSH Key.
+subcategory : "Account Management"
 ---
 
 # ovh_me_ssh_key
