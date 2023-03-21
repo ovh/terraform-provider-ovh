@@ -18,6 +18,7 @@ interact directly with the team that builds our databases services and terraform
 ## Example Usage
 
 Minimum settings for each engine (region choice is up to the user):
+
 ```hcl
 resource "ovh_cloud_project_database" "cassandradb" {
   service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
@@ -135,6 +136,7 @@ resource "ovh_cloud_project_database" "redisdb" {
 ```
 
 To deploy a business PostgreSQL service with two nodes on public network:
+
 ```hcl
 resource "ovh_cloud_project_database" "postgresql" {
   service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
@@ -154,6 +156,7 @@ resource "ovh_cloud_project_database" "postgresql" {
 
 
 To deploy an enterprise MongoDB service with three nodes on private network:
+
 ```hcl
 resource "ovh_cloud_project_database" "mongodb" {
   service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"

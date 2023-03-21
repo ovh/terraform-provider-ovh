@@ -13,6 +13,7 @@ Please take a look at the list of available `types` in the `Argument references`
 ## Example Usage
 
 Push PostgreSQL logs in an OpenSearch DB:
+
 ```hcl
 data "ovh_cloud_project_database" "dbpostgresql" {
   service_name  = "XXXX"
