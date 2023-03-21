@@ -8,7 +8,7 @@ Creates a backend server entry linked to HTTP loadbalancing group (farm)
 
 ## Example Usage
 
-```
+```hcl
 data "ovh_iploadbalancing" "lb" {
   service_name = "ip-1.2.3.4"
   state        = "ok"
