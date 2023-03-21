@@ -10,6 +10,7 @@ Creates an user for a M3DB cluster associated with a public cloud project.
 
 Create a user johndoe in a M3DB database.
 Output the user generated password with command `terraform output user_password`.
+
 ```hcl
 data "ovh_cloud_project_database" "m3db" {
   service_name  = "XXX"

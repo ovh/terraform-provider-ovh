@@ -9,6 +9,7 @@ Use this data source to get the list of managed databases of a public cloud proj
 ## Example Usage
 
 To get the list of database clusters service for a given engine:
+
 ```hcl
 data "ovh_cloud_project_databases" "dbs" {
   service_name  = "XXXXXX"

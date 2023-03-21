@@ -10,6 +10,7 @@ Creates an user for a OpenSearch cluster associated with a public cloud project.
 
 Create a user johndoe in a OpenSearch database.
 Output the user generated password with command `terraform output user_password`.
+
 ```hcl
 data "ovh_cloud_project_database" "opensearch" {
   service_name  = "XXX"
