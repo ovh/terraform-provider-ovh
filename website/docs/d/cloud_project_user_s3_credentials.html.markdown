@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: cloud_project_user_s3_credentials"
-sidebar_current: "docs-ovh-datasource-cloud-project-user-s3-credentials"
-description: |-
-  Get the list of Access Key ID of a public cloud project's user.
+subcategory : "Account Management"
 ---
 
 # ovh_cloud_project_user_s3_credentials (Data Source)

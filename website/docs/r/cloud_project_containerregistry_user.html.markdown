@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: cloud_project_containerregistry_user"
-sidebar_current: "docs-ovh-resource-cloud-project-containerregistry-user"
-description: |-
-  Creates a user for a container registry associated with a public cloud project.
+subcategory : "Managed Private Registry"
 ---
 
 # ovh_cloud_project_containerregistry_user

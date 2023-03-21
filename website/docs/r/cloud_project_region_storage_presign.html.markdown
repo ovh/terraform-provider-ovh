@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: cloud_project_region_storage_presign"
-sidebar_current: "docs-ovh-resource-cloud-project-region-storage-presign"
-description: |-
-  Generates a temporary presigned S3 URLs to download or upload an object.
+subcategory : "Object Storage"
 ---
 
 # ovh_cloud_project_region_storage_presign

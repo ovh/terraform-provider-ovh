@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: ovh_iploadbalancing_tcp_route_rule"
-sidebar_current: "docs-ovh-resource-iploadbalancing-tcp-route-rule"
-description: |-
-  Manage rules for TCP route.
+subcategory : "Load Balancer (IPLB)"
 ---
 
 # ovh_iploadbalancing_tcp_route_rule

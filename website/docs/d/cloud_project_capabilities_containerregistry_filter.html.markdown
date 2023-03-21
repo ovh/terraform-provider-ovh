@@ -1,10 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: cloud_project_capabilities_containerregistry_filter"
-sidebar_current: "docs-ovh-datasource-cloud-project-capabilities-containerregistry-filter"
-description: |-
-  Filter the list of container registry capabilities associated with a public cloud project
-  to match one and only one capability.
+subcategory : "Managed Private Registry"
 ---
 
 # ovh_cloud_project_capabilities_containerregistry_filter (Data Source)

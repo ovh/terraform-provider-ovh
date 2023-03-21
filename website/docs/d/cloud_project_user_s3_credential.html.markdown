@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: cloud_project_user_s3_credential"
-sidebar_current: "docs-ovh-datasource-cloud-project-user-s3-credential"
-description: |-
-  Get the Secret Access Key of an Access Key ID of a public cloud project's user.
+subcategory : "Account Management"
 ---
 
 # ovh_cloud_project_user_s3_credential (Data Source)

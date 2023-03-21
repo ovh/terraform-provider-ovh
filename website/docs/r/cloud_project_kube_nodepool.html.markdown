@@ -1,8 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: cloud_project_kube_nodepool"
-sidebar_current: "docs-ovh-resource-cloud-project-kube-nodepool-x"
-description: "Creates a nodepool in a kubernetes managed cluster."
+subcategory : "Managed Kubernetes Service"
 ---
 
 # ovh_cloud_project_kube_nodepool

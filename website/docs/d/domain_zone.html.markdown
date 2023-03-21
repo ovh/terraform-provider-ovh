@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: domain_zone"
-sidebar_current: "docs-ovh-datasource-domain-zone"
-description: |-
-  Get information & status of a domain zone.
+subcategory : "Domain names"
 ---
 
 # ovh_domain_zone (Data Source)

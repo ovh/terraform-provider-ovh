@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: ovh_iploadbalancing"
-sidebar_current: "docs-ovh-resource-iploadbalancing-x"
-description: |-
-  Orders an IP load balancing.
+subcategory : "Load Balancer (IPLB)"
 ---
 
 # ovh_iploadbalancing

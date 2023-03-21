@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: ovh_me_installation_template"
-sidebar_current: "docs-ovh-resource-me-installation-template-x"
-description: |-
-  Creates a custom installation template available for dedicated servers.
+subcategory : "Dedicated Server"
 ---
 
 # ovh_me_installation_template

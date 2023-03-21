@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: ovh_me_identity_user"
-sidebar_current: "docs-ovh-resource-me-identity-user"
-description: |-
-  Creates an identity user.
+subcategory : "Account Management"
 ---
 
 # ovh_me_identity_user

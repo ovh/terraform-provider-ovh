@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: me_ssh_key"
-sidebar_current: "docs-ovh-datasource-ssh-key-x"
-description: |-
-  Get information & status of an SSH key.
+subcategory : "Account Management"
 ---
 
 # ovh_me_ssh_key (Data Source)

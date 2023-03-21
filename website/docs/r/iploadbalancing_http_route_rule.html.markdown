@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: ovh_iploadbalancing_http_route_rule"
-sidebar_current: "docs-ovh-resource-iploadbalancing-http-route-rule"
-description: |-
-  Manage rules for HTTP route.
+subcategory : "Load Balancer (IPLB)"
 ---
 
 # ovh_iploadbalancing_http_route_rule

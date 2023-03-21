@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: ovh_dbaas_logs_input"
-sidebar_current: "docs-ovh-resource-dbaas-logs-input-x"
-description: |-
-  Creates a dbaas logs input.
+subcategory : "Logs Data Platform"
 ---
 
 # ovh_dbaas_logs_input
