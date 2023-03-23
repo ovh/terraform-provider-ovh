@@ -10,6 +10,10 @@ description: |-
 
 Creates an OVHcloud managed private cloud database.
 
+## Important
+
+-> __NOTE__ To order a product with terraform, your account needs to have a default payment method defined. This can be done in the [console](https://www.ovh.com/manager/#/dedicated/billing/payment/method) or via API with the [/me/payment/method](https://api.ovh.com/console/#/me/payment/method~GET) routes
+
 ## Example Usage
 
 ```hcl

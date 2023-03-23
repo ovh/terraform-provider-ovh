@@ -10,6 +10,7 @@ description: |-
 
 Attach an IP block to a VRack.
 
+
 ## Example Usage
 
 ```hcl
