@@ -16,9 +16,7 @@ Orders an ip service.
 This resource orders an OVHcloud product for a long period of time and may generate heavy costs !
 Use with caution.
 
-__NOTE__ 1: the "default-payment-mean" will scan your registered bank accounts, credit card and paypal payment means to find your default payment mean.
-
-__NOTE__ 2: this resource is in beta state. Use with caution.
+-> __NOTE__ To order a product with terraform, your account needs to have a default payment method defined. This can be done in the [console](https://www.ovh.com/manager/#/dedicated/billing/payment/method) or via API with the [/me/payment/method](https://api.ovh.com/console/#/me/payment/method~GET) routes
 
 
 ## Example Usage
