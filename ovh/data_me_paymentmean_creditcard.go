@@ -62,6 +62,7 @@ func dataSourceMePaymentmeanCreditcard() *schema.Resource {
 				Computed: true,
 			},
 		},
+		DeprecationMessage: "paymentmean API is deprecated. In order process, the account default payment method is used.",
 	}
 }
 

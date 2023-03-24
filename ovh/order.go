@@ -41,8 +41,9 @@ func genericOrderSchema(withOptions bool) map[string]*schema.Schema {
 		},
 		"payment_mean": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Optional:    true,
 			ForceNew:    true,
+			Deprecated:  "This field is not anymore used since the API has been deprecated in favor of /payment/mean. Now, the default payment mean is used.",
 			Description: "Ovh payment mode",
 			ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
 				err := helpers.ValidateStringEnum(strings.ToLower(v.(string)), []string{
@@ -303,6 +304,16 @@ func orderCreate(d *schema.ResourceData, meta interface{}, product string) error
 		}
 	}
 
+	// get defaultPayment
+	paymentIds := []int64{}
+	endpoint = "/me/payment/method?default=true"
+	if err := config.OVHClient.Get(endpoint, &paymentIds); err != nil {
+		return fmt.Errorf("calling Get %s \n\t %q", endpoint, err)
+	}
+	if len(paymentIds) == 0 {
+		return fmt.Errorf("no default payment found")
+	}
+
 	// Create Order
 	log.Printf("[DEBUG] Will create order %s for cart: %s", product, cart.CartId)
 	order := &MeOrder{}
@@ -313,33 +324,18 @@ func orderCreate(d *schema.ResourceData, meta interface{}, product string) error
 	}
 
 	// Pay Order
-	log.Printf("[DEBUG] Will pay order %d", order.OrderId)
-
-	var paymentMeanOpts *MeOrderPaymentOpts
-	paymentMean := d.Get("payment_mean").(string)
-
-	switch strings.ToLower(paymentMean) {
-	case "default-payment-mean":
-		paymentMeanOpts, err = MePaymentMeanDefaultPaymentOpts(config.OVHClient)
-		if err != nil {
-			return fmt.Errorf("Could not order product: %v.", err)
-		}
-		if paymentMeanOpts == nil {
-			return fmt.Errorf("Could not find any default payment mean to order product.")
-		}
-	case "ovh-account":
-		paymentMeanOpts = MePaymentMeanOvhAccountPaymentOpts
-	case "fidelity":
-		paymentMeanOpts = MePaymentMeanFidelityAccountPaymentOpts
-	default:
-		return fmt.Errorf("Unsupported payment mean. This is a bug with the provider.")
-	}
+	log.Printf("[DEBUG] Will pay order %d with PaymentId %d", order.OrderId, paymentIds[0])
 
 	endpoint = fmt.Sprintf(
-		"/me/order/%d/payWithRegisteredPaymentMean",
+		"/me/order/%d/pay",
 		order.OrderId,
 	)
-	if err := config.OVHClient.Post(endpoint, paymentMeanOpts, nil); err != nil {
+	var paymentMethodOpts = &MeOrderPaymentMethodOpts{
+		PaymentMethod: PaymentMethod{
+			Id: paymentIds[0],
+		},
+	}
+	if err := config.OVHClient.Post(endpoint, paymentMethodOpts, nil); err != nil {
 		return fmt.Errorf("calling Post %s:\n\t %q", endpoint, err)
 	}
 
