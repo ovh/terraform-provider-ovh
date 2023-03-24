@@ -8,9 +8,9 @@ Orders a vrack.
 
 ## Important
 
-~> __WARNING__ This resource is in beta state. Use with caution.
+-> __NOTE__ To order a product through Terraform, your account needs to have a default payment method defined. This can be done in the [OVHcloud Control Panel](https://www.ovh.com/manager/#/dedicated/billing/payment/method) or via API with the [/me/payment/method](https://api.ovh.com/console/#/me/payment/method~GET) endpoint.
 
--> __NOTE__ Currently, the OVHcloud API doesn't support Vrack termination. You have to open a support ticket to ask for vrack termination. Otherwise, you may hit vrack quota issues.
+-> __WARNING__ Currently, the OVHcloud API doesn't support Vrack termination. You have to open a support ticket to ask for vrack termination. Otherwise, you may hit vrack quota issues.
 
 ## Example Usage
 
@@ -30,7 +30,6 @@ data "ovh_order_cart_product_plan" "vrack" {
 resource "ovh_vrack" "vrack" {
   ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
   name           = "my vrack"
-  payment_mean   = "fidelity"
   description    = "my vrack"
 
   plan {
@@ -47,7 +46,6 @@ The following arguments are supported:
 * `description` - yourvrackdescription
 * `name` - yourvrackname
 * `ovh_subsidiary` - (Required) OVHcloud Subsidiary
-* `payment_mean` - (Required) OVHcloud payment mode (One of "default-payment-mean", "fidelity", "ovh-account")
 * `plan` - (Required) Product Plan to order
   * `duration` - (Required) duration
   * `plan_code` - (Required) Plan code

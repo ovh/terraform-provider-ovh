@@ -6,6 +6,10 @@ subcategory : "Web Cloud Private SQL"
 
 Creates an OVHcloud managed private cloud database.
 
+## Important
+
+-> __NOTE__ To order a product through Terraform, your account needs to have a default payment method defined. This can be done in the [OVHcloud Control Panel](https://www.ovh.com/manager/#/dedicated/billing/payment/method) or via API with the [/me/payment/method](https://api.ovh.com/console/#/me/payment/method~GET) endpoint.
+
 ## Example Usage
 
 ```hcl
@@ -23,7 +27,6 @@ data "ovh_order_cart_product_plan" "database" {
 
 resource "ovh_hosting_privatedatabase" "database" {
   ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
-  payment_mean   = "ovh-account"
   display_name   = "Postgresql-12"
 
   plan {
@@ -54,7 +57,6 @@ The following arguments are supported:
 
 * `description` - Custom description on your privatedatabase order.
 * `ovh_subsidiary` - (Required) OVHcloud Subsidiary
-* `payment_mean` - (Required) OVHcloud payment mode (One of "default-payment-mean", "fidelity", "ovh-account")
 * `plan` - (Required) Product Plan to order
   * `duration` - (Required) duration.
   * `plan_code` - (Required) Plan code.
@@ -89,7 +91,6 @@ The following attributes are exported:
     * `quantity` - quantity
 * `quantity` - quantity
 * `ovh_subsidiary` - OVHcloud Subsidiary
-* `payment_mean` - OVHcloud payment mode
 * `plan` - Product Plan
   * `catalog_name` - Catalog name
   * `configuration` - Representation of a configuration item for personalizing product

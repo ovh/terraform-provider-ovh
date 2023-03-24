@@ -11,7 +11,8 @@ Orders an IP load balancing.
 ~> __WARNING__ This resource orders an OVHcloud product for a long period of time and may generate heavy costs!
 Use with caution.
 
--> __NOTE__ The "default-payment-mean" will scan your registered bank accounts, credit card and paypal payment means to find your default payment mean.
+-> __NOTE__ To order a product through Terraform, your account needs to have a default payment method defined. This can be done in the [OVHcloud Control Panel](https://www.ovh.com/manager/#/dedicated/billing/payment/method) or via API with the [/me/payment/method](https://api.ovh.com/console/#/me/payment/method~GET) endpoint.
+
 
 ## Example Usage
 
@@ -39,7 +40,6 @@ data "ovh_order_cart_product_options_plan" "bhs" {
 resource "ovh_iploadbalancing" "iplb-lb1" {
   ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
   display_name   = "my ip loadbalancing"
-  payment_mean   = "ovh-account"
 
   plan {
     duration     = data.ovh_order_cart_product_plan.iplb.selected_price.0.duration
@@ -61,7 +61,6 @@ The following arguments are supported:
 
 * `display_name` - Set the name displayed in ManagerV6 for your iplb (max 50 chars)
 * `ovh_subsidiary` - (Required) OVHcloud Subsidiary
-* `payment_mean` - (Required) OVHcloud payment mode (One of "default-payment-mean", "fidelity", "ovh-account")
 * `plan` - (Required) Product Plan to order
   * `duration` - (Required) duration
   * `plan_code` - (Required) Plan code
