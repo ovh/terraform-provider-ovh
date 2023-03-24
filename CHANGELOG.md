@@ -1,4 +1,51 @@
-## 0.29.0 (Unreleased)
+## 0.30.0 (Unreleased)
+
+## 0.29.0 (March 24, 2023)
+
+💪 Improvements:
+
+* `r/ovh_domain_zone_record`: Validate zone_record TTL is >=60 ([#397](https://github.com/ovh/terraform-provider-ovh/pull/397))
+* `r/ovh_cloud_project_kube_iprestrictions`: Add acceptance tests for all Managed Kubernetes Service resources ([#387](https://github.com/ovh/terraform-provider-ovh/pull/387))
+* `r/ovh_cloud_project_kube_nodepool`: Add acceptance tests for all Managed Kubernetes Service resources ([#387](https://github.com/ovh/terraform-provider-ovh/pull/387))
+* `r/ovh_cloud_project_kube_oidc`: Add acceptance tests for all Managed Kubernetes Service resources ([#387](https://github.com/ovh/terraform-provider-ovh/pull/387))
+* `r/ovh_cloud_project_kube`: Add acceptance tests for all Managed Kubernetes Service resources ([#387](https://github.com/ovh/terraform-provider-ovh/pull/387))
+
+🐜 Bug fixes:
+
+* `r/ovh_ip_reverse`: Update separator for ip reverse to fix the acceptance test ([#394](https://github.com/ovh/terraform-provider-ovh/pull/394))
+* `r/ovh_cloud_project_kube_nodepool`: desired_nodes to 0 was not taken into account ([#389](https://github.com/ovh/terraform-provider-ovh/pull/389))
+
+* `d/ovh_me_paymentmean_bankaccount`: Fix issue to be able to order with BankAccount or CreditCard ([#390](https://github.com/ovh/terraform-provider-ovh/pull/390))
+* `d/ovh_me_paymentmean_creditcard`: Fix issue to be able to order with BankAccount or CreditCard ([#390](https://github.com/ovh/terraform-provider-ovh/pull/390))
+
+📚 Documentation:
+
+* Add subcategory in documentation page ([#400](https://github.com/ovh/terraform-provider-ovh/pull/400))
+
+* `r/ovh_dedicated_nasha_partition`: Update documentation page ([#401](https://github.com/ovh/terraform-provider-ovh/pull/401))
+* `r/ovh_dedicated_nasha_partition_access`: Update documentation page ([#401](https://github.com/ovh/terraform-provider-ovh/pull/401))
+* `r/ovh_dedicated_nasha_partition_snapshot`: Update documentation page ([#401](https://github.com/ovh/terraform-provider-ovh/pull/401))
+* `r/ovh_iploadbalancing_http_farm`: Update documentation page ([#401](https://github.com/ovh/terraform-provider-ovh/pull/401))
+* `r/ovh_iploadbalancing_http_farm_server`: Update documentation page ([#401](https://github.com/ovh/terraform-provider-ovh/pull/401))
+* `r/ovh_iploadbalancing_http_frontend`: Update documentation page ([#401](https://github.com/ovh/terraform-provider-ovh/pull/401))
+* `r/ovh_iploadbalancing_refresh`: Update documentation page ([#399](https://github.com/ovh/terraform-provider-ovh/pull/399))
+* `r/ovh_iploadbalancing_tcp_farm`: Update documentation page ([#399](https://github.com/ovh/terraform-provider-ovh/pull/399))
+* `r/ovh_iploadbalancing_tcp_farm_server`: Update documentation page ([#399](https://github.com/ovh/terraform-provider-ovh/pull/399))
+* `r/ovh_domain_zone_record`: Update documentation page ([#397](https://github.com/ovh/terraform-provider-ovh/pull/397))
+* `r/ovh_cloud_project_kube`: Update documentation page ([#395](https://github.com/ovh/terraform-provider-ovh/pull/395))
+* `r/ovh_me_installation_template_partition_scheme_partition`: Update documentation page ([#393](https://github.com/ovh/terraform-provider-ovh/pull/393))
+* `r/ovh_cloud_project_workflow_backup`: Update documentation page ([#392](https://github.com/ovh/terraform-provider-ovh/pull/392))
+* `r/ovh_cloud_project`: Update documentation page ([#390](https://github.com/ovh/terraform-provider-ovh/pull/390))
+* `r/ovh_hosting_privatedatabase`: Update documentation page ([#390](https://github.com/ovh/terraform-provider-ovh/pull/390))
+* `r/ovh_ip_service`: Update documentation page ([#390](https://github.com/ovh/terraform-provider-ovh/pull/390))
+* `r/ovh_iploadbalancing`: Update documentation page ([#390](https://github.com/ovh/terraform-provider-ovh/pull/390))
+* `r/ovh_domain_zone`: Update documentation page ([#390](https://github.com/ovh/terraform-provider-ovh/pull/390))
+* `r/ovh_vrack`: Update documentation page ([#390](https://github.com/ovh/terraform-provider-ovh/pull/390))
+* `r/ovh_vrack_ip`: Update documentation page ([#390](https://github.com/ovh/terraform-provider-ovh/pull/390))
+
+* `d/cloud_project_failover_ip_attach`: Update documentation page ([#401](https://github.com/ovh/terraform-provider-ovh/pull/401))
+
+❤️ Thanks for your contributions ❤️
 
 ## 0.28.0 (February 22, 2023)
 
