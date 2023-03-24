@@ -16,7 +16,7 @@ Orders an ip service.
 This resource orders an OVHcloud product for a long period of time and may generate heavy costs !
 Use with caution.
 
--> __NOTE__ To order a product with terraform, your account needs to have a default payment method defined. This can be done in the [console](https://www.ovh.com/manager/#/dedicated/billing/payment/method) or via API with the [/me/payment/method](https://api.ovh.com/console/#/me/payment/method~GET) routes
+-> __NOTE__ To order a product through Terraform, your account needs to have a default payment method defined. This can be done in the [OVHcloud Control Panel](https://www.ovh.com/manager/#/dedicated/billing/payment/method) or via API with the [/me/payment/method](https://api.ovh.com/console/#/me/payment/method~GET) endpoint.
 
 
 ## Example Usage
