@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: cloud_project_network_private_subnet"
-sidebar_current: "docs-ovh-resource-cloud-project-network-private-subnet"
-description: |-
-  Creates a subnet in a private network of a public cloud project.
+subcategory : "Public Cloud Network"
 ---
 
 # ovh_cloud_project_network_private_subnet

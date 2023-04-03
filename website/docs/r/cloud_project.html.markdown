@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: ovh_cloud_project"
-sidebar_current: "docs-ovh-resource-cloud-project-x"
-description: |-
-  Orders a public cloud project.
+subcategory : "Account Management"
 ---
 
 # ovh_cloud_project
@@ -12,7 +8,7 @@ Orders a public cloud project.
 
 ## Important
 
-This resource is in beta state. Use with caution.
+-> __NOTE__ To order a product through Terraform, your account needs to have a default payment method defined. This can be done in the [OVHcloud Control Panel](https://www.ovh.com/manager/#/dedicated/billing/payment/method) or via API with the [/me/payment/method](https://api.ovh.com/console/#/me/payment/method~GET) endpoint.
 
 ## Example Usage
 
@@ -32,7 +28,6 @@ data "ovh_order_cart_product_plan" "cloud" {
 resource "ovh_cloud_project" "my_cloud_project" {
   ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
   description    = "my cloud project"
-  payment_mean   = "fidelity"
 
   plan {
     duration     = data.ovh_order_cart_product_plan.cloud.selected_price.0.duration
@@ -48,7 +43,6 @@ The following arguments are supported:
 
 * `description` - A description associated with the user.
 * `ovh_subsidiary` - (Required) OVHcloud Subsidiary
-* `payment_mean` - (Required) OVHcloud payment mode (One of "default-payment-mean", "fidelity", "ovh-account")
 * `plan` - (Required) Product Plan to order
   * `duration` - (Required) duration
   * `plan_code` - (Required) Plan code

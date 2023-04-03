@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: cloud_project_database_opensearch_user"
-sidebar_current: "docs-ovh-resource-cloud-project-database-opensearch-user"
-description: |-
-  Creates an user for a OpenSearch cluster associated with a public cloud project.
+subcategory : "Managed Databases"
 ---
 
 # ovh_cloud_project_database_opensearch_user
@@ -14,6 +10,7 @@ Creates an user for a OpenSearch cluster associated with a public cloud project.
 
 Create a user johndoe in a OpenSearch database.
 Output the user generated password with command `terraform output user_password`.
+
 ```hcl
 data "ovh_cloud_project_database" "opensearch" {
   service_name  = "XXX"

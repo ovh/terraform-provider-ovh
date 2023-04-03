@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: cloud_project_failover_ip_attach"
-sidebar_current: "docs-ovh-resource-cloud-project-failover-ip-attach-x"
-description: |-
-  Attaches failover ip addresses to cloud instances
+subcategory : "Additional IP"
 ---
 
 # ovh_cloud_project_failover_ip_attach

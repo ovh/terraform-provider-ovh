@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: iploadbalancing_tcp_frontend"
-sidebar_current: "docs-ovh-resource-iploadbalancing-tcp-frontend"
-description: |-
-  Creates a frontend for an IP Load balancing service.
+subcategory : "Load Balancer (IPLB)"
 ---
 
 # ovh_iploadbalancing_tcp_frontend

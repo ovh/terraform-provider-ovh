@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: cloud_project_database_integration"
-sidebar_current: "docs-ovh-datasource-cloud-project-database-integration"
-description: |-
-  Get information about an integration of a database cluster associated with a public cloud project.
+subcategory : "Managed Databases"
 ---
 
 # ovh_cloud_project_database_integration (Data Source)

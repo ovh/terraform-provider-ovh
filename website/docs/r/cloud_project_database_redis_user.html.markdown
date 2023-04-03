@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: cloud_project_database_redis_user"
-sidebar_current: "docs-ovh-resource-cloud-project-database-redis-user"
-description: |-
-  Creates an user for a Redis cluster associated with a public cloud project.
+subcategory : "Managed Databases"
 ---
 
 # ovh_cloud_project_database_redis_user

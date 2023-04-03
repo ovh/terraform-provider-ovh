@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: ovh_hosting_privatedatabase_database"
-sidebar_current: "docs-ovh-resource-hosting-privatedatabase-database"
-description: |-
-  Create a new database on your private cloud database service.
+subcategory : "Web Cloud Private SQL"
 ---
 
 # ovh_hosting_privatedatabase_database

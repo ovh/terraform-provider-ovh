@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: me_identity_user"
-sidebar_current: "docs-ovh-datasource-identity-user-x"
-description: |-
-  Get information about identity User.
+subcategory : "Account Management"
 ---
 
 # ovh_me_identity_user (Data Source)

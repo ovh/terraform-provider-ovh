@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: me_paymentmean_creditcard"
-sidebar_current: "docs-ovh-datasource-me-paymentmean-creditcard"
-description: |-
-  Get information & status of an OVHcloud credit card payment mean
+subcategory : "Account Management"
 ---
 
 # ovh_me_paymentmean_creditcard (Data Source)

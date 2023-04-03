@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: ovh_cloud_project_user_s3_policy"
-sidebar_current: "docs-ovh-resource-cloud-project-user-s3-policy"
-description: |-
-  Set the S3 Policy of a public cloud project user.
+subcategory : "Account Management"
 ---
 
 # ovh_cloud_project_user_s3_policy

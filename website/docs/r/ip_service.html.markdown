@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: ovh_ip_service"
-sidebar_current: "docs-ovh-resource-ip-service-x"
-description: |-
-  Orders an ip service.
+subcategory : "Additional IP"
 ---
 
 # ovh_ip_service
@@ -16,9 +12,7 @@ Orders an ip service.
 This resource orders an OVHcloud product for a long period of time and may generate heavy costs !
 Use with caution.
 
-__NOTE__ 1: the "default-payment-mean" will scan your registered bank accounts, credit card and paypal payment means to find your default payment mean.
-
-__NOTE__ 2: this resource is in beta state. Use with caution.
+-> __NOTE__ To order a product through Terraform, your account needs to have a default payment method defined. This can be done in the [OVHcloud Control Panel](https://www.ovh.com/manager/#/dedicated/billing/payment/method) or via API with the [/me/payment/method](https://api.ovh.com/console/#/me/payment/method~GET) endpoint.
 
 
 ## Example Usage
@@ -38,7 +32,6 @@ data "ovh_order_cart_product_plan" "ipblock" {
 
 resource "ovh_ip_service" "ipblock" {
   ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
-  payment_mean   = "ovh-account"
   description    = "my ip block"
 
  plan {
@@ -60,7 +53,6 @@ The following arguments are supported:
 
 * `description` - Custom description on your ip.
 * `ovh_subsidiary` - (Required) OVHcloud Subsidiary
-* `payment_mean` - (Required) OVHcloud payment mode (One of "default-payment-mean", "fidelity", "ovh-account")
 * `plan` - (Required) Product Plan to order
   * `duration` - (Required) duration
   * `plan_code` - (Required) Plan code

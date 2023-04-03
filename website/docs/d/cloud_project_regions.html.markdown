@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: cloud_project_regions"
-sidebar_current: "docs-ovh-datasource-cloud-project-regions"
-description: |-
-  Get the list of regions associated with a public cloud project.
+subcategory : "Account Management"
 ---
 
 # ovh_cloud_project_regions (Data Source)

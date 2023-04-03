@@ -1,14 +1,11 @@
 ---
-layout: "ovh"
-page_title: "OVH: vrack_ip"
-sidebar_current: "docs-ovh-resource-vrack-ip"
-description: |-
-  Attach an Ip block to a VRack.
+subcategory : "vRack"
 ---
 
 # ovh_vrack_ip
 
 Attach an IP block to a VRack.
+
 
 ## Example Usage
 
@@ -29,7 +26,6 @@ resource "ovh_vrack" "vrack" {
   description    = data.ovh_order_cart.mycart.description
   name           = data.ovh_order_cart.mycart.description
   ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
-  payment_mean   = "fidelity"
 
   plan {
     duration     = data.ovh_order_cart_product_plan.vrack.selected_price.0.duration
@@ -47,7 +43,6 @@ data "ovh_order_cart_product_plan" "ipblock" {
 
 resource "ovh_ip_service" "ipblock" {
   ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
-  payment_mean   = "ovh-account"
   description    = data.ovh_order_cart.mycart.description
 
   plan {

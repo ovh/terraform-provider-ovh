@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: cloud_project_databases"
-sidebar_current: "docs-ovh-datasource-cloud-project-databases"
-description: |-
-  Get the list of managed database cluster associated with a public cloud project.
+subcategory : "Managed Databases"
 ---
 
 # ovh_cloud_project_databases (Data Source)
@@ -13,6 +9,7 @@ Use this data source to get the list of managed databases of a public cloud proj
 ## Example Usage
 
 To get the list of database clusters service for a given engine:
+
 ```hcl
 data "ovh_cloud_project_databases" "dbs" {
   service_name  = "XXXXXX"

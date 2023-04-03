@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: cloud_project_kube"
-sidebar_current: "docs-ovh-resource-cloud-project-kube-x"
-description: |-
-  Creates a kubernetes managed cluster in a public cloud project.
+subcategory : "Managed Kubernetes Service"
 ---
 
 # ovh_cloud_project_kube

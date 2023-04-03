@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: ovh_iploadbalancing_vrack_networks"
-sidebar_current: "docs-ovh-iploadbalancing-vrack-networks"
-description: |-
-  Get the list of Vrack network ids available for your IPLoadbalancer associated with your OVHcloud account.
+subcategory : "Load Balancer (IPLB)"
 ---
 
 # ovh_iploadbalancing_vrack_networks (Data Source)
