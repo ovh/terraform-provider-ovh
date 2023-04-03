@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: ovh_hosting_privatedatabase_user_grant"
-sidebar_current: "docs-ovh-resource-hosting-privatedatabase-user-grant"
-description: |-
-  Add grant on a database in your private cloud database instance.
+subcategory : "Web Cloud Private SQL"
 ---
 
 # ovh_hosting_privatedatabase_user_grant

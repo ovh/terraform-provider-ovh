@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: order_cart_product_plan"
-sidebar_current: "docs-ovh-datasource-order-cart-product-plan"
-description: |-
-  Retrieve information of order cart product plan.
+subcategory : "Order"
 ---
 
 # ovh_order_cart_product_plan (Data Source)

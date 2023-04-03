@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: cloud_project_database_users"
-sidebar_current: "docs-ovh-datasource-cloud-project-database-users"
-description: |-
-  Get the list of users of a database cluster associated with a public cloud project.
+subcategory : "Managed Databases"
 ---
 
 # ovh_cloud_project_database_users (Data Source)

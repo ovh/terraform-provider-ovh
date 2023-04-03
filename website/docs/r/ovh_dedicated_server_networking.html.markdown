@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: ovh_dedicated_server_networking"
-sidebar_current: "docs-ovh-resource-ovh-dedicated-server-networking"
-description: |-
-  Manage dedicated server networking interface
+subcategory : "Dedicated Server"
 ---
 
 # ovh_dedicated_server_networking

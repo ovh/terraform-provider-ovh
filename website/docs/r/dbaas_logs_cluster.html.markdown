@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: ovh_dbaas_logs_cluster"
-sidebar_current: "docs-ovh-resource-dbaas-logs-cluster"
-description: |-
-  Manage a existing dbaas logs cluster.
+subcategory : "Logs Data Platform"
 ---
 
 # ovh_dbaas_logs_cluster

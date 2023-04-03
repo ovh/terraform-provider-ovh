@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: ovh_cloud_project_user"
-sidebar_current: "docs-ovh-resource-cloud-project-user"
-description: |-
-  Creates a user in a public cloud project.
+subcategory : "Account Management"
 ---
 
 # ovh_cloud_project_user

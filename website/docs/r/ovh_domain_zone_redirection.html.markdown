@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: ovh_domain_zone_redirection"
-sidebar_current: "docs-ovh-resource-domain-zone-redirection"
-description: |-
-  Provides a OVHcloud domain zone resource.
+subcategory : "Domain names"
 ---
 
 # ovh_domain_zone_redirection

@@ -24,7 +24,6 @@ data "ovh_order_cart" "mycart" {
 	
   resource "ovh_hosting_privatedatabase" "database" {
 	ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
-	payment_mean   = "ovh-account"
 	display_name   = "%s"
   
 	plan {

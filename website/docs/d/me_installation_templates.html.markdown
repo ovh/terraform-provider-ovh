@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: me_installation_templates"
-sidebar_current: "docs-ovh-datasource-me-installation-templates"
-description: |-
-  Get the list of custom installation templates available for dedicated servers.
+subcategory : "Dedicated Server"
 ---
 
 # ovh_me_installation_templates (Data Source)

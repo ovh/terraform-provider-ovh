@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: me_identity_users"
-sidebar_current: "docs-ovh-datasource-identity-users"
-description: |-
-  Get the list of the identity users for the account.
+subcategory : "Account Management"
 ---
 
 # ovh_me_identity_users (Data Source)
