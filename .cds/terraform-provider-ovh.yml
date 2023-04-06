@@ -63,5 +63,4 @@ notifications:
     on_success: never
     send_to_author: false
     recipients:
-    - yann.degat@ovhcloud.com
-    - pierre.gaxatte@ovhcloud.com
+    - guillaume.allee@ovhcloud.com
