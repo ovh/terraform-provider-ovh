@@ -242,7 +242,7 @@ func resourceCloudProjectDatabaseCreate(ctx context.Context, d *schema.ResourceD
 	)
 	err, params := (&CloudProjectDatabaseCreateOpts{}).FromResource(d)
 	if err != nil {
-		return diag.Errorf("multi region cluster not available yet : %q", err)
+		return diag.Errorf("service creation failed : %q", err)
 	}
 	res := &CloudProjectDatabaseResponse{}
 
@@ -342,7 +342,7 @@ func resourceCloudProjectDatabaseUpdate(ctx context.Context, d *schema.ResourceD
 	)
 	err, params := (&CloudProjectDatabaseUpdateOpts{}).FromResource(d)
 	if err != nil {
-		return diag.Errorf("multi region cluster not available yet : %q", err)
+		return diag.Errorf("service update failed : %q", err)
 	}
 	log.Printf("[DEBUG] Will update database: %+v", params)
 	err = config.OVHClient.Put(endpoint, params, nil)
