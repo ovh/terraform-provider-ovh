@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: ovh_cloud_project_user"
-sidebar_current: "docs-ovh-datasource-cloud-project-user"
-description: |-
-  Get the details of a public cloud project user.
+subcategory : "Account Management"
 ---
 
 # ovh_cloud_project_user

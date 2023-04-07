@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: me_ssh_keys"
-sidebar_current: "docs-ovh-datasource-ssh-keys"
-description: |-
-  Get the list of the SSH keys of the account.
+subcategory : "Account Management"
 ---
 
 # ovh_me_ssh_keys (Data Source)

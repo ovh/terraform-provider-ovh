@@ -90,14 +90,17 @@ func resourceCloudProjectKubeOIDC() *schema.Resource {
 
 func resourceCloudProjectKubeOIDCImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	givenId := d.Id()
+	log.Printf("[DEBUG] Importing cloud project kube OIDC %s", givenId)
+	fmt.Sprintf("[DEBUG] Importing cloud project kube OIDC %s", givenId)
+
 	splitId := strings.SplitN(givenId, "/", 3)
 	if len(splitId) != 2 {
-		return nil, fmt.Errorf("Import Id is not service_name/kubeid formatted")
+		return nil, fmt.Errorf("import Id is not service_name/kubeid formatted")
 	}
 	serviceName := splitId[0]
-	kubeId := splitId[1]
-	d.SetId(kubeId)
-	d.Set("kube_id", kubeId)
+	kubeID := splitId[1]
+	d.SetId(serviceName + "/" + kubeID)
+	d.Set("kube_id", kubeID)
 	d.Set("service_name", serviceName)
 
 	results := make([]*schema.ResourceData, 1)

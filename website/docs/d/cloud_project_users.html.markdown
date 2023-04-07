@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: ovh_cloud_project_users"
-sidebar_current: "docs-ovh-datasource-cloud-project-users"
-description: |-
-  Get the list of all users of a public cloud project.
+subcategory : "Account Management"
 ---
 
 # ovh_cloud_project_users

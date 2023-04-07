@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: dedicated_server_reboot_task"
-sidebar_current: "docs-ovh-resource-dedicated-server-reboot-task"
-description: |-
-  Reboot your Dedicated Server
+subcategory : "Dedicated Server"
 ---
 
 # ovh_dedicated_server_reboot_task

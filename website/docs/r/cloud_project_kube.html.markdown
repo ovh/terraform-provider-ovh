@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: cloud_project_kube"
-sidebar_current: "docs-ovh-resource-cloud-project-kube-x"
-description: |-
-  Creates a kubernetes managed cluster in a public cloud project.
+subcategory : "Managed Kubernetes Service"
 ---
 
 # ovh_cloud_project_kube
@@ -81,9 +77,9 @@ resource "ovh_cloud_project_kube" "mycluster" {
 provider "helm" {
   kubernetes {
     host                    = ovh_cloud_project_kube.mycluster.kubeconfig_attributes[0].host
-    client_certificate      = ovh_cloud_project_kube.mycluster.kubeconfig_attributes[0].client_certificate
-    client_key              = ovh_cloud_project_kube.mycluster.kubeconfig_attributes[0].client_key
-    cluster_ca_certificate  = ovh_cloud_project_kube.mycluster.kubeconfig_attributes[0].cluster_ca_certificate
+    client_certificate      = base64decode(ovh_cloud_project_kube.mycluster.kubeconfig_attributes[0].client_certificate)
+    client_key              = base64decode(ovh_cloud_project_kube.mycluster.kubeconfig_attributes[0].client_key)
+    cluster_ca_certificate  = base64decode(ovh_cloud_project_kube.mycluster.kubeconfig_attributes[0].cluster_ca_certificate)
   }
 }
 

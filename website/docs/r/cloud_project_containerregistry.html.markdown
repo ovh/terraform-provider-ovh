@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: cloud_project_containerregistry"
-sidebar_current: "docs-ovh-resource-cloud-project-containerregistry-x"
-description: |-
-  Creates a container registry associated with a public cloud project.
+subcategory : "Managed Private Registry"
 ---
 
 # ovh_cloud_project_containerregistry

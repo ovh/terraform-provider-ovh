@@ -28,7 +28,6 @@ data "ovh_order_cart_product_plan" "ipblock" {
 
 resource "ovh_ip_service" "ipblock" {
   ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
-  payment_mean   = "ovh-account"
   description   = "%s"
 
  plan {

@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: iploadbalancing_refresh"
-sidebar_current: "docs-ovh-resource-iploadbalancing-refresh"
-description: |-
-  Applies changes from other ovh_iploadbalancing_* resources to the production configuration of loadbalancers.
+subcategory : "Load Balancer (IPLB)"
 ---
 
 # ovh\_iploadbalancing\_refresh
@@ -19,13 +15,13 @@ data "ovh_iploadbalancing" "lb" {
 }
 
 resource "ovh_iploadbalancing_tcp_farm" "farmname" {
-  service_name = "${data.ovh_iploadbalancing.lb.id}"
+  service_name = "${data.ovh_iploadbalancing.lb.service_name}"
   port         = 8080
   zone         = "all"
 }
 
 resource "ovh_iploadbalancing_tcp_farm_server" "backend" {
-  service_name           = "${data.ovh_iploadbalancing.lb.id}"
+  service_name           = "${data.ovh_iploadbalancing.lb.service_name}"
   farm_id                = "${ovh_iploadbalancing_tcp_farm.farmname.id}"
   display_name           = "mybackend"
   address                = "4.5.6.7"
@@ -39,7 +35,7 @@ resource "ovh_iploadbalancing_tcp_farm_server" "backend" {
 }
 
 resource "ovh_iploadbalancing_refresh" "mylb" {
-  service_name = "${data.ovh_iploadbalancing.lb.id}"
+  service_name = "${data.ovh_iploadbalancing.lb.service_name}"
   keepers = [
     "${ovh_iploadbalancing_tcp_farm_server.backend.*.address}",
   ]

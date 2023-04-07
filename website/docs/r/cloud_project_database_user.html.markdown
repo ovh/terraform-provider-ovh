@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: cloud_project_database_user"
-sidebar_current: "docs-ovh-resource-cloud-project-database-user"
-description: |-
-  Creates an user for a database cluster associated with a public cloud project.
+subcategory : "Managed Databases"
 ---
 
 # ovh_cloud_project_database_user
@@ -21,6 +17,7 @@ With this resource you can create a user for the following database engine:
 
 Create a user johndoe in a database.
 Output the user generated password with command `terraform output user_password`.
+
 ```hcl
 data "ovh_cloud_project_database" "db" {
   service_name  = "XXXX"

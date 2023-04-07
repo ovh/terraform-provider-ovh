@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: cloud_project_database_capabilities"
-sidebar_current: "docs-ovh-datasource-cloud-project-database-capabilities"
-description: |-
-  Get information about capabilities of a public cloud project.
+subcategory : "Managed Databases"
 ---
 
 # ovh_cloud_project_database_capabilities (Data Source)

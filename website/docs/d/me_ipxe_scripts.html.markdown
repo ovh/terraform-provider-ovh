@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: me_ipxe_scripts"
-sidebar_current: "docs-ovh-datasource-ipxe-scripts"
-description: |-
-  Get the list of the IPXE Scripts of the account.
+subcategory : "Dedicated Server"
 ---
 
 # ovh_me_ipxe_scripts (Data Source)

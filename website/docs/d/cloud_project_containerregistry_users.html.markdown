@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: cloud_project_containerregistry_users"
-sidebar_current: "docs-ovh-datasource-cloud-project-containerregistry-users"
-description: |-
-  Get the list of users of a container registry associated with a public cloud project.
+subcategory : "Managed Private Registry"
 ---
 
 # ovh_cloud_project_containerregistry_users (Data Source)

@@ -24,7 +24,6 @@ data "ovh_order_cart_product_plan" "vrack" {
 resource "ovh_vrack" "vrack" {
  ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
  name          = "%s"
- payment_mean  = "fidelity"
  description   = "%s"
 
  plan {

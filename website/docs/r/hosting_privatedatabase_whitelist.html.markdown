@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: ovh_hosting_privatedatabase_whitelist"
-sidebar_current: "docs-ovh-resource-hosting-privatedatabase-whitelist"
-description: |-
-  Create a new IP whitelist on your private cloud database instance.
+subcategory : "Web Cloud Private SQL"
 ---
 
 # ovh_hosting_privatedatabase_whitelist

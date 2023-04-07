@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: ovh_me_installation_template_partition_scheme_hardware_raid"
-sidebar_current: "docs-ovh-resource-me-installation-template-partition-scheme-hardware-raid"
-description: |-
-  Creates a hardware raid group in the partition scheme of a custom installation template available for dedicated servers.
+subcategory : "Dedicated Server"
 ---
 
 # ovh_me_installation_template_partition_scheme_hardware_raid

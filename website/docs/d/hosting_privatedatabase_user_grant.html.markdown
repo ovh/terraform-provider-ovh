@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: ovh_hosting_privatedatabase_user_grant"
-sidebar_current: "docs-ovh-datasource-hosting-privatedatabase-user-grant"
-description: |-
-  Get information & status of an hosting privatedatabase user grant.
+subcategory : "Web Cloud Private SQL"
 ---
 
 # ovh_hosting_privatedatabase_user_grant (Data Source)
