@@ -28,7 +28,6 @@ data "ovh_order_cart_product_plan" "zone" {
 
 resource "ovh_domain_zone" "zone" {
  ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
- payment_mean   = "fidelity"
 
  plan {
    duration     = data.ovh_order_cart_product_plan.zone.selected_price.0.duration

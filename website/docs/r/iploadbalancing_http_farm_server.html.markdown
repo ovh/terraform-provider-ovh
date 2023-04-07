@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: iploadbalancing_http_farm_server"
-sidebar_current: "docs-ovh-resource-iploadbalancing-http-farm-server"
-description: |-
-  Creates a backend server entry linked to farm.
+subcategory : "Load Balancer (IPLB)"
 ---
 
 # ovh\_iploadbalancing\_http_farm\_server
@@ -12,20 +8,20 @@ Creates a backend server entry linked to HTTP loadbalancing group (farm)
 
 ## Example Usage
 
-```
+```hcl
 data "ovh_iploadbalancing" "lb" {
   service_name = "ip-1.2.3.4"
   state        = "ok"
 }
 
 resource "ovh_iploadbalancing_http_farm" "farmname" {
-  service_name = "${data.ovh_iploadbalancing.lb.id}"
+  service_name = "${data.ovh_iploadbalancing.lb.service_name}"
   port         = 8080
   zone         = "all"
 }
 
 resource "ovh_iploadbalancing_http_farm_server" "backend" {
-  service_name           = "${data.ovh_iploadbalancing.lb.id}"
+  service_name           = "${data.ovh_iploadbalancing.lb.service_name}"
   farm_id                = "${ovh_iploadbalancing_http_farm.farmname.id}"
   display_name           = "mybackend"
   address                = "4.5.6.7"

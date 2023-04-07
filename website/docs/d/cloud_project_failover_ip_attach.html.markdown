@@ -1,14 +1,10 @@
 ---
-layout: "ovh"
-page_title: "OVH: cloud_project_failover_ip_attach"
-sidebar_current: "docs-ovh-datasource-cloud-project-failover-ip-attach-x"
-description: |-
-  Reads failover ip addresses for a service
+subcategory : "Additional IP"
 ---
 
 # ovh_cloud_project_failover_ip_attach (Data Source)
 
-Use this data source to get the details of a failover ip address of a service in a public cloud project.
+Use this data source to get the details of a failover IP address of a service in a public cloud project.
 
 ## Example Usage
 

@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: ovh_domain_zone_record"
-sidebar_current: "docs-ovh-resource-domain-zone-record"
-description: |-
-  Provides a OVHcloud domain zone resource.
+subcategory : "Domain names"
 ---
 
 # ovh_domain_zone_record
@@ -18,7 +14,7 @@ resource "ovh_domain_zone_record" "test" {
   zone      = "testdemo.ovh"
   subdomain = "test"
   fieldtype = "A"
-  ttl       = "3600"
+  ttl       = 3600
   target    = "0.0.0.0"
 }
 ```
@@ -31,7 +27,7 @@ The following arguments are supported:
 * `subdomain` - (Required) The name of the record
 * `target` - (Required) The value of the record
 * `fieldtype` - (Required) The type of the record
-* `ttl` - (Optional) The TTL of the record
+* `ttl` - (Optional) The TTL of the record, it shall be >= to 60.
 
 
 ## Attributes Reference

@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: dedicated_nasha_partition"
-sidebar_current: "docs-ovh-resource-dedicated-nasha-partition"
-description: |-
-  Provides a resource for managing partitions on HA-NAS services
+subcategory : "NAS-HA"
 ---
 
 # ovh_dedicated_nasha_partition
@@ -12,7 +8,7 @@ Provides a resource for managing partitions on HA-NAS services
 
 ## Example Usage
 
-```
+```hcl
 resource "ovh_dedicated_nasha_partition" "my-partition" {
   service_name = "zpool-12345"
   name = "my-partition"

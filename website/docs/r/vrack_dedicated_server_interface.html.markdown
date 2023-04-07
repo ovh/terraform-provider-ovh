@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: vrack_dedicated_server_interface"
-sidebar_current: "docs-ovh-resource-vrack-dedicated-server-interface"
-description: |-
-  Attach a Dedicated Server Network Interface to a VRack.
+subcategory : "vRack"
 ---
 
 # ovh_vrack_dedicated_server_interface

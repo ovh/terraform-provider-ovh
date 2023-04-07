@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: ovh_iploadbalancing_vrack_network"
-sidebar_current: "docs-ovh-resource-iploadbalancing-vrack-network"
-description: |-
-  Manage a vrack network for your IP Loadbalancing service.
+subcategory : "Load Balancer (IPLB)"
 ---
 
 # ovh_iploadbalancing_vrack_network

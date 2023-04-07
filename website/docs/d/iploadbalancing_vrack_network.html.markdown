@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: ovh_iploadbalancing_vrack_network"
-sidebar_current: "docs-ovh-iploadbalancing-vrack-network"
-description: |-
-  Get the details of Vrack network available for your IPLoadbalancer associated with your OVHcloud account.
+subcategory : "Load Balancer (IPLB)"
 ---
 
 # ovh_iploadbalancing_vrack_network (Data Source)

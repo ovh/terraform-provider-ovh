@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: ovh_dbaas_logs_graylog_output_stream"
-sidebar_current: "docs-ovh-resource-dbaas-logs-graylog-output-stream-x"
-description: |-
-  Creates a dbaas logs graylog output stream.
+subcategory : "Logs Data Platform"
 ---
 
 # ovh_dbaas_logs_graylog_output_stream

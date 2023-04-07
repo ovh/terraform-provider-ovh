@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: ovh_me_ipxe_script"
-sidebar_current: "docs-ovh-resource-me-ipxe-script"
-description: |-
-  Creates an IPXE Script.
+subcategory : "Dedicated Server"
 ---
 
 # ovh_me_ipxe_script

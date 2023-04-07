@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: me"
-sidebar_current: "docs-ovh-datasource-me"
-description: |-
-  Get information about the current OVHcloud account
+subcategory : "Account Management"
 ---
 
 # ovh_me (Data Source)

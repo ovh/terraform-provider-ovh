@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: cloud_project_database_kafka_acl"
-sidebar_current: "docs-ovh-resource-cloud-project-database-kafka-acl"
-description: |-
-  Creates an ACL for a kafka cluster associated with a public cloud project.
+subcategory : "Managed Databases"
 ---
 
 # ovh_cloud_project_database_kafka_acl

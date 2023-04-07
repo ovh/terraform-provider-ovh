@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: cloud_project_database_postgresql_user"
-sidebar_current: "docs-ovh-resource-cloud-project-database-postgresql-user"
-description: |-
-  Creates an user for a PostgreSQL cluster associated with a public cloud project.
+subcategory : "Managed Databases"
 ---
 
 # ovh_cloud_project_database_postgresql_user
@@ -14,6 +10,7 @@ Creates an user for a PostgreSQL cluster associated with a public cloud project.
 
 Create a user johndoe in a PostgreSQL database.
 Output the user generated password with command `terraform output user_password`.
+
 ```hcl
 data "ovh_cloud_project_database" "postgresql" {
   service_name  = "XXXX"

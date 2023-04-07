@@ -1,10 +1,7 @@
 ---
-layout: "ovh"
-page_title: "OVH: dbaas_logs_cluster"
-sidebar_current: "docs-ovh-datasource-dbaas-logs"
-description: |-
-  Get informations of a DBaas logs cluster tenant.
+subcategory : "Logs Data Platform"
 ---
+
 
 # ovh_dbaas_logs_cluster (Data Source)
 

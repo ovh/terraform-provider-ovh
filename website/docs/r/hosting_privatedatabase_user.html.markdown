@@ -1,9 +1,5 @@
 ---
-layout: "ovh"
-page_title: "OVH: ovh_hosting_privatedatabase_user"
-sidebar_current: "docs-ovh-resource-hosting-privatedatabase-user"
-description: |-
-  Create a new user on your private cloud database instance.
+subcategory : "Web Cloud Private SQL"
 ---
 
 # ovh_hosting_privatedatabase_user
