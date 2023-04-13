@@ -6,6 +6,8 @@ subcategory : "Domain names"
 
 Provides a OVHcloud domain zone record.
 
+!> The `Change in text format` feature available in the web console will update the record ids if you use it. Hence if you have created your records with terraform, you will get some `record has been deleted` errors. The workaround is to import all the records with the updated ids and to stop using that feature !
+
 ## Example Usage
 
 ```hcl
