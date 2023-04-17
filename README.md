@@ -46,7 +46,6 @@ First install the terraform provider binary into your local plugin repository:
 # Set your target environment (OS_architecture): linux_amd64, darwin_amd64...
 $ export ENV="linux_amd64"
 $ make build
-...
 $ mkdir -p ~/.terraform.d/plugins/terraform.local/local/ovh/0.0.1/$ENV
 $ cp $GOPATH/bin/terraform-provider-ovh ~/.terraform.d/plugins/terraform.local/local/ovh/0.0.1/$ENV/terraform-provider-ovh_v0.0.1
 ```
@@ -57,6 +56,7 @@ Then create a terraform configuration using this exact provider:
 $ mkdir ~/test-terraform-provider-ovh
 $ cd ~/test-terraform-provider-ovh
 $ cat > main.tf <<EOF
+# Configure the OVHcloud Provider
 terraform {
   required_providers {
     ovh = {
@@ -66,17 +66,14 @@ terraform {
   }
 }
 
-data "ovh_me" "me" {}
-
-output "me" {
-  value = data.ovh_me.me
+provider "ovh" {
 }
 EOF
 $ export OVH_ENDPOINT="..."
 $ export OVH_APPLICATION_KEY="..."
 $ export OVH_APPLICATION_SECRET="..."
 $ export OVH_CONSUMER_KEY="..."
-$ terraform init
+$ rm .terraform.lock.hcl && terraform init
 ...
 $ terraform apply
 ...
