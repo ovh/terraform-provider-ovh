@@ -2,6 +2,7 @@ package ovh
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"testing"
 
@@ -30,6 +31,44 @@ resource "ovh_cloud_project_database_database" "database" {
 }
 `
 
+func init() {
+	resource.AddTestSweepers("ovh_cloud_project_database_database", &resource.Sweeper{
+		Name: "ovh_cloud_project_database_database",
+		F:    testSweepCloudDatabaseDatabase,
+	})
+}
+
+func testSweepCloudDatabaseDatabase(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	databases := []string{"cassandra", "grafana", "kafka", "kafkaConnect", "kafkaMirrorMaker", "m3aggregator", "m3db", "mongodb", "mysql", "opensearch", "postgresql", "redis"}
+
+	for _, database := range databases {
+
+		idsToSweep := []string{}
+		endpoint := fmt.Sprintf("/cloud/project/%s/database/%s", serviceName, database)
+		if err := client.Get(endpoint, &idsToSweep); err != nil {
+			return fmt.Errorf("Error calling Get %s:\n\t %q", endpoint, err)
+		}
+
+		if len(idsToSweep) == 0 {
+			log.Printf("[INFO] No %s database  to sweep", database)
+		}
+
+		for _, id := range idsToSweep {
+			log.Printf("[INFO] sweeping %s database with id %s", database, id)
+			endpoint = fmt.Sprintf("/cloud/project/%s/database/%s/%s", serviceName, database, id)
+			if err := client.Delete(endpoint, nil); err != nil {
+				return fmt.Errorf("Error calling Get %s:\n\t %q", endpoint, err)
+			}
+		}
+	}
+	return nil
+
+}
 func TestAccCloudProjectDatabaseDatabase_basic(t *testing.T) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
 	engine := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_ENGINE_TEST")

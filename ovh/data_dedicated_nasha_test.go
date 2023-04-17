@@ -13,7 +13,7 @@ func TestAccDedicatedNashaData(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			checkEnvOrFail(t, "OVH_NASHA_SERVICE_TEST")
+			checkEnvOrSkip(t, "OVH_NASHA_SERVICE_TEST")
 			testAccPreCheckCredentials(t)
 		},
 		Providers: testAccProviders,
