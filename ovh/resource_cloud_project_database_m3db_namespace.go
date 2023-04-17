@@ -50,7 +50,7 @@ func resourceCloudProjectDatabaseM3dbNamespace() *schema.Resource {
 			"resolution": {
 				Type:             schema.TypeString,
 				Description:      "Resolution for an aggregated namespace",
-				Optional:         true,
+				Required:         true,
 				DiffSuppressFunc: DiffDurationRfc3339,
 			},
 			"retention_block_data_expiration_duration": {

@@ -37,7 +37,9 @@ func testSweepHostingPrivateDatabaseWhitelist(region string) error {
 	ds := HostingPrivateDatabaseWhitelist{}
 	serviceName := os.Getenv("OVH_HOSTING_PRIVATEDATABASE_SERVICE_TEST")
 	ip := os.Getenv("OVH_HOSTING_PRIVATEDATABASE_WHITELIST_IP_TEST")
-
+	if serviceName == "" {
+		return nil
+	}
 	endpoint := fmt.Sprintf("/hosting/privateDatabase/%s/whitelist/%s", url.PathEscape(serviceName), url.PathEscape(ip))
 
 	if err := client.Get(endpoint, &ds); err != nil {

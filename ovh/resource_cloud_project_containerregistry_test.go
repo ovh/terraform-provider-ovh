@@ -103,6 +103,12 @@ func TestAccCloudProjectContainerRegistry_basic(t *testing.T) {
 						"ovh_cloud_project_containerregistry.reg", "url"),
 				),
 			},
+			{
+				ResourceName:        "ovh_cloud_project_containerregistry.reg",
+				ImportState:         true,
+				ImportStateIdPrefix: serviceName + "/",
+				ImportStateVerify:   true,
+			},
 		},
 	})
 }
