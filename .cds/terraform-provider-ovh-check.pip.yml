@@ -15,4 +15,4 @@ jobs:
       make test
       make vet
   requirements:
-  - model: shared.infra/Go-official-1.19-bullseye
+  - model: shared.infra/Go-official-1.13-buster

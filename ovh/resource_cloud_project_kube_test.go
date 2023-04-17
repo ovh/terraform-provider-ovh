@@ -384,7 +384,7 @@ resource "ovh_cloud_project_kube" "cluster" {
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "service_name", serviceName),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "kube_proxy_mode", "iptables"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", ".customization_kube_proxy.#", "0"),
+					resource.TestCheckNoResourceAttr("ovh_cloud_project_kube.cluster", "customization_kube_proxy"),
 				),
 			},
 			{
@@ -523,7 +523,7 @@ resource "ovh_cloud_project_kube" "cluster" {
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "service_name", serviceName),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "kube_proxy_mode", "ipvs"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", ".customization_kube_proxy.#", "0"),
+					resource.TestCheckNoResourceAttr("ovh_cloud_project_kube.cluster", "customization_kube_proxy"),
 				),
 			},
 			{
@@ -937,7 +937,6 @@ resource "ovh_cloud_project_kube" "cluster" {
 func TestAccCloudProjectKubeVRack(t *testing.T) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
 	vrackID := os.Getenv("OVH_VRACK_SERVICE_TEST")
-	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
 
 	name := acctest.RandomWithPrefix(test_prefix)
 	tmpl, err := template.New("config").Parse(testAccCloudProjectKubeVRackConfig)
@@ -951,7 +950,7 @@ func TestAccCloudProjectKubeVRack(t *testing.T) {
 		ServiceName:                    serviceName,
 		VrackID:                        vrackID,
 		Name:                           name,
-		Region:                         region,
+		Region:                         "GRA5",
 		DefaultVrackGateway:            "",
 		PrivateNetworkRoutingAsDefault: false,
 	}
@@ -959,7 +958,7 @@ func TestAccCloudProjectKubeVRack(t *testing.T) {
 		ServiceName:                    serviceName,
 		VrackID:                        vrackID,
 		Name:                           name,
-		Region:                         region,
+		Region:                         "GRA5",
 		DefaultVrackGateway:            "10.4.0.1",
 		PrivateNetworkRoutingAsDefault: true,
 	}
@@ -1166,8 +1165,8 @@ func TestAccCloudProjectKubeUpdateVersion_basic(t *testing.T) {
 	name := acctest.RandomWithPrefix(test_prefix)
 	updatedName := acctest.RandomWithPrefix(test_prefix)
 
-	version1 := "1.24"
-	version2 := "1.25"
+	version1 := "1.22"
+	version2 := "1.23"
 
 	config := fmt.Sprintf(
 		testAccCloudProjectKubeConfig,

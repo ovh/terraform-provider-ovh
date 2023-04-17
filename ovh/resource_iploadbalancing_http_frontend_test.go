@@ -77,53 +77,52 @@ func TestAccIpLoadbalancingHttpFrontend_basic(t *testing.T) {
 				Config: fmt.Sprintf(testAccCheckOvhIpLoadbalancingHttpFrontendConfig_basic, iplb, test_prefix),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
-						TEST_ACC_IPLOADBALANCING_HTTP_FRONTEND_RES_NAME, "display_name", test_prefix),
+						"ovh_iploadbalancing_http_frontend.testfrontend", "display_name", test_prefix),
 					resource.TestCheckResourceAttr(
-						TEST_ACC_IPLOADBALANCING_HTTP_FRONTEND_RES_NAME, "ssl", "true"),
+						"ovh_iploadbalancing_http_frontend.testfrontend", "ssl", "true"),
 					resource.TestCheckResourceAttr(
-						TEST_ACC_IPLOADBALANCING_HTTP_FRONTEND_RES_NAME, "port", "22280"),
+						"ovh_iploadbalancing_http_frontend.testfrontend", "hsts", "true"),
 					resource.TestCheckResourceAttr(
-						TEST_ACC_IPLOADBALANCING_HTTP_FRONTEND_RES_NAME, "disabled", "true"),
+						"ovh_iploadbalancing_http_frontend.testfrontend", "port", "22280"),
 					resource.TestCheckResourceAttr(
-						TEST_ACC_IPLOADBALANCING_HTTP_FRONTEND_RES_NAME, "allowed_source.#", "0"),
+						"ovh_iploadbalancing_http_frontend.testfrontend", "disabled", "true"),
+					resource.TestCheckResourceAttr(
+						"ovh_iploadbalancing_http_frontend.testfrontend", "allowed_source.#", "0"),
 				),
 			},
 			{
 				Config: fmt.Sprintf(testAccCheckOvhIpLoadbalancingHttpFrontendConfig_update, iplb, test_prefix),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
-						TEST_ACC_IPLOADBALANCING_HTTP_FRONTEND_RES_NAME, "display_name", test_prefix),
+						"ovh_iploadbalancing_http_frontend.testfrontend", "display_name", test_prefix),
 					resource.TestCheckResourceAttr(
-						TEST_ACC_IPLOADBALANCING_HTTP_FRONTEND_RES_NAME, "ssl", "false"),
+						"ovh_iploadbalancing_http_frontend.testfrontend", "ssl", "false"),
 					resource.TestCheckResourceAttr(
-						TEST_ACC_IPLOADBALANCING_HTTP_FRONTEND_RES_NAME, "port", "22280,22443"),
+						"ovh_iploadbalancing_http_frontend.testfrontend", "hsts", "false"),
 					resource.TestCheckResourceAttr(
-						TEST_ACC_IPLOADBALANCING_HTTP_FRONTEND_RES_NAME, "disabled", "false"),
+						"ovh_iploadbalancing_http_frontend.testfrontend", "port", "22280,22443"),
 					resource.TestCheckResourceAttr(
-						TEST_ACC_IPLOADBALANCING_HTTP_FRONTEND_RES_NAME, "allowed_source.#", "1"),
+						"ovh_iploadbalancing_http_frontend.testfrontend", "disabled", "false"),
+					resource.TestCheckResourceAttr(
+						"ovh_iploadbalancing_http_frontend.testfrontend", "allowed_source.#", "1"),
 				),
 			},
 			{
 				Config: fmt.Sprintf(testAccCheckOvhIpLoadbalancingHttpFrontendConfig_basic, iplb, test_prefix),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
-						TEST_ACC_IPLOADBALANCING_HTTP_FRONTEND_RES_NAME, "display_name", test_prefix),
+						"ovh_iploadbalancing_http_frontend.testfrontend", "display_name", test_prefix),
 					resource.TestCheckResourceAttr(
-						TEST_ACC_IPLOADBALANCING_HTTP_FRONTEND_RES_NAME, "ssl", "true"),
+						"ovh_iploadbalancing_http_frontend.testfrontend", "ssl", "true"),
 					resource.TestCheckResourceAttr(
-						TEST_ACC_IPLOADBALANCING_HTTP_FRONTEND_RES_NAME, "port", "22280"),
+						"ovh_iploadbalancing_http_frontend.testfrontend", "hsts", "true"),
 					resource.TestCheckResourceAttr(
-						TEST_ACC_IPLOADBALANCING_HTTP_FRONTEND_RES_NAME, "disabled", "true"),
+						"ovh_iploadbalancing_http_frontend.testfrontend", "port", "22280"),
 					resource.TestCheckResourceAttr(
-						TEST_ACC_IPLOADBALANCING_HTTP_FRONTEND_RES_NAME, "allowed_source.#", "0"),
+						"ovh_iploadbalancing_http_frontend.testfrontend", "disabled", "true"),
+					resource.TestCheckResourceAttr(
+						"ovh_iploadbalancing_http_frontend.testfrontend", "allowed_source.#", "0"),
 				),
-			},
-
-			{
-				ResourceName:        TEST_ACC_IPLOADBALANCING_HTTP_FRONTEND_RES_NAME,
-				ImportState:         true,
-				ImportStateIdPrefix: iplb + "/",
-				ImportStateVerify:   true,
 			},
 		},
 	})
@@ -140,9 +139,9 @@ func TestAccIpLoadbalancingHttpFrontend_withfarm(t *testing.T) {
 				Config: fmt.Sprintf(testAccCheckOvhIpLoadbalancingHttpFrontendConfig_withfarm, iplb, test_prefix, test_prefix),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
-						TEST_ACC_IPLOADBALANCING_HTTP_FRONTEND_RES_NAME, "display_name", test_prefix),
+						"ovh_iploadbalancing_http_frontend.testfrontend", "display_name", test_prefix),
 					resource.TestCheckResourceAttrSet(
-						TEST_ACC_IPLOADBALANCING_HTTP_FRONTEND_RES_NAME, "default_farm_id"),
+						"ovh_iploadbalancing_http_frontend.testfrontend", "default_farm_id"),
 				),
 			},
 		},
@@ -157,6 +156,7 @@ resource "ovh_iploadbalancing_http_frontend" "testfrontend" {
    port     = "22280"
    disabled = true
    ssl      = true
+   hsts     = true
 }
 `
 const testAccCheckOvhIpLoadbalancingHttpFrontendConfig_update = `
@@ -190,4 +190,3 @@ resource "ovh_iploadbalancing_http_frontend" "testfrontend" {
    default_farm_id = ovh_iploadbalancing_http_farm.farm.id
 }
 `
-const TEST_ACC_IPLOADBALANCING_HTTP_FRONTEND_RES_NAME = "ovh_iploadbalancing_http_frontend.testfrontend"

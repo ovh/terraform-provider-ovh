@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/ovh/go-ovh/ovh"
 )
@@ -85,17 +86,10 @@ func TestAccIpReverse_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("ovh_ip_reverse.reverse", "reverse", reverse),
 				),
 			},
-			{
-				ResourceName:        "ovh_ip_reverse.reverse",
-				ImportState:         true,
-				ImportStateIdPrefix: block + "|",
-				ImportStateVerify:   true,
-			},
 		},
 	})
 }
 
-/*
 func TestAccIpReverse_importBasic(t *testing.T) {
 	block := os.Getenv("OVH_IP_BLOCK_TEST")
 	ip := os.Getenv("OVH_IP_TEST")
@@ -134,4 +128,3 @@ func testAccIpReverseImportId(resourceName string) resource.ImportStateIdFunc {
 		), nil
 	}
 }
-*/

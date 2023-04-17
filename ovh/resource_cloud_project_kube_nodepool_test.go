@@ -15,7 +15,7 @@ import (
 
 func init() {
 	resource.AddTestSweepers("ovh_cloud_project_kube_nodepool", &resource.Sweeper{
-		Name: "ovh_cloud_project_kube_nodepool",
+		Name: "ovh_cloud_project_kube",
 		F:    testSweepCloudProjectKubeNodePool,
 	})
 }

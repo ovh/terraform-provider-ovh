@@ -10,7 +10,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const (
@@ -134,6 +133,7 @@ resource ovh_iploadbalancing_http_farm_server testacc {
 `
 	testAccIpLoadbalancingHttpFarmServerConfig_step7 = `
 %s
+
 resource ovh_iploadbalancing_http_farm_server testacc {
   service_name     = data.ovh_iploadbalancing.iplb.id
   farm_id = ovh_iploadbalancing_http_farm.testacc.id
@@ -144,10 +144,8 @@ resource ovh_iploadbalancing_http_farm_server testacc {
   ssl = true
   backup = true
   on_marked_down = "shutdown-sessions"
-  proxy_protocol_version = "v1"
 }
 `
-	TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME = "ovh_iploadbalancing_http_farm_server.testacc"
 )
 
 func init() {
@@ -219,10 +217,9 @@ func testSweepIploadbalancingHttpFarmServer(region string) error {
 
 func TestAccIpLoadbalancingHttpFarmServerBasic(t *testing.T) {
 	displayName := acctest.RandomWithPrefix(test_prefix)
-	serviceName := os.Getenv("OVH_IPLB_SERVICE_TEST")
 	prefix := fmt.Sprintf(
 		testAccIpLoadbalancingHttpFarmServerConfig_templ,
-		serviceName,
+		os.Getenv("OVH_IPLB_SERVICE_TEST"),
 		displayName,
 	)
 
@@ -233,115 +230,93 @@ func TestAccIpLoadbalancingHttpFarmServerBasic(t *testing.T) {
 			{
 				Config: fmt.Sprintf(testAccIpLoadbalancingHttpFarmServerConfig_step0, prefix),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "display_name", "testBackendA"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "address", "10.0.0.11"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "status", "active"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "port", "80"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "weight", "3"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "probe", "false"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "display_name", "testBackendA"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "address", "10.0.0.11"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "status", "active"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "port", "80"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "weight", "3"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "probe", "false"),
 				),
 			},
 			{
 				Config: fmt.Sprintf(testAccIpLoadbalancingHttpFarmServerConfig_step1, prefix),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "display_name", "testBackendA"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "address", "10.0.0.11"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "status", "active"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "port", "8080"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "weight", "3"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "probe", "false"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "display_name", "testBackendA"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "address", "10.0.0.11"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "status", "active"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "port", "8080"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "weight", "3"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "probe", "false"),
 				),
 			},
 			{
 				Config: fmt.Sprintf(testAccIpLoadbalancingHttpFarmServerConfig_step2, prefix),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "display_name", "testBackendB"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "address", "10.0.0.11"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "status", "active"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "port", "8080"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "weight", "2"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "probe", "true"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "backup", "true"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "display_name", "testBackendB"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "address", "10.0.0.11"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "status", "active"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "port", "8080"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "weight", "2"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "probe", "true"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "backup", "true"),
 				),
 			},
 			{
 				Config: fmt.Sprintf(testAccIpLoadbalancingHttpFarmServerConfig_step3, prefix),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "address", "10.0.0.11"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "status", "inactive"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "port", "80"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "probe", "false"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "backup", "false"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "address", "10.0.0.11"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "status", "inactive"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "port", "80"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "probe", "false"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "backup", "false"),
 				),
 			},
 			{
 				Config: fmt.Sprintf(testAccIpLoadbalancingHttpFarmServerConfig_step4, prefix),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "address", "10.0.0.11"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "status", "active"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "port", "8080"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "weight", "2"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "ssl", "true"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "proxy_protocol_version", "v2"),
-				),
-			},
-			{
-				Config: fmt.Sprintf(testAccIpLoadbalancingHttpFarmServerConfig_step6, prefix),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "address", "10.0.0.11"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "status", "active"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "port", "8080"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "weight", "1"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "ssl", "true"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "backup", "true"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "address", "10.0.0.11"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "status", "active"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "port", "8080"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "weight", "2"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "ssl", "true"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "proxy_protocol_version", "v2"),
 				),
 			},
 			{
 				Config: fmt.Sprintf(testAccIpLoadbalancingHttpFarmServerConfig_step5, prefix),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "address", "10.0.0.11"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "status", "active"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "port", "8080"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "weight", "1"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "ssl", "true"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "backup", "false"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "proxy_protocol_version", "v1"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "address", "10.0.0.11"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "status", "active"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "port", "8080"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "weight", "1"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "ssl", "true"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "backup", "false"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "proxy_protocol_version", "v1"),
+				),
+			},
+			{
+				Config: fmt.Sprintf(testAccIpLoadbalancingHttpFarmServerConfig_step6, prefix),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "address", "10.0.0.11"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "status", "active"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "port", "8080"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "weight", "1"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "ssl", "true"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "backup", "true"),
 				),
 			},
 			{
 				Config: fmt.Sprintf(testAccIpLoadbalancingHttpFarmServerConfig_step7, prefix),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "address", "10.0.0.11"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "status", "active"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "port", "8080"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "weight", "1"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "ssl", "true"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "backup", "true"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "on_marked_down", "shutdown-sessions"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "address", "10.0.0.11"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "status", "active"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "port", "8080"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "weight", "1"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "ssl", "true"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "backup", "true"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm_server.testacc", "on_marked_down", "shutdown-sessions"),
 				),
-			},
-			{
-				ResourceName:      TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME,
-				ImportState:       true,
-				ImportStateIdFunc: getImportStateId,
-				ImportStateVerify: true,
 			},
 		},
 	})
-}
-
-func getImportStateId(state *terraform.State) (string, error) {
-	serviceName := os.Getenv("OVH_IPLB_SERVICE_TEST")
-
-	if len(state.Modules) != 1 {
-		return "", fmt.Errorf("Unexpected modules length %d", len(state.Modules))
-	}
-	var mod = state.Modules[0]
-	var farmId = mod.Resources["ovh_iploadbalancing_http_farm.testacc"].Primary.ID
-	var serverId = mod.Resources["ovh_iploadbalancing_http_farm_server.testacc"].Primary.ID
-
-	var result = serviceName + "/" + farmId + "/" + serverId
-	log.Printf("[DEBUG] ID to import %s", result)
-	return result, nil
-
 }

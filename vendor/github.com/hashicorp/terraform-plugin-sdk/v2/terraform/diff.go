@@ -20,7 +20,7 @@ import (
 type diffChangeType byte
 
 const (
-	diffInvalid diffChangeType = iota //nolint:deadcode,varcheck
+	diffInvalid diffChangeType = iota
 	diffNone
 	diffCreate
 	diffUpdate

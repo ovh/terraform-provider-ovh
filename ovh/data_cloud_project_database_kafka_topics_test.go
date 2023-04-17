@@ -42,7 +42,7 @@ data "ovh_cloud_project_database_kafka_topics" "topics" {
 
 func TestAccCloudProjectDatabaseKafkaTopicsDataSource_basic(t *testing.T) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
-	version := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_KAFKA_VERSION_TEST")
+	version := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_KAKFA_VERSION_TEST")
 	if version == "" {
 		version = os.Getenv("OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST")
 	}

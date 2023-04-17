@@ -226,7 +226,7 @@ func (sf *shimmedFlatmap) AddMap(prefix string, m map[string]interface{}) error 
 
 		err := sf.AddEntry(k, value)
 		if err != nil {
-			return fmt.Errorf("unable to add map key %q entry: %w", k, err)
+			return err
 		}
 	}
 
@@ -235,9 +235,7 @@ func (sf *shimmedFlatmap) AddMap(prefix string, m map[string]interface{}) error 
 		mapLength = fmt.Sprintf("%s.%s", prefix, "%")
 	}
 
-	if err := sf.AddEntry(mapLength, strconv.Itoa(len(m))); err != nil {
-		return fmt.Errorf("unable to add map length %q entry: %w", mapLength, err)
-	}
+	sf.AddEntry(mapLength, strconv.Itoa(len(m)))
 
 	return nil
 }
@@ -247,14 +245,12 @@ func (sf *shimmedFlatmap) AddSlice(name string, elements []interface{}) error {
 		key := fmt.Sprintf("%s.%d", name, i)
 		err := sf.AddEntry(key, elem)
 		if err != nil {
-			return fmt.Errorf("unable to add slice key %q entry: %w", key, err)
+			return err
 		}
 	}
 
 	sliceLength := fmt.Sprintf("%s.#", name)
-	if err := sf.AddEntry(sliceLength, strconv.Itoa(len(elements))); err != nil {
-		return fmt.Errorf("unable to add slice length %q entry: %w", sliceLength, err)
-	}
+	sf.AddEntry(sliceLength, strconv.Itoa(len(elements)))
 
 	return nil
 }

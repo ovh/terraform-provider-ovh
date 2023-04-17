@@ -51,7 +51,6 @@ resource "ovh_iploadbalancing_tcp_farm" "testfarm" {
   }
 }
 `
-	TEST_ACC_IPLOADBALANCING_TCP_FARM_RES_NAME = "ovh_iploadbalancing_tcp_farm.testfarm"
 )
 
 func init() {
@@ -115,24 +114,23 @@ func testSweepIploadbalancingTcpFarm(region string) error {
 func TestAccIpLoadbalancingTcpFarmBasicCreate(t *testing.T) {
 	displayName1 := acctest.RandomWithPrefix(test_prefix)
 	displayName2 := acctest.RandomWithPrefix(test_prefix)
-	serviceName := os.Getenv("OVH_IPLB_SERVICE_TEST")
 	config1 := fmt.Sprintf(
 		testAccIpLoadbalancingTcpFarmConfig,
-		serviceName,
+		os.Getenv("OVH_IPLB_SERVICE_TEST"),
 		displayName1,
 		12345,
 		"all",
 	)
 	config2 := fmt.Sprintf(
 		testAccIpLoadbalancingTcpFarmConfig,
-		serviceName,
+		os.Getenv("OVH_IPLB_SERVICE_TEST"),
 		displayName2,
 		12346,
 		"all",
 	)
 	config3 := fmt.Sprintf(
 		testAccIpLoadbalancingTcpFarmProbeMatchConfig,
-		serviceName,
+		os.Getenv("OVH_IPLB_SERVICE_TEST"),
 		displayName2,
 		12346,
 		"all",
@@ -145,36 +143,30 @@ func TestAccIpLoadbalancingTcpFarmBasicCreate(t *testing.T) {
 			{
 				Config: config1,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_TCP_FARM_RES_NAME, "display_name", displayName1),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_TCP_FARM_RES_NAME, "zone", "all"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_TCP_FARM_RES_NAME, "port", "12345"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_TCP_FARM_RES_NAME, "probe.0.interval", "30"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm.testfarm", "display_name", displayName1),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm.testfarm", "zone", "all"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm.testfarm", "port", "12345"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm.testfarm", "probe.0.interval", "30"),
 				),
 			},
 			{
 				Config: config2,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_TCP_FARM_RES_NAME, "display_name", displayName2),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_TCP_FARM_RES_NAME, "zone", "all"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_TCP_FARM_RES_NAME, "port", "12346"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_TCP_FARM_RES_NAME, "probe.0.interval", "30"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm.testfarm", "display_name", displayName2),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm.testfarm", "zone", "all"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm.testfarm", "port", "12346"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm.testfarm", "probe.0.interval", "30"),
 				),
 			},
 			{
 				Config: config3,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_TCP_FARM_RES_NAME, "display_name", displayName2),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_TCP_FARM_RES_NAME, "zone", "all"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_TCP_FARM_RES_NAME, "port", "12346"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_TCP_FARM_RES_NAME, "probe.0.interval", "30"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_TCP_FARM_RES_NAME, "probe.0.match", "default"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm.testfarm", "display_name", displayName2),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm.testfarm", "zone", "all"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm.testfarm", "port", "12346"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm.testfarm", "probe.0.interval", "30"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm.testfarm", "probe.0.match", "default"),
 				),
-			},
-			{
-				ResourceName:        TEST_ACC_IPLOADBALANCING_TCP_FARM_RES_NAME,
-				ImportState:         true,
-				ImportStateIdPrefix: serviceName + "/",
-				ImportStateVerify:   true,
 			},
 		},
 	})

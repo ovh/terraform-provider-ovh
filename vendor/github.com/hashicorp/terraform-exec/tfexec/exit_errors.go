@@ -18,18 +18,10 @@ var (
 
 	usageRegexp = regexp.MustCompile(`Too many command line arguments|^Usage: .*Options:.*|Error: Invalid -\d+ option`)
 
-	noInitErrRegexp = regexp.MustCompile(
-		// UNINITIALISED PROVIDERS/MODULES
-		`Error: Could not satisfy plugin requirements|` +
-			`Error: Could not load plugin|` + // v0.13
-			`Please run \"terraform init\"|` + // v1.1.0 early alpha versions (ref 89b05050)
-			`run:\s+terraform init|` + // v1.1.0 (ref df578afd)
-			`Run\s+\"terraform init\"|` + // v1.2.0
-
-			// UNINITIALISED BACKENDS
-			`Error: Initialization required.|` + // v0.13
-			`Error: Backend initialization required, please run \"terraform init\"`, // v0.15
-	)
+	noInitErrRegexp = regexp.MustCompile(`Error: Could not satisfy plugin requirements|` +
+		`Error: Could not load plugin|` + // v0.13
+		`Please run \"terraform init\"|` + // v1.1.0 early alpha versions (ref 89b05050)
+		`run:\s+terraform init`) // v1.1.0 (ref df578afd)
 
 	noConfigErrRegexp = regexp.MustCompile(`Error: No configuration files`)
 
@@ -41,12 +33,8 @@ var (
 	tfVersionMismatchConstraintRegexp = regexp.MustCompile(`required_version = "(.+)"|Required version: (.+)\b`)
 	configInvalidErrRegexp            = regexp.MustCompile(`There are some problems with the configuration, described below.`)
 
-	stateLockErrRegexp     = regexp.MustCompile(`Error acquiring the state lock`)
-	stateLockInfoRegexp    = regexp.MustCompile(`Lock Info:\n\s*ID:\s*([^\n]+)\n\s*Path:\s*([^\n]+)\n\s*Operation:\s*([^\n]+)\n\s*Who:\s*([^\n]+)\n\s*Version:\s*([^\n]+)\n\s*Created:\s*([^\n]+)\n`)
-	statePlanReadErrRegexp = regexp.MustCompile(
-		`Terraform couldn't read the given file as a state or plan file.|` +
-			`Error: Failed to read the given file as a state or plan file`)
-	lockIdInvalidErrRegexp = regexp.MustCompile(`Failed to unlock state: `)
+	stateLockErrRegexp  = regexp.MustCompile(`Error acquiring the state lock`)
+	stateLockInfoRegexp = regexp.MustCompile(`Lock Info:\n\s*ID:\s*([^\n]+)\n\s*Path:\s*([^\n]+)\n\s*Operation:\s*([^\n]+)\n\s*Who:\s*([^\n]+)\n\s*Version:\s*([^\n]+)\n\s*Created:\s*([^\n]+)\n`)
 )
 
 func (tf *Terraform) wrapExitError(ctx context.Context, err error, stderr string) error {
@@ -159,10 +147,6 @@ func (tf *Terraform) wrapExitError(ctx context.Context, err error, stderr string
 				Created:   submatches[6],
 			}
 		}
-	case statePlanReadErrRegexp.MatchString(stderr):
-		return &ErrStatePlanRead{stderr: stderr}
-	case lockIdInvalidErrRegexp.MatchString(stderr):
-		return &ErrLockIdInvalid{stderr: stderr}
 	}
 
 	return fmt.Errorf("%w\n%s", &unwrapper{exitErr, ctxErr}, stderr)
@@ -239,16 +223,6 @@ func (e *ErrNoInit) Error() string {
 	return e.stderr
 }
 
-type ErrStatePlanRead struct {
-	unwrapper
-
-	stderr string
-}
-
-func (e *ErrStatePlanRead) Error() string {
-	return e.stderr
-}
-
 type ErrNoConfig struct {
 	unwrapper
 
@@ -256,16 +230,6 @@ type ErrNoConfig struct {
 }
 
 func (e *ErrNoConfig) Error() string {
-	return e.stderr
-}
-
-type ErrLockIdInvalid struct {
-	unwrapper
-
-	stderr string
-}
-
-func (e *ErrLockIdInvalid) Error() string {
 	return e.stderr
 }
 

@@ -127,7 +127,9 @@ func Schema_Object_NestingMode(in tfprotov6.SchemaObjectNestingMode) tfplugin6.S
 
 func Schema_Object(in *tfprotov6.SchemaObject) (*tfplugin6.Schema_Object, error) {
 	resp := &tfplugin6.Schema_Object{
-		Nesting: Schema_Object_NestingMode(in.Nesting),
+		Nesting:  Schema_Object_NestingMode(in.Nesting),
+		MinItems: in.MinItems,
+		MaxItems: in.MaxItems,
 	}
 	attrs, err := Schema_Attributes(in.Attributes)
 	if err != nil {

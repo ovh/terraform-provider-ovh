@@ -100,13 +100,13 @@ func (w *MapFieldWriter) set(addr []string, value interface{}) error {
 	case TypeBool, TypeInt, TypeFloat, TypeString:
 		return w.setPrimitive(addr, value, schema)
 	case TypeList:
-		return w.setList(addr, value)
+		return w.setList(addr, value, schema)
 	case TypeMap:
-		return w.setMap(addr, value)
+		return w.setMap(addr, value, schema)
 	case TypeSet:
 		return w.setSet(addr, value, schema)
 	case typeObject:
-		return w.setObject(addr, value)
+		return w.setObject(addr, value, schema)
 	default:
 		panic(fmt.Sprintf("Unknown type: %#v", schema.Type))
 	}
@@ -114,7 +114,8 @@ func (w *MapFieldWriter) set(addr []string, value interface{}) error {
 
 func (w *MapFieldWriter) setList(
 	addr []string,
-	v interface{}) error {
+	v interface{},
+	schema *Schema) error {
 	k := strings.Join(addr, ".")
 	setElement := func(idx string, value interface{}) error {
 		addrCopy := make([]string, len(addr), len(addr)+1)
@@ -147,7 +148,7 @@ func (w *MapFieldWriter) setList(
 	if err != nil {
 		for i := range vs {
 			is := strconv.FormatInt(int64(i), 10)
-			_ = setElement(is, nil) // best effort; error returned below
+			setElement(is, nil)
 		}
 
 		return err
@@ -159,7 +160,8 @@ func (w *MapFieldWriter) setList(
 
 func (w *MapFieldWriter) setMap(
 	addr []string,
-	value interface{}) error {
+	value interface{},
+	schema *Schema) error {
 	k := strings.Join(addr, ".")
 	v := reflect.ValueOf(value)
 	vs := make(map[string]interface{})
@@ -174,7 +176,7 @@ func (w *MapFieldWriter) setMap(
 		return fmt.Errorf("%s: must be a map", k)
 	}
 	if v.Type().Key().Kind() != reflect.String {
-		return fmt.Errorf("%s: keys must be strings", k)
+		return fmt.Errorf("%s: keys must strings", k)
 	}
 	for _, mk := range v.MapKeys() {
 		mv := v.MapIndex(mk)
@@ -205,7 +207,8 @@ func (w *MapFieldWriter) setMap(
 
 func (w *MapFieldWriter) setObject(
 	addr []string,
-	value interface{}) error {
+	value interface{},
+	schema *Schema) error {
 	// Set the entire object. First decode into a proper structure
 	var v map[string]interface{}
 	if err := mapstructure.Decode(value, &v); err != nil {
@@ -225,13 +228,11 @@ func (w *MapFieldWriter) setObject(
 	}
 	if err != nil {
 		for k1 := range v {
-			_ = w.set(append(addrCopy, k1), nil) // best effort; error returned below
+			w.set(append(addrCopy, k1), nil)
 		}
-
-		return err
 	}
 
-	return nil
+	return err
 }
 
 func (w *MapFieldWriter) setPrimitive(
@@ -270,7 +271,7 @@ func (w *MapFieldWriter) setPrimitive(
 		if err := mapstructure.Decode(v, &n); err != nil {
 			return fmt.Errorf("%s: %s", k, err)
 		}
-		set = strconv.FormatFloat(n, 'G', -1, 64)
+		set = strconv.FormatFloat(float64(n), 'G', -1, 64)
 	default:
 		return fmt.Errorf("Unknown type: %#v", schema.Type)
 	}

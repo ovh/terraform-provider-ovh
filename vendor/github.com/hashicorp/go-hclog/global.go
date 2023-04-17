@@ -2,7 +2,6 @@ package hclog
 
 import (
 	"sync"
-	"time"
 )
 
 var (
@@ -15,7 +14,6 @@ var (
 	DefaultOptions = &LoggerOptions{
 		Level:  DefaultLevel,
 		Output: DefaultOutput,
-		TimeFn: time.Now,
 	}
 )
 

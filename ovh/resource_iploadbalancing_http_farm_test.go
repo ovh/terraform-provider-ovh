@@ -49,7 +49,6 @@ resource "ovh_iploadbalancing_http_farm" "testfarm" {
   }
 }
 `
-	TEST_ACC_IPLOADBALANCING_HTTP_FARM_RES_NAME = "ovh_iploadbalancing_http_farm.testfarm"
 )
 
 func init() {
@@ -113,24 +112,23 @@ func testSweepIploadbalancingHttpFarm(region string) error {
 func TestAccIpLoadbalancingHttpFarmBasicCreate(t *testing.T) {
 	displayName1 := acctest.RandomWithPrefix(test_prefix)
 	displayName2 := acctest.RandomWithPrefix(test_prefix)
-	serviceName := os.Getenv("OVH_IPLB_SERVICE_TEST")
 	config1 := fmt.Sprintf(
 		testAccIpLoadbalancingHttpFarmConfig,
-		serviceName,
+		os.Getenv("OVH_IPLB_SERVICE_TEST"),
 		displayName1,
 		12345,
 		"all",
 	)
 	config2 := fmt.Sprintf(
 		testAccIpLoadbalancingHttpFarmConfig,
-		serviceName,
+		os.Getenv("OVH_IPLB_SERVICE_TEST"),
 		displayName2,
 		12346,
 		"all",
 	)
 	config3 := fmt.Sprintf(
 		testAccIpLoadbalancingHttpFarmProbeMatchConfig,
-		serviceName,
+		os.Getenv("OVH_IPLB_SERVICE_TEST"),
 		displayName2,
 		12346,
 		"all",
@@ -143,36 +141,30 @@ func TestAccIpLoadbalancingHttpFarmBasicCreate(t *testing.T) {
 			{
 				Config: config1,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_RES_NAME, "display_name", displayName1),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_RES_NAME, "zone", "all"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_RES_NAME, "port", "12345"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_RES_NAME, "probe.0.interval", "30"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm.testfarm", "display_name", displayName1),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm.testfarm", "zone", "all"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm.testfarm", "port", "12345"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm.testfarm", "probe.0.interval", "30"),
 				),
 			},
 			{
 				Config: config2,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_RES_NAME, "display_name", displayName2),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_RES_NAME, "zone", "all"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_RES_NAME, "port", "12346"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_RES_NAME, "probe.0.interval", "30"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm.testfarm", "display_name", displayName2),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm.testfarm", "zone", "all"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm.testfarm", "port", "12346"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm.testfarm", "probe.0.interval", "30"),
 				),
 			},
 			{
 				Config: config3,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_RES_NAME, "display_name", displayName2),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_RES_NAME, "zone", "all"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_RES_NAME, "port", "12346"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_RES_NAME, "probe.0.interval", "30"),
-					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_RES_NAME, "probe.0.match", "default"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm.testfarm", "display_name", displayName2),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm.testfarm", "zone", "all"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm.testfarm", "port", "12346"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm.testfarm", "probe.0.interval", "30"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_http_farm.testfarm", "probe.0.match", "default"),
 				),
-			},
-			{
-				ResourceName:        TEST_ACC_IPLOADBALANCING_HTTP_FARM_RES_NAME,
-				ImportState:         true,
-				ImportStateIdPrefix: serviceName + "/",
-				ImportStateVerify:   true,
 			},
 		},
 	})

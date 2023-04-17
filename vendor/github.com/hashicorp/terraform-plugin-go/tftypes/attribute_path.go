@@ -85,9 +85,21 @@ func (a *AttributePath) Equal(o *AttributePath) bool {
 	}
 	for pos, aStep := range a.Steps() {
 		oStep := o.Steps()[pos]
-
-		if !aStep.Equal(oStep) {
-			return false
+		switch aStep.(type) {
+		case AttributeName, ElementKeyString, ElementKeyInt:
+			if oStep != aStep {
+				return false
+			}
+		case ElementKeyValue:
+			oVal, ok := oStep.(ElementKeyValue)
+			if !ok {
+				return false
+			}
+			if !Value(aStep.(ElementKeyValue)).Equal(Value(oVal)) {
+				return false
+			}
+		default:
+			panic(fmt.Sprintf("unknown step %T in AttributePath.Equal", aStep))
 		}
 	}
 	return true
@@ -115,18 +127,6 @@ func (a *AttributePath) NewError(err error) error {
 		Path: a,
 		err:  err,
 	}
-}
-
-// LastStep returns the last step in the path. If the path was
-// empty, nil is returned.
-func (a *AttributePath) LastStep() AttributePathStep {
-	steps := a.Steps()
-
-	if len(steps) == 0 {
-		return nil
-	}
-
-	return steps[len(steps)-1]
 }
 
 // WithAttributeName adds an AttributeName step to `a`, using `name` as the
@@ -185,9 +185,6 @@ func (a *AttributePath) WithoutLastStep() *AttributePath {
 // indicating a specific attribute or element that is the next value in the
 // path.
 type AttributePathStep interface {
-	// Equal returns true if the AttributePathStep is equal to the other.
-	Equal(AttributePathStep) bool
-
 	unfulfillable() // make this interface fillable only by this package
 }
 
@@ -202,36 +199,12 @@ var (
 // AttributeName is the name of the attribute to be selected.
 type AttributeName string
 
-// Equal returns true if the other AttributePathStep is an AttributeName and
-// has the same value.
-func (a AttributeName) Equal(other AttributePathStep) bool {
-	otherA, ok := other.(AttributeName)
-
-	if !ok {
-		return false
-	}
-
-	return string(a) == string(otherA)
-}
-
 func (a AttributeName) unfulfillable() {}
 
 // ElementKeyString is an AttributePathStep implementation that indicates the
 // next step in the AttributePath is to select an element using a string key.
 // The value of the ElementKeyString is the key of the element to select.
 type ElementKeyString string
-
-// Equal returns true if the other AttributePathStep is an ElementKeyString and
-// has the same value.
-func (e ElementKeyString) Equal(other AttributePathStep) bool {
-	otherE, ok := other.(ElementKeyString)
-
-	if !ok {
-		return false
-	}
-
-	return string(e) == string(otherE)
-}
 
 func (e ElementKeyString) unfulfillable() {}
 
@@ -240,18 +213,6 @@ func (e ElementKeyString) unfulfillable() {}
 // value of the ElementKeyInt is the key of the element to select.
 type ElementKeyInt int64
 
-// Equal returns true if the other AttributePathStep is an ElementKeyInt and
-// has the same value.
-func (e ElementKeyInt) Equal(other AttributePathStep) bool {
-	otherE, ok := other.(ElementKeyInt)
-
-	if !ok {
-		return false
-	}
-
-	return int(e) == int(otherE)
-}
-
 func (e ElementKeyInt) unfulfillable() {}
 
 // ElementKeyValue is an AttributePathStep implementation that indicates the
@@ -259,18 +220,6 @@ func (e ElementKeyInt) unfulfillable() {}
 // itself as a key. The value of the ElementKeyValue is the key of the element
 // to select.
 type ElementKeyValue Value
-
-// Equal returns true if the other AttributePathStep is an ElementKeyValue and
-// has the same value.
-func (e ElementKeyValue) Equal(other AttributePathStep) bool {
-	otherE, ok := other.(ElementKeyValue)
-
-	if !ok {
-		return false
-	}
-
-	return Value(e).Equal(Value(otherE))
-}
 
 func (e ElementKeyValue) unfulfillable() {}
 
@@ -284,9 +233,9 @@ type AttributePathStepper interface {
 	ApplyTerraform5AttributePathStep(AttributePathStep) (interface{}, error)
 }
 
-// WalkAttributePath will return the Type or Value that `path` is pointing to,
-// using `in` as the root. If an error is returned, the AttributePath returned
-// will indicate the steps that remained to be applied when the error was
+// WalkAttributePath will return the value that `path` is pointing to, using
+// `in` as the root. If an error is returned, the AttributePath returned will
+// indicate the steps that remained to be applied when the error was
 // encountered.
 //
 // map[string]interface{} and []interface{} types have built-in support. Other

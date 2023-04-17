@@ -85,15 +85,15 @@ func flatmapValueFromHCL2Map(m map[string]string, prefix string, val cty.Value) 
 		return
 	}
 
-	valLen := 0
+	len := 0
 	for it := val.ElementIterator(); it.Next(); {
 		ak, av := it.Element()
 		name := ak.AsString()
 		flatmapValueFromHCL2Value(m, prefix+name, av)
-		valLen++
+		len++
 	}
 	if !val.Type().IsObjectType() { // objects don't have an explicit count included, since their attribute count is fixed
-		m[prefix+"%"] = strconv.Itoa(valLen)
+		m[prefix+"%"] = strconv.Itoa(len)
 	}
 }
 

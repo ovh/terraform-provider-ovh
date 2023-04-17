@@ -1,11 +1,9 @@
 package tfexec
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -19,12 +17,10 @@ import (
 const (
 	checkpointDisableEnvVar  = "CHECKPOINT_DISABLE"
 	cliArgsEnvVar            = "TF_CLI_ARGS"
+	logEnvVar                = "TF_LOG"
 	inputEnvVar              = "TF_INPUT"
 	automationEnvVar         = "TF_IN_AUTOMATION"
-	logEnvVar                = "TF_LOG"
-	logCoreEnvVar            = "TF_LOG_CORE"
 	logPathEnvVar            = "TF_LOG_PATH"
-	logProviderEnvVar        = "TF_LOG_PROVIDER"
 	reattachEnvVar           = "TF_REATTACH_PROVIDERS"
 	appendUserAgentEnvVar    = "TF_APPEND_USER_AGENT"
 	workspaceEnvVar          = "TF_WORKSPACE"
@@ -39,10 +35,8 @@ var prohibitedEnvVars = []string{
 	cliArgsEnvVar,
 	inputEnvVar,
 	automationEnvVar,
-	logEnvVar,
-	logCoreEnvVar,
 	logPathEnvVar,
-	logProviderEnvVar,
+	logEnvVar,
 	reattachEnvVar,
 	appendUserAgentEnvVar,
 	workspaceEnvVar,
@@ -152,14 +146,11 @@ func (tf *Terraform) buildEnv(mergeEnv map[string]string) []string {
 	if tf.logPath == "" {
 		// so logging can't pollute our stderr output
 		env[logEnvVar] = ""
-		env[logCoreEnvVar] = ""
 		env[logPathEnvVar] = ""
-		env[logProviderEnvVar] = ""
 	} else {
-		env[logEnvVar] = tf.log
-		env[logCoreEnvVar] = tf.logCore
 		env[logPathEnvVar] = tf.logPath
-		env[logProviderEnvVar] = tf.logProvider
+		// Log levels other than TRACE are currently unreliable, the CLI recommends using TRACE only.
+		env[logEnvVar] = "TRACE"
 	}
 
 	// constant automation override env vars
@@ -180,12 +171,12 @@ func (tf *Terraform) buildEnv(mergeEnv map[string]string) []string {
 }
 
 func (tf *Terraform) buildTerraformCmd(ctx context.Context, mergeEnv map[string]string, args ...string) *exec.Cmd {
-	cmd := exec.CommandContext(ctx, tf.execPath, args...)
+	cmd := exec.Command(tf.execPath, args...)
 
 	cmd.Env = tf.buildEnv(mergeEnv)
 	cmd.Dir = tf.workingDir
 
-	tf.logger.Printf("[INFO] running Terraform command: %s", cmd.String())
+	tf.logger.Printf("[INFO] running Terraform command: %s", cmdString(cmd))
 
 	return cmd
 }
@@ -238,37 +229,4 @@ func mergeWriters(writers ...io.Writer) io.Writer {
 		return compact[0]
 	}
 	return io.MultiWriter(compact...)
-}
-
-func writeOutput(ctx context.Context, r io.ReadCloser, w io.Writer) error {
-	// ReadBytes will block until bytes are read, which can cause a delay in
-	// returning even if the command's context has been canceled. Use a separate
-	// goroutine to prompt ReadBytes to return on cancel
-	closeCtx, closeCancel := context.WithCancel(ctx)
-	defer closeCancel()
-	go func() {
-		select {
-		case <-ctx.Done():
-			r.Close()
-		case <-closeCtx.Done():
-			return
-		}
-	}()
-
-	buf := bufio.NewReader(r)
-	for {
-		line, err := buf.ReadBytes('\n')
-		if len(line) > 0 {
-			if _, err := w.Write(line); err != nil {
-				return err
-			}
-		}
-		if err != nil {
-			if errors.Is(err, io.EOF) {
-				return nil
-			}
-
-			return err
-		}
-	}
 }

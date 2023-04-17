@@ -1,5 +1,5 @@
-//go:build !windows && !appengine
-// +build !windows,!appengine
+// +build !windows
+// +build !appengine
 
 package colorable
 
@@ -27,12 +27,4 @@ func NewColorableStdout() io.Writer {
 // NewColorableStderr returns new instance of Writer which handles escape sequence for stderr.
 func NewColorableStderr() io.Writer {
 	return os.Stderr
-}
-
-// EnableColorsStdout enable colors if possible.
-func EnableColorsStdout(enabled *bool) func() {
-	if enabled != nil {
-		*enabled = true
-	}
-	return func() {}
 }

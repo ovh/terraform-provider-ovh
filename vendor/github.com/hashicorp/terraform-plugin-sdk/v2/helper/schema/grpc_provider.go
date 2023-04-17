@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strconv"
 	"sync"
 
@@ -15,15 +16,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/configs/configschema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/configs/hcl2shim"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/logging"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/plans/objchange"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/plugin/convert"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-const (
-	newExtraKey = "_new_extra_shim"
-)
+const newExtraKey = "_new_extra_shim"
 
 func NewGRPCProviderServer(p *Provider) *GRPCProviderServer {
 	return &GRPCProviderServer{
@@ -55,7 +53,6 @@ func mergeStop(ctx context.Context, cancel context.CancelFunc, stopCh chan struc
 // It creates a goroutine to wait for the server stop and propagates
 // cancellation to the derived grpc context.
 func (s *GRPCProviderServer) StopContext(ctx context.Context) context.Context {
-	ctx = logging.InitContext(ctx)
 	s.stopMu.Lock()
 	defer s.stopMu.Unlock()
 
@@ -64,10 +61,7 @@ func (s *GRPCProviderServer) StopContext(ctx context.Context) context.Context {
 	return stoppable
 }
 
-func (s *GRPCProviderServer) GetProviderSchema(ctx context.Context, req *tfprotov5.GetProviderSchemaRequest) (*tfprotov5.GetProviderSchemaResponse, error) {
-	ctx = logging.InitContext(ctx)
-
-	logging.HelperSchemaTrace(ctx, "Getting provider schema")
+func (s *GRPCProviderServer) GetProviderSchema(_ context.Context, req *tfprotov5.GetProviderSchemaRequest) (*tfprotov5.GetProviderSchemaResponse, error) {
 
 	resp := &tfprotov5.GetProviderSchemaResponse{
 		ResourceSchemas:   make(map[string]*tfprotov5.Schema),
@@ -75,28 +69,24 @@ func (s *GRPCProviderServer) GetProviderSchema(ctx context.Context, req *tfproto
 	}
 
 	resp.Provider = &tfprotov5.Schema{
-		Block: convert.ConfigSchemaToProto(ctx, s.getProviderSchemaBlock()),
+		Block: convert.ConfigSchemaToProto(s.getProviderSchemaBlock()),
 	}
 
 	resp.ProviderMeta = &tfprotov5.Schema{
-		Block: convert.ConfigSchemaToProto(ctx, s.getProviderMetaSchemaBlock()),
+		Block: convert.ConfigSchemaToProto(s.getProviderMetaSchemaBlock()),
 	}
 
 	for typ, res := range s.provider.ResourcesMap {
-		logging.HelperSchemaTrace(ctx, "Found resource type", map[string]interface{}{logging.KeyResourceType: typ})
-
 		resp.ResourceSchemas[typ] = &tfprotov5.Schema{
 			Version: int64(res.SchemaVersion),
-			Block:   convert.ConfigSchemaToProto(ctx, res.CoreConfigSchema()),
+			Block:   convert.ConfigSchemaToProto(res.CoreConfigSchema()),
 		}
 	}
 
 	for typ, dat := range s.provider.DataSourcesMap {
-		logging.HelperSchemaTrace(ctx, "Found data source type", map[string]interface{}{logging.KeyDataSourceType: typ})
-
 		resp.DataSourceSchemas[typ] = &tfprotov5.Schema{
 			Version: int64(dat.SchemaVersion),
-			Block:   convert.ConfigSchemaToProto(ctx, dat.CoreConfigSchema()),
+			Block:   convert.ConfigSchemaToProto(dat.CoreConfigSchema()),
 		}
 	}
 
@@ -121,17 +111,14 @@ func (s *GRPCProviderServer) getDatasourceSchemaBlock(name string) *configschema
 	return dat.CoreConfigSchema()
 }
 
-func (s *GRPCProviderServer) PrepareProviderConfig(ctx context.Context, req *tfprotov5.PrepareProviderConfigRequest) (*tfprotov5.PrepareProviderConfigResponse, error) {
-	ctx = logging.InitContext(ctx)
+func (s *GRPCProviderServer) PrepareProviderConfig(_ context.Context, req *tfprotov5.PrepareProviderConfigRequest) (*tfprotov5.PrepareProviderConfigResponse, error) {
 	resp := &tfprotov5.PrepareProviderConfigResponse{}
-
-	logging.HelperSchemaTrace(ctx, "Preparing provider configuration")
 
 	schemaBlock := s.getProviderSchemaBlock()
 
 	configVal, err := msgpack.Unmarshal(req.Config.MsgPack, schemaBlock.ImpliedType())
 	if err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 
@@ -169,7 +156,8 @@ func (s *GRPCProviderServer) PrepareProviderConfig(ctx context.Context, req *tfp
 		// find a default value if it exists
 		def, err := attrSchema.DefaultValue()
 		if err != nil {
-			return val, fmt.Errorf("error getting default for %q: %w", getAttr.Name, err)
+			resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, fmt.Errorf("error getting default for %q: %s", getAttr.Name, err))
+			return val, err
 		}
 
 		// no default
@@ -183,43 +171,41 @@ func (s *GRPCProviderServer) PrepareProviderConfig(ctx context.Context, req *tfp
 		// helper/schema used to allow setting "" to a bool
 		if val.Type() == cty.Bool && tmpVal.RawEquals(cty.StringVal("")) {
 			// return a warning about the conversion
-			resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, "provider set empty string as default value for bool "+getAttr.Name)
+			resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, "provider set empty string as default value for bool "+getAttr.Name)
 			tmpVal = cty.False
 		}
 
 		val, err = ctyconvert.Convert(tmpVal, val.Type())
 		if err != nil {
-			return val, fmt.Errorf("error setting default for %q: %w", getAttr.Name, err)
+			resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, fmt.Errorf("error setting default for %q: %s", getAttr.Name, err))
 		}
 
-		return val, nil
+		return val, err
 	})
 	if err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+		// any error here was already added to the diagnostics
 		return resp, nil
 	}
 
 	configVal, err = schemaBlock.CoerceValue(configVal)
 	if err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 
 	// Ensure there are no nulls that will cause helper/schema to panic.
-	if err := validateConfigNulls(ctx, configVal, nil); err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+	if err := validateConfigNulls(configVal, nil); err != nil {
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 
 	config := terraform.NewResourceConfigShimmed(configVal, schemaBlock)
 
-	logging.HelperSchemaTrace(ctx, "Calling downstream")
-	resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, s.provider.Validate(config))
-	logging.HelperSchemaTrace(ctx, "Called downstream")
+	resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, s.provider.Validate(config))
 
 	preparedConfigMP, err := msgpack.Marshal(configVal, schemaBlock.ImpliedType())
 	if err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 
@@ -228,61 +214,54 @@ func (s *GRPCProviderServer) PrepareProviderConfig(ctx context.Context, req *tfp
 	return resp, nil
 }
 
-func (s *GRPCProviderServer) ValidateResourceTypeConfig(ctx context.Context, req *tfprotov5.ValidateResourceTypeConfigRequest) (*tfprotov5.ValidateResourceTypeConfigResponse, error) {
-	ctx = logging.InitContext(ctx)
+func (s *GRPCProviderServer) ValidateResourceTypeConfig(_ context.Context, req *tfprotov5.ValidateResourceTypeConfigRequest) (*tfprotov5.ValidateResourceTypeConfigResponse, error) {
 	resp := &tfprotov5.ValidateResourceTypeConfigResponse{}
 
 	schemaBlock := s.getResourceSchemaBlock(req.TypeName)
 
 	configVal, err := msgpack.Unmarshal(req.Config.MsgPack, schemaBlock.ImpliedType())
 	if err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 
 	config := terraform.NewResourceConfigShimmed(configVal, schemaBlock)
 
-	logging.HelperSchemaTrace(ctx, "Calling downstream")
-	resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, s.provider.ValidateResource(req.TypeName, config))
-	logging.HelperSchemaTrace(ctx, "Called downstream")
+	resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, s.provider.ValidateResource(req.TypeName, config))
 
 	return resp, nil
 }
 
-func (s *GRPCProviderServer) ValidateDataSourceConfig(ctx context.Context, req *tfprotov5.ValidateDataSourceConfigRequest) (*tfprotov5.ValidateDataSourceConfigResponse, error) {
-	ctx = logging.InitContext(ctx)
+func (s *GRPCProviderServer) ValidateDataSourceConfig(_ context.Context, req *tfprotov5.ValidateDataSourceConfigRequest) (*tfprotov5.ValidateDataSourceConfigResponse, error) {
 	resp := &tfprotov5.ValidateDataSourceConfigResponse{}
 
 	schemaBlock := s.getDatasourceSchemaBlock(req.TypeName)
 
 	configVal, err := msgpack.Unmarshal(req.Config.MsgPack, schemaBlock.ImpliedType())
 	if err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 
 	// Ensure there are no nulls that will cause helper/schema to panic.
-	if err := validateConfigNulls(ctx, configVal, nil); err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+	if err := validateConfigNulls(configVal, nil); err != nil {
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 
 	config := terraform.NewResourceConfigShimmed(configVal, schemaBlock)
 
-	logging.HelperSchemaTrace(ctx, "Calling downstream")
-	resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, s.provider.ValidateDataSource(req.TypeName, config))
-	logging.HelperSchemaTrace(ctx, "Called downstream")
+	resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, s.provider.ValidateDataSource(req.TypeName, config))
 
 	return resp, nil
 }
 
 func (s *GRPCProviderServer) UpgradeResourceState(ctx context.Context, req *tfprotov5.UpgradeResourceStateRequest) (*tfprotov5.UpgradeResourceStateResponse, error) {
-	ctx = logging.InitContext(ctx)
 	resp := &tfprotov5.UpgradeResourceStateResponse{}
 
 	res, ok := s.provider.ResourcesMap[req.TypeName]
 	if !ok {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, fmt.Errorf("unknown resource type: %s", req.TypeName))
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, fmt.Errorf("unknown resource type: %s", req.TypeName))
 		return resp, nil
 	}
 	schemaBlock := s.getResourceSchemaBlock(req.TypeName)
@@ -296,11 +275,9 @@ func (s *GRPCProviderServer) UpgradeResourceState(ctx context.Context, req *tfpr
 	// We first need to upgrade a flatmap state if it exists.
 	// There should never be both a JSON and Flatmap state in the request.
 	case len(req.RawState.Flatmap) > 0:
-		logging.HelperSchemaTrace(ctx, "Upgrading flatmap state")
-
 		jsonMap, version, err = s.upgradeFlatmapState(ctx, version, req.RawState.Flatmap, res)
 		if err != nil {
-			resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+			resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 			return resp, nil
 		}
 	// if there's a JSON state, we need to decode it.
@@ -311,31 +288,29 @@ func (s *GRPCProviderServer) UpgradeResourceState(ctx context.Context, req *tfpr
 			err = json.Unmarshal(req.RawState.JSON, &jsonMap)
 		}
 		if err != nil {
-			resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+			resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 			return resp, nil
 		}
 	default:
-		logging.HelperSchemaDebug(ctx, "no state provided to upgrade")
+		log.Println("[DEBUG] no state provided to upgrade")
 		return resp, nil
 	}
 
 	// complete the upgrade of the JSON states
-	logging.HelperSchemaTrace(ctx, "Upgrading JSON state")
-
 	jsonMap, err = s.upgradeJSONState(ctx, version, jsonMap, res)
 	if err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 
 	// The provider isn't required to clean out removed fields
-	s.removeAttributes(ctx, jsonMap, schemaBlock.ImpliedType())
+	s.removeAttributes(jsonMap, schemaBlock.ImpliedType())
 
 	// now we need to turn the state into the default json representation, so
 	// that it can be re-decoded using the actual schema.
 	val, err := JSONMapToStateValue(jsonMap, schemaBlock)
 	if err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 
@@ -344,7 +319,7 @@ func (s *GRPCProviderServer) UpgradeResourceState(ctx context.Context, req *tfpr
 	// First we need to CoerceValue to ensure that all object types match.
 	val, err = schemaBlock.CoerceValue(val)
 	if err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 	// Normalize the value and fill in any missing blocks.
@@ -353,7 +328,7 @@ func (s *GRPCProviderServer) UpgradeResourceState(ctx context.Context, req *tfpr
 	// encode the final state to the expected msgpack format
 	newStateMP, err := msgpack.Marshal(val, schemaBlock.ImpliedType())
 	if err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 
@@ -366,7 +341,7 @@ func (s *GRPCProviderServer) UpgradeResourceState(ctx context.Context, req *tfpr
 // map[string]interface{}.
 // upgradeFlatmapState returns the json map along with the corresponding schema
 // version.
-func (s *GRPCProviderServer) upgradeFlatmapState(_ context.Context, version int, m map[string]string, res *Resource) (map[string]interface{}, int, error) {
+func (s *GRPCProviderServer) upgradeFlatmapState(ctx context.Context, version int, m map[string]string, res *Resource) (map[string]interface{}, int, error) {
 	// this will be the version we've upgraded so, defaulting to the given
 	// version in case no migration was called.
 	upgradedVersion := version
@@ -458,7 +433,7 @@ func (s *GRPCProviderServer) upgradeJSONState(ctx context.Context, version int, 
 
 // Remove any attributes no longer present in the schema, so that the json can
 // be correctly decoded.
-func (s *GRPCProviderServer) removeAttributes(ctx context.Context, v interface{}, ty cty.Type) {
+func (s *GRPCProviderServer) removeAttributes(v interface{}, ty cty.Type) {
 	// we're only concerned with finding maps that corespond to object
 	// attributes
 	switch v := v.(type) {
@@ -467,7 +442,7 @@ func (s *GRPCProviderServer) removeAttributes(ctx context.Context, v interface{}
 		if ty.IsListType() || ty.IsSetType() {
 			eTy := ty.ElementType()
 			for _, eV := range v {
-				s.removeAttributes(ctx, eV, eTy)
+				s.removeAttributes(eV, eTy)
 			}
 		}
 		return
@@ -476,20 +451,20 @@ func (s *GRPCProviderServer) removeAttributes(ctx context.Context, v interface{}
 		if ty.IsMapType() {
 			eTy := ty.ElementType()
 			for _, eV := range v {
-				s.removeAttributes(ctx, eV, eTy)
+				s.removeAttributes(eV, eTy)
 			}
 			return
 		}
 
 		if ty == cty.DynamicPseudoType {
-			logging.HelperSchemaDebug(ctx, "ignoring dynamic block", map[string]interface{}{"block": v})
+			log.Printf("[DEBUG] ignoring dynamic block: %#v\n", v)
 			return
 		}
 
 		if !ty.IsObjectType() {
 			// This shouldn't happen, and will fail to decode further on, so
 			// there's no need to handle it here.
-			logging.HelperSchemaWarn(ctx, "unexpected type for map in JSON state", map[string]interface{}{"type": ty})
+			log.Printf("[WARN] unexpected type %#v for map in json state", ty)
 			return
 		}
 
@@ -497,21 +472,17 @@ func (s *GRPCProviderServer) removeAttributes(ctx context.Context, v interface{}
 		for attr, attrV := range v {
 			attrTy, ok := attrTypes[attr]
 			if !ok {
-				logging.HelperSchemaDebug(ctx, "attribute no longer present in schema", map[string]interface{}{"attribute": attr})
+				log.Printf("[DEBUG] attribute %q no longer present in schema", attr)
 				delete(v, attr)
 				continue
 			}
 
-			s.removeAttributes(ctx, attrV, attrTy)
+			s.removeAttributes(attrV, attrTy)
 		}
 	}
 }
 
-func (s *GRPCProviderServer) StopProvider(ctx context.Context, _ *tfprotov5.StopProviderRequest) (*tfprotov5.StopProviderResponse, error) {
-	ctx = logging.InitContext(ctx)
-
-	logging.HelperSchemaTrace(ctx, "Stopping provider")
-
+func (s *GRPCProviderServer) StopProvider(_ context.Context, _ *tfprotov5.StopProviderRequest) (*tfprotov5.StopProviderResponse, error) {
 	s.stopMu.Lock()
 	defer s.stopMu.Unlock()
 
@@ -520,28 +491,25 @@ func (s *GRPCProviderServer) StopProvider(ctx context.Context, _ *tfprotov5.Stop
 	// reset the stop signal
 	s.stopCh = make(chan struct{})
 
-	logging.HelperSchemaTrace(ctx, "Stopped provider")
-
 	return &tfprotov5.StopProviderResponse{}, nil
 }
 
 func (s *GRPCProviderServer) ConfigureProvider(ctx context.Context, req *tfprotov5.ConfigureProviderRequest) (*tfprotov5.ConfigureProviderResponse, error) {
-	ctx = logging.InitContext(ctx)
 	resp := &tfprotov5.ConfigureProviderResponse{}
 
 	schemaBlock := s.getProviderSchemaBlock()
 
 	configVal, err := msgpack.Unmarshal(req.Config.MsgPack, schemaBlock.ImpliedType())
 	if err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 
 	s.provider.TerraformVersion = req.TerraformVersion
 
 	// Ensure there are no nulls that will cause helper/schema to panic.
-	if err := validateConfigNulls(ctx, configVal, nil); err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+	if err := validateConfigNulls(configVal, nil); err != nil {
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 
@@ -552,18 +520,13 @@ func (s *GRPCProviderServer) ConfigureProvider(ctx context.Context, req *tfproto
 	// function. Ideally a provider should migrate to the context aware API that receives
 	// request scoped contexts, however this is a large undertaking for very large providers.
 	ctxHack := context.WithValue(ctx, StopContextKey, s.StopContext(context.Background()))
-
-	logging.HelperSchemaTrace(ctx, "Calling downstream")
 	diags := s.provider.Configure(ctxHack, config)
-	logging.HelperSchemaTrace(ctx, "Called downstream")
-
-	resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, diags)
+	resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, diags)
 
 	return resp, nil
 }
 
 func (s *GRPCProviderServer) ReadResource(ctx context.Context, req *tfprotov5.ReadResourceRequest) (*tfprotov5.ReadResourceResponse, error) {
-	ctx = logging.InitContext(ctx)
 	resp := &tfprotov5.ReadResourceResponse{
 		// helper/schema did previously handle private data during refresh, but
 		// core is now going to expect this to be maintained in order to
@@ -573,20 +536,20 @@ func (s *GRPCProviderServer) ReadResource(ctx context.Context, req *tfprotov5.Re
 
 	res, ok := s.provider.ResourcesMap[req.TypeName]
 	if !ok {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, fmt.Errorf("unknown resource type: %s", req.TypeName))
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, fmt.Errorf("unknown resource type: %s", req.TypeName))
 		return resp, nil
 	}
 	schemaBlock := s.getResourceSchemaBlock(req.TypeName)
 
 	stateVal, err := msgpack.Unmarshal(req.CurrentState.MsgPack, schemaBlock.ImpliedType())
 	if err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 
 	instanceState, err := res.ShimInstanceStateFromValue(stateVal)
 	if err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 	instanceState.RawState = stateVal
@@ -594,7 +557,7 @@ func (s *GRPCProviderServer) ReadResource(ctx context.Context, req *tfprotov5.Re
 	private := make(map[string]interface{})
 	if len(req.Private) > 0 {
 		if err := json.Unmarshal(req.Private, &private); err != nil {
-			resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+			resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 			return resp, nil
 		}
 	}
@@ -604,14 +567,14 @@ func (s *GRPCProviderServer) ReadResource(ctx context.Context, req *tfprotov5.Re
 	if pmSchemaBlock != nil && req.ProviderMeta != nil {
 		providerSchemaVal, err := msgpack.Unmarshal(req.ProviderMeta.MsgPack, pmSchemaBlock.ImpliedType())
 		if err != nil {
-			resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+			resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 			return resp, nil
 		}
 		instanceState.ProviderMeta = providerSchemaVal
 	}
 
 	newInstanceState, diags := res.RefreshWithoutUpgrade(ctx, instanceState, s.provider.Meta())
-	resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, diags)
+	resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, diags)
 	if diags.HasError() {
 		return resp, nil
 	}
@@ -622,7 +585,7 @@ func (s *GRPCProviderServer) ReadResource(ctx context.Context, req *tfprotov5.Re
 		// to see a null value (in the cty sense) in that case.
 		newStateMP, err := msgpack.Marshal(cty.NullVal(schemaBlock.ImpliedType()), schemaBlock.ImpliedType())
 		if err != nil {
-			resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+			resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		}
 		resp.NewState = &tfprotov5.DynamicValue{
 			MsgPack: newStateMP,
@@ -635,7 +598,7 @@ func (s *GRPCProviderServer) ReadResource(ctx context.Context, req *tfprotov5.Re
 
 	newStateVal, err := hcl2shim.HCL2ValueFromFlatmap(newInstanceState.Attributes, schemaBlock.ImpliedType())
 	if err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 
@@ -644,7 +607,7 @@ func (s *GRPCProviderServer) ReadResource(ctx context.Context, req *tfprotov5.Re
 
 	newStateMP, err := msgpack.Marshal(newStateVal, schemaBlock.ImpliedType())
 	if err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 
@@ -656,7 +619,6 @@ func (s *GRPCProviderServer) ReadResource(ctx context.Context, req *tfprotov5.Re
 }
 
 func (s *GRPCProviderServer) PlanResourceChange(ctx context.Context, req *tfprotov5.PlanResourceChangeRequest) (*tfprotov5.PlanResourceChangeResponse, error) {
-	ctx = logging.InitContext(ctx)
 	resp := &tfprotov5.PlanResourceChangeResponse{}
 
 	// This is a signal to Terraform Core that we're doing the best we can to
@@ -665,18 +627,18 @@ func (s *GRPCProviderServer) PlanResourceChange(ctx context.Context, req *tfprot
 	// forward to any new SDK implementations, since setting it prevents us
 	// from catching certain classes of provider bug that can lead to
 	// confusing downstream errors.
-	resp.UnsafeToUseLegacyTypeSystem = true //nolint:staticcheck
+	resp.UnsafeToUseLegacyTypeSystem = true
 
 	res, ok := s.provider.ResourcesMap[req.TypeName]
 	if !ok {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, fmt.Errorf("unknown resource type: %s", req.TypeName))
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, fmt.Errorf("unknown resource type: %s", req.TypeName))
 		return resp, nil
 	}
 	schemaBlock := s.getResourceSchemaBlock(req.TypeName)
 
 	priorStateVal, err := msgpack.Unmarshal(req.PriorState.MsgPack, schemaBlock.ImpliedType())
 	if err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 
@@ -684,7 +646,7 @@ func (s *GRPCProviderServer) PlanResourceChange(ctx context.Context, req *tfprot
 
 	proposedNewStateVal, err := msgpack.Unmarshal(req.ProposedNewState.MsgPack, schemaBlock.ImpliedType())
 	if err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 
@@ -697,13 +659,13 @@ func (s *GRPCProviderServer) PlanResourceChange(ctx context.Context, req *tfprot
 
 	configVal, err := msgpack.Unmarshal(req.Config.MsgPack, schemaBlock.ImpliedType())
 	if err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 
 	priorState, err := res.ShimInstanceStateFromValue(priorStateVal)
 	if err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 	priorState.RawState = priorStateVal
@@ -712,7 +674,7 @@ func (s *GRPCProviderServer) PlanResourceChange(ctx context.Context, req *tfprot
 	priorPrivate := make(map[string]interface{})
 	if len(req.PriorPrivate) > 0 {
 		if err := json.Unmarshal(req.PriorPrivate, &priorPrivate); err != nil {
-			resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+			resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 			return resp, nil
 		}
 	}
@@ -723,15 +685,15 @@ func (s *GRPCProviderServer) PlanResourceChange(ctx context.Context, req *tfprot
 	if pmSchemaBlock != nil && req.ProviderMeta != nil {
 		providerSchemaVal, err := msgpack.Unmarshal(req.ProviderMeta.MsgPack, pmSchemaBlock.ImpliedType())
 		if err != nil {
-			resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+			resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 			return resp, nil
 		}
 		priorState.ProviderMeta = providerSchemaVal
 	}
 
 	// Ensure there are no nulls that will cause helper/schema to panic.
-	if err := validateConfigNulls(ctx, proposedNewStateVal, nil); err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+	if err := validateConfigNulls(proposedNewStateVal, nil); err != nil {
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 
@@ -740,7 +702,7 @@ func (s *GRPCProviderServer) PlanResourceChange(ctx context.Context, req *tfprot
 
 	diff, err := res.SimpleDiff(ctx, priorState, cfg, s.provider.Meta())
 	if err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 
@@ -772,27 +734,22 @@ func (s *GRPCProviderServer) PlanResourceChange(ctx context.Context, req *tfprot
 	// now we need to apply the diff to the prior state, so get the planned state
 	plannedAttrs, err := diff.Apply(priorState.Attributes, schemaBlock)
 
-	if err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
-		return resp, nil
-	}
-
 	plannedStateVal, err := hcl2shim.HCL2ValueFromFlatmap(plannedAttrs, schemaBlock.ImpliedType())
 	if err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 
 	plannedStateVal, err = schemaBlock.CoerceValue(plannedStateVal)
 	if err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 
 	plannedStateVal = normalizeNullValues(plannedStateVal, proposedNewStateVal, false)
 
 	if err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 
@@ -820,7 +777,7 @@ func (s *GRPCProviderServer) PlanResourceChange(ctx context.Context, req *tfprot
 
 	plannedMP, err := msgpack.Marshal(plannedStateVal, schemaBlock.ImpliedType())
 	if err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 	resp.PlannedState = &tfprotov5.DynamicValue{
@@ -830,12 +787,12 @@ func (s *GRPCProviderServer) PlanResourceChange(ctx context.Context, req *tfprot
 	// encode any timeouts into the diff Meta
 	t := &ResourceTimeout{}
 	if err := t.ConfigDecode(res, cfg); err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 
 	if err := t.DiffEncode(diff); err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 
@@ -858,7 +815,7 @@ func (s *GRPCProviderServer) PlanResourceChange(ctx context.Context, req *tfprot
 	// the Meta field gets encoded into PlannedPrivate
 	plannedPrivate, err := json.Marshal(privateMap)
 	if err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 	resp.PlannedPrivate = plannedPrivate
@@ -885,7 +842,7 @@ func (s *GRPCProviderServer) PlanResourceChange(ctx context.Context, req *tfprot
 
 	requiresReplace, err := hcl2shim.RequiresReplace(requiresNew, schemaBlock.ImpliedType())
 	if err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 
@@ -898,7 +855,6 @@ func (s *GRPCProviderServer) PlanResourceChange(ctx context.Context, req *tfprot
 }
 
 func (s *GRPCProviderServer) ApplyResourceChange(ctx context.Context, req *tfprotov5.ApplyResourceChangeRequest) (*tfprotov5.ApplyResourceChangeResponse, error) {
-	ctx = logging.InitContext(ctx)
 	resp := &tfprotov5.ApplyResourceChangeResponse{
 		// Start with the existing state as a fallback
 		NewState: req.PriorState,
@@ -906,39 +862,39 @@ func (s *GRPCProviderServer) ApplyResourceChange(ctx context.Context, req *tfpro
 
 	res, ok := s.provider.ResourcesMap[req.TypeName]
 	if !ok {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, fmt.Errorf("unknown resource type: %s", req.TypeName))
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, fmt.Errorf("unknown resource type: %s", req.TypeName))
 		return resp, nil
 	}
 	schemaBlock := s.getResourceSchemaBlock(req.TypeName)
 
 	priorStateVal, err := msgpack.Unmarshal(req.PriorState.MsgPack, schemaBlock.ImpliedType())
 	if err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 
 	plannedStateVal, err := msgpack.Unmarshal(req.PlannedState.MsgPack, schemaBlock.ImpliedType())
 	if err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 
 	configVal, err := msgpack.Unmarshal(req.Config.MsgPack, schemaBlock.ImpliedType())
 	if err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 
 	priorState, err := res.ShimInstanceStateFromValue(priorStateVal)
 	if err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 
 	private := make(map[string]interface{})
 	if len(req.PlannedPrivate) > 0 {
 		if err := json.Unmarshal(req.PlannedPrivate, &private); err != nil {
-			resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+			resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 			return resp, nil
 		}
 	}
@@ -960,7 +916,7 @@ func (s *GRPCProviderServer) ApplyResourceChange(ctx context.Context, req *tfpro
 	} else {
 		diff, err = DiffFromValues(ctx, priorStateVal, plannedStateVal, configVal, stripResourceModifiers(res))
 		if err != nil {
-			resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+			resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 			return resp, nil
 		}
 	}
@@ -1012,14 +968,14 @@ func (s *GRPCProviderServer) ApplyResourceChange(ctx context.Context, req *tfpro
 	if pmSchemaBlock != nil && req.ProviderMeta != nil {
 		providerSchemaVal, err := msgpack.Unmarshal(req.ProviderMeta.MsgPack, pmSchemaBlock.ImpliedType())
 		if err != nil {
-			resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+			resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 			return resp, nil
 		}
 		priorState.ProviderMeta = providerSchemaVal
 	}
 
 	newInstanceState, diags := res.Apply(ctx, priorState, diff, s.provider.Meta())
-	resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, diags)
+	resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, diags)
 
 	newStateVal := cty.NullVal(schemaBlock.ImpliedType())
 
@@ -1029,7 +985,7 @@ func (s *GRPCProviderServer) ApplyResourceChange(ctx context.Context, req *tfpro
 	if destroy || newInstanceState == nil || newInstanceState.Attributes == nil || newInstanceState.ID == "" {
 		newStateMP, err := msgpack.Marshal(newStateVal, schemaBlock.ImpliedType())
 		if err != nil {
-			resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+			resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 			return resp, nil
 		}
 		resp.NewState = &tfprotov5.DynamicValue{
@@ -1042,7 +998,7 @@ func (s *GRPCProviderServer) ApplyResourceChange(ctx context.Context, req *tfpro
 	// entire object, even if the new state was nil.
 	newStateVal, err = StateValueFromInstanceState(newInstanceState, schemaBlock.ImpliedType())
 	if err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 
@@ -1052,7 +1008,7 @@ func (s *GRPCProviderServer) ApplyResourceChange(ctx context.Context, req *tfpro
 
 	newStateMP, err := msgpack.Marshal(newStateVal, schemaBlock.ImpliedType())
 	if err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 	resp.NewState = &tfprotov5.DynamicValue{
@@ -1061,7 +1017,7 @@ func (s *GRPCProviderServer) ApplyResourceChange(ctx context.Context, req *tfpro
 
 	meta, err := json.Marshal(newInstanceState.Meta)
 	if err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 	resp.Private = meta
@@ -1072,13 +1028,12 @@ func (s *GRPCProviderServer) ApplyResourceChange(ctx context.Context, req *tfpro
 	// forward to any new SDK implementations, since setting it prevents us
 	// from catching certain classes of provider bug that can lead to
 	// confusing downstream errors.
-	resp.UnsafeToUseLegacyTypeSystem = true //nolint:staticcheck
+	resp.UnsafeToUseLegacyTypeSystem = true
 
 	return resp, nil
 }
 
 func (s *GRPCProviderServer) ImportResourceState(ctx context.Context, req *tfprotov5.ImportResourceStateRequest) (*tfprotov5.ImportResourceStateResponse, error) {
-	ctx = logging.InitContext(ctx)
 	resp := &tfprotov5.ImportResourceStateResponse{}
 
 	info := &terraform.InstanceInfo{
@@ -1087,7 +1042,7 @@ func (s *GRPCProviderServer) ImportResourceState(ctx context.Context, req *tfpro
 
 	newInstanceStates, err := s.provider.ImportState(ctx, info, req.ID)
 	if err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 
@@ -1103,7 +1058,7 @@ func (s *GRPCProviderServer) ImportResourceState(ctx context.Context, req *tfpro
 		schemaBlock := s.getResourceSchemaBlock(resourceType)
 		newStateVal, err := hcl2shim.HCL2ValueFromFlatmap(is.Attributes, schemaBlock.ImpliedType())
 		if err != nil {
-			resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+			resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 			return resp, nil
 		}
 
@@ -1112,13 +1067,13 @@ func (s *GRPCProviderServer) ImportResourceState(ctx context.Context, req *tfpro
 
 		newStateMP, err := msgpack.Marshal(newStateVal, schemaBlock.ImpliedType())
 		if err != nil {
-			resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+			resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 			return resp, nil
 		}
 
 		meta, err := json.Marshal(is.Meta)
 		if err != nil {
-			resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+			resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 			return resp, nil
 		}
 
@@ -1137,20 +1092,19 @@ func (s *GRPCProviderServer) ImportResourceState(ctx context.Context, req *tfpro
 }
 
 func (s *GRPCProviderServer) ReadDataSource(ctx context.Context, req *tfprotov5.ReadDataSourceRequest) (*tfprotov5.ReadDataSourceResponse, error) {
-	ctx = logging.InitContext(ctx)
 	resp := &tfprotov5.ReadDataSourceResponse{}
 
 	schemaBlock := s.getDatasourceSchemaBlock(req.TypeName)
 
 	configVal, err := msgpack.Unmarshal(req.Config.MsgPack, schemaBlock.ImpliedType())
 	if err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 
 	// Ensure there are no nulls that will cause helper/schema to panic.
-	if err := validateConfigNulls(ctx, configVal, nil); err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+	if err := validateConfigNulls(configVal, nil); err != nil {
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 
@@ -1160,12 +1114,12 @@ func (s *GRPCProviderServer) ReadDataSource(ctx context.Context, req *tfprotov5.
 	// the old behavior
 	res, ok := s.provider.DataSourcesMap[req.TypeName]
 	if !ok {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, fmt.Errorf("unknown data source: %s", req.TypeName))
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, fmt.Errorf("unknown data source: %s", req.TypeName))
 		return resp, nil
 	}
 	diff, err := res.Diff(ctx, nil, config, s.provider.Meta())
 	if err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 
@@ -1177,14 +1131,14 @@ func (s *GRPCProviderServer) ReadDataSource(ctx context.Context, req *tfprotov5.
 
 	// now we can get the new complete data source
 	newInstanceState, diags := res.ReadDataApply(ctx, diff, s.provider.Meta())
-	resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, diags)
+	resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, diags)
 	if diags.HasError() {
 		return resp, nil
 	}
 
 	newStateVal, err := StateValueFromInstanceState(newInstanceState, schemaBlock.ImpliedType())
 	if err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 
@@ -1192,7 +1146,7 @@ func (s *GRPCProviderServer) ReadDataSource(ctx context.Context, req *tfprotov5.
 
 	newStateMP, err := msgpack.Marshal(newStateVal, schemaBlock.ImpliedType())
 	if err != nil {
-		resp.Diagnostics = convert.AppendProtoDiag(ctx, resp.Diagnostics, err)
+		resp.Diagnostics = convert.AppendProtoDiag(resp.Diagnostics, err)
 		return resp, nil
 	}
 	resp.State = &tfprotov5.DynamicValue{
@@ -1485,7 +1439,7 @@ func normalizeNullValues(dst, src cty.Value, apply bool) cty.Value {
 // appears in a list-like attribute (list, set, tuple) will present a nil value
 // to helper/schema which can panic. Return an error to the user in this case,
 // indicating the attribute with the null value.
-func validateConfigNulls(ctx context.Context, v cty.Value, path cty.Path) []*tfprotov5.Diagnostic {
+func validateConfigNulls(v cty.Value, path cty.Path) []*tfprotov5.Diagnostic {
 	var diags []*tfprotov5.Diagnostic
 	if v.IsNull() || !v.IsKnown() {
 		return diags
@@ -1514,8 +1468,8 @@ func validateConfigNulls(ctx context.Context, v cty.Value, path cty.Path) []*tfp
 				continue
 			}
 
-			d := validateConfigNulls(ctx, ev, append(path, cty.IndexStep{Key: kv}))
-			diags = convert.AppendProtoDiag(ctx, diags, d)
+			d := validateConfigNulls(ev, append(path, cty.IndexStep{Key: kv}))
+			diags = convert.AppendProtoDiag(diags, d)
 		}
 
 	case v.Type().IsMapType() || v.Type().IsObjectType():
@@ -1529,8 +1483,8 @@ func validateConfigNulls(ctx context.Context, v cty.Value, path cty.Path) []*tfp
 			case v.Type().IsObjectType():
 				step = cty.GetAttrStep{Name: kv.AsString()}
 			}
-			d := validateConfigNulls(ctx, ev, append(path, step))
-			diags = convert.AppendProtoDiag(ctx, diags, d)
+			d := validateConfigNulls(ev, append(path, step))
+			diags = convert.AppendProtoDiag(diags, d)
 		}
 	}
 

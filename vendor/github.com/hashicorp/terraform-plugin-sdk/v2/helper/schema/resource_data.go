@@ -528,7 +528,7 @@ func (d *ResourceData) getChange(
 func (d *ResourceData) get(addr []string, source getSource) getResult {
 	d.once.Do(d.init)
 
-	var level string
+	level := "set"
 	flags := source & ^getSourceLevelMask
 	exact := flags&getSourceExact != 0
 	source = source & getSourceLevelMask
