@@ -569,6 +569,9 @@ func postCloudProjectDatabaseUser(d *schema.ResourceData, meta interface{}, engi
 		}
 		return updateFunc(d, meta)
 	}
+	if engine == "grafana" && name != "avnadmin" {
+		return fmt.Errorf("The Grafana engine does not allow to create a user resource other than avnadmin")
+	}
 
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)

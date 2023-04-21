@@ -45,6 +45,9 @@ func TestAccCloudProjectDatabaseUserDataSource_basic(t *testing.T) {
 	flavor := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_FLAVOR_TEST")
 	description := acctest.RandomWithPrefix(test_prefix)
 	name := "johndoe"
+	if engine == "grafana" {
+		name = "avnadmin"
+	}
 
 	config := fmt.Sprintf(
 		testAccCloudProjectDatabaseUserDatasourceConfig_Basic,
