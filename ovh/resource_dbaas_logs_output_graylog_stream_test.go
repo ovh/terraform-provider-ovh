@@ -94,7 +94,7 @@ func testSweepDbaasOutputGraylogStream(region string) error {
 	return nil
 }
 
-func TestAccResourceDbaasLogsOutputGraylogStream_basic(t *testing.T) {
+func TestAccDbaasLogsOutputGraylogStream_basic(t *testing.T) {
 	serviceName := os.Getenv("OVH_DBAAS_LOGS_SERVICE_TEST")
 	title := acctest.RandomWithPrefix(test_prefix)
 	desc := acctest.RandomWithPrefix(test_prefix)

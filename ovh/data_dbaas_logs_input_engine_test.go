@@ -25,7 +25,7 @@ data "ovh_dbaas_logs_input_engine" "logstash" {
 }
 `
 
-func TestAccDataSourceDbaasLogsInputEngine_basic(t *testing.T) {
+func TestAccDbaasLogsInputEngineDataSource_basic(t *testing.T) {
 	serviceName := os.Getenv("OVH_DBAAS_LOGS_SERVICE_TEST")
 	name := "LOGSTASH"
 	// version := "7.x"
@@ -62,7 +62,7 @@ func TestAccDataSourceDbaasLogsInputEngine_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceDbaasLogsInputEngine_deprecated(t *testing.T) {
+func TestAccDbaasLogsInputEngineDataSource_deprecated(t *testing.T) {
 	serviceName := os.Getenv("OVH_DBAAS_LOGS_SERVICE_TEST")
 	name := "LOGSTASH"
 	version := "6.8"

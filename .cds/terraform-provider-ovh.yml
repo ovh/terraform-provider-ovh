@@ -22,15 +22,237 @@ workflow:
   #   depends_on:
   #     - terraform-provider-ovh
 
-  terraform-provider-ovh-testacc:
+  terraform-provider-ovh-TestAccCloudProjectCapabilities:
     pipeline: terraform-provider-ovh-testacc
     one_at_a_time: true
     application: terraform-provider-ovh
     environment: acctests
     parameters:
-      testargs: "{{ .workflow.terraform-provider-ovh.pip.testargs }}"
+      testargs: "-run TestAccCloudProjectCapabilities"
     depends_on:
       - terraform-provider-ovh-check
+
+  terraform-provider-ovh-TestAccCloudProjectContainer:
+    pipeline: terraform-provider-ovh-testacc
+    one_at_a_time: true
+    application: terraform-provider-ovh
+    environment: acctests
+    parameters:
+      testargs: "-run TestAccCloudProjectContainer"
+    depends_on:
+      - terraform-provider-ovh-check
+
+  terraform-provider-ovh-TestAccCloudProjectDatabase:
+    pipeline: terraform-provider-ovh-testacc
+    one_at_a_time: true
+    application: terraform-provider-ovh
+    environment: acctests
+    parameters:
+      testargs: "-run TestAccCloudProjectDatabase"
+    depends_on:
+      - terraform-provider-ovh-check
+
+
+  terraform-provider-ovh-TestAccDataSourceCloudProjectFailoverIp:
+    pipeline: terraform-provider-ovh-testacc
+    one_at_a_time: true
+    application: terraform-provider-ovh
+    environment: acctests
+    parameters:
+      testargs: "-run TestAccDataSourceCloudProjectFailoverIp"
+    depends_on:
+      - terraform-provider-ovh-check
+
+  terraform-provider-ovh-TestAccCloudProjectKube:
+    pipeline: terraform-provider-ovh-testacc
+    one_at_a_time: true
+    application: terraform-provider-ovh
+    environment: acctests
+    parameters:
+      testargs: "-run TestAccCloudProjectKube"
+    depends_on:
+      - terraform-provider-ovh-check
+
+  terraform-provider-ovh-TestAccCloudProjectRegion:
+    pipeline: terraform-provider-ovh-testacc
+    one_at_a_time: true
+    application: terraform-provider-ovh
+    environment: acctests
+    parameters:
+      testargs: "-run TestAccCloudProjectRegion"
+    depends_on:
+      - terraform-provider-ovh-check
+
+  terraform-provider-ovh-TestAccDataCloudProjectUser:
+    pipeline: terraform-provider-ovh-testacc
+    one_at_a_time: true
+    application: terraform-provider-ovh
+    environment: acctests
+    parameters:
+      testargs: "-run TestAccDataCloudProjectUser"
+    depends_on:
+      - terraform-provider-ovh-check
+
+  terraform-provider-ovh-TestAccDataSourceDbaas:
+    pipeline: terraform-provider-ovh-testacc
+    one_at_a_time: true
+    application: terraform-provider-ovh
+    environment: acctests
+    parameters:
+      testargs: "-run TestAccDataSourceDbaas"
+    depends_on:
+      - terraform-provider-ovh-check
+
+  terraform-provider-ovh-TestAccDedicated:
+    pipeline: terraform-provider-ovh-testacc
+    one_at_a_time: true
+    application: terraform-provider-ovh
+    environment: acctests
+    parameters:
+      testargs: "-run TestAccDedicated"
+    depends_on:
+      - terraform-provider-ovh-check
+
+  terraform-provider-ovh-TestAccDomain:
+    pipeline: terraform-provider-ovh-testacc
+    one_at_a_time: true
+    application: terraform-provider-ovh
+    environment: acctests
+    parameters:
+      testargs: "-run TestAccDomain"
+    depends_on:
+      - terraform-provider-ovh-check
+
+  terraform-provider-ovh-TestAccDataSourceHosting:
+    pipeline: terraform-provider-ovh-testacc
+    one_at_a_time: true
+    application: terraform-provider-ovh
+    environment: acctests
+    parameters:
+      testargs: "-run TestAccDataSourceHosting"
+    depends_on:
+      - terraform-provider-ovh-check
+
+  terraform-provider-ovh-TestAccDataSourceIpService:
+    pipeline: terraform-provider-ovh-testacc
+    one_at_a_time: true
+    application: terraform-provider-ovh
+    environment: acctests
+    parameters:
+      testargs: "-run TestAccDataSourceIpService"
+    depends_on:
+      - terraform-provider-ovh-check
+
+  terraform-provider-ovh-TestAccIpLoadbalancing:
+    pipeline: terraform-provider-ovh-testacc
+    one_at_a_time: true
+    application: terraform-provider-ovh
+    environment: acctests
+    parameters:
+      testargs: "-run TestAccIpLoadbalancing"
+    depends_on:
+      - terraform-provider-ovh-check
+
+  terraform-provider-ovh-TestAccMe:
+    pipeline: terraform-provider-ovh-testacc
+    one_at_a_time: true
+    application: terraform-provider-ovh
+    environment: acctests
+    parameters:
+      testargs: "-run TestAccDataSourceDbaas"
+    depends_on:
+      - terraform-provider-ovh-check/Dat&
+
+
+  terraform-provider-ovh-TestAccVPS:
+    pipeline: terraform-provider-ovh-testacc
+    one_at_a_time: true
+    application: terraform-provider-ovh
+    environment: acctests
+    parameters:
+      testargs: "-run TestAccVPS"
+    depends_on:
+      - terraform-provider-ovh-check
+
+  terraform-provider-ovh-TestAccVrack:
+    pipeline: terraform-provider-ovh-testacc
+    one_at_a_time: true
+    application: terraform-provider-ovh
+    environment: acctests
+    parameters:
+      testargs: "-run TestAccVrack"
+    depends_on:
+      - terraform-provider-ovh-check
+
+  terraform-provider-ovh-TestAccCloudProjectNetwork:
+    pipeline: terraform-provider-ovh-testacc
+    one_at_a_time: true
+    application: terraform-provider-ovh
+    environment: acctests
+    parameters:
+      testargs: "-run TestAccCloudProjectNetwork"
+    depends_on:
+      - terraform-provider-ovh-check
+
+  terraform-provider-ovh-TestAccHostingPrivateDatabase:
+    pipeline: terraform-provider-ovh-testacc
+    one_at_a_time: true
+    application: terraform-provider-ovh
+    environment: acctests
+    parameters:
+      testargs: "-run TestAccHostingPrivateDatabase"
+    depends_on:
+      - terraform-provider-ovh-check
+
+  terraform-provider-ovh-TestAccVPS:
+    pipeline: terraform-provider-ovh-testacc
+    one_at_a_time: true
+    application: terraform-provider-ovh
+    environment: acctests
+    parameters:
+      testargs: "-run TestAccVPS"
+    depends_on:
+      - terraform-provider-ovh-check
+
+  terraform-provider-ovh-TestAccCloudProjectWorkflowBackup:
+    pipeline: terraform-provider-ovh-testacc
+    one_at_a_time: true
+    application: terraform-provider-ovh
+    environment: acctests
+    parameters:
+      testargs: "-run TestAccCloudProjectWorkflowBackup"
+    depends_on:
+      - terraform-provider-ovh-check
+
+    terraform-provider-ovh-TestAccDbaas:
+    pipeline: terraform-provider-ovh-testacc
+    one_at_a_time: true
+    application: terraform-provider-ovh
+    environment: acctests
+    parameters:
+      testargs: "-run TestAccDbaas"
+    depends_on:
+      - terraform-provider-ovh-check
+  terraform-provider-ovh-TestAccVPS:
+    pipeline: terraform-provider-ovh-testacc
+    one_at_a_time: true
+    application: terraform-provider-ovh
+    environment: acctests
+    parameters:
+      testargs: "-run TestAccVPS"
+    depends_on:
+      - terraform-provider-ovh-check
+  terraform-provider-ovh-TestAccVPS:
+    pipeline: terraform-provider-ovh-testacc
+    one_at_a_time: true
+    application: terraform-provider-ovh
+    environment: acctests
+    parameters:
+      testargs: "-run TestAccVPS"
+    depends_on:
+      - terraform-provider-ovh-check
+
+
 
 metadata:
   default_tags: git.branch,git.author

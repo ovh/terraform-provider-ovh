@@ -151,7 +151,7 @@ func testSweepDbaasInput(region string) error {
 	return nil
 }
 
-func TestAccResourceDbaasLogsInput_basic(t *testing.T) {
+func TestAccDbaasLogsInputResource_basic(t *testing.T) {
 	serviceName := os.Getenv("OVH_DBAAS_LOGS_SERVICE_TEST")
 	name := "LOGSTASH"
 	version := os.Getenv("OVH_DBAAS_LOGS_LOGSTASH_VERSION_TEST")

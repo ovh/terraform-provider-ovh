@@ -14,7 +14,7 @@ data "ovh_dbaas_logs_cluster" "ldp" {
 }
 `
 
-func TestAccDataSourceDbaasLogsCluster(t *testing.T) {
+func TestAccDbaasLogsClusterDataSource(t *testing.T) {
 	serviceName := os.Getenv("OVH_DBAAS_LOGS_SERVICE_TEST")
 
 	config := fmt.Sprintf(
