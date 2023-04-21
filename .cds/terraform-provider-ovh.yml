@@ -161,7 +161,7 @@ workflow:
     parameters:
       testargs: "-run TestAccDataSourceDbaas"
     depends_on:
-      - terraform-provider-ovh-check/Dat&
+      - terraform-provider-ovh-check
 
 
   terraform-provider-ovh-TestAccVPS:
