@@ -93,16 +93,6 @@ workflow:
     depends_on:
       - terraform-provider-ovh-check
 
-  terraform-provider-ovh-TestAccDataSourceDbaas:
-    pipeline: terraform-provider-ovh-testacc
-    one_at_a_time: true
-    application: terraform-provider-ovh
-    environment: acctests
-    parameters:
-      testargs: "-run TestAccDataSourceDbaas"
-    depends_on:
-      - terraform-provider-ovh-check
-
   terraform-provider-ovh-TestAccDedicated:
     pipeline: terraform-provider-ovh-testacc
     one_at_a_time: true
@@ -214,7 +204,7 @@ workflow:
     depends_on:
       - terraform-provider-ovh-check
 
-    terraform-provider-ovh-TestAccDbaas:
+  terraform-provider-ovh-TestAccDbaas:
     pipeline: terraform-provider-ovh-testacc
     one_at_a_time: true
     application: terraform-provider-ovh
@@ -251,7 +241,26 @@ notifications:
   - terraform-provider-ovh-check
 - type: email
   pipelines:
-  - terraform-provider-ovh-testacc
+  - terraform-provider-ovh-check
+  - terraform-provider-ovh-TestAccCloudProjectCapabilities
+  - terraform-provider-ovh-TestAccCloudProjectContainer
+  - terraform-provider-ovh-TestAccCloudProjectDatabase
+  - terraform-provider-ovh-TestAccDataSourceCloudProjectFailoverIp
+  - terraform-provider-ovh-TestAccCloudProjectKube
+  - terraform-provider-ovh-TestAccCloudProjectRegion
+  - terraform-provider-ovh-TestAccDataCloudProjectUser
+  - terraform-provider-ovh-TestAccDedicated
+  - terraform-provider-ovh-TestAccDomain
+  - terraform-provider-ovh-TestAccDataSourceHosting
+  - terraform-provider-ovh-TestAccDataSourceIpService
+  - terraform-provider-ovh-TestAccIpLoadbalancing
+  - terraform-provider-ovh-TestAccMe
+  - terraform-provider-ovh-TestAccVPS
+  - terraform-provider-ovh-TestAccVrack
+  - terraform-provider-ovh-TestAccCloudProjectNetwork
+  - terraform-provider-ovh-TestAccHostingPrivateDatabase
+  - terraform-provider-ovh-TestAccCloudProjectWorkflowBackup
+  - terraform-provider-ovh-TestAccDbaas
   settings:
     on_success: never
     send_to_author: false
