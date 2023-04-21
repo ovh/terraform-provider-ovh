@@ -204,16 +204,6 @@ workflow:
     depends_on:
       - terraform-provider-ovh-check
 
-  terraform-provider-ovh-TestAccVPS:
-    pipeline: terraform-provider-ovh-testacc
-    one_at_a_time: true
-    application: terraform-provider-ovh
-    environment: acctests
-    parameters:
-      testargs: "-run TestAccVPS"
-    depends_on:
-      - terraform-provider-ovh-check
-
   terraform-provider-ovh-TestAccCloudProjectWorkflowBackup:
     pipeline: terraform-provider-ovh-testacc
     one_at_a_time: true
@@ -231,24 +221,6 @@ workflow:
     environment: acctests
     parameters:
       testargs: "-run TestAccDbaas"
-    depends_on:
-      - terraform-provider-ovh-check
-  terraform-provider-ovh-TestAccVPS:
-    pipeline: terraform-provider-ovh-testacc
-    one_at_a_time: true
-    application: terraform-provider-ovh
-    environment: acctests
-    parameters:
-      testargs: "-run TestAccVPS"
-    depends_on:
-      - terraform-provider-ovh-check
-  terraform-provider-ovh-TestAccVPS:
-    pipeline: terraform-provider-ovh-testacc
-    one_at_a_time: true
-    application: terraform-provider-ovh
-    environment: acctests
-    parameters:
-      testargs: "-run TestAccVPS"
     depends_on:
       - terraform-provider-ovh-check
 
@@ -277,7 +249,6 @@ notifications:
     on_success: always
   pipelines:
   - terraform-provider-ovh-check
-  - terraform-provider-ovh-testacc
 - type: email
   pipelines:
   - terraform-provider-ovh-testacc
