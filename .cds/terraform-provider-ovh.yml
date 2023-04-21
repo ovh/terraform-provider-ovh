@@ -18,7 +18,7 @@ workflow:
     pipeline: terraform-provider-ovh-sweep
     application: terraform-provider-ovh
     depends_on:
-      - terraform-provider-check
+      - terraform-provider-ovh-check
 
   # TODO: the website-test make target is broken.
   # pipeline is disable and further investigation is required
