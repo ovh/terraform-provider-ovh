@@ -158,6 +158,7 @@ func resourceCloudProjectContainerRegistry() *schema.Resource {
 
 func resourceCloudProjectContainerRegistryImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	givenId := d.Id()
+	log.Printf("[INFO] importing with the id %s", givenId)
 	splitId := strings.SplitN(givenId, "/", 2)
 	if len(splitId) != 2 {
 		return nil, fmt.Errorf("Import Id is not service_name/id id formatted")
@@ -167,16 +168,14 @@ func resourceCloudProjectContainerRegistryImportState(d *schema.ResourceData, me
 	d.SetId(id)
 	d.Set("service_name", serviceName)
 
-	results := make([]*schema.ResourceData, 1)
-	results[0] = d
-	return results, nil
+	return []*schema.ResourceData{d}, nil
 }
 
 func resourceCloudProjectContainerRegistryCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 
-	log.Printf("[DEBUG] Will create cloud project registry for project: %s", serviceName)
+	log.Printf("[INFO] Will create cloud project registry for project: %s", serviceName)
 
 	opts := (&CloudProjectContainerRegistryCreateOpts{}).FromResource(d)
 	reg := &CloudProjectContainerRegistry{}
@@ -189,9 +188,8 @@ func resourceCloudProjectContainerRegistryCreate(d *schema.ResourceData, meta in
 	if err := config.OVHClient.Post(endpoint, opts, reg); err != nil {
 		return fmt.Errorf("Error calling post %s:\n\t %q", endpoint, err)
 	}
-
 	d.SetId(reg.Id)
-
+	log.Printf("[DEBUG] container registry created with id %s", reg.Id)
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"INSTALLING"},
 		Target:     []string{"READY"},
@@ -204,7 +202,7 @@ func resourceCloudProjectContainerRegistryCreate(d *schema.ResourceData, meta in
 	if _, err := stateConf.WaitForState(); err != nil {
 		return fmt.Errorf("waiting for registry (%s): %s", d.Id(), err)
 	}
-
+	log.Printf("[INFO] container registry created with id %s", reg.Id)
 	return resourceCloudProjectContainerRegistryRead(d, meta)
 }
 
@@ -277,7 +275,7 @@ func cloudProjectContainerRegistryPlanRead(d *schema.ResourceData, meta interfac
 	serviceName := d.Get("service_name").(string)
 	id := d.Id()
 
-	log.Printf("[DEBUG] Will read cloud project registry plan %s for project: %s", id, serviceName)
+	log.Printf("[INFO] Will read cloud project registry plan %s for project: %s", id, serviceName)
 
 	plan := &CloudProjectCapabilitiesContainerRegistryPlan{}
 
@@ -302,11 +300,11 @@ func cloudProjectContainerRegistryPlanUpdate(d *schema.ResourceData, meta interf
 	serviceName := d.Get("service_name").(string)
 
 	if !d.HasChange("plan_id") {
-		log.Printf("[DEBUG] cloud project registry plan for project : %s hasnt changed.", serviceName)
+		log.Printf("[INFO] cloud project registry plan for project : %s hasnt changed.", serviceName)
 		return nil
 	}
 
-	log.Printf("[DEBUG] Will update cloud project registry plan for project: %s", serviceName)
+	log.Printf("[INFO] Will update cloud project registry plan for project: %s", serviceName)
 
 	opts := (&CloudProjectContainerRegistryPlanUpdateOpts{}).FromResource(d)
 
@@ -341,7 +339,7 @@ func resourceCloudProjectContainerRegistryDelete(d *schema.ResourceData, meta in
 	serviceName := d.Get("service_name").(string)
 	id := d.Id()
 
-	log.Printf("[DEBUG] Will delete cloud project registry %s for project: %s", id, serviceName)
+	log.Printf("[INFO] Will delete cloud project registry %s for project: %s", id, serviceName)
 
 	endpoint := fmt.Sprintf(
 		"/cloud/project/%s/containerRegistry/%s",
@@ -382,14 +380,14 @@ func waitForCloudProjectContainerRegistry(c *ovh.Client, serviceName, id string)
 		err := c.Get(endpoint, r)
 		if err != nil {
 			if err.(*ovh.APIError).Code == 404 {
-				log.Printf("[DEBUG] container registry id %s on project %s deleted", id, serviceName)
+				log.Printf("[INFO] container registry id %s on project %s deleted", id, serviceName)
 				return r, "deleted", nil
 			} else {
 				return r, "", err
 			}
 		}
 
-		log.Printf("[DEBUG] Pending container registry: %s", r)
+		log.Printf("[INFO] Pending container registry: %s", r)
 		return r, r.Status, nil
 	}
 }

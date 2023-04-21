@@ -158,7 +158,7 @@ func resourceIpLoadbalancingHttpFarmImportState(d *schema.ResourceData, meta int
 	givenId := d.Id()
 	splitId := strings.SplitN(givenId, "/", 2)
 	if len(splitId) != 2 {
-		return nil, fmt.Errorf("Import Id is not service_name/farm id formatted")
+		return nil, fmt.Errorf("Import Id %s is not service_name/farm id formatted", givenId)
 	}
 	serviceName := splitId[0]
 	farmId := splitId[1]
