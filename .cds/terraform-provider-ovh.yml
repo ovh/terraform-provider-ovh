@@ -17,6 +17,7 @@ workflow:
   terraform-provider-ovh-presweep:
     pipeline: terraform-provider-ovh-sweep
     application: terraform-provider-ovh
+    environment: acctests    
     depends_on:
       - terraform-provider-ovh-check
 
@@ -223,6 +224,7 @@ workflow:
   terraform-provider-ovh-postsweep:
     pipeline: terraform-provider-ovh-sweep
     application: terraform-provider-ovh
+    environment: acctests    
     depends_on:
       - terraform-provider-ovh-check
       - terraform-provider-ovh-TestAccCloudProjectCapabilities
