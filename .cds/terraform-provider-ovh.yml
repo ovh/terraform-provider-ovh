@@ -14,6 +14,12 @@ workflow:
     depends_on:
       - terraform-provider-ovh
 
+  terraform-provider-ovh-presweep:
+    pipeline: terraform-provider-ovh-sweep
+    application: terraform-provider-ovh
+    depends_on:
+      - terraform-provider-check
+
   # TODO: the website-test make target is broken.
   # pipeline is disable and further investigation is required
   # terraform-provider-ovh-website-test:
@@ -30,7 +36,7 @@ workflow:
     parameters:
       testargs: "-run TestAccCloudProjectCapabilities"
     depends_on:
-      - terraform-provider-ovh-check
+      - terraform-provider-ovh-presweep
 
   terraform-provider-ovh-TestAccCloudProjectContainer:
     pipeline: terraform-provider-ovh-testacc
@@ -40,7 +46,7 @@ workflow:
     parameters:
       testargs: "-run TestAccCloudProjectContainer"
     depends_on:
-      - terraform-provider-ovh-check
+      - terraform-provider-ovh-presweep
 
   terraform-provider-ovh-TestAccCloudProjectDatabase:
     pipeline: terraform-provider-ovh-testacc
@@ -50,7 +56,7 @@ workflow:
     parameters:
       testargs: "-run TestAccCloudProjectDatabase"
     depends_on:
-      - terraform-provider-ovh-check
+      - terraform-provider-ovh-presweep
 
 
   terraform-provider-ovh-TestAccDataSourceCloudProjectFailoverIp:
@@ -61,7 +67,7 @@ workflow:
     parameters:
       testargs: "-run TestAccDataSourceCloudProjectFailoverIp"
     depends_on:
-      - terraform-provider-ovh-check
+      - terraform-provider-ovh-presweep
 
   terraform-provider-ovh-TestAccCloudProjectKube:
     pipeline: terraform-provider-ovh-testacc
@@ -71,7 +77,7 @@ workflow:
     parameters:
       testargs: "-run TestAccCloudProjectKube"
     depends_on:
-      - terraform-provider-ovh-check
+      - terraform-provider-ovh-presweep
 
   terraform-provider-ovh-TestAccCloudProjectRegion:
     pipeline: terraform-provider-ovh-testacc
@@ -81,7 +87,7 @@ workflow:
     parameters:
       testargs: "-run TestAccCloudProjectRegion"
     depends_on:
-      - terraform-provider-ovh-check
+      - terraform-provider-ovh-presweep
 
   terraform-provider-ovh-TestAccDataCloudProjectUser:
     pipeline: terraform-provider-ovh-testacc
@@ -91,7 +97,7 @@ workflow:
     parameters:
       testargs: "-run TestAccDataCloudProjectUser"
     depends_on:
-      - terraform-provider-ovh-check
+      - terraform-provider-ovh-presweep
 
   terraform-provider-ovh-TestAccDedicated:
     pipeline: terraform-provider-ovh-testacc
@@ -101,7 +107,7 @@ workflow:
     parameters:
       testargs: "-run TestAccDedicated"
     depends_on:
-      - terraform-provider-ovh-check
+      - terraform-provider-ovh-presweep
 
   terraform-provider-ovh-TestAccDomain:
     pipeline: terraform-provider-ovh-testacc
@@ -111,7 +117,7 @@ workflow:
     parameters:
       testargs: "-run TestAccDomain"
     depends_on:
-      - terraform-provider-ovh-check
+      - terraform-provider-ovh-presweep
 
   terraform-provider-ovh-TestAccDataSourceHosting:
     pipeline: terraform-provider-ovh-testacc
@@ -121,7 +127,7 @@ workflow:
     parameters:
       testargs: "-run TestAccDataSourceHosting"
     depends_on:
-      - terraform-provider-ovh-check
+      - terraform-provider-ovh-presweep
 
   terraform-provider-ovh-TestAccDataSourceIpService:
     pipeline: terraform-provider-ovh-testacc
@@ -131,7 +137,7 @@ workflow:
     parameters:
       testargs: "-run TestAccDataSourceIpService"
     depends_on:
-      - terraform-provider-ovh-check
+      - terraform-provider-ovh-presweep
 
   terraform-provider-ovh-TestAccIpLoadbalancing:
     pipeline: terraform-provider-ovh-testacc
@@ -141,7 +147,7 @@ workflow:
     parameters:
       testargs: "-run TestAccIpLoadbalancing"
     depends_on:
-      - terraform-provider-ovh-check
+      - terraform-provider-ovh-presweep
 
   terraform-provider-ovh-TestAccMe:
     pipeline: terraform-provider-ovh-testacc
@@ -151,7 +157,7 @@ workflow:
     parameters:
       testargs: "-run TestAccDataSourceDbaas"
     depends_on:
-      - terraform-provider-ovh-check
+      - terraform-provider-ovh-presweep
 
 
   terraform-provider-ovh-TestAccVPS:
@@ -162,7 +168,7 @@ workflow:
     parameters:
       testargs: "-run TestAccVPS"
     depends_on:
-      - terraform-provider-ovh-check
+      - terraform-provider-ovh-presweep
 
   terraform-provider-ovh-TestAccVrack:
     pipeline: terraform-provider-ovh-testacc
@@ -172,7 +178,7 @@ workflow:
     parameters:
       testargs: "-run TestAccVrack"
     depends_on:
-      - terraform-provider-ovh-check
+      - terraform-provider-ovh-presweep
 
   terraform-provider-ovh-TestAccCloudProjectNetwork:
     pipeline: terraform-provider-ovh-testacc
@@ -182,7 +188,7 @@ workflow:
     parameters:
       testargs: "-run TestAccCloudProjectNetwork"
     depends_on:
-      - terraform-provider-ovh-check
+      - terraform-provider-ovh-presweep
 
   terraform-provider-ovh-TestAccHostingPrivateDatabase:
     pipeline: terraform-provider-ovh-testacc
@@ -192,7 +198,7 @@ workflow:
     parameters:
       testargs: "-run TestAccHostingPrivateDatabase"
     depends_on:
-      - terraform-provider-ovh-check
+      - terraform-provider-ovh-presweep
 
   terraform-provider-ovh-TestAccCloudProjectWorkflowBackup:
     pipeline: terraform-provider-ovh-testacc
@@ -202,7 +208,7 @@ workflow:
     parameters:
       testargs: "-run TestAccCloudProjectWorkflowBackup"
     depends_on:
-      - terraform-provider-ovh-check
+      - terraform-provider-ovh-presweep
 
   terraform-provider-ovh-TestAccDbaas:
     pipeline: terraform-provider-ovh-testacc
@@ -212,8 +218,32 @@ workflow:
     parameters:
       testargs: "-run TestAccDbaas"
     depends_on:
-      - terraform-provider-ovh-check
+      - terraform-provider-ovh-presweep
 
+  terraform-provider-ovh-postsweep:
+    pipeline: terraform-provider-ovh-sweep
+    application: terraform-provider-ovh
+    depends_on:
+      - terraform-provider-ovh-check
+      - terraform-provider-ovh-TestAccCloudProjectCapabilities
+      - terraform-provider-ovh-TestAccCloudProjectContainer
+      - terraform-provider-ovh-TestAccCloudProjectDatabase
+      - terraform-provider-ovh-TestAccDataSourceCloudProjectFailoverIp
+      - terraform-provider-ovh-TestAccCloudProjectKube
+      - terraform-provider-ovh-TestAccCloudProjectRegion
+      - terraform-provider-ovh-TestAccDataCloudProjectUser
+      - terraform-provider-ovh-TestAccDedicated
+      - terraform-provider-ovh-TestAccDomain
+      - terraform-provider-ovh-TestAccDataSourceHosting
+      - terraform-provider-ovh-TestAccDataSourceIpService
+      - terraform-provider-ovh-TestAccIpLoadbalancing
+      - terraform-provider-ovh-TestAccMe
+      - terraform-provider-ovh-TestAccVPS
+      - terraform-provider-ovh-TestAccVrack
+      - terraform-provider-ovh-TestAccCloudProjectNetwork
+      - terraform-provider-ovh-TestAccHostingPrivateDatabase
+      - terraform-provider-ovh-TestAccCloudProjectWorkflowBackup
+      - terraform-provider-ovh-TestAccDbaas
 
 
 metadata:
