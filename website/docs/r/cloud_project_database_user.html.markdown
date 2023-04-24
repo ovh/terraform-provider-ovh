@@ -6,12 +6,13 @@ subcategory : "Managed Databases"
 
 Creates an user for a database cluster associated with a public cloud project.
 
-With this resource you can create a user for the following database engine:
+With this resource you can create a user and map "avnadmin" for the following database engine:
 
   * `cassandra`
   * `kafka`
   * `kafkaConnect`
   * `mysql`
+  * `grafana`
 
 ## Example Usage
 
@@ -74,10 +75,12 @@ Available engines:
   * `kafka`
   * `kafkaConnect`
   * `mysql`
+  * `grafana`
+
 
 * `cluster_id` - (Required, Forces new resource) Cluster ID.
 
-* `name` - (Required, Forces new resource) Name of the user. A user named "avnadmin" is map with already created admin user and reset his password instead of create a new user.
+* `name` - (Required, Forces new resource) Name of the user. A user named "avnadmin" is map with already created admin user and reset his password instead of create a new user. The "Grafana" engine only allows the "avnadmin" mapping.
 
 * `password_reset` - (Optional) Arbitrary string to change to trigger a password update. Use the `terraform refresh` command after executing `terraform apply` to update the output with the new password.
 
