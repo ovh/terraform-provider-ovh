@@ -33,6 +33,7 @@ Available engines:
   * `kafka`
   * `kafkaConnect`
   * `mysql`
+  * `grafana`
 
 * `cluster_id` - (Required) Cluster ID
 
