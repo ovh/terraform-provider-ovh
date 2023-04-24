@@ -3,10 +3,11 @@ package ovh
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"log"
 	"net/url"
 	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -21,22 +22,22 @@ func resourceDedicatedNASHAPartitionAccess() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"service_name": &schema.Schema{
+			"service_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"partition_name": &schema.Schema{
+			"partition_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"ip": &schema.Schema{
+			"ip": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:     schema.TypeString,
 				Default:  "readwrite",
 				Optional: true,
@@ -108,9 +109,8 @@ func resourceDedicatedNASHAPartitionAccessRead(c context.Context, d *schema.Reso
 			err.Error() == fmt.Sprintf("Error 404: \"The requested object (partitionName = %s) does not exist\"", partitionName) {
 			d.SetId("")
 			return nil
-		} else {
-			return diag.Errorf("Error calling %s:\n\t '%q'", endpoint, err)
 		}
+		return diag.Errorf("Error calling %s:\n\t '%q'", endpoint, err)
 	}
 	d.Set("type", resp.Type)
 

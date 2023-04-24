@@ -1,22 +1,24 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/url"
 	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
 func resourceCloudProjectDatabase() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCloudProjectDatabaseCreate,
-		Read:   resourceCloudProjectDatabaseRead,
-		Delete: resourceCloudProjectDatabaseDelete,
-		Update: resourceCloudProjectDatabaseUpdate,
+		CreateContext: resourceCloudProjectDatabaseCreate,
+		ReadContext:   resourceCloudProjectDatabaseRead,
+		DeleteContext: resourceCloudProjectDatabaseDelete,
+		UpdateContext: resourceCloudProjectDatabaseUpdate,
 
 		Importer: &schema.ResourceImporter{
 			State: resourceCloudProjectDatabaseImportState,
@@ -229,7 +231,7 @@ func resourceCloudProjectDatabaseImportState(d *schema.ResourceData, meta interf
 	return results, nil
 }
 
-func resourceCloudProjectDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	engine := d.Get("engine").(string)
@@ -240,20 +242,20 @@ func resourceCloudProjectDatabaseCreate(d *schema.ResourceData, meta interface{}
 	)
 	err, params := (&CloudProjectDatabaseCreateOpts{}).FromResource(d)
 	if err != nil {
-		return fmt.Errorf("multi region cluster not available yet : %q", err)
+		return diag.Errorf("service creation failed : %q", err)
 	}
 	res := &CloudProjectDatabaseResponse{}
 
 	log.Printf("[DEBUG] Will create Database: %+v", params)
 	err = config.OVHClient.Post(endpoint, params, res)
 	if err != nil {
-		return fmt.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
+		return diag.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
 	}
 
 	log.Printf("[DEBUG] Waiting for database %s to be READY", res.Id)
 	err = waitForCloudProjectDatabaseReady(config.OVHClient, serviceName, engine, res.Id, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
-		return fmt.Errorf("timeout while waiting database %s to be READY: %w", res.Id, err)
+		return diag.Errorf("timeout while waiting database %s to be READY: %s", res.Id, err.Error())
 	}
 	log.Printf("[DEBUG] database %s is READY", res.Id)
 
@@ -262,13 +264,13 @@ func resourceCloudProjectDatabaseCreate(d *schema.ResourceData, meta interface{}
 	if (engine != "mongodb" && len(d.Get("advanced_configuration").(map[string]interface{})) > 0) ||
 		(engine == "kafka" && d.Get("kafka_rest_api").(bool)) ||
 		(engine == "opensearch" && d.Get("opensearch_acls_enabled").(bool)) {
-		return resourceCloudProjectDatabaseUpdate(d, meta)
+		return resourceCloudProjectDatabaseUpdate(ctx, d, meta)
 	}
 
-	return resourceCloudProjectDatabaseRead(d, meta)
+	return resourceCloudProjectDatabaseRead(ctx, d, meta)
 }
 
-func resourceCloudProjectDatabaseRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	engine := d.Get("engine").(string)
@@ -282,22 +284,22 @@ func resourceCloudProjectDatabaseRead(d *schema.ResourceData, meta interface{}) 
 
 	log.Printf("[DEBUG] Will read database %s from project: %s", d.Id(), serviceName)
 	if err := config.OVHClient.Get(serviceEndpoint, res); err != nil {
-		return helpers.CheckDeleted(d, err, serviceEndpoint)
+		return diag.FromErr(helpers.CheckDeleted(d, err, serviceEndpoint))
 	}
 
 	nodesEndpoint := fmt.Sprintf("%s/node", serviceEndpoint)
 	nodeList := &[]string{}
 	if err := config.OVHClient.Get(nodesEndpoint, nodeList); err != nil {
-		return fmt.Errorf("unable to get database %s nodes: %v", res.Id, err)
+		return diag.Errorf("unable to get database %s nodes: %v", res.Id, err)
 	}
 
 	if len(*nodeList) == 0 {
-		return fmt.Errorf("no node found for database %s", res.Id)
+		return diag.Errorf("no node found for database %s", res.Id)
 	}
 	nodeEndpoint := fmt.Sprintf("%s/%s", nodesEndpoint, url.PathEscape((*nodeList)[0]))
 	node := &CloudProjectDatabaseNodes{}
 	if err := config.OVHClient.Get(nodeEndpoint, node); err != nil {
-		return fmt.Errorf("unable to get database %s node %s: %v", res.Id, (*nodeList)[0], err)
+		return diag.Errorf("unable to get database %s node %s: %v", res.Id, (*nodeList)[0], err)
 	}
 
 	res.Region = node.Region
@@ -306,24 +308,29 @@ func resourceCloudProjectDatabaseRead(d *schema.ResourceData, meta interface{}) 
 		advancedConfigEndpoint := fmt.Sprintf("%s/advancedConfiguration", serviceEndpoint)
 		advancedConfigMap := &map[string]string{}
 		if err := config.OVHClient.Get(advancedConfigEndpoint, advancedConfigMap); err != nil {
-			return fmt.Errorf("unable to get database %s advanced configuration: %v", res.Id, err)
+			return diag.Errorf("unable to get database %s advanced configuration: %v", res.Id, err)
 		}
 		res.AdvancedConfiguration = *advancedConfigMap
 	}
 
+	diags := make(diag.Diagnostics, 0)
+	warnAttr := []string{"disk_size", "advanced_configuration"}
 	for k, v := range res.ToMap() {
 		if k != "id" {
+			warningFactory(warnAttr, d, k, v, &diags)
 			d.Set(k, v)
 		} else {
 			d.SetId(fmt.Sprint(v))
 		}
 	}
 
-	log.Printf("[DEBUG] Read Database %+v", res)
+	if len(diags) > 0 {
+		return diags
+	}
 	return nil
 }
 
-func resourceCloudProjectDatabaseUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	engine := d.Get("engine").(string)
@@ -335,18 +342,18 @@ func resourceCloudProjectDatabaseUpdate(d *schema.ResourceData, meta interface{}
 	)
 	err, params := (&CloudProjectDatabaseUpdateOpts{}).FromResource(d)
 	if err != nil {
-		return fmt.Errorf("multi region cluster not available yet : %q", err)
+		return diag.Errorf("service update failed : %q", err)
 	}
 	log.Printf("[DEBUG] Will update database: %+v", params)
 	err = config.OVHClient.Put(endpoint, params, nil)
 	if err != nil {
-		return fmt.Errorf("calling Put %s with params %v:\n\t %q", endpoint, params, err)
+		return diag.Errorf("calling Put %s with params %v:\n\t %q", endpoint, params, err)
 	}
 
 	log.Printf("[DEBUG] Waiting for database %s to be READY", d.Id())
 	err = waitForCloudProjectDatabaseReady(config.OVHClient, serviceName, engine, d.Id(), d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
-		return fmt.Errorf("timeout while waiting database %s to be READY: %w", d.Id(), err)
+		return diag.Errorf("timeout while waiting database %s to be READY: %s", d.Id(), err.Error())
 	}
 
 	if d.HasChanges("advanced_configuration") {
@@ -356,16 +363,16 @@ func resourceCloudProjectDatabaseUpdate(d *schema.ResourceData, meta interface{}
 
 		err = config.OVHClient.Put(advancedConfigEndpoint, acParams, nil)
 		if err != nil {
-			return fmt.Errorf("calling Put %s with params %v:\n\t %q", advancedConfigEndpoint, acParams, err)
+			return diag.Errorf("calling Put %s with params %v:\n\t %q", advancedConfigEndpoint, acParams, err)
 		}
 	}
 
 	log.Printf("[DEBUG] database %s is READY", d.Id())
 
-	return resourceCloudProjectDatabaseRead(d, meta)
+	return resourceCloudProjectDatabaseRead(ctx, d, meta)
 }
 
-func resourceCloudProjectDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	engine := d.Get("engine").(string)
@@ -379,13 +386,13 @@ func resourceCloudProjectDatabaseDelete(d *schema.ResourceData, meta interface{}
 	log.Printf("[DEBUG] Will delete database %s from project: %s", d.Id(), serviceName)
 	err := config.OVHClient.Delete(endpoint, nil)
 	if err != nil {
-		return helpers.CheckDeleted(d, err, endpoint)
+		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
 	log.Printf("[DEBUG] Waiting for database %s to be DELETED", d.Id())
 	err = waitForCloudProjectDatabaseDeleted(config.OVHClient, serviceName, engine, d.Id(), d.Timeout(schema.TimeoutDelete))
 	if err != nil {
-		return fmt.Errorf("timeout while waiting database %s to be DELETED: %v", d.Id(), err)
+		return diag.Errorf("timeout while waiting database %s to be DELETED: %v", d.Id(), err)
 	}
 	log.Printf("[DEBUG] database %s is DELETED", d.Id())
 

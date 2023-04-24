@@ -1,16 +1,18 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/url"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceCloudProjectDatabasePostgresqlUser() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceCloudProjectDatabasePostgresqlUserRead,
+		ReadContext: dataSourceCloudProjectDatabasePostgresqlUserRead,
 		Schema: map[string]*schema.Schema{
 			"service_name": {
 				Type:        schema.TypeString,
@@ -49,7 +51,7 @@ func dataSourceCloudProjectDatabasePostgresqlUser() *schema.Resource {
 	}
 }
 
-func dataSourceCloudProjectDatabasePostgresqlUserRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceCloudProjectDatabasePostgresqlUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
@@ -64,7 +66,7 @@ func dataSourceCloudProjectDatabasePostgresqlUserRead(d *schema.ResourceData, me
 
 	log.Printf("[DEBUG] Will read users from cluster %s from project %s", clusterId, serviceName)
 	if err := config.OVHClient.Get(listEndpoint, &listRes); err != nil {
-		return fmt.Errorf("Error calling GET %s:\n\t %q", listEndpoint, err)
+		return diag.Errorf("Error calling GET %s:\n\t %q", listEndpoint, err)
 	}
 
 	for _, id := range listRes {
@@ -77,7 +79,7 @@ func dataSourceCloudProjectDatabasePostgresqlUserRead(d *schema.ResourceData, me
 
 		log.Printf("[DEBUG] Will read user %s from cluster %s from project %s", id, clusterId, serviceName)
 		if err := config.OVHClient.Get(endpoint, res); err != nil {
-			return fmt.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
+			return diag.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
 		}
 
 		if res.Username == name {
@@ -93,5 +95,5 @@ func dataSourceCloudProjectDatabasePostgresqlUserRead(d *schema.ResourceData, me
 		}
 	}
 
-	return fmt.Errorf("User name %s not found for cluster %s from project %s", name, clusterId, serviceName)
+	return diag.Errorf("User name %s not found for cluster %s from project %s", name, clusterId, serviceName)
 }

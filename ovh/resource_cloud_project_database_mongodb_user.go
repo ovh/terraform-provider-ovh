@@ -1,11 +1,13 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/url"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/go-ovh/ovh"
@@ -14,10 +16,10 @@ import (
 
 func resourceCloudProjectDatabaseMongodbUser() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCloudProjectDatabaseMongodbUserCreate,
-		Read:   resourceCloudProjectDatabaseMongodbUserRead,
-		Delete: resourceCloudProjectDatabaseMongodbUserDelete,
-		Update: resourceCloudProjectDatabaseMongodbUserUpdate,
+		CreateContext: resourceCloudProjectDatabaseMongodbUserCreate,
+		ReadContext:   resourceCloudProjectDatabaseMongodbUserRead,
+		DeleteContext: resourceCloudProjectDatabaseMongodbUserDelete,
+		UpdateContext: resourceCloudProjectDatabaseMongodbUserUpdate,
 
 		Importer: &schema.ResourceImporter{
 			State: resourceCloudProjectDatabaseMongodbUserImportState,
@@ -93,7 +95,7 @@ func resourceCloudProjectDatabaseMongodbUserImportState(d *schema.ResourceData, 
 	return importCloudProjectDatabaseUser(d, meta)
 }
 
-func resourceCloudProjectDatabaseMongodbUserCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseMongodbUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
 
@@ -104,26 +106,31 @@ func resourceCloudProjectDatabaseMongodbUserCreate(d *schema.ResourceData, meta 
 	params := (&CloudProjectDatabaseMongodbUserCreateOpts{}).FromResource(d)
 	res := &CloudProjectDatabaseUserResponse{}
 
-	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		log.Printf("[DEBUG] Will create user: %+v for cluster %s from project %s", params, clusterId, serviceName)
-		err := postFuncCloudProjectDatabaseUser(d, meta, "mongodb", endpoint, params, res, schema.TimeoutCreate)
-		if err != nil {
-			if errOvh, ok := err.(*ovh.APIError); ok && (errOvh.Code == 409) {
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(err)
-		}
+	return diag.FromErr(
+		resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate),
+			func() *resource.RetryError {
+				log.Printf("[DEBUG] Will create user: %+v for cluster %s from project %s", params, clusterId, serviceName)
+				rErr := postFuncCloudProjectDatabaseUser(ctx, d, meta, "mongodb", endpoint, params, res, schema.TimeoutCreate)
+				if rErr != nil {
+					if errOvh, ok := rErr.(*ovh.APIError); ok && (errOvh.Code == 409) {
+						return resource.RetryableError(rErr)
+					}
+					return resource.NonRetryableError(rErr)
+				}
 
-		d.SetId(res.Id)
-		err = resourceCloudProjectDatabaseMongodbUserRead(d, meta)
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
+				d.SetId(res.Id)
+				readDiags := resourceCloudProjectDatabaseMongodbUserRead(ctx, d, meta)
+				rErr = diagnosticsToError(readDiags)
+				if rErr != nil {
+					return resource.NonRetryableError(rErr)
+				}
+				return nil
+			},
+		),
+	)
 }
 
-func resourceCloudProjectDatabaseMongodbUserRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseMongodbUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
@@ -138,7 +145,7 @@ func resourceCloudProjectDatabaseMongodbUserRead(d *schema.ResourceData, meta in
 
 	log.Printf("[DEBUG] Will read user %s from cluster %s from project %s", id, clusterId, serviceName)
 	if err := config.OVHClient.Get(endpoint, res); err != nil {
-		return helpers.CheckDeleted(d, err, endpoint)
+		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
 	for k, v := range res.ToMap() {
@@ -153,7 +160,7 @@ func resourceCloudProjectDatabaseMongodbUserRead(d *schema.ResourceData, meta in
 	return nil
 }
 
-func resourceCloudProjectDatabaseMongodbUserUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseMongodbUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
@@ -167,45 +174,50 @@ func resourceCloudProjectDatabaseMongodbUserUpdate(d *schema.ResourceData, meta 
 	)
 	params := (&CloudProjectDatabaseMongodbUserUpdateOpts{}).FromResource(d)
 
-	return resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
-		log.Printf("[DEBUG] Will update user: %+v from cluster %s from project %s", params, clusterId, serviceName)
-		err := config.OVHClient.Put(endpoint, params, nil)
-		if err != nil {
-			if errOvh, ok := err.(*ovh.APIError); ok && (errOvh.Code == 409) {
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(fmt.Errorf("calling Put %s with params %s:\n\t %q", endpoint, params, err))
-		}
-
-		log.Printf("[DEBUG] Waiting for user %s to be READY", id)
-		err = waitForCloudProjectDatabaseUserReady(config.OVHClient, serviceName, "mongodb", clusterId, id, d.Timeout(schema.TimeoutUpdate))
-		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("timeout while waiting user %s to be READY: %w", id, err))
-		}
-		log.Printf("[DEBUG] user %s is READY", id)
-
-		if passwordReset {
-			pwdResetEndpoint := endpoint + "/credentials/reset"
-			res := &CloudProjectDatabaseUserResponse{}
-			log.Printf("[DEBUG] Will update user password for cluster %s from project %s", clusterId, serviceName)
-			err := postFuncCloudProjectDatabaseUser(d, meta, "mongodb", pwdResetEndpoint, nil, res, schema.TimeoutUpdate)
-			if err != nil {
-				if errOvh, ok := err.(*ovh.APIError); ok && (errOvh.Code == 409) {
-					return resource.RetryableError(err)
+	return diag.FromErr(
+		resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate),
+			func() *resource.RetryError {
+				log.Printf("[DEBUG] Will update user: %+v from cluster %s from project %s", params, clusterId, serviceName)
+				rErr := config.OVHClient.Put(endpoint, params, nil)
+				if rErr != nil {
+					if errOvh, ok := rErr.(*ovh.APIError); ok && (errOvh.Code == 409) {
+						return resource.RetryableError(rErr)
+					}
+					return resource.NonRetryableError(fmt.Errorf("calling Put %s with params %s:\n\t %q", endpoint, params, rErr))
 				}
-				return resource.NonRetryableError(err)
-			}
-		}
 
-		err = resourceCloudProjectDatabaseMongodbUserRead(d, meta)
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
+				log.Printf("[DEBUG] Waiting for user %s to be READY", id)
+				rErr = waitForCloudProjectDatabaseUserReady(ctx, config.OVHClient, serviceName, "mongodb", clusterId, id, d.Timeout(schema.TimeoutUpdate))
+				if rErr != nil {
+					return resource.NonRetryableError(fmt.Errorf("timeout while waiting user %s to be READY: %w", id, rErr))
+				}
+				log.Printf("[DEBUG] user %s is READY", id)
+
+				if passwordReset {
+					pwdResetEndpoint := endpoint + "/credentials/reset"
+					res := &CloudProjectDatabaseUserResponse{}
+					log.Printf("[DEBUG] Will update user password for cluster %s from project %s", clusterId, serviceName)
+					err := postFuncCloudProjectDatabaseUser(ctx, d, meta, "mongodb", pwdResetEndpoint, nil, res, schema.TimeoutUpdate)
+					if err != nil {
+						if errOvh, ok := err.(*ovh.APIError); ok && (errOvh.Code == 409) {
+							return resource.RetryableError(err)
+						}
+						return resource.NonRetryableError(err)
+					}
+				}
+
+				readDiags := resourceCloudProjectDatabaseMongodbUserRead(ctx, d, meta)
+				rErr = diagnosticsToError(readDiags)
+				if rErr != nil {
+					return resource.NonRetryableError(rErr)
+				}
+				return nil
+			},
+		),
+	)
 }
 
-func resourceCloudProjectDatabaseMongodbUserDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseMongodbUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
@@ -217,29 +229,33 @@ func resourceCloudProjectDatabaseMongodbUserDelete(d *schema.ResourceData, meta 
 		url.PathEscape(id),
 	)
 
-	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		log.Printf("[DEBUG] Will delete user %s from cluster %s from project %s", id, clusterId, serviceName)
-		err := config.OVHClient.Delete(endpoint, nil)
-		if err != nil {
-			if errOvh, ok := err.(*ovh.APIError); ok && (errOvh.Code == 409) {
-				return resource.RetryableError(err)
-			}
-			err = helpers.CheckDeleted(d, err, endpoint)
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-			return nil
-		}
+	return diag.FromErr(
+		resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete),
+			func() *resource.RetryError {
+				log.Printf("[DEBUG] Will delete user %s from cluster %s from project %s", id, clusterId, serviceName)
+				err := config.OVHClient.Delete(endpoint, nil)
+				if err != nil {
+					if errOvh, ok := err.(*ovh.APIError); ok && (errOvh.Code == 409) {
+						return resource.RetryableError(err)
+					}
+					err = helpers.CheckDeleted(d, err, endpoint)
+					if err != nil {
+						return resource.NonRetryableError(err)
+					}
+					return nil
+				}
 
-		log.Printf("[DEBUG] Waiting for user %s to be DELETED", id)
-		err = waitForCloudProjectDatabaseUserDeleted(config.OVHClient, serviceName, "mongodb", clusterId, id, d.Timeout(schema.TimeoutDelete))
-		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("timeout while waiting user %s to be DELETED: %w", id, err))
-		}
-		log.Printf("[DEBUG] user %s is DELETED", id)
+				log.Printf("[DEBUG] Waiting for user %s to be DELETED", id)
+				err = waitForCloudProjectDatabaseUserDeleted(ctx, config.OVHClient, serviceName, "mongodb", clusterId, id, d.Timeout(schema.TimeoutDelete))
+				if err != nil {
+					return resource.NonRetryableError(fmt.Errorf("timeout while waiting user %s to be DELETED: %w", id, err))
+				}
+				log.Printf("[DEBUG] user %s is DELETED", id)
 
-		d.SetId("")
+				d.SetId("")
 
-		return nil
-	})
+				return nil
+			},
+		),
+	)
 }

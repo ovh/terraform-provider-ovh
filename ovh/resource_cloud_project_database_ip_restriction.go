@@ -1,12 +1,14 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/url"
 	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/go-ovh/ovh"
@@ -16,10 +18,10 @@ import (
 
 func resourceCloudProjectDatabaseIpRestriction() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCloudProjectDatabaseIpRestrictionCreate,
-		Read:   resourceCloudProjectDatabaseIpRestrictionRead,
-		Delete: resourceCloudProjectDatabaseIpRestrictionDelete,
-		Update: resourceCloudProjectDatabaseIpRestrictionUpdate,
+		CreateContext: resourceCloudProjectDatabaseIpRestrictionCreate,
+		ReadContext:   resourceCloudProjectDatabaseIpRestrictionRead,
+		DeleteContext: resourceCloudProjectDatabaseIpRestrictionDelete,
+		UpdateContext: resourceCloudProjectDatabaseIpRestrictionUpdate,
 
 		Importer: &schema.ResourceImporter{
 			State: resourceCloudProjectDatabaseIpRestrictionImportState,
@@ -94,7 +96,7 @@ func resourceCloudProjectDatabaseIpRestrictionImportState(d *schema.ResourceData
 	return results, nil
 }
 
-func resourceCloudProjectDatabaseIpRestrictionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseIpRestrictionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	engine := d.Get("engine").(string)
@@ -108,34 +110,39 @@ func resourceCloudProjectDatabaseIpRestrictionCreate(d *schema.ResourceData, met
 	params := (&CloudProjectDatabaseIpRestrictionCreateOpts{}).FromResource(d)
 	res := &CloudProjectDatabaseIpRestrictionResponse{}
 
-	return resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		log.Printf("[DEBUG] Will create IP restriction: %+v for cluster %s from project %s", params, clusterId, serviceName)
-		err := config.OVHClient.Post(endpoint, params, res)
-		if err != nil {
-			if errOvh, ok := err.(*ovh.APIError); ok && (errOvh.Code == 409) {
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(fmt.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err))
-		}
+	return diag.FromErr(
+		resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate),
+			func() *resource.RetryError {
+				log.Printf("[DEBUG] Will create IP restriction: %+v for cluster %s from project %s", params, clusterId, serviceName)
+				rErr := config.OVHClient.Post(endpoint, params, res)
+				if rErr != nil {
+					if errOvh, ok := rErr.(*ovh.APIError); ok && (errOvh.Code == 409) {
+						return resource.RetryableError(rErr)
+					}
+					return resource.NonRetryableError(fmt.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, rErr))
+				}
 
-		log.Printf("[DEBUG] Waiting for IP restriction %s to be READY", res.Ip)
-		err = waitForCloudProjectDatabaseIpRestrictionReady(config.OVHClient, serviceName, engine, clusterId, res.Ip, d.Timeout(schema.TimeoutCreate))
-		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("timeout while waiting IP restriction %s to be READY: %w", res.Ip, err))
-		}
-		log.Printf("[DEBUG] IP restriction %s is READY", res.Ip)
+				log.Printf("[DEBUG] Waiting for IP restriction %s to be READY", res.Ip)
+				rErr = waitForCloudProjectDatabaseIpRestrictionReady(ctx, config.OVHClient, serviceName, engine, clusterId, res.Ip, d.Timeout(schema.TimeoutCreate))
+				if rErr != nil {
+					return resource.NonRetryableError(fmt.Errorf("timeout while waiting IP restriction %s to be READY: %w", res.Ip, rErr))
+				}
+				log.Printf("[DEBUG] IP restriction %s is READY", res.Ip)
 
-		d.SetId(hashcode.Strings([]string{res.Ip}))
+				d.SetId(hashcode.Strings([]string{res.Ip}))
 
-		err = resourceCloudProjectDatabaseIpRestrictionRead(d, meta)
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
+				readDiags := resourceCloudProjectDatabaseIpRestrictionRead(ctx, d, meta)
+				rErr = diagnosticsToError(readDiags)
+				if rErr != nil {
+					return resource.NonRetryableError(rErr)
+				}
+				return nil
+			},
+		),
+	)
 }
 
-func resourceCloudProjectDatabaseIpRestrictionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseIpRestrictionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	engine := d.Get("engine").(string)
@@ -152,7 +159,7 @@ func resourceCloudProjectDatabaseIpRestrictionRead(d *schema.ResourceData, meta 
 
 	log.Printf("[DEBUG] Will read IP restriction %s from cluster %s from project %s", ip, clusterId, serviceName)
 	if err := config.OVHClient.Get(endpoint, res); err != nil {
-		return helpers.CheckDeleted(d, err, endpoint)
+		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
 	d.SetId(hashcode.Strings([]string{res.Ip}))
@@ -164,7 +171,7 @@ func resourceCloudProjectDatabaseIpRestrictionRead(d *schema.ResourceData, meta 
 	return nil
 }
 
-func resourceCloudProjectDatabaseIpRestrictionUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseIpRestrictionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	engine := d.Get("engine").(string)
@@ -179,32 +186,34 @@ func resourceCloudProjectDatabaseIpRestrictionUpdate(d *schema.ResourceData, met
 	)
 	params := (&CloudProjectDatabaseIpRestrictionUpdateOpts{}).FromResource(d)
 
-	return resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
+	err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
 		log.Printf("[DEBUG] Will update IP restriction: %+v from cluster %s from project %s", params, clusterId, serviceName)
-		err := config.OVHClient.Put(endpoint, params, nil)
-		if err != nil {
-			if errOvh, ok := err.(*ovh.APIError); ok && (errOvh.Code == 409) {
-				return resource.RetryableError(err)
+		rErr := config.OVHClient.Put(endpoint, params, nil)
+		if rErr != nil {
+			if errOvh, ok := rErr.(*ovh.APIError); ok && (errOvh.Code == 409) {
+				return resource.RetryableError(rErr)
 			}
-			return resource.NonRetryableError(fmt.Errorf("calling Put %s with params %+v:\n\t %q", endpoint, params, err))
+			return resource.NonRetryableError(fmt.Errorf("calling Put %s with params %+v:\n\t %q", endpoint, params, rErr))
 		}
 
 		log.Printf("[DEBUG] Waiting for IP restriction %s to be READY", ip)
-		err = waitForCloudProjectDatabaseIpRestrictionReady(config.OVHClient, serviceName, engine, clusterId, ip, d.Timeout(schema.TimeoutUpdate))
-		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("timeout while waiting IP restriction %s to be READY: %w", ip, err))
+		rErr = waitForCloudProjectDatabaseIpRestrictionReady(ctx, config.OVHClient, serviceName, engine, clusterId, ip, d.Timeout(schema.TimeoutUpdate))
+		if rErr != nil {
+			return resource.NonRetryableError(fmt.Errorf("timeout while waiting IP restriction %s to be READY: %w", ip, rErr))
 		}
 		log.Printf("[DEBUG] IP restriction %s is READY", ip)
 
-		err = resourceCloudProjectDatabaseIpRestrictionRead(d, meta)
-		if err != nil {
-			return resource.NonRetryableError(err)
+		readDiags := resourceCloudProjectDatabaseIpRestrictionRead(ctx, d, meta)
+		rErr = diagnosticsToError(readDiags)
+		if rErr != nil {
+			return resource.NonRetryableError(rErr)
 		}
 		return nil
 	})
+	return diag.FromErr(err)
 }
 
-func resourceCloudProjectDatabaseIpRestrictionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseIpRestrictionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	engine := d.Get("engine").(string)
@@ -218,24 +227,24 @@ func resourceCloudProjectDatabaseIpRestrictionDelete(d *schema.ResourceData, met
 		url.PathEscape(ip),
 	)
 
-	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		log.Printf("[DEBUG] Will delete IP restriction %s from cluster %s from project %s", ip, clusterId, serviceName)
-		err := config.OVHClient.Delete(endpoint, nil)
-		if err != nil {
-			if errOvh, ok := err.(*ovh.APIError); ok && (errOvh.Code == 409) {
-				return resource.RetryableError(err)
+		rErr := config.OVHClient.Delete(endpoint, nil)
+		if rErr != nil {
+			if errOvh, ok := rErr.(*ovh.APIError); ok && (errOvh.Code == 409) {
+				return resource.RetryableError(rErr)
 			}
-			err = helpers.CheckDeleted(d, err, endpoint)
-			if err != nil {
-				return resource.NonRetryableError(err)
+			rErr = helpers.CheckDeleted(d, rErr, endpoint)
+			if rErr != nil {
+				return resource.NonRetryableError(rErr)
 			}
 			return nil
 		}
 
 		log.Printf("[DEBUG] Waiting for IP restriction %s to be DELETED", clusterId)
-		err = waitForCloudProjectDatabaseIpRestrictionDeleted(config.OVHClient, serviceName, engine, clusterId, ip, d.Timeout(schema.TimeoutDelete))
-		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("timeout while waiting IP restriction %s to be DELETED: %w", clusterId, err))
+		rErr = waitForCloudProjectDatabaseIpRestrictionDeleted(ctx, config.OVHClient, serviceName, engine, clusterId, ip, d.Timeout(schema.TimeoutDelete))
+		if rErr != nil {
+			return resource.NonRetryableError(fmt.Errorf("timeout while waiting IP restriction %s to be DELETED: %w", clusterId, rErr))
 		}
 		log.Printf("[DEBUG] IP restriction %s is DELETED", clusterId)
 
@@ -243,4 +252,5 @@ func resourceCloudProjectDatabaseIpRestrictionDelete(d *schema.ResourceData, met
 
 		return nil
 	})
+	return diag.FromErr(err)
 }

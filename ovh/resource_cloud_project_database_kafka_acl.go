@@ -1,21 +1,23 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/url"
 	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
 func resourceCloudProjectDatabaseKafkaAcl() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCloudProjectDatabaseKafkaAclCreate,
-		Read:   resourceCloudProjectDatabaseKafkaAclRead,
-		Delete: resourceCloudProjectDatabaseKafkaAclDelete,
+		CreateContext: resourceCloudProjectDatabaseKafkaAclCreate,
+		ReadContext:   resourceCloudProjectDatabaseKafkaAclRead,
+		DeleteContext: resourceCloudProjectDatabaseKafkaAclDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: resourceCloudProjectDatabaseKafkaAclImportState,
@@ -80,7 +82,7 @@ func resourceCloudProjectDatabaseKafkaAclImportState(d *schema.ResourceData, met
 	return results, nil
 }
 
-func resourceCloudProjectDatabaseKafkaAclCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseKafkaAclCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
@@ -95,22 +97,22 @@ func resourceCloudProjectDatabaseKafkaAclCreate(d *schema.ResourceData, meta int
 	log.Printf("[DEBUG] Will create acl: %+v for cluster %s from project %s", params, clusterId, serviceName)
 	err := config.OVHClient.Post(endpoint, params, res)
 	if err != nil {
-		return fmt.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
+		return diag.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
 	}
 
 	log.Printf("[DEBUG] Waiting for acl %s to be READY", res.Id)
-	err = waitForCloudProjectDatabaseKafkaAclReady(config.OVHClient, serviceName, clusterId, res.Id, d.Timeout(schema.TimeoutCreate))
+	err = waitForCloudProjectDatabaseKafkaAclReady(ctx, config.OVHClient, serviceName, clusterId, res.Id, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
-		return fmt.Errorf("timeout while waiting acl %s to be READY: %w", res.Id, err)
+		return diag.Errorf("timeout while waiting acl %s to be READY: %s", res.Id, err.Error())
 	}
 	log.Printf("[DEBUG] acl %s is READY", res.Id)
 
 	d.SetId(res.Id)
 
-	return resourceCloudProjectDatabaseKafkaAclRead(d, meta)
+	return resourceCloudProjectDatabaseKafkaAclRead(ctx, d, meta)
 }
 
-func resourceCloudProjectDatabaseKafkaAclRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseKafkaAclRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
@@ -125,7 +127,7 @@ func resourceCloudProjectDatabaseKafkaAclRead(d *schema.ResourceData, meta inter
 
 	log.Printf("[DEBUG] Will read acl %s from cluster %s from project %s", id, clusterId, serviceName)
 	if err := config.OVHClient.Get(endpoint, res); err != nil {
-		return helpers.CheckDeleted(d, err, endpoint)
+		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
 	for k, v := range res.ToMap() {
@@ -140,7 +142,7 @@ func resourceCloudProjectDatabaseKafkaAclRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceCloudProjectDatabaseKafkaAclDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseKafkaAclDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
@@ -155,13 +157,13 @@ func resourceCloudProjectDatabaseKafkaAclDelete(d *schema.ResourceData, meta int
 	log.Printf("[DEBUG] Will delete acl  %s from cluster %s from project %s", id, clusterId, serviceName)
 	err := config.OVHClient.Delete(endpoint, nil)
 	if err != nil {
-		return helpers.CheckDeleted(d, err, endpoint)
+		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
 	log.Printf("[DEBUG] Waiting for acl %s to be DELETED", id)
-	err = waitForCloudProjectDatabaseKafkaAclDeleted(config.OVHClient, serviceName, clusterId, id, d.Timeout(schema.TimeoutDelete))
+	err = waitForCloudProjectDatabaseKafkaAclDeleted(ctx, config.OVHClient, serviceName, clusterId, id, d.Timeout(schema.TimeoutDelete))
 	if err != nil {
-		return fmt.Errorf("timeout while waiting acl %s to be DELETED: %w", id, err)
+		return diag.Errorf("timeout while waiting acl %s to be DELETED: %s", id, err.Error())
 	}
 	log.Printf("[DEBUG] acl %s is DELETED", id)
 
