@@ -133,6 +133,18 @@ resource "ovh_cloud_project_database" "redisdb" {
   }
   flavor        = "db1-4"
 }
+
+resource "ovh_cloud_project_database" "grafana" {
+  service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  description   = "my-first-grafana"
+  engine        = "grafana"
+  version       = "9.1"
+  plan          = "essential"
+  nodes {
+    region =  "GRA"
+  }
+  flavor        = "db1-4"
+}
 ```
 
 To deploy a business PostgreSQL service with two nodes on public network:
