@@ -1,17 +1,19 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/url"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
 func dataSourceCloudProjectDatabaseCapabilities() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceCloudProjectDatabaseCapabilitiesRead,
+		ReadContext: dataSourceCloudProjectDatabaseCapabilitiesRead,
 		Schema: map[string]*schema.Schema{
 			"service_name": {
 				Type:        schema.TypeString,
@@ -132,7 +134,7 @@ func dataSourceCloudProjectDatabaseCapabilities() *schema.Resource {
 	}
 }
 
-func dataSourceCloudProjectDatabaseCapabilitiesRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceCloudProjectDatabaseCapabilitiesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 
@@ -143,7 +145,7 @@ func dataSourceCloudProjectDatabaseCapabilitiesRead(d *schema.ResourceData, meta
 
 	log.Printf("[DEBUG] Will read capabilities from project %s", serviceName)
 	if err := config.OVHClient.Get(capabilitiesEndpoint, capabilitiesRes); err != nil {
-		return helpers.CheckDeleted(d, err, capabilitiesEndpoint)
+		return diag.FromErr(helpers.CheckDeleted(d, err, capabilitiesEndpoint))
 	}
 
 	d.SetId(serviceName)

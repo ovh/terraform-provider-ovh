@@ -1,6 +1,7 @@
 package ovh
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -8,12 +9,24 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 	"github.com/ybriffa/rfc3339"
+	"golang.org/x/exp/slices"
 )
+
+// Helper
+
+func diagnosticsToError(diags diag.Diagnostics) error {
+	if diags.HasError() {
+		return fmt.Errorf(diags[slices.IndexFunc(diags, func(d diag.Diagnostic) bool { return d.Severity == diag.Error })].Summary)
+	}
+	return nil
+}
 
 type CloudProjectDatabaseResponse struct {
 	AclsEnabled           bool                           `json:"aclsEnabled"`
@@ -443,7 +456,7 @@ func (opts *CloudProjectDatabaseIpRestrictionUpdateOpts) FromResource(d *schema.
 	return opts
 }
 
-func waitForCloudProjectDatabaseIpRestrictionReady(client *ovh.Client, serviceName, engine string, databaseId string, ip string, timeOut time.Duration) error {
+func waitForCloudProjectDatabaseIpRestrictionReady(ctx context.Context, client *ovh.Client, serviceName, engine string, databaseId string, ip string, timeOut time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "CREATING", "UPDATING"},
 		Target:  []string{"READY"},
@@ -467,11 +480,11 @@ func waitForCloudProjectDatabaseIpRestrictionReady(client *ovh.Client, serviceNa
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 	return err
 }
 
-func waitForCloudProjectDatabaseIpRestrictionDeleted(client *ovh.Client, serviceName, engine string, databaseId string, ip string, timeOut time.Duration) error {
+func waitForCloudProjectDatabaseIpRestrictionDeleted(ctx context.Context, client *ovh.Client, serviceName, engine string, databaseId string, ip string, timeOut time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"DELETING"},
 		Target:  []string{"DELETED"},
@@ -498,7 +511,7 @@ func waitForCloudProjectDatabaseIpRestrictionDeleted(client *ovh.Client, service
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 	return err
 }
 
@@ -560,14 +573,14 @@ func importCloudProjectDatabaseUser(d *schema.ResourceData, meta interface{}) ([
 	return results, nil
 }
 
-func postCloudProjectDatabaseUser(d *schema.ResourceData, meta interface{}, engine string, dsReadFunc, readFunc schema.ReadFunc, updateFunc schema.UpdateFunc, f func() interface{}) error {
+func postCloudProjectDatabaseUser(ctx context.Context, d *schema.ResourceData, meta interface{}, engine string, dsReadFunc, readFunc schema.ReadContextFunc, updateFunc schema.UpdateContextFunc, f func() interface{}) diag.Diagnostics {
 	name := d.Get("name").(string)
 	if name == "avnadmin" && engine != "redis" {
-		err := dsReadFunc(d, meta)
-		if err != nil {
-			return err
+		diags := dsReadFunc(ctx, d, meta)
+		if diags.HasError() {
+			return diags
 		}
-		return updateFunc(d, meta)
+		return updateFunc(ctx, d, meta)
 	}
 
 	serviceName := d.Get("service_name").(string)
@@ -583,17 +596,17 @@ func postCloudProjectDatabaseUser(d *schema.ResourceData, meta interface{}, engi
 	res := &CloudProjectDatabaseUserResponse{}
 
 	log.Printf("[DEBUG] Will create user: %+v for cluster %s from project %s", params, clusterId, serviceName)
-	err := postFuncCloudProjectDatabaseUser(d, meta, engine, endpoint, params, res, schema.TimeoutCreate)
+	err := postFuncCloudProjectDatabaseUser(ctx, d, meta, engine, endpoint, params, res, schema.TimeoutCreate)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(res.Id)
-	return readFunc(d, meta)
+	return readFunc(ctx, d, meta)
 
 }
 
-func postFuncCloudProjectDatabaseUser(d *schema.ResourceData, meta interface{}, engine string, endpoint string, params interface{}, res *CloudProjectDatabaseUserResponse, timeout string) error {
+func postFuncCloudProjectDatabaseUser(ctx context.Context, d *schema.ResourceData, meta interface{}, engine string, endpoint string, params interface{}, res *CloudProjectDatabaseUserResponse, timeout string) error {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
@@ -606,7 +619,7 @@ func postFuncCloudProjectDatabaseUser(d *schema.ResourceData, meta interface{}, 
 	}
 
 	log.Printf("[DEBUG] Waiting for user %s to be READY", res.Id)
-	err = waitForCloudProjectDatabaseUserReady(config.OVHClient, serviceName, engine, clusterId, res.Id, d.Timeout(timeout))
+	err = waitForCloudProjectDatabaseUserReady(ctx, config.OVHClient, serviceName, engine, clusterId, res.Id, d.Timeout(timeout))
 	if err != nil {
 		return fmt.Errorf("timeout while waiting user %s to be READY: %w", res.Id, err)
 	}
@@ -616,7 +629,7 @@ func postFuncCloudProjectDatabaseUser(d *schema.ResourceData, meta interface{}, 
 	return nil
 }
 
-func updateCloudProjectDatabaseUser(d *schema.ResourceData, meta interface{}, engine string, readFunc schema.ReadFunc, f func() interface{}) error {
+func updateCloudProjectDatabaseUser(ctx context.Context, d *schema.ResourceData, meta interface{}, engine string, readFunc schema.ReadContextFunc, f func() interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
@@ -638,13 +651,13 @@ func updateCloudProjectDatabaseUser(d *schema.ResourceData, meta interface{}, en
 		log.Printf("[DEBUG] Will update user: %+v from cluster %s from project %s", params, clusterId, serviceName)
 		err := config.OVHClient.Put(endpoint, params, nil)
 		if err != nil {
-			return fmt.Errorf("calling Put %s with params %+v:\n\t %q", endpoint, params, err)
+			return diag.Errorf("calling Put %s with params %+v:\n\t %q", endpoint, params, err)
 		}
 
 		log.Printf("[DEBUG] Waiting for user %s to be READY", id)
-		err = waitForCloudProjectDatabaseUserReady(config.OVHClient, serviceName, engine, clusterId, id, d.Timeout(schema.TimeoutUpdate))
+		err = waitForCloudProjectDatabaseUserReady(ctx, config.OVHClient, serviceName, engine, clusterId, id, d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
-			return fmt.Errorf("timeout while waiting user %s to be READY: %w", id, err)
+			return diag.Errorf("timeout while waiting user %s to be READY: %s", id, err.Error())
 		}
 		log.Printf("[DEBUG] user %s is READY", id)
 	}
@@ -653,16 +666,16 @@ func updateCloudProjectDatabaseUser(d *schema.ResourceData, meta interface{}, en
 		pwdResetEndpoint := endpoint + "/credentials/reset"
 		res := &CloudProjectDatabaseUserResponse{}
 		log.Printf("[DEBUG] Will update user password for cluster %s from project %s", clusterId, serviceName)
-		err := postFuncCloudProjectDatabaseUser(d, meta, engine, pwdResetEndpoint, nil, res, schema.TimeoutUpdate)
+		err := postFuncCloudProjectDatabaseUser(ctx, d, meta, engine, pwdResetEndpoint, nil, res, schema.TimeoutUpdate)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
-	return readFunc(d, meta)
+	return readFunc(ctx, d, meta)
 }
 
-func deleteCloudProjectDatabaseUser(d *schema.ResourceData, meta interface{}, engine string) error {
+func deleteCloudProjectDatabaseUser(ctx context.Context, d *schema.ResourceData, meta interface{}, engine string) diag.Diagnostics {
 	name := d.Get("name").(string)
 	if name == "avnadmin" && engine != "redis" {
 		d.SetId("")
@@ -684,13 +697,13 @@ func deleteCloudProjectDatabaseUser(d *schema.ResourceData, meta interface{}, en
 	log.Printf("[DEBUG] Will delete user %s from cluster %s from project %s", id, clusterId, serviceName)
 	err := config.OVHClient.Delete(endpoint, nil)
 	if err != nil {
-		return helpers.CheckDeleted(d, err, endpoint)
+		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
 	log.Printf("[DEBUG] Waiting for user %s to be DELETED", id)
-	err = waitForCloudProjectDatabaseUserDeleted(config.OVHClient, serviceName, engine, clusterId, id, d.Timeout(schema.TimeoutDelete))
+	err = waitForCloudProjectDatabaseUserDeleted(ctx, config.OVHClient, serviceName, engine, clusterId, id, d.Timeout(schema.TimeoutDelete))
 	if err != nil {
-		return fmt.Errorf("timeout while waiting user %s to be DELETED: %w", id, err)
+		return diag.Errorf("timeout while waiting user %s to be DELETED: %s", id, err.Error())
 	}
 	log.Printf("[DEBUG] user %s is DELETED", id)
 
@@ -699,7 +712,7 @@ func deleteCloudProjectDatabaseUser(d *schema.ResourceData, meta interface{}, en
 	return nil
 }
 
-func waitForCloudProjectDatabaseUserReady(client *ovh.Client, serviceName, engine string, databaseId string, userId string, timeOut time.Duration) error {
+func waitForCloudProjectDatabaseUserReady(ctx context.Context, client *ovh.Client, serviceName, engine string, databaseId string, userId string, timeOut time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "CREATING", "UPDATING"},
 		Target:  []string{"READY"},
@@ -723,11 +736,11 @@ func waitForCloudProjectDatabaseUserReady(client *ovh.Client, serviceName, engin
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 	return err
 }
 
-func waitForCloudProjectDatabaseUserDeleted(client *ovh.Client, serviceName, engine string, databaseId string, userId string, timeOut time.Duration) error {
+func waitForCloudProjectDatabaseUserDeleted(ctx context.Context, client *ovh.Client, serviceName, engine string, databaseId string, userId string, timeOut time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"DELETING"},
 		Target:  []string{"DELETED"},
@@ -754,7 +767,7 @@ func waitForCloudProjectDatabaseUserDeleted(client *ovh.Client, serviceName, eng
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 	return err
 }
 
@@ -794,7 +807,7 @@ func (opts *CloudProjectDatabaseDatabaseCreateOpts) FromResource(d *schema.Resou
 	return opts
 }
 
-func waitForCloudProjectDatabaseDatabaseReady(client *ovh.Client, serviceName, engine string, serviceId string, databaseId string, timeOut time.Duration) error {
+func waitForCloudProjectDatabaseDatabaseReady(ctx context.Context, client *ovh.Client, serviceName, engine string, serviceId string, databaseId string, timeOut time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING"},
 		Target:  []string{"READY"},
@@ -820,11 +833,11 @@ func waitForCloudProjectDatabaseDatabaseReady(client *ovh.Client, serviceName, e
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 	return err
 }
 
-func waitForCloudProjectDatabaseDatabaseDeleted(client *ovh.Client, serviceName, engine string, serviceId string, databaseId string, timeOut time.Duration) error {
+func waitForCloudProjectDatabaseDatabaseDeleted(ctx context.Context, client *ovh.Client, serviceName, engine string, serviceId string, databaseId string, timeOut time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"DELETING"},
 		Target:  []string{"DELETED"},
@@ -851,7 +864,7 @@ func waitForCloudProjectDatabaseDatabaseDeleted(client *ovh.Client, serviceName,
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 	return err
 }
 
@@ -908,7 +921,7 @@ func (opts *CloudProjectDatabaseIntegrationCreateOpts) FromResource(d *schema.Re
 	return opts
 }
 
-func waitForCloudProjectDatabaseIntegrationReady(client *ovh.Client, serviceName, engine string, serviceId string, integrationId string, timeOut time.Duration) error {
+func waitForCloudProjectDatabaseIntegrationReady(ctx context.Context, client *ovh.Client, serviceName, engine string, serviceId string, integrationId string, timeOut time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING"},
 		Target:  []string{"READY"},
@@ -934,11 +947,11 @@ func waitForCloudProjectDatabaseIntegrationReady(client *ovh.Client, serviceName
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 	return err
 }
 
-func waitForCloudProjectDatabaseIntegrationDeleted(client *ovh.Client, serviceName, engine string, serviceId string, integrationId string, timeOut time.Duration) error {
+func waitForCloudProjectDatabaseIntegrationDeleted(ctx context.Context, client *ovh.Client, serviceName, engine string, serviceId string, integrationId string, timeOut time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"DELETING"},
 		Target:  []string{"DELETED"},
@@ -965,7 +978,7 @@ func waitForCloudProjectDatabaseIntegrationDeleted(client *ovh.Client, serviceNa
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 	return err
 }
 
@@ -1365,7 +1378,7 @@ func (opts *CloudProjectDatabaseM3dbNamespaceUpdateOpts) FromResource(d *schema.
 	return opts
 }
 
-func waitForCloudProjectDatabaseM3dbNamespaceReady(client *ovh.Client, serviceName, databaseId string, namespaceId string, timeOut time.Duration) error {
+func waitForCloudProjectDatabaseM3dbNamespaceReady(ctx context.Context, client *ovh.Client, serviceName, databaseId string, namespaceId string, timeOut time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING"},
 		Target:  []string{"READY"},
@@ -1390,11 +1403,11 @@ func waitForCloudProjectDatabaseM3dbNamespaceReady(client *ovh.Client, serviceNa
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 	return err
 }
 
-func waitForCloudProjectDatabaseM3dbNamespaceDeleted(client *ovh.Client, serviceName, databaseId string, namespaceId string, timeOut time.Duration) error {
+func waitForCloudProjectDatabaseM3dbNamespaceDeleted(ctx context.Context, client *ovh.Client, serviceName, databaseId string, namespaceId string, timeOut time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"DELETING"},
 		Target:  []string{"DELETED"},
@@ -1420,7 +1433,7 @@ func waitForCloudProjectDatabaseM3dbNamespaceDeleted(client *ovh.Client, service
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 	return err
 }
 
@@ -1552,7 +1565,7 @@ func (opts *CloudProjectDatabaseOpensearchPatternCreateOpts) FromResource(d *sch
 	return opts
 }
 
-func waitForCloudProjectDatabaseOpensearchPatternReady(client *ovh.Client, serviceName, databaseId string, patternId string, timeOut time.Duration) error {
+func waitForCloudProjectDatabaseOpensearchPatternReady(ctx context.Context, client *ovh.Client, serviceName, databaseId string, patternId string, timeOut time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING"},
 		Target:  []string{"READY"},
@@ -1577,11 +1590,11 @@ func waitForCloudProjectDatabaseOpensearchPatternReady(client *ovh.Client, servi
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 	return err
 }
 
-func waitForCloudProjectDatabaseOpensearchPatternDeleted(client *ovh.Client, serviceName, databaseId string, patternId string, timeOut time.Duration) error {
+func waitForCloudProjectDatabaseOpensearchPatternDeleted(ctx context.Context, client *ovh.Client, serviceName, databaseId string, patternId string, timeOut time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"DELETING"},
 		Target:  []string{"DELETED"},
@@ -1607,7 +1620,7 @@ func waitForCloudProjectDatabaseOpensearchPatternDeleted(client *ovh.Client, ser
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 	return err
 }
 
@@ -1667,6 +1680,21 @@ func (opts *CloudProjectDatabaseKafkaTopicCreateOpts) FromResource(d *schema.Res
 	return opts
 }
 
+func warningFactory(warningsAttr []string, d *schema.ResourceData, k string, v interface{}, diags *diag.Diagnostics) {
+	if slices.Contains(warningsAttr, k) {
+		if _, ok := d.GetOk(k); !ok {
+			*diags = append(*diags, diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  fmt.Sprintf("Attribute `%s` is not specified", k),
+				Detail:   fmt.Sprintf("Attribute `%s` is set to it default value : %v", k, v),
+				AttributePath: cty.Path{
+					cty.GetAttrStep{Name: k},
+				},
+			})
+		}
+	}
+}
+
 func validateIsSupEqual(v, min int) (errors []error) {
 	if v < min {
 		errors = append(errors, fmt.Errorf("Value %d is inferior of min value %d", v, min))
@@ -1694,7 +1722,7 @@ func validateCloudProjectDatabaseKafkaTopicRetentionHoursFunc(v interface{}, k s
 	return
 }
 
-func waitForCloudProjectDatabaseKafkaTopicReady(client *ovh.Client, serviceName, databaseId string, topicId string, timeOut time.Duration) error {
+func waitForCloudProjectDatabaseKafkaTopicReady(ctx context.Context, client *ovh.Client, serviceName, databaseId string, topicId string, timeOut time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING"},
 		Target:  []string{"READY"},
@@ -1719,11 +1747,11 @@ func waitForCloudProjectDatabaseKafkaTopicReady(client *ovh.Client, serviceName,
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 	return err
 }
 
-func waitForCloudProjectDatabaseKafkaTopicDeleted(client *ovh.Client, serviceName, databaseId string, topicId string, timeOut time.Duration) error {
+func waitForCloudProjectDatabaseKafkaTopicDeleted(ctx context.Context, client *ovh.Client, serviceName, databaseId string, topicId string, timeOut time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"DELETING"},
 		Target:  []string{"DELETED"},
@@ -1749,7 +1777,7 @@ func waitForCloudProjectDatabaseKafkaTopicDeleted(client *ovh.Client, serviceNam
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 	return err
 }
 
@@ -1797,7 +1825,7 @@ func (opts *CloudProjectDatabaseKafkaAclCreateOpts) FromResource(d *schema.Resou
 	return opts
 }
 
-func waitForCloudProjectDatabaseKafkaAclReady(client *ovh.Client, serviceName, databaseId string, aclId string, timeOut time.Duration) error {
+func waitForCloudProjectDatabaseKafkaAclReady(ctx context.Context, client *ovh.Client, serviceName, databaseId string, aclId string, timeOut time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING"},
 		Target:  []string{"READY"},
@@ -1822,11 +1850,11 @@ func waitForCloudProjectDatabaseKafkaAclReady(client *ovh.Client, serviceName, d
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 	return err
 }
 
-func waitForCloudProjectDatabaseKafkaAclDeleted(client *ovh.Client, serviceName, databaseId string, aclId string, timeOut time.Duration) error {
+func waitForCloudProjectDatabaseKafkaAclDeleted(ctx context.Context, client *ovh.Client, serviceName, databaseId string, aclId string, timeOut time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"DELETING"},
 		Target:  []string{"DELETED"},
@@ -1852,7 +1880,7 @@ func waitForCloudProjectDatabaseKafkaAclDeleted(client *ovh.Client, serviceName,
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 	return err
 }
 

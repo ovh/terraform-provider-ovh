@@ -1,11 +1,13 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/url"
 	"sort"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers/hashcode"
@@ -13,7 +15,7 @@ import (
 
 func dataSourceCloudProjectDatabaseKafkaTopics() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceCloudProjectDatabaseKafkaTopicsRead,
+		ReadContext: dataSourceCloudProjectDatabaseKafkaTopicsRead,
 		Schema: map[string]*schema.Schema{
 			"service_name": {
 				Type:        schema.TypeString,
@@ -37,7 +39,7 @@ func dataSourceCloudProjectDatabaseKafkaTopics() *schema.Resource {
 	}
 }
 
-func dataSourceCloudProjectDatabaseKafkaTopicsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceCloudProjectDatabaseKafkaTopicsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
@@ -50,7 +52,7 @@ func dataSourceCloudProjectDatabaseKafkaTopicsRead(d *schema.ResourceData, meta 
 
 	log.Printf("[DEBUG] Will read topics from cluster %s from project %s", clusterId, serviceName)
 	if err := config.OVHClient.Get(endpoint, &res); err != nil {
-		return helpers.CheckDeleted(d, err, endpoint)
+		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
 	// sort.Strings sorts in place, returns nothing

@@ -1,16 +1,18 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/url"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceCloudProjectDatabaseM3dbNamespace() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceCloudProjectDatabaseM3dbNamespaceRead,
+		ReadContext: dataSourceCloudProjectDatabaseM3dbNamespaceRead,
 		Schema: map[string]*schema.Schema{
 			"service_name": {
 				Type:        schema.TypeString,
@@ -78,7 +80,7 @@ func dataSourceCloudProjectDatabaseM3dbNamespace() *schema.Resource {
 	}
 }
 
-func dataSourceCloudProjectDatabaseM3dbNamespaceRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceCloudProjectDatabaseM3dbNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
@@ -92,7 +94,7 @@ func dataSourceCloudProjectDatabaseM3dbNamespaceRead(d *schema.ResourceData, met
 
 	log.Printf("[DEBUG] Will read namespaces from cluster %s from project %s", clusterId, serviceName)
 	if err := config.OVHClient.Get(listEndpoint, &listRes); err != nil {
-		return fmt.Errorf("Error calling GET %s:\n\t %q", listEndpoint, err)
+		return diag.Errorf("Error calling GET %s:\n\t %q", listEndpoint, err)
 	}
 
 	name := d.Get("name").(string)
@@ -106,7 +108,7 @@ func dataSourceCloudProjectDatabaseM3dbNamespaceRead(d *schema.ResourceData, met
 
 		log.Printf("[DEBUG] Will read namespace %s from cluster %s from project %s", id, clusterId, serviceName)
 		if err := config.OVHClient.Get(endpoint, res); err != nil {
-			return fmt.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
+			return diag.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
 		}
 
 		if res.Name == name {
@@ -122,5 +124,5 @@ func dataSourceCloudProjectDatabaseM3dbNamespaceRead(d *schema.ResourceData, met
 		}
 	}
 
-	return fmt.Errorf("Namespace name %s not found for cluster %s from project %s", name, clusterId, serviceName)
+	return diag.Errorf("Namespace name %s not found for cluster %s from project %s", name, clusterId, serviceName)
 }

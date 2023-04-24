@@ -1,21 +1,23 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/url"
 	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
 func resourceCloudProjectDatabaseOpensearchPattern() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCloudProjectDatabaseOpensearchPatternCreate,
-		Read:   resourceCloudProjectDatabaseOpensearchPatternRead,
-		Delete: resourceCloudProjectDatabaseOpensearchPatternDelete,
+		CreateContext: resourceCloudProjectDatabaseOpensearchPatternCreate,
+		ReadContext:   resourceCloudProjectDatabaseOpensearchPatternRead,
+		DeleteContext: resourceCloudProjectDatabaseOpensearchPatternDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: resourceCloudProjectDatabaseOpensearchPatternImportState,
@@ -74,7 +76,7 @@ func resourceCloudProjectDatabaseOpensearchPatternImportState(d *schema.Resource
 	return results, nil
 }
 
-func resourceCloudProjectDatabaseOpensearchPatternCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseOpensearchPatternCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
@@ -89,22 +91,22 @@ func resourceCloudProjectDatabaseOpensearchPatternCreate(d *schema.ResourceData,
 	log.Printf("[DEBUG] Will create pattern: %+v for cluster %s from project %s", params, clusterId, serviceName)
 	err := config.OVHClient.Post(endpoint, params, res)
 	if err != nil {
-		return fmt.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
+		return diag.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
 	}
 
 	log.Printf("[DEBUG] Waiting for topic %s to be READY", res.Id)
-	err = waitForCloudProjectDatabaseOpensearchPatternReady(config.OVHClient, serviceName, clusterId, res.Id, d.Timeout(schema.TimeoutCreate))
+	err = waitForCloudProjectDatabaseOpensearchPatternReady(ctx, config.OVHClient, serviceName, clusterId, res.Id, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
-		return fmt.Errorf("timeout while waiting topic %s to be READY: %w", res.Id, err)
+		return diag.Errorf("timeout while waiting topic %s to be READY: %s", res.Id, err.Error())
 	}
 	log.Printf("[DEBUG] topic %s is READY", res.Id)
 
 	d.SetId(res.Id)
 
-	return resourceCloudProjectDatabaseOpensearchPatternRead(d, meta)
+	return resourceCloudProjectDatabaseOpensearchPatternRead(ctx, d, meta)
 }
 
-func resourceCloudProjectDatabaseOpensearchPatternRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseOpensearchPatternRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
@@ -119,7 +121,7 @@ func resourceCloudProjectDatabaseOpensearchPatternRead(d *schema.ResourceData, m
 
 	log.Printf("[DEBUG] Will read pattern %s from cluster %s from project %s", id, clusterId, serviceName)
 	if err := config.OVHClient.Get(endpoint, res); err != nil {
-		return helpers.CheckDeleted(d, err, endpoint)
+		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
 	for k, v := range res.ToMap() {
@@ -134,7 +136,7 @@ func resourceCloudProjectDatabaseOpensearchPatternRead(d *schema.ResourceData, m
 	return nil
 }
 
-func resourceCloudProjectDatabaseOpensearchPatternDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseOpensearchPatternDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
@@ -149,13 +151,13 @@ func resourceCloudProjectDatabaseOpensearchPatternDelete(d *schema.ResourceData,
 	log.Printf("[DEBUG] Will delete pattern %s from cluster %s from project %s", id, clusterId, serviceName)
 	err := config.OVHClient.Delete(endpoint, nil)
 	if err != nil {
-		return helpers.CheckDeleted(d, err, endpoint)
+		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
 	log.Printf("[DEBUG] Waiting for pattern %s to be DELETED", id)
-	err = waitForCloudProjectDatabaseOpensearchPatternDeleted(config.OVHClient, serviceName, clusterId, id, d.Timeout(schema.TimeoutDelete))
+	err = waitForCloudProjectDatabaseOpensearchPatternDeleted(ctx, config.OVHClient, serviceName, clusterId, id, d.Timeout(schema.TimeoutDelete))
 	if err != nil {
-		return fmt.Errorf("timeout while waiting pattern %s to be DELETED: %w", id, err)
+		return diag.Errorf("timeout while waiting pattern %s to be DELETED: %s", id, err.Error())
 	}
 	log.Printf("[DEBUG] pattern %s is DELETED", id)
 

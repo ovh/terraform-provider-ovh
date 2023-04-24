@@ -1,21 +1,23 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/url"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
 func resourceCloudProjectDatabasePostgresqlUser() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCloudProjectDatabasePostgresqlUserCreate,
-		Read:   resourceCloudProjectDatabasePostgresqlUserRead,
-		Delete: resourceCloudProjectDatabasePostgresqlUserDelete,
-		Update: resourceCloudProjectDatabasePostgresqlUserUpdate,
+		CreateContext: resourceCloudProjectDatabasePostgresqlUserCreate,
+		ReadContext:   resourceCloudProjectDatabasePostgresqlUserRead,
+		DeleteContext: resourceCloudProjectDatabasePostgresqlUserDelete,
+		UpdateContext: resourceCloudProjectDatabasePostgresqlUserUpdate,
 
 		Importer: &schema.ResourceImporter{
 			State: resourceCloudProjectDatabasePostgresqlUserImportState,
@@ -84,14 +86,14 @@ func resourceCloudProjectDatabasePostgresqlUserImportState(d *schema.ResourceDat
 	return importCloudProjectDatabaseUser(d, meta)
 }
 
-func resourceCloudProjectDatabasePostgresqlUserCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabasePostgresqlUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	f := func() interface{} {
 		return (&CloudProjectDatabasePostgresqlUserCreateOpts{}).FromResource(d)
 	}
-	return postCloudProjectDatabaseUser(d, meta, "postgresql", dataSourceCloudProjectDatabasePostgresqlUserRead, resourceCloudProjectDatabasePostgresqlUserRead, resourceCloudProjectDatabasePostgresqlUserUpdate, f)
+	return postCloudProjectDatabaseUser(ctx, d, meta, "postgresql", dataSourceCloudProjectDatabasePostgresqlUserRead, resourceCloudProjectDatabasePostgresqlUserRead, resourceCloudProjectDatabasePostgresqlUserUpdate, f)
 }
 
-func resourceCloudProjectDatabasePostgresqlUserRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabasePostgresqlUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
@@ -106,7 +108,7 @@ func resourceCloudProjectDatabasePostgresqlUserRead(d *schema.ResourceData, meta
 
 	log.Printf("[DEBUG] Will read user %s from cluster %s from project %s", id, clusterId, serviceName)
 	if err := config.OVHClient.Get(endpoint, res); err != nil {
-		return helpers.CheckDeleted(d, err, endpoint)
+		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
 	for k, v := range res.ToMap() {
@@ -121,13 +123,13 @@ func resourceCloudProjectDatabasePostgresqlUserRead(d *schema.ResourceData, meta
 	return nil
 }
 
-func resourceCloudProjectDatabasePostgresqlUserUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabasePostgresqlUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	f := func() interface{} {
 		return (&CloudProjectDatabasePostgresqlUserUpdateOpts{}).FromResource(d)
 	}
-	return updateCloudProjectDatabaseUser(d, meta, "postgresql", resourceCloudProjectDatabasePostgresqlUserRead, f)
+	return updateCloudProjectDatabaseUser(ctx, d, meta, "postgresql", resourceCloudProjectDatabasePostgresqlUserRead, f)
 }
 
-func resourceCloudProjectDatabasePostgresqlUserDelete(d *schema.ResourceData, meta interface{}) error {
-	return deleteCloudProjectDatabaseUser(d, meta, "postgresql")
+func resourceCloudProjectDatabasePostgresqlUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return deleteCloudProjectDatabaseUser(ctx, d, meta, "postgresql")
 }

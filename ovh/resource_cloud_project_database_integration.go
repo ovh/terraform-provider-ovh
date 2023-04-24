@@ -1,21 +1,23 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/url"
 	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
 func resourceCloudProjectDatabaseIntegration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCloudProjectDatabaseIntegrationCreate,
-		Read:   resourceCloudProjectDatabaseIntegrationRead,
-		Delete: resourceCloudProjectDatabaseIntegrationDelete,
+		CreateContext: resourceCloudProjectDatabaseIntegrationCreate,
+		ReadContext:   resourceCloudProjectDatabaseIntegrationRead,
+		DeleteContext: resourceCloudProjectDatabaseIntegrationDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: resourceCloudProjectDatabaseIntegrationImportState,
@@ -115,7 +117,7 @@ func resourceCloudProjectDatabaseIntegrationImportState(d *schema.ResourceData, 
 	return results, nil
 }
 
-func resourceCloudProjectDatabaseIntegrationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	engine := d.Get("engine").(string)
@@ -133,21 +135,21 @@ func resourceCloudProjectDatabaseIntegrationCreate(d *schema.ResourceData, meta 
 	log.Printf("[DEBUG] Will create integration: %+v for cluster %s from project %s", params, clusterId, serviceName)
 	err := config.OVHClient.Post(endpoint, params, res)
 	if err != nil {
-		return fmt.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
+		return diag.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
 	}
 
 	log.Printf("[DEBUG] Waiting for integration %s to be READY", res.Id)
-	err = waitForCloudProjectDatabaseIntegrationReady(config.OVHClient, serviceName, engine, clusterId, res.Id, d.Timeout(schema.TimeoutCreate))
+	err = waitForCloudProjectDatabaseIntegrationReady(ctx, config.OVHClient, serviceName, engine, clusterId, res.Id, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
-		return fmt.Errorf("timeout while waiting integration %s to be READY: %w", res.Id, err)
+		return diag.Errorf("timeout while waiting integration %s to be READY: %s", res.Id, err.Error())
 	}
 	log.Printf("[DEBUG] integration %s is READY", res.Id)
 
 	d.SetId(res.Id)
-	return resourceCloudProjectDatabaseIntegrationRead(d, meta)
+	return resourceCloudProjectDatabaseIntegrationRead(ctx, d, meta)
 }
 
-func resourceCloudProjectDatabaseIntegrationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseIntegrationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	engine := d.Get("engine").(string)
@@ -165,21 +167,27 @@ func resourceCloudProjectDatabaseIntegrationRead(d *schema.ResourceData, meta in
 
 	log.Printf("[DEBUG] Will read integration %s from cluster %s from project %s", id, clusterId, serviceName)
 	if err := config.OVHClient.Get(endpoint, res); err != nil {
-		return helpers.CheckDeleted(d, err, endpoint)
+		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
+	diags := make(diag.Diagnostics, 0)
+	warnAttr := []string{"type"}
 	for k, v := range res.ToMap() {
 		if k != "id" {
+			warningFactory(warnAttr, d, k, v, &diags)
 			d.Set(k, v)
 		} else {
 			d.SetId(fmt.Sprint(v))
 		}
 	}
 
+	if len(diags) > 0 {
+		return diags
+	}
 	return nil
 }
 
-func resourceCloudProjectDatabaseIntegrationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	engine := d.Get("engine").(string)
@@ -196,13 +204,13 @@ func resourceCloudProjectDatabaseIntegrationDelete(d *schema.ResourceData, meta 
 	log.Printf("[DEBUG] Will delete integration %s from cluster %s from project %s", id, clusterId, serviceName)
 	err := config.OVHClient.Delete(endpoint, nil)
 	if err != nil {
-		return helpers.CheckDeleted(d, err, endpoint)
+		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
 	log.Printf("[DEBUG] Waiting for integration %s to be DELETED", id)
-	err = waitForCloudProjectDatabaseIntegrationDeleted(config.OVHClient, serviceName, engine, clusterId, id, d.Timeout(schema.TimeoutDelete))
+	err = waitForCloudProjectDatabaseIntegrationDeleted(ctx, config.OVHClient, serviceName, engine, clusterId, id, d.Timeout(schema.TimeoutDelete))
 	if err != nil {
-		return fmt.Errorf("timeout while waiting integration %s to be DELETED: %w", id, err)
+		return diag.Errorf("timeout while waiting integration %s to be DELETED: %s", id, err.Error())
 	}
 	log.Printf("[DEBUG] integration %s is DELETED", id)
 

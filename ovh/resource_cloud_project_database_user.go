@@ -1,22 +1,24 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/url"
 	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
 func resourceCloudProjectDatabaseUser() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCloudProjectDatabaseUserCreate,
-		Read:   resourceCloudProjectDatabaseUserRead,
-		Update: resourceCloudProjectDatabaseUserUpdate,
-		Delete: resourceCloudProjectDatabaseUserDelete,
+		CreateContext: resourceCloudProjectDatabaseUserCreate,
+		ReadContext:   resourceCloudProjectDatabaseUserRead,
+		UpdateContext: resourceCloudProjectDatabaseUserUpdate,
+		DeleteContext: resourceCloudProjectDatabaseUserDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: resourceCloudProjectDatabaseUserImportState,
@@ -102,15 +104,15 @@ func resourceCloudProjectDatabaseUserImportState(d *schema.ResourceData, meta in
 	return results, nil
 }
 
-func resourceCloudProjectDatabaseUserCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	engine := d.Get("engine").(string)
 	f := func() interface{} {
 		return (&CloudProjectDatabaseUserCreateOpts{}).FromResource(d)
 	}
-	return postCloudProjectDatabaseUser(d, meta, engine, dataSourceCloudProjectDatabaseUserRead, resourceCloudProjectDatabaseUserRead, resourceCloudProjectDatabaseUserUpdate, f)
+	return postCloudProjectDatabaseUser(ctx, d, meta, engine, dataSourceCloudProjectDatabaseUserRead, resourceCloudProjectDatabaseUserRead, resourceCloudProjectDatabaseUserUpdate, f)
 }
 
-func resourceCloudProjectDatabaseUserRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	engine := d.Get("engine").(string)
@@ -128,7 +130,7 @@ func resourceCloudProjectDatabaseUserRead(d *schema.ResourceData, meta interface
 
 	log.Printf("[DEBUG] Will read user %s from cluster %s from project %s", id, clusterId, serviceName)
 	if err := config.OVHClient.Get(endpoint, res); err != nil {
-		return helpers.CheckDeleted(d, err, endpoint)
+		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
 	for k, v := range res.ToMap() {
@@ -142,7 +144,7 @@ func resourceCloudProjectDatabaseUserRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceCloudProjectDatabaseUserUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	serviceName := d.Get("service_name").(string)
 	engine := d.Get("engine").(string)
 	clusterId := d.Get("cluster_id").(string)
@@ -156,15 +158,15 @@ func resourceCloudProjectDatabaseUserUpdate(d *schema.ResourceData, meta interfa
 	)
 	res := &CloudProjectDatabaseUserResponse{}
 	log.Printf("[DEBUG] Will update user password for cluster %s from project %s", clusterId, serviceName)
-	err := postFuncCloudProjectDatabaseUser(d, meta, engine, endpoint, nil, res, schema.TimeoutUpdate)
+	err := postFuncCloudProjectDatabaseUser(ctx, d, meta, engine, endpoint, nil, res, schema.TimeoutUpdate)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	return resourceCloudProjectDatabaseUserRead(d, meta)
+	return resourceCloudProjectDatabaseUserRead(ctx, d, meta)
 }
 
-func resourceCloudProjectDatabaseUserDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectDatabaseUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	engine := d.Get("engine").(string)
-	return deleteCloudProjectDatabaseUser(d, meta, engine)
+	return deleteCloudProjectDatabaseUser(ctx, d, meta, engine)
 }

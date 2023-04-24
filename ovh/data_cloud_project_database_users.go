@@ -1,18 +1,20 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/url"
 	"sort"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers/hashcode"
 )
 
 func dataSourceCloudProjectDatabaseUsers() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceCloudProjectDatabaseUsersRead,
+		ReadContext: dataSourceCloudProjectDatabaseUsersRead,
 		Schema: map[string]*schema.Schema{
 			"service_name": {
 				Type:        schema.TypeString,
@@ -41,7 +43,7 @@ func dataSourceCloudProjectDatabaseUsers() *schema.Resource {
 	}
 }
 
-func dataSourceCloudProjectDatabaseUsersRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceCloudProjectDatabaseUsersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	engine := d.Get("engine").(string)
@@ -57,7 +59,7 @@ func dataSourceCloudProjectDatabaseUsersRead(d *schema.ResourceData, meta interf
 
 	log.Printf("[DEBUG] Will read users from cluster %s from project %s", clusterId, serviceName)
 	if err := config.OVHClient.Get(endpoint, &res); err != nil {
-		return fmt.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
+		return diag.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
 	}
 
 	// sort.Strings sorts in place, returns nothing
