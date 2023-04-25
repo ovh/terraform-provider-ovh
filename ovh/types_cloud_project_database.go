@@ -583,7 +583,7 @@ func postCloudProjectDatabaseUser(ctx context.Context, d *schema.ResourceData, m
 		return updateFunc(ctx, d, meta)
 	}
 	if engine == "grafana" && name != "avnadmin" {
-		return fmt.Errorf("The Grafana engine does not allow to create a user resource other than avnadmin")
+		return diag.FromErr(fmt.Errorf("The Grafana engine does not allow to create a user resource other than avnadmin"))
 	}
 
 	serviceName := d.Get("service_name").(string)
@@ -606,7 +606,6 @@ func postCloudProjectDatabaseUser(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(res.Id)
 	return readFunc(ctx, d, meta)
-
 }
 
 func postFuncCloudProjectDatabaseUser(ctx context.Context, d *schema.ResourceData, meta interface{}, engine string, endpoint string, params interface{}, res *CloudProjectDatabaseUserResponse, timeout string) error {
