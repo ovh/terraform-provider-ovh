@@ -48,7 +48,7 @@ func testSweepDedicatedCephACL(region string) error {
 	var acls []DedicatedCephACL
 	endpoint := fmt.Sprintf("/dedicated/ceph/%s/acl", url.PathEscape(serviceName))
 
-	if err := client.Get(endpoint, acls); err != nil {
+	if err := client.Get(endpoint, &acls); err != nil {
 		return fmt.Errorf("Error calling GET %s:\n\t%q", endpoint, err)
 	}
 
