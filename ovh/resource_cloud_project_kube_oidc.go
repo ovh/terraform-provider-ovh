@@ -91,7 +91,6 @@ func resourceCloudProjectKubeOIDC() *schema.Resource {
 func resourceCloudProjectKubeOIDCImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	givenId := d.Id()
 	log.Printf("[DEBUG] Importing cloud project kube OIDC %s", givenId)
-	fmt.Sprintf("[DEBUG] Importing cloud project kube OIDC %s", givenId)
 
 	splitId := strings.SplitN(givenId, "/", 3)
 	if len(splitId) != 2 {
