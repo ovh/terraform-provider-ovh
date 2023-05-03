@@ -1,4 +1,34 @@
-## 0.30.0 (Unreleased)
+## 0.31.0 (Unreleased)
+
+## 0.30.0 (May 3, 2023)
+
+⚙️ General:
+
+* `go` version upgrade to `1.20.0` ([#403](https://github.com/ovh/terraform-provider-ovh/pull/403))
+* `terraform-plugin-sdk` upgrade to `2.24.0` ([#406](https://github.com/ovh/terraform-provider-ovh/pull/406))
+
+💪 Improvements:
+
+* `r/ovh_cloud_project_database`: Manage grafana in the generic database user resources ([#412](https://github.com/ovh/terraform-provider-ovh/pull/412))
+* `r/ovh_cloud_project_database_*`: Use new function with context and diagnostic - Stop to use deprecated functions ([#403](https://github.com/ovh/terraform-provider-ovh/pull/403))
+
+* `d/ovh_cloud_project_database_*`: Use new function with context and diagnostic - Stop to use deprecated functions ([#403](https://github.com/ovh/terraform-provider-ovh/pull/403))
+
+🐜 Bug fixes:
+
+* `r/ovh_dedicated_ceph_acl`: Fix the acceptance test ([#416](https://github.com/ovh/terraform-provider-ovh/pull/416))
+* `r/ovh_cloud_project_database`: Fix the bug that resetted avnadmin password on creation of ovh_cloud_project_database / grafana ([#412](https://github.com/ovh/terraform-provider-ovh/pull/412))
+* Fix a lot of acceptance tests ([#406](https://github.com/ovh/terraform-provider-ovh/pull/406))
+
+📚 Documentation:
+
+* `r/ovh_cloud_project_database`: Update documentation page ([#413](https://github.com/ovh/terraform-provider-ovh/pull/413))
+* `r/ovh_cloud_project_database_user`: Update documentation page ([#412](https://github.com/ovh/terraform-provider-ovh/pull/412))
+* `r/ovh_domain_zone_record`: Update documentation page ([#408](https://github.com/ovh/terraform-provider-ovh/pull/408))
+
+* `d/ovh_cloud_project_database_user`: Update documentation page ([#412](https://github.com/ovh/terraform-provider-ovh/pull/412))
+
+❤️ Thanks for your contributions ❤️
 
 ## 0.29.0 (March 24, 2023)
 
