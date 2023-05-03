@@ -14,6 +14,8 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+
 jobs:
   goreleaser:
     runs-on: ubuntu-20.04
