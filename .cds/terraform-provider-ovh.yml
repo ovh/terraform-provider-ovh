@@ -391,36 +391,37 @@ notifications:
   - terraform-provider-ovh-check
 - type: email
   pipelines:
-      - TestAccCloudProjectCapabilities
-      - TestAccCloudProjectContainer
-      - TestAccCloudProjectDatabaseDatabase
-      - TestAccCloudProjectDatabaseIntegration
-      - TestAccCloudProjectDatabaseIpRestriction
-      - TestAccCloudProjectDatabaseKafka
-      - TestAccCloudProjectDatabaseM3
-      - TestAccCloudProjectDatabaseMongo
-      - TestAccCloudProjectDatabaseOpensearch
-      - TestAccCloudProjectDatabasePostgreSQL
-      - TestAccCloudProjectDatabaseRedis
-      - TestAccCloudProjectDatabaseUser
-      - TestAccCloudProjectDatabaseSource
-      - TestAccCloudProjectDatabase_basic
-      - TestAccDataSourceCloudProjectFailoverIp
-      - TestAccCloudProjectKube
-      - TestAccCloudProjectRegion
-      - TestAccDataCloudProjectUser
-      - TestAccDedicated
-      - TestAccDomain
-      - TestAccDataSourceHosting
-      - TestAccDataSourceIpService
-      - TestAccIpLoadbalancing
-      - TestAccMe
-      - TestAccVPS
-      - TestAccVrack
-      - TestAccCloudProjectNetwork
-      - TestAccHostingPrivateDatabase
-      - TestAccCloudProjectWorkflowBackup
-      - TestAccDbaas
+    - terraform-provider-ovh-check
+    - TestAccCloudProjectCapabilities
+    - TestAccCloudProjectContainer
+    - TestAccCloudProjectDatabaseDatabase
+    - TestAccCloudProjectDatabaseIntegration
+    - TestAccCloudProjectDatabaseIpRestriction
+    - TestAccCloudProjectDatabaseKafka
+    - TestAccCloudProjectDatabaseM3
+    - TestAccCloudProjectDatabaseMongo
+    - TestAccCloudProjectDatabaseOpensearch
+    - TestAccCloudProjectDatabasePostgreSQL
+    - TestAccCloudProjectDatabaseRedis
+    - TestAccCloudProjectDatabaseUser
+    - TestAccCloudProjectDatabaseSource
+    - TestAccCloudProjectDatabase_basic
+    - TestAccDataSourceCloudProjectFailoverIp
+    - TestAccCloudProjectKube
+    - TestAccCloudProjectRegion
+    - TestAccDataCloudProjectUser
+    - TestAccDedicated
+    - TestAccDomain
+    - TestAccDataSourceHosting
+    - TestAccDataSourceIpService
+    - TestAccIpLoadbalancing
+    - TestAccMe
+    - TestAccVPS
+    - TestAccVrack
+    - TestAccCloudProjectNetwork
+    - TestAccHostingPrivateDatabase
+    - TestAccCloudProjectWorkflowBackup
+    - TestAccDbaas
   settings:
     on_success: never
     send_to_author: false
