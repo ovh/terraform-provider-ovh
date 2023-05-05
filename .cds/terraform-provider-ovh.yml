@@ -388,4 +388,4 @@ notifications:
   settings:
     on_success: always
   pipelines:
-  - terraform-provider-ovh-check
+    - terraform-provider-ovh-check
