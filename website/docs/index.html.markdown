@@ -8,15 +8,15 @@ description: |-
 
 # OVH Provider
 
-The OVH provider is used to interact with the many resources supported by OVHcloud. 
-The provider needs to be configured with the proper credentials before it can be used.
+The OVH provider is the entry point to interact with the resources provided by OVHcloud. 
+
+-> __NOTE__ According on your needs, you may need to use additional providers. This [documentation page](https://help.ovhcloud.com/csm/en-gb-terraform-at-ovhcloud?id=kb_article_view&sysparm_article=KB0054612) provides the mapping between the control panel concepts and the terraform providers / ressources.
 
 Use the navigation to the left to read about the available resources.
 
 ## Provider configuration
 
-Requests to OVHcloud APIs require a set of secrets keys and the definition of the API end point. 
-See [First Steps with the API](https://docs.ovh.com/gb/en/customer/first-steps-with-ovh-api/) (or the French version, [Premiers pas avec les API OVHcloud](https://docs.ovh.com/fr/api/api-premiers-pas/)) for a detailed explanation.
+The provider needs to be configured with the proper credentials before it can be used. Requests to OVHcloud APIs require a set of secrets keys and the definition of the API end point. See [First Steps with the API](https://docs.ovh.com/gb/en/customer/first-steps-with-ovh-api/) (or the French version, [Premiers pas avec les API OVHcloud](https://docs.ovh.com/fr/api/api-premiers-pas/)) for a detailed explanation.
 
 Besides the API end-point, the required keys are the `application_key`, the `application_secret`, and the `consumer_key`.
 These keys can be generated via the [OVHcloud token generation page](https://api.ovh.com/createToken/?GET=/*&POST=/*&PUT=/*&DELETE=/*). 
@@ -34,18 +34,6 @@ terraform {
   }
 }
 
-provider "ovh" {
-  endpoint           = "ovh-eu"
-  application_key    = "xxxxxxxxx"
-  application_secret = "yyyyyyyyy"
-  consumer_key       = "zzzzzzzzzzzzzz"
-}
-```
-
-Terraform 0.12 and earlier:
-
-```hcl
-# Configure the OVHcloud Provider
 provider "ovh" {
   endpoint           = "ovh-eu"
   application_key    = "xxxxxxxxx"
@@ -198,17 +186,6 @@ variables must also be set:
 
 * `OVH_TESTACC_IP` - set this variable to "yes" will order public ip blocks.
 
-### Credentials
-
-You will also need to [generate an OVHcloud token](https://api.ovh.com/createToken/?GET=/*&POST=/*&PUT=/*&DELETE=/*) and use it to set the following environment variables:
-
- * `OVH_APPLICATION_KEY`
-
- * `OVH_APPLICATION_SECRET`
-
- * `OVH_CONSUMER_KEY`
-
-You should be able to use any OVHcloud environment to develop on as long as the above environment variables are set.
 
 ### Using a locally built terraform-provider-ovh
 
