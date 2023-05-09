@@ -27,9 +27,9 @@ resource "ovh_cloud_project_kube" "mycluster" {
   region       = "GRA7"
 }
 
-resource "local_file" "kubeconfig" {
-  content     = ovh_cloud_project_kube.mycluster.kubeconfig
-  filename    = "mycluster.yml"
+output "kubeconfig_file" {
+  value     = ovh_cloud_project_kube.mycluster.kubeconfig
+  sensitive = true
 }
 ```
 
