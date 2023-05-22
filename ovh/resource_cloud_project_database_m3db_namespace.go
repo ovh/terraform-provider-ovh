@@ -185,10 +185,8 @@ func resourceCloudProjectDatabaseM3dbNamespaceRead(ctx context.Context, d *schem
 	}
 
 	diags := make(diag.Diagnostics, 0)
-	warnAttr := []string{"retention_block_size_duration"}
 	for k, v := range res.ToMap() {
 		if k != "id" {
-			warningFactory(warnAttr, d, k, v, &diags)
 			d.Set(k, v)
 		} else {
 			d.SetId(fmt.Sprint(v))

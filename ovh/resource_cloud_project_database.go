@@ -314,10 +314,8 @@ func resourceCloudProjectDatabaseRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	diags := make(diag.Diagnostics, 0)
-	warnAttr := []string{"disk_size", "advanced_configuration"}
 	for k, v := range res.ToMap() {
 		if k != "id" {
-			warningFactory(warnAttr, d, k, v, &diags)
 			d.Set(k, v)
 		} else {
 			d.SetId(fmt.Sprint(v))
