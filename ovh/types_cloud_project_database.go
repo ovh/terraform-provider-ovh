@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -1680,21 +1679,6 @@ func (opts *CloudProjectDatabaseKafkaTopicCreateOpts) FromResource(d *schema.Res
 	opts.RetentionHours = d.Get("retention_hours").(int)
 
 	return opts
-}
-
-func warningFactory(warningsAttr []string, d *schema.ResourceData, k string, v interface{}, diags *diag.Diagnostics) {
-	if slices.Contains(warningsAttr, k) {
-		if _, ok := d.GetOk(k); !ok {
-			*diags = append(*diags, diag.Diagnostic{
-				Severity: diag.Warning,
-				Summary:  fmt.Sprintf("Attribute `%s` is not specified", k),
-				Detail:   fmt.Sprintf("Attribute `%s` is set to it default value : %v", k, v),
-				AttributePath: cty.Path{
-					cty.GetAttrStep{Name: k},
-				},
-			})
-		}
-	}
 }
 
 func validateIsSupEqual(v, min int) (errors []error) {
