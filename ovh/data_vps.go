@@ -5,6 +5,7 @@ import (
 	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
 func dataSourceVPS() *schema.Resource {
@@ -16,6 +17,10 @@ func dataSourceVPS() *schema.Resource {
 				Required: true,
 			},
 			// Here come all the computed items
+			"urn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -107,6 +112,9 @@ func dataSourceVPSRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(vps.Name)
+
+	d.Set("urn", helpers.ServiceURN(config.Plate, helpers.VPSkind, serviceName))
+
 	d.Set("name", vps.Name)
 	d.Set("zone", vps.Zone)
 	d.Set("state", vps.State)
@@ -130,6 +138,9 @@ func dataSourceVPSRead(d *schema.ResourceData, meta interface{}) error {
 		fmt.Sprintf("/vps/%s/ips", d.Id()),
 		&ips,
 	)
+	if err != nil {
+		return err
+	}
 
 	d.Set("ips", ips)
 
@@ -138,6 +149,10 @@ func dataSourceVPSRead(d *schema.ResourceData, meta interface{}) error {
 		fmt.Sprintf("/vps/%s/datacenter", d.Id()),
 		&vpsDatacenter,
 	)
+	if err != nil {
+		return err
+	}
+
 	datacenter := make(map[string]string)
 	datacenter["name"] = vpsDatacenter.Name
 	datacenter["longname"] = vpsDatacenter.Longname

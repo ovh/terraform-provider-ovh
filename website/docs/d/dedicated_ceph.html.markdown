@@ -16,12 +16,12 @@ data "ovh_dedicated_ceph" "my-ceph" {
 
 ## Argument Reference
 
-
 * `service_name` - (Required) The service name of the dedicated CEPH cluster.
 
 
 ## Attributes Reference
 
+* `urn` - URN of the CEPH instance
 * `ceph_mons` - list of CEPH monitors IPs
 * `ceph_version` - CEPH cluster version
 * `crush_tunables` - CRUSH algorithm settings. Possible values

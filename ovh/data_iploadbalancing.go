@@ -13,6 +13,10 @@ func dataSourceIpLoadbalancing() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceIpLoadbalancingRead,
 		Schema: map[string]*schema.Schema{
+			"urn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"ipv6": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -214,13 +218,13 @@ func dataSourceIpLoadbalancingRead(d *schema.ResourceData, meta interface{}) err
 			" Please try a more specific search criteria")
 	}
 
-	dataSourceIpLoadbalancingAttributes(d, filtered_iplbs[0])
+	dataSourceIpLoadbalancingAttributes(config, d, filtered_iplbs[0])
 
 	return nil
 }
 
 // dataSourceIpLoadbalancingAttributes populates the fields of an ipLoadbalancing datasource.
-func dataSourceIpLoadbalancingAttributes(d *schema.ResourceData, iplb *IpLoadbalancing) error {
+func dataSourceIpLoadbalancingAttributes(config *Config, d *schema.ResourceData, iplb *IpLoadbalancing) error {
 	log.Printf("[DEBUG] ovh_iploadbalancing details: %#v", iplb)
 
 	if iplb.ServiceName == "" {
@@ -240,6 +244,8 @@ func dataSourceIpLoadbalancingAttributes(d *schema.ResourceData, iplb *IpLoadbal
 	}
 
 	d.SetId(iplb.ServiceName)
+	d.Set("urn", helpers.ServiceURN(config.Plate, "loadbalancer", iplb.ServiceName))
+
 	d.Set("ipv6", iplb.IPv6)
 	d.Set("ipv4", iplb.IPv4)
 	d.Set("zone", iplb.Zone)

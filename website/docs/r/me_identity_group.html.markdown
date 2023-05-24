@@ -24,6 +24,7 @@ resource "ovh_me_identity_group" "my_group" {
 
 ## Attributes Reference
 
+* `urn` - URN of the user group, used when writing IAM policies
 * `default_group` - Is the group a default and immutable one.
 * `creation` - Creation date of this group.
 * `last_update` - Date of the last update of this group.

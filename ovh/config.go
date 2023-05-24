@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"sync"
-	"time"
 
 	cleanhttp "github.com/hashicorp/go-cleanhttp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging"
@@ -14,6 +13,8 @@ import (
 var providerVersion, providerCommit string
 
 type Config struct {
+	Account           string
+	Plate             string
 	Endpoint          string
 	ApplicationKey    string
 	ApplicationSecret string
@@ -22,17 +23,6 @@ type Config struct {
 	authenticated     bool
 	authFailed        error
 	lockAuth          *sync.Mutex
-}
-
-type OvhAuthCurrentCredential struct {
-	OvhSupport    bool             `json:"ovhSupport"`
-	Status        string           `json:"status"`
-	ApplicationId int64            `json:"applicationId"`
-	CredentialId  int64            `json:"credentialId"`
-	Rules         []ovh.AccessRule `json:"rules"`
-	Expiration    time.Time        `json:"expiration"`
-	LastUse       time.Time        `json:"lastUse"`
-	Creation      time.Time        `json:"creation"`
 }
 
 func clientDefault(c *Config) (*ovh.Client, error) {
@@ -63,15 +53,21 @@ func (c *Config) loadAndValidate() error {
 	}
 
 	if !c.authenticated {
-		var cred OvhAuthCurrentCredential
-		if err := c.OVHClient.Get("/auth/currentCredential", &cred); err != nil {
+		var details OvhAuthDetails
+		if err := c.OVHClient.Get("/auth/details", &details); err != nil {
 			c.authFailed = fmt.Errorf("OVH client seems to be misconfigured: %q\n", err)
 			return c.authFailed
 		}
 
 		log.Printf("[DEBUG] Logged in on OVH API")
+		c.Account = details.Account
 		c.authenticated = true
 	}
+
+	if c.Plate == "" {
+		c.Plate = plateFromEndpoint(c.Endpoint)
+	}
+
 	return nil
 }
 
@@ -105,4 +101,18 @@ func (c *Config) load() error {
 	c.OVHClient = targetClient
 
 	return nil
+}
+
+var plateMapping map[string]string = map[string]string{
+	"ovh-eu":        "eu",
+	"ovh-ca":        "ca",
+	"ovh-us":        "us",
+	"kimsufi-eu":    "eu",
+	"kimsufi-ca":    "ca",
+	"soyoustart-eu": "eu",
+	"soyoustart-ca": "ca",
+}
+
+func plateFromEndpoint(endpoint string) string {
+	return plateMapping[endpoint]
 }

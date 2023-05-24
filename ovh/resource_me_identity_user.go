@@ -27,6 +27,10 @@ func resourceMeIdentityUser() *schema.Resource {
 				Optional:    true,
 				Description: "User description",
 			},
+			"urn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"email": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -84,6 +88,8 @@ func resourceMeIdentityUserRead(d *schema.ResourceData, meta interface{}) error 
 	if err := config.OVHClient.Get(endpoint, identityUser); err != nil {
 		return helpers.CheckDeleted(d, err, endpoint)
 	}
+
+	d.Set("urn", fmt.Sprintf("urn:v1:%s:identity:user:%s/%s", config.Plate, config.Account, identityUser.Login))
 
 	d.Set("login", identityUser.Login)
 	d.Set("creation", identityUser.Creation)
