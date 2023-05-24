@@ -132,6 +132,26 @@ func (c MeCurrency) ToMap() map[string]interface{} {
 	return obj
 }
 
+type MeIdentityGroupResponse struct {
+	Name         string `json:"name"`
+	DefaultGroup bool   `json:"defaultGroup"`
+	Role         string `json:"role"`
+	Creation     string `json:"creation"`
+	Description  string `json:"description"`
+	LastUpdate   string `json:"lastUpdate"`
+}
+
+type MeIdentityGroupCreateOpts struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Role        string `json:"role"`
+}
+
+type MeIdentityGroupUpdateOpts struct {
+	Description string `json:"description"`
+	Role        string `json:"role"`
+}
+
 type MeIdentityUserResponse struct {
 	Creation           string `json:"creation"`
 	Description        string `json:"description"`
