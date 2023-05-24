@@ -171,10 +171,8 @@ func resourceCloudProjectDatabaseIntegrationRead(ctx context.Context, d *schema.
 	}
 
 	diags := make(diag.Diagnostics, 0)
-	warnAttr := []string{"type"}
 	for k, v := range res.ToMap() {
 		if k != "id" {
-			warningFactory(warnAttr, d, k, v, &diags)
 			d.Set(k, v)
 		} else {
 			d.SetId(fmt.Sprint(v))

@@ -160,10 +160,8 @@ func resourceCloudProjectDatabaseKafkaTopicRead(ctx context.Context, d *schema.R
 	}
 
 	diags := make(diag.Diagnostics, 0)
-	warnAttr := []string{"min_insync_replicas", "partitions", "replication", "retention_bytes", "retention_hours"}
 	for k, v := range res.ToMap() {
 		if k != "id" {
-			warningFactory(warnAttr, d, k, v, &diags)
 			d.Set(k, v)
 		} else {
 			d.SetId(fmt.Sprint(v))
