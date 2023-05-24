@@ -6,6 +6,7 @@ import (
 	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
 func dataSourceDbaasLogsCluster() *schema.Resource {
@@ -20,6 +21,10 @@ func dataSourceDbaasLogsCluster() *schema.Resource {
 				Required:    true,
 			},
 			// Computed
+			"urn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"cluster_type": {
 				Type:        schema.TypeString,
 				Description: "Cluster type",
@@ -114,6 +119,7 @@ func dataSourceDbaasLogsClusterRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	d.SetId(cluster_id)
+	d.Set("urn", helpers.ServiceURN(config.Plate, "ldp", serviceName))
 
 	endpoint := fmt.Sprintf(
 		"/dbaas/logs/%s/cluster/%s",

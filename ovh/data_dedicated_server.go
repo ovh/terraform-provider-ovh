@@ -6,6 +6,7 @@ import (
 	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
 func dataSourceDedicatedServer() *schema.Resource {
@@ -18,6 +19,10 @@ func dataSourceDedicatedServer() *schema.Resource {
 			},
 
 			// Computed
+			"urn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"boot_id": {
 				Type:        schema.TypeInt,
 				Computed:    true,
@@ -196,6 +201,7 @@ func dataSourceDedicatedServerRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	d.SetId(ds.Name)
+	d.Set("urn", helpers.ServiceURN(config.Plate, "dedicatedServer", ds.Name))
 	d.Set("boot_id", ds.BootId)
 	d.Set("commercial_range", ds.CommercialRange)
 	d.Set("datacenter", ds.Datacenter)

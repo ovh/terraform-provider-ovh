@@ -22,6 +22,7 @@ data "ovh_hosting_privatedatabase" "database" {
 
 `id` is set to database service_name. In addition, the following attributes are exported.
 
+* `urn` - URN of the private database
 * `cpu` - Number of CPU on your private database
 * `datacenter` - Datacenter where this private database is located
 * `display_name` - Name displayed in customer panel for your private database

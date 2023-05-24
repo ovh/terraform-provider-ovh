@@ -83,6 +83,7 @@ The following arguments are supported:
 ## Attributes Reference
 
 Id is set to the order Id. In addition, the following attributes are exported:
+* `urn` - URN of the load balancer, used when writing IAM policies
 * `ip_loadbalancing` - Your IP load balancing
 * `ipv4` - The IPV4 associated to your IP load balancing
 * `ipv6` - The IPV6 associated to your IP load balancing. DEPRECATED.

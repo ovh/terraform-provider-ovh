@@ -30,6 +30,10 @@ func resourceDomainZoneSchema() map[string]*schema.Schema {
 	schema := map[string]*schema.Schema{
 
 		// computed
+		"urn": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
 		"dnssec_supported": {
 			Type:        schema.TypeBool,
 			Description: "Is DNSSEC supported by this zone",
@@ -93,6 +97,8 @@ func resourceDomainZoneRead(d *schema.ResourceData, meta interface{}) error {
 	for k, v := range r.ToMap() {
 		d.Set(k, v)
 	}
+
+	d.Set("urn", helpers.ServiceURN(config.Plate, "dnsZone", r.Name))
 
 	return nil
 }

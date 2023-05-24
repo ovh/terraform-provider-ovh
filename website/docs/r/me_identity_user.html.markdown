@@ -28,6 +28,7 @@ resource "ovh_me_identity_user" "my_user" {
 
 ## Attributes Reference
 
+* `urn` - URN of the user, used when writing IAM policies
 * `creation` - Creation date of this user.
 * `last_update` - Last update of this user.
 * `password_last_update` - When the user changed his password for the last time.

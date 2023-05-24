@@ -24,6 +24,7 @@ data "ovh_vps" "server" {
 
 In addition, the following attributes are exported:
 
+* `urn` - The URN of the vps
 * `cluster` - The OVHcloud cluster the vps is in
 * `datacenter` - The datacenter in which the vps is located
   * `datacenter.longname` - The fullname of the datacenter (ex: "Strasbourg SBG1")
