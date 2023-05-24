@@ -133,10 +133,8 @@ func resourceCloudProjectDatabaseRedisUserRead(ctx context.Context, d *schema.Re
 	}
 
 	diags := make(diag.Diagnostics, 0)
-	warnAttr := []string{"channels"}
 	for k, v := range res.ToMap() {
 		if k != "id" {
-			warningFactory(warnAttr, d, k, v, &diags)
 			d.Set(k, v)
 		} else {
 			d.SetId(fmt.Sprint(v))
