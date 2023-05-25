@@ -52,7 +52,7 @@ func dataSourceOrderCart() *schema.Resource {
 			},
 			"assign": {
 				Type:        schema.TypeBool,
-				Description: "Assign a shopping cart to an loggedin client",
+				Description: "Assign a shopping cart to a logged in client",
 				Optional:    true,
 				Default:     false,
 			},
