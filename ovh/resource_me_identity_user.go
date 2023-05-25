@@ -35,6 +35,7 @@ func resourceMeIdentityUser() *schema.Resource {
 			"group": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Default:     "DEFAULT",
 				Description: "User's group",
 			},
 			"login": {
