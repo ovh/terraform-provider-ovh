@@ -1,4 +1,4 @@
-Thanks for wanted to contribute to this project ❤️.
+Thanks for wanting to contribute to this project ❤️.
 
 This project accepts contributions. In order to contribute, you should pay attention to a few things:
 
