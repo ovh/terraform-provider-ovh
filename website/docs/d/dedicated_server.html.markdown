@@ -47,7 +47,7 @@ In addition, the following attributes are exported:
   * `server_name` - Server bound to this VirtualNetworkInterface
   * `uuid` - VirtualNetworkInterface unique id
   * `vrack` - vRack name
-  * `ncis` - NetworkInterfaceControllers bound to this VirtualNetworkInterface
+  * `nics` - NetworkInterfaceControllers bound to this VirtualNetworkInterface
 * `enabled_vrack_vnis` - List of enabled vrack VNI uuids
 * `enabled_vrack_aggregation_vnis` - List of enabled vrack_aggregation VNI uuids
 * `enabled_public_vnis` - List of enabled public VNI uuids
