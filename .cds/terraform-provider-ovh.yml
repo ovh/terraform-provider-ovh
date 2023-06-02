@@ -43,7 +43,7 @@ hooks:
     config:
       cron: 0 0 * * *
       payload: '{}'
-      timezone: UTC    
+      timezone: UTC
   - type: RepositoryWebHook
     config:
       # don't trigger build on PRs

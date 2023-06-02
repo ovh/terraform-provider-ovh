@@ -170,7 +170,6 @@ func resourceCloudProjectDatabaseIntegrationRead(ctx context.Context, d *schema.
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
-	diags := make(diag.Diagnostics, 0)
 	for k, v := range res.ToMap() {
 		if k != "id" {
 			d.Set(k, v)
@@ -179,9 +178,6 @@ func resourceCloudProjectDatabaseIntegrationRead(ctx context.Context, d *schema.
 		}
 	}
 
-	if len(diags) > 0 {
-		return diags
-	}
 	return nil
 }
 
