@@ -313,7 +313,6 @@ func resourceCloudProjectDatabaseRead(ctx context.Context, d *schema.ResourceDat
 		res.AdvancedConfiguration = *advancedConfigMap
 	}
 
-	diags := make(diag.Diagnostics, 0)
 	for k, v := range res.ToMap() {
 		if k != "id" {
 			d.Set(k, v)
@@ -322,9 +321,6 @@ func resourceCloudProjectDatabaseRead(ctx context.Context, d *schema.ResourceDat
 		}
 	}
 
-	if len(diags) > 0 {
-		return diags
-	}
 	return nil
 }
 
