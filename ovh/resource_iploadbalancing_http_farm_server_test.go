@@ -318,6 +318,7 @@ func TestAccIpLoadbalancingHttpFarmServerBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "ssl", "true"),
 					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "backup", "true"),
 					resource.TestCheckResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "on_marked_down", "shutdown-sessions"),
+					resource.TestCheckNoResourceAttr(TEST_ACC_IPLOADBALANCING_HTTP_FARM_SRV_RES_NAME, "proxy_protocol_version"),
 				),
 			},
 			{
