@@ -64,9 +64,11 @@ func resourceIpLoadbalancingHttpFarmServer() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					err := helpers.ValidateStringEnum(v.(string), []string{"v1", "v2", "v2-ssl", "v2-ssl-cn"})
-					if err != nil {
-						errors = append(errors, err)
+					if v != nil {
+						err := helpers.ValidateStringEnum(v.(string), []string{"v1", "v2", "v2-ssl", "v2-ssl-cn"})
+						if err != nil {
+							errors = append(errors, err)
+						}
 					}
 					return
 				},
