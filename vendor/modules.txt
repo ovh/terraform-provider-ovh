@@ -29,8 +29,6 @@ github.com/google/go-cmp/cmp/internal/diff
 github.com/google/go-cmp/cmp/internal/flags
 github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
-# github.com/gopherjs/gopherjs v0.0.0-20181103185306-d547d1d9531e
-## explicit
 # github.com/hashicorp/errwrap v1.0.0
 ## explicit
 github.com/hashicorp/errwrap
@@ -175,11 +173,9 @@ github.com/mitchellh/reflectwalk
 # github.com/oklog/run v1.0.0
 ## explicit
 github.com/oklog/run
-# github.com/ovh/go-ovh v1.3.0
-## explicit; go 1.12
+# github.com/ovh/go-ovh v1.4.1
+## explicit; go 1.18
 github.com/ovh/go-ovh/ovh
-# github.com/smartystreets/assertions v0.0.0-20190116191733-b6c0e53d7304
-## explicit
 # github.com/vmihailenco/msgpack v4.0.4+incompatible
 ## explicit
 github.com/vmihailenco/msgpack
@@ -351,7 +347,7 @@ google.golang.org/protobuf/types/known/anypb
 google.golang.org/protobuf/types/known/durationpb
 google.golang.org/protobuf/types/known/emptypb
 google.golang.org/protobuf/types/known/timestamppb
-# gopkg.in/ini.v1 v1.57.0
+# gopkg.in/ini.v1 v1.67.0
 ## explicit
 gopkg.in/ini.v1
 # gopkg.in/yaml.v3 v3.0.1
