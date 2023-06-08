@@ -9,7 +9,9 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
@@ -123,22 +125,35 @@ func resourceCloudProjectDatabaseKafkaTopicCreate(ctx context.Context, d *schema
 	params := (&CloudProjectDatabaseKafkaTopicCreateOpts{}).FromResource(d)
 	res := &CloudProjectDatabaseKafkaTopicResponse{}
 
-	log.Printf("[DEBUG] Will create topic: %+v for cluster %s from project %s", params, clusterId, serviceName)
-	err := config.OVHClient.Post(endpoint, params, res)
-	if err != nil {
-		return diag.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
-	}
+	return diag.FromErr(
+		resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate),
+			func() *resource.RetryError {
+				log.Printf("[DEBUG] Will create topic: %+v for cluster %s from project %s", params, clusterId, serviceName)
+				err := config.OVHClient.Post(endpoint, params, res)
+				if err != nil {
+					if errOvh, ok := err.(*ovh.APIError); ok && (errOvh.Code == 409) {
+						return resource.RetryableError(err)
+					}
+					return resource.NonRetryableError(fmt.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err))
+				}
 
-	log.Printf("[DEBUG] Waiting for topic %s to be READY", res.Id)
-	err = waitForCloudProjectDatabaseKafkaTopicReady(ctx, config.OVHClient, serviceName, clusterId, res.Id, d.Timeout(schema.TimeoutCreate))
-	if err != nil {
-		return diag.Errorf("timeout while waiting topic %s to be READY: %s", res.Id, err.Error())
-	}
-	log.Printf("[DEBUG] topic %s is READY", res.Id)
+				log.Printf("[DEBUG] Waiting for topic %s to be READY", res.Id)
+				err = waitForCloudProjectDatabaseKafkaTopicReady(ctx, config.OVHClient, serviceName, clusterId, res.Id, d.Timeout(schema.TimeoutCreate))
+				if err != nil {
+					return resource.NonRetryableError(fmt.Errorf("timeout while waiting topic %s to be READY: %s", res.Id, err.Error()))
+				}
+				log.Printf("[DEBUG] topic %s is READY", res.Id)
 
-	d.SetId(res.Id)
-
-	return resourceCloudProjectDatabaseKafkaTopicRead(ctx, d, meta)
+				d.SetId(res.Id)
+				readDiags := resourceCloudProjectDatabaseKafkaTopicRead(ctx, d, meta)
+				err = diagnosticsToError(readDiags)
+				if err != nil {
+					return resource.NonRetryableError(err)
+				}
+				return nil
+			},
+		),
+	)
 }
 
 func resourceCloudProjectDatabaseKafkaTopicRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -159,7 +174,6 @@ func resourceCloudProjectDatabaseKafkaTopicRead(ctx context.Context, d *schema.R
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
-	diags := make(diag.Diagnostics, 0)
 	for k, v := range res.ToMap() {
 		if k != "id" {
 			d.Set(k, v)
@@ -168,9 +182,6 @@ func resourceCloudProjectDatabaseKafkaTopicRead(ctx context.Context, d *schema.R
 		}
 	}
 
-	if len(diags) > 0 {
-		return diags
-	}
 	return nil
 }
 
@@ -186,20 +197,33 @@ func resourceCloudProjectDatabaseKafkaTopicDelete(ctx context.Context, d *schema
 		url.PathEscape(id),
 	)
 
-	log.Printf("[DEBUG] Will delete topic  %s from cluster %s from project %s", id, clusterId, serviceName)
-	err := config.OVHClient.Delete(endpoint, nil)
-	if err != nil {
-		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
-	}
+	return diag.FromErr(
+		resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete),
+			func() *resource.RetryError {
+				log.Printf("[DEBUG] Will delete topic  %s from cluster %s from project %s", id, clusterId, serviceName)
+				err := config.OVHClient.Delete(endpoint, nil)
+				if err != nil {
+					if errOvh, ok := err.(*ovh.APIError); ok && (errOvh.Code == 409) {
+						return resource.RetryableError(err)
+					}
+					err = helpers.CheckDeleted(d, err, endpoint)
+					if err != nil {
+						return resource.NonRetryableError(err)
+					}
+					return nil
+				}
 
-	log.Printf("[DEBUG] Waiting for topic %s to be DELETED", id)
-	err = waitForCloudProjectDatabaseKafkaTopicDeleted(ctx, config.OVHClient, serviceName, clusterId, id, d.Timeout(schema.TimeoutDelete))
-	if err != nil {
-		return diag.Errorf("timeout while waiting topic %s to be DELETED: %s", id, err.Error())
-	}
-	log.Printf("[DEBUG] topic %s is DELETED", id)
+				log.Printf("[DEBUG] Waiting for topic %s to be DELETED", id)
+				err = waitForCloudProjectDatabaseKafkaTopicDeleted(ctx, config.OVHClient, serviceName, clusterId, id, d.Timeout(schema.TimeoutDelete))
+				if err != nil {
+					return resource.NonRetryableError(fmt.Errorf("timeout while waiting topic %s to be DELETED: %s", id, err.Error()))
+				}
+				log.Printf("[DEBUG] topic %s is DELETED", id)
 
-	d.SetId("")
+				d.SetId("")
 
-	return nil
+				return nil
+			},
+		),
+	)
 }

@@ -184,7 +184,6 @@ func resourceCloudProjectDatabaseM3dbNamespaceRead(ctx context.Context, d *schem
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
-	diags := make(diag.Diagnostics, 0)
 	for k, v := range res.ToMap() {
 		if k != "id" {
 			d.Set(k, v)
@@ -193,9 +192,6 @@ func resourceCloudProjectDatabaseM3dbNamespaceRead(ctx context.Context, d *schem
 		}
 	}
 
-	if len(diags) > 0 {
-		return diags
-	}
 	return nil
 }
 
