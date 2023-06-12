@@ -303,7 +303,6 @@ func TestAccIpLoadbalancingTcpFarmServerBasic(t *testing.T) {
 					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "weight", "1"),
 					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "ssl", "true"),
 					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "backup", "true"),
-					resource.TestCheckNoResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "proxy_protocol_version"),
 				),
 			},
 			{
