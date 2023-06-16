@@ -45,7 +45,7 @@ type CloudProjectKubeNodePoolTemplateMetadata struct {
 
 type CloudProjectKubeNodePoolTemplateSpec struct {
 	Taints        []Taint `json:"taints"`
-	Unschedulable bool    `json:"unschedulable"`
+	Unschedulable *bool   `json:"unschedulable"`
 }
 
 type CloudProjectKubeNodePoolTemplate struct {
@@ -94,90 +94,77 @@ func (opts *CloudProjectKubeNodePoolCreateOpts) FromResource(d *schema.ResourceD
 }
 
 func loadNodelPoolTemplateFromResource(i interface{}) (*CloudProjectKubeNodePoolTemplate, error) {
+	// initialize map variables to explicit empty map
 	template := CloudProjectKubeNodePoolTemplate{
-		Metadata: &CloudProjectKubeNodePoolTemplateMetadata{
-			Annotations: map[string]string{},
-			Finalizers:  []string{},
-			Labels:      map[string]string{},
-		},
-		Spec: &CloudProjectKubeNodePoolTemplateSpec{
-			Taints:        []Taint{},
-			Unschedulable: false,
-		},
+		Metadata: &CloudProjectKubeNodePoolTemplateMetadata{},
+		Spec:     &CloudProjectKubeNodePoolTemplateSpec{},
 	}
 
 	templateSet := i.(*schema.Set).List()
-	if len(templateSet) == 0 {
-		return nil, nil
-	}
-	templateObject := templateSet[0]
-
-	// when updating the nested object template there is two objects, one is empty, take the not empty one
-	if len(templateSet) > 1 {
-		for _, to := range templateSet {
-			metadata := to.(map[string]interface{})["metadata"].(*schema.Set).List()[0]
-			annotations := metadata.(map[string]interface{})["annotations"].(map[string]interface{})
-			labels := metadata.(map[string]interface{})["labels"].(map[string]interface{})
-			finalizers := metadata.(map[string]interface{})["finalizers"].([]interface{})
-
-			spec := templateObject.(map[string]interface{})["spec"].(*schema.Set).List()[0]
-			taints := spec.(map[string]interface{})["taints"].([]interface{})
-			unschedulable := spec.(map[string]interface{})["unschedulable"].(bool)
-
-			if len(annotations) == 0 && len(labels) == 0 && len(finalizers) == 0 && len(taints) == 0 && unschedulable == false {
-				// is empty
-			} else {
-				templateObject = to
-				break
-			}
-		}
-	}
 	if len(templateSet) > 2 {
 		return nil, errors.New("resource template cannot have more than 2 elements")
 	}
 
-	metadataSet := templateObject.(map[string]interface{})["metadata"].(*schema.Set).List()
-	for _, meta := range metadataSet {
+	if len(templateSet) > 0 {
+		templateObject := templateSet[0].(map[string]interface{})
 
-		annotations := meta.(map[string]interface{})["annotations"].(map[string]interface{})
-		template.Metadata.Annotations = make(map[string]string)
-		for k, v := range annotations {
-			template.Metadata.Annotations[k] = v.(string)
-		}
+		// metadata
+		{
+			metadataSet := templateObject["metadata"].(*schema.Set).List()
+			if len(metadataSet) > 0 {
+				metadata := metadataSet[0].(map[string]interface{})
 
-		labels := meta.(map[string]interface{})["labels"].(map[string]interface{})
-		template.Metadata.Labels = make(map[string]string)
-		for k, v := range labels {
-			template.Metadata.Labels[k] = v.(string)
-		}
+				// metadata.annotations
+				annotations := metadata["annotations"].(map[string]interface{})
+				template.Metadata.Annotations = make(map[string]string)
+				for k, v := range annotations {
+					template.Metadata.Annotations[k] = v.(string)
+				}
 
-		finalizers := meta.(map[string]interface{})["finalizers"].([]interface{})
-		for _, finalizer := range finalizers {
-			template.Metadata.Finalizers = append(template.Metadata.Finalizers, finalizer.(string))
-		}
+				// metadata.finalizers
+				finalizers := metadata["finalizers"].([]interface{})
+				template.Metadata.Finalizers = make([]string, 0)
+				for _, finalizer := range finalizers {
+					template.Metadata.Finalizers = append(template.Metadata.Finalizers, finalizer.(string))
+				}
 
-	}
-
-	specSet := templateObject.(map[string]interface{})["spec"].(*schema.Set).List()
-	for _, spec := range specSet {
-
-		taints := spec.(map[string]interface{})["taints"].([]interface{})
-		for _, taint := range taints {
-			effectString := taint.(map[string]interface{})["effect"].(string)
-			effect := TaintEffecTypeToID[effectString]
-			if effect == NotATaint {
-				return nil, errors.New(fmt.Sprintf("Effect: %s is not a allowable taint %#v", effectString, TaintEffecTypeToID))
+				// metadata.labels
+				labels := metadata["labels"].(map[string]interface{})
+				template.Metadata.Labels = make(map[string]string)
+				for k, v := range labels {
+					template.Metadata.Labels[k] = v.(string)
+				}
 			}
-
-			template.Spec.Taints = append(template.Spec.Taints, Taint{
-				Effect: effect,
-				Key:    taint.(map[string]interface{})["key"].(string),
-				Value:  taint.(map[string]interface{})["value"].(string),
-			})
 		}
 
-		template.Spec.Unschedulable = spec.(map[string]interface{})["unschedulable"].(bool)
+		// spec
+		{
+			specSet := templateObject["spec"].(*schema.Set).List()
+			if len(specSet) > 0 {
+				spec := specSet[0].(map[string]interface{})
 
+				// spec.taints
+				taints := spec["taints"].([]interface{})
+				data := make([]Taint, 0)
+				for _, taint := range taints {
+					effectString := taint.(map[string]interface{})["effect"].(string)
+					effect := TaintEffecTypeToID[effectString]
+					if effect == NotATaint {
+						return nil, fmt.Errorf("effect: %s is not a allowable taint %#v", effectString, TaintEffecTypeToID)
+					}
+
+					data = append(data, Taint{
+						Effect: effect,
+						Key:    taint.(map[string]interface{})["key"].(string),
+						Value:  taint.(map[string]interface{})["value"].(string),
+					})
+				}
+				template.Spec.Taints = data
+
+				// spec.unschedulable
+				template.Spec.Unschedulable = helpers.GetNilBoolPointerFromData(spec, "unschedulable")
+			}
+		}
 	}
 
 	return &template, nil
@@ -271,64 +258,60 @@ func (v CloudProjectKubeNodePoolResponse) ToMap() map[string]interface{} {
 	obj["up_to_date_nodes"] = v.UpToDateNodes
 	obj["updated_at"] = v.UpdatedAt
 
-	var taints []map[string]interface{}
-	for _, taint := range v.Template.Spec.Taints {
-		t := map[string]interface{}{
-			"effect": taint.Effect.String(),
-			"key":    taint.Key,
-			"value":  taint.Value,
+	if v.Template != nil {
+		obj["template"] = []map[string]interface{}{{}}
+
+		// template.metadata
+		if v.Template.Metadata != nil {
+			data := make(map[string]interface{})
+			if vv := v.Template.Metadata.Finalizers; vv != nil && len(vv) > 0 {
+				data["finalizers"] = vv
+			}
+
+			if vv := v.Template.Metadata.Labels; vv != nil && len(vv) > 0 {
+				data["labels"] = vv
+			}
+
+			if vv := v.Template.Metadata.Annotations; vv != nil && len(vv) > 0 {
+				data["annotations"] = vv
+			}
+
+			if len(data) > 0 {
+				obj["template"].([]map[string]interface{})[0]["metadata"] = []map[string]interface{}{data}
+			}
 		}
 
-		taints = append(taints, t)
+		// template.spec
+		if v.Template.Spec != nil {
+			data := make(map[string]interface{})
+			if vv := v.Template.Spec.Taints; vv != nil && len(vv) > 0 {
+				var taints []map[string]interface{}
+				for _, taint := range vv {
+					t := map[string]interface{}{
+						"effect": taint.Effect.String(),
+						"key":    taint.Key,
+						"value":  taint.Value,
+					}
+
+					taints = append(taints, t)
+				}
+
+				data["taints"] = taints
+			}
+
+			if vv := v.Template.Spec.Unschedulable; vv != nil {
+				data["unschedulable"] = vv
+			}
+
+			if len(data) > 0 {
+				obj["template"].([]map[string]interface{})[0]["spec"] = []map[string]interface{}{data}
+			}
+		}
 	}
 
-	obj["template"] = []map[string]interface{}{
-		{
-			"metadata": []map[string]interface{}{
-				{
-					"finalizers":  v.Template.Metadata.Finalizers,
-					"labels":      v.Template.Metadata.Labels,
-					"annotations": v.Template.Metadata.Annotations,
-				},
-			},
-			"spec": []map[string]interface{}{
-				{
-					"unschedulable": v.Template.Spec.Unschedulable,
-					"taints":        taints,
-				},
-			},
-		},
-	}
-
-	if len(obj["template"].([]map[string]interface{})[0]["metadata"].([]map[string]interface{})[0]["finalizers"].([]string)) == 0 {
-		obj["template"].([]map[string]interface{})[0]["metadata"].([]map[string]interface{})[0]["finalizers"] = nil
-	}
-	if len(obj["template"].([]map[string]interface{})[0]["metadata"].([]map[string]interface{})[0]["labels"].(map[string]string)) == 0 {
-		obj["template"].([]map[string]interface{})[0]["metadata"].([]map[string]interface{})[0]["labels"] = nil
-	}
-	if len(obj["template"].([]map[string]interface{})[0]["metadata"].([]map[string]interface{})[0]["annotations"].(map[string]string)) == 0 {
-		obj["template"].([]map[string]interface{})[0]["metadata"].([]map[string]interface{})[0]["annotations"] = nil
-	}
-	if obj["template"].([]map[string]interface{})[0]["metadata"].([]map[string]interface{})[0]["finalizers"] == nil &&
-		obj["template"].([]map[string]interface{})[0]["metadata"].([]map[string]interface{})[0]["labels"] == nil &&
-		obj["template"].([]map[string]interface{})[0]["metadata"].([]map[string]interface{})[0]["annotations"] == nil {
-		obj["template"].([]map[string]interface{})[0]["metadata"] = nil
-	}
-	if obj["template"].([]map[string]interface{})[0]["spec"].([]map[string]interface{})[0]["unschedulable"].(bool) == false {
-		obj["template"].([]map[string]interface{})[0]["spec"].([]map[string]interface{})[0]["unschedulable"] = nil
-	}
-	if len(obj["template"].([]map[string]interface{})[0]["spec"].([]map[string]interface{})[0]["taints"].([]map[string]interface{})) == 0 {
-		obj["template"].([]map[string]interface{})[0]["spec"].([]map[string]interface{})[0]["taints"] = nil
-	}
-
-	if obj["template"].([]map[string]interface{})[0]["spec"].([]map[string]interface{})[0]["unschedulable"] == nil &&
-		obj["template"].([]map[string]interface{})[0]["spec"].([]map[string]interface{})[0]["taints"] == nil {
-		obj["template"].([]map[string]interface{})[0]["spec"] = nil
-	}
-
-	if obj["template"].([]map[string]interface{})[0]["metadata"] == nil &&
-		obj["template"].([]map[string]interface{})[0]["spec"] == nil {
-		obj["template"] = nil
+	// Delete the entire template if it's empty
+	if len(obj["template"].([]map[string]interface{})[0]) == 0 {
+		delete(obj, "template")
 	}
 
 	return obj
