@@ -1,4 +1,58 @@
-## 0.31.0 (Unreleased)
+## 0.32.0 (Unreleased)
+
+## 0.31.0 (June 19, 2023)
+
+Welcome to the the first step of the IAM integration (beta) 🎉.
+
+🎉 Features:
+
+* New resource: `me_identity_group` ([#420](https://github.com/ovh/terraform-provider-ovh/pull/420))
+
+* New datasource: `me_identity_group` ([#420](https://github.com/ovh/terraform-provider-ovh/pull/420))
+* New datasource: `me_identity_groups` ([#420](https://github.com/ovh/terraform-provider-ovh/pull/420))
+
+⚙️ General:
+
+* bump go-ovh version to `1.4.1` to fix OVH-Query-Id log ([#425](https://github.com/ovh/terraform-provider-ovh/pull/425))
+
+💪 Improvements:
+
+* `r/ovh_iploadbalancing_tcp_farm_server`: Skip validate func for proxy_protocol_version if nil ([#428](https://github.com/ovh/terraform-provider-ovh/pull/428))
+* `r/ovh_iploadbalancing_http_farm_server`: Skip validate func for proxy_protocol_version if nil ([#428](https://github.com/ovh/terraform-provider-ovh/pull/428))
+* `r/ovh_cloud_project_database`: Add retry logic to avoid Conflict error on Kafka Topic + Clean code ([#426](https://github.com/ovh/terraform-provider-ovh/pull/426))
+* `r/ovh_cloud_project_database_integration`: Add retry logic to avoid Conflict error on Kafka Topic + Clean code ([#426](https://github.com/ovh/terraform-provider-ovh/pull/426))
+* `r/ovh_cloud_project_database_kafka_topic`: Add retry logic to avoid Conflict error on Kafka Topic + Clean code ([#426](https://github.com/ovh/terraform-provider-ovh/pull/426))
+* `r/ovh_cloud_project_database_m3db_namespace`: Add retry logic to avoid Conflict error on Kafka Topic + Clean code ([#426](https://github.com/ovh/terraform-provider-ovh/pull/426))
+* `r/ovh_cloud_project_database_redis_user`: Add retry logic to avoid Conflict error on Kafka Topic + Clean code ([#426](https://github.com/ovh/terraform-provider-ovh/pull/426))
+* `r/ovh_cloud_project_database`: Remove unnecessary warning in database resources ([#421](https://github.com/ovh/terraform-provider-ovh/pull/421))
+* `r/ovh_cloud_project_database_integration`: Remove unnecessary warning in database resources ([#421](https://github.com/ovh/terraform-provider-ovh/pull/421))
+* `r/ovh_cloud_project_database_kafka_topic`: Remove unnecessary warning in database resources ([#421](https://github.com/ovh/terraform-provider-ovh/pull/421))
+* `r/ovh_cloud_project_database_m3db_namespace`: Remove unnecessary warning in database resources ([#421](https://github.com/ovh/terraform-provider-ovh/pull/421))
+* `r/ovh_cloud_project_database_redis_user`: Remove unnecessary warning in database resources ([#421](https://github.com/ovh/terraform-provider-ovh/pull/421))
+* `r/ovh_cloud_project`: Fix typos ([#422](https://github.com/ovh/terraform-provider-ovh/pull/422))
+* `r/ovh_domain_zone`: Fix typos ([#422](https://github.com/ovh/terraform-provider-ovh/pull/422))
+* `r/ovh_hosting_privatedatabase`: Fix typos ([#422](https://github.com/ovh/terraform-provider-ovh/pull/422))
+* `r/ovh_iam_policy`: Fix typos ([#422](https://github.com/ovh/terraform-provider-ovh/pull/422))
+* `r/ovh_iploadbalancing`: Fix typos ([#422](https://github.com/ovh/terraform-provider-ovh/pull/422))
+* `r/ovh_me_identity_group`: Fix typos ([#422](https://github.com/ovh/terraform-provider-ovh/pull/422))
+* `r/ovh_me_identity_user`: Fix typos ([#422](https://github.com/ovh/terraform-provider-ovh/pull/422))
+* `r/ovh_vrack`: Fix typos ([#422](https://github.com/ovh/terraform-provider-ovh/pull/422))
+
+* `d/ovh_order_cart`: Fix typos ([#422](https://github.com/ovh/terraform-provider-ovh/pull/422))
+
+📚 Documentation:
+
+* Home Page: Add documentation on multiple providers usage ([#417](https://github.com/ovh/terraform-provider-ovh/pull/417))
+
+* `r/ovh_dedicated_server`: Update documentation page ([#423](https://github.com/ovh/terraform-provider-ovh/pull/423))
+* `r/me_identity_group`: Add documentation page ([#420](https://github.com/ovh/terraform-provider-ovh/pull/420))
+* `r/ovh_cloud_project_kube`: Update documentation page ([#418](https://github.com/ovh/terraform-provider-ovh/pull/418))
+
+* `d/ovh_order_cart`: Update documentation page ([#422](https://github.com/ovh/terraform-provider-ovh/pull/422))
+* `d/me_identity_group`: Add documentation page ([#420](https://github.com/ovh/terraform-provider-ovh/pull/420))
+* `d/me_identity_groups`: Add documentation page ([#420](https://github.com/ovh/terraform-provider-ovh/pull/420))
+
+❤️ Thanks for your contributions ❤️
 
 ## 0.30.0 (May 3, 2023)
 
