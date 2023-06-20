@@ -3,9 +3,8 @@ package ovh
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"log"
+	"reflect"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
@@ -95,79 +94,119 @@ func (opts *CloudProjectKubeNodePoolCreateOpts) FromResource(d *schema.ResourceD
 }
 
 func loadNodelPoolTemplateFromResource(i interface{}) (*CloudProjectKubeNodePoolTemplate, error) {
-	// initialize map variables to explicit empty map
+	if i == nil {
+		return nil, nil
+	}
+
+	// We need to initialize slices to empty slice instead of nil
 	template := CloudProjectKubeNodePoolTemplate{
-		Metadata: CloudProjectKubeNodePoolTemplateMetadata{},
-		Spec:     CloudProjectKubeNodePoolTemplateSpec{},
+		Metadata: CloudProjectKubeNodePoolTemplateMetadata{
+			Annotations: make(map[string]string),
+			Finalizers:  make([]string, 0),
+			Labels:      make(map[string]string),
+		},
+		Spec: CloudProjectKubeNodePoolTemplateSpec{
+			Taints:        make([]Taint, 0),
+			Unschedulable: false,
+		},
 	}
 
 	templateSet := i.(*schema.Set).List()
-	if len(templateSet) > 2 {
-		return nil, errors.New("resource template cannot have more than 2 elements")
+	if templateSet == nil || len(templateSet) == 0 {
+		return &template, nil
 	}
 
-	if len(templateSet) > 0 {
-		templateObject := templateSet[0].(map[string]interface{})
+	// Due to this bug https://github.com/hashicorp/terraform-plugin-sdk/pull/1042
+	// when updating the 'template' object there is two objects, one is empty, take the not empty one
+	templateObject := templateSet[0].(map[string]interface{}) // by default take the first one
+	for _, to := range templateSet {
+		var (
+			annotations map[string]interface{}
+			labels      map[string]interface{}
+			finalizers  []interface{}
+			taints      []interface{}
+		)
 
-		// metadata
-		{
-			metadataSet := templateObject["metadata"].(*schema.Set).List()
-			if len(metadataSet) > 0 {
-				metadata := metadataSet[0].(map[string]interface{})
+		metadataSet := to.(map[string]interface{})["metadata"].(*schema.Set).List()
+		if len(metadataSet) > 0 {
+			metadata := metadataSet[0].(map[string]interface{})
+			annotations = metadata["annotations"].(map[string]interface{})
+			labels = metadata["labels"].(map[string]interface{})
+			finalizers = metadata["finalizers"].([]interface{})
+		}
 
-				// metadata.annotations
-				annotations := metadata["annotations"].(map[string]interface{})
-				template.Metadata.Annotations = make(map[string]string)
+		specSet := to.(map[string]interface{})["spec"].(*schema.Set).List()
+		if len(specSet) > 0 {
+			spec := specSet[0].(map[string]interface{})
+			taints = spec["taints"].([]interface{})
+		}
+
+		if len(annotations) == 0 && len(labels) == 0 && len(finalizers) == 0 && len(taints) == 0 {
+			continue
+		}
+
+		// We found the not empty object
+		templateObject = to.(map[string]interface{})
+	}
+
+	// metadata
+	{
+		metadataSet := templateObject["metadata"].(*schema.Set).List()
+		if len(metadataSet) > 0 {
+			metadata := metadataSet[0].(map[string]interface{})
+
+			// metadata.annotations
+			annotations := metadata["annotations"].(map[string]interface{})
+			if len(annotations) > 0 {
 				for k, v := range annotations {
 					template.Metadata.Annotations[k] = v.(string)
 				}
+			}
 
-				// metadata.finalizers
-				finalizers := metadata["finalizers"].([]interface{})
-				template.Metadata.Finalizers = make([]string, 0)
+			// metadata.finalizers
+			finalizers := metadata["finalizers"].([]interface{})
+			if len(finalizers) > 0 {
 				for _, finalizer := range finalizers {
 					template.Metadata.Finalizers = append(template.Metadata.Finalizers, finalizer.(string))
 				}
+			}
 
-				// metadata.labels
-				labels := metadata["labels"].(map[string]interface{})
-				template.Metadata.Labels = make(map[string]string)
+			// metadata.labels
+			labels := metadata["labels"].(map[string]interface{})
+			if len(labels) > 0 {
 				for k, v := range labels {
 					template.Metadata.Labels[k] = v.(string)
 				}
 			}
 		}
-
-		// spec
-		{
-			specSet := templateObject["spec"].(*schema.Set).List()
-			if len(specSet) > 0 {
-				spec := specSet[0].(map[string]interface{})
-
-				// spec.taints
-				taints := spec["taints"].([]interface{})
-				template.Spec.Taints = make([]Taint, 0)
-				for _, taint := range taints {
-					effectString := taint.(map[string]interface{})["effect"].(string)
-					effect := TaintEffecTypeToID[effectString]
-					if effect == NotATaint {
-						return nil, fmt.Errorf("effect: %s is not a allowable taint %#v", effectString, TaintEffecTypeToID)
-					}
-
-					template.Spec.Taints = append(template.Spec.Taints, Taint{
-						Effect: effect,
-						Key:    taint.(map[string]interface{})["key"].(string),
-						Value:  taint.(map[string]interface{})["value"].(string),
-					})
-				}
-
-				// spec.unschedulable
-				template.Spec.Unschedulable = spec["unschedulable"].(bool)
-			}
-		}
 	}
 
-	log.Printf("[DEBUG] >>>>>>>>>>>>>>>>>>>>>>>>>>%#+v", templateSet)
+	// spec
+	{
+		specSet := templateObject["spec"].(*schema.Set).List()
+		if len(specSet) > 0 {
+			spec := specSet[0].(map[string]interface{})
+
+			// spec.taints
+			taints := spec["taints"].([]interface{})
+			for _, taint := range taints {
+				effectString := taint.(map[string]interface{})["effect"].(string)
+				effect := TaintEffecTypeToID[effectString]
+				if effect == NotATaint {
+					return nil, fmt.Errorf("effect: %s is not a allowable taint %#v", effectString, TaintEffecTypeToID)
+				}
+
+				template.Spec.Taints = append(template.Spec.Taints, Taint{
+					Effect: effect,
+					Key:    taint.(map[string]interface{})["key"].(string),
+					Value:  taint.(map[string]interface{})["value"].(string),
+				})
+			}
+
+			// spec.unschedulable
+			template.Spec.Unschedulable = spec["unschedulable"].(bool)
+		}
+	}
 
 	return &template, nil
 }
@@ -260,32 +299,41 @@ func (v CloudProjectKubeNodePoolResponse) ToMap() map[string]interface{} {
 	obj["up_to_date_nodes"] = v.UpToDateNodes
 	obj["updated_at"] = v.UpdatedAt
 
-	if v.Template != nil {
+	emptyTemplateResponse := &CloudProjectKubeNodePoolTemplate{
+		Metadata: CloudProjectKubeNodePoolTemplateMetadata{
+			Annotations: make(map[string]string),
+			Finalizers:  make([]string, 0),
+			Labels:      make(map[string]string),
+		},
+		Spec: CloudProjectKubeNodePoolTemplateSpec{
+			Taints:        make([]Taint, 0),
+			Unschedulable: false,
+		},
+	}
+
+	// If the template is not nil and not empty, then we need to add it to the map
+	if v.Template != nil && !reflect.DeepEqual(v.Template, emptyTemplateResponse) {
 		obj["template"] = []map[string]interface{}{{}}
 
 		// template.metadata
-		data := make(map[string]interface{})
-		if vv := v.Template.Metadata.Finalizers; vv != nil && len(vv) > 0 {
-			data["finalizers"] = vv
-		}
+		{
+			data := map[string]interface{}{
+				"finalizers":  v.Template.Metadata.Finalizers,
+				"labels":      v.Template.Metadata.Labels,
+				"annotations": v.Template.Metadata.Annotations,
+			}
 
-		if vv := v.Template.Metadata.Labels; vv != nil && len(vv) > 0 {
-			data["labels"] = vv
-		}
-
-		if vv := v.Template.Metadata.Annotations; vv != nil && len(vv) > 0 {
-			data["annotations"] = vv
-		}
-
-		if len(data) > 0 {
 			obj["template"].([]map[string]interface{})[0]["metadata"] = []map[string]interface{}{data}
 		}
 
 		// template.spec
-		data = make(map[string]interface{})
-		if vv := v.Template.Spec.Taints; vv != nil && len(vv) > 0 {
+		{
+			data := map[string]interface{}{
+				"unschedulable": v.Template.Spec.Unschedulable,
+			}
+
 			var taints []map[string]interface{}
-			for _, taint := range vv {
+			for _, taint := range v.Template.Spec.Taints {
 				t := map[string]interface{}{
 					"effect": taint.Effect.String(),
 					"key":    taint.Key,
@@ -294,21 +342,10 @@ func (v CloudProjectKubeNodePoolResponse) ToMap() map[string]interface{} {
 
 				taints = append(taints, t)
 			}
-
 			data["taints"] = taints
-		}
 
-		data["unschedulable"] = v.Template.Spec.Unschedulable
-
-		if len(data) > 0 {
 			obj["template"].([]map[string]interface{})[0]["spec"] = []map[string]interface{}{data}
 		}
-
-	}
-
-	// Delete the entire template if it's empty
-	if len(obj["template"].([]map[string]interface{})[0]) == 0 {
-		delete(obj, "template")
 	}
 
 	return obj

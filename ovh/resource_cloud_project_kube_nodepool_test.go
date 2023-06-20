@@ -75,100 +75,113 @@ func testSweepCloudProjectKubeNodePool(region string) error {
 
 var testAccCloudProjectKubeNodePoolConfig = `
 resource "ovh_cloud_project_kube" "cluster" {
-	service_name  = "%s"
-	name          = "%s"
-	region        = "%s"
-	version       = "%s"
+  service_name = "%s"
+  name         = "%s"
+  region       = "%s"
+  version      = "%s"
 }
 
 resource "ovh_cloud_project_kube_nodepool" "pool" {
-	service_name  = ovh_cloud_project_kube.cluster.service_name
-	kube_id       = ovh_cloud_project_kube.cluster.id
-	name          = ovh_cloud_project_kube.cluster.name
-	flavor_name   = "b2-7"
-	desired_nodes = 1
-	min_nodes     = 0
-	max_nodes     = 1
-	template {
-		metadata {
-			annotations = {
-				a1 = "av1"
-			}
-			finalizers = ["finalizer.extensions/v1beta1"]
-			labels = {
-				l1 = "lv1"
-			}
-		}
-		spec {
-			unschedulable = false
-			taints = [
-			{
-				effect = "PreferNoSchedule"
-				key    = "t1"
-				value  = "tv1"
-			}
-			]
-		}
-	}
+  service_name  = ovh_cloud_project_kube.cluster.service_name
+  kube_id       = ovh_cloud_project_kube.cluster.id
+  name          = ovh_cloud_project_kube.cluster.name
+  flavor_name   = "b2-7"
+  desired_nodes = 1
+  min_nodes     = 0
+  max_nodes     = 1
+  template {
+    metadata {
+      annotations = {
+        a1 = "av1"
+      }
+      finalizers = ["finalizer.extensions/v1beta1"]
+      labels = {
+        l1 = "lv1"
+      }
+    }
+    spec {
+      unschedulable = false
+      taints = [
+        {
+          effect = "PreferNoSchedule"
+          key    = "t1"
+          value  = "tv1"
+        }
+      ]
+    }
+  }
 }
+
 `
 
 var testAccCloudProjectKubeNodePoolConfigUpdated = `
 resource "ovh_cloud_project_kube" "cluster" {
-	service_name  = "%s"
-	name          = "%s"
-	region        = "%s"
-	version       = "%s"
+  service_name = "%s"
+  name         = "%s"
+  region       = "%s"
+  version      = "%s"
 }
 
 resource "ovh_cloud_project_kube_nodepool" "pool" {
-	service_name	= ovh_cloud_project_kube.cluster.service_name
-	kube_id			= ovh_cloud_project_kube.cluster.id
-	name			= ovh_cloud_project_kube.cluster.name
-	flavor_name		= "b2-7"
-	desired_nodes	= 2
-	min_nodes		= 0
-	max_nodes		= 2
-	template {
-		metadata {
-			annotations = {
-				a2 = "av2"
-			}
-			labels = {
-				l2 = "lv2"
-			}
-		}
-	}
+  service_name  = ovh_cloud_project_kube.cluster.service_name
+  kube_id       = ovh_cloud_project_kube.cluster.id
+  name          = ovh_cloud_project_kube.cluster.name
+  flavor_name   = "b2-7"
+  desired_nodes = 2
+  min_nodes     = 0
+  max_nodes     = 2
+  template {
+    metadata {
+      annotations = {
+        a2 = "av2"
+      }
+      finalizers = []
+      labels = {
+        l2 = "lv2"
+      }
+    }
+    spec {
+      unschedulable = false
+      taints = []
+    }
+  }
 }
+
 `
 
 var testAccCloudProjectKubeNodePoolConfigUpdatedScaleToZero = `
 resource "ovh_cloud_project_kube" "cluster" {
-	service_name  = "%s"
-	name          = "%s"
-	region        = "%s"
-	version       = "%s"
+  service_name = "%s"
+  name         = "%s"
+  region       = "%s"
+  version      = "%s"
 }
 
 resource "ovh_cloud_project_kube_nodepool" "pool" {
-	service_name	= ovh_cloud_project_kube.cluster.service_name
-	kube_id			= ovh_cloud_project_kube.cluster.id
-	name			= ovh_cloud_project_kube.cluster.name
-	flavor_name		= "b2-7"
-	desired_nodes	= 0
-	min_nodes		= 0
-	max_nodes		= 2
-	template {
-		metadata {
-			annotations = {
-				a2 = "av2"
-			}
-			labels = {
-				l2 = "lv2"
-			}
-		}
-	}
+  service_name  = ovh_cloud_project_kube.cluster.service_name
+  kube_id       = ovh_cloud_project_kube.cluster.id
+  name          = ovh_cloud_project_kube.cluster.name
+  flavor_name   = "b2-7"
+  desired_nodes = 0
+  min_nodes     = 0
+  max_nodes     = 2
+  template {
+    metadata {
+      annotations = {
+        a2 = "av2"
+      }
+      finalizers = []
+      labels = {
+        l2 = "lv2"
+      }
+    }
+    spec {
+      unschedulable = false
+      taints = []
+    }
+  }
 }
+
 `
 
 func TestAccCloudProjectKubeNodePool(t *testing.T) {
@@ -218,9 +231,11 @@ func TestAccCloudProjectKubeNodePool(t *testing.T) {
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "desired_nodes", "1"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "min_nodes", "0"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "max_nodes", "1"),
+
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.annotations.a1", "av1"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.finalizers.0", "finalizer.extensions/v1beta1"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.labels.l1", "lv1"),
+
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.spec.0.taints.0.effect", "PreferNoSchedule"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.spec.0.taints.0.key", "t1"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.spec.0.taints.0.value", "tv1"),
@@ -239,10 +254,13 @@ func TestAccCloudProjectKubeNodePool(t *testing.T) {
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "desired_nodes", "2"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "min_nodes", "0"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "max_nodes", "2"),
+
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.annotations.a2", "av2"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.finalizers.#", "0"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.labels.l2", "lv2"),
+
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.spec.0.taints.#", "0"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.spec.0.unschedulable", "false"),
 				),
 			},
 			{
@@ -257,10 +275,13 @@ func TestAccCloudProjectKubeNodePool(t *testing.T) {
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "desired_nodes", "0"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "min_nodes", "0"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "max_nodes", "2"),
+
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.annotations.a2", "av2"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.finalizers.#", "0"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.labels.l2", "lv2"),
+
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.spec.0.taints.#", "0"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.spec.0.unschedulable", "false"),
 				),
 			},
 			{
