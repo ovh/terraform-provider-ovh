@@ -154,7 +154,7 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"metadata": {
 							Description: "metadata",
-							Optional:    true,
+							Required:    true,
 							Type:        schema.TypeSet,
 							MaxItems:    1,
 							Set:         CustomSchemaSetFunc(),
@@ -162,20 +162,20 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"finalizers": {
 										Description: "finalizers",
-										Optional:    true,
+										Required:    true,
 										Type:        schema.TypeList,
 										Elem:        &schema.Schema{Type: schema.TypeString},
 									},
 									"labels": {
 										Description: "labels",
-										Optional:    true,
+										Required:    true,
 										Type:        schema.TypeMap,
 										Elem:        &schema.Schema{Type: schema.TypeString},
 										Set:         schema.HashString,
 									},
 									"annotations": {
 										Description: "annotations",
-										Optional:    true,
+										Required:    true,
 										Type:        schema.TypeMap,
 										Elem:        &schema.Schema{Type: schema.TypeString},
 										Set:         schema.HashString,
@@ -185,7 +185,7 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 						},
 						"spec": {
 							Description: "spec",
-							Optional:    true,
+							Required:    true,
 							Type:        schema.TypeSet,
 							MaxItems:    1,
 							Set:         CustomSchemaSetFunc(),
@@ -193,12 +193,12 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"unschedulable": {
 										Description: "unschedulable",
-										Optional:    true,
+										Required:    true,
 										Type:        schema.TypeBool,
 									},
 									"taints": {
 										Description: "taints",
-										Optional:    true,
+										Required:    true,
 										Type:        schema.TypeList,
 										Elem: &schema.Schema{
 											Type: schema.TypeMap,

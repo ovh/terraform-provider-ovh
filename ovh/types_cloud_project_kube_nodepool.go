@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
@@ -32,9 +33,9 @@ type CloudProjectKubeNodePoolCreateOpts struct {
 type TaintEffectType int
 
 type Taint struct {
-	Effect TaintEffectType `json:"effect,omitempty"`
-	Key    string          `json:"key,omitempty"`
-	Value  string          `json:"value,omitempty"`
+	Effect TaintEffectType `json:"effect"`
+	Key    string          `json:"key"`
+	Value  string          `json:"value"`
 }
 
 type CloudProjectKubeNodePoolTemplateMetadata struct {
@@ -45,12 +46,12 @@ type CloudProjectKubeNodePoolTemplateMetadata struct {
 
 type CloudProjectKubeNodePoolTemplateSpec struct {
 	Taints        []Taint `json:"taints"`
-	Unschedulable *bool   `json:"unschedulable"`
+	Unschedulable bool    `json:"unschedulable"`
 }
 
 type CloudProjectKubeNodePoolTemplate struct {
-	Metadata *CloudProjectKubeNodePoolTemplateMetadata `json:"metadata,omitempty"`
-	Spec     *CloudProjectKubeNodePoolTemplateSpec     `json:"spec,omitempty"`
+	Metadata CloudProjectKubeNodePoolTemplateMetadata `json:"metadata"`
+	Spec     CloudProjectKubeNodePoolTemplateSpec     `json:"spec"`
 }
 
 type CloudProjectKubeNodePoolUpdateOpts struct {
@@ -96,8 +97,8 @@ func (opts *CloudProjectKubeNodePoolCreateOpts) FromResource(d *schema.ResourceD
 func loadNodelPoolTemplateFromResource(i interface{}) (*CloudProjectKubeNodePoolTemplate, error) {
 	// initialize map variables to explicit empty map
 	template := CloudProjectKubeNodePoolTemplate{
-		Metadata: &CloudProjectKubeNodePoolTemplateMetadata{},
-		Spec:     &CloudProjectKubeNodePoolTemplateSpec{},
+		Metadata: CloudProjectKubeNodePoolTemplateMetadata{},
+		Spec:     CloudProjectKubeNodePoolTemplateSpec{},
 	}
 
 	templateSet := i.(*schema.Set).List()
@@ -145,7 +146,7 @@ func loadNodelPoolTemplateFromResource(i interface{}) (*CloudProjectKubeNodePool
 
 				// spec.taints
 				taints := spec["taints"].([]interface{})
-				data := make([]Taint, 0)
+				template.Spec.Taints = make([]Taint, 0)
 				for _, taint := range taints {
 					effectString := taint.(map[string]interface{})["effect"].(string)
 					effect := TaintEffecTypeToID[effectString]
@@ -153,19 +154,20 @@ func loadNodelPoolTemplateFromResource(i interface{}) (*CloudProjectKubeNodePool
 						return nil, fmt.Errorf("effect: %s is not a allowable taint %#v", effectString, TaintEffecTypeToID)
 					}
 
-					data = append(data, Taint{
+					template.Spec.Taints = append(template.Spec.Taints, Taint{
 						Effect: effect,
 						Key:    taint.(map[string]interface{})["key"].(string),
 						Value:  taint.(map[string]interface{})["value"].(string),
 					})
 				}
-				template.Spec.Taints = data
 
 				// spec.unschedulable
-				template.Spec.Unschedulable = helpers.GetNilBoolPointerFromData(spec, "unschedulable")
+				template.Spec.Unschedulable = spec["unschedulable"].(bool)
 			}
 		}
 	}
+
+	log.Printf("[DEBUG] >>>>>>>>>>>>>>>>>>>>>>>>>>%#+v", templateSet)
 
 	return &template, nil
 }
@@ -262,51 +264,46 @@ func (v CloudProjectKubeNodePoolResponse) ToMap() map[string]interface{} {
 		obj["template"] = []map[string]interface{}{{}}
 
 		// template.metadata
-		if v.Template.Metadata != nil {
-			data := make(map[string]interface{})
-			if vv := v.Template.Metadata.Finalizers; vv != nil && len(vv) > 0 {
-				data["finalizers"] = vv
-			}
+		data := make(map[string]interface{})
+		if vv := v.Template.Metadata.Finalizers; vv != nil && len(vv) > 0 {
+			data["finalizers"] = vv
+		}
 
-			if vv := v.Template.Metadata.Labels; vv != nil && len(vv) > 0 {
-				data["labels"] = vv
-			}
+		if vv := v.Template.Metadata.Labels; vv != nil && len(vv) > 0 {
+			data["labels"] = vv
+		}
 
-			if vv := v.Template.Metadata.Annotations; vv != nil && len(vv) > 0 {
-				data["annotations"] = vv
-			}
+		if vv := v.Template.Metadata.Annotations; vv != nil && len(vv) > 0 {
+			data["annotations"] = vv
+		}
 
-			if len(data) > 0 {
-				obj["template"].([]map[string]interface{})[0]["metadata"] = []map[string]interface{}{data}
-			}
+		if len(data) > 0 {
+			obj["template"].([]map[string]interface{})[0]["metadata"] = []map[string]interface{}{data}
 		}
 
 		// template.spec
-		if v.Template.Spec != nil {
-			data := make(map[string]interface{})
-			if vv := v.Template.Spec.Taints; vv != nil && len(vv) > 0 {
-				var taints []map[string]interface{}
-				for _, taint := range vv {
-					t := map[string]interface{}{
-						"effect": taint.Effect.String(),
-						"key":    taint.Key,
-						"value":  taint.Value,
-					}
-
-					taints = append(taints, t)
+		data = make(map[string]interface{})
+		if vv := v.Template.Spec.Taints; vv != nil && len(vv) > 0 {
+			var taints []map[string]interface{}
+			for _, taint := range vv {
+				t := map[string]interface{}{
+					"effect": taint.Effect.String(),
+					"key":    taint.Key,
+					"value":  taint.Value,
 				}
 
-				data["taints"] = taints
+				taints = append(taints, t)
 			}
 
-			if vv := v.Template.Spec.Unschedulable; vv != nil {
-				data["unschedulable"] = vv
-			}
-
-			if len(data) > 0 {
-				obj["template"].([]map[string]interface{})[0]["spec"] = []map[string]interface{}{data}
-			}
+			data["taints"] = taints
 		}
+
+		data["unschedulable"] = v.Template.Spec.Unschedulable
+
+		if len(data) > 0 {
+			obj["template"].([]map[string]interface{})[0]["spec"] = []map[string]interface{}{data}
+		}
+
 	}
 
 	// Delete the entire template if it's empty
