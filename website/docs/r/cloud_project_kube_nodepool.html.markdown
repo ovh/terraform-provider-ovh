@@ -75,13 +75,13 @@ The following arguments are supported:
 * `anti_affinity` - (Optional) should the pool use the anti-affinity feature. Default to `false`. **Changing this value recreates the resource.**
 * `autoscale` - (Optional) Enable auto-scaling for the pool. Default to `false`.
 * `template ` - (Optional) Managed Kubernetes nodepool template, which is a complex object constituted by two main nested objects:
-    * `metadata` - (Optional) Metadata of each node in the pool
-        * `annotations` - (Optional) Annotations to apply to each node
-        * `finalizers` - (Optional) Finalizers to apply to each node
-        * `labels` - (Optional) Labels to apply to each node
-    * `spec` - (Optional) Spec of each node in the pool
-        * `taints` - (Optional) Taints to apply to each node
-        * `unschedulable` - (Optional) If true, set nodes as un-schedulable
+    * `metadata` - Metadata of each node in the pool
+        * `annotations` - Annotations to apply to each node
+        * `finalizers` - Finalizers to apply to each node
+        * `labels` - Labels to apply to each node
+    * `spec` - Spec of each node in the pool
+        * `taints` - Taints to apply to each node
+        * `unschedulable` - If true, set nodes as un-schedulable
 
 ## Attributes Reference
 
