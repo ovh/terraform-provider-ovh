@@ -72,7 +72,7 @@ The following attributes are exported:
 
 ## Import 
 
-TCP farm server can be imported using the following format `service_name`,  the `id` of the farm and the `id` of the server separated by "/" e.g.
+TCP farm server can be imported using the following format `service_name`, the `id` of the farm and the `id` of the server separated by "/" e.g.
 
 ```bash
 $ terraform import ovh_iploadbalancing_tcp_farm_server.backend service_name/farm_id/server_id
