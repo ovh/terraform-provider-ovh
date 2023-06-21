@@ -67,7 +67,7 @@ The following attributes are exported:
 
 ## Import 
 
-HTTP Farm can be imported using the following format `service_name` and the `id` of the farm, separated by "/" e.g.
+HTTP farm can be imported using the following format `service_name` and the `id` of the farm, separated by "/" e.g.
 
 ```bash
 $ terraform import ovh_iploadbalancing_http_farm.farmname service_name/farm_id
