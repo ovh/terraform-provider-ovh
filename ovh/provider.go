@@ -170,6 +170,7 @@ func Provider() *schema.Provider {
 			"ovh_dedicated_nasha_partition":                               resourceDedicatedNASHAPartition(),
 			"ovh_dedicated_nasha_partition_access":                        resourceDedicatedNASHAPartitionAccess(),
 			"ovh_dedicated_nasha_partition_snapshot":                      resourceDedicatedNASHAPartitionSnapshot(),
+			"ovh_dedicated_server_bringyourownimage":                      resourceDedicatedServerBringYourOwnImage(),
 			"ovh_dedicated_server_install_task":                           resourceDedicatedServerInstallTask(),
 			"ovh_dedicated_server_reboot_task":                            resourceDedicatedServerRebootTask(),
 			"ovh_dedicated_server_update":                                 resourceDedicatedServerUpdate(),
