@@ -58,6 +58,22 @@ func resourceDedicatedServerBringYourOwnImage() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Checksum type",
+				ValidateDiagFunc: func(value interface{}, attributePath cty.Path) diag.Diagnostics {
+					if value != "md5" &&
+						value != "sha1" &&
+						value != "sha256" &&
+						value != "sha512" {
+						return diag.Diagnostics{
+							{
+								Severity:      diag.Error,
+								Summary:       "Checksum type is not set or is invalid",
+								Detail:        fmt.Sprintf("Checksum type is currently set as '%v'. It should be one of 'md5', 'sha1', 'sha256' or 'sha512'.", value),
+								AttributePath: attributePath,
+							},
+						}
+					}
+					return diag.Diagnostics{}
+				},
 			},
 			"config_drive": {
 				Type:     schema.TypeSet,
@@ -94,16 +110,6 @@ func resourceDedicatedServerBringYourOwnImage() *schema.Resource {
 							Type:     schema.TypeMap,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							/*Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"key": {
-										Type: schema.TypeString,
-									},
-									"value": {
-										Type: schema.TypeString,
-									},
-								},
-							},*/
 						},
 					},
 				},
