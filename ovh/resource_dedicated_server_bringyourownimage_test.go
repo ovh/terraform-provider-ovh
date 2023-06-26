@@ -22,12 +22,6 @@ func TestAccDedicatedServerBringYourOwnImage(t *testing.T) {
 				Config: testAccDedicatedServerBringYourOwnImageConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
-						"ovh_dedicated_server.server", "state", "ok"),
-					resource.TestCheckResourceAttr(
-						"ovh_dedicated_server.server", "monitoring", "true"),
-					resource.TestCheckResourceAttr(
-						"ovh_dedicated_server.server", "state", "ok"),
-					resource.TestCheckResourceAttr(
 						"ovh_dedicated_server_bringyourownimage.os_install", "function", "reinstallServer"),
 					resource.TestCheckResourceAttr(
 						"ovh_dedicated_server_bringyourownimage.os_install", "status", "done"),
@@ -45,7 +39,6 @@ func testAccDedicatedServerBringYourOwnImageConfig() string {
 	return fmt.Sprintf(`
 	data ovh_dedicated_server "server" {
 		service_name = "%s"
-		boot_type    = "harddisk"
 	}
 	
 	resource ovh_dedicated_server_bringyourownimage "os_install" {
