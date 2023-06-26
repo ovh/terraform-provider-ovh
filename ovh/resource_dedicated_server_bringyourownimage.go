@@ -106,7 +106,7 @@ func resourceDedicatedServerBringYourOwnImage() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
-						"user_metadata": {
+						"user_metadatas": {
 							Type:     schema.TypeMap,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},

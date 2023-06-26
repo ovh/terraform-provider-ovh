@@ -38,7 +38,7 @@ The following arguments are supported:
   * `hostname` - The hostname to set on your dedicated server.
   * `ssh_key` - The SSH Key to install on your dedicated server.
   * `user_data` - Custom data to provide to the installation.
-  * `user_metadata` - Custom metadata to provide to the installation.
+  * `user_metadatas` - Custom metadata to provide to the installation.
 * `description` - Description of the image to install.
 * `disk_group_id` - Disk group id to process install on (only available for some templates).
 * `http_headers` - Headers to provide when querying the image.

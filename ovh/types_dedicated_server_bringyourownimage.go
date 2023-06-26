@@ -15,56 +15,27 @@ type DedicatedServerBringYourOwnImageStatus struct {
 }
 
 type DedicatedServerBringYourOwnImageConfigDrive struct {
-	Enable       *bool              `json:enable`
-	Hostname     *string            `json:hostname,omitempty`
-	SSHKey       *string            `json:sshKey,omitempty`
-	UserData     *string            `json:userData,omitempty`
-	UserMetadata *map[string]string `json:userMetadata,omitempty`
+	Enable        *bool              `json:enable`
+	Hostname      *string            `json:hostname,omitempty`
+	SSHKey        *string            `json:sshKey,omitempty`
+	UserData      *string            `json:userData,omitempty`
+	UserMetadatas *map[string]string `json:userMetadatas,omitempty`
 }
 
 func (opts *DedicatedServerBringYourOwnImageConfigDrive) FromResource(d *schema.ResourceData, parent string) (*DedicatedServerBringYourOwnImageConfigDrive, error) {
-	/*configDriveSet := d.Get(parent).(*schema.Set).List()
-	configDrive := configDriveSet[0]
-
-	if len(configDriveSet) == 0 {
-		return opts, nil
-	}
-	if len(configDriveSet) > 2 {
-		return opts, errors.New("resource config_drive cannot have more than 2 elements")
-	}*/
-
-	//for _, to := range configDriveSet {
-	/*
-
-		Enable       *bool              `json:enable`
-		Hostname     *string            `json:hostname`
-		SSHKey       *string            `json:sshKey`
-		UserData     *string            `json:userData`
-		UserMetadata *map[string]string `json:userMetadata`
-	*/
-	/*metadata := to.(map[string]interface{})["metadata"].(*schema.Set).List()[0]
-		annotations := metadata.(map[string]interface{})["annotations"].(map[string]interface{})
-		labels := metadata.(map[string]interface{})["labels"].(map[string]interface{})
-		finalizers := metadata.(map[string]interface{})["finalizers"].([]interface{})
-
-		spec := configDrive.(map[string]interface{})["spec"].(*schema.Set).List()[0]
-		taints := spec.(map[string]interface{})["taints"].([]interface{})
-		unschedulable := spec.(map[string]interface{})["unschedulable"].(bool)
-
-		if len(annotations) == 0 && len(labels) == 0 && len(finalizers) == 0 && len(taints) == 0 && unschedulable == false {
-			// is empty
-		} else {
-			configDrive = to
-			break
-		}
-	}*/
-
 	opts.Enable = helpers.GetNilBoolPointerFromData(d, fmt.Sprintf("%s.enable", parent))
 	opts.Hostname = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.hostname", parent))
 	opts.SSHKey = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.ssh_key", parent))
 	opts.UserData = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.user_data", parent))
-	// TODO
-	//opts.UserMetadata = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.user_metadata", parent))
+
+	userMetadatas := map[string]string{}
+	providedUserMetadatas := d.Get(fmt.Sprintf("%s.user_metadatas", parent))
+	if providedUserMetadatas != nil {
+		for key, value := range providedUserMetadatas.(map[string]interface{}) {
+			userMetadatas[key] = fmt.Sprintf("%v", value)
+		}
+	}
+	opts.UserMetadatas = &userMetadatas
 
 	return opts, nil
 }
@@ -98,8 +69,6 @@ func (opts *DedicatedServerBringYourOwnImageCreateOpts) FromResource(d *schema.R
 		return nil, err
 	}
 	opts.ConfigDrive = configDrive
-
-	//opts.ConfigDrive = (&DedicatedServerBringYourOwnImageConfigDrive{}).FromResource(d, "config_drive")
 
 	return opts, nil
 }
