@@ -78,6 +78,14 @@ func testAccPreCheckIp(t *testing.T) {
 	checkEnvOrSkip(t, "OVH_IP_REVERSE_TEST")
 }
 
+// Checks that the environment variables needed for the /ip/{ip}/move acceptance tests
+// are set/.
+func testAccPreCheckIpMove(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_IP_TEST")
+	checkEnvOrSkip(t, "OVH_IPLB_SERVICE_TEST")
+}
+
 // Checks that the environment variables needed to order /ip/service for acceptance tests
 // are set.
 func testAccPreCheckOrderIpService(t *testing.T) {

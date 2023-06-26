@@ -19,24 +19,27 @@ data "ovh_order_cart_product_plan" "plan" {
  price_capacity = "renew"
  product        = "%s"
  plan_code      = "%s"
+ catalog_name   = "%s"
 }
 `
 
 func TestAccDataSourceOrderCartIpLoadbalancingPlan_basic(t *testing.T) {
-	testAccDataSourceOrderCartProductPlan_basic(t, "ipLoadbalancing", "iplb-lb2")
+	testAccDataSourceOrderCartProductPlan_basic(t, "ipLoadbalancing", "iplb-lb2", "")
+	testAccDataSourceOrderCartProductPlan_basic(t, "ipLoadbalancing", "iplb-mutu", "iplb_private_beta")
 }
 
 func TestAccDataSourceOrderCartCloudPlan_basic(t *testing.T) {
-	testAccDataSourceOrderCartProductPlan_basic(t, "cloud", "project")
+	testAccDataSourceOrderCartProductPlan_basic(t, "cloud", "project", "")
 }
 
-func testAccDataSourceOrderCartProductPlan_basic(t *testing.T, product, planCode string) {
+func testAccDataSourceOrderCartProductPlan_basic(t *testing.T, product, planCode, catalogName string) {
 	desc := acctest.RandomWithPrefix(test_prefix)
 	config := fmt.Sprintf(
 		testAccOrderCartProductPlanBasic,
 		desc,
 		product,
 		planCode,
+		catalogName,
 	)
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { testAccPreCheckCredentials(t) },
