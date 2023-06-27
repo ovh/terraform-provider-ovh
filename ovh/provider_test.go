@@ -351,3 +351,8 @@ func testAccPreCheckWorkflowBackup(t *testing.T) {
 	checkEnvOrSkip(t, WORKFLOW_BACKUP_TEST_INSTANCE_ID_ENV_VAR)
 	checkEnvOrSkip(t, WORKFLOW_BACKUP_TEST_REGION_ENV_VAR)
 }
+
+func testAccPreCheckActiveMonthlyBilling(t *testing.T) {
+	testAccPreCheckCloud(t)
+	checkEnvOrSkip(t, ACTIVE_MONTHLY_BILLING_INSTANCE_ID_TEST)
+}
