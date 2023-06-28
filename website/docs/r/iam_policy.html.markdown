@@ -6,6 +6,10 @@ subcategory : "Account Management"
 
 Creates an IAM policy.
 
+## Important
+-> Using this resource requires that the account is enrolled in the OVHcloud [IAM beta](https://labs.ovhcloud.com/en/iam/) 
+
+
 ## Example Usage
 
 ```hcl
@@ -31,8 +35,6 @@ resource "ovh_iam_policy" "manager" {
     "account:apiovh:*",
   ]
 }
-
-
 ```
 
 ## Argument Reference
