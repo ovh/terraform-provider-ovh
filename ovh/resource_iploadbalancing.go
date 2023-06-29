@@ -55,6 +55,10 @@ func resourceIpLoadbalancingSchema() map[string]*schema.Schema {
 		},
 
 		//computed
+		"urn": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
 		"ipv6": {
 			Type:        schema.TypeString,
 			Description: "The IPV6 associated to your IP load balancing. DEPRECATED.",
@@ -202,6 +206,7 @@ func resourceIpLoadbalancingRead(d *schema.ResourceData, meta interface{}) error
 	for k, v := range r.ToMap() {
 		d.Set(k, v)
 	}
+	d.Set("urn", helpers.ServiceURN(config.Plate, "loadbalancer", r.ServiceName))
 
 	return nil
 }

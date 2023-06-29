@@ -3,8 +3,10 @@ package ovh
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"net/url"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -20,6 +22,10 @@ func dataSourceDedicatedNasha() *schema.Resource {
 			},
 
 			// Computed
+			"urn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"can_create_partition": {
 				Type:        schema.TypeBool,
 				Computed:    true,
@@ -86,6 +92,7 @@ func dataSourceDedicatedNashaRead(c context.Context, d *schema.ResourceData, met
 	}
 
 	d.SetId(ds.ServiceName)
+	d.Set("urn", helpers.ServiceURN(config.Plate, "nasHA", ds.ServiceName))
 	d.Set("service_name", ds.ServiceName)
 	d.Set("monitored", ds.Monitored)
 	d.Set("zpool_size", ds.ZpoolSize)
