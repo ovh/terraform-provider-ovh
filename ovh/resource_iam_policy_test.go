@@ -24,30 +24,30 @@ func testSweepIamPolicy(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	policyIds := []string{}
-	if err := client.Get("/v2/iam/policy", &policyIds); err != nil {
+	policies := []IamPolicy{}
+	if err := client.Get("/v2/iam/policy", &policies); err != nil {
 		return fmt.Errorf("Error calling /v2/iam/policy:\n\t %q", err)
 	}
 
-	if len(policyIds) == 0 {
-		log.Print("[DEBUG] No identity groups to sweep")
+	if len(policies) == 0 {
+		log.Print("[DEBUG] No iam policy to sweep")
 		return nil
 	}
 
-	for _, polId := range policyIds {
-		var polDetails IamPolicy
-		if err := client.Get(fmt.Sprintf("/v2/iam/policy/%s", polId), &polDetails); err != nil {
-			return err
-		}
-
-		if !strings.HasPrefix(polDetails.Name, test_prefix) {
+	for _, pol := range policies {
+		if !strings.HasPrefix(pol.Name, test_prefix) {
 			continue
 		}
 
-		log.Printf("[DEBUG] IAM policy found %s: %s", polDetails.Name, polId)
+		// skip seeping readonly attributes
+		if pol.ReadOnly {
+			continue
+		}
+
+		log.Printf("[DEBUG] IAM policy found %s: %s", pol.Name, pol.Id)
 		err = resource.Retry(5*time.Minute, func() *resource.RetryError {
-			log.Printf("[INFO] Deleting iam policy %s: %s", polDetails.Name, polId)
-			if err := client.Delete(fmt.Sprintf("/v2/iam/policy/%s", polId), nil); err != nil {
+			log.Printf("[INFO] Deleting iam policy %s: %s", pol.Name, pol.Id)
+			if err := client.Delete(fmt.Sprintf("/v2/iam/policy/%s", pol.Id), nil); err != nil {
 				return resource.RetryableError(err)
 			}
 
