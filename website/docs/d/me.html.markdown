@@ -20,6 +20,7 @@ There are no arguments to this datasource.
 
 The following attributes are exported:
 
+* `urn`: The resource URN of the account, to be used when writing IAM policies
 * `address`: Postal address of the account
 * `area`: Area of the account
 * `birth_city`: City of birth

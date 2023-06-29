@@ -11,6 +11,11 @@ func dataSourceMe() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceMeRead,
 		Schema: map[string]*schema.Schema{
+			"urn": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Identity URN of the account",
+			},
 			"address": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -190,6 +195,8 @@ func dataSourceMeRead(d *schema.ResourceData, meta interface{}) error {
 	for k, v := range me.ToMap() {
 		d.Set(k, v)
 	}
+
+	d.Set("urn", fmt.Sprintf("urn:v1:%s:resource:account:%s", config.Plate, me.Nichandle))
 
 	return nil
 }

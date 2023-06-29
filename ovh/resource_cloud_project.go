@@ -36,6 +36,10 @@ func resourceCloudProjectSchema() map[string]*schema.Schema {
 		},
 
 		// computed
+		"urn": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
 		"project_name": {
 			Type:     schema.TypeString,
 			Computed: true,
@@ -103,6 +107,8 @@ func resourceCloudProjectRead(d *schema.ResourceData, meta interface{}) error {
 	if err := config.OVHClient.Get(endpoint, &r); err != nil {
 		return helpers.CheckDeleted(d, err, endpoint)
 	}
+
+	d.Set("urn", helpers.ServiceURN(config.Plate, "publicCloudProject", serviceName))
 
 	// set resource attributes
 	for k, v := range r.ToMap() {

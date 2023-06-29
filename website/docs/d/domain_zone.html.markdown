@@ -23,6 +23,7 @@ data "ovh_domain_zone" "rootzone" {
 `id` is set to the domain zone name.
 In addition, the following attributes are exported:
 
+* `urn` - URN of the DNS zone
 * `last_update` - Last update date of the DNS zone
 * `has_dns_anycast` - hasDnsAnycast flag of the DNS zone
 * `name_servers` - Name servers that host the DNS zone

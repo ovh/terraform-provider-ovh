@@ -20,6 +20,7 @@ data "ovh_me_identity_group" "my_group" {
 
 ## Attributes Reference
 
+* `urn` - Identity URN of the group.
 * `description` - Group description.
 * `role` - Role associated with the group. Valid roles are ADMIN, REGULAR, UNPRIVILEGED, and NONE.
 * `default_group` - Is the group a default and immutable one.

@@ -30,6 +30,10 @@ func resourceMeIdentityGroup() *schema.Resource {
 				ForceNew: true,
 				Required: true,
 			},
+			"urn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -72,6 +76,8 @@ func resourceMeIdentityGroupRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("creation", identityGroup.Creation)
 	d.Set("description", identityGroup.Description)
 	d.Set("role", identityGroup.Role)
+
+	d.Set("urn", fmt.Sprintf("urn:v1:%s:identity:group:%s/%s", config.Plate, config.Account, identityGroup.Name))
 
 	return nil
 }

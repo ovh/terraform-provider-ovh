@@ -41,6 +41,10 @@ func resourceVrackSchema() map[string]*schema.Schema {
 		},
 
 		// computed
+		"urn": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
 		"service_name": {
 			Type:        schema.TypeString,
 			Description: "The internal name of your vrack",
@@ -104,6 +108,7 @@ func resourceVrackRead(d *schema.ResourceData, meta interface{}) error {
 	for k, v := range r.ToMap() {
 		d.Set(k, v)
 	}
+	d.Set("urn", helpers.ServiceURN(config.Plate, "vrack", serviceName))
 
 	return nil
 }

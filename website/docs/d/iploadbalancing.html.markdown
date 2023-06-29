@@ -49,7 +49,7 @@ Can take any of the following value: "intermediate", "modern"
 
 `id` is set to the service_name of your IP load balancing
 In addition, the following attributes are exported:
-
+* `urn` - The URN of the load balancer, to be used in IAM policies
 * `metrics_token` - The metrics token associated with your IP load balancing
 This attribute is sensitive.
 

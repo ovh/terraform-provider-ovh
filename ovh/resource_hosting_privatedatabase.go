@@ -36,6 +36,10 @@ func resourceHostingPrivateDatabaseSchema() map[string]*schema.Schema {
 		},
 
 		// Computed
+		"urn": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
 		"cpu": {
 			Type:        schema.TypeInt,
 			Computed:    true,
@@ -190,6 +194,8 @@ func resourceHostingPrivateDatabaseRead(d *schema.ResourceData, meta interface{}
 	for k, v := range ds.ToMap() {
 		d.Set(k, v)
 	}
+	d.Set("urn", helpers.ServiceURN(config.Plate, "webCloudDatabases", ds.ServiceName))
+
 	return nil
 }
 
