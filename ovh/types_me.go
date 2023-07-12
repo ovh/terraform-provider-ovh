@@ -173,7 +173,6 @@ type MeIdentityUserCreateOpts struct {
 }
 
 type MeIdentityUserUpdateOpts struct {
-	Login       string `json:"user"`
 	Description string `json:"description"`
 	Email       string `json:"email"`
 	Group       string `json:"group"`

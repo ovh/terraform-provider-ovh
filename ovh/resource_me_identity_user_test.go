@@ -80,6 +80,34 @@ func TestAccMeIdentityUser_basic(t *testing.T) {
 	})
 }
 
+func TestAccMeIdentityUser_update(t *testing.T) {
+	desc := "Identity user created by Terraform Acc."
+	email := "tf_acceptance_tests@example.com"
+	group := "DEFAULT"
+	login := acctest.RandomWithPrefix(test_prefix)
+	password := base64.StdEncoding.EncodeToString([]byte(acctest.RandomWithPrefix(test_prefix)))
+
+	newEmail := "tf_acceptance_tests_new@example.com"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheckCredentials(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(testAccMeIdentityUserConfig, desc, email, group, login, password),
+				Check: resource.ComposeTestCheckFunc(
+					checkIdentityUserResourceAttr("ovh_me_identity_user.user_1", desc, email, group, login)...,
+				),
+			},
+			{
+				Config: fmt.Sprintf(testAccMeIdentityUserConfig, desc, newEmail, group, login, password),
+				Check: resource.ComposeTestCheckFunc(
+					checkIdentityUserResourceAttr("ovh_me_identity_user.user_1", desc, newEmail, group, login)...,
+				),
+			}},
+	})
+}
+
 const testAccMeIdentityUserConfig = `
 resource "ovh_me_identity_user" "user_1" {
 	description = "%s"
