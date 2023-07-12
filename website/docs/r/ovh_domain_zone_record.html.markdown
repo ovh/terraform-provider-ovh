@@ -26,7 +26,7 @@ resource "ovh_domain_zone_record" "test" {
 The following arguments are supported:
 
 * `zone` - (Required) The domain to add the record to
-* `subdomain` - (Required) The name of the record
+* `subdomain` - (Required) The name of the record. It can be an empty string.
 * `target` - (Required) The value of the record
 * `fieldtype` - (Required) The type of the record
 * `ttl` - (Optional) The TTL of the record, it shall be >= to 60.
