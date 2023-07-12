@@ -138,17 +138,15 @@ func resourceMeIdentityUserUpdate(d *schema.ResourceData, meta interface{}) erro
 	description := d.Get("description").(string)
 	email := d.Get("email").(string)
 	group := d.Get("group").(string)
-	login := d.Get("login").(string)
 	params := &MeIdentityUserUpdateOpts{
-		Login:       login,
 		Description: description,
 		Email:       email,
 		Group:       group,
 	}
 	err := config.OVHClient.Put(
 		fmt.Sprintf("/me/identity/user/%s", id),
-		nil,
 		params,
+		nil,
 	)
 	if err != nil {
 		return fmt.Errorf("Unable to update identity user %s:\n\t %q", id, err)
