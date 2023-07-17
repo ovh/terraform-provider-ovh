@@ -83,3 +83,11 @@ The following attributes are exported:
 * `last_update` - Last update in RFC3339 format.
 * `start_date` - Task creation date in RFC3339 format.
 * `status` - Task status (should be `done`)
+
+## Import
+
+Installation task can be imported using the `service_name` (`nsXXXX.ip...`) of the baremetal server, the `template_name` used  and ths `task_id`, separated by "/" E.g.,
+
+```bash
+$ terraform import ovh_dedicated_server_install_task nsXXXX.ipXXXX/template_name/12345
+```
