@@ -252,8 +252,8 @@ func dedicatedServerBringYourOwnImageTaskCreate(d *schema.ResourceData, meta int
 }
 
 func resourceDedicatedServerBringYourOwnImageUpdate(d *schema.ResourceData, meta interface{}) error {
-	// nothing to do on update
-	return nil
+	// If the BYOI inputs changed, the dedicated server is reinstalled.
+	return dedicatedServerBringYourOwnImageTaskCreate(d, meta)
 }
 
 func resourceDedicatedServerBringYourOwnImageTaskRead(d *schema.ResourceData, meta interface{}) error {
