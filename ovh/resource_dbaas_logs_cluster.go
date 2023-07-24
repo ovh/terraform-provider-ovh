@@ -30,6 +30,10 @@ func resourceDbaasLogsClusterSchema() map[string]*schema.Schema {
 			Required: true,
 			ForceNew: true,
 		},
+		"cluster_id": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
 		"archive_allowed_networks": {
 			Type: schema.TypeSet,
 			Elem: &schema.Schema{
@@ -130,17 +134,23 @@ func resourceDbaasLogsClusterCreate(d *schema.ResourceData, meta interface{}) er
 	config := meta.(*Config)
 
 	serviceName := d.Get("service_name").(string)
-	cluster_id, err := dbaasGetClusterID(config, serviceName)
-	if err != nil {
-		return fmt.Errorf("Error fetching info for %s:\n\t %q", serviceName, err)
+	clusterId := d.Get("cluster_id").(string)
+	if clusterId == "" {
+		var err error
+		clusterId, err = dbaasGetClusterID(config, serviceName)
+		if err != nil {
+			return fmt.Errorf("Error retrieving clusterId for %s:\n\t %q", serviceName, err)
+		}
 	}
-	d.SetId(cluster_id)
+	d.Set("cluster_id", clusterId)
+	id := fmt.Sprintf("%s_%s", serviceName, clusterId)
+	d.SetId(id)
 
 	// Fetch current ACL to restore them as-is when the resource is deleted
 	endpoint := fmt.Sprintf(
 		"/dbaas/logs/%s/cluster/%s",
 		url.PathEscape(serviceName),
-		url.PathEscape(cluster_id),
+		url.PathEscape(clusterId),
 	)
 
 	res := map[string]interface{}{}
@@ -160,12 +170,12 @@ func resourceDbaasLogsClusterDelete(d *schema.ResourceData, meta interface{}) er
 	config := meta.(*Config)
 
 	serviceName := d.Get("service_name").(string)
-	cluster_id := d.Id()
+	clusterId := d.Get("cluster_id").(string)
 
 	endpoint := fmt.Sprintf(
 		"/dbaas/logs/%s/cluster/%s",
 		url.PathEscape(serviceName),
-		url.PathEscape(cluster_id),
+		url.PathEscape(clusterId),
 	)
 
 	opts := &DbaasLogsOpts{}
@@ -200,15 +210,30 @@ func resourceDbaasLogsClusterDelete(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceDbaasLogsClusterImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	config := meta.(*Config)
+
 	givenId := d.Id()
 	splitId := strings.SplitN(givenId, "/", 2)
-	if len(splitId) != 2 {
-		return nil, fmt.Errorf("Import Id is not service_name/id formatted")
+	var serviceName string
+	var clusterId string
+	if len(splitId) == 1 {
+		var err error
+		serviceName = splitId[0]
+		clusterId, err = dbaasGetClusterID(config, serviceName)
+		if err != nil {
+			return nil, fmt.Errorf("Error retrieving clusterId for %s:\n\t %q", serviceName, err)
+		}
+	} else if len(splitId) == 2 {
+		serviceName = splitId[0]
+		clusterId = splitId[1]
+	} else if len(splitId) != 2 {
+		return nil, fmt.Errorf("Import Id is not service_name/cluster_id formatted")
 	}
-	serviceName := splitId[0]
-	id := splitId[1]
-	d.SetId(id)
+
 	d.Set("service_name", serviceName)
+	d.Set("cluster_id", clusterId)
+	id := fmt.Sprintf("%s_%s", serviceName, clusterId)
+	d.SetId(id)
 
 	results := make([]*schema.ResourceData, 1)
 	results[0] = d
@@ -219,7 +244,7 @@ func resourceDbaasLogsClusterUpdate(d *schema.ResourceData, meta interface{}) er
 	config := meta.(*Config)
 
 	serviceName := d.Get("service_name").(string)
-	id := d.Id()
+	clusterId := d.Get("cluster_id").(string)
 
 	log.Printf("[INFO] Will update dbaas logs cluster for: %s", serviceName)
 
@@ -228,7 +253,7 @@ func resourceDbaasLogsClusterUpdate(d *schema.ResourceData, meta interface{}) er
 	endpoint := fmt.Sprintf(
 		"/dbaas/logs/%s/cluster/%s",
 		url.PathEscape(serviceName),
-		url.PathEscape(id),
+		url.PathEscape(clusterId),
 	)
 
 	if err := config.OVHClient.Put(endpoint, opts, res); err != nil {
@@ -247,14 +272,14 @@ func resourceDbaasLogsClusterRead(d *schema.ResourceData, meta interface{}) erro
 	config := meta.(*Config)
 
 	serviceName := d.Get("service_name").(string)
-	cluster_id := d.Id()
+	clusterId := d.Get("cluster_id").(string)
 
-	log.Printf("[DEBUG] Will read dbaas logs cluster %s", serviceName)
+	log.Printf("[DEBUG] Will read dbaas logs cluster %s/%s", serviceName, clusterId)
 
 	endpoint := fmt.Sprintf(
 		"/dbaas/logs/%s/cluster/%s",
 		url.PathEscape(serviceName),
-		url.PathEscape(cluster_id),
+		url.PathEscape(clusterId),
 	)
 
 	res := map[string]interface{}{}
