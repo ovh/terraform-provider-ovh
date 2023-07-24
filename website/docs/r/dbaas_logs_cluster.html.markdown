@@ -14,6 +14,7 @@ type.
 ```hcl
 resource "ovh_dbaas_logs_cluster" "ldp" {
   service_name     = "ldp-xx-xxxxx"
+  cluster_id       = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
   archive_allowed_networks       = ["10.0.0.0/16"]
   direct_input_allowed_networks  = ["10.0.0.0/16"]
@@ -25,13 +26,15 @@ resource "ovh_dbaas_logs_cluster" "ldp" {
 
 The following arguments are supported:
 
+* `service_name` - (Required) The service name
+* `cluster_id` - Cluster ID. If not provided, the default cluster_id is used
 * `archive_allowed_networks` - List of IP blocks
 * `direct_input_allowed_networks` - List of IP blocks
 * `query_allowed_networks` - List of IP blocks
 
 ## Attributes Reference
 
-Id is set to the input Id. In addition, the following attributes are exported:
+Id is set to a concatenation of service name and cluster Id. In addition, the following attributes are exported:
 * `urn` - URN of the DBaaS
 * `cluster_type` - type of cluster (DEDICATED, PRO or TRIAL)
 * `dedicated_input_pem` - PEM for dedicated inputs
@@ -46,8 +49,8 @@ Id is set to the input Id. In addition, the following attributes are exported:
 
 ## Import
 
-OVHcloud DBaaS Log Data Platform clusters can be imported using the `service_name` and `id` of the cluster, separated by "/" E.g.,
+OVHcloud DBaaS Log Data Platform clusters can be imported using the `service_name` and `cluster_id` of the cluster, separated by "/" E.g.,
 
 ```bash
-$ terraform import ovh_dbaas_logs_cluster.ldp service_name/id
+$ terraform import ovh_dbaas_logs_cluster.ldp service_name/cluster_id
 ```
