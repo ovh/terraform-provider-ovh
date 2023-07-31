@@ -38,7 +38,7 @@ data "ovh_cloud_project_user_s3_policy" "policy" {
 }
 `
 
-const normalizedPolicyRWBucket = "{\"Statement\":[{\"Sid\":\"RWContainer\",\"Effect\":\"Allow\",\"Action\":[\"s3:GetObject\",\"s3:PutObject\",\"s3:DeleteObject\",\"s3:ListBucket\",\"s3:ListMultipartUploadParts\",\"s3:ListBucketMultipartUploads\",\"s3:AbortMultipartUpload\",\"s3:GetBucketLocation\"],\"Resource\":[\"arn:aws:s3:::hp-bucket\",\"arn:aws:s3:::hp-bucket/*\"]}]}"
+const normalizedPolicyRWBucket = "{\"Statement\":[{\"Sid\":\"RWContainer\",\"Effect\":\"Allow\",\"Action\":[\"s3:GetObject\",\"s3:PutObject\",\"s3:DeleteObject\",\"s3:ListBucket\",\"s3:ListMultipartUploadParts\",\"s3:ListBucketMultipartUploads\",\"s3:AbortMultipartUpload\",\"s3:GetBucketLocation\"],\"Resource\":[\"arn:aws:s3:::hp-bucket\",\"arn:aws:s3:::hp-bucket/*\"],\"Condition\":null}]}"
 
 func TestAccDataCloudProjectUserS3Policy_basic(t *testing.T) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
