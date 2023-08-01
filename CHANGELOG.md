@@ -1,4 +1,74 @@
-## 0.32.0 (Unreleased)
+## 0.33.0 (Unreleased)
+
+## 0.32.0 (July 18, 2023)
+
+🎉 Features:
+
+* New resource: `ovh_iam_policy` ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+
+* New datasource: `ovh_iam_policy` ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+* New datasource: `ovh_iam_policies` ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+* New datasource: `ovh_iam_reference_action` ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+* New datasource: `ovh_iam_reference_resource` ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+
+⚙️ General:
+
+* Internal provider authentication: Check authenticaton using /auth/currentCredential instead of /auth/details ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+
+💪 Improvements:
+
+* `d/ovh_dbaas_logs_cluster`: Add computed identity URN ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+* `d/ovh_dedicated_ceph`: Add computed identity URN ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+* `d/ovh_dedicated_nasha`: Add computed identity URN ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+* `d/ovh_dedicated_server`: Add computed identity URN ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+* `d/ovh_domain_zone`: Add computed identity URN ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+* `d/ovh_hosting_privatedatabase`: Add computed identity URN ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+* `d/ovh_iploadbalancing`: Add computed identity URN ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+* `d/ovh_me_identity_user`: Add computed identity URN ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+* `d/ovh_me`: Add computed identity URN ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+* `d/ovh_vps`: Add computed identity URN ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+
+* `r/ovh_cloud_project`: Add computed identity URN ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+* `r/ovh_dedicated_server_install_task`: Allow retry on install task creation and add import ([#444](https://github.com/ovh/terraform-provider-ovh/pull/444))
+* `r/ovh_domain_zone`: Add computed identity URN ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+* `r/ovh_hosting_privatedatabase`: Add computed identity URN ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+* `r/ovh_iploadbalancing`: Add computed identity URN ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+* `r/ovh_me_identity_group`: Add computed identity URN ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+* `r/ovh_me_identity_user`: Add computed identity URN ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+* `r/ovh_vrack`: Add computed identity URN ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+
+🐜 Bug fixes:
+
+* `r/ovh_me_identity_user`: Fix IAM policy sweeps after tests ([#438](https://github.com/ovh/terraform-provider-ovh/pull/438))
+
+📚 Documentation:
+
+* `d/ovh_dbaas_logs_cluster`: Update documentation page ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+* `d/ovh_dedicated_ceph`: Update documentation page ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+* `d/ovh_dedicated_nasha`: Update documentation page ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+* `d/ovh_dedicated_server`: Update documentation page ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+* `d/ovh_domain_zone`: Update documentation page ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+* `d/ovh_hosting_privatedatabase`: Update documentation page ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+* `d/ovh_iam_policies`: Add documentation page ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+* `d/ovh_iam_policy`: Add documentation page ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+* `d/ovh_iam_reference_action`: Add documentation page ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+* `d/ovh_iam_reference_resource`: Add documentation page ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+* `d/ovh_iploadbalancing`: Update documentation page ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+* `d/ovh_me_identity_user`: Update documentation page ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+* `d/ovh_me`: Update documentation page ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+* `d/ovh_vps`: Update documentation page ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+
+* `r/ovh_cloud_project`: Update documentation page ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+* `r/ovh_dedicated_server_install_task`: Update documentation page ([#444](https://github.com/ovh/terraform-provider-ovh/pull/444))
+* `r/ovh_domain_zone`: Update documentation page ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+* `r/ovh_hosting_privatedatabase`: Update documentation page ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+* `r/ovh_iam_policy`: Add documentation page ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+* `r/ovh_iploadbalancing`: Update documentation page ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+* `r/ovh_me_identity_group`: Update documentation page ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+* `r/ovh_me_identity_user`: Update documentation page ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+* `r/ovh_vrack`: Update documentation page ([#424](https://github.com/ovh/terraform-provider-ovh/pull/424))
+
+❤️ Thanks for your contributions ❤️
 
 ## 0.31.0 (June 19, 2023)
 

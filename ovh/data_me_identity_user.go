@@ -16,6 +16,10 @@ func dataSourceMeIdentityUser() *schema.Resource {
 				Required:    true,
 				Description: "User's login",
 			},
+			"urn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"login": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -73,6 +77,9 @@ func dataSourceMeIdentityUserRead(d *schema.ResourceData, meta interface{}) erro
 	if err != nil {
 		return fmt.Errorf("Unable to find identity user %s:\n\t %q", user, err)
 	}
+
+	d.Set("urn", fmt.Sprintf("urn:v1:%s:identity:user:%s/%s", config.Plate, config.Account, user))
+
 	log.Printf("[DEBUG] identity user for %s: %+v", user, identityUser)
 
 	d.SetId(user)

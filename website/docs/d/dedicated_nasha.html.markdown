@@ -24,6 +24,7 @@ data "ovh_dedicated_nasha" "my-nas-ha" {
 In addition, the following attributes are exported:
 
 * `service_name` - The storage service name
+* `urn` - the URN of the HA-NAS instance
 * `can_create_partition` - True, if partition creation is allowed on this HA-NAS
 * `custom_name` - The name you give to the HA-NAS
 * `datacenter` - area of HA-NAS

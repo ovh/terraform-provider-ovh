@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
 func dataSourceDomainZone() *schema.Resource {
@@ -16,6 +17,10 @@ func dataSourceDomainZone() *schema.Resource {
 			},
 
 			// Computed
+			"urn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"has_dns_anycast": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -54,6 +59,8 @@ func dataSourceDomainZoneRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("dnssec_supported", dz.DnssecSupported)
 	d.Set("last_update", dz.LastUpdate)
 	d.Set("name_servers", dz.NameServers)
+
+	d.Set("urn", helpers.ServiceURN(config.Plate, "dnsZone", zoneName))
 
 	return nil
 }

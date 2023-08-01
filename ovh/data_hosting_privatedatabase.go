@@ -5,6 +5,7 @@ import (
 	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
 func dataSourceHostingPrivateDatabase() *schema.Resource {
@@ -17,6 +18,10 @@ func dataSourceHostingPrivateDatabase() *schema.Resource {
 			},
 
 			// Computed
+			"urn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"cpu": {
 				Type:        schema.TypeInt,
 				Computed:    true,
@@ -138,6 +143,7 @@ func dataSourceHostingPrivateDatabaseRead(d *schema.ResourceData, meta interface
 		}
 	}
 	d.SetId(ds.ServiceName)
+	d.Set("urn", helpers.ServiceURN(config.Plate, "webCloudDatabases", ds.ServiceName))
 
 	return nil
 }

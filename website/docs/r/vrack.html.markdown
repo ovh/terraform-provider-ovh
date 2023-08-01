@@ -68,6 +68,7 @@ The following arguments are supported:
 
 Id is set to the order Id. In addition, the following attributes are exported:
 
+* `urn` - The URN of the vrack, used with IAM permissions
 * `order` - Details about an Order
   * `date` - date
   * `order_id` - order id

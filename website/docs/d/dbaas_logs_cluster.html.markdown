@@ -21,7 +21,8 @@ data "ovh_dbaas_logs_cluster" "logstash" {
 
 ## Attributes Reference
 
-* `id` is set to input engine ID
+* `id` is the input engine ID
+* `urn` is the URN of the DBaas logs instance
 * `cluster_type` is type of cluster (DEDICATED, PRO or TRIAL)
 * `dedicated_input_pem` is PEM for dedicated inputs
 * `archive_allowed_networks` is allowed networks for ARCHIVE flow type

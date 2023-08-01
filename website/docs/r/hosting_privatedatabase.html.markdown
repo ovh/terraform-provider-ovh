@@ -72,6 +72,7 @@ Plan order valid values can be found on OVHcloud [APIv6](https://api.ovh.com/con
 
 The following attributes are exported:
 
+* `urn` - URN of the private database, used when writing IAM policies
 * `cpu` - Number of CPU on your private database
 * `datacenter` - Datacenter where this private database is located
 * `display_name` - Name displayed in customer panel for your private database

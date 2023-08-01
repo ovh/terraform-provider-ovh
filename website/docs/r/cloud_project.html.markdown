@@ -41,6 +41,7 @@ resource "ovh_cloud_project" "my_cloud_project" {
 
 The following arguments are supported:
 
+* `urn` - The URN of the cloud project
 * `description` - A description associated with the user.
 * `ovh_subsidiary` - (Required) OVHcloud Subsidiary
 * `plan` - (Required) Product Plan to order

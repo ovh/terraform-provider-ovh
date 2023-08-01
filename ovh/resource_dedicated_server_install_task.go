@@ -2,8 +2,10 @@ package ovh
 
 import (
 	"fmt"
+	"log"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -16,6 +18,9 @@ func resourceDedicatedServerInstallTask() *schema.Resource {
 		Update: resourceDedicatedServerInstallTaskUpdate,
 		Read:   resourceDedicatedServerInstallTaskRead,
 		Delete: resourceDedicatedServerInstallTaskDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceDedicatedServerInstallTaskImportState,
+		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(45 * time.Minute),
@@ -175,6 +180,31 @@ func resourceDedicatedServerInstallTask() *schema.Resource {
 	}
 }
 
+func resourceDedicatedServerInstallTaskImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	//
+	// After creating an install task, there is no way to get the name of the server (service_name)
+	// nor the name of template (template_name) used during the creation of the task.
+	// This is why it is required to provide them when importing.
+	//
+
+	givenId := d.Id()
+	splitId := strings.SplitN(givenId, "/", 3)
+	if len(splitId) != 3 {
+		return nil, fmt.Errorf("Import Id is not service_name/template_name/task_id formatted")
+	}
+	serviceName := splitId[0]
+	templateName := splitId[1]
+	taskId := splitId[2]
+	d.SetId(taskId)
+	d.Set("service_name", serviceName)
+	d.Set("template_name", templateName)
+	err := dedicatedServerInstallTaskRead(d, meta)
+
+	results := make([]*schema.ResourceData, 1)
+	results[0] = d
+	return results, err
+}
+
 func resourceDedicatedServerInstallTaskCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
@@ -187,7 +217,9 @@ func resourceDedicatedServerInstallTaskCreate(d *schema.ResourceData, meta inter
 	task := &DedicatedServerTask{}
 
 	if err := config.OVHClient.Post(endpoint, opts, task); err != nil {
-		return fmt.Errorf("Error calling POST %s:\n\t %q", endpoint, err)
+		// POST on install tasks can fail randomly so in order to avoid issues, let's allow
+		// a retry via waitForDedicatedServerTask
+		log.Printf("[WARN] Ignored error when calling POST %s: %v", endpoint, err)
 	}
 
 	if err := waitForDedicatedServerTask(serviceName, task, config.OVHClient); err != nil {
@@ -273,7 +305,9 @@ func resourceDedicatedServerInstallTaskDelete(d *schema.ResourceData, meta inter
 
 		task := &DedicatedServerTask{}
 		if err := config.OVHClient.Post(endpoint, nil, task); err != nil {
-			return fmt.Errorf("Error calling POST %s:\n\t %q", endpoint, err)
+			// POST on install tasks can fail randomly so in order to avoid issues, let's allow
+			// a retry via waitForDedicatedServerTask
+			log.Printf("[WARN] Ignored error when calling POST %s: %v", endpoint, err)
 		}
 
 		if err := waitForDedicatedServerTask(serviceName, task, config.OVHClient); err != nil {

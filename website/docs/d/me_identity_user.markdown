@@ -20,6 +20,7 @@ data "ovh_me_identity_user" "my_user" {
 
 ## Attributes Reference
 
+* `urn` - User's identity URN.
 * `login` - User's login suffix.
 * `creation` - Creation date of this user.
 * `description` - User description.
