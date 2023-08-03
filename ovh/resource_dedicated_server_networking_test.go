@@ -20,6 +20,7 @@ func TestAccresourceDedicatedServerNetworking(t *testing.T) {
 			PreCheck: func() {
 				testAccPreCheckCredentials(t)
 				testAccPreCheckDedicatedServer(t)
+				testAccPreCheckDedicatedServerNetworking(t)
 			},
 			Providers: testAccProviders,
 			Steps: []resource.TestStep{
