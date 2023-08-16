@@ -124,11 +124,6 @@ func TestAccMeInstallationTemplateResource_customization(t *testing.T) {
 						"customization.0.post_installation_script_return",
 						"returned_string",
 					),
-					resource.TestCheckResourceAttr(
-						"ovh_me_installation_template.template",
-						"customization.0.use_distribution_kernel",
-						"true",
-					),
 					resource.TestCheckResourceAttrSet(
 						"ovh_me_installation_template.template",
 						"family",
@@ -157,7 +152,6 @@ resource "ovh_me_installation_template" "template" {
      ssh_key_name                    = "test"
      post_installation_script_link   = "http://mylink.org"
      post_installation_script_return = "returned_string"
-     use_distribution_kernel         = true
   }
 }
 `
