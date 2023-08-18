@@ -64,7 +64,7 @@ func dataSourceCloudProjectDatabaseKafkaSchemaregistryaclRead(ctx context.Contex
 	)
 	res := &CloudProjectDatabaseKafkaAclResponse{}
 
-	log.Printf("[DEBUG] Will read schema registry acl %s from cluster %s from project %s", id, clusterID, serviceName)
+	log.Printf("[DEBUG] Will read schema registry ACL %s from cluster %s from project %s", id, clusterID, serviceName)
 	if err := config.OVHClient.Get(endpoint, res); err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
