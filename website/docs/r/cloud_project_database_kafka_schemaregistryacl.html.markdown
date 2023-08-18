@@ -4,7 +4,7 @@ subcategory : "Managed Databases"
 
 # ovh_cloud_project_database_kafka_schemaregistryacl
 
-Creates a schema registry ACL for a kafka cluster associated with a public cloud project.
+Creates a schema registry ACL for a Kafka cluster associated with a public cloud project.
 
 ## Example Usage
 
