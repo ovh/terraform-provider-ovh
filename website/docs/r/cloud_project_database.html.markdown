@@ -42,7 +42,7 @@ resource "ovh_cloud_project_database" "kafkadb" {
   service_name    = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
   description     = "my-first-kafka"
   engine          = "kafka"
-  version         = "3.1"
+  version         = "3.4"
   plan            = "business"
   kafka_rest_api  = true
   nodes {
