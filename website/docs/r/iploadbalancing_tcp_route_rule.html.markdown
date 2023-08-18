@@ -46,3 +46,11 @@ The following arguments are supported:
 ## Attributes Reference
 
 No additional attribute is exported.
+
+## Import 
+
+TCP route rule can be imported using the following format `service_name`, the `id` of the route and the `id` of the rule separated by "/" e.g.
+
+```bash
+$ terraform import ovh_iploadbalancing_tcp_route_rule.examplerule service_name/route_id/rule_id
+```

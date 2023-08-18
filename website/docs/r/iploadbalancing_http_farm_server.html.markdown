@@ -69,3 +69,11 @@ The following attributes are exported:
 * `ssl` - See Argument Reference above.
 * `backup` - See Argument Reference above.
 * `cookie` - Value of the stickiness cookie used for this backend.
+
+## Import 
+
+HTTP farm server can be imported using the following format `service_name`, the `id` of the farm and the `id` of the server separated by "/" e.g.
+
+```bash
+$ terraform import ovh_iploadbalancing_http_farm_server.backend service_name/farm_id/server_id
+```
