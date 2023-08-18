@@ -1870,6 +1870,109 @@ func waitForCloudProjectDatabaseKafkaAclDeleted(ctx context.Context, client *ovh
 	return err
 }
 
+// // Schema Registry ACL
+
+type CloudProjectDatabaseKafkaSchemaregistryaclResponse struct {
+	Id         string `json:"id"`
+	Permission string `json:"permission"`
+	Resource   string `json:"resource"`
+	Username   string `json:"username"`
+}
+
+func (p *CloudProjectDatabaseKafkaSchemaregistryaclResponse) String() string {
+	return fmt.Sprintf(
+		"Id: %s, Permission: %s, affected User: %s, affected Topic %s",
+		p.Id,
+		p.Permission,
+		p.Username,
+		p.Resource,
+	)
+}
+
+func (v CloudProjectDatabaseKafkaSchemaregistryaclResponse) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+
+	obj["id"] = v.Id
+	obj["permission"] = v.Permission
+	obj["resource"] = v.Resource
+	obj["username"] = v.Username
+
+	return obj
+}
+
+type CloudProjectDatabaseKafkaSchemaregistryaclCreateOpts struct {
+	Permission string `json:"permission"`
+	Resource   string `json:"resource"`
+	Username   string `json:"username"`
+}
+
+func (opts *CloudProjectDatabaseKafkaSchemaregistryaclCreateOpts) FromResource(d *schema.ResourceData) *CloudProjectDatabaseKafkaSchemaregistryaclCreateOpts {
+	opts.Permission = d.Get("permission").(string)
+	opts.Resource = d.Get("resource").(string)
+	opts.Username = d.Get("username").(string)
+
+	return opts
+}
+
+func waitForCloudProjectDatabaseKafkaSchemaregistryaclReady(ctx context.Context, client *ovh.Client, serviceName, databaseId string, schemaRegistryAclId string, timeOut time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"PENDING"},
+		Target:  []string{"READY"},
+		Refresh: func() (interface{}, string, error) {
+			res := &CloudProjectDatabaseKafkaTopicResponse{}
+			endpoint := fmt.Sprintf("/cloud/project/%s/database/kafka/%s/schemaRegistryAcl/%s",
+				url.PathEscape(serviceName),
+				url.PathEscape(databaseId),
+				url.PathEscape(schemaRegistryAclId),
+			)
+			err := client.Get(endpoint, res)
+			if err != nil {
+				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
+					return res, "PENDING", nil
+				}
+				return res, "", err
+			}
+			return res, "READY", nil
+		},
+		Timeout:    timeOut,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+	return err
+}
+
+func waitForCloudProjectDatabaseKafkaSchemaregistryaclDeleted(ctx context.Context, client *ovh.Client, serviceName, databaseId string, schemaRegistryAclId string, timeOut time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"DELETING"},
+		Target:  []string{"DELETED"},
+		Refresh: func() (interface{}, string, error) {
+			res := &CloudProjectDatabaseKafkaTopicResponse{}
+			endpoint := fmt.Sprintf("/cloud/project/%s/database/kafka/%s/schemaRegistryAcl/%s",
+				url.PathEscape(serviceName),
+				url.PathEscape(databaseId),
+				url.PathEscape(schemaRegistryAclId),
+			)
+			err := client.Get(endpoint, res)
+			if err != nil {
+				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
+					return res, "DELETED", nil
+				}
+				return res, "", err
+			}
+
+			return res, "DELETING", nil
+		},
+		Timeout:    timeOut,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+	return err
+}
+
 // // User Access
 
 type CloudProjectDatabaseKafkaUserAccessResponse struct {
