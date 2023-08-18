@@ -351,3 +351,8 @@ func testAccPreCheckWorkflowBackup(t *testing.T) {
 	checkEnvOrSkip(t, WORKFLOW_BACKUP_TEST_INSTANCE_ID_ENV_VAR)
 	checkEnvOrSkip(t, WORKFLOW_BACKUP_TEST_REGION_ENV_VAR)
 }
+
+// This variable shall be defined to run the test because it targets an internal route that shall be authorized per user
+func testAccPreCheckDedicatedServerNetworking(t *testing.T) {
+	checkEnvOrSkip(t, "TEST_DEDICATED_SERVER_NETWORKING")
+}
