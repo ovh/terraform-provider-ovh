@@ -27,7 +27,7 @@ func dataSourceCloudProjectDatabaseKafkaSchemaRegistryAcl() *schema.Resource {
 			},
 			"id": {
 				Type:        schema.TypeString,
-				Description: "Shema registry acl ID",
+				Description: "Shema registry ACL ID",
 				Required:    true,
 			},
 
