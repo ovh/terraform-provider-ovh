@@ -138,7 +138,7 @@ func resourceCloudProjectDatabaseKafkaSchemaregistryaclRead(ctx context.Context,
 		}
 	}
 
-	log.Printf("[DEBUG] Read schema registry acl %+v", res)
+	log.Printf("[DEBUG] Read schema registry ACL %+v", res)
 	return nil
 }
 
