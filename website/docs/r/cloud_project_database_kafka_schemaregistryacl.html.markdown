@@ -70,7 +70,7 @@ resource "ovh_cloud_project_database_kafka_schemaregistryacl" "schemaRegistryAcl
 
 ## Import
 
-OVHcloud Managed kafka clusters schema registry ACLs can be imported using the `service_name`, `cluster_id` and `id` of the schema registry acl, separated by "/" E.g.,
+OVHcloud Managed Kafka clusters schema registry ACLs can be imported using the `service_name`, `cluster_id` and `id` of the schema registry ACL, separated by "/" E.g.,
 
 ```bash
 $ terraform import ovh_cloud_project_database_kafka_schemaregistryacl.my_schemaRegistryAcl service_name/cluster_id/id
