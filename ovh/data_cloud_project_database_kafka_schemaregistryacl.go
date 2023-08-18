@@ -77,6 +77,6 @@ func dataSourceCloudProjectDatabaseKafkaSchemaregistryaclRead(ctx context.Contex
 		}
 	}
 
-	log.Printf("[DEBUG] Read acl %+v", res)
+	log.Printf("[DEBUG] Read ACL %+v", res)
 	return nil
 }
