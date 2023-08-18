@@ -64,3 +64,12 @@ The following attributes are exported:
   * `force_ssl` - See Argument Reference above.
   * `url` - See Argument Reference above.
   * `method` - See Argument Reference above.
+
+## Import 
+
+HTTP farm can be imported using the following format `service_name` and the `id` of the farm, separated by "/" e.g.
+
+```bash
+$ terraform import ovh_iploadbalancing_http_farm.farmname service_name/farm_id
+```
+

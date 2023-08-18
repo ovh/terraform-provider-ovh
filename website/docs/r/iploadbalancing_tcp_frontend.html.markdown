@@ -61,3 +61,10 @@ The following attributes are exported:
 * `disabled` - See Argument Reference above.
 * `ssl` - See Argument Reference above.
 
+## Import 
+
+TCP frontend can be imported using the following format `service_name` and the `id` of the frontend separated by "/" e.g.
+
+```bash
+$ terraform import ovh_iploadbalancing_tcp_frontend.testfrontend service_name/tcp_frontend_id
+```

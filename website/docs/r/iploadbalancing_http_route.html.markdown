@@ -49,3 +49,12 @@ In addition, the following attributes are exported:
    * `pattern` - Value to match against this match. Interpretation if this field depends on the match and field
    * `rule_id` - Id of your rule
    * `sub_field` - Name of sub-field, if applicable. This may be a Cookie or Header name for instance
+
+
+## Import 
+
+HTTP route can be imported using the following format `service_name` and the `id` of the route separated by "/" e.g.
+
+```bash
+$ terraform import ovh_iploadbalancing_http_route.httpsredirect service_name/route_id
+```

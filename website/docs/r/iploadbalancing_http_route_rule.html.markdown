@@ -75,3 +75,12 @@ The following attributes are exported:
 * `negate` - See Argument Reference above.
 * `pattern` - See Argument Reference above.
 * `sub_field` - See Argument Reference above.
+
+
+## Import 
+
+HTTP route rule can be imported using the following format `service_name`, the `id` of the route and the `id` of the rule separated by "/" e.g.
+
+```bash
+$ terraform import ovh_iploadbalancing_http_route_rule.examplerule service_name/route_id/rule_id
+```
