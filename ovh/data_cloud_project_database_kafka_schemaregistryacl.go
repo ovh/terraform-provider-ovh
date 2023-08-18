@@ -44,7 +44,7 @@ func dataSourceCloudProjectDatabaseKafkaSchemaRegistryAcl() *schema.Resource {
 			},
 			"username": {
 				Type:        schema.TypeString,
-				Description: "Username affected by this acl",
+				Description: "Username affected by this ACL",
 				Computed:    true,
 			},
 		},
