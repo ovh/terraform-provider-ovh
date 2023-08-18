@@ -163,7 +163,7 @@ func resourceCloudProjectDatabaseKafkaSchemaregistryaclDelete(ctx context.Contex
 	log.Printf("[DEBUG] Waiting for schema registry acl %s to be DELETED", id)
 	err = waitForCloudProjectDatabaseKafkaSchemaregistryaclDeleted(ctx, config.OVHClient, serviceName, clusterId, id, d.Timeout(schema.TimeoutDelete))
 	if err != nil {
-		return diag.Errorf("timeout while waiting schema registry acl %s to be DELETED: %s", id, err.Error())
+		return diag.Errorf("timeout while waiting schema registry ACL %s to be DELETED: %s", id, err.Error())
 	}
 	log.Printf("[DEBUG] schema registry acl %s is DELETED", id)
 
