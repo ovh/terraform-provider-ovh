@@ -77,7 +77,7 @@ The following arguments are supported:
 * `template ` - (Optional) Managed Kubernetes nodepool template, which is a complex object constituted by two main nested objects:
     * `metadata` - Metadata of each node in the pool
         * `annotations` - Annotations to apply to each node
-        * `finalizers` - Finalizers to apply to each node, kubernetes finalizer format is a FQDN (full qualified domain name) like an api group, the rune '/' and then a version. For example: ovhcloud.com/v1  
+        * `finalizers` - Finalizers to apply to each node. A finalizer name must be fully qualified, e.g. kubernetes.io/pv-protection , where you prefix it with hostname of your service which is related to the controller responsible for the finalizer.
         * `labels` - Labels to apply to each node
     * `spec` - Spec of each node in the pool
         * `taints` - Taints to apply to each node
