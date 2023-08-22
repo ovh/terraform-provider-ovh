@@ -39,7 +39,7 @@ resource "ovh_cloud_project_kube_nodepool" "pool" {
         k1 = "v1"
         k2 = "v2"
       }
-      finalizers = ["F1", "F2"]
+      finalizers = ["ovhcloud.com/v1beta1", "ovhcloud.com/v1"]
       labels = {
         k3 = "v3"
         k4 = "v4"
@@ -77,7 +77,7 @@ The following arguments are supported:
 * `template ` - (Optional) Managed Kubernetes nodepool template, which is a complex object constituted by two main nested objects:
     * `metadata` - Metadata of each node in the pool
         * `annotations` - Annotations to apply to each node
-        * `finalizers` - Finalizers to apply to each node
+        * `finalizers` - Finalizers to apply to each node, kubernetes finalizer format is a FQDN (full qualified domain name) like an api group, the rune '/' and then a version. For example: ovhcloud.com/v1  
         * `labels` - Labels to apply to each node
     * `spec` - Spec of each node in the pool
         * `taints` - Taints to apply to each node

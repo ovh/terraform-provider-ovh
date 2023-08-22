@@ -259,8 +259,8 @@ func resourceCloudProjectKubeNodePoolCreate(d *schema.ResourceData, meta interfa
 		return err
 	}
 
-	log.Printf("[DEBUG] Waiting for nodepool %s to be READY", res.Id)
-	err = waitForCloudProjectKubeNodePoolReady(config.OVHClient, serviceName, kubeId, res.Id, d.Timeout(schema.TimeoutCreate))
+	log.Printf("[DEBUG] Waiting for nodepool %s to be READY or ERROR", res.Id)
+	err = waitForCloudProjectKubeNodePoolWithStateTarget(config.OVHClient, serviceName, kubeId, res.Id, d.Timeout(schema.TimeoutCreate), []string{"READY", "ERROR"})
 	if err != nil {
 		return fmt.Errorf("timeout while waiting nodepool %s to be READY: %w", res.Id, err)
 	}
@@ -314,7 +314,7 @@ func resourceCloudProjectKubeNodePoolUpdate(d *schema.ResourceData, meta interfa
 	}
 
 	log.Printf("[DEBUG] Waiting for nodepool %s to be READY", d.Id())
-	err = waitForCloudProjectKubeNodePoolReady(config.OVHClient, serviceName, kubeId, d.Id(), d.Timeout(schema.TimeoutUpdate))
+	err = waitForCloudProjectKubeNodePoolWithStateTarget(config.OVHClient, serviceName, kubeId, d.Id(), d.Timeout(schema.TimeoutUpdate), []string{"READY"})
 	if err != nil {
 		return fmt.Errorf("timeout while waiting nodepool %s to be READY: %w", d.Id(), err)
 	}
@@ -355,10 +355,10 @@ func cloudProjectKubeNodePoolExists(serviceName, kubeId, id string, client *ovh.
 	return client.Get(endpoint, res)
 }
 
-func waitForCloudProjectKubeNodePoolReady(client *ovh.Client, serviceName, kubeId, id string, timeout time.Duration) error {
+func waitForCloudProjectKubeNodePoolWithStateTarget(client *ovh.Client, serviceName, kubeId, id string, timeout time.Duration, stateTargets []string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"INSTALLING", "UPDATING", "REDEPLOYING", "RESIZING", "DOWNSCALING", "UPSCALING"},
-		Target:  []string{"READY"},
+		Target:  stateTargets,
 		Refresh: func() (interface{}, string, error) {
 			res := &CloudProjectKubeNodePoolResponse{}
 			endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/nodepool/%s", serviceName, kubeId, id)
