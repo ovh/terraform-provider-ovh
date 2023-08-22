@@ -39,7 +39,7 @@ resource "ovh_cloud_project_kube_nodepool" "pool" {
         k1 = "v1"
         k2 = "v2"
       }
-      finalizers = ["F1", "F2"]
+      finalizers = ["ovhcloud.com/v1beta1", "ovhcloud.com/v1"]
       labels = {
         k3 = "v3"
         k4 = "v4"
@@ -75,13 +75,13 @@ The following arguments are supported:
 * `anti_affinity` - (Optional) should the pool use the anti-affinity feature. Default to `false`. **Changing this value recreates the resource.**
 * `autoscale` - (Optional) Enable auto-scaling for the pool. Default to `false`.
 * `template ` - (Optional) Managed Kubernetes nodepool template, which is a complex object constituted by two main nested objects:
-    * `metadata` - (Optional) Metadata of each node in the pool
-        * `annotations` - (Optional) Annotations to apply to each node
-        * `finalizers` - (Optional) Finalizers to apply to each node
-        * `labels` - (Optional) Labels to apply to each node
-    * `spec` - (Optional) Spec of each node in the pool
-        * `taints` - (Optional) Taints to apply to each node
-        * `unschedulable` - (Optional) If true, set nodes as un-schedulable
+    * `metadata` - Metadata of each node in the pool
+        * `annotations` - Annotations to apply to each node
+        * `finalizers` - Finalizers to apply to each node. A finalizer name must be fully qualified, e.g. kubernetes.io/pv-protection , where you prefix it with hostname of your service which is related to the controller responsible for the finalizer.
+        * `labels` - Labels to apply to each node
+    * `spec` - Spec of each node in the pool
+        * `taints` - Taints to apply to each node
+        * `unschedulable` - If true, set nodes as un-schedulable
 
 ## Attributes Reference
 
