@@ -33,7 +33,7 @@ func TestAccDedicatedServerBringYourOwnImage(t *testing.T) {
 
 func testAccDedicatedServerBringYourOwnImageConfig() string {
 	dedicated_server := os.Getenv("OVH_DEDICATED_SERVER")
-	url := os.Getenv("OVH_BYOI_IMAGE_URL")
+	url := os.Getenv("OVH_DEDICATED_SERVER_BYOI_IMAGE_URL")
 	hostName := acctest.RandomWithPrefix(test_prefix)
 
 	return fmt.Sprintf(`
@@ -59,5 +59,5 @@ func testAccDedicatedServerBringYourOwnImageConfig() string {
 
 func testAccPreCheckByoiImageUrl(t *testing.T) {
 	testAccPreCheckCredentials(t)
-	checkEnvOrSkip(t, "OVH_BYOI_IMAGE_URL")
+	checkEnvOrSkip(t, "OVH_DEDICATED_SERVER_BYOI_IMAGE_URL")
 }

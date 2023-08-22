@@ -11,7 +11,6 @@ Install the image provided by an URL on your Dedicated Server.
 ```hcl
 data ovh_dedicated_server "server" {
   service_name = "nsxxxxxxx.ip-xx-xx-xx.eu"
-  boot_type    = "harddisk"
 }
 
 resource ovh_dedicated_server_bringyourownimage "os_install" {
@@ -22,6 +21,10 @@ resource ovh_dedicated_server_bringyourownimage "os_install" {
     enable = true
     hostname = "my-server"
   }
+}
+
+output "server_install_status" {
+  value = resource.ovh_dedicated_server_bringyourownimage.os_install.status
 }
 ```
 
