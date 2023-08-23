@@ -13,14 +13,14 @@ import (
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
-func resourceCloudProjectDatabaseKafkaSchemaregistryacl() *schema.Resource {
+func resourceCloudProjectDatabaseKafkaSchemaRegistryAcl() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceCloudProjectDatabaseKafkaSchemaregistryaclCreate,
-		ReadContext:   resourceCloudProjectDatabaseKafkaSchemaregistryaclRead,
-		DeleteContext: resourceCloudProjectDatabaseKafkaSchemaregistryaclDelete,
+		CreateContext: resourceCloudProjectDatabaseKafkaSchemaRegistryAclCreate,
+		ReadContext:   resourceCloudProjectDatabaseKafkaSchemaRegistryAclRead,
+		DeleteContext: resourceCloudProjectDatabaseKafkaSchemaRegistryAclDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceCloudProjectDatabaseKafkaSchemaregistryaclImportState,
+			State: resourceCloudProjectDatabaseKafkaSchemaRegistryAclImportState,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -63,7 +63,7 @@ func resourceCloudProjectDatabaseKafkaSchemaregistryacl() *schema.Resource {
 	}
 }
 
-func resourceCloudProjectDatabaseKafkaSchemaregistryaclImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceCloudProjectDatabaseKafkaSchemaRegistryAclImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	givenId := d.Id()
 	n := 3
 	splitId := strings.SplitN(givenId, "/", n)
@@ -82,7 +82,7 @@ func resourceCloudProjectDatabaseKafkaSchemaregistryaclImportState(d *schema.Res
 	return results, nil
 }
 
-func resourceCloudProjectDatabaseKafkaSchemaregistryaclCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCloudProjectDatabaseKafkaSchemaRegistryAclCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
@@ -91,8 +91,8 @@ func resourceCloudProjectDatabaseKafkaSchemaregistryaclCreate(ctx context.Contex
 		url.PathEscape(serviceName),
 		url.PathEscape(clusterId),
 	)
-	params := (&CloudProjectDatabaseKafkaSchemaregistryaclCreateOpts{}).FromResource(d)
-	res := &CloudProjectDatabaseKafkaSchemaregistryaclResponse{}
+	params := (&CloudProjectDatabaseKafkaSchemaRegistryAclCreateOpts{}).FromResource(d)
+	res := &CloudProjectDatabaseKafkaSchemaRegistryAclResponse{}
 
 	log.Printf("[DEBUG] Will create schema registry acl: %+v for cluster %s from project %s", params, clusterId, serviceName)
 	err := config.OVHClient.Post(endpoint, params, res)
@@ -101,7 +101,7 @@ func resourceCloudProjectDatabaseKafkaSchemaregistryaclCreate(ctx context.Contex
 	}
 
 	log.Printf("[DEBUG] Waiting for schema registry acl %s to be READY", res.Id)
-	err = waitForCloudProjectDatabaseKafkaSchemaregistryaclReady(ctx, config.OVHClient, serviceName, clusterId, res.Id, d.Timeout(schema.TimeoutCreate))
+	err = waitForCloudProjectDatabaseKafkaSchemaRegistryAclReady(ctx, config.OVHClient, serviceName, clusterId, res.Id, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return diag.Errorf("timeout while waiting schema registry ACL %s to be READY: %s", res.Id, err.Error())
 	}
@@ -109,10 +109,10 @@ func resourceCloudProjectDatabaseKafkaSchemaregistryaclCreate(ctx context.Contex
 
 	d.SetId(res.Id)
 
-	return resourceCloudProjectDatabaseKafkaSchemaregistryaclRead(ctx, d, meta)
+	return resourceCloudProjectDatabaseKafkaSchemaRegistryAclRead(ctx, d, meta)
 }
 
-func resourceCloudProjectDatabaseKafkaSchemaregistryaclRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCloudProjectDatabaseKafkaSchemaRegistryAclRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
@@ -123,7 +123,7 @@ func resourceCloudProjectDatabaseKafkaSchemaregistryaclRead(ctx context.Context,
 		url.PathEscape(clusterId),
 		url.PathEscape(id),
 	)
-	res := &CloudProjectDatabaseKafkaSchemaregistryaclResponse{}
+	res := &CloudProjectDatabaseKafkaSchemaRegistryAclResponse{}
 
 	log.Printf("[DEBUG] Will read schema registry acl %s from cluster %s from project %s", id, clusterId, serviceName)
 	if err := config.OVHClient.Get(endpoint, res); err != nil {
@@ -142,7 +142,7 @@ func resourceCloudProjectDatabaseKafkaSchemaregistryaclRead(ctx context.Context,
 	return nil
 }
 
-func resourceCloudProjectDatabaseKafkaSchemaregistryaclDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCloudProjectDatabaseKafkaSchemaRegistryAclDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
@@ -161,7 +161,7 @@ func resourceCloudProjectDatabaseKafkaSchemaregistryaclDelete(ctx context.Contex
 	}
 
 	log.Printf("[DEBUG] Waiting for schema registry acl %s to be DELETED", id)
-	err = waitForCloudProjectDatabaseKafkaSchemaregistryaclDeleted(ctx, config.OVHClient, serviceName, clusterId, id, d.Timeout(schema.TimeoutDelete))
+	err = waitForCloudProjectDatabaseKafkaSchemaRegistryAclDeleted(ctx, config.OVHClient, serviceName, clusterId, id, d.Timeout(schema.TimeoutDelete))
 	if err != nil {
 		return diag.Errorf("timeout while waiting schema registry ACL %s to be DELETED: %s", id, err.Error())
 	}

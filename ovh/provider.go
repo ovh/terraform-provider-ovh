@@ -148,7 +148,7 @@ func Provider() *schema.Provider {
 			"ovh_cloud_project_database_integration":                      resourceCloudProjectDatabaseIntegration(),
 			"ovh_cloud_project_database_ip_restriction":                   resourceCloudProjectDatabaseIpRestriction(),
 			"ovh_cloud_project_database_kafka_acl":                        resourceCloudProjectDatabaseKafkaAcl(),
-			"ovh_cloud_project_database_kafka_schemaregistryacl":          resourceCloudProjectDatabaseKafkaSchemaregistryacl(),
+			"ovh_cloud_project_database_kafka_schemaregistryacl":          resourceCloudProjectDatabaseKafkaSchemaRegistryAcl(),
 			"ovh_cloud_project_database_kafka_topic":                      resourceCloudProjectDatabaseKafkaTopic(),
 			"ovh_cloud_project_database_m3db_namespace":                   resourceCloudProjectDatabaseM3dbNamespace(),
 			"ovh_cloud_project_database_m3db_user":                        resourceCloudProjectDatabaseM3dbUser(),
