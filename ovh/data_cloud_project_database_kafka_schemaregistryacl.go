@@ -13,7 +13,7 @@ import (
 
 func dataSourceCloudProjectDatabaseKafkaSchemaRegistryAcl() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceCloudProjectDatabaseKafkaSchemaregistryaclRead,
+		ReadContext: dataSourceCloudProjectDatabaseKafkaSchemaRegistryAclRead,
 		Schema: map[string]*schema.Schema{
 			"service_name": {
 				Type:        schema.TypeString,
@@ -51,7 +51,7 @@ func dataSourceCloudProjectDatabaseKafkaSchemaRegistryAcl() *schema.Resource {
 	}
 }
 
-func dataSourceCloudProjectDatabaseKafkaSchemaregistryaclRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceCloudProjectDatabaseKafkaSchemaRegistryAclRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterID := d.Get("cluster_id").(string)

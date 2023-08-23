@@ -1872,14 +1872,14 @@ func waitForCloudProjectDatabaseKafkaAclDeleted(ctx context.Context, client *ovh
 
 // // Schema Registry ACL
 
-type CloudProjectDatabaseKafkaSchemaregistryaclResponse struct {
+type CloudProjectDatabaseKafkaSchemaRegistryAclResponse struct {
 	Id         string `json:"id"`
 	Permission string `json:"permission"`
 	Resource   string `json:"resource"`
 	Username   string `json:"username"`
 }
 
-func (p *CloudProjectDatabaseKafkaSchemaregistryaclResponse) String() string {
+func (p *CloudProjectDatabaseKafkaSchemaRegistryAclResponse) String() string {
 	return fmt.Sprintf(
 		"Id: %s, Permission: %s, affected User: %s, affected Topic %s",
 		p.Id,
@@ -1889,7 +1889,7 @@ func (p *CloudProjectDatabaseKafkaSchemaregistryaclResponse) String() string {
 	)
 }
 
-func (v CloudProjectDatabaseKafkaSchemaregistryaclResponse) ToMap() map[string]interface{} {
+func (v CloudProjectDatabaseKafkaSchemaRegistryAclResponse) ToMap() map[string]interface{} {
 	obj := make(map[string]interface{})
 
 	obj["id"] = v.Id
@@ -1900,13 +1900,13 @@ func (v CloudProjectDatabaseKafkaSchemaregistryaclResponse) ToMap() map[string]i
 	return obj
 }
 
-type CloudProjectDatabaseKafkaSchemaregistryaclCreateOpts struct {
+type CloudProjectDatabaseKafkaSchemaRegistryAclCreateOpts struct {
 	Permission string `json:"permission"`
 	Resource   string `json:"resource"`
 	Username   string `json:"username"`
 }
 
-func (opts *CloudProjectDatabaseKafkaSchemaregistryaclCreateOpts) FromResource(d *schema.ResourceData) *CloudProjectDatabaseKafkaSchemaregistryaclCreateOpts {
+func (opts *CloudProjectDatabaseKafkaSchemaRegistryAclCreateOpts) FromResource(d *schema.ResourceData) *CloudProjectDatabaseKafkaSchemaRegistryAclCreateOpts {
 	opts.Permission = d.Get("permission").(string)
 	opts.Resource = d.Get("resource").(string)
 	opts.Username = d.Get("username").(string)
@@ -1914,7 +1914,7 @@ func (opts *CloudProjectDatabaseKafkaSchemaregistryaclCreateOpts) FromResource(d
 	return opts
 }
 
-func waitForCloudProjectDatabaseKafkaSchemaregistryaclReady(ctx context.Context, client *ovh.Client, serviceName, databaseId string, schemaRegistryAclId string, timeOut time.Duration) error {
+func waitForCloudProjectDatabaseKafkaSchemaRegistryAclReady(ctx context.Context, client *ovh.Client, serviceName, databaseId string, schemaRegistryAclId string, timeOut time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING"},
 		Target:  []string{"READY"},
@@ -1943,7 +1943,7 @@ func waitForCloudProjectDatabaseKafkaSchemaregistryaclReady(ctx context.Context,
 	return err
 }
 
-func waitForCloudProjectDatabaseKafkaSchemaregistryaclDeleted(ctx context.Context, client *ovh.Client, serviceName, databaseId string, schemaRegistryAclId string, timeOut time.Duration) error {
+func waitForCloudProjectDatabaseKafkaSchemaRegistryAclDeleted(ctx context.Context, client *ovh.Client, serviceName, databaseId string, schemaRegistryAclId string, timeOut time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"DELETING"},
 		Target:  []string{"DELETED"},
