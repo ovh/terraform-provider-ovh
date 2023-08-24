@@ -1,4 +1,57 @@
-## 0.33.0 (Unreleased)
+## 0.34.0 (Unreleased)
+
+## 0.33.0 (August 24, 2023)
+
+🎉 Features:
+
+* New resource: `ovh_cloud_project_database_kafka_schemaregistryacl` ([#449](https://github.com/ovh/terraform-provider-ovh/pull/449))
+
+* New datasource: `ovh_cloud_project_database_kafka_schemaregistryacl` ([#449](https://github.com/ovh/terraform-provider-ovh/pull/449))
+* New datasource: `ovh_cloud_project_database_kafka_schemaregistryacls` ([#449](https://github.com/ovh/terraform-provider-ovh/pull/449))
+
+⚙️ General:
+
+* Bump google.golang.org/grpc from 1.48.0 to 1.53.0 ([#440](https://github.com/ovh/terraform-provider-ovh/pull/440))
+
+💪 Improvements:
+
+* `r/ovh_dedicated_server_networking`: Specify that this route is for internal use only ([#451](https://github.com/ovh/terraform-provider-ovh/pull/451))
+
+🐜 Bug fixes:
+
+* `r/me_installation_template`: Remove `useDistribKernel` deprecated field and fix the test case ([#452](https://github.com/ovh/terraform-provider-ovh/pull/452))
+* `r/cloud_project_database_kafka_schemaregistryacl`: Fix test case ([#454](https://github.com/ovh/terraform-provider-ovh/pull/454))
+* `r/me_identity_user`: Fix user update ([#443](https://github.com/ovh/terraform-provider-ovh/pull/443))
+* `r/cloud_project_kube_nodepool`: Fix terraform schema where nodepool template is optional but all its attributes are required & fix the issue [427](https://github.com/ovh/terraform-provider-ovh/issues/427) ([#433](https://github.com/ovh/terraform-provider-ovh/pull/433))
+
+* `d/cloud_project_database_kafka_schemaregistryacl`: Fix test case ([#454](https://github.com/ovh/terraform-provider-ovh/pull/454))
+* `d/cloud_project_database_kafka_schemaregistryacls`: Fix test case ([#454](https://github.com/ovh/terraform-provider-ovh/pull/454))
+
+📚 Documentation:
+
+* `r/ovh_dedicated_server_networking`: Update documentation page ([#451](https://github.com/ovh/terraform-provider-ovh/pull/451))
+* `r/ovh_cloud_project_database_kafka_schemaregistryacl`: Add documentation page ([#451](https://github.com/ovh/terraform-provider-ovh/pull/451))
+* `r/iam_policy`: Update documentation page ([#445](https://github.com/ovh/terraform-provider-ovh/pull/445))
+* `r/ovh_domain_zone_record`: Update documentation page ([#442](https://github.com/ovh/terraform-provider-ovh/pull/442))
+* `r/iploadbalancing_http_farm`: Update documentation page ([#432](https://github.com/ovh/terraform-provider-ovh/pull/432))
+* `r/iploadbalancing_http_farm_server`: Update documentation page ([#432](https://github.com/ovh/terraform-provider-ovh/pull/432))
+* `r/iploadbalancing_http_frontend`: Update documentation page ([#432](https://github.com/ovh/terraform-provider-ovh/pull/432))
+* `r/iploadbalancing_http_route`: Update documentation page ([#432](https://github.com/ovh/terraform-provider-ovh/pull/432))
+* `r/iploadbalancing_http_route_rule`: Update documentation page ([#432](https://github.com/ovh/terraform-provider-ovh/pull/432))
+* `r/iploadbalancing_tcp_farm`: Update documentation page ([#432](https://github.com/ovh/terraform-provider-ovh/pull/432))
+* `r/iploadbalancing_tcp_farm_server`: Update documentation page ([#432](https://github.com/ovh/terraform-provider-ovh/pull/432))
+* `r/iploadbalancing_tcp_frontend`: Update documentation page ([#432](https://github.com/ovh/terraform-provider-ovh/pull/432))
+* `r/iploadbalancing_tcp_route`: Update documentation page ([#432](https://github.com/ovh/terraform-provider-ovh/pull/432))
+* `r/iploadbalancing_tcp_route_rule`: Update documentation page ([#432](https://github.com/ovh/terraform-provider-ovh/pull/432))
+
+* `d/ovh_cloud_project_database_kafka_schemaregistryacl`: Add documentation page ([#451](https://github.com/ovh/terraform-provider-ovh/pull/451))
+* `d/ovh_cloud_project_database_kafka_schemaregistryacls`: Add documentation page ([#451](https://github.com/ovh/terraform-provider-ovh/pull/451))
+* `d/iam_policies`: Update documentation page ([#445](https://github.com/ovh/terraform-provider-ovh/pull/445))
+* `d/iam_policy`: Update documentation page ([#445](https://github.com/ovh/terraform-provider-ovh/pull/445))
+* `d/iam_reference_actions`: Update documentation page ([#445](https://github.com/ovh/terraform-provider-ovh/pull/445))
+* `d/iam_reference_resource_type`: Update documentation page ([#445](https://github.com/ovh/terraform-provider-ovh/pull/445))
+
+❤️ Thanks for your contributions ❤️
 
 ## 0.32.0 (July 18, 2023)
 
