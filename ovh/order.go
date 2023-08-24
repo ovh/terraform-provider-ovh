@@ -494,3 +494,25 @@ func waitForOrder(c *ovh.Client, id int64) resource.StateRefreshFunc {
 		return r, r, nil
 	}
 }
+
+func orderDetailOperations(c *ovh.Client, orderId int64, orderDetailId int64) ([]*MeOrderDetailOperation, error) {
+	log.Printf("[DEBUG] Will list order detail operations %d/%d", orderId, orderDetailId)
+	operationsIds := []int64{}
+	endpoint := fmt.Sprintf("/me/order/%d/details/%d/operations", orderId, orderDetailId)
+	if err := c.Get(endpoint, &operationsIds); err != nil {
+		return nil, fmt.Errorf("calling get %s:\n\t %q", endpoint, err)
+	}
+
+	operations := make([]*MeOrderDetailOperation, len(operationsIds))
+	for i, operationId := range operationsIds {
+		operation := &MeOrderDetailOperation{}
+		log.Printf("[DEBUG] Will read order detail operations %d/%d/%d", orderId, orderDetailId, operationId)
+		endpoint := fmt.Sprintf("/me/order/%d/details/%d/operations/%d", orderId, orderDetailId, operationId)
+		if err := c.Get(endpoint, operation); err != nil {
+			return nil, fmt.Errorf("calling get %s:\n\t %q", endpoint, err)
+		}
+
+		operations[i] = operation
+	}
+	return operations, nil
+}

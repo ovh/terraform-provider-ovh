@@ -30,6 +30,20 @@ func (v MeOrderDetail) ToMap() map[string]interface{} {
 	return obj
 }
 
+type MeOrderDetailOperation struct {
+	Status   string                         `json:"status"`
+	ID       int                            `json:"id"`
+	Type     string                         `json:"type"`
+	Resource MeOrderDetailOperationResource `json:"resource"`
+	Quantity int                            `json:"quantity"`
+}
+
+type MeOrderDetailOperationResource struct {
+	Name        string `json:"name"`
+	State       string `json:"state"`
+	DisplayName string `json:"displayName"`
+}
+
 type MeOrderPaymentOpts struct {
 	PaymentMean   string `json:"paymentMean"`
 	PaymentMeanId *int64 `json:"paymentMeanId,omitEmpty"`
