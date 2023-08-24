@@ -16,7 +16,7 @@ func TestAccCloudProjectCapabilitiesContainerRegistryDataSource_basic(t *testing
 	)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheckCloud(t) },
+		PreCheck:  func() { testAccPreCheckContainerRegistry(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
