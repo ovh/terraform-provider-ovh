@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-const testAccCloudProjectDatabaseKafkaSchemaregistryaclConfig = `
+const testAccCloudProjectDatabaseKafkaSchemaRegistryAclConfig = `
 resource "ovh_cloud_project_database" "db" {
 	service_name = "%s"
 	description  = "%s"
@@ -37,7 +37,7 @@ resource "ovh_cloud_project_database_kafka_schemaregistryacl" "schemaRegistryAcl
 }
 `
 
-func TestAccCloudProjectDatabaseKafkaSchemaregistryacl_basic(t *testing.T) {
+func TestAccCloudProjectDatabaseKafkaSchemaRegistryAcl_basic(t *testing.T) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
 	version := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_KAFKA_VERSION_TEST")
 	if version == "" {
@@ -51,7 +51,7 @@ func TestAccCloudProjectDatabaseKafkaSchemaregistryacl_basic(t *testing.T) {
 	username := "johnDoe"
 
 	config := fmt.Sprintf(
-		testAccCloudProjectDatabaseKafkaSchemaregistryaclConfig,
+		testAccCloudProjectDatabaseKafkaSchemaRegistryAclConfig,
 		serviceName,
 		description,
 		version,
