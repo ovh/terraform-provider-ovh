@@ -109,6 +109,10 @@ variables must also be set:
 
 * `OVH_CLOUD_PROJECT_SERVICE_TEST` - The ID of your public cloud project.
 
+* `OVH_CLOUD_PROJECT_CONTAINERREGISTRY_OIDC_ENDPOINT_TEST` - The OIDC endpoint of the container registry to test.
+
+* `OVH_CLOUD_PROJECT_CONTAINERREGISTRY_REGION_TEST` - The region of the container registry to test.
+
 * `OVH_CLOUD_PROJECT_DATABASE_ENGINE_TEST` - The name of the database engine to test.
 
 * `OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST` - The version of the database engine to test.

@@ -11,24 +11,24 @@ import (
 
 func TestAccCloudProjectContainerRegistryUser_basic(t *testing.T) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
-	regName := acctest.RandomWithPrefix(test_prefix)
-	region := "GRA"
+	registryName := acctest.RandomWithPrefix(test_prefix)
+	region := os.Getenv("OVH_CLOUD_PROJECT_CONTAINERREGISTRY_REGION_TEST")
 	config := fmt.Sprintf(
 		testAccCloudProjectContainerRegistryUserConfig,
 		serviceName,
 		region,
-		regName,
+		registryName,
 	)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheckCloud(t) },
+		PreCheck:  func() { testAccPreCheckContainerRegistry(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_containerregistry.reg", "name", regName),
+						"ovh_cloud_project_containerregistry.reg", "name", registryName),
 					resource.TestCheckResourceAttr(
 						"ovh_cloud_project_containerregistry.reg", "region", region),
 					resource.TestCheckResourceAttrSet(
