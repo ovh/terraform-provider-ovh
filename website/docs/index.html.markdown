@@ -104,6 +104,7 @@ variables must also be set:
 * `OVH_ENDPOINT` - possible value are: `ovh-eu`, `ovh-ca`, `ovh-us`, `soyoustart-eu`, `soyoustart-ca`, `kimsufi-ca`, `kimsufi-eu`, `runabove-ca`
 
 * `OVH_IPLB_SERVICE_TEST` - The ID of the IP Load Balancer to use
+* `OVH_IPLB_IPFO_TEST`- An array of FailOver IPs (also known as Additional IPs) that shall be associated with the IPLB Service
 
 * `OVH_VRACK_SERVICE_TEST` - The ID of the vRack to use.
 
