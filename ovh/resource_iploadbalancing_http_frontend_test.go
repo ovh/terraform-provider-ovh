@@ -68,13 +68,14 @@ func testSweepIploadbalancingHttpFrontend(region string) error {
 
 func TestAccIpLoadbalancingHttpFrontend_basic(t *testing.T) {
 	iplb := os.Getenv("OVH_IPLB_SERVICE_TEST")
+	ipfo := os.Getenv("OVH_IPLB_IPFO_TEST")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheckIpLoadbalancing(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(testAccCheckOvhIpLoadbalancingHttpFrontendConfig_basic, iplb, test_prefix),
+				Config: fmt.Sprintf(testAccCheckOvhIpLoadbalancingHttpFrontendConfig_basic, iplb, test_prefix, ipfo),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
 						TEST_ACC_IPLOADBALANCING_HTTP_FRONTEND_RES_NAME, "display_name", test_prefix),
@@ -104,7 +105,7 @@ func TestAccIpLoadbalancingHttpFrontend_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: fmt.Sprintf(testAccCheckOvhIpLoadbalancingHttpFrontendConfig_basic, iplb, test_prefix),
+				Config: fmt.Sprintf(testAccCheckOvhIpLoadbalancingHttpFrontendConfig_basic, iplb, test_prefix, ipfo),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
 						TEST_ACC_IPLOADBALANCING_HTTP_FRONTEND_RES_NAME, "display_name", test_prefix),
@@ -157,6 +158,7 @@ resource "ovh_iploadbalancing_http_frontend" "testfrontend" {
    port     = "22280"
    disabled = true
    ssl      = true
+   dedicated_ipfo = %s
 }
 `
 const testAccCheckOvhIpLoadbalancingHttpFrontendConfig_update = `
