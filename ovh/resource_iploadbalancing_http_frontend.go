@@ -40,7 +40,7 @@ func resourceIpLoadbalancingHttpFrontend() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"dedicated_ipfo": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},

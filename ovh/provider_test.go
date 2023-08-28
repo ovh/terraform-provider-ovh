@@ -233,6 +233,7 @@ func testAccPreCheckKubernetesVRack(t *testing.T) {
 func testAccPreCheckIpLoadbalancing(t *testing.T) {
 	testAccPreCheckCredentials(t)
 	checkEnvOrSkip(t, "OVH_IPLB_SERVICE_TEST")
+	checkEnvOrSkip(t, "OVH_IPLB_IPFO_TEST")
 }
 
 // Checks that the environment variables needed to order /ipLoadbalacing for acceptance tests
