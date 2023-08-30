@@ -8,21 +8,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-const testAccDataSourceDbaasLogsCluster = `
-data "ovh_dbaas_logs_cluster" "ldp" {
+const testAccDataSourceDbaasLogsClusters = `
+data "ovh_dbaas_logs_clusters" "ldp" {
   service_name = "%s"
-  cluster_id   = "%s"
 }
 `
 
-func TestAccDataSourceDbaasLogsCluster(t *testing.T) {
+func TestAccDataSourceDbaasLogsClusters(t *testing.T) {
 	serviceName := os.Getenv("OVH_DBAAS_LOGS_SERVICE_TEST")
 	clusterId := os.Getenv("OVH_DBAAS_LOGS_CLUSTER_ID")
 
 	config := fmt.Sprintf(
-		testAccDataSourceDbaasLogsCluster,
+		testAccDataSourceDbaasLogsClusters,
 		serviceName,
-		clusterId,
 	)
 
 	resource.Test(t, resource.TestCase{
@@ -34,9 +32,14 @@ func TestAccDataSourceDbaasLogsCluster(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
-						"data.ovh_dbaas_logs_cluster.ldp",
+						"data.ovh_dbaas_logs_clusters.ldp",
 						"service_name",
 						serviceName,
+					),
+					resource.TestCheckTypeSetElemAttr(
+						"data.ovh_dbaas_logs_clusters.ldp",
+						"uuids.*",
+						clusterId,
 					),
 				),
 			},
