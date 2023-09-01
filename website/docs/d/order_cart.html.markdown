@@ -18,7 +18,7 @@ data "ovh_order_cart" "mycart" {
 ## Argument Reference
 
 
-* `ovh_subsidiary` - (Required) OVHcloud Subsidiary
+* `ovh_subsidiary` - (Required) OVHcloud Subsidiary. Country of OVHcloud legal entity you'll be billed by. List of supported subsidiaries available on API at [/1.0/me.json under `models.nichandle.OvhSubsidiaryEnum`](https://eu.api.ovh.com/1.0/me.json)
 * `description` - Description of your cart
 * `assign` - Assign a shopping cart to a logged in client. Values can be `true` or `false`. 
 * `expire` - Expiration time (format: 2006-01-02T15:04:05+00:00)

@@ -56,7 +56,7 @@ output "privatedatabase_service_name" {
 The following arguments are supported:
 
 * `description` - Custom description on your privatedatabase order.
-* `ovh_subsidiary` - (Required) OVHcloud Subsidiary
+* `ovh_subsidiary` - (Required) OVHcloud Subsidiary. Country of OVHcloud legal entity you'll be billed by. List of supported subsidiaries available on API at [/1.0/me.json under `models.nichandle.OvhSubsidiaryEnum`](https://eu.api.ovh.com/1.0/me.json)
 * `plan` - (Required) Product Plan to order
   * `duration` - (Required) duration.
   * `plan_code` - (Required) Plan code.
