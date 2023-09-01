@@ -21,7 +21,7 @@ This project accepts contributions. In order to contribute, you should pay atten
 - Each resource and/or datasource need to have an acceptance test
 - If you use new environment variables, document them in `website/docs/index.html.markdown`
 - Acceptance tests must be run and must pass
-- Don't forget to add or modify existing sweeper method if you think the acceptance tests may leave oprhan resources on failure
+- Don't forget to add or modify existing sweeper method if you think the acceptance tests may leave orphan resources on failure
 
 ## Submitting Modifications:
 
