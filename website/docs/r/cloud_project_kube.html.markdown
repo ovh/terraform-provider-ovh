@@ -35,7 +35,7 @@ output "kubeconfig_file" {
 
 Create a simple Kubernetes cluster in `GRA7` region and read kubeconfig attributes:
 
--> Sensitive attributes cannot be displayed using `terraform ouput` command. You need to specify the output's name: `terraform ouput mycluster-host`.
+-> Sensitive attributes cannot be displayed using `terraform output` command. You need to specify the output's name: `terraform output mycluster-host`.
 
 ```hcl
 resource "ovh_cloud_project_kube" "mycluster" {
