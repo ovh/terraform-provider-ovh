@@ -47,12 +47,12 @@ The following attributes are exported:
   * `code` - Plan code from the catalog
   * `created_at` - Plan creation date
   * `features` - Features of the plan
-    * `vulnerability` - Vulnerability scanning
+     * `vulnerability` - Vulnerability scanning
   * `id` - Plan ID
   * `name` - Plan name
   * `registry_limits` - Container registry limits
-    * `image_storage` - Docker image storage limits in bytes
-    * `parallel_request` - Parallel requests on Docker image API (/v2 Docker registry API)
+     * `image_storage` - Docker image storage limits in bytes
+     * `parallel_request` - Parallel requests on Docker image API (/v2 Docker registry API)
   * `updated_at` - Plan last update date
 * `project_id` - Project ID of your registry
 * `region` - Region of the registry
