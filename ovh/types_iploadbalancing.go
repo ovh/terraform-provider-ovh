@@ -1,9 +1,14 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
+	"net/url"
+	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
@@ -668,4 +673,73 @@ func (opts *IpLoadbalancingVrackNetworkUpdateOpts) FromResource(d *schema.Resour
 	opts.Vlan = helpers.GetNilInt64PointerFromData(d, "vlan")
 
 	return opts
+}
+
+type IpTaskStatus string
+
+const (
+	IpTaskStatusCancelled     IpTaskStatus = "cancelled"
+	IpTaskStatusCustomerError IpTaskStatus = "customerError"
+	IpTaskStatusDoing         IpTaskStatus = "doing"
+	IpTaskStatusDone          IpTaskStatus = "done"
+	IpTaskStatusInit          IpTaskStatus = "init"
+	IpTaskStatusOvhError      IpTaskStatus = "ovhError"
+	IpTaskStatusTodo          IpTaskStatus = "todo"
+)
+
+type IpTask struct {
+	Comment     string       `json:"comment"`
+	Destination string       `json:"destination"`
+	DoneDate    time.Time    `json:"doneDate"`
+	Function    string       `json:"function"`
+	LastUpdate  time.Time    `json:"lastUpdate"`
+	StartDate   time.Time    `json:"startDate"`
+	Status      IpTaskStatus `json:"status"`
+	TaskID      int64        `json:"taskId"`
+}
+
+type IpMoveCreateOpts struct {
+	Nexthop string `json:"nexthop"`
+	To      string `json:"to"`
+}
+
+func (opts *IpMoveCreateOpts) FromResource(d *schema.ResourceData) *IpMoveCreateOpts {
+	opts.Nexthop = d.Get("nexthop").(string)
+	opts.To = d.Get("to").(string)
+
+	return opts
+}
+
+func waitForIpLoadbalancingFailoverIpAttachDone(ctx context.Context, client *ovh.Client, ip string, taskID int64, timeOut time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Target: []string{string(IpTaskStatusDone)},
+		Refresh: func() (interface{}, string, error) {
+			endpoint := fmt.Sprintf("/ip/%s/task/%d", url.PathEscape(ip), taskID)
+
+			ipTask := IpTask{}
+			err := client.Get(endpoint, &ipTask)
+			if err != nil {
+				return nil, "", err
+			}
+
+			if ipTask.Status == IpTaskStatusCustomerError ||
+				ipTask.Status == IpTaskStatusOvhError {
+				return ipTask, "", fmt.Errorf(ipTask.Comment)
+			}
+
+			if ipTask.Status == IpTaskStatusDoing ||
+				ipTask.Status == IpTaskStatusInit ||
+				ipTask.Status == IpTaskStatusTodo {
+				return ipTask, "", nil
+			}
+
+			return ipTask, string(ipTask.Status), nil
+		},
+		Timeout:    timeOut,
+		Delay:      20 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+	return err
 }

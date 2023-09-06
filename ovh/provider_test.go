@@ -78,6 +78,14 @@ func testAccPreCheckIp(t *testing.T) {
 	checkEnvOrSkip(t, "OVH_IP_REVERSE_TEST")
 }
 
+// Checks that the environment variables needed for the ipLoadbalancing/{service_name}/failover acceptance tests
+// are set/.
+func testAccPreCheckIpLoadbalancingFailoverIpAttach(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_IPLB_SERVICE_TEST")
+	checkEnvOrSkip(t, "OVH_IP_BLOCK_TEST")
+}
+
 // Checks that the environment variables needed to order /ip/service for acceptance tests
 // are set.
 func testAccPreCheckOrderIpService(t *testing.T) {
