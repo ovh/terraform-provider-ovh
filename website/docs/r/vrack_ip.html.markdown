@@ -10,8 +10,10 @@ Attach an IP block to a VRack.
 ## Example Usage
 
 ```hcl
+data "ovh_me" "myaccount" {}
+
 data "ovh_order_cart" "mycart" {
-  ovh_subsidiary = "fr"
+  ovh_subsidiary = data.ovh_me.myaccount.ovh_subsidiary
   description    = "my cart"
 }
 

@@ -18,9 +18,10 @@ Use with caution.
 ## Example Usage
 
 ```hcl
+data "ovh_me" "myaccount" {}
+
 data "ovh_order_cart" "mycart" {
   ovh_subsidiary = "fr"
-  description    = "order ip block"
 }
 
 data "ovh_order_cart_product_plan" "ipblock" {
