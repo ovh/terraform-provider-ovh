@@ -13,8 +13,10 @@ Creates a domain zone.
 ## Example Usage
 
 ```hcl
+data "ovh_me" "myaccount" {}
+
 data "ovh_order_cart" "mycart" {
-  ovh_subsidiary = "fr"
+  ovh_subsidiary = data.ovh_me.myaccount.ovh_subsidiary
 }
 
 data "ovh_order_cart_product_plan" "zone" {
