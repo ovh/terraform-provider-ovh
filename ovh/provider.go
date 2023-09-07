@@ -51,6 +51,7 @@ func Provider() *schema.Provider {
 			"ovh_cloud_project_capabilities_containerregistry_filter": dataSourceCloudProjectCapabilitiesContainerRegistryFilter(),
 			"ovh_cloud_project_containerregistries":                   dataSourceCloudProjectContainerRegistries(),
 			"ovh_cloud_project_containerregistry":                     dataSourceCloudProjectContainerRegistry(),
+			"ovh_cloud_project_containerregistry_oidc":                dataSourceCloudProjectContainerRegistryOIDC(),
 			"ovh_cloud_project_containerregistry_users":               dataSourceCloudProjectContainerRegistryUsers(),
 			"ovh_cloud_project_database":                              dataSourceCloudProjectDatabase(),
 			"ovh_cloud_project_databases":                             dataSourceCloudProjectDatabases(),
@@ -142,6 +143,7 @@ func Provider() *schema.Provider {
 		ResourcesMap: map[string]*schema.Resource{
 			"ovh_cloud_project":                                           resourceCloudProject(),
 			"ovh_cloud_project_containerregistry":                         resourceCloudProjectContainerRegistry(),
+			"ovh_cloud_project_containerregistry_oidc":                    resourceCloudProjectContainerRegistryOIDC(),
 			"ovh_cloud_project_containerregistry_user":                    resourceCloudProjectContainerRegistryUser(),
 			"ovh_cloud_project_database":                                  resourceCloudProjectDatabase(),
 			"ovh_cloud_project_database_database":                         resourceCloudProjectDatabaseDatabase(),

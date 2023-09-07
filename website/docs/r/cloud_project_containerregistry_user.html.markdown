@@ -11,7 +11,7 @@ Creates a user for a container registry associated with a public cloud project.
 ```hcl
 data "ovh_cloud_project_containerregistry" "registry" {
   service_name = "XXXXXX"
-  registry_id  = "yyyy"
+  registry_id  = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx"
 }
 
 resource "ovh_cloud_project_containerregistry_user" "user" {

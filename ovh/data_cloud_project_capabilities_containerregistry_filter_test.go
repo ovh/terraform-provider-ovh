@@ -11,7 +11,7 @@ import (
 func TestAccCloudProjectCapabilitiesContainerRegistryFilterDataSource_basic(t *testing.T) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
 	planName := "SMALL"
-	region := "GRA"
+	region := os.Getenv("OVH_CLOUD_PROJECT_CONTAINERREGISTRY_REGION_TEST")
 
 	config := fmt.Sprintf(
 		testAccCloudProjectCapabilitiesContainerRegistryFilterDatasourceConfig_Basic,
@@ -21,7 +21,7 @@ func TestAccCloudProjectCapabilitiesContainerRegistryFilterDataSource_basic(t *t
 	)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheckCloud(t) },
+		PreCheck:  func() { testAccPreCheckContainerRegistry(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -30,7 +30,7 @@ func TestAccCloudProjectCapabilitiesContainerRegistryFilterDataSource_basic(t *t
 					resource.TestCheckResourceAttr(
 						"data.ovh_cloud_project_capabilities_containerregistry_filter.cap",
 						"region",
-						"GRA",
+						region,
 					),
 					resource.TestCheckResourceAttr(
 						"data.ovh_cloud_project_capabilities_containerregistry_filter.cap",
