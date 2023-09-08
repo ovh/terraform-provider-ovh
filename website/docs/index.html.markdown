@@ -145,6 +145,7 @@ variables must also be set:
 * `OVH_CLOUD_PROJECT_KUBE_REGION_TEST` - The region of your public cloud kubernetes project.
 
 * `OVH_CLOUD_PROJECT_KUBE_VERSION_TEST` - The version of your public cloud kubernetes project.
+* `OVH_CLOUD_PROJECT_KUBE_PREV_VERSION_TEST` - The previous version of your public cloud kubernetes project. This is used to test upgrade. 
 
 * `OVH_DEDICATED_SERVER` - The name of the dedicated server to test dedicated_server_networking resource.
 

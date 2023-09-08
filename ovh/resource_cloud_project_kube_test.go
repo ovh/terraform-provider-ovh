@@ -1166,8 +1166,8 @@ func TestAccCloudProjectKubeUpdateVersion_basic(t *testing.T) {
 	name := acctest.RandomWithPrefix(test_prefix)
 	updatedName := acctest.RandomWithPrefix(test_prefix)
 
-	version1 := "1.24"
-	version2 := "1.25"
+	version1 := os.Getenv("OVH_CLOUD_PROJECT_KUBE_VERSION_TEST")
+	version2 := os.Getenv("OVH_CLOUD_PROJECT_KUBE_PREV_VERSION_TEST")
 
 	config := fmt.Sprintf(
 		testAccCloudProjectKubeConfig,
