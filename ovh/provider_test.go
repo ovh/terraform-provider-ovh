@@ -234,6 +234,7 @@ func testAccPreCheckKubernetes(t *testing.T) {
 	testAccPreCheckCloud(t)
 	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_KUBE_REGION_TEST")
 	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_KUBE_VERSION_TEST")
+	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_KUBE_PREV_VERSION_TEST")
 }
 
 // Checks that the environment variables needed for the /vrack/{service}/cloudProject acceptance tests
