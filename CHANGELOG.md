@@ -1,4 +1,51 @@
-## 0.34.0 (Unreleased)
+## 0.35.0 (Unreleased)
+
+## 0.34.0 (September 11, 2023)
+
+⚙️ General:
+
+* Bump github.com/ovh/go-ovh from 1.4.1 to 1.4.2 ([#460](https://github.com/ovh/terraform-provider-ovh/pull/460))
+
+💪 Improvements:
+
+* `r/cloud_project_containerregistry_oidc`: Add OIDC configuration to containerRegistry ([#459](https://github.com/ovh/terraform-provider-ovh/pull/459))
+
+* `d/cloud_project_containerregistry_oidc`: Add OIDC configuration to containerRegistry ([#459](https://github.com/ovh/terraform-provider-ovh/pull/459))
+
+🐜 Bug fixes:
+
+* `r/iploadbalancing_http_frontend`: Fix behavior when OVH API returns unordered response - Fix [#439](https://github.com/ovh/terraform-provider-ovh/issues/439) ([#458](https://github.com/ovh/terraform-provider-ovh/pull/458))
+* `r/cloud_project_kube_test`: Use an environment variable for the Kubernetes previous version ([#466](https://github.com/ovh/terraform-provider-ovh/pull/466))
+* `r/order`: Creation, Update and import are now solved for US accounts ([#455](https://github.com/ovh/terraform-provider-ovh/pull/455))
+* `r/cloud_project`: Creation, Update and import are now solved for US accounts ([#455](https://github.com/ovh/terraform-provider-ovh/pull/455))
+
+📚 Documentation:
+
+* `index`: Update documentation page ([#466](https://github.com/ovh/terraform-provider-ovh/pull/466))
+
+* `r/cloud_project`: Update documentation page ([#456](https://github.com/ovh/terraform-provider-ovh/pull/456))
+* `r/hosting_privatedatabase`: Update documentation page ([#456](https://github.com/ovh/terraform-provider-ovh/pull/456))
+* `r/ip_service`: Update documentation page ([#456](https://github.com/ovh/terraform-provider-ovh/pull/456))
+* `r/iploadbalancing`: Update documentation page ([#456](https://github.com/ovh/terraform-provider-ovh/pull/456))
+* `r/ovh_domain_zone`: Update documentation page ([#456](https://github.com/ovh/terraform-provider-ovh/pull/456))
+* `r/vrack`: Update documentation page ([#456](https://github.com/ovh/terraform-provider-ovh/pull/456))
+* `r/cloud_project_kube`: Update documentation page ([#461](https://github.com/ovh/terraform-provider-ovh/pull/461))
+* `r/cloud_project_kube`: Update documentation page ([#461](https://github.com/ovh/terraform-provider-ovh/pull/461))
+* `r/cloud_project_containerregistry`: Update documentation page ([#462](https://github.com/ovh/terraform-provider-ovh/pull/462))
+* `r/cloud_project_containerregistry_oidc`: Add documentation page ([#459](https://github.com/ovh/terraform-provider-ovh/pull/459))
+* `r/cloud_project_containerregistry_users`: Update documentation page ([#459](https://github.com/ovh/terraform-provider-ovh/pull/459))
+* `r/vrack_ip`: Update documentation page ([#465](https://github.com/ovh/terraform-provider-ovh/pull/465))
+
+* `d/order_cart`: Update documentation page ([#456](https://github.com/ovh/terraform-provider-ovh/pull/456))
+* `d/order_cart_product`: Update documentation page ([#465](https://github.com/ovh/terraform-provider-ovh/pull/465))
+* `d/order_cart_product_options`: Update documentation page ([#465](https://github.com/ovh/terraform-provider-ovh/pull/465))
+* `d/order_cart_product_options_plan`: Update documentation page ([#465](https://github.com/ovh/terraform-provider-ovh/pull/465))
+* `d/order_cart_product_plan`: Update documentation page ([#465](https://github.com/ovh/terraform-provider-ovh/pull/465))
+* `d/cloud_project_containerregistry`: Update documentation page ([#459](https://github.com/ovh/terraform-provider-ovh/pull/459))
+* `d/cloud_project_containerregistry_oidc`: Add documentation page ([#459](https://github.com/ovh/terraform-provider-ovh/pull/459))
+* `d/cloud_project_containerregistry_users`: Update documentation page ([#459](https://github.com/ovh/terraform-provider-ovh/pull/459))
+
+❤️ Thanks for your contributions ❤️
 
 ## 0.33.0 (August 24, 2023)
 
