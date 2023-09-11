@@ -23,6 +23,7 @@ data "ovh_order_cart_product_plan" "cloud" {
   price_capacity = "renew"
   product        = "cloud"
   plan_code      = "project.2018"
+  # plan_code    = "project" # when running in the US
 }
 
 resource "ovh_cloud_project" "my_cloud_project" {
@@ -37,6 +38,8 @@ resource "ovh_cloud_project" "my_cloud_project" {
 }
 ```
 
+-> __WARNING__ Currently, the OVHcloud Terraform provider does not support deletion of a public cloud project in the US. Removal is possible by manually deleting the project and then manually removing the public cloud project from terraform state.
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -46,7 +49,7 @@ The following arguments are supported:
 * `ovh_subsidiary` - (Required) OVHcloud Subsidiary. Country of OVHcloud legal entity you'll be billed by. List of supported subsidiaries available on API at [/1.0/me.json under `models.nichandle.OvhSubsidiaryEnum`](https://eu.api.ovh.com/1.0/me.json)
 * `plan` - (Required) Product Plan to order
   * `duration` - (Required) duration
-  * `plan_code` - (Required) Plan code
+  * `plan_code` - (Required) Plan code. This value must be adapted depending on your `OVH_ENDPOINT` value. It's `project.2018` for `ovh-{eu,ca}` and `project` when using `ovh-us`.
   * `pricing_mode` - (Required) Pricing model identifier
   * `catalog_name` - Catalog name
   * `configuration` - (Optional) Representation of a configuration item for personalizing product
