@@ -14,9 +14,10 @@ import (
 )
 
 const testAccCloudProjectBasic = `
+data "ovh_me" "myaccount" {}
+
 data "ovh_order_cart" "mycart" {
- ovh_subsidiary = "fr"
- description    = "%s"
+ ovh_subsidiary = data.ovh_me.myaccount.ovh_subsidiary
 }
 
 data "ovh_order_cart_product_plan" "cloud" {
@@ -126,7 +127,6 @@ func TestAccResourceCloudProject_basic(t *testing.T) {
 	desc := acctest.RandomWithPrefix(test_prefix)
 	config := fmt.Sprintf(
 		testAccCloudProjectBasic,
-		desc,
 		desc,
 	)
 	resource.Test(t, resource.TestCase{
