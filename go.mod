@@ -6,7 +6,7 @@ require (
 	github.com/hashicorp/go-version v1.6.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.24.0
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/ovh/go-ovh v1.4.1
+	github.com/ovh/go-ovh v1.4.2
 	github.com/ybriffa/rfc3339 v0.0.0-20220203155318-1789e3fd6e70
 	golang.org/x/exp v0.0.0-20230224173230-c95f2b4c22f2
 	gopkg.in/ini.v1 v1.67.0
