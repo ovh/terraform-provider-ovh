@@ -19,13 +19,14 @@ data "ovh_order_cart_product_plan" "plan" {
   price_capacity    = "renew"
   product           = "cloud"
   plan_code         = "project"
+  catalog_name      = "iplb_private_beta"
 }
 ```
 
 ## Argument Reference
 
 * `cart_id` - (Required) Cart identifier
-* `catalog_name` - Catalog name
+* `catalog_name` - Catalog name (Internal API - restricted to OVHcloud internal employees)
 * `plan_code` - (Required) Product offer identifier
 * `price_capacity` - (Required) Capacity of the pricing (type of pricing)
 * `product` - (Required) Product
