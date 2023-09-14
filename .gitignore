@@ -32,3 +32,7 @@ terraform-provider-ovh
 # Test exclusions
 !command/test-fixtures/**/*.tfstate
 !command/test-fixtures/**/.terraform/
+examples/kube-nodepool-deployment/.terraform.lock.hcl
+examples/kube-nodepool-deployment/.terraform.tfstate.lock.info
+examples/kube-nodepool-deployment/logs
+examples/kube-nodepool-deployment/my-kube-cluster-*.yml
