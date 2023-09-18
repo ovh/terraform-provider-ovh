@@ -1,11 +1,14 @@
 package ovh
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
+	"reflect"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccDataCloudProjectUserS3PolicyConfig_basic = `
@@ -38,7 +41,7 @@ data "ovh_cloud_project_user_s3_policy" "policy" {
 }
 `
 
-const normalizedPolicyRWBucket = "{\"Statement\":[{\"Sid\":\"RWContainer\",\"Effect\":\"Allow\",\"Action\":[\"s3:GetObject\",\"s3:PutObject\",\"s3:DeleteObject\",\"s3:ListBucket\",\"s3:ListMultipartUploadParts\",\"s3:ListBucketMultipartUploads\",\"s3:AbortMultipartUpload\",\"s3:GetBucketLocation\"],\"Resource\":[\"arn:aws:s3:::hp-bucket\",\"arn:aws:s3:::hp-bucket/*\"],\"Condition\":null}]}"
+const normalizedPolicyRWBucket = "{\"Statement\":[{\"Sid\":\"RWContainer\",\"Effect\":\"Allow\",\"Action\":[\"s3:GetObject\",\"s3:PutObject\",\"s3:DeleteObject\",\"s3:ListBucket\",\"s3:ListMultipartUploadParts\",\"s3:ListBucketMultipartUploads\",\"s3:AbortMultipartUpload\",\"s3:GetBucketLocation\"],\"Resource\":[\"arn:aws:s3:::hp-bucket\",\"arn:aws:s3:::hp-bucket/*\"]}]}"
 
 func TestAccDataCloudProjectUserS3Policy_basic(t *testing.T) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
@@ -54,9 +57,28 @@ func TestAccDataCloudProjectUserS3Policy_basic(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
-					resource.TestCheckResourceAttr(resourceName, "policy", normalizedPolicyRWBucket),
+					testCheckResourceAttrJson(resourceName, "policy", normalizedPolicyRWBucket),
 				),
 			},
 		},
 	})
+}
+
+func testCheckResourceAttrJson(resourceName string, attributeName string, attributeValue string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		// retrieve the resource by name from state
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		stateValue := rs.Primary.Attributes[attributeName]
+		var v1, v2 interface{}
+		json.Unmarshal([]byte(attributeValue), &v1)
+		json.Unmarshal([]byte(stateValue), &v2)
+		if !reflect.DeepEqual(v1, v2) {
+			return fmt.Errorf("for attribute %s.%s got %s expected %s", resourceName, attributeName, stateValue, attributeValue)
+		}
+		return nil
+	}
 }
