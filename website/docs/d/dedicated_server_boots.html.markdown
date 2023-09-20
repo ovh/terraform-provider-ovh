@@ -21,6 +21,8 @@ data "ovh_dedicated_server_boots" "netboots" {
 
 * `boot_type` - (Optional) Filter the value of bootType property (harddisk, rescue, ipxeCustomerScript, internal, network)
 
+* `kernel` - (Optional) Filter the value of kernel property (iPXE script name)
+
 ## Attributes Reference
 
 The following attributes are exported:
