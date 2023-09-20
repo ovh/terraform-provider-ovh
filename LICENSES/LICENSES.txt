@@ -1,0 +1,61 @@
+Licences:
+Apache-2.0
+BSD-2-Clause
+BSD-3-Clause
+ISC
+MIT
+MPL-2.0
+Unknown
+
+Packages:
+github.com/agext/levenshtein; Apache-2.0
+github.com/apparentlymart/go-textseg/v13; Apache-2.0
+github.com/davecgh/go-spew; ISC
+github.com/fatih/color; MIT
+github.com/golang/go; BSD-3-Clause
+github.com/golang/protobuf; BSD-3-Clause
+github.com/google/go-cmp; BSD-3-Clause
+github.com/hashicorp/errwrap; MPL-2.0
+github.com/hashicorp/go-checkpoint; MPL-2.0
+github.com/hashicorp/go-cleanhttp; MPL-2.0
+github.com/hashicorp/go-cty; MIT
+github.com/hashicorp/go-hclog; MIT
+github.com/hashicorp/go-multierror; MPL-2.0
+github.com/hashicorp/go-plugin; MPL-2.0
+github.com/hashicorp/go-uuid; MPL-2.0
+github.com/hashicorp/go-version; MPL-2.0
+github.com/hashicorp/hc-install; MPL-2.0
+github.com/hashicorp/hcl/v2; MPL-2.0
+github.com/hashicorp/logutils; MPL-2.0
+github.com/hashicorp/terraform-exec; MPL-2.0
+github.com/hashicorp/terraform-json; MPL-2.0
+github.com/hashicorp/terraform-plugin-go; MPL-2.0
+github.com/hashicorp/terraform-plugin-log; MPL-2.0
+github.com/hashicorp/terraform-plugin-sdk/v2; MPL-2.0
+github.com/hashicorp/terraform-registry-address; MPL-2.0
+github.com/hashicorp/terraform-svchost; MPL-2.0
+github.com/hashicorp/yamux; MPL-2.0
+github.com/mattn/go-colorable; MIT
+github.com/mattn/go-isatty; MIT
+github.com/mitchellh/copystructure; MIT
+github.com/mitchellh/go-homedir; MIT
+github.com/mitchellh/go-testing-interface; MIT
+github.com/mitchellh/go-wordwrap; MIT
+github.com/mitchellh/mapstructure; MIT
+github.com/mitchellh/reflectwalk; MIT
+github.com/oklog/run; Apache-2.0
+github.com/ovh/go-ovh; BSD-3-Clause
+github.com/vmihailenco/msgpack/v4; BSD-2-Clause
+github.com/vmihailenco/msgpack; BSD-2-Clause
+github.com/vmihailenco/tagparser; BSD-2-Clause
+github.com/ybriffa/rfc3339; Unknown. See go/github.com/ybriffa/rfc3339/LICENSE file
+github.com/zclconf/go-cty; MIT
+golang.org/x/crypto; BSD-3-Clause
+golang.org/x/exp; BSD-3-Clause
+golang.org/x/net; BSD-3-Clause
+golang.org/x/text; BSD-3-Clause
+google.golang.org/genproto; Apache-2.0
+google.golang.org/grpc; Apache-2.0
+google.golang.org/protobuf; BSD-3-Clause
+gopkg.in/ini.v1; Apache-2.0
+gopkg.in/yaml.v3; Apache-2.0
