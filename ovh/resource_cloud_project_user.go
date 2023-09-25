@@ -131,6 +131,7 @@ func validateCloudProjectUserRoleFunc(v interface{}, k string) (ws []string, err
 	err := helpers.ValidateStringEnum(v.(string), []string{
 		"administrator",
 		"ai_training_operator",
+		"ai_training_read",
 		"authentication",
 		"backup_operator",
 		"compute_operator",
