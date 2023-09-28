@@ -40,7 +40,7 @@ Using the locally built provider
 
 If you wish to test the provider from the local version you just built, you can try the following method.
 
-First install the terraform provider binary into your local plugin repository:
+First install the Terraform Provider binary into your local plugin repository:
 
 ```sh
 # Set your target environment (OS_architecture): linux_amd64, darwin_amd64...
@@ -50,7 +50,7 @@ $ mkdir -p ~/.terraform.d/plugins/terraform.local/local/ovh/0.0.1/$ENV
 $ cp $GOPATH/bin/terraform-provider-ovh ~/.terraform.d/plugins/terraform.local/local/ovh/0.0.1/$ENV/terraform-provider-ovh_v0.0.1
 ```
 
-Then create a terraform configuration using this exact provider:
+Then create a Terraform configuration using this exact provider:
 
 ```sh
 $ mkdir ~/test-terraform-provider-ovh
@@ -69,12 +69,18 @@ terraform {
 provider "ovh" {
 }
 EOF
+
+# Export OVHcloud API credentials
 $ export OVH_ENDPOINT="..."
 $ export OVH_APPLICATION_KEY="..."
 $ export OVH_APPLICATION_SECRET="..."
 $ export OVH_CONSUMER_KEY="..."
+
+# Initialize your project and remove existing dependencies lock file
 $ rm .terraform.lock.hcl && terraform init
 ...
+
+# Apply your resources & datasources
 $ terraform apply
 ...
 ```
@@ -108,9 +114,9 @@ In order to run the full suite of Acceptance tests you will need to have the fol
 - a [Vrack](https://www.ovh.ie/solutions/vrack/)
 - a [Load Balancer](https://www.ovh.ie/solutions/load-balancer/)
 - a registered [Domain](https://www.ovh.ie/domains/)
-- a [cloud project](https://www.ovh.ie/public-cloud/instances/)
+- a [Cloud Project](https://www.ovh.ie/public-cloud/instances/)
 
-You will also need to setup your [OVH api](https://api.ovh.com) credentials. (see [documentation](https://www.terraform.io/docs/providers/ovh/index.html#configuration-reference))
+You will also need to setup your [OVH API](https://api.ovh.com) credentials. (see [documentation](https://www.terraform.io/docs/providers/ovh/index.html#configuration-reference))
 
 Once setup, please follow these steps to prepare an environment for running the Acceptance tests:
 
@@ -142,10 +148,10 @@ export OVH_ZONE_TEST="..."
 $ make testacc
 ```
 
-To filter acceptance test, you can run:
+To run only one acceptance test, you can run:
 
 ```sh
-$ make testacc TESTARGS="-run TestAccCloudProjectPrivateNetwork"
+$ make testacc TESTARGS="-run TestAccCloudProjectKubeUpdateVersion_basic"
 ```
 
 To remove dangling resources, you can run:
