@@ -3,7 +3,7 @@ Terraform OVH Provider
 
 The OVH Provider allows Terraform to manage [OVH](https://www.ovhcloud.com/) resources.
 
-- Website: [https://www.terraform.io](https://registry.terraform.io/providers/ovh/ovh/latest/docs)
+- Website: [registry.terraform.io](https://registry.terraform.io/providers/ovh/ovh/latest/docs)
 
 Requirements
 ------------
