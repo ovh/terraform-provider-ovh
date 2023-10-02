@@ -6,7 +6,7 @@ subcategory : "Account Management"
 
 Creates an SSH Key.
 
--> __NOTE__ An SSH key in OVH provider cannot be currently used with Public Cloud instances through terraform. We advise  to use [openstack provider](https://registry.terraform.io/providers/terraform-provider-openstack/openstack/latest) to manage Public Cloud instances. Hence, if you need to associate an SSH key to a Public Cloud instance, you need to use [openstack_compute_keypair_v2](https://registry.terraform.io/providers/terraform-provider-openstack/openstack/latest/docs/resources/compute_keypair_v2)
+-> __NOTE__ An SSH key in OVH provider cannot be currently used with Public Cloud instances through Terraform. We advise to use [OpenStack provider](https://registry.terraform.io/providers/terraform-provider-openstack/openstack/latest) to manage Public Cloud instances. Hence, if you need to associate an SSH key to a Public Cloud instance, you need to use [openstack_compute_keypair_v2](https://registry.terraform.io/providers/terraform-provider-openstack/openstack/latest/docs/resources/compute_keypair_v2) resource.
 
 ## Example Usage
 
