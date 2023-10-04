@@ -79,6 +79,15 @@ resource "ovh_cloud_project_kube" "cluster" {
 }
 `
 
+var testAccCloudProjectKubeUpdateLoadBalancersSubnetIdConfig = `
+resource "ovh_cloud_project_kube" "cluster" {
+	service_name  = "%s"
+	name          = "%s"
+	region        = "%s"
+	load_balancers_subnet_id = "%s"
+}
+`
+
 var testAccCloudProjectKubeConfig = `
 resource "ovh_cloud_project_kube" "cluster" {
 	service_name  = "%s"
@@ -1209,6 +1218,75 @@ func TestAccCloudProjectKubeUpdateVersion_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, updatedName),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterVersionKey, version2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCloudProjectKubeUpdateLoadBalancersSubnetId_basic(t *testing.T) {
+	region := os.Getenv("OVH_CLOUD_PROJECT_KUBE_REGION_TEST")
+
+	noSubnetName := acctest.RandomWithPrefix(test_prefix)
+	noSubnetConfig := fmt.Sprintf(
+		testAccCloudProjectKubeUpdateLoadBalancersSubnetIdConfig,
+		os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"),
+		noSubnetName,
+		region,
+		"ALWAYS_UPDATE",
+	)
+
+	subnetPresentName := acctest.RandomWithPrefix(test_prefix)
+	subnetPresentConfig := fmt.Sprintf(
+		testAccCloudProjectKubeUpdateLoadBalancersSubnetIdConfig,
+		os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"),
+		subnetPresentName,
+		region,
+		"777e7777-e89b-12d3-a456-426614174777",
+	)
+
+	subnetUpdatedName := acctest.RandomWithPrefix(test_prefix)
+	subnetUpdatedConfig := fmt.Sprintf(
+		testAccCloudProjectKubeUpdateLoadBalancersSubnetIdConfig,
+		os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"),
+		subnetUpdatedName,
+		region,
+		"123e4567-e89b-12d3-a456-426614174000",
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloud(t)
+			testAccCheckCloudProjectExists(t)
+			testAccPreCheckKubernetes(t)
+		},
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: noSubnetConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, noSubnetName),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "load_balancers_subnet_id", "ALWAYS_UPDATE"),
+				),
+			},
+			{
+				Config: subnetPresentConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, subnetPresentName),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "load_balancers_subnet_id", "NEVER_UPDATE"),
+				),
+			},
+			{
+				Config: subnetUpdatedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, subnetUpdatedName),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "update_policy", "NEVER_UPDATE"),
 				),
 			},
 		},
