@@ -16,6 +16,7 @@ import (
 
 const (
 	kubeClusterLoadBalancersSubnetIdKey       = "load_balancers_subnet_id"
+	kubeClusterNodesSubnetIdKey               = "nodes_subnet_id"
 	kubeClusterNameKey                        = "name"
 	kubeClusterPrivateNetworkIDKey            = "private_network_id"
 	kubeClusterPrivateNetworkConfigurationKey = "private_network_configuration"
@@ -277,6 +278,11 @@ func resourceCloudProjectKube() *schema.Resource {
 				},
 			},
 			kubeClusterLoadBalancersSubnetIdKey: {
+				Type:     schema.TypeString,
+				Computed: true,
+				Optional: true,
+			},
+			kubeClusterNodesSubnetIdKey: {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
