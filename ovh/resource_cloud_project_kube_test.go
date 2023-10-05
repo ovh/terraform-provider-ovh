@@ -88,6 +88,15 @@ resource "ovh_cloud_project_kube" "cluster" {
 }
 `
 
+var testAccCloudProjectKubeNodesSubnetIdCreateConfigDefaultValues = `
+resource "ovh_cloud_project_kube" "cluster" {
+	service_name  = "%s"
+	name          = "%s"
+	region        = "%s"
+	nodes_subnet_id = "%s"
+}
+`
+
 var testAccCloudProjectKubeConfig = `
 resource "ovh_cloud_project_kube" "cluster" {
 	service_name  = "%s"
@@ -260,8 +269,47 @@ func TestAccCloudProjectKubeCustomizationApiServerAdmissionPlugins(t *testing.T)
 	})
 }
 
+func TestAccCloudProjectKubeNodesSubnetId(t *testing.T) {
+	region := os.Getenv("OVH_CLOUD_PROJECT_KUBE_REGION_TEST")
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	name := acctest.RandomWithPrefix(test_prefix)
+	nodesSubnetId := "158c9998-18da-4bef-a8db-4891b1736574"
+
+	createConfig := fmt.Sprintf(
+		testAccCloudProjectKubeNodesSubnetIdCreateConfigDefaultValues,
+		serviceName,
+		name,
+		region,
+		nodesSubnetId,
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloud(t)
+			testAccCheckCloudProjectExists(t)
+			testAccPreCheckKubernetes(t)
+		},
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				// no apiserver customization, should contain default values from API
+				Config: createConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "service_name", serviceName),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "nodes_subnet_id", nodesSubnetId),
+
+					// Conflicts with the old schema
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 // TestAccCloudProjectKubeDeprecatedCustomizationApiServerAdmissionPlugins aims to test that
-// values are the same between customization_apiserver.admissionplugins are the same and customization.apiserver.admissionplugins.
+// values are the same between customization_apiserver.admissionplugins and customization.apiserver.admissionplugins.
 // This is deprecated and will be removed in the future.
 func TestAccCloudProjectKubeDeprecatedCustomizationApiServerAdmissionPlugins(t *testing.T) {
 	region := os.Getenv("OVH_CLOUD_PROJECT_KUBE_REGION_TEST")

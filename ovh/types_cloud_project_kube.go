@@ -37,6 +37,7 @@ type CloudProjectKubeCreateOpts struct {
 	Customization               *Customization               `json:"customization,omitempty"`
 	KubeProxyMode               *string                      `json:"kubeProxyMode,omitempty"`
 	LoadBalancersSubnetId       *string                      `json:"loadBalancersSubnetId,omitempty"`
+	NodesSubnetId               *string                      `json:"nodesSubnetId,omitempty"`
 }
 
 type Customization struct {
@@ -78,6 +79,7 @@ func (opts *CloudProjectKubeCreateOpts) FromResource(d *schema.ResourceData) {
 	opts.Name = helpers.GetNilStringPointerFromData(d, "name")
 	opts.UpdatePolicy = helpers.GetNilStringPointerFromData(d, "update_policy")
 	opts.LoadBalancersSubnetId = helpers.GetNilStringPointerFromData(d, "load_balancers_subnet_id")
+	opts.NodesSubnetId = helpers.GetNilStringPointerFromData(d, "nodes_subnet_id")
 	opts.PrivateNetworkId = helpers.GetNilStringPointerFromData(d, "private_network_id")
 	opts.PrivateNetworkConfiguration = loadPrivateNetworkConfiguration(d.Get("private_network_configuration"))
 	opts.KubeProxyMode = helpers.GetNilStringPointerFromData(d, kubeClusterProxyModeKey)
@@ -265,6 +267,7 @@ type CloudProjectKubeResponse struct {
 	LoadBalancersSubnetId  string        `json:"loadBalancersSubnetId"`
 	Name                   string        `json:"name"`
 	NextUpgradeVersions    []string      `json:"nextUpgradeVersions"`
+	NodesSubnetId          string        `json:"nodesSubnetId"`
 	NodesUrl               string        `json:"nodesUrl"`
 	PrivateNetworkId       string        `json:"privateNetworkId"`
 	Region                 string        `json:"region"`
@@ -281,9 +284,10 @@ func (v *CloudProjectKubeResponse) ToMap(d *schema.ResourceData) map[string]inte
 	obj["control_plane_is_up_to_date"] = v.ControlPlaneIsUpToDate
 	obj["id"] = v.Id
 	obj["is_up_to_date"] = v.IsUpToDate
-	obj["load_balancers_subnet_id"] = v.LoadBalancersSubnetId
+	obj[kubeClusterLoadBalancersSubnetIdKey] = v.LoadBalancersSubnetId
 	obj["name"] = v.Name
 	obj["next_upgrade_versions"] = v.NextUpgradeVersions
+	obj[kubeClusterNodesSubnetIdKey] = v.NodesSubnetId
 	obj["nodes_url"] = v.NodesUrl
 	obj["private_network_id"] = v.PrivateNetworkId
 	obj["region"] = v.Region
