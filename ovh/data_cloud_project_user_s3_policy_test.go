@@ -1,11 +1,14 @@
 package ovh
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
+	"reflect"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const testAccDataCloudProjectUserS3PolicyConfig_basic = `
@@ -54,9 +57,28 @@ func TestAccDataCloudProjectUserS3Policy_basic(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
-					resource.TestCheckResourceAttr(resourceName, "policy", normalizedPolicyRWBucket),
+					testCheckResourceAttrJson(resourceName, "policy", normalizedPolicyRWBucket),
 				),
 			},
 		},
 	})
+}
+
+func testCheckResourceAttrJson(resourceName string, attributeName string, attributeValue string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		// retrieve the resource by name from state
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		stateValue := rs.Primary.Attributes[attributeName]
+		var v1, v2 interface{}
+		json.Unmarshal([]byte(attributeValue), &v1)
+		json.Unmarshal([]byte(stateValue), &v2)
+		if !reflect.DeepEqual(v1, v2) {
+			return fmt.Errorf("for attribute %s.%s got %s expected %s", resourceName, attributeName, stateValue, attributeValue)
+		}
+		return nil
+	}
 }
