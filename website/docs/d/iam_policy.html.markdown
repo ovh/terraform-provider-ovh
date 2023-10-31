@@ -25,7 +25,8 @@ data "ovh_iam_policy" "my_policy" {
 * `identities` - List of identities affected by the policy.
 * `resources` - List of resources affected by the policy.
 * `allow` - List of actions allowed by the policy.
-* `except` - List of actions.
+* `except` - List of actions that will be subtracted from the `allow` list.
+* `deny` - List of actions that will be denied no matter what policy exists.
 * `owner` - Owner of the policy.
 * `created_at` - Creation date of this group.
 * `updated_at` - Date of the last update of this group.
