@@ -80,7 +80,7 @@ func resourceCloudProjectUserS3CredentialCreate(d *schema.ResourceData, meta int
 	serviceName := d.Get("service_name").(string)
 	userID := d.Get("user_id").(string)
 
-	s3Credential := &CloudProjectUserS3Credential{}
+	s3Credential := &CloudProjectUserS3CredentialSecret{}
 
 	log.Printf("[DEBUG] Will create Public Cloud S3 AccessKey for user: %s from project: %s", userID, serviceName)
 	endpoint := fmt.Sprintf(
@@ -94,7 +94,6 @@ func resourceCloudProjectUserS3CredentialCreate(d *schema.ResourceData, meta int
 	}
 
 	d.SetId(s3Credential.Access)
-	d.Set("secret_access_key", s3Credential.Secret)
 	for k, v := range s3Credential.ToMap() {
 		d.Set(k, v)
 	}
@@ -109,24 +108,34 @@ func resourceCloudProjectUserS3CredentialRead(d *schema.ResourceData, meta inter
 	serviceName := d.Get("service_name").(string)
 	userID := d.Get("user_id").(string)
 
-	s3Credential := &CloudProjectUserS3Credential{}
+	s3Credential := CloudProjectUserS3Secret{}
 
 	log.Printf("[DEBUG] Will read the Public Cloud S3 AccessKey %s for user %s from project: %s", d.Id(), userID, serviceName)
 
 	endpoint := fmt.Sprintf(
-		"/cloud/project/%s/user/%s/s3Credentials/%s",
+		"/cloud/project/%s/user/%s/s3Credentials/%s/secret",
 		url.PathEscape(serviceName),
 		userID,
 		d.Id(),
 	)
 
-	if err := config.OVHClient.Get(endpoint, s3Credential); err != nil {
+	if err := config.OVHClient.Post(endpoint, nil, &s3Credential); err != nil {
 		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
-	d.SetId(s3Credential.Access)
+	// The API returns only secret key.
+	// In order not to break old tfstate, we craft an object with all data including access, user ID and service name.
+	s3CredentialFull := &CloudProjectUserS3CredentialSecret{
+		CloudProjectUserS3Secret: s3Credential,
+		CloudProjectUserS3Credential: CloudProjectUserS3Credential{
+			Access:      d.Id(),
+			ServiceName: serviceName,
+			UserId:      userID,
+		},
+	}
+
 	// set resource attributes
-	for k, v := range s3Credential.ToMap() {
+	for k, v := range s3CredentialFull.ToMap() {
 		d.Set(k, v)
 	}
 
