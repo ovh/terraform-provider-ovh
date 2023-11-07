@@ -116,7 +116,7 @@ func resourceCloudProjectDatabaseIpRestrictionCreate(ctx context.Context, d *sch
 				log.Printf("[DEBUG] Will create IP restriction: %+v for cluster %s from project %s", params, clusterId, serviceName)
 				rErr := config.OVHClient.Post(endpoint, params, res)
 				if rErr != nil {
-					if errOvh, ok := rErr.(*ovh.APIError); engine == "mongodb" && ok && (errOvh.Code == 409) {
+					if errOvh, ok := rErr.(*ovh.APIError); ok && (errOvh.Code == 409) {
 						if resourceCloudProjectDatabaseIpRestrictionRead(ctx, d, meta) != nil || d.Id() != "" {
 							return resource.NonRetryableError(fmt.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, rErr))
 						}
@@ -195,7 +195,7 @@ func resourceCloudProjectDatabaseIpRestrictionUpdate(ctx context.Context, d *sch
 				log.Printf("[DEBUG] Will update IP restriction: %+v from cluster %s from project %s", params, clusterId, serviceName)
 				rErr := config.OVHClient.Put(endpoint, params, nil)
 				if rErr != nil {
-					if errOvh, ok := rErr.(*ovh.APIError); engine == "mongodb" && ok && (errOvh.Code == 409) {
+					if errOvh, ok := rErr.(*ovh.APIError); ok && (errOvh.Code == 409) {
 						return resource.RetryableError(rErr)
 					}
 					return resource.NonRetryableError(fmt.Errorf("calling Put %s with params %+v:\n\t %q", endpoint, params, rErr))
@@ -239,7 +239,7 @@ func resourceCloudProjectDatabaseIpRestrictionDelete(ctx context.Context, d *sch
 				log.Printf("[DEBUG] Will delete IP restriction %s from cluster %s from project %s", ip, clusterId, serviceName)
 				rErr := config.OVHClient.Delete(endpoint, nil)
 				if rErr != nil {
-					if errOvh, ok := rErr.(*ovh.APIError); engine == "mongodb" && ok && (errOvh.Code == 409) {
+					if errOvh, ok := rErr.(*ovh.APIError); ok && (errOvh.Code == 409) {
 						return resource.RetryableError(rErr)
 					}
 					rErr = helpers.CheckDeleted(d, rErr, endpoint)
