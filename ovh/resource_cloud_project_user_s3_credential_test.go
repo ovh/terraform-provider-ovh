@@ -33,6 +33,12 @@ func TestAccCloudProjectUserS3Credential_basic(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(
+						"ovh_cloud_project_user_s3_credential.s3_cred", "service_name"),
+					resource.TestCheckResourceAttrSet(
+						"ovh_cloud_project_user_s3_credential.s3_cred", "user_id"),
+					resource.TestCheckResourceAttrSet(
+						"ovh_cloud_project_user_s3_credential.s3_cred", "internal_user_id"),
+					resource.TestCheckResourceAttrSet(
 						"ovh_cloud_project_user_s3_credential.s3_cred", "access_key_id"),
 					resource.TestCheckResourceAttrSet(
 						"ovh_cloud_project_user_s3_credential.s3_cred", "secret_access_key"),
