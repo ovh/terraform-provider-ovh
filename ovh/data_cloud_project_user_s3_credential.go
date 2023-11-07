@@ -52,14 +52,14 @@ func dataCloudProjectUserS3CredentialRead(d *schema.ResourceData, meta interface
 	log.Printf("[DEBUG] Will read public cloud secret access key for access key %s user %s on project: %s", accessKey, userID, serviceName)
 
 	endpoint := fmt.Sprintf(
-		"/cloud/project/%s/user/%s/s3Credentials/%s",
+		"/cloud/project/%s/user/%s/s3Credentials/%s/secret",
 		url.PathEscape(serviceName),
 		url.PathEscape(userID),
 		url.PathEscape(accessKey),
 	)
 
-	s3Credential := &CloudProjectUserS3Credential{}
-	if err := config.OVHClient.Get(endpoint, &s3Credential); err != nil {
+	s3Credential := &CloudProjectUserS3CredentialSecret{}
+	if err := config.OVHClient.Post(endpoint, nil, &s3Credential); err != nil {
 		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
