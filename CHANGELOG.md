@@ -1,4 +1,22 @@
-## 0.35.0 (Unreleased)
+## 0.35.0 (November 7, 2023)
+
+⚙️ General:
+
+* Bump golang dependencies ([#480](https://github.com/ovh/terraform-provider-ovh/pull/480))
+
+🐜 Bug fixes:
+
+* `r/cloud_project_user_s3_credential`: A breaking change has been applied on the 11/06/2023 on the routes behind this ressource. In order to use it or if you have it in your state, **an upgrade to the v0.35.0 version is mandatory.** ([#492](https://github.com/ovh/terraform-provider-ovh/pull/492))
+* `d/cloud_project_user_s3_credential`: A breaking change has been applied on the 11/06/2023 on the routes behind this data source. In order to use it or if you have it in your state, **an upgrade to the v0.35.0 version is mandatory.** ([#492](https://github.com/ovh/terraform-provider-ovh/pull/492))
+* `r/cloud_project_user`: Add AI training read role ([#475](https://github.com/ovh/terraform-provider-ovh/pull/475))
+
+📚 Documentation:
+
+* `examples/kube-nodepool-deployment`: Add an example with Kube, NodePool and an app ([#468](https://github.com/ovh/terraform-provider-ovh/pull/468))
+* `d/dedicated_server_boots`: Update documentation page ([#473](https://github.com/ovh/terraform-provider-ovh/pull/473))
+* `r/me_ssh_key`: Update documentation page ([#467](https://github.com/ovh/terraform-provider-ovh/pull/467))
+
+❤️ Thanks for your contributions ❤️
 
 ## 0.34.0 (September 11, 2023)
 
