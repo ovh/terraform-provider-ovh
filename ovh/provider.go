@@ -214,6 +214,7 @@ func Provider() *schema.Provider {
 			"ovh_iploadbalancing_vrack_network":                           resourceIPLoadbalancingVrackNetwork(),
 			"ovh_me_identity_group":                                       resourceMeIdentityGroup(),
 			"ovh_me_api_oauth2_client":                                    resourceApiOauth2Client(),
+			"ovh_me_identity_provider":                                    resourceMeIdentityProvider(),
 			"ovh_me_identity_user":                                        resourceMeIdentityUser(),
 			"ovh_me_installation_template":                                resourceMeInstallationTemplate(),
 			"ovh_me_installation_template_partition_scheme":               resourceMeInstallationTemplatePartitionScheme(),
