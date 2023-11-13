@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -34,7 +35,6 @@ func resourceApiOauth2Client() *schema.Resource {
 			"client_id": {
 				Type:        schema.TypeString,
 				Description: "Client ID for the oauth2 client, generated during the resource creation.",
-				ForceNew:    true,
 				Computed:    true,
 			},
 			"client_secret": {
@@ -76,7 +76,7 @@ func resourceApiOauth2ClientRead(ctx context.Context, d *schema.ResourceData, me
 	serviceAccount := &ApiOauth2ClientReadResponse{}
 
 	// Query the oauth2 client using its client ID
-	endpoint := fmt.Sprintf("/me/api/oauth2/client/%s", d.Get("client_id").(string))
+	endpoint := fmt.Sprintf("/me/api/oauth2/client/%s", url.PathEscape(d.Get("client_id").(string)))
 	if err := config.OVHClient.GetWithContext(ctx, endpoint, serviceAccount); err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
@@ -149,12 +149,12 @@ func resourceApiOauth2ClientUpdate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	err := config.OVHClient.PutWithContext(ctx,
-		fmt.Sprintf("/me/api/oauth2/client/%s", d.Id()),
+		fmt.Sprintf("/me/api/oauth2/client/%s", url.PathEscape(d.Id())),
 		params,
 		nil,
 	)
 	if err != nil {
-		return diag.Errorf("Unable to update api oauth2 client %s:\n\t %q", d.Id(), err)
+		return diag.Errorf("Unable to update api oauth2 client %s:\n\t %q", url.PathEscape(d.Id()), err)
 	}
 
 	log.Printf("[DEBUG] Updated api oauth2 client %s", d.Id())
@@ -165,7 +165,7 @@ func resourceApiOauth2ClientDelete(ctx context.Context, d *schema.ResourceData, 
 	config := meta.(*Config)
 
 	err := config.OVHClient.DeleteWithContext(ctx,
-		fmt.Sprintf("/me/api/oauth2/client/%s", d.Id()),
+		fmt.Sprintf("/me/api/oauth2/client/%s", url.PathEscape(d.Id())),
 		nil,
 	)
 	if err != nil {

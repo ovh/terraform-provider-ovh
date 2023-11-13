@@ -18,7 +18,6 @@ type ApiOauth2ClientCreateResponse struct {
 type ApiOauth2ClientReadResponse struct {
 	CallbackUrls []string `json:"callbackUrls"`
 	ClientId     string   `json:"clientId"`
-	ClientSecret string   `json:"clientSecret"`
 	Description  string   `json:"description"`
 	Flow         string   `json:"flow"`
 	Name         string   `json:"name"`

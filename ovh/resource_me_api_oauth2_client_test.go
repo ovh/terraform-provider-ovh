@@ -18,7 +18,7 @@ func apiOauth2ClientStringNotEmpty(s string) error {
 }
 
 // Tests valid configurations to create oauth2 clients
-func TestAccMeApiOauth2Client_importBasic(t *testing.T) {
+func TestAccMeApiOauth2Client_basic(t *testing.T) {
 	const resourceName1 = "ovh_me_api_oauth2_client.service_account_1"
 	const resourceName2 = "ovh_me_api_oauth2_client.service_account_2"
 
