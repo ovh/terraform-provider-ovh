@@ -62,7 +62,7 @@ func dataSourceMeApiOauth2ClientRead(ctx context.Context, d *schema.ResourceData
 	serviceAccount := &ApiOauth2ClientReadResponse{}
 
 	// Query the oauth2 client using its client ID
-	endpoint := fmt.Sprintf("/me/api/oauth2/client/%s", d.Get("client_id").(string))
+	endpoint := fmt.Sprintf("/me/api/oauth2/client/%s", url.PathEscape(d.Get("client_id").(string)))
 	if err := config.OVHClient.GetWithContext(ctx, endpoint, serviceAccount); err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
