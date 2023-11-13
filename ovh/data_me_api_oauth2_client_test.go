@@ -24,7 +24,6 @@ func TestAccMeApiOauth2Client_data(t *testing.T) {
 	}
 	output "oauth2_client_name" {
 		value = data.ovh_me_api_oauth2_client.service_account_1.name
-
 	}`
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheckCredentials(t) },
