@@ -57,9 +57,8 @@ func resourceApiOauth2Client() *schema.Resource {
 				Type:         schema.TypeString,
 				ValidateFunc: helpers.ValidateEnum([]string{"AUTHORIZATION_CODE", "CLIENT_CREDENTIALS"}),
 				Description:  "OAuth2 flow type implemented for this oauth2 client. Can be either AUTHORIZATION_CODE or CLIENT_CREDENTIALS",
-				Default:      "CLIENT_CREDENTIALS",
-				Optional:     true,
 				ForceNew:     true,
+				Required:     true,
 			},
 			"name": {
 				Type:     schema.TypeString,

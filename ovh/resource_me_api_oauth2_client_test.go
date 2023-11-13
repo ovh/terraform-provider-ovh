@@ -84,6 +84,12 @@ func TestAccMeApiOauth2Client_configMissingArguments(t *testing.T) {
 	const configMissingDescription = `
 	resource "ovh_me_api_oauth2_client" "service_account_1" {
 		name        = "tf acc test authorization code"
+		flow = "AUTHORIZATION_CODE"
+	}`
+	const configMissingFlow = `
+	resource "ovh_me_api_oauth2_client" "service_account_1" {
+		name        = "tf acc test authorization code"
+		description = "tf acc import test"
 	}`
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheckCredentials(t) },
@@ -97,6 +103,11 @@ func TestAccMeApiOauth2Client_configMissingArguments(t *testing.T) {
 			// Check that we cannot create a resource with a missing description
 			{
 				Config:      configMissingDescription,
+				ExpectError: regexp.MustCompile("Missing required argument"),
+			},
+			// Check that we cannot create a resource with a missing flow
+			{
+				Config:      configMissingFlow,
 				ExpectError: regexp.MustCompile("Missing required argument"),
 			},
 		},
