@@ -351,3 +351,14 @@ func requestedAttributesToMapList(attributes []MeIdentityProviderAttribute) []ma
 	return requestedAttributes
 }
 
+// idpSigningCertificatesToMapList transforms an array of MeIdentityProviderIDPCertificates to an array of map
+func idpSigningCertificatesToMapList(idpSigningCertificates []MeIdentityProviderIDPCertificates) []map[string]interface{} {
+	certificates := []map[string]interface{}{}
+	for _, v := range idpSigningCertificates {
+		certificates = append(certificates, map[string]interface{}{
+			"expiration": v.Expiration,
+			"subject":    v.Subject,
+		})
+	}
+	return certificates
+}

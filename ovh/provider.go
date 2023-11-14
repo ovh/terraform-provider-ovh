@@ -124,6 +124,7 @@ func Provider() *schema.Provider {
 			"ovh_me_api_oauth2_clients":                               dataSourceMeApiOauth2Clients(),
 			"ovh_me_identity_group":                                   dataSourceMeIdentityGroup(),
 			"ovh_me_identity_groups":                                  dataSourceMeIdentityGroups(),
+			"ovh_me_identity_provider":                                dataSourceMeIdentityProvider(),
 			"ovh_me_identity_user":                                    dataSourceMeIdentityUser(),
 			"ovh_me_identity_users":                                   dataSourceMeIdentityUsers(),
 			"ovh_me_installation_template":                            dataSourceMeInstallationTemplate(),
