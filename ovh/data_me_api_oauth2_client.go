@@ -28,12 +28,6 @@ func dataSourceMeApiOauth2Client() *schema.Resource {
 				Description: "Client ID for the oauth2 client, generated during the resource creation.",
 				Required:    true,
 			},
-			"client_secret": {
-				Type:        schema.TypeString,
-				Description: "Secret for the oauth2 client, generated during the oauth2 client creation. Can be specified in the data resource.",
-				Optional:    true,
-				Sensitive:   true,
-			},
 			"description": {
 				Type:        schema.TypeString,
 				Description: "A description of your oauth2 client.",

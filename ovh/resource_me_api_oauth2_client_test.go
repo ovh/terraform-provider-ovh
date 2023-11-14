@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 // Returns an error if a string is empty,
@@ -48,12 +49,12 @@ func TestAccMeApiOauth2Client_basic(t *testing.T) {
 					resource.TestCheckResourceAttrWith(resourceName1, "client_secret", apiOauth2ClientStringNotEmpty),
 				),
 			},
-			// Verify that state matches the imported resource
+			// Verify that the state matches the resource imported with its client_id
 			{
 				ResourceName:            resourceName1,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"client_secret"}, // Client secrets cannot be imported
+				ImportStateVerifyIgnore: []string{"client_secret"}, // Client secrets cannot be imported using client id only
 			},
 			// Update the object with the second configuration, check that the client secret is not empty after creation
 			{
@@ -68,7 +69,7 @@ func TestAccMeApiOauth2Client_basic(t *testing.T) {
 				ResourceName:            resourceName2,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"client_secret"}, // Client secrets cannot be imported
+				ImportStateVerifyIgnore: []string{"client_secret"}, // Client secrets cannot be imported using client id only
 			},
 		},
 	})
@@ -109,6 +110,45 @@ func TestAccMeApiOauth2Client_configMissingArguments(t *testing.T) {
 			{
 				Config:      configMissingFlow,
 				ExpectError: regexp.MustCompile("Missing required argument"),
+			},
+		},
+	})
+}
+
+// Test invalid oauth2 clients import IDs
+func TestAccMeApiOauth2Client_importBasic(t *testing.T) {
+	const resourceName = "ovh_me_api_oauth2_client.service_account_1"
+	const okConfigClientCredentials = `
+	resource "ovh_me_api_oauth2_client" "service_account_1" {
+		description = "tf acc test client credentials"
+		name        = "tf acc test client credentials"
+		flow = "CLIENT_CREDENTIALS"
+	}`
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheckCredentials(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: okConfigClientCredentials,
+			},
+			// Verify that the state matches the resource imported with its client_id and client_secret separated by a pipe
+			{
+				ResourceName: resourceName,
+				ImportStateIdFunc: func(state *terraform.State) (string, error) {
+					resource_id := state.RootModule().Resources[resourceName].Primary.Attributes["id"]
+					resource_secret := state.RootModule().Resources[resourceName].Primary.Attributes["client_secret"]
+					return resource_id + "|" + resource_secret, nil
+				},
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// Check that importing a resource fails when its client_id contains a pipe but is not formatted properly
+			{
+				ImportState:       true,
+				ImportStateVerify: true,
+				ResourceName:      resourceName,
+				ImportStateId:     "fake_client|fake_secret|extra_data",
+				ExpectError:       regexp.MustCompile("Resource IDs with the pipe character should be formatted as"),
 			},
 		},
 	})

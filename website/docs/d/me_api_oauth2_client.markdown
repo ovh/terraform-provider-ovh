@@ -17,7 +17,6 @@ data "ovh_me_api_oauth2_client" "my_oauth2_client" {
 ## Argument Reference
 
 * `client_id` - Client ID of an existing OAuth2 service account.
-* `client_secret` - Optional: Client secret of an existing service account. Has to be declared if needed as it will not be imported from the API.
 
 ## Attributes Reference
 
@@ -26,3 +25,5 @@ data "ovh_me_api_oauth2_client" "my_oauth2_client" {
 * `description` - OAuth2 client description.
 * `flow` - The OAuth2 flow to use. `AUTHORIZATION_CODE` or `CLIENT_CREDENTIALS` are supported at the moment.
 * `callback_urls` - List of callback urls when configuring the `AUTHORIZATION_CODE` flow.
+
+The `client_secret` attribute is not supported in the Data Source. If you need this attribute to be in the state, see how to import a `ovh_me_api_oauth2_client` resource instead.

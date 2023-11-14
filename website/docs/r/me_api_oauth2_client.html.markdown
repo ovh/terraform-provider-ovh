@@ -44,3 +44,18 @@ resource "ovh_me_api_oauth2_client" "my_oauth2_client_client_creds" {
 * `description` - OAuth2 client description.
 * `flow` - The OAuth2 flow to use. `AUTHORIZATION_CODE` or `CLIENT_CREDENTIALS` are supported at the moment.
 * `callback_urls` - List of callback urls when configuring the `AUTHORIZATION_CODE` flow.
+
+
+## Import
+
+OAuth2 clients can be imported using their `client_id`:
+
+```bash
+$ terraform import ovh_me_api_oauth2_client.my_oauth2_client client_id
+```
+
+Because the client_secret is only available for resources created using terraform, OAuth2 clients can also be imported using a `client_id` and a `client_secret` with a pipe separator:
+
+```bash
+$ terraform import ovh_me_api_oauth2_client.my_oauth2_client 'client_id|client_secret'
+```
