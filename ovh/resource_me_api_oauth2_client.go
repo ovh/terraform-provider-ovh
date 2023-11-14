@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -19,7 +20,25 @@ func resourceApiOauth2Client() *schema.Resource {
 		DeleteContext: resourceApiOauth2ClientDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+
+				// Get the resource id from the terraform import command.
+				// If it contains a pipe character, try to parse it as client_id|client_secret
+				client_config_string := d.Id()
+				if strings.Contains(client_config_string, "|") {
+
+					log.Printf("[INFO] Importing oauth2 client formatted as 'client_id|client_secret'")
+
+					client_config_params := strings.Split(client_config_string, "|")
+					if len(client_config_params) != 2 {
+						return nil, fmt.Errorf("Error importing api oauth2 client: Resource IDs with the pipe character should be formatted as 'client_id|client_secret': %s", d.Id())
+					}
+					d.SetId(client_config_params[0])
+					d.Set("client_secret", client_config_params[1])
+				}
+
+				// Use the provided resource id as the client_id
 				d.Set("client_id", d.Id())
+
 				return []*schema.ResourceData{d}, nil
 			},
 		},
