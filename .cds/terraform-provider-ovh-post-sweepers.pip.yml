@@ -1,5 +1,5 @@
 version: v1.0
-name: terraform-provider-ovh-testacc
+name: terraform-provider-ovh-post-sweepers
 parameters:
   testargs:
     type: string
@@ -19,10 +19,9 @@ jobs:
       curl -sfLo - "${tfurl}" | gunzip -d - > /usr/local/bin/terraform
       chmod +x /usr/local/bin/terraform
 
-  - name: Run acceptance tests
+  - name: Run post sweepers
     script: |
-      #!/usr/bin/env bash
-      make testacc TESTARGS="-parallel=1 ${CDS_PIP_TESTARGS}"
+      TF_ACC=1 go test ./ovh/ -v -sweep=1
 
   requirements:
   - model: shared.infra/Go-official-1.20-bullseye
