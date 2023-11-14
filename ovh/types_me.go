@@ -179,17 +179,20 @@ type MeIdentityUserUpdateOpts struct {
 }
 
 type MeIdentityProviderResponse struct {
-	GroupAttributeName     string `json:"groupAttributeName"`
-	IdpSigningCertificates []struct {
-		Expiration string `json:"expiration"`
-		Subject    string `json:"subject"`
-	} `json:"idpSigningCertificates"`
-	DisableUsers bool                         `json:"disableUsers"`
-	Extensions   MeIdentityProviderExtensions `json:"extensions"`
+	GroupAttributeName     string                              `json:"groupAttributeName"`
+	IdpSigningCertificates []MeIdentityProviderIDPCertificates `json:"idpSigningCertificates"`
+	DisableUsers           bool                                `json:"disableUsers"`
+	Extensions             MeIdentityProviderExtensions        `json:"extensions"`
 
-	SsoServiceUrl string `json:"ssoServiceUrl"`
-	Creation      string `json:"creation"`
-	LastUpdate    string `json:"lastUpdate"`
+	UserAttributeName string `json:"userAttributeName"`
+	SsoServiceUrl     string `json:"ssoServiceUrl"`
+	Creation          string `json:"creation"`
+	LastUpdate        string `json:"lastUpdate"`
+}
+
+type MeIdentityProviderIDPCertificates struct {
+	Expiration string `json:"expiration"`
+	Subject    string `json:"subject"`
 }
 
 type MeIdentityProviderCreateOpts struct {
@@ -333,3 +336,18 @@ func loadMeIdentityProviderAttributeFromResource(i interface{}) (MeIdentityProvi
 
 	return requestedAttribute, nil
 }
+
+// requestedAttributesToMapList transforms an array of MeIdentityProviderAttribute to an array of map
+func requestedAttributesToMapList(attributes []MeIdentityProviderAttribute) []map[string]interface{} {
+	requestedAttributes := []map[string]interface{}{}
+	for _, v := range attributes {
+		requestedAttributes = append(requestedAttributes, map[string]interface{}{
+			"is_required": v.IsRequired,
+			"name":        v.Name,
+			"name_format": v.NameFormat,
+			"values":      v.Values,
+		})
+	}
+	return requestedAttributes
+}
+

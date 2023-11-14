@@ -14,11 +14,10 @@ func resourceMeIdentityProvider() *schema.Resource {
 		UpdateContext: resourceMeIdentityProviderUpdate,
 		DeleteContext: resourceMeIdentityProviderDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				return []*schema.ResourceData{d}, nil
-			},
-		},
+		// Importer is voluntarily disabled for this resource. As the `metadata`
+		// attribute is not retrievable with GET /me/identity/provider, there
+		// is no way to create a valid resource using `terraform import`
+		Importer: nil,
 
 		Schema: map[string]*schema.Schema{
 			"metadata": {
@@ -89,20 +88,6 @@ func resourceMeIdentityProviderRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("last_update", providerConfDetails.LastUpdate)
 
 	return nil
-}
-
-// requestedAttributesToMapList transforms an array of MeIdentityProviderAttribute to an array of map
-func requestedAttributesToMapList(attributes []MeIdentityProviderAttribute) []map[string]interface{} {
-	requestedAttributes := []map[string]interface{}{}
-	for _, v := range attributes {
-		requestedAttributes = append(requestedAttributes, map[string]interface{}{
-			"is_required": v.IsRequired,
-			"name":        v.Name,
-			"name_format": v.NameFormat,
-			"values":      v.Values,
-		})
-	}
-	return requestedAttributes
 }
 
 func resourceMeIdentityProviderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
