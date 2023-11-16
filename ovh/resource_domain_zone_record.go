@@ -19,7 +19,7 @@ type OvhDomainZoneRecord struct {
 	Zone      string `json:"zone,omitempty"`
 	Target    string `json:"target"`
 	Ttl       int    `json:"ttl,omitempty"`
-	FieldType string `json:"fieldType"`
+	FieldType string `json:"fieldType,omitempty"`
 	SubDomain string `json:"subDomain,omitempty"`
 }
 
@@ -195,9 +195,6 @@ func resourceOvhDomainZoneRecordUpdate(d *schema.ResourceData, meta interface{})
 
 	if attr, ok := d.GetOk("subdomain"); ok {
 		record.SubDomain = attr.(string)
-	}
-	if attr, ok := d.GetOk("fieldtype"); ok {
-		record.FieldType = attr.(string)
 	}
 	if attr, ok := d.GetOk("target"); ok {
 		record.Target = attr.(string)
