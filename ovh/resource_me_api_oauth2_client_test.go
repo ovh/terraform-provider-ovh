@@ -28,13 +28,13 @@ func TestAccMeApiOauth2Client_basic(t *testing.T) {
 	resource "ovh_me_api_oauth2_client" "service_account_1" {
 		description = "tf acc test client credentials"
 		name        = "tf acc test client credentials"
-		flow = "CLIENT_CREDENTIALS"
+		flow        = "CLIENT_CREDENTIALS"
 	}`
 	const okConfigAuthorizationCode = `
 	resource "ovh_me_api_oauth2_client" "service_account_2" {
-		description = "tf acc test authorization code"
-		name        = "tf acc test authorization code"
-		flow = "AUTHORIZATION_CODE"
+		description   = "tf acc test authorization code"
+		name          = "tf acc test authorization code"
+		flow          = "AUTHORIZATION_CODE"
 		callback_urls = ["https://localhost:8080"]
 	}`
 	resource.Test(t, resource.TestCase{
@@ -80,11 +80,11 @@ func TestAccMeApiOauth2Client_configMissingArguments(t *testing.T) {
 	const configMissingName = `
 	resource "ovh_me_api_oauth2_client" "service_account_1" {
 		description = "tf acc import test"
-		flow = "AUTHORIZATION_CODE"
+		flow        = "AUTHORIZATION_CODE"
 	}`
 	const configMissingDescription = `
 	resource "ovh_me_api_oauth2_client" "service_account_1" {
-		name        = "tf acc test authorization code"
+		name = "tf acc test authorization code"
 		flow = "AUTHORIZATION_CODE"
 	}`
 	const configMissingFlow = `
@@ -122,7 +122,7 @@ func TestAccMeApiOauth2Client_importBasic(t *testing.T) {
 	resource "ovh_me_api_oauth2_client" "service_account_1" {
 		description = "tf acc test client credentials"
 		name        = "tf acc test client credentials"
-		flow = "CLIENT_CREDENTIALS"
+		flow        = "CLIENT_CREDENTIALS"
 	}`
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheckCredentials(t) },

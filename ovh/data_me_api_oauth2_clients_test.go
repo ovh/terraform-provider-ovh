@@ -15,7 +15,7 @@ func TestAccMeApiOauth2Clients_data(t *testing.T) {
 	resource "ovh_me_api_oauth2_client" "service_account_1" {
 		description = "tf acc test client credentials"
 		name        = "tf acc test client credentials"
-		flow = "CLIENT_CREDENTIALS"
+		flow        = "CLIENT_CREDENTIALS"
 	}
 	# A data source listing all the client ids in the account
 	data "ovh_me_api_oauth2_clients" "all_clients_ref" {
