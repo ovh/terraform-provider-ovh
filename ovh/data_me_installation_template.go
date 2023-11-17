@@ -254,6 +254,9 @@ func dataSourceMeInstallationTemplateRead(d *schema.ResourceData, meta interface
 	if err != nil {
 		return err
 	}
+	if template == nil {
+		return fmt.Errorf("Your query returned no results. Please change your search criteria")
+	}
 
 	// set attributes
 	for k, v := range template.ToMap() {
