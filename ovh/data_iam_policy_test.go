@@ -18,7 +18,8 @@ func TestAccIamPolicyDataSource_basic(t *testing.T) {
 	resource1 := "urn:v1:eu:resource:vrack:*"
 	resource2 := "urn:v1:eu:resource:vps:*"
 	allow1 := "*"
-	allow2 := "*"
+	except1 := "vrack:apiovh:dedicatedServer/remove"
+	deny2 := "*"
 
 	preSetup := fmt.Sprintf(
 		testAccIamPolicyDatasourceConfig_preSetup,
@@ -29,10 +30,11 @@ func TestAccIamPolicyDataSource_basic(t *testing.T) {
 		desc,
 		resource1,
 		allow1,
+		except1,
 		policyName2,
 		desc,
 		resource2,
-		allow2,
+		deny2,
 	)
 	config := fmt.Sprintf(
 		testAccIamPolicyDatasourceConfig_keys,
@@ -43,14 +45,15 @@ func TestAccIamPolicyDataSource_basic(t *testing.T) {
 		desc,
 		resource1,
 		allow1,
+		except1,
 		policyName2,
 		desc,
 		resource2,
-		allow2,
+		deny2,
 	)
 
-	checks := checkIamPolicyResourceAttr("ovh_iam_policy.policy_1", policyName1, desc, resource1)
-	checks = append(checks, checkIamPolicyResourceAttr("ovh_iam_policy.policy_2", policyName2, desc, resource2)...)
+	checks := checkIamPolicyResourceAttr("ovh_iam_policy.policy_1", policyName1, desc, resource1, allow1, except1, "")
+	checks = append(checks, checkIamPolicyResourceAttr("ovh_iam_policy.policy_2", policyName2, desc, resource2, "", "", deny2)...)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheckCredentials(t) },
@@ -70,13 +73,23 @@ func TestAccIamPolicyDataSource_basic(t *testing.T) {
 	})
 }
 
-func checkIamPolicyResourceAttr(name, polName, desc, resourceURN string) []resource.TestCheckFunc {
+func checkIamPolicyResourceAttr(name, polName, desc, resourceURN, allowAction, exceptAction, denyAction string) []resource.TestCheckFunc {
 	// we are not checking identity urn because they are dynamic and depend on the test account NIC
-	return []resource.TestCheckFunc{
+	checks := []resource.TestCheckFunc{
 		resource.TestCheckResourceAttr(name, "name", polName),
 		resource.TestCheckResourceAttr(name, "description", desc),
 		resource.TestCheckTypeSetElemAttr(name, "resources.*", resourceURN),
 	}
+	if allowAction != "" {
+		checks = append(checks, resource.TestCheckTypeSetElemAttr(name, "allow.*", allowAction))
+	}
+	if exceptAction != "" {
+		checks = append(checks, resource.TestCheckTypeSetElemAttr(name, "except.*", exceptAction))
+	}
+	if denyAction != "" {
+		checks = append(checks, resource.TestCheckTypeSetElemAttr(name, "deny.*", denyAction))
+	}
+	return checks
 }
 
 const testAccIamPolicyDatasourceConfig_preSetup = `
@@ -96,6 +109,7 @@ resource "ovh_iam_policy" "policy_1" {
 	identities  = [ovh_me_identity_user.user_1.urn]
 	resources   = ["%s"]
 	allow       = ["%s"]
+	except       = ["%s"]
 }
 
 resource "ovh_iam_policy" "policy_2" {
@@ -103,7 +117,7 @@ resource "ovh_iam_policy" "policy_2" {
 	description = "%s"
 	identities  = [ovh_me_identity_group.group_1.urn]
 	resources   = ["%s"]
-	allow       = ["%s"]
+	deny       = ["%s"]
 }
 `
 
@@ -124,6 +138,7 @@ resource "ovh_iam_policy" "policy_1" {
 	identities  = [ovh_me_identity_user.user_1.urn]
 	resources   = ["%s"]
 	allow       = ["%s"]
+	except       = ["%s"]
 }
 
 resource "ovh_iam_policy" "policy_2" {
@@ -131,7 +146,7 @@ resource "ovh_iam_policy" "policy_2" {
 	description = "%s"
 	identities  = [ovh_me_identity_group.group_1.urn]
 	resources   = ["%s"]
-	allow       = ["%s"]
+	deny       = ["%s"]
 }
 
 data "ovh_iam_policies" "policies" {}

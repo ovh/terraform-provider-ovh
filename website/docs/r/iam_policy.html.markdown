@@ -21,7 +21,7 @@ resource "ovh_iam_policy" "manager" {
   description = "Users are allowed to use the OVH manager"
   identities  = [ovh_me_identity_group.my_group.urn]
   resources   = [data.ovh_me.account.urn]
-  # these are all the actions 
+  # these are all the actions
   allow = [
     "account:apiovh:me/get",
     "account:apiovh:me/supportLevel/get",
@@ -41,6 +41,7 @@ resource "ovh_iam_policy" "manager" {
 * `resources` - List of resources affected by the policy
 * `allow` - List of actions allowed on resources by identities
 * `except` - List of overrides of action that must not be allowed even if they are caught by allow. Only makes sens if allow contains wildcards.
+* `deny` - List of actions that will be denied no matter what policy exists.
 
 ## Attributes Reference
 

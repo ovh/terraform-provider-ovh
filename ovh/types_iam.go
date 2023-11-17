@@ -44,13 +44,16 @@ func (p IamPolicy) ToMap() map[string]any {
 	}
 	out["resources"] = resources
 
-	// inline allow and except
-	allow, except := p.Permissions.ToLists()
+	// inline allow, except and deny
+	allow, except, deny := p.Permissions.ToLists()
 	if len(allow) != 0 {
 		out["allow"] = allow
 	}
 	if len(except) != 0 {
 		out["except"] = except
+	}
+	if len(deny) != 0 {
+		out["deny"] = deny
 	}
 
 	if p.Description != "" {
@@ -90,11 +93,13 @@ type IamResourceDetails struct {
 type IamPermissions struct {
 	Allow  []IamAction `json:"allow"`
 	Except []IamAction `json:"except"`
+	Deny   []IamAction `json:"deny"`
 }
 
-func (p IamPermissions) ToLists() ([]string, []string) {
+func (p IamPermissions) ToLists() ([]string, []string, []string) {
 	var allow []string
 	var except []string
+	var deny []string
 
 	for _, r := range p.Allow {
 		allow = append(allow, r.Action)
@@ -103,7 +108,11 @@ func (p IamPermissions) ToLists() ([]string, []string) {
 	for _, r := range p.Except {
 		except = append(except, r.Action)
 	}
-	return allow, except
+
+	for _, r := range p.Deny {
+		deny = append(deny, r.Action)
+	}
+	return allow, except, deny
 }
 
 type IamAction struct {
