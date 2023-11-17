@@ -1,66 +1,703 @@
-name: terraform-provider-ovh
-version: v2.0
-workflow:
-
-  terraform-provider-ovh:
-    application: terraform-provider-ovh
-    pipeline: terraform-provider-ovh
-    parameters:
-      testargs: ""
-
-  terraform-provider-ovh-check:
-    pipeline: terraform-provider-ovh-check
-    application: terraform-provider-ovh
-    depends_on:
-      - terraform-provider-ovh
-
-  # TODO: the website-test make target is broken.
-  # pipeline is disable and further investigation is required
-  # terraform-provider-ovh-website-test:
-  #   pipeline: terraform-provider-ovh-website-test
-  #   application: terraform-provider-ovh
-  #   depends_on:
-  #     - terraform-provider-ovh
-
-  terraform-provider-ovh-testacc:
-    pipeline: terraform-provider-ovh-testacc
-    one_at_a_time: true
-    application: terraform-provider-ovh
-    environment: acctests
-    parameters:
-      testargs: "{{ .workflow.terraform-provider-ovh.pip.testargs }}"
-    depends_on:
-      - terraform-provider-ovh-check
-
-metadata:
-  default_tags: git.branch,git.author
-
-retention_policy: return (git_branch_exist == "false" and run_days_before < 2) or run_days_before < 365
-
 hooks:
   terraform-provider-ovh:
-  - type: Scheduler
-    config:
+  - config:
       cron: 0 0 * * *
       payload: '{}'
       timezone: UTC
-  - type: RepositoryWebHook
-    config:
-      # don't trigger build on PRs
+    type: Scheduler
+  - config:
       eventFilter: push
-
-notifications:
-- type: vcs
-  settings:
-    on_success: always
-  pipelines:
-  - terraform-provider-ovh-check
-  - terraform-provider-ovh-testacc
-- type: email
-  pipelines:
-  - terraform-provider-ovh-testacc
-  settings:
-    on_success: never
-    send_to_author: false
-    recipients:
-    - guillaume.allee@ovhcloud.com
+    type: RepositoryWebHook
+metadata:
+  default_tags: git.branch,git.author
+name: terraform-provider-ovh
+retention_policy: return (git_branch_exist == "false" and run_days_before < 2) or
+  run_days_before < 365
+version: v2.0
+workflow:
+  Tests_CloudProjectCapabilities:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run CloudProjectCapabilities
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_CloudProjectContainer:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run CloudProjectContainer
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_CloudProjectDatabaseCapabilities:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run CloudProjectDatabaseCapabilities
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_CloudProjectDatabaseCertificates:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run CloudProjectDatabaseCertificates
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_CloudProjectDatabaseDatabase:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run CloudProjectDatabaseDatabase
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_CloudProjectDatabaseIntegration:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run CloudProjectDatabaseIntegration
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_CloudProjectDatabaseIpRestriction:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run CloudProjectDatabaseIpRestriction
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_CloudProjectDatabaseKafkaAcl:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run CloudProjectDatabaseKafkaAcl
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_CloudProjectDatabaseKafkaSchemaRegistry:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run CloudProjectDatabaseKafkaSchemaRegistry
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_CloudProjectDatabaseKafkaTopic:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run CloudProjectDatabaseKafkaTopic
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_CloudProjectDatabaseKafkaUser:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run CloudProjectDatabaseKafkaUser
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_CloudProjectDatabaseM3dbNamespace:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run CloudProjectDatabaseM3dbNamespace
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_CloudProjectDatabaseM3dbUser:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run CloudProjectDatabaseM3dbUser
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_CloudProjectDatabaseMongodbUser:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run CloudProjectDatabaseMongodbUser
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_CloudProjectDatabaseOpensearchPattern:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run CloudProjectDatabaseOpensearchPattern
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_CloudProjectDatabaseOpensearchUser:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run CloudProjectDatabaseOpensearchUser
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_CloudProjectDatabasePostgresql:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run CloudProjectDatabasePostgresql
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_CloudProjectDatabaseRedis:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run CloudProjectDatabaseRedis
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_CloudProjectKubeCustomization:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run CloudProjectKube.*[cC]ustomization
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_CloudProjectKubeDataSource:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run CloudProjectKubeDataSource
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_CloudProjectKubeEmptyVersion:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run CloudProjectKubeEmptyVersion
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_CloudProjectKubeIPRestriction:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run CloudProjectKubeIPRestriction
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_CloudProjectKubeNodePool:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run CloudProjectKubeNodePool
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_CloudProjectKubeNodes:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run CloudProjectKubeNodes
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_CloudProjectKubeOIDC:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run CloudProjectKubeOIDC
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_CloudProjectKubeUpdate:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run CloudProjectKubeUpdate
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_CloudProjectKubeVRack:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run CloudProjectKubeVRack
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_CloudProjectKube_basic:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run CloudProjectKube_basic
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_CloudProjectKube_kube_proxy:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run CloudProjectKube_kube_proxy
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_CloudProjectUser:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run CloudProjectUser
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_DbaasLogs:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run DbaasLogs
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_DedicatedCeph:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run DedicatedCeph
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_DedicatedNasha:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run DedicatedNasha
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_DedicatedServer:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run DedicatedServer
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_DomainZone:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run DomainZone
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_HostingPrivateDatabase:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run HostingPrivateDatabase
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_IpLoadbalancing:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      # Exclude tests that use a vRack since they are already ran in Tests_Vrack pipeline
+      testargs: -run '[^Vrack]IpLoadbalancing[^Vrack]'
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_IpReverse:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run IpReverse
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_TestAccCloudProjectDatabaseDataSource_basic:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run TestAccCloudProjectDatabaseDataSource_basic
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_TestAccCloudProjectDatabaseUser:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run TestAccCloudProjectDatabaseUser
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_TestAccCloudProjectDatabase_basic:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run TestAccCloudProjectDatabase_basic
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_TestAccCloudProjectDatabase_importBasic:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run TestAccCloudProjectDatabase_importBasic
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_TestAccCloudProjectDatabasesDataSource_basic:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run TestAccCloudProjectDatabasesDataSource_basic
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_TestAccCloudProjectRegions:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run TestAccCloudProjectRegions
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_TestAccCloudProjectWorkflowBackup:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run TestAccCloudProjectWorkflowBackup
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_TestAccDataSourceCloudProject:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run TestAccDataSourceCloudProject
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_TestAccDataSourceIp:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run TestAccDataSourceIp
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_TestAccDataSourceOrderCart:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      # Skip TestAccDataSourceOrderCartCloudOptionsPlan_basic as it references a vRack service, already tested in pipeline Tests_Vrack
+      testargs: -run TestAccDataSourceOrderCart -skip TestAccDataSourceOrderCartCloudOptionsPlan_basic
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_TestAccDedicatedInstallationTemplates:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run TestAccDedicatedInstallationTemplates
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_TestAccIam:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run TestAccIam
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_TestAccMe:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run TestAccMe
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_TestAccResourceCloudProjectFailoverIpAttachTestAccResourceCloudProject_basic:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run TestAccResourceCloudProjectFailoverIpAttachTestAccResourceCloudProject_basic
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_TestAccResourceIpService_basic:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run TestAccResourceIpService_basic
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_TestAccVPS:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run TestAccVPS
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_Vrack:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      # Include specific test TestAccCloudProjectNetwork as it uses a vRack service
+      testargs: -run 'Vrack|TestAccCloudProjectNetwork|TestAccDataSourceOrderCartCloudOptionsPlan_basic'
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  terraform-provider-ovh:
+    application: terraform-provider-ovh
+    parameters: null
+    pipeline: terraform-provider-ovh
+    testargs: ''
+  terraform-provider-ovh-check:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh
+    pipeline: terraform-provider-ovh-check
+  terraform-provider-ovh-post-sweepers:
+    application: terraform-provider-ovh
+    depends_on:
+    - Tests_CloudProjectCapabilities
+    - Tests_CloudProjectContainer
+    - Tests_CloudProjectDatabaseCapabilities
+    - Tests_CloudProjectDatabaseCertificates
+    - Tests_CloudProjectDatabaseDatabase
+    - Tests_CloudProjectDatabaseIntegration
+    - Tests_CloudProjectDatabaseIpRestriction
+    - Tests_CloudProjectDatabaseKafkaAcl
+    - Tests_CloudProjectDatabaseKafkaSchemaRegistry
+    - Tests_CloudProjectDatabaseKafkaTopic
+    - Tests_CloudProjectDatabaseKafkaUser
+    - Tests_CloudProjectDatabaseM3dbNamespace
+    - Tests_CloudProjectDatabaseM3dbUser
+    - Tests_CloudProjectDatabaseMongodbUser
+    - Tests_CloudProjectDatabaseOpensearchPattern
+    - Tests_CloudProjectDatabaseOpensearchUser
+    - Tests_CloudProjectDatabasePostgresql
+    - Tests_CloudProjectDatabaseRedis
+    - Tests_TestAccCloudProjectDatabaseUser
+    - Tests_TestAccCloudProjectDatabasesDataSource_basic
+    - Tests_TestAccCloudProjectDatabaseDataSource_basic
+    - Tests_TestAccCloudProjectDatabase_importBasic
+    - Tests_TestAccCloudProjectDatabase_basic
+    - Tests_TestAccDataSourceCloudProject
+    - Tests_CloudProjectKubeIPRestriction
+    - Tests_CloudProjectKubeNodePool
+    - Tests_CloudProjectKubeNodes
+    - Tests_CloudProjectKubeOIDC
+    - Tests_CloudProjectKubeDataSource
+    - Tests_CloudProjectKubeCustomization
+    - Tests_CloudProjectKube_kube_proxy
+    - Tests_CloudProjectKubeVRack
+    - Tests_CloudProjectKubeEmptyVersion
+    - Tests_CloudProjectKubeUpdate
+    - Tests_CloudProjectKube_basic
+    - Tests_TestAccCloudProjectRegions
+    - Tests_CloudProjectUser
+    - Tests_DbaasLogs
+    - Tests_DedicatedCeph
+    - Tests_TestAccDedicatedInstallationTemplates
+    - Tests_DedicatedNasha
+    - Tests_DedicatedServer
+    - Tests_DomainZone
+    - Tests_TestAccIam
+    - Tests_IpLoadbalancing
+    - Tests_TestAccDataSourceIp
+    - Tests_TestAccMe
+    - Tests_TestAccDataSourceOrderCart
+    - Tests_TestAccVPS
+    - Tests_Vrack
+    - Tests_HostingPrivateDatabase
+    - Tests_IpReverse
+    - Tests_TestAccResourceCloudProjectFailoverIpAttachTestAccResourceCloudProject_basic
+    - Tests_TestAccCloudProjectWorkflowBackup
+    - Tests_TestAccResourceIpService_basic
+    environment: acctests
+    one_at_a_time: true
+    pipeline: terraform-provider-ovh-post-sweepers
+  terraform-provider-ovh-pre-sweepers:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-check
+    environment: acctests
+    one_at_a_time: true
+    pipeline: terraform-provider-ovh-pre-sweepers
