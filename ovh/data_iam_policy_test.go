@@ -18,7 +18,7 @@ func TestAccIamPolicyDataSource_basic(t *testing.T) {
 	resource1 := "urn:v1:eu:resource:vrack:*"
 	resource2 := "urn:v1:eu:resource:vps:*"
 	allow1 := "*"
-	except1 := "vrack:apiovh:dedicatedServer/remove"
+	except1 := "vrack:apiovh:dedicatedServer/detach"
 	deny2 := "*"
 
 	preSetup := fmt.Sprintf(
