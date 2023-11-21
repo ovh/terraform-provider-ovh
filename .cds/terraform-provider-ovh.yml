@@ -301,17 +301,6 @@ workflow:
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
-  Tests_CloudProjectKubeVRack:
-    application: terraform-provider-ovh
-    depends_on:
-    - terraform-provider-ovh-pre-sweepers
-    environment: acctests
-    one_at_a_time: true
-    parameters:
-      testargs: -run CloudProjectKubeVRack
-    pipeline: terraform-provider-ovh-testacc
-    when:
-    - success
   Tests_CloudProjectKube_basic:
     application: terraform-provider-ovh
     depends_on:
@@ -540,8 +529,7 @@ workflow:
     environment: acctests
     one_at_a_time: true
     parameters:
-      # Skip TestAccDataSourceOrderCartCloudOptionsPlan_basic as it references a vRack service, already tested in pipeline Tests_Vrack
-      testargs: -run TestAccDataSourceOrderCart -skip TestAccDataSourceOrderCartCloudOptionsPlan_basic
+      testargs: -run TestAccDataSourceOrderCart
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -619,7 +607,7 @@ workflow:
     one_at_a_time: true
     parameters:
       # Include specific test TestAccCloudProjectNetwork as it uses a vRack service
-      testargs: -run 'Vrack|TestAccCloudProjectNetwork|TestAccDataSourceOrderCartCloudOptionsPlan_basic'
+      testargs: -run 'Vrack|TestAccCloudProjectNetwork|TestAccCloudProjectKubeVRack'
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -667,7 +655,6 @@ workflow:
     - Tests_CloudProjectKubeDataSource
     - Tests_CloudProjectKubeCustomization
     - Tests_CloudProjectKube_kube_proxy
-    - Tests_CloudProjectKubeVRack
     - Tests_CloudProjectKubeEmptyVersion
     - Tests_CloudProjectKubeUpdate
     - Tests_CloudProjectKube_basic

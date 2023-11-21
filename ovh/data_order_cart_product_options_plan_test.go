@@ -37,7 +37,7 @@ func TestAccDataSourceOrderCartCloudOptionsPlan_basic(t *testing.T) {
 		t,
 		"cloud",
 		"project",
-		"vrack",
+		"certification.hds",
 	)
 }
 
