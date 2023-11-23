@@ -44,14 +44,14 @@ func resourceMeIdentityProvider() *schema.Resource {
 						},
 						"name_format": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 						},
 						"values": {
 							Type: schema.TypeList,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
-							Required: true,
+							Optional: true,
 						},
 					},
 				},
@@ -66,6 +66,30 @@ func resourceMeIdentityProvider() *schema.Resource {
 				Computed: true,
 			},
 			"last_update": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"idp_signing_certificates": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"expiration": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"subject": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"sso_service_url": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"user_attribute_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -86,6 +110,9 @@ func resourceMeIdentityProviderRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("requested_attributes", requestedAttributesToMapList(providerConfDetails.Extensions.RequestedAttributes))
 	d.Set("creation", providerConfDetails.Creation)
 	d.Set("last_update", providerConfDetails.LastUpdate)
+	d.Set("idp_signing_certificates", idpSigningCertificatesToMapList(providerConfDetails.IdpSigningCertificates))
+	d.Set("sso_service_url", providerConfDetails.SsoServiceUrl)
+	d.Set("user_attribute_name", providerConfDetails.UserAttributeName)
 
 	return nil
 }

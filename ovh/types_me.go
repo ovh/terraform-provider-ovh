@@ -197,7 +197,7 @@ type MeIdentityProviderIDPCertificates struct {
 
 type MeIdentityProviderCreateOpts struct {
 	Metadata           string `json:"metadata"`
-	GroupAttributeName string `json:"groupAttributeName"`
+	GroupAttributeName string `json:"groupAttributeName,omitempty"`
 	DisableUsers       bool   `json:"disableUsers"`
 
 	Extensions MeIdentityProviderExtensions `json:"extensions,omitempty"`
@@ -217,8 +217,8 @@ type MeIdentityProviderExtensions struct {
 type MeIdentityProviderAttribute struct {
 	IsRequired bool     `json:"isRequired"`
 	Name       string   `json:"name"`
-	NameFormat string   `json:"nameFormat"`
-	Values     []string `json:"values"`
+	NameFormat string   `json:"nameFormat,omitempty"`
+	Values     []string `json:"values,omitempty"`
 }
 
 // MeSshKey Opts
