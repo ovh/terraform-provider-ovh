@@ -42,7 +42,7 @@ func dataSourceCloudProjectVrackRead(ctx context.Context, d *schema.ResourceData
 
 	log.Printf("[DEBUG] Will read public cloud vRack for project: %s", serviceName)
 
-	res := &CloudProjectVerackResponse{}
+	res := &CloudProjectVrackResponse{}
 	endpoint := fmt.Sprintf(
 		"/cloud/project/%s/vrack",
 		url.PathEscape(serviceName),
