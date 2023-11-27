@@ -96,6 +96,54 @@ The following arguments are supported:
 * `consumer_key` - (Optional) The API Consumer key. If omitted,
   the `OVH_CONSUMER_KEY` environment variable is used.
 
+## Terraform State storage in an OVHcloud Object Storage (S3 compatibility)
+
+In order to store your Terraform states on an Object Storage, and generally if you want to interact with the Object Storage, you need to have the rights to manage an Object Storage.
+
+You should already created [High Performance Object Storage container and a user](https://help.ovhcloud.com/csm/en-public-cloud-compute-terraform-high-perf-object-storage-backend-state?id=kb_article_view&sysparm_article=KB0051345).
+
+You should also be able to interact with the `aws` CLI and list the OVHcloud High Performance Object Storage containers that the user is linked to:
+```
+$ aws s3 ls
+2022-07-11 16:20:48 my-container
+2022-07-11 16:55:20 terraform-state-hp
+```
+
+Before Terraform 1.6.0:
+
+```
+terraform {
+    backend "s3" {
+      bucket = "terraform-state-hp"
+      key    = "terraform.tfstate"
+      region = "gra"
+      #or sbg or any activated high performance storage region
+      endpoint = "s3.gra.perf.cloud.ovh.net"
+      skip_credentials_validation = true
+      skip_region_validation = true
+    }
+}
+```
+
+Terraform 1.6.0 and later:
+
+```
+terraform {
+    backend "s3" {
+      bucket = "terraform-state-hp"
+      key    = "terraform.tfstate"
+      region = "gra"
+      # sbg or any activated high performance storage region
+      endpoints = {
+        s3 = "https://s3.gra.perf.cloud.ovh.net/"
+      }
+      skip_credentials_validation = true
+      skip_region_validation      = true
+      skip_requesting_account_id  = true
+    }
+}
+```
+
 ## Testing and Development
 
 In order to run the Acceptance Tests for development, the following environment
