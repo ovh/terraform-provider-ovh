@@ -51,6 +51,13 @@ func dataSourceIamPolicy() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"deny": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			"owner": {
 				Type:     schema.TypeString,
 				Computed: true,

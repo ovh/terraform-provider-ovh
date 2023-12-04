@@ -2,6 +2,7 @@ package ovh
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -45,10 +46,19 @@ func TestAccMeInstallationTemplateDataSource_basic(t *testing.T) {
 					),
 				),
 			},
+			{
+				Config:      testAccMeInstallationTemplateDatasourceConfig_404,
+				ExpectError: regexp.MustCompile("Your query returned no results. Please change your search criteria"),
+			},
 		},
 	})
 }
 
+const testAccMeInstallationTemplateDatasourceConfig_404 = `
+data "ovh_me_installation_template" "template" {
+	template_name = "42"
+  }
+`
 const testAccMeInstallationTemplateDatasourceConfig_Basic = `
 resource "ovh_me_installation_template" "template" {
   base_template_name = "centos7_64"

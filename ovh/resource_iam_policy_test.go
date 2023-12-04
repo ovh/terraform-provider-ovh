@@ -67,7 +67,8 @@ func TestAccIamPolicy_basic(t *testing.T) {
 	desc := "IAM policy created by Terraform Acc"
 	userName := acctest.RandomWithPrefix(test_prefix)
 	res := "urn:v1:eu:resource:vps:*"
-	config := fmt.Sprintf(testAccIamPolicyConfig, userName, userName, name, desc, res)
+	exceptAction := "vps:apiovh:reinstall"
+	config := fmt.Sprintf(testAccIamPolicyConfig, userName, userName, name, desc, res, exceptAction)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheckCredentials(t) },
@@ -76,7 +77,29 @@ func TestAccIamPolicy_basic(t *testing.T) {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					checkIamPolicyResourceAttr("ovh_iam_policy.policy1", name, desc, res)...,
+					checkIamPolicyResourceAttr("ovh_iam_policy.policy1", name, desc, res, "*", exceptAction, "")...,
+				),
+			},
+		},
+	})
+}
+
+func TestAccIamPolicy_deny(t *testing.T) {
+	name := acctest.RandomWithPrefix(test_prefix)
+	desc := "IAM policy created by Terraform Acc"
+	userName := acctest.RandomWithPrefix(test_prefix)
+	res := "urn:v1:eu:resource:vps:*"
+	denyAction := "vps:apiovh:reinstall"
+	config := fmt.Sprintf(testAccIamPolicyDenyConfig, userName, userName, name, desc, res, denyAction)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheckCredentials(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					checkIamPolicyResourceAttr("ovh_iam_policy.policy1", name, desc, res, "", "", denyAction)...,
 				),
 			},
 		},
@@ -96,5 +119,22 @@ resource "ovh_iam_policy" "policy1" {
 	identities  = [ovh_me_identity_user.test_user.urn]
 	resources   = ["%s"]
 	allow 	    = ["*"]
+	except 	    = ["%s"]
+}
+`
+
+const testAccIamPolicyDenyConfig = `
+resource "ovh_me_identity_user" "test_user" {
+	login = "%s"
+	email = "%s@terraform.test"
+	password = "qwe123!@#"
+}
+
+resource "ovh_iam_policy" "policy1" {
+	name        = "%s"
+	description = "%s"
+	identities  = [ovh_me_identity_user.test_user.urn]
+	resources   = ["%s"]
+	deny 	    = ["%s"]
 }
 `
