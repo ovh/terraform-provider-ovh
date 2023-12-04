@@ -191,6 +191,8 @@ variables must also be set:
 * `OVH_ZONE_TEST` - The domain you own to test the domain_zone resource.
 
 * `OVH_IP_TEST`, `OVH_IP_BLOCK_TEST`, `OVH_IP_REVERSE_TEST` - The values you have to set for testing ip reverse resources.
+ 
+* `OVH_IP_MOVE_TEST`, `OVH_IP_MOVE_SERVICE_NAME_TEST` - The values you have to set for testing ip move resources.
 
 * `OVH_DBAAS_LOGS_SERVICE_TEST` - The name of your Dbaas logs service.
 
