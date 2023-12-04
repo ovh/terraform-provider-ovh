@@ -373,3 +373,9 @@ func testAccPreCheckWorkflowBackup(t *testing.T) {
 func testAccPreCheckDedicatedServerNetworking(t *testing.T) {
 	checkEnvOrSkip(t, "TEST_DEDICATED_SERVER_NETWORKING")
 }
+
+func testAccPreCheckIamResourceGroup(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_VRACK_SERVICE_TEST")
+	checkEnvOrSkip(t, "OVH_VPS")
+}

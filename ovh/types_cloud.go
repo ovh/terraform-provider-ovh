@@ -151,9 +151,17 @@ type CloudProjectUserOpenstackRC struct {
 
 type CloudProjectUserS3Credential struct {
 	Access      string `json:"access"`
-	Secret      string `json:"secret"`
 	ServiceName string `json:"tenantId"`
 	UserId      string `json:"userId"`
+}
+
+type CloudProjectUserS3Secret struct {
+	Secret string `json:"secret"`
+}
+
+type CloudProjectUserS3CredentialSecret struct {
+	CloudProjectUserS3Credential
+	CloudProjectUserS3Secret
 }
 
 func (u *CloudProjectUserS3Credential) String() string {
@@ -163,9 +171,30 @@ func (u *CloudProjectUserS3Credential) String() string {
 func (u CloudProjectUserS3Credential) ToMap() map[string]interface{} {
 	obj := make(map[string]interface{})
 	obj["access_key_id"] = u.Access
-	obj["secret_access_key"] = u.Secret
 	obj["service_name"] = u.ServiceName
 	obj["internal_user_id"] = u.UserId
+	return obj
+}
+
+func (u *CloudProjectUserS3Secret) String() string {
+	return "CloudProjectUserS3Secret[Secret: ***]"
+}
+
+func (u CloudProjectUserS3Secret) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+	obj["secret_access_key"] = u.Secret
+	return obj
+}
+
+func (u *CloudProjectUserS3CredentialSecret) String() string {
+	return fmt.Sprintf("CloudProjectUserS3CredentialSecret[ServiceName:%s, UserId: %s, Access: %s, Secret: ***]", u.ServiceName, u.UserId, u.Access)
+}
+
+func (u CloudProjectUserS3CredentialSecret) ToMap() map[string]interface{} {
+	obj := u.CloudProjectUserS3Credential.ToMap()
+	for k, v := range u.CloudProjectUserS3Secret.ToMap() {
+		obj[k] = v
+	}
 	return obj
 }
 

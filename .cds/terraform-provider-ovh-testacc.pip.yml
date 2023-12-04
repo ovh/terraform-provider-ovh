@@ -19,18 +19,10 @@ jobs:
       curl -sfLo - "${tfurl}" | gunzip -d - > /usr/local/bin/terraform
       chmod +x /usr/local/bin/terraform
 
-  - name: Run pre sweepers
-    script: |
-      TF_ACC=1 go test ./ovh/ -v -sweep=1
-
   - name: Run acceptance tests
     script: |
       #!/usr/bin/env bash
       make testacc TESTARGS="-parallel=1 ${CDS_PIP_TESTARGS}"
-
-  - name: Run post sweepers
-    script: |
-      TF_ACC=1 go test ./ovh/ -v -sweep=1
 
   requirements:
   - model: shared.infra/Go-official-1.20-bullseye

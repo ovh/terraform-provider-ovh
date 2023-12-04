@@ -52,6 +52,13 @@ func resourceIamPolicy() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"deny": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			"owner": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -163,7 +170,13 @@ func prepareIamPolicyCall(d *schema.ResourceData) IamPolicy {
 
 	if except, ok := d.GetOk("except"); ok {
 		for _, e := range except.(*schema.Set).List() {
-			out.Permissions.Except = append(out.Permissions.Allow, IamAction{Action: e.(string)})
+			out.Permissions.Except = append(out.Permissions.Except, IamAction{Action: e.(string)})
+		}
+	}
+
+	if deny, ok := d.GetOk("deny"); ok {
+		for _, e := range deny.(*schema.Set).List() {
+			out.Permissions.Deny = append(out.Permissions.Deny, IamAction{Action: e.(string)})
 		}
 	}
 	return out
