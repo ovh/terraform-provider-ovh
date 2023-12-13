@@ -59,7 +59,7 @@ The following arguments are supported:
   * `catalog_name` - Catalog name
   * `configuration` - (Required) Representation of a configuration item for personalizing product. 2 configurations are required : one for `zone` and one for `template`
     * `label` - (Required) Identifier of the resource : `zone` or `template`
-    * `value` - (Required) For `zone`, the value is the zone name `myzone.mydomain.com`. For `template`, the value can be `basic`, `minimized` or  `redirect` which is the same as `minimized` with additional entries for a redirect configuration.
+    * `value` - (Required) For `zone`, the value is the zone name `myzone.example.com`. For `template`, the value can be `basic`, `minimized` or  `redirect` which is the same as `minimized` with additional entries for a redirect configuration.
 * `plan_option` - (Optional) Product Plan to order
   * `duration` - (Required) duration
   * `plan_code` - (Required) Plan code
