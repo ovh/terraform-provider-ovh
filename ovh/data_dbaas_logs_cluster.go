@@ -20,6 +20,10 @@ func dataSourceDbaasLogsCluster() *schema.Resource {
 				Description: "The service name",
 				Required:    true,
 			},
+			"cluster_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			// Computed
 			"urn": {
 				Type:     schema.TypeString,
@@ -102,29 +106,51 @@ func dbaasGetClusterID(config *Config, serviceName string) (string, error) {
 		return "", fmt.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
 	}
 
-	return res[0], nil
+	if len(res) == 1 {
+		return res[0], nil
+	}
+
+	/* Look for default clusterId */
+	for _, clusterId := range res {
+		res := make(map[string]interface{})
+		endpoint := fmt.Sprintf(
+			"/dbaas/logs/%s/cluster/%s",
+			url.PathEscape(serviceName), clusterId,
+		)
+		if err := config.OVHClient.Get(endpoint, &res); err != nil {
+			return "", fmt.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
+		}
+		if res["isDefault"] == true {
+			return clusterId, nil
+		}
+	}
+
+	return "", fmt.Errorf("Can't find default clusterId")
 }
 
 func dataSourceDbaasLogsClusterRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
 	serviceName := d.Get("service_name").(string)
-
-	log.Printf("[DEBUG] Will read dbaas logs cluster %s", serviceName)
-
-	cluster_id, err := dbaasGetClusterID(config, serviceName)
-
-	if err != nil {
-		return fmt.Errorf("Error fetching info for %s:\n\t %q", serviceName, err)
+	clusterId := d.Get("cluster_id").(string)
+	if clusterId == "" {
+		var err error
+		clusterId, err = dbaasGetClusterID(config, serviceName)
+		if err != nil {
+			return fmt.Errorf("Error retrieving clusterId for %s:\n\t %q", serviceName, err)
+		}
 	}
 
-	d.SetId(cluster_id)
+	log.Printf("[DEBUG] Will read dbaas logs cluster %s/%s", serviceName, clusterId)
+
+	id := fmt.Sprintf("%s_%s", serviceName, clusterId)
+	d.SetId(id)
 	d.Set("urn", helpers.ServiceURN(config.Plate, "ldp", serviceName))
 
 	endpoint := fmt.Sprintf(
 		"/dbaas/logs/%s/cluster/%s",
 		url.PathEscape(serviceName),
-		url.PathEscape(cluster_id),
+		url.PathEscape(clusterId),
 	)
 
 	res := map[string]interface{}{}
