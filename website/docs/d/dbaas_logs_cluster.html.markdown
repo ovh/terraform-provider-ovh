@@ -12,16 +12,18 @@ Use this data source to retrieve informations about a DBaas logs cluster tenant.
 ```hcl
 data "ovh_dbaas_logs_cluster" "logstash" {
   service_name = "ldp-xx-xxxxx"
+  cluster_id   = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 }
 ```
 
 ## Argument Reference
 
 * `service_name` - The service name. It's the ID of your Logs Data Platform instance.
+* `cluster_id` - Cluster ID. If not provided, the default cluster_id is returned
 
 ## Attributes Reference
 
-* `id` is the input engine ID
+* `id` is the cluster id
 * `urn` is the URN of the DBaas logs instance
 * `cluster_type` is type of cluster (DEDICATED, PRO or TRIAL)
 * `dedicated_input_pem` is PEM for dedicated inputs
