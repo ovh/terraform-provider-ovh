@@ -33,7 +33,6 @@ func TestAccDbaasLogsCluster(t *testing.T) {
 	config := fmt.Sprintf(
 		testAccDbaasLogsClusterConfig,
 		serviceName,
-		clusterId,
 	)
 
 	resource.Test(t, resource.TestCase{
