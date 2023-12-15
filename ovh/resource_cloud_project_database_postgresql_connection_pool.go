@@ -95,10 +95,7 @@ func resourceCloudProjectDatabasePostgresqlConnectionPoolImportState(d *schema.R
 }
 
 func resourceCloudProjectDatabasePostgresqlConnectionPoolCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	f := func() interface{} {
-		return (&CloudProjectDatabasePostgresqlConnectionPoolCreateOpts{}).FromResource(d)
-	}
-	return postCloudProjectDatabasePostgresqlConnectionPool(ctx, d, meta, dataSourceCloudProjectDatabasePostgresqlConnectionPoolRead, resourceCloudProjectDatabasePostgresqlConnectionPoolRead, resourceCloudProjectDatabasePostgresqlConnectionPoolUpdate, f)
+	return postCloudProjectDatabasePostgresqlConnectionPool(ctx, d, meta, resourceCloudProjectDatabasePostgresqlConnectionPoolRead)
 }
 
 func resourceCloudProjectDatabasePostgresqlConnectionPoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -132,10 +129,7 @@ func resourceCloudProjectDatabasePostgresqlConnectionPoolRead(ctx context.Contex
 }
 
 func resourceCloudProjectDatabasePostgresqlConnectionPoolUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	f := func() interface{} {
-		return (&CloudProjectDatabasePostgresqlConnectionPoolUpdateOpts{}).FromResource(d)
-	}
-	return updateCloudProjectDatabasePostgresqlConnectionPool(ctx, d, meta, resourceCloudProjectDatabasePostgresqlConnectionPoolRead, f)
+	return updateCloudProjectDatabasePostgresqlConnectionPool(ctx, d, meta, resourceCloudProjectDatabasePostgresqlConnectionPoolRead)
 }
 
 func resourceCloudProjectDatabasePostgresqlConnectionPoolDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
