@@ -2093,7 +2093,7 @@ func importCloudProjectDatabasePostgresqlConnectionPool(d *schema.ResourceData, 
 	return results, nil
 }
 
-func postCloudProjectDatabasePostgresqlConnectionPool(ctx context.Context, d *schema.ResourceData, meta interface{}, dsReadFunc, readFunc schema.ReadContextFunc, updateFunc schema.UpdateContextFunc, f func() interface{}) diag.Diagnostics {
+func postCloudProjectDatabasePostgresqlConnectionPool(ctx context.Context, d *schema.ResourceData, meta interface{}, readFunc schema.ReadContextFunc) diag.Diagnostics {
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
 
@@ -2103,7 +2103,7 @@ func postCloudProjectDatabasePostgresqlConnectionPool(ctx context.Context, d *sc
 		url.PathEscape(clusterId),
 	)
 
-	params := f()
+	params := (&CloudProjectDatabasePostgresqlConnectionPoolCreateOpts{}).FromResource(d)
 	res := &CloudProjectDatabasePostgresqlConnectionPoolResponse{}
 
 	log.Printf("[DEBUG] Will create connectionPool: %+v for cluster %s from project %s", params, clusterId, serviceName)
@@ -2118,7 +2118,7 @@ func postCloudProjectDatabasePostgresqlConnectionPool(ctx context.Context, d *sc
 	return readFunc(ctx, d, meta)
 }
 
-func updateCloudProjectDatabasePostgresqlConnectionPool(ctx context.Context, d *schema.ResourceData, meta interface{}, readFunc schema.ReadContextFunc, f func() interface{}) diag.Diagnostics {
+func updateCloudProjectDatabasePostgresqlConnectionPool(ctx context.Context, d *schema.ResourceData, meta interface{}, readFunc schema.ReadContextFunc) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
@@ -2131,7 +2131,7 @@ func updateCloudProjectDatabasePostgresqlConnectionPool(ctx context.Context, d *
 		url.PathEscape(id),
 	)
 
-	params := f()
+	params := (&CloudProjectDatabasePostgresqlConnectionPoolUpdateOpts{}).FromResource(d)
 
 	log.Printf("[DEBUG] Will update connectionPool: %+v from cluster %s from project %s", params, clusterId, serviceName)
 	err := config.OVHClient.Put(endpoint, params, nil)
