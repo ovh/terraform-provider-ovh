@@ -15,7 +15,13 @@ resource "ovh_cloud_project_database" "db" {
 	description  = "%s"
 	engine       = "mongodb"
 	version      = "%s"
-	plan         = "essential"
+	plan         = "discovery"
+	nodes {
+		region     = "%s"
+	}
+	nodes {
+		region     = "%s"
+	}
 	nodes {
 		region     = "%s"
 	}
@@ -32,7 +38,7 @@ resource "ovh_cloud_project_database_mongodb_user" "user" {
 data "ovh_cloud_project_database_mongodb_user" "user" {
   service_name = ovh_cloud_project_database_mongodb_user.user.service_name
   cluster_id   = ovh_cloud_project_database_mongodb_user.user.cluster_id
-  name     = ovh_cloud_project_database_mongodb_user.user.name
+  name         = ovh_cloud_project_database_mongodb_user.user.name
 }
 `
 
@@ -42,8 +48,8 @@ func TestAccCloudProjectDatabaseMongodbUserDataSource_basic(t *testing.T) {
 	if version == "" {
 		version = os.Getenv("OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST")
 	}
-	region := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_REGION_TEST")
-	flavor := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_FLAVOR_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_MONGODB_REGION_TEST")
+	flavor := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_MONGODB_FLAVOR_TEST")
 	description := acctest.RandomWithPrefix(test_prefix)
 	name := "johndoe"
 	rolesBackup := "backup"
@@ -55,6 +61,8 @@ func TestAccCloudProjectDatabaseMongodbUserDataSource_basic(t *testing.T) {
 		description,
 		version,
 		region,
+		region,
+		region,
 		flavor,
 		name,
 		rolesBackup,
@@ -62,7 +70,7 @@ func TestAccCloudProjectDatabaseMongodbUserDataSource_basic(t *testing.T) {
 	)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheckCloudDatabaseNoEngine(t) },
+		PreCheck:  func() { testAccPreCheckCloudDatabaseMongoDBNoEngine(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{

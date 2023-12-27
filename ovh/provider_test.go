@@ -217,6 +217,15 @@ func testAccPreCheckCloudDatabaseNoEngine(t *testing.T) {
 	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_DATABASE_FLAVOR_TEST")
 }
 
+// Checks that the environment variables needed for the /cloud/project/{projectId}/database/mongodb/ acceptance tests are set.
+func testAccPreCheckCloudDatabaseMongoDBNoEngine(t *testing.T) {
+	testAccPreCheckCloud(t)
+	testAccCheckCloudProjectExists(t)
+	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_DATABASE_MONGODB_VERSION_TEST")
+	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_DATABASE_MONGODB_REGION_TEST")
+	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_DATABASE_MONGODB_FLAVOR_TEST")
+}
+
 // Checks that the environment variables needed for the /cloud/project/{projectId}/database/{engine}/{clusterId}/ipRestriction/ acceptance tests are set.
 func testAccPreCheckCloudDatabaseIpRestriction(t *testing.T) {
 	testAccPreCheckCloudDatabase(t)

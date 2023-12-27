@@ -16,8 +16,8 @@ func TestAccCloudProjectDatabaseMongodbUser_importBasic(t *testing.T) {
 	if version == "" {
 		version = os.Getenv("OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST")
 	}
-	region := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_REGION_TEST")
-	flavor := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_FLAVOR_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_MONGODB_REGION_TEST")
+	flavor := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_MONGODB_FLAVOR_TEST")
 	description := acctest.RandomWithPrefix(test_prefix)
 	name := "johndoe"
 	rolesBackup := "backup"
@@ -29,6 +29,8 @@ func TestAccCloudProjectDatabaseMongodbUser_importBasic(t *testing.T) {
 		description,
 		version,
 		region,
+		region,
+		region,
 		flavor,
 		name,
 		rolesBackup,
@@ -36,7 +38,7 @@ func TestAccCloudProjectDatabaseMongodbUser_importBasic(t *testing.T) {
 	)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheckCloudDatabaseNoEngine(t) },
+		PreCheck:  func() { testAccPreCheckCloudDatabaseMongoDBNoEngine(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
