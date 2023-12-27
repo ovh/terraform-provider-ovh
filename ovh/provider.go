@@ -94,6 +94,7 @@ func Provider() *schema.Provider {
 			"ovh_cloud_project_user_s3_credentials":                   dataCloudProjectUserS3Credentials(),
 			"ovh_cloud_project_user_s3_policy":                        dataCloudProjectUserS3Policy(),
 			"ovh_cloud_project_users":                                 datasourceCloudProjectUsers(),
+			"ovh_cloud_project_vrack":                                 dataSourceCloudProjectVrack(),
 			"ovh_dbaas_logs_cluster":                                  dataSourceDbaasLogsCluster(),
 			"ovh_dbaas_logs_clusters":                                 dataSourceDbaasLogsClusters(),
 			"ovh_dbaas_logs_input_engine":                             dataSourceDbaasLogsInputEngine(),
