@@ -50,7 +50,7 @@ const testAccDedicatedServerRebootConfig_Basic = `
 data ovh_dedicated_server_boots "rescue" {
   service_name = "%s"
   boot_type    = "rescue"
-  kernel       = "rescue64-pro"
+  kernel       = "rescue-customer"
 }
 
 resource ovh_dedicated_server_update "server" {
