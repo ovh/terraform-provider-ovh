@@ -30,13 +30,16 @@ func testSweepDbaasLogsCluster(region string) error {
 
 func TestAccDbaasLogsCluster(t *testing.T) {
 	serviceName := os.Getenv("OVH_DBAAS_LOGS_SERVICE_TEST")
+	clusterId := os.Getenv("OVH_DBAAS_LOGS_CLUSTER_ID")
+
 	config := fmt.Sprintf(
 		testAccDbaasLogsClusterConfig,
 		serviceName,
+		clusterId,
 	)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheckDbaasLogs(t) },
+		PreCheck:  func() { testAccPreCheckDbaasLogsCluster(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -66,6 +69,7 @@ func TestAccDbaasLogsCluster(t *testing.T) {
 const testAccDbaasLogsClusterConfig = `
 resource "ovh_dbaas_logs_cluster" "ldp" {
 	service_name = "%s"
+	cluster_id = "%s"
 
 	archive_allowed_networks       = ["10.0.0.0/16"]
 	direct_input_allowed_networks  = ["10.0.0.0/16"]
