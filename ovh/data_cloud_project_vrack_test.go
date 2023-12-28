@@ -10,7 +10,7 @@ import (
 
 func TestAccCloudProjectVrackDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheckCloud(t) },
+		PreCheck:  func() { testAccPreCheckCloudWithVrack(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -25,4 +25,4 @@ var testAccCloudProjectVrackDatasourceConfig = fmt.Sprintf(`
 data "ovh_cloud_project_vrack" "vrack" {
   service_name = "%s"
 }
-`, os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"))
+`, os.Getenv("OVH_CLOUD_PROJECT_WITH_VRACK_SERVICE_TEST"))

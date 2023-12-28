@@ -187,6 +187,13 @@ func testAccPreCheckCloud(t *testing.T) {
 	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_SERVICE_TEST")
 }
 
+// Checks that the environment variables needed for the /cloud acceptance tests
+// are set.
+func testAccPreCheckCloudWithVrack(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_WITH_VRACK_SERVICE_TEST")
+}
+
 // Checks that the environment variables needed for the /cloud/{cloudId}/containerregistry acceptance tests
 // are set.
 func testAccPreCheckContainerRegistry(t *testing.T) {
