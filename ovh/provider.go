@@ -2,6 +2,7 @@ package ovh
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"sync"
 
@@ -254,25 +255,8 @@ func ConfigureContextFunc(context context.Context, d *schema.ResourceData) (inte
 		lockAuth: &sync.Mutex{},
 	}
 
-	rawPath := "~/.ovh.conf"
-	configPath, err := homedir.Expand(rawPath)
-	if err != nil {
-		return &config, diag.Errorf("Failed to expand config path %q: %s", rawPath, err)
-	}
-
-	if _, err := os.Stat(configPath); err == nil {
-		c, err := ini.Load(configPath)
-		if err != nil {
-			return nil, diag.FromErr(err)
-		}
-
-		section, err := c.GetSection(d.Get("endpoint").(string))
-		if err != nil {
-			return nil, diag.FromErr(err)
-		}
-		config.ApplicationKey = section.Key("application_key").String()
-		config.ApplicationSecret = section.Key("application_secret").String()
-		config.ConsumerKey = section.Key("consumer_key").String()
+	if err := readOVHConfigurationFile(&config); err != nil {
+		return &config, diag.FromErr(err)
 	}
 
 	if v, ok := d.GetOk("application_key"); ok {
@@ -290,4 +274,29 @@ func ConfigureContextFunc(context context.Context, d *schema.ResourceData) (inte
 	}
 
 	return &config, nil
+}
+
+func readOVHConfigurationFile(config *Config) error {
+	rawPath := "~/.ovh.conf"
+	configPath, err := homedir.Expand(rawPath)
+	if err != nil {
+		return fmt.Errorf("Failed to expand config path %q: %s", rawPath, err)
+	}
+
+	if _, err := os.Stat(configPath); err == nil {
+		c, err := ini.Load(configPath)
+		if err != nil {
+			return err
+		}
+
+		section, err := c.GetSection(config.Endpoint)
+		if err != nil {
+			return err
+		}
+		config.ApplicationKey = section.Key("application_key").String()
+		config.ApplicationSecret = section.Key("application_secret").String()
+		config.ConsumerKey = section.Key("consumer_key").String()
+	}
+
+	return nil
 }
