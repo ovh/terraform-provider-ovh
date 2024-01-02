@@ -42,7 +42,7 @@ resource "ovh_iam_policy" "manager" {
 * `allow` - List of actions allowed on resources by identities
 * `except` - List of overrides of action that must not be allowed even if they are caught by allow. Only makes sens if allow contains wildcards.
 * `deny` - List of actions that will always be denied even if also allowed by this policy or another one.
-* `permissions_group` - Set of permissions group included in the policy. At evaluation, these permissions groups are each evaluated independently (notably, excepts actions only affect actions in the same permission group).
+* `permissions_groups` - Set of permissions groups included in the policy. At evaluation, these permissions groups are each evaluated independently (notably, excepts actions only affect actions in the same permission group).
 
 ## Attributes Reference
 
