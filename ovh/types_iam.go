@@ -148,3 +148,45 @@ type IamResourceGroupCreate struct {
 	Name      string               `json:"name"`
 	Resources []IamResourceDetails `json:"resources"`
 }
+
+type IamPermissionsGroup struct {
+	Id          string         `json:"id,omitempty"`
+	Name        string         `json:"name"`
+	Description string         `json:"description,omitempty"`
+	Permissions IamPermissions `json:"permissions"`
+	CreatedAt   string         `json:"createdAt,omitempty"`
+	UpdatedAt   string         `json:"updatedAt,omitempty"`
+	Urn         string         `json:"urn,omitempty"`
+	Owner       string         `json:"owner,omitempty"`
+}
+
+func (p IamPermissionsGroup) ToMap() map[string]any {
+	out := make(map[string]any, 0)
+	out["name"] = p.Name
+
+	out["owner"] = p.Owner
+	out["created_at"] = p.CreatedAt
+
+	// inline allow, except and deny
+	allow, except, deny := p.Permissions.ToLists()
+	if len(allow) != 0 {
+		out["allow"] = allow
+	}
+	if len(except) != 0 {
+		out["except"] = except
+	}
+	if len(deny) != 0 {
+		out["deny"] = deny
+	}
+
+	if p.Description != "" {
+		out["description"] = p.Description
+	}
+	if p.UpdatedAt != "" {
+		out["updated_at"] = p.UpdatedAt
+	}
+
+	out["urn"] = p.Urn
+
+	return out
+}

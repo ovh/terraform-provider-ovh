@@ -27,7 +27,7 @@ data "ovh_iam_policy" "my_policy" {
 * `allow` - Set of actions allowed by the policy.
 * `except` - Set of actions that will be subtracted from the `allow` list.
 * `deny` - Set of actions that will be denied no matter what policy exists.
-* `permissions_group` - Set of permissions group that apply to the policy.
+* `permissions_groups` - Set of permissions groups that apply to the policy.
 * `owner` - Owner of the policy.
 * `created_at` - Creation date of this group.
 * `updated_at` - Date of the last update of this group.
