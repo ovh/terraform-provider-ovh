@@ -22,11 +22,12 @@ data "ovh_iam_policy" "my_policy" {
 
 * `name` - Name of the policy.
 * `description` - Group description.
-* `identities` - List of identities affected by the policy.
-* `resources` - List of resources affected by the policy.
-* `allow` - List of actions allowed by the policy.
-* `except` - List of actions that will be subtracted from the `allow` list.
-* `deny` - List of actions that will be denied no matter what policy exists.
+* `identities` - Set of identities affected by the policy.
+* `resources` - Set of resources affected by the policy.
+* `allow` - Set of actions allowed by the policy.
+* `except` - Set of actions that will be subtracted from the `allow` list.
+* `deny` - Set of actions that will be denied no matter what policy exists.
+* `permissions_group` - Set of permissions group that apply to the policy.
 * `owner` - Owner of the policy.
 * `created_at` - Creation date of this group.
 * `updated_at` - Date of the last update of this group.
