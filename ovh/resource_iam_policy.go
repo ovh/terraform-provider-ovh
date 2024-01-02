@@ -59,6 +59,13 @@ func resourceIamPolicy() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"permissions_groups": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			"owner": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -177,6 +184,12 @@ func prepareIamPolicyCall(d *schema.ResourceData) IamPolicy {
 	if deny, ok := d.GetOk("deny"); ok {
 		for _, e := range deny.(*schema.Set).List() {
 			out.Permissions.Deny = append(out.Permissions.Deny, IamAction{Action: e.(string)})
+		}
+	}
+
+	if permGrps, ok := d.GetOk("permissions_groups"); ok {
+		for _, e := range permGrps.(*schema.Set).List() {
+			out.PermissionsGroups = append(out.PermissionsGroups, PermissionGroup{Urn: e.(string)})
 		}
 	}
 	return out

@@ -58,6 +58,13 @@ func dataSourceIamPolicy() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"permissions_groups": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			"owner": {
 				Type:     schema.TypeString,
 				Computed: true,
