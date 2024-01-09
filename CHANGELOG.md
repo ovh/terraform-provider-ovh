@@ -1,3 +1,11 @@
+## 0.36.1 (January 9, 2024)
+
+🐜 Bug fixes:
+
+* `core`: Regression while migrating to `github.com/hashicorp/terraform-plugin-framework` ([#528](https://github.com/ovh/terraform-provider-ovh/issues/528))
+
+❤️ Thanks for your contributions ❤️
+
 ## 0.36.0 (January 9, 2024)
 
 🎉 Features:
