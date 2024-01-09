@@ -63,3 +63,5 @@ require (
 )
 
 go 1.20
+
+retract v0.36.0 // OVH_ENDPOINT environment variable prevent a correct usage of the terraform provider
