@@ -1,3 +1,40 @@
+## 0.36.0 (January 9, 2024)
+
+🎉 Features:
+
+* New resource: `ovh_me_api_oauth2_client` ([#488](https://github.com/ovh/terraform-provider-ovh/pull/488))
+* New resource: `ovh_iam_resource_group` ([#457](https://github.com/ovh/terraform-provider-ovh/pull/457))
+
+* New datasource: `ovh_me_api_oauth2_client` ([#488](https://github.com/ovh/terraform-provider-ovh/pull/488))
+* New datasource: `ovh_iam_resource_group` ([#457](https://github.com/ovh/terraform-provider-ovh/pull/457))
+* New datasource: `ovh_iam_resource_groups` ([#457](https://github.com/ovh/terraform-provider-ovh/pull/457))
+* New datasource: `ovh_dbaas_logs_cluster` ([#446](https://github.com/ovh/terraform-provider-ovh/pull/446))
+* New datasource: `ovh_cloud_project_vrack` ([#504](https://github.com/ovh/terraform-provider-ovh/pull/504))
+
+⚙️ General:
+
+* Bump golang dependencies ([#482](https://github.com/ovh/terraform-provider-ovh/pull/482), [#516](https://github.com/ovh/terraform-provider-ovh/pull/516), [#525](https://github.com/ovh/terraform-provider-ovh/pull/525))
+
+💪 Improvements:
+
+* `r/ovh_iam_policy`: Add support for deny in IAM policies ([#483](https://github.com/ovh/terraform-provider-ovh/pull/483))
+
+🐜 Bug fixes:
+
+* `r/ovh_cloud_project_database_ip_restriction`: Prevent terraform apply useless retries when an IP restriction is already set on a database instance ([#489](https://github.com/ovh/terraform-provider-ovh/pull/489))
+* `r/ovh_dbaas_logs_cluster`: Add mandatory parameter `cluster_id` ([#446](https://github.com/ovh/terraform-provider-ovh/pull/446))
+
+* `d/ovh_me_installation_template`: Fix a bug when referencing a template that doesn't exist ([#499](https://github.com/ovh/terraform-provider-ovh/pull/499))
+* `d/ovh_dbaas_logs_cluster`: Add mandatory parameter `cluster_id` ([#446](https://github.com/ovh/terraform-provider-ovh/pull/446))
+
+📚 Documentation:
+
+* `r/ovh_domain_zone`: Update documentation page ([#486](https://github.com/ovh/terraform-provider-ovh/pull/486))
+* `r/ovh_vrack`: Add documentation for import ([#513](https://github.com/ovh/terraform-provider-ovh/pull/513))
+* `r/ovh_domain_zone`: Improve parameters documentation ([#511](https://github.com/ovh/terraform-provider-ovh/pull/511))
+
+❤️ Thanks for your contributions ❤️
+
 ## 0.35.0 (November 7, 2023)
 
 ⚙️ General:
