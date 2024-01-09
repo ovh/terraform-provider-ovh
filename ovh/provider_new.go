@@ -37,7 +37,8 @@ func (p *OvhProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"endpoint": schema.StringAttribute{
-				Optional:    true,
+				Required:    os.Getenv("OVH_ENDPOINT") == "",
+				Optional:    os.Getenv("OVH_ENDPOINT") != "",
 				Description: descriptions["endpoint"],
 			},
 			"application_key": schema.StringAttribute{
