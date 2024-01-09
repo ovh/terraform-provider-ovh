@@ -22,10 +22,10 @@
 🐜 Bug fixes:
 
 * `r/ovh_cloud_project_database_ip_restriction`: Prevent terraform apply useless retries when an IP restriction is already set on a database instance ([#489](https://github.com/ovh/terraform-provider-ovh/pull/489))
-* `r/ovh_dbaas_logs_cluster`: Add mandatory parameter `cluster_id` ([#446](https://github.com/ovh/terraform-provider-ovh/pull/446))
+* `r/ovh_dbaas_logs_cluster`: Add optional parameter `cluster_id` ([#446](https://github.com/ovh/terraform-provider-ovh/pull/446))
 
 * `d/ovh_me_installation_template`: Fix a bug when referencing a template that doesn't exist ([#499](https://github.com/ovh/terraform-provider-ovh/pull/499))
-* `d/ovh_dbaas_logs_cluster`: Add mandatory parameter `cluster_id` ([#446](https://github.com/ovh/terraform-provider-ovh/pull/446))
+* `d/ovh_dbaas_logs_cluster`: Add optional parameter `cluster_id` ([#446](https://github.com/ovh/terraform-provider-ovh/pull/446))
 
 📚 Documentation:
 
