@@ -52,7 +52,7 @@ The following attributes are exported:
   * `statement`
   * `transaction`
 * `size` - Size of the connection pool.
-* `user_id` - Database User authorized to connect to the pool, if none all the users are allowed.
+* `user_id` - Database user authorized to connect to the pool, if none all the users are allowed.
 * `port` - Port of the connection pool.
 * `ssl_mode` - Ssl connection mode for the pool.
 * `uri` - Connection URI to the pool.

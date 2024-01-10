@@ -66,7 +66,7 @@ func resourceCloudProjectDatabasePostgresqlConnectionPool() *schema.Resource {
 			// Optional
 			"user_id": {
 				Type:        schema.TypeString,
-				Description: "Database User authorized to connect to the pool, if none all the users are allowed",
+				Description: "Database user authorized to connect to the pool, if none all the users are allowed",
 				Optional:    true,
 			},
 
@@ -78,7 +78,7 @@ func resourceCloudProjectDatabasePostgresqlConnectionPool() *schema.Resource {
 			},
 			"ssl_mode": {
 				Type:        schema.TypeString,
-				Description: "Ssl connection mode for the pool",
+				Description: "SSL connection mode for the pool",
 				Computed:    true,
 			},
 			"uri": {

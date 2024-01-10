@@ -2097,9 +2097,8 @@ func postCloudProjectDatabasePostgresqlConnectionPool(ctx context.Context, d *sc
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/connectionPool",
+	endpoint := fmt.Sprintf("/cloud/project/%s/database/postgresql/%s/connectionPool",
 		url.PathEscape(serviceName),
-		url.PathEscape("postgresql"),
 		url.PathEscape(clusterId),
 	)
 
@@ -2124,9 +2123,8 @@ func updateCloudProjectDatabasePostgresqlConnectionPool(ctx context.Context, d *
 	clusterId := d.Get("cluster_id").(string)
 	id := d.Id()
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/connectionPool/%s",
+	endpoint := fmt.Sprintf("/cloud/project/%s/database/postgresql/%s/connectionPool/%s",
 		url.PathEscape(serviceName),
-		url.PathEscape("postgresql"),
 		url.PathEscape(clusterId),
 		url.PathEscape(id),
 	)
@@ -2150,9 +2148,8 @@ func deleteCloudProjectDatabasePostgresqlConnectionPool(ctx context.Context, d *
 	clusterId := d.Get("cluster_id").(string)
 	id := d.Id()
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/connectionPool/%s",
+	endpoint := fmt.Sprintf("/cloud/project/%s/database/postgresql/%s/connectionPool/%s",
 		url.PathEscape(serviceName),
-		url.PathEscape("postgresql"),
 		url.PathEscape(clusterId),
 		url.PathEscape(id),
 	)

@@ -53,7 +53,7 @@ func dataSourceCloudProjectDatabasePostgresqlConnectionPool() *schema.Resource {
 			},
 			"ssl_mode": {
 				Type:        schema.TypeString,
-				Description: "Ssl connection mode for the pool",
+				Description: "SSL connection mode for the pool",
 				Computed:    true,
 			},
 			"uri": {
