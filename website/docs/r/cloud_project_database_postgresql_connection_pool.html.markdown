@@ -80,7 +80,7 @@ The following arguments are supported:
   * `statement`
   * `transaction`
 * `size` - (Required) Size of the connection pool.
-* `user_id` - (Optional) Database User authorized to connect to the pool, if none all the users are allowed.
+* `user_id` - (Optional) Database user authorized to connect to the pool, if none all the users are allowed.
 
 
 ## Attributes Reference
