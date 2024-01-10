@@ -1995,3 +1995,174 @@ func (v CloudProjectDatabaseKafkaUserAccessResponse) ToMap() map[string]interfac
 
 	return obj
 }
+
+type CloudProjectDatabasePostgresqlConnectionPoolModeEnum string
+
+const (
+	CloudProjectDatabasePostgresqlConnectionPoolModeEnumSession     CloudProjectDatabasePostgresqlConnectionPoolModeEnum = "session"
+	CloudProjectDatabasePostgresqlConnectionPoolModeEnumStatement   CloudProjectDatabasePostgresqlConnectionPoolModeEnum = "statement"
+	CloudProjectDatabasePostgresqlConnectionPoolModeEnumTransaction CloudProjectDatabasePostgresqlConnectionPoolModeEnum = "transaction"
+)
+
+type CloudProjectDatabasePostgresqlConnectionPoolSslModeEnum string
+
+const (
+	CloudProjectDatabasePostgresqlConnectionPoolSslModeEnumRequire CloudProjectDatabasePostgresqlConnectionPoolSslModeEnum = "require"
+)
+
+type CloudProjectDatabasePostgresqlConnectionPoolCreateOpts struct {
+	DatabaseId string                                               `json:"databaseId"`
+	Mode       CloudProjectDatabasePostgresqlConnectionPoolModeEnum `json:"mode"`
+	Name       string                                               `json:"name"`
+	Size       int                                                  `json:"size"`
+	UserId     *string                                              `json:"userId,omitempty"`
+}
+
+func (opts *CloudProjectDatabasePostgresqlConnectionPoolCreateOpts) FromResource(d *schema.ResourceData) *CloudProjectDatabasePostgresqlConnectionPoolCreateOpts {
+	opts.DatabaseId = d.Get("database_id").(string)
+	opts.Mode = CloudProjectDatabasePostgresqlConnectionPoolModeEnum(d.Get("mode").(string))
+	opts.Name = d.Get("name").(string)
+	opts.Size = d.Get("size").(int)
+	opts.UserId = helpers.GetNilStringPointer(d.Get("user_id"))
+	return opts
+}
+
+type CloudProjectDatabasePostgresqlConnectionPoolUpdateOpts struct {
+	DatabaseId *string                                               `json:"databaseId,omitempty"`
+	Mode       *CloudProjectDatabasePostgresqlConnectionPoolModeEnum `json:"mode,omitempty"`
+	Size       *int                                                  `json:"size,omitempty"`
+	UserId     *string                                               `json:"userId"`
+}
+
+func (opts *CloudProjectDatabasePostgresqlConnectionPoolUpdateOpts) FromResource(d *schema.ResourceData) *CloudProjectDatabasePostgresqlConnectionPoolUpdateOpts {
+	opts.DatabaseId = helpers.GetNilStringPointer(d.Get("database_id"))
+	mode := helpers.GetNilStringPointer(d.Get("mode"))
+	if mode != nil {
+		enumMode := CloudProjectDatabasePostgresqlConnectionPoolModeEnum(*mode)
+		opts.Mode = &enumMode
+	}
+	opts.Size = helpers.GetNilIntPointer(d.Get("size"))
+	opts.UserId = helpers.GetNilStringPointer(d.Get("user_id"))
+	return opts
+}
+
+type CloudProjectDatabasePostgresqlConnectionPoolResponse struct {
+	DatabaseId string                                                   `json:"databaseId"`
+	Id         string                                                   `json:"id"`
+	Mode       CloudProjectDatabasePostgresqlConnectionPoolModeEnum     `json:"mode"`
+	Name       string                                                   `json:"name"`
+	Port       int64                                                    `json:"port"`
+	Size       int                                                      `json:"size"`
+	SslMode    *CloudProjectDatabasePostgresqlConnectionPoolSslModeEnum `json:"sslMode,omitempty"`
+	Uri        string                                                   `json:"uri"`
+	UserId     *string                                                  `json:"userId,omitempty"`
+}
+
+func (v CloudProjectDatabasePostgresqlConnectionPoolResponse) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+
+	obj["database_id"] = v.DatabaseId
+	obj["id"] = v.Id
+	obj["mode"] = v.Mode
+	obj["name"] = v.Name
+	obj["port"] = v.Port
+	obj["size"] = v.Size
+	obj["ssl_mode"] = v.SslMode
+	obj["uri"] = v.Uri
+	obj["user_id"] = v.UserId
+
+	return obj
+}
+
+func importCloudProjectDatabasePostgresqlConnectionPool(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	givenId := d.Id()
+	n := 3
+	splitId := strings.SplitN(givenId, "/", n)
+	if len(splitId) != n {
+		return nil, fmt.Errorf("Import Id is not service_name/cluster_id/id formatted")
+	}
+	serviceName := splitId[0]
+	clusterId := splitId[1]
+	id := splitId[2]
+	d.SetId(id)
+	d.Set("cluster_id", clusterId)
+	d.Set("service_name", serviceName)
+
+	results := make([]*schema.ResourceData, 1)
+	results[0] = d
+	return results, nil
+}
+
+func postCloudProjectDatabasePostgresqlConnectionPool(ctx context.Context, d *schema.ResourceData, meta interface{}, readFunc schema.ReadContextFunc) diag.Diagnostics {
+	serviceName := d.Get("service_name").(string)
+	clusterId := d.Get("cluster_id").(string)
+
+	endpoint := fmt.Sprintf("/cloud/project/%s/database/postgresql/%s/connectionPool",
+		url.PathEscape(serviceName),
+		url.PathEscape(clusterId),
+	)
+
+	params := (&CloudProjectDatabasePostgresqlConnectionPoolCreateOpts{}).FromResource(d)
+	res := &CloudProjectDatabasePostgresqlConnectionPoolResponse{}
+
+	log.Printf("[DEBUG] Will create connectionPool: %+v for cluster %s from project %s", params, clusterId, serviceName)
+	config := meta.(*Config)
+
+	err := config.OVHClient.Post(endpoint, params, res)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.SetId(res.Id)
+	return readFunc(ctx, d, meta)
+}
+
+func updateCloudProjectDatabasePostgresqlConnectionPool(ctx context.Context, d *schema.ResourceData, meta interface{}, readFunc schema.ReadContextFunc) diag.Diagnostics {
+	config := meta.(*Config)
+	serviceName := d.Get("service_name").(string)
+	clusterId := d.Get("cluster_id").(string)
+	id := d.Id()
+
+	endpoint := fmt.Sprintf("/cloud/project/%s/database/postgresql/%s/connectionPool/%s",
+		url.PathEscape(serviceName),
+		url.PathEscape(clusterId),
+		url.PathEscape(id),
+	)
+
+	params := (&CloudProjectDatabasePostgresqlConnectionPoolUpdateOpts{}).FromResource(d)
+
+	log.Printf("[DEBUG] Will update connectionPool: %+v from cluster %s from project %s", params, clusterId, serviceName)
+	err := config.OVHClient.Put(endpoint, params, nil)
+	if err != nil {
+		return diag.Errorf("calling Put %s with params %+v:\n\t %q", endpoint, params, err)
+	}
+
+	log.Printf("[DEBUG] connectionPool %s is READY", id)
+
+	return readFunc(ctx, d, meta)
+}
+
+func deleteCloudProjectDatabasePostgresqlConnectionPool(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	config := meta.(*Config)
+	serviceName := d.Get("service_name").(string)
+	clusterId := d.Get("cluster_id").(string)
+	id := d.Id()
+
+	endpoint := fmt.Sprintf("/cloud/project/%s/database/postgresql/%s/connectionPool/%s",
+		url.PathEscape(serviceName),
+		url.PathEscape(clusterId),
+		url.PathEscape(id),
+	)
+
+	log.Printf("[DEBUG] Will delete connectionPool %s from cluster %s from project %s", id, clusterId, serviceName)
+	err := config.OVHClient.Delete(endpoint, nil)
+	if err != nil {
+		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
+	}
+
+	log.Printf("[DEBUG] connectionPool %s is DELETED", id)
+
+	d.SetId("")
+
+	return nil
+}
