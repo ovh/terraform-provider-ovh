@@ -5,67 +5,119 @@ import (
 	"fmt"
 	"log"
 	"net/url"
-	"sort"
+	"os"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/ovh/terraform-provider-ovh/ovh/helpers/hashcode"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-func dataSourceCloudProjectDatabaseIPRestrictions() *schema.Resource {
-	return &schema.Resource{
-		ReadContext: dataSourceCloudProjectDatabaseIPRestrictionsRead,
-		Schema: map[string]*schema.Schema{
-			"service_name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
-			},
-			"engine": {
-				Type:        schema.TypeString,
-				Description: "Name of the engine of the service",
-				Required:    true,
-			},
-			"cluster_id": {
-				Type:        schema.TypeString,
-				Description: "Cluster ID",
-				Required:    true,
-			},
+type cloudProjectDatabaseIPRestrictionsDataSource struct {
+	config *Config
+}
 
-			//Computed
-			"ips": {
-				Type:        schema.TypeList,
-				Description: "List of IP restriction",
+type ovhCloudProjectDatabaseIpRestrictionsModel struct {
+	ServiceName types.String `tfsdk:"service_name"`
+	Engine      types.String `tfsdk:"engine"`
+	ClusterId   types.String `tfsdk:"cluster_id"`
+	IPs         types.Set    `tfsdk:"ips"`
+}
+
+func NewCloudProjectDatabaseIPRestrictionsDataSource() datasource.DataSource {
+	return &cloudProjectDatabaseIPRestrictionsDataSource{}
+}
+
+// Ensure the implementation satisfies the expected interfaces.
+var (
+	_ datasource.DataSource              = &cloudProjectDatabaseIPRestrictionsDataSource{}
+	_ datasource.DataSourceWithConfigure = &cloudProjectDatabaseIPRestrictionsDataSource{}
+)
+
+func (d *cloudProjectDatabaseIPRestrictionsDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_cloud_project_database_ip_restrictions"
+}
+
+func (d *cloudProjectDatabaseIPRestrictionsDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
+	config, ok := req.ProviderData.(*Config)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Data Source Configure Type",
+			fmt.Sprintf("Expected *Config, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+		return
+	}
+
+	d.config = config
+}
+
+func (d *cloudProjectDatabaseIPRestrictionsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"service_name": schema.StringAttribute{
+				Required:    os.Getenv("OVH_CLOUD_PROJECT_SERVICE") == "",
+				Optional:    os.Getenv("OVH_CLOUD_PROJECT_SERVICE") != "",
+				Description: "Service name",
+			},
+			"engine": schema.StringAttribute{
+				Required:    true,
+				Description: "Name of the engine of the service",
+			},
+			"cluster_id": schema.StringAttribute{
+				Required:    true,
+				Description: "Cluster ID",
+			},
+			"ips": schema.SetAttribute{
+				ElementType: types.StringType,
 				Computed:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "List of IP restriction",
 			},
 		},
 	}
 }
 
-func dataSourceCloudProjectDatabaseIPRestrictionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	config := meta.(*Config)
-	serviceName := d.Get("service_name").(string)
-	engine := d.Get("engine").(string)
-	clusterID := d.Get("cluster_id").(string)
-
-	endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/ipRestriction",
-		url.PathEscape(serviceName),
-		url.PathEscape(engine),
-		url.PathEscape(clusterID),
-	)
-	res := make([]string, 0)
-
-	log.Printf("[DEBUG] Will read IP restrictions from cluster %s from project %s", clusterID, serviceName)
-	if err := config.OVHClient.Get(endpoint, &res); err != nil {
-		return diag.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
+func (d *cloudProjectDatabaseIPRestrictionsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var config ovhCloudProjectDatabaseIpRestrictionsModel
+	diags := req.Config.Get(ctx, &config)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	// sort.Strings sorts in place, returns nothing
-	sort.Strings(res)
+	if config.ServiceName.IsNull() {
+		config.ServiceName = basetypes.NewStringValue(os.Getenv("OVH_CLOUD_PROJECT_SERVICE"))
+	}
 
-	d.SetId(hashcode.Strings(res))
-	d.Set("ips", res)
+	endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/ipRestriction",
+		url.PathEscape(config.ServiceName.ValueString()),
+		url.PathEscape(config.Engine.ValueString()),
+		url.PathEscape(config.ClusterId.ValueString()),
+	)
 
-	return nil
+	log.Printf("[DEBUG] Will read IP restrictions from cluster %s from project %s",
+		config.ClusterId.ValueString(), config.ServiceName.ValueString())
+
+	res := make([]string, 0)
+	if err := d.config.OVHClient.Get(endpoint, &res); err != nil {
+		resp.Diagnostics.AddError("Failed to get ip restrictions", fmt.Sprintf("error calling GET %s: %s", endpoint, err))
+		return
+	}
+
+	ips := make([]attr.Value, 0, len(res))
+	for _, ip := range res {
+		ips = append(ips, types.StringValue(ip))
+	}
+	config.IPs, diags = types.SetValue(types.StringType, ips)
+	if diags.HasError() {
+		resp.Diagnostics = append(resp.Diagnostics, diags...)
+		return
+	}
+
+	diags = resp.State.Set(ctx, &config)
+	resp.Diagnostics.Append(diags...)
 }
