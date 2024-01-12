@@ -8,12 +8,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func dataSourceIamPolicy() *schema.Resource {
+func dataSourceIamPermissionsGroup() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"id": {
+			"urn": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -22,20 +26,6 @@ func dataSourceIamPolicy() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
-			},
-			"identities": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"resources": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
 			},
 			"allow": {
 				Type:     schema.TypeSet,
@@ -58,13 +48,6 @@ func dataSourceIamPolicy() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"permissions_groups": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
 			"owner": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -75,23 +58,20 @@ func dataSourceIamPolicy() *schema.Resource {
 			},
 			"updated_at": {
 				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"read_only": {
-				Type:     schema.TypeBool,
+				Optional: true,
 				Computed: true,
 			},
 		},
-		ReadContext: datasourceIamPolicyRead,
+		ReadContext: datasourceIamPermissionsGroupRead,
 	}
 }
 
-func datasourceIamPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func datasourceIamPermissionsGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	config := meta.(*Config)
-	id := d.Get("id").(string)
+	id := d.Get("urn").(string)
 
-	var pol IamPolicy
-	err := config.OVHClient.GetWithContext(ctx, "/v2/iam/policy/"+url.PathEscape(id), &pol)
+	var pol IamPermissionsGroup
+	err := config.OVHClient.GetWithContext(ctx, "/v2/iam/permissionsGroup/"+url.PathEscape(id), &pol)
 	if err != nil {
 		return diag.FromErr(err)
 	}
