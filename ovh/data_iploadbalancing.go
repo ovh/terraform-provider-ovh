@@ -3,6 +3,7 @@ package ovh
 import (
 	"fmt"
 	"log"
+	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
@@ -164,7 +165,7 @@ func dataSourceIpLoadbalancingRead(d *schema.ResourceData, meta interface{}) err
 
 	for _, serviceName := range response {
 		iplb := &IpLoadbalancing{}
-		err := config.OVHClient.Get(fmt.Sprintf("/ipLoadbalancing/%s", serviceName), &iplb)
+		err := config.OVHClient.Get(fmt.Sprintf("/ipLoadbalancing/%s", url.PathEscape(serviceName)), &iplb)
 
 		if err != nil {
 			return fmt.Errorf("Error calling /ipLoadbalancing/%s:\n\t %q", serviceName, err)
@@ -244,8 +245,8 @@ func dataSourceIpLoadbalancingAttributes(config *Config, d *schema.ResourceData,
 	}
 
 	d.SetId(iplb.ServiceName)
-	d.Set("urn", helpers.ServiceURN(config.Plate, "loadbalancer", iplb.ServiceName))
 
+	d.Set("urn", iplb.URN)
 	d.Set("ipv6", iplb.IPv6)
 	d.Set("ipv4", iplb.IPv4)
 	d.Set("zone", iplb.Zone)

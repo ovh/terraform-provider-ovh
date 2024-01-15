@@ -18,6 +18,7 @@ type DedicatedNASHA struct {
 	CanCreatePartition bool   `json:"canCreatePartition,omitempty"`
 	Ip                 string `json:"ip,omitempty"`
 	ZpoolCapacity      int    `json:"zpoolCapacity,omitempty"`
+	IamResourceDetails `json:"iam"`
 }
 
 type DedicatedNASHAPartition struct {

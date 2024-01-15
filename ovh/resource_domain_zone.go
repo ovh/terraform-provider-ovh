@@ -88,7 +88,7 @@ func resourceDomainZoneRead(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Will read domainZone: %s", zoneName)
 	r := &DomainZone{}
-	endpoint := fmt.Sprintf("/domain/zone/%s", zoneName)
+	endpoint := fmt.Sprintf("/domain/zone/%s", url.PathEscape(zoneName))
 	if err := config.OVHClient.Get(endpoint, &r); err != nil {
 		return helpers.CheckDeleted(d, err, endpoint)
 	}
@@ -97,8 +97,6 @@ func resourceDomainZoneRead(d *schema.ResourceData, meta interface{}) error {
 	for k, v := range r.ToMap() {
 		d.Set(k, v)
 	}
-
-	d.Set("urn", helpers.ServiceURN(config.Plate, "dnsZone", r.Name))
 
 	return nil
 }

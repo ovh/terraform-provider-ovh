@@ -8,19 +8,20 @@ import (
 )
 
 type IpLoadbalancing struct {
-	DisplayName      *string                         `json:"displayName"`
-	IPv4             *string                         `json:"ipv4,omitempty"`
-	IPv6             *string                         `json:"ipv6,omitempty"`
-	IpLoadbalancing  string                          `json:"ipLoadbalancing"`
-	MetricsToken     *string                         `json:"metricsToken,omitempty"`
-	Offer            string                          `json:"offer"`
-	OrderableZones   []*IpLoadbalancingOrderableZone `json:"orderableZone"`
-	ServiceName      string                          `json:"serviceName"`
-	SslConfiguration *string                         `json:"sslConfiguration"`
-	State            string                          `json:"state"`
-	VrackEligibility bool                            `json:"vrackEligibility"`
-	VrackName        *string                         `json:"vrackName"`
-	Zone             []string                        `json:"zone"`
+	DisplayName        *string                         `json:"displayName"`
+	IPv4               *string                         `json:"ipv4,omitempty"`
+	IPv6               *string                         `json:"ipv6,omitempty"`
+	IpLoadbalancing    string                          `json:"ipLoadbalancing"`
+	MetricsToken       *string                         `json:"metricsToken,omitempty"`
+	Offer              string                          `json:"offer"`
+	OrderableZones     []*IpLoadbalancingOrderableZone `json:"orderableZone"`
+	ServiceName        string                          `json:"serviceName"`
+	SslConfiguration   *string                         `json:"sslConfiguration"`
+	State              string                          `json:"state"`
+	VrackEligibility   bool                            `json:"vrackEligibility"`
+	VrackName          *string                         `json:"vrackName"`
+	Zone               []string                        `json:"zone"`
+	IamResourceDetails `json:"iam"`
 }
 
 func (v IpLoadbalancing) ToMap() map[string]interface{} {
@@ -33,6 +34,7 @@ func (v IpLoadbalancing) ToMap() map[string]interface{} {
 	obj["state"] = v.State
 	obj["vrack_eligibility"] = v.VrackEligibility
 	obj["display_name"] = v.DisplayName
+	obj["urn"] = v.URN
 
 	if v.IPv4 != nil {
 		obj["ipv4"] = *v.IPv4

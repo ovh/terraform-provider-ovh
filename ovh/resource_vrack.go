@@ -3,6 +3,7 @@ package ovh
 import (
 	"fmt"
 	"log"
+	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
@@ -78,7 +79,7 @@ func resourceVrackUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Will update vrack: %s", serviceName)
 	opts := (&VrackUpdateOpts{}).FromResource(d)
-	endpoint := fmt.Sprintf("/vrack/%s", serviceName)
+	endpoint := fmt.Sprintf("/vrack/%s", url.PathEscape(serviceName))
 	if err := config.OVHClient.Put(endpoint, opts, nil); err != nil {
 		return fmt.Errorf("calling Put %s: %q", endpoint, err)
 	}
@@ -97,7 +98,7 @@ func resourceVrackRead(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Will read vrack: %s", serviceName)
 	r := &Vrack{}
-	endpoint := fmt.Sprintf("/vrack/%s", serviceName)
+	endpoint := fmt.Sprintf("/vrack/%s", url.PathEscape(serviceName))
 	if err := config.OVHClient.Get(endpoint, &r); err != nil {
 		return helpers.CheckDeleted(d, err, endpoint)
 	}
@@ -108,7 +109,6 @@ func resourceVrackRead(d *schema.ResourceData, meta interface{}) error {
 	for k, v := range r.ToMap() {
 		d.Set(k, v)
 	}
-	d.Set("urn", helpers.ServiceURN(config.Plate, "vrack", serviceName))
 
 	return nil
 }

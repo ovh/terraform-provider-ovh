@@ -23,6 +23,8 @@ func TestAccIpLoadbalancingDataSource_basic(t *testing.T) {
 						"data.ovh_iploadbalancing.iplb", "service_name", serviceName),
 					resource.TestCheckResourceAttr(
 						"data.ovh_iploadbalancing.iplb", "id", serviceName),
+					resource.TestCheckResourceAttrSet(
+						"data.ovh_iploadbalancing.iplb", "urn"),
 				),
 			},
 		},
@@ -48,6 +50,8 @@ func TestAccIpLoadbalancingDataSource_statevrack(t *testing.T) {
 						"data.ovh_iploadbalancing.iplb", "state", "ok"),
 					resource.TestCheckResourceAttr(
 						"data.ovh_iploadbalancing.iplb", "vrack_eligibility", "true"),
+					resource.TestCheckResourceAttrSet(
+						"data.ovh_iploadbalancing.iplb", "urn"),
 				),
 			},
 		},

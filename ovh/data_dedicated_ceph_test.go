@@ -22,6 +22,8 @@ func TestAccDedicatedCephDatasource(t *testing.T) {
 						"data.ovh_dedicated_ceph.ceph", "service_name", dedicated_ceph),
 					resource.TestCheckResourceAttr(
 						"data.ovh_dedicated_ceph.ceph", "status", "INSTALLED"),
+					resource.TestCheckResourceAttrSet(
+						"data.ovh_dedicated_ceph.ceph", "urn"),
 				),
 			},
 		},
