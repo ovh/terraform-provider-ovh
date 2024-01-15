@@ -2,15 +2,15 @@ Licences:
 Apache-2.0
 BSD-2-Clause
 BSD-3-Clause
-ISC
 MIT
 MPL-2.0
 Unknown
 
 Packages:
+github.com/ProtonMail/go-crypto; BSD-3-Clause
 github.com/agext/levenshtein; Apache-2.0
-github.com/apparentlymart/go-textseg/v13; Apache-2.0
-github.com/davecgh/go-spew; ISC
+github.com/apparentlymart/go-textseg/v15; Apache-2.0
+github.com/cloudflare/circl; BSD-3-Clause
 github.com/fatih/color; MIT
 github.com/golang/go; BSD-3-Clause
 github.com/golang/protobuf; BSD-3-Clause
@@ -29,8 +29,10 @@ github.com/hashicorp/hcl/v2; MPL-2.0
 github.com/hashicorp/logutils; MPL-2.0
 github.com/hashicorp/terraform-exec; MPL-2.0
 github.com/hashicorp/terraform-json; MPL-2.0
+github.com/hashicorp/terraform-plugin-framework; MPL-2.0
 github.com/hashicorp/terraform-plugin-go; MPL-2.0
 github.com/hashicorp/terraform-plugin-log; MPL-2.0
+github.com/hashicorp/terraform-plugin-mux; MPL-2.0
 github.com/hashicorp/terraform-plugin-sdk/v2; MPL-2.0
 github.com/hashicorp/terraform-registry-address; MPL-2.0
 github.com/hashicorp/terraform-svchost; MPL-2.0
@@ -45,16 +47,18 @@ github.com/mitchellh/mapstructure; MIT
 github.com/mitchellh/reflectwalk; MIT
 github.com/oklog/run; Apache-2.0
 github.com/ovh/go-ovh; BSD-3-Clause
-github.com/vmihailenco/msgpack/v4; BSD-2-Clause
+github.com/vmihailenco/msgpack/v5; BSD-2-Clause
 github.com/vmihailenco/msgpack; BSD-2-Clause
-github.com/vmihailenco/tagparser; BSD-2-Clause
+github.com/vmihailenco/tagparser/v2; BSD-2-Clause
 github.com/ybriffa/rfc3339; Unknown. See go/github.com/ybriffa/rfc3339/LICENSE file
 github.com/zclconf/go-cty; MIT
 golang.org/x/crypto; BSD-3-Clause
 golang.org/x/exp; BSD-3-Clause
-golang.org/x/net; BSD-3-Clause
+golang.org/x/mod; BSD-3-Clause
+golang.org/x/net; BSD-2-Clause
+golang.org/x/sys; BSD-3-Clause
 golang.org/x/text; BSD-3-Clause
-google.golang.org/genproto; Apache-2.0
+google.golang.org/genproto/googleapis/rpc; Apache-2.0
 google.golang.org/grpc; Apache-2.0
 google.golang.org/protobuf; BSD-3-Clause
 gopkg.in/ini.v1; Apache-2.0
