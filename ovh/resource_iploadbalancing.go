@@ -172,7 +172,7 @@ func resourceIpLoadbalancingUpdate(d *schema.ResourceData, meta interface{}) err
 
 	log.Printf("[DEBUG] Will update ipLoadbalancing: %s", serviceName)
 	opts := (&IpLoadbalancingUpdateOpts{}).FromResource(d)
-	endpoint := fmt.Sprintf("/ipLoadbalancing/%s", serviceName)
+	endpoint := fmt.Sprintf("/ipLoadbalancing/%s", url.PathEscape(serviceName))
 	if err := config.OVHClient.Put(endpoint, opts, nil); err != nil {
 		return fmt.Errorf("calling Put %s: %q", endpoint, err)
 	}
@@ -197,7 +197,7 @@ func resourceIpLoadbalancingRead(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[DEBUG] Will read ipLoadbalancing: %s", serviceName)
 
 	r := &IpLoadbalancing{}
-	endpoint := fmt.Sprintf("/ipLoadbalancing/%s", serviceName)
+	endpoint := fmt.Sprintf("/ipLoadbalancing/%s", url.PathEscape(serviceName))
 	if err := config.OVHClient.Get(endpoint, &r); err != nil {
 		return helpers.CheckDeleted(d, err, endpoint)
 	}
@@ -206,7 +206,6 @@ func resourceIpLoadbalancingRead(d *schema.ResourceData, meta interface{}) error
 	for k, v := range r.ToMap() {
 		d.Set(k, v)
 	}
-	d.Set("urn", helpers.ServiceURN(config.Plate, "loadbalancer", r.ServiceName))
 
 	return nil
 }

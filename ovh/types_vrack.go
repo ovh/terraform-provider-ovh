@@ -8,8 +8,9 @@ import (
 )
 
 type Vrack struct {
-	Description *string `json:"description"`
-	Name        *string `json:"name"`
+	Description        *string `json:"description"`
+	Name               *string `json:"name"`
+	IamResourceDetails `json:"iam"`
 }
 
 func (v Vrack) ToMap() map[string]interface{} {
@@ -22,6 +23,8 @@ func (v Vrack) ToMap() map[string]interface{} {
 	if v.Name != nil {
 		obj["name"] = *v.Name
 	}
+
+	obj["urn"] = v.URN
 
 	return obj
 }

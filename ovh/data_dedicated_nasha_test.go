@@ -27,6 +27,7 @@ func TestAccDedicatedNashaData(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.ovh_dedicated_nasha.testacc", "disk_type", "ssd"),
 					resource.TestCheckResourceAttr("data.ovh_dedicated_nasha.testacc", "service_name", serviceName),
+					resource.TestCheckResourceAttrSet("data.ovh_dedicated_nasha.testacc", "urn"),
 				),
 			},
 		},

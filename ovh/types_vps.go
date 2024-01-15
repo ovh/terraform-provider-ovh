@@ -14,18 +14,19 @@ type VPSModel struct {
 }
 
 type VPS struct {
-	Name           string   `json:"name"`
-	Cluster        string   `json:"cluster"`
-	Memory         int      `json:"memoryLimit"`
-	NetbootMode    string   `json:"netbootMode"`
-	Keymap         string   `json:"keymap"`
-	Zone           string   `json:"zone"`
-	State          string   `json:"state"`
-	Vcore          int      `json:"vcore"`
-	OfferType      string   `json:"offerType"`
-	SlaMonitorting bool     `json:"slaMonitoring"`
-	DisplayName    string   `json:"displayName"`
-	Model          VPSModel `json:"model"`
+	Name               string   `json:"name"`
+	Cluster            string   `json:"cluster"`
+	Memory             int      `json:"memoryLimit"`
+	NetbootMode        string   `json:"netbootMode"`
+	Keymap             string   `json:"keymap"`
+	Zone               string   `json:"zone"`
+	State              string   `json:"state"`
+	Vcore              int      `json:"vcore"`
+	OfferType          string   `json:"offerType"`
+	SlaMonitorting     bool     `json:"slaMonitoring"`
+	DisplayName        string   `json:"displayName"`
+	Model              VPSModel `json:"model"`
+	IamResourceDetails `json:"iam"`
 }
 
 type VPSDatacenter struct {

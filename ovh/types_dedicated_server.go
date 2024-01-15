@@ -9,22 +9,23 @@ import (
 )
 
 type DedicatedServer struct {
-	Name            string `json:"name"`
-	BootId          int    `json:"bootId"`
-	CommercialRange string `json:"commercialRange"`
-	Datacenter      string `json:"datacenter"`
-	Ip              string `json:"ip"`
-	LinkSpeed       int    `json:"linkSpeed"`
-	Monitoring      bool   `json:"monitoring"`
-	Os              string `json:"os"`
-	ProfessionalUse bool   `json:"professionalUse"`
-	Rack            string `json:"rack"`
-	RescueMail      string `json:"rescueMail"`
-	Reverse         string `json:"reverse"`
-	RootDevice      string `json:"rootDevice"`
-	ServerId        int    `json:"serverId"`
-	State           string `json:"state"`
-	SupportLevel    string `json:"supportLevel"`
+	Name               string `json:"name"`
+	BootId             int    `json:"bootId"`
+	CommercialRange    string `json:"commercialRange"`
+	Datacenter         string `json:"datacenter"`
+	Ip                 string `json:"ip"`
+	LinkSpeed          int    `json:"linkSpeed"`
+	Monitoring         bool   `json:"monitoring"`
+	Os                 string `json:"os"`
+	ProfessionalUse    bool   `json:"professionalUse"`
+	Rack               string `json:"rack"`
+	RescueMail         string `json:"rescueMail"`
+	Reverse            string `json:"reverse"`
+	RootDevice         string `json:"rootDevice"`
+	ServerId           int    `json:"serverId"`
+	State              string `json:"state"`
+	SupportLevel       string `json:"supportLevel"`
+	IamResourceDetails `json:"iam"`
 }
 
 func (ds DedicatedServer) String() string {

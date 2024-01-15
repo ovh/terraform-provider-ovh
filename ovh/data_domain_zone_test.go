@@ -24,6 +24,8 @@ func TestAccDomainZoneDataSource_basic(t *testing.T) {
 					testAccCheckDomainZoneHasNameServers("data.ovh_domain_zone.rootzone", t),
 					resource.TestCheckResourceAttr(
 						"data.ovh_domain_zone.rootzone", "id", zoneName),
+					resource.TestCheckResourceAttrSet(
+						"data.ovh_domain_zone.rootzone", "urn"),
 				),
 			},
 		},
