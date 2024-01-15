@@ -1093,9 +1093,6 @@ func (v CloudProjectDatabaseMongodbUserResponse) ToMap() map[string]interface{} 
 	obj["id"] = v.Id
 	obj["name"] = v.Username
 	obj["status"] = v.Status
-	for i := range v.Roles {
-		v.Roles[i] = strings.TrimSuffix(v.Roles[i], "@admin")
-	}
 	obj["roles"] = v.Roles
 
 	return obj
