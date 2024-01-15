@@ -80,7 +80,10 @@ The following arguments are supported:
         * `finalizers` - Finalizers to apply to each node. A finalizer name must be fully qualified, e.g. kubernetes.io/pv-protection , where you prefix it with hostname of your service which is related to the controller responsible for the finalizer.
         * `labels` - Labels to apply to each node
     * `spec` - Spec of each node in the pool
-        * `taints` - Taints to apply to each node
+        * `taints` - Taints to apply to each node [NodeSpec kubernetes documentation](https://kubernetes.io/docs/reference/kubernetes-api/cluster-resources/node-v1/#NodeSpec)
+          * `effect` - mandatory possible values: NoExecute, NoSchedule, PreferNoSchedule
+          * `key` - mandatory
+          * `value` - (Optional)
         * `unschedulable` - If true, set nodes as un-schedulable
 
 ## Attributes Reference

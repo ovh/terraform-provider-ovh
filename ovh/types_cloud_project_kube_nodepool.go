@@ -196,11 +196,15 @@ func loadNodelPoolTemplateFromResource(i interface{}) (*CloudProjectKubeNodePool
 					return nil, fmt.Errorf("effect: %s is not a allowable taint %#v", effectString, TaintEffecTypeToID)
 				}
 
-				template.Spec.Taints = append(template.Spec.Taints, Taint{
+				taintObject := Taint{
 					Effect: effect,
 					Key:    taint.(map[string]interface{})["key"].(string),
-					Value:  taint.(map[string]interface{})["value"].(string),
-				})
+				}
+				if taint.(map[string]interface{})["value"] != nil {
+					taintObject.Value = taint.(map[string]interface{})["value"].(string)
+				}
+
+				template.Spec.Taints = append(template.Spec.Taints, taintObject)
 			}
 
 			// spec.unschedulable
