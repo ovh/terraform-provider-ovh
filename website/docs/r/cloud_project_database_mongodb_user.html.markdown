@@ -67,12 +67,23 @@ The following arguments are supported:
 
 * `roles` - (Optional: if omit, default role) Roles the user belongs to.
 Available roles:
-  * `backup`
-  * `dbAdminAnyDatabase`
-  * `readAnyDatabase`
-  * `readWriteAnyDatabase`
-  * `restore`
-  * `userAdminAnyDatabase`
+  * `backup@admin`
+  * `clusterAdmin@admin`
+  * `clusterManager@admin`
+  * `clusterMonitor@admin`
+  * `dbAdmin@(defined db)`
+  * `dbAdminAnyDatabase@admin`
+  * `dbOwner@(defined db)`
+  * `enableSharding@(defined db)`
+  * `hostManager@admin`
+  * `read@(defined db)`
+  * `readAnyDatabase@admin`
+  * `readWrite@(defined db)`
+  * `readWriteAnyDatabase@admin`
+  * `restore@admin`
+  * `root@admin`
+  * `userAdmin@(defined db)`
+  * `userAdminAnyDatabase@admin`
 
 * `password_reset` - (Optional) Arbitrary string to change to trigger a password update. Use the `terraform refresh` command after executing `terraform apply` to update the output with the new password.
 
