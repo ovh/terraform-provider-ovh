@@ -90,6 +90,10 @@ func TestAccDataSourceHostingPrivateDatabase_basic(t *testing.T) {
 						"data.ovh_hosting_privatedatabase.database",
 						"version_number",
 					),
+					resource.TestCheckResourceAttrSet(
+						"data.ovh_hosting_privatedatabase.database",
+						"urn",
+					),
 				),
 			},
 		},

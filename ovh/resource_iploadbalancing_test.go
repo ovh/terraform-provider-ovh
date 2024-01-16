@@ -176,6 +176,8 @@ func TestAccResourceIpLoadbalancing_basic(t *testing.T) {
 						"ovh_iploadbalancing.iplb-lb1", "ipv4"),
 					resource.TestCheckResourceAttr(
 						"ovh_iploadbalancing.iplb-lb1", "display_name", desc),
+					resource.TestCheckResourceAttrSet(
+						"ovh_iploadbalancing.iplb-lb1", "urn"),
 				),
 			},
 		},
@@ -200,6 +202,8 @@ func TestAccResourceIpLoadbalancing_internal(t *testing.T) {
 						"ovh_iploadbalancing.iplb-internal", "ipv4"),
 					resource.TestCheckResourceAttr(
 						"ovh_iploadbalancing.iplb-internal", "display_name", desc),
+					resource.TestCheckResourceAttrSet(
+						"ovh_iploadbalancing.iplb-internal", "urn"),
 				),
 			},
 		},

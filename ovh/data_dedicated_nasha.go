@@ -6,7 +6,6 @@ import (
 	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -92,7 +91,7 @@ func dataSourceDedicatedNashaRead(c context.Context, d *schema.ResourceData, met
 	}
 
 	d.SetId(ds.ServiceName)
-	d.Set("urn", helpers.ServiceURN(config.Plate, "nasHA", ds.ServiceName))
+	d.Set("urn", ds.URN)
 	d.Set("service_name", ds.ServiceName)
 	d.Set("monitored", ds.Monitored)
 	d.Set("zpool_size", ds.ZpoolSize)

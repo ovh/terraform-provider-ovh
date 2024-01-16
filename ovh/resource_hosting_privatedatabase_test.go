@@ -154,6 +154,8 @@ func TestAccHostingPrivateDatabase_basic(t *testing.T) {
 						"ovh_hosting_privatedatabase.database", "datacenter", dc),
 					resource.TestCheckResourceAttr(
 						"ovh_hosting_privatedatabase.database", "version", engine),
+					resource.TestCheckResourceAttrSet(
+						"ovh_hosting_privatedatabase.database", "urn"),
 				),
 			},
 		},

@@ -57,6 +57,8 @@ func TestAccResourceVrack_basic(t *testing.T) {
 						"ovh_vrack.vrack", "description", desc),
 					resource.TestCheckResourceAttrSet(
 						"ovh_vrack.vrack", "service_name"),
+					resource.TestCheckResourceAttrSet(
+						"ovh_vrack.vrack", "urn"),
 				),
 			},
 		},

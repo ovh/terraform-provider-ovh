@@ -23,6 +23,8 @@ func TestAccVPSDataSource_basic(t *testing.T) {
 						"data.ovh_vps.server", "name", vps),
 					resource.TestCheckResourceAttr(
 						"data.ovh_vps.server", "service_name", vps),
+					resource.TestCheckResourceAttrSet(
+						"data.ovh_vps.server", "urn"),
 				),
 			},
 		},

@@ -106,7 +106,7 @@ func resourceCloudProjectUpdate(d *schema.ResourceData, meta interface{}) error 
 
 	log.Printf("[DEBUG] Will update cloudProject: %s", serviceName)
 	opts := (&CloudProjectUpdateOpts{}).FromResource(d)
-	endpoint := fmt.Sprintf("/cloud/project/%s", serviceName)
+	endpoint := fmt.Sprintf("/cloud/project/%s", url.PathEscape(serviceName))
 	if err := config.OVHClient.Put(endpoint, opts, nil); err != nil {
 		return fmt.Errorf("calling Put %s: %q", endpoint, err)
 	}
@@ -142,12 +142,10 @@ func resourceCloudProjectRead(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Will read cloudProject: %s", serviceName)
 	r := &CloudProject{}
-	endpoint := fmt.Sprintf("/cloud/project/%s", serviceName)
+	endpoint := fmt.Sprintf("/cloud/project/%s", url.PathEscape(serviceName))
 	if err := config.OVHClient.Get(endpoint, &r); err != nil {
 		return helpers.CheckDeleted(d, err, endpoint)
 	}
-
-	d.Set("urn", helpers.ServiceURN(config.Plate, "publicCloudProject", serviceName))
 
 	// set resource attributes
 	for k, v := range r.ToMap() {

@@ -141,6 +141,8 @@ func TestAccResourceDomainZone_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
 						"ovh_domain_zone.zone", "name", name),
+					resource.TestCheckResourceAttrSet(
+						"ovh_domain_zone.zone", "urn"),
 				),
 			},
 		},
