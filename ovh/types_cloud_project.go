@@ -6,11 +6,12 @@ import (
 )
 
 type CloudProject struct {
-	Access      string  `json:"access"`
-	Description *string `json:"description"`
-	ProjectName *string `json:"projectName"`
-	ProjectId   string  `json:"project_id"`
-	Status      string  `json:"status"`
+	Access             string  `json:"access"`
+	Description        *string `json:"description"`
+	ProjectName        *string `json:"projectName"`
+	ProjectId          string  `json:"project_id"`
+	Status             string  `json:"status"`
+	IamResourceDetails `json:"iam"`
 }
 
 func (v CloudProject) ToMap() map[string]interface{} {
@@ -19,6 +20,7 @@ func (v CloudProject) ToMap() map[string]interface{} {
 	obj["access"] = v.Access
 	obj["project_id"] = v.ProjectId
 	obj["status"] = v.Status
+	obj["urn"] = v.URN
 
 	if v.Description != nil {
 		obj["description"] = *v.Description

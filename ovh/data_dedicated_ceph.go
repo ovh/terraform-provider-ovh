@@ -88,7 +88,7 @@ func dataSourceDedicatedCephRead(d *schema.ResourceData, meta interface{}) error
 	}
 	log.Printf("[DEBUG] CEPH is %v", ceph.CephMonitors)
 	d.SetId(ceph.ServiceName)
-	d.Set("urn", helpers.ServiceURN(config.Plate, "dedicatedCeph", ceph.ServiceName))
+	d.Set("urn", ceph.URN)
 	d.Set("service_name", ceph.ServiceName)
 	d.Set("ceph_mons", ceph.CephMonitors)
 	d.Set("ceph_version", ceph.CephVersion)

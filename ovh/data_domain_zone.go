@@ -2,9 +2,9 @@ package ovh
 
 import (
 	"fmt"
+	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
 func dataSourceDomainZone() *schema.Resource {
@@ -48,7 +48,7 @@ func dataSourceDomainZoneRead(d *schema.ResourceData, meta interface{}) error {
 	zoneName := d.Get("name").(string)
 
 	dz := &DomainZone{}
-	err := config.OVHClient.Get(fmt.Sprintf("/domain/zone/%s", zoneName), &dz)
+	err := config.OVHClient.Get(fmt.Sprintf("/domain/zone/%s", url.PathEscape(zoneName)), &dz)
 
 	if err != nil {
 		return fmt.Errorf("Error calling /domain/zone/%s:\n\t %q", zoneName, err)
@@ -59,8 +59,7 @@ func dataSourceDomainZoneRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("dnssec_supported", dz.DnssecSupported)
 	d.Set("last_update", dz.LastUpdate)
 	d.Set("name_servers", dz.NameServers)
-
-	d.Set("urn", helpers.ServiceURN(config.Plate, "dnsZone", zoneName))
+	d.Set("urn", dz.URN)
 
 	return nil
 }

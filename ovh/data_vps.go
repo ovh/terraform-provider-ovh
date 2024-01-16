@@ -5,7 +5,6 @@ import (
 	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
 func dataSourceVPS() *schema.Resource {
@@ -113,8 +112,7 @@ func dataSourceVPSRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(vps.Name)
 
-	d.Set("urn", helpers.ServiceURN(config.Plate, helpers.VPSkind, serviceName))
-
+	d.Set("urn", vps.URN)
 	d.Set("name", vps.Name)
 	d.Set("zone", vps.Zone)
 	d.Set("state", vps.State)
@@ -135,7 +133,7 @@ func dataSourceVPSRead(d *schema.ResourceData, meta interface{}) error {
 
 	ips := []string{}
 	err = config.OVHClient.Get(
-		fmt.Sprintf("/vps/%s/ips", d.Id()),
+		fmt.Sprintf("/vps/%s/ips", url.PathEscape(d.Id())),
 		&ips,
 	)
 	if err != nil {
@@ -146,7 +144,7 @@ func dataSourceVPSRead(d *schema.ResourceData, meta interface{}) error {
 
 	vpsDatacenter := VPSDatacenter{}
 	err = config.OVHClient.Get(
-		fmt.Sprintf("/vps/%s/datacenter", d.Id()),
+		fmt.Sprintf("/vps/%s/datacenter", url.PathEscape(d.Id())),
 		&vpsDatacenter,
 	)
 	if err != nil {

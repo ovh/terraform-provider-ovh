@@ -33,15 +33,16 @@ const (
 )
 
 type DedicatedCeph struct {
-	ServiceName   string                    `json:"serviceName"`
-	CephMonitors  []string                  `json:"cephMons"`
-	CephVersion   string                    `json:"cephVersion"`
-	CrushTunables DedicatedCephCrushTunable `json:"crushTunables"`
-	Label         string                    `json:"label"`
-	Region        string                    `json:"region"`
-	Size          float32                   `json:"size"`
-	State         DedicatedCephState        `json:"state"`
-	Status        DedicatedCephStatus       `json:"status"`
+	ServiceName        string                    `json:"serviceName"`
+	CephMonitors       []string                  `json:"cephMons"`
+	CephVersion        string                    `json:"cephVersion"`
+	CrushTunables      DedicatedCephCrushTunable `json:"crushTunables"`
+	Label              string                    `json:"label"`
+	Region             string                    `json:"region"`
+	Size               float32                   `json:"size"`
+	State              DedicatedCephState        `json:"state"`
+	Status             DedicatedCephStatus       `json:"status"`
+	IamResourceDetails `json:"iam"`
 }
 
 type DedicatedCephACL struct {

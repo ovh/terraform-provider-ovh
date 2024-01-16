@@ -1,13 +1,12 @@
 package ovh
 
-import ()
-
 type DomainZone struct {
-	DnssecSupported bool     `json:"dnssecSupported"`
-	HasDnsAnycast   bool     `json:"hasDnsAnycast"`
-	LastUpdate      string   `json:"lastUpdate"`
-	Name            string   `json:"name"`
-	NameServers     []string `json:"nameServers"`
+	DnssecSupported    bool     `json:"dnssecSupported"`
+	HasDnsAnycast      bool     `json:"hasDnsAnycast"`
+	LastUpdate         string   `json:"lastUpdate"`
+	Name               string   `json:"name"`
+	NameServers        []string `json:"nameServers"`
+	IamResourceDetails `json:"iam"`
 }
 
 func (v DomainZone) ToMap() map[string]interface{} {
@@ -17,6 +16,7 @@ func (v DomainZone) ToMap() map[string]interface{} {
 	obj["has_dns_anycast"] = v.HasDnsAnycast
 	obj["last_update"] = v.LastUpdate
 	obj["name"] = v.Name
+	obj["urn"] = v.URN
 
 	if v.NameServers != nil {
 		obj["name_servers"] = v.NameServers
