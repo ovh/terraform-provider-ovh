@@ -290,7 +290,46 @@ resource "ovh_cloud_project_kube_nodepool" "pool" {
 
 `
 
-func TestAccCloudProjectKubeNodePool(t *testing.T) {
+var testAccCloudProjectKubeNodePoolConfigWithoutMaxMin = `
+resource "ovh_cloud_project_kube" "cluster" {
+  service_name = "%s"
+  name         = "%s"
+  region       = "%s"
+  version      = "%s"
+}
+
+resource "ovh_cloud_project_kube_nodepool" "pool" {
+  service_name  = ovh_cloud_project_kube.cluster.service_name
+  kube_id       = ovh_cloud_project_kube.cluster.id
+  name          = ovh_cloud_project_kube.cluster.name
+  flavor_name   = "b2-7"
+  desired_nodes = 1
+  template {
+    metadata {
+      annotations = {
+        a1 = "av1"
+      }
+      finalizers = ["finalizer.extensions/v1beta1"]
+      labels = {
+        l1 = "lv1"
+      }
+    }
+    spec {
+      unschedulable = false
+      taints = [
+        {
+          effect = "PreferNoSchedule"
+          key    = "t1"
+          value  = "tv1"
+        }
+      ]
+    }
+  }
+}
+
+`
+
+func TestAccCloudProjectKubeNodePoolRessource(t *testing.T) {
 	name := acctest.RandomWithPrefix(test_prefix)
 	region := os.Getenv("OVH_CLOUD_PROJECT_KUBE_REGION_TEST")
 	version := os.Getenv("OVH_CLOUD_PROJECT_KUBE_VERSION_TEST")
@@ -316,7 +355,13 @@ func TestAccCloudProjectKubeNodePool(t *testing.T) {
 		region,
 		version,
 	)
-
+	configWithoutMaxMinNodes := fmt.Sprintf(
+		testAccCloudProjectKubeNodePoolConfigWithoutMaxMin,
+		os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"),
+		name,
+		region,
+		version,
+	)
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckCloud(t)
@@ -325,6 +370,29 @@ func TestAccCloudProjectKubeNodePool(t *testing.T) {
 		},
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
+			{
+				Config: configWithoutMaxMinNodes,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "version", version),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "name", name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "flavor_name", "b2-7"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "desired_nodes", "1"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "min_nodes", "0"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "max_nodes", "100"),
+
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.annotations.a1", "av1"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.finalizers.0", "finalizer.extensions/v1beta1"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.labels.l1", "lv1"),
+
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.spec.0.taints.0.effect", "PreferNoSchedule"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.spec.0.taints.0.key", "t1"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.spec.0.taints.0.value", "tv1"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.spec.0.unschedulable", "false"),
+				),
+			},
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
