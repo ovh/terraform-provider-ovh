@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -11,6 +12,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+)
+
+var (
+	effectTaintsErrorRegex       = regexp.MustCompile("(.)*effect attribute is mandatory for taint(.)*")
+	keyTaintsErrorRegex          = regexp.MustCompile("(.)*key attribute is mandatory for taint(.)*")
+	valueNoCrashTaintsErrorRegex = regexp.MustCompile("(.)*This service does not exist(.)*")
 )
 
 func init() {
@@ -72,6 +79,105 @@ func testSweepCloudProjectKubeNodePool(region string) error {
 	}
 	return nil
 }
+
+var testAccCloudProjectKubeNodePoolConfigEffectMissingInTaint = `
+resource "ovh_cloud_project_kube_nodepool" "pool" {
+  service_name  = "xxx"
+  kube_id       = "xxx"
+  name          = "xxx"
+  flavor_name   = "b2-7"
+  desired_nodes = 1
+  min_nodes     = 0
+  max_nodes     = 1
+  template {
+    metadata {
+      annotations = {
+        a1 = "av1"
+      }
+      finalizers = ["finalizer.extensions/v1beta1"]
+      labels = {
+        l1 = "lv1"
+      }
+    }
+    spec {
+      unschedulable = false
+      taints = [
+        {
+          #effect = "PreferNoSchedule"
+          key    = "t1"
+          value  = "tv1"
+        }
+      ]
+    }
+  }
+}
+`
+
+var testAccCloudProjectKubeNodePoolConfigKeyMissingInTaint = `
+resource "ovh_cloud_project_kube_nodepool" "pool" {
+  service_name  = "xxx"
+  kube_id       = "xxx"
+  name          = "xxx"
+  flavor_name   = "b2-7"
+  desired_nodes = 1
+  min_nodes     = 0
+  max_nodes     = 1
+  template {
+    metadata {
+      annotations = {
+        a1 = "av1"
+      }
+      finalizers = ["finalizer.extensions/v1beta1"]
+      labels = {
+        l1 = "lv1"
+      }
+    }
+    spec {
+      unschedulable = false
+      taints = [
+        {
+          effect = "PreferNoSchedule"
+          #key    = "t1"
+          value  = "tv1"
+        }
+      ]
+    }
+  }
+}
+`
+
+var testAccCloudProjectKubeNodePoolConfigValueMissingInTaint = `
+resource "ovh_cloud_project_kube_nodepool" "pool" {
+  service_name  = "xxx"
+  kube_id       = "xxx"
+  name          = "xxx"
+  flavor_name   = "b2-7"
+  desired_nodes = 1
+  min_nodes     = 0
+  max_nodes     = 1
+  template {
+    metadata {
+      annotations = {
+        a1 = "av1"
+      }
+      finalizers = ["finalizer.extensions/v1beta1"]
+      labels = {
+        l1 = "lv1"
+      }
+    }
+    spec {
+      unschedulable = false
+      taints = [
+        {
+          effect = "PreferNoSchedule"
+          key    = "t1"
+          #value  = "tv1"
+        }
+      ]
+    }
+  }
+}
+`
 
 var testAccCloudProjectKubeNodePoolConfig = `
 resource "ovh_cloud_project_kube" "cluster" {
@@ -293,6 +399,53 @@ func TestAccCloudProjectKubeNodePool(t *testing.T) {
 					kubernetesClusterID := state.RootModule().Resources["ovh_cloud_project_kube.cluster"].Primary.ID
 					return fmt.Sprintf("%s/%s/%s", os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"), kubernetesClusterID, poolId), nil
 				},
+			},
+		},
+	})
+}
+
+func TestAccCloudProjectKubeNodePoolTaints(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloud(t)
+			testAccCheckCloudProjectExists(t)
+			testAccPreCheckKubernetes(t)
+		},
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccCloudProjectKubeNodePoolConfigEffectMissingInTaint,
+				ExpectError: effectTaintsErrorRegex,
+			},
+		},
+	})
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloud(t)
+			testAccCheckCloudProjectExists(t)
+			testAccPreCheckKubernetes(t)
+		},
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccCloudProjectKubeNodePoolConfigKeyMissingInTaint,
+				ExpectError: keyTaintsErrorRegex,
+			},
+		},
+	})
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloud(t)
+			testAccCheckCloudProjectExists(t)
+			testAccPreCheckKubernetes(t)
+		},
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccCloudProjectKubeNodePoolConfigValueMissingInTaint,
+				ExpectError: valueNoCrashTaintsErrorRegex,
 			},
 		},
 	})
