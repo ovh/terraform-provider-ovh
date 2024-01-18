@@ -310,50 +310,82 @@ func orderCreate(d *schema.ResourceData, meta interface{}, product string) error
 	if err := config.OVHClient.Get(endpoint, &paymentIds); err != nil {
 		return fmt.Errorf("calling Get %s \n\t %q", endpoint, err)
 	}
+
+	fallbackToFidelityAccount := false
 	if len(paymentIds) == 0 {
-		return fmt.Errorf("no default payment found")
+		// check if amount of the order is 0€, we can try to use fidelity account to pay order
+		log.Printf("[DEBUG] Will create order %s for cart: %s", product, cart.CartId)
+		checkout := &OrderCartCheckout{}
+
+		endpoint = fmt.Sprintf("/order/cart/%s/checkout", url.PathEscape(cart.CartId))
+		if err := config.OVHClient.Get(endpoint, checkout); err != nil {
+			return fmt.Errorf("calling Get %s:\n\t %q", endpoint, err)
+		}
+
+		if checkout.Prices.WithoutTax.Value == 0 {
+			fallbackToFidelityAccount = true
+
+		} else {
+			return fmt.Errorf("no default payment found")
+		}
+
 	}
 
 	// Create Order
 	log.Printf("[DEBUG] Will create order %s for cart: %s", product, cart.CartId)
-	order := &MeOrder{}
+	checkout := &OrderCartCheckout{}
 
 	endpoint = fmt.Sprintf("/order/cart/%s/checkout", url.PathEscape(cart.CartId))
-	if err := config.OVHClient.Post(endpoint, nil, order); err != nil {
+	if err := config.OVHClient.Post(endpoint, nil, checkout); err != nil {
 		return fmt.Errorf("calling Post %s:\n\t %q", endpoint, err)
 	}
 
 	// Pay Order
-	log.Printf("[DEBUG] Will pay order %d with PaymentId %d", order.OrderId, paymentIds[0])
+	if !fallbackToFidelityAccount {
+		log.Printf("[DEBUG] Will pay order %d with PaymentId %d", checkout.OrderID, paymentIds[0])
 
-	endpoint = fmt.Sprintf(
-		"/me/order/%d/pay",
-		order.OrderId,
-	)
-	var paymentMethodOpts = &MeOrderPaymentMethodOpts{
-		PaymentMethod: PaymentMethod{
-			Id: paymentIds[0],
-		},
-	}
-	if err := config.OVHClient.Post(endpoint, paymentMethodOpts, nil); err != nil {
-		return fmt.Errorf("calling Post %s:\n\t %q", endpoint, err)
+		endpoint = fmt.Sprintf(
+			"/me/order/%d/pay",
+			checkout.OrderID,
+		)
+		var paymentMethodOpts = &MeOrderPaymentMethodOpts{
+			PaymentMethod: PaymentMethod{
+				Id: paymentIds[0],
+			},
+		}
+		if err := config.OVHClient.Post(endpoint, paymentMethodOpts, nil); err != nil {
+			return fmt.Errorf("calling Post %s:\n\t %q", endpoint, err)
+		}
+	} else {
+		log.Printf("[DEBUG] Will pay free order %d with fidelityAccount", checkout.OrderID)
+		endpoint = fmt.Sprintf(
+			"/me/order/%d/payWithRegisteredPaymentMean",
+			checkout.OrderID,
+		)
+		var paymentMethodOpts = &MeOrderPaymentOpts{
+			PaymentMean: "fidelityAccount",
+		}
+		if err := config.OVHClient.Post(endpoint, paymentMethodOpts, nil); err != nil {
+			return fmt.Errorf("calling Post %s:\n\t %q", endpoint, err)
+		}
+
 	}
 
 	// Wait for order status
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"checking", "delivering", "ignoreerror"},
 		Target:     []string{"delivered"},
-		Refresh:    waitForOrder(config.OVHClient, order.OrderId),
+		Refresh:    waitForOrder(config.OVHClient, checkout.OrderID),
 		Timeout:    30 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
 
 	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf("waiting for order (%d): %s", order.OrderId, err)
+		return fmt.Errorf("waiting for order (%d): %s", checkout.OrderID, err)
 	}
 
-	d.SetId(fmt.Sprint(order.OrderId))
+	d.SetId(fmt.Sprint(checkout.OrderID))
 
 	return nil
 }
