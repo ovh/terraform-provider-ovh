@@ -29,8 +29,10 @@ func TestAccCloudProjectKubeNodePoolDataSource_basic(t *testing.T) {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						"data.ovh_cloud_project_kube_nodepool.poolDataSource", "max_nodes", "2"),
+					resource.TestCheckResourceAttr("data.ovh_cloud_project_kube_nodepool.poolDataSource", "max_nodes", "2"),
+					resource.TestCheckResourceAttr("data.ovh_cloud_project_kube_nodepool.poolDataSource", "autoscaling_scale_down_unneeded_time_seconds", "222"),
+					resource.TestCheckResourceAttr("data.ovh_cloud_project_kube_nodepool.poolDataSource", "autoscaling_scale_down_unready_time_seconds", "2222"),
+					resource.TestCheckResourceAttr("data.ovh_cloud_project_kube_nodepool.poolDataSource", "autoscaling_scale_down_utilization_threshold", "0.2"),
 				),
 			},
 		},
@@ -52,6 +54,9 @@ resource "ovh_cloud_project_kube_nodepool" "pool" {
 	desired_nodes = 1
 	min_nodes     = 0
 	max_nodes     = 2
+	autoscaling_scale_down_unneeded_time_seconds = 222
+	autoscaling_scale_down_unready_time_seconds = 2222
+	autoscaling_scale_down_utilization_threshold = 0.2
 
 	depends_on = [
 		ovh_cloud_project_kube.cluster
