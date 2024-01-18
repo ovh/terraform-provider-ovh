@@ -100,7 +100,7 @@ The following arguments are supported:
 
 In order to store your Terraform states on an Object Storage, and generally if you want to interact with the Object Storage, you need to have the rights to manage an Object Storage.
 
-You should already created [High Performance Object Storage container and a user](https://help.ovhcloud.com/csm/en-public-cloud-compute-terraform-high-perf-object-storage-backend-state?id=kb_article_view&sysparm_article=KB0051345).
+You should already have a [High Performance Object Storage container and a user](https://help.ovhcloud.com/csm/en-public-cloud-compute-terraform-high-perf-object-storage-backend-state?id=kb_article_view&sysparm_article=KB0051345).
 
 You should also be able to interact with the `aws` CLI and list the OVHcloud High Performance Object Storage containers that the user is linked to:
 ```
