@@ -14,7 +14,6 @@ Orders a public cloud project.
 
 ## Example Usage
 
-
 ```hcl
 data "ovh_me" "myaccount" {}
 
@@ -27,7 +26,10 @@ data "ovh_order_cart_product_plan" "cloud" {
   price_capacity = "renew"
   product        = "cloud"
   plan_code      = "project.2018"
+  hds_plan_code  = "certification.hds.2018"
   # plan_code    = "project" # when running in the US
+  # hds_plan_code  = "certification.hds" # when running in the US
+
 }
 
 resource "ovh_cloud_project" "my_cloud_project" {
@@ -43,6 +45,32 @@ resource "ovh_cloud_project" "my_cloud_project" {
 ```
 
 -> __WARNING__ Currently, the OVHcloud Terraform provider does not support deletion of a public cloud project in the US. Removal is possible by manually deleting the project and then manually removing the public cloud project from terraform state.
+
+## HDS Certification
+
+If you want to add the certification HDS option at project creation (you must have a business support level on your account), you can add this configuration on the `ovh_cloud_project`.
+
+```hcl
+resource "ovh_cloud_project" "my_cloud_project" {
+  
+  ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
+  description    = "my cloud project"
+
+  plan {
+    duration     = data.ovh_order_cart_product_plan.cloud.selected_price.0.duration
+    plan_code    = data.ovh_order_cart_product_plan.cloud.plan_code
+    pricing_mode = data.ovh_order_cart_product_plan.cloud.selected_price.0.pricing_mode
+  }
+
+  plan_option {
+    duration     = data.ovh_order_cart_product_plan.cloud.selected_price.0.duration
+    plan_code    = data.ovh_order_cart_product_plan.cloud.hds_plan_code
+    pricing_mode = data.ovh_order_cart_product_plan.cloud.selected_price.0.pricing_mode
+  }
+
+}
+
+```
 
 ## Argument Reference
 
@@ -68,7 +96,6 @@ The following arguments are supported:
     * `label` - (Required) Identifier of the resource
     * `value` - (Required) Path to the resource in API.OVH.COM
 
-
 ## Attributes Reference
 
 `id` is set to the order Id. In addition, the following attributes are exported:
@@ -89,7 +116,9 @@ The following arguments are supported:
 * `status` - project status
 
 ## Import
+
 Cloud project can be imported using the `order_id` that can be retrieved in the [order page](https://www.ovh.com/manager/#/dedicated/billing/orders/orders) at the creation time of the Public Cloud project. 
+
 ```bash
 $ terraform import ovh_cloud_project.my_cloud_project order_id
 ```
