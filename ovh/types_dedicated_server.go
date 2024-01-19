@@ -11,6 +11,7 @@ import (
 type DedicatedServer struct {
 	Name               string `json:"name"`
 	BootId             int    `json:"bootId"`
+	BootScript         string `json:"bootScript"`
 	CommercialRange    string `json:"commercialRange"`
 	Datacenter         string `json:"datacenter"`
 	Ip                 string `json:"ip"`
@@ -40,12 +41,14 @@ func (ds DedicatedServer) String() string {
 
 type DedicatedServerUpdateOpts struct {
 	BootId     *int64  `json:"bootId,omitempty"`
+	BootScript *string `json:"bootScript,omitempty"`
 	Monitoring *bool   `json:"monitoring,omitempty"`
 	State      *string `json:"state,omitempty"`
 }
 
 func (opts *DedicatedServerUpdateOpts) FromResource(d *schema.ResourceData) *DedicatedServerUpdateOpts {
 	opts.BootId = helpers.GetNilInt64PointerFromData(d, "boot_id")
+	opts.BootScript = helpers.GetNilStringPointerFromData(d, "boot_script")
 	opts.Monitoring = helpers.GetNilBoolPointerFromData(d, "monitoring")
 	opts.State = helpers.GetNilStringPointerFromData(d, "state")
 	return opts
