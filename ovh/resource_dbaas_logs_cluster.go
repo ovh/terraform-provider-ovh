@@ -273,6 +273,14 @@ func resourceDbaasLogsClusterRead(d *schema.ResourceData, meta interface{}) erro
 
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
+	if clusterId == "" {
+		var err error
+		clusterId, err = dbaasGetClusterID(config, serviceName)
+		if err != nil {
+			return fmt.Errorf("error retrieving clusterId for %s:\n\t %q", serviceName, err)
+		}
+	}
+	d.Set("cluster_id", clusterId)
 
 	log.Printf("[DEBUG] Will read dbaas logs cluster %s/%s", serviceName, clusterId)
 
