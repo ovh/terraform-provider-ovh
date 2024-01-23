@@ -23,6 +23,7 @@ func resourceCloudProjectUser() *schema.Resource {
 		Create: resourceCloudProjectUserCreate,
 		Read:   resourceCloudProjectUserRead,
 		Delete: resourceCloudProjectUserDelete,
+		Update: resourceCloudProjectUserUpdate,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceCloudProjectUserImportState,
@@ -39,18 +40,18 @@ func resourceCloudProjectUser() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
+				ForceNew: false,
 			},
 			"role_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
+				ForceNew:     false,
 				ValidateFunc: validateCloudProjectUserRoleFunc,
 			},
 			"role_names": {
 				Type:     schema.TypeList,
 				Optional: true,
-				ForceNew: true,
+				ForceNew: false,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
@@ -147,6 +148,45 @@ func validateCloudProjectUserRoleFunc(v interface{}, k string) (ws []string, err
 		errors = append(errors, err)
 	}
 	return
+}
+
+func resourceCloudProjectUserUpdate(d *schema.ResourceData, meta interface{}) error {
+	config := meta.(*Config)
+	serviceName := d.Get("service_name").(string)
+	user := d.Id()
+	roles, _ := helpers.StringsFromSchema(d, "role_names")
+
+	endpoint := fmt.Sprintf("/cloud/project/%s/role",
+		url.PathEscape(serviceName),
+	)
+	res := &CloudProjectrolesResponse{}
+	if err := config.OVHClient.Get(endpoint, res); err != nil {
+		return fmt.Errorf("calling Get %s", endpoint)
+	}
+
+	update := []string{}
+	for _, i := range res.Roles {
+		for _, j := range roles {
+			if j == i.Name {
+				update = append(update, i.Id)
+			}
+		}
+	}
+	log.Printf("[DEBUG] ID des roles %s", update)
+	log.Printf("[DEBUG] user %s", user)
+	endpoint = fmt.Sprintf("/cloud/project/%s/user/%s/role",
+		url.PathEscape(serviceName),
+		url.PathEscape(user),
+	)
+	log.Printf("[DEBUG] curl %s", endpoint)
+	r := &CloudProjectUser{}
+	data := &CloudProjectroleUpdate{
+		RolesIds: update,
+	}
+	if err := config.OVHClient.Put(endpoint, data, r); err != nil {
+		return fmt.Errorf("calling %s with params %s:\n\t %q", endpoint, data, err)
+	}
+	return nil
 }
 
 func resourceCloudProjectUserCreate(d *schema.ResourceData, meta interface{}) error {

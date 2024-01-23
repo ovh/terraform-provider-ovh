@@ -46,3 +46,18 @@ func (opts *CloudProjectUpdateOpts) FromResource(d *schema.ResourceData) *CloudP
 type CloudProjectConfirmTerminationOpts struct {
 	Token string `json:"token"`
 }
+
+type CloudProjectrolesResponse struct {
+	Roles []CloudProjectroleResponse `json:"roles"`
+}
+
+type CloudProjectroleResponse struct {
+	Id          string   `json:"id"`
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	Permissions []string `json:"permissions"`
+}
+
+type CloudProjectroleUpdate struct {
+	RolesIds []string `json:"rolesIds"`
+}
