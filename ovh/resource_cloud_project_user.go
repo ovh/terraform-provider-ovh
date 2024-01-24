@@ -40,7 +40,7 @@ func resourceCloudProjectUser() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: false,
+				ForceNew: true,
 			},
 			"role_name": {
 				Type:         schema.TypeString,
@@ -153,7 +153,8 @@ func validateCloudProjectUserRoleFunc(v interface{}, k string) (ws []string, err
 func resourceCloudProjectUserUpdate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
-	user := d.Id()
+	userId := d.Id()
+	role := d.Get("role_name")
 	roles, _ := helpers.StringsFromSchema(d, "role_names")
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/role",
@@ -171,14 +172,18 @@ func resourceCloudProjectUserUpdate(d *schema.ResourceData, meta interface{}) er
 				update = append(update, i.Id)
 			}
 		}
+		if role == i.Name {
+			update = append(update, i.Id)
+		}
 	}
-	log.Printf("[DEBUG] ID des roles %s", update)
-	log.Printf("[DEBUG] user %s", user)
+
+	log.Printf("[DEBUG] roles IDs %s", update)
+	log.Printf("[DEBUG] user %s", userId)
 	endpoint = fmt.Sprintf("/cloud/project/%s/user/%s/role",
 		url.PathEscape(serviceName),
-		url.PathEscape(user),
+		url.PathEscape(userId),
 	)
-	log.Printf("[DEBUG] curl %s", endpoint)
+
 	r := &CloudProjectUser{}
 	data := &CloudProjectroleUpdate{
 		RolesIds: update,
