@@ -27,6 +27,8 @@ func TestAccDedicatedServerDataSource_basic(t *testing.T) {
 						"data.ovh_dedicated_server.server", "vnis.#"),
 					resource.TestCheckResourceAttr(
 						"data.ovh_dedicated_server.server", "vnis.0.server_name", dedicated_server),
+					resource.TestCheckResourceAttr(
+						"data.ovh_dedicated_server.server", "boot_script", ""),
 					resource.TestCheckResourceAttrSet(
 						"data.ovh_dedicated_server.server", "urn"),
 				),
