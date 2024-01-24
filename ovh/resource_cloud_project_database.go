@@ -34,7 +34,6 @@ func resourceCloudProjectDatabase() *schema.Resource {
 			"service_name": {
 				Type:        schema.TypeString,
 				ForceNew:    true,
-				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
 			},
 			"description": {
