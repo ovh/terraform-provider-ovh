@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
+	"golang.org/x/exp/slices"
 
 	"github.com/ovh/go-ovh/ovh"
 )
@@ -155,7 +156,11 @@ func resourceCloudProjectUserUpdate(d *schema.ResourceData, meta interface{}) er
 	serviceName := d.Get("service_name").(string)
 	userId := d.Id()
 	role := d.Get("role_name")
-	roles, _ := helpers.StringsFromSchema(d, "role_names")
+	roles, err := helpers.StringsFromSchema(d, "role_names")
+
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/role",
 		url.PathEscape(serviceName),
@@ -167,12 +172,10 @@ func resourceCloudProjectUserUpdate(d *schema.ResourceData, meta interface{}) er
 
 	update := []string{}
 	for _, i := range res.Roles {
-		for _, j := range roles {
-			if j == i.Name {
-				update = append(update, i.Id)
-			}
+		if slices.Contains(roles, i.Name) {
+			update = append(update, i.Id)
 		}
-		if role == i.Name {
+		if role == i.Name && !slices.Contains(update, i.Name) {
 			update = append(update, i.Id)
 		}
 	}

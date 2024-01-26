@@ -68,6 +68,13 @@ func TestAccCloudProjectUser_withRole(t *testing.T) {
 	})
 }
 
+var updatedConfig = fmt.Sprintf(`
+resource "ovh_cloud_project_user" "user" {
+ service_name = "%s"
+ role_names   = ["compute_operator"]
+}
+`, os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"))
+
 func TestAccCloudProjectUser_withRoles(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheckCloud(t); testAccCheckCloudProjectExists(t) },
@@ -80,6 +87,14 @@ func TestAccCloudProjectUser_withRoles(t *testing.T) {
 						"ovh_cloud_project_user.user", "description", "my user for acceptance tests"),
 					resource.TestCheckResourceAttr(
 						"ovh_cloud_project_user.user", "roles.#", "2"),
+					testAccCheckCloudProjectUserOpenRC("ovh_cloud_project_user.user", t),
+				),
+			},
+			{
+				Config: updatedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_project_user.user", "roles.#", "1"),
 					testAccCheckCloudProjectUserOpenRC("ovh_cloud_project_user.user", t),
 				),
 			},
