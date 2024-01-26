@@ -1,17 +1,24 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework/providerserver"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
+	"github.com/hashicorp/terraform-plugin-mux/tf5to6server"
+	"github.com/hashicorp/terraform-plugin-mux/tf6muxserver"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/ovh/go-ovh/ovh"
 )
 
 var testAccProviders map[string]*schema.Provider
+var testAccProtoV6ProviderFactories map[string]func() (tfprotov6.ProviderServer, error)
+
 var testAccProvider *schema.Provider
 var testAccOVHClient *ovh.Client
 
@@ -20,6 +27,33 @@ func init() {
 	testAccProvider = Provider()
 	testAccProviders = map[string]*schema.Provider{
 		"ovh": testAccProvider,
+	}
+
+	// Instantiate a composite provider
+	upgradedSdkServer, err := tf5to6server.UpgradeServer(
+		context.Background(),
+		Provider().GRPCProvider, // Provider using terraform-plugin-sdk
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	providers := []func() tfprotov6.ProviderServer{
+		providerserver.NewProtocol6(&OvhProvider{}), // Provider using terraform-plugin-framework
+		func() tfprotov6.ProviderServer {
+			return upgradedSdkServer
+		},
+	}
+
+	muxServer, err := tf6muxserver.NewMuxServer(context.Background(), providers...)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
+		"ovh": func() (tfprotov6.ProviderServer, error) {
+			return muxServer, nil
+		},
 	}
 }
 

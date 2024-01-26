@@ -62,7 +62,6 @@ func Provider() *schema.Provider {
 			"ovh_cloud_project_database_databases":                    dataSourceCloudProjectDatabaseDatabases(),
 			"ovh_cloud_project_database_integration":                  dataSourceCloudProjectDatabaseIntegration(),
 			"ovh_cloud_project_database_integrations":                 dataSourceCloudProjectDatabaseIntegrations(),
-			"ovh_cloud_project_database_ip_restrictions":              dataSourceCloudProjectDatabaseIPRestrictions(),
 			"ovh_cloud_project_database_kafka_acl":                    dataSourceCloudProjectDatabaseKafkaACL(),
 			"ovh_cloud_project_database_kafka_acls":                   dataSourceCloudProjectDatabaseKafkaAcls(),
 			"ovh_cloud_project_database_kafka_schemaregistryacl":      dataSourceCloudProjectDatabaseKafkaSchemaRegistryAcl(),
