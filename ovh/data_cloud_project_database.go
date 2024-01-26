@@ -31,6 +31,12 @@ func dataSourceCloudProjectDatabase() *schema.Resource {
 			},
 
 			//Computed
+			"backup_regions": {
+				Type:        schema.TypeList,
+				Description: "List of region where backups are pushed. Not more than 1 regions for MongoDB. Not more than 2 region for other engines with one that is the same that the nodes[].region field",
+				Computed:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 			"backup_time": {
 				Type:        schema.TypeString,
 				Description: "Time on which backups start every day",

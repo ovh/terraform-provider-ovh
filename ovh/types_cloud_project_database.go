@@ -27,9 +27,14 @@ func diagnosticsToError(diags diag.Diagnostics) error {
 	return nil
 }
 
+type CloudProjectDatabaseBackups struct {
+	Regions []string `json:"regions"`
+	Time    string   `json:"time"`
+}
+
 type CloudProjectDatabaseResponse struct {
 	AclsEnabled           bool                           `json:"aclsEnabled"`
-	BackupTime            string                         `json:"backupTime"`
+	Backups               CloudProjectDatabaseBackups    `json:"backups"`
 	CreatedAt             string                         `json:"createdAt"`
 	Description           string                         `json:"description"`
 	Endpoints             []CloudProjectDatabaseEndpoint `json:"endpoints"`
@@ -55,7 +60,8 @@ func (s *CloudProjectDatabaseResponse) String() string {
 
 func (v CloudProjectDatabaseResponse) ToMap() map[string]interface{} {
 	obj := make(map[string]interface{})
-	obj["backup_time"] = v.BackupTime
+	obj["backup_regions"] = v.Backups.Regions
+	obj["backup_time"] = v.Backups.Time
 	obj["created_at"] = v.CreatedAt
 	obj["description"] = v.Description
 	obj["id"] = v.Id

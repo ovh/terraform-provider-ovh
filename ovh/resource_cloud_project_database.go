@@ -108,6 +108,26 @@ func resourceCloudProjectDatabase() *schema.Resource {
 			},
 
 			//Optional/Computed
+			"backup_regions": {
+				Type:        schema.TypeList,
+				Description: "List of region where backups are pushed. Not more than 1 regions for MongoDB. Not more than 2 region for other engines with one that is the same that the nodes[].region field",
+				Optional:    true,
+				Computed:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+					value := v.([]string)
+					if len(value) > 2 {
+						errors = append(errors, fmt.Errorf("Too many regions. Not more than 1 regions for MongoDB. Not more than 2 region for other engines with one that is the same that the nodes[].region field"))
+					}
+					return
+				},
+			},
+			"backup_time": {
+				Type:        schema.TypeString,
+				Description: "Time on which backups start every day",
+				Optional:    true,
+				Computed:    true,
+			},
 			"disk_size": {
 				Type:         schema.TypeInt,
 				Description:  "Disk size attributes of the cluster",
@@ -129,11 +149,11 @@ func resourceCloudProjectDatabase() *schema.Resource {
 			},
 
 			//Computed
-			"backup_time": {
-				Type:        schema.TypeString,
-				Description: "Time on which backups start every day",
-				Computed:    true,
-			},
+			// "backup_time": {
+			// 	Type:        schema.TypeString,
+			// 	Description: "Time on which backups start every day",
+			// 	Computed:    true,
+			// },
 			"created_at": {
 				Type:        schema.TypeString,
 				Description: "Date of the creation of the cluster",
