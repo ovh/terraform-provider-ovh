@@ -65,7 +65,7 @@ The following arguments are supported:
 
 * `name` - (Required, Forces new resource) Name of the user.
 
-* `roles` - (Optional: if omit, default role) Roles the user belongs to.
+* `roles` - (Optional: if omit, default role) Roles the user belongs to. Since version 0.37.0, the authentication database must be indicated for all roles
 Available roles:
   * `backup@admin`
   * `clusterAdmin@admin`
