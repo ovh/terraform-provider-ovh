@@ -149,11 +149,6 @@ func resourceCloudProjectDatabase() *schema.Resource {
 			},
 
 			//Computed
-			// "backup_time": {
-			// 	Type:        schema.TypeString,
-			// 	Description: "Time on which backups start every day",
-			// 	Computed:    true,
-			// },
 			"created_at": {
 				Type:        schema.TypeString,
 				Description: "Date of the creation of the cluster",
