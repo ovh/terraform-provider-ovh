@@ -25,4 +25,4 @@ jobs:
       make testacc TESTARGS="-parallel=1 ${CDS_PIP_TESTARGS}"
 
   requirements:
-  - model: shared.infra/Go-official-1.20-bullseye
+  - model: shared.infra/Go-official-1.21-bullseye
