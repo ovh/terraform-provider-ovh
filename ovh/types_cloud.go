@@ -8,6 +8,76 @@ import (
 )
 
 // Opts
+type CloudProjectGatewayInterfaceCreateOpts struct {
+	Subnet string `json:"subnetId"`
+}
+
+func (p *CloudProjectGatewayInterfaceCreateOpts) String() string {
+	return fmt.Sprintf("subnetId: %s", p.Subnet)
+}
+
+type CloudProjectGatewayInterfaceResponse struct {
+	Id        string `json:"id"`
+	Ip        string `json:"ip"`
+	NetworkId string `json:"networkId"`
+	SubnetId  string `json:"subnetId"`
+}
+
+// Opts
+type CloudProjectGatewayCreateOpts struct {
+	Name  string `json:"name"`
+	Model string `json:"model"`
+}
+
+func (p *CloudProjectGatewayCreateOpts) String() string {
+	return fmt.Sprintf("name: %s, model: %s", p.Name, p.Model)
+}
+
+type CloudProjectGatewayUpdateOpts struct {
+	Name  string `json:"name"`
+	Model string `json:"model"`
+}
+
+type CloudProjectGatewayInterface struct {
+	Id        string `json:"id"`
+	Ip        string `json:"ip"`
+	SubnetId  string `json:"subnetId"`
+	NetworkId string `json:"networkId"`
+}
+
+type CloudProjectGatewayExternalIp struct {
+	Ip       string `json:"ip"`
+	SubnetId string `json:"subnetId"`
+}
+
+type CloudProjectGatewayExternal struct {
+	Ips       []*CloudProjectGatewayExternalIp `json:"ip"`
+	NetworkId string                           `json:"networkId"`
+}
+
+type CloudProjectGatewayResponse struct {
+	Id                  string                          `json:"id"`
+	Name                string                          `json:"name"`
+	Status              string                          `json:"status"`
+	Interfaces          []*CloudProjectGatewayInterface `json:"interfaces"`
+	ExternalInformation *CloudProjectGatewayExternal    `json:"externalInformation"`
+	Region              string                          `json:"region"`
+	Model               string                          `json:"model"`
+}
+
+type CloudProjectOperationResponse struct {
+	Id          string   `json:"id"`
+	Action      string   `json:"action"`
+	CreateAt    string   `json:"createdAt"`
+	StartedAt   string   `json:"startedAt"`
+	CompletedAt *string  `json:"completedAt"`
+	Progress    int      `json:"progress"`
+	Regions     []string `json:"regions"`
+	ResourceId  *string  `json:"resourceId"`
+	Status      string   `json:"status"`
+}
+
+// Opts
 type CloudProjectNetworkPrivateCreateOpts struct {
 	ServiceName string   `json:"serviceName"`
 	VlanId      int      `json:"vlanId"`
