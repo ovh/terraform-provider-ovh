@@ -18,15 +18,16 @@ const (
 )
 
 type CloudProjectKubeNodePoolCreateOpts struct {
-	AntiAffinity  *bool                             `json:"antiAffinity,omitempty"`
-	Autoscale     *bool                             `json:"autoscale,omitempty"`
-	DesiredNodes  *int                              `json:"desiredNodes,omitempty"`
-	FlavorName    string                            `json:"flavorName"`
-	MaxNodes      *int                              `json:"maxNodes,omitempty"`
-	MinNodes      *int                              `json:"minNodes,omitempty"`
-	MonthlyBilled *bool                             `json:"monthlyBilled,omitempty"`
-	Name          *string                           `json:"name,omitempty"`
-	Template      *CloudProjectKubeNodePoolTemplate `json:"template,omitempty"`
+	AntiAffinity  *bool                                `json:"antiAffinity,omitempty"`
+	Autoscale     *bool                                `json:"autoscale,omitempty"`
+	DesiredNodes  *int                                 `json:"desiredNodes,omitempty"`
+	FlavorName    string                               `json:"flavorName"`
+	MaxNodes      *int                                 `json:"maxNodes,omitempty"`
+	MinNodes      *int                                 `json:"minNodes,omitempty"`
+	MonthlyBilled *bool                                `json:"monthlyBilled,omitempty"`
+	Name          *string                              `json:"name,omitempty"`
+	Autoscaling   *CloudProjectKubeNodePoolAutoscaling `json:"autoscaling,omitempty"`
+	Template      *CloudProjectKubeNodePoolTemplate    `json:"template,omitempty"`
 }
 
 type TaintEffectType int
@@ -53,12 +54,19 @@ type CloudProjectKubeNodePoolTemplate struct {
 	Spec     CloudProjectKubeNodePoolTemplateSpec     `json:"spec"`
 }
 
+type CloudProjectKubeNodePoolAutoscaling struct {
+	ScaleDownUtilizationThreshold *float64 `json:"scaleDownUtilizationThreshold,omitempty"`
+	ScaleDownUnneededTimeSeconds  *int     `json:"scaleDownUnneededTimeSeconds,omitempty"`
+	ScaleDownUnreadyTimeSeconds   *int     `json:"scaleDownUnreadyTimeSeconds,omitempty"`
+}
+
 type CloudProjectKubeNodePoolUpdateOpts struct {
-	Autoscale    *bool                             `json:"autoscale,omitempty"`
-	DesiredNodes *int                              `json:"desiredNodes,omitempty"`
-	MaxNodes     *int                              `json:"maxNodes,omitempty"`
-	MinNodes     *int                              `json:"minNodes,omitempty"`
-	Template     *CloudProjectKubeNodePoolTemplate `json:"template,omitempty"`
+	Autoscale    *bool                                `json:"autoscale,omitempty"`
+	DesiredNodes *int                                 `json:"desiredNodes,omitempty"`
+	MaxNodes     *int                                 `json:"maxNodes,omitempty"`
+	MinNodes     *int                                 `json:"minNodes,omitempty"`
+	Autoscaling  *CloudProjectKubeNodePoolAutoscaling `json:"autoscaling,omitempty"`
+	Template     *CloudProjectKubeNodePoolTemplate    `json:"template,omitempty"`
 }
 
 var toString = map[TaintEffectType]string{
@@ -75,6 +83,15 @@ var TaintEffecTypeToID = map[string]TaintEffectType{
 	"PreferNoSchedule": PreferNoSchedule,
 }
 
+func GetAutoscalingOpts(d *schema.ResourceData) (*CloudProjectKubeNodePoolAutoscaling, error) {
+	var autoscaling CloudProjectKubeNodePoolAutoscaling
+	var e error
+	autoscaling.ScaleDownUtilizationThreshold, e = helpers.GetNilFloat64PointerFromData(d, "autoscaling_scale_down_utilization_threshold")
+	autoscaling.ScaleDownUnneededTimeSeconds = helpers.GetNilIntPointerFromData(d, "autoscaling_scale_down_unneeded_time_seconds")
+	autoscaling.ScaleDownUnreadyTimeSeconds = helpers.GetNilIntPointerFromData(d, "autoscaling_scale_down_unready_time_seconds")
+	return &autoscaling, e
+}
+
 func (opts *CloudProjectKubeNodePoolCreateOpts) FromResource(d *schema.ResourceData) (*CloudProjectKubeNodePoolCreateOpts, error) {
 	opts.Autoscale = helpers.GetNilBoolPointerFromData(d, "autoscale")
 	opts.AntiAffinity = helpers.GetNilBoolPointerFromData(d, "anti_affinity")
@@ -84,10 +101,20 @@ func (opts *CloudProjectKubeNodePoolCreateOpts) FromResource(d *schema.ResourceD
 	opts.MinNodes = helpers.GetNilIntPointerFromDataAndNilIfNotPresent(d, "min_nodes")
 	opts.MonthlyBilled = helpers.GetNilBoolPointerFromData(d, "monthly_billed")
 	opts.Name = helpers.GetNilStringPointerFromData(d, "name")
+
 	template, err := loadNodelPoolTemplateFromResource(d.Get("template"))
+
 	if err != nil {
 		return nil, err
 	}
+
+	autoscaling, err := GetAutoscalingOpts(d)
+
+	if err != nil {
+		return nil, err
+	}
+
+	opts.Autoscaling = autoscaling
 	opts.Template = template
 
 	return opts, nil
@@ -248,9 +275,18 @@ func (opts *CloudProjectKubeNodePoolUpdateOpts) FromResource(d *schema.ResourceD
 	opts.DesiredNodes = helpers.GetNilIntPointerFromDataAndNilIfNotPresent(d, "desired_nodes")
 	opts.MaxNodes = helpers.GetNilIntPointerFromDataAndNilIfNotPresent(d, "max_nodes")
 	opts.MinNodes = helpers.GetNilIntPointerFromDataAndNilIfNotPresent(d, "min_nodes")
+	var autoscaling CloudProjectKubeNodePoolAutoscaling
+	var e error
+	autoscaling.ScaleDownUtilizationThreshold, e = helpers.GetNilFloat64PointerFromData(d, "autoscaling_scale_down_utilization_threshold")
+	autoscaling.ScaleDownUnneededTimeSeconds = helpers.GetNilIntPointerFromData(d, "autoscaling_scale_down_unneeded_time_seconds")
+	autoscaling.ScaleDownUnreadyTimeSeconds = helpers.GetNilIntPointerFromData(d, "autoscaling_scale_down_unready_time_seconds")
+	opts.Autoscaling = &autoscaling
+
 	template, err := loadNodelPoolTemplateFromResource(d.Get("template"))
 	if err != nil {
 		return nil, err
+	} else if e != nil {
+		return nil, e
 	}
 	opts.Template = template
 
@@ -262,24 +298,25 @@ func (s *CloudProjectKubeNodePoolUpdateOpts) String() string {
 }
 
 type CloudProjectKubeNodePoolResponse struct {
-	Autoscale      bool                              `json:"autoscale"`
-	AntiAffinity   bool                              `json:"antiAffinity"`
-	AvailableNodes int                               `json:"availableNodes"`
-	CreatedAt      string                            `json:"createdAt"`
-	CurrentNodes   int                               `json:"currentNodes"`
-	DesiredNodes   int                               `json:"desiredNodes"`
-	Flavor         string                            `json:"flavor"`
-	Id             string                            `json:"id"`
-	MaxNodes       int                               `json:"maxNodes"`
-	MinNodes       int                               `json:"minNodes"`
-	MonthlyBilled  bool                              `json:"monthlyBilled"`
-	Name           string                            `json:"name"`
-	ProjectId      string                            `json:"projectId"`
-	SizeStatus     string                            `json:"sizeStatus"`
-	Status         string                            `json:"status"`
-	UpToDateNodes  int                               `json:"upToDateNodes"`
-	UpdatedAt      string                            `json:"updatedAt"`
-	Template       *CloudProjectKubeNodePoolTemplate `json:"template,omitempty"`
+	Autoscale      bool                                `json:"autoscale"`
+	AntiAffinity   bool                                `json:"antiAffinity"`
+	AvailableNodes int                                 `json:"availableNodes"`
+	CreatedAt      string                              `json:"createdAt"`
+	CurrentNodes   int                                 `json:"currentNodes"`
+	DesiredNodes   int                                 `json:"desiredNodes"`
+	Flavor         string                              `json:"flavor"`
+	Id             string                              `json:"id"`
+	MaxNodes       int                                 `json:"maxNodes"`
+	MinNodes       int                                 `json:"minNodes"`
+	MonthlyBilled  bool                                `json:"monthlyBilled"`
+	Name           string                              `json:"name"`
+	ProjectId      string                              `json:"projectId"`
+	SizeStatus     string                              `json:"sizeStatus"`
+	Status         string                              `json:"status"`
+	UpToDateNodes  int                                 `json:"upToDateNodes"`
+	UpdatedAt      string                              `json:"updatedAt"`
+	Autoscaling    CloudProjectKubeNodePoolAutoscaling `json:"autoscaling"`
+	Template       *CloudProjectKubeNodePoolTemplate   `json:"template,omitempty"`
 }
 
 func (v CloudProjectKubeNodePoolResponse) ToMap() map[string]interface{} {
@@ -302,6 +339,9 @@ func (v CloudProjectKubeNodePoolResponse) ToMap() map[string]interface{} {
 	obj["status"] = v.Status
 	obj["up_to_date_nodes"] = v.UpToDateNodes
 	obj["updated_at"] = v.UpdatedAt
+	obj["autoscaling_scale_down_utilization_threshold"] = v.Autoscaling.ScaleDownUtilizationThreshold
+	obj["autoscaling_scale_down_unneeded_time_seconds"] = v.Autoscaling.ScaleDownUnneededTimeSeconds
+	obj["autoscaling_scale_down_unready_time_seconds"] = v.Autoscaling.ScaleDownUnreadyTimeSeconds
 
 	emptyTemplateResponse := &CloudProjectKubeNodePoolTemplate{
 		Metadata: CloudProjectKubeNodePoolTemplateMetadata{

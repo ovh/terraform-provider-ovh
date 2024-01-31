@@ -53,6 +53,24 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 				Computed:    true,
 				ForceNew:    false,
 			},
+			"autoscaling_scale_down_unneeded_time_seconds": {
+				Description: "scaleDownUnneededTimeSeconds for autoscaling",
+				Optional:    true,
+				Computed:    true,
+				Type:        schema.TypeInt,
+			},
+			"autoscaling_scale_down_unready_time_seconds": {
+				Description: "scaleDownUnreadyTimeSeconds for autoscaling",
+				Optional:    true,
+				Computed:    true,
+				Type:        schema.TypeInt,
+			},
+			"autoscaling_scale_down_utilization_threshold": {
+				Description: "scaleDownUtilizationThreshold for autoscaling",
+				Optional:    true,
+				Computed:    true,
+				Type:        schema.TypeFloat,
+			},
 			"anti_affinity": {
 				Type:        schema.TypeBool,
 				Description: "Enable anti affinity groups for nodes in the pool",
