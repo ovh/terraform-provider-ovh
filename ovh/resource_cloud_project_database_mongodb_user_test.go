@@ -46,8 +46,8 @@ func TestAccCloudProjectDatabaseMongodbUser_basic(t *testing.T) {
 	flavor := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_MONGODB_FLAVOR_TEST")
 	description := acctest.RandomWithPrefix(test_prefix)
 	name := "johndoe"
-	rolesBackup := "backup"
-	rolesReadAnyDatabase := "readAnyDatabase"
+	rolesBackup := "backup@admin"
+	rolesReadAnyDatabase := "readAnyDatabase@admin"
 
 	config := fmt.Sprintf(
 		testAccCloudProjectDatabaseMongodbUserConfig_basic,

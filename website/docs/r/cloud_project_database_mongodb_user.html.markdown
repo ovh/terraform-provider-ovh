@@ -22,7 +22,7 @@ resource "ovh_cloud_project_database_mongodb_user" "user" {
   service_name  = data.ovh_cloud_project_database.mongodb.service_name
   cluster_id    = data.ovh_cloud_project_database.mongodb.id
   name          = "johndoe"
-  roles         = ["backup", "readAnyDatabase"]
+  roles         = ["backup@admin", "readAnyDatabase@admin"]
 }
 
 output "user_password" {
@@ -44,7 +44,7 @@ resource "ovh_cloud_project_database_mongodb_user" "user" {
   service_name  = data.ovh_cloud_project_database.mongodb.service_name
   cluster_id    = data.ovh_cloud_project_database.mongodb.id
   name          = "johndoe"
-  roles         = ["backup", "readAnyDatabase"]
+  roles         = ["backup@admin", "readAnyDatabase@admin"]
   password_reset  = "reset1"
 }
 
@@ -65,14 +65,25 @@ The following arguments are supported:
 
 * `name` - (Required, Forces new resource) Name of the user.
 
-* `roles` - (Optional: if omit, default role) Roles the user belongs to.
+* `roles` - (Optional: if omit, default role) Roles the user belongs to. Since version 0.37.0, the authentication database must be indicated for all roles
 Available roles:
-  * `backup`
-  * `dbAdminAnyDatabase`
-  * `readAnyDatabase`
-  * `readWriteAnyDatabase`
-  * `restore`
-  * `userAdminAnyDatabase`
+  * `backup@admin`
+  * `clusterAdmin@admin`
+  * `clusterManager@admin`
+  * `clusterMonitor@admin`
+  * `dbAdmin@(defined db)`
+  * `dbAdminAnyDatabase@admin`
+  * `dbOwner@(defined db)`
+  * `enableSharding@(defined db)`
+  * `hostManager@admin`
+  * `read@(defined db)`
+  * `readAnyDatabase@admin`
+  * `readWrite@(defined db)`
+  * `readWriteAnyDatabase@admin`
+  * `restore@admin`
+  * `root@admin`
+  * `userAdmin@(defined db)`
+  * `userAdminAnyDatabase@admin`
 
 * `password_reset` - (Optional) Arbitrary string to change to trigger a password update. Use the `terraform refresh` command after executing `terraform apply` to update the output with the new password.
 
