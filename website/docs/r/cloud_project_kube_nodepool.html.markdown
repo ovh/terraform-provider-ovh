@@ -74,6 +74,12 @@ The following arguments are supported:
 * `monthly_billed` - (Optional) should the nodes be billed on a monthly basis. Default to `false`. **Changing this value recreates the resource.**
 * `anti_affinity` - (Optional) should the pool use the anti-affinity feature. Default to `false`. **Changing this value recreates the resource.**
 * `autoscale` - (Optional) Enable auto-scaling for the pool. Default to `false`.
+* `autoscaling_scale_down_unneeded_time_seconds` - (Optional) scaleDownUnneededTimeSeconds autoscaling parameter
+  How long a node should be unneeded before it is eligible for scale down
+* `autoscaling_scale_down_unready_time_seconds` - (Optional) scaleDownUnreadyTimeSeconds autoscaling parameter
+  How long an unready node should be unneeded before it is eligible for scale down
+* `autoscaling_scale_down_utilization_threshold` - (Optional) scaleDownUtilizationThreshold autoscaling parameter
+  Node utilization level, defined as sum of requested resources divided by capacity, below which a node can be considered for scale down
 * `template ` - (Optional) Managed Kubernetes nodepool template, which is a complex object constituted by two main nested objects:
     * `metadata` - Metadata of each node in the pool
         * `annotations` - Annotations to apply to each node

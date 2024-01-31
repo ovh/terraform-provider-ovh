@@ -110,6 +110,21 @@ func dataSourceCloudProjectKubeNodepool() *schema.Resource {
 				Description: "Last update date",
 				Computed:    true,
 			},
+			"autoscaling_scale_down_unneeded_time_seconds": {
+				Type:        schema.TypeInt,
+				Description: "scaleDownUnneededTimeSeconds for autoscaling",
+				Computed:    true,
+			},
+			"autoscaling_scale_down_unready_time_seconds": {
+				Type:        schema.TypeInt,
+				Description: "scaleDownUnreadyTimeSeconds for autoscaling",
+				Computed:    true,
+			},
+			"autoscaling_scale_down_utilization_threshold": {
+				Type:        schema.TypeFloat,
+				Description: "scaleDownUtilizationThreshold for autoscaling",
+				Computed:    true,
+			},
 			"template": {
 				Description: "Node pool template",
 				Optional:    true,
