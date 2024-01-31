@@ -91,6 +91,7 @@ func GetAutoscalingOpts(d *schema.ResourceData) (*CloudProjectKubeNodePoolAutosc
 	autoscaling.ScaleDownUnreadyTimeSeconds = helpers.GetNilIntPointerFromData(d, "autoscaling_scale_down_unready_time_seconds")
 	return &autoscaling, e
 }
+
 func (opts *CloudProjectKubeNodePoolCreateOpts) FromResource(d *schema.ResourceData) (*CloudProjectKubeNodePoolCreateOpts, error) {
 	opts.Autoscale = helpers.GetNilBoolPointerFromData(d, "autoscale")
 	opts.AntiAffinity = helpers.GetNilBoolPointerFromData(d, "anti_affinity")

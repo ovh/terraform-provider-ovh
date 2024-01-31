@@ -268,9 +268,7 @@ func GetNilFloat64PointerFromData(data interface{}, id string) (*float64, error)
 	} else {
 		return nil, fmt.Errorf("expected a *schema.ResourceData or a map[string]interface{} data type but got a %T", data)
 	}
-
 	return nil, nil
-
 }
 
 func GetNilInt64PointerFromData(data interface{}, id string) *int64 {
@@ -315,9 +313,8 @@ func GetNilFloat64Pointer(val interface{}) (*float64, error) {
 		return nil, nil
 	} else if value, ok := val.(float64); ok {
 		return &value, nil
-	} else {
-		return nil, fmt.Errorf("Expected a float64 value but got a %T", val)
 	}
+	return nil, fmt.Errorf("Expected a float64 value but got a %T", val)
 }
 
 func GetNilInt64Pointer(val interface{}) *int64 {
