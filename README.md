@@ -154,6 +154,12 @@ To run only one acceptance test, you can run:
 $ make testacc TESTARGS="-run TestAccCloudProjectKubeUpdateVersion_basic"
 ```
 
+To run one acceptance test and bypass go test caching:
+
+```sh
+$ TF_ACC=1 go test -count=1 $(go list ./... |grep -v 'vendor') -v -run  TestAccCloudProjectKubeUpdateVersion_basic -timeout 600m -p 10
+```
+
 To remove dangling resources, you can run:
 
 ```sh
