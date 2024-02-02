@@ -157,6 +157,7 @@ type CloudProjectDatabaseCreateOpts struct {
 	Plan         string                           `json:"plan"`
 	SubnetId     string                           `json:"subnetId,omitempty"`
 	Version      string                           `json:"version"`
+	Backups      CloudProjectDatabaseBackups      `json:"backups", omitempty`
 }
 
 type CloudProjectDatabaseDisk struct {
@@ -199,17 +200,28 @@ func (opts *CloudProjectDatabaseCreateOpts) FromResource(d *schema.ResourceData)
 	opts.SubnetId = nodes[0].SubnetId
 	opts.Version = d.Get("version").(string)
 	opts.Disk = CloudProjectDatabaseDisk{Size: d.Get("disk_size").(int)}
+
+	regions, err := helpers.StringsFromSchema(d, "backup_regions")
+	if err != nil {
+		return err, nil
+	}
+
+	opts.Backups = CloudProjectDatabaseBackups{
+		Regions: regions,
+		Time:    d.Get("backup_time").(string),
+	}
 	return nil, opts
 }
 
 type CloudProjectDatabaseUpdateOpts struct {
-	AclsEnabled bool                     `json:"aclsEnabled,omitempty"`
-	Description string                   `json:"description,omitempty"`
-	Flavor      string                   `json:"flavor,omitempty"`
-	Plan        string                   `json:"plan,omitempty"`
-	RestApi     bool                     `json:"restApi,omitempty"`
-	Version     string                   `json:"version,omitempty"`
-	Disk        CloudProjectDatabaseDisk `json:"disk,omitempty"`
+	AclsEnabled bool                        `json:"aclsEnabled,omitempty"`
+	Description string                      `json:"description,omitempty"`
+	Flavor      string                      `json:"flavor,omitempty"`
+	Plan        string                      `json:"plan,omitempty"`
+	RestApi     bool                        `json:"restApi,omitempty"`
+	Version     string                      `json:"version,omitempty"`
+	Disk        CloudProjectDatabaseDisk    `json:"disk,omitempty"`
+	Backups     CloudProjectDatabaseBackups `json:"backups", omitempty`
 }
 
 func (opts *CloudProjectDatabaseUpdateOpts) FromResource(d *schema.ResourceData) (error, *CloudProjectDatabaseUpdateOpts) {
@@ -226,6 +238,15 @@ func (opts *CloudProjectDatabaseUpdateOpts) FromResource(d *schema.ResourceData)
 	opts.Flavor = d.Get("flavor").(string)
 	opts.Version = d.Get("version").(string)
 	opts.Disk = CloudProjectDatabaseDisk{Size: d.Get("disk_size").(int)}
+
+	regions, err := helpers.StringsFromSchema(d, "backup_regions")
+	if err != nil {
+		return err, nil
+	}
+	opts.Backups = CloudProjectDatabaseBackups{
+		Regions: regions,
+		Time:    d.Get("backup_time").(string),
+	}
 	return nil, opts
 }
 

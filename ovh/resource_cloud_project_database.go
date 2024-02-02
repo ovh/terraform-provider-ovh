@@ -114,13 +114,6 @@ func resourceCloudProjectDatabase() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.([]string)
-					if len(value) > 2 {
-						errors = append(errors, fmt.Errorf("Too many regions. Not more than 1 regions for MongoDB. Not more than 2 region for other engines with one that is the same that the nodes[].region field"))
-					}
-					return
-				},
 			},
 			"backup_time": {
 				Type:        schema.TypeString,
