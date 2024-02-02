@@ -157,7 +157,7 @@ type CloudProjectDatabaseCreateOpts struct {
 	Plan         string                           `json:"plan"`
 	SubnetId     string                           `json:"subnetId,omitempty"`
 	Version      string                           `json:"version"`
-	Backups      CloudProjectDatabaseBackups      `json:"backups", omitempty`
+	Backups      CloudProjectDatabaseBackups      `json:"backups,omitempty"`
 }
 
 type CloudProjectDatabaseDisk struct {
@@ -221,7 +221,7 @@ type CloudProjectDatabaseUpdateOpts struct {
 	RestApi     bool                        `json:"restApi,omitempty"`
 	Version     string                      `json:"version,omitempty"`
 	Disk        CloudProjectDatabaseDisk    `json:"disk,omitempty"`
-	Backups     CloudProjectDatabaseBackups `json:"backups", omitempty`
+	Backups     CloudProjectDatabaseBackups `json:"backups,omitempty"`
 }
 
 func (opts *CloudProjectDatabaseUpdateOpts) FromResource(d *schema.ResourceData) (error, *CloudProjectDatabaseUpdateOpts) {
