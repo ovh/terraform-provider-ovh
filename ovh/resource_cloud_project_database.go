@@ -110,7 +110,7 @@ func resourceCloudProjectDatabase() *schema.Resource {
 			//Optional/Computed
 			"backup_regions": {
 				Type:        schema.TypeList,
-				Description: "List of region where backups are pushed. Not more than 1 regions for MongoDB. Not more than 2 region for other engines with one that is the same that the nodes[].region field",
+				Description: "List of region where backups are pushed. Not more than 1 regions for MongoDB. Not more than 2 regions for the other engines with one which is the same as the nodes[].region field",
 				Optional:    true,
 				Computed:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
