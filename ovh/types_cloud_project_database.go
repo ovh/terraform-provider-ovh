@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 	"github.com/ybriffa/rfc3339"
@@ -1099,9 +1099,6 @@ func (v CloudProjectDatabaseMongodbUserResponse) ToMap() map[string]interface{} 
 	obj["id"] = v.Id
 	obj["name"] = v.Username
 	obj["status"] = v.Status
-	for i := range v.Roles {
-		v.Roles[i] = strings.TrimSuffix(v.Roles[i], "@admin")
-	}
 	obj["roles"] = v.Roles
 
 	return obj

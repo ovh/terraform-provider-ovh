@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
@@ -52,6 +52,24 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 				ForceNew:    false,
+			},
+			"autoscaling_scale_down_unneeded_time_seconds": {
+				Description: "scaleDownUnneededTimeSeconds for autoscaling",
+				Optional:    true,
+				Computed:    true,
+				Type:        schema.TypeInt,
+			},
+			"autoscaling_scale_down_unready_time_seconds": {
+				Description: "scaleDownUnreadyTimeSeconds for autoscaling",
+				Optional:    true,
+				Computed:    true,
+				Type:        schema.TypeInt,
+			},
+			"autoscaling_scale_down_utilization_threshold": {
+				Description: "scaleDownUtilizationThreshold for autoscaling",
+				Optional:    true,
+				Computed:    true,
+				Type:        schema.TypeFloat,
 			},
 			"anti_affinity": {
 				Type:        schema.TypeBool,

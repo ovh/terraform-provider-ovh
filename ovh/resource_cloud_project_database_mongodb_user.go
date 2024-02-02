@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
@@ -63,10 +64,17 @@ func resourceCloudProjectDatabaseMongodbUser() *schema.Resource {
 			},
 			"roles": {
 				Type:        schema.TypeSet,
-				Description: "Roles the user belongs to (without authentication database)",
+				Description: "Roles the user belongs to with the authentication database",
 				Optional:    true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
+					ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+						value := v.(string)
+						if !strings.Contains(value, "@") {
+							errors = append(errors, fmt.Errorf("Value %s do not have authentication database", value))
+						}
+						return
+					},
 				},
 			},
 

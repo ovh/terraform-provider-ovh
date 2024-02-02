@@ -159,7 +159,9 @@ func (p *OvhProvider) Configure(ctx context.Context, req provider.ConfigureReque
 
 // DataSources defines the data sources implemented in the provider.
 func (p *OvhProvider) DataSources(_ context.Context) []func() datasource.DataSource {
-	return nil
+	return []func() datasource.DataSource{
+		NewCloudProjectDatabaseIPRestrictionsDataSource,
+	}
 }
 
 // Resources defines the resources implemented in the provider.

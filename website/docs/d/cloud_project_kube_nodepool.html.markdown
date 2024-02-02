@@ -51,6 +51,12 @@ The following attributes are exported:
 * `monthly_billed` - (Optional) should the nodes be billed on a monthly basis. Default to `false`.
 * `anti_affinity` - (Optional) should the pool use the anti-affinity feature. Default to `false`.
 * `autoscale` - (Optional) Enable auto-scaling for the pool. Default to `false`.
+* `autoscaling_scale_down_unneeded_time_seconds` - (Optional) scaleDownUnneededTimeSeconds autoscaling parameter
+  How long a node should be unneeded before it is eligible for scale down
+* `autoscaling_scale_down_unready_time_seconds` - (Optional) scaleDownUnreadyTimeSeconds autoscaling parameter
+  How long an unready node should be unneeded before it is eligible for scale down
+* `autoscaling_scale_down_utilization_threshold` - (Optional) scaleDownUtilizationThreshold autoscaling parameter
+  Node utilization level, defined as sum of requested resources divided by capacity, below which a node can be considered for scale down
 * `available_nodes` - Number of nodes which are actually ready in the pool
 * `created_at` - Creation date
 * `current_nodes` - Number of nodes present in the pool
@@ -61,4 +67,3 @@ The following attributes are exported:
 * `status` - Current status
 * `up_to_date_nodes` - Number of nodes with the latest version installed in the pool
 * `updated_at` - Last update date
-

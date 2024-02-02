@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 const testAccCloudProjectDatabaseMongodbUserDatasourceConfig_Basic = `
@@ -52,8 +52,8 @@ func TestAccCloudProjectDatabaseMongodbUserDataSource_basic(t *testing.T) {
 	flavor := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_MONGODB_FLAVOR_TEST")
 	description := acctest.RandomWithPrefix(test_prefix)
 	name := "johndoe"
-	rolesBackup := "backup"
-	rolesReadAnyDatabase := "readAnyDatabase"
+	rolesBackup := "backup@admin"
+	rolesReadAnyDatabase := "readAnyDatabase@admin"
 
 	config := fmt.Sprintf(
 		testAccCloudProjectDatabaseMongodbUserDatasourceConfig_Basic,

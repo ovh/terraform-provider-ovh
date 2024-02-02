@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/ovh/go-ovh/ovh"
 	"github.com/ybriffa/rfc3339"
 )
@@ -256,6 +256,21 @@ func GetNilIntPointerFromData(data interface{}, id string) *int {
 	return nil
 }
 
+func GetNilFloat64PointerFromData(data interface{}, id string) (*float64, error) {
+	if resourceData, tok := data.(*schema.ResourceData); tok {
+		if val, ok := resourceData.GetOk(id); ok {
+			return GetNilFloat64Pointer(val)
+		}
+	} else if mapData, tok := data.(map[string]interface{}); tok {
+		if val, ok := mapData[id]; ok {
+			return GetNilFloat64Pointer(val)
+		}
+	} else {
+		return nil, fmt.Errorf("expected a *schema.ResourceData or a map[string]interface{} data type but got a %T", data)
+	}
+	return nil, nil
+}
+
 func GetNilInt64PointerFromData(data interface{}, id string) *int64 {
 	if resourceData, tok := data.(*schema.ResourceData); tok {
 		if val, ok := resourceData.GetOk(id); ok {
@@ -291,6 +306,15 @@ func GetNilIntPointer(val interface{}) *int {
 	}
 	value := val.(int)
 	return &value
+}
+
+func GetNilFloat64Pointer(val interface{}) (*float64, error) {
+	if val == nil {
+		return nil, nil
+	} else if value, ok := val.(float64); ok {
+		return &value, nil
+	}
+	return nil, fmt.Errorf("Expected a float64 value but got a %T", val)
 }
 
 func GetNilInt64Pointer(val interface{}) *int64 {
