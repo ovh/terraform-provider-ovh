@@ -28,8 +28,8 @@ func diagnosticsToError(diags diag.Diagnostics) error {
 }
 
 type CloudProjectDatabaseBackups struct {
-	Regions []string `json:"regions"`
-	Time    string   `json:"time"`
+	Regions []string `json:"regions,omitempty"`
+	Time    string   `json:"time,omitempty"`
 }
 
 type CloudProjectDatabaseResponse struct {
@@ -243,10 +243,12 @@ func (opts *CloudProjectDatabaseUpdateOpts) FromResource(d *schema.ResourceData)
 	if err != nil {
 		return err, nil
 	}
+
 	opts.Backups = CloudProjectDatabaseBackups{
 		Regions: regions,
 		Time:    d.Get("backup_time").(string),
 	}
+
 	return nil, opts
 }
 
