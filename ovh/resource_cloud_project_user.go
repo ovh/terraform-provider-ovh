@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
+	"golang.org/x/exp/slices"
 
 	"github.com/ovh/go-ovh/ovh"
 )
@@ -23,6 +24,7 @@ func resourceCloudProjectUser() *schema.Resource {
 		Create: resourceCloudProjectUserCreate,
 		Read:   resourceCloudProjectUserRead,
 		Delete: resourceCloudProjectUserDelete,
+		Update: resourceCloudProjectUserUpdate,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceCloudProjectUserImportState,
@@ -44,13 +46,13 @@ func resourceCloudProjectUser() *schema.Resource {
 			"role_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
+				ForceNew:     false,
 				ValidateFunc: validateCloudProjectUserRoleFunc,
 			},
 			"role_names": {
 				Type:     schema.TypeList,
 				Optional: true,
-				ForceNew: true,
+				ForceNew: false,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
@@ -147,6 +149,52 @@ func validateCloudProjectUserRoleFunc(v interface{}, k string) (ws []string, err
 		errors = append(errors, err)
 	}
 	return
+}
+
+func resourceCloudProjectUserUpdate(d *schema.ResourceData, meta interface{}) error {
+	config := meta.(*Config)
+	serviceName := d.Get("service_name").(string)
+	userId := d.Id()
+	role := d.Get("role_name")
+	roles, err := helpers.StringsFromSchema(d, "role_names")
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	endpoint := fmt.Sprintf("/cloud/project/%s/role",
+		url.PathEscape(serviceName),
+	)
+	res := &CloudProjectrolesResponse{}
+	if err := config.OVHClient.Get(endpoint, res); err != nil {
+		return fmt.Errorf("calling Get %s", endpoint)
+	}
+
+	update := []string{}
+	for _, i := range res.Roles {
+		if slices.Contains(roles, i.Name) {
+			update = append(update, i.Id)
+		}
+		if role == i.Name && !slices.Contains(update, i.Name) {
+			update = append(update, i.Id)
+		}
+	}
+
+	log.Printf("[DEBUG] roles IDs %s", update)
+	log.Printf("[DEBUG] user %s", userId)
+	endpoint = fmt.Sprintf("/cloud/project/%s/user/%s/role",
+		url.PathEscape(serviceName),
+		url.PathEscape(userId),
+	)
+
+	r := &CloudProjectUser{}
+	data := &CloudProjectroleUpdate{
+		RolesIds: update,
+	}
+	if err := config.OVHClient.Put(endpoint, data, r); err != nil {
+		return fmt.Errorf("calling %s with params %s:\n\t %q", endpoint, data, err)
+	}
+	return nil
 }
 
 func resourceCloudProjectUserCreate(d *schema.ResourceData, meta interface{}) error {
