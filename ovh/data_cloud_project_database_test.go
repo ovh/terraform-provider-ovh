@@ -55,6 +55,8 @@ func TestAccCloudProjectDatabaseDataSource_basic(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(
+						"data.ovh_cloud_project_database.db", "backup_regions.#"),
+					resource.TestCheckResourceAttrSet(
 						"data.ovh_cloud_project_database.db", "backup_time"),
 					resource.TestCheckResourceAttrSet(
 						"data.ovh_cloud_project_database.db", "created_at"),

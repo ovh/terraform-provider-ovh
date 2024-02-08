@@ -41,6 +41,7 @@ The following attributes are exported:
 
 * `id` - See Argument Reference above.
 * `service_name` - See Argument Reference above.
+* `backup_regions` - List of region where backups are pushed.
 * `backup_time` - Time on which backups start every day.
 * `created_at` - Date of the creation of the cluster.
 * `description` - Small description of the database service.
