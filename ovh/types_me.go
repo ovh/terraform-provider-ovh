@@ -178,6 +178,49 @@ type MeIdentityUserUpdateOpts struct {
 	Group       string `json:"group"`
 }
 
+type MeIdentityProviderResponse struct {
+	GroupAttributeName     string                              `json:"groupAttributeName"`
+	IdpSigningCertificates []MeIdentityProviderIDPCertificates `json:"idpSigningCertificates"`
+	DisableUsers           bool                                `json:"disableUsers"`
+	Extensions             MeIdentityProviderExtensions        `json:"extensions"`
+
+	UserAttributeName string `json:"userAttributeName"`
+	SsoServiceUrl     string `json:"ssoServiceUrl"`
+	Creation          string `json:"creation"`
+	LastUpdate        string `json:"lastUpdate"`
+}
+
+type MeIdentityProviderIDPCertificates struct {
+	Expiration string `json:"expiration"`
+	Subject    string `json:"subject"`
+}
+
+type MeIdentityProviderCreateOpts struct {
+	Metadata           string `json:"metadata"`
+	GroupAttributeName string `json:"groupAttributeName,omitempty"`
+	DisableUsers       bool   `json:"disableUsers"`
+
+	Extensions MeIdentityProviderExtensions `json:"extensions,omitempty"`
+}
+
+type MeIdentityProviderUpdateOpts struct {
+	GroupAttributeName string `json:"groupAttributeName"`
+	DisableUsers       bool   `json:"disableUsers"`
+
+	Extensions MeIdentityProviderExtensions `json:"extensions,omitempty"`
+}
+
+type MeIdentityProviderExtensions struct {
+	RequestedAttributes []MeIdentityProviderAttribute `json:"requestedAttributes"`
+}
+
+type MeIdentityProviderAttribute struct {
+	IsRequired bool     `json:"isRequired"`
+	Name       string   `json:"name"`
+	NameFormat string   `json:"nameFormat,omitempty"`
+	Values     []string `json:"values,omitempty"`
+}
+
 // MeSshKey Opts
 type MeSshKeyCreateOpts struct {
 	KeyName string `json:"keyName"`
@@ -257,4 +300,65 @@ type MePaymentMeanPaypal struct {
 type MePaymentMeanIcon struct {
 	Data *string `json:"data"`
 	Name *string `json:"name"`
+}
+
+func loadMeIdentityProviderAttributeListFromResource(i interface{}) ([]MeIdentityProviderAttribute, error) {
+	requestedAttributeList := []MeIdentityProviderAttribute{}
+	objList := i.([]interface{})
+	for _, v := range objList {
+		requestedAttribute, err := loadMeIdentityProviderAttributeFromResource(v)
+		if err != nil {
+			return nil, err
+		}
+		requestedAttributeList = append(requestedAttributeList, requestedAttribute)
+	}
+	return requestedAttributeList, nil
+}
+
+func loadMeIdentityProviderAttributeFromResource(i interface{}) (MeIdentityProviderAttribute, error) {
+
+	requestedAttribute := MeIdentityProviderAttribute{}
+
+	resourceAttributeObj := i.(map[string]interface{})
+
+	requestedAttribute.IsRequired = resourceAttributeObj["is_required"].(bool)
+
+	requestedAttribute.Name = resourceAttributeObj["name"].(string)
+
+	requestedAttribute.NameFormat = resourceAttributeObj["name_format"].(string)
+
+	valuesObj := resourceAttributeObj["values"].([]interface{})
+	values := []string{}
+	for _, v := range valuesObj {
+		values = append(values, v.(string))
+	}
+	requestedAttribute.Values = values
+
+	return requestedAttribute, nil
+}
+
+// requestedAttributesToMapList transforms an array of MeIdentityProviderAttribute to an array of map
+func requestedAttributesToMapList(attributes []MeIdentityProviderAttribute) []map[string]interface{} {
+	requestedAttributes := []map[string]interface{}{}
+	for _, v := range attributes {
+		requestedAttributes = append(requestedAttributes, map[string]interface{}{
+			"is_required": v.IsRequired,
+			"name":        v.Name,
+			"name_format": v.NameFormat,
+			"values":      v.Values,
+		})
+	}
+	return requestedAttributes
+}
+
+// idpSigningCertificatesToMapList transforms an array of MeIdentityProviderIDPCertificates to an array of map
+func idpSigningCertificatesToMapList(idpSigningCertificates []MeIdentityProviderIDPCertificates) []map[string]interface{} {
+	certificates := []map[string]interface{}{}
+	for _, v := range idpSigningCertificates {
+		certificates = append(certificates, map[string]interface{}{
+			"expiration": v.Expiration,
+			"subject":    v.Subject,
+		})
+	}
+	return certificates
 }
