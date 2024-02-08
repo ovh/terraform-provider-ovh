@@ -231,13 +231,18 @@ The following arguments are supported:
 
 * `version` - (Required) The version of the engine in which the service should be deployed
 
+* `backup_regions` - List of region where backups are pushed. Not more than 1 regions for MongoDB. Not more than 2 regions for the other engines with one being the same as the nodes[].region field
+
+* `backup_time` - Time on which backups start every day.
+
 ## Attributes Reference
 
 The following attributes are exported:
 
 * `id` - Public Cloud Database Service ID
 * `service_name` - See Argument Reference above.
-* `backup_time` - Time on which backups start every day.
+* `backup_regions` - See Argument Reference above.
+* `backup_time` - See Argument Reference above.
 * `created_at` - Date of the creation of the cluster.
 * `description` - See Argument Reference above.
 * `endpoints` - List of all endpoints objects of the service.

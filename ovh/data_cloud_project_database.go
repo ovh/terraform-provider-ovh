@@ -31,6 +31,12 @@ func dataSourceCloudProjectDatabase() *schema.Resource {
 			},
 
 			//Computed
+			"backup_regions": {
+				Type:        schema.TypeList,
+				Description: "List of region where backups are pushed",
+				Computed:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 			"backup_time": {
 				Type:        schema.TypeString,
 				Description: "Time on which backups start every day",
