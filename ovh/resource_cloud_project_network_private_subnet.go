@@ -236,7 +236,7 @@ func resourceCloudProjectNetworkPrivateSubnetDelete(d *schema.ResourceData, meta
 
 	log.Printf("[DEBUG] Will delete public cloud private network subnet for project: %s, network: %s, id: %s", serviceName, networkId, id)
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s/subnet/%s", serviceName, id, id)
+	endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s/subnet/%s", serviceName, networkId, id)
 
 	if err := config.OVHClient.Delete(endpoint, nil); err != nil {
 		return fmt.Errorf("calling DELETE %s:\n\t %q", endpoint, err)

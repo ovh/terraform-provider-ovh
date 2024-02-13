@@ -644,6 +644,10 @@ func resourceCloudProjectKubeUpdate(d *schema.ResourceData, meta interface{}) er
 		if err != nil {
 			return err
 		}
+		err = waitForCloudProjectKubeReady(config.OVHClient, serviceName, d.Id(), []string{"REDEPLOYING", "RESETTING"}, []string{"READY"}, d.Timeout(schema.TimeoutUpdate))
+		if err != nil {
+			return fmt.Errorf("timeout while waiting kube %s to be READY: %w", d.Id(), err)
+		}
 	}
 
 	if d.HasChange(kubeClusterNameKey) {
