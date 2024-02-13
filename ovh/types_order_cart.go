@@ -122,3 +122,16 @@ func (opts *OrderCartItemCreateOpts) FromResource(d *schema.ResourceData) *Order
 
 	return opts
 }
+
+type OrderCartCheckout struct {
+	OrderID int64                   `json:"orderId"`
+	Prices  OrderCartCheckoutPrices `json:"prices"`
+}
+
+type OrderCartCheckoutPrices struct {
+	WithoutTax OrderCartCheckoutPrice `json:"withoutTax"`
+}
+
+type OrderCartCheckoutPrice struct {
+	Value float64 `json:"value"`
+}
