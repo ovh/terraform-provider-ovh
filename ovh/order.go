@@ -328,7 +328,6 @@ func orderCreate(d *schema.ResourceData, meta interface{}, product string) error
 		} else {
 			return fmt.Errorf("no default payment found")
 		}
-
 	}
 
 	// Create Order
