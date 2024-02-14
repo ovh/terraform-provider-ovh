@@ -78,6 +78,32 @@ func resourceCloudProjectCreate(d *schema.ResourceData, meta interface{}) error 
 	return resourceCloudProjectUpdate(d, meta)
 }
 
+func resourceCloudProjectGetServiceName(config *Config, order *MeOrder, details []*MeOrderDetail) (string, error) {
+	// Looking for an order detail associated to a Public Cloud Project.
+	// Cloud Project has a specific resource_name that we can grep through a Regexp
+	for _, d := range details {
+		domain := d.Domain
+		if publicCloudProjectNameFormatRegex.MatchString(domain) {
+			return domain, nil
+		}
+	}
+
+	// For OVHcloud US, resource_name are not stored inside order detail, but inside the operation associated to the order detail.
+	for _, orderDetail := range details {
+		operations, err := orderDetailOperations(config.OVHClient, order.OrderId, orderDetail.OrderDetailId)
+		if err != nil {
+			return "", fmt.Errorf("Could not read cloudProject order details operations: %q", err)
+		}
+		for _, operation := range operations {
+			if publicCloudProjectNameFormatRegex.MatchString(operation.Resource.Name) {
+				return operation.Resource.Name, nil
+			}
+		}
+	}
+
+	return "", fmt.Errorf("Unknown service name")
+}
+
 func resourceCloudProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 	order, details, err := orderRead(d, meta)
 	if err != nil {
@@ -85,23 +111,9 @@ func resourceCloudProjectUpdate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	config := meta.(*Config)
-	serviceName := details[0].Domain
-
-	// in the US, for reasons too long to be detailled here, cloud project order domain is not the public cloud project id, but "*".
-	// There have been discussions to align US & EU, but they've failed.
-	// So we end up making a few extra queries to fetch the project id from operations details.
-	if !publicCloudProjectNameFormatRegex.MatchString(serviceName) {
-		orderDetailId := details[0].OrderDetailId
-		operations, err := orderDetailOperations(config.OVHClient, order.OrderId, orderDetailId)
-		if err != nil {
-			return fmt.Errorf("Could not read cloudProject order details operations: %q", err)
-		}
-		for _, operation := range operations {
-			if !publicCloudProjectNameFormatRegex.MatchString(operation.Resource.Name) {
-				continue
-			}
-			serviceName = operation.Resource.Name
-		}
+	serviceName, err := resourceCloudProjectGetServiceName(config, order, details)
+	if err != nil {
+		return err
 	}
 
 	log.Printf("[DEBUG] Will update cloudProject: %s", serviceName)
@@ -121,23 +133,9 @@ func resourceCloudProjectRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	config := meta.(*Config)
-	serviceName := details[0].Domain
-
-	// in the US, for reasons too long to be detailled here, cloud project order domain is not the public cloud project id, but "*".
-	// There have been discussions to align US & EU, but they've failed.
-	// So we end up making a few extra queries to fetch the project id from operations details.
-	if !publicCloudProjectNameFormatRegex.MatchString(serviceName) {
-		orderDetailId := details[0].OrderDetailId
-		operations, err := orderDetailOperations(config.OVHClient, order.OrderId, orderDetailId)
-		if err != nil {
-			return fmt.Errorf("Could not read cloudProject order details operations: %q", err)
-		}
-		for _, operation := range operations {
-			if !publicCloudProjectNameFormatRegex.MatchString(operation.Resource.Name) {
-				continue
-			}
-			serviceName = operation.Resource.Name
-		}
+	serviceName, err := resourceCloudProjectGetServiceName(config, order, details)
+	if err != nil {
+		return err
 	}
 
 	log.Printf("[DEBUG] Will read cloudProject: %s", serviceName)
@@ -162,23 +160,9 @@ func resourceCloudProjectDelete(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	config := meta.(*Config)
-	serviceName := details[0].Domain
-
-	// in the US, for reasons too long to be detailled here, cloud project order domain is not the public cloud project id, but "*".
-	// There have been discussions to align US & EU, but they've failed.
-	// So we end up making a few extra queries to fetch the project id from operations details.
-	if !publicCloudProjectNameFormatRegex.MatchString(serviceName) {
-		orderDetailId := details[0].OrderDetailId
-		operations, err := orderDetailOperations(config.OVHClient, order.OrderId, orderDetailId)
-		if err != nil {
-			return fmt.Errorf("Could not read cloudProject order details operations: %q", err)
-		}
-		for _, operation := range operations {
-			if !publicCloudProjectNameFormatRegex.MatchString(operation.Resource.Name) {
-				continue
-			}
-			serviceName = operation.Resource.Name
-		}
+	serviceName, err := resourceCloudProjectGetServiceName(config, order, details)
+	if err != nil {
+		return err
 	}
 
 	id := d.Id()
