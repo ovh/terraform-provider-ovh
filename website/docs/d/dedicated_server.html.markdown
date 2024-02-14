@@ -24,6 +24,7 @@ data "ovh_dedicated_server" "server" {
 In addition, the following attributes are exported:
 
 * `boot_id` - boot id of the server
+* `boot_script` - boot script of the server
 * `urn` - URN of the dedicated server instance
 * `commercial_range` - dedicated server commercial range
 * `datacenter` - dedicated datacenter localisation (bhs1,bhs2,...)

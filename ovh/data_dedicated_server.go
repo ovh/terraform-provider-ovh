@@ -27,6 +27,11 @@ func dataSourceDedicatedServer() *schema.Resource {
 				Computed:    true,
 				Description: "",
 			},
+			"boot_script": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "",
+			},
 			"commercial_range": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -202,6 +207,7 @@ func dataSourceDedicatedServerRead(d *schema.ResourceData, meta interface{}) err
 	d.SetId(ds.Name)
 	d.Set("urn", ds.URN)
 	d.Set("boot_id", ds.BootId)
+	d.Set("boot_script", ds.BootScript)
 	d.Set("commercial_range", ds.CommercialRange)
 	d.Set("datacenter", ds.Datacenter)
 	d.Set("ip", ds.Ip)

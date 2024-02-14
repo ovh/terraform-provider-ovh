@@ -34,6 +34,7 @@ The following arguments are supported:
 
 * `service_name` - (Required) The service_name of your dedicated server.
 * `boot_id` - boot id of the server
+* `boot_script` - boot script of the server
 * `monitoring` - Icmp monitoring state
 * `state` - error, hacked, hackedBlocked, ok
 
