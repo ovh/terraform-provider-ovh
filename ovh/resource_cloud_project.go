@@ -79,8 +79,8 @@ func resourceCloudProjectCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceCloudProjectGetServiceName(config *Config, order *MeOrder, details []*MeOrderDetail) (string, error) {
-	// Sometimes projects are created through order form with some resources wrongly assigned to the right project.
-	// If such happens, we need to look over all possible order details to find one with the appropriate service name.
+	// Looking for an order detail associated to a Public Cloud Project.
+	// Cloud Project has a specific resource_name that we can grep through a Regexp
 	for _, d := range details {
 		domain := d.Domain
 		if publicCloudProjectNameFormatRegex.MatchString(domain) {
@@ -88,20 +88,17 @@ func resourceCloudProjectGetServiceName(config *Config, order *MeOrder, details 
 		}
 	}
 
-	// All has failed, some we end up in this special case.
-	// In the US, for reasons too long to be detailled here, cloud project order domain is not the public cloud project id, but "*".
-	// There have been discussions to align US & EU, but they've failed.
-	// So we end up making a few extra queries to fetch the project id from operations details.
-	orderDetailId := details[0].OrderDetailId
-	operations, err := orderDetailOperations(config.OVHClient, order.OrderId, orderDetailId)
-	if err != nil {
-		return "", fmt.Errorf("Could not read cloudProject order details operations: %q", err)
-	}
-	for _, operation := range operations {
-		if !publicCloudProjectNameFormatRegex.MatchString(operation.Resource.Name) {
-			continue
+	// For OVHcloud US, resource_name are not stored inside order detail, but inside the operation associated to the order detail.
+	for _, orderDetail := range details {
+		operations, err := orderDetailOperations(config.OVHClient, order.OrderId, orderDetail.OrderDetailId)
+		if err != nil {
+			return "", fmt.Errorf("Could not read cloudProject order details operations: %q", err)
 		}
-		return operation.Resource.Name, nil
+		for _, operation := range operations {
+			if publicCloudProjectNameFormatRegex.MatchString(operation.Resource.Name) {
+				return operation.Resource.Name, nil
+			}
+		}
 	}
 
 	return "", fmt.Errorf("Unknown service name")
