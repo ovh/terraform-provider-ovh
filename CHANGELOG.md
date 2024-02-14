@@ -1,4 +1,49 @@
-## 0.36.1 (January 9, 2024)
+## 0.37.0 (February 14, 2024)
+
+🎉 Features:
+
+* New resource: `ovh_cloud_project_database_postgresql_connection_pool` ([#514](https://github.com/ovh/terraform-provider-ovh/pull/514))
+* New resource: `ovh_iam_permissions_group` ([#521](https://github.com/ovh/terraform-provider-ovh/pull/521))
+* New resource: `ovh_cloud_project_containerregistry_ip_restrictions_management` ([#552](https://github.com/ovh/terraform-provider-ovh/pull/552))
+* New resource: `ovh_cloud_project_containerregistry_ip_restrictions_registry` ([#552](https://github.com/ovh/terraform-provider-ovh/pull/552))
+
+* New datasource: `ovh_cloud_project_database_postgresql_connection_pool` ([#514](https://github.com/ovh/terraform-provider-ovh/pull/514))
+* New datasource: `ovh_iam_permissions_group` ([#521](https://github.com/ovh/terraform-provider-ovh/pull/521))
+* New datasource: `ovh_iam_permissions_groups` ([#521](https://github.com/ovh/terraform-provider-ovh/pull/521))
+* New datasource: `ovh_cloud_project_containerregistry_ip_restrictions_management` ([#552](https://github.com/ovh/terraform-provider-ovh/pull/552))
+* New datasource: `ovh_cloud_project_containerregistry_ip_restrictions_registry` ([#552](https://github.com/ovh/terraform-provider-ovh/pull/552))
+
+💪 Improvements:
+
+* IAM resources URNs are not computed anymore but fetched from the API ([#537](https://github.com/ovh/terraform-provider-ovh/pull/537))
+* Ability to use fidelity account to pay orders ([#540](https://github.com/ovh/terraform-provider-ovh/pull/540))
+
+* `r/ovh_cloud_project_kube_nodepool`: Add autoscaling settings ([#543](https://github.com/ovh/terraform-provider-ovh/pull/543))
+* `r/ovh_cloud_project_user`: Add ability to update resource ([#548](https://github.com/ovh/terraform-provider-ovh/pull/548))
+* `r/ovh_cloud_project_database`: Add ability to define custom backup ([#553](https://github.com/ovh/terraform-provider-ovh/pull/553))
+* `r/ovh_dedicated_server_update`: Add ability to update boot script ([#545](https://github.com/ovh/terraform-provider-ovh/pull/545))
+
+* `d/ovh_cloud_project_kube_nodepool`: Add autoscaling settings ([#543](https://github.com/ovh/terraform-provider-ovh/pull/543))
+* `d/ovh_cloud_project_database`: Add custom backup ([#553](https://github.com/ovh/terraform-provider-ovh/pull/553))
+* `d/ovh_dedicated_server_update`: Add boot script ([#545](https://github.com/ovh/terraform-provider-ovh/pull/545))
+
+🐜 Bug fixes:
+
+* `r/ovh_cloud_project_kube_nodepool`: Fix validation of the given taints ([#535](https://github.com/ovh/terraform-provider-ovh/pull/535))
+* `r/ovh_cloud_project_kube_nodepool`: Nodepool are now created with the correct desired_nodes ([#538](https://github.com/ovh/terraform-provider-ovh/pull/538))
+* `r/ovh_cloud_project_database_mongodb_user`: A breaking change has been applied on the 02/14/2024 on this ressource. **Since version 0.37.0, the authentication database must be indicated for all roles** ([#536](https://github.com/ovh/terraform-provider-ovh/pull/536))
+* `r/ovh_cloud_project`: Fix bug on project creation ([#478](https://github.com/ovh/terraform-provider-ovh/pull/478))
+
+* `d/ovh_cloud_project_database_mongodb_user`: A breaking change has been applied on the 02/14/2024 on this ressource. **Since version 0.37.0, the authentication database must be indicated for all roles** ([#536](https://github.com/ovh/terraform-provider-ovh/pull/536))
+
+📚 Documentation:
+
+* `index`: Update documentation page ([#503](https://github.com/ovh/terraform-provider-ovh/pull/503), [#542](https://github.com/ovh/terraform-provider-ovh/pull/542))
+* `r/ovh_cloud_project`: Update documentation page ([#541](https://github.com/ovh/terraform-provider-ovh/pull/541))
+
+❤️ Thanks for your contributions ❤️
+
+# 0.36.1 (January 9, 2024)
 
 🐜 Bug fixes:
 
