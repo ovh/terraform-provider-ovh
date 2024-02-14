@@ -24,6 +24,8 @@ func TestAccDedicatedServerUpdate_basic(t *testing.T) {
 						"ovh_dedicated_server_update.server", "monitoring", "true"),
 					resource.TestCheckResourceAttr(
 						"ovh_dedicated_server_update.server", "state", "ok"),
+					resource.TestCheckResourceAttr(
+						"ovh_dedicated_server_update.server", "boot_script", ""),
 				),
 			},
 			{
@@ -34,6 +36,8 @@ func TestAccDedicatedServerUpdate_basic(t *testing.T) {
 						"ovh_dedicated_server_update.server", "monitoring", "false"),
 					resource.TestCheckResourceAttr(
 						"ovh_dedicated_server_update.server", "state", "ok"),
+					resource.TestCheckResourceAttr(
+						"ovh_dedicated_server_update.server", "boot_script", ""),
 				),
 			},
 		},
