@@ -74,7 +74,7 @@ resource "ovh_cloud_project_database" "mongodb" {
   description   = "my-first-mongodb"
   engine        = "mongodb"
   version       = "5.0"
-  plan          = "essential"
+  plan          = "discovery"
   nodes {
     region =  "GRA"
   }
@@ -175,7 +175,7 @@ resource "ovh_cloud_project_database" "mongodb" {
   description   = "my-first-mongodb"
   engine        = "mongodb"
   version       = "5.0"
-  plan          = "enterprise"
+  plan          = "production"
   nodes {
     region      = "SBG"
     subnet_id   = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
