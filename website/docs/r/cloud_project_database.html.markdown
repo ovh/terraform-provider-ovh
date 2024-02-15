@@ -74,7 +74,7 @@ resource "ovh_cloud_project_database" "mongodb" {
   description   = "my-first-mongodb"
   engine        = "mongodb"
   version       = "5.0"
-  plan          = "essential"
+  plan          = "discovery"
   nodes {
     region =  "GRA"
   }
@@ -175,7 +175,7 @@ resource "ovh_cloud_project_database" "mongodb" {
   description   = "my-first-mongodb"
   engine        = "mongodb"
   version       = "5.0"
-  plan          = "enterprise"
+  plan          = "production"
   nodes {
     region      = "SBG"
     subnet_id   = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
@@ -227,7 +227,10 @@ The following arguments are supported:
 * `advanced_configuration` -  (Optional) Advanced configuration key / value.
 
 * `plan` - (Required) Plan of the cluster.
-  Enum: "essential", "business", "enterprise".
+  * MongoDB: Enum: "discovery", "production", "advanced".
+  * Mysql, PosgreSQL, Cassandra, M3DB, : Enum: "essential", "business", "enterprise".
+  * M3 Aggregator: "business", "enterprise".
+  * Redis: "essential", "business"
 
 * `version` - (Required) The version of the engine in which the service should be deployed
 
