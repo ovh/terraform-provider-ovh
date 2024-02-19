@@ -34,6 +34,7 @@ github.com/hashicorp/terraform-plugin-go; MPL-2.0
 github.com/hashicorp/terraform-plugin-log; MPL-2.0
 github.com/hashicorp/terraform-plugin-mux; MPL-2.0
 github.com/hashicorp/terraform-plugin-sdk/v2; MPL-2.0
+github.com/hashicorp/terraform-plugin-testing; MPL-2.0
 github.com/hashicorp/terraform-registry-address; MPL-2.0
 github.com/hashicorp/terraform-svchost; MPL-2.0
 github.com/hashicorp/yamux; MPL-2.0
