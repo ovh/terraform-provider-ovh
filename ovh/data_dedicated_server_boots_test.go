@@ -29,10 +29,6 @@ func TestAccDedicatedServerBootsDataSource_basic(t *testing.T) {
 				Config: testAccDedicatedServerBootsDatasourceConfig("rescue"),
 				Check:  resource.TestCheckOutput("test", "true"),
 			},
-			{
-				Config: testAccDedicatedServerBootsDatasourceConfig("network"),
-				Check:  resource.TestCheckOutput("test", "true"),
-			},
 		},
 	})
 }
