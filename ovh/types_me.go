@@ -199,22 +199,6 @@ type MeSshKeyUpdateOpts struct {
 	Default bool `json:"default"`
 }
 
-// MeIpxeScript Opts
-type MeIpxeScriptCreateOpts struct {
-	Description string `json:"description"`
-	Name        string `json:"name"`
-	Script      string `json:"script"`
-}
-
-type MeIpxeScriptResponse struct {
-	Name   string `json:"name"`
-	Script string `json:"script"`
-}
-
-func (s *MeIpxeScriptResponse) String() string {
-	return fmt.Sprintf("IpxeScript: %s", s.Name)
-}
-
 type MePaymentMeanBankAccount struct {
 	Bic                    string             `json:"bic"`
 	CreationDate           string             `json:"creationDate"`
