@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
@@ -80,6 +81,13 @@ func resourceCloudProjectDatabaseUser() *schema.Resource {
 				Computed:    true,
 			},
 		},
+
+		CustomizeDiff: customdiff.ComputedIf(
+			"password",
+			func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+				return d.HasChange("password_reset")
+			},
+		),
 	}
 }
 
