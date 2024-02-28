@@ -63,6 +63,7 @@ func resourceOvhDomainZoneRecord() *schema.Resource {
 			"zone": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"target": {
 				Type:     schema.TypeString,
