@@ -257,6 +257,17 @@ workflow:
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
+  Tests_CloudProjectAlerting:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run CloudProjectAlerting
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
   Tests_CloudProjectKubeNodePool:
     application: terraform-provider-ovh
     depends_on:
@@ -624,6 +635,7 @@ workflow:
   terraform-provider-ovh-post-sweepers:
     application: terraform-provider-ovh
     depends_on:
+    - Tests_CloudProjectAlerting
     - Tests_CloudProjectCapabilities
     - Tests_CloudProjectContainer
     - Tests_CloudProjectDatabaseCapabilities
