@@ -2,10 +2,11 @@ package ovh
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 	"log"
 	"net/url"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
 func resourceCloudProjectFailoverIpAttach() *schema.Resource {
@@ -85,6 +86,7 @@ func resourceCloudProjectFailoverIpAttachSchema() map[string]*schema.Schema {
 			Type:        schema.TypeString,
 			Description: "Instance where ip is routed to",
 			Computed:    true,
+			ForceNew:    true,
 			Optional:    true,
 		},
 		"status": {
