@@ -305,7 +305,7 @@ func (wd *WorkingDir) SavedPlan(ctx context.Context) (*tfjson.Plan, error) {
 
 	logging.HelperResourceTrace(ctx, "Calling Terraform CLI show command for JSON plan")
 
-	plan, err := wd.tf.ShowPlanFile(context.Background(), wd.planFilename(), tfexec.Reattach(wd.reattachInfo))
+	plan, err := wd.tf.ShowPlanFile(context.Background(), wd.planFilename(), tfexec.Reattach(wd.reattachInfo), tfexec.JSONNumber(true))
 
 	logging.HelperResourceTrace(ctx, "Calling Terraform CLI show command for JSON plan")
 

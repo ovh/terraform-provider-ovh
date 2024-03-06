@@ -5,8 +5,10 @@ package tf6muxserver
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
+
 	"github.com/hashicorp/terraform-plugin-mux/internal/logging"
 )
 
@@ -24,8 +26,22 @@ func (s *muxServer) CallFunction(ctx context.Context, req *tfprotov6.CallFunctio
 	}
 
 	if diagnosticsHasError(diags) {
+		var text string
+
+		for _, d := range diags {
+			if d.Severity == tfprotov6.DiagnosticSeverityError {
+				if text != "" {
+					text += "\n"
+				}
+
+				text += fmt.Sprintf("%s: %s", d.Summary, d.Detail)
+			}
+		}
+
 		return &tfprotov6.CallFunctionResponse{
-			Diagnostics: diags,
+			Error: &tfprotov6.FunctionError{
+				Text: text,
+			},
 		}, nil
 	}
 
@@ -37,13 +53,9 @@ func (s *muxServer) CallFunction(ctx context.Context, req *tfprotov6.CallFunctio
 
 	if !ok {
 		resp := &tfprotov6.CallFunctionResponse{
-			Diagnostics: []*tfprotov6.Diagnostic{
-				{
-					Severity: tfprotov6.DiagnosticSeverityError,
-					Summary:  "Provider Functions Not Implemented",
-					Detail: "A provider-defined function call was received by the provider, however the provider does not implement functions. " +
-						"Either upgrade the provider to a version that implements provider-defined functions or this is a bug in Terraform that should be reported to the Terraform maintainers.",
-				},
+			Error: &tfprotov6.FunctionError{
+				Text: "Provider Functions Not Implemented: A provider-defined function call was received by the provider, however the provider does not implement functions. " +
+					"Either upgrade the provider to a version that implements provider-defined functions or this is a bug in Terraform that should be reported to the Terraform maintainers.",
 			},
 		}
 
