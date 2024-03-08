@@ -1,3 +1,32 @@
+## 0.38.0 (March 8, 2024)
+
+🎉 Features:
+
+* New resource: `ovh_cloud_project_alerting` ([#564](https://github.com/ovh/terraform-provider-ovh/pull/564))
+
+🐜 Bug fixes:
+
+* `r/ovh_cloud_project_database_m3db_user`: Set `password` field as computed when `password_reset` is used ([#561](https://github.com/ovh/terraform-provider-ovh/pull/561))
+* `r/ovh_cloud_project_database_mongodb_user`: Set `password` field as computed when `password_reset` is used ([#561](https://github.com/ovh/terraform-provider-ovh/pull/561))
+* `r/ovh_cloud_project_database_opensearch_user`: Set `password` field as computed when `password_reset` is used ([#561](https://github.com/ovh/terraform-provider-ovh/pull/561))
+* `r/ovh_cloud_project_database_postgresql_user`: Set `password` field as computed when `password_reset` is used ([#561](https://github.com/ovh/terraform-provider-ovh/pull/561))
+* `r/ovh_cloud_project_database_redis_user`: Set `password` field as computed when `password_reset` is used ([#561](https://github.com/ovh/terraform-provider-ovh/pull/561))
+* `r/ovh_cloud_project_database_user`: Set `password` field as computed when `password_reset` is used ([#561](https://github.com/ovh/terraform-provider-ovh/pull/561))
+* `r/ovh_domain_zone_record`: Resource is now recreated when zone is modified ([#563](https://github.com/ovh/terraform-provider-ovh/pull/563))
+
+⛔️ Deletions:
+
+* `r/ovh_me_ipxe_script`: Removed ([#562](https://github.com/ovh/terraform-provider-ovh/pull/562))
+
+* `d/ovh_me_ipxe_script`: Removed ([#562](https://github.com/ovh/terraform-provider-ovh/pull/562))
+* `d/ovh_me_ipxe_scripts`: Removed ([#562](https://github.com/ovh/terraform-provider-ovh/pull/562))
+
+📚 Documentation:
+
+* `r/cloud_project_database`: Update documentation page ([#556](https://github.com/ovh/terraform-provider-ovh/pull/556))
+
+❤️ Thanks for your contributions ❤️
+
 ## 0.37.0 (February 14, 2024)
 
 🎉 Features:
