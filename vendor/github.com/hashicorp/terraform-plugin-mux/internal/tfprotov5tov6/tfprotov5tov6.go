@@ -59,8 +59,8 @@ func CallFunctionResponse(in *tfprotov5.CallFunctionResponse) *tfprotov6.CallFun
 	}
 
 	return &tfprotov6.CallFunctionResponse{
-		Diagnostics: Diagnostics(in.Diagnostics),
-		Result:      DynamicValue(in.Result),
+		Error:  FunctionError(in.Error),
+		Result: DynamicValue(in.Result),
 	}
 }
 
@@ -143,6 +143,19 @@ func Function(in *tfprotov5.Function) *tfprotov6.Function {
 
 	for _, parameter := range in.Parameters {
 		out.Parameters = append(out.Parameters, FunctionParameter(parameter))
+	}
+
+	return out
+}
+
+func FunctionError(in *tfprotov5.FunctionError) *tfprotov6.FunctionError {
+	if in == nil {
+		return nil
+	}
+
+	out := &tfprotov6.FunctionError{
+		Text:             in.Text,
+		FunctionArgument: in.FunctionArgument,
 	}
 
 	return out
@@ -325,6 +338,33 @@ func ImportedResources(in []*tfprotov5.ImportedResource) []*tfprotov6.ImportedRe
 	}
 
 	return res
+}
+
+func MoveResourceStateRequest(in *tfprotov5.MoveResourceStateRequest) *tfprotov6.MoveResourceStateRequest {
+	if in == nil {
+		return nil
+	}
+
+	return &tfprotov6.MoveResourceStateRequest{
+		SourcePrivate:         in.SourcePrivate,
+		SourceProviderAddress: in.SourceProviderAddress,
+		SourceSchemaVersion:   in.SourceSchemaVersion,
+		SourceState:           RawState(in.SourceState),
+		SourceTypeName:        in.SourceTypeName,
+		TargetTypeName:        in.TargetTypeName,
+	}
+}
+
+func MoveResourceStateResponse(in *tfprotov5.MoveResourceStateResponse) *tfprotov6.MoveResourceStateResponse {
+	if in == nil {
+		return nil
+	}
+
+	return &tfprotov6.MoveResourceStateResponse{
+		Diagnostics:   Diagnostics(in.Diagnostics),
+		TargetPrivate: in.TargetPrivate,
+		TargetState:   DynamicValue(in.TargetState),
+	}
 }
 
 func PlanResourceChangeRequest(in *tfprotov5.PlanResourceChangeRequest) *tfprotov6.PlanResourceChangeRequest {

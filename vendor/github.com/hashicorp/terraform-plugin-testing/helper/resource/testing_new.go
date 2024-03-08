@@ -63,6 +63,8 @@ func runNewTest(ctx context.Context, t testing.T, c TestCase, helper *plugintest
 	}
 
 	defer func() {
+		t.Helper()
+
 		var statePreDestroy *terraform.State
 		var err error
 		err = runProviderCommand(ctx, t, func() error {
@@ -558,6 +560,8 @@ func testIDRefresh(ctx context.Context, t testing.T, c TestCase, wd *plugintest.
 	}
 
 	defer func() {
+		t.Helper()
+
 		confRequest := teststep.PrepareConfigurationRequest{
 			Directory: step.ConfigDirectory,
 			File:      step.ConfigFile,

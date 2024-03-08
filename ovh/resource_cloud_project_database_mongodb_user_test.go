@@ -15,7 +15,7 @@ resource "ovh_cloud_project_database" "db" {
 	description  = "%s"
 	engine       = "mongodb"
 	version      = "%s"
-	plan         = "discovery"
+	plan         = "production"
 	nodes {
 		region     = "%s"
 	}
