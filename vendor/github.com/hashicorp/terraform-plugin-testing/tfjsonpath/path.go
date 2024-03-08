@@ -74,6 +74,17 @@ func (s Path) AtMapKey(key string) Path {
 	return s
 }
 
+// String returns a string representation of the Path.
+func (s Path) String() string {
+	var pathStr []string
+
+	for _, step := range s.steps {
+		pathStr = append(pathStr, fmt.Sprintf("%v", step))
+	}
+
+	return strings.Join(pathStr, ".")
+}
+
 // Traverse returns the element found when traversing the given
 // object using the specified Path. The object is an unmarshalled
 // JSON object representing Terraform data.

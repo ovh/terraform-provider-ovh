@@ -205,6 +205,26 @@ func testStepNewConfig(ctx context.Context, t testing.T, c TestCase, wd *plugint
 				}
 			}
 		}
+
+		// Run state checks
+		if len(step.ConfigStateChecks) > 0 {
+			var state *tfjson.State
+
+			err = runProviderCommand(ctx, t, func() error {
+				var err error
+				state, err = wd.State(ctx)
+				return err
+			}, wd, providers)
+
+			if err != nil {
+				return fmt.Errorf("Error retrieving post-apply, post-refresh state: %w", err)
+			}
+
+			err = runStateChecks(ctx, t, state, step.ConfigStateChecks)
+			if err != nil {
+				return fmt.Errorf("Post-apply refresh state check(s) failed:\n%w", err)
+			}
+		}
 	}
 
 	// Test for perpetual diffs by performing a plan, a refresh, and another plan
@@ -221,7 +241,11 @@ func testStepNewConfig(ctx context.Context, t testing.T, c TestCase, wd *plugint
 		return wd.CreatePlan(ctx, opts...)
 	}, wd, providers)
 	if err != nil {
-		return fmt.Errorf("Error running post-apply plan: %w", err)
+		if step.PlanOnly {
+			return fmt.Errorf("Error running non-refresh plan: %w", err)
+		}
+
+		return fmt.Errorf("Error running post-apply non-refresh plan: %w", err)
 	}
 
 	var plan *tfjson.Plan
@@ -231,13 +255,21 @@ func testStepNewConfig(ctx context.Context, t testing.T, c TestCase, wd *plugint
 		return err
 	}, wd, providers)
 	if err != nil {
-		return fmt.Errorf("Error retrieving post-apply plan: %w", err)
+		if step.PlanOnly {
+			return fmt.Errorf("Error reading saved non-refresh plan: %w", err)
+		}
+
+		return fmt.Errorf("Error reading saved post-apply non-refresh plan: %w", err)
 	}
 
 	// Run post-apply, pre-refresh plan checks
 	if len(step.ConfigPlanChecks.PostApplyPreRefresh) > 0 {
 		err = runPlanChecks(ctx, t, plan, step.ConfigPlanChecks.PostApplyPreRefresh)
 		if err != nil {
+			if step.PlanOnly {
+				return fmt.Errorf("Non-refresh plan checks(s) failed:\n%w", err)
+			}
+
 			return fmt.Errorf("Post-apply, pre-refresh plan check(s) failed:\n%w", err)
 		}
 	}
@@ -250,9 +282,14 @@ func testStepNewConfig(ctx context.Context, t testing.T, c TestCase, wd *plugint
 			return err
 		}, wd, providers)
 		if err != nil {
-			return fmt.Errorf("Error retrieving formatted plan output: %w", err)
+			return fmt.Errorf("Error reading saved human-readable non-refresh plan output: %w", err)
 		}
-		return fmt.Errorf("After applying this test step, the plan was not empty.\nstdout:\n\n%s", stdout)
+
+		if step.PlanOnly {
+			return fmt.Errorf("The non-refresh plan was not empty.\nstdout:\n\n%s", stdout)
+		}
+
+		return fmt.Errorf("After applying this test step, the non-refresh plan was not empty.\nstdout:\n\n%s", stdout)
 	}
 
 	// do another plan
@@ -268,7 +305,11 @@ func testStepNewConfig(ctx context.Context, t testing.T, c TestCase, wd *plugint
 		return wd.CreatePlan(ctx, opts...)
 	}, wd, providers)
 	if err != nil {
-		return fmt.Errorf("Error running second post-apply plan: %w", err)
+		if step.PlanOnly {
+			return fmt.Errorf("Error running refresh plan: %w", err)
+		}
+
+		return fmt.Errorf("Error running post-apply refresh plan: %w", err)
 	}
 
 	err = runProviderCommand(ctx, t, func() error {
@@ -277,14 +318,18 @@ func testStepNewConfig(ctx context.Context, t testing.T, c TestCase, wd *plugint
 		return err
 	}, wd, providers)
 	if err != nil {
-		return fmt.Errorf("Error retrieving second post-apply plan: %w", err)
+		if step.PlanOnly {
+			return fmt.Errorf("Error reading refresh plan: %w", err)
+		}
+
+		return fmt.Errorf("Error reading post-apply refresh plan: %w", err)
 	}
 
 	// Run post-apply, post-refresh plan checks
 	if len(step.ConfigPlanChecks.PostApplyPostRefresh) > 0 {
 		err = runPlanChecks(ctx, t, plan, step.ConfigPlanChecks.PostApplyPostRefresh)
 		if err != nil {
-			return fmt.Errorf("Post-apply, post-refresh plan check(s) failed:\n%w", err)
+			return fmt.Errorf("Post-apply refresh plan check(s) failed:\n%w", err)
 		}
 	}
 
@@ -297,11 +342,16 @@ func testStepNewConfig(ctx context.Context, t testing.T, c TestCase, wd *plugint
 			return err
 		}, wd, providers)
 		if err != nil {
-			return fmt.Errorf("Error retrieving formatted second plan output: %w", err)
+			return fmt.Errorf("Error reading human-readable refresh plan output: %w", err)
 		}
-		return fmt.Errorf("After applying this test step and performing a `terraform refresh`, the plan was not empty.\nstdout\n\n%s", stdout)
+
+		if step.PlanOnly {
+			return fmt.Errorf("The refresh plan was not empty.\nstdout\n\n%s", stdout)
+		}
+
+		return fmt.Errorf("After applying this test step, the refresh plan was not empty.\nstdout\n\n%s", stdout)
 	} else if step.ExpectNonEmptyPlan && planIsEmpty(plan, helper.TerraformVersion()) {
-		return errors.New("Expected a non-empty plan, but got an empty plan")
+		return errors.New("Expected a non-empty plan, but got an empty refresh plan")
 	}
 
 	// ID-ONLY REFRESH

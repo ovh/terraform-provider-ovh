@@ -19,7 +19,6 @@ import (
 
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/go-uuid"
-	"github.com/mitchellh/copystructure"
 
 	"github.com/hashicorp/terraform-plugin-testing/internal/addrs"
 	"github.com/hashicorp/terraform-plugin-testing/internal/configs/hcl2shim"
@@ -626,17 +625,45 @@ func (s *State) DeepCopy() *State {
 		return nil
 	}
 
-	copiedState, err := copystructure.Config{Lock: true}.Copy(s)
-	if err != nil {
-		panic(err)
+	copied := &State{
+		IsBinaryDrivenTest: s.IsBinaryDrivenTest,
+		Lineage:            s.Lineage,
+		Serial:             s.Serial,
+		TFVersion:          s.TFVersion,
+		Version:            s.Version,
 	}
 
-	state, ok := copiedState.(*State)
-	if !ok {
-		panic(fmt.Errorf("unexpected type %T for copiedState", state))
+	if s.Backend != nil {
+		copied.Backend = &BackendState{
+			Hash:      s.Backend.Hash,
+			ConfigRaw: s.Backend.ConfigRaw,
+			Type:      s.Backend.Type,
+		}
 	}
 
-	return state
+	// Best effort single level copy is fine; this is method is not used by this
+	// Go module and its already deprecated.
+	if s.Modules != nil {
+		copied.Modules = make([]*ModuleState, len(s.Modules))
+
+		copy(copied.Modules, s.Modules)
+	}
+
+	if s.Remote != nil {
+		copied.Remote = &RemoteState{
+			Type: s.Remote.Type,
+		}
+
+		if s.Remote.Config != nil {
+			copied.Remote.Config = make(map[string]string, len(s.Remote.Config))
+
+			for key, value := range s.Remote.Config {
+				copied.Remote.Config[key] = value
+			}
+		}
+	}
+
+	return copied
 }
 
 // Deprecated: This method is unintentionally exported by this Go module and not
@@ -1549,17 +1576,42 @@ func (s *InstanceState) Set(from *InstanceState) {
 // supported for external consumption. It will be removed in the next major
 // version.
 func (s *InstanceState) DeepCopy() *InstanceState {
-	copiedState, err := copystructure.Config{Lock: true}.Copy(s)
-	if err != nil {
-		panic(err)
+	if s == nil {
+		return nil
 	}
 
-	instanceState, ok := copiedState.(*InstanceState)
-	if !ok {
-		panic(fmt.Errorf("unexpected type %T for copiedState", copiedState))
+	copied := &InstanceState{
+		Ephemeral: EphemeralState{
+			ConnInfo: s.Ephemeral.ConnInfo,
+			Type:     s.Ephemeral.Type,
+		},
+		ID:           s.ID,
+		ProviderMeta: s.ProviderMeta,
+		RawConfig:    s.RawConfig,
+		RawPlan:      s.RawPlan,
+		RawState:     s.RawState,
+		Tainted:      s.Tainted,
 	}
 
-	return instanceState
+	if s.Attributes != nil {
+		copied.Attributes = make(map[string]string, len(s.Attributes))
+
+		for k, v := range s.Attributes {
+			copied.Attributes[k] = v
+		}
+	}
+
+	// Best effort single level copy is fine; this is not used by this Go module
+	// and its already deprecated.
+	if s.Meta != nil {
+		copied.Meta = make(map[string]any, len(s.Meta))
+
+		for k, v := range s.Meta {
+			copied.Meta[k] = v
+		}
+	}
+
+	return copied
 }
 
 // Deprecated: This method is unintentionally exported by this Go module and not
