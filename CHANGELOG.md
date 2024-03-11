@@ -1,3 +1,11 @@
+## 0.39.0 (March 11, 2024)
+
+📚 Documentation:
+
+* Licenses update ([#572](https://github.com/ovh/terraform-provider-ovh/pull/572))
+
+❤️ Thanks for your contributions ❤️
+
 ## 0.38.0 (March 8, 2024)
 
 🎉 Features:
