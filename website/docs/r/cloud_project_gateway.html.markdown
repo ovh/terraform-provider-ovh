@@ -41,16 +41,19 @@ resource "ovh_cloud_project_gateway" "gateway" {
 The following arguments are supported:
 
 * `service_name` - (Required) The ID of the private network.
-* `name` - (Required) The name of the gateway. \*` model` - (Required) The model of the gateway.
+* `name` - (Required) The name of the gateway.
+* `region` - (Required) The region of the gateway.
 * `model` - (Required) The model of the gateway.
 * `network_id` - (Required) The ID of the private network.
 * `subnet_id` - (Required) The ID of the subnet.
 
 ## Attributes Reference
+
 The following attributes are exported:
 
 * `service_name` - See Argument Reference above.
 * `name` - See Argument Reference above.
+* `region` - (Required) The region of the gateway.
 * `model` - See Argument Reference above.
 * `network_id` - See Argument Reference above.
 * `subnet_id` - See Argument Reference above.

@@ -10,8 +10,19 @@ import (
 )
 
 var testAccCloudProjectGatewayConfig = `
+resource "ovh_vrack_cloudproject" "attach" {
+	service_name = "%s"
+	project_id   = "%s"
+}
+
+data "ovh_cloud_project_vrack" "vrack" {
+  service_name  = "%s"
+  depends_on    = [ovh_vrack_cloudproject.attach]
+}
+
 resource "ovh_cloud_project_network_private" "mypriv" {
-	service_name  = "%s"
+  depends_on    = [ovh_vrack_cloudproject.attach]
+  service_name  = ovh_vrack_cloudproject.attach.service_name
   vlan_id       = "%d"
   name          = "%s"
   regions       = ["%s"]
@@ -20,7 +31,7 @@ resource "ovh_cloud_project_network_private" "mypriv" {
 resource "ovh_cloud_project_network_private_subnet" "myprivsub" {
   service_name  = ovh_cloud_project_network_private.mypriv.service_name
   network_id    = ovh_cloud_project_network_private.mypriv.id
-	region        = "%s"
+  region        = "%s"
   start         = "10.0.0.2"
   end           = "10.0.255.254"
   network       = "10.0.0.0/16"
@@ -29,9 +40,9 @@ resource "ovh_cloud_project_network_private_subnet" "myprivsub" {
 
 resource "ovh_cloud_project_gateway" "gateway" {
   service_name = ovh_cloud_project_network_private.mypriv.service_name
-	name          = "%s"
+  name          = "%s"
   model         = "s"
-	region        = ovh_cloud_project_network_private_subnet.myprivsub.region
+  region        = ovh_cloud_project_network_private_subnet.myprivsub.region
   network_id    = tolist(ovh_cloud_project_network_private.mypriv.regions_attributes[*].openstackid)[0]
   subnet_id     = ovh_cloud_project_network_private_subnet.myprivsub.id
 }
@@ -45,6 +56,8 @@ func TestAccCloudProjectGateway(t *testing.T) {
 
 	config := fmt.Sprintf(
 		testAccCloudProjectGatewayConfig,
+		os.Getenv("OVH_VRACK_SERVICE_TEST"),
+		os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"),
 		os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"),
 		vlanId,
 		name,
