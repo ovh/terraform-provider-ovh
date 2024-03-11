@@ -1,6 +1,7 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -8,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
@@ -52,9 +54,9 @@ func testSweepCloudProjectDatabase(region string) error {
 			continue
 		}
 
-		err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+		err = retry.RetryContext(context.Background(), 5*time.Minute, func() *retry.RetryError {
 			if err := client.Delete(fmt.Sprintf("/cloud/project/%s/database/%s/%s", serviceName, engineName, databaseId), nil); err != nil {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 			// Successful delete
 			return nil

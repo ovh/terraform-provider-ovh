@@ -225,7 +225,7 @@ func resourceCloudProjectDatabaseImportState(d *schema.ResourceData, meta interf
 	n := 3
 	splitId := strings.SplitN(givenId, "/", n)
 	if len(splitId) != n {
-		return nil, fmt.Errorf("Import Id is not service_name/engine/databaseId formatted")
+		return nil, fmt.Errorf("import Id is not service_name/engine/databaseId formatted")
 	}
 	serviceName := splitId[0]
 	engine := splitId[1]
@@ -248,7 +248,7 @@ func resourceCloudProjectDatabaseCreate(ctx context.Context, d *schema.ResourceD
 		url.PathEscape(serviceName),
 		url.PathEscape(engine),
 	)
-	err, params := (&CloudProjectDatabaseCreateOpts{}).FromResource(d)
+	params, err := (&CloudProjectDatabaseCreateOpts{}).FromResource(d)
 	if err != nil {
 		return diag.Errorf("service creation failed : %q", err)
 	}
@@ -261,7 +261,7 @@ func resourceCloudProjectDatabaseCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	log.Printf("[DEBUG] Waiting for database %s to be READY", res.Id)
-	err = waitForCloudProjectDatabaseReady(config.OVHClient, serviceName, engine, res.Id, d.Timeout(schema.TimeoutCreate))
+	err = waitForCloudProjectDatabaseReady(ctx, config.OVHClient, serviceName, engine, res.Id, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return diag.Errorf("timeout while waiting database %s to be READY: %s", res.Id, err.Error())
 	}
@@ -342,7 +342,7 @@ func resourceCloudProjectDatabaseUpdate(ctx context.Context, d *schema.ResourceD
 		url.PathEscape(engine),
 		url.PathEscape(d.Id()),
 	)
-	err, params := (&CloudProjectDatabaseUpdateOpts{}).FromResource(d)
+	params, err := (&CloudProjectDatabaseUpdateOpts{}).FromResource(d)
 	if err != nil {
 		return diag.Errorf("service update failed : %q", err)
 	}
@@ -353,7 +353,7 @@ func resourceCloudProjectDatabaseUpdate(ctx context.Context, d *schema.ResourceD
 	}
 
 	log.Printf("[DEBUG] Waiting for database %s to be READY", d.Id())
-	err = waitForCloudProjectDatabaseReady(config.OVHClient, serviceName, engine, d.Id(), d.Timeout(schema.TimeoutUpdate))
+	err = waitForCloudProjectDatabaseReady(ctx, config.OVHClient, serviceName, engine, d.Id(), d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
 		return diag.Errorf("timeout while waiting database %s to be READY: %s", d.Id(), err.Error())
 	}
@@ -392,7 +392,7 @@ func resourceCloudProjectDatabaseDelete(ctx context.Context, d *schema.ResourceD
 	}
 
 	log.Printf("[DEBUG] Waiting for database %s to be DELETED", d.Id())
-	err = waitForCloudProjectDatabaseDeleted(config.OVHClient, serviceName, engine, d.Id(), d.Timeout(schema.TimeoutDelete))
+	err = waitForCloudProjectDatabaseDeleted(ctx, config.OVHClient, serviceName, engine, d.Id(), d.Timeout(schema.TimeoutDelete))
 	if err != nil {
 		return diag.Errorf("timeout while waiting database %s to be DELETED: %v", d.Id(), err)
 	}

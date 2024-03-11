@@ -48,7 +48,7 @@ func TestAccCloudProjectDatabaseKafkaSchemaRegistryAcl_importBasic(t *testing.T)
 				ResourceName:      "ovh_cloud_project_database_kafka_schemaregistryacl.schemaRegistryAcl",
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateIdFunc: testAccCloudProjectDatabaseKafkaAclImportId("ovh_cloud_project_database_kafka_schemaregistryacl.schemaRegistryAcl"),
+				ImportStateIdFunc: testAccCloudProjectDatabaseKafkaSchemaRegistryAclImportId("ovh_cloud_project_database_kafka_schemaregistryacl.schemaRegistryAcl"),
 			},
 		},
 	})
@@ -56,15 +56,15 @@ func TestAccCloudProjectDatabaseKafkaSchemaRegistryAcl_importBasic(t *testing.T)
 
 func testAccCloudProjectDatabaseKafkaSchemaRegistryAclImportId(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
-		testKafkaAcl, ok := s.RootModule().Resources[resourceName]
+		testKafkaSchemaRegistryAcl, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return "", fmt.Errorf("ovh_cloud_project_database_kafka_schemaregistryacl not found: %s", resourceName)
 		}
 		return fmt.Sprintf(
 			"%s/%s/%s",
-			testKafkaAcl.Primary.Attributes["service_name"],
-			testKafkaAcl.Primary.Attributes["cluster_id"],
-			testKafkaAcl.Primary.Attributes["id"],
+			testKafkaSchemaRegistryAcl.Primary.Attributes["service_name"],
+			testKafkaSchemaRegistryAcl.Primary.Attributes["cluster_id"],
+			testKafkaSchemaRegistryAcl.Primary.Attributes["id"],
 		), nil
 	}
 }
