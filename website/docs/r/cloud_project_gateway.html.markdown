@@ -4,7 +4,7 @@ subcategory: "Gateway"
 
 # ovh_cloud_project_gateway
 
-Creates a new Gateway in the specified public cloud project.
+Create a new Gateway for existing subnet in the specified public cloud project.
 
 ## Example Usage
 
@@ -55,5 +55,3 @@ The following attributes are exported:
 * `network_id` - See Argument Reference above.
 * `subnet_id` - See Argument Reference above.
 * `status` - The status of the gateway.
-
-

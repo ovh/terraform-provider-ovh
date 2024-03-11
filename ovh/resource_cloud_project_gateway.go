@@ -50,12 +50,10 @@ func resourceCloudProjectGateway() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: false,
 			},
 			"model": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: false,
 			},
 			"region": {
 				Type:     schema.TypeString,
