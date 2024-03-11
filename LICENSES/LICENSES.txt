@@ -29,6 +29,7 @@ github.com/hashicorp/hcl/v2; MPL-2.0
 github.com/hashicorp/logutils; MPL-2.0
 github.com/hashicorp/terraform-exec; MPL-2.0
 github.com/hashicorp/terraform-json; MPL-2.0
+github.com/hashicorp/terraform-plugin-framework-validators; MPL-2.0
 github.com/hashicorp/terraform-plugin-framework; MPL-2.0
 github.com/hashicorp/terraform-plugin-go; MPL-2.0
 github.com/hashicorp/terraform-plugin-log; MPL-2.0
