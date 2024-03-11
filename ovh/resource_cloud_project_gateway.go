@@ -122,7 +122,9 @@ func resourceCloudProjectGatewayCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	ro := &CloudProjectOperationResponse{}
-	endpointo := fmt.Sprintf("/cloud/project/%s/operation/%s", serviceName, r.Id)
+	endpointo := fmt.Sprintf("/cloud/project/%s/operation/%s",
+		url.PathEscape(serviceName),
+		url.PathEscape(r.Id))
 	if err := config.OVHClient.Get(endpointo, ro); err != nil {
 		return nil
 	}
@@ -238,7 +240,7 @@ func waitForCloudProjectGatewayActive(c *ovh.Client, serviceName, OperationId st
 		ro := &CloudProjectOperationResponse{}
 		endpoint := fmt.Sprintf("/cloud/project/%s/operation/%s",
 			url.PathEscape(serviceName),
-			OperationId)
+			url.PathEscape(OperationId))
 		if err := c.Get(endpoint, ro); err != nil {
 			return ro, "", err
 		}
@@ -251,7 +253,7 @@ func waitForCloudProjectGatewayActive(c *ovh.Client, serviceName, OperationId st
 			endpoint := fmt.Sprintf("/cloud/project/%s/region/%s/gateway/%s",
 				url.PathEscape(serviceName),
 				url.PathEscape(ro.Regions[0]),
-				*gatewayId)
+				url.PathEscape(*gatewayId))
 			if err := c.Get(endpoint, rg); err != nil {
 				return rg, "", err
 			}
@@ -269,7 +271,7 @@ func waitForCloudProjectGatewayDelete(c *ovh.Client, serviceName, OperationId st
 		r := &CloudProjectOperationResponse{}
 		endpoint := fmt.Sprintf("/cloud/project/%s/operation/%s",
 			url.PathEscape(serviceName),
-			OperationId)
+			url.PathEscape(OperationId))
 		if err := c.Get(endpoint, r); err != nil {
 			if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
 				log.Printf("[DEBUG] gateway id %s on project %s deleted", OperationId, serviceName)
