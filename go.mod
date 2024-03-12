@@ -10,11 +10,9 @@ require (
 	github.com/hashicorp/terraform-plugin-mux v0.15.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.33.0
 	github.com/hashicorp/terraform-plugin-testing v1.7.0
-	github.com/mitchellh/go-homedir v1.1.0
-	github.com/ovh/go-ovh v1.4.2
+	github.com/ovh/go-ovh v1.4.3
 	github.com/ybriffa/rfc3339 v0.0.0-20220203155318-1789e3fd6e70
 	golang.org/x/exp v0.0.0-20230809150735-7b3493d9a819
-	gopkg.in/ini.v1 v1.67.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -64,6 +62,7 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240123012728-ef4313101c80 // indirect
 	google.golang.org/grpc v1.62.0 // indirect
 	google.golang.org/protobuf v1.32.0 // indirect
+	gopkg.in/ini.v1 v1.67.0 // indirect
 )
 
 go 1.21
