@@ -618,7 +618,7 @@ workflow:
     one_at_a_time: true
     parameters:
       # Include specific test TestAccCloudProjectNetwork as it uses a vRack service
-      testargs: -run 'Vrack|TestAccCloudProjectNetwork|TestAccCloudProjectKubeVRack'
+      testargs: -run 'Vrack|TestAccCloudProjectNetwork|TestAccCloudProjectKubeVRack|TestAccCloudProjectGateway'
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
