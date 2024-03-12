@@ -2,7 +2,7 @@ package ovh
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"os"
 	"testing"
 )
@@ -11,12 +11,10 @@ var testAccIpMoveConfig = `
 resource "ovh_ip_move" "move" {
     ip = "%s"
     routed_to {
-		service_name = "%s"
-	}
+        service_name = "%s"
+    }
 }
 `
-
-func init() {}
 
 func TestAccIpMove_basic(t *testing.T) {
 	ip := os.Getenv("OVH_IP_MOVE_TEST")

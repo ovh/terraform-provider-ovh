@@ -1,9 +1,10 @@
 package ovh
 
 import (
+	"errors"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 	"log"
@@ -17,8 +18,8 @@ import (
 // Usually, time taken for such a task is around 1 minute, here we tolerate 5 minutes
 const taskExpiresAfter = 300 * time.Second
 
-// WaitingTimeInSecondsBeforeRefreshState number if seconds to wait before making a new API call to refresh ip task state
-const WaitingTimeInSecondsBeforeRefreshState = 10
+// waitingTimeInSecondsBeforeRefreshState number if seconds to wait before making a new API call to refresh ip task state
+const waitingTimeInSecondsBeforeRefreshState = 10
 
 func resourceIpServiceMove() *schema.Resource {
 	return &schema.Resource{
@@ -119,7 +120,6 @@ func resourceIpMoveUpdate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	ip := d.Get("ip").(string)
 
-	// no need to update if ip is already routed to the appropriate service
 	opts, err := (&IpMoveOpts{}).FromResource(d)
 	if err != nil {
 		return err
@@ -160,6 +160,7 @@ func resourceIpMoveUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	currentlyRoutedService := GetRoutedToServiceName(d)
+	// no need to update if ip is already routed to the appropriate service
 	if reflect.DeepEqual(currentlyRoutedService, opts.To) {
 		log.Printf("[DEBUG] Won't do anything as ip %s (service name = %s) is already routed to service %v", ip, *serviceName, currentlyRoutedService)
 		return nil
@@ -192,39 +193,38 @@ func resourceIpMoveUpdate(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 	}
-	err = resourceIpRead(d, meta)
-	return err
+	return resourceIpRead(d, meta)
 }
 
-// waitForTaskFinished queries GET /ip/:ip/task/:taskId route until task state is in a terminal success or error state or until WaitingTimeInSecondsBeforeRefreshState is reached
+// waitForTaskFinished queries GET /ip/:ip/task/:taskId route until task state is in a terminal success or error state or until waitingTimeInSecondsBeforeRefreshState is reached
 // and returns :
 //   - finishedWithSuccess : true if task ended with success, false if ended with error, nil if not ended at all
 //   - err : nil if no error is encountered in the process, any met error otherwise
 //
 // in any case before returning, "task_status" field of d will be updated with the last known ipTask.Status
 func waitForTaskFinished(d *schema.ResourceData, meta interface{}, ipTask *IpTask, ip string, opts *IpMoveOpts) (finishedWithSuccess *bool, err error) {
-	defer func() {
-		errSet := d.Set("task_status", ipTask.Status)
-		if errSet == nil {
-			err = errSet
-		}
-	}()
-	return recursiveWaitTaskFinished(d, meta, ipTask, ip, opts)
+	finishedWithSuccess, err = recursiveWaitTaskFinished(d, meta, ipTask, ip, opts)
+	errSet := d.Set("task_status", ipTask.Status)
+
+	return finishedWithSuccess, errors.Join(err, errSet)
 }
 
 // recursiveWaitTaskFinished checks a given ipTask and return true if task status is in a state that we consider finished.
 // and calls itself again if task is not finished while task is not yet expired
 func recursiveWaitTaskFinished(d *schema.ResourceData, meta interface{}, ipTask *IpTask, ip string, opts *IpMoveOpts) (finished *bool, err error) {
+	if ipTask == nil {
+		return helpers.GetNilBoolPointer(false), fmt.Errorf("could not assign IP %s to service %v as Ip task does not exist", ip, opts.To)
+	}
 	switch ipTask.Status {
 	case IpTaskStatusDone:
 		return helpers.GetNilBoolPointer(true), nil
 	case IpTaskStatusCancelled, IpTaskStatusOvhError, IpTaskStatusCustomerError:
-		return helpers.GetNilBoolPointer(true), fmt.Errorf("could not assign IP %s to service %v as Ip task is %s", ip, opts.To, ipTask.Status)
+		return helpers.GetNilBoolPointer(false), fmt.Errorf("could not assign IP %s to service %v as Ip task is %s", ip, opts.To, ipTask.Status)
 	}
 	timeDiff := time.Now().Sub(ipTask.StartDate)
 	if timeDiff < taskExpiresAfter {
-		log.Printf("[DEBUG] ipTask.Status is currently: %s. Waiting %d second (we allow %f more seconds for the task to complete)", ipTask.Status, WaitingTimeInSecondsBeforeRefreshState, taskExpiresAfter.Seconds()-timeDiff.Seconds())
-		time.Sleep(WaitingTimeInSecondsBeforeRefreshState * time.Second)
+		log.Printf("[DEBUG] ipTask.Status is currently: %s. Waiting %d second (we allow %f more seconds for the task to complete)", ipTask.Status, waitingTimeInSecondsBeforeRefreshState, taskExpiresAfter.Seconds()-timeDiff.Seconds())
+		time.Sleep(waitingTimeInSecondsBeforeRefreshState * time.Second)
 		err = resourceIpTaskRead(d, ipTask, meta)
 		return recursiveWaitTaskFinished(d, meta, ipTask, ip, opts)
 	}

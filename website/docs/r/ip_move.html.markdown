@@ -43,14 +43,14 @@ The following arguments are supported:
 
 Attributes are mostly the same as for [ovh_ip_service](https://registry.terraform.io/providers/ovh/ovh/latest/docs/resources/ip_service#attributes-reference):
 
-* `can_be_terminated` - can be terminated
-* `country` - country
-* `description` - description attached to the IP
-* `ip` - ip block
+* `can_be_terminated` - Whether IP service can be terminated
+* `country` - Country
+* `description` - Description attached to the IP
+* `ip` - IP block
 * `organisation_id` - IP block organisation Id
 * `routed_to` - Routage information
   * `service_name` - Service where ip is routed to
-* `service_name`: service name in the form of `ip-<part-1>.<part-2>.<part-3>.<part-4>`
+* `service_name`: Service name in the form of `ip-<part-1>.<part-2>.<part-3>.<part-4>`
 * `type` - Possible values for ip type
 * `task_status` - Status field of the current IP task that is in charge of changing the service the IP is attached to
 * `task_start_date` - Starting date and time field of the current IP task that is in charge of changing the service the IP is attached to
