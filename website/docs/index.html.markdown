@@ -18,7 +18,7 @@ Use the navigation to the left to read about the available resources.
 
 The provider needs to be configured with the proper credentials before it can be used. Requests to OVHcloud APIs require a set of secrets keys and the definition of the API end point. See [First Steps with the API](https://docs.ovh.com/gb/en/customer/first-steps-with-ovh-api/) (or the French version, [Premiers pas avec les API OVHcloud](https://docs.ovh.com/fr/api/api-premiers-pas/)) for a detailed explanation.
 
-Besides the API end-point, the required keys are the `application_key`, the `application_secret`, and the `consumer_key`.
+Besides the API endpoint, the required keys are the `application_key`, the `application_secret`, and the `consumer_key`.
 These keys can be generated via the [OVHcloud token generation page](https://api.ovh.com/createToken/?GET=/*&POST=/*&PUT=/*&DELETE=/*). 
 
 These parameters can be configured directly in the provider block as shown hereafter.
@@ -42,15 +42,48 @@ provider "ovh" {
 }
 ```
 
-Alternatively the secret keys can be retrieved from your environment.
+Alternatively it is suggested to use configuration files or environment
+variables so that the same code may run seamlessly in multiple environments.
+Production and development for instance.
 
- * `OVH_ENDPOINT`
- * `OVH_APPLICATION_KEY`
- * `OVH_APPLICATION_SECRET`
- * `OVH_CONSUMER_KEY` 
+The provider will first look for direct instanciation parameters then
+``OVH_ENDPOINT``, ``OVH_APPLICATION_KEY``, ``OVH_APPLICATION_SECRET`` and
+``OVH_CONSUMER_KEY`` environment variables. If either of these parameter is not
+provided, it will look for a configuration file of the form:
 
-This later method (or a similar alternative) is recommended to avoid storing secret data in a source repository.
+```ini
+[default]
+; general configuration: default endpoint
+endpoint=ovh-eu
 
+[ovh-eu]
+; configuration specific to 'ovh-eu' endpoint
+application_key=my_app_key
+application_secret=my_application_secret
+consumer_key=my_consumer_key
+```
+
+Depending on the API you want to use, you may set the ``endpoint`` to:
+
+* ``ovh-eu`` for OVHcloud Europe API
+* ``ovh-us`` for OVHcloud US API
+* ``ovh-ca`` for OVHcloud Canada API
+* ``soyoustart-eu`` for So you Start Europe API
+* ``soyoustart-ca`` for So you Start Canada API
+* ``kimsufi-eu`` for Kimsufi Europe API
+* ``kimsufi-ca`` for Kimsufi Canada API
+* Or any arbitrary URL to use in a test for example
+
+The provider will successively attempt to locate this configuration file in
+
+1. Current working directory: ``./ovh.conf``
+2. Current user's home directory ``~/.ovh.conf``
+3. System wide configuration ``/etc/ovh.conf``
+
+This lookup mechanism makes it easy to overload credentials for a specific
+project or user.
+
+You can find more details about the configuration parsing on repository [go-ovh](https://github.com/ovh/go-ovh).
 
 ## Example Usage
 
@@ -83,7 +116,7 @@ resource "ovh_cloud_project_kube_nodepool" "node_pool" {
 
 The following arguments are supported:
 
-* `endpoint` - (Required) Specify which API endpoint to use.
+* `endpoint` - (Optional) Specify which API endpoint to use.
   It can be set using the `OVH_ENDPOINT` environment
   variable. e.g. `ovh-eu` or `ovh-ca`.
 
