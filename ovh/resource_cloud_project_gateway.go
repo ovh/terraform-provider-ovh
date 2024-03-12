@@ -235,12 +235,12 @@ func resourceCloudProjectGatewayDelete(d *schema.ResourceData, meta interface{})
 
 // AttachmentStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch
 // an Attachment Task.
-func waitForCloudProjectGatewayActive(c *ovh.Client, serviceName, OperationId string) resource.StateRefreshFunc {
+func waitForCloudProjectGatewayActive(c *ovh.Client, serviceName, operationId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		ro := &CloudProjectOperationResponse{}
 		endpoint := fmt.Sprintf("/cloud/project/%s/operation/%s",
 			url.PathEscape(serviceName),
-			url.PathEscape(OperationId))
+			url.PathEscape(operationId))
 		if err := c.Get(endpoint, ro); err != nil {
 			return ro, "", err
 		}
