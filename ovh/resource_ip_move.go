@@ -7,7 +7,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
+	"golang.org/x/exp/slices"
 	"log"
+	"net/http"
 	"net/url"
 	"reflect"
 	"strconv"
@@ -20,6 +22,8 @@ const taskExpiresAfter = 300 * time.Second
 
 // waitingTimeInSecondsBeforeRefreshState number if seconds to wait before making a new API call to refresh ip task state
 const waitingTimeInSecondsBeforeRefreshState = 10
+
+var ipTaskUnrecoverableErrors = []int{http.StatusBadRequest, http.StatusUnauthorized, http.StatusForbidden, http.StatusNotFound}
 
 func resourceIpServiceMove() *schema.Resource {
 	return &schema.Resource{
@@ -204,7 +208,10 @@ func resourceIpMoveUpdate(d *schema.ResourceData, meta interface{}) error {
 // in any case before returning, "task_status" field of d will be updated with the last known ipTask.Status
 func waitForTaskFinished(d *schema.ResourceData, meta interface{}, ipTask *IpTask, ip string, opts *IpMoveOpts) (finishedWithSuccess *bool, err error) {
 	finishedWithSuccess, err = recursiveWaitTaskFinished(d, meta, ipTask, ip, opts)
-	errSet := d.Set("task_status", ipTask.Status)
+	var errSet error
+	if ipTask != nil {
+		errSet = d.Set("task_status", ipTask.Status)
+	}
 
 	return finishedWithSuccess, errors.Join(err, errSet)
 }
@@ -226,6 +233,12 @@ func recursiveWaitTaskFinished(d *schema.ResourceData, meta interface{}, ipTask 
 		log.Printf("[DEBUG] ipTask.Status is currently: %s. Waiting %d second (we allow %f more seconds for the task to complete)", ipTask.Status, waitingTimeInSecondsBeforeRefreshState, taskExpiresAfter.Seconds()-timeDiff.Seconds())
 		time.Sleep(waitingTimeInSecondsBeforeRefreshState * time.Second)
 		err = resourceIpTaskRead(d, ipTask, meta)
+		if errOvh, ok := err.(*ovh.APIError); ok {
+			// bad request, unauthorized, forbidden & not found errors are unrecoverable, so there is no point
+			if slices.Contains(ipTaskUnrecoverableErrors, errOvh.Code) {
+				return helpers.GetNilBoolPointer(false), err
+			}
+		}
 		return recursiveWaitTaskFinished(d, meta, ipTask, ip, opts)
 	}
 	log.Printf("[WARNING] - waitForTaskFinished max number of retries reached without the task having reached a terminal state")
@@ -239,10 +252,8 @@ func resourceIpTaskRead(d *schema.ResourceData, ipTask *IpTask, meta interface{}
 		url.PathEscape(d.Get("ip").(string)),
 		ipTask.TaskId,
 	)
-	if err := config.OVHClient.Get(endpoint, ipTask); err != nil {
-		return fmt.Errorf("calling Get %s: %q", endpoint, err)
-	}
-	return nil
+
+	return config.OVHClient.Get(endpoint, ipTask)
 }
 
 func resourceIpRead(d *schema.ResourceData, meta interface{}) error {
