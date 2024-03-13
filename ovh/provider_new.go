@@ -2,7 +2,6 @@ package ovh
 
 import (
 	"context"
-	"os"
 	"sync"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -37,8 +36,7 @@ func (p *OvhProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"endpoint": schema.StringAttribute{
-				Required:    os.Getenv("OVH_ENDPOINT") == "",
-				Optional:    os.Getenv("OVH_ENDPOINT") != "",
+				Optional:    true,
 				Description: descriptions["endpoint"],
 			},
 			"application_key": schema.StringAttribute{
@@ -110,34 +108,14 @@ func (p *OvhProvider) Configure(ctx context.Context, req provider.ConfigureReque
 		return
 	}
 
-	endpoint := os.Getenv("OVH_ENDPOINT")
-	if !config.Endpoint.IsNull() {
-		endpoint = config.Endpoint.ValueString()
-	}
-
 	clientConfig := Config{
-		Endpoint: endpoint,
 		lockAuth: &sync.Mutex{},
 	}
 
-	// First try to read configuration from config file in home directory
-	if err := readOVHConfigurationFile(&clientConfig); err != nil {
-		resp.Diagnostics.AddError("failed to read OVH API configuration file", err.Error())
-		return
-	}
-
-	// Check if env variables are set
-	if appKey := os.Getenv("OVH_APPLICATION_KEY"); appKey != "" {
-		clientConfig.ApplicationKey = appKey
-	}
-	if appSecret := os.Getenv("OVH_APPLICATION_SECRET"); appSecret != "" {
-		clientConfig.ApplicationSecret = appSecret
-	}
-	if consumerKey := os.Getenv("OVH_CONSUMER_KEY"); consumerKey != "" {
-		clientConfig.ConsumerKey = consumerKey
-	}
-
 	// Check if API variables has been set directly in the configuration
+	if !config.Endpoint.IsNull() {
+		clientConfig.Endpoint = config.Endpoint.ValueString()
+	}
 	if !config.ApplicationKey.IsNull() {
 		clientConfig.ApplicationKey = config.ApplicationKey.ValueString()
 	}
