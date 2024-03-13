@@ -36,7 +36,15 @@ func clientDefault(c *Config) (*ovh.Client, error) {
 		return nil, err
 	}
 
+	// Retrieve endpoint that is used
+	for k, v := range ovh.Endpoints {
+		if v == client.Endpoint() {
+			c.Endpoint = k
+		}
+	}
+
 	client.UserAgent = "Terraform/" + providerVersion + "/" + providerCommit
+
 	return client, nil
 }
 
@@ -55,7 +63,7 @@ func (c *Config) loadAndValidate() error {
 	if !c.authenticated {
 		var details OvhAuthDetails
 		if err := c.OVHClient.Get("/auth/details", &details); err != nil {
-			c.authFailed = fmt.Errorf("OVH client seems to be misconfigured: %q\n", err)
+			c.authFailed = fmt.Errorf("OVH client seems to be misconfigured: %q", err)
 			return c.authFailed
 		}
 
@@ -72,23 +80,9 @@ func (c *Config) loadAndValidate() error {
 }
 
 func (c *Config) load() error {
-	validEndpoint := false
-
-	ovhEndpoints := [7]string{ovh.OvhEU, ovh.OvhCA, ovh.OvhUS, ovh.KimsufiEU, ovh.KimsufiCA, ovh.SoyoustartEU, ovh.SoyoustartCA}
-
-	for _, e := range ovhEndpoints {
-		if ovh.Endpoints[c.Endpoint] == e {
-			validEndpoint = true
-		}
-	}
-
-	if !validEndpoint {
-		return fmt.Errorf("%s must be one of %#v endpoints\n", c.Endpoint, ovh.Endpoints)
-	}
-
 	targetClient, err := clientDefault(c)
 	if err != nil {
-		return fmt.Errorf("Error getting ovh client: %q\n", err)
+		return fmt.Errorf("error getting ovh client: %q", err)
 	}
 
 	// decorating the OVH http client with logs

@@ -75,7 +75,7 @@ func dataSourceMeIdentityUserRead(d *schema.ResourceData, meta interface{}) erro
 		identityUser,
 	)
 	if err != nil {
-		return fmt.Errorf("Unable to find identity user %s:\n\t %q", user, err)
+		return fmt.Errorf("unable to find identity user %s:\n\t %q", user, err)
 	}
 
 	d.Set("urn", fmt.Sprintf("urn:v1:%s:identity:user:%s/%s", config.Plate, config.Account, user))
