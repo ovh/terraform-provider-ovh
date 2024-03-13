@@ -21,8 +21,7 @@ data "ovh_cloud_project_vrack" "vrack" {
 }
 
 resource "ovh_cloud_project_network_private" "mypriv" {
-  depends_on    = [ovh_vrack_cloudproject.attach]
-  service_name  = ovh_vrack_cloudproject.attach.service_name
+  service_name  = ovh_vrack_cloudproject.attach.project_id
   vlan_id       = "%d"
   name          = "%s"
   regions       = ["%s"]
