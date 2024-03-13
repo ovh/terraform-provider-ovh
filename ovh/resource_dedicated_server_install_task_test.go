@@ -49,6 +49,12 @@ func TestAccDedicatedServerInstall_rebootondestroy(t *testing.T) {
 			testAccPreCheckDedicatedServer(t)
 		},
 		Providers: testAccProviders,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"time": {
+				VersionConstraint: "0.10.0",
+				Source:            "hashicorp/time",
+			},
+		},
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDedicatedServerInstallConfig("rebootondestroy"),
@@ -127,7 +133,7 @@ resource "ovh_me_installation_template" "debian" {
 }
 
 resource "time_sleep" "wait_for_ssh_key_sync" {
-  create_duration = "60s"
+  create_duration = "120s"
   depends_on = [ovh_me_installation_template.debian]
 }
 
@@ -173,9 +179,16 @@ resource "ovh_me_installation_template" "debian" {
   }
 }
 
+resource "time_sleep" "wait_for_ssh_key_sync" {
+	create_duration = "120s"
+	depends_on = [ovh_me_installation_template.debian]
+  }
+
 resource ovh_dedicated_server_install_task "server_install" {
   service_name      = data.ovh_dedicated_server_boots.harddisk.service_name
   template_name     = ovh_me_installation_template.debian.template_name
   bootid_on_destroy = data.ovh_dedicated_server_boots.rescue.result[0]
+
+  depends_on = [time_sleep.wait_for_ssh_key_sync]
 }
 `
