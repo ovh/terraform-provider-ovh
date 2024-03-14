@@ -428,3 +428,17 @@ func ValidateHostingPrivateDatabaseUserGrant(value string) error {
 		"rw",
 	})
 }
+
+func ServiceNameFromIpBlock(ip string) (*string, error) {
+	parsedIp := net.ParseIP(ip)
+	if parsedIp == nil {
+		var err error
+		parsedIp, _, err = net.ParseCIDR(ip)
+		if err != nil {
+			return nil, fmt.Errorf("ip %s is not valid IP nor a valid CIDR", ip)
+		}
+	}
+	serviceName := fmt.Sprintf("ip-%s", parsedIp)
+
+	return &serviceName, nil
+}

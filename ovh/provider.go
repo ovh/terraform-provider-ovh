@@ -200,6 +200,7 @@ func Provider() *schema.Provider {
 			"ovh_iam_resource_group":                                         resourceIamResourceGroup(),
 			"ovh_ip_reverse":                                                 resourceIpReverse(),
 			"ovh_ip_service":                                                 resourceIpService(),
+			"ovh_ip_move":                                                    resourceIpServiceMove(),
 			"ovh_iploadbalancing":                                            resourceIpLoadbalancing(),
 			"ovh_iploadbalancing_http_farm":                                  resourceIpLoadbalancingHttpFarm(),
 			"ovh_iploadbalancing_http_farm_server":                           resourceIpLoadbalancingHttpFarmServer(),
