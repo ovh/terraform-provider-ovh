@@ -137,7 +137,6 @@ In order for all the tests to pass you can run:
 export OVH_IP_TEST="..."
 export OVH_IP_BLOCK_TEST="..."
 export OVH_IP_REVERSE_TEST="..."
-export OVH_IP_MOVE_TEST="..."
 export OVH_IP_MOVE_SERVICE_NAME_TEST="..."
 export OVH_IPLB_SERVICE_TEST="..."
 export OVH_CLOUD_PROJECT_SERVICE_TEST="..."

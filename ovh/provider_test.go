@@ -116,7 +116,6 @@ func testAccPreCheckIp(t *testing.T) {
 // are set.
 func testAccPreCheckIpMove(t *testing.T) {
 	testAccPreCheckCredentials(t)
-	checkEnvOrSkip(t, "OVH_IP_MOVE_TEST")
 	checkEnvOrSkip(t, "OVH_IP_MOVE_SERVICE_NAME_TEST")
 }
 

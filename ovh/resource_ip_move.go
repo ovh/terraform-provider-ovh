@@ -3,17 +3,18 @@ package ovh
 import (
 	"errors"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/ovh/go-ovh/ovh"
-	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
-	"golang.org/x/exp/slices"
 	"log"
 	"net/http"
 	"net/url"
 	"reflect"
 	"strconv"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/ovh/go-ovh/ovh"
+	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
+	"golang.org/x/exp/slices"
 )
 
 // taskExpiresAfter is the duration in seconds after which we'll consider an ongoing task to be expired and we'll allow ourselves to create a new one.
@@ -145,7 +146,7 @@ func resourceIpMoveUpdate(d *schema.ResourceData, meta interface{}) error {
 		if d.Get("task_status") != nil {
 			ipTask.Status = IpTaskStatusEnum(d.Get("task_status").(string))
 			ipTask.TaskId = taskId
-			taskStartDate, err := time.Parse("2006-01-02 15:04:05 -0700 MST", d.Get("task_start_date").(string))
+			taskStartDate, err := time.Parse(time.RFC3339, d.Get("task_start_date").(string))
 			if err != nil {
 				return err
 			}
@@ -188,7 +189,7 @@ func resourceIpMoveUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 		d.SetId(fmt.Sprint(ipTask.TaskId))
-		if err = d.Set("task_start_date", ipTask.StartDate.String()); err != nil {
+		if err = d.Set("task_start_date", ipTask.StartDate.Format(time.RFC3339)); err != nil {
 			return err
 		}
 
