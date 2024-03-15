@@ -139,6 +139,7 @@ func (p *OvhProvider) Configure(ctx context.Context, req provider.ConfigureReque
 func (p *OvhProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		NewCloudProjectDatabaseIPRestrictionsDataSource,
+		NewDedicatedServerSpecificationsHardwareDataSource,
 	}
 }
 
