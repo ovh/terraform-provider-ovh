@@ -218,24 +218,35 @@ func genericOrderSchema(withOptions bool) map[string]*schema.Schema {
 	return orderSchema
 }
 
-func orderCreate(d *schema.ResourceData, meta interface{}, product string) error {
+func orderCreateFromResource(d *schema.ResourceData, meta interface{}, product string) error {
 	config := meta.(*Config)
+	order := (&OrderCreateType{}).FromResource(d)
 
-	// create Cart
-	cartParams := &OrderCartCreateOpts{
-		OvhSubsidiary: strings.ToUpper(d.Get("ovh_subsidiary").(string)),
+	err := orderCreate(order, config, product)
+	if err != nil {
+		return err
 	}
 
-	cart, err := orderCartCreate(meta, cartParams, true)
+	d.SetId(order.OrderID)
+
+	return nil
+}
+
+func orderCreate(d *OrderCreateType, config *Config, product string) error {
+	// create Cart
+	cartParams := &OrderCartCreateOpts{
+		OvhSubsidiary: strings.ToUpper(d.OvhSubsidiary),
+	}
+
+	cart, err := orderCartCreate(config, cartParams, true)
 	if err != nil {
 		return fmt.Errorf("calling creating order cart: %q", err)
 	}
 
 	// Create Product Item
 	item := &OrderCartItem{}
-	cartPlanParams := (&OrderCartPlanCreateOpts{
-		Quantity: 1,
-	}).FromResourceWithPath(d, "plan.0")
+	cartPlanParams := d.Plans[0]
+	cartPlanParams.Quantity = 1
 
 	log.Printf("[DEBUG] Will create order item %s for cart: %s", product, cart.CartId)
 	endpoint := fmt.Sprintf("/order/cart/%s/%s", url.PathEscape(cart.CartId), product)
@@ -244,62 +255,47 @@ func orderCreate(d *schema.ResourceData, meta interface{}, product string) error
 	}
 
 	// apply configurations
-	nbOfConfigurations := d.Get("plan.0.configuration.#").(int)
-	for i := 0; i < nbOfConfigurations; i++ {
+	for _, cfg := range cartPlanParams.Configuration {
 		log.Printf("[DEBUG] Will create order cart item configuration for cart item: %s/%d",
 			item.CartId,
 			item.ItemId,
 		)
 		itemConfig := &OrderCartItemConfiguration{}
-		itemConfigParams := (&OrderCartItemConfigurationOpts{}).FromResourceWithPath(
-			d,
-			fmt.Sprintf("plan.0.configuration.%d", i),
-		)
 		endpoint := fmt.Sprintf("/order/cart/%s/item/%d/configuration",
 			url.PathEscape(item.CartId),
 			item.ItemId,
 		)
-		if err := config.OVHClient.Post(endpoint, itemConfigParams, itemConfig); err != nil {
-			return fmt.Errorf("calling Post %s with params %v:\n\t %q", endpoint, itemConfigParams, err)
+		if err := config.OVHClient.Post(endpoint, cfg, itemConfig); err != nil {
+			return fmt.Errorf("calling Post %s with params %v:\n\t %q", endpoint, cfg, err)
 		}
 	}
 
 	// Create Product Options Items
-	nbOfOptions := d.Get("plan_option.#").(int)
-	for i := 0; i < nbOfOptions; i++ {
-		optionPath := fmt.Sprintf("plan_option.%d", i)
+	for _, option := range d.PlanOptions {
 		log.Printf("[DEBUG] Will create order item options %s for cart: %s", product, cart.CartId)
 		productOptionsItem := &OrderCartItem{}
-		cartPlanOptionsParams := (&OrderCartPlanOptionsCreateOpts{
-			ItemId:   item.ItemId,
-			Quantity: 1,
-		}).FromResourceWithPath(
-			d,
-			optionPath,
-		)
+
+		option.ItemId = item.ItemId
+		option.Quantity = 1
+
 		endpoint := fmt.Sprintf("/order/cart/%s/%s/options", url.PathEscape(cart.CartId), product)
-		if err := config.OVHClient.Post(endpoint, cartPlanOptionsParams, productOptionsItem); err != nil {
+		if err := config.OVHClient.Post(endpoint, option, productOptionsItem); err != nil {
 			return fmt.Errorf("calling Post %s with params %v:\n\t %q", endpoint, cartPlanParams, err)
 		}
 
 		// apply configurations
-		nbOfConfigurations := d.Get(fmt.Sprintf("%s.configuration.#", optionPath)).(int)
-		for j := 0; j < nbOfConfigurations; j++ {
+		for _, cfg := range option.Configuration {
 			log.Printf("[DEBUG] Will create order cart item configuration for cart item: %s/%d",
 				item.CartId,
 				item.ItemId,
 			)
 			itemConfig := &OrderCartItemConfiguration{}
-			itemConfigParams := (&OrderCartItemConfigurationOpts{}).FromResourceWithPath(
-				d,
-				fmt.Sprintf("%s.configuration.%d", optionPath, j),
-			)
 			endpoint := fmt.Sprintf("/order/cart/%s/item/%d/configuration",
 				url.PathEscape(item.CartId),
 				item.ItemId,
 			)
-			if err := config.OVHClient.Post(endpoint, itemConfigParams, itemConfig); err != nil {
-				return fmt.Errorf("calling Post %s with params %v:\n\t %q", endpoint, itemConfigParams, err)
+			if err := config.OVHClient.Post(endpoint, cfg, itemConfig); err != nil {
+				return fmt.Errorf("calling Post %s with params %v:\n\t %q", endpoint, cfg, err)
 			}
 		}
 	}
@@ -384,15 +380,33 @@ func orderCreate(d *schema.ResourceData, meta interface{}, product string) error
 		return fmt.Errorf("waiting for order (%d): %s", checkout.OrderID, err)
 	}
 
-	d.SetId(fmt.Sprint(checkout.OrderID))
+	d.OrderID = fmt.Sprint(checkout.OrderID)
 
 	return nil
 }
 
-func orderRead(d *schema.ResourceData, meta interface{}) (*MeOrder, []*MeOrderDetail, error) {
+func orderReadInResource(d *schema.ResourceData, meta interface{}) (*MeOrder, []*MeOrderDetail, error) {
 	config := meta.(*Config)
 	orderId := d.Id()
 
+	order, details, err := orderRead(orderId, config)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	detailsData := make([]map[string]interface{}, len(details))
+	for i, detail := range details {
+		detailsData[i] = detail.ToMap()
+	}
+
+	orderData := order.ToMap()
+	orderData["details"] = detailsData
+	d.Set("order", []interface{}{orderData})
+
+	return order, details, nil
+}
+
+func orderRead(orderId string, config *Config) (*MeOrder, []*MeOrderDetail, error) {
 	order := &MeOrder{}
 	log.Printf("[DEBUG] Will read order %s", orderId)
 	endpoint := fmt.Sprintf("/me/order/%s",
@@ -411,23 +425,28 @@ func orderRead(d *schema.ResourceData, meta interface{}) (*MeOrder, []*MeOrderDe
 		return nil, nil, fmt.Errorf("There is no order details for id %s. This shouldn't happen. This is a bug with the API.", orderId)
 	}
 
-	detailsData := make([]map[string]interface{}, len(details))
-	for i, detail := range details {
-		detailsData[i] = detail.ToMap()
-	}
-
-	orderData := order.ToMap()
-	orderData["details"] = detailsData
-	d.Set("order", []interface{}{orderData})
-
 	return order, details, nil
 }
 
 type TerminateFunc func() (string, error)
 type ConfirmTerminationFunc func(token string) error
 
-func orderDelete(d *schema.ResourceData, meta interface{}, terminate TerminateFunc, confirm ConfirmTerminationFunc) error {
-	oldEmailsIds, err := notificationEmailSortedIds(meta)
+func orderDeleteFromResource(d *schema.ResourceData, meta interface{}, terminate TerminateFunc, confirm ConfirmTerminationFunc) error {
+	config := meta.(*Config)
+
+	if err := orderDelete(config, terminate, confirm); err != nil {
+		return err
+	}
+
+	if d != nil {
+		d.SetId("")
+	}
+
+	return nil
+}
+
+func orderDelete(config *Config, terminate TerminateFunc, confirm ConfirmTerminationFunc) error {
+	oldEmailsIds, err := notificationEmailSortedIds(config)
 	if err != nil {
 		return err
 	}
@@ -450,7 +469,7 @@ func orderDelete(d *schema.ResourceData, meta interface{}, terminate TerminateFu
 	var email *NotificationEmail
 	// wait for email
 	err = resource.Retry(30*time.Minute, func() *resource.RetryError {
-		email, err = getNewNotificationEmail(matches, oldEmailsIds, meta)
+		email, err = getNewNotificationEmail(matches, oldEmailsIds, config)
 		if err != nil {
 			log.Printf("[DEBUG] error while getting email notification. retry: %v", err)
 			return resource.RetryableError(err)
@@ -476,10 +495,6 @@ func orderDelete(d *schema.ResourceData, meta interface{}, terminate TerminateFu
 
 	if err := confirm(tokenMatch[1]); err != nil {
 		return err
-	}
-
-	if d != nil {
-		d.SetId("")
 	}
 
 	return nil

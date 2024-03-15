@@ -141,7 +141,7 @@ func resourceHostingPrivateDatabaseSchema() map[string]*schema.Schema {
 }
 
 func resourceHostingPrivateDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
-	if err := orderCreate(d, meta, "privateSQL"); err != nil {
+	if err := orderCreateFromResource(d, meta, "privateSQL"); err != nil {
 		return fmt.Errorf("could not order privateDatabase: %q", err)
 	}
 
@@ -149,7 +149,7 @@ func resourceHostingPrivateDatabaseCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceHostingPrivateDatabaseUpdate(d *schema.ResourceData, meta interface{}) error {
-	_, details, err := orderRead(d, meta)
+	_, details, err := orderReadInResource(d, meta)
 	if err != nil {
 		return fmt.Errorf("could not read privateDatabase order: %q", err)
 	}
@@ -168,7 +168,7 @@ func resourceHostingPrivateDatabaseUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceHostingPrivateDatabaseRead(d *schema.ResourceData, meta interface{}) error {
-	_, details, err := orderRead(d, meta)
+	_, details, err := orderReadInResource(d, meta)
 	if err != nil {
 		return fmt.Errorf("could not read privatedatabase order: %q", err)
 	}
@@ -199,7 +199,7 @@ func resourceHostingPrivateDatabaseRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceHostingPrivateDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
-	_, details, err := orderRead(d, meta)
+	_, details, err := orderReadInResource(d, meta)
 	if err != nil {
 		return fmt.Errorf("could not read privateDatabase order: %q", err)
 	}
@@ -235,7 +235,7 @@ func resourceHostingPrivateDatabaseDelete(d *schema.ResourceData, meta interface
 		return nil
 	}
 
-	if err := orderDelete(d, meta, terminate, confirmTerminate); err != nil {
+	if err := orderDeleteFromResource(d, meta, terminate, confirmTerminate); err != nil {
 		return err
 	}
 
