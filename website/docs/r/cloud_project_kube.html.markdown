@@ -129,7 +129,7 @@ resource "ovh_cloud_project_kube" "mycluster" {
 }
 ```
 
-Kubernetes cluster creation attached to a VRack in `GRA5` region:
+Kubernetes cluster creation attached to a VRack in `GRA5` region with:
 
 ```hcl
 resource "ovh_vrack_cloudproject" "attach" {
@@ -211,9 +211,17 @@ The following arguments are supported:
    
 ~> __WARNING__ Updating the private network ID resets the cluster so that all user data is deleted.
 
-* `private_network_configuration` - (Optional) The private network configuration
+* `private_network_configuration` - (Optional) The private network configuration. If this is set then the 2 parameters below shall be defined.
   * `default_vrack_gateway` - If defined, all egress traffic will be routed towards this IP address, which should belong to the private network. Empty string means disabled.
   * `private_network_routing_as_default` - Defines whether routing should default to using the nodes' private interface, instead of their public interface. Default is false.
+  
+  In order to use the gateway IP advertised by the private network subnet DHCP, the following configuration shall be used.
+  ```hcl  
+  private_network_configuration {
+      default_vrack_gateway              = ""
+      private_network_routing_as_default = true
+  }
+  ```
 * `update_policy` - Cluster update policy. Choose between [ALWAYS_UPDATE, MINIMAL_DOWNTIME, NEVER_UPDATE].
 
 ## Attributes Reference

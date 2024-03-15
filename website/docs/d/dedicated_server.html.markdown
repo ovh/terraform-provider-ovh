@@ -23,26 +23,27 @@ data "ovh_dedicated_server" "server" {
 `id` is set with the service_name of the dedicated server.
 In addition, the following attributes are exported:
 
-* `boot_id` - boot id of the server
-* `boot_script` - boot script of the server
+* `boot_id` - Boot id of the server
+* `boot_script` - Boot script of the server
 * `urn` - URN of the dedicated server instance
-* `commercial_range` - dedicated server commercial range
-* `datacenter` - dedicated datacenter localisation (bhs1,bhs2,...)
-* `ip` - dedicated server ip (IPv4)
-* `ips` - dedicated server ip blocks
-* `link_speed` - link speed of the server
+* `commercial_range` - Dedicated server commercial range
+* `datacenter` - Dedicated datacenter localisation (bhs1,bhs2,...)
+* `ip` - Dedicated server ip (IPv4)
+* `ips` - Dedicated server ip blocks
+* `link_speed` - Link speed of the server
 * `monitoring` - Icmp monitoring state
-* `name` - dedicated server name
+* `name` - Dedicated server name
+* `display_name` - Dedicated server display name
 * `os` - Operating system
 * `professional_use` - Does this server have professional use option
-* `rack` - rack id of the server
-* `rescue_mail` - rescue mail of the server
-* `reverse` - dedicated server reverse
-* `root_device` - root device of the server
-* `server_id` - your server id
-* `state` - error, hacked, hackedBlocked, ok
+* `rack` - Rack id of the server
+* `rescue_mail` - Rescue mail of the server
+* `reverse` - Dedicated server reverse
+* `root_device` - Root device of the server
+* `server_id` - Server id
+* `state` - Error, hacked, hackedBlocked, ok
 * `support_level` - Dedicated server support level (critical, fastpath, gs, pro)
-* `vnis` - the list of Virtualnetworkinterface assiociated with this server
+* `vnis` - The list of Virtualnetworkinterface associated with this server
   * `enabled` - VirtualNetworkInterface activation state
   * `mode` - VirtualNetworkInterface mode (public,vrack,vrack_aggregation)
   * `name` - User defined VirtualNetworkInterface name

@@ -599,6 +599,17 @@ workflow:
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
+  Tests_TestAccIpMove_basic:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run TestAccIpMove_basic
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
   Tests_TestAccVPS:
     application: terraform-provider-ovh
     depends_on:
@@ -618,7 +629,7 @@ workflow:
     one_at_a_time: true
     parameters:
       # Include specific test TestAccCloudProjectNetwork as it uses a vRack service
-      testargs: -run 'Vrack|TestAccCloudProjectNetwork|TestAccCloudProjectKubeVRack'
+      testargs: -run 'Vrack|TestAccCloudProjectNetwork|TestAccCloudProjectKubeVRack|TestAccCloudProjectGateway'
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -690,6 +701,7 @@ workflow:
     - Tests_TestAccResourceCloudProjectFailoverIpAttachTestAccResourceCloudProject_basic
     - Tests_TestAccCloudProjectWorkflowBackup
     - Tests_TestAccResourceIpService_basic
+    - Tests_TestAccIpMove_basic
     environment: acctests
     one_at_a_time: true
     pipeline: terraform-provider-ovh-post-sweepers

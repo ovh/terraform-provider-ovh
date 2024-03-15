@@ -2,15 +2,10 @@ package ovh
 
 import (
 	"context"
-	"fmt"
-	"os"
 	"sync"
-
-	ini "gopkg.in/ini.v1"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/mitchellh/go-homedir"
 )
 
 const (
@@ -23,26 +18,22 @@ func Provider() *schema.Provider {
 		Schema: map[string]*schema.Schema{
 			"endpoint": {
 				Type:        schema.TypeString,
-				Required:    true,
-				DefaultFunc: schema.EnvDefaultFunc("OVH_ENDPOINT", nil),
+				Optional:    true,
 				Description: descriptions["endpoint"],
 			},
 			"application_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("OVH_APPLICATION_KEY", ""),
 				Description: descriptions["application_key"],
 			},
 			"application_secret": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("OVH_APPLICATION_SECRET", ""),
 				Description: descriptions["application_secret"],
 			},
 			"consumer_key": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("OVH_CONSUMER_KEY", ""),
 				Description: descriptions["consumer_key"],
 			},
 		},
@@ -173,6 +164,7 @@ func Provider() *schema.Provider {
 			"ovh_cloud_project_database_redis_user":                          resourceCloudProjectDatabaseRedisUser(),
 			"ovh_cloud_project_database_user":                                resourceCloudProjectDatabaseUser(),
 			"ovh_cloud_project_failover_ip_attach":                           resourceCloudProjectFailoverIpAttach(),
+			"ovh_cloud_project_gateway":                                      resourceCloudProjectGateway(),
 			"ovh_cloud_project_kube":                                         resourceCloudProjectKube(),
 			"ovh_cloud_project_kube_nodepool":                                resourceCloudProjectKubeNodePool(),
 			"ovh_cloud_project_kube_oidc":                                    resourceCloudProjectKubeOIDC(),
@@ -208,6 +200,7 @@ func Provider() *schema.Provider {
 			"ovh_iam_resource_group":                                         resourceIamResourceGroup(),
 			"ovh_ip_reverse":                                                 resourceIpReverse(),
 			"ovh_ip_service":                                                 resourceIpService(),
+			"ovh_ip_move":                                                    resourceIpServiceMove(),
 			"ovh_iploadbalancing":                                            resourceIpLoadbalancing(),
 			"ovh_iploadbalancing_http_farm":                                  resourceIpLoadbalancingHttpFarm(),
 			"ovh_iploadbalancing_http_farm_server":                           resourceIpLoadbalancingHttpFarmServer(),
@@ -256,14 +249,12 @@ func init() {
 
 func ConfigureContextFunc(context context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	config := Config{
-		Endpoint: d.Get("endpoint").(string),
 		lockAuth: &sync.Mutex{},
 	}
 
-	if err := readOVHConfigurationFile(&config); err != nil {
-		return &config, diag.FromErr(err)
+	if v, ok := d.GetOk("endpoint"); ok {
+		config.Endpoint = v.(string)
 	}
-
 	if v, ok := d.GetOk("application_key"); ok {
 		config.ApplicationKey = v.(string)
 	}
@@ -279,29 +270,4 @@ func ConfigureContextFunc(context context.Context, d *schema.ResourceData) (inte
 	}
 
 	return &config, nil
-}
-
-func readOVHConfigurationFile(config *Config) error {
-	rawPath := "~/.ovh.conf"
-	configPath, err := homedir.Expand(rawPath)
-	if err != nil {
-		return fmt.Errorf("Failed to expand config path %q: %s", rawPath, err)
-	}
-
-	if _, err := os.Stat(configPath); err == nil {
-		c, err := ini.Load(configPath)
-		if err != nil {
-			return err
-		}
-
-		section, err := c.GetSection(config.Endpoint)
-		if err != nil {
-			return err
-		}
-		config.ApplicationKey = section.Key("application_key").String()
-		config.ApplicationSecret = section.Key("application_secret").String()
-		config.ConsumerKey = section.Key("consumer_key").String()
-	}
-
-	return nil
 }

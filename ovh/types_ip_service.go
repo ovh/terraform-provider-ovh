@@ -60,6 +60,29 @@ func (opts *IpServiceUpdateOpts) FromResource(d *schema.ResourceData) *IpService
 	return opts
 }
 
+// see https://api.ovh.com/console/#/ip/%7Bip%7D/move~POST
+type IpMoveOpts struct {
+	NextHop *string `json:"nexthop,omitempty"`
+	To      *string `json:"to"`
+}
+
+func (opts *IpMoveOpts) FromResource(d *schema.ResourceData) (*IpMoveOpts, error) {
+	opts.To = GetRoutedToServiceName(d)
+	return opts, nil
+}
+
+func GetRoutedToServiceName(d *schema.ResourceData) *string {
+	routedTo := (d.Get("routed_to")).([]interface{})
+	if routedTo == nil || len(routedTo) == 0 || routedTo[0] == nil {
+		return nil
+	}
+	serviceName := (routedTo[0].(map[string]interface{}))["service_name"].(string)
+	if serviceName == "" {
+		return nil
+	}
+	return &serviceName
+}
+
 type IpServiceConfirmTerminationOpts struct {
 	Token string `json:"token"`
 }
