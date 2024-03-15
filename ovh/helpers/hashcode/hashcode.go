@@ -8,7 +8,7 @@ import (
 
 // String hashes a string to a unique hashcode.
 //
-// Copy from github.com/hashicorp/terraform-plugin-sdk/helper/hashcode
+// Copy from https://github.com/hashicorp/terraform-plugin-sdk/blob/v1.17.2/helper/hashcode/hashcode.go
 // following depracation comment
 func String(s string) int {
 	v := int(crc32.ChecksumIEEE([]byte(s)))
@@ -24,7 +24,7 @@ func String(s string) int {
 
 // Strings hashes a list of strings to a unique hashcode.
 //
-// Copy from github.com/hashicorp/terraform-plugin-sdk/helper/hashcode
+// Copy from https://github.com/hashicorp/terraform-plugin-sdk/blob/v1.17.2/helper/hashcode/hashcode.go
 // following depracation comment
 func Strings(strings []string) string {
 	var buf bytes.Buffer
