@@ -90,7 +90,7 @@ func resourceIpServiceSchema() map[string]*schema.Schema {
 }
 
 func resourceIpServiceCreate(d *schema.ResourceData, meta interface{}) error {
-	if err := orderCreate(d, meta, "ip"); err != nil {
+	if err := orderCreateFromResource(d, meta, "ip"); err != nil {
 		return fmt.Errorf("Could not order ip: %q", err)
 	}
 
@@ -98,7 +98,7 @@ func resourceIpServiceCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceIpServiceUpdate(d *schema.ResourceData, meta interface{}) error {
-	_, details, err := orderRead(d, meta)
+	_, details, err := orderReadInResource(d, meta)
 	if err != nil {
 		return fmt.Errorf("Could not read ip order: %q", err)
 	}
@@ -120,7 +120,7 @@ func resourceIpServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceIpServiceRead(d *schema.ResourceData, meta interface{}) error {
-	_, details, err := orderRead(d, meta)
+	_, details, err := orderReadInResource(d, meta)
 	if err != nil {
 		return fmt.Errorf("Could not read ip order: %q", err)
 	}
@@ -171,7 +171,7 @@ func resourceIpServiceRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceIpServiceDelete(d *schema.ResourceData, meta interface{}) error {
-	_, details, err := orderRead(d, meta)
+	_, details, err := orderReadInResource(d, meta)
 	if err != nil {
 		return fmt.Errorf("Could not read ip order: %q", err)
 	}
@@ -207,7 +207,7 @@ func resourceIpServiceDelete(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	if err := orderDelete(d, meta, terminate, confirmTerminate); err != nil {
+	if err := orderDeleteFromResource(d, meta, terminate, confirmTerminate); err != nil {
 		return err
 	}
 

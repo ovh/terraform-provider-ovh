@@ -71,7 +71,7 @@ func resourceCloudProjectSchema() map[string]*schema.Schema {
 }
 
 func resourceCloudProjectCreate(d *schema.ResourceData, meta interface{}) error {
-	if err := orderCreate(d, meta, "cloud"); err != nil {
+	if err := orderCreateFromResource(d, meta, "cloud"); err != nil {
 		return fmt.Errorf("Could not order cloud project: %q", err)
 	}
 
@@ -105,7 +105,7 @@ func resourceCloudProjectGetServiceName(config *Config, order *MeOrder, details 
 }
 
 func resourceCloudProjectUpdate(d *schema.ResourceData, meta interface{}) error {
-	order, details, err := orderRead(d, meta)
+	order, details, err := orderReadInResource(d, meta)
 	if err != nil {
 		return fmt.Errorf("Could not read cloud project order: %q", err)
 	}
@@ -127,7 +127,7 @@ func resourceCloudProjectUpdate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceCloudProjectRead(d *schema.ResourceData, meta interface{}) error {
-	order, details, err := orderRead(d, meta)
+	order, details, err := orderReadInResource(d, meta)
 	if err != nil {
 		return fmt.Errorf("Could not read cloudProject order: %q", err)
 	}
@@ -154,7 +154,7 @@ func resourceCloudProjectRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceCloudProjectDelete(d *schema.ResourceData, meta interface{}) error {
-	order, details, err := orderRead(d, meta)
+	order, details, err := orderReadInResource(d, meta)
 	if err != nil {
 		return fmt.Errorf("Could not read cloudProject order: %q", err)
 	}
@@ -194,7 +194,7 @@ func resourceCloudProjectDelete(d *schema.ResourceData, meta interface{}) error 
 		return nil
 	}
 
-	if err := orderDelete(d, meta, terminate, confirmTerminate); err != nil {
+	if err := orderDeleteFromResource(d, meta, terminate, confirmTerminate); err != nil {
 		return err
 	}
 
