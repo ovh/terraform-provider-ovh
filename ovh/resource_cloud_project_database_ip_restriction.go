@@ -79,7 +79,7 @@ func resourceCloudProjectDatabaseIpRestrictionImportState(d *schema.ResourceData
 	n := 4
 	splitId := strings.SplitN(givenId, "/", n)
 	if len(splitId) != n {
-		return nil, fmt.Errorf("mport Id is not service_name/engine/cluster_id/ip formatted")
+		return nil, fmt.Errorf("import Id is not service_name/engine/cluster_id/ip formatted")
 	}
 	serviceName := splitId[0]
 	engine := splitId[1]
