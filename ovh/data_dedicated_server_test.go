@@ -31,6 +31,8 @@ func TestAccDedicatedServerDataSource_basic(t *testing.T) {
 						"data.ovh_dedicated_server.server", "boot_script", ""),
 					resource.TestCheckResourceAttrSet(
 						"data.ovh_dedicated_server.server", "urn"),
+					resource.TestCheckResourceAttrSet(
+						"data.ovh_dedicated_server.server", "display_name"),
 				),
 			},
 		},
