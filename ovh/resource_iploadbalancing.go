@@ -148,7 +148,7 @@ func resourceIpLoadbalancingSchema() map[string]*schema.Schema {
 }
 
 func resourceIpLoadbalancingCreate(d *schema.ResourceData, meta interface{}) error {
-	if err := orderCreate(d, meta, "ipLoadbalancing"); err != nil {
+	if err := orderCreateFromResource(d, meta, "ipLoadbalancing"); err != nil {
 		return fmt.Errorf("Could not order ipLoadbalancing: %q", err)
 	}
 
@@ -156,7 +156,7 @@ func resourceIpLoadbalancingCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceIpLoadbalancingUpdate(d *schema.ResourceData, meta interface{}) error {
-	_, details, err := orderRead(d, meta)
+	_, details, err := orderReadInResource(d, meta)
 	if err != nil {
 		return fmt.Errorf("Could not read ipLoadbalancing order: %q", err)
 	}
@@ -181,7 +181,7 @@ func resourceIpLoadbalancingUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceIpLoadbalancingRead(d *schema.ResourceData, meta interface{}) error {
-	_, details, err := orderRead(d, meta)
+	_, details, err := orderReadInResource(d, meta)
 	if err != nil {
 		return fmt.Errorf("Could not read ipLoadbalancing order: %q", err)
 	}
@@ -243,7 +243,7 @@ func resourceIpLoadbalancingDelete(d *schema.ResourceData, meta interface{}) err
 		return nil
 	}
 
-	if err := orderDelete(d, meta, terminate, confirmTerminate); err != nil {
+	if err := orderDeleteFromResource(d, meta, terminate, confirmTerminate); err != nil {
 		return err
 	}
 

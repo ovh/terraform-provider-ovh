@@ -61,7 +61,7 @@ func resourceVrackSchema() map[string]*schema.Schema {
 }
 
 func resourceVrackCreate(d *schema.ResourceData, meta interface{}) error {
-	if err := orderCreate(d, meta, "vrack"); err != nil {
+	if err := orderCreateFromResource(d, meta, "vrack"); err != nil {
 		return fmt.Errorf("Could not order vrack: %q", err)
 	}
 
@@ -69,7 +69,7 @@ func resourceVrackCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVrackUpdate(d *schema.ResourceData, meta interface{}) error {
-	_, details, err := orderRead(d, meta)
+	_, details, err := orderReadInResource(d, meta)
 	if err != nil {
 		return fmt.Errorf("Could not read vrack order: %q", err)
 	}
@@ -88,7 +88,7 @@ func resourceVrackUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVrackRead(d *schema.ResourceData, meta interface{}) error {
-	_, details, err := orderRead(d, meta)
+	_, details, err := orderReadInResource(d, meta)
 	if err != nil {
 		return fmt.Errorf("Could not read vrack order: %q", err)
 	}
