@@ -28,7 +28,7 @@ func dataSourceCloudProjectDatabaseIntegrations() *schema.Resource {
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
 					value := v.(string)
 					if value == "mongodb" {
-						errors = append(errors, fmt.Errorf("Value %s is not a valid engine for integration", value))
+						errors = append(errors, fmt.Errorf("value %s is not a valid engine for integration", value))
 					}
 					return
 				},

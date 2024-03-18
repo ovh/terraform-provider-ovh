@@ -70,7 +70,7 @@ func resourceCloudProjectDatabaseDatabaseImportState(d *schema.ResourceData, met
 	n := 4
 	splitId := strings.SplitN(givenId, "/", n)
 	if len(splitId) != n {
-		return nil, fmt.Errorf("Import Id is not service_name/engine/cluster_id/id formatted")
+		return nil, fmt.Errorf("import Id is not service_name/engine/cluster_id/id formatted")
 	}
 	serviceName := splitId[0]
 	engine := splitId[1]

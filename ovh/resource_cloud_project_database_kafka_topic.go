@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
@@ -99,7 +99,7 @@ func resourceCloudProjectDatabaseKafkaTopicImportState(d *schema.ResourceData, m
 	n := 3
 	splitId := strings.SplitN(givenId, "/", n)
 	if len(splitId) != n {
-		return nil, fmt.Errorf("Import Id is not service_name/cluster_id/id formatted")
+		return nil, fmt.Errorf("import Id is not service_name/cluster_id/id formatted")
 	}
 	serviceName := splitId[0]
 	clusterId := splitId[1]
@@ -126,21 +126,21 @@ func resourceCloudProjectDatabaseKafkaTopicCreate(ctx context.Context, d *schema
 	res := &CloudProjectDatabaseKafkaTopicResponse{}
 
 	return diag.FromErr(
-		resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate),
-			func() *resource.RetryError {
+		retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate),
+			func() *retry.RetryError {
 				log.Printf("[DEBUG] Will create topic: %+v for cluster %s from project %s", params, clusterId, serviceName)
 				err := config.OVHClient.Post(endpoint, params, res)
 				if err != nil {
 					if errOvh, ok := err.(*ovh.APIError); ok && (errOvh.Code == 409) {
-						return resource.RetryableError(err)
+						return retry.RetryableError(err)
 					}
-					return resource.NonRetryableError(fmt.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err))
+					return retry.NonRetryableError(fmt.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err))
 				}
 
 				log.Printf("[DEBUG] Waiting for topic %s to be READY", res.Id)
 				err = waitForCloudProjectDatabaseKafkaTopicReady(ctx, config.OVHClient, serviceName, clusterId, res.Id, d.Timeout(schema.TimeoutCreate))
 				if err != nil {
-					return resource.NonRetryableError(fmt.Errorf("timeout while waiting topic %s to be READY: %s", res.Id, err.Error()))
+					return retry.NonRetryableError(fmt.Errorf("timeout while waiting topic %s to be READY: %s", res.Id, err.Error()))
 				}
 				log.Printf("[DEBUG] topic %s is READY", res.Id)
 
@@ -148,7 +148,7 @@ func resourceCloudProjectDatabaseKafkaTopicCreate(ctx context.Context, d *schema
 				readDiags := resourceCloudProjectDatabaseKafkaTopicRead(ctx, d, meta)
 				err = diagnosticsToError(readDiags)
 				if err != nil {
-					return resource.NonRetryableError(err)
+					return retry.NonRetryableError(err)
 				}
 				return nil
 			},
@@ -198,17 +198,17 @@ func resourceCloudProjectDatabaseKafkaTopicDelete(ctx context.Context, d *schema
 	)
 
 	return diag.FromErr(
-		resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete),
-			func() *resource.RetryError {
+		retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete),
+			func() *retry.RetryError {
 				log.Printf("[DEBUG] Will delete topic  %s from cluster %s from project %s", id, clusterId, serviceName)
 				err := config.OVHClient.Delete(endpoint, nil)
 				if err != nil {
 					if errOvh, ok := err.(*ovh.APIError); ok && (errOvh.Code == 409) {
-						return resource.RetryableError(err)
+						return retry.RetryableError(err)
 					}
 					err = helpers.CheckDeleted(d, err, endpoint)
 					if err != nil {
-						return resource.NonRetryableError(err)
+						return retry.NonRetryableError(err)
 					}
 					return nil
 				}
@@ -216,7 +216,7 @@ func resourceCloudProjectDatabaseKafkaTopicDelete(ctx context.Context, d *schema
 				log.Printf("[DEBUG] Waiting for topic %s to be DELETED", id)
 				err = waitForCloudProjectDatabaseKafkaTopicDeleted(ctx, config.OVHClient, serviceName, clusterId, id, d.Timeout(schema.TimeoutDelete))
 				if err != nil {
-					return resource.NonRetryableError(fmt.Errorf("timeout while waiting topic %s to be DELETED: %s", id, err.Error()))
+					return retry.NonRetryableError(fmt.Errorf("timeout while waiting topic %s to be DELETED: %s", id, err.Error()))
 				}
 				log.Printf("[DEBUG] topic %s is DELETED", id)
 
