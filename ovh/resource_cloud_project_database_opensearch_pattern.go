@@ -62,7 +62,7 @@ func resourceCloudProjectDatabaseOpensearchPatternImportState(d *schema.Resource
 	n := 3
 	splitId := strings.SplitN(givenId, "/", n)
 	if len(splitId) != n {
-		return nil, fmt.Errorf("Import Id is not service_name/cluster_id/id formatted")
+		return nil, fmt.Errorf("import Id is not service_name/cluster_id/id formatted")
 	}
 	serviceName := splitId[0]
 	clusterId := splitId[1]

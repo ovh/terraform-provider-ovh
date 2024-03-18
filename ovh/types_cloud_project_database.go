@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 	"github.com/ybriffa/rfc3339"
@@ -176,7 +176,7 @@ type CloudProjectDatabaseNodesPattern struct {
 	Region string `json:"region"`
 }
 
-func (opts *CloudProjectDatabaseCreateOpts) FromResource(d *schema.ResourceData) (error, *CloudProjectDatabaseCreateOpts) {
+func (opts *CloudProjectDatabaseCreateOpts) FromResource(d *schema.ResourceData) (*CloudProjectDatabaseCreateOpts, error) {
 	opts.Description = d.Get("description").(string)
 	opts.Plan = d.Get("plan").(string)
 
@@ -187,7 +187,7 @@ func (opts *CloudProjectDatabaseCreateOpts) FromResource(d *schema.ResourceData)
 	}
 
 	if err := checkNodesEquality(nodes); err != nil {
-		return err, nil
+		return nil, err
 	}
 
 	opts.NodesPattern = CloudProjectDatabaseNodesPattern{
@@ -203,14 +203,14 @@ func (opts *CloudProjectDatabaseCreateOpts) FromResource(d *schema.ResourceData)
 
 	regions, err := helpers.StringsFromSchema(d, "backup_regions")
 	if err != nil {
-		return err, nil
+		return nil, err
 	}
 
 	opts.Backups = CloudProjectDatabaseBackups{
 		Regions: regions,
 		Time:    d.Get("backup_time").(string),
 	}
-	return nil, opts
+	return opts, nil
 }
 
 type CloudProjectDatabaseUpdateOpts struct {
@@ -224,7 +224,7 @@ type CloudProjectDatabaseUpdateOpts struct {
 	Backups     CloudProjectDatabaseBackups `json:"backups,omitempty"`
 }
 
-func (opts *CloudProjectDatabaseUpdateOpts) FromResource(d *schema.ResourceData) (error, *CloudProjectDatabaseUpdateOpts) {
+func (opts *CloudProjectDatabaseUpdateOpts) FromResource(d *schema.ResourceData) (*CloudProjectDatabaseUpdateOpts, error) {
 	engine := d.Get("engine").(string)
 	if engine == "opensearch" {
 		opts.AclsEnabled = d.Get("opensearch_acls_enabled").(bool)
@@ -241,7 +241,7 @@ func (opts *CloudProjectDatabaseUpdateOpts) FromResource(d *schema.ResourceData)
 
 	regions, err := helpers.StringsFromSchema(d, "backup_regions")
 	if err != nil {
-		return err, nil
+		return nil, err
 	}
 
 	opts.Backups = CloudProjectDatabaseBackups{
@@ -249,7 +249,7 @@ func (opts *CloudProjectDatabaseUpdateOpts) FromResource(d *schema.ResourceData)
 		Time:    d.Get("backup_time").(string),
 	}
 
-	return nil, opts
+	return opts, nil
 }
 
 // This make sure Nodes are homogenous.
@@ -282,8 +282,8 @@ func checkNodesEquality(nodes []CloudProjectDatabaseNodes) error {
 	return nil
 }
 
-func waitForCloudProjectDatabaseReady(client *ovh.Client, serviceName, engine string, databaseId string, timeOut time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+func waitForCloudProjectDatabaseReady(ctx context.Context, client *ovh.Client, serviceName, engine string, databaseId string, timeOut time.Duration) error {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"PENDING", "CREATING", "UPDATING"},
 		Target:  []string{"READY"},
 		Refresh: func() (interface{}, string, error) {
@@ -305,12 +305,12 @@ func waitForCloudProjectDatabaseReady(client *ovh.Client, serviceName, engine st
 		MinTimeout: 10 * time.Second,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 	return err
 }
 
-func waitForCloudProjectDatabaseDeleted(client *ovh.Client, serviceName, engine string, databaseId string, timeOut time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+func waitForCloudProjectDatabaseDeleted(ctx context.Context, client *ovh.Client, serviceName, engine string, databaseId string, timeOut time.Duration) error {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"DELETING"},
 		Target:  []string{"DELETED"},
 		Refresh: func() (interface{}, string, error) {
@@ -335,7 +335,7 @@ func waitForCloudProjectDatabaseDeleted(client *ovh.Client, serviceName, engine 
 		PollInterval: 20 * time.Second,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 	return err
 }
 
@@ -485,7 +485,7 @@ func (opts *CloudProjectDatabaseIpRestrictionUpdateOpts) FromResource(d *schema.
 }
 
 func waitForCloudProjectDatabaseIpRestrictionReady(ctx context.Context, client *ovh.Client, serviceName, engine string, databaseId string, ip string, timeOut time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"PENDING", "CREATING", "UPDATING"},
 		Target:  []string{"READY"},
 		Refresh: func() (interface{}, string, error) {
@@ -513,7 +513,7 @@ func waitForCloudProjectDatabaseIpRestrictionReady(ctx context.Context, client *
 }
 
 func waitForCloudProjectDatabaseIpRestrictionDeleted(ctx context.Context, client *ovh.Client, serviceName, engine string, databaseId string, ip string, timeOut time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"DELETING"},
 		Target:  []string{"DELETED"},
 		Refresh: func() (interface{}, string, error) {
@@ -587,7 +587,7 @@ func importCloudProjectDatabaseUser(d *schema.ResourceData, meta interface{}) ([
 	n := 3
 	splitId := strings.SplitN(givenId, "/", n)
 	if len(splitId) != n {
-		return nil, fmt.Errorf("Import Id is not service_name/cluster_id/id formatted")
+		return nil, fmt.Errorf("import Id is not service_name/cluster_id/id formatted")
 	}
 	serviceName := splitId[0]
 	clusterId := splitId[1]
@@ -611,7 +611,7 @@ func postCloudProjectDatabaseUser(ctx context.Context, d *schema.ResourceData, m
 		return updateFunc(ctx, d, meta)
 	}
 	if engine == "grafana" && name != "avnadmin" {
-		return diag.FromErr(fmt.Errorf("The Grafana engine does not allow to create a user resource other than avnadmin"))
+		return diag.FromErr(fmt.Errorf("the Grafana engine does not allow to create a user resource other than avnadmin"))
 	}
 
 	serviceName := d.Get("service_name").(string)
@@ -743,7 +743,7 @@ func deleteCloudProjectDatabaseUser(ctx context.Context, d *schema.ResourceData,
 }
 
 func waitForCloudProjectDatabaseUserReady(ctx context.Context, client *ovh.Client, serviceName, engine string, databaseId string, userId string, timeOut time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"PENDING", "CREATING", "UPDATING"},
 		Target:  []string{"READY"},
 		Refresh: func() (interface{}, string, error) {
@@ -771,7 +771,7 @@ func waitForCloudProjectDatabaseUserReady(ctx context.Context, client *ovh.Clien
 }
 
 func waitForCloudProjectDatabaseUserDeleted(ctx context.Context, client *ovh.Client, serviceName, engine string, databaseId string, userId string, timeOut time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"DELETING"},
 		Target:  []string{"DELETED"},
 		Refresh: func() (interface{}, string, error) {
@@ -838,7 +838,7 @@ func (opts *CloudProjectDatabaseDatabaseCreateOpts) FromResource(d *schema.Resou
 }
 
 func waitForCloudProjectDatabaseDatabaseReady(ctx context.Context, client *ovh.Client, serviceName, engine string, serviceId string, databaseId string, timeOut time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"PENDING"},
 		Target:  []string{"READY"},
 		Refresh: func() (interface{}, string, error) {
@@ -868,7 +868,7 @@ func waitForCloudProjectDatabaseDatabaseReady(ctx context.Context, client *ovh.C
 }
 
 func waitForCloudProjectDatabaseDatabaseDeleted(ctx context.Context, client *ovh.Client, serviceName, engine string, serviceId string, databaseId string, timeOut time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"DELETING"},
 		Target:  []string{"DELETED"},
 		Refresh: func() (interface{}, string, error) {
@@ -952,7 +952,7 @@ func (opts *CloudProjectDatabaseIntegrationCreateOpts) FromResource(d *schema.Re
 }
 
 func waitForCloudProjectDatabaseIntegrationReady(ctx context.Context, client *ovh.Client, serviceName, engine string, serviceId string, integrationId string, timeOut time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"PENDING"},
 		Target:  []string{"READY"},
 		Refresh: func() (interface{}, string, error) {
@@ -982,7 +982,7 @@ func waitForCloudProjectDatabaseIntegrationReady(ctx context.Context, client *ov
 }
 
 func waitForCloudProjectDatabaseIntegrationDeleted(ctx context.Context, client *ovh.Client, serviceName, engine string, serviceId string, integrationId string, timeOut time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"DELETING"},
 		Target:  []string{"DELETED"},
 		Refresh: func() (interface{}, string, error) {
@@ -1406,7 +1406,7 @@ func (opts *CloudProjectDatabaseM3dbNamespaceUpdateOpts) FromResource(d *schema.
 }
 
 func waitForCloudProjectDatabaseM3dbNamespaceReady(ctx context.Context, client *ovh.Client, serviceName, databaseId string, namespaceId string, timeOut time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"PENDING"},
 		Target:  []string{"READY"},
 		Refresh: func() (interface{}, string, error) {
@@ -1435,7 +1435,7 @@ func waitForCloudProjectDatabaseM3dbNamespaceReady(ctx context.Context, client *
 }
 
 func waitForCloudProjectDatabaseM3dbNamespaceDeleted(ctx context.Context, client *ovh.Client, serviceName, databaseId string, namespaceId string, timeOut time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"DELETING"},
 		Target:  []string{"DELETED"},
 		Refresh: func() (interface{}, string, error) {
@@ -1593,7 +1593,7 @@ func (opts *CloudProjectDatabaseOpensearchPatternCreateOpts) FromResource(d *sch
 }
 
 func waitForCloudProjectDatabaseOpensearchPatternReady(ctx context.Context, client *ovh.Client, serviceName, databaseId string, patternId string, timeOut time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"PENDING"},
 		Target:  []string{"READY"},
 		Refresh: func() (interface{}, string, error) {
@@ -1622,7 +1622,7 @@ func waitForCloudProjectDatabaseOpensearchPatternReady(ctx context.Context, clie
 }
 
 func waitForCloudProjectDatabaseOpensearchPatternDeleted(ctx context.Context, client *ovh.Client, serviceName, databaseId string, patternId string, timeOut time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"DELETING"},
 		Target:  []string{"DELETED"},
 		Refresh: func() (interface{}, string, error) {
@@ -1709,7 +1709,7 @@ func (opts *CloudProjectDatabaseKafkaTopicCreateOpts) FromResource(d *schema.Res
 
 func validateIsSupEqual(v, min int) (errors []error) {
 	if v < min {
-		errors = append(errors, fmt.Errorf("Value %d is inferior of min value %d", v, min))
+		errors = append(errors, fmt.Errorf("value %d is inferior of min value %d", v, min))
 	}
 	return
 }
@@ -1735,7 +1735,7 @@ func validateCloudProjectDatabaseKafkaTopicRetentionHoursFunc(v interface{}, k s
 }
 
 func waitForCloudProjectDatabaseKafkaTopicReady(ctx context.Context, client *ovh.Client, serviceName, databaseId string, topicId string, timeOut time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"PENDING"},
 		Target:  []string{"READY"},
 		Refresh: func() (interface{}, string, error) {
@@ -1764,7 +1764,7 @@ func waitForCloudProjectDatabaseKafkaTopicReady(ctx context.Context, client *ovh
 }
 
 func waitForCloudProjectDatabaseKafkaTopicDeleted(ctx context.Context, client *ovh.Client, serviceName, databaseId string, topicId string, timeOut time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"DELETING"},
 		Target:  []string{"DELETED"},
 		Refresh: func() (interface{}, string, error) {
@@ -1838,7 +1838,7 @@ func (opts *CloudProjectDatabaseKafkaAclCreateOpts) FromResource(d *schema.Resou
 }
 
 func waitForCloudProjectDatabaseKafkaAclReady(ctx context.Context, client *ovh.Client, serviceName, databaseId string, aclId string, timeOut time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"PENDING"},
 		Target:  []string{"READY"},
 		Refresh: func() (interface{}, string, error) {
@@ -1867,7 +1867,7 @@ func waitForCloudProjectDatabaseKafkaAclReady(ctx context.Context, client *ovh.C
 }
 
 func waitForCloudProjectDatabaseKafkaAclDeleted(ctx context.Context, client *ovh.Client, serviceName, databaseId string, aclId string, timeOut time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"DELETING"},
 		Target:  []string{"DELETED"},
 		Refresh: func() (interface{}, string, error) {
@@ -1941,7 +1941,7 @@ func (opts *CloudProjectDatabaseKafkaSchemaRegistryAclCreateOpts) FromResource(d
 }
 
 func waitForCloudProjectDatabaseKafkaSchemaRegistryAclReady(ctx context.Context, client *ovh.Client, serviceName, databaseId string, schemaRegistryAclId string, timeOut time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"PENDING"},
 		Target:  []string{"READY"},
 		Refresh: func() (interface{}, string, error) {
@@ -1970,7 +1970,7 @@ func waitForCloudProjectDatabaseKafkaSchemaRegistryAclReady(ctx context.Context,
 }
 
 func waitForCloudProjectDatabaseKafkaSchemaRegistryAclDeleted(ctx context.Context, client *ovh.Client, serviceName, databaseId string, schemaRegistryAclId string, timeOut time.Duration) error {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"DELETING"},
 		Target:  []string{"DELETED"},
 		Refresh: func() (interface{}, string, error) {
@@ -2105,7 +2105,7 @@ func importCloudProjectDatabasePostgresqlConnectionPool(d *schema.ResourceData, 
 	n := 3
 	splitId := strings.SplitN(givenId, "/", n)
 	if len(splitId) != n {
-		return nil, fmt.Errorf("Import Id is not service_name/cluster_id/id formatted")
+		return nil, fmt.Errorf("import Id is not service_name/cluster_id/id formatted")
 	}
 	serviceName := splitId[0]
 	clusterId := splitId[1]

@@ -43,7 +43,7 @@ func resourceCloudProjectDatabaseIntegration() *schema.Resource {
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
 					value := v.(string)
 					if value == "mongodb" {
-						errors = append(errors, fmt.Errorf("Value %s is not a valid engine for integration", value))
+						errors = append(errors, fmt.Errorf("value %s is not a valid engine for integration", value))
 					}
 					return
 				},
@@ -101,7 +101,7 @@ func resourceCloudProjectDatabaseIntegrationImportState(d *schema.ResourceData, 
 	n := 4
 	splitId := strings.SplitN(givenId, "/", n)
 	if len(splitId) != n {
-		return nil, fmt.Errorf("Import Id is not service_name/engine/cluster_id/id formatted")
+		return nil, fmt.Errorf("import Id is not service_name/engine/cluster_id/id formatted")
 	}
 	serviceName := splitId[0]
 	engine := splitId[1]
