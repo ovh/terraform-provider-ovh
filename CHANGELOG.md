@@ -1,3 +1,27 @@
+## 0.40.0 (March 19, 2024)
+
+⚙️ General:
+
+* Bump golang dependencies ([#578](https://github.com/ovh/terraform-provider-ovh/pull/578))
+
+🎉 Features:
+
+* New resource: `ovh_cloud_project_gateway` ([#571](https://github.com/ovh/terraform-provider-ovh/pull/571))
+* New resource: `ovh_ip_move` ([#510](https://github.com/ovh/terraform-provider-ovh/pull/510))
+
+* New datasource: `ovh_dedicated_server_specifications_hardware` ([#580](https://github.com/ovh/terraform-provider-ovh/pull/580))
+
+💪 Improvements:
+
+* Configuration is loaded like it is done in go-ovh library ([#575](https://github.com/ovh/terraform-provider-ovh/pull/575))
+* `d/ovh_dedicated_server`: Add property `display_name` ([#581](https://github.com/ovh/terraform-provider-ovh/pull/581))
+
+📚 Documentation:
+
+* `r/ovh_cloud_project_kube`: Update documentation page ([#579](https://github.com/ovh/terraform-provider-ovh/pull/579))
+
+❤️ Thanks for your contributions ❤️
+
 ## 0.39.0 (March 11, 2024)
 
 📚 Documentation:
