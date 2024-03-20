@@ -419,7 +419,7 @@ workflow:
     one_at_a_time: true
     parameters:
       # Exclude tests that use a vRack since they are already ran in Tests_Vrack pipeline
-      testargs: -run '[^Vrack]IpLoadbalancing[^Vrack]'
+      testargs: -run 'IpLoadbalancing' -skip '[Vv]rack'
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
