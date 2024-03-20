@@ -122,7 +122,7 @@ type IpLoadbalancingFarmCreateOrUpdateOpts struct {
 	DisplayName    *string                          `json:"displayName,omitempty"`
 	Port           *int                             `json:"port,omitempty"`
 	Probe          *IpLoadbalancingFarmBackendProbe `json:"probe,omitempty"`
-	Stickiness     *string                          `json:"stickiness,omitempty"`
+	Stickiness     *string                          `json:"stickiness"`
 	VrackNetworkId *int64                           `json:"vrackNetworkId,omitempty"`
 	Zone           string                           `json:"zone"`
 }
