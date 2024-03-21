@@ -140,6 +140,7 @@ func (p *OvhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 	return []func() datasource.DataSource{
 		NewCloudProjectDatabaseIPRestrictionsDataSource,
 		NewDedicatedServerSpecificationsHardwareDataSource,
+		NewDomainZoneDnssecDataSource,
 	}
 }
 
@@ -147,6 +148,7 @@ func (p *OvhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 func (p *OvhProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewCloudProjectAlertingResource,
+		NewDomainZoneDnssecResource,
 		NewIploadbalancingUdpFrontendResource,
 	}
 }
