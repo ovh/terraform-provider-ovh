@@ -35,7 +35,7 @@ func resourceIpLoadbalancingHttpFrontend() *schema.Resource {
 				ForceNew: false,
 			},
 			"allowed_source": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
