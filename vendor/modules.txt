@@ -124,13 +124,14 @@ github.com/hashicorp/terraform-exec/tfexec
 # github.com/hashicorp/terraform-json v0.21.0
 ## explicit; go 1.18
 github.com/hashicorp/terraform-json
-# github.com/hashicorp/terraform-plugin-framework v1.4.2
-## explicit; go 1.20
+# github.com/hashicorp/terraform-plugin-framework v1.6.1
+## explicit; go 1.21
 github.com/hashicorp/terraform-plugin-framework/attr
 github.com/hashicorp/terraform-plugin-framework/attr/xattr
 github.com/hashicorp/terraform-plugin-framework/datasource
 github.com/hashicorp/terraform-plugin-framework/datasource/schema
 github.com/hashicorp/terraform-plugin-framework/diag
+github.com/hashicorp/terraform-plugin-framework/function
 github.com/hashicorp/terraform-plugin-framework/internal/fromproto5
 github.com/hashicorp/terraform-plugin-framework/internal/fromproto6
 github.com/hashicorp/terraform-plugin-framework/internal/fromtftypes
@@ -155,6 +156,7 @@ github.com/hashicorp/terraform-plugin-framework/resource
 github.com/hashicorp/terraform-plugin-framework/resource/schema
 github.com/hashicorp/terraform-plugin-framework/resource/schema/defaults
 github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier
+github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier
 github.com/hashicorp/terraform-plugin-framework/schema/validator
 github.com/hashicorp/terraform-plugin-framework/tfsdk
 github.com/hashicorp/terraform-plugin-framework/types
