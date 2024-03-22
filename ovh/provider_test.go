@@ -315,6 +315,13 @@ func testAccPreCheckOrderIpLoadbalancing(t *testing.T) {
 	checkEnvOrSkip(t, "OVH_TESTACC_ORDER_IPLOADBALANCING")
 }
 
+// Checks that the environment variables needed to order /vps for acceptance tests
+// are set.
+func testAccPreCheckOrderVPS(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_TESTACC_ORDER_VPS")
+}
+
 // Checks that the environment variables needed to order /vrack for acceptance tests
 // are set.
 func testAccPreCheckOrderVrack(t *testing.T) {
