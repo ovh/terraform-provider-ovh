@@ -1,6 +1,7 @@
 package ovh
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/url"
@@ -8,10 +9,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
+	"github.com/ovh/terraform-provider-ovh/ovh/types"
 )
 
 var (
@@ -220,22 +223,22 @@ func genericOrderSchema(withOptions bool) map[string]*schema.Schema {
 
 func orderCreateFromResource(d *schema.ResourceData, meta interface{}, product string) error {
 	config := meta.(*Config)
-	order := (&OrderCreateType{}).FromResource(d)
+	order := (&OrderModel{}).FromResource(d)
 
 	err := orderCreate(order, config, product)
 	if err != nil {
 		return err
 	}
 
-	d.SetId(order.OrderID)
+	d.SetId(fmt.Sprint(order.Order.OrderId.ValueInt64()))
 
 	return nil
 }
 
-func orderCreate(d *OrderCreateType, config *Config, product string) error {
+func orderCreate(d *OrderModel, config *Config, product string) error {
 	// create Cart
 	cartParams := &OrderCartCreateOpts{
-		OvhSubsidiary: strings.ToUpper(d.OvhSubsidiary),
+		OvhSubsidiary: strings.ToUpper(d.OvhSubsidiary.ValueString()),
 	}
 
 	cart, err := orderCartCreate(config, cartParams, true)
@@ -245,8 +248,9 @@ func orderCreate(d *OrderCreateType, config *Config, product string) error {
 
 	// Create Product Item
 	item := &OrderCartItem{}
-	cartPlanParams := d.Plans[0]
-	cartPlanParams.Quantity = 1
+	cartPlanParamsList := d.Plan.Elements()
+	cartPlanParams := cartPlanParamsList[0].(PlanValue)
+	cartPlanParams.Quantity = types.TfInt64Value{Int64Value: basetypes.NewInt64Value(1)}
 
 	log.Printf("[DEBUG] Will create order item %s for cart: %s", product, cart.CartId)
 	endpoint := fmt.Sprintf("/order/cart/%s/%s", url.PathEscape(cart.CartId), product)
@@ -255,7 +259,9 @@ func orderCreate(d *OrderCreateType, config *Config, product string) error {
 	}
 
 	// apply configurations
-	for _, cfg := range cartPlanParams.Configuration {
+	configs := cartPlanParams.Configuration.Elements()
+
+	for _, cfg := range configs {
 		log.Printf("[DEBUG] Will create order cart item configuration for cart item: %s/%d",
 			item.CartId,
 			item.ItemId,
@@ -270,21 +276,25 @@ func orderCreate(d *OrderCreateType, config *Config, product string) error {
 		}
 	}
 
+	planOptionValue := d.PlanOption.Elements()
+
 	// Create Product Options Items
-	for _, option := range d.PlanOptions {
+	for _, option := range planOptionValue {
+		opt := option.(PlanOptionValue)
+
 		log.Printf("[DEBUG] Will create order item options %s for cart: %s", product, cart.CartId)
 		productOptionsItem := &OrderCartItem{}
 
-		option.ItemId = item.ItemId
-		option.Quantity = 1
+		opt.ItemId = types.TfInt64Value{Int64Value: basetypes.NewInt64Value(item.ItemId)}
+		opt.Quantity = types.TfInt64Value{Int64Value: basetypes.NewInt64Value(1)}
 
 		endpoint := fmt.Sprintf("/order/cart/%s/%s/options", url.PathEscape(cart.CartId), product)
-		if err := config.OVHClient.Post(endpoint, option, productOptionsItem); err != nil {
+		if err := config.OVHClient.Post(endpoint, opt, productOptionsItem); err != nil {
 			return fmt.Errorf("calling Post %s with params %v:\n\t %q", endpoint, cartPlanParams, err)
 		}
 
-		// apply configurations
-		for _, cfg := range option.Configuration {
+		optionConfigs := opt.Configuration.Elements()
+		for _, cfg := range optionConfigs {
 			log.Printf("[DEBUG] Will create order cart item configuration for cart item: %s/%d",
 				item.CartId,
 				item.ItemId,
@@ -380,7 +390,7 @@ func orderCreate(d *OrderCreateType, config *Config, product string) error {
 		return fmt.Errorf("waiting for order (%d): %s", checkout.OrderID, err)
 	}
 
-	d.OrderID = fmt.Sprint(checkout.OrderID)
+	d.Order.OrderId = types.TfInt64Value{Int64Value: basetypes.NewInt64Value(checkout.OrderID)}
 
 	return nil
 }
@@ -422,7 +432,7 @@ func orderRead(orderId string, config *Config) (*MeOrder, []*MeOrderDetail, erro
 	}
 
 	if len(details) < 1 {
-		return nil, nil, fmt.Errorf("There is no order details for id %s. This shouldn't happen. This is a bug with the API.", orderId)
+		return nil, nil, fmt.Errorf("there is no order details for id %s. This shouldn't happen. This is a bug with the API", orderId)
 	}
 
 	return order, details, nil
@@ -520,6 +530,38 @@ func orderDetails(c *ovh.Client, orderId int64) ([]*MeOrderDetail, error) {
 		details[i] = detail
 	}
 	return details, nil
+}
+
+func serviceNameFromOrder(c *ovh.Client, orderId int64, plan string) (string, error) {
+	detailIds := []int64{}
+	endpoint := fmt.Sprintf("/me/order/%d/details", orderId)
+	if err := c.Get(endpoint, &detailIds); err != nil {
+		return "", fmt.Errorf("calling get %s:\n\t %q", endpoint, err)
+	}
+
+	for _, detailId := range detailIds {
+		detailExtension := &MeOrderDetailExtension{}
+		log.Printf("[DEBUG] Will read order detail extension %d/%d", orderId, detailId)
+		endpoint := fmt.Sprintf("/me/order/%d/details/%d/extension", orderId, detailId)
+		if err := c.Get(endpoint, detailExtension); err != nil {
+			return "", fmt.Errorf("calling get %s:\n\t %q", endpoint, err)
+		}
+
+		if detailExtension.Order.Plan.Code != plan {
+			continue
+		}
+
+		detail := &MeOrderDetail{}
+		log.Printf("[DEBUG] Will read order detail %d/%d", orderId, detailId)
+		endpoint = fmt.Sprintf("/me/order/%d/details/%d", orderId, detailId)
+		if err := c.Get(endpoint, detail); err != nil {
+			return "", fmt.Errorf("calling get %s:\n\t %q", endpoint, err)
+		}
+
+		return detail.Domain, nil
+	}
+
+	return "", errors.New("serviceName not found")
 }
 
 func waitForOrder(c *ovh.Client, id int64) resource.StateRefreshFunc {
