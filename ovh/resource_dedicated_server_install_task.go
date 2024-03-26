@@ -57,12 +57,6 @@ func resourceDedicatedServerInstallTask() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"change_log": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Deprecated:  "field is not used anymore",
-							Description: "Template change log details",
-						},
 						"custom_hostname": {
 							Type:        schema.TypeString,
 							Optional:    true,
@@ -71,12 +65,6 @@ func resourceDedicatedServerInstallTask() *schema.Resource {
 						},
 						"disk_group_id": {
 							Type:        schema.TypeInt,
-							Optional:    true,
-							ForceNew:    true,
-							Description: "",
-						},
-						"install_rtm": {
-							Type:        schema.TypeBool,
 							Optional:    true,
 							ForceNew:    true,
 							Description: "",
@@ -111,12 +99,6 @@ func resourceDedicatedServerInstallTask() *schema.Resource {
 							ForceNew:    true,
 							Description: "indicate the string returned by your postinstall customisation script on successful execution. Advice: your script should return a unique validation string in case of succes. A good example is 'loh1Xee7eo OK OK OK UGh8Ang1Gu'",
 						},
-						"reset_hw_raid": {
-							Type:        schema.TypeBool,
-							Optional:    true,
-							ForceNew:    true,
-							Description: "",
-						},
 						"soft_raid_devices": {
 							Type:        schema.TypeInt,
 							Optional:    true,
@@ -134,12 +116,6 @@ func resourceDedicatedServerInstallTask() *schema.Resource {
 							Optional:    true,
 							ForceNew:    true,
 							Description: "",
-						},
-						"use_distrib_kernel": {
-							Type:        schema.TypeBool,
-							Optional:    true,
-							ForceNew:    true,
-							Description: "Use the distribution's native kernel instead of the recommended OVH Kernel",
 						},
 					},
 				},

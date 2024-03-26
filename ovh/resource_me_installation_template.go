@@ -60,12 +60,6 @@ func resourceMeInstallationTemplate() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"change_log": {
-							Type:        schema.TypeString,
-							Deprecated:  "field is not used anymore",
-							Optional:    true,
-							Description: "Template change log details",
-						},
 						"custom_hostname": {
 							Type:        schema.TypeString,
 							Optional:    true,
@@ -90,11 +84,6 @@ func resourceMeInstallationTemplate() *schema.Resource {
 							Type:        schema.TypeString,
 							Optional:    true,
 							Description: "Name of the ssh key that should be installed. Password login will be disabled",
-						},
-						"use_distribution_kernel": {
-							Type:        schema.TypeBool,
-							Optional:    true,
-							Description: "Use the distribution's native kernel instead of the recommended OVH Kernel",
 						},
 					},
 				},
@@ -165,16 +154,6 @@ func resourceMeInstallationTemplate() *schema.Resource {
 				Type:        schema.TypeBool,
 				Computed:    true,
 				Description: "This distribution supports Logical Volumes (Linux LVM)",
-			},
-			"supports_distribution_kernel": {
-				Type:        schema.TypeBool,
-				Computed:    true,
-				Description: "This distribution supports installation using the distribution's native kernel instead of the recommended OVH kernel",
-			},
-			"supports_rtm": {
-				Type:        schema.TypeBool,
-				Computed:    true,
-				Description: "This distribution supports RTM software",
 			},
 			"supports_sql_server": {
 				Type:        schema.TypeBool,

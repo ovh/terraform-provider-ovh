@@ -128,32 +128,26 @@ func (opts *DedicatedServerInstallTaskCreateOpts) FromResource(d *schema.Resourc
 type DedicatedServerInstallTaskDetails struct {
 	CustomHostname               *string `json:"customHostname,omitempty"`
 	DiskGroupId                  *int64  `json:"diskGroupId,omitempty"`
-	InstallRTM                   *bool   `json:"installRTM,omitempty"`
 	InstallSqlServer             *bool   `json:"installSqlServer,omitempty"`
 	Language                     *string `json:"language,omitempty"`
 	NoRaid                       *bool   `json:"noRaid,omitempty"`
 	PostInstallationScriptLink   *string `json:"postInstallationScriptLink,omitempty"`
 	PostInstallationScriptReturn *string `json:"postInstallationScriptReturn,omitempty"`
-	ResetHwRaid                  *bool   `json:"resetHwRaid,omitempty"`
 	SoftRaidDevices              *int64  `json:"softRaidDevices,omitempty"`
 	SshKeyName                   *string `json:"sshKeyName,omitempty"`
-	UseDistribKernel             *bool   `json:"useDistribKernel,omitempty"`
 	UseSpla                      *bool   `json:"useSpla,omitempty"`
 }
 
 func (opts *DedicatedServerInstallTaskDetails) FromResource(d *schema.ResourceData, parent string) *DedicatedServerInstallTaskDetails {
 	opts.CustomHostname = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.custom_hostname", parent))
 	opts.DiskGroupId = helpers.GetNilInt64PointerFromData(d, fmt.Sprintf("%s.disk_group_id", parent))
-	opts.InstallRTM = helpers.GetNilBoolPointerFromData(d, fmt.Sprintf("%s.install_rtm", parent))
 	opts.InstallSqlServer = helpers.GetNilBoolPointerFromData(d, fmt.Sprintf("%s.install_sql_server", parent))
 	opts.Language = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.language", parent))
 	opts.NoRaid = helpers.GetNilBoolPointerFromData(d, fmt.Sprintf("%s.no_raid", parent))
 	opts.PostInstallationScriptLink = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.post_installation_script_link", parent))
 	opts.PostInstallationScriptReturn = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.post_installation_script_return", parent))
-	opts.ResetHwRaid = helpers.GetNilBoolPointerFromData(d, fmt.Sprintf("%s.reset_hw_raid", parent))
 	opts.SoftRaidDevices = helpers.GetNilInt64PointerFromData(d, fmt.Sprintf("%s.soft_raid_devices", parent))
 	opts.SshKeyName = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.ssh_key_name", parent))
-	opts.UseDistribKernel = helpers.GetNilBoolPointerFromData(d, fmt.Sprintf("%s.use_distrib_kernel", parent))
 	opts.UseSpla = helpers.GetNilBoolPointerFromData(d, fmt.Sprintf("%s.use_spla", parent))
 
 	return opts

@@ -25,7 +25,6 @@ func TestAccMeInstallationTemplate_importBasic(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"remove_default_partition_schemes",
-					"customization.0.change_log",
 					"customization.0.rating",
 				},
 			},

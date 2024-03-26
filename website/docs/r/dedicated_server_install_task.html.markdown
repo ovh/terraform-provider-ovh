@@ -57,20 +57,16 @@ The following arguments are supported:
 
 The `details` block supports:
 
-* `change_log` - Template change log details.
 * `custom_hostname` - Set up the server using the provided hostname instead of the default hostname.
 * `disk_group_id` - Disk group id.
-* `install_rtm` - set to true to install RTM.
 * `install_sql_server` - set to true to install sql server (Windows template only).
 * `language` - language.
 * `no_raid` - set to true to disable RAID.
 * `post_installation_script_link` - Indicate the URL where your postinstall customisation script is located.
 * `post_installation_script_return` - Indicate the string returned by your postinstall customisation script on successful execution. Advice: your script should return a unique validation string in case of succes. A good example is 'loh1Xee7eo OK OK OK UGh8Ang1Gu'.
-* `reset_hw_raid` - set to true to make a hardware raid reset.
 * `soft_raid_devices` - soft raid devices.
 * `ssh_key_name` - Name of the ssh key that should be installed. Password login will be disabled.
 * `use_spla` - set to true to use SPLA.
-* `use_distrib_kernel` - Use the distribution's native kernel instead of the recommended OVHcloud Kernel.
 
 ## Attributes Reference
 
