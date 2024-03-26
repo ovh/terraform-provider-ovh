@@ -65,7 +65,6 @@ The `details` block supports:
 * `no_raid` - set to true to disable RAID.
 * `post_installation_script_link` - Indicate the URL where your postinstall customisation script is located.
 * `post_installation_script_return` - Indicate the string returned by your postinstall customisation script on successful execution. Advice: your script should return a unique validation string in case of succes. A good example is 'loh1Xee7eo OK OK OK UGh8Ang1Gu'.
-* `reset_hw_raid` - set to true to make a hardware raid reset.
 * `soft_raid_devices` - soft raid devices.
 * `ssh_key_name` - Name of the ssh key that should be installed. Password login will be disabled.
 * `use_spla` - set to true to use SPLA.

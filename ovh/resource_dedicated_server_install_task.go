@@ -105,12 +105,6 @@ func resourceDedicatedServerInstallTask() *schema.Resource {
 							ForceNew:    true,
 							Description: "indicate the string returned by your postinstall customisation script on successful execution. Advice: your script should return a unique validation string in case of succes. A good example is 'loh1Xee7eo OK OK OK UGh8Ang1Gu'",
 						},
-						"reset_hw_raid": {
-							Type:        schema.TypeBool,
-							Optional:    true,
-							ForceNew:    true,
-							Description: "",
-						},
 						"soft_raid_devices": {
 							Type:        schema.TypeInt,
 							Optional:    true,

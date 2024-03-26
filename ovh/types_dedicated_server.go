@@ -133,7 +133,6 @@ type DedicatedServerInstallTaskDetails struct {
 	NoRaid                       *bool   `json:"noRaid,omitempty"`
 	PostInstallationScriptLink   *string `json:"postInstallationScriptLink,omitempty"`
 	PostInstallationScriptReturn *string `json:"postInstallationScriptReturn,omitempty"`
-	ResetHwRaid                  *bool   `json:"resetHwRaid,omitempty"`
 	SoftRaidDevices              *int64  `json:"softRaidDevices,omitempty"`
 	SshKeyName                   *string `json:"sshKeyName,omitempty"`
 	UseSpla                      *bool   `json:"useSpla,omitempty"`
@@ -147,7 +146,6 @@ func (opts *DedicatedServerInstallTaskDetails) FromResource(d *schema.ResourceDa
 	opts.NoRaid = helpers.GetNilBoolPointerFromData(d, fmt.Sprintf("%s.no_raid", parent))
 	opts.PostInstallationScriptLink = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.post_installation_script_link", parent))
 	opts.PostInstallationScriptReturn = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.post_installation_script_return", parent))
-	opts.ResetHwRaid = helpers.GetNilBoolPointerFromData(d, fmt.Sprintf("%s.reset_hw_raid", parent))
 	opts.SoftRaidDevices = helpers.GetNilInt64PointerFromData(d, fmt.Sprintf("%s.soft_raid_devices", parent))
 	opts.SshKeyName = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.ssh_key_name", parent))
 	opts.UseSpla = helpers.GetNilBoolPointerFromData(d, fmt.Sprintf("%s.use_spla", parent))
