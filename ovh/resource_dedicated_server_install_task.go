@@ -129,12 +129,6 @@ func resourceDedicatedServerInstallTask() *schema.Resource {
 							ForceNew:    true,
 							Description: "",
 						},
-						"use_distrib_kernel": {
-							Type:        schema.TypeBool,
-							Optional:    true,
-							ForceNew:    true,
-							Description: "Use the distribution's native kernel instead of the recommended OVH Kernel",
-						},
 					},
 				},
 			},

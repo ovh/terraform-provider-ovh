@@ -136,7 +136,6 @@ type DedicatedServerInstallTaskDetails struct {
 	ResetHwRaid                  *bool   `json:"resetHwRaid,omitempty"`
 	SoftRaidDevices              *int64  `json:"softRaidDevices,omitempty"`
 	SshKeyName                   *string `json:"sshKeyName,omitempty"`
-	UseDistribKernel             *bool   `json:"useDistribKernel,omitempty"`
 	UseSpla                      *bool   `json:"useSpla,omitempty"`
 }
 
@@ -151,7 +150,6 @@ func (opts *DedicatedServerInstallTaskDetails) FromResource(d *schema.ResourceDa
 	opts.ResetHwRaid = helpers.GetNilBoolPointerFromData(d, fmt.Sprintf("%s.reset_hw_raid", parent))
 	opts.SoftRaidDevices = helpers.GetNilInt64PointerFromData(d, fmt.Sprintf("%s.soft_raid_devices", parent))
 	opts.SshKeyName = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.ssh_key_name", parent))
-	opts.UseDistribKernel = helpers.GetNilBoolPointerFromData(d, fmt.Sprintf("%s.use_distrib_kernel", parent))
 	opts.UseSpla = helpers.GetNilBoolPointerFromData(d, fmt.Sprintf("%s.use_spla", parent))
 
 	return opts

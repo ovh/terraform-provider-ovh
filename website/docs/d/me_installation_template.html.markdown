@@ -33,7 +33,6 @@ The following attributes are exported:
   * `post_installation_script_return`: indicate the string returned by your postinstall customisation script on successful execution. Advice: your script should return a unique validation string in case of succes. A good example is 'loh1Xee7eo OK OK OK UGh8Ang1Gu'.
   * `rating`: (DEPRECATED) Rating.
   * `ssh_key_name`: Name of the ssh key that should be installed. Password login will be disabled.
-  * `use_distribution_kernel`: Use the distribution's native kernel instead of the recommended OVHcloud Kernel.
 * `default_language`: The default language of this template.
 * `deprecated`: is this distribution deprecated.
 * `description`: information about this template.
@@ -58,5 +57,4 @@ The following attributes are exported:
      * `order`: step or order. specifies the creation order of the partition on the disk
      * `type`: partition type.
      * `volume_name`: The volume name needed for proxmox distribution
-* `supports_distribution_kernel`: This distribution supports installation using the distribution's native kernel instead of the recommended OVHcloud kernel.
 * `supports_sql_server`: This distribution supports the microsoft SQL server.
