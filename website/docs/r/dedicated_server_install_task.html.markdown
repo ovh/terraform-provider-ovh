@@ -57,7 +57,6 @@ The following arguments are supported:
 
 The `details` block supports:
 
-* `change_log` - Template change log details.
 * `custom_hostname` - Set up the server using the provided hostname instead of the default hostname.
 * `disk_group_id` - Disk group id.
 * `install_sql_server` - set to true to install sql server (Windows template only).

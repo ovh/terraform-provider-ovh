@@ -60,12 +60,6 @@ func resourceMeInstallationTemplate() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"change_log": {
-							Type:        schema.TypeString,
-							Deprecated:  "field is not used anymore",
-							Optional:    true,
-							Description: "Template change log details",
-						},
 						"custom_hostname": {
 							Type:        schema.TypeString,
 							Optional:    true,

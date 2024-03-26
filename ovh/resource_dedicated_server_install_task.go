@@ -57,12 +57,6 @@ func resourceDedicatedServerInstallTask() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"change_log": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Deprecated:  "field is not used anymore",
-							Description: "Template change log details",
-						},
 						"custom_hostname": {
 							Type:        schema.TypeString,
 							Optional:    true,

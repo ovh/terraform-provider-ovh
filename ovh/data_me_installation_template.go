@@ -29,12 +29,6 @@ func dataSourceMeInstallationTemplate() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"change_log": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Deprecated:  "field is not used anymore",
-							Description: "Template change log details",
-						},
 						"custom_hostname": {
 							Type:        schema.TypeString,
 							Computed:    true,
