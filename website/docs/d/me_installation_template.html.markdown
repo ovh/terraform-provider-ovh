@@ -59,5 +59,4 @@ The following attributes are exported:
      * `type`: partition type.
      * `volume_name`: The volume name needed for proxmox distribution
 * `supports_distribution_kernel`: This distribution supports installation using the distribution's native kernel instead of the recommended OVHcloud kernel.
-* `supports_rtm`: This distribution supports RTM software.
 * `supports_sql_server`: This distribution supports the microsoft SQL server.

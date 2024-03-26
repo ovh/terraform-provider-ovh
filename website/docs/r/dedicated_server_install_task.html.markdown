@@ -60,7 +60,6 @@ The `details` block supports:
 * `change_log` - Template change log details.
 * `custom_hostname` - Set up the server using the provided hostname instead of the default hostname.
 * `disk_group_id` - Disk group id.
-* `install_rtm` - set to true to install RTM.
 * `install_sql_server` - set to true to install sql server (Windows template only).
 * `language` - language.
 * `no_raid` - set to true to disable RAID.

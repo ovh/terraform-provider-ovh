@@ -24,7 +24,6 @@ type InstallationTemplate struct {
 	LastModification           *string                            `json:"last_modification"`
 	LvmReady                   *bool                              `json:"lvmReady,omitempty"`
 	SupportsDistributionKernel *bool                              `json:"supportsDistributionKernel,omitempty"`
-	SupportsRTM                bool                               `json:"supportsRTM"`
 	SupportsSqlServer          *bool                              `json:"supportsSqlServer,omitempty"`
 	TemplateName               string                             `json:"templateName"`
 }
@@ -74,8 +73,6 @@ func (v InstallationTemplate) ToMap() map[string]interface{} {
 	if v.SupportsDistributionKernel != nil {
 		obj["supports_distribution_kernel"] = *v.SupportsDistributionKernel
 	}
-
-	obj["supports_rtm"] = v.SupportsRTM
 
 	if v.SupportsSqlServer != nil {
 		obj["supports_sql_server"] = *v.SupportsSqlServer

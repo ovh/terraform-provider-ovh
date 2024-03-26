@@ -234,11 +234,6 @@ func dataSourceMeInstallationTemplate() *schema.Resource {
 				Computed:    true,
 				Description: "This distribution supports installation using the distribution's native kernel instead of the recommended OVH kernel",
 			},
-			"supports_rtm": {
-				Type:        schema.TypeBool,
-				Computed:    true,
-				Description: "This distribution supports RTM software",
-			},
 			"supports_sql_server": {
 				Type:        schema.TypeBool,
 				Computed:    true,

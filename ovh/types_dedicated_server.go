@@ -128,7 +128,6 @@ func (opts *DedicatedServerInstallTaskCreateOpts) FromResource(d *schema.Resourc
 type DedicatedServerInstallTaskDetails struct {
 	CustomHostname               *string `json:"customHostname,omitempty"`
 	DiskGroupId                  *int64  `json:"diskGroupId,omitempty"`
-	InstallRTM                   *bool   `json:"installRTM,omitempty"`
 	InstallSqlServer             *bool   `json:"installSqlServer,omitempty"`
 	Language                     *string `json:"language,omitempty"`
 	NoRaid                       *bool   `json:"noRaid,omitempty"`
@@ -144,7 +143,6 @@ type DedicatedServerInstallTaskDetails struct {
 func (opts *DedicatedServerInstallTaskDetails) FromResource(d *schema.ResourceData, parent string) *DedicatedServerInstallTaskDetails {
 	opts.CustomHostname = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.custom_hostname", parent))
 	opts.DiskGroupId = helpers.GetNilInt64PointerFromData(d, fmt.Sprintf("%s.disk_group_id", parent))
-	opts.InstallRTM = helpers.GetNilBoolPointerFromData(d, fmt.Sprintf("%s.install_rtm", parent))
 	opts.InstallSqlServer = helpers.GetNilBoolPointerFromData(d, fmt.Sprintf("%s.install_sql_server", parent))
 	opts.Language = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.language", parent))
 	opts.NoRaid = helpers.GetNilBoolPointerFromData(d, fmt.Sprintf("%s.no_raid", parent))

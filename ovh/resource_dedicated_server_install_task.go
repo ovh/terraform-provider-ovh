@@ -75,12 +75,6 @@ func resourceDedicatedServerInstallTask() *schema.Resource {
 							ForceNew:    true,
 							Description: "",
 						},
-						"install_rtm": {
-							Type:        schema.TypeBool,
-							Optional:    true,
-							ForceNew:    true,
-							Description: "",
-						},
 						"install_sql_server": {
 							Type:        schema.TypeBool,
 							Optional:    true,

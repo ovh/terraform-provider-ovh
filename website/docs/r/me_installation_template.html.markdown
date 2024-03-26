@@ -41,7 +41,6 @@ resource "ovh_me_installation_template" "mytemplate" {
 * `last_modification`: Date of last modification of the base image.
 * `remove_default_partition_schemes`: (Required) Remove default partition schemes at creation.
 * `supports_distribution_kernel`: This distribution supports installation using the distribution's native kernel instead of the recommended OVHcloud kernel.
-* `supports_rtm`: This distribution supports RTM software.
 * `supports_sql_server`: This distribution supports the microsoft SQL server.
 * `template_name`: (Required)  This template name.
 
