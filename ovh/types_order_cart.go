@@ -9,6 +9,30 @@ import (
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
+type OrderCreateType struct {
+	OrderID string
+	*OrderCartCreateOpts
+	Plans       []*OrderCartPlanCreateOpts
+	PlanOptions []*OrderCartPlanOptionsCreateOpts
+}
+
+func (o *OrderCreateType) FromResource(d *schema.ResourceData) *OrderCreateType {
+	o.OrderCartCreateOpts = (&OrderCartCreateOpts{}).FromResource(d)
+
+	nbPlans := d.Get("plan.#").(int)
+	for i := 0; i < nbPlans; i++ {
+		o.Plans = append(o.Plans, (&OrderCartPlanCreateOpts{}).FromResourceWithPath(d, fmt.Sprintf("plan.%d", i)))
+	}
+
+	nbPlanOptions := d.Get("plan_option.#").(int)
+	for i := 0; i < nbPlanOptions; i++ {
+		o.PlanOptions = append(o.PlanOptions,
+			(&OrderCartPlanOptionsCreateOpts{}).FromResourceWithPath(d, fmt.Sprintf("plan_option.%d", i)))
+	}
+
+	return o
+}
+
 type OrderCartCreateOpts struct {
 	OvhSubsidiary string  `json:"ovhSubsidiary"`
 	Description   *string `json:"description,omitempty"`
@@ -24,11 +48,12 @@ func (opts *OrderCartCreateOpts) FromResource(d *schema.ResourceData) *OrderCart
 }
 
 type OrderCartPlanCreateOpts struct {
-	CatalogName *string `json:"catalogName,omitempty"`
-	Duration    string  `json:"duration"`
-	PlanCode    string  `json:"planCode"`
-	PricingMode string  `json:"pricingMode"`
-	Quantity    int     `json:"quantity"`
+	CatalogName   *string                           `json:"catalogName,omitempty"`
+	Duration      string                            `json:"duration"`
+	PlanCode      string                            `json:"planCode"`
+	PricingMode   string                            `json:"pricingMode"`
+	Quantity      int                               `json:"quantity"`
+	Configuration []*OrderCartItemConfigurationOpts `json:"-"`
 }
 
 func (opts *OrderCartPlanCreateOpts) FromResourceWithPath(d *schema.ResourceData, path string) *OrderCartPlanCreateOpts {
@@ -36,6 +61,13 @@ func (opts *OrderCartPlanCreateOpts) FromResourceWithPath(d *schema.ResourceData
 	opts.Duration = d.Get(fmt.Sprintf("%s.duration", path)).(string)
 	opts.PlanCode = d.Get(fmt.Sprintf("%s.plan_code", path)).(string)
 	opts.PricingMode = d.Get(fmt.Sprintf("%s.pricing_mode", path)).(string)
+
+	nbOfConfigurations := d.Get(fmt.Sprintf("%s.configuration.#", path)).(int)
+	for i := 0; i < nbOfConfigurations; i++ {
+		opts.Configuration = append(opts.Configuration,
+			(&OrderCartItemConfigurationOpts{}).FromResourceWithPath(d, fmt.Sprintf("%s.configuration.%d", path, i)))
+	}
+
 	return opts
 }
 
@@ -51,12 +83,13 @@ func (opts *OrderCartPlanCreateOpts) String() string {
 }
 
 type OrderCartPlanOptionsCreateOpts struct {
-	CatalogName *string `json:"catalogName,omitempty"`
-	Duration    string  `json:"duration"`
-	PlanCode    string  `json:"planCode"`
-	PricingMode string  `json:"pricingMode"`
-	Quantity    int     `json:"quantity"`
-	ItemId      int64   `json:"itemId"`
+	CatalogName   *string                           `json:"catalogName,omitempty"`
+	Duration      string                            `json:"duration"`
+	PlanCode      string                            `json:"planCode"`
+	PricingMode   string                            `json:"pricingMode"`
+	Quantity      int                               `json:"quantity"`
+	ItemId        int64                             `json:"itemId"`
+	Configuration []*OrderCartItemConfigurationOpts `json:"-"`
 }
 
 func (opts *OrderCartPlanOptionsCreateOpts) FromResourceWithPath(d *schema.ResourceData, path string) *OrderCartPlanOptionsCreateOpts {
@@ -64,6 +97,13 @@ func (opts *OrderCartPlanOptionsCreateOpts) FromResourceWithPath(d *schema.Resou
 	opts.Duration = d.Get(fmt.Sprintf("%s.duration", path)).(string)
 	opts.PlanCode = d.Get(fmt.Sprintf("%s.plan_code", path)).(string)
 	opts.PricingMode = d.Get(fmt.Sprintf("%s.pricing_mode", path)).(string)
+
+	nbConfigs := d.Get(fmt.Sprintf("%s.configuration.#", path)).(int)
+	for i := 0; i < nbConfigs; i++ {
+		opts.Configuration = append(opts.Configuration,
+			(&OrderCartItemConfigurationOpts{}).FromResourceWithPath(d, fmt.Sprintf("%s.configuration.%d", path, i)))
+	}
+
 	return opts
 }
 

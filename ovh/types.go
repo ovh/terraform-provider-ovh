@@ -34,3 +34,7 @@ func (v UnitAndValue) ToMap() map[string]interface{} {
 
 	return obj
 }
+
+type ConfirmTerminationOpts struct {
+	Token string `json:"token"`
+}

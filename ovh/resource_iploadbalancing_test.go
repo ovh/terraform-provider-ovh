@@ -142,7 +142,7 @@ func testSweepIpLoadbalancing(region string) error {
 		}
 
 		err = resource.Retry(5*time.Minute, func() *resource.RetryError {
-			if err := orderDelete(nil, config, terminate, confirmTerminate); err != nil {
+			if err := orderDeleteFromResource(nil, config, terminate, confirmTerminate); err != nil {
 				return resource.RetryableError(err)
 			}
 

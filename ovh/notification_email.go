@@ -7,9 +7,7 @@ import (
 	"strings"
 )
 
-func notificationEmailSortedIds(meta interface{}) ([]int64, error) {
-	config := meta.(*Config)
-
+func notificationEmailSortedIds(config *Config) ([]int64, error) {
 	// Create Order
 	log.Printf("[DEBUG] Will read notification emails ids")
 	res := []int64{}
@@ -24,10 +22,8 @@ func notificationEmailSortedIds(meta interface{}) ([]int64, error) {
 	return res, nil
 }
 
-func getNewNotificationEmail(matches []string, oldIds []int64, meta interface{}) (*NotificationEmail, error) {
-	config := meta.(*Config)
-
-	curIds, err := notificationEmailSortedIds(meta)
+func getNewNotificationEmail(matches []string, oldIds []int64, config *Config) (*NotificationEmail, error) {
+	curIds, err := notificationEmailSortedIds(config)
 	if err != nil {
 		return nil, err
 	}
