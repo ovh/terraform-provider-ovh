@@ -1,6 +1,7 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/url"
@@ -9,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
@@ -73,15 +75,16 @@ func testSweepDbaasOutputGraylogStream(region string) error {
 		}
 
 		res := &DbaasLogsOperation{}
-		err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+		ctx := context.Background()
+		err = retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
 			log.Printf("[INFO] Will delete dbaas logs output graylog stream : %s/%s", serviceName, id)
 			if err := config.OVHClient.Delete(endpoint, res); err != nil {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
 			// Wait for operation status
-			if _, err := waitForDbaasLogsOperation(config.OVHClient, serviceName, res.OperationId); err != nil {
-				return resource.RetryableError(err)
+			if _, err := waitForDbaasLogsOperation(ctx, config.OVHClient, serviceName, res.OperationId); err != nil {
+				return retry.RetryableError(err)
 			}
 			// Successful delete
 			return nil

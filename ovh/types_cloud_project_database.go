@@ -437,6 +437,58 @@ func (v CloudProjectDatabaseCapabilitiesResponse) ToMap() map[string]interface{}
 	return obj
 }
 
+// Log Subscrition
+
+type CloudProjectDatabaseLogSubscriptionResource struct {
+	Name string `json:"name"`
+	Type string `json:"type"`
+}
+
+type CloudProjectDatabaseLogSubscriptionResponse struct {
+	CreateAt       string                                      `json:"createAt"`
+	Kind           string                                      `json:"kind"`
+	OperationID    string                                      `json:"operationId"`
+	Resource       CloudProjectDatabaseLogSubscriptionResource `json:"resource"`
+	LDPServiceName string                                      `json:"serviceName"`
+	StreamID       string                                      `json:"streamId"`
+	SubscriptionID string                                      `json:"subscriptionId"`
+	UpdatedAt      string                                      `json:"updatedAt"`
+}
+
+func (p *CloudProjectDatabaseLogSubscriptionResponse) String() string {
+	return fmt.Sprintf(
+		"Operation ID: %s, Subscription ID: %s, Stream ID: %s",
+		p.OperationID,
+		p.SubscriptionID,
+		p.StreamID,
+	)
+}
+
+func (v CloudProjectDatabaseLogSubscriptionResponse) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+
+	obj["create_at"] = v.CreateAt
+	obj["id"] = v.SubscriptionID
+	obj["ldp_service_name"] = v.LDPServiceName
+	obj["kind"] = v.Kind
+	obj["operationId"] = v.OperationID
+	obj["resource_name"] = v.Resource.Name
+	obj["resource_type"] = v.Resource.Type
+	obj["stream_id"] = v.StreamID
+	obj["updated_at"] = v.UpdatedAt
+
+	return obj
+}
+
+type CloudProjectDatabaseLogSubscriptionCreateOpts struct {
+	StreamID string `json:"streamId"`
+}
+
+func (opts *CloudProjectDatabaseLogSubscriptionCreateOpts) FromResource(d *schema.ResourceData) *CloudProjectDatabaseLogSubscriptionCreateOpts {
+	opts.StreamID = d.Get("stream_id").(string)
+	return opts
+}
+
 // IP Restriction
 
 type CloudProjectDatabaseIpRestrictionResponse struct {

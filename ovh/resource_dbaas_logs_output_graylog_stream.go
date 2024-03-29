@@ -1,21 +1,23 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/url"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
 func resourceDbaasLogsOutputGraylogStream() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDbaasLogsOutputGraylogStreamCreate,
-		Read:   resourceDbaasLogsOutputGraylogStreamRead,
-		Update: resourceDbaasLogsOutputGraylogStreamUpdate,
-		Delete: resourceDbaasLogsOutputGraylogStreamDelete,
+		CreateContext: resourceDbaasLogsOutputGraylogStreamCreate,
+		ReadContext:   resourceDbaasLogsOutputGraylogStreamRead,
+		UpdateContext: resourceDbaasLogsOutputGraylogStreamUpdate,
+		DeleteContext: resourceDbaasLogsOutputGraylogStreamDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceDbaasLogsOutputGraylogStreamImportState,
 		},
@@ -199,13 +201,13 @@ func resourceDbaasLogsOutputGraylogStream() *schema.Resource {
 }
 
 func resourceDbaasLogsOutputGraylogStreamImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	givenId := d.Id()
-	splitId := strings.SplitN(givenId, "/", 2)
-	if len(splitId) != 2 {
+	givenID := d.Id()
+	splitID := strings.SplitN(givenID, "/", 2)
+	if len(splitID) != 2 {
 		return nil, fmt.Errorf("Import Id is not service_name/id formatted")
 	}
-	serviceName := splitId[0]
-	id := splitId[1]
+	serviceName := splitID[0]
+	id := splitID[1]
 	d.SetId(id)
 	d.Set("service_name", serviceName)
 
@@ -214,7 +216,7 @@ func resourceDbaasLogsOutputGraylogStreamImportState(d *schema.ResourceData, met
 	return results, nil
 }
 
-func resourceDbaasLogsOutputGraylogStreamCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDbaasLogsOutputGraylogStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 
 	serviceName := d.Get("service_name").(string)
@@ -228,26 +230,26 @@ func resourceDbaasLogsOutputGraylogStreamCreate(d *schema.ResourceData, meta int
 		url.PathEscape(serviceName),
 	)
 	if err := config.OVHClient.Post(endpoint, opts, res); err != nil {
-		return fmt.Errorf("Error calling post %s:\n\t %q", endpoint, err)
+		return diag.Errorf("Error calling post %s:\n\t %q", endpoint, err)
 	}
 
 	// Wait for operation status
-	op, err := waitForDbaasLogsOperation(config.OVHClient, serviceName, res.OperationId)
+	op, err := waitForDbaasLogsOperation(ctx, config.OVHClient, serviceName, res.OperationId)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	id := op.StreamId
 	if id == nil {
-		return fmt.Errorf("Stream Id is nil. This should not happen: operation is %s/%s", serviceName, res.OperationId)
+		return diag.Errorf("Stream Id is nil. This should not happen: operation is %s/%s", serviceName, res.OperationId)
 	}
 
 	d.SetId(*id)
 
-	return resourceDbaasLogsOutputGraylogStreamRead(d, meta)
+	return resourceDbaasLogsOutputGraylogStreamRead(ctx, d, meta)
 }
 
-func resourceDbaasLogsOutputGraylogStreamUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDbaasLogsOutputGraylogStreamUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 
 	serviceName := d.Get("service_name").(string)
@@ -263,18 +265,18 @@ func resourceDbaasLogsOutputGraylogStreamUpdate(d *schema.ResourceData, meta int
 		url.PathEscape(id),
 	)
 	if err := config.OVHClient.Put(endpoint, opts, res); err != nil {
-		return fmt.Errorf("Error calling Put %s:\n\t %q", endpoint, err)
+		return diag.Errorf("Error calling Put %s:\n\t %q", endpoint, err)
 	}
 
 	// Wait for operation status
-	if _, err := waitForDbaasLogsOperation(config.OVHClient, serviceName, res.OperationId); err != nil {
-		return err
+	if _, err := waitForDbaasLogsOperation(ctx, config.OVHClient, serviceName, res.OperationId); err != nil {
+		return diag.FromErr(err)
 	}
 
-	return resourceDbaasLogsOutputGraylogStreamRead(d, meta)
+	return resourceDbaasLogsOutputGraylogStreamRead(ctx, d, meta)
 }
 
-func resourceDbaasLogsOutputGraylogStreamRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDbaasLogsOutputGraylogStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 
 	serviceName := d.Get("service_name").(string)
@@ -289,7 +291,7 @@ func resourceDbaasLogsOutputGraylogStreamRead(d *schema.ResourceData, meta inter
 	)
 	if err := config.OVHClient.Get(endpoint, &res); err != nil {
 		log.Printf("[ERROR] %s: %v", endpoint, err)
-		return helpers.CheckDeleted(d, err, endpoint)
+		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
 	for k, v := range res.ToMap() {
@@ -303,7 +305,7 @@ func resourceDbaasLogsOutputGraylogStreamRead(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceDbaasLogsOutputGraylogStreamDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDbaasLogsOutputGraylogStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 
 	serviceName := d.Get("service_name").(string)
@@ -318,12 +320,12 @@ func resourceDbaasLogsOutputGraylogStreamDelete(d *schema.ResourceData, meta int
 	)
 
 	if err := config.OVHClient.Delete(endpoint, res); err != nil {
-		return helpers.CheckDeleted(d, err, endpoint)
+		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
 	// Wait for operation status
-	if _, err := waitForDbaasLogsOperation(config.OVHClient, serviceName, res.OperationId); err != nil {
-		return err
+	if _, err := waitForDbaasLogsOperation(ctx, config.OVHClient, serviceName, res.OperationId); err != nil {
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
