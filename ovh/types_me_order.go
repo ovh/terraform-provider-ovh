@@ -30,6 +30,14 @@ func (v MeOrderDetail) ToMap() map[string]interface{} {
 	return obj
 }
 
+type MeOrderDetailExtension struct {
+	Order struct {
+		Plan struct {
+			Code string `json:"code"`
+		} `json:"plan"`
+	} `json:"order"`
+}
+
 type MeOrderDetailOperation struct {
 	Status   string                         `json:"status"`
 	ID       int                            `json:"id"`
