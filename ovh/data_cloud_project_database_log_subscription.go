@@ -93,7 +93,7 @@ func dataSourceCloudProjectDatabaseLogSubscriptionRead(ctx context.Context, d *s
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
-	for k, v := range res.ToMap() {
+	for k, v := range res.toMap() {
 		if k == "operation_id" {
 			continue
 		} else if k != "id" {

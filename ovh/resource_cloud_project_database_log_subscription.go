@@ -127,7 +127,7 @@ func resourceCloudProjectDatabaseLogSubscriptionCreate(ctx context.Context, d *s
 		url.PathEscape(engine),
 		url.PathEscape(clusterID),
 	)
-	params := (&CloudProjectDatabaseLogSubscriptionCreateOpts{}).FromResource(d)
+	params := (&CloudProjectDatabaseLogSubscriptionCreateOpts{}).fromResource(d)
 	res := &CloudProjectDatabaseLogSubscriptionResponse{}
 
 	log.Printf("[DEBUG] Will create Log subscrition : %+v for cluster %s from project %s", params, clusterID, serviceName)
@@ -173,7 +173,7 @@ func resourceCloudProjectDatabaseLogSubscriptionRead(ctx context.Context, d *sch
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
-	for k, v := range res.ToMap() {
+	for k, v := range res.toMap() {
 		if k == "operation_id" {
 			continue
 		} else if k != "id" {

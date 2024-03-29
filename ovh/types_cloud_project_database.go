@@ -455,27 +455,27 @@ type CloudProjectDatabaseLogSubscriptionResponse struct {
 	UpdatedAt      string                                      `json:"updatedAt"`
 }
 
-func (p *CloudProjectDatabaseLogSubscriptionResponse) String() string {
+func (r *CloudProjectDatabaseLogSubscriptionResponse) string() string {
 	return fmt.Sprintf(
 		"Operation ID: %s, Subscription ID: %s, Stream ID: %s",
-		p.OperationID,
-		p.SubscriptionID,
-		p.StreamID,
+		r.OperationID,
+		r.SubscriptionID,
+		r.StreamID,
 	)
 }
 
-func (v CloudProjectDatabaseLogSubscriptionResponse) ToMap() map[string]interface{} {
+func (r CloudProjectDatabaseLogSubscriptionResponse) toMap() map[string]interface{} {
 	obj := make(map[string]interface{})
 
-	obj["create_at"] = v.CreateAt
-	obj["id"] = v.SubscriptionID
-	obj["ldp_service_name"] = v.LDPServiceName
-	obj["kind"] = v.Kind
-	obj["operationId"] = v.OperationID
-	obj["resource_name"] = v.Resource.Name
-	obj["resource_type"] = v.Resource.Type
-	obj["stream_id"] = v.StreamID
-	obj["updated_at"] = v.UpdatedAt
+	obj["create_at"] = r.CreateAt
+	obj["id"] = r.SubscriptionID
+	obj["ldp_service_name"] = r.LDPServiceName
+	obj["kind"] = r.Kind
+	obj["operationId"] = r.OperationID
+	obj["resource_name"] = r.Resource.Name
+	obj["resource_type"] = r.Resource.Type
+	obj["stream_id"] = r.StreamID
+	obj["updated_at"] = r.UpdatedAt
 
 	return obj
 }
@@ -484,7 +484,7 @@ type CloudProjectDatabaseLogSubscriptionCreateOpts struct {
 	StreamID string `json:"streamId"`
 }
 
-func (opts *CloudProjectDatabaseLogSubscriptionCreateOpts) FromResource(d *schema.ResourceData) *CloudProjectDatabaseLogSubscriptionCreateOpts {
+func (opts *CloudProjectDatabaseLogSubscriptionCreateOpts) fromResource(d *schema.ResourceData) *CloudProjectDatabaseLogSubscriptionCreateOpts {
 	opts.StreamID = d.Get("stream_id").(string)
 	return opts
 }

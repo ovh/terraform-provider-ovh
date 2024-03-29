@@ -26,47 +26,49 @@ func testSweepCloudProjectDatabase(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
 	if serviceName == "" {
 		log.Print("[DEBUG] OVH_CLOUD_PROJECT_SERVICE_TEST is not set. No database to sweep")
 		return nil
 	}
+	databases := []string{"cassandra", "grafana", "kafka", "kafkaConnect", "kafkaMirrorMaker", "m3aggregator", "m3db", "mongodb", "mysql", "opensearch", "postgresql", "redis"}
 
-	engineName := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_ENGINE_TEST")
-	if engineName == "" {
-		log.Print("[DEBUG] OVH_CLOUD_PROJECT_DATABASE_ENGINE_TEST is not set. No database to sweep")
-		return nil
-	}
-
-	databaseIds := make([]string, 0)
-	if err := client.Get(fmt.Sprintf("/cloud/project/%s/database/%s", serviceName, engineName), &databaseIds); err != nil {
-		return fmt.Errorf("Error calling GET /cloud/project/%s/database/%s:\n\t %q", serviceName, engineName, err)
-	}
-	for _, databaseId := range databaseIds {
-		endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s", serviceName, engineName, databaseId)
-		res := &CloudProjectDatabaseResponse{}
-		log.Printf("[DEBUG] read database %s from project: %s", databaseId, serviceName)
-		if err := client.Get(endpoint, res); err != nil {
-			return err
-		}
-		if !strings.HasPrefix(res.Description, test_prefix) {
-			continue
+	for _, database := range databases {
+		idsToSweep := []string{}
+		endpoint := fmt.Sprintf("/cloud/project/%s/database/%s", serviceName, database)
+		if err := client.Get(endpoint, &idsToSweep); err != nil {
+			return fmt.Errorf("Error calling Get %s:\n\t %q", endpoint, err)
 		}
 
-		err = retry.RetryContext(context.Background(), 5*time.Minute, func() *retry.RetryError {
-			if err := client.Delete(fmt.Sprintf("/cloud/project/%s/database/%s/%s", serviceName, engineName, databaseId), nil); err != nil {
-				return retry.RetryableError(err)
+		if len(idsToSweep) == 0 {
+			log.Printf("[INFO] No %s database  to sweep", database)
+		}
+
+		for _, id := range idsToSweep {
+			endpoint = fmt.Sprintf("/cloud/project/%s/database/%s/%s", serviceName, database, id)
+			res := &CloudProjectDatabaseResponse{}
+			log.Printf("[DEBUG] read database %s from project: %s", id, serviceName)
+			if err := client.Get(endpoint, res); err != nil {
+				return err
 			}
-			// Successful delete
-			return nil
-		})
-		if err != nil {
-			return err
-		}
+			if !strings.HasPrefix(res.Description, test_prefix) {
+				continue
+			}
 
+			err = retry.RetryContext(context.Background(), 5*time.Minute, func() *retry.RetryError {
+				if err := client.Delete(fmt.Sprintf("/cloud/project/%s/database/%s/%s", serviceName, database, id), nil); err != nil {
+					return retry.RetryableError(err)
+				}
+				// Successful delete
+				return nil
+			})
+			if err != nil {
+				return err
+			}
+		}
 	}
 	return nil
+
 }
 
 var testAccCloudProjectDatabaseConfig = `
