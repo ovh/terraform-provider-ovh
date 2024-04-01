@@ -42,7 +42,6 @@ github.com/hashicorp/yamux; MPL-2.0
 github.com/mattn/go-colorable; MIT
 github.com/mattn/go-isatty; MIT
 github.com/mitchellh/copystructure; MIT
-github.com/mitchellh/go-homedir; MIT
 github.com/mitchellh/go-testing-interface; MIT
 github.com/mitchellh/go-wordwrap; MIT
 github.com/mitchellh/mapstructure; MIT
