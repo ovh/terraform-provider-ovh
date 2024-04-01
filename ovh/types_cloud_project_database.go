@@ -32,26 +32,41 @@ type CloudProjectDatabaseBackups struct {
 	Time    string   `json:"time,omitempty"`
 }
 
+type CloudProjectDatabaseIPRestrictions struct {
+	Description string `json:"description,omitempty"`
+	IP          string `json:"ip,omitempty"`
+}
+
+func (ir CloudProjectDatabaseIPRestrictions) toMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+
+	obj["description"] = ir.Description
+	obj["ip"] = ir.IP
+
+	return obj
+}
+
 type CloudProjectDatabaseResponse struct {
-	AclsEnabled           bool                           `json:"aclsEnabled"`
-	Backups               CloudProjectDatabaseBackups    `json:"backups"`
-	CreatedAt             string                         `json:"createdAt"`
-	Description           string                         `json:"description"`
-	Endpoints             []CloudProjectDatabaseEndpoint `json:"endpoints"`
-	Flavor                string                         `json:"flavor"`
-	Id                    string                         `json:"id"`
-	MaintenanceTime       string                         `json:"maintenanceTime"`
-	NetworkId             string                         `json:"networkId"`
-	NetworkType           string                         `json:"networkType"`
-	Plan                  string                         `json:"plan"`
-	NodeNumber            int                            `json:"nodeNumber"`
-	Region                string                         `json:"region"`
-	RestApi               bool                           `json:"restApi"`
-	Status                string                         `json:"status"`
-	SubnetId              string                         `json:"subnetId"`
-	Version               string                         `json:"version"`
-	Disk                  CloudProjectDatabaseDisk       `json:"disk"`
-	AdvancedConfiguration map[string]string              `json:"advancedConfiguration"`
+	AclsEnabled           bool                                 `json:"aclsEnabled"`
+	Backups               CloudProjectDatabaseBackups          `json:"backups"`
+	CreatedAt             string                               `json:"createdAt"`
+	Description           string                               `json:"description"`
+	Endpoints             []CloudProjectDatabaseEndpoint       `json:"endpoints"`
+	Flavor                string                               `json:"flavor"`
+	Id                    string                               `json:"id"`
+	IPRestrictions        []CloudProjectDatabaseIPRestrictions `json:"ipRestrictions"`
+	MaintenanceTime       string                               `json:"maintenanceTime"`
+	NetworkId             string                               `json:"networkId"`
+	NetworkType           string                               `json:"networkType"`
+	Plan                  string                               `json:"plan"`
+	NodeNumber            int                                  `json:"nodeNumber"`
+	Region                string                               `json:"region"`
+	RestApi               bool                                 `json:"restApi"`
+	Status                string                               `json:"status"`
+	SubnetId              string                               `json:"subnetId"`
+	Version               string                               `json:"version"`
+	Disk                  CloudProjectDatabaseDisk             `json:"disk"`
+	AdvancedConfiguration map[string]string                    `json:"advancedConfiguration"`
 }
 
 func (s *CloudProjectDatabaseResponse) String() string {
@@ -65,6 +80,12 @@ func (v CloudProjectDatabaseResponse) ToMap() map[string]interface{} {
 	obj["created_at"] = v.CreatedAt
 	obj["description"] = v.Description
 	obj["id"] = v.Id
+
+	var ipRests []map[string]interface{}
+	for _, ir := range v.IPRestrictions {
+		ipRests = append(ipRests, ir.toMap())
+	}
+	obj["ip_restrictions"] = ipRests
 
 	var endpoints []map[string]interface{}
 	for _, e := range v.Endpoints {

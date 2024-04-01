@@ -53,6 +53,25 @@ func resourceCloudProjectDatabase() *schema.Resource {
 				Description: "The node flavor used for this cluster",
 				Required:    true,
 			},
+			"ip_restrictions": {
+				Type:        schema.TypeList,
+				Description: "IP Blocks authorized to access to the cluster",
+				Optional:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"description": {
+							Type:        schema.TypeString,
+							Description: "Description of the IP restriction",
+							Optional:    true,
+						},
+						"ip": {
+							Type:        schema.TypeString,
+							Description: "Authorized IP",
+							Optional:    true,
+						},
+					},
+				},
+			},
 			"kafka_rest_api": {
 				Type:        schema.TypeBool,
 				Description: "Defines whether the REST API is enabled on a Kafka cluster",
