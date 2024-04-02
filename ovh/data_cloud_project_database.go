@@ -107,7 +107,7 @@ func dataSourceCloudProjectDatabase() *schema.Resource {
 				Computed:    true,
 			},
 			"ip_restrictions": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Description: "IP Blocks authorized to access to the cluster",
 				Computed:    true,
 				Elem: &schema.Resource{
@@ -120,6 +120,11 @@ func dataSourceCloudProjectDatabase() *schema.Resource {
 						"ip": {
 							Type:        schema.TypeString,
 							Description: "Authorized IP",
+							Computed:    true,
+						},
+						"status": {
+							Type:        schema.TypeString,
+							Description: "Current status of the IP restriction",
 							Computed:    true,
 						},
 					},
