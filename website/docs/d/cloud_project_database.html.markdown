@@ -56,6 +56,10 @@ The following attributes are exported:
   * `uri` - URI of the endpoint.
 * `engine` - See Argument Reference above.
 * `flavor` - A valid OVHcloud public cloud database flavor name in which the nodes will be started.
+* `ip_restrictions` - IP Blocks authorized to access to the cluster.
+  * `description` - Description of the IP restriction
+  * `ip` - Authorized IP
+  * `status` - Current status of the IP restriction.
 * `kafka_rest_api` - Defines whether the REST API is enabled on a kafka cluster.
 * `maintenance_time` - Time on which maintenances can start every day.
 * `network_type` - Type of network of the cluster.

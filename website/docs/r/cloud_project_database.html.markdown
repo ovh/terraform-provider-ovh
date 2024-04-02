@@ -120,6 +120,14 @@ resource "ovh_cloud_project_database" "pgsqldb" {
     region  = "WAW"
   }
   flavor        = "db1-4"
+  ip_restrictions {
+    description = "ip 1"
+    ip = "178.97.6.0/24"
+  }
+  ip_restrictions {
+    description = "ip 2"
+    ip = "178.97.7.0/24"
+  }
 }
 
 resource "ovh_cloud_project_database" "redisdb" {
@@ -211,6 +219,10 @@ The following arguments are supported:
   Ex: "db1-7". Changing this value upgrade the nodes with the new flavor.
   You can find the list of flavor names: https://www.ovhcloud.com/fr/public-cloud/prices/
 
+* `ip_restrictions` - (Optional) IP Blocks authorized to access to the cluster.
+  * `description` - (Optional) Description of the IP restriction
+  * `ip` - (Optional) Authorized IP
+
 * `kafka_rest_api` -  (Optional) Defines whether the REST API is enabled on a kafka cluster
 
 * `nodes` - (Required, Minimum Items: 1) List of nodes object.
@@ -259,6 +271,10 @@ The following attributes are exported:
   * `uri` - URI of the endpoint.
 * `engine` - See Argument Reference above.
 * `flavor` - See Argument Reference above.
+* `ip_restrictions` - See Argument Reference above.
+  * `description` - See Argument Reference above.
+  * `ip` - See Argument Reference above.
+  * `status` - Current status of the IP restriction.
 * `kafka_rest_api` - See Argument Reference above.
 * `maintenance_time` - Time on which maintenances can start every day.
 * `network_type` - Type of network of the cluster.
