@@ -9,24 +9,22 @@ import (
 )
 
 type InstallationTemplate struct {
-	AvailableLanguages         []string                           `json:"available_languages"`
-	Beta                       *bool                              `json:"beta,omitempty"`
-	BitFormat                  int                                `json:"bitFormat"`
-	Category                   string                             `json:"category"`
-	Customization              *InstallationTemplateCustomization `json:"customization,omitempty"`
-	DefaultLanguage            string                             `json:"defaultLanguage"`
-	Deprecated                 *bool                              `json:"deprecated,omitempty"`
-	Description                string                             `json:"description"`
-	Distribution               string                             `json:"distribution"`
-	Family                     string                             `json:"family"`
-	Filesystems                []string                           `json:"filesystems"`
-	HardRaidConfiguration      *bool                              `json:"hardRaidConfigurtion,omitempty"`
-	LastModification           *string                            `json:"last_modification"`
-	LvmReady                   *bool                              `json:"lvmReady,omitempty"`
-	SupportsDistributionKernel *bool                              `json:"supportsDistributionKernel,omitempty"`
-	SupportsRTM                bool                               `json:"supportsRTM"`
-	SupportsSqlServer          *bool                              `json:"supportsSqlServer,omitempty"`
-	TemplateName               string                             `json:"templateName"`
+	AvailableLanguages    []string                           `json:"available_languages"`
+	Beta                  *bool                              `json:"beta,omitempty"`
+	BitFormat             int                                `json:"bitFormat"`
+	Category              string                             `json:"category"`
+	Customization         *InstallationTemplateCustomization `json:"customization,omitempty"`
+	DefaultLanguage       string                             `json:"defaultLanguage"`
+	Deprecated            *bool                              `json:"deprecated,omitempty"`
+	Description           string                             `json:"description"`
+	Distribution          string                             `json:"distribution"`
+	Family                string                             `json:"family"`
+	Filesystems           []string                           `json:"filesystems"`
+	HardRaidConfiguration *bool                              `json:"hardRaidConfigurtion,omitempty"`
+	LastModification      *string                            `json:"last_modification"`
+	LvmReady              *bool                              `json:"lvmReady,omitempty"`
+	SupportsSqlServer     *bool                              `json:"supportsSqlServer,omitempty"`
+	TemplateName          string                             `json:"templateName"`
 }
 
 func (v InstallationTemplate) ToMap() map[string]interface{} {
@@ -70,12 +68,6 @@ func (v InstallationTemplate) ToMap() map[string]interface{} {
 	if v.LvmReady != nil {
 		obj["lvm_ready"] = *v.LvmReady
 	}
-
-	if v.SupportsDistributionKernel != nil {
-		obj["supports_distribution_kernel"] = *v.SupportsDistributionKernel
-	}
-
-	obj["supports_rtm"] = v.SupportsRTM
 
 	if v.SupportsSqlServer != nil {
 		obj["supports_sql_server"] = *v.SupportsSqlServer
@@ -122,7 +114,6 @@ type InstallationTemplateCustomization struct {
 	PostInstallationScriptLink   *string `json:"postInstallationScriptLink,omitempty"`
 	PostInstallationScriptReturn *string `json:"postInstallationScriptReturn,omitempty"`
 	SshKeyName                   *string `json:"sshKeyName,omitempty"`
-	UseDistributionKernel        *bool   `json:"useDistributionKernel,omitempty"`
 }
 
 func (v InstallationTemplateCustomization) ToMap() map[string]interface{} {
@@ -149,11 +140,6 @@ func (v InstallationTemplateCustomization) ToMap() map[string]interface{} {
 		custom_attr_set = true
 	}
 
-	if v.UseDistributionKernel != nil {
-		obj["use_distribution_kernel"] = *v.UseDistributionKernel
-		custom_attr_set = true
-	}
-
 	// dont return an object if nothing is set
 	if custom_attr_set {
 		return obj
@@ -167,8 +153,6 @@ func (opts *InstallationTemplateCustomization) FromResource(d *schema.ResourceDa
 	opts.PostInstallationScriptLink = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.post_installation_script_link", parent))
 	opts.PostInstallationScriptReturn = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.post_installation_script_return", parent))
 	opts.SshKeyName = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.ssh_key_name", parent))
-	opts.UseDistributionKernel = helpers.GetNilBoolPointerFromData(d, fmt.Sprintf("%s.use_distribution_kernel", parent))
-
 	return opts
 }
 
