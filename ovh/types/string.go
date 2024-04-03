@@ -49,6 +49,12 @@ func (v TfStringValue) Type(ctx context.Context) attr.Type {
 	return TfStringType{}
 }
 
+func NewTfStringValue(value string) TfStringValue {
+	return TfStringValue{
+		StringValue: basetypes.NewStringValue(value),
+	}
+}
+
 type TfStringType struct {
 	basetypes.StringType
 }
