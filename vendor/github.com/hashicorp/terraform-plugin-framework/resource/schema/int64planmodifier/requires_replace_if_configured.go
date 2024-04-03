@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package listplanmodifier
+package int64planmodifier
 
 import (
 	"context"
@@ -19,9 +19,9 @@ import (
 // Use RequiresReplace if the resource replacement should occur regardless of
 // the presence of a configuration value. Use RequiresReplaceIf if the resource
 // replacement should check provider-defined conditional logic.
-func RequiresReplaceIfConfigured() planmodifier.List {
+func RequiresReplaceIfConfigured() planmodifier.Int64 {
 	return RequiresReplaceIf(
-		func(_ context.Context, req planmodifier.ListRequest, resp *RequiresReplaceIfFuncResponse) {
+		func(_ context.Context, req planmodifier.Int64Request, resp *RequiresReplaceIfFuncResponse) {
 			if req.ConfigValue.IsNull() {
 				return
 			}
