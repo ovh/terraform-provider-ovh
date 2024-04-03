@@ -114,7 +114,7 @@ func resourceCloudProjectDatabaseIpRestrictionCreate(ctx context.Context, d *sch
 		retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate),
 			func() *retry.RetryError {
 				log.Printf("[DEBUG] Will create IP restriction: %+v for cluster %s from project %s", params, clusterId, serviceName)
-				rErr := config.OVHClient.Post(endpoint, params, res)
+				rErr := config.OVHClient.PostWithContext(ctx, endpoint, params, res)
 				if rErr != nil {
 					if errOvh, ok := rErr.(*ovh.APIError); ok && (errOvh.Code == 409) {
 						if resourceCloudProjectDatabaseIpRestrictionRead(ctx, d, meta) != nil || d.Id() != "" {
@@ -161,7 +161,7 @@ func resourceCloudProjectDatabaseIpRestrictionRead(ctx context.Context, d *schem
 	res := &CloudProjectDatabaseIpRestrictionResponse{}
 
 	log.Printf("[DEBUG] Will read IP restriction %s from cluster %s from project %s", ip, clusterId, serviceName)
-	if err := config.OVHClient.Get(endpoint, res); err != nil {
+	if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
@@ -237,7 +237,7 @@ func resourceCloudProjectDatabaseIpRestrictionDelete(ctx context.Context, d *sch
 		retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete),
 			func() *retry.RetryError {
 				log.Printf("[DEBUG] Will delete IP restriction %s from cluster %s from project %s", ip, clusterId, serviceName)
-				rErr := config.OVHClient.Delete(endpoint, nil)
+				rErr := config.OVHClient.DeleteWithContext(ctx, endpoint, nil)
 				if rErr != nil {
 					if errOvh, ok := rErr.(*ovh.APIError); ok && (errOvh.Code == 409) {
 						return retry.RetryableError(rErr)

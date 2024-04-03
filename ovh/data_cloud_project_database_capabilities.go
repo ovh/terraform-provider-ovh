@@ -144,7 +144,7 @@ func dataSourceCloudProjectDatabaseCapabilitiesRead(ctx context.Context, d *sche
 	capabilitiesRes := &CloudProjectDatabaseCapabilitiesResponse{}
 
 	log.Printf("[DEBUG] Will read capabilities from project %s", serviceName)
-	if err := config.OVHClient.Get(capabilitiesEndpoint, capabilitiesRes); err != nil {
+	if err := config.OVHClient.GetWithContext(ctx, capabilitiesEndpoint, capabilitiesRes); err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, capabilitiesEndpoint))
 	}
 

@@ -51,7 +51,7 @@ func dataSourceCloudProjectDatabaseM3dbNamespacesRead(ctx context.Context, d *sc
 	res := make([]string, 0)
 
 	log.Printf("[DEBUG] Will read namespaces from cluster %s from project %s", clusterId, serviceName)
-	if err := config.OVHClient.Get(endpoint, &res); err != nil {
+	if err := config.OVHClient.GetWithContext(ctx, endpoint, &res); err != nil {
 		return diag.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
 	}
 

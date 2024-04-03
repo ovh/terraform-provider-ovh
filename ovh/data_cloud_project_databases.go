@@ -50,7 +50,7 @@ func dataSourceCloudProjectDatabasesRead(ctx context.Context, d *schema.Resource
 	res := make([]string, 0)
 
 	log.Printf("[DEBUG] Will list databases from project: %s", serviceName)
-	if err := config.OVHClient.Get(serviceEndpoint, &res); err != nil {
+	if err := config.OVHClient.GetWithContext(ctx, serviceEndpoint, &res); err != nil {
 		return diag.Errorf("Error calling GET %s:\n\t %q", serviceEndpoint, err)
 	}
 

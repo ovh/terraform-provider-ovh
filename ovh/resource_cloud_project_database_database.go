@@ -102,7 +102,7 @@ func resourceCloudProjectDatabaseDatabaseCreate(ctx context.Context, d *schema.R
 	res := &CloudProjectDatabaseDatabaseResponse{}
 
 	log.Printf("[DEBUG] Will create database: %+v for cluster %s from project %s", params, clusterId, serviceName)
-	err := config.OVHClient.Post(endpoint, params, res)
+	err := config.OVHClient.PostWithContext(ctx, endpoint, params, res)
 	if err != nil {
 		return diag.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
 	}
@@ -136,7 +136,7 @@ func resourceCloudProjectDatabaseDatabaseRead(ctx context.Context, d *schema.Res
 	res := &CloudProjectDatabaseDatabaseResponse{}
 
 	log.Printf("[DEBUG] Will read database %s from cluster %s from project %s", id, clusterId, serviceName)
-	if err := config.OVHClient.Get(endpoint, res); err != nil {
+	if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
@@ -166,7 +166,7 @@ func resourceCloudProjectDatabaseDatabaseDelete(ctx context.Context, d *schema.R
 	)
 
 	log.Printf("[DEBUG] Will delete database %s from cluster %s from project %s", id, clusterId, serviceName)
-	err := config.OVHClient.Delete(endpoint, nil)
+	err := config.OVHClient.DeleteWithContext(ctx, endpoint, nil)
 	if err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}

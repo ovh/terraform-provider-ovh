@@ -113,7 +113,7 @@ func resourceCloudProjectDatabaseM3dbUserRead(ctx context.Context, d *schema.Res
 	res := &CloudProjectDatabaseM3dbUserResponse{}
 
 	log.Printf("[DEBUG] Will read user %s from cluster %s from project %s", id, clusterId, serviceName)
-	if err := config.OVHClient.Get(endpoint, res); err != nil {
+	if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 

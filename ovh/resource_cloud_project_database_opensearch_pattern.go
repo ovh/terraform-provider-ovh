@@ -89,7 +89,7 @@ func resourceCloudProjectDatabaseOpensearchPatternCreate(ctx context.Context, d 
 	res := &CloudProjectDatabaseOpensearchPatternResponse{}
 
 	log.Printf("[DEBUG] Will create pattern: %+v for cluster %s from project %s", params, clusterId, serviceName)
-	err := config.OVHClient.Post(endpoint, params, res)
+	err := config.OVHClient.PostWithContext(ctx, endpoint, params, res)
 	if err != nil {
 		return diag.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
 	}
@@ -120,7 +120,7 @@ func resourceCloudProjectDatabaseOpensearchPatternRead(ctx context.Context, d *s
 	res := &CloudProjectDatabaseOpensearchPatternResponse{}
 
 	log.Printf("[DEBUG] Will read pattern %s from cluster %s from project %s", id, clusterId, serviceName)
-	if err := config.OVHClient.Get(endpoint, res); err != nil {
+	if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
@@ -149,7 +149,7 @@ func resourceCloudProjectDatabaseOpensearchPatternDelete(ctx context.Context, d 
 	)
 
 	log.Printf("[DEBUG] Will delete pattern %s from cluster %s from project %s", id, clusterId, serviceName)
-	err := config.OVHClient.Delete(endpoint, nil)
+	err := config.OVHClient.DeleteWithContext(ctx, endpoint, nil)
 	if err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
