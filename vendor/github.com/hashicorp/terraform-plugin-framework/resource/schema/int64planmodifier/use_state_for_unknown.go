@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package listplanmodifier
+package int64planmodifier
 
 import (
 	"context"
@@ -17,7 +17,7 @@ import (
 // and Computed attributes to an unknown value "(known after apply)" on update.
 // Using this plan modifier will instead display the prior state value in the
 // plan, unless a prior plan modifier adjusts the value.
-func UseStateForUnknown() planmodifier.List {
+func UseStateForUnknown() planmodifier.Int64 {
 	return useStateForUnknownModifier{}
 }
 
@@ -34,8 +34,8 @@ func (m useStateForUnknownModifier) MarkdownDescription(_ context.Context) strin
 	return "Once set, the value of this attribute in state will not change."
 }
 
-// PlanModifyList implements the plan modification logic.
-func (m useStateForUnknownModifier) PlanModifyList(_ context.Context, req planmodifier.ListRequest, resp *planmodifier.ListResponse) {
+// PlanModifyInt64 implements the plan modification logic.
+func (m useStateForUnknownModifier) PlanModifyInt64(_ context.Context, req planmodifier.Int64Request, resp *planmodifier.Int64Response) {
 	// Do nothing if there is no state value.
 	if req.StateValue.IsNull() {
 		return
