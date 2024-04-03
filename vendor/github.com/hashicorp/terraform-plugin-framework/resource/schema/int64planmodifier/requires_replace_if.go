@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package listplanmodifier
+package int64planmodifier
 
 import (
 	"context"
@@ -21,7 +21,7 @@ import (
 // changes. Use RequiresReplaceIfConfigured if the resource replacement should
 // occur on value changes, but only if there is a configuration value (ignore
 // unconfigured drift detection changes).
-func RequiresReplaceIf(f RequiresReplaceIfFunc, description, markdownDescription string) planmodifier.List {
+func RequiresReplaceIf(f RequiresReplaceIfFunc, description, markdownDescription string) planmodifier.Int64 {
 	return requiresReplaceIfModifier{
 		ifFunc:              f,
 		description:         description,
@@ -47,8 +47,8 @@ func (m requiresReplaceIfModifier) MarkdownDescription(_ context.Context) string
 	return m.markdownDescription
 }
 
-// PlanModifyList implements the plan modification logic.
-func (m requiresReplaceIfModifier) PlanModifyList(ctx context.Context, req planmodifier.ListRequest, resp *planmodifier.ListResponse) {
+// PlanModifyInt64 implements the plan modification logic.
+func (m requiresReplaceIfModifier) PlanModifyInt64(ctx context.Context, req planmodifier.Int64Request, resp *planmodifier.Int64Response) {
 	// Do not replace on resource creation.
 	if req.State.Raw.IsNull() {
 		return

@@ -142,6 +142,7 @@ func (p *OvhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 		NewDedicatedServerSpecificationsHardwareDataSource,
 		NewDomainZoneDnssecDataSource,
 		NewIpFirewallDataSource,
+		NewIpFirewallRuleDataSource,
 	}
 }
 
@@ -151,6 +152,7 @@ func (p *OvhProvider) Resources(_ context.Context) []func() resource.Resource {
 		NewCloudProjectAlertingResource,
 		NewDomainZoneDnssecResource,
 		NewIpFirewallResource,
+		NewIpFirewallRuleResource,
 		NewIploadbalancingUdpFrontendResource,
 		NewVpsResource,
 	}
