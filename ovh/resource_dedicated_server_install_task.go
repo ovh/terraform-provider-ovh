@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
@@ -116,6 +118,171 @@ func resourceDedicatedServerInstallTask() *schema.Resource {
 							Optional:    true,
 							ForceNew:    true,
 							Description: "",
+						},
+					},
+				},
+			},
+			"user_metadata": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"image_url": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Image URL",
+							ValidateDiagFunc: func(value interface{}, attributePath cty.Path) diag.Diagnostics {
+								if _, err := url.Parse(value.(string)); err != nil {
+									return diag.Diagnostics{
+										{
+											Severity:      diag.Error,
+											Summary:       "Image URL is invalid",
+											Detail:        fmt.Sprintf("Image URL '%v' is invalid: %v", value, err),
+											AttributePath: attributePath,
+										},
+									}
+								}
+								return diag.Diagnostics{}
+							},
+						},
+						"http_headers_0_key": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Required:    false,
+							Description: "httpHeaders0Key",
+						},
+						"http_headers_0_value": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Required:    false,
+							Description: "httpHeaders0Value",
+						},
+						"http_headers_1_key": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Required:    false,
+							Description: "httpHeaders1Key",
+						},
+						"http_headers_1_value": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Required:    false,
+							Description: "httpHeaders1Value",
+						},
+						"http_headers_2_key": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Required:    false,
+							Description: "httpHeaders2Key",
+						},
+						"http_headers_2_value": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Required:    false,
+							Description: "httpHeaders2Value",
+						},
+						"http_headers_3_key": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Required:    false,
+							Description: "httpHeaders3Key",
+						},
+						"http_headers_3_value": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Required:    false,
+							Description: "httpHeaders3Value",
+						},
+						"http_headers_4_key": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Required:    false,
+							Description: "httpHeaders4Key",
+						},
+						"http_headers_4_value": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Required:    false,
+							Description: "httpHeaders4Value",
+						},
+						"http_headers_5_key": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Required:    false,
+							Description: "httpHeaders5Key",
+						},
+						"http_headers_5_value": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Required:    false,
+							Description: "httpHeaders5Value",
+						},
+						"image_checksum": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Required:    false,
+							Description: "Image checksum",
+						},
+						"image_checksum_type": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Required:    false,
+							Description: "Checksum type",
+							ValidateDiagFunc: func(value interface{}, attributePath cty.Path) diag.Diagnostics {
+								if value != "md5" &&
+									value != "sha1" &&
+									value != "sha256" &&
+									value != "sha512" {
+									return diag.Diagnostics{
+										{
+											Severity:      diag.Error,
+											Summary:       "Checksum type is not set or is invalid",
+											Detail:        fmt.Sprintf("Checksum type is currently set as '%v'. It should be one of 'md5', 'sha1', 'sha256' or 'sha512'.", value),
+											AttributePath: attributePath,
+										},
+									}
+								}
+								return diag.Diagnostics{}
+							},
+						},
+						"config_drive_user_data": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Required:    false,
+							Description: "configDriveUserData",
+						},
+						"image_type": {
+							Type:        schema.TypeString,
+							Description: "Image type",
+							Optional:    true,
+							Required:    false,
+							ValidateDiagFunc: func(value interface{}, attributePath cty.Path) diag.Diagnostics {
+								if value != "qcow2" && value != "raw" {
+									return diag.Diagnostics{
+										{
+											Severity:      diag.Error,
+											Summary:       "Image type is not set or is invalid",
+											Detail:        fmt.Sprintf("Image type is currently set as '%v'. It should be either 'qcow2' or 'raw'.", value),
+											AttributePath: attributePath,
+										},
+									}
+								}
+								return diag.Diagnostics{}
+							},
+						},
+						"language": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Required:    false,
+							Description: "language",
+						},
+						"use_spla": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Required:    false,
+							Description: "set to true to use your own licence",
 						},
 					},
 				},

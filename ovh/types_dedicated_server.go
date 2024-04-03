@@ -107,10 +107,16 @@ type DedicatedServerTask struct {
 	StartDate  time.Time `json:"startDate"`
 }
 
+type UserMetadata struct {
+	Key   string `json:"key,omitempty"`
+	Value string `json:"value,omitempty"`
+}
+
 type DedicatedServerInstallTaskCreateOpts struct {
 	TemplateName        string                             `json:"templateName"`
 	PartitionSchemeName *string                            `json:"partitionSchemeName,omitempty"`
 	Details             *DedicatedServerInstallTaskDetails `json:"details"`
+	UserMetadata        *[]UserMetadata                    `json:"userMetadata"`
 }
 
 func (opts *DedicatedServerInstallTaskCreateOpts) FromResource(d *schema.ResourceData) *DedicatedServerInstallTaskCreateOpts {
@@ -118,10 +124,23 @@ func (opts *DedicatedServerInstallTaskCreateOpts) FromResource(d *schema.Resourc
 	opts.PartitionSchemeName = helpers.GetNilStringPointerFromData(d, "partition_scheme_name")
 
 	details := d.Get("details").([]interface{})
-	if details != nil && len(details) == 1 {
+	if len(details) == 1 {
 		opts.Details = (&DedicatedServerInstallTaskDetails{}).FromResource(d, "details.0")
-
 	}
+
+	var UserMetadataArray = []UserMetadata{}
+	providedUserMetadatas := d.Get("user_metadata.0")
+	if providedUserMetadatas != nil {
+		for key, value := range providedUserMetadatas.(map[string]interface{}) {
+			if value != "" {
+				UserMetadataArray = append(UserMetadataArray, UserMetadata{
+					Key:   fixKeyName(key),
+					Value: fmt.Sprintf("%v", value),
+				})
+			}
+		}
+	}
+	opts.UserMetadata = &UserMetadataArray
 	return opts
 }
 
@@ -151,4 +170,49 @@ func (opts *DedicatedServerInstallTaskDetails) FromResource(d *schema.ResourceDa
 	opts.UseSpla = helpers.GetNilBoolPointerFromData(d, fmt.Sprintf("%s.use_spla", parent))
 
 	return opts
+}
+
+func fixKeyName(key string) string {
+	switch key {
+	case "image_url":
+		return "imageURL"
+	case "http_headers_0_key":
+		return "httpHeaders0Key"
+	case "http_headers_0_value":
+		return "httpHeaders0Value"
+	case "http_headers_1_key":
+		return "httpHeaders1Key"
+	case "http_headers_1_value":
+		return "httpHeaders1Value"
+	case "http_headers_2_key":
+		return "httpHeaders2Key"
+	case "http_headers_2_value":
+		return "httpHeaders2Value"
+	case "http_headers_3_key":
+		return "httpHeaders3Key"
+	case "http_headers_3_value":
+		return "httpHeaders3Value"
+	case "http_headers_4_key":
+		return "httpHeaders4Key"
+	case "http_headers_4_value":
+		return "httpHeaders4Value"
+	case "http_headers_5_key":
+		return "httpHeaders5Key"
+	case "http_headers_5_value":
+		return "httpHeaders5Value"
+	case "image_checksum":
+		return "imageCheckSum"
+	case "image_checksum_type":
+		return "imageCheckSumType"
+	case "config_drive_user_data":
+		return "configDriveUserData"
+	case "image_type":
+		return "imageType"
+	case "language":
+		return "language"
+	case "use_spla":
+		return "useSpla"
+	default:
+		return ""
+	}
 }
