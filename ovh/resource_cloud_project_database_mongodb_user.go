@@ -160,7 +160,7 @@ func resourceCloudProjectDatabaseMongodbUserRead(ctx context.Context, d *schema.
 	res := &CloudProjectDatabaseMongodbUserResponse{}
 
 	log.Printf("[DEBUG] Will read user %s from cluster %s from project %s", id, clusterId, serviceName)
-	if err := config.OVHClient.Get(endpoint, res); err != nil {
+	if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
@@ -249,7 +249,7 @@ func resourceCloudProjectDatabaseMongodbUserDelete(ctx context.Context, d *schem
 		retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete),
 			func() *retry.RetryError {
 				log.Printf("[DEBUG] Will delete user %s from cluster %s from project %s", id, clusterId, serviceName)
-				err := config.OVHClient.Delete(endpoint, nil)
+				err := config.OVHClient.DeleteWithContext(ctx, endpoint, nil)
 				if err != nil {
 					if errOvh, ok := err.(*ovh.APIError); ok && (errOvh.Code == 409) {
 						return retry.RetryableError(err)

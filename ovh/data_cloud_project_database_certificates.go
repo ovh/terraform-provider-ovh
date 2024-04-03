@@ -58,7 +58,7 @@ func dataSourceCloudProjectDatabaseCertificatesRead(ctx context.Context, d *sche
 	res := &CloudProjectDatabaseCertificatesResponse{}
 
 	log.Printf("[DEBUG] Will read certificates from cluster %s from project %s", clusterID, serviceName)
-	if err := config.OVHClient.Get(endpoint, res); err != nil {
+	if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 

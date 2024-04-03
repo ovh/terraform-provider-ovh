@@ -63,7 +63,7 @@ func dataSourceCloudProjectDatabaseDatabaseRead(ctx context.Context, d *schema.R
 	listRes := make([]string, 0)
 
 	log.Printf("[DEBUG] Will read databases from cluster %s from project %s", clusterID, serviceName)
-	if err := config.OVHClient.Get(listEndpoint, &listRes); err != nil {
+	if err := config.OVHClient.GetWithContext(ctx, listEndpoint, &listRes); err != nil {
 		return diag.Errorf("Error calling GET %s:\n\t %q", listEndpoint, err)
 	}
 
@@ -78,7 +78,7 @@ func dataSourceCloudProjectDatabaseDatabaseRead(ctx context.Context, d *schema.R
 		res := &CloudProjectDatabaseDatabaseResponse{}
 
 		log.Printf("[DEBUG] Will read database %s from cluster %s from project %s", id, clusterID, serviceName)
-		if err := config.OVHClient.Get(endpoint, res); err != nil {
+		if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
 			return diag.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
 		}
 

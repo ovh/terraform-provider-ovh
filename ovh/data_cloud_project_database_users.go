@@ -58,7 +58,7 @@ func dataSourceCloudProjectDatabaseUsersRead(ctx context.Context, d *schema.Reso
 	res := make([]string, 0)
 
 	log.Printf("[DEBUG] Will read users from cluster %s from project %s", clusterId, serviceName)
-	if err := config.OVHClient.Get(endpoint, &res); err != nil {
+	if err := config.OVHClient.GetWithContext(ctx, endpoint, &res); err != nil {
 		return diag.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
 	}
 

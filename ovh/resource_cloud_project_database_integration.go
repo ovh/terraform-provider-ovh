@@ -133,7 +133,7 @@ func resourceCloudProjectDatabaseIntegrationCreate(ctx context.Context, d *schem
 	res := &CloudProjectDatabaseIntegrationResponse{}
 
 	log.Printf("[DEBUG] Will create integration: %+v for cluster %s from project %s", params, clusterId, serviceName)
-	err := config.OVHClient.Post(endpoint, params, res)
+	err := config.OVHClient.PostWithContext(ctx, endpoint, params, res)
 	if err != nil {
 		return diag.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
 	}
@@ -166,7 +166,7 @@ func resourceCloudProjectDatabaseIntegrationRead(ctx context.Context, d *schema.
 	res := &CloudProjectDatabaseIntegrationResponse{}
 
 	log.Printf("[DEBUG] Will read integration %s from cluster %s from project %s", id, clusterId, serviceName)
-	if err := config.OVHClient.Get(endpoint, res); err != nil {
+	if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
@@ -196,7 +196,7 @@ func resourceCloudProjectDatabaseIntegrationDelete(ctx context.Context, d *schem
 	)
 
 	log.Printf("[DEBUG] Will delete integration %s from cluster %s from project %s", id, clusterId, serviceName)
-	err := config.OVHClient.Delete(endpoint, nil)
+	err := config.OVHClient.DeleteWithContext(ctx, endpoint, nil)
 	if err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}

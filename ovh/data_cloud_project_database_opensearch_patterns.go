@@ -51,7 +51,7 @@ func dataSourceCloudProjectDatabaseOpensearchPatternsRead(ctx context.Context, d
 	res := make([]string, 0)
 
 	log.Printf("[DEBUG] Will read patterns from cluster %s from project %s", clusterId, serviceName)
-	if err := config.OVHClient.Get(endpoint, &res); err != nil {
+	if err := config.OVHClient.GetWithContext(ctx, endpoint, &res); err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 

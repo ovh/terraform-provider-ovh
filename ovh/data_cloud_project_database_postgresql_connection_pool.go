@@ -84,7 +84,7 @@ func dataSourceCloudProjectDatabasePostgresqlConnectionPoolRead(ctx context.Cont
 	listRes := make([]string, 0)
 
 	log.Printf("[DEBUG] Will read connectionPools from cluster %s from project %s", clusterId, serviceName)
-	if err := config.OVHClient.Get(listEndpoint, &listRes); err != nil {
+	if err := config.OVHClient.GetWithContext(ctx, listEndpoint, &listRes); err != nil {
 		return diag.Errorf("Error calling GET %s:\n\t %q", listEndpoint, err)
 	}
 
@@ -97,7 +97,7 @@ func dataSourceCloudProjectDatabasePostgresqlConnectionPoolRead(ctx context.Cont
 		res := &CloudProjectDatabasePostgresqlConnectionPoolResponse{}
 
 		log.Printf("[DEBUG] Will read connectionPool %s from cluster %s from project %s", id, clusterId, serviceName)
-		if err := config.OVHClient.Get(endpoint, res); err != nil {
+		if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
 			return diag.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
 		}
 
