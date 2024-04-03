@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package listplanmodifier
+package boolplanmodifier
 
 import (
 	"context"
@@ -19,9 +19,9 @@ import (
 // only occur if there is a configuration value (ignore unconfigured drift
 // detection changes). Use RequiresReplaceIf if the resource replacement
 // should check provider-defined conditional logic.
-func RequiresReplace() planmodifier.List {
+func RequiresReplace() planmodifier.Bool {
 	return RequiresReplaceIf(
-		func(_ context.Context, _ planmodifier.ListRequest, resp *RequiresReplaceIfFuncResponse) {
+		func(_ context.Context, _ planmodifier.BoolRequest, resp *RequiresReplaceIfFuncResponse) {
 			resp.RequiresReplace = true
 		},
 		"If the value of this attribute changes, Terraform will destroy and recreate the resource.",
