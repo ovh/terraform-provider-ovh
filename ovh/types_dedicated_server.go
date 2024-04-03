@@ -111,6 +111,7 @@ type DedicatedServerInstallTaskCreateOpts struct {
 	TemplateName        string                             `json:"templateName"`
 	PartitionSchemeName *string                            `json:"partitionSchemeName,omitempty"`
 	Details             *DedicatedServerInstallTaskDetails `json:"details"`
+	UserMetadata        *[]map[string]string               `json:"userMetadata"`
 }
 
 func (opts *DedicatedServerInstallTaskCreateOpts) FromResource(d *schema.ResourceData) *DedicatedServerInstallTaskCreateOpts {
@@ -118,10 +119,25 @@ func (opts *DedicatedServerInstallTaskCreateOpts) FromResource(d *schema.Resourc
 	opts.PartitionSchemeName = helpers.GetNilStringPointerFromData(d, "partition_scheme_name")
 
 	details := d.Get("details").([]interface{})
-	if details != nil && len(details) == 1 {
+	if len(details) == 1 {
 		opts.Details = (&DedicatedServerInstallTaskDetails{}).FromResource(d, "details.0")
-
 	}
+
+	userMetadata := d.Get("user_metadata").([]interface{})
+	var userMetadatas []map[string]string
+	if len(userMetadata) >= 1 {
+		for _, metadata := range userMetadata {
+			m := metadata.(map[string]interface{})
+			metadatum := make(map[string]string)
+			key := m["key"].(string)
+			metadatum["key"] = key
+			value := m["value"].(string)
+			metadatum["value"] = value
+			userMetadatas = append(userMetadatas, metadatum)
+		}
+		opts.UserMetadata = &userMetadatas
+	}
+
 	return opts
 }
 

@@ -120,6 +120,26 @@ func resourceDedicatedServerInstallTask() *schema.Resource {
 					},
 				},
 			},
+			"user_metadata": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 128,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"key": {
+							Type:        schema.TypeString,
+							Description: "The key for the user_metadata",
+							Optional:    true,
+						},
+						"value": {
+							Type:        schema.TypeString,
+							Description: "The value for the user_metadata",
+							Optional:    true,
+						},
+					},
+				},
+			},
 
 			//Computed
 			"comment": {
