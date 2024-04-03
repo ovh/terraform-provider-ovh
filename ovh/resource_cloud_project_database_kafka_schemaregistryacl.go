@@ -95,7 +95,7 @@ func resourceCloudProjectDatabaseKafkaSchemaRegistryAclCreate(ctx context.Contex
 	res := &CloudProjectDatabaseKafkaSchemaRegistryAclResponse{}
 
 	log.Printf("[DEBUG] Will create schema registry acl: %+v for cluster %s from project %s", params, clusterId, serviceName)
-	err := config.OVHClient.Post(endpoint, params, res)
+	err := config.OVHClient.PostWithContext(ctx, endpoint, params, res)
 	if err != nil {
 		return diag.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
 	}
@@ -126,7 +126,7 @@ func resourceCloudProjectDatabaseKafkaSchemaRegistryAclRead(ctx context.Context,
 	res := &CloudProjectDatabaseKafkaSchemaRegistryAclResponse{}
 
 	log.Printf("[DEBUG] Will read schema registry acl %s from cluster %s from project %s", id, clusterId, serviceName)
-	if err := config.OVHClient.Get(endpoint, res); err != nil {
+	if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
@@ -155,7 +155,7 @@ func resourceCloudProjectDatabaseKafkaSchemaRegistryAclDelete(ctx context.Contex
 	)
 
 	log.Printf("[DEBUG] Will delete schema registry acl  %s from cluster %s from project %s", id, clusterId, serviceName)
-	err := config.OVHClient.Delete(endpoint, nil)
+	err := config.OVHClient.DeleteWithContext(ctx, endpoint, nil)
 	if err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}

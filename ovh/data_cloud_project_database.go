@@ -201,13 +201,13 @@ func dataSourceCloudProjectDatabaseRead(ctx context.Context, d *schema.ResourceD
 	res := &CloudProjectDatabaseResponse{}
 
 	log.Printf("[DEBUG] Will read database %s from project: %s", id, serviceName)
-	if err := config.OVHClient.Get(serviceEndpoint, res); err != nil {
+	if err := config.OVHClient.GetWithContext(ctx, serviceEndpoint, res); err != nil {
 		return diag.Errorf("Error calling GET %s:\n\t %q", serviceEndpoint, err)
 	}
 
 	nodesEndpoint := fmt.Sprintf("%s/node", serviceEndpoint)
 	nodeList := &[]string{}
-	if err := config.OVHClient.Get(nodesEndpoint, nodeList); err != nil {
+	if err := config.OVHClient.GetWithContext(ctx, nodesEndpoint, nodeList); err != nil {
 		return diag.Errorf("unable to get database %s nodes: %v", res.Id, err)
 	}
 
@@ -216,7 +216,7 @@ func dataSourceCloudProjectDatabaseRead(ctx context.Context, d *schema.ResourceD
 	}
 	nodeEndpoint := fmt.Sprintf("%s/%s", nodesEndpoint, url.PathEscape((*nodeList)[0]))
 	node := &CloudProjectDatabaseNodes{}
-	if err := config.OVHClient.Get(nodeEndpoint, node); err != nil {
+	if err := config.OVHClient.GetWithContext(ctx, nodeEndpoint, node); err != nil {
 		return diag.Errorf("unable to get database %s node %s: %v", res.Id, (*nodeList)[0], err)
 	}
 
@@ -225,7 +225,7 @@ func dataSourceCloudProjectDatabaseRead(ctx context.Context, d *schema.ResourceD
 	if engine != "mongodb" {
 		advancedConfigEndpoint := fmt.Sprintf("%s/advancedConfiguration", serviceEndpoint)
 		advancedConfigMap := &map[string]string{}
-		if err := config.OVHClient.Get(advancedConfigEndpoint, advancedConfigMap); err != nil {
+		if err := config.OVHClient.GetWithContext(ctx, advancedConfigEndpoint, advancedConfigMap); err != nil {
 			return diag.Errorf("unable to get database %s advanced configuration: %v", res.Id, err)
 		}
 		res.AdvancedConfiguration = *advancedConfigMap

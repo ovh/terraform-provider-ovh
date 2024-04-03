@@ -129,7 +129,7 @@ func resourceCloudProjectDatabaseKafkaTopicCreate(ctx context.Context, d *schema
 		retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate),
 			func() *retry.RetryError {
 				log.Printf("[DEBUG] Will create topic: %+v for cluster %s from project %s", params, clusterId, serviceName)
-				err := config.OVHClient.Post(endpoint, params, res)
+				err := config.OVHClient.PostWithContext(ctx, endpoint, params, res)
 				if err != nil {
 					if errOvh, ok := err.(*ovh.APIError); ok && (errOvh.Code == 409) {
 						return retry.RetryableError(err)
@@ -170,7 +170,7 @@ func resourceCloudProjectDatabaseKafkaTopicRead(ctx context.Context, d *schema.R
 	res := &CloudProjectDatabaseKafkaTopicResponse{}
 
 	log.Printf("[DEBUG] Will read topic %s from cluster %s from project %s", id, clusterId, serviceName)
-	if err := config.OVHClient.Get(endpoint, res); err != nil {
+	if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
@@ -201,7 +201,7 @@ func resourceCloudProjectDatabaseKafkaTopicDelete(ctx context.Context, d *schema
 		retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete),
 			func() *retry.RetryError {
 				log.Printf("[DEBUG] Will delete topic  %s from cluster %s from project %s", id, clusterId, serviceName)
-				err := config.OVHClient.Delete(endpoint, nil)
+				err := config.OVHClient.DeleteWithContext(ctx, endpoint, nil)
 				if err != nil {
 					if errOvh, ok := err.(*ovh.APIError); ok && (errOvh.Code == 409) {
 						return retry.RetryableError(err)

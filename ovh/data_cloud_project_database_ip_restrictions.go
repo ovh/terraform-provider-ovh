@@ -103,7 +103,7 @@ func (d *cloudProjectDatabaseIPRestrictionsDataSource) Read(ctx context.Context,
 		config.ClusterId.ValueString(), config.ServiceName.ValueString())
 
 	res := make([]string, 0)
-	if err := d.config.OVHClient.Get(endpoint, &res); err != nil {
+	if err := d.config.OVHClient.GetWithContext(ctx, endpoint, &res); err != nil {
 		resp.Diagnostics.AddError("Failed to get ip restrictions", fmt.Sprintf("error calling GET %s: %s", endpoint, err))
 		return
 	}

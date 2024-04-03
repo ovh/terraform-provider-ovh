@@ -255,7 +255,7 @@ func resourceCloudProjectDatabaseCreate(ctx context.Context, d *schema.ResourceD
 	res := &CloudProjectDatabaseResponse{}
 
 	log.Printf("[DEBUG] Will create Database: %+v", params)
-	err = config.OVHClient.Post(endpoint, params, res)
+	err = config.OVHClient.PostWithContext(ctx, endpoint, params, res)
 	if err != nil {
 		return diag.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
 	}
@@ -291,13 +291,13 @@ func resourceCloudProjectDatabaseRead(ctx context.Context, d *schema.ResourceDat
 	res := &CloudProjectDatabaseResponse{}
 
 	log.Printf("[DEBUG] Will read database %s from project: %s", d.Id(), serviceName)
-	if err := config.OVHClient.Get(serviceEndpoint, res); err != nil {
+	if err := config.OVHClient.GetWithContext(ctx, serviceEndpoint, res); err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, serviceEndpoint))
 	}
 
 	nodesEndpoint := fmt.Sprintf("%s/node", serviceEndpoint)
 	nodeList := &[]string{}
-	if err := config.OVHClient.Get(nodesEndpoint, nodeList); err != nil {
+	if err := config.OVHClient.GetWithContext(ctx, nodesEndpoint, nodeList); err != nil {
 		return diag.Errorf("unable to get database %s nodes: %v", res.Id, err)
 	}
 
@@ -306,7 +306,7 @@ func resourceCloudProjectDatabaseRead(ctx context.Context, d *schema.ResourceDat
 	}
 	nodeEndpoint := fmt.Sprintf("%s/%s", nodesEndpoint, url.PathEscape((*nodeList)[0]))
 	node := &CloudProjectDatabaseNodes{}
-	if err := config.OVHClient.Get(nodeEndpoint, node); err != nil {
+	if err := config.OVHClient.GetWithContext(ctx, nodeEndpoint, node); err != nil {
 		return diag.Errorf("unable to get database %s node %s: %v", res.Id, (*nodeList)[0], err)
 	}
 
@@ -315,7 +315,7 @@ func resourceCloudProjectDatabaseRead(ctx context.Context, d *schema.ResourceDat
 	if engine != "mongodb" {
 		advancedConfigEndpoint := fmt.Sprintf("%s/advancedConfiguration", serviceEndpoint)
 		advancedConfigMap := &map[string]string{}
-		if err := config.OVHClient.Get(advancedConfigEndpoint, advancedConfigMap); err != nil {
+		if err := config.OVHClient.GetWithContext(ctx, advancedConfigEndpoint, advancedConfigMap); err != nil {
 			return diag.Errorf("unable to get database %s advanced configuration: %v", res.Id, err)
 		}
 		res.AdvancedConfiguration = *advancedConfigMap
@@ -386,7 +386,7 @@ func resourceCloudProjectDatabaseDelete(ctx context.Context, d *schema.ResourceD
 	)
 
 	log.Printf("[DEBUG] Will delete database %s from project: %s", d.Id(), serviceName)
-	err := config.OVHClient.Delete(endpoint, nil)
+	err := config.OVHClient.DeleteWithContext(ctx, endpoint, nil)
 	if err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
