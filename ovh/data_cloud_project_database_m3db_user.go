@@ -63,7 +63,7 @@ func dataSourceCloudProjectDatabaseM3dbUserRead(ctx context.Context, d *schema.R
 	listRes := make([]string, 0)
 
 	log.Printf("[DEBUG] Will read users from cluster %s from project %s", clusterId, serviceName)
-	if err := config.OVHClient.Get(listEndpoint, &listRes); err != nil {
+	if err := config.OVHClient.GetWithContext(ctx, listEndpoint, &listRes); err != nil {
 		return diag.Errorf("Error calling GET %s:\n\t %q", listEndpoint, err)
 	}
 
@@ -77,7 +77,7 @@ func dataSourceCloudProjectDatabaseM3dbUserRead(ctx context.Context, d *schema.R
 		res := &CloudProjectDatabaseM3dbUserResponse{}
 
 		log.Printf("[DEBUG] Will read user %s from cluster %s from project %s", id, clusterId, serviceName)
-		if err := config.OVHClient.Get(endpoint, res); err != nil {
+		if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
 			return diag.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
 		}
 

@@ -141,7 +141,7 @@ func resourceCloudProjectDatabaseM3dbNamespaceCreate(ctx context.Context, d *sch
 	// Should read one time to
 	listRes := make([]string, 0)
 	log.Printf("[DEBUG] Will read namespaces from cluster %s from project %s", clusterId, serviceName)
-	if err := config.OVHClient.Get(endpoint, &listRes); err != nil {
+	if err := config.OVHClient.GetWithContext(ctx, endpoint, &listRes); err != nil {
 		return diag.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
 	}
 
@@ -149,7 +149,7 @@ func resourceCloudProjectDatabaseM3dbNamespaceCreate(ctx context.Context, d *sch
 	res := &CloudProjectDatabaseM3dbNamespaceResponse{}
 
 	log.Printf("[DEBUG] Will create namespace: %+v for cluster %s from project %s", params, clusterId, serviceName)
-	err := config.OVHClient.Post(endpoint, params, res)
+	err := config.OVHClient.PostWithContext(ctx, endpoint, params, res)
 	if err != nil {
 		return diag.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
 	}
@@ -180,7 +180,7 @@ func resourceCloudProjectDatabaseM3dbNamespaceRead(ctx context.Context, d *schem
 	res := &CloudProjectDatabaseM3dbNamespaceResponse{}
 
 	log.Printf("[DEBUG] Will read namespace %s from cluster %s from project %s", id, clusterId, serviceName)
-	if err := config.OVHClient.Get(endpoint, res); err != nil {
+	if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
@@ -237,7 +237,7 @@ func resourceCloudProjectDatabaseM3dbNamespaceDelete(ctx context.Context, d *sch
 	)
 
 	log.Printf("[DEBUG] Will delete namespace %s from cluster %s from project %s", id, clusterId, serviceName)
-	err := config.OVHClient.Delete(endpoint, nil)
+	err := config.OVHClient.DeleteWithContext(ctx, endpoint, nil)
 	if err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}

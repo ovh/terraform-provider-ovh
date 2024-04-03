@@ -293,7 +293,7 @@ func waitForCloudProjectDatabaseReady(ctx context.Context, client *ovh.Client, s
 				url.PathEscape(engine),
 				url.PathEscape(databaseId),
 			)
-			err := client.Get(endpoint, res)
+			err := client.GetWithContext(ctx, endpoint, res)
 			if err != nil {
 				return res, "", err
 			}
@@ -320,7 +320,7 @@ func waitForCloudProjectDatabaseDeleted(ctx context.Context, client *ovh.Client,
 				url.PathEscape(engine),
 				url.PathEscape(databaseId),
 			)
-			err := client.Get(endpoint, res)
+			err := client.GetWithContext(ctx, endpoint, res)
 			if err != nil {
 				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
 					return res, "DELETED", nil
@@ -496,7 +496,7 @@ func waitForCloudProjectDatabaseIpRestrictionReady(ctx context.Context, client *
 				url.PathEscape(databaseId),
 				url.PathEscape(ip),
 			)
-			err := client.Get(endpoint, res)
+			err := client.GetWithContext(ctx, endpoint, res)
 			if err != nil {
 				return res, "", err
 			}
@@ -524,7 +524,7 @@ func waitForCloudProjectDatabaseIpRestrictionDeleted(ctx context.Context, client
 				url.PathEscape(databaseId),
 				url.PathEscape(ip),
 			)
-			err := client.Get(endpoint, res)
+			err := client.GetWithContext(ctx, endpoint, res)
 			if err != nil {
 				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
 					return res, "DELETED", nil
@@ -640,7 +640,7 @@ func postFuncCloudProjectDatabaseUser(ctx context.Context, d *schema.ResourceDat
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
-	err := config.OVHClient.Post(endpoint, params, res)
+	err := config.OVHClient.PostWithContext(ctx, endpoint, params, res)
 	if err != nil {
 		if errOvh, ok := err.(*ovh.APIError); engine == "mongodb" && ok && (errOvh.Code == 409) {
 			return err
@@ -725,7 +725,7 @@ func deleteCloudProjectDatabaseUser(ctx context.Context, d *schema.ResourceData,
 	)
 
 	log.Printf("[DEBUG] Will delete user %s from cluster %s from project %s", id, clusterId, serviceName)
-	err := config.OVHClient.Delete(endpoint, nil)
+	err := config.OVHClient.DeleteWithContext(ctx, endpoint, nil)
 	if err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
@@ -754,7 +754,7 @@ func waitForCloudProjectDatabaseUserReady(ctx context.Context, client *ovh.Clien
 				url.PathEscape(databaseId),
 				url.PathEscape(userId),
 			)
-			err := client.Get(endpoint, res)
+			err := client.GetWithContext(ctx, endpoint, res)
 			if err != nil {
 				return res, "", err
 			}
@@ -782,7 +782,7 @@ func waitForCloudProjectDatabaseUserDeleted(ctx context.Context, client *ovh.Cli
 				url.PathEscape(databaseId),
 				url.PathEscape(userId),
 			)
-			err := client.Get(endpoint, res)
+			err := client.GetWithContext(ctx, endpoint, res)
 			if err != nil {
 				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
 					return res, "DELETED", nil
@@ -849,7 +849,7 @@ func waitForCloudProjectDatabaseDatabaseReady(ctx context.Context, client *ovh.C
 				url.PathEscape(serviceId),
 				url.PathEscape(databaseId),
 			)
-			err := client.Get(endpoint, res)
+			err := client.GetWithContext(ctx, endpoint, res)
 			if err != nil {
 				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
 					return res, "PENDING", nil
@@ -879,7 +879,7 @@ func waitForCloudProjectDatabaseDatabaseDeleted(ctx context.Context, client *ovh
 				url.PathEscape(serviceId),
 				url.PathEscape(databaseId),
 			)
-			err := client.Get(endpoint, res)
+			err := client.GetWithContext(ctx, endpoint, res)
 			if err != nil {
 				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
 					return res, "DELETED", nil
@@ -963,7 +963,7 @@ func waitForCloudProjectDatabaseIntegrationReady(ctx context.Context, client *ov
 				url.PathEscape(serviceId),
 				url.PathEscape(integrationId),
 			)
-			err := client.Get(endpoint, res)
+			err := client.GetWithContext(ctx, endpoint, res)
 			if err != nil {
 				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
 					return res, "PENDING", nil
@@ -993,7 +993,7 @@ func waitForCloudProjectDatabaseIntegrationDeleted(ctx context.Context, client *
 				url.PathEscape(serviceId),
 				url.PathEscape(integrationId),
 			)
-			err := client.Get(endpoint, res)
+			err := client.GetWithContext(ctx, endpoint, res)
 			if err != nil {
 				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
 					return res, "DELETED", nil
@@ -1416,7 +1416,7 @@ func waitForCloudProjectDatabaseM3dbNamespaceReady(ctx context.Context, client *
 				url.PathEscape(databaseId),
 				url.PathEscape(namespaceId),
 			)
-			err := client.Get(endpoint, res)
+			err := client.GetWithContext(ctx, endpoint, res)
 			if err != nil {
 				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
 					return res, "PENDING", nil
@@ -1445,7 +1445,7 @@ func waitForCloudProjectDatabaseM3dbNamespaceDeleted(ctx context.Context, client
 				url.PathEscape(databaseId),
 				url.PathEscape(namespaceId),
 			)
-			err := client.Get(endpoint, res)
+			err := client.GetWithContext(ctx, endpoint, res)
 			if err != nil {
 				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
 					return res, "DELETED", nil
@@ -1603,7 +1603,7 @@ func waitForCloudProjectDatabaseOpensearchPatternReady(ctx context.Context, clie
 				url.PathEscape(databaseId),
 				url.PathEscape(patternId),
 			)
-			err := client.Get(endpoint, res)
+			err := client.GetWithContext(ctx, endpoint, res)
 			if err != nil {
 				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
 					return res, "PENDING", nil
@@ -1632,7 +1632,7 @@ func waitForCloudProjectDatabaseOpensearchPatternDeleted(ctx context.Context, cl
 				url.PathEscape(databaseId),
 				url.PathEscape(patternId),
 			)
-			err := client.Get(endpoint, res)
+			err := client.GetWithContext(ctx, endpoint, res)
 			if err != nil {
 				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
 					return res, "DELETED", nil
@@ -1745,7 +1745,7 @@ func waitForCloudProjectDatabaseKafkaTopicReady(ctx context.Context, client *ovh
 				url.PathEscape(databaseId),
 				url.PathEscape(topicId),
 			)
-			err := client.Get(endpoint, res)
+			err := client.GetWithContext(ctx, endpoint, res)
 			if err != nil {
 				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
 					return res, "PENDING", nil
@@ -1774,7 +1774,7 @@ func waitForCloudProjectDatabaseKafkaTopicDeleted(ctx context.Context, client *o
 				url.PathEscape(databaseId),
 				url.PathEscape(topicId),
 			)
-			err := client.Get(endpoint, res)
+			err := client.GetWithContext(ctx, endpoint, res)
 			if err != nil {
 				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
 					return res, "DELETED", nil
@@ -1848,7 +1848,7 @@ func waitForCloudProjectDatabaseKafkaAclReady(ctx context.Context, client *ovh.C
 				url.PathEscape(databaseId),
 				url.PathEscape(aclId),
 			)
-			err := client.Get(endpoint, res)
+			err := client.GetWithContext(ctx, endpoint, res)
 			if err != nil {
 				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
 					return res, "PENDING", nil
@@ -1877,7 +1877,7 @@ func waitForCloudProjectDatabaseKafkaAclDeleted(ctx context.Context, client *ovh
 				url.PathEscape(databaseId),
 				url.PathEscape(aclId),
 			)
-			err := client.Get(endpoint, res)
+			err := client.GetWithContext(ctx, endpoint, res)
 			if err != nil {
 				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
 					return res, "DELETED", nil
@@ -1951,7 +1951,7 @@ func waitForCloudProjectDatabaseKafkaSchemaRegistryAclReady(ctx context.Context,
 				url.PathEscape(databaseId),
 				url.PathEscape(schemaRegistryAclId),
 			)
-			err := client.Get(endpoint, res)
+			err := client.GetWithContext(ctx, endpoint, res)
 			if err != nil {
 				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
 					return res, "PENDING", nil
@@ -1980,7 +1980,7 @@ func waitForCloudProjectDatabaseKafkaSchemaRegistryAclDeleted(ctx context.Contex
 				url.PathEscape(databaseId),
 				url.PathEscape(schemaRegistryAclId),
 			)
-			err := client.Get(endpoint, res)
+			err := client.GetWithContext(ctx, endpoint, res)
 			if err != nil {
 				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
 					return res, "DELETED", nil
@@ -2134,7 +2134,7 @@ func postCloudProjectDatabasePostgresqlConnectionPool(ctx context.Context, d *sc
 	log.Printf("[DEBUG] Will create connectionPool: %+v for cluster %s from project %s", params, clusterId, serviceName)
 	config := meta.(*Config)
 
-	err := config.OVHClient.Post(endpoint, params, res)
+	err := config.OVHClient.PostWithContext(ctx, endpoint, params, res)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -2181,7 +2181,7 @@ func deleteCloudProjectDatabasePostgresqlConnectionPool(ctx context.Context, d *
 	)
 
 	log.Printf("[DEBUG] Will delete connectionPool %s from cluster %s from project %s", id, clusterId, serviceName)
-	err := config.OVHClient.Delete(endpoint, nil)
+	err := config.OVHClient.DeleteWithContext(ctx, endpoint, nil)
 	if err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}

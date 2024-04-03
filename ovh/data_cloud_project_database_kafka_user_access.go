@@ -63,7 +63,7 @@ func dataSourceCloudProjectDatabaseKafkaUserAccessRead(ctx context.Context, d *s
 	res := &CloudProjectDatabaseKafkaUserAccessResponse{}
 
 	log.Printf("[DEBUG] Will read certificates of user %s from cluster %s from project %s", userId, clusterId, serviceName)
-	if err := config.OVHClient.Get(endpoint, res); err != nil {
+	if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
