@@ -144,6 +144,7 @@ func resourceCloudProjectDatabaseLogSubscriptionCreate(ctx context.Context, d *s
 	log.Printf("[DEBUG] Log subscrition operation %s is READY", res.OperationID)
 
 	d.SetId(*op.SubscriptionID)
+	d.Set("operation_id", res.OperationID)
 
 	return resourceCloudProjectDatabaseLogSubscriptionRead(ctx, d, meta)
 }

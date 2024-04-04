@@ -445,7 +445,7 @@ type CloudProjectDatabaseLogSubscriptionResource struct {
 }
 
 type CloudProjectDatabaseLogSubscriptionResponse struct {
-	CreateAt       string                                      `json:"createAt"`
+	CreatedAt      string                                      `json:"createdAt"`
 	Kind           string                                      `json:"kind"`
 	OperationID    string                                      `json:"operationId"`
 	Resource       CloudProjectDatabaseLogSubscriptionResource `json:"resource"`
@@ -467,11 +467,11 @@ func (r *CloudProjectDatabaseLogSubscriptionResponse) string() string {
 func (r CloudProjectDatabaseLogSubscriptionResponse) toMap() map[string]interface{} {
 	obj := make(map[string]interface{})
 
-	obj["create_at"] = r.CreateAt
+	obj["created_at"] = r.CreatedAt
 	obj["id"] = r.SubscriptionID
 	obj["ldp_service_name"] = r.LDPServiceName
 	obj["kind"] = r.Kind
-	obj["operationId"] = r.OperationID
+	obj["operation_id"] = r.OperationID
 	obj["resource_name"] = r.Resource.Name
 	obj["resource_type"] = r.Resource.Type
 	obj["stream_id"] = r.StreamID

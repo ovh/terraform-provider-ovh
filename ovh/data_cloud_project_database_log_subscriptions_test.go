@@ -78,7 +78,7 @@ func TestAccCloudProjectDatabaseLogSubscriptionsDataSource_basic(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(
-						"data.ovh_cloud_project_database_log_subscription.sub",
+						"data.ovh_cloud_project_database_log_subscriptions.subs",
 						"subscription_ids.#",
 					),
 				),

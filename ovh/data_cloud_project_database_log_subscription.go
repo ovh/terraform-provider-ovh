@@ -64,6 +64,11 @@ func dataSourceCloudProjectDatabaseLogSubscription() *schema.Resource {
 				Description: "Type of subscribed resource, where the logs come from",
 				Computed:    true,
 			},
+			"stream_id": {
+				Type:        schema.TypeString,
+				Description: "Id of the target Log data platform stream",
+				Computed:    true,
+			},
 			"updated_at": {
 				Type:        schema.TypeString,
 				Description: "Last update date of the subscription",
