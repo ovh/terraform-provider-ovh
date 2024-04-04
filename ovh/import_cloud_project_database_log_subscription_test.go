@@ -45,10 +45,11 @@ func TestAccCloudProjectDatabaseLogSubscription_importBasic(t *testing.T) {
 				Config: config,
 			},
 			{
-				ResourceName:      "ovh_cloud_project_database_log_subscription.sub",
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateIdFunc: testAccCloudProjectDatabaseLogSubscriptionImportID("ovh_cloud_project_database_log_subscription.sub"),
+				ResourceName:            "ovh_cloud_project_database_log_subscription.sub",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateIdFunc:       testAccCloudProjectDatabaseLogSubscriptionImportID("ovh_cloud_project_database_log_subscription.sub"),
+				ImportStateVerifyIgnore: []string{"operation_id"},
 			},
 		},
 	})
