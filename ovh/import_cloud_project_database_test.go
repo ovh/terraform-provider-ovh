@@ -15,6 +15,7 @@ func TestAccCloudProjectDatabase_importBasic(t *testing.T) {
 	version := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST")
 	region := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_REGION_TEST")
 	flavor := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_FLAVOR_TEST")
+	ip := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_IP_RESTRICTION_IP_TEST")
 	description := acctest.RandomWithPrefix(test_prefix)
 
 	config := fmt.Sprintf(
@@ -24,6 +25,8 @@ func TestAccCloudProjectDatabase_importBasic(t *testing.T) {
 		engine,
 		version,
 		region,
+		description,
+		ip,
 		flavor,
 	)
 
