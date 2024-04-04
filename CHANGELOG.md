@@ -1,3 +1,45 @@
+## 0.41.0 (April 4, 2024)
+
+🎉 Features:
+
+* New resource: `ovh_iploadbalancing_udp_frontend` ([#587](https://github.com/ovh/terraform-provider-ovh/pull/587))
+* New resource: `ovh_domain_zone_dnssec` ([#589](https://github.com/ovh/terraform-provider-ovh/pull/589))
+* New resource: `ovh_vps` ([#594](https://github.com/ovh/terraform-provider-ovh/pull/594))
+* New resource: `ovh_ip_firewall` ([#596](https://github.com/ovh/terraform-provider-ovh/pull/596))
+* New resource: `ovh_ip_firewall_rule` ([#601](https://github.com/ovh/terraform-provider-ovh/pull/601))
+* New resource: `ovh_ip_mitigation` ([#604](https://github.com/ovh/terraform-provider-ovh/pull/604))
+
+* New datasource: `ovh_domain_zone_dnssec` ([#589](https://github.com/ovh/terraform-provider-ovh/pull/589))
+* New datasource: `ovh_ip_firewall` ([#596](https://github.com/ovh/terraform-provider-ovh/pull/596))
+* New datasource: `ovh_ip_firewall_rule` ([#601](https://github.com/ovh/terraform-provider-ovh/pull/601))
+* New datasource: `ovh_ip_mitigation` ([#604](https://github.com/ovh/terraform-provider-ovh/pull/604))
+* New datasource: `ovh_cloud_project` ([#603](https://github.com/ovh/terraform-provider-ovh/pull/603))
+* New datasource: `ovh_cloud_projects` ([#603](https://github.com/ovh/terraform-provider-ovh/pull/603))
+
+💪 Improvements:
+
+* Products ordering is now usable by resources developed with SDK `terraform-plugin-framework` ([#594](https://github.com/ovh/terraform-provider-ovh/pull/594))
+
+🐜 Bug fixes:
+
+* `r/ovh_iploadbalancing_tcp_farm`: Allow update of field `stickiness` ([#586](https://github.com/ovh/terraform-provider-ovh/pull/586))
+* `r/ovh_iploadbalancing_tcp_frontend`: Use type Set for fields `allowed_source` and `dedicated_ipfo` ([#590](https://github.com/ovh/terraform-provider-ovh/pull/590))
+* `r/ovh_iploadbalancing_http_frontend`: Use type Set for fields `allowed_source` and `dedicated_ipfo` ([#590](https://github.com/ovh/terraform-provider-ovh/pull/590))
+* `r/ovh_cloud_project_database`: Increase default timeout for database creation ([#591](https://github.com/ovh/terraform-provider-ovh/pull/591))
+
+⛔️ Deletions:
+
+* `r/ovh_dedicated_server_install_task`: **Breaking change** Removed properties `change_log`, `install_rtm`, `reset_hw_raid` and `use_distrib_kernel` ([#593](https://github.com/ovh/terraform-provider-ovh/pull/593))
+* `r/ovh_me_installation_template`: **Breaking change** Removed properties `change_log`, `use_distribution_kernel`, `supports_distribution_kernel` and `supports_rtm` ([#593](https://github.com/ovh/terraform-provider-ovh/pull/593))
+
+* `d/ovh_me_installation_template`: **Breaking change** Removed properties `change_log`, `supports_distribution_kernel`, `supports_rtm` and `use_distribution_kernel` ([#593](https://github.com/ovh/terraform-provider-ovh/pull/593))
+
+📚 Documentation:
+
+* Licenses update ([#597](https://github.com/ovh/terraform-provider-ovh/pull/597))
+
+❤️ Thanks for your contributions ❤️
+
 ## 0.40.0 (March 19, 2024)
 
 ⚙️ General:
