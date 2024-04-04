@@ -145,6 +145,7 @@ func (p *OvhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 		NewDomainZoneDnssecDataSource,
 		NewIpFirewallDataSource,
 		NewIpFirewallRuleDataSource,
+		NewIpMitigationDataSource,
 	}
 }
 
@@ -156,6 +157,7 @@ func (p *OvhProvider) Resources(_ context.Context) []func() resource.Resource {
 		NewIpFirewallResource,
 		NewIpFirewallRuleResource,
 		NewIploadbalancingUdpFrontendResource,
+		NewIpMitigationResource,
 		NewVpsResource,
 	}
 }
