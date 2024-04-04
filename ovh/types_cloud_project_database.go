@@ -229,7 +229,6 @@ func (opts *CloudProjectDatabaseCreateOpts) FromResource(d *schema.ResourceData)
 			Description: ipRestMap["description"].(string),
 			IP:          ipRestMap["ip"].(string),
 		}
-
 	}
 
 	if err := checkNodesEquality(nodes); err != nil {
