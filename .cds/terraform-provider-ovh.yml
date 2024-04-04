@@ -640,7 +640,7 @@ workflow:
     environment: acctests
     one_at_a_time: true
     parameters:
-      testargs: -run 'TestAccIPFirewall'
+      testargs: -run 'TestAccIPFirewall|TestAccIPMitigation'
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
