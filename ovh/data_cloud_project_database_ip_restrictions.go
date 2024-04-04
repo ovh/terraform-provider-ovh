@@ -58,6 +58,8 @@ func (d *cloudProjectDatabaseIPRestrictionsDataSource) Configure(_ context.Conte
 
 func (d *cloudProjectDatabaseIPRestrictionsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		DeprecationMessage: "use ip_restriction field in cloud_project_database datasource",
+
 		Attributes: map[string]schema.Attribute{
 			"service_name": schema.StringAttribute{
 				Required:    os.Getenv("OVH_CLOUD_PROJECT_SERVICE") == "",

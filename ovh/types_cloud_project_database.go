@@ -32,26 +32,54 @@ type CloudProjectDatabaseBackups struct {
 	Time    string   `json:"time,omitempty"`
 }
 
+type CloudProjectDatabaseIPRestriction struct {
+	Description string `json:"description"`
+	IP          string `json:"ip"`
+}
+
+func (opts *CloudProjectDatabaseIPRestriction) FromResourceWithPath(d *schema.ResourceData, path string) *CloudProjectDatabaseIPRestriction {
+	opts.Description = d.Get(fmt.Sprintf("%s.description", path)).(string)
+	opts.IP = d.Get(fmt.Sprintf("%s.ip", path)).(string)
+
+	return opts
+}
+
+type CloudProjectDatabaseIPRestrictionResponse struct {
+	CloudProjectDatabaseIPRestriction
+	Status string `json:"status"`
+}
+
+func (ir CloudProjectDatabaseIPRestrictionResponse) toMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+
+	obj["description"] = ir.Description
+	obj["ip"] = ir.IP
+	obj["status"] = ir.Status
+
+	return obj
+}
+
 type CloudProjectDatabaseResponse struct {
-	AclsEnabled           bool                           `json:"aclsEnabled"`
-	Backups               CloudProjectDatabaseBackups    `json:"backups"`
-	CreatedAt             string                         `json:"createdAt"`
-	Description           string                         `json:"description"`
-	Endpoints             []CloudProjectDatabaseEndpoint `json:"endpoints"`
-	Flavor                string                         `json:"flavor"`
-	Id                    string                         `json:"id"`
-	MaintenanceTime       string                         `json:"maintenanceTime"`
-	NetworkId             string                         `json:"networkId"`
-	NetworkType           string                         `json:"networkType"`
-	Plan                  string                         `json:"plan"`
-	NodeNumber            int                            `json:"nodeNumber"`
-	Region                string                         `json:"region"`
-	RestApi               bool                           `json:"restApi"`
-	Status                string                         `json:"status"`
-	SubnetId              string                         `json:"subnetId"`
-	Version               string                         `json:"version"`
-	Disk                  CloudProjectDatabaseDisk       `json:"disk"`
-	AdvancedConfiguration map[string]string              `json:"advancedConfiguration"`
+	AclsEnabled           bool                                        `json:"aclsEnabled"`
+	Backups               CloudProjectDatabaseBackups                 `json:"backups"`
+	CreatedAt             string                                      `json:"createdAt"`
+	Description           string                                      `json:"description"`
+	Endpoints             []CloudProjectDatabaseEndpoint              `json:"endpoints"`
+	Flavor                string                                      `json:"flavor"`
+	Id                    string                                      `json:"id"`
+	IPRestrictions        []CloudProjectDatabaseIPRestrictionResponse `json:"ipRestrictions"`
+	MaintenanceTime       string                                      `json:"maintenanceTime"`
+	NetworkId             string                                      `json:"networkId"`
+	NetworkType           string                                      `json:"networkType"`
+	Plan                  string                                      `json:"plan"`
+	NodeNumber            int                                         `json:"nodeNumber"`
+	Region                string                                      `json:"region"`
+	RestApi               bool                                        `json:"restApi"`
+	Status                string                                      `json:"status"`
+	SubnetId              string                                      `json:"subnetId"`
+	Version               string                                      `json:"version"`
+	Disk                  CloudProjectDatabaseDisk                    `json:"disk"`
+	AdvancedConfiguration map[string]string                           `json:"advancedConfiguration"`
 }
 
 func (s *CloudProjectDatabaseResponse) String() string {
@@ -65,6 +93,12 @@ func (v CloudProjectDatabaseResponse) ToMap() map[string]interface{} {
 	obj["created_at"] = v.CreatedAt
 	obj["description"] = v.Description
 	obj["id"] = v.Id
+
+	var ipRests []map[string]interface{}
+	for _, ir := range v.IPRestrictions {
+		ipRests = append(ipRests, ir.toMap())
+	}
+	obj["ip_restrictions"] = ipRests
 
 	var endpoints []map[string]interface{}
 	for _, e := range v.Endpoints {
@@ -150,14 +184,15 @@ func (v CloudProjectDatabaseNodes) ToMap() map[string]interface{} {
 }
 
 type CloudProjectDatabaseCreateOpts struct {
-	Description  string                           `json:"description,omitempty"`
-	NetworkId    string                           `json:"networkId,omitempty"`
-	NodesPattern CloudProjectDatabaseNodesPattern `json:"nodesPattern,omitempty"`
-	Disk         CloudProjectDatabaseDisk         `json:"disk,omitempty"`
-	Plan         string                           `json:"plan"`
-	SubnetId     string                           `json:"subnetId,omitempty"`
-	Version      string                           `json:"version"`
-	Backups      CloudProjectDatabaseBackups      `json:"backups,omitempty"`
+	Backups        CloudProjectDatabaseBackups         `json:"backups,omitempty"`
+	Description    string                              `json:"description,omitempty"`
+	Disk           CloudProjectDatabaseDisk            `json:"disk,omitempty"`
+	IPRestrictions []CloudProjectDatabaseIPRestriction `json:"ipRestrictions,omitempty"`
+	NetworkId      string                              `json:"networkId,omitempty"`
+	NodesPattern   CloudProjectDatabaseNodesPattern    `json:"nodesPattern,omitempty"`
+	Plan           string                              `json:"plan"`
+	SubnetId       string                              `json:"subnetId,omitempty"`
+	Version        string                              `json:"version"`
 }
 
 type CloudProjectDatabaseDisk struct {
@@ -184,6 +219,16 @@ func (opts *CloudProjectDatabaseCreateOpts) FromResource(d *schema.ResourceData)
 	nbOfNodes := d.Get("nodes.#").(int)
 	for i := 0; i < nbOfNodes; i++ {
 		nodes = append(nodes, *(&CloudProjectDatabaseNodes{}).FromResourceWithPath(d, fmt.Sprintf("nodes.%d", i)))
+	}
+
+	ipRests := d.Get("ip_restrictions").(*schema.Set).List()
+	opts.IPRestrictions = make([]CloudProjectDatabaseIPRestriction, len(ipRests))
+	for i, ir := range ipRests {
+		ipRestMap := ir.(map[string]interface{})
+		opts.IPRestrictions[i] = CloudProjectDatabaseIPRestriction{
+			Description: ipRestMap["description"].(string),
+			IP:          ipRestMap["ip"].(string),
+		}
 	}
 
 	if err := checkNodesEquality(nodes); err != nil {
@@ -214,14 +259,15 @@ func (opts *CloudProjectDatabaseCreateOpts) FromResource(d *schema.ResourceData)
 }
 
 type CloudProjectDatabaseUpdateOpts struct {
-	AclsEnabled bool                        `json:"aclsEnabled,omitempty"`
-	Description string                      `json:"description,omitempty"`
-	Flavor      string                      `json:"flavor,omitempty"`
-	Plan        string                      `json:"plan,omitempty"`
-	RestApi     bool                        `json:"restApi,omitempty"`
-	Version     string                      `json:"version,omitempty"`
-	Disk        CloudProjectDatabaseDisk    `json:"disk,omitempty"`
-	Backups     CloudProjectDatabaseBackups `json:"backups,omitempty"`
+	AclsEnabled    bool                                `json:"aclsEnabled,omitempty"`
+	Backups        CloudProjectDatabaseBackups         `json:"backups,omitempty"`
+	Description    string                              `json:"description,omitempty"`
+	Disk           CloudProjectDatabaseDisk            `json:"disk,omitempty"`
+	Flavor         string                              `json:"flavor,omitempty"`
+	IPRestrictions []CloudProjectDatabaseIPRestriction `json:"ipRestrictions,omitempty"`
+	Plan           string                              `json:"plan,omitempty"`
+	RestApi        bool                                `json:"restApi,omitempty"`
+	Version        string                              `json:"version,omitempty"`
 }
 
 func (opts *CloudProjectDatabaseUpdateOpts) FromResource(d *schema.ResourceData) (*CloudProjectDatabaseUpdateOpts, error) {
@@ -238,6 +284,17 @@ func (opts *CloudProjectDatabaseUpdateOpts) FromResource(d *schema.ResourceData)
 	opts.Flavor = d.Get("flavor").(string)
 	opts.Version = d.Get("version").(string)
 	opts.Disk = CloudProjectDatabaseDisk{Size: d.Get("disk_size").(int)}
+
+	ipRests := d.Get("ip_restrictions").(*schema.Set).List()
+	opts.IPRestrictions = make([]CloudProjectDatabaseIPRestriction, len(ipRests))
+	for i, ir := range ipRests {
+		ipRestMap := ir.(map[string]interface{})
+		opts.IPRestrictions[i] = CloudProjectDatabaseIPRestriction{
+			Description: ipRestMap["description"].(string),
+			IP:          ipRestMap["ip"].(string),
+		}
+
+	}
 
 	regions, err := helpers.StringsFromSchema(d, "backup_regions")
 	if err != nil {

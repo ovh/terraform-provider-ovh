@@ -77,7 +77,11 @@ resource "ovh_cloud_project_database" "db" {
 	version      = "%s"
 	plan         = "essential"
 	nodes {
-		region     = "%s"
+		region = "%s"
+	}
+	ip_restrictions {
+		description = "%s"
+		ip = "%s"
 	}
 	flavor = "%s"
 }
@@ -89,6 +93,7 @@ func TestAccCloudProjectDatabase_basic(t *testing.T) {
 	version := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST")
 	region := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_REGION_TEST")
 	flavor := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_FLAVOR_TEST")
+	ip := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_IP_RESTRICTION_IP_TEST")
 	description := acctest.RandomWithPrefix(test_prefix)
 
 	config := fmt.Sprintf(
@@ -98,6 +103,8 @@ func TestAccCloudProjectDatabase_basic(t *testing.T) {
 		engine,
 		version,
 		region,
+		description,
+		ip,
 		flavor,
 	)
 
@@ -138,6 +145,12 @@ func TestAccCloudProjectDatabase_basic(t *testing.T) {
 						"ovh_cloud_project_database.db", "nodes.#"),
 					resource.TestCheckResourceAttr(
 						"ovh_cloud_project_database.db", "nodes.0.region", region),
+					resource.TestCheckResourceAttrSet(
+						"ovh_cloud_project_database.db", "ip_restrictions.#"),
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_project_database.db", "ip_restrictions.0.description", description),
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_project_database.db", "ip_restrictions.0.ip", ip),
 					resource.TestCheckResourceAttr(
 						"ovh_cloud_project_database.db", "plan", "essential"),
 					resource.TestCheckResourceAttr(

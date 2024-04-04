@@ -18,6 +18,8 @@ import (
 
 func resourceCloudProjectDatabaseIpRestriction() *schema.Resource {
 	return &schema.Resource{
+		DeprecationMessage: "use ip_restriction field in cloud_project_database resource",
+
 		CreateContext: resourceCloudProjectDatabaseIpRestrictionCreate,
 		ReadContext:   resourceCloudProjectDatabaseIpRestrictionRead,
 		DeleteContext: resourceCloudProjectDatabaseIpRestrictionDelete,
