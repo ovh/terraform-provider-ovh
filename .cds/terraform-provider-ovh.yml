@@ -81,17 +81,6 @@ workflow:
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
-  Tests_CloudProjectDatabaseIpRestriction:
-    application: terraform-provider-ovh
-    depends_on:
-    - terraform-provider-ovh-pre-sweepers
-    environment: acctests
-    one_at_a_time: true
-    parameters:
-      testargs: -run CloudProjectDatabaseIpRestriction
-    pipeline: terraform-provider-ovh-testacc
-    when:
-    - success
   Tests_CloudProjectDatabaseKafkaAcl:
     application: terraform-provider-ovh
     depends_on:
@@ -664,7 +653,6 @@ workflow:
     - Tests_CloudProjectDatabaseCertificates
     - Tests_CloudProjectDatabaseDatabase
     - Tests_CloudProjectDatabaseIntegration
-    - Tests_CloudProjectDatabaseIpRestriction
     - Tests_CloudProjectDatabaseKafkaAcl
     - Tests_CloudProjectDatabaseKafkaSchemaRegistry
     - Tests_CloudProjectDatabaseKafkaTopic

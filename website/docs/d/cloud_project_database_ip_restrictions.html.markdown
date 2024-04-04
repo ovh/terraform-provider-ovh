@@ -4,7 +4,9 @@ subcategory : "Managed Databases"
 
 # ovh_cloud_project_database_ip_restrictions (Data Source)
 
-Use the list of IP restrictions associated with a public cloud project.
+Deprecated: Use ip_restrictions field in cloud_project_database datasource instead.
+
+Use this data source to get the list of IP restrictions associated with a public cloud project.
 
 ## Example Usage
 
