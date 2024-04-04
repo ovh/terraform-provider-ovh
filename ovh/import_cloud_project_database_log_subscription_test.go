@@ -58,7 +58,7 @@ func testAccCloudProjectDatabaseLogSubscriptionImportID(resourceName string) res
 	return func(s *terraform.State) (string, error) {
 		testUser, ok := s.RootModule().Resources[resourceName]
 		if !ok {
-			return "", fmt.Errorf("ovh_cloud_project_database_user not found: %s", resourceName)
+			return "", fmt.Errorf("ovh_cloud_project_database_log_subscription not found: %s", resourceName)
 		}
 		return fmt.Sprintf(
 			"%s/%s/%s/%s",

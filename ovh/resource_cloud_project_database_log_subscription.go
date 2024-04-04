@@ -145,12 +145,7 @@ func resourceCloudProjectDatabaseLogSubscriptionCreate(ctx context.Context, d *s
 
 	d.SetId(*op.SubscriptionID)
 
-	readDiags := resourceCloudProjectDatabaseLogSubscriptionRead(ctx, d, meta)
-	err = diagnosticsToError(readDiags)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	return nil
+	return resourceCloudProjectDatabaseLogSubscriptionRead(ctx, d, meta)
 }
 
 func resourceCloudProjectDatabaseLogSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

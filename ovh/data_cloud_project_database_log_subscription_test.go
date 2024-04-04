@@ -17,7 +17,7 @@ resource "ovh_cloud_project_database" "db" {
 	version      = "%s"
 	plan         = "essential"
 	nodes {
-		region     = "%s"
+		region = "%s"
 	}
 	flavor = "%s"
 }
@@ -30,16 +30,16 @@ resource "ovh_dbaas_logs_output_graylog_stream" "stream" {
 
 resource "ovh_cloud_project_database_log_subscription" "sub" {
 	service_name = ovh_cloud_project_database.db.service_name
-	engine		 = ovh_cloud_project_database.db.engine
+	engine       = ovh_cloud_project_database.db.engine
 	cluster_id   = ovh_cloud_project_database.db.id
 	stream_id    = ovh_dbaas_logs_output_graylog_stream.id
 }
 
 data "ovh_cloud_project_database_log_subscription" "sub" {
 	service_name = ovh_cloud_project_database_log_subscription.sub.service_name
-	engine		 = ovh_cloud_project_database_log_subscription.sub.engine
+	engine       = ovh_cloud_project_database_log_subscription.sub.engine
 	cluster_id   = ovh_cloud_project_database_log_subscription.sub.cluster_id
-	id    		 = ovh_cloud_project_database_log_subscription.sub.id
+	id           = ovh_cloud_project_database_log_subscription.sub.id
 }
 `
 

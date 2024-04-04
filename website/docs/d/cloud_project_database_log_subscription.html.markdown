@@ -4,7 +4,7 @@ subcategory : "Managed Databases"
 
 # ovh_cloud_project_database_log_subscription (Data Source)
 
-Use this data source to get information a log subscrition for a cluster associated with a public cloud project.
+Use this data source to get information about a log subscription for a cluster associated with a public cloud project.
 
 ## Example Usage
 
@@ -16,7 +16,7 @@ data "ovh_cloud_project_database_log_subscription" "subscription" {
     id           = "ZZZ"
 }
 
-output "redisuser_commands" {
+output "subscription_ldp_name" {
   value = data.ovh_cloud_project_database_log_subscription.subscription.ldp_service_name
 }
 ```
@@ -27,12 +27,9 @@ The following arguments are supported:
 
 * `service_name` - (Required) The id of the public cloud project. If omitted,
   the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
-
-* `engine` - (Required) The database engine you want to deploy. To get a full list of available engine visit.
+* `engine` - (Required) The database engine for which you want to retrieve a subscription. To get a full list of available engine visit.
 [public documentation](https://docs.ovh.com/gb/en/publiccloud/databases).
-
 * `cluster_id` - (Required) Cluster ID.
-
 * `id` - (Required) Id of the log subscription.
 
 ## Attributes Reference

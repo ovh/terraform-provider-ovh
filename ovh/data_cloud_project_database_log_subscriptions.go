@@ -70,5 +70,4 @@ func dataSourceCloudProjectDatabaseLogSubscriptionsRead(ctx context.Context, d *
 	d.Set("subscription_ids", res)
 
 	return nil
-
 }

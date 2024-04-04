@@ -36,12 +36,9 @@ The following arguments are supported:
 
 * `service_name` - (Required, Forces new resource) The id of the public cloud project. If omitted,
   the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
-
-* `engine` - (Required, Forces new resource) The database engine you want to deploy. To get a full list of available engine visit.
+* `engine` - (Required, Forces new resource) The database engine for which you want to retrieve a subscription. To get a full list of available engine visit.
 [public documentation](https://docs.ovh.com/gb/en/publiccloud/databases).
-
 * `cluster_id` - (Required, Forces new resource) Cluster ID.
-
 * `stream_id` - (Required, Forces new resource) Id of the target Log data platform stream.
 
 ## Attributes Reference

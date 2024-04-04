@@ -15,7 +15,7 @@ data "ovh_cloud_project_database_log_subscriptions" "subscriptions" {
     cluster_id   = "ZZZ"
 }
 
-output "redisuser_commands" {
+output "subscription_ids" {
   value = data.ovh_cloud_project_database_log_subscriptions.subscriptions.subscription_ids
 }
 ```
@@ -26,10 +26,8 @@ The following arguments are supported:
 
 * `service_name` - (Required) The id of the public cloud project. If omitted,
   the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
-
-* `engine` - (Required) The database engine you want to deploy. To get a full list of available engine visit.
+* `engine` - (Required) The database engine for which you want to retrieve a subscription. To get a full list of available engine visit.
 [public documentation](https://docs.ovh.com/gb/en/publiccloud/databases).
-
 * `cluster_id` - (Required) Cluster ID.
 
 ## Attributes Reference
