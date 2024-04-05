@@ -125,6 +125,17 @@ workflow:
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
+  Tests_CloudProjectDatabaseLogSubscription:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run CloudProjectDatabaseLogSubscription
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
   Tests_CloudProjectDatabaseM3dbNamespace:
     application: terraform-provider-ovh
     depends_on:
@@ -657,6 +668,7 @@ workflow:
     - Tests_CloudProjectDatabaseKafkaSchemaRegistry
     - Tests_CloudProjectDatabaseKafkaTopic
     - Tests_CloudProjectDatabaseKafkaUser
+    - Tests_CloudProjectDatabaseLogSubscription
     - Tests_CloudProjectDatabaseM3dbNamespace
     - Tests_CloudProjectDatabaseM3dbUser
     - Tests_CloudProjectDatabaseMongodbUser

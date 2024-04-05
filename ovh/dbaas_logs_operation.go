@@ -1,19 +1,20 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/url"
 	"reflect"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/ovh/go-ovh/ovh"
 )
 
-func waitForDbaasLogsOperation(c *ovh.Client, serviceName, id string) (*DbaasLogsOperation, error) {
+func waitForDbaasLogsOperation(ctx context.Context, c *ovh.Client, serviceName, id string) (*DbaasLogsOperation, error) {
 	// Wait for operation status
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"PENDING", "RECEIVED", "STARTED", "RETRY", "RUNNING"},
 		Target:     []string{"SUCCESS"},
 		Refresh:    waitForDbaasLogsOperationCheck(c, serviceName, id),
@@ -22,7 +23,7 @@ func waitForDbaasLogsOperation(c *ovh.Client, serviceName, id string) (*DbaasLog
 		MinTimeout: 3 * time.Second,
 	}
 
-	res, err := stateConf.WaitForState()
+	res, err := stateConf.WaitForStateContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("waiting for dbaas logs operation %s/%s: %s", serviceName, id, err)
 	}
@@ -40,7 +41,7 @@ func waitForDbaasLogsOperation(c *ovh.Client, serviceName, id string) (*DbaasLog
 	return op, nil
 }
 
-func waitForDbaasLogsOperationCheck(c *ovh.Client, serviceName, id string) resource.StateRefreshFunc {
+func waitForDbaasLogsOperationCheck(c *ovh.Client, serviceName, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		res := &DbaasLogsOperation{}
 
