@@ -1,20 +1,22 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/url"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceDbaasLogsCluster() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDbaasLogsClusterCreate,
-		Update: resourceDbaasLogsClusterUpdate,
-		Read:   resourceDbaasLogsClusterRead,
-		Delete: resourceDbaasLogsClusterDelete,
+		CreateContext: resourceDbaasLogsClusterCreate,
+		UpdateContext: resourceDbaasLogsClusterUpdate,
+		ReadContext:   resourceDbaasLogsClusterRead,
+		DeleteContext: resourceDbaasLogsClusterDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceDbaasLogsClusterImportState,
 		},
@@ -130,52 +132,52 @@ func resourceDbaasLogsClusterSchema() map[string]*schema.Schema {
 	return schema
 }
 
-func resourceDbaasLogsClusterCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDbaasLogsClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 
 	serviceName := d.Get("service_name").(string)
-	clusterId := d.Get("cluster_id").(string)
-	if clusterId == "" {
+	clusterID := d.Get("cluster_id").(string)
+	if clusterID == "" {
 		var err error
-		clusterId, err = dbaasGetClusterID(config, serviceName)
+		clusterID, err = dbaasGetClusterID(config, serviceName)
 		if err != nil {
-			return fmt.Errorf("Error retrieving clusterId for %s:\n\t %q", serviceName, err)
+			return diag.Errorf("Error retrieving clusterId for %s:\n\t %q", serviceName, err)
 		}
 	}
-	d.Set("cluster_id", clusterId)
-	id := fmt.Sprintf("%s_%s", serviceName, clusterId)
+	d.Set("cluster_id", clusterID)
+	id := fmt.Sprintf("%s_%s", serviceName, clusterID)
 	d.SetId(id)
 
 	// Fetch current ACL to restore them as-is when the resource is deleted
 	endpoint := fmt.Sprintf(
 		"/dbaas/logs/%s/cluster/%s",
 		url.PathEscape(serviceName),
-		url.PathEscape(clusterId),
+		url.PathEscape(clusterID),
 	)
 
 	res := map[string]interface{}{}
 	if err := config.OVHClient.Get(endpoint, &res); err != nil {
-		return fmt.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
+		return diag.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
 	}
 
 	d.Set("initial_archive_allowed_networks", res["archiveAllowedNetworks"])
 	d.Set("initial_direct_input_allowed_networks", res["directInputAllowedNetworks"])
 	d.Set("initial_query_allowed_networks", res["queryAllowedNetworks"])
 
-	return resourceDbaasLogsClusterUpdate(d, meta)
+	return resourceDbaasLogsClusterUpdate(ctx, d, meta)
 }
 
-func resourceDbaasLogsClusterDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDbaasLogsClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	// Restore ACL as they were before we managed the resource using terraform
 	config := meta.(*Config)
 
 	serviceName := d.Get("service_name").(string)
-	clusterId := d.Get("cluster_id").(string)
+	clusterID := d.Get("cluster_id").(string)
 
 	endpoint := fmt.Sprintf(
 		"/dbaas/logs/%s/cluster/%s",
 		url.PathEscape(serviceName),
-		url.PathEscape(clusterId),
+		url.PathEscape(clusterID),
 	)
 
 	opts := &DbaasLogsOpts{}
@@ -196,12 +198,12 @@ func resourceDbaasLogsClusterDelete(d *schema.ResourceData, meta interface{}) er
 	}
 	res := &DbaasLogsOperation{}
 	if err := config.OVHClient.Put(endpoint, opts, res); err != nil {
-		return fmt.Errorf("Error calling Put %s:\n\t %q", endpoint, err)
+		return diag.Errorf("Error calling Put %s:\n\t %q", endpoint, err)
 	}
 
 	// Wait for operation status
-	if _, err := waitForDbaasLogsOperation(config.OVHClient, serviceName, res.OperationId); err != nil {
-		return err
+	if _, err := waitForDbaasLogsOperation(ctx, config.OVHClient, serviceName, res.OperationId); err != nil {
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
@@ -212,27 +214,27 @@ func resourceDbaasLogsClusterDelete(d *schema.ResourceData, meta interface{}) er
 func resourceDbaasLogsClusterImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	config := meta.(*Config)
 
-	givenId := d.Id()
-	splitId := strings.SplitN(givenId, "/", 2)
+	givenID := d.Id()
+	splitID := strings.SplitN(givenID, "/", 2)
 	var serviceName string
-	var clusterId string
-	if len(splitId) == 1 {
+	var clusterID string
+	if len(splitID) == 1 {
 		var err error
-		serviceName = splitId[0]
-		clusterId, err = dbaasGetClusterID(config, serviceName)
+		serviceName = splitID[0]
+		clusterID, err = dbaasGetClusterID(config, serviceName)
 		if err != nil {
 			return nil, fmt.Errorf("Error retrieving clusterId for %s:\n\t %q", serviceName, err)
 		}
-	} else if len(splitId) == 2 {
-		serviceName = splitId[0]
-		clusterId = splitId[1]
-	} else if len(splitId) != 2 {
+	} else if len(splitID) == 2 {
+		serviceName = splitID[0]
+		clusterID = splitID[1]
+	} else if len(splitID) != 2 {
 		return nil, fmt.Errorf("Import Id is not service_name/cluster_id formatted")
 	}
 
 	d.Set("service_name", serviceName)
-	d.Set("cluster_id", clusterId)
-	id := fmt.Sprintf("%s_%s", serviceName, clusterId)
+	d.Set("cluster_id", clusterID)
+	id := fmt.Sprintf("%s_%s", serviceName, clusterID)
 	d.SetId(id)
 
 	results := make([]*schema.ResourceData, 1)
@@ -240,11 +242,11 @@ func resourceDbaasLogsClusterImportState(d *schema.ResourceData, meta interface{
 	return results, nil
 }
 
-func resourceDbaasLogsClusterUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDbaasLogsClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 
 	serviceName := d.Get("service_name").(string)
-	clusterId := d.Get("cluster_id").(string)
+	clusterID := d.Get("cluster_id").(string)
 
 	log.Printf("[INFO] Will update dbaas logs cluster for: %s", serviceName)
 
@@ -253,46 +255,46 @@ func resourceDbaasLogsClusterUpdate(d *schema.ResourceData, meta interface{}) er
 	endpoint := fmt.Sprintf(
 		"/dbaas/logs/%s/cluster/%s",
 		url.PathEscape(serviceName),
-		url.PathEscape(clusterId),
+		url.PathEscape(clusterID),
 	)
 
 	if err := config.OVHClient.Put(endpoint, opts, res); err != nil {
-		return fmt.Errorf("Error calling Put %s:\n\t %q", endpoint, err)
+		return diag.Errorf("Error calling Put %s:\n\t %q", endpoint, err)
 	}
 
 	// Wait for operation status
-	if _, err := waitForDbaasLogsOperation(config.OVHClient, serviceName, res.OperationId); err != nil {
-		return err
+	if _, err := waitForDbaasLogsOperation(ctx, config.OVHClient, serviceName, res.OperationId); err != nil {
+		return diag.FromErr(err)
 	}
 
-	return resourceDbaasLogsClusterRead(d, meta)
+	return resourceDbaasLogsClusterRead(ctx, d, meta)
 }
 
-func resourceDbaasLogsClusterRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDbaasLogsClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 
 	serviceName := d.Get("service_name").(string)
-	clusterId := d.Get("cluster_id").(string)
-	if clusterId == "" {
+	clusterID := d.Get("cluster_id").(string)
+	if clusterID == "" {
 		var err error
-		clusterId, err = dbaasGetClusterID(config, serviceName)
+		clusterID, err = dbaasGetClusterID(config, serviceName)
 		if err != nil {
-			return fmt.Errorf("error retrieving clusterId for %s:\n\t %q", serviceName, err)
+			return diag.Errorf("error retrieving clusterId for %s:\n\t %q", serviceName, err)
 		}
 	}
-	d.Set("cluster_id", clusterId)
+	d.Set("cluster_id", clusterID)
 
-	log.Printf("[DEBUG] Will read dbaas logs cluster %s/%s", serviceName, clusterId)
+	log.Printf("[DEBUG] Will read dbaas logs cluster %s/%s", serviceName, clusterID)
 
 	endpoint := fmt.Sprintf(
 		"/dbaas/logs/%s/cluster/%s",
 		url.PathEscape(serviceName),
-		url.PathEscape(clusterId),
+		url.PathEscape(clusterID),
 	)
 
 	res := map[string]interface{}{}
 	if err := config.OVHClient.Get(endpoint, &res); err != nil {
-		return fmt.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
+		return diag.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
 	}
 
 	d.Set("archive_allowed_networks", res["archiveAllowedNetworks"])

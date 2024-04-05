@@ -21,18 +21,19 @@ func (v DbaasLogsInputEngine) ToMap() map[string]interface{} {
 }
 
 type DbaasLogsOperation struct {
-	AliasId     *string `json:"aliasId"`
-	CreatedAt   string  `json:"createdAt"`
-	DashboardId *string `json:"dashboardId"`
-	IndexId     *string `json:"indexId"`
-	InputId     *string `json:"inputId"`
-	KibanaId    *string `json:"kibanaId"`
-	OperationId string  `json:"operationId"`
-	OsdId       *string `json:"osdId"`
-	RoleId      *string `json:"roleId"`
-	State       string  `json:"state"`
-	StreamId    *string `json:"streamId"`
-	UpdatedAt   string  `json:"updatedAt"`
+	AliasId        *string `json:"aliasId"`
+	CreatedAt      string  `json:"createdAt"`
+	DashboardId    *string `json:"dashboardId"`
+	IndexId        *string `json:"indexId"`
+	InputId        *string `json:"inputId"`
+	KibanaId       *string `json:"kibanaId"`
+	OperationId    string  `json:"operationId"`
+	OsdId          *string `json:"osdId"`
+	RoleId         *string `json:"roleId"`
+	State          string  `json:"state"`
+	StreamId       *string `json:"streamId"`
+	SubscriptionID *string `json:"subscriptionId"`
+	UpdatedAt      string  `json:"updatedAt"`
 }
 
 type DbaasLogsOpts struct {
