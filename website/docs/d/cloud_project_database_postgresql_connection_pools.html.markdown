@@ -17,7 +17,6 @@ data "ovh_cloud_project_database_postgresql_connection_pools" "test_pools" {
 output "connection_pool_ids" {
   value = data.ovh_cloud_project_database_postgresql_connection_pools.test_pools.connection_pool_ids
 }
-
 ```
 
 ## Argument Reference

@@ -133,6 +133,7 @@ func resourceCloudProjectDatabasePostgresqlConnectionPoolCreate(ctx context.Cont
 				log.Printf("[DEBUG] Will create connection pool: %+v for cluster %s from project %s", params, clusterID, serviceName)
 				rErr := config.OVHClient.PostWithContext(ctx, endpoint, params, res)
 				if rErr != nil {
+					// Manage a corner case where database is not create yet and connection pool POST return 403 Forbidden "Service database 'xxx' does not exist"
 					if errOvh, ok := rErr.(*ovh.APIError); ok && (errOvh.Code == 403) {
 						return retry.RetryableError(rErr)
 					}
