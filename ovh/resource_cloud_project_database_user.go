@@ -39,11 +39,11 @@ func resourceCloudProjectDatabaseUser() *schema.Resource {
 				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
 			},
 			"engine": {
-				Type:         schema.TypeString,
-				Description:  "Name of the engine of the service",
-				ForceNew:     true,
-				Required:     true,
-				ValidateFunc: helpers.ValidateEnum([]string{"cassandra", "mysql", "kafka", "kafkaConnect", "grafana"}),
+				Type:             schema.TypeString,
+				Description:      "Name of the engine of the service",
+				ForceNew:         true,
+				Required:         true,
+				ValidateDiagFunc: helpers.ValidateDiagEnum([]string{"cassandra", "mysql", "kafka", "kafkaConnect", "grafana"}),
 			},
 			"cluster_id": {
 				Type:        schema.TypeString,

@@ -36,17 +36,11 @@ func resourceCloudProjectDatabaseIntegration() *schema.Resource {
 				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
 			},
 			"engine": {
-				Type:        schema.TypeString,
-				Description: "Name of the engine of the service",
-				ForceNew:    true,
-				Required:    true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(string)
-					if value == "mongodb" {
-						errors = append(errors, fmt.Errorf("value %s is not a valid engine for integration", value))
-					}
-					return
-				},
+				Type:             schema.TypeString,
+				Description:      "Name of the engine of the service",
+				ForceNew:         true,
+				Required:         true,
+				ValidateDiagFunc: validateCloudProjectDatabaseIntegrationEngine,
 			},
 			"cluster_id": {
 				Type:        schema.TypeString,
@@ -78,12 +72,12 @@ func resourceCloudProjectDatabaseIntegration() *schema.Resource {
 
 			//Optional/Computed
 			"type": {
-				Type:         schema.TypeString,
-				Description:  "Type of the integration",
-				ForceNew:     true,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: helpers.ValidateEnum([]string{"grafanaDashboard", "grafanaDatasource", "kafkaConnect", "kafkaLogs", "kafkaMirrorMaker", "m3aggregator", "m3dbMetrics", "opensearchLogs", "postgresqlMetrics"}),
+				Type:             schema.TypeString,
+				Description:      "Type of the integration",
+				ForceNew:         true,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: helpers.ValidateDiagEnum([]string{"grafanaDashboard", "grafanaDatasource", "kafkaConnect", "kafkaLogs", "kafkaMirrorMaker", "m3aggregator", "m3dbMetrics", "opensearchLogs", "postgresqlMetrics"}),
 			},
 
 			//Computed

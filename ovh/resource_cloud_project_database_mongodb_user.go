@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -68,14 +67,8 @@ func resourceCloudProjectDatabaseMongodbUser() *schema.Resource {
 				Description: "Roles the user belongs to with the authentication database",
 				Optional:    true,
 				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-						value := v.(string)
-						if !strings.Contains(value, "@") {
-							errors = append(errors, fmt.Errorf("value %s do not have authentication database", value))
-						}
-						return
-					},
+					Type:             schema.TypeString,
+					ValidateDiagFunc: validateCloudProjectDatabaseMongodbUserAuthenticationDatabase,
 				},
 			},
 
@@ -112,20 +105,29 @@ func resourceCloudProjectDatabaseMongodbUserImportState(d *schema.ResourceData, 
 }
 
 func resourceCloudProjectDatabaseMongodbUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	name := d.Get("name").(string)
+	if name == "admin" {
+		diags := dataSourceCloudProjectDatabaseMongodbUserRead(ctx, d, meta)
+		if diags.HasError() {
+			return diags
+		}
+		return resourceCloudProjectDatabaseMongodbUserUpdate(ctx, d, meta)
+	}
+
 	serviceName := d.Get("service_name").(string)
-	clusterId := d.Get("cluster_id").(string)
+	clusterID := d.Get("cluster_id").(string)
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/database/mongodb/%s/user",
 		url.PathEscape(serviceName),
-		url.PathEscape(clusterId),
+		url.PathEscape(clusterID),
 	)
-	params := (&CloudProjectDatabaseMongodbUserCreateOpts{}).FromResource(d)
+	params := (&CloudProjectDatabaseMongodbUserCreateOpts{}).fromResource(d)
 	res := &CloudProjectDatabaseUserResponse{}
 
 	return diag.FromErr(
 		retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate),
 			func() *retry.RetryError {
-				log.Printf("[DEBUG] Will create user: %+v for cluster %s from project %s", params, clusterId, serviceName)
+				log.Printf("[DEBUG] Will create user: %+v for cluster %s from project %s", params, clusterID, serviceName)
 				rErr := postFuncCloudProjectDatabaseUser(ctx, d, meta, "mongodb", endpoint, params, res, schema.TimeoutCreate)
 				if rErr != nil {
 					if errOvh, ok := rErr.(*ovh.APIError); ok && (errOvh.Code == 409) {
@@ -149,22 +151,22 @@ func resourceCloudProjectDatabaseMongodbUserCreate(ctx context.Context, d *schem
 func resourceCloudProjectDatabaseMongodbUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
-	clusterId := d.Get("cluster_id").(string)
+	clusterID := d.Get("cluster_id").(string)
 	id := d.Id()
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/database/mongodb/%s/user/%s",
 		url.PathEscape(serviceName),
-		url.PathEscape(clusterId),
+		url.PathEscape(clusterID),
 		url.PathEscape(id),
 	)
 	res := &CloudProjectDatabaseMongodbUserResponse{}
 
-	log.Printf("[DEBUG] Will read user %s from cluster %s from project %s", id, clusterId, serviceName)
+	log.Printf("[DEBUG] Will read user %s from cluster %s from project %s", id, clusterID, serviceName)
 	if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
-	for k, v := range res.ToMap() {
+	for k, v := range res.toMap() {
 		if k != "id" {
 			d.Set(k, v)
 		} else {
@@ -179,21 +181,22 @@ func resourceCloudProjectDatabaseMongodbUserRead(ctx context.Context, d *schema.
 func resourceCloudProjectDatabaseMongodbUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
-	clusterId := d.Get("cluster_id").(string)
-	passwordReset := d.HasChange("password_reset")
+	clusterID := d.Get("cluster_id").(string)
+	isAdmin := d.Get("name").(string) == "admin@admin"
+	passwordReset := d.HasChange("password_reset") || (d.IsNewResource() && isAdmin)
 	id := d.Id()
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/database/mongodb/%s/user/%s",
 		url.PathEscape(serviceName),
-		url.PathEscape(clusterId),
+		url.PathEscape(clusterID),
 		url.PathEscape(id),
 	)
-	params := (&CloudProjectDatabaseMongodbUserUpdateOpts{}).FromResource(d)
+	params := (&CloudProjectDatabaseMongodbUserUpdateOpts{}).fromResource(d)
 
 	return diag.FromErr(
 		retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate),
 			func() *retry.RetryError {
-				log.Printf("[DEBUG] Will update user: %+v from cluster %s from project %s", params, clusterId, serviceName)
+				log.Printf("[DEBUG] Will update user: %+v from cluster %s from project %s", params, clusterID, serviceName)
 				rErr := config.OVHClient.Put(endpoint, params, nil)
 				if rErr != nil {
 					if errOvh, ok := rErr.(*ovh.APIError); ok && (errOvh.Code == 409) {
@@ -203,7 +206,7 @@ func resourceCloudProjectDatabaseMongodbUserUpdate(ctx context.Context, d *schem
 				}
 
 				log.Printf("[DEBUG] Waiting for user %s to be READY", id)
-				rErr = waitForCloudProjectDatabaseUserReady(ctx, config.OVHClient, serviceName, "mongodb", clusterId, id, d.Timeout(schema.TimeoutUpdate))
+				rErr = waitForCloudProjectDatabaseUserReady(ctx, config.OVHClient, serviceName, "mongodb", clusterID, id, d.Timeout(schema.TimeoutUpdate))
 				if rErr != nil {
 					return retry.NonRetryableError(fmt.Errorf("timeout while waiting user %s to be READY: %w", id, rErr))
 				}
@@ -212,7 +215,7 @@ func resourceCloudProjectDatabaseMongodbUserUpdate(ctx context.Context, d *schem
 				if passwordReset {
 					pwdResetEndpoint := endpoint + "/credentials/reset"
 					res := &CloudProjectDatabaseUserResponse{}
-					log.Printf("[DEBUG] Will update user password for cluster %s from project %s", clusterId, serviceName)
+					log.Printf("[DEBUG] Will update user password for cluster %s from project %s", clusterID, serviceName)
 					err := postFuncCloudProjectDatabaseUser(ctx, d, meta, "mongodb", pwdResetEndpoint, nil, res, schema.TimeoutUpdate)
 					if err != nil {
 						if errOvh, ok := err.(*ovh.APIError); ok && (errOvh.Code == 409) {
@@ -234,21 +237,27 @@ func resourceCloudProjectDatabaseMongodbUserUpdate(ctx context.Context, d *schem
 }
 
 func resourceCloudProjectDatabaseMongodbUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	name := d.Get("name").(string)
+	if name == "admin@admin" {
+		d.SetId("")
+		return nil
+	}
+
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
-	clusterId := d.Get("cluster_id").(string)
+	clusterID := d.Get("cluster_id").(string)
 	id := d.Id()
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/database/mongodb/%s/user/%s",
 		url.PathEscape(serviceName),
-		url.PathEscape(clusterId),
+		url.PathEscape(clusterID),
 		url.PathEscape(id),
 	)
 
 	return diag.FromErr(
 		retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete),
 			func() *retry.RetryError {
-				log.Printf("[DEBUG] Will delete user %s from cluster %s from project %s", id, clusterId, serviceName)
+				log.Printf("[DEBUG] Will delete user %s from cluster %s from project %s", id, clusterID, serviceName)
 				err := config.OVHClient.DeleteWithContext(ctx, endpoint, nil)
 				if err != nil {
 					if errOvh, ok := err.(*ovh.APIError); ok && (errOvh.Code == 409) {
@@ -262,7 +271,7 @@ func resourceCloudProjectDatabaseMongodbUserDelete(ctx context.Context, d *schem
 				}
 
 				log.Printf("[DEBUG] Waiting for user %s to be DELETED", id)
-				err = waitForCloudProjectDatabaseUserDeleted(ctx, config.OVHClient, serviceName, "mongodb", clusterId, id, d.Timeout(schema.TimeoutDelete))
+				err = waitForCloudProjectDatabaseUserDeleted(ctx, config.OVHClient, serviceName, "mongodb", clusterID, id, d.Timeout(schema.TimeoutDelete))
 				if err != nil {
 					return retry.NonRetryableError(fmt.Errorf("timeout while waiting user %s to be DELETED: %w", id, err))
 				}

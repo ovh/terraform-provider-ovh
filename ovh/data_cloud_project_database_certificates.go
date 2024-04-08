@@ -23,10 +23,10 @@ func dataSourceCloudProjectDatabaseCertificates() *schema.Resource {
 				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
 			},
 			"engine": {
-				Type:         schema.TypeString,
-				Description:  "Name of the engine of the service",
-				Required:     true,
-				ValidateFunc: helpers.ValidateEnum([]string{"cassandra", "kafka", "mysql", "postgresql"}),
+				Type:             schema.TypeString,
+				Description:      "Name of the engine of the service",
+				Required:         true,
+				ValidateDiagFunc: helpers.ValidateDiagEnum([]string{"cassandra", "kafka", "mysql", "postgresql"}),
 			},
 			"cluster_id": {
 				Type:        schema.TypeString,

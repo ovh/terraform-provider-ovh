@@ -25,9 +25,10 @@ func dataSourceCloudProjectDatabaseMongodbUser() *schema.Resource {
 				Required:    true,
 			},
 			"name": {
-				Type:        schema.TypeString,
-				Description: "Name of the user with the authentication database in the format name@authDB",
-				Required:    true,
+				Type:             schema.TypeString,
+				Description:      "Name of the user with the authentication database in the format name@authDB",
+				Required:         true,
+				ValidateDiagFunc: validateCloudProjectDatabaseMongodbUserAuthenticationDatabase,
 			},
 
 			//Computed
@@ -54,36 +55,39 @@ func dataSourceCloudProjectDatabaseMongodbUser() *schema.Resource {
 func dataSourceCloudProjectDatabaseMongodbUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
-	clusterId := d.Get("cluster_id").(string)
+	clusterID := d.Get("cluster_id").(string)
 
 	listEndpoint := fmt.Sprintf("/cloud/project/%s/database/mongodb/%s/user",
 		url.PathEscape(serviceName),
-		url.PathEscape(clusterId),
+		url.PathEscape(clusterID),
 	)
 
 	listRes := make([]string, 0)
 
-	log.Printf("[DEBUG] Will read users from cluster %s from project %s", clusterId, serviceName)
+	log.Printf("[DEBUG] Will read users from cluster %s from project %s", clusterID, serviceName)
 	if err := config.OVHClient.GetWithContext(ctx, listEndpoint, &listRes); err != nil {
 		return diag.Errorf("Error calling GET %s:\n\t %q", listEndpoint, err)
 	}
 
 	name := d.Get("name").(string)
+	if name == "admin" {
+		name = name + "@admin"
+	}
 	for _, id := range listRes {
 		endpoint := fmt.Sprintf("/cloud/project/%s/database/mongodb/%s/user/%s",
 			url.PathEscape(serviceName),
-			url.PathEscape(clusterId),
+			url.PathEscape(clusterID),
 			url.PathEscape(id),
 		)
 		res := &CloudProjectDatabaseMongodbUserResponse{}
 
-		log.Printf("[DEBUG] Will read user %s from cluster %s from project %s", id, clusterId, serviceName)
+		log.Printf("[DEBUG] Will read user %s from cluster %s from project %s", id, clusterID, serviceName)
 		if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
 			return diag.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
 		}
 
 		if res.Username == name {
-			for k, v := range res.ToMap() {
+			for k, v := range res.toMap() {
 				if k != "id" {
 					d.Set(k, v)
 				} else {
@@ -95,5 +99,5 @@ func dataSourceCloudProjectDatabaseMongodbUserRead(ctx context.Context, d *schem
 		}
 	}
 
-	return diag.Errorf("User name %s not found for cluster %s from project %s", name, clusterId, serviceName)
+	return diag.Errorf("User name %s not found for cluster %s from project %s", name, clusterID, serviceName)
 }

@@ -36,11 +36,11 @@ func resourceCloudProjectDatabaseDatabase() *schema.Resource {
 				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
 			},
 			"engine": {
-				Type:         schema.TypeString,
-				Description:  "Name of the engine of the service",
-				ForceNew:     true,
-				Required:     true,
-				ValidateFunc: helpers.ValidateEnum([]string{"mysql", "postgresql"}),
+				Type:             schema.TypeString,
+				Description:      "Name of the engine of the service",
+				ForceNew:         true,
+				Required:         true,
+				ValidateDiagFunc: helpers.ValidateDiagEnum([]string{"mysql", "postgresql"}),
 			},
 			"cluster_id": {
 				Type:        schema.TypeString,
