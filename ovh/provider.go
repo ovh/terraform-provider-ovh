@@ -73,6 +73,7 @@ func Provider() *schema.Provider {
 			"ovh_cloud_project_database_opensearch_user":                     dataSourceCloudProjectDatabaseOpensearchUser(),
 			"ovh_cloud_project_database_postgresql_user":                     dataSourceCloudProjectDatabasePostgresqlUser(),
 			"ovh_cloud_project_database_postgresql_connection_pool":          dataSourceCloudProjectDatabasePostgresqlConnectionPool(),
+			"ovh_cloud_project_database_postgresql_connection_pools":         dataSourceCloudProjectDatabasePostgresqlConnectionPools(),
 			"ovh_cloud_project_database_redis_user":                          dataSourceCloudProjectDatabaseRedisUser(),
 			"ovh_cloud_project_database_user":                                dataSourceCloudProjectDatabaseUser(),
 			"ovh_cloud_project_database_users":                               dataSourceCloudProjectDatabaseUsers(),

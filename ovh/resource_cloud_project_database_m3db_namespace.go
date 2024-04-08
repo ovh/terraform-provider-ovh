@@ -209,7 +209,7 @@ func resourceCloudProjectDatabaseM3dbNamespaceUpdate(ctx context.Context, d *sch
 	params := (&CloudProjectDatabaseM3dbNamespaceUpdateOpts{}).FromResource(d)
 
 	log.Printf("[DEBUG] Will update namespace: %+v from cluster %s from project %s", params, clusterId, serviceName)
-	err := config.OVHClient.Put(endpoint, params, nil)
+	err := config.OVHClient.PutWithContext(ctx, endpoint, params, nil)
 	if err != nil {
 		return diag.Errorf("calling Put %s with params %+v:\n\t %q", endpoint, params, err)
 	}
