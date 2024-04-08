@@ -73,17 +73,17 @@ func dataSourceCloudProjectDatabasePostgresqlConnectionPool() *schema.Resource {
 func dataSourceCloudProjectDatabasePostgresqlConnectionPoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
-	clusterId := d.Get("cluster_id").(string)
+	clusterID := d.Get("cluster_id").(string)
 	name := d.Get("name").(string)
 
 	listEndpoint := fmt.Sprintf("/cloud/project/%s/database/postgresql/%s/connectionPool",
 		url.PathEscape(serviceName),
-		url.PathEscape(clusterId),
+		url.PathEscape(clusterID),
 	)
 
 	listRes := make([]string, 0)
 
-	log.Printf("[DEBUG] Will read connectionPools from cluster %s from project %s", clusterId, serviceName)
+	log.Printf("[DEBUG] Will read connectionPools from cluster %s from project %s", clusterID, serviceName)
 	if err := config.OVHClient.GetWithContext(ctx, listEndpoint, &listRes); err != nil {
 		return diag.Errorf("Error calling GET %s:\n\t %q", listEndpoint, err)
 	}
@@ -91,18 +91,18 @@ func dataSourceCloudProjectDatabasePostgresqlConnectionPoolRead(ctx context.Cont
 	for _, id := range listRes {
 		endpoint := fmt.Sprintf("/cloud/project/%s/database/postgresql/%s/connectionPool/%s",
 			url.PathEscape(serviceName),
-			url.PathEscape(clusterId),
+			url.PathEscape(clusterID),
 			url.PathEscape(id),
 		)
 		res := &CloudProjectDatabasePostgresqlConnectionPoolResponse{}
 
-		log.Printf("[DEBUG] Will read connectionPool %s from cluster %s from project %s", id, clusterId, serviceName)
+		log.Printf("[DEBUG] Will read connectionPool %s from cluster %s from project %s", id, clusterID, serviceName)
 		if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
 			return diag.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
 		}
 
 		if res.Name == name {
-			for k, v := range res.ToMap() {
+			for k, v := range res.toMap() {
 				if k != "id" {
 					d.Set(k, v)
 				} else {
@@ -114,5 +114,5 @@ func dataSourceCloudProjectDatabasePostgresqlConnectionPoolRead(ctx context.Cont
 		}
 	}
 
-	return diag.Errorf("ConnectionPool name %s not found for cluster %s from project %s", name, clusterId, serviceName)
+	return diag.Errorf("ConnectionPool name %s not found for cluster %s from project %s", name, clusterID, serviceName)
 }

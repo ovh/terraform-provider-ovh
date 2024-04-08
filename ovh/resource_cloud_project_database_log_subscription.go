@@ -131,7 +131,7 @@ func resourceCloudProjectDatabaseLogSubscriptionCreate(ctx context.Context, d *s
 	res := &CloudProjectDatabaseLogSubscriptionResponse{}
 
 	log.Printf("[DEBUG] Will create Log subscrition : %+v for cluster %s from project %s", params, clusterID, serviceName)
-	err := config.OVHClient.Post(endpoint, params, res)
+	err := config.OVHClient.PostWithContext(ctx, endpoint, params, res)
 	if err != nil {
 		diag.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
 	}
@@ -165,7 +165,7 @@ func resourceCloudProjectDatabaseLogSubscriptionRead(ctx context.Context, d *sch
 	res := &CloudProjectDatabaseLogSubscriptionResponse{}
 
 	log.Printf("[DEBUG] Will read log subscrition %s from cluster %s from project %s", id, clusterID, serviceName)
-	if err := config.OVHClient.Get(endpoint, res); err != nil {
+	if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
@@ -200,7 +200,7 @@ func resourceCloudProjectDatabaseLogSubscriptionDelete(ctx context.Context, d *s
 	res := &CloudProjectDatabaseLogSubscriptionResponse{}
 
 	log.Printf("[DEBUG] Will delete Log subscrition %s from cluster %s from project %s", id, clusterID, serviceName)
-	err := config.OVHClient.Delete(endpoint, res)
+	err := config.OVHClient.DeleteWithContext(ctx, endpoint, res)
 	if err != nil {
 		diag.Errorf("calling DELETE %s:\n\t %q", endpoint, err)
 	}
