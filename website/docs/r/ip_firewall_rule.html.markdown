@@ -2,7 +2,7 @@
 subcategory : "Additional IP"
 ---
 
-# ovh_ip_firewall
+# ovh_ip_firewall_rule
 
 Use this resource to manage a rule on an IP firewall.
 
@@ -39,10 +39,12 @@ resource "ovh_ip_firewall_rule" "myfirewallrule" {
 * `creation_date` - Creation date of the rule
 * `destination` - Destination IP for your rule
 * `destination_port` - Destination port for your rule. Only with TCP/UDP protocol
+* `destination_port_desc` - String description of field `destination_port`
 * `fragments` - Fragments option
 * `protocol` - Possible values for protocol (ah|esp|gre|icmp|ipv4|tcp|udp)
 * `rule` - Description of the rule
 * `sequence` - Rule position in the rules array
 * `source` - IPv4 CIDR notation (e.g., 192.0.2.0/24)
 * `source_port` - Source port for your rule. Only with TCP/UDP protocol
+* `source_port_desc` - String description of field `source_port`
 * `tcp_option` - TCP option on your rule (syn|established)
