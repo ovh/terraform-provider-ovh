@@ -4,7 +4,10 @@ subcategory : "vRack"
 
 # ovh_vrack_dedicated_server_interface
 
-Attach a Dedicated Server Network Interface to a VRack.
+Attach a Dedicated Server Network Interface to a vRack.
+
+~> **NOTE:** The resource `ovh_vrack_dedicated_server_interface` is intended to be used for dedicated servers that have configurable network interfaces.<br />
+Legacy Dedicated servers that do not have configurable network interfaces MUST use the resource [`ovh_vrack_dedicated_server`](vrack_dedicated_server.html.markdown) instead.
 
 ## Example Usage
 
@@ -24,7 +27,7 @@ resource "ovh_vrack_dedicated_server_interface" "vdsi" {
 The following arguments are supported:
 
 * `service_name` - (Required) The id of the vrack. If omitted,
-    the `OVH_VRACK_SERVICE` environment variable is used. 
+    the `OVH_VRACK_SERVICE` environment variable is used.
 
 * `interface_id` - (Required) The id of dedicated server network interface.
 

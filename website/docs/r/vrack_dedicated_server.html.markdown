@@ -4,10 +4,10 @@ subcategory : "vRack"
 
 # ovh_vrack_dedicated_server
 
-~> **NOTE:** The resource `ovh_vrack_dedicated_server` is DEPRECATED and will be removed in a future version.
-Use the resource [`ovh_vrack_dedicated_server_interface`](vrack_dedicated_server_interface.html.markdown) instead.
+Attach a legacy dedicated server to a vRack.
 
-Attach a dedicated server to a VRack.
+~> **NOTE:** The resource `ovh_vrack_dedicated_server` is intended to be used for legacy dedicated servers.<br />
+Dedicated servers that have configurable network interfaces MUST use the resource [`ovh_vrack_dedicated_server_interface`](vrack_dedicated_server_interface.html.markdown) instead.
 
 ## Example Usage
 
@@ -23,7 +23,7 @@ resource "ovh_vrack_dedicated_server" "vds" {
 The following arguments are supported:
 
 * `service_name` - (Required) The service name of the vrack. If omitted,
-    the `OVH_VRACK_SERVICE` environment variable is used. 
+    the `OVH_VRACK_SERVICE` environment variable is used.
 
 * `server_id` - (Required) The id of the dedicated server. 
 
