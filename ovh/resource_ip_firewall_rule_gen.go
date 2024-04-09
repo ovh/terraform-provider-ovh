@@ -55,6 +55,11 @@ func IpFirewallRuleResourceSchema(ctx context.Context) schema.Schema {
 					int64planmodifier.RequiresReplace(),
 				},
 			},
+			"destination_port_desc": schema.StringAttribute{
+				CustomType:  ovhtypes.TfStringType{},
+				Computed:    true,
+				Description: "Destination port range for your rule. Only with TCP/UDP protocol",
+			},
 			"fragments": schema.BoolAttribute{
 				CustomType:          ovhtypes.TfBoolType{},
 				Optional:            true,
@@ -160,6 +165,11 @@ func IpFirewallRuleResourceSchema(ctx context.Context) schema.Schema {
 					int64planmodifier.RequiresReplace(),
 				},
 			},
+			"source_port_desc": schema.StringAttribute{
+				CustomType:  ovhtypes.TfStringType{},
+				Computed:    true,
+				Description: "Source port for your rule. Only with TCP/UDP protocol",
+			},
 			"state": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Computed:            true,
@@ -187,23 +197,105 @@ func IpFirewallRuleResourceSchema(ctx context.Context) schema.Schema {
 }
 
 type IpFirewallRuleModel struct {
-	Action          ovhtypes.TfStringValue `tfsdk:"action" json:"action"`
-	CreationDate    ovhtypes.TfStringValue `tfsdk:"creation_date" json:"creationDate"`
-	Destination     ovhtypes.TfStringValue `tfsdk:"destination" json:"destination"`
-	DestinationPort ovhtypes.TfInt64Value  `tfsdk:"destination_port" json:"destinationPort"`
-	Fragments       ovhtypes.TfBoolValue   `tfsdk:"fragments" json:"fragments"`
-	Ip              ovhtypes.TfStringValue `tfsdk:"ip" json:"ip"`
-	IpOnFirewall    ovhtypes.TfStringValue `tfsdk:"ip_on_firewall" json:"ipOnFirewall"`
-	Protocol        ovhtypes.TfStringValue `tfsdk:"protocol" json:"protocol"`
-	Rule            ovhtypes.TfStringValue `tfsdk:"rule" json:"rule"`
-	Sequence        ovhtypes.TfInt64Value  `tfsdk:"sequence" json:"sequence"`
-	Source          ovhtypes.TfStringValue `tfsdk:"source" json:"source"`
-	SourcePort      ovhtypes.TfInt64Value  `tfsdk:"source_port" json:"sourcePort"`
-	State           ovhtypes.TfStringValue `tfsdk:"state" json:"state"`
-	TcpOption       ovhtypes.TfStringValue `tfsdk:"tcp_option" json:"tcpOption"`
+	Action              ovhtypes.TfStringValue `tfsdk:"action" json:"action"`
+	CreationDate        ovhtypes.TfStringValue `tfsdk:"creation_date" json:"creationDate"`
+	Destination         ovhtypes.TfStringValue `tfsdk:"destination" json:"destination"`
+	DestinationPort     ovhtypes.TfInt64Value  `tfsdk:"destination_port" json:"destinationPort"`
+	DestinationPortDesc ovhtypes.TfStringValue `tfsdk:"destination_port_desc" json:"-"`
+	Fragments           ovhtypes.TfBoolValue   `tfsdk:"fragments" json:"fragments"`
+	Ip                  ovhtypes.TfStringValue `tfsdk:"ip" json:"ip"`
+	IpOnFirewall        ovhtypes.TfStringValue `tfsdk:"ip_on_firewall" json:"ipOnFirewall"`
+	Protocol            ovhtypes.TfStringValue `tfsdk:"protocol" json:"protocol"`
+	Rule                ovhtypes.TfStringValue `tfsdk:"rule" json:"rule"`
+	Sequence            ovhtypes.TfInt64Value  `tfsdk:"sequence" json:"sequence"`
+	Source              ovhtypes.TfStringValue `tfsdk:"source" json:"source"`
+	SourcePort          ovhtypes.TfInt64Value  `tfsdk:"source_port" json:"sourcePort"`
+	SourcePortDesc      ovhtypes.TfStringValue `tfsdk:"source_port_desc" json:"-"`
+	State               ovhtypes.TfStringValue `tfsdk:"state" json:"state"`
+	TcpOption           ovhtypes.TfStringValue `tfsdk:"tcp_option" json:"tcpOption"`
+}
+
+// IpFirewallRuleResponseModel is used to read the API response body. We need
+// a separate model to write and read because some properties don't have the
+// same type everywhere.
+type IpFirewallRuleResponseModel struct {
+	Action              ovhtypes.TfStringValue `tfsdk:"action" json:"action"`
+	CreationDate        ovhtypes.TfStringValue `tfsdk:"creation_date" json:"creationDate"`
+	Destination         ovhtypes.TfStringValue `tfsdk:"destination" json:"destination"`
+	DestinationPort     ovhtypes.TfInt64Value  `tfsdk:"destination_port" json:"-"`
+	DestinationPortDesc ovhtypes.TfStringValue `tfsdk:"destination_port_desc" json:"destinationPort"`
+	Fragments           ovhtypes.TfBoolValue   `tfsdk:"fragments" json:"fragments"`
+	Ip                  ovhtypes.TfStringValue `tfsdk:"ip" json:"ip"`
+	IpOnFirewall        ovhtypes.TfStringValue `tfsdk:"ip_on_firewall" json:"ipOnFirewall"`
+	Protocol            ovhtypes.TfStringValue `tfsdk:"protocol" json:"protocol"`
+	Rule                ovhtypes.TfStringValue `tfsdk:"rule" json:"rule"`
+	Sequence            ovhtypes.TfInt64Value  `tfsdk:"sequence" json:"sequence"`
+	Source              ovhtypes.TfStringValue `tfsdk:"source" json:"source"`
+	SourcePort          ovhtypes.TfInt64Value  `tfsdk:"source_port" json:"-"`
+	SourcePortDesc      ovhtypes.TfStringValue `tfsdk:"source_port_desc" json:"sourcePort"`
+	State               ovhtypes.TfStringValue `tfsdk:"state" json:"state"`
+	TcpOption           ovhtypes.TfStringValue `tfsdk:"tcp_option" json:"tcpOption"`
 }
 
 func (v *IpFirewallRuleModel) MergeWith(other *IpFirewallRuleModel) {
+	if (v.Action.IsUnknown() || v.Action.IsNull()) && !other.Action.IsUnknown() {
+		v.Action = other.Action
+	}
+
+	if (v.CreationDate.IsUnknown() || v.CreationDate.IsNull()) && !other.CreationDate.IsUnknown() {
+		v.CreationDate = other.CreationDate
+	}
+
+	if (v.Destination.IsUnknown() || v.Destination.IsNull()) && !other.Destination.IsUnknown() {
+		v.Destination = other.Destination
+	}
+
+	if (v.DestinationPort.IsUnknown() || v.DestinationPort.IsNull()) && !other.DestinationPort.IsUnknown() {
+		v.DestinationPort = other.DestinationPort
+	}
+
+	if (v.Fragments.IsUnknown() || v.Fragments.IsNull()) && !other.Fragments.IsUnknown() {
+		v.Fragments = other.Fragments
+	}
+
+	if (v.Ip.IsUnknown() || v.Ip.IsNull()) && !other.Ip.IsUnknown() {
+		v.Ip = other.Ip
+	}
+
+	if (v.IpOnFirewall.IsUnknown() || v.IpOnFirewall.IsNull()) && !other.IpOnFirewall.IsUnknown() {
+		v.IpOnFirewall = other.IpOnFirewall
+	}
+
+	if (v.Protocol.IsUnknown() || v.Protocol.IsNull()) && !other.Protocol.IsUnknown() {
+		v.Protocol = other.Protocol
+	}
+
+	if (v.Rule.IsUnknown() || v.Rule.IsNull()) && !other.Rule.IsUnknown() {
+		v.Rule = other.Rule
+	}
+
+	if (v.Sequence.IsUnknown() || v.Sequence.IsNull()) && !other.Sequence.IsUnknown() {
+		v.Sequence = other.Sequence
+	}
+
+	if (v.Source.IsUnknown() || v.Source.IsNull()) && !other.Source.IsUnknown() {
+		v.Source = other.Source
+	}
+
+	if (v.SourcePort.IsUnknown() || v.SourcePort.IsNull()) && !other.SourcePort.IsUnknown() {
+		v.SourcePort = other.SourcePort
+	}
+
+	if (v.State.IsUnknown() || v.State.IsNull()) && !other.State.IsUnknown() {
+		v.State = other.State
+	}
+
+	if (v.TcpOption.IsUnknown() || v.TcpOption.IsNull()) && !other.TcpOption.IsUnknown() {
+		v.TcpOption = other.TcpOption
+	}
+}
+
+func (v *IpFirewallRuleResponseModel) MergeWith(other *IpFirewallRuleModel) {
 	if (v.Action.IsUnknown() || v.Action.IsNull()) && !other.Action.IsUnknown() {
 		v.Action = other.Action
 	}
