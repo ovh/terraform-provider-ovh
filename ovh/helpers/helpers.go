@@ -69,6 +69,7 @@ func ValidateEnum(enum []string) schema.SchemaValidateFunc {
 func ValidateDiagEnum(enum []string) schema.SchemaValidateDiagFunc {
 	return func(v any, p cty.Path) (diags diag.Diagnostics) {
 		err := ValidateStringEnum(v.(string), enum)
+
 		if err != nil {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,

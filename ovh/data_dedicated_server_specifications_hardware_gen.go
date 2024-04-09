@@ -384,7 +384,6 @@ func (t DefaultHardwareRaidSizeType) ValueFromObject(ctx context.Context, in bas
 	attributes := in.Attributes()
 
 	unitAttribute, ok := attributes["unit"]
-
 	if !ok {
 		diags.AddError(
 			"Attribute Missing",

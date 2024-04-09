@@ -1285,7 +1285,7 @@ func validateCloudProjectDatabaseMongodbUserAuthenticationDatabase(v any, p cty.
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Missing authentication database",
-			Detail:   fmt.Sprintf("value %s do not have authentication database", value),
+			Detail:   fmt.Sprintf("value %s does not have authentication database", value),
 		})
 	}
 	return
