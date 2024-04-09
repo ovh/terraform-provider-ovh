@@ -29,7 +29,8 @@ func TestAccIPFirewallRule_basic(t *testing.T) {
 			protocol = "tcp"
 			sequence = 0
 			tcp_option = "established"
-			fragments = true
+			destination_port = 22
+			source_port = 44
 		}
 	`, ip, ip)
 
@@ -50,6 +51,14 @@ func TestAccIPFirewallRule_basic(t *testing.T) {
 						"ovh_ip_firewall_rule.rule", "source", "any"),
 					resource.TestCheckResourceAttr(
 						"ovh_ip_firewall_rule.rule", "tcp_option", "established"),
+					resource.TestCheckResourceAttr(
+						"ovh_ip_firewall_rule.rule", "destination_port", "22"),
+					resource.TestCheckResourceAttr(
+						"ovh_ip_firewall_rule.rule", "destination_port_desc", "eq 22"),
+					resource.TestCheckResourceAttr(
+						"ovh_ip_firewall_rule.rule", "source_port", "44"),
+					resource.TestCheckResourceAttr(
+						"ovh_ip_firewall_rule.rule", "source_port_desc", "eq 44"),
 				),
 			},
 		},
