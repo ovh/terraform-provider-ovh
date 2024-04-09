@@ -1,3 +1,21 @@
+## 0.42.0 (April 9, 2024)
+
+🎉 Features:
+
+* New datasource: `ovh_cloud_project_database_postgresql_connection_pools` ([#607](https://github.com/ovh/terraform-provider-ovh/pull/607))
+
+💪 Improvements:
+
+* `r/ovh_cloud_project_database`: Allow IP restrictions declaration directly in the resource instead of using `ovh_cloud_project_database_ip_restriction` (which is now deprecated) ([#600](https://github.com/ovh/terraform-provider-ovh/pull/600) and [#606](https://github.com/ovh/terraform-provider-ovh/pull/606))
+* `d/ovh_cloud_project_database`: Add IP restrictions in the datasource ([#600](https://github.com/ovh/terraform-provider-ovh/pull/600))
+
+🐜 Bug fixes:
+
+* `r/ovh_ip_firewall_rule`: Fix type mismatch between request and response bodies ([#610](https://github.com/ovh/terraform-provider-ovh/pull/610))
+* `r/ovh_cloud_project_database_postgresql_connection_pool`: Added missing retry on connection pool creation ([#607](https://github.com/ovh/terraform-provider-ovh/pull/607))
+
+❤️ Thanks for your contributions ❤️
+
 ## 0.41.0 (April 4, 2024)
 
 🎉 Features:
