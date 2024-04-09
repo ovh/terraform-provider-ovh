@@ -38,8 +38,8 @@ func IpFirewallRuleDataSourceSchema(ctx context.Context) schema.Schema {
 				Description:         "Destination ip for your rule",
 				MarkdownDescription: "Destination ip for your rule",
 			},
-			"destination_port": schema.Int64Attribute{
-				CustomType:          ovhtypes.TfInt64Type{},
+			"destination_port": schema.StringAttribute{
+				CustomType:          ovhtypes.TfStringType{},
 				Computed:            true,
 				Description:         "Destination port for your rule. Only with TCP/UDP protocol",
 				MarkdownDescription: "Destination port for your rule. Only with TCP/UDP protocol",
@@ -119,8 +119,8 @@ func IpFirewallRuleDataSourceSchema(ctx context.Context) schema.Schema {
 				Description:         "IPv4 CIDR notation (e.g., 192.0.2.0/24)",
 				MarkdownDescription: "IPv4 CIDR notation (e.g., 192.0.2.0/24)",
 			},
-			"source_port": schema.Int64Attribute{
-				CustomType:          ovhtypes.TfInt64Type{},
+			"source_port": schema.StringAttribute{
+				CustomType:          ovhtypes.TfStringType{},
 				Computed:            true,
 				Description:         "Source port for your rule. Only with TCP/UDP protocol",
 				MarkdownDescription: "Source port for your rule. Only with TCP/UDP protocol",
@@ -145,4 +145,21 @@ func IpFirewallRuleDataSourceSchema(ctx context.Context) schema.Schema {
 			},
 		},
 	}
+}
+
+type IpFirewallRuleDataResponseModel struct {
+	Action          ovhtypes.TfStringValue `tfsdk:"action" json:"action"`
+	CreationDate    ovhtypes.TfStringValue `tfsdk:"creation_date" json:"creationDate"`
+	Destination     ovhtypes.TfStringValue `tfsdk:"destination" json:"destination"`
+	DestinationPort ovhtypes.TfStringValue `tfsdk:"destination_port" json:"destinationPort"`
+	Fragments       ovhtypes.TfBoolValue   `tfsdk:"fragments" json:"fragments"`
+	Ip              ovhtypes.TfStringValue `tfsdk:"ip" json:"ip"`
+	IpOnFirewall    ovhtypes.TfStringValue `tfsdk:"ip_on_firewall" json:"ipOnFirewall"`
+	Protocol        ovhtypes.TfStringValue `tfsdk:"protocol" json:"protocol"`
+	Rule            ovhtypes.TfStringValue `tfsdk:"rule" json:"rule"`
+	Sequence        ovhtypes.TfInt64Value  `tfsdk:"sequence" json:"sequence"`
+	Source          ovhtypes.TfStringValue `tfsdk:"source" json:"source"`
+	SourcePort      ovhtypes.TfStringValue `tfsdk:"source_port" json:"sourcePort"`
+	State           ovhtypes.TfStringValue `tfsdk:"state" json:"state"`
+	TcpOption       ovhtypes.TfStringValue `tfsdk:"tcp_option" json:"tcpOption"`
 }

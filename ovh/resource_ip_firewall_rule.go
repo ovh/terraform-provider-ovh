@@ -48,7 +48,10 @@ func (d *ipFirewallRuleResource) Schema(ctx context.Context, req resource.Schema
 }
 
 func (r *ipFirewallRuleResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data, responseData IpFirewallRuleModel
+	var (
+		data         IpFirewallRuleModel
+		responseData IpFirewallRuleResponseModel
+	)
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
@@ -100,7 +103,10 @@ func (r *ipFirewallRuleResource) Create(ctx context.Context, req resource.Create
 }
 
 func (r *ipFirewallRuleResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data, responseData IpFirewallRuleModel
+	var (
+		data         IpFirewallRuleModel
+		responseData IpFirewallRuleResponseModel
+	)
 
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
