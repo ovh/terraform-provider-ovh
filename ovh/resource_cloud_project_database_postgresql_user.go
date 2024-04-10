@@ -49,17 +49,19 @@ func resourceCloudProjectDatabasePostgresqlUser() *schema.Resource {
 				ForceNew:    true,
 				Required:    true,
 			},
+			"password_reset": {
+				Type:        schema.TypeString,
+				Description: "Arbitrary string to change to trigger a password update",
+				Optional:    true,
+			},
+
+			//Optional/Computed
 			"roles": {
 				Type:        schema.TypeSet,
 				Description: "Roles the user belongs to",
 				Optional:    true,
 				Computed:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
-			},
-			"password_reset": {
-				Type:        schema.TypeString,
-				Description: "Arbitrary string to change to trigger a password update",
-				Optional:    true,
 			},
 
 			//Computed

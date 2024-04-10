@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/ovh/go-ovh/ovh"
@@ -59,6 +61,20 @@ func ValidateEnum(enum []string) schema.SchemaValidateFunc {
 		err := ValidateStringEnum(v.(string), enum)
 		if err != nil {
 			errors = append(errors, err)
+		}
+		return
+	}
+}
+
+func ValidateDiagEnum(enum []string) schema.SchemaValidateDiagFunc {
+	return func(v any, p cty.Path) (diags diag.Diagnostics) {
+		err := ValidateStringEnum(v.(string), enum)
+
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  err.Error(),
+			})
 		}
 		return
 	}

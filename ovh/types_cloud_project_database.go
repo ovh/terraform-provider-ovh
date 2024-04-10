@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -200,8 +201,8 @@ type CloudProjectDatabaseDisk struct {
 	Size int    `json:"size,omitempty"`
 }
 
-func validateCloudProjectDatabaseDiskSize(v interface{}, k string) (ws []string, errors []error) {
-	errors = validateIsSupEqual(v.(int), 0)
+func validateCloudProjectDatabaseDiskSize(v any, p cty.Path) (diags diag.Diagnostics) {
+	diags = validateIsSupEqual(v.(int), 0)
 	return
 }
 
@@ -1060,6 +1061,18 @@ func (opts *CloudProjectDatabaseIntegrationCreateOpts) FromResource(d *schema.Re
 	return opts
 }
 
+func validateCloudProjectDatabaseIntegrationEngine(v any, p cty.Path) (diags diag.Diagnostics) {
+	value := v.(string)
+	if value == "mongodb" {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Invalid engine",
+			Detail:   fmt.Sprintf("value %s is not a valid engine for integration", value),
+		})
+	}
+	return
+}
+
 func waitForCloudProjectDatabaseIntegrationReady(ctx context.Context, client *ovh.Client, serviceName, engine string, serviceId string, integrationId string, timeOut time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{"PENDING"},
@@ -1208,30 +1221,30 @@ func (opts *CloudProjectDatabasePostgresqlUserUpdateOpts) FromResource(d *schema
 
 type CloudProjectDatabaseMongodbUserResponse struct {
 	CreatedAt string   `json:"createdAt"`
-	Id        string   `json:"id"`
+	ID        string   `json:"id"`
 	Password  string   `json:"password"`
 	Roles     []string `json:"roles"`
 	Status    string   `json:"status"`
 	Username  string   `json:"username"`
 }
 
-func (p *CloudProjectDatabaseMongodbUserResponse) String() string {
+func (r *CloudProjectDatabaseMongodbUserResponse) String() string {
 	return fmt.Sprintf(
 		"Id: %s, User: %s, Status: %s",
-		p.Id,
-		p.Username,
-		p.Status,
+		r.ID,
+		r.Username,
+		r.Status,
 	)
 }
 
-func (v CloudProjectDatabaseMongodbUserResponse) ToMap() map[string]interface{} {
+func (r CloudProjectDatabaseMongodbUserResponse) toMap() map[string]interface{} {
 	obj := make(map[string]interface{})
 
-	obj["created_at"] = v.CreatedAt
-	obj["id"] = v.Id
-	obj["name"] = v.Username
-	obj["status"] = v.Status
-	obj["roles"] = v.Roles
+	obj["created_at"] = r.CreatedAt
+	obj["id"] = r.ID
+	obj["name"] = r.Username
+	obj["status"] = r.Status
+	obj["roles"] = r.Roles
 
 	return obj
 }
@@ -1241,15 +1254,7 @@ type CloudProjectDatabaseMongodbUserCreateOpts struct {
 	Roles []string `json:"roles"`
 }
 
-func (p *CloudProjectDatabaseMongodbUserCreateOpts) String() string {
-	return fmt.Sprintf(
-		"Name: %s, Password: <sensitive>, Roles: %v",
-		p.Name,
-		p.Roles,
-	)
-}
-
-func (opts *CloudProjectDatabaseMongodbUserCreateOpts) FromResource(d *schema.ResourceData) *CloudProjectDatabaseMongodbUserCreateOpts {
+func (opts *CloudProjectDatabaseMongodbUserCreateOpts) fromResource(d *schema.ResourceData) *CloudProjectDatabaseMongodbUserCreateOpts {
 	opts.Name = d.Get("name").(string)
 	roles := d.Get("roles").(*schema.Set).List()
 	opts.Roles = make([]string, len(roles))
@@ -1265,20 +1270,25 @@ type CloudProjectDatabaseMongodbUserUpdateOpts struct {
 	Roles []string `json:"roles"`
 }
 
-func (p *CloudProjectDatabaseMongodbUserUpdateOpts) String() string {
-	return fmt.Sprintf(
-		"Password: <sensitive>, Roles: %v",
-		p.Roles,
-	)
-}
-
-func (opts *CloudProjectDatabaseMongodbUserUpdateOpts) FromResource(d *schema.ResourceData) *CloudProjectDatabaseMongodbUserUpdateOpts {
+func (opts *CloudProjectDatabaseMongodbUserUpdateOpts) fromResource(d *schema.ResourceData) *CloudProjectDatabaseMongodbUserUpdateOpts {
 	roles := d.Get("roles").(*schema.Set).List()
 	opts.Roles = make([]string, len(roles))
 	for i, e := range roles {
 		opts.Roles[i] = e.(string)
 	}
 	return opts
+}
+
+func validateCloudProjectDatabaseMongodbUserAuthenticationDatabase(v any, p cty.Path) (diags diag.Diagnostics) {
+	value := v.(string)
+	if !strings.Contains(value, "@") {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Missing authentication database",
+			Detail:   fmt.Sprintf("value %s does not have authentication database", value),
+		})
+	}
+	return
 }
 
 // Redis User
@@ -1816,30 +1826,34 @@ func (opts *CloudProjectDatabaseKafkaTopicCreateOpts) FromResource(d *schema.Res
 	return opts
 }
 
-func validateIsSupEqual(v, min int) (errors []error) {
+func validateIsSupEqual(v, min int) (diags diag.Diagnostics) {
 	if v < min {
-		errors = append(errors, fmt.Errorf("value %d is inferior of min value %d", v, min))
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Inferior of Min value",
+			Detail:   fmt.Sprintf("value %d is inferior of min value %d", v, min),
+		})
 	}
 	return
 }
 
-func validateCloudProjectDatabaseKafkaTopicMinInsyncReplicasFunc(v interface{}, k string) (ws []string, errors []error) {
-	errors = validateIsSupEqual(v.(int), 1)
+func validateCloudProjectDatabaseKafkaTopicMinInsyncReplicasFunc(v any, p cty.Path) (diags diag.Diagnostics) {
+	diags = validateIsSupEqual(v.(int), 1)
 	return
 }
 
-func validateCloudProjectDatabaseKafkaTopicPartitionsFunc(v interface{}, k string) (ws []string, errors []error) {
-	errors = validateIsSupEqual(v.(int), 1)
+func validateCloudProjectDatabaseKafkaTopicPartitionsFunc(v any, p cty.Path) (diags diag.Diagnostics) {
+	diags = validateIsSupEqual(v.(int), 1)
 	return
 }
 
-func validateCloudProjectDatabaseKafkaTopicReplicationFunc(v interface{}, k string) (ws []string, errors []error) {
-	errors = validateIsSupEqual(v.(int), 2)
+func validateCloudProjectDatabaseKafkaTopicReplicationFunc(v any, p cty.Path) (diags diag.Diagnostics) {
+	diags = validateIsSupEqual(v.(int), 2)
 	return
 }
 
-func validateCloudProjectDatabaseKafkaTopicRetentionHoursFunc(v interface{}, k string) (ws []string, errors []error) {
-	errors = validateIsSupEqual(v.(int), -1)
+func validateCloudProjectDatabaseKafkaTopicRetentionHoursFunc(v any, p cty.Path) (diags diag.Diagnostics) {
+	diags = validateIsSupEqual(v.(int), -1)
 	return
 }
 

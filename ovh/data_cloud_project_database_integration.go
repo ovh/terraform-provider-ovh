@@ -21,16 +21,10 @@ func dataSourceCloudProjectDatabaseIntegration() *schema.Resource {
 				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
 			},
 			"engine": {
-				Type:        schema.TypeString,
-				Description: "Name of the engine of the service",
-				Required:    true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(string)
-					if value == "mongodb" {
-						errors = append(errors, fmt.Errorf("value %s is not a valid engine for integration", value))
-					}
-					return
-				},
+				Type:             schema.TypeString,
+				Description:      "Name of the engine of the service",
+				Required:         true,
+				ValidateDiagFunc: validateCloudProjectDatabaseIntegrationEngine,
 			},
 			"cluster_id": {
 				Type:        schema.TypeString,

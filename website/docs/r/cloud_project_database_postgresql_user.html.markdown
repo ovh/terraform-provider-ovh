@@ -60,15 +60,11 @@ The following arguments are supported:
 
 * `service_name` - (Required, Forces new resource) The id of the public cloud project. If omitted,
   the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
-
 * `cluster_id` - (Required, Forces new resource) Cluster ID.
-
-* `name` - (Required, Forces new resource) Name of the user. A user named "avnadmin" is map with already created admin user and reset his password instead of create a new user.
-
+* `name` - (Required, Forces new resource) Name of the user. A user named "avnadmin" is mapped with already created admin user and reset his password instead of creating a new user.
 * `roles` - (Optional: if omit, default role) Roles the user belongs to.
   Available roles:
   * `replication`
-
 * `password_reset` - (Optional) Arbitrary string to change to trigger a password update. Use the `terraform refresh` command after executing `terraform apply` to update the output with the new password.
 
 ## Attributes Reference
