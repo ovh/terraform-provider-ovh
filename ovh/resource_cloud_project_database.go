@@ -371,7 +371,7 @@ func resourceCloudProjectDatabaseUpdate(ctx context.Context, d *schema.ResourceD
 		return diag.Errorf("service update failed : %q", err)
 	}
 	log.Printf("[DEBUG] Will update database: %+v", params)
-	err = config.OVHClient.Put(endpoint, params, nil)
+	err = config.OVHClient.PutWithContext(ctx, endpoint, params, nil)
 	if err != nil {
 		return diag.Errorf("calling Put %s with params %v:\n\t %q", endpoint, params, err)
 	}
@@ -387,7 +387,7 @@ func resourceCloudProjectDatabaseUpdate(ctx context.Context, d *schema.ResourceD
 
 		advancedConfigEndpoint := fmt.Sprintf("%s/advancedConfiguration", endpoint)
 
-		err = config.OVHClient.Put(advancedConfigEndpoint, acParams, nil)
+		err = config.OVHClient.PutWithContext(ctx, advancedConfigEndpoint, acParams, nil)
 		if err != nil {
 			return diag.Errorf("calling Put %s with params %v:\n\t %q", advancedConfigEndpoint, acParams, err)
 		}

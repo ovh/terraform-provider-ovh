@@ -94,7 +94,7 @@ func dataSourceCloudProjectDatabaseLogSubscriptionRead(ctx context.Context, d *s
 	res := &CloudProjectDatabaseLogSubscriptionResponse{}
 
 	log.Printf("[DEBUG] Will read log subscrition %s from cluster %s from project %s", id, clusterID, serviceName)
-	if err := config.OVHClient.Get(endpoint, res); err != nil {
+	if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 

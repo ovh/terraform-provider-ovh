@@ -36,13 +36,13 @@ The following arguments are supported:
 * `kube_id` - The ID of the managed kubernetes cluster. **Changing this value recreates the resource.**
 * `client_id` - The OIDC client ID.
 * `issuer_url` - The OIDC issuer url.
-* `oidcUsernameClaim` - JWT claim to use as the username. By default, sub, which is expected to be a unique identifier of the end user. Admins can choose other claims, such as email or name, depending on their provider. However, claims other than email will be prefixed with the issuer URL to prevent naming clashes with other plugins.
-* `oidcUsernamePrefix` - Prefix prepended to username claims to prevent clashes with existing names (such as `system:users`). For example, the value `oidc:` will create usernames like `oidc:jane.doe`. If this field isn't set and `oidcUsernameClaim` is a value other than email the prefix defaults to `issuer_url` where `issuer_url` is the value of `oidcIssuerUrl.` The value - can be used to disable all prefixing.
-* `oidcGroupsClaim` - Array of JWT claim to use as the user's group. If the claim is present it must be an array of strings.
-* `oidcGroupsPrefix` - Prefix prepended to group claims to prevent clashes with existing names (such as `system:groups`). For example, the value `oidc:` will create group names like `oidc:engineering` and `oidc:infra`.
-* `oidcRequiredClaim` - Array of `key=value` pairs that describe required claims in the ID Token. If set, the claims are verified to be present in the ID Token with a matching value."
-* `oidcSigningAlgs` - Array of signing algorithms accepted. Default is `RS256`. 
-* `oidcCaContent` - Content of the certificate for the CA, in Base64 format, that signed your identity provider's web certificate. Defaults to the host's root CAs.
+* `oidc_username_claim` - JWT claim to use as the username. By default, sub, which is expected to be a unique identifier of the end user. Admins can choose other claims, such as email or name, depending on their provider. However, claims other than email will be prefixed with the issuer URL to prevent naming clashes with other plugins.
+* `oidc_username_prefix` - Prefix prepended to username claims to prevent clashes with existing names (such as `system:users`). For example, the value `oidc:` will create usernames like `oidc:jane.doe`. If this field isn't set and `oidc_username_claim` is a value other than email the prefix defaults to `issuer_url` where `issuer_url` is the value of `issuer_url.` The value - can be used to disable all prefixing.
+* `oidc_groups_claim` - Array of JWT claim to use as the user's group. If the claim is present it must be an array of strings.
+* `oidc_groups_prefix` - Prefix prepended to group claims to prevent clashes with existing names (such as `system:groups`). For example, the value `oidc:` will create group names like `oidc:engineering` and `oidc:infra`.
+* `oidc_required_claim` - Array of `key=value` pairs that describe required claims in the ID Token. If set, the claims are verified to be present in the ID Token with a matching value."
+* `oidc_signing_algs` - Array of signing algorithms accepted. Default is `RS256`.
+* `oidc_ca_content` - Content of the certificate for the CA, in Base64 format, that signed your identity provider's web certificate. Defaults to the host's root CAs.
 
 ## Timeouts
 

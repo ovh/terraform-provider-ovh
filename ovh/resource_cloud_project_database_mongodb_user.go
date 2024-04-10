@@ -197,7 +197,7 @@ func resourceCloudProjectDatabaseMongodbUserUpdate(ctx context.Context, d *schem
 		retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate),
 			func() *retry.RetryError {
 				log.Printf("[DEBUG] Will update user: %+v from cluster %s from project %s", params, clusterID, serviceName)
-				rErr := config.OVHClient.Put(endpoint, params, nil)
+				rErr := config.OVHClient.PutWithContext(ctx, endpoint, params, nil)
 				if rErr != nil {
 					if errOvh, ok := rErr.(*ovh.APIError); ok && (errOvh.Code == 409) {
 						return retry.RetryableError(rErr)

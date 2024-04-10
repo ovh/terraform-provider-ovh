@@ -44,7 +44,7 @@ func (d *ipFirewallRuleDataSource) Schema(ctx context.Context, req datasource.Sc
 }
 
 func (d *ipFirewallRuleDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data IpFirewallRuleModel
+	var data IpFirewallRuleDataResponseModel
 
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
