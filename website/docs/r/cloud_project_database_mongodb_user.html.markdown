@@ -77,7 +77,7 @@ The following arguments are supported:
 * `service_name` - (Required, Forces new resource) The id of the public cloud project. If omitted,
   the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 * `cluster_id` - (Required, Forces new resource) Cluster ID.
-* `name` - (Required, Forces new resource) Name of the user. A user named "admin" is map with already created admin@admin user instead of creating a new user.
+* `name` - (Required, Forces new resource) Name of the user. A user named "admin" is mapped with already created admin@admin user instead of creating a new user.
 * `roles` - (Optional: if omit, default role) Roles the user belongs to. Since version 0.37.0, the authentication database must be indicated for all roles
 Available roles:
   * `backup@admin`
