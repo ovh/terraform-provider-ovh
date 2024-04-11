@@ -362,9 +362,13 @@ func ConditionalAttributeBool(buff *bytes.Buffer, name string, val *bool) {
 // CheckDeleted checks the error to see if it's a 404 (Not Found) and, if so,
 // sets the resource ID to the empty string instead of throwing an error.
 func CheckDeleted(d *schema.ResourceData, err error, endpoint string) error {
-	if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
-		d.SetId("")
-		return nil
+	errOvh, ok := err.(*ovh.APIError)
+	if ok {
+		if errOvh.Code == 404 {
+			d.SetId("")
+			return nil
+		}
+		return fmt.Errorf("calling %s:\n\t %s Query ID : %s", endpoint, err.Error(), errOvh.QueryID)
 	}
 
 	return fmt.Errorf("calling %s:\n\t %s", endpoint, err.Error())
