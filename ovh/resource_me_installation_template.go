@@ -29,10 +29,10 @@ func resourceMeInstallationTemplate() *schema.Resource {
 				Description: "OVH template name yours will be based on, choose one among the list given by compatibleTemplates function",
 			},
 			"default_language": {
-				Type:        schema.TypeString,
-				Required:    true,
-				ForceNew:    true,
-				Description: "The default language of this template",
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Default:  "en",
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
 					err := helpers.ValidateLanguageCode(v.(string))
 					if err != nil {
@@ -40,20 +40,19 @@ func resourceMeInstallationTemplate() *schema.Resource {
 					}
 					return
 				},
+				Deprecated: "This field is deprecated and will be removed in a future release.",
 			},
 			"template_name": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "This template name",
 			},
-
 			"remove_default_partition_schemes": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Computed:    true,
 				Description: "Remove default partition schemes at creation",
 			},
-
 			"customization": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -75,15 +74,10 @@ func resourceMeInstallationTemplate() *schema.Resource {
 							Optional:    true,
 							Description: "indicate the string returned by your postinstall customisation script on successful execution. Advice: your script should return a unique validation string in case of succes. A good example is 'loh1Xee7eo OK OK OK UGh8Ang1Gu'",
 						},
-						"rating": {
-							Type:       schema.TypeInt,
-							Deprecated: "field is not used anymore",
-							Optional:   true,
-						},
 						"ssh_key_name": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "Name of the ssh key that should be installed. Password login will be disabled",
+							Type:       schema.TypeString,
+							Optional:   true,
+							Deprecated: "This field is deprecated and will be removed in a future release.",
 						},
 					},
 				},
@@ -97,25 +91,15 @@ func resourceMeInstallationTemplate() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"beta": {
-				Type:        schema.TypeBool,
-				Computed:    true,
-				Description: "This distribution is new and, although tested and functional, may still display odd behaviour",
-			},
 			"bit_format": {
 				Type:        schema.TypeInt,
 				Computed:    true,
 				Description: "This template bit format (32 or 64)",
 			},
 			"category": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Category of this template (informative only). (basic, customer, hosting, other, readyToUse, virtualisation)",
-			},
-			"deprecated": {
-				Type:        schema.TypeBool,
-				Computed:    true,
-				Description: "is this distribution deprecated",
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "This field is deprecated and will be removed in a future release.",
 			},
 			"description": {
 				Type:        schema.TypeString,
@@ -145,20 +129,10 @@ func resourceMeInstallationTemplate() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"last_modification": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Date of last modification of the base image",
-			},
 			"lvm_ready": {
 				Type:        schema.TypeBool,
 				Computed:    true,
 				Description: "This distribution supports Logical Volumes (Linux LVM)",
-			},
-			"supports_sql_server": {
-				Type:        schema.TypeBool,
-				Computed:    true,
-				Description: "This distribution supports the microsoft SQL server",
 			},
 		},
 	}

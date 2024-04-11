@@ -51,17 +51,15 @@ func TestAccMeInstallationTemplatesDataSource_basic(t *testing.T) {
 
 const testAccMeInstallationTemplatesDatasourceConfig_presetup = `
 resource "ovh_me_installation_template" "template" {
-  base_template_name = "centos7_64"
+  base_template_name = "debian12_64"
   template_name      = "%s"
-  default_language   = "en"
 }
 `
 
 const testAccMeInstallationTemplatesDatasourceConfig_Basic = `
 resource "ovh_me_installation_template" "template" {
-  base_template_name = "centos7_64"
+  base_template_name = "debian12_64"
   template_name      = "%s"
-  default_language   = "en"
 }
 
 data "ovh_me_installation_templates" "templates" {}

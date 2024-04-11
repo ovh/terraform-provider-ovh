@@ -75,9 +75,8 @@ func TestAccMeInstallationTemplatePartitionSchemeResource_priority_zero(t *testi
 
 const testAccMeInstallationTemplatePartitionSchemeResourceConfig_Basic = `
 resource "ovh_me_installation_template" "template" {
-  base_template_name = "centos7_64"
+  base_template_name = "debian12_64"
   template_name      = "%s"
-  default_language   = "en"
 }
 
 resource "ovh_me_installation_template_partition_scheme" "scheme" {
@@ -89,9 +88,8 @@ resource "ovh_me_installation_template_partition_scheme" "scheme" {
 
 const testAccMeInstallationTemplatePartitionSchemeResourceConfig_priority_zero = `
 resource "ovh_me_installation_template" "template" {
-  base_template_name               = "centos7_64"
+  base_template_name               = "debian12_64"
   template_name                    = "%s"
-  default_language                 = "en"
   remove_default_partition_schemes = true
 }
 

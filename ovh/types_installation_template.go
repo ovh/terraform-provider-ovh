@@ -10,20 +10,16 @@ import (
 
 type InstallationTemplate struct {
 	AvailableLanguages    []string                           `json:"available_languages"`
-	Beta                  *bool                              `json:"beta,omitempty"`
 	BitFormat             int                                `json:"bitFormat"`
 	Category              string                             `json:"category"`
 	Customization         *InstallationTemplateCustomization `json:"customization,omitempty"`
-	DefaultLanguage       string                             `json:"defaultLanguage"`
-	Deprecated            *bool                              `json:"deprecated,omitempty"`
+	DefaultLanguage       string                             `json:"defaultLanguage,omitempty"`
 	Description           string                             `json:"description"`
 	Distribution          string                             `json:"distribution"`
 	Family                string                             `json:"family"`
 	Filesystems           []string                           `json:"filesystems"`
 	HardRaidConfiguration *bool                              `json:"hardRaidConfigurtion,omitempty"`
-	LastModification      *string                            `json:"last_modification"`
 	LvmReady              *bool                              `json:"lvmReady,omitempty"`
-	SupportsSqlServer     *bool                              `json:"supportsSqlServer,omitempty"`
 	TemplateName          string                             `json:"templateName"`
 }
 
@@ -31,10 +27,6 @@ func (v InstallationTemplate) ToMap() map[string]interface{} {
 	obj := make(map[string]interface{})
 
 	obj["available_languages"] = v.AvailableLanguages
-
-	if v.Beta != nil {
-		obj["beta"] = *v.Beta
-	}
 
 	obj["bit_format"] = v.BitFormat
 	obj["category"] = v.Category
@@ -46,10 +38,8 @@ func (v InstallationTemplate) ToMap() map[string]interface{} {
 		}
 	}
 
-	obj["default_language"] = v.DefaultLanguage
-
-	if v.Deprecated != nil {
-		obj["deprecated"] = *v.Deprecated
+	if v.DefaultLanguage != "" {
+		obj["default_language"] = v.DefaultLanguage
 	}
 
 	obj["description"] = v.Description
@@ -61,16 +51,8 @@ func (v InstallationTemplate) ToMap() map[string]interface{} {
 		obj["hard_raid_configuration"] = *v.HardRaidConfiguration
 	}
 
-	if v.LastModification != nil {
-		obj["last_modification"] = *v.LastModification
-	}
-
 	if v.LvmReady != nil {
 		obj["lvm_ready"] = *v.LvmReady
-	}
-
-	if v.SupportsSqlServer != nil {
-		obj["supports_sql_server"] = *v.SupportsSqlServer
 	}
 
 	obj["template_name"] = v.TemplateName
@@ -81,7 +63,7 @@ func (v InstallationTemplate) ToMap() map[string]interface{} {
 type InstallationTemplateCreateOpts struct {
 	BaseTemplateName string `json:"baseTemplateName"`
 	Name             string `json:"name"`
-	DefaultLanguage  string `json:"defaultLanguage"`
+	DefaultLanguage  string `json:"defaultLanguage,omitempty"`
 }
 
 func (opts *InstallationTemplateCreateOpts) FromResource(d *schema.ResourceData) *InstallationTemplateCreateOpts {
@@ -92,7 +74,7 @@ func (opts *InstallationTemplateCreateOpts) FromResource(d *schema.ResourceData)
 }
 
 type InstallationTemplateUpdateOpts struct {
-	DefaultLanguage string                             `json:"defaultLanguage"`
+	DefaultLanguage string                             `json:"defaultLanguage,omitempty"`
 	Customization   *InstallationTemplateCustomization `json:"customization"`
 	TemplateName    string                             `json:"templateName"`
 }
@@ -100,7 +82,6 @@ type InstallationTemplateUpdateOpts struct {
 func (opts *InstallationTemplateUpdateOpts) FromResource(d *schema.ResourceData) *InstallationTemplateUpdateOpts {
 	opts.TemplateName = d.Get("template_name").(string)
 	opts.DefaultLanguage = d.Get("default_language").(string)
-
 	customizations := d.Get("customization").([]interface{})
 	if customizations != nil && len(customizations) == 1 {
 		opts.Customization = (&InstallationTemplateCustomization{}).FromResource(d, "customization.0")
@@ -139,7 +120,6 @@ func (v InstallationTemplateCustomization) ToMap() map[string]interface{} {
 		obj["ssh_key_name"] = *v.SshKeyName
 		custom_attr_set = true
 	}
-
 	// dont return an object if nothing is set
 	if custom_attr_set {
 		return obj

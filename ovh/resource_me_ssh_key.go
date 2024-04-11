@@ -20,6 +20,7 @@ func resourceMeSshKey() *schema.Resource {
 				return []*schema.ResourceData{d}, nil
 			},
 		},
+		DeprecationMessage: "This resource will be deprecated in next release, please use userMetadata instead",
 
 		Schema: map[string]*schema.Schema{
 			"key_name": {
@@ -27,18 +28,21 @@ func resourceMeSshKey() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 				Description: "Name of this public Ssh key",
+				Deprecated:  "use userMetada instead",
 			},
 			"key": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
 				Description: "ASCII encoded public Ssh key",
+				Deprecated:  "use userMetada instead",
 			},
 			"default": {
 				Type:        schema.TypeBool,
 				Computed:    true,
 				Optional:    true,
 				Description: "True when this public Ssh key is used for rescue mode and reinstallations",
+				Deprecated:  "use userMetada instead",
 			},
 		},
 	}
@@ -60,6 +64,7 @@ func resourceMeSshKeyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("default", r.Default)
 
 	return nil
+
 }
 
 func resourceMeSshKeyCreate(d *schema.ResourceData, meta interface{}) error {
