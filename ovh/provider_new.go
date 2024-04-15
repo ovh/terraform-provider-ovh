@@ -142,6 +142,7 @@ func (p *OvhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 		NewCloudProjectDataSource,
 		NewCloudProjectsDataSource,
 		NewDedicatedServerSpecificationsHardwareDataSource,
+		NewDedicatedServerSpecificationsNetworkDataSource,
 		NewDomainZoneDnssecDataSource,
 		NewIpFirewallDataSource,
 		NewIpFirewallRuleDataSource,
