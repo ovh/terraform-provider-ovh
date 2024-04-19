@@ -51,6 +51,14 @@ func (p *OvhProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *
 				Optional:    true,
 				Description: descriptions["consumer_key"],
 			},
+			"client_id": schema.StringAttribute{
+				Optional:    true,
+				Description: descriptions["client_id"],
+			},
+			"client_secret": schema.StringAttribute{
+				Optional:    true,
+				Description: descriptions["client_secret"],
+			},
 		},
 	}
 }
@@ -69,7 +77,7 @@ func (p *OvhProvider) Configure(ctx context.Context, req provider.ConfigureReque
 		resp.Diagnostics.AddAttributeError(
 			path.Root("endpoint"),
 			"Unknown OVH API endpoint",
-			"The provider cannot create the OVH API client as there is a missing or empty value for the API endpoint. "+
+			"The provider cannot create the OVH API client as there is a missing or empty value for the API endpoint."+
 				"Set the endpoint value in the configuration and ensure the value is not empty.",
 		)
 	}
@@ -78,8 +86,8 @@ func (p *OvhProvider) Configure(ctx context.Context, req provider.ConfigureReque
 		resp.Diagnostics.AddAttributeError(
 			path.Root("application_key"),
 			"Unknown OVH API application_key",
-			"The provider cannot create the OVH API client as there is a missing or empty value for the API application key. "+
-				"Set the application key value in the configuration or use the OVH_APPLICATION_KEY environment variable. "+
+			"The provider cannot create the OVH API client as there is a missing or empty value for the API application key."+
+				"Set the application key value in the configuration or use the OVH_APPLICATION_KEY environment variable."+
 				"If either is already set, ensure the value is not empty.",
 		)
 	}
@@ -88,8 +96,8 @@ func (p *OvhProvider) Configure(ctx context.Context, req provider.ConfigureReque
 		resp.Diagnostics.AddAttributeError(
 			path.Root("application_secret"),
 			"Unknown OVH API application_secret",
-			"The provider cannot create the OVH API client as there is a missing or empty value for the API application secret. "+
-				"Set the application secret value in the configuration or use the OVH_APPLICATION_SECRET environment variable. "+
+			"The provider cannot create the OVH API client as there is a missing or empty value for the API application secret."+
+				"Set the application secret value in the configuration or use the OVH_APPLICATION_SECRET environment variable."+
 				"If either is already set, ensure the value is not empty.",
 		)
 	}
@@ -98,8 +106,28 @@ func (p *OvhProvider) Configure(ctx context.Context, req provider.ConfigureReque
 		resp.Diagnostics.AddAttributeError(
 			path.Root("consumer_key"),
 			"Unknown OVH API consumer_key",
-			"The provider cannot create the OVH API client as there is a missing or empty value for the API consumer key. "+
-				"Set the consumer key value in the configuration or use the OVH_CONSUMER_KEY environment variable. "+
+			"The provider cannot create the OVH API client as there is a missing or empty value for the API consumer key."+
+				"Set the consumer key value in the configuration or use the OVH_CONSUMER_KEY environment variable."+
+				"If either is already set, ensure the value is not empty.",
+		)
+	}
+
+	if config.ClientID.IsUnknown() {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("client_id"),
+			"Unknown OVH API oAuth2 client ID",
+			"The provider cannot create the OVH API client as there is a missing or empty value for the API oAuth2 client id."+
+				"Set the client id value in the configuration or use the OVH_CLIENT_ID environment variable."+
+				"If either is already set, ensure the value is not empty.",
+		)
+	}
+
+	if config.ClientSecret.IsUnknown() {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("client_secret"),
+			"Unknown OVH API oAuth2 client secret",
+			"The provider cannot create the OVH API client as there is a missing or empty value for the API oAuth2 client secret."+
+				"Set the client secret value in the configuration or use the OVH_CLIENT_SECRET environment variable."+
 				"If either is already set, ensure the value is not empty.",
 		)
 	}
@@ -124,6 +152,12 @@ func (p *OvhProvider) Configure(ctx context.Context, req provider.ConfigureReque
 	}
 	if !config.ConsumerKey.IsNull() {
 		clientConfig.ConsumerKey = config.ConsumerKey.ValueString()
+	}
+	if !config.ClientID.IsNull() {
+		clientConfig.ClientID = config.ClientID.ValueString()
+	}
+	if !config.ClientSecret.IsNull() {
+		clientConfig.ClientSecret = config.ClientSecret.ValueString()
 	}
 
 	if err := clientConfig.loadAndValidate(); err != nil {
@@ -168,4 +202,6 @@ type ovhProviderModel struct {
 	ApplicationKey    types.String `tfsdk:"application_key"`
 	ApplicationSecret types.String `tfsdk:"application_secret"`
 	ConsumerKey       types.String `tfsdk:"consumer_key"`
+	ClientID          types.String `tfsdk:"client_id"`
+	ClientSecret      types.String `tfsdk:"client_secret"`
 }

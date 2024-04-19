@@ -12,7 +12,7 @@ require (
 	github.com/hashicorp/terraform-plugin-mux v0.15.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.33.0
 	github.com/hashicorp/terraform-plugin-testing v1.7.0
-	github.com/ovh/go-ovh v1.4.3
+	github.com/ovh/go-ovh v1.5.1
 	github.com/ybriffa/rfc3339 v0.0.0-20220203155318-1789e3fd6e70
 	golang.org/x/exp v0.0.0-20230809150735-7b3493d9a819
 	gopkg.in/yaml.v3 v3.0.1
@@ -55,6 +55,7 @@ require (
 	golang.org/x/crypto v0.21.0 // indirect
 	golang.org/x/mod v0.15.0 // indirect
 	golang.org/x/net v0.23.0 // indirect
+	golang.org/x/oauth2 v0.18.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/tools v0.13.0 // indirect
