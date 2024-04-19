@@ -13,25 +13,46 @@ import (
 var providerVersion, providerCommit string
 
 type Config struct {
-	Account           string
-	Plate             string
-	Endpoint          string
+	Account  string
+	Plate    string
+	Endpoint string
+
+	// AK / AS / CK authentication information
 	ApplicationKey    string
 	ApplicationSecret string
 	ConsumerKey       string
-	OVHClient         *ovh.Client
-	authenticated     bool
-	authFailed        error
-	lockAuth          *sync.Mutex
+
+	// oAuth2 authentication information
+	ClientID     string
+	ClientSecret string
+
+	OVHClient     *ovh.Client
+	authenticated bool
+	authFailed    error
+	lockAuth      *sync.Mutex
 }
 
 func clientDefault(c *Config) (*ovh.Client, error) {
-	client, err := ovh.NewClient(
-		c.Endpoint,
-		c.ApplicationKey,
-		c.ApplicationSecret,
-		c.ConsumerKey,
+	var (
+		client *ovh.Client
+		err    error
 	)
+
+	if c.ClientID != "" {
+		client, err = ovh.NewOAuth2Client(
+			c.Endpoint,
+			c.ClientID,
+			c.ClientSecret,
+		)
+	} else {
+		client, err = ovh.NewClient(
+			c.Endpoint,
+			c.ApplicationKey,
+			c.ApplicationSecret,
+			c.ConsumerKey,
+		)
+	}
+
 	if err != nil {
 		return nil, err
 	}

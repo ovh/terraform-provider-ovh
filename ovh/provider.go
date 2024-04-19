@@ -12,6 +12,24 @@ const (
 	SERVICE_NAME_ATT = "service_name"
 )
 
+var (
+	// descriptions contains the descriptions for the fields of the providers' schemas.
+	// The descriptions are grouped here because we need to have the exact same description
+	// in each provider used by the MuxServer, else it doesn't boot.
+	descriptions = map[string]string{
+		"endpoint": "The OVH API endpoint to target (ex: \"ovh-eu\")",
+
+		// Authentication via app key / app secret / comsumer key
+		"application_key":    "The OVH API Application Key",
+		"application_secret": "The OVH API Application Secret",
+		"consumer_key":       "The OVH API Consumer Key",
+
+		// Authentication via oAuth2
+		"client_id":     "OAuth 2.0 application's ID",
+		"client_secret": "OAuth 2.0 application's secret",
+	}
+)
+
 // Provider returns a *schema.Provider for OVH.
 func Provider() *schema.Provider {
 	return &schema.Provider{
@@ -35,6 +53,16 @@ func Provider() *schema.Provider {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: descriptions["consumer_key"],
+			},
+			"client_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: descriptions["client_id"],
+			},
+			"client_secret": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: descriptions["client_secret"],
 			},
 		},
 
@@ -238,19 +266,6 @@ func Provider() *schema.Provider {
 	}
 }
 
-var descriptions map[string]string
-
-func init() {
-	descriptions = map[string]string{
-		"endpoint": "The OVH API endpoint to target (ex: \"ovh-eu\").",
-
-		"application_key": "The OVH API Application Key.",
-
-		"application_secret": "The OVH API Application Secret.",
-		"consumer_key":       "The OVH API Consumer key.",
-	}
-}
-
 func ConfigureContextFunc(context context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	config := Config{
 		lockAuth: &sync.Mutex{},
@@ -267,6 +282,12 @@ func ConfigureContextFunc(context context.Context, d *schema.ResourceData) (inte
 	}
 	if v, ok := d.GetOk("consumer_key"); ok {
 		config.ConsumerKey = v.(string)
+	}
+	if v, ok := d.GetOk("client_id"); ok {
+		config.ClientID = v.(string)
+	}
+	if v, ok := d.GetOk("client_secret"); ok {
+		config.ClientSecret = v.(string)
 	}
 
 	if err := config.loadAndValidate(); err != nil {
