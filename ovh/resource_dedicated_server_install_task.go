@@ -69,17 +69,17 @@ func resourceDedicatedServerInstallTask() *schema.Resource {
 							ForceNew:    true,
 							Description: "",
 						},
-						"install_sql_server": {
-							Type:        schema.TypeBool,
-							Optional:    true,
-							ForceNew:    true,
-							Description: "",
-						},
 						"language": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							ForceNew:    true,
-							Description: "language",
+							Type:       schema.TypeString,
+							Optional:   true,
+							ForceNew:   true,
+							Deprecated: "This field is deprecated and will be removed in a future release",
+						},
+						"use_spla": {
+							Type:       schema.TypeBool,
+							Optional:   true,
+							ForceNew:   true,
+							Deprecated: "This field is deprecated and will be removed in a future release",
 						},
 						"no_raid": {
 							Type:        schema.TypeBool,
@@ -105,17 +105,25 @@ func resourceDedicatedServerInstallTask() *schema.Resource {
 							ForceNew:    true,
 							Description: "",
 						},
-						"ssh_key_name": {
+					},
+				},
+			},
+			"user_metadata": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 128,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"key": {
 							Type:        schema.TypeString,
-							Optional:    true,
-							ForceNew:    true,
-							Description: "Name of the ssh key that should be installed. Password login will be disabled",
+							Description: "The key for the user_metadata",
+							Required:    true,
 						},
-						"use_spla": {
-							Type:        schema.TypeBool,
-							Optional:    true,
-							ForceNew:    true,
-							Description: "",
+						"value": {
+							Type:        schema.TypeString,
+							Description: "The value for the user_metadata",
+							Required:    true,
 						},
 					},
 				},

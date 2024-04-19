@@ -22,24 +22,20 @@ data "ovh_me_installation_template" "mytemplate" {
 
 The following attributes are exported:
 
-* `available_languages`: List of all language available for this template.
-* `beta`: This distribution is new and, although tested and functional, may still display odd behaviour.
+* `available_languages`: List of all language available for this template. Deprecated, will be removed in next release.
 * `bit_format`: This template bit format (32 or 64).
 * `category`: Category of this template (informative only). (basic, customer, hosting, other, readyToUse, virtualisation).
 * `customization`: 
   * `custom_hostname`: Set up the server using the provided hostname instead of the default hostname.
   * `post_installation_script_link`: Indicate the URL where your postinstall customisation script is located.
   * `post_installation_script_return`: indicate the string returned by your postinstall customisation script on successful execution. Advice: your script should return a unique validation string in case of succes. A good example is 'loh1Xee7eo OK OK OK UGh8Ang1Gu'.
-  * `rating`: (DEPRECATED) Rating.
-  * `ssh_key_name`: Name of the ssh key that should be installed. Password login will be disabled.
-* `default_language`: The default language of this template.
-* `deprecated`: is this distribution deprecated.
+    * `ssh_key_name`: Name of the ssh key that should be installed. Password login will be disabled. Deprecated, will be removed in next release, use userMetada instead.
+* `default_language`: The default language of this template. Deprecated, will be removed in next release.
 * `description`: information about this template.
 * `distribution`: the distribution this template is based on.
 * `family`: this template family type (bsd,linux,solaris,windows).
 * `hard_raid_configuration`: This distribution supports hardware raid configuration through the OVHcloud API.
 * `filesystems`: Filesystems available (btrfs,ext3,ext4,ntfs,reiserfs,swap,ufs,xfs,zfs).
-* `last_modification`: Date of last modification of the base image.
 * `partition_scheme`: 
   * `name`: name of this partitioning scheme.
   * `priority`: on a reinstall, if a partitioning scheme is not specified, the one with the higher priority will be used by default, among all the compatible partitioning schemes (given the underlying hardware specifications).
@@ -56,4 +52,3 @@ The following attributes are exported:
      * `order`: step or order. specifies the creation order of the partition on the disk
      * `type`: partition type.
      * `volume_name`: The volume name needed for proxmox distribution
-* `supports_sql_server`: This distribution supports the microsoft SQL server.

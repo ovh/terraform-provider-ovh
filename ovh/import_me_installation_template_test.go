@@ -21,11 +21,10 @@ func TestAccMeInstallationTemplate_importBasic(t *testing.T) {
 			{
 				ResourceName:      "ovh_me_installation_template.template",
 				ImportState:       true,
-				ImportStateId:     fmt.Sprintf("centos7_64/%s", installationTemplate),
+				ImportStateId:     fmt.Sprintf("debian12_64/%s", installationTemplate),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"remove_default_partition_schemes",
-					"customization.0.rating",
 				},
 			},
 		},

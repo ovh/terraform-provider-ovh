@@ -11,7 +11,8 @@ import (
 
 func dataSourceMeSshKeys() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceMeSshKeysRead,
+		Read:               dataSourceMeSshKeysRead,
+		DeprecationMessage: "[DEPRECATED] SSH key names '/me/sshKey' will be deprecated soon",
 		Schema: map[string]*schema.Schema{
 			"names": {
 				Type:     schema.TypeSet,

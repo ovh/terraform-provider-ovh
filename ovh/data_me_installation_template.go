@@ -20,9 +20,9 @@ func dataSourceMeInstallationTemplate() *schema.Resource {
 
 			// computed
 			"default_language": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "The default language of this template",
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "This field will be removed from the API, please use `userMetadata` instead.",
 			},
 			"customization": {
 				Type:     schema.TypeList,
@@ -44,15 +44,10 @@ func dataSourceMeInstallationTemplate() *schema.Resource {
 							Computed:    true,
 							Description: "indicate the string returned by your postinstall customisation script on successful execution. Advice: your script should return a unique validation string in case of succes. A good example is 'loh1Xee7eo OK OK OK UGh8Ang1Gu'",
 						},
-						"rating": {
-							Type:       schema.TypeInt,
-							Deprecated: "field is not used anymore",
-							Computed:   true,
-						},
 						"ssh_key_name": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Name of the ssh key that should be installed. Password login will be disabled",
+							Type:       schema.TypeString,
+							Computed:   true,
+							Deprecated: "This field will be removed from the API, please use `userMetadata` instead.",
 						},
 					},
 				},
@@ -160,11 +155,6 @@ func dataSourceMeInstallationTemplate() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"beta": {
-				Type:        schema.TypeBool,
-				Computed:    true,
-				Description: "This distribution is new and, although tested and functional, may still display odd behaviour",
-			},
 			"bit_format": {
 				Type:        schema.TypeInt,
 				Computed:    true,
@@ -174,11 +164,6 @@ func dataSourceMeInstallationTemplate() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Category of this template (informative only). (basic, customer, hosting, other, readyToUse, virtualisation)",
-			},
-			"deprecated": {
-				Type:        schema.TypeBool,
-				Computed:    true,
-				Description: "is this distribution deprecated",
 			},
 			"description": {
 				Type:        schema.TypeString,
@@ -208,20 +193,10 @@ func dataSourceMeInstallationTemplate() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"last_modification": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Date of last modification of the base image",
-			},
 			"lvm_ready": {
 				Type:        schema.TypeBool,
 				Computed:    true,
 				Description: "This distribution supports Logical Volumes (Linux LVM)",
-			},
-			"supports_sql_server": {
-				Type:        schema.TypeBool,
-				Computed:    true,
-				Description: "This distribution supports the microsoft SQL server",
 			},
 		},
 	}

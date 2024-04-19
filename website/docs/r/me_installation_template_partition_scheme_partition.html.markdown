@@ -10,9 +10,8 @@ Use this resource to create a partition in the partition scheme of a custom inst
 
 ```hcl
 resource "ovh_me_installation_template" "mytemplate" {
-  base_template_name = "centos7_64"
+  base_template_name = "debian12_64"
   template_name      = "mytemplate"
-  default_language   = "fr"
 }
 
 resource "ovh_me_installation_template_partition_scheme" "scheme" {

@@ -111,11 +111,6 @@ func TestAccMeInstallationTemplateResource_customization(t *testing.T) {
 					),
 					resource.TestCheckResourceAttr(
 						"ovh_me_installation_template.template",
-						"customization.0.ssh_key_name",
-						"test",
-					),
-					resource.TestCheckResourceAttr(
-						"ovh_me_installation_template.template",
 						"customization.0.post_installation_script_link",
 						"http://mylink.org",
 					),
@@ -136,20 +131,17 @@ func TestAccMeInstallationTemplateResource_customization(t *testing.T) {
 
 const testAccMeInstallationTemplateResourceConfig_Basic = `
 resource "ovh_me_installation_template" "template" {
-  base_template_name = "centos7_64"
+  base_template_name = "debian12_64"
   template_name      = "%s"
-  default_language   = "en"
 }
 `
 const testAccMeInstallationTemplateResourceConfig_Customization = `
 resource "ovh_me_installation_template" "template" {
-  base_template_name = "centos7_64"
+  base_template_name = "debian12_64"
   template_name      = "%s"
-  default_language   = "en"
 
   customization {
      custom_hostname                 = "mytest"
-     ssh_key_name                    = "test"
      post_installation_script_link   = "http://mylink.org"
      post_installation_script_return = "returned_string"
   }

@@ -107,10 +107,16 @@ type DedicatedServerTask struct {
 	StartDate  time.Time `json:"startDate"`
 }
 
+type DedicatedServerInstallTaskUserMetadata struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
+}
+
 type DedicatedServerInstallTaskCreateOpts struct {
-	TemplateName        string                             `json:"templateName"`
-	PartitionSchemeName *string                            `json:"partitionSchemeName,omitempty"`
-	Details             *DedicatedServerInstallTaskDetails `json:"details"`
+	TemplateName        string                                   `json:"templateName"`
+	PartitionSchemeName *string                                  `json:"partitionSchemeName,omitempty"`
+	Details             *DedicatedServerInstallTaskDetails       `json:"details"`
+	UserMetadata        []DedicatedServerInstallTaskUserMetadata `json:"userMetadata,omitempty"`
 }
 
 func (opts *DedicatedServerInstallTaskCreateOpts) FromResource(d *schema.ResourceData) *DedicatedServerInstallTaskCreateOpts {
@@ -118,17 +124,28 @@ func (opts *DedicatedServerInstallTaskCreateOpts) FromResource(d *schema.Resourc
 	opts.PartitionSchemeName = helpers.GetNilStringPointerFromData(d, "partition_scheme_name")
 
 	details := d.Get("details").([]interface{})
-	if details != nil && len(details) == 1 {
+	if len(details) == 1 {
 		opts.Details = (&DedicatedServerInstallTaskDetails{}).FromResource(d, "details.0")
-
 	}
+
+	userMetadata := d.Get("user_metadata").([]interface{})
+	var userMetadatas []DedicatedServerInstallTaskUserMetadata
+
+	for _, metadata := range userMetadata {
+		m := metadata.(map[string]interface{})
+		key := m["key"].(string)
+		value := m["value"].(string)
+		metadatum := DedicatedServerInstallTaskUserMetadata{Key: key, Value: value}
+		userMetadatas = append(userMetadatas, metadatum)
+	}
+	opts.UserMetadata = userMetadatas
+
 	return opts
 }
 
 type DedicatedServerInstallTaskDetails struct {
 	CustomHostname               *string `json:"customHostname,omitempty"`
 	DiskGroupId                  *int64  `json:"diskGroupId,omitempty"`
-	InstallSqlServer             *bool   `json:"installSqlServer,omitempty"`
 	Language                     *string `json:"language,omitempty"`
 	NoRaid                       *bool   `json:"noRaid,omitempty"`
 	PostInstallationScriptLink   *string `json:"postInstallationScriptLink,omitempty"`
@@ -141,7 +158,6 @@ type DedicatedServerInstallTaskDetails struct {
 func (opts *DedicatedServerInstallTaskDetails) FromResource(d *schema.ResourceData, parent string) *DedicatedServerInstallTaskDetails {
 	opts.CustomHostname = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.custom_hostname", parent))
 	opts.DiskGroupId = helpers.GetNilInt64PointerFromData(d, fmt.Sprintf("%s.disk_group_id", parent))
-	opts.InstallSqlServer = helpers.GetNilBoolPointerFromData(d, fmt.Sprintf("%s.install_sql_server", parent))
 	opts.Language = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.language", parent))
 	opts.NoRaid = helpers.GetNilBoolPointerFromData(d, fmt.Sprintf("%s.no_raid", parent))
 	opts.PostInstallationScriptLink = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.post_installation_script_link", parent))

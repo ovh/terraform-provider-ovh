@@ -8,7 +8,8 @@ import (
 
 func dataSourceMeSshKey() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceMeSshKeyRead,
+		Read:               dataSourceMeSshKeyRead,
+		DeprecationMessage: "[DEPRECATED] SSH key names '/me/sshKey' will be deprecated soon",
 		Schema: map[string]*schema.Schema{
 			"key_name": {
 				Type:        schema.TypeString,
@@ -33,7 +34,6 @@ func dataSourceMeSshKeyRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
 	sshKey := &MeSshKeyResponse{}
-
 	keyName := d.Get("key_name").(string)
 	err := config.OVHClient.Get(
 		fmt.Sprintf("/me/sshKey/%s", keyName),
