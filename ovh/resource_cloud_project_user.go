@@ -44,10 +44,9 @@ func resourceCloudProjectUser() *schema.Resource {
 				ForceNew: true,
 			},
 			"role_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     false,
-				ValidateFunc: validateCloudProjectUserRoleFunc,
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: false,
 			},
 			"role_names": {
 				Type:     schema.TypeList,
@@ -108,6 +107,30 @@ func resourceCloudProjectUser() *schema.Resource {
 	}
 }
 
+func validateCloudProjectUserRoleFunc(config *Config, serviceName string, roles []string, role string) (*CloudProjectrolesResponse, error) {
+
+	endpoint := fmt.Sprintf("/cloud/project/%s/role",
+		url.PathEscape(serviceName),
+	)
+	res := &CloudProjectrolesResponse{}
+	if err := config.OVHClient.Get(endpoint, res); err != nil {
+		return nil, fmt.Errorf("calling Get %s", endpoint)
+	}
+
+	ovhRole := make([]string, 0, len(res.Roles))
+	for _, val := range res.Roles {
+		ovhRole = append(ovhRole, val.Name)
+	}
+
+	for _, role := range append(roles, role) {
+		if !slices.Contains(ovhRole, role) {
+			return nil, fmt.Errorf("Role %q does not exist", role)
+		}
+	}
+
+	return res, nil
+}
+
 func resourceCloudProjectUserImportState(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	userId := d.Id()
 	// Fallback to the environment variable if service_name not given
@@ -129,47 +152,18 @@ func resourceCloudProjectUserImportState(ctx context.Context, d *schema.Resource
 	return []*schema.ResourceData{d}, nil
 }
 
-func validateCloudProjectUserRoleFunc(v interface{}, k string) (ws []string, errors []error) {
-	err := helpers.ValidateStringEnum(v.(string), []string{
-		"administrator",
-		"ai_training_operator",
-		"ai_training_read",
-		"authentication",
-		"backup_operator",
-		"compute_operator",
-		"image_operator",
-		"infrastructure_supervisor",
-		"network_operator",
-		"network_security_operator",
-		"objectstore_operator",
-		"volume_operator",
-	})
-
-	if err != nil {
-		errors = append(errors, err)
-	}
-	return
-}
-
 func resourceCloudProjectUserUpdate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	userId := d.Id()
 	role := d.Get("role_name")
 	roles, err := helpers.StringsFromSchema(d, "role_names")
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	endpoint := fmt.Sprintf("/cloud/project/%s/role",
-		url.PathEscape(serviceName),
-	)
 	res := &CloudProjectrolesResponse{}
-	if err := config.OVHClient.Get(endpoint, res); err != nil {
-		return fmt.Errorf("calling Get %s", endpoint)
-	}
 
+	res, err = validateCloudProjectUserRoleFunc(config, serviceName, roles, role.(string))
+	if err != nil {
+		return err
+	}
 	update := []string{}
 	for _, i := range res.Roles {
 		if slices.Contains(roles, i.Name) {
@@ -182,7 +176,7 @@ func resourceCloudProjectUserUpdate(d *schema.ResourceData, meta interface{}) er
 
 	log.Printf("[DEBUG] roles IDs %s", update)
 	log.Printf("[DEBUG] user %s", userId)
-	endpoint = fmt.Sprintf("/cloud/project/%s/user/%s/role",
+	endpoint := fmt.Sprintf("/cloud/project/%s/user/%s/role",
 		url.PathEscape(serviceName),
 		url.PathEscape(userId),
 	)
@@ -200,16 +194,14 @@ func resourceCloudProjectUserUpdate(d *schema.ResourceData, meta interface{}) er
 func resourceCloudProjectUserCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
-
+	role := d.Get("role_name")
 	params := (&CloudProjectUserCreateOpts{}).FromResource(d)
 
-	for _, role := range params.Roles {
-		if _, errs := validateCloudProjectUserRoleFunc(role, ""); errs != nil {
-			return fmt.Errorf("roles contains unsupported value: %s.", role)
-		}
-	}
-
 	r := &CloudProjectUser{}
+	_, err := validateCloudProjectUserRoleFunc(config, serviceName, params.Roles, role.(string))
+	if err != nil {
+		return err
+	}
 
 	log.Printf("[DEBUG] Will create public cloud user: %s", params)
 	endpoint := fmt.Sprintf(
