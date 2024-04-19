@@ -45,6 +45,7 @@ resource "ovh_cloud_project_database" "kafkadb" {
   version         = "3.4"
   plan            = "business"
   kafka_rest_api  = true
+  kafka_schema_registry = true
   nodes {
     region  = "DE"
   }
@@ -209,45 +210,33 @@ The following arguments are supported:
 
 * `service_name` - (Required, Forces new resource) The id of the public cloud project. If omitted,
   the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
-
 * `description` - (Optional) Small description of the database service.
-
 * `engine` - (Required, Forces new resource) The database engine you want to deploy. To get a full list of available engine visit.
 [public documentation](https://docs.ovh.com/gb/en/publiccloud/databases).
-
 * `flavor` -  (Required) A valid OVHcloud public cloud database flavor name in which the nodes will be started.
   Ex: "db1-7". Changing this value upgrade the nodes with the new flavor.
   You can find the list of flavor names: https://www.ovhcloud.com/fr/public-cloud/prices/
-
 * `ip_restrictions` - (Optional) IP Blocks authorized to access to the cluster.
   * `description` - (Optional) Description of the IP restriction
   * `ip` - (Optional) Authorized IP
-
 * `kafka_rest_api` -  (Optional) Defines whether the REST API is enabled on a kafka cluster
-
+* `kafka_schema_registry` - (Optional) Defines whether the schema registry is enabled on a Kafka cluster
 * `nodes` - (Required, Minimum Items: 1) List of nodes object.
   Multi region cluster are not yet available, all node should be identical.
   * `network_id` - (Optional, Forces new resource) Private network id in which the node should be deployed. It's the regional openstackId of the private network
   * `region` - (Required, Forces new resource) Public cloud region in which the node should be deployed.
     Ex: "GRA'.
   * `subnet_id` - (Optional, Forces new resource) Private subnet ID in which the node is.
-
 * `opensearch_acls_enabled` -  (Optional) Defines whether the ACLs are enabled on an OpenSearch cluster
-
 * `disk_size` -  (Optional) The disk size (in GB) of the database service.
-
 * `advanced_configuration` -  (Optional) Advanced configuration key / value.
-
 * `plan` - (Required) Plan of the cluster.
   * MongoDB: Enum: "discovery", "production", "advanced".
   * Mysql, PosgreSQL, Cassandra, M3DB, : Enum: "essential", "business", "enterprise".
   * M3 Aggregator: "business", "enterprise".
   * Redis: "essential", "business"
-
 * `version` - (Required) The version of the engine in which the service should be deployed
-
 * `backup_regions` - List of region where backups are pushed. Not more than 1 regions for MongoDB. Not more than 2 regions for the other engines with one being the same as the nodes[].region field
-
 * `backup_time` - Time on which backups start every day.
 
 ## Attributes Reference
@@ -276,6 +265,7 @@ The following attributes are exported:
   * `ip` - See Argument Reference above.
   * `status` - Current status of the IP restriction.
 * `kafka_rest_api` - See Argument Reference above.
+* `kafka_schema_registry` - See Argument Reference above.
 * `maintenance_time` - Time on which maintenances can start every day.
 * `network_type` - Type of network of the cluster.
 * `nodes` - See Argument Reference above.
