@@ -85,6 +85,14 @@ func resourceCloudProjectDatabase() *schema.Resource {
 					return d.Get("engine").(string) != "kafka" || new == old
 				},
 			},
+			"kafka_schema_registry": {
+				Type:        schema.TypeBool,
+				Description: "Defines whether the schema registry is enabled on a Kafka cluster",
+				Optional:    true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return d.Get("engine").(string) != "kafka" || new == old
+				},
+			},
 			"nodes": {
 				Type:        schema.TypeList,
 				Description: "List of nodes composing the service",
@@ -245,15 +253,15 @@ func resourceCloudProjectDatabase() *schema.Resource {
 }
 
 func resourceCloudProjectDatabaseImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	givenId := d.Id()
+	givenID := d.Id()
 	n := 3
-	splitId := strings.SplitN(givenId, "/", n)
-	if len(splitId) != n {
+	splitID := strings.SplitN(givenID, "/", n)
+	if len(splitID) != n {
 		return nil, fmt.Errorf("import Id is not service_name/engine/databaseId formatted")
 	}
-	serviceName := splitId[0]
-	engine := splitId[1]
-	id := splitId[2]
+	serviceName := splitID[0]
+	engine := splitID[1]
+	id := splitID[2]
 	d.SetId(id)
 	d.Set("engine", engine)
 	d.Set("service_name", serviceName)
@@ -272,7 +280,7 @@ func resourceCloudProjectDatabaseCreate(ctx context.Context, d *schema.ResourceD
 		url.PathEscape(serviceName),
 		url.PathEscape(engine),
 	)
-	params, err := (&CloudProjectDatabaseCreateOpts{}).FromResource(d)
+	params, err := (&CloudProjectDatabaseCreateOpts{}).fromResource(d)
 	if err != nil {
 		return diag.Errorf("service creation failed : %q", err)
 	}
@@ -284,17 +292,18 @@ func resourceCloudProjectDatabaseCreate(ctx context.Context, d *schema.ResourceD
 		return diag.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
 	}
 
-	log.Printf("[DEBUG] Waiting for database %s to be READY", res.Id)
-	err = waitForCloudProjectDatabaseReady(ctx, config.OVHClient, serviceName, engine, res.Id, d.Timeout(schema.TimeoutCreate))
+	log.Printf("[DEBUG] Waiting for database %s to be READY", res.ID)
+	err = waitForCloudProjectDatabaseReady(ctx, config.OVHClient, serviceName, engine, res.ID, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
-		return diag.Errorf("timeout while waiting database %s to be READY: %s", res.Id, err.Error())
+		return diag.Errorf("timeout while waiting database %s to be READY: %s", res.ID, err.Error())
 	}
-	log.Printf("[DEBUG] database %s is READY", res.Id)
+	log.Printf("[DEBUG] database %s is READY", res.ID)
 
-	d.SetId(res.Id)
+	d.SetId(res.ID)
 
 	if (engine != "mongodb" && len(d.Get("advanced_configuration").(map[string]interface{})) > 0) ||
 		(engine == "kafka" && d.Get("kafka_rest_api").(bool)) ||
+		(engine == "kafka" && d.Get("kafka_schema_registry").(bool)) ||
 		(engine == "opensearch" && d.Get("opensearch_acls_enabled").(bool)) {
 		return resourceCloudProjectDatabaseUpdate(ctx, d, meta)
 	}
@@ -322,16 +331,16 @@ func resourceCloudProjectDatabaseRead(ctx context.Context, d *schema.ResourceDat
 	nodesEndpoint := fmt.Sprintf("%s/node", serviceEndpoint)
 	nodeList := &[]string{}
 	if err := config.OVHClient.GetWithContext(ctx, nodesEndpoint, nodeList); err != nil {
-		return diag.Errorf("unable to get database %s nodes: %v", res.Id, err)
+		return diag.Errorf("unable to get database %s nodes: %v", res.ID, err)
 	}
 
 	if len(*nodeList) == 0 {
-		return diag.Errorf("no node found for database %s", res.Id)
+		return diag.Errorf("no node found for database %s", res.ID)
 	}
 	nodeEndpoint := fmt.Sprintf("%s/%s", nodesEndpoint, url.PathEscape((*nodeList)[0]))
 	node := &CloudProjectDatabaseNodes{}
 	if err := config.OVHClient.GetWithContext(ctx, nodeEndpoint, node); err != nil {
-		return diag.Errorf("unable to get database %s node %s: %v", res.Id, (*nodeList)[0], err)
+		return diag.Errorf("unable to get database %s node %s: %v", res.ID, (*nodeList)[0], err)
 	}
 
 	res.Region = node.Region
@@ -340,12 +349,12 @@ func resourceCloudProjectDatabaseRead(ctx context.Context, d *schema.ResourceDat
 		advancedConfigEndpoint := fmt.Sprintf("%s/advancedConfiguration", serviceEndpoint)
 		advancedConfigMap := &map[string]string{}
 		if err := config.OVHClient.GetWithContext(ctx, advancedConfigEndpoint, advancedConfigMap); err != nil {
-			return diag.Errorf("unable to get database %s advanced configuration: %v", res.Id, err)
+			return diag.Errorf("unable to get database %s advanced configuration: %v", res.ID, err)
 		}
 		res.AdvancedConfiguration = *advancedConfigMap
 	}
 
-	for k, v := range res.ToMap() {
+	for k, v := range res.toMap() {
 		if k != "id" {
 			d.Set(k, v)
 		} else {
@@ -366,7 +375,7 @@ func resourceCloudProjectDatabaseUpdate(ctx context.Context, d *schema.ResourceD
 		url.PathEscape(engine),
 		url.PathEscape(d.Id()),
 	)
-	params, err := (&CloudProjectDatabaseUpdateOpts{}).FromResource(d)
+	params, err := (&CloudProjectDatabaseUpdateOpts{}).fromResource(d)
 	if err != nil {
 		return diag.Errorf("service update failed : %q", err)
 	}

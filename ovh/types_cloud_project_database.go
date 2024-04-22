@@ -67,69 +67,67 @@ type CloudProjectDatabaseResponse struct {
 	Description           string                                      `json:"description"`
 	Endpoints             []CloudProjectDatabaseEndpoint              `json:"endpoints"`
 	Flavor                string                                      `json:"flavor"`
-	Id                    string                                      `json:"id"`
+	ID                    string                                      `json:"id"`
 	IPRestrictions        []CloudProjectDatabaseIPRestrictionResponse `json:"ipRestrictions"`
 	MaintenanceTime       string                                      `json:"maintenanceTime"`
-	NetworkId             string                                      `json:"networkId"`
+	NetworkID             string                                      `json:"networkId"`
 	NetworkType           string                                      `json:"networkType"`
 	Plan                  string                                      `json:"plan"`
 	NodeNumber            int                                         `json:"nodeNumber"`
 	Region                string                                      `json:"region"`
-	RestApi               bool                                        `json:"restApi"`
+	RestAPI               bool                                        `json:"restApi"`
+	SchemaRegistry        bool                                        `json:"schemaRegistry"`
 	Status                string                                      `json:"status"`
-	SubnetId              string                                      `json:"subnetId"`
+	SubnetID              string                                      `json:"subnetId"`
 	Version               string                                      `json:"version"`
 	Disk                  CloudProjectDatabaseDisk                    `json:"disk"`
 	AdvancedConfiguration map[string]string                           `json:"advancedConfiguration"`
 }
 
-func (s *CloudProjectDatabaseResponse) String() string {
-	return fmt.Sprintf("%s(%s): %s", s.Description, s.Id, s.Status)
-}
-
-func (v CloudProjectDatabaseResponse) ToMap() map[string]interface{} {
+func (r CloudProjectDatabaseResponse) toMap() map[string]interface{} {
 	obj := make(map[string]interface{})
-	obj["backup_regions"] = v.Backups.Regions
-	obj["backup_time"] = v.Backups.Time
-	obj["created_at"] = v.CreatedAt
-	obj["description"] = v.Description
-	obj["id"] = v.Id
+	obj["backup_regions"] = r.Backups.Regions
+	obj["backup_time"] = r.Backups.Time
+	obj["created_at"] = r.CreatedAt
+	obj["description"] = r.Description
+	obj["id"] = r.ID
 
 	var ipRests []map[string]interface{}
-	for _, ir := range v.IPRestrictions {
+	for _, ir := range r.IPRestrictions {
 		ipRests = append(ipRests, ir.toMap())
 	}
 	obj["ip_restrictions"] = ipRests
 
 	var endpoints []map[string]interface{}
-	for _, e := range v.Endpoints {
+	for _, e := range r.Endpoints {
 		endpoints = append(endpoints, e.ToMap())
 	}
 	obj["endpoints"] = endpoints
 
-	obj["flavor"] = v.Flavor
-	obj["kafka_rest_api"] = v.RestApi
-	obj["maintenance_time"] = v.MaintenanceTime
-	obj["network_type"] = v.NetworkType
+	obj["flavor"] = r.Flavor
+	obj["kafka_rest_api"] = r.RestAPI
+	obj["kafka_schema_registry"] = r.SchemaRegistry
+	obj["maintenance_time"] = r.MaintenanceTime
+	obj["network_type"] = r.NetworkType
 
 	var nodes []map[string]interface{}
-	for i := 0; i < v.NodeNumber; i++ {
+	for i := 0; i < r.NodeNumber; i++ {
 		node := CloudProjectDatabaseNodes{
-			Region:    v.Region,
-			NetworkId: v.NetworkId,
-			SubnetId:  v.SubnetId,
+			Region:    r.Region,
+			NetworkId: r.NetworkID,
+			SubnetId:  r.SubnetID,
 		}
 		nodes = append(nodes, node.ToMap())
 	}
 	obj["nodes"] = nodes
 
-	obj["opensearch_acls_enabled"] = v.AclsEnabled
-	obj["plan"] = v.Plan
-	obj["status"] = v.Status
-	obj["version"] = v.Version
-	obj["disk_size"] = v.Disk.Size
-	obj["disk_type"] = v.Disk.Type
-	obj["advanced_configuration"] = v.AdvancedConfiguration
+	obj["opensearch_acls_enabled"] = r.AclsEnabled
+	obj["plan"] = r.Plan
+	obj["status"] = r.Status
+	obj["version"] = r.Version
+	obj["disk_size"] = r.Disk.Size
+	obj["disk_type"] = r.Disk.Type
+	obj["advanced_configuration"] = r.AdvancedConfiguration
 
 	return obj
 }
@@ -185,7 +183,7 @@ func (v CloudProjectDatabaseNodes) ToMap() map[string]interface{} {
 }
 
 type CloudProjectDatabaseCreateOpts struct {
-	Backups        CloudProjectDatabaseBackups         `json:"backups,omitempty"`
+	Backups        *CloudProjectDatabaseBackups        `json:"backups,omitempty"`
 	Description    string                              `json:"description,omitempty"`
 	Disk           CloudProjectDatabaseDisk            `json:"disk,omitempty"`
 	IPRestrictions []CloudProjectDatabaseIPRestriction `json:"ipRestrictions,omitempty"`
@@ -212,7 +210,7 @@ type CloudProjectDatabaseNodesPattern struct {
 	Region string `json:"region"`
 }
 
-func (opts *CloudProjectDatabaseCreateOpts) FromResource(d *schema.ResourceData) (*CloudProjectDatabaseCreateOpts, error) {
+func (opts *CloudProjectDatabaseCreateOpts) fromResource(d *schema.ResourceData) (*CloudProjectDatabaseCreateOpts, error) {
 	opts.Description = d.Get("description").(string)
 	opts.Plan = d.Get("plan").(string)
 
@@ -251,33 +249,39 @@ func (opts *CloudProjectDatabaseCreateOpts) FromResource(d *schema.ResourceData)
 	if err != nil {
 		return nil, err
 	}
+	time := d.Get("backup_time").(string)
 
-	opts.Backups = CloudProjectDatabaseBackups{
-		Regions: regions,
-		Time:    d.Get("backup_time").(string),
+	if len(regions) != 0 || time != "" {
+		opts.Backups = &CloudProjectDatabaseBackups{
+			Regions: regions,
+			Time:    time,
+		}
 	}
+
 	return opts, nil
 }
 
 type CloudProjectDatabaseUpdateOpts struct {
 	AclsEnabled    bool                                `json:"aclsEnabled,omitempty"`
-	Backups        CloudProjectDatabaseBackups         `json:"backups,omitempty"`
+	Backups        *CloudProjectDatabaseBackups        `json:"backups,omitempty"`
 	Description    string                              `json:"description,omitempty"`
 	Disk           CloudProjectDatabaseDisk            `json:"disk,omitempty"`
 	Flavor         string                              `json:"flavor,omitempty"`
 	IPRestrictions []CloudProjectDatabaseIPRestriction `json:"ipRestrictions,omitempty"`
 	Plan           string                              `json:"plan,omitempty"`
-	RestApi        bool                                `json:"restApi,omitempty"`
+	RestAPI        bool                                `json:"restApi,omitempty"`
+	SchemaRegistry bool                                `json:"schemaRegistry,omitempty"`
 	Version        string                              `json:"version,omitempty"`
 }
 
-func (opts *CloudProjectDatabaseUpdateOpts) FromResource(d *schema.ResourceData) (*CloudProjectDatabaseUpdateOpts, error) {
+func (opts *CloudProjectDatabaseUpdateOpts) fromResource(d *schema.ResourceData) (*CloudProjectDatabaseUpdateOpts, error) {
 	engine := d.Get("engine").(string)
 	if engine == "opensearch" {
 		opts.AclsEnabled = d.Get("opensearch_acls_enabled").(bool)
 	}
 	if engine == "kafka" {
-		opts.RestApi = d.Get("kafka_rest_api").(bool)
+		opts.RestAPI = d.Get("kafka_rest_api").(bool)
+		opts.SchemaRegistry = d.Get("kafka_schema_registry").(bool)
 	}
 
 	opts.Description = d.Get("description").(string)
@@ -301,10 +305,13 @@ func (opts *CloudProjectDatabaseUpdateOpts) FromResource(d *schema.ResourceData)
 	if err != nil {
 		return nil, err
 	}
+	time := d.Get("backup_time").(string)
 
-	opts.Backups = CloudProjectDatabaseBackups{
-		Regions: regions,
-		Time:    d.Get("backup_time").(string),
+	if engine != "kafka" && (len(regions) != 0 || time != "") {
+		opts.Backups = &CloudProjectDatabaseBackups{
+			Regions: regions,
+			Time:    time,
+		}
 	}
 
 	return opts, nil

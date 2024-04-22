@@ -135,6 +135,11 @@ func dataSourceCloudProjectDatabase() *schema.Resource {
 				Description: "Defines whether the REST API is enabled on a Kafka cluster",
 				Computed:    true,
 			},
+			"kafka_schema_registry": {
+				Type:        schema.TypeBool,
+				Description: "Defines whether the schema registry is enabled on a Kafka cluster",
+				Computed:    true,
+			},
 			"maintenance_time": {
 				Type:        schema.TypeString,
 				Description: "Time on which maintenances can start every day",
@@ -232,16 +237,16 @@ func dataSourceCloudProjectDatabaseRead(ctx context.Context, d *schema.ResourceD
 	nodesEndpoint := fmt.Sprintf("%s/node", serviceEndpoint)
 	nodeList := &[]string{}
 	if err := config.OVHClient.GetWithContext(ctx, nodesEndpoint, nodeList); err != nil {
-		return diag.Errorf("unable to get database %s nodes: %v", res.Id, err)
+		return diag.Errorf("unable to get database %s nodes: %v", res.ID, err)
 	}
 
 	if len(*nodeList) == 0 {
-		return diag.Errorf("no node found for database %s", res.Id)
+		return diag.Errorf("no node found for database %s", res.ID)
 	}
 	nodeEndpoint := fmt.Sprintf("%s/%s", nodesEndpoint, url.PathEscape((*nodeList)[0]))
 	node := &CloudProjectDatabaseNodes{}
 	if err := config.OVHClient.GetWithContext(ctx, nodeEndpoint, node); err != nil {
-		return diag.Errorf("unable to get database %s node %s: %v", res.Id, (*nodeList)[0], err)
+		return diag.Errorf("unable to get database %s node %s: %v", res.ID, (*nodeList)[0], err)
 	}
 
 	res.Region = node.Region
@@ -250,12 +255,12 @@ func dataSourceCloudProjectDatabaseRead(ctx context.Context, d *schema.ResourceD
 		advancedConfigEndpoint := fmt.Sprintf("%s/advancedConfiguration", serviceEndpoint)
 		advancedConfigMap := &map[string]string{}
 		if err := config.OVHClient.GetWithContext(ctx, advancedConfigEndpoint, advancedConfigMap); err != nil {
-			return diag.Errorf("unable to get database %s advanced configuration: %v", res.Id, err)
+			return diag.Errorf("unable to get database %s advanced configuration: %v", res.ID, err)
 		}
 		res.AdvancedConfiguration = *advancedConfigMap
 	}
 
-	for k, v := range res.ToMap() {
+	for k, v := range res.toMap() {
 		if k != "id" {
 			d.Set(k, v)
 		} else {

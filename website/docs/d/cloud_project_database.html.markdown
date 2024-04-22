@@ -61,6 +61,7 @@ The following attributes are exported:
   * `ip` - Authorized IP
   * `status` - Current status of the IP restriction.
 * `kafka_rest_api` - Defines whether the REST API is enabled on a kafka cluster.
+* `kafka_schema_registry` - Defines whether the schema registry is enabled on a Kafka cluster
 * `maintenance_time` - Time on which maintenances can start every day.
 * `network_type` - Type of network of the cluster.
 * `nodes` - List of nodes object.
