@@ -42,7 +42,7 @@ func resourceCloudProjectNetworkPrivate() *schema.Resource {
 			"service_name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				ForceNew:    true,
+				ForceNew:    false,
 				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
 				Description: "Service name of the resource representing the id of the cloud project.",
 			},
@@ -54,14 +54,14 @@ func resourceCloudProjectNetworkPrivate() *schema.Resource {
 			"vlan_id": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				ForceNew: true,
+				ForceNew: false,
 				Default:  0,
 			},
 			"regions": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
+				ForceNew: false,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
@@ -217,20 +217,81 @@ func resourceCloudProjectNetworkPrivateRead(d *schema.ResourceData, meta interfa
 func resourceCloudProjectNetworkPrivateUpdate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
+	regions, _ := helpers.StringsFromSchema(d, "regions")
+
 	params := &CloudProjectNetworkPrivateUpdateOpts{
-		Name: d.Get("name").(string),
+		Name:    d.Get("name").(string),
+		Regions: regions,
 	}
 
-	log.Printf("[DEBUG] Will update public cloud private network: %s", params)
+	log.Printf("[DEBUG] params %s", params)
+
+	for _, reg := range params.Regions {
+		param := CloudProjectNetworkPrivateUpdateOptsAlone{
+			Region: reg,
+		}
+		log.Printf("[DEBUG] Will update public cloud private network: %s", param)
+		endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s/region", serviceName, d.Id())
+		err := config.OVHClient.Post(endpoint, param, nil)
+		if err != nil {
+			if strings.Contains(err.Error(), "already activated") {
+				log.Printf("[DEBUG] Region %s already activated", reg)
+			} else {
+				return fmt.Errorf("calling %s with params %s:\n\t %q", endpoint, param, err)
+			}
+		}
+
+		log.Printf("[DEBUG] Waiting for Private Network %s:", reg)
+
+		stateConf := &resource.StateChangeConf{
+			Pending:    []string{"BUILDING"},
+			Target:     []string{"ACTIVE"},
+			Refresh:    waitForCloudProjectNetworkPrivateActive(config.OVHClient, serviceName, d.Id()),
+			Timeout:    10 * time.Minute,
+			Delay:      10 * time.Second,
+			MinTimeout: 3 * time.Second,
+		}
+
+		if _, err := stateConf.WaitForState(); err != nil {
+			return fmt.Errorf("waiting for private network (%s): %s", params, err)
+		}
+		log.Printf("[DEBUG] Created Private Network %s", reg)
+	}
+
+	log.Printf("[DEBUG] Will read public cloud private network for project: %s, id: %s", serviceName, d.Id())
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s", serviceName, d.Id())
-
-	if err := config.OVHClient.Put(endpoint, params, nil); err != nil {
-		return fmt.Errorf("calling %s with params %s:\n\t %q", endpoint, params, err)
+	r := &CloudProjectNetworkPrivateResponse{}
+	if err := config.OVHClient.Get(endpoint, r); err != nil {
+		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
-	log.Printf("[DEBUG] Updated Public cloud %s Private Network %s:", serviceName, d.Id())
+	regions_attributes := make([]string, 0)
+	for i := range r.Regions {
+		regions_attributes = append(regions_attributes, r.Regions[i].Region)
+	}
 
+	diff := make([]string, 0)
+	for _, apiinput := range regions_attributes {
+		found := false
+		for _, fileinput := range params.Regions {
+			if fileinput == apiinput {
+				found = true
+				break
+			}
+		}
+		if !found {
+			diff = append(diff, apiinput)
+		}
+	}
+
+	for _, reg := range diff {
+		endpoint = fmt.Sprintf("/cloud/project/%s/network/private/%s/region/%s", serviceName, d.Id(), reg)
+
+		if err := config.OVHClient.Delete(endpoint, params); err != nil {
+			return fmt.Errorf("calling %s with params %s:\n\t %q", endpoint, params.Name, err)
+		}
+	}
 	return resourceCloudProjectNetworkPrivateRead(d, meta)
 }
 
