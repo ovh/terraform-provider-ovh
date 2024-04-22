@@ -8,8 +8,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-var testCreateNetworkPrivate = fmt.Sprintf(`
-resource "ovh_cloud_project_network_private" "testnetwork" {
+func TestAccCloudProjectNetworkPrivate_basic(t *testing.T) {
+	var testCreateNetworkPrivate = fmt.Sprintf(`
+      resource "ovh_cloud_project_network_private" "testnetwork" {
       service_name = "%s"
 	  name         = "network_test"
 	  regions      = ["GRA11", "GRA9"]
@@ -17,8 +18,8 @@ resource "ovh_cloud_project_network_private" "testnetwork" {
 	}
 `, os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"))
 
-var testUpdateNetworkPrivate = fmt.Sprintf(`
-resource "ovh_cloud_project_network_private" "testnetwork" {
+	var testUpdateNetworkPrivate = fmt.Sprintf(`
+	  resource "ovh_cloud_project_network_private" "testnetwork" {
       service_name = "%s"
 	  name         = "network_test"
 	  regions      = ["GRA11"]
@@ -26,7 +27,6 @@ resource "ovh_cloud_project_network_private" "testnetwork" {
 	}
 `, os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"))
 
-func TestAccCloudProjectNetworkPrivate_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheckCloud(t); testAccCheckCloudProjectExists(t) },
 		Providers: testAccProviders,
