@@ -1,3 +1,41 @@
+## 0.43.0 (April 22, 2024)
+
+⚙️ General:
+
+* Bump golang dependencies ([#622](https://github.com/ovh/terraform-provider-ovh/pull/622))
+
+🎉 Features:
+
+* New datasource: `ovh_dedicated_server_specifications_network` ([#617](https://github.com/ovh/terraform-provider-ovh/pull/617))
+
+💪 Improvements:
+
+* Support OAuth2.0 authentication ([#620](https://github.com/ovh/terraform-provider-ovh/pull/620))
+* `r/ovh_dedicated_server_install_task`: Add `userMetadata` field to customize dedicated server installation ([#619](https://github.com/ovh/terraform-provider-ovh/pull/619))
+* `r/ovh_cloud_project_database`: Add `kafka_schema_registry` field ([#623](https://github.com/ovh/terraform-provider-ovh/pull/623))
+
+* `d/ovh_cloud_project_database`: Add `kafka_schema_registry` field ([#623](https://github.com/ovh/terraform-provider-ovh/pull/623))
+
+🐜 Bug fixes:
+
+* `r/ovh_cloud_project_database_mongodb_user`: Correctly manage `admin` user ([#609](https://github.com/ovh/terraform-provider-ovh/pull/609))
+* `r/ovh_resource_cloud_project_user`: Validate user roles against API ([#621](https://github.com/ovh/terraform-provider-ovh/pull/621))
+* `r/ovh_cloud_project_database`: Kafka engine does not have a `backups` field ([#623](https://github.com/ovh/terraform-provider-ovh/pull/623))
+
+⛔️ Deletions:
+
+* `r/ovh_dedicated_server_install_task`: **Breaking change** Removed property `install_sql_server` ([#619](https://github.com/ovh/terraform-provider-ovh/pull/619))
+* `r/ovh_me_installation_template`: **Breaking change** Removed properties `beta`, `deprecated`, `last_modification` and `supports_sql_server` ([#619](https://github.com/ovh/terraform-provider-ovh/pull/619))
+
+* `d/ovh_me_installation_template`: **Breaking change** Removed properties `rating`, `beta`, `deprecated`, `last_modification` and `supports_sql_server` ([#619](https://github.com/ovh/terraform-provider-ovh/pull/619))
+
+📚 Documentation:
+
+* `r/ovh_cloud_project_kube_oidc`: Fix fields names ([#613](https://github.com/ovh/terraform-provider-ovh/pull/613))
+* `d/ovh_cloud_project_kube_oidc`: Fix fields names ([#613](https://github.com/ovh/terraform-provider-ovh/pull/613))
+
+❤️ Thanks for your contributions ❤️
+
 ## 0.42.0 (April 9, 2024)
 
 🎉 Features:
