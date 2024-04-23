@@ -26,7 +26,6 @@ func TestAccCloudProjectNetworkPrivate_basic(t *testing.T) {
 	  vlan_id      = 0
 	}
 `, os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"))
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheckCloud(t); testAccCheckCloudProjectExists(t) },
 		Providers: testAccProviders,

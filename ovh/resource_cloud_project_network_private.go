@@ -44,7 +44,7 @@ func resourceCloudProjectNetworkPrivate() *schema.Resource {
 			"service_name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				ForceNew:    false,
+				ForceNew:    true,
 				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
 				Description: "Service name of the resource representing the id of the cloud project.",
 			},
@@ -227,16 +227,15 @@ func resourceCloudProjectNetworkPrivateUpdate(d *schema.ResourceData, meta inter
 	}
 
 	log.Printf("[DEBUG] params %s", params)
-
+	endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s/region",
+		url.PathEscape(serviceName),
+		url.PathEscape(d.Id()),
+	)
 	for _, reg := range params.Regions {
 		param := CloudProjectNetworkPrivateUpdateOptsAlone{
 			Region: reg,
 		}
 		log.Printf("[DEBUG] Will update public cloud private network: %s", param)
-		endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s/region",
-			url.PathEscape(serviceName),
-			url.PathEscape(d.Id()),
-		)
 		err := config.OVHClient.Post(endpoint, param, nil)
 		if err != nil {
 			if strings.Contains(err.Error(), "already activated") {
@@ -266,7 +265,7 @@ func resourceCloudProjectNetworkPrivateUpdate(d *schema.ResourceData, meta inter
 
 	log.Printf("[DEBUG] Will read public cloud private network for project: %s, id: %s", serviceName, d.Id())
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s",
+	endpoint = fmt.Sprintf("/cloud/project/%s/network/private/%s",
 		url.PathEscape(serviceName),
 		url.PathEscape(d.Id()),
 	)
@@ -276,8 +275,8 @@ func resourceCloudProjectNetworkPrivateUpdate(d *schema.ResourceData, meta inter
 	}
 
 	currentRegions := make([]string, 0)
-	for i := range r.Regions {
-		currentRegions = append(currentRegions, r.Regions[i].Region)
+	for _, r := range r.Regions {
+		currentRegions = append(currentRegions, r.Region)
 	}
 
 	regionsToRemove := make([]string, 0)
