@@ -107,7 +107,7 @@ func testAccDedicatedServerInstallConfig(config string) string {
 	testName := acctest.RandomWithPrefix(test_prefix)
 	sshKey := os.Getenv("OVH_SSH_KEY")
 	if sshKey == "" {
-		sshKey = "ssh-ed25519 AAAAC3NzaC1yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
+		sshKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIrODOo0SvY5f0TlQNvGHIRKzr4bHPa+D5bYF18RiOgP email@example.com"
 	}
 
 	if config == "rebootondestroy" {
@@ -192,11 +192,6 @@ resource ovh_dedicated_server_update "server" {
   state        = "ok"
 }
 
-resource "time_sleep" "wait_for_ssh_key_sync" {
-	create_duration = "120s"
-	depends_on = [ovh_me_installation_template.debian]
-  }
-
 resource ovh_dedicated_server_install_task "server_install" {
   service_name      = data.ovh_dedicated_server_boots.harddisk.service_name
   template_name     = "debian12_64"
@@ -205,7 +200,6 @@ resource ovh_dedicated_server_install_task "server_install" {
     key  = "sshKey"
     value ="%s"
   }
-  depends_on = [time_sleep.wait_for_ssh_key_sync]
 }
 `
 const testAccDedicatedServerInstallConfig_Usermetadata = `
