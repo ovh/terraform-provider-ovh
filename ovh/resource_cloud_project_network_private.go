@@ -3,12 +3,14 @@ package ovh
 import (
 	"fmt"
 	"log"
+	"net/url"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
+	"golang.org/x/exp/slices"
 
 	"github.com/ovh/go-ovh/ovh"
 )
@@ -61,7 +63,7 @@ func resourceCloudProjectNetworkPrivate() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
+				ForceNew: false,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
@@ -217,20 +219,84 @@ func resourceCloudProjectNetworkPrivateRead(d *schema.ResourceData, meta interfa
 func resourceCloudProjectNetworkPrivateUpdate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
+	regions, _ := helpers.StringsFromSchema(d, "regions")
+
 	params := &CloudProjectNetworkPrivateUpdateOpts{
-		Name: d.Get("name").(string),
+		Name:    d.Get("name").(string),
+		Regions: regions,
 	}
 
-	log.Printf("[DEBUG] Will update public cloud private network: %s", params)
+	log.Printf("[DEBUG] params %s", params)
+	endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s/region",
+		url.PathEscape(serviceName),
+		url.PathEscape(d.Id()),
+	)
+	for _, reg := range params.Regions {
+		param := CloudProjectNetworkPrivateUpdateOptsAlone{
+			Region: reg,
+		}
+		log.Printf("[DEBUG] Will update public cloud private network: %s", param)
+		err := config.OVHClient.Post(endpoint, param, nil)
+		if err != nil {
+			if strings.Contains(err.Error(), "already activated") {
+				log.Printf("[DEBUG] Region %s already activated", reg)
+				continue
+			} else {
+				return fmt.Errorf("calling %s with params %s:\n\t %q", endpoint, param, err)
+			}
+		}
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s", serviceName, d.Id())
+		log.Printf("[DEBUG] Waiting for Private Network %s:", reg)
 
-	if err := config.OVHClient.Put(endpoint, params, nil); err != nil {
-		return fmt.Errorf("calling %s with params %s:\n\t %q", endpoint, params, err)
+		stateConf := &resource.StateChangeConf{
+			Pending:    []string{"BUILDING"},
+			Target:     []string{"ACTIVE"},
+			Refresh:    waitForCloudProjectNetworkPrivateActive(config.OVHClient, serviceName, d.Id()),
+			Timeout:    10 * time.Minute,
+			Delay:      10 * time.Second,
+			MinTimeout: 3 * time.Second,
+		}
+
+		if _, err := stateConf.WaitForState(); err != nil {
+			return fmt.Errorf("waiting for private network (%s): %s", params, err)
+		}
+		log.Printf("[DEBUG] Created Private Network %s", reg)
 	}
 
-	log.Printf("[DEBUG] Updated Public cloud %s Private Network %s:", serviceName, d.Id())
+	log.Printf("[DEBUG] Will read public cloud private network for project: %s, id: %s", serviceName, d.Id())
 
+	endpoint = fmt.Sprintf("/cloud/project/%s/network/private/%s",
+		url.PathEscape(serviceName),
+		url.PathEscape(d.Id()),
+	)
+	r := &CloudProjectNetworkPrivateResponse{}
+	if err := config.OVHClient.Get(endpoint, r); err != nil {
+		return helpers.CheckDeleted(d, err, endpoint)
+	}
+
+	currentRegions := make([]string, 0)
+	for _, r := range r.Regions {
+		currentRegions = append(currentRegions, r.Region)
+	}
+
+	regionsToRemove := make([]string, 0)
+	for _, apiinput := range currentRegions {
+		if !slices.Contains(params.Regions, apiinput) {
+			regionsToRemove = append(regionsToRemove, apiinput)
+		}
+	}
+
+	for _, reg := range regionsToRemove {
+		endpoint = fmt.Sprintf("/cloud/project/%s/network/private/%s/region/%s",
+			url.PathEscape(serviceName),
+			url.PathEscape(d.Id()),
+			url.PathEscape(reg),
+		)
+
+		if err := config.OVHClient.Delete(endpoint, params); err != nil {
+			return fmt.Errorf("calling %s with params %s:\n\t %q", endpoint, params.Name, err)
+		}
+	}
 	return resourceCloudProjectNetworkPrivateRead(d, meta)
 }
 
@@ -242,7 +308,10 @@ func resourceCloudProjectNetworkPrivateDelete(d *schema.ResourceData, meta inter
 
 	log.Printf("[DEBUG] Will delete public cloud private network for project: %s, id: %s", serviceName, id)
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s", serviceName, id)
+	endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s",
+		url.PathEscape(serviceName),
+		url.PathEscape(d.Id()),
+	)
 
 	if err := config.OVHClient.Delete(endpoint, nil); err != nil {
 		return fmt.Errorf("calling %s:\n\t %q", endpoint, err)

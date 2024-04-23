@@ -62,28 +62,6 @@ type CloudProjectOperationResponse struct {
 }
 
 // Opts
-type CloudProjectNetworkPrivateCreateOpts struct {
-	ServiceName string   `json:"serviceName"`
-	VlanId      int      `json:"vlanId"`
-	Name        string   `json:"name"`
-	Regions     []string `json:"regions"`
-}
-
-func (p *CloudProjectNetworkPrivateCreateOpts) String() string {
-	return fmt.Sprintf("projectId: %s, vlanId:%d, name: %s, regions: %s", p.ServiceName, p.VlanId, p.Name, p.Regions)
-}
-
-// Opts
-type CloudProjectNetworkPrivateUpdateOpts struct {
-	Name string `json:"name"`
-}
-
-type CloudProjectNetworkPrivateRegion struct {
-	Status      string `json:"status"`
-	Region      string `json:"region"`
-	OpenStackId string `json:"openstackId"`
-}
-
 func (p *CloudProjectNetworkPrivateRegion) String() string {
 	return fmt.Sprintf("Status:%s, Region: %s", p.Status, p.Region)
 }
