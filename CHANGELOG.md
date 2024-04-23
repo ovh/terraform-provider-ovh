@@ -1,3 +1,11 @@
+## 0.43.1 (April 23, 2024)
+
+🐜 Bug fixes:
+
+* `r/ovh_cloud_project_user`: Fix user roles validation ([#627](https://github.com/ovh/terraform-provider-ovh/pull/627))
+
+❤️ Thanks for your contributions ❤️
+
 ## 0.43.0 (April 22, 2024)
 
 ⚙️ General:
@@ -19,7 +27,7 @@
 🐜 Bug fixes:
 
 * `r/ovh_cloud_project_database_mongodb_user`: Correctly manage `admin` user ([#609](https://github.com/ovh/terraform-provider-ovh/pull/609))
-* `r/ovh_resource_cloud_project_user`: Validate user roles against API ([#621](https://github.com/ovh/terraform-provider-ovh/pull/621))
+* `r/ovh_cloud_project_user`: Validate user roles against API ([#621](https://github.com/ovh/terraform-provider-ovh/pull/621))
 * `r/ovh_cloud_project_database`: Kafka engine does not have a `backups` field ([#623](https://github.com/ovh/terraform-provider-ovh/pull/623))
 
 ⛔️ Deletions:
