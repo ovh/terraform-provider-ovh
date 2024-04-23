@@ -108,7 +108,6 @@ func resourceCloudProjectUser() *schema.Resource {
 }
 
 func validateCloudProjectUserRoleFunc(config *Config, serviceName string, roles []string, role string) (*CloudProjectrolesResponse, error) {
-
 	endpoint := fmt.Sprintf("/cloud/project/%s/role",
 		url.PathEscape(serviceName),
 	)
@@ -122,9 +121,13 @@ func validateCloudProjectUserRoleFunc(config *Config, serviceName string, roles 
 		ovhRole = append(ovhRole, val.Name)
 	}
 
-	for _, role := range append(roles, role) {
+	rolesToCheck := roles
+	if role != "" {
+		rolesToCheck = append(rolesToCheck, role)
+	}
+	for _, role := range rolesToCheck {
 		if !slices.Contains(ovhRole, role) {
-			return nil, fmt.Errorf("Role %q does not exist", role)
+			return nil, fmt.Errorf("role %q does not exist", role)
 		}
 	}
 
