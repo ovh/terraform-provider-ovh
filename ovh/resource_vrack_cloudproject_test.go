@@ -21,9 +21,8 @@ resource "ovh_vrack_cloudproject" "vcp" {
 
 func init() {
 	resource.AddTestSweepers("ovh_vrack_cloudproject", &resource.Sweeper{
-		Name:         "ovh_vrack_cloudproject",
-		Dependencies: []string{"ovh_cloud_project_network_private"},
-		F:            testSweepVrackCloudProject,
+		Name: "ovh_vrack_cloudproject",
+		F:    testSweepVrackCloudProject,
 	})
 }
 
