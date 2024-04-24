@@ -166,6 +166,7 @@ func genericOrderSchema(withOptions bool) map[string]*schema.Schema {
 		"order": {
 			Type:        schema.TypeList,
 			Computed:    true,
+			Optional:    true,
 			Description: "Details about an Order",
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{

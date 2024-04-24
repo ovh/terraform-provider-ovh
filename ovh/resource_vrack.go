@@ -61,21 +61,27 @@ func resourceVrackSchema() map[string]*schema.Schema {
 }
 
 func resourceVrackCreate(d *schema.ResourceData, meta interface{}) error {
+	// Order vRack and wait for it to be delivered
 	if err := orderCreateFromResource(d, meta, "vrack"); err != nil {
-		return fmt.Errorf("Could not order vrack: %q", err)
+		return fmt.Errorf("could not order vrack: %q", err)
 	}
+
+	// Retrieve serviceName from order ID
+	_, details, err := orderReadInResource(d, meta)
+	if err != nil {
+		return fmt.Errorf("could not read vrack order: %q", err)
+	}
+	serviceName := details[0].Domain
+
+	d.SetId(serviceName)
+	d.Set("service_name", serviceName)
 
 	return resourceVrackUpdate(d, meta)
 }
 
 func resourceVrackUpdate(d *schema.ResourceData, meta interface{}) error {
-	_, details, err := orderReadInResource(d, meta)
-	if err != nil {
-		return fmt.Errorf("Could not read vrack order: %q", err)
-	}
-
 	config := meta.(*Config)
-	serviceName := details[0].Domain
+	serviceName := d.Id()
 
 	log.Printf("[DEBUG] Will update vrack: %s", serviceName)
 	opts := (&VrackUpdateOpts{}).FromResource(d)
@@ -88,13 +94,10 @@ func resourceVrackUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVrackRead(d *schema.ResourceData, meta interface{}) error {
-	_, details, err := orderReadInResource(d, meta)
-	if err != nil {
-		return fmt.Errorf("Could not read vrack order: %q", err)
-	}
-
 	config := meta.(*Config)
-	serviceName := details[0].Domain
+	serviceName := d.Id()
+
+	d.Set("service_name", serviceName)
 
 	log.Printf("[DEBUG] Will read vrack: %s", serviceName)
 	r := &Vrack{}
@@ -103,12 +106,24 @@ func resourceVrackRead(d *schema.ResourceData, meta interface{}) error {
 		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
-	d.Set("service_name", serviceName)
-
-	// set resource attributes
+	// Set resource attributes
 	for k, v := range r.ToMap() {
 		d.Set(k, v)
 	}
+
+	// Retrieve order information
+	serviceObj, err := serviceFromServiceName(config.OVHClient, "vrack", serviceName)
+	if err != nil {
+		return fmt.Errorf("failed to retrieve vrack details: %w", err)
+	}
+	d.Set("plan", serviceObj.ToSDKv2PlanValue())
+
+	// Retrieve subsidiary information
+	var me MeResponse
+	if err := config.OVHClient.Get("/me", &me); err != nil {
+		return fmt.Errorf("error retrieving account information: %w", err)
+	}
+	d.Set("ovh_subsidiary", me.OvhSubsidiary)
 
 	return nil
 }

@@ -45,6 +45,16 @@ func (s *Service) ToPlanValue(ctx context.Context, existingPlans types.TfListNes
 	return &planValue
 }
 
+func (s *Service) ToSDKv2PlanValue() []interface{} {
+	obj := make(map[string]interface{})
+
+	obj["plan_code"] = s.Billing.Plan.Code
+	obj["duration"] = s.Billing.Pricing.Duration
+	obj["pricing_mode"] = s.Billing.Pricing.PricingMode
+
+	return []interface{}{obj}
+}
+
 type ServiceBilling struct {
 	Plan    ServiceBillingPlan    `json:"plan"`
 	Pricing ServiceBillingPricing `json:"pricing"`
