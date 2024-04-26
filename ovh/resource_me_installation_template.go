@@ -69,11 +69,6 @@ func resourceMeInstallationTemplate() *schema.Resource {
 				Computed:    true,
 				Description: "This template bit format (32 or 64)",
 			},
-			"category": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "This field is deprecated and will be removed in a future release.",
-			},
 			"description": {
 				Type:        schema.TypeString,
 				Computed:    true,
