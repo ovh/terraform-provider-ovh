@@ -110,10 +110,6 @@ func (v InstallationTemplateCustomization) ToMap() map[string]interface{} {
 		custom_attr_set = true
 	}
 
-	if v.SshKeyName != nil {
-		obj["ssh_key_name"] = *v.SshKeyName
-		custom_attr_set = true
-	}
 	// dont return an object if nothing is set
 	if custom_attr_set {
 		return obj
@@ -126,7 +122,6 @@ func (opts *InstallationTemplateCustomization) FromResource(d *schema.ResourceDa
 	opts.CustomHostname = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.custom_hostname", parent))
 	opts.PostInstallationScriptLink = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.post_installation_script_link", parent))
 	opts.PostInstallationScriptReturn = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.post_installation_script_return", parent))
-	opts.SshKeyName = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.ssh_key_name", parent))
 	return opts
 }
 

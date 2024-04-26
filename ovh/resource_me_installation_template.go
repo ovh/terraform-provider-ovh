@@ -60,11 +60,6 @@ func resourceMeInstallationTemplate() *schema.Resource {
 							Optional:    true,
 							Description: "indicate the string returned by your postinstall customisation script on successful execution. Advice: your script should return a unique validation string in case of succes. A good example is 'loh1Xee7eo OK OK OK UGh8Ang1Gu'",
 						},
-						"ssh_key_name": {
-							Type:       schema.TypeString,
-							Optional:   true,
-							Deprecated: "This field is deprecated and will be removed in a future release.",
-						},
 					},
 				},
 			},

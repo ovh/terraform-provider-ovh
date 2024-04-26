@@ -163,7 +163,6 @@ func (opts *DedicatedServerInstallTaskDetails) FromResource(d *schema.ResourceDa
 	opts.PostInstallationScriptLink = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.post_installation_script_link", parent))
 	opts.PostInstallationScriptReturn = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.post_installation_script_return", parent))
 	opts.SoftRaidDevices = helpers.GetNilInt64PointerFromData(d, fmt.Sprintf("%s.soft_raid_devices", parent))
-	opts.SshKeyName = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.ssh_key_name", parent))
 	opts.UseSpla = helpers.GetNilBoolPointerFromData(d, fmt.Sprintf("%s.use_spla", parent))
 
 	return opts

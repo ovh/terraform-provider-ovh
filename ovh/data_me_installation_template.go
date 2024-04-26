@@ -39,11 +39,6 @@ func dataSourceMeInstallationTemplate() *schema.Resource {
 							Computed:    true,
 							Description: "indicate the string returned by your postinstall customisation script on successful execution. Advice: your script should return a unique validation string in case of succes. A good example is 'loh1Xee7eo OK OK OK UGh8Ang1Gu'",
 						},
-						"ssh_key_name": {
-							Type:       schema.TypeString,
-							Computed:   true,
-							Deprecated: "This field will be removed from the API, please use `userMetadata` instead.",
-						},
 					},
 				},
 			},
