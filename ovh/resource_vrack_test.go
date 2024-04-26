@@ -44,8 +44,7 @@ func TestAccResourceVrack_basic(t *testing.T) {
 		desc,
 	)
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { testAccPreCheckOrderVrack(t) },
-
+		PreCheck:  func() { testAccPreCheckOrderVrack(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
