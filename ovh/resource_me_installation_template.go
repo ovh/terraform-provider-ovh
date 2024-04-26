@@ -28,20 +28,6 @@ func resourceMeInstallationTemplate() *schema.Resource {
 				ForceNew:    true,
 				Description: "OVH template name yours will be based on, choose one among the list given by compatibleTemplates function",
 			},
-			"default_language": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  "en",
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					err := helpers.ValidateLanguageCode(v.(string))
-					if err != nil {
-						errors = append(errors, err)
-					}
-					return
-				},
-				Deprecated: "This field is deprecated and will be removed in a future release.",
-			},
 			"template_name": {
 				Type:        schema.TypeString,
 				Required:    true,

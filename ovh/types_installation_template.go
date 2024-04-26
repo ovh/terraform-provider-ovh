@@ -38,10 +38,6 @@ func (v InstallationTemplate) ToMap() map[string]interface{} {
 		}
 	}
 
-	if v.DefaultLanguage != "" {
-		obj["default_language"] = v.DefaultLanguage
-	}
-
 	obj["description"] = v.Description
 	obj["distribution"] = v.Distribution
 	obj["family"] = v.Family
@@ -69,7 +65,6 @@ type InstallationTemplateCreateOpts struct {
 func (opts *InstallationTemplateCreateOpts) FromResource(d *schema.ResourceData) *InstallationTemplateCreateOpts {
 	opts.BaseTemplateName = d.Get("base_template_name").(string)
 	opts.Name = d.Get("template_name").(string)
-	opts.DefaultLanguage = d.Get("default_language").(string)
 	return opts
 }
 
@@ -81,7 +76,6 @@ type InstallationTemplateUpdateOpts struct {
 
 func (opts *InstallationTemplateUpdateOpts) FromResource(d *schema.ResourceData) *InstallationTemplateUpdateOpts {
 	opts.TemplateName = d.Get("template_name").(string)
-	opts.DefaultLanguage = d.Get("default_language").(string)
 	customizations := d.Get("customization").([]interface{})
 	if customizations != nil && len(customizations) == 1 {
 		opts.Customization = (&InstallationTemplateCustomization{}).FromResource(d, "customization.0")

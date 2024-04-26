@@ -19,11 +19,6 @@ func dataSourceMeInstallationTemplate() *schema.Resource {
 			},
 
 			// computed
-			"default_language": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: "This field will be removed from the API, please use `userMetadata` instead.",
-			},
 			"customization": {
 				Type:     schema.TypeList,
 				Computed: true,
