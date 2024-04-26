@@ -25,3 +25,20 @@ func serviceFromServiceName(c *ovh.Client, serviceType, serviceName string) (*Se
 
 	return &service, nil
 }
+
+func serviceIDFromServiceNameInQuery(c *ovh.Client, serviceName string) (int, error) {
+	var (
+		endpoint = "/services?resourceName=" + url.QueryEscape(serviceName)
+		ids      []int
+	)
+
+	if err := c.Get(endpoint, &ids); err != nil {
+		return 0, fmt.Errorf("failed to retrieve service name: %w", err)
+	}
+
+	if len(ids) != 1 {
+		return 0, fmt.Errorf("invalid number of services retrieved, expected 1 got %d", len(ids))
+	}
+
+	return ids[0], nil
+}
