@@ -52,6 +52,7 @@ func TestAccCloudProjectGateway(t *testing.T) {
 	gatewayName := acctest.RandomWithPrefix(test_prefix)
 	vlanId := acctest.RandIntRange(100, 200)
 	region := os.Getenv("OVH_CLOUD_PROJECT_KUBE_REGION_TEST")
+	resourcePath := "ovh_cloud_project_gateway.gateway"
 
 	config := fmt.Sprintf(
 		testAccCloudProjectGatewayConfig,
@@ -76,13 +77,20 @@ func TestAccCloudProjectGateway(t *testing.T) {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("ovh_cloud_project_gateway.gateway", "service_name"),
-					resource.TestCheckResourceAttrSet("ovh_cloud_project_gateway.gateway", "network_id"),
-					resource.TestCheckResourceAttrSet("ovh_cloud_project_gateway.gateway", "subnet_id"),
-					resource.TestCheckResourceAttrSet("ovh_cloud_project_gateway.gateway", "model"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_gateway.gateway", "region", region),
-					resource.TestCheckResourceAttr("ovh_cloud_project_gateway.gateway", "name", gatewayName),
-					resource.TestCheckResourceAttr("ovh_cloud_project_gateway.gateway", "model", "s"),
+					resource.TestCheckResourceAttrSet(resourcePath, "service_name"),
+					resource.TestCheckResourceAttrSet(resourcePath, "network_id"),
+					resource.TestCheckResourceAttrSet(resourcePath, "subnet_id"),
+					resource.TestCheckResourceAttrSet(resourcePath, "model"),
+					resource.TestCheckResourceAttrSet(resourcePath, "external_information.0.network_id"),
+					resource.TestCheckResourceAttrSet(resourcePath, "external_information.0.ips.0.ip"),
+					resource.TestCheckResourceAttrSet(resourcePath, "external_information.0.ips.0.subnet_id"),
+					resource.TestCheckResourceAttrSet(resourcePath, "interfaces.0.id"),
+					resource.TestCheckResourceAttrSet(resourcePath, "interfaces.0.ip"),
+					resource.TestCheckResourceAttrSet(resourcePath, "interfaces.0.subnet_id"),
+					resource.TestCheckResourceAttrSet(resourcePath, "interfaces.0.network_id"),
+					resource.TestCheckResourceAttr(resourcePath, "region", region),
+					resource.TestCheckResourceAttr(resourcePath, "name", gatewayName),
+					resource.TestCheckResourceAttr(resourcePath, "model", "s"),
 				),
 			},
 		},
