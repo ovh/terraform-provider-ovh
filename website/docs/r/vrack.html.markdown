@@ -85,7 +85,9 @@ Id is set to the order Id. In addition, the following attributes are exported:
 * `service_name` - The internal name of your vrack
 
 ## Import
-vRack can be imported using the `order_id` that can be retrieved in the [order page](https://www.ovh.com/manager/#/dedicated/billing/orders/orders). 
+
+vRack can be imported using the `service_name`.
+
 ```bash
-$ terraform import ovh_vrack.vrack order_id
+$ terraform import ovh_vrack.vrack service_name
 ```
