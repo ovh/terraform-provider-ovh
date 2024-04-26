@@ -137,14 +137,6 @@ func dataSourceMeInstallationTemplate() *schema.Resource {
 			},
 
 			//Computed
-			"available_languages": {
-				Type:        schema.TypeList,
-				Computed:    true,
-				Description: "List of all language available for this template",
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
 			"bit_format": {
 				Type:        schema.TypeInt,
 				Computed:    true,

@@ -9,7 +9,6 @@ import (
 )
 
 type InstallationTemplate struct {
-	AvailableLanguages    []string                           `json:"available_languages"`
 	BitFormat             int                                `json:"bitFormat"`
 	Category              string                             `json:"category"`
 	Customization         *InstallationTemplateCustomization `json:"customization,omitempty"`
@@ -25,8 +24,6 @@ type InstallationTemplate struct {
 
 func (v InstallationTemplate) ToMap() map[string]interface{} {
 	obj := make(map[string]interface{})
-
-	obj["available_languages"] = v.AvailableLanguages
 
 	obj["bit_format"] = v.BitFormat
 	obj["category"] = v.Category
