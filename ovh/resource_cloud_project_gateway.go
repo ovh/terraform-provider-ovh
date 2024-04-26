@@ -14,20 +14,19 @@ import (
 	"github.com/ovh/go-ovh/ovh"
 )
 
-func resourceOvhCloudProjectGatewayImportState(
-	d *schema.ResourceData,
-	meta interface{},
-) ([]*schema.ResourceData, error) {
+func resourceOvhCloudProjectGatewayImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	givenId := d.Id()
-	splitId := strings.SplitN(givenId, "/", 2)
-	if len(splitId) != 2 {
-		return nil, fmt.Errorf("Import Id is not OVH_CLOUD_PROJECT/network_id formatted")
+
+	splitId := strings.SplitN(givenId, "/", 3)
+	if len(splitId) != 3 {
+		return nil, fmt.Errorf("given ID is not ovh_cloud_project/region/gateway_id formatted")
 	}
-	d.SetId(splitId[1])
+
+	d.SetId(splitId[2])
 	d.Set("service_name", splitId[0])
-	results := make([]*schema.ResourceData, 1)
-	results[0] = d
-	return results, nil
+	d.Set("region", splitId[1])
+
+	return []*schema.ResourceData{d}, nil
 }
 
 func resourceCloudProjectGateway() *schema.Resource {
