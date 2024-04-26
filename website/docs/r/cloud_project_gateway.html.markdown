@@ -58,6 +58,16 @@ The following attributes are exported:
 * `model` - See Argument Reference above.
 * `network_id` - See Argument Reference above.
 * `subnet_id` - See Argument Reference above.
+* `external_information` - List of External Information of the gateway.
+  * `network_id` - External network ID of the gateway.
+  * `ips` - List of external ips of the gateway.
+    * `ip` - External IP of the gateway.
+    * `subnet_id` - Subnet ID of the ip.
+* `interfaces` - Interfaces list of the gateway.
+  * `id` - ID of the interface.
+  * `ip` - IP of the interface.
+  * `network_id` - Network ID of the interface.
+  * `subnet_id` - Subnet ID of the interface.
 * `status` - Status of the gateway.
 
 ## Import

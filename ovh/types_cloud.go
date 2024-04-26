@@ -35,7 +35,7 @@ type CloudProjectGatewayExternalIp struct {
 }
 
 type CloudProjectGatewayExternal struct {
-	Ips       []*CloudProjectGatewayExternalIp `json:"ip"`
+	Ips       []*CloudProjectGatewayExternalIp `json:"ips"`
 	NetworkId string                           `json:"networkId"`
 }
 
