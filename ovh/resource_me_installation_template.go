@@ -93,6 +93,7 @@ func resourceMeInstallationTemplate() *schema.Resource {
 				Type:        schema.TypeBool,
 				Computed:    true,
 				Description: "This distribution supports hardware raid configuration through the OVH API",
+				Deprecated:  "This will be deprecated in the next release",
 			},
 			"filesystems": {
 				Type:        schema.TypeList,

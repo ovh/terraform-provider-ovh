@@ -29,7 +29,7 @@ resource "ovh_me_installation_template" "mytemplate" {
 * `distribution`: the distribution this template is based on.
 * `family`: this template family type (bsd,linux,solaris,windows).
 * `filesystems`: Filesystems available (btrfs,ext3,ext4,ntfs,reiserfs,swap,ufs,xfs,zfs).
-* `hard_raid_configuration`: This distribution supports hardware raid configuration through the OVHcloud API.
+* `hard_raid_configuration`: This distribution supports hardware raid configuration through the OVHcloud API. Deprecated, will be removed in next release.
 * `remove_default_partition_schemes`: (Required) Remove default partition schemes at creation.
 * `template_name`: (Required)  This template name.
 
