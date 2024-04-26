@@ -40,21 +40,30 @@ resource "ovh_cloud_project_gateway" "gateway" {
 
 The following arguments are supported:
 
-* `service_name` - (Required) The ID of the private network.
-* `name` - (Required) The name of the gateway.
-* `region` - (Required) The region of the gateway.
-* `model` - (Required) The model of the gateway.
-* `network_id` - (Required) The ID of the private network.
-* `subnet_id` - (Required) The ID of the subnet.
+* `service_name` - (Required) ID of the private network.
+* `name` - (Required) Name of the gateway.
+* `region` - (Required) Region of the gateway.
+* `model` - (Required) Model of the gateway.
+* `network_id` - (Required) ID of the private network.
+* `subnet_id` - (Required) ID of the subnet.
 
 ## Attributes Reference
 
 The following attributes are exported:
 
+* `id` - Identifier of the gateway.
 * `service_name` - See Argument Reference above.
 * `name` - See Argument Reference above.
-* `region` - (Required) The region of the gateway.
+* `region` - Region of the gateway.
 * `model` - See Argument Reference above.
 * `network_id` - See Argument Reference above.
 * `subnet_id` - See Argument Reference above.
-* `status` - The status of the gateway.
+* `status` - Status of the gateway.
+
+## Import
+
+A gateway can be imported using the `service_name`, `region` and `id` (identifier of the gateway) properties, separated by a `/`.
+
+```bash
+$ terraform import ovh_cloud_project_gateway.gateway service_name/region/id
+```
