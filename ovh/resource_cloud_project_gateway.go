@@ -74,6 +74,68 @@ func resourceCloudProjectGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"external_information": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "External information of the gateway",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"network_id": {
+							Type:        schema.TypeString,
+							Description: "External network ID of the gateway",
+							Computed:    true,
+						},
+						"ips": {
+							Type:        schema.TypeList,
+							Description: "List of external ips of the gateway",
+							Computed:    true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ip": {
+										Type:        schema.TypeString,
+										Description: "External IP of the gateway",
+										Computed:    true,
+									},
+									"subnet_id": {
+										Type:        schema.TypeString,
+										Description: "Subnet ID of the ip",
+										Computed:    true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"interfaces": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "Interfaces list of the gateway",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:        schema.TypeString,
+							Description: "ID of the interface",
+							Computed:    true,
+						},
+						"ip": {
+							Type:        schema.TypeString,
+							Description: "IP of the interface",
+							Computed:    true,
+						},
+						"network_id": {
+							Type:        schema.TypeString,
+							Description: "Network ID of the interface",
+							Computed:    true,
+						},
+						"subnet_id": {
+							Type:        schema.TypeString,
+							Description: "Subnet ID of the interface",
+							Computed:    true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -163,7 +225,32 @@ func resourceCloudProjectGatewayRead(d *schema.ResourceData, meta interface{}) e
 	d.SetId(r.Id)
 	d.Set("service_name", serviceName)
 
-	// TODO : add response fields "externalInformation" and "interfaces"
+	externalInfos := make([]map[string]interface{}, 0)
+	if r.ExternalInformation != nil {
+		externalInfo := make(map[string]interface{})
+		ips := make([]map[string]interface{}, 0)
+		for _, externalIp := range r.ExternalInformation.Ips {
+			ip := make(map[string]interface{})
+			ip["ip"] = externalIp.Ip
+			ip["subnet_id"] = externalIp.SubnetId
+			ips = append(ips, ip)
+		}
+		externalInfo["ips"] = ips
+		externalInfo["network_id"] = r.ExternalInformation.NetworkId
+		externalInfos = append(externalInfos, externalInfo)
+	}
+	d.Set("external_information", externalInfos)
+
+	interfaces := make([]map[string]string, 0)
+	for _, responseInterface := range r.Interfaces {
+		itf := make(map[string]string)
+		itf["id"] = responseInterface.Id
+		itf["ip"] = responseInterface.Ip
+		itf["subnet_id"] = responseInterface.SubnetId
+		itf["network_id"] = responseInterface.NetworkId
+		interfaces = append(interfaces, itf)
+	}
+	d.Set("interfaces", interfaces)
 
 	log.Printf("[DEBUG] Read Public Cloud Gateway %+v", r)
 	return nil
