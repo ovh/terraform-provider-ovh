@@ -82,7 +82,7 @@ func resourceMeInstallationTemplate() *schema.Resource {
 			"family": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "this template family type (bsd,linux,solaris,windows)",
+				Description: "this template family type",
 			},
 			"hard_raid_configuration": {
 				Type:        schema.TypeBool,
@@ -93,7 +93,7 @@ func resourceMeInstallationTemplate() *schema.Resource {
 			"filesystems": {
 				Type:        schema.TypeList,
 				Computed:    true,
-				Description: "Filesystems available (btrfs,ext3,ext4,ntfs,reiserfs,swap,ufs,xfs,zfs)",
+				Description: "Filesystems available",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},

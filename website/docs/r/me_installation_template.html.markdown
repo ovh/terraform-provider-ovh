@@ -27,8 +27,8 @@ resource "ovh_me_installation_template" "mytemplate" {
   * `post_installation_script_return`: indicate the string returned by your postinstall customisation script on successful execution. Advice: your script should return a unique validation string in case of succes. A good example is 'loh1Xee7eo OK OK OK UGh8Ang1Gu'.
 * `description`: information about this template.
 * `distribution`: the distribution this template is based on.
-* `family`: this template family type (bsd,linux,solaris,windows).
-* `filesystems`: Filesystems available (btrfs,ext3,ext4,ntfs,reiserfs,swap,ufs,xfs,zfs).
+* `family`: this template family type.
+* `filesystems`: Filesystems available.
 * `hard_raid_configuration`: This distribution supports hardware raid configuration through the OVHcloud API. Deprecated, will be removed in next release.
 * `remove_default_partition_schemes`: (Required) Remove default partition schemes at creation.
 * `template_name`: (Required)  This template name.

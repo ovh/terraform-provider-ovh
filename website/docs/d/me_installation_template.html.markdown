@@ -23,7 +23,7 @@ data "ovh_me_installation_template" "mytemplate" {
 The following attributes are exported:
 
 * `bit_format`: This template bit format (32 or 64).
-* `category`: Category of this template (informative only). (basic, customer, hosting, other, readyToUse, virtualisation).
+* `category`: Category of this template (informative only).
 * `customization`: 
   * `custom_hostname`: Set up the server using the provided hostname instead of the default hostname.
   * `post_installation_script_link`: Indicate the URL where your postinstall customisation script is located.
@@ -31,9 +31,12 @@ The following attributes are exported:
     * `ssh_key_name`: Name of the ssh key that should be installed. Password login will be disabled. Deprecated, will be removed in next release, use userMetada instead.
 * `description`: information about this template.
 * `distribution`: the distribution this template is based on.
+* `end_of_install` - The end of install date of the template
 * `family`: this template family type (bsd,linux,solaris,windows).
+* `filesystems`: Filesystems available.
 * `hard_raid_configuration`: This distribution supports hardware raid configuration through the OVHcloud API.
-* `filesystems`: Filesystems available (btrfs,ext3,ext4,ntfs,reiserfs,swap,ufs,xfs,zfs).
+* `lvm_ready` - This template supports LVM.
+* `no_partitioning` - Partitioning customization is not available for this OS template.
 * `partition_scheme`: 
   * `name`: name of this partitioning scheme.
   * `priority`: on a reinstall, if a partitioning scheme is not specified, the one with the higher priority will be used by default, among all the compatible partitioning schemes (given the underlying hardware specifications).
@@ -50,3 +53,5 @@ The following attributes are exported:
      * `order`: step or order. specifies the creation order of the partition on the disk
      * `type`: partition type.
      * `volume_name`: The volume name needed for proxmox distribution
+* `soft_raid_only_mirroring` - The template supports RAID0 and RAID1 on 2 disks.
+* `subfamily` - The sub family of the template

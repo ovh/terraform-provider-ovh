@@ -19,6 +19,16 @@ func dataSourceMeInstallationTemplate() *schema.Resource {
 			},
 
 			// computed
+			"bit_format": {
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "This template bit format (32 or 64)",
+			},
+			"category": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Category of this template (informative only)",
+			},
 			"customization": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -42,7 +52,50 @@ func dataSourceMeInstallationTemplate() *schema.Resource {
 					},
 				},
 			},
-
+			"description": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "information about this template",
+			},
+			"distribution": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "the distribution this template is based on",
+			},
+			"end_of_install": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "after this date, install of this template will not be possible at OVH",
+			},
+			"family": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "this template family type (bsd,linux,solaris,windows)",
+			},
+			"filesystems": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "Filesystems available",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"hard_raid_configuration": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "This distribution supports hardware raid configuration through the OVH API",
+				Deprecated:  "This will be deprecated in the next release",
+			},
+			"lvm_ready": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "This distribution supports Logical Volumes (Linux LVM)",
+			},
+			"no_partitioning": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "The template supports RAID0 and RAID1 on 2 disks.",
+			},
 			"partition_scheme": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -135,51 +188,15 @@ func dataSourceMeInstallationTemplate() *schema.Resource {
 					},
 				},
 			},
-
-			//Computed
-			"bit_format": {
-				Type:        schema.TypeInt,
-				Computed:    true,
-				Description: "This template bit format (32 or 64)",
-			},
-			"category": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Category of this template (informative only). (basic, customer, hosting, other, readyToUse, virtualisation)",
-			},
-			"description": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "information about this template",
-			},
-			"distribution": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "the distribution this template is based on",
-			},
-			"family": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "this template family type (bsd,linux,solaris,windows)",
-			},
-			"hard_raid_configuration": {
+			"soft_raid_only_mirroring": {
 				Type:        schema.TypeBool,
 				Computed:    true,
-				Description: "This distribution supports hardware raid configuration through the OVH API",
-				Deprecated:  "This will be deprecated in the next release",
+				Description: "Partitioning customization is available but limited to mirroring for this OS template",
 			},
-			"filesystems": {
-				Type:        schema.TypeList,
+			"subfamily": {
+				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "Filesystems available (btrfs,ext3,ext4,ntfs,reiserfs,swap,ufs,xfs,zfs)",
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"lvm_ready": {
-				Type:        schema.TypeBool,
-				Computed:    true,
-				Description: "This distribution supports Logical Volumes (Linux LVM)",
+				Description: "this template subfamily type",
 			},
 		},
 	}

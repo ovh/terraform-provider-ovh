@@ -9,14 +9,14 @@ import (
 )
 
 type InstallationTemplate struct {
-	BitFormat             int                                `json:"bitFormat"`
-	Category              string                             `json:"category"`
+	BitFormat             int                                `json:"bitFormat,omitempty"`
+	Category              string                             `json:"category,omitempty"`
 	Customization         *InstallationTemplateCustomization `json:"customization,omitempty"`
 	DefaultLanguage       string                             `json:"defaultLanguage,omitempty"`
-	Description           string                             `json:"description"`
-	Distribution          string                             `json:"distribution"`
+	Description           string                             `json:"description,omitempty"`
+	Distribution          string                             `json:"distribution,omitempty"`
 	EndOfInstall          string                             `json:"endOfInstall,omitempty"`
-	Family                string                             `json:"family"`
+	Family                string                             `json:"family,omitempty"`
 	Filesystems           []string                           `json:"filesystems"`
 	HardRaidConfiguration bool                               `json:"hardRaidConfiguration,omitempty"`
 	Inputs                []InstallationTemplateInputs       `json:"inputs,omitempty"`
