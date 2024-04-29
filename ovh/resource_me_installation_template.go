@@ -69,6 +69,11 @@ func resourceMeInstallationTemplate() *schema.Resource {
 				Computed:    true,
 				Description: "This template bit format (32 or 64)",
 			},
+			"category": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Category of this template (informative only). (basic, customer, hosting, other, readyToUse, virtualisation)",
+			},
 			"description": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -78,6 +83,11 @@ func resourceMeInstallationTemplate() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "the distribution this template is based on",
+			},
+			"end_of_install": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "after this date, install of this template will not be possible at OVH",
 			},
 			"family": {
 				Type:        schema.TypeString,
@@ -98,10 +108,58 @@ func resourceMeInstallationTemplate() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"inputs": {
+				Type: schema.TypeList,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"mandatory": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"enum": {
+							Type:     schema.TypeList,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Computed: true,
+						},
+						"description": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"default": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+				Computed: true,
+			},
 			"lvm_ready": {
 				Type:        schema.TypeBool,
 				Computed:    true,
 				Description: "This distribution supports Logical Volumes (Linux LVM)",
+			},
+			"no_partitioning": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Partitioning customization is not available for this OS template",
+			},
+			"soft_raid_only_mirroring": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Partitioning customization is available but limited to mirroring for this OS template",
+			},
+			"subfamily": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "this template subfamily type",
 			},
 		},
 	}
