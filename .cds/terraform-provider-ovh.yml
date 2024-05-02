@@ -544,14 +544,14 @@ workflow:
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
-  Tests_TestAccDedicatedInstallationTemplates:
+  Tests_TestAccDedicatedInstallationTemplate:
     application: terraform-provider-ovh
     depends_on:
     - terraform-provider-ovh-pre-sweepers
     environment: acctests
     one_at_a_time: true
     parameters:
-      testargs: -run TestAccDedicatedInstallationTemplates
+      testargs: -run TestAccDedicatedInstallationTemplate
     pipeline: terraform-provider-ovh-testacc
     when:
     - success

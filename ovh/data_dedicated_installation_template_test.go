@@ -1,31 +1,30 @@
 package ovh
 
 import (
-	"fmt"
 	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-func TestAccInstallationTemplateDataSource_basic(t *testing.T) {
-	templateName := "debian12_64"
-	config := fmt.Sprintf(
-		testAccInstallationTemplateDatasourceConfig_Basic,
-		templateName,
-	)
-
+func TestAccDedicatedInstallationTemplateDataSource_basic(t *testing.T) {
+	testAccInstallationTemplateDatasourceConfig_404 := `data "ovh_dedicated_installation_template" "notemplate" {
+		template_name = "42"
+	}`
+	testAccInstallationTemplateDatasourceConfig_Basic := `data "ovh_dedicated_installation_template" "template" {
+		template_name= "debian12_64"
+	}`
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheckCredentials(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: testAccInstallationTemplateDatasourceConfig_Basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
 						"data.ovh_dedicated_installation_template.template",
 						"template_name",
-						templateName,
+						"debian12_64",
 					),
 					resource.TestCheckResourceAttr(
 						"data.ovh_dedicated_installation_template.template",
@@ -41,14 +40,3 @@ func TestAccInstallationTemplateDataSource_basic(t *testing.T) {
 		},
 	})
 }
-
-const testAccInstallationTemplateDatasourceConfig_404 = `
-data "ovh_dedicated_installation_template" "notemplate" {
-	template_name = "42"
-  }
-`
-const testAccInstallationTemplateDatasourceConfig_Basic = `
-data "ovh_dedicated_installation_template" "template" {
-    template_name      = "%s"
-}
-`
