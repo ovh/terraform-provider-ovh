@@ -138,7 +138,7 @@ resource "ovh_vrack_cloudproject" "attach" {
 }
 
 resource "ovh_cloud_project_network_private" "network" {
-  service_name = ovh_vrack_cloudproject.attach.service_name
+  service_name = ovh_vrack_cloudproject.attach.project_id
   vlan_id    = 0
   name       = "terraform_testacc_private_net"
   regions    = ["GRA5"]
@@ -176,7 +176,7 @@ resource "ovh_cloud_project_kube" "mycluster" {
       private_network_routing_as_default = false
   }
 
-  depends_on = [ovh_cloud_project_network_private.network]
+  depends_on = [ovh_cloud_project_network_private_subnet.networksubnet]
 }
 ```
 
