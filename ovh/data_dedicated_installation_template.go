@@ -16,14 +16,14 @@ func dataSourceDedicatedInstallationTemplate() *schema.Resource {
 			"template_name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "This template name",
+				Description: "Template name",
 			},
 
 			// Computed properties
 			"bit_format": {
 				Type:        schema.TypeInt,
 				Computed:    true,
-				Description: "This template bit format (32 or 64)",
+				Description: "Template bit format (32 or 64)",
 			},
 			"category": {
 				Type:        schema.TypeString,
@@ -33,22 +33,22 @@ func dataSourceDedicatedInstallationTemplate() *schema.Resource {
 			"description": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "information about this template",
+				Description: "Description of the template",
 			},
 			"distribution": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "the distribution this template is based on",
+				Description: "Distribution this template is based on",
 			},
 			"end_of_install": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "after this date, install of this template will not be possible at OVH",
+				Description: "After this date, install of this template will not be possible at OVH",
 			},
 			"family": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "this template family type (bsd,linux,solaris,windows)",
+				Description: "Template family type (bsd,linux,solaris,windows)",
 			},
 			"filesystems": {
 				Type:        schema.TypeList,
@@ -59,7 +59,7 @@ func dataSourceDedicatedInstallationTemplate() *schema.Resource {
 			"hard_raid_configuration": {
 				Type:        schema.TypeBool,
 				Computed:    true,
-				Description: "This distribution supports hardware raid configuration through the OVH API",
+				Description: "Distribution supports hardware raid configuration through the OVH API",
 			},
 			"inputs": {
 				Type: schema.TypeList,
@@ -139,17 +139,17 @@ func dataSourceDedicatedInstallationTemplate() *schema.Resource {
 			"lvm_ready": {
 				Type:        schema.TypeBool,
 				Computed:    true,
-				Description: "This distribution supports Logical Volumes (Linux LVM)",
+				Description: "Whether this distribution supports Logical Volumes (Linux LVM)",
 			},
 			"no_partitioning": {
 				Type:        schema.TypeBool,
 				Computed:    true,
-				Description: "The template supports RAID0 and RAID1 on 2 disks.",
+				Description: "Template supports RAID0 and RAID1 on 2 disks",
 			},
 			"project": {
 				Type:        schema.TypeList,
 				Computed:    true,
-				Description: "This distribution project details",
+				Description: "Distribution project details",
 				Elem: &schema.Resource{
 					Description: "A structure describing some interesting facts about an OS template project",
 					Schema: map[string]*schema.Schema{
@@ -233,7 +233,7 @@ func dataSourceDedicatedInstallationTemplate() *schema.Resource {
 			"subfamily": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "this template subfamily type",
+				Description: "Template subfamily type",
 			},
 		},
 	}

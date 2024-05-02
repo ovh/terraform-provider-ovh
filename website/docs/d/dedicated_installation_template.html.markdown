@@ -4,7 +4,7 @@ subcategory : "Dedicated Server"
 
 # ovh_dedicated_installation_template (Data Source)
 
-Use this data source to retrieve informations about a specific ovh dedicated server installation template.
+Use this data source to retrieve information about a specific OVH dedicated server installation template.
 
 ## Example Usage
 
@@ -20,25 +20,25 @@ output "template" {
 
 ## Argument Reference
 
-* `template_name` - (Required) The name of the template
+* `template_name` - (Required) The name of the template.
 
 ## Attributes Reference
 
 The following attributes are exported:
 
-* `id` - The ID of the installation template
-* `bit_format`: This template bit format (32 or 64)
+* `id` - The ID of the installation template.
+* `bit_format`: Template bit format (32 or 64).
 * `category` - Category of this template (informative only).
 * `description` - Information about this template.
-* `distribution` - The distribution this template is based on.
-* `end_of_install` - The end of install date of the template
-* `family` - This template family type.
+* `distribution` - Distribution this template is based on.
+* `end_of_install` - End of install date of the template.
+* `family` - Template family type.
 * `filesystems` - Filesystems available.
-* `hardware_raid_configuration` - This distribution supports hardware raid configuration through the OVHcloud API.
-* `inputs` - Represents the questions of the expected answers in the userMetadata field
-* `license` - The license available for this template
-* `lvm_ready` - This template supports LVM.
+* `hardware_raid_configuration` - Distribution supports hardware raid configuration through the OVHcloud API.
+* `inputs` - Represents the questions of the expected answers in the userMetadata field.
+* `license` - License available for this template.
+* `lvm_ready` - Whether this template supports LVM.
 * `no_partitioning` - Partitioning customization is not available for this OS template.
-* `project` - The project
-* `soft_raid_only_mirroring` - The template supports RAID0 and RAID1 on 2 disks.
-* `subfamily` - The sub family of the template
+* `project` - Distribution project details.
+* `soft_raid_only_mirroring` - Template supports RAID0 and RAID1 on 2 disks.
+* `subfamily` - Subfamily of the template.

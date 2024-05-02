@@ -144,7 +144,7 @@ func resourceMeInstallationTemplate() *schema.Resource {
 			"lvm_ready": {
 				Type:        schema.TypeBool,
 				Computed:    true,
-				Description: "This distribution supports Logical Volumes (Linux LVM)",
+				Description: "Whether this distribution supports Logical Volumes (Linux LVM)",
 			},
 			"no_partitioning": {
 				Type:        schema.TypeBool,

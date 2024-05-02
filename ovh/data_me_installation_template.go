@@ -15,14 +15,14 @@ func dataSourceMeInstallationTemplate() *schema.Resource {
 			"template_name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "This template name",
+				Description: "Template name",
 			},
 
 			// computed
 			"bit_format": {
 				Type:        schema.TypeInt,
 				Computed:    true,
-				Description: "This template bit format (32 or 64)",
+				Description: "Template bit format (32 or 64)",
 			},
 			"category": {
 				Type:        schema.TypeString,
@@ -47,7 +47,7 @@ func dataSourceMeInstallationTemplate() *schema.Resource {
 						"post_installation_script_return": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "indicate the string returned by your postinstall customisation script on successful execution. Advice: your script should return a unique validation string in case of succes. A good example is 'loh1Xee7eo OK OK OK UGh8Ang1Gu'",
+							Description: "Indicate the string returned by your postinstall customisation script on successful execution. Advice: your script should return a unique validation string in case of succes. A good example is 'loh1Xee7eo OK OK OK UGh8Ang1Gu'",
 						},
 					},
 				},
@@ -55,22 +55,22 @@ func dataSourceMeInstallationTemplate() *schema.Resource {
 			"description": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "information about this template",
+				Description: "Description of the template",
 			},
 			"distribution": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "the distribution this template is based on",
+				Description: "Distribution this template is based on",
 			},
 			"end_of_install": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "after this date, install of this template will not be possible at OVH",
+				Description: "After this date, install of this template will not be possible at OVH",
 			},
 			"family": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "this template family type (bsd,linux,solaris,windows)",
+				Description: "Template family type (bsd,linux,solaris,windows)",
 			},
 			"filesystems": {
 				Type:        schema.TypeList,
@@ -83,18 +83,18 @@ func dataSourceMeInstallationTemplate() *schema.Resource {
 			"hard_raid_configuration": {
 				Type:        schema.TypeBool,
 				Computed:    true,
-				Description: "This distribution supports hardware raid configuration through the OVH API",
+				Description: "Distribution supports hardware raid configuration through the OVH API",
 				Deprecated:  "This will be deprecated in the next release",
 			},
 			"lvm_ready": {
 				Type:        schema.TypeBool,
 				Computed:    true,
-				Description: "This distribution supports Logical Volumes (Linux LVM)",
+				Description: "Whether this Distribution supports Logical Volumes (Linux LVM)",
 			},
 			"no_partitioning": {
 				Type:        schema.TypeBool,
 				Computed:    true,
-				Description: "The template supports RAID0 and RAID1 on 2 disks.",
+				Description: "Template supports RAID0 and RAID1 on 2 disks",
 			},
 			"partition_scheme": {
 				Type:     schema.TypeList,
@@ -104,12 +104,12 @@ func dataSourceMeInstallationTemplate() *schema.Resource {
 						"name": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "name of this partitioning scheme",
+							Description: "Name of this partitioning scheme",
 						},
 						"priority": {
 							Type:        schema.TypeInt,
 							Computed:    true,
-							Description: "on a reinstall, if a partitioning scheme is not specified, the one with the higher priority will be used by default, among all the compatible partitioning schemes (given the underlying hardware specifications)",
+							Description: "On a reinstall, if a partitioning scheme is not specified, the one with the higher priority will be used by default, among all the compatible partitioning schemes (given the underlying hardware specifications)",
 						},
 						"hardware_raid": {
 							Type:     schema.TypeList,
@@ -155,32 +155,32 @@ func dataSourceMeInstallationTemplate() *schema.Resource {
 									"mountpoint": {
 										Type:        schema.TypeString,
 										Computed:    true,
-										Description: "partition mount point",
+										Description: "Partition mount point",
 									},
 									"raid": {
 										Type:        schema.TypeString,
 										Computed:    true,
-										Description: "raid partition type",
+										Description: "Raid partition type",
 									},
 									"size": {
 										Type:        schema.TypeInt,
 										Computed:    true,
-										Description: "size of partition in MB, 0 => rest of the space",
+										Description: "Size of partition in MB, 0 => rest of the space",
 									},
 									"order": {
 										Type:        schema.TypeInt,
 										Computed:    true,
-										Description: "step or order. specifies the creation order of the partition on the disk",
+										Description: "Step or order. specifies the creation order of the partition on the disk",
 									},
 									"type": {
 										Type:        schema.TypeString,
 										Computed:    true,
-										Description: "partition type",
+										Description: "Partition type",
 									},
 									"volume_name": {
 										Type:        schema.TypeString,
 										Computed:    true,
-										Description: "The volume name needed for proxmox distribution",
+										Description: "Volume name needed for proxmox distribution",
 									},
 								},
 							},
@@ -196,7 +196,7 @@ func dataSourceMeInstallationTemplate() *schema.Resource {
 			"subfamily": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "this template subfamily type",
+				Description: "Template subfamily type",
 			},
 		},
 	}
