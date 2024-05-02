@@ -176,7 +176,7 @@ resource "ovh_cloud_project_kube" "mycluster" {
       private_network_routing_as_default = false
   }
 
-  depends_on = [ovh_cloud_project_network_private.network]
+  depends_on = [ovh_cloud_project_network_private_subnet.networksubnet]
 }
 ```
 
