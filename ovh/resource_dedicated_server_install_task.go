@@ -69,18 +69,6 @@ func resourceDedicatedServerInstallTask() *schema.Resource {
 							ForceNew:    true,
 							Description: "",
 						},
-						"language": {
-							Type:       schema.TypeString,
-							Optional:   true,
-							ForceNew:   true,
-							Deprecated: "This field is deprecated and will be removed in a future release",
-						},
-						"use_spla": {
-							Type:       schema.TypeBool,
-							Optional:   true,
-							ForceNew:   true,
-							Deprecated: "This field is deprecated and will be removed in a future release",
-						},
 						"no_raid": {
 							Type:        schema.TypeBool,
 							Optional:    true,

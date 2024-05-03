@@ -16,29 +16,29 @@ data "ovh_me_installation_template" "mytemplate" {
 
 ## Argument Reference
 
-* `template_name`: This template name
+* `template_name`: Template name.
 
 ## Attributes Reference
 
 The following attributes are exported:
 
-* `available_languages`: List of all language available for this template. Deprecated, will be removed in next release.
-* `bit_format`: This template bit format (32 or 64).
-* `category`: Category of this template (informative only). (basic, customer, hosting, other, readyToUse, virtualisation).
+* `bit_format`: Template bit format (32 or 64).
+* `category`: Category of this template (informative only).
 * `customization`: 
   * `custom_hostname`: Set up the server using the provided hostname instead of the default hostname.
   * `post_installation_script_link`: Indicate the URL where your postinstall customisation script is located.
-  * `post_installation_script_return`: indicate the string returned by your postinstall customisation script on successful execution. Advice: your script should return a unique validation string in case of succes. A good example is 'loh1Xee7eo OK OK OK UGh8Ang1Gu'.
-    * `ssh_key_name`: Name of the ssh key that should be installed. Password login will be disabled. Deprecated, will be removed in next release, use userMetada instead.
-* `default_language`: The default language of this template. Deprecated, will be removed in next release.
-* `description`: information about this template.
-* `distribution`: the distribution this template is based on.
-* `family`: this template family type (bsd,linux,solaris,windows).
-* `hard_raid_configuration`: This distribution supports hardware raid configuration through the OVHcloud API.
-* `filesystems`: Filesystems available (btrfs,ext3,ext4,ntfs,reiserfs,swap,ufs,xfs,zfs).
+  * `post_installation_script_return`: Indicate the string returned by your postinstall customisation script on successful execution. Advice: your script should return a unique validation string in case of succes. A good example is 'loh1Xee7eo OK OK OK UGh8Ang1Gu'.
+* `description`: Information about this template.
+* `distribution`: Distribution this template is based on.
+* `end_of_install` - End of install date of the template.
+* `family`: Template family type (bsd,linux,solaris,windows).
+* `filesystems`: Filesystems available.
+* `hard_raid_configuration`: Distribution supports hardware raid configuration through the OVHcloud API.
+* `lvm_ready` - Whether this template supports LVM.
+* `no_partitioning` - Partitioning customization is not available for this OS template.
 * `partition_scheme`: 
-  * `name`: name of this partitioning scheme.
-  * `priority`: on a reinstall, if a partitioning scheme is not specified, the one with the higher priority will be used by default, among all the compatible partitioning schemes (given the underlying hardware specifications).
+  * `name`: Name of this partitioning scheme.
+  * `priority`: On a reinstall, if a partitioning scheme is not specified, the one with the higher priority will be used by default, among all the compatible partitioning schemes (given the underlying hardware specifications).
   * `hardware_raid`: 
      * `name`: Hardware RAID name.
      * `disks`: Disk List. Syntax is cX:dY for disks and [cX:dY,cX:dY] for groups. With X and Y resp. the controller id and the disk id.
@@ -46,9 +46,11 @@ The following attributes are exported:
      * `step`: Specifies the creation order of the hardware RAID.
   * `partition`:
      * `filesystem`: Partition filesystem.
-     * `mountpoint`: partition mount point.
-     * `raid`: raid partition type.
-     * `size`: size of partition in MB, 0 => rest of the space.
-     * `order`: step or order. specifies the creation order of the partition on the disk
-     * `type`: partition type.
-     * `volume_name`: The volume name needed for proxmox distribution
+     * `mountpoint`: Partition mount point.
+     * `raid`: Raid partition type.
+     * `size`: Size of partition in MB, 0 => rest of the space.
+     * `order`: Step or order. Specifies the creation order of the partition on the disk.
+     * `type`: Partition type.
+     * `volume_name`: Volume name needed for proxmox distribution.
+* `soft_raid_only_mirroring` - Template supports RAID0 and RAID1 on 2 disks.
+* `subfamily` - Subfamily of the template.
