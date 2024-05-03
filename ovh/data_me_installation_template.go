@@ -86,6 +86,39 @@ func dataSourceMeInstallationTemplate() *schema.Resource {
 				Description: "Distribution supports hardware raid configuration through the OVH API",
 				Deprecated:  "This will be deprecated in the next release",
 			},
+			"inputs": {
+				Type: schema.TypeList,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"mandatory": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"enum": {
+							Type:     schema.TypeList,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Computed: true,
+						},
+						"description": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"default": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+				Computed: true,
+			},
 			"lvm_ready": {
 				Type:        schema.TypeBool,
 				Computed:    true,
