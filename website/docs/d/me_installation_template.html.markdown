@@ -34,6 +34,7 @@ The following attributes are exported:
 * `family`: Template family type (bsd,linux,solaris,windows).
 * `filesystems`: Filesystems available.
 * `hard_raid_configuration`: Distribution supports hardware raid configuration through the OVHcloud API.
+* `inputs` - Represents the questions of the expected answers in the userMetadata field.
 * `lvm_ready` - Whether this template supports LVM.
 * `no_partitioning` - Partitioning customization is not available for this OS template.
 * `partition_scheme`: 
