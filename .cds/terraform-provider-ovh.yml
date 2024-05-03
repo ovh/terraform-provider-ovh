@@ -696,7 +696,7 @@ workflow:
     - Tests_CloudProjectUser
     - Tests_DbaasLogs
     - Tests_DedicatedCeph
-    - Tests_TestAccDedicatedInstallationTemplates
+    - Tests_TestAccDedicatedInstallationTemplate
     - Tests_DedicatedNasha
     - Tests_DedicatedServer
     - Tests_DomainZone
