@@ -9,24 +9,28 @@ import (
 )
 
 type InstallationTemplate struct {
-	AvailableLanguages    []string                           `json:"available_languages"`
-	BitFormat             int                                `json:"bitFormat"`
-	Category              string                             `json:"category"`
+	BitFormat             int                                `json:"bitFormat,omitempty"`
+	Category              string                             `json:"category,omitempty"`
 	Customization         *InstallationTemplateCustomization `json:"customization,omitempty"`
 	DefaultLanguage       string                             `json:"defaultLanguage,omitempty"`
-	Description           string                             `json:"description"`
-	Distribution          string                             `json:"distribution"`
-	Family                string                             `json:"family"`
+	Description           string                             `json:"description,omitempty"`
+	Distribution          string                             `json:"distribution,omitempty"`
+	EndOfInstall          string                             `json:"endOfInstall,omitempty"`
+	Family                string                             `json:"family,omitempty"`
 	Filesystems           []string                           `json:"filesystems"`
-	HardRaidConfiguration *bool                              `json:"hardRaidConfigurtion,omitempty"`
+	HardRaidConfiguration bool                               `json:"hardRaidConfiguration,omitempty"`
+	Inputs                []InstallationTemplateInputs       `json:"inputs,omitempty"`
+	License               *InstallationTemplateLicense       `json:"license,omitempty"`
 	LvmReady              *bool                              `json:"lvmReady,omitempty"`
+	NoPartitioning        bool                               `json:"noPartitioning,omitempty"`
+	Project               *InstallationTemplateProject       `json:"project,omitempty"`
+	SoftRaidOnlyMirroring bool                               `json:"soft_raid_only_mirroring,omitempty"`
+	Subfamily             string                             `json:"subfamily,omitempty"`
 	TemplateName          string                             `json:"templateName"`
 }
 
 func (v InstallationTemplate) ToMap() map[string]interface{} {
 	obj := make(map[string]interface{})
-
-	obj["available_languages"] = v.AvailableLanguages
 
 	obj["bit_format"] = v.BitFormat
 	obj["category"] = v.Category
@@ -38,23 +42,37 @@ func (v InstallationTemplate) ToMap() map[string]interface{} {
 		}
 	}
 
-	if v.DefaultLanguage != "" {
-		obj["default_language"] = v.DefaultLanguage
-	}
-
 	obj["description"] = v.Description
 	obj["distribution"] = v.Distribution
+	obj["end_of_install"] = v.EndOfInstall
 	obj["family"] = v.Family
 	obj["filesystems"] = v.Filesystems
 
-	if v.HardRaidConfiguration != nil {
-		obj["hard_raid_configuration"] = *v.HardRaidConfiguration
+	obj["hard_raid_configuration"] = v.HardRaidConfiguration
+
+	if v.Inputs != nil {
+		inputs := make([]interface{}, len(v.Inputs))
+		for i, input := range v.Inputs {
+			inputs[i] = input.ToMap()
+		}
+		obj["inputs"] = inputs
+	}
+
+	if v.License != nil {
+		obj["license"] = []map[string]interface{}{v.License.ToMap()}
 	}
 
 	if v.LvmReady != nil {
 		obj["lvm_ready"] = *v.LvmReady
 	}
 
+	if v.Project != nil {
+		obj["project"] = []map[string]interface{}{v.Project.ToMap()}
+	}
+
+	obj["no_partitioning"] = v.NoPartitioning
+	obj["soft_raid_only_mirroring"] = v.SoftRaidOnlyMirroring
+	obj["subfamily"] = v.Subfamily
 	obj["template_name"] = v.TemplateName
 
 	return obj
@@ -69,7 +87,6 @@ type InstallationTemplateCreateOpts struct {
 func (opts *InstallationTemplateCreateOpts) FromResource(d *schema.ResourceData) *InstallationTemplateCreateOpts {
 	opts.BaseTemplateName = d.Get("base_template_name").(string)
 	opts.Name = d.Get("template_name").(string)
-	opts.DefaultLanguage = d.Get("default_language").(string)
 	return opts
 }
 
@@ -81,7 +98,6 @@ type InstallationTemplateUpdateOpts struct {
 
 func (opts *InstallationTemplateUpdateOpts) FromResource(d *schema.ResourceData) *InstallationTemplateUpdateOpts {
 	opts.TemplateName = d.Get("template_name").(string)
-	opts.DefaultLanguage = d.Get("default_language").(string)
 	customizations := d.Get("customization").([]interface{})
 	if customizations != nil && len(customizations) == 1 {
 		opts.Customization = (&InstallationTemplateCustomization{}).FromResource(d, "customization.0")
@@ -116,10 +132,6 @@ func (v InstallationTemplateCustomization) ToMap() map[string]interface{} {
 		custom_attr_set = true
 	}
 
-	if v.SshKeyName != nil {
-		obj["ssh_key_name"] = *v.SshKeyName
-		custom_attr_set = true
-	}
 	// dont return an object if nothing is set
 	if custom_attr_set {
 		return obj
@@ -128,11 +140,84 @@ func (v InstallationTemplateCustomization) ToMap() map[string]interface{} {
 	return nil
 }
 
+type InstallationTemplateInputs struct {
+	Name        string   `json:"name"`
+	Type        string   `json:"type"`
+	Description string   `json:"description,omitempty"`
+	Mandatory   bool     `json:"mandatory"`
+	Default     *string  `json:"default,omitempty"`
+	Enum        []string `json:"enum,omitempty"`
+}
+
+func (v InstallationTemplateInputs) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+	obj["name"] = v.Name
+	obj["description"] = v.Description
+	obj["type"] = v.Type
+	obj["mandatory"] = v.Mandatory
+	obj["default"] = *v.Default
+	obj["enum"] = &v.Enum
+	return obj
+}
+
+type InstallTemplateLicenseItem struct {
+	Name []string `json:"name,omitempty"`
+	Url  string   `json:"url,omitempty"`
+}
+
+type InstallationTemplateLicense struct {
+	Usage InstallTemplateLicenseItem `json:"usage,omitempty"`
+	Os    InstallTemplateLicenseItem `json:"os,omitempty"`
+}
+
+func (v InstallationTemplateLicense) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+	obj["usage"] = []map[string]interface{}{v.Usage.ToMap()}
+	obj["os"] = []map[string]interface{}{v.Os.ToMap()}
+	return obj
+}
+
+func (v InstallTemplateLicenseItem) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+	obj["name"] = &v.Name
+	obj["url"] = v.Url
+	return obj
+}
+
+type InstallationTemplateProject struct {
+	Usage InstallationTemplateProjectItem `json:"usage,omitempty"`
+	Os    InstallationTemplateProjectItem `json:"os,omitempty"`
+}
+
+type InstallationTemplateProjectItem struct {
+	Version      string   `json:"version,omitempty"`
+	Url          string   `json:"url,omitempty"`
+	ReleaseNotes string   `json:"release_notes,omitempty"`
+	Name         string   `json:"name,omitempty"`
+	Governance   []string `json:"governance,omitempty"`
+}
+
+func (v InstallationTemplateProject) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+	obj["usage"] = []map[string]interface{}{v.Usage.ToMap()}
+	obj["os"] = []map[string]interface{}{v.Os.ToMap()}
+	return obj
+}
+
+func (v InstallationTemplateProjectItem) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+	obj["version"] = v.Version
+	obj["url"] = v.Url
+	obj["release_notes"] = v.ReleaseNotes
+	obj["name"] = v.Name
+	obj["governance"] = &v.Governance
+	return obj
+}
+
 func (opts *InstallationTemplateCustomization) FromResource(d *schema.ResourceData, parent string) *InstallationTemplateCustomization {
 	opts.CustomHostname = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.custom_hostname", parent))
 	opts.PostInstallationScriptLink = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.post_installation_script_link", parent))
 	opts.PostInstallationScriptReturn = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.post_installation_script_return", parent))
-	opts.SshKeyName = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.ssh_key_name", parent))
 	return opts
 }
 
