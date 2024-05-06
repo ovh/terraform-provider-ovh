@@ -28,9 +28,13 @@ resource "ovh_cloud_project_containerregistry_ip_restrictions_registry" "my-regi
   registry_id  = ovh_cloud_project_containerregistry.registry.id
 	
   ip_restrictions = [
-    { 
+    {
       ip_block = "121.121.121.121/32"
-      description = "my awesome ip"  
+      description = "my first ip restriction"
+    },
+    {
+      ip_block = "122.122.122.122/32"
+      description = "my second ip description"
     }
   ]
 }
@@ -53,11 +57,46 @@ resource "ovh_cloud_project_containerregistry" "registry" {
 resource "ovh_cloud_project_containerregistry_ip_restrictions_registry" "my-registry-iprestrictions" {
   service_name = ovh_cloud_project_containerregistry.registry.service_name
   registry_id  = ovh_cloud_project_containerregistry.registry.id
+
+  ip_restrictions = [
+    {
+      ip_block = "121.121.121.121/32"
+      description = "my new first ip restriction"
+    },
+    {
+      ip_block = "122.122.122.122/32"
+      description = "my second ip description"
+    }
+  ]
+}
+`
+
+const testAccCloudProjectContainerRegistryIPRestrictionsRegistryReorderIpRestrictions = `
+data "ovh_cloud_project_capabilities_containerregistry_filter" "registryCap" {
+  service_name = "%s"
+  plan_name    = "SMALL"
+  region       = "%s"
+}
+
+resource "ovh_cloud_project_containerregistry" "registry" {
+  service_name = data.ovh_cloud_project_capabilities_containerregistry_filter.registryCap.service_name
+  plan_id      = data.ovh_cloud_project_capabilities_containerregistry_filter.registryCap.id
+  name         = "%s"
+  region       = data.ovh_cloud_project_capabilities_containerregistry_filter.registryCap.region
+}
+
+resource "ovh_cloud_project_containerregistry_ip_restrictions_registry" "my-registry-iprestrictions" {
+  service_name = ovh_cloud_project_containerregistry.registry.service_name
+  registry_id  = ovh_cloud_project_containerregistry.registry.id
 	
   ip_restrictions = [
     {
       ip_block = "122.122.122.122/32"
-      description = "my new awesome ip description"
+      description = "my second ip description"
+    },
+    {
+      ip_block = "121.121.121.121/32"
+      description = "my new first ip restriction"
     }
   ]
 }
@@ -83,6 +122,13 @@ func TestAccCloudProjectContainerRegistryIPRestrictionsRegistry_basic(t *testing
 		registryName,
 	)
 
+	configUpdatedIpRestrictions := fmt.Sprintf(
+		testAccCloudProjectContainerRegistryIPRestrictionsRegistryReorderIpRestrictions,
+		serviceName,
+		region,
+		registryName,
+	)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckContainerRegistry(t)
@@ -93,18 +139,23 @@ func TestAccCloudProjectContainerRegistryIPRestrictionsRegistry_basic(t *testing
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("ovh_cloud_project_containerregistry_ip_restrictions_registry.my-registry-iprestrictions", "ip_restrictions.0.ip_block", "121.121.121.121/32"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_containerregistry_ip_restrictions_registry.my-registry-iprestrictions", "ip_restrictions.0.description", "my awesome ip"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_containerregistry_ip_restrictions_registry.my-registry-iprestrictions", "ip_restrictions.0.description", "my first ip restriction"),
 				),
 			},
 			{
 				Config: configUpdated,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_cloud_project_containerregistry_ip_restrictions_registry.my-registry-iprestrictions", "ip_restrictions.0.ip_block", "122.122.122.122/32"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_containerregistry_ip_restrictions_registry.my-registry-iprestrictions", "ip_restrictions.0.description", "my new awesome ip description"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_containerregistry_ip_restrictions_registry.my-registry-iprestrictions", "ip_restrictions.0.ip_block", "121.121.121.121/32"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_containerregistry_ip_restrictions_registry.my-registry-iprestrictions", "ip_restrictions.0.description", "my new first ip restriction"),
 				),
 			},
 			{
-				Config:       configUpdated,
+				// We check that a change in the ip restrictions order does not affect the plan
+				Config:             configUpdatedIpRestrictions,
+				ExpectNonEmptyPlan: false,
+			},
+			{
+				Config:       configUpdatedIpRestrictions,
 				Destroy:      true,
 				ResourceName: resourceName,
 			},

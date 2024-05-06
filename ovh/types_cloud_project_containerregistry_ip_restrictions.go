@@ -22,13 +22,15 @@ func (opts *CloudProjectContainerRegistryIPRestrictionCreateOpts) FromResource(d
 func loadIPRestrictionsFromResource(i interface{}) []CloudProjectContainerRegistryIPRestriction {
 	ips := make([]CloudProjectContainerRegistryIPRestriction, 0)
 
-	iprestrictionsSet := i.([]interface{})
+	iprestrictionsSet := i.(*schema.Set)
 
-	for _, ipSet := range iprestrictionsSet {
-		ips = append(ips, CloudProjectContainerRegistryIPRestriction{
-			Description: ipSet.(map[string]interface{})["description"].(string),
-			IPBlock:     ipSet.(map[string]interface{})["ip_block"].(string),
-		})
+	for _, ipSet := range iprestrictionsSet.List() {
+		if len(ipSet.(map[string]interface{})) > 0 {
+			ips = append(ips, CloudProjectContainerRegistryIPRestriction{
+				Description: ipSet.(map[string]interface{})["description"].(string),
+				IPBlock:     ipSet.(map[string]interface{})["ip_block"].(string),
+			})
+		}
 	}
 
 	return ips

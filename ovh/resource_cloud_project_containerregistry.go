@@ -379,7 +379,8 @@ func waitForCloudProjectContainerRegistry(c *ovh.Client, serviceName, id string)
 		)
 		err := c.Get(endpoint, r)
 		if err != nil {
-			if err.(*ovh.APIError).Code == 404 {
+			ovhError, isOvhApiError := err.(*ovh.APIError)
+			if isOvhApiError && ovhError.Code == 404 {
 				log.Printf("[INFO] container registry id %s on project %s deleted", id, serviceName)
 				return r, "deleted", nil
 			} else {
