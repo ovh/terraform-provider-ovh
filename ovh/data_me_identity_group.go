@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -37,6 +38,10 @@ func dataSourceMeIdentityGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"urn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -46,7 +51,7 @@ func dataSourceMeIdentityGroupRead(ctx context.Context, d *schema.ResourceData, 
 
 	group := d.Get("name").(string)
 
-	endpoint := fmt.Sprintf("/me/identity/group/%s", group)
+	endpoint := fmt.Sprintf("/me/identity/group/%s", url.PathEscape(group))
 
 	var resp MeIdentityGroupResponse
 	err := config.OVHClient.GetWithContext(
@@ -68,6 +73,7 @@ func dataSourceMeIdentityGroupRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("creation", resp.Creation)
 	d.Set("description", resp.Description)
 	d.Set("role", resp.Role)
+	d.Set("urn", resp.URN)
 
 	return nil
 }
