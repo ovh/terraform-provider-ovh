@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -66,7 +67,7 @@ func resourceMeIdentityGroupRead(ctx context.Context, d *schema.ResourceData, me
 
 	identityGroup := &MeIdentityGroupResponse{}
 
-	endpoint := fmt.Sprintf("/me/identity/group/%s", d.Id())
+	endpoint := fmt.Sprintf("/me/identity/group/%s", url.PathEscape(d.Id()))
 	if err := config.OVHClient.GetWithContext(ctx, endpoint, identityGroup); err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
@@ -76,8 +77,7 @@ func resourceMeIdentityGroupRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("creation", identityGroup.Creation)
 	d.Set("description", identityGroup.Description)
 	d.Set("role", identityGroup.Role)
-
-	d.Set("urn", fmt.Sprintf("urn:v1:%s:identity:group:%s/%s", config.Plate, config.Account, identityGroup.Name))
+	d.Set("urn", identityGroup.URN)
 
 	return nil
 }
@@ -118,7 +118,7 @@ func resourceMeIdentityGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 		Role:        role,
 	}
 	err := config.OVHClient.PutWithContext(ctx,
-		fmt.Sprintf("/me/identity/group/%s", d.Id()),
+		fmt.Sprintf("/me/identity/group/%s", url.PathEscape(d.Id())),
 		params,
 		nil,
 	)
@@ -134,7 +134,7 @@ func resourceMeIdentityGroupDelete(ctx context.Context, d *schema.ResourceData, 
 	config := meta.(*Config)
 
 	err := config.OVHClient.DeleteWithContext(ctx,
-		fmt.Sprintf("/me/identity/group/%s", d.Id()),
+		fmt.Sprintf("/me/identity/group/%s", url.PathEscape(d.Id())),
 		nil,
 	)
 	if err != nil {
