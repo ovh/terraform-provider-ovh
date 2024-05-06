@@ -58,6 +58,41 @@ resource "ovh_cloud_project_containerregistry_ip_restrictions_management" "my-mg
     {
       ip_block = "121.121.121.121/32"
       description = "my new awesome ip description"
+    },
+    {
+      ip_block = "121.121.121.122/32"
+      description = "my second awesome ip description"
+    }
+  ]
+}
+`
+
+const testAccCloudProjectContainerRegistryIPRestrictionsManagementReorderIpRestrictions = `
+data "ovh_cloud_project_capabilities_containerregistry_filter" "registryCap" {
+  service_name = "%s"
+  plan_name    = "SMALL"
+  region       = "%s"
+}
+
+resource "ovh_cloud_project_containerregistry" "registry" {
+  service_name = data.ovh_cloud_project_capabilities_containerregistry_filter.registryCap.service_name
+  plan_id      = data.ovh_cloud_project_capabilities_containerregistry_filter.registryCap.id
+  name         = "%s"
+  region       = data.ovh_cloud_project_capabilities_containerregistry_filter.registryCap.region
+}
+
+resource "ovh_cloud_project_containerregistry_ip_restrictions_management" "my-mgt-iprestrictions" {
+  service_name = ovh_cloud_project_containerregistry.registry.service_name
+  registry_id  = ovh_cloud_project_containerregistry.registry.id
+
+  ip_restrictions = [
+    {
+      ip_block = "121.121.121.122/32"
+      description = "my second awesome ip description"
+    },
+    {
+      ip_block = "121.121.121.121/32"
+      description = "my new awesome ip description"
     }
   ]
 }
@@ -78,6 +113,13 @@ func TestAccCloudProjectContainerRegistryIPRestrictionsManagement_basic(t *testi
 
 	configUpdated := fmt.Sprintf(
 		testAccCloudProjectContainerRegistryIPRestrictionsManagementConfigUpdated,
+		serviceName,
+		region,
+		registryName,
+	)
+
+	configUpdatedIpRestrictions := fmt.Sprintf(
+		testAccCloudProjectContainerRegistryIPRestrictionsManagementReorderIpRestrictions,
 		serviceName,
 		region,
 		registryName,
@@ -104,7 +146,12 @@ func TestAccCloudProjectContainerRegistryIPRestrictionsManagement_basic(t *testi
 				),
 			},
 			{
-				Config:       configUpdated,
+				// We check that a change in the ip restrictions order does not affect the plan
+				Config:             configUpdatedIpRestrictions,
+				ExpectNonEmptyPlan: false,
+			},
+			{
+				Config:       configUpdatedIpRestrictions,
 				Destroy:      true,
 				ResourceName: resourceName,
 			},
