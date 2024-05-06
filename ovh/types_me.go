@@ -139,6 +139,7 @@ type MeIdentityGroupResponse struct {
 	Creation     string `json:"creation"`
 	Description  string `json:"description"`
 	LastUpdate   string `json:"lastUpdate"`
+	URN          string `json:"urn"`
 }
 
 type MeIdentityGroupCreateOpts struct {
