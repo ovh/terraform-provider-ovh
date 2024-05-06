@@ -1,3 +1,41 @@
+## 0.44.0 (May 6, 2024)
+
+🎉 Features:
+
+* New datasource: `ovh_dedicated_installation_template` ([#639](https://github.com/ovh/terraform-provider-ovh/pull/639))
+
+💪 Improvements:
+
+* `r/ovh_vrack`: A vRack is now imported using its `service_name` instead of its `order_id` ([#630](https://github.com/ovh/terraform-provider-ovh/pull/630))
+* `r/ovh_cloud_project_gateway`: Add fields `external_information` and `interfaces` ([#638](https://github.com/ovh/terraform-provider-ovh/pull/638))
+* `r/ovh_me_installation_template`: New properties: `end_of_install`, `inputs`, `no_partitioning`, `soft_raid_only_mirroring` and `subfamily` ([#639](https://github.com/ovh/terraform-provider-ovh/pull/639))
+
+* `d/ovh_me_installation_template`: New properties: `end_of_install`, `inputs`, `lvm_ready`, `no_partitioning`, `soft_raid_only_mirroring` and `subfamily` ([#639](https://github.com/ovh/terraform-provider-ovh/pull/639))
+
+🐜 Bug fixes:
+
+* `r/ovh_cloud_project_network_private`: Add possibility to update regions of a private network ([#624](https://github.com/ovh/terraform-provider-ovh/pull/624))
+* `r/ovh_cloud_project_gateway`: Fix resource import ([#634](https://github.com/ovh/terraform-provider-ovh/pull/634))
+
+* `d/ovh_me_identity_group`: Add missing URN in datasource ([#643](https://github.com/ovh/terraform-provider-ovh/pull/643))
+
+📚 Documentation:
+
+* `r/ovh_vrack_cloudproject`: Fix import documentation ([#635](https://github.com/ovh/terraform-provider-ovh/pull/635))
+* `r/ovh_cloud_project_kube`: Fix wrong fields in documentation ([#640](https://github.com/ovh/terraform-provider-ovh/pull/640))
+
+⛔️ Deletions:
+
+* `r/ovh_me_ssh_key`: **BREAKING CHANGE** Resource removed ([#639](https://github.com/ovh/terraform-provider-ovh/pull/639))
+* `r/ovh_dedicated_server_install_task`: **BREAKING CHANGE** Removal of deprecated properties `language` and `use_spla` ([#639](https://github.com/ovh/terraform-provider-ovh/pull/639))
+* `r/ovh_me_installation_template`: **BREAKING CHANGE** Removal of deprecated properties `default_language`, `ssh_key_name`, and `available_languages` ([#639](https://github.com/ovh/terraform-provider-ovh/pull/639))
+
+* `d/ovh_me_installation_template`: **BREAKING CHANGE** Removal of deprecated properties `default_language`, `ssh_key_name` and `available_languages` ([#639](https://github.com/ovh/terraform-provider-ovh/pull/639))
+* `d/ovh_me_ssh_key`: **BREAKING CHANGE** Datasource removed ([#639](https://github.com/ovh/terraform-provider-ovh/pull/639))
+* `d/ovh_me_ssh_keys`: **BREAKING CHANGE** Datasource removed ([#639](https://github.com/ovh/terraform-provider-ovh/pull/639))
+
+❤️ Thanks for your contributions ❤️
+
 ## 0.43.1 (April 23, 2024)
 
 🐜 Bug fixes:
