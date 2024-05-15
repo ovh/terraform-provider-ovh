@@ -33,6 +33,7 @@ type DbaasLogsOperation struct {
 	State          string  `json:"state"`
 	StreamId       *string `json:"streamId"`
 	SubscriptionID *string `json:"subscriptionId"`
+	TokenID        *string `json:"tokenId"`
 	UpdatedAt      string  `json:"updatedAt"`
 }
 
