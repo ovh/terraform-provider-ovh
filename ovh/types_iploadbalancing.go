@@ -499,6 +499,7 @@ type IpLoadbalancingTcpFrontend struct {
 	DedicatedIpFo []string `json:"dedicatedIpfo"`
 	DefaultFarmId *int     `json:"defaultFarmId,omitempty"`
 	DefaultSslId  *int     `json:"defaultSslId,omitempty"`
+	DeniedSource  []string `json:"deniedSource"`
 	Disabled      bool     `json:"disabled"`
 	Ssl           bool     `json:"ssl"`
 	DisplayName   string   `json:"displayName"`

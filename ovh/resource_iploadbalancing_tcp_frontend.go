@@ -56,6 +56,11 @@ func resourceIpLoadbalancingTcpFrontend() *schema.Resource {
 				Optional: true,
 				ForceNew: false,
 			},
+			"denied_source": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"disabled": {
 				Type:     schema.TypeBool,
 				Default:  false,
@@ -95,11 +100,18 @@ func resourceIpLoadbalancingTcpFrontendCreate(d *schema.ResourceData, meta inter
 	config := meta.(*Config)
 
 	allowedSources, _ := helpers.StringsFromSchema(d, "allowed_source")
+	deniedSources, _ := helpers.StringsFromSchema(d, "denied_source")
 	dedicatedIpFo, _ := helpers.StringsFromSchema(d, "dedicated_ipfo")
 
 	for _, s := range allowedSources {
 		if err := helpers.ValidateIpBlock(s); err != nil {
 			return fmt.Errorf("Error validating `allowed_source` value: %s", err)
+		}
+	}
+
+	for _, s := range deniedSources {
+		if err := helpers.ValidateIpBlock(s); err != nil {
+			return fmt.Errorf("Error validating `denied_source` value: %s", err)
 		}
 	}
 
@@ -114,6 +126,7 @@ func resourceIpLoadbalancingTcpFrontendCreate(d *schema.ResourceData, meta inter
 		Zone:          d.Get("zone").(string),
 		AllowedSource: allowedSources,
 		DedicatedIpFo: dedicatedIpFo,
+		DeniedSource:  deniedSources,
 		Disabled:      d.Get("disabled").(bool),
 		Ssl:           d.Get("ssl").(bool),
 		DisplayName:   d.Get("display_name").(string),
@@ -151,6 +164,9 @@ func resourceIpLoadbalancingTcpFrontendRead(d *schema.ResourceData, meta interfa
 	allowedSources := make([]string, 0)
 	allowedSources = append(allowedSources, r.AllowedSource...)
 
+	deniedSources := make([]string, 0)
+	deniedSources = append(deniedSources, r.DeniedSource...)
+
 	dedicatedIpFos := make([]string, 0)
 	dedicatedIpFos = append(dedicatedIpFos, r.DedicatedIpFo...)
 
@@ -163,6 +179,7 @@ func resourceIpLoadbalancingTcpFrontendRead(d *schema.ResourceData, meta interfa
 	d.Set("ssl", r.Ssl)
 	d.Set("zone", r.Zone)
 	d.Set("allowed_source", allowedSources)
+	d.Set("denied_source", deniedSources)
 
 	return nil
 }
@@ -173,11 +190,18 @@ func resourceIpLoadbalancingTcpFrontendUpdate(d *schema.ResourceData, meta inter
 	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/tcp/frontend/%s", service, d.Id())
 
 	allowedSources, _ := helpers.StringsFromSchema(d, "allowed_source")
+	deniedSources, _ := helpers.StringsFromSchema(d, "denied_source")
 	dedicatedIpFo, _ := helpers.StringsFromSchema(d, "dedicated_ipfo")
 
 	for _, s := range allowedSources {
 		if err := helpers.ValidateIpBlock(s); err != nil {
 			return fmt.Errorf("Error validating `allowed_source` value: %s", err)
+		}
+	}
+
+	for _, s := range deniedSources {
+		if err := helpers.ValidateIpBlock(s); err != nil {
+			return fmt.Errorf("Error validating `denied_source` value: %s", err)
 		}
 	}
 
@@ -192,6 +216,7 @@ func resourceIpLoadbalancingTcpFrontendUpdate(d *schema.ResourceData, meta inter
 		Zone:          d.Get("zone").(string),
 		AllowedSource: allowedSources,
 		DedicatedIpFo: dedicatedIpFo,
+		DeniedSource:  deniedSources,
 		Disabled:      d.Get("disabled").(bool),
 		Ssl:           d.Get("ssl").(bool),
 		DisplayName:   d.Get("display_name").(string),

@@ -86,6 +86,8 @@ func TestAccIpLoadbalancingTcpFrontend_basic(t *testing.T) {
 						"ovh_iploadbalancing_tcp_frontend.testfrontend", "disabled", "true"),
 					resource.TestCheckResourceAttr(
 						"ovh_iploadbalancing_tcp_frontend.testfrontend", "allowed_source.#", "0"),
+					resource.TestCheckResourceAttr(
+						"ovh_iploadbalancing_tcp_frontend.testfrontend", "denied_source.#", "0"),
 				),
 			},
 			{
@@ -101,6 +103,25 @@ func TestAccIpLoadbalancingTcpFrontend_basic(t *testing.T) {
 						"ovh_iploadbalancing_tcp_frontend.testfrontend", "disabled", "false"),
 					resource.TestCheckResourceAttr(
 						"ovh_iploadbalancing_tcp_frontend.testfrontend", "allowed_source.#", "1"),
+					resource.TestCheckResourceAttr(
+						"ovh_iploadbalancing_tcp_frontend.testfrontend", "denied_source.#", "0"),
+				),
+			},
+			{
+				Config: fmt.Sprintf(testAccCheckOvhIpLoadbalancingTcpFrontendConfig_denied_source, iplb, test_prefix),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"ovh_iploadbalancing_tcp_frontend.testfrontend", "display_name", test_prefix),
+					resource.TestCheckResourceAttr(
+						"ovh_iploadbalancing_tcp_frontend.testfrontend", "ssl", "false"),
+					resource.TestCheckResourceAttr(
+						"ovh_iploadbalancing_tcp_frontend.testfrontend", "port", "22280,22443"),
+					resource.TestCheckResourceAttr(
+						"ovh_iploadbalancing_tcp_frontend.testfrontend", "disabled", "false"),
+					resource.TestCheckResourceAttr(
+						"ovh_iploadbalancing_tcp_frontend.testfrontend", "allowed_source.#", "0"),
+					resource.TestCheckResourceAttr(
+						"ovh_iploadbalancing_tcp_frontend.testfrontend", "denied_source.#", "1"),
 				),
 			},
 			{
@@ -116,6 +137,8 @@ func TestAccIpLoadbalancingTcpFrontend_basic(t *testing.T) {
 						"ovh_iploadbalancing_tcp_frontend.testfrontend", "disabled", "true"),
 					resource.TestCheckResourceAttr(
 						"ovh_iploadbalancing_tcp_frontend.testfrontend", "allowed_source.#", "0"),
+					resource.TestCheckResourceAttr(
+						"ovh_iploadbalancing_tcp_frontend.testfrontend", "denied_source.#", "0"),
 				),
 			},
 		},
@@ -159,6 +182,16 @@ resource "ovh_iploadbalancing_tcp_frontend" "testfrontend" {
    zone           = "all"
    port           = "22280,22443"
    allowed_source = ["8.8.8.8/32"]
+}
+`
+
+const testAccCheckOvhIpLoadbalancingTcpFrontendConfig_denied_source = `
+resource "ovh_iploadbalancing_tcp_frontend" "testfrontend" {
+   service_name   = "%s"
+   display_name   = "%s"
+   zone           = "all"
+   port           = "22280,22443"
+   denied_source  = ["8.8.8.8/32"]
 }
 `
 
