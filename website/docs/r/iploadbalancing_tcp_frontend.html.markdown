@@ -41,6 +41,7 @@ The following arguments are supported:
    and/or 'range'. Each port must be in the [1;49151] range
 * `zone` - (Required) Zone where the frontend will be defined (ie. `gra`, `bhs` also supports `all`)
 * `allowed_source` - Restrict IP Load Balancing access to these ip block. No restriction if null. List of IP blocks.
+* `denied_source` - Deny IP Load Balancing access to these ip block. No restriction if null. You cannot specify both `allowed_source` and `denied_source` at the same time. List of IP blocks.
 * `dedicated_ipfo` - Only attach frontend on these ip. No restriction if null. List of Ip blocks.
 * `default_farm_id` - Default TCP Farm of your frontend
 * `default_ssl_id` - Default ssl served to your customer
@@ -55,6 +56,7 @@ The following attributes are exported:
 * `id` - Id of your frontend
 * `display_name` - See Argument Reference above.
 * `allowed_source` - See Argument Reference above.
+* `denied_source` - See Argument Reference above.
 * `dedicated_ipfo` - See Argument Reference above.
 * `default_farm_id` - See Argument Reference above.
 * `default_ssl_id` - See Argument Reference above.
