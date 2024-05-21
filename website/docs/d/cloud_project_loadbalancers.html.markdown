@@ -11,7 +11,7 @@ List your public cloud loadbalancers.
 ```hcl
 data "ovh_cloud_project_loadbalancers" "lbs" {
   service_name = "XXXXXX"
-  region_name = "XXX"
+  region_name  = "XXX"
 }
 output "lbs" {
   value = data.ovh_cloud_project_loadbalancers.lbs
@@ -38,8 +38,8 @@ The following attributes are exported:
   - `flavor_id`:  ID of the flavor
   - `name`:  Name of the loadbalancer
   - `region` - Region of the loadbalancer
-  - `created_at` - Date of creation of the loadbalancer.
-  - `updated_at` - Last update date of the loadbalancer.
+  - `created_at` - Date of creation of the loadbalancer
+  - `updated_at` - Last update date of the loadbalancer
   - `operating_status`:  Operating status of the loadbalancer
   - `provisioning_status`:   Provisioning status of the loadbalancer
   - `vip_address`:  IP address of the Virtual IP
