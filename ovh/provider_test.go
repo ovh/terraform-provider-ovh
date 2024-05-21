@@ -273,6 +273,17 @@ func testAccPreCheckCloudDatabaseIpRestriction(t *testing.T) {
 	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_DATABASE_IP_RESTRICTION_IP_TEST")
 }
 
+func testAccPreCheckCloudRegion(t *testing.T) {
+	testAccPreCheckCloud(t)
+	testAccCheckCloudProjectExists(t)
+	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_REGION_TEST")
+}
+
+func testAccPreCheckCloudRegionLoadbalancer(t *testing.T) {
+	testAccPreCheckCloudRegion(t)
+	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_LOADBALANCER_TEST")
+}
+
 // Checks that the environment variables needed for the /cloud/project/{projectId}/ip/failover acceptance tests
 // are set.
 func testAccPreCheckFailoverIpAttach(t *testing.T) {
