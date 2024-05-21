@@ -25,9 +25,9 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create:  schema.DefaultTimeout(20 * time.Minute),
-			Update:  schema.DefaultTimeout(10 * time.Minute),
-			Delete:  schema.DefaultTimeout(10 * time.Minute),
+			Create:  schema.DefaultTimeout(time.Hour),
+			Update:  schema.DefaultTimeout(time.Hour),
+			Delete:  schema.DefaultTimeout(time.Hour),
 			Read:    schema.DefaultTimeout(5 * time.Minute),
 			Default: schema.DefaultTimeout(10 * time.Minute),
 		},
