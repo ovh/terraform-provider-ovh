@@ -10,7 +10,7 @@ import (
 
 func TestAccDataSourceCloudProjectBalancers_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheckCloudRegion(t) },
+		PreCheck:                 func() { testAccPreCheckCloudRegionLoadbalancer(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
