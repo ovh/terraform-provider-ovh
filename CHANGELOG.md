@@ -1,3 +1,22 @@
+## 0.45.0 (May 21, 2024)
+
+🎉 Features:
+
+* New resource: `ovh_dbaas_logs_token` ([#649](https://github.com/ovh/terraform-provider-ovh/pull/649))
+
+* New datasource: `ovh_cloud_project_loadbalancer` ([#648](https://github.com/ovh/terraform-provider-ovh/pull/648))
+* New datasource: `ovh_cloud_project_loadbalancers` ([#648](https://github.com/ovh/terraform-provider-ovh/pull/648))
+
+💪 Improvements:
+
+* `r/ovh_iploadbalancing_tcp_frontend`: Add field `denied_source` ([#652](https://github.com/ovh/terraform-provider-ovh/pull/652))
+
+📚 Documentation:
+
+* `r/ovh_cloud_project`: Fix example of project ordering with HDS certification ([#651](https://github.com/ovh/terraform-provider-ovh/pull/651))
+
+❤️ Thanks for your contributions ❤️
+
 ## 0.44.0 (May 6, 2024)
 
 🎉 Features:
