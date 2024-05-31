@@ -378,17 +378,23 @@ func StringsFromSchema(d *schema.ResourceData, id string) ([]string, error) {
 			rs := vv.List()
 			if len(rs) > 0 {
 				for _, vvv := range vv.List() {
-					xs = append(xs, vvv.(string))
+					if stringValue, ok := vvv.(string); ok {
+						xs = append(xs, stringValue)
+					} else {
+						return nil, fmt.Errorf("invalid value in field %s: %v: expected a string", id, vvv)
+					}
 				}
 			}
 		case []interface{}:
-			if len(vv) > 0 {
-				for _, vvv := range vv {
-					xs = append(xs, vvv.(string))
+			for _, vvv := range vv {
+				if stringValue, ok := vvv.(string); ok {
+					xs = append(xs, stringValue)
+				} else {
+					return nil, fmt.Errorf("invalid value in field %s: %v: expected a string", id, vvv)
 				}
 			}
 		default:
-			return nil, fmt.Errorf("Attribute %v is not a list or set", id)
+			return nil, fmt.Errorf("attribute %v is not a list or set", id)
 		}
 	}
 	return xs, nil
