@@ -28,9 +28,9 @@ resource "ovh_cloud_project_containerregistry_ip_restrictions_management" "my-mg
   registry_id  = ovh_cloud_project_containerregistry.registry.id
 	
   ip_restrictions = [
-    { 
+    {
       ip_block = "121.121.121.121/32"
-      description = "my awesome ip"  
+      description = "my awesome ip"
     }
   ]
   depends_on = [

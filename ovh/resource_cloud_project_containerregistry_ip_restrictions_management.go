@@ -37,7 +37,7 @@ func resourceCloudProjectContainerRegistryIPRestrictionsManagement() *schema.Res
 				Required:    true,
 			},
 			"ip_restrictions": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Description: "List your IP restrictions applied on artifact manager component",
 				Required:    true,
 				Elem: &schema.Schema{
