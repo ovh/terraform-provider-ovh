@@ -258,6 +258,14 @@ func dataSourceCloudProjectKube() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			kubeClusterLoadBalancersSubnetIdKey: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			kubeClusterNodesSubnetIdKey: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
