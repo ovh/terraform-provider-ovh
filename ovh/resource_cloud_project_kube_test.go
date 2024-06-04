@@ -114,12 +114,27 @@ resource "ovh_cloud_project_network_private" "network" {
 resource "ovh_cloud_project_network_private_subnet" "networksubnet" {
   service_name = ovh_cloud_project_network_private.network.service_name
   network_id   = ovh_cloud_project_network_private.network.id
+  # whatever region, for test purpose
+  region     = "{{ .Region }}"
+  start      = "192.168.168.66"
+  end        = "192.168.168.100"
+  network    = "192.168.168.64/26"
+  dhcp       = true
+  no_gateway = false
+
+  depends_on   = [ovh_cloud_project_network_private.network]
+}
+
+resource "ovh_cloud_project_network_private_subnet" "networksubnet2" {
+  service_name = ovh_cloud_project_network_private.network.service_name
+  network_id   = ovh_cloud_project_network_private.network.id
+
 
   # whatever region, for test purpose
   region     = "{{ .Region }}"
-  start      = "192.168.168.100"
-  end        = "192.168.168.200"
-  network    = "192.168.168.0/24"
+  start      = "192.168.168.130"
+  end        = "192.168.168.180"
+  network    = "192.168.168.128/26"
   dhcp       = true
   no_gateway = false
 
@@ -132,6 +147,8 @@ resource "ovh_cloud_project_kube" "cluster" {
 	region        = "{{ .Region }}"
 
 	private_network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
+	nodes_subnet_id = ovh_cloud_project_network_private_subnet.networksubnet.id
+	load_balancers_subnet_id = {{ .LoadBalancersSubnetId }}
 
 	private_network_configuration {
 		default_vrack_gateway              = "{{ .DefaultVrackGateway }}"
@@ -190,6 +207,8 @@ type configData struct {
 	Name                           string
 	DefaultVrackGateway            string
 	PrivateNetworkRoutingAsDefault bool
+	LoadBalancersSubnetName        string
+	LoadBalancersSubnetId          string
 }
 
 func TestAccCloudProjectKubeCustomizationApiServerAdmissionPlugins(t *testing.T) {
@@ -252,7 +271,7 @@ func TestAccCloudProjectKubeCustomizationApiServerAdmissionPlugins(t *testing.T)
 }
 
 // TestAccCloudProjectKubeDeprecatedCustomizationApiServerAdmissionPlugins aims to test that
-// values are the same between customization_apiserver.admissionplugins are the same and customization.apiserver.admissionplugins.
+// values are the same between customization_apiserver.admissionplugins and customization.apiserver.admissionplugins.
 // This is deprecated and will be removed in the future.
 func TestAccCloudProjectKubeDeprecatedCustomizationApiServerAdmissionPlugins(t *testing.T) {
 	region := os.Getenv("OVH_CLOUD_PROJECT_KUBE_REGION_TEST")
@@ -940,10 +959,7 @@ func TestAccCloudProjectKubeVRack(t *testing.T) {
 	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
 
 	name := acctest.RandomWithPrefix(test_prefix)
-	tmpl, err := template.New("config").Parse(testAccCloudProjectKubeVRackConfig)
-	if err != nil {
-		panic(err)
-	}
+	tmpl := template.Must(template.New("config").Parse(testAccCloudProjectKubeVRackConfig))
 
 	var config bytes.Buffer
 	var configUpdated bytes.Buffer
@@ -954,6 +970,7 @@ func TestAccCloudProjectKubeVRack(t *testing.T) {
 		Region:                         region,
 		DefaultVrackGateway:            "",
 		PrivateNetworkRoutingAsDefault: false,
+		LoadBalancersSubnetId:          "ovh_cloud_project_network_private_subnet.networksubnet.id",
 	}
 	configData2 := configData{
 		ServiceName:                    serviceName,
@@ -962,9 +979,10 @@ func TestAccCloudProjectKubeVRack(t *testing.T) {
 		Region:                         region,
 		DefaultVrackGateway:            "10.4.0.1",
 		PrivateNetworkRoutingAsDefault: true,
+		LoadBalancersSubnetId:          "ovh_cloud_project_network_private_subnet.networksubnet2.id",
 	}
 
-	err = tmpl.Execute(&config, &configData1)
+	err := tmpl.Execute(&config, &configData1)
 	if err != nil {
 		panic(err)
 	}
@@ -986,11 +1004,13 @@ func TestAccCloudProjectKubeVRack(t *testing.T) {
 			{
 				Config: config.String(),
 				Check: resource.ComposeTestCheckFunc(
+
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "version"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "private_network_configuration.0.default_vrack_gateway", configData1.DefaultVrackGateway),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "private_network_configuration.0.private_network_routing_as_default", strconv.FormatBool(configData1.PrivateNetworkRoutingAsDefault)),
+					resource.TestCheckResourceAttrPair("ovh_cloud_project_kube.cluster", "load_balancers_subnet_id", "ovh_cloud_project_network_private_subnet.networksubnet", "id"),
 				),
 			},
 			{
@@ -1001,6 +1021,7 @@ func TestAccCloudProjectKubeVRack(t *testing.T) {
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "version"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "private_network_configuration.0.default_vrack_gateway", configData2.DefaultVrackGateway),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "private_network_configuration.0.private_network_routing_as_default", strconv.FormatBool(configData2.PrivateNetworkRoutingAsDefault)),
+					resource.TestCheckResourceAttrPair("ovh_cloud_project_kube.cluster", "load_balancers_subnet_id", "ovh_cloud_project_network_private_subnet.networksubnet2", "id"),
 				),
 			},
 		},
