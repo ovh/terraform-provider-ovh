@@ -39,7 +39,7 @@ resource "ovh_cloud_project_kube_nodepool" "pool" {
         k1 = "v1"
         k2 = "v2"
       }
-      finalizers = ["ovhcloud.com/v1beta1", "ovhcloud.com/v1"]
+      finalizers = []
       labels = {
         k3 = "v3"
         k4 = "v4"
