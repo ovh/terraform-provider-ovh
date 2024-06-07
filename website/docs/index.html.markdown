@@ -152,6 +152,8 @@ project or user.
 
 You can find more details about the configuration parsing on repository [go-ovh](https://github.com/ovh/go-ovh).
 
+To list and revoke your API keys, you can read [the following documentation](https://help.ovhcloud.com/csm/en-ie-api-getting-started-ovhcloud-api?id=kb_article_view&sysparm_article=KB0042786#list-and-revoke-your-keys).
+
 ## Example Usage
 
 ```hcl
