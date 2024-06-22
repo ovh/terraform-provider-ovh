@@ -17,6 +17,9 @@ type Config struct {
 	Plate    string
 	Endpoint string
 
+	// Access token
+	AccessToken string
+
 	// AK / AS / CK authentication information
 	ApplicationKey    string
 	ApplicationSecret string
@@ -38,13 +41,19 @@ func clientDefault(c *Config) (*ovh.Client, error) {
 		err    error
 	)
 
-	if c.ClientID != "" {
+	switch {
+	case c.AccessToken != "":
+		client, err = ovh.NewAccessTokenClient(
+			c.Endpoint,
+			c.AccessToken,
+		)
+	case c.ClientID != "":
 		client, err = ovh.NewOAuth2Client(
 			c.Endpoint,
 			c.ClientID,
 			c.ClientSecret,
 		)
-	} else {
+	default:
 		client, err = ovh.NewClient(
 			c.Endpoint,
 			c.ApplicationKey,
