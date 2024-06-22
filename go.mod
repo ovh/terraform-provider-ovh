@@ -12,7 +12,7 @@ require (
 	github.com/hashicorp/terraform-plugin-mux v0.15.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.33.0
 	github.com/hashicorp/terraform-plugin-testing v1.7.0
-	github.com/ovh/go-ovh v1.5.1
+	github.com/ovh/go-ovh v1.6.0
 	github.com/ybriffa/rfc3339 v0.0.0-20220203155318-1789e3fd6e70
 	golang.org/x/exp v0.0.0-20230809150735-7b3493d9a819
 	gopkg.in/yaml.v3 v3.0.1
