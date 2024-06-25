@@ -92,7 +92,7 @@ You can find more details about the configuration parsing on repository [go-ovh]
 The provider will look for the token either at ``OVH_ACCESS_TOKEN`` environment
 variable, or get it via ``access_token`` argument in the provider's stanza.
 
-Similarly to OAuth2 method, the endpoint might need to be configured (either via
+Similarly to OAuth2 method, the endpoint must be configured (either via
 ``endpoint`` argument, or with ``OVH_ENDPOINT`` environment variable).
 
 ### Application Key/Application Secret
