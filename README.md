@@ -147,6 +147,7 @@ export OVH_CLOUD_PROJECT_FAILOVER_IP_ROUTED_TO_1_TEST="..."
 export OVH_CLOUD_PROJECT_FAILOVER_IP_ROUTED_TO_2_TEST="..."
 export OVH_VRACK_SERVICE_TEST="..."
 export OVH_ZONE_TEST="..."
+export OVH_DOMAIN_TEST="..."
 
 $ make testacc
 ```
