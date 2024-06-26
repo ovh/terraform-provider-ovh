@@ -19,7 +19,10 @@ var (
 	descriptions = map[string]string{
 		"endpoint": "The OVH API endpoint to target (ex: \"ovh-eu\")",
 
-		// Authentication via app key / app secret / comsumer key
+		// Authentication via short-lived access token
+		"access_token": "The OVH API Access Token",
+
+		// Authentication via app key / app secret / consumer key
 		"application_key":    "The OVH API Application Key",
 		"application_secret": "The OVH API Application Secret",
 		"consumer_key":       "The OVH API Consumer Key",
@@ -38,6 +41,11 @@ func Provider() *schema.Provider {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: descriptions["endpoint"],
+			},
+			"access_token": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: descriptions["access_token"],
 			},
 			"application_key": {
 				Type:        schema.TypeString,
@@ -271,6 +279,9 @@ func ConfigureContextFunc(context context.Context, d *schema.ResourceData) (inte
 
 	if v, ok := d.GetOk("endpoint"); ok {
 		config.Endpoint = v.(string)
+	}
+	if v, ok := d.GetOk("access_token"); ok {
+		config.AccessToken = v.(string)
 	}
 	if v, ok := d.GetOk("application_key"); ok {
 		config.ApplicationKey = v.(string)

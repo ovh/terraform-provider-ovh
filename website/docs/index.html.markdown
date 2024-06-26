@@ -8,9 +8,9 @@ description: |-
 
 # OVH Provider
 
-The OVH provider is the entry point to interact with the resources provided by OVHcloud. 
+The OVH provider is the entry point to interact with the resources provided by OVHcloud.
 
--> __NOTE__ According on your needs, you may need to use additional providers. This [documentation page](https://help.ovhcloud.com/csm/en-gb-terraform-at-ovhcloud?id=kb_article_view&sysparm_article=KB0054612) provides the mapping between the control panel concepts and the terraform providers / ressources.
+-> __NOTE__ According on your needs, you may need to use additional providers. This [documentation page](https://help.ovhcloud.com/csm/en-gb-terraform-at-ovhcloud?id=kb_article_view&sysparm_article=KB0054612) provides the mapping between the control panel concepts and the terraform providers / resources.
 
 Use the navigation to the left to read about the available resources.
 
@@ -18,9 +18,13 @@ Use the navigation to the left to read about the available resources.
 
 The provider needs to be configured with the proper credentials before it can be used. Requests to OVHcloud APIs require a set of secrets keys and the definition of the API end point. See [First Steps with the API](https://docs.ovh.com/gb/en/customer/first-steps-with-ovh-api/) (or the French version, [Premiers pas avec les API OVHcloud](https://docs.ovh.com/fr/api/api-premiers-pas/)) for a detailed explanation.
 
-Two forms of authentication are supported by the provider:
-- OAuth2, using scopped service accounts, and compatible with OVHcloud IAM
-- application key & application secret & consumer key
+Three forms of authentication are supported by the provider:
+- OAuth2, using scoped service accounts, and compatible with OVHcloud IAM
+- Short-lived access token received from
+  [OVH API](https://support.us.ovhcloud.com/hc/en-us/articles/19901571606547-Using-Service-Accounts-to-Connect-to-OVHcloud-APIs)
+  (for example with aid of Hashicorp Vault OAuth2 secret engine configured to
+  work with OVH auth api).
+- Application key & application secret & consumer key
 
 ### OAuth2
 
@@ -51,7 +55,7 @@ Alternatively it is suggested to use configuration files or environment
 variables so that the same code may run seamlessly in multiple environments.
 Production and development for instance.
 
-The provider will first look for direct instanciation parameters then
+The provider will first look for direct instantiation parameters then
 ``OVH_ENDPOINT``, ``OVH_CLIENT_ID`` and ``OVH_CLIENT_SECRET`` environment variables.
 If either of these parameter is not provided, it will look for a configuration file of the form:
 
@@ -83,10 +87,18 @@ project or user.
 
 You can find more details about the configuration parsing on repository [go-ovh](https://github.com/ovh/go-ovh).
 
+### Access token
+
+The provider will look for the token either at ``OVH_ACCESS_TOKEN`` environment
+variable, or get it via ``access_token`` argument in the provider's stanza.
+
+Similarly to OAuth2 method, the endpoint must be configured (either via
+``endpoint`` argument, or with ``OVH_ENDPOINT`` environment variable).
+
 ### Application Key/Application Secret
 
 The required keys are the `application_key`, the `application_secret`, and the `consumer_key`.
-These keys can be generated via the [OVHcloud token generation page](https://api.ovh.com/createToken/?GET=/*&POST=/*&PUT=/*&DELETE=/*). 
+These keys can be generated via the [OVHcloud token generation page](https://api.ovh.com/createToken/?GET=/*&POST=/*&PUT=/*&DELETE=/*).
 
 These parameters can be configured directly in the provider block as shown hereafter.
 
@@ -113,7 +125,7 @@ Alternatively it is suggested to use configuration files or environment
 variables so that the same code may run seamlessly in multiple environments.
 Production and development for instance.
 
-The provider will first look for direct instanciation parameters then
+The provider will first look for direct instantiation parameters then
 ``OVH_ENDPOINT``, ``OVH_APPLICATION_KEY``, ``OVH_APPLICATION_SECRET`` and
 ``OVH_CONSUMER_KEY`` environment variables. If either of these parameter is not
 provided, it will look for a configuration file of the form:
@@ -246,12 +258,12 @@ variables must also be set:
 
 * `OVH_CLOUD_PROJECT_FAILOVER_IP_ROUTED_TO_1_TEST` - The GUID of an instance to which failover IP addresses can be attached
 
-* `OVH_CLOUD_PROJECT_FAILOVER_IP_ROUTED_TO_2_TEST` - The GUID of a secondary instance to which failover IP addresses can be attached. There must be 2 as associations can only be updated not removed. To test effectively, the failover ip address must be moved between instances 
+* `OVH_CLOUD_PROJECT_FAILOVER_IP_ROUTED_TO_2_TEST` - The GUID of a secondary instance to which failover IP addresses can be attached. There must be 2 as associations can only be updated not removed. To test effectively, the failover ip address must be moved between instances
 
 * `OVH_CLOUD_PROJECT_KUBE_REGION_TEST` - The region of your public cloud kubernetes project.
 
 * `OVH_CLOUD_PROJECT_KUBE_VERSION_TEST` - The version of your public cloud kubernetes project.
-* `OVH_CLOUD_PROJECT_KUBE_PREV_VERSION_TEST` - The previous version of your public cloud kubernetes project. This is used to test upgrade. 
+* `OVH_CLOUD_PROJECT_KUBE_PREV_VERSION_TEST` - The previous version of your public cloud kubernetes project. This is used to test upgrade.
 
 * `OVH_DEDICATED_SERVER` - The name of the dedicated server to test dedicated_server_networking resource.
 
@@ -260,7 +272,7 @@ variables must also be set:
 * `OVH_ZONE_TEST` - The domain you own to test the domain_zone resource.
 
 * `OVH_IP_TEST`, `OVH_IP_BLOCK_TEST`, `OVH_IP_REVERSE_TEST` - The values you have to set for testing ip reverse resources.
- 
+
 * `OVH_IP_MOVE_SERVICE_NAME_TEST` - The value you have to set for testing ip move resources.
 
 * `OVH_DBAAS_LOGS_SERVICE_TEST` - The name of your Dbaas logs service.

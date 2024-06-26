@@ -39,6 +39,10 @@ func (p *OvhProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *
 				Optional:    true,
 				Description: descriptions["endpoint"],
 			},
+			"access_token": schema.StringAttribute{
+				Optional:    true,
+				Description: descriptions["access_token"],
+			},
 			"application_key": schema.StringAttribute{
 				Optional:    true,
 				Description: descriptions["application_key"],
@@ -79,6 +83,16 @@ func (p *OvhProvider) Configure(ctx context.Context, req provider.ConfigureReque
 			"Unknown OVH API endpoint",
 			"The provider cannot create the OVH API client as there is a missing or empty value for the API endpoint."+
 				"Set the endpoint value in the configuration and ensure the value is not empty.",
+		)
+	}
+
+	if config.AccessToken.IsUnknown() {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("access_token"),
+			"Unknown OVH API access_token",
+			"The provider cannot create the OVH API client as there is a missing or empty value for the API access token."+
+				"Set the access token value in the configuration or use the OVH_ACCESS_TOKEN environment variable."+
+				"If either is already set, ensure the value is not empty.",
 		)
 	}
 
@@ -144,6 +158,9 @@ func (p *OvhProvider) Configure(ctx context.Context, req provider.ConfigureReque
 	if !config.Endpoint.IsNull() {
 		clientConfig.Endpoint = config.Endpoint.ValueString()
 	}
+	if !config.AccessToken.IsNull() {
+		clientConfig.AccessToken = config.AccessToken.ValueString()
+	}
 	if !config.ApplicationKey.IsNull() {
 		clientConfig.ApplicationKey = config.ApplicationKey.ValueString()
 	}
@@ -202,6 +219,7 @@ func (p *OvhProvider) Resources(_ context.Context) []func() resource.Resource {
 
 type ovhProviderModel struct {
 	Endpoint          types.String `tfsdk:"endpoint"`
+	AccessToken       types.String `tfsdk:"access_token"`
 	ApplicationKey    types.String `tfsdk:"application_key"`
 	ApplicationSecret types.String `tfsdk:"application_secret"`
 	ConsumerKey       types.String `tfsdk:"consumer_key"`
