@@ -124,6 +124,34 @@ func TestAccDomainZoneRecord_Basic(t *testing.T) {
 						"ovh_domain_zone_record.foobar", "ttl", "3600"),
 				),
 			},
+			{
+				Config: testAccCheckOvhDomainZoneRecordConfig_A(zone, subdomain, "192.168.0.11", 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOvhDomainZoneRecordExists("ovh_domain_zone_record.foobar", &record),
+					resource.TestCheckResourceAttr(
+						"ovh_domain_zone_record.foobar", "subdomain", subdomain),
+					resource.TestCheckResourceAttr(
+						"ovh_domain_zone_record.foobar", "zone", zone),
+					resource.TestCheckResourceAttr(
+						"ovh_domain_zone_record.foobar", "target", "192.168.0.11"),
+					resource.TestCheckResourceAttr(
+						"ovh_domain_zone_record.foobar", "ttl", "0"),
+				),
+			},
+			{
+				Config: testAccCheckOvhDomainZoneRecordConfig_A_noTTL(zone, subdomain, "192.168.0.12"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOvhDomainZoneRecordExists("ovh_domain_zone_record.foobar", &record),
+					resource.TestCheckResourceAttr(
+						"ovh_domain_zone_record.foobar", "subdomain", subdomain),
+					resource.TestCheckResourceAttr(
+						"ovh_domain_zone_record.foobar", "zone", zone),
+					resource.TestCheckResourceAttr(
+						"ovh_domain_zone_record.foobar", "target", "192.168.0.12"),
+					resource.TestCheckResourceAttr(
+						"ovh_domain_zone_record.foobar", "ttl", "0"),
+				),
+			},
 		},
 	})
 }
@@ -310,6 +338,16 @@ resource "ovh_domain_zone_record" "foobar" {
 	fieldtype = "A"
 	ttl = %d
 }`, zone, subdomain, target, ttl)
+}
+
+func testAccCheckOvhDomainZoneRecordConfig_A_noTTL(zone, subdomain, target string) string {
+	return fmt.Sprintf(`
+resource "ovh_domain_zone_record" "foobar" {
+	zone = "%s"
+	subdomain = "%s"
+	target = "%s"
+	fieldtype = "A"
+}`, zone, subdomain, target)
 }
 
 func testAccCheckOvhDomainZoneRecordConfig_CNAME(zone, subdomain, target string, ttl int) string {
