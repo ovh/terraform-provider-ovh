@@ -4,10 +4,22 @@ parameters:
   testargs:
     type: string
     description: additional testargs
+  skipthispipeline:
+    type: boolean
+    description: Skip this pipeline
 
 jobs:
 - job: checks
   steps:
+  - name: Skip this pipeline without failing
+    script: |
+      #!/usr/bin/env bash
+      set -eEuo pipefail
+      if [[ "${CDS_PIP_SKIPTHISPIPELINE}" == "true" ]];
+      then
+        worker exit 0
+      fi
+
   - name: Get the sources of the project
     checkout: '{{.cds.workspace}}'
   - name: Install terraform
