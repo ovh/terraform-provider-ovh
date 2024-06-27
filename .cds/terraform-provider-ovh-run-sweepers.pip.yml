@@ -1,5 +1,5 @@
 version: v1.0
-name: terraform-provider-ovh-post-sweepers
+name: terraform-provider-ovh-run-sweepers
 parameters:
   testargs:
     type: string
@@ -19,7 +19,7 @@ jobs:
       curl -sfLo - "${tfurl}" | gunzip -d - > /usr/local/bin/terraform
       chmod +x /usr/local/bin/terraform
 
-  - name: Run post sweepers
+  - name: Run sweepers
     script: |
       TF_ACC=1 go test ./ovh/ -v -sweep=1
 
