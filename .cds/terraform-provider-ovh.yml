@@ -23,6 +23,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run CloudProjectCapabilities
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudproject}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -34,6 +35,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run CloudProjectContainer
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudproject}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -45,6 +47,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run CloudProjectDatabaseCapabilities
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudprojectdatabase}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -56,6 +59,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run CloudProjectDatabaseCertificates
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudprojectdatabase}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -67,6 +71,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run CloudProjectDatabaseDatabase
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudprojectdatabase}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -78,6 +83,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run CloudProjectDatabaseIntegration
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudprojectdatabase}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -89,6 +95,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run CloudProjectDatabaseKafkaAcl
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudprojectdatabase}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -100,6 +107,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run CloudProjectDatabaseKafkaSchemaRegistry
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudprojectdatabase}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -111,6 +119,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run CloudProjectDatabaseKafkaTopic
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudprojectdatabase}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -122,6 +131,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run CloudProjectDatabaseKafkaUser
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudprojectdatabase}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -133,6 +143,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run CloudProjectDatabaseLogSubscription
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudprojectdatabase}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -144,6 +155,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run CloudProjectDatabaseM3dbNamespace
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudprojectdatabase}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -155,6 +167,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run CloudProjectDatabaseM3dbUser
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudprojectdatabase}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -166,6 +179,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run CloudProjectDatabaseMongodbUser
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudprojectdatabase}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -177,6 +191,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run CloudProjectDatabaseOpensearchPattern
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudprojectdatabase}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -188,6 +203,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run CloudProjectDatabaseOpensearchUser
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudprojectdatabase}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -199,6 +215,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run CloudProjectDatabasePostgresql
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudprojectdatabase}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -210,6 +227,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run CloudProjectDatabaseRedis
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudprojectdatabase}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -221,6 +239,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run CloudProjectKube.*[cC]ustomization
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudprojectkubernetes}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -232,6 +251,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run CloudProjectKubeDataSource
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudprojectkubernetes}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -243,6 +263,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run CloudProjectKubeEmptyVersion
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudprojectkubernetes}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -254,6 +275,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run CloudProjectKubeIPRestriction
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudprojectkubernetes}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -265,6 +287,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run CloudProjectAlerting
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudproject}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -276,6 +299,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run CloudProjectKubeNodePool
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudprojectkubernetes}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -287,6 +311,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run CloudProjectKubeNodes
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudprojectkubernetes}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -298,6 +323,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run CloudProjectKubeOIDC
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudprojectkubernetes}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -309,6 +335,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run CloudProjectKubeUpdate
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudprojectkubernetes}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -320,6 +347,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run CloudProjectKube_basic
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudprojectkubernetes}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -331,6 +359,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run CloudProjectKube_kube_proxy
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudprojectkubernetes}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -342,6 +371,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run CloudProjectUser
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudproject}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -353,6 +383,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run DbaasLogs
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.ldp}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -364,6 +395,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run DedicatedCeph
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.ceph}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -375,6 +407,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run DedicatedNasha
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.nasha}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -386,6 +419,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run DedicatedServer
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.baremetal}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -397,6 +431,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run DomainZone
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.dns}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -408,6 +443,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run HostingPrivateDatabase
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.hostingdatabase}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -420,6 +456,7 @@ workflow:
     parameters:
       # Exclude tests that use a vRack since they are already ran in Tests_Vrack pipeline
       testargs: -run 'IpLoadbalancing' -skip '[Vv]rack'
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.iplb}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -431,6 +468,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run IpReverse
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.ip}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -442,6 +480,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run TestAccCloudProjectDatabaseDataSource_basic
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudprojectdatabase}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -453,6 +492,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run TestAccCloudProjectDatabaseUser
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudprojectdatabase}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -464,6 +504,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run TestAccCloudProjectDatabase_basic
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudprojectdatabase}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -475,6 +516,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run TestAccCloudProjectDatabase_importBasic
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudprojectdatabase}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -486,6 +528,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run TestAccCloudProjectDatabasesDataSource_basic
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudprojectdatabase}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -497,6 +540,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run TestAccCloudProjectRegions
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudproject}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -508,6 +552,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run TestAccCloudProjectWorkflowBackup
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudproject}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -519,6 +564,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run TestAccDataSourceCloudProject
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudproject}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -530,6 +576,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run TestAccDataSourceIp
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.ip}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -541,6 +588,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run TestAccDataSourceOrderCart
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.order}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -552,6 +600,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run TestAccDedicatedInstallationTemplate
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.baremetal}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -563,6 +612,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run TestAccIam
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.iam}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -574,6 +624,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run TestAccMe
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.account}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -585,6 +636,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run TestAccResourceCloudProjectFailoverIpAttachTestAccResourceCloudProject_basic
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudproject}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -596,6 +648,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run TestAccResourceIpService_basic
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.ip}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -607,6 +660,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run TestAccIpMove_basic
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.ip}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -618,6 +672,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run TestAccVPS
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.vps}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -630,6 +685,7 @@ workflow:
     parameters:
       # Include specific test TestAccCloudProjectNetwork as it uses a vRack service
       testargs: -run 'Vrack|TestAccCloudProjectNetwork|TestAccCloudProjectKubeVRack|TestAccCloudProjectGateway'
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.vrack}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
@@ -641,14 +697,20 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run 'TestAccIPFirewall|TestAccIPMitigation'
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.ip}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
   terraform-provider-ovh:
     application: terraform-provider-ovh
-    parameters: null
+    parameters:
+      skipthistest.cloudprojectdatabase: "true"
     pipeline: terraform-provider-ovh
-    testargs: ''
+    payload:
+      git.branch: master
+      git.hash: ""
+      git.tag: ""
+      git.repository: "ovh/terraform-provider-ovh"
   terraform-provider-ovh-check:
     application: terraform-provider-ovh
     depends_on:
@@ -716,11 +778,11 @@ workflow:
     - Tests_IPFirewall
     environment: acctests
     one_at_a_time: true
-    pipeline: terraform-provider-ovh-post-sweepers
+    pipeline: terraform-provider-ovh-run-sweepers
   terraform-provider-ovh-pre-sweepers:
     application: terraform-provider-ovh
     depends_on:
     - terraform-provider-ovh-check
     environment: acctests
     one_at_a_time: true
-    pipeline: terraform-provider-ovh-pre-sweepers
+    pipeline: terraform-provider-ovh-run-sweepers

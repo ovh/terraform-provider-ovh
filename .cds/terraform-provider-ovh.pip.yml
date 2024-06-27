@@ -4,7 +4,51 @@ name: terraform-provider-ovh
 description: |
   Empty pipeline to use as root node for the workflow allowing the use of parameters from the UI
 parameters:
-  testargs:
-    type: string
-    default: ""
-    description: additional testacc arguments
+  skipthistest.cloudprojectdatabase:
+    type: boolean
+    description: Skip Cloud Project Database tests
+  skipthistest.cloudproject:
+    type: boolean
+    description: Skip Cloud Project tests
+  skipthistest.cloudprojectkubernetes:
+    type: boolean
+    description: Skip Cloud Project Kubernetes tests
+  skipthistest.ldp:
+    type: boolean
+    description: Skip LDP tests
+  skipthistest.ceph:
+    type: boolean
+    description: Skip Ceph tests
+  skipthistest.nasha:
+    type: boolean
+    description: Skip NAS HA tests
+  skipthistest.baremetal:
+    type: boolean
+    description: Skip Baremetal tests
+  skipthistest.dns:
+    type: boolean
+    description: Skip DNS Zone tests
+  skipthistest.hostingdatabase:
+    type: boolean
+    description: Skip Hosting Database tests
+  skipthistest.iplb:
+    type: boolean
+    description: Skip IPLB tests
+  skipthistest.ip:
+    type: boolean
+    description: Skip IP tests
+  skipthistest.order:
+    type: boolean
+    description: Skip Order tests
+  skipthistest.iam:
+    type: boolean
+    description: Skip IAM tests
+  skipthistest.account:
+    type: boolean
+    description: Skip Account Management tests
+  skipthistest.vps:
+    type: boolean
+    description: Skip VPS tests
+  skipthistest.vrack:
+    type: boolean
+    description: Skip vRack tests
