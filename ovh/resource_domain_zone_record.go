@@ -72,11 +72,11 @@ func resourceOvhDomainZoneRecord() *schema.Resource {
 			"ttl": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  3600,
+				Default:  0,
 				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
 					v := val.(int)
-					if v < 60 {
-						errs = append(errs, fmt.Errorf("%q must be greater than or equal to 60, got: %d", key, v))
+					if v < 60 && v != 0 {
+						errs = append(errs, fmt.Errorf("%q must be either equal to 0 or, greater than or equal to 60, got: %d", key, v))
 					}
 					return
 				},
