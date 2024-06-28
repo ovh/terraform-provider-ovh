@@ -127,7 +127,7 @@ func resourceOvhDomainNameServersCreate(d *schema.ResourceData, meta interface{}
 		})
 	}
 	log.Printf("[DEBUG] OVH Record create configuration: %#v", servers)
-	err := config.OVHClient.Post(fmt.Sprintf("/domain/%s/nameServers/update", serviceName), servers, nil)
+	err := config.OVHClient.Post(fmt.Sprintf("/domain/%s/nameServers/update", url.PathEscape(serviceName)), servers, nil)
 
 	if err != nil {
 		return fmt.Errorf("failed to register OVH Nameservers: %s", err)
