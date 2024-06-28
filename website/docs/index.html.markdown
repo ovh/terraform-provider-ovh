@@ -226,6 +226,8 @@ variables must also be set:
 
 * `OVH_VRACK_SERVICE_TEST` - The ID of the vRack to use.
 
+* `OVH_CLOUD_LOADBALANCER_ID_TEST` - The ID of the LoadBalancer to use.
+
 * `OVH_CLOUD_PROJECT_SERVICE_TEST` - The ID of your public cloud project.
 
 * `OVH_CLOUD_PROJECT_CONTAINERREGISTRY_OIDC_ENDPOINT_TEST` - The OIDC endpoint of the container registry to test.
@@ -264,6 +266,8 @@ variables must also be set:
 
 * `OVH_CLOUD_PROJECT_KUBE_VERSION_TEST` - The version of your public cloud kubernetes project.
 * `OVH_CLOUD_PROJECT_KUBE_PREV_VERSION_TEST` - The previous version of your public cloud kubernetes project. This is used to test upgrade.
+
+* `OVH_CLOUD_STREAM_ID_TEST` - The ID of the LogSubscription to use.
 
 * `OVH_DEDICATED_SERVER` - The name of the dedicated server to test dedicated_server_networking resource.
 
@@ -305,7 +309,6 @@ variables must also be set:
 
 * `OVH_CLOUD_PROJECT_WORKFLOW_BACKUP_REGION_TEST` - The openstack region in which the workflow will be defined
 * `OVH_CLOUD_PROJECT_WORKFLOW_BACKUP_INSTANCE_ID_TEST` - The openstack id of the instance to backup
-
 ### Using a locally built terraform-provider-ovh
 
 If you wish to test the provider from the local version you just built, you can try the following method.

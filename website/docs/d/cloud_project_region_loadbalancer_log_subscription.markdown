@@ -4,7 +4,7 @@ subcategory : "Managed Loadbalancer Log Subscription"
 
 # ovh_cloud_project_region_loadbalancer_log_subscription
 
-Get information about a subscription to a Managed Loadbalance Logs Service in a public cloud project.
+Get information about a subscription to a Managed Loadbalancer Logs Service in a public cloud project.
 
 ## Example Usage
 
