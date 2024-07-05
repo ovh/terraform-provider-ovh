@@ -189,6 +189,11 @@ func resourceDedicatedServerInstallTaskCreate(d *schema.ResourceData, meta inter
 	task := &DedicatedServerTask{}
 
 	if err := config.OVHClient.Post(endpoint, opts, task); err != nil {
+		// If task was not created because of an error, return it immediately.
+		if task != nil && task.Id == 0 {
+			return fmt.Errorf("failed to create install task: %w", err)
+		}
+
 		// POST on install tasks can fail randomly so in order to avoid issues, let's allow
 		// a retry via waitForDedicatedServerTask
 		log.Printf("[WARN] Ignored error when calling POST %s: %v", endpoint, err)
