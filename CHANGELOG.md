@@ -1,3 +1,34 @@
+## 0.46.0 (July 8, 2024)
+
+🎉 Features:
+
+* Added `access_token` authentication method ([#668](https://github.com/ovh/terraform-provider-ovh/pull/668))
+
+💪 Improvements:
+
+* `r/ovh_cloud_project_kube`: Added properties `load_balancers_subnet_id` and `nodes_subnet_id` ([#661](https://github.com/ovh/terraform-provider-ovh/pull/661))
+* `r/ovh_dedicated_nasha_partition_access`: Added field `acl_description` ([#678](https://github.com/ovh/terraform-provider-ovh/pull/678))
+
+* `d/ovh_cloud_project_kube`: Added properties `load_balancers_subnet_id` and `nodes_subnet_id` ([#662](https://github.com/ovh/terraform-provider-ovh/pull/662))
+
+🐜 Bug fixes:
+
+* `r/ovh_cloud_project_kube_nodepool`: Increased default timeouts ([#656](https://github.com/ovh/terraform-provider-ovh/pull/656))
+* `r/ovh_cloud_project_containerregistry_ip_restrictions_management`: Use `TypeSet` for IP restrictions ([#645](https://github.com/ovh/terraform-provider-ovh/pull/645))
+* `r/ovh_cloud_project_containerregistry_ip_restrictions_registry`: Use `TypeSet` for IP restrictions ([#645](https://github.com/ovh/terraform-provider-ovh/pull/645))
+* `r/ovh_domain_zone_record`: Use correct default value for TTL ([#672](https://github.com/ovh/terraform-provider-ovh/pull/672), [#679](https://github.com/ovh/terraform-provider-ovh/pull/679))
+* `r/ovh_dedicated_server_install_task`: Don't retry task if creation failed ([#676](https://github.com/ovh/terraform-provider-ovh/pull/676))
+* `r/ovh_cloud_project`: Retrieve order information when reading the resource to avoid re-creation ([#680](https://github.com/ovh/terraform-provider-ovh/pull/680))
+
+* `d/ovh_cloud_project_containerregistry_ip_restrictions_management`: Use `TypeSet` for IP restrictions ([#645](https://github.com/ovh/terraform-provider-ovh/pull/645))
+* `d/ovh_cloud_project_containerregistry_ip_restrictions_registry`: Use `TypeSet` for IP restrictions ([#645](https://github.com/ovh/terraform-provider-ovh/pull/645))
+
+📚 Documentation:
+
+* Added link to the documentation page that explains how to manage API keys ([#665](https://github.com/ovh/terraform-provider-ovh/pull/665))
+
+❤️ Thanks for your contributions ❤️
+
 ## 0.45.0 (May 21, 2024)
 
 🎉 Features:
