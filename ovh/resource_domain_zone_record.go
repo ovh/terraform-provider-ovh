@@ -18,7 +18,7 @@ type OvhDomainZoneRecord struct {
 	Id        int64  `json:"id,omitempty"`
 	Zone      string `json:"zone,omitempty"`
 	Target    string `json:"target"`
-	Ttl       int    `json:"ttl,omitempty"`
+	Ttl       int    `json:"ttl"`
 	FieldType string `json:"fieldType,omitempty"`
 	SubDomain string `json:"subDomain,omitempty"`
 }
