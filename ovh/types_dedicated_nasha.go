@@ -31,8 +31,9 @@ type DedicatedNASHAPartition struct {
 }
 
 type DedicatedNASHAPartitionAccess struct {
-	IP   string `json:"ip"`
-	Type string `json:"type,omitempty"` // readonly, readwrite
+	IP             string `json:"ip"`
+	Type           string `json:"type,omitempty"` // readonly, readwrite
+	AclDescription string `json:"aclDescription,omitempty"`
 }
 
 type DedicatedNASHAPartitionSnapshot struct {
