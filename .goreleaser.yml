@@ -1,5 +1,6 @@
 # Visit https://goreleaser.com for documentation on how to customize this
 # behavior.
+version: 2
 before:
   hooks:
     # this is just an example and not a requirement for provider building/publishing
@@ -7,7 +8,7 @@ before:
 builds:
 - env:
     # goreleaser does not work with CGO, it could also complicate
-    # usage by users in CI/CD systems like Terraform Cloud where
+    # usage by users in CI/CD systems like HCP Terraform where
     # they are unable to install libraries.
     - CGO_ENABLED=0
   mod_timestamp: '{{ .CommitTimestamp }}'
@@ -28,8 +29,6 @@ builds:
   ignore:
     - goos: darwin
       goarch: '386'
-    - goos: windows
-      goarch: 'arm64'
   binary: '{{ .ProjectName }}_v{{ .Version }}'
 archives:
 - format: zip
@@ -40,13 +39,9 @@ checksum:
 signs:
   - artifacts: checksum
     args:
-      # if you are using this is a GitHub action or some other automated pipeline, you 
+      # if you are using this in a GitHub action or some other automated pipeline, you 
       # need to pass the batch flag to indicate its not interactive.
       - "--batch"
-      - "--yes"
-      - "--no-tty"
-      - "--pinentry-mode"
-      - "loopback"
       - "--local-user"
       - "{{ .Env.GPG_FINGERPRINT }}" # set this environment variable for your signing key
       - "--output"
@@ -54,7 +49,7 @@ signs:
       - "--detach-sign"
       - "${artifact}"
 release:
-  # If you want to manually examine the release before its live, uncomment this line:                                
+  # If you want to manually examine the release before its live, uncomment this line:
   # draft: true
 changelog:
-  skip: true
+  disable: true
