@@ -44,6 +44,7 @@ func TestAccDedicatedNASHA(t *testing.T) {
 						partition_name = "${ovh_dedicated_nasha_partition.testacc.name}"
 						ip = "127.0.0.1/32"
 						type = "readonly"
+						acl_description = "ACL for acceptance tests"
 					}
 				`, serviceName, partitionName),
 				Check: resource.ComposeTestCheckFunc(
@@ -61,6 +62,7 @@ func TestAccDedicatedNASHA(t *testing.T) {
 					resource.TestCheckResourceAttr("ovh_dedicated_nasha_partition_access.testacc", "partition_name", partitionName),
 					resource.TestCheckResourceAttr("ovh_dedicated_nasha_partition_access.testacc", "ip", "127.0.0.1/32"),
 					resource.TestCheckResourceAttr("ovh_dedicated_nasha_partition_access.testacc", "type", "readonly"),
+					resource.TestCheckResourceAttr("ovh_dedicated_nasha_partition_access.testacc", "acl_description", "ACL for acceptance tests"),
 				),
 			},
 		},

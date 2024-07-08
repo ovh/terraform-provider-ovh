@@ -43,6 +43,12 @@ func resourceDedicatedNASHAPartitionAccess() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"acl_description": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "A brief description of the ACL",
+			},
 		},
 	}
 }
@@ -54,13 +60,14 @@ func resourceDedicatedNASHAPartitionAccessCreate(c context.Context, d *schema.Re
 	ipsubnet, _ := d.Get("ip").(string)
 
 	access := &DedicatedNASHAPartitionAccess{
-		IP:   d.Get("ip").(string),
-		Type: d.Get("type").(string),
+		IP:             d.Get("ip").(string),
+		Type:           d.Get("type").(string),
+		AclDescription: d.Get("acl_description").(string),
 	}
 
 	resp := &DedicatedNASHATask{}
 
-	endpoint := fmt.Sprintf("/dedicated/nasha/%s/partition/%s/access", serviceName, partitionName)
+	endpoint := fmt.Sprintf("/dedicated/nasha/%s/partition/%s/access", url.PathEscape(serviceName), url.PathEscape(partitionName))
 
 	err := config.OVHClient.Post(endpoint, access, resp)
 	if err != nil {
@@ -101,7 +108,7 @@ func resourceDedicatedNASHAPartitionAccessRead(c context.Context, d *schema.Reso
 
 	resp := &DedicatedNASHAPartitionAccess{}
 
-	endpoint := fmt.Sprintf("/dedicated/nasha/%s/partition/%s/access/%s", serviceName, partitionName, url.PathEscape(ipsubnet))
+	endpoint := fmt.Sprintf("/dedicated/nasha/%s/partition/%s/access/%s", url.PathEscape(serviceName), url.PathEscape(partitionName), url.PathEscape(ipsubnet))
 
 	err := config.OVHClient.Get(endpoint, resp)
 	if err != nil {
@@ -112,7 +119,9 @@ func resourceDedicatedNASHAPartitionAccessRead(c context.Context, d *schema.Reso
 		}
 		return diag.Errorf("Error calling %s:\n\t '%q'", endpoint, err)
 	}
+
 	d.Set("type", resp.Type)
+	d.Set("acl_description", resp.AclDescription)
 
 	return nil
 }
@@ -123,7 +132,7 @@ func resourceDedicatedNASHAPartitionAccessDelete(c context.Context, d *schema.Re
 	partitionName := d.Get("partition_name").(string)
 	ipsubnet, _ := d.Get("ip").(string)
 
-	endpoint := fmt.Sprintf("/dedicated/nasha/%s/partition/%s/access/%s", serviceName, partitionName, url.PathEscape(ipsubnet))
+	endpoint := fmt.Sprintf("/dedicated/nasha/%s/partition/%s/access/%s", url.PathEscape(serviceName), url.PathEscape(partitionName), url.PathEscape(ipsubnet))
 
 	resp := &DedicatedNASHATask{}
 
