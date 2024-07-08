@@ -145,6 +145,8 @@ func TestAccResourceCloudProject_basic(t *testing.T) {
 						"ovh_cloud_project.cloud", "project_name"),
 					resource.TestCheckResourceAttrSet(
 						"ovh_cloud_project.cloud", "urn"),
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_project.cloud", "plan.0.plan_code", "project.2018"),
 				),
 			},
 		},
