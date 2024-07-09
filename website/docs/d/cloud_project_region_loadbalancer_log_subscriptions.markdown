@@ -33,5 +33,5 @@ The following attributes are exported:
 * `service_name` - The id of the public cloud project.
 * `region_name` - A valid OVHcloud public cloud region name in which the loadbalancer will be available. Ex.: "GRA11".
 * `loadbalancer_id` - Loadbalancer id to get the logs
-* `kind` - haproxy
+* `kind` - Router used for forwarding log 
 * `subscription_ids` - The list of the subscription id

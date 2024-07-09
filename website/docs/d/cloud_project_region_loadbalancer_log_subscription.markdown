@@ -35,7 +35,7 @@ The following attributes are exported:
 * `region_name` - A valid OVHcloud public cloud region name in which the loadbalancer will be available. Ex.: "GRA11". 
 * `loadbalancer_id` - Loadbalancer id to get the logs
 * `stream_id` - Data stream id to use for the subscription
-* `kind` - haproxy
+* `kind` - Router used for forwarding log 
 * `created_at` - The date of the subscription creation
 * `ldp_service_name` - LDP service name
 * `operation_id` - The operation ID
