@@ -50,16 +50,23 @@ func dataSourceCloudProjectRegionLoadbalancerSubscriptionsRead(d *schema.Resourc
 	serviceName := d.Get("service_name").(string)
 	regionName := d.Get("region_name").(string)
 	loadbalancerID := d.Get("loadbalancer_id").(string)
-
-	log.Printf("[DEBUG] Will read public cloud loadbalancer %s log subscriptions for region %s for project: %s", loadbalancerID, regionName, serviceName)
+	kind := d.Get("kind").(string)
+	query := ""
+	if len(kind) > 0 {
+		query = fmt.Sprintf("?kind=%s", url.PathEscape(kind))
+	}
+	log.Printf("[DEBUG] Will read public cloud loadbalancer %s log subscriptions for region %s for project: %s with query %s", loadbalancerID, regionName, serviceName, query)
 
 	response := make([]string, 0)
 	endpoint := fmt.Sprintf(
-		"/cloud/project/%s/region/%s/loadbalancing/loadbalancer/%s/log/subscription",
+		"/cloud/project/%s/region/%s/loadbalancing/loadbalancer/%s/log/subscription%s",
 		url.PathEscape(serviceName),
 		url.PathEscape(regionName),
 		url.PathEscape(loadbalancerID),
+		query,
 	)
+
+	log.Printf("[DEBUG] Endpoint %s", query)
 
 	if err := config.OVHClient.Get(endpoint, &response); err != nil {
 		return fmt.Errorf("Error calling GET %s:\n\t %q", endpoint, err)

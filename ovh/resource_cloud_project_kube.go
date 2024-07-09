@@ -3,6 +3,7 @@ package ovh
 import (
 	"fmt"
 	"log"
+	"net/url"
 	"sort"
 	"strings"
 	"time"
@@ -636,8 +637,10 @@ func resourceCloudProjectKubeUpdate(d *schema.ResourceData, meta interface{}) er
 	if d.HasChange(kubeClusterLoadBalancersSubnetIdKey) {
 		_, newValue := d.GetChange(kubeClusterLoadBalancersSubnetIdKey)
 		value := newValue.(string)
-
-		endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/updateLoadBalancersSubnetId", serviceName, d.Id())
+		id := d.Id()
+		endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/updateLoadBalancersSubnetId",
+			url.PathEscape(serviceName),
+			url.PathEscape(id))
 		err := config.OVHClient.Put(endpoint, CloudProjectKubeUpdateLoadBalancersSubnetIdOpts{
 			LoadBalancersSubnetId: value,
 		}, nil)

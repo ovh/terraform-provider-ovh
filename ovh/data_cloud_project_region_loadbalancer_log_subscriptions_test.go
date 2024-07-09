@@ -9,7 +9,6 @@ import (
 )
 
 func TestAccCloudProjectLoadBalancerGetLogSubscriptions_basic(t *testing.T) {
-
 	config := fmt.Sprintf(testAccCloudProjectSubscriptions,
 		os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"),
 		os.Getenv("OVH_CLOUD_PROJECT_WORKFLOW_BACKUP_REGION_TEST"),

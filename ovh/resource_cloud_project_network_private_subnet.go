@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/url"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -236,7 +237,11 @@ func resourceCloudProjectNetworkPrivateSubnetDelete(d *schema.ResourceData, meta
 
 	log.Printf("[DEBUG] Will delete public cloud private network subnet for project: %s, network: %s, id: %s", serviceName, networkId, id)
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s/subnet/%s", serviceName, networkId, id)
+	endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s/subnet/%s",
+		url.PathEscape(serviceName),
+		url.PathEscape(networkId),
+		url.PathEscape(id),
+	)
 
 	if err := config.OVHClient.Delete(endpoint, nil); err != nil {
 		return fmt.Errorf("calling DELETE %s:\n\t %q", endpoint, err)

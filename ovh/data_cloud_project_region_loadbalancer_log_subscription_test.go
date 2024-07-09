@@ -27,6 +27,8 @@ func TestAccCloudProjectLoadBalancerGetLogSubscription_basic(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.ovh_cloud_project_region_loadbalancer_log_subscription.test", "created_at"),
+					resource.TestCheckResourceAttrSet("data.ovh_cloud_project_region_loadbalancer_log_subscription.test", "resource_name"),
+					resource.TestCheckResourceAttr("data.ovh_cloud_project_region_loadbalancer_log_subscription.test", "kind", "haproxy"),
 				),
 			},
 		},
