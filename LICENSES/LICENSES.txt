@@ -56,7 +56,8 @@ github.com/zclconf/go-cty; MIT
 golang.org/x/crypto; BSD-3-Clause
 golang.org/x/exp; BSD-3-Clause
 golang.org/x/mod; BSD-3-Clause
-golang.org/x/net; BSD-2-Clause
+golang.org/x/net; BSD-3-Clause
+golang.org/x/oauth2; BSD-3-Clause
 golang.org/x/sys; BSD-3-Clause
 golang.org/x/text; BSD-3-Clause
 google.golang.org/genproto/googleapis/rpc; Apache-2.0
