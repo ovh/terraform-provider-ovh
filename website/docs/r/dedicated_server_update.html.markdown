@@ -25,6 +25,7 @@ resource "ovh_dedicated_server_update" "server" {
   boot_id      = data.ovh_dedicated_server_boots.rescue.result[0]
   monitoring   = true
   state        = "ok"
+  display_name = "Some human-readable name"
 }
 ```
 
@@ -37,6 +38,7 @@ The following arguments are supported:
 * `boot_script` - boot script of the server
 * `monitoring` - Icmp monitoring state
 * `state` - error, hacked, hackedBlocked, ok
+* `display_name` - display name of the dedicated server
 
 ## Attributes Reference
 
@@ -46,3 +48,4 @@ The following attributes are exported:
 * `boot_id` - See Argument Reference above.
 * `monitoring` - See Argument Reference above.
 * `state` - See Argument Reference above.
+* `display_name` - See Argument Reference above.
