@@ -52,6 +52,10 @@ func TestAccDataSourceDbaasLogsOutputGraylogStream_basic(t *testing.T) {
 						"title",
 						title,
 					),
+					resource.TestCheckResourceAttrSet(
+						"data.ovh_dbaas_logs_output_graylog_stream.stream",
+						"write_token",
+					),
 				),
 			},
 		},
