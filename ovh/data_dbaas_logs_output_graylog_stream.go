@@ -1,19 +1,19 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/url"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceDbaasLogsOutputGraylogStream() *schema.Resource {
 	return &schema.Resource{
-		Read: func(d *schema.ResourceData, meta interface{}) error {
-			return dataSourceDbaasLogsOutputGraylogStreamRead(d, meta)
-		},
+		ReadContext: dataSourceDbaasLogsOutputGraylogStreamRead,
 		Schema: map[string]*schema.Schema{
 			"service_name": {
 				Type:        schema.TypeString,
@@ -137,11 +137,17 @@ func dataSourceDbaasLogsOutputGraylogStream() *schema.Resource {
 				Description: "Enable Websocket",
 				Computed:    true,
 			},
+			"write_token": {
+				Type:        schema.TypeString,
+				Description: "Write token of the stream",
+				Computed:    true,
+				Sensitive:   true,
+			},
 		},
 	}
 }
 
-func dataSourceDbaasLogsOutputGraylogStreamRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceDbaasLogsOutputGraylogStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 
 	serviceName := d.Get("service_name").(string)
@@ -154,7 +160,7 @@ func dataSourceDbaasLogsOutputGraylogStreamRead(d *schema.ResourceData, meta int
 		url.PathEscape(serviceName),
 	)
 	if err := config.OVHClient.Get(endpoint, &res); err != nil {
-		return fmt.Errorf("Error calling Get %s:\n\t %q", endpoint, err)
+		return diag.Errorf("Error calling Get %s:\n\t %q", endpoint, err)
 	}
 	streams := []*DbaasLogsOutputGraylogStream{}
 
@@ -169,7 +175,7 @@ func dataSourceDbaasLogsOutputGraylogStreamRead(d *schema.ResourceData, meta int
 
 		stream := &DbaasLogsOutputGraylogStream{}
 		if err := config.OVHClient.Get(endpoint, &stream); err != nil {
-			return fmt.Errorf("Error calling Get %s:\n\t %q", endpoint, err)
+			return diag.Errorf("Error calling Get %s:\n\t %q", endpoint, err)
 		}
 
 		log.Printf("[INFO]Comparing : %s ? %s",
@@ -183,12 +189,10 @@ func dataSourceDbaasLogsOutputGraylogStreamRead(d *schema.ResourceData, meta int
 	}
 
 	if len(streams) == 0 {
-		return fmt.Errorf("Your query returned no results. " +
-			"Please change your search criteria and try again.")
+		return diag.Errorf("Your query returned no results. Please change your search criteria and try again.")
 	}
 	if len(streams) > 1 {
-		return fmt.Errorf("Your query returned more than one result. " +
-			"Please change your search criteria and try again.")
+		return diag.Errorf("Your query returned more than one result. Please change your search criteria and try again.")
 	}
 
 	for k, v := range streams[0].ToMap() {
@@ -199,6 +203,13 @@ func dataSourceDbaasLogsOutputGraylogStreamRead(d *schema.ResourceData, meta int
 			d.SetId(fmt.Sprint(v))
 		}
 	}
+
+	// Get stream write token, if available
+	writeToken, err := resourceDbaasLogsOutputGraylogStreamGetWriteToken(ctx, config, serviceName, streams[0].StreamId)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.Set("write_token", writeToken)
 
 	return nil
 }

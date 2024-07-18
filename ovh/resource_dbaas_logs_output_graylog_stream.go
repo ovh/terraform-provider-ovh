@@ -196,6 +196,12 @@ func resourceDbaasLogsOutputGraylogStream() *schema.Resource {
 				Description: "Stream last update",
 				Computed:    true,
 			},
+			"write_token": {
+				Type:        schema.TypeString,
+				Description: "Write token of the stream",
+				Computed:    true,
+				Sensitive:   true,
+			},
 		},
 	}
 }
@@ -302,7 +308,40 @@ func resourceDbaasLogsOutputGraylogStreamRead(ctx context.Context, d *schema.Res
 		}
 	}
 
+	// Get stream write token, if available
+	writeToken, err := resourceDbaasLogsOutputGraylogStreamGetWriteToken(ctx, config, serviceName, id)
+	if err != nil {
+		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
+	}
+	d.Set("write_token", writeToken)
+
 	return nil
+}
+
+func resourceDbaasLogsOutputGraylogStreamGetWriteToken(ctx context.Context, config *Config, serviceName, streamId string) (string, error) {
+	var (
+		ruleIds  []string
+		endpoint = fmt.Sprintf("/dbaas/logs/%s/output/graylog/stream/%s/rule", url.PathEscape(serviceName), url.PathEscape(streamId))
+	)
+
+	if err := config.OVHClient.GetWithContext(ctx, endpoint, &ruleIds); err != nil {
+		return "", fmt.Errorf("failed to list stream rules: %w", err)
+	}
+
+	for _, ruleId := range ruleIds {
+		rule := DbaasLogsOutputGraylogStreamRule{}
+		ruleEndpoint := endpoint + "/" + url.PathEscape(ruleId)
+
+		if err := config.OVHClient.GetWithContext(ctx, ruleEndpoint, &rule); err != nil {
+			return "", fmt.Errorf("failed to get stream rule %q: %w", ruleId, err)
+		}
+
+		if rule.Field == "X-OVH-TOKEN" {
+			return rule.Value, nil
+		}
+	}
+
+	return "", nil
 }
 
 func resourceDbaasLogsOutputGraylogStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
