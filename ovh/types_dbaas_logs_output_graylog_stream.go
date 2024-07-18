@@ -155,3 +155,8 @@ func (opts *DbaasLogsOutputGraylogStreamUpdateOpts) FromResource(d *schema.Resou
 
 	return opts
 }
+
+type DbaasLogsOutputGraylogStreamRule struct {
+	Field string `json:"field"`
+	Value string `json:"value"`
+}
