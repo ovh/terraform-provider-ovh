@@ -26,6 +26,8 @@ func TestAccDedicatedServerUpdate_basic(t *testing.T) {
 						"ovh_dedicated_server_update.server", "state", "ok"),
 					resource.TestCheckResourceAttr(
 						"ovh_dedicated_server_update.server", "boot_script", ""),
+					resource.TestCheckResourceAttr(
+						"ovh_dedicated_server_update.server", "display_name", "An awesome display name"),
 				),
 			},
 			{
@@ -38,6 +40,8 @@ func TestAccDedicatedServerUpdate_basic(t *testing.T) {
 						"ovh_dedicated_server_update.server", "state", "ok"),
 					resource.TestCheckResourceAttr(
 						"ovh_dedicated_server_update.server", "boot_script", ""),
+					resource.TestCheckResourceAttr(
+						"ovh_dedicated_server_update.server", "display_name", "An awesome display name restored"),
 				),
 			},
 		},
@@ -71,6 +75,7 @@ resource ovh_dedicated_server_update "server" {
   boot_id      = data.ovh_dedicated_server_boots.rescue.result[0]
   monitoring   = true
   state        = "ok"
+  display_name = "An awesome display name"
 }
 
 output test {
@@ -89,6 +94,7 @@ resource ovh_dedicated_server_update "server" {
   boot_id      = data.ovh_dedicated_server_boots.harddisk.result[0]
   monitoring   = false
   state        = "ok"
+  display_name = "An awesome display name restored"
 }
 
 output test {
