@@ -46,3 +46,4 @@ data "ovh_dbaas_logs_output_graylog_stream" "stream" {
 * `stream_id` - Stream ID
 * `updated_at` - Stream last update
 * `web_socket_enabled` - Enable Websocket
+* `write_token` - Write token of the stream (empty if the caller is not the owner of the stream)

@@ -48,3 +48,4 @@ Id is set to the output stream Id. In addition, the following attributes are exp
 * `nb_archive` - Number of coldstored archivesr
 * `stream_id` - Stream ID
 * `updated_at` - Stream last updater
+* `write_token` - Write token of the stream (empty if the caller is not the owner of the stream)
