@@ -1,3 +1,22 @@
+## 0.47.0 (July 19, 2024)
+
+🎉 Features:
+
+* New datasource: `ovh_dbaas_logs_cluster_retention` ([#691](https://github.com/ovh/terraform-provider-ovh/pull/691))
+
+💪 Improvements:
+
+* `r/ovh_dbaas_logs_output_graylog_stream`: Added computed property `write_token` ([#689](https://github.com/ovh/terraform-provider-ovh/pull/689))
+* `r/ovh_dedicated_server_update`: Added property `display_name` ([#690](https://github.com/ovh/terraform-provider-ovh/pull/690))
+
+* `d/ovh_dbaas_logs_output_graylog_stream`: Added computed property `write_token` ([#689](https://github.com/ovh/terraform-provider-ovh/pull/689))
+
+📚 Documentation:
+
+* Added documentation to explain how to define the retention period of a DBaaS Logs Graylog stream ([#692](https://github.com/ovh/terraform-provider-ovh/pull/692))
+
+❤️ Thanks for your contributions ❤️
+
 ## 0.46.1 (July 8, 2024)
 
 🎉 Features:
