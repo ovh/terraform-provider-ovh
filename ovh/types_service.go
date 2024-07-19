@@ -68,3 +68,11 @@ type ServiceBillingPricing struct {
 	PricingMode string `json:"pricingMode"`
 	Duration    string `json:"duration"`
 }
+
+type ServiceUpdatePayload struct {
+	DisplayName string `json:"displayName"`
+}
+
+type GenericServiceWithIAMInjection struct {
+	IamResourceDetails `json:"iam"`
+}
