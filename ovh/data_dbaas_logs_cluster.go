@@ -23,6 +23,7 @@ func dataSourceDbaasLogsCluster() *schema.Resource {
 			"cluster_id": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			// Computed
 			"urn": {
@@ -137,8 +138,9 @@ func dataSourceDbaasLogsClusterRead(d *schema.ResourceData, meta interface{}) er
 		var err error
 		clusterId, err = dbaasGetClusterID(config, serviceName)
 		if err != nil {
-			return fmt.Errorf("Error retrieving clusterId for %s:\n\t %q", serviceName, err)
+			return fmt.Errorf("error retrieving cluster_id for %s:\n\t %q", serviceName, err)
 		}
+		d.Set("cluster_id", clusterId)
 	}
 
 	log.Printf("[DEBUG] Will read dbaas logs cluster %s/%s", serviceName, clusterId)
@@ -155,7 +157,7 @@ func dataSourceDbaasLogsClusterRead(d *schema.ResourceData, meta interface{}) er
 
 	res := map[string]interface{}{}
 	if err := config.OVHClient.Get(endpoint, &res); err != nil {
-		return fmt.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
+		return fmt.Errorf("error calling GET %s:\n\t %q", endpoint, err)
 	}
 
 	d.Set("archive_allowed_networks", res["archiveAllowedNetworks"])
