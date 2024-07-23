@@ -24,8 +24,7 @@ resource "ovh_me_installation_template" "debian" {
   base_template_name = "debian12_64"
   template_name      = "mydebian12"
   customization {
-    post_installation_script_link = "http://test"
-    post_installation_script_return = "ok"
+    custom_hostname = "mytest"
   }
 }
 

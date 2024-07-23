@@ -39,16 +39,6 @@ func dataSourceMeInstallationTemplate() *schema.Resource {
 							Computed:    true,
 							Description: "Set up the server using the provided hostname instead of the default hostname",
 						},
-						"post_installation_script_link": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Indicate the URL where your postinstall customisation script is located",
-						},
-						"post_installation_script_return": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Indicate the string returned by your postinstall customisation script on successful execution. Advice: your script should return a unique validation string in case of succes. A good example is 'loh1Xee7eo OK OK OK UGh8Ang1Gu'",
-						},
 					},
 				},
 			},
