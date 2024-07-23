@@ -107,10 +107,8 @@ func (opts *InstallationTemplateUpdateOpts) FromResource(d *schema.ResourceData)
 }
 
 type InstallationTemplateCustomization struct {
-	CustomHostname               *string `json:"customHostname,omitempty"`
-	PostInstallationScriptLink   *string `json:"postInstallationScriptLink,omitempty"`
-	PostInstallationScriptReturn *string `json:"postInstallationScriptReturn,omitempty"`
-	SshKeyName                   *string `json:"sshKeyName,omitempty"`
+	CustomHostname *string `json:"customHostname,omitempty"`
+	SshKeyName     *string `json:"sshKeyName,omitempty"`
 }
 
 func (v InstallationTemplateCustomization) ToMap() map[string]interface{} {
