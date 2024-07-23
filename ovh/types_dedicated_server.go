@@ -144,20 +144,16 @@ func (opts *DedicatedServerInstallTaskCreateOpts) FromResource(d *schema.Resourc
 }
 
 type DedicatedServerInstallTaskDetails struct {
-	CustomHostname               *string `json:"customHostname,omitempty"`
-	DiskGroupId                  *int64  `json:"diskGroupId,omitempty"`
-	NoRaid                       *bool   `json:"noRaid,omitempty"`
-	PostInstallationScriptLink   *string `json:"postInstallationScriptLink,omitempty"`
-	PostInstallationScriptReturn *string `json:"postInstallationScriptReturn,omitempty"`
-	SoftRaidDevices              *int64  `json:"softRaidDevices,omitempty"`
+	CustomHostname  *string `json:"customHostname,omitempty"`
+	DiskGroupId     *int64  `json:"diskGroupId,omitempty"`
+	NoRaid          *bool   `json:"noRaid,omitempty"`
+	SoftRaidDevices *int64  `json:"softRaidDevices,omitempty"`
 }
 
 func (opts *DedicatedServerInstallTaskDetails) FromResource(d *schema.ResourceData, parent string) *DedicatedServerInstallTaskDetails {
 	opts.CustomHostname = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.custom_hostname", parent))
 	opts.DiskGroupId = helpers.GetNilInt64PointerFromData(d, fmt.Sprintf("%s.disk_group_id", parent))
 	opts.NoRaid = helpers.GetNilBoolPointerFromData(d, fmt.Sprintf("%s.no_raid", parent))
-	opts.PostInstallationScriptLink = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.post_installation_script_link", parent))
-	opts.PostInstallationScriptReturn = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.post_installation_script_return", parent))
 	opts.SoftRaidDevices = helpers.GetNilInt64PointerFromData(d, fmt.Sprintf("%s.soft_raid_devices", parent))
 
 	return opts
