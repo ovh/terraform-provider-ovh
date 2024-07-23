@@ -122,16 +122,6 @@ func (v InstallationTemplateCustomization) ToMap() map[string]interface{} {
 		custom_attr_set = true
 	}
 
-	if v.PostInstallationScriptLink != nil {
-		obj["post_installation_script_link"] = *v.PostInstallationScriptLink
-		custom_attr_set = true
-	}
-
-	if v.PostInstallationScriptReturn != nil {
-		obj["post_installation_script_return"] = *v.PostInstallationScriptReturn
-		custom_attr_set = true
-	}
-
 	// dont return an object if nothing is set
 	if custom_attr_set {
 		return obj
@@ -216,8 +206,6 @@ func (v InstallationTemplateProjectItem) ToMap() map[string]interface{} {
 
 func (opts *InstallationTemplateCustomization) FromResource(d *schema.ResourceData, parent string) *InstallationTemplateCustomization {
 	opts.CustomHostname = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.custom_hostname", parent))
-	opts.PostInstallationScriptLink = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.post_installation_script_link", parent))
-	opts.PostInstallationScriptReturn = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.post_installation_script_return", parent))
 	return opts
 }
 

@@ -138,8 +138,6 @@ The `details` block supports:
 * `disk_group_id` - Disk group id.
 * `language` - Deprecated, will be removed in next release.
 * `no_raid` - Set to true to disable RAID.
-* `post_installation_script_link` - Indicate the URL where your postinstall customisation script is located.
-* `post_installation_script_return` - Indicate the string returned by your postinstall customisation script on successful execution. Advice: your script should return a unique validation string in case of succes. A good example is 'loh1Xee7eo OK OK OK UGh8Ang1Gu'.
 * `soft_raid_devices` - soft raid devices.
 * `use_spla` - Deprecated, will be removed in next release.
 
