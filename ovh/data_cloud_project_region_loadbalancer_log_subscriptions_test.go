@@ -34,23 +34,18 @@ func TestAccCloudProjectLoadBalancerGetLogSubscriptions_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckGetSubscriptions(t *testing.T) {
-	testAccPreCheckCloud(t)
-	testAccCheckCloudProjectExists(t)
-}
-
 var testAccCloudProjectSubscriptions = `
-resource "ovh_cloud_project_region_loadbalancer_log_subscription" "subscription" {
-	service_name = "%s"
-	region_name = "%s"
-	loadbalancer_id = "%s"
-	kind = "haproxy"
-	stream_id = "%s"
-}
+	resource "ovh_cloud_project_region_loadbalancer_log_subscription" "subscription" {
+		service_name = "%s"
+		region_name = "%s"
+		loadbalancer_id = "%s"
+		kind = "haproxy"
+		stream_id = "%s"
+	}
 
-data "ovh_cloud_project_region_loadbalancer_log_subscriptions" "test" {
-	service_name = ovh_cloud_project_region_loadbalancer_log_subscription.subscription.service_name
-    region_name = ovh_cloud_project_region_loadbalancer_log_subscription.subscription.region_name
-    loadbalancer_id = ovh_cloud_project_region_loadbalancer_log_subscription.subscription.loadbalancer_id
-}
+	data "ovh_cloud_project_region_loadbalancer_log_subscriptions" "test" {
+		service_name = ovh_cloud_project_region_loadbalancer_log_subscription.subscription.service_name
+		region_name = ovh_cloud_project_region_loadbalancer_log_subscription.subscription.region_name
+		loadbalancer_id = ovh_cloud_project_region_loadbalancer_log_subscription.subscription.loadbalancer_id
+	}
 `

@@ -20,20 +20,22 @@ func TestAccCloudProjectLoadBalancerLogSubscription_basic(t *testing.T) {
 `, os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"), os.Getenv("OVH_CLOUD_LOADBALANCER_ID_TEST"), os.Getenv("OVH_CLOUD_STREAM_ID_TEST"))
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccCheckSubscription(t) },
+		PreCheck: func() {
+			testAccPreCheckCloud(t)
+			testAccCheckCloudProjectExists(t)
+		},
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testCreateLoadBalancerLogSubscription,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_region_loadbalancer_log_subscription.CreateLogSubscription", "created_at"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_region_loadbalancer_log_subscription.CreateLogSubscription", "subscription_id"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_region_loadbalancer_log_subscription.CreateLogSubscription", "resource_type"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_region_loadbalancer_log_subscription.CreateLogSubscription", "resource_name"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_region_loadbalancer_log_subscription.CreateLogSubscription", "operation_id"),
 				),
 			},
 		},
 	})
-}
-
-func testAccCheckSubscription(t *testing.T) {
-	testAccPreCheckCloud(t)
-	testAccCheckCloudProjectExists(t)
 }

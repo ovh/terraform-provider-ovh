@@ -59,7 +59,6 @@ func resourceCloudProjectRegionLoadbalancerLogSubscription() *schema.Resource {
 			"ldp_service_name": {
 				Type:        schema.TypeString,
 				Description: "Name of the destination log service",
-				Sensitive:   true,
 				Computed:    true,
 			},
 			"operation_id": {
@@ -143,7 +142,7 @@ func resourceCloudProjectRegionLoadbalancerSubscriptionsRead(ctx context.Context
 	}
 
 	for k, v := range res.ToMap() {
-		if k != "id" {
+		if k != "subscription_id" {
 			d.Set(k, fmt.Sprint(v))
 		} else {
 			d.SetId(fmt.Sprint(v))
@@ -168,7 +167,7 @@ func resourceCloudProjectRegionLoadbalancerSubscriptionsDelete(ctx context.Conte
 		url.PathEscape(id),
 	)
 
-	res := &GetCloudProjectRegionLoadbalancerLogSubscriptionResponse{}
+	res := &GetCloudProjectRegionLoadbalancerLogSubscriptioDeletionResponse{}
 
 	log.Printf("[DEBUG] Will delete Log subscrition for loadbalancer %s on region %s from project %s", loadbalancerID, regionName, serviceName)
 	err := config.OVHClient.DeleteWithContext(ctx, endpoint, res)
@@ -176,6 +175,10 @@ func resourceCloudProjectRegionLoadbalancerSubscriptionsDelete(ctx context.Conte
 		diag.Errorf("calling DELETE %s:\n\t %q", endpoint, err)
 	}
 
+	op, err := waitForDbaasLogsOperation(ctx, config.OVHClient, res.ServiceName, res.OperationId)
+	if err != nil {
+		return diag.Errorf("timeout while waiting log subscrition operation %v to be READY: %s", op, err)
+	}
 	log.Printf("[DEBUG] Log subsription %s is DELETED", id)
 
 	d.SetId("")

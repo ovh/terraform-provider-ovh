@@ -46,8 +46,8 @@ resource "ovh_cloud_project_region_loadbalancer_log_subscription" "subscription"
 
 data "ovh_cloud_project_region_loadbalancer_log_subscription" "test" {
 	service_name = ovh_cloud_project_region_loadbalancer_log_subscription.subscription.service_name
-    region_name = ovh_cloud_project_region_loadbalancer_log_subscription.subscription.region_name
-    loadbalancer_id = ovh_cloud_project_region_loadbalancer_log_subscription.subscription.loadbalancer_id
-    subscription_id = ovh_cloud_project_region_loadbalancer_log_subscription.subscription.id
+	region_name = ovh_cloud_project_region_loadbalancer_log_subscription.subscription.region_name
+	loadbalancer_id = ovh_cloud_project_region_loadbalancer_log_subscription.subscription.loadbalancer_id
+	subscription_id = ovh_cloud_project_region_loadbalancer_log_subscription.subscription.id
 }
 `

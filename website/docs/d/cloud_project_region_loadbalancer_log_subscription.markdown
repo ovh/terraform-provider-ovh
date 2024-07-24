@@ -25,7 +25,7 @@ The following arguments are supported:
 * `service_name` - The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 * `region_name` - A valid OVHcloud public cloud region name in which the loadbalancer is available. Ex.: "GRA11". 
 * `loadbalancer_id` - Loadbalancer id to get the logs
-* `subscription` - Subscription id
+* `subscription_id` - Subscription id
 
 ## Attributes Reference
 

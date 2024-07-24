@@ -12,6 +12,11 @@ type GetCloudProjectRegionLoadbalancerLogSubscriptionResponse struct {
 	UpdatedAt      string                                                        `json:"updatedAt"`
 }
 
+type GetCloudProjectRegionLoadbalancerLogSubscriptioDeletionResponse struct {
+	OperationId string `json:"operationId"`
+	ServiceName string `json:"serviceName"`
+}
+
 type CreateCloudProjectRegionLoadbalancerLogSubscriptionResponse struct {
 	ServiceName string `json:"serviceName"`
 	OperationID string `json:"operationId"`
