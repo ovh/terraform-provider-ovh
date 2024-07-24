@@ -39,6 +39,15 @@ resource "ovh_dedicated_server_install_task" "server_install" {
     key = "sshKey"
     value = "ssh-ed25519 AAAAC3..."
   }
+  user_metadata {
+    key = "postInstallationScript"
+    value = <<-EOF
+        #!/bin/bash
+          echo "coucou postInstallationScript" > /opt/coucou
+          cat /etc/machine-id  >> /opt/coucou
+          date "+%Y-%m-%d %H:%M:%S" --utc >> /opt/coucou
+        EOF
+  }
 }
 ```
 
@@ -114,6 +123,14 @@ resource "ovh_dedicated_server_install_task" "server_install" {
   user_metadata {
     key  = "language"
     value ="fr-fr"
+  }
+  user_metadata {
+    key = "postInstallationScript"
+    value = <<-EOF
+    coucou postInstallationScriptPowerShell" | Out-File -FilePath "c:\ovhupd\script\coucou.txt"
+          (Get-ItemProperty -LiteralPath "Registry::HKLM\SOFTWARE\Microsoft\Cryptography" -Name "MachineGuid").MachineGuid | Out-File -FilePath "c:\ovhupd\script\coucou.txt" -Append
+          (Get-Date).ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss") | Out-File -FilePath "c:\ovhupd\script\coucou.txt" -Append
+    EOF
   }
 
 }
