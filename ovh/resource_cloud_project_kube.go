@@ -250,8 +250,6 @@ func resourceCloudProjectKube() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
-				// private_network_id is required when load_balancers_subnet_id is set
-				RequiredWith: []string{kubeClusterLoadBalancersSubnetIdKey},
 			},
 			kubeClusterProxyModeKey: {
 				Type:         schema.TypeString,
@@ -282,11 +280,15 @@ func resourceCloudProjectKube() *schema.Resource {
 			kubeClusterLoadBalancersSubnetIdKey: {
 				Type:     schema.TypeString,
 				Optional: true,
+				// private_network_id is required when load_balancers_subnet_id is set
+				RequiredWith: []string{kubeClusterPrivateNetworkIDKey},
 			},
 			kubeClusterNodesSubnetIdKey: {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
+				// private_network_id is required when nodes_subnet_id is set
+				RequiredWith: []string{kubeClusterPrivateNetworkIDKey},
 			},
 			"region": {
 				Type:     schema.TypeString,

@@ -1314,3 +1314,138 @@ func TestCustomApiServerAdmissionPluginsSchemaSetFunc(t *testing.T) {
 		})
 	}
 }
+
+func TestRequiredWithSchemaValidation(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+resource "ovh_cloud_project_kube" "cluster" {
+	service_name  = "xxx"
+	name          = "BUG_683"
+	region        = "SBG5"
+
+	private_network_id = "xxx"
+	nodes_subnet_id = "xxx"
+	load_balancers_subnet_id = "xxx"
+}`,
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+			},
+
+			{
+				Config: `
+resource "ovh_cloud_project_kube" "cluster" {
+	service_name  = "xxx"
+	name          = "BUG_683"
+	region        = "SBG5"
+
+	private_network_id = "xxx"
+	nodes_subnet_id = "xxx"
+	#load_balancers_subnet_id = "xxx"
+}`,
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+			},
+
+			{
+				Config: `
+resource "ovh_cloud_project_kube" "cluster" {
+	service_name  = "xxx"
+	name          = "BUG_683"
+	region        = "SBG5"
+
+	private_network_id = "xxx"
+	#nodes_subnet_id = "xxx"
+	load_balancers_subnet_id = "xxx"
+}`,
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+			},
+
+			{
+				Config: `
+resource "ovh_cloud_project_kube" "cluster" {
+	service_name  = "xxx"
+	name          = "BUG_683"
+	region        = "SBG5"
+
+	private_network_id = "xxx"
+	#nodes_subnet_id = "xxx"
+	#load_balancers_subnet_id = "xxx"
+
+}`,
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+			},
+
+			{
+				Config: `
+resource "ovh_cloud_project_kube" "cluster" {
+	service_name  = "xxx"
+	name          = "BUG_683"
+	region        = "SBG5"
+
+	#private_network_id = "xxx"
+	nodes_subnet_id = "xxx"
+	load_balancers_subnet_id = "xxx"
+
+}`,
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+				ExpectError:        regexp.MustCompile("(.)*`nodes_subnet_id,private_network_id`\\smust\\sbe\\sspecified(.)*"),
+			},
+
+			{
+				Config: `
+resource "ovh_cloud_project_kube" "cluster" {
+	service_name  = "xxx"
+	name          = "BUG_683"
+	region        = "SBG5"
+
+	#private_network_id = "xxx"
+	nodes_subnet_id = "xxx"
+	#load_balancers_subnet_id = "xxx"
+
+}`,
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+				ExpectError:        regexp.MustCompile("(.)*`nodes_subnet_id,private_network_id`\\smust\\sbe\\sspecified(.)*"),
+			},
+
+			{
+				Config: `
+resource "ovh_cloud_project_kube" "cluster" {
+	service_name  = "xxx"
+	name          = "BUG_683"
+	region        = "SBG5"
+
+	#private_network_id = "xxx"
+	#nodes_subnet_id = "xxx"
+	load_balancers_subnet_id = "xxx"
+
+}`,
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+				ExpectError:        regexp.MustCompile("(.)*`load_balancers_subnet_id,private_network_id`\\smust\\sbe\\sspecified(.)*"),
+			},
+
+			{
+				Config: `
+resource "ovh_cloud_project_kube" "cluster" {
+	service_name  = "xxx"
+	name          = "BUG_683"
+	region        = "SBG5"
+
+	#private_network_id = "xxx"
+	#nodes_subnet_id = "xxx"
+	#load_balancers_subnet_id = "xxx"
+
+}`,
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
