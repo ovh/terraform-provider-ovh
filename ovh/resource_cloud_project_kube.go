@@ -287,7 +287,7 @@ func resourceCloudProjectKube() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
-				// private_network_id is required when load_balancers_subnet_id is set
+				// private_network_id is required when nodes_subnet_id is set
 				RequiredWith: []string{kubeClusterPrivateNetworkIDKey},
 			},
 			"region": {
