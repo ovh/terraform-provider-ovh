@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/url"
 	"os"
 	"testing"
 
@@ -379,7 +380,7 @@ func testAccCheckVRackExists(t *testing.T) {
 
 	r := vrackResponse{}
 
-	endpoint := fmt.Sprintf("/vrack/%s", os.Getenv("OVH_VRACK_SERVICE_TEST"))
+	endpoint := fmt.Sprintf("/vrack/%s", url.PathEscape(os.Getenv("OVH_VRACK_SERVICE_TEST")))
 
 	err := testAccOVHClient.Get(endpoint, &r)
 	if err != nil {
@@ -396,7 +397,7 @@ func testAccCheckCloudProjectExists(t *testing.T) {
 
 	r := cloudProjectResponse{}
 
-	endpoint := fmt.Sprintf("/cloud/project/%s", os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"))
+	endpoint := fmt.Sprintf("/cloud/project/%s", url.PathEscape(os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")))
 
 	err := testAccOVHClient.Get(endpoint, &r)
 	if err != nil {
@@ -413,7 +414,7 @@ func testAccCheckIpLoadbalancingExists(t *testing.T) {
 
 	r := iplbResponse{}
 
-	endpoint := fmt.Sprintf("/ipLoadbalancing/%s", os.Getenv("OVH_IPLB_SERVICE_TEST"))
+	endpoint := fmt.Sprintf("/ipLoadbalancing/%s", url.PathEscape(os.Getenv("OVH_IPLB_SERVICE_TEST")))
 
 	err := testAccOVHClient.Get(endpoint, &r)
 	if err != nil {
@@ -429,7 +430,7 @@ func testAccCheckDomainZoneExists(t *testing.T) {
 
 	r := domainZoneResponse{}
 
-	endpoint := fmt.Sprintf("/domain/zone/%s", os.Getenv("OVH_ZONE_TEST"))
+	endpoint := fmt.Sprintf("/domain/zone/%s", url.PathEscape(os.Getenv("OVH_ZONE_TEST")))
 
 	err := testAccOVHClient.Get(endpoint, &r)
 	if err != nil {
