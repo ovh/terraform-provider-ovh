@@ -190,6 +190,7 @@ func (p *OvhProvider) Configure(ctx context.Context, req provider.ConfigureReque
 func (p *OvhProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		NewCloudProjectDatabaseIPRestrictionsDataSource,
+		NewCloudProjectGatewayInterfaceDataSource,
 		NewCloudProjectLoadbalancerDataSource,
 		NewCloudProjectLoadbalancersDataSource,
 		NewCloudProjectDataSource,
@@ -208,6 +209,7 @@ func (p *OvhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 func (p *OvhProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewCloudProjectAlertingResource,
+		NewCloudProjectGatewayInterfaceResource,
 		NewDbaasLogsTokenResource,
 		NewDomainZoneDnssecResource,
 		NewIpFirewallResource,
