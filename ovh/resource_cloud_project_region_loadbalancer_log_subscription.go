@@ -117,6 +117,7 @@ func resourceCloudProjectRegionLoadbalancerSubscriptionsCreate(ctx context.Conte
 	}
 
 	d.SetId(*op.SubscriptionID)
+	d.Set("operation_id", res.OperationID)
 
 	return resourceCloudProjectRegionLoadbalancerSubscriptionsRead(ctx, d, meta)
 }
@@ -142,11 +143,10 @@ func resourceCloudProjectRegionLoadbalancerSubscriptionsRead(ctx context.Context
 	}
 
 	for k, v := range res.ToMap() {
-		if k != "subscription_id" {
-			d.Set(k, fmt.Sprint(v))
-		} else {
+		if k == "subscription_id" {
 			d.SetId(fmt.Sprint(v))
 		}
+		d.Set(k, fmt.Sprint(v))
 	}
 
 	log.Printf("[DEBUG] Read log subscrition %+v", res)
@@ -167,7 +167,7 @@ func resourceCloudProjectRegionLoadbalancerSubscriptionsDelete(ctx context.Conte
 		url.PathEscape(id),
 	)
 
-	res := &GetCloudProjectRegionLoadbalancerLogSubscriptioDeletionResponse{}
+	res := &GetCloudProjectRegionLoadbalancerLogSubscriptionDeletionResponse{}
 
 	log.Printf("[DEBUG] Will delete Log subscrition for loadbalancer %s on region %s from project %s", loadbalancerID, regionName, serviceName)
 	err := config.OVHClient.DeleteWithContext(ctx, endpoint, res)

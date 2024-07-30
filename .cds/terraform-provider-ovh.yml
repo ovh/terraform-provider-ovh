@@ -375,6 +375,18 @@ workflow:
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
+  Tests_CloudProjectLoadBalancer:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run CloudProjectLoadBalancer
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudproject}}"
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
   Tests_DbaasLogs:
     application: terraform-provider-ovh
     depends_on:
@@ -756,6 +768,7 @@ workflow:
     - Tests_CloudProjectKube_basic
     - Tests_TestAccCloudProjectRegions
     - Tests_CloudProjectUser
+    - Tests_CloudProjectLoadBalancer
     - Tests_DbaasLogs
     - Tests_DedicatedCeph
     - Tests_TestAccDedicatedInstallationTemplate
