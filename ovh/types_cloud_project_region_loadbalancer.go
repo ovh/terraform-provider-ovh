@@ -12,7 +12,7 @@ type GetCloudProjectRegionLoadbalancerLogSubscriptionResponse struct {
 	UpdatedAt      string                                                        `json:"updatedAt"`
 }
 
-type GetCloudProjectRegionLoadbalancerLogSubscriptioDeletionResponse struct {
+type GetCloudProjectRegionLoadbalancerLogSubscriptionDeletionResponse struct {
 	OperationId string `json:"operationId"`
 	ServiceName string `json:"serviceName"`
 }
@@ -33,10 +33,12 @@ func (v CreateCloudProjectRegionLoadbalancerLogSubscriptionResponse) ToMap() map
 
 func (v GetCloudProjectRegionLoadbalancerLogSubscriptionResponse) ToMap() map[string]interface{} {
 	obj := make(map[string]interface{})
+	resourceMap := v.Resource.ToMap()
 
 	obj["created_at"] = v.CreatedAt
 	obj["kind"] = v.Kind
-	obj["resource_type"] = v.Resource.ToMap()
+	obj["resource_type"] = resourceMap["type"]
+	obj["resource_name"] = resourceMap["name"]
 	obj["ldp_service_name"] = v.LDPServiceName
 	obj["stream_id"] = v.StreamID
 	obj["subscription_id"] = v.SubscriptionID
