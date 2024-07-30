@@ -267,8 +267,6 @@ variables must also be set:
 * `OVH_CLOUD_PROJECT_KUBE_VERSION_TEST` - The version of your public cloud kubernetes project.
 * `OVH_CLOUD_PROJECT_KUBE_PREV_VERSION_TEST` - The previous version of your public cloud kubernetes project. This is used to test upgrade.
 
-* `OVH_CLOUD_STREAM_ID_TEST` - The ID of the LogSubscription to use.
-
 * `OVH_DEDICATED_SERVER` - The name of the dedicated server to test dedicated_server_networking resource.
 
 * `OVH_NASHA_SERVICE_TEST` - The name of your HA-NAS service.
