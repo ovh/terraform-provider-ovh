@@ -5,19 +5,30 @@ import (
 	"os"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAccCloudProjectLoadBalancerLogSubscription_basic(t *testing.T) {
+	dbaasLogsServiceName := os.Getenv("OVH_DBAAS_LOGS_SERVICE_TEST")
+	cloudProject := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	loadBalancerId := os.Getenv("OVH_CLOUD_LOADBALANCER_ID_TEST")
+
 	var testCreateLoadBalancerLogSubscription = fmt.Sprintf(`
-		resource "ovh_cloud_project_region_loadbalancer_log_subscription" "CreateLogSubscription" {
-		service_name = "%s"
-		region_name = "GRA11"
-		loadbalancer_id = "%s"
-		kind = "haproxy"
-		stream_id = "%s"
+		resource "ovh_dbaas_logs_output_graylog_stream" "stream" {
+			service_name = "%s"
+			title        = "%s"
+			description  = "%s"
 		}
-`, os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"), os.Getenv("OVH_CLOUD_LOADBALANCER_ID_TEST"), os.Getenv("OVH_CLOUD_STREAM_ID_TEST"))
+
+		resource "ovh_cloud_project_region_loadbalancer_log_subscription" "CreateLogSubscription" {
+			service_name = "%s"
+			region_name = "GRA11"
+			loadbalancer_id = "%s"
+			kind = "haproxy"
+			stream_id = ovh_dbaas_logs_output_graylog_stream.stream.stream_id
+		}
+	`, dbaasLogsServiceName, acctest.RandomWithPrefix(test_prefix), acctest.RandomWithPrefix(test_prefix), cloudProject, loadBalancerId)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
