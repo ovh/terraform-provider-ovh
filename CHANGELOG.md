@@ -1,3 +1,22 @@
+## 0.48.0 (July 31, 2024)
+
+🎉 Features:
+
+* New resource: `ovh_cloud_project_gateway_interface` ([#697](https://github.com/ovh/terraform-provider-ovh/pull/697))
+* New resource: `ovh_cloud_project_region_loadbalancer_log_subscription` ([#657](https://github.com/ovh/terraform-provider-ovh/pull/657))
+
+* New datasource: `ovh_cloud_project_gateway_interface` ([#697](https://github.com/ovh/terraform-provider-ovh/pull/697))
+* New datasource: `ovh_cloud_project_region_loadbalancer_log_subscription` ([#657](https://github.com/ovh/terraform-provider-ovh/pull/657))
+* New datasource: `ovh_cloud_project_region_loadbalancer_log_subscriptions` ([#657](https://github.com/ovh/terraform-provider-ovh/pull/657))
+
+🐜 Bug fixes:
+
+* `r/ovh_cloud_project_kube`: Fixed wrong dependencies between fields ([#695](https://github.com/ovh/terraform-provider-ovh/pull/695))
+
+* `d/ovh_dbaas_logs_cluster`: Correctly set `cluster_id` field ([#694](https://github.com/ovh/terraform-provider-ovh/pull/694))
+
+❤️ Thanks for your contributions ❤️
+
 ## 0.47.0 (July 19, 2024)
 
 🎉 Features:
