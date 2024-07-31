@@ -357,38 +357,35 @@ func (v CloudProjectKubeNodePoolResponse) ToMap() map[string]interface{} {
 
 	// If the template is not nil and not empty, then we need to add it to the map
 	if v.Template != nil && !reflect.DeepEqual(v.Template, emptyTemplateResponse) {
-		obj["template"] = []map[string]interface{}{{}}
-
-		// template.metadata
-		{
-			data := map[string]interface{}{
-				"finalizers":  v.Template.Metadata.Finalizers,
-				"labels":      v.Template.Metadata.Labels,
-				"annotations": v.Template.Metadata.Annotations,
-			}
-
-			obj["template"].([]map[string]interface{})[0]["metadata"] = []map[string]interface{}{data}
+		// template.spec
+		specData := map[string]interface{}{
+			"unschedulable": v.Template.Spec.Unschedulable,
 		}
 
-		// template.spec
-		{
-			data := map[string]interface{}{
-				"unschedulable": v.Template.Spec.Unschedulable,
+		var taints []map[string]interface{}
+		for _, taint := range v.Template.Spec.Taints {
+			t := map[string]interface{}{
+				"effect": taint.Effect.String(),
+				"key":    taint.Key,
+				"value":  taint.Value,
 			}
 
-			var taints []map[string]interface{}
-			for _, taint := range v.Template.Spec.Taints {
-				t := map[string]interface{}{
-					"effect": taint.Effect.String(),
-					"key":    taint.Key,
-					"value":  taint.Value,
-				}
+			taints = append(taints, t)
+		}
+		specData["taints"] = taints
 
-				taints = append(taints, t)
-			}
-			data["taints"] = taints
-
-			obj["template"].([]map[string]interface{})[0]["spec"] = []map[string]interface{}{data}
+		obj["template"] = []map[string]interface{}{
+			{
+				// template.metadata
+				"metadata": []map[string]interface{}{
+					{
+						"finalizers":  v.Template.Metadata.Finalizers,
+						"labels":      v.Template.Metadata.Labels,
+						"annotations": v.Template.Metadata.Annotations,
+					},
+				},
+				"spec": []map[string]interface{}{specData},
+			},
 		}
 	}
 
