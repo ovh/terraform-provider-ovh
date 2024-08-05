@@ -262,10 +262,20 @@ variables must also be set:
 
 * `OVH_CLOUD_PROJECT_FAILOVER_IP_ROUTED_TO_2_TEST` - The GUID of a secondary instance to which failover IP addresses can be attached. There must be 2 as associations can only be updated not removed. To test effectively, the failover ip address must be moved between instances
 
+* `OVH_CLOUD_PROJECT_FLAVOR_ID_TEST` - The ID of the Flavor to test
+
+* `OVH_CLOUD_PROJECT_IMAGE_ID_TEST` - The ID of the image to test
+
+* `OVH_CLOUD_PROJECT_INSTANCE_TEST` - The ID of the instance to test
+
 * `OVH_CLOUD_PROJECT_KUBE_REGION_TEST` - The region of your public cloud kubernetes project.
 
 * `OVH_CLOUD_PROJECT_KUBE_VERSION_TEST` - The version of your public cloud kubernetes project.
 * `OVH_CLOUD_PROJECT_KUBE_PREV_VERSION_TEST` - The previous version of your public cloud kubernetes project. This is used to test upgrade.
+
+* `OVH_CLOUD_PROJECT_REGION_TEST` - The Name of the region to test
+
+* `OVH_CLOUD_PROJECT_SSH_NAME_TEST` - The Name of the SSH Key to test
 
 * `OVH_DEDICATED_SERVER` - The name of the dedicated server to test dedicated_server_networking resource.
 
