@@ -51,12 +51,14 @@ resource "ovh_cloud_project_network_private_subnet" "subnet" {
   network_id = ovh_cloud_project_network_private.network.id
 
   # whatever region, for test purpose
-  region     = element(tolist(sort(data.ovh_cloud_project_regions.regions.names)), 0)
-  start      = "192.168.168.100"
-  end        = "192.168.168.200"
-  network    = "192.168.168.0/24"
-  dhcp       = true
-  no_gateway = false
+  region          = element(tolist(sort(data.ovh_cloud_project_regions.regions.names)), 0)
+  start           = "192.168.168.100"
+  end             = "192.168.168.200"
+  network         = "192.168.168.0/24"
+  dns_nameservers = ["1.1.1.1"]
+  host_routes     = [{destination = "192.168.168.0/24", nexthop = "192.168.168.254"}]
+  dhcp            = true
+  no_gateway      = false
 }
 `
 
@@ -97,6 +99,9 @@ func TestAccCloudProjectNetworkPrivateSubnet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("ovh_cloud_project_network_private_subnet.subnet", "start", "192.168.168.100"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_network_private_subnet.subnet", "end", "192.168.168.200"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_network_private_subnet.subnet", "network", "192.168.168.0/24"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_network_private_subnet.subnet", "dns_nameservers.0", "1.1.1.1"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_network_private_subnet.subnet", "host_routes.0.destination", "192.168.168.0/24"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_network_private_subnet.subnet", "host_routes.0.nexthop", "192.168.168.254"),
 				),
 			},
 		},

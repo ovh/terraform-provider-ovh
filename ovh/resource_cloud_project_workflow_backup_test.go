@@ -67,7 +67,7 @@ func testSweepCloudProjectWorkflowBackup(region string) error {
 
 	for _, wf := range wfToSweep {
 		var deleteEndpoint = endpoint + "/%s"
-		client.Delete(fmt.Sprintf(deleteEndpoint, wf.Id), nil)
+		err := client.Delete(fmt.Sprintf(deleteEndpoint, wf.Id), nil)
 		if err != nil {
 			return fmt.Errorf("Error while deleting workflow with id %s through endpoint %s", wf.Id, deleteEndpoint)
 		}

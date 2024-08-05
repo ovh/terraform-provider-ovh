@@ -4,6 +4,7 @@
 example.tf
 terraform.tfplan
 terraform.tfstate
+.vscode/
 bin/
 modules-dev/
 /pkg/
