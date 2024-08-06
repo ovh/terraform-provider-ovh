@@ -79,6 +79,11 @@ func resourceCloudProjectNetworkPrivateSubnet() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: resourceCloudProjectNetworkPrivateSubnetValidateNetwork,
 			},
+			"name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"region": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -90,29 +95,60 @@ func resourceCloudProjectNetworkPrivateSubnet() *schema.Resource {
 				ForceNew: true,
 				Default:  false,
 			},
-			"dns_nameservers": {
-				Type:         schema.TypeSet,
-				Optional:     true,
-				Elem:         schema.TypeString,
-				Description:  "List of DNS nameservers, default: 213.186.33.99",
-				ValidateFunc: resourceCloudProjectNetworkPrivateSubnetValidateIPs,
-			},
-			"host_routes": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"destination": {
-							Type:         schema.TypeString,
-							ValidateFunc: resourceCloudProjectNetworkPrivateSubnetValidateIP,
-						},
-						"nexthop": {
-							Type:         schema.TypeString,
-							ValidateFunc: resourceCloudProjectNetworkPrivateSubnetValidateNetwork,
-						},
-					},
-				},
-			},
+			// "dns_nameservers": {
+			// 	Type:     schema.TypeSet,
+			// 	Optional: true,
+			// 	ForceNew: true,
+			// 	Elem:     schema.TypeString,
+			// 	// DefaultFunc: func() (interface{}, error) { return []string{}, nil },
+			// 	Description: "List of DNS nameservers, default: 213.186.33.99",
+			// 	// ValidateFunc: resourceCloudProjectNetworkPrivateSubnetValidateIPs,
+			// },
+			// "host_routes": {
+			// 	Type:     schema.TypeSet,
+			// 	Optional: true,
+			// 	ForceNew: true,
+			// 	Elem: &schema.Resource{
+			// 		Schema: map[string]*schema.Schema{
+			// 			"destination": {
+			// 				Type:         schema.TypeString,
+			// 				Required:     true,
+			// 				ValidateFunc: resourceCloudProjectNetworkPrivateSubnetValidateIP,
+			// 			},
+			// 			"nexthop": {
+			// 				Type:         schema.TypeString,
+			// 				Required:     true,
+			// 				ValidateFunc: resourceCloudProjectNetworkPrivateSubnetValidateNetwork,
+			// 			},
+			// 		},
+			// 	},
+			// },
+			// "host_routes": {
+			// 	Type:     schema.TypeSet,
+			// 	Optional: true,
+			// 	Elem: &schema.Resource{
+			// 		Schema: map[string]*schema.Schema{
+			// 			"host_route": {
+			// 				Type:     schema.TypeSet,
+			// 				Optional: true,
+			// 				Elem: &schema.Resource{
+			// 					Schema: map[string]*schema.Schema{
+			// 						"destination": {
+			// 							Type:         schema.TypeString,
+			// 							Required:     true,
+			// 							ValidateFunc: resourceCloudProjectNetworkPrivateSubnetValidateIP,
+			// 						},
+			// 						"nexthop": {
+			// 							Type:         schema.TypeString,
+			// 							Required:     true,
+			// 							ValidateFunc: resourceCloudProjectNetworkPrivateSubnetValidateNetwork,
+			// 						},
+			// 					},
+			// 				},
+			// 			},
+			// 		},
+			// 	},
+			// },
 			"gateway_ip": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -159,32 +195,40 @@ func resourceCloudProjectNetworkPrivateSubnetCreate(d *schema.ResourceData, meta
 	config := meta.(*Config)
 
 	serviceName := d.Get("service_name").(string)
-	regionName := d.Get("network").(string)
+	regionName := d.Get("region").(string)
 	networkId := d.Get("network_id").(string)
 
 	// current regionalized API needs the network name in input, so we must get it
-	networkResponse := &CloudProjectNetworkPrivateResponse{}
-	log.Printf("[DEBUG] Will read public cloud private network for project: %s, id: %s", serviceName, d.Id())
-	endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s", serviceName, d.Id())
-	if err := config.OVHClient.Get(endpoint, networkResponse); err != nil {
-		return helpers.CheckDeleted(d, err, endpoint)
-	}
+	// networkResponse := &CloudProjectRegionalizedNetworkPrivateResponse{}
+	// log.Printf("[DEBUG] Will read public cloud private network for project: %s, id: %s", serviceName, networkId)
+	// endpointGetNetwork := fmt.Sprintf(
+	// 	"/cloud/project/%s/region/%s/network/%s",
+	// 	url.PathEscape(serviceName),
+	// 	url.PathEscape(regionName),
+	// 	url.PathEscape(networkId),
+	// )
+	// if err := config.OVHClient.Get(endpointGetNetwork, networkResponse); err != nil {
+	// 	return helpers.CheckDeleted(d, err, endpointGetNetwork)
+	// }
 
-	hostRoutes, err := helpers.StringMapFromSchema(d, "host_routes", "destination", "nexthop")
-	if err != nil {
-		return err
-	}
+	// if networkResponse.Visibility != "private" {
+	// 	return fmt.Errorf("Network %s must be private:\n\t %q", networkId, networkResponse.Visibility)
+	// }
 
-	dnsNameservers, err := helpers.StringsFromSchema(d, "dns_nameservers")
-	if err != nil {
-		return err
-	}
+	// hostRoutes, err := helpers.StringMapFromSchema(d, "host_route", "destination", "nexthop")
+	// if err != nil {
+	// 	return err
+	// }
+
+	// dnsNameservers, err := helpers.StringsFromSchema(d, "dns_nameservers")
+	// if err != nil {
+	// 	return err
+	// }
 
 	params := &CloudProjectNetworkPrivatesCreateOpts{
 		ServiceName: serviceName,
-		Region:      regionName,
-		Name:        networkResponse.Name,
-		NetworkId:   networkId,
+		Name:        networkId,
+		// NetworkId:   networkId,
 		Subnet: CloudProjectSubnetPrivates{
 			Name:      d.Get("name").(string),
 			Cidr:      d.Get("network").(string),
@@ -195,33 +239,50 @@ func resourceCloudProjectNetworkPrivateSubnetCreate(d *schema.ResourceData, meta
 					"end":   d.Get("end").(string),
 				},
 			},
-			DnsNameservers:  dnsNameservers,
+			// DnsNameservers:  dnsNameservers,
 			EnableGatewayIP: !d.Get("no_gateway").(bool),
 			EnableDHCP:      d.Get("dhcp").(bool),
-			HostRoutes:      hostRoutes,
+			// HostRoutes:      hostRoutes,
 		},
 	}
 
-	subnetResponse := &CloudProjectNetworkPrivatesResponse{}
-
-	log.Printf("[DEBUG] Will create public cloud private network subnet: %v", params)
-
-	endpoint = fmt.Sprintf("/cloud/project/%s/region/%s/network", serviceName, regionName)
-
-	if err := config.OVHClient.Post(endpoint, params, subnetResponse); err != nil {
-		return fmt.Errorf("calling POST %s with params %v:\n\t %q", endpoint, params, err)
-	}
-
-	log.Printf("[DEBUG] Created Private Network Subnet %s", subnetResponse)
-
+	// subnetResponse := &CloudProjectNetworkPrivatesResponse{}
 	ro := &CloudProjectOperationResponse{}
-	endpointo := fmt.Sprintf("/cloud/project/%s/operation/%s",
+
+	endpointPostSubnet := fmt.Sprintf("/cloud/project/%s/region/%s/network",
 		url.PathEscape(serviceName),
-		url.PathEscape(subnetResponse.Id))
-	if err := config.OVHClient.Get(endpointo, ro); err != nil {
-		return nil
+		url.PathEscape(regionName),
+	)
+	if err := config.OVHClient.Post(endpointPostSubnet, params, ro); err != nil {
+		return fmt.Errorf("calling POST %s with params %v:\n\t %q", endpointPostSubnet, params, err)
 	}
-	log.Printf("[DEBUG] Created Subnet %+v", ro)
+
+	for true {
+		endpointGetOperation := fmt.Sprintf("/cloud/project/%s/operation/%s",
+			url.PathEscape(serviceName),
+			url.PathEscape(ro.Id))
+		if err := config.OVHClient.Get(endpointGetOperation, ro); err != nil {
+			return err
+		}
+		if ro.Status == "completed" {
+			break
+		}
+	}
+
+	// ro := &CloudProjectOperationResponse{}
+
+	// log.Printf("[DEBUG] Will create public cloud private network subnet: %v", params)
+
+	// log.Printf("[DEBUG] Created Private Network Subnet %s", subnetResponse)
+
+	// ro := &CloudProjectOperationResponse{}
+	// endpointo := fmt.Sprintf("/cloud/project/%s/operation/%s",
+	// 	url.PathEscape(serviceName),
+	// 	url.PathEscape(subnetResponse.Id))
+	// if err := config.OVHClient.Get(endpointo, ro); err != nil {
+	// 	return nil
+	// }
+	// log.Printf("[DEBUG] Created Subnet %+v", ro)
 
 	subnetId := ro.ResourceId
 
@@ -323,7 +384,7 @@ func resourceCloudProjectNetworkPrivateSubnetValidateIPs(v interface{}, k string
 	for _, value := range values {
 		ip := net.ParseIP(value)
 		if ip == nil {
-			errors = append(errors, fmt.Errorf("%q must be a valid IP list", k))
+			errors = append(errors, fmt.Errorf("%q must be a valid IP", k))
 		}
 	}
 	return
