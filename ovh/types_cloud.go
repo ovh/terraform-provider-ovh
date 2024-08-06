@@ -79,21 +79,40 @@ func (p *CloudProjectNetworkPrivateResponse) String() string {
 	return fmt.Sprintf("Id: %s, Status: %s, Name: %s, Vlanid: %d, Type: %s, Regions: %s", p.Id, p.Status, p.Name, p.Vlanid, p.Type, p.Regions)
 }
 
+type CloudProjectRegionalizedNetworkPrivateResponse struct {
+	Id         string `json:"id"`
+	Vlanid     int    `json:"vlanId"`
+	Name       string `json:"name"`
+	Visibility string `json:"visibility"`
+}
+
+func (p *CloudProjectRegionalizedNetworkPrivateResponse) String() string {
+	return fmt.Sprintf("Id: %s, Name: %s, Vlanid: %d, Visibility: %s", p.Id, p.Name, p.Vlanid, p.Visibility)
+}
+
 // Opts
+type CloudProjectSubnetPrivates struct {
+	Name            string              `json:"name"`
+	Cidr            string              `json:"cidr"`
+	IpVersion       int                 `json:"ipVersion"`
+	AllocationPools []map[string]string `json:"allocationPools"`
+	DnsNameservers  []string            `json:"dnsNameservers"`
+	HostRoutes      []map[string]string `json:"hostRoutes"`
+	EnableDHCP      bool                `json:"enableDHCP"`
+	EnableGatewayIP bool                `json:"enableGatewayIP"`
+}
+
 type CloudProjectNetworkPrivatesCreateOpts struct {
-	ServiceName string `json:"serviceName"`
-	NetworkId   string `json:"networkId"`
-	Dhcp        bool   `json:"dhcp"`
-	NoGateway   bool   `json:"noGateway"`
-	Start       string `json:"start"`
-	End         string `json:"end"`
-	Network     string `json:"network"`
-	Region      string `json:"region"`
+	ServiceName string                     `json:"serviceName" `
+	NetworkId   string                     `json:"network_id"`
+	Name        string                     `json:"name"`
+	Subnet      CloudProjectSubnetPrivates `json:"subnet"`
+	// Region      string                     `json:"region"`
 }
 
 func (p *CloudProjectNetworkPrivatesCreateOpts) String() string {
-	return fmt.Sprintf("PCPNSCreateOpts[projectId: %s, networkId:%s, dhcp: %v, noGateway: %v, network: %s, start: %s, end: %s, region: %s]",
-		p.ServiceName, p.NetworkId, p.Dhcp, p.NoGateway, p.Network, p.Start, p.End, p.Region)
+	return fmt.Sprintf("CloudProjectNetworkPrivatesCreateOpts[projectId: %s, networkId:%s, enableDhcp: %v, enableGatewayIP: %v, network: %s, start: %s, end: %s]",
+		p.ServiceName, p.NetworkId, p.Subnet.EnableDHCP, p.Subnet.EnableGatewayIP, p.Name, p.Subnet.AllocationPools[0]["start"], p.Subnet.AllocationPools[0]["end"])
 }
 
 type CloudProjectNetworkPrivatesResponse struct {

@@ -179,16 +179,9 @@ func resourceHostingPrivateDatabaseRead(d *schema.ResourceData, meta interface{}
 	log.Printf("[DEBUG] Will read privateDatabase: %s", serviceName)
 	ds := &HostingPrivateDatabase{}
 	endpoint := fmt.Sprintf("/hosting/privateDatabase/%s", serviceName)
-	if err := config.OVHClient.Get(endpoint, &ds); err != nil {
-		return helpers.CheckDeleted(d, err, endpoint)
-	}
-
+	err = config.OVHClient.Get(endpoint, &ds)
 	if err != nil {
-		return fmt.Errorf(
-			"error reading Hosting privateDatabase for %s: %q",
-			serviceName,
-			err,
-		)
+		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
 	for k, v := range ds.ToMap() {
