@@ -60,7 +60,7 @@ func dataSourceHostingPrivateDatabaseWhitelist() *schema.Resource {
 func dataSourceHostingPrivateDatabaseWhitelistRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
-	ip := d.Get("ip").(string)
+	ip := HostingPrivateDatabaseWhitelistefaultNetmask(d.Get("ip").(string))
 
 	ds := &HostingPrivateDatabaseWhitelist{}
 	err := config.OVHClient.Get(
