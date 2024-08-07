@@ -54,7 +54,7 @@ func resourceHostingPrivateDatabaseWhitelist() *schema.Resource {
 func resourceHostingPrivateDatabaseWhitelistCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
-	ip := d.Get("ip").(string)
+	ip := HostingPrivateDatabaseWhitelistefaultNetmask(d.Get("ip").(string))
 
 	opts := (&HostingPrivateDatabaseWhitelistCreateOpts{}).FromResource(d)
 	ds := &HostingPrivateDatabaseWhitelist{}
@@ -80,7 +80,7 @@ func resourceHostingPrivateDatabaseWhitelistCreate(d *schema.ResourceData, meta 
 func resourceHostingPrivateDatabaseWhitelistUpdate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
-	ip := d.Get("ip").(string)
+	ip := HostingPrivateDatabaseWhitelistefaultNetmask(d.Get("ip").(string))
 
 	opts := (&HostingPrivateDatabaseWhitelistUpdateOpts{}).FromResource(d)
 
@@ -98,7 +98,7 @@ func resourceHostingPrivateDatabaseWhitelistUpdate(d *schema.ResourceData, meta 
 func resourceHostingPrivateDatabaseWhitelistRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
-	ip := d.Get("ip").(string)
+	ip := HostingPrivateDatabaseWhitelistefaultNetmask(d.Get("ip").(string))
 
 	ds := &HostingPrivateDatabaseWhitelist{}
 
@@ -119,7 +119,7 @@ func resourceHostingPrivateDatabaseWhitelistRead(d *schema.ResourceData, meta in
 func resourceHostingPrivateDatabaseWhitelistDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
-	ip := d.Get("ip").(string)
+	ip := HostingPrivateDatabaseWhitelistefaultNetmask(d.Get("ip").(string))
 
 	ds := &HostingPrivateDatabaseWhitelist{}
 
