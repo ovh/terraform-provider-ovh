@@ -47,6 +47,9 @@ func resourceCloudProjectUserS3Policy() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The policy document. This is a JSON formatted string.",
+				DiffSuppressFunc: func(key, old, new string, d *schema.ResourceData) bool {
+					return helpers.JSONStringsEqual(old, new)
+				},
 			},
 		},
 	}
@@ -63,7 +66,7 @@ func resourceCloudProjectUserS3PolicyImportState(ctx context.Context, d *schema.
 	}
 
 	if serviceName == "" || userId == "" {
-		return nil, fmt.Errorf("Import ID is not service_name/user_id formatted. Got %s", d.Id())
+		return nil, fmt.Errorf("import ID is not service_name/user_id formatted. Got %s", d.Id())
 	}
 
 	d.SetId(buildUserS3PolicyId(serviceName, userId))
@@ -106,6 +109,7 @@ func resourceCloudProjectUserS3PolicyRead(ctx context.Context, d *schema.Resourc
 	}
 
 	d.SetId(buildUserS3PolicyId(serviceName, userId))
+	d.Set("policy", s3Policy.Policy)
 
 	log.Printf("[DEBUG] Policy %s set for user %s", s3Policy.Policy, userId)
 	return nil
