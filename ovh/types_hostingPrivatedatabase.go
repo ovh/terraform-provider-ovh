@@ -3,6 +3,7 @@ package ovh
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
+	"strings"
 )
 
 type HostingPrivateDatabase struct {
@@ -285,4 +286,11 @@ func (opts *HostingPrivateDatabaseWhitelistUpdateOpts) FromResource(d *schema.Re
 	opts.Sftp = d.Get("sftp").(bool)
 
 	return opts
+}
+
+func HostingPrivateDatabaseWhitelistefaultNetmask(ip string) string {
+	if !strings.Contains(ip, "/") {
+		ip = ip + "/32"
+	}
+	return ip
 }
