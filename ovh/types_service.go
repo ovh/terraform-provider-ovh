@@ -17,7 +17,8 @@ type ServiceInfos struct {
 // Service contains the information returned by
 // calls to /services/{serviceId}
 type Service struct {
-	Billing ServiceBilling `json:"billing"`
+	Billing              ServiceBilling          `json:"billing"`
+	OrderDetailExtension *MeOrderDetailExtension `json:"-"`
 }
 
 func (s *Service) ToPlanValue(ctx context.Context, existingPlans types.TfListNestedValue[PlanValue]) *types.TfListNestedValue[PlanValue] {
@@ -51,6 +52,14 @@ func (s *Service) ToSDKv2PlanValue() []interface{} {
 	obj["plan_code"] = s.Billing.Plan.Code
 	obj["duration"] = s.Billing.Pricing.Duration
 	obj["pricing_mode"] = s.Billing.Pricing.PricingMode
+
+	if s.OrderDetailExtension != nil {
+		configurations := make([]interface{}, 0)
+		for _, config := range s.OrderDetailExtension.Order.Configurations {
+			configurations = append(configurations, config.ToMap())
+		}
+		obj["configuration"] = configurations
+	}
 
 	return []interface{}{obj}
 }

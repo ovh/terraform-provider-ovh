@@ -15,10 +15,11 @@ func (v MeOrder) ToMap() map[string]interface{} {
 }
 
 type MeOrderDetail struct {
-	Description   string `json:"description"`
-	Domain        string `json:"domain"`
-	OrderDetailId int64  `json:"orderDetailId"`
-	Quantity      string `json:"quantity"`
+	Description   string                  `json:"description"`
+	Domain        string                  `json:"domain"`
+	OrderDetailId int64                   `json:"orderDetailId"`
+	Quantity      string                  `json:"quantity"`
+	Extension     *MeOrderDetailExtension `json:"-"`
 }
 
 func (v MeOrderDetail) ToMap() map[string]interface{} {
@@ -35,7 +36,20 @@ type MeOrderDetailExtension struct {
 		Plan struct {
 			Code string `json:"code"`
 		} `json:"plan"`
+		Configurations []MeOrderDetailExtensionConfiguration `json:"configurations"`
 	} `json:"order"`
+}
+
+type MeOrderDetailExtensionConfiguration struct {
+	Value string `json:"value"`
+	Label string `json:"label"`
+}
+
+func (v MeOrderDetailExtensionConfiguration) ToMap() map[string]interface{} {
+	return map[string]interface{}{
+		"value": v.Value,
+		"label": v.Label,
+	}
 }
 
 type MeOrderDetailOperation struct {

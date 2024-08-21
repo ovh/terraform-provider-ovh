@@ -132,6 +132,7 @@ func testAccPreCheckOrderIpService(t *testing.T) {
 func testAccPreCheckOrderCloudProject(t *testing.T) {
 	testAccPreCheckCredentials(t)
 	checkEnvOrSkip(t, "OVH_TESTACC_ORDER_CLOUD_PROJECT")
+	checkEnvOrSkip(t, "OVH_VRACK_SERVICE_TEST")
 }
 
 // Checks that the environment variables needed for the /domain acceptance tests

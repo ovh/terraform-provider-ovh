@@ -528,6 +528,14 @@ func orderDetails(c *ovh.Client, orderId int64) ([]*MeOrderDetail, error) {
 			return nil, fmt.Errorf("calling get %s:\n\t %q", endpoint, err)
 		}
 
+		detailExtension := &MeOrderDetailExtension{}
+		log.Printf("[DEBUG] Will read order detail extension %d/%d", orderId, detailId)
+		endpoint = fmt.Sprintf("/me/order/%d/details/%d/extension", orderId, detailId)
+		if err := c.Get(endpoint, detailExtension); err != nil {
+			return nil, fmt.Errorf("calling get %s:\n\t %q", endpoint, err)
+		}
+		detail.Extension = detailExtension
+
 		details[i] = detail
 	}
 	return details, nil
