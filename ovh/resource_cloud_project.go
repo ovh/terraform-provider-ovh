@@ -129,7 +129,7 @@ func resourceCloudProjectUpdate(d *schema.ResourceData, meta interface{}) error 
 func resourceCloudProjectRead(d *schema.ResourceData, meta interface{}) error {
 	order, details, err := orderReadInResource(d, meta)
 	if err != nil {
-		return fmt.Errorf("Could not read cloudProject order: %q", err)
+		return fmt.Errorf("could not read cloudProject order: %q", err)
 	}
 
 	config := meta.(*Config)
@@ -155,6 +155,9 @@ func resourceCloudProjectRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("failed to retrieve cloud project details: %w", err)
 	}
+	if len(details) > 0 {
+		serviceObj.OrderDetailExtension = details[0].Extension
+	}
 	d.Set("plan", serviceObj.ToSDKv2PlanValue())
 
 	// Retrieve subsidiary information
@@ -170,7 +173,7 @@ func resourceCloudProjectRead(d *schema.ResourceData, meta interface{}) error {
 func resourceCloudProjectDelete(d *schema.ResourceData, meta interface{}) error {
 	order, details, err := orderReadInResource(d, meta)
 	if err != nil {
-		return fmt.Errorf("Could not read cloudProject order: %q", err)
+		return fmt.Errorf("could not read cloudProject order: %q", err)
 	}
 
 	config := meta.(*Config)
