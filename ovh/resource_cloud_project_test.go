@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -17,25 +18,30 @@ const testAccCloudProjectBasic = `
 data "ovh_me" "myaccount" {}
 
 data "ovh_order_cart" "mycart" {
- ovh_subsidiary = data.ovh_me.myaccount.ovh_subsidiary
+	ovh_subsidiary = data.ovh_me.myaccount.ovh_subsidiary
 }
 
 data "ovh_order_cart_product_plan" "cloud" {
- cart_id        = data.ovh_order_cart.mycart.id
- price_capacity = "renew"
- product        = "cloud"
- plan_code      = "project.2018"
+	cart_id        = data.ovh_order_cart.mycart.id
+	price_capacity = "renew"
+	product        = "cloud"
+	plan_code      = "project.2018"
 }
 
 resource "ovh_cloud_project" "cloud" {
- ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
- description    = "%s"
+	ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
+	description    = "%s"
  
- plan {
-   duration     = data.ovh_order_cart_product_plan.cloud.selected_price.0.duration
-   plan_code    = data.ovh_order_cart_product_plan.cloud.plan_code
-   pricing_mode = data.ovh_order_cart_product_plan.cloud.selected_price.0.pricing_mode
- }
+	plan {
+		duration     = data.ovh_order_cart_product_plan.cloud.selected_price.0.duration
+		plan_code    = data.ovh_order_cart_product_plan.cloud.plan_code
+		pricing_mode = data.ovh_order_cart_product_plan.cloud.selected_price.0.pricing_mode
+
+		configuration {
+			label = "vrack"
+			value = "%s"
+		}
+	}
 }
 `
 
@@ -125,9 +131,14 @@ func testSweepCloudProject(region string) error {
 
 func TestAccResourceCloudProject_basic(t *testing.T) {
 	desc := acctest.RandomWithPrefix(test_prefix)
+
+	// Link a vrack to the new cloud project at order time
+	vrackServiceName := os.Getenv("OVH_VRACK_SERVICE_TEST")
+
 	config := fmt.Sprintf(
 		testAccCloudProjectBasic,
 		desc,
+		vrackServiceName,
 	)
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { testAccPreCheckOrderCloudProject(t) },
