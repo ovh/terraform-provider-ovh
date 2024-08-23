@@ -70,7 +70,7 @@ func resourceDomainZoneSchema() map[string]*schema.Schema {
 }
 
 func resourceDomainZoneCreate(d *schema.ResourceData, meta interface{}) error {
-	if err := orderCreateFromResource(d, meta, "dns"); err != nil {
+	if err := orderCreateFromResource(d, meta, "dns", true); err != nil {
 		return fmt.Errorf("Could not order domain zone: %q", err)
 	}
 

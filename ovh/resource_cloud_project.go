@@ -71,7 +71,7 @@ func resourceCloudProjectSchema() map[string]*schema.Schema {
 }
 
 func resourceCloudProjectCreate(d *schema.ResourceData, meta interface{}) error {
-	if err := orderCreateFromResource(d, meta, "cloud"); err != nil {
+	if err := orderCreateFromResource(d, meta, "cloud", true); err != nil {
 		return fmt.Errorf("Could not order cloud project: %q", err)
 	}
 

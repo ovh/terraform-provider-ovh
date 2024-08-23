@@ -141,7 +141,7 @@ func resourceHostingPrivateDatabaseSchema() map[string]*schema.Schema {
 }
 
 func resourceHostingPrivateDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
-	if err := orderCreateFromResource(d, meta, "privateSQL"); err != nil {
+	if err := orderCreateFromResource(d, meta, "privateSQL", true); err != nil {
 		return fmt.Errorf("could not order privateDatabase: %q", err)
 	}
 
