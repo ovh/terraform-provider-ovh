@@ -148,7 +148,7 @@ func resourceIpLoadbalancingSchema() map[string]*schema.Schema {
 }
 
 func resourceIpLoadbalancingCreate(d *schema.ResourceData, meta interface{}) error {
-	if err := orderCreateFromResource(d, meta, "ipLoadbalancing"); err != nil {
+	if err := orderCreateFromResource(d, meta, "ipLoadbalancing", true); err != nil {
 		return fmt.Errorf("Could not order ipLoadbalancing: %q", err)
 	}
 
