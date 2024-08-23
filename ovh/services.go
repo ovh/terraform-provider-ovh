@@ -12,6 +12,17 @@ import (
 	"github.com/ovh/go-ovh/ovh"
 )
 
+func serviceIdFromResourceName(c *ovh.Client, resourceName string) (int, error) {
+	var serviceIds []int
+	endpoint := fmt.Sprintf("/services?resourceName=%s", url.PathEscape(resourceName))
+
+	if err := c.Get(endpoint, &serviceIds); err != nil {
+		return 0, fmt.Errorf("failed to get service infos: %w", err)
+	}
+
+	return serviceIds[0], nil
+}
+
 func serviceInfoFromServiceName(c *ovh.Client, serviceType, serviceName string) (*ServiceInfos, error) {
 	var (
 		serviceInfos ServiceInfos
