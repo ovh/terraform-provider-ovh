@@ -146,7 +146,8 @@ func OkmsCredentialResourceSchema(ctx context.Context) schema.Schema {
 	}
 
 	return schema.Schema{
-		Attributes: attrs,
+		Attributes:  attrs,
+		Description: "Creates a credential for an OVHcloud KMS.",
 	}
 }
 

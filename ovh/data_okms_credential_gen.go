@@ -2,7 +2,6 @@ package ovh
 
 import (
 	"context"
-	// "encoding/json"
 
 	ovhtypes "github.com/ovh/terraform-provider-ovh/ovh/types"
 
@@ -79,7 +78,8 @@ func OkmsCredentialDataSourceSchema(ctx context.Context) schema.Schema {
 	}
 
 	return schema.Schema{
-		Attributes: credAttrs,
+		Attributes:  credAttrs,
+		Description: "Use this data source to retrieve data associated with a KMS credential, such as the PEM encoded certificate.",
 	}
 }
 

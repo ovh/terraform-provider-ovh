@@ -136,7 +136,8 @@ func OkmsServiceKeyJwkDataSourceSchema(ctx context.Context) schema.Schema {
 	}
 
 	return schema.Schema{
-		Attributes: attrs,
+		Attributes:  attrs,
+		Description: "Use this data source to retrieve information about a KMS service key, in the JWK format.",
 	}
 }
 

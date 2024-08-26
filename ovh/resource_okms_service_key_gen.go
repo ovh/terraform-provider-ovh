@@ -161,7 +161,8 @@ func OkmsServiceKeyResourceSchema(ctx context.Context) schema.Schema {
 	}
 
 	return schema.Schema{
-		Attributes: attrs,
+		Attributes:  attrs,
+		Description: "Creates a Service Key in an OVHcloud KMS.",
 	}
 }
 
