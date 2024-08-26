@@ -62,7 +62,6 @@ func OkmsResourceDataSourceSchema(ctx context.Context) schema.Schema {
 		},
 		"public_ca": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
-			Optional:            true,
 			Computed:            true,
 			Description:         "KMS public CA (Certificate Authority)",
 			MarkdownDescription: "KMS public CA (Certificate Authority)",
@@ -88,7 +87,8 @@ func OkmsResourceDataSourceSchema(ctx context.Context) schema.Schema {
 	}
 
 	return schema.Schema{
-		Attributes: attrs,
+		Attributes:  attrs,
+		Description: "Use this data source to retrieve information about a KMS associated with this account",
 	}
 }
 
