@@ -18,7 +18,6 @@ type InstallationTemplate struct {
 	EndOfInstall          string                             `json:"endOfInstall,omitempty"`
 	Family                string                             `json:"family,omitempty"`
 	Filesystems           []string                           `json:"filesystems"`
-	HardRaidConfiguration bool                               `json:"hardRaidConfiguration,omitempty"`
 	Inputs                []InstallationTemplateInputs       `json:"inputs,omitempty"`
 	License               *InstallationTemplateLicense       `json:"license,omitempty"`
 	LvmReady              *bool                              `json:"lvmReady,omitempty"`
@@ -47,8 +46,6 @@ func (v InstallationTemplate) ToMap() map[string]interface{} {
 	obj["end_of_install"] = v.EndOfInstall
 	obj["family"] = v.Family
 	obj["filesystems"] = v.Filesystems
-
-	obj["hard_raid_configuration"] = v.HardRaidConfiguration
 
 	if v.Inputs != nil {
 		inputs := make([]interface{}, len(v.Inputs))
