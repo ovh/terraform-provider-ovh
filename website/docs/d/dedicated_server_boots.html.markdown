@@ -19,7 +19,7 @@ data "ovh_dedicated_server_boots" "netboots" {
 
 * `service_name` - (Required) The internal name of your dedicated server.
 
-* `boot_type` - (Optional) Filter the value of bootType property (harddisk, rescue, ipxeCustomerScript, internal, network)
+* `boot_type` - (Optional) Filter the value of bootType property (harddisk, rescue, internal, network)
 
 * `kernel` - (Optional) Filter the value of kernel property (iPXE script name)
 
