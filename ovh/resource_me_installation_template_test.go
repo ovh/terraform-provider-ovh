@@ -109,16 +109,6 @@ func TestAccMeInstallationTemplateResource_customization(t *testing.T) {
 						"customization.0.custom_hostname",
 						"mytest",
 					),
-					resource.TestCheckResourceAttr(
-						"ovh_me_installation_template.template",
-						"customization.0.post_installation_script_link",
-						"http://mylink.org",
-					),
-					resource.TestCheckResourceAttr(
-						"ovh_me_installation_template.template",
-						"customization.0.post_installation_script_return",
-						"returned_string",
-					),
 					resource.TestCheckResourceAttrSet(
 						"ovh_me_installation_template.template",
 						"family",
@@ -142,8 +132,6 @@ resource "ovh_me_installation_template" "template" {
 
   customization {
      custom_hostname                 = "mytest"
-     post_installation_script_link   = "http://mylink.org"
-     post_installation_script_return = "returned_string"
   }
 }
 `
