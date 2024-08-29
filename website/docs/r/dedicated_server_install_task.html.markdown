@@ -24,8 +24,7 @@ resource "ovh_me_installation_template" "debian" {
   base_template_name = "debian12_64"
   template_name      = "mydebian12"
   customization {
-    post_installation_script_link = "http://test"
-    post_installation_script_return = "ok"
+    custom_hostname = "mytest"
   }
 }
 
@@ -39,6 +38,15 @@ resource "ovh_dedicated_server_install_task" "server_install" {
   user_metadata {
     key = "sshKey"
     value = "ssh-ed25519 AAAAC3..."
+  }
+  user_metadata {
+    key = "postInstallationScript"
+    value = <<-EOF
+        #!/bin/bash
+          echo "coucou postInstallationScript" > /opt/coucou
+          cat /etc/machine-id  >> /opt/coucou
+          date "+%Y-%m-%d %H:%M:%S" --utc >> /opt/coucou
+        EOF
   }
 }
 ```
@@ -116,6 +124,14 @@ resource "ovh_dedicated_server_install_task" "server_install" {
     key  = "language"
     value ="fr-fr"
   }
+  user_metadata {
+    key = "postInstallationScript"
+    value = <<-EOF
+    coucou postInstallationScriptPowerShell" | Out-File -FilePath "c:\ovhupd\script\coucou.txt"
+          (Get-ItemProperty -LiteralPath "Registry::HKLM\SOFTWARE\Microsoft\Cryptography" -Name "MachineGuid").MachineGuid | Out-File -FilePath "c:\ovhupd\script\coucou.txt" -Append
+          (Get-Date).ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss") | Out-File -FilePath "c:\ovhupd\script\coucou.txt" -Append
+    EOF
+  }
 
 }
 ```
@@ -138,8 +154,6 @@ The `details` block supports:
 * `disk_group_id` - Disk group id.
 * `language` - Deprecated, will be removed in next release.
 * `no_raid` - Set to true to disable RAID.
-* `post_installation_script_link` - Indicate the URL where your postinstall customisation script is located.
-* `post_installation_script_return` - Indicate the string returned by your postinstall customisation script on successful execution. Advice: your script should return a unique validation string in case of succes. A good example is 'loh1Xee7eo OK OK OK UGh8Ang1Gu'.
 * `soft_raid_devices` - soft raid devices.
 * `use_spla` - Deprecated, will be removed in next release.
 

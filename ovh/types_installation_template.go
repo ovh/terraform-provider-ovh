@@ -18,7 +18,6 @@ type InstallationTemplate struct {
 	EndOfInstall          string                             `json:"endOfInstall,omitempty"`
 	Family                string                             `json:"family,omitempty"`
 	Filesystems           []string                           `json:"filesystems"`
-	HardRaidConfiguration bool                               `json:"hardRaidConfiguration,omitempty"`
 	Inputs                []InstallationTemplateInputs       `json:"inputs,omitempty"`
 	License               *InstallationTemplateLicense       `json:"license,omitempty"`
 	LvmReady              *bool                              `json:"lvmReady,omitempty"`
@@ -47,8 +46,6 @@ func (v InstallationTemplate) ToMap() map[string]interface{} {
 	obj["end_of_install"] = v.EndOfInstall
 	obj["family"] = v.Family
 	obj["filesystems"] = v.Filesystems
-
-	obj["hard_raid_configuration"] = v.HardRaidConfiguration
 
 	if v.Inputs != nil {
 		inputs := make([]interface{}, len(v.Inputs))
@@ -107,10 +104,8 @@ func (opts *InstallationTemplateUpdateOpts) FromResource(d *schema.ResourceData)
 }
 
 type InstallationTemplateCustomization struct {
-	CustomHostname               *string `json:"customHostname,omitempty"`
-	PostInstallationScriptLink   *string `json:"postInstallationScriptLink,omitempty"`
-	PostInstallationScriptReturn *string `json:"postInstallationScriptReturn,omitempty"`
-	SshKeyName                   *string `json:"sshKeyName,omitempty"`
+	CustomHostname *string `json:"customHostname,omitempty"`
+	SshKeyName     *string `json:"sshKeyName,omitempty"`
 }
 
 func (v InstallationTemplateCustomization) ToMap() map[string]interface{} {
@@ -119,16 +114,6 @@ func (v InstallationTemplateCustomization) ToMap() map[string]interface{} {
 
 	if v.CustomHostname != nil {
 		obj["custom_hostname"] = *v.CustomHostname
-		custom_attr_set = true
-	}
-
-	if v.PostInstallationScriptLink != nil {
-		obj["post_installation_script_link"] = *v.PostInstallationScriptLink
-		custom_attr_set = true
-	}
-
-	if v.PostInstallationScriptReturn != nil {
-		obj["post_installation_script_return"] = *v.PostInstallationScriptReturn
 		custom_attr_set = true
 	}
 
@@ -216,8 +201,6 @@ func (v InstallationTemplateProjectItem) ToMap() map[string]interface{} {
 
 func (opts *InstallationTemplateCustomization) FromResource(d *schema.ResourceData, parent string) *InstallationTemplateCustomization {
 	opts.CustomHostname = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.custom_hostname", parent))
-	opts.PostInstallationScriptLink = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.post_installation_script_link", parent))
-	opts.PostInstallationScriptReturn = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.post_installation_script_return", parent))
 	return opts
 }
 
