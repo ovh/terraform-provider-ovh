@@ -129,14 +129,38 @@ func resourceVrackRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVrackDelete(d *schema.ResourceData, meta interface{}) error {
-	id := d.Id()
-	serviceName := d.Get("service_name").(string)
-	log.Printf(
-		`[WARN] The API doesn't provide any delete mechanism for VRACK.
-The vrack %s (order %s) will be forgotten without being effectively deleted.`,
-		serviceName,
-		id,
-	)
+	config := meta.(*Config)
+	serviceName := d.Id()
+
+	terminate := func() (string, error) {
+		log.Printf("[DEBUG] Will terminate vrack %s", serviceName)
+		endpoint := fmt.Sprintf(
+			"/vrack/%s/terminate",
+			url.PathEscape(serviceName),
+		)
+		if err := config.OVHClient.Post(endpoint, nil, nil); err != nil {
+			return "", fmt.Errorf("calling Post %s:\n\t %q", endpoint, err)
+		}
+		return serviceName, nil
+	}
+
+	confirmTerminate := func(token string) error {
+		log.Printf("[DEBUG] Will confirm termination of vrack %s", serviceName)
+		endpoint := fmt.Sprintf(
+			"/vrack/%s/confirmTermination",
+			url.PathEscape(serviceName),
+		)
+		if err := config.OVHClient.Post(endpoint, &ConfirmTerminationOpts{Token: token}, nil); err != nil {
+			return fmt.Errorf("calling Post %s:\n\t %q", endpoint, err)
+		}
+		return nil
+	}
+
+	if err := orderDeleteFromResource(d, meta, terminate, confirmTerminate); err != nil {
+		return err
+	}
+
 	d.SetId("")
+
 	return nil
 }

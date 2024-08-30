@@ -9,9 +9,11 @@ import (
 )
 
 const testAccVrackBasic = `
+data "ovh_me" "myaccount" {}
+
 data "ovh_order_cart" "mycart" {
- ovh_subsidiary = "fr"
- description    = "%s"
+	ovh_subsidiary = data.ovh_me.myaccount.ovh_subsidiary
+	description    = "%s"
 }
 
 data "ovh_order_cart_product_plan" "vrack" {
