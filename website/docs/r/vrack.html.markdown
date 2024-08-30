@@ -10,10 +10,7 @@ Orders a vrack.
 
 -> __NOTE__ To order a product through Terraform, your account needs to have a default payment method defined. This can be done in the [OVHcloud Control Panel](https://www.ovh.com/manager/#/dedicated/billing/payment/method) or via API with the [/me/payment/method](https://api.ovh.com/console/#/me/payment/method~GET) endpoint.
 
-~> __WARNING__ Currently, the OVHcloud API doesn't support Vrack termination. You have to open a support ticket to ask for vrack termination. Otherwise, you may hit vrack quota issues.
-
 ~> __WARNING__ `BANK_ACCOUNT` is not supported anymore, please update your default payment_method to `SEPA_DIRECT_DEBIT`
-
 
 ## Example Usage
 
@@ -66,7 +63,6 @@ The following arguments are supported:
   * `configuration` - (Optional) Representation of a configuration item for personalizing product
     * `label` - (Required) Identifier of the resource
     * `value` - (Required) Path to the resource in API.OVH.COM
-
 
 ## Attributes Reference
 
