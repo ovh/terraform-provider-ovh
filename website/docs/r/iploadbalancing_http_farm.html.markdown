@@ -26,7 +26,7 @@ resource "ovh_iploadbalancing_http_farm" "farmname" {
 The following arguments are supported:
 
 * `service_name` - (Required) The internal name of your IP load balancing
-* `balance` - Load balancing algorithm. `roundrobin` if null (`first`, `leastconn`, `roundrobin`, `source`)
+* `balance` - Load balancing algorithm. `roundrobin` if null (`first`, `leastconn`, `roundrobin`, `source`, `uri`)
 * `display_name` - Readable label for loadbalancer farm
 * `port` - Port attached to your farm ([1..49151]). Inherited from frontend if null
 * `stickiness` - 	Stickiness type. No stickiness if null (`sourceIp`, `cookie`)
