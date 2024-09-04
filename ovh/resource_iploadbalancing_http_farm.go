@@ -29,7 +29,7 @@ func resourceIpLoadbalancingHttpFarm() *schema.Resource {
 				Optional: true,
 				ForceNew: false,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					err := helpers.ValidateStringEnum(v.(string), []string{"first", "leastconn", "roundrobin", "source"})
+					err := helpers.ValidateStringEnum(v.(string), []string{"first", "leastconn", "roundrobin", "source", "uri"})
 					if err != nil {
 						errors = append(errors, err)
 					}
