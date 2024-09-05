@@ -8,7 +8,6 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -86,17 +85,6 @@ func (d *okmsResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 
 func (r *okmsResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), req.ID)...)
-	var data OkmsModel
-	if err := r.getOkmsById(req.ID, &data); err != nil {
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("Error calling reading KMS %s", req.ID),
-			err.Error(),
-		)
-		return
-	}
-
-	// Save data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *okmsResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -149,7 +137,8 @@ func (r *okmsResource) Create(ctx context.Context, req resource.CreateRequest, r
 	}
 
 	// Update service displayName
-	if r.updateServiceDisplayName(
+	if serviceUpdateDisplayNameAPIv2(
+		r.config,
 		data.Id.ValueString(),
 		data.DisplayName.ValueString(),
 		&resp.Diagnostics,
@@ -194,31 +183,6 @@ func (r *okmsResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *okmsResource) updateServiceDisplayName(serviceName string, displayName string, diagnostics *diag.Diagnostics) error {
-	serviceId, err := serviceIdFromResourceName(r.config.OVHClient, serviceName)
-	if err != nil {
-		diagnostics.AddError(
-			fmt.Sprintf("Error locating KMS %s", serviceName),
-			err.Error(),
-		)
-		return err
-	}
-
-	endpoint := fmt.Sprintf("/services/%d", serviceId)
-	if err := r.config.OVHClient.Put(endpoint, &ServiceUpdatePayload{
-		DisplayName: displayName,
-	}, nil); err != nil {
-		log.Printf("[WARN] update failed : %v", err)
-		diagnostics.AddError(
-			fmt.Sprintf("Failed to update display name for service %d", serviceId),
-			err.Error(),
-		)
-		return err
-	}
-
-	return nil
-}
-
 func (r *okmsResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var data, planData OkmsModel
 
@@ -243,7 +207,8 @@ func (r *okmsResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	if planData.DisplayName.ValueString() != data.DisplayName.ValueString() {
 		// Update service displayName
 		log.Printf("[OKMS] updating display name for %s to %s", data.Id.ValueString(), planData.DisplayName.ValueString())
-		if r.updateServiceDisplayName(
+		if serviceUpdateDisplayNameAPIv2(
+			r.config,
 			data.Id.ValueString(),
 			planData.DisplayName.ValueString(),
 			&resp.Diagnostics,

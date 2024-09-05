@@ -54,7 +54,7 @@ func (d *okmsCredentialDataSource) Read(ctx context.Context, req datasource.Read
 	}
 
 	// Read API call logic
-	endpoint := "/v2/okms/resource/" + url.PathEscape(data.OkmsId.ValueString()) + "/credential/" + url.PathEscape(data.Id.ValueString()) + ""
+	endpoint := "/v2/okms/resource/" + url.PathEscape(data.OkmsId.ValueString()) + "/credential/" + url.PathEscape(data.Id.ValueString())
 
 	if err := d.config.OVHClient.Get(endpoint, &data); err != nil {
 		resp.Diagnostics.AddError(

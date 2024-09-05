@@ -60,24 +60,6 @@ func (r *okmsCredentialResource) ImportState(ctx context.Context, req resource.I
 	// Set ID attributes in the state
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("okms_id"), ids[0])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), ids[1])...)
-
-	var data OkmsCredentialResourceModel
-	resp.Diagnostics.Append(resp.State.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	endpoint := "/v2/okms/resource/" + ids[0] + "/credential/" + ids[1]
-	if err := r.config.OVHClient.Get(endpoint, &data); err != nil {
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("Error importing credential in GET %s", endpoint),
-			err.Error(),
-		)
-		return
-	}
-
-	// Save data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *okmsCredentialResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -146,7 +128,7 @@ func (r *okmsCredentialResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	endpoint := "/v2/okms/resource/" + url.PathEscape(data.OkmsId.ValueString()) + "/credential/" + url.PathEscape(data.Id.ValueString()) + ""
+	endpoint := "/v2/okms/resource/" + url.PathEscape(data.OkmsId.ValueString()) + "/credential/" + url.PathEscape(data.Id.ValueString())
 
 	if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
 		resp.Diagnostics.AddError(
@@ -193,7 +175,7 @@ func (r *okmsCredentialResource) Delete(ctx context.Context, req resource.Delete
 	}
 
 	// Delete API call logic
-	endpoint := "/v2/okms/resource/" + url.PathEscape(data.OkmsId.ValueString()) + "/credential/" + url.PathEscape(data.Id.ValueString()) + ""
+	endpoint := "/v2/okms/resource/" + url.PathEscape(data.OkmsId.ValueString()) + "/credential/" + url.PathEscape(data.Id.ValueString())
 	if err := r.config.OVHClient.Delete(endpoint, nil); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Delete %s", endpoint),
