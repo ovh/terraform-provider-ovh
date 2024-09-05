@@ -216,6 +216,8 @@ func (p *OvhProvider) Resources(_ context.Context) []func() resource.Resource {
 		NewIpFirewallResource,
 		NewIpFirewallRuleResource,
 		NewIploadbalancingUdpFrontendResource,
+		NewIploadbalancingUdpFarmResource,
+		NewIploadbalancingUdpFarmServerResource,
 		NewIpMitigationResource,
 		NewVpsResource,
 	}
