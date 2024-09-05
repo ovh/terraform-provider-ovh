@@ -28,3 +28,17 @@ func (v DomainZone) ToMap() map[string]interface{} {
 type DomainZoneConfirmTerminationOpts struct {
 	Token string `json:"token"`
 }
+
+type DomainZoneTask struct {
+	CanAccelerate bool   `json:"canAccelerate"`
+	CanCancel     bool   `json:"canCancel"`
+	CanRelaunch   bool   `json:"canRelaunch"`
+	Comment       string `json:"comment"`
+	CreationDate  string `json:"creationDate"`
+	DoneDate      string `json:"doneDate"`
+	Function      string `json:"function"`
+	TaskID        int    `json:"id"`
+	LastUpdate    string `json:"lastUpdate"`
+	Status        string `json:"status"`
+	TodoDate      string `json:"todoDate"`
+}
