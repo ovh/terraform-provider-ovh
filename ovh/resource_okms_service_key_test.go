@@ -278,13 +278,13 @@ func kmsJwkDatasourceChecks(resName string, datasourceName string) []statecheck.
 		resName,
 		tfjsonpath.New("id"),
 		datasourceName,
-		tfjsonpath.New("jwk").AtMapKey("kid"),
+		tfjsonpath.New("keys").AtSliceIndex(0).AtMapKey("kid"),
 		compare.ValuesSame()))
 	checks = append(checks, statecheck.CompareValuePairs(
 		resName,
 		tfjsonpath.New("type"),
 		datasourceName,
-		tfjsonpath.New("jwk").AtMapKey("kty"),
+		tfjsonpath.New("keys").AtSliceIndex(0).AtMapKey("kty"),
 		compare.ValuesSame()))
 
 	return checks
@@ -294,7 +294,7 @@ func kmsJwkOctDatasourceChecks(datasourceName string) []statecheck.StateCheck {
 	checks := []statecheck.StateCheck{
 		statecheck.ExpectKnownValue(
 			datasourceName,
-			tfjsonpath.New("jwk").AtMapKey("key_ops"),
+			tfjsonpath.New("keys").AtSliceIndex(0).AtMapKey("key_ops"),
 			knownvalue.SetExact(
 				[]knownvalue.Check{
 					knownvalue.StringExact("encrypt"),
@@ -315,7 +315,7 @@ func kmsJwkOctDatasourceChecks(datasourceName string) []statecheck.StateCheck {
 			checks,
 			statecheck.ExpectKnownValue(
 				datasourceName,
-				tfjsonpath.New("jwk").AtMapKey(key),
+				tfjsonpath.New("keys").AtSliceIndex(0).AtMapKey(key),
 				knownvalue.Null()),
 		)
 	}
@@ -327,7 +327,7 @@ func kmsJwkRsaDatasourceChecks(datasourceName string) []statecheck.StateCheck {
 	checks := []statecheck.StateCheck{
 		statecheck.ExpectKnownValue(
 			datasourceName,
-			tfjsonpath.New("jwk").AtMapKey("key_ops"),
+			tfjsonpath.New("keys").AtSliceIndex(0).AtMapKey("key_ops"),
 			knownvalue.SetExact(
 				[]knownvalue.Check{
 					knownvalue.StringExact("sign"),
@@ -346,7 +346,7 @@ func kmsJwkRsaDatasourceChecks(datasourceName string) []statecheck.StateCheck {
 			checks,
 			statecheck.ExpectKnownValue(
 				datasourceName,
-				tfjsonpath.New("jwk").AtMapKey(key),
+				tfjsonpath.New("keys").AtSliceIndex(0).AtMapKey(key),
 				knownvalue.Null()),
 		)
 	}
@@ -359,7 +359,7 @@ func kmsJwkRsaDatasourceChecks(datasourceName string) []statecheck.StateCheck {
 			checks,
 			statecheck.ExpectKnownValue(
 				datasourceName,
-				tfjsonpath.New("jwk").AtMapKey(key),
+				tfjsonpath.New("keys").AtSliceIndex(0).AtMapKey(key),
 				knownvalue.NotNull()),
 		)
 	}
@@ -371,7 +371,7 @@ func kmsJwkEcdsaDatasourceChecks(datasourceName string) []statecheck.StateCheck 
 	checks := []statecheck.StateCheck{
 		statecheck.ExpectKnownValue(
 			datasourceName,
-			tfjsonpath.New("jwk").AtMapKey("key_ops"),
+			tfjsonpath.New("keys").AtSliceIndex(0).AtMapKey("key_ops"),
 			knownvalue.SetExact(
 				[]knownvalue.Check{
 					knownvalue.StringExact("sign"),
@@ -389,7 +389,7 @@ func kmsJwkEcdsaDatasourceChecks(datasourceName string) []statecheck.StateCheck 
 			checks,
 			statecheck.ExpectKnownValue(
 				datasourceName,
-				tfjsonpath.New("jwk").AtMapKey(key),
+				tfjsonpath.New("keys").AtSliceIndex(0).AtMapKey(key),
 				knownvalue.Null()),
 		)
 	}
@@ -403,7 +403,7 @@ func kmsJwkEcdsaDatasourceChecks(datasourceName string) []statecheck.StateCheck 
 			checks,
 			statecheck.ExpectKnownValue(
 				datasourceName,
-				tfjsonpath.New("jwk").AtMapKey(key),
+				tfjsonpath.New("keys").AtSliceIndex(0).AtMapKey(key),
 				knownvalue.NotNull()),
 		)
 	}
