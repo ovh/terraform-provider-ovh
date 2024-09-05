@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"net/url"
 	"path"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/ovh/go-ovh/ovh"
 )
@@ -82,4 +84,29 @@ func serviceUpdateDisplayName(ctx context.Context, config *Config, serviceType, 
 
 		return nil
 	})
+}
+
+func serviceUpdateDisplayNameAPIv2(config *Config, serviceName string, displayName string, diagnostics *diag.Diagnostics) error {
+	serviceId, err := serviceIdFromResourceName(config.OVHClient, serviceName)
+	if err != nil {
+		diagnostics.AddError(
+			fmt.Sprintf("Error locating KMS %s", serviceName),
+			err.Error(),
+		)
+		return err
+	}
+
+	endpoint := fmt.Sprintf("/services/%d", serviceId)
+	if err := config.OVHClient.Put(endpoint, &ServiceUpdatePayload{
+		DisplayName: displayName,
+	}, nil); err != nil {
+		log.Printf("[WARN] update failed : %v", err)
+		diagnostics.AddError(
+			fmt.Sprintf("Failed to update display name for service %d", serviceId),
+			err.Error(),
+		)
+		return err
+	}
+
+	return nil
 }

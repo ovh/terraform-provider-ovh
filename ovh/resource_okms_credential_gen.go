@@ -6,6 +6,7 @@ import (
 	ovhtypes "github.com/ovh/terraform-provider-ovh/ovh/types"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -50,6 +51,9 @@ func OkmsCredentialResourceSchema(ctx context.Context) schema.Schema {
 			Computed:            true,
 			Description:         "Creation time of the credential",
 			MarkdownDescription: "Creation time of the credential",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"csr": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
@@ -80,12 +84,18 @@ func OkmsCredentialResourceSchema(ctx context.Context) schema.Schema {
 			Computed:            true,
 			Description:         "Expiration time of the credential",
 			MarkdownDescription: "Expiration time of the credential",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"from_csr": schema.BoolAttribute{
 			CustomType:          ovhtypes.TfBoolType{},
 			Computed:            true,
 			Description:         "Is the credential generated from CSR",
 			MarkdownDescription: "Is the credential generated from CSR",
+			PlanModifiers: []planmodifier.Bool{
+				boolplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"id": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
@@ -126,6 +136,9 @@ func OkmsCredentialResourceSchema(ctx context.Context) schema.Schema {
 			Sensitive:           true,
 			Description:         "Private Key PEM of the credential if no CSR is provided (cannot be retrieve later)",
 			MarkdownDescription: "Private Key PEM of the credential if no CSR is provided (cannot be retrieve later)",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"status": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},

@@ -23,6 +23,9 @@ func OkmsResourceSchema(ctx context.Context) schema.Schema {
 			Computed:            true,
 			Description:         "Set the name displayed in Manager for this KMS",
 			MarkdownDescription: "Set the name displayed in Manager for this KMS",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"iam": schema.SingleNestedAttribute{
 			Attributes: map[string]schema.Attribute{
@@ -31,6 +34,9 @@ func OkmsResourceSchema(ctx context.Context) schema.Schema {
 					Computed:            true,
 					Description:         "Resource display name",
 					MarkdownDescription: "Resource display name",
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.UseStateForUnknown(),
+					},
 				},
 				"id": schema.StringAttribute{
 					CustomType:          ovhtypes.TfStringType{},
@@ -98,6 +104,9 @@ func OkmsResourceSchema(ctx context.Context) schema.Schema {
 			Computed:            true,
 			Description:         "KMS public CA (Certificate Authority)",
 			MarkdownDescription: "KMS public CA (Certificate Authority)",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"region": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},

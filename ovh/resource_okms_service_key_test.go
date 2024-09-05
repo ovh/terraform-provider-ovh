@@ -194,7 +194,6 @@ data "ovh_okms_service_key_jwk" "key_ecdsa" {
   okms_id = ovh_okms.kms.id
   id  = ovh_okms_service_key.key_ecdsa.id
 }
-
 `
 
 func getAllChecks(resName string) []statecheck.StateCheck {

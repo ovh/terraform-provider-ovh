@@ -19,7 +19,6 @@ resource "ovh_okms" "newkms" {
   region         = "EU_WEST_RBX"
   display_name   = "terraformed KMS"
 }
-
 ```
 
 ## Argument Reference

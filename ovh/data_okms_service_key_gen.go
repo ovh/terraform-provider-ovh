@@ -32,7 +32,6 @@ func OkmsServiceKeyAttributes(ctx context.Context) map[string]schema.Attribute {
 			Description:         "Key name",
 			MarkdownDescription: "Key name",
 		},
-
 		"operations": schema.ListAttribute{
 			CustomType:          ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
 			Computed:            true,
