@@ -47,3 +47,11 @@ The following attributes are exported:
 * `dedicated_ipfo` - See Argument Reference above
 * `default_farm_id` - See Argument Reference above
 * `disabled` - See Argument Reference above
+
+## Import
+
+UDP frontend can be imported using the following format `service_name` and the `id` of the frontend separated by "/" e.g.
+
+```bash
+$ terraform import ovh_iploadbalancing_udp_frontend.testfrontend service_name/frontend_id
+```
