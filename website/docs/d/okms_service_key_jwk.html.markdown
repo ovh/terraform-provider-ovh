@@ -23,14 +23,14 @@ data "ovh_okms_service_key" "key_info" {
 ### Read-Only
 
 - `created_at` (String) Creation time of the key
-- `jwk` (Attributes) The key in JWK format (see [below for nested schema](#nestedatt--jwk))
+- `keys` (Attributes List) The key in JWK format (see [below for nested schema](#nestedatt--keys))
 - `name` (String) Key name
 - `size` (Number) Size of the key
 - `state` (String) State of the key
 - `type` (String) Key type
 
-<a id="nestedatt--jwk"></a>
-### Nested Schema for `jwk`
+<a id="nestedatt--keys"></a>
+### Nested Schema for `keys`
 
 Read-Only:
 
