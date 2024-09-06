@@ -1,6 +1,7 @@
 package ovh
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/ovh/go-ovh/ovh"
@@ -222,11 +224,11 @@ func genericOrderSchema(withOptions bool) map[string]*schema.Schema {
 	return orderSchema
 }
 
-func orderCreateFromResource(d *schema.ResourceData, meta interface{}, product string) error {
+func orderCreateFromResource(d *schema.ResourceData, meta interface{}, product string, waitForCompletion bool) error {
 	config := meta.(*Config)
 	order := (&OrderModel{}).FromResource(d)
 
-	err := orderCreate(order, config, product)
+	err := orderCreate(order, config, product, waitForCompletion)
 	if err != nil {
 		return err
 	}
@@ -236,7 +238,7 @@ func orderCreateFromResource(d *schema.ResourceData, meta interface{}, product s
 	return nil
 }
 
-func orderCreate(d *OrderModel, config *Config, product string) error {
+func orderCreate(d *OrderModel, config *Config, product string, waitForCompletion bool) error {
 	// create Cart
 	cartParams := &OrderCartCreateOpts{
 		OvhSubsidiary: strings.ToUpper(d.OvhSubsidiary.ValueString()),
@@ -377,23 +379,31 @@ func orderCreate(d *OrderModel, config *Config, product string) error {
 
 	}
 
-	// Wait for order status
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"checking", "delivering", "ignoreerror"},
-		Target:     []string{"delivered"},
-		Refresh:    waitForOrder(config.OVHClient, checkout.OrderID),
-		Timeout:    30 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf("waiting for order (%d): %s", checkout.OrderID, err)
+	// Wait for order to be completed
+	if waitForCompletion {
+		if err := waitOrderCompletion(config, checkout.OrderID); err != nil {
+			return fmt.Errorf("waiting for order (%d): %s", checkout.OrderID, err)
+		}
 	}
 
 	d.Order.OrderId = types.TfInt64Value{Int64Value: basetypes.NewInt64Value(checkout.OrderID)}
 
 	return nil
+}
+
+func waitOrderCompletion(config *Config, orderID int64) error {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{"checking", "delivering", "ignoreerror"},
+		Target:     []string{"delivered"},
+		Refresh:    waitForOrder(config.OVHClient, orderID),
+		Timeout:    30 * time.Minute,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
 }
 
 func orderReadInResource(d *schema.ResourceData, meta interface{}) (*MeOrder, []*MeOrderDetail, error) {
@@ -573,7 +583,7 @@ func serviceNameFromOrder(c *ovh.Client, orderId int64, plan string) (string, er
 	return "", errors.New("serviceName not found")
 }
 
-func waitForOrder(c *ovh.Client, id int64) resource.StateRefreshFunc {
+func waitForOrder(c *ovh.Client, id int64) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		var r string
 		endpoint := fmt.Sprintf("/me/order/%d/status", id)
@@ -590,6 +600,39 @@ func waitForOrder(c *ovh.Client, id int64) resource.StateRefreshFunc {
 		log.Printf("[DEBUG] Pending order: %s", r)
 		return r, r, nil
 	}
+}
+
+func waitOrderCompletionV2(ctx context.Context, config *Config, orderID int64) (string, error) {
+	endpoint := fmt.Sprintf("/me/order/%d/status", orderID)
+
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{"checking", "delivering"},
+		Target:  []string{"delivered"},
+		Refresh: func() (interface{}, string, error) {
+			var status string
+			if err := config.OVHClient.Get(endpoint, &status); err != nil {
+				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
+					log.Printf("[DEBUG] order id %d deleted", orderID)
+					return nil, "deleted", nil
+				}
+
+				log.Printf("[WARNING] order id %d, got error: %v", orderID, err)
+				return nil, "error", err
+			}
+
+			return status, status, nil
+		},
+		Timeout:    time.Hour,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	result, err := stateConf.WaitForStateContext(ctx)
+	if err != nil {
+		return "error", err
+	}
+
+	return result.(string), err
 }
 
 func orderDetailOperations(c *ovh.Client, orderId int64, orderDetailId int64) ([]*MeOrderDetailOperation, error) {

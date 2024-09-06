@@ -69,7 +69,7 @@ func (r *vpsResource) Create(ctx context.Context, req resource.CreateRequest, re
 
 	// Create order and wait for service to be delivered
 	order := data.ToOrder()
-	if err := orderCreate(order, r.config, "vps"); err != nil {
+	if err := orderCreate(order, r.config, "vps", true); err != nil {
 		resp.Diagnostics.AddError("failed to create order", err.Error())
 	}
 

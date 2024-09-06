@@ -194,19 +194,12 @@ func OrderResourceSchema(ctx context.Context) schema.Schema {
 							},
 							CustomType: ovhtypes.NewTfListNestedType[PlanOptionConfigurationValue](ctx),
 							Optional:   true,
-							Computed:   true,
 						},
 						"duration": schema.StringAttribute{
 							CustomType:          ovhtypes.TfStringType{},
 							Required:            true,
 							Description:         "Duration selected for the purchase of the product",
 							MarkdownDescription: "Duration selected for the purchase of the product",
-						},
-						"item_id": schema.Int64Attribute{
-							CustomType:          ovhtypes.TfInt64Type{},
-							Required:            true,
-							Description:         "Cart item to be linked",
-							MarkdownDescription: "Cart item to be linked",
 						},
 						"plan_code": schema.StringAttribute{
 							CustomType:          ovhtypes.TfStringType{},
@@ -2796,24 +2789,6 @@ func (t PlanOptionType) ValueFromObject(ctx context.Context, in basetypes.Object
 			fmt.Sprintf(`duration expected to be ovhtypes.TfStringValue, was: %T`, durationAttribute))
 	}
 
-	itemIdAttribute, ok := attributes["item_id"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`item_id is missing from object`)
-
-		return nil, diags
-	}
-
-	itemIdVal, ok := itemIdAttribute.(ovhtypes.TfInt64Value)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`item_id expected to be ovhtypes.TfInt64Value, was: %T`, itemIdAttribute))
-	}
-
 	planCodeAttribute, ok := attributes["plan_code"]
 
 	if !ok {
@@ -2875,7 +2850,6 @@ func (t PlanOptionType) ValueFromObject(ctx context.Context, in basetypes.Object
 	return PlanOptionValue{
 		Configuration: configurationVal,
 		Duration:      durationVal,
-		ItemId:        itemIdVal,
 		PlanCode:      planCodeVal,
 		PricingMode:   pricingModeVal,
 		Quantity:      quantityVal,
@@ -2982,24 +2956,6 @@ func NewPlanOptionValue(attributeTypes map[string]attr.Type, attributes map[stri
 			fmt.Sprintf(`duration expected to be ovhtypes.TfStringValue, was: %T`, durationAttribute))
 	}
 
-	itemIdAttribute, ok := attributes["item_id"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`item_id is missing from object`)
-
-		return NewPlanOptionValueUnknown(), diags
-	}
-
-	itemIdVal, ok := itemIdAttribute.(ovhtypes.TfInt64Value)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`item_id expected to be ovhtypes.TfInt64Value, was: %T`, itemIdAttribute))
-	}
-
 	planCodeAttribute, ok := attributes["plan_code"]
 
 	if !ok {
@@ -3061,7 +3017,6 @@ func NewPlanOptionValue(attributeTypes map[string]attr.Type, attributes map[stri
 	return PlanOptionValue{
 		Configuration: configurationVal,
 		Duration:      durationVal,
-		ItemId:        itemIdVal,
 		PlanCode:      planCodeVal,
 		PricingMode:   pricingModeVal,
 		Quantity:      quantityVal,
@@ -3139,7 +3094,7 @@ var _ basetypes.ObjectValuable = PlanOptionValue{}
 type PlanOptionValue struct {
 	Configuration ovhtypes.TfListNestedValue[PlanOptionConfigurationValue] `tfsdk:"configuration" json:"configuration"`
 	Duration      ovhtypes.TfStringValue                                   `tfsdk:"duration" json:"duration"`
-	ItemId        ovhtypes.TfInt64Value                                    `tfsdk:"item_id" json:"itemId"`
+	ItemId        ovhtypes.TfInt64Value                                    `tfsdk:"-" json:"itemId"`
 	PlanCode      ovhtypes.TfStringValue                                   `tfsdk:"plan_code" json:"planCode"`
 	PricingMode   ovhtypes.TfStringValue                                   `tfsdk:"pricing_mode" json:"pricingMode"`
 	Quantity      ovhtypes.TfInt64Value                                    `tfsdk:"quantity" json:"quantity"`
@@ -3229,7 +3184,6 @@ func (v *PlanOptionValue) UnmarshalJSON(data []byte) error {
 }
 
 func (v *PlanOptionValue) MergeWith(other *PlanOptionValue) {
-
 	if (v.Configuration.IsUnknown() || v.Configuration.IsNull()) && !other.Configuration.IsUnknown() {
 		v.Configuration = other.Configuration
 	} else if !other.Configuration.IsUnknown() {
@@ -3257,8 +3211,12 @@ func (v *PlanOptionValue) MergeWith(other *PlanOptionValue) {
 		v.Duration = other.Duration
 	}
 
-	if (v.ItemId.IsUnknown() || v.ItemId.IsNull()) && !other.ItemId.IsUnknown() {
-		v.ItemId = other.ItemId
+	if v.ItemId.IsUnknown() || v.ItemId.IsNull() {
+		if !other.ItemId.IsUnknown() {
+			v.ItemId = other.ItemId
+		} else {
+			v.ItemId = ovhtypes.NewTfInt64ValueNull()
+		}
 	}
 
 	if (v.PlanCode.IsUnknown() || v.PlanCode.IsNull()) && !other.PlanCode.IsUnknown() {
@@ -3298,7 +3256,6 @@ func (v PlanOptionValue) ToTerraformValue(ctx context.Context) (tftypes.Value, e
 		ElemType: PlanOptionConfigurationValue{}.Type(ctx),
 	}.TerraformType(ctx)
 	attrTypes["duration"] = basetypes.StringType{}.TerraformType(ctx)
-	attrTypes["item_id"] = basetypes.Int64Type{}.TerraformType(ctx)
 	attrTypes["plan_code"] = basetypes.StringType{}.TerraformType(ctx)
 	attrTypes["pricing_mode"] = basetypes.StringType{}.TerraformType(ctx)
 	attrTypes["quantity"] = basetypes.Int64Type{}.TerraformType(ctx)
@@ -3324,14 +3281,6 @@ func (v PlanOptionValue) ToTerraformValue(ctx context.Context) (tftypes.Value, e
 		}
 
 		vals["duration"] = val
-
-		val, err = v.ItemId.ToTerraformValue(ctx)
-
-		if err != nil {
-			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
-		}
-
-		vals["item_id"] = val
 
 		val, err = v.PlanCode.ToTerraformValue(ctx)
 
@@ -3390,7 +3339,6 @@ func (v PlanOptionValue) ToObjectValue(ctx context.Context) (basetypes.ObjectVal
 		map[string]attr.Type{
 			"configuration": ovhtypes.NewTfListNestedType[PlanOptionConfigurationValue](ctx),
 			"duration":      ovhtypes.TfStringType{},
-			"item_id":       ovhtypes.TfInt64Type{},
 			"plan_code":     ovhtypes.TfStringType{},
 			"pricing_mode":  ovhtypes.TfStringType{},
 			"quantity":      ovhtypes.TfInt64Type{},
@@ -3398,7 +3346,6 @@ func (v PlanOptionValue) ToObjectValue(ctx context.Context) (basetypes.ObjectVal
 		map[string]attr.Value{
 			"configuration": v.Configuration,
 			"duration":      v.Duration,
-			"item_id":       v.ItemId,
 			"plan_code":     v.PlanCode,
 			"pricing_mode":  v.PricingMode,
 			"quantity":      v.Quantity,
@@ -3461,7 +3408,6 @@ func (v PlanOptionValue) AttributeTypes(ctx context.Context) map[string]attr.Typ
 	return map[string]attr.Type{
 		"configuration": ovhtypes.NewTfListNestedType[PlanOptionConfigurationValue](ctx),
 		"duration":      ovhtypes.TfStringType{},
-		"item_id":       ovhtypes.TfInt64Type{},
 		"plan_code":     ovhtypes.TfStringType{},
 		"pricing_mode":  ovhtypes.TfStringType{},
 		"quantity":      ovhtypes.TfInt64Type{},
