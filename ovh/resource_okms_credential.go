@@ -50,7 +50,6 @@ func (d *okmsCredentialResource) Schema(ctx context.Context, req resource.Schema
 }
 
 func (r *okmsCredentialResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-
 	ids := strings.Split(req.ID, "/")
 	if len(ids) != 2 {
 		resp.Diagnostics.AddError("Error importing okms_credential resource.", "ID should be of the format '{okmsId}/{credentialId}'")

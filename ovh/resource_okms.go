@@ -254,10 +254,6 @@ func (r *okmsResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 		return
 	}
 
-	type TerminateServiceOption struct {
-		ServiceId int `json:"serviceId"`
-	}
-
 	terminate := func() (string, error) {
 		log.Printf("[DEBUG] Will terminate okms %s (service %d)", id, serviceId)
 		endpoint := fmt.Sprintf("/services/%d/terminate", serviceId)
