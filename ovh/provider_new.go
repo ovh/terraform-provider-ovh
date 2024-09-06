@@ -211,6 +211,7 @@ func (p *OvhProvider) Resources(_ context.Context) []func() resource.Resource {
 		NewCloudProjectAlertingResource,
 		NewCloudProjectGatewayInterfaceResource,
 		NewDbaasLogsTokenResource,
+		NewDedicatedServerResource,
 		NewDomainZoneDnssecResource,
 		NewDomainZoneImportResource,
 		NewIpFirewallResource,

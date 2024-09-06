@@ -90,7 +90,7 @@ func resourceIpServiceSchema() map[string]*schema.Schema {
 }
 
 func resourceIpServiceCreate(d *schema.ResourceData, meta interface{}) error {
-	if err := orderCreateFromResource(d, meta, "ip"); err != nil {
+	if err := orderCreateFromResource(d, meta, "ip", true); err != nil {
 		return fmt.Errorf("Could not order ip: %q", err)
 	}
 

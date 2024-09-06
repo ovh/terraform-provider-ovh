@@ -62,7 +62,7 @@ func resourceVrackSchema() map[string]*schema.Schema {
 
 func resourceVrackCreate(d *schema.ResourceData, meta interface{}) error {
 	// Order vRack and wait for it to be delivered
-	if err := orderCreateFromResource(d, meta, "vrack"); err != nil {
+	if err := orderCreateFromResource(d, meta, "vrack", true); err != nil {
 		return fmt.Errorf("could not order vrack: %q", err)
 	}
 

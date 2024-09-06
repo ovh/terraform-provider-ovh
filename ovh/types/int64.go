@@ -89,3 +89,15 @@ func (t TfInt64Value) MarshalJSON() ([]byte, error) {
 func (v TfInt64Value) Type(ctx context.Context) attr.Type {
 	return TfInt64Type{}
 }
+
+func NewTfInt64Value(value int64) TfInt64Value {
+	return TfInt64Value{
+		Int64Value: basetypes.NewInt64Value(value),
+	}
+}
+
+func NewTfInt64ValueNull() TfInt64Value {
+	return TfInt64Value{
+		Int64Value: basetypes.NewInt64Null(),
+	}
+}
