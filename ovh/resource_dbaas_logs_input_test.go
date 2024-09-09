@@ -23,35 +23,75 @@ data "ovh_dbaas_logs_input_engine" "logstash" {
 }
 
 resource "ovh_dbaas_logs_output_graylog_stream" "stream" {
- service_name = "%s"
- title        = "%s"
- description  = "%s"
+	service_name = "%s"
+	title        = "%s"
+	description  = "%s"
 }
 
 resource "ovh_dbaas_logs_input" "input" {
- service_name = ovh_dbaas_logs_output_graylog_stream.stream.service_name
- description  = ovh_dbaas_logs_output_graylog_stream.stream.description
- title        = ovh_dbaas_logs_output_graylog_stream.stream.title
- engine_id    = data.ovh_dbaas_logs_input_engine.logstash.id
- stream_id    = ovh_dbaas_logs_output_graylog_stream.stream.id
+	service_name = ovh_dbaas_logs_output_graylog_stream.stream.service_name
+	description  = ovh_dbaas_logs_output_graylog_stream.stream.description
+	title        = ovh_dbaas_logs_output_graylog_stream.stream.title
+	engine_id    = data.ovh_dbaas_logs_input_engine.logstash.id
+	stream_id    = ovh_dbaas_logs_output_graylog_stream.stream.id
 
- allowed_networks = ["10.0.0.0/16"]
- exposed_port     = "6154"
- nb_instance      = 2
+	allowed_networks = ["10.0.0.0/16"]
+	exposed_port     = "6154"
+	nb_instance      = %d
 
- configuration {
-   logstash {
-       input_section = <<EOF
-beats {
-  port => 6514
-  ssl => true
-  ssl_certificate => "/etc/ssl/private/server.crt"
-  ssl_key => "/etc/ssl/private/server.key"
+	configuration {
+		logstash {
+			input_section = <<EOF
+				beats {
+					port => 6514
+					ssl => true
+					ssl_certificate => "/etc/ssl/private/server.crt"
+					ssl_key => "/etc/ssl/private/server.key"
+				}
+			EOF
+		}
+	}
 }
-EOF
+`
 
-   }
- }
+const testAccResourceDbaasLogsInput_updated = `
+data "ovh_dbaas_logs_input_engine" "logstash" {
+	service_name  = "%s"
+	name          = "%s"
+	version       = "%s"
+}
+
+resource "ovh_dbaas_logs_output_graylog_stream" "stream" {
+	service_name = "%s"
+	title        = "%s"
+	description  = "%s"
+}
+
+resource "ovh_dbaas_logs_input" "input" {
+	service_name = ovh_dbaas_logs_output_graylog_stream.stream.service_name
+	description  = ovh_dbaas_logs_output_graylog_stream.stream.description
+	title        = ovh_dbaas_logs_output_graylog_stream.stream.title
+	engine_id    = data.ovh_dbaas_logs_input_engine.logstash.id
+	stream_id    = ovh_dbaas_logs_output_graylog_stream.stream.id
+
+	allowed_networks   = ["10.0.0.0/16"]
+	exposed_port       = "6154"
+	autoscale          = true
+	min_scale_instance = 2
+	max_scale_instance = 4
+
+	configuration {
+		logstash {
+			input_section = <<EOF
+				beats {
+					port => 6514
+					ssl => true
+					ssl_certificate => "/etc/ssl/private/server.crt"
+					ssl_key => "/etc/ssl/private/server.key"
+				}
+			EOF
+		}
+	}
 }
 `
 
@@ -161,15 +201,12 @@ func TestAccResourceDbaasLogsInput_basic(t *testing.T) {
 	title := acctest.RandomWithPrefix(test_prefix)
 	desc := acctest.RandomWithPrefix(test_prefix)
 
-	config := fmt.Sprintf(
-		testAccResourceDbaasLogsInput_basic,
-		serviceName,
-		name,
-		version,
-		serviceName,
-		title,
-		desc,
-	)
+	config := fmt.Sprintf(testAccResourceDbaasLogsInput_basic,
+		serviceName, name, version, serviceName, title, desc, 2)
+	configWithMoreInstances := fmt.Sprintf(testAccResourceDbaasLogsInput_basic,
+		serviceName, name, version, serviceName, title, desc, 4)
+	configUpdated := fmt.Sprintf(testAccResourceDbaasLogsInput_updated,
+		serviceName, name, version, serviceName, title, desc)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { testAccPreCheckDbaasLogsInput(t) },
@@ -188,6 +225,91 @@ func TestAccResourceDbaasLogsInput_basic(t *testing.T) {
 						"ovh_dbaas_logs_input.input",
 						"title",
 						title,
+					),
+					resource.TestCheckResourceAttr(
+						"ovh_dbaas_logs_input.input",
+						"autoscale",
+						"false",
+					),
+					resource.TestCheckResourceAttr(
+						"ovh_dbaas_logs_input.input",
+						"nb_instance",
+						"2",
+					),
+					resource.TestCheckResourceAttr(
+						"ovh_dbaas_logs_input.input",
+						"current_nb_instance",
+						"2",
+					),
+				),
+			},
+			{
+				Config: configWithMoreInstances,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"ovh_dbaas_logs_input.input",
+						"description",
+						desc,
+					),
+					resource.TestCheckResourceAttr(
+						"ovh_dbaas_logs_input.input",
+						"title",
+						title,
+					),
+					resource.TestCheckResourceAttr(
+						"ovh_dbaas_logs_input.input",
+						"autoscale",
+						"false",
+					),
+					resource.TestCheckResourceAttr(
+						"ovh_dbaas_logs_input.input",
+						"nb_instance",
+						"4",
+					),
+					resource.TestCheckResourceAttr(
+						"ovh_dbaas_logs_input.input",
+						"current_nb_instance",
+						"4",
+					),
+				),
+			},
+			{
+				Config: configUpdated,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"ovh_dbaas_logs_input.input",
+						"description",
+						desc,
+					),
+					resource.TestCheckResourceAttr(
+						"ovh_dbaas_logs_input.input",
+						"title",
+						title,
+					),
+					resource.TestCheckResourceAttr(
+						"ovh_dbaas_logs_input.input",
+						"autoscale",
+						"true",
+					),
+					resource.TestCheckResourceAttr(
+						"ovh_dbaas_logs_input.input",
+						"min_scale_instance",
+						"2",
+					),
+					resource.TestCheckResourceAttr(
+						"ovh_dbaas_logs_input.input",
+						"max_scale_instance",
+						"4",
+					),
+					resource.TestCheckResourceAttr(
+						"ovh_dbaas_logs_input.input",
+						"nb_instance",
+						"0",
+					),
+					resource.TestCheckResourceAttr(
+						"ovh_dbaas_logs_input.input",
+						"current_nb_instance",
+						"4",
 					),
 				),
 			},
