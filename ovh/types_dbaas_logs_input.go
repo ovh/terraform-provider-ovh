@@ -18,6 +18,9 @@ type DbaasLogsInput struct {
 	InputId           string   `json:"inputId"`
 	IsRestartRequired bool     `json:"isRestartRequired"`
 	NbInstance        *int64   `json:"nbInstance"`
+	Autoscale         bool     `json:"autoscale"`
+	MaxScaleInstance  *int     `json:"maxScaleInstance"`
+	MinScaleInstance  *int     `json:"minScaleInstance"`
 	PublicAddress     string   `json:"publicAddress"`
 	SslCertificate    string   `json:"sslCertificate"`
 	Status            string   `json:"status"`
@@ -40,6 +43,7 @@ func (v DbaasLogsInput) ToMap() map[string]interface{} {
 	obj["stream_id"] = v.StreamId
 	obj["title"] = v.Title
 	obj["updated_at"] = v.UpdatedAt
+	obj["autoscale"] = v.Autoscale
 
 	if v.AllowedNetworks != nil {
 		obj["allowed_networks"] = v.AllowedNetworks
@@ -48,20 +52,29 @@ func (v DbaasLogsInput) ToMap() map[string]interface{} {
 		obj["exposed_port"] = *v.ExposedPort
 	}
 	if v.NbInstance != nil {
-		obj["nb_instance"] = *v.NbInstance
+		obj["current_nb_instance"] = *v.NbInstance
+	}
+	if v.MaxScaleInstance != nil {
+		obj["max_scale_instance"] = *v.MaxScaleInstance
+	}
+	if v.MinScaleInstance != nil {
+		obj["min_scale_instance"] = *v.MinScaleInstance
 	}
 
 	return obj
 }
 
 type DbaasLogsInputOpts struct {
-	Description     string   `json:"description"`
-	EngineId        string   `json:"engineId"`
-	StreamId        string   `json:"streamId"`
-	Title           string   `json:"title"`
-	AllowedNetworks []string `json:"allowedNetworks,omitempty"`
-	ExposedPort     *string  `json:"exposedPort,omitempty"`
-	NbInstance      *int64   `json:"nbInstance,omitempty"`
+	Description      string   `json:"description"`
+	EngineId         string   `json:"engineId"`
+	StreamId         string   `json:"streamId"`
+	Title            string   `json:"title"`
+	AllowedNetworks  []string `json:"allowedNetworks,omitempty"`
+	ExposedPort      *string  `json:"exposedPort,omitempty"`
+	NbInstance       *int64   `json:"nbInstance,omitempty"`
+	Autoscale        bool     `json:"autoscale"`
+	MaxScaleInstance *int     `json:"maxScaleInstance,omitempty"`
+	MinScaleInstance *int     `json:"minScaleInstance,omitempty"`
 }
 
 func (opts *DbaasLogsInputOpts) FromResource(d *schema.ResourceData) *DbaasLogsInputOpts {
@@ -71,7 +84,7 @@ func (opts *DbaasLogsInputOpts) FromResource(d *schema.ResourceData) *DbaasLogsI
 	opts.Title = d.Get("title").(string)
 
 	networks := d.Get("allowed_networks").([]interface{})
-	if networks != nil && len(networks) > 0 {
+	if len(networks) > 0 {
 		networksString := make([]string, len(networks))
 		for i, net := range networks {
 			networksString[i] = net.(string)
@@ -81,6 +94,12 @@ func (opts *DbaasLogsInputOpts) FromResource(d *schema.ResourceData) *DbaasLogsI
 
 	opts.ExposedPort = helpers.GetNilStringPointerFromData(d, "exposed_port")
 	opts.NbInstance = helpers.GetNilInt64PointerFromData(d, "nb_instance")
+	if autoscale, ok := d.GetOk("autoscale"); ok {
+		opts.Autoscale = autoscale.(bool)
+	}
+	opts.MaxScaleInstance = helpers.GetNilIntPointerFromDataAndNilIfNotPresent(d, "max_scale_instance")
+	opts.MinScaleInstance = helpers.GetNilIntPointerFromDataAndNilIfNotPresent(d, "min_scale_instance")
+
 	return opts
 }
 

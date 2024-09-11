@@ -153,10 +153,26 @@ func resourceDbaasLogsInputSchema() map[string]*schema.Schema {
 			Computed:    true,
 		},
 		"nb_instance": {
+			Type:          schema.TypeInt,
+			Description:   "Number of instance running",
+			Optional:      true,
+			ConflictsWith: []string{"autoscale"},
+		},
+		"autoscale": {
+			Type:          schema.TypeBool,
+			Description:   "Whether the workload is auto-scaled",
+			Optional:      true,
+			ConflictsWith: []string{"nb_instance"},
+		},
+		"min_scale_instance": {
 			Type:        schema.TypeInt,
-			Description: "Number of instance running",
+			Description: "Minimum number of instances in auto-scaled mode",
 			Optional:    true,
-			Computed:    true,
+		},
+		"max_scale_instance": {
+			Type:        schema.TypeInt,
+			Description: "Maximum number of instances in auto-scaled mode",
+			Optional:    true,
 		},
 
 		// computed
@@ -201,6 +217,11 @@ func resourceDbaasLogsInputSchema() map[string]*schema.Schema {
 			Description: "Input last update",
 			Computed:    true,
 		},
+		"current_nb_instance": {
+			Type:        schema.TypeInt,
+			Description: "Number of instance running (returned by the API)",
+			Computed:    true,
+		},
 	}
 
 	return schema
@@ -210,7 +231,7 @@ func resourceDbaasLogsInputImportState(d *schema.ResourceData, meta interface{})
 	givenID := d.Id()
 	splitID := strings.SplitN(givenID, "/", 2)
 	if len(splitID) != 2 {
-		return nil, fmt.Errorf("Import Id is not service_name/id formatted")
+		return nil, fmt.Errorf("import ID is not service_name/id formatted")
 	}
 	serviceName := splitID[0]
 	id := splitID[1]
@@ -387,7 +408,7 @@ func dbaasLogsInputConfigurationUpdate(ctx context.Context, d *schema.ResourceDa
 			url.PathEscape(id),
 		)
 		if err := config.OVHClient.Put(endpoint, flowggerOpts, res); err != nil {
-			return fmt.Errorf("Error calling Put %s:\n\t %q", endpoint, err)
+			return fmt.Errorf("error calling Put %s:\n\t %q", endpoint, err)
 		}
 	}
 
@@ -401,7 +422,7 @@ func dbaasLogsInputConfigurationUpdate(ctx context.Context, d *schema.ResourceDa
 			url.PathEscape(id),
 		)
 		if err := config.OVHClient.Put(endpoint, logstashOpts, res); err != nil {
-			return fmt.Errorf("Error calling Put %s:\n\t %q", endpoint, err)
+			return fmt.Errorf("error calling Put %s:\n\t %q", endpoint, err)
 		}
 	}
 
@@ -486,7 +507,7 @@ func dbaasLogsInputStart(ctx context.Context, d *schema.ResourceData, meta inter
 			url.PathEscape(id),
 		)
 		if err := config.OVHClient.Post(endpoint, nil, res); err != nil {
-			return fmt.Errorf("Error calling Put %s:\n\t %q", endpoint, err)
+			return fmt.Errorf("error calling Put %s:\n\t %q", endpoint, err)
 		}
 	}
 
@@ -497,7 +518,7 @@ func dbaasLogsInputStart(ctx context.Context, d *schema.ResourceData, meta inter
 			url.PathEscape(id),
 		)
 		if err := config.OVHClient.Post(endpoint, nil, res); err != nil {
-			return fmt.Errorf("Error calling Put %s:\n\t %q", endpoint, err)
+			return fmt.Errorf("error calling Put %s:\n\t %q", endpoint, err)
 		}
 	}
 
@@ -538,7 +559,7 @@ func dbaasLogsInputEnd(ctx context.Context, d *schema.ResourceData, meta interfa
 		url.PathEscape(id),
 	)
 	if err := config.OVHClient.Post(endpoint, nil, res); err != nil {
-		return fmt.Errorf("Error calling Put %s:\n\t %q", endpoint, err)
+		return fmt.Errorf("error calling Put %s:\n\t %q", endpoint, err)
 	}
 
 	// Wait for operation status
