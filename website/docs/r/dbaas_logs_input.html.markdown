@@ -63,7 +63,10 @@ The following arguments are supported:
 * `description` - (Required) Input description
 * `engine_id` - (Required) Input engine ID
 * `exposed_port` - Port
-* `nb_instance` - Number of instance running
+* `nb_instance` - Number of instance running (input, mutually exclusive with parameter `autoscale`)
+* `autoscale` - Whether the workload is auto-scaled (mutually exclusive with parameter `nb_instance`)
+* `min_scale_instance` - Minimum number of instances in auto-scaled mode
+* `max_scale_instance` - Maximum number of instances in auto-scaled mode
 * `service_name` - (Required) service name
 * `stream_id` - (Required) Associated Graylog stream
 * `title` - (Required) Input title
@@ -80,3 +83,4 @@ Id is set to the input Id. In addition, the following attributes are exported:
 * `ssl_certificate` - Input SSL certificate
 * `status` - init: configuration required, pending: ready to start, running: available
 * `updated_at` - Input last update
+* `current_nb_instance` - Number of instance running (returned by the API)
