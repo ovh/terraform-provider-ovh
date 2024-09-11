@@ -1,3 +1,33 @@
+## 0.49.0 (September 11, 2024)
+
+🎉 Features:
+
+* New resource: `ovh_dedicated_server` ([#711](https://github.com/ovh/terraform-provider-ovh/pull/711))
+* New resource: `ovh_domain_zone_import` ([#716](https://github.com/ovh/terraform-provider-ovh/pull/716))
+
+💪 Improvements:
+
+* `r/ovh_vrack`: Add resource termination ([#713](https://github.com/ovh/terraform-provider-ovh/pull/713))
+* `r/ovh_iploadbalancing_http_farm`: Added `uri` as a possible balance value ([#715](https://github.com/ovh/terraform-provider-ovh/pull/715))
+* `r/ovh_dbaas_logs_input`: Add missing parameters for autoscaling ([#720](https://github.com/ovh/terraform-provider-ovh/pull/720))
+
+🐜 Bug fixes:
+
+* `r/ovh_hosting_privatedatabase_whitelist`: Add default netmask when user does not define it ([#703](https://github.com/ovh/terraform-provider-ovh/pull/703))
+* `r/cloud_project_user_s3_policy`: Read policy field from API ([#707](https://github.com/ovh/terraform-provider-ovh/pull/707))
+* `r/ovh_cloud_project`: Fetch plan configurations when reading orders ([#708](https://github.com/ovh/terraform-provider-ovh/pull/708))
+
+* `d/ovh_hosting_privatedatabase_whitelist`: Add default netmask when user does not define it ([#703](https://github.com/ovh/terraform-provider-ovh/pull/703))
+
+⛔️ Deletions:
+
+* `r/ovh_dedicated_server_install_task`: **BREAKING CHANGE** Removal of deprecated properties `post_installation_script_link` and `post_installation_script_return` ([#710](https://github.com/ovh/terraform-provider-ovh/pull/710))
+* `r/ovh_me_installation_template`: **BREAKING CHANGE** Removal of deprecated properties `post_installation_script_link` and `post_installation_script_return` ([#710](https://github.com/ovh/terraform-provider-ovh/pull/710))
+
+* `d/ovh_me_installation_template`: **BREAKING CHANGE** Removal of deprecated properties `post_installation_script_link` and `post_installation_script_return` ([#710](https://github.com/ovh/terraform-provider-ovh/pull/710))
+
+❤️ Thanks for your contributions ❤️
+
 ## 0.48.0 (July 31, 2024)
 
 🎉 Features:
