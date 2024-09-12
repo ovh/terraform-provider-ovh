@@ -12,23 +12,23 @@ import (
 )
 
 var (
-	_ resource.ResourceWithConfigure   = (*iploadbalancingUdpFrontendResource)(nil)
-	_ resource.ResourceWithImportState = (*iploadbalancingUdpFrontendResource)(nil)
+	_ resource.ResourceWithConfigure   = (*iploadbalancingUdpFarmResource)(nil)
+	_ resource.ResourceWithImportState = (*iploadbalancingUdpFarmResource)(nil)
 )
 
-func NewIploadbalancingUdpFrontendResource() resource.Resource {
-	return &iploadbalancingUdpFrontendResource{}
+func NewIploadbalancingUdpFarmResource() resource.Resource {
+	return &iploadbalancingUdpFarmResource{}
 }
 
-type iploadbalancingUdpFrontendResource struct {
+type iploadbalancingUdpFarmResource struct {
 	config *Config
 }
 
-func (r *iploadbalancingUdpFrontendResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_iploadbalancing_udp_frontend"
+func (r *iploadbalancingUdpFarmResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_iploadbalancing_udp_farm"
 }
 
-func (d *iploadbalancingUdpFrontendResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (d *iploadbalancingUdpFarmResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -45,12 +45,12 @@ func (d *iploadbalancingUdpFrontendResource) Configure(_ context.Context, req re
 	d.config = config
 }
 
-func (d *iploadbalancingUdpFrontendResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = IploadbalancingUdpFrontendResourceSchema(ctx)
+func (d *iploadbalancingUdpFarmResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = IploadbalancingUdpFarmResourceSchema(ctx)
 }
 
-func (r *iploadbalancingUdpFrontendResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data, responseData IploadbalancingUdpFrontendModel
+func (r *iploadbalancingUdpFarmResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var data, responseData IploadbalancingUdpFarmModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
@@ -58,7 +58,7 @@ func (r *iploadbalancingUdpFrontendResource) Create(ctx context.Context, req res
 		return
 	}
 
-	endpoint := "/ipLoadbalancing/" + url.PathEscape(data.ServiceName.ValueString()) + "/udp/frontend"
+	endpoint := "/ipLoadbalancing/" + url.PathEscape(data.ServiceName.ValueString()) + "/udp/farm"
 	if err := r.config.OVHClient.Post(endpoint, data.ToCreate(), &responseData); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Post %s", endpoint),
@@ -73,8 +73,8 @@ func (r *iploadbalancingUdpFrontendResource) Create(ctx context.Context, req res
 	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)
 }
 
-func (r *iploadbalancingUdpFrontendResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data, responseData IploadbalancingUdpFrontendModel
+func (r *iploadbalancingUdpFarmResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var data, responseData IploadbalancingUdpFarmModel
 
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
@@ -82,8 +82,8 @@ func (r *iploadbalancingUdpFrontendResource) Read(ctx context.Context, req resou
 		return
 	}
 
-	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/udp/frontend/%d",
-		url.PathEscape(data.ServiceName.ValueString()), data.FrontendId.ValueInt64())
+	endpoint := "/ipLoadbalancing/" + url.PathEscape(data.ServiceName.ValueString()) + "/udp/farm/" + strconv.FormatInt(data.FarmId.ValueInt64(), 10)
+
 	if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Get %s", endpoint),
@@ -98,8 +98,8 @@ func (r *iploadbalancingUdpFrontendResource) Read(ctx context.Context, req resou
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *iploadbalancingUdpFrontendResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, planData, responseData IploadbalancingUdpFrontendModel
+func (r *iploadbalancingUdpFarmResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var data, planData, responseData IploadbalancingUdpFarmModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &planData)...)
@@ -114,8 +114,7 @@ func (r *iploadbalancingUdpFrontendResource) Update(ctx context.Context, req res
 	}
 
 	// Update resource
-	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/udp/frontend/%d",
-		url.PathEscape(data.ServiceName.ValueString()), data.FrontendId.ValueInt64())
+	endpoint := "/ipLoadbalancing/" + url.PathEscape(data.ServiceName.ValueString()) + "/udp/farm/" + strconv.FormatInt(data.FarmId.ValueInt64(), 10)
 	if err := r.config.OVHClient.Put(endpoint, planData.ToUpdate(), nil); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Put %s", endpoint),
@@ -125,6 +124,7 @@ func (r *iploadbalancingUdpFrontendResource) Update(ctx context.Context, req res
 	}
 
 	// Read updated resource
+	endpoint = "/ipLoadbalancing/" + url.PathEscape(data.ServiceName.ValueString()) + "/udp/farm/" + strconv.FormatInt(data.FarmId.ValueInt64(), 10)
 	if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Get %s", endpoint),
@@ -139,8 +139,8 @@ func (r *iploadbalancingUdpFrontendResource) Update(ctx context.Context, req res
 	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)
 }
 
-func (r *iploadbalancingUdpFrontendResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data IploadbalancingUdpFrontendModel
+func (r *iploadbalancingUdpFarmResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var data IploadbalancingUdpFarmModel
 
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
@@ -150,8 +150,7 @@ func (r *iploadbalancingUdpFrontendResource) Delete(ctx context.Context, req res
 	}
 
 	// Delete API call logic
-	endpoint := fmt.Sprintf("/ipLoadbalancing/%s/udp/frontend/%d",
-		url.PathEscape(data.ServiceName.ValueString()), data.FrontendId.ValueInt64())
+	endpoint := "/ipLoadbalancing/" + url.PathEscape(data.ServiceName.ValueString()) + "/udp/farm/" + strconv.FormatInt(data.FarmId.ValueInt64(), 10)
 	if err := r.config.OVHClient.Delete(endpoint, nil); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Delete %s", endpoint),
@@ -160,20 +159,20 @@ func (r *iploadbalancingUdpFrontendResource) Delete(ctx context.Context, req res
 	}
 }
 
-func (r *iploadbalancingUdpFrontendResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *iploadbalancingUdpFarmResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	splits := strings.Split(req.ID, "/")
 	if len(splits) != 2 {
-		resp.Diagnostics.AddError("Given ID is malformed", "ID must be formatted like the following: <service_name>/<frontendId>")
+		resp.Diagnostics.AddError("Given ID is malformed", "ID must be formatted like the following: <service_name>/<farmId>")
 		return
 	}
 
 	serviceName := splits[0]
-	frontendId, err := strconv.Atoi(splits[1])
+	farmId, err := strconv.Atoi(splits[1])
 	if err != nil {
 		resp.Diagnostics.AddError("Given ID is malformed", "ID must be formatted like the following: <service_name>/<farmId> where farmId is a number")
 		return
 	}
 
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_name"), serviceName)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("frontend_id"), frontendId)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("farm_id"), farmId)...)
 }
