@@ -202,6 +202,10 @@ func (p *OvhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 		NewIpFirewallDataSource,
 		NewIpFirewallRuleDataSource,
 		NewIpMitigationDataSource,
+		NewOkmsCredentialDataSource,
+		NewOkmsResourceDataSource,
+		NewOkmsServiceKeyDataSource,
+		NewOkmsServiceKeyJwkDataSource,
 	}
 }
 
@@ -218,6 +222,9 @@ func (p *OvhProvider) Resources(_ context.Context) []func() resource.Resource {
 		NewIpFirewallRuleResource,
 		NewIploadbalancingUdpFrontendResource,
 		NewIpMitigationResource,
+		NewOkmsResource,
+		NewOkmsCredentialResource,
+		NewOkmsServiceKeyResource,
 		NewVpsResource,
 	}
 }
