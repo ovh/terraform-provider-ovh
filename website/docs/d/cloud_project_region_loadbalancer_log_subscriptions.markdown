@@ -1,5 +1,5 @@
 ---
-subcategory : "Managed Loadbalancer Log Subscriptions"
+subcategory : "Managed Loadbalancer Log Subscription"
 ---
 
 # ovh_cloud_project_region_loadbalancer_log_subscriptions
