@@ -252,6 +252,13 @@ func testAccPreCheckContainerRegistryOIDC(t *testing.T) {
 	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_CONTAINERREGISTRY_OIDC_ENDPOINT_TEST")
 }
 
+// Checks that the environment variables needed for the /cloud/project/{projectId}/network/private/ acceptance tests are set.
+func testAccPreCheckCloudNetworkPrivate(t *testing.T) {
+	testAccPreCheckCloud(t)
+	testAccCheckCloudProjectExists(t)
+	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_PRIVATE_NETWORK_TEST")
+}
+
 // Checks that the environment variables needed for the /cloud/project/{projectId}/database/ acceptance tests are set.
 func testAccPreCheckCloudDatabase(t *testing.T) {
 	testAccPreCheckCloudDatabaseNoEngine(t)
