@@ -447,6 +447,8 @@ func (c *Client) CallAPIWithContext(ctx context.Context, method, path string, re
 	if err != nil {
 		return err
 	}
+
+	fmt.Printf("REQ: %+v", req)
 	req = req.WithContext(ctx)
 	response, err := c.Do(req)
 	if err != nil {
