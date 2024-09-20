@@ -30,7 +30,7 @@ data "ovh_order_cart_product_plan" "vrack" {
 
 resource "ovh_vrack" "vrack" {
   ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
-  name           = "my vrack"
+  name           = "my-vrack"
   description    = "my vrack"
 
   plan {
