@@ -1,3 +1,33 @@
+## 0.50.0 (September 20, 2024)
+
+🎉 Features:
+
+* New resource: `ovh_okms` ([#709](https://github.com/ovh/terraform-provider-ovh/pull/709))
+* New resource: `ovh_okms_credential` ([#709](https://github.com/ovh/terraform-provider-ovh/pull/709))
+* New resource: `ovh_okms_service_key` ([#709](https://github.com/ovh/terraform-provider-ovh/pull/709))
+* New resource: `ovh_iploadbalancing_ssl` ([#718](https://github.com/ovh/terraform-provider-ovh/pull/718))
+* New resource: `ovh_iploadbalancing_udp_farm` ([#719](https://github.com/ovh/terraform-provider-ovh/pull/719))
+* New resource: `ovh_iploadbalancing_udp_farm_server` ([#719](https://github.com/ovh/terraform-provider-ovh/pull/719))
+
+* New datasource: `ovh_okms_credential` ([#709](https://github.com/ovh/terraform-provider-ovh/pull/709))
+* New datasource: `ovh_okms_resource` ([#709](https://github.com/ovh/terraform-provider-ovh/pull/709))
+* New datasource: `ovh_okms_service_key` ([#709](https://github.com/ovh/terraform-provider-ovh/pull/709))
+* New datasource: `ovh_okms_service_key_jwk` ([#709](https://github.com/ovh/terraform-provider-ovh/pull/709))
+* New datasource: `ovh_cloud_project_network_private` ([#723](https://github.com/ovh/terraform-provider-ovh/pull/723))
+* New datasource: `ovh_cloud_project_network_privates` ([#723](https://github.com/ovh/terraform-provider-ovh/pull/723))
+* New datasource: `ovh_cloud_project_network_private_subnets` ([#723](https://github.com/ovh/terraform-provider-ovh/pull/723))
+
+💪 Improvements:
+
+* `r/ovh_iploadbalancing_udp_frontend`: Add ability to import resource ([#719](https://github.com/ovh/terraform-provider-ovh/pull/719))
+
+📚 Documentation:
+
+* Reorganize cloud project docs ([#725](https://github.com/ovh/terraform-provider-ovh/pull/725))
+* `r/ovh_vrack`: Update example ([#728](https://github.com/ovh/terraform-provider-ovh/pull/728))
+
+❤️ Thanks for your contributions ❤️
+
 ## 0.49.0 (September 11, 2024)
 
 🎉 Features:
