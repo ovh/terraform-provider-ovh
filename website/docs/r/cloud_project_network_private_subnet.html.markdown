@@ -33,7 +33,7 @@ The following arguments are supported:
 
 * `dhcp` - (Optional) Enable DHCP.
    Changing this forces a new resource to be created. Defaults to false.
-_
+
 * `start` - (Required) First ip for this region.
    Changing this value recreates the subnet.
 
