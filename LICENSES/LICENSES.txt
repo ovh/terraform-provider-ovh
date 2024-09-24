@@ -22,6 +22,7 @@ github.com/hashicorp/go-cty; MIT
 github.com/hashicorp/go-hclog; MIT
 github.com/hashicorp/go-multierror; MPL-2.0
 github.com/hashicorp/go-plugin; MPL-2.0
+github.com/hashicorp/go-retryablehttp; MPL-2.0
 github.com/hashicorp/go-uuid; MPL-2.0
 github.com/hashicorp/go-version; MPL-2.0
 github.com/hashicorp/hc-install; MPL-2.0
