@@ -3,31 +3,52 @@
 package ovh
 
 import (
+	"bytes"
 	"context"
+	"crypto/sha1"
+	"crypto/x509"
+	"encoding/pem"
+	"fmt"
+
 	ovhtypes "github.com/ovh/terraform-provider-ovh/ovh/types"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 func IploadbalancingSslResourceSchema(ctx context.Context) schema.Schema {
 	attrs := map[string]schema.Attribute{
 		"certificate": schema.StringAttribute{
-			CustomType:          ovhtypes.TfStringType{},
-			Required:            true,
+			CustomType: ovhtypes.TfStringType{},
+			Required:   true,
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.RequiresReplaceIf(
+					checkIfFingerprintChange,
+					"Check if fingerprint change",
+					"Check if fingerprint change",
+				),
+			},
 			Description:         "Certificate",
 			MarkdownDescription: "Certificate",
 		},
 		"chain": schema.StringAttribute{
-			CustomType:          ovhtypes.TfStringType{},
-			Optional:            true,
-			Computed:            true,
+			CustomType: ovhtypes.TfStringType{},
+			Optional:   true,
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.RequiresReplaceIf(
+					checkIfFingerprintChange,
+					"Check if fingerprint change",
+					"Check if fingerprint change",
+				),
+			},
 			Description:         "Certificate chain",
 			MarkdownDescription: "Certificate chain",
 		},
 		"display_name": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
 			Optional:            true,
-			Computed:            true,
 			Description:         "Human readable name for your ssl certificate, this field is for you",
 			MarkdownDescription: "Human readable name for your ssl certificate, this field is for you",
 		},
@@ -50,8 +71,15 @@ func IploadbalancingSslResourceSchema(ctx context.Context) schema.Schema {
 			MarkdownDescription: "Id of your SSL certificate",
 		},
 		"key": schema.StringAttribute{
-			CustomType:          ovhtypes.TfStringType{},
-			Required:            true,
+			CustomType: ovhtypes.TfStringType{},
+			Required:   true,
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.RequiresReplaceIf(
+					checkIfFingerprintChange,
+					"Check if fingerprint change",
+					"Check if fingerprint change",
+				),
+			},
 			Description:         "Certificate key",
 			MarkdownDescription: "Certificate key",
 			Sensitive:           true,
@@ -69,8 +97,11 @@ func IploadbalancingSslResourceSchema(ctx context.Context) schema.Schema {
 			MarkdownDescription: "Serial of your SSL certificate (Deprecated, use fingerprint instead!)",
 		},
 		"service_name": schema.StringAttribute{
-			CustomType:          ovhtypes.TfStringType{},
-			Required:            true,
+			CustomType: ovhtypes.TfStringType{},
+			Required:   true,
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.RequiresReplace(),
+			},
 			Description:         "The internal name of your IP load balancing",
 			MarkdownDescription: "The internal name of your IP load balancing",
 		},
@@ -197,4 +228,53 @@ func (v IploadbalancingSslModel) ToUpdate() *IploadbalancingSslWritableModel {
 	}
 
 	return res
+}
+
+func checkIfFingerprintChange(ctx context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
+	var data, planData IploadbalancingSslModel
+
+	resp.RequiresReplace = true
+	// Read Terraform plan data into the model
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &planData)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// compute fingerprint from certificate
+	block, _ := pem.Decode([]byte(planData.Certificate.ValueString()))
+	if block == nil {
+		tflog.Error(ctx, "Failed to parse pem file")
+		return
+	}
+
+	cert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		tflog.Error(ctx, err.Error())
+		return
+	}
+
+	fingerprint := sha1.Sum(cert.Raw)
+
+	var buf bytes.Buffer
+	for i, f := range fingerprint {
+		if i > 0 {
+			fmt.Fprintf(&buf, ":")
+		}
+		fmt.Fprintf(&buf, "%02X", f)
+	}
+
+	// Read Terraform prior state data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if buf.String() == data.Fingerprint.ValueString() {
+		// This ssl was created from a CERT/KEY/CHAIN but it's gone from the state.
+		// This happens when we import this resource,
+		// because the API doesn't return the original CERT/KEY/CHAIN.
+		// In that case let's just update the state with the CERT/KEY/CHAIN present in the config,
+		// there's no update to do on the server side.
+		resp.RequiresReplace = false
+	}
 }
