@@ -72,7 +72,7 @@ The following attributes are exported:
 
 ## Import
 
-Subnet in a private network of a public cloud project can be imported using the `service_name` , the `network_id` and the `subnet_id`, separated by "/" E.g.,
+Subnet in a private network of a public cloud project can be imported using the `service_name` , `network_id`, `region` and the `subnet_id`, separated by "/" E.g.,
 
 ```bash
 $ terraform import ovh_cloud_project_network_private_subnet_v2.mysubnet ookie9mee8Shaeghaeleeju7Xeghohv6e/25807101-8aaa-4ea5-b507-61f0d661b101/0f0b73a4-403b-45e4-86d0-b438f1291909

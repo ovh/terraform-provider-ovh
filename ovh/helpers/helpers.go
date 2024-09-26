@@ -403,24 +403,8 @@ func StringsFromSchema(d *schema.ResourceData, id string) ([]string, error) {
 func StringMapFromSchema(d *schema.ResourceData, id string, keys ...string) ([]map[string]string, error) {
 	xs := []map[string]string{}
 	if v := d.Get(id); v != nil {
-		switch vv := v.(type) {
-		case *schema.Set:
-			rs := vv.List()
-			if len(rs) > 0 {
-				for _, vvv := range vv.List() {
-					if mapValue, ok := vvv.(map[string]string); ok {
-						for _, key := range keys {
-							if _, ok := mapValue[key]; !ok {
-								return nil, fmt.Errorf("invalid value in field %s: %v: expected key: %s", id, vvv, key)
-							}
-						}
-						xs = append(xs, mapValue)
-					} else {
-						return nil, fmt.Errorf("invalid value in field %s: %v: expected a map", id, vvv)
-					}
-				}
-			}
-		case []interface{}:
+		vv, ok := v.([]interface{})
+		if ok {
 			for _, vvv := range vv {
 				if mapValue, ok := vvv.(map[string]interface{}); ok {
 					mapStringValue := map[string]string{}
@@ -440,7 +424,7 @@ func StringMapFromSchema(d *schema.ResourceData, id string, keys ...string) ([]m
 					return nil, fmt.Errorf("invalid value in field %s: %v: expected a map", id, vvv)
 				}
 			}
-		default:
+		} else {
 			return nil, fmt.Errorf("attribute %v is not a list or set", id)
 		}
 	}

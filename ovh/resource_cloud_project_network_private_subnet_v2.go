@@ -14,13 +14,14 @@ func resourceOvhCloudProjectNetworkPrivateSubnetV2ImportState(
 	d *schema.ResourceData,
 	meta interface{}) ([]*schema.ResourceData, error) {
 	givenId := d.Id()
-	splitId := strings.SplitN(givenId, "/", 3)
-	if len(splitId) != 3 {
-		return nil, fmt.Errorf("Import Id is not service_name/network_id/subnet_id formatted")
+	splitId := strings.SplitN(givenId, "/", 4)
+	if len(splitId) != 4 {
+		return nil, fmt.Errorf("Import Id is not service_name/region/network_id/subnet_id formatted")
 	}
-	d.SetId(splitId[2])
-	d.Set("network_id", splitId[1])
 	d.Set("service_name", splitId[0])
+	d.Set("region", splitId[1])
+	d.Set("network_id", splitId[2])
+	d.SetId(splitId[3])
 	results := make([]*schema.ResourceData, 1)
 	results[0] = d
 	log.Printf(
@@ -50,43 +51,51 @@ func resourceCloudProjectNetworkPrivateSubnetV2() *schema.Resource {
 				Description: "Service name of the resource representing the id of the cloud project.",
 			},
 			"network_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "Network ID of subnet",
 			},
 			"region": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "Region of network/subnet",
 			},
 			"dhcp": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Default:  true,
+				Type:        schema.TypeBool,
+				Optional:    true,
+				ForceNew:    true,
+				Default:     true,
+				Description: "Enable DHCP in subnet",
 			},
 			"cidr": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: resourceCloudProjectNetworkPrivateSubnetValidateNetwork,
+				Description:  "CIDR of subnet",
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "Name of subnet",
 			},
 			"gateway_ip": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Computed:     true,
+				Description:  "Gateway IP of subnet",
+				ValidateFunc: resourceCloudProjectNetworkPrivateSubnetValidateIP,
 			},
 			"enable_gateway_ip": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Default:  true,
+				Type:        schema.TypeBool,
+				Optional:    true,
+				ForceNew:    true,
+				Default:     true,
+				Description: "Enable gateway IP in subnet",
 			},
 			"dns_nameservers": {
 				Type:     schema.TypeList,
@@ -98,24 +107,46 @@ func resourceCloudProjectNetworkPrivateSubnetV2() *schema.Resource {
 				},
 				Description: "List of DNS nameservers, default: 213.186.33.99",
 			},
-			"host_routes": {
+			"host_route": {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeMap,
-					Set:  schema.HashString,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"destination": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: resourceCloudProjectNetworkPrivateSubnetValidateNetwork,
+						},
+						"nexthop": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: resourceCloudProjectNetworkPrivateSubnetValidateIP,
+						},
+					},
 				},
+				Description: "Static host routes of subnet",
 			},
-			"allocation_pools": {
+			"allocation_pool": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeMap,
-					Set:  schema.HashString,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"start": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: resourceCloudProjectNetworkPrivateSubnetValidateIP,
+						},
+						"end": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: resourceCloudProjectNetworkPrivateSubnetValidateIP,
+						},
+					},
 				},
+				Description: "DHCP allocation pools of subnet",
 			},
 		},
 	}
@@ -132,7 +163,7 @@ func resourceCloudProjectNetworkPrivateSubnetV2Create(d *schema.ResourceData, me
 	enableDHCP := d.Get("dhcp").(bool)
 	gatewayIp := d.Get("gateway_ip").(string)
 
-	hostRoutesStrings, err := helpers.StringMapFromSchema(d, "host_routes", "destination", "nexthop")
+	hostRoutesStrings, err := helpers.StringMapFromSchema(d, "host_route", "destination", "nexthop")
 	if err != nil {
 		return err
 	}
@@ -145,7 +176,7 @@ func resourceCloudProjectNetworkPrivateSubnetV2Create(d *schema.ResourceData, me
 		})
 	}
 
-	allocationPoolsStrings, err := helpers.StringMapFromSchema(d, "allocation_pools", "start", "end")
+	allocationPoolsStrings, err := helpers.StringMapFromSchema(d, "allocation_pool", "start", "end")
 	if err != nil {
 		return err
 	}
@@ -204,38 +235,23 @@ func resourceCloudProjectNetworkPrivateSubnetV2Read(d *schema.ResourceData, meta
 	networkId := d.Get("network_id").(string)
 	regionName := d.Get("region").(string)
 
-	subnets := []*CloudProjectNetworkPrivateV2Response{}
-
 	log.Printf("[DEBUG] Will read public cloud private network subnet for project: %s, region: %s, network: %s, id: %s", serviceName, regionName, networkId, d.Id())
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/region/%s/network/%s/subnet", serviceName, regionName, networkId)
-
-	if err := config.OVHClient.Get(endpoint, &subnets); err != nil {
+	subnet := CloudProjectNetworkPrivateV2Response{}
+	endpoint := fmt.Sprintf("/cloud/project/%s/region/%s/network/%s/subnet/%s", serviceName, regionName, networkId, d.Id())
+	if err := config.OVHClient.Get(endpoint, &subnet); err != nil {
 		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
-	var r *CloudProjectNetworkPrivateV2Response
-	for i := range subnets {
-		if subnets[i].Id == d.Id() {
-			r = subnets[i]
-			break
-		}
-	}
-
-	if r == nil {
-		d.SetId("")
-		return nil
-	}
-
-	d.Set("gateway_ip", r.GatewayIp)
-	d.Set("cidr", r.Cidr)
-	d.Set("dhcp", r.DHCPEnabled)
-	d.Set("enable_gateway_ip", r.GatewayIp != nil)
+	d.Set("gateway_ip", subnet.GatewayIp)
+	d.Set("cidr", subnet.Cidr)
+	d.Set("dhcp", subnet.DHCPEnabled)
+	d.Set("enable_gateway_ip", subnet.GatewayIp != nil)
 	d.Set("service_name", serviceName)
 	d.Set("network_id", networkId)
 	d.Set("region", regionName)
-	d.SetId(r.Id)
-	log.Printf("[DEBUG] Read Public Cloud Private Network %v", r)
+	d.SetId(subnet.Id)
+	log.Printf("[DEBUG] Read Public Cloud Private Network %v", subnet)
 	return nil
 }
 
