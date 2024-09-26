@@ -20,6 +20,11 @@ resource "ovh_iploadbalancing_ssl" "sslname" {
   certificate  = "..."
   key          = "..."
   chain        = "..."
+
+  # use this if ssl is configured as frontend default_ssl
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 ```
 
