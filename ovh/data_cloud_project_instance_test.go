@@ -14,7 +14,7 @@ func TestAccDataSourceCloudProjecInstance_basic(t *testing.T) {
 		testAccDataSourceCloudProjectInstance,
 		os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"),
 		os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST"),
-		os.Getenv("OVH_CLOUD_PROJECT_INSTANCE_TEST"),
+		os.Getenv("OVH_CLOUD_PROJECT_INSTANCE_ID_TEST"),
 	)
 
 	resource.Test(t, resource.TestCase{

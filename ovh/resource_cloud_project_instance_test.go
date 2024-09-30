@@ -9,7 +9,7 @@ import (
 )
 
 func TestAccCloudProjectInstance_basic(t *testing.T) {
-	var testCreateLoadBalancerLogSubscription = fmt.Sprintf(`
+	var testCreateInstance = fmt.Sprintf(`
 		resource "ovh_cloud_project_instance" "instance" {
 			service_name = "%s"
 			region = "%s"
@@ -20,7 +20,7 @@ func TestAccCloudProjectInstance_basic(t *testing.T) {
 			flavor {
 				flavor_id = "%s"
 			}
-			name = "haproxy"
+			name = "%s"
 			ssh_key {
 				name = "%s"
 			}
@@ -33,6 +33,7 @@ func TestAccCloudProjectInstance_basic(t *testing.T) {
 		os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST"),
 		os.Getenv("OVH_CLOUD_PROJECT_IMAGE_ID_TEST"),
 		os.Getenv("OVH_CLOUD_PROJECT_FLAVOR_ID_TEST"),
+		os.Getenv("OVH_CLOUD_PROJECT_INSTANCE_NAME_TEST"),
 		os.Getenv("OVH_CLOUD_PROJECT_SSH_NAME_TEST"))
 
 	resource.Test(t, resource.TestCase{
@@ -43,9 +44,14 @@ func TestAccCloudProjectInstance_basic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testCreateLoadBalancerLogSubscription,
+				Config: testCreateInstance,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_instance.instance", "id"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_instance.instance", "flavor_name"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_instance.instance", "flavor_id", os.Getenv("OVH_CLOUD_PROJECT_FLAVOR_ID_TEST")),
+					resource.TestCheckResourceAttr("ovh_cloud_project_instance.instance", "image_id", os.Getenv("OVH_CLOUD_PROJECT_IMAGE_ID_TEST")),
+					resource.TestCheckResourceAttr("ovh_cloud_project_instance.instance", "region", os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")),
+					resource.TestCheckResourceAttr("ovh_cloud_project_instance.instance", "name", os.Getenv("OVH_CLOUD_PROJECT_INSTANCE_NAME_TEST")),
 				),
 			},
 		},

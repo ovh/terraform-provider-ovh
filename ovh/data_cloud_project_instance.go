@@ -23,17 +23,15 @@ func dataSourceCloudProjectInstance() *schema.Resource {
 				Type:        schema.TypeString,
 				Description: "Instance region",
 				Required:    true,
-				ForceNew:    true,
 			},
 			"instance_id": {
 				Type:        schema.TypeString,
 				Description: "Instance id",
 				Required:    true,
-				ForceNew:    true,
 			},
 			// computed
 			"addresses": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Computed:    true,
 				Description: "Instance IP addresses",
 				Elem: &schema.Resource{
@@ -52,12 +50,12 @@ func dataSourceCloudProjectInstance() *schema.Resource {
 				},
 			},
 			"attached_volumes": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Computed:    true,
-				Description: " Volumes attached to the instance",
+				Description: "Volumes attached to the instance",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"ip": {
+						"id": {
 							Type:        schema.TypeString,
 							Description: "Volume Id",
 							Computed:    true,
@@ -109,7 +107,7 @@ func dataSourceCloudProjectInstanceRead(d *schema.ResourceData, meta interface{}
 	serviceName := d.Get("service_name").(string)
 	region := d.Get("region").(string)
 	instanceId := d.Get("instance_id").(string)
-	log.Printf("[DEBUG] SCROUTCH")
+
 	endpoint := fmt.Sprintf("/cloud/project/%s/region/%s/instance/%s",
 		url.PathEscape(serviceName),
 		url.PathEscape(region),
@@ -121,15 +119,31 @@ func dataSourceCloudProjectInstanceRead(d *schema.ResourceData, meta interface{}
 	if err := config.OVHClient.Get(endpoint, &res); err != nil {
 		return helpers.CheckDeleted(d, err, endpoint)
 	}
+	log.Printf("[DEBUG] Read instance: %+v", res)
 
-	for k, v := range res.ToMap() {
-		if k != "id" {
-			d.Set(k, v)
-		} else {
-			d.SetId(fmt.Sprint(v))
-		}
+	addresses := make([]map[string]interface{}, 0)
+	for i := range res.Addresses {
+		address := make(map[string]interface{})
+		address["ip"] = res.Addresses[i].Ip
+		address["version"] = res.Addresses[i].Version
+		addresses = append(addresses, address)
 	}
 
-	log.Printf("[DEBUG] Read instance: %+v", res)
+	attachedVolumes := make([]map[string]interface{}, 0)
+	for i := range res.AttachedVolumes {
+		attachedVolume := make(map[string]interface{})
+		attachedVolume["id"] = res.AttachedVolumes[i].Id
+		attachedVolumes = append(attachedVolumes, attachedVolume)
+	}
+	d.Set("addresses", addresses)
+	d.Set("flavor_id", res.FlavorId)
+	d.Set("flavor_name", res.FlavorName)
+	d.SetId(res.Id)
+	d.Set("image_id", res.ImageId)
+	d.Set("instance_id", res.Id)
+	d.Set("name", res.Name)
+	d.Set("ssh_key", res.SshKey)
+	d.Set("task_state", res.TaskState)
+
 	return nil
 }
