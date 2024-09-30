@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"sort"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
@@ -24,17 +25,16 @@ func dataSourceCloudProjectInstances() *schema.Resource {
 				Type:        schema.TypeString,
 				Description: "Instance region",
 				Required:    true,
-				ForceNew:    true,
 			},
 			// computed
 			"instances": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Description: "List of instances",
 				Computed:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"addresses": {
-							Type:        schema.TypeList,
+							Type:        schema.TypeSet,
 							Computed:    true,
 							Description: "Instance IP addresses",
 							Elem: &schema.Resource{
@@ -58,7 +58,7 @@ func dataSourceCloudProjectInstances() *schema.Resource {
 							Description: " Volumes attached to the instance",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"ip": {
+									"id": {
 										Type:        schema.TypeString,
 										Description: "Volume Id",
 										Computed:    true,
@@ -123,17 +123,18 @@ func dataSourceCloudProjectInstancesRead(d *schema.ResourceData, meta interface{
 	if err := config.OVHClient.Get(endpoint, &res); err != nil {
 		return helpers.CheckDeleted(d, err, endpoint)
 	}
-	instances := make([]map[string]interface{}, len(res))
-	ids := make([]string, len(instances))
 
+	instances := make([]map[string]interface{}, len(res))
+	ids := make([]string, len(res))
 	for i, instance := range res {
 		instances[i] = instance.ToMap()
 		ids = append(ids, instance.Id)
 	}
+	sort.Strings(ids)
 
 	d.SetId(hashcode.Strings(ids))
 	d.Set("instances", instances)
 
-	log.Printf("[DEBUG] Read instances: %+v", res)
+	log.Printf("[DEBUG] Read instances: %s", ids)
 	return nil
 }

@@ -8,21 +8,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-const testAccDataSourceCloudProjecInstancesConfig_basic = `
-data "ovh_cloud_project_instances" "instances" {
-   service_name = "%s"
-   region = "%s"
-}
-`
-
-func TestAccDataSourceCloudProjecInstances_basic(t *testing.T) {
-	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
-	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
-
-	config := fmt.Sprintf(
-		testAccDataSourceCloudProjecInstancesConfig_basic,
-		serviceName,
-		region,
+func TestAccDataSourceCloudProjectInstances_basic(t *testing.T) {
+	config := fmt.Sprintf(`
+			data "ovh_cloud_project_instances" "instances" {
+				service_name = "%s"
+				region       = "%s"
+			}
+		`,
+		os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"),
+		os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST"),
 	)
 
 	resource.Test(t, resource.TestCase{
@@ -38,7 +32,23 @@ func TestAccDataSourceCloudProjecInstances_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(
 						"data.ovh_cloud_project_instances.instances",
-						"instances.#",
+						"instances.0.flavor_id",
+					),
+					resource.TestCheckResourceAttrSet(
+						"data.ovh_cloud_project_instances.instances",
+						"instances.0.flavor_name",
+					),
+					resource.TestCheckResourceAttrSet(
+						"data.ovh_cloud_project_instances.instances",
+						"instances.0.id",
+					),
+					resource.TestCheckResourceAttrSet(
+						"data.ovh_cloud_project_instances.instances",
+						"instances.0.image_id",
+					),
+					resource.TestCheckResourceAttrSet(
+						"data.ovh_cloud_project_instances.instances",
+						"instances.0.ssh_key",
 					),
 				),
 			},

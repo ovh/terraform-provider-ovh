@@ -568,6 +568,17 @@ workflow:
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
+  Tests_TestAccCloudProjectInstance:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run CloudProjectInstance
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
   Tests_TestAccCloudProjectWorkflowBackup:
     application: terraform-provider-ovh
     depends_on:
@@ -807,6 +818,7 @@ workflow:
     - Tests_CloudProjectUser
     - Tests_CloudProjectLoadBalancer
     - Tests_CloudProjectVolume
+    - Tests_TestAccCloudProjectInstance
     - Tests_DbaasLogs
     - Tests_DedicatedCeph
     - Tests_TestAccDedicatedInstallationTemplate
