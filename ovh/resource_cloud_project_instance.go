@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/go-ovh/ovh"
+	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
 func resourceCloudProjectInstance() *schema.Resource {
@@ -34,7 +35,8 @@ func resourceCloudProjectInstance() *schema.Resource {
 				ForceNew:    true,
 			},
 			"auto_backup": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
+				MaxItems:    1,
 				Optional:    true,
 				Description: "Create an autobackup workflow after instance start up",
 				ForceNew:    true,
@@ -43,27 +45,29 @@ func resourceCloudProjectInstance() *schema.Resource {
 						"cron": {
 							Type:        schema.TypeString,
 							Description: "Unix cron pattern",
-							Optional:    true,
 							ForceNew:    true,
+							Required:    true,
 						},
 						"rotation": {
 							Type:        schema.TypeInt,
 							Description: "Number of backup to keep",
-							Optional:    true,
 							ForceNew:    true,
+							Required:    true,
 						},
 					},
 				},
 			},
 			"billing_period": {
-				Type:        schema.TypeString,
-				Description: "Number of backup to keep",
-				Required:    true,
-				ForceNew:    true,
+				Type:         schema.TypeString,
+				Description:  "Billing period - hourly | monthly ",
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: helpers.ValidateEnum([]string{"monthly", "hourly"}),
 			},
 			"boot_from": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Required:    true,
+				MaxItems:    1,
 				Description: "Boot the instance from an image or a volume",
 				ForceNew:    true,
 				Elem: &schema.Resource{
@@ -88,8 +92,9 @@ func resourceCloudProjectInstance() *schema.Resource {
 				ForceNew:    true,
 			},
 			"flavor": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Required:    true,
+				MaxItems:    1,
 				Description: "Flavor information",
 				ForceNew:    true,
 				Elem: &schema.Resource{
@@ -103,8 +108,9 @@ func resourceCloudProjectInstance() *schema.Resource {
 				},
 			},
 			"group": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Optional:    true,
+				MaxItems:    1,
 				Description: "Start instance in group",
 				ForceNew:    true,
 				Elem: &schema.Resource{
@@ -124,36 +130,38 @@ func resourceCloudProjectInstance() *schema.Resource {
 				ForceNew:    true,
 			},
 			"ssh_key": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "Existing SSH Keypair",
 				ForceNew:    true,
+				MaxItems:    1,
+				Description: "Existing SSH Keypair",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
 							Type:        schema.TypeString,
 							Description: "SSH Keypair name",
-							Optional:    true,
+							Required:    true,
 						},
 					},
 				},
 			},
 			"ssh_key_create": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "Start instance in group",
 				ForceNew:    true,
+				MaxItems:    1,
+				Description: "Creatting SSH Keypair",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
 							Type:        schema.TypeString,
 							Description: "SSH Keypair name",
-							Optional:    true,
+							Required:    true,
 						},
 						"public_key": {
 							Type:        schema.TypeString,
-							Description: "SSH Public key",
-							Optional:    true,
+							Description: "Group id",
+							Required:    true,
 						},
 					},
 				},
@@ -165,17 +173,13 @@ func resourceCloudProjectInstance() *schema.Resource {
 				ForceNew:    true,
 			},
 			"network": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Required:    true,
 				ForceNew:    true,
+				MaxItems:    1,
 				Description: "Create network interfaces",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"private": {
-							Type:        schema.TypeString,
-							Description: "Private network information",
-							Optional:    true,
-						},
 						"public": {
 							Type:        schema.TypeBool,
 							Description: "Set the new instance as public",
@@ -186,7 +190,7 @@ func resourceCloudProjectInstance() *schema.Resource {
 			},
 			// computed
 			"addresses": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Computed:    true,
 				Description: "Instance IP addresses",
 				Elem: &schema.Resource{
@@ -205,7 +209,7 @@ func resourceCloudProjectInstance() *schema.Resource {
 				},
 			},
 			"attached_volumes": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Computed:    true,
 				Description: " Volumes attached to the instance",
 				Elem: &schema.Resource{
@@ -251,7 +255,8 @@ func resourceCloudProjectInstanceCreate(ctx context.Context, d *schema.ResourceD
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	region := d.Get("region").(string)
-	params := (&CloudProjectInstanceCreateOpts{}).FromResource(d)
+	params := new(CloudProjectInstanceCreateOpts)
+	params.FromResource(d)
 
 	r := &CloudProjectOperation{}
 
@@ -334,7 +339,6 @@ func resourceCloudProjectInstanceRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("region", r.Region)
 	d.Set("task_state", r.TaskState)
 	d.Set("name", d.Get("name").(string))
-	//	d.Set("name", r.Name)
 	d.Set("id", r.Id)
 
 	addresses := make([]map[string]interface{}, 0)
@@ -375,8 +379,7 @@ func resourceCloudProjectInstanceDelete(ctx context.Context, d *schema.ResourceD
 		url.PathEscape(id),
 	)
 
-	r := &CloudProjectInstanceResponse{}
-	if err := config.OVHClient.Delete(endpoint, r); err != nil {
+	if err := config.OVHClient.Delete(endpoint, nil); err != nil {
 		return diag.Errorf("Error calling post %s:\n\t %q", endpoint, err)
 	}
 

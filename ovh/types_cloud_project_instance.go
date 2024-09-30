@@ -1,7 +1,6 @@
 package ovh
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -9,95 +8,57 @@ import (
 )
 
 type AutoBackup struct {
-	Cron     *string `json:"cron",omitempty`
-	Rotation *int    `json:"rotation",omitempty`
-}
-
-func (ab *AutoBackup) FromResource(d *schema.ResourceData, parent string) *AutoBackup {
-	ab.Cron = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.cron", parent))
-	ab.Rotation = helpers.GetNilIntPointerFromData(d, fmt.Sprintf("%s.rotation", parent))
-	return ab
+	Cron     string `json:"cron"`
+	Rotation int    `json:"rotation"`
 }
 
 type Flavor struct {
-	FlavorId *string `json:"id",omitempty`
-}
-
-func (fl *Flavor) FromResource(d *schema.ResourceData, parent string) *Flavor {
-	fl.FlavorId = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.flavor_id", parent))
-	return fl
+	FlavorId string `json:"id"`
 }
 
 type BootFrom struct {
-	ImageId  *string `json:"imageId",omitempty`
-	VolumeId *string `json:"volumeId",omitempty`
-}
-
-func (bf *BootFrom) FromResource(d *schema.ResourceData, parent string) *BootFrom {
-	bf.ImageId = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.image_id", parent))
-	bf.VolumeId = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.volume_id", parent))
-	return bf
+	ImageId  *string `json:"imageId,omitempty"`
+	VolumeId *string `json:"volumeId,omitempty"`
 }
 
 type Group struct {
-	GroupId *string `json:"id";omitempty`
-}
-
-func (g *Group) FromResource(d *schema.ResourceData, parent string) *Group {
-	g.GroupId = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.id", parent))
-	return g
+	GroupId string `json:"id"`
 }
 
 type SshKey struct {
-	Name *string `json:"name",omitempty`
-}
-
-func (sk *SshKey) FromResource(d *schema.ResourceData, parent string) *SshKey {
-	sk.Name = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.name", parent))
-	return sk
+	Name string `json:"name"`
 }
 
 type SshKeyCreate struct {
-	Name      *string `json:"name",omitempty`
-	PublicKey *string `json:"publicKey",omitempty`
-}
-
-func (skc *SshKeyCreate) FromResource(d *schema.ResourceData, parent string) *SshKeyCreate {
-	skc.Name = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.name", parent))
-	skc.PublicKey = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.public_key", parent))
-	return skc
+	Name      string `json:"name"`
+	PublicKey string `json:"publicKey"`
 }
 
 type Network struct {
-	Public *bool `json:"public",omitempty`
-}
-
-func (n *Network) FromResource(d *schema.ResourceData, parent string) *Network {
-	n.Public = helpers.GetNilBoolPointerFromData(d, fmt.Sprintf("%s.public", parent))
-	return n
+	Public bool `json:"public"`
 }
 
 type CloudProjectInstanceCreateOpts struct {
-	AutoBackup    *AutoBackup   `json:"autobackup"`
+	AutoBackup    *AutoBackup   `json:"autobackup,omitempty"`
 	BillingPeriod string        `json:"billingPeriod"`
-	BootFrom      *BootFrom     `json:"bootFrom"`
+	BootFrom      *BootFrom     `json:"bootFrom,omitempty"`
 	Bulk          int           `json:"bulk"`
-	Flavor        *Flavor       `json:"flavor"`
-	Group         *Group        `json:"group"`
+	Flavor        *Flavor       `json:"flavor,omitempty"`
+	Group         *Group        `json:"group,omitempty"`
 	Name          string        `json:"name"`
-	SshKey        *SshKey       `json:"sshKey"`
-	SshKeyCreate  *SshKeyCreate `json:"sshKeyCreate"`
-	UserData      string        `json:"userData"`
-	Network       *Network      `json:"network"`
+	SshKey        *SshKey       `json:"sshKey,omitempty"`
+	SshKeyCreate  *SshKeyCreate `json:"sshKeyCreate,omitempty"`
+	UserData      *string       `json:"userData,omitempty"`
+	Network       *Network      `json:"network,omitempty"`
 }
 
 type Address struct {
-	Ip      *string `json:"ip",omitempty`
-	Version *int    `json:"version",omitempty`
+	Ip      *string `json:"ip"`
+	Version *int    `json:"version"`
 }
 
 type AttachedVolume struct {
-	Id string `json:"id",omitempty`
+	Id string `json:"id"`
 }
 
 type CloudProjectInstanceResponse struct {
@@ -111,6 +72,37 @@ type CloudProjectInstanceResponse struct {
 	Region          string           `json:"region"`
 	SshKey          string           `json:"sshKey"`
 	TaskState       string           `json:"taskState"`
+}
+
+func (v CloudProjectInstanceResponse) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+	obj["flavor_id"] = v.FlavorId
+	obj["flavor_name"] = v.FlavorName
+	obj["image_id"] = v.ImageId
+	obj["id"] = v.Id
+	obj["name"] = v.Name
+	obj["ssh_key"] = v.SshKey
+	obj["task_state"] = v.TaskState
+
+	addresses := make([]map[string]interface{}, 0)
+	for i := range v.Addresses {
+		address := make(map[string]interface{})
+		address["ip"] = v.Addresses[i].Ip
+		address["version"] = v.Addresses[i].Version
+		addresses = append(addresses, address)
+	}
+	obj["addresses"] = addresses
+
+	attachedVolumes := make([]map[string]interface{}, 0)
+	for i := range v.AttachedVolumes {
+		attachedVolume := make(map[string]interface{})
+		attachedVolume["id"] = v.AttachedVolumes[i].Id
+		attachedVolumes = append(attachedVolumes, attachedVolume)
+	}
+
+	obj["attached_volumes"] = attachedVolumes
+
+	return obj
 }
 
 type CloudProjectOperation struct {
@@ -140,14 +132,10 @@ func (o CloudProjectOperation) ToMap() map[string]interface{} {
 	obj["id"] = o.Id
 	obj["status"] = o.Status
 	subOperations := make([]map[string]interface{}, len(o.SubOperations))
-	log.Printf("[DEBUG] titi operation %+v:", o)
-	log.Printf("[DEBUG] titi operation %+v:", o.SubOperations)
 	for _, subOperation := range o.SubOperations {
-		log.Printf("[DEBUG] tutu operation %+v:", subOperation)
 		subOperations = append(subOperations, subOperation.ToMap())
 	}
 	obj["subOperations"] = subOperations
-	log.Printf("[DEBUG] titi operation %+v:", obj)
 	return obj
 }
 
@@ -164,77 +152,129 @@ func (a AttachedVolume) ToMap() map[string]interface{} {
 	return obj
 }
 
-func (cpir CloudProjectInstanceResponse) ToMap() map[string]interface{} {
-	obj := make(map[string]interface{})
-	obj["flavor_id"] = cpir.FlavorId
-	obj["flavor_name"] = cpir.FlavorName
-	obj["id"] = cpir.Id
-	obj["image_id"] = cpir.ImageId
-	obj["name"] = cpir.Name
-	obj["ssh_key"] = cpir.SshKey
-	obj["task_state"] = cpir.TaskState
-
-	addresses := make([]map[string]interface{}, len(cpir.Addresses))
-	for _, address := range cpir.Addresses {
-		addresses = append(addresses, address.ToMap())
-	}
-	obj["addresses"] = addresses
-
-	attachedVolumes := make([]map[string]interface{}, len(cpir.AttachedVolumes))
-	for _, attachedVolume := range cpir.AttachedVolumes {
-		attachedVolumes = append(addresses, attachedVolume.ToMap())
-	}
-
-	obj["attached_volumes"] = attachedVolumes
-	return obj
-}
-
 type CloudProjectInstanceResponseList struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
 }
 
-func (cpir *CloudProjectInstanceCreateOpts) FromResource(d *schema.ResourceData) *CloudProjectInstanceCreateOpts {
+func GetFlaorId(i interface{}) *Flavor {
+	if i == nil {
+		return nil
+	}
+	flavorId := Flavor{}
+	flavorSet := i.(*schema.Set).List()
+	for _, flavor := range flavorSet {
+		mapping := flavor.(map[string]interface{})
+		flavorId.FlavorId = mapping["flavor_id"].(string)
+	}
+	return &flavorId
+}
 
-	bootFrom := d.Get("boot_from").([]interface{})
-	flavor := d.Get("flavor").([]interface{})
-	autoBackup := d.Get("auto_backup").([]interface{})
-	group := d.Get("group").([]interface{})
-	sshKey := d.Get("ssh_key").([]interface{})
-	sshKeyCreate := d.Get("ssh_key_create").([]interface{})
-	network := d.Get("network").([]interface{})
+func GetAutoBackup(i interface{}) *AutoBackup {
+	if i == nil {
+		return nil
+	}
+	autoBackupOut := AutoBackup{}
 
+	autoBackupSet := i.(*schema.Set).List()
+	if len(autoBackupSet) == 0 {
+		return nil
+	}
+	for _, autoBackup := range autoBackupSet {
+		mapping := autoBackup.(map[string]interface{})
+		autoBackupOut.Cron = mapping["cron"].(string)
+		autoBackupOut.Rotation = mapping["rotation"].(int)
+	}
+	return &autoBackupOut
+}
+
+func GetBootFrom(i interface{}) *BootFrom {
+	if i == nil {
+		return nil
+	}
+	bootFromOutput := BootFrom{}
+
+	bootFromSet := i.(*schema.Set).List()
+	for _, bootFrom := range bootFromSet {
+		mapping := bootFrom.(map[string]interface{})
+		bootFromOutput.ImageId = helpers.GetNilStringPointerFromData(mapping, "image_id")
+		bootFromOutput.VolumeId = helpers.GetNilStringPointerFromData(mapping, "volume_id")
+	}
+
+	return &bootFromOutput
+}
+
+func GetGroup(i interface{}) *Group {
+	if i == nil {
+		return nil
+	}
+	groupOut := Group{}
+
+	groupSet := i.(*schema.Set).List()
+	for _, group := range groupSet {
+		mapping := group.(map[string]interface{})
+		groupOut.GroupId = mapping["id"].(string)
+	}
+	return &groupOut
+}
+
+func GetSshKey(i interface{}) *SshKey {
+	if i == nil {
+		return nil
+	}
+	sshOutput := SshKey{}
+
+	sshSet := i.(*schema.Set).List()
+	for _, ssh := range sshSet {
+		mapping := ssh.(map[string]interface{})
+		sshOutput.Name = mapping["name"].(string)
+	}
+
+	return &sshOutput
+}
+
+func GetSshKeyCreate(i interface{}) *SshKeyCreate {
+	if i == nil {
+		return nil
+	}
+	sshCreateOutput := SshKeyCreate{}
+
+	sshCreateSet := i.(*schema.Set).List()
+	if len(sshCreateSet) == 0 {
+		return nil
+	}
+	for _, ssh := range sshCreateSet {
+		mapping := ssh.(map[string]interface{})
+		sshCreateOutput.Name = mapping["name"].(string)
+		sshCreateOutput.Name = mapping["public_key"].(string)
+	}
+
+	return &sshCreateOutput
+}
+
+func GetNetwork(i interface{}) *Network {
+	if i == nil {
+		return nil
+	}
+	networkOutput := Network{}
+
+	networkSet := i.(*schema.Set).List()
+	for _, network := range networkSet {
+		mapping := network.(map[string]interface{})
+		networkOutput.Public = mapping["public"].(bool)
+	}
+	return &networkOutput
+}
+
+func (cpir *CloudProjectInstanceCreateOpts) FromResource(d *schema.ResourceData) {
+	cpir.Flavor = GetFlaorId(d.Get("flavor"))
+	cpir.AutoBackup = GetAutoBackup(d.Get("auto_backup"))
+	cpir.BootFrom = GetBootFrom(d.Get("boot_from"))
+	cpir.Group = GetGroup(d.Get("group"))
+	cpir.SshKey = GetSshKey(d.Get("ssh_key"))
+	cpir.SshKeyCreate = GetSshKeyCreate(d.Get("ssh_key_create"))
+	cpir.Network = GetNetwork(d.Get("network"))
 	cpir.BillingPeriod = d.Get("billing_period").(string)
 	cpir.Name = d.Get("name").(string)
-	cpir.Bulk = 1
-
-	if len(bootFrom) == 1 {
-		cpir.BootFrom = (&BootFrom{}).FromResource(d, "boot_from.0")
-	}
-
-	if len(flavor) == 1 {
-		cpir.Flavor = (&Flavor{}).FromResource(d, "flavor.0")
-	}
-
-	if len(autoBackup) == 1 {
-		cpir.AutoBackup = (&AutoBackup{}).FromResource(d, "auto_backup.0")
-	}
-
-	if len(group) == 1 {
-		cpir.Group = (&Group{}).FromResource(d, "group.0")
-	}
-
-	if len(sshKey) == 1 {
-		cpir.SshKey = (&SshKey{}).FromResource(d, "ssh_key.0")
-	}
-
-	if len(sshKeyCreate) == 1 {
-		cpir.SshKeyCreate = (&SshKeyCreate{}).FromResource(d, "ssh_key_create.0")
-	}
-
-	if len(network) == 1 {
-		cpir.Network = (&Network{}).FromResource(d, "network.0")
-	}
-
-	return cpir
+	cpir.UserData = helpers.GetNilStringPointerFromData(d, "user_data")
 }

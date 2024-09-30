@@ -4,11 +4,12 @@ subcategory : "Cloud Project"
 
 # ovh_cloud_project_instance
 **This datasource uses a Beta API**
-Use this data source to get the list instance in a region of a public cloud project.
+
+Use this data source to get the list of instance in a region of a public cloud project.
 
 ## Example Usage
 
-To get information of an instance:
+To list your instances:
 
 ```hcl
 data "ovh_cloud_project_instances" "instance" {
@@ -21,7 +22,7 @@ data "ovh_cloud_project_instances" "instance" {
 
 The following arguments are supported:
 
-* `service_name` - (Required, Forces new resource) The id of the public cloud project. If omitted,
+* `service_name` - (Required) The id of the public cloud project. If omitted,
   the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 * `region` - (Required, Forces new resource) Instance region.
 
