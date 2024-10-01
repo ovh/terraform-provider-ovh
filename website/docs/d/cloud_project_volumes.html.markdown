@@ -1,5 +1,5 @@
 ---
-subcategory : "Cloud Project Volume"
+subcategory : "Cloud Project"
 ---
 
 # ovh_cloud_project_volumes

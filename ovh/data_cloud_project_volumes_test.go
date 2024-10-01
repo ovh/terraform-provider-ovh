@@ -11,7 +11,6 @@ import (
 func TestAccDataSourceCloudProjectVolumes_basic(t *testing.T) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
 	regionName := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
-	volumeId := os.Getenv("OVH_CLOUD_PROJECT_VOLUME_ID_TEST")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { testAccPreCheckCloud(t); testAccCheckCloudProjectExists(t) },
@@ -25,7 +24,6 @@ func TestAccDataSourceCloudProjectVolumes_basic(t *testing.T) {
 				`,
 					serviceName,
 					regionName,
-					volumeId,
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.ovh_cloud_project_volume.volume", "region_name", os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")),
