@@ -10,7 +10,6 @@ import (
 
 func testAccCloudProjectNetworkPrivateV2SubnetConfig(config string) string {
 	var testAccCloudProjectNetworkPrivateSubnetV2Config_attachVrack = `
-	
 	resource "ovh_vrack_cloudproject" "attach" {
 		service_name = "%s"
 		project_id   = "%s"
@@ -35,7 +34,6 @@ func testAccCloudProjectNetworkPrivateV2SubnetConfig(config string) string {
 	)
 
 	var testAccCloudProjectNetworkPrivateSubnetV2Config_noAttachVrack = `
-	
 	data "ovh_cloud_project_regions" "regions" {
 		service_name = "%s"
 		has_services_up = ["network"]
