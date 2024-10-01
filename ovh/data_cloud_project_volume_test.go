@@ -21,7 +21,7 @@ func TestAccDataSourceCloudProjectVolume_basic(t *testing.T) {
 					data "ovh_cloud_project_volume" "volume" {
 						service_name = "%s"
 						region_name  = "%s"
-						volume_id           = "%s"
+						volume_id    = "%s"
 					}
 				`,
 					serviceName,
