@@ -9,13 +9,19 @@ import (
 	ovhtypes "github.com/ovh/terraform-provider-ovh/ovh/types"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 )
 
 func IploadbalancingUdpFarmServerResourceSchema(ctx context.Context) schema.Schema {
 	attrs := map[string]schema.Attribute{
 		"address": schema.StringAttribute{
-			CustomType:          ovhtypes.TfStringType{},
-			Required:            true,
+			CustomType: ovhtypes.TfStringType{},
+			Required:   true,
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.RequiresReplace(),
+			},
 			Description:         "IPv4 address (e.g., 192.0.2.0)",
 			MarkdownDescription: "IPv4 address (e.g., 192.0.2.0)",
 		},
@@ -28,20 +34,21 @@ func IploadbalancingUdpFarmServerResourceSchema(ctx context.Context) schema.Sche
 		"display_name": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
 			Optional:            true,
-			Computed:            true,
 			Description:         "Human readable name for your server, this field is for you",
 			MarkdownDescription: "Human readable name for your server, this field is for you",
 		},
 		"farm_id": schema.Int64Attribute{
-			CustomType:          ovhtypes.TfInt64Type{},
-			Required:            true,
+			CustomType: ovhtypes.TfInt64Type{},
+			Required:   true,
+			PlanModifiers: []planmodifier.Int64{
+				int64planmodifier.RequiresReplace(),
+			},
 			Description:         "Id of your farm",
 			MarkdownDescription: "Id of your farm",
 		},
 		"port": schema.Int64Attribute{
 			CustomType:          ovhtypes.TfInt64Type{},
 			Optional:            true,
-			Computed:            true,
 			Description:         "Port attached to your server ([1..49151]). Inherited from farm if null",
 			MarkdownDescription: "Port attached to your server ([1..49151]). Inherited from farm if null",
 		},
@@ -52,8 +59,11 @@ func IploadbalancingUdpFarmServerResourceSchema(ctx context.Context) schema.Sche
 			MarkdownDescription: "Id of your server",
 		},
 		"service_name": schema.StringAttribute{
-			CustomType:          ovhtypes.TfStringType{},
-			Required:            true,
+			CustomType: ovhtypes.TfStringType{},
+			Required:   true,
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.RequiresReplace(),
+			},
 			Description:         "The internal name of your IP load balancing",
 			MarkdownDescription: "The internal name of your IP load balancing",
 		},

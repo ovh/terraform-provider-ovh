@@ -17,28 +17,24 @@ func IploadbalancingUdpFrontendResourceSchema(ctx context.Context) schema.Schema
 			"dedicated_ipfo": schema.ListAttribute{
 				CustomType:          ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
 				Optional:            true,
-				Computed:            true,
 				Description:         "Only attach frontend on these ip. No restriction if null",
 				MarkdownDescription: "Only attach frontend on these ip. No restriction if null",
 			},
 			"default_farm_id": schema.Int64Attribute{
 				CustomType:          ovhtypes.TfInt64Type{},
 				Optional:            true,
-				Computed:            true,
 				Description:         "Default UDP Farm of your frontend",
 				MarkdownDescription: "Default UDP Farm of your frontend",
 			},
 			"disabled": schema.BoolAttribute{
 				CustomType:          ovhtypes.TfBoolType{},
 				Optional:            true,
-				Computed:            true,
 				Description:         "Disable your frontend. Default: 'false'",
 				MarkdownDescription: "Disable your frontend. Default: 'false'",
 			},
 			"display_name": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Optional:            true,
-				Computed:            true,
 				Description:         "Human readable name for your frontend, this field is for you",
 				MarkdownDescription: "Human readable name for your frontend, this field is for you",
 			},

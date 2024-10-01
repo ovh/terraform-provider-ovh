@@ -7,6 +7,8 @@ import (
 	ovhtypes "github.com/ovh/terraform-provider-ovh/ovh/types"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 )
 
 func IploadbalancingUdpFarmResourceSchema(ctx context.Context) schema.Schema {
@@ -14,7 +16,6 @@ func IploadbalancingUdpFarmResourceSchema(ctx context.Context) schema.Schema {
 		"display_name": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
 			Optional:            true,
-			Computed:            true,
 			Description:         "Human readable name for your backend, this field is for you",
 			MarkdownDescription: "Human readable name for your backend, this field is for you",
 		},
@@ -31,21 +32,26 @@ func IploadbalancingUdpFarmResourceSchema(ctx context.Context) schema.Schema {
 			MarkdownDescription: "Port attached to your farm ([1..49151]). Inherited from frontend if null",
 		},
 		"service_name": schema.StringAttribute{
-			CustomType:          ovhtypes.TfStringType{},
-			Required:            true,
+			CustomType: ovhtypes.TfStringType{},
+			Required:   true,
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.RequiresReplace(),
+			},
 			Description:         "The internal name of your IP load balancing",
 			MarkdownDescription: "The internal name of your IP load balancing",
 		},
 		"vrack_network_id": schema.Int64Attribute{
 			CustomType:          ovhtypes.TfInt64Type{},
 			Optional:            true,
-			Computed:            true,
 			Description:         "Internal Load Balancer identifier of the vRack private network to attach to your farm, mandatory when your Load Balancer is attached to a vRack",
 			MarkdownDescription: "Internal Load Balancer identifier of the vRack private network to attach to your farm, mandatory when your Load Balancer is attached to a vRack",
 		},
 		"zone": schema.StringAttribute{
-			CustomType:          ovhtypes.TfStringType{},
-			Required:            true,
+			CustomType: ovhtypes.TfStringType{},
+			Required:   true,
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.RequiresReplace(),
+			},
 			Description:         "Zone of your farm",
 			MarkdownDescription: "Zone of your farm",
 		},
