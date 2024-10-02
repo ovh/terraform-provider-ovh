@@ -212,6 +212,7 @@ func Provider() *schema.Provider {
 			"ovh_cloud_project_kube_iprestrictions":                          resourceCloudProjectKubeIpRestrictions(),
 			"ovh_cloud_project_network_private":                              resourceCloudProjectNetworkPrivate(),
 			"ovh_cloud_project_network_private_subnet":                       resourceCloudProjectNetworkPrivateSubnet(),
+			"ovh_cloud_project_network_private_subnet_v2":                    resourceCloudProjectNetworkPrivateSubnetV2(),
 			"ovh_cloud_project_region_storage_presign":                       resourceCloudProjectRegionStoragePresign(),
 			"ovh_cloud_project_region_loadbalancer_log_subscription":         resourceCloudProjectRegionLoadbalancerLogSubscription(),
 			"ovh_cloud_project_user":                                         resourceCloudProjectUser(),

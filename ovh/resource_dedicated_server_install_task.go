@@ -174,11 +174,11 @@ func resourceDedicatedServerInstallTaskCreate(d *schema.ResourceData, meta inter
 		url.PathEscape(serviceName),
 	)
 	opts := (&DedicatedServerInstallTaskCreateOpts{}).FromResource(d)
-	task := &DedicatedServerTask{}
+	task := DedicatedServerTask{}
 
-	if err := config.OVHClient.Post(endpoint, opts, task); err != nil {
+	if err := config.OVHClient.Post(endpoint, opts, &task); err != nil {
 		// If task was not created because of an error, return it immediately.
-		if task != nil && task.Id == 0 {
+		if task.Id == 0 {
 			return fmt.Errorf("failed to create install task: %w", err)
 		}
 
@@ -187,7 +187,7 @@ func resourceDedicatedServerInstallTaskCreate(d *schema.ResourceData, meta inter
 		log.Printf("[WARN] Ignored error when calling POST %s: %v", endpoint, err)
 	}
 
-	if err := waitForDedicatedServerTask(serviceName, task, config.OVHClient); err != nil {
+	if err := waitForDedicatedServerTask(serviceName, &task, config.OVHClient); err != nil {
 		return err
 	}
 

@@ -400,6 +400,37 @@ func StringsFromSchema(d *schema.ResourceData, id string) ([]string, error) {
 	return xs, nil
 }
 
+func StringMapFromSchema(d *schema.ResourceData, id string, keys ...string) ([]map[string]string, error) {
+	xs := []map[string]string{}
+	if v := d.Get(id); v != nil {
+		vv, ok := v.([]interface{})
+		if ok {
+			for _, vvv := range vv {
+				if mapValue, ok := vvv.(map[string]interface{}); ok {
+					mapStringValue := map[string]string{}
+					for _, key := range keys {
+						vvvv, ok := mapValue[key]
+						if !ok {
+							return nil, fmt.Errorf("invalid value in field %s: %v: expected key: %s", id, vvv, key)
+						}
+						value, ok := vvvv.(string)
+						if !ok {
+							return nil, fmt.Errorf("invalid value in field %s with key %s: expected string: %s", id, key, vvvv)
+						}
+						mapStringValue[key] = value
+					}
+					xs = append(xs, mapStringValue)
+				} else {
+					return nil, fmt.Errorf("invalid value in field %s: %v: expected a map", id, vvv)
+				}
+			}
+		} else {
+			return nil, fmt.Errorf("attribute %v is not a list or set", id)
+		}
+	}
+	return xs, nil
+}
+
 // WaitAvailable wait for a ressource to become available in the API (aka non 404)
 func WaitAvailable(client *ovh.Client, endpoint string, timeout time.Duration) error {
 	return resource.Retry(timeout, func() *resource.RetryError {
