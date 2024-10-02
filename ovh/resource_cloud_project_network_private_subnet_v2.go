@@ -92,7 +92,7 @@ func resourceCloudProjectNetworkPrivateSubnetV2() *schema.Resource {
 			},
 			"enable_gateway_ip": {
 				Type:        schema.TypeBool,
-				Required:    true,
+				Optional:    true,
 				ForceNew:    true,
 				Default:     true,
 				Description: "Enable gateway IP in subnet",
