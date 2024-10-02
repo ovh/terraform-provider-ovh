@@ -96,6 +96,50 @@ func (p *CloudProjectNetworkPrivatesCreateOpts) String() string {
 		p.ServiceName, p.NetworkId, p.Dhcp, p.NoGateway, p.Network, p.Start, p.End, p.Region)
 }
 
+type CloudProjectNetworkPrivateV2CreateOpts struct {
+	Name            string           `json:"name"`
+	Cidr            string           `json:"cidr"`
+	IpVersion       int              `json:"ipVersion"`
+	AllocationPools []AllocationPool `json:"allocationPools"`
+	DnsNameServers  []string         `json:"dnsNameServers"`
+	HostRoutes      []HostRoute      `json:"hostRoutes"`
+	EnableDHCP      bool             `json:"enableDhcp"`
+	GatewayIp       string           `json:"gatewayIp,omitempty"`
+	EnableGatewayIP bool             `json:"enableGatewayIp"`
+}
+
+func (p *CloudProjectNetworkPrivateV2CreateOpts) String() string {
+	return fmt.Sprintf("PCPNSCreateOpts[name: %s, cidr:%s, ipVersion: %d, allocationPools: %+v, dnsNameServers: %s, hostRoutes: %+v, enableDHCP: %t, gatewayIP: %v, enableGatewayIP: %t]",
+		p.Name, p.Cidr, p.IpVersion, p.AllocationPools, p.DnsNameServers, p.HostRoutes, p.EnableDHCP, p.GatewayIp, p.EnableGatewayIP)
+}
+
+type HostRoute struct {
+	Destination string `json:"destination"`
+	Nexthop     string `json:"nextHop"`
+}
+
+type AllocationPool struct {
+	Start string `json:"start"`
+	End   string `json:"end"`
+}
+
+type CloudProjectNetworkPrivateV2Response struct {
+	Id              string           `json:"id"`
+	Name            string           `json:"name"`
+	Cidr            string           `json:"cidr"`
+	IPVersion       int              `json:"ipVersion"`
+	DHCPEnabled     bool             `json:"dhcpEnabled"`
+	GatewayIp       *string          `json:"gatewayIp" description:"Gateway IP, null means no gateway"`
+	AllocationPools []AllocationPool `json:"allocationPools"`
+	HostRoutes      []HostRoute      `json:"hostRoutes"`
+	DnsNameservers  []string         `json:"dnsNameServers"`
+}
+
+func (p *CloudProjectNetworkPrivateV2Response) String() string {
+	return fmt.Sprintf("PCPNSResponse[Id: %s, Name: %s, Cidr: %s, IPVersion: %d, DHCPEnabled: %t, GatewayIp: %v, AllocationPools: %v, HostRoutes: %v, DnsNameservers: %s]",
+		p.Id, p.Name, p.Cidr, p.IPVersion, p.DHCPEnabled, p.GatewayIp, p.AllocationPools, p.HostRoutes, p.DnsNameservers)
+}
+
 type CloudProjectNetworkPrivatesResponse struct {
 	Id        string    `json:"id"`
 	GatewayIp string    `json:"gatewayIp"`
