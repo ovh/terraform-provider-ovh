@@ -18,7 +18,6 @@ data "ovh_cloud_project_volume" "volume" {
 
 ## Argument Reference
 
-
 * `service_name` - (Required) The id of the public cloud project.
 * `region_name` - (Required) A valid OVHcloud public cloud region name in which the volume is available. Ex.: "GRA11".
 * `volume_id` - (Required) Volume id to get the informations
