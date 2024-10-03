@@ -207,12 +207,12 @@ The following arguments are supported:
       * `tcp_timeout` - (Optional) Timeout value used for idle IPVS TCP sessions in [RFC3339](https://www.rfc-editor.org/rfc/rfc3339) duration (e.g. `PT60S`). The default value is `PT0S`, which preserves the current timeout value on the system.
       * `tcp_fin_timeout` - (Optional) Timeout value used for IPVS TCP sessions after receiving a FIN in RFC3339 duration (e.g. `PT60S`). The default value is `PT0S`, which preserves the current timeout value on the system.
       * `udp_timeout` - (Optional) timeout value used for IPVS UDP packets in [RFC3339](https://www.rfc-editor.org/rfc/rfc3339) duration (e.g. `PT60S`). The default value is `PT0S`, which preserves the current timeout value on the system.
-* `private_network_id` - (Optional) OpenStack private network ID to use. **Changing this value recreates the resource, including ETCD user data.** Defaults - not use private network.
+* `private_network_id` - (Optional) Private network ID to use. **Changing this value recreates the resource, including ETCD user data.** Defaults - not use private network.
 
 ~> __WARNING__ Updating the private network ID resets the cluster so that all user data is deleted.
 
-* `nodes_subnet_id` - (Optional) Openstack private network ID to use for nodes. Default uses the first subnet belonging to the private network with id `private_network_id`. This attribute requires `private_network_id` to be defined. **Cannot be updated, it can only be used at cluster creation or reset.**
-* `load_balancers_subnet_id` - (Optional) Openstack subnet ID to use for load balancers. Default uses the same subnet as the nodes (see `nodes_subnet_id`). This attribute requires `private_network_id` to be defined.
+* `nodes_subnet_id` - (Optional) Subnet ID to use for nodes. Default uses the first subnet belonging to the private network with id `private_network_id`. This attribute requires `private_network_id` to be defined. **Cannot be updated, it can only be used at cluster creation or reset.**
+* `load_balancers_subnet_id` - (Optional) Subnet ID to use for load balancers. Default uses the same subnet as the nodes (see `nodes_subnet_id`). This attribute requires `private_network_id` to be defined.
 
 * `private_network_configuration` - (Optional) The private network configuration. If this is set then the 2 parameters below shall be defined.
   * `default_vrack_gateway` - If defined, all egress traffic will be routed towards this IP address, which should belong to the private network. Empty string means disabled.
