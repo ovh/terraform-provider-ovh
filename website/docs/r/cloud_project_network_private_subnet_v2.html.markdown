@@ -43,7 +43,7 @@ The following arguments are supported:
 * `region` - (Required) The region in which the network subnet will be created.
    Ex.: "GRA1". Changing this value recreates the resource.
 
-* `enable_gateway_ip` - (Required) Set to true if you want to set a default gateway IP.
+* `enable_gateway_ip` - Set to true if you want to set a default gateway IP.
    Changing this value recreates the resource. Defaults to true.
 
 * `dns_nameservers` - DNS nameservers used by DHCP
