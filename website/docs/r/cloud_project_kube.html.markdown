@@ -211,7 +211,7 @@ The following arguments are supported:
 
 ~> __WARNING__ Updating the private network ID resets the cluster so that all user data is deleted.
 
-* `nodes_subnet_id` - (Optional) Subnet ID to use for nodes. Default uses the first subnet belonging to the private network with id `private_network_id`. This attribute requires `private_network_id` to be defined. **Cannot be updated, it can only be used at cluster creation or reset.**
+* `nodes_subnet_id` - (Optional) Subnet ID to use for nodes, this subnet must belong to `private_network_id`. Default uses the first subnet belonging to the private network with id `private_network_id`. This attribute requires `private_network_id` to be defined. **Cannot be updated, it can only be used at cluster creation or reset.**
 * `load_balancers_subnet_id` - (Optional) Subnet ID to use for load balancers. Default uses the same subnet as the nodes (see `nodes_subnet_id`). This attribute requires `private_network_id` to be defined.
 
 * `private_network_configuration` - (Optional) The private network configuration. If this is set then the 2 parameters below shall be defined.
