@@ -212,7 +212,7 @@ The following arguments are supported:
 ~> __WARNING__ Updating the private network ID resets the cluster so that all user data is deleted.
 
 * `nodes_subnet_id` - (Optional) Subnet ID to use for nodes, this subnet must belong to `private_network_id`. Default uses the first subnet belonging to the private network with id `private_network_id`. This attribute requires `private_network_id` to be defined. **Cannot be updated, it can only be used at cluster creation or reset.**
-* `load_balancers_subnet_id` - (Optional) Subnet ID to use for load balancers. Default uses the same subnet as the nodes (see `nodes_subnet_id`). This attribute requires `private_network_id` to be defined.
+* `load_balancers_subnet_id` - (Optional) Subnet ID to use for Public Load Balancers, this subnet must belong to  `private_network_id`. Default uses the same subnet as the nodes (see `nodes_subnet_id`).This attribute requires `private_network_id` to be defined. Take care to network requirements, please refer to our [documentation](https://help.ovhcloud.com/csm/fr-public-cloud-kubernetes-expose-applications-using-load-balancer?id=kb_article_view&sysparm_article=KB0062873) for more information.
 
 * `private_network_configuration` - (Optional) The private network configuration. If this is set then the 2 parameters below shall be defined.
   * `default_vrack_gateway` - If defined, all egress traffic will be routed towards this IP address, which should belong to the private network. Empty string means disabled.
