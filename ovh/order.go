@@ -558,6 +558,35 @@ func serviceNameFromOrder(c *ovh.Client, orderId int64, plan string) (string, er
 		return "", fmt.Errorf("calling get %s:\n\t %q", endpoint, err)
 	}
 
+	switch c.Endpoint() {
+	case ovh.Endpoints["ovh-us"]:
+		return serviceNameFromOrderDetailsOperations(c, orderId, detailIds)
+	default:
+		return serviceNameFromOrderDetailsExtension(c, plan, orderId, detailIds)
+	}
+}
+
+// serviceNameFromOrderDetailsOperations retrieves the service name from an order ID using
+// the route `/me/order/{orderId}/details/{detailId}/operations`.
+// It is used in the US where route `/me/order/{orderId}/details/{detailId}/extension` does not exist.
+func serviceNameFromOrderDetailsOperations(c *ovh.Client, orderId int64, detailIds []int64) (string, error) {
+	for _, detailId := range detailIds {
+		operations, err := orderDetailOperations(c, orderId, detailId)
+		if err != nil {
+			return "", fmt.Errorf("could not read order details operations: %q", err)
+		}
+		for _, operation := range operations {
+			return operation.Resource.Name, nil
+		}
+	}
+
+	return "", errors.New("serviceName not found")
+}
+
+// serviceNameFromOrderDetailsExtension retrieves the service name from an order ID using
+// the route `/me/order/{orderId}/details/{detailId}/extension`.
+// It is used everywhere except in the US region.
+func serviceNameFromOrderDetailsExtension(c *ovh.Client, plan string, orderId int64, detailIds []int64) (string, error) {
 	for _, detailId := range detailIds {
 		detailExtension := &MeOrderDetailExtension{}
 		log.Printf("[DEBUG] Will read order detail extension %d/%d", orderId, detailId)

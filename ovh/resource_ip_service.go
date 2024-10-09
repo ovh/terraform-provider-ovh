@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"strconv"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -91,21 +92,30 @@ func resourceIpServiceSchema() map[string]*schema.Schema {
 
 func resourceIpServiceCreate(d *schema.ResourceData, meta interface{}) error {
 	if err := orderCreateFromResource(d, meta, "ip", true); err != nil {
-		return fmt.Errorf("Could not order ip: %q", err)
+		return fmt.Errorf("could not order ip: %q", err)
 	}
+
+	config := meta.(*Config)
+
+	orderIdInt, err := strconv.Atoi(d.Id())
+	if err != nil {
+		return fmt.Errorf("failed to convert orderID to int: %w", err)
+	}
+
+	serviceName, err := serviceNameFromOrder(config.OVHClient, int64(orderIdInt), d.Get("plan.0.plan_code").(string))
+	if err != nil {
+		return fmt.Errorf("failed to get service name from order ID: %w", err)
+	}
+
+	d.Set("service_name", serviceName)
 
 	return resourceIpServiceUpdate(d, meta)
 }
 
 func resourceIpServiceUpdate(d *schema.ResourceData, meta interface{}) error {
-	_, details, err := orderReadInResource(d, meta)
-	if err != nil {
-		return fmt.Errorf("Could not read ip order: %q", err)
-	}
-
-	serviceName := details[0].Domain
-
 	config := meta.(*Config)
+
+	serviceName := d.Get("service_name").(string)
 
 	log.Printf("[DEBUG] Will update ip: %s", serviceName)
 	opts := (&IpServiceUpdateOpts{}).FromResource(d)
@@ -120,12 +130,7 @@ func resourceIpServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceIpServiceRead(d *schema.ResourceData, meta interface{}) error {
-	_, details, err := orderReadInResource(d, meta)
-	if err != nil {
-		return fmt.Errorf("Could not read ip order: %q", err)
-	}
-
-	serviceName := details[0].Domain
+	serviceName := d.Get("service_name").(string)
 
 	config := meta.(*Config)
 	log.Printf("[DEBUG] Will read ip: %s", serviceName)
@@ -138,7 +143,7 @@ func resourceIpServiceRead(d *schema.ResourceData, meta interface{}) error {
 	// This retry logic is there to handle a known API bug
 	// which happens while an ipblock is attached/detached from
 	// a Vrack
-	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		if err := config.OVHClient.Get(endpoint, &r); err != nil {
 			if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 400 {
 				log.Printf("[DEBUG] known API bug when attaching/detaching vrack")
@@ -161,7 +166,6 @@ func resourceIpServiceRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	d.Set("service_name", serviceName)
 	// set resource attributes
 	for k, v := range r.ToMap() {
 		d.Set(k, v)
@@ -171,14 +175,9 @@ func resourceIpServiceRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceIpServiceDelete(d *schema.ResourceData, meta interface{}) error {
-	_, details, err := orderReadInResource(d, meta)
-	if err != nil {
-		return fmt.Errorf("Could not read ip order: %q", err)
-	}
-
 	config := meta.(*Config)
 	id := d.Id()
-	serviceName := details[0].Domain
+	serviceName := d.Get("service_name").(string)
 
 	terminate := func() (string, error) {
 		log.Printf("[DEBUG] Will terminate ip %s for order %s", serviceName, id)
