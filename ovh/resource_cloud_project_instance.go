@@ -93,6 +93,7 @@ func resourceCloudProjectInstance() *schema.Resource {
 				Type:        schema.TypeSet,
 				Required:    true,
 				Description: "Flavor information",
+				ForceNew:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"flavor_id": {

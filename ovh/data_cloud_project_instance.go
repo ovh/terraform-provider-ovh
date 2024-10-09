@@ -135,6 +135,7 @@ func dataSourceCloudProjectInstanceRead(d *schema.ResourceData, meta interface{}
 		attachedVolume["id"] = res.AttachedVolumes[i].Id
 		attachedVolumes = append(attachedVolumes, attachedVolume)
 	}
+
 	d.Set("addresses", addresses)
 	d.Set("flavor_id", res.FlavorId)
 	d.Set("flavor_name", res.FlavorName)

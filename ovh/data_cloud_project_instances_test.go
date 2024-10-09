@@ -38,7 +38,23 @@ func TestAccDataSourceCloudProjecInstances_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(
 						"data.ovh_cloud_project_instances.instances",
-						"instances.#",
+						"instances.0.flavor_id",
+					),
+					resource.TestCheckResourceAttrSet(
+						"data.ovh_cloud_project_instances.instances",
+						"instances.0.flavor_name",
+					),
+					resource.TestCheckResourceAttrSet(
+						"data.ovh_cloud_project_instances.instances",
+						"instances.0.id",
+					),
+					resource.TestCheckResourceAttrSet(
+						"data.ovh_cloud_project_instances.instances",
+						"instances.0.image_id",
+					),
+					resource.TestCheckResourceAttrSet(
+						"data.ovh_cloud_project_instances.instances",
+						"instances.0.ssh_key",
 					),
 				),
 			},

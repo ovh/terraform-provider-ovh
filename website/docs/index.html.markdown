@@ -252,7 +252,7 @@ variables must also be set:
 
 * `OVH_CLOUD_PROJECT_INSTANCE_ID_TEST` - The ID of the instance to test
 
-* `OVH_CLOUD_PROJECT_INSTANCE_NAME_TEST` - The ID of the instance to test
+* `OVH_CLOUD_PROJECT_INSTANCE_NAME_TEST` - The Name of the instance to test
 
 * `OVH_CLOUD_PROJECT_KUBE_REGION_TEST` - The region of your public cloud kubernetes project.
 
