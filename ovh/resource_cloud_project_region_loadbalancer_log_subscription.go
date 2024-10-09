@@ -104,7 +104,7 @@ func resourceCloudProjectRegionLoadbalancerSubscriptionsCreate(ctx context.Conte
 	params := (&CloudProjectRegionLoadbalancerLogSubscriptionResourceCreateOpts{}).fromResource(d)
 	res := &CreateCloudProjectRegionLoadbalancerLogSubscriptionResponse{}
 
-	log.Printf("[DEBUG] Will create Log subscrition : %+v for loadbalancer %s on region %s from project %s", params, loadbalancerID, regionName, serviceName)
+	log.Printf("[DEBUG] Will create Log subscription : %+v for loadbalancer %s on region %s from project %s", params, loadbalancerID, regionName, serviceName)
 	err := config.OVHClient.Post(endpoint, params, res)
 	if err != nil {
 		diag.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
@@ -113,7 +113,7 @@ func resourceCloudProjectRegionLoadbalancerSubscriptionsCreate(ctx context.Conte
 	log.Printf("[DEBUG] Waiting for Log subscription operation %s to be READY", res.OperationID)
 	op, err := waitForDbaasLogsOperation(ctx, config.OVHClient, res.ServiceName, res.OperationID)
 	if err != nil {
-		return diag.Errorf("timeout while waiting log subscrition operation %s to be READY: %q", res.ServiceName, err)
+		return diag.Errorf("timeout while waiting log subscription operation %s to be READY: %q", res.ServiceName, err)
 	}
 
 	d.SetId(*op.SubscriptionID)
@@ -137,7 +137,7 @@ func resourceCloudProjectRegionLoadbalancerSubscriptionsRead(ctx context.Context
 	)
 	res := &GetCloudProjectRegionLoadbalancerLogSubscriptionResponse{}
 
-	log.Printf("[DEBUG] Will read log subscrition %s from loadbalancer %s on region %s from project %s", id, loadbalancerID, regionName, serviceName)
+	log.Printf("[DEBUG] Will read log subscription %s from loadbalancer %s on region %s from project %s", id, loadbalancerID, regionName, serviceName)
 	if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
@@ -149,7 +149,7 @@ func resourceCloudProjectRegionLoadbalancerSubscriptionsRead(ctx context.Context
 		d.Set(k, fmt.Sprint(v))
 	}
 
-	log.Printf("[DEBUG] Read log subscrition %+v", res)
+	log.Printf("[DEBUG] Read log subscription %+v", res)
 	return nil
 }
 
@@ -169,7 +169,7 @@ func resourceCloudProjectRegionLoadbalancerSubscriptionsDelete(ctx context.Conte
 
 	res := &GetCloudProjectRegionLoadbalancerLogSubscriptionDeletionResponse{}
 
-	log.Printf("[DEBUG] Will delete Log subscrition for loadbalancer %s on region %s from project %s", loadbalancerID, regionName, serviceName)
+	log.Printf("[DEBUG] Will delete Log subscription for loadbalancer %s on region %s from project %s", loadbalancerID, regionName, serviceName)
 	err := config.OVHClient.DeleteWithContext(ctx, endpoint, res)
 	if err != nil {
 		diag.Errorf("calling DELETE %s:\n\t %q", endpoint, err)
@@ -177,7 +177,7 @@ func resourceCloudProjectRegionLoadbalancerSubscriptionsDelete(ctx context.Conte
 
 	op, err := waitForDbaasLogsOperation(ctx, config.OVHClient, res.ServiceName, res.OperationId)
 	if err != nil {
-		return diag.Errorf("timeout while waiting log subscrition operation %v to be READY: %s", op, err)
+		return diag.Errorf("timeout while waiting log subscription operation %v to be READY: %s", op, err)
 	}
 	log.Printf("[DEBUG] Log subsription %s is DELETED", id)
 

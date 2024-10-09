@@ -58,7 +58,7 @@ func dataSourceCloudProjectDatabaseLogSubscriptionsRead(ctx context.Context, d *
 
 	res := make([]string, 0)
 
-	log.Printf("[DEBUG] Will read log subscritions from cluster %s from project %s", clusterID, serviceName)
+	log.Printf("[DEBUG] Will read log subscriptions from cluster %s from project %s", clusterID, serviceName)
 	if err := config.OVHClient.GetWithContext(ctx, endpoint, &res); err != nil {
 		return diag.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
 	}
