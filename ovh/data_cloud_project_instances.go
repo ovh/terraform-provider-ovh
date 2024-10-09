@@ -19,7 +19,7 @@ func dataSourceCloudProjectInstances() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
-				Description: "Service name of the resource representing the id of the cloud project.",
+				Description: "Service name of the resource representing the id of the cloud project",
 			},
 			"region": {
 				Type:        schema.TypeString,
@@ -55,12 +55,12 @@ func dataSourceCloudProjectInstances() *schema.Resource {
 						"attached_volumes": {
 							Type:        schema.TypeList,
 							Computed:    true,
-							Description: " Volumes attached to the instance",
+							Description: "Volumes attached to the instance",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"id": {
 										Type:        schema.TypeString,
-										Description: "Volume Id",
+										Description: "Volume id",
 										Computed:    true,
 									},
 								},
@@ -78,7 +78,7 @@ func dataSourceCloudProjectInstances() *schema.Resource {
 						},
 						"name": {
 							Type:        schema.TypeString,
-							Description: "Flavor name",
+							Description: "Instance name",
 							Computed:    true,
 						},
 						"id": {
@@ -93,7 +93,7 @@ func dataSourceCloudProjectInstances() *schema.Resource {
 						},
 						"ssh_key": {
 							Type:        schema.TypeString,
-							Description: "Instance task state",
+							Description: "SSH Key pair name",
 							Computed:    true,
 						},
 						"task_state": {
@@ -124,10 +124,10 @@ func dataSourceCloudProjectInstancesRead(d *schema.ResourceData, meta interface{
 		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
-	instances := make([]map[string]interface{}, len(res))
-	ids := make([]string, len(res))
-	for i, instance := range res {
-		instances[i] = instance.ToMap()
+	instances := make([]map[string]interface{}, 0, len(res))
+	ids := make([]string, 0, len(res))
+	for _, instance := range res {
+		instances = append(instances, instance.ToMap())
 		ids = append(ids, instance.Id)
 	}
 	sort.Strings(ids)

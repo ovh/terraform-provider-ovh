@@ -22,10 +22,10 @@ data "ovh_cloud_project_instance" "instance" {
 
 The following arguments are supported:
 
-* `service_name` - (Required, Forces new resource) The id of the public cloud project. If omitted,
-  the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
-* `region` - (Required, Forces new resource) Instance region.
-* `instance_id` - (Required, Forces new resource) Instance id
+* `service_name` - (Required) The id of the public cloud project. If omitted,
+  the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used
+* `region` - (Required) Instance region
+* `instance_id` - (Required) Instance id
 
 ## Attributes Reference
 
@@ -35,10 +35,11 @@ The following attributes are exported:
   * `ip` - IP address
   * `version` - IP version
 * `attached_volumes` - Volumes attached to the instance
-  * `id` - Volume Id
+  * `id` - Volume id
 * `flavor_id` - Flavor id
 * `flavor_name` - Flavor name
 * `id` - Instance id
+* `name` - Instance name
 * `image_id` - Image id
 * `task_state` - Instance task state
 * `ssh_key` - SSH Keypair

@@ -576,6 +576,7 @@ workflow:
     one_at_a_time: true
     parameters:
       testargs: -run CloudProjectInstance
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudproject}}"
     pipeline: terraform-provider-ovh-testacc
     when:
     - success

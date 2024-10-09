@@ -1,8 +1,6 @@
 package ovh
 
 import (
-	"log"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
@@ -84,7 +82,7 @@ func (v CloudProjectInstanceResponse) ToMap() map[string]interface{} {
 	obj["ssh_key"] = v.SshKey
 	obj["task_state"] = v.TaskState
 
-	addresses := make([]map[string]interface{}, 0)
+	addresses := make([]map[string]interface{}, 0, len(v.Addresses))
 	for i := range v.Addresses {
 		address := make(map[string]interface{})
 		address["ip"] = v.Addresses[i].Ip
@@ -93,7 +91,7 @@ func (v CloudProjectInstanceResponse) ToMap() map[string]interface{} {
 	}
 	obj["addresses"] = addresses
 
-	attachedVolumes := make([]map[string]interface{}, 0)
+	attachedVolumes := make([]map[string]interface{}, 0, len(v.AttachedVolumes))
 	for i := range v.AttachedVolumes {
 		attachedVolume := make(map[string]interface{})
 		attachedVolume["id"] = v.AttachedVolumes[i].Id
@@ -102,40 +100,6 @@ func (v CloudProjectInstanceResponse) ToMap() map[string]interface{} {
 
 	obj["attached_volumes"] = attachedVolumes
 
-	return obj
-}
-
-type CloudProjectOperation struct {
-	Id            string         `json:"id"`
-	Status        string         `json:"status"`
-	SubOperations []SubOperation `json:"subOperations"`
-}
-
-type SubOperation struct {
-	Id         string `json:"id"`
-	ResourceId string `json:"resourceId"`
-	Status     string `json:"status"`
-}
-
-func (sb SubOperation) ToMap() map[string]interface{} {
-	obj := make(map[string]interface{})
-	obj["id"] = sb.Id
-	obj["resourceId"] = sb.ResourceId
-	obj["status"] = sb.Status
-
-	log.Printf("[DEBUG] tata suboperation %+v:", obj)
-	return obj
-}
-
-func (o CloudProjectOperation) ToMap() map[string]interface{} {
-	obj := make(map[string]interface{})
-	obj["id"] = o.Id
-	obj["status"] = o.Status
-	subOperations := make([]map[string]interface{}, len(o.SubOperations))
-	for _, subOperation := range o.SubOperations {
-		subOperations = append(subOperations, subOperation.ToMap())
-	}
-	obj["subOperations"] = subOperations
 	return obj
 }
 
@@ -157,7 +121,7 @@ type CloudProjectInstanceResponseList struct {
 	Name string `json:"name"`
 }
 
-func GetFlaorId(i interface{}) *Flavor {
+func GetFlavorId(i interface{}) *Flavor {
 	if i == nil {
 		return nil
 	}
@@ -267,7 +231,7 @@ func GetNetwork(i interface{}) *Network {
 }
 
 func (cpir *CloudProjectInstanceCreateOpts) FromResource(d *schema.ResourceData) {
-	cpir.Flavor = GetFlaorId(d.Get("flavor"))
+	cpir.Flavor = GetFlavorId(d.Get("flavor"))
 	cpir.AutoBackup = GetAutoBackup(d.Get("auto_backup"))
 	cpir.BootFrom = GetBootFrom(d.Get("boot_from"))
 	cpir.Group = GetGroup(d.Get("group"))

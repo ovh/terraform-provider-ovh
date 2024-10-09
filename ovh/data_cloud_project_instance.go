@@ -17,7 +17,7 @@ func dataSourceCloudProjectInstance() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
-				Description: "Service name of the resource representing the id of the cloud project.",
+				Description: "Service name of the resource representing the id of the cloud project",
 			},
 			"region": {
 				Type:        schema.TypeString,
@@ -57,7 +57,7 @@ func dataSourceCloudProjectInstance() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"id": {
 							Type:        schema.TypeString,
-							Description: "Volume Id",
+							Description: "Volume id",
 							Computed:    true,
 						},
 					},
@@ -75,12 +75,7 @@ func dataSourceCloudProjectInstance() *schema.Resource {
 			},
 			"name": {
 				Type:        schema.TypeString,
-				Description: "Flavor name",
-				Computed:    true,
-			},
-			"id": {
-				Type:        schema.TypeString,
-				Description: "Instance id",
+				Description: "Instance name",
 				Computed:    true,
 			},
 			"image_id": {
@@ -90,7 +85,7 @@ func dataSourceCloudProjectInstance() *schema.Resource {
 			},
 			"ssh_key": {
 				Type:        schema.TypeString,
-				Description: "Instance task state",
+				Description: "SSH Key pair name",
 				Computed:    true,
 			},
 			"task_state": {
@@ -119,20 +114,19 @@ func dataSourceCloudProjectInstanceRead(d *schema.ResourceData, meta interface{}
 	if err := config.OVHClient.Get(endpoint, &res); err != nil {
 		return helpers.CheckDeleted(d, err, endpoint)
 	}
-	log.Printf("[DEBUG] Read instance: %+v", res)
 
-	addresses := make([]map[string]interface{}, 0)
-	for i := range res.Addresses {
+	addresses := make([]map[string]interface{}, 0, len(res.Addresses))
+	for _, addr := range res.Addresses {
 		address := make(map[string]interface{})
-		address["ip"] = res.Addresses[i].Ip
-		address["version"] = res.Addresses[i].Version
+		address["ip"] = addr.Ip
+		address["version"] = addr.Version
 		addresses = append(addresses, address)
 	}
 
-	attachedVolumes := make([]map[string]interface{}, 0)
-	for i := range res.AttachedVolumes {
+	attachedVolumes := make([]map[string]interface{}, 0, len(res.AttachedVolumes))
+	for _, volume := range res.AttachedVolumes {
 		attachedVolume := make(map[string]interface{})
-		attachedVolume["id"] = res.AttachedVolumes[i].Id
+		attachedVolume["id"] = volume.Id
 		attachedVolumes = append(attachedVolumes, attachedVolume)
 	}
 
@@ -145,6 +139,7 @@ func dataSourceCloudProjectInstanceRead(d *schema.ResourceData, meta interface{}
 	d.Set("name", res.Name)
 	d.Set("ssh_key", res.SshKey)
 	d.Set("task_state", res.TaskState)
+	d.Set("attached_volumes", attachedVolumes)
 
 	return nil
 }
