@@ -4,7 +4,7 @@ subcategory : "Managed Databases"
 
 # ovh_cloud_project_database_log_subscription
 
-Creates a log subscrition for a cluster associated with a public cloud project.
+Creates a log subscription for a cluster associated with a public cloud project.
 
 ## Example Usage
 

@@ -130,7 +130,7 @@ func resourceCloudProjectDatabaseLogSubscriptionCreate(ctx context.Context, d *s
 	params := (&CloudProjectDatabaseLogSubscriptionCreateOpts{}).fromResource(d)
 	res := &CloudProjectDatabaseLogSubscriptionResponse{}
 
-	log.Printf("[DEBUG] Will create Log subscrition : %+v for cluster %s from project %s", params, clusterID, serviceName)
+	log.Printf("[DEBUG] Will create Log subscription : %+v for cluster %s from project %s", params, clusterID, serviceName)
 	err := config.OVHClient.PostWithContext(ctx, endpoint, params, res)
 	if err != nil {
 		diag.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
@@ -139,9 +139,9 @@ func resourceCloudProjectDatabaseLogSubscriptionCreate(ctx context.Context, d *s
 	log.Printf("[DEBUG] Waiting for Log subscription operation %s to be READY", res.OperationID)
 	op, err := waitForDbaasLogsOperation(ctx, config.OVHClient, res.LDPServiceName, res.OperationID)
 	if err != nil {
-		return diag.Errorf("timeout while waiting log subscrition operation %s to be READY: %q", res.OperationID, err)
+		return diag.Errorf("timeout while waiting log subscription operation %s to be READY: %q", res.OperationID, err)
 	}
-	log.Printf("[DEBUG] Log subscrition operation %s is READY", res.OperationID)
+	log.Printf("[DEBUG] Log subscription operation %s is READY", res.OperationID)
 
 	d.SetId(*op.SubscriptionID)
 	d.Set("operation_id", res.OperationID)
@@ -164,7 +164,7 @@ func resourceCloudProjectDatabaseLogSubscriptionRead(ctx context.Context, d *sch
 	)
 	res := &CloudProjectDatabaseLogSubscriptionResponse{}
 
-	log.Printf("[DEBUG] Will read log subscrition %s from cluster %s from project %s", id, clusterID, serviceName)
+	log.Printf("[DEBUG] Will read log subscription %s from cluster %s from project %s", id, clusterID, serviceName)
 	if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
@@ -179,7 +179,7 @@ func resourceCloudProjectDatabaseLogSubscriptionRead(ctx context.Context, d *sch
 		}
 	}
 
-	log.Printf("[DEBUG] Read log subscrition %+v", res)
+	log.Printf("[DEBUG] Read log subscription %+v", res)
 	return nil
 }
 
@@ -199,7 +199,7 @@ func resourceCloudProjectDatabaseLogSubscriptionDelete(ctx context.Context, d *s
 
 	res := &CloudProjectDatabaseLogSubscriptionResponse{}
 
-	log.Printf("[DEBUG] Will delete Log subscrition %s from cluster %s from project %s", id, clusterID, serviceName)
+	log.Printf("[DEBUG] Will delete Log subscription %s from cluster %s from project %s", id, clusterID, serviceName)
 	err := config.OVHClient.DeleteWithContext(ctx, endpoint, res)
 	if err != nil {
 		diag.Errorf("calling DELETE %s:\n\t %q", endpoint, err)
