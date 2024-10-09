@@ -33,7 +33,7 @@ func dataSourceCloudProjectDatabaseLogSubscription() *schema.Resource {
 			},
 			"id": {
 				Type:        schema.TypeString,
-				Description: "Id of the subscrition",
+				Description: "Id of the subscription",
 				Required:    true,
 			},
 
@@ -93,7 +93,7 @@ func dataSourceCloudProjectDatabaseLogSubscriptionRead(ctx context.Context, d *s
 	)
 	res := &CloudProjectDatabaseLogSubscriptionResponse{}
 
-	log.Printf("[DEBUG] Will read log subscrition %s from cluster %s from project %s", id, clusterID, serviceName)
+	log.Printf("[DEBUG] Will read log subscription %s from cluster %s from project %s", id, clusterID, serviceName)
 	if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
@@ -108,6 +108,6 @@ func dataSourceCloudProjectDatabaseLogSubscriptionRead(ctx context.Context, d *s
 		}
 	}
 
-	log.Printf("[DEBUG] Read log subscrition %+v", res)
+	log.Printf("[DEBUG] Read log subscription %+v", res)
 	return nil
 }
