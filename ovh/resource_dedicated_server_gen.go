@@ -525,29 +525,6 @@ func (v *DedicatedServerModel) MergeWith(other *DedicatedServerModel) {
 		v.TemplateName = other.TemplateName
 	}
 
-	if (v.UserMetadata.IsUnknown() || v.UserMetadata.IsNull()) && !other.UserMetadata.IsUnknown() {
-		v.UserMetadata = other.UserMetadata
-	} else if !other.UserMetadata.IsUnknown() && !other.UserMetadata.IsNull() {
-		newSlice := make([]attr.Value, 0)
-		elems := v.UserMetadata.Elements()
-		newElems := other.UserMetadata.Elements()
-
-		if len(elems) != len(newElems) {
-			v.UserMetadata = other.UserMetadata
-		} else {
-			for idx, e := range elems {
-				tmp := e.(UserMetadataValue)
-				tmp2 := newElems[idx].(UserMetadataValue)
-				tmp.MergeWith(&tmp2)
-				newSlice = append(newSlice, tmp)
-			}
-
-			v.UserMetadata = ovhtypes.TfListNestedValue[UserMetadataValue]{
-				ListValue: basetypes.NewListValueMust(UserMetadataValue{}.Type(context.Background()), newSlice),
-			}
-		}
-	}
-
 	if (v.Order.IsUnknown() || v.Order.IsNull()) && !other.Order.IsUnknown() {
 		v.Order = other.Order
 	}
@@ -582,7 +559,6 @@ func (v *DedicatedServerModel) MergeWith(other *DedicatedServerModel) {
 			}
 		}
 	}
-
 }
 
 func (v *DedicatedServerModel) ToOrder() *OrderModel {
