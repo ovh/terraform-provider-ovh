@@ -405,7 +405,6 @@ type DedicatedServerModel struct {
 }
 
 func (v *DedicatedServerModel) MergeWith(other *DedicatedServerModel) {
-
 	if (v.AvailabilityZone.IsUnknown() || v.AvailabilityZone.IsNull()) && !other.AvailabilityZone.IsUnknown() {
 		v.AvailabilityZone = other.AvailabilityZone
 	}
@@ -528,7 +527,7 @@ func (v *DedicatedServerModel) MergeWith(other *DedicatedServerModel) {
 
 	if (v.UserMetadata.IsUnknown() || v.UserMetadata.IsNull()) && !other.UserMetadata.IsUnknown() {
 		v.UserMetadata = other.UserMetadata
-	} else if !other.UserMetadata.IsUnknown() {
+	} else if !other.UserMetadata.IsUnknown() && !other.UserMetadata.IsNull() {
 		newSlice := make([]attr.Value, 0)
 		elems := v.UserMetadata.Elements()
 		newElems := other.UserMetadata.Elements()
@@ -664,14 +663,14 @@ func (v DedicatedServerModel) ToReinstall() *DedicatedServerWritableModel {
 	}
 
 	if !v.UserMetadata.IsUnknown() {
-		var updateUserMetadata []UserMetadataWritableValue
+		var updateUserMetadata []*UserMetadataWritableValue
 		for _, elem := range v.UserMetadata.Elements() {
-			updateUserMetadata = append(updateUserMetadata, *elem.(UserMetadataValue).ToUpdate())
+			elemToUpdate := elem.(UserMetadataValue).ToUpdate()
+			updateUserMetadata = append(updateUserMetadata, elemToUpdate)
 		}
 
-		newUserMetadata, _ := basetypes.NewListValueFrom(context.Background(), UserMetadataWritableValue{
-			UserMetadataValue: &UserMetadataValue{},
-		}.Type(context.Background()), updateUserMetadata)
+		newUserMetadata, _ := basetypes.NewListValueFrom(context.Background(),
+			UserMetadataWritableValue{}.Type(context.Background()), updateUserMetadata)
 		res.UserMetadata = &ovhtypes.TfListNestedValue[UserMetadataWritableValue]{
 			ListValue: newUserMetadata,
 		}
@@ -1368,6 +1367,126 @@ func (t UserMetadataType) ValueFromObject(ctx context.Context, in basetypes.Obje
 	}, diags
 }
 
+type UserMetadataWritableType struct {
+	basetypes.ObjectType
+}
+
+func (t UserMetadataWritableType) Equal(o attr.Type) bool {
+	other, ok := o.(UserMetadataWritableType)
+
+	if !ok {
+		return false
+	}
+
+	return t.ObjectType.Equal(other.ObjectType)
+}
+
+func (t UserMetadataWritableType) String() string {
+	return "UserMetadataWritableType"
+}
+
+func (t UserMetadataWritableType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	attributes := in.Attributes()
+
+	keyAttribute, ok := attributes["key"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`key is missing from object`)
+
+		return nil, diags
+	}
+
+	keyVal, ok := keyAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`key expected to be ovhtypes.TfStringValue, was: %T`, keyAttribute))
+	}
+
+	valueAttribute, ok := attributes["value"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`value is missing from object`)
+
+		return nil, diags
+	}
+
+	valueVal, ok := valueAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`value expected to be ovhtypes.TfStringValue, was: %T`, valueAttribute))
+	}
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return UserMetadataWritableValue{
+		Key:   &keyVal,
+		Value: &valueVal,
+		state: attr.ValueStateKnown,
+	}, diags
+}
+
+func (t UserMetadataWritableType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+	if in.Type() == nil {
+		return UserMetadataWritableValue{
+			state: attr.ValueStateNull,
+		}, nil
+	}
+
+	if !in.Type().Equal(t.TerraformType(ctx)) {
+		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
+	}
+
+	if !in.IsKnown() {
+		return UserMetadataWritableValue{
+			state: attr.ValueStateUnknown,
+		}, nil
+	}
+
+	if in.IsNull() {
+		return UserMetadataWritableValue{
+			state: attr.ValueStateNull,
+		}, nil
+	}
+
+	attributes := map[string]attr.Value{}
+
+	val := map[string]tftypes.Value{}
+
+	err := in.As(&val)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range val {
+		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
+
+		if err != nil {
+			return nil, err
+		}
+
+		attributes[k] = a
+	}
+
+	return NewUserMetadataWritableValueMust(UserMetadataWritableValue{}.AttributeTypes(ctx), attributes), nil
+}
+
+func (t UserMetadataWritableType) ValueType(ctx context.Context) attr.Value {
+	return UserMetadataValue{}
+}
+
 func NewUserMetadataValueNull() UserMetadataValue {
 	return UserMetadataValue{
 		state: attr.ValueStateNull,
@@ -1499,6 +1618,133 @@ func NewUserMetadataValueMust(attributeTypes map[string]attr.Type, attributes ma
 	return object
 }
 
+func NewUserMetadataWritableValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (UserMetadataWritableValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
+	ctx := context.Background()
+
+	for name, attributeType := range attributeTypes {
+		attribute, ok := attributes[name]
+
+		if !ok {
+			diags.AddError(
+				"Missing UserMetadataWritableValue Attribute Value",
+				"While creating a UserMetadataWritableValue value, a missing attribute value was detected. "+
+					"A UserMetadataValue must contain values for all attributes, even if null or unknown. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("UserMetadataValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
+			)
+
+			continue
+		}
+
+		if !attributeType.Equal(attribute.Type(ctx)) {
+			diags.AddError(
+				"Invalid UserMetadataWritableValue Attribute Type",
+				"While creating a UserMetadataWritableValue value, an invalid attribute value was detected. "+
+					"A UserMetadataValue must use a matching attribute type for the value. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("UserMetadataValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
+					fmt.Sprintf("UserMetadataValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
+			)
+		}
+	}
+
+	for name := range attributes {
+		_, ok := attributeTypes[name]
+
+		if !ok {
+			diags.AddError(
+				"Extra UserMetadataWritableValue Attribute Value",
+				"While creating a UserMetadataWritableValue value, an extra attribute value was detected. "+
+					"A UserMetadataValue must not contain values beyond the expected attribute types. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("Extra UserMetadataValue Attribute Name: %s", name),
+			)
+		}
+	}
+
+	if diags.HasError() {
+		return UserMetadataWritableValue{
+			state: attr.ValueStateUnknown,
+		}, diags
+	}
+
+	keyAttribute, ok := attributes["key"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`key is missing from object`)
+
+		return UserMetadataWritableValue{
+			state: attr.ValueStateUnknown,
+		}, diags
+	}
+
+	keyVal, ok := keyAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`key expected to be ovhtypes.TfStringValue, was: %T`, keyAttribute))
+	}
+
+	valueAttribute, ok := attributes["value"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`value is missing from object`)
+
+		return UserMetadataWritableValue{
+			state: attr.ValueStateUnknown,
+		}, diags
+	}
+
+	valueVal, ok := valueAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`value expected to be ovhtypes.TfStringValue, was: %T`, valueAttribute))
+	}
+
+	if diags.HasError() {
+		return UserMetadataWritableValue{
+			state: attr.ValueStateUnknown,
+		}, diags
+	}
+
+	return UserMetadataWritableValue{
+		Key:   &keyVal,
+		Value: &valueVal,
+		state: attr.ValueStateKnown,
+	}, diags
+}
+
+func NewUserMetadataWritableValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) UserMetadataWritableValue {
+	object, diags := NewUserMetadataWritableValue(attributeTypes, attributes)
+
+	if diags.HasError() {
+		// This could potentially be added to the diag package.
+		diagsStrings := make([]string, 0, len(diags))
+
+		for _, diagnostic := range diags {
+			diagsStrings = append(diagsStrings, fmt.Sprintf(
+				"%s | %s | %s",
+				diagnostic.Severity(),
+				diagnostic.Summary(),
+				diagnostic.Detail()))
+		}
+
+		panic("NewUserMetadataWritableValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
+	}
+
+	return object
+}
+
 func (t UserMetadataType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
 	if in.Type() == nil {
 		return NewUserMetadataValueNull(), nil
@@ -1552,13 +1798,15 @@ type UserMetadataValue struct {
 }
 
 type UserMetadataWritableValue struct {
-	*UserMetadataValue `json:"-"`
-	Key                *ovhtypes.TfStringValue `json:"key,omitempty"`
-	Value              *ovhtypes.TfStringValue `json:"value,omitempty"`
+	Key   *ovhtypes.TfStringValue `json:"key,omitempty"`
+	Value *ovhtypes.TfStringValue `json:"value,omitempty"`
+	state attr.ValueState
 }
 
 func (v UserMetadataValue) ToCreate() *UserMetadataWritableValue {
-	res := &UserMetadataWritableValue{}
+	res := &UserMetadataWritableValue{
+		state: v.state,
+	}
 
 	if !v.Value.IsNull() {
 		res.Value = &v.Value
@@ -1572,7 +1820,9 @@ func (v UserMetadataValue) ToCreate() *UserMetadataWritableValue {
 }
 
 func (v UserMetadataValue) ToUpdate() *UserMetadataWritableValue {
-	res := &UserMetadataWritableValue{}
+	res := &UserMetadataWritableValue{
+		state: v.state,
+	}
 
 	if !v.Value.IsNull() {
 		res.Value = &v.Value
@@ -1621,6 +1871,7 @@ func (v UserMetadataValue) Attributes() map[string]attr.Value {
 		"value": v.Value,
 	}
 }
+
 func (v UserMetadataValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
 	attrTypes := make(map[string]tftypes.Type, 2)
 
@@ -1733,4 +1984,125 @@ func (v UserMetadataValue) AttributeTypes(ctx context.Context) map[string]attr.T
 		"key":   ovhtypes.TfStringType{},
 		"value": ovhtypes.TfStringType{},
 	}
+}
+
+func (v UserMetadataWritableValue) Type(ctx context.Context) attr.Type {
+	return UserMetadataWritableType{
+		basetypes.ObjectType{
+			AttrTypes: v.AttributeTypes(ctx),
+		},
+	}
+}
+
+func (v UserMetadataWritableValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
+	return map[string]attr.Type{
+		"key":   ovhtypes.TfStringType{},
+		"value": ovhtypes.TfStringType{},
+	}
+}
+
+func (v UserMetadataWritableValue) Attributes() map[string]attr.Value {
+	return map[string]attr.Value{
+		"key":   v.Key,
+		"value": v.Value,
+	}
+}
+
+func (v UserMetadataWritableValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
+	attrTypes := make(map[string]tftypes.Type, 2)
+
+	var val tftypes.Value
+	var err error
+
+	attrTypes["key"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["value"] = basetypes.StringType{}.TerraformType(ctx)
+
+	objectType := tftypes.Object{AttributeTypes: attrTypes}
+
+	switch v.state {
+	case attr.ValueStateKnown:
+		vals := make(map[string]tftypes.Value, 2)
+
+		val, err = v.Key.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["key"] = val
+
+		val, err = v.Value.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["value"] = val
+
+		if err := tftypes.ValidateValue(objectType, vals); err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		return tftypes.NewValue(objectType, vals), nil
+	case attr.ValueStateNull:
+		return tftypes.NewValue(objectType, nil), nil
+	case attr.ValueStateUnknown:
+		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
+	default:
+		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
+	}
+}
+
+func (v UserMetadataWritableValue) IsNull() bool {
+	return v.state == attr.ValueStateNull
+}
+
+func (v UserMetadataWritableValue) IsUnknown() bool {
+	return v.state == attr.ValueStateUnknown
+}
+
+func (v UserMetadataWritableValue) String() string {
+	return "UserMetadataWritableValue"
+}
+
+func (v UserMetadataWritableValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	objVal, diags := types.ObjectValue(
+		map[string]attr.Type{
+			"key":   ovhtypes.TfStringType{},
+			"value": ovhtypes.TfStringType{},
+		},
+		map[string]attr.Value{
+			"key":   v.Key,
+			"value": v.Value,
+		})
+
+	return objVal, diags
+}
+
+func (v UserMetadataWritableValue) Equal(o attr.Value) bool {
+	other, ok := o.(UserMetadataWritableValue)
+
+	if !ok {
+		return false
+	}
+
+	if v.state != other.state {
+		return false
+	}
+
+	if v.state != attr.ValueStateKnown {
+		return true
+	}
+
+	if !v.Key.Equal(other.Key) {
+		return false
+	}
+
+	if !v.Value.Equal(other.Value) {
+		return false
+	}
+
+	return true
 }
