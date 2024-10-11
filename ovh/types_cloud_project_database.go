@@ -183,15 +183,16 @@ func (v CloudProjectDatabaseNodes) ToMap() map[string]interface{} {
 }
 
 type CloudProjectDatabaseCreateOpts struct {
-	Backups        *CloudProjectDatabaseBackups        `json:"backups,omitempty"`
-	Description    string                              `json:"description,omitempty"`
-	Disk           CloudProjectDatabaseDisk            `json:"disk,omitempty"`
-	IPRestrictions []CloudProjectDatabaseIPRestriction `json:"ipRestrictions,omitempty"`
-	NetworkId      string                              `json:"networkId,omitempty"`
-	NodesPattern   CloudProjectDatabaseNodesPattern    `json:"nodesPattern,omitempty"`
-	Plan           string                              `json:"plan"`
-	SubnetId       string                              `json:"subnetId,omitempty"`
-	Version        string                              `json:"version"`
+	Backups         *CloudProjectDatabaseBackups        `json:"backups,omitempty"`
+	Description     string                              `json:"description,omitempty"`
+	Disk            CloudProjectDatabaseDisk            `json:"disk,omitempty"`
+	IPRestrictions  []CloudProjectDatabaseIPRestriction `json:"ipRestrictions,omitempty"`
+	MaintenanceTime string                              `json:"maintenanceTime,omitempty"`
+	NetworkId       string                              `json:"networkId,omitempty"`
+	NodesPattern    CloudProjectDatabaseNodesPattern    `json:"nodesPattern,omitempty"`
+	Plan            string                              `json:"plan"`
+	SubnetId        string                              `json:"subnetId,omitempty"`
+	Version         string                              `json:"version"`
 }
 
 type CloudProjectDatabaseDisk struct {
@@ -258,20 +259,23 @@ func (opts *CloudProjectDatabaseCreateOpts) fromResource(d *schema.ResourceData)
 		}
 	}
 
+	opts.MaintenanceTime = d.Get("maintenance_time").(string)
+
 	return opts, nil
 }
 
 type CloudProjectDatabaseUpdateOpts struct {
-	AclsEnabled    bool                                `json:"aclsEnabled,omitempty"`
-	Backups        *CloudProjectDatabaseBackups        `json:"backups,omitempty"`
-	Description    string                              `json:"description,omitempty"`
-	Disk           CloudProjectDatabaseDisk            `json:"disk,omitempty"`
-	Flavor         string                              `json:"flavor,omitempty"`
-	IPRestrictions []CloudProjectDatabaseIPRestriction `json:"ipRestrictions,omitempty"`
-	Plan           string                              `json:"plan,omitempty"`
-	RestAPI        bool                                `json:"restApi,omitempty"`
-	SchemaRegistry bool                                `json:"schemaRegistry,omitempty"`
-	Version        string                              `json:"version,omitempty"`
+	AclsEnabled     bool                                `json:"aclsEnabled,omitempty"`
+	Backups         *CloudProjectDatabaseBackups        `json:"backups,omitempty"`
+	Description     string                              `json:"description,omitempty"`
+	Disk            CloudProjectDatabaseDisk            `json:"disk,omitempty"`
+	Flavor          string                              `json:"flavor,omitempty"`
+	IPRestrictions  []CloudProjectDatabaseIPRestriction `json:"ipRestrictions,omitempty"`
+	MaintenanceTime string                              `json:"maintenanceTime,omitempty"`
+	Plan            string                              `json:"plan,omitempty"`
+	RestAPI         bool                                `json:"restApi,omitempty"`
+	SchemaRegistry  bool                                `json:"schemaRegistry,omitempty"`
+	Version         string                              `json:"version,omitempty"`
 }
 
 func (opts *CloudProjectDatabaseUpdateOpts) fromResource(d *schema.ResourceData) (*CloudProjectDatabaseUpdateOpts, error) {
@@ -313,6 +317,8 @@ func (opts *CloudProjectDatabaseUpdateOpts) fromResource(d *schema.ResourceData)
 			Time:    time,
 		}
 	}
+
+	opts.MaintenanceTime = d.Get("maintenance_time").(string)
 
 	return opts, nil
 }
