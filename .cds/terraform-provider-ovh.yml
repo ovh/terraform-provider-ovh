@@ -382,7 +382,7 @@ workflow:
     environment: acctests
     one_at_a_time: true
     parameters:
-      testargs: -run CloudProjectUser
+      testargs: -run CloudProjectVolume
       skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudproject}}"
     pipeline: terraform-provider-ovh-testacc
     when:
