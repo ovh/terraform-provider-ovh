@@ -86,6 +86,7 @@ resource "ovh_cloud_project_database" "db" {
 		ip = "%s"
 	}
 	flavor = "%s"
+	maintenance_time = "01:00:00"
 }
 `
 
@@ -157,6 +158,8 @@ func TestAccCloudProjectDatabase_basic(t *testing.T) {
 						"ovh_cloud_project_database.db", "plan", "essential"),
 					resource.TestCheckResourceAttr(
 						"ovh_cloud_project_database.db", "version", version),
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_project_database.db", "maintenance_time", "01:00:00"),
 				),
 			},
 		},
