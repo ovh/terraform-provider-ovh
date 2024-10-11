@@ -1,3 +1,27 @@
+## 0.51.0 (October 11, 2024)
+
+🎉 Features:
+
+* New resource: `ovh_cloud_project_network_private_subnet_v2` ([#732](https://github.com/ovh/terraform-provider-ovh/pull/732))
+
+🐜 Bug fixes:
+
+* `r/ovh_iploadbalancing_udp_farm`: Fix schema errors ([#735](https://github.com/ovh/terraform-provider-ovh/pull/735))
+* `r/ovh_iploadbalancing_udp_farm_server`: Fix schema errors ([#735](https://github.com/ovh/terraform-provider-ovh/pull/735))
+* `r/ovh_iploadbalancing_udp_frontend`: Fix schema errors ([#735](https://github.com/ovh/terraform-provider-ovh/pull/735))
+* `r/ovh_iploadbalancing_ssl`: Force replacement if fingerprint changes ([#733](https://github.com/ovh/terraform-provider-ovh/pull/733))
+* `r/ovh_ip_service`: Correctly retrieve `service_name` in US region ([#740](https://github.com/ovh/terraform-provider-ovh/pull/740))
+* `r/ovh_dedicated_server`: Only save `user_metadata` coming from the plan in the state ([#744](https://github.com/ovh/terraform-provider-ovh/pull/744), [#745](https://github.com/ovh/terraform-provider-ovh/pull/745))
+* `r/ovh_cloud_project_database`: Allow setting `maintenance_time` ([#748](https://github.com/ovh/terraform-provider-ovh/pull/748))
+
+📚 Documentation:
+
+* Licenses update ([#731](https://github.com/ovh/terraform-provider-ovh/pull/731))
+* `r/ovh_cloud_project_kube`: Add details on `nodes_subnet_id` and `load_balancers_subnet_id` ([#738](https://github.com/ovh/terraform-provider-ovh/pull/738))
+* Reorganize `Public cloud network` and `Log subscriptions` documentations ([#746](https://github.com/ovh/terraform-provider-ovh/pull/746))
+
+❤️ Thanks for your contributions ❤️
+
 ## 0.50.0 (September 20, 2024)
 
 🎉 Features:
