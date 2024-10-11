@@ -172,6 +172,12 @@ func resourceCloudProjectDatabase() *schema.Resource {
 					return d.Get("engine").(string) == "mongodb" || new == old
 				},
 			},
+			"maintenance_time": {
+				Type:        schema.TypeString,
+				Description: "Time on which maintenances can start every day",
+				Optional:    true,
+				Computed:    true,
+			},
 
 			//Computed
 			"created_at": {
@@ -227,11 +233,6 @@ func resourceCloudProjectDatabase() *schema.Resource {
 						},
 					},
 				},
-			},
-			"maintenance_time": {
-				Type:        schema.TypeString,
-				Description: "Time on which maintenances can start every day",
-				Computed:    true,
 			},
 			"network_type": {
 				Type:        schema.TypeString,
