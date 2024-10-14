@@ -29,6 +29,7 @@ func IploadbalancingUdpFrontendResourceSchema(ctx context.Context) schema.Schema
 			"disabled": schema.BoolAttribute{
 				CustomType:          ovhtypes.TfBoolType{},
 				Optional:            true,
+				Computed:            true,
 				Description:         "Disable your frontend. Default: 'false'",
 				MarkdownDescription: "Disable your frontend. Default: 'false'",
 			},
