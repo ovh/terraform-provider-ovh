@@ -130,26 +130,34 @@ var _ basetypes.SetValuable = (*TfListNestedValue[attr.Value])(nil)
 
 func (t *TfListNestedValue[T]) UnmarshalJSON(data []byte) error {
 	var v []T
-	var d []attr.Value
 
 	if err := json.Unmarshal(data, &v); err != nil {
 		return err
 	}
 
-	for _, c := range v {
-		d = append(d, c)
-	}
-
 	var zero T
-	t.ListValue = basetypes.NewListValueMust(zero.Type(context.Background()), d)
+
+	if v == nil {
+		t.ListValue = basetypes.NewListNull(zero.Type(context.Background()))
+	} else {
+		d := make([]attr.Value, 0, len(v))
+		for _, c := range v {
+			d = append(d, c)
+		}
+		t.ListValue = basetypes.NewListValueMust(zero.Type(context.Background()), d)
+	}
 
 	return nil
 }
 
 func (t TfListNestedValue[T]) MarshalJSON() ([]byte, error) {
-	var toMarshal []T
+	if t.IsNull() || t.IsUnknown() {
+		return []byte("null"), nil
+	}
 
-	for _, elem := range t.Elements() {
+	elems := t.Elements()
+	toMarshal := make([]T, 0, len(elems))
+	for _, elem := range elems {
 		toMarshal = append(toMarshal, elem.(T))
 	}
 
