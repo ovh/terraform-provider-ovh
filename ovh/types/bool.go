@@ -21,17 +21,24 @@ type TfBoolValue struct {
 var _ basetypes.BoolValuable = TfBoolValue{}
 
 func (t *TfBoolValue) UnmarshalJSON(data []byte) error {
-	var v bool
+	var v *bool
 	if err := json.Unmarshal(data, &v); err != nil {
 		return err
 	}
 
-	t.BoolValue = basetypes.NewBoolValue(v)
+	if v == nil {
+		t.BoolValue = basetypes.NewBoolNull()
+	} else {
+		t.BoolValue = basetypes.NewBoolValue(*v)
+	}
 
 	return nil
 }
 
 func (t TfBoolValue) MarshalJSON() ([]byte, error) {
+	if t.IsNull() || t.IsUnknown() {
+		return []byte("null"), nil
+	}
 	return json.Marshal(t.BoolValue.ValueBool())
 }
 

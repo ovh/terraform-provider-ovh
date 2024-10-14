@@ -21,17 +21,24 @@ type TfStringValue struct {
 var _ basetypes.StringValuable = TfStringValue{}
 
 func (t *TfStringValue) UnmarshalJSON(data []byte) error {
-	var v string
+	var v *string
 	if err := json.Unmarshal(data, &v); err != nil {
 		return err
 	}
 
-	t.StringValue = basetypes.NewStringValue(v)
+	if v == nil {
+		t.StringValue = basetypes.NewStringNull()
+	} else {
+		t.StringValue = basetypes.NewStringValue(*v)
+	}
 
 	return nil
 }
 
 func (t TfStringValue) MarshalJSON() ([]byte, error) {
+	if t.IsNull() || t.IsUnknown() {
+		return []byte("null"), nil
+	}
 	return json.Marshal(t.StringValue.ValueString())
 }
 

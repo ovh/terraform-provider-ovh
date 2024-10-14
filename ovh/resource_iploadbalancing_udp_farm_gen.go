@@ -72,7 +72,6 @@ type IploadbalancingUdpFarmModel struct {
 }
 
 func (v *IploadbalancingUdpFarmModel) MergeWith(other *IploadbalancingUdpFarmModel) {
-
 	if (v.DisplayName.IsUnknown() || v.DisplayName.IsNull()) && !other.DisplayName.IsUnknown() {
 		v.DisplayName = other.DisplayName
 	}
@@ -96,7 +95,6 @@ func (v *IploadbalancingUdpFarmModel) MergeWith(other *IploadbalancingUdpFarmMod
 	if (v.Zone.IsUnknown() || v.Zone.IsNull()) && !other.Zone.IsUnknown() {
 		v.Zone = other.Zone
 	}
-
 }
 
 type IploadbalancingUdpFarmWritableModel struct {

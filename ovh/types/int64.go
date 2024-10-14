@@ -72,17 +72,24 @@ type TfInt64Value struct {
 var _ basetypes.Int64Valuable = TfInt64Value{}
 
 func (t *TfInt64Value) UnmarshalJSON(data []byte) error {
-	var v int64
+	var v *int64
 	if err := json.Unmarshal(data, &v); err != nil {
 		return err
 	}
 
-	t.Int64Value = basetypes.NewInt64Value(v)
+	if v == nil {
+		t.Int64Value = basetypes.NewInt64Null()
+	} else {
+		t.Int64Value = basetypes.NewInt64Value(*v)
+	}
 
 	return nil
 }
 
 func (t TfInt64Value) MarshalJSON() ([]byte, error) {
+	if t.IsNull() || t.IsUnknown() {
+		return []byte("null"), nil
+	}
 	return json.Marshal(t.Int64Value.ValueInt64())
 }
 
