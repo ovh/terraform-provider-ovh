@@ -71,17 +71,25 @@ type TfNumberValue struct {
 var _ basetypes.NumberValuable = TfNumberValue{}
 
 func (t *TfNumberValue) UnmarshalJSON(data []byte) error {
-	var v float64
+	var v *float64
 	if err := json.Unmarshal(data, &v); err != nil {
 		return err
 	}
 
-	t.NumberValue = basetypes.NewNumberValue(big.NewFloat(v))
+	if v == nil {
+		t.NumberValue = basetypes.NewNumberNull()
+	} else {
+		t.NumberValue = basetypes.NewNumberValue(big.NewFloat(*v))
+	}
 
 	return nil
 }
 
 func (t TfNumberValue) MarshalJSON() ([]byte, error) {
+	if t.IsNull() || t.IsUnknown() {
+		return []byte("null"), nil
+	}
+
 	floatVal, _ := t.ValueBigFloat().Float64()
 	return json.Marshal(floatVal)
 }

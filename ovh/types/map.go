@@ -99,20 +99,37 @@ type TfMapNestedValue[T attr.Value] struct {
 
 func (v *TfMapNestedValue[T]) UnmarshalJSON(data []byte) error {
 	var mm map[string]T
-	d := make(map[string]attr.Value)
 
 	if err := json.Unmarshal(data, &mm); err != nil {
 		return err
 	}
 
-	for k, v := range mm {
-		d[k] = v
+	var zero T
+	if mm == nil {
+		v.MapValue = basetypes.NewMapNull(zero.Type(context.Background()))
+	} else {
+		d := make(map[string]attr.Value, len(mm))
+		for k, v := range mm {
+			d[k] = v
+		}
+		v.MapValue = basetypes.NewMapValueMust(zero.Type(context.Background()), d)
 	}
 
-	var zero T
-	v.MapValue = basetypes.NewMapValueMust(zero.Type(context.Background()), d)
-
 	return nil
+}
+
+func (t TfMapNestedValue[T]) MarshalJSON() ([]byte, error) {
+	if t.IsNull() || t.IsUnknown() {
+		return []byte("null"), nil
+	}
+
+	elems := t.Elements()
+	toMarshal := make(map[string]T, len(elems))
+	for key, elem := range elems {
+		toMarshal[key] = elem.(T)
+	}
+
+	return json.Marshal(toMarshal)
 }
 
 // ToTerraformValue returns the data contained in the Map as a tftypes.Value.
