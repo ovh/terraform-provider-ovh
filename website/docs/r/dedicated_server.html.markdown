@@ -142,6 +142,7 @@ The `user_metadata` block supports many arguments, here is a non-exhaustive list
   * `tags` - Resource tags. Tags that were internally computed are prefixed with `ovh:`
 * `boot_id` - Boot id of the server
 * `boot_script` - Boot script of the server
+* `efi_bootloader_path` - Path of the EFI bootloader
 * `link_speed` - Link speed of the server
 * `monitoring` - Icmp monitoring state
 * `no_intervention` - Prevent datacenter intervention
