@@ -178,8 +178,7 @@ func (t TfListNestedValue[T]) ElementType(ctx context.Context) attr.Type {
 }
 
 func (t TfListNestedValue[T]) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	var zero T
-	listType := tftypes.List{ElementType: zero.Type(ctx).TerraformType(ctx)}
+	listType := t.Type(ctx).TerraformType(ctx)
 
 	switch {
 	case t.IsNull():

@@ -21,7 +21,8 @@ func resourceIpService() *schema.Resource {
 		Delete: resourceIpServiceDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			State: func(d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				d.Set("service_name", d.Id())
 				return []*schema.ResourceData{d}, nil
 			},
 		},
@@ -107,6 +108,7 @@ func resourceIpServiceCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("failed to get service name from order ID: %w", err)
 	}
 
+	d.SetId(serviceName)
 	d.Set("service_name", serviceName)
 
 	return resourceIpServiceUpdate(d, meta)
@@ -114,7 +116,6 @@ func resourceIpServiceCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceIpServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-
 	serviceName := d.Get("service_name").(string)
 
 	log.Printf("[DEBUG] Will update ip: %s", serviceName)
@@ -136,9 +137,7 @@ func resourceIpServiceRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Will read ip: %s", serviceName)
 
 	r := &IpService{}
-	endpoint := fmt.Sprintf("/ip/service/%s",
-		url.PathEscape(serviceName),
-	)
+	endpoint := fmt.Sprintf("/ip/service/%s", url.PathEscape(serviceName))
 
 	// This retry logic is there to handle a known API bug
 	// which happens while an ipblock is attached/detached from
@@ -176,11 +175,10 @@ func resourceIpServiceRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceIpServiceDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-	id := d.Id()
 	serviceName := d.Get("service_name").(string)
 
 	terminate := func() (string, error) {
-		log.Printf("[DEBUG] Will terminate ip %s for order %s", serviceName, id)
+		log.Printf("[DEBUG] Will terminate ip %s", serviceName)
 		endpoint := fmt.Sprintf(
 			"/ip/service/%s/terminate",
 			url.PathEscape(serviceName),
@@ -195,7 +193,7 @@ func resourceIpServiceDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	confirmTerminate := func(token string) error {
-		log.Printf("[DEBUG] Will confirm termination of ip %s for order %s", serviceName, id)
+		log.Printf("[DEBUG] Will confirm termination of ip %s", serviceName)
 		endpoint := fmt.Sprintf(
 			"/ip/service/%s/confirmTermination",
 			url.PathEscape(serviceName),

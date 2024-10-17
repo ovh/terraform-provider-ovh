@@ -145,6 +145,12 @@ func TestAccResourceDomainZone_basic(t *testing.T) {
 						"ovh_domain_zone.zone", "urn"),
 				),
 			},
+			{
+				ResourceName:            "ovh_domain_zone.zone",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"plan", "ovh_subsidiary"},
+			},
 		},
 	})
 }

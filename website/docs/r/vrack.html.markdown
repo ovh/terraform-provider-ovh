@@ -82,8 +82,22 @@ Id is set to the order Id. In addition, the following attributes are exported:
 
 ## Import
 
-vRack can be imported using the `service_name`.
+A vRack can be imported using the `service_name`.
+Using the following configuration:
+
+```hcl
+import {
+  to = ovh_vrack.vrack
+  id = "<service name>"
+}
+```
+
+You can then run:
 
 ```bash
-$ terraform import ovh_vrack.vrack service_name
+$ terraform plan -generate-config-out=vrack.tf
+$ terraform apply
 ```
+
+The file `vrack.tf` will then contain the imported resource's configuration, that can be copied next to the `import` block above.
+See https://developer.hashicorp.com/terraform/language/import/generating-configuration for more details.

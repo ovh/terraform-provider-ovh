@@ -158,6 +158,12 @@ func TestAccHostingPrivateDatabase_basic(t *testing.T) {
 						"ovh_hosting_privatedatabase.database", "urn"),
 				),
 			},
+			{
+				ResourceName:            "ovh_hosting_privatedatabase.database",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"plan", "ovh_subsidiary"},
+			},
 		},
 	})
 }

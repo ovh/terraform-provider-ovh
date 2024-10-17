@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -83,8 +84,11 @@ func OrderResourceSchema(ctx context.Context) schema.Schema {
 				MarkdownDescription: "Details about an Order",
 			},
 			"ovh_subsidiary": schema.StringAttribute{
-				CustomType:          ovhtypes.TfStringType{},
-				Required:            true,
+				CustomType: ovhtypes.TfStringType{},
+				Optional:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description:         "OVH subsidiaries",
 				MarkdownDescription: "OVH subsidiaries",
 			},
@@ -166,6 +170,9 @@ func OrderResourceSchema(ctx context.Context) schema.Schema {
 				CustomType: ovhtypes.NewTfListNestedType[PlanValue](ctx),
 				Optional:   true,
 				Computed:   true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplaceIfConfigured(),
+				},
 			},
 			"plan_option": schema.ListNestedAttribute{
 				NestedObject: schema.NestedAttributeObject{

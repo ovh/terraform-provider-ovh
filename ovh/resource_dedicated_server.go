@@ -54,6 +54,12 @@ func (d *dedicatedServerResource) Schema(ctx context.Context, req resource.Schem
 }
 
 func (d *dedicatedServerResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	// Here we force the attribute "plan" to an empty array because it won't be fetched by the Read function.
+	// If we don't do this, Terraform always shows a diff on the following plans (null => []), due to the
+	// plan modifier RequiresReplace that initializes the attribute to its zero-value (an empty array).
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("plan"), ovhtypes.TfListNestedValue[PlanValue]{
+		ListValue: basetypes.NewListValueMust(PlanValue{}.Type(ctx), make([]attr.Value, 0)),
+	})...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_name"), req.ID)...)
 }
 

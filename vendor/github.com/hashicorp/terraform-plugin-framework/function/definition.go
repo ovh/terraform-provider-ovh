@@ -12,9 +12,6 @@ import (
 )
 
 // Definition is a function definition. Always set at least the Result field.
-//
-// NOTE: Provider-defined function support is in technical preview and offered
-// without compatibility promises until Terraform 1.8 is generally available.
 type Definition struct {
 	// Parameters is the ordered list of function parameters and their
 	// associated data types.
@@ -51,41 +48,6 @@ type Definition struct {
 	DeprecationMessage string
 }
 
-// Parameter returns the Parameter for a given argument position. This may be
-// from the Parameters field or, if defined, the VariadicParameter field. An
-// error diagnostic is raised if the position is outside the expected arguments.
-func (d Definition) Parameter(ctx context.Context, position int) (Parameter, diag.Diagnostics) {
-	if d.VariadicParameter != nil && position >= len(d.Parameters) {
-		return d.VariadicParameter, nil
-	}
-
-	if len(d.Parameters) == 0 {
-		return nil, diag.Diagnostics{
-			diag.NewErrorDiagnostic(
-				"Invalid Parameter Position for Definition",
-				"When determining the parameter for the given argument position, an invalid value was given. "+
-					"This is always an issue in the provider code and should be reported to the provider developers.\n\n"+
-					"Function does not implement parameters.\n"+
-					fmt.Sprintf("Given position: %d", position),
-			),
-		}
-	}
-
-	if position >= len(d.Parameters) {
-		return nil, diag.Diagnostics{
-			diag.NewErrorDiagnostic(
-				"Invalid Parameter Position for Definition",
-				"When determining the parameter for the given argument position, an invalid value was given. "+
-					"This is always an issue in the provider code and should be reported to the provider developers.\n\n"+
-					fmt.Sprintf("Max argument position: %d\n", len(d.Parameters)-1)+
-					fmt.Sprintf("Given position: %d", position),
-			),
-		}
-	}
-
-	return d.Parameters[position], nil
-}
-
 // ValidateImplementation contains logic for validating the provider-defined
 // implementation of the definition to prevent unexpected errors or panics. This
 // logic runs during the GetProviderSchema RPC, or via provider-defined unit
@@ -119,20 +81,10 @@ func (d Definition) ValidateImplementation(ctx context.Context, req DefinitionVa
 	paramNames := make(map[string]int, len(d.Parameters))
 	for pos, param := range d.Parameters {
 		parameterPosition := int64(pos)
-		name := param.GetName()
-		// If name is not set, add an error diagnostic, parameter names are mandatory.
-		if name == "" {
-			diags.AddError(
-				"Invalid Function Definition",
-				"When validating the function definition, an implementation issue was found. "+
-					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
-					fmt.Sprintf("Function %q - Parameter at position %d does not have a name", req.FuncName, pos),
-			)
-		}
 
 		if paramWithValidateImplementation, ok := param.(fwfunction.ParameterWithValidateImplementation); ok {
 			req := fwfunction.ValidateParameterImplementationRequest{
-				Name:              name,
+				FunctionName:      req.FuncName,
 				ParameterPosition: &parameterPosition,
 			}
 			resp := &fwfunction.ValidateParameterImplementationResponse{}
@@ -142,7 +94,9 @@ func (d Definition) ValidateImplementation(ctx context.Context, req DefinitionVa
 			diags.Append(resp.Diagnostics...)
 		}
 
+		name := param.GetName()
 		conflictPos, exists := paramNames[name]
+
 		if exists && name != "" {
 			diags.AddError(
 				"Invalid Function Definition",
@@ -158,20 +112,9 @@ func (d Definition) ValidateImplementation(ctx context.Context, req DefinitionVa
 	}
 
 	if d.VariadicParameter != nil {
-		name := d.VariadicParameter.GetName()
-		// If name is not set, add an error diagnostic, parameter names are mandatory.
-		if name == "" {
-			diags.AddError(
-				"Invalid Function Definition",
-				"When validating the function definition, an implementation issue was found. "+
-					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
-					fmt.Sprintf("Function %q - The variadic parameter does not have a name", req.FuncName),
-			)
-		}
-
 		if paramWithValidateImplementation, ok := d.VariadicParameter.(fwfunction.ParameterWithValidateImplementation); ok {
 			req := fwfunction.ValidateParameterImplementationRequest{
-				Name: name,
+				FunctionName: req.FuncName,
 			}
 			resp := &fwfunction.ValidateParameterImplementationResponse{}
 
@@ -180,7 +123,9 @@ func (d Definition) ValidateImplementation(ctx context.Context, req DefinitionVa
 			diags.Append(resp.Diagnostics...)
 		}
 
+		name := d.VariadicParameter.GetName()
 		conflictPos, exists := paramNames[name]
+
 		if exists && name != "" {
 			diags.AddError(
 				"Invalid Function Definition",

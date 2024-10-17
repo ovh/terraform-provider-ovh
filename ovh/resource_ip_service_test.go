@@ -149,6 +149,12 @@ func TestAccResourceIpService_basic(t *testing.T) {
 						"ovh_ip_service.ipblock", "description", desc),
 				),
 			},
+			{
+				ResourceName:            "ovh_ip_service.ipblock",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"plan", "ovh_subsidiary"},
+			},
 		},
 	})
 }

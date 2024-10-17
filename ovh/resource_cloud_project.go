@@ -72,7 +72,7 @@ func resourceCloudProjectSchema() map[string]*schema.Schema {
 
 func resourceCloudProjectCreate(d *schema.ResourceData, meta interface{}) error {
 	if err := orderCreateFromResource(d, meta, "cloud", true); err != nil {
-		return fmt.Errorf("Could not order cloud project: %q", err)
+		return fmt.Errorf("could not order cloud project: %q", err)
 	}
 
 	return resourceCloudProjectUpdate(d, meta)
@@ -92,7 +92,7 @@ func resourceCloudProjectGetServiceName(config *Config, order *MeOrder, details 
 	for _, orderDetail := range details {
 		operations, err := orderDetailOperations(config.OVHClient, order.OrderId, orderDetail.OrderDetailId)
 		if err != nil {
-			return "", fmt.Errorf("Could not read cloudProject order details operations: %q", err)
+			return "", fmt.Errorf("could not read cloudProject order details operations: %q", err)
 		}
 		for _, operation := range operations {
 			if publicCloudProjectNameFormatRegex.MatchString(operation.Resource.Name) {
@@ -101,13 +101,13 @@ func resourceCloudProjectGetServiceName(config *Config, order *MeOrder, details 
 		}
 	}
 
-	return "", fmt.Errorf("Unknown service name")
+	return "", fmt.Errorf("unknown service name")
 }
 
 func resourceCloudProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 	order, details, err := orderReadInResource(d, meta)
 	if err != nil {
-		return fmt.Errorf("Could not read cloud project order: %q", err)
+		return fmt.Errorf("could not read cloud project order: %q", err)
 	}
 
 	config := meta.(*Config)
@@ -149,23 +149,6 @@ func resourceCloudProjectRead(d *schema.ResourceData, meta interface{}) error {
 	for k, v := range r.ToMap() {
 		d.Set(k, v)
 	}
-
-	// Retrieve order information
-	serviceObj, err := serviceFromServiceName(config.OVHClient, "cloud/project", serviceName)
-	if err != nil {
-		return fmt.Errorf("failed to retrieve cloud project details: %w", err)
-	}
-	if len(details) > 0 {
-		serviceObj.OrderDetailExtension = details[0].Extension
-	}
-	d.Set("plan", serviceObj.ToSDKv2PlanValue())
-
-	// Retrieve subsidiary information
-	var me MeResponse
-	if err := config.OVHClient.Get("/me", &me); err != nil {
-		return fmt.Errorf("error retrieving account information: %w", err)
-	}
-	d.Set("ovh_subsidiary", me.OvhSubsidiary)
 
 	return nil
 }

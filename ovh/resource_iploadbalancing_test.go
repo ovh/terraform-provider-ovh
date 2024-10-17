@@ -180,6 +180,12 @@ func TestAccResourceIpLoadbalancing_basic(t *testing.T) {
 						"ovh_iploadbalancing.iplb-lb1", "urn"),
 				),
 			},
+			{
+				ResourceName:            "ovh_iploadbalancing.iplb-lb1",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"plan", "ovh_subsidiary"},
+			},
 		},
 	})
 }

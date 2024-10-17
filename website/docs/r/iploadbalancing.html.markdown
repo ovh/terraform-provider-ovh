@@ -108,3 +108,26 @@ Id is set to the order Id. In addition, the following attributes are exported:
 * `vrack_eligibility` - Vrack eligibility
 * `vrack_name` - Name of the vRack on which the current Load Balancer is attached to, as it is named on vRack product
 * `zone` - Location where your service is
+
+## Import
+
+OVHcloud IP load balancing services can be imported using the `order_id` that can be retrieved in the [order page](https://www.ovh.com/manager/#/dedicated/billing/orders/orders) at the creation time of the service.
+
+Using the following configuration:
+
+```hcl
+import {
+  to = ovh_iploadbalancing.iplb
+  id = "<order ID>"
+}
+```
+
+You can then run:
+
+```bash
+$ terraform plan -generate-config-out=iplb.tf
+$ terraform apply
+```
+
+The file `iplb.tf` will then contain the imported resource's configuration, that can be copied next to the `import` block above.
+See https://developer.hashicorp.com/terraform/language/import/generating-configuration for more details.

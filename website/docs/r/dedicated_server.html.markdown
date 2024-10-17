@@ -155,8 +155,22 @@ The `user_metadata` block supports many arguments, here is a non-exhaustive list
 
 ## Import
 
-Dedicated servers can be imported using the `service_name`, e.g.:
+Dedicated servers can be imported using the `service_name`.
+Using the following configuration:
+
+```hcl
+import {
+  to = ovh_dedicated_server.server
+  id = "<service name>"
+}
+```
+
+You can then run:
 
 ```bash
-$ terraform import ovh_dedicated_server.server service_name
+$ terraform plan -generate-config-out=dedicated.tf
+$ terraform apply
 ```
+
+The file `dedicated.tf` will then contain the imported resource's configuration, that can be copied next to the `import` block above.
+See https://developer.hashicorp.com/terraform/language/import/generating-configuration for more details.

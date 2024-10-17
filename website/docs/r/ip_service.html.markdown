@@ -95,3 +95,22 @@ Id is set to the order Id. In addition, the following attributes are exported:
   * `service_name` - Service where ip is routed to
 * `service_name`: service name
 * `type` - Possible values for ip type
+
+## Import
+
+The resource can be imported using its `service_name`, E.g.,
+
+```hcl
+import {
+  to = ovh_ip_service.ipblock
+  id = "ip-xx.xx.xx.xx"
+}
+```
+
+```bash
+$ terraform plan -generate-config-out=ipblock.tf
+$ terraform apply
+```
+
+The file `ipblock.tf` will then contain the imported resource's configuration, that can be copied next to the `import` block above.
+See https://developer.hashicorp.com/terraform/language/import/generating-configuration for more details.
