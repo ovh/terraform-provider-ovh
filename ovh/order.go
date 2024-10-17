@@ -20,8 +20,8 @@ import (
 )
 
 var (
-	reTerminateEmailToken = regexp.MustCompile(`.*https://www.ovh.com/manager/#/billing/confirmTerminate\?id=[[:alnum:]]+&token=([[:alnum:]]+).*`)
-	terminateEmailMatch   = "https://www.ovh.com/manager/#/billing/confirmTerminate"
+	reTerminateEmailToken = regexp.MustCompile(`.*/billing/confirmTerminate\?id=[[:alnum:]]+&token=([[:alnum:]]+).*`)
+	terminateEmailMatch   = "/billing/confirmTerminate"
 )
 
 func genericOrderSchema(withOptions bool) map[string]*schema.Schema {
