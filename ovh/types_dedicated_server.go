@@ -15,6 +15,7 @@ type DedicatedServer struct {
 	BootScript         string `json:"bootScript"`
 	CommercialRange    string `json:"commercialRange"`
 	Datacenter         string `json:"datacenter"`
+	EfiBootloaderPath  string `json:"efiBootloaderPath"`
 	Ip                 string `json:"ip"`
 	LinkSpeed          int    `json:"linkSpeed"`
 	Monitoring         bool   `json:"monitoring"`
@@ -46,15 +47,17 @@ func (ds DedicatedServer) String() string {
 }
 
 type DedicatedServerUpdateOpts struct {
-	BootId     *int64  `json:"bootId,omitempty"`
-	BootScript *string `json:"bootScript,omitempty"`
-	Monitoring *bool   `json:"monitoring,omitempty"`
-	State      *string `json:"state,omitempty"`
+	BootId            *int64  `json:"bootId,omitempty"`
+	BootScript        *string `json:"bootScript,omitempty"`
+	EfiBootloaderPath *string `json:"efiBootloaderPath,omitempty"`
+	Monitoring        *bool   `json:"monitoring,omitempty"`
+	State             *string `json:"state,omitempty"`
 }
 
 func (opts *DedicatedServerUpdateOpts) FromResource(d *schema.ResourceData) *DedicatedServerUpdateOpts {
 	opts.BootId = helpers.GetNilInt64PointerFromData(d, "boot_id")
 	opts.BootScript = helpers.GetNilStringPointerFromData(d, "boot_script")
+	opts.EfiBootloaderPath = helpers.GetNilStringPointerFromData(d, "efi_bootloader_path")
 	opts.Monitoring = helpers.GetNilBoolPointerFromData(d, "monitoring")
 	opts.State = helpers.GetNilStringPointerFromData(d, "state")
 	return opts

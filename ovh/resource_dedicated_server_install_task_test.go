@@ -144,10 +144,11 @@ data ovh_dedicated_server_boots "harddisk" {
 }
 
 resource ovh_dedicated_server_update "server" {
-  service_name = data.ovh_dedicated_server_boots.harddisk.service_name
-  boot_id      = data.ovh_dedicated_server_boots.harddisk.result[0]
-  monitoring   = true
-  state        = "ok"
+  service_name        = data.ovh_dedicated_server_boots.harddisk.service_name
+  boot_id             = data.ovh_dedicated_server_boots.harddisk.result[0]
+  monitoring          = true
+  state               = "ok"
+  efi_bootloader_path = "\\efi\\debian\\grubx64.efi"
 }
 
 resource "ovh_me_installation_template" "debian" {
@@ -186,10 +187,11 @@ data ovh_dedicated_server_boots "rescue" {
 }
 
 resource ovh_dedicated_server_update "server" {
-  service_name = data.ovh_dedicated_server_boots.harddisk.service_name
-  boot_id      = data.ovh_dedicated_server_boots.harddisk.result[0]
-  monitoring   = true
-  state        = "ok"
+  service_name        = data.ovh_dedicated_server_boots.harddisk.service_name
+  boot_id             = data.ovh_dedicated_server_boots.harddisk.result[0]
+  monitoring          = true
+  state               = "ok"
+  efi_bootloader_path = "\\efi\\debian\\grubx64.efi"
 }
 
 resource ovh_dedicated_server_install_task "server_install" {
@@ -209,9 +211,10 @@ data ovh_dedicated_server_boots "harddisk" {
 }
 
 resource ovh_dedicated_server_update "server" {
-  service_name = data.ovh_dedicated_server_boots.harddisk.service_name
-  monitoring   = true
-  state        = "ok"
+  service_name        = data.ovh_dedicated_server_boots.harddisk.service_name
+  boot_id             = data.ovh_dedicated_server_boots.harddisk.result[0]
+  monitoring          = true
+  state               = "ok"
 }
 
 resource ovh_dedicated_server_install_task "server_install" {

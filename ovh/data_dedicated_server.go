@@ -51,6 +51,11 @@ func dataSourceDedicatedServer() *schema.Resource {
 				Computed:    true,
 				Description: "Dedicated datacenter localisation (bhs1,bhs2,...)",
 			},
+			"efi_bootloader_path": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "path of the EFI bootloader",
+			},
 			"ip": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -243,6 +248,7 @@ func dataSourceDedicatedServerRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("boot_script", ds.BootScript)
 	d.Set("commercial_range", ds.CommercialRange)
 	d.Set("datacenter", ds.Datacenter)
+	d.Set("efi_bootloader_path", ds.EfiBootloaderPath)
 	d.Set("ip", ds.Ip)
 	d.Set("link_speed", ds.LinkSpeed)
 	d.Set("monitoring", ds.Monitoring)
