@@ -27,7 +27,6 @@ data "ovh_order_cart_product_plan" "cloud" {
   product        = "cloud"
   plan_code      = "project.2018"
   # plan_code    = "project" # when running in the US
-
 }
 
 resource "ovh_cloud_project" "my_cloud_project" {
@@ -128,6 +127,21 @@ The following arguments are supported:
 
 Cloud project can be imported using the `order_id` that can be retrieved in the [order page](https://www.ovh.com/manager/#/dedicated/billing/orders/orders) at the creation time of the Public Cloud project.
 
-```bash
-$ terraform import ovh_cloud_project.my_cloud_project order_id
+Using the following configuration:
+
+```hcl
+import {
+  to = ovh_cloud_project.my_cloud_project
+  id = "<order ID>"
+}
 ```
+
+You can then run:
+
+```bash
+$ terraform plan -generate-config-out=cloudproject.tf
+$ terraform apply
+```
+
+The file `cloudproject.tf` will then contain the imported resource's configuration, that can be copied next to the `import` block above.
+See https://developer.hashicorp.com/terraform/language/import/generating-configuration for more details.

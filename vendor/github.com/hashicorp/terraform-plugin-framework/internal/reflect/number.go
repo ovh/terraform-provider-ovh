@@ -132,9 +132,9 @@ func Number(ctx context.Context, typ attr.Type, val tftypes.Value, target reflec
 			return reflect.ValueOf(uintResult), diags
 		}
 	case reflect.Float32:
-		floatResult, _ := result.Float32()
+		float64Result, _ := result.Float64()
 
-		bf := big.NewFloat(float64(floatResult))
+		bf := big.NewFloat(float64Result)
 
 		if result.Text('f', -1) != bf.Text('f', -1) {
 			diags.Append(roundingErrorDiag)
@@ -142,7 +142,25 @@ func Number(ctx context.Context, typ attr.Type, val tftypes.Value, target reflec
 			return target, diags
 		}
 
-		return reflect.ValueOf(floatResult), diags
+		float32Result, accuracy := result.Float32()
+
+		// Underflow
+		// Reference: https://pkg.go.dev/math/big#Float.Float32
+		if float32Result == 0 && accuracy != big.Exact {
+			diags.Append(roundingErrorDiag)
+
+			return target, diags
+		}
+
+		// Overflow
+		// Reference: https://pkg.go.dev/math/big#Float.Float32
+		if math.IsInf(float64(float32Result), 0) {
+			diags.Append(roundingErrorDiag)
+
+			return target, diags
+		}
+
+		return reflect.ValueOf(float32Result), diags
 	case reflect.Float64:
 		floatResult, _ := result.Float64()
 
@@ -179,17 +197,36 @@ func FromInt(ctx context.Context, typ attr.Type, val int64, path path.Path) (att
 	}
 	tfNum := tftypes.NewValue(tftypes.Number, val)
 
-	if typeWithValidate, ok := typ.(xattr.TypeWithValidate); ok {
-		diags.Append(typeWithValidate.Validate(ctx, tfNum, path)...)
+	num, err := typ.ValueFromTerraform(ctx, tfNum)
+	if err != nil {
+		return nil, append(diags, valueFromTerraformErrorDiag(err, path))
+	}
+
+	switch t := num.(type) {
+	case xattr.ValidateableAttribute:
+		resp := xattr.ValidateAttributeResponse{}
+
+		t.ValidateAttribute(ctx,
+			xattr.ValidateAttributeRequest{
+				Path: path,
+			},
+			&resp,
+		)
+
+		diags.Append(resp.Diagnostics...)
 
 		if diags.HasError() {
 			return nil, diags
 		}
-	}
+	default:
+		//nolint:staticcheck // xattr.TypeWithValidate is deprecated, but we still need to support it.
+		if typeWithValidate, ok := typ.(xattr.TypeWithValidate); ok {
+			diags.Append(typeWithValidate.Validate(ctx, tfNum, path)...)
 
-	num, err := typ.ValueFromTerraform(ctx, tfNum)
-	if err != nil {
-		return nil, append(diags, valueFromTerraformErrorDiag(err, path))
+			if diags.HasError() {
+				return nil, diags
+			}
+		}
 	}
 
 	return num, diags
@@ -206,17 +243,36 @@ func FromUint(ctx context.Context, typ attr.Type, val uint64, path path.Path) (a
 	}
 	tfNum := tftypes.NewValue(tftypes.Number, val)
 
-	if typeWithValidate, ok := typ.(xattr.TypeWithValidate); ok {
-		diags.Append(typeWithValidate.Validate(ctx, tfNum, path)...)
+	num, err := typ.ValueFromTerraform(ctx, tfNum)
+	if err != nil {
+		return nil, append(diags, valueFromTerraformErrorDiag(err, path))
+	}
+
+	switch t := num.(type) {
+	case xattr.ValidateableAttribute:
+		resp := xattr.ValidateAttributeResponse{}
+
+		t.ValidateAttribute(ctx,
+			xattr.ValidateAttributeRequest{
+				Path: path,
+			},
+			&resp,
+		)
+
+		diags.Append(resp.Diagnostics...)
 
 		if diags.HasError() {
 			return nil, diags
 		}
-	}
+	default:
+		//nolint:staticcheck // xattr.TypeWithValidate is deprecated, but we still need to support it.
+		if typeWithValidate, ok := typ.(xattr.TypeWithValidate); ok {
+			diags.Append(typeWithValidate.Validate(ctx, tfNum, path)...)
 
-	num, err := typ.ValueFromTerraform(ctx, tfNum)
-	if err != nil {
-		return nil, append(diags, valueFromTerraformErrorDiag(err, path))
+			if diags.HasError() {
+				return nil, diags
+			}
+		}
 	}
 
 	return num, diags
@@ -233,17 +289,36 @@ func FromFloat(ctx context.Context, typ attr.Type, val float64, path path.Path) 
 	}
 	tfNum := tftypes.NewValue(tftypes.Number, val)
 
-	if typeWithValidate, ok := typ.(xattr.TypeWithValidate); ok {
-		diags.Append(typeWithValidate.Validate(ctx, tfNum, path)...)
+	num, err := typ.ValueFromTerraform(ctx, tfNum)
+	if err != nil {
+		return nil, append(diags, valueFromTerraformErrorDiag(err, path))
+	}
+
+	switch t := num.(type) {
+	case xattr.ValidateableAttribute:
+		resp := xattr.ValidateAttributeResponse{}
+
+		t.ValidateAttribute(ctx,
+			xattr.ValidateAttributeRequest{
+				Path: path,
+			},
+			&resp,
+		)
+
+		diags.Append(resp.Diagnostics...)
 
 		if diags.HasError() {
 			return nil, diags
 		}
-	}
+	default:
+		//nolint:staticcheck // xattr.TypeWithValidate is deprecated, but we still need to support it.
+		if typeWithValidate, ok := typ.(xattr.TypeWithValidate); ok {
+			diags.Append(typeWithValidate.Validate(ctx, tfNum, path)...)
 
-	num, err := typ.ValueFromTerraform(ctx, tfNum)
-	if err != nil {
-		return nil, append(diags, valueFromTerraformErrorDiag(err, path))
+			if diags.HasError() {
+				return nil, diags
+			}
+		}
 	}
 
 	return num, diags
@@ -260,17 +335,36 @@ func FromBigFloat(ctx context.Context, typ attr.Type, val *big.Float, path path.
 	}
 	tfNum := tftypes.NewValue(tftypes.Number, val)
 
-	if typeWithValidate, ok := typ.(xattr.TypeWithValidate); ok {
-		diags.Append(typeWithValidate.Validate(ctx, tfNum, path)...)
+	num, err := typ.ValueFromTerraform(ctx, tfNum)
+	if err != nil {
+		return nil, append(diags, valueFromTerraformErrorDiag(err, path))
+	}
+
+	switch t := num.(type) {
+	case xattr.ValidateableAttribute:
+		resp := xattr.ValidateAttributeResponse{}
+
+		t.ValidateAttribute(ctx,
+			xattr.ValidateAttributeRequest{
+				Path: path,
+			},
+			&resp,
+		)
+
+		diags.Append(resp.Diagnostics...)
 
 		if diags.HasError() {
 			return nil, diags
 		}
-	}
+	default:
+		//nolint:staticcheck // xattr.TypeWithValidate is deprecated, but we still need to support it.
+		if typeWithValidate, ok := typ.(xattr.TypeWithValidate); ok {
+			diags.Append(typeWithValidate.Validate(ctx, tfNum, path)...)
 
-	num, err := typ.ValueFromTerraform(ctx, tfNum)
-	if err != nil {
-		return nil, append(diags, valueFromTerraformErrorDiag(err, path))
+			if diags.HasError() {
+				return nil, diags
+			}
+		}
 	}
 
 	return num, diags
@@ -288,17 +382,36 @@ func FromBigInt(ctx context.Context, typ attr.Type, val *big.Int, path path.Path
 	}
 	tfNum := tftypes.NewValue(tftypes.Number, fl)
 
-	if typeWithValidate, ok := typ.(xattr.TypeWithValidate); ok {
-		diags.Append(typeWithValidate.Validate(ctx, tfNum, path)...)
+	num, err := typ.ValueFromTerraform(ctx, tfNum)
+	if err != nil {
+		return nil, append(diags, valueFromTerraformErrorDiag(err, path))
+	}
+
+	switch t := num.(type) {
+	case xattr.ValidateableAttribute:
+		resp := xattr.ValidateAttributeResponse{}
+
+		t.ValidateAttribute(ctx,
+			xattr.ValidateAttributeRequest{
+				Path: path,
+			},
+			&resp,
+		)
+
+		diags.Append(resp.Diagnostics...)
 
 		if diags.HasError() {
 			return nil, diags
 		}
-	}
+	default:
+		//nolint:staticcheck // xattr.TypeWithValidate is deprecated, but we still need to support it.
+		if typeWithValidate, ok := typ.(xattr.TypeWithValidate); ok {
+			diags.Append(typeWithValidate.Validate(ctx, tfNum, path)...)
 
-	num, err := typ.ValueFromTerraform(ctx, tfNum)
-	if err != nil {
-		return nil, append(diags, valueFromTerraformErrorDiag(err, path))
+			if diags.HasError() {
+				return nil, diags
+			}
+		}
 	}
 
 	return num, diags

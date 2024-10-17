@@ -32,9 +32,11 @@ func genericOrderSchema(withOptions bool) map[string]*schema.Schema {
 
 	orderSchema := map[string]*schema.Schema{
 		"ovh_subsidiary": {
-			Type:        schema.TypeString,
-			Required:    true,
-			ForceNew:    true,
+			Type:     schema.TypeString,
+			ForceNew: true,
+			Optional: true,
+			Computed: true,
+
 			Description: "Ovh Subsidiary",
 			ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
 				err := helpers.ValidateSubsidiary(v.(string))
@@ -64,9 +66,11 @@ func genericOrderSchema(withOptions bool) map[string]*schema.Schema {
 		},
 
 		"plan": {
-			Type:        schema.TypeList,
-			Required:    true,
-			ForceNew:    true,
+			Type:     schema.TypeList,
+			ForceNew: true,
+			Optional: true,
+			Computed: true,
+
 			Description: "Product Plan to order",
 			MaxItems:    1,
 			Elem: &schema.Resource{
@@ -239,6 +243,13 @@ func orderCreateFromResource(d *schema.ResourceData, meta interface{}, product s
 }
 
 func orderCreate(d *OrderModel, config *Config, product string, waitForCompletion bool) error {
+	if d.OvhSubsidiary.ValueString() == "" {
+		return fmt.Errorf("ovh_subsidiary is missing from configuration")
+	}
+	if len(d.Plan.Elements()) == 0 {
+		return fmt.Errorf("plan is missing from configuration")
+	}
+
 	// create Cart
 	cartParams := &OrderCartCreateOpts{
 		OvhSubsidiary: strings.ToUpper(d.OvhSubsidiary.ValueString()),

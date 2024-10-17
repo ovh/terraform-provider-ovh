@@ -47,23 +47,7 @@ func (s *muxServer) CallFunction(ctx context.Context, req *tfprotov6.CallFunctio
 
 	ctx = logging.Tfprotov6ProviderServerContext(ctx, server)
 
-	// Remove and call server.CallFunction below directly.
-	// Reference: https://github.com/hashicorp/terraform-plugin-mux/issues/210
-	functionServer, ok := server.(tfprotov6.FunctionServer)
-
-	if !ok {
-		resp := &tfprotov6.CallFunctionResponse{
-			Error: &tfprotov6.FunctionError{
-				Text: "Provider Functions Not Implemented: A provider-defined function call was received by the provider, however the provider does not implement functions. " +
-					"Either upgrade the provider to a version that implements provider-defined functions or this is a bug in Terraform that should be reported to the Terraform maintainers.",
-			},
-		}
-
-		return resp, nil
-	}
-
 	logging.MuxTrace(ctx, "calling downstream server")
 
-	// return server.CallFunction(ctx, req)
-	return functionServer.CallFunction(ctx, req)
+	return server.CallFunction(ctx, req)
 }
