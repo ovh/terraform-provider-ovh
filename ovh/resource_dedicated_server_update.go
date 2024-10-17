@@ -34,6 +34,12 @@ func resourceDedicatedServerUpdate() *schema.Resource {
 				Description: "The boot script of your dedicated server.",
 				Optional:    true,
 			},
+			"efi_bootloader_path": {
+				Type:        schema.TypeString,
+				Description: "The path of the EFI bootloader.",
+				Computed:    true,
+				Optional:    true,
+			},
 			"monitoring": {
 				Type:        schema.TypeBool,
 				Computed:    true,
@@ -113,6 +119,7 @@ func resourceDedicatedServerUpdateRead(ctx context.Context, d *schema.ResourceDa
 
 	d.Set("boot_id", ds.BootId)
 	d.Set("boot_script", ds.BootScript)
+	d.Set("efi_bootloader_path", ds.EfiBootloaderPath)
 	d.Set("monitoring", ds.Monitoring)
 	d.Set("state", ds.State)
 	d.Set("display_name", ds.DisplayName)

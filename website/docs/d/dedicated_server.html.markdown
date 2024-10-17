@@ -29,6 +29,7 @@ In addition, the following attributes are exported:
 * `urn` - URN of the dedicated server instance
 * `commercial_range` - Dedicated server commercial range
 * `datacenter` - Dedicated datacenter localisation (bhs1,bhs2,...)
+* `efi_bootloader_path` - Path of the EFI bootloader of the dedicated server
 * `ip` - Dedicated server ip (IPv4)
 * `ips` - Dedicated server ip blocks
 * `link_speed` - Link speed of the server

@@ -37,9 +37,9 @@ func TestAccDedicatedServerDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(
 						"data.ovh_dedicated_server.server", "display_name"),
 					resource.TestCheckResourceAttr(
-						"data.ovh_dedicated_server.server", "region", "eu-west-sbg"),
+						"data.ovh_dedicated_server.server", "region", "ca-east-bhs"),
 					resource.TestCheckResourceAttr(
-						"data.ovh_dedicated_server.server", "availability_zone", "eu-west-sbg-a"),
+						"data.ovh_dedicated_server.server", "availability_zone", "ca-east-bhs-a"),
 					resource.TestCheckResourceAttr(
 						"data.ovh_dedicated_server.server", "new_upgrade_system", "true"),
 					resource.TestCheckResourceAttr(
