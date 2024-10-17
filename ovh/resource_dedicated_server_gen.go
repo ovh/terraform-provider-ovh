@@ -152,6 +152,13 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 			Description:         "The display name of your dedicated server",
 			MarkdownDescription: "The display name of your dedicated server",
 		},
+		"efi_bootloader_path": schema.StringAttribute{
+			CustomType:          ovhtypes.TfStringType{},
+			Optional:            true,
+			Computed:            true,
+			Description:         "Path of the EFI bootloader served on boot",
+			MarkdownDescription: "Path of the EFI bootloader served on boot",
+		},
 		"iam": schema.SingleNestedAttribute{
 			Attributes: map[string]schema.Attribute{
 				"display_name": schema.StringAttribute{
@@ -375,6 +382,7 @@ type DedicatedServerModel struct {
 	Datacenter          ovhtypes.TfStringValue                        `tfsdk:"datacenter" json:"datacenter"`
 	Details             DetailsValue                                  `tfsdk:"details" json:"details"`
 	DisplayName         ovhtypes.TfStringValue                        `tfsdk:"display_name" json:"displayName"`
+	EfiBootloaderPath   ovhtypes.TfStringValue                        `tfsdk:"efi_bootloader_path" json:"efiBootloaderPath"`
 	Iam                 IamValue                                      `tfsdk:"iam" json:"iam"`
 	Ip                  ovhtypes.TfStringValue                        `tfsdk:"ip" json:"ip"`
 	LinkSpeed           ovhtypes.TfInt64Value                         `tfsdk:"link_speed" json:"linkSpeed"`
@@ -433,6 +441,10 @@ func (v *DedicatedServerModel) MergeWith(other *DedicatedServerModel) {
 
 	if (v.DisplayName.IsUnknown() || v.DisplayName.IsNull()) && !other.DisplayName.IsUnknown() {
 		v.DisplayName = other.DisplayName
+	}
+
+	if (v.EfiBootloaderPath.IsUnknown() || v.EfiBootloaderPath.IsNull()) && !other.EfiBootloaderPath.IsUnknown() {
+		v.EfiBootloaderPath = other.EfiBootloaderPath
 	}
 
 	if v.Iam.IsUnknown() && !other.Iam.IsUnknown() {
@@ -574,6 +586,7 @@ type DedicatedServerWritableModel struct {
 	BootId              *ovhtypes.TfInt64Value                                 `tfsdk:"boot_id" json:"bootId,omitempty"`
 	BootScript          *ovhtypes.TfStringValue                                `tfsdk:"boot_script" json:"bootScript,omitempty"`
 	Details             *DetailsWritableValue                                  `tfsdk:"details" json:"details,omitempty"`
+	EfiBootloaderPath   *ovhtypes.TfStringValue                                `tfsdk:"efi_bootloader_path" json:"efiBootloaderPath,omitempty"`
 	Monitoring          *ovhtypes.TfBoolValue                                  `tfsdk:"monitoring" json:"monitoring,omitempty"`
 	NoIntervention      *ovhtypes.TfBoolValue                                  `tfsdk:"no_intervention" json:"noIntervention,omitempty"`
 	PartitionSchemeName *ovhtypes.TfStringValue                                `tfsdk:"partition_scheme_name" json:"partitionSchemeName,omitempty"`
@@ -594,6 +607,10 @@ func (v DedicatedServerModel) ToCreate() *DedicatedServerWritableModel {
 
 	if !v.BootScript.IsUnknown() {
 		res.BootScript = &v.BootScript
+	}
+
+	if !v.EfiBootloaderPath.IsUnknown() {
+		res.EfiBootloaderPath = &v.EfiBootloaderPath
 	}
 
 	if !v.Monitoring.IsUnknown() {
@@ -664,6 +681,10 @@ func (v DedicatedServerModel) ToUpdate() *DedicatedServerWritableModel {
 
 	if !v.BootScript.IsUnknown() {
 		res.BootScript = &v.BootScript
+	}
+
+	if !v.EfiBootloaderPath.IsUnknown() {
+		res.EfiBootloaderPath = &v.EfiBootloaderPath
 	}
 
 	if !v.Monitoring.IsUnknown() {
