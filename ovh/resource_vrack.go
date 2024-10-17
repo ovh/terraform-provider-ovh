@@ -111,20 +111,6 @@ func resourceVrackRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set(k, v)
 	}
 
-	// Retrieve order information
-	serviceObj, err := serviceFromServiceName(config.OVHClient, "vrack", serviceName)
-	if err != nil {
-		return fmt.Errorf("failed to retrieve vrack details: %w", err)
-	}
-	d.Set("plan", serviceObj.ToSDKv2PlanValue())
-
-	// Retrieve subsidiary information
-	var me MeResponse
-	if err := config.OVHClient.Get("/me", &me); err != nil {
-		return fmt.Errorf("error retrieving account information: %w", err)
-	}
-	d.Set("ovh_subsidiary", me.OvhSubsidiary)
-
 	return nil
 }
 

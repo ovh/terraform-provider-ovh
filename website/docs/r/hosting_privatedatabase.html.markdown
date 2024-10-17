@@ -117,8 +117,22 @@ The following attributes are exported:
 
 ## Import
 
-OVHcloud Webhosting database can be imported using the `service_name`, E.g.,
+OVHcloud Webhosting database can be imported using the `service_name`.
+Using the following configuration:
 
+```hcl
+import {
+  to = ovh_hosting_privatedatabase.database
+  id = "<service name>"
+}
 ```
-$ terraform import ovh_hosting_privatedatabase.database service_name
+
+You can then run:
+
+```bash
+$ terraform plan -generate-config-out=database.tf
+$ terraform apply
 ```
+
+The file `database.tf` will then contain the imported resource's configuration, that can be copied next to the `import` block above.
+See https://developer.hashicorp.com/terraform/language/import/generating-configuration for more details.

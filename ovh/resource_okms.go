@@ -219,10 +219,7 @@ func (r *okmsResource) Update(ctx context.Context, req resource.UpdateRequest, r
 			data.Iam.DisplayName = planData.DisplayName
 			err := r.waitKmsUpdate(ctx, data.Id.ValueString(), 1*time.Minute, func(responseData *OkmsModel) bool {
 				// KMS name was updated successfully
-				if responseData.DisplayName.ValueString() == data.DisplayName.ValueString() {
-					return true
-				}
-				return false
+				return responseData.DisplayName.ValueString() == data.DisplayName.ValueString()
 			})
 
 			if err != nil {

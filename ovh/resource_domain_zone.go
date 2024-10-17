@@ -71,7 +71,7 @@ func resourceDomainZoneSchema() map[string]*schema.Schema {
 
 func resourceDomainZoneCreate(d *schema.ResourceData, meta interface{}) error {
 	if err := orderCreateFromResource(d, meta, "dns", true); err != nil {
-		return fmt.Errorf("Could not order domain zone: %q", err)
+		return fmt.Errorf("could not order domain zone: %q", err)
 	}
 
 	return resourceDomainZoneRead(d, meta)
@@ -80,7 +80,7 @@ func resourceDomainZoneCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceDomainZoneRead(d *schema.ResourceData, meta interface{}) error {
 	_, details, err := orderReadInResource(d, meta)
 	if err != nil {
-		return fmt.Errorf("Could not read domainZone order: %q", err)
+		return fmt.Errorf("could not read domainZone order: %q", err)
 	}
 
 	config := meta.(*Config)
@@ -104,7 +104,7 @@ func resourceDomainZoneRead(d *schema.ResourceData, meta interface{}) error {
 func resourceDomainZoneDelete(d *schema.ResourceData, meta interface{}) error {
 	_, details, err := orderReadInResource(d, meta)
 	if err != nil {
-		return fmt.Errorf("Could not read domainZone order: %q", err)
+		return fmt.Errorf("could not read domainZone order: %q", err)
 	}
 
 	config := meta.(*Config)
