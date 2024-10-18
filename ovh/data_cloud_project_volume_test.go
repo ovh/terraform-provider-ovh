@@ -14,7 +14,8 @@ func TestAccDataSourceCloudProjectVolume_basic(t *testing.T) {
 	volumeId := os.Getenv("OVH_CLOUD_PROJECT_VOLUME_ID_TEST")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { testAccPreCheckCloud(t); testAccCheckCloudProjectExists(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		PreCheck:                 func() { testAccPreCheckCloud(t); testAccCheckCloudProjectExists(t) },
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(`
