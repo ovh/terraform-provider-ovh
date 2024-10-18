@@ -20,23 +20,27 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 // PlanResourceChangeRequest is the framework server request for the
 // PlanResourceChange RPC.
 type PlanResourceChangeRequest struct {
-	Config           *tfsdk.Config
-	PriorPrivate     *privatestate.Data
-	PriorState       *tfsdk.State
-	ProposedNewState *tfsdk.Plan
-	ProviderMeta     *tfsdk.Config
-	ResourceSchema   fwschema.Schema
-	Resource         resource.Resource
+	ClientCapabilities resource.ModifyPlanClientCapabilities
+	Config             *tfsdk.Config
+	PriorPrivate       *privatestate.Data
+	PriorState         *tfsdk.State
+	ProposedNewState   *tfsdk.Plan
+	ProviderMeta       *tfsdk.Config
+	ResourceSchema     fwschema.Schema
+	Resource           resource.Resource
+	ResourceBehavior   resource.ResourceBehavior
 }
 
 // PlanResourceChangeResponse is the framework server response for the
 // PlanResourceChange RPC.
 type PlanResourceChangeResponse struct {
+	Deferred        *resource.Deferred
 	Diagnostics     diag.Diagnostics
 	PlannedPrivate  *privatestate.Data
 	PlannedState    *tfsdk.State
@@ -46,6 +50,24 @@ type PlanResourceChangeResponse struct {
 // PlanResourceChange implements the framework server PlanResourceChange RPC.
 func (s *Server) PlanResourceChange(ctx context.Context, req *PlanResourceChangeRequest, resp *PlanResourceChangeResponse) {
 	if req == nil {
+		return
+	}
+
+	// Skip ModifyPlan for automatic deferrals with proposed new state as a best effort for PlannedState
+	// unless ProviderDeferredBehavior.EnablePlanModification is true.
+	if s.deferred != nil && !req.ResourceBehavior.ProviderDeferred.EnablePlanModification {
+		logging.FrameworkDebug(ctx, "Provider has deferred response configured, automatically returning deferred response.",
+			map[string]interface{}{
+				logging.KeyDeferredReason: s.deferred.Reason.String(),
+			},
+		)
+
+		resp.PlannedState = planToState(*req.ProposedNewState)
+		resp.PlannedPrivate = req.PriorPrivate
+		resp.Deferred = &resource.Deferred{
+			Reason: resource.DeferredReason(s.deferred.Reason),
+		}
+
 		return
 	}
 
@@ -259,10 +281,11 @@ func (s *Server) PlanResourceChange(ctx context.Context, req *PlanResourceChange
 		logging.FrameworkTrace(ctx, "Resource implements ResourceWithModifyPlan")
 
 		modifyPlanReq := resource.ModifyPlanRequest{
-			Config:  *req.Config,
-			Plan:    stateToPlan(*resp.PlannedState),
-			State:   *req.PriorState,
-			Private: resp.PlannedPrivate.Provider,
+			ClientCapabilities: req.ClientCapabilities,
+			Config:             *req.Config,
+			Plan:               stateToPlan(*resp.PlannedState),
+			State:              *req.PriorState,
+			Private:            resp.PlannedPrivate.Provider,
 		}
 
 		if req.ProviderMeta != nil {
@@ -284,6 +307,23 @@ func (s *Server) PlanResourceChange(ctx context.Context, req *PlanResourceChange
 		resp.PlannedState = planToState(modifyPlanResp.Plan)
 		resp.RequiresReplace = append(resp.RequiresReplace, modifyPlanResp.RequiresReplace...)
 		resp.PlannedPrivate.Provider = modifyPlanResp.Private
+		resp.Deferred = modifyPlanResp.Deferred
+
+		// Provider deferred response is present, add the deferred response alongside the provider-modified plan
+		if s.deferred != nil {
+			logging.FrameworkDebug(ctx, "Provider has deferred response configured, returning deferred response with modified plan.")
+			// Only set the response to the provider configured deferred reason if there is no resource configured deferred reason
+			if resp.Deferred == nil {
+				resp.Deferred = &resource.Deferred{
+					Reason: resource.DeferredReason(s.deferred.Reason),
+				}
+			} else {
+				logging.FrameworkDebug(ctx, fmt.Sprintf("Resource has deferred reason configured, "+
+					"replacing provider deferred reason: %s with resource deferred reason: %s",
+					s.deferred.Reason.String(), modifyPlanResp.Deferred.Reason.String()))
+			}
+			return
+		}
 	}
 
 	// Ensure deterministic RequiresReplace by sorting and deduplicating
@@ -368,8 +408,16 @@ func MarkComputedNilsAsUnknown(ctx context.Context, config tftypes.Value, resour
 			if a.BoolDefaultValue() != nil {
 				return val, nil
 			}
+		case fwschema.AttributeWithFloat32DefaultValue:
+			if a.Float32DefaultValue() != nil {
+				return val, nil
+			}
 		case fwschema.AttributeWithFloat64DefaultValue:
 			if a.Float64DefaultValue() != nil {
+				return val, nil
+			}
+		case fwschema.AttributeWithInt32DefaultValue:
+			if a.Int32DefaultValue() != nil {
 				return val, nil
 			}
 		case fwschema.AttributeWithInt64DefaultValue:
@@ -406,9 +454,19 @@ func MarkComputedNilsAsUnknown(ctx context.Context, config tftypes.Value, resour
 			}
 		}
 
+		// Value type from planned state to create unknown with
+		newValueType := val.Type()
+
+		// If the attribute is dynamic then we can't use the planned state value to create an unknown, as it may be a concrete type.
+		// This logic explicitly sets the unknown value type to dynamic so the type can be determined during apply.
+		_, isDynamic := attribute.GetType().(basetypes.DynamicTypable)
+		if isDynamic {
+			newValueType = tftypes.DynamicPseudoType
+		}
+
 		logging.FrameworkDebug(ctx, "marking computed attribute that is null in the config as unknown")
 
-		return tftypes.NewValue(val.Type(), tftypes.UnknownValue), nil
+		return tftypes.NewValue(newValueType, tftypes.UnknownValue), nil
 	}
 }
 

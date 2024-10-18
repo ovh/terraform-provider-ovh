@@ -94,7 +94,24 @@ Id is set to the order Id. In addition, the following attributes are exported:
     * `quantity` - quantity
 
 ## Import
+
 Zone can be imported using the `order_id` that can be retrieved in the [order page](https://www.ovh.com/manager/#/dedicated/billing/orders/orders) at the creation time of the zone. 
-```bash
-$ terraform import ovh_domain_zone.zone order_id
+
+Using the following configuration:
+
+```hcl
+import {
+  to = ovh_domain_zone.zone
+  id = "<order ID>"
+}
 ```
+
+You can then run:
+
+```bash
+$ terraform plan -generate-config-out=zone.tf
+$ terraform apply
+```
+
+The file `zone.tf` will then contain the imported resource's configuration, that can be copied next to the `import` block above.
+See https://developer.hashicorp.com/terraform/language/import/generating-configuration for more details.

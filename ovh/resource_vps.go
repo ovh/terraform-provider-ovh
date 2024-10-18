@@ -8,12 +8,14 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/ovh/types"
+	ovhtypes "github.com/ovh/terraform-provider-ovh/ovh/types"
 )
 
 var (
@@ -55,6 +57,12 @@ func (d *vpsResource) Schema(ctx context.Context, req resource.SchemaRequest, re
 }
 
 func (r *vpsResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	// Here we force the attribute "plan" to an empty array because it won't be fetched by the Read function.
+	// If we don't do this, Terraform always shows a diff on the following plans (null => []), due to the
+	// plan modifier RequiresReplace that initializes the attribute to its zero-value (an empty array).
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("plan"), ovhtypes.TfListNestedValue[PlanValue]{
+		ListValue: basetypes.NewListValueMust(PlanValue{}.Type(ctx), make([]attr.Value, 0)),
+	})...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_name"), req.ID)...)
 }
 
@@ -244,20 +252,6 @@ func (r *vpsResource) waitForVPSUpdate(ctx context.Context, serviceName string, 
 
 	if err != nil {
 		return nil, err
-	}
-
-	service, err := serviceFromServiceName(r.config.OVHClient, "vps", serviceName)
-	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve service from service name: %w", err)
-	}
-	responseData.Plan = *service.ToPlanValue(ctx, planData.Plan)
-
-	var me MeResponse
-	if err := r.config.OVHClient.Get("/me", &me); err != nil {
-		return nil, fmt.Errorf("error retrieving account information: %w", err)
-	}
-	responseData.OvhSubsidiary = types.TfStringValue{
-		StringValue: basetypes.NewStringValue(me.OvhSubsidiary),
 	}
 
 	return &responseData, nil
