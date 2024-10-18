@@ -74,7 +74,7 @@ func (d *cloudProjectVolumesDataSource) Read(ctx context.Context, req datasource
 		b = append(b, a)
 	}
 
-	data.CloudProjectVolumes = ovhtypes.TfListNestedValue[CloudProjectVolumesValue]{
+	data.Volumes = ovhtypes.TfListNestedValue[CloudProjectVolumesValue]{
 		ListValue: basetypes.NewListValueMust(CloudProjectVolumesValue{}.Type(ctx), b),
 	}
 
