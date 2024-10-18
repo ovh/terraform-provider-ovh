@@ -4,12 +4,17 @@
 package function
 
 import (
+	"context"
+
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/internal/fwfunction"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 // Ensure the implementation satisifies the desired interfaces.
 var _ Parameter = BoolParameter{}
+var _ ParameterWithBoolValidators = BoolParameter{}
+var _ fwfunction.ParameterWithValidateImplementation = BoolParameter{}
 
 // BoolParameter represents a function parameter that is a boolean.
 //
@@ -70,6 +75,15 @@ type BoolParameter struct {
 	// alphabetical character and followed by alphanumeric or underscore
 	// characters.
 	Name string
+
+	// Validators is a list of bool validators that should be applied to the
+	// parameter.
+	Validators []BoolParameterValidator
+}
+
+// GetValidators returns the list of validators for the parameter.
+func (p BoolParameter) GetValidators() []BoolParameterValidator {
+	return p.Validators
 }
 
 // GetAllowNullValue returns if the parameter accepts a null value.
@@ -104,4 +118,10 @@ func (p BoolParameter) GetType() attr.Type {
 	}
 
 	return basetypes.BoolType{}
+}
+
+func (p BoolParameter) ValidateImplementation(ctx context.Context, req fwfunction.ValidateParameterImplementationRequest, resp *fwfunction.ValidateParameterImplementationResponse) {
+	if p.GetName() == "" {
+		resp.Diagnostics.Append(fwfunction.MissingParameterNameDiag(req.FunctionName, req.ParameterPosition))
+	}
 }

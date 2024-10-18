@@ -38,20 +38,6 @@ func serviceInfoFromServiceName(c *ovh.Client, serviceType, serviceName string) 
 	return &serviceInfos, nil
 }
 
-func serviceFromServiceName(c *ovh.Client, serviceType, serviceName string) (*Service, error) {
-	serviceInfo, err := serviceInfoFromServiceName(c, serviceType, serviceName)
-	if err != nil {
-		return nil, err
-	}
-
-	var service Service
-	if err := c.Get(fmt.Sprintf("/services/%d", serviceInfo.ServiceID), &service); err != nil {
-		return nil, fmt.Errorf("failed to get service: %w", err)
-	}
-
-	return &service, nil
-}
-
 // serviceUpdateDisplayName allows to update the display name of any service.
 // It first retrieves the ID of the service using route "/${serviceType}/${serviceName}/serviceInfos", and
 // then uses this ID to call PUT /services/${serviceId}.
