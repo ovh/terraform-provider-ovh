@@ -13,7 +13,8 @@ func TestAccDataSourceCloudProjectVolumes_basic(t *testing.T) {
 	regionName := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { testAccPreCheckCloud(t); testAccCheckCloudProjectExists(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		PreCheck:                 func() { testAccPreCheckCloud(t); testAccCheckCloudProjectExists(t) },
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(`
@@ -26,9 +27,9 @@ func TestAccDataSourceCloudProjectVolumes_basic(t *testing.T) {
 					regionName,
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.ovh_cloud_project_volume.volume", "region_name", os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")),
-					resource.TestCheckResourceAttrSet("data.ovh_cloud_project_volume.volume", "volumes.0.name"),
-					resource.TestCheckResourceAttrSet("data.ovh_cloud_project_volume.volume", "volumes.0.volume_id"),
+					resource.TestCheckResourceAttr("data.ovh_cloud_project_volumes.volume", "region_name", os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")),
+					resource.TestCheckResourceAttrSet("data.ovh_cloud_project_volumes.volume", "volumes.0.name"),
+					resource.TestCheckResourceAttrSet("data.ovh_cloud_project_volumes.volume", "volumes.0.volume_id"),
 				),
 			},
 		},
