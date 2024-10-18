@@ -19,7 +19,7 @@ import (
 
 func CloudProjectVolumesDataSourceSchema(ctx context.Context) schema.Schema {
 	attrs := map[string]schema.Attribute{
-		"cloud_project_volumes": schema.SetNestedAttribute{
+		"volumes": schema.SetNestedAttribute{
 			NestedObject: schema.NestedAttributeObject{
 				Attributes: map[string]schema.Attribute{
 					"id": schema.StringAttribute{
@@ -70,15 +70,15 @@ func CloudProjectVolumesDataSourceSchema(ctx context.Context) schema.Schema {
 }
 
 type CloudProjectVolumesModel struct {
-	CloudProjectVolumes ovhtypes.TfListNestedValue[CloudProjectVolumesValue] `tfsdk:"cloud_project_volumes" json:"cloudProjectVolumes"`
-	RegionName          ovhtypes.TfStringValue                               `tfsdk:"region_name" json:"regionName"`
-	ServiceName         ovhtypes.TfStringValue                               `tfsdk:"service_name" json:"serviceName"`
+	Volumes     ovhtypes.TfListNestedValue[CloudProjectVolumesValue] `tfsdk:"volumes" json:"cloudProjectVolumes"`
+	RegionName  ovhtypes.TfStringValue                               `tfsdk:"region_name" json:"regionName"`
+	ServiceName ovhtypes.TfStringValue                               `tfsdk:"service_name" json:"serviceName"`
 }
 
 func (v *CloudProjectVolumesModel) MergeWith(other *CloudProjectVolumesModel) {
 
-	if (v.CloudProjectVolumes.IsUnknown() || v.CloudProjectVolumes.IsNull()) && !other.CloudProjectVolumes.IsUnknown() {
-		v.CloudProjectVolumes = other.CloudProjectVolumes
+	if (v.Volumes.IsUnknown() || v.Volumes.IsNull()) && !other.Volumes.IsUnknown() {
+		v.Volumes = other.Volumes
 	}
 
 	if (v.RegionName.IsUnknown() || v.RegionName.IsNull()) && !other.RegionName.IsUnknown() {
