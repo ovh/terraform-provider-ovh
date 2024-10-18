@@ -20,13 +20,16 @@ import (
 )
 
 // Helper
-
 func diagnosticsToError(diags diag.Diagnostics) error {
 	if diags.HasError() {
 		return fmt.Errorf(diags[slices.IndexFunc(diags, func(d diag.Diagnostic) bool { return d.Severity == diag.Error })].Summary)
 	}
 	return nil
 }
+
+// enginesWithoutBackupTime is the list of engines
+// for which "backup_time" is not customizable
+var enginesWithoutBackupTime = []string{"m3db", "grafana", "kafka", "kafkaconnect", "kafkamirrormaker", "opensearch", "m3aggregator"}
 
 type CloudProjectDatabaseBackups struct {
 	Regions []string `json:"regions,omitempty"`
@@ -251,6 +254,10 @@ func (opts *CloudProjectDatabaseCreateOpts) fromResource(d *schema.ResourceData)
 		return nil, err
 	}
 	time := d.Get("backup_time").(string)
+	engine := d.Get("engine").(string)
+	if time != "" && slices.Contains(enginesWithoutBackupTime, engine) {
+		return nil, fmt.Errorf("backup_time is not customizable for engine %q", engine)
+	}
 
 	if len(regions) != 0 || time != "" {
 		opts.Backups = &CloudProjectDatabaseBackups{
@@ -310,6 +317,9 @@ func (opts *CloudProjectDatabaseUpdateOpts) fromResource(d *schema.ResourceData)
 		return nil, err
 	}
 	time := d.Get("backup_time").(string)
+	if time != "" && slices.Contains(enginesWithoutBackupTime, engine) {
+		return nil, fmt.Errorf("backup_time is not customizable for engine %q", engine)
+	}
 
 	if engine != "kafka" && (len(regions) != 0 || time != "") {
 		opts.Backups = &CloudProjectDatabaseBackups{
