@@ -1,3 +1,33 @@
+## 1.0.0 (October 21, 2024)
+
+🎉 Features:
+
+* New resource: `ovh_dbaas_logs_output_opensearch_alias` ([#742](https://github.com/ovh/terraform-provider-ovh/pull/742))
+* New resource: `ovh_dbaas_logs_output_opensearch_index` ([#742](https://github.com/ovh/terraform-provider-ovh/pull/742))
+* New datasource: `ovh_cloud_project_volume` ([#736](https://github.com/ovh/terraform-provider-ovh/pull/736))
+* New datasource: `ovh_cloud_project_volumes` ([#736](https://github.com/ovh/terraform-provider-ovh/pull/736))
+* New datasource: `ovh_dbaas_logs_output_opensearch_index` ([#742](https://github.com/ovh/terraform-provider-ovh/pull/742))
+
+🧨 Breaking changes:
+
+* `r/ovh_ip_service`: **BREAKING CHANGE** Fix resource import and use `service_name` as ID. This is a breaking change because the ID of the resource has been modified, but already existing resources will continue working. ([#754](https://github.com/ovh/terraform-provider-ovh/pull/754))
+* `r/ovh_cloud_project`: **BREAKING CHANGE** Fix resource import and use `project_id` as ID. This is a breaking change because the ID of the resource has been modified, but already existing resources will continue working. ([#760](https://github.com/ovh/terraform-provider-ovh/pull/760))
+* `r/ovh_domain_zone`: **BREAKING CHANGE** Fix resource import and use `name` as ID. This is a breaking change because the ID of the resource has been modified, but already existing resources will continue working. ([#760](https://github.com/ovh/terraform-provider-ovh/pull/760))
+* `r/ovh_hosting_privatedatabase`: **BREAKING CHANGE** Fix resource import and use `service_name` as ID. This is a breaking change because the ID of the resource has been modified, but already existing resources will continue working. ([#760](https://github.com/ovh/terraform-provider-ovh/pull/760))
+* `r/ovh_iploadbalancing`: **BREAKING CHANGE** Fix resource import and use `service_name` as ID. This is a breaking change because the ID of the resource has been modified, but already existing resources will continue working. ([#760](https://github.com/ovh/terraform-provider-ovh/pull/760))
+
+💪 Improvements:
+
+* Don't read order-related information (`ovh_subsidiary`, `plan` and `plan_option` fields) in Read functions of resources that are created using an order ([#754](https://github.com/ovh/terraform-provider-ovh/pull/754))
+
+🐜 Bug fixes:
+
+* `r/ovh_cloud_project_database`: Prevent setting `backup_time` on several engines ([#756](https://github.com/ovh/terraform-provider-ovh/pull/756))
+* Fix marshal and unmarshal of null and unknown values ([#750](https://github.com/ovh/terraform-provider-ovh/pull/750))
+* Fix products termination in the US region ([#754](https://github.com/ovh/terraform-provider-ovh/pull/754))
+
+❤️ Thanks for your contributions ❤️
+
 ## 0.51.0 (October 11, 2024)
 
 🎉 Features:
