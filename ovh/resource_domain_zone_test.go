@@ -132,8 +132,7 @@ func TestAccResourceDomainZone_basic(t *testing.T) {
 	t.Logf("[INFO] Will order test zone: %v", name)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { testAccPreCheckOrderDomainZone(t) },
-
+		PreCheck:  func() { testAccPreCheckOrderDomainZone(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -149,7 +148,7 @@ func TestAccResourceDomainZone_basic(t *testing.T) {
 				ResourceName:            "ovh_domain_zone.zone",
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"plan", "ovh_subsidiary"},
+				ImportStateVerifyIgnore: []string{"plan", "ovh_subsidiary", "order"},
 			},
 		},
 	})

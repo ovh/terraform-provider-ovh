@@ -141,8 +141,7 @@ func TestAccResourceCloudProject_basic(t *testing.T) {
 		vrackServiceName,
 	)
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { testAccPreCheckOrderCloudProject(t) },
-
+		PreCheck:  func() { testAccPreCheckOrderCloudProject(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -159,6 +158,12 @@ func TestAccResourceCloudProject_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"ovh_cloud_project.cloud", "plan.0.plan_code", "project.2018"),
 				),
+			},
+			{
+				ResourceName:            "ovh_cloud_project.cloud",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"plan", "ovh_subsidiary", "order"},
 			},
 		},
 	})

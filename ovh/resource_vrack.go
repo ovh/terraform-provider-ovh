@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
@@ -61,17 +62,22 @@ func resourceVrackSchema() map[string]*schema.Schema {
 }
 
 func resourceVrackCreate(d *schema.ResourceData, meta interface{}) error {
+	config := meta.(*Config)
+
 	// Order vRack and wait for it to be delivered
 	if err := orderCreateFromResource(d, meta, "vrack", true); err != nil {
 		return fmt.Errorf("could not order vrack: %q", err)
 	}
 
-	// Retrieve serviceName from order ID
-	_, details, err := orderReadInResource(d, meta)
+	orderIdInt, err := strconv.Atoi(d.Id())
 	if err != nil {
-		return fmt.Errorf("could not read vrack order: %q", err)
+		return fmt.Errorf("failed to convert orderID to int: %w", err)
 	}
-	serviceName := details[0].Domain
+
+	serviceName, err := serviceNameFromOrder(config.OVHClient, int64(orderIdInt), d.Get("plan.0.plan_code").(string))
+	if err != nil {
+		return fmt.Errorf("could not retrieve service name from order: %w", err)
+	}
 
 	d.SetId(serviceName)
 	d.Set("service_name", serviceName)

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -18,13 +19,12 @@ func resourceIpLoadbalancing() *schema.Resource {
 		Update: resourceIpLoadbalancingUpdate,
 		Read:   resourceIpLoadbalancingRead,
 		Delete: resourceIpLoadbalancingDelete,
-
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			State: func(d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				d.Set("service_name", d.Id())
 				return []*schema.ResourceData{d}, nil
 			},
 		},
-
 		Schema: resourceIpLoadbalancingSchema(),
 	}
 }
@@ -148,27 +148,36 @@ func resourceIpLoadbalancingSchema() map[string]*schema.Schema {
 }
 
 func resourceIpLoadbalancingCreate(d *schema.ResourceData, meta interface{}) error {
+	config := meta.(*Config)
+
 	if err := orderCreateFromResource(d, meta, "ipLoadbalancing", true); err != nil {
 		return fmt.Errorf("Could not order ipLoadbalancing: %q", err)
 	}
+
+	orderIdInt, err := strconv.Atoi(d.Id())
+	if err != nil {
+		return fmt.Errorf("failed to convert orderID to int: %w", err)
+	}
+
+	serviceName, err := serviceNameFromOrder(config.OVHClient, int64(orderIdInt), d.Get("plan.0.plan_code").(string))
+	if err != nil {
+		return fmt.Errorf("could not retrieve service name from order: %w", err)
+	}
+
+	// Backported from the old code
+	if strings.Contains(serviceName, "-zone-") {
+		serviceName = strings.Split(serviceName, "-zone-")[0]
+	}
+
+	d.SetId(serviceName)
+	d.Set("service_name", serviceName)
 
 	return resourceIpLoadbalancingUpdate(d, meta)
 }
 
 func resourceIpLoadbalancingUpdate(d *schema.ResourceData, meta interface{}) error {
-	_, details, err := orderReadInResource(d, meta)
-	if err != nil {
-		return fmt.Errorf("Could not read ipLoadbalancing order: %q", err)
-	}
-
-	var serviceName string
-	if strings.Contains(details[0].Domain, "-zone-") {
-		serviceName = strings.Split(details[0].Domain, "-zone-")[0]
-	} else {
-		serviceName = details[0].Domain
-	}
-
 	config := meta.(*Config)
+	serviceName := d.Get("service_name").(string)
 
 	log.Printf("[DEBUG] Will update ipLoadbalancing: %s", serviceName)
 	opts := (&IpLoadbalancingUpdateOpts{}).FromResource(d)
@@ -181,19 +190,9 @@ func resourceIpLoadbalancingUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceIpLoadbalancingRead(d *schema.ResourceData, meta interface{}) error {
-	_, details, err := orderReadInResource(d, meta)
-	if err != nil {
-		return fmt.Errorf("Could not read ipLoadbalancing order: %q", err)
-	}
-
-	var serviceName string
-	if strings.Contains(details[0].Domain, "-zone-") {
-		serviceName = strings.Split(details[0].Domain, "-zone-")[0]
-	} else {
-		serviceName = details[0].Domain
-	}
-
 	config := meta.(*Config)
+	serviceName := d.Get("service_name").(string)
+
 	log.Printf("[DEBUG] Will read ipLoadbalancing: %s", serviceName)
 
 	r := &IpLoadbalancing{}
@@ -212,12 +211,10 @@ func resourceIpLoadbalancingRead(d *schema.ResourceData, meta interface{}) error
 
 func resourceIpLoadbalancingDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-
-	id := d.Id()
 	serviceName := d.Get("service_name").(string)
 
 	terminate := func() (string, error) {
-		log.Printf("[DEBUG] Will terminate ipLoadbalancing %s for order %s", serviceName, id)
+		log.Printf("[DEBUG] Will terminate ipLoadbalancing %s", serviceName)
 		endpoint := fmt.Sprintf(
 			"/ipLoadbalancing/%s/terminate",
 			url.PathEscape(serviceName),
@@ -232,7 +229,7 @@ func resourceIpLoadbalancingDelete(d *schema.ResourceData, meta interface{}) err
 	}
 
 	confirmTerminate := func(token string) error {
-		log.Printf("[DEBUG] Will confirm termination of ipLoadbalancing %s for order %s", serviceName, id)
+		log.Printf("[DEBUG] Will confirm termination of ipLoadbalancing %s", serviceName)
 		endpoint := fmt.Sprintf(
 			"/ipLoadbalancing/%s/confirmTermination",
 			url.PathEscape(serviceName),
