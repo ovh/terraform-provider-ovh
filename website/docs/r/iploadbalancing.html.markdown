@@ -111,14 +111,14 @@ Id is set to the order Id. In addition, the following attributes are exported:
 
 ## Import
 
-OVHcloud IP load balancing services can be imported using the `order_id` that can be retrieved in the [order page](https://www.ovh.com/manager/#/dedicated/billing/orders/orders) at the creation time of the service.
+OVHcloud IP load balancing services can be imported using its `service_name`.
 
 Using the following configuration:
 
 ```hcl
 import {
   to = ovh_iploadbalancing.iplb
-  id = "<order ID>"
+  id = "<service name>"
 }
 ```
 

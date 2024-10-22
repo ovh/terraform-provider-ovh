@@ -66,7 +66,7 @@ func TestAccResourceVrack_basic(t *testing.T) {
 				ResourceName:            "ovh_vrack.vrack",
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"plan", "ovh_subsidiary"},
+				ImportStateVerifyIgnore: []string{"plan", "ovh_subsidiary", "order"},
 			},
 		},
 	})

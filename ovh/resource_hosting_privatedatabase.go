@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/go-ovh/ovh"
@@ -16,13 +17,12 @@ func resourceHostingPrivateDatabase() *schema.Resource {
 		Update: resourceHostingPrivateDatabaseUpdate,
 		Read:   resourceHostingPrivateDatabaseRead,
 		Delete: resourceHostingPrivateDatabaseDelete,
-
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			State: func(d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				d.Set("service_name", d.Id())
 				return []*schema.ResourceData{d}, nil
 			},
 		},
-
 		Schema: resourceHostingPrivateDatabaseSchema(),
 	}
 }
@@ -141,25 +141,35 @@ func resourceHostingPrivateDatabaseSchema() map[string]*schema.Schema {
 }
 
 func resourceHostingPrivateDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
+	config := meta.(*Config)
+
 	if err := orderCreateFromResource(d, meta, "privateSQL", true); err != nil {
 		return fmt.Errorf("could not order privateDatabase: %q", err)
 	}
+
+	orderIdInt, err := strconv.Atoi(d.Id())
+	if err != nil {
+		return fmt.Errorf("failed to convert orderID to int: %w", err)
+	}
+
+	serviceName, err := serviceNameFromOrder(config.OVHClient, int64(orderIdInt), d.Get("plan.0.plan_code").(string))
+	if err != nil {
+		return fmt.Errorf("could not retrieve service name from order: %w", err)
+	}
+
+	d.SetId(serviceName)
+	d.Set("service_name", serviceName)
 
 	return resourceHostingPrivateDatabaseUpdate(d, meta)
 }
 
 func resourceHostingPrivateDatabaseUpdate(d *schema.ResourceData, meta interface{}) error {
-	_, details, err := orderReadInResource(d, meta)
-	if err != nil {
-		return fmt.Errorf("could not read privateDatabase order: %q", err)
-	}
-
 	config := meta.(*Config)
-	serviceName := details[0].Domain
+	serviceName := d.Get("service_name").(string)
 
 	log.Printf("[DEBUG] Will update privateDatabase: %s", serviceName)
 	opts := (&HostingPrivateDatabaseOpts{}).FromResource(d)
-	endpoint := fmt.Sprintf("/hosting/privateDatabase/%s", serviceName)
+	endpoint := fmt.Sprintf("/hosting/privateDatabase/%s", url.PathEscape(serviceName))
 	if err := config.OVHClient.Put(endpoint, opts, nil); err != nil {
 		return fmt.Errorf("calling Put %s: %q", endpoint, err)
 	}
@@ -168,18 +178,13 @@ func resourceHostingPrivateDatabaseUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceHostingPrivateDatabaseRead(d *schema.ResourceData, meta interface{}) error {
-	_, details, err := orderReadInResource(d, meta)
-	if err != nil {
-		return fmt.Errorf("could not read privatedatabase order: %q", err)
-	}
-
 	config := meta.(*Config)
-	serviceName := details[0].Domain
+	serviceName := d.Get("service_name").(string)
 
 	log.Printf("[DEBUG] Will read privateDatabase: %s", serviceName)
 	ds := &HostingPrivateDatabase{}
-	endpoint := fmt.Sprintf("/hosting/privateDatabase/%s", serviceName)
-	err = config.OVHClient.Get(endpoint, &ds)
+	endpoint := fmt.Sprintf("/hosting/privateDatabase/%s", url.PathEscape(serviceName))
+	err := config.OVHClient.Get(endpoint, &ds)
 	if err != nil {
 		return helpers.CheckDeleted(d, err, endpoint)
 	}
@@ -192,17 +197,11 @@ func resourceHostingPrivateDatabaseRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceHostingPrivateDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
-	_, details, err := orderReadInResource(d, meta)
-	if err != nil {
-		return fmt.Errorf("could not read privateDatabase order: %q", err)
-	}
-
 	config := meta.(*Config)
-	id := d.Id()
-	serviceName := details[0].Domain
+	serviceName := d.Get("service_name").(string)
 
 	terminate := func() (string, error) {
-		log.Printf("[DEBUG] Will terminate privateDatabase %s for order %s", serviceName, id)
+		log.Printf("[DEBUG] Will terminate privateDatabase %s", serviceName)
 		endpoint := fmt.Sprintf(
 			"/hosting/privateDatabase/%s/terminate",
 			url.PathEscape(serviceName),
@@ -217,7 +216,7 @@ func resourceHostingPrivateDatabaseDelete(d *schema.ResourceData, meta interface
 	}
 
 	confirmTerminate := func(token string) error {
-		log.Printf("[DEBUG] Will confirm termination of privateDatabase %s for order %s", serviceName, id)
+		log.Printf("[DEBUG] Will confirm termination of privateDatabase %s", serviceName)
 		endpoint := fmt.Sprintf(
 			"/hosting/privateDatabase/%s/confirmTermination",
 			url.PathEscape(serviceName),
