@@ -110,17 +110,17 @@ func resourceCloudProjectDatabaseM3dbNamespace() *schema.Resource {
 }
 
 func resourceCloudProjectDatabaseM3dbNamespaceImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	givenId := d.Id()
+	givenID := d.Id()
 	n := 3
-	splitId := strings.SplitN(givenId, "/", n)
-	if len(splitId) != n {
+	splitID := strings.SplitN(givenID, "/", n)
+	if len(splitID) != n {
 		return nil, fmt.Errorf("import Id is not service_name/cluster_id/id formatted")
 	}
-	serviceName := splitId[0]
-	clusterId := splitId[1]
-	id := splitId[2]
+	serviceName := splitID[0]
+	clusterID := splitID[1]
+	id := splitID[2]
 	d.SetId(id)
-	d.Set("cluster_id", clusterId)
+	d.Set("cluster_id", clusterID)
 	d.Set("service_name", serviceName)
 
 	results := make([]*schema.ResourceData, 1)
@@ -128,19 +128,50 @@ func resourceCloudProjectDatabaseM3dbNamespaceImportState(d *schema.ResourceData
 	return results, nil
 }
 
+func toMap(d *schema.ResourceData) map[string]interface{} {
+	obj := make(map[string]interface{})
+	obj["resolution"] = d.Get("resolution")
+	obj["retention_block_data_expiration_duration"] = d.Get("retention_block_data_expiration_duration")
+	obj["retention_block_size_duration"] = d.Get("retention_block_size_duration")
+	obj["retention_buffer_future_duration"] = d.Get("retention_buffer_future_duration")
+	obj["retention_buffer_past_duration"] = d.Get("retention_buffer_past_duration")
+	obj["retention_period_duration"] = d.Get("retention_period_duration")
+	obj["snapshot_enabled"] = d.Get("snapshot_enabled")
+	obj["type"] = d.Get("type")
+	obj["writes_to_commit_log_enabled"] = d.Get("writes_to_commit_log_enabled")
+
+	return obj
+}
+
 func resourceCloudProjectDatabaseM3dbNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	name := d.Get("name").(string)
+	if name == "default" {
+		obj := toMap(d)
+
+		diags := dataSourceCloudProjectDatabaseM3dbNamespaceRead(ctx, d, meta)
+		if diags.HasError() {
+			return diags
+		}
+
+		for k, v := range obj {
+			d.Set(k, v)
+		}
+
+		return resourceCloudProjectDatabaseM3dbNamespaceUpdate(ctx, d, meta)
+	}
+
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
-	clusterId := d.Get("cluster_id").(string)
+	clusterID := d.Get("cluster_id").(string)
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/database/m3db/%s/namespace",
 		url.PathEscape(serviceName),
-		url.PathEscape(clusterId),
+		url.PathEscape(clusterID),
 	)
 
 	// Should read one time to
 	listRes := make([]string, 0)
-	log.Printf("[DEBUG] Will read namespaces from cluster %s from project %s", clusterId, serviceName)
+	log.Printf("[DEBUG] Will read namespaces from cluster %s from project %s", clusterID, serviceName)
 	if err := config.OVHClient.GetWithContext(ctx, endpoint, &listRes); err != nil {
 		return diag.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
 	}
@@ -148,14 +179,14 @@ func resourceCloudProjectDatabaseM3dbNamespaceCreate(ctx context.Context, d *sch
 	params := (&CloudProjectDatabaseM3dbNamespaceCreateOpts{}).FromResource(d)
 	res := &CloudProjectDatabaseM3dbNamespaceResponse{}
 
-	log.Printf("[DEBUG] Will create namespace: %+v for cluster %s from project %s", params, clusterId, serviceName)
+	log.Printf("[DEBUG] Will create namespace: %+v for cluster %s from project %s", params, clusterID, serviceName)
 	err := config.OVHClient.PostWithContext(ctx, endpoint, params, res)
 	if err != nil {
 		return diag.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
 	}
 
 	log.Printf("[DEBUG] Waiting for namespace %s to be READY", res.Id)
-	err = waitForCloudProjectDatabaseM3dbNamespaceReady(ctx, config.OVHClient, serviceName, clusterId, res.Id, d.Timeout(schema.TimeoutCreate))
+	err = waitForCloudProjectDatabaseM3dbNamespaceReady(ctx, config.OVHClient, serviceName, clusterID, res.Id, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return diag.Errorf("timeout while waiting namespace %s to be READY: %s", res.Id, err.Error())
 	}
@@ -169,17 +200,17 @@ func resourceCloudProjectDatabaseM3dbNamespaceCreate(ctx context.Context, d *sch
 func resourceCloudProjectDatabaseM3dbNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
-	clusterId := d.Get("cluster_id").(string)
+	clusterID := d.Get("cluster_id").(string)
 	id := d.Id()
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/database/m3db/%s/namespace/%s",
 		url.PathEscape(serviceName),
-		url.PathEscape(clusterId),
+		url.PathEscape(clusterID),
 		url.PathEscape(id),
 	)
 	res := &CloudProjectDatabaseM3dbNamespaceResponse{}
 
-	log.Printf("[DEBUG] Will read namespace %s from cluster %s from project %s", id, clusterId, serviceName)
+	log.Printf("[DEBUG] Will read namespace %s from cluster %s from project %s", id, clusterID, serviceName)
 	if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
@@ -198,24 +229,24 @@ func resourceCloudProjectDatabaseM3dbNamespaceRead(ctx context.Context, d *schem
 func resourceCloudProjectDatabaseM3dbNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
-	clusterId := d.Get("cluster_id").(string)
+	clusterID := d.Get("cluster_id").(string)
 	id := d.Id()
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/database/m3db/%s/namespace/%s",
 		url.PathEscape(serviceName),
-		url.PathEscape(clusterId),
+		url.PathEscape(clusterID),
 		url.PathEscape(id),
 	)
 	params := (&CloudProjectDatabaseM3dbNamespaceUpdateOpts{}).FromResource(d)
 
-	log.Printf("[DEBUG] Will update namespace: %+v from cluster %s from project %s", params, clusterId, serviceName)
+	log.Printf("[DEBUG] Will update namespace: %+v from cluster %s from project %s", params, clusterID, serviceName)
 	err := config.OVHClient.PutWithContext(ctx, endpoint, params, nil)
 	if err != nil {
 		return diag.Errorf("calling Put %s with params %+v:\n\t %q", endpoint, params, err)
 	}
 
 	log.Printf("[DEBUG] Waiting for namespace %s to be READY", id)
-	err = waitForCloudProjectDatabaseM3dbNamespaceReady(ctx, config.OVHClient, serviceName, clusterId, id, d.Timeout(schema.TimeoutUpdate))
+	err = waitForCloudProjectDatabaseM3dbNamespaceReady(ctx, config.OVHClient, serviceName, clusterID, id, d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
 		return diag.Errorf("timeout while waiting namespace %s to be READY: %s", id, err.Error())
 	}
@@ -225,25 +256,31 @@ func resourceCloudProjectDatabaseM3dbNamespaceUpdate(ctx context.Context, d *sch
 }
 
 func resourceCloudProjectDatabaseM3dbNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	name := d.Get("name").(string)
+	if name == "default" {
+		d.SetId("")
+		return nil
+	}
+
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
-	clusterId := d.Get("cluster_id").(string)
+	clusterID := d.Get("cluster_id").(string)
 	id := d.Id()
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/database/m3db/%s/namespace/%s",
 		url.PathEscape(serviceName),
-		url.PathEscape(clusterId),
+		url.PathEscape(clusterID),
 		url.PathEscape(id),
 	)
 
-	log.Printf("[DEBUG] Will delete namespace %s from cluster %s from project %s", id, clusterId, serviceName)
+	log.Printf("[DEBUG] Will delete namespace %s from cluster %s from project %s", id, clusterID, serviceName)
 	err := config.OVHClient.DeleteWithContext(ctx, endpoint, nil)
 	if err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
 	log.Printf("[DEBUG] Waiting for namespace %s to be DELETED", id)
-	err = waitForCloudProjectDatabaseM3dbNamespaceDeleted(ctx, config.OVHClient, serviceName, clusterId, id, d.Timeout(schema.TimeoutDelete))
+	err = waitForCloudProjectDatabaseM3dbNamespaceDeleted(ctx, config.OVHClient, serviceName, clusterID, id, d.Timeout(schema.TimeoutDelete))
 	if err != nil {
 		return diag.Errorf("timeout while waiting namespace %s to be DELETED: %s", id, err.Error())
 	}
