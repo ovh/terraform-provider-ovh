@@ -21,13 +21,12 @@ func resourceCloudProject() *schema.Resource {
 		Update: resourceCloudProjectUpdate,
 		Read:   resourceCloudProjectRead,
 		Delete: resourceCloudProjectDelete,
-
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			State: func(d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				d.Set("project_id", d.Id())
 				return []*schema.ResourceData{d}, nil
 			},
 		},
-
 		Schema: resourceCloudProjectSchema(),
 	}
 }
@@ -71,9 +70,24 @@ func resourceCloudProjectSchema() map[string]*schema.Schema {
 }
 
 func resourceCloudProjectCreate(d *schema.ResourceData, meta interface{}) error {
+	config := meta.(*Config)
+
 	if err := orderCreateFromResource(d, meta, "cloud", true); err != nil {
 		return fmt.Errorf("could not order cloud project: %q", err)
 	}
+
+	order, details, err := orderReadInResource(d, meta)
+	if err != nil {
+		return fmt.Errorf("could not read cloud project order: %q", err)
+	}
+
+	serviceName, err := resourceCloudProjectGetServiceName(config, order, details)
+	if err != nil {
+		return err
+	}
+
+	d.SetId(serviceName)
+	d.Set("project_id", serviceName)
 
 	return resourceCloudProjectUpdate(d, meta)
 }
@@ -105,16 +119,8 @@ func resourceCloudProjectGetServiceName(config *Config, order *MeOrder, details 
 }
 
 func resourceCloudProjectUpdate(d *schema.ResourceData, meta interface{}) error {
-	order, details, err := orderReadInResource(d, meta)
-	if err != nil {
-		return fmt.Errorf("could not read cloud project order: %q", err)
-	}
-
 	config := meta.(*Config)
-	serviceName, err := resourceCloudProjectGetServiceName(config, order, details)
-	if err != nil {
-		return err
-	}
+	serviceName := d.Get("project_id").(string)
 
 	log.Printf("[DEBUG] Will update cloudProject: %s", serviceName)
 	opts := (&CloudProjectUpdateOpts{}).FromResource(d)
@@ -127,16 +133,8 @@ func resourceCloudProjectUpdate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceCloudProjectRead(d *schema.ResourceData, meta interface{}) error {
-	order, details, err := orderReadInResource(d, meta)
-	if err != nil {
-		return fmt.Errorf("could not read cloudProject order: %q", err)
-	}
-
 	config := meta.(*Config)
-	serviceName, err := resourceCloudProjectGetServiceName(config, order, details)
-	if err != nil {
-		return err
-	}
+	serviceName := d.Get("project_id").(string)
 
 	log.Printf("[DEBUG] Will read cloudProject: %s", serviceName)
 	r := &CloudProject{}
@@ -154,21 +152,11 @@ func resourceCloudProjectRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceCloudProjectDelete(d *schema.ResourceData, meta interface{}) error {
-	order, details, err := orderReadInResource(d, meta)
-	if err != nil {
-		return fmt.Errorf("could not read cloudProject order: %q", err)
-	}
-
 	config := meta.(*Config)
-	serviceName, err := resourceCloudProjectGetServiceName(config, order, details)
-	if err != nil {
-		return err
-	}
-
-	id := d.Id()
+	serviceName := d.Get("project_id").(string)
 
 	terminate := func() (string, error) {
-		log.Printf("[DEBUG] Will terminate cloud project %s for order %s", serviceName, id)
+		log.Printf("[DEBUG] Will terminate cloud project %s", serviceName)
 		endpoint := fmt.Sprintf(
 			"/cloud/project/%s/terminate",
 			url.PathEscape(serviceName),
@@ -183,7 +171,7 @@ func resourceCloudProjectDelete(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	confirmTerminate := func(token string) error {
-		log.Printf("[DEBUG] Will confirm termination of cloud project %s for order %s", serviceName, id)
+		log.Printf("[DEBUG] Will confirm termination of cloud project %s", serviceName)
 		endpoint := fmt.Sprintf(
 			"/cloud/project/%s/confirmTermination",
 			url.PathEscape(serviceName),

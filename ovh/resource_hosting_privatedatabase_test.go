@@ -162,7 +162,7 @@ func TestAccHostingPrivateDatabase_basic(t *testing.T) {
 				ResourceName:            "ovh_hosting_privatedatabase.database",
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"plan", "ovh_subsidiary"},
+				ImportStateVerifyIgnore: []string{"plan", "ovh_subsidiary", "order"},
 			},
 		},
 	})

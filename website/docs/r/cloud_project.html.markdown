@@ -125,14 +125,14 @@ The following arguments are supported:
 
 ## Import
 
-Cloud project can be imported using the `order_id` that can be retrieved in the [order page](https://www.ovh.com/manager/#/dedicated/billing/orders/orders) at the creation time of the Public Cloud project.
+Cloud project can be imported using the `project_id`.
 
 Using the following configuration:
 
 ```hcl
 import {
   to = ovh_cloud_project.my_cloud_project
-  id = "<order ID>"
+  id = "<project ID>"
 }
 ```
 
