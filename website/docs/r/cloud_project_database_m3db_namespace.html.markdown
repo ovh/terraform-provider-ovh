@@ -33,7 +33,7 @@ The following arguments are supported:
 
 * `cluster_id` - (Required, Forces new resource) Cluster ID.
 
-* `name` - (Required, Forces new resource) Name of the namespace.
+* `name` - (Required, Forces new resource) Name of the namespace. A namespace named "default" is mapped with already created default namespace instead of creating a new namespace.
 
 * `resolution` - (Optional) Resolution for an aggregated namespace. Should follow Rfc3339 e.g P2D, PT48H.
 
