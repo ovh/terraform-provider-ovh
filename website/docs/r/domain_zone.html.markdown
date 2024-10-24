@@ -95,14 +95,14 @@ Id is set to the order Id. In addition, the following attributes are exported:
 
 ## Import
 
-Zone can be imported using the `order_id` that can be retrieved in the [order page](https://www.ovh.com/manager/#/dedicated/billing/orders/orders) at the creation time of the zone. 
+Zone can be imported using its `name`. 
 
 Using the following configuration:
 
 ```hcl
 import {
   to = ovh_domain_zone.zone
-  id = "<order ID>"
+  id = "<zone name>"
 }
 ```
 

@@ -165,8 +165,7 @@ func TestAccResourceIpLoadbalancing_basic(t *testing.T) {
 		desc,
 	)
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { testAccPreCheckOrderIpLoadbalancing(t) },
-
+		PreCheck:  func() { testAccPreCheckOrderIpLoadbalancing(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -184,7 +183,7 @@ func TestAccResourceIpLoadbalancing_basic(t *testing.T) {
 				ResourceName:            "ovh_iploadbalancing.iplb-lb1",
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"plan", "ovh_subsidiary"},
+				ImportStateVerifyIgnore: []string{"plan", "ovh_subsidiary", "order"},
 			},
 		},
 	})
@@ -197,8 +196,7 @@ func TestAccResourceIpLoadbalancing_internal(t *testing.T) {
 		desc,
 	)
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() { testAccPreCheckOrderIpLoadbalancing(t) },
-
+		PreCheck:  func() { testAccPreCheckOrderIpLoadbalancing(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{

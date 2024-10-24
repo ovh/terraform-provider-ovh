@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/go-ovh/ovh"
@@ -15,20 +16,18 @@ func resourceDomainZone() *schema.Resource {
 		Create: resourceDomainZoneCreate,
 		Read:   resourceDomainZoneRead,
 		Delete: resourceDomainZoneDelete,
-
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			State: func(d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				d.Set("name", d.Id())
 				return []*schema.ResourceData{d}, nil
 			},
 		},
-
 		Schema: resourceDomainZoneSchema(),
 	}
 }
 
 func resourceDomainZoneSchema() map[string]*schema.Schema {
 	schema := map[string]*schema.Schema{
-
 		// computed
 		"urn": {
 			Type:     schema.TypeString,
@@ -70,21 +69,31 @@ func resourceDomainZoneSchema() map[string]*schema.Schema {
 }
 
 func resourceDomainZoneCreate(d *schema.ResourceData, meta interface{}) error {
+	config := meta.(*Config)
+
 	if err := orderCreateFromResource(d, meta, "dns", true); err != nil {
 		return fmt.Errorf("could not order domain zone: %q", err)
 	}
+
+	orderIdInt, err := strconv.Atoi(d.Id())
+	if err != nil {
+		return fmt.Errorf("failed to convert orderID to int: %w", err)
+	}
+
+	serviceName, err := serviceNameFromOrder(config.OVHClient, int64(orderIdInt), d.Get("plan.0.plan_code").(string))
+	if err != nil {
+		return fmt.Errorf("could not retrieve service name from order: %w", err)
+	}
+
+	d.SetId(serviceName)
+	d.Set("name", serviceName)
 
 	return resourceDomainZoneRead(d, meta)
 }
 
 func resourceDomainZoneRead(d *schema.ResourceData, meta interface{}) error {
-	_, details, err := orderReadInResource(d, meta)
-	if err != nil {
-		return fmt.Errorf("could not read domainZone order: %q", err)
-	}
-
 	config := meta.(*Config)
-	zoneName := details[0].Domain
+	zoneName := d.Get("name").(string)
 
 	log.Printf("[DEBUG] Will read domainZone: %s", zoneName)
 	r := &DomainZone{}
@@ -102,18 +111,11 @@ func resourceDomainZoneRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainZoneDelete(d *schema.ResourceData, meta interface{}) error {
-	_, details, err := orderReadInResource(d, meta)
-	if err != nil {
-		return fmt.Errorf("could not read domainZone order: %q", err)
-	}
-
 	config := meta.(*Config)
-	zoneName := details[0].Domain
-
-	id := d.Id()
+	zoneName := d.Get("name").(string)
 
 	terminate := func() (string, error) {
-		log.Printf("[DEBUG] Will terminate domain zone %s for order %s", zoneName, id)
+		log.Printf("[DEBUG] Will terminate domain zone %s", zoneName)
 		endpoint := fmt.Sprintf(
 			"/domain/zone/%s/terminate",
 			url.PathEscape(zoneName),
@@ -128,7 +130,7 @@ func resourceDomainZoneDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	confirmTerminate := func(token string) error {
-		log.Printf("[DEBUG] Will confirm termination of domain zone %s for order %s", zoneName, id)
+		log.Printf("[DEBUG] Will confirm termination of domain zone %s", zoneName)
 		endpoint := fmt.Sprintf(
 			"/domain/zone/%s/confirmTermination",
 			url.PathEscape(zoneName),
