@@ -55,6 +55,8 @@ func resourceCloudProjectDatabaseM3dbNamespace() *schema.Resource {
 				Required:         true,
 				DiffSuppressFunc: DiffDurationRfc3339,
 			},
+
+			// Optional
 			"retention_block_data_expiration_duration": {
 				Type:             schema.TypeString,
 				Description:      "Controls how long we wait before expiring stale data",
@@ -73,30 +75,34 @@ func resourceCloudProjectDatabaseM3dbNamespace() *schema.Resource {
 				Optional:         true,
 				DiffSuppressFunc: DiffDurationRfc3339,
 			},
+
+			// Optional/Computed
+			"retention_block_size_duration": {
+				Type:             schema.TypeString,
+				Description:      "Controls how long to keep a block in memory before flushing to a fileset on disk",
+				ForceNew:         true,
+				Optional:         true,
+				Computed:         true,
+				DiffSuppressFunc: DiffDurationRfc3339,
+			},
 			"retention_period_duration": {
 				Type:             schema.TypeString,
 				Description:      "Controls the duration of time that M3DB will retain data for the namespace",
-				Required:         true,
+				Optional:         true,
+				Computed:         true,
 				DiffSuppressFunc: DiffDurationRfc3339,
 			},
 			"snapshot_enabled": {
 				Type:        schema.TypeBool,
 				Description: "Defines whether M3db will create snapshot files for this namespace",
 				Optional:    true,
+				Computed:    true,
 			},
 			"writes_to_commit_log_enabled": {
 				Type:        schema.TypeBool,
 				Description: "Defines whether M3db will include writes to this namespace in the commit log",
 				Optional:    true,
-			},
-
-			//Optional/Computed
-			"retention_block_size_duration": {
-				Type:             schema.TypeString,
-				Description:      "Controls how long to keep a block in memory before flushing to a fileset on disk",
-				Optional:         true,
-				Computed:         true,
-				DiffSuppressFunc: DiffDurationRfc3339,
+				Computed:    true,
 			},
 
 			// Computed
@@ -128,7 +134,7 @@ func resourceCloudProjectDatabaseM3dbNamespaceImportState(d *schema.ResourceData
 	return results, nil
 }
 
-func toMap(d *schema.ResourceData) map[string]interface{} {
+func m3dbNamespaceToMap(d *schema.ResourceData) map[string]interface{} {
 	obj := make(map[string]interface{})
 	obj["resolution"] = d.Get("resolution")
 	obj["retention_block_data_expiration_duration"] = d.Get("retention_block_data_expiration_duration")
@@ -146,7 +152,7 @@ func toMap(d *schema.ResourceData) map[string]interface{} {
 func resourceCloudProjectDatabaseM3dbNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	name := d.Get("name").(string)
 	if name == "default" {
-		obj := toMap(d)
+		obj := m3dbNamespaceToMap(d)
 
 		diags := dataSourceCloudProjectDatabaseM3dbNamespaceRead(ctx, d, meta)
 		if diags.HasError() {
