@@ -17,14 +17,10 @@ func TestAccCloudProjectDatabaseM3dbNamespace_importBasic(t *testing.T) {
 		version = os.Getenv("OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST")
 	}
 	region := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_REGION_TEST")
-	flavor := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_M3DB_FLAVOR_TEST")
-	if flavor == "" {
-		flavor = os.Getenv("OVH_CLOUD_PROJECT_DATABASE_FLAVOR_TEST")
-	}
+	flavor := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_FLAVOR_TEST")
 	description := acctest.RandomWithPrefix(test_prefix)
 	name := "mynamespace"
 	resolution := "P2D"
-	periodDuration := "PT48H"
 
 	config := fmt.Sprintf(
 		testAccCloudProjectDatabaseM3dbNamespaceConfig_basic,
@@ -35,7 +31,6 @@ func TestAccCloudProjectDatabaseM3dbNamespace_importBasic(t *testing.T) {
 		flavor,
 		name,
 		resolution,
-		periodDuration,
 	)
 
 	resource.Test(t, resource.TestCase{
