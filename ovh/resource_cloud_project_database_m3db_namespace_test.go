@@ -73,7 +73,7 @@ func TestAccCloudProjectDatabaseM3dbNamespace_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"ovh_cloud_project_database_m3db_namespace.namespace", "type", "aggregated"),
 					resource.TestCheckResourceAttr(
-						"data.ovh_cloud_project_database_m3db_namespace.namespace", "writes_to_commit_log_enabled", "true"),
+						"ovh_cloud_project_database_m3db_namespace.namespace", "writes_to_commit_log_enabled", "true"),
 				),
 			},
 		},
