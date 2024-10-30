@@ -27,7 +27,6 @@ resource "ovh_cloud_project_database_m3db_namespace" "namespace" {
 	cluster_id   = ovh_cloud_project_database.db.id
 	name		 = "%s"
 	resolution 	 = "%s"
-	retention_period_duration = "%s"
 }
 `
 
@@ -45,7 +44,6 @@ func TestAccCloudProjectDatabaseM3dbNamespace_basic(t *testing.T) {
 	description := acctest.RandomWithPrefix(test_prefix)
 	name := "mynamespace"
 	resolution := "P2D"
-	periodDuration := "P2D"
 
 	config := fmt.Sprintf(
 		testAccCloudProjectDatabaseM3dbNamespaceConfig_basic,
@@ -56,7 +54,6 @@ func TestAccCloudProjectDatabaseM3dbNamespace_basic(t *testing.T) {
 		flavor,
 		name,
 		resolution,
-		periodDuration,
 	)
 
 	resource.Test(t, resource.TestCase{
@@ -71,9 +68,15 @@ func TestAccCloudProjectDatabaseM3dbNamespace_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"ovh_cloud_project_database_m3db_namespace.namespace", "resolution", resolution),
 					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_database_m3db_namespace.namespace", "retention_period_duration", periodDuration),
+						"ovh_cloud_project_database_m3db_namespace.namespace", "retention_block_size_duration", "P2D"),
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_project_database_m3db_namespace.namespace", "retention_period_duration", "P2D"),
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_project_database_m3db_namespace.namespace", "snapshot_enabled", "true"),
 					resource.TestCheckResourceAttr(
 						"ovh_cloud_project_database_m3db_namespace.namespace", "type", "aggregated"),
+					resource.TestCheckResourceAttr(
+						"data.ovh_cloud_project_database_m3db_namespace.namespace", "writes_to_commit_log_enabled", "true"),
 				),
 			},
 		},

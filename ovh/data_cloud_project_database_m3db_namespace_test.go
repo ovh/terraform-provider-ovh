@@ -27,7 +27,6 @@ resource "ovh_cloud_project_database_m3db_namespace" "namespace" {
 	cluster_id   = ovh_cloud_project_database.db.id
 	name		 = "%s"
 	resolution 	 = "%s"
-	retention_period_duration = "%s"
 }
 
 data "ovh_cloud_project_database_m3db_namespace" "namespace" {
@@ -44,11 +43,13 @@ func TestAccCloudProjectDatabaseM3dbNamespaceDataSource_basic(t *testing.T) {
 		version = os.Getenv("OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST")
 	}
 	region := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_REGION_TEST")
-	flavor := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_FLAVOR_TEST")
+	flavor := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_M3DB_FLAVOR_TEST")
+	if flavor == "" {
+		flavor = os.Getenv("OVH_CLOUD_PROJECT_DATABASE_FLAVOR_TEST")
+	}
 	description := acctest.RandomWithPrefix(test_prefix)
 	name := "mynamespace"
 	resolution := "P2D"
-	periodDuration := "P2D"
 
 	config := fmt.Sprintf(
 		testAccCloudProjectDatabaseM3dbNamespaceDatasourceConfig_Basic,
@@ -59,7 +60,6 @@ func TestAccCloudProjectDatabaseM3dbNamespaceDataSource_basic(t *testing.T) {
 		flavor,
 		name,
 		resolution,
-		periodDuration,
 	)
 
 	resource.Test(t, resource.TestCase{
@@ -74,9 +74,15 @@ func TestAccCloudProjectDatabaseM3dbNamespaceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"data.ovh_cloud_project_database_m3db_namespace.namespace", "resolution", resolution),
 					resource.TestCheckResourceAttr(
-						"data.ovh_cloud_project_database_m3db_namespace.namespace", "retention_period_duration", periodDuration),
+						"data.ovh_cloud_project_database_m3db_namespace.namespace", "retention_block_size_duration", "P2D"),
+					resource.TestCheckResourceAttr(
+						"data.ovh_cloud_project_database_m3db_namespace.namespace", "retention_period_duration", "P2D"),
+					resource.TestCheckResourceAttr(
+						"data.ovh_cloud_project_database_m3db_namespace.namespace", "snapshot_enabled", "true"),
 					resource.TestCheckResourceAttr(
 						"data.ovh_cloud_project_database_m3db_namespace.namespace", "type", "aggregated"),
+					resource.TestCheckResourceAttr(
+						"data.ovh_cloud_project_database_m3db_namespace.namespace", "writes_to_commit_log_enabled", "true"),
 				),
 			},
 		},
