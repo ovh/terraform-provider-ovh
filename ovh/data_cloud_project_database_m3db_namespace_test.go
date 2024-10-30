@@ -74,7 +74,7 @@ func TestAccCloudProjectDatabaseM3dbNamespaceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"data.ovh_cloud_project_database_m3db_namespace.namespace", "resolution", resolution),
 					resource.TestCheckResourceAttr(
-						"data.ovh_cloud_project_database_m3db_namespace.namespace", "retention_block_size_duration", "P2D"),
+						"data.ovh_cloud_project_database_m3db_namespace.namespace", "retention_block_size_duration", resolution),
 					resource.TestCheckResourceAttr(
 						"data.ovh_cloud_project_database_m3db_namespace.namespace", "retention_period_duration", "P2D"),
 					resource.TestCheckResourceAttr(
