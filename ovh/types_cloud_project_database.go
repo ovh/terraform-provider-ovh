@@ -1505,9 +1505,9 @@ type CloudProjectDatabaseM3dbNamespaceCreateOpts struct {
 	Name                     string                                     `json:"name"`
 	Resolution               string                                     `json:"resolution,omitempty"`
 	Retention                CloudProjectDatabaseM3dbNamespaceRetention `json:"retention,omitempty"`
-	SnapshotEnabled          bool                                       `json:"snapshotEnabled"`
+	SnapshotEnabled          *bool                                      `json:"snapshotEnabled"`
 	Type                     string                                     `json:"type"`
-	WritesToCommitLogEnabled bool                                       `json:"writesToCommitLogEnabled"`
+	WritesToCommitLogEnabled *bool                                      `json:"writesToCommitLogEnabled"`
 }
 
 func (opts *CloudProjectDatabaseM3dbNamespaceCreateOpts) FromResource(d *schema.ResourceData) *CloudProjectDatabaseM3dbNamespaceCreateOpts {
@@ -1520,30 +1520,45 @@ func (opts *CloudProjectDatabaseM3dbNamespaceCreateOpts) FromResource(d *schema.
 		BufferPastDuration:          d.Get("retention_buffer_past_duration").(string),
 		PeriodDuration:              d.Get("retention_period_duration").(string),
 	}
-	opts.SnapshotEnabled = d.Get("snapshot_enabled").(bool)
+	snapshotEnabled, ok := d.GetOkExists("snapshot_enabled")
+	if ok {
+		snapshotEnabledBool := snapshotEnabled.(bool)
+		opts.SnapshotEnabled = &snapshotEnabledBool
+	}
 	opts.Type = "aggregated"
-	opts.WritesToCommitLogEnabled = d.Get("writes_to_commit_log_enabled").(bool)
+	writesToCommitLogEnabled, ok := d.GetOkExists("writes_to_commit_log_enabled")
+	if ok {
+		writesToCommitLogEnabledBool := writesToCommitLogEnabled.(bool)
+		opts.WritesToCommitLogEnabled = &writesToCommitLogEnabledBool
+	}
+
 	return opts
 }
 
 type CloudProjectDatabaseM3dbNamespaceUpdateOpts struct {
 	Resolution               string                                     `json:"resolution,omitempty"`
 	Retention                CloudProjectDatabaseM3dbNamespaceRetention `json:"retention,omitempty"`
-	SnapshotEnabled          bool                                       `json:"snapshotEnabled,omitempty"`
-	WritesToCommitLogEnabled bool                                       `json:"writesToCommitLogEnabled,omitempty"`
+	SnapshotEnabled          *bool                                      `json:"snapshotEnabled,omitempty"`
+	WritesToCommitLogEnabled *bool                                      `json:"writesToCommitLogEnabled,omitempty"`
 }
 
 func (opts *CloudProjectDatabaseM3dbNamespaceUpdateOpts) FromResource(d *schema.ResourceData) *CloudProjectDatabaseM3dbNamespaceUpdateOpts {
 	opts.Resolution = d.Get("resolution").(string)
 	opts.Retention = CloudProjectDatabaseM3dbNamespaceRetention{
 		BlockDataExpirationDuration: d.Get("retention_block_data_expiration_duration").(string),
-		BlockSizeDuration:           d.Get("retention_block_size_duration").(string),
 		BufferFutureDuration:        d.Get("retention_buffer_future_duration").(string),
 		BufferPastDuration:          d.Get("retention_buffer_past_duration").(string),
 		PeriodDuration:              d.Get("retention_period_duration").(string),
 	}
-	opts.SnapshotEnabled = d.Get("snapshot_enabled").(bool)
-	opts.WritesToCommitLogEnabled = d.Get("writes_to_commit_log_enabled").(bool)
+	if d.HasChange("snapshot_enabled") {
+		snapshotEnabledBool := d.Get("snapshot_enabled").(bool)
+		opts.SnapshotEnabled = &snapshotEnabledBool
+	}
+	if d.HasChange("writes_to_commit_log_enabled") {
+		writesToCommitLogEnabledBool := d.Get("writes_to_commit_log_enabled").(bool)
+		opts.WritesToCommitLogEnabled = &writesToCommitLogEnabledBool
+	}
+
 	return opts
 }
 

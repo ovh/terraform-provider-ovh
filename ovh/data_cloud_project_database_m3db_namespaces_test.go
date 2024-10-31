@@ -27,7 +27,6 @@ resource "ovh_cloud_project_database_m3db_namespace" "namespace" {
 	cluster_id   = ovh_cloud_project_database.db.id
 	name		 = "%s"
 	resolution 	 = "%s"
-	retention_period_duration = "%s"
 }
 
 
@@ -48,7 +47,6 @@ func TestAccCloudProjectDatabaseM3dbNamespacesDataSource_basic(t *testing.T) {
 	description := acctest.RandomWithPrefix(test_prefix)
 	name := "mynamespace"
 	resolution := "P2D"
-	periodDuration := "PT48H"
 
 	config := fmt.Sprintf(
 		testAccCloudProjectDatabaseM3dbNamespacesDatasourceConfig_Basic,
@@ -59,7 +57,6 @@ func TestAccCloudProjectDatabaseM3dbNamespacesDataSource_basic(t *testing.T) {
 		flavor,
 		name,
 		resolution,
-		periodDuration,
 	)
 
 	resource.Test(t, resource.TestCase{
