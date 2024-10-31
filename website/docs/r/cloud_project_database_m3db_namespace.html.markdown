@@ -33,19 +33,19 @@ The following arguments are supported:
 
 * `cluster_id` - (Required, Forces new resource) Cluster ID.
 
-* `name` - (Required, Forces new resource) Name of the namespace.
+* `name` - (Required, Forces new resource) Name of the namespace. A namespace named "default" is mapped with already created default namespace instead of creating a new namespace.
 
 * `resolution` - (Optional) Resolution for an aggregated namespace. Should follow Rfc3339 e.g P2D, PT48H.
 
 * `retention_block_data_expiration_duration` - (Optional) Controls how long we wait before expiring stale data. Should follow Rfc3339 e.g P2D, PT48H.
 
-* `retention_block_size_duration` - (Optional) Controls how long to keep a block in memory before flushing to a fileset on disk. Should follow Rfc3339 e.g P2D, PT48H.
+* `retention_block_size_duration` - (Optional, Forces new resource) Controls how long to keep a block in memory before flushing to a fileset on disk. Should follow Rfc3339 e.g P2D, PT48H.
 
 * `retention_buffer_future_duration` - (Optional) Controls how far into the future writes to the namespace will be accepted. Should follow Rfc3339 e.g P2D, PT48H.
 
 * `retention_buffer_past_duration` - (Optional) Controls how far into the past writes to the namespace will be accepted. Should follow Rfc3339 e.g P2D, PT48H.
 
-* `retention_period_duration` - (Required) Controls the duration of time that M3DB will retain data for the namespace. Should follow Rfc3339 e.g P2D, PT48H.
+* `retention_period_duration` - (Optional) Controls the duration of time that M3DB will retain data for the namespace. Should follow Rfc3339 e.g P2D, PT48H.
 
 * `snapshot_enabled` - (Optional) Defines whether M3DB will create snapshot files for this namespace.
 
