@@ -9,12 +9,12 @@ Use this data source to retrieve information about a specific OVH dedicated serv
 ## Example Usage
 
 ```hcl
-data "ovh_dedicated_installation_template" "ovhtemplate" {
+data "ovh_dedicated_installation_template" "ovh_template" {
   template_name = "debian12_64"
 }
 
 output "template" {
-  value = data.ovh_dedicated_installation_template.ovhtemplate
+  value = data.ovh_dedicated_installation_template.ovh_template
 }
 ```
 

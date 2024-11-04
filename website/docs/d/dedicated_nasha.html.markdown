@@ -9,7 +9,7 @@ Use this data source to retrieve information about a dedicated HA-NAS.
 ## Example Usage
 
 ```hcl
-data "ovh_dedicated_nasha" "my-nas-ha" {
+data "ovh_dedicated_nasha" "my_nas_ha" {
   service_name = "zpool-12345"
 }
 ```

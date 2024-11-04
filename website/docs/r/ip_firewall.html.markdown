@@ -9,7 +9,7 @@ Use this resource to manage an IP firewall.
 ## Example Usage
 
 ```hcl
-resource "ovh_ip_firewall" "myfirewall" {
+resource "ovh_ip_firewall" "my_firewall" {
   ip             = "XXXXXX"
   ip_on_firewall = "XXXXXX"
 }

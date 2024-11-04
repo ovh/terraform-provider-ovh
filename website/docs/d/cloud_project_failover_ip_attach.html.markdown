@@ -9,7 +9,7 @@ Use this data source to get the details of a failover IP address of a service in
 ## Example Usage
 
 ```hcl
-data "ovh_cloud_project_failover_ip_attach" "myfailoverip" {
+data "ovh_cloud_project_failover_ip_attach" "my_failover_ip" {
   service_name = "XXXXXX"
   ip           = "XXXXXX"
 }

@@ -9,7 +9,7 @@ Use this data source to retrieve information about an IP firewall.
 ## Example Usage
 
 ```hcl
-data "ovh_ip_firewall" "myfirewall" {
+data "ovh_ip_firewall" "my_firewall" {
   ip             = "XXXXXX"
   ip_on_firewall = "XXXXXX"
 }

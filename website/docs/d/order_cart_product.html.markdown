@@ -9,14 +9,14 @@ Use this data source to retrieve information of order cart product products.
 ## Example Usage
 
 ```hcl
-data "ovh_me" "myaccount" {}
+data "ovh_me" "my_account" {}
 
-data "ovh_order_cart" "mycart" {
-  ovh_subsidiary = data.ovh_me.myaccount.ovh_subsidiary
+data "ovh_order_cart" "my_cart" {
+  ovh_subsidiary = data.ovh_me.my_account.ovh_subsidiary
 }
 
 data "ovh_order_cart_product" "plans" {
-  cart_id = data.ovh_order_cart.mycart.id
+  cart_id = data.ovh_order_cart.my_cart.id
   product = "..."
 }
 ```

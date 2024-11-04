@@ -19,7 +19,7 @@ resource "ovh_iploadbalancing_tcp_route" "reject" {
   }
 }
 
-resource "ovh_iploadbalancing_tcp_route_rule" "examplerule" {
+resource "ovh_iploadbalancing_tcp_route_rule" "example_rule" {
   service_name = "loadbalancer-xxxxxxxxxxxxxxxxxx"
   route_id     = ovh_iploadbalancing_tcp_route.reject.id
   display_name = "Match example.com host"

@@ -13,14 +13,14 @@ Use this data source to get the list of IP restrictions associated with a public
 To get the list of IP restriction on a database cluster service:
 
 ```hcl
-data "ovh_cloud_project_database_ip_restrictions" "iprestrictions" {
+data "ovh_cloud_project_database_ip_restrictions" "ip_restrictions" {
   service_name  = "XXXXXX"
   engine        = "YYYY"
   cluster_id    = "ZZZZ"
 }
 
 output "ips" {
-  value = data.ovh_cloud_project_database_ip_restrictions.iprestrictions.ips
+  value = data.ovh_cloud_project_database_ip_restrictions.ip_restrictions.ips
 }
 ```
 

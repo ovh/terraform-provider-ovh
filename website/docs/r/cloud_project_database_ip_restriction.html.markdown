@@ -18,7 +18,7 @@ data "ovh_cloud_project_database" "db" {
   id           = "ZZZZ"
 }
 
-resource "ovh_cloud_project_database_ip_restriction" "iprestriction" {
+resource "ovh_cloud_project_database_ip_restriction" "ip_restriction" {
   service_name = data.ovh_cloud_project_database.db.service_name
   engine       = data.ovh_cloud_project_database.db.engine
   cluster_id   = data.ovh_cloud_project_database.db.id
@@ -54,7 +54,7 @@ The following attributes are exported:
 ## Timeouts
 
 ```hcl
-resource "ovh_cloud_project_database_ip_restriction" "iprestriction" {
+resource "ovh_cloud_project_database_ip_restriction" "ip_restriction" {
   # ...
 
   timeouts {

@@ -9,13 +9,13 @@ Use this resource to create partition scheme for a custom installation template 
 ## Example Usage
 
 ```hcl
-resource "ovh_me_installation_template" "mytemplate" {
+resource "ovh_me_installation_template" "my_template" {
   base_template_name = "debian12_64"
   template_name      = "mytemplate"
 }
 
 resource "ovh_me_installation_template_partition_scheme" "scheme" {
-  template_name = ovh_me_installation_template.mytemplate.template_name
+  template_name = ovh_me_installation_template.my_template.template_name
   name          = "myscheme"
   priority      = 1
 }

@@ -9,14 +9,14 @@ Use this data source to get information about a user of a redis cluster associat
 ## Example Usage
 
 ```hcl
-data "ovh_cloud_project_database_redis_user" "redisuser" {
+data "ovh_cloud_project_database_redis_user" "redis_user" {
   service_name  = "XXX"
   cluster_id    = "YYY"
   name          = "ZZZ"
 }
 
-output "redisuser_commands" {
-  value = data.ovh_cloud_project_database_redis_user.redisuser.commands
+output "redis_user_commands" {
+  value = data.ovh_cloud_project_database_redis_user.redis_user.commands
 }
 ```
 

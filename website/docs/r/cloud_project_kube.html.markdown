@@ -11,7 +11,7 @@ Creates a OVHcloud Managed Kubernetes Service cluster in a public cloud project.
 Create a simple Kubernetes cluster in `GRA7` region:
 
 ```hcl
-resource "ovh_cloud_project_kube" "mycluster" {
+resource "ovh_cloud_project_kube" "my_cluster" {
   service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
   name         = "my_kube_cluster"
   region       = "GRA7"
@@ -21,46 +21,46 @@ resource "ovh_cloud_project_kube" "mycluster" {
 Create a simple Kubernetes cluster in `GRA7` region and export its kubeconfig file:
 
 ```hcl
-resource "ovh_cloud_project_kube" "mycluster" {
+resource "ovh_cloud_project_kube" "my_cluster" {
   service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
   name         = "my_kube_cluster"
   region       = "GRA7"
 }
 
 output "kubeconfig_file" {
-  value     = ovh_cloud_project_kube.mycluster.kubeconfig
+  value     = ovh_cloud_project_kube.my_cluster.kubeconfig
   sensitive = true
 }
 ```
 
 Create a simple Kubernetes cluster in `GRA7` region and read kubeconfig attributes:
 
--> Sensitive attributes cannot be displayed using `terraform output` command. You need to specify the output's name: `terraform output mycluster-host`.
+-> Sensitive attributes cannot be displayed using `terraform output` command. You need to specify the output's name: `terraform output my_cluster_host`.
 
 ```hcl
-resource "ovh_cloud_project_kube" "mycluster" {
+resource "ovh_cloud_project_kube" "my_cluster" {
   service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
   name         = "my_kube_cluster"
   region       = "GRA7"
 }
 
-output "mycluster-host" {
-  value = ovh_cloud_project_kube.mycluster.kubeconfig_attributes[0].host
+output "my_cluster_host" {
+  value = ovh_cloud_project_kube.my_cluster.kubeconfig_attributes[0].host
   sensitive = true
 }
 
-output "mycluster-cluster-ca-certificate" {
-  value = ovh_cloud_project_kube.mycluster.kubeconfig_attributes[0].cluster_ca_certificate
+output "my_cluster_cluster_ca_certificate" {
+  value = ovh_cloud_project_kube.my_cluster.kubeconfig_attributes[0].cluster_ca_certificate
   sensitive = true
 }
 
-output "mycluster-client-certificate" {
-  value = ovh_cloud_project_kube.mycluster.kubeconfig_attributes[0].client_certificate
+output "my_cluster_client_certificate" {
+  value = ovh_cloud_project_kube.my_cluster.kubeconfig_attributes[0].client_certificate
   sensitive = true
 }
 
-output "mycluster-client-key" {
-  value = ovh_cloud_project_kube.mycluster.kubeconfig_attributes[0].client_key
+output "my_cluster_client_key" {
+  value = ovh_cloud_project_kube.my_cluster.kubeconfig_attributes[0].client_key
   sensitive = true
 }
 ```
@@ -68,7 +68,7 @@ output "mycluster-client-key" {
 Create a simple Kubernetes cluster in `GRA7` region and use kubeconfig with [Helm provider](https://registry.terraform.io/providers/hashicorp/helm/latest/docs):
 
 ```hcl
-resource "ovh_cloud_project_kube" "mycluster" {
+resource "ovh_cloud_project_kube" "my_cluster" {
   service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
   name         = "my_kube_cluster"
   region       = "GRA7"
@@ -76,10 +76,10 @@ resource "ovh_cloud_project_kube" "mycluster" {
 
 provider "helm" {
   kubernetes {
-    host                    = ovh_cloud_project_kube.mycluster.kubeconfig_attributes[0].host
-    client_certificate      = base64decode(ovh_cloud_project_kube.mycluster.kubeconfig_attributes[0].client_certificate)
-    client_key              = base64decode(ovh_cloud_project_kube.mycluster.kubeconfig_attributes[0].client_key)
-    cluster_ca_certificate  = base64decode(ovh_cloud_project_kube.mycluster.kubeconfig_attributes[0].cluster_ca_certificate)
+    host                    = ovh_cloud_project_kube.my_cluster.kubeconfig_attributes[0].host
+    client_certificate      = base64decode(ovh_cloud_project_kube.my_cluster.kubeconfig_attributes[0].client_certificate)
+    client_key              = base64decode(ovh_cloud_project_kube.my_cluster.kubeconfig_attributes[0].client_key)
+    cluster_ca_certificate  = base64decode(ovh_cloud_project_kube.my_cluster.kubeconfig_attributes[0].cluster_ca_certificate)
   }
 }
 
@@ -89,7 +89,7 @@ provider "helm" {
 Create a Kubernetes cluster in `GRA5` region with API Server AdmissionPlugins configuration:
 
 ```hcl
-resource "ovh_cloud_project_kube" "mycluster" {
+resource "ovh_cloud_project_kube" "my_cluster" {
   service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
   name          = "my_kube_cluster"
   region        = "GRA5"
@@ -105,7 +105,7 @@ resource "ovh_cloud_project_kube" "mycluster" {
 Create a Kubernetes cluster in `GRA5` region with Kube proxy configuration, by specifying iptables or ipvs configurations:
 
 ```hcl
-resource "ovh_cloud_project_kube" "mycluster" {
+resource "ovh_cloud_project_kube" "my_cluster" {
   service_name    = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
   name            = "my_kube_cluster"
   region          = "GRA5"
@@ -164,7 +164,7 @@ output "openstackID" {
   value = one(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)
 }
 
-resource "ovh_cloud_project_kube" "mycluster" {
+resource "ovh_cloud_project_kube" "my_cluster" {
   service_name  = var.service_name
   name          = "test-kube-attach"
   region        = "GRA5"

@@ -14,7 +14,7 @@ data "ovh_iploadbalancing" "lb" {
   state        = "ok"
 }
 
-resource "ovh_iploadbalancing_tcp_farm" "farmname" {
+resource "ovh_iploadbalancing_tcp_farm" "farm_name" {
   service_name = "${data.ovh_iploadbalancing.lb.service_name}"
   port         = 8080
   zone         = "all"
@@ -22,7 +22,7 @@ resource "ovh_iploadbalancing_tcp_farm" "farmname" {
 
 resource "ovh_iploadbalancing_tcp_farm_server" "backend" {
   service_name           = "${data.ovh_iploadbalancing.lb.service_name}"
-  farm_id                = "${ovh_iploadbalancing_tcp_farm.farmname.id}"
+  farm_id                = "${ovh_iploadbalancing_tcp_farm.farm_name.id}"
   display_name           = "mybackend"
   address                = "4.5.6.7"
   status                 = "active"

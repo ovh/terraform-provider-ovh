@@ -9,14 +9,14 @@ Use this data source to get the list of users of a container registry associated
 ## Example Usage
 
 ```hcl
-data "ovh_cloud_project_containerregistry" "my-registry" {
+data "ovh_cloud_project_containerregistry" "my_registry" {
   service_name = "XXXXXX"
   registry_id  = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx"
 }
 
 data "ovh_cloud_project_containerregistry_users" "users" {
-  service_name = ovh_cloud_project_containerregistry.registry.service_name
-  registry_id  = ovh_cloud_project_containerregistry.registry.id
+  service_name = ovh_cloud_project_containerregistry.my_registry.service_name
+  registry_id  = ovh_cloud_project_containerregistry.my_registry.id
 }
 ```
 
