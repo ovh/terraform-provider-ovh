@@ -9,7 +9,7 @@ Manage TCP route for a loadbalancer service
 ## Example Usage
 
 ```hcl
-resource "ovh_iploadbalancing_tcp_route" "tcpreject" {
+resource "ovh_iploadbalancing_tcp_route" "tcp_reject" {
   service_name = "loadbalancer-xxxxxxxxxxxxxxxxxx"
   weight = 1
 

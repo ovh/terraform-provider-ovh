@@ -15,21 +15,21 @@ Orders a vrack.
 ## Example Usage
 
 ```hcl
-data "ovh_me" "myaccount" {}
+data "ovh_me" "my_account" {}
 
-data "ovh_order_cart" "mycart" {
-  ovh_subsidiary = data.ovh_me.myaccount.ovh_subsidiary
+data "ovh_order_cart" "my_cart" {
+  ovh_subsidiary = data.ovh_me.my_account.ovh_subsidiary
 }
 
 data "ovh_order_cart_product_plan" "vrack" {
-  cart_id        = data.ovh_order_cart.mycart.id
+  cart_id        = data.ovh_order_cart.my_cart.id
   price_capacity = "renew"
   product        = "vrack"
   plan_code      = "vrack"
 }
 
 resource "ovh_vrack" "vrack" {
-  ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
+  ovh_subsidiary = data.ovh_order_cart.my_cart.ovh_subsidiary
   name           = "my-vrack"
   description    = "my vrack"
 

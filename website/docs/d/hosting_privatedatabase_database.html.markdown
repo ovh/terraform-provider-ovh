@@ -10,7 +10,7 @@ Use this data source to retrieve information about an hosting privatedatabase.
 ## Example Usage
 
 ```hcl
-data "ovh_hosting_privatedatabase_database" "mydatabase" {
+data "ovh_hosting_privatedatabase_database" "my_database" {
   service_name  = "XXXXXX"
   database_name = "XXXXXX"
 }

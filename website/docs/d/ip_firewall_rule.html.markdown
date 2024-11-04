@@ -9,7 +9,7 @@ Use this data source to retrieve information about a rule on an IP firewall.
 ## Example Usage
 
 ```hcl
-data "ovh_ip_firewall_rule" "myfirewallrule" {
+data "ovh_ip_firewall_rule" "my_firewall_rule" {
   ip             = "XXXXXX"
   ip_on_firewall = "XXXXXX"
   sequence       = 0

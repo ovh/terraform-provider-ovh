@@ -23,7 +23,7 @@ resource "ovh_okms_service_key" "key_rsa" {
   type       = "RSA"
   size       = 2048
   operations = ["sign", "verify"]
-k
+}
 
 resource "ovh_okms_service_key" "key_ecdsa" {
   okms_id    = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
