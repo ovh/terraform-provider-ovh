@@ -9,7 +9,7 @@ Creates an alert on a public cloud project.
 ## Example Usage
 
 ```hcl
-resource "ovh_cloud_project_alerting" "my-alert" {
+resource "ovh_cloud_project_alerting" "my_alert" {
   service_name = "XXX"
   delay = 3600
   email = "aaa.bbb@domain.com"

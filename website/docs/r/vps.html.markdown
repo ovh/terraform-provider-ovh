@@ -15,10 +15,10 @@ Creates an OVHcloud Virtual Private Server (VPS).
 ## Example Usage
 
 ```hcl
-data "ovh_me" "myaccount" {}
+data "ovh_me" "my_account" {}
 
 data "ovh_order_cart" "mycart" {
-  ovh_subsidiary = data.ovh_me.myaccount.ovh_subsidiary
+  ovh_subsidiary = data.ovh_me.my_account.ovh_subsidiary
 }
 
 data "ovh_order_cart_product_plan" "vps" {
@@ -28,7 +28,7 @@ data "ovh_order_cart_product_plan" "vps" {
   plan_code      = "vps-le-2-2-40"
 }
 
-resource "ovh_vps" "myvps" {
+resource "ovh_vps" "my_vps" {
   display_name = dev_vps"
 
   ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
@@ -53,7 +53,7 @@ resource "ovh_vps" "myvps" {
 }
 
 output "vps_display_name" {
-  value = ovh_vps.myvps.display_name
+  value = ovh_vps.my_vps.display_name
 }
 ```
 

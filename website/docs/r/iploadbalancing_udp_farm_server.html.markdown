@@ -14,7 +14,7 @@ data "ovh_iploadbalancing" "lb" {
   state        = "ok"
 }
 
-resource "ovh_iploadbalancing_udp_farm" "farmname" {
+resource "ovh_iploadbalancing_udp_farm" "farm_name" {
   service_name = "${data.ovh_iploadbalancing.lb.service_name}"
   display_name = "ingress-8080-gra"
   zone         = "gra"
@@ -23,7 +23,7 @@ resource "ovh_iploadbalancing_udp_farm" "farmname" {
 
 resource "ovh_iploadbalancing_udp_farm_server" "backend" {
   service_name           = "${data.ovh_iploadbalancing.lb.service_name}"
-  farm_id                = "${ovh_iploadbalancing_udp_farm.farmname.farm_id}"
+  farm_id                = "${ovh_iploadbalancing_udp_farm.farm_name.farm_id}"
   display_name           = "mybackend"
   address                = "4.5.6.7"
   status                 = "active"

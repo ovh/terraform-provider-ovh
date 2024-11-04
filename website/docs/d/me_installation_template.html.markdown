@@ -9,7 +9,7 @@ Use this data source to get a custom installation template available for dedicat
 ## Example Usage
 
 ```hcl
-data "ovh_me_installation_template" "mytemplate" {
+data "ovh_me_installation_template" "my_template" {
   template_name = "mytemplate"
 }
 ```

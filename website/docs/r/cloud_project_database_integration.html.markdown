@@ -15,24 +15,24 @@ Please take a look at the list of available `types` in the `Argument references`
 Push PostgreSQL logs in an OpenSearch DB:
 
 ```hcl
-data "ovh_cloud_project_database" "dbpostgresql" {
+data "ovh_cloud_project_database" "db_postgresql" {
   service_name  = "XXXX"
   engine        = "postgresql"
   id            = "ZZZZ"
 }
 
-data "ovh_cloud_project_database" "dbopensearch" {
+data "ovh_cloud_project_database" "db_opensearch" {
   service_name  = "XXXX"
   engine        = "opensearch"
   id            = "ZZZZ"
 }
 
 resource "ovh_cloud_project_database_integration" "integration" {
-  service_name            = data.ovh_cloud_project_database.dbpostgresql.service_name
-  engine                  = data.ovh_cloud_project_database.dbpostgresql.engine
-  cluster_id              = data.ovh_cloud_project_database.dbpostgresql.id
-  source_service_id       = data.ovh_cloud_project_database.dbpostgresql.id
-  destination_service_id  = data.ovh_cloud_project_database.dbopensearch.id
+  service_name            = data.ovh_cloud_project_database.db_postgresql.service_name
+  engine                  = data.ovh_cloud_project_database.db_postgresql.engine
+  cluster_id              = data.ovh_cloud_project_database.db_postgresql.id
+  source_service_id       = data.ovh_cloud_project_database.db_postgresql.id
+  destination_service_id  = data.ovh_cloud_project_database.db_opensearch.id
   type                    = "opensearchLogs"
 }
 ```

@@ -9,14 +9,14 @@ Use this data source to get information about a user of a opensearch cluster ass
 ## Example Usage
 
 ```hcl
-data "ovh_cloud_project_database_opensearch_user" "osuser" {
+data "ovh_cloud_project_database_opensearch_user" "os_user" {
   service_name  = "XXX"
   cluster_id    = "YYY"
   name          = "ZZZ"
 }
 
-output "osuser_acls" {
-  value = data.ovh_cloud_project_database_opensearch_user.osuser.acls
+output "os_user_acls" {
+  value = data.ovh_cloud_project_database_opensearch_user.os_user.acls
 }
 ```
 

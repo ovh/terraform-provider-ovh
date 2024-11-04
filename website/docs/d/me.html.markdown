@@ -9,7 +9,7 @@ Use this data source to get information about the current OVHcloud account.
 ## Example Usage
 
 ```hcl
-data "ovh_me" "myaccount" {}
+data "ovh_me" "my_account" {}
 ```
 
 ## Argument Reference

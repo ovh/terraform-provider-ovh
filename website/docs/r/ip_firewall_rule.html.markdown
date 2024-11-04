@@ -9,7 +9,7 @@ Use this resource to manage a rule on an IP firewall.
 ## Example Usage
 
 ```hcl
-resource "ovh_ip_firewall_rule" "myfirewallrule" {
+resource "ovh_ip_firewall_rule" "my_firewall_rule" {
   ip             = "XXXXXX"
   ip_on_firewall = "XXXXXX"
   sequence       = 0

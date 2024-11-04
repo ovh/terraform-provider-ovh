@@ -9,7 +9,7 @@ Creates an OIDC configuration in an OVHcloud Managed Private Registry.
 ## Example Usage
 
 ```hcl
-resource "ovh_cloud_project_containerregistry_oidc" "my-oidc" {
+resource "ovh_cloud_project_containerregistry_oidc" "my_oidc" {
   service_name = "XXXXXX"
   registry_id  = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx"
 
@@ -30,7 +30,7 @@ resource "ovh_cloud_project_containerregistry_oidc" "my-oidc" {
 }
 
 output "oidc_client_secret" {
-  value = ovh_cloud_project_containerregistry_oidc.my-oidc.oidc_client_secret
+  value = ovh_cloud_project_containerregistry_oidc.my_oidc.oidc_client_secret
   sensitive = true
 }
 ```

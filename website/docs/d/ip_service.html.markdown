@@ -9,7 +9,7 @@ Use this data source to retrieve information about an IP service.
 ## Example Usage
 
 ```hcl
-data "ovh_ip_service" "myip" {
+data "ovh_ip_service" "my_ip" {
   service_name  = "XXXXXX"
 }
 ```
