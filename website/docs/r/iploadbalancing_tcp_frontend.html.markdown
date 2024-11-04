@@ -21,7 +21,7 @@ resource "ovh_iploadbalancing_tcp_farm" "farm80" {
   port         = 80
 }
 
-resource "ovh_iploadbalancing_tcp_frontend" "testfrontend" {
+resource "ovh_iploadbalancing_tcp_frontend" "test_frontend" {
   service_name    = "${data.ovh_iploadbalancing.lb.service_name}"
   display_name    = "ingress-8080-gra"
   zone            = "all"

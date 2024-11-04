@@ -9,7 +9,7 @@ Use this data source to retrieve information about a domain zone.
 ## Example Usage
 
 ```hcl
-data "ovh_domain_zone" "rootzone" {
+data "ovh_domain_zone" "root_zone" {
   name = "mysite.ovh"
 }
 ```

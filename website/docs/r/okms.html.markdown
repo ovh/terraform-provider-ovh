@@ -14,7 +14,7 @@ Creates an OVHcloud Key Management Service (okms).
 ## Example Usage
 
 ```hcl
-resource "ovh_okms" "newkms" {
+resource "ovh_okms" "new_kms" {
   ovh_subsidiary = "FR"
   region         = "EU_WEST_RBX"
   display_name   = "terraformed KMS"

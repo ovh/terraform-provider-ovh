@@ -11,7 +11,7 @@ Manage HTTP route for a loadbalancer service
 Route which redirect all url to https.
 
 ```hcl
-resource "ovh_iploadbalancing_http_route" "httpsredirect" {
+resource "ovh_iploadbalancing_http_route" "https_redirect" {
   service_name = "loadbalancer-xxxxxxxxxxxxxxxxxx"
   display_name = "Redirect to HTTPS"
   weight = 1

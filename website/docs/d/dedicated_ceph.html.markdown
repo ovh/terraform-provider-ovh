@@ -9,7 +9,7 @@ Use this data source to retrieve information about a dedicated CEPH.
 ## Example Usage
 
 ```hcl
-data "ovh_dedicated_ceph" "my-ceph" {
+data "ovh_dedicated_ceph" "my_ceph" {
   service_name = "XXXXXX"
 }
 ```

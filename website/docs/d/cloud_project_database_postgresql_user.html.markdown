@@ -9,14 +9,14 @@ Use this data source to get information about a user of a postgresql cluster ass
 ## Example Usage
 
 ```hcl
-data "ovh_cloud_project_database_postgresql_user" "pguser" {
+data "ovh_cloud_project_database_postgresql_user" "pg_user" {
   service_name  = "XXX"
   cluster_id    = "YYY"
   name          = "ZZZ"
 }
 
-output "pguser_roles" {
-  value = data.ovh_cloud_project_database_postgresql_user.pguser.roles
+output "pg_user_roles" {
+  value = data.ovh_cloud_project_database_postgresql_user.pg_user.roles
 }
 ```
 

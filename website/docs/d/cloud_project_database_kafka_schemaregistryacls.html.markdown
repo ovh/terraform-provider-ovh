@@ -9,13 +9,13 @@ Use this data source to get the list of ACLs of a kafka cluster associated with 
 ## Example Usage
 
 ```hcl
-data "ovh_cloud_project_database_kafka_schemaregistryacls" "schemaRegistryAcls" {
+data "ovh_cloud_project_database_kafka_schemaregistryacls" "schema_registry_acls" {
   service_name  = "XXX"
   cluster_id    = "YYY"
 }
 
 output "acl_ids" {
-  value = data.ovh_cloud_project_database_kafka_schemaregistryacls.schemaRegistryAcls.acl_ids
+  value = data.ovh_cloud_project_database_kafka_schemaregistryacls.schema_registry_acls.acl_ids
 }
 ```
 

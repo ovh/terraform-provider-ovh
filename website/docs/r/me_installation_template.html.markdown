@@ -9,7 +9,7 @@ Use this resource to create a custom installation template available for dedicat
 ## Example Usage
 
 ```hcl
-resource "ovh_me_installation_template" "mytemplate" {
+resource "ovh_me_installation_template" "my_template" {
   base_template_name = "debian12_64"
   template_name      = "mytemplate"
   custom_hostname    = "mytest"

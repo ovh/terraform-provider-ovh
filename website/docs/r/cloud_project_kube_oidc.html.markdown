@@ -9,7 +9,7 @@ Creates an OIDC configuration in an OVHcloud Managed Kubernetes cluster.
 ## Example Usage
 
 ```hcl
-resource "ovh_cloud_project_kube_oidc" "my-oidc" {
+resource "ovh_cloud_project_kube_oidc" "my_oidc" {
   service_name = var.projectid
   kube_id      = ovh_cloud_project_kube.mykube.id
 
