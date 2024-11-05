@@ -18,6 +18,11 @@ func dataSourceDedicatedServer() *schema.Resource {
 			},
 
 			// Computed
+			"availability_zone": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Dedicated AZ localisation",
+			},
 			"urn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -34,35 +39,34 @@ func dataSourceDedicatedServer() *schema.Resource {
 			"boot_script": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "",
+				Description: "Ipxe script served on boot",
 			},
 			"commercial_range": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "dedicater server commercial range",
+				Description: "Dedicated server commercial range",
 			},
 			"datacenter": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "dedicated datacenter localisation (bhs1,bhs2,...)",
+				Description: "Dedicated datacenter localisation (bhs1,bhs2,...)",
 			},
 			"ip": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "dedicated server ip (IPv4)",
+				Description: "Dedicated server ip (IPv4)",
 			},
 			"ips": {
 				Type:        schema.TypeList,
 				Computed:    true,
-				Description: "dedicated server ip blocks",
+				Description: "Dedicated server ip blocks",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
 			"link_speed": {
-				Type:        schema.TypeInt,
-				Computed:    true,
-				Description: "",
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
 			"monitoring": {
 				Type:        schema.TypeBool,
@@ -72,12 +76,26 @@ func dataSourceDedicatedServer() *schema.Resource {
 			"name": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "dedicated server name",
+				Description: "Dedicated server name",
+			},
+			"new_upgrade_system": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"no_intervention": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Prevent datacenter intervention",
 			},
 			"os": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Operating system",
+			},
+			"power_state": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Power state of the server: poweroff, poweron",
 			},
 			"professional_use": {
 				Type:        schema.TypeBool,
@@ -89,15 +107,25 @@ func dataSourceDedicatedServer() *schema.Resource {
 				Computed:    true,
 				Description: "",
 			},
+			"region": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Dedicated region localisation",
+			},
 			"rescue_mail": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "",
+				Description: "Custom email used to receive rescue credentials",
+			},
+			"rescue_ssh_key": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Public SSH Key used in the rescue mode",
 			},
 			"reverse": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "dedicated server reverse",
+				Description: "Dedicated server reverse",
 			},
 			"root_device": {
 				Type:        schema.TypeString,
@@ -107,12 +135,12 @@ func dataSourceDedicatedServer() *schema.Resource {
 			"server_id": {
 				Type:        schema.TypeInt,
 				Computed:    true,
-				Description: "your server id",
+				Description: "Server id",
 			},
 			"state": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "error, hacked, hackedBlocked, ok",
+				Description: "All states a Dedicated can be in: error, hacked, hackedBlocked, ok",
 			},
 			"support_level": {
 				Type:        schema.TypeString,
@@ -147,7 +175,7 @@ func dataSourceDedicatedServer() *schema.Resource {
 						"server_name": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "server name",
+							Description: "Server name",
 						},
 						"vrack": {
 							Type:        schema.TypeString,
@@ -228,6 +256,12 @@ func dataSourceDedicatedServerRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("server_id", ds.ServerId)
 	d.Set("state", ds.State)
 	d.Set("support_level", ds.SupportLevel)
+	d.Set("availability_zone", ds.AvailabilityZone)
+	d.Set("new_upgrade_system", ds.NewUpgradeSystem)
+	d.Set("no_intervention", ds.NoIntervention)
+	d.Set("power_state", ds.PowerState)
+	d.Set("region", ds.Region)
+	d.Set("rescue_ssh_key", ds.RescueSshKey)
 
 	dsIps := &[]string{}
 	err = config.OVHClient.Get(

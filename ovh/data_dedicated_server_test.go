@@ -10,7 +10,10 @@ import (
 
 func TestAccDedicatedServerDataSource_basic(t *testing.T) {
 	dedicated_server := os.Getenv("OVH_DEDICATED_SERVER")
-	config := fmt.Sprintf(testAccDedicatedServerDatasourceConfig_Basic, dedicated_server)
+	config := fmt.Sprintf(`
+	data "ovh_dedicated_server" "server" {
+		service_name  = "%s"
+	}`, dedicated_server)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheckDedicatedServer(t) },
@@ -33,14 +36,18 @@ func TestAccDedicatedServerDataSource_basic(t *testing.T) {
 						"data.ovh_dedicated_server.server", "urn"),
 					resource.TestCheckResourceAttrSet(
 						"data.ovh_dedicated_server.server", "display_name"),
+					resource.TestCheckResourceAttr(
+						"data.ovh_dedicated_server.server", "region", "eu-west-sbg"),
+					resource.TestCheckResourceAttr(
+						"data.ovh_dedicated_server.server", "availability_zone", "eu-west-sbg-a"),
+					resource.TestCheckResourceAttr(
+						"data.ovh_dedicated_server.server", "new_upgrade_system", "true"),
+					resource.TestCheckResourceAttr(
+						"data.ovh_dedicated_server.server", "no_intervention", "false"),
+					resource.TestCheckResourceAttr(
+						"data.ovh_dedicated_server.server", "power_state", "poweron"),
 				),
 			},
 		},
 	})
 }
-
-const testAccDedicatedServerDatasourceConfig_Basic = `
-data "ovh_dedicated_server" "server" {
-  service_name  = "%s"
-}
-`
