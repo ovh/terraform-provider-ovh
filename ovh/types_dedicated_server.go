@@ -9,6 +9,7 @@ import (
 )
 
 type DedicatedServer struct {
+	AvailabilityZone   string `json:"availabilityZone"`
 	Name               string `json:"name"`
 	BootId             int    `json:"bootId"`
 	BootScript         string `json:"bootScript"`
@@ -17,10 +18,15 @@ type DedicatedServer struct {
 	Ip                 string `json:"ip"`
 	LinkSpeed          int    `json:"linkSpeed"`
 	Monitoring         bool   `json:"monitoring"`
+	NewUpgradeSystem   bool   `json:"newUpgradeSystem"`
+	NoIntervention     bool   `json:"noIntervention"`
 	Os                 string `json:"os"`
+	PowerState         string `json:"powerState"`
 	ProfessionalUse    bool   `json:"professionalUse"`
 	Rack               string `json:"rack"`
+	Region             string `json:"region"`
 	RescueMail         string `json:"rescueMail"`
+	RescueSshKey       string `json:"rescueSshKey"`
 	Reverse            string `json:"reverse"`
 	RootDevice         string `json:"rootDevice"`
 	ServerId           int    `json:"serverId"`
