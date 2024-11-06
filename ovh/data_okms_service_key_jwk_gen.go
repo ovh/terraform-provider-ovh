@@ -136,6 +136,7 @@ func OkmsServiceKeyJwkDataSourceSchema(ctx context.Context) schema.Schema {
 		},
 	}
 
+	appendIamSchema(attrs, ctx)
 	return schema.Schema{
 		Attributes:  attrs,
 		Description: "Use this data source to retrieve information about a KMS service key, in the JWK format.",
@@ -145,6 +146,7 @@ func OkmsServiceKeyJwkDataSourceSchema(ctx context.Context) schema.Schema {
 type OkmsServiceKeyJwkModel struct {
 	CreatedAt ovhtypes.TfStringValue               `tfsdk:"created_at" json:"createdAt"`
 	Id        ovhtypes.TfStringValue               `tfsdk:"id" json:"id"`
+	Iam       IamValue                             `tfsdk:"iam" json:"iam"`
 	Keys      ovhtypes.TfListNestedValue[JwkValue] `tfsdk:"keys" json:"keys"`
 	Name      ovhtypes.TfStringValue               `tfsdk:"name" json:"name"`
 	OkmsId    ovhtypes.TfStringValue               `tfsdk:"okms_id" json:"okmsId"`

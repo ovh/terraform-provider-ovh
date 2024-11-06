@@ -61,6 +61,7 @@ func OkmsServiceKeyAttributes(ctx context.Context) map[string]schema.Attribute {
 
 func OkmsServiceKeyDataSourceSchema(ctx context.Context) schema.Schema {
 	attrs := OkmsServiceKeyAttributes(ctx)
+	appendIamSchema(attrs, ctx)
 	attrs["okms_id"] = schema.StringAttribute{
 		CustomType:          ovhtypes.TfStringType{},
 		Required:            true,
@@ -76,6 +77,7 @@ func OkmsServiceKeyDataSourceSchema(ctx context.Context) schema.Schema {
 type OkmsServiceKeyModel struct {
 	CreatedAt  ovhtypes.TfStringValue                             `tfsdk:"created_at" json:"createdAt"`
 	Curve      ovhtypes.TfStringValue                             `tfsdk:"curve" json:"curve"`
+	Iam        IamValue                                           `tfsdk:"iam" json:"iam"`
 	Id         ovhtypes.TfStringValue                             `tfsdk:"id" json:"id"`
 	Name       ovhtypes.TfStringValue                             `tfsdk:"name" json:"name"`
 	OkmsId     ovhtypes.TfStringValue                             `tfsdk:"okms_id" json:"okmsId"`
