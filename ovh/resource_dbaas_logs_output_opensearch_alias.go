@@ -145,7 +145,7 @@ func resourceDbaasLogsOutputOpensearchAliasCreate(ctx context.Context, d *schema
 		return diag.Errorf("Alias Id is nil. This should not happen: operation is %s/%s", serviceName, res.OperationId)
 	}
 
-	d.SetId(*id)
+	d.SetId(opts.Suffix)
 
 	indexes := d.Get("indexes").(*schema.Set)
 	for _, index := range indexes.List() {
@@ -168,6 +168,10 @@ func resourceDbaasLogsOutputOpensearchAliasUpdate(ctx context.Context, d *schema
 
 	serviceName := d.Get("service_name").(string)
 	id := d.Id()
+	alias, err := resourceDbaasLogsOutputOpensearchAliasReadFromSuffix(ctx, config, serviceName, id)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	log.Printf("[DEBUG] Will update dbaas logs output Opensearch alias for: %s", serviceName)
 
@@ -177,7 +181,7 @@ func resourceDbaasLogsOutputOpensearchAliasUpdate(ctx context.Context, d *schema
 		endpoint := fmt.Sprintf(
 			"/dbaas/logs/%s/output/opensearch/alias/%s",
 			url.PathEscape(serviceName),
-			url.PathEscape(id),
+			url.PathEscape(alias.AliasId),
 		)
 		if err := config.OVHClient.Put(endpoint, opts, res); err != nil {
 			return diag.Errorf("Error calling Put %s:\n\t %q", endpoint, err)
@@ -197,14 +201,14 @@ func resourceDbaasLogsOutputOpensearchAliasUpdate(ctx context.Context, d *schema
 		newIndexes := newIndexesSet.List()
 		for _, idx := range oldIndexes {
 			if !slices.Contains(newIndexes, idx) {
-				if err := resourceDbaasLogsOutputOpensearchAliasDetachIndex(ctx, config, serviceName, id, idx.(string)); err != nil {
+				if err := resourceDbaasLogsOutputOpensearchAliasDetachIndex(ctx, config, serviceName, alias.AliasId, idx.(string)); err != nil {
 					return diag.FromErr(err)
 				}
 			}
 		}
 		for _, idx := range newIndexes {
 			if !slices.Contains(oldIndexes, idx) {
-				if err := resourceDbaasLogsOutputOpensearchAliasAttachIndex(ctx, config, serviceName, id, idx.(string)); err != nil {
+				if err := resourceDbaasLogsOutputOpensearchAliasAttachIndex(ctx, config, serviceName, alias.AliasId, idx.(string)); err != nil {
 					return diag.FromErr(err)
 				}
 			}
@@ -219,14 +223,14 @@ func resourceDbaasLogsOutputOpensearchAliasUpdate(ctx context.Context, d *schema
 		newStreams := newStreamsSet.List()
 		for _, idx := range oldStreams {
 			if !slices.Contains(newStreams, idx) {
-				if err := resourceDbaasLogsOutputOpensearchAliasDetachStream(ctx, config, serviceName, id, idx.(string)); err != nil {
+				if err := resourceDbaasLogsOutputOpensearchAliasDetachStream(ctx, config, serviceName, alias.AliasId, idx.(string)); err != nil {
 					return diag.FromErr(err)
 				}
 			}
 		}
 		for _, idx := range newStreams {
 			if !slices.Contains(oldStreams, idx) {
-				if err := resourceDbaasLogsOutputOpensearchAliasAttachStream(ctx, config, serviceName, id, idx.(string)); err != nil {
+				if err := resourceDbaasLogsOutputOpensearchAliasAttachStream(ctx, config, serviceName, alias.AliasId, idx.(string)); err != nil {
 					return diag.FromErr(err)
 				}
 			}
@@ -240,35 +244,43 @@ func resourceDbaasLogsOutputOpensearchAliasRead(ctx context.Context, d *schema.R
 	config := meta.(*Config)
 
 	serviceName := d.Get("service_name").(string)
+	suffix := d.Get("suffix").(string)
 	id := d.Id()
 
-	log.Printf("[DEBUG] Will read dbaas logs output Opensearch alias: %s/%s", serviceName, id)
-	res := &DbaasLogsOutputOpensearchAlias{}
-	endpoint := fmt.Sprintf(
-		"/dbaas/logs/%s/output/opensearch/alias/%s",
-		url.PathEscape(serviceName),
-		url.PathEscape(id),
-	)
-	if err := config.OVHClient.Get(endpoint, &res); err != nil {
-		log.Printf("[ERROR] %s: %v", endpoint, err)
-		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
-	}
+	var res *DbaasLogsOutputOpensearchAlias
 
-	for k, v := range res.ToMap() {
-		if k != "id" {
-			d.Set(k, v)
-		} else {
-			d.SetId(fmt.Sprint(v))
+	// In case resource has been stored with alias Id instead of suffix, fetch directly with alias Id and reset id to suffix
+	if id == suffix {
+		var err error
+		res, err = resourceDbaasLogsOutputOpensearchAliasReadFromSuffix(ctx, config, serviceName, id)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	} else {
+		endpoint := fmt.Sprintf(
+			"/dbaas/logs/%s/output/opensearch/alias/%s",
+			url.PathEscape(serviceName),
+			url.PathEscape(id),
+		)
+		if err := config.OVHClient.Get(endpoint, &res); err != nil {
+			return diag.Errorf("Error calling get %s:\n\t %q", endpoint, err)
 		}
 	}
 
-	idx, err := resourceDbaasLogsOutputOpensearchAliasIndexRead(ctx, config, serviceName, id)
+	log.Printf("[DEBUG] Will read dbaas logs output Opensearch alias: %s/%s", serviceName, id)
+
+	for k, v := range res.ToMap() {
+		d.Set(k, v)
+	}
+	d.SetId(suffix)
+
+	idx, err := resourceDbaasLogsOutputOpensearchAliasIndexRead(ctx, config, serviceName, res.AliasId)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 	d.Set("indexes", idx)
 
-	streams, err := resourceDbaasLogsOutputOpensearchAliasStreamRead(ctx, config, serviceName, id)
+	streams, err := resourceDbaasLogsOutputOpensearchAliasStreamRead(ctx, config, serviceName, res.AliasId)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -282,16 +294,21 @@ func resourceDbaasLogsOutputOpensearchAliasDelete(ctx context.Context, d *schema
 
 	serviceName := d.Get("service_name").(string)
 	id := d.Id()
+	log.Printf("[DEBUG] Will read dbaas logs output Opensearch alias: %s/%s", serviceName, id)
+	alias, err := resourceDbaasLogsOutputOpensearchAliasReadFromSuffix(ctx, config, serviceName, id)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	indexes := d.Get("indexes").(*schema.Set)
 	for _, index := range indexes.List() {
-		if err := resourceDbaasLogsOutputOpensearchAliasDetachIndex(ctx, config, serviceName, id, index.(string)); err != nil {
+		if err := resourceDbaasLogsOutputOpensearchAliasDetachIndex(ctx, config, serviceName, alias.AliasId, index.(string)); err != nil {
 			return diag.FromErr(err)
 		}
 	}
 	streams := d.Get("streams").(*schema.Set)
 	for _, stream := range streams.List() {
-		if err := resourceDbaasLogsOutputOpensearchAliasDetachStream(ctx, config, serviceName, id, stream.(string)); err != nil {
+		if err := resourceDbaasLogsOutputOpensearchAliasDetachStream(ctx, config, serviceName, alias.AliasId, stream.(string)); err != nil {
 			return diag.FromErr(err)
 		}
 	}
@@ -301,7 +318,7 @@ func resourceDbaasLogsOutputOpensearchAliasDelete(ctx context.Context, d *schema
 	endpoint := fmt.Sprintf(
 		"/dbaas/logs/%s/output/opensearch/alias/%s",
 		url.PathEscape(serviceName),
-		url.PathEscape(id),
+		url.PathEscape(alias.AliasId),
 	)
 
 	if err := config.OVHClient.Delete(endpoint, res); err != nil {
@@ -392,6 +409,36 @@ func resourceDbaasLogsOutputOpensearchAliasIndexRead(ctx context.Context, config
 	}
 
 	return indexes, nil
+}
+
+func resourceDbaasLogsOutputOpensearchAliasReadFromSuffix(ctx context.Context, config *Config, serviceName, suffix string) (*DbaasLogsOutputOpensearchAlias, error) {
+	var (
+		endpoint = fmt.Sprintf(
+			"/dbaas/logs/%s/output/opensearch/alias?namePattern=%s",
+			url.PathEscape(serviceName),
+			url.QueryEscape(suffix))
+		aliases []string
+		res     DbaasLogsOutputOpensearchAlias
+	)
+
+	if err := config.OVHClient.GetWithContext(ctx, endpoint, &aliases); err != nil {
+		return nil, fmt.Errorf("failed to retrieve alias: %w", err)
+	}
+
+	if len(aliases) == 0 {
+		return nil, fmt.Errorf("No resource found matching suffix %s", suffix)
+	}
+
+	endpoint = fmt.Sprintf(
+		"/dbaas/logs/%s/output/opensearch/alias/%s",
+		url.PathEscape(serviceName),
+		url.QueryEscape(aliases[0]))
+
+	if err := config.OVHClient.GetWithContext(ctx, endpoint, &res); err != nil {
+		return nil, fmt.Errorf("failed to retrieve alias: %w", err)
+	}
+
+	return &res, nil
 }
 
 func resourceDbaasLogsOutputOpensearchAliasStreamRead(ctx context.Context, config *Config, serviceName, aliasId string) ([]string, error) {
