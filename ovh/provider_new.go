@@ -211,6 +211,7 @@ func (p *OvhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 		NewOkmsResourceDataSource,
 		NewOkmsServiceKeyDataSource,
 		NewOkmsServiceKeyJwkDataSource,
+		NewOkmsServiceKeyPemDataSource,
 	}
 }
 
@@ -233,6 +234,7 @@ func (p *OvhProvider) Resources(_ context.Context) []func() resource.Resource {
 		NewOkmsResource,
 		NewOkmsCredentialResource,
 		NewOkmsServiceKeyResource,
+		NewOkmsServiceKeyJwkResource,
 		NewVpsResource,
 	}
 }
