@@ -48,7 +48,6 @@ resource "ovh_cloud_project" "my_cloud_project" {
 If you want to add the certification HDS option at project creation (you must have a business support level on your account), you can add hds datasource and the plan_option configuration on the `ovh_cloud_project`.
 
 ```hcl
-
 data "ovh_order_cart_product_options_plan" "hds" {
   cart_id        = data.ovh_order_cart.mycart.id
   price_capacity = "renew"
@@ -60,7 +59,6 @@ data "ovh_order_cart_product_options_plan" "hds" {
 }
 
 resource "ovh_cloud_project" "my_cloud_project" {
-
   ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
   description    = "my cloud project"
 
@@ -75,9 +73,29 @@ resource "ovh_cloud_project" "my_cloud_project" {
     plan_code    = data.ovh_order_cart_product_options_plan.hds.options_plan_code
     pricing_mode = data.ovh_order_cart_product_options_plan.hds.selected_price.0.pricing_mode
   }
-
 }
+```
 
+## Associate an existing vRack to a new cloud project
+
+You may want to associate an already-existing vRack to the cloud project at creation time.
+To do so, you can use the following plan configuration:
+
+```hcl
+resource "ovh_cloud_project" "my_cloud_project" {
+  ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
+  description    = "cloud project with pre-existing vrack"
+
+  plan {
+    duration     = data.ovh_order_cart_product_plan.cloud.selected_price.0.duration
+    plan_code    = data.ovh_order_cart_product_plan.cloud.plan_code
+    pricing_mode = data.ovh_order_cart_product_plan.cloud.selected_price.0.pricing_mode
+    configuration {
+      label = "vrack"
+      value = "pn-*******"
+    }
+  }
+}
 ```
 
 ## Argument Reference
