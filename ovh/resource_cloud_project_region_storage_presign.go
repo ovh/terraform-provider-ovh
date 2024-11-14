@@ -2,11 +2,13 @@ package ovh
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
 func resourceCloudProjectRegionStoragePresign() *schema.Resource {
@@ -21,25 +23,25 @@ func resourceCloudProjectRegionStoragePresign() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
-				Description: "Service name of the resource representing the ID of the cloud project.",
+				Description: "Service name of the resource representing the ID of the cloud project",
 			},
 			"region_name": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Region name.",
+				Description: "Region name",
 			},
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "The S3 storage container's name.",
+				Description: "The S3 storage container's name",
 			},
 			"expire": {
 				Type:        schema.TypeInt,
 				Required:    true,
 				ForceNew:    true,
-				Description: "How long (in seconds) the URL will be valid.",
+				Description: "How long (in seconds) the URL will be valid",
 			},
 			"method": {
 				Type:     schema.TypeString,
@@ -57,14 +59,14 @@ func resourceCloudProjectRegionStoragePresign() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Name of the object to download or upload.",
+				Description: "Name of the object to download or upload",
 			},
 
 			// Computed
 			"url": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "Presigned URL.",
+				Description: "Presigned URL",
 			},
 		},
 	}
@@ -73,7 +75,7 @@ func resourceCloudProjectRegionStoragePresign() *schema.Resource {
 func resourceCloudProjectRegionStoragePresignCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
-	regionName := d.Get("region_name").(string)
+	regionName := strings.ToUpper(d.Get("region_name").(string))
 	name := d.Get("name").(string)
 
 	resp := &PresignedURL{}
