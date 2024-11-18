@@ -204,6 +204,12 @@ func (r *okmsResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		data.OvhSubsidiary = planData.OvhSubsidiary
 	}
 
+	if data.Region != planData.Region {
+		// This will happen when we change the region format.
+		// No need to update resource, just take the value from the plan.
+		data.Region = planData.Region
+	}
+
 	if planData.DisplayName.ValueString() != data.DisplayName.ValueString() {
 		// Update service displayName
 		log.Printf("[OKMS] updating display name for %s to %s", data.Id.ValueString(), planData.DisplayName.ValueString())

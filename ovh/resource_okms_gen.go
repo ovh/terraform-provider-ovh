@@ -2,10 +2,12 @@ package ovh
 
 import (
 	"context"
-	// "fmt"
+	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/ovh/types"
@@ -14,6 +16,71 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 )
+
+type okmsRegionValidator struct {
+}
+
+func (o okmsRegionValidator) Description(ctx context.Context) string {
+	return "The new region format is `plate-zone-dc`"
+}
+
+func (o okmsRegionValidator) MarkdownDescription(ctx context.Context) string {
+	return o.Description(ctx)
+}
+
+func (o okmsRegionValidator) ValidateString(ctx context.Context, req validator.StringRequest, resp *validator.StringResponse) {
+	// We only want to make sure the region is not in the old format.
+	if req.ConfigValue.IsUnknown() || req.ConfigValue.IsNull() {
+		return
+	}
+
+	regionName := req.ConfigValue.ValueString()
+	if regionName != okmsReformatRegion(regionName) {
+		resp.Diagnostics.AddAttributeWarning(
+			req.Path,
+			"Deprecated format used for region attribute",
+			fmt.Sprintf(
+				"The region should now be formatted as %s instead of %s",
+				okmsReformatRegion(regionName),
+				regionName,
+			),
+		)
+	}
+}
+
+var _ validator.String = okmsRegionValidator{}
+
+func okmsReformatRegion(region string) string {
+	return strings.Replace(strings.ToLower(region), "_", "-", -1)
+}
+
+func okmsRegionCheckUpdate(ctx context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
+	// The region is immutable for a KMS so we almost always want
+	// to replace the KMS if the region has changed.
+	// However, the region format has undergone a change in november 2024
+	// from PLATE_ZONE_DC to plate-zone-dc, so we must check
+	// whether the difference isn't simply due to this change.
+	// In that case a simple update will work, there is no need to replace the KMS.
+	var stateData, planData OkmsModel
+
+	resp.RequiresReplace = true
+	// Read Terraform plan data into the model
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &planData)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Read Terraform current state data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, &stateData)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if okmsReformatRegion(planData.Region.ValueString()) == okmsReformatRegion(stateData.Region.ValueString()) {
+		// The regions are actually the same, but not with the same format
+		resp.RequiresReplace = false
+	}
+}
 
 func OkmsResourceSchema(ctx context.Context) schema.Schema {
 	attrs := map[string]schema.Attribute{
@@ -114,8 +181,15 @@ func OkmsResourceSchema(ctx context.Context) schema.Schema {
 			Description:         "KMS region",
 			MarkdownDescription: "KMS region",
 			PlanModifiers: []planmodifier.String{
-				stringplanmodifier.RequiresReplace(),
+				stringplanmodifier.RequiresReplaceIf(
+					okmsRegionCheckUpdate,
+					"KMS Region name change",
+					"KMS Region name change",
+				),
 				stringplanmodifier.UseStateForUnknown(),
+			},
+			Validators: []validator.String{
+				okmsRegionValidator{},
 			},
 		},
 		"rest_endpoint": schema.StringAttribute{
