@@ -135,7 +135,7 @@ data "ovh_me" "current_account" {
 resource "ovh_okms" "kms" {
   ovh_subsidiary = "FR"
   display_name = "%[1]s"
-  region = "EU_WEST_SBG"
+  region = "eu-west-sbg"
 }
 
 resource "ovh_okms_service_key" "key_oct" {
