@@ -1,3 +1,21 @@
+## 1.1.0 (November 19, 2024)
+
+💪 Improvements:
+
+* `r/ovh_cloud_project_database_m3db_namespace`: Allow managing the default namespace ([#761](https://github.com/ovh/terraform-provider-ovh/pull/761))
+* `r/ovh_cloud_project_region_storage_presign`: Force region to be uppercased ([#772](https://github.com/ovh/terraform-provider-ovh/pull/772))
+* `r/ovh_okms`: Support the new region name format ([#773](https://github.com/ovh/terraform-provider-ovh/pull/773))
+
+* `d/ovh_dedicated_server`: Add missing fields ([#766](https://github.com/ovh/terraform-provider-ovh/pull/766))
+
+📚 Documentation:
+
+* Licenses update ([#764](https://github.com/ovh/terraform-provider-ovh/pull/764))
+* `r/ovh_cloud_project_region_storage_presign`: Fix documentation ([#770](https://github.com/ovh/terraform-provider-ovh/pull/770))
+* `r/ovh_cloud_project`: Add an example of cloud project creation with a pre-existing vRack ([#771](https://github.com/ovh/terraform-provider-ovh/pull/771))
+
+❤️ Thanks for your contributions ❤️
+
 ## 1.0.0 (October 21, 2024)
 
 🎉 Features:
