@@ -123,7 +123,7 @@ data "ovh_okms_resource" "datakms" {
 func TestAccOkmsOrder(t *testing.T) {
 	compareValuesSame := statecheck.CompareValue(compare.ValuesSame())
 	displayName := acctest.RandomWithPrefix(test_prefix)
-	region := "EU_WEST_SBG"
+	region := "eu-west-sbg"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheckCredentials(t) },
@@ -181,7 +181,7 @@ func TestAccOkmsImport(t *testing.T) {
 				ResourceName:  "ovh_okms.kms",
 				ImportState:   true,
 				ImportStateId: kmsId,
-				Config:        fmt.Sprintf(confOkmsResourceOrder, displayName, "EU_WEST_SBG"),
+				Config:        fmt.Sprintf(confOkmsResourceOrder, displayName, "eu-west-sbg"),
 			},
 		},
 	})
