@@ -176,7 +176,7 @@ func OkmsResourceSchema(ctx context.Context) schema.Schema {
 			},
 		},
 		"region": schema.StringAttribute{
-			CustomType:          ovhtypes.TfStringType{},
+			CustomType:          okmsRegionStringType{},
 			Required:            true,
 			Description:         "KMS region",
 			MarkdownDescription: "KMS region",
@@ -227,7 +227,7 @@ type OkmsModel struct {
 	RestEndpoint    ovhtypes.TfStringValue `tfsdk:"rest_endpoint" json:"restEndpoint"`
 	SwaggerEndpoint ovhtypes.TfStringValue `tfsdk:"swagger_endpoint" json:"swaggerEndpoint"`
 	OvhSubsidiary   ovhtypes.TfStringValue `tfsdk:"ovh_subsidiary" json:"ovhSubsidiary"`
-	Region          ovhtypes.TfStringValue `tfsdk:"region" json:"region"`
+	Region          okmsRegionStringValue  `tfsdk:"region" json:"region"`
 }
 
 func (v *OkmsModel) ToCreate(ctx context.Context) (*OrderModel, diag.Diagnostics) {
@@ -236,7 +236,9 @@ func (v *OkmsModel) ToCreate(ctx context.Context) (*OrderModel, diag.Diagnostics
 		PlanConfigurationValue{}.AttributeTypes(ctx),
 		map[string]attr.Value{
 			"label": ovhtypes.NewTfStringValue("region"),
-			"value": v.Region,
+			"value": ovhtypes.TfStringValue{
+				StringValue: v.Region.StringValue,
+			},
 		},
 	)
 
