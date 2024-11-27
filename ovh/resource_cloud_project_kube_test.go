@@ -972,7 +972,7 @@ func TestAccCloudProjectKubeVRack(t *testing.T) {
 		VlanID:                         vlanID,
 		Name:                           name,
 		Region:                         region,
-		DefaultVrackGateway:            "10.4.0.1",
+		DefaultVrackGateway:            "",
 		PrivateNetworkRoutingAsDefault: true,
 		LoadBalancersSubnetId:          "ovh_cloud_project_network_private_subnet.networksubnet2.id",
 	}
