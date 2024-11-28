@@ -129,24 +129,19 @@ resource "ovh_cloud_project_kube" "my_cluster" {
 }
 ```
 
-Kubernetes cluster creation attached to a VRack in `GRA5` region with:
+Kubernetes cluster creation on a private network / subnet in `GRA5` region with a managed gateway:
 
 ```hcl
-resource "ovh_vrack_cloudproject" "attach" {
-  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" # vrack ID
-  project_id   = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" # Public Cloud service name
-}
 
 resource "ovh_cloud_project_network_private" "network" {
-  service_name = ovh_vrack_cloudproject.attach.project_id
-  vlan_id    = 0
+  service_name = "${var.service_name}" # Public Cloud service name
+  vlan_id     = 42
   name       = "terraform_testacc_private_net"
   regions    = ["GRA5"]
-  depends_on = [ovh_vrack_cloudproject.attach]
 }
 
-resource "ovh_cloud_project_network_private_subnet" "networksubnet" {
-  service_name = ovh_cloud_project_network_private.network.service_name
+resource "ovh_cloud_project_network_private_subnet" "subnet" {
+  service_name = "${var.service_name}"
   network_id   = ovh_cloud_project_network_private.network.id
 
   # whatever region, for test purpose
@@ -156,27 +151,28 @@ resource "ovh_cloud_project_network_private_subnet" "networksubnet" {
   network    = "192.168.168.0/24"
   dhcp       = true
   no_gateway = false
-
-  depends_on   = [ovh_cloud_project_network_private.network]
 }
 
-output "openstackID" {
-  value = one(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)
+resource "ovh_cloud_project_gateway" "gateway" {
+  service_name = "${var.service_name}"
+  name       = "gateway"
+  model      = "s"
+  region     = "GRA5"
+  network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
+  subnet_id  = ovh_cloud_project_network_private_subnet.subnet.id
 }
 
 resource "ovh_cloud_project_kube" "my_cluster" {
-  service_name  = var.service_name
+  service_name  = "${var.service_name}"
   name          = "test-kube-attach"
   region        = "GRA5"
 
   private_network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
-
+  nodes_subnet_id = ovh_cloud_project_network_private_subnet.subnet.id
   private_network_configuration {
       default_vrack_gateway              = ""
       private_network_routing_as_default = false
   }
-
-  depends_on = [ovh_cloud_project_network_private_subnet.networksubnet]
 }
 ```
 
