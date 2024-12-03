@@ -2,50 +2,10 @@ package ovh
 
 import (
 	"context"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/ovh/types"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 )
-
-func appendIamSchema(attrs map[string]schema.Attribute, ctx context.Context) {
-	attrs["iam"] = schema.SingleNestedAttribute{
-		Attributes: map[string]schema.Attribute{
-			"display_name": schema.StringAttribute{
-				CustomType:          ovhtypes.TfStringType{},
-				Computed:            true,
-				Description:         "Resource display name",
-				MarkdownDescription: "Resource display name",
-			},
-			"id": schema.StringAttribute{
-				CustomType:          ovhtypes.TfStringType{},
-				Computed:            true,
-				Description:         "Unique identifier of the resource",
-				MarkdownDescription: "Unique identifier of the resource",
-			},
-			"tags": schema.MapAttribute{
-				CustomType:          ovhtypes.NewTfMapNestedType[ovhtypes.TfStringValue](ctx),
-				Computed:            true,
-				Description:         "Resource tags. Tags that were internally computed are prefixed with ovh:",
-				MarkdownDescription: "Resource tags. Tags that were internally computed are prefixed with ovh:",
-			},
-			"urn": schema.StringAttribute{
-				CustomType:          ovhtypes.TfStringType{},
-				Computed:            true,
-				Description:         "Unique resource name used in policies",
-				MarkdownDescription: "Unique resource name used in policies",
-			},
-		},
-		CustomType: IamType{
-			ObjectType: types.ObjectType{
-				AttrTypes: IamValue{}.AttributeTypes(ctx),
-			},
-		},
-		Computed:            true,
-		Description:         "IAM resource metadata",
-		MarkdownDescription: "IAM resource metadata",
-	}
-}
 
 func OkmsResourceDataSourceSchema(ctx context.Context) schema.Schema {
 	attrs := map[string]schema.Attribute{
@@ -87,7 +47,7 @@ func OkmsResourceDataSourceSchema(ctx context.Context) schema.Schema {
 		},
 	}
 
-	appendIamSchema(attrs, ctx)
+	AppendIamDatasourceSchema(attrs, ctx)
 	return schema.Schema{
 		Attributes:  attrs,
 		Description: "Use this data source to retrieve information about a KMS associated with this account",
