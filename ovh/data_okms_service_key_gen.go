@@ -61,7 +61,7 @@ func OkmsServiceKeyAttributes(ctx context.Context) map[string]schema.Attribute {
 
 func OkmsServiceKeyDataSourceSchema(ctx context.Context) schema.Schema {
 	attrs := OkmsServiceKeyAttributes(ctx)
-	appendIamSchema(attrs, ctx)
+	AppendIamDatasourceSchema(attrs, ctx)
 	attrs["okms_id"] = schema.StringAttribute{
 		CustomType:          ovhtypes.TfStringType{},
 		Required:            true,

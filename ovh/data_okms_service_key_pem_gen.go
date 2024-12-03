@@ -45,7 +45,7 @@ func OkmsServiceKeyPemDataSourceSchema(ctx context.Context) schema.Schema {
 		CustomType:          ovhtypes.NewTfListNestedType[PemValue](ctx),
 	}
 
-	appendIamSchema(attrs, ctx)
+	AppendIamDatasourceSchema(attrs, ctx)
 	return schema.Schema{
 		Attributes:  attrs,
 		Description: "Use this data source to retrieve information about a KMS service key, in the PEM format.",
