@@ -23,11 +23,23 @@ data "ovh_okms_service_key" "key_info" {
 ### Read-Only
 
 - `created_at` (String) Creation time of the key
+- `iam` (Attributes) IAM resource metadata (see [below for nested schema](#nestedatt--iam))
 - `keys` (Attributes List) The key in JWK format (see [below for nested schema](#nestedatt--keys))
 - `name` (String) Key name
 - `size` (Number) Size of the key
 - `state` (String) State of the key
 - `type` (String) Key type
+
+<a id="nestedatt--iam"></a>
+### Nested Schema for `iam`
+
+Read-Only:
+
+- `display_name` (String) Resource display name
+- `id` (String) Unique identifier of the resource
+- `tags` (Map of String) Resource tags. Tags that were internally computed are prefixed with ovh:
+- `urn` (String) Unique resource name used in policies
+
 
 <a id="nestedatt--keys"></a>
 ### Nested Schema for `keys`
