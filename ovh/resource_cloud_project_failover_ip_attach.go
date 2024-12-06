@@ -104,7 +104,6 @@ func resourceCloudProjectFailoverIpAttachSchema() map[string]*schema.Schema {
 
 func resourceCloudProjectFailoverIpAttachRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-
 	serviceName := d.Get("service_name").(string)
 
 	log.Printf("[DEBUG] Will read cloud project ip addresses %s", serviceName)
@@ -114,7 +113,7 @@ func resourceCloudProjectFailoverIpAttachRead(d *schema.ResourceData, meta inter
 
 	ips := []FailoverIp{}
 	if err := config.OVHClient.Get(endpoint, &ips); err != nil {
-		return fmt.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
+		return fmt.Errorf("error calling GET %s:\n\t %q", endpoint, err)
 	}
 
 	match := false
@@ -143,9 +142,7 @@ func resourceCloudProjectFailoverIpAttachRead(d *schema.ResourceData, meta inter
 }
 
 func resourceCloudProjectFailoverIpAttachCreate(d *schema.ResourceData, meta interface{}) error {
-
 	serviceName := d.Get("service_name").(string)
-
 	config := meta.(*Config)
 
 	//Fetch Failover IP address to populate ID field
@@ -156,7 +153,7 @@ func resourceCloudProjectFailoverIpAttachCreate(d *schema.ResourceData, meta int
 
 	ips := []FailoverIp{}
 	if err := config.OVHClient.Get(endpoint, &ips); err != nil {
-		return fmt.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
+		return fmt.Errorf("error calling GET %s:\n\t %q", endpoint, err)
 	}
 
 	match := false
@@ -187,11 +184,10 @@ func resourceCloudProjectFailoverIpAttachCreate(d *schema.ResourceData, meta int
 
 	ip := &FailoverIp{}
 	if err := config.OVHClient.Post(endpoint, opts, ip); err != nil {
-		return fmt.Errorf("calling Put %s: %q", endpoint, err)
+		return fmt.Errorf("calling Post %s: %q", endpoint, err)
 	}
 
 	for k, v := range ip.ToMap() {
-		match = true
 		if k != "id" {
 			err := d.Set(k, v)
 			if err != nil {
@@ -210,9 +206,8 @@ func resourceCloudProjectFailoverIpAttachCreate(d *schema.ResourceData, meta int
 }
 
 func resourceCloudProjectFailoverIpAttachDelete(d *schema.ResourceData, meta interface{}) error {
-	// Failover IPs cannot be deleted, the best that can be done in this instance is to check it exists
-	if err := resourceCloudProjectFailoverIpAttachRead(d, meta); err != nil {
-		return err
-	}
+	// Failover IPs cannot be detached from an instance, so nothing done here.
+	d.SetId("")
+
 	return nil
 }
