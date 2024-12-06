@@ -95,6 +95,47 @@ resource "ovh_dbaas_logs_input" "input" {
 }
 `
 
+const testAccResourceDbaasLogsInput_noNetwork = `
+data "ovh_dbaas_logs_input_engine" "logstash" {
+	service_name  = "%s"
+	name          = "%s"
+	version       = "%s"
+}
+
+resource "ovh_dbaas_logs_output_graylog_stream" "stream" {
+	service_name = "%s"
+	title        = "%s"
+	description  = "%s"
+}
+
+resource "ovh_dbaas_logs_input" "input" {
+	service_name = ovh_dbaas_logs_output_graylog_stream.stream.service_name
+	description  = ovh_dbaas_logs_output_graylog_stream.stream.description
+	title        = ovh_dbaas_logs_output_graylog_stream.stream.title
+	engine_id    = data.ovh_dbaas_logs_input_engine.logstash.id
+	stream_id    = ovh_dbaas_logs_output_graylog_stream.stream.id
+
+	allowed_networks   = []
+	exposed_port       = "6154"
+	autoscale          = true
+	min_scale_instance = 2
+	max_scale_instance = 4
+
+	configuration {
+		logstash {
+			input_section = <<EOF
+				beats {
+					port => 6514
+					ssl => true
+					ssl_certificate => "/etc/ssl/private/server.crt"
+					ssl_key => "/etc/ssl/private/server.key"
+				}
+			EOF
+		}
+	}
+}
+`
+
 func init() {
 	resource.AddTestSweepers("ovh_dbaas_logs_input", &resource.Sweeper{
 		Name: "ovh_dbaas_logs_input",
@@ -207,6 +248,8 @@ func TestAccResourceDbaasLogsInput_basic(t *testing.T) {
 		serviceName, name, version, serviceName, title, desc, 4)
 	configUpdated := fmt.Sprintf(testAccResourceDbaasLogsInput_updated,
 		serviceName, name, version, serviceName, title, desc)
+	configNoNetwork := fmt.Sprintf(testAccResourceDbaasLogsInput_noNetwork,
+		serviceName, name, version, serviceName, title, desc)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { testAccPreCheckDbaasLogsInput(t) },
@@ -312,6 +355,10 @@ func TestAccResourceDbaasLogsInput_basic(t *testing.T) {
 						"4",
 					),
 				),
+			},
+			{
+				Config: configNoNetwork,
+				Check:  resource.TestCheckResourceAttr("ovh_dbaas_logs_input.input", "allowed_networks.#", "0"),
 			},
 		},
 	})

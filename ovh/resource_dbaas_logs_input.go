@@ -140,7 +140,7 @@ func resourceDbaasLogsInputSchema() map[string]*schema.Schema {
 
 		// Optional
 		"allowed_networks": {
-			Type:        schema.TypeList,
+			Type:        schema.TypeSet,
 			Description: "IP blocks",
 			Elem:        &schema.Schema{Type: schema.TypeString},
 			Optional:    true,
