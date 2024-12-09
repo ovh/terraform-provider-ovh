@@ -83,7 +83,7 @@ func (opts *DbaasLogsInputOpts) FromResource(d *schema.ResourceData) *DbaasLogsI
 	opts.StreamId = d.Get("stream_id").(string)
 	opts.Title = d.Get("title").(string)
 
-	networks := d.Get("allowed_networks").([]interface{})
+	networks := d.Get("allowed_networks").(*schema.Set).List()
 	if len(networks) > 0 {
 		networksString := make([]string, len(networks))
 		for i, net := range networks {
