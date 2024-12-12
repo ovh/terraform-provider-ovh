@@ -1,11 +1,15 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/url"
+	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
@@ -182,19 +186,31 @@ func resourceCloudProjectFailoverIpAttachCreate(d *schema.ResourceData, meta int
 		url.PathEscape(id),
 	)
 
-	ip := &FailoverIp{}
-	if err := config.OVHClient.Post(endpoint, opts, ip); err != nil {
-		return fmt.Errorf("calling Post %s: %q", endpoint, err)
-	}
-
-	for k, v := range ip.ToMap() {
-		if k != "id" {
-			err := d.Set(k, v)
-			if err != nil {
-				return err
+	retry.RetryContext(context.Background(), 5*time.Minute, func() *retry.RetryError {
+		ip := &FailoverIp{}
+		if err := config.OVHClient.Post(endpoint, opts, ip); err != nil {
+			// Retry 400 errors because it can mean that the instance IP
+			// is not allocated yet.
+			ovhError, isOvhApiError := err.(*ovh.APIError)
+			if isOvhApiError && ovhError.Code == 400 {
+				log.Printf("[INFO] container registry id %s on project %s deleted", id, serviceName)
+				return retry.RetryableError(fmt.Errorf("error calling POST %s: %q", endpoint, err))
+			} else {
+				return retry.NonRetryableError(fmt.Errorf("failed to attach failover IP: %s", err))
 			}
 		}
-	}
+
+		for k, v := range ip.ToMap() {
+			if k != "id" {
+				err := d.Set(k, v)
+				if err != nil {
+					return retry.NonRetryableError(err)
+				}
+			}
+		}
+
+		return nil
+	})
 
 	for d.Get("status").(string) == "operationPending" {
 		if err := resourceCloudProjectFailoverIpAttachRead(d, meta); err != nil {
