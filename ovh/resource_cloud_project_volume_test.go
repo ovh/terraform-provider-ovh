@@ -31,8 +31,8 @@ func TestAccCloudProjectVolume_basic(t *testing.T) {
 					serviceName,
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_cloud_project_volume.volume", "region_name", os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")),
-					resource.TestCheckResourceAttr("ovh_cloud_project_volume.volume", "service_name", os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")),
+					resource.TestCheckResourceAttr("ovh_cloud_project_volume.volume", "region_name", regionName),
+					resource.TestCheckResourceAttr("ovh_cloud_project_volume.volume", "service_name", serviceName),
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_volume.volume", "volume_id"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_volume.volume", "type"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_volume.volume", "description"),
