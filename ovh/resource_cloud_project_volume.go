@@ -64,7 +64,7 @@ func (r *cloudProjectVolumeResource) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
-	err := r.WaitForVolumeCreation(ctx, r.config.OVHClient, data.ServiceName.ValueString(), responseData.Id.ValueString())
+	resWait, err := r.WaitForVolumeCreation(ctx, r.config.OVHClient, data.ServiceName.ValueString(), responseData.Id.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Operation"),
@@ -73,18 +73,10 @@ func (r *cloudProjectVolumeResource) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
-	res := &CloudProjectVolumeModelOp{}
-	endpoint = "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/operation/" + url.PathEscape(responseData.Id.ValueString())
-	if err := r.config.OVHClient.Get(endpoint, res); err != nil {
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("Error calling Post %s", endpoint),
-			err.Error(),
-		)
-		return
-	}
+	v := resWait.(interface{})
 
 	resVol := &CloudProjectVolumeModelOp{}
-	endpoint = "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/region/" + url.PathEscape(data.RegionName.ValueString()) + "/volume/" + url.PathEscape(res.ResourceId.ValueString())
+	endpoint = "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/region/" + url.PathEscape(data.RegionName.ValueString()) + "/volume/" + url.PathEscape(v.(string))
 	if err := r.config.OVHClient.Get(endpoint, resVol); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Post %s", endpoint),
@@ -99,7 +91,7 @@ func (r *cloudProjectVolumeResource) Create(ctx context.Context, req resource.Cr
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (d *cloudProjectVolumeResource) WaitForVolumeCreation(ctx context.Context, client *ovh.Client, serviceName, operationId string) error {
+func (d *cloudProjectVolumeResource) WaitForVolumeCreation(ctx context.Context, client *ovh.Client, serviceName, operationId string) (interface{}, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{"null", "in-progress", "created", ""},
 		Target:  []string{"completed"},
@@ -110,15 +102,16 @@ func (d *cloudProjectVolumeResource) WaitForVolumeCreation(ctx context.Context, 
 			if err != nil {
 				return res, "", err
 			}
-			return res, res.Status.ValueString(), nil
+			return res.ResourceId.ValueString(), res.Status.ValueString(), nil
 		},
 		Timeout:    360 * time.Second,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, err := stateConf.WaitForStateContext(ctx)
-	return err
+	res, err := stateConf.WaitForStateContext(ctx)
+
+	return res, err
 }
 
 func (r *cloudProjectVolumeResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -130,7 +123,7 @@ func (r *cloudProjectVolumeResource) Read(ctx context.Context, req resource.Read
 		return
 	}
 
-	endpoint := "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/region/" + url.PathEscape(data.RegionName.ValueString()) + "/volume/" + url.PathEscape(data.VolumeId.ValueString()) + ""
+	endpoint := "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/region/" + url.PathEscape(data.RegionName.ValueString()) + "/volume/" + url.PathEscape(data.VolumeId.ValueString())
 
 	if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
 		resp.Diagnostics.AddError(
@@ -162,8 +155,8 @@ func (r *cloudProjectVolumeResource) Update(ctx context.Context, req resource.Up
 	}
 
 	// Update resource
-	endpoint := "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/region/" + url.PathEscape(data.RegionName.ValueString()) + "/volume"
-	if err := r.config.OVHClient.Post(endpoint, planData.ToUpdate(), nil); err != nil {
+	endpoint := "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/volume/" + url.PathEscape(data.VolumeId.ValueString())
+	if err := r.config.OVHClient.Put(endpoint, planData.ToUpdate(), nil); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Post %s", endpoint),
 			err.Error(),
@@ -172,7 +165,7 @@ func (r *cloudProjectVolumeResource) Update(ctx context.Context, req resource.Up
 	}
 
 	// Read updated resource
-	endpoint = "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/region/" + url.PathEscape(data.RegionName.ValueString()) + "/volume/" + url.PathEscape(data.VolumeId.ValueString()) + ""
+	endpoint = "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/region/" + url.PathEscape(data.RegionName.ValueString()) + "/volume/" + url.PathEscape(data.VolumeId.ValueString())
 	if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Get %s", endpoint),
@@ -198,7 +191,7 @@ func (r *cloudProjectVolumeResource) Delete(ctx context.Context, req resource.De
 	}
 
 	// Delete API call logic
-	endpoint := "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/volume/" + url.PathEscape(data.VolumeId.ValueString()) + ""
+	endpoint := "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/volume/" + url.PathEscape(data.VolumeId.ValueString())
 	if err := r.config.OVHClient.Delete(endpoint, nil); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Delete %s", endpoint),
