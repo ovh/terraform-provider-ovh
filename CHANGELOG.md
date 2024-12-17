@@ -1,3 +1,22 @@
+## 1.2.0 (December 17, 2024)
+
+🎉 Features:
+
+* New resource: `ovh_okms_service_key_jwk` ([#777](https://github.com/ovh/terraform-provider-ovh/pull/777))
+
+* New datasource: `ovh_okms_service_key_pem` ([#777](https://github.com/ovh/terraform-provider-ovh/pull/777))
+
+🐜 Bug fixes:
+
+* `r/ovh_dbaas_logs_input`: Use Set instead of List for `allowed_networks` ([#783](https://github.com/ovh/terraform-provider-ovh/pull/783))
+* `r/ovh_cloud_project_failover_ip_attach`: Retry attach if IP is not allocated yet ([#785](https://github.com/ovh/terraform-provider-ovh/pull/785))
+
+📚 Documentation:
+
+* `r/ovh_cloud_project_kube`: Clean example on resource with private network ([#775](https://github.com/ovh/terraform-provider-ovh/pull/775))
+
+❤️ Thanks for your contributions ❤️
+
 ## 1.1.0 (November 19, 2024)
 
 💪 Improvements:
