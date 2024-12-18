@@ -97,6 +97,12 @@ func resourceCloudProjectNetworkPrivateSubnetV2() *schema.Resource {
 				Default:     true,
 				Description: "Enable gateway IP in subnet",
 			},
+			"use_default_public_dns_resolver": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Use OVH default DNS",
+			},
 			"dns_nameservers": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -161,6 +167,12 @@ func resourceCloudProjectNetworkPrivateSubnetV2Create(d *schema.ResourceData, me
 	cidr := d.Get("cidr").(string)
 	enableGatewayIP := d.Get("enable_gateway_ip").(bool)
 	enableDHCP := d.Get("dhcp").(bool)
+	useDefaultPublicDNSResolverbool, ok := d.GetOkExists("use_default_public_dns_resolver")
+	var useDefaultPublicDNSResolver *bool
+	if ok {
+		i := useDefaultPublicDNSResolverbool.(bool)
+		useDefaultPublicDNSResolver = &i
+	}
 	gatewayIp := d.Get("gateway_ip").(string)
 
 	hostRoutesStrings, err := helpers.StringMapFromSchema(d, "host_route", "destination", "nexthop")
@@ -195,15 +207,16 @@ func resourceCloudProjectNetworkPrivateSubnetV2Create(d *schema.ResourceData, me
 	}
 
 	createSubnetParams := &CloudProjectNetworkPrivateV2CreateOpts{
-		Name:            subnetName,
-		Cidr:            cidr,
-		IpVersion:       4,
-		AllocationPools: allocationPools,
-		DnsNameServers:  dnsNameServers,
-		GatewayIp:       gatewayIp,
-		EnableGatewayIP: enableGatewayIP,
-		EnableDHCP:      enableDHCP,
-		HostRoutes:      hostRoutes,
+		Name:                        subnetName,
+		Cidr:                        cidr,
+		IpVersion:                   4,
+		AllocationPools:             allocationPools,
+		DnsNameServers:              dnsNameServers,
+		GatewayIp:                   gatewayIp,
+		EnableGatewayIP:             enableGatewayIP,
+		EnableDHCP:                  enableDHCP,
+		HostRoutes:                  hostRoutes,
+		UseDefaultPublicDNSResolver: useDefaultPublicDNSResolver,
 	}
 
 	subnetResponse := &CloudProjectNetworkPrivateV2Response{}
