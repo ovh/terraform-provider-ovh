@@ -97,10 +97,17 @@ func resourceCloudProjectNetworkPrivateSubnetV2() *schema.Resource {
 				Default:     true,
 				Description: "Enable gateway IP in subnet",
 			},
+			"use_default_public_dns_resolver": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Use OVH default DNS",
+			},
 			"dns_nameservers": {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
+				Computed: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: resourceCloudProjectNetworkPrivateSubnetValidateIP,
@@ -161,6 +168,12 @@ func resourceCloudProjectNetworkPrivateSubnetV2Create(d *schema.ResourceData, me
 	cidr := d.Get("cidr").(string)
 	enableGatewayIP := d.Get("enable_gateway_ip").(bool)
 	enableDHCP := d.Get("dhcp").(bool)
+	useDefaultPublicDNSResolverbool, ok := d.GetOkExists("use_default_public_dns_resolver")
+	var useDefaultPublicDNSResolver *bool
+	if ok {
+		i := useDefaultPublicDNSResolverbool.(bool)
+		useDefaultPublicDNSResolver = &i
+	}
 	gatewayIp := d.Get("gateway_ip").(string)
 
 	hostRoutesStrings, err := helpers.StringMapFromSchema(d, "host_route", "destination", "nexthop")
@@ -195,15 +208,16 @@ func resourceCloudProjectNetworkPrivateSubnetV2Create(d *schema.ResourceData, me
 	}
 
 	createSubnetParams := &CloudProjectNetworkPrivateV2CreateOpts{
-		Name:            subnetName,
-		Cidr:            cidr,
-		IpVersion:       4,
-		AllocationPools: allocationPools,
-		DnsNameServers:  dnsNameServers,
-		GatewayIp:       gatewayIp,
-		EnableGatewayIP: enableGatewayIP,
-		EnableDHCP:      enableDHCP,
-		HostRoutes:      hostRoutes,
+		Name:                        subnetName,
+		Cidr:                        cidr,
+		IpVersion:                   4,
+		AllocationPools:             allocationPools,
+		DnsNameServers:              dnsNameServers,
+		GatewayIp:                   gatewayIp,
+		EnableGatewayIP:             enableGatewayIP,
+		EnableDHCP:                  enableDHCP,
+		HostRoutes:                  hostRoutes,
+		UseDefaultPublicDNSResolver: useDefaultPublicDNSResolver,
 	}
 
 	subnetResponse := &CloudProjectNetworkPrivateV2Response{}
@@ -225,6 +239,8 @@ func resourceCloudProjectNetworkPrivateSubnetV2Create(d *schema.ResourceData, me
 	d.Set("dhcp", subnetResponse.DHCPEnabled)
 	d.Set("region", regionName)
 	d.SetId(subnetResponse.Id)
+	d.Set("dns_nameservers", subnetResponse.DnsNameservers)
+
 	log.Printf("[DEBUG] Read Public Cloud Private Network %v", subnetResponse)
 	return nil
 }
@@ -250,6 +266,8 @@ func resourceCloudProjectNetworkPrivateSubnetV2Read(d *schema.ResourceData, meta
 	d.Set("service_name", serviceName)
 	d.Set("network_id", networkId)
 	d.Set("region", regionName)
+
+	d.Set("dns_nameservers", subnet.DnsNameservers)
 	d.SetId(subnet.Id)
 	log.Printf("[DEBUG] Read Public Cloud Private Network %v", subnet)
 	return nil

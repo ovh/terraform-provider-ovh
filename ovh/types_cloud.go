@@ -97,20 +97,21 @@ func (p *CloudProjectNetworkPrivatesCreateOpts) String() string {
 }
 
 type CloudProjectNetworkPrivateV2CreateOpts struct {
-	Name            string           `json:"name"`
-	Cidr            string           `json:"cidr"`
-	IpVersion       int              `json:"ipVersion"`
-	AllocationPools []AllocationPool `json:"allocationPools"`
-	DnsNameServers  []string         `json:"dnsNameServers"`
-	HostRoutes      []HostRoute      `json:"hostRoutes"`
-	EnableDHCP      bool             `json:"enableDhcp"`
-	GatewayIp       string           `json:"gatewayIp,omitempty"`
-	EnableGatewayIP bool             `json:"enableGatewayIp"`
+	Name                        string           `json:"name"`
+	Cidr                        string           `json:"cidr"`
+	IpVersion                   int              `json:"ipVersion"`
+	AllocationPools             []AllocationPool `json:"allocationPools"`
+	DnsNameServers              []string         `json:"dnsNameServers"`
+	HostRoutes                  []HostRoute      `json:"hostRoutes"`
+	EnableDHCP                  bool             `json:"enableDhcp"`
+	GatewayIp                   string           `json:"gatewayIp,omitempty"`
+	EnableGatewayIP             bool             `json:"enableGatewayIp"`
+	UseDefaultPublicDNSResolver *bool            `json:"useDefaultPublicDNSResolver"`
 }
 
 func (p *CloudProjectNetworkPrivateV2CreateOpts) String() string {
-	return fmt.Sprintf("PCPNSCreateOpts[name: %s, cidr:%s, ipVersion: %d, allocationPools: %+v, dnsNameServers: %s, hostRoutes: %+v, enableDHCP: %t, gatewayIP: %v, enableGatewayIP: %t]",
-		p.Name, p.Cidr, p.IpVersion, p.AllocationPools, p.DnsNameServers, p.HostRoutes, p.EnableDHCP, p.GatewayIp, p.EnableGatewayIP)
+	return fmt.Sprintf("PCPNSCreateOpts[name: %s, cidr:%s, ipVersion: %d, allocationPools: %+v, dnsNameServers: %s, hostRoutes: %+v, enableDHCP: %t, gatewayIP: %v, enableGatewayIP: %t, useDefaultPublicDNSResolver: %t]",
+		p.Name, p.Cidr, p.IpVersion, p.AllocationPools, p.DnsNameServers, p.HostRoutes, p.EnableDHCP, p.GatewayIp, p.EnableGatewayIP, *p.UseDefaultPublicDNSResolver)
 }
 
 type HostRoute struct {
