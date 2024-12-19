@@ -107,6 +107,7 @@ func resourceCloudProjectNetworkPrivateSubnetV2() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
+				Computed: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: resourceCloudProjectNetworkPrivateSubnetValidateIP,
@@ -238,6 +239,8 @@ func resourceCloudProjectNetworkPrivateSubnetV2Create(d *schema.ResourceData, me
 	d.Set("dhcp", subnetResponse.DHCPEnabled)
 	d.Set("region", regionName)
 	d.SetId(subnetResponse.Id)
+	d.Set("dns_nameservers", subnetResponse.DnsNameservers)
+
 	log.Printf("[DEBUG] Read Public Cloud Private Network %v", subnetResponse)
 	return nil
 }
@@ -263,6 +266,8 @@ func resourceCloudProjectNetworkPrivateSubnetV2Read(d *schema.ResourceData, meta
 	d.Set("service_name", serviceName)
 	d.Set("network_id", networkId)
 	d.Set("region", regionName)
+
+	d.Set("dns_nameservers", subnet.DnsNameservers)
 	d.SetId(subnet.Id)
 	log.Printf("[DEBUG] Read Public Cloud Private Network %v", subnet)
 	return nil
