@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
@@ -117,7 +118,7 @@ resource "ovh_okms" "kms" {
 resource "ovh_okms_credential" "cred" {
   okms_id = ovh_okms.kms.id
   name = "%[2]s"
-  identity_urns = ["urn:v1:eu:identity:account:${data.ovh_me.current_account.nichandle}"]
+  identity_urns = ["%[3]s"]
 }
 
 resource "ovh_okms_credential" "credcsr" {
@@ -159,13 +160,15 @@ func getAllCredsChecks(resName string, displayName string, resNameCsr string, di
 func TestAccOkmsCredCreate(t *testing.T) {
 	kmsName := acctest.RandomWithPrefix(test_prefix)
 	credName := acctest.RandomWithPrefix(test_prefix)
+	oldIdUrn := "urn:v1:eu:identity:account:${data.ovh_me.current_account.nichandle}"
+	newIdUrn := "urn:v1:eu:identity:user:badnic-ovh/user1"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheckCredentials(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(confOkmsCredTest, kmsName, credName),
+				Config: fmt.Sprintf(confOkmsCredTest, kmsName, credName, oldIdUrn),
 				ConfigStateChecks: getAllCredsChecks(
 					"ovh_okms_credential.cred",
 					credName,
@@ -173,8 +176,29 @@ func TestAccOkmsCredCreate(t *testing.T) {
 					credName+"csr"),
 			},
 			{
+				// Test update
+				Config: fmt.Sprintf(confOkmsCredTest, kmsName, credName, newIdUrn),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+						plancheck.ExpectResourceAction(
+							"ovh_okms_credential.cred",
+							plancheck.ResourceActionReplace),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"ovh_okms_credential.cred",
+						tfjsonpath.New("identity_urns"),
+						knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.StringExact(newIdUrn),
+						}),
+					),
+				},
+			},
+			{
 				// Test datasource
-				Config: fmt.Sprintf(confOkmsCredTest+confOkmsDatasourceTest, kmsName, credName),
+				Config: fmt.Sprintf(confOkmsCredTest+confOkmsDatasourceTest, kmsName, credName, newIdUrn),
 				ConfigStateChecks: append(
 					kmsCredDatasourceChecks("ovh_okms_credential.cred", "data.ovh_okms_credential.data_cred"),
 					kmsCredDatasourceChecks("ovh_okms_credential.credcsr", "data.ovh_okms_credential.data_credcsr")...,
