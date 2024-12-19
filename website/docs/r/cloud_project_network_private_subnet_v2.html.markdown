@@ -18,6 +18,7 @@ resource "ovh_cloud_project_network_private_subnet_v2" "subnet" {
   cidr              = "192.168.168.0/24"
   dhcp              = true
   enable_gateway_ip = true
+  use_default_public_dns_resolver = false
 }
 ```
 
@@ -55,6 +56,8 @@ The following arguments are supported:
 * `allocation_pools` - List of IP allocation pools
    Changing this value recreates the resource.
 
+* `use_default_public_dns_resolver` - Set to false if you want to use your DNS resolver.
+   Changing this value recreates the resource.
 ## Attributes Reference
 
 The following attributes are exported:
