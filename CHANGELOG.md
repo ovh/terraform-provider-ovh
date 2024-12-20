@@ -1,3 +1,16 @@
+## 1.3.0 (December 20, 2024)
+
+🎉 Features:
+
+* New resource: `ovh_cloud_project_volume` ([#778](https://github.com/ovh/terraform-provider-ovh/pull/778))
+
+🐜 Bug fixes:
+
+* `r/ovh_cloud_project_network_private_subnet_v2`: Correctly handle DNS nameservers definition by adding `use_default_public_dns_resolver` parameter ([#789](https://github.com/ovh/terraform-provider-ovh/pull/789))
+* `r/ovh_okms_credential`: Modifying field `identity_urns` now triggers a resource re-creation ([#790](https://github.com/ovh/terraform-provider-ovh/pull/790))
+
+❤️ Thanks for your contributions ❤️
+
 ## 1.2.0 (December 17, 2024)
 
 🎉 Features:
