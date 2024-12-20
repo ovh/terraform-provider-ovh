@@ -109,6 +109,9 @@ func CloudProjectVolumeResourceSchema(ctx context.Context) schema.Schema {
 			Required:            true,
 			Description:         "Service name",
 			MarkdownDescription: "Service name",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.RequiresReplace(),
+			},
 		},
 		"size": schema.Int64Attribute{
 			CustomType:          ovhtypes.TfInt64Type{},
