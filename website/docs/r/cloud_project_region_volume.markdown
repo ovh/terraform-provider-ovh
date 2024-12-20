@@ -29,7 +29,7 @@ The following arguments are supported:
 * `region_name` - Required. A valid OVHcloud public cloud region name in which the volume will be available. Ex.: "GRA11". **Changing this value recreates the resource.**
 * `description` - A description of the volume
 * `name` - Name of the volume  
-* `size` - Size of the volume  **Changing this value recreates the resource.**
+* `size` - Size (GB) of the volume  **Changing this value recreates the resource.**
 * `type` - Type of the volume  **Changing this value recreates the resource.**
 
 ## Attributes Reference
