@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 )
@@ -111,6 +112,9 @@ func OkmsCredentialResourceSchema(ctx context.Context) schema.Schema {
 			Required:            true,
 			Description:         "List of identity URNs associated with the credential (max 25)",
 			MarkdownDescription: "List of identity URNs associated with the credential (max 25)",
+			PlanModifiers: []planmodifier.List{
+				listplanmodifier.RequiresReplace(),
+			},
 		},
 		"name": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
