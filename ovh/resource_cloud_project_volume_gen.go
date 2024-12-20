@@ -18,6 +18,9 @@ import (
 	ovhtypes "github.com/ovh/terraform-provider-ovh/ovh/types"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 )
 
 func CloudProjectVolumeResourceSchema(ctx context.Context) schema.Schema {
@@ -85,6 +88,9 @@ func CloudProjectVolumeResourceSchema(ctx context.Context) schema.Schema {
 			Required:            true,
 			Description:         "Region name",
 			MarkdownDescription: "Region name",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.RequiresReplace(),
+			},
 		},
 		"regions": schema.ListAttribute{
 			CustomType:          ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
@@ -110,6 +116,9 @@ func CloudProjectVolumeResourceSchema(ctx context.Context) schema.Schema {
 			Computed:            true,
 			Description:         "Volume size",
 			MarkdownDescription: "Volume size",
+			PlanModifiers: []planmodifier.Int64{
+				int64planmodifier.RequiresReplace(),
+			},
 		},
 		"snapshot_id": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
@@ -171,6 +180,9 @@ func CloudProjectVolumeResourceSchema(ctx context.Context) schema.Schema {
 					"high-speed-BETA",
 					"high-speed-gen2",
 				),
+			},
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.RequiresReplace(),
 			},
 		},
 		"volume_id": schema.StringAttribute{
