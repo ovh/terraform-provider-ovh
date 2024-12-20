@@ -73,10 +73,8 @@ func (r *cloudProjectVolumeResource) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
-	v := resWait.(interface{})
-
 	resVol := &CloudProjectVolumeModelOp{}
-	endpoint = "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/region/" + url.PathEscape(data.RegionName.ValueString()) + "/volume/" + url.PathEscape(v.(string))
+	endpoint = "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/region/" + url.PathEscape(data.RegionName.ValueString()) + "/volume/" + url.PathEscape(resWait.(string))
 	if err := r.config.OVHClient.Get(endpoint, resVol); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Post %s", endpoint),
