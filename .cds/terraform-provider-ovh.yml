@@ -737,10 +737,23 @@ workflow:
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
+  Tests_SavingsPlan:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run SavingsPlan
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.savingsplan}}"
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
   terraform-provider-ovh:
     application: terraform-provider-ovh
     parameters:
       skipthistest.cloudprojectdatabase: "true"
+      skipthistest.savingsplan: "true"
     pipeline: terraform-provider-ovh
     payload:
       git.branch: master
@@ -815,6 +828,7 @@ workflow:
     - Tests_TestAccIpMove_basic
     - Tests_IPFirewall
     - Tests_Okms
+    - Tests_SavingsPlan
     environment: acctests
     one_at_a_time: true
     pipeline: terraform-provider-ovh-run-sweepers
