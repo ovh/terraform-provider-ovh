@@ -14,6 +14,38 @@ import (
 	"github.com/ovh/go-ovh/ovh"
 )
 
+type savingsPlansSubscribable struct {
+	OfferID string `json:"offerId"`
+}
+
+type savingsPlansSimulateRequest struct {
+	DisplayName string `json:"displayName"`
+	OfferID     string `json:"offerId"`
+	Size        int    `json:"size"`
+}
+
+type savingsPlansSimulateResponse struct {
+	DisplayName string `json:"displayName"`
+	OfferID     string `json:"offerId"`
+	Size        int    `json:"size"`
+
+	Flavor          string `json:"flavor"`
+	ID              string `json:"id"`
+	Period          string `json:"period"`
+	PeriodEndAction string `json:"periodEndAction"`
+	PeriodStartDate string `json:"periodStartDate"`
+	PeriodEndDate   string `json:"periodEndDate"`
+	Status          string `json:"status"`
+
+	StartDate       string `json:"startDate"`
+	EndDate         string `json:"endDate"`
+	TerminationDate string `json:"terminationDate"`
+}
+
+type savingsPlanPeriodEndActionRequest struct {
+	PeriodEndAction string `json:"periodEndAction"`
+}
+
 func serviceIdFromResourceName(c *ovh.Client, resourceName string) (int, error) {
 	var serviceIds []int
 	endpoint := fmt.Sprintf("/services?resourceName=%s", url.PathEscape(resourceName))
