@@ -1,3 +1,15 @@
+## 1.4.0 (December 26, 2024)
+
+🎉 Features:
+
+* New resource: `ovh_savings_plan` ([#793](https://github.com/ovh/terraform-provider-ovh/pull/793))
+
+📚 Documentation:
+
+* `r/ovh_cloud_project_volume`: Update documentation ([#792](https://github.com/ovh/terraform-provider-ovh/pull/792))
+
+❤️ Thanks for your contributions ❤️
+
 ## 1.3.0 (December 20, 2024)
 
 🎉 Features:
