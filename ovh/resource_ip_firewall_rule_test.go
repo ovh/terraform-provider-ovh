@@ -61,6 +61,13 @@ func TestAccIPFirewallRule_basic(t *testing.T) {
 						"ovh_ip_firewall_rule.rule", "source_port_desc", "eq 44"),
 				),
 			},
+			{
+				ImportStateId:                        fmt.Sprintf("%s|%s|0", ip, ip),
+				ResourceName:                         "ovh_ip_firewall_rule.rule",
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "ip_on_firewall",
+			},
 		},
 	})
 }
