@@ -5,14 +5,20 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"strconv"
+	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/ovh/go-ovh/ovh"
+	ovhtypes "github.com/ovh/terraform-provider-ovh/ovh/types"
 )
 
 var _ resource.ResourceWithConfigure = (*ipFirewallRuleResource)(nil)
+var _ resource.ResourceWithImportState = (*ipFirewallRuleResource)(nil)
 
 func NewIpFirewallRuleResource() resource.Resource {
 	return &ipFirewallRuleResource{}
@@ -45,6 +51,26 @@ func (d *ipFirewallRuleResource) Configure(_ context.Context, req resource.Confi
 
 func (d *ipFirewallRuleResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = IpFirewallRuleResourceSchema(ctx)
+}
+
+func (r *ipFirewallRuleResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	splits := strings.Split(req.ID, "|")
+	if len(splits) != 3 {
+		resp.Diagnostics.AddError("Given ID is malformed", "ID must be formatted like the following: <ip>|<ip_on_firewall>|<sequence>")
+		return
+	}
+
+	ip := splits[0]
+	ipOnFirewall := splits[1]
+	sequence, err := strconv.Atoi(splits[2])
+	if err != nil {
+		resp.Diagnostics.AddError("Given firewall sequence number must be an integer", err.Error())
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("ip"), ip)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("ip_on_firewall"), ipOnFirewall)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("sequence"), sequence)...)
 }
 
 func (r *ipFirewallRuleResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -128,6 +154,27 @@ func (r *ipFirewallRuleResource) Read(ctx context.Context, req resource.ReadRequ
 	}
 
 	responseData.MergeWith(&data)
+
+	// In case the resource is being imported, the fields `source_port` and `destination_port` are not returned
+	// by the API, so we must use fields `source_port_desc` and `destination_port_desc` to retrieve the values.
+	if responseData.SourcePort.IsNull() && strings.HasPrefix(responseData.SourcePortDesc.ValueString(), "eq ") {
+		port := strings.TrimPrefix(responseData.SourcePortDesc.ValueString(), "eq ")
+		portNumber, err := strconv.ParseInt(port, 10, 64)
+		if err != nil {
+			tflog.Warn(ctx, fmt.Sprintf("failed to parse source port from desc: %s", err))
+		} else {
+			responseData.SourcePort = ovhtypes.NewTfInt64Value(portNumber)
+		}
+	}
+	if responseData.DestinationPort.IsNull() && strings.HasPrefix(responseData.DestinationPortDesc.ValueString(), "eq ") {
+		port := strings.TrimPrefix(responseData.DestinationPortDesc.ValueString(), "eq ")
+		portNumber, err := strconv.ParseInt(port, 10, 64)
+		if err != nil {
+			tflog.Warn(ctx, fmt.Sprintf("failed to parse destination port from desc: %s", err))
+		} else {
+			responseData.DestinationPort = ovhtypes.NewTfInt64Value(portNumber)
+		}
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)
