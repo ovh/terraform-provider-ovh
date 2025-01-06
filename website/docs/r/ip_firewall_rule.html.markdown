@@ -48,3 +48,11 @@ resource "ovh_ip_firewall_rule" "my_firewall_rule" {
 * `source_port` - Source port for your rule. Only with TCP/UDP protocol
 * `source_port_desc` - String description of field `source_port`
 * `tcp_option` - TCP option on your rule (syn|established)
+
+## Import
+
+The resource can be imported using the properties `ip`, `ip_on_firewall` and `sequence`, separated by "|" E.g.,
+
+```bash
+$ terraform import ovh_ip_firewall_rule.my_firewall_rule '127.0.0.1|127.0.0.2|0'
+```
