@@ -120,6 +120,7 @@ func resourceSavingsPlanImport(d *schema.ResourceData, meta interface{}) ([]*sch
 
 func resourceSavingsPlanCreate(d *schema.ResourceData, meta interface{}) error {
 	serviceName := d.Get("service_name").(string)
+	flavor := strings.ToUpper(d.Get("flavor").(string))
 	config := meta.(*Config)
 
 	// Retrieve service ID
@@ -153,7 +154,7 @@ func resourceSavingsPlanCreate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error calling POST %s:\n\t %q", endpoint, err)
 		}
 
-		if d.Get("flavor").(string) == resp.Flavor &&
+		if flavor == strings.ToUpper(resp.Flavor) &&
 			d.Get("period").(string) == resp.Period &&
 			d.Get("size").(int) == resp.Size {
 			// We found the right savings plan, execute subscription
