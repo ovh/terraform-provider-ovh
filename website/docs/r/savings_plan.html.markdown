@@ -24,7 +24,7 @@ resource "ovh_savings_plan" "plan" {
 The following arguments are supported:
 
 * `service_name` - (Required) ID of the public cloud project
-* `flavor` - (Required) Savings Plan flavor (e.g. Rancher, C3-4, any instance flavor, ...)
+* `flavor` - (Required) Savings Plan flavor (e.g. Rancher, C3-4, any instance flavor, ...).
 * `period` - (Required) Periodicity of the Savings Plan
 * `size` - (Required) Size of the Savings Plan
 * `display_name` - (Required) Custom display name, used in invoices

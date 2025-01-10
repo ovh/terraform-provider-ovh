@@ -17,7 +17,7 @@ func TestAccResourceSavingsPlan_basic(t *testing.T) {
 	config := fmt.Sprintf(
 		`resource "ovh_savings_plan" "sp" {
 			service_name = "%s"
-			flavor = "Rancher"
+			flavor = "b3-8"
 			period = "P1M"
 			size = 1
 			display_name = "%s"
@@ -36,7 +36,7 @@ func TestAccResourceSavingsPlan_basic(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("ovh_savings_plan.sp", "display_name", displayName),
-					resource.TestCheckResourceAttr("ovh_savings_plan.sp", "flavor", "Rancher"),
+					resource.TestCheckResourceAttr("ovh_savings_plan.sp", "flavor", "b3-8"),
 					resource.TestCheckResourceAttr("ovh_savings_plan.sp", "size", "1"),
 					resource.TestCheckResourceAttr("ovh_savings_plan.sp", "end_date", endDate),
 					resource.TestCheckResourceAttr("ovh_savings_plan.sp", "period_end_date", endDate),
