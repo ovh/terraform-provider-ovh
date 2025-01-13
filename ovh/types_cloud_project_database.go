@@ -85,7 +85,7 @@ type CloudProjectDatabaseResponse struct {
 	Version               string                                      `json:"version"`
 	Disk                  CloudProjectDatabaseDisk                    `json:"disk"`
 	AdvancedConfiguration map[string]string                           `json:"advancedConfiguration"`
-	EnablePrometheus      bool                                        `json:"EnablePrometheus"`
+	EnablePrometheus      bool                                        `json:"enablePrometheus"`
 }
 
 func (r CloudProjectDatabaseResponse) toMap() map[string]interface{} {
@@ -2406,7 +2406,6 @@ func enableCloudProjectDatabasePrometheus(ctx context.Context, d *schema.Resourc
 	}
 	d.SetId("")
 	return nil
-
 }
 
 func updateCloudProjectDatabasePrometheus(ctx context.Context, d *schema.ResourceData, meta interface{}, engine string, readFunc schema.ReadContextFunc) diag.Diagnostics {
@@ -2421,7 +2420,6 @@ func updateCloudProjectDatabasePrometheus(ctx context.Context, d *schema.Resourc
 	)
 
 	res := &CloudProjectDatabasePrometheusAccessResponse{}
-	//log.Printf("[DEBUG] Will create pro: %+v for cluster %s from project %s", params, clusterId, serviceName)
 	err := config.OVHClient.PostWithContext(ctx, endpoint, nil, res)
 	if err != nil {
 		return diag.Errorf("calling Post %s:\n\t %q", endpoint, err)
