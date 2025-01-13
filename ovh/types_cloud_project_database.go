@@ -85,6 +85,7 @@ type CloudProjectDatabaseResponse struct {
 	Version               string                                      `json:"version"`
 	Disk                  CloudProjectDatabaseDisk                    `json:"disk"`
 	AdvancedConfiguration map[string]string                           `json:"advancedConfiguration"`
+	EnablePrometheus      bool                                        `json:"enablePrometheus"`
 }
 
 func (r CloudProjectDatabaseResponse) toMap() map[string]interface{} {
@@ -2302,4 +2303,129 @@ func waitForCloudProjectDatabasePostgresqlConnectionPoolDeleted(ctx context.Cont
 
 	_, err := stateConf.WaitForStateContext(ctx)
 	return err
+}
+
+// Prometheus
+
+type CloudProjectDatabasePrometheusCreateOpts struct {
+	EnablePrometheus bool `json:"enablePrometheus"`
+}
+
+type CloudProjectDatabasePrometheusAccessResponse struct {
+	Password string `json:"password"`
+	Username string `json:"username"`
+}
+
+func (r CloudProjectDatabasePrometheusAccessResponse) toMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+
+	obj["password"] = r.Password
+	obj["username"] = r.Username
+
+	return obj
+}
+
+type CloudProjectDatabasePrometheusEndpointResponse struct {
+	Username string                                         `json:"username"`
+	Targets  []CloudProjectDatabasePrometheusEndpointTarget `json:"targets"`
+}
+
+type CloudProjectDatabasePrometheusEndpointTarget struct {
+	Host string `json:"host"`
+	Port int    `json:"port"`
+}
+
+func (r CloudProjectDatabasePrometheusEndpointResponse) toMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+
+	obj["username"] = r.Username
+
+	var targets []map[string]interface{}
+	for _, t := range r.Targets {
+		targets = append(targets, t.toMap())
+	}
+	obj["targets"] = targets
+
+	return obj
+}
+
+func (r CloudProjectDatabasePrometheusEndpointTarget) toMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+
+	obj["host"] = r.Host
+	obj["port"] = r.Port
+
+	return obj
+}
+
+type CloudProjectDatabaseMongodbPrometheusEndpointResponse struct {
+	Username  string `json:"username"`
+	SrvDomain string `json:"srvDomain"`
+}
+
+func (r CloudProjectDatabaseMongodbPrometheusEndpointResponse) toMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+
+	obj["username"] = r.Username
+	obj["srv_domain"] = r.SrvDomain
+
+	return obj
+}
+
+func enableCloudProjectDatabasePrometheus(ctx context.Context, d *schema.ResourceData, meta interface{}, engine string, enablePrometheus bool, updateFunc schema.UpdateContextFunc) diag.Diagnostics {
+	config := meta.(*Config)
+	serviceName := d.Get("service_name").(string)
+	clusterID := d.Get("cluster_id").(string)
+
+	serviceEndpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s",
+		url.PathEscape(serviceName),
+		url.PathEscape(engine),
+		url.PathEscape(clusterID),
+	)
+
+	params := &CloudProjectDatabasePrometheusCreateOpts{
+		EnablePrometheus: enablePrometheus,
+	}
+	res := &CloudProjectDatabaseResponse{}
+	log.Printf("[DEBUG] Will update database: %+v", params)
+	err := config.OVHClient.PutWithContext(ctx, serviceEndpoint, params, res)
+	if err != nil {
+		return diag.Errorf("calling Put %s with params %v:\n\t %q", serviceEndpoint, params, err)
+	}
+
+	log.Printf("[DEBUG] Waiting for database %s to be READY", res.ID)
+	err = waitForCloudProjectDatabaseReady(ctx, config.OVHClient, serviceName, engine, res.ID, d.Timeout(schema.TimeoutCreate))
+	if err != nil {
+		return diag.Errorf("timeout while waiting database %s to be READY: %s", res.ID, err.Error())
+	}
+	log.Printf("[DEBUG] database %s is READY", res.ID)
+
+	if enablePrometheus {
+		d.SetId(res.ID)
+		return updateFunc(ctx, d, meta)
+	}
+	d.SetId("")
+	return nil
+}
+
+func updateCloudProjectDatabasePrometheus(ctx context.Context, d *schema.ResourceData, meta interface{}, engine string, readFunc schema.ReadContextFunc) diag.Diagnostics {
+	config := meta.(*Config)
+	serviceName := d.Get("service_name").(string)
+	id := d.Id()
+
+	endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/prometheus/credentials/reset",
+		url.PathEscape(serviceName),
+		url.PathEscape(engine),
+		url.PathEscape(id),
+	)
+
+	res := &CloudProjectDatabasePrometheusAccessResponse{}
+	err := config.OVHClient.PostWithContext(ctx, endpoint, nil, res)
+	if err != nil {
+		return diag.Errorf("calling Post %s:\n\t %q", endpoint, err)
+	}
+
+	d.Set("password", res.Password)
+
+	return readFunc(ctx, d, meta)
 }
