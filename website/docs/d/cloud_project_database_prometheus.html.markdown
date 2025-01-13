@@ -4,7 +4,7 @@ subcategory : "Managed Databases"
 
 # ovh_cloud_project_database_prometheus (Data Source)
 
-Use this data source to get information about a prometheus of a database cluster associated with a public cloud project.
+Use this data source to get information about a prometheus of a database cluster associated with a public cloud project. For mongodb, please use ovh_cloud_project_database_mongodb_prometheus datasource
 
 ## Example Usage
 
