@@ -18,7 +18,6 @@ import (
 	ovhtypes "github.com/ovh/terraform-provider-ovh/ovh/types"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 )
@@ -119,9 +118,6 @@ func CloudProjectVolumeResourceSchema(ctx context.Context) schema.Schema {
 			Computed:            true,
 			Description:         "Volume size",
 			MarkdownDescription: "Volume size",
-			PlanModifiers: []planmodifier.Int64{
-				int64planmodifier.RequiresReplace(),
-			},
 		},
 		"snapshot_id": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
@@ -226,7 +222,6 @@ type CloudProjectVolumeModelOp struct {
 }
 
 func (v *CloudProjectVolumeModelOp) MergeWith(other *CloudProjectVolumeModelOp) {
-
 	if (v.Action.IsUnknown() || v.Action.IsNull()) && !other.Action.IsUnknown() {
 		v.Action = other.Action
 	}
@@ -306,7 +301,6 @@ func (v *CloudProjectVolumeModelOp) MergeWith(other *CloudProjectVolumeModelOp) 
 	if (v.VolumeId.IsUnknown() || v.VolumeId.IsNull()) && !other.VolumeId.IsUnknown() {
 		v.VolumeId = other.Id
 	}
-
 }
 
 func (v CloudProjectVolumeModelOp) ToCreate() *CloudProjectVolumeModelOp {
@@ -350,28 +344,8 @@ func (v CloudProjectVolumeModelOp) ToUpdate() *CloudProjectVolumeModelOp {
 		res.Description = v.Description
 	}
 
-	if !v.ImageId.IsUnknown() {
-		res.ImageId = v.ImageId
-	}
-
-	if !v.InstanceId.IsUnknown() {
-		res.InstanceId = v.InstanceId
-	}
-
 	if !v.Name.IsUnknown() {
 		res.Name = v.Name
-	}
-
-	if !v.Size.IsUnknown() {
-		res.Size = v.Size
-	}
-
-	if !v.SnapshotId.IsUnknown() {
-		res.SnapshotId = v.SnapshotId
-	}
-
-	if !v.Type.IsUnknown() {
-		res.Type = v.Type
 	}
 
 	return res
