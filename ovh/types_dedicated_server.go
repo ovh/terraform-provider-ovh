@@ -113,12 +113,162 @@ type DedicatedServerTask struct {
 	StartDate  time.Time `json:"startDate"`
 }
 
-type DedicatedServerInstallTaskCreateOpts struct {
-	OperatingSystem string `json:"operatingSystem"`
+type DedicatedServerReinstallTaskCreateOpts struct {
+	OperatingSystem string                                      `json:"operatingSystem"`
+	Customizations  *DedicatedServerReinstallTaskCustomizations `json:"customizations,omitempty"`
+	Properties      map[string]interface{}                      `json:"properties,omitempty"`
+	Storage         *DedicatedServerReinstallTaskStorage        `json:"storage,omitempty"`
 }
 
-func (opts *DedicatedServerInstallTaskCreateOpts) FromResource(d *schema.ResourceData) *DedicatedServerInstallTaskCreateOpts {
+func (opts *DedicatedServerReinstallTaskCreateOpts) FromResource(d *schema.ResourceData) *DedicatedServerReinstallTaskCreateOpts {
 	opts.OperatingSystem = d.Get("operating_system").(string)
+	Customizations := d.Get("customizations").([]interface{})
+	if len(Customizations) == 1 {
+		opts.Customizations = (&DedicatedServerReinstallTaskCustomizations{}).FromResource(d, "customizations.0")
+	}
+	Properties := d.Get("properties").(map[string]interface{})
+	if len(Properties) == 1 {
+		opts.Properties = d.Get("properties").(map[string]interface{})
+	}
+
+	Storage := d.Get("storage").([]interface{})
+	if len(Storage) == 1 {
+		opts.Storage = (&DedicatedServerReinstallTaskStorage{}).FromResource(d, "storage.0")
+	}
+
+	return opts
+}
+
+type DedicatedServerReinstallTaskStorage struct {
+	DiskGroupId  *int                 `json:"diskGroupId,omitempty"`
+	HardwareRaid *HardwareRaidInstall `json:"hardwareRaid,omitempty"`
+	Partitioning *Partitioning        `json:"partitioning,omitempty"`
+}
+
+type HardwareRaidInstall struct {
+	Arrays    *int `json:"arrays,omitempty"`
+	Disks     *int `json:"disks,omitempty"`
+	RaidLevel *int `json:"raidLevel,omitempty"`
+	Spares    *int `json:"spares,omitempty"`
+}
+
+type Partitioning struct {
+	Disks      *int    `json:"disks,omitempty"`
+	Layout     *Layout `json:"layout,omitempty"`
+	SchemeName *string `json:"schemeName,omitempty"`
+}
+
+type Layout struct {
+	FileSystem *string `json:"filesystem,omitempty"`
+	MountPoint *string `json:"mountPoint,omitempty"`
+	RaidLevel  *int    `json:"raidLevel,omitempty"`
+	Size       *int    `json:"size,omitempty"`
+	Extras     *Extras `json:"extras,omitempty"`
+}
+
+type Extras struct {
+	Lv *ExtrasDetails `json:"lv,omitempty"`
+	Zp *ExtrasDetails `json:"zp,omitempty"`
+}
+
+type ExtrasDetails struct {
+	Name *string `json:"name,omitempty"`
+}
+
+type DedicatedServerReinstallTaskCustomizations struct {
+	ConfigDriveUserData             *string                `json:"configDriveUserData,omitempty"`
+	Hostname                        *string                `json:"hostname,omitempty"`
+	ImageCheckSum                   *string                `json:"imageCheckSum,omitempty"`
+	ImageCheckSumType               *string                `json:"imageCheckSumType,omitempty"`
+	ImageType                       *string                `json:"imageType,omitempty"`
+	ImageURL                        *string                `json:"imageURL,omitempty"`
+	Language                        *string                `json:"language,omitempty"`
+	PostInstallationScript          *string                `json:"postInstallationScript,omitempty"`
+	PostInstallationScriptExtension *string                `json:"postInstallationScriptExtension,omitempty"`
+	SshKey                          *string                `json:"sshKey,omitempty"`
+	HttpHeaders                     map[string]interface{} `json:"httpHeaders,omitempty"`
+}
+
+func (opts *DedicatedServerReinstallTaskCustomizations) FromResource(d *schema.ResourceData, parent string) *DedicatedServerReinstallTaskCustomizations {
+	opts.ConfigDriveUserData = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.config_drive_user_data", parent))
+	opts.Hostname = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.hostname", parent))
+	opts.ImageCheckSum = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.image_check_sum", parent))
+	opts.ImageCheckSumType = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.image_check_sum_type", parent))
+	opts.ImageType = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.image_type", parent))
+	opts.ImageURL = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.image_url", parent))
+	opts.Language = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.language", parent))
+	opts.PostInstallationScript = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.post_installation_script", parent))
+	opts.PostInstallationScriptExtension = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.post_installation_script_extension", parent))
+	opts.SshKey = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.ssh_key", parent))
+	opts.HttpHeaders = helpers.GetMapFromData(d, fmt.Sprintf("%s.http_headers", parent))
+
+	return opts
+}
+
+func (opts *DedicatedServerReinstallTaskStorage) FromResource(d *schema.ResourceData, parent string) *DedicatedServerReinstallTaskStorage {
+	opts.DiskGroupId = helpers.GetNilIntPointerFromData(d, fmt.Sprintf("%s.disk_group_id", parent))
+
+	HardwareRaid := d.Get("hardwareRaid").([]interface{})
+	if len(HardwareRaid) == 1 {
+		opts.HardwareRaid = (&HardwareRaidInstall{}).FromResource(d, fmt.Sprintf("%s.hardware_raid.0", parent))
+	}
+
+	Partitioning_user := d.Get("partitioning").([]interface{})
+	if len(Partitioning_user) == 1 {
+		opts.Partitioning = (&Partitioning{}).FromResource(d, fmt.Sprintf("%s.partitioning.0", parent))
+	}
+
+	return opts
+}
+
+func (opts *HardwareRaidInstall) FromResource(d *schema.ResourceData, parent string) *HardwareRaidInstall {
+	opts.Arrays = helpers.GetNilIntPointerFromData(d, fmt.Sprintf("%s.arrays", parent))
+	opts.Disks = helpers.GetNilIntPointerFromData(d, fmt.Sprintf("%s.disks", parent))
+	opts.RaidLevel = helpers.GetNilIntPointerFromData(d, fmt.Sprintf("%s.raid_level", parent))
+	opts.Spares = helpers.GetNilIntPointerFromData(d, fmt.Sprintf("%s.spares", parent))
+	return opts
+}
+
+func (opts *Partitioning) FromResource(d *schema.ResourceData, parent string) *Partitioning {
+	opts.Disks = helpers.GetNilIntPointerFromData(d, fmt.Sprintf("%s.disks", parent))
+
+	Layout_user := d.Get("layout").([]interface{})
+	if len(Layout_user) == 1 {
+		opts.Layout = (&Layout{}).FromResource(d, fmt.Sprintf("%s.layout.0", parent))
+	}
+	opts.SchemeName = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.scheme_name", parent))
+
+	return opts
+}
+
+func (opts *Layout) FromResource(d *schema.ResourceData, parent string) *Layout {
+	opts.FileSystem = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.file_system", parent))
+	opts.MountPoint = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.mount_point", parent))
+	opts.RaidLevel = helpers.GetNilIntPointerFromData(d, fmt.Sprintf("%s.raid_level", parent))
+	opts.Size = helpers.GetNilIntPointerFromData(d, fmt.Sprintf("%s.size", parent))
+	Extras_user := d.Get("extras").([]interface{})
+	if len(Extras_user) == 1 {
+		opts.Extras = (&Extras{}).FromResource(d, fmt.Sprintf("%s.extras.0", parent))
+	}
+
+	return opts
+}
+
+func (opts *Extras) FromResource(d *schema.ResourceData, parent string) *Extras {
+	Lv := d.Get("lv").([]interface{})
+	if len(Lv) == 1 {
+		opts.Lv = (&ExtrasDetails{}).FromResource(d, fmt.Sprintf("%s.lv", parent))
+	}
+	Zp := d.Get("zp").([]interface{})
+	if len(Zp) == 1 {
+		opts.Zp = (&ExtrasDetails{}).FromResource(d, fmt.Sprintf("%s.zp", parent))
+	}
+
+	return opts
+}
+
+func (opts *ExtrasDetails) FromResource(d *schema.ResourceData, parent string) *ExtrasDetails {
+	opts.Name = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.name", parent))
 
 	return opts
 }

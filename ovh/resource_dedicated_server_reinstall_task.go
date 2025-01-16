@@ -12,14 +12,14 @@ import (
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
-func resourceDedicatedServerInstallTask() *schema.Resource {
+func resourceDedicatedServerReinstallTask() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDedicatedServerInstallTaskCreate,
-		Update: resourceDedicatedServerInstallTaskUpdate,
-		Read:   resourceDedicatedServerInstallTaskRead,
-		Delete: resourceDedicatedServerInstallTaskDelete,
+		Create: resourceDedicatedServerReinstallTaskCreate,
+		Update: resourceDedicatedServerReinstallTaskUpdate,
+		Read:   resourceDedicatedServerReinstallTaskRead,
+		Delete: resourceDedicatedServerReinstallTaskDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceDedicatedServerInstallTaskImportState,
+			State: resourceDedicatedServerReinstallTaskImportState,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -43,6 +43,226 @@ func resourceDedicatedServerInstallTask() *schema.Resource {
 				Type:        schema.TypeInt,
 				Optional:    true,
 				Description: "If set, reboot the server on the specified boot id during destroy phase",
+			},
+			"customizations": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Computed:    true,
+				Description: "OS reinstallation customizations",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"config_drive_user_data": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Computed:    true,
+							Description: "Config Drive UserData",
+						},
+						"hostname": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Computed:    true,
+							Description: "Custom hostname",
+						},
+						"http_headers": {
+							Type:        schema.TypeMap,
+							Optional:    true,
+							Computed:    true,
+							Description: "Image HTTP Headers",
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"image_check_sum": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Computed:    true,
+							Description: "Image checksum",
+						},
+						"image_check_sum_type": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Computed:    true,
+							Description: "Checksum type",
+						},
+						"image_type": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Computed:    true,
+							Description: "Image Type",
+						},
+						"image_url": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Computed:    true,
+							Description: "Image URL",
+						},
+						"language": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Computed:    true,
+							Description: "Display Language",
+						},
+						"post_installation_script": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Computed:    true,
+							Description: "Post-Installation Script",
+						},
+						"post_installation_script_extension": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Computed:    true,
+							Description: "Post-Installation Script File Extension",
+						},
+						"ssh_key": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Computed:    true,
+							Description: "SSH Public Key",
+						},
+					},
+				},
+			},
+			"properties": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				Computed:    true,
+				Description: "Arbitrary properties to pass to cloud-init's config drive datasource",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"storage": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Storage configuration",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"disk_group_id": {
+							Type:        schema.TypeInt,
+							Required:    true,
+							Description: "Datastore name",
+						},
+						"hardware_raid": {
+							Type:        schema.TypeList,
+							Optional:    true,
+							Computed:    true,
+							Description: "Hardware Raid configurations (if not specified, all disks of the chosen disk group id will be configured in JBOD mode)",
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"arrays": {
+										Type:        schema.TypeInt,
+										Optional:    true,
+										Computed:    true,
+										Description: "Number of arrays (default is 1)",
+									},
+									"disks": {
+										Type:        schema.TypeInt,
+										Optional:    true,
+										Computed:    true,
+										Description: "Total number of disks in the disk group involved in the hardware raid configuration (all disks of the disk group by default)",
+									},
+									"raid_level": {
+										Type:        schema.TypeInt,
+										Optional:    true,
+										Computed:    true,
+										Description: "Hardware raid type (default is 1)",
+									},
+									"spares": {
+										Type:        schema.TypeInt,
+										Optional:    true,
+										Computed:    true,
+										Description: "Number of disks in the disk group involved in the spare (default is 0)",
+									},
+								},
+							},
+						},
+						"partitioning": {
+							Type:        schema.TypeInt,
+							Required:    true,
+							Description: "Size in GB",
+						},
+						"scheme_name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Partitioning scheme name",
+						},
+						"layout": {
+							Type:        schema.TypeList,
+							Optional:    true,
+							Computed:    true,
+							Description: "Custom partitioning layout (default is the default layout of the operating system's default partitioning scheme)",
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"extras": {
+										Type:        schema.TypeList,
+										Optional:    true,
+										Computed:    true,
+										Description: "Partition extras parameters",
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"lv": {
+													Type:        schema.TypeList,
+													Optional:    true,
+													Computed:    true,
+													Description: "LVM-specific parameters",
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"name": {
+																Type:        schema.TypeString,
+																Optional:    true,
+																Computed:    true,
+																Description: "Logical volume name",
+															},
+														},
+													},
+												},
+												"zp": {
+													Type:        schema.TypeList,
+													Optional:    true,
+													Computed:    true,
+													Description: "ZFS-specific parameters",
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"name": {
+																Type:        schema.TypeString,
+																Optional:    true,
+																Computed:    true,
+																Description: "zpool name (generated automatically if not specified)",
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"file_system": {
+										Type:        schema.TypeString,
+										Required:    true,
+										Description: "File system type",
+									},
+									"mount_point": {
+										Type:        schema.TypeString,
+										Required:    true,
+										Description: "Mount point",
+									},
+									"raid_level": {
+										Type:        schema.TypeInt,
+										Optional:    true,
+										Computed:    true,
+										Description: "Software raid type (default is 1)",
+									},
+									"size": {
+										Type:        schema.TypeInt,
+										Optional:    true,
+										Computed:    true,
+										Description: "Partition size in MiB (default value is 0)",
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 			//Computed
 			"comment": {
@@ -74,9 +294,9 @@ func resourceDedicatedServerInstallTask() *schema.Resource {
 	}
 }
 
-func resourceDedicatedServerInstallTaskImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceDedicatedServerReinstallTaskImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	//
-	// After creating an install task, there is no way to get the name of the server (service_name)
+	// After creating an reinstall task, there is no way to get the name of the server (service_name)
 	// nor the name of template (operating_system) used during the creation of the task.
 	// This is why it is required to provide them when importing.
 	//
@@ -92,14 +312,14 @@ func resourceDedicatedServerInstallTaskImportState(d *schema.ResourceData, meta 
 	d.SetId(taskId)
 	d.Set("service_name", serviceName)
 	d.Set("operating_system", operatingSystem)
-	err := dedicatedServerInstallTaskRead(d, meta)
+	err := dedicatedServerReinstallTaskRead(d, meta)
 
 	results := make([]*schema.ResourceData, 1)
 	results[0] = d
 	return results, err
 }
 
-func resourceDedicatedServerInstallTaskCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDedicatedServerReinstallTaskCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 
@@ -107,16 +327,16 @@ func resourceDedicatedServerInstallTaskCreate(d *schema.ResourceData, meta inter
 		"/dedicated/server/%s/reinstall",
 		url.PathEscape(serviceName),
 	)
-	opts := (&DedicatedServerInstallTaskCreateOpts{}).FromResource(d)
+	opts := (&DedicatedServerReinstallTaskCreateOpts{}).FromResource(d)
 	task := DedicatedServerTask{}
 
 	if err := config.OVHClient.Post(endpoint, opts, &task); err != nil {
 		// If task was not created because of an error, return it immediately.
 		if task.Id == 0 {
-			return fmt.Errorf("failed to create install task: %w", err)
+			return fmt.Errorf("failed to create reinstall task: %w", err)
 		}
 
-		// POST on install tasks can fail randomly so in order to avoid issues, let's allow
+		// POST on reinstall tasks can fail randomly so in order to avoid issues, let's allow
 		// a retry via waitForDedicatedServerTask
 		log.Printf("[WARN] Ignored error when calling POST %s: %v", endpoint, err)
 	}
@@ -127,17 +347,17 @@ func resourceDedicatedServerInstallTaskCreate(d *schema.ResourceData, meta inter
 
 	d.SetId(fmt.Sprintf("%d", task.Id))
 
-	return dedicatedServerInstallTaskRead(d, meta)
+	return dedicatedServerReinstallTaskRead(d, meta)
 }
 
-func dedicatedServerInstallTaskRead(d *schema.ResourceData, meta interface{}) error {
+func dedicatedServerReinstallTaskRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 
 	id, err := strconv.ParseInt(d.Id(), 10, 64)
 	if err != nil {
 		return fmt.Errorf(
-			"Could not parse install task id %s,%s:\n\t %q",
+			"Could not parse reinstall task id %s,%s:\n\t %q",
 			serviceName,
 			d.Id(),
 			err,
@@ -162,25 +382,25 @@ func dedicatedServerInstallTaskRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceDedicatedServerInstallTaskUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDedicatedServerReinstallTaskUpdate(d *schema.ResourceData, meta interface{}) error {
 	// nothing to do on update
-	return resourceDedicatedServerInstallTaskRead(d, meta)
+	return resourceDedicatedServerReinstallTaskRead(d, meta)
 }
 
-func resourceDedicatedServerInstallTaskRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDedicatedServerReinstallTaskRead(d *schema.ResourceData, meta interface{}) error {
 	// Nothing to do on READ
 	//
 	// IMPORTANT: This resource doesn't represent a real resource
 	// but instead a task on a dedicated server. OVH may clean its tasks database after a while
 	// so that the API may return a 404 on a task id. If we hit a 404 on a READ, then
 	// terraform will understand that it has to recreate the resource, and consequently
-	// will trigger new install task on the dedicated server.
+	// will trigger new reinstall task on the dedicated server.
 	// This is something we must avoid!
 	//
 	return nil
 }
 
-func resourceDedicatedServerInstallTaskDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDedicatedServerReinstallTaskDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	bootId := helpers.GetNilIntPointerFromData(d, "bootid_on_destroy")
 
@@ -203,7 +423,7 @@ func resourceDedicatedServerInstallTaskDelete(d *schema.ResourceData, meta inter
 
 		task := &DedicatedServerTask{}
 		if err := config.OVHClient.Post(endpoint, nil, task); err != nil {
-			// POST on install tasks can fail randomly so in order to avoid issues, let's allow
+			// POST on reinstall tasks can fail randomly so in order to avoid issues, let's allow
 			// a retry via waitForDedicatedServerTask
 			log.Printf("[WARN] Ignored error when calling POST %s: %v", endpoint, err)
 		}
