@@ -156,10 +156,27 @@ func (r *cloudProjectVolumeResource) Update(ctx context.Context, req resource.Up
 	endpoint := "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/volume/" + url.PathEscape(data.VolumeId.ValueString())
 	if err := r.config.OVHClient.Put(endpoint, planData.ToUpdate(), nil); err != nil {
 		resp.Diagnostics.AddError(
-			fmt.Sprintf("Error calling Post %s", endpoint),
+			fmt.Sprintf("Error calling Put %s", endpoint),
 			err.Error(),
 		)
 		return
+	}
+
+	// Check if size has been modified as updating it requires a specific call
+	if !planData.Size.Equal(data.Size) {
+		endpoint = "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/volume/" + url.PathEscape(data.VolumeId.ValueString()) + "/upsize"
+		if err := r.config.OVHClient.Post(endpoint, map[string]any{
+			"size": planData.Size.ValueInt64(),
+		}, nil); err != nil {
+			resp.Diagnostics.AddError(
+				fmt.Sprintf("Error calling Post %s", endpoint),
+				err.Error(),
+			)
+			return
+		}
+
+		// Here we need to wait for some time to make sure the size is correctly updated on backend side
+		time.Sleep(1 * time.Minute)
 	}
 
 	// Read updated resource
@@ -173,6 +190,7 @@ func (r *cloudProjectVolumeResource) Update(ctx context.Context, req resource.Up
 	}
 
 	responseData.MergeWith(&planData)
+	responseData.MergeWith(&data)
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)
@@ -183,7 +201,6 @@ func (r *cloudProjectVolumeResource) Delete(ctx context.Context, req resource.De
 
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
