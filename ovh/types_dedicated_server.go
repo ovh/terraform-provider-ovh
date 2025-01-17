@@ -119,15 +119,13 @@ type DedicatedServerInstallTaskUserMetadata struct {
 }
 
 type DedicatedServerInstallTaskCreateOpts struct {
-	TemplateName        string                                   `json:"templateName"`
-	PartitionSchemeName *string                                  `json:"partitionSchemeName,omitempty"`
-	Details             *DedicatedServerInstallTaskDetails       `json:"details"`
-	UserMetadata        []DedicatedServerInstallTaskUserMetadata `json:"userMetadata,omitempty"`
+	TemplateName string                                   `json:"templateName"`
+	Details      *DedicatedServerInstallTaskDetails       `json:"details"`
+	UserMetadata []DedicatedServerInstallTaskUserMetadata `json:"userMetadata,omitempty"`
 }
 
 func (opts *DedicatedServerInstallTaskCreateOpts) FromResource(d *schema.ResourceData) *DedicatedServerInstallTaskCreateOpts {
 	opts.TemplateName = d.Get("template_name").(string)
-	opts.PartitionSchemeName = helpers.GetNilStringPointerFromData(d, "partition_scheme_name")
 
 	details := d.Get("details").([]interface{})
 	if len(details) == 1 {
