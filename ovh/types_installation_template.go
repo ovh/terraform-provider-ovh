@@ -101,17 +101,11 @@ func (opts *InstallationTemplateUpdateOpts) FromResource(d *schema.ResourceData)
 }
 
 type InstallationTemplateCustomization struct {
-	CustomHostname *string `json:"customHostname,omitempty"`
 }
 
 func (v InstallationTemplateCustomization) ToMap() map[string]interface{} {
 	obj := make(map[string]interface{})
 	custom_attr_set := false
-
-	if v.CustomHostname != nil {
-		obj["custom_hostname"] = *v.CustomHostname
-		custom_attr_set = true
-	}
 
 	// dont return an object if nothing is set
 	if custom_attr_set {
@@ -196,7 +190,6 @@ func (v InstallationTemplateProjectItem) ToMap() map[string]interface{} {
 }
 
 func (opts *InstallationTemplateCustomization) FromResource(d *schema.ResourceData, parent string) *InstallationTemplateCustomization {
-	opts.CustomHostname = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.custom_hostname", parent))
 	return opts
 }
 
