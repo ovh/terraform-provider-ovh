@@ -107,7 +107,6 @@ resource "ovh_dedicated_server" "server" {
 * `details` - Details object when reinstalling server (see https://eu.api.ovh.com/console/?section=%2Fdedicated%2Fserver&branch=v1#post-/dedicated/server/-serviceName-/install/start)
   * `custom_hostname` - Personnal hostname to use in server reinstallation
   * `disk_group_id` - Disk group id to process install on (only available for some templates)
-  * `no_raid` - Whether you want to install only on the first disk
   * `soft_raid_devices` - Number of devices to use for system's software RAID
 * `partition_scheme_name` - Partition scheme name
 * `template_name` - Template name. You can check [the following API](https://eu.api.ovh.com/console/?section=%2Fdedicated%2FinstallationTemplate&branch=v1#get-/dedicated/installationTemplate) to list the available base templates
