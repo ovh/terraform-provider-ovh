@@ -12,7 +12,6 @@ type InstallationTemplate struct {
 	BitFormat             int                                `json:"bitFormat,omitempty"`
 	Category              string                             `json:"category,omitempty"`
 	Customization         *InstallationTemplateCustomization `json:"customization,omitempty"`
-	DefaultLanguage       string                             `json:"defaultLanguage,omitempty"`
 	Description           string                             `json:"description,omitempty"`
 	Distribution          string                             `json:"distribution,omitempty"`
 	EndOfInstall          string                             `json:"endOfInstall,omitempty"`
@@ -78,7 +77,6 @@ func (v InstallationTemplate) ToMap() map[string]interface{} {
 type InstallationTemplateCreateOpts struct {
 	BaseTemplateName string `json:"baseTemplateName"`
 	Name             string `json:"name"`
-	DefaultLanguage  string `json:"defaultLanguage,omitempty"`
 }
 
 func (opts *InstallationTemplateCreateOpts) FromResource(d *schema.ResourceData) *InstallationTemplateCreateOpts {
@@ -88,9 +86,8 @@ func (opts *InstallationTemplateCreateOpts) FromResource(d *schema.ResourceData)
 }
 
 type InstallationTemplateUpdateOpts struct {
-	DefaultLanguage string                             `json:"defaultLanguage,omitempty"`
-	Customization   *InstallationTemplateCustomization `json:"customization"`
-	TemplateName    string                             `json:"templateName"`
+	Customization *InstallationTemplateCustomization `json:"customization"`
+	TemplateName  string                             `json:"templateName"`
 }
 
 func (opts *InstallationTemplateUpdateOpts) FromResource(d *schema.ResourceData) *InstallationTemplateUpdateOpts {
