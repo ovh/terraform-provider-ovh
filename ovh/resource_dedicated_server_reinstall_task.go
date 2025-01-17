@@ -33,12 +33,6 @@ func resourceDedicatedServerInstallTask() *schema.Resource {
 				ForceNew:    true,
 				Description: "The internal name of your dedicated server.",
 			},
-			"partition_scheme_name": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "Partition scheme name.",
-			},
 			"template_name": {
 				Type:        schema.TypeString,
 				Required:    true,
