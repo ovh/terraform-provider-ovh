@@ -2,7 +2,7 @@
 subcategory : "Dedicated Server"
 ---
 
-# ovh_dedicated_server_install_task
+# ovh_dedicated_server_reinstall_task
 
 Install your Dedicated Server.
 
@@ -20,7 +20,7 @@ data ovh_dedicated_server_boots "rescue" {
   boot_type    = "rescue"
 }
 
-resource "ovh_dedicated_server_install_task" "server_install" {
+resource "ovh_dedicated_server_reinstall_task" "server_install" {
   service_name      = "nsxxxxxxx.ip-xx-xx-xx.eu"
   template_name     = "debian12_64"
   bootid_on_destroy = data.ovh_dedicated_server_boots.rescue.result[0]
@@ -55,7 +55,7 @@ data ovh_dedicated_server_boots "rescue" {
   boot_type    = "rescue"
 }
 
-resource "ovh_dedicated_server_install_task" "server_install" {
+resource "ovh_dedicated_server_reinstall_task" "server_install" {
   service_name      = data.ovh_dedicated_server.server.service_name
   template_name     = "byolinux_64"
   bootid_on_destroy = data.ovh_dedicated_server_boots.rescue.result[0]
@@ -105,7 +105,7 @@ data ovh_dedicated_server_boots "rescue" {
   boot_type    = "rescue"
 }
 
-resource "ovh_dedicated_server_install_task" "server_install" {
+resource "ovh_dedicated_server_reinstall_task" "server_install" {
   service_name      = data.ovh_dedicated_server.server.service_name
   template_name     = "win2019-std_64"
   bootid_on_destroy = data.ovh_dedicated_server_boots.rescue.result[0]
@@ -175,5 +175,5 @@ The following attributes are exported:
 Installation task can be imported using the `service_name` (`nsXXXX.ip...`) of the baremetal server, the `template_name` used  and ths `task_id`, separated by "/" E.g.,
 
 ```bash
-$ terraform import ovh_dedicated_server_install_task nsXXXX.ipXXXX/template_name/12345
+$ terraform import ovh_dedicated_server_reinstall_task nsXXXX.ipXXXX/template_name/12345
 ```
