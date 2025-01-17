@@ -69,12 +69,6 @@ func resourceDedicatedServerInstallTask() *schema.Resource {
 							ForceNew:    true,
 							Description: "",
 						},
-						"no_raid": {
-							Type:        schema.TypeBool,
-							Optional:    true,
-							ForceNew:    true,
-							Description: "",
-						},
 						"soft_raid_devices": {
 							Type:        schema.TypeInt,
 							Optional:    true,
