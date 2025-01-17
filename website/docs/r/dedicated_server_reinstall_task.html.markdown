@@ -145,7 +145,6 @@ The `details` block supports:
 * `custom_hostname` - Set up the server using the provided hostname instead of the default hostname.
 * `disk_group_id` - Disk group id.
 * `language` - Deprecated, will be removed in next release.
-* `no_raid` - Set to true to disable RAID.
 * `soft_raid_devices` - soft raid devices.
 * `use_spla` - Deprecated, will be removed in next release.
 

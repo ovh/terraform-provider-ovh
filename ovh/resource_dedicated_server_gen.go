@@ -123,12 +123,6 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 					Description:         "Disk group id to process install on (only available for some templates)",
 					MarkdownDescription: "Disk group id to process install on (only available for some templates)",
 				},
-				"no_raid": schema.BoolAttribute{
-					CustomType:          ovhtypes.TfBoolType{},
-					Optional:            true,
-					Description:         "true if you want to install only on the first disk",
-					MarkdownDescription: "true if you want to install only on the first disk",
-				},
 				"soft_raid_devices": schema.Int64Attribute{
 					CustomType:          ovhtypes.TfInt64Type{},
 					Optional:            true,
@@ -754,24 +748,6 @@ func (t DetailsType) ValueFromObject(ctx context.Context, in basetypes.ObjectVal
 			fmt.Sprintf(`disk_group_id expected to be ovhtypes.TfInt64Value, was: %T`, diskGroupIdAttribute))
 	}
 
-	noRaidAttribute, ok := attributes["no_raid"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`no_raid is missing from object`)
-
-		return nil, diags
-	}
-
-	noRaidVal, ok := noRaidAttribute.(ovhtypes.TfBoolValue)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`no_raid expected to be ovhtypes.TfBoolValue, was: %T`, noRaidAttribute))
-	}
-
 	softRaidDevicesAttribute, ok := attributes["soft_raid_devices"]
 
 	if !ok {
@@ -797,7 +773,6 @@ func (t DetailsType) ValueFromObject(ctx context.Context, in basetypes.ObjectVal
 	return DetailsValue{
 		CustomHostname:  customHostnameVal,
 		DiskGroupId:     diskGroupIdVal,
-		NoRaid:          noRaidVal,
 		SoftRaidDevices: softRaidDevicesVal,
 		state:           attr.ValueStateKnown,
 	}, diags
@@ -902,24 +877,6 @@ func NewDetailsValue(attributeTypes map[string]attr.Type, attributes map[string]
 			fmt.Sprintf(`disk_group_id expected to be ovhtypes.TfInt64Value, was: %T`, diskGroupIdAttribute))
 	}
 
-	noRaidAttribute, ok := attributes["no_raid"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`no_raid is missing from object`)
-
-		return NewDetailsValueUnknown(), diags
-	}
-
-	noRaidVal, ok := noRaidAttribute.(ovhtypes.TfBoolValue)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`no_raid expected to be ovhtypes.TfBoolValue, was: %T`, noRaidAttribute))
-	}
-
 	softRaidDevicesAttribute, ok := attributes["soft_raid_devices"]
 
 	if !ok {
@@ -945,7 +902,6 @@ func NewDetailsValue(attributeTypes map[string]attr.Type, attributes map[string]
 	return DetailsValue{
 		CustomHostname:  customHostnameVal,
 		DiskGroupId:     diskGroupIdVal,
-		NoRaid:          noRaidVal,
 		SoftRaidDevices: softRaidDevicesVal,
 		state:           attr.ValueStateKnown,
 	}, diags
@@ -1021,7 +977,6 @@ var _ basetypes.ObjectValuable = DetailsValue{}
 type DetailsValue struct {
 	CustomHostname  ovhtypes.TfStringValue `tfsdk:"custom_hostname" json:"customHostname"`
 	DiskGroupId     ovhtypes.TfInt64Value  `tfsdk:"disk_group_id" json:"diskGroupId"`
-	NoRaid          ovhtypes.TfBoolValue   `tfsdk:"no_raid" json:"noRaid"`
 	SoftRaidDevices ovhtypes.TfInt64Value  `tfsdk:"soft_raid_devices" json:"softRaidDevices"`
 	state           attr.ValueState
 }
@@ -1030,7 +985,6 @@ type DetailsWritableValue struct {
 	*DetailsValue   `json:"-"`
 	CustomHostname  *ovhtypes.TfStringValue `json:"customHostname,omitempty"`
 	DiskGroupId     *ovhtypes.TfInt64Value  `json:"diskGroupId,omitempty"`
-	NoRaid          *ovhtypes.TfBoolValue   `json:"noRaid,omitempty"`
 	SoftRaidDevices *ovhtypes.TfInt64Value  `json:"softRaidDevices,omitempty"`
 }
 
@@ -1043,10 +997,6 @@ func (v DetailsValue) ToCreate() *DetailsWritableValue {
 
 	if !v.DiskGroupId.IsNull() {
 		res.DiskGroupId = &v.DiskGroupId
-	}
-
-	if !v.NoRaid.IsNull() {
-		res.NoRaid = &v.NoRaid
 	}
 
 	if !v.SoftRaidDevices.IsNull() {
@@ -1067,10 +1017,6 @@ func (v DetailsValue) ToUpdate() *DetailsWritableValue {
 		res.DiskGroupId = &v.DiskGroupId
 	}
 
-	if !v.NoRaid.IsNull() {
-		res.NoRaid = &v.NoRaid
-	}
-
 	if !v.SoftRaidDevices.IsNull() {
 		res.SoftRaidDevices = &v.SoftRaidDevices
 	}
@@ -1087,7 +1033,6 @@ func (v *DetailsValue) UnmarshalJSON(data []byte) error {
 	}
 	v.CustomHostname = tmp.CustomHostname
 	v.DiskGroupId = tmp.DiskGroupId
-	v.NoRaid = tmp.NoRaid
 	v.SoftRaidDevices = tmp.SoftRaidDevices
 
 	v.state = attr.ValueStateKnown
@@ -1104,10 +1049,6 @@ func (v *DetailsValue) MergeWith(other *DetailsValue) {
 		v.DiskGroupId = other.DiskGroupId
 	}
 
-	if (v.NoRaid.IsUnknown() || v.NoRaid.IsNull()) && !other.NoRaid.IsUnknown() {
-		v.NoRaid = other.NoRaid
-	}
-
 	if (v.SoftRaidDevices.IsUnknown() || v.SoftRaidDevices.IsNull()) && !other.SoftRaidDevices.IsUnknown() {
 		v.SoftRaidDevices = other.SoftRaidDevices
 	}
@@ -1121,7 +1062,6 @@ func (v DetailsValue) Attributes() map[string]attr.Value {
 	return map[string]attr.Value{
 		"customHostname":  v.CustomHostname,
 		"diskGroupId":     v.DiskGroupId,
-		"noRaid":          v.NoRaid,
 		"softRaidDevices": v.SoftRaidDevices,
 	}
 }
@@ -1133,7 +1073,6 @@ func (v DetailsValue) ToTerraformValue(ctx context.Context) (tftypes.Value, erro
 
 	attrTypes["custom_hostname"] = basetypes.StringType{}.TerraformType(ctx)
 	attrTypes["disk_group_id"] = basetypes.Int64Type{}.TerraformType(ctx)
-	attrTypes["no_raid"] = basetypes.BoolType{}.TerraformType(ctx)
 	attrTypes["soft_raid_devices"] = basetypes.Int64Type{}.TerraformType(ctx)
 
 	objectType := tftypes.Object{AttributeTypes: attrTypes}
@@ -1157,14 +1096,6 @@ func (v DetailsValue) ToTerraformValue(ctx context.Context) (tftypes.Value, erro
 		}
 
 		vals["disk_group_id"] = val
-
-		val, err = v.NoRaid.ToTerraformValue(ctx)
-
-		if err != nil {
-			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
-		}
-
-		vals["no_raid"] = val
 
 		val, err = v.SoftRaidDevices.ToTerraformValue(ctx)
 
@@ -1207,13 +1138,11 @@ func (v DetailsValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue,
 		map[string]attr.Type{
 			"custom_hostname":   ovhtypes.TfStringType{},
 			"disk_group_id":     ovhtypes.TfInt64Type{},
-			"no_raid":           ovhtypes.TfBoolType{},
 			"soft_raid_devices": ovhtypes.TfInt64Type{},
 		},
 		map[string]attr.Value{
 			"custom_hostname":   v.CustomHostname,
 			"disk_group_id":     v.DiskGroupId,
-			"no_raid":           v.NoRaid,
 			"soft_raid_devices": v.SoftRaidDevices,
 		})
 
@@ -1243,10 +1172,6 @@ func (v DetailsValue) Equal(o attr.Value) bool {
 		return false
 	}
 
-	if !v.NoRaid.Equal(other.NoRaid) {
-		return false
-	}
-
 	if !v.SoftRaidDevices.Equal(other.SoftRaidDevices) {
 		return false
 	}
@@ -1266,7 +1191,6 @@ func (v DetailsValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
 	return map[string]attr.Type{
 		"custom_hostname":   ovhtypes.TfStringType{},
 		"disk_group_id":     ovhtypes.TfInt64Type{},
-		"no_raid":           ovhtypes.TfBoolType{},
 		"soft_raid_devices": ovhtypes.TfInt64Type{},
 	}
 }
