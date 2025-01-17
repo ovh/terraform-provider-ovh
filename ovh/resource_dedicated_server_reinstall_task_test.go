@@ -31,9 +31,9 @@ func TestAccDedicatedServerInstall_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"ovh_dedicated_server_update.server", "monitoring", "true"),
 					resource.TestCheckResourceAttr(
-						"ovh_dedicated_server_install_task.server_install", "function", "reinstallServer"),
+						"ovh_dedicated_server_reinstall_task.server_install", "function", "reinstallServer"),
 					resource.TestCheckResourceAttr(
-						"ovh_dedicated_server_install_task.server_install", "status", "done"),
+						"ovh_dedicated_server_reinstall_task.server_install", "status", "done"),
 				),
 			},
 		},
@@ -62,9 +62,9 @@ func TestAccDedicatedServerInstall_rebootondestroy(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"ovh_dedicated_server_update.server", "monitoring", "true"),
 					resource.TestCheckResourceAttr(
-						"ovh_dedicated_server_install_task.server_install", "function", "reinstallServer"),
+						"ovh_dedicated_server_reinstall_task.server_install", "function", "reinstallServer"),
 					resource.TestCheckResourceAttr(
-						"ovh_dedicated_server_install_task.server_install", "status", "done"),
+						"ovh_dedicated_server_reinstall_task.server_install", "status", "done"),
 				),
 			},
 		},
@@ -93,9 +93,9 @@ func TestAccDedicatedServerInstall_usermetadata(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"ovh_dedicated_server_update.server", "monitoring", "true"),
 					resource.TestCheckResourceAttr(
-						"ovh_dedicated_server_install_task.server_install", "function", "reinstallServer"),
+						"ovh_dedicated_server_reinstall_task.server_install", "function", "reinstallServer"),
 					resource.TestCheckResourceAttr(
-						"ovh_dedicated_server_install_task.server_install", "status", "done"),
+						"ovh_dedicated_server_reinstall_task.server_install", "status", "done"),
 				),
 			},
 		},
@@ -150,7 +150,7 @@ resource ovh_dedicated_server_update "server" {
   state        = "ok"
 }
 
-resource ovh_dedicated_server_install_task "server_install" {
+resource ovh_dedicated_server_reinstall_task "server_install" {
   service_name = data.ovh_dedicated_server_boots.harddisk.service_name
   template_name = "debian12_64"
   user_metadata {
@@ -178,7 +178,7 @@ resource ovh_dedicated_server_update "server" {
   state        = "ok"
 }
 
-resource ovh_dedicated_server_install_task "server_install" {
+resource ovh_dedicated_server_reinstall_task "server_install" {
   service_name      = data.ovh_dedicated_server_boots.harddisk.service_name
   template_name     = "debian12_64"
   bootid_on_destroy = data.ovh_dedicated_server_boots.rescue.result[0]
@@ -200,7 +200,7 @@ resource ovh_dedicated_server_update "server" {
   state        = "ok"
 }
 
-resource ovh_dedicated_server_install_task "server_install" {
+resource ovh_dedicated_server_reinstall_task "server_install" {
   service_name      = data.ovh_dedicated_server_boots.harddisk.service_name
   template_name     = "byolinux_64"
   user_metadata {
