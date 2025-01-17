@@ -120,8 +120,8 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 				"disk_group_id": schema.Int64Attribute{
 					CustomType:          ovhtypes.TfInt64Type{},
 					Optional:            true,
-					Description:         "Disk group id to process install on (only available for some templates)",
-					MarkdownDescription: "Disk group id to process install on (only available for some templates)",
+					Description:         "Disk group id to process OS install on",
+					MarkdownDescription: "Disk group id to process OS install on",
 				},
 				"soft_raid_devices": schema.Int64Attribute{
 					CustomType:          ovhtypes.TfInt64Type{},
