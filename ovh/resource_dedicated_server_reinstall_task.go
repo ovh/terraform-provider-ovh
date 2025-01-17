@@ -51,12 +51,6 @@ func resourceDedicatedServerInstallTask() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"custom_hostname": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							ForceNew:    true,
-							Description: "Set up the server using the provided hostname instead of the default hostname",
-						},
 						"disk_group_id": {
 							Type:        schema.TypeInt,
 							Optional:    true,
