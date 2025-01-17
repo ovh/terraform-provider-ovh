@@ -150,27 +150,13 @@ resource ovh_dedicated_server_update "server" {
   state        = "ok"
 }
 
-resource "ovh_me_installation_template" "debian" {
-  base_template_name = "debian12_64"
-  template_name      = "%s"
-  customization {
-    custom_hostname  = "mytest"
-  }
-}
-
-resource "time_sleep" "wait_for_ssh_key_sync" {
-  create_duration = "120s"
-  depends_on = [ovh_me_installation_template.debian]
-}
-
 resource ovh_dedicated_server_install_task "server_install" {
   service_name = data.ovh_dedicated_server_boots.harddisk.service_name
-  template_name = ovh_me_installation_template.debian.template_name
+  template_name = "debian12_64"
   user_metadata {
     key  = "sshKey"
     value ="%s"
   }
-  depends_on = [time_sleep.wait_for_ssh_key_sync]
 }
 `
 
