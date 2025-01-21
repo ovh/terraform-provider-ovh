@@ -41,11 +41,30 @@ output "user_password" {
 
 -> __NOTE__ To reset password of the user previously created, update the `password_reset` attribute.
 Use the `terraform refresh` command after executing `terraform apply` to update the output with the new password.
+This attribute can be an arbitratry string but we recomand 2 formats:
+- a datetime to keep a trace of the last reset
+- a md5 of another variables to automaticaly triger it based on this variable update
 ```hcl
 data "ovh_cloud_project_database" "db" {
   service_name  = "XXXX"
   engine        = "YYYY"
   id            = "ZZZZ"
+}
+
+resource "ovh_cloud_project_database_user" "userDatetime" {
+  service_name    = data.ovh_cloud_project_database.db.service_name
+  engine          = data.ovh_cloud_project_database.db.engine
+  cluster_id      = data.ovh_cloud_project_database.db.id
+  name            = "alice"
+  password_reset  = "2024-01-02T11:00:00Z"
+}
+
+resource "ovh_cloud_project_database_user" "userMd5" {
+  service_name    = data.ovh_cloud_project_database.db.service_name
+  engine          = data.ovh_cloud_project_database.db.engine
+  cluster_id      = data.ovh_cloud_project_database.db.id
+  name            = "bob"
+  password_reset  = "md5(var.something)"
 }
 
 resource "ovh_cloud_project_database_user" "user" {

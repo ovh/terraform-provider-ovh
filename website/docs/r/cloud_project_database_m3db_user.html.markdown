@@ -33,6 +33,9 @@ output "user_password" {
 
 -> __NOTE__ To reset password of the user previously created, update the `password_reset` attribute.
 Use the `terraform refresh` command after executing `terraform apply` to update the output with the new password.
+This attribute can be an arbitratry string but we recomand 2 formats:
+- a datetime to keep a trace of the last reset
+- a md5 of another variables to automaticaly triger it based on this variable update
 ```hcl
 data "ovh_cloud_project_database" "m3db" {
   service_name  = "XXX"
@@ -40,7 +43,29 @@ data "ovh_cloud_project_database" "m3db" {
   id            = "ZZZ"
 }
 
-# change password_reset each time you want to reset the password to trigger an update
+# Change password_reset with the datetime each time you want to reset the password to trigger an update
+resource "ovh_cloud_project_database_m3db_user" "userDatetime" {
+  service_name    = data.ovh_cloud_project_database.m3db.service_name
+  cluster_id      = data.ovh_cloud_project_database.m3db.id
+  group           = "mygroup"
+  name            = "alice"
+  password_reset  = "2024-01-02T11:00:00Z"
+}
+
+variable "something" {
+  type = string
+}
+
+# Set password_reset to be based on the update of another variable to reset the password
+resource "ovh_cloud_project_database_m3db_user" "userMd5" {
+  service_name    = data.ovh_cloud_project_database.m3db.service_name
+  cluster_id      = data.ovh_cloud_project_database.m3db.id
+  group           = "mygroup"
+  name            = "bob"
+  password_reset  = md5(var.something)
+}
+
+# Change password_reset each time you want to reset the password to trigger an update
 resource "ovh_cloud_project_database_m3db_user" "user" {
   service_name    = data.ovh_cloud_project_database.m3db.service_name
   cluster_id      = data.ovh_cloud_project_database.m3db.id
@@ -62,7 +87,7 @@ The following arguments are supported:
 * `service_name` - (Required, Forces new resource) The id of the public cloud project. If omitted,
   the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 * `cluster_id` - (Required, Forces new resource) Cluster ID.
-* `group` - (Optional) Group of the user:
+* `group` - (Optional) Group of the user.
 * `name` - (Required, Forces new resource) Name of the user. A user named "avnadmin" is mapped with already created admin user instead of creating a new user.
 * `password_reset` - (Optional) Arbitrary string to change to trigger a password update. Use the `terraform refresh` command after executing `terraform apply` to update the output with the new password.
 
