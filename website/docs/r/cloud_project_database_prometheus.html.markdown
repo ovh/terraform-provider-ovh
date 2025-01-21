@@ -43,11 +43,33 @@ output "prom_password" {
 
 -> __NOTE__ To reset password of the prometheus user previously created, update the `password_reset` attribute.
 Use the `terraform refresh` command after executing `terraform apply` to update the output with the new password.
+This attribute can be an arbitratry string but we recomand 2 formats:
+- a datetime to keep a trace of the last reset
+- a md5 of another variables to automaticaly triger it based on this variable update
 ```hcl
 data "ovh_cloud_project_database" "db" {
   service_name  = "XXXX"
   engine        = "YYYY"
   id            = "ZZZZ"
+}
+
+# Set password_reset to be based on the update of another variable to reset the password
+resource "ovh_cloud_project_database_prometheus" "prometheusDatetime" {
+  service_name    = data.ovh_cloud_project_database.db.service_name
+  engine          = data.ovh_cloud_project_database.db.engine
+  cluster_id      = data.ovh_cloud_project_database.db.id
+  password_reset  = "2024-01-02T11:00:00Z"
+}
+
+variable "something" {
+  type = string
+}
+
+resource "ovh_cloud_project_database_prometheus" "prometheusMd5" {
+  service_name    = data.ovh_cloud_project_database.db.service_name
+  engine          = data.ovh_cloud_project_database.db.engine
+  cluster_id      = data.ovh_cloud_project_database.db.id
+  password_reset  = md5(var.something)
 }
 
 resource "ovh_cloud_project_database_prometheus" "prometheus" {
