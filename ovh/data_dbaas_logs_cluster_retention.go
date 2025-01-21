@@ -7,6 +7,8 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	ovhtypes "github.com/ovh/terraform-provider-ovh/ovh/types"
 )
 
 var _ datasource.DataSourceWithConfigure = (*dbaasLogsClusterRetentionDataSource)(nil)
@@ -75,7 +77,7 @@ func (d *dbaasLogsClusterRetentionDataSource) Read(ctx context.Context, req data
 		return
 	}
 
-	// No retention ID given, try to fetch a retention with given duration
+	// No retention ID given, try to fetch a retention with given type and duration
 	var (
 		retentionIDs       []string
 		availableDurations []string
@@ -85,6 +87,12 @@ func (d *dbaasLogsClusterRetentionDataSource) Read(ctx context.Context, req data
 	if err := d.config.OVHClient.GetWithContext(ctx, endpoint, &retentionIDs); err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("error calling get %s", endpoint), err.Error())
 		return
+	}
+
+	// If no retention_type given, default on LOGS_INDEXING value
+	if data.RetentionType.IsNull() {
+		tflog.Info(ctx, "no retention type defined, defaulting to LOGS_INDEXING")
+		data.RetentionType = ovhtypes.NewTfStringValue("LOGS_INDEXING")
 	}
 
 	for _, id := range retentionIDs {
@@ -98,6 +106,16 @@ func (d *dbaasLogsClusterRetentionDataSource) Read(ctx context.Context, req data
 			return
 		}
 
+		if !data.RetentionType.Equal(retentionData.RetentionType) {
+			tflog.Info(ctx, fmt.Sprintf("skipping retention %s with wrong type %s", retentionData.RetentionId, retentionData.RetentionType))
+			continue
+		}
+
+		if !retentionData.IsSupported.ValueBool() {
+			tflog.Info(ctx, fmt.Sprintf("skipping retention %s as it is not supported", retentionData.RetentionId))
+			continue
+		}
+
 		availableDurations = append(availableDurations, retentionData.Duration.ValueString())
 		if data.Duration.Equal(retentionData.Duration) {
 			data.MergeWith(&retentionData)
@@ -108,7 +126,11 @@ func (d *dbaasLogsClusterRetentionDataSource) Read(ctx context.Context, req data
 		}
 	}
 
-	// No retention found with given duration, error
+	// No retention found with given duration and type, error
+	errorDetails := ""
+	if len(availableDurations) > 0 {
+		errorDetails = ", available values are: " + strings.Join(availableDurations, ",")
+	}
 	resp.Diagnostics.AddError("retention not found",
-		fmt.Sprintf("no retention was found with duration %s, available values are: %s", data.Duration.ValueString(), strings.Join(availableDurations, ",")))
+		fmt.Sprintf("no retention was found with duration %s and type %s%s", data.Duration.ValueString(), data.RetentionType.ValueString(), errorDetails))
 }
