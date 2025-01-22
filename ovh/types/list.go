@@ -165,10 +165,26 @@ func (t TfListNestedValue[T]) MarshalJSON() ([]byte, error) {
 }
 
 func (t TfListNestedValue[T]) ToSetValue(ctx context.Context) (basetypes.SetValue, diag.Diagnostics) {
+	if t.IsNull() {
+		return basetypes.NewSetNull(t.ElementType(ctx)), nil
+	}
+
+	if t.IsUnknown() {
+		return basetypes.NewSetUnknown(t.ElementType(ctx)), nil
+	}
+
 	return basetypes.NewSetValueMust(t.ElementType(ctx), t.Elements()), nil
 }
 
 func (v TfListNestedValue[T]) ToListValue(ctx context.Context) (basetypes.ListValue, diag.Diagnostics) {
+	if v.IsNull() {
+		return basetypes.NewListNull(v.ElementType(ctx)), nil
+	}
+
+	if v.IsUnknown() {
+		return basetypes.NewListUnknown(v.ElementType(ctx)), nil
+	}
+
 	return basetypes.NewListValue(v.ElementType(ctx), v.Elements())
 }
 

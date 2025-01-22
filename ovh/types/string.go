@@ -62,6 +62,12 @@ func NewTfStringValue(value string) TfStringValue {
 	}
 }
 
+func NewTfStringNull() TfStringValue {
+	return TfStringValue{
+		StringValue: basetypes.NewStringNull(),
+	}
+}
+
 type TfStringType struct {
 	basetypes.StringType
 }
