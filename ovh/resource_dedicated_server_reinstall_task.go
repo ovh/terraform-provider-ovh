@@ -103,11 +103,6 @@ func resourceDedicatedServerInstallTask() *schema.Resource {
 				Computed:    true,
 				Description: "Function name",
 			},
-			"last_update": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Last update",
-			},
 			"start_date": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -204,7 +199,6 @@ func dedicatedServerInstallTaskRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("function", task.Function)
 	d.Set("comment", task.Comment)
 	d.Set("status", task.Status)
-	d.Set("last_update", task.LastUpdate.Format(time.RFC3339))
 	d.Set("done_date", task.DoneDate.Format(time.RFC3339))
 	d.Set("start_date", task.StartDate.Format(time.RFC3339))
 
