@@ -220,6 +220,7 @@ func (p *OvhProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewCloudProjectAlertingResource,
 		NewCloudProjectGatewayInterfaceResource,
+		NewCloudProjectRegionNetworkResource,
 		NewCloudProjectVolumeResource,
 		NewDbaasLogsTokenResource,
 		NewDedicatedServerResource,

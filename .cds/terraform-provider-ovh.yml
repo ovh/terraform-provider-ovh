@@ -556,14 +556,14 @@ workflow:
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
-  Tests_TestAccCloudProjectRegions:
+  Tests_TestAccCloudProjectRegion:
     application: terraform-provider-ovh
     depends_on:
     - terraform-provider-ovh-pre-sweepers
     environment: acctests
     one_at_a_time: true
     parameters:
-      testargs: -run TestAccCloudProjectRegions
+      testargs: -run TestAccCloudProjectRegion
       skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudproject}}"
     pipeline: terraform-provider-ovh-testacc
     when:
@@ -803,7 +803,7 @@ workflow:
     - Tests_CloudProjectKubeEmptyVersion
     - Tests_CloudProjectKubeUpdate
     - Tests_CloudProjectKube_basic
-    - Tests_TestAccCloudProjectRegions
+    - Tests_TestAccCloudProjectRegion
     - Tests_CloudProjectUser
     - Tests_CloudProjectLoadBalancer
     - Tests_CloudProjectVolume
