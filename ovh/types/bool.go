@@ -56,6 +56,12 @@ func (v TfBoolValue) Type(ctx context.Context) attr.Type {
 	return TfBoolType{}
 }
 
+func NewTfBoolValue(v bool) TfBoolValue {
+	return TfBoolValue{
+		BoolValue: basetypes.NewBoolValue(v),
+	}
+}
+
 type TfBoolType struct {
 	basetypes.BoolType
 }

@@ -1,9 +1,14 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
+	"net/url"
+	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
@@ -59,6 +64,31 @@ type CloudProjectOperationResponse struct {
 	Regions     []string `json:"regions"`
 	ResourceId  *string  `json:"resourceId"`
 	Status      string   `json:"status"`
+}
+
+func waitForCloudProjectOperation(ctx context.Context, c *ovh.Client, serviceName, operationId string) (string, error) {
+	endpoint := fmt.Sprintf("/cloud/project/%s/operation/%s", url.PathEscape(serviceName), url.PathEscape(operationId))
+	resourceID := ""
+	err := retry.RetryContext(ctx, 10*time.Minute, func() *retry.RetryError {
+		ro := &CloudProjectOperationResponse{}
+		if err := c.GetWithContext(ctx, endpoint, ro); err != nil {
+			return retry.NonRetryableError(err)
+		}
+
+		switch ro.Status {
+		case "in-error":
+			return retry.NonRetryableError(fmt.Errorf("operation %q ended in error", ro.Action))
+		case "completed":
+			if ro.ResourceId != nil {
+				resourceID = *ro.ResourceId
+			}
+			return nil
+		default:
+			return retry.RetryableError(fmt.Errorf("waiting for operation %s to be completed", ro.Id))
+		}
+	})
+
+	return resourceID, err
 }
 
 // Opts
