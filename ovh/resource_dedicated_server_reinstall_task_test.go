@@ -152,7 +152,7 @@ resource ovh_dedicated_server_update "server" {
 
 resource ovh_dedicated_server_reinstall_task "server_install" {
   service_name = data.ovh_dedicated_server_boots.harddisk.service_name
-  template_name = "debian12_64"
+  operating_system = "debian12_64"
   user_metadata {
     key  = "sshKey"
     value ="%s"
@@ -180,7 +180,7 @@ resource ovh_dedicated_server_update "server" {
 
 resource ovh_dedicated_server_reinstall_task "server_install" {
   service_name      = data.ovh_dedicated_server_boots.harddisk.service_name
-  template_name     = "debian12_64"
+  operating_system     = "debian12_64"
   bootid_on_destroy = data.ovh_dedicated_server_boots.rescue.result[0]
   user_metadata {
     key  = "sshKey"
@@ -202,7 +202,7 @@ resource ovh_dedicated_server_update "server" {
 
 resource ovh_dedicated_server_reinstall_task "server_install" {
   service_name      = data.ovh_dedicated_server_boots.harddisk.service_name
-  template_name     = "byolinux_64"
+  operating_system  = "byolinux_64"
   user_metadata {
 	key   = "imageURL"
 	value = "https://github.com/ashmonger/akution_test/releases/download/0.6-fixCache/deb11k6.qcow2"

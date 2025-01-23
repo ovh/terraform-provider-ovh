@@ -310,7 +310,7 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 				),
 			},
 		},
-		"template_name": schema.StringAttribute{
+		"operating_system": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
 			Optional:            true,
 			Description:         "Template name",
@@ -377,7 +377,7 @@ type DedicatedServerModel struct {
 	ServiceName      ovhtypes.TfStringValue                        `tfsdk:"service_name" json:"serviceName"`
 	State            ovhtypes.TfStringValue                        `tfsdk:"state" json:"state"`
 	SupportLevel     ovhtypes.TfStringValue                        `tfsdk:"support_level" json:"supportLevel"`
-	TemplateName     ovhtypes.TfStringValue                        `tfsdk:"template_name" json:"templateName"`
+	OperatingSystem  ovhtypes.TfStringValue                        `tfsdk:"operating_system" json:"operatingSystem"`
 	UserMetadata     ovhtypes.TfListNestedValue[UserMetadataValue] `tfsdk:"user_metadata" json:"userMetadata"`
 	Order            OrderValue                                    `tfsdk:"order" json:"order"`
 	OvhSubsidiary    ovhtypes.TfStringValue                        `tfsdk:"ovh_subsidiary" json:"ovhSubsidiary"`
@@ -498,8 +498,8 @@ func (v *DedicatedServerModel) MergeWith(other *DedicatedServerModel) {
 		v.SupportLevel = other.SupportLevel
 	}
 
-	if (v.TemplateName.IsUnknown() || v.TemplateName.IsNull()) && !other.TemplateName.IsUnknown() {
-		v.TemplateName = other.TemplateName
+	if (v.OperatingSystem.IsUnknown() || v.OperatingSystem.IsNull()) && !other.OperatingSystem.IsUnknown() {
+		v.OperatingSystem = other.OperatingSystem
 	}
 
 	if (v.Order.IsUnknown() || v.Order.IsNull()) && !other.Order.IsUnknown() {
@@ -548,17 +548,17 @@ func (v *DedicatedServerModel) ToOrder() *OrderModel {
 }
 
 type DedicatedServerWritableModel struct {
-	BootId         *ovhtypes.TfInt64Value                                 `tfsdk:"boot_id" json:"bootId,omitempty"`
-	BootScript     *ovhtypes.TfStringValue                                `tfsdk:"boot_script" json:"bootScript,omitempty"`
-	Details        *DetailsWritableValue                                  `tfsdk:"details" json:"details,omitempty"`
-	Monitoring     *ovhtypes.TfBoolValue                                  `tfsdk:"monitoring" json:"monitoring,omitempty"`
-	NoIntervention *ovhtypes.TfBoolValue                                  `tfsdk:"no_intervention" json:"noIntervention,omitempty"`
-	RescueMail     *ovhtypes.TfStringValue                                `tfsdk:"rescue_mail" json:"rescueMail,omitempty"`
-	RescueSshKey   *ovhtypes.TfStringValue                                `tfsdk:"rescue_ssh_key" json:"rescueSshKey,omitempty"`
-	RootDevice     *ovhtypes.TfStringValue                                `tfsdk:"root_device" json:"rootDevice,omitempty"`
-	State          *ovhtypes.TfStringValue                                `tfsdk:"state" json:"state,omitempty"`
-	TemplateName   *ovhtypes.TfStringValue                                `tfsdk:"template_name" json:"templateName,omitempty"`
-	UserMetadata   *ovhtypes.TfListNestedValue[UserMetadataWritableValue] `tfsdk:"user_metadata" json:"userMetadata,omitempty"`
+	BootId          *ovhtypes.TfInt64Value                                 `tfsdk:"boot_id" json:"bootId,omitempty"`
+	BootScript      *ovhtypes.TfStringValue                                `tfsdk:"boot_script" json:"bootScript,omitempty"`
+	Details         *DetailsWritableValue                                  `tfsdk:"details" json:"details,omitempty"`
+	Monitoring      *ovhtypes.TfBoolValue                                  `tfsdk:"monitoring" json:"monitoring,omitempty"`
+	NoIntervention  *ovhtypes.TfBoolValue                                  `tfsdk:"no_intervention" json:"noIntervention,omitempty"`
+	RescueMail      *ovhtypes.TfStringValue                                `tfsdk:"rescue_mail" json:"rescueMail,omitempty"`
+	RescueSshKey    *ovhtypes.TfStringValue                                `tfsdk:"rescue_ssh_key" json:"rescueSshKey,omitempty"`
+	RootDevice      *ovhtypes.TfStringValue                                `tfsdk:"root_device" json:"rootDevice,omitempty"`
+	State           *ovhtypes.TfStringValue                                `tfsdk:"state" json:"state,omitempty"`
+	OperatingSystem *ovhtypes.TfStringValue                                `tfsdk:"operating_system" json:"operatingSystem,omitempty"`
+	UserMetadata    *ovhtypes.TfListNestedValue[UserMetadataWritableValue] `tfsdk:"user_metadata" json:"userMetadata,omitempty"`
 }
 
 func (v DedicatedServerModel) ToCreate() *DedicatedServerWritableModel {
@@ -606,8 +606,8 @@ func (v DedicatedServerModel) ToReinstall() *DedicatedServerWritableModel {
 		res.Details = v.Details.ToUpdate()
 	}
 
-	if !v.TemplateName.IsUnknown() {
-		res.TemplateName = &v.TemplateName
+	if !v.OperatingSystem.IsUnknown() {
+		res.OperatingSystem = &v.OperatingSystem
 	}
 
 	if !v.UserMetadata.IsUnknown() {
