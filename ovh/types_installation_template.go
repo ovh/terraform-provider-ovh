@@ -9,22 +9,21 @@ import (
 )
 
 type InstallationTemplate struct {
-	BitFormat             int                                `json:"bitFormat,omitempty"`
-	Category              string                             `json:"category,omitempty"`
-	Customization         *InstallationTemplateCustomization `json:"customization,omitempty"`
-	Description           string                             `json:"description,omitempty"`
-	Distribution          string                             `json:"distribution,omitempty"`
-	EndOfInstall          string                             `json:"endOfInstall,omitempty"`
-	Family                string                             `json:"family,omitempty"`
-	Filesystems           []string                           `json:"filesystems"`
-	Inputs                []InstallationTemplateInputs       `json:"inputs,omitempty"`
-	License               *InstallationTemplateLicense       `json:"license,omitempty"`
-	LvmReady              *bool                              `json:"lvmReady,omitempty"`
-	NoPartitioning        bool                               `json:"noPartitioning,omitempty"`
-	Project               *InstallationTemplateProject       `json:"project,omitempty"`
-	SoftRaidOnlyMirroring bool                               `json:"soft_raid_only_mirroring,omitempty"`
-	Subfamily             string                             `json:"subfamily,omitempty"`
-	TemplateName          string                             `json:"templateName"`
+	BitFormat             int                          `json:"bitFormat,omitempty"`
+	Category              string                       `json:"category,omitempty"`
+	Description           string                       `json:"description,omitempty"`
+	Distribution          string                       `json:"distribution,omitempty"`
+	EndOfInstall          string                       `json:"endOfInstall,omitempty"`
+	Family                string                       `json:"family,omitempty"`
+	Filesystems           []string                     `json:"filesystems"`
+	Inputs                []InstallationTemplateInputs `json:"inputs,omitempty"`
+	License               *InstallationTemplateLicense `json:"license,omitempty"`
+	LvmReady              *bool                        `json:"lvmReady,omitempty"`
+	NoPartitioning        bool                         `json:"noPartitioning,omitempty"`
+	Project               *InstallationTemplateProject `json:"project,omitempty"`
+	SoftRaidOnlyMirroring bool                         `json:"soft_raid_only_mirroring,omitempty"`
+	Subfamily             string                       `json:"subfamily,omitempty"`
+	TemplateName          string                       `json:"templateName"`
 }
 
 func (v InstallationTemplate) ToMap() map[string]interface{} {
@@ -32,13 +31,6 @@ func (v InstallationTemplate) ToMap() map[string]interface{} {
 
 	obj["bit_format"] = v.BitFormat
 	obj["category"] = v.Category
-
-	if v.Customization != nil {
-		customization := v.Customization.ToMap()
-		if customization != nil {
-			obj["customization"] = []interface{}{customization}
-		}
-	}
 
 	obj["description"] = v.Description
 	obj["distribution"] = v.Distribution
@@ -86,33 +78,12 @@ func (opts *InstallationTemplateCreateOpts) FromResource(d *schema.ResourceData)
 }
 
 type InstallationTemplateUpdateOpts struct {
-	Customization *InstallationTemplateCustomization `json:"customization"`
-	TemplateName  string                             `json:"templateName"`
+	TemplateName string `json:"templateName"`
 }
 
 func (opts *InstallationTemplateUpdateOpts) FromResource(d *schema.ResourceData) *InstallationTemplateUpdateOpts {
 	opts.TemplateName = d.Get("template_name").(string)
-	customizations := d.Get("customization").([]interface{})
-	if customizations != nil && len(customizations) == 1 {
-		opts.Customization = (&InstallationTemplateCustomization{}).FromResource(d, "customization.0")
-	}
-
 	return opts
-}
-
-type InstallationTemplateCustomization struct {
-}
-
-func (v InstallationTemplateCustomization) ToMap() map[string]interface{} {
-	obj := make(map[string]interface{})
-	custom_attr_set := false
-
-	// dont return an object if nothing is set
-	if custom_attr_set {
-		return obj
-	}
-
-	return nil
 }
 
 type InstallationTemplateInputs struct {
@@ -187,10 +158,6 @@ func (v InstallationTemplateProjectItem) ToMap() map[string]interface{} {
 	obj["name"] = v.Name
 	obj["governance"] = &v.Governance
 	return obj
-}
-
-func (opts *InstallationTemplateCustomization) FromResource(d *schema.ResourceData, parent string) *InstallationTemplateCustomization {
-	return opts
 }
 
 type Partition struct {
