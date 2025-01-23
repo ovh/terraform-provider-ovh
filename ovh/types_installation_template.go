@@ -66,26 +66,6 @@ func (v InstallationTemplate) ToMap() map[string]interface{} {
 	return obj
 }
 
-type InstallationTemplateCreateOpts struct {
-	BaseTemplateName string `json:"baseTemplateName"`
-	Name             string `json:"name"`
-}
-
-func (opts *InstallationTemplateCreateOpts) FromResource(d *schema.ResourceData) *InstallationTemplateCreateOpts {
-	opts.BaseTemplateName = d.Get("base_template_name").(string)
-	opts.Name = d.Get("template_name").(string)
-	return opts
-}
-
-type InstallationTemplateUpdateOpts struct {
-	TemplateName string `json:"templateName"`
-}
-
-func (opts *InstallationTemplateUpdateOpts) FromResource(d *schema.ResourceData) *InstallationTemplateUpdateOpts {
-	opts.TemplateName = d.Get("template_name").(string)
-	return opts
-}
-
 type InstallationTemplateInputs struct {
 	Name        string   `json:"name"`
 	Type        string   `json:"type"`
