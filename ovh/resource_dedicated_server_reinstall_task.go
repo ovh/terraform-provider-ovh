@@ -33,11 +33,11 @@ func resourceDedicatedServerInstallTask() *schema.Resource {
 				ForceNew:    true,
 				Description: "The internal name of your dedicated server.",
 			},
-			"template_name": {
+			"operating_system": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
-				Description: "Template name",
+				Description: "Operating System name",
 			},
 			"bootid_on_destroy": {
 				Type:        schema.TypeInt,
@@ -120,21 +120,21 @@ func resourceDedicatedServerInstallTask() *schema.Resource {
 func resourceDedicatedServerInstallTaskImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	//
 	// After creating an install task, there is no way to get the name of the server (service_name)
-	// nor the name of template (template_name) used during the creation of the task.
+	// nor the name of template (operating_system) used during the creation of the task.
 	// This is why it is required to provide them when importing.
 	//
 
 	givenId := d.Id()
 	splitId := strings.SplitN(givenId, "/", 3)
 	if len(splitId) != 3 {
-		return nil, fmt.Errorf("Import Id is not service_name/template_name/task_id formatted")
+		return nil, fmt.Errorf("Import Id is not service_name/operating_system/task_id formatted")
 	}
 	serviceName := splitId[0]
-	templateName := splitId[1]
+	operatingSystem := splitId[1]
 	taskId := splitId[2]
 	d.SetId(taskId)
 	d.Set("service_name", serviceName)
-	d.Set("template_name", templateName)
+	d.Set("operating_system", operatingSystem)
 	err := dedicatedServerInstallTaskRead(d, meta)
 
 	results := make([]*schema.ResourceData, 1)
@@ -147,7 +147,7 @@ func resourceDedicatedServerInstallTaskCreate(d *schema.ResourceData, meta inter
 	serviceName := d.Get("service_name").(string)
 
 	endpoint := fmt.Sprintf(
-		"/dedicated/server/%s/install/start",
+		"/dedicated/server/%s/reinstall",
 		url.PathEscape(serviceName),
 	)
 	opts := (&DedicatedServerInstallTaskCreateOpts{}).FromResource(d)
