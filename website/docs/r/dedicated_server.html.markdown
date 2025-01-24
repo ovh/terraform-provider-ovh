@@ -14,7 +14,6 @@ data "ovh_me" "account" {}
 resource "ovh_dedicated_server" "server" {
   ovh_subsidiary = data.ovh_me.account.ovh_subsidiary
   display_name = "My server display name"
-  template_name = "debian12_64"
 
   plan = [
     {
@@ -101,22 +100,6 @@ resource "ovh_dedicated_server" "server" {
 * `rescue_ssh_key` - Public SSH Key used in the rescue mode
 * `root_device` - Root device of the server
 * `state` - All states a Dedicated can in (error, hacked, hackedBlocked, ok)
-
-### Arguments used to reinstall a dedicated server
-
-* `details` - Details object when reinstalling server (see <https://eu.api.ovh.com/console/?section=%2Fdedicated%2Fserver&branch=v1#post-/dedicated/server/-serviceName-/install/start>)
-  * `custom_hostname` - Personnal hostname to use in server reinstallation
-  * `disk_group_id` - Disk group id to process OS install on
-  * `soft_raid_devices` - Number of devices to use for system's software RAID
-* `partition_scheme_name` - Partition scheme name
-* `template_name` - Template name. You can check [the following API](https://eu.api.ovh.com/console/?section=%2Fdedicated%2FinstallationTemplate&branch=v1#get-/dedicated/installationTemplate) to list the available base templates
-* `user_metadata` - Metadata
-  * `key`
-  * `value`
-
-The `user_metadata` block supports many arguments, here is a non-exhaustive list depending on the OS:
--[See OS questions](https://help.ovhcloud.com/csm/en-dedicated-servers-api-os-installation?id=kb_article_view&sysparm_article=KB0061951#os-questions)
--[See documentation](https://help.ovhcloud.com/csm/en-ie-dedicated-servers-api-os-installation?id=kb_article_view&sysparm_article=KB0061950#create-an-os-installation-task) to get more information
 
 ## Attributes Reference
 
