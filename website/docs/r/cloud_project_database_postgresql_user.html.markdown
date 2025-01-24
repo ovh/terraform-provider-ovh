@@ -33,9 +33,9 @@ output "user_password" {
 
 -> __NOTE__ To reset password of the user previously created, update the `password_reset` attribute.
 Use the `terraform refresh` command after executing `terraform apply` to update the output with the new password.
-This attribute can be an arbitratry string but we recomand 2 formats:
+This attribute can be an arbitrary string but we recommend 2 formats:
 - a datetime to keep a trace of the last reset
-- a md5 of another variables to automaticaly triger it based on this variable update
+- a md5 of other variables to automatically trigger it based on this variable update
 ```hcl
 data "ovh_cloud_project_database" "postgresql" {
   service_name  = "XXXX"
