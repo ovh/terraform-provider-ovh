@@ -44,27 +44,6 @@ func resourceDedicatedServerInstallTask() *schema.Resource {
 				Optional:    true,
 				Description: "If set, reboot the server on the specified boot id during destroy phase",
 			},
-			"user_metadata": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 128,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"key": {
-							Type:        schema.TypeString,
-							Description: "The key for the user_metadata",
-							Required:    true,
-						},
-						"value": {
-							Type:        schema.TypeString,
-							Description: "The value for the user_metadata",
-							Required:    true,
-						},
-					},
-				},
-			},
-
 			//Computed
 			"comment": {
 				Type:        schema.TypeString,
