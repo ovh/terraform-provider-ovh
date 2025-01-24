@@ -113,30 +113,12 @@ type DedicatedServerTask struct {
 	StartDate  time.Time `json:"startDate"`
 }
 
-type DedicatedServerInstallTaskUserMetadata struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
-}
-
 type DedicatedServerInstallTaskCreateOpts struct {
-	OperatingSystem string                                   `json:"operatingSystem"`
-	UserMetadata    []DedicatedServerInstallTaskUserMetadata `json:"userMetadata,omitempty"`
+	OperatingSystem string `json:"operatingSystem"`
 }
 
 func (opts *DedicatedServerInstallTaskCreateOpts) FromResource(d *schema.ResourceData) *DedicatedServerInstallTaskCreateOpts {
 	opts.OperatingSystem = d.Get("operating_system").(string)
-
-	userMetadata := d.Get("user_metadata").([]interface{})
-	var userMetadatas []DedicatedServerInstallTaskUserMetadata
-
-	for _, metadata := range userMetadata {
-		m := metadata.(map[string]interface{})
-		key := m["key"].(string)
-		value := m["value"].(string)
-		metadatum := DedicatedServerInstallTaskUserMetadata{Key: key, Value: value}
-		userMetadatas = append(userMetadatas, metadatum)
-	}
-	opts.UserMetadata = userMetadatas
 
 	return opts
 }
