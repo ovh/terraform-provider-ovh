@@ -117,12 +117,6 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 					Description:         "Disk group id to process OS install on",
 					MarkdownDescription: "Disk group id to process OS install on",
 				},
-				"soft_raid_devices": schema.Int64Attribute{
-					CustomType:          ovhtypes.TfInt64Type{},
-					Optional:            true,
-					Description:         "Number of devices to use for system's software RAID",
-					MarkdownDescription: "Number of devices to use for system's software RAID",
-				},
 			},
 			CustomType: DetailsType{
 				ObjectType: types.ObjectType{
@@ -708,31 +702,8 @@ func (t DetailsType) ValueFromObject(ctx context.Context, in basetypes.ObjectVal
 			fmt.Sprintf(`disk_group_id expected to be ovhtypes.TfInt64Value, was: %T`, diskGroupIdAttribute))
 	}
 
-	softRaidDevicesAttribute, ok := attributes["soft_raid_devices"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`soft_raid_devices is missing from object`)
-
-		return nil, diags
-	}
-
-	softRaidDevicesVal, ok := softRaidDevicesAttribute.(ovhtypes.TfInt64Value)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`soft_raid_devices expected to be ovhtypes.TfInt64Value, was: %T`, softRaidDevicesAttribute))
-	}
-
-	if diags.HasError() {
-		return nil, diags
-	}
-
 	return DetailsValue{
 		DiskGroupId:     diskGroupIdVal,
-		SoftRaidDevices: softRaidDevicesVal,
 		state:           attr.ValueStateKnown,
 	}, diags
 }
@@ -818,31 +789,8 @@ func NewDetailsValue(attributeTypes map[string]attr.Type, attributes map[string]
 			fmt.Sprintf(`disk_group_id expected to be ovhtypes.TfInt64Value, was: %T`, diskGroupIdAttribute))
 	}
 
-	softRaidDevicesAttribute, ok := attributes["soft_raid_devices"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`soft_raid_devices is missing from object`)
-
-		return NewDetailsValueUnknown(), diags
-	}
-
-	softRaidDevicesVal, ok := softRaidDevicesAttribute.(ovhtypes.TfInt64Value)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`soft_raid_devices expected to be ovhtypes.TfInt64Value, was: %T`, softRaidDevicesAttribute))
-	}
-
-	if diags.HasError() {
-		return NewDetailsValueUnknown(), diags
-	}
-
 	return DetailsValue{
 		DiskGroupId:     diskGroupIdVal,
-		SoftRaidDevices: softRaidDevicesVal,
 		state:           attr.ValueStateKnown,
 	}, diags
 }
@@ -916,14 +864,12 @@ var _ basetypes.ObjectValuable = DetailsValue{}
 
 type DetailsValue struct {
 	DiskGroupId     ovhtypes.TfInt64Value `tfsdk:"disk_group_id" json:"diskGroupId"`
-	SoftRaidDevices ovhtypes.TfInt64Value `tfsdk:"soft_raid_devices" json:"softRaidDevices"`
 	state           attr.ValueState
 }
 
 type DetailsWritableValue struct {
 	*DetailsValue   `json:"-"`
 	DiskGroupId     *ovhtypes.TfInt64Value `json:"diskGroupId,omitempty"`
-	SoftRaidDevices *ovhtypes.TfInt64Value `json:"softRaidDevices,omitempty"`
 }
 
 func (v DetailsValue) ToCreate() *DetailsWritableValue {
@@ -931,10 +877,6 @@ func (v DetailsValue) ToCreate() *DetailsWritableValue {
 
 	if !v.DiskGroupId.IsNull() {
 		res.DiskGroupId = &v.DiskGroupId
-	}
-
-	if !v.SoftRaidDevices.IsNull() {
-		res.SoftRaidDevices = &v.SoftRaidDevices
 	}
 
 	return res
@@ -945,10 +887,6 @@ func (v DetailsValue) ToUpdate() *DetailsWritableValue {
 
 	if !v.DiskGroupId.IsNull() {
 		res.DiskGroupId = &v.DiskGroupId
-	}
-
-	if !v.SoftRaidDevices.IsNull() {
-		res.SoftRaidDevices = &v.SoftRaidDevices
 	}
 
 	return res
@@ -962,7 +900,6 @@ func (v *DetailsValue) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	v.DiskGroupId = tmp.DiskGroupId
-	v.SoftRaidDevices = tmp.SoftRaidDevices
 
 	v.state = attr.ValueStateKnown
 
@@ -974,10 +911,6 @@ func (v *DetailsValue) MergeWith(other *DetailsValue) {
 		v.DiskGroupId = other.DiskGroupId
 	}
 
-	if (v.SoftRaidDevices.IsUnknown() || v.SoftRaidDevices.IsNull()) && !other.SoftRaidDevices.IsUnknown() {
-		v.SoftRaidDevices = other.SoftRaidDevices
-	}
-
 	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
 		v.state = other.state
 	}
@@ -986,7 +919,6 @@ func (v *DetailsValue) MergeWith(other *DetailsValue) {
 func (v DetailsValue) Attributes() map[string]attr.Value {
 	return map[string]attr.Value{
 		"diskGroupId":     v.DiskGroupId,
-		"softRaidDevices": v.SoftRaidDevices,
 	}
 }
 func (v DetailsValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
@@ -996,7 +928,6 @@ func (v DetailsValue) ToTerraformValue(ctx context.Context) (tftypes.Value, erro
 	var err error
 
 	attrTypes["disk_group_id"] = basetypes.Int64Type{}.TerraformType(ctx)
-	attrTypes["soft_raid_devices"] = basetypes.Int64Type{}.TerraformType(ctx)
 
 	objectType := tftypes.Object{AttributeTypes: attrTypes}
 
@@ -1011,14 +942,6 @@ func (v DetailsValue) ToTerraformValue(ctx context.Context) (tftypes.Value, erro
 		}
 
 		vals["disk_group_id"] = val
-
-		val, err = v.SoftRaidDevices.ToTerraformValue(ctx)
-
-		if err != nil {
-			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
-		}
-
-		vals["soft_raid_devices"] = val
 
 		if err := tftypes.ValidateValue(objectType, vals); err != nil {
 			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
@@ -1052,11 +975,9 @@ func (v DetailsValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue,
 	objVal, diags := types.ObjectValue(
 		map[string]attr.Type{
 			"disk_group_id":     ovhtypes.TfInt64Type{},
-			"soft_raid_devices": ovhtypes.TfInt64Type{},
 		},
 		map[string]attr.Value{
 			"disk_group_id":     v.DiskGroupId,
-			"soft_raid_devices": v.SoftRaidDevices,
 		})
 
 	return objVal, diags
@@ -1081,10 +1002,6 @@ func (v DetailsValue) Equal(o attr.Value) bool {
 		return false
 	}
 
-	if !v.SoftRaidDevices.Equal(other.SoftRaidDevices) {
-		return false
-	}
-
 	return true
 }
 
@@ -1099,7 +1016,6 @@ func (v DetailsValue) Type(ctx context.Context) attr.Type {
 func (v DetailsValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
 	return map[string]attr.Type{
 		"disk_group_id":     ovhtypes.TfInt64Type{},
-		"soft_raid_devices": ovhtypes.TfInt64Type{},
 	}
 }
 
