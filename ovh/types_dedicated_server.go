@@ -120,17 +120,11 @@ type DedicatedServerInstallTaskUserMetadata struct {
 
 type DedicatedServerInstallTaskCreateOpts struct {
 	OperatingSystem string                                   `json:"operatingSystem"`
-	Details         *DedicatedServerInstallTaskDetails       `json:"details"`
 	UserMetadata    []DedicatedServerInstallTaskUserMetadata `json:"userMetadata,omitempty"`
 }
 
 func (opts *DedicatedServerInstallTaskCreateOpts) FromResource(d *schema.ResourceData) *DedicatedServerInstallTaskCreateOpts {
 	opts.OperatingSystem = d.Get("operating_system").(string)
-
-	details := d.Get("details").([]interface{})
-	if len(details) == 1 {
-		opts.Details = (&DedicatedServerInstallTaskDetails{}).FromResource(d, "details.0")
-	}
 
 	userMetadata := d.Get("user_metadata").([]interface{})
 	var userMetadatas []DedicatedServerInstallTaskUserMetadata
@@ -143,16 +137,6 @@ func (opts *DedicatedServerInstallTaskCreateOpts) FromResource(d *schema.Resourc
 		userMetadatas = append(userMetadatas, metadatum)
 	}
 	opts.UserMetadata = userMetadatas
-
-	return opts
-}
-
-type DedicatedServerInstallTaskDetails struct {
-	DiskGroupId *int64 `json:"diskGroupId,omitempty"`
-}
-
-func (opts *DedicatedServerInstallTaskDetails) FromResource(d *schema.ResourceData, parent string) *DedicatedServerInstallTaskDetails {
-	opts.DiskGroupId = helpers.GetNilInt64PointerFromData(d, fmt.Sprintf("%s.disk_group_id", parent))
 
 	return opts
 }
