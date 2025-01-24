@@ -2,22 +2,25 @@
 subcategory : "Managed Databases"
 ---
 
-# ovh_cloud_project_database_user
+# ovh_cloud_project_database_prometheus
 
-Creates an user for a database cluster associated with a public cloud project.
+Creates a prometheus for a database cluster associated with a public cloud project.
 
-With this resource you can create a user and map "avnadmin" for the following database engine:
+With this resource you can create a prometheus for the following database engine:
 
   * `cassandra`
   * `kafka`
   * `kafkaConnect`
+  * `kafkaMirrorMaker`
   * `mysql`
-  * `grafana`
+  * `opensearch`
+  * `postgresql`
+  * `redis`
 
 ## Example Usage
 
-Create a user johndoe in a database.
-Output the user generated password with command `terraform output user_password`.
+Create a Prometheus for a database.
+Output the prometheus user generated password with command `terraform output prom_password`.
 
 ```hcl
 data "ovh_cloud_project_database" "db" {
@@ -26,20 +29,19 @@ data "ovh_cloud_project_database" "db" {
   id            = "ZZZZ"
 }
 
-resource "ovh_cloud_project_database_user" "user" {
+resource "ovh_cloud_project_database_prometheus" "prometheus" {
   service_name  = data.ovh_cloud_project_database.db.service_name
   engine        = data.ovh_cloud_project_database.db.engine
   cluster_id    = data.ovh_cloud_project_database.db.id
-  name          = "johndoe"
 }
 
-output "user_password" {
-  value     = ovh_cloud_project_database_user.user.password
+output "prom_password" {
+  value     = ovh_cloud_project_database_prometheus.prometheus.password
   sensitive = true
 }
 ```
 
--> __NOTE__ To reset password of the user previously created, update the `password_reset` attribute.
+-> __NOTE__ To reset password of the prometheus user previously created, update the `password_reset` attribute.
 Use the `terraform refresh` command after executing `terraform apply` to update the output with the new password.
 This attribute can be an arbitrary string but we recommend 2 formats:
 - a datetime to keep a trace of the last reset
@@ -51,32 +53,34 @@ data "ovh_cloud_project_database" "db" {
   id            = "ZZZZ"
 }
 
-resource "ovh_cloud_project_database_user" "userDatetime" {
+# Set password_reset to be based on the update of another variable to reset the password
+resource "ovh_cloud_project_database_prometheus" "prometheusDatetime" {
   service_name    = data.ovh_cloud_project_database.db.service_name
   engine          = data.ovh_cloud_project_database.db.engine
   cluster_id      = data.ovh_cloud_project_database.db.id
-  name            = "alice"
   password_reset  = "2024-01-02T11:00:00Z"
 }
 
-resource "ovh_cloud_project_database_user" "userMd5" {
-  service_name    = data.ovh_cloud_project_database.db.service_name
-  engine          = data.ovh_cloud_project_database.db.engine
-  cluster_id      = data.ovh_cloud_project_database.db.id
-  name            = "bob"
-  password_reset  = "md5(var.something)"
+variable "something" {
+  type = string
 }
 
-resource "ovh_cloud_project_database_user" "user" {
+resource "ovh_cloud_project_database_prometheus" "prometheusMd5" {
   service_name    = data.ovh_cloud_project_database.db.service_name
   engine          = data.ovh_cloud_project_database.db.engine
   cluster_id      = data.ovh_cloud_project_database.db.id
-  name            = "johndoe"
+  password_reset  = md5(var.something)
+}
+
+resource "ovh_cloud_project_database_prometheus" "prometheus" {
+  service_name    = data.ovh_cloud_project_database.db.service_name
+  engine          = data.ovh_cloud_project_database.db.engine
+  cluster_id      = data.ovh_cloud_project_database.db.id
   password_reset  = "reset1"
 }
 
-output "user_password" {
-  value     = ovh_cloud_project_database_user.user.password
+output "prom_password" {
+  value     = ovh_cloud_project_database_prometheus.prometheus.password
   sensitive = true
 }
 ```
@@ -92,10 +96,12 @@ Available engines:
   * `cassandra`
   * `kafka`
   * `kafkaConnect`
+  * `kafkaMirrorMaker`
   * `mysql`
-  * `grafana`
+  * `opensearch`
+  * `postgresql`
+  * `redis`
 * `cluster_id` - (Required, Forces new resource) Cluster ID.
-* `name` - (Required, Forces new resource) Name of the user. A user named "avnadmin" is mapped with already created admin user and reset his password instead of creating a new user. The "Grafana" engine only allows the "avnadmin" mapping.
 * `password_reset` - (Optional) Arbitrary string to change to trigger a password update. Use the `terraform refresh` command after executing `terraform apply` to update the output with the new password.
 
 ## Attributes Reference
@@ -103,19 +109,20 @@ Available engines:
 The following attributes are exported:
 
 * `cluster_id` - See Argument Reference above.
-* `created_at` - Date of the creation of the user.
 * `engine` - See Argument Reference above.
-* `id` - ID of the user.
-* `name` - See Argument Reference above.
+* `id` - Cluster ID.
 * `password` - (Sensitive) Password of the user.
 * `password_reset` - Arbitrary string to change to trigger a password update.
 * `service_name` - See Argument Reference above.
-* `status` - Current status of the user.
+* `targets` - List of all endpoint targets.
+  * `Host` - Host of the endpoint.
+  * `Port` - Connection port for the endpoint.
+* `username` - name of the prometheus user.
 
 ## Timeouts
 
 ```hcl
-resource "ovh_cloud_project_database_user" "user" {
+resource "ovh_cloud_project_database_prometheus" "prometheus" {
   # ...
 
   timeouts {
@@ -131,8 +138,8 @@ resource "ovh_cloud_project_database_user" "user" {
 
 ## Import
 
-OVHcloud Managed database clusters users can be imported using the `service_name`, `engine`, `cluster_id` and `id` of the user, separated by "/" E.g.,
+OVHcloud Managed database clusters prometheus can be imported using the `service_name`, `engine` and `cluster_id`, separated by "/" E.g.,
 
 ```bash
-$ terraform import ovh_cloud_project_database_user.my_user service_name/engine/cluster_id/id
+$ terraform import ovh_cloud_project_database_mongodb_prometheus.my_prometheus service_name/engine/cluster_id
 ```

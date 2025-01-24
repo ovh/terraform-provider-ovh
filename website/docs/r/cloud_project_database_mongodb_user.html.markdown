@@ -33,6 +33,9 @@ output "user_password" {
 
 -> __NOTE__ To reset password of the user previously created, update the `password_reset` attribute.
 Use the `terraform refresh` command after executing `terraform apply` to update the output with the new password.
+This attribute can be an arbitrary string but we recommend 2 formats:
+- a datetime to keep a trace of the last reset
+- a md5 of other variables to automatically trigger it based on this variable update
 ```hcl
 data "ovh_cloud_project_database" "mongodb" {
   service_name  = "XXX"
@@ -40,6 +43,29 @@ data "ovh_cloud_project_database" "mongodb" {
   id            = "ZZZ"
 }
 
+# Change password_reset with the datetime each time you want to reset the password to trigger an update
+resource "ovh_cloud_project_database_mongodb_user" "userDatetime" {
+  service_name  = data.ovh_cloud_project_database.mongodb.service_name
+  cluster_id    = data.ovh_cloud_project_database.mongodb.id
+  name          = "alice"
+  roles         = ["backup@admin", "readAnyDatabase@admin"]
+  password_reset  = "2024-01-02T11:00:00Z"
+}
+
+variable "something" {
+  type = string
+}
+
+# Set password_reset to be based on the update of another variable to reset the password
+resource "ovh_cloud_project_database_mongodb_user" "userMd5" {
+  service_name  = data.ovh_cloud_project_database.mongodb.service_name
+  cluster_id    = data.ovh_cloud_project_database.mongodb.id
+  name          = "bob"
+  roles         = ["backup@admin", "readAnyDatabase@admin"]
+  password_reset  = md5(var.something)
+}
+
+# Change password_reset each time you want to reset the password to trigger an update
 resource "ovh_cloud_project_database_mongodb_user" "user" {
   service_name  = data.ovh_cloud_project_database.mongodb.service_name
   cluster_id    = data.ovh_cloud_project_database.mongodb.id
@@ -78,7 +104,7 @@ The following arguments are supported:
   the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 * `cluster_id` - (Required, Forces new resource) Cluster ID.
 * `name` - (Required, Forces new resource) Name of the user. A user named "admin" is mapped with already created admin@admin user instead of creating a new user.
-* `roles` - (Optional: if omit, default role) Roles the user belongs to. Since version 0.37.0, the authentication database must be indicated for all roles
+* `roles` - (Optional: if omit, default role) Roles the user belongs to. Since version 0.37.0, the authentication database must be indicated for all roles.
 Available roles:
   * `backup@admin`
   * `clusterAdmin@admin`
