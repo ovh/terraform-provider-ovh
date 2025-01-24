@@ -148,13 +148,11 @@ func (opts *DedicatedServerInstallTaskCreateOpts) FromResource(d *schema.Resourc
 }
 
 type DedicatedServerInstallTaskDetails struct {
-	DiskGroupId     *int64 `json:"diskGroupId,omitempty"`
-	SoftRaidDevices *int64 `json:"softRaidDevices,omitempty"`
+	DiskGroupId *int64 `json:"diskGroupId,omitempty"`
 }
 
 func (opts *DedicatedServerInstallTaskDetails) FromResource(d *schema.ResourceData, parent string) *DedicatedServerInstallTaskDetails {
 	opts.DiskGroupId = helpers.GetNilInt64PointerFromData(d, fmt.Sprintf("%s.disk_group_id", parent))
-	opts.SoftRaidDevices = helpers.GetNilInt64PointerFromData(d, fmt.Sprintf("%s.soft_raid_devices", parent))
 
 	return opts
 }
