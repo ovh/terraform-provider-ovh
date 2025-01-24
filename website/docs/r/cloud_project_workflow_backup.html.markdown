@@ -1,5 +1,5 @@
 ---
-subcategory : "VM Instances"
+subcategory : "Cloud Project"
 ---
 
 # ovh_cloud_project_workflow_backup
