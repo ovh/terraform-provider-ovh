@@ -1,3 +1,35 @@
+## 1.5.0 (January 24, 2025)
+
+⚙️ General:
+
+* Bump golang dependencies ([#803](https://github.com/ovh/terraform-provider-ovh/pull/803))
+
+🎉 Features:
+
+* New resource: `ovh_cloud_project_instance` ([#809](https://github.com/ovh/terraform-provider-ovh/pull/809))
+* New resource: `ovh_cloud_project_region_network` ([#808](https://github.com/ovh/terraform-provider-ovh/pull/808))
+* New resource: `ovh_cloud_project_database_prometheus` ([#787](https://github.com/ovh/terraform-provider-ovh/pull/787))
+* New resource: `ovh_cloud_project_database_mongodb_prometheus` ([#787](https://github.com/ovh/terraform-provider-ovh/pull/787))
+
+* New datasource: `ovh_cloud_project_instance` ([#809](https://github.com/ovh/terraform-provider-ovh/pull/809))
+* New datasource: `ovh_cloud_project_instances` ([#809](https://github.com/ovh/terraform-provider-ovh/pull/809))
+* New datasource: `ovh_cloud_project_database_prometheus` ([#787](https://github.com/ovh/terraform-provider-ovh/pull/787))
+* New datasource: `ovh_cloud_project_database_mongodb_prometheus` ([#787](https://github.com/ovh/terraform-provider-ovh/pull/787))
+
+💪 Improvements:
+
+* `r/ovh_ip_firewall_rule`: Add import capability to resource ([#797](https://github.com/ovh/terraform-provider-ovh/pull/797))
+* `r/ovh_savings_plan`: For uppercase for flavors ([#799](https://github.com/ovh/terraform-provider-ovh/pull/799))
+* `r/ovh_cloud_project_volume`: Allow size edition ([#804](https://github.com/ovh/terraform-provider-ovh/pull/804))
+
+* `d/ovh_dbaas_logs_cluster_retention`: Add `retention_type` field ([#806](https://github.com/ovh/terraform-provider-ovh/pull/806))
+
+📚 Documentation:
+
+* Licenses update ([#796](https://github.com/ovh/terraform-provider-ovh/pull/796))
+
+❤️ Thanks for your contributions ❤️
+
 ## 1.4.0 (December 26, 2024)
 
 🎉 Features:
