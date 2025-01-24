@@ -44,22 +44,6 @@ func resourceDedicatedServerInstallTask() *schema.Resource {
 				Optional:    true,
 				Description: "If set, reboot the server on the specified boot id during destroy phase",
 			},
-			"details": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"disk_group_id": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							ForceNew:    true,
-							Description: "",
-						},
-					},
-				},
-			},
 			"user_metadata": {
 				Type:     schema.TypeList,
 				Optional: true,
