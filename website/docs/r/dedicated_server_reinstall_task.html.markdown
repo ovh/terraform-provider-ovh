@@ -7,13 +7,14 @@ subcategory : "Dedicated Server"
 Install your Dedicated Server.
 
 ~> __WARNING__ After some delay, if the task is marked as `done`, the Provider
-may purge it. To avoid raising errors when terraform refreshes its plan, 
+may purge it. To avoid raising errors when terraform refreshes its plan,
 404 errors are ignored on Resource Read, thus some information may be lost
 after a while.
 
 ## Example Usage
 
 Using a custom template based on an OVHCloud template
+
 ```hcl
 data ovh_dedicated_server_boots "rescue" {
   service_name = "nsxxxxxxx.ip-xx-xx-xx.eu"
@@ -139,7 +140,6 @@ The following arguments are supported:
 * `details` - see `details` block below.
 * `user_metadata` - see `user_metadata` block below.
 
-
 The `details` block supports:
 
 * `custom_hostname` - Set up the server using the provided hostname instead of the default hostname.
@@ -152,10 +152,9 @@ The `user_metadata` block supports many arguments, here is a non-exhaustive list
 
 -[see OS questions](https://help.ovhcloud.com/csm/en-dedicated-servers-api-os-installation?id=kb_article_view&sysparm_article=KB0061951#os-questions)
 
--[see api](https://eu.api.ovh.com/console-preview/?section=%2Fdedicated%2FinstallationTemplate&branch=v1#get-/dedicated/installationTemplate/-templateName-) 
+-[see api](https://eu.api.ovh.com/console-preview/?section=%2Fdedicated%2FinstallationTemplate&branch=v1#get-/dedicated/installationTemplate/-templateName-)
 
 -[see documentation](https://help.ovhcloud.com/csm/en-ie-dedicated-servers-api-os-installation?id=kb_article_view&sysparm_article=KB0061950#create-an-os-installation-task) to get more information
-
 
 ## Attributes Reference
 
@@ -174,5 +173,5 @@ The following attributes are exported:
 Installation task can be imported using the `service_name` (`nsXXXX.ip...`) of the baremetal server, the `template_name` used  and ths `task_id`, separated by "/" E.g.,
 
 ```bash
-$ terraform import ovh_dedicated_server_reinstall_task nsXXXX.ipXXXX/template_name/12345
+terraform import ovh_dedicated_server_reinstall_task nsXXXX.ipXXXX/template_name/12345
 ```
