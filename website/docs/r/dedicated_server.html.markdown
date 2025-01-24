@@ -104,7 +104,7 @@ resource "ovh_dedicated_server" "server" {
 
 ### Arguments used to reinstall a dedicated server
 
-* `details` - Details object when reinstalling server (see https://eu.api.ovh.com/console/?section=%2Fdedicated%2Fserver&branch=v1#post-/dedicated/server/-serviceName-/install/start)
+* `details` - Details object when reinstalling server (see <https://eu.api.ovh.com/console/?section=%2Fdedicated%2Fserver&branch=v1#post-/dedicated/server/-serviceName-/install/start>)
   * `custom_hostname` - Personnal hostname to use in server reinstallation
   * `disk_group_id` - Disk group id to process OS install on
   * `soft_raid_devices` - Number of devices to use for system's software RAID
@@ -167,9 +167,9 @@ import {
 You can then run:
 
 ```bash
-$ terraform plan -generate-config-out=dedicated.tf
-$ terraform apply
+terraform plan -generate-config-out=dedicated.tf
+terraform apply
 ```
 
 The file `dedicated.tf` will then contain the imported resource's configuration, that can be copied next to the `import` block above.
-See https://developer.hashicorp.com/terraform/language/import/generating-configuration for more details.
+See <https://developer.hashicorp.com/terraform/language/import/generating-configuration> for more details.
