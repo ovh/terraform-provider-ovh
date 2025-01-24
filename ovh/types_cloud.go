@@ -55,15 +55,20 @@ type CloudProjectGatewayResponse struct {
 }
 
 type CloudProjectOperationResponse struct {
-	Id          string   `json:"id"`
-	Action      string   `json:"action"`
-	CreateAt    string   `json:"createdAt"`
-	StartedAt   string   `json:"startedAt"`
-	CompletedAt *string  `json:"completedAt"`
-	Progress    int      `json:"progress"`
-	Regions     []string `json:"regions"`
-	ResourceId  *string  `json:"resourceId"`
-	Status      string   `json:"status"`
+	Id            string                     `json:"id"`
+	Action        string                     `json:"action"`
+	CreateAt      string                     `json:"createdAt"`
+	StartedAt     string                     `json:"startedAt"`
+	CompletedAt   *string                    `json:"completedAt"`
+	Progress      int                        `json:"progress"`
+	Regions       []string                   `json:"regions"`
+	ResourceId    *string                    `json:"resourceId"`
+	Status        string                     `json:"status"`
+	SubOperations []CloudProjectSubOperation `json:"subOperations"`
+}
+
+type CloudProjectSubOperation struct {
+	ResourceId *string `json:"resourceId"`
 }
 
 func waitForCloudProjectOperation(ctx context.Context, c *ovh.Client, serviceName, operationId string) (string, error) {
@@ -81,6 +86,8 @@ func waitForCloudProjectOperation(ctx context.Context, c *ovh.Client, serviceNam
 		case "completed":
 			if ro.ResourceId != nil {
 				resourceID = *ro.ResourceId
+			} else if len(ro.SubOperations) > 0 && ro.SubOperations[0].ResourceId != nil {
+				resourceID = *ro.SubOperations[0].ResourceId
 			}
 			return nil
 		default:
