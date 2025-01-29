@@ -5,10 +5,18 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+var validSavingsPlanFlavors = []string{
+	"rancher", "rancher_standard", "rancher_ovhcloud_edition",
+	"b3-8", "b3-16", "b3-32", "b3-64", "b3-128", "b3-256",
+	"c3-4", "c3-8", "c3-16", "c3-32", "c3-64", "c3-128",
+	"r3-16", "r3-32", "r3-64", "r3-128", "r3-256", "r3-512",
+}
 
 func resourceSavingsPlan() *schema.Resource {
 	return &schema.Resource{
@@ -28,9 +36,16 @@ func resourceSavingsPlan() *schema.Resource {
 			},
 			"flavor": {
 				Type:        schema.TypeString,
-				Description: "Savings Plan flavor (e.g. Rancher, C3-4, any instance flavor, ...)",
+				Description: "Savings Plan flavor",
 				ForceNew:    true,
 				Required:    true,
+				ValidateFunc: func(v interface{}, s string) ([]string, []error) {
+					value := strings.ToLower(v.(string))
+					if !slices.Contains(validSavingsPlanFlavors, value) {
+						return nil, []error{fmt.Errorf("invalid flavor %q, valid values are %s", value, validSavingsPlanFlavors)}
+					}
+					return nil, nil
+				},
 			},
 			"period": {
 				Type:        schema.TypeString,
@@ -120,7 +135,10 @@ func resourceSavingsPlanImport(d *schema.ResourceData, meta interface{}) ([]*sch
 
 func resourceSavingsPlanCreate(d *schema.ResourceData, meta interface{}) error {
 	serviceName := d.Get("service_name").(string)
-	flavor := strings.ToUpper(d.Get("flavor").(string))
+	flavor := strings.ReplaceAll(d.Get("flavor").(string), "_", " ")
+	if flavor == "rancher" {
+		flavor = "rancher standard"
+	}
 	config := meta.(*Config)
 
 	// Retrieve service ID
@@ -132,7 +150,7 @@ func resourceSavingsPlanCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Get subscribables savings plans
 	log.Print("[DEBUG] Will fetch subscribables savings plans")
-	endpoint := fmt.Sprintf("/services/%d/savingsPlans/subscribable", serviceId)
+	endpoint := fmt.Sprintf("/services/%d/savingsPlans/subscribable?productCode=%s", serviceId, url.QueryEscape(flavor))
 	subscribables := []savingsPlansSubscribable{}
 	if err := config.OVHClient.Get(endpoint, &subscribables); err != nil {
 		return fmt.Errorf("error calling GET %s:\n\t %q", endpoint, err)
@@ -154,8 +172,7 @@ func resourceSavingsPlanCreate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error calling POST %s:\n\t %q", endpoint, err)
 		}
 
-		if flavor == strings.ToUpper(resp.Flavor) &&
-			d.Get("period").(string) == resp.Period &&
+		if d.Get("period").(string) == resp.Period &&
 			d.Get("size").(int) == resp.Size {
 			// We found the right savings plan, execute subscription
 			endpoint = fmt.Sprintf("/services/%d/savingsPlans/subscribe/execute", serviceId)
