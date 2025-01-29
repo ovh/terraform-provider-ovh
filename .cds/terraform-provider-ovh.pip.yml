@@ -4,6 +4,9 @@ name: terraform-provider-ovh
 description: |
   Empty pipeline to use as root node for the workflow allowing the use of parameters from the UI
 parameters:
+  skipthistest.savingsplan:
+    type: boolean
+    description: Skip Savings Plans tests
   skipthistest.cloudprojectdatabase:
     type: boolean
     description: Skip Cloud Project Database tests
