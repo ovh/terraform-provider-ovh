@@ -3,11 +3,12 @@ subcategory : "Cloud Project"
 ---
 
 # ovh_cloud_project_floatingips
+
 Use this data source to get the floating IPs of a public cloud project.
 
 ## Example Usage
 
-To get information of an instance:
+To get information of floating IPs:
 
 ```hcl
 data "ovh_cloud_project_floatingips" "ips" {
@@ -20,15 +21,14 @@ data "ovh_cloud_project_floatingips" "ips" {
 
 The following arguments are supported:
 
-* `service_name` - (Required) The id of the public cloud project. If omitted,
-  the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used
+* `service_name` - (Required) The id of the public cloud project
 * `region_name` - (Required) Public cloud region name
 
 ## Attributes Reference
 
 The following attributes are exported:
 
-* `associated_entity` - Associated entity with the floating ip
+* `associated_entity` - Associated entity with the floating IP
   * `ip` - IP of the port
   * `id` - ID of the port
   * `gateway_id` - ID of the gateway
