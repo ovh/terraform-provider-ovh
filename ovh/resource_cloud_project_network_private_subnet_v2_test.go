@@ -32,7 +32,7 @@ resource "ovh_cloud_project_network_private" "network" {
     destination = "192.168.169.0/24" 
     nexthop = "192.168.169.254"
   }
-  allocation_pool {
+  allocation_pools {
     start = "192.168.169.100"
     end = "192.168.169.200"
   }
@@ -58,8 +58,8 @@ resource "ovh_cloud_project_network_private" "network" {
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_network_private_subnet_v2.subnet", "network_id"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_network_private_subnet_v2.subnet", "region"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_network_private_subnet_v2.subnet", "gateway_ip", "192.168.169.253"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_network_private_subnet_v2.subnet", "allocation_pool.0.start", "192.168.169.100"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_network_private_subnet_v2.subnet", "allocation_pool.0.end", "192.168.169.200"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_network_private_subnet_v2.subnet", "allocation_pools.0.start", "192.168.169.100"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_network_private_subnet_v2.subnet", "allocation_pools.0.end", "192.168.169.200"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_network_private_subnet_v2.subnet", "host_route.0.destination", "192.168.169.0/24"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_network_private_subnet_v2.subnet", "host_route.0.nexthop", "192.168.169.254"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_network_private_subnet_v2.subnet", "dns_nameservers.0", "1.1.1.1"),
@@ -96,7 +96,7 @@ resource "ovh_cloud_project_network_private" "network" {
     destination = "192.168.169.0/24" 
     nexthop = "192.168.169.254"
   }
-  allocation_pool {
+  allocation_pools {
     start = "192.168.169.100"
     end = "192.168.169.200"
   }
@@ -122,8 +122,8 @@ resource "ovh_cloud_project_network_private" "network" {
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_network_private_subnet_v2.subnet", "network_id"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_network_private_subnet_v2.subnet", "region"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_network_private_subnet_v2.subnet", "gateway_ip", "192.168.169.253"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_network_private_subnet_v2.subnet", "allocation_pool.0.start", "192.168.169.100"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_network_private_subnet_v2.subnet", "allocation_pool.0.end", "192.168.169.200"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_network_private_subnet_v2.subnet", "allocation_pools.0.start", "192.168.169.100"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_network_private_subnet_v2.subnet", "allocation_pools.0.end", "192.168.169.200"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_network_private_subnet_v2.subnet", "host_route.0.destination", "192.168.169.0/24"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_network_private_subnet_v2.subnet", "host_route.0.nexthop", "192.168.169.254"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_network_private_subnet_v2.subnet", "dns_nameservers.0", "213.186.33.99"),
