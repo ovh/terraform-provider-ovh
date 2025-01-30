@@ -134,7 +134,7 @@ func resourceCloudProjectNetworkPrivateSubnetV2() *schema.Resource {
 				},
 				Description: "Static host routes of subnet",
 			},
-			"allocation_pool": {
+			"allocation_pools": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -189,7 +189,7 @@ func resourceCloudProjectNetworkPrivateSubnetV2Create(d *schema.ResourceData, me
 		})
 	}
 
-	allocationPoolsStrings, err := helpers.StringMapFromSchema(d, "allocation_pool", "start", "end")
+	allocationPoolsStrings, err := helpers.StringMapFromSchema(d, "allocation_pools", "start", "end")
 	if err != nil {
 		return err
 	}
