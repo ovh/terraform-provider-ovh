@@ -8,6 +8,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
+type DedicatedNASHAPartitionsList struct {
+	PartitionName []string `json:"partitionName"`
+}
+
 type DedicatedNASHA struct {
 	ServiceName        string `json:"serviceName,omitempty"`
 	Monitored          bool   `json:"monitored,omitempty"`
