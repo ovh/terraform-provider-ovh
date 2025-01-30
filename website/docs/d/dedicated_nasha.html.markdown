@@ -33,3 +33,4 @@ In addition, the following attributes are exported:
 * `monitored` - Send an email to customer if any issue is detected
 * `zpool_capacity` - percentage of HA-NAS space used in %
 * `zpool_size` - the size of the HA-NAS in GB
+* `partitions_list` - the list of the HA-NAS partitions name
