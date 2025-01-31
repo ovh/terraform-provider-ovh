@@ -65,6 +65,15 @@ func dataSourceDedicatedNasha() *schema.Resource {
 				Computed:    true,
 				Description: "the size of the HA-NAS",
 			},
+
+			"partitions_list": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "List of partition names for this HA-NAS",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 		},
 	}
 }
@@ -90,12 +99,26 @@ func dataSourceDedicatedNashaRead(c context.Context, d *schema.ResourceData, met
 		)
 	}
 
+	var partitionsList []string
+	err = config.OVHClient.Get(
+		fmt.Sprintf("/dedicated/nasha/%s/partition", url.PathEscape(serviceName)),
+		&partitionsList,
+	)
+	if err != nil {
+		return diag.Errorf(
+			"Error calling /dedicated/nasha/%s/partition: %s",
+			serviceName,
+			err,
+		)
+	}
+
 	d.SetId(ds.ServiceName)
 	d.Set("urn", ds.URN)
 	d.Set("service_name", ds.ServiceName)
 	d.Set("monitored", ds.Monitored)
 	d.Set("zpool_size", ds.ZpoolSize)
 	d.Set("zpool_capacity", ds.ZpoolCapacity)
+	d.Set("partitions_list", partitionsList)
 	d.Set("datacenter", ds.Datacenter)
 	d.Set("disk_type", ds.DiskType)
 	d.Set("can_create_partition", ds.CanCreatePartition)
