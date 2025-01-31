@@ -89,10 +89,6 @@ func TestAccDedicatedServerInstall_usermetadata(t *testing.T) {
 				Config: testAccDedicatedServerInstallConfig("usermetadata"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
-						"ovh_dedicated_server_update.server", "state", "ok"),
-					resource.TestCheckResourceAttr(
-						"ovh_dedicated_server_update.server", "monitoring", "true"),
-					resource.TestCheckResourceAttr(
 						"ovh_dedicated_server_install_task.server_install", "function", "reinstallServer"),
 					resource.TestCheckResourceAttr(
 						"ovh_dedicated_server_install_task.server_install", "status", "done"),
@@ -144,10 +140,11 @@ data ovh_dedicated_server_boots "harddisk" {
 }
 
 resource ovh_dedicated_server_update "server" {
-  service_name = data.ovh_dedicated_server_boots.harddisk.service_name
-  boot_id      = data.ovh_dedicated_server_boots.harddisk.result[0]
-  monitoring   = true
-  state        = "ok"
+  service_name        = data.ovh_dedicated_server_boots.harddisk.service_name
+  boot_id             = data.ovh_dedicated_server_boots.harddisk.result[0]
+  monitoring          = true
+  state               = "ok"
+  efi_bootloader_path = "\\efi\\debian\\grubx64.efi"
 }
 
 resource "ovh_me_installation_template" "debian" {
@@ -186,10 +183,11 @@ data ovh_dedicated_server_boots "rescue" {
 }
 
 resource ovh_dedicated_server_update "server" {
-  service_name = data.ovh_dedicated_server_boots.harddisk.service_name
-  boot_id      = data.ovh_dedicated_server_boots.harddisk.result[0]
-  monitoring   = true
-  state        = "ok"
+  service_name        = data.ovh_dedicated_server_boots.harddisk.service_name
+  boot_id             = data.ovh_dedicated_server_boots.harddisk.result[0]
+  monitoring          = true
+  state               = "ok"
+  efi_bootloader_path = "\\efi\\debian\\grubx64.efi"
 }
 
 resource ovh_dedicated_server_install_task "server_install" {
@@ -206,12 +204,6 @@ const testAccDedicatedServerInstallConfig_Usermetadata = `
 data ovh_dedicated_server_boots "harddisk" {
 	service_name = "%s"
 	boot_type    = "harddisk"
-}
-
-resource ovh_dedicated_server_update "server" {
-  service_name = data.ovh_dedicated_server_boots.harddisk.service_name
-  monitoring   = true
-  state        = "ok"
 }
 
 resource ovh_dedicated_server_install_task "server_install" {
