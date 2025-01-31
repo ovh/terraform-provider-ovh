@@ -143,6 +143,7 @@ func Provider() *schema.Provider {
 			"ovh_dedicated_installation_templates":                           dataSourceDedicatedInstallationTemplates(),
 			"ovh_dedicated_installation_template":                            dataSourceDedicatedInstallationTemplate(),
 			"ovh_dedicated_nasha":                                            dataSourceDedicatedNasha(),
+			"ovh_dedicated_nasha_partition":                                  dataSourceDedicatedNashaPartition(),
 			"ovh_dedicated_server":                                           dataSourceDedicatedServer(),
 			"ovh_dedicated_server_boots":                                     dataSourceDedicatedServerBoots(),
 			"ovh_dedicated_servers":                                          dataSourceDedicatedServers(),
