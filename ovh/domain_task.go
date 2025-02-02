@@ -1,0 +1,40 @@
+package ovh
+
+import (
+	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/ovh/go-ovh/ovh"
+	"log"
+	"net/url"
+	"time"
+)
+
+func waitDomainTask(client *ovh.Client, domainName string, taskId int) error {
+	endpoint := fmt.Sprintf("/domain/%s/task/%d", url.PathEscape(domainName), taskId)
+
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{"todo", "doing"},
+		Target:  []string{"done"},
+		Refresh: func() (result interface{}, state string, err error) {
+			var task DomainTask
+
+			if err := client.Get(endpoint, &task); err != nil {
+				log.Printf("[ERROR] couldn't fetch task %d for domain %s:\n\t%s\n", taskId, domainName, err.Error())
+				return nil, "error", err
+			}
+
+			return task, task.Status, nil
+		},
+		Timeout:    10 * time.Minute,
+		Delay:      30 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	if err != nil {
+		return fmt.Errorf("error waiting for domain: %s task: %d to complete:\n\t%s\n", domainName, taskId, err.Error())
+	}
+
+	return err
+}
