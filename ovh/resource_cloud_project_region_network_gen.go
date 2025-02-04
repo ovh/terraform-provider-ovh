@@ -977,7 +977,7 @@ func (v *SubnetValue) UnmarshalJSON(data []byte) error {
 func (v *SubnetValue) MergeWith(other *SubnetValue) {
 	if (v.AllocationPools.IsUnknown() || v.AllocationPools.IsNull()) && !other.AllocationPools.IsUnknown() {
 		v.AllocationPools = other.AllocationPools
-	} else if !other.AllocationPools.IsUnknown() {
+	} else if !other.AllocationPools.IsUnknown() && !other.AllocationPools.IsNull() {
 		newSlice := make([]attr.Value, 0)
 		elems := v.AllocationPools.Elements()
 		newElems := other.AllocationPools.Elements()
