@@ -11,10 +11,11 @@ import (
 
 func dedicatedServerResourceTestConfig(updated bool) string {
 	var (
-		monitoring     = true
-		noIntervention = false
-		baseTemplate   = "debian11_64"
-		displayName    = "First display name"
+		monitoring        = true
+		noIntervention    = false
+		baseTemplate      = "debian11_64"
+		displayName       = "First display name"
+		efiBootloaderPath = ""
 	)
 
 	if updated {
@@ -22,6 +23,7 @@ func dedicatedServerResourceTestConfig(updated bool) string {
 		noIntervention = true
 		baseTemplate = "debian12_64"
 		displayName = "Second display name"
+		efiBootloaderPath = "\\efi\\debian\\grubx64.efi"
 	}
 
 	return fmt.Sprintf(`
@@ -33,6 +35,7 @@ func dedicatedServerResourceTestConfig(updated bool) string {
 		no_intervention = %t
 		display_name = "%s"
 		template_name = "%s"
+		efi_bootloader_path = "%s"
 
 		plan = [
 			{
@@ -84,7 +87,7 @@ func dedicatedServerResourceTestConfig(updated bool) string {
 			}
 		]
 	}
-	`, monitoring, noIntervention, displayName, baseTemplate)
+	`, monitoring, noIntervention, displayName, baseTemplate, efiBootloaderPath)
 }
 
 func TestAccDedicatedServer_basic(t *testing.T) {
@@ -107,6 +110,8 @@ func TestAccDedicatedServer_basic(t *testing.T) {
 						"ovh_dedicated_server.server", "iam.display_name", "First display name"),
 					resource.TestCheckResourceAttr(
 						"ovh_dedicated_server.server", "os", "debian11_64"),
+					resource.TestCheckResourceAttr(
+						"ovh_dedicated_server.server", "efi_bootloader_path", ""),
 				),
 			},
 			{
@@ -122,6 +127,8 @@ func TestAccDedicatedServer_basic(t *testing.T) {
 						"ovh_dedicated_server.server", "iam.display_name", "Second display name"),
 					resource.TestCheckResourceAttr(
 						"ovh_dedicated_server.server", "os", "debian12_64"),
+					resource.TestCheckResourceAttr(
+						"ovh_dedicated_server.server", "efi_bootloader_path", "\\efi\\debian\\grubx64.efi"),
 				),
 			},
 			{

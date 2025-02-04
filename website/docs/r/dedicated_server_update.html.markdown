@@ -36,6 +36,7 @@ The following arguments are supported:
 * `service_name` - (Required) The service_name of your dedicated server.
 * `boot_id` - boot id of the server
 * `boot_script` - boot script of the server
+* `efi_bootloader_path` - path of the EFI bootloader
 * `monitoring` - Icmp monitoring state
 * `state` - error, hacked, hackedBlocked, ok
 * `display_name` - display name of the dedicated server
@@ -46,6 +47,7 @@ The following attributes are exported:
 
 * `service_name` - See Argument Reference above.
 * `boot_id` - See Argument Reference above.
+* `efi_bootloader_path` - See Argument Reference above.
 * `monitoring` - See Argument Reference above.
 * `state` - See Argument Reference above.
 * `display_name` - See Argument Reference above.
