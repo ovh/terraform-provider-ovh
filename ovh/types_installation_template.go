@@ -28,7 +28,7 @@ type InstallationTemplate struct {
 	TemplateName          string                             `json:"templateName"`
 }
 
-func (v InstallationTemplate) ToMap() map[string]interface{} {
+func (v *InstallationTemplate) ToMap() map[string]interface{} {
 	obj := make(map[string]interface{})
 
 	obj["bit_format"] = v.BitFormat
