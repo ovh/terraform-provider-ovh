@@ -37,16 +37,26 @@ resource "ovh_ip_service" "ipblock" {
   ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
   description    = "my ip block"
 
- plan {
-  duration     = data.ovh_order_cart_product_plan.ipblock.selected_price.0.duration
-  plan_code    = data.ovh_order_cart_product_plan.ipblock.plan_code
-  pricing_mode = data.ovh_order_cart_product_plan.ipblock.selected_price.0.pricing_mode
+  plan {
+    duration     = data.ovh_order_cart_product_plan.ipblock.selected_price.0.duration
+    plan_code    = data.ovh_order_cart_product_plan.ipblock.plan_code
+    pricing_mode = data.ovh_order_cart_product_plan.ipblock.selected_price.0.pricing_mode
 
-  configuration {
-    label = "country"
-    value = "FR"
+    configuration {
+      label = "country"
+      value = "FR"
+    }
+
+    configuration {
+      label = "region"
+      value = "europe"
+    }
+
+    configuration {
+      label = "destination"
+      value = "parking"
+    }
   }
- }
 }
 ```
 
@@ -69,7 +79,7 @@ The following arguments are supported:
   * `plan_code` - (Required) Plan code
   * `pricing_mode` - (Required) Pricing model identifier
   * `catalog_name` - Catalog name
-  * `configuration` - (Optional) Representation of a configuration item for personalizing product
+  * `configuration` - (Optional) Representation of a configuration item for personalizing product. The list of available configurations can be retrieved using call [GET /order/cart/{cartId}/item/{itemId}/requiredConfiguration](https://eu.api.ovh.com/console/?section=%2Forder&branch=v1#get-/order/cart/-cartId-/item/-itemId-/requiredConfiguration)
     * `label` - (Required) Identifier of the resource
     * `value` - (Required) Path to the resource in API.OVH.COM
 
