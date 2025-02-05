@@ -35,15 +35,15 @@ The following arguments are supported:
   * `enable_gateway_ip` - (Required) Set a gateway ip for the subnet
   * `ip_version` - (Required) IP version
   * `allocation_pools` - List of IP pools allocated in subnet
-    * `start` - First IP for the pool (eg: 192.168.1.12)
-    * `end` - Last IP for the pool (eg: 192.168.1.24)
+      * `start` - First IP for the pool (eg: 192.168.1.12)
+      * `end` - Last IP for the pool (eg: 192.168.1.24)
   * `dns_name_servers` - DNS nameservers
   * `gateway_ip` - Gateway IP
   * `name` - Subnet name
   * `use_default_public_dnsresolver` - Use default DNS
   * `host_routes` - Host routes
-    * `destination` - Host route destination (eg: 192.168.1.0/24)
-    * `next_hop` - Host route next hop (eg: 192.168.1.254)
+      * `destination` - Host route destination (eg: 192.168.1.0/24)
+      * `next_hop` - Host route next hop (eg: 192.168.1.254)
 * `vlan_id` - VLAN ID, between 1 and 4000
 
 ## Attributes Reference
@@ -61,15 +61,15 @@ The following attributes are exported:
   * `enable_gateway_ip` - Set a gateway ip for the subnet
   * `ip_version` - IP version
   * `allocation_pools` - List of IP pools allocated in subnet
-    * `start` - First IP for the pool (eg: 192.168.1.12)
-    * `end` - Last IP for the pool (eg: 192.168.1.24)
+      * `start` - First IP for the pool (eg: 192.168.1.12)
+      * `end` - Last IP for the pool (eg: 192.168.1.24)
   * `dns_name_servers` - DNS nameservers
   * `gateway_ip` - Gateway IP
   * `name` - Subnet name
   * `use_default_public_dnsresolver` - Use default DNS
   * `host_routes` - Host routes
-    * `destination` - Host route destination (eg: 192.168.1.0/24)
-    * `next_hop` - Host route next hop (eg: 192.168.1.254)
+      * `destination` - Host route destination (eg: 192.168.1.0/24)
+      * `next_hop` - Host route next hop (eg: 192.168.1.254)
 * `vlan_id` - VLAN ID, between 1 and 4000
 * `visibility` - Network visibility
 
