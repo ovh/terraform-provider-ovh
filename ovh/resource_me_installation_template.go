@@ -271,6 +271,10 @@ func resourceMeInstallationTemplateRead(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
+	if template == nil {
+		return fmt.Errorf("template %q not found", d.Get("template_name").(string))
+	}
+
 	// set attributes
 	for k, v := range template.ToMap() {
 		d.Set(k, v)
