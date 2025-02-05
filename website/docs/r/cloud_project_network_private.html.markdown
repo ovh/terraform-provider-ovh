@@ -53,8 +53,8 @@ The following attributes are exported:
 
 ## Import
 
-Private network in a public cloud project can be imported using the `service_name` and the `network_id`, separated by "/" E.g.,
+Private network in a public cloud project can be imported using the `service_name` and the `network_id` as `pn-xxxx` format, separated by "/" E.g.,
 
 ```bash
-$ terraform import ovh_cloud_project_network_private.mynet ookie9mee8Shaeghaeleeju7Xeghohv6e/pn-12345678
+$ terraform import ovh_cloud_project_network_private.mynet service_name/network_id
 ```
