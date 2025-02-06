@@ -1,3 +1,38 @@
+## 1.6.0 (February 6, 2025)
+
+⚙️ General:
+
+* Update issue template ([#812](https://github.com/ovh/terraform-provider-ovh/pull/812))
+* Bump `go-ovh` dependency ([#830](https://github.com/ovh/terraform-provider-ovh/pull/830))
+
+🎉 Features:
+
+* New datasource: `ovh_cloud_project_floatingips` ([#811](https://github.com/ovh/terraform-provider-ovh/pull/811))
+* New datasource: `ovh_dedicated_nasha_partition` ([#817](https://github.com/ovh/terraform-provider-ovh/pull/817))
+
+💪 Improvements:
+
+* `r/ovh_savings_plan`: Add a list of accepted flavors ([#813](https://github.com/ovh/terraform-provider-ovh/pull/813))
+* `r/ovh_dedicated_nasha`: Add new field `partitions_list` ([#817](https://github.com/ovh/terraform-provider-ovh/pull/817))
+* `r/ovh_dedicated_server`: Add new field `efi_bootloader_path` ([#755](https://github.com/ovh/terraform-provider-ovh/pull/755))
+* `r/ovh_dedicated_server_update`: Add new field `efi_bootloader_path` ([#755](https://github.com/ovh/terraform-provider-ovh/pull/755))
+
+* `d/ovh_dedicated_server`: Add new field `efi_bootloader_path` ([#755](https://github.com/ovh/terraform-provider-ovh/pull/755))
+
+🐜 Bug fixes:
+
+* `r/ovh_cloud_project_network_private_subnet_v2`: Set the right property name for allocation pools ([#816](https://github.com/ovh/terraform-provider-ovh/pull/816))
+* `r/ovh_me_installation_template`: Fix panic when template does not exist ([#829](https://github.com/ovh/terraform-provider-ovh/pull/829))
+
+📚 Documentation:
+
+* `r/ovh_cloud_project_region_network`: Fix wrong indentations in documentation ([#824](https://github.com/ovh/terraform-provider-ovh/pull/824))
+* `r/ovh_cloud_project_network_private`: Update documentation ([#826](https://github.com/ovh/terraform-provider-ovh/pull/826))
+* `r/ovh_cloud_project_network_private_subnet`: Update documentation ([#827](https://github.com/ovh/terraform-provider-ovh/pull/827))
+* `r/ovh_ip_service`: Add missing configurations in documentation ([#828](https://github.com/ovh/terraform-provider-ovh/pull/828))
+
+❤️ Thanks for your contributions ❤️
+
 ## 1.5.0 (January 24, 2025)
 
 ⚙️ General:
