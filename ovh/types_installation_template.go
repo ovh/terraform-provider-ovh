@@ -2,30 +2,24 @@ package ovh
 
 import (
 	"fmt"
-	"strings"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
 type InstallationTemplate struct {
-	BitFormat             int                                `json:"bitFormat,omitempty"`
-	Category              string                             `json:"category,omitempty"`
-	Customization         *InstallationTemplateCustomization `json:"customization,omitempty"`
-	DefaultLanguage       string                             `json:"defaultLanguage,omitempty"`
-	Description           string                             `json:"description,omitempty"`
-	Distribution          string                             `json:"distribution,omitempty"`
-	EndOfInstall          string                             `json:"endOfInstall,omitempty"`
-	Family                string                             `json:"family,omitempty"`
-	Filesystems           []string                           `json:"filesystems"`
-	Inputs                []InstallationTemplateInputs       `json:"inputs,omitempty"`
-	License               *InstallationTemplateLicense       `json:"license,omitempty"`
-	LvmReady              *bool                              `json:"lvmReady,omitempty"`
-	NoPartitioning        bool                               `json:"noPartitioning,omitempty"`
-	Project               *InstallationTemplateProject       `json:"project,omitempty"`
-	SoftRaidOnlyMirroring bool                               `json:"soft_raid_only_mirroring,omitempty"`
-	Subfamily             string                             `json:"subfamily,omitempty"`
-	TemplateName          string                             `json:"templateName"`
+	BitFormat             int                          `json:"bitFormat,omitempty"`
+	Category              string                       `json:"category,omitempty"`
+	Description           string                       `json:"description,omitempty"`
+	Distribution          string                       `json:"distribution,omitempty"`
+	EndOfInstall          string                       `json:"endOfInstall,omitempty"`
+	Family                string                       `json:"family,omitempty"`
+	Filesystems           []string                     `json:"filesystems"`
+	Inputs                []InstallationTemplateInputs `json:"inputs,omitempty"`
+	License               *InstallationTemplateLicense `json:"license,omitempty"`
+	LvmReady              *bool                        `json:"lvmReady,omitempty"`
+	NoPartitioning        bool                         `json:"noPartitioning,omitempty"`
+	Project               *InstallationTemplateProject `json:"project,omitempty"`
+	SoftRaidOnlyMirroring bool                         `json:"soft_raid_only_mirroring,omitempty"`
+	Subfamily             string                       `json:"subfamily,omitempty"`
+	TemplateName          string                       `json:"templateName"`
 }
 
 func (v *InstallationTemplate) ToMap() map[string]interface{} {
@@ -33,13 +27,6 @@ func (v *InstallationTemplate) ToMap() map[string]interface{} {
 
 	obj["bit_format"] = v.BitFormat
 	obj["category"] = v.Category
-
-	if v.Customization != nil {
-		customization := v.Customization.ToMap()
-		if customization != nil {
-			obj["customization"] = []interface{}{customization}
-		}
-	}
 
 	obj["description"] = v.Description
 	obj["distribution"] = v.Distribution
@@ -73,56 +60,6 @@ func (v *InstallationTemplate) ToMap() map[string]interface{} {
 	obj["template_name"] = v.TemplateName
 
 	return obj
-}
-
-type InstallationTemplateCreateOpts struct {
-	BaseTemplateName string `json:"baseTemplateName"`
-	Name             string `json:"name"`
-	DefaultLanguage  string `json:"defaultLanguage,omitempty"`
-}
-
-func (opts *InstallationTemplateCreateOpts) FromResource(d *schema.ResourceData) *InstallationTemplateCreateOpts {
-	opts.BaseTemplateName = d.Get("base_template_name").(string)
-	opts.Name = d.Get("template_name").(string)
-	return opts
-}
-
-type InstallationTemplateUpdateOpts struct {
-	DefaultLanguage string                             `json:"defaultLanguage,omitempty"`
-	Customization   *InstallationTemplateCustomization `json:"customization"`
-	TemplateName    string                             `json:"templateName"`
-}
-
-func (opts *InstallationTemplateUpdateOpts) FromResource(d *schema.ResourceData) *InstallationTemplateUpdateOpts {
-	opts.TemplateName = d.Get("template_name").(string)
-	customizations := d.Get("customization").([]interface{})
-	if customizations != nil && len(customizations) == 1 {
-		opts.Customization = (&InstallationTemplateCustomization{}).FromResource(d, "customization.0")
-	}
-
-	return opts
-}
-
-type InstallationTemplateCustomization struct {
-	CustomHostname *string `json:"customHostname,omitempty"`
-	SshKeyName     *string `json:"sshKeyName,omitempty"`
-}
-
-func (v InstallationTemplateCustomization) ToMap() map[string]interface{} {
-	obj := make(map[string]interface{})
-	custom_attr_set := false
-
-	if v.CustomHostname != nil {
-		obj["custom_hostname"] = *v.CustomHostname
-		custom_attr_set = true
-	}
-
-	// dont return an object if nothing is set
-	if custom_attr_set {
-		return obj
-	}
-
-	return nil
 }
 
 type InstallationTemplateInputs struct {
@@ -199,11 +136,6 @@ func (v InstallationTemplateProjectItem) ToMap() map[string]interface{} {
 	return obj
 }
 
-func (opts *InstallationTemplateCustomization) FromResource(d *schema.ResourceData, parent string) *InstallationTemplateCustomization {
-	opts.CustomHostname = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.custom_hostname", parent))
-	return opts
-}
-
 type Partition struct {
 	Filesystem string       `json:"filesystem"`
 	Mountpoint string       `json:"mountpoint"`
@@ -235,56 +167,6 @@ func (v Partition) ToMap() map[string]interface{} {
 	return obj
 }
 
-type PartitionCreateOpts struct {
-	Filesystem string  `json:"filesystem"`
-	Mountpoint string  `json:"mountpoint"`
-	Step       int     `json:"step"`
-	Raid       *string `json:"raid,omitempty"`
-	Size       int     `json:"size"`
-	Type       string  `json:"type"`
-	VolumeName *string `json:"volumeName,omitempty"`
-}
-
-func (opts *PartitionCreateOpts) FromResource(d *schema.ResourceData) *PartitionCreateOpts {
-	opts.Filesystem = d.Get("filesystem").(string)
-	opts.Mountpoint = d.Get("mountpoint").(string)
-	opts.Step = d.Get("order").(int)
-
-	if raid := helpers.GetNilStringPointerFromData(d, "raid"); raid != nil {
-		raidValue := strings.ReplaceAll(*raid, "raid", "")
-		opts.Raid = &raidValue
-	}
-
-	opts.Size = d.Get("size").(int)
-	opts.Type = d.Get("type").(string)
-	opts.VolumeName = helpers.GetNilStringPointerFromData(d, "volume_name")
-	return opts
-}
-
-type PartitionUpdateOpts struct {
-	Partition
-}
-
-func (opts *PartitionUpdateOpts) FromResource(d *schema.ResourceData) *PartitionUpdateOpts {
-	opts.Filesystem = d.Get("filesystem").(string)
-	opts.Mountpoint = d.Get("mountpoint").(string)
-	opts.Order = d.Get("order").(int)
-
-	if raid := helpers.GetNilStringPointerFromData(d, "raid"); raid != nil {
-		raidValue := strings.ReplaceAll(*raid, "raid", "")
-		opts.Raid = &raidValue
-	}
-
-	opts.Size = UnitAndValue{
-		Unit:  "M",
-		Value: d.Get("size").(int),
-	}
-
-	opts.Type = d.Get("type").(string)
-	opts.VolumeName = helpers.GetNilStringPointerFromData(d, "volume_name")
-	return opts
-}
-
 type HardwareRaid struct {
 	Disks []string `json:"disks"`
 	Mode  string   `json:"mode"`
@@ -302,23 +184,6 @@ func (v HardwareRaid) ToMap() map[string]interface{} {
 	return obj
 }
 
-type HardwareRaidCreateOrUpdateOpts struct {
-	HardwareRaid
-}
-
-func (opts *HardwareRaidCreateOrUpdateOpts) FromResource(d *schema.ResourceData) *HardwareRaidCreateOrUpdateOpts {
-	disks := d.Get("disks").([]interface{})
-	opts.Disks = make([]string, len(disks))
-	for i, disk := range disks {
-		opts.Disks[i] = disk.(string)
-	}
-
-	opts.Mode = d.Get("mode").(string)
-	opts.Name = d.Get("name").(string)
-	opts.Step = d.Get("step").(int)
-	return opts
-}
-
 type PartitionScheme struct {
 	Name     string `json:"name"`
 	Priority int    `json:"priority"`
@@ -329,14 +194,4 @@ func (v PartitionScheme) ToMap() map[string]interface{} {
 	obj["name"] = v.Name
 	obj["priority"] = v.Priority
 	return obj
-}
-
-type PartitionSchemeCreateOrUpdateOpts struct {
-	PartitionScheme
-}
-
-func (opts *PartitionSchemeCreateOrUpdateOpts) FromResource(d *schema.ResourceData) *PartitionSchemeCreateOrUpdateOpts {
-	opts.Name = d.Get("name").(string)
-	opts.Priority = d.Get("priority").(int)
-	return opts
 }
