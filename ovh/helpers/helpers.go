@@ -242,6 +242,15 @@ func GetNilStringPointerFromData(data interface{}, id string) *string {
 	return nil
 }
 
+func GetMapFromData(data interface{}, id string) map[string]interface{} {
+	if resourceData, tok := data.(*schema.ResourceData); tok {
+		return resourceData.Get(id).(map[string]interface{})
+	} else if mapData, tok := data.(map[string]interface{}); tok {
+		return mapData[id].(map[string]interface{})
+	}
+	return nil
+}
+
 // GetNilIntPointerFromDataAndNilIfNotPresent similar to GetNilIntPointerFromData but use terraform function schema.ResourceData.Get instead of schema.ResourceData.GetOk
 func GetNilIntPointerFromDataAndNilIfNotPresent(data interface{}, id string) *int {
 	if resourceData, tok := data.(*schema.ResourceData); tok {
