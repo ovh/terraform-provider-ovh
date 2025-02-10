@@ -14,8 +14,7 @@ data "ovh_me" "account" {}
 resource "ovh_dedicated_server" "server" {
   ovh_subsidiary = data.ovh_me.account.ovh_subsidiary
   display_name = "My server display name"
-  template_name = "debian12_64"
-
+  operating_system = "debian12_64"
   plan = [
     {
       plan_code = "22rise01"
@@ -103,21 +102,38 @@ resource "ovh_dedicated_server" "server" {
 * `state` - All states a Dedicated can in (error, hacked, hackedBlocked, ok)
 
 ### Arguments used to reinstall a dedicated server
-
-* `details` - Details object when reinstalling server (see https://eu.api.ovh.com/console/?section=%2Fdedicated%2Fserver&branch=v1#post-/dedicated/server/-serviceName-/install/start)
-  * `custom_hostname` - Personnal hostname to use in server reinstallation
-  * `disk_group_id` - Disk group id to process install on (only available for some templates)
-  * `no_raid` - Whether you want to install only on the first disk
-  * `soft_raid_devices` - Number of devices to use for system's software RAID
-* `partition_scheme_name` - Partition scheme name
-* `template_name` - Template name. You can check [the following API](https://eu.api.ovh.com/console/?section=%2Fdedicated%2FinstallationTemplate&branch=v1#get-/dedicated/installationTemplate) to list the available base templates
-* `user_metadata` - Metadata
-  * `key`
-  * `value`
-
-The `user_metadata` block supports many arguments, here is a non-exhaustive list depending on the OS:
--[See OS questions](https://help.ovhcloud.com/csm/en-dedicated-servers-api-os-installation?id=kb_article_view&sysparm_article=KB0061951#os-questions)
--[See documentation](https://help.ovhcloud.com/csm/en-ie-dedicated-servers-api-os-installation?id=kb_article_view&sysparm_article=KB0061950#create-an-os-installation-task) to get more information
+* `customizations` - Customization of the OS configuration
+  * `configDriveUserData` -Config Drive UserData
+  * `efiBootloaderPath` - Path of the EFI bootloader from the OS installed on the server
+  * `hostname` - Custom hostname
+  * `httpHeaders` - Image HTTP Headers
+  * `imageCheckSum` - Image checksum
+  * `imageCheckSumType` - Checksum type
+  * `imageType` - Image Type
+  * `imageURL` - Image URL
+  * `language` - Display Language
+  * `postInstallationScript` - Post-Installation Script
+  * `postInstallationScriptExtension` - Post-Installation Script File Extension
+  * `sshKey` - SSH Public Key
+* `storage` - Storage customization
+  * `diskGroupId` -  Disk group id
+  * `hardwareRaid` - Hardware Raid configurations
+    * `arrays` - Number of arrays
+    * `disks` - Total number of disks in the disk group involved in the hardware raid configuration
+    * `raidLevel` - Hardware raid type
+    * `spares` -  Number of disks in the disk group involved in the spare
+  * `partitioning` - Partitioning configuration
+    * `disks` - Total number of disks in the disk group involved in the partitioning configuration
+    * `layout` - Custom partitioning layout 
+      * `extras` - Partition extras parameters
+        * `lv` - LVM-specific parameters
+        * `zp` - ZFS-specific parameters
+      * `fileSystem` -  File system type
+      * `mountPoint` - Mount point
+      * `raidLevel` - Software raid type
+      * `size` - Partition size in MiB
+    * `schemeName` - Partitioning scheme (if applicable with selected operating system)
+* `properties` - Arbitrary properties to pass to cloud-init's config drive datasource
 
 ## Attributes Reference
 
@@ -169,9 +185,9 @@ import {
 You can then run:
 
 ```bash
-$ terraform plan -generate-config-out=dedicated.tf
-$ terraform apply
+terraform plan -generate-config-out=dedicated.tf
+terraform apply
 ```
 
 The file `dedicated.tf` will then contain the imported resource's configuration, that can be copied next to the `import` block above.
-See https://developer.hashicorp.com/terraform/language/import/generating-configuration for more details.
+See <https://developer.hashicorp.com/terraform/language/import/generating-configuration> for more details.
