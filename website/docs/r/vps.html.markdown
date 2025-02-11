@@ -29,7 +29,7 @@ data "ovh_order_cart_product_plan" "vps" {
 }
 
 resource "ovh_vps" "my_vps" {
-  display_name = dev_vps"
+  display_name = "dev_vps"
 
   ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
   plan = [
