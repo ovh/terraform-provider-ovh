@@ -2,15 +2,15 @@ package ovh
 
 import (
 	"fmt"
+	"log"
+	"net/url"
+	"strings"
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
-	"log"
-	"net/url"
-	"sort"
-	"strings"
-	"time"
 )
 
 func resourceDomainNameServers() *schema.Resource {
@@ -47,17 +47,17 @@ func resourceDomainNameServersSchema() map[string]*schema.Schema {
 			ForceNew:    true,
 		},
 		"servers": {
-			Type:        schema.TypeList,
+			Type:        schema.TypeSet,
 			Description: "Name servers for the domain",
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"host": {
 						Type:        schema.TypeString,
 						Description: "DNS name server hostname",
-						ValidateFunc: func(v interface{}, k string) (ws []string, err []error) {
+						ValidateFunc: func(v any, k string) (ws []string, err []error) {
 							if strings.HasSuffix(v.(string), ".") {
 								return nil, []error{
-									fmt.Errorf(`Field "host" must not end by a dot`),
+									fmt.Errorf(`field "host" must not end by a dot`),
 								}
 							}
 
@@ -68,7 +68,7 @@ func resourceDomainNameServersSchema() map[string]*schema.Schema {
 					"ip": {
 						Type:        schema.TypeString,
 						Description: "DNS name server IP address",
-						ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+						ValidateFunc: func(v any, k string) (ws []string, errors []error) {
 							if v.(string) == "" {
 								return
 							}
@@ -105,27 +105,23 @@ func resourceDomainNameServersRead(resourceData *schema.ResourceData, meta inter
 
 	log.Printf("[DEBUG] Will read domain name servers: %s\n", domainName)
 
-	responseData := &[]int{}
+	var nameservers []int
 	endpoint := fmt.Sprintf("/domain/%s/nameServer", url.PathEscape(domainName))
 
-	if err := config.OVHClient.Get(endpoint, &responseData); err != nil {
+	if err := config.OVHClient.Get(endpoint, &nameservers); err != nil {
 		return fmt.Errorf("calling GET %s:\n\t%s", endpoint, err.Error())
 	}
 
-	for _, nameServerId := range *responseData {
-		responseData := &DomainNameServer{}
+	for _, nameServerId := range nameservers {
+		responseData := DomainNameServer{}
 		endpoint := fmt.Sprintf("/domain/%s/nameServer/%d", url.PathEscape(domainName), nameServerId)
 
 		if err := config.OVHClient.Get(endpoint, &responseData); err != nil {
 			return helpers.CheckDeleted(resourceData, err, endpoint)
 		}
 
-		domainNameServers.Servers = append(domainNameServers.Servers, *responseData)
+		domainNameServers.Servers = append(domainNameServers.Servers, responseData)
 	}
-
-	sort.Slice(domainNameServers.Servers, func(i, j int) bool {
-		return domainNameServers.Servers[i].Host < domainNameServers.Servers[j].Host
-	})
 
 	resourceData.SetId(domainName)
 	for k, v := range domainNameServers.ToMap() {
@@ -138,13 +134,13 @@ func resourceDomainNameServersRead(resourceData *schema.ResourceData, meta inter
 func resourceDomainNameServersUpdate(resourceData *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	domainName := resourceData.Get("domain").(string)
-	task := &DomainTask{}
+	task := DomainTask{}
 
 	nameServersUpdate := &DomainNameServerUpdateOpts{
 		NameServers: make([]DomainNameServer, 0),
 	}
 
-	for _, nameServer := range resourceData.Get("servers").([]interface{}) {
+	for _, nameServer := range resourceData.Get("servers").(*schema.Set).List() {
 		ns := nameServer.(map[string]interface{})
 
 		nameServersUpdate.NameServers = append(nameServersUpdate.NameServers, DomainNameServer{
@@ -161,7 +157,7 @@ func resourceDomainNameServersUpdate(resourceData *schema.ResourceData, meta int
 		return fmt.Errorf("calling POST %s:\n\t%s", endpoint, err.Error())
 	}
 
-	if err := waitDomainTask(config.OVHClient, domainName, task.TaskId); err != nil {
+	if err := waitDomainTask(config.OVHClient, domainName, task.TaskID); err != nil {
 		return fmt.Errorf("waiting for %s name servers to be updated:\n\t%s", domainName, err.Error())
 	}
 
