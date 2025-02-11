@@ -2,11 +2,12 @@ package ovh
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 	"log"
 	"net/url"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
 func resourceDomainDsRecords() *schema.Resource {
@@ -98,22 +99,22 @@ func resourceDomainDsRecordsRead(resourceData *schema.ResourceData, meta interfa
 
 	log.Printf("[DEBUG] Will read domain name DS records: %s\n", domainName)
 
-	responseData := &[]int{}
+	var responseData []int
 	endpoint := fmt.Sprintf("/domain/%s/dsRecord", url.PathEscape(domainName))
 
 	if err := config.OVHClient.Get(endpoint, &responseData); err != nil {
 		return fmt.Errorf("calling GET %s:\n\t %s", endpoint, err.Error())
 	}
 
-	for _, dsRecordId := range *responseData {
-		responseData := &DomainDsRecord{}
+	for _, dsRecordId := range responseData {
+		responseData := DomainDsRecord{}
 		endpoint := fmt.Sprintf("/domain/%s/dsRecord/%d", url.PathEscape(domainName), dsRecordId)
 
 		if err := config.OVHClient.Get(endpoint, &responseData); err != nil {
 			return helpers.CheckDeleted(resourceData, err, endpoint)
 		}
 
-		domainDsRecords.DsRecords = append(domainDsRecords.DsRecords, *responseData)
+		domainDsRecords.DsRecords = append(domainDsRecords.DsRecords, responseData)
 	}
 
 	resourceData.SetId(domainName)
@@ -127,7 +128,7 @@ func resourceDomainDsRecordsRead(resourceData *schema.ResourceData, meta interfa
 func resourceDomainDsRecordsUpdate(resourceData *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	domainName := resourceData.Get("domain").(string)
-	task := &DomainTask{}
+	task := DomainTask{}
 
 	dsRecordsUpdate := &DomainDsRecordsUpdateOpts{
 		DsRecords: make([]DomainDsRecord, 0),
@@ -152,7 +153,7 @@ func resourceDomainDsRecordsUpdate(resourceData *schema.ResourceData, meta inter
 		return fmt.Errorf("calling POST %s :\n\t %s", endpoint, err.Error())
 	}
 
-	if err := waitDomainTask(config.OVHClient, domainName, task.TaskId); err != nil {
+	if err := waitDomainTask(config.OVHClient, domainName, task.TaskID); err != nil {
 		return fmt.Errorf("waiting for %s DS records to be updated: %s", domainName, err.Error())
 	}
 
@@ -164,7 +165,7 @@ func resourceDomainDsRecordsUpdate(resourceData *schema.ResourceData, meta inter
 func resourceDomainDsRecordsDelete(resourceData *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	domainName := resourceData.Get("domain").(string)
-	task := &DomainTask{}
+	task := DomainTask{}
 
 	domainDsRecordsUpdateOpts := &DomainDsRecordsUpdateOpts{
 		DsRecords: make([]DomainDsRecord, 0),
@@ -178,7 +179,7 @@ func resourceDomainDsRecordsDelete(resourceData *schema.ResourceData, meta inter
 		return fmt.Errorf("calling POST %s :\n\t %s", endpoint, err.Error())
 	}
 
-	if err := waitDomainTask(config.OVHClient, domainName, task.TaskId); err != nil {
+	if err := waitDomainTask(config.OVHClient, domainName, task.TaskID); err != nil {
 		return fmt.Errorf("waiting for %s DS records to be deleted: %s", domainName, err.Error())
 	}
 

@@ -2,14 +2,14 @@ package ovh
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"log"
 	"net/url"
 	"os"
 	"regexp"
-	"strings"
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func init() {
@@ -50,7 +50,6 @@ func testSweepDomainNameServers(region string) error {
 
 func TestAccDomainNameServers_Basic(t *testing.T) {
 	domainName := os.Getenv("OVH_ZONE_TEST")
-	resourceName := "ovh_domain_name_servers.test"
 
 	nameServer1Host := os.Getenv("OVH_DOMAIN_NS1_HOST_TEST")
 	nameServer1Ip := os.Getenv("OVH_DOMAIN_NS1_IP_TEST")
@@ -69,23 +68,30 @@ func TestAccDomainNameServers_Basic(t *testing.T) {
 				ExpectError: regexp.MustCompile(`2 "servers" blocks are required`),
 			},
 			{
-				Config: testAccCheckOvhDomainNameServersConfig(resourceName, domainName, nameServer1Host, nameServer1Ip, nameServer2Host),
+				Config: testAccCheckOvhDomainNameServersConfig(domainName, nameServer1Host, nameServer1Ip, nameServer2Host),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOvhDomainNameServersCurrent(resourceName, nameServer1Host, nameServer1Ip, nameServer2Host),
-					resource.TestCheckResourceAttr(resourceName, "domain", domainName),
-					resource.TestCheckResourceAttr(resourceName, "servers.0.host", nameServer1Host),
-					resource.TestCheckResourceAttr(resourceName, "servers.0.ip", nameServer1Ip),
-					resource.TestCheckResourceAttr(resourceName, "servers.1.host", nameServer2Host),
+					testAccCheckOvhDomainNameServersCurrent("ovh_domain_name_servers.test", nameServer1Host, nameServer1Ip, nameServer2Host),
+					resource.TestCheckResourceAttr("ovh_domain_name_servers.test", "domain", domainName),
+					resource.TestCheckTypeSetElemNestedAttrs("ovh_domain_name_servers.test", "servers.*", map[string]string{
+						"host": nameServer1Host,
+						"ip":   nameServer1Ip,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs("ovh_domain_name_servers.test", "servers.*", map[string]string{
+						"host": nameServer2Host,
+					}),
 				),
 			},
 			{
-				Config: testAccCheckOvhDomainNameServersConfig(resourceName, domainName, nameServer2Host, "", nameServer3Host),
+				Config: testAccCheckOvhDomainNameServersConfig(domainName, nameServer2Host, "", nameServer3Host),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOvhDomainNameServersCurrent(resourceName, nameServer2Host, "", nameServer3Host),
-					resource.TestCheckResourceAttr(resourceName, "domain", domainName),
-					resource.TestCheckResourceAttr(resourceName, "servers.0.host", nameServer2Host),
-					resource.TestCheckResourceAttr(resourceName, "servers.0.ip", ""),
-					resource.TestCheckResourceAttr(resourceName, "servers.1.host", nameServer3Host),
+					testAccCheckOvhDomainNameServersCurrent("ovh_domain_name_servers.test", nameServer2Host, "", nameServer3Host),
+					resource.TestCheckResourceAttr("ovh_domain_name_servers.test", "domain", domainName),
+					resource.TestCheckTypeSetElemNestedAttrs("ovh_domain_name_servers.test", "servers.*", map[string]string{
+						"host": nameServer2Host,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs("ovh_domain_name_servers.test", "servers.*", map[string]string{
+						"host": nameServer3Host,
+					}),
 				),
 			},
 		},
@@ -105,11 +111,9 @@ resource "ovh_domain_name_servers" "invalid" {
 `, domainName, nameServer1Host, nameServer1Ip)
 }
 
-func testAccCheckOvhDomainNameServersConfig(resourceFullName string, domainName string, nameServer1Host string, nameServer1Ip string, nameServer2Host string) string {
-	resourceType, resourceName, _ := strings.Cut(resourceFullName, ".")
-
+func testAccCheckOvhDomainNameServersConfig(domainName string, nameServer1Host string, nameServer1Ip string, nameServer2Host string) string {
 	return fmt.Sprintf(`
-resource "%s" "%s" {
+resource "ovh_domain_name_servers" "test" {
 	domain = "%s"
 
 	servers {
@@ -122,7 +126,7 @@ resource "%s" "%s" {
 		ip = ""
     }
 }
-`, resourceType, resourceName, domainName, nameServer1Host, nameServer1Ip, nameServer2Host)
+`, domainName, nameServer1Host, nameServer1Ip, nameServer2Host)
 }
 
 func testAccCheckOvhDomainNameServersCurrent(resourceName string, nameServer1Host string, nameServer1Ip string, nameServer2Host string) resource.TestCheckFunc {
@@ -141,29 +145,29 @@ func testAccCheckOvhDomainNameServersCurrent(resourceName string, nameServer1Hos
 
 		provider := testAccProvider.Meta().(*Config)
 
-		responseData := &[]int{}
+		var nameservers []int
 		endpoint := fmt.Sprintf("/domain/%s/nameServer", url.PathEscape(domainName))
 
-		if err := provider.OVHClient.Get(endpoint, &responseData); err != nil {
+		if err := provider.OVHClient.Get(endpoint, &nameservers); err != nil {
 			return fmt.Errorf("error while calling GET on %s:\n\t%v", endpoint, err)
 		}
 
-		var domainNameServerList []DomainNameServer
+		found := 0
 
-		for _, nameServerId := range *responseData {
-			responseData := &DomainNameServer{}
+		for _, nameServerId := range nameservers {
+			responseData := DomainNameServer{}
 			endpoint := fmt.Sprintf("/domain/%s/nameServer/%d", url.PathEscape(domainName), nameServerId)
 
 			if err := provider.OVHClient.Get(endpoint, &responseData); err != nil {
 				return fmt.Errorf("error while calling GET on %s:\n\t%v", endpoint, err)
 			}
 
-			domainNameServerList = append(domainNameServerList, *responseData)
+			if (responseData.Host == nameServer1Host && responseData.Ip == nameServer1Ip) || (responseData.Host == nameServer2Host && responseData.Ip == "") {
+				found += 1
+			}
 		}
 
-		if domainNameServerList[0].Host != nameServer1Host ||
-			domainNameServerList[0].Ip != nameServer1Ip ||
-			domainNameServerList[1].Host != nameServer2Host {
+		if found != 2 {
 			return fmt.Errorf("domain name servers not configured properly")
 		}
 

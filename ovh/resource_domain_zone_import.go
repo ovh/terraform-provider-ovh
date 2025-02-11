@@ -51,7 +51,7 @@ func (d *domainZoneImportResource) Schema(ctx context.Context, req resource.Sche
 func (r *domainZoneImportResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var (
 		data   DomainZoneImportModel
-		task   DomainZoneTask
+		task   DomainTask
 		export string
 	)
 
@@ -147,7 +147,7 @@ func waitDNSTask(ctx context.Context, config *Config, zoneName string, taskID in
 		Pending: []string{"doing", "todo"},
 		Target:  []string{"done"},
 		Refresh: func() (interface{}, string, error) {
-			var task DomainZoneTask
+			var task DomainTask
 			if err := config.OVHClient.Get(endpoint, &task); err != nil {
 				log.Printf("[ERROR] couldn't fetch task %d: error: %v", taskID, err)
 				return nil, "error", err
