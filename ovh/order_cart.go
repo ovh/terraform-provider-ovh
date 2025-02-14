@@ -406,7 +406,7 @@ func orderCartGenericProductPlanRead(d *schema.ResourceData, meta interface{}) e
 	)
 
 	if err := config.OVHClient.Get(endpoint, &res); err != nil {
-		return fmt.Errorf("Error calling Get %s:\n\t %q", endpoint, err)
+		return fmt.Errorf("error calling Get %s:\n\t %q", endpoint, err)
 	}
 
 	match := false

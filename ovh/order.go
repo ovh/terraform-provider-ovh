@@ -244,7 +244,11 @@ func orderCreateFromResource(d *schema.ResourceData, meta interface{}, product s
 
 func orderCreate(d *OrderModel, config *Config, product string, waitForCompletion bool) error {
 	if d.OvhSubsidiary.ValueString() == "" {
-		return fmt.Errorf("ovh_subsidiary is missing from configuration")
+		subsidiary, err := getOVHSubsidiary(context.Background(), config.OVHClient)
+		if err != nil {
+			return fmt.Errorf("ovh_subsidiary is missing from configuration, and it couldn't be fetched automatically: %w", err)
+		}
+		d.OvhSubsidiary = types.NewTfStringValue(subsidiary)
 	}
 	if len(d.Plan.Elements()) == 0 {
 		return fmt.Errorf("plan is missing from configuration")
@@ -695,4 +699,14 @@ func orderDetailOperations(c *ovh.Client, orderId int64, orderDetailId int64) ([
 		operations[i] = operation
 	}
 	return operations, nil
+}
+
+func getOVHSubsidiary(ctx context.Context, c *ovh.Client) (string, error) {
+	var response MeResponse
+
+	if err := c.GetWithContext(ctx, "/me", &response); err != nil {
+		return "", err
+	}
+
+	return response.OvhSubsidiary, nil
 }

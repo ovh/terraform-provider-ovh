@@ -57,6 +57,17 @@ func serviceIdFromResourceName(c *ovh.Client, resourceName string) (int, error) 
 	return serviceIds[0], nil
 }
 
+func serviceIdFromRouteAndResourceName(c *ovh.Client, route, resourceName string) (int, error) {
+	var serviceIds []int
+	endpoint := fmt.Sprintf("/services?resourceName=%s&routes=%s", url.PathEscape(resourceName), url.PathEscape(route))
+
+	if err := c.Get(endpoint, &serviceIds); err != nil {
+		return 0, fmt.Errorf("failed to get service infos: %w", err)
+	}
+
+	return serviceIds[0], nil
+}
+
 func serviceInfoFromServiceName(c *ovh.Client, serviceType, serviceName string) (*ServiceInfos, error) {
 	var (
 		serviceInfos ServiceInfos
@@ -108,7 +119,7 @@ func serviceUpdateDisplayNameAPIv2(config *Config, serviceName string, displayNa
 	serviceId, err := serviceIdFromResourceName(config.OVHClient, serviceName)
 	if err != nil {
 		diagnostics.AddError(
-			fmt.Sprintf("Error locating KMS %s", serviceName),
+			fmt.Sprintf("Error locating service %s", serviceName),
 			err.Error(),
 		)
 		return err
