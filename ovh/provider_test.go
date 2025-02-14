@@ -144,7 +144,7 @@ func testAccPreCheckDomain(t *testing.T) {
 
 // Checks that the environment variables needed to order /domain for acceptance tests
 // are set.
-func testAccPreCheckOrderDomainZone(t *testing.T) {
+func testAccPreCheckOrderDomain(t *testing.T) {
 	testAccPreCheckCredentials(t)
 	checkEnvOrSkip(t, "OVH_TESTACC_ORDER_DOMAIN")
 }
