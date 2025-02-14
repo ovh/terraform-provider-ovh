@@ -10,7 +10,7 @@ import (
 
 func TestAccDataSourceCloudProjectInstances_basic(t *testing.T) {
 	config := fmt.Sprintf(`
-			data "ovh_cloud_project_instances" "instances" {
+			data "ovh_cloud_project_floatingips" "instances" {
 				service_name = "%s"
 				region       = "%s"
 			}
