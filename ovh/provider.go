@@ -282,6 +282,7 @@ func Provider() *schema.Provider {
 			"ovh_vrack_dedicated_server_interface":                           resourceVrackDedicatedServerInterface(),
 			"ovh_vrack_ip":                                                   resourceVrackIp(),
 			"ovh_vrack_iploadbalancing":                                      resourceVrackIpLoadbalancing(),
+			"ovh_vrack_vrackservices":                                        resourceVrackVrackServices(),
 		},
 
 		ConfigureContextFunc: ConfigureContextFunc,

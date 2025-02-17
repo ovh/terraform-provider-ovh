@@ -89,6 +89,10 @@ type VrackDedicatedServerCreateOpts struct {
 	DedicatedServer string `json:"dedicatedServer"`
 }
 
+type VrackVrackServicesCreateOpts struct {
+	VrackServices string `json:"vrackServices"`
+}
+
 func (opts *VrackDedicatedServerCreateOpts) FromResource(d *schema.ResourceData) *VrackDedicatedServerCreateOpts {
 	opts.DedicatedServer = d.Get("server_id").(string)
 	return opts
