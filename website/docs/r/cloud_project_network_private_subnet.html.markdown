@@ -1,5 +1,5 @@
 ---
-subcategory : "Public Cloud Network"
+subcategory : "Private Network"
 ---
 
 # ovh_cloud_project_network_private_subnet
