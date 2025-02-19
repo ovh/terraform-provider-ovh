@@ -1,5 +1,5 @@
 ---
-subcategory : "Public Cloud Network"
+subcategory : "vRack"
 ---
 
 # ovh_cloud_project_vrack (Data Source)
