@@ -1,5 +1,5 @@
 ---
-subcategory: "KMS"
+subcategory: "Key Management Service (KMS)"
 ---
 
 # ovh_okms_credential (Data Source)

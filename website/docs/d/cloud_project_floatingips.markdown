@@ -1,5 +1,5 @@
 ---
-subcategory : "Cloud Project"
+subcategory : "Floating IPs"
 ---
 
 # ovh_cloud_project_floatingips

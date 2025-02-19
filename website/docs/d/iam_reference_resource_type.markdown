@@ -1,5 +1,5 @@
 ---
-subcategory : "Account Management"
+subcategory : "Account Management (IAM)"
 ---
 
 # ovh_iam_reference_resource_type (Data Source)

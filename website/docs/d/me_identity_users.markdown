@@ -1,5 +1,5 @@
 ---
-subcategory : "Account Management"
+subcategory : "Account Management (IAM)"
 ---
 
 # ovh_me_identity_users (Data Source)

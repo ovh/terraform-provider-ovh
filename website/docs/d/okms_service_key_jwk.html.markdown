@@ -1,5 +1,5 @@
 ---
-subcategory: "KMS"
+subcategory: "Key Management Service (KMS)"
 ---
 
 # ovh_okms_service_key_jwk (Data Source)

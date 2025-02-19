@@ -1,5 +1,5 @@
 ---
-subcategory : "Account Management"
+subcategory : "Savings Plan"
 ---
 
 # ovh_savings_plan
