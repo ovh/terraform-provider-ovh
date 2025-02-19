@@ -1,5 +1,5 @@
 ---
-subcategory : "Account Management"
+subcategory : "Account Management (IAM)"
 ---
 
 # ovh_iam_permissions_group (Data Source)

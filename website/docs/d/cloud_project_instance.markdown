@@ -1,5 +1,5 @@
 ---
-subcategory : "Cloud Project"
+subcategory : "Instances"
 ---
 
 # ovh_cloud_project_instance

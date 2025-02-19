@@ -1,5 +1,5 @@
 ---
-subcategory : "Managed Private Registry"
+subcategory : "Managed Private Registry (MPR)"
 ---
 
 # ovh_cloud_project_capabilities_containerregistry (Data Source)
