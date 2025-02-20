@@ -1,5 +1,5 @@
 ---
-subcategory : "Cloud Project"
+subcategory : "Block Storage"
 ---
 
 # ovh_cloud_project_volume
