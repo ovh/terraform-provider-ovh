@@ -1,5 +1,5 @@
 ---
-subcategory : "Managed Kubernetes Service"
+subcategory : "Managed Kubernetes Service (MKS)"
 ---
 
 # ovh_cloud_project_kube_nodepool

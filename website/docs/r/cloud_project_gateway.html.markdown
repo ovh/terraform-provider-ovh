@@ -1,5 +1,5 @@
 ---
-subcategory: "Public Cloud Network"
+subcategory: "Gateway"
 ---
 
 # ovh_cloud_project_gateway
