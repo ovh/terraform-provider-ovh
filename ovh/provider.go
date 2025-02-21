@@ -184,6 +184,7 @@ func Provider() *schema.Provider {
 			"ovh_vps":                                                        dataSourceVPS(),
 			"ovh_vpss":                                                       dataSourceVPSs(),
 			"ovh_vracks":                                                     dataSourceVracks(),
+			"ovh_vrack":                                                      dataSourceVrack(),
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
