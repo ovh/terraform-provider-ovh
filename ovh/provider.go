@@ -229,6 +229,8 @@ func Provider() *schema.Provider {
 			"ovh_cloud_project_user_s3_policy":                               resourceCloudProjectUserS3Policy(),
 			"ovh_cloud_project_workflow_backup":                              resourceCloudProjectWorkflowBackup(),
 			"ovh_dbaas_logs_cluster":                                         resourceDbaasLogsCluster(),
+			"ovh_dbaas_logs_role":                                            resourceDbaasLogsRole(),
+			"ovh_dbaas_logs_role_permission":                                 resourceDbaasLogsRolePermission(),
 			"ovh_dbaas_logs_input":                                           resourceDbaasLogsInput(),
 			"ovh_dbaas_logs_output_graylog_stream":                           resourceDbaasLogsOutputGraylogStream(),
 			"ovh_dbaas_logs_output_opensearch_alias":                         resourceDbaasLogsOutputOpensearchAlias(),
