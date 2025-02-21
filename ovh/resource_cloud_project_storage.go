@@ -10,21 +10,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 )
 
-var _ resource.ResourceWithConfigure = (*cloudProjectRegionStorageResource)(nil)
+var _ resource.ResourceWithConfigure = (*cloudProjectStorageResource)(nil)
 
-func NewCloudProjectRegionStorageResource() resource.Resource {
-	return &cloudProjectRegionStorageResource{}
+func NewCloudProjectStorageResource() resource.Resource {
+	return &cloudProjectStorageResource{}
 }
 
-type cloudProjectRegionStorageResource struct {
+type cloudProjectStorageResource struct {
 	config *Config
 }
 
-func (r *cloudProjectRegionStorageResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_cloud_project_region_storage"
+func (r *cloudProjectStorageResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_cloud_project_storage"
 }
 
-func (d *cloudProjectRegionStorageResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (d *cloudProjectStorageResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -41,11 +41,11 @@ func (d *cloudProjectRegionStorageResource) Configure(_ context.Context, req res
 	d.config = config
 }
 
-func (d *cloudProjectRegionStorageResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (d *cloudProjectStorageResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = CloudProjectRegionStorageResourceSchema(ctx)
 }
 
-func (r *cloudProjectRegionStorageResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *cloudProjectStorageResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	splits := strings.Split(req.ID, "/")
 	if len(splits) != 3 {
 		resp.Diagnostics.AddError("Given ID is malformed", "ID must be formatted like the following: <service_name>/<region_name>/<storage_name>")
@@ -57,7 +57,7 @@ func (r *cloudProjectRegionStorageResource) ImportState(ctx context.Context, req
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), splits[2])...)
 }
 
-func (r *cloudProjectRegionStorageResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *cloudProjectStorageResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data, responseData CloudProjectRegionStorageModel
 
 	// Read Terraform plan data into the model
@@ -81,7 +81,7 @@ func (r *cloudProjectRegionStorageResource) Create(ctx context.Context, req reso
 	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)
 }
 
-func (r *cloudProjectRegionStorageResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *cloudProjectStorageResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var data, responseData CloudProjectRegionStorageModel
 
 	// Read Terraform prior state data into the model
@@ -105,7 +105,7 @@ func (r *cloudProjectRegionStorageResource) Read(ctx context.Context, req resour
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *cloudProjectRegionStorageResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *cloudProjectStorageResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var data, planData, responseData CloudProjectRegionStorageModel
 
 	// Read Terraform plan data into the model
@@ -146,7 +146,7 @@ func (r *cloudProjectRegionStorageResource) Update(ctx context.Context, req reso
 	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)
 }
 
-func (r *cloudProjectRegionStorageResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *cloudProjectStorageResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var data CloudProjectRegionStorageModel
 
 	// Read Terraform prior state data into the model

@@ -3,7 +3,7 @@
 subcategory : "Object Storage"
 ---
 
-# ovh_cloud_project_region_storage
+# ovh_cloud_project_storage
 
 Create S3™* compatible storage container
 (* S3 is a trademark filed by Amazon Technologies,Inc. OVHcloud's service is not sponsored by, endorsed by, or otherwise affiliated with Amazon Technologies,Inc.)
@@ -11,7 +11,7 @@ Create S3™* compatible storage container
 ## Example Usage
 
 ```hcl
-resource "ovh_cloud_project_region_storage" "storage" {
+resource "ovh_cloud_project_storage" "storage" {
   service_name = "<public cloud project ID>"
   region_name = "GRA"
   name = "my-storage"
@@ -133,7 +133,7 @@ Using the following configuration:
 ```hcl
 import {
   id = "<service_name>/<region_name>/<name>"
-  to = ovh_cloud_project_region_storage.storage
+  to = ovh_cloud_project_storage.storage
 }
 ```
 
