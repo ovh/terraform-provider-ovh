@@ -332,50 +332,6 @@ func (v *OrderModel) MergeWith(other *OrderModel) {
 	}
 }
 
-type OrderWritableModel struct {
-	OvhSubsidiary *ovhtypes.TfStringValue                              `tfsdk:"ovh_subsidiary" json:"ovhSubsidiary,omitempty"`
-	Plan          *ovhtypes.TfListNestedValue[PlanWritableValue]       `tfsdk:"plan" json:"plan,omitempty"`
-	PlanOption    *ovhtypes.TfListNestedValue[PlanOptionWritableValue] `tfsdk:"plan_option" json:"planOption,omitempty"`
-}
-
-func (v OrderModel) ToCreate() *OrderWritableModel {
-	res := &OrderWritableModel{}
-
-	if !v.OvhSubsidiary.IsUnknown() {
-		res.OvhSubsidiary = &v.OvhSubsidiary
-	}
-
-	if !v.Plan.IsUnknown() {
-		var createPlan []PlanWritableValue
-		for _, elem := range v.Plan.Elements() {
-			createPlan = append(createPlan, *elem.(PlanValue).ToCreate())
-		}
-
-		newPlan, _ := basetypes.NewListValueFrom(context.Background(), PlanWritableValue{
-			PlanValue: &PlanValue{},
-		}.Type(context.Background()), createPlan)
-		res.Plan = &ovhtypes.TfListNestedValue[PlanWritableValue]{
-			ListValue: newPlan,
-		}
-	}
-
-	if !v.PlanOption.IsUnknown() {
-		var createPlanOption []PlanOptionWritableValue
-		for _, elem := range v.PlanOption.Elements() {
-			createPlanOption = append(createPlanOption, *elem.(PlanOptionValue).ToCreate())
-		}
-
-		newPlanOption, _ := basetypes.NewListValueFrom(context.Background(), PlanOptionWritableValue{
-			PlanOptionValue: &PlanOptionValue{},
-		}.Type(context.Background()), createPlanOption)
-		res.PlanOption = &ovhtypes.TfListNestedValue[PlanOptionWritableValue]{
-			ListValue: newPlanOption,
-		}
-	}
-
-	return res
-}
-
 var _ basetypes.ObjectTypable = OrderType{}
 
 type OrderType struct {
@@ -707,36 +663,6 @@ type OrderValue struct {
 	ExpirationDate ovhtypes.TfStringValue                        `tfsdk:"expiration_date" json:"expirationDate"`
 	OrderId        ovhtypes.TfInt64Value                         `tfsdk:"order_id" json:"orderId"`
 	state          attr.ValueState
-}
-
-type OrderWritableValue struct {
-	*OrderValue    `json:"-"`
-	Date           *ovhtypes.TfStringValue                        `json:"date,omitempty"`
-	Details        *ovhtypes.TfListNestedValue[OrderDetailsValue] `json:"details,omitempty"`
-	ExpirationDate *ovhtypes.TfStringValue                        `json:"expirationDate,omitempty"`
-	OrderId        *ovhtypes.TfInt64Value                         `json:"orderId,omitempty"`
-}
-
-func (v OrderValue) ToCreate() *OrderWritableValue {
-	res := &OrderWritableValue{}
-
-	if !v.ExpirationDate.IsNull() {
-		res.ExpirationDate = &v.ExpirationDate
-	}
-
-	if !v.OrderId.IsNull() {
-		res.OrderId = &v.OrderId
-	}
-
-	if !v.Date.IsNull() {
-		res.Date = &v.Date
-	}
-
-	if !v.Details.IsNull() {
-		res.Details = &v.Details
-	}
-
-	return res
 }
 
 func (v *OrderValue) UnmarshalJSON(data []byte) error {
@@ -1324,41 +1250,6 @@ type OrderDetailsValue struct {
 	OrderDetailId ovhtypes.TfInt64Value  `tfsdk:"order_detail_id" json:"orderDetailId"`
 	Quantity      ovhtypes.TfStringValue `tfsdk:"quantity" json:"quantity"`
 	state         attr.ValueState
-}
-
-type OrderDetailsWritableValue struct {
-	*OrderDetailsValue `json:"-"`
-	Description        *ovhtypes.TfStringValue `json:"description,omitempty"`
-	DetailType         *ovhtypes.TfStringValue `json:"detailType,omitempty"`
-	Domain             *ovhtypes.TfStringValue `json:"domain,omitempty"`
-	OrderDetailId      *ovhtypes.TfInt64Value  `json:"orderDetailId,omitempty"`
-	Quantity           *ovhtypes.TfStringValue `json:"quantity,omitempty"`
-}
-
-func (v OrderDetailsValue) ToCreate() *OrderDetailsWritableValue {
-	res := &OrderDetailsWritableValue{}
-
-	if !v.OrderDetailId.IsNull() {
-		res.OrderDetailId = &v.OrderDetailId
-	}
-
-	if !v.Quantity.IsNull() {
-		res.Quantity = &v.Quantity
-	}
-
-	if !v.Description.IsNull() {
-		res.Description = &v.Description
-	}
-
-	if !v.DetailType.IsNull() {
-		res.DetailType = &v.DetailType
-	}
-
-	if !v.Domain.IsNull() {
-		res.Domain = &v.Domain
-	}
-
-	return res
 }
 
 func (v *OrderDetailsValue) UnmarshalJSON(data []byte) error {
@@ -1985,23 +1876,15 @@ type PlanValue struct {
 	PlanCode      ovhtypes.TfStringValue                             `tfsdk:"plan_code" json:"planCode"`
 	PricingMode   ovhtypes.TfStringValue                             `tfsdk:"pricing_mode" json:"pricingMode"`
 	Quantity      ovhtypes.TfInt64Value                              `tfsdk:"quantity" json:"quantity"`
+	Domain        ovhtypes.TfStringValue                             `tfsdk:"-" json:"domain"`
 	state         attr.ValueState
-}
-
-type PlanWritableValue struct {
-	*PlanValue    `json:"-"`
-	Configuration *ovhtypes.TfListNestedValue[PlanConfigurationValue] `json:"configuration,omitempty"`
-	Duration      *ovhtypes.TfStringValue                             `json:"duration,omitempty"`
-	ItemId        *ovhtypes.TfInt64Value                              `json:"itemId,omitempty"`
-	PlanCode      *ovhtypes.TfStringValue                             `json:"planCode,omitempty"`
-	PricingMode   *ovhtypes.TfStringValue                             `json:"pricingMode,omitempty"`
-	Quantity      *ovhtypes.TfInt64Value                              `json:"quantity,omitempty"`
 }
 
 func (opts PlanValue) FromResourceWithPath(d *legacyschema.ResourceData, path string) PlanValue {
 	opts.Duration = ovhtypes.TfStringValue{StringValue: basetypes.NewStringValue(d.Get(fmt.Sprintf("%s.duration", path)).(string))}
 	opts.PlanCode = ovhtypes.TfStringValue{StringValue: basetypes.NewStringValue(d.Get(fmt.Sprintf("%s.plan_code", path)).(string))}
 	opts.PricingMode = ovhtypes.TfStringValue{StringValue: basetypes.NewStringValue(d.Get(fmt.Sprintf("%s.pricing_mode", path)).(string))}
+	opts.Domain = ovhtypes.NewTfStringValue(d.Get(fmt.Sprintf("%s.domain", path)).(string))
 
 	nbConfigs := d.Get(fmt.Sprintf("%s.configuration.#", path)).(int)
 	var configs []attr.Value
@@ -2019,36 +1902,6 @@ func (opts PlanValue) FromResourceWithPath(d *legacyschema.ResourceData, path st
 	}
 
 	return opts
-}
-
-func (v PlanValue) ToCreate() *PlanWritableValue {
-	res := &PlanWritableValue{}
-
-	if !v.PricingMode.IsNull() {
-		res.PricingMode = &v.PricingMode
-	}
-
-	if !v.Quantity.IsNull() {
-		res.Quantity = &v.Quantity
-	}
-
-	if !v.Configuration.IsNull() {
-		res.Configuration = &v.Configuration
-	}
-
-	if !v.Duration.IsNull() {
-		res.Duration = &v.Duration
-	}
-
-	if !v.ItemId.IsNull() {
-		res.ItemId = &v.ItemId
-	}
-
-	if !v.PlanCode.IsNull() {
-		res.PlanCode = &v.PlanCode
-	}
-
-	return res
 }
 
 func (v *PlanValue) UnmarshalJSON(data []byte) error {
@@ -2113,6 +1966,10 @@ func (v *PlanValue) MergeWith(other *PlanValue) {
 
 	if (v.Quantity.IsUnknown() || v.Quantity.IsNull()) && !other.Quantity.IsUnknown() {
 		v.Quantity = other.Quantity
+	}
+
+	if (v.Domain.IsUnknown() || v.Domain.IsNull()) && !other.Domain.IsUnknown() {
+		v.Domain = other.Domain
 	}
 
 	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
@@ -2563,26 +2420,6 @@ type PlanConfigurationValue struct {
 	Label ovhtypes.TfStringValue `tfsdk:"label" json:"label"`
 	Value ovhtypes.TfStringValue `tfsdk:"value" json:"value"`
 	state attr.ValueState
-}
-
-type PlanConfigurationWritableValue struct {
-	*PlanConfigurationValue `json:"-"`
-	Label                   *ovhtypes.TfStringValue `json:"label,omitempty"`
-	Value                   *ovhtypes.TfStringValue `json:"value,omitempty"`
-}
-
-func (v PlanConfigurationValue) ToCreate() *PlanConfigurationWritableValue {
-	res := &PlanConfigurationWritableValue{}
-
-	if !v.Label.IsNull() {
-		res.Label = &v.Label
-	}
-
-	if !v.Value.IsNull() {
-		res.Value = &v.Value
-	}
-
-	return res
 }
 
 func (v *PlanConfigurationValue) UnmarshalJSON(data []byte) error {
@@ -3108,16 +2945,6 @@ type PlanOptionValue struct {
 	state         attr.ValueState
 }
 
-type PlanOptionWritableValue struct {
-	*PlanOptionValue `json:"-"`
-	Configuration    *ovhtypes.TfListNestedValue[PlanOptionConfigurationValue] `json:"configuration,omitempty"`
-	Duration         *ovhtypes.TfStringValue                                   `json:"duration,omitempty"`
-	ItemId           *ovhtypes.TfInt64Value                                    `json:"itemId,omitempty"`
-	PlanCode         *ovhtypes.TfStringValue                                   `json:"planCode,omitempty"`
-	PricingMode      *ovhtypes.TfStringValue                                   `json:"pricingMode,omitempty"`
-	Quantity         *ovhtypes.TfInt64Value                                    `json:"quantity,omitempty"`
-}
-
 func (opts PlanOptionValue) FromResourceWithPath(d *legacyschema.ResourceData, path string) PlanOptionValue {
 	opts.Duration = ovhtypes.TfStringValue{StringValue: basetypes.NewStringValue(d.Get(fmt.Sprintf("%s.duration", path)).(string))}
 	opts.PlanCode = ovhtypes.TfStringValue{StringValue: basetypes.NewStringValue(d.Get(fmt.Sprintf("%s.plan_code", path)).(string))}
@@ -3139,36 +2966,6 @@ func (opts PlanOptionValue) FromResourceWithPath(d *legacyschema.ResourceData, p
 	}
 
 	return opts
-}
-
-func (v PlanOptionValue) ToCreate() *PlanOptionWritableValue {
-	res := &PlanOptionWritableValue{}
-
-	if !v.Configuration.IsNull() {
-		res.Configuration = &v.Configuration
-	}
-
-	if !v.Duration.IsNull() {
-		res.Duration = &v.Duration
-	}
-
-	if !v.ItemId.IsNull() {
-		res.ItemId = &v.ItemId
-	}
-
-	if !v.PlanCode.IsNull() {
-		res.PlanCode = &v.PlanCode
-	}
-
-	if !v.PricingMode.IsNull() {
-		res.PricingMode = &v.PricingMode
-	}
-
-	if !v.Quantity.IsNull() {
-		res.Quantity = &v.Quantity
-	}
-
-	return res
 }
 
 func (v *PlanOptionValue) UnmarshalJSON(data []byte) error {

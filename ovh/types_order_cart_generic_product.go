@@ -1,7 +1,5 @@
 package ovh
 
-import ()
-
 type OrderCartGenericProduct struct {
 	PlanCode    string                         `json:"planCode"`
 	Prices      []OrderCartGenericProductPrice `json:"prices"`

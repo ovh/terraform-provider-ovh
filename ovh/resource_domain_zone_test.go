@@ -132,7 +132,7 @@ func TestAccResourceDomainZone_basic(t *testing.T) {
 	t.Logf("[INFO] Will order test zone: %v", name)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheckOrderDomainZone(t) },
+		PreCheck:  func() { testAccPreCheckOrderDomain(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
