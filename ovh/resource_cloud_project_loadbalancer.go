@@ -97,7 +97,7 @@ func (r *cloudProjectLoadbalancerResource) Create(ctx context.Context, req resou
 	}
 
 	// Wait for operation to be completed
-	resourceID, err := waitForCloudProjectOperation(ctx, r.config.OVHClient, data.ServiceName.ValueString(), operation.Id)
+	resourceID, err := waitForCloudProjectOperation(ctx, r.config.OVHClient, data.ServiceName.ValueString(), operation.Id, "")
 	if err != nil {
 		resp.Diagnostics.AddError("error waiting for operation", err.Error())
 	}
