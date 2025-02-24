@@ -141,6 +141,7 @@ func resourceCloudProjectInstance() *schema.Resource {
 						},
 					},
 				},
+				ExactlyOneOf: []string{"ssh_key", "ssh_key_create"},
 			},
 			"ssh_key_create": {
 				Type:        schema.TypeSet,
@@ -265,13 +266,12 @@ func resourceCloudProjectInstanceCreate(ctx context.Context, d *schema.ResourceD
 		return diag.Errorf("calling %s with params %v:\n\t %q", endpoint, params, err)
 	}
 
-	instanceID, err := waitForCloudProjectOperation(ctx, config.OVHClient, serviceName, r.Id)
+	instanceID, err := waitForCloudProjectOperation(ctx, config.OVHClient, serviceName, r.Id, "instance#create")
 	if err != nil {
 		return diag.Errorf("timeout instance creation: %s", err)
 	}
 
 	d.SetId(instanceID)
-	d.Set("region", region)
 
 	return resourceCloudProjectInstanceRead(ctx, d, meta)
 }
