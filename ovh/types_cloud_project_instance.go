@@ -175,6 +175,9 @@ func GetGroup(i interface{}) *Group {
 	groupOut := Group{}
 
 	groupSet := i.(*schema.Set).List()
+	if len(groupSet) == 0 {
+		return nil
+	}
 	for _, group := range groupSet {
 		mapping := group.(map[string]interface{})
 		groupOut.GroupId = mapping["id"].(string)
@@ -189,6 +192,9 @@ func GetSshKey(i interface{}) *SshKey {
 	sshOutput := SshKey{}
 
 	sshSet := i.(*schema.Set).List()
+	if len(sshSet) == 0 {
+		return nil
+	}
 	for _, ssh := range sshSet {
 		mapping := ssh.(map[string]interface{})
 		sshOutput.Name = mapping["name"].(string)
@@ -210,7 +216,7 @@ func GetSshKeyCreate(i interface{}) *SshKeyCreate {
 	for _, ssh := range sshCreateSet {
 		mapping := ssh.(map[string]interface{})
 		sshCreateOutput.Name = mapping["name"].(string)
-		sshCreateOutput.Name = mapping["public_key"].(string)
+		sshCreateOutput.PublicKey = mapping["public_key"].(string)
 	}
 
 	return &sshCreateOutput

@@ -69,9 +69,10 @@ type CloudProjectOperationResponse struct {
 
 type CloudProjectSubOperation struct {
 	ResourceId *string `json:"resourceId"`
+	Action     string  `json:"action"`
 }
 
-func waitForCloudProjectOperation(ctx context.Context, c *ovh.Client, serviceName, operationId string) (string, error) {
+func waitForCloudProjectOperation(ctx context.Context, c *ovh.Client, serviceName, operationId, actionType string) (string, error) {
 	endpoint := fmt.Sprintf("/cloud/project/%s/operation/%s", url.PathEscape(serviceName), url.PathEscape(operationId))
 	resourceID := ""
 	err := retry.RetryContext(ctx, 10*time.Minute, func() *retry.RetryError {
@@ -86,6 +87,13 @@ func waitForCloudProjectOperation(ctx context.Context, c *ovh.Client, serviceNam
 		case "completed":
 			if ro.ResourceId != nil {
 				resourceID = *ro.ResourceId
+			} else if len(ro.SubOperations) > 0 && actionType != "" {
+				for _, subOp := range ro.SubOperations {
+					if subOp.Action == actionType && subOp.ResourceId != nil {
+						resourceID = *subOp.ResourceId
+						break
+					}
+				}
 			} else if len(ro.SubOperations) > 0 && ro.SubOperations[0].ResourceId != nil {
 				resourceID = *ro.SubOperations[0].ResourceId
 			}
