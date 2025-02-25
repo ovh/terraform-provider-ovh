@@ -33,7 +33,7 @@ func dedicatedServerResourceTestConfig(updated bool) string {
 		ovh_subsidiary = data.ovh_me.account.ovh_subsidiary
 		monitoring = %t
 		no_intervention = %t
-		operating_system = "%s"
+		os = "%s"
 		display_name = "%s"
 		efi_bootloader_path = "%s"
 		plan = [
@@ -136,7 +136,7 @@ func TestAccDedicatedServer_basic(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "service_name",
 				ImportStateVerifyIgnore: []string{
-					"display_name", "order", "ovh_subsidiary", "plan", "plan_option", "operating_system",
+					"display_name", "order", "ovh_subsidiary", "plan", "plan_option",
 				},
 				ImportStateIdFunc: func(s *terraform.State) (string, error) {
 					service, ok := s.RootModule().Resources["ovh_dedicated_server.server"]

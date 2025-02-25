@@ -627,12 +627,6 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 				),
 			},
 		},
-		"operating_system": schema.StringAttribute{
-			CustomType:          ovhtypes.TfStringType{},
-			Optional:            true,
-			Description:         "Operating system name",
-			MarkdownDescription: "Operating system name",
-		},
 	}
 	for k, v := range OrderResourceSchema(ctx).Attributes {
 		attrs[k] = v
@@ -678,7 +672,6 @@ type DedicatedServerModel struct {
 	OvhSubsidiary     ovhtypes.TfStringValue                            `tfsdk:"ovh_subsidiary" json:"ovhSubsidiary"`
 	Plan              ovhtypes.TfListNestedValue[PlanValue]             `tfsdk:"plan" json:"plan"`
 	PlanOption        ovhtypes.TfListNestedValue[PlanOptionValue]       `tfsdk:"plan_option" json:"planOption"`
-	OperatingSystem   ovhtypes.TfStringValue                            `tfsdk:"operating_system" json:"operatingSystem"`
 }
 
 func (v *DedicatedServerModel) MergeWith(other *DedicatedServerModel) {
@@ -806,10 +799,6 @@ func (v *DedicatedServerModel) MergeWith(other *DedicatedServerModel) {
 		v.SupportLevel = other.SupportLevel
 	}
 
-	if (v.OperatingSystem.IsUnknown() || v.OperatingSystem.IsNull()) && !other.OperatingSystem.IsUnknown() {
-		v.OperatingSystem = other.OperatingSystem
-	}
-
 	if (v.Order.IsUnknown() || v.Order.IsNull()) && !other.Order.IsUnknown() {
 		v.Order = other.Order
 	}
@@ -868,7 +857,7 @@ type DedicatedServerWritableModel struct {
 	RootDevice        *ovhtypes.TfStringValue                           `tfsdk:"root_device" json:"rootDevice,omitempty"`
 	State             *ovhtypes.TfStringValue                           `tfsdk:"state" json:"state,omitempty"`
 	Storage           *ovhtypes.TfListNestedValue[StorageWritableValue] `tfsdk:"storage" json:"storage,omitempty"`
-	OperatingSystem   *ovhtypes.TfStringValue                           `tfsdk:"operating_system" json:"operatingSystem"`
+	Os                *ovhtypes.TfStringValue                           `tfsdk:"os" json:"operatingSystem"`
 }
 
 func (v DedicatedServerModel) ToCreate() *DedicatedServerWritableModel {
@@ -916,8 +905,8 @@ func (v DedicatedServerModel) ToCreate() *DedicatedServerWritableModel {
 func (v DedicatedServerModel) ToReinstall() *DedicatedServerWritableModel {
 	res := &DedicatedServerWritableModel{}
 
-	if !v.OperatingSystem.IsUnknown() {
-		res.OperatingSystem = &v.OperatingSystem
+	if !v.Os.IsUnknown() {
+		res.Os = &v.Os
 	}
 
 	if !v.Customizations.IsUnknown() {
