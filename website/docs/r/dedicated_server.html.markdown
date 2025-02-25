@@ -14,7 +14,7 @@ data "ovh_me" "account" {}
 resource "ovh_dedicated_server" "server" {
   ovh_subsidiary = data.ovh_me.account.ovh_subsidiary
   display_name = "My server display name"
-  operating_system = "debian12_64"
+  os = "debian12_64"
   plan = [
     {
       plan_code = "22rise01"
@@ -94,6 +94,7 @@ resource "ovh_dedicated_server" "server" {
 ### Editable fields of a dedicated server
 
 * `display_name` - Display name of your dedicated server
+* `efi_bootloader_path` - Path of the EFI bootloader
 * `monitoring` - Icmp monitoring state
 * `no_intervention` - Prevent datacenter intervention
 * `rescue_mail` - Custom email used to receive rescue credentials
@@ -102,6 +103,7 @@ resource "ovh_dedicated_server" "server" {
 * `state` - All states a Dedicated can in (error, hacked, hackedBlocked, ok)
 
 ### Arguments used to reinstall a dedicated server
+* `os` - Operating System to install
 * `customizations` - Customization of the OS configuration
   * `configDriveUserData` -Config Drive UserData
   * `efiBootloaderPath` - Path of the EFI bootloader from the OS installed on the server

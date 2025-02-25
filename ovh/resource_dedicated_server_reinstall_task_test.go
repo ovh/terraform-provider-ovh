@@ -221,7 +221,7 @@ resource ovh_dedicated_server_update "server" {
 
 resource "ovh_dedicated_server_reinstall_task" "server_reinstall" {
   service_name     = data.ovh_dedicated_server_boots.harddisk.service_name
-  operating_system = "debian12_64"
+  os= "debian12_64"
 }
 `
 
@@ -246,7 +246,7 @@ resource ovh_dedicated_server_update "server" {
 
 resource ovh_dedicated_server_reinstall_task "server_reinstall" {
   service_name      = data.ovh_dedicated_server_boots.harddisk.service_name
-  operating_system     = "debian12_64"
+  os     = "debian12_64"
   bootid_on_destroy = data.ovh_dedicated_server_boots.rescue.result[0]
 }
 `
@@ -266,7 +266,7 @@ resource ovh_dedicated_server_update "server" {
 
 resource "ovh_dedicated_server_reinstall_task" "server_reinstall" {
   service_name     = data.ovh_dedicated_server_boots.harddisk.service_name
-  operating_system = "debian12_64"
+  os = "debian12_64"
   customizations {
     hostname               = "mon-tux"
     post_installation_script = "IyEvYmluL2Jhc2gKZWNobyAiY291Y291IHBvc3RJbnN0YWxsYXRpb25TY3JpcHQiID4gL29wdC9jb3Vjb3UKY2F0IC9ldGMvbWFjaGluZS1pZCAgPj4gL29wdC9jb3Vjb3UKZGF0ZSAiKyVZLSVtLSVkICVIOiVNOiVTIiAtLXV0YyA+PiAvb3B0L2NvdWNvdQo="
@@ -289,7 +289,7 @@ resource ovh_dedicated_server_update "server" {
 
 resource "ovh_dedicated_server_reinstall_task" "server_reinstall" {
   service_name     = data.ovh_dedicated_server_boots.harddisk.service_name
-  operating_system = "byolinux_64"
+  os = "byolinux_64"
   customizations {
     hostname = "mon-tux"
     image_check_sum = "047122c9ff4d2a69512212104b06c678f5a9cdb22b75467353613ff87ccd03b57b38967e56d810e61366f9d22d6bd39ac0addf4e00a4c6445112a2416af8f225"
@@ -320,7 +320,7 @@ resource ovh_dedicated_server_update "server" {
 
 resource "ovh_dedicated_server_reinstall_task" "server_reinstall" {
   service_name     = data.ovh_dedicated_server_boots.harddisk.service_name
-  operating_system = "debian12_64"
+  os = "debian12_64"
   customizations {
     hostname = "mon-tux"
   }

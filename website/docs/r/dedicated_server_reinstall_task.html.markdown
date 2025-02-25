@@ -120,7 +120,7 @@ data "ovh_dedicated_installation_template" "template" {
 
 resource "ovh_dedicated_server_reinstall_task" "server_install" {
   service_name     = data.ovh_dedicated_server.server.service_name
-  operating_system = "byolinux_64"
+  os = "byolinux_64"
   customizations {
     config_drive_user_data = "I2Nsb3VkLWNvbmZpZwpzc2hfYXV0aG9yaXplZF9rZXlzOgogIC0gc3NoLXJzYSBBQUFBQjhkallpdz09IG15c2VsZkBteWRvbWFpbi5uZXQKCnVzZXJzOgogIC0gbmFtZTogcGF0aWVudDAKICAgIHN1ZG86IEFMTD0oQUxMKSBOT1BBU1NXRDpBTEwKICAgIGdyb3VwczogdXNlcnMsIHN1ZG8KICAgIHNoZWxsOiAvYmluL2Jhc2gKICAgIGxvY2tfcGFzc3dkOiBmYWxzZQogICAgc3NoX2F1dGhvcml6ZWRfa2V5czoKICAgICAgLSBzc2gtcnNhIEFBQUFCOGRqWWl3PT0gbXlzZWxmQG15ZG9tYWluLm5ldApkaXNhYmxlX3Jvb3Q6IGZhbHNlCnBhY2thZ2VzOgogIC0gdmltCiAgLSB0cmVlCmZpbmFsX21lc3NhZ2U6IFRoZSBzeXN0ZW0gaXMgZmluYWxseSB1cCwgYWZ0ZXIgJFVQVElNRSBzZWNvbmRzCg=="
     hostname               = "mon-tux"
@@ -151,7 +151,7 @@ data "ovh_dedicated_installation_template" "template" {
 
 resource "ovh_dedicated_server_reinstall_task" "server_install" {
   service_name     = data.ovh_dedicated_server.server.service_name
-  operating_system = data.ovh_dedicated_installation_template.template.template_name
+  os = data.ovh_dedicated_installation_template.template.template_name
   customizations {
     hostname = "mon-tux"
   }
@@ -209,7 +209,7 @@ data "ovh_dedicated_installation_template" "template" {
 
 resource "ovh_dedicated_server_reinstall_task" "server_install" {
   service_name     = data.ovh_dedicated_server.server.service_name
-  operating_system = data.ovh_dedicated_installation_template.template.template_name
+  os = data.ovh_dedicated_installation_template.template.template_name
   customizations {
     hostname = "mon-tux"
   }
@@ -236,7 +236,7 @@ The following arguments are supported:
 
 * `service_name` - (Required) The service_name of your dedicated server.
 
-* `operating_system` - (Required) Operating system to install.
+* `os` - (Required) Operating system to install.
 
 * `bootid_on_destroy` - If set, reboot the server on the specified boot id during destroy phase.
 

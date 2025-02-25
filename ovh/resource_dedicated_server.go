@@ -283,14 +283,14 @@ func (r *dedicatedServerResource) updateDedicatedServerResource(ctx context.Cont
 	// Check if server needs to be reinstalled
 	var shouldReinstall bool
 	if stateData != nil {
-		if stateData.OperatingSystem.ValueString() != planData.OperatingSystem.ValueString() ||
+		if stateData.Os.ValueString() != planData.Os.ValueString() ||
 			!stateData.Customizations.Equal(planData.Customizations) ||
 			!stateData.Storage.Equal(planData.Storage) ||
 			!stateData.Properties.Equal(planData.Properties) {
 			shouldReinstall = true
 		}
 	} else {
-		if planData.OperatingSystem.ValueString() != "" {
+		if planData.Os.ValueString() != "" {
 			shouldReinstall = true
 		}
 	}

@@ -29,7 +29,7 @@ func resourceDedicatedServerReinstallTask() *schema.Resource {
 				ForceNew:    true,
 				Description: "The internal name of your dedicated server.",
 			},
-			"operating_system": {
+			"os": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
