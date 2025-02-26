@@ -54,3 +54,11 @@ Attributes are mostly the same as for [ovh_ip_service](https://registry.terrafor
 * `type` - Possible values for ip type
 * `task_status` - Status field of the current IP task that is in charge of changing the service the IP is attached to
 * `task_start_date` - Starting date and time field of the current IP task that is in charge of changing the service the IP is attached to
+
+## Import
+
+The resource can be imported using the `ip` field, e.g.,
+
+```bash
+$ terraform import ovh_ip_move.mv '1.2.3.4/32'
+```

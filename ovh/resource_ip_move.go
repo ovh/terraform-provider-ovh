@@ -35,6 +35,7 @@ func resourceIpServiceMove() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				d.Set("ip", d.Id())
 				return []*schema.ResourceData{d}, nil
 			},
 		},
