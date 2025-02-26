@@ -17,7 +17,7 @@ resource "ovh_dedicated_server" "server" {
   os = "debian12_64"
   plan = [
     {
-      plan_code = "22rise01"
+      plan_code = "24rise01"
       duration = "P1M"
       pricing_mode = "default"
 
@@ -67,7 +67,7 @@ resource "ovh_dedicated_server" "server" {
 }
 ```
 
-~> __WARNING__ After ordering a dedicated server, the provider will wait for 1 hour for it to be delivered. If it is still not delivered after this time, the apply will end in error, but the delivery process will still continue on OVHcloud's side. In this case you just need to manually untaint the resource and re-run an apply: `terraform untaint ovh_dedicated_server.server && terraform apply`. This can be repeated as many times as needed while waiting for the server to be delivered.
+~> __WARNING__ After ordering a dedicated server, the provider will wait a maximum of 2 hours for it to be delivered. If it is still not delivered after this time, the apply will end in error, but the delivery process will still continue on OVHcloud's side. In this case you just need to manually untaint the resource and re-run an apply: `terraform untaint ovh_dedicated_server.server && terraform apply`. This can be repeated as many times as needed while waiting for the server to be delivered.
 
 ## Argument Reference
 

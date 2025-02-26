@@ -662,9 +662,9 @@ func waitOrderCompletionV2(ctx context.Context, config *Config, orderID int64) (
 
 			return status, status, nil
 		},
-		Timeout:    time.Hour,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
+		Timeout:    2 * time.Hour,
+		Delay:      1 * time.Minute,
+		MinTimeout: 30 * time.Second,
 	}
 
 	result, err := stateConf.WaitForStateContext(ctx)

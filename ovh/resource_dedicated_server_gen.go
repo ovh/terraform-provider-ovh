@@ -313,6 +313,7 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 		},
 		"os": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
+			Optional:            true,
 			Computed:            true,
 			Description:         "Operating system",
 			MarkdownDescription: "Operating system",
@@ -845,19 +846,19 @@ func (v *DedicatedServerModel) ToOrder() *OrderModel {
 }
 
 type DedicatedServerWritableModel struct {
-	BootId            *ovhtypes.TfInt64Value                            `tfsdk:"boot_id" json:"bootId,omitempty"`
-	BootScript        *ovhtypes.TfStringValue                           `tfsdk:"boot_script" json:"bootScript,omitempty"`
-	Customizations    *CustomizationsWritableValue                      `tfsdk:"customizations" json:"customizations,omitempty"`
-	EfiBootloaderPath *ovhtypes.TfStringValue                           `tfsdk:"efi_bootloader_path" json:"efiBootloaderPath,omitempty"`
-	Monitoring        *ovhtypes.TfBoolValue                             `tfsdk:"monitoring" json:"monitoring,omitempty"`
-	NoIntervention    *ovhtypes.TfBoolValue                             `tfsdk:"no_intervention" json:"noIntervention,omitempty"`
-	Properties        ovhtypes.TfMapNestedValue[ovhtypes.TfStringValue] `tfsdk:"properties" json:"properties,omitempty"`
-	RescueMail        *ovhtypes.TfStringValue                           `tfsdk:"rescue_mail" json:"rescueMail,omitempty"`
-	RescueSshKey      *ovhtypes.TfStringValue                           `tfsdk:"rescue_ssh_key" json:"rescueSshKey,omitempty"`
-	RootDevice        *ovhtypes.TfStringValue                           `tfsdk:"root_device" json:"rootDevice,omitempty"`
-	State             *ovhtypes.TfStringValue                           `tfsdk:"state" json:"state,omitempty"`
-	Storage           *ovhtypes.TfListNestedValue[StorageWritableValue] `tfsdk:"storage" json:"storage,omitempty"`
-	Os                *ovhtypes.TfStringValue                           `tfsdk:"os" json:"operatingSystem"`
+	BootId            *ovhtypes.TfInt64Value                             `tfsdk:"boot_id" json:"bootId,omitempty"`
+	BootScript        *ovhtypes.TfStringValue                            `tfsdk:"boot_script" json:"bootScript,omitempty"`
+	Customizations    *CustomizationsWritableValue                       `tfsdk:"customizations" json:"customizations,omitempty"`
+	EfiBootloaderPath *ovhtypes.TfStringValue                            `tfsdk:"efi_bootloader_path" json:"efiBootloaderPath,omitempty"`
+	Monitoring        *ovhtypes.TfBoolValue                              `tfsdk:"monitoring" json:"monitoring,omitempty"`
+	NoIntervention    *ovhtypes.TfBoolValue                              `tfsdk:"no_intervention" json:"noIntervention,omitempty"`
+	Properties        *ovhtypes.TfMapNestedValue[ovhtypes.TfStringValue] `tfsdk:"properties" json:"properties,omitempty"`
+	RescueMail        *ovhtypes.TfStringValue                            `tfsdk:"rescue_mail" json:"rescueMail,omitempty"`
+	RescueSshKey      *ovhtypes.TfStringValue                            `tfsdk:"rescue_ssh_key" json:"rescueSshKey,omitempty"`
+	RootDevice        *ovhtypes.TfStringValue                            `tfsdk:"root_device" json:"rootDevice,omitempty"`
+	State             *ovhtypes.TfStringValue                            `tfsdk:"state" json:"state,omitempty"`
+	Storage           *ovhtypes.TfListNestedValue[StorageWritableValue]  `tfsdk:"storage" json:"storage,omitempty"`
+	Os                *ovhtypes.TfStringValue                            `tfsdk:"os" json:"operatingSystem,omitempty"`
 }
 
 func (v DedicatedServerModel) ToCreate() *DedicatedServerWritableModel {
@@ -909,11 +910,11 @@ func (v DedicatedServerModel) ToReinstall() *DedicatedServerWritableModel {
 		res.Os = &v.Os
 	}
 
-	if !v.Customizations.IsUnknown() {
+	if !v.Customizations.IsUnknown() && !v.Customizations.IsNull() {
 		res.Customizations = v.Customizations.ToUpdate()
 	}
 
-	if !v.Storage.IsUnknown() {
+	if !v.Storage.IsUnknown() && !v.Storage.IsNull() {
 		var updateStorage []*StorageWritableValue
 		for _, elem := range v.Storage.Elements() {
 			elemToUpdate := elem.(StorageValue).ToUpdate()
@@ -927,8 +928,8 @@ func (v DedicatedServerModel) ToReinstall() *DedicatedServerWritableModel {
 		}
 	}
 
-	if !v.Properties.IsUnknown() {
-		res.Properties = v.Properties
+	if !v.Properties.IsUnknown() && !v.Properties.IsNull() {
+		res.Properties = &v.Properties
 	}
 
 	return res
@@ -1686,7 +1687,9 @@ func (v CustomizationsValue) ToCreate() *CustomizationsWritableValue {
 }
 
 func (v CustomizationsValue) ToUpdate() *CustomizationsWritableValue {
-	res := &CustomizationsWritableValue{}
+	res := &CustomizationsWritableValue{
+		CustomizationsValue: &CustomizationsValue{},
+	}
 
 	if !v.ImageType.IsNull() {
 		res.ImageType = v.ImageType
