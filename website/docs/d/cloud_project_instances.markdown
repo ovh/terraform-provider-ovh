@@ -36,6 +36,7 @@ The following attributes are exported:
     * `version` - IP version
   * `attached_volumes` - Volumes attached to the instance
     * `id` - Volume id
+  * `availability_zone` - Availability zone of the instance
   * `flavor_id` - Flavor id
   * `flavor_name` - Flavor name
   * `id` - Instance id

@@ -50,6 +50,7 @@ The following arguments are supported:
 * `group`- (Optional, Forces new resource) Start instance in group
   * `group_id` - (Optional, Forces new resource) Group id
 * `name` - (Required, Forces new resource) Instance name
+* `availability_zone` - (Optional) The availability zone where the instance will be created
 * `ssh_key` - (Mandatory only if ssh_key_create not used, Forces new resource) Existing SSH Keypair
   * `name` - (Optional, Forces new resource) SSH Keypair name
 * `ssh_key_create` - (Mandatory only if ssh_key not used, Forces new resource) Add existing SSH Key pair into your Public Cloud project and link it to the instance
