@@ -12,13 +12,13 @@ import (
 	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
 )
 
-func resourceDbaasLogsRolePermission() *schema.Resource {
+func resourceDbaasLogsRolePermissionStream() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceDbaasLogsRolePermissionCreate,
-		ReadContext:   resourceDbaasLogsRolePermissionRead,
-		DeleteContext: resourceDbaasLogsRolePermissionDelete,
+		CreateContext: resourceDbaasLogsRolePermissionStreamCreate,
+		ReadContext:   resourceDbaasLogsRolePermissionStreamRead,
+		DeleteContext: resourceDbaasLogsRolePermissionStreamDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceDbaasLogsRolePermissionImportState,
+			State: resourceDbaasLogsRolePermissionStreamImportState,
 		},
 		Schema: map[string]*schema.Schema{
 			"service_name": {
@@ -54,8 +54,8 @@ func resourceDbaasLogsRolePermission() *schema.Resource {
 	}
 }
 
-// resourceDbaasLogsRolePermissionCreate adds a stream permission to a role.
-func resourceDbaasLogsRolePermissionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+// resourceDbaasLogsRolePermissionStreamCreate adds a stream permission to a role.
+func resourceDbaasLogsRolePermissionStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	roleId := d.Get("role_id").(string)
@@ -83,10 +83,10 @@ func resourceDbaasLogsRolePermissionCreate(ctx context.Context, d *schema.Resour
 	}
 
 	// Iterate over each permission ID to retrieve full details and filter by streamId.
-	var foundPermission *DbaasLogsRolePermission
+	var foundPermission *DbaasLogsRolePermissionStream
 	for _, pid := range permissionIDs {
 		permEndpoint := fmt.Sprintf("/dbaas/logs/%s/role/%s/permission/%s", url.PathEscape(serviceName), url.PathEscape(roleId), url.PathEscape(pid))
-		var permission DbaasLogsRolePermission
+		var permission DbaasLogsRolePermissionStream
 		if err := config.OVHClient.Get(permEndpoint, &permission); err != nil {
 			// Optionally, log error and continue with next permission.
 			log.Printf("[WARN] Failed to get permission details for ID %s: %v", pid, err)
@@ -103,11 +103,11 @@ func resourceDbaasLogsRolePermissionCreate(ctx context.Context, d *schema.Resour
 	}
 
 	d.SetId(foundPermission.PermissionId)
-	return resourceDbaasLogsRolePermissionRead(ctx, d, meta)
+	return resourceDbaasLogsRolePermissionStreamRead(ctx, d, meta)
 }
 
-// resourceDbaasLogsRolePermissionRead reads the details of a permission.
-func resourceDbaasLogsRolePermissionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+// resourceDbaasLogsRolePermissionStreamRead reads the details of a permission.
+func resourceDbaasLogsRolePermissionStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	roleId := d.Get("role_id").(string)
@@ -115,7 +115,7 @@ func resourceDbaasLogsRolePermissionRead(ctx context.Context, d *schema.Resource
 
 	log.Printf("[DEBUG] Reading permission: service=%s, role=%s, permission=%s", serviceName, roleId, permissionId)
 
-	permission := &DbaasLogsRolePermission{}
+	permission := &DbaasLogsRolePermissionStream{}
 	endpoint := fmt.Sprintf("/dbaas/logs/%s/role/%s/permission/%s", url.PathEscape(serviceName), url.PathEscape(roleId), url.PathEscape(permissionId))
 	if err := config.OVHClient.Get(endpoint, permission); err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
@@ -128,8 +128,8 @@ func resourceDbaasLogsRolePermissionRead(ctx context.Context, d *schema.Resource
 	return nil
 }
 
-// resourceDbaasLogsRolePermissionDelete deletes the specified permission.
-func resourceDbaasLogsRolePermissionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+// resourceDbaasLogsRolePermissionStreamDelete deletes the specified permission.
+func resourceDbaasLogsRolePermissionStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	roleId := d.Get("role_id").(string)
@@ -152,8 +152,8 @@ func resourceDbaasLogsRolePermissionDelete(ctx context.Context, d *schema.Resour
 	return nil
 }
 
-// resourceDbaasLogsRolePermissionImportState imports a permission given an ID in the format "service_name/role_id/permission_id".
-func resourceDbaasLogsRolePermissionImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+// resourceDbaasLogsRolePermissionStreamImportState imports a permission given an ID in the format "service_name/role_id/permission_id".
+func resourceDbaasLogsRolePermissionStreamImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	givenID := d.Id()
 	splitID := strings.SplitN(givenID, "/", 3)
 	if len(splitID) != 3 {

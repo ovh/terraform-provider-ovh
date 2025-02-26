@@ -16,18 +16,6 @@ func (opts *DbaasLogsRoleCreateOpts) FromResource(d *schema.ResourceData) *Dbaas
 	return opts
 }
 
-// DbaasLogsRoleUpdateOpts defines the options for updating a role.
-type DbaasLogsRoleUpdateOpts struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-}
-
-func (opts *DbaasLogsRoleUpdateOpts) FromResource(d *schema.ResourceData) *DbaasLogsRoleUpdateOpts {
-	opts.Name = d.Get("name").(string)
-	opts.Description = d.Get("description").(string)
-	return opts
-}
-
 // DbaasLogsRole represents the role resource as returned by the API.
 type DbaasLogsRole struct {
 	CreatedAt    string `json:"createdAt"`

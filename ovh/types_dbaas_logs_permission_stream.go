@@ -15,7 +15,7 @@ func (opts *DbaasLogsRolePermissionStreamOpts) FromResource(d *schema.ResourceDa
 }
 
 // DbaasLogsRolePermission represents the permission as returned by the GET endpoint.
-type DbaasLogsRolePermission struct {
+type DbaasLogsRolePermissionStream struct {
 	PermissionId   string `json:"permissionId"`
 	PermissionType string `json:"permissionType"`
 	StreamId       string `json:"streamId"`

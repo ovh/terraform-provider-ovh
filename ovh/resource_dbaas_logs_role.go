@@ -128,11 +128,11 @@ func resourceDbaasLogsRoleUpdate(ctx context.Context, d *schema.ResourceData, me
 
 	log.Printf("[DEBUG] Updating dbaas logs role for service: %s, role: %s", serviceName, roleId)
 
-	opts := (&DbaasLogsRoleUpdateOpts{}).FromResource(d)
+	opts := (&DbaasLogsRoleCreateOpts{}).FromResource(d)
 	opRes := &DbaasLogsOperation{}
 	endpoint := fmt.Sprintf("/dbaas/logs/%s/role/%s", url.PathEscape(serviceName), url.PathEscape(roleId))
-	if err := config.OVHClient.Post(endpoint, opts, opRes); err != nil {
-		return diag.Errorf("Error calling POST %s:\n\t%q", endpoint, err)
+	if err := config.OVHClient.Put(endpoint, opts, opRes); err != nil {
+		return diag.Errorf("Error calling PUT %s:\n\t%q", endpoint, err)
 	}
 
 	// Wait for asynchronous operation to complete.
