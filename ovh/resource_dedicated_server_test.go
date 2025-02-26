@@ -23,7 +23,7 @@ func dedicatedServerResourceTestConfig(updated bool) string {
 		noIntervention = true
 		operatingSystem = "debian12_64"
 		displayName = "Second display name"
-		efiBootloaderPath = "\\efi\\debian\\grubx64.efi"
+		efiBootloaderPath = `\\efi\\debian\\grubx64.efi`
 	}
 
 	return fmt.Sprintf(`
@@ -38,7 +38,7 @@ func dedicatedServerResourceTestConfig(updated bool) string {
 		efi_bootloader_path = "%s"
 		plan = [
 			{
-				plan_code = "22rise01"
+				plan_code = "24rise01"
 				duration = "P1M"
 				pricing_mode = "default"
 
