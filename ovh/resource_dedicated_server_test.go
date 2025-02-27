@@ -13,7 +13,7 @@ func dedicatedServerResourceTestConfig(updated bool) string {
 	var (
 		monitoring        = true
 		noIntervention    = false
-		baseTemplate      = "debian11_64"
+		operatingSystem   = "debian11_64"
 		displayName       = "First display name"
 		efiBootloaderPath = ""
 	)
@@ -21,9 +21,9 @@ func dedicatedServerResourceTestConfig(updated bool) string {
 	if updated {
 		monitoring = false
 		noIntervention = true
-		baseTemplate = "debian12_64"
+		operatingSystem = "debian12_64"
 		displayName = "Second display name"
-		efiBootloaderPath = "\\efi\\debian\\grubx64.efi"
+		efiBootloaderPath = `\\efi\\debian\\grubx64.efi`
 	}
 
 	return fmt.Sprintf(`
@@ -33,13 +33,12 @@ func dedicatedServerResourceTestConfig(updated bool) string {
 		ovh_subsidiary = data.ovh_me.account.ovh_subsidiary
 		monitoring = %t
 		no_intervention = %t
+		os = "%s"
 		display_name = "%s"
-		template_name = "%s"
 		efi_bootloader_path = "%s"
-
 		plan = [
 			{
-				plan_code = "22rise01"
+				plan_code = "24rise01"
 				duration = "P1M"
 				pricing_mode = "default"
 
@@ -87,7 +86,7 @@ func dedicatedServerResourceTestConfig(updated bool) string {
 			}
 		]
 	}
-	`, monitoring, noIntervention, displayName, baseTemplate, efiBootloaderPath)
+	`, monitoring, noIntervention, operatingSystem, displayName, efiBootloaderPath)
 }
 
 func TestAccDedicatedServer_basic(t *testing.T) {
@@ -137,7 +136,7 @@ func TestAccDedicatedServer_basic(t *testing.T) {
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "service_name",
 				ImportStateVerifyIgnore: []string{
-					"display_name", "order", "ovh_subsidiary", "plan", "plan_option", "template_name",
+					"display_name", "order", "ovh_subsidiary", "plan", "plan_option",
 				},
 				ImportStateIdFunc: func(s *terraform.State) (string, error) {
 					service, ok := s.RootModule().Resources["ovh_dedicated_server.server"]

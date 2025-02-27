@@ -226,9 +226,11 @@ func (r *dedicatedServerResource) Update(ctx context.Context, req resource.Updat
 	responseData.MergeWith(&planData)
 	responseData.MergeWith(&stateData)
 
-	// Explicitely set UserMetadata to what was defined in the plan
+	// Explicitely set Customizations/Properties/Storage to what was defined in the plan
 	// as we can't determine the right thing to do in MergeWith function
-	responseData.UserMetadata = planData.UserMetadata
+	responseData.Customizations = planData.Customizations
+	responseData.Properties = planData.Properties
+	responseData.Storage = planData.Storage
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)
@@ -281,12 +283,14 @@ func (r *dedicatedServerResource) updateDedicatedServerResource(ctx context.Cont
 	// Check if server needs to be reinstalled
 	var shouldReinstall bool
 	if stateData != nil {
-		if stateData.TemplateName.ValueString() != planData.TemplateName.ValueString() ||
-			!stateData.UserMetadata.Equal(planData.UserMetadata) {
+		if stateData.Os.ValueString() != planData.Os.ValueString() ||
+			!stateData.Customizations.Equal(planData.Customizations) ||
+			!stateData.Storage.Equal(planData.Storage) ||
+			!stateData.Properties.Equal(planData.Properties) {
 			shouldReinstall = true
 		}
 	} else {
-		if planData.TemplateName.ValueString() != "" {
+		if planData.Os.ValueString() != "" {
 			shouldReinstall = true
 		}
 	}
@@ -298,7 +302,7 @@ func (r *dedicatedServerResource) updateDedicatedServerResource(ctx context.Cont
 	}
 
 	// Trigger server reinstallation
-	endpoint := "/dedicated/server/" + url.PathEscape(serviceName) + "/install/start"
+	endpoint := "/dedicated/server/" + url.PathEscape(serviceName) + "/reinstall"
 	if shouldReinstall {
 		log.Print("Triggering server reinstallation")
 		task := DedicatedServerTask{}
