@@ -44,7 +44,7 @@ func resourceCloudProjectKube() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create:  schema.DefaultTimeout(15 * time.Minute),
-			Update:  schema.DefaultTimeout(10 * time.Minute),
+			Update:  schema.DefaultTimeout(time.Hour),
 			Delete:  schema.DefaultTimeout(10 * time.Minute),
 			Read:    schema.DefaultTimeout(5 * time.Minute),
 			Default: schema.DefaultTimeout(10 * time.Minute),
