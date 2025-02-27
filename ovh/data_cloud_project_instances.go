@@ -66,6 +66,11 @@ func dataSourceCloudProjectInstances() *schema.Resource {
 								},
 							},
 						},
+						"availability_zone": {
+							Type:        schema.TypeString,
+							Description: "Availability Zone",
+							Computed:    true,
+						},
 						"flavor_id": {
 							Type:        schema.TypeString,
 							Description: "Flavor id",
