@@ -109,7 +109,7 @@ func TestAccCloudProjectInstance_basic(t *testing.T) {
 func TestAccCloudProjectInstance3AZ_basic(t *testing.T) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
 	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
-	az := os.Getenv("OVH_CLOUD_PROJECT_AZ_TEST")
+	az := os.Getenv("OVH_CLOUD_PROJECT_3AZ_REGION_TEST")
 	flavor, image, err := getFlavorAndImage(serviceName, region)
 	if err != nil {
 		t.Fatalf("failed to retrieve a flavor and an image: %s", err)
