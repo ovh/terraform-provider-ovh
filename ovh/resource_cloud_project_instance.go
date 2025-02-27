@@ -131,6 +131,7 @@ func resourceCloudProjectInstance() *schema.Resource {
 				Description: "The availability zone where the instance will be created",
 				Optional:    true,
 				ForceNew:    true,
+				Computed:    true,
 			},
 			"ssh_key": {
 				Type:        schema.TypeSet,
