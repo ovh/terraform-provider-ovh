@@ -106,6 +106,66 @@ func TestAccCloudProjectInstance_basic(t *testing.T) {
 	})
 }
 
+func TestAccCloudProjectInstance3AZ_basic(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+	az := os.Getenv("OVH_CLOUD_PROJECT_3AZ_REGION_TEST")
+	flavor, image, err := getFlavorAndImage(serviceName, region)
+	if err != nil {
+		t.Fatalf("failed to retrieve a flavor and an image: %s", err)
+	}
+
+	var testCreateInstance = fmt.Sprintf(`
+			resource "ovh_cloud_project_instance" "instance" {
+				service_name = "%s"
+				region = "%s"
+				billing_period = "hourly"
+				boot_from {
+					image_id = "%s"
+				}
+				flavor {
+					flavor_id = "%s"
+				}
+				name = "TestInstance"
+				ssh_key {
+					name = "%s"
+				}
+				network {
+					public = true
+				}
+				availability_zone = "%s"
+			}
+		`,
+		serviceName,
+		region,
+		image,
+		flavor,
+		os.Getenv("OVH_CLOUD_PROJECT_SSH_NAME_TEST"),
+		az)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloud(t)
+			testAccCheckCloudProjectExists(t)
+		},
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testCreateInstance,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_instance.instance", "id"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_instance.instance", "flavor_name", "b3-8"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_instance.instance", "flavor_id", flavor),
+					resource.TestCheckResourceAttr("ovh_cloud_project_instance.instance", "image_id", image),
+					resource.TestCheckResourceAttr("ovh_cloud_project_instance.instance", "region", region),
+					resource.TestCheckResourceAttr("ovh_cloud_project_instance.instance", "name", "TestInstance"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_instance.instance", "availability_zone", az),
+				),
+			},
+		},
+	})
+}
+
 func TestAccCloudProjectInstance_withSSHKeyCreate(t *testing.T) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
 	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")

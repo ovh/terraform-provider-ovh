@@ -68,6 +68,11 @@ func dataSourceCloudProjectInstance() *schema.Resource {
 				Description: "Flavor id",
 				Computed:    true,
 			},
+			"availability_zone": {
+				Type:        schema.TypeString,
+				Description: "Availability Zone",
+				Computed:    true,
+			},
 			"flavor_name": {
 				Type:        schema.TypeString,
 				Description: "Flavor name",
@@ -138,6 +143,7 @@ func dataSourceCloudProjectInstanceRead(d *schema.ResourceData, meta interface{}
 	d.Set("instance_id", res.Id)
 	d.Set("name", res.Name)
 	d.Set("ssh_key", res.SshKey)
+	d.Set("availability_zone", res.AvailabilityZone)
 	d.Set("task_state", res.TaskState)
 	d.Set("attached_volumes", attachedVolumes)
 

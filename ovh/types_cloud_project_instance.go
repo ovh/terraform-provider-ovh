@@ -37,17 +37,18 @@ type Network struct {
 }
 
 type CloudProjectInstanceCreateOpts struct {
-	AutoBackup    *AutoBackup   `json:"autobackup,omitempty"`
-	BillingPeriod string        `json:"billingPeriod"`
-	BootFrom      *BootFrom     `json:"bootFrom,omitempty"`
-	Bulk          int           `json:"bulk"`
-	Flavor        *Flavor       `json:"flavor,omitempty"`
-	Group         *Group        `json:"group,omitempty"`
-	Name          string        `json:"name"`
-	SshKey        *SshKey       `json:"sshKey,omitempty"`
-	SshKeyCreate  *SshKeyCreate `json:"sshKeyCreate,omitempty"`
-	UserData      *string       `json:"userData,omitempty"`
-	Network       *Network      `json:"network,omitempty"`
+	AutoBackup       *AutoBackup   `json:"autobackup,omitempty"`
+	AvailabilityZone *string       `json:"availabilityZone,omitempty"`
+	BillingPeriod    string        `json:"billingPeriod"`
+	BootFrom         *BootFrom     `json:"bootFrom,omitempty"`
+	Bulk             int           `json:"bulk"`
+	Flavor           *Flavor       `json:"flavor,omitempty"`
+	Group            *Group        `json:"group,omitempty"`
+	Name             string        `json:"name"`
+	SshKey           *SshKey       `json:"sshKey,omitempty"`
+	SshKeyCreate     *SshKeyCreate `json:"sshKeyCreate,omitempty"`
+	UserData         *string       `json:"userData,omitempty"`
+	Network          *Network      `json:"network,omitempty"`
 }
 
 type Address struct {
@@ -60,21 +61,23 @@ type AttachedVolume struct {
 }
 
 type CloudProjectInstanceResponse struct {
-	Addresses       []Address        `json:"addresses"`
-	AttachedVolumes []AttachedVolume `json:"attachedVolumes"`
-	FlavorId        string           `json:"flavorId"`
-	FlavorName      string           `json:"flavorName"`
-	Id              string           `json:"id"`
-	ImageId         string           `json:"imageId"`
-	Name            string           `json:"name"`
-	Region          string           `json:"region"`
-	SshKey          string           `json:"sshKey"`
-	TaskState       string           `json:"taskState"`
+	Addresses        []Address        `json:"addresses"`
+	AttachedVolumes  []AttachedVolume `json:"attachedVolumes"`
+	AvailabilityZone string           `json:"availabilityZone"`
+	FlavorId         string           `json:"flavorId"`
+	FlavorName       string           `json:"flavorName"`
+	Id               string           `json:"id"`
+	ImageId          string           `json:"imageId"`
+	Name             string           `json:"name"`
+	Region           string           `json:"region"`
+	SshKey           string           `json:"sshKey"`
+	TaskState        string           `json:"taskState"`
 }
 
 func (v CloudProjectInstanceResponse) ToMap() map[string]interface{} {
 	obj := make(map[string]interface{})
 	obj["flavor_id"] = v.FlavorId
+	obj["availability_zone"] = v.AvailabilityZone
 	obj["flavor_name"] = v.FlavorName
 	obj["image_id"] = v.ImageId
 	obj["id"] = v.Id
@@ -246,5 +249,6 @@ func (cpir *CloudProjectInstanceCreateOpts) FromResource(d *schema.ResourceData)
 	cpir.Network = GetNetwork(d.Get("network"))
 	cpir.BillingPeriod = d.Get("billing_period").(string)
 	cpir.Name = d.Get("name").(string)
+	cpir.AvailabilityZone = helpers.GetNilStringPointerFromData(d, "availability_zone")
 	cpir.UserData = helpers.GetNilStringPointerFromData(d, "user_data")
 }
