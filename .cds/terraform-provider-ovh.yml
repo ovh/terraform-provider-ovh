@@ -231,6 +231,18 @@ workflow:
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
+  Tests_CloudProjectRancher:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run CloudProjectRancher
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudprojectrancher}}"
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
   Tests_CloudProjectKubeCustomization:
     application: terraform-provider-ovh
     depends_on:
@@ -842,6 +854,7 @@ workflow:
     - Tests_IPFirewall
     - Tests_Okms
     - Tests_SavingsPlan
+    - Tests_CloudProjectRancher
     environment: acctests
     one_at_a_time: true
     pipeline: terraform-provider-ovh-run-sweepers
