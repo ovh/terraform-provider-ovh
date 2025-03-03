@@ -217,6 +217,8 @@ func (p *OvhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 		NewOkmsServiceKeyDataSource,
 		NewOkmsServiceKeyJwkDataSource,
 		NewOkmsServiceKeyPemDataSource,
+		NewOvhcloudConnectDataSource,
+		NewOvhcloudConnectsDataSource,
 	}
 }
 
