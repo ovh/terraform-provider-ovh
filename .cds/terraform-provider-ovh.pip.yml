@@ -16,6 +16,9 @@ parameters:
   skipthistest.cloudprojectkubernetes:
     type: boolean
     description: Skip Cloud Project Kubernetes tests
+  skipthistest.cloudprojectrancher:
+    type: boolean
+    description: Skip Cloud Project Rancher tests
   skipthistest.ldp:
     type: boolean
     description: Skip LDP tests
