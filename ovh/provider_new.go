@@ -199,6 +199,7 @@ func (p *OvhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 		NewCloudProjectNetworkPrivateDataSource,
 		NewCloudProjectNetworkPrivatesDataSource,
 		NewCloudProjectNetworkPrivateSubnetsDataSource,
+		NewCloudProjectRancherDataSource,
 		NewCloudProjectRancherPlanDataSource,
 		NewCloudProjectRancherVersionDataSource,
 		NewCloudProjectStorageDataSource,
