@@ -1,5 +1,5 @@
 ---
-subcategory : "Public Cloud Network"
+subcategory : "Load Balancer (Public Cloud / Octavia)"
 ---
 
 # ovh_cloud_project_loadbalancer_flavors
