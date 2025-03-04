@@ -45,7 +45,9 @@ func testSweepDomainNameServers(region string) error {
 
 	if err := client.Put(endpoint, domainNameServerTypeOpts, nil); err != nil {
 		// Ignore error "Your domaine nsType is already 'hosted'" as it means there is no sweep to perform
-		if ovhErr, ok := err.(ovh.APIError); ok && ovhErr.Code == http.StatusConflict && ovhErr.Class == "Client::Conflict::DomMsuUnknownError" {
+		if ovhErr, ok := err.(*ovh.APIError); ok &&
+			ovhErr.Code == http.StatusConflict &&
+			ovhErr.Class == "Client::Conflict::DomMsuUnknownError" {
 			return nil
 		}
 
