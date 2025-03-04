@@ -26,11 +26,13 @@ func testSweepVrackOCC(region string) error {
 	serviceName := os.Getenv("OVH_VRACK_SERVICE_TEST")
 	if serviceName == "" {
 		log.Print("[DEBUG] OVH_VRACK_SERVICE_TEST is not set. No vrack_ovhcloudconnect to sweep")
+		return nil
 	}
 
 	occ := os.Getenv("OVH_OVH_CLOUD_CONNECT_TEST")
 	if occ == "" {
 		log.Print("[DEBUG] OVH_OVH_CLOUD_CONNECT_TEST is not set. No vrack_ovhcloudconnect to sweep")
+		return nil
 	}
 
 	endpoint := fmt.Sprintf("/vrack/%s/ovhCloudConnect/%s",
