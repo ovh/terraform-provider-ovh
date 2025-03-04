@@ -2,15 +2,18 @@ package ovh
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"log"
+	"net/http"
 	"net/url"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/ovh/go-ovh/ovh"
 )
 
 func init() {
@@ -43,6 +46,12 @@ func testSweepDomainDsRecords(region string) error {
 	endpoint := fmt.Sprintf("/domain/%s/dsRecord", url.PathEscape(domainName))
 
 	if err := client.Post(endpoint, domainDsRecordsUpdateOpts, nil); err != nil {
+		if ovhErr, ok := err.(*ovh.APIError); ok &&
+			ovhErr.Code == http.StatusForbidden &&
+			ovhErr.Class == "Client::Forbidden::DomDoaForbidden" {
+			log.Printf("[DEBUG] Cannot update DS records on the given domain, skipping sweeper")
+			return nil
+		}
 		return fmt.Errorf("error calling POST on %s:\n\t%v", endpoint, err)
 	}
 
