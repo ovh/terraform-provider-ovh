@@ -6,7 +6,7 @@ import (
 	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	ovhtypes "github.com/ovh/terraform-provider-ovh/ovh/types"
+	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
 var _ datasource.DataSourceWithConfigure = (*ovhcloudConnectsDataSource)(nil)

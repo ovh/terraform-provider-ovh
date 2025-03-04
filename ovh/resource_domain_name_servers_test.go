@@ -3,6 +3,7 @@ package ovh
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"net/url"
 	"os"
 	"regexp"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/ovh/go-ovh/ovh"
 )
 
 func init() {
@@ -42,6 +44,11 @@ func testSweepDomainNameServers(region string) error {
 	endpoint := fmt.Sprintf("/domain/%s", url.PathEscape(domainName))
 
 	if err := client.Put(endpoint, domainNameServerTypeOpts, nil); err != nil {
+		// Ignore error "Your domaine nsType is already 'hosted'" as it means there is no sweep to perform
+		if ovhErr, ok := err.(ovh.APIError); ok && ovhErr.Code == http.StatusConflict && ovhErr.Class == "Client::Conflict::DomMsuUnknownError" {
+			return nil
+		}
+
 		return fmt.Errorf("error calling PUT on %s:\n\t%v", endpoint, err)
 	}
 

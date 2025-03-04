@@ -7,8 +7,8 @@ import (
 	"sort"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
-	"github.com/ovh/terraform-provider-ovh/ovh/helpers/hashcode"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers/hashcode"
 )
 
 func dataSourceCloudProjectKubeNodes() *schema.Resource {

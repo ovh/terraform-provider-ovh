@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	ovhtypes "github.com/ovh/terraform-provider-ovh/ovh/types"
+	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
 func DbaasLogsClusterRetentionDataSourceSchema(ctx context.Context) schema.Schema {

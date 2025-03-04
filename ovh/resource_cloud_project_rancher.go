@@ -8,7 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 )
 
 var _ resource.ResourceWithConfigure = (*cloudProjectRancherResource)(nil)

@@ -7,7 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 )
 
 const testAccCloudProjectUserS3PolicyConfig_basic = `

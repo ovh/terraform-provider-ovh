@@ -5,7 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"github.com/ovh/terraform-provider-ovh/ovh/types"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
 // ServiceInfos contains the information returned

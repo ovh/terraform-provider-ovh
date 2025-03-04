@@ -5,7 +5,7 @@ import (
 
 	"github.com/ovh/go-ovh/ovh"
 
-	"github.com/ovh/terraform-provider-ovh/ovh/helpers"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 )
 
 var (

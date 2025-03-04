@@ -5,7 +5,7 @@ package ovh
 import (
 	"context"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	ovhtypes "github.com/ovh/terraform-provider-ovh/ovh/types"
+	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 )

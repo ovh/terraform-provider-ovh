@@ -1,4 +1,4 @@
-module github.com/ovh/terraform-provider-ovh
+module github.com/ovh/terraform-provider-ovh/v2
 
 require (
 	github.com/google/go-cmp v0.6.0
@@ -71,5 +71,3 @@ require (
 go 1.22.0
 
 toolchain go1.22.8
-
-retract v0.36.0 // OVH_ENDPOINT environment variable prevent a correct usage of the terraform provider

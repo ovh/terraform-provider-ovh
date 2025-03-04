@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6/tf6server"
 	"github.com/hashicorp/terraform-plugin-mux/tf5to6server"
 	"github.com/hashicorp/terraform-plugin-mux/tf6muxserver"
-	"github.com/ovh/terraform-provider-ovh/ovh"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh"
 )
 
 func main() {

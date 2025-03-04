@@ -6,7 +6,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	ovhtypes "github.com/ovh/terraform-provider-ovh/ovh/types"
+	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
 func CloudProjectGatewayInterfaceDataSourceSchema(ctx context.Context) schema.Schema {

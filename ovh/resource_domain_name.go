@@ -9,7 +9,7 @@ import (
 	"golang.org/x/net/publicsuffix"
 
 	"github.com/ovh/go-ovh/ovh"
-	"github.com/ovh/terraform-provider-ovh/ovh/types"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
