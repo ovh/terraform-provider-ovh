@@ -1,3 +1,59 @@
+## 2.0.0 (March 4, 2025)
+
+🎉 Features:
+
+* New resource: `ovh_domain_name` ([#837](https://github.com/ovh/terraform-provider-ovh/pull/837))
+* New resource: `ovh_domain_name_servers` ([#870](https://github.com/ovh/terraform-provider-ovh/pull/870))
+* New resource: `ovh_domain_ds_records` ([#870](https://github.com/ovh/terraform-provider-ovh/pull/870))
+* New resource: `ovh_cloud_project_storage` ([#834](https://github.com/ovh/terraform-provider-ovh/pull/834), [#858](https://github.com/ovh/terraform-provider-ovh/pull/858))
+* New resource: `ovh_cloud_project_loadbalancer` ([#855](https://github.com/ovh/terraform-provider-ovh/pull/855))
+* New resource: `ovh_cloud_project_rancher` ([#872](https://github.com/ovh/terraform-provider-ovh/pull/872))
+* New resource: `ovh_dbaas_logs_role` ([#859](https://github.com/ovh/terraform-provider-ovh/pull/859))
+* New resource: `ovh_dbaas_logs_role_permission_stream` ([#859](https://github.com/ovh/terraform-provider-ovh/pull/859))
+* New resource: `ovh_vrack_ipv6` ([#838](https://github.com/ovh/terraform-provider-ovh/pull/838))
+* New resource: `ovh_vrack_vrackservices` ([#839](https://github.com/ovh/terraform-provider-ovh/pull/839))
+* New resource: `ovh_vrack_ovhcloudconnect` ([#875](https://github.com/ovh/terraform-provider-ovh/pull/875))
+* New resource: `ovh_dedicated_server_reinstall_task` ([#835](https://github.com/ovh/terraform-provider-ovh/pull/835))
+
+* New datasource: `ovh_cloud_project_flavors` ([#865](https://github.com/ovh/terraform-provider-ovh/pull/865))
+* New datasource: `ovh_cloud_project_loadbalancer_flavors` ([#866](https://github.com/ovh/terraform-provider-ovh/pull/866))
+* New datasource: `ovh_cloud_project_storage` ([#867](https://github.com/ovh/terraform-provider-ovh/pull/867))
+* New datasource: `ovh_cloud_project_storages` ([#867](https://github.com/ovh/terraform-provider-ovh/pull/867))
+* New datasource: `ovh_cloud_project_rancher` ([#876](https://github.com/ovh/terraform-provider-ovh/pull/876))
+* New datasource: `ovh_cloud_project_rancher_version` ([#874](https://github.com/ovh/terraform-provider-ovh/pull/874))
+* New datasource: `ovh_cloud_project_rancher_plan` ([#874](https://github.com/ovh/terraform-provider-ovh/pull/874))
+* New datasource: `ovh_ovhcloud_connect` ([#871](https://github.com/ovh/terraform-provider-ovh/pull/871))
+* New datasource: `ovh_ovhcloud_connects` ([#871](https://github.com/ovh/terraform-provider-ovh/pull/871))
+
+💪 Improvements:
+
+* `r/ovh_cloud_project_instance`: Add `availability_zone` field ([#863](https://github.com/ovh/terraform-provider-ovh/pull/863))
+* `d/ovh_cloud_project_instance`: Add `availability_zone` field ([#863](https://github.com/ovh/terraform-provider-ovh/pull/863))
+* `d/ovh_cloud_project_instances`: Add `availability_zone` field ([#863](https://github.com/ovh/terraform-provider-ovh/pull/863))
+
+🐜 Bug fixes:
+
+* `r/ovh_cloud_project_instance`: Correctly handle SSH keys ([#861](https://github.com/ovh/terraform-provider-ovh/pull/861))
+* `r/ovh_cloud_project_kube`: Increase update timeout ([#868](https://github.com/ovh/terraform-provider-ovh/pull/868))
+* `r/ovh_ip_move`: Fix import and add documentation ([#864](https://github.com/ovh/terraform-provider-ovh/pull/864))
+
+🧨 Breaking changes:
+
+__In the context of IAM integration across all OVHcloud products, we are deprecating the routes in the API section `/me` that are used to store/retrieve information about dedicated server installation templates and partition schemes.
+As a result, the resources `ovh_me_installation_template`, `ovh_me_installation_template_partition_scheme`, `ovh_me_installation_template_partition_scheme_hardware_raid` and `ovh_me_installation_template_partition_scheme_partition` are removed in favor of the new resource `ovh_dedicated_server_reinstall_task` and new parameters in resource `ovh_dedicated_server`.
+This will simplify the reinstallation and OS change on dedicated servers, especially when partitioning needs to be customized.__
+
+* `r/ovh_dedicated_server`: The fields used to reinstall a dedicated server have been modified do to API changes (the call [POST  /dedicated/server/{serviceName}/install/start](https://eu.api.ovh.com/console/?section=%2Fdedicated%2Fserver&branch=v1#post-/dedicated/server/-serviceName-/install/start) will be replaced by [POST /dedicated/server/{serviceName}/reinstall](https://eu.api.ovh.com/console/?section=%2Fdedicated%2Fserver&branch=v1#post-/dedicated/server/-serviceName-/reinstall)). In this context, the following fields have been removed: `user_metadata`, `template_name`, `partition_scheme_name`, `details`, and the following fields are replacing them: `os`, `storage`, `customizations`, and `properties` ([#835](https://github.com/ovh/terraform-provider-ovh/pull/835))
+* Resource `ovh_dedicated_server_install_task` has been replaced by the new resource `ovh_dedicated_server_reinstall_task` ([#835](https://github.com/ovh/terraform-provider-ovh/pull/835))
+* Resources removed: `ovh_me_installation_template`, `ovh_me_installation_template_partition_scheme`, `ovh_me_installation_template_partition_scheme_hardware_raid`, `ovh_me_installation_template_partition_scheme_partition` ([#835](https://github.com/ovh/terraform-provider-ovh/pull/835))
+
+📚 Documentation:
+
+* Reorganization of the documentation ([#840](https://github.com/ovh/terraform-provider-ovh/pull/840), [#873](https://github.com/ovh/terraform-provider-ovh/pull/873))
+* `r/ovh_vps`: Fix typo in documentation ([#836](https://github.com/ovh/terraform-provider-ovh/pull/836))
+
+❤️ Thanks for your contributions ❤️
+
 ## 1.6.0 (February 6, 2025)
 
 ⚙️ General:
