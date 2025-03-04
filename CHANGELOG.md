@@ -1,5 +1,15 @@
 ## 2.0.0 (March 4, 2025)
 
+🧨 Breaking changes:
+
+__In the context of IAM integration across all OVHcloud products, we are deprecating the routes in the API section `/me` that are used to store/retrieve information about dedicated server installation templates and partition schemes.
+As a result, the resources `ovh_me_installation_template`, `ovh_me_installation_template_partition_scheme`, `ovh_me_installation_template_partition_scheme_hardware_raid` and `ovh_me_installation_template_partition_scheme_partition` are removed in favor of the new resource `ovh_dedicated_server_reinstall_task` and new parameters in resource `ovh_dedicated_server`.
+This will simplify the reinstallation and OS change on dedicated servers, especially when partitioning needs to be customized.__
+
+* `r/ovh_dedicated_server`: The fields used to reinstall a dedicated server have been modified do to API changes (the call [POST  /dedicated/server/{serviceName}/install/start](https://eu.api.ovh.com/console/?section=%2Fdedicated%2Fserver&branch=v1#post-/dedicated/server/-serviceName-/install/start) will be replaced by [POST /dedicated/server/{serviceName}/reinstall](https://eu.api.ovh.com/console/?section=%2Fdedicated%2Fserver&branch=v1#post-/dedicated/server/-serviceName-/reinstall)). In this context, the following fields have been removed: `user_metadata`, `template_name`, `partition_scheme_name`, `details`, and the following fields are replacing them: `os`, `storage`, `customizations`, and `properties` ([#835](https://github.com/ovh/terraform-provider-ovh/pull/835))
+* Resource `ovh_dedicated_server_install_task` has been replaced by the new resource `ovh_dedicated_server_reinstall_task` ([#835](https://github.com/ovh/terraform-provider-ovh/pull/835))
+* Resources removed: `ovh_me_installation_template`, `ovh_me_installation_template_partition_scheme`, `ovh_me_installation_template_partition_scheme_hardware_raid`, `ovh_me_installation_template_partition_scheme_partition` ([#835](https://github.com/ovh/terraform-provider-ovh/pull/835))
+
 🎉 Features:
 
 * New resource: `ovh_domain_name` ([#837](https://github.com/ovh/terraform-provider-ovh/pull/837))
@@ -36,16 +46,6 @@
 * `r/ovh_cloud_project_instance`: Correctly handle SSH keys ([#861](https://github.com/ovh/terraform-provider-ovh/pull/861))
 * `r/ovh_cloud_project_kube`: Increase update timeout ([#868](https://github.com/ovh/terraform-provider-ovh/pull/868))
 * `r/ovh_ip_move`: Fix import and add documentation ([#864](https://github.com/ovh/terraform-provider-ovh/pull/864))
-
-🧨 Breaking changes:
-
-__In the context of IAM integration across all OVHcloud products, we are deprecating the routes in the API section `/me` that are used to store/retrieve information about dedicated server installation templates and partition schemes.
-As a result, the resources `ovh_me_installation_template`, `ovh_me_installation_template_partition_scheme`, `ovh_me_installation_template_partition_scheme_hardware_raid` and `ovh_me_installation_template_partition_scheme_partition` are removed in favor of the new resource `ovh_dedicated_server_reinstall_task` and new parameters in resource `ovh_dedicated_server`.
-This will simplify the reinstallation and OS change on dedicated servers, especially when partitioning needs to be customized.__
-
-* `r/ovh_dedicated_server`: The fields used to reinstall a dedicated server have been modified do to API changes (the call [POST  /dedicated/server/{serviceName}/install/start](https://eu.api.ovh.com/console/?section=%2Fdedicated%2Fserver&branch=v1#post-/dedicated/server/-serviceName-/install/start) will be replaced by [POST /dedicated/server/{serviceName}/reinstall](https://eu.api.ovh.com/console/?section=%2Fdedicated%2Fserver&branch=v1#post-/dedicated/server/-serviceName-/reinstall)). In this context, the following fields have been removed: `user_metadata`, `template_name`, `partition_scheme_name`, `details`, and the following fields are replacing them: `os`, `storage`, `customizations`, and `properties` ([#835](https://github.com/ovh/terraform-provider-ovh/pull/835))
-* Resource `ovh_dedicated_server_install_task` has been replaced by the new resource `ovh_dedicated_server_reinstall_task` ([#835](https://github.com/ovh/terraform-provider-ovh/pull/835))
-* Resources removed: `ovh_me_installation_template`, `ovh_me_installation_template_partition_scheme`, `ovh_me_installation_template_partition_scheme_hardware_raid`, `ovh_me_installation_template_partition_scheme_partition` ([#835](https://github.com/ovh/terraform-provider-ovh/pull/835))
 
 📚 Documentation:
 
