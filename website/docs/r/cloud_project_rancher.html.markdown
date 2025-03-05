@@ -16,6 +16,10 @@ resource "ovh_cloud_project_rancher" "rancher" {
     plan = "STANDARD"
   }
 }
+
+output "rancher_url" {
+  value = ovh_cloud_project_rancher.rancher.current_state.url
+}
 ```
 
 ## Schema
@@ -45,7 +49,7 @@ Required:
 Optional:
 
 - `ip_restrictions` (Attributes List) List of allowed CIDR blocks for a managed Rancher service's IP restrictions. When empty, any IP is allowed (see [below for nested schema](#nestedatt--target_spec--ip_restrictions))
-- `version` (String) Version of the managed Rancher service. Available versions for an existing managed Rancher can be retrieved using GET /rancher/rancherID/capabilities/version. Default is the latest version.
+- `version` (String) Version of the managed Rancher service. Available versions for an existing managed Rancher can be retrieved using ovh_cloud_project_rancher_version datasource. Default is the latest version.
 
 <a id="nestedatt--target_spec--ip_restrictions"></a>
 ### Nested Schema for `target_spec.ip_restrictions`
