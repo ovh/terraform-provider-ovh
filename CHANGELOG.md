@@ -17,6 +17,7 @@ This will simplify the reinstallation and OS change on dedicated servers, especi
 * New resource: `ovh_domain_ds_records` ([#870](https://github.com/ovh/terraform-provider-ovh/pull/870))
 * New resource: `ovh_cloud_project_storage` ([#834](https://github.com/ovh/terraform-provider-ovh/pull/834), [#858](https://github.com/ovh/terraform-provider-ovh/pull/858))
 * New resource: `ovh_cloud_project_loadbalancer` ([#855](https://github.com/ovh/terraform-provider-ovh/pull/855))
+* New resource: `ovh_cloud_project_volume_backup` ([#878](https://github.com/ovh/terraform-provider-ovh/pull/878))
 * New resource: `ovh_cloud_project_rancher` ([#872](https://github.com/ovh/terraform-provider-ovh/pull/872))
 * New resource: `ovh_dbaas_logs_role` ([#859](https://github.com/ovh/terraform-provider-ovh/pull/859))
 * New resource: `ovh_dbaas_logs_role_permission_stream` ([#859](https://github.com/ovh/terraform-provider-ovh/pull/859))
