@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	legacyschema "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	ovhtypes "github.com/ovh/terraform-provider-ovh/ovh/types"
+	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
 func OrderResourceSchema(ctx context.Context) schema.Schema {
@@ -1884,7 +1884,6 @@ func (opts PlanValue) FromResourceWithPath(d *legacyschema.ResourceData, path st
 	opts.Duration = ovhtypes.TfStringValue{StringValue: basetypes.NewStringValue(d.Get(fmt.Sprintf("%s.duration", path)).(string))}
 	opts.PlanCode = ovhtypes.TfStringValue{StringValue: basetypes.NewStringValue(d.Get(fmt.Sprintf("%s.plan_code", path)).(string))}
 	opts.PricingMode = ovhtypes.TfStringValue{StringValue: basetypes.NewStringValue(d.Get(fmt.Sprintf("%s.pricing_mode", path)).(string))}
-	opts.Domain = ovhtypes.NewTfStringValue(d.Get(fmt.Sprintf("%s.domain", path)).(string))
 
 	nbConfigs := d.Get(fmt.Sprintf("%s.configuration.#", path)).(int)
 	var configs []attr.Value
