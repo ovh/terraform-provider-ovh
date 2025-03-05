@@ -1,5 +1,5 @@
 ---
-subcategory : "Managed Rancher Service"
+subcategory : "Managed Rancher Service (MRS)"
 ---
 
 # ovh_cloud_project_rancher
