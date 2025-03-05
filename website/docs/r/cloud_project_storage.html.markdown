@@ -10,6 +10,8 @@ Create S3™* compatible storage container
 
 ## Example Usage
 
+Create a S3™* compatible storage container in GRA region with versioning enabled:
+
 ```hcl
 resource "ovh_cloud_project_storage" "storage" {
   service_name = "<public cloud project ID>"
@@ -17,6 +19,19 @@ resource "ovh_cloud_project_storage" "storage" {
   name = "my-storage"
   versioning = {
     status = "enabled"
+  }
+}
+```
+
+Create a S3™* compatible storage container in GRA region with encryption in AES256:
+
+```hcl
+resource "ovh_cloud_project_storage" "storage" {
+  service_name = "<public cloud project ID>"
+  region_name = "GRA"
+  name = "my-storage-via-tf"
+  encryption = {
+    sse_algorithm = "AES256"
   }
 }
 ```
