@@ -37,6 +37,7 @@ The following arguments are supported:
 - `method` - (Required) The method you want to use to interact with your
   object. Can be either 'GET' or 'PUT'.
 - `object` - (Required) The name of the object in your S3 bucket.
+- `version_id` - Version ID of the object to download or delete
 
 
 ## Attributes Reference
@@ -50,3 +51,4 @@ The following attributes are exported:
 * `method` - See Argument Reference above.
 * `object` - See Argument Reference above.
 * `url` - Computed URL result.
+* `signed_headers` - Map of signed headers.
