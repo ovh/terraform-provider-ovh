@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/ovh/go-ovh/ovh"
-	"github.com/ovh/terraform-provider-ovh/ovh/types"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
 var (

@@ -55,7 +55,7 @@ func TestAccCloudProjectInstance_basic(t *testing.T) {
 	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
 	flavor, image, err := getFlavorAndImage(serviceName, region)
 	if err != nil {
-		t.Fatalf("failed to retrieve a flavor and an image: %s", err)
+		t.Skipf("failed to retrieve a flavor and an image: %s", err)
 	}
 
 	var testCreateInstance = fmt.Sprintf(`
@@ -112,7 +112,7 @@ func TestAccCloudProjectInstance3AZ_basic(t *testing.T) {
 	az := os.Getenv("OVH_CLOUD_PROJECT_AVAILABILITY_ZONE_TEST")
 	flavor, image, err := getFlavorAndImage(serviceName, region)
 	if err != nil {
-		t.Fatalf("failed to retrieve a flavor and an image: %s", err)
+		t.Skipf("failed to retrieve a flavor and an image: %s", err)
 	}
 
 	var testCreateInstance = fmt.Sprintf(`
@@ -171,7 +171,7 @@ func TestAccCloudProjectInstance_withSSHKeyCreate(t *testing.T) {
 	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
 	flavor, image, err := getFlavorAndImage(serviceName, region)
 	if err != nil {
-		t.Fatalf("failed to retrieve a flavor and an image: %s", err)
+		t.Skipf("failed to retrieve a flavor and an image: %s", err)
 	}
 
 	sshKeyName := acctest.RandomWithPrefix(test_prefix)
