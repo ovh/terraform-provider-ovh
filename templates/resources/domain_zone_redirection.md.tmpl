@@ -1,0 +1,43 @@
+---
+subcategory : "Domain names"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_domain_zone_redirection
+
+Provides a OVHcloud domain zone redirection.
+
+## Example Usage
+
+{{tffile "examples/resources/domain_zone_redirection/example_1.tf"}}
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `zone` - (Required) The domain to add the redirection to
+* `subdomain` - (Optional) The name of the redirection
+* `target` - (Required) The value of the redirection
+* `type` - (Required) The type of the redirection, with values:
+  * `visible` -> Redirection by http code 302
+  * `visiblePermanent` -> Redirection by http code 301
+  * `invisible` -> Redirection by html frame
+* `description` - (Optional) A description of this redirection
+* `keywords` - (Optional) Keywords to describe this redirection
+* `title` - (Optional) Title of this redirection
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `id` - The redirection ID
+* `zone` - The domain to add the redirection to
+* `subDomain` - The name of the redirection
+* `target` - The value of the redirection
+* `type` - The type of the redirection
+* `description` - The description of the redirection
+* `keywords` - Keywords of the redirection
+* `title` - The title of the redirection

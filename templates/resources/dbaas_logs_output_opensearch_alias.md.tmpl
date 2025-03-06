@@ -1,0 +1,40 @@
+---
+subcategory : "Logs Data Platform"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_dbaas_logs_output_opensearch_alias
+
+Creates a DBaaS Logs Opensearch output alias.
+
+## Example Usage
+
+{{tffile "examples/resources/dbaas_logs_output_opensearch_alias/example_1.tf"}}
+
+## Argument Reference
+
+The following arguments are supported:
+* `service_name` - (Required) The service name
+* `description` - (Required) Index description
+* `suffix` - (Required) Index suffix
+* `indexes` - (Optional) List of attached indexes id
+* `streams` - (Optional) List of attached streams id
+
+## Attributes Reference
+
+Id is set to the opensearch alias Id. In addition, the following attributes are exported:
+
+* `alias_id` - Alias Id
+* `created_at` - Alias creation
+* `description` - Alias description
+* `indexes` - List of attached indexes id
+* `is_editable` - Indicates if you are allowed to edit entry
+* `max_size` - Maximum index size (in bytes)
+* `name` - Alias name
+* `nb_index` - Number of indices linked
+* `nb_stream` - Number of streams linked
+* `streams` - List of attached streams id
+* `updated_at` - Input last update

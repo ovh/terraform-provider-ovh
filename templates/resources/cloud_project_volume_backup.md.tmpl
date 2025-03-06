@@ -1,0 +1,50 @@
+---
+subcategory : "Cloud Project"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_cloud_project_volume_backup
+
+Manage backups for the given volume in a public cloud project.
+
+## Example Usage
+
+{{tffile "examples/resources/cloud_project_volume_backup/example_1.tf"}}
+
+## Schema
+
+### Required
+
+- `region_name` (String) Region name
+- `service_name` (String) Service name
+- `volume_id` (String) ID of the volume to backup
+
+### Optional
+
+- `name` (String) name of the backup
+
+### Read-Only
+
+- `creation_date` (String) Creation date of the backup
+- `id` (String) Volume backup id
+- `region` (String) Volume backup region
+- `size` (Number) Size of the backup in GiB
+- `status` (String) Staus of the backup
+
+## Import
+
+A volume backup in a public cloud project can be imported using the `service_name`, `region_name` and `id` attributes. Using the following configuration:
+
+{{tffile "examples/resources/cloud_project_volume_backup/example_2.tf"}}
+
+You can then run:
+
+```bash
+$ terraform plan -generate-config-out=backup.tf
+$ terraform apply
+```
+
+The file `backup.tf` will then contain the imported resource's configuration, that can be copied next to the `import` block above. See https://developer.hashicorp.com/terraform/language/import/generating-configuration for more details.

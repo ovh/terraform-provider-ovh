@@ -1,0 +1,36 @@
+---
+subcategory : "Logs Data Platform"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_dbaas_logs_role_permission_stream
+
+Reference a DBaaS logs role stream permission.
+
+## Example Usage
+
+{{tffile "examples/resources/dbaas_logs_role_permission_stream/example_1.tf"}}
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `service_name` - (Required) The service name
+* `role_id` - (Required) The DBaaS Logs role id
+* `stream_id` - (Required) The DBaaS Logs Graylog output stream id
+
+## Attributes Reference
+
+Id is set to the permission Id. In addition, the following attributes are exported:
+* `permission_type` - Permission type (e.g., READ_ONLY)
+
+## Import
+
+DBaaS logs role stream permission can be imported using the `service_name`, `role_id` and `id` of the permission, separated by "/" E.g.,
+
+```bash
+$  terraform import ovh_dbaas_logs_role_permission_stream.perm ldp-ra-XX/dc145bc2-eb01-4efe-a802-XXXXXX/e4818fa8-f426-11ef-a1f6-XXXXXXX
+```

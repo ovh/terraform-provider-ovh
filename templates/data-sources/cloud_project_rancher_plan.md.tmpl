@@ -1,0 +1,36 @@
+---
+subcategory : "Managed Rancher Service (MRS)"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_cloud_project_rancher_plan
+
+Use this datasource to retrieve information about the Managed Rancher plans available in the given public cloud project.
+
+## Example Usage
+
+{{tffile "examples/data-sources/cloud_project_rancher_plan/example_1.tf"}}
+
+## Schema
+
+### Required
+
+- `project_id` (String) Project ID
+
+### Read-Only
+
+- `plans` (Attributes Set) (see [below for nested schema](#nestedatt--plans))
+
+<a id="nestedatt--plans"></a>
+
+### Nested Schema for `plans`
+
+Read-Only:
+
+- `cause` (String) Cause for an unavailability
+- `message` (String) Human-readable description of the unavailability cause
+- `name` (String) Name of the plan
+- `status` (String) Status of the plan

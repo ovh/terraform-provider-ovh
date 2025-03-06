@@ -1,0 +1,27 @@
+---
+subcategory : "Cloud Project"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_cloud_project_user_s3_policy
+
+Get the S3 Policy of a public cloud project user. The policy can be set by using the `ovh_cloud_project_user_s3_policy` resource.
+
+## Example Usage
+
+{{tffile "examples/data-sources/cloud_project_user_s3_policy/example_1.tf"}}
+
+## Argument Reference
+
+The following arguments are supported:
+
+- `service_name` - (Required) The ID of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
+
+- `user_id` - (Required) The ID of a public cloud project's user.
+
+## Attributes Reference
+
+- `policy` - (Required) The policy document. This is a JSON formatted string.

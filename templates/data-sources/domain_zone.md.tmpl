@@ -1,0 +1,29 @@
+---
+subcategory : "Domain names"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_domain_zone (Data Source)
+
+Use this data source to retrieve information about a domain zone.
+
+## Example Usage
+
+{{tffile "examples/data-sources/domain_zone/example_1.tf"}}
+
+## Argument Reference
+
+* `name` - (Required) The name of the domain zone.
+
+## Attributes Reference
+
+`id` is set to the domain zone name. In addition, the following attributes are exported:
+
+* `urn` - URN of the DNS zone
+* `last_update` - Last update date of the DNS zone
+* `has_dns_anycast` - hasDnsAnycast flag of the DNS zone
+* `name_servers` - Name servers that host the DNS zone
+* `dnssec_supported` - Is DNSSEC supported by this zone

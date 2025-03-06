@@ -1,0 +1,26 @@
+---
+subcategory : "vRack"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_vracks (Data Source)
+
+Use this data source to get the list of Vrack IDs available for your OVHcloud account.
+
+## Example Usage
+
+{{tffile "examples/data-sources/vracks/example_1.tf"}}
+
+## Argument Reference
+
+This datasource takes no argument.
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `urn` - The URN of the vps
+* `result` - The list of vrack service name available for your OVHcloud account.
