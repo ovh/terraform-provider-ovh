@@ -1,0 +1,23 @@
+---
+subcategory : "Account Management (IAM)"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_me_api_oauth2_client (Data Source)
+
+Use this data source to retrieve information the list of existing OAuth2 service account IDs.
+
+## Example Usage
+
+{{tffile "examples/data-sources/me_api_oauth2_clients/example_1.tf"}}
+
+## Argument Reference
+
+This datasource takes no arguments.
+
+## Attributes Reference
+
+* `client_ids` - The list of all the existing client IDs.

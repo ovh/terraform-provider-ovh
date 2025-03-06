@@ -1,0 +1,27 @@
+---
+subcategory : "Account Management (IAM)"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_iam_reference_actions (Data Source)
+
+Use this data source to list the IAM action associated with a resource type.
+
+## Example Usage
+
+{{tffile "examples/data-sources/iam_reference_actions/example_1.tf"}}
+
+## Argument Reference
+
+* `type` - Kind of resource we want the actions for
+
+## Attributes Reference
+
+* `actions` - List of actions
+  * `action` - Name of the action
+  * `categories` - List of the categories of the action
+  * `description` - Description of the action
+  * `resource_type` - Resource type the action is related to

@@ -1,0 +1,29 @@
+---
+subcategory : "Additional IP"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_ip_mitigation
+
+Use this resource to manage an IP permanent mitigation.
+
+## Example Usage
+
+{{tffile "examples/resources/ip_mitigation/example_1.tf"}}
+
+## Argument Reference
+
+* `ip` - (Required) The IP or the CIDR
+* `ip_on_mitigation` - (Required) IPv4 address
+* `permanent ` - Set on true if the IP is on permanent mitigation
+
+## Attributes Reference
+
+* `ip` - The IP or the CIDR
+* `ip_on_mitigation` - IPv4 address
+* `permanent ` - Set on true if the IP is on permanent mitigation
+* `state` - Current state of the IP on mitigation
+* `auto` - Set on true if the IP is on auto-mitigation

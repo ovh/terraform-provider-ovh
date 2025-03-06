@@ -1,0 +1,48 @@
+---
+subcategory : "Domain names"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_domain_name_servers
+
+Use this resource to manage a domain's name servers.
+
+## Example Usage
+
+{{tffile "examples/resources/domain_name_servers/example_1.tf"}}
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `domain` - (Required) Domain name for which to manage name servers
+* `servers` - (Required) Details about a name server
+  * `host` - (Required) The server hostname
+  * `ip` - (Optional) The server IP
+
+## Attributes Reference
+
+* `domain` - Domain name and resource ID
+* `servers` - Details about a name server
+  * `host` - The server hostname
+  * `ip` - The server IP
+
+## Import
+
+Name servers can be imported using their `domain`.
+
+Using the following configuration:
+
+{{tffile "examples/resources/domain_name_servers/example_2.tf"}}
+
+You can then run:
+
+```bash
+$ terraform plan -generate-config-out=name_servers.tf
+$ terraform apply
+```
+
+The file `name_servers.tf` will then contain the imported resource's configuration, that can be copied next to the `import` block above. See https://developer.hashicorp.com/terraform/language/import/generating-configuration for more details.

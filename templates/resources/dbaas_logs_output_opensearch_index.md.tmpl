@@ -1,0 +1,38 @@
+---
+subcategory : "Logs Data Platform"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_dbaas_logs_output_opensearch_index
+
+Creates a DBaaS Logs Opensearch output index.
+
+## Example Usage
+
+{{tffile "examples/resources/dbaas_logs_output_opensearch_index/example_1.tf"}}
+
+## Argument Reference
+
+The following arguments are supported:
+* `service_name` - (Required) The service name
+* `description` - (Required) Index description
+* `nb_shard` - (Required) Number of shards
+* `suffix` - (Required) Index suffix
+
+## Attributes Reference
+
+Id is set to the opensearch index Id. In addition, the following attributes are exported:
+
+* `alert_notify_enabled` - If set, notify when size is near 80, 90 or 100 % of its maximum capacity
+* `created_at` - Index creation
+* `current_size` - Current index size (in bytes)
+* `description` - Index description
+* `index_id` - Index ID
+* `is_editable` - Indicates if you are allowed to edit entry
+* `max_size` - Maximum index size (in bytes)
+* `name` - Index name
+* `nb_shard` - Number of shard
+* `updated_at` - Index last update

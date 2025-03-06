@@ -1,0 +1,52 @@
+---
+subcategory : "Object Storage"
+---
+
+# ovh_cloud_project_storage_objects
+
+Get objects of S3™* compatible storage containers. \* S3 is a trademark filed by Amazon Technologies,Inc. OVHcloud's service is not sponsored by, endorsed by, or otherwise affiliated with Amazon Technologies,Inc.
+
+## Example Usage
+
+```terraform
+data "ovh_cloud_project_storage_objects" "objects" {
+  service_name = "<public cloud project ID>"
+  region_name  = "GRA"
+  name         = "<bucket name>"
+}
+```
+
+## Schema
+
+### Required
+
+- `name` (String) Name
+- `region_name` (String) Region name
+- `service_name` (String) Service name
+
+### Optional
+
+- `key_marker` (String) Key to start with when listing objects
+- `limit` (Number) Limit the number of objects returned (1000 maximum, defaults to 1000)
+- `prefix` (String) List objects whose key begins with this prefix
+- `version_id_marker` (String) Version ID to start listing from
+- `with_versions` (Boolean) List object versions
+
+### Read-Only
+
+- `objects` (Attributes Set) (see [below for nested schema](#nestedatt--objects))
+
+<a id="nestedatt--objects"></a>
+
+### Nested Schema for `objects`
+
+Read-Only:
+
+- `etag` (String) ETag
+- `is_delete_marker` (Boolean) Whether this object is a delete marker
+- `is_latest` (Boolean) Whether this is the latest version of the object
+- `key` (String) Key
+- `last_modified` (String) Last modification date
+- `size` (Number) Size (bytes)
+- `storage_class` (String) Storage class
+- `version_id` (String) Version ID of the object

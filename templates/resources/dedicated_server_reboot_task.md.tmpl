@@ -1,0 +1,36 @@
+---
+subcategory : "Dedicated Server"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_dedicated_server_reboot_task
+
+Reboot your Dedicated Server.
+
+~> **WARNING** After some delay, if the task is marked as `done`, the Provider may purge it. To avoid raising errors when terraform refreshes its plan, 404 errors are ignored on Resource Read, thus some information may be lost after a while.
+
+## Example Usage
+
+{{tffile "examples/resources/dedicated_server_reboot_task/example_1.tf"}}
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `service_name` - (Required) The service_name of your dedicated server.
+* `keepers` - List of values tracked to trigger reboot, used also to form implicit dependencies.
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `id` - The task id
+* `comment` - Details of this task. (should be `Reboot asked`)
+* `done_date` - Completion date in RFC3339 format.
+* `function` - Function name (should be `hardReboot`).
+* `last_update` - Last update in RFC3339 format.
+* `start_date` - Task creation date in RFC3339 format.
+* `status` - Task status (should be `done`)

@@ -1,0 +1,32 @@
+---
+subcategory : "Additional IP"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_cloud_project_failover_ip_attach (Data Source)
+
+Use this data source to get the details of a failover IP address of a service in a public cloud project.
+
+## Example Usage
+
+{{tffile "examples/data-sources/cloud_project_failover_ip_attach/example_1.tf"}}
+
+## Argument Reference
+
+* `service_name` - The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
+* `ip` - The failover ip address to query
+
+## Attributes Reference
+
+* `block` - The IP block
+* `continentCode` - The Ip continent
+* `geoloc` - The Ip location
+* `id` - The Ip id
+* `ip` - The Ip Address
+* `progress` - Current operation progress in percent
+* `routedTo` - Instance where ip is routed to
+* `status` - Ip status, can be `ok` or `operationPending`
+* `subType` - IP sub type, can be `cloud` or `ovh`

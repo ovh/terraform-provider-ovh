@@ -1,0 +1,57 @@
+---
+subcategory: "Gateway"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_cloud_project_gateway
+
+Create a new Gateway for existing subnet in the specified public cloud project.
+
+## Example Usage
+
+{{tffile "examples/resources/cloud_project_gateway/example_1.tf"}}
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `service_name` - (Required) ID of the private network.
+* `name` - (Required) Name of the gateway.
+* `region` - (Required) Region of the gateway.
+* `model` - (Required) Model of the gateway.
+* `network_id` - (Required) ID of the private network.
+* `subnet_id` - (Required) ID of the subnet.
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `id` - Identifier of the gateway.
+* `service_name` - See Argument Reference above.
+* `name` - See Argument Reference above.
+* `region` - Region of the gateway.
+* `model` - See Argument Reference above.
+* `network_id` - See Argument Reference above.
+* `subnet_id` - See Argument Reference above.
+* `external_information` - List of External Information of the gateway.
+  * `network_id` - External network ID of the gateway.
+  * `ips` - List of external ips of the gateway.
+    * `ip` - External IP of the gateway.
+    * `subnet_id` - Subnet ID of the ip.
+* `interfaces` - Interfaces list of the gateway.
+  * `id` - ID of the interface.
+  * `ip` - IP of the interface.
+  * `network_id` - Network ID of the interface.
+  * `subnet_id` - Subnet ID of the interface.
+* `status` - Status of the gateway.
+
+## Import
+
+A gateway can be imported using the `service_name`, `region` and `id` (identifier of the gateway) properties, separated by a `/`.
+
+```bash
+$ terraform import ovh_cloud_project_gateway.gateway service_name/region/id
+```

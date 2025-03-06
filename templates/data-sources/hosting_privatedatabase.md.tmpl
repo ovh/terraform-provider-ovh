@@ -1,0 +1,42 @@
+---
+subcategory : "Web Cloud Private SQL"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_hosting_privatedatabase (Data Source)
+
+Use this data source to retrieve information about an hosting database.
+
+## Example Usage
+
+{{tffile "examples/data-sources/hosting_privatedatabase/example_1.tf"}}
+
+## Argument Reference
+
+* `service_name` - The internal name of your private database
+
+## Attributes Reference
+
+`id` is set to database service_name. In addition, the following attributes are exported.
+
+* `urn` - URN of the private database
+* `cpu` - Number of CPU on your private database
+* `datacenter` - Datacenter where this private database is located
+* `display_name` - Name displayed in customer panel for your private database
+* `hostname` - Private database hostname
+* `hostname_ftp` - Private database FTP hostname
+* `infrastructure` - Infrastructure where service was stored
+* `offer` - Type of the private database offer
+* `port` - Private database service port
+* `port_ftp` - Private database FTP port
+* `quota_size` - Space allowed (in MB) on your private database
+* `quota_used` - Sapce used (in MB) on your private database
+* `ram` - Amount of ram (in MB) on your private database
+* `server` - Private database server name
+* `state` - Private database state
+* `version` - Private database available versions
+* `version_label` - Private database version label
+* `version_number` - Private database version number

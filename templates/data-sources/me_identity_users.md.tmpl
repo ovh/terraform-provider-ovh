@@ -1,0 +1,23 @@
+---
+subcategory : "Account Management (IAM)"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_me_identity_users (Data Source)
+
+Use this data source to retrieve list of user logins of the account's identity users.
+
+## Example Usage
+
+{{tffile "examples/data-sources/me_identity_users/example_1.tf"}}
+
+## Argument Reference
+
+This datasource takes no arguments.
+
+## Attributes Reference
+
+* `users` - The list of the user's logins of all the identity users.

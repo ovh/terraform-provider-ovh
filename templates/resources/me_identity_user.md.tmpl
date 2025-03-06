@@ -1,0 +1,31 @@
+---
+subcategory : "Account Management (IAM)"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_me_identity_user
+
+Creates an identity user.
+
+## Example Usage
+
+{{tffile "examples/resources/me_identity_user/example_1.tf"}}
+
+## Argument Reference
+
+* `description` - User description.
+* `email` - User's email.
+* `group` - User's group.
+* `login` - User's login suffix.
+* `password` - User's password.
+
+## Attributes Reference
+
+* `urn` - URN of the user, used when writing IAM policies
+* `creation` - Creation date of this user.
+* `last_update` - Last update of this user.
+* `password_last_update` - When the user changed his password for the last time.
+* `status` - Current user's status.

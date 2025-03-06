@@ -1,0 +1,40 @@
+---
+subcategory : "Dedicated Server"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_dedicated_server_update
+
+Update various properties of your Dedicated Server.
+
+~> **WARNING** `rescue_mail` and `root_device` properties aren't updated consistently. This is an issue on the OVHcloud API which has been reported. Meanwhile, these properties are not mapped on this terraform resource.
+
+## Example Usage
+
+{{tffile "examples/resources/dedicated_server_update/example_1.tf"}}
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `service_name` - (Required) The service_name of your dedicated server.
+* `boot_id` - boot id of the server
+* `boot_script` - boot script of the server
+* `efi_bootloader_path` - path of the EFI bootloader
+* `monitoring` - Icmp monitoring state
+* `state` - error, hacked, hackedBlocked, ok
+* `display_name` - display name of the dedicated server
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `service_name` - See Argument Reference above.
+* `boot_id` - See Argument Reference above.
+* `efi_bootloader_path` - See Argument Reference above.
+* `monitoring` - See Argument Reference above.
+* `state` - See Argument Reference above.
+* `display_name` - See Argument Reference above.

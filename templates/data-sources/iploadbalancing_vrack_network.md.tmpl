@@ -1,0 +1,30 @@
+---
+subcategory : "Load Balancer (IPLB)"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_iploadbalancing_vrack_network (Data Source)
+
+Use this data source to get the details of Vrack network available for your IPLoadbalancer associated with your OVHcloud account.
+
+## Example Usage
+
+{{tffile "examples/data-sources/iploadbalancing_vrack_network/example_1.tf"}}
+
+## Argument Reference
+
+* `service_name` - (Required) The internal name of your IP load balancing
+
+* `vrack_network_id` - (Required) Internal Load Balancer identifier of the vRack private network
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `display_name` - Human readable name for your vrack network
+* `nat_ip` - An IP block used as a pool of IPs by this Load Balancer to connect to the servers in this private network. The blck must be in the private network and reserved for the Load Balancer
+* `subnet` - IP block of the private network in the vRack
+* `vlan` - VLAN of the private network in the vRack. 0 if the private network is not in a VLAN

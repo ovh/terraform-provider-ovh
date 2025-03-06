@@ -1,0 +1,75 @@
+---
+subcategory : "Managed Databases"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_cloud_project_database_user
+
+Creates an user for a database cluster associated with a public cloud project.
+
+With this resource you can create a user and map "avnadmin" for the following database engine:
+
+* `cassandra`
+* `kafka`
+* `kafkaConnect`
+* `mysql`
+* `grafana`
+
+## Example Usage
+
+Create a user johndoe in a database. Output the user generated password with command `terraform output user_password`.
+
+{{tffile "examples/resources/cloud_project_database_user/example_1.tf"}}
+
+-> **NOTE** To reset password of the user previously created, update the `password_reset` attribute. Use the `terraform refresh` command after executing `terraform apply` to update the output with the new password. This attribute can be an arbitrary string but we recommend 2 formats:
+- a datetime to keep a trace of the last reset
+- a md5 of other variables to automatically trigger it based on this variable update
+
+{{tffile "examples/resources/cloud_project_database_user/example_2.tf"}}
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `service_name` - (Required, Forces new resource) The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
+* `engine` - (Required, Forces new resource) The engine of the database cluster you want to add. You can find the complete list of available engine in the [public documentation](https://docs.ovh.com/gb/en/publiccloud/databases). Available engines:
+  * `cassandra`
+  * `kafka`
+  * `kafkaConnect`
+  * `mysql`
+  * `grafana`
+* `cluster_id` - (Required, Forces new resource) Cluster ID.
+* `name` - (Required, Forces new resource) Name of the user. A user named "avnadmin" is mapped with already created admin user and reset his password instead of creating a new user. The "Grafana" engine only allows the "avnadmin" mapping.
+* `password_reset` - (Optional) Arbitrary string to change to trigger a password update. Use the `terraform refresh` command after executing `terraform apply` to update the output with the new password.
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `cluster_id` - See Argument Reference above.
+* `created_at` - Date of the creation of the user.
+* `engine` - See Argument Reference above.
+* `id` - ID of the user.
+* `name` - See Argument Reference above.
+* `password` - (Sensitive) Password of the user.
+* `password_reset` - Arbitrary string to change to trigger a password update.
+* `service_name` - See Argument Reference above.
+* `status` - Current status of the user.
+
+## Timeouts
+
+{{tffile "examples/resources/cloud_project_database_user/example_3.tf"}}
+* `create` - (Default 20m)
+* `update` - (Default 20m)
+* `delete` - (Default 20m)
+
+## Import
+
+OVHcloud Managed database clusters users can be imported using the `service_name`, `engine`, `cluster_id` and `id` of the user, separated by "/" E.g.,
+
+```bash
+$ terraform import ovh_cloud_project_database_user.my_user service_name/engine/cluster_id/id
+```
