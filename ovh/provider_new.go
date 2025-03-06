@@ -204,6 +204,8 @@ func (p *OvhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 		NewCloudProjectRancherVersionDataSource,
 		NewCloudProjectStorageDataSource,
 		NewCloudProjectStoragesDataSource,
+		NewCloudProjectStorageObjectDataSource,
+		NewCloudProjectStorageObjectsDataSource,
 		NewCloudProjectVolumesDataSource,
 		NewCloudProjectVolumeDataSource,
 		NewCloudProjectDataSource,
