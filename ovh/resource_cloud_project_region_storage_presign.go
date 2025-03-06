@@ -61,12 +61,26 @@ func resourceCloudProjectRegionStoragePresign() *schema.Resource {
 				ForceNew:    true,
 				Description: "Name of the object to download or upload",
 			},
+			"version_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				ForceNew:    true,
+				Description: "Version ID of the object to download or delete",
+			},
 
 			// Computed
 			"url": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Presigned URL",
+			},
+			"signed_headers": {
+				Type: schema.TypeMap,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Computed:    true,
+				Description: "Signed headers",
 			},
 		},
 	}
@@ -83,12 +97,17 @@ func resourceCloudProjectRegionStoragePresignCreate(d *schema.ResourceData, meta
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/region/%s/storage/%s/presign", url.PathEscape(serviceName), url.PathEscape(regionName), url.PathEscape(name))
 	if err := config.OVHClient.Post(endpoint, opts, resp); err != nil {
-		return fmt.Errorf("Error calling post %s:\n\t %q", endpoint, err)
+		return fmt.Errorf("error calling post %s:\n\t %q", endpoint, err)
 	}
+
 	d.SetId(strconv.FormatInt(time.Now().Unix(), 10))
-	err := d.Set("url", resp.URL)
-	if err != nil {
+	if err := d.Set("url", resp.URL); err != nil {
 		return err
 	}
+
+	if err := d.Set("signed_headers", resp.SignedHeaders); err != nil {
+		return err
+	}
+
 	return nil
 }
