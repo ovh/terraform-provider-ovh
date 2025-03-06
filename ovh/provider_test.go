@@ -237,6 +237,16 @@ func testAccPreCheckCloud(t *testing.T) {
 	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_SERVICE_TEST")
 }
 
+// Checks that the environment variables needed for the /cloud/region/storage acceptance tests
+// are set.
+func testAccPreCheckCloudStorage(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_SERVICE_TEST")
+	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_STORAGE_REGION_TEST")
+	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_STORAGE_BUCKET_NAME_TEST")
+	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_STORAGE_OBJECT_TEST")
+}
+
 // Checks that the environment variables needed for the /publicCloud/project/{id}/rancher acceptance tests
 // are set.
 func testAccPreCheckRancher(t *testing.T) {
