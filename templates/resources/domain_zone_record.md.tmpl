@@ -1,0 +1,48 @@
+---
+subcategory : "Domain names"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_domain_zone_record
+
+Provides a OVHcloud domain zone record.
+
+!> The `Change in text format` feature available in the web console will update the `ovh_domain_zone_record` ids if you use it. Hence if you have created your records with terraform, you will get some `record has been deleted` errors. The workaround is to `terraform import` all the records with the updated ids and to stop to mix web console and terraform.
+
+~> **WARNING** This resource and resource `ovh_domain_zone_import` should not be used together as `ovh_domain_zone_import` controls the whole DNS zone at once.
+
+## Example Usage
+
+{{tffile "examples/resources/domain_zone_record/example_1.tf"}}
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `zone` - (Required) The domain to add the record to
+* `subdomain` - (Required) The name of the record. It can be an empty string.
+* `target` - (Required) The value of the record
+* `fieldtype` - (Required) The type of the record
+* `ttl` - (Optional) The TTL of the record, it shall be >= to 60.
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `id` - The record ID
+* `zone` - The domain to add the record to
+* `subDomain` - The name of the record
+* `target` - The value of the record
+* `fieldType` - The type of the record
+* `ttl` - The TTL of the record
+
+## Import
+
+OVHcloud domain zone record can be imported using the `id`, which can be retrieved by using [OVH API portal](https://api.ovh.com/console/#/domain/zone/%7BzoneName%7D/record~GET), and the `zone`, separated by "." E.g.,
+
+```bash
+$ terraform import ovh_domain_zone_record.test id.zone
+```

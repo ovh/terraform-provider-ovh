@@ -1,0 +1,58 @@
+---
+subcategory : "Load Balancer (IPLB)"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh\_iploadbalancing\_http_farm\_server
+
+Creates a backend server entry linked to HTTP loadbalancing group (farm)
+
+## Example Usage
+
+{{tffile "examples/resources/iploadbalancing_http_farm_server/example_1.tf"}}
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `service_name` - (Required) The internal name of your IP load balancing
+* `farm_id` - ID of the farm this server is attached to
+* `display_name` - Label for the server
+* `address` - Address of the backend server (IP from either internal or OVHcloud network)
+* `status` - backend status - `active` or `inactive`
+* `port` - Port that backend will respond on
+* `proxy_protocol_version` - version of the PROXY protocol used to pass origin connection information from loadbalancer to receiving service (`v1`, `v2`, `v2-ssl`, `v2-ssl-cn`)
+* `on_marked_down` - enable action when backend marked down. (`shutdown-sessions`)
+* `weight` - used in loadbalancing algorithm
+* `probe` - defines if backend will be probed to determine health and keep as active in farm if healthy
+* `ssl` - is the connection ciphered with SSL (TLS)
+* `backup` - is it a backup server used in case of failure of all the non-backup backends
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `service_name` - See Argument Reference above.
+* `farm_id` - See Argument Reference above.
+* `display_name` - See Argument Reference above.
+* `address` - See Argument Reference above.
+* `status` - See Argument Reference above.
+* `port` - See Argument Reference above.
+* `proxy_protocol_version` - See Argument Reference above.
+* `on_marked_down` - See Argument Reference above.
+* `weight` - See Argument Reference above.
+* `probe` - See Argument Reference above.
+* `ssl` - See Argument Reference above.
+* `backup` - See Argument Reference above.
+* `cookie` - Value of the stickiness cookie used for this backend.
+
+## Import
+
+HTTP farm server can be imported using the following format `service_name`, the `id` of the farm and the `id` of the server separated by "/" e.g.
+
+```bash
+$ terraform import ovh_iploadbalancing_http_farm_server.backend service_name/farm_id/server_id
+```

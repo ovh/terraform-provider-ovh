@@ -1,0 +1,28 @@
+---
+subcategory : "Account Management (IAM)"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_me_identity_group
+
+Creates an identity group.
+
+## Example Usage
+
+{{tffile "examples/resources/me_identity_group/example_1.tf"}}
+
+## Argument Reference
+
+* `name` - Group name.
+* `description` - Group description.
+* `role` - Role associated with the group. Valid roles are ADMIN, REGULAR, UNPRIVILEGED, and NONE.
+
+## Attributes Reference
+
+* `urn` - URN of the user group, used when writing IAM policies
+* `default_group` - Is the group a default and immutable one.
+* `creation` - Creation date of this group.
+* `last_update` - Date of the last update of this group.

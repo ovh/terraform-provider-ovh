@@ -1,0 +1,44 @@
+---
+subcategory: "Gateway"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_cloud_project_gateway_interface
+
+Create a new Gateway Interface for existing subnet in the specified public cloud project.
+
+## Example Usage
+
+{{tffile "examples/resources/cloud_project_gateway_interface/example_1.tf"}}
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `service_name` - (Required) ID of the cloud project
+* `region` - (Required) Region of the gateway
+* `id` - (Required) ID of the gateway
+* `subnet_id` - (Required) ID of the subnet to add
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `service_name` - ID of the cloud project
+* `region` - Region of the gateway
+* `id` - ID of the gateway
+* `subnet_id` - ID of the subnet to add
+* `interface_id` - ID of the interface
+* `ip` - IP of the interface
+* `network_id` - Network ID of the interface
+
+## Import
+
+A gateway interface can be imported using the `service_name`, `region`, `id` (identifier of the gateway) and `interface_id` properties, separated by a `/`.
+
+```bash
+$ terraform import ovh_cloud_project_gateway.gateway service_name/region/id/interface_id
+```

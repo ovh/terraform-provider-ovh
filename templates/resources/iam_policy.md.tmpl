@@ -1,0 +1,33 @@
+---
+subcategory : "Account Management (IAM)"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_iam_policy
+
+Creates an IAM policy.
+
+## Example Usage
+
+{{tffile "examples/resources/iam_policy/example_1.tf"}}
+
+## Argument Reference
+
+* `name` - Name of the policy, must be unique
+* `description` - Description of the policy
+* `identities` - List of identities affected by the policy
+* `resources` - List of resources affected by the policy
+* `allow` - List of actions allowed on resources by identities
+* `except` - List of overrides of action that must not be allowed even if they are caught by allow. Only makes sens if allow contains wildcards.
+* `deny` - List of actions that will always be denied even if also allowed by this policy or another one.
+* `permissions_groups` - Set of permissions groups included in the policy. At evaluation, these permissions groups are each evaluated independently (notably, excepts actions only affect actions in the same permission group).
+
+## Attributes Reference
+
+* `owner` - Owner of the policy.
+* `created_at` - Creation date of this group.
+* `updated_at` - Date of the last update of this group.
+* `read_only` - Indicates that the policy is a default one.

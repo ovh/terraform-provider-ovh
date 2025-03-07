@@ -1,0 +1,35 @@
+---
+subcategory : "Web Cloud Private SQL"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_hosting_privatedatabase_user
+
+Create a new user on your private cloud database instance.
+
+## Example Usage
+
+{{tffile "examples/resources/hosting_privatedatabase_user/example_1.tf"}}
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `service_name` - The internal name of your private database.
+* `password` - (Required) Password for the new user (alphanumeric, minimum one number and 8 characters minimum)
+* `user_name` - (Required) User name used to connect on your databases
+
+## Attributes Reference
+
+The id is set to the value of `service_name`/`user_name`.
+
+## Import
+
+OVHcloud database user can be imported using the `service_name` and the `user_name`, separated by "/" E.g.,
+
+```
+$ terraform import ovh_hosting_privatedatabase_user.user service_name/user_name
+```

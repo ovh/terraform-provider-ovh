@@ -1,0 +1,30 @@
+---
+subcategory : "NAS-HA"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_dedicated_nasha_partition (Data Source)
+
+Use this data source to retrieve information about a dedicated HA-NAS partition.
+
+## Example Usage
+
+{{tffile "examples/data-sources/dedicated_nasha_partition/example_1.tf"}}
+
+## Argument Reference
+
+* `service_name` - (Required) The service_name of your dedicated HA-NAS.
+* `name` - (Required) The name of your dedicated HA-NAS partition.
+
+## Attributes Reference
+
+`id` is set with the name of the dedicated HA-NAS partition. In addition, the following attributes are exported:
+
+* `size` - size of the partition in GB
+* `protocol` - one of "NFS", "CIFS" or "NFS_CIFS"
+* `description` - A brief description of the partition
+* `capacity` - Percentage of partition space used in %
+* `used_by_snapshots` - Percentage of partition space used by snapshots in %

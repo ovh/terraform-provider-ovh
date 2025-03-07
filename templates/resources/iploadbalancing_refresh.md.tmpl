@@ -1,0 +1,29 @@
+---
+subcategory : "Load Balancer (IPLB)"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh\_iploadbalancing\_refresh
+
+Applies changes from other `ovh_iploadbalancing_*` resources to the production configuration of loadbalancers.
+
+## Example Usage
+
+{{tffile "examples/resources/iploadbalancing_refresh/example_1.tf"}}
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `service_name` - (Required) The internal name of your IP load balancing
+* `keepers` - List of values tracked to trigger refresh, used also to form implicit dependencies
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `service_name` - See Argument Reference above.
+* `keepers` - See Argument Reference above.

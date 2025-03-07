@@ -1,0 +1,42 @@
+---
+subcategory : "Ovhcloud Connect (OCC)"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_ovhcloud_connect (Data Source)
+
+Use this data source to retrieve information about an Ovhcloud Connect product
+
+## Example Usage
+
+{{tffile "examples/data-sources/ovhcloud_connect/example_1.tf"}}
+
+## Argument Reference
+
+The following arguments are supported:
+
+- `service_name` - (Required) The uuid of the Ovhcloud connect.
+
+## Attributes Reference
+
+The following attributes are exported:
+
+- `uuid` - uuid of the Ovhcloud Connect service
+- `bandwidth` - Service bandwidth
+- `description` - Service description
+- `status` - Service status
+- `interface_list` - List of interfaces linked to a service
+- `pop` - Pop reference where the service is delivered
+- `port_quantity` - Port quantity
+- `product` - Product name of the service
+- `provider_name` - Service provider
+- `service_name` - Service name
+- `vrack` - vrack linked to the service
+- `iam` - IAM resource information
+  - `urn` - URN of the private database, used when writing IAM policies
+  - `display_name` - Resource display name
+  - `id` - Unique identifier of the resource in the IAM
+  - `tags` - Resource tags. Tags that were internally computed are prefixed with `ovh:`

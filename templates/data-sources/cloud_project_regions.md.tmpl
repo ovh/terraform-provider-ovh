@@ -1,0 +1,27 @@
+---
+subcategory : "Cloud Project"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_cloud_project_regions (Data Source)
+
+Use this data source to get the regions of a public cloud project.
+
+## Example Usage
+
+{{tffile "examples/data-sources/cloud_project_regions/example_1.tf"}}
+
+## Argument Reference
+
+* `service_name` - (Required) The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
+
+* `has_services_up` - (Optional) List of services which has to be UP in regions. Example: "image", "instance", "network", "storage", "volume", "workflow", ... If left blank, returns all regions associated with the service_name.
+
+## Attributes Reference
+
+`id` is set to the ID of the project. In addition, the following attributes are exported:
+
+* `names` - The list of regions associated with the project, filtered by services UP.
