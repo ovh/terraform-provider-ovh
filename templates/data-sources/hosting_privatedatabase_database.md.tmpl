@@ -1,0 +1,31 @@
+---
+subcategory : "Web Cloud Private SQL"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_hosting_privatedatabase_database (Data Source)
+
+Use this data source to retrieve information about an hosting privatedatabase.
+
+## Example Usage
+
+{{tffile "examples/data-sources/hosting_privatedatabase_database/example_1.tf"}}
+
+## Argument Reference
+
+* `service_name` - The internal name of your private database
+* `database_name` - Database name
+
+## Attributes Reference
+
+`id` is set to `service_name`/`database_name`. In addition, the following attributes are exported.
+
+* `backup_time` - Time of the next backup (every day)
+* `creation_date` - Creation date of the database
+* `quota_used` - Space used by the database (in MB)
+* `users` - Users granted to this database
+  * `user_name` - User's name granted on this database
+  * `grant_type` - Grant of this user for this database

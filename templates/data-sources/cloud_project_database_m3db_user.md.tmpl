@@ -1,0 +1,35 @@
+---
+subcategory : "Managed Databases"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_cloud_project_database_m3db_user (Data Source)
+
+Use this data source to get information about a user of a M3DB cluster associated with a public cloud project.
+
+## Example Usage
+
+{{tffile "examples/data-sources/cloud_project_database_m3db_user/example_1.tf"}}
+
+## Argument Reference
+
+* `service_name` - (Required) The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
+
+* `cluster_id` - (Required) Cluster ID
+
+* `name` - (Required, Forces new resource) Name of the user.
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `cluster_id` - See Argument Reference above.
+* `created_at` - Date of the creation of the user.
+* `id` - ID of the user.
+* `group` - See Argument Reference above.
+* `name` - See Argument Reference above.
+* `service_name` - Current status of the user.
+* `status` - Current status of the user.

@@ -1,0 +1,32 @@
+resource "ovh_cloud_project_kube_nodepool" "pool" {
+  service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  kube_id       = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+  name          = "my-pool"
+  flavor_name   = "b2-7"
+  desired_nodes = 3
+  max_nodes     = 3
+  min_nodes     = 3
+  template {
+    metadata {
+      annotations = {
+        k1 = "v1"
+        k2 = "v2"
+      }
+      finalizers = []
+      labels = {
+        k3 = "v3"
+        k4 = "v4"
+      }
+    }
+    spec {
+      unschedulable = false
+      taints = [
+        {
+          effect = "PreferNoSchedule"
+          key    = "k"
+          value  = "v"
+        }
+      ]
+    }
+  }
+}

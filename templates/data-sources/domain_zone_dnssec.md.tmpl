@@ -1,0 +1,23 @@
+---
+subcategory : "Domain names"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_domain_zone_dnssec (Data Source)
+
+Use this data source to retrieve information about a domain zone DNSSEC status.
+
+## Example Usage
+
+{{tffile "examples/data-sources/domain_zone_dnssec/example_1.tf"}}
+
+## Argument Reference
+
+* `zone_name` - (Required) The name of the domain zone
+
+## Attributes Reference
+
+* `status` - DNSSEC status (`disableInProgress`, `disabled`, `enableInProgress` or `enabled`)

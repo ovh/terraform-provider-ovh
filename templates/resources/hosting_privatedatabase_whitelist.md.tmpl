@@ -1,0 +1,37 @@
+---
+subcategory : "Web Cloud Private SQL"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_hosting_privatedatabase_whitelist
+
+Create a new IP whitelist on your private cloud database instance.
+
+## Example Usage
+
+{{tffile "examples/resources/hosting_privatedatabase_whitelist/example_1.tf"}}
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `service_name` - The internal name of your private database.
+* `ip` - (Required) The whitelisted IP in your instance.
+* `name` - (Required) Custom name for your Whitelisted IP.
+* `service` - (Required) Authorize this IP to access service port. Values can be `true` or `false`
+* `sftp` - (Required) Authorize this IP to access SFTP port. Values can be `true` or `false`
+
+## Attributes Reference
+
+The id is set to the value of `service_name`/`ip`.
+
+## Import
+
+OVHcloud database whitelist can be imported using the `service_name` and the `ip`, separated by "/" E.g.,
+
+```
+$ terraform import ovh_hosting_privatedatabase_whitelist.ip service_name/ip
+```

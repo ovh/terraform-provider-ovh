@@ -1,0 +1,53 @@
+---
+subcategory : "Logs Data Platform"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_dbaas_logs_input
+
+Creates a dbaas logs input.
+
+## Example Usage
+
+{{tffile "examples/resources/dbaas_logs_input/example_1.tf"}}
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `allowed_networks` - List of IP blocks
+* `configuration` - (Required) Input configuration
+  * `flowgger` - (Optional) Flowgger configuration
+    * `log_format` - Type of format to decode. One of "RFC5424", "LTSV", "GELF", "CAPNP"
+    * `log_framing` - Indicates how messages are delimited. One of "LINE", "NUL", "SYSLEN", "CAPNP"
+  * `logstash` - (Optional) Logstash configuration
+    * `filter_section` - (Optional) The filter section of logstash.conf
+    * `input_section` - (Required) The filter section of logstash.conf
+    * `pattern_section` - (Optional) The list of customs Grok patterns
+* `description` - (Required) Input description
+* `engine_id` - (Required) Input engine ID
+* `exposed_port` - Port
+* `nb_instance` - Number of instance running (input, mutually exclusive with parameter `autoscale`)
+* `autoscale` - Whether the workload is auto-scaled (mutually exclusive with parameter `nb_instance`)
+* `min_scale_instance` - Minimum number of instances in auto-scaled mode
+* `max_scale_instance` - Maximum number of instances in auto-scaled mode
+* `service_name` - (Required) service name
+* `stream_id` - (Required) Associated Graylog stream
+* `title` - (Required) Input title
+
+## Attributes Reference
+
+Id is set to the input Id. In addition, the following attributes are exported:
+
+* `created_at` - Input creation
+* `hostname` - Hostname
+* `input_id` - Input ID
+* `is_restart_required` - Indicate if input need to be restarted
+* `public_address` - Input IP address
+* `ssl_certificate` - Input SSL certificate
+* `status` - init: configuration required, pending: ready to start, running: available
+* `updated_at` - Input last update
+* `current_nb_instance` - Number of instance running (returned by the API)

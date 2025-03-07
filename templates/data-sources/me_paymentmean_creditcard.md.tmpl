@@ -1,0 +1,33 @@
+---
+subcategory : "Account Management (IAM)"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_me_paymentmean_creditcard (Data Source)
+
+Use this data source to retrieve information about a credit card payment mean associated with an OVHcloud account.
+
+## Example Usage
+
+{{tffile "examples/data-sources/me_paymentmean_creditcard/example_1.tf"}}
+
+## Argument Reference
+
+* `description_regexp` - (Optional) a regexp used to filter credit cards on their `description` attributes.
+
+* `use_default` - (Optional) Retrieve credit card marked as default payment mean.
+
+* `use_last_to_expire` - (Optional) Retrieve the credit card that will be the last to expire according to its expiration date.
+
+* `states` - (Optional) Filter credit cards on their `state` attribute. Can be "expired", "valid", "tooManyFailures"
+
+## Attributes Reference
+
+`id` is set to the ID of the credit card payment mean
+
+* `description` - the description attribute of the credit card
+* `state` - the state attribute of the credit card
+* `default` - a boolean which tells if the retrieved credit card is marked as the default payment mean

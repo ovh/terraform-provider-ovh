@@ -1,0 +1,26 @@
+---
+subcategory : "Domain names"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_domain_zone_import
+
+Handle a whole DNS zone using a zone file.
+
+~> **WARNING** This resource and resource `ovh_domain_zone_record` should not be used together as `ovh_domain_zone_import` controls the whole DNS zone at once.
+
+## Example Usage
+
+{{tffile "examples/resources/domain_zone_import/example_1.tf"}}
+
+## Argument Reference
+
+* `zone_name` - (Required) The name of the domain zone
+* `zone_file` - (Required) Content of the zone file to import
+
+## Attributes Reference
+
+* `exported_content` - Zone file exported from the API

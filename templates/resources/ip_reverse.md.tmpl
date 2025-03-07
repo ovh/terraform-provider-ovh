@@ -1,0 +1,35 @@
+---
+subcategory : "Additional IP"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_ip_reverse
+
+Provides a OVHcloud IP reverse.
+
+## Example Usage
+
+{{tffile "examples/resources/ip_reverse/example_1.tf"}}
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `ip` - (Required) The IP block to which the IP belongs
+* `reverse` - (Required) The value of the reverse
+* `ip_reverse` - (Required) The IP to set the reverse of
+
+## Attributes Reference
+
+The id is set to the value of ip_reverse.
+
+## Import
+
+The resource can be imported using the `ip`, `ip_reverse` of the address, separated by "|" E.g.,
+
+```bash
+$ terraform import ovh_ip_reverse.my_reverse '2001:0db8:c0ff:ee::/64|2001:0db8:c0ff:ee::42'
+```

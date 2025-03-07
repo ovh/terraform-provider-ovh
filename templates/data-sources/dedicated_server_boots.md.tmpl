@@ -1,0 +1,29 @@
+---
+subcategory : "Dedicated Server"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_dedicated_server_boots (Data Source)
+
+Use this data source to get the list of compatible netboots for a dedicated server associated with your OVHcloud Account.
+
+## Example Usage
+
+{{tffile "examples/data-sources/dedicated_server_boots/example_1.tf"}}
+
+## Argument Reference
+
+* `service_name` - (Required) The internal name of your dedicated server.
+
+* `boot_type` - (Optional) Filter the value of bootType property (harddisk, rescue, internal, network)
+
+* `kernel` - (Optional) Filter the value of kernel property (iPXE script name)
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `result` - The list of dedicated server netboots.

@@ -1,0 +1,34 @@
+---
+subcategory : "vRack"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_vrack_vrackservices
+
+Attach a vrackServices to the vrack.
+
+## Example Usage
+
+{{tffile "examples/resources/vrack_vrackservices/example_1.tf"}}
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `service_name` - (Required) The internal name of your vrack
+* `vrack_services` - (Required) Your vrackServices service name.
+
+## Attributes Reference
+
+No additional attribute is exported.
+
+## Import
+
+Attachment of a vrackServices and a vRack can be imported using the `service_name` (vRack identifier) and the `vrack_services` (vrackServices service name), separated by "/" E.g.,
+
+```bash
+$ terraform import ovh_vrack_vrackservices.myattach "<service_name>/<vrackServices service name>"
+```

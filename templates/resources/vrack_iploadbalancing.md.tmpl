@@ -1,0 +1,29 @@
+---
+subcategory : "vRack"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_vrack_iploadbalancing
+
+Attach an IP Load Balancing to a VRack.
+
+## Example Usage
+
+{{tffile "examples/resources/vrack_iploadbalancing/example_1.tf"}}
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `service_name` - (Required) The id of the vrack.
+* `ip_loadbalancing` - (Required) The id of the IP Load Balancing.
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `service_name` - See Argument Reference above.
+* `ip_loadbalancing` - See Argument Reference above.
