@@ -7,6 +7,8 @@ subcategory : "Object Storage"
 
 Create S3™* compatible storage container (* S3 is a trademark filed by Amazon Technologies,Inc. OVHcloud's service is not sponsored by, endorsed by, or otherwise affiliated with Amazon Technologies,Inc.)
 
+~> When destroying a storage container, the provider will try to remove all objects it contains beforehand. This process can fail if the bucket contains locked objects. In this case, you will have to remove these objects manually before being able to run `terraform destroy` again.
+
 ## Example Usage
 
 ```terraform
