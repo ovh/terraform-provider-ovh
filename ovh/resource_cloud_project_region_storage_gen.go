@@ -396,7 +396,6 @@ type CloudProjectRegionStorageModel struct {
 }
 
 func (v *CloudProjectRegionStorageModel) MergeWith(other *CloudProjectRegionStorageModel) {
-
 	if (v.CreatedAt.IsUnknown() || v.CreatedAt.IsNull()) && !other.CreatedAt.IsUnknown() {
 		v.CreatedAt = other.CreatedAt
 	}
@@ -485,7 +484,6 @@ func (v *CloudProjectRegionStorageModel) MergeWith(other *CloudProjectRegionStor
 	if (v.VirtualHost.IsUnknown() || v.VirtualHost.IsNull()) && !other.VirtualHost.IsUnknown() {
 		v.VirtualHost = other.VirtualHost
 	}
-
 }
 
 type CloudProjectRegionStorageWritableModel struct {

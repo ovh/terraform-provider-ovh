@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 var _ resource.ResourceWithConfigure = (*cloudProjectStorageResource)(nil)
@@ -156,8 +157,61 @@ func (r *cloudProjectStorageResource) Delete(ctx context.Context, req resource.D
 		return
 	}
 
-	// Delete API call logic
-	endpoint := "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/region/" + url.PathEscape(data.RegionName.ValueString()) + "/storage/" + url.PathEscape(data.Name.ValueString())
+	endpoint := "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) +
+		"/region/" + url.PathEscape(data.RegionName.ValueString()) +
+		"/storage/" + url.PathEscape(data.Name.ValueString()) +
+		"/object?withVersions=true"
+	bulkDeleteEndpoint := "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) +
+		"/region/" + url.PathEscape(data.RegionName.ValueString()) +
+		"/storage/" + url.PathEscape(data.Name.ValueString()) +
+		"/bulkDeleteObjects"
+
+	// Try to empty bucket to be able to destroy it completely.
+	// This operation can fail if objects are locked. In this case, they must be unlocked manually
+	// before retrying the operation.
+	// A maximum of 1000 objects are returned at each GET call, so we have to iterate to empty bucket.
+	for {
+		var (
+			objects     []CloudProjectStorageObjectsValue
+			idsToDelete []map[string]string
+		)
+
+		if err := r.config.OVHClient.GetWithContext(ctx, endpoint, &objects); err != nil {
+			resp.Diagnostics.AddError(
+				fmt.Sprintf("Error calling Get %s", endpoint),
+				err.Error(),
+			)
+			return
+		}
+
+		if len(objects) == 0 {
+			break
+		}
+
+		for _, obj := range objects {
+			idsToDelete = append(idsToDelete, map[string]string{
+				"key":       obj.Key.ValueString(),
+				"versionId": obj.VersionId.ValueString(),
+			})
+		}
+
+		tflog.Info(ctx, fmt.Sprintf("removing objects %s", idsToDelete))
+		if err := r.config.OVHClient.PostWithContext(ctx, bulkDeleteEndpoint, map[string]any{
+			"objects": idsToDelete,
+		}, nil); err != nil {
+			resp.Diagnostics.AddError(
+				fmt.Sprintf("Error calling Post %s", bulkDeleteEndpoint),
+				err.Error(),
+			)
+			return
+		}
+	}
+
+	endpoint = "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) +
+		"/region/" + url.PathEscape(data.RegionName.ValueString()) +
+		"/storage/" + url.PathEscape(data.Name.ValueString())
+
+	// Delete bucket itself
 	if err := r.config.OVHClient.Delete(endpoint, nil); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Delete %s", endpoint),
