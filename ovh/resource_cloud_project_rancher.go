@@ -74,6 +74,10 @@ func (r *cloudProjectRancherResource) Create(ctx context.Context, req resource.C
 		return
 	}
 
+	// The password is only returned in response of the initial POST, so
+	// we save it to set it in the state in the end
+	savedBootstrapPassword := responseData.CurrentState.BootstrapPassword
+
 	// Wait for service to be ready
 	endpoint = "/v2/publicCloud/project/" + url.PathEscape(data.ProjectId.ValueString()) + "/rancher/" + url.PathEscape(responseData.Id.ValueString())
 	if err := helpers.WaitForAPIv2ResourceStatusReady(ctx, r.config.OVHClient, endpoint); err != nil {
@@ -88,6 +92,7 @@ func (r *cloudProjectRancherResource) Create(ctx context.Context, req resource.C
 	}
 
 	responseData.MergeWith(&data)
+	responseData.CurrentState.BootstrapPassword = savedBootstrapPassword
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)
@@ -155,6 +160,7 @@ func (r *cloudProjectRancherResource) Update(ctx context.Context, req resource.U
 	}
 
 	responseData.MergeWith(&planData)
+	responseData.MergeWith(&data)
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)

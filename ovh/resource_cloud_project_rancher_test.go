@@ -33,6 +33,7 @@ func TestAccCloudProjectRancher_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_rancher.ranch", "current_state.version"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_rancher.ranch", "current_state.region"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_rancher.ranch", "current_state.url"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_rancher.ranch", "current_state.bootstrap_password"),
 				),
 			},
 			{
@@ -53,6 +54,7 @@ func TestAccCloudProjectRancher_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_rancher.ranch", "current_state.version"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_rancher.ranch", "current_state.region"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_rancher.ranch", "current_state.url"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_rancher.ranch", "current_state.bootstrap_password"),
 				),
 			},
 		},
