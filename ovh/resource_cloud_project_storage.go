@@ -200,7 +200,7 @@ func (r *cloudProjectStorageResource) Delete(ctx context.Context, req resource.D
 			"objects": idsToDelete,
 		}, nil); err != nil {
 			resp.Diagnostics.AddError(
-				fmt.Sprintf("Error calling Get %s", endpoint),
+				fmt.Sprintf("Error calling Post %s", bulkDeleteEndpoint),
 				err.Error(),
 			)
 			return
