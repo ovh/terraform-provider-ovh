@@ -423,6 +423,30 @@ workflow:
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
+  Tests_DedicatedCloud:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run DedicatedCloud
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.dedicatedcloud}}"
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_VMwareCloudDirector:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run VMwareCloudDirector
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.vcd}}"
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
   Tests_DedicatedCeph:
     application: terraform-provider-ovh
     depends_on:
@@ -855,6 +879,8 @@ workflow:
     - Tests_Okms
     - Tests_SavingsPlan
     - Tests_CloudProjectRancher
+    - Tests_DedicatedCloud
+    - Tests_VMwareCloudDirector
     environment: acctests
     one_at_a_time: true
     pipeline: terraform-provider-ovh-run-sweepers
