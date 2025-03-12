@@ -83,17 +83,14 @@ func checkEnvOrSkip(t *testing.T, e string) {
 // Checks that the environment variables needed to create the OVH API client
 // are set and create the client right away.
 func testAccPreCheckCredentials(t *testing.T) {
-	checkEnvOrFail(t, "OVH_ENDPOINT")
-	checkEnvOrFail(t, "OVH_APPLICATION_KEY")
-	checkEnvOrFail(t, "OVH_APPLICATION_SECRET")
-	checkEnvOrFail(t, "OVH_CONSUMER_KEY")
-
 	if testAccOVHClient == nil {
 		config := Config{
 			Endpoint:          os.Getenv("OVH_ENDPOINT"),
 			ApplicationKey:    os.Getenv("OVH_APPLICATION_KEY"),
 			ApplicationSecret: os.Getenv("OVH_APPLICATION_SECRET"),
 			ConsumerKey:       os.Getenv("OVH_CONSUMER_KEY"),
+			ClientID:          os.Getenv("OVH_CLIENT_ID"),
+			ClientSecret:      os.Getenv("OVH_CLIENT_SECRET"),
 		}
 
 		if err := config.load(); err != nil {
