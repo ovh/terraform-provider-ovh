@@ -1,0 +1,34 @@
+---
+subcategory : "vRack"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_vrack_dedicated_cloud
+
+Attach a Dedicated Cloud to the vrack.
+
+## Example Usage
+
+{{tffile "examples/resources/vrack_dedicated_cloud/example_1.tf"}}
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `service_name` - (Required) The internal name of your vrack
+* `dedicated_cloud` - (Required) Your Dedicated Cloud service name
+
+## Attributes Reference
+
+No additional attribute is exported.
+
+## Import
+
+Attachment of a Dedicated Cloud and a vRack can be imported using the `service_name` (vRack identifier) and the `dedicated_cloud` (Dedicated Cloud service name), separated by "/" E.g.,
+
+```bash
+$ terraform import ovh_vrack_dedicated_cloud.myattach "<vRack service name>/<Dedicated Cloud service name>"
+```
