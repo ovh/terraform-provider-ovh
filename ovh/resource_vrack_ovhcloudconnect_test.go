@@ -63,7 +63,9 @@ func TestAccVrackOCC_basic(t *testing.T) {
 	occ := os.Getenv("OVH_OVH_CLOUD_CONNECT_TEST")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheckCredentials(t) },
+		PreCheck: func() {
+			testAccPreCheckOCCVRack(t)
+		},
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{

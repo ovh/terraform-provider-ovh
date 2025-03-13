@@ -350,6 +350,14 @@ func testAccPreCheckOCCVRack(t *testing.T) {
 	checkEnvOrSkip(t, "OVH_VRACK_OVH_CLOUD_CONNECT")
 }
 
+// Checks that the environment variables needed for the /vrack/{service}/dedicatedCloud/{dedicatedCloud} acceptance tests
+// are set.
+func testAccPreCheckDedicatedCloud(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_VRACK_SERVICE_TEST")
+	checkEnvOrSkip(t, "OVH_VRACK_DEDICATED_CLOUD")
+}
+
 // Checks that the environment variables needed for the /ipLoadbalacing acceptance tests
 // are set.
 func testAccPreCheckIpLoadbalancing(t *testing.T) {

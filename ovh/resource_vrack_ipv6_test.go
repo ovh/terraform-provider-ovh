@@ -67,7 +67,7 @@ func TestAccVrackIPv6_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheckOCCVRack(t)
+			testAccPreCheckVRack(t)
 		},
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
