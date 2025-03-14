@@ -29,6 +29,11 @@ func dataSourceCloudProjectContainerRegistry() *schema.Resource {
 				Description: "Registry creation date",
 				Computed:    true,
 			},
+			"iam_enabled": {
+				Type:        schema.TypeBool,
+				Description: "OVHcloud IAM enabled",
+				Computed:    true,
+			},
 			"name": {
 				Type:        schema.TypeString,
 				Description: "Registry name",

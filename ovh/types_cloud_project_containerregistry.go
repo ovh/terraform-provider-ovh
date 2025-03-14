@@ -77,16 +77,17 @@ func (v CloudProjectCapabilitiesContainerRegistryPlanRegistryLimits) ToMap() map
 }
 
 type CloudProjectContainerRegistry struct {
-	CreatedAt string `json:"createdAt"`
-	Id        string `json:"id"`
-	Name      string `json:"name"`
-	ProjectID string `json:"projectID"`
-	Region    string `json:"region"`
-	Size      int64  `json:"size"`
-	Status    string `json:"status"`
-	UpdatedAt string `json:"updatedAt"`
-	Url       string `json:"url"`
-	Version   string `json:"version"`
+	CreatedAt  string `json:"createdAt"`
+	Id         string `json:"id"`
+	IamEnabled bool   `json:"iamEnabled"`
+	Name       string `json:"name"`
+	ProjectID  string `json:"projectID"`
+	Region     string `json:"region"`
+	Size       int64  `json:"size"`
+	Status     string `json:"status"`
+	UpdatedAt  string `json:"updatedAt"`
+	Url        string `json:"url"`
+	Version    string `json:"version"`
 }
 
 func (p *CloudProjectContainerRegistry) String() string {
@@ -102,6 +103,7 @@ func (p *CloudProjectContainerRegistry) String() string {
 func (r CloudProjectContainerRegistry) ToMap() map[string]interface{} {
 	obj := make(map[string]interface{})
 	obj["created_at"] = r.CreatedAt
+	obj["iam_enabled"] = r.IamEnabled
 	obj["id"] = r.Id
 	obj["name"] = r.Name
 	obj["project_id"] = r.ProjectID
