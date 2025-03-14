@@ -1,0 +1,27 @@
+---
+subcategory : "vRack"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_vrack_dedicated_cloud_datacenter
+
+Move a Dedicated Cloud Datacenter to a vrack.
+
+## Example Usage
+
+{{tffile "examples/resources/vrack_dedicated_cloud_datacenter/example_1.tf"}}
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `service_name` - (Required) The internal name of your vrack
+* `datacenter` - (Required) Your Dedicated Cloud Datacenter.
+* `target_service_name` - (Required) The internal name of the vrack where you want to move your datacenter.
+
+## Attributes Reference
+
+No additional attribute is exported.
