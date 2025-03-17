@@ -26,8 +26,8 @@ resource "ovh_dedicated_server_reinstall_task" "server_install" {
         mount_point = "/"
         raid_level  = 1
         size        = 20480
-        extras = {
-          lv = {
+        extras  {
+          lv {
             name = "root"
           }
         }
@@ -42,8 +42,8 @@ resource "ovh_dedicated_server_reinstall_task" "server_install" {
         mount_point = "/data"
         raid_level  = 5
         size        = 0
-        extras = {
-          zp = {
+        extras {
+          zp {
             name = "poule"
           }
         }
