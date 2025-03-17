@@ -257,6 +257,7 @@ func resourceDedicatedServerReinstallTask() *schema.Resource {
 												},
 												"raid_level": {
 													Type:        schema.TypeInt,
+													Default:     1,
 													Optional:    true,
 													ForceNew:    true,
 													Description: "Software raid type (default is 1)",
