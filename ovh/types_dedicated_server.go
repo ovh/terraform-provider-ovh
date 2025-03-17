@@ -169,7 +169,7 @@ type Partitioning struct {
 type Layout struct {
 	FileSystem string `json:"fileSystem,omitempty"`
 	MountPoint string `json:"mountPoint,omitempty"`
-	RaidLevel  int    `json:"raidLevel,omitempty"`
+	RaidLevel  int    `json:"raidLevel"`
 	Size       int    `json:"size,omitempty"`
 	Extras     Extras `json:"extras,omitempty"`
 }
