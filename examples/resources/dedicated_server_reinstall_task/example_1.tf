@@ -7,6 +7,6 @@ data "ovh_dedicated_installation_template" "template" {
 }
 
 resource "ovh_dedicated_server_reinstall_task" "server_reinstall" {
-  service_name     = data.ovh_dedicated_server.server.service_name
-  operating_system = data.ovh_dedicated_installation_template.template.template_name
+  service_name = data.ovh_dedicated_server.server.service_name
+  os           = data.ovh_dedicated_installation_template.template.template_name
 }

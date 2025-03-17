@@ -7,17 +7,17 @@ data "ovh_dedicated_installation_template" "template" {
 }
 
 resource "ovh_dedicated_server_reinstall_task" "server_install" {
-  service_name     = data.ovh_dedicated_server.server.service_name
-  os = data.ovh_dedicated_installation_template.template.template_name
+  service_name = data.ovh_dedicated_server.server.service_name
+  os           = data.ovh_dedicated_installation_template.template.template_name
   customizations {
     hostname = "mon-tux"
   }
   storage {
+    disk_group_id = 2
+    hardware_raid {
+      raid_level = 5
+    }
     partitioning {
-      disk_group_id = 2
-      hardware_raid {
-        raid_level = 5
-      }
       layout {
         file_system = "ext4"
         mount_point = "/"

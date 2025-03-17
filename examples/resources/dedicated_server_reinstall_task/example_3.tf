@@ -7,8 +7,8 @@ data "ovh_dedicated_installation_template" "template" {
 }
 
 resource "ovh_dedicated_server_reinstall_task" "server_install" {
-  service_name     = data.ovh_dedicated_server.server.service_name
-  operating_system = "win2022core-std_64"
+  service_name = data.ovh_dedicated_server.server.service_name
+  os           = "win2022core-std_64"
   customizations {
     hostname                 = "ma-fenetre"
     language                 = "fr-fr"
