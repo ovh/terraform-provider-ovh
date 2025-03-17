@@ -7,8 +7,8 @@ data "ovh_dedicated_installation_template" "template" {
 }
 
 resource "ovh_dedicated_server_reinstall_task" "server_reinstall" {
-  service_name     = data.ovh_dedicated_server.server.service_name
-  operating_system = data.ovh_dedicated_installation_template.template.template_name
+  service_name = data.ovh_dedicated_server.server.service_name
+  os           = data.ovh_dedicated_installation_template.template.template_name
   customizations {
     hostname                 = "mon-tux"
     post_installation_script = "IyEvYmluL2Jhc2gKZWNobyAiY291Y291IHBvc3RJbnN0YWxsYXRpb25TY3JpcHQiID4gL29wdC9jb3Vjb3UKY2F0IC9ldGMvbWFjaGluZS1pZCAgPj4gL29wdC9jb3Vjb3UKZGF0ZSAiKyVZLSVtLSVkICVIOiVNOiVTIiAtLXV0YyA+PiAvb3B0L2NvdWNvdQo="

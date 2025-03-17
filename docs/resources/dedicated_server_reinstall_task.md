@@ -22,8 +22,8 @@ data "ovh_dedicated_installation_template" "template" {
 }
 
 resource "ovh_dedicated_server_reinstall_task" "server_reinstall" {
-  service_name     = data.ovh_dedicated_server.server.service_name
-  operating_system = data.ovh_dedicated_installation_template.template.template_name
+  service_name = data.ovh_dedicated_server.server.service_name
+  os           = data.ovh_dedicated_installation_template.template.template_name
 }
 ```
 
@@ -39,8 +39,8 @@ data "ovh_dedicated_installation_template" "template" {
 }
 
 resource "ovh_dedicated_server_reinstall_task" "server_reinstall" {
-  service_name     = data.ovh_dedicated_server.server.service_name
-  operating_system = data.ovh_dedicated_installation_template.template.template_name
+  service_name = data.ovh_dedicated_server.server.service_name
+  os           = data.ovh_dedicated_installation_template.template.template_name
   customizations {
     hostname                 = "mon-tux"
     post_installation_script = "IyEvYmluL2Jhc2gKZWNobyAiY291Y291IHBvc3RJbnN0YWxsYXRpb25TY3JpcHQiID4gL29wdC9jb3Vjb3UKY2F0IC9ldGMvbWFjaGluZS1pZCAgPj4gL29wdC9jb3Vjb3UKZGF0ZSAiKyVZLSVtLSVkICVIOiVNOiVTIiAtLXV0YyA+PiAvb3B0L2NvdWNvdQo="
@@ -78,8 +78,8 @@ data "ovh_dedicated_installation_template" "template" {
 }
 
 resource "ovh_dedicated_server_reinstall_task" "server_install" {
-  service_name     = data.ovh_dedicated_server.server.service_name
-  operating_system = "win2022core-std_64"
+  service_name = data.ovh_dedicated_server.server.service_name
+  os           = "win2022core-std_64"
   customizations {
     hostname                 = "ma-fenetre"
     language                 = "fr-fr"
@@ -116,8 +116,8 @@ data "ovh_dedicated_installation_template" "template" {
 }
 
 resource "ovh_dedicated_server_reinstall_task" "server_install" {
-  service_name     = data.ovh_dedicated_server.server.service_name
-  os = "byolinux_64"
+  service_name = data.ovh_dedicated_server.server.service_name
+  os           = "byolinux_64"
   customizations {
     config_drive_user_data = "I2Nsb3VkLWNvbmZpZwpzc2hfYXV0aG9yaXplZF9rZXlzOgogIC0gc3NoLXJzYSBBQUFBQjhkallpdz09IG15c2VsZkBteWRvbWFpbi5uZXQKCnVzZXJzOgogIC0gbmFtZTogcGF0aWVudDAKICAgIHN1ZG86IEFMTD0oQUxMKSBOT1BBU1NXRDpBTEwKICAgIGdyb3VwczogdXNlcnMsIHN1ZG8KICAgIHNoZWxsOiAvYmluL2Jhc2gKICAgIGxvY2tfcGFzc3dkOiBmYWxzZQogICAgc3NoX2F1dGhvcml6ZWRfa2V5czoKICAgICAgLSBzc2gtcnNhIEFBQUFCOGRqWWl3PT0gbXlzZWxmQG15ZG9tYWluLm5ldApkaXNhYmxlX3Jvb3Q6IGZhbHNlCnBhY2thZ2VzOgogIC0gdmltCiAgLSB0cmVlCmZpbmFsX21lc3NhZ2U6IFRoZSBzeXN0ZW0gaXMgZmluYWxseSB1cCwgYWZ0ZXIgJFVQVElNRSBzZWNvbmRzCg=="
     hostname               = "mon-tux"
@@ -128,7 +128,7 @@ resource "ovh_dedicated_server_reinstall_task" "server_install" {
     image_check_sum_type = "sha512"
     image_url           = "https://github.com/ashmonger/akution_test/releases/download/0.5-compress/deb11k6.qcow2"
   }
-  properties {
+  properties = {
     essential = "false"
     role      = "webservers"
   }
@@ -166,8 +166,8 @@ resource "ovh_dedicated_server_reinstall_task" "server_install" {
         mount_point = "/"
         raid_level  = 1
         size        = 20480
-        extras = {
-          lv = {
+        extras  {
+          lv {
             name = "root"
           }
         }
@@ -182,8 +182,8 @@ resource "ovh_dedicated_server_reinstall_task" "server_install" {
         mount_point = "/data"
         raid_level  = 5
         size        = 0
-        extras = {
-          zp = {
+        extras {
+          zp {
             name = "poule"
           }
         }
@@ -205,17 +205,17 @@ data "ovh_dedicated_installation_template" "template" {
 }
 
 resource "ovh_dedicated_server_reinstall_task" "server_install" {
-  service_name     = data.ovh_dedicated_server.server.service_name
-  os = data.ovh_dedicated_installation_template.template.template_name
+  service_name = data.ovh_dedicated_server.server.service_name
+  os           = data.ovh_dedicated_installation_template.template.template_name
   customizations {
     hostname = "mon-tux"
   }
   storage {
+    disk_group_id = 2
+    hardware_raid {
+      raid_level = 5
+    }
     partitioning {
-      disk_group_id = 2
-      hardware_raid {
-        raid_level = 5
-      }
       layout {
         file_system = "ext4"
         mount_point = "/"
