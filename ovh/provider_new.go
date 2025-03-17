@@ -193,6 +193,8 @@ func (p *OvhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 		NewCloudProjectFlavorsDataSource,
 		NewCloudProjectFloatingipsDataSource,
 		NewCloudProjectGatewayInterfaceDataSource,
+		NewCloudProjectImageDataSource,
+		NewCloudProjectImagesDataSource,
 		NewCloudProjectLoadbalancerDataSource,
 		NewCloudProjectLoadbalancersDataSource,
 		NewCloudProjectLoadbalancerFlavorsDataSource,
