@@ -137,9 +137,8 @@ func CloudProjectLoadbalancerResourceSchema(ctx context.Context) schema.Schema {
 									"http_configuration": schema.SingleNestedAttribute{
 										Attributes: map[string]schema.Attribute{
 											"domain_name": schema.StringAttribute{
-												CustomType:          ovhtypes.TfStringType{},
-												Optional:            true,
-												Computed:            true,
+												CustomType: ovhtypes.TfStringType{},
+												Optional:   true,
 												Description:         "Domain name, which be injected into the HTTP Host Header to the backend server for HTTP health check",
 												MarkdownDescription: "Domain name, which be injected into the HTTP Host Header to the backend server for HTTP health check",
 												PlanModifiers: []planmodifier.String{
@@ -147,9 +146,8 @@ func CloudProjectLoadbalancerResourceSchema(ctx context.Context) schema.Schema {
 												},
 											},
 											"expected_codes": schema.StringAttribute{
-												CustomType:          ovhtypes.TfStringType{},
-												Optional:            true,
-												Computed:            true,
+												CustomType: ovhtypes.TfStringType{},
+												Optional:   true,
 												Description:         "Status codes expected in response from the member to declare it healthy; The list of HTTP status codes expected in response from the member to declare it healthy. Specify one of the following values: * A single value, such as 200; * A list, such as 200, 202; * A range, such as 200-204",
 												MarkdownDescription: "Status codes expected in response from the member to declare it healthy; The list of HTTP status codes expected in response from the member to declare it healthy. Specify one of the following values: * A single value, such as 200; * A list, such as 200, 202; * A range, such as 200-204",
 												PlanModifiers: []planmodifier.String{
@@ -179,9 +177,8 @@ func CloudProjectLoadbalancerResourceSchema(ctx context.Context) schema.Schema {
 												},
 											},
 											"http_version": schema.StringAttribute{
-												CustomType:          ovhtypes.TfStringType{},
-												Optional:            true,
-												Computed:            true,
+												CustomType: ovhtypes.TfStringType{},
+												Optional:   true,
 												Description:         "HTTP version that the health monitor uses for requests",
 												MarkdownDescription: "HTTP version that the health monitor uses for requests",
 												Validators: []validator.String{
@@ -195,9 +192,8 @@ func CloudProjectLoadbalancerResourceSchema(ctx context.Context) schema.Schema {
 												},
 											},
 											"url_path": schema.StringAttribute{
-												CustomType:          ovhtypes.TfStringType{},
-												Optional:            true,
-												Computed:            true,
+												CustomType: ovhtypes.TfStringType{},
+												Optional:   true,
 												Description:         "HTTP URL path of the request sent by the monitor to test the health of a backend member",
 												MarkdownDescription: "HTTP URL path of the request sent by the monitor to test the health of a backend member",
 												PlanModifiers: []planmodifier.String{
@@ -210,8 +206,7 @@ func CloudProjectLoadbalancerResourceSchema(ctx context.Context) schema.Schema {
 												AttrTypes: ListenersPoolHealthMonitorHttpConfigurationValue{}.AttributeTypes(ctx),
 											},
 										},
-										Optional:            true,
-										Computed:            true,
+										Optional: true,
 										Description:         "Monitor HTTP configuration",
 										MarkdownDescription: "Monitor HTTP configuration",
 									},
@@ -225,9 +220,8 @@ func CloudProjectLoadbalancerResourceSchema(ctx context.Context) schema.Schema {
 										},
 									},
 									"max_retries_down": schema.Int64Attribute{
-										CustomType:          ovhtypes.TfInt64Type{},
-										Optional:            true,
-										Computed:            true,
+										CustomType: ovhtypes.TfInt64Type{},
+										Optional:   true,
 										Description:         "Number of allowed check failures before changing the operating status of the member to ERROR",
 										MarkdownDescription: "Number of allowed check failures before changing the operating status of the member to ERROR",
 										PlanModifiers: []planmodifier.Int64{
@@ -264,9 +258,8 @@ func CloudProjectLoadbalancerResourceSchema(ctx context.Context) schema.Schema {
 										},
 									},
 									"operating_status": schema.StringAttribute{
-										CustomType:          ovhtypes.TfStringType{},
-										Optional:            true,
-										Computed:            true,
+										CustomType: ovhtypes.TfStringType{},
+										Optional:   true,
 										Description:         "The operating status of the resource",
 										MarkdownDescription: "The operating status of the resource",
 										Validators: []validator.String{
@@ -284,9 +277,8 @@ func CloudProjectLoadbalancerResourceSchema(ctx context.Context) schema.Schema {
 										},
 									},
 									"provisioning_status": schema.StringAttribute{
-										CustomType:          ovhtypes.TfStringType{},
-										Optional:            true,
-										Computed:            true,
+										CustomType: ovhtypes.TfStringType{},
+										Optional:   true,
 										Description:         "The provisioning status of the resource",
 										MarkdownDescription: "The provisioning status of the resource",
 										Validators: []validator.String{
@@ -335,9 +327,8 @@ func CloudProjectLoadbalancerResourceSchema(ctx context.Context) schema.Schema {
 											},
 										},
 										"name": schema.StringAttribute{
-											CustomType:          ovhtypes.TfStringType{},
-											Optional:            true,
-											Computed:            true,
+											CustomType: ovhtypes.TfStringType{},
+											Optional:   true,
 											Description:         "Name of the member",
 											MarkdownDescription: "Name of the member",
 											PlanModifiers: []planmodifier.String{
@@ -356,7 +347,6 @@ func CloudProjectLoadbalancerResourceSchema(ctx context.Context) schema.Schema {
 										"weight": schema.Int64Attribute{
 											CustomType:          ovhtypes.TfInt64Type{},
 											Optional:            true,
-											Computed:            true,
 											Description:         "Weight of a member determines the portion of requests or connections it services compared to the other members of the pool. Between 1 and 256.",
 											MarkdownDescription: "Weight of a member determines the portion of requests or connections it services compared to the other members of the pool. Between 1 and 256.",
 											PlanModifiers: []planmodifier.Int64{
@@ -373,9 +363,8 @@ func CloudProjectLoadbalancerResourceSchema(ctx context.Context) schema.Schema {
 										objectplanmodifier.RequiresReplace(),
 									},
 								},
-								CustomType:          ovhtypes.NewTfListNestedType[ListenersPoolMembersValue](ctx),
-								Optional:            true,
-								Computed:            true,
+								CustomType: ovhtypes.NewTfListNestedType[ListenersPoolMembersValue](ctx),
+								Optional:   true,
 								Description:         "Pool members",
 								MarkdownDescription: "Pool members",
 								PlanModifiers: []planmodifier.List{
@@ -383,9 +372,8 @@ func CloudProjectLoadbalancerResourceSchema(ctx context.Context) schema.Schema {
 								},
 							},
 							"name": schema.StringAttribute{
-								CustomType:          ovhtypes.TfStringType{},
-								Optional:            true,
-								Computed:            true,
+								CustomType: ovhtypes.TfStringType{},
+								Optional:   true,
 								Description:         "Name of the pool",
 								MarkdownDescription: "Name of the pool",
 								PlanModifiers: []planmodifier.String{
@@ -415,9 +403,8 @@ func CloudProjectLoadbalancerResourceSchema(ctx context.Context) schema.Schema {
 							"session_persistence": schema.SingleNestedAttribute{
 								Attributes: map[string]schema.Attribute{
 									"cookie_name": schema.StringAttribute{
-										CustomType:          ovhtypes.TfStringType{},
-										Optional:            true,
-										Computed:            true,
+										CustomType: ovhtypes.TfStringType{},
+										Optional:   true,
 										Description:         "Cookie name, only applicable to session persistence through cookie",
 										MarkdownDescription: "Cookie name, only applicable to session persistence through cookie",
 										PlanModifiers: []planmodifier.String{
@@ -425,9 +412,8 @@ func CloudProjectLoadbalancerResourceSchema(ctx context.Context) schema.Schema {
 										},
 									},
 									"type": schema.StringAttribute{
-										CustomType:          ovhtypes.TfStringType{},
-										Optional:            true,
-										Computed:            true,
+										CustomType: ovhtypes.TfStringType{},
+										Optional:   true,
 										Description:         "Type of session persistence",
 										MarkdownDescription: "Type of session persistence",
 										Validators: []validator.String{
@@ -1523,7 +1509,7 @@ type ListenersWritableValue struct {
 	AllowedCidrs      *ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] `json:"allowedCidrs,omitempty"`
 	Description       *ovhtypes.TfStringValue                             `json:"description,omitempty"`
 	Name              *ovhtypes.TfStringValue                             `json:"name,omitempty"`
-	Pool              *ListenersPoolValue                                 `json:"pool,omitempty"`
+	Pool              *ListenersPoolWritableValue                         `json:"pool,omitempty"`
 	Port              *ovhtypes.TfInt64Value                              `json:"port,omitempty"`
 	Protocol          *ovhtypes.TfStringValue                             `json:"protocol,omitempty"`
 	SecretId          *ovhtypes.TfStringValue                             `json:"secretId,omitempty"`
@@ -1553,7 +1539,7 @@ func (v ListenersValue) ToCreate() *ListenersWritableValue {
 	}
 
 	if !v.Pool.IsUnknown() && !v.Pool.IsNull() {
-		res.Pool = &v.Pool
+		res.Pool = v.Pool.ToCreate()
 	}
 
 	if !v.TimeoutClientData.IsUnknown() && !v.TimeoutClientData.IsNull() {
@@ -2342,12 +2328,12 @@ type ListenersPoolValue struct {
 
 type ListenersPoolWritableValue struct {
 	*ListenersPoolValue `json:"-"`
-	Algorithm           *ovhtypes.TfStringValue                                `json:"algorithm,omitempty"`
-	HealthMonitor       *ListenersPoolHealthMonitorValue                       `json:"healthMonitor,omitempty"`
-	Members             *ovhtypes.TfListNestedValue[ListenersPoolMembersValue] `json:"members,omitempty"`
-	Name                *ovhtypes.TfStringValue                                `json:"name,omitempty"`
-	Protocol            *ovhtypes.TfStringValue                                `json:"protocol,omitempty"`
-	SessionPersistence  *ListenersPoolSessionPersistenceValue                  `json:"sessionPersistence,omitempty"`
+	Algorithm           *ovhtypes.TfStringValue                       `json:"algorithm,omitempty"`
+	HealthMonitor       *ListenersPoolHealthMonitorWritableValue      `json:"healthMonitor,omitempty"`
+	Members             []*ListenersPoolMembersWritableValue          `json:"members,omitempty"`
+	Name                *ovhtypes.TfStringValue                       `json:"name,omitempty"`
+	Protocol            *ovhtypes.TfStringValue                       `json:"protocol,omitempty"`
+	SessionPersistence  *ListenersPoolSessionPersistenceWritableValue `json:"sessionPersistence,omitempty"`
 }
 
 func (v ListenersPoolValue) ToCreate() *ListenersPoolWritableValue {
@@ -2362,19 +2348,22 @@ func (v ListenersPoolValue) ToCreate() *ListenersPoolWritableValue {
 	}
 
 	if !v.SessionPersistence.IsNull() {
-		res.SessionPersistence = &v.SessionPersistence
+		res.SessionPersistence = v.SessionPersistence.ToCreate()
 	}
 
 	if !v.Algorithm.IsNull() {
 		res.Algorithm = &v.Algorithm
 	}
 
-	if !v.HealthMonitor.IsNull() {
-		res.HealthMonitor = &v.HealthMonitor
+	if !v.HealthMonitor.IsNull() && !v.HealthMonitor.IsUnknown() {
+		res.HealthMonitor = v.HealthMonitor.ToCreate()
 	}
 
-	if !v.Members.IsNull() {
-		res.Members = &v.Members
+	if !v.Members.IsNull() && !v.Members.IsUnknown() {
+		for _, elem := range v.Members.Elements() {
+			writableMember := elem.(ListenersPoolMembersValue).ToCreate()
+			res.Members = append(res.Members, writableMember)
+		}
 	}
 
 	return res
@@ -3185,13 +3174,13 @@ type ListenersPoolHealthMonitorValue struct {
 
 type ListenersPoolHealthMonitorWritableValue struct {
 	*ListenersPoolHealthMonitorValue `json:"-"`
-	Delay                            *ovhtypes.TfInt64Value                            `json:"delay,omitempty"`
-	HttpConfiguration                *ListenersPoolHealthMonitorHttpConfigurationValue `json:"httpConfiguration,omitempty"`
-	MaxRetries                       *ovhtypes.TfInt64Value                            `json:"maxRetries,omitempty"`
-	MaxRetriesDown                   *ovhtypes.TfInt64Value                            `json:"maxRetriesDown,omitempty"`
-	MonitorType                      *ovhtypes.TfStringValue                           `json:"monitorType,omitempty"`
-	Name                             *ovhtypes.TfStringValue                           `json:"name,omitempty"`
-	Timeout                          *ovhtypes.TfInt64Value                            `json:"timeout,omitempty"`
+	Delay                            *ovhtypes.TfInt64Value                                    `json:"delay,omitempty"`
+	HttpConfiguration                *ListenersPoolHealthMonitorHttpConfigurationWritableValue `json:"httpConfiguration,omitempty"`
+	MaxRetries                       *ovhtypes.TfInt64Value                                    `json:"maxRetries,omitempty"`
+	MaxRetriesDown                   *ovhtypes.TfInt64Value                                    `json:"maxRetriesDown,omitempty"`
+	MonitorType                      *ovhtypes.TfStringValue                                   `json:"monitorType,omitempty"`
+	Name                             *ovhtypes.TfStringValue                                   `json:"name,omitempty"`
+	Timeout                          *ovhtypes.TfInt64Value                                    `json:"timeout,omitempty"`
 }
 
 func (v ListenersPoolHealthMonitorValue) ToCreate() *ListenersPoolHealthMonitorWritableValue {
@@ -3210,7 +3199,7 @@ func (v ListenersPoolHealthMonitorValue) ToCreate() *ListenersPoolHealthMonitorW
 	}
 
 	if !v.HttpConfiguration.IsNull() {
-		res.HttpConfiguration = &v.HttpConfiguration
+		res.HttpConfiguration = v.HttpConfiguration.ToCreate()
 	}
 
 	if !v.MaxRetries.IsNull() {
@@ -4507,19 +4496,19 @@ type ListenersPoolMembersWritableValue struct {
 func (v ListenersPoolMembersValue) ToCreate() *ListenersPoolMembersWritableValue {
 	res := &ListenersPoolMembersWritableValue{}
 
-	if !v.Address.IsNull() {
+	if !v.Address.IsNull() && !v.Address.IsUnknown() {
 		res.Address = &v.Address
 	}
 
-	if !v.Name.IsNull() {
+	if !v.Name.IsNull() && !v.Name.IsUnknown() {
 		res.Name = &v.Name
 	}
 
-	if !v.ProtocolPort.IsNull() {
+	if !v.ProtocolPort.IsNull() && !v.ProtocolPort.IsUnknown() {
 		res.ProtocolPort = &v.ProtocolPort
 	}
 
-	if !v.Weight.IsNull() {
+	if !v.Weight.IsNull() && !v.Weight.IsUnknown() {
 		res.Weight = &v.Weight
 	}
 
