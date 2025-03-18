@@ -46,6 +46,18 @@ func TestAccCloudProjectLoadBalancer_basic(t *testing.T) {
 				{
 					port = "34568"
 					protocol = "tcp"
+					pool = {
+						algorithm      = "roundRobin"
+						name           = "TestPool"
+						protocol       = "http"
+						members = [
+							{
+								name          = "web"
+								address       = "1.2.3.4"
+								protocol_port = 80
+							}
+						]
+					}
 				}
 			]
 		}
