@@ -1,3 +1,41 @@
+## 2.1.0 (March 24, 2025)
+
+⚙️ General:
+
+* Bump dependencies ([#903](https://github.com/ovh/terraform-provider-ovh/pull/903))
+
+🎉 Features:
+
+* New resource: `ovh_cloud_project_instance_snapshot` ([#887](https://github.com/ovh/terraform-provider-ovh/pull/887))
+* New resource: `ovh_vrack_dedicated_cloud` ([#904](https://github.com/ovh/terraform-provider-ovh/pull/904))
+
+* New datasource: `ovh_cloud_project_storage_object` ([#882](https://github.com/ovh/terraform-provider-ovh/pull/882))
+* New datasource: `ovh_cloud_project_storage_objects` ([#882](https://github.com/ovh/terraform-provider-ovh/pull/882))
+* New datasource: `ovh_cloud_project_image` ([#909](https://github.com/ovh/terraform-provider-ovh/pull/909))
+* New datasource: `ovh_cloud_project_images` ([#909](https://github.com/ovh/terraform-provider-ovh/pull/909))
+* New datasource: `ovh_dedicated_cloud` ([#889](https://github.com/ovh/terraform-provider-ovh/pull/889))
+* New datasource: `ovh_vmware_cloud_director_organization` ([#900](https://github.com/ovh/terraform-provider-ovh/pull/900))
+* New datasource: `ovh_vmware_cloud_director_backup` ([#902](https://github.com/ovh/terraform-provider-ovh/pull/902))
+
+💪 Improvements:
+
+* `r/ovh_cloud_project_region_storage_presign`: Update resource with new fields ([#880](https://github.com/ovh/terraform-provider-ovh/pull/880))
+
+🐜 Bug fixes:
+
+* `r/ovh_cloud_project_rancher`: Make sure `bootstrap_password` is saved on creation ([#888](https://github.com/ovh/terraform-provider-ovh/pull/888))
+* `r/ovh_cloud_project_storage`: Remove objects on bucket deletion ([#886](https://github.com/ovh/terraform-provider-ovh/pull/886))
+* `r/ovh_dedicated_server_reinstall_task`: Raid type was ignored when 0 was given as value ([#911](https://github.com/ovh/terraform-provider-ovh/pull/911))
+* `r/ovh_cloud_project_loadbalancer`: Fix errors in schema and invalid values sent to the API ([#912](https://github.com/ovh/terraform-provider-ovh/pull/912))
+
+📚 Documentation:
+
+* Migrate documentation from legacy to new directory ([#883](https://github.com/ovh/terraform-provider-ovh/pull/883))
+* Improve Rancher documentation ([#879](https://github.com/ovh/terraform-provider-ovh/pull/879))
+* `r/ovh_dedicated_server_reinstall_task`: Fix invalid examples in documentation ([#910](https://github.com/ovh/terraform-provider-ovh/pull/910))
+
+❤️ Thanks for your contributions ❤️
+
 ## 2.0.0 (March 4, 2025)
 
 🧨 Breaking changes:
