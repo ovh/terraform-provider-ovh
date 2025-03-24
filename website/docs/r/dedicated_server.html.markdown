@@ -91,6 +91,7 @@ resource "ovh_dedicated_server" "server" {
   * `configuration` - Representation of a configuration item to personalize product
     * `label` - (Required) Identifier of the resource
     * `value` - (Required) Path to the resource in API.OVH.COM
+* `service_name` - (Optional) The service_name of your dedicated server. This field can be used to avoid ordering a dedicated server at creation and just create the resource using an already existing service
 
 ### Editable fields of a dedicated server
 
@@ -101,8 +102,49 @@ resource "ovh_dedicated_server" "server" {
 * `rescue_ssh_key` - Public SSH Key used in the rescue mode
 * `root_device` - Root device of the server
 * `state` - All states a Dedicated can in (error, hacked, hackedBlocked, ok)
+* `keep_service_after_destroy` - Avoid termination of the service when deleting the resource (when using this parameter, make sure to apply your configuration before running the destroy so that the value is set in the state)
+* `prevent_install_on_create` - Prevent server installation after it has been delivered
+* `prevent_install_on_import` - Defines whether a reinstallation of the server is allowed after importing it if there is a modification on the installation parameters
 
 ### Arguments used to reinstall a dedicated server
+
+#### New arguments
+
+* `os` - (String) Operating System to install
+* `customizations` - (Attributes) Customization of the OS configuration
+  * `config_drive_user_data` -Config Drive UserData
+  * `efi_bootloader_path` - Path of the EFI bootloader from the OS installed on the server
+  * `hostname` - Custom hostname
+  * `http_headers` - Image HTTP Headers
+  * `image_check_sum` - Image checksum
+  * `image_check_sum_type` - Checksum type
+  * `image_type` - Image Type
+  * `image_url` - Image URL
+  * `language` - Display Language
+  * `post_installation_script` - Post-Installation Script
+  * `post_installation_script_extension` - Post-Installation Script File Extension
+  * `ssh_key` - SSH Public Key
+* `storage` - (Attributes List) Storage customizations
+  * `disk_group_id` - Disk group id
+  * `hardware_raid` - Hardware Raid configurations
+    * `arrays` - Number of arrays
+    * `disks` - Total number of disks in the disk group involved in the hardware raid configuration
+    * `raid_level` - Hardware raid type
+    * `spares` - Number of disks in the disk group involved in the spare
+  * `partitioning` - Partitioning configuration
+    * `disks` - Total number of disks in the disk group involved in the partitioning configuration
+    * `layout` - Custom partitioning layout
+      * `extras` - Partition extras parameters
+        * `lv` - LVM-specific parameters
+        * `zp` - ZFS-specific parameters
+      * `file_system` - File system type
+      * `mount_point` - Mount point
+      * `raid_level` - Software raid type
+      * `size` - Partition size in MiB
+    * `scheme_name` - Partitioning scheme (if applicable with selected operating system)
+* `properties` - (Map string, string) Arbitrary properties to pass to cloud-init's config drive datasource
+
+#### Legacy arguments, will be removed in version v2.0.0
 
 * `details` - Details object when reinstalling server (see https://eu.api.ovh.com/console/?section=%2Fdedicated%2Fserver&branch=v1#post-/dedicated/server/-serviceName-/install/start)
   * `custom_hostname` - Personnal hostname to use in server reinstallation

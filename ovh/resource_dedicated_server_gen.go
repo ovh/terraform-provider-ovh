@@ -6,17 +6,23 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
+
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
-	ovhtypes "github.com/ovh/terraform-provider-ovh/ovh/types"
-	"strings"
 
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	ovhtypes "github.com/ovh/terraform-provider-ovh/ovh/types"
 )
 
 func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
@@ -26,11 +32,17 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 			Computed:            true,
 			Description:         "dedicated AZ localisation",
 			MarkdownDescription: "dedicated AZ localisation",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"boot_id": schema.Int64Attribute{
 			CustomType: ovhtypes.TfInt64Type{},
 			Optional:   true,
 			Computed:   true,
+			PlanModifiers: []planmodifier.Int64{
+				int64planmodifier.UseStateForUnknown(),
+			},
 		},
 		"boot_script": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
@@ -38,75 +50,143 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 			Computed:            true,
 			Description:         "Ipxe script served on boot",
 			MarkdownDescription: "Ipxe script served on boot",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"commercial_range": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
 			Computed:            true,
 			Description:         "dedicater server commercial range",
 			MarkdownDescription: "dedicater server commercial range",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
+		},
+		"customizations": schema.SingleNestedAttribute{
+			Attributes: map[string]schema.Attribute{
+				"config_drive_user_data": schema.StringAttribute{
+					CustomType:          ovhtypes.TfStringType{},
+					Optional:            true,
+					Description:         "Config Drive UserData",
+					MarkdownDescription: "Config Drive UserData",
+				},
+				"efi_bootloader_path": schema.StringAttribute{
+					CustomType:          ovhtypes.TfStringType{},
+					Optional:            true,
+					Description:         "Path of the EFI bootloader from the OS installed on the server",
+					MarkdownDescription: "Path of the EFI bootloader from the OS installed on the server",
+				},
+				"hostname": schema.StringAttribute{
+					CustomType:          ovhtypes.TfStringType{},
+					Optional:            true,
+					Description:         "Custom hostname",
+					MarkdownDescription: "Custom hostname",
+				},
+				"http_headers": schema.MapAttribute{
+					CustomType:          ovhtypes.NewTfMapNestedType[ovhtypes.TfStringValue](ctx),
+					Optional:            true,
+					Description:         "Image HTTP Headers",
+					MarkdownDescription: "Image HTTP Headers",
+				},
+				"image_check_sum": schema.StringAttribute{
+					CustomType:          ovhtypes.TfStringType{},
+					Optional:            true,
+					Description:         "Image checksum",
+					MarkdownDescription: "Image checksum",
+				},
+				"image_check_sum_type": schema.StringAttribute{
+					CustomType:          ovhtypes.TfStringType{},
+					Optional:            true,
+					Description:         "Checksum type",
+					MarkdownDescription: "Checksum type",
+					Validators: []validator.String{
+						stringvalidator.OneOf(
+							"md5",
+							"sha1",
+							"sha256",
+							"sha512",
+						),
+					},
+				},
+				"image_type": schema.StringAttribute{
+					CustomType:          ovhtypes.TfStringType{},
+					Optional:            true,
+					Description:         "Image Type",
+					MarkdownDescription: "Image Type",
+					Validators: []validator.String{
+						stringvalidator.OneOf(
+							"qcow2",
+							"raw",
+						),
+					},
+				},
+				"image_url": schema.StringAttribute{
+					CustomType:          ovhtypes.TfStringType{},
+					Optional:            true,
+					Description:         "Image URL",
+					MarkdownDescription: "Image URL",
+				},
+				"language": schema.StringAttribute{
+					CustomType:          ovhtypes.TfStringType{},
+					Optional:            true,
+					Description:         "Display Language",
+					MarkdownDescription: "Display Language",
+					Validators: []validator.String{
+						stringvalidator.OneOf(
+							"cs-cz",
+							"de-de",
+							"en-us",
+							"es-es",
+							"fr-fr",
+							"it-it",
+							"nl-nl",
+							"pl-pl",
+							"pt-pt",
+						),
+					},
+				},
+				"post_installation_script": schema.StringAttribute{
+					CustomType:          ovhtypes.TfStringType{},
+					Optional:            true,
+					Description:         "Post-Installation Script",
+					MarkdownDescription: "Post-Installation Script",
+				},
+				"post_installation_script_extension": schema.StringAttribute{
+					CustomType:          ovhtypes.TfStringType{},
+					Optional:            true,
+					Description:         "Post-Installation Script File Extension",
+					MarkdownDescription: "Post-Installation Script File Extension",
+					Validators: []validator.String{
+						stringvalidator.OneOf(
+							"cmd",
+							"ps1",
+						),
+					},
+				},
+				"ssh_key": schema.StringAttribute{
+					CustomType:          ovhtypes.TfStringType{},
+					Optional:            true,
+					Description:         "SSH Public Key",
+					MarkdownDescription: "SSH Public Key",
+				},
+			},
+			CustomType: CustomizationsType{
+				ObjectType: types.ObjectType{
+					AttrTypes: CustomizationsValue{}.AttributeTypes(ctx),
+				},
+			},
+			Optional:            true,
+			Description:         "OS reinstallation customizations",
+			MarkdownDescription: "OS reinstallation customizations",
 		},
 		"datacenter": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
 			Computed:            true,
 			Description:         "dedicated datacenter localisation",
 			MarkdownDescription: "dedicated datacenter localisation",
-			Validators: []validator.String{
-				stringvalidator.OneOf(
-					"bhs1",
-					"bhs2",
-					"bhs3",
-					"bhs4",
-					"bhs5",
-					"bhs6",
-					"bhs7",
-					"bhs8",
-					"cch01",
-					"crx1",
-					"crx2",
-					"dc1",
-					"eri1",
-					"eri2",
-					"gra04",
-					"gra1",
-					"gra2",
-					"gra3",
-					"gsw",
-					"hdf01",
-					"hil1",
-					"ieb01",
-					"lil1-int1",
-					"lim1",
-					"lim2",
-					"lim3",
-					"mr901",
-					"p19",
-					"rbx",
-					"rbx-hz",
-					"rbx1",
-					"rbx10",
-					"rbx2",
-					"rbx3",
-					"rbx4",
-					"rbx5",
-					"rbx6",
-					"rbx7",
-					"rbx8",
-					"rbx9",
-					"sbg1",
-					"sbg2",
-					"sbg3",
-					"sbg4",
-					"sbg5",
-					"sgp02",
-					"sgp1",
-					"syd03",
-					"syd1",
-					"syd2",
-					"vin1",
-					"waw1",
-					"ynm1",
-					"yyz01",
-				),
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
 			},
 		},
 		"details": schema.SingleNestedAttribute{
@@ -147,7 +227,6 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 		},
 		"display_name": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
-			Computed:            true,
 			Optional:            true,
 			Description:         "The display name of your dedicated server",
 			MarkdownDescription: "The display name of your dedicated server",
@@ -158,6 +237,9 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 			Computed:            true,
 			Description:         "Path of the EFI bootloader served on boot",
 			MarkdownDescription: "Path of the EFI bootloader served on boot",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"iam": schema.SingleNestedAttribute{
 			Attributes: map[string]schema.Attribute{
@@ -200,10 +282,22 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 			Computed:            true,
 			Description:         "dedicated server ip",
 			MarkdownDescription: "dedicated server ip",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
+		},
+		"keep_service_after_destroy": schema.BoolAttribute{
+			CustomType:          ovhtypes.TfBoolType{},
+			Optional:            true,
+			Description:         "Whether we should avoid terminating the service when destroying the resource",
+			MarkdownDescription: "Whether we should avoid terminating the service when destroying the resource",
 		},
 		"link_speed": schema.Int64Attribute{
 			CustomType: ovhtypes.TfInt64Type{},
 			Computed:   true,
+			PlanModifiers: []planmodifier.Int64{
+				int64planmodifier.UseStateForUnknown(),
+			},
 		},
 		"monitoring": schema.BoolAttribute{
 			CustomType:          ovhtypes.TfBoolType{},
@@ -211,16 +305,25 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 			Computed:            true,
 			Description:         "Icmp monitoring state",
 			MarkdownDescription: "Icmp monitoring state",
+			PlanModifiers: []planmodifier.Bool{
+				boolplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"name": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
 			Computed:            true,
 			Description:         "dedicated server name",
 			MarkdownDescription: "dedicated server name",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"new_upgrade_system": schema.BoolAttribute{
 			CustomType: ovhtypes.TfBoolType{},
 			Computed:   true,
+			PlanModifiers: []planmodifier.Bool{
+				boolplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"no_intervention": schema.BoolAttribute{
 			CustomType:          ovhtypes.TfBoolType{},
@@ -228,10 +331,14 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 			Computed:            true,
 			Description:         "Prevent datacenter intervention",
 			MarkdownDescription: "Prevent datacenter intervention",
+			PlanModifiers: []planmodifier.Bool{
+				boolplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"os": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
 			Computed:            true,
+			Optional:            true,
 			Description:         "Operating system",
 			MarkdownDescription: "Operating system",
 		},
@@ -252,59 +359,106 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 					"poweron",
 				),
 			},
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"professional_use": schema.BoolAttribute{
 			CustomType:          ovhtypes.TfBoolType{},
 			Computed:            true,
 			Description:         "Does this server have professional use option",
 			MarkdownDescription: "Does this server have professional use option",
+			PlanModifiers: []planmodifier.Bool{
+				boolplanmodifier.UseStateForUnknown(),
+			},
+		},
+		"properties": schema.MapAttribute{
+			CustomType:          ovhtypes.NewTfMapNestedType[ovhtypes.TfStringValue](ctx),
+			Optional:            true,
+			Description:         "Arbitrary properties to pass to cloud-init's config drive datasource",
+			MarkdownDescription: "Arbitrary properties to pass to cloud-init's config drive datasource",
 		},
 		"rack": schema.StringAttribute{
 			CustomType: ovhtypes.TfStringType{},
 			Computed:   true,
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
+		},
+		"prevent_install_on_create": schema.BoolAttribute{
+			CustomType:          ovhtypes.TfBoolType{},
+			Optional:            true,
+			Description:         "Defines whether the server should not be reinstalled after creating the resource",
+			MarkdownDescription: "Defines whether the server should not be reinstalled after creating the resource",
+		},
+		"prevent_install_on_import": schema.BoolAttribute{
+			CustomType:          ovhtypes.TfBoolType{},
+			Optional:            true,
+			Description:         "Defines whether the server should not be reinstalled when importing the resource",
+			MarkdownDescription: "Defines whether the server should not be reinstalled when importing the resource",
 		},
 		"region": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
 			Computed:            true,
 			Description:         "dedicated region localisation",
 			MarkdownDescription: "dedicated region localisation",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"rescue_mail": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
 			Optional:            true,
-			Computed:            true,
 			Description:         "Custom email used to receive rescue credentials",
 			MarkdownDescription: "Custom email used to receive rescue credentials",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"rescue_ssh_key": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
 			Optional:            true,
-			Computed:            true,
 			Description:         "Public SSH Key used in the rescue mode",
 			MarkdownDescription: "Public SSH Key used in the rescue mode",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"reverse": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
 			Computed:            true,
 			Description:         "dedicated server reverse",
 			MarkdownDescription: "dedicated server reverse",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"root_device": schema.StringAttribute{
 			CustomType: ovhtypes.TfStringType{},
 			Optional:   true,
 			Computed:   true,
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"server_id": schema.Int64Attribute{
 			CustomType:          ovhtypes.TfInt64Type{},
 			Computed:            true,
 			Description:         "Server id",
 			MarkdownDescription: "Server id",
+			PlanModifiers: []planmodifier.Int64{
+				int64planmodifier.UseStateForUnknown(),
+			},
 		},
 		"service_name": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
 			Computed:            true,
+			Optional:            true,
 			Description:         "The internal name of your dedicated server",
 			MarkdownDescription: "The internal name of your dedicated server",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"state": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
@@ -320,6 +474,219 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 					"ok",
 				),
 			},
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
+		},
+		"storage": schema.ListNestedAttribute{
+			NestedObject: schema.NestedAttributeObject{
+				Attributes: map[string]schema.Attribute{
+					"disk_group_id": schema.Int64Attribute{
+						CustomType:          ovhtypes.TfInt64Type{},
+						Optional:            true,
+						Description:         "Disk group id (default is 0, meaning automatic)",
+						MarkdownDescription: "Disk group id (default is 0, meaning automatic)",
+					},
+					"hardware_raid": schema.ListNestedAttribute{
+						NestedObject: schema.NestedAttributeObject{
+							Attributes: map[string]schema.Attribute{
+								"arrays": schema.Int64Attribute{
+									CustomType:          ovhtypes.TfInt64Type{},
+									Optional:            true,
+									Description:         "Number of arrays (default is 1)",
+									MarkdownDescription: "Number of arrays (default is 1)",
+								},
+								"disks": schema.Int64Attribute{
+									CustomType:          ovhtypes.TfInt64Type{},
+									Optional:            true,
+									Description:         "Total number of disks in the disk group involved in the hardware raid configuration (all disks of the disk group by default)",
+									MarkdownDescription: "Total number of disks in the disk group involved in the hardware raid configuration (all disks of the disk group by default)",
+								},
+								"raid_level": schema.Int64Attribute{
+									CustomType:          ovhtypes.TfInt64Type{},
+									Optional:            true,
+									Description:         "Hardware raid type (default is 1)",
+									MarkdownDescription: "Hardware raid type (default is 1)",
+									Validators: []validator.Int64{
+										int64validator.OneOf(
+											0,
+											1,
+											5,
+											6,
+											10,
+											50,
+											60,
+										),
+									},
+								},
+								"spares": schema.Int64Attribute{
+									CustomType:          ovhtypes.TfInt64Type{},
+									Optional:            true,
+									Description:         "Number of disks in the disk group involved in the spare (default is 0)",
+									MarkdownDescription: "Number of disks in the disk group involved in the spare (default is 0)",
+								},
+							},
+							CustomType: StorageHardwareRaidType{
+								ObjectType: types.ObjectType{
+									AttrTypes: StorageHardwareRaidValue{}.AttributeTypes(ctx),
+								},
+							},
+						},
+						CustomType:          ovhtypes.NewTfListNestedType[StorageHardwareRaidValue](ctx),
+						Optional:            true,
+						Description:         "Hardware Raid configurations (if not specified, all disks of the chosen disk group id will be configured in JBOD mode)",
+						MarkdownDescription: "Hardware Raid configurations (if not specified, all disks of the chosen disk group id will be configured in JBOD mode)",
+					},
+					"partitioning": schema.SingleNestedAttribute{
+						Attributes: map[string]schema.Attribute{
+							"disks": schema.Int64Attribute{
+								CustomType:          ovhtypes.TfInt64Type{},
+								Optional:            true,
+								Description:         "Total number of disks in the disk group involved in the partitioning configuration (all disks of the disk group by default)",
+								MarkdownDescription: "Total number of disks in the disk group involved in the partitioning configuration (all disks of the disk group by default)",
+							},
+							"layout": schema.ListNestedAttribute{
+								NestedObject: schema.NestedAttributeObject{
+									Attributes: map[string]schema.Attribute{
+										"extras": schema.SingleNestedAttribute{
+											Attributes: map[string]schema.Attribute{
+												"lv": schema.SingleNestedAttribute{
+													Attributes: map[string]schema.Attribute{
+														"name": schema.StringAttribute{
+															CustomType:          ovhtypes.TfStringType{},
+															Optional:            true,
+															Description:         "Logical volume name",
+															MarkdownDescription: "Logical volume name",
+														},
+													},
+													CustomType: StoragePartitioningLayoutExtrasLvType{
+														ObjectType: types.ObjectType{
+															AttrTypes: StoragePartitioningLayoutExtrasLvValue{}.AttributeTypes(ctx),
+														},
+													},
+													Optional:            true,
+													Description:         "LVM-specific parameters",
+													MarkdownDescription: "LVM-specific parameters",
+												},
+												"zp": schema.SingleNestedAttribute{
+													Attributes: map[string]schema.Attribute{
+														"name": schema.StringAttribute{
+															CustomType:          ovhtypes.TfStringType{},
+															Optional:            true,
+															Description:         "zpool name (generated automatically if not specified, note that multiple ZFS partitions with same zpool names will be configured as multiple datasets belonging to the same zpool if compatible)",
+															MarkdownDescription: "zpool name (generated automatically if not specified, note that multiple ZFS partitions with same zpool names will be configured as multiple datasets belonging to the same zpool if compatible)",
+														},
+													},
+													CustomType: StoragePartitioningLayoutExtrasZpType{
+														ObjectType: types.ObjectType{
+															AttrTypes: StoragePartitioningLayoutExtrasZpValue{}.AttributeTypes(ctx),
+														},
+													},
+													Optional:            true,
+													Description:         "ZFS-specific parameters",
+													MarkdownDescription: "ZFS-specific parameters",
+												},
+											},
+											CustomType: StoragePartitioningLayoutExtrasType{
+												ObjectType: types.ObjectType{
+													AttrTypes: StoragePartitioningLayoutExtrasValue{}.AttributeTypes(ctx),
+												},
+											},
+											Optional:            true,
+											Description:         "Partition extras parameters",
+											MarkdownDescription: "Partition extras parameters",
+										},
+										"file_system": schema.StringAttribute{
+											CustomType:          ovhtypes.TfStringType{},
+											Required:            true,
+											Description:         "File system type",
+											MarkdownDescription: "File system type",
+											Validators: []validator.String{
+												stringvalidator.OneOf(
+													"btrfs",
+													"ext3",
+													"ext4",
+													"fat16",
+													"none",
+													"ntfs",
+													"reiserfs",
+													"swap",
+													"ufs",
+													"vmfs5",
+													"vmfs6",
+													"vmfsl",
+													"xfs",
+													"zfs",
+												),
+											},
+										},
+										"mount_point": schema.StringAttribute{
+											CustomType:          ovhtypes.TfStringType{},
+											Required:            true,
+											Description:         "Mount point",
+											MarkdownDescription: "Mount point",
+										},
+										"raid_level": schema.Int64Attribute{
+											CustomType:          ovhtypes.TfInt64Type{},
+											Optional:            true,
+											Description:         "Software raid type (default is 1)",
+											MarkdownDescription: "Software raid type (default is 1)",
+											Validators: []validator.Int64{
+												int64validator.OneOf(
+													0,
+													1,
+													5,
+													6,
+													7,
+													10,
+												),
+											},
+										},
+										"size": schema.Int64Attribute{
+											CustomType:          ovhtypes.TfInt64Type{},
+											Optional:            true,
+											Description:         "Partition size in MiB (default value is 0 which means to fill the disk with that partition)",
+											MarkdownDescription: "Partition size in MiB (default value is 0 which means to fill the disk with that partition)",
+										},
+									},
+									CustomType: StoragePartitioningLayoutType{
+										ObjectType: types.ObjectType{
+											AttrTypes: StoragePartitioningLayoutValue{}.AttributeTypes(ctx),
+										},
+									},
+								},
+								CustomType:          ovhtypes.NewTfListNestedType[StoragePartitioningLayoutValue](ctx),
+								Optional:            true,
+								Description:         "Custom partitioning layout (default is the default layout of the operating system's default partitioning scheme)",
+								MarkdownDescription: "Custom partitioning layout (default is the default layout of the operating system's default partitioning scheme)",
+							},
+							"scheme_name": schema.StringAttribute{
+								CustomType:          ovhtypes.TfStringType{},
+								Optional:            true,
+								Description:         "Partitioning scheme (if applicable with selected operating system)",
+								MarkdownDescription: "Partitioning scheme (if applicable with selected operating system)",
+							},
+						},
+						CustomType: StoragePartitioningType{
+							ObjectType: types.ObjectType{
+								AttrTypes: StoragePartitioningValue{}.AttributeTypes(ctx),
+							},
+						},
+						Optional:            true,
+						Description:         "Partitioning configuration",
+						MarkdownDescription: "Partitioning configuration",
+					},
+				},
+				CustomType: StorageType{
+					ObjectType: types.ObjectType{
+						AttrTypes: StorageValue{}.AttributeTypes(ctx),
+					},
+				},
+			},
+			CustomType:          ovhtypes.NewTfListNestedType[StorageValue](ctx),
+			Optional:            true,
+			Description:         "OS reinstallation storage configurations",
+			MarkdownDescription: "OS reinstallation storage configurations",
 		},
 		"support_level": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
@@ -333,6 +700,9 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 					"gs",
 					"pro",
 				),
+			},
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
 			},
 		},
 		"template_name": schema.StringAttribute{
@@ -375,41 +745,47 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 }
 
 type DedicatedServerModel struct {
-	AvailabilityZone    ovhtypes.TfStringValue                        `tfsdk:"availability_zone" json:"availabilityZone"`
-	BootId              ovhtypes.TfInt64Value                         `tfsdk:"boot_id" json:"bootId"`
-	BootScript          ovhtypes.TfStringValue                        `tfsdk:"boot_script" json:"bootScript"`
-	CommercialRange     ovhtypes.TfStringValue                        `tfsdk:"commercial_range" json:"commercialRange"`
-	Datacenter          ovhtypes.TfStringValue                        `tfsdk:"datacenter" json:"datacenter"`
-	Details             DetailsValue                                  `tfsdk:"details" json:"details"`
-	DisplayName         ovhtypes.TfStringValue                        `tfsdk:"display_name" json:"displayName"`
-	EfiBootloaderPath   ovhtypes.TfStringValue                        `tfsdk:"efi_bootloader_path" json:"efiBootloaderPath"`
-	Iam                 IamValue                                      `tfsdk:"iam" json:"iam"`
-	Ip                  ovhtypes.TfStringValue                        `tfsdk:"ip" json:"ip"`
-	LinkSpeed           ovhtypes.TfInt64Value                         `tfsdk:"link_speed" json:"linkSpeed"`
-	Monitoring          ovhtypes.TfBoolValue                          `tfsdk:"monitoring" json:"monitoring"`
-	Name                ovhtypes.TfStringValue                        `tfsdk:"name" json:"name"`
-	NewUpgradeSystem    ovhtypes.TfBoolValue                          `tfsdk:"new_upgrade_system" json:"newUpgradeSystem"`
-	NoIntervention      ovhtypes.TfBoolValue                          `tfsdk:"no_intervention" json:"noIntervention"`
-	Os                  ovhtypes.TfStringValue                        `tfsdk:"os" json:"os"`
-	PartitionSchemeName ovhtypes.TfStringValue                        `tfsdk:"partition_scheme_name" json:"partitionSchemeName"`
-	PowerState          ovhtypes.TfStringValue                        `tfsdk:"power_state" json:"powerState"`
-	ProfessionalUse     ovhtypes.TfBoolValue                          `tfsdk:"professional_use" json:"professionalUse"`
-	Rack                ovhtypes.TfStringValue                        `tfsdk:"rack" json:"rack"`
-	Region              ovhtypes.TfStringValue                        `tfsdk:"region" json:"region"`
-	RescueMail          ovhtypes.TfStringValue                        `tfsdk:"rescue_mail" json:"rescueMail"`
-	RescueSshKey        ovhtypes.TfStringValue                        `tfsdk:"rescue_ssh_key" json:"rescueSshKey"`
-	Reverse             ovhtypes.TfStringValue                        `tfsdk:"reverse" json:"reverse"`
-	RootDevice          ovhtypes.TfStringValue                        `tfsdk:"root_device" json:"rootDevice"`
-	ServerId            ovhtypes.TfInt64Value                         `tfsdk:"server_id" json:"serverId"`
-	ServiceName         ovhtypes.TfStringValue                        `tfsdk:"service_name" json:"serviceName"`
-	State               ovhtypes.TfStringValue                        `tfsdk:"state" json:"state"`
-	SupportLevel        ovhtypes.TfStringValue                        `tfsdk:"support_level" json:"supportLevel"`
-	TemplateName        ovhtypes.TfStringValue                        `tfsdk:"template_name" json:"templateName"`
-	UserMetadata        ovhtypes.TfListNestedValue[UserMetadataValue] `tfsdk:"user_metadata" json:"userMetadata"`
-	Order               OrderValue                                    `tfsdk:"order" json:"order"`
-	OvhSubsidiary       ovhtypes.TfStringValue                        `tfsdk:"ovh_subsidiary" json:"ovhSubsidiary"`
-	Plan                ovhtypes.TfListNestedValue[PlanValue]         `tfsdk:"plan" json:"plan"`
-	PlanOption          ovhtypes.TfListNestedValue[PlanOptionValue]   `tfsdk:"plan_option" json:"planOption"`
+	AvailabilityZone        ovhtypes.TfStringValue                            `tfsdk:"availability_zone" json:"availabilityZone"`
+	BootId                  ovhtypes.TfInt64Value                             `tfsdk:"boot_id" json:"bootId"`
+	BootScript              ovhtypes.TfStringValue                            `tfsdk:"boot_script" json:"bootScript"`
+	CommercialRange         ovhtypes.TfStringValue                            `tfsdk:"commercial_range" json:"commercialRange"`
+	Customizations          CustomizationsValue                               `tfsdk:"customizations" json:"customizations"`
+	Datacenter              ovhtypes.TfStringValue                            `tfsdk:"datacenter" json:"datacenter"`
+	Details                 DetailsValue                                      `tfsdk:"details" json:"details"`
+	DisplayName             ovhtypes.TfStringValue                            `tfsdk:"display_name" json:"displayName"`
+	EfiBootloaderPath       ovhtypes.TfStringValue                            `tfsdk:"efi_bootloader_path" json:"efiBootloaderPath"`
+	Iam                     IamValue                                          `tfsdk:"iam" json:"iam"`
+	Ip                      ovhtypes.TfStringValue                            `tfsdk:"ip" json:"ip"`
+	LinkSpeed               ovhtypes.TfInt64Value                             `tfsdk:"link_speed" json:"linkSpeed"`
+	Monitoring              ovhtypes.TfBoolValue                              `tfsdk:"monitoring" json:"monitoring"`
+	Name                    ovhtypes.TfStringValue                            `tfsdk:"name" json:"name"`
+	NewUpgradeSystem        ovhtypes.TfBoolValue                              `tfsdk:"new_upgrade_system" json:"newUpgradeSystem"`
+	NoIntervention          ovhtypes.TfBoolValue                              `tfsdk:"no_intervention" json:"noIntervention"`
+	Os                      ovhtypes.TfStringValue                            `tfsdk:"os" json:"os"`
+	PartitionSchemeName     ovhtypes.TfStringValue                            `tfsdk:"partition_scheme_name" json:"partitionSchemeName"`
+	PowerState              ovhtypes.TfStringValue                            `tfsdk:"power_state" json:"powerState"`
+	ProfessionalUse         ovhtypes.TfBoolValue                              `tfsdk:"professional_use" json:"professionalUse"`
+	Properties              ovhtypes.TfMapNestedValue[ovhtypes.TfStringValue] `tfsdk:"properties" json:"properties"`
+	Rack                    ovhtypes.TfStringValue                            `tfsdk:"rack" json:"rack"`
+	PreventInstallOnCreate  ovhtypes.TfBoolValue                              `tfsdk:"prevent_install_on_create" json:"-"`
+	PreventInstallOnImport  ovhtypes.TfBoolValue                              `tfsdk:"prevent_install_on_import" json:"-"`
+	Region                  ovhtypes.TfStringValue                            `tfsdk:"region" json:"region"`
+	RescueMail              ovhtypes.TfStringValue                            `tfsdk:"rescue_mail" json:"rescueMail"`
+	RescueSshKey            ovhtypes.TfStringValue                            `tfsdk:"rescue_ssh_key" json:"rescueSshKey"`
+	Reverse                 ovhtypes.TfStringValue                            `tfsdk:"reverse" json:"reverse"`
+	RootDevice              ovhtypes.TfStringValue                            `tfsdk:"root_device" json:"rootDevice"`
+	ServerId                ovhtypes.TfInt64Value                             `tfsdk:"server_id" json:"serverId"`
+	ServiceName             ovhtypes.TfStringValue                            `tfsdk:"service_name" json:"serviceName"`
+	State                   ovhtypes.TfStringValue                            `tfsdk:"state" json:"state"`
+	SupportLevel            ovhtypes.TfStringValue                            `tfsdk:"support_level" json:"supportLevel"`
+	Storage                 ovhtypes.TfListNestedValue[StorageValue]          `tfsdk:"storage" json:"storage"`
+	TemplateName            ovhtypes.TfStringValue                            `tfsdk:"template_name" json:"templateName"`
+	KeepServiceAfterDestroy ovhtypes.TfBoolValue                              `tfsdk:"keep_service_after_destroy" json:"-"`
+	UserMetadata            ovhtypes.TfListNestedValue[UserMetadataValue]     `tfsdk:"user_metadata" json:"userMetadata"`
+	Order                   OrderValue                                        `tfsdk:"order" json:"order"`
+	OvhSubsidiary           ovhtypes.TfStringValue                            `tfsdk:"ovh_subsidiary" json:"ovhSubsidiary"`
+	Plan                    ovhtypes.TfListNestedValue[PlanValue]             `tfsdk:"plan" json:"plan"`
+	PlanOption              ovhtypes.TfListNestedValue[PlanOptionValue]       `tfsdk:"plan_option" json:"planOption"`
 }
 
 func (v *DedicatedServerModel) MergeWith(other *DedicatedServerModel) {
@@ -427,6 +803,12 @@ func (v *DedicatedServerModel) MergeWith(other *DedicatedServerModel) {
 
 	if (v.CommercialRange.IsUnknown() || v.CommercialRange.IsNull()) && !other.CommercialRange.IsUnknown() {
 		v.CommercialRange = other.CommercialRange
+	}
+
+	if v.Customizations.IsUnknown() && !other.Customizations.IsUnknown() {
+		v.Customizations = other.Customizations
+	} else if !other.Customizations.IsUnknown() {
+		v.Customizations.MergeWith(&other.Customizations)
 	}
 
 	if (v.Datacenter.IsUnknown() || v.Datacenter.IsNull()) && !other.Datacenter.IsUnknown() {
@@ -485,6 +867,10 @@ func (v *DedicatedServerModel) MergeWith(other *DedicatedServerModel) {
 		v.PartitionSchemeName = other.PartitionSchemeName
 	}
 
+	if (v.Properties.IsUnknown() || v.Properties.IsNull()) && !other.Properties.IsUnknown() {
+		v.Properties = other.Properties
+	}
+
 	if (v.PowerState.IsUnknown() || v.PowerState.IsNull()) && !other.PowerState.IsUnknown() {
 		v.PowerState = other.PowerState
 	}
@@ -497,6 +883,14 @@ func (v *DedicatedServerModel) MergeWith(other *DedicatedServerModel) {
 		v.Rack = other.Rack
 	}
 
+	if (v.PreventInstallOnCreate.IsUnknown() || v.PreventInstallOnCreate.IsNull()) && !other.PreventInstallOnCreate.IsUnknown() {
+		v.PreventInstallOnCreate = other.PreventInstallOnCreate
+	}
+
+	if (v.PreventInstallOnImport.IsUnknown() || v.PreventInstallOnImport.IsNull()) && !other.PreventInstallOnImport.IsUnknown() {
+		v.PreventInstallOnImport = other.PreventInstallOnImport
+	}
+
 	if (v.Region.IsUnknown() || v.Region.IsNull()) && !other.Region.IsUnknown() {
 		v.Region = other.Region
 	}
@@ -505,7 +899,7 @@ func (v *DedicatedServerModel) MergeWith(other *DedicatedServerModel) {
 		v.RescueMail = other.RescueMail
 	}
 
-	if (v.RescueSshKey.IsUnknown() || v.RescueSshKey.IsNull()) && !other.RescueSshKey.IsUnknown() {
+	if v.RescueSshKey.IsUnknown() && !other.RescueSshKey.IsUnknown() {
 		v.RescueSshKey = other.RescueSshKey
 	}
 
@@ -529,12 +923,20 @@ func (v *DedicatedServerModel) MergeWith(other *DedicatedServerModel) {
 		v.State = other.State
 	}
 
+	if (v.Storage.IsUnknown() || v.Storage.IsNull()) && !other.Storage.IsUnknown() {
+		v.Storage = other.Storage
+	}
+
 	if (v.SupportLevel.IsUnknown() || v.SupportLevel.IsNull()) && !other.SupportLevel.IsUnknown() {
 		v.SupportLevel = other.SupportLevel
 	}
 
 	if (v.TemplateName.IsUnknown() || v.TemplateName.IsNull()) && !other.TemplateName.IsUnknown() {
 		v.TemplateName = other.TemplateName
+	}
+
+	if (v.KeepServiceAfterDestroy.IsUnknown() || v.KeepServiceAfterDestroy.IsNull()) && !other.KeepServiceAfterDestroy.IsUnknown() {
+		v.KeepServiceAfterDestroy = other.KeepServiceAfterDestroy
 	}
 
 	if (v.Order.IsUnknown() || v.Order.IsNull()) && !other.Order.IsUnknown() {
@@ -583,19 +985,23 @@ func (v *DedicatedServerModel) ToOrder() *OrderModel {
 }
 
 type DedicatedServerWritableModel struct {
-	BootId              *ovhtypes.TfInt64Value                                 `tfsdk:"boot_id" json:"bootId,omitempty"`
-	BootScript          *ovhtypes.TfStringValue                                `tfsdk:"boot_script" json:"bootScript,omitempty"`
-	Details             *DetailsWritableValue                                  `tfsdk:"details" json:"details,omitempty"`
-	EfiBootloaderPath   *ovhtypes.TfStringValue                                `tfsdk:"efi_bootloader_path" json:"efiBootloaderPath,omitempty"`
-	Monitoring          *ovhtypes.TfBoolValue                                  `tfsdk:"monitoring" json:"monitoring,omitempty"`
-	NoIntervention      *ovhtypes.TfBoolValue                                  `tfsdk:"no_intervention" json:"noIntervention,omitempty"`
-	PartitionSchemeName *ovhtypes.TfStringValue                                `tfsdk:"partition_scheme_name" json:"partitionSchemeName,omitempty"`
-	RescueMail          *ovhtypes.TfStringValue                                `tfsdk:"rescue_mail" json:"rescueMail,omitempty"`
-	RescueSshKey        *ovhtypes.TfStringValue                                `tfsdk:"rescue_ssh_key" json:"rescueSshKey,omitempty"`
-	RootDevice          *ovhtypes.TfStringValue                                `tfsdk:"root_device" json:"rootDevice,omitempty"`
-	State               *ovhtypes.TfStringValue                                `tfsdk:"state" json:"state,omitempty"`
-	TemplateName        *ovhtypes.TfStringValue                                `tfsdk:"template_name" json:"templateName,omitempty"`
-	UserMetadata        *ovhtypes.TfListNestedValue[UserMetadataWritableValue] `tfsdk:"user_metadata" json:"userMetadata,omitempty"`
+	BootId              *ovhtypes.TfInt64Value                             `tfsdk:"boot_id" json:"bootId,omitempty"`
+	BootScript          *ovhtypes.TfStringValue                            `tfsdk:"boot_script" json:"bootScript,omitempty"`
+	Customizations      *CustomizationsWritableValue                       `tfsdk:"customizations" json:"customizations,omitempty"`
+	Details             *DetailsWritableValue                              `tfsdk:"details" json:"details,omitempty"`
+	EfiBootloaderPath   *ovhtypes.TfStringValue                            `tfsdk:"efi_bootloader_path" json:"efiBootloaderPath,omitempty"`
+	Monitoring          *ovhtypes.TfBoolValue                              `tfsdk:"monitoring" json:"monitoring,omitempty"`
+	NoIntervention      *ovhtypes.TfBoolValue                              `tfsdk:"no_intervention" json:"noIntervention,omitempty"`
+	PartitionSchemeName *ovhtypes.TfStringValue                            `tfsdk:"partition_scheme_name" json:"partitionSchemeName,omitempty"`
+	Properties          *ovhtypes.TfMapNestedValue[ovhtypes.TfStringValue] `tfsdk:"properties" json:"properties,omitempty"`
+	RescueMail          *ovhtypes.TfStringValue                            `tfsdk:"rescue_mail" json:"rescueMail,omitempty"`
+	RescueSshKey        *ovhtypes.TfStringValue                            `tfsdk:"rescue_ssh_key" json:"rescueSshKey,omitempty"`
+	RootDevice          *ovhtypes.TfStringValue                            `tfsdk:"root_device" json:"rootDevice,omitempty"`
+	State               *ovhtypes.TfStringValue                            `tfsdk:"state" json:"state,omitempty"`
+	TemplateName        *ovhtypes.TfStringValue                            `tfsdk:"template_name" json:"templateName,omitempty"`
+	UserMetadata        []*UserMetadataWritableValue                       `tfsdk:"user_metadata" json:"userMetadata,omitempty"`
+	Storage             []*StorageWritableValue                            `tfsdk:"storage" json:"storage,omitempty"`
+	Os                  *ovhtypes.TfStringValue                            `tfsdk:"os" json:"operatingSystem,omitempty"`
 }
 
 func (v DedicatedServerModel) ToCreate() *DedicatedServerWritableModel {
@@ -656,17 +1062,33 @@ func (v DedicatedServerModel) ToReinstall() *DedicatedServerWritableModel {
 	}
 
 	if !v.UserMetadata.IsUnknown() {
-		var updateUserMetadata []*UserMetadataWritableValue
 		for _, elem := range v.UserMetadata.Elements() {
-			elemToUpdate := elem.(UserMetadataValue).ToUpdate()
-			updateUserMetadata = append(updateUserMetadata, elemToUpdate)
+			res.UserMetadata = append(res.UserMetadata, elem.(UserMetadataValue).ToUpdate())
 		}
+	}
 
-		newUserMetadata, _ := basetypes.NewListValueFrom(context.Background(),
-			UserMetadataWritableValue{}.Type(context.Background()), updateUserMetadata)
-		res.UserMetadata = &ovhtypes.TfListNestedValue[UserMetadataWritableValue]{
-			ListValue: newUserMetadata,
+	return res
+}
+
+func (v DedicatedServerModel) ToReinstallV2() *DedicatedServerWritableModel {
+	res := &DedicatedServerWritableModel{}
+
+	if !v.Os.IsUnknown() {
+		res.Os = &v.Os
+	}
+
+	if !v.Customizations.IsUnknown() && !v.Customizations.IsNull() {
+		res.Customizations = v.Customizations.ToCreate()
+	}
+
+	if !v.Storage.IsUnknown() && !v.Storage.IsNull() {
+		for _, elem := range v.Storage.Elements() {
+			res.Storage = append(res.Storage, elem.(StorageValue).ToCreate())
 		}
+	}
+
+	if !v.Properties.IsUnknown() && !v.Properties.IsNull() {
+		res.Properties = &v.Properties
 	}
 
 	return res
@@ -674,28 +1096,35 @@ func (v DedicatedServerModel) ToReinstall() *DedicatedServerWritableModel {
 
 func (v DedicatedServerModel) ToUpdate() *DedicatedServerWritableModel {
 	res := &DedicatedServerWritableModel{}
+	emptyString := ovhtypes.NewTfStringValue("")
 
 	if !v.BootId.IsUnknown() {
 		res.BootId = &v.BootId
 	}
 
-	if !v.BootScript.IsUnknown() {
+	if v.BootScript.IsNull() {
+		res.BootScript = &emptyString
+	} else if !v.BootScript.IsUnknown() {
 		res.BootScript = &v.BootScript
 	}
 
-	if !v.EfiBootloaderPath.IsUnknown() {
+	if v.EfiBootloaderPath.IsNull() {
+		res.EfiBootloaderPath = &emptyString
+	} else if !v.EfiBootloaderPath.IsUnknown() {
 		res.EfiBootloaderPath = &v.EfiBootloaderPath
 	}
 
-	if !v.Monitoring.IsUnknown() {
+	if !v.Monitoring.IsUnknown() && !v.Monitoring.IsNull() {
 		res.Monitoring = &v.Monitoring
 	}
 
-	if !v.NoIntervention.IsUnknown() {
+	if !v.NoIntervention.IsUnknown() && !v.NoIntervention.IsNull() {
 		res.NoIntervention = &v.NoIntervention
 	}
 
-	if !v.RescueMail.IsUnknown() {
+	if v.RescueMail.IsNull() {
+		res.RescueMail = &emptyString
+	} else if !v.RescueMail.IsUnknown() {
 		res.RescueMail = &v.RescueMail
 	}
 
@@ -703,11 +1132,13 @@ func (v DedicatedServerModel) ToUpdate() *DedicatedServerWritableModel {
 		res.RescueSshKey = &v.RescueSshKey
 	}
 
-	if !v.RootDevice.IsUnknown() {
+	if v.RootDevice.IsNull() {
+		res.RootDevice = &emptyString
+	} else if !v.RootDevice.IsUnknown() {
 		res.RootDevice = &v.RootDevice
 	}
 
-	if !v.State.IsUnknown() {
+	if !v.State.IsUnknown() && !v.State.IsNull() {
 		res.State = &v.State
 	}
 
@@ -2102,4 +2533,4682 @@ func (v UserMetadataWritableValue) Equal(o attr.Value) bool {
 	}
 
 	return true
+}
+
+var _ basetypes.ObjectTypable = CustomizationsType{}
+
+type CustomizationsType struct {
+	basetypes.ObjectType
+}
+
+func (t CustomizationsType) Equal(o attr.Type) bool {
+	other, ok := o.(CustomizationsType)
+
+	if !ok {
+		return false
+	}
+
+	return t.ObjectType.Equal(other.ObjectType)
+}
+
+func (t CustomizationsType) String() string {
+	return "CustomizationsType"
+}
+
+func (t CustomizationsType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	attributes := in.Attributes()
+
+	configDriveUserDataAttribute, ok := attributes["config_drive_user_data"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`config_drive_user_data is missing from object`)
+
+		return nil, diags
+	}
+
+	configDriveUserDataVal, ok := configDriveUserDataAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`config_drive_user_data expected to be ovhtypes.TfStringValue, was: %T`, configDriveUserDataAttribute))
+	}
+
+	efiBootloaderPathAttribute, ok := attributes["efi_bootloader_path"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`efi_bootloader_path is missing from object`)
+
+		return nil, diags
+	}
+
+	efiBootloaderPathVal, ok := efiBootloaderPathAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`efi_bootloader_path expected to be ovhtypes.TfStringValue, was: %T`, efiBootloaderPathAttribute))
+	}
+
+	hostnameAttribute, ok := attributes["hostname"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`hostname is missing from object`)
+
+		return nil, diags
+	}
+
+	hostnameVal, ok := hostnameAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`hostname expected to be ovhtypes.TfStringValue, was: %T`, hostnameAttribute))
+	}
+
+	httpHeadersAttribute, ok := attributes["http_headers"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`http_headers is missing from object`)
+
+		return nil, diags
+	}
+
+	httpHeadersVal, ok := httpHeadersAttribute.(ovhtypes.TfMapNestedValue[ovhtypes.TfStringValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`http_headers expected to be ovhtypes.TfMapNestedValue[ovhtypes.TfStringValue], was: %T`, httpHeadersAttribute))
+	}
+
+	imageCheckSumAttribute, ok := attributes["image_check_sum"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`image_check_sum is missing from object`)
+
+		return nil, diags
+	}
+
+	imageCheckSumVal, ok := imageCheckSumAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`image_check_sum expected to be ovhtypes.TfStringValue, was: %T`, imageCheckSumAttribute))
+	}
+
+	imageCheckSumTypeAttribute, ok := attributes["image_check_sum_type"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`image_check_sum_type is missing from object`)
+
+		return nil, diags
+	}
+
+	imageCheckSumTypeVal, ok := imageCheckSumTypeAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`image_check_sum_type expected to be ovhtypes.TfStringValue, was: %T`, imageCheckSumTypeAttribute))
+	}
+
+	imageTypeAttribute, ok := attributes["image_type"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`image_type is missing from object`)
+
+		return nil, diags
+	}
+
+	imageTypeVal, ok := imageTypeAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`image_type expected to be ovhtypes.TfStringValue, was: %T`, imageTypeAttribute))
+	}
+
+	imageUrlAttribute, ok := attributes["image_url"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`image_url is missing from object`)
+
+		return nil, diags
+	}
+
+	imageUrlVal, ok := imageUrlAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`image_url expected to be ovhtypes.TfStringValue, was: %T`, imageUrlAttribute))
+	}
+
+	languageAttribute, ok := attributes["language"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`language is missing from object`)
+
+		return nil, diags
+	}
+
+	languageVal, ok := languageAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`language expected to be ovhtypes.TfStringValue, was: %T`, languageAttribute))
+	}
+
+	postInstallationScriptAttribute, ok := attributes["post_installation_script"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`post_installation_script is missing from object`)
+
+		return nil, diags
+	}
+
+	postInstallationScriptVal, ok := postInstallationScriptAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`post_installation_script expected to be ovhtypes.TfStringValue, was: %T`, postInstallationScriptAttribute))
+	}
+
+	postInstallationScriptExtensionAttribute, ok := attributes["post_installation_script_extension"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`post_installation_script_extension is missing from object`)
+
+		return nil, diags
+	}
+
+	postInstallationScriptExtensionVal, ok := postInstallationScriptExtensionAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`post_installation_script_extension expected to be ovhtypes.TfStringValue, was: %T`, postInstallationScriptExtensionAttribute))
+	}
+
+	sshKeyAttribute, ok := attributes["ssh_key"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`ssh_key is missing from object`)
+
+		return nil, diags
+	}
+
+	sshKeyVal, ok := sshKeyAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`ssh_key expected to be ovhtypes.TfStringValue, was: %T`, sshKeyAttribute))
+	}
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return CustomizationsValue{
+		ConfigDriveUserData:             configDriveUserDataVal,
+		EfiBootloaderPath:               efiBootloaderPathVal,
+		Hostname:                        hostnameVal,
+		HttpHeaders:                     httpHeadersVal,
+		ImageCheckSum:                   imageCheckSumVal,
+		ImageCheckSumType:               imageCheckSumTypeVal,
+		ImageType:                       imageTypeVal,
+		ImageUrl:                        imageUrlVal,
+		Language:                        languageVal,
+		PostInstallationScript:          postInstallationScriptVal,
+		PostInstallationScriptExtension: postInstallationScriptExtensionVal,
+		SshKey:                          sshKeyVal,
+		state:                           attr.ValueStateKnown,
+	}, diags
+}
+
+func NewCustomizationsValueNull() CustomizationsValue {
+	return CustomizationsValue{
+		state: attr.ValueStateNull,
+	}
+}
+
+func NewCustomizationsValueUnknown() CustomizationsValue {
+	return CustomizationsValue{
+		state: attr.ValueStateUnknown,
+	}
+}
+
+func NewCustomizationsValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (CustomizationsValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
+	ctx := context.Background()
+
+	for name, attributeType := range attributeTypes {
+		attribute, ok := attributes[name]
+
+		if !ok {
+			diags.AddError(
+				"Missing CustomizationsValue Attribute Value",
+				"While creating a CustomizationsValue value, a missing attribute value was detected. "+
+					"A CustomizationsValue must contain values for all attributes, even if null or unknown. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("CustomizationsValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
+			)
+
+			continue
+		}
+
+		if !attributeType.Equal(attribute.Type(ctx)) {
+			diags.AddError(
+				"Invalid CustomizationsValue Attribute Type",
+				"While creating a CustomizationsValue value, an invalid attribute value was detected. "+
+					"A CustomizationsValue must use a matching attribute type for the value. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("CustomizationsValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
+					fmt.Sprintf("CustomizationsValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
+			)
+		}
+	}
+
+	for name := range attributes {
+		_, ok := attributeTypes[name]
+
+		if !ok {
+			diags.AddError(
+				"Extra CustomizationsValue Attribute Value",
+				"While creating a CustomizationsValue value, an extra attribute value was detected. "+
+					"A CustomizationsValue must not contain values beyond the expected attribute types. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("Extra CustomizationsValue Attribute Name: %s", name),
+			)
+		}
+	}
+
+	if diags.HasError() {
+		return NewCustomizationsValueUnknown(), diags
+	}
+
+	configDriveUserDataAttribute, ok := attributes["config_drive_user_data"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`config_drive_user_data is missing from object`)
+
+		return NewCustomizationsValueUnknown(), diags
+	}
+
+	configDriveUserDataVal, ok := configDriveUserDataAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`config_drive_user_data expected to be ovhtypes.TfStringValue, was: %T`, configDriveUserDataAttribute))
+	}
+
+	efiBootloaderPathAttribute, ok := attributes["efi_bootloader_path"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`efi_bootloader_path is missing from object`)
+
+		return NewCustomizationsValueUnknown(), diags
+	}
+
+	efiBootloaderPathVal, ok := efiBootloaderPathAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`efi_bootloader_path expected to be ovhtypes.TfStringValue, was: %T`, efiBootloaderPathAttribute))
+	}
+
+	hostnameAttribute, ok := attributes["hostname"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`hostname is missing from object`)
+
+		return NewCustomizationsValueUnknown(), diags
+	}
+
+	hostnameVal, ok := hostnameAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`hostname expected to be ovhtypes.TfStringValue, was: %T`, hostnameAttribute))
+	}
+
+	httpHeadersAttribute, ok := attributes["http_headers"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`http_headers is missing from object`)
+
+		return NewCustomizationsValueUnknown(), diags
+	}
+
+	httpHeadersVal, ok := httpHeadersAttribute.(ovhtypes.TfMapNestedValue[ovhtypes.TfStringValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`http_headers expected to be ovhtypes.TfMapNestedValue[ovhtypes.TfStringValue], was: %T`, httpHeadersAttribute))
+	}
+
+	imageCheckSumAttribute, ok := attributes["image_check_sum"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`image_check_sum is missing from object`)
+
+		return NewCustomizationsValueUnknown(), diags
+	}
+
+	imageCheckSumVal, ok := imageCheckSumAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`image_check_sum expected to be ovhtypes.TfStringValue, was: %T`, imageCheckSumAttribute))
+	}
+
+	imageCheckSumTypeAttribute, ok := attributes["image_check_sum_type"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`image_check_sum_type is missing from object`)
+
+		return NewCustomizationsValueUnknown(), diags
+	}
+
+	imageCheckSumTypeVal, ok := imageCheckSumTypeAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`image_check_sum_type expected to be ovhtypes.TfStringValue, was: %T`, imageCheckSumTypeAttribute))
+	}
+
+	imageTypeAttribute, ok := attributes["image_type"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`image_type is missing from object`)
+
+		return NewCustomizationsValueUnknown(), diags
+	}
+
+	imageTypeVal, ok := imageTypeAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`image_type expected to be ovhtypes.TfStringValue, was: %T`, imageTypeAttribute))
+	}
+
+	imageUrlAttribute, ok := attributes["image_url"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`image_url is missing from object`)
+
+		return NewCustomizationsValueUnknown(), diags
+	}
+
+	imageUrlVal, ok := imageUrlAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`image_url expected to be ovhtypes.TfStringValue, was: %T`, imageUrlAttribute))
+	}
+
+	languageAttribute, ok := attributes["language"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`language is missing from object`)
+
+		return NewCustomizationsValueUnknown(), diags
+	}
+
+	languageVal, ok := languageAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`language expected to be ovhtypes.TfStringValue, was: %T`, languageAttribute))
+	}
+
+	postInstallationScriptAttribute, ok := attributes["post_installation_script"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`post_installation_script is missing from object`)
+
+		return NewCustomizationsValueUnknown(), diags
+	}
+
+	postInstallationScriptVal, ok := postInstallationScriptAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`post_installation_script expected to be ovhtypes.TfStringValue, was: %T`, postInstallationScriptAttribute))
+	}
+
+	postInstallationScriptExtensionAttribute, ok := attributes["post_installation_script_extension"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`post_installation_script_extension is missing from object`)
+
+		return NewCustomizationsValueUnknown(), diags
+	}
+
+	postInstallationScriptExtensionVal, ok := postInstallationScriptExtensionAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`post_installation_script_extension expected to be ovhtypes.TfStringValue, was: %T`, postInstallationScriptExtensionAttribute))
+	}
+
+	sshKeyAttribute, ok := attributes["ssh_key"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`ssh_key is missing from object`)
+
+		return NewCustomizationsValueUnknown(), diags
+	}
+
+	sshKeyVal, ok := sshKeyAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`ssh_key expected to be ovhtypes.TfStringValue, was: %T`, sshKeyAttribute))
+	}
+
+	if diags.HasError() {
+		return NewCustomizationsValueUnknown(), diags
+	}
+
+	return CustomizationsValue{
+		ConfigDriveUserData:             configDriveUserDataVal,
+		EfiBootloaderPath:               efiBootloaderPathVal,
+		Hostname:                        hostnameVal,
+		HttpHeaders:                     httpHeadersVal,
+		ImageCheckSum:                   imageCheckSumVal,
+		ImageCheckSumType:               imageCheckSumTypeVal,
+		ImageType:                       imageTypeVal,
+		ImageUrl:                        imageUrlVal,
+		Language:                        languageVal,
+		PostInstallationScript:          postInstallationScriptVal,
+		PostInstallationScriptExtension: postInstallationScriptExtensionVal,
+		SshKey:                          sshKeyVal,
+		state:                           attr.ValueStateKnown,
+	}, diags
+}
+
+func NewCustomizationsValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) CustomizationsValue {
+	object, diags := NewCustomizationsValue(attributeTypes, attributes)
+
+	if diags.HasError() {
+		// This could potentially be added to the diag package.
+		diagsStrings := make([]string, 0, len(diags))
+
+		for _, diagnostic := range diags {
+			diagsStrings = append(diagsStrings, fmt.Sprintf(
+				"%s | %s | %s",
+				diagnostic.Severity(),
+				diagnostic.Summary(),
+				diagnostic.Detail()))
+		}
+
+		panic("NewCustomizationsValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
+	}
+
+	return object
+}
+
+func (t CustomizationsType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+	if in.Type() == nil {
+		return NewCustomizationsValueNull(), nil
+	}
+
+	if !in.Type().Equal(t.TerraformType(ctx)) {
+		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
+	}
+
+	if !in.IsKnown() {
+		return NewCustomizationsValueUnknown(), nil
+	}
+
+	if in.IsNull() {
+		return NewCustomizationsValueNull(), nil
+	}
+
+	attributes := map[string]attr.Value{}
+
+	val := map[string]tftypes.Value{}
+
+	err := in.As(&val)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range val {
+		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
+
+		if err != nil {
+			return nil, err
+		}
+
+		attributes[k] = a
+	}
+
+	return NewCustomizationsValueMust(CustomizationsValue{}.AttributeTypes(ctx), attributes), nil
+}
+
+func (t CustomizationsType) ValueType(ctx context.Context) attr.Value {
+	return CustomizationsValue{}
+}
+
+var _ basetypes.ObjectValuable = CustomizationsValue{}
+
+type CustomizationsValue struct {
+	ConfigDriveUserData             ovhtypes.TfStringValue                            `tfsdk:"config_drive_user_data" json:"configDriveUserData"`
+	EfiBootloaderPath               ovhtypes.TfStringValue                            `tfsdk:"efi_bootloader_path" json:"efiBootloaderPath"`
+	Hostname                        ovhtypes.TfStringValue                            `tfsdk:"hostname" json:"hostname"`
+	HttpHeaders                     ovhtypes.TfMapNestedValue[ovhtypes.TfStringValue] `tfsdk:"http_headers" json:"httpHeaders"`
+	ImageCheckSum                   ovhtypes.TfStringValue                            `tfsdk:"image_check_sum" json:"imageCheckSum"`
+	ImageCheckSumType               ovhtypes.TfStringValue                            `tfsdk:"image_check_sum_type" json:"imageCheckSumType"`
+	ImageType                       ovhtypes.TfStringValue                            `tfsdk:"image_type" json:"imageType"`
+	ImageUrl                        ovhtypes.TfStringValue                            `tfsdk:"image_url" json:"imageUrl"`
+	Language                        ovhtypes.TfStringValue                            `tfsdk:"language" json:"language"`
+	PostInstallationScript          ovhtypes.TfStringValue                            `tfsdk:"post_installation_script" json:"postInstallationScript"`
+	PostInstallationScriptExtension ovhtypes.TfStringValue                            `tfsdk:"post_installation_script_extension" json:"postInstallationScriptExtension"`
+	SshKey                          ovhtypes.TfStringValue                            `tfsdk:"ssh_key" json:"sshKey"`
+	state                           attr.ValueState
+}
+
+type CustomizationsWritableValue struct {
+	ConfigDriveUserData             *ovhtypes.TfStringValue                            `json:"configDriveUserData,omitempty"`
+	EfiBootloaderPath               *ovhtypes.TfStringValue                            `json:"efiBootloaderPath,omitempty"`
+	Hostname                        *ovhtypes.TfStringValue                            `json:"hostname,omitempty"`
+	HttpHeaders                     *ovhtypes.TfMapNestedValue[ovhtypes.TfStringValue] `json:"httpHeaders,omitempty"`
+	ImageCheckSum                   *ovhtypes.TfStringValue                            `json:"imageCheckSum,omitempty"`
+	ImageCheckSumType               *ovhtypes.TfStringValue                            `json:"imageCheckSumType,omitempty"`
+	ImageType                       *ovhtypes.TfStringValue                            `json:"imageType,omitempty"`
+	ImageUrl                        *ovhtypes.TfStringValue                            `json:"imageUrl,omitempty"`
+	Language                        *ovhtypes.TfStringValue                            `json:"language,omitempty"`
+	PostInstallationScript          *ovhtypes.TfStringValue                            `json:"postInstallationScript,omitempty"`
+	PostInstallationScriptExtension *ovhtypes.TfStringValue                            `json:"postInstallationScriptExtension,omitempty"`
+	SshKey                          *ovhtypes.TfStringValue                            `json:"sshKey,omitempty"`
+}
+
+func (v CustomizationsValue) ToCreate() *CustomizationsWritableValue {
+	res := &CustomizationsWritableValue{}
+
+	if !v.ImageType.IsNull() {
+		res.ImageType = &v.ImageType
+	}
+
+	if !v.Language.IsNull() {
+		res.Language = &v.Language
+	}
+
+	if !v.PostInstallationScript.IsNull() {
+		res.PostInstallationScript = &v.PostInstallationScript
+	}
+
+	if !v.PostInstallationScriptExtension.IsNull() {
+		res.PostInstallationScriptExtension = &v.PostInstallationScriptExtension
+	}
+
+	if !v.Hostname.IsNull() {
+		res.Hostname = &v.Hostname
+	}
+
+	if !v.ImageCheckSum.IsNull() {
+		res.ImageCheckSum = &v.ImageCheckSum
+	}
+
+	if !v.SshKey.IsNull() {
+		res.SshKey = &v.SshKey
+	}
+
+	if !v.EfiBootloaderPath.IsNull() {
+		res.EfiBootloaderPath = &v.EfiBootloaderPath
+	}
+
+	if !v.HttpHeaders.IsNull() {
+		res.HttpHeaders = &v.HttpHeaders
+	}
+
+	if !v.ImageCheckSumType.IsNull() {
+		res.ImageCheckSumType = &v.ImageCheckSumType
+	}
+
+	if !v.ImageUrl.IsNull() {
+		res.ImageUrl = &v.ImageUrl
+	}
+
+	if !v.ConfigDriveUserData.IsNull() {
+		res.ConfigDriveUserData = &v.ConfigDriveUserData
+	}
+
+	return res
+}
+
+func (v *CustomizationsValue) UnmarshalJSON(data []byte) error {
+	type JsonCustomizationsValue CustomizationsValue
+
+	var tmp JsonCustomizationsValue
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		return err
+	}
+	v.ConfigDriveUserData = tmp.ConfigDriveUserData
+	v.EfiBootloaderPath = tmp.EfiBootloaderPath
+	v.Hostname = tmp.Hostname
+	v.HttpHeaders = tmp.HttpHeaders
+	v.ImageCheckSum = tmp.ImageCheckSum
+	v.ImageCheckSumType = tmp.ImageCheckSumType
+	v.ImageType = tmp.ImageType
+	v.ImageUrl = tmp.ImageUrl
+	v.Language = tmp.Language
+	v.PostInstallationScript = tmp.PostInstallationScript
+	v.PostInstallationScriptExtension = tmp.PostInstallationScriptExtension
+	v.SshKey = tmp.SshKey
+
+	v.state = attr.ValueStateKnown
+
+	return nil
+}
+
+func (v *CustomizationsValue) MergeWith(other *CustomizationsValue) {
+
+	if (v.ConfigDriveUserData.IsUnknown() || v.ConfigDriveUserData.IsNull()) && !other.ConfigDriveUserData.IsUnknown() {
+		v.ConfigDriveUserData = other.ConfigDriveUserData
+	}
+
+	if (v.EfiBootloaderPath.IsUnknown() || v.EfiBootloaderPath.IsNull()) && !other.EfiBootloaderPath.IsUnknown() {
+		v.EfiBootloaderPath = other.EfiBootloaderPath
+	}
+
+	if (v.Hostname.IsUnknown() || v.Hostname.IsNull()) && !other.Hostname.IsUnknown() {
+		v.Hostname = other.Hostname
+	}
+
+	if (v.HttpHeaders.IsUnknown() || v.HttpHeaders.IsNull()) && !other.HttpHeaders.IsUnknown() {
+		v.HttpHeaders = other.HttpHeaders
+	}
+
+	if (v.ImageCheckSum.IsUnknown() || v.ImageCheckSum.IsNull()) && !other.ImageCheckSum.IsUnknown() {
+		v.ImageCheckSum = other.ImageCheckSum
+	}
+
+	if (v.ImageCheckSumType.IsUnknown() || v.ImageCheckSumType.IsNull()) && !other.ImageCheckSumType.IsUnknown() {
+		v.ImageCheckSumType = other.ImageCheckSumType
+	}
+
+	if (v.ImageType.IsUnknown() || v.ImageType.IsNull()) && !other.ImageType.IsUnknown() {
+		v.ImageType = other.ImageType
+	}
+
+	if (v.ImageUrl.IsUnknown() || v.ImageUrl.IsNull()) && !other.ImageUrl.IsUnknown() {
+		v.ImageUrl = other.ImageUrl
+	}
+
+	if (v.Language.IsUnknown() || v.Language.IsNull()) && !other.Language.IsUnknown() {
+		v.Language = other.Language
+	}
+
+	if (v.PostInstallationScript.IsUnknown() || v.PostInstallationScript.IsNull()) && !other.PostInstallationScript.IsUnknown() {
+		v.PostInstallationScript = other.PostInstallationScript
+	}
+
+	if (v.PostInstallationScriptExtension.IsUnknown() || v.PostInstallationScriptExtension.IsNull()) && !other.PostInstallationScriptExtension.IsUnknown() {
+		v.PostInstallationScriptExtension = other.PostInstallationScriptExtension
+	}
+
+	if (v.SshKey.IsUnknown() || v.SshKey.IsNull()) && !other.SshKey.IsUnknown() {
+		v.SshKey = other.SshKey
+	}
+
+	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
+		v.state = other.state
+	}
+}
+
+func (v CustomizationsValue) Attributes() map[string]attr.Value {
+	return map[string]attr.Value{
+		"configDriveUserData":             v.ConfigDriveUserData,
+		"efiBootloaderPath":               v.EfiBootloaderPath,
+		"hostname":                        v.Hostname,
+		"httpHeaders":                     v.HttpHeaders,
+		"imageCheckSum":                   v.ImageCheckSum,
+		"imageCheckSumType":               v.ImageCheckSumType,
+		"imageType":                       v.ImageType,
+		"imageUrl":                        v.ImageUrl,
+		"language":                        v.Language,
+		"postInstallationScript":          v.PostInstallationScript,
+		"postInstallationScriptExtension": v.PostInstallationScriptExtension,
+		"sshKey":                          v.SshKey,
+	}
+}
+func (v CustomizationsValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
+	attrTypes := make(map[string]tftypes.Type, 12)
+
+	var val tftypes.Value
+	var err error
+
+	attrTypes["config_drive_user_data"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["efi_bootloader_path"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["hostname"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["http_headers"] = basetypes.MapType{
+		ElemType: types.StringType,
+	}.TerraformType(ctx)
+	attrTypes["image_check_sum"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["image_check_sum_type"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["image_type"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["image_url"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["language"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["post_installation_script"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["post_installation_script_extension"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["ssh_key"] = basetypes.StringType{}.TerraformType(ctx)
+
+	objectType := tftypes.Object{AttributeTypes: attrTypes}
+
+	switch v.state {
+	case attr.ValueStateKnown:
+		vals := make(map[string]tftypes.Value, 12)
+
+		val, err = v.ConfigDriveUserData.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["config_drive_user_data"] = val
+
+		val, err = v.EfiBootloaderPath.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["efi_bootloader_path"] = val
+
+		val, err = v.Hostname.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["hostname"] = val
+
+		val, err = v.HttpHeaders.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["http_headers"] = val
+
+		val, err = v.ImageCheckSum.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["image_check_sum"] = val
+
+		val, err = v.ImageCheckSumType.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["image_check_sum_type"] = val
+
+		val, err = v.ImageType.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["image_type"] = val
+
+		val, err = v.ImageUrl.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["image_url"] = val
+
+		val, err = v.Language.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["language"] = val
+
+		val, err = v.PostInstallationScript.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["post_installation_script"] = val
+
+		val, err = v.PostInstallationScriptExtension.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["post_installation_script_extension"] = val
+
+		val, err = v.SshKey.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["ssh_key"] = val
+
+		if err := tftypes.ValidateValue(objectType, vals); err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		return tftypes.NewValue(objectType, vals), nil
+	case attr.ValueStateNull:
+		return tftypes.NewValue(objectType, nil), nil
+	case attr.ValueStateUnknown:
+		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
+	default:
+		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
+	}
+}
+
+func (v CustomizationsValue) IsNull() bool {
+	return v.state == attr.ValueStateNull
+}
+
+func (v CustomizationsValue) IsUnknown() bool {
+	return v.state == attr.ValueStateUnknown
+}
+
+func (v CustomizationsValue) String() string {
+	return "CustomizationsValue"
+}
+
+func (v CustomizationsValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	objVal, diags := types.ObjectValue(
+		map[string]attr.Type{
+			"config_drive_user_data":             ovhtypes.TfStringType{},
+			"efi_bootloader_path":                ovhtypes.TfStringType{},
+			"hostname":                           ovhtypes.TfStringType{},
+			"http_headers":                       ovhtypes.NewTfMapNestedType[ovhtypes.TfStringValue](ctx),
+			"image_check_sum":                    ovhtypes.TfStringType{},
+			"image_check_sum_type":               ovhtypes.TfStringType{},
+			"image_type":                         ovhtypes.TfStringType{},
+			"image_url":                          ovhtypes.TfStringType{},
+			"language":                           ovhtypes.TfStringType{},
+			"post_installation_script":           ovhtypes.TfStringType{},
+			"post_installation_script_extension": ovhtypes.TfStringType{},
+			"ssh_key":                            ovhtypes.TfStringType{},
+		},
+		map[string]attr.Value{
+			"config_drive_user_data":             v.ConfigDriveUserData,
+			"efi_bootloader_path":                v.EfiBootloaderPath,
+			"hostname":                           v.Hostname,
+			"http_headers":                       v.HttpHeaders,
+			"image_check_sum":                    v.ImageCheckSum,
+			"image_check_sum_type":               v.ImageCheckSumType,
+			"image_type":                         v.ImageType,
+			"image_url":                          v.ImageUrl,
+			"language":                           v.Language,
+			"post_installation_script":           v.PostInstallationScript,
+			"post_installation_script_extension": v.PostInstallationScriptExtension,
+			"ssh_key":                            v.SshKey,
+		})
+
+	return objVal, diags
+}
+
+func (v CustomizationsValue) Equal(o attr.Value) bool {
+	other, ok := o.(CustomizationsValue)
+
+	if !ok {
+		return false
+	}
+
+	if v.state != other.state {
+		return false
+	}
+
+	if v.state != attr.ValueStateKnown {
+		return true
+	}
+
+	if !v.ConfigDriveUserData.Equal(other.ConfigDriveUserData) {
+		return false
+	}
+
+	if !v.EfiBootloaderPath.Equal(other.EfiBootloaderPath) {
+		return false
+	}
+
+	if !v.Hostname.Equal(other.Hostname) {
+		return false
+	}
+
+	if !v.HttpHeaders.Equal(other.HttpHeaders) {
+		return false
+	}
+
+	if !v.ImageCheckSum.Equal(other.ImageCheckSum) {
+		return false
+	}
+
+	if !v.ImageCheckSumType.Equal(other.ImageCheckSumType) {
+		return false
+	}
+
+	if !v.ImageType.Equal(other.ImageType) {
+		return false
+	}
+
+	if !v.ImageUrl.Equal(other.ImageUrl) {
+		return false
+	}
+
+	if !v.Language.Equal(other.Language) {
+		return false
+	}
+
+	if !v.PostInstallationScript.Equal(other.PostInstallationScript) {
+		return false
+	}
+
+	if !v.PostInstallationScriptExtension.Equal(other.PostInstallationScriptExtension) {
+		return false
+	}
+
+	if !v.SshKey.Equal(other.SshKey) {
+		return false
+	}
+
+	return true
+}
+
+func (v CustomizationsValue) Type(ctx context.Context) attr.Type {
+	return CustomizationsType{
+		basetypes.ObjectType{
+			AttrTypes: v.AttributeTypes(ctx),
+		},
+	}
+}
+
+func (v CustomizationsValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
+	return map[string]attr.Type{
+		"config_drive_user_data":             ovhtypes.TfStringType{},
+		"efi_bootloader_path":                ovhtypes.TfStringType{},
+		"hostname":                           ovhtypes.TfStringType{},
+		"http_headers":                       ovhtypes.NewTfMapNestedType[ovhtypes.TfStringValue](ctx),
+		"image_check_sum":                    ovhtypes.TfStringType{},
+		"image_check_sum_type":               ovhtypes.TfStringType{},
+		"image_type":                         ovhtypes.TfStringType{},
+		"image_url":                          ovhtypes.TfStringType{},
+		"language":                           ovhtypes.TfStringType{},
+		"post_installation_script":           ovhtypes.TfStringType{},
+		"post_installation_script_extension": ovhtypes.TfStringType{},
+		"ssh_key":                            ovhtypes.TfStringType{},
+	}
+}
+
+var _ basetypes.ObjectTypable = StorageType{}
+
+type StorageType struct {
+	basetypes.ObjectType
+}
+
+func (t StorageType) Equal(o attr.Type) bool {
+	other, ok := o.(StorageType)
+
+	if !ok {
+		return false
+	}
+
+	return t.ObjectType.Equal(other.ObjectType)
+}
+
+func (t StorageType) String() string {
+	return "StorageType"
+}
+
+func (t StorageType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	attributes := in.Attributes()
+
+	diskGroupIdAttribute, ok := attributes["disk_group_id"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`disk_group_id is missing from object`)
+
+		return nil, diags
+	}
+
+	diskGroupIdVal, ok := diskGroupIdAttribute.(ovhtypes.TfInt64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`disk_group_id expected to be ovhtypes.TfInt64Value, was: %T`, diskGroupIdAttribute))
+	}
+
+	hardwareRaidAttribute, ok := attributes["hardware_raid"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`hardware_raid is missing from object`)
+
+		return nil, diags
+	}
+
+	hardwareRaidVal, ok := hardwareRaidAttribute.(ovhtypes.TfListNestedValue[StorageHardwareRaidValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`hardware_raid expected to be ovhtypes.TfListNestedValue[StorageHardwareRaidValue], was: %T`, hardwareRaidAttribute))
+	}
+
+	partitioningAttribute, ok := attributes["partitioning"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`partitioning is missing from object`)
+
+		return nil, diags
+	}
+
+	partitioningVal, ok := partitioningAttribute.(StoragePartitioningValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`partitioning expected to be StoragePartitioningValue, was: %T`, partitioningAttribute))
+	}
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return StorageValue{
+		DiskGroupId:  diskGroupIdVal,
+		HardwareRaid: hardwareRaidVal,
+		Partitioning: partitioningVal,
+		state:        attr.ValueStateKnown,
+	}, diags
+}
+
+func NewStorageValueNull() StorageValue {
+	return StorageValue{
+		state: attr.ValueStateNull,
+	}
+}
+
+func NewStorageValueUnknown() StorageValue {
+	return StorageValue{
+		state: attr.ValueStateUnknown,
+	}
+}
+
+func NewStorageValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (StorageValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
+	ctx := context.Background()
+
+	for name, attributeType := range attributeTypes {
+		attribute, ok := attributes[name]
+
+		if !ok {
+			diags.AddError(
+				"Missing StorageValue Attribute Value",
+				"While creating a StorageValue value, a missing attribute value was detected. "+
+					"A StorageValue must contain values for all attributes, even if null or unknown. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("StorageValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
+			)
+
+			continue
+		}
+
+		if !attributeType.Equal(attribute.Type(ctx)) {
+			diags.AddError(
+				"Invalid StorageValue Attribute Type",
+				"While creating a StorageValue value, an invalid attribute value was detected. "+
+					"A StorageValue must use a matching attribute type for the value. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("StorageValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
+					fmt.Sprintf("StorageValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
+			)
+		}
+	}
+
+	for name := range attributes {
+		_, ok := attributeTypes[name]
+
+		if !ok {
+			diags.AddError(
+				"Extra StorageValue Attribute Value",
+				"While creating a StorageValue value, an extra attribute value was detected. "+
+					"A StorageValue must not contain values beyond the expected attribute types. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("Extra StorageValue Attribute Name: %s", name),
+			)
+		}
+	}
+
+	if diags.HasError() {
+		return NewStorageValueUnknown(), diags
+	}
+
+	diskGroupIdAttribute, ok := attributes["disk_group_id"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`disk_group_id is missing from object`)
+
+		return NewStorageValueUnknown(), diags
+	}
+
+	diskGroupIdVal, ok := diskGroupIdAttribute.(ovhtypes.TfInt64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`disk_group_id expected to be ovhtypes.TfInt64Value, was: %T`, diskGroupIdAttribute))
+	}
+
+	hardwareRaidAttribute, ok := attributes["hardware_raid"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`hardware_raid is missing from object`)
+
+		return NewStorageValueUnknown(), diags
+	}
+
+	hardwareRaidVal, ok := hardwareRaidAttribute.(ovhtypes.TfListNestedValue[StorageHardwareRaidValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`hardware_raid expected to be ovhtypes.TfListNestedValue[StorageHardwareRaidValue], was: %T`, hardwareRaidAttribute))
+	}
+
+	partitioningAttribute, ok := attributes["partitioning"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`partitioning is missing from object`)
+
+		return NewStorageValueUnknown(), diags
+	}
+
+	partitioningVal, ok := partitioningAttribute.(StoragePartitioningValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`partitioning expected to be StoragePartitioningValue, was: %T`, partitioningAttribute))
+	}
+
+	if diags.HasError() {
+		return NewStorageValueUnknown(), diags
+	}
+
+	return StorageValue{
+		DiskGroupId:  diskGroupIdVal,
+		HardwareRaid: hardwareRaidVal,
+		Partitioning: partitioningVal,
+		state:        attr.ValueStateKnown,
+	}, diags
+}
+
+func NewStorageValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) StorageValue {
+	object, diags := NewStorageValue(attributeTypes, attributes)
+
+	if diags.HasError() {
+		// This could potentially be added to the diag package.
+		diagsStrings := make([]string, 0, len(diags))
+
+		for _, diagnostic := range diags {
+			diagsStrings = append(diagsStrings, fmt.Sprintf(
+				"%s | %s | %s",
+				diagnostic.Severity(),
+				diagnostic.Summary(),
+				diagnostic.Detail()))
+		}
+
+		panic("NewStorageValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
+	}
+
+	return object
+}
+
+func (t StorageType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+	if in.Type() == nil {
+		return NewStorageValueNull(), nil
+	}
+
+	if !in.Type().Equal(t.TerraformType(ctx)) {
+		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
+	}
+
+	if !in.IsKnown() {
+		return NewStorageValueUnknown(), nil
+	}
+
+	if in.IsNull() {
+		return NewStorageValueNull(), nil
+	}
+
+	attributes := map[string]attr.Value{}
+
+	val := map[string]tftypes.Value{}
+
+	err := in.As(&val)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range val {
+		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
+
+		if err != nil {
+			return nil, err
+		}
+
+		attributes[k] = a
+	}
+
+	return NewStorageValueMust(StorageValue{}.AttributeTypes(ctx), attributes), nil
+}
+
+func (t StorageType) ValueType(ctx context.Context) attr.Value {
+	return StorageValue{}
+}
+
+var _ basetypes.ObjectValuable = StorageValue{}
+
+type StorageValue struct {
+	DiskGroupId  ovhtypes.TfInt64Value                                `tfsdk:"disk_group_id" json:"diskGroupId"`
+	HardwareRaid ovhtypes.TfListNestedValue[StorageHardwareRaidValue] `tfsdk:"hardware_raid" json:"hardwareRaid"`
+	Partitioning StoragePartitioningValue                             `tfsdk:"partitioning" json:"partitioning"`
+	state        attr.ValueState
+}
+
+type StorageWritableValue struct {
+	DiskGroupId  *ovhtypes.TfInt64Value      `tfsdk:"disk_group_id" json:"diskGroupId,omitempty"`
+	HardwareRaid []*StorageHardwareRaidValue `tfsdk:"hardware_raid" json:"hardwareRaid,omitempty"`
+	Partitioning *StoragePartitioningValue   `tfsdk:"partitioning" json:"partitioning,omitempty"`
+	state        attr.ValueState
+}
+
+func (v StorageValue) ToCreate() *StorageWritableValue {
+	res := &StorageWritableValue{
+		state: v.state,
+	}
+
+	if !v.DiskGroupId.IsNull() {
+		res.DiskGroupId = &v.DiskGroupId
+	}
+
+	if !v.HardwareRaid.IsNull() {
+		for _, elem := range v.HardwareRaid.Elements() {
+			res.HardwareRaid = append(res.HardwareRaid, elem.(StorageHardwareRaidValue).ToCreate())
+		}
+	}
+
+	if !v.Partitioning.IsNull() {
+		res.Partitioning = &v.Partitioning
+	}
+
+	res.state = attr.ValueStateKnown
+
+	return res
+}
+
+func (v StorageValue) ToUpdate() *StorageWritableValue {
+	res := &StorageWritableValue{
+		state: v.state,
+	}
+
+	if !v.DiskGroupId.IsNull() {
+		res.DiskGroupId = &v.DiskGroupId
+	}
+
+	if !v.HardwareRaid.IsNull() {
+		for _, elem := range v.HardwareRaid.Elements() {
+			res.HardwareRaid = append(res.HardwareRaid, elem.(StorageHardwareRaidValue).ToUpdate())
+		}
+	}
+
+	if !v.Partitioning.IsNull() {
+		res.Partitioning = &v.Partitioning
+	}
+
+	res.state = attr.ValueStateKnown
+
+	return res
+}
+
+func (v StorageValue) MarshalJSON() ([]byte, error) {
+	toMarshal := map[string]any{}
+	if !v.DiskGroupId.IsNull() && !v.DiskGroupId.IsUnknown() {
+		toMarshal["diskGroupId"] = v.DiskGroupId
+	}
+	if !v.HardwareRaid.IsNull() && !v.HardwareRaid.IsUnknown() {
+		toMarshal["hardwareRaid"] = v.HardwareRaid
+	}
+	if !v.Partitioning.IsNull() && !v.Partitioning.IsUnknown() {
+		toMarshal["partitioning"] = v.Partitioning
+	}
+
+	return json.Marshal(toMarshal)
+}
+
+func (v *StorageValue) UnmarshalJSON(data []byte) error {
+	type JsonStorageValue StorageValue
+
+	var tmp JsonStorageValue
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		return err
+	}
+	v.DiskGroupId = tmp.DiskGroupId
+	v.HardwareRaid = tmp.HardwareRaid
+	v.Partitioning = tmp.Partitioning
+
+	v.state = attr.ValueStateKnown
+
+	return nil
+}
+
+func (v *StorageValue) MergeWith(other *StorageValue) {
+
+	if (v.DiskGroupId.IsUnknown() || v.DiskGroupId.IsNull()) && !other.DiskGroupId.IsUnknown() {
+		v.DiskGroupId = other.DiskGroupId
+	}
+
+	if (v.HardwareRaid.IsUnknown() || v.HardwareRaid.IsNull()) && !other.HardwareRaid.IsUnknown() {
+		v.HardwareRaid = other.HardwareRaid
+	} else if !other.HardwareRaid.IsUnknown() {
+		newSlice := make([]attr.Value, 0)
+		elems := v.HardwareRaid.Elements()
+		newElems := other.HardwareRaid.Elements()
+
+		if len(elems) != len(newElems) {
+			v.HardwareRaid = other.HardwareRaid
+		} else {
+			for idx, e := range elems {
+				tmp := e.(StorageHardwareRaidValue)
+				tmp2 := newElems[idx].(StorageHardwareRaidValue)
+				tmp.MergeWith(&tmp2)
+				newSlice = append(newSlice, tmp)
+			}
+
+			v.HardwareRaid = ovhtypes.TfListNestedValue[StorageHardwareRaidValue]{
+				ListValue: basetypes.NewListValueMust(StorageHardwareRaidValue{}.Type(context.Background()), newSlice),
+			}
+		}
+	}
+
+	if v.Partitioning.IsUnknown() && !other.Partitioning.IsUnknown() {
+		v.Partitioning = other.Partitioning
+	} else if !other.Partitioning.IsUnknown() {
+		v.Partitioning.MergeWith(&other.Partitioning)
+	}
+
+	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
+		v.state = other.state
+	}
+}
+
+func (v StorageValue) Attributes() map[string]attr.Value {
+	return map[string]attr.Value{
+		"diskGroupId":  v.DiskGroupId,
+		"hardwareRaid": v.HardwareRaid,
+		"partitioning": v.Partitioning,
+	}
+}
+func (v StorageValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
+	attrTypes := make(map[string]tftypes.Type, 3)
+
+	var val tftypes.Value
+	var err error
+
+	attrTypes["disk_group_id"] = basetypes.Int64Type{}.TerraformType(ctx)
+	attrTypes["hardware_raid"] = basetypes.ListType{
+		ElemType: StorageHardwareRaidValue{}.Type(ctx),
+	}.TerraformType(ctx)
+	attrTypes["partitioning"] = basetypes.ObjectType{
+		AttrTypes: StoragePartitioningValue{}.AttributeTypes(ctx),
+	}.TerraformType(ctx)
+
+	objectType := tftypes.Object{AttributeTypes: attrTypes}
+
+	switch v.state {
+	case attr.ValueStateKnown:
+		vals := make(map[string]tftypes.Value, 3)
+
+		val, err = v.DiskGroupId.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["disk_group_id"] = val
+
+		val, err = v.HardwareRaid.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["hardware_raid"] = val
+
+		val, err = v.Partitioning.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["partitioning"] = val
+
+		if err := tftypes.ValidateValue(objectType, vals); err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		return tftypes.NewValue(objectType, vals), nil
+	case attr.ValueStateNull:
+		return tftypes.NewValue(objectType, nil), nil
+	case attr.ValueStateUnknown:
+		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
+	default:
+		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
+	}
+}
+
+func (v StorageValue) IsNull() bool {
+	return v.state == attr.ValueStateNull
+}
+
+func (v StorageValue) IsUnknown() bool {
+	return v.state == attr.ValueStateUnknown
+}
+
+func (v StorageValue) String() string {
+	return "StorageValue"
+}
+
+func (v StorageValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	objVal, diags := types.ObjectValue(
+		map[string]attr.Type{
+			"disk_group_id": ovhtypes.TfInt64Type{},
+			"hardware_raid": ovhtypes.NewTfListNestedType[StorageHardwareRaidValue](ctx),
+			"partitioning": StoragePartitioningType{
+				basetypes.ObjectType{
+					AttrTypes: StoragePartitioningValue{}.AttributeTypes(ctx),
+				},
+			},
+		},
+		map[string]attr.Value{
+			"disk_group_id": v.DiskGroupId,
+			"hardware_raid": v.HardwareRaid,
+			"partitioning":  v.Partitioning,
+		})
+
+	return objVal, diags
+}
+
+func (v StorageValue) Equal(o attr.Value) bool {
+	other, ok := o.(StorageValue)
+
+	if !ok {
+		return false
+	}
+
+	if v.state != other.state {
+		return false
+	}
+
+	if v.state != attr.ValueStateKnown {
+		return true
+	}
+
+	if !v.DiskGroupId.Equal(other.DiskGroupId) {
+		return false
+	}
+
+	if !v.HardwareRaid.Equal(other.HardwareRaid) {
+		return false
+	}
+
+	if !v.Partitioning.Equal(other.Partitioning) {
+		return false
+	}
+
+	return true
+}
+
+func (v StorageValue) Type(ctx context.Context) attr.Type {
+	return StorageType{
+		basetypes.ObjectType{
+			AttrTypes: v.AttributeTypes(ctx),
+		},
+	}
+}
+
+func (v StorageValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
+	return map[string]attr.Type{
+		"disk_group_id": ovhtypes.TfInt64Type{},
+		"hardware_raid": ovhtypes.NewTfListNestedType[StorageHardwareRaidValue](ctx),
+		"partitioning":  StoragePartitioningValue{}.Type(ctx),
+	}
+}
+
+var _ basetypes.ObjectTypable = StorageHardwareRaidType{}
+
+type StorageHardwareRaidType struct {
+	basetypes.ObjectType
+}
+
+func (t StorageHardwareRaidType) Equal(o attr.Type) bool {
+	other, ok := o.(StorageHardwareRaidType)
+
+	if !ok {
+		return false
+	}
+
+	return t.ObjectType.Equal(other.ObjectType)
+}
+
+func (t StorageHardwareRaidType) String() string {
+	return "StorageHardwareRaidType"
+}
+
+func (t StorageHardwareRaidType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	attributes := in.Attributes()
+
+	arraysAttribute, ok := attributes["arrays"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`arrays is missing from object`)
+
+		return nil, diags
+	}
+
+	arraysVal, ok := arraysAttribute.(ovhtypes.TfInt64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`arrays expected to be ovhtypes.TfInt64Value, was: %T`, arraysAttribute))
+	}
+
+	disksAttribute, ok := attributes["disks"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`disks is missing from object`)
+
+		return nil, diags
+	}
+
+	disksVal, ok := disksAttribute.(ovhtypes.TfInt64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`disks expected to be ovhtypes.TfInt64Value, was: %T`, disksAttribute))
+	}
+
+	raidLevelAttribute, ok := attributes["raid_level"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`raid_level is missing from object`)
+
+		return nil, diags
+	}
+
+	raidLevelVal, ok := raidLevelAttribute.(ovhtypes.TfInt64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`raid_level expected to be ovhtypes.TfInt64Value, was: %T`, raidLevelAttribute))
+	}
+
+	sparesAttribute, ok := attributes["spares"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`spares is missing from object`)
+
+		return nil, diags
+	}
+
+	sparesVal, ok := sparesAttribute.(ovhtypes.TfInt64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`spares expected to be ovhtypes.TfInt64Value, was: %T`, sparesAttribute))
+	}
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return StorageHardwareRaidValue{
+		Arrays:    arraysVal,
+		Disks:     disksVal,
+		RaidLevel: raidLevelVal,
+		Spares:    sparesVal,
+		state:     attr.ValueStateKnown,
+	}, diags
+}
+
+func NewStorageHardwareRaidValueNull() StorageHardwareRaidValue {
+	return StorageHardwareRaidValue{
+		state: attr.ValueStateNull,
+	}
+}
+
+func NewStorageHardwareRaidValueUnknown() StorageHardwareRaidValue {
+	return StorageHardwareRaidValue{
+		state: attr.ValueStateUnknown,
+	}
+}
+
+func NewStorageHardwareRaidValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (StorageHardwareRaidValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
+	ctx := context.Background()
+
+	for name, attributeType := range attributeTypes {
+		attribute, ok := attributes[name]
+
+		if !ok {
+			diags.AddError(
+				"Missing StorageHardwareRaidValue Attribute Value",
+				"While creating a StorageHardwareRaidValue value, a missing attribute value was detected. "+
+					"A StorageHardwareRaidValue must contain values for all attributes, even if null or unknown. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("StorageHardwareRaidValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
+			)
+
+			continue
+		}
+
+		if !attributeType.Equal(attribute.Type(ctx)) {
+			diags.AddError(
+				"Invalid StorageHardwareRaidValue Attribute Type",
+				"While creating a StorageHardwareRaidValue value, an invalid attribute value was detected. "+
+					"A StorageHardwareRaidValue must use a matching attribute type for the value. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("StorageHardwareRaidValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
+					fmt.Sprintf("StorageHardwareRaidValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
+			)
+		}
+	}
+
+	for name := range attributes {
+		_, ok := attributeTypes[name]
+
+		if !ok {
+			diags.AddError(
+				"Extra StorageHardwareRaidValue Attribute Value",
+				"While creating a StorageHardwareRaidValue value, an extra attribute value was detected. "+
+					"A StorageHardwareRaidValue must not contain values beyond the expected attribute types. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("Extra StorageHardwareRaidValue Attribute Name: %s", name),
+			)
+		}
+	}
+
+	if diags.HasError() {
+		return NewStorageHardwareRaidValueUnknown(), diags
+	}
+
+	arraysAttribute, ok := attributes["arrays"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`arrays is missing from object`)
+
+		return NewStorageHardwareRaidValueUnknown(), diags
+	}
+
+	arraysVal, ok := arraysAttribute.(ovhtypes.TfInt64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`arrays expected to be ovhtypes.TfInt64Value, was: %T`, arraysAttribute))
+	}
+
+	disksAttribute, ok := attributes["disks"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`disks is missing from object`)
+
+		return NewStorageHardwareRaidValueUnknown(), diags
+	}
+
+	disksVal, ok := disksAttribute.(ovhtypes.TfInt64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`disks expected to be ovhtypes.TfInt64Value, was: %T`, disksAttribute))
+	}
+
+	raidLevelAttribute, ok := attributes["raid_level"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`raid_level is missing from object`)
+
+		return NewStorageHardwareRaidValueUnknown(), diags
+	}
+
+	raidLevelVal, ok := raidLevelAttribute.(ovhtypes.TfInt64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`raid_level expected to be ovhtypes.TfInt64Value, was: %T`, raidLevelAttribute))
+	}
+
+	sparesAttribute, ok := attributes["spares"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`spares is missing from object`)
+
+		return NewStorageHardwareRaidValueUnknown(), diags
+	}
+
+	sparesVal, ok := sparesAttribute.(ovhtypes.TfInt64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`spares expected to be ovhtypes.TfInt64Value, was: %T`, sparesAttribute))
+	}
+
+	if diags.HasError() {
+		return NewStorageHardwareRaidValueUnknown(), diags
+	}
+
+	return StorageHardwareRaidValue{
+		Arrays:    arraysVal,
+		Disks:     disksVal,
+		RaidLevel: raidLevelVal,
+		Spares:    sparesVal,
+		state:     attr.ValueStateKnown,
+	}, diags
+}
+
+func NewStorageHardwareRaidValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) StorageHardwareRaidValue {
+	object, diags := NewStorageHardwareRaidValue(attributeTypes, attributes)
+
+	if diags.HasError() {
+		// This could potentially be added to the diag package.
+		diagsStrings := make([]string, 0, len(diags))
+
+		for _, diagnostic := range diags {
+			diagsStrings = append(diagsStrings, fmt.Sprintf(
+				"%s | %s | %s",
+				diagnostic.Severity(),
+				diagnostic.Summary(),
+				diagnostic.Detail()))
+		}
+
+		panic("NewStorageHardwareRaidValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
+	}
+
+	return object
+}
+
+func (t StorageHardwareRaidType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+	if in.Type() == nil {
+		return NewStorageHardwareRaidValueNull(), nil
+	}
+
+	if !in.Type().Equal(t.TerraformType(ctx)) {
+		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
+	}
+
+	if !in.IsKnown() {
+		return NewStorageHardwareRaidValueUnknown(), nil
+	}
+
+	if in.IsNull() {
+		return NewStorageHardwareRaidValueNull(), nil
+	}
+
+	attributes := map[string]attr.Value{}
+
+	val := map[string]tftypes.Value{}
+
+	err := in.As(&val)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range val {
+		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
+
+		if err != nil {
+			return nil, err
+		}
+
+		attributes[k] = a
+	}
+
+	return NewStorageHardwareRaidValueMust(StorageHardwareRaidValue{}.AttributeTypes(ctx), attributes), nil
+}
+
+func (t StorageHardwareRaidType) ValueType(ctx context.Context) attr.Value {
+	return StorageHardwareRaidValue{}
+}
+
+var _ basetypes.ObjectValuable = StorageHardwareRaidValue{}
+
+type StorageHardwareRaidValue struct {
+	Arrays    ovhtypes.TfInt64Value `tfsdk:"arrays" json:"arrays"`
+	Disks     ovhtypes.TfInt64Value `tfsdk:"disks" json:"disks"`
+	RaidLevel ovhtypes.TfInt64Value `tfsdk:"raid_level" json:"raidLevel"`
+	Spares    ovhtypes.TfInt64Value `tfsdk:"spares" json:"spares"`
+	state     attr.ValueState
+}
+
+func (v StorageHardwareRaidValue) ToCreate() *StorageHardwareRaidValue {
+	res := &StorageHardwareRaidValue{}
+
+	if !v.Arrays.IsNull() {
+		res.Arrays = v.Arrays
+	}
+
+	if !v.Disks.IsNull() {
+		res.Disks = v.Disks
+	}
+
+	if !v.RaidLevel.IsNull() {
+		res.RaidLevel = v.RaidLevel
+	}
+
+	if !v.Spares.IsNull() {
+		res.Spares = v.Spares
+	}
+
+	res.state = attr.ValueStateKnown
+
+	return res
+}
+
+func (v StorageHardwareRaidValue) ToUpdate() *StorageHardwareRaidValue {
+	res := &StorageHardwareRaidValue{}
+
+	if !v.Arrays.IsNull() {
+		res.Arrays = v.Arrays
+	}
+
+	if !v.Disks.IsNull() {
+		res.Disks = v.Disks
+	}
+
+	if !v.RaidLevel.IsNull() {
+		res.RaidLevel = v.RaidLevel
+	}
+
+	if !v.Spares.IsNull() {
+		res.Spares = v.Spares
+	}
+
+	res.state = attr.ValueStateKnown
+
+	return res
+}
+
+func (v StorageHardwareRaidValue) MarshalJSON() ([]byte, error) {
+	toMarshal := map[string]any{}
+	if !v.Arrays.IsNull() && !v.Arrays.IsUnknown() {
+		toMarshal["arrays"] = v.Arrays
+	}
+	if !v.Disks.IsNull() && !v.Disks.IsUnknown() {
+		toMarshal["disks"] = v.Disks
+	}
+	if !v.RaidLevel.IsNull() && !v.RaidLevel.IsUnknown() {
+		toMarshal["raidLevel"] = v.RaidLevel
+	}
+	if !v.Spares.IsNull() && !v.Spares.IsUnknown() {
+		toMarshal["spares"] = v.Spares
+	}
+
+	return json.Marshal(toMarshal)
+}
+
+func (v *StorageHardwareRaidValue) UnmarshalJSON(data []byte) error {
+	type JsonStorageHardwareRaidValue StorageHardwareRaidValue
+
+	var tmp JsonStorageHardwareRaidValue
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		return err
+	}
+	v.Arrays = tmp.Arrays
+	v.Disks = tmp.Disks
+	v.RaidLevel = tmp.RaidLevel
+	v.Spares = tmp.Spares
+
+	v.state = attr.ValueStateKnown
+
+	return nil
+}
+
+func (v *StorageHardwareRaidValue) MergeWith(other *StorageHardwareRaidValue) {
+
+	if (v.Arrays.IsUnknown() || v.Arrays.IsNull()) && !other.Arrays.IsUnknown() {
+		v.Arrays = other.Arrays
+	}
+
+	if (v.Disks.IsUnknown() || v.Disks.IsNull()) && !other.Disks.IsUnknown() {
+		v.Disks = other.Disks
+	}
+
+	if (v.RaidLevel.IsUnknown() || v.RaidLevel.IsNull()) && !other.RaidLevel.IsUnknown() {
+		v.RaidLevel = other.RaidLevel
+	}
+
+	if (v.Spares.IsUnknown() || v.Spares.IsNull()) && !other.Spares.IsUnknown() {
+		v.Spares = other.Spares
+	}
+
+	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
+		v.state = other.state
+	}
+}
+
+func (v StorageHardwareRaidValue) Attributes() map[string]attr.Value {
+	return map[string]attr.Value{
+		"arrays":    v.Arrays,
+		"disks":     v.Disks,
+		"raidLevel": v.RaidLevel,
+		"spares":    v.Spares,
+	}
+}
+func (v StorageHardwareRaidValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
+	attrTypes := make(map[string]tftypes.Type, 4)
+
+	var val tftypes.Value
+	var err error
+
+	attrTypes["arrays"] = basetypes.Int64Type{}.TerraformType(ctx)
+	attrTypes["disks"] = basetypes.Int64Type{}.TerraformType(ctx)
+	attrTypes["raid_level"] = basetypes.Int64Type{}.TerraformType(ctx)
+	attrTypes["spares"] = basetypes.Int64Type{}.TerraformType(ctx)
+
+	objectType := tftypes.Object{AttributeTypes: attrTypes}
+
+	switch v.state {
+	case attr.ValueStateKnown:
+		vals := make(map[string]tftypes.Value, 4)
+
+		val, err = v.Arrays.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["arrays"] = val
+
+		val, err = v.Disks.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["disks"] = val
+
+		val, err = v.RaidLevel.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["raid_level"] = val
+
+		val, err = v.Spares.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["spares"] = val
+
+		if err := tftypes.ValidateValue(objectType, vals); err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		return tftypes.NewValue(objectType, vals), nil
+	case attr.ValueStateNull:
+		return tftypes.NewValue(objectType, nil), nil
+	case attr.ValueStateUnknown:
+		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
+	default:
+		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
+	}
+}
+
+func (v StorageHardwareRaidValue) IsNull() bool {
+	return v.state == attr.ValueStateNull
+}
+
+func (v StorageHardwareRaidValue) IsUnknown() bool {
+	return v.state == attr.ValueStateUnknown
+}
+
+func (v StorageHardwareRaidValue) String() string {
+	return "StorageHardwareRaidValue"
+}
+
+func (v StorageHardwareRaidValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	objVal, diags := types.ObjectValue(
+		map[string]attr.Type{
+			"arrays":     ovhtypes.TfInt64Type{},
+			"disks":      ovhtypes.TfInt64Type{},
+			"raid_level": ovhtypes.TfInt64Type{},
+			"spares":     ovhtypes.TfInt64Type{},
+		},
+		map[string]attr.Value{
+			"arrays":     v.Arrays,
+			"disks":      v.Disks,
+			"raid_level": v.RaidLevel,
+			"spares":     v.Spares,
+		})
+
+	return objVal, diags
+}
+
+func (v StorageHardwareRaidValue) Equal(o attr.Value) bool {
+	other, ok := o.(StorageHardwareRaidValue)
+
+	if !ok {
+		return false
+	}
+
+	if v.state != other.state {
+		return false
+	}
+
+	if v.state != attr.ValueStateKnown {
+		return true
+	}
+
+	if !v.Arrays.Equal(other.Arrays) {
+		return false
+	}
+
+	if !v.Disks.Equal(other.Disks) {
+		return false
+	}
+
+	if !v.RaidLevel.Equal(other.RaidLevel) {
+		return false
+	}
+
+	if !v.Spares.Equal(other.Spares) {
+		return false
+	}
+
+	return true
+}
+
+func (v StorageHardwareRaidValue) Type(ctx context.Context) attr.Type {
+	return StorageHardwareRaidType{
+		basetypes.ObjectType{
+			AttrTypes: v.AttributeTypes(ctx),
+		},
+	}
+}
+
+func (v StorageHardwareRaidValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
+	return map[string]attr.Type{
+		"arrays":     ovhtypes.TfInt64Type{},
+		"disks":      ovhtypes.TfInt64Type{},
+		"raid_level": ovhtypes.TfInt64Type{},
+		"spares":     ovhtypes.TfInt64Type{},
+	}
+}
+
+var _ basetypes.ObjectTypable = StoragePartitioningType{}
+
+type StoragePartitioningType struct {
+	basetypes.ObjectType
+}
+
+func (t StoragePartitioningType) Equal(o attr.Type) bool {
+	other, ok := o.(StoragePartitioningType)
+
+	if !ok {
+		return false
+	}
+
+	return t.ObjectType.Equal(other.ObjectType)
+}
+
+func (t StoragePartitioningType) String() string {
+	return "StoragePartitioningType"
+}
+
+func (t StoragePartitioningType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	attributes := in.Attributes()
+
+	disksAttribute, ok := attributes["disks"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`disks is missing from object`)
+
+		return nil, diags
+	}
+
+	disksVal, ok := disksAttribute.(ovhtypes.TfInt64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`disks expected to be ovhtypes.TfInt64Value, was: %T`, disksAttribute))
+	}
+
+	layoutAttribute, ok := attributes["layout"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`layout is missing from object`)
+
+		return nil, diags
+	}
+
+	layoutVal, ok := layoutAttribute.(ovhtypes.TfListNestedValue[StoragePartitioningLayoutValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`layout expected to be ovhtypes.TfListNestedValue[StoragePartitioningLayoutValue], was: %T`, layoutAttribute))
+	}
+
+	schemeNameAttribute, ok := attributes["scheme_name"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`scheme_name is missing from object`)
+
+		return nil, diags
+	}
+
+	schemeNameVal, ok := schemeNameAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`scheme_name expected to be ovhtypes.TfStringValue, was: %T`, schemeNameAttribute))
+	}
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return StoragePartitioningValue{
+		Disks:      disksVal,
+		Layout:     layoutVal,
+		SchemeName: schemeNameVal,
+		state:      attr.ValueStateKnown,
+	}, diags
+}
+
+func NewStoragePartitioningValueNull() StoragePartitioningValue {
+	return StoragePartitioningValue{
+		state: attr.ValueStateNull,
+	}
+}
+
+func NewStoragePartitioningValueUnknown() StoragePartitioningValue {
+	return StoragePartitioningValue{
+		state: attr.ValueStateUnknown,
+	}
+}
+
+func NewStoragePartitioningValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (StoragePartitioningValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
+	ctx := context.Background()
+
+	for name, attributeType := range attributeTypes {
+		attribute, ok := attributes[name]
+
+		if !ok {
+			diags.AddError(
+				"Missing StoragePartitioningValue Attribute Value",
+				"While creating a StoragePartitioningValue value, a missing attribute value was detected. "+
+					"A StoragePartitioningValue must contain values for all attributes, even if null or unknown. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("StoragePartitioningValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
+			)
+
+			continue
+		}
+
+		if !attributeType.Equal(attribute.Type(ctx)) {
+			diags.AddError(
+				"Invalid StoragePartitioningValue Attribute Type",
+				"While creating a StoragePartitioningValue value, an invalid attribute value was detected. "+
+					"A StoragePartitioningValue must use a matching attribute type for the value. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("StoragePartitioningValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
+					fmt.Sprintf("StoragePartitioningValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
+			)
+		}
+	}
+
+	for name := range attributes {
+		_, ok := attributeTypes[name]
+
+		if !ok {
+			diags.AddError(
+				"Extra StoragePartitioningValue Attribute Value",
+				"While creating a StoragePartitioningValue value, an extra attribute value was detected. "+
+					"A StoragePartitioningValue must not contain values beyond the expected attribute types. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("Extra StoragePartitioningValue Attribute Name: %s", name),
+			)
+		}
+	}
+
+	if diags.HasError() {
+		return NewStoragePartitioningValueUnknown(), diags
+	}
+
+	disksAttribute, ok := attributes["disks"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`disks is missing from object`)
+
+		return NewStoragePartitioningValueUnknown(), diags
+	}
+
+	disksVal, ok := disksAttribute.(ovhtypes.TfInt64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`disks expected to be ovhtypes.TfInt64Value, was: %T`, disksAttribute))
+	}
+
+	layoutAttribute, ok := attributes["layout"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`layout is missing from object`)
+
+		return NewStoragePartitioningValueUnknown(), diags
+	}
+
+	layoutVal, ok := layoutAttribute.(ovhtypes.TfListNestedValue[StoragePartitioningLayoutValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`layout expected to be ovhtypes.TfListNestedValue[StoragePartitioningLayoutValue], was: %T`, layoutAttribute))
+	}
+
+	schemeNameAttribute, ok := attributes["scheme_name"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`scheme_name is missing from object`)
+
+		return NewStoragePartitioningValueUnknown(), diags
+	}
+
+	schemeNameVal, ok := schemeNameAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`scheme_name expected to be ovhtypes.TfStringValue, was: %T`, schemeNameAttribute))
+	}
+
+	if diags.HasError() {
+		return NewStoragePartitioningValueUnknown(), diags
+	}
+
+	return StoragePartitioningValue{
+		Disks:      disksVal,
+		Layout:     layoutVal,
+		SchemeName: schemeNameVal,
+		state:      attr.ValueStateKnown,
+	}, diags
+}
+
+func NewStoragePartitioningValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) StoragePartitioningValue {
+	object, diags := NewStoragePartitioningValue(attributeTypes, attributes)
+
+	if diags.HasError() {
+		// This could potentially be added to the diag package.
+		diagsStrings := make([]string, 0, len(diags))
+
+		for _, diagnostic := range diags {
+			diagsStrings = append(diagsStrings, fmt.Sprintf(
+				"%s | %s | %s",
+				diagnostic.Severity(),
+				diagnostic.Summary(),
+				diagnostic.Detail()))
+		}
+
+		panic("NewStoragePartitioningValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
+	}
+
+	return object
+}
+
+func (t StoragePartitioningType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+	if in.Type() == nil {
+		return NewStoragePartitioningValueNull(), nil
+	}
+
+	if !in.Type().Equal(t.TerraformType(ctx)) {
+		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
+	}
+
+	if !in.IsKnown() {
+		return NewStoragePartitioningValueUnknown(), nil
+	}
+
+	if in.IsNull() {
+		return NewStoragePartitioningValueNull(), nil
+	}
+
+	attributes := map[string]attr.Value{}
+
+	val := map[string]tftypes.Value{}
+
+	err := in.As(&val)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range val {
+		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
+
+		if err != nil {
+			return nil, err
+		}
+
+		attributes[k] = a
+	}
+
+	return NewStoragePartitioningValueMust(StoragePartitioningValue{}.AttributeTypes(ctx), attributes), nil
+}
+
+func (t StoragePartitioningType) ValueType(ctx context.Context) attr.Value {
+	return StoragePartitioningValue{}
+}
+
+var _ basetypes.ObjectValuable = StoragePartitioningValue{}
+
+type StoragePartitioningValue struct {
+	Disks      ovhtypes.TfInt64Value                                      `tfsdk:"disks" json:"disks"`
+	Layout     ovhtypes.TfListNestedValue[StoragePartitioningLayoutValue] `tfsdk:"layout" json:"layout"`
+	SchemeName ovhtypes.TfStringValue                                     `tfsdk:"scheme_name" json:"schemeName"`
+	state      attr.ValueState
+}
+
+func (v StoragePartitioningValue) ToCreate() *StoragePartitioningValue {
+	res := &StoragePartitioningValue{}
+
+	if !v.Disks.IsNull() {
+		res.Disks = v.Disks
+	}
+
+	if !v.Layout.IsNull() {
+		res.Layout = v.Layout
+	}
+
+	if !v.SchemeName.IsNull() {
+		res.SchemeName = v.SchemeName
+	}
+
+	res.state = attr.ValueStateKnown
+
+	return res
+}
+
+func (v StoragePartitioningValue) ToUpdate() *StoragePartitioningValue {
+	res := &StoragePartitioningValue{}
+
+	if !v.Disks.IsNull() {
+		res.Disks = v.Disks
+	}
+
+	if !v.Layout.IsNull() {
+		res.Layout = v.Layout
+	}
+
+	if !v.SchemeName.IsNull() {
+		res.SchemeName = v.SchemeName
+	}
+
+	res.state = attr.ValueStateKnown
+
+	return res
+}
+
+func (v StoragePartitioningValue) MarshalJSON() ([]byte, error) {
+	toMarshal := map[string]any{}
+	if !v.Disks.IsNull() && !v.Disks.IsUnknown() {
+		toMarshal["disks"] = v.Disks
+	}
+	if !v.Layout.IsNull() && !v.Layout.IsUnknown() {
+		toMarshal["layout"] = v.Layout
+	}
+	if !v.SchemeName.IsNull() && !v.SchemeName.IsUnknown() {
+		toMarshal["schemeName"] = v.SchemeName
+	}
+
+	return json.Marshal(toMarshal)
+}
+
+func (v *StoragePartitioningValue) UnmarshalJSON(data []byte) error {
+	type JsonStoragePartitioningValue StoragePartitioningValue
+
+	var tmp JsonStoragePartitioningValue
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		return err
+	}
+	v.Disks = tmp.Disks
+	v.Layout = tmp.Layout
+	v.SchemeName = tmp.SchemeName
+
+	v.state = attr.ValueStateKnown
+
+	return nil
+}
+
+func (v *StoragePartitioningValue) MergeWith(other *StoragePartitioningValue) {
+
+	if (v.Disks.IsUnknown() || v.Disks.IsNull()) && !other.Disks.IsUnknown() {
+		v.Disks = other.Disks
+	}
+
+	if (v.Layout.IsUnknown() || v.Layout.IsNull()) && !other.Layout.IsUnknown() {
+		v.Layout = other.Layout
+	} else if !other.Layout.IsUnknown() {
+		newSlice := make([]attr.Value, 0)
+		elems := v.Layout.Elements()
+		newElems := other.Layout.Elements()
+
+		if len(elems) != len(newElems) {
+			v.Layout = other.Layout
+		} else {
+			for idx, e := range elems {
+				tmp := e.(StoragePartitioningLayoutValue)
+				tmp2 := newElems[idx].(StoragePartitioningLayoutValue)
+				tmp.MergeWith(&tmp2)
+				newSlice = append(newSlice, tmp)
+			}
+
+			v.Layout = ovhtypes.TfListNestedValue[StoragePartitioningLayoutValue]{
+				ListValue: basetypes.NewListValueMust(StoragePartitioningLayoutValue{}.Type(context.Background()), newSlice),
+			}
+		}
+	}
+
+	if (v.SchemeName.IsUnknown() || v.SchemeName.IsNull()) && !other.SchemeName.IsUnknown() {
+		v.SchemeName = other.SchemeName
+	}
+
+	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
+		v.state = other.state
+	}
+}
+
+func (v StoragePartitioningValue) Attributes() map[string]attr.Value {
+	return map[string]attr.Value{
+		"disks":      v.Disks,
+		"layout":     v.Layout,
+		"schemeName": v.SchemeName,
+	}
+}
+func (v StoragePartitioningValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
+	attrTypes := make(map[string]tftypes.Type, 3)
+
+	var val tftypes.Value
+	var err error
+
+	attrTypes["disks"] = basetypes.Int64Type{}.TerraformType(ctx)
+	attrTypes["layout"] = basetypes.ListType{
+		ElemType: StoragePartitioningLayoutValue{}.Type(ctx),
+	}.TerraformType(ctx)
+	attrTypes["scheme_name"] = basetypes.StringType{}.TerraformType(ctx)
+
+	objectType := tftypes.Object{AttributeTypes: attrTypes}
+
+	switch v.state {
+	case attr.ValueStateKnown:
+		vals := make(map[string]tftypes.Value, 3)
+
+		val, err = v.Disks.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["disks"] = val
+
+		val, err = v.Layout.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["layout"] = val
+
+		val, err = v.SchemeName.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["scheme_name"] = val
+
+		if err := tftypes.ValidateValue(objectType, vals); err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		return tftypes.NewValue(objectType, vals), nil
+	case attr.ValueStateNull:
+		return tftypes.NewValue(objectType, nil), nil
+	case attr.ValueStateUnknown:
+		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
+	default:
+		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
+	}
+}
+
+func (v StoragePartitioningValue) IsNull() bool {
+	return v.state == attr.ValueStateNull
+}
+
+func (v StoragePartitioningValue) IsUnknown() bool {
+	return v.state == attr.ValueStateUnknown
+}
+
+func (v StoragePartitioningValue) String() string {
+	return "StoragePartitioningValue"
+}
+
+func (v StoragePartitioningValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	objVal, diags := types.ObjectValue(
+		map[string]attr.Type{
+			"disks":       ovhtypes.TfInt64Type{},
+			"layout":      ovhtypes.NewTfListNestedType[StoragePartitioningLayoutValue](ctx),
+			"scheme_name": ovhtypes.TfStringType{},
+		},
+		map[string]attr.Value{
+			"disks":       v.Disks,
+			"layout":      v.Layout,
+			"scheme_name": v.SchemeName,
+		})
+
+	return objVal, diags
+}
+
+func (v StoragePartitioningValue) Equal(o attr.Value) bool {
+	other, ok := o.(StoragePartitioningValue)
+
+	if !ok {
+		return false
+	}
+
+	if v.state != other.state {
+		return false
+	}
+
+	if v.state != attr.ValueStateKnown {
+		return true
+	}
+
+	if !v.Disks.Equal(other.Disks) {
+		return false
+	}
+
+	if !v.Layout.Equal(other.Layout) {
+		return false
+	}
+
+	if !v.SchemeName.Equal(other.SchemeName) {
+		return false
+	}
+
+	return true
+}
+
+func (v StoragePartitioningValue) Type(ctx context.Context) attr.Type {
+	return StoragePartitioningType{
+		basetypes.ObjectType{
+			AttrTypes: v.AttributeTypes(ctx),
+		},
+	}
+}
+
+func (v StoragePartitioningValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
+	return map[string]attr.Type{
+		"disks":       ovhtypes.TfInt64Type{},
+		"layout":      ovhtypes.NewTfListNestedType[StoragePartitioningLayoutValue](ctx),
+		"scheme_name": ovhtypes.TfStringType{},
+	}
+}
+
+var _ basetypes.ObjectTypable = StoragePartitioningLayoutType{}
+
+type StoragePartitioningLayoutType struct {
+	basetypes.ObjectType
+}
+
+func (t StoragePartitioningLayoutType) Equal(o attr.Type) bool {
+	other, ok := o.(StoragePartitioningLayoutType)
+
+	if !ok {
+		return false
+	}
+
+	return t.ObjectType.Equal(other.ObjectType)
+}
+
+func (t StoragePartitioningLayoutType) String() string {
+	return "StoragePartitioningLayoutType"
+}
+
+func (t StoragePartitioningLayoutType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	attributes := in.Attributes()
+
+	extrasAttribute, ok := attributes["extras"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`extras is missing from object`)
+
+		return nil, diags
+	}
+
+	extrasVal, ok := extrasAttribute.(StoragePartitioningLayoutExtrasValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`extras expected to be StoragePartitioningLayoutExtrasValue, was: %T`, extrasAttribute))
+	}
+
+	fileSystemAttribute, ok := attributes["file_system"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`file_system is missing from object`)
+
+		return nil, diags
+	}
+
+	fileSystemVal, ok := fileSystemAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`file_system expected to be ovhtypes.TfStringValue, was: %T`, fileSystemAttribute))
+	}
+
+	mountPointAttribute, ok := attributes["mount_point"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`mount_point is missing from object`)
+
+		return nil, diags
+	}
+
+	mountPointVal, ok := mountPointAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`mount_point expected to be ovhtypes.TfStringValue, was: %T`, mountPointAttribute))
+	}
+
+	raidLevelAttribute, ok := attributes["raid_level"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`raid_level is missing from object`)
+
+		return nil, diags
+	}
+
+	raidLevelVal, ok := raidLevelAttribute.(ovhtypes.TfInt64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`raid_level expected to be ovhtypes.TfInt64Value, was: %T`, raidLevelAttribute))
+	}
+
+	sizeAttribute, ok := attributes["size"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`size is missing from object`)
+
+		return nil, diags
+	}
+
+	sizeVal, ok := sizeAttribute.(ovhtypes.TfInt64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`size expected to be ovhtypes.TfInt64Value, was: %T`, sizeAttribute))
+	}
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return StoragePartitioningLayoutValue{
+		Extras:     extrasVal,
+		FileSystem: fileSystemVal,
+		MountPoint: mountPointVal,
+		RaidLevel:  raidLevelVal,
+		Size:       sizeVal,
+		state:      attr.ValueStateKnown,
+	}, diags
+}
+
+func NewStoragePartitioningLayoutValueNull() StoragePartitioningLayoutValue {
+	return StoragePartitioningLayoutValue{
+		state: attr.ValueStateNull,
+	}
+}
+
+func NewStoragePartitioningLayoutValueUnknown() StoragePartitioningLayoutValue {
+	return StoragePartitioningLayoutValue{
+		state: attr.ValueStateUnknown,
+	}
+}
+
+func NewStoragePartitioningLayoutValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (StoragePartitioningLayoutValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
+	ctx := context.Background()
+
+	for name, attributeType := range attributeTypes {
+		attribute, ok := attributes[name]
+
+		if !ok {
+			diags.AddError(
+				"Missing StoragePartitioningLayoutValue Attribute Value",
+				"While creating a StoragePartitioningLayoutValue value, a missing attribute value was detected. "+
+					"A StoragePartitioningLayoutValue must contain values for all attributes, even if null or unknown. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("StoragePartitioningLayoutValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
+			)
+
+			continue
+		}
+
+		if !attributeType.Equal(attribute.Type(ctx)) {
+			diags.AddError(
+				"Invalid StoragePartitioningLayoutValue Attribute Type",
+				"While creating a StoragePartitioningLayoutValue value, an invalid attribute value was detected. "+
+					"A StoragePartitioningLayoutValue must use a matching attribute type for the value. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("StoragePartitioningLayoutValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
+					fmt.Sprintf("StoragePartitioningLayoutValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
+			)
+		}
+	}
+
+	for name := range attributes {
+		_, ok := attributeTypes[name]
+
+		if !ok {
+			diags.AddError(
+				"Extra StoragePartitioningLayoutValue Attribute Value",
+				"While creating a StoragePartitioningLayoutValue value, an extra attribute value was detected. "+
+					"A StoragePartitioningLayoutValue must not contain values beyond the expected attribute types. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("Extra StoragePartitioningLayoutValue Attribute Name: %s", name),
+			)
+		}
+	}
+
+	if diags.HasError() {
+		return NewStoragePartitioningLayoutValueUnknown(), diags
+	}
+
+	extrasAttribute, ok := attributes["extras"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`extras is missing from object`)
+
+		return NewStoragePartitioningLayoutValueUnknown(), diags
+	}
+
+	extrasVal, ok := extrasAttribute.(StoragePartitioningLayoutExtrasValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`extras expected to be StoragePartitioningLayoutExtrasValue, was: %T`, extrasAttribute))
+	}
+
+	fileSystemAttribute, ok := attributes["file_system"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`file_system is missing from object`)
+
+		return NewStoragePartitioningLayoutValueUnknown(), diags
+	}
+
+	fileSystemVal, ok := fileSystemAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`file_system expected to be ovhtypes.TfStringValue, was: %T`, fileSystemAttribute))
+	}
+
+	mountPointAttribute, ok := attributes["mount_point"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`mount_point is missing from object`)
+
+		return NewStoragePartitioningLayoutValueUnknown(), diags
+	}
+
+	mountPointVal, ok := mountPointAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`mount_point expected to be ovhtypes.TfStringValue, was: %T`, mountPointAttribute))
+	}
+
+	raidLevelAttribute, ok := attributes["raid_level"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`raid_level is missing from object`)
+
+		return NewStoragePartitioningLayoutValueUnknown(), diags
+	}
+
+	raidLevelVal, ok := raidLevelAttribute.(ovhtypes.TfInt64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`raid_level expected to be ovhtypes.TfInt64Value, was: %T`, raidLevelAttribute))
+	}
+
+	sizeAttribute, ok := attributes["size"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`size is missing from object`)
+
+		return NewStoragePartitioningLayoutValueUnknown(), diags
+	}
+
+	sizeVal, ok := sizeAttribute.(ovhtypes.TfInt64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`size expected to be ovhtypes.TfInt64Value, was: %T`, sizeAttribute))
+	}
+
+	if diags.HasError() {
+		return NewStoragePartitioningLayoutValueUnknown(), diags
+	}
+
+	return StoragePartitioningLayoutValue{
+		Extras:     extrasVal,
+		FileSystem: fileSystemVal,
+		MountPoint: mountPointVal,
+		RaidLevel:  raidLevelVal,
+		Size:       sizeVal,
+		state:      attr.ValueStateKnown,
+	}, diags
+}
+
+func NewStoragePartitioningLayoutValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) StoragePartitioningLayoutValue {
+	object, diags := NewStoragePartitioningLayoutValue(attributeTypes, attributes)
+
+	if diags.HasError() {
+		// This could potentially be added to the diag package.
+		diagsStrings := make([]string, 0, len(diags))
+
+		for _, diagnostic := range diags {
+			diagsStrings = append(diagsStrings, fmt.Sprintf(
+				"%s | %s | %s",
+				diagnostic.Severity(),
+				diagnostic.Summary(),
+				diagnostic.Detail()))
+		}
+
+		panic("NewStoragePartitioningLayoutValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
+	}
+
+	return object
+}
+
+func (t StoragePartitioningLayoutType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+	if in.Type() == nil {
+		return NewStoragePartitioningLayoutValueNull(), nil
+	}
+
+	if !in.Type().Equal(t.TerraformType(ctx)) {
+		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
+	}
+
+	if !in.IsKnown() {
+		return NewStoragePartitioningLayoutValueUnknown(), nil
+	}
+
+	if in.IsNull() {
+		return NewStoragePartitioningLayoutValueNull(), nil
+	}
+
+	attributes := map[string]attr.Value{}
+
+	val := map[string]tftypes.Value{}
+
+	err := in.As(&val)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range val {
+		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
+
+		if err != nil {
+			return nil, err
+		}
+
+		attributes[k] = a
+	}
+
+	return NewStoragePartitioningLayoutValueMust(StoragePartitioningLayoutValue{}.AttributeTypes(ctx), attributes), nil
+}
+
+func (t StoragePartitioningLayoutType) ValueType(ctx context.Context) attr.Value {
+	return StoragePartitioningLayoutValue{}
+}
+
+var _ basetypes.ObjectValuable = StoragePartitioningLayoutValue{}
+
+type StoragePartitioningLayoutValue struct {
+	Extras     StoragePartitioningLayoutExtrasValue `tfsdk:"extras" json:"extras"`
+	FileSystem ovhtypes.TfStringValue               `tfsdk:"file_system" json:"fileSystem"`
+	MountPoint ovhtypes.TfStringValue               `tfsdk:"mount_point" json:"mountPoint"`
+	RaidLevel  ovhtypes.TfInt64Value                `tfsdk:"raid_level" json:"raidLevel"`
+	Size       ovhtypes.TfInt64Value                `tfsdk:"size" json:"size"`
+	state      attr.ValueState
+}
+
+func (v StoragePartitioningLayoutValue) ToCreate() *StoragePartitioningLayoutValue {
+	res := &StoragePartitioningLayoutValue{}
+
+	if !v.FileSystem.IsNull() {
+		res.FileSystem = v.FileSystem
+	}
+
+	if !v.MountPoint.IsNull() {
+		res.MountPoint = v.MountPoint
+	}
+
+	if !v.RaidLevel.IsNull() {
+		res.RaidLevel = v.RaidLevel
+	}
+
+	if !v.Size.IsNull() {
+		res.Size = v.Size
+	}
+
+	if !v.Extras.IsNull() {
+		res.Extras = v.Extras
+	}
+
+	res.state = attr.ValueStateKnown
+
+	return res
+}
+
+func (v StoragePartitioningLayoutValue) ToUpdate() *StoragePartitioningLayoutValue {
+	res := &StoragePartitioningLayoutValue{}
+
+	if !v.FileSystem.IsNull() {
+		res.FileSystem = v.FileSystem
+	}
+
+	if !v.MountPoint.IsNull() {
+		res.MountPoint = v.MountPoint
+	}
+
+	if !v.RaidLevel.IsNull() {
+		res.RaidLevel = v.RaidLevel
+	}
+
+	if !v.Size.IsNull() {
+		res.Size = v.Size
+	}
+
+	if !v.Extras.IsNull() {
+		res.Extras = v.Extras
+	}
+
+	res.state = attr.ValueStateKnown
+
+	return res
+}
+
+func (v StoragePartitioningLayoutValue) MarshalJSON() ([]byte, error) {
+	toMarshal := map[string]any{}
+	if !v.Extras.IsNull() && !v.Extras.IsUnknown() {
+		toMarshal["extras"] = v.Extras
+	}
+	if !v.FileSystem.IsNull() && !v.FileSystem.IsUnknown() {
+		toMarshal["fileSystem"] = v.FileSystem
+	}
+	if !v.MountPoint.IsNull() && !v.MountPoint.IsUnknown() {
+		toMarshal["mountPoint"] = v.MountPoint
+	}
+	if !v.RaidLevel.IsNull() && !v.RaidLevel.IsUnknown() {
+		toMarshal["raidLevel"] = v.RaidLevel
+	}
+	if !v.Size.IsNull() && !v.Size.IsUnknown() {
+		toMarshal["size"] = v.Size
+	}
+
+	return json.Marshal(toMarshal)
+}
+
+func (v *StoragePartitioningLayoutValue) UnmarshalJSON(data []byte) error {
+	type JsonStoragePartitioningLayoutValue StoragePartitioningLayoutValue
+
+	var tmp JsonStoragePartitioningLayoutValue
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		return err
+	}
+	v.Extras = tmp.Extras
+	v.FileSystem = tmp.FileSystem
+	v.MountPoint = tmp.MountPoint
+	v.RaidLevel = tmp.RaidLevel
+	v.Size = tmp.Size
+
+	v.state = attr.ValueStateKnown
+
+	return nil
+}
+
+func (v *StoragePartitioningLayoutValue) MergeWith(other *StoragePartitioningLayoutValue) {
+
+	if v.Extras.IsUnknown() && !other.Extras.IsUnknown() {
+		v.Extras = other.Extras
+	} else if !other.Extras.IsUnknown() {
+		v.Extras.MergeWith(&other.Extras)
+	}
+
+	if (v.FileSystem.IsUnknown() || v.FileSystem.IsNull()) && !other.FileSystem.IsUnknown() {
+		v.FileSystem = other.FileSystem
+	}
+
+	if (v.MountPoint.IsUnknown() || v.MountPoint.IsNull()) && !other.MountPoint.IsUnknown() {
+		v.MountPoint = other.MountPoint
+	}
+
+	if (v.RaidLevel.IsUnknown() || v.RaidLevel.IsNull()) && !other.RaidLevel.IsUnknown() {
+		v.RaidLevel = other.RaidLevel
+	}
+
+	if (v.Size.IsUnknown() || v.Size.IsNull()) && !other.Size.IsUnknown() {
+		v.Size = other.Size
+	}
+
+	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
+		v.state = other.state
+	}
+}
+
+func (v StoragePartitioningLayoutValue) Attributes() map[string]attr.Value {
+	return map[string]attr.Value{
+		"extras":     v.Extras,
+		"fileSystem": v.FileSystem,
+		"mountPoint": v.MountPoint,
+		"raidLevel":  v.RaidLevel,
+		"size":       v.Size,
+	}
+}
+func (v StoragePartitioningLayoutValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
+	attrTypes := make(map[string]tftypes.Type, 5)
+
+	var val tftypes.Value
+	var err error
+
+	attrTypes["extras"] = basetypes.ObjectType{
+		AttrTypes: StoragePartitioningLayoutExtrasValue{}.AttributeTypes(ctx),
+	}.TerraformType(ctx)
+	attrTypes["file_system"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["mount_point"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["raid_level"] = basetypes.Int64Type{}.TerraformType(ctx)
+	attrTypes["size"] = basetypes.Int64Type{}.TerraformType(ctx)
+
+	objectType := tftypes.Object{AttributeTypes: attrTypes}
+
+	switch v.state {
+	case attr.ValueStateKnown:
+		vals := make(map[string]tftypes.Value, 5)
+
+		val, err = v.Extras.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["extras"] = val
+
+		val, err = v.FileSystem.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["file_system"] = val
+
+		val, err = v.MountPoint.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["mount_point"] = val
+
+		val, err = v.RaidLevel.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["raid_level"] = val
+
+		val, err = v.Size.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["size"] = val
+
+		if err := tftypes.ValidateValue(objectType, vals); err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		return tftypes.NewValue(objectType, vals), nil
+	case attr.ValueStateNull:
+		return tftypes.NewValue(objectType, nil), nil
+	case attr.ValueStateUnknown:
+		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
+	default:
+		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
+	}
+}
+
+func (v StoragePartitioningLayoutValue) IsNull() bool {
+	return v.state == attr.ValueStateNull
+}
+
+func (v StoragePartitioningLayoutValue) IsUnknown() bool {
+	return v.state == attr.ValueStateUnknown
+}
+
+func (v StoragePartitioningLayoutValue) String() string {
+	return "StoragePartitioningLayoutValue"
+}
+
+func (v StoragePartitioningLayoutValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	objVal, diags := types.ObjectValue(
+		map[string]attr.Type{
+			"extras": StoragePartitioningLayoutExtrasType{
+				basetypes.ObjectType{
+					AttrTypes: StoragePartitioningLayoutExtrasValue{}.AttributeTypes(ctx),
+				},
+			},
+			"file_system": ovhtypes.TfStringType{},
+			"mount_point": ovhtypes.TfStringType{},
+			"raid_level":  ovhtypes.TfInt64Type{},
+			"size":        ovhtypes.TfInt64Type{},
+		},
+		map[string]attr.Value{
+			"extras":      v.Extras,
+			"file_system": v.FileSystem,
+			"mount_point": v.MountPoint,
+			"raid_level":  v.RaidLevel,
+			"size":        v.Size,
+		})
+
+	return objVal, diags
+}
+
+func (v StoragePartitioningLayoutValue) Equal(o attr.Value) bool {
+	other, ok := o.(StoragePartitioningLayoutValue)
+
+	if !ok {
+		return false
+	}
+
+	if v.state != other.state {
+		return false
+	}
+
+	if v.state != attr.ValueStateKnown {
+		return true
+	}
+
+	if !v.Extras.Equal(other.Extras) {
+		return false
+	}
+
+	if !v.FileSystem.Equal(other.FileSystem) {
+		return false
+	}
+
+	if !v.MountPoint.Equal(other.MountPoint) {
+		return false
+	}
+
+	if !v.RaidLevel.Equal(other.RaidLevel) {
+		return false
+	}
+
+	if !v.Size.Equal(other.Size) {
+		return false
+	}
+
+	return true
+}
+
+func (v StoragePartitioningLayoutValue) Type(ctx context.Context) attr.Type {
+	return StoragePartitioningLayoutType{
+		basetypes.ObjectType{
+			AttrTypes: v.AttributeTypes(ctx),
+		},
+	}
+}
+
+func (v StoragePartitioningLayoutValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
+	return map[string]attr.Type{
+		"extras":      StoragePartitioningLayoutExtrasValue{}.Type(ctx),
+		"file_system": ovhtypes.TfStringType{},
+		"mount_point": ovhtypes.TfStringType{},
+		"raid_level":  ovhtypes.TfInt64Type{},
+		"size":        ovhtypes.TfInt64Type{},
+	}
+}
+
+var _ basetypes.ObjectTypable = StoragePartitioningLayoutExtrasType{}
+
+type StoragePartitioningLayoutExtrasType struct {
+	basetypes.ObjectType
+}
+
+func (t StoragePartitioningLayoutExtrasType) Equal(o attr.Type) bool {
+	other, ok := o.(StoragePartitioningLayoutExtrasType)
+
+	if !ok {
+		return false
+	}
+
+	return t.ObjectType.Equal(other.ObjectType)
+}
+
+func (t StoragePartitioningLayoutExtrasType) String() string {
+	return "StoragePartitioningLayoutExtrasType"
+}
+
+func (t StoragePartitioningLayoutExtrasType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	attributes := in.Attributes()
+
+	lvAttribute, ok := attributes["lv"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`lv is missing from object`)
+
+		return nil, diags
+	}
+
+	lvVal, ok := lvAttribute.(StoragePartitioningLayoutExtrasLvValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`lv expected to be StoragePartitioningLayoutExtrasLvValue, was: %T`, lvAttribute))
+	}
+
+	zpAttribute, ok := attributes["zp"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`zp is missing from object`)
+
+		return nil, diags
+	}
+
+	zpVal, ok := zpAttribute.(StoragePartitioningLayoutExtrasZpValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`zp expected to be StoragePartitioningLayoutExtrasZpValue, was: %T`, zpAttribute))
+	}
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return StoragePartitioningLayoutExtrasValue{
+		Lv:    lvVal,
+		Zp:    zpVal,
+		state: attr.ValueStateKnown,
+	}, diags
+}
+
+func NewStoragePartitioningLayoutExtrasValueNull() StoragePartitioningLayoutExtrasValue {
+	return StoragePartitioningLayoutExtrasValue{
+		state: attr.ValueStateNull,
+	}
+}
+
+func NewStoragePartitioningLayoutExtrasValueUnknown() StoragePartitioningLayoutExtrasValue {
+	return StoragePartitioningLayoutExtrasValue{
+		state: attr.ValueStateUnknown,
+	}
+}
+
+func NewStoragePartitioningLayoutExtrasValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (StoragePartitioningLayoutExtrasValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
+	ctx := context.Background()
+
+	for name, attributeType := range attributeTypes {
+		attribute, ok := attributes[name]
+
+		if !ok {
+			diags.AddError(
+				"Missing StoragePartitioningLayoutExtrasValue Attribute Value",
+				"While creating a StoragePartitioningLayoutExtrasValue value, a missing attribute value was detected. "+
+					"A StoragePartitioningLayoutExtrasValue must contain values for all attributes, even if null or unknown. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("StoragePartitioningLayoutExtrasValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
+			)
+
+			continue
+		}
+
+		if !attributeType.Equal(attribute.Type(ctx)) {
+			diags.AddError(
+				"Invalid StoragePartitioningLayoutExtrasValue Attribute Type",
+				"While creating a StoragePartitioningLayoutExtrasValue value, an invalid attribute value was detected. "+
+					"A StoragePartitioningLayoutExtrasValue must use a matching attribute type for the value. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("StoragePartitioningLayoutExtrasValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
+					fmt.Sprintf("StoragePartitioningLayoutExtrasValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
+			)
+		}
+	}
+
+	for name := range attributes {
+		_, ok := attributeTypes[name]
+
+		if !ok {
+			diags.AddError(
+				"Extra StoragePartitioningLayoutExtrasValue Attribute Value",
+				"While creating a StoragePartitioningLayoutExtrasValue value, an extra attribute value was detected. "+
+					"A StoragePartitioningLayoutExtrasValue must not contain values beyond the expected attribute types. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("Extra StoragePartitioningLayoutExtrasValue Attribute Name: %s", name),
+			)
+		}
+	}
+
+	if diags.HasError() {
+		return NewStoragePartitioningLayoutExtrasValueUnknown(), diags
+	}
+
+	lvAttribute, ok := attributes["lv"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`lv is missing from object`)
+
+		return NewStoragePartitioningLayoutExtrasValueUnknown(), diags
+	}
+
+	lvVal, ok := lvAttribute.(StoragePartitioningLayoutExtrasLvValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`lv expected to be StoragePartitioningLayoutExtrasLvValue, was: %T`, lvAttribute))
+	}
+
+	zpAttribute, ok := attributes["zp"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`zp is missing from object`)
+
+		return NewStoragePartitioningLayoutExtrasValueUnknown(), diags
+	}
+
+	zpVal, ok := zpAttribute.(StoragePartitioningLayoutExtrasZpValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`zp expected to be StoragePartitioningLayoutExtrasZpValue, was: %T`, zpAttribute))
+	}
+
+	if diags.HasError() {
+		return NewStoragePartitioningLayoutExtrasValueUnknown(), diags
+	}
+
+	return StoragePartitioningLayoutExtrasValue{
+		Lv:    lvVal,
+		Zp:    zpVal,
+		state: attr.ValueStateKnown,
+	}, diags
+}
+
+func NewStoragePartitioningLayoutExtrasValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) StoragePartitioningLayoutExtrasValue {
+	object, diags := NewStoragePartitioningLayoutExtrasValue(attributeTypes, attributes)
+
+	if diags.HasError() {
+		// This could potentially be added to the diag package.
+		diagsStrings := make([]string, 0, len(diags))
+
+		for _, diagnostic := range diags {
+			diagsStrings = append(diagsStrings, fmt.Sprintf(
+				"%s | %s | %s",
+				diagnostic.Severity(),
+				diagnostic.Summary(),
+				diagnostic.Detail()))
+		}
+
+		panic("NewStoragePartitioningLayoutExtrasValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
+	}
+
+	return object
+}
+
+func (t StoragePartitioningLayoutExtrasType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+	if in.Type() == nil {
+		return NewStoragePartitioningLayoutExtrasValueNull(), nil
+	}
+
+	if !in.Type().Equal(t.TerraformType(ctx)) {
+		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
+	}
+
+	if !in.IsKnown() {
+		return NewStoragePartitioningLayoutExtrasValueUnknown(), nil
+	}
+
+	if in.IsNull() {
+		return NewStoragePartitioningLayoutExtrasValueNull(), nil
+	}
+
+	attributes := map[string]attr.Value{}
+
+	val := map[string]tftypes.Value{}
+
+	err := in.As(&val)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range val {
+		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
+
+		if err != nil {
+			return nil, err
+		}
+
+		attributes[k] = a
+	}
+
+	return NewStoragePartitioningLayoutExtrasValueMust(StoragePartitioningLayoutExtrasValue{}.AttributeTypes(ctx), attributes), nil
+}
+
+func (t StoragePartitioningLayoutExtrasType) ValueType(ctx context.Context) attr.Value {
+	return StoragePartitioningLayoutExtrasValue{}
+}
+
+var _ basetypes.ObjectValuable = StoragePartitioningLayoutExtrasValue{}
+
+type StoragePartitioningLayoutExtrasValue struct {
+	Lv    StoragePartitioningLayoutExtrasLvValue `tfsdk:"lv" json:"lv"`
+	Zp    StoragePartitioningLayoutExtrasZpValue `tfsdk:"zp" json:"zp"`
+	state attr.ValueState
+}
+
+func (v StoragePartitioningLayoutExtrasValue) ToCreate() *StoragePartitioningLayoutExtrasValue {
+	res := &StoragePartitioningLayoutExtrasValue{}
+
+	if !v.Zp.IsNull() {
+		res.Zp = v.Zp
+	}
+
+	if !v.Lv.IsNull() {
+		res.Lv = v.Lv
+	}
+
+	res.state = attr.ValueStateKnown
+
+	return res
+}
+
+func (v StoragePartitioningLayoutExtrasValue) ToUpdate() *StoragePartitioningLayoutExtrasValue {
+	res := &StoragePartitioningLayoutExtrasValue{}
+
+	if !v.Zp.IsNull() {
+		res.Zp = v.Zp
+	}
+
+	if !v.Lv.IsNull() {
+		res.Lv = v.Lv
+	}
+
+	res.state = attr.ValueStateKnown
+
+	return res
+}
+
+func (v StoragePartitioningLayoutExtrasValue) MarshalJSON() ([]byte, error) {
+	toMarshal := map[string]any{}
+	if !v.Lv.IsNull() && !v.Lv.IsUnknown() {
+		toMarshal["lv"] = v.Lv
+	}
+	if !v.Zp.IsNull() && !v.Zp.IsUnknown() {
+		toMarshal["zp"] = v.Zp
+	}
+
+	return json.Marshal(toMarshal)
+}
+
+func (v *StoragePartitioningLayoutExtrasValue) UnmarshalJSON(data []byte) error {
+	type JsonStoragePartitioningLayoutExtrasValue StoragePartitioningLayoutExtrasValue
+
+	var tmp JsonStoragePartitioningLayoutExtrasValue
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		return err
+	}
+	v.Lv = tmp.Lv
+	v.Zp = tmp.Zp
+
+	v.state = attr.ValueStateKnown
+
+	return nil
+}
+
+func (v *StoragePartitioningLayoutExtrasValue) MergeWith(other *StoragePartitioningLayoutExtrasValue) {
+
+	if v.Lv.IsUnknown() && !other.Lv.IsUnknown() {
+		v.Lv = other.Lv
+	} else if !other.Lv.IsUnknown() {
+		v.Lv.MergeWith(&other.Lv)
+	}
+
+	if v.Zp.IsUnknown() && !other.Zp.IsUnknown() {
+		v.Zp = other.Zp
+	} else if !other.Zp.IsUnknown() {
+		v.Zp.MergeWith(&other.Zp)
+	}
+
+	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
+		v.state = other.state
+	}
+}
+
+func (v StoragePartitioningLayoutExtrasValue) Attributes() map[string]attr.Value {
+	return map[string]attr.Value{
+		"lv": v.Lv,
+		"zp": v.Zp,
+	}
+}
+func (v StoragePartitioningLayoutExtrasValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
+	attrTypes := make(map[string]tftypes.Type, 2)
+
+	var val tftypes.Value
+	var err error
+
+	attrTypes["lv"] = basetypes.ObjectType{
+		AttrTypes: StoragePartitioningLayoutExtrasLvValue{}.AttributeTypes(ctx),
+	}.TerraformType(ctx)
+	attrTypes["zp"] = basetypes.ObjectType{
+		AttrTypes: StoragePartitioningLayoutExtrasZpValue{}.AttributeTypes(ctx),
+	}.TerraformType(ctx)
+
+	objectType := tftypes.Object{AttributeTypes: attrTypes}
+
+	switch v.state {
+	case attr.ValueStateKnown:
+		vals := make(map[string]tftypes.Value, 2)
+
+		val, err = v.Lv.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["lv"] = val
+
+		val, err = v.Zp.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["zp"] = val
+
+		if err := tftypes.ValidateValue(objectType, vals); err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		return tftypes.NewValue(objectType, vals), nil
+	case attr.ValueStateNull:
+		return tftypes.NewValue(objectType, nil), nil
+	case attr.ValueStateUnknown:
+		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
+	default:
+		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
+	}
+}
+
+func (v StoragePartitioningLayoutExtrasValue) IsNull() bool {
+	return v.state == attr.ValueStateNull
+}
+
+func (v StoragePartitioningLayoutExtrasValue) IsUnknown() bool {
+	return v.state == attr.ValueStateUnknown
+}
+
+func (v StoragePartitioningLayoutExtrasValue) String() string {
+	return "StoragePartitioningLayoutExtrasValue"
+}
+
+func (v StoragePartitioningLayoutExtrasValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	objVal, diags := types.ObjectValue(
+		map[string]attr.Type{
+			"lv": StoragePartitioningLayoutExtrasLvType{
+				basetypes.ObjectType{
+					AttrTypes: StoragePartitioningLayoutExtrasLvValue{}.AttributeTypes(ctx),
+				},
+			},
+			"zp": StoragePartitioningLayoutExtrasZpType{
+				basetypes.ObjectType{
+					AttrTypes: StoragePartitioningLayoutExtrasZpValue{}.AttributeTypes(ctx),
+				},
+			},
+		},
+		map[string]attr.Value{
+			"lv": v.Lv,
+			"zp": v.Zp,
+		})
+
+	return objVal, diags
+}
+
+func (v StoragePartitioningLayoutExtrasValue) Equal(o attr.Value) bool {
+	other, ok := o.(StoragePartitioningLayoutExtrasValue)
+
+	if !ok {
+		return false
+	}
+
+	if v.state != other.state {
+		return false
+	}
+
+	if v.state != attr.ValueStateKnown {
+		return true
+	}
+
+	if !v.Lv.Equal(other.Lv) {
+		return false
+	}
+
+	if !v.Zp.Equal(other.Zp) {
+		return false
+	}
+
+	return true
+}
+
+func (v StoragePartitioningLayoutExtrasValue) Type(ctx context.Context) attr.Type {
+	return StoragePartitioningLayoutExtrasType{
+		basetypes.ObjectType{
+			AttrTypes: v.AttributeTypes(ctx),
+		},
+	}
+}
+
+func (v StoragePartitioningLayoutExtrasValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
+	return map[string]attr.Type{
+		"lv": StoragePartitioningLayoutExtrasLvValue{}.Type(ctx),
+		"zp": StoragePartitioningLayoutExtrasZpValue{}.Type(ctx),
+	}
+}
+
+var _ basetypes.ObjectTypable = StoragePartitioningLayoutExtrasLvType{}
+
+type StoragePartitioningLayoutExtrasLvType struct {
+	basetypes.ObjectType
+}
+
+func (t StoragePartitioningLayoutExtrasLvType) Equal(o attr.Type) bool {
+	other, ok := o.(StoragePartitioningLayoutExtrasLvType)
+
+	if !ok {
+		return false
+	}
+
+	return t.ObjectType.Equal(other.ObjectType)
+}
+
+func (t StoragePartitioningLayoutExtrasLvType) String() string {
+	return "StoragePartitioningLayoutExtrasLvType"
+}
+
+func (t StoragePartitioningLayoutExtrasLvType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	attributes := in.Attributes()
+
+	nameAttribute, ok := attributes["name"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`name is missing from object`)
+
+		return nil, diags
+	}
+
+	nameVal, ok := nameAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`name expected to be ovhtypes.TfStringValue, was: %T`, nameAttribute))
+	}
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return StoragePartitioningLayoutExtrasLvValue{
+		Name:  nameVal,
+		state: attr.ValueStateKnown,
+	}, diags
+}
+
+func NewStoragePartitioningLayoutExtrasLvValueNull() StoragePartitioningLayoutExtrasLvValue {
+	return StoragePartitioningLayoutExtrasLvValue{
+		state: attr.ValueStateNull,
+	}
+}
+
+func NewStoragePartitioningLayoutExtrasLvValueUnknown() StoragePartitioningLayoutExtrasLvValue {
+	return StoragePartitioningLayoutExtrasLvValue{
+		state: attr.ValueStateUnknown,
+	}
+}
+
+func NewStoragePartitioningLayoutExtrasLvValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (StoragePartitioningLayoutExtrasLvValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
+	ctx := context.Background()
+
+	for name, attributeType := range attributeTypes {
+		attribute, ok := attributes[name]
+
+		if !ok {
+			diags.AddError(
+				"Missing StoragePartitioningLayoutExtrasLvValue Attribute Value",
+				"While creating a StoragePartitioningLayoutExtrasLvValue value, a missing attribute value was detected. "+
+					"A StoragePartitioningLayoutExtrasLvValue must contain values for all attributes, even if null or unknown. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("StoragePartitioningLayoutExtrasLvValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
+			)
+
+			continue
+		}
+
+		if !attributeType.Equal(attribute.Type(ctx)) {
+			diags.AddError(
+				"Invalid StoragePartitioningLayoutExtrasLvValue Attribute Type",
+				"While creating a StoragePartitioningLayoutExtrasLvValue value, an invalid attribute value was detected. "+
+					"A StoragePartitioningLayoutExtrasLvValue must use a matching attribute type for the value. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("StoragePartitioningLayoutExtrasLvValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
+					fmt.Sprintf("StoragePartitioningLayoutExtrasLvValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
+			)
+		}
+	}
+
+	for name := range attributes {
+		_, ok := attributeTypes[name]
+
+		if !ok {
+			diags.AddError(
+				"Extra StoragePartitioningLayoutExtrasLvValue Attribute Value",
+				"While creating a StoragePartitioningLayoutExtrasLvValue value, an extra attribute value was detected. "+
+					"A StoragePartitioningLayoutExtrasLvValue must not contain values beyond the expected attribute types. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("Extra StoragePartitioningLayoutExtrasLvValue Attribute Name: %s", name),
+			)
+		}
+	}
+
+	if diags.HasError() {
+		return NewStoragePartitioningLayoutExtrasLvValueUnknown(), diags
+	}
+
+	nameAttribute, ok := attributes["name"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`name is missing from object`)
+
+		return NewStoragePartitioningLayoutExtrasLvValueUnknown(), diags
+	}
+
+	nameVal, ok := nameAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`name expected to be ovhtypes.TfStringValue, was: %T`, nameAttribute))
+	}
+
+	if diags.HasError() {
+		return NewStoragePartitioningLayoutExtrasLvValueUnknown(), diags
+	}
+
+	return StoragePartitioningLayoutExtrasLvValue{
+		Name:  nameVal,
+		state: attr.ValueStateKnown,
+	}, diags
+}
+
+func NewStoragePartitioningLayoutExtrasLvValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) StoragePartitioningLayoutExtrasLvValue {
+	object, diags := NewStoragePartitioningLayoutExtrasLvValue(attributeTypes, attributes)
+
+	if diags.HasError() {
+		// This could potentially be added to the diag package.
+		diagsStrings := make([]string, 0, len(diags))
+
+		for _, diagnostic := range diags {
+			diagsStrings = append(diagsStrings, fmt.Sprintf(
+				"%s | %s | %s",
+				diagnostic.Severity(),
+				diagnostic.Summary(),
+				diagnostic.Detail()))
+		}
+
+		panic("NewStoragePartitioningLayoutExtrasLvValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
+	}
+
+	return object
+}
+
+func (t StoragePartitioningLayoutExtrasLvType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+	if in.Type() == nil {
+		return NewStoragePartitioningLayoutExtrasLvValueNull(), nil
+	}
+
+	if !in.Type().Equal(t.TerraformType(ctx)) {
+		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
+	}
+
+	if !in.IsKnown() {
+		return NewStoragePartitioningLayoutExtrasLvValueUnknown(), nil
+	}
+
+	if in.IsNull() {
+		return NewStoragePartitioningLayoutExtrasLvValueNull(), nil
+	}
+
+	attributes := map[string]attr.Value{}
+
+	val := map[string]tftypes.Value{}
+
+	err := in.As(&val)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range val {
+		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
+
+		if err != nil {
+			return nil, err
+		}
+
+		attributes[k] = a
+	}
+
+	return NewStoragePartitioningLayoutExtrasLvValueMust(StoragePartitioningLayoutExtrasLvValue{}.AttributeTypes(ctx), attributes), nil
+}
+
+func (t StoragePartitioningLayoutExtrasLvType) ValueType(ctx context.Context) attr.Value {
+	return StoragePartitioningLayoutExtrasLvValue{}
+}
+
+var _ basetypes.ObjectValuable = StoragePartitioningLayoutExtrasLvValue{}
+
+type StoragePartitioningLayoutExtrasLvValue struct {
+	Name  ovhtypes.TfStringValue `tfsdk:"name" json:"name"`
+	state attr.ValueState
+}
+
+func (v StoragePartitioningLayoutExtrasLvValue) ToCreate() *StoragePartitioningLayoutExtrasLvValue {
+	res := &StoragePartitioningLayoutExtrasLvValue{}
+
+	if !v.Name.IsNull() {
+		res.Name = v.Name
+	}
+
+	res.state = attr.ValueStateKnown
+
+	return res
+}
+
+func (v StoragePartitioningLayoutExtrasLvValue) ToUpdate() *StoragePartitioningLayoutExtrasLvValue {
+	res := &StoragePartitioningLayoutExtrasLvValue{}
+
+	if !v.Name.IsNull() {
+		res.Name = v.Name
+	}
+
+	res.state = attr.ValueStateKnown
+
+	return res
+}
+
+func (v StoragePartitioningLayoutExtrasLvValue) MarshalJSON() ([]byte, error) {
+	toMarshal := map[string]any{}
+	if !v.Name.IsNull() && !v.Name.IsUnknown() {
+		toMarshal["name"] = v.Name
+	}
+
+	return json.Marshal(toMarshal)
+}
+
+func (v *StoragePartitioningLayoutExtrasLvValue) UnmarshalJSON(data []byte) error {
+	type JsonStoragePartitioningLayoutExtrasLvValue StoragePartitioningLayoutExtrasLvValue
+
+	var tmp JsonStoragePartitioningLayoutExtrasLvValue
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		return err
+	}
+	v.Name = tmp.Name
+
+	v.state = attr.ValueStateKnown
+
+	return nil
+}
+
+func (v *StoragePartitioningLayoutExtrasLvValue) MergeWith(other *StoragePartitioningLayoutExtrasLvValue) {
+
+	if (v.Name.IsUnknown() || v.Name.IsNull()) && !other.Name.IsUnknown() {
+		v.Name = other.Name
+	}
+
+	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
+		v.state = other.state
+	}
+}
+
+func (v StoragePartitioningLayoutExtrasLvValue) Attributes() map[string]attr.Value {
+	return map[string]attr.Value{
+		"name": v.Name,
+	}
+}
+func (v StoragePartitioningLayoutExtrasLvValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
+	attrTypes := make(map[string]tftypes.Type, 1)
+
+	var val tftypes.Value
+	var err error
+
+	attrTypes["name"] = basetypes.StringType{}.TerraformType(ctx)
+
+	objectType := tftypes.Object{AttributeTypes: attrTypes}
+
+	switch v.state {
+	case attr.ValueStateKnown:
+		vals := make(map[string]tftypes.Value, 1)
+
+		val, err = v.Name.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["name"] = val
+
+		if err := tftypes.ValidateValue(objectType, vals); err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		return tftypes.NewValue(objectType, vals), nil
+	case attr.ValueStateNull:
+		return tftypes.NewValue(objectType, nil), nil
+	case attr.ValueStateUnknown:
+		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
+	default:
+		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
+	}
+}
+
+func (v StoragePartitioningLayoutExtrasLvValue) IsNull() bool {
+	return v.state == attr.ValueStateNull
+}
+
+func (v StoragePartitioningLayoutExtrasLvValue) IsUnknown() bool {
+	return v.state == attr.ValueStateUnknown
+}
+
+func (v StoragePartitioningLayoutExtrasLvValue) String() string {
+	return "StoragePartitioningLayoutExtrasLvValue"
+}
+
+func (v StoragePartitioningLayoutExtrasLvValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	objVal, diags := types.ObjectValue(
+		map[string]attr.Type{
+			"name": ovhtypes.TfStringType{},
+		},
+		map[string]attr.Value{
+			"name": v.Name,
+		})
+
+	return objVal, diags
+}
+
+func (v StoragePartitioningLayoutExtrasLvValue) Equal(o attr.Value) bool {
+	other, ok := o.(StoragePartitioningLayoutExtrasLvValue)
+
+	if !ok {
+		return false
+	}
+
+	if v.state != other.state {
+		return false
+	}
+
+	if v.state != attr.ValueStateKnown {
+		return true
+	}
+
+	if !v.Name.Equal(other.Name) {
+		return false
+	}
+
+	return true
+}
+
+func (v StoragePartitioningLayoutExtrasLvValue) Type(ctx context.Context) attr.Type {
+	return StoragePartitioningLayoutExtrasLvType{
+		basetypes.ObjectType{
+			AttrTypes: v.AttributeTypes(ctx),
+		},
+	}
+}
+
+func (v StoragePartitioningLayoutExtrasLvValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
+	return map[string]attr.Type{
+		"name": ovhtypes.TfStringType{},
+	}
+}
+
+var _ basetypes.ObjectTypable = StoragePartitioningLayoutExtrasZpType{}
+
+type StoragePartitioningLayoutExtrasZpType struct {
+	basetypes.ObjectType
+}
+
+func (t StoragePartitioningLayoutExtrasZpType) Equal(o attr.Type) bool {
+	other, ok := o.(StoragePartitioningLayoutExtrasZpType)
+
+	if !ok {
+		return false
+	}
+
+	return t.ObjectType.Equal(other.ObjectType)
+}
+
+func (t StoragePartitioningLayoutExtrasZpType) String() string {
+	return "StoragePartitioningLayoutExtrasZpType"
+}
+
+func (t StoragePartitioningLayoutExtrasZpType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	attributes := in.Attributes()
+
+	nameAttribute, ok := attributes["name"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`name is missing from object`)
+
+		return nil, diags
+	}
+
+	nameVal, ok := nameAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`name expected to be ovhtypes.TfStringValue, was: %T`, nameAttribute))
+	}
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return StoragePartitioningLayoutExtrasZpValue{
+		Name:  nameVal,
+		state: attr.ValueStateKnown,
+	}, diags
+}
+
+func NewStoragePartitioningLayoutExtrasZpValueNull() StoragePartitioningLayoutExtrasZpValue {
+	return StoragePartitioningLayoutExtrasZpValue{
+		state: attr.ValueStateNull,
+	}
+}
+
+func NewStoragePartitioningLayoutExtrasZpValueUnknown() StoragePartitioningLayoutExtrasZpValue {
+	return StoragePartitioningLayoutExtrasZpValue{
+		state: attr.ValueStateUnknown,
+	}
+}
+
+func NewStoragePartitioningLayoutExtrasZpValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (StoragePartitioningLayoutExtrasZpValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
+	ctx := context.Background()
+
+	for name, attributeType := range attributeTypes {
+		attribute, ok := attributes[name]
+
+		if !ok {
+			diags.AddError(
+				"Missing StoragePartitioningLayoutExtrasZpValue Attribute Value",
+				"While creating a StoragePartitioningLayoutExtrasZpValue value, a missing attribute value was detected. "+
+					"A StoragePartitioningLayoutExtrasZpValue must contain values for all attributes, even if null or unknown. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("StoragePartitioningLayoutExtrasZpValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
+			)
+
+			continue
+		}
+
+		if !attributeType.Equal(attribute.Type(ctx)) {
+			diags.AddError(
+				"Invalid StoragePartitioningLayoutExtrasZpValue Attribute Type",
+				"While creating a StoragePartitioningLayoutExtrasZpValue value, an invalid attribute value was detected. "+
+					"A StoragePartitioningLayoutExtrasZpValue must use a matching attribute type for the value. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("StoragePartitioningLayoutExtrasZpValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
+					fmt.Sprintf("StoragePartitioningLayoutExtrasZpValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
+			)
+		}
+	}
+
+	for name := range attributes {
+		_, ok := attributeTypes[name]
+
+		if !ok {
+			diags.AddError(
+				"Extra StoragePartitioningLayoutExtrasZpValue Attribute Value",
+				"While creating a StoragePartitioningLayoutExtrasZpValue value, an extra attribute value was detected. "+
+					"A StoragePartitioningLayoutExtrasZpValue must not contain values beyond the expected attribute types. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("Extra StoragePartitioningLayoutExtrasZpValue Attribute Name: %s", name),
+			)
+		}
+	}
+
+	if diags.HasError() {
+		return NewStoragePartitioningLayoutExtrasZpValueUnknown(), diags
+	}
+
+	nameAttribute, ok := attributes["name"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`name is missing from object`)
+
+		return NewStoragePartitioningLayoutExtrasZpValueUnknown(), diags
+	}
+
+	nameVal, ok := nameAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`name expected to be ovhtypes.TfStringValue, was: %T`, nameAttribute))
+	}
+
+	if diags.HasError() {
+		return NewStoragePartitioningLayoutExtrasZpValueUnknown(), diags
+	}
+
+	return StoragePartitioningLayoutExtrasZpValue{
+		Name:  nameVal,
+		state: attr.ValueStateKnown,
+	}, diags
+}
+
+func NewStoragePartitioningLayoutExtrasZpValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) StoragePartitioningLayoutExtrasZpValue {
+	object, diags := NewStoragePartitioningLayoutExtrasZpValue(attributeTypes, attributes)
+
+	if diags.HasError() {
+		// This could potentially be added to the diag package.
+		diagsStrings := make([]string, 0, len(diags))
+
+		for _, diagnostic := range diags {
+			diagsStrings = append(diagsStrings, fmt.Sprintf(
+				"%s | %s | %s",
+				diagnostic.Severity(),
+				diagnostic.Summary(),
+				diagnostic.Detail()))
+		}
+
+		panic("NewStoragePartitioningLayoutExtrasZpValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
+	}
+
+	return object
+}
+
+func (t StoragePartitioningLayoutExtrasZpType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+	if in.Type() == nil {
+		return NewStoragePartitioningLayoutExtrasZpValueNull(), nil
+	}
+
+	if !in.Type().Equal(t.TerraformType(ctx)) {
+		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
+	}
+
+	if !in.IsKnown() {
+		return NewStoragePartitioningLayoutExtrasZpValueUnknown(), nil
+	}
+
+	if in.IsNull() {
+		return NewStoragePartitioningLayoutExtrasZpValueNull(), nil
+	}
+
+	attributes := map[string]attr.Value{}
+
+	val := map[string]tftypes.Value{}
+
+	err := in.As(&val)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range val {
+		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
+
+		if err != nil {
+			return nil, err
+		}
+
+		attributes[k] = a
+	}
+
+	return NewStoragePartitioningLayoutExtrasZpValueMust(StoragePartitioningLayoutExtrasZpValue{}.AttributeTypes(ctx), attributes), nil
+}
+
+func (t StoragePartitioningLayoutExtrasZpType) ValueType(ctx context.Context) attr.Value {
+	return StoragePartitioningLayoutExtrasZpValue{}
+}
+
+var _ basetypes.ObjectValuable = StoragePartitioningLayoutExtrasZpValue{}
+
+type StoragePartitioningLayoutExtrasZpValue struct {
+	Name  ovhtypes.TfStringValue `tfsdk:"name" json:"name"`
+	state attr.ValueState
+}
+
+func (v StoragePartitioningLayoutExtrasZpValue) ToCreate() *StoragePartitioningLayoutExtrasZpValue {
+	res := &StoragePartitioningLayoutExtrasZpValue{}
+
+	if !v.Name.IsNull() {
+		res.Name = v.Name
+	}
+
+	res.state = attr.ValueStateKnown
+
+	return res
+}
+
+func (v StoragePartitioningLayoutExtrasZpValue) ToUpdate() *StoragePartitioningLayoutExtrasZpValue {
+	res := &StoragePartitioningLayoutExtrasZpValue{}
+
+	if !v.Name.IsNull() {
+		res.Name = v.Name
+	}
+
+	res.state = attr.ValueStateKnown
+
+	return res
+}
+
+func (v StoragePartitioningLayoutExtrasZpValue) MarshalJSON() ([]byte, error) {
+	toMarshal := map[string]any{}
+	if !v.Name.IsNull() && !v.Name.IsUnknown() {
+		toMarshal["name"] = v.Name
+	}
+
+	return json.Marshal(toMarshal)
+}
+
+func (v *StoragePartitioningLayoutExtrasZpValue) UnmarshalJSON(data []byte) error {
+	type JsonStoragePartitioningLayoutExtrasZpValue StoragePartitioningLayoutExtrasZpValue
+
+	var tmp JsonStoragePartitioningLayoutExtrasZpValue
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		return err
+	}
+	v.Name = tmp.Name
+
+	v.state = attr.ValueStateKnown
+
+	return nil
+}
+
+func (v *StoragePartitioningLayoutExtrasZpValue) MergeWith(other *StoragePartitioningLayoutExtrasZpValue) {
+
+	if (v.Name.IsUnknown() || v.Name.IsNull()) && !other.Name.IsUnknown() {
+		v.Name = other.Name
+	}
+
+	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
+		v.state = other.state
+	}
+}
+
+func (v StoragePartitioningLayoutExtrasZpValue) Attributes() map[string]attr.Value {
+	return map[string]attr.Value{
+		"name": v.Name,
+	}
+}
+func (v StoragePartitioningLayoutExtrasZpValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
+	attrTypes := make(map[string]tftypes.Type, 1)
+
+	var val tftypes.Value
+	var err error
+
+	attrTypes["name"] = basetypes.StringType{}.TerraformType(ctx)
+
+	objectType := tftypes.Object{AttributeTypes: attrTypes}
+
+	switch v.state {
+	case attr.ValueStateKnown:
+		vals := make(map[string]tftypes.Value, 1)
+
+		val, err = v.Name.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["name"] = val
+
+		if err := tftypes.ValidateValue(objectType, vals); err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		return tftypes.NewValue(objectType, vals), nil
+	case attr.ValueStateNull:
+		return tftypes.NewValue(objectType, nil), nil
+	case attr.ValueStateUnknown:
+		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
+	default:
+		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
+	}
+}
+
+func (v StoragePartitioningLayoutExtrasZpValue) IsNull() bool {
+	return v.state == attr.ValueStateNull
+}
+
+func (v StoragePartitioningLayoutExtrasZpValue) IsUnknown() bool {
+	return v.state == attr.ValueStateUnknown
+}
+
+func (v StoragePartitioningLayoutExtrasZpValue) String() string {
+	return "StoragePartitioningLayoutExtrasZpValue"
+}
+
+func (v StoragePartitioningLayoutExtrasZpValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	objVal, diags := types.ObjectValue(
+		map[string]attr.Type{
+			"name": ovhtypes.TfStringType{},
+		},
+		map[string]attr.Value{
+			"name": v.Name,
+		})
+
+	return objVal, diags
+}
+
+func (v StoragePartitioningLayoutExtrasZpValue) Equal(o attr.Value) bool {
+	other, ok := o.(StoragePartitioningLayoutExtrasZpValue)
+
+	if !ok {
+		return false
+	}
+
+	if v.state != other.state {
+		return false
+	}
+
+	if v.state != attr.ValueStateKnown {
+		return true
+	}
+
+	if !v.Name.Equal(other.Name) {
+		return false
+	}
+
+	return true
+}
+
+func (v StoragePartitioningLayoutExtrasZpValue) Type(ctx context.Context) attr.Type {
+	return StoragePartitioningLayoutExtrasZpType{
+		basetypes.ObjectType{
+			AttrTypes: v.AttributeTypes(ctx),
+		},
+	}
+}
+
+func (v StoragePartitioningLayoutExtrasZpValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
+	return map[string]attr.Type{
+		"name": ovhtypes.TfStringType{},
+	}
 }
