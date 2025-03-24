@@ -6,18 +6,22 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
+
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
-	"strings"
-
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 )
 
 func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
@@ -27,11 +31,17 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 			Computed:            true,
 			Description:         "dedicated AZ localisation",
 			MarkdownDescription: "dedicated AZ localisation",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"boot_id": schema.Int64Attribute{
 			CustomType: ovhtypes.TfInt64Type{},
 			Optional:   true,
 			Computed:   true,
+			PlanModifiers: []planmodifier.Int64{
+				int64planmodifier.UseStateForUnknown(),
+			},
 		},
 		"boot_script": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
@@ -39,12 +49,135 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 			Computed:            true,
 			Description:         "Ipxe script served on boot",
 			MarkdownDescription: "Ipxe script served on boot",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"commercial_range": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
 			Computed:            true,
 			Description:         "dedicater server commercial range",
 			MarkdownDescription: "dedicater server commercial range",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
+		},
+		"customizations": schema.SingleNestedAttribute{
+			Attributes: map[string]schema.Attribute{
+				"config_drive_user_data": schema.StringAttribute{
+					CustomType:          ovhtypes.TfStringType{},
+					Optional:            true,
+					Description:         "Config Drive UserData",
+					MarkdownDescription: "Config Drive UserData",
+				},
+				"efi_bootloader_path": schema.StringAttribute{
+					CustomType:          ovhtypes.TfStringType{},
+					Optional:            true,
+					Description:         "Path of the EFI bootloader from the OS installed on the server",
+					MarkdownDescription: "Path of the EFI bootloader from the OS installed on the server",
+				},
+				"hostname": schema.StringAttribute{
+					CustomType:          ovhtypes.TfStringType{},
+					Optional:            true,
+					Description:         "Custom hostname",
+					MarkdownDescription: "Custom hostname",
+				},
+				"http_headers": schema.MapAttribute{
+					CustomType:          ovhtypes.NewTfMapNestedType[ovhtypes.TfStringValue](ctx),
+					Optional:            true,
+					Description:         "Image HTTP Headers",
+					MarkdownDescription: "Image HTTP Headers",
+				},
+				"image_check_sum": schema.StringAttribute{
+					CustomType:          ovhtypes.TfStringType{},
+					Optional:            true,
+					Description:         "Image checksum",
+					MarkdownDescription: "Image checksum",
+				},
+				"image_check_sum_type": schema.StringAttribute{
+					CustomType:          ovhtypes.TfStringType{},
+					Optional:            true,
+					Description:         "Checksum type",
+					MarkdownDescription: "Checksum type",
+					Validators: []validator.String{
+						stringvalidator.OneOf(
+							"md5",
+							"sha1",
+							"sha256",
+							"sha512",
+						),
+					},
+				},
+				"image_type": schema.StringAttribute{
+					CustomType:          ovhtypes.TfStringType{},
+					Optional:            true,
+					Description:         "Image Type",
+					MarkdownDescription: "Image Type",
+					Validators: []validator.String{
+						stringvalidator.OneOf(
+							"qcow2",
+							"raw",
+						),
+					},
+				},
+				"image_url": schema.StringAttribute{
+					CustomType:          ovhtypes.TfStringType{},
+					Optional:            true,
+					Description:         "Image URL",
+					MarkdownDescription: "Image URL",
+				},
+				"language": schema.StringAttribute{
+					CustomType:          ovhtypes.TfStringType{},
+					Optional:            true,
+					Description:         "Display Language",
+					MarkdownDescription: "Display Language",
+					Validators: []validator.String{
+						stringvalidator.OneOf(
+							"cs-cz",
+							"de-de",
+							"en-us",
+							"es-es",
+							"fr-fr",
+							"it-it",
+							"nl-nl",
+							"pl-pl",
+							"pt-pt",
+						),
+					},
+				},
+				"post_installation_script": schema.StringAttribute{
+					CustomType:          ovhtypes.TfStringType{},
+					Optional:            true,
+					Description:         "Post-Installation Script",
+					MarkdownDescription: "Post-Installation Script",
+				},
+				"post_installation_script_extension": schema.StringAttribute{
+					CustomType:          ovhtypes.TfStringType{},
+					Optional:            true,
+					Description:         "Post-Installation Script File Extension",
+					MarkdownDescription: "Post-Installation Script File Extension",
+					Validators: []validator.String{
+						stringvalidator.OneOf(
+							"cmd",
+							"ps1",
+						),
+					},
+				},
+				"ssh_key": schema.StringAttribute{
+					CustomType:          ovhtypes.TfStringType{},
+					Optional:            true,
+					Description:         "SSH Public Key",
+					MarkdownDescription: "SSH Public Key",
+				},
+			},
+			CustomType: CustomizationsType{
+				ObjectType: types.ObjectType{
+					AttrTypes: CustomizationsValue{}.AttributeTypes(ctx),
+				},
+			},
+			Optional:            true,
+			Description:         "OS reinstallation customizations",
+			MarkdownDescription: "OS reinstallation customizations",
 		},
 		"customizations": schema.SingleNestedAttribute{
 			Attributes: map[string]schema.Attribute{
@@ -168,68 +301,12 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 			Computed:            true,
 			Description:         "dedicated datacenter localisation",
 			MarkdownDescription: "dedicated datacenter localisation",
-			Validators: []validator.String{
-				stringvalidator.OneOf(
-					"bhs1",
-					"bhs2",
-					"bhs3",
-					"bhs4",
-					"bhs5",
-					"bhs6",
-					"bhs7",
-					"bhs8",
-					"cch01",
-					"crx1",
-					"crx2",
-					"dc1",
-					"eri1",
-					"eri2",
-					"gra04",
-					"gra1",
-					"gra2",
-					"gra3",
-					"gsw",
-					"hdf01",
-					"hil1",
-					"ieb01",
-					"lil1-int1",
-					"lim1",
-					"lim2",
-					"lim3",
-					"mr901",
-					"p19",
-					"rbx",
-					"rbx-hz",
-					"rbx1",
-					"rbx10",
-					"rbx2",
-					"rbx3",
-					"rbx4",
-					"rbx5",
-					"rbx6",
-					"rbx7",
-					"rbx8",
-					"rbx9",
-					"sbg1",
-					"sbg2",
-					"sbg3",
-					"sbg4",
-					"sbg5",
-					"sgp02",
-					"sgp1",
-					"syd03",
-					"syd1",
-					"syd2",
-					"vin1",
-					"waw1",
-					"ynm1",
-					"yyz01",
-				),
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
 			},
 		},
 		"display_name": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
-			Computed:            true,
 			Optional:            true,
 			Description:         "The display name of your dedicated server",
 			MarkdownDescription: "The display name of your dedicated server",
@@ -240,6 +317,9 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 			Computed:            true,
 			Description:         "Path of the EFI bootloader served on boot",
 			MarkdownDescription: "Path of the EFI bootloader served on boot",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"iam": schema.SingleNestedAttribute{
 			Attributes: map[string]schema.Attribute{
@@ -282,10 +362,22 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 			Computed:            true,
 			Description:         "dedicated server ip",
 			MarkdownDescription: "dedicated server ip",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
+		},
+		"keep_service_after_destroy": schema.BoolAttribute{
+			CustomType:          ovhtypes.TfBoolType{},
+			Optional:            true,
+			Description:         "Whether we should avoid terminating the service when destroying the resource",
+			MarkdownDescription: "Whether we should avoid terminating the service when destroying the resource",
 		},
 		"link_speed": schema.Int64Attribute{
 			CustomType: ovhtypes.TfInt64Type{},
 			Computed:   true,
+			PlanModifiers: []planmodifier.Int64{
+				int64planmodifier.UseStateForUnknown(),
+			},
 		},
 		"monitoring": schema.BoolAttribute{
 			CustomType:          ovhtypes.TfBoolType{},
@@ -293,16 +385,25 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 			Computed:            true,
 			Description:         "Icmp monitoring state",
 			MarkdownDescription: "Icmp monitoring state",
+			PlanModifiers: []planmodifier.Bool{
+				boolplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"name": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
 			Computed:            true,
 			Description:         "dedicated server name",
 			MarkdownDescription: "dedicated server name",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"new_upgrade_system": schema.BoolAttribute{
 			CustomType: ovhtypes.TfBoolType{},
 			Computed:   true,
+			PlanModifiers: []planmodifier.Bool{
+				boolplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"no_intervention": schema.BoolAttribute{
 			CustomType:          ovhtypes.TfBoolType{},
@@ -310,11 +411,15 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 			Computed:            true,
 			Description:         "Prevent datacenter intervention",
 			MarkdownDescription: "Prevent datacenter intervention",
+			PlanModifiers: []planmodifier.Bool{
+				boolplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"os": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
 			Optional:            true,
 			Computed:            true,
+			Optional:            true,
 			Description:         "Operating system",
 			MarkdownDescription: "Operating system",
 		},
@@ -329,12 +434,24 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 					"poweron",
 				),
 			},
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"professional_use": schema.BoolAttribute{
 			CustomType:          ovhtypes.TfBoolType{},
 			Computed:            true,
 			Description:         "Does this server have professional use option",
 			MarkdownDescription: "Does this server have professional use option",
+			PlanModifiers: []planmodifier.Bool{
+				boolplanmodifier.UseStateForUnknown(),
+			},
+		},
+		"properties": schema.MapAttribute{
+			CustomType:          ovhtypes.NewTfMapNestedType[ovhtypes.TfStringValue](ctx),
+			Optional:            true,
+			Description:         "Arbitrary properties to pass to cloud-init's config drive datasource",
+			MarkdownDescription: "Arbitrary properties to pass to cloud-init's config drive datasource",
 		},
 		"properties": schema.MapAttribute{
 			CustomType:          ovhtypes.NewTfMapNestedType[ovhtypes.TfStringValue](ctx),
@@ -345,49 +462,84 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 		"rack": schema.StringAttribute{
 			CustomType: ovhtypes.TfStringType{},
 			Computed:   true,
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
+		},
+		"prevent_install_on_create": schema.BoolAttribute{
+			CustomType:          ovhtypes.TfBoolType{},
+			Optional:            true,
+			Description:         "Defines whether the server should not be reinstalled after creating the resource",
+			MarkdownDescription: "Defines whether the server should not be reinstalled after creating the resource",
+		},
+		"prevent_install_on_import": schema.BoolAttribute{
+			CustomType:          ovhtypes.TfBoolType{},
+			Optional:            true,
+			Description:         "Defines whether the server should not be reinstalled when importing the resource",
+			MarkdownDescription: "Defines whether the server should not be reinstalled when importing the resource",
 		},
 		"region": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
 			Computed:            true,
 			Description:         "dedicated region localisation",
 			MarkdownDescription: "dedicated region localisation",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"rescue_mail": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
 			Optional:            true,
-			Computed:            true,
 			Description:         "Custom email used to receive rescue credentials",
 			MarkdownDescription: "Custom email used to receive rescue credentials",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"rescue_ssh_key": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
 			Optional:            true,
-			Computed:            true,
 			Description:         "Public SSH Key used in the rescue mode",
 			MarkdownDescription: "Public SSH Key used in the rescue mode",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"reverse": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
 			Computed:            true,
 			Description:         "dedicated server reverse",
 			MarkdownDescription: "dedicated server reverse",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"root_device": schema.StringAttribute{
 			CustomType: ovhtypes.TfStringType{},
 			Optional:   true,
 			Computed:   true,
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"server_id": schema.Int64Attribute{
 			CustomType:          ovhtypes.TfInt64Type{},
 			Computed:            true,
 			Description:         "Server id",
 			MarkdownDescription: "Server id",
+			PlanModifiers: []planmodifier.Int64{
+				int64planmodifier.UseStateForUnknown(),
+			},
 		},
 		"service_name": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
 			Computed:            true,
+			Optional:            true,
 			Description:         "The internal name of your dedicated server",
 			MarkdownDescription: "The internal name of your dedicated server",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"state": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
@@ -403,6 +555,219 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 					"ok",
 				),
 			},
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
+		},
+		"storage": schema.ListNestedAttribute{
+			NestedObject: schema.NestedAttributeObject{
+				Attributes: map[string]schema.Attribute{
+					"disk_group_id": schema.Int64Attribute{
+						CustomType:          ovhtypes.TfInt64Type{},
+						Optional:            true,
+						Description:         "Disk group id (default is 0, meaning automatic)",
+						MarkdownDescription: "Disk group id (default is 0, meaning automatic)",
+					},
+					"hardware_raid": schema.ListNestedAttribute{
+						NestedObject: schema.NestedAttributeObject{
+							Attributes: map[string]schema.Attribute{
+								"arrays": schema.Int64Attribute{
+									CustomType:          ovhtypes.TfInt64Type{},
+									Optional:            true,
+									Description:         "Number of arrays (default is 1)",
+									MarkdownDescription: "Number of arrays (default is 1)",
+								},
+								"disks": schema.Int64Attribute{
+									CustomType:          ovhtypes.TfInt64Type{},
+									Optional:            true,
+									Description:         "Total number of disks in the disk group involved in the hardware raid configuration (all disks of the disk group by default)",
+									MarkdownDescription: "Total number of disks in the disk group involved in the hardware raid configuration (all disks of the disk group by default)",
+								},
+								"raid_level": schema.Int64Attribute{
+									CustomType:          ovhtypes.TfInt64Type{},
+									Optional:            true,
+									Description:         "Hardware raid type (default is 1)",
+									MarkdownDescription: "Hardware raid type (default is 1)",
+									Validators: []validator.Int64{
+										int64validator.OneOf(
+											0,
+											1,
+											5,
+											6,
+											10,
+											50,
+											60,
+										),
+									},
+								},
+								"spares": schema.Int64Attribute{
+									CustomType:          ovhtypes.TfInt64Type{},
+									Optional:            true,
+									Description:         "Number of disks in the disk group involved in the spare (default is 0)",
+									MarkdownDescription: "Number of disks in the disk group involved in the spare (default is 0)",
+								},
+							},
+							CustomType: StorageHardwareRaidType{
+								ObjectType: types.ObjectType{
+									AttrTypes: StorageHardwareRaidValue{}.AttributeTypes(ctx),
+								},
+							},
+						},
+						CustomType:          ovhtypes.NewTfListNestedType[StorageHardwareRaidValue](ctx),
+						Optional:            true,
+						Description:         "Hardware Raid configurations (if not specified, all disks of the chosen disk group id will be configured in JBOD mode)",
+						MarkdownDescription: "Hardware Raid configurations (if not specified, all disks of the chosen disk group id will be configured in JBOD mode)",
+					},
+					"partitioning": schema.SingleNestedAttribute{
+						Attributes: map[string]schema.Attribute{
+							"disks": schema.Int64Attribute{
+								CustomType:          ovhtypes.TfInt64Type{},
+								Optional:            true,
+								Description:         "Total number of disks in the disk group involved in the partitioning configuration (all disks of the disk group by default)",
+								MarkdownDescription: "Total number of disks in the disk group involved in the partitioning configuration (all disks of the disk group by default)",
+							},
+							"layout": schema.ListNestedAttribute{
+								NestedObject: schema.NestedAttributeObject{
+									Attributes: map[string]schema.Attribute{
+										"extras": schema.SingleNestedAttribute{
+											Attributes: map[string]schema.Attribute{
+												"lv": schema.SingleNestedAttribute{
+													Attributes: map[string]schema.Attribute{
+														"name": schema.StringAttribute{
+															CustomType:          ovhtypes.TfStringType{},
+															Optional:            true,
+															Description:         "Logical volume name",
+															MarkdownDescription: "Logical volume name",
+														},
+													},
+													CustomType: StoragePartitioningLayoutExtrasLvType{
+														ObjectType: types.ObjectType{
+															AttrTypes: StoragePartitioningLayoutExtrasLvValue{}.AttributeTypes(ctx),
+														},
+													},
+													Optional:            true,
+													Description:         "LVM-specific parameters",
+													MarkdownDescription: "LVM-specific parameters",
+												},
+												"zp": schema.SingleNestedAttribute{
+													Attributes: map[string]schema.Attribute{
+														"name": schema.StringAttribute{
+															CustomType:          ovhtypes.TfStringType{},
+															Optional:            true,
+															Description:         "zpool name (generated automatically if not specified, note that multiple ZFS partitions with same zpool names will be configured as multiple datasets belonging to the same zpool if compatible)",
+															MarkdownDescription: "zpool name (generated automatically if not specified, note that multiple ZFS partitions with same zpool names will be configured as multiple datasets belonging to the same zpool if compatible)",
+														},
+													},
+													CustomType: StoragePartitioningLayoutExtrasZpType{
+														ObjectType: types.ObjectType{
+															AttrTypes: StoragePartitioningLayoutExtrasZpValue{}.AttributeTypes(ctx),
+														},
+													},
+													Optional:            true,
+													Description:         "ZFS-specific parameters",
+													MarkdownDescription: "ZFS-specific parameters",
+												},
+											},
+											CustomType: StoragePartitioningLayoutExtrasType{
+												ObjectType: types.ObjectType{
+													AttrTypes: StoragePartitioningLayoutExtrasValue{}.AttributeTypes(ctx),
+												},
+											},
+											Optional:            true,
+											Description:         "Partition extras parameters",
+											MarkdownDescription: "Partition extras parameters",
+										},
+										"file_system": schema.StringAttribute{
+											CustomType:          ovhtypes.TfStringType{},
+											Required:            true,
+											Description:         "File system type",
+											MarkdownDescription: "File system type",
+											Validators: []validator.String{
+												stringvalidator.OneOf(
+													"btrfs",
+													"ext3",
+													"ext4",
+													"fat16",
+													"none",
+													"ntfs",
+													"reiserfs",
+													"swap",
+													"ufs",
+													"vmfs5",
+													"vmfs6",
+													"vmfsl",
+													"xfs",
+													"zfs",
+												),
+											},
+										},
+										"mount_point": schema.StringAttribute{
+											CustomType:          ovhtypes.TfStringType{},
+											Required:            true,
+											Description:         "Mount point",
+											MarkdownDescription: "Mount point",
+										},
+										"raid_level": schema.Int64Attribute{
+											CustomType:          ovhtypes.TfInt64Type{},
+											Optional:            true,
+											Description:         "Software raid type (default is 1)",
+											MarkdownDescription: "Software raid type (default is 1)",
+											Validators: []validator.Int64{
+												int64validator.OneOf(
+													0,
+													1,
+													5,
+													6,
+													7,
+													10,
+												),
+											},
+										},
+										"size": schema.Int64Attribute{
+											CustomType:          ovhtypes.TfInt64Type{},
+											Optional:            true,
+											Description:         "Partition size in MiB (default value is 0 which means to fill the disk with that partition)",
+											MarkdownDescription: "Partition size in MiB (default value is 0 which means to fill the disk with that partition)",
+										},
+									},
+									CustomType: StoragePartitioningLayoutType{
+										ObjectType: types.ObjectType{
+											AttrTypes: StoragePartitioningLayoutValue{}.AttributeTypes(ctx),
+										},
+									},
+								},
+								CustomType:          ovhtypes.NewTfListNestedType[StoragePartitioningLayoutValue](ctx),
+								Optional:            true,
+								Description:         "Custom partitioning layout (default is the default layout of the operating system's default partitioning scheme)",
+								MarkdownDescription: "Custom partitioning layout (default is the default layout of the operating system's default partitioning scheme)",
+							},
+							"scheme_name": schema.StringAttribute{
+								CustomType:          ovhtypes.TfStringType{},
+								Optional:            true,
+								Description:         "Partitioning scheme (if applicable with selected operating system)",
+								MarkdownDescription: "Partitioning scheme (if applicable with selected operating system)",
+							},
+						},
+						CustomType: StoragePartitioningType{
+							ObjectType: types.ObjectType{
+								AttrTypes: StoragePartitioningValue{}.AttributeTypes(ctx),
+							},
+						},
+						Optional:            true,
+						Description:         "Partitioning configuration",
+						MarkdownDescription: "Partitioning configuration",
+					},
+				},
+				CustomType: StorageType{
+					ObjectType: types.ObjectType{
+						AttrTypes: StorageValue{}.AttributeTypes(ctx),
+					},
+				},
+			},
+			CustomType:          ovhtypes.NewTfListNestedType[StorageValue](ctx),
+			Optional:            true,
+			Description:         "OS reinstallation storage configurations",
+			MarkdownDescription: "OS reinstallation storage configurations",
 		},
 		"storage": schema.ListNestedAttribute{
 			NestedObject: schema.NestedAttributeObject{
@@ -627,6 +992,9 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 					"pro",
 				),
 			},
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 	}
 	for k, v := range OrderResourceSchema(ctx).Attributes {
@@ -639,40 +1007,43 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 }
 
 type DedicatedServerModel struct {
-	AvailabilityZone  ovhtypes.TfStringValue                            `tfsdk:"availability_zone" json:"availabilityZone"`
-	BootId            ovhtypes.TfInt64Value                             `tfsdk:"boot_id" json:"bootId"`
-	BootScript        ovhtypes.TfStringValue                            `tfsdk:"boot_script" json:"bootScript"`
-	CommercialRange   ovhtypes.TfStringValue                            `tfsdk:"commercial_range" json:"commercialRange"`
-	Customizations    CustomizationsValue                               `tfsdk:"customizations" json:"customizations"`
-	Datacenter        ovhtypes.TfStringValue                            `tfsdk:"datacenter" json:"datacenter"`
-	DisplayName       ovhtypes.TfStringValue                            `tfsdk:"display_name" json:"displayName"`
-	EfiBootloaderPath ovhtypes.TfStringValue                            `tfsdk:"efi_bootloader_path" json:"efiBootloaderPath"`
-	Iam               IamValue                                          `tfsdk:"iam" json:"iam"`
-	Ip                ovhtypes.TfStringValue                            `tfsdk:"ip" json:"ip"`
-	LinkSpeed         ovhtypes.TfInt64Value                             `tfsdk:"link_speed" json:"linkSpeed"`
-	Monitoring        ovhtypes.TfBoolValue                              `tfsdk:"monitoring" json:"monitoring"`
-	Name              ovhtypes.TfStringValue                            `tfsdk:"name" json:"name"`
-	NewUpgradeSystem  ovhtypes.TfBoolValue                              `tfsdk:"new_upgrade_system" json:"newUpgradeSystem"`
-	NoIntervention    ovhtypes.TfBoolValue                              `tfsdk:"no_intervention" json:"noIntervention"`
-	Os                ovhtypes.TfStringValue                            `tfsdk:"os" json:"os"`
-	PowerState        ovhtypes.TfStringValue                            `tfsdk:"power_state" json:"powerState"`
-	ProfessionalUse   ovhtypes.TfBoolValue                              `tfsdk:"professional_use" json:"professionalUse"`
-	Properties        ovhtypes.TfMapNestedValue[ovhtypes.TfStringValue] `tfsdk:"properties" json:"properties"`
-	Rack              ovhtypes.TfStringValue                            `tfsdk:"rack" json:"rack"`
-	Region            ovhtypes.TfStringValue                            `tfsdk:"region" json:"region"`
-	RescueMail        ovhtypes.TfStringValue                            `tfsdk:"rescue_mail" json:"rescueMail"`
-	RescueSshKey      ovhtypes.TfStringValue                            `tfsdk:"rescue_ssh_key" json:"rescueSshKey"`
-	Reverse           ovhtypes.TfStringValue                            `tfsdk:"reverse" json:"reverse"`
-	RootDevice        ovhtypes.TfStringValue                            `tfsdk:"root_device" json:"rootDevice"`
-	ServerId          ovhtypes.TfInt64Value                             `tfsdk:"server_id" json:"serverId"`
-	ServiceName       ovhtypes.TfStringValue                            `tfsdk:"service_name" json:"serviceName"`
-	State             ovhtypes.TfStringValue                            `tfsdk:"state" json:"state"`
-	Storage           ovhtypes.TfListNestedValue[StorageValue]          `tfsdk:"storage" json:"storage"`
-	SupportLevel      ovhtypes.TfStringValue                            `tfsdk:"support_level" json:"supportLevel"`
-	Order             OrderValue                                        `tfsdk:"order" json:"order"`
-	OvhSubsidiary     ovhtypes.TfStringValue                            `tfsdk:"ovh_subsidiary" json:"ovhSubsidiary"`
-	Plan              ovhtypes.TfListNestedValue[PlanValue]             `tfsdk:"plan" json:"plan"`
-	PlanOption        ovhtypes.TfListNestedValue[PlanOptionValue]       `tfsdk:"plan_option" json:"planOption"`
+	AvailabilityZone        ovhtypes.TfStringValue                            `tfsdk:"availability_zone" json:"availabilityZone"`
+	BootId                  ovhtypes.TfInt64Value                             `tfsdk:"boot_id" json:"bootId"`
+	BootScript              ovhtypes.TfStringValue                            `tfsdk:"boot_script" json:"bootScript"`
+	CommercialRange         ovhtypes.TfStringValue                            `tfsdk:"commercial_range" json:"commercialRange"`
+	Customizations          CustomizationsValue                               `tfsdk:"customizations" json:"customizations"`
+	Datacenter              ovhtypes.TfStringValue                            `tfsdk:"datacenter" json:"datacenter"`
+	DisplayName             ovhtypes.TfStringValue                            `tfsdk:"display_name" json:"displayName"`
+	EfiBootloaderPath       ovhtypes.TfStringValue                            `tfsdk:"efi_bootloader_path" json:"efiBootloaderPath"`
+	Iam                     IamValue                                          `tfsdk:"iam" json:"iam"`
+	Ip                      ovhtypes.TfStringValue                            `tfsdk:"ip" json:"ip"`
+	LinkSpeed               ovhtypes.TfInt64Value                             `tfsdk:"link_speed" json:"linkSpeed"`
+	Monitoring              ovhtypes.TfBoolValue                              `tfsdk:"monitoring" json:"monitoring"`
+	Name                    ovhtypes.TfStringValue                            `tfsdk:"name" json:"name"`
+	NewUpgradeSystem        ovhtypes.TfBoolValue                              `tfsdk:"new_upgrade_system" json:"newUpgradeSystem"`
+	NoIntervention          ovhtypes.TfBoolValue                              `tfsdk:"no_intervention" json:"noIntervention"`
+	Os                      ovhtypes.TfStringValue                            `tfsdk:"os" json:"os"`
+	PowerState              ovhtypes.TfStringValue                            `tfsdk:"power_state" json:"powerState"`
+	ProfessionalUse         ovhtypes.TfBoolValue                              `tfsdk:"professional_use" json:"professionalUse"`
+	Properties              ovhtypes.TfMapNestedValue[ovhtypes.TfStringValue] `tfsdk:"properties" json:"properties"`
+	Rack                    ovhtypes.TfStringValue                            `tfsdk:"rack" json:"rack"`
+	PreventInstallOnCreate  ovhtypes.TfBoolValue                              `tfsdk:"prevent_install_on_create" json:"-"`
+	PreventInstallOnImport  ovhtypes.TfBoolValue                              `tfsdk:"prevent_install_on_import" json:"-"`
+	Region                  ovhtypes.TfStringValue                            `tfsdk:"region" json:"region"`
+	RescueMail              ovhtypes.TfStringValue                            `tfsdk:"rescue_mail" json:"rescueMail"`
+	RescueSshKey            ovhtypes.TfStringValue                            `tfsdk:"rescue_ssh_key" json:"rescueSshKey"`
+	Reverse                 ovhtypes.TfStringValue                            `tfsdk:"reverse" json:"reverse"`
+	RootDevice              ovhtypes.TfStringValue                            `tfsdk:"root_device" json:"rootDevice"`
+	ServerId                ovhtypes.TfInt64Value                             `tfsdk:"server_id" json:"serverId"`
+	ServiceName             ovhtypes.TfStringValue                            `tfsdk:"service_name" json:"serviceName"`
+	State                   ovhtypes.TfStringValue                            `tfsdk:"state" json:"state"`
+	SupportLevel            ovhtypes.TfStringValue                            `tfsdk:"support_level" json:"supportLevel"`
+	Storage                 ovhtypes.TfListNestedValue[StorageValue]          `tfsdk:"storage" json:"storage"`
+	KeepServiceAfterDestroy ovhtypes.TfBoolValue                              `tfsdk:"keep_service_after_destroy" json:"-"`
+	Order                   OrderValue                                        `tfsdk:"order" json:"order"`
+	OvhSubsidiary           ovhtypes.TfStringValue                            `tfsdk:"ovh_subsidiary" json:"ovhSubsidiary"`
+	Plan                    ovhtypes.TfListNestedValue[PlanValue]             `tfsdk:"plan" json:"plan"`
+	PlanOption              ovhtypes.TfListNestedValue[PlanOptionValue]       `tfsdk:"plan_option" json:"planOption"`
 }
 
 func (v *DedicatedServerModel) MergeWith(other *DedicatedServerModel) {
@@ -744,6 +1115,10 @@ func (v *DedicatedServerModel) MergeWith(other *DedicatedServerModel) {
 		v.Os = other.Os
 	}
 
+	if (v.Properties.IsUnknown() || v.Properties.IsNull()) && !other.Properties.IsUnknown() {
+		v.Properties = other.Properties
+	}
+
 	if (v.PowerState.IsUnknown() || v.PowerState.IsNull()) && !other.PowerState.IsUnknown() {
 		v.PowerState = other.PowerState
 	}
@@ -760,6 +1135,14 @@ func (v *DedicatedServerModel) MergeWith(other *DedicatedServerModel) {
 		v.Rack = other.Rack
 	}
 
+	if (v.PreventInstallOnCreate.IsUnknown() || v.PreventInstallOnCreate.IsNull()) && !other.PreventInstallOnCreate.IsUnknown() {
+		v.PreventInstallOnCreate = other.PreventInstallOnCreate
+	}
+
+	if (v.PreventInstallOnImport.IsUnknown() || v.PreventInstallOnImport.IsNull()) && !other.PreventInstallOnImport.IsUnknown() {
+		v.PreventInstallOnImport = other.PreventInstallOnImport
+	}
+
 	if (v.Region.IsUnknown() || v.Region.IsNull()) && !other.Region.IsUnknown() {
 		v.Region = other.Region
 	}
@@ -768,7 +1151,7 @@ func (v *DedicatedServerModel) MergeWith(other *DedicatedServerModel) {
 		v.RescueMail = other.RescueMail
 	}
 
-	if (v.RescueSshKey.IsUnknown() || v.RescueSshKey.IsNull()) && !other.RescueSshKey.IsUnknown() {
+	if v.RescueSshKey.IsUnknown() && !other.RescueSshKey.IsUnknown() {
 		v.RescueSshKey = other.RescueSshKey
 	}
 
@@ -798,6 +1181,10 @@ func (v *DedicatedServerModel) MergeWith(other *DedicatedServerModel) {
 
 	if (v.SupportLevel.IsUnknown() || v.SupportLevel.IsNull()) && !other.SupportLevel.IsUnknown() {
 		v.SupportLevel = other.SupportLevel
+	}
+
+	if (v.KeepServiceAfterDestroy.IsUnknown() || v.KeepServiceAfterDestroy.IsNull()) && !other.KeepServiceAfterDestroy.IsUnknown() {
+		v.KeepServiceAfterDestroy = other.KeepServiceAfterDestroy
 	}
 
 	if (v.Order.IsUnknown() || v.Order.IsNull()) && !other.Order.IsUnknown() {
@@ -846,19 +1233,19 @@ func (v *DedicatedServerModel) ToOrder() *OrderModel {
 }
 
 type DedicatedServerWritableModel struct {
-	BootId            *ovhtypes.TfInt64Value                             `tfsdk:"boot_id" json:"bootId,omitempty"`
-	BootScript        *ovhtypes.TfStringValue                            `tfsdk:"boot_script" json:"bootScript,omitempty"`
-	Customizations    *CustomizationsWritableValue                       `tfsdk:"customizations" json:"customizations,omitempty"`
-	EfiBootloaderPath *ovhtypes.TfStringValue                            `tfsdk:"efi_bootloader_path" json:"efiBootloaderPath,omitempty"`
-	Monitoring        *ovhtypes.TfBoolValue                              `tfsdk:"monitoring" json:"monitoring,omitempty"`
-	NoIntervention    *ovhtypes.TfBoolValue                              `tfsdk:"no_intervention" json:"noIntervention,omitempty"`
-	Properties        *ovhtypes.TfMapNestedValue[ovhtypes.TfStringValue] `tfsdk:"properties" json:"properties,omitempty"`
-	RescueMail        *ovhtypes.TfStringValue                            `tfsdk:"rescue_mail" json:"rescueMail,omitempty"`
-	RescueSshKey      *ovhtypes.TfStringValue                            `tfsdk:"rescue_ssh_key" json:"rescueSshKey,omitempty"`
-	RootDevice        *ovhtypes.TfStringValue                            `tfsdk:"root_device" json:"rootDevice,omitempty"`
-	State             *ovhtypes.TfStringValue                            `tfsdk:"state" json:"state,omitempty"`
-	Storage           *ovhtypes.TfListNestedValue[StorageWritableValue]  `tfsdk:"storage" json:"storage,omitempty"`
-	Os                *ovhtypes.TfStringValue                            `tfsdk:"os" json:"operatingSystem,omitempty"`
+	BootId              *ovhtypes.TfInt64Value                             `tfsdk:"boot_id" json:"bootId,omitempty"`
+	BootScript          *ovhtypes.TfStringValue                            `tfsdk:"boot_script" json:"bootScript,omitempty"`
+	Customizations      *CustomizationsWritableValue                       `tfsdk:"customizations" json:"customizations,omitempty"`
+	EfiBootloaderPath   *ovhtypes.TfStringValue                            `tfsdk:"efi_bootloader_path" json:"efiBootloaderPath,omitempty"`
+	Monitoring          *ovhtypes.TfBoolValue                              `tfsdk:"monitoring" json:"monitoring,omitempty"`
+	NoIntervention      *ovhtypes.TfBoolValue                              `tfsdk:"no_intervention" json:"noIntervention,omitempty"`
+	Properties          *ovhtypes.TfMapNestedValue[ovhtypes.TfStringValue] `tfsdk:"properties" json:"properties,omitempty"`
+	RescueMail          *ovhtypes.TfStringValue                            `tfsdk:"rescue_mail" json:"rescueMail,omitempty"`
+	RescueSshKey        *ovhtypes.TfStringValue                            `tfsdk:"rescue_ssh_key" json:"rescueSshKey,omitempty"`
+	RootDevice          *ovhtypes.TfStringValue                            `tfsdk:"root_device" json:"rootDevice,omitempty"`
+	State               *ovhtypes.TfStringValue                            `tfsdk:"state" json:"state,omitempty"`
+	Storage             []*StorageWritableValue                            `tfsdk:"storage" json:"storage,omitempty"`
+	Os                  *ovhtypes.TfStringValue                            `tfsdk:"os" json:"operatingSystem,omitempty"`
 }
 
 func (v DedicatedServerModel) ToCreate() *DedicatedServerWritableModel {
@@ -903,7 +1290,7 @@ func (v DedicatedServerModel) ToCreate() *DedicatedServerWritableModel {
 	return res
 }
 
-func (v DedicatedServerModel) ToReinstall() *DedicatedServerWritableModel {
+func (v DedicatedServerModel) ToReinstallV2() *DedicatedServerWritableModel {
 	res := &DedicatedServerWritableModel{}
 
 	if !v.Os.IsUnknown() {
@@ -911,20 +1298,12 @@ func (v DedicatedServerModel) ToReinstall() *DedicatedServerWritableModel {
 	}
 
 	if !v.Customizations.IsUnknown() && !v.Customizations.IsNull() {
-		res.Customizations = v.Customizations.ToUpdate()
+		res.Customizations = v.Customizations.ToCreate()
 	}
 
 	if !v.Storage.IsUnknown() && !v.Storage.IsNull() {
-		var updateStorage []*StorageWritableValue
 		for _, elem := range v.Storage.Elements() {
-			elemToUpdate := elem.(StorageValue).ToUpdate()
-			updateStorage = append(updateStorage, elemToUpdate)
-		}
-
-		newStorage, _ := basetypes.NewListValueFrom(context.Background(),
-			StorageWritableValue{}.Type(context.Background()), updateStorage)
-		res.Storage = &ovhtypes.TfListNestedValue[StorageWritableValue]{
-			ListValue: newStorage,
+			res.Storage = append(res.Storage, elem.(StorageValue).ToCreate())
 		}
 	}
 
@@ -937,28 +1316,35 @@ func (v DedicatedServerModel) ToReinstall() *DedicatedServerWritableModel {
 
 func (v DedicatedServerModel) ToUpdate() *DedicatedServerWritableModel {
 	res := &DedicatedServerWritableModel{}
+	emptyString := ovhtypes.NewTfStringValue("")
 
 	if !v.BootId.IsUnknown() {
 		res.BootId = &v.BootId
 	}
 
-	if !v.BootScript.IsUnknown() {
+	if v.BootScript.IsNull() {
+		res.BootScript = &emptyString
+	} else if !v.BootScript.IsUnknown() {
 		res.BootScript = &v.BootScript
 	}
 
-	if !v.EfiBootloaderPath.IsUnknown() {
+	if v.EfiBootloaderPath.IsNull() {
+		res.EfiBootloaderPath = &emptyString
+	} else if !v.EfiBootloaderPath.IsUnknown() {
 		res.EfiBootloaderPath = &v.EfiBootloaderPath
 	}
 
-	if !v.Monitoring.IsUnknown() {
+	if !v.Monitoring.IsUnknown() && !v.Monitoring.IsNull() {
 		res.Monitoring = &v.Monitoring
 	}
 
-	if !v.NoIntervention.IsUnknown() {
+	if !v.NoIntervention.IsUnknown() && !v.NoIntervention.IsNull() {
 		res.NoIntervention = &v.NoIntervention
 	}
 
-	if !v.RescueMail.IsUnknown() {
+	if v.RescueMail.IsNull() {
+		res.RescueMail = &emptyString
+	} else if !v.RescueMail.IsUnknown() {
 		res.RescueMail = &v.RescueMail
 	}
 
@@ -966,11 +1352,13 @@ func (v DedicatedServerModel) ToUpdate() *DedicatedServerWritableModel {
 		res.RescueSshKey = &v.RescueSshKey
 	}
 
-	if !v.RootDevice.IsUnknown() {
+	if v.RootDevice.IsNull() {
+		res.RootDevice = &emptyString
+	} else if !v.RootDevice.IsUnknown() {
 		res.RootDevice = &v.RootDevice
 	}
 
-	if !v.State.IsUnknown() {
+	if !v.State.IsUnknown() && !v.State.IsNull() {
 		res.State = &v.State
 	}
 

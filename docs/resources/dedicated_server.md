@@ -90,6 +90,7 @@ resource "ovh_dedicated_server" "server" {
   * `configuration` - Representation of a configuration item to personalize product
     * `label` - (Required) Identifier of the resource
     * `value` - (Required) Path to the resource in API.OVH.COM
+* `service_name` - (Optional) The service_name of your dedicated server. This field can be used to avoid ordering a dedicated server at creation and just create the resource using an already existing service
 
 ### Editable fields of a dedicated server
 
@@ -101,6 +102,9 @@ resource "ovh_dedicated_server" "server" {
 * `rescue_ssh_key` - Public SSH Key used in the rescue mode
 * `root_device` - Root device of the server
 * `state` - All states a Dedicated can in (error, hacked, hackedBlocked, ok)
+* `keep_service_after_destroy` - Avoid termination of the service when deleting the resource (when using this parameter, make sure to apply your configuration before running the destroy so that the value is set in the state)
+* `prevent_install_on_create` - Prevent server installation after it has been delivered
+* `prevent_install_on_import` - Defines whether a reinstallation of the server is allowed after importing it if there is a modification on the installation parameters
 
 ### Arguments used to reinstall a dedicated server
 * `os` - Operating System to install
@@ -130,12 +134,29 @@ resource "ovh_dedicated_server" "server" {
       * `extras` - Partition extras parameters
         * `lv` - LVM-specific parameters
         * `zp` - ZFS-specific parameters
-      * `fileSystem` - File system type
-      * `mountPoint` - Mount point
-      * `raidLevel` - Software raid type
+      * `file_system` - File system type
+      * `mount_point` - Mount point
+      * `raid_level` - Software raid type
       * `size` - Partition size in MiB
-    * `schemeName` - Partitioning scheme (if applicable with selected operating system)
-* `properties` - Arbitrary properties to pass to cloud-init's config drive datasource
+    * `scheme_name` - Partitioning scheme (if applicable with selected operating system)
+* `properties` - (Map string, string) Arbitrary properties to pass to cloud-init's config drive datasource
+
+#### Legacy arguments, will be removed in version v2.0.0
+
+* `details` - Details object when reinstalling server (see https://eu.api.ovh.com/console/?section=%2Fdedicated%2Fserver&branch=v1#post-/dedicated/server/-serviceName-/install/start)
+  * `custom_hostname` - Personnal hostname to use in server reinstallation
+  * `disk_group_id` - Disk group id to process install on (only available for some templates)
+  * `no_raid` - Whether you want to install only on the first disk
+  * `soft_raid_devices` - Number of devices to use for system's software RAID
+* `partition_scheme_name` - Partition scheme name
+* `template_name` - Template name. You can check [the following API](https://eu.api.ovh.com/console/?section=%2Fdedicated%2FinstallationTemplate&branch=v1#get-/dedicated/installationTemplate) to list the available base templates
+* `user_metadata` - Metadata
+  * `key`
+  * `value`
+
+The `user_metadata` block supports many arguments, here is a non-exhaustive list depending on the OS:
+-[See OS questions](https://help.ovhcloud.com/csm/en-dedicated-servers-api-os-installation?id=kb_article_view&sysparm_article=KB0061951#os-questions)
+-[See documentation](https://help.ovhcloud.com/csm/en-ie-dedicated-servers-api-os-installation?id=kb_article_view&sysparm_article=KB0061950#create-an-os-installation-task) to get more information
 
 ## Attributes Reference
 
