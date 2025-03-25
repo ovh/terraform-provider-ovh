@@ -1,5 +1,5 @@
 resource "ovh_cloud_project_user" "user" {
-  service_name = "XXX
+  service_name = "XXX"
   description  = "my user for acceptance tests"
   role_names   = [
     "objectstore_operator"
