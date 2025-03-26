@@ -2,17 +2,17 @@
 subcategory : "Account Management (IAM)"
 ---
 
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
 # ovh_iam_permissions_group (Data Source)
 
 Use this data source to retrieve an IAM permissions group.
 
 ## Example Usage
 
-```terraform
-data "ovh_iam_permissions_group" "website" {
-  urn = "urn:v1:eu:permissionsGroup:ovh:controlPanelAccess"
-}
-```
+{{tffile "examples/data-sources/iam_permissions_group/example_1.tf"}}
 
 ## Argument Reference
 
