@@ -42,7 +42,7 @@ The following arguments are supported:
 
 * `dns_nameservers` - DNS nameservers used by DHCP Changing this value recreates the resource. Defaults to OVH default DNS nameserver.
 
-* `host_routes` - List of custom host routes. Changing this value recreates the resource.
+* `host_route` - List of custom host routes. Changing this value recreates the resource.
 
 * `allocation_pools` - List of IP allocation pools Changing this value recreates the resource.
 
@@ -60,7 +60,7 @@ The following attributes are exported:
 * `gateway_ip` - See Argument Reference above.
 * `enable_gateway_ip` - See Argument Reference above.
 * `dns_nameservers` - See Argument Reference above.
-* `host_routes` - See Argument Reference above.
+* `host_route` - See Argument Reference above.
 * `allocation_pools` - See Argument Reference above.
 
 ## Import
