@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"strconv"
 
 	"github.com/ovh/go-ovh/ovh"
 
@@ -54,12 +55,8 @@ func (d *dedicatedServerResource) Schema(ctx context.Context, req resource.Schem
 }
 
 func (d *dedicatedServerResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	// Here we force the attribute "plan" to an empty array because it won't be fetched by the Read function.
-	// If we don't do this, Terraform always shows a diff on the following plans (null => []), due to the
-	// plan modifier RequiresReplace that initializes the attribute to its zero-value (an empty array).
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("plan"), ovhtypes.TfListNestedValue[PlanValue]{
-		ListValue: basetypes.NewListValueMust(PlanValue{}.Type(ctx), make([]attr.Value, 0)),
-	})...)
+	resp.Diagnostics.Append(resp.Private.SetKey(ctx, "is_imported", []byte("true"))...)
+	resp.Diagnostics.Append(resp.Private.SetKey(ctx, "run_count", []byte("0"))...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_name"), req.ID)...)
 }
 
@@ -72,41 +69,47 @@ func (r *dedicatedServerResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	order := data.ToOrder()
-	if err := orderCreate(order, r.config, "baremetalServers", false); err != nil {
-		resp.Diagnostics.AddError("failed to create order", err.Error())
-		return
-	}
-	orderID := order.Order.OrderId.ValueInt64()
-	data.Order = OrderValue{
-		state:   attr.ValueStateKnown,
-		OrderId: ovhtypes.NewTfInt64Value(orderID),
-	}
-
-	// Wait for order to be completed
-	_, err := waitOrderCompletionV2(ctx, r.config, orderID)
-	if err != nil {
-		timeout := &retry.TimeoutError{}
-		if errors.As(err, &timeout) {
-			// Delivery took too long, just store the order ID and leave.
-			// Resource will have to be untainted before next apply (cf: https://discuss.hashicorp.com/t/partial-resource-create-tainted-state/48905).
-			resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-			resp.Diagnostics.AddError("still waiting for order to be completed", fmt.Sprintf("Order %d not delivered yet, saving the ID for later", orderID))
-		} else {
-			// Got a real error, return it and don't save anything in the state
-			resp.Diagnostics.AddError("error waiting for order", err.Error())
+	// If service_name is not provided, it means dedicated server has to be ordered
+	if data.ServiceName.IsNull() || data.ServiceName.IsUnknown() {
+		order := data.ToOrder()
+		if err := orderCreate(order, r.config, "baremetalServers", false); err != nil {
+			resp.Diagnostics.AddError("failed to create order", err.Error())
+			return
 		}
-		return
+		orderID := order.Order.OrderId.ValueInt64()
+		data.Order = OrderValue{
+			state:   attr.ValueStateKnown,
+			OrderId: ovhtypes.NewTfInt64Value(orderID),
+		}
+
+		// Wait for order to be completed
+		_, err := waitOrderCompletionV2(ctx, r.config, orderID)
+		if err != nil {
+			timeout := &retry.TimeoutError{}
+			if errors.As(err, &timeout) {
+				// Delivery took too long, just store the order ID and leave.
+				// Resource will have to be untainted before next apply (cf: https://discuss.hashicorp.com/t/partial-resource-create-tainted-state/48905).
+				resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+				resp.Diagnostics.AddError("still waiting for order to be completed", fmt.Sprintf("Order %d not delivered yet, saving the ID for later", orderID))
+			} else {
+				// Got a real error, return it and don't save anything in the state
+				resp.Diagnostics.AddError("error waiting for order", err.Error())
+			}
+			return
+		}
+
+		// Find service name from order
+		r.getServiceName(ctx, &data, orderID, resp.Diagnostics)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
-	// Find service name from order
-	r.getServiceName(ctx, &data, orderID, resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	// Check if server must be installed after creation
+	shouldInstall := !data.PreventInstallOnCreate.ValueBool()
 
 	// Update resource
-	r.updateDedicatedServerResource(ctx, nil, &data, &responseData, resp.Diagnostics)
+	r.updateDedicatedServerResource(ctx, shouldInstall, nil, &data, &responseData, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		// TODO: not sure we should return here, maybe save the state instead
 		return
@@ -168,6 +171,31 @@ func (r *dedicatedServerResource) Read(ctx context.Context, req resource.ReadReq
 
 	data.MergeWith(&responseData)
 
+	// Check if resource has just been imported. If it is the case, increase
+	// the run counter each time we go through this function. The run counter
+	// value is used in the Update function to decide if the server should be
+	// reinstalled or not.
+	isImported, privDiags := req.Private.GetKey(ctx, "is_imported")
+	if privDiags.HasError() {
+		resp.Diagnostics.Append(privDiags...)
+		return
+	}
+
+	if isImported != nil && string(isImported) == "true" {
+		runCounter, privDiags := req.Private.GetKey(ctx, "run_count")
+		if privDiags.HasError() {
+			resp.Diagnostics.Append(privDiags...)
+			return
+		}
+		count, err := strconv.Atoi(string(runCounter))
+		if err != nil {
+			resp.Diagnostics.AddError("failed to read run_count from private state", err.Error())
+			return
+		}
+
+		resp.Private.SetKey(ctx, "run_count", []byte(strconv.Itoa(count+1)))
+	}
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -216,8 +244,41 @@ func (r *dedicatedServerResource) Update(ctx context.Context, req resource.Updat
 		}
 	}
 
+	// Check if resource has just been imported, and remove key from private state.
+	// We need this information to know if a reinstall should be forced at this point.
+	isImported, privDiags := req.Private.GetKey(ctx, "is_imported")
+	if privDiags.HasError() {
+		resp.Diagnostics.Append(privDiags...)
+		return
+	}
+	resp.Private.SetKey(ctx, "is_imported", nil)
+
+	// Decide if server installation should be forced. This happens when resource has just been
+	// imported and the parameter "reinstall_on_import" is true.
+	var forceReinstall bool
+	if isImported != nil && string(isImported) == "true" {
+		runCounter, privDiags := req.Private.GetKey(ctx, "run_count")
+		if privDiags.HasError() {
+			resp.Diagnostics.Append(privDiags...)
+			return
+		}
+		resp.Private.SetKey(ctx, "run_count", nil)
+
+		count, err := strconv.Atoi(string(runCounter))
+		if err != nil {
+			resp.Diagnostics.AddError("failed to read run_count from private state", err.Error())
+			return
+		}
+
+		// When "is_imported" is true, only allow reinstall if update is called right after import.
+		// If "run_count" is > 1, it means that Update was not called at import time, so we just
+		// ignore this parameter: changing the value of "reinstall_on_import" after import
+		// should not trigger a reinstall.
+		forceReinstall = count == 1 && planData.ReinstallOnImport.ValueBool()
+	}
+
 	// Update resource
-	r.updateDedicatedServerResource(ctx, &stateData, &planData, &responseData, resp.Diagnostics)
+	r.updateDedicatedServerResource(ctx, forceReinstall, &stateData, &planData, &responseData, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		// TODO: not sure we should return here, maybe save the state instead
 		return
@@ -226,9 +287,12 @@ func (r *dedicatedServerResource) Update(ctx context.Context, req resource.Updat
 	responseData.MergeWith(&planData)
 	responseData.MergeWith(&stateData)
 
-	// Explicitely set UserMetadata to what was defined in the plan
+	// Explicitely set installation config to what was defined in the plan
 	// as we can't determine the right thing to do in MergeWith function
 	responseData.UserMetadata = planData.UserMetadata
+	responseData.Customizations = planData.Customizations
+	responseData.Properties = planData.Properties
+	responseData.Storage = planData.Storage
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)
@@ -240,6 +304,11 @@ func (r *dedicatedServerResource) Delete(ctx context.Context, req resource.Delet
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if data.KeepServiceAfterDestroy.ValueBool() {
+		log.Print("Will remove the resource without terminating service")
 		return
 	}
 
@@ -277,17 +346,30 @@ func (r *dedicatedServerResource) Delete(ctx context.Context, req resource.Delet
 	}
 }
 
-func (r *dedicatedServerResource) updateDedicatedServerResource(ctx context.Context, stateData, planData, responseData *DedicatedServerModel, diags diag.Diagnostics) {
+func (r *dedicatedServerResource) updateDedicatedServerResource(ctx context.Context, forceReinstall bool,
+	stateData, planData, responseData *DedicatedServerModel, diags *diag.Diagnostics) {
+
 	// Check if server needs to be reinstalled
-	var shouldReinstall bool
-	if stateData != nil {
+	var shouldReinstallWithV1, shouldReinstallWithV2 bool
+	switch {
+	// Reinstallation is required
+	case forceReinstall:
+		if planData.TemplateName.ValueString() != "" {
+			shouldReinstallWithV1 = true
+		} else if planData.Os.ValueString() != "" {
+			shouldReinstallWithV2 = true
+		}
+	// Classical update when resource already exists.
+	// Checks state data against plan data to decide if a reinstall should be triggered.
+	case stateData != nil:
 		if stateData.TemplateName.ValueString() != planData.TemplateName.ValueString() ||
 			!stateData.UserMetadata.Equal(planData.UserMetadata) {
-			shouldReinstall = true
-		}
-	} else {
-		if planData.TemplateName.ValueString() != "" {
-			shouldReinstall = true
+			shouldReinstallWithV1 = true
+		} else if stateData.Os.ValueString() != planData.Os.ValueString() ||
+			!stateData.Customizations.Equal(planData.Customizations) ||
+			!stateData.Storage.Equal(planData.Storage) ||
+			!stateData.Properties.Equal(planData.Properties) {
+			shouldReinstallWithV2 = true
 		}
 	}
 
@@ -298,16 +380,28 @@ func (r *dedicatedServerResource) updateDedicatedServerResource(ctx context.Cont
 	}
 
 	// Trigger server reinstallation
-	endpoint := "/dedicated/server/" + url.PathEscape(serviceName) + "/install/start"
-	if shouldReinstall {
+	if shouldReinstallWithV1 || shouldReinstallWithV2 {
 		log.Print("Triggering server reinstallation")
+
 		task := DedicatedServerTask{}
-		if err := r.config.OVHClient.Post(endpoint, planData.ToReinstall(), &task); err != nil {
-			diags.AddError(
-				fmt.Sprintf("Error calling Post %s", endpoint),
-				err.Error(),
-			)
-			return
+		if shouldReinstallWithV1 {
+			endpoint := "/dedicated/server/" + url.PathEscape(serviceName) + "/install/start"
+			if err := r.config.OVHClient.Post(endpoint, planData.ToReinstall(), &task); err != nil {
+				diags.AddError(
+					fmt.Sprintf("Error calling Post %s", endpoint),
+					err.Error(),
+				)
+				return
+			}
+		} else {
+			endpoint := "/dedicated/server/" + url.PathEscape(serviceName) + "/reinstall"
+			if err := r.config.OVHClient.Post(endpoint, planData.ToReinstallV2(), &task); err != nil {
+				diags.AddError(
+					fmt.Sprintf("Error calling Post %s", endpoint),
+					err.Error(),
+				)
+				return
+			}
 		}
 
 		// Wait for reinstallation completion
@@ -318,7 +412,7 @@ func (r *dedicatedServerResource) updateDedicatedServerResource(ctx context.Cont
 	}
 
 	// PUT the resource
-	endpoint = "/dedicated/server/" + url.PathEscape(serviceName)
+	endpoint := "/dedicated/server/" + url.PathEscape(serviceName)
 	if err := r.config.OVHClient.Put(endpoint, planData.ToUpdate(), nil); err != nil {
 		diags.AddError(
 			fmt.Sprintf("Error calling Put %s", endpoint),
