@@ -137,8 +137,8 @@ func CloudProjectLoadbalancerResourceSchema(ctx context.Context) schema.Schema {
 									"http_configuration": schema.SingleNestedAttribute{
 										Attributes: map[string]schema.Attribute{
 											"domain_name": schema.StringAttribute{
-												CustomType: ovhtypes.TfStringType{},
-												Optional:   true,
+												CustomType:          ovhtypes.TfStringType{},
+												Optional:            true,
 												Description:         "Domain name, which be injected into the HTTP Host Header to the backend server for HTTP health check",
 												MarkdownDescription: "Domain name, which be injected into the HTTP Host Header to the backend server for HTTP health check",
 												PlanModifiers: []planmodifier.String{
@@ -146,8 +146,8 @@ func CloudProjectLoadbalancerResourceSchema(ctx context.Context) schema.Schema {
 												},
 											},
 											"expected_codes": schema.StringAttribute{
-												CustomType: ovhtypes.TfStringType{},
-												Optional:   true,
+												CustomType:          ovhtypes.TfStringType{},
+												Optional:            true,
 												Description:         "Status codes expected in response from the member to declare it healthy; The list of HTTP status codes expected in response from the member to declare it healthy. Specify one of the following values: * A single value, such as 200; * A list, such as 200, 202; * A range, such as 200-204",
 												MarkdownDescription: "Status codes expected in response from the member to declare it healthy; The list of HTTP status codes expected in response from the member to declare it healthy. Specify one of the following values: * A single value, such as 200; * A list, such as 200, 202; * A range, such as 200-204",
 												PlanModifiers: []planmodifier.String{
@@ -177,8 +177,8 @@ func CloudProjectLoadbalancerResourceSchema(ctx context.Context) schema.Schema {
 												},
 											},
 											"http_version": schema.StringAttribute{
-												CustomType: ovhtypes.TfStringType{},
-												Optional:   true,
+												CustomType:          ovhtypes.TfStringType{},
+												Optional:            true,
 												Description:         "HTTP version that the health monitor uses for requests",
 												MarkdownDescription: "HTTP version that the health monitor uses for requests",
 												Validators: []validator.String{
@@ -192,8 +192,8 @@ func CloudProjectLoadbalancerResourceSchema(ctx context.Context) schema.Schema {
 												},
 											},
 											"url_path": schema.StringAttribute{
-												CustomType: ovhtypes.TfStringType{},
-												Optional:   true,
+												CustomType:          ovhtypes.TfStringType{},
+												Optional:            true,
 												Description:         "HTTP URL path of the request sent by the monitor to test the health of a backend member",
 												MarkdownDescription: "HTTP URL path of the request sent by the monitor to test the health of a backend member",
 												PlanModifiers: []planmodifier.String{
@@ -206,7 +206,7 @@ func CloudProjectLoadbalancerResourceSchema(ctx context.Context) schema.Schema {
 												AttrTypes: ListenersPoolHealthMonitorHttpConfigurationValue{}.AttributeTypes(ctx),
 											},
 										},
-										Optional: true,
+										Optional:            true,
 										Description:         "Monitor HTTP configuration",
 										MarkdownDescription: "Monitor HTTP configuration",
 									},
@@ -220,8 +220,8 @@ func CloudProjectLoadbalancerResourceSchema(ctx context.Context) schema.Schema {
 										},
 									},
 									"max_retries_down": schema.Int64Attribute{
-										CustomType: ovhtypes.TfInt64Type{},
-										Optional:   true,
+										CustomType:          ovhtypes.TfInt64Type{},
+										Optional:            true,
 										Description:         "Number of allowed check failures before changing the operating status of the member to ERROR",
 										MarkdownDescription: "Number of allowed check failures before changing the operating status of the member to ERROR",
 										PlanModifiers: []planmodifier.Int64{
@@ -258,8 +258,8 @@ func CloudProjectLoadbalancerResourceSchema(ctx context.Context) schema.Schema {
 										},
 									},
 									"operating_status": schema.StringAttribute{
-										CustomType: ovhtypes.TfStringType{},
-										Optional:   true,
+										CustomType:          ovhtypes.TfStringType{},
+										Optional:            true,
 										Description:         "The operating status of the resource",
 										MarkdownDescription: "The operating status of the resource",
 										Validators: []validator.String{
@@ -277,8 +277,8 @@ func CloudProjectLoadbalancerResourceSchema(ctx context.Context) schema.Schema {
 										},
 									},
 									"provisioning_status": schema.StringAttribute{
-										CustomType: ovhtypes.TfStringType{},
-										Optional:   true,
+										CustomType:          ovhtypes.TfStringType{},
+										Optional:            true,
 										Description:         "The provisioning status of the resource",
 										MarkdownDescription: "The provisioning status of the resource",
 										Validators: []validator.String{
@@ -327,8 +327,8 @@ func CloudProjectLoadbalancerResourceSchema(ctx context.Context) schema.Schema {
 											},
 										},
 										"name": schema.StringAttribute{
-											CustomType: ovhtypes.TfStringType{},
-											Optional:   true,
+											CustomType:          ovhtypes.TfStringType{},
+											Optional:            true,
 											Description:         "Name of the member",
 											MarkdownDescription: "Name of the member",
 											PlanModifiers: []planmodifier.String{
@@ -363,8 +363,8 @@ func CloudProjectLoadbalancerResourceSchema(ctx context.Context) schema.Schema {
 										objectplanmodifier.RequiresReplace(),
 									},
 								},
-								CustomType: ovhtypes.NewTfListNestedType[ListenersPoolMembersValue](ctx),
-								Optional:   true,
+								CustomType:          ovhtypes.NewTfListNestedType[ListenersPoolMembersValue](ctx),
+								Optional:            true,
 								Description:         "Pool members",
 								MarkdownDescription: "Pool members",
 								PlanModifiers: []planmodifier.List{
@@ -372,8 +372,8 @@ func CloudProjectLoadbalancerResourceSchema(ctx context.Context) schema.Schema {
 								},
 							},
 							"name": schema.StringAttribute{
-								CustomType: ovhtypes.TfStringType{},
-								Optional:   true,
+								CustomType:          ovhtypes.TfStringType{},
+								Optional:            true,
 								Description:         "Name of the pool",
 								MarkdownDescription: "Name of the pool",
 								PlanModifiers: []planmodifier.String{
@@ -403,8 +403,8 @@ func CloudProjectLoadbalancerResourceSchema(ctx context.Context) schema.Schema {
 							"session_persistence": schema.SingleNestedAttribute{
 								Attributes: map[string]schema.Attribute{
 									"cookie_name": schema.StringAttribute{
-										CustomType: ovhtypes.TfStringType{},
-										Optional:   true,
+										CustomType:          ovhtypes.TfStringType{},
+										Optional:            true,
 										Description:         "Cookie name, only applicable to session persistence through cookie",
 										MarkdownDescription: "Cookie name, only applicable to session persistence through cookie",
 										PlanModifiers: []planmodifier.String{
@@ -412,8 +412,8 @@ func CloudProjectLoadbalancerResourceSchema(ctx context.Context) schema.Schema {
 										},
 									},
 									"type": schema.StringAttribute{
-										CustomType: ovhtypes.TfStringType{},
-										Optional:   true,
+										CustomType:          ovhtypes.TfStringType{},
+										Optional:            true,
 										Description:         "Type of session persistence",
 										MarkdownDescription: "Type of session persistence",
 										Validators: []validator.String{
