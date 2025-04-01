@@ -43,3 +43,4 @@ The following attributes are exported:
 * `image_id` - Image id
 * `task_state` - Instance task state
 * `ssh_key` - SSH Keypair
+* `status` - Instance status

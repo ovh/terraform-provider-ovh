@@ -20,6 +20,7 @@ func getFlavorAndImage(project, region string) (string, string, error) {
 		ID     string `json:"id"`
 		Type   string `json:"type"`
 		OSType string `json:"osType"`
+		Name   string `json:"name"`
 	}
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/flavor?region=%s", url.PathEscape(project), url.QueryEscape(region))
@@ -30,6 +31,10 @@ func getFlavorAndImage(project, region string) (string, string, error) {
 	}
 
 	for _, flav := range response {
+		if flav.Name != "b2-7" {
+			continue
+		}
+
 		endpoint = fmt.Sprintf("/cloud/project/%s/image?region=%s&osType=%s&flavorType=%s",
 			url.PathEscape(project),
 			url.QueryEscape(region),
@@ -219,6 +224,76 @@ func TestAccCloudProjectInstance_withSSHKeyCreate(t *testing.T) {
 					resource.TestCheckResourceAttr("ovh_cloud_project_instance.instance", "image_id", image),
 					resource.TestCheckResourceAttr("ovh_cloud_project_instance.instance", "region", region),
 					resource.TestCheckResourceAttr("ovh_cloud_project_instance.instance", "name", "TestInstance"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCloudProjectInstance_privateNetwork(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+	flavor, image, err := getFlavorAndImage(serviceName, region)
+	if err != nil {
+		t.Skipf("failed to retrieve a flavor and an image: %s", err)
+	}
+
+	networkName := acctest.RandomWithPrefix(test_prefix)
+
+	var testCreateInstance = fmt.Sprintf(`
+			resource "ovh_cloud_project_instance" "instance" {
+				service_name = "%s"
+				region = "%s"
+				billing_period = "hourly"
+				boot_from {
+					image_id = "%s"
+				}
+				flavor {
+					flavor_id = "%s"
+				}
+				name = "TestInstance"
+				ssh_key {
+					name = "%s"
+				}
+				network {
+					private {
+						network_create {
+							name = "%s"
+							vlan_id = 1237
+							subnet{
+								ip_version = 4
+								cidr = "10.0.0.1/20"
+								enable_dhcp = true
+							}
+						}
+					}
+				}
+			}
+		`,
+		serviceName,
+		region,
+		image,
+		flavor,
+		os.Getenv("OVH_CLOUD_PROJECT_SSH_NAME_TEST"),
+		networkName)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloud(t)
+			testAccCheckCloudProjectExists(t)
+		},
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testCreateInstance,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_instance.instance", "id"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_instance.instance", "flavor_name", "b2-7"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_instance.instance", "flavor_id", flavor),
+					resource.TestCheckResourceAttr("ovh_cloud_project_instance.instance", "image_id", image),
+					resource.TestCheckResourceAttr("ovh_cloud_project_instance.instance", "region", region),
+					resource.TestCheckResourceAttr("ovh_cloud_project_instance.instance", "name", "TestInstance"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_instance.instance", "addresses.0.ip"),
 				),
 			},
 		},

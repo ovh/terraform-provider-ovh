@@ -1,7 +1,14 @@
 package ovh
 
 import (
+	"context"
+	"fmt"
+	"net/url"
+	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 )
 
@@ -33,7 +40,52 @@ type SshKeyCreate struct {
 }
 
 type Network struct {
-	Public bool `json:"public"`
+	Public  bool            `json:"public"`
+	Private *PrivateNetwork `json:"private,omitempty"`
+}
+
+type PrivateNetwork struct {
+	FloatingIP       *PrivateNetworkFloatingIP        `json:"floating_ip,omitempty"`
+	FloatingIPCreate *PrivateNetworkFloatingIPCreate  `json:"floatingIpCreate,omitempty"`
+	Gateway          *PrivateNetworkGateway           `json:"gateway,omitempty"`
+	GatewayCreate    *PrivateNetworkGatewayCreate     `json:"gatewayCreate,omitempty"`
+	IP               string                           `json:"ip,omitempty"`
+	Network          *PrivateNetworkInformation       `json:"network,omitempty"`
+	NetworkCreate    *PrivateNetworkInformationCreate `json:"networkCreate,omitempty"`
+}
+
+type PrivateNetworkFloatingIP struct {
+	ID string `json:"id"`
+}
+
+type PrivateNetworkFloatingIPCreate struct {
+	Description string `json:"description"`
+}
+
+type PrivateNetworkGateway struct {
+	ID string `json:"id"`
+}
+
+type PrivateNetworkGatewayCreate struct {
+	Model string `json:"model"`
+	Name  string `json:"name"`
+}
+
+type PrivateNetworkInformation struct {
+	ID       string `json:"id"`
+	SubnetID string `json:"subnetId"`
+}
+
+type PrivateNetworkInformationCreate struct {
+	Name   string                                `json:"name"`
+	Subnet PrivateNetworkInformationSubnetCreate `json:"subnet"`
+	VlanId *int                                  `json:"vlanId,omitempty"`
+}
+
+type PrivateNetworkInformationSubnetCreate struct {
+	CIDR       string `json:"cidr,omitempty"`
+	EnableDHCP bool   `json:"enableDhcp"`
+	IPVersion  int    `json:"ipVersion,omitempty"`
 }
 
 type CloudProjectInstanceCreateOpts struct {
@@ -72,6 +124,7 @@ type CloudProjectInstanceResponse struct {
 	Region           string           `json:"region"`
 	SshKey           string           `json:"sshKey"`
 	TaskState        string           `json:"taskState"`
+	Status           string           `json:"status"`
 }
 
 func (v CloudProjectInstanceResponse) ToMap() map[string]interface{} {
@@ -84,6 +137,7 @@ func (v CloudProjectInstanceResponse) ToMap() map[string]interface{} {
 	obj["name"] = v.Name
 	obj["ssh_key"] = v.SshKey
 	obj["task_state"] = v.TaskState
+	obj["status"] = v.Status
 
 	addresses := make([]map[string]interface{}, 0, len(v.Addresses))
 	for i := range v.Addresses {
@@ -235,7 +289,91 @@ func GetNetwork(i interface{}) *Network {
 	for _, network := range networkSet {
 		mapping := network.(map[string]interface{})
 		networkOutput.Public = mapping["public"].(bool)
+
+		privateNet, ok := mapping["private"]
+		if !ok || privateNet == nil || privateNet.(*schema.Set).Len() == 0 {
+			continue
+		}
+
+		for _, priv := range privateNet.(*schema.Set).List() {
+			networkOutput.Private = &PrivateNetwork{}
+			private := priv.(map[string]interface{})
+
+			if floatingIP, ok := private["floating_ip"]; ok {
+				for _, float := range floatingIP.(*schema.Set).List() {
+					params := float.(map[string]interface{})
+					networkOutput.Private.FloatingIP = &PrivateNetworkFloatingIP{
+						ID: params["id"].(string),
+					}
+				}
+			}
+
+			if floatingIPCreate, ok := private["floating_ip_create"]; ok {
+				for _, float := range floatingIPCreate.(*schema.Set).List() {
+					params := float.(map[string]interface{})
+					networkOutput.Private.FloatingIPCreate = &PrivateNetworkFloatingIPCreate{
+						Description: params["description"].(string),
+					}
+				}
+			}
+
+			if gateway, ok := private["gateway"]; ok {
+				for _, gateway := range gateway.(*schema.Set).List() {
+					params := gateway.(map[string]interface{})
+					networkOutput.Private.Gateway = &PrivateNetworkGateway{
+						ID: params["id"].(string),
+					}
+				}
+			}
+
+			if gatewayCreate, ok := private["gateway_create"]; ok {
+				for _, gateway := range gatewayCreate.(*schema.Set).List() {
+					params := gateway.(map[string]interface{})
+					networkOutput.Private.GatewayCreate = &PrivateNetworkGatewayCreate{
+						Model: params["model"].(string),
+						Name:  params["name"].(string),
+					}
+				}
+			}
+
+			networkOutput.Private.IP = private["ip"].(string)
+
+			if network, ok := private["network"]; ok {
+				for _, net := range network.(*schema.Set).List() {
+					params := net.(map[string]interface{})
+					networkOutput.Private.Network = &PrivateNetworkInformation{
+						ID:       params["id"].(string),
+						SubnetID: params["subnet_id"].(string),
+					}
+				}
+			}
+
+			if networkCreate, ok := private["network_create"]; ok {
+				for _, net := range networkCreate.(*schema.Set).List() {
+					params := net.(map[string]interface{})
+					networkOutput.Private.NetworkCreate = &PrivateNetworkInformationCreate{
+						Name: params["name"].(string),
+					}
+
+					if vlanID, ok := params["vlan_id"]; ok {
+						intVlanID := vlanID.(int)
+						networkOutput.Private.NetworkCreate.VlanId = &intVlanID
+					}
+
+					for _, subnet := range params["subnet"].(*schema.Set).List() {
+						subnetParams := subnet.(map[string]interface{})
+						networkOutput.Private.NetworkCreate.Subnet = PrivateNetworkInformationSubnetCreate{
+							CIDR:       subnetParams["cidr"].(string),
+							EnableDHCP: subnetParams["enable_dhcp"].(bool),
+							IPVersion:  subnetParams["ip_version"].(int),
+						}
+					}
+				}
+			}
+		}
+
 	}
+
 	return &networkOutput
 }
 
@@ -251,4 +389,27 @@ func (cpir *CloudProjectInstanceCreateOpts) FromResource(d *schema.ResourceData)
 	cpir.Name = d.Get("name").(string)
 	cpir.AvailabilityZone = helpers.GetNilStringPointerFromData(d, "availability_zone")
 	cpir.UserData = helpers.GetNilStringPointerFromData(d, "user_data")
+}
+
+func waitForCloudProjectInstance(ctx context.Context, c *ovh.Client, serviceName, region, instance string) error {
+	endpoint := fmt.Sprintf("/cloud/project/%s/region/%s/instance/%s", url.PathEscape(serviceName), url.PathEscape(region), url.PathEscape(instance))
+
+	err := retry.RetryContext(ctx, 60*time.Minute, func() *retry.RetryError {
+
+		ro := &CloudProjectInstanceResponse{}
+		if err := c.GetWithContext(ctx, endpoint, ro); err != nil {
+			return retry.NonRetryableError(fmt.Errorf("error calling Get %s:\n\t %q", endpoint, err))
+		}
+
+		switch ro.Status {
+		case "ERROR", "UNKNOWN":
+			return retry.NonRetryableError(fmt.Errorf("invalid status for instance: %q", ro.Status))
+		case "ACTIVE":
+			return nil
+		default:
+			return retry.RetryableError(fmt.Errorf("waiting for instance %s to be in state ACTIVE", ro.Id))
+		}
+	})
+
+	return err
 }
