@@ -98,6 +98,11 @@ func dataSourceCloudProjectInstance() *schema.Resource {
 				Description: "Instance task state",
 				Computed:    true,
 			},
+			"status": {
+				Type:        schema.TypeString,
+				Description: "Instance status",
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -146,6 +151,7 @@ func dataSourceCloudProjectInstanceRead(d *schema.ResourceData, meta interface{}
 	d.Set("availability_zone", res.AvailabilityZone)
 	d.Set("task_state", res.TaskState)
 	d.Set("attached_volumes", attachedVolumes)
+	d.Set("status", res.Status)
 
 	return nil
 }
