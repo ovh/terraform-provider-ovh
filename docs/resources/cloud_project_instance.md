@@ -39,7 +39,28 @@ The following arguments are supported:
 * `region` - (Required, Forces new resource) Instance region
 * `billing_period` - (Required, Forces new resource) Billing period - hourly or monthly
 * `network` - (Required, Forces new resource) Create network interfaces
-  * `public` - (Optional, Forces new resource) Set the new instance as public boolean
+  * `public` - (Optional, Forces new resource) Set the new instance as public
+  * `private` - (Optional, Forces new resource) Private network information
+    * `floating_ip` - (Optional, Forces new resource) Existing floating IP
+      * `id` - (Optional, Forces new resource) Floating IP ID
+    * `floating_ip_create` - (Optional, Forces new resource) Information to create a new floating IP
+      * `description` - (Optional, Forces new resource) Floating IP description
+    * `gateway` - (Optional, Forces new resource) Existing gateway
+      * `id` - (Optional, Forces new resource) Gateway ID
+    * `gateway_create` - (Optional, Forces new resource) Information to create a new gateway
+      * `model` - (Optional, Forces new resource) Gateway model (s | m | l)
+      * `name` - (Optional, Forces new resource) Gateway name
+    * `ip` - (Optional, Forces new resource) Instance IP in the private network
+    * `network` - (Optional, Forces new resource) Existing private network
+      * `id` - (Optional, Forces new resource) Network ID
+      * `subnet_id` - (Optional, Forces new resource) Existing subnet ID
+    * network_create - (Optional, Forces new resource) Information to create a new private network
+      * `name` - (Optional, Forces new resource) Network name
+      * `vlan_id` - (Optional, Forces new resource) Network vlan ID
+      * `subnet` - (Optional, Forces new resource) New subnet information
+        * `cidr` - (Optional, Forces new resource) Subnet range in CIDR notation
+        * `enable_dhcp` - (Optional, Forces new resource) Whether to enable DHCP
+        * `ip_version` - (Optional, Forces new resource) IP version
 * `flavor` - (Required, Forces new resource) Flavor information
   * `flavor_id` - (Required, Forces new resource) Flavor ID. Flavors can be retrieved using `GET /cloud/project/{serviceName}/flavor`
 * `boot_from` - (Required, Forces new resource) Boot the instance from an image or a volume
@@ -74,3 +95,4 @@ The following attributes are exported:
 * `name` - Instance name
 * `image_id` - Image id
 * `task_state` - Instance task state
+* `status` - Instance status

@@ -101,6 +101,11 @@ func dataSourceCloudProjectInstances() *schema.Resource {
 							Description: "SSH Key pair name",
 							Computed:    true,
 						},
+						"status": {
+							Type:        schema.TypeString,
+							Description: "Instance status",
+							Computed:    true,
+						},
 						"task_state": {
 							Type:        schema.TypeString,
 							Description: "Instance task state",
