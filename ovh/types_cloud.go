@@ -75,7 +75,7 @@ type CloudProjectSubOperation struct {
 func waitForCloudProjectOperation(ctx context.Context, c *ovh.Client, serviceName, operationId, actionType string) (string, error) {
 	endpoint := fmt.Sprintf("/cloud/project/%s/operation/%s", url.PathEscape(serviceName), url.PathEscape(operationId))
 	resourceID := ""
-	err := retry.RetryContext(ctx, 10*time.Minute, func() *retry.RetryError {
+	err := retry.RetryContext(ctx, 60*time.Minute, func() *retry.RetryError {
 		ro := &CloudProjectOperationResponse{}
 		if err := c.GetWithContext(ctx, endpoint, ro); err != nil {
 			return retry.NonRetryableError(err)

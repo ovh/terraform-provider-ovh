@@ -182,13 +182,173 @@ func resourceCloudProjectInstance() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 				MaxItems:    1,
-				Description: "Create network interfaces",
+				Description: "Network information",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"public": {
 							Type:        schema.TypeBool,
 							Description: "Set the new instance as public",
 							Optional:    true,
+						},
+						"private": {
+							Type:        schema.TypeSet,
+							Optional:    true,
+							ForceNew:    true,
+							MaxItems:    1,
+							Description: "Private network information",
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"floating_ip": {
+										Type:        schema.TypeSet,
+										Optional:    true,
+										MaxItems:    1,
+										Description: "Existing floating IP",
+										ForceNew:    true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"id": {
+													Type:        schema.TypeString,
+													Description: "Floating IP ID",
+													Optional:    true,
+												},
+											},
+										},
+									},
+
+									"floating_ip_create": {
+										Type:        schema.TypeSet,
+										Optional:    true,
+										MaxItems:    1,
+										Description: "Information to create a new floating IP",
+										ForceNew:    true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"description": {
+													Type:        schema.TypeString,
+													Description: "Floating IP description",
+													Optional:    true,
+												},
+											},
+										},
+									},
+
+									"gateway": {
+										Type:        schema.TypeSet,
+										Optional:    true,
+										MaxItems:    1,
+										Description: "Existing gateway",
+										ForceNew:    true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"id": {
+													Type:        schema.TypeString,
+													Description: "Existing gateway ID",
+													Optional:    true,
+												},
+											},
+										},
+									},
+
+									"gateway_create": {
+										Type:        schema.TypeSet,
+										Optional:    true,
+										MaxItems:    1,
+										Description: "Information to create a new gateway",
+										ForceNew:    true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"model": {
+													Type:         schema.TypeString,
+													Description:  "Gateway model",
+													Optional:     true,
+													ValidateFunc: helpers.ValidateEnum([]string{"s", "m", "l"}),
+												},
+												"name": {
+													Type:        schema.TypeString,
+													Description: "Gateway name",
+													Optional:    true,
+												},
+											},
+										},
+									},
+
+									"ip": {
+										Type:        schema.TypeString,
+										Optional:    true,
+										Description: "Instance IP in the private network",
+										ForceNew:    true,
+									},
+
+									"network": {
+										Type:        schema.TypeSet,
+										Optional:    true,
+										MaxItems:    1,
+										Description: "Existing private network",
+										ForceNew:    true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"id": {
+													Type:        schema.TypeString,
+													Description: "Existing network ID",
+													Optional:    true,
+												},
+												"subnet_id": {
+													Type:        schema.TypeString,
+													Description: "Existing subnet ID",
+													Optional:    true,
+												},
+											},
+										},
+									},
+
+									"network_create": {
+										Type:        schema.TypeSet,
+										Optional:    true,
+										MaxItems:    1,
+										Description: "Information to create a new private network",
+										ForceNew:    true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"name": {
+													Type:        schema.TypeString,
+													Description: "Network name",
+													Optional:    true,
+												},
+												"subnet": {
+													Type:        schema.TypeSet,
+													Optional:    true,
+													MaxItems:    1,
+													Description: "New subnet information",
+													ForceNew:    true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"cidr": {
+																Type:        schema.TypeString,
+																Description: "Subnet range in CIDR notation",
+																Optional:    true,
+															},
+															"enable_dhcp": {
+																Type:     schema.TypeBool,
+																Optional: true,
+															},
+															"ip_version": {
+																Type:        schema.TypeInt,
+																Description: "IP version",
+																Optional:    true,
+															},
+														},
+													},
+												},
+												"vlan_id": {
+													Type:        schema.TypeInt,
+													Description: "Network vlan ID",
+													Optional:    true,
+												},
+											},
+										},
+									},
+								},
+							},
 						},
 					},
 				},
@@ -252,6 +412,11 @@ func resourceCloudProjectInstance() *schema.Resource {
 				Description: "Instance task state",
 				Computed:    true,
 			},
+			"status": {
+				Type:        schema.TypeString,
+				Description: "Instance status",
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -280,6 +445,10 @@ func resourceCloudProjectInstanceCreate(ctx context.Context, d *schema.ResourceD
 
 	d.SetId(instanceID)
 
+	if err := waitForCloudProjectInstance(ctx, config.OVHClient, serviceName, region, instanceID); err != nil {
+		return diag.Errorf("error waiting for instance to be ready: %s", err)
+	}
+
 	return resourceCloudProjectInstanceRead(ctx, d, meta)
 }
 
@@ -305,6 +474,7 @@ func resourceCloudProjectInstanceRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("image_id", r.ImageId)
 	d.Set("region", r.Region)
 	d.Set("task_state", r.TaskState)
+	d.Set("status", r.Status)
 	d.Set("id", r.Id)
 
 	addresses := make([]map[string]interface{}, 0, len(r.Addresses))
