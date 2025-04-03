@@ -102,31 +102,29 @@ resource "ovh_dedicated_server" "server" {
 * `rescue_ssh_key` - Public SSH Key used in the rescue mode
 * `root_device` - Root device of the server
 * `state` - All states a Dedicated can in (error, hacked, hackedBlocked, ok)
-* `keep_service_after_destroy` - Avoid termination of the service when deleting the resource (when using this parameter, make sure to apply your configuration before running the destroy so that the value is set in the state)
-* `prevent_install_on_create` - Prevent server installation after it has been delivered
-* `prevent_install_on_import` - Defines whether a reinstallation of the server is allowed after importing it if there is a modification on the installation parameters
 
 ### Arguments used to reinstall a dedicated server
+
 * `os` - Operating System to install
 * `customizations` - Customization of the OS configuration
-  * `configDriveUserData` -Config Drive UserData
-  * `efiBootloaderPath` - Path of the EFI bootloader from the OS installed on the server
+  * `config_drive_user_data` - Config Drive UserData
+  * `efi_bootloader_path` - Path of the EFI bootloader from the OS installed on the server
   * `hostname` - Custom hostname
-  * `httpHeaders` - Image HTTP Headers
-  * `imageCheckSum` - Image checksum
-  * `imageCheckSumType` - Checksum type
-  * `imageType` - Image Type
-  * `imageURL` - Image URL
+  * `http_headers` - Image HTTP Headers
+  * `image_check_sum` - Image checksum
+  * `image_check_sum_type` - Checksum type
+  * `image_type` - Image Type
+  * `image_url` - Image URL
   * `language` - Display Language
-  * `postInstallationScript` - Post-Installation Script
-  * `postInstallationScriptExtension` - Post-Installation Script File Extension
-  * `sshKey` - SSH Public Key
+  * `post_installation_script` - Post-Installation Script
+  * `post_installation_script_extension` - Post-Installation Script File Extension
+  * `ssh_key` - SSH Public Key
 * `storage` - Storage customization
-  * `diskGroupId` - Disk group id
-  * `hardwareRaid` - Hardware Raid configurations
+  * `disk_group_id` - Disk group id
+  * `hardware_raid` - Hardware Raid configurations
     * `arrays` - Number of arrays
     * `disks` - Total number of disks in the disk group involved in the hardware raid configuration
-    * `raidLevel` - Hardware raid type
+    * `raid_level` - Hardware raid type
     * `spares` - Number of disks in the disk group involved in the spare
   * `partitioning` - Partitioning configuration
     * `disks` - Total number of disks in the disk group involved in the partitioning configuration
@@ -139,24 +137,13 @@ resource "ovh_dedicated_server" "server" {
       * `raid_level` - Software raid type
       * `size` - Partition size in MiB
     * `scheme_name` - Partitioning scheme (if applicable with selected operating system)
-* `properties` - (Map string, string) Arbitrary properties to pass to cloud-init's config drive datasource
+* `properties` - Arbitrary properties to pass to cloud-init's config drive datasource
 
-#### Legacy arguments, will be removed in version v2.0.0
+### Arguments used to control the lifecycle of a dedicated server
 
-* `details` - Details object when reinstalling server (see https://eu.api.ovh.com/console/?section=%2Fdedicated%2Fserver&branch=v1#post-/dedicated/server/-serviceName-/install/start)
-  * `custom_hostname` - Personnal hostname to use in server reinstallation
-  * `disk_group_id` - Disk group id to process install on (only available for some templates)
-  * `no_raid` - Whether you want to install only on the first disk
-  * `soft_raid_devices` - Number of devices to use for system's software RAID
-* `partition_scheme_name` - Partition scheme name
-* `template_name` - Template name. You can check [the following API](https://eu.api.ovh.com/console/?section=%2Fdedicated%2FinstallationTemplate&branch=v1#get-/dedicated/installationTemplate) to list the available base templates
-* `user_metadata` - Metadata
-  * `key`
-  * `value`
-
-The `user_metadata` block supports many arguments, here is a non-exhaustive list depending on the OS:
--[See OS questions](https://help.ovhcloud.com/csm/en-dedicated-servers-api-os-installation?id=kb_article_view&sysparm_article=KB0061951#os-questions)
--[See documentation](https://help.ovhcloud.com/csm/en-ie-dedicated-servers-api-os-installation?id=kb_article_view&sysparm_article=KB0061950#create-an-os-installation-task) to get more information
+* `keep_service_after_destroy` - Avoid termination of the service when deleting the resource (when using this parameter, make sure to apply your configuration before running the destroy so that the value is set in the state)
+* `prevent_install_on_create` - Prevent server installation after it has been delivered
+* `prevent_install_on_import` - Defines whether a reinstallation of the server is allowed after importing it if there is a modification on the installation parameters
 
 ## Attributes Reference
 
