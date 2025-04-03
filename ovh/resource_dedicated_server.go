@@ -376,47 +376,34 @@ func (r *dedicatedServerResource) reinstallDedicatedServer(ctx context.Context, 
 		serviceName = stateData.ServiceName.ValueString()
 	}
 
-	var shouldReinstallWithV1, shouldReinstallWithV2 bool
+	var shouldReinstall bool
 
 	switch stateData {
 	// Check if we should install server right after it has been delivered
 	case nil:
-		if planData.TemplateName.ValueString() != "" {
-			shouldReinstallWithV1 = true
-		} else if planData.Os.ValueString() != "" {
-			shouldReinstallWithV2 = true
+		if planData.Os.ValueString() != "" {
+			shouldReinstall = true
 		}
 
 	// Classical update when resource already exists.
 	// Checks state data against plan data to decide if a reinstall should be triggered.
 	default:
-		if stateData.TemplateName.ValueString() != planData.TemplateName.ValueString() ||
-			!stateData.UserMetadata.Equal(planData.UserMetadata) {
-			shouldReinstallWithV1 = true
-		} else if stateData.Os.ValueString() != planData.Os.ValueString() ||
+		if stateData.Os.ValueString() != planData.Os.ValueString() ||
 			!stateData.Customizations.Equal(planData.Customizations) ||
 			!stateData.Storage.Equal(planData.Storage) ||
 			!stateData.Properties.Equal(planData.Properties) {
-			shouldReinstallWithV2 = true
+			shouldReinstall = true
 		}
 	}
 
 	// Trigger server reinstallation
-	endpoint := "/dedicated/server/" + url.PathEscape(serviceName) + "/reinstall"
 	if shouldReinstall {
 		log.Print("Triggering server reinstallation")
 
 		task := DedicatedServerTask{}
-		if shouldReinstallWithV1 {
-			endpoint := "/dedicated/server/" + url.PathEscape(serviceName) + "/install/start"
-			if err := r.config.OVHClient.Post(endpoint, planData.ToReinstall(), &task); err != nil {
-				return fmt.Errorf("error calling Post %s", endpoint)
-			}
-		} else {
-			endpoint := "/dedicated/server/" + url.PathEscape(serviceName) + "/reinstall"
-			if err := r.config.OVHClient.Post(endpoint, planData.ToReinstallV2(), &task); err != nil {
-				return fmt.Errorf("error calling Post %s", endpoint)
-			}
+		endpoint := "/dedicated/server/" + url.PathEscape(serviceName) + "/reinstall"
+		if err := r.config.OVHClient.Post(endpoint, planData.ToReinstall(), &task); err != nil {
+			return fmt.Errorf("error calling Post %s", endpoint)
 		}
 
 		// Wait for reinstallation completion
