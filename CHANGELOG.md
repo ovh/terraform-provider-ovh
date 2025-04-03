@@ -1,3 +1,11 @@
+## 1.7.0 (April 3, 2025)
+
+🎉 Features:
+
+* `r/ovh_dedicated_server`: Added new fields to control a dedicated server reinstallation: `prevent_install_on_create`, `prevent_install_on_import`, `os`, `storage`, `customizations`, and `properties`. A new parameter has also been added to avoid terminating the OVHcloud service when removing the resource in Terraform: `keep_service_after_destroy` ([#921](https://github.com/ovh/terraform-provider-ovh/pull/921))
+
+❤️ Thanks for your contributions ❤️
+
 ## 1.6.0 (February 6, 2025)
 
 ⚙️ General:
