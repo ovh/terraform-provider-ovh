@@ -388,7 +388,8 @@ func (r *dedicatedServerResource) reinstallDedicatedServer(ctx context.Context, 
 	// Classical update when resource already exists.
 	// Checks state data against plan data to decide if a reinstall should be triggered.
 	default:
-		if stateData.Os.ValueString() != planData.Os.ValueString() ||
+		if planData.Os.ValueString() != "" &&
+			stateData.Os.ValueString() != planData.Os.ValueString() ||
 			!stateData.Customizations.Equal(planData.Customizations) ||
 			!stateData.Storage.Equal(planData.Storage) ||
 			!stateData.Properties.Equal(planData.Properties) {
