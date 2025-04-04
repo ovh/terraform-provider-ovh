@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 
 	"github.com/ovh/go-ovh/ovh"
 )
@@ -17,6 +18,17 @@ func init() {
 		Name: "ovh_vrack_ipv6",
 		F:    testSweepVrackIPv6,
 	})
+}
+
+func testAccVrackIPv6Config(resourceName, serviceName, block, slaac string) string {
+	return fmt.Sprintf(`
+	resource "ovh_vrack_ipv6" "%s" {
+		service_name = "%s"
+		block        = "%s"
+		bridged_subrange {
+			slaac = "%s"
+		}
+	}`, resourceName, serviceName, block, slaac)
 }
 
 func testSweepVrackIPv6(region string) error {
@@ -33,7 +45,7 @@ func testSweepVrackIPv6(region string) error {
 
 	ipBlock := os.Getenv("OVH_IP_V6_BLOCK_TEST")
 	if ipBlock == "" {
-		log.Print("[DEBUG] OVH_CLOUD_PROJECT_SERVICE_TEST is not set. No vrack_ipv6 to sweep")
+		log.Print("[DEBUG] OVH_IP_V6_BLOCK_TEST is not set. No vrack_ipv6 to sweep")
 		return nil
 	}
 
@@ -67,21 +79,53 @@ func TestAccVrackIPv6_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheckVRack(t)
+			testAccPreCheckIPv6VRack(t)
 		},
-		Providers: testAccProviders,
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(`
-				resource "ovh_vrack_ipv6" "vrack-ipv6" {
-				  service_name = "%s"
-				  block        = "%s"
-				}
-				`, serviceName, ipBlock),
+				Config: testAccVrackIPv6Config("test-vrack-ipv6-basic", serviceName, ipBlock, "enabled"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_vrack_ipv6.vrack-ipv6", "service_name", serviceName),
-					resource.TestCheckResourceAttr("ovh_vrack_ipv6.vrack-ipv6", "block", ipBlock),
+					resource.TestCheckResourceAttr("ovh_vrack_ipv6.test-vrack-ipv6-basic", "service_name", serviceName),
+					resource.TestCheckResourceAttr("ovh_vrack_ipv6.test-vrack-ipv6-basic", "block", ipBlock),
+					resource.TestCheckResourceAttrSet("ovh_vrack_ipv6.test-vrack-ipv6-basic", "bridged_subrange.0.subrange"),
+					resource.TestCheckResourceAttrSet("ovh_vrack_ipv6.test-vrack-ipv6-basic", "bridged_subrange.0.gateway"),
+					resource.TestCheckResourceAttr("ovh_vrack_ipv6.test-vrack-ipv6-basic", "bridged_subrange.0.slaac", "enabled"),
 				),
+			},
+			{
+				// update the Slaac status of the bridged subrange.
+				Config: testAccVrackIPv6Config("test-vrack-ipv6-basic", serviceName, ipBlock, "disabled"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_vrack_ipv6.test-vrack-ipv6-basic", "service_name", serviceName),
+					resource.TestCheckResourceAttr("ovh_vrack_ipv6.test-vrack-ipv6-basic", "block", ipBlock),
+					resource.TestCheckResourceAttrSet("ovh_vrack_ipv6.test-vrack-ipv6-basic", "bridged_subrange.0.subrange"),
+					resource.TestCheckResourceAttrSet("ovh_vrack_ipv6.test-vrack-ipv6-basic", "bridged_subrange.0.gateway"),
+					resource.TestCheckResourceAttr("ovh_vrack_ipv6.test-vrack-ipv6-basic", "bridged_subrange.0.slaac", "disabled"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVrackIPv6_import(t *testing.T) {
+	serviceName := os.Getenv("OVH_VRACK_SERVICE_TEST")
+	ipBlock := os.Getenv("OVH_IP_V6_BLOCK_IMPORT_TEST")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckIPv6ImportVRack(t)
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ResourceName: "ovh_vrack_ipv6.test-vrack-ipv6-import",
+				ImportState:  true,
+				// ImportStateVerify: true,
+				Config: testAccVrackIPv6Config("test-vrack-ipv6-import", serviceName, ipBlock, "enabled"),
+				ImportStateIdFunc: func(state *terraform.State) (string, error) {
+					return fmt.Sprintf("%s,%s", serviceName, ipBlock), nil
+				},
 			},
 		},
 	})
