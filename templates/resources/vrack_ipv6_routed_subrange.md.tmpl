@@ -1,0 +1,36 @@
+---
+subcategory : "vRack"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_vrack_ipv6_routed_subrange (Resource)
+
+Route a subrange of your IP v6 block into your vrack.
+
+## Example Usage
+
+{{tffile "examples/resources/vrack_ipv6_routed_subrange/example_1.tf"}}
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `service_name` - (Required) The internal name of your vrack
+* `block` - (Required) Your IPv6 block.
+* `routed_subrange` (String) The subrange to route into your vRack, IPv6 CIDR notation (e.g., 2001:41d0::/128)
+* `nexthop` (String) Next-hop IPv6 address (e.g., 2001:41d0:1:1994::1)
+
+## Attributes Reference
+
+No additional attribute is exported.
+
+## Import
+
+Routing of an subrange into your vRack can be imported using the `service_name` (vRack identifier), the `block` (IPv6 block) and the `routed_subrange (IPv6 block)`, separated by "," E.g.,
+
+```bash
+$ terraform import ovh_vrack_ipv6_routed_subrange.myroutedsubrange "<service_name>,<block>,<routed_subrange>"
+```
