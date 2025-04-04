@@ -208,3 +208,72 @@ func TestAccCloudProjectDatabase_invalidBackupTime(t *testing.T) {
 		},
 	})
 }
+
+func TestAccCloudProjectDatabase_invalidBackupTimeUpdate(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	version := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_OPENSEARCH_VERSION_TEST")
+	if version == "" {
+		version = os.Getenv("OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST")
+	}
+	region := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_REGION_TEST")
+	flavor := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_FLAVOR_TEST")
+
+	config := fmt.Sprintf(`
+		resource "ovh_cloud_project_database" "db" {
+			service_name = "%s"
+			description  = "Invalid opensearch"
+			engine       = "opensearch"
+			version      = "%s"
+			plan         = "business"
+			flavor       = "%s"
+			nodes {
+				region     = "%s"
+			}
+			nodes {
+				region     = "%s"
+			}
+			nodes {
+				region     = "%s"
+			}
+		}
+	`, serviceName, version, flavor, region, region, region)
+
+	configUpdated := fmt.Sprintf(`
+		resource "ovh_cloud_project_database" "db" {
+			service_name = "%s"
+			description  = "Invalid opensearch"
+			engine       = "opensearch"
+			version      = "%s"
+			plan         = "business"
+			backup_time  = "00:11:00"
+			flavor       = "%s"
+			nodes {
+				region     = "%s"
+			}
+			nodes {
+				region     = "%s"
+			}
+			nodes {
+				region     = "%s"
+			}
+		}
+	`, serviceName, version, flavor, region, region, region)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheckCloudDatabaseNoEngine(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(
+						"ovh_cloud_project_database.db", "backup_time"),
+				),
+			},
+			{
+				Config:      configUpdated,
+				ExpectError: regexp.MustCompile(`backup_time is not customizable for engine \\\"opensearch\\\"`),
+			},
+		},
+	})
+}

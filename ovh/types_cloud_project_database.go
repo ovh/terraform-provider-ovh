@@ -317,11 +317,12 @@ func (opts *CloudProjectDatabaseUpdateOpts) fromResource(d *schema.ResourceData)
 	if err != nil {
 		return nil, err
 	}
-	time := d.Get("backup_time").(string)
-	if time != "" && slices.Contains(enginesWithoutBackupTime, engine) {
+
+	if d.HasChange("backup_time") && slices.Contains(enginesWithoutBackupTime, engine) {
 		return nil, fmt.Errorf("backup_time is not customizable for engine %q", engine)
 	}
 
+	time := d.Get("backup_time").(string)
 	if engine != "kafka" && (len(regions) != 0 || time != "") {
 		opts.Backups = &CloudProjectDatabaseBackups{
 			Regions: regions,
