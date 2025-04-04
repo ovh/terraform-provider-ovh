@@ -282,11 +282,3 @@ The following attributes are exported:
 * `function` - Function name (should be `hardInstall`).
 * `start_date` - Task creation date in RFC3339 format.
 * `status` - Task status (should be `done`)
-
-## Import
-
-Installation task can be imported using the `service_name` (`nsXXXX.ip...`) of the baremetal server, the `operating_system` used and ths `task_id`, separated by "/" E.g.,
-
-```bash
-terraform import ovh_dedicated_server_reinstall_task nsXXXX.ipXXXX/operating_system/12345
-```
