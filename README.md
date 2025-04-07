@@ -3,8 +3,9 @@ Terraform OVH Provider
 
 The OVH Provider allows Terraform to manage [OVH](https://www.ovhcloud.com/) resources.
 
-[![](https://img.shields.io/github/license/ovh/terraform-provider-ovh)](LICENSE)
-[![](https://img.shields.io/github/release-date/ovh/terraform-provider-ovh)](https://github.com/ovh/terraform-provider-ovh/releases)
+[![License](https://img.shields.io/github/license/ovh/terraform-provider-ovh)](LICENSE)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/ovh/terraform-provider-ovh)](https://github.com/ovh/terraform-provider-ovh/releases/latest)
+[![Release Date](https://img.shields.io/github/release-date/ovh/terraform-provider-ovh)](https://github.com/ovh/terraform-provider-ovh/releases)
 ![Terraform Provider Downloads](https://img.shields.io/terraform/provider/dm/786)
 ![Website](https://img.shields.io/badge/website-terraform?color=blue)
 
