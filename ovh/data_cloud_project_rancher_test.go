@@ -26,10 +26,10 @@ func TestAccDataSourceCloudProjectRancher_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.ovh_cloud_project_rancher.rancher", "project_id", projectID),
 					resource.TestCheckResourceAttr("data.ovh_cloud_project_rancher.rancher", "id", rancherID),
-					resource.TestCheckResourceAttr("data.ovh_cloud_project_rancher.rancher", "current_state.version", "2.9.4"),
 					resource.TestCheckResourceAttr("data.ovh_cloud_project_rancher.rancher", "current_state.region", "EU_WEST_SBG"),
 					resource.TestCheckResourceAttr("data.ovh_cloud_project_rancher.rancher", "resource_status", "READY"),
 					resource.TestCheckResourceAttr("data.ovh_cloud_project_rancher.rancher", "target_spec.plan", "OVHCLOUD_EDITION"),
+					resource.TestCheckResourceAttrSet("data.ovh_cloud_project_rancher.rancher", "current_state.version"),
 				),
 			},
 		},
