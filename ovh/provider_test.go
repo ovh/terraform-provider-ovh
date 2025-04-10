@@ -367,6 +367,42 @@ func testAccPreCheckDedicatedCloudDatacenter(t *testing.T) {
 	checkEnvOrSkip(t, "OVH_VRACK_TARGET_SERVICE_TEST")
 }
 
+// Checks that the environment variables needed for the /vrack/{service}/ipv6/{ipv6} acceptance tests
+// are set.
+func testAccPreCheckIPv6VRack(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_VRACK_SERVICE_TEST")
+	checkEnvOrSkip(t, "OVH_IP_V6_BLOCK_TEST")
+}
+
+// Checks that the environment variables needed for the /vrack/{service}/ipv6/{ipv6} import acceptance tests
+// are set.
+func testAccPreCheckIPv6ImportVRack(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_VRACK_SERVICE_TEST")
+	checkEnvOrSkip(t, "OVH_IP_V6_BLOCK_IMPORT_TEST")
+}
+
+// Checks that the environment variables needed for the /vrack/{service}/ipv6/{ipv6}/routedSubrange{subrange} acceptance tests
+// are set.
+func testAccPreCheckIPv6RoutedSubrangeVRack(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_VRACK_SERVICE_TEST")
+	checkEnvOrSkip(t, "OVH_IP_V6_BLOCK_TEST")
+	checkEnvOrSkip(t, "OVH_IP_V6_ROUTED_SUBRANGE_TEST")
+	checkEnvOrSkip(t, "OVH_IP_V6_ROUTED_SUBRANGE_NEXTHOP_TEST")
+}
+
+// Checks that the environment variables needed for the /vrack/{service}/ipv6/{ipv6}/routedSubrange{subrange} import acceptance tests
+// are set.
+func testAccPreCheckIPv6RoutedSubrangeImportVRack(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_VRACK_SERVICE_TEST")
+	checkEnvOrSkip(t, "OVH_IP_V6_BLOCK_TEST")
+	checkEnvOrSkip(t, "OVH_IP_V6_ROUTED_SUBRANGE_IMPORT_TEST")
+	checkEnvOrSkip(t, "OVH_IP_V6_ROUTED_SUBRANGE_NEXTHOP_TEST")
+}
+
 // Checks that the environment variables needed for the /ipLoadbalacing acceptance tests
 // are set.
 func testAccPreCheckIpLoadbalancing(t *testing.T) {
