@@ -2,6 +2,7 @@ package ovh
 
 import (
 	"fmt"
+	"log"
 	"net/url"
 	"strings"
 
@@ -12,6 +13,7 @@ import (
 func resourceVrackIpV6() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceVrackIpv6Create,
+		Update: resourceVrackIpv6Update,
 		Read:   resourceVrackIpv6Read,
 		Delete: resourceVrackIpv6Delete,
 		Importer: &schema.ResourceImporter{
@@ -37,6 +39,34 @@ func resourceVrackIpV6() *schema.Resource {
 					return nil, nil
 				},
 			},
+			"bridged_subrange": {
+				Type:        schema.TypeSet,
+				MaxItems:    1,
+				Computed:    true,
+				Optional:    true,
+				Description: "Subrange bridged into your vrack",
+				ForceNew:    false,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"subrange": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "IPv6 CIDR notation (e.g., 2001:41d0::/128)",
+						},
+						"gateway": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Your gateway",
+						},
+						"slaac": {
+							Type:         schema.TypeString,
+							Required:     true,
+							Description:  "Slaac status",
+							ValidateFunc: helpers.ValidateEnum([]string{"disabled", "enabled"}),
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -53,6 +83,10 @@ func resourceVrackIpv6ImportState(d *schema.ResourceData, meta interface{}) ([]*
 	d.SetId(fmt.Sprintf("vrack_%s-block_%s", serviceName, block))
 	d.Set("service_name", serviceName)
 	d.Set("block", block)
+
+	if err := setBridgedSubrangeState(d, meta, serviceName, block); err != nil {
+		return nil, err
+	}
 
 	return []*schema.ResourceData{d}, nil
 }
@@ -74,7 +108,79 @@ func resourceVrackIpv6Create(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error waiting for vrack (%s) to attach ipv6 %v: %s", serviceName, opts, err)
 	}
 
+	optSlaac := (&VrackIPv6BridgedSubrangeSlaacUpdateOpts{}).FromResource(d)
+	if optSlaac.Slaac == "enabled" {
+		var task VrackTask
+		endpoint := fmt.Sprintf("/vrack/%s/ipv6/%s/bridgedSubrange",
+			url.PathEscape(serviceName),
+			url.PathEscape(opts.Block),
+		)
+
+		log.Printf("[DEBUG] Get the subrange bridged into your vrack")
+		var bridgedSubranges []string
+		if err := config.OVHClient.Get(endpoint, &bridgedSubranges); err != nil {
+			return fmt.Errorf("error calling Get %s: %w", endpoint, err)
+		}
+		if len(bridgedSubranges) != 1 {
+			return fmt.Errorf("error getting bridgeSubrange: exactly one should be found")
+		}
+		bridgedSubrange := bridgedSubranges[0]
+
+		log.Printf("[DEBUG] Will set bridged subrange %s Slaac to %s", bridgedSubrange, optSlaac.Slaac)
+		endpoint = fmt.Sprintf("/vrack/%s/ipv6/%s/bridgedSubrange/%s",
+			url.PathEscape(serviceName),
+			url.PathEscape(opts.Block),
+			url.PathEscape(bridgedSubrange),
+		)
+		if err := config.OVHClient.Put(endpoint, optSlaac, &task); err != nil {
+			return fmt.Errorf("error calling Put %s: %q", endpoint, err)
+		}
+
+		if err := waitForVrackTask(&task, config.OVHClient); err != nil {
+			return fmt.Errorf("error waiting for vrack (%s): %s", serviceName, err)
+		}
+	}
 	d.SetId(fmt.Sprintf("vrack_%s-block_%s", serviceName, opts.Block))
+
+	return resourceVrackIpv6Read(d, meta)
+}
+
+func resourceVrackIpv6Update(d *schema.ResourceData, meta interface{}) error {
+	var task VrackTask
+	config := meta.(*Config)
+	serviceName := d.Get("service_name").(string)
+	block := d.Get("block").(string)
+
+	log.Printf("[DEBUG] Get the subrange bridged into your vrack")
+	endpoint := fmt.Sprintf("/vrack/%s/ipv6/%s/bridgedSubrange",
+		url.PathEscape(serviceName),
+		url.PathEscape(block),
+	)
+
+	var bridgedSubranges []string
+	if err := config.OVHClient.Get(endpoint, &bridgedSubranges); err != nil {
+		return fmt.Errorf("error calling Get %s: %w", endpoint, err)
+	}
+	if len(bridgedSubranges) != 1 {
+		return fmt.Errorf("error getting bridgeSubrange: exactly one should be found")
+	}
+	bridgedSubrange := bridgedSubranges[0]
+
+	opts := (&VrackIPv6BridgedSubrangeSlaacUpdateOpts{}).FromResource(d)
+	log.Printf("[DEBUG] Will update bridge subrange %s slaac to: %s", bridgedSubrange, opts.Slaac)
+	endpoint = fmt.Sprintf("/vrack/%s/ipv6/%s/bridgedSubrange/%s",
+		url.PathEscape(serviceName),
+		url.PathEscape(block),
+		url.PathEscape(bridgedSubrange),
+	)
+
+	if err := config.OVHClient.Put(endpoint, opts, &task); err != nil {
+		return fmt.Errorf("error calling Put %s: %q", endpoint, err)
+	}
+
+	if err := waitForVrackTask(&task, config.OVHClient); err != nil {
+		return fmt.Errorf("error waiting for vrack (%s): %s", serviceName, err)
+	}
 
 	return resourceVrackIpv6Read(d, meta)
 }
@@ -94,7 +200,7 @@ func resourceVrackIpv6Read(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("failed to get vrack-ipv6 link: %w", err)
 	}
 
-	return nil
+	return setBridgedSubrangeState(d, meta, serviceName, block)
 }
 
 func resourceVrackIpv6Delete(d *schema.ResourceData, meta interface{}) error {
@@ -118,6 +224,40 @@ func resourceVrackIpv6Delete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId("")
+
+	return nil
+}
+
+// setBridgedSubrangeState set the values of the BridgedSubrange nested resource in the state.
+func setBridgedSubrangeState(d *schema.ResourceData, meta interface{}, serviceName, block string) error {
+	config := meta.(*Config)
+
+	endpoint := fmt.Sprintf("/vrack/%s/ipv6/%s/bridgedSubrange",
+		url.PathEscape(serviceName),
+		url.PathEscape(block),
+	)
+
+	log.Printf("[DEBUG] Get the subrange bridged into your vrack")
+	var bridgedSubranges []string
+	if err := config.OVHClient.Get(endpoint, &bridgedSubranges); err != nil {
+		return fmt.Errorf("error calling Get %s: %w", endpoint, err)
+	}
+
+	if len(bridgedSubranges) != 1 {
+		return fmt.Errorf("error getting bridgeSubrange: exactly one should be found")
+	}
+	endpoint = fmt.Sprintf("/vrack/%s/ipv6/%s/bridgedSubrange/%s",
+		url.PathEscape(serviceName),
+		url.PathEscape(block),
+		url.PathEscape(bridgedSubranges[0]),
+	)
+
+	var bridgedSubrange VrackIPv6BridgedSubrange
+	if err := config.OVHClient.Get(endpoint, &bridgedSubrange); err != nil {
+		return fmt.Errorf("error calling Get %s: %w", endpoint, err)
+	}
+
+	d.Set("bridged_subrange", bridgedSubrange.ToMap())
 
 	return nil
 }
