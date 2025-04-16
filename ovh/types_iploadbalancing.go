@@ -120,7 +120,7 @@ type IPLoadbalancingRefreshPendings []IPLoadbalancingRefreshPending
 type IpLoadbalancingFarmCreateOrUpdateOpts struct {
 	Balance        *string                          `json:"balance,omitempty"`
 	DisplayName    *string                          `json:"displayName,omitempty"`
-	Port           *int                             `json:"port,omitempty"`
+	Port           *int                             `json:"port"`
 	Probe          *IpLoadbalancingFarmBackendProbe `json:"probe,omitempty"`
 	Stickiness     *string                          `json:"stickiness"`
 	VrackNetworkId *int64                           `json:"vrackNetworkId,omitempty"`
@@ -147,7 +147,7 @@ type IpLoadbalancingFarm struct {
 	Balance        *string                          `json:"balance,omitempty"`
 	DisplayName    *string                          `json:"displayName,omitempty"`
 	FarmId         int                              `json:"farmId"`
-	Port           *int                             `json:"port,omitempty"`
+	Port           *int                             `json:"port"`
 	Probe          *IpLoadbalancingFarmBackendProbe `json:"probe,omitempty"`
 	Stickiness     *string                          `json:"stickiness,omitempty"`
 	VrackNetworkId *int64                           `json:"vrackNetworkId,omitempty"`
@@ -527,7 +527,7 @@ type IpLoadbalancingFarmServerCreateOpts struct {
 	Chain                *string `json:"chain,omitempty"`
 	Cookie               *string `json:"cookie,omitempty"`
 	DisplayName          *string `json:"displayName,omitempty"`
-	Port                 *int    `json:"port,omitempty"`
+	Port                 *int    `json:"port"`
 	Probe                *bool   `json:"probe"`
 	ProxyProtocolVersion *string `json:"proxyProtocolVersion,omitempty"`
 	OnMarkedDown         *string `json:"onMarkedDown"`
@@ -542,7 +542,7 @@ type IpLoadbalancingFarmServerUpdateOpts struct {
 	Chain                *string `json:"chain"`
 	Cookie               *string `json:"cookie,omitempty"`
 	DisplayName          *string `json:"displayName"`
-	Port                 *int    `json:"port,omitempty"`
+	Port                 *int    `json:"port"`
 	Probe                *bool   `json:"probe"`
 	ProxyProtocolVersion *string `json:"proxyProtocolVersion"`
 	OnMarkedDown         *string `json:"onMarkedDown"`
