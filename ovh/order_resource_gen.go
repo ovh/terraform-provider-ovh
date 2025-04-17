@@ -169,7 +169,6 @@ func OrderResourceSchema(ctx context.Context) schema.Schema {
 				},
 				CustomType: ovhtypes.NewTfListNestedType[PlanValue](ctx),
 				Optional:   true,
-				Computed:   true,
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.RequiresReplaceIfConfigured(),
 				},
@@ -235,7 +234,6 @@ func OrderResourceSchema(ctx context.Context) schema.Schema {
 				},
 				CustomType: ovhtypes.NewTfListNestedType[PlanOptionValue](ctx),
 				Optional:   true,
-				Computed:   true,
 			},
 		},
 	}
