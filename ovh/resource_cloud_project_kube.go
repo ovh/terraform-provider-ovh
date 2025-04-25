@@ -465,7 +465,7 @@ func resourceCloudProjectKubeCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	log.Printf("[DEBUG] Waiting for kube %s to be READY", res.Id)
-	if err := waitForCloudProjectKubeReady(config.OVHClient, serviceName, res.Id, []string{"INSTALLING"}, []string{"READY"}, d.Timeout(schema.TimeoutCreate)); err != nil {
+	if err := waitForCloudProjectKubeReady(config.OVHClient, serviceName, res.Id, []string{"INSTALLING", "UNKNOWN"}, []string{"READY"}, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("timeout while waiting kube %s to be READY: %w", res.Id, err)
 	}
 
