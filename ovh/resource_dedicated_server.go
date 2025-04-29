@@ -107,7 +107,7 @@ func (r *dedicatedServerResource) Create(ctx context.Context, req resource.Creat
 	}
 
 	// Reinstall server if not blocked by configuration
-	if err := r.reinstallDedicatedServer(ctx, data.PreventInstallOnCreate.ValueBool(), nil, &data); err != nil {
+	if err := r.reinstallDedicatedServer(ctx, data.PreventInstallOnCreate.ValueBool(), false, nil, &data); err != nil {
 		resp.Diagnostics.AddError("failed to reinstall server", err.Error())
 		return
 	}
@@ -283,7 +283,7 @@ func (r *dedicatedServerResource) Update(ctx context.Context, req resource.Updat
 	}
 
 	// Reinstall server (if needed and not blocked)
-	if err := r.reinstallDedicatedServer(ctx, preventReinstall, &stateData, &planData); err != nil {
+	if err := r.reinstallDedicatedServer(ctx, preventReinstall, false, &stateData, &planData); err != nil {
 		resp.Diagnostics.AddError("failed to reinstall server", err.Error())
 		return
 	}
@@ -319,6 +319,11 @@ func (r *dedicatedServerResource) Delete(ctx context.Context, req resource.Delet
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if err := r.runPreDestroyActions(ctx, &data); err != nil {
+		resp.Diagnostics.AddError("failed to run pre-destroy actions", err.Error())
 		return
 	}
 
@@ -361,7 +366,31 @@ func (r *dedicatedServerResource) Delete(ctx context.Context, req resource.Delet
 	}
 }
 
-func (r *dedicatedServerResource) reinstallDedicatedServer(ctx context.Context, preventReinstall bool, stateData, planData *DedicatedServerModel) error {
+func (r *dedicatedServerResource) runPreDestroyActions(ctx context.Context, data *DedicatedServerModel) error {
+	if data.RunActionsBeforeDestroy.IsNull() || data.RunActionsBeforeDestroy.IsUnknown() {
+		return nil
+	}
+
+	elems := data.RunActionsBeforeDestroy.Elements()
+	log.Print("Actions to perform before destroy: ", elems)
+
+	for _, elem := range elems {
+		action := elem.(ovhtypes.TfStringValue).ValueString()
+
+		switch action {
+		case "reinstall_only_os":
+			if err := r.reinstallDedicatedServer(ctx, false, true, nil, data); err != nil {
+				return fmt.Errorf("failed to reinstall server: %w", err)
+			}
+		default:
+			return fmt.Errorf("invalid pre-destroy action given: %q", action)
+		}
+	}
+
+	return nil
+}
+
+func (r *dedicatedServerResource) reinstallDedicatedServer(ctx context.Context, preventReinstall, onlyOS bool, stateData, planData *DedicatedServerModel) error {
 	tflog.Debug(ctx, fmt.Sprintf("Prevent server reinstallation: %t", preventReinstall))
 	tflog.Debug(ctx, fmt.Sprintf("State data is nil: %t", stateData == nil))
 
@@ -403,7 +432,7 @@ func (r *dedicatedServerResource) reinstallDedicatedServer(ctx context.Context, 
 
 		task := DedicatedServerTask{}
 		endpoint := "/dedicated/server/" + url.PathEscape(serviceName) + "/reinstall"
-		if err := r.config.OVHClient.Post(endpoint, planData.ToReinstall(), &task); err != nil {
+		if err := r.config.OVHClient.Post(endpoint, planData.ToReinstall(onlyOS), &task); err != nil {
 			return fmt.Errorf("error calling Post %s", endpoint)
 		}
 

@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -254,6 +255,15 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 			Optional:            true,
 			Description:         "Whether we should avoid terminating the service when destroying the resource",
 			MarkdownDescription: "Whether we should avoid terminating the service when destroying the resource",
+		},
+		"run_actions_before_destroy": schema.SetAttribute{
+			ElementType: ovhtypes.TfStringType{},
+			CustomType:  ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+			Optional:    true,
+			Description: "Actions to run before destroying the resource",
+			Validators: []validator.Set{
+				setvalidator.ValueStringsAre(stringvalidator.OneOf("reinstall_only_os")),
+			},
 		},
 		"link_speed": schema.Int64Attribute{
 			CustomType: ovhtypes.TfInt64Type{},
@@ -673,43 +683,44 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 }
 
 type DedicatedServerModel struct {
-	AvailabilityZone        ovhtypes.TfStringValue                            `tfsdk:"availability_zone" json:"availabilityZone"`
-	BootId                  ovhtypes.TfInt64Value                             `tfsdk:"boot_id" json:"bootId"`
-	BootScript              ovhtypes.TfStringValue                            `tfsdk:"boot_script" json:"bootScript"`
-	CommercialRange         ovhtypes.TfStringValue                            `tfsdk:"commercial_range" json:"commercialRange"`
-	Customizations          CustomizationsValue                               `tfsdk:"customizations" json:"customizations"`
-	Datacenter              ovhtypes.TfStringValue                            `tfsdk:"datacenter" json:"datacenter"`
-	DisplayName             ovhtypes.TfStringValue                            `tfsdk:"display_name" json:"displayName"`
-	EfiBootloaderPath       ovhtypes.TfStringValue                            `tfsdk:"efi_bootloader_path" json:"efiBootloaderPath"`
-	Iam                     IamValue                                          `tfsdk:"iam" json:"iam"`
-	Ip                      ovhtypes.TfStringValue                            `tfsdk:"ip" json:"ip"`
-	LinkSpeed               ovhtypes.TfInt64Value                             `tfsdk:"link_speed" json:"linkSpeed"`
-	Monitoring              ovhtypes.TfBoolValue                              `tfsdk:"monitoring" json:"monitoring"`
-	Name                    ovhtypes.TfStringValue                            `tfsdk:"name" json:"name"`
-	NewUpgradeSystem        ovhtypes.TfBoolValue                              `tfsdk:"new_upgrade_system" json:"newUpgradeSystem"`
-	NoIntervention          ovhtypes.TfBoolValue                              `tfsdk:"no_intervention" json:"noIntervention"`
-	Os                      ovhtypes.TfStringValue                            `tfsdk:"os" json:"os"`
-	PowerState              ovhtypes.TfStringValue                            `tfsdk:"power_state" json:"powerState"`
-	ProfessionalUse         ovhtypes.TfBoolValue                              `tfsdk:"professional_use" json:"professionalUse"`
-	Properties              ovhtypes.TfMapNestedValue[ovhtypes.TfStringValue] `tfsdk:"properties" json:"properties"`
-	Rack                    ovhtypes.TfStringValue                            `tfsdk:"rack" json:"rack"`
-	PreventInstallOnCreate  ovhtypes.TfBoolValue                              `tfsdk:"prevent_install_on_create" json:"-"`
-	PreventInstallOnImport  ovhtypes.TfBoolValue                              `tfsdk:"prevent_install_on_import" json:"-"`
-	Region                  ovhtypes.TfStringValue                            `tfsdk:"region" json:"region"`
-	RescueMail              ovhtypes.TfStringValue                            `tfsdk:"rescue_mail" json:"rescueMail"`
-	RescueSshKey            ovhtypes.TfStringValue                            `tfsdk:"rescue_ssh_key" json:"rescueSshKey"`
-	Reverse                 ovhtypes.TfStringValue                            `tfsdk:"reverse" json:"reverse"`
-	RootDevice              ovhtypes.TfStringValue                            `tfsdk:"root_device" json:"rootDevice"`
-	ServerId                ovhtypes.TfInt64Value                             `tfsdk:"server_id" json:"serverId"`
-	ServiceName             ovhtypes.TfStringValue                            `tfsdk:"service_name" json:"serviceName"`
-	State                   ovhtypes.TfStringValue                            `tfsdk:"state" json:"state"`
-	SupportLevel            ovhtypes.TfStringValue                            `tfsdk:"support_level" json:"supportLevel"`
-	Storage                 ovhtypes.TfListNestedValue[StorageValue]          `tfsdk:"storage" json:"storage"`
-	KeepServiceAfterDestroy ovhtypes.TfBoolValue                              `tfsdk:"keep_service_after_destroy" json:"-"`
-	Order                   OrderValue                                        `tfsdk:"order" json:"order"`
-	OvhSubsidiary           ovhtypes.TfStringValue                            `tfsdk:"ovh_subsidiary" json:"ovhSubsidiary"`
-	Plan                    ovhtypes.TfListNestedValue[PlanValue]             `tfsdk:"plan" json:"plan"`
-	PlanOption              ovhtypes.TfListNestedValue[PlanOptionValue]       `tfsdk:"plan_option" json:"planOption"`
+	AvailabilityZone        ovhtypes.TfStringValue                             `tfsdk:"availability_zone" json:"availabilityZone"`
+	BootId                  ovhtypes.TfInt64Value                              `tfsdk:"boot_id" json:"bootId"`
+	BootScript              ovhtypes.TfStringValue                             `tfsdk:"boot_script" json:"bootScript"`
+	CommercialRange         ovhtypes.TfStringValue                             `tfsdk:"commercial_range" json:"commercialRange"`
+	Customizations          CustomizationsValue                                `tfsdk:"customizations" json:"customizations"`
+	Datacenter              ovhtypes.TfStringValue                             `tfsdk:"datacenter" json:"datacenter"`
+	DisplayName             ovhtypes.TfStringValue                             `tfsdk:"display_name" json:"displayName"`
+	EfiBootloaderPath       ovhtypes.TfStringValue                             `tfsdk:"efi_bootloader_path" json:"efiBootloaderPath"`
+	Iam                     IamValue                                           `tfsdk:"iam" json:"iam"`
+	Ip                      ovhtypes.TfStringValue                             `tfsdk:"ip" json:"ip"`
+	LinkSpeed               ovhtypes.TfInt64Value                              `tfsdk:"link_speed" json:"linkSpeed"`
+	Monitoring              ovhtypes.TfBoolValue                               `tfsdk:"monitoring" json:"monitoring"`
+	Name                    ovhtypes.TfStringValue                             `tfsdk:"name" json:"name"`
+	NewUpgradeSystem        ovhtypes.TfBoolValue                               `tfsdk:"new_upgrade_system" json:"newUpgradeSystem"`
+	NoIntervention          ovhtypes.TfBoolValue                               `tfsdk:"no_intervention" json:"noIntervention"`
+	Os                      ovhtypes.TfStringValue                             `tfsdk:"os" json:"os"`
+	PowerState              ovhtypes.TfStringValue                             `tfsdk:"power_state" json:"powerState"`
+	ProfessionalUse         ovhtypes.TfBoolValue                               `tfsdk:"professional_use" json:"professionalUse"`
+	Properties              ovhtypes.TfMapNestedValue[ovhtypes.TfStringValue]  `tfsdk:"properties" json:"properties"`
+	Rack                    ovhtypes.TfStringValue                             `tfsdk:"rack" json:"rack"`
+	PreventInstallOnCreate  ovhtypes.TfBoolValue                               `tfsdk:"prevent_install_on_create" json:"-"`
+	PreventInstallOnImport  ovhtypes.TfBoolValue                               `tfsdk:"prevent_install_on_import" json:"-"`
+	Region                  ovhtypes.TfStringValue                             `tfsdk:"region" json:"region"`
+	RescueMail              ovhtypes.TfStringValue                             `tfsdk:"rescue_mail" json:"rescueMail"`
+	RescueSshKey            ovhtypes.TfStringValue                             `tfsdk:"rescue_ssh_key" json:"rescueSshKey"`
+	Reverse                 ovhtypes.TfStringValue                             `tfsdk:"reverse" json:"reverse"`
+	RootDevice              ovhtypes.TfStringValue                             `tfsdk:"root_device" json:"rootDevice"`
+	ServerId                ovhtypes.TfInt64Value                              `tfsdk:"server_id" json:"serverId"`
+	ServiceName             ovhtypes.TfStringValue                             `tfsdk:"service_name" json:"serviceName"`
+	State                   ovhtypes.TfStringValue                             `tfsdk:"state" json:"state"`
+	SupportLevel            ovhtypes.TfStringValue                             `tfsdk:"support_level" json:"supportLevel"`
+	Storage                 ovhtypes.TfListNestedValue[StorageValue]           `tfsdk:"storage" json:"storage"`
+	KeepServiceAfterDestroy ovhtypes.TfBoolValue                               `tfsdk:"keep_service_after_destroy" json:"-"`
+	RunActionsBeforeDestroy ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] `tfsdk:"run_actions_before_destroy" json:"-"`
+	Order                   OrderValue                                         `tfsdk:"order" json:"order"`
+	OvhSubsidiary           ovhtypes.TfStringValue                             `tfsdk:"ovh_subsidiary" json:"ovhSubsidiary"`
+	Plan                    ovhtypes.TfListNestedValue[PlanValue]              `tfsdk:"plan" json:"plan"`
+	PlanOption              ovhtypes.TfListNestedValue[PlanOptionValue]        `tfsdk:"plan_option" json:"planOption"`
 }
 
 func (v *DedicatedServerModel) MergeWith(other *DedicatedServerModel) {
@@ -853,6 +864,10 @@ func (v *DedicatedServerModel) MergeWith(other *DedicatedServerModel) {
 		v.KeepServiceAfterDestroy = other.KeepServiceAfterDestroy
 	}
 
+	if (v.RunActionsBeforeDestroy.IsUnknown() || v.RunActionsBeforeDestroy.IsNull()) && !other.RunActionsBeforeDestroy.IsUnknown() {
+		v.RunActionsBeforeDestroy = other.RunActionsBeforeDestroy
+	}
+
 	if (v.Order.IsUnknown() || v.Order.IsNull()) && !other.Order.IsUnknown() {
 		v.Order = other.Order
 	}
@@ -956,25 +971,27 @@ func (v DedicatedServerModel) ToCreate() *DedicatedServerWritableModel {
 	return res
 }
 
-func (v DedicatedServerModel) ToReinstall() *DedicatedServerWritableModel {
+func (v DedicatedServerModel) ToReinstall(onlyOS bool) *DedicatedServerWritableModel {
 	res := &DedicatedServerWritableModel{}
 
 	if !v.Os.IsUnknown() {
 		res.Os = &v.Os
 	}
 
-	if !v.Customizations.IsUnknown() && !v.Customizations.IsNull() {
-		res.Customizations = v.Customizations.ToCreate()
-	}
-
-	if !v.Storage.IsUnknown() && !v.Storage.IsNull() {
-		for _, elem := range v.Storage.Elements() {
-			res.Storage = append(res.Storage, elem.(StorageValue).ToCreate())
+	if !onlyOS {
+		if !v.Customizations.IsUnknown() && !v.Customizations.IsNull() {
+			res.Customizations = v.Customizations.ToCreate()
 		}
-	}
 
-	if !v.Properties.IsUnknown() && !v.Properties.IsNull() {
-		res.Properties = &v.Properties
+		if !v.Storage.IsUnknown() && !v.Storage.IsNull() {
+			for _, elem := range v.Storage.Elements() {
+				res.Storage = append(res.Storage, elem.(StorageValue).ToCreate())
+			}
+		}
+
+		if !v.Properties.IsUnknown() && !v.Properties.IsNull() {
+			res.Properties = &v.Properties
+		}
 	}
 
 	return res

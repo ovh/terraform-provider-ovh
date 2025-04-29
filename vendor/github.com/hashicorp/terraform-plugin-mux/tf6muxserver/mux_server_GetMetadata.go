@@ -26,6 +26,7 @@ func (s *muxServer) GetMetadata(ctx context.Context, req *tfprotov6.GetMetadataR
 
 	resp := &tfprotov6.GetMetadataResponse{
 		DataSources:        make([]tfprotov6.DataSourceMetadata, 0),
+		EphemeralResources: make([]tfprotov6.EphemeralResourceMetadata, 0),
 		Functions:          make([]tfprotov6.FunctionMetadata, 0),
 		Resources:          make([]tfprotov6.ResourceMetadata, 0),
 		ServerCapabilities: serverCapabilities,
@@ -52,6 +53,17 @@ func (s *muxServer) GetMetadata(ctx context.Context, req *tfprotov6.GetMetadataR
 
 			s.dataSources[datasource.TypeName] = server
 			resp.DataSources = append(resp.DataSources, datasource)
+		}
+
+		for _, ephemeralResource := range serverResp.EphemeralResources {
+			if ephemeralResourceMetadataContainsTypeName(resp.EphemeralResources, ephemeralResource.TypeName) {
+				resp.Diagnostics = append(resp.Diagnostics, ephemeralResourceDuplicateError(ephemeralResource.TypeName))
+
+				continue
+			}
+
+			s.ephemeralResources[ephemeralResource.TypeName] = server
+			resp.EphemeralResources = append(resp.EphemeralResources, ephemeralResource)
 		}
 
 		for _, function := range serverResp.Functions {
@@ -82,6 +94,16 @@ func (s *muxServer) GetMetadata(ctx context.Context, req *tfprotov6.GetMetadataR
 }
 
 func datasourceMetadataContainsTypeName(metadatas []tfprotov6.DataSourceMetadata, typeName string) bool {
+	for _, metadata := range metadatas {
+		if typeName == metadata.TypeName {
+			return true
+		}
+	}
+
+	return false
+}
+
+func ephemeralResourceMetadataContainsTypeName(metadatas []tfprotov6.EphemeralResourceMetadata, typeName string) bool {
 	for _, metadata := range metadatas {
 		if typeName == metadata.TypeName {
 			return true
