@@ -204,6 +204,13 @@ func dataSourceCloudProjectKubeNodepool() *schema.Resource {
 					},
 				},
 			},
+			"availability_zones": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 		},
 	}
 }

@@ -249,6 +249,14 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 					},
 				},
 			},
+			"availability_zones": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 		},
 	}
 }
@@ -395,7 +403,7 @@ func cloudProjectKubeNodePoolExists(serviceName, kubeId, id string, client *ovh.
 
 func waitForCloudProjectKubeNodePoolWithStateTarget(client *ovh.Client, serviceName, kubeId, id string, timeout time.Duration, stateTargets []string) error {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"INSTALLING", "UPDATING", "REDEPLOYING", "RESIZING", "DOWNSCALING", "UPSCALING"},
+		Pending: []string{"INSTALLING", "UPDATING", "REDEPLOYING", "RESIZING", "DOWNSCALING", "UPSCALING", "UNKNOWN"},
 		Target:  stateTargets,
 		Refresh: func() (interface{}, string, error) {
 			res := &CloudProjectKubeNodePoolResponse{}
