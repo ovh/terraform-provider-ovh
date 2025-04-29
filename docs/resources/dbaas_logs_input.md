@@ -11,7 +11,7 @@ Creates a dbaas logs input.
 ```terraform
 data "ovh_dbaas_logs_input_engine" "logstash" {
   name          = "logstash"
-  version       = "7.x"
+  version       = "9.x"
 }
 
 resource "ovh_dbaas_logs_output_graylog_stream" "stream" {
