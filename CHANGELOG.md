@@ -1,3 +1,42 @@
+## 2.2.0 (April 30, 2025)
+
+⚙️ General:
+
+* Bump dependencies ([#950](https://github.com/ovh/terraform-provider-ovh/pull/950))
+
+🎉 Features:
+
+* New resource: `ovh_cloud_project_ssh_key` ([#926](https://github.com/ovh/terraform-provider-ovh/pull/926))
+* New resource: `ovh_vrack_dedicated_cloud_datacenter` ([#908](https://github.com/ovh/terraform-provider-ovh/pull/908))
+* New resource: `ovh_vrack_ipv6_routed_subrange` ([#947](https://github.com/ovh/terraform-provider-ovh/pull/947))
+
+💪 Improvements:
+
+* `r/ovh_cloud_project_instance`: Allow instance creation on a private network ([#931](https://github.com/ovh/terraform-provider-ovh/pull/931))
+* `r/ovh_vrack_ipv6`: Add `bridged_subrange` field ([#947](https://github.com/ovh/terraform-provider-ovh/pull/947))
+* `r/ovh_dedicated_server`: Add new fields to control a dedicated server reinstallation: `prevent_install_on_create` and `prevent_install_on_import`. Also add a new parameter to avoid terminating the OVHcloud service when removing the resource in Terraform: `keep_service_after_destroy` and a parameter to run specific actions before destroying the resource: `run_actions_before_destroy` ([#937](https://github.com/ovh/terraform-provider-ovh/pull/937), [#960](https://github.com/ovh/terraform-provider-ovh/pull/960))
+* `r/ovh_cloud_project_kube_nodepool`: Add new field `availability_zones` ([#957](https://github.com/ovh/terraform-provider-ovh/pull/957))
+
+* `d/ovh_cloud_project_kube_nodepool`: Add new field `availability_zones` ([#957](https://github.com/ovh/terraform-provider-ovh/pull/957))
+
+🐜 Bug fixes:
+
+* `r/ovh_cloud_project_database`: Correctly handle `backup_time` field ([#938](https://github.com/ovh/terraform-provider-ovh/pull/938))
+* `r/ovh_cloud_project_rancher`: Fix version in tests ([#945](https://github.com/ovh/terraform-provider-ovh/pull/945))
+* `r/ovh_iploadbalancing_tcp_farm`: Allow setting a null port ([#949](https://github.com/ovh/terraform-provider-ovh/pull/949))
+* `r/ovh_iploadbalancing_tcp_farm_server`: Allow setting a null port ([#949](https://github.com/ovh/terraform-provider-ovh/pull/949))
+* `r/ovh_iploadbalancing_http_farm`: Allow setting a null port ([#949](https://github.com/ovh/terraform-provider-ovh/pull/949))
+* `r/ovh_iploadbalancing_http_farm_server`: Allow setting a null port ([#949](https://github.com/ovh/terraform-provider-ovh/pull/949))
+* `r/ovh_domain_name`: Avoid unnecessary diff when `target_spec` is not set ([#954](https://github.com/ovh/terraform-provider-ovh/pull/954))
+
+📚 Documentation:
+
+* Add missing docs and fix some wrong locations ([#925](https://github.com/ovh/terraform-provider-ovh/pull/925))
+* Add badges in README ([#941](https://github.com/ovh/terraform-provider-ovh/pull/941))
+* Set an up-to-date version for `dbaas_logs` resources ([#955](https://github.com/ovh/terraform-provider-ovh/pull/955))
+
+❤️ Thanks for your contributions ❤️
+
 ## 2.1.0 (March 24, 2025)
 
 ⚙️ General:
