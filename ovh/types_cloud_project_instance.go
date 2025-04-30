@@ -391,10 +391,10 @@ func (cpir *CloudProjectInstanceCreateOpts) FromResource(d *schema.ResourceData)
 	cpir.UserData = helpers.GetNilStringPointerFromData(d, "user_data")
 }
 
-func waitForCloudProjectInstance(ctx context.Context, c *ovh.Client, serviceName, region, instance string) error {
+func waitForCloudProjectInstance(ctx context.Context, c *ovh.Client, serviceName, region, instance string, timeout time.Duration) error {
 	endpoint := fmt.Sprintf("/cloud/project/%s/region/%s/instance/%s", url.PathEscape(serviceName), url.PathEscape(region), url.PathEscape(instance))
 
-	err := retry.RetryContext(ctx, 60*time.Minute, func() *retry.RetryError {
+	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
 
 		ro := &CloudProjectInstanceResponse{}
 		if err := c.GetWithContext(ctx, endpoint, ro); err != nil {
