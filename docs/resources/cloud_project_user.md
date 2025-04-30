@@ -14,6 +14,17 @@ resource "ovh_cloud_project_user" "user1" {
 }
 ```
 
+## User with rotating password support
+```terraform
+resource "ovh_cloud_project_user" "user_with_rotation" {
+  service_name = "XXX"
+  description  = "Service User created by Terraform with password rotation"
+  rotate_when_changed = {
+    last_rotation = "2025-04-30"
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -37,8 +48,6 @@ The following arguments are supported:
   - network_security_operator
   - objectstore_operator
   - volume_operator
-
-* `rotate_when_changed` - A map of arbitrary key/value pairs that will trigger password regeneration when they change, enabling password rotation based on external conditions such as a rotating timestamp. When rotation occurs, the new password is saved in the Terraform state and can be used by dependent resources (such as storing the password in a key vault).
 
 ## Attributes Reference
 
