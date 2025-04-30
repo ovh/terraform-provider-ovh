@@ -54,6 +54,12 @@ func resourceCloudProjectUser() *schema.Resource {
 				ForceNew: false,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"rotate_when_changed": {
+				Type:        schema.TypeMap,
+				Optional:    true,
+				ForceNew:    false,
+				Description: "A map of arbitrary key/value pairs that will trigger password regeneration when they change, enabling password rotation based on external conditions such as a rotating timestamp.",
+			},
 
 			// Computed
 			"creation_date": {
@@ -159,39 +165,62 @@ func resourceCloudProjectUserUpdate(d *schema.ResourceData, meta interface{}) er
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	userId := d.Id()
-	role := d.Get("role_name")
-	roles, err := helpers.StringsFromSchema(d, "role_names")
-	res := &CloudProjectrolesResponse{}
 
-	res, err = validateCloudProjectUserRoleFunc(config, serviceName, roles, role.(string))
-	if err != nil {
-		return err
-	}
-	update := []string{}
-	for _, i := range res.Roles {
-		if slices.Contains(roles, i.Name) {
-			update = append(update, i.Id)
+	// Check if rotate_when_changed has been modified
+	if d.HasChange("rotate_when_changed") {
+		log.Printf("[DEBUG] rotate_when_changed has been modified, regenerating password for user %s", userId)
+
+		// Call the regeneratePassword endpoint
+		regenerate, err := cloudProjectUserRegeneratePassword(config, serviceName, userId)
+		if err != nil {
+			return fmt.Errorf("error regenerating password for user %s: %s", userId, err)
 		}
-		if role == i.Name && !slices.Contains(update, i.Name) {
-			update = append(update, i.Id)
+
+		// Update the password in the state
+		if err := d.Set("password", regenerate.Password); err != nil {
+			return fmt.Errorf("error setting password in state: %s", err)
+		}
+
+		log.Printf("[DEBUG] Successfully updated password in state for user %s", userId)
+	}
+
+	// Update roles if they changed
+	if d.HasChange("role_name") || d.HasChange("role_names") {
+		role := d.Get("role_name")
+		roles, err := helpers.StringsFromSchema(d, "role_names")
+		res := &CloudProjectrolesResponse{}
+
+		res, err = validateCloudProjectUserRoleFunc(config, serviceName, roles, role.(string))
+		if err != nil {
+			return err
+		}
+		update := []string{}
+		for _, i := range res.Roles {
+			if slices.Contains(roles, i.Name) {
+				update = append(update, i.Id)
+			}
+			if role == i.Name && !slices.Contains(update, i.Name) {
+				update = append(update, i.Id)
+			}
+		}
+
+		log.Printf("[DEBUG] roles IDs %s", update)
+		log.Printf("[DEBUG] user %s", userId)
+		endpoint := fmt.Sprintf("/cloud/project/%s/user/%s/role",
+			url.PathEscape(serviceName),
+			url.PathEscape(userId),
+		)
+
+		r := &CloudProjectUser{}
+		data := &CloudProjectroleUpdate{
+			RolesIds: update,
+		}
+		if err := config.OVHClient.Put(endpoint, data, r); err != nil {
+			return fmt.Errorf("calling %s with params %s:\n\t %q", endpoint, data, err)
 		}
 	}
 
-	log.Printf("[DEBUG] roles IDs %s", update)
-	log.Printf("[DEBUG] user %s", userId)
-	endpoint := fmt.Sprintf("/cloud/project/%s/user/%s/role",
-		url.PathEscape(serviceName),
-		url.PathEscape(userId),
-	)
-
-	r := &CloudProjectUser{}
-	data := &CloudProjectroleUpdate{
-		RolesIds: update,
-	}
-	if err := config.OVHClient.Put(endpoint, data, r); err != nil {
-		return fmt.Errorf("calling %s with params %s:\n\t %q", endpoint, data, err)
-	}
-	return nil
+	return resourceCloudProjectUserRead(d, meta)
 }
 
 func resourceCloudProjectUserCreate(d *schema.ResourceData, meta interface{}) error {
@@ -312,6 +341,25 @@ func resourceCloudProjectUserDelete(d *schema.ResourceData, meta interface{}) er
 	d.SetId("")
 
 	return nil
+}
+
+// cloudProjectUserRegeneratePassword regenerates the password for a cloud project user
+func cloudProjectUserRegeneratePassword(config *Config, serviceName, userId string) (*CloudProjectUserRegenerate, error) {
+	log.Printf("[DEBUG] Will regenerate password for user %s from project: %s", userId, serviceName)
+
+	endpoint := fmt.Sprintf(
+		"/cloud/project/%s/user/%s/regeneratePassword",
+		url.PathEscape(serviceName),
+		url.PathEscape(userId),
+	)
+
+	r := &CloudProjectUserRegenerate{}
+	if err := config.OVHClient.Post(endpoint, nil, r); err != nil {
+		return nil, fmt.Errorf("calling Post %s:\n\t %q", endpoint, err)
+	}
+
+	log.Printf("[DEBUG] Successfully regenerated password for user %s", userId)
+	return r, nil
 }
 
 var cloudUserOSTenantName = regexp.MustCompile("export OS_TENANT_NAME=\"?([[:alnum:]]+)\"?")
