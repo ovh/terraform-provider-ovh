@@ -102,6 +102,91 @@ func TestAccCloudProjectUser_withRoles(t *testing.T) {
 	})
 }
 
+var testAccCloudProjectUserWithRotateConfig = fmt.Sprintf(`
+resource "ovh_cloud_project_user" "user_rotate" {
+ service_name = "%s"
+ description  = "my user for acceptance tests with rotation"
+ rotate_when_changed = {
+   last_rotation = "2025-04-29"
+ }
+}
+`, os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"))
+
+var testAccCloudProjectUserWithRotateUpdatedConfig = fmt.Sprintf(`
+resource "ovh_cloud_project_user" "user_rotate" {
+ service_name = "%s"
+ description  = "my user for acceptance tests with rotation"
+ rotate_when_changed = {
+   last_rotation = "2025-04-30"
+ }
+}
+`, os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"))
+
+func TestAccCloudProjectUser_withRotate(t *testing.T) {
+	var firstPassword, secondPassword string
+	var userId string
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheckCloud(t); testAccCheckCloudProjectExists(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCloudProjectUserWithRotateConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_project_user.user_rotate", "description", "my user for acceptance tests with rotation"),
+					testAccCheckCloudProjectUserOpenRC("ovh_cloud_project_user.user_rotate", t),
+					testAccCheckCloudProjectUserPassword("ovh_cloud_project_user.user_rotate", &firstPassword),
+					testAccCheckCloudProjectUserId("ovh_cloud_project_user.user_rotate", &userId),
+				),
+			},
+			{
+				Config: testAccCloudProjectUserWithRotateUpdatedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_project_user.user_rotate", "description", "my user for acceptance tests with rotation"),
+					testAccCheckCloudProjectUserOpenRC("ovh_cloud_project_user.user_rotate", t),
+					testAccCheckCloudProjectUserPassword("ovh_cloud_project_user.user_rotate", &secondPassword),
+					testAccCheckCloudProjectUserId("ovh_cloud_project_user.user_rotate", &userId),  // Same user ID (not recreated)
+					testAccCheckCloudProjectUserDifferentPasswords(firstPassword, &secondPassword), // But password changed
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckCloudProjectUserPassword(n string, password *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ID is set")
+		}
+
+		if rs.Primary.Attributes["password"] == "" {
+			return fmt.Errorf("No password is set")
+		}
+
+		*password = rs.Primary.Attributes["password"]
+		return nil
+	}
+}
+
+func testAccCheckCloudProjectUserDifferentPasswords(firstPassword string, secondPassword *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if firstPassword == *secondPassword {
+			return fmt.Errorf("Password did not change after rotation")
+		}
+		if *secondPassword == "" {
+			return fmt.Errorf("New password is empty after rotation")
+		}
+		return nil
+	}
+}
+
 func testAccCheckCloudProjectUserOpenRC(n string, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -129,6 +214,22 @@ func testAccCheckCloudProjectUserOpenRC(n string, t *testing.T) resource.TestChe
 			return fmt.Errorf("No openstack_rc.OS_USERNAME is set")
 		}
 
+		return nil
+	}
+}
+
+func testAccCheckCloudProjectUserId(n string, userId *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ID is set")
+		}
+
+		*userId = rs.Primary.ID
 		return nil
 	}
 }

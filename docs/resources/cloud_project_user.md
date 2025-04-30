@@ -38,6 +38,8 @@ The following arguments are supported:
   - objectstore_operator
   - volume_operator
 
+* `rotate_when_changed` - A map of arbitrary key/value pairs that will trigger password regeneration when they change, enabling password rotation based on external conditions such as a rotating timestamp. When rotation occurs, the new password is saved in the Terraform state and can be used by dependent resources (such as storing the password in a key vault).
+
 ## Attributes Reference
 
 The following attributes are exported:
