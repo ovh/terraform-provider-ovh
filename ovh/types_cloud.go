@@ -318,9 +318,14 @@ func (u CloudProjectUserS3CredentialSecret) ToMap() map[string]interface{} {
 }
 
 type CloudProjectRegionResponse struct {
+	AvailabilityZones  []string                     `json:"availabilityZones"`
 	ContinentCode      string                       `json:"continentCode"`
+	CountryCode        string                       `json:"countryCode"`
 	DatacenterLocation string                       `json:"datacenterLocation"`
+	IPCountries        []string                     `json:"ipCountries"`
 	Name               string                       `json:"name"`
+	Status             string                       `json:"status"`
+	Type               string                       `json:"type"`
 	Services           []CloudServiceStatusResponse `json:"services"`
 }
 
@@ -338,8 +343,9 @@ func (r *CloudProjectRegionResponse) HasServiceUp(service string) bool {
 }
 
 type CloudServiceStatusResponse struct {
-	Status string `json:"status"`
-	Name   string `json:"name"`
+	Status   string `json:"status"`
+	Name     string `json:"name"`
+	Endpoint string `json:"endpoint"`
 }
 
 func (s *CloudServiceStatusResponse) String() string {

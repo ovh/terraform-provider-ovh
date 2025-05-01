@@ -17,15 +17,20 @@ Use this data source to retrieve information about a region associated with a pu
 ## Argument Reference
 
 * `service_name` - (Required) The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
-
-* `name` - (Required) The name of the region associated with the public cloud project.
+* `name`         - (Required) The name of the region associated with the public cloud project.
 
 ## Attributes Reference
 
 `id` is set to the ID of the project concatenated with the name of the region. In addition, the following attributes are exported:
 
-* `continent_code` - the code of the geographic continent the region is running. E.g.: EU for Europe, US for America...
+* `type`                - Region type (localzone | region | region-3-az)
+* `status`              - Openstack region status (DOWN | MAINTENANCE | UP)
+* `continent_code`      - The code of the geographic continent the region is running. E.g.: EU for Europe, US for America...
+* `country_code`        - Region country code
 * `datacenter_location` - The location code of the datacenter. E.g.: "GRA", meaning Gravelines, for region "GRA1"
-* `services` - The list of public cloud services running within the region
-  * `name` - the name of the public cloud service
-  * `status` - the status of the service
+* `availability_zones`  - Availability zones of the region
+* `ip_countries`        - Allowed countries for failover IP
+* `services`            - The list of public cloud services running within the region
+  * `name`              - the name of the public cloud service
+  * `status`            - the status of the service
+  * `endpoint`          - Endpoint URL
