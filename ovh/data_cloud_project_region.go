@@ -22,36 +22,76 @@ func dataSourceCloudProjectRegion() *schema.Resource {
 				Description: "Service name of the resource representing the id of the cloud project.",
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
+				Description: "Name of the region",
+			},
+			"status": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Openstack region status",
+			},
+			"type": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Region type (localzone, region, region-3-az)",
 			},
 			"services": {
-				Type:     schema.TypeSet,
-				Set:      cloudServiceHash,
-				Computed: true,
+				Type:        schema.TypeSet,
+				Set:         cloudServiceHash,
+				Computed:    true,
+				Description: "Information about the different components available in the region",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Type:        schema.TypeString,
+							Description: "Service name",
+							Computed:    true,
 						},
-
 						"status": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Type:        schema.TypeString,
+							Description: "Service status",
+							Computed:    true,
+						},
+						"endpoint": {
+							Type:        schema.TypeString,
+							Description: "Endpoint URL",
+							Computed:    true,
 						},
 					},
 				},
 			},
-
 			"continent_code": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Region continent code",
+			},
+			"country_code": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Region country code",
 			},
 			"datacenter_location": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Location of the datacenter where the region is",
+			},
+			"availability_zones": {
+				Type:        schema.TypeSet,
+				Computed:    true,
+				Description: "Availability zones of the region",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"ip_countries": {
+				Type:        schema.TypeSet,
+				Computed:    true,
+				Description: "Allowed countries for failover IP",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 		},
 	}
@@ -72,16 +112,21 @@ func dataSourceCloudProjectRegionRead(d *schema.ResourceData, meta interface{}) 
 
 	d.Set("datacenter_location", region.DatacenterLocation)
 	d.Set("continent_code", region.ContinentCode)
+	d.Set("country_code", region.CountryCode)
+	d.Set("status", region.Status)
+	d.Set("type", region.Type)
+	d.Set("ip_countries", region.IPCountries)
+	d.Set("availability_zones", region.AvailabilityZones)
 
 	services := &schema.Set{
 		F: cloudServiceHash,
 	}
-	for i := range region.Services {
-		service := map[string]interface{}{
-			"name":   region.Services[i].Name,
-			"status": region.Services[i].Status,
-		}
-		services.Add(service)
+	for _, service := range region.Services {
+		services.Add(map[string]interface{}{
+			"name":     service.Name,
+			"status":   service.Status,
+			"endpoint": service.Endpoint,
+		})
 	}
 
 	d.Set("services", services)

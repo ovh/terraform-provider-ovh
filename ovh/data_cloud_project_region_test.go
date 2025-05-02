@@ -14,28 +14,20 @@ func TestAccCloudProjectRegionDataSource_basic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCloudProjectRegionDatasourceConfig,
+				Config: fmt.Sprintf(`
+					data "ovh_cloud_project_region" "region" {
+						service_name = "%s"
+						name         = "EU-WEST-PAR"
+					}
+				`, os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.ovh_cloud_project_region.region_attr.0", "name"),
-					resource.TestCheckResourceAttrSet("data.ovh_cloud_project_region.region_attr.0", "services.#"),
-					resource.TestCheckResourceAttrSet("data.ovh_cloud_project_region.region_attr.1", "name"),
-					resource.TestCheckResourceAttrSet("data.ovh_cloud_project_region.region_attr.1", "services.#"),
-					resource.TestCheckResourceAttrSet("data.ovh_cloud_project_region.region_attr.2", "name"),
-					resource.TestCheckResourceAttrSet("data.ovh_cloud_project_region.region_attr.2", "services.#"),
+					resource.TestCheckResourceAttrSet("data.ovh_cloud_project_region.region", "name"),
+					resource.TestCheckResourceAttrSet("data.ovh_cloud_project_region.region", "type"),
+					resource.TestCheckResourceAttrSet("data.ovh_cloud_project_region.region", "status"),
+					resource.TestCheckResourceAttrSet("data.ovh_cloud_project_region.region", "services.#"),
+					resource.TestCheckResourceAttrSet("data.ovh_cloud_project_region.region", "availability_zones.#"),
 				),
 			},
 		},
 	})
 }
-
-var testAccCloudProjectRegionDatasourceConfig = fmt.Sprintf(`
-data "ovh_cloud_project_regions" "regions" {
-  service_name = "%s"
-}
-
-data "ovh_cloud_project_region" "region_attr" {
-  count        = 3
-  service_name = data.ovh_cloud_project_regions.regions.service_name
-  name         = element(sort(data.ovh_cloud_project_regions.regions.names), count.index)
-}
-`, os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"))
