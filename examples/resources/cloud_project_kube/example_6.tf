@@ -1,7 +1,7 @@
 resource "ovh_cloud_project_kube" "my_cluster" {
   service_name    = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
   name            = "my_kube_cluster"
-  region          = "GRA5"
+  region          = "GRA11"
   kube_proxy_mode = "ipvs" # or "iptables"	
 	
   customization_kube_proxy {

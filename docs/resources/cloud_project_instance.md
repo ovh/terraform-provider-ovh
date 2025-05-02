@@ -96,3 +96,17 @@ The following attributes are exported:
 * `image_id` - Image id
 * `task_state` - Instance task state
 * `status` - Instance status
+
+## Timeouts
+
+```terraform
+resource "ovh_cloud_project_instance" "instance" {
+  # ...
+
+  timeouts {
+    create = "10min"
+  }
+}
+```
+
+* `create` - (Default 60m)

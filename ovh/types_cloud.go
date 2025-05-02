@@ -12,6 +12,8 @@ import (
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 )
 
+const defaultCloudOperationTimeout = 60 * time.Minute
+
 // Opts
 type CloudProjectGatewayCreateOpts struct {
 	Name  string `json:"name"`
@@ -72,10 +74,10 @@ type CloudProjectSubOperation struct {
 	Action     string  `json:"action"`
 }
 
-func waitForCloudProjectOperation(ctx context.Context, c *ovh.Client, serviceName, operationId, actionType string) (string, error) {
+func waitForCloudProjectOperation(ctx context.Context, c *ovh.Client, serviceName, operationId, actionType string, timeout time.Duration) (string, error) {
 	endpoint := fmt.Sprintf("/cloud/project/%s/operation/%s", url.PathEscape(serviceName), url.PathEscape(operationId))
 	resourceID := ""
-	err := retry.RetryContext(ctx, 60*time.Minute, func() *retry.RetryError {
+	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
 		ro := &CloudProjectOperationResponse{}
 		if err := c.GetWithContext(ctx, endpoint, ro); err != nil {
 			return retry.NonRetryableError(err)

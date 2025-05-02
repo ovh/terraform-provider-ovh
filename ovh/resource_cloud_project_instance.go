@@ -17,6 +17,11 @@ func resourceCloudProjectInstance() *schema.Resource {
 		ReadContext:   resourceCloudProjectInstanceRead,
 		DeleteContext: resourceCloudProjectInstanceDelete,
 
+		Timeouts: &schema.ResourceTimeout{
+			Create:  schema.DefaultTimeout(defaultCloudOperationTimeout),
+			Default: schema.DefaultTimeout(defaultCloudOperationTimeout),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"service_name": {
 				Type:        schema.TypeString,
@@ -438,14 +443,14 @@ func resourceCloudProjectInstanceCreate(ctx context.Context, d *schema.ResourceD
 		return diag.Errorf("calling %s with params %v:\n\t %q", endpoint, params, err)
 	}
 
-	instanceID, err := waitForCloudProjectOperation(ctx, config.OVHClient, serviceName, r.Id, "instance#create")
+	instanceID, err := waitForCloudProjectOperation(ctx, config.OVHClient, serviceName, r.Id, "instance#create", d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return diag.Errorf("timeout instance creation: %s", err)
 	}
 
 	d.SetId(instanceID)
 
-	if err := waitForCloudProjectInstance(ctx, config.OVHClient, serviceName, region, instanceID); err != nil {
+	if err := waitForCloudProjectInstance(ctx, config.OVHClient, serviceName, region, instanceID, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return diag.Errorf("error waiting for instance to be ready: %s", err)
 	}
 

@@ -226,6 +226,9 @@ func (p *OvhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 		NewOkmsServiceKeyJwkDataSource,
 		NewOkmsServiceKeyPemDataSource,
 		NewOvhcloudConnectDatacentersDataSource,
+		NewOvhcloudConnectConfigPopDatacenterExtrasDataSource,
+		NewOvhcloudConnectConfigPopDatacentersDataSource,
+		NewOvhcloudConnectConfigPopsDataSource,
 		NewOvhcloudConnectDataSource,
 		NewOvhcloudConnectsDataSource,
 		NewVmwareCloudDirectorBackupDataSource,
@@ -265,6 +268,7 @@ func (p *OvhProvider) Resources(_ context.Context) []func() resource.Resource {
 		NewVpsResource,
 		NewVrackOvhcloudconnectResource,
 		NewVrackDedicatedCloudResource,
+		NewVrackIpv6RoutedSubrangeResource,
 		NewVrackDedicatedCloudDatacenterResource,
 	}
 }

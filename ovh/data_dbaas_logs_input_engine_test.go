@@ -28,7 +28,7 @@ data "ovh_dbaas_logs_input_engine" "logstash" {
 func TestAccDataSourceDbaasLogsInputEngine_basic(t *testing.T) {
 	serviceName := os.Getenv("OVH_DBAAS_LOGS_SERVICE_TEST")
 	name := "LOGSTASH"
-	// version := "7.x"
+	// version := "9.x"
 	version := os.Getenv("OVH_DBAAS_LOGS_LOGSTASH_VERSION_TEST")
 
 	config := fmt.Sprintf(

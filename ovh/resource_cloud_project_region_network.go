@@ -83,7 +83,7 @@ func (r *cloudProjectRegionNetworkResource) Create(ctx context.Context, req reso
 	}
 
 	// Wait for operation to complete
-	networkID, err := waitForCloudProjectOperation(ctx, r.config.OVHClient, data.ServiceName.ValueString(), operation.Id, "")
+	networkID, err := waitForCloudProjectOperation(ctx, r.config.OVHClient, data.ServiceName.ValueString(), operation.Id, "", defaultCloudOperationTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("error waiting for operation %s", operation.Id), err.Error())
 		return

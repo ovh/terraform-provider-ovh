@@ -15,10 +15,21 @@ resource "ovh_cloud_project_kube_nodepool" "node_pool" {
   service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
   kube_id       = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
   name          = "my-pool-1" //Warning: "_" char is not allowed!
-  flavor_name   = "b2-7"
+  flavor_name   = "b3-8"
   desired_nodes = 3
-  max_nodes     = 3
-  min_nodes     = 3
+}
+```
+
+Create a node pool on a specific availability zones for Kubernetes cluster (with multi-zones support):
+
+```terraform
+resource "ovh_cloud_project_kube_nodepool" "node_pool_multi_zones" {
+  service_name       = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  kube_id            = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+  name               = "my-pool-zone-a" //Warning: "_" char is not allowed!
+  flavor_name        = "b3-8"
+  desired_nodes      = 3
+  availability_zones = ["eu-west-par-a"] //Currently, only one zone is supported
 }
 ```
 
@@ -29,10 +40,8 @@ resource "ovh_cloud_project_kube_nodepool" "pool" {
   service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
   kube_id       = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
   name          = "my-pool"
-  flavor_name   = "b2-7"
+  flavor_name   = "b3-8"
   desired_nodes = 3
-  max_nodes     = 3
-  min_nodes     = 3
   template {
     metadata {
       annotations = {

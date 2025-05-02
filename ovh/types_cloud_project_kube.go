@@ -2,11 +2,11 @@ package ovh
 
 import (
 	"fmt"
-	"log"
-	"strings"
-
+	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
+	"log"
+	"strings"
 )
 
 type CloudProjectKubeUpdatePolicyOpts struct {
@@ -294,7 +294,14 @@ func (v *CloudProjectKubeResponse) ToMap(d *schema.ResourceData) map[string]inte
 	obj["status"] = v.Status
 	obj["update_policy"] = v.UpdatePolicy
 	obj["url"] = v.Url
-	obj["version"] = v.Version[:strings.LastIndex(v.Version, ".")]
+	versionPatch, err := version.NewVersion(v.Version)
+	if err != nil {
+		// if fail, return to the previous implementation
+		obj["version"] = v.Version[:strings.LastIndex(v.Version, ".")]
+	} else {
+		// versionPatch.String() return a true semantic version (0.0.0)
+		obj["version"] = v.Version[:strings.LastIndex(versionPatch.String(), ".")]
+	}
 	obj[kubeClusterProxyModeKey] = v.KubeProxyMode
 
 	if v.Customization.APIServer != nil {

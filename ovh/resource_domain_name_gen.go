@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -330,24 +332,32 @@ func DomainNameResourceSchema(ctx context.Context) schema.Schema {
 							NestedObject: schema.NestedAttributeObject{
 								Attributes: map[string]schema.Attribute{
 									"ipv4": schema.StringAttribute{
-										CustomType:          ovhtypes.TfStringType{},
-										Optional:            true,
-										Computed:            true,
+										CustomType: ovhtypes.TfStringType{},
+										Optional:   true,
+										Computed:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseStateForUnknown(),
+										},
 										Description:         "The IPv4 associated to the name server",
 										MarkdownDescription: "The IPv4 associated to the name server",
 									},
 									"ipv6": schema.StringAttribute{
-										CustomType:          ovhtypes.TfStringType{},
-										Optional:            true,
-										Computed:            true,
+										CustomType: ovhtypes.TfStringType{},
+										Optional:   true,
+										Computed:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseStateForUnknown(),
+										},
 										Description:         "The IPv6 associated to the name server",
 										MarkdownDescription: "The IPv6 associated to the name server",
 									},
 									"name_server": schema.StringAttribute{
 										CustomType: ovhtypes.TfStringType{},
-										// Required:            true,
-										Optional:            true,
-										Computed:            true,
+										Optional:   true,
+										Computed:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseStateForUnknown(),
+										},
 										Description:         "The host name",
 										MarkdownDescription: "The host name",
 									},
@@ -358,8 +368,12 @@ func DomainNameResourceSchema(ctx context.Context) schema.Schema {
 									},
 								},
 							},
-							CustomType:          ovhtypes.NewTfListNestedType[TargetSpecDnsConfigurationNameServersValue](ctx),
-							Optional:            true,
+							CustomType: ovhtypes.NewTfListNestedType[TargetSpecDnsConfigurationNameServersValue](ctx),
+							Optional:   true,
+							Computed:   true,
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.UseStateForUnknown(),
+							},
 							Description:         "The name servers to update",
 							MarkdownDescription: "The name servers to update",
 						},
@@ -369,8 +383,11 @@ func DomainNameResourceSchema(ctx context.Context) schema.Schema {
 							AttrTypes: TargetSpecDnsConfigurationValue{}.AttributeTypes(ctx),
 						},
 					},
-					Optional:            true,
-					Computed:            true,
+					Optional: true,
+					Computed: true,
+					PlanModifiers: []planmodifier.Object{
+						objectplanmodifier.UseStateForUnknown(),
+					},
 					Description:         "The domain DNS configuration",
 					MarkdownDescription: "The domain DNS configuration",
 				},
