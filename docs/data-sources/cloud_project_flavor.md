@@ -2,15 +2,16 @@
 subcategory : "Cloud Project"
 ---
 
-# ovh_cloud_project_flavors
+# ovh_cloud_project_flavor
 
-Retrieves the available flavors on the given public cloud project.
+Retrieves the given flavor in a public cloud project.
 
 ## Example Usage
 
 ```terraform
-data "ovh_cloud_project_flavors" "flavors" {
+data "ovh_cloud_project_flavor" "flavor" {
   service_name = "YYYY"
+  id           = "XXXX"
 }
 ```
 
@@ -21,49 +22,37 @@ data "ovh_cloud_project_flavors" "flavors" {
 ### Required
 
 - `service_name` (String) Service name
-
-### Optional
-
-- `region` (String) Flavor region
-- `name_filter` (String) Filter flavors using the given name (e.g. b2-7)
+- `id` (String) Flavor ID
 
 ### Read-Only
 
-- `flavors` (Attributes Set) (see [below for nested schema](#nestedatt--flavors))
-
-<a id="nestedatt--flavors"></a>
-
-### Nested Schema for `flavors`
-
-Read-Only:
-
 - `available` (Boolean) Available in stock
-- `capabilities` (Attributes List) Capabilities of the flavor (see [below for nested schema](#nestedatt--flavors--capabilities))
+- `capabilities` (Attributes List) Capabilities of the flavor (see [below for nested schema](#nestedatt--capabilities))
 - `disk` (Number) Number of disks
 - `id` (String) Flavor id
 - `inbound_bandwidth` (Number) Max capacity of inbound traffic in Mbit/s
 - `name` (String) Flavor name
 - `os_type` (String) OS to install on
 - `outbound_bandwidth` (Number) Max capacity of outbound traffic in Mbit/s
-- `plan_codes` (Attributes) Plan codes to order instances (see [below for nested schema](#nestedatt--flavors--plan_codes))
+- `plan_codes` (Attributes) Plan codes to order instances (see [below for nested schema](#nestedatt--plan_codes))
 - `quota` (Number) Number instance you can spawn with your actual quota
 - `ram` (Number) Ram quantity (Gio)
 - `region` (String) Flavor region
 - `type` (String) Flavor type
 - `vcpus` (Number) Number of VCPUs
 
-<a id="nestedatt--flavors--capabilities"></a>
+<a id="nestedatt--capabilities"></a>
 
-### Nested Schema for `flavors.capabilities`
+### Nested Schema for `capabilities`
 
 Read-Only:
 
 - `enabled` (Boolean) Is the capability enabled
 - `name` (String) Name of the capability
 
-<a id="nestedatt--flavors--plan_codes"></a>
+<a id="nestedatt--plan_codes"></a>
 
-### Nested Schema for `flavors.plan_codes`
+### Nested Schema for `plan_codes`
 
 Read-Only:
 

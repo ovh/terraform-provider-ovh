@@ -74,7 +74,9 @@ func (d *cloudProjectFlavorsDataSource) Read(ctx context.Context, req datasource
 
 	var b []attr.Value
 	for _, a := range arr {
-		b = append(b, a)
+		if data.NameFilter.IsNull() || data.NameFilter.IsUnknown() || a.Name.Equal(data.NameFilter) {
+			b = append(b, a)
+		}
 	}
 
 	data.Flavors = ovhtypes.TfListNestedValue[CloudProjectFlavorValue]{
