@@ -162,6 +162,11 @@ func CloudProjectFlavorsDataSourceSchema(ctx context.Context) schema.Schema {
 			Description:         "Flavor region",
 			MarkdownDescription: "Flavor region",
 		},
+		"name_filter": schema.StringAttribute{
+			CustomType:  ovhtypes.TfStringType{},
+			Optional:    true,
+			Description: "Filter results on the given flavor name",
+		},
 		"service_name": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
 			Required:            true,
@@ -178,6 +183,7 @@ func CloudProjectFlavorsDataSourceSchema(ctx context.Context) schema.Schema {
 type CloudProjectFlavorsModel struct {
 	Flavors     ovhtypes.TfListNestedValue[CloudProjectFlavorValue] `tfsdk:"flavors" json:"cloudProjectFlavor"`
 	Region      ovhtypes.TfStringValue                              `tfsdk:"region" json:"region"`
+	NameFilter  ovhtypes.TfStringValue                              `tfsdk:"name_filter" json:"_"`
 	ServiceName ovhtypes.TfStringValue                              `tfsdk:"service_name" json:"serviceName"`
 }
 
@@ -188,6 +194,10 @@ func (v *CloudProjectFlavorsModel) MergeWith(other *CloudProjectFlavorsModel) {
 
 	if (v.Region.IsUnknown() || v.Region.IsNull()) && !other.Region.IsUnknown() {
 		v.Region = other.Region
+	}
+
+	if (v.NameFilter.IsUnknown() || v.NameFilter.IsNull()) && !other.NameFilter.IsUnknown() {
+		v.NameFilter = other.NameFilter
 	}
 
 	if (v.ServiceName.IsUnknown() || v.ServiceName.IsNull()) && !other.ServiceName.IsUnknown() {
