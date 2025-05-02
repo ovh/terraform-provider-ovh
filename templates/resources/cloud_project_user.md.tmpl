@@ -25,7 +25,8 @@ The following arguments are supported:
 * `role_name` - The name of a role. See `role_names`.
 
 * `role_names` - A list of role names. Values can be:
-  - administrator,
+  - admin
+  - administrator
   - ai_training_operator
   - ai_training_read
   - authentication
@@ -33,6 +34,9 @@ The following arguments are supported:
   - compute_operator
   - image_operator
   - infrastructure_supervisor
+  - key-manager_operator
+  - key-manager_read
+  - load-balancer_operator
   - network_operator
   - network_security_operator
   - objectstore_operator
