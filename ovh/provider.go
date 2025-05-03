@@ -30,6 +30,9 @@ var (
 		// Authentication via oAuth2
 		"client_id":     "OAuth 2.0 application's ID",
 		"client_secret": "OAuth 2.0 application's secret",
+
+		// Extra info in user-agent
+		"user_agent_extra": "Extra information to append to the user-agent",
 	}
 )
 
@@ -71,6 +74,11 @@ func Provider() *schema.Provider {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: descriptions["client_secret"],
+			},
+			"user_agent_extra": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: descriptions["user_agent_extra"],
 			},
 		},
 
@@ -313,6 +321,9 @@ func ConfigureContextFunc(context context.Context, d *schema.ResourceData) (inte
 	}
 	if v, ok := d.GetOk("client_secret"); ok {
 		config.ClientSecret = v.(string)
+	}
+	if v, ok := d.GetOk("user_agent_extra"); ok {
+		config.UserAgentExtra = v.(string)
 	}
 
 	if err := config.loadAndValidate(); err != nil {
