@@ -63,6 +63,10 @@ func (p *OvhProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *
 				Optional:    true,
 				Description: descriptions["client_secret"],
 			},
+			"user_agent_extra": schema.StringAttribute{
+				Optional:    true,
+				Description: descriptions["user_agent_extra"],
+			},
 		},
 	}
 }
@@ -176,6 +180,9 @@ func (p *OvhProvider) Configure(ctx context.Context, req provider.ConfigureReque
 	if !config.ClientSecret.IsNull() {
 		clientConfig.ClientSecret = config.ClientSecret.ValueString()
 	}
+	if !config.UserAgentExtra.IsNull() {
+		clientConfig.UserAgentExtra = config.UserAgentExtra.ValueString()
+	}
 
 	if err := clientConfig.loadAndValidate(); err != nil {
 		resp.Diagnostics.AddError(err.Error(), "failed to init OVH API client")
@@ -282,4 +289,5 @@ type ovhProviderModel struct {
 	ConsumerKey       types.String `tfsdk:"consumer_key"`
 	ClientID          types.String `tfsdk:"client_id"`
 	ClientSecret      types.String `tfsdk:"client_secret"`
+	UserAgentExtra    types.String `tfsdk:"user_agent_extra"`
 }

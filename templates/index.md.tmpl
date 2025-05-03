@@ -138,6 +138,14 @@ The following arguments are supported:
 
 * `consumer_key` - (Optional) The API Consumer key. If omitted, the `OVH_CONSUMER_KEY` environment variable is used.
 
+* `client_id` - (Optional) The OAuth2 client ID. If omitted, the `OVH_CLIENT_ID` environment variable is used.
+
+* `client_id` - (Optional) The OAuth2 client secret. If omitted, the `OVH_CLIENT_SECRET` environment variable is used.
+
+* `access_token` - (Optional) The OVH API Access Token. If omitted, the `OVH_ACCESS_TOKEN` environment variable is used.
+
+* `user_agent_extra` - (Optional) Extra information to append at the end of the user-agent used when making API calls.
+
 ## Terraform State storage in an OVHcloud Object Storage (S3 compatibility)
 
 In order to store your Terraform states on a High Performance (S3) OVHcloud Object Storage, please follow the [guide](https://help.ovhcloud.com/csm/en-public-cloud-compute-terraform-high-perf-object-storage-backend-state?id=kb_article_view&sysparm_article=KB0051345).

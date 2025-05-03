@@ -29,6 +29,9 @@ type Config struct {
 	ClientID     string
 	ClientSecret string
 
+	// Extra user-agent information
+	UserAgentExtra string
+
 	OVHClient     *ovh.Client
 	authenticated bool
 	authFailed    error
@@ -74,6 +77,9 @@ func clientDefault(c *Config) (*ovh.Client, error) {
 	}
 
 	client.UserAgent = "Terraform/" + providerVersion + "/" + providerCommit
+	if c.UserAgentExtra != "" {
+		client.UserAgent += " - " + c.UserAgentExtra
+	}
 
 	return client, nil
 }
