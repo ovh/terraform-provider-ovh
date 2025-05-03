@@ -15,4 +15,4 @@ jobs:
       make test
       make vet
   requirements:
-  - model: shared.infra/Go-official-1.22-bookworm
+  - model: shared.infra/Go-official-1.23-bookworm
