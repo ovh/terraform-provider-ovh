@@ -37,4 +37,4 @@ jobs:
       make testacc TESTARGS="-parallel=1 ${CDS_PIP_TESTARGS}"
 
   requirements:
-  - model: shared.infra/Go-official-1.22-bookworm
+  - model: shared.infra/Go-official-1.23-bookworm
