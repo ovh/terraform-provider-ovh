@@ -43,13 +43,13 @@ func resourceDbaasLogsOutputOpensearchIndex() *schema.Resource {
 				Description: "Index suffix",
 				Required:    true,
 			},
-
-			// computed
 			"alert_notify_enabled": {
 				Type:        schema.TypeBool,
-				Computed:    true,
+				Optional:    true,
 				Description: "If set, notify when size is near 80, 90 or 100 % of its maximum capacity",
 			},
+
+			// computed
 			"created_at": {
 				Type:        schema.TypeString,
 				Computed:    true,
