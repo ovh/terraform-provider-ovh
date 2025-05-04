@@ -106,9 +106,7 @@ var testAccCloudProjectUserWithRotateConfig = fmt.Sprintf(`
 resource "ovh_cloud_project_user" "user_rotate" {
  service_name = "%s"
  description  = "my user for acceptance tests with rotation"
- rotate_when_changed = {
-   last_rotation = "2025-04-29"
- }
+ password_reset =  "2025-04-29"
 }
 `, os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"))
 
@@ -116,14 +114,12 @@ var testAccCloudProjectUserWithRotateUpdatedConfig = fmt.Sprintf(`
 resource "ovh_cloud_project_user" "user_rotate" {
  service_name = "%s"
  description  = "my user for acceptance tests with rotation"
- rotate_when_changed = {
-   last_rotation = "2025-04-30"
- }
+ password_reset =  "2025-04-30"
 }
 `, os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"))
 
 func TestAccCloudProjectUser_withRotate(t *testing.T) {
-	var firstPassword, secondPassword string
+	var oldPassword, newPassword string
 	var userId string
 
 	resource.Test(t, resource.TestCase{
@@ -136,7 +132,7 @@ func TestAccCloudProjectUser_withRotate(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"ovh_cloud_project_user.user_rotate", "description", "my user for acceptance tests with rotation"),
 					testAccCheckCloudProjectUserOpenRC("ovh_cloud_project_user.user_rotate", t),
-					testAccCheckCloudProjectUserPassword("ovh_cloud_project_user.user_rotate", &firstPassword),
+					testAccCheckCloudProjectUserPassword("ovh_cloud_project_user.user_rotate", &oldPassword),
 					testAccCheckCloudProjectUserId("ovh_cloud_project_user.user_rotate", &userId),
 				),
 			},
@@ -146,9 +142,9 @@ func TestAccCloudProjectUser_withRotate(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"ovh_cloud_project_user.user_rotate", "description", "my user for acceptance tests with rotation"),
 					testAccCheckCloudProjectUserOpenRC("ovh_cloud_project_user.user_rotate", t),
-					testAccCheckCloudProjectUserPassword("ovh_cloud_project_user.user_rotate", &secondPassword),
-					testAccCheckCloudProjectUserId("ovh_cloud_project_user.user_rotate", &userId),  // Same user ID (not recreated)
-					testAccCheckCloudProjectUserDifferentPasswords(firstPassword, &secondPassword), // But password changed
+					testAccCheckCloudProjectUserPassword("ovh_cloud_project_user.user_rotate", &newPassword), // Store the second password
+					testAccCheckCloudProjectUserId("ovh_cloud_project_user.user_rotate", &userId),            // Same user ID (not recreated)
+					testAccCheckCloudProjectUserDifferentPasswords(&oldPassword, &newPassword),               // Compare first and second passwords
 				),
 			},
 		},
@@ -175,14 +171,25 @@ func testAccCheckCloudProjectUserPassword(n string, password *string) resource.T
 	}
 }
 
-func testAccCheckCloudProjectUserDifferentPasswords(firstPassword string, secondPassword *string) resource.TestCheckFunc {
+// testAccCheckCloudProjectUserDifferentPasswords creates a test check function that verifies
+// if the password has been changed during rotation by comparing old and new password values
+func testAccCheckCloudProjectUserDifferentPasswords(oldPassword *string, newPassword *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if firstPassword == *secondPassword {
-			return fmt.Errorf("Password did not change after rotation")
+		// Verify that we have actually captured the old password
+		if *oldPassword == "" {
+			return fmt.Errorf("Old password was not captured")
 		}
-		if *secondPassword == "" {
-			return fmt.Errorf("New password is empty after rotation")
+
+		// Verify that we have actually captured the new password
+		if *newPassword == "" {
+			return fmt.Errorf("New password was not captured")
 		}
+
+		// Check that the password has actually changed
+		if *oldPassword == *newPassword {
+			return fmt.Errorf("Password did not change after rotation (both are '%s')", *oldPassword)
+		}
+
 		return nil
 	}
 }

@@ -194,19 +194,19 @@ func (p *CloudProjectNetworkPrivatesResponse) String() string {
 
 // Opts
 type CloudProjectUserCreateOpts struct {
-	Description       *string           `json:"description,omitempty"`
-	Role              *string           `json:"role,omitempty"`
-	Roles             []string          `json:"roles"`
-	RotateWhenChanged map[string]string `json:"-"` // This is only used for triggering recreation, not sent to the API
+	Description   *string  `json:"description,omitempty"`
+	Role          *string  `json:"role,omitempty"`
+	Roles         []string `json:"roles"`
+	PasswordReset string   `json:"-"` // This is only used for triggering recreation, not sent to the API
 }
 
 func (p *CloudProjectUserCreateOpts) String() string {
 	return fmt.Sprintf(
-		"CloudProjectUserCreateOpts[description:%v, role:%v, roles:%s, rotateWhenChanged:%v]",
+		"CloudProjectUserCreateOpts[description:%v, role:%v, roles:%s, passwordReset:%s]",
 		p.Description,
 		p.Role,
 		p.Roles,
-		p.RotateWhenChanged,
+		p.PasswordReset,
 	)
 }
 
@@ -214,14 +214,7 @@ func (opts *CloudProjectUserCreateOpts) FromResource(d *schema.ResourceData) *Cl
 	opts.Description = helpers.GetNilStringPointerFromData(d, "description")
 	opts.Role = helpers.GetNilStringPointerFromData(d, "role_name")
 	opts.Roles, _ = helpers.StringsFromSchema(d, "role_names")
-
-	// Extract the rotate_when_changed map if present
-	if rotateMap, ok := d.GetOk("rotate_when_changed"); ok {
-		opts.RotateWhenChanged = make(map[string]string)
-		for k, v := range rotateMap.(map[string]interface{}) {
-			opts.RotateWhenChanged[k] = v.(string)
-		}
-	}
+	opts.PasswordReset = d.Get("password_reset").(string)
 
 	return opts
 }

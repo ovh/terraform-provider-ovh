@@ -54,11 +54,10 @@ func resourceCloudProjectUser() *schema.Resource {
 				ForceNew: false,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"rotate_when_changed": {
-				Type:        schema.TypeMap,
+			"password_reset": {
+				Type:        schema.TypeString,
+				Description: "Arbitrary string to change to trigger a password update",
 				Optional:    true,
-				ForceNew:    false,
-				Description: "A map of arbitrary key/value pairs that will trigger password regeneration when they change, enabling password rotation based on external conditions such as a rotating timestamp.",
 			},
 
 			// Computed
@@ -166,9 +165,9 @@ func resourceCloudProjectUserUpdate(d *schema.ResourceData, meta interface{}) er
 	serviceName := d.Get("service_name").(string)
 	userId := d.Id()
 
-	// Check if rotate_when_changed has been modified
-	if d.HasChange("rotate_when_changed") {
-		log.Printf("[DEBUG] rotate_when_changed has been modified, regenerating password for user %s", userId)
+	// Check if password_reset has been modified
+	if d.HasChange("password_reset") {
+		log.Printf("[DEBUG] password_reset has been modified, regenerating password for user %s", userId)
 
 		// Call the regeneratePassword endpoint
 		regenerate, err := cloudProjectUserRegeneratePassword(config, serviceName, userId)
@@ -182,6 +181,21 @@ func resourceCloudProjectUserUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 
 		log.Printf("[DEBUG] Successfully updated password in state for user %s", userId)
+
+		// Wait for user to be ok after password regeneration
+		log.Printf("[DEBUG] Waiting for User %s to be ok after password regeneration:", userId)
+		stateConf := &resource.StateChangeConf{
+			Pending:    []string{"updating", "regenerating"}, // Add any potential intermediate states
+			Target:     []string{"ok"},
+			Refresh:    waitForCloudProjectUser(config.OVHClient, serviceName, userId),
+			Timeout:    5 * time.Minute, // Adjust timeout as needed
+			Delay:      5 * time.Second,
+			MinTimeout: 3 * time.Second,
+		}
+		if _, err := stateConf.WaitForState(); err != nil {
+			return fmt.Errorf("waiting for user (%s) to be ok after password regeneration: %s", userId, err)
+		}
+		log.Printf("[DEBUG] User %s is ok after password regeneration", userId)
 	}
 
 	// Update roles if they changed
