@@ -185,7 +185,7 @@ func resourceCloudProjectUserUpdate(d *schema.ResourceData, meta interface{}) er
 		// Wait for user to be ok after password regeneration
 		log.Printf("[DEBUG] Waiting for User %s to be ok after password regeneration:", userId)
 		stateConf := &resource.StateChangeConf{
-			Pending:    []string{"updating", "regenerating"}, // Add any potential intermediate states
+			Pending:    []string{"creating", "deleted", "deleting"},
 			Target:     []string{"ok"},
 			Refresh:    waitForCloudProjectUser(config.OVHClient, serviceName, userId),
 			Timeout:    5 * time.Minute, // Adjust timeout as needed
