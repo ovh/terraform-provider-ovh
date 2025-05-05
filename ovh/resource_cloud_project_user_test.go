@@ -102,6 +102,98 @@ func TestAccCloudProjectUser_withRoles(t *testing.T) {
 	})
 }
 
+var testAccCloudProjectUserWithRotateConfig = fmt.Sprintf(`
+resource "ovh_cloud_project_user" "user_rotate" {
+ service_name = "%s"
+ description  = "my user for acceptance tests with rotation"
+ password_reset =  "2025-04-29"
+}
+`, os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"))
+
+var testAccCloudProjectUserWithRotateUpdatedConfig = fmt.Sprintf(`
+resource "ovh_cloud_project_user" "user_rotate" {
+ service_name = "%s"
+ description  = "my user for acceptance tests with rotation"
+ password_reset =  "2025-04-30"
+}
+`, os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"))
+
+func TestAccCloudProjectUser_withRotate(t *testing.T) {
+	var oldPassword, newPassword string
+	var userId string
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheckCloud(t); testAccCheckCloudProjectExists(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCloudProjectUserWithRotateConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_project_user.user_rotate", "description", "my user for acceptance tests with rotation"),
+					testAccCheckCloudProjectUserOpenRC("ovh_cloud_project_user.user_rotate", t),
+					testAccCheckCloudProjectUserPassword("ovh_cloud_project_user.user_rotate", &oldPassword),
+					testAccCheckCloudProjectUserId("ovh_cloud_project_user.user_rotate", &userId),
+				),
+			},
+			{
+				Config: testAccCloudProjectUserWithRotateUpdatedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_project_user.user_rotate", "description", "my user for acceptance tests with rotation"),
+					testAccCheckCloudProjectUserOpenRC("ovh_cloud_project_user.user_rotate", t),
+					testAccCheckCloudProjectUserPassword("ovh_cloud_project_user.user_rotate", &newPassword), // Store the second password
+					testAccCheckCloudProjectUserId("ovh_cloud_project_user.user_rotate", &userId),            // Same user ID (not recreated)
+					testAccCheckCloudProjectUserDifferentPasswords(&oldPassword, &newPassword),               // Compare first and second passwords
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckCloudProjectUserPassword(n string, password *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ID is set")
+		}
+
+		if rs.Primary.Attributes["password"] == "" {
+			return fmt.Errorf("No password is set")
+		}
+
+		*password = rs.Primary.Attributes["password"]
+		return nil
+	}
+}
+
+// testAccCheckCloudProjectUserDifferentPasswords creates a test check function that verifies
+// if the password has been changed during rotation by comparing old and new password values
+func testAccCheckCloudProjectUserDifferentPasswords(oldPassword *string, newPassword *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		// Verify that we have actually captured the old password
+		if *oldPassword == "" {
+			return fmt.Errorf("Old password was not captured")
+		}
+
+		// Verify that we have actually captured the new password
+		if *newPassword == "" {
+			return fmt.Errorf("New password was not captured")
+		}
+
+		// Check that the password has actually changed
+		if *oldPassword == *newPassword {
+			return fmt.Errorf("Password did not change after rotation (both are '%s')", *oldPassword)
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckCloudProjectUserOpenRC(n string, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -129,6 +221,22 @@ func testAccCheckCloudProjectUserOpenRC(n string, t *testing.T) resource.TestChe
 			return fmt.Errorf("No openstack_rc.OS_USERNAME is set")
 		}
 
+		return nil
+	}
+}
+
+func testAccCheckCloudProjectUserId(n string, userId *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ID is set")
+		}
+
+		*userId = rs.Primary.ID
 		return nil
 	}
 }

@@ -196,17 +196,19 @@ func (p *CloudProjectNetworkPrivatesResponse) String() string {
 
 // Opts
 type CloudProjectUserCreateOpts struct {
-	Description *string  `json:"description,omitempty"`
-	Role        *string  `json:"role,omitempty"`
-	Roles       []string `json:"roles"`
+	Description   *string  `json:"description,omitempty"`
+	Role          *string  `json:"role,omitempty"`
+	Roles         []string `json:"roles"`
+	PasswordReset string   `json:"-"` // This is only used for triggering recreation, not sent to the API
 }
 
 func (p *CloudProjectUserCreateOpts) String() string {
 	return fmt.Sprintf(
-		"CloudProjectUserCreateOpts[description:%v, role:%v, roles:%s]",
+		"CloudProjectUserCreateOpts[description:%v, role:%v, roles:%s, passwordReset:%s]",
 		p.Description,
 		p.Role,
 		p.Roles,
+		p.PasswordReset,
 	)
 }
 
@@ -214,6 +216,8 @@ func (opts *CloudProjectUserCreateOpts) FromResource(d *schema.ResourceData) *Cl
 	opts.Description = helpers.GetNilStringPointerFromData(d, "description")
 	opts.Role = helpers.GetNilStringPointerFromData(d, "role_name")
 	opts.Roles, _ = helpers.StringsFromSchema(d, "role_names")
+	opts.PasswordReset = d.Get("password_reset").(string)
+
 	return opts
 }
 
@@ -350,4 +354,15 @@ type CloudServiceStatusResponse struct {
 
 func (s *CloudServiceStatusResponse) String() string {
 	return fmt.Sprintf("%s: %s", s.Name, s.Status)
+}
+
+type CloudProjectUserRegenerate struct {
+	CreationDate string                  `json:"creationDate"`
+	Description  string                  `json:"description"`
+	Id           int                     `json:"id"`
+	OpenstackId  string                  `json:"openstackId"`
+	Password     string                  `json:"password"`
+	Roles        []*CloudProjectUserRole `json:"roles"`
+	Status       string                  `json:"status"`
+	Username     string                  `json:"username"`
 }

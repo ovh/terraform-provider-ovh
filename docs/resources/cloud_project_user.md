@@ -14,6 +14,18 @@ resource "ovh_cloud_project_user" "user1" {
 }
 ```
 
+```terraform
+# Change password_reset with the datetime each time you want to reset the password to trigger an update
+resource "ovh_cloud_project_user" "user_with_rotation" {
+  service_name   = "XXX"
+  description    = "Service User created by Terraform with password rotation"
+  password_reset = "2025-04-30"
+}
+```
+
+-> **NOTE** To reset password of the user previously created, update the `password_reset` attribute. Use the `terraform refresh` command after executing `terraform apply` to update the output with the new password. This attribute can be an arbitrary string but we recommend 2 formats:
+- a datetime to keep a trace of the last reset
+- a md5 of other variables to automatically trigger it based on this variable update
 ## Argument Reference
 
 The following arguments are supported:
@@ -42,6 +54,8 @@ The following arguments are supported:
   - objectstore_operator
   - volume_operator
 
+* `password_reset` - (Optional) Arbitrary string to change to trigger a password update. Use the `terraform refresh` command after executing `terraform apply` to update the output with the new password.
+
 ## Attributes Reference
 
 The following attributes are exported:
@@ -50,6 +64,7 @@ The following attributes are exported:
 * `description` - See Argument Reference above.
 * `openstack_rc` - a convenient map representing an openstack_rc file. Note: no password nor sensitive token is set in this map.
 * `password` - (Sensitive) the password generated for the user. The password can be used with the Openstack API. This attribute is sensitive and will only be retrieve once during creation.
+* `password_reset` - See Argument Reference above.
 * `roles` - A list of roles associated with the user.
   * `description` - description of the role
   * `id` - id of the role
