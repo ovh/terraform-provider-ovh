@@ -565,10 +565,12 @@ func (r CloudProjectDatabaseLogSubscriptionResponse) toMap() map[string]interfac
 
 type CloudProjectDatabaseLogSubscriptionCreateOpts struct {
 	StreamID string `json:"streamId"`
+	Kind     string `json:"kind"`
 }
 
 func (opts *CloudProjectDatabaseLogSubscriptionCreateOpts) fromResource(d *schema.ResourceData) *CloudProjectDatabaseLogSubscriptionCreateOpts {
 	opts.StreamID = d.Get("stream_id").(string)
+	opts.Kind = d.Get("kind").(string)
 	return opts
 }
 

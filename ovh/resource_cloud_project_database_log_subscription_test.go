@@ -33,6 +33,7 @@ resource "ovh_cloud_project_database_log_subscription" "sub" {
 	engine		 = ovh_cloud_project_database.db.engine
 	cluster_id   = ovh_cloud_project_database.db.id
 	stream_id    = ovh_dbaas_logs_output_graylog_stream.stream.id
+	kind         = "customer_logs"
 }
 `
 
