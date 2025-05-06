@@ -54,15 +54,16 @@ func resourceCloudProjectDatabaseLogSubscription() *schema.Resource {
 				ForceNew:    true,
 				Required:    true,
 			},
+			"kind": {
+				Type:        schema.TypeString,
+				Description: "Log kind name of this subscription",
+				ForceNew:    true,
+				Required:    true,
+			},
 			//Computed
 			"created_at": {
 				Type:        schema.TypeString,
 				Description: "Creation date of the subscription",
-				Computed:    true,
-			},
-			"kind": {
-				Type:        schema.TypeString,
-				Description: "Log kind name of this subscription",
 				Computed:    true,
 			},
 			"ldp_service_name": {
@@ -133,7 +134,7 @@ func resourceCloudProjectDatabaseLogSubscriptionCreate(ctx context.Context, d *s
 	log.Printf("[DEBUG] Will create Log subscription : %+v for cluster %s from project %s", params, clusterID, serviceName)
 	err := config.OVHClient.PostWithContext(ctx, endpoint, params, res)
 	if err != nil {
-		diag.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
+		return diag.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
 	}
 
 	log.Printf("[DEBUG] Waiting for Log subscription operation %s to be READY", res.OperationID)
@@ -202,7 +203,7 @@ func resourceCloudProjectDatabaseLogSubscriptionDelete(ctx context.Context, d *s
 	log.Printf("[DEBUG] Will delete Log subscription %s from cluster %s from project %s", id, clusterID, serviceName)
 	err := config.OVHClient.DeleteWithContext(ctx, endpoint, res)
 	if err != nil {
-		diag.Errorf("calling DELETE %s:\n\t %q", endpoint, err)
+		return diag.Errorf("calling DELETE %s:\n\t %q", endpoint, err)
 	}
 
 	log.Printf("[DEBUG] Waiting for user %s to be DELETED", id)
