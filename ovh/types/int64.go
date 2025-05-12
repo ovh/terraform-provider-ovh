@@ -86,6 +86,16 @@ func (t *TfInt64Value) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func (t TfInt64Value) Equal(o attr.Value) bool {
+	other, ok := o.(TfInt64Value)
+
+	if !ok {
+		return false
+	}
+
+	return t.Int64Value.Equal(other.Int64Value)
+}
+
 func (t TfInt64Value) MarshalJSON() ([]byte, error) {
 	if t.IsNull() || t.IsUnknown() {
 		return []byte("null"), nil
