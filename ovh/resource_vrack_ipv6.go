@@ -67,6 +67,17 @@ func resourceVrackIpV6() *schema.Resource {
 					},
 				},
 			},
+			// computed
+			"region": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Where your block announced on the network",
+			},
+			"ipv6": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The IPv6 block announced on the network",
+			},
 		},
 	}
 }
@@ -96,7 +107,7 @@ func resourceVrackIpv6Create(d *schema.ResourceData, meta interface{}) error {
 
 	serviceName := d.Get("service_name").(string)
 
-	opts := (&VrackIpCreateOpts{}).FromResource(d)
+	opts := (&VrackIpV6CreateOpts{}).FromResource(d)
 	task := VrackTask{}
 
 	endpoint := fmt.Sprintf("/vrack/%s/ipv6", url.PathEscape(serviceName))
@@ -196,8 +207,14 @@ func resourceVrackIpv6Read(d *schema.ResourceData, meta interface{}) error {
 		url.PathEscape(block),
 	)
 
-	if err := config.OVHClient.Get(endpoint, nil); err != nil {
+	ipv6 := &VrackIpV6{}
+	if err := config.OVHClient.Get(endpoint, ipv6); err != nil {
 		return fmt.Errorf("failed to get vrack-ipv6 link: %w", err)
+	}
+
+	// set resource attributes
+	for k, v := range ipv6.ToMap() {
+		d.Set(k, v)
 	}
 
 	return setBridgedSubrangeState(d, meta, serviceName, block)

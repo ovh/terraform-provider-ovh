@@ -88,6 +88,8 @@ func TestAccVrackIPv6_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("ovh_vrack_ipv6.test-vrack-ipv6-basic", "service_name", serviceName),
 					resource.TestCheckResourceAttr("ovh_vrack_ipv6.test-vrack-ipv6-basic", "block", ipBlock),
+					resource.TestCheckResourceAttrSet("ovh_vrack_ipv6.test-vrack-ipv6-basic", "region"),
+					resource.TestCheckResourceAttrSet("ovh_vrack_ipv6.test-vrack-ipv6-basic", "ipv6"),
 					resource.TestCheckResourceAttrSet("ovh_vrack_ipv6.test-vrack-ipv6-basic", "bridged_subrange.0.subrange"),
 					resource.TestCheckResourceAttrSet("ovh_vrack_ipv6.test-vrack-ipv6-basic", "bridged_subrange.0.gateway"),
 					resource.TestCheckResourceAttr("ovh_vrack_ipv6.test-vrack-ipv6-basic", "bridged_subrange.0.slaac", "enabled"),
@@ -99,6 +101,8 @@ func TestAccVrackIPv6_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("ovh_vrack_ipv6.test-vrack-ipv6-basic", "service_name", serviceName),
 					resource.TestCheckResourceAttr("ovh_vrack_ipv6.test-vrack-ipv6-basic", "block", ipBlock),
+					resource.TestCheckResourceAttrSet("ovh_vrack_ipv6.test-vrack-ipv6-basic", "region"),
+					resource.TestCheckResourceAttrSet("ovh_vrack_ipv6.test-vrack-ipv6-basic", "ipv6"),
 					resource.TestCheckResourceAttrSet("ovh_vrack_ipv6.test-vrack-ipv6-basic", "bridged_subrange.0.subrange"),
 					resource.TestCheckResourceAttrSet("ovh_vrack_ipv6.test-vrack-ipv6-basic", "bridged_subrange.0.gateway"),
 					resource.TestCheckResourceAttr("ovh_vrack_ipv6.test-vrack-ipv6-basic", "bridged_subrange.0.slaac", "disabled"),

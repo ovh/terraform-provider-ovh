@@ -69,6 +69,7 @@ The following arguments are supported:
 
 * `service_name` - (Required) The internal name of your vrack
 * `block` - (Required) Your IP block.
+* `region` - (Optional) The region (e.g: eu-west-gra) where want to route your block to.
 
 ## Attributes Reference
 
@@ -77,3 +78,4 @@ The following attributes are exported:
 * `gateway` - Your gateway
 * `ip` - Your IP block
 * `zone` - Where you want your block announced on the network
+* `region` - See Argument Reference above.
