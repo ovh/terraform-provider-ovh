@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/ovh/go-ovh/ovh"
 )
 
 type DomainZone struct {
@@ -53,7 +52,7 @@ type DomainTask struct {
 	TodoDate      string `json:"todoDate"`
 }
 
-func waitDomainTask(client *ovh.Client, domainName string, taskId int) error {
+func waitDomainTask(client *OVHClient, domainName string, taskId int) error {
 	endpoint := fmt.Sprintf("/domain/%s/task/%d", url.PathEscape(domainName), taskId)
 
 	stateConf := &retry.StateChangeConf{

@@ -9,7 +9,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 )
 
@@ -190,7 +189,7 @@ func resourceDomainNameServersDelete(resourceData *schema.ResourceData, meta int
 	return nil
 }
 
-func waitDomainNameServersHosted(client *ovh.Client, domainName string) error {
+func waitDomainNameServersHosted(client *OVHClient, domainName string) error {
 	endpoint := fmt.Sprintf("/domain/%s", url.PathEscape(domainName))
 
 	stateConf := &retry.StateChangeConf{

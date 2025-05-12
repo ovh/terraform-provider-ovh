@@ -9,10 +9,9 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/ovh/go-ovh/ovh"
 )
 
-func waitForDbaasLogsOperation(ctx context.Context, c *ovh.Client, serviceName, id string) (*DbaasLogsOperation, error) {
+func waitForDbaasLogsOperation(ctx context.Context, c *OVHClient, serviceName, id string) (*DbaasLogsOperation, error) {
 	// Wait for operation status
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"PENDING", "RECEIVED", "STARTED", "RETRY", "RUNNING"},
@@ -41,7 +40,7 @@ func waitForDbaasLogsOperation(ctx context.Context, c *ovh.Client, serviceName, 
 	return op, nil
 }
 
-func waitForDbaasLogsOperationCheck(c *ovh.Client, serviceName, id string) retry.StateRefreshFunc {
+func waitForDbaasLogsOperationCheck(c *OVHClient, serviceName, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		res := &DbaasLogsOperation{}
 

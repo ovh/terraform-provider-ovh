@@ -369,7 +369,7 @@ func resourceCloudProjectContainerRegistryDelete(d *schema.ResourceData, meta in
 	return nil
 }
 
-func waitForCloudProjectContainerRegistry(c *ovh.Client, serviceName, id string) resource.StateRefreshFunc {
+func waitForCloudProjectContainerRegistry(c *OVHClient, serviceName, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		r := &CloudProjectContainerRegistry{}
 		endpoint := fmt.Sprintf(

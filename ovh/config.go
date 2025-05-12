@@ -8,6 +8,8 @@ import (
 	cleanhttp "github.com/hashicorp/go-cleanhttp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging"
 	"github.com/ovh/go-ovh/ovh"
+
+	"go.uber.org/ratelimit"
 )
 
 var providerVersion, providerCommit string
@@ -32,10 +34,13 @@ type Config struct {
 	// Extra user-agent information
 	UserAgentExtra string
 
-	OVHClient     *ovh.Client
+	RawOVHClient  *ovh.Client
+	OVHClient     *OVHClient
 	authenticated bool
 	authFailed    error
 	lockAuth      *sync.Mutex
+
+	ApiRateLimit ratelimit.Limiter
 }
 
 func clientDefault(c *Config) (*ovh.Client, error) {
@@ -128,7 +133,11 @@ func (c *Config) load() error {
 	}
 
 	httpClient.Transport = logging.NewTransport("OVH", httpClient.Transport)
-	c.OVHClient = targetClient
+	c.RawOVHClient = targetClient
+	c.OVHClient = &OVHClient{
+		RawOVHClient: targetClient,
+		RateLimiter:  c.ApiRateLimit,
+	}
 
 	return nil
 }

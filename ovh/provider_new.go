@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+
+	"go.uber.org/ratelimit"
 )
 
 // Ensure the implementation satisfies the expected interfaces.
@@ -66,6 +68,10 @@ func (p *OvhProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *
 			"user_agent_extra": schema.StringAttribute{
 				Optional:    true,
 				Description: descriptions["user_agent_extra"],
+			},
+			"api_rate_limit": schema.Int32Attribute{
+				Optional:    true,
+				Description: descriptions["api_rate_limit"],
 			},
 		},
 	}
@@ -183,6 +189,11 @@ func (p *OvhProvider) Configure(ctx context.Context, req provider.ConfigureReque
 	if !config.UserAgentExtra.IsNull() {
 		clientConfig.UserAgentExtra = config.UserAgentExtra.ValueString()
 	}
+	if !config.ApiRateLimit.IsNull() {
+		clientConfig.ApiRateLimit = ratelimit.New(int(config.ApiRateLimit.ValueInt32()))
+	} else {
+		clientConfig.ApiRateLimit = ratelimit.NewUnlimited()
+	}
 
 	if err := clientConfig.loadAndValidate(); err != nil {
 		resp.Diagnostics.AddError(err.Error(), "failed to init OVH API client")
@@ -294,4 +305,5 @@ type ovhProviderModel struct {
 	ClientID          types.String `tfsdk:"client_id"`
 	ClientSecret      types.String `tfsdk:"client_secret"`
 	UserAgentExtra    types.String `tfsdk:"user_agent_extra"`
+	ApiRateLimit      types.Int32  `tfsdk:"api_rate_limit"`
 }

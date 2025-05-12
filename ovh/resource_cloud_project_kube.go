@@ -460,7 +460,7 @@ func resourceCloudProjectKubeCreate(d *schema.ResourceData, meta interface{}) er
 
 	log.Printf("[DEBUG] Waiting for kube %s to be available", res.Id)
 	endpoint = fmt.Sprintf("/cloud/project/%s/kube/%s", serviceName, res.Id)
-	if err := helpers.WaitAvailable(config.OVHClient, endpoint, d.Timeout(schema.TimeoutCreate)); err != nil {
+	if err := helpers.WaitAvailable(config.RawOVHClient, endpoint, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return err
 	}
 
@@ -699,14 +699,14 @@ func resourceCloudProjectKubeUpdate(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func cloudProjectKubeExists(serviceName, id string, client *ovh.Client) error {
+func cloudProjectKubeExists(serviceName, id string, client *OVHClient) error {
 	res := &CloudProjectKubeResponse{}
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s", serviceName, id)
 	return client.Get(endpoint, res)
 }
 
-func waitForCloudProjectKubeReady(client *ovh.Client, serviceName, kubeId string, pending []string, target []string, timeout time.Duration) error {
+func waitForCloudProjectKubeReady(client *OVHClient, serviceName, kubeId string, pending []string, target []string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: pending,
 		Target:  target,
@@ -729,7 +729,7 @@ func waitForCloudProjectKubeReady(client *ovh.Client, serviceName, kubeId string
 	return err
 }
 
-func waitForCloudProjectKubeDeleted(d *schema.ResourceData, client *ovh.Client, serviceName, kubeId string) error {
+func waitForCloudProjectKubeDeleted(d *schema.ResourceData, client *OVHClient, serviceName, kubeId string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"DELETING"},
 		Target:  []string{"DELETED"},

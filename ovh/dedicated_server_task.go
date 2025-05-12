@@ -11,7 +11,7 @@ import (
 	"github.com/ovh/go-ovh/ovh"
 )
 
-func waitForDedicatedServerTask(serviceName string, task *DedicatedServerTask, c *ovh.Client) error {
+func waitForDedicatedServerTask(serviceName string, task *DedicatedServerTask, c *OVHClient) error {
 	taskId := task.Id
 
 	refreshFunc := func() (interface{}, string, error) {
@@ -65,7 +65,7 @@ func waitForDedicatedServerTask(serviceName string, task *DedicatedServerTask, c
 	return nil
 }
 
-func getDedicatedServerTask(serviceName string, taskId int64, c *ovh.Client) (*DedicatedServerTask, error) {
+func getDedicatedServerTask(serviceName string, taskId int64, c *OVHClient) (*DedicatedServerTask, error) {
 	task := &DedicatedServerTask{}
 	endpoint := fmt.Sprintf(
 		"/dedicated/server/%s/task/%d",

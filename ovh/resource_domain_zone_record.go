@@ -260,7 +260,7 @@ func ovhDomainZoneRefresh(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func ovhDomainZoneRecord(client *ovh.Client, d *schema.ResourceData, id string, retry bool) (*OvhDomainZoneRecord, error) {
+func ovhDomainZoneRecord(client *OVHClient, d *schema.ResourceData, id string, retry bool) (*OvhDomainZoneRecord, error) {
 	rec := &OvhDomainZoneRecord{}
 	zone := d.Get("zone").(string)
 
