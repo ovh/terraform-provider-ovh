@@ -13,15 +13,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-mux/tf5to6server"
 	"github.com/hashicorp/terraform-plugin-mux/tf6muxserver"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-
-	"github.com/ovh/go-ovh/ovh"
 )
 
 var testAccProviders map[string]*schema.Provider
 var testAccProtoV6ProviderFactories map[string]func() (tfprotov6.ProviderServer, error)
 
 var testAccProvider *schema.Provider
-var testAccOVHClient *ovh.Client
+var testAccOVHClient *OVHClient
 
 func init() {
 	log.SetOutput(os.Stdout)

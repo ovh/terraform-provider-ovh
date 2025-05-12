@@ -338,7 +338,7 @@ func resourceCloudProjectNetworkPrivateDelete(d *schema.ResourceData, meta inter
 
 // AttachmentStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch
 // an Attachment Task.
-func waitForCloudProjectNetworkPrivateActive(c *ovh.Client, serviceName, CloudProjectNetworkPrivateId string) resource.StateRefreshFunc {
+func waitForCloudProjectNetworkPrivateActive(c *OVHClient, serviceName, CloudProjectNetworkPrivateId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		r := &CloudProjectNetworkPrivateResponse{}
 		endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s", serviceName, CloudProjectNetworkPrivateId)
@@ -353,7 +353,7 @@ func waitForCloudProjectNetworkPrivateActive(c *ovh.Client, serviceName, CloudPr
 
 // AttachmentStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch
 // an Attachment Task.
-func waitForCloudProjectNetworkPrivateDelete(c *ovh.Client, serviceName, CloudProjectNetworkPrivateId string) resource.StateRefreshFunc {
+func waitForCloudProjectNetworkPrivateDelete(c *OVHClient, serviceName, CloudProjectNetworkPrivateId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		r := &CloudProjectNetworkPrivateResponse{}
 		endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s", serviceName, CloudProjectNetworkPrivateId)

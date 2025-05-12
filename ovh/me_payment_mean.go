@@ -3,8 +3,6 @@ package ovh
 import (
 	"fmt"
 
-	"github.com/ovh/go-ovh/ovh"
-
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 )
 
@@ -13,7 +11,7 @@ var (
 	MePaymentMeanFidelityAccountPaymentOpts = &MeOrderPaymentOpts{PaymentMean: "fidelityAccount"}
 )
 
-func MePaymentMeanBankAccounts(c *ovh.Client) ([]*MePaymentMeanBankAccount, error) {
+func MePaymentMeanBankAccounts(c *OVHClient) ([]*MePaymentMeanBankAccount, error) {
 	ids := &[]int64{}
 	endpoint := fmt.Sprintf("/me/paymentMean/bankAccount")
 	if err := c.Get(endpoint, ids); err != nil {
@@ -38,7 +36,7 @@ func MePaymentMeanBankAccounts(c *ovh.Client) ([]*MePaymentMeanBankAccount, erro
 	return results, nil
 }
 
-func MePaymentMeanCreditCards(c *ovh.Client) ([]*MePaymentMeanCreditCard, error) {
+func MePaymentMeanCreditCards(c *OVHClient) ([]*MePaymentMeanCreditCard, error) {
 	ids := &[]int64{}
 	endpoint := fmt.Sprintf("/me/paymentMean/creditCard")
 	if err := c.Get(endpoint, ids); err != nil {
@@ -63,7 +61,7 @@ func MePaymentMeanCreditCards(c *ovh.Client) ([]*MePaymentMeanCreditCard, error)
 	return results, nil
 }
 
-func MePaymentMeanPaypals(c *ovh.Client) ([]*MePaymentMeanPaypal, error) {
+func MePaymentMeanPaypals(c *OVHClient) ([]*MePaymentMeanPaypal, error) {
 	ids := &[]int64{}
 	endpoint := fmt.Sprintf("/me/paymentMean/paypal")
 	if err := c.Get(endpoint, ids); err != nil {
@@ -88,7 +86,7 @@ func MePaymentMeanPaypals(c *ovh.Client) ([]*MePaymentMeanPaypal, error) {
 	return results, nil
 }
 
-func MePaymentMeanDefaultPaymentOpts(c *ovh.Client) (*MeOrderPaymentOpts, error) {
+func MePaymentMeanDefaultPaymentOpts(c *OVHClient) (*MeOrderPaymentOpts, error) {
 	payment := &MeOrderPaymentOpts{}
 
 	bankAccounts, err := MePaymentMeanBankAccounts(c)

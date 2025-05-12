@@ -183,7 +183,7 @@ func resourceDedicatedServerNetworkingDelete(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func waitForDedicatedServerNetworking(serviceName string, c *ovh.Client) error {
+func waitForDedicatedServerNetworking(serviceName string, c *OVHClient) error {
 
 	refreshFunc := func() (interface{}, string, error) {
 		var taskErr error
@@ -236,7 +236,7 @@ func waitForDedicatedServerNetworking(serviceName string, c *ovh.Client) error {
 	return nil
 }
 
-func getDedicatedServerNetworkingDetails(serviceName string, c *ovh.Client) (*DedicatedServerNetworking, error) {
+func getDedicatedServerNetworkingDetails(serviceName string, c *OVHClient) (*DedicatedServerNetworking, error) {
 	serverNetworkingDetails := &DedicatedServerNetworking{}
 	endpoint := fmt.Sprintf(
 		"/dedicated/server/%s/networking",

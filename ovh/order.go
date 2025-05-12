@@ -536,7 +536,7 @@ func orderDelete(config *Config, terminate TerminateFunc, confirm ConfirmTermina
 	return nil
 }
 
-func orderDetails(c *ovh.Client, orderId int64) ([]*MeOrderDetail, error) {
+func orderDetails(c *OVHClient, orderId int64) ([]*MeOrderDetail, error) {
 	log.Printf("[DEBUG] Will read order details %d", orderId)
 	detailIds := []int64{}
 	endpoint := fmt.Sprintf("/me/order/%d/details", orderId)
@@ -566,7 +566,7 @@ func orderDetails(c *ovh.Client, orderId int64) ([]*MeOrderDetail, error) {
 	return details, nil
 }
 
-func serviceNameFromOrder(c *ovh.Client, orderId int64, plan string) (string, error) {
+func serviceNameFromOrder(c *OVHClient, orderId int64, plan string) (string, error) {
 	detailIds := []int64{}
 	endpoint := fmt.Sprintf("/me/order/%d/details", orderId)
 	if err := c.Get(endpoint, &detailIds); err != nil {
@@ -584,7 +584,7 @@ func serviceNameFromOrder(c *ovh.Client, orderId int64, plan string) (string, er
 // serviceNameFromOrderDetailsOperations retrieves the service name from an order ID using
 // the route `/me/order/{orderId}/details/{detailId}/operations`.
 // It is used in the US where route `/me/order/{orderId}/details/{detailId}/extension` does not exist.
-func serviceNameFromOrderDetailsOperations(c *ovh.Client, orderId int64, detailIds []int64) (string, error) {
+func serviceNameFromOrderDetailsOperations(c *OVHClient, orderId int64, detailIds []int64) (string, error) {
 	for _, detailId := range detailIds {
 		operations, err := orderDetailOperations(c, orderId, detailId)
 		if err != nil {
@@ -601,7 +601,7 @@ func serviceNameFromOrderDetailsOperations(c *ovh.Client, orderId int64, detailI
 // serviceNameFromOrderDetailsExtension retrieves the service name from an order ID using
 // the route `/me/order/{orderId}/details/{detailId}/extension`.
 // It is used everywhere except in the US region.
-func serviceNameFromOrderDetailsExtension(c *ovh.Client, plan string, orderId int64, detailIds []int64) (string, error) {
+func serviceNameFromOrderDetailsExtension(c *OVHClient, plan string, orderId int64, detailIds []int64) (string, error) {
 	for _, detailId := range detailIds {
 		detailExtension := &MeOrderDetailExtension{}
 		log.Printf("[DEBUG] Will read order detail extension %d/%d", orderId, detailId)
@@ -627,7 +627,7 @@ func serviceNameFromOrderDetailsExtension(c *ovh.Client, plan string, orderId in
 	return "", errors.New("serviceName not found")
 }
 
-func waitForOrder(c *ovh.Client, id int64) retry.StateRefreshFunc {
+func waitForOrder(c *OVHClient, id int64) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		var r string
 		endpoint := fmt.Sprintf("/me/order/%d/status", id)
@@ -679,7 +679,7 @@ func waitOrderCompletionV2(ctx context.Context, config *Config, orderID int64) (
 	return result.(string), err
 }
 
-func orderDetailOperations(c *ovh.Client, orderId int64, orderDetailId int64) ([]*MeOrderDetailOperation, error) {
+func orderDetailOperations(c *OVHClient, orderId int64, orderDetailId int64) ([]*MeOrderDetailOperation, error) {
 	log.Printf("[DEBUG] Will list order detail operations %d/%d", orderId, orderDetailId)
 	operationsIds := []int64{}
 	endpoint := fmt.Sprintf("/me/order/%d/details/%d/operations", orderId, orderDetailId)
@@ -701,7 +701,7 @@ func orderDetailOperations(c *ovh.Client, orderId int64, orderDetailId int64) ([
 	return operations, nil
 }
 
-func getOVHSubsidiary(ctx context.Context, c *ovh.Client) (string, error) {
+func getOVHSubsidiary(ctx context.Context, c *OVHClient) (string, error) {
 	var response MeResponse
 
 	if err := c.GetWithContext(ctx, "/me", &response); err != nil {
