@@ -23,10 +23,10 @@ data "ovh_cloud_project_database" "db" {
 }
 
 resource "ovh_cloud_project_database_log_subscription" "subscription" {
-	service_name = data.ovh_cloud_project_database.db.service_name
-	engine       = data.ovh_cloud_project_database.db.engine
-	cluster_id   = data.ovh_cloud_project_database.db.id
-	stream_id    = data.ovh_dbaas_logs_output_graylog_stream.stream.id
+  service_name = data.ovh_cloud_project_database.db.service_name
+  engine       = data.ovh_cloud_project_database.db.engine
+  cluster_id   = data.ovh_cloud_project_database.db.id
+  stream_id    = data.ovh_dbaas_logs_output_graylog_stream.stream.id
   kind         = "customer_logs"
 }
 ```
@@ -38,8 +38,8 @@ The following arguments are supported:
 * `service_name` - (Required, Forces new resource) The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 * `engine` - (Required, Forces new resource) The database engine for which you want to manage a subscription. To get a full list of available engine visit. [public documentation](https://docs.ovh.com/gb/en/publiccloud/databases).
 * `cluster_id` - (Required, Forces new resource) Cluster ID.
-* `stream_id` - (Required, Forces new resource) Id of the target Log data platform stream.
 * `kind` - (Required, Forces new resource) Log kind name of this subscription.
+* `stream_id` - (Required, Forces new resource) Id of the target Log data platform stream.
 
 ## Attributes Reference
 
