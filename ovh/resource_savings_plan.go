@@ -33,6 +33,7 @@ func resourceSavingsPlan() *schema.Resource {
 				Description: "ID of the public cloud project",
 				ForceNew:    true,
 				Required:    true,
+				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
 			},
 			"flavor": {
 				Type:        schema.TypeString,

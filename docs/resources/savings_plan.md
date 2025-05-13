@@ -23,7 +23,7 @@ resource "ovh_savings_plan" "plan" {
 
 The following arguments are supported:
 
-* `service_name` - (Required) ID of the public cloud project
+* `service_name` - (Required) ID of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 * `flavor` - (Required) Savings Plan flavor. The list of available flavors can be retrieved in the [next section](#available-flavors).
 * `period` - (Required) Periodicity of the Savings Plan
 * `size` - (Required) Size of the Savings Plan
