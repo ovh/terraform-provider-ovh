@@ -10,7 +10,7 @@ import (
 	"github.com/ovh/go-ovh/ovh"
 )
 
-func waitForVrackTask(task *VrackTask, c *ovh.Client) error {
+func waitForVrackTask(task *VrackTask, c *OVHClient) error {
 	vrackId := task.ServiceName
 	taskId := task.Id
 

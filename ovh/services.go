@@ -11,7 +11,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/ovh/go-ovh/ovh"
 )
 
 type savingsPlansSubscribable struct {
@@ -46,7 +45,7 @@ type savingsPlanPeriodEndActionRequest struct {
 	PeriodEndAction string `json:"periodEndAction"`
 }
 
-func serviceIdFromResourceName(c *ovh.Client, resourceName string) (int, error) {
+func serviceIdFromResourceName(c *OVHClient, resourceName string) (int, error) {
 	var serviceIds []int
 	endpoint := fmt.Sprintf("/services?resourceName=%s", url.QueryEscape(resourceName))
 
@@ -57,7 +56,7 @@ func serviceIdFromResourceName(c *ovh.Client, resourceName string) (int, error) 
 	return serviceIds[0], nil
 }
 
-func serviceIdFromRouteAndResourceName(c *ovh.Client, route, resourceName string) (int, error) {
+func serviceIdFromRouteAndResourceName(c *OVHClient, route, resourceName string) (int, error) {
 	var serviceIds []int
 	endpoint := fmt.Sprintf("/services?resourceName=%s&routes=%s", url.QueryEscape(resourceName), url.QueryEscape(route))
 
@@ -68,7 +67,7 @@ func serviceIdFromRouteAndResourceName(c *ovh.Client, route, resourceName string
 	return serviceIds[0], nil
 }
 
-func serviceInfoFromServiceName(c *ovh.Client, serviceType, serviceName string) (*ServiceInfos, error) {
+func serviceInfoFromServiceName(c *OVHClient, serviceType, serviceName string) (*ServiceInfos, error) {
 	var (
 		serviceInfos ServiceInfos
 		endpoint     = path.Join("/", serviceType, url.PathEscape(serviceName), "/serviceInfos")

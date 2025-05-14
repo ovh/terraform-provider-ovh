@@ -300,7 +300,7 @@ func resourceCloudProjectKubeNodePoolCreate(d *schema.ResourceData, meta interfa
 	// This is a fix for a weird bug where the nodepool is not immediately available on API
 	log.Printf("[DEBUG] Waiting for nodepool %s to be available", res.Id)
 	endpoint = fmt.Sprintf("/cloud/project/%s/kube/%s/nodepool/%s", serviceName, kubeId, res.Id)
-	err = helpers.WaitAvailable(config.OVHClient, endpoint, 2*time.Minute)
+	err = helpers.WaitAvailable(config.RawOVHClient, endpoint, 2*time.Minute)
 	if err != nil {
 		return err
 	}
@@ -394,14 +394,14 @@ func resourceCloudProjectKubeNodePoolDelete(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func cloudProjectKubeNodePoolExists(serviceName, kubeId, id string, client *ovh.Client) error {
+func cloudProjectKubeNodePoolExists(serviceName, kubeId, id string, client *OVHClient) error {
 	res := &CloudProjectKubeNodePoolResponse{}
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/nodepool/%s", serviceName, kubeId, id)
 	return client.Get(endpoint, res)
 }
 
-func waitForCloudProjectKubeNodePoolWithStateTarget(client *ovh.Client, serviceName, kubeId, id string, timeout time.Duration, stateTargets []string) error {
+func waitForCloudProjectKubeNodePoolWithStateTarget(client *OVHClient, serviceName, kubeId, id string, timeout time.Duration, stateTargets []string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"INSTALLING", "UPDATING", "REDEPLOYING", "RESIZING", "DOWNSCALING", "UPSCALING", "UNKNOWN"},
 		Target:  stateTargets,
@@ -424,7 +424,7 @@ func waitForCloudProjectKubeNodePoolWithStateTarget(client *ovh.Client, serviceN
 	return err
 }
 
-func waitForCloudProjectKubeNodePoolDeleted(client *ovh.Client, serviceName, kubeId, id string, timeout time.Duration) error {
+func waitForCloudProjectKubeNodePoolDeleted(client *OVHClient, serviceName, kubeId, id string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"DELETING"},
 		Target:  []string{"DELETED"},
