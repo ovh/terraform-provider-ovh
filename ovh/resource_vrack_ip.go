@@ -31,6 +31,12 @@ func resourceVrackIp() *schema.Resource {
 				ForceNew:    true,
 				Description: "Your IP block.",
 			},
+			"region": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "Where you want your block announced on the network",
+			},
 
 			// computed
 			"gateway": {

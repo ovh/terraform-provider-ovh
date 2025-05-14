@@ -45,6 +45,7 @@ type VrackIp struct {
 	Gateway string `json:"gateway"`
 	Ip      string `json:"ip"`
 	Zone    string `json:"zone"`
+	Region  string `json:"region"`
 }
 
 func (v VrackIp) ToMap() map[string]interface{} {
@@ -53,15 +54,41 @@ func (v VrackIp) ToMap() map[string]interface{} {
 	obj["gateway"] = v.Gateway
 	obj["ip"] = v.Ip
 	obj["zone"] = v.Zone
+	obj["region"] = v.Region
 
 	return obj
 }
 
+// IPv4 Block Payload
 type VrackIpCreateOpts struct {
-	Block string `json:"block"`
+	Block  string  `json:"block"`
+	Region *string `json:"region,omitempty"`
 }
 
 func (opts *VrackIpCreateOpts) FromResource(d *schema.ResourceData) *VrackIpCreateOpts {
+	opts.Block = d.Get("block").(string)
+	opts.Region = helpers.GetNilStringPointerFromData(d, "region")
+	return opts
+}
+
+type VrackIpV6 struct {
+	Region string `json:"region"`
+	IPv6   string `json:"ipv6"`
+}
+
+func (v VrackIpV6) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+	obj["region"] = v.Region
+	obj["ipv6"] = v.IPv6
+	return obj
+}
+
+// IPv6 Block Payload
+type VrackIpV6CreateOpts struct {
+	Block string `json:"block"`
+}
+
+func (opts *VrackIpV6CreateOpts) FromResource(d *schema.ResourceData) *VrackIpV6CreateOpts {
 	opts.Block = d.Get("block").(string)
 	return opts
 }

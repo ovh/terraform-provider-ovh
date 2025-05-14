@@ -439,6 +439,15 @@ func testAccPreCheckVRack(t *testing.T) {
 	checkEnvOrSkip(t, "OVH_VRACK_SERVICE_TEST")
 }
 
+// Checks that the environment variables needed for the /vrack/{serviceName}/ip acceptance tests
+// are set, and variable used for block with region.
+func testAccPreCheckVRackIpWithRegion(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_VRACK_SERVICE_TEST")
+	checkEnvOrSkip(t, "OVH_VRACK_IP_BLOCK")
+	checkEnvOrSkip(t, "OVH_VRACK_IP_REGION")
+}
+
 // Checks that the environment variables needed for the /me/paymentMean acceptance tests
 // are set.
 func testAccPreCheckMePaymentMean(t *testing.T) {

@@ -34,7 +34,8 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-No additional attribute is exported.
+* `region` - The region in which the block is routed.
+* `ipv6` - The IPv6 block.
 
 ## Import
 

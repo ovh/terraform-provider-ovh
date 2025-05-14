@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"os"
 	"strings"
 	"testing"
 
@@ -178,6 +179,35 @@ func TestAccVrackIp_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("ovh_vrack_ip.vrackblock", "service_name"),
 					resource.TestCheckResourceAttrSet("ovh_vrack_ip.vrackblock", "block"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVrackIpWithRegion_basic(t *testing.T) {
+	serviceName := os.Getenv("OVH_VRACK_SERVICE_TEST")
+	block := os.Getenv("OVH_VRACK_IP_BLOCK")
+	region := os.Getenv("OVH_VRACK_IP_REGION")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckVRackIpWithRegion(t)
+		},
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+				resource "ovh_vrack_ip" "vrackblock" {
+				  service_name      = "%s"
+				  block 	= "%s"
+				  region 	= "%s"
+				}
+				`, serviceName, block, region),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_vrack_ip.vrackblock", "service_name", serviceName),
+					resource.TestCheckResourceAttr("ovh_vrack_ip.vrackblock", "block", block),
+					resource.TestCheckResourceAttr("ovh_vrack_ip.vrackblock", "region", region),
 				),
 			},
 		},
