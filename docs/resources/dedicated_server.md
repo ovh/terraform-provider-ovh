@@ -142,7 +142,9 @@ resource "ovh_dedicated_server" "server" {
 ### Arguments used to control the lifecycle of a dedicated server
 
 * `keep_service_after_destroy` - Avoid termination of the service when deleting the resource (when using this parameter, make sure to apply your configuration before running the destroy so that the value is set in the state)
-* `run_actions_before_destroy` - (Set of strings) Actions to perform before destroying the server. Right now the only available action is "reinstall_only_os", that will reinstall the dedicated server with the operating system defined in the `os` field. When using this parameter, make sure to apply your configuration before running the destroy so that the value is set in the state
+* `run_actions_before_destroy` - (Set of strings) Actions to perform before destroying the server. When using this parameter, make sure to apply your configuration before running the destroy so that the value is set in the state. The following actions are available:
+  * "reinstall_only_os": Will reinstall the dedicated server with the operating system defined in the `os` field.
+  * "reboot_rescue": Will reboot your server in rescue mode before destroying the resource.
 * `prevent_install_on_create`  - Prevent server installation after it has been delivered
 * `prevent_install_on_import`  - Defines whether a reinstallation of the server is allowed after importing it if there is a modification on the installation parameters
 

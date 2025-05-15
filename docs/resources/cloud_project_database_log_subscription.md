@@ -17,9 +17,9 @@ data "ovh_dbaas_logs_output_graylog_stream" "stream" {
 }
 
 data "ovh_cloud_project_database" "db" {
-  service_name  = "XXX"
-  engine        = "YYY"
-  id            = "ZZZ"
+  service_name = "XXX"
+  engine       = "YYY"
+  id           = "ZZZ"
 }
 
 resource "ovh_cloud_project_database_log_subscription" "subscription" {
