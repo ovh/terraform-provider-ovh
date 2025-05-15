@@ -262,7 +262,7 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 			Optional:    true,
 			Description: "Actions to run before destroying the resource",
 			Validators: []validator.Set{
-				setvalidator.ValueStringsAre(stringvalidator.OneOf("reinstall_only_os")),
+				setvalidator.ValueStringsAre(stringvalidator.OneOf("reinstall_only_os", "reboot_rescue")),
 			},
 		},
 		"link_speed": schema.Int64Attribute{
