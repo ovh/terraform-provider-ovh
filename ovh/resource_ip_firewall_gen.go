@@ -72,10 +72,6 @@ type IpFirewallWritableModel struct {
 func (v IpFirewallModel) ToCreate() *IpFirewallWritableModel {
 	res := &IpFirewallWritableModel{}
 
-	if !v.Enabled.IsUnknown() {
-		res.Enabled = &v.Enabled
-	}
-
 	if !v.IpOnFirewall.IsUnknown() {
 		res.IpOnFirewall = &v.IpOnFirewall
 	}
