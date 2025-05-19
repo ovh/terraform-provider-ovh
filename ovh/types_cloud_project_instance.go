@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/ovhwrap"
 )
 
 type AutoBackup struct {
@@ -390,7 +391,7 @@ func (cpir *CloudProjectInstanceCreateOpts) FromResource(d *schema.ResourceData)
 	cpir.UserData = helpers.GetNilStringPointerFromData(d, "user_data")
 }
 
-func waitForCloudProjectInstance(ctx context.Context, c *OVHClient, serviceName, region, instance string, timeout time.Duration) error {
+func waitForCloudProjectInstance(ctx context.Context, c *ovhwrap.Client, serviceName, region, instance string, timeout time.Duration) error {
 	endpoint := fmt.Sprintf("/cloud/project/%s/region/%s/instance/%s", url.PathEscape(serviceName), url.PathEscape(region), url.PathEscape(instance))
 
 	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {

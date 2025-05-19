@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers/hashcode"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/ovhwrap"
 )
 
 func dataSourceCloudProjectRegion() *schema.Resource {
@@ -135,7 +136,7 @@ func dataSourceCloudProjectRegionRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func getCloudProjectRegion(serviceName, region string, client *OVHClient) (*CloudProjectRegionResponse, error) {
+func getCloudProjectRegion(serviceName, region string, client *ovhwrap.Client) (*CloudProjectRegionResponse, error) {
 	log.Printf("[DEBUG] Will read public cloud region %s for project: %s", region, serviceName)
 
 	response := &CloudProjectRegionResponse{}

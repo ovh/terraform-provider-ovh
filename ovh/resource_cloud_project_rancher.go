@@ -80,7 +80,7 @@ func (r *cloudProjectRancherResource) Create(ctx context.Context, req resource.C
 
 	// Wait for service to be ready
 	endpoint = "/v2/publicCloud/project/" + url.PathEscape(data.ProjectId.ValueString()) + "/rancher/" + url.PathEscape(responseData.Id.ValueString())
-	if err := helpers.WaitForAPIv2ResourceStatusReady(ctx, r.config.RawOVHClient, endpoint); err != nil {
+	if err := helpers.WaitForAPIv2ResourceStatusReady(ctx, r.config.OVHClient, endpoint); err != nil {
 		resp.Diagnostics.AddError("Error waiting for resource to be ready", err.Error())
 		return
 	}
@@ -148,7 +148,7 @@ func (r *cloudProjectRancherResource) Update(ctx context.Context, req resource.U
 	}
 
 	// Wait for service to be ready
-	if err := helpers.WaitForAPIv2ResourceStatusReady(ctx, r.config.RawOVHClient, endpoint); err != nil {
+	if err := helpers.WaitForAPIv2ResourceStatusReady(ctx, r.config.OVHClient, endpoint); err != nil {
 		resp.Diagnostics.AddError("Error waiting for resource to be ready", err.Error())
 		return
 	}

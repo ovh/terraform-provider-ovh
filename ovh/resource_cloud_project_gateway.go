@@ -9,9 +9,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
-
 	"github.com/ovh/go-ovh/ovh"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/ovhwrap"
 )
 
 func resourceOvhCloudProjectGatewayImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -321,7 +321,7 @@ func resourceCloudProjectGatewayDelete(d *schema.ResourceData, meta interface{})
 
 // AttachmentStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch
 // an Attachment Task.
-func waitForCloudProjectGatewayActive(c *OVHClient, serviceName, operationId string) resource.StateRefreshFunc {
+func waitForCloudProjectGatewayActive(c *ovhwrap.Client, serviceName, operationId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		ro := &CloudProjectOperationResponse{}
 		endpoint := fmt.Sprintf("/cloud/project/%s/operation/%s",
@@ -352,7 +352,7 @@ func waitForCloudProjectGatewayActive(c *OVHClient, serviceName, operationId str
 
 // AttachmentStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch
 // an Attachment Task.
-func waitForCloudProjectGatewayDelete(c *OVHClient, serviceName, OperationId string) resource.StateRefreshFunc {
+func waitForCloudProjectGatewayDelete(c *ovhwrap.Client, serviceName, OperationId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		r := &CloudProjectOperationResponse{}
 		endpoint := fmt.Sprintf("/cloud/project/%s/operation/%s",

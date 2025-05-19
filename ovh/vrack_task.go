@@ -8,9 +8,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/ovh/go-ovh/ovh"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/ovhwrap"
 )
 
-func waitForVrackTask(task *VrackTask, c *OVHClient) error {
+func waitForVrackTask(task *VrackTask, c *ovhwrap.Client) error {
 	vrackId := task.ServiceName
 	taskId := task.Id
 

@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/ovhwrap"
 )
 
 func dataSourceDedicatedInstallationTemplate() *schema.Resource {
@@ -259,7 +260,7 @@ func dataSourceDedicatedInstallationTemplateRead(d *schema.ResourceData, meta in
 	return nil
 }
 
-func getDedicatedInstallationTemplate(d *schema.ResourceData, client *OVHClient) (*InstallationTemplate, error) {
+func getDedicatedInstallationTemplate(d *schema.ResourceData, client *ovhwrap.Client) (*InstallationTemplate, error) {
 	r := &InstallationTemplate{}
 
 	endpoint := fmt.Sprintf(

@@ -9,10 +9,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
-	"golang.org/x/exp/slices"
-
 	"github.com/ovh/go-ovh/ovh"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/ovhwrap"
+	"golang.org/x/exp/slices"
 )
 
 func resourceOvhCloudProjectNetworkPrivateImportState(
@@ -338,7 +338,7 @@ func resourceCloudProjectNetworkPrivateDelete(d *schema.ResourceData, meta inter
 
 // AttachmentStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch
 // an Attachment Task.
-func waitForCloudProjectNetworkPrivateActive(c *OVHClient, serviceName, CloudProjectNetworkPrivateId string) resource.StateRefreshFunc {
+func waitForCloudProjectNetworkPrivateActive(c *ovhwrap.Client, serviceName, CloudProjectNetworkPrivateId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		r := &CloudProjectNetworkPrivateResponse{}
 		endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s", serviceName, CloudProjectNetworkPrivateId)
@@ -353,7 +353,7 @@ func waitForCloudProjectNetworkPrivateActive(c *OVHClient, serviceName, CloudPro
 
 // AttachmentStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch
 // an Attachment Task.
-func waitForCloudProjectNetworkPrivateDelete(c *OVHClient, serviceName, CloudProjectNetworkPrivateId string) resource.StateRefreshFunc {
+func waitForCloudProjectNetworkPrivateDelete(c *ovhwrap.Client, serviceName, CloudProjectNetworkPrivateId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		r := &CloudProjectNetworkPrivateResponse{}
 		endpoint := fmt.Sprintf("/cloud/project/%s/network/private/%s", serviceName, CloudProjectNetworkPrivateId)

@@ -8,7 +8,7 @@ import (
 	cleanhttp "github.com/hashicorp/go-cleanhttp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging"
 	"github.com/ovh/go-ovh/ovh"
-
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/ovhwrap"
 	"go.uber.org/ratelimit"
 )
 
@@ -35,7 +35,7 @@ type Config struct {
 	UserAgentExtra string
 
 	RawOVHClient  *ovh.Client
-	OVHClient     *OVHClient
+	OVHClient     *ovhwrap.Client
 	authenticated bool
 	authFailed    error
 	lockAuth      *sync.Mutex
@@ -134,9 +134,9 @@ func (c *Config) load() error {
 
 	httpClient.Transport = logging.NewTransport("OVH", httpClient.Transport)
 	c.RawOVHClient = targetClient
-	c.OVHClient = &OVHClient{
-		RawOVHClient: targetClient,
-		RateLimiter:  c.ApiRateLimit,
+	c.OVHClient = &ovhwrap.Client{
+		RawClient:   targetClient,
+		RateLimiter: c.ApiRateLimit,
 	}
 
 	return nil

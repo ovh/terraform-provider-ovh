@@ -7,11 +7,11 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-
 	"github.com/ovh/go-ovh/ovh"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/ovhwrap"
 )
 
-func waitForDedicatedServerTask(serviceName string, task *DedicatedServerTask, c *OVHClient) error {
+func waitForDedicatedServerTask(serviceName string, task *DedicatedServerTask, c *ovhwrap.Client) error {
 	taskId := task.Id
 
 	refreshFunc := func() (interface{}, string, error) {
@@ -65,7 +65,7 @@ func waitForDedicatedServerTask(serviceName string, task *DedicatedServerTask, c
 	return nil
 }
 
-func getDedicatedServerTask(serviceName string, taskId int64, c *OVHClient) (*DedicatedServerTask, error) {
+func getDedicatedServerTask(serviceName string, taskId int64, c *ovhwrap.Client) (*DedicatedServerTask, error) {
 	task := &DedicatedServerTask{}
 	endpoint := fmt.Sprintf(
 		"/dedicated/server/%s/task/%d",

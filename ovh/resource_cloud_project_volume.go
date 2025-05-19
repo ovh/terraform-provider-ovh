@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/ovhwrap"
 )
 
 var _ resource.ResourceWithConfigure = (*cloudProjectVolumeResource)(nil)
@@ -88,7 +89,7 @@ func (r *cloudProjectVolumeResource) Create(ctx context.Context, req resource.Cr
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (d *cloudProjectVolumeResource) WaitForVolumeCreation(ctx context.Context, client *OVHClient, serviceName, operationId string) (interface{}, error) {
+func (d *cloudProjectVolumeResource) WaitForVolumeCreation(ctx context.Context, client *ovhwrap.Client, serviceName, operationId string) (interface{}, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{"null", "in-progress", "created", ""},
 		Target:  []string{"completed"},

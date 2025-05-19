@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/ovh/go-ovh/ovh"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/ovhwrap"
 )
 
 func resourceDedicatedServerNetworking() *schema.Resource {
@@ -183,7 +184,7 @@ func resourceDedicatedServerNetworkingDelete(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func waitForDedicatedServerNetworking(serviceName string, c *OVHClient) error {
+func waitForDedicatedServerNetworking(serviceName string, c *ovhwrap.Client) error {
 
 	refreshFunc := func() (interface{}, string, error) {
 		var taskErr error
@@ -236,7 +237,7 @@ func waitForDedicatedServerNetworking(serviceName string, c *OVHClient) error {
 	return nil
 }
 
-func getDedicatedServerNetworkingDetails(serviceName string, c *OVHClient) (*DedicatedServerNetworking, error) {
+func getDedicatedServerNetworkingDetails(serviceName string, c *ovhwrap.Client) (*DedicatedServerNetworking, error) {
 	serverNetworkingDetails := &DedicatedServerNetworking{}
 	endpoint := fmt.Sprintf(
 		"/dedicated/server/%s/networking",
