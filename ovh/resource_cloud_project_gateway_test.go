@@ -7,21 +7,13 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 var testAccCloudProjectGatewayConfig = `
-resource "ovh_vrack_cloudproject" "attach" {
-	service_name = "%s"
-	project_id   = "%s"
-}
-
-data "ovh_cloud_project_vrack" "vrack" {
-  service_name  = "%s"
-  depends_on    = [ovh_vrack_cloudproject.attach]
-}
 
 resource "ovh_cloud_project_network_private" "mypriv" {
-  service_name  = ovh_vrack_cloudproject.attach.project_id
+  service_name  = "%s"
   vlan_id       = "%d"
   name          = "%s"
   regions       = ["%s"]
@@ -56,8 +48,6 @@ func TestAccCloudProjectGateway(t *testing.T) {
 
 	config := fmt.Sprintf(
 		testAccCloudProjectGatewayConfig,
-		os.Getenv("OVH_VRACK_SERVICE_TEST"),
-		os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"),
 		os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"),
 		vlanId,
 		name,
@@ -93,6 +83,32 @@ func TestAccCloudProjectGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourcePath, "model", "s"),
 				),
 			},
+			{
+				ResourceName:            "ovh_cloud_project_gateway.gateway",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"network_id", "subnet_id"},
+				ImportStateIdFunc:       testAccCloudProjectGatewayImportId("ovh_cloud_project_gateway.gateway"),
+			},
+			{
+				Config: config,
+			},
 		},
 	})
+}
+
+func testAccCloudProjectGatewayImportId(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		gateway, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("gateway not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf(
+			"%s/%s/%s",
+			gateway.Primary.Attributes["service_name"],
+			gateway.Primary.Attributes["region"],
+			gateway.Primary.ID,
+		), nil
+	}
 }
