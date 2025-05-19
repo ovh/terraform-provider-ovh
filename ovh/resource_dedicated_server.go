@@ -382,9 +382,49 @@ func (r *dedicatedServerResource) runPreDestroyActions(ctx context.Context, data
 			if err := r.reinstallDedicatedServer(ctx, false, true, nil, data); err != nil {
 				return fmt.Errorf("failed to reinstall server: %w", err)
 			}
+		case "reboot_rescue":
+			if err := r.rebootRescue(ctx, data); err != nil {
+				return fmt.Errorf("failed to reboot server in rescue mode: %w", err)
+			}
 		default:
 			return fmt.Errorf("invalid pre-destroy action given: %q", action)
 		}
+	}
+
+	return nil
+}
+
+func (r *dedicatedServerResource) rebootRescue(ctx context.Context, data *DedicatedServerModel) error {
+	// List available boots
+	var boots []int
+	endpoint := fmt.Sprintf("/dedicated/server/%s/boot?bootType=rescue", data.ServiceName.ValueString())
+	if err := r.config.OVHClient.GetWithContext(ctx, endpoint, &boots); err != nil {
+		return fmt.Errorf("failed to fetch boot options: %w", err)
+	}
+
+	if len(boots) == 0 {
+		return errors.New("no boot found for rescue mode")
+	}
+
+	// Update server with boot ID
+	endpoint = fmt.Sprintf("/dedicated/server/%s", data.ServiceName.ValueString())
+	if err := r.config.OVHClient.PutWithContext(ctx, endpoint, map[string]any{
+		"bootId": boots[0],
+	}, nil); err != nil {
+		return fmt.Errorf("failed to set boot ID %d for server: %w", boots[0], err)
+	}
+
+	// Reboot server
+	endpoint += "/reboot"
+	task := &DedicatedServerTask{}
+
+	if err := r.config.OVHClient.Post(endpoint, nil, task); err != nil {
+		return fmt.Errorf("failed to reboot server: %w", err)
+	}
+
+	// Wait for reboot to be done
+	if err := waitForDedicatedServerTask(data.ServiceName.ValueString(), task, r.config.OVHClient); err != nil {
+		return fmt.Errorf("error waiting for reboot task: %w", err)
 	}
 
 	return nil
