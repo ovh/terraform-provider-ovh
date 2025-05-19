@@ -300,7 +300,7 @@ func TestAccCloudProjectInstance_privateNetworkCreate(t *testing.T) {
 	})
 }
 
-func TestAccCloudProjectInstance_privateNetworkAlreadyExisting(t *testing.T) {
+func TestAccCloudProjectInstance_privateNetworkAlreadyExists(t *testing.T) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
 	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
 	flavor, image, err := getFlavorAndImage(serviceName, region)
