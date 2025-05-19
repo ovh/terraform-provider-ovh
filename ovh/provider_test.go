@@ -481,6 +481,14 @@ func testAccPreCheckOkmsCredential(t *testing.T) {
 	checkEnvOrSkip(t, "OVH_OKMS_CREDENTIAL")
 }
 
+func testAccPreCheckCloudInstance(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_NETWORK_PRIVATE_TEST")
+	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_NETWORK_PRIVATE_SUBNET_TEST")
+	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_FLOATING_IP_ID")
+	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_GATEWAY_ID")
+}
+
 func testAccCheckVRackExists(t *testing.T) {
 	type vrackResponse struct {
 		Name        string `json:"name"`

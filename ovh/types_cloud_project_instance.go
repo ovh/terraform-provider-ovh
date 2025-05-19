@@ -45,7 +45,7 @@ type Network struct {
 }
 
 type PrivateNetwork struct {
-	FloatingIP       *PrivateNetworkFloatingIP        `json:"floating_ip,omitempty"`
+	FloatingIP       *PrivateNetworkFloatingIP        `json:"floatingIp,omitempty"`
 	FloatingIPCreate *PrivateNetworkFloatingIPCreate  `json:"floatingIpCreate,omitempty"`
 	Gateway          *PrivateNetworkGateway           `json:"gateway,omitempty"`
 	GatewayCreate    *PrivateNetworkGatewayCreate     `json:"gatewayCreate,omitempty"`
