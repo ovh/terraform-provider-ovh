@@ -35,7 +35,7 @@ var (
 		"user_agent_extra": "Extra information to append to the user-agent",
 
 		// OVH API Rate Limit
-		"api_rate_mit": "Specify the API request rate limit, X operations by seconds (default: unlimited)",
+		"api_rate_limit": "Specify the API request rate limit, X operations by seconds (default: unlimited)",
 	}
 )
 
@@ -83,10 +83,10 @@ func Provider() *schema.Provider {
 				Optional:    true,
 				Description: descriptions["user_agent_extra"],
 			},
-			"api_rate_mit": {
+			"api_rate_limit": {
 				Type:        schema.TypeInt,
 				Optional:    true,
-				Description: descriptions["api_rate_mit"],
+				Description: descriptions["api_rate_limit"],
 			},
 		},
 
