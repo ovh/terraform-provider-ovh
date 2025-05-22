@@ -1,3 +1,50 @@
+## 2.3.0 (May 22, 2025)
+
+⚙️ General:
+
+* Add `user_agent_extra` field in provider configuration to append extra information in the user-agent header in API calls ([#973](https://github.com/ovh/terraform-provider-ovh/pull/973))
+* Use `go-1.23` worker model in CI ([#974](https://github.com/ovh/terraform-provider-ovh/pull/974))
+
+🎉 Features:
+
+* New resource: `ovh_ovhcloud_connect_pop_config` ([#970](https://github.com/ovh/terraform-provider-ovh/pull/970))
+* New resource: `ovh_ovhcloud_connect_pop_datacenter_config` ([#970](https://github.com/ovh/terraform-provider-ovh/pull/970))
+* New resource: `ovh_ovhcloud_connect_pop_datacenter_extra_config` ([#970](https://github.com/ovh/terraform-provider-ovh/pull/970))
+
+* New datasource: `ovh_cloud_project_ssh_key` ([#972](https://github.com/ovh/terraform-provider-ovh/pull/972))
+* New datasource: `ovh_cloud_project_ssh_keys` ([#972](https://github.com/ovh/terraform-provider-ovh/pull/972))
+* New datasource: `ovh_cloud_project_rancher_capabilities_plan` ([#971](https://github.com/ovh/terraform-provider-ovh/pull/971))
+* New datasource: `ovh_cloud_project_rancher_capabilities_version` ([#971](https://github.com/ovh/terraform-provider-ovh/pull/971))
+* New datasource: `ovh_cloud_project_flavor` ([#969](https://github.com/ovh/terraform-provider-ovh/pull/969))
+* New datasource: `ovh_ovhcloud_connect_datacenters` ([#942](https://github.com/ovh/terraform-provider-ovh/pull/942))
+* New datasource: `ovh_ovhcloud_connect_config_pops` ([#946](https://github.com/ovh/terraform-provider-ovh/pull/946))
+* New datasource: `ovh_ovhcloud_connect_config_pop_datacenters` ([#946](https://github.com/ovh/terraform-provider-ovh/pull/946))
+* New datasource: `ovh_ovhcloud_connect_config_pop_datacenter_extras` ([#946](https://github.com/ovh/terraform-provider-ovh/pull/946))
+
+💪 Improvements:
+
+* `r/ovh_cloud_project_user`: Add support for password rotation ([#965](https://github.com/ovh/terraform-provider-ovh/pull/965))
+* `r/ovh_cloud_project_instance`: Add customizable creation timeout ([#964](https://github.com/ovh/terraform-provider-ovh/pull/964))
+* `r/ovh_cloud_project_region`: Add missing fields in resource ([#967](https://github.com/ovh/terraform-provider-ovh/pull/967))
+* `r/ovh_cloud_project_flavors`: Add `name_filter` field to filter results by name ([#969](https://github.com/ovh/terraform-provider-ovh/pull/969))
+* `r/ovh_vrack_ip`: Add `region` optional field ([#982](https://github.com/ovh/terraform-provider-ovh/pull/982))
+* `r/ovh_vrack_ipv6`: Add `region` computed field ([#982](https://github.com/ovh/terraform-provider-ovh/pull/982))
+* `r/ovh_savings_plan`: Use environment variable `OVH_CLOUD_PROJECT_SERVICE` as defaut value for `service_name` field ([#984](https://github.com/ovh/terraform-provider-ovh/pull/984))
+* `r/ovh_dedicated_server`: Add `reboot_rescue` option in pre-destroy available actions ([#988](https://github.com/ovh/terraform-provider-ovh/pull/988))
+
+🐜 Bug fixes:
+
+* `r/ovh_cloud_project_instance`: Use the right API parameter for `floating_ip` field ([#987](https://github.com/ovh/terraform-provider-ovh/pull/987))
+* `r/ovh_cloud_project_database_log_subscription`: Add missing required field `kind` ([#976](https://github.com/ovh/terraform-provider-ovh/pull/976))
+* `r/ovh_ip_firewall`: Avoid sending `enabled` argument at creation ([#991](https://github.com/ovh/terraform-provider-ovh/pull/991))
+
+📚 Documentation:
+
+* `r/ovh_cloud_project_user`: Add missing roles in the documentation ([#966](https://github.com/ovh/terraform-provider-ovh/pull/966))
+* `r/ovh_cloud_project_gateway`: Update docomentation of import ([#993](https://github.com/ovh/terraform-provider-ovh/pull/993))
+
+❤️ Thanks for your contributions ❤️
+
 ## 2.2.0 (April 30, 2025)
 
 ⚙️ General:
