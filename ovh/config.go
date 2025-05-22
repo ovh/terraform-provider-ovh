@@ -34,7 +34,6 @@ type Config struct {
 	// Extra user-agent information
 	UserAgentExtra string
 
-	RawOVHClient  *ovh.Client
 	OVHClient     *ovhwrap.Client
 	authenticated bool
 	authFailed    error
@@ -133,12 +132,7 @@ func (c *Config) load() error {
 	}
 
 	httpClient.Transport = logging.NewTransport("OVH", httpClient.Transport)
-	c.RawOVHClient = targetClient
-	c.OVHClient = &ovhwrap.Client{
-		RawClient:   targetClient,
-		RateLimiter: c.ApiRateLimit,
-	}
-
+	c.OVHClient = ovhwrap.NewClient(targetClient, c.ApiRateLimit)
 	return nil
 }
 

@@ -10,13 +10,20 @@ import (
 )
 
 type Client struct {
-	RawClient   *ovh.Client
+	*ovh.Client
 	RateLimiter ratelimit.Limiter
+}
+
+func NewClient(ovhClient *ovh.Client, rateLimiter ratelimit.Limiter) *Client {
+	return &Client{
+		Client:      ovhClient,
+		RateLimiter: rateLimiter,
+	}
 }
 
 func (c *Client) _CallAPIWithContext(ctx context.Context, method, url string, req, res interface{}, auth bool) error {
 	c.RateLimiter.Take()
-	return c.RawClient.CallAPIWithContext(ctx, method, url, req, res, auth)
+	return c.CallAPIWithContext(ctx, method, url, req, res, auth)
 }
 
 func (c *Client) _CallAPI(method, path string, reqBody, resType interface{}, needAuth bool) error {
@@ -89,8 +96,4 @@ func (c *Client) DeleteWithContext(ctx context.Context, url string, resType inte
 
 func (c *Client) DeleteUnAuthWithContext(ctx context.Context, url string, resType interface{}) error {
 	return c._CallAPIWithContext(ctx, "DELETE", url, nil, resType, false)
-}
-
-func (c *Client) Endpoint() string {
-	return c.RawClient.Endpoint()
 }
