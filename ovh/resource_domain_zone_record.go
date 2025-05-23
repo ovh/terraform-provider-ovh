@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/ovhwrap"
 )
 
 type OvhDomainZoneRecord struct {
@@ -260,7 +261,7 @@ func ovhDomainZoneRefresh(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func ovhDomainZoneRecord(client *ovh.Client, d *schema.ResourceData, id string, retry bool) (*OvhDomainZoneRecord, error) {
+func ovhDomainZoneRecord(client *ovhwrap.Client, d *schema.ResourceData, id string, retry bool) (*OvhDomainZoneRecord, error) {
 	rec := &OvhDomainZoneRecord{}
 	zone := d.Get("zone").(string)
 

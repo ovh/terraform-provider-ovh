@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/ovhwrap"
 )
 
 func resourceCloudProjectKubeNodePool() *schema.Resource {
@@ -394,14 +395,14 @@ func resourceCloudProjectKubeNodePoolDelete(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func cloudProjectKubeNodePoolExists(serviceName, kubeId, id string, client *ovh.Client) error {
+func cloudProjectKubeNodePoolExists(serviceName, kubeId, id string, client *ovhwrap.Client) error {
 	res := &CloudProjectKubeNodePoolResponse{}
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/nodepool/%s", serviceName, kubeId, id)
 	return client.Get(endpoint, res)
 }
 
-func waitForCloudProjectKubeNodePoolWithStateTarget(client *ovh.Client, serviceName, kubeId, id string, timeout time.Duration, stateTargets []string) error {
+func waitForCloudProjectKubeNodePoolWithStateTarget(client *ovhwrap.Client, serviceName, kubeId, id string, timeout time.Duration, stateTargets []string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"INSTALLING", "UPDATING", "REDEPLOYING", "RESIZING", "DOWNSCALING", "UPSCALING", "UNKNOWN"},
 		Target:  stateTargets,
@@ -424,7 +425,7 @@ func waitForCloudProjectKubeNodePoolWithStateTarget(client *ovh.Client, serviceN
 	return err
 }
 
-func waitForCloudProjectKubeNodePoolDeleted(client *ovh.Client, serviceName, kubeId, id string, timeout time.Duration) error {
+func waitForCloudProjectKubeNodePoolDeleted(client *ovhwrap.Client, serviceName, kubeId, id string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"DELETING"},
 		Target:  []string{"DELETED"},

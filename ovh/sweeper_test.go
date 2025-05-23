@@ -7,8 +7,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-
-	"github.com/ovh/go-ovh/ovh"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/ovhwrap"
 )
 
 func TestMain(m *testing.M) {
@@ -56,7 +55,7 @@ func sharedConfigForRegion(region string) (*Config, error) {
 
 // sharedClientForRegion returns a common OVHClient setup needed for the sweeper
 // functions for a given region
-func sharedClientForRegion(region string) (*ovh.Client, error) {
+func sharedClientForRegion(region string) (*ovhwrap.Client, error) {
 	config, err := sharedConfigForRegion(region)
 	if err != nil {
 		return nil, err

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/ovh/go-ovh/ovh"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/ovhwrap"
 	"github.com/ybriffa/rfc3339"
 )
 
@@ -445,7 +446,7 @@ func StringMapFromSchema(d *schema.ResourceData, id string, keys ...string) ([]m
 }
 
 // WaitAvailable wait for a ressource to become available in the API (aka non 404)
-func WaitAvailable(client *ovh.Client, endpoint string, timeout time.Duration) error {
+func WaitAvailable(client *ovhwrap.Client, endpoint string, timeout time.Duration) error {
 	return resource.Retry(timeout, func() *resource.RetryError {
 		if err := client.Get(endpoint, nil); err != nil {
 			if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {

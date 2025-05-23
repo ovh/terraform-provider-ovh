@@ -8,8 +8,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/ovhwrap"
 )
 
 const defaultCloudOperationTimeout = 60 * time.Minute
@@ -74,7 +74,7 @@ type CloudProjectSubOperation struct {
 	Action     string  `json:"action"`
 }
 
-func waitForCloudProjectOperation(ctx context.Context, c *ovh.Client, serviceName, operationId, actionType string, timeout time.Duration) (string, error) {
+func waitForCloudProjectOperation(ctx context.Context, c *ovhwrap.Client, serviceName, operationId, actionType string, timeout time.Duration) (string, error) {
 	endpoint := fmt.Sprintf("/cloud/project/%s/operation/%s", url.PathEscape(serviceName), url.PathEscape(operationId))
 	resourceID := ""
 	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {

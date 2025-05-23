@@ -13,10 +13,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
-	"golang.org/x/exp/slices"
-
 	"github.com/ovh/go-ovh/ovh"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/ovhwrap"
+	"golang.org/x/exp/slices"
 )
 
 func resourceCloudProjectUser() *schema.Resource {
@@ -381,7 +381,7 @@ var cloudUserOSTenantId = regexp.MustCompile("export OS_TENANT_ID=\"??([[:alnum:
 var cloudUserOSAuthURL = regexp.MustCompile("export OS_AUTH_URL=\"??([[:^space:]]+)\"??")
 var cloudUserOSUsername = regexp.MustCompile("export OS_USERNAME=\"?([[:alnum:]]+)\"?")
 
-func cloudUserGetOpenstackRC(serviceName, id string, c *ovh.Client, rc map[string]string) error {
+func cloudUserGetOpenstackRC(serviceName, id string, c *ovhwrap.Client, rc map[string]string) error {
 	log.Printf("[DEBUG] Will read public cloud user openstack rc for project: %s, id: %s", serviceName, id)
 
 	endpoint := fmt.Sprintf(
@@ -421,7 +421,7 @@ func cloudUserGetOpenstackRC(serviceName, id string, c *ovh.Client, rc map[strin
 	return nil
 }
 
-func waitForCloudProjectUser(c *ovh.Client, serviceName, id string) resource.StateRefreshFunc {
+func waitForCloudProjectUser(c *ovhwrap.Client, serviceName, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		r := &CloudProjectUser{}
 		endpoint := fmt.Sprintf(

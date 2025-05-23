@@ -6,10 +6,11 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/ovh/go-ovh/ovh"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/ovhwrap"
 )
 
 // WaitArchivedHostingPrivateDabaseTask wait for a task to become archived in the API (aka 404)
-func WaitArchivedHostingPrivateDabaseTask(client *ovh.Client, endpoint string, timeout time.Duration) error {
+func WaitArchivedHostingPrivateDabaseTask(client *ovhwrap.Client, endpoint string, timeout time.Duration) error {
 	return resource.Retry(timeout, func() *resource.RetryError {
 		err := client.Get(endpoint, nil)
 		if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code != 404 {

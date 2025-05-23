@@ -194,6 +194,8 @@ The following arguments are supported:
 
 * `user_agent_extra` - (Optional) Extra information to append at the end of the user-agent used when making API calls.
 
+* `api_rate_limit` - (Optional) Specify the API request rate limit, X operations by seconds. If omitted, unlimited.
+
 ## Terraform State storage in an OVHcloud Object Storage (S3 compatibility)
 
 In order to store your Terraform states on a High Performance (S3) OVHcloud Object Storage, please follow the [guide](https://help.ovhcloud.com/csm/en-public-cloud-compute-terraform-high-perf-object-storage-backend-state?id=kb_article_view&sysparm_article=KB0051345).

@@ -10,9 +10,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
-
 	"github.com/ovh/go-ovh/ovh"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/ovhwrap"
 )
 
 func resourceCloudProjectContainerRegistry() *schema.Resource {
@@ -369,7 +369,7 @@ func resourceCloudProjectContainerRegistryDelete(d *schema.ResourceData, meta in
 	return nil
 }
 
-func waitForCloudProjectContainerRegistry(c *ovh.Client, serviceName, id string) resource.StateRefreshFunc {
+func waitForCloudProjectContainerRegistry(c *ovhwrap.Client, serviceName, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		r := &CloudProjectContainerRegistry{}
 		endpoint := fmt.Sprintf(

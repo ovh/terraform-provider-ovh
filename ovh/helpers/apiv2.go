@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/ovh/go-ovh/ovh"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/ovhwrap"
 )
 
 type GenericAPIv2Resource struct {
@@ -18,7 +19,7 @@ type GenericAPIv2Resource struct {
 // WaitForAPIv2ResourceStatusReady retries a GET on the given URL until the fetched resource
 // is in state "READY". It expects the given URL to target a route that fetches an asynchronous
 // resource on APIv2.
-func WaitForAPIv2ResourceStatusReady(ctx context.Context, c *ovh.Client, url string) error {
+func WaitForAPIv2ResourceStatusReady(ctx context.Context, c *ovhwrap.Client, url string) error {
 	return retry.RetryContext(ctx, time.Hour, func() *retry.RetryError {
 		var resource GenericAPIv2Resource
 

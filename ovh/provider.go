@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"go.uber.org/ratelimit"
 )
 
 const (
@@ -33,6 +34,9 @@ var (
 
 		// Extra info in user-agent
 		"user_agent_extra": "Extra information to append to the user-agent",
+
+		// OVH API Rate Limit
+		"api_rate_limit": "Specify the API request rate limit, X operations by seconds (default: unlimited)",
 	}
 )
 
@@ -79,6 +83,11 @@ func Provider() *schema.Provider {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: descriptions["user_agent_extra"],
+			},
+			"api_rate_limit": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: descriptions["api_rate_limit"],
 			},
 		},
 
@@ -324,6 +333,11 @@ func ConfigureContextFunc(context context.Context, d *schema.ResourceData) (inte
 	}
 	if v, ok := d.GetOk("user_agent_extra"); ok {
 		config.UserAgentExtra = v.(string)
+	}
+	if v, ok := d.GetOk("api_rate_limit"); ok {
+		config.ApiRateLimit = ratelimit.New(v.(int))
+	} else {
+		config.ApiRateLimit = ratelimit.NewUnlimited()
 	}
 
 	if err := config.loadAndValidate(); err != nil {
