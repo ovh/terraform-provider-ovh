@@ -132,3 +132,15 @@ resource "ovh_cloud_project_database" "grafana" {
   }
   flavor        = "db1-4"
 }
+
+resource "ovh_cloud_project_database" "valkeydb" {
+  service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  description   = "my-first-valkey"
+  engine        = "valkey"
+  version       = "8.0"
+  plan          = "essential"
+  nodes {
+    region  = "BHS"
+  }
+  flavor        = "db1-4"
+}

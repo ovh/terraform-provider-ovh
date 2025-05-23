@@ -1454,6 +1454,77 @@ func (opts *CloudProjectDatabaseM3dbUserUpdateOpts) FromResource(d *schema.Resou
 	return opts
 }
 
+// // Valkey User
+
+type CloudProjectDatabaseValkeyUserResponse struct {
+	Categories []string `json:"categories"`
+	Channels   []string `json:"channels"`
+	Commands   []string `json:"commands"`
+	CreatedAt  string   `json:"createdAt"`
+	Id         string   `json:"id"`
+	Keys       []string `json:"keys"`
+	Password   string   `json:"password"`
+	Status     string   `json:"status"`
+	Username   string   `json:"username"`
+}
+
+func (p *CloudProjectDatabaseValkeyUserResponse) String() string {
+	return fmt.Sprintf(
+		"Id: %s, User: %s, Status: %s",
+		p.Id,
+		p.Username,
+		p.Status,
+	)
+}
+
+func (v CloudProjectDatabaseValkeyUserResponse) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+
+	obj["categories"] = v.Categories
+	obj["channels"] = v.Channels
+	obj["commands"] = v.Commands
+	obj["created_at"] = v.CreatedAt
+	obj["id"] = v.Id
+	obj["keys"] = v.Keys
+	obj["name"] = v.Username
+	obj["status"] = v.Status
+
+	return obj
+}
+
+type CloudProjectDatabaseValkeyUserCreateOpts struct {
+	Categories []string `json:"categories,omitempty"`
+	Channels   []string `json:"channels,omitempty"`
+	Commands   []string `json:"commands,omitempty"`
+	Keys       []string `json:"keys,omitempty"`
+	Name       string   `json:"name"`
+}
+
+func (opts *CloudProjectDatabaseValkeyUserCreateOpts) FromResource(d *schema.ResourceData) *CloudProjectDatabaseValkeyUserCreateOpts {
+	opts.Name = d.Get("name").(string)
+	opts.Categories = getStringSlice(d.Get("categories"))
+	opts.Channels = getStringSlice(d.Get("channels"))
+	opts.Commands = getStringSlice(d.Get("commands"))
+	opts.Keys = getStringSlice(d.Get("keys"))
+
+	return opts
+}
+
+type CloudProjectDatabaseValkeyUserUpdateOpts struct {
+	Categories []string `json:"categories,omitempty"`
+	Channels   []string `json:"channels,omitempty"`
+	Commands   []string `json:"commands,omitempty"`
+	Keys       []string `json:"keys,omitempty"`
+}
+
+func (opts *CloudProjectDatabaseValkeyUserUpdateOpts) FromResource(d *schema.ResourceData) *CloudProjectDatabaseValkeyUserUpdateOpts {
+	opts.Categories = getStringSlice(d.Get("categories"))
+	opts.Channels = getStringSlice(d.Get("channels"))
+	opts.Commands = getStringSlice(d.Get("commands"))
+	opts.Keys = getStringSlice(d.Get("keys"))
+	return opts
+}
+
 // // Namespace
 
 func DiffDurationRfc3339(k, old, new string, d *schema.ResourceData) bool {
