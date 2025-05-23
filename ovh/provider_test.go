@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-mux/tf6muxserver"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/ovhwrap"
+	"go.uber.org/ratelimit"
 )
 
 var testAccProviders map[string]*schema.Provider
@@ -90,6 +91,7 @@ func testAccPreCheckCredentials(t *testing.T) {
 			ConsumerKey:       os.Getenv("OVH_CONSUMER_KEY"),
 			ClientID:          os.Getenv("OVH_CLIENT_ID"),
 			ClientSecret:      os.Getenv("OVH_CLIENT_SECRET"),
+			ApiRateLimit:      ratelimit.NewUnlimited(),
 		}
 
 		if err := config.load(); err != nil {
