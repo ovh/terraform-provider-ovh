@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"go.uber.org/ratelimit"
 )
 
 const (
@@ -332,6 +333,11 @@ func ConfigureContextFunc(context context.Context, d *schema.ResourceData) (inte
 	}
 	if v, ok := d.GetOk("user_agent_extra"); ok {
 		config.UserAgentExtra = v.(string)
+	}
+	if v, ok := d.GetOk("api_rate_limit"); ok {
+		config.ApiRateLimit = ratelimit.New(v.(int))
+	} else {
+		config.ApiRateLimit = ratelimit.NewUnlimited()
 	}
 
 	if err := config.loadAndValidate(); err != nil {
