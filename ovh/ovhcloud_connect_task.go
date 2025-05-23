@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/ovh/go-ovh/ovh"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/ovhwrap"
 )
 
 type OccTask struct {
@@ -18,7 +18,7 @@ type OccTask struct {
 	Status     string `json:"status"`
 }
 
-func waitForOccTask(ctx context.Context, client *ovh.Client, serviceName string, taskId int) error {
+func waitForOccTask(ctx context.Context, client *ovhwrap.Client, serviceName string, taskId int) error {
 	endpoint := fmt.Sprintf("/ovhCloudConnect/%s/task/%d", url.PathEscape(serviceName), taskId)
 
 	stateConf := &retry.StateChangeConf{

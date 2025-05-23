@@ -8,10 +8,13 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"go.uber.org/ratelimit"
 )
 
 func getFlavorAndImage(project, region string) (string, string, error) {
-	client, err := clientDefault(&Config{})
+	client, err := clientDefault(&Config{
+		ApiRateLimit: ratelimit.NewUnlimited(),
+	})
 	if err != nil {
 		return "", "", fmt.Errorf("error getting client: %w", err)
 	}

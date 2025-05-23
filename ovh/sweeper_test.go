@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/ovhwrap"
+	"go.uber.org/ratelimit"
 )
 
 func TestMain(m *testing.M) {
@@ -42,6 +43,7 @@ func sharedConfigForRegion(region string) (*Config, error) {
 		ApplicationKey:    os.Getenv("OVH_APPLICATION_KEY"),
 		ApplicationSecret: os.Getenv("OVH_APPLICATION_SECRET"),
 		ConsumerKey:       os.Getenv("OVH_CONSUMER_KEY"),
+		ApiRateLimit:      ratelimit.NewUnlimited(),
 		lockAuth:          &sync.Mutex{},
 	}
 
