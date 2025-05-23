@@ -268,6 +268,12 @@ func testAccPreCheckContainerRegistryOIDC(t *testing.T) {
 	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_CONTAINERREGISTRY_OIDC_ENDPOINT_TEST")
 }
 
+// Checks that the environment variables needed for the /cloud/{cloudId}/containerregistry/{registryID}/iam acceptance tests
+// are set.
+func testAccPreCheckContainerRegistryIAM(t *testing.T) {
+	testAccPreCheckContainerRegistry(t)
+}
+
 // Checks that the environment variables needed for the /cloud/project/{projectId}/network/private/ acceptance tests are set.
 func testAccPreCheckCloudNetworkPrivate(t *testing.T) {
 	testAccPreCheckCloud(t)
@@ -556,7 +562,6 @@ func testAccCheckDomainZoneExists(t *testing.T) {
 	}
 
 	t.Logf("Read Domain Zone %s -> nameservers: '%v'", endpoint, r.NameServers)
-
 }
 
 func testAccPreCheckDedicatedCeph(t *testing.T) {

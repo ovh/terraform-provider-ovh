@@ -54,6 +54,11 @@ func resourceCloudProjectContainerRegistry() *schema.Resource {
 				Description: "Registry creation date",
 				Computed:    true,
 			},
+			"iam_enabled": {
+				Type:        schema.TypeBool,
+				Description: "OVHcloud IAM enabled",
+				Computed:    true,
+			},
 			"project_id": {
 				Type:        schema.TypeString,
 				Description: "Project ID of your registry",
