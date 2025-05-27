@@ -33,6 +33,7 @@ The following arguments are supported:
 * `name` - (Optional) The name of the nodepool. Warning: `_` char is not allowed! **Changing this value recreates the resource.**
 * `flavor_name` - a valid OVHcloud public cloud flavor ID in which the nodes will be started. Ex: "b2-7". You can find the list of flavor IDs: https://www.ovhcloud.com/fr/public-cloud/prices/. **Changing this value recreates the resource.**
 * `desired_nodes` - number of nodes to start.
+* `availability_zones` - (Optional) list of availability zones to associate the pool - **mandatory for multi-zone** cluster - only one zone is supported at the moment.
 * `max_nodes` - maximum number of nodes allowed in the pool. Setting `desired_nodes` over this value will raise an error.
 * `min_nodes` - minimum number of nodes allowed in the pool. Setting `desired_nodes` under this value will raise an error.
 * `monthly_billed` - (Optional) should the nodes be billed on a monthly basis. Default to `false`. **Changing this value recreates the resource.**
