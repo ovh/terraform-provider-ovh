@@ -494,7 +494,7 @@ func (r *dedicatedServerResource) updateDedicatedServerResource(ctx context.Cont
 
 	// PUT the resource
 	endpoint := "/dedicated/server/" + url.PathEscape(serviceName)
-	if err := r.config.OVHClient.Put(endpoint, planData.ToUpdate(), nil); err != nil {
+	if err := r.config.OVHClient.Put(endpoint, planData.ToUpdate(stateData), nil); err != nil {
 		diags.AddError(
 			fmt.Sprintf("Error calling Put %s", endpoint),
 			err.Error(),
