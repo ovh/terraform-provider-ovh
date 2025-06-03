@@ -205,6 +205,7 @@ func Provider() *schema.Provider {
 			"ovh_cloud_project":                                              resourceCloudProject(),
 			"ovh_cloud_project_containerregistry":                            resourceCloudProjectContainerRegistry(),
 			"ovh_cloud_project_containerregistry_oidc":                       resourceCloudProjectContainerRegistryOIDC(),
+			"ovh_cloud_project_containerregistry_iam":                        resourceCloudProjectContainerRegistryIAM(),
 			"ovh_cloud_project_containerregistry_user":                       resourceCloudProjectContainerRegistryUser(),
 			"ovh_cloud_project_containerregistry_ip_restrictions_management": resourceCloudProjectContainerRegistryIPRestrictionsManagement(),
 			"ovh_cloud_project_containerregistry_ip_restrictions_registry":   resourceCloudProjectContainerRegistryIPRestrictionsRegistry(),

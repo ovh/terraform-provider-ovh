@@ -35,3 +35,4 @@ The following attributes are exported:
 * `updated_at` - Registry last update date
 * `url` - Access url of the registry
 * `version` - Version of your registry
+* `iam_enabled` - OVHCloud IAM enabled
