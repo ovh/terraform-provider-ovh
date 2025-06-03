@@ -741,7 +741,7 @@ func importCloudProjectDatabaseUser(d *schema.ResourceData, meta interface{}) ([
 
 func postCloudProjectDatabaseUser(ctx context.Context, d *schema.ResourceData, meta interface{}, engine string, dsReadFunc, readFunc schema.ReadContextFunc, updateFunc schema.UpdateContextFunc, f func() interface{}) diag.Diagnostics {
 	name := d.Get("name").(string)
-	if name == "avnadmin" && engine != "redis" {
+	if name == "avnadmin" && engine != "redis" && engine != "valkey" {
 		diags := dsReadFunc(ctx, d, meta)
 		if diags.HasError() {
 			return diags
@@ -845,7 +845,7 @@ func updateCloudProjectDatabaseUser(ctx context.Context, d *schema.ResourceData,
 
 func deleteCloudProjectDatabaseUser(ctx context.Context, d *schema.ResourceData, meta interface{}, engine string) diag.Diagnostics {
 	name := d.Get("name").(string)
-	if name == "avnadmin" && engine != "redis" {
+	if name == "avnadmin" && engine != "redis" && engine != "valkey" {
 		d.SetId("")
 		return nil
 	}
@@ -1319,7 +1319,7 @@ func validateCloudProjectDatabaseMongodbUserAuthenticationDatabase(v any, p cty.
 	return
 }
 
-// Redis User
+// Redis & Valkey User
 
 type CloudProjectDatabaseRedisUserResponse struct {
 	Categories []string `json:"categories"`
