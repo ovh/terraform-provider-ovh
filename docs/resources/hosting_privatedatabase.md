@@ -115,6 +115,20 @@ The following attributes are exported:
 * `version_label`: Private database version label
 * `version_number`: Private database version number
 
+## Timeouts
+
+```terraform
+resource "ovh_hosting_privatedatabase" "database" {
+  # ...
+
+  timeouts {
+    create = "1h"
+  }
+}
+```
+
+* `create` - (Default 30m)
+
 ## Import
 
 OVHcloud Webhosting database can be imported using the `service_name`. Using the following configuration:

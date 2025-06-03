@@ -140,6 +140,20 @@ The following arguments are supported:
 - `project_id` - openstack project id
 - `status` - project status
 
+## Timeouts
+
+```terraform
+resource "ovh_cloud_project" "my_cloud_project" {
+  # ...
+
+  timeouts {
+    create = "1h"
+  }
+}
+```
+
+* `create` - (Default 30m)
+
 ## Import
 
 Cloud project can be imported using the `project_id`.

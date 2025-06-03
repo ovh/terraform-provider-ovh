@@ -28,6 +28,9 @@ func resourceIpService() *schema.Resource {
 		},
 
 		Schema: resourceIpServiceSchema(),
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(defaultOrderTimeout),
+		},
 	}
 }
 
@@ -87,12 +90,11 @@ func resourceIpServiceSchema() map[string]*schema.Schema {
 	for k, v := range genericOrderSchema(true) {
 		schema[k] = v
 	}
-
 	return schema
 }
 
 func resourceIpServiceCreate(d *schema.ResourceData, meta interface{}) error {
-	if err := orderCreateFromResource(d, meta, "ip", true); err != nil {
+	if err := orderCreateFromResource(d, meta, "ip", true, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("could not order ip: %q", err)
 	}
 

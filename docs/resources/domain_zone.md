@@ -91,6 +91,20 @@ Id is set to the order Id. In addition, the following attributes are exported:
     * `domain` - expiration date
     * `quantity` - quantity
 
+## Timeouts
+
+```terraform
+resource "ovh_domain_zone" "zone" {
+  # ...
+
+  timeouts {
+    create = "1h"
+  }
+}
+```
+
+* `create` - (Default 30m)
+
 ## Import
 
 Zone can be imported using its `name`.

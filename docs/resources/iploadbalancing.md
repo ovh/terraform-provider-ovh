@@ -107,6 +107,20 @@ Id is set to the order Id. In addition, the following attributes are exported:
 * `vrack_name` - Name of the vRack on which the current Load Balancer is attached to, as it is named on vRack product
 * `zone` - Location where your service is
 
+## Timeouts
+
+```terraform
+resource "ovh_iploadbalancing" "iplb" {
+  # ...
+
+  timeouts {
+    create = "1h"
+  }
+}
+```
+
+* `create` - (Default 30m)
+
 ## Import
 
 OVHcloud IP load balancing services can be imported using its `service_name`.

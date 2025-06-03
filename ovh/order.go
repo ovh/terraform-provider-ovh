@@ -20,6 +20,10 @@ import (
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
+const (
+	defaultOrderTimeout = 30 * time.Minute
+)
+
 var (
 	reTerminateEmailToken = regexp.MustCompile(`.*/billing/confirmTerminate\?id=[[:alnum:]]+&token=([[:alnum:]]+).*`)
 	terminateEmailMatch   = "/billing/confirmTerminate"
@@ -229,11 +233,11 @@ func genericOrderSchema(withOptions bool) map[string]*schema.Schema {
 	return orderSchema
 }
 
-func orderCreateFromResource(d *schema.ResourceData, meta interface{}, product string, waitForCompletion bool) error {
+func orderCreateFromResource(d *schema.ResourceData, meta interface{}, product string, waitForCompletion bool, timeout time.Duration) error {
 	config := meta.(*Config)
 	order := (&OrderModel{}).FromResource(d)
 
-	err := orderCreate(order, config, product, waitForCompletion)
+	err := orderCreate(order, config, product, waitForCompletion, timeout)
 	if err != nil {
 		return err
 	}
@@ -243,7 +247,7 @@ func orderCreateFromResource(d *schema.ResourceData, meta interface{}, product s
 	return nil
 }
 
-func orderCreate(d *OrderModel, config *Config, product string, waitForCompletion bool) error {
+func orderCreate(d *OrderModel, config *Config, product string, waitForCompletion bool, timeout time.Duration) error {
 	if d.OvhSubsidiary.ValueString() == "" {
 		subsidiary, err := getOVHSubsidiary(context.Background(), config.OVHClient)
 		if err != nil {
@@ -397,7 +401,7 @@ func orderCreate(d *OrderModel, config *Config, product string, waitForCompletio
 
 	// Wait for order to be completed
 	if waitForCompletion {
-		if err := waitOrderCompletion(config, checkout.OrderID); err != nil {
+		if err := waitOrderCompletion(config, checkout.OrderID, timeout); err != nil {
 			return fmt.Errorf("waiting for order (%d): %s", checkout.OrderID, err)
 		}
 	}
@@ -407,12 +411,12 @@ func orderCreate(d *OrderModel, config *Config, product string, waitForCompletio
 	return nil
 }
 
-func waitOrderCompletion(config *Config, orderID int64) error {
+func waitOrderCompletion(config *Config, orderID int64, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"checking", "delivering", "ignoreerror"},
 		Target:     []string{"delivered"},
 		Refresh:    waitForOrder(config.OVHClient, orderID),
-		Timeout:    30 * time.Minute,
+		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}

@@ -26,6 +26,9 @@ func resourceIpLoadbalancing() *schema.Resource {
 			},
 		},
 		Schema: resourceIpLoadbalancingSchema(),
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(defaultOrderTimeout),
+		},
 	}
 }
 
@@ -150,7 +153,7 @@ func resourceIpLoadbalancingSchema() map[string]*schema.Schema {
 func resourceIpLoadbalancingCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
-	if err := orderCreateFromResource(d, meta, "ipLoadbalancing", true); err != nil {
+	if err := orderCreateFromResource(d, meta, "ipLoadbalancing", true, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("Could not order ipLoadbalancing: %q", err)
 	}
 

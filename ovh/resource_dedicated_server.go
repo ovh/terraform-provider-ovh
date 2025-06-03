@@ -73,7 +73,7 @@ func (r *dedicatedServerResource) Create(ctx context.Context, req resource.Creat
 	// If service_name is not provided, it means dedicated server has to be ordered
 	if data.ServiceName.IsNull() || data.ServiceName.IsUnknown() {
 		order := data.ToOrder()
-		if err := orderCreate(order, r.config, "baremetalServers", false); err != nil {
+		if err := orderCreate(order, r.config, "baremetalServers", false, defaultOrderTimeout); err != nil {
 			resp.Diagnostics.AddError("failed to create order", err.Error())
 			return
 		}

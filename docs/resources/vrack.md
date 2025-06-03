@@ -80,6 +80,20 @@ Id is set to the order Id. In addition, the following attributes are exported:
     * `quantity` - quantity
 * `service_name` - The internal name of your vrack
 
+## Timeouts
+
+```terraform
+resource "ovh_vrack" "vrack" {
+  # ...
+
+  timeouts {
+    create = "1h"
+  }
+}
+```
+
+* `create` - (Default 30m)
+
 ## Import
 
 A vRack can be imported using the `service_name`. Using the following configuration:

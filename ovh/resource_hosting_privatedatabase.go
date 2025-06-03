@@ -24,6 +24,9 @@ func resourceHostingPrivateDatabase() *schema.Resource {
 			},
 		},
 		Schema: resourceHostingPrivateDatabaseSchema(),
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(defaultOrderTimeout),
+		},
 	}
 }
 
@@ -143,7 +146,7 @@ func resourceHostingPrivateDatabaseSchema() map[string]*schema.Schema {
 func resourceHostingPrivateDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
-	if err := orderCreateFromResource(d, meta, "privateSQL", true); err != nil {
+	if err := orderCreateFromResource(d, meta, "privateSQL", true, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("could not order privateDatabase: %q", err)
 	}
 
