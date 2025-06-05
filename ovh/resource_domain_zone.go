@@ -23,6 +23,9 @@ func resourceDomainZone() *schema.Resource {
 			},
 		},
 		Schema: resourceDomainZoneSchema(),
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(defaultOrderTimeout),
+		},
 	}
 }
 
@@ -71,7 +74,7 @@ func resourceDomainZoneSchema() map[string]*schema.Schema {
 func resourceDomainZoneCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
-	if err := orderCreateFromResource(d, meta, "dns", true); err != nil {
+	if err := orderCreateFromResource(d, meta, "dns", true, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("could not order domain zone: %q", err)
 	}
 

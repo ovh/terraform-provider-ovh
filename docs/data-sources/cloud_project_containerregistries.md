@@ -25,7 +25,6 @@ data "ovh_cloud_project_containerregistries" "registries" {
 * `result` - The list of container registries associated with the project.
   * `created_at` - Registry creation date
   * `id` - Registry ID
-  * `iam_enabled` - IAM enable on the registry
   * `name` - Registry name
   * `project_id` - Project ID of your registry
   * `region` - Region of the registry
@@ -34,3 +33,4 @@ data "ovh_cloud_project_containerregistries" "registries" {
   * `updated_at` - Registry last update date
   * `url` - Access url of the registry
   * `version` - Version of your registry
+  * `iam_enabled` - OVHCloud IAM enabled

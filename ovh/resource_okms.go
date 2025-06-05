@@ -102,7 +102,7 @@ func (r *okmsResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	if err := orderCreate(order, r.config, "okms", true); err != nil {
+	if err := orderCreate(order, r.config, "okms", true, defaultOrderTimeout); err != nil {
 		resp.Diagnostics.AddError("failed to create order", err.Error())
 	}
 

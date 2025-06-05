@@ -96,7 +96,7 @@ func (r *domainNameResource) Create(ctx context.Context, req resource.CreateRequ
 	// Create order and wait for service to be delivered
 	order := data.ToOrder()
 	setDefaultDomainOrderValues(ctx, order, data.DomainName.ValueString())
-	if err := orderCreate(order, r.config, "domain", true); err != nil {
+	if err := orderCreate(order, r.config, "domain", true, defaultOrderTimeout); err != nil {
 		resp.Diagnostics.AddError("failed to create order", err.Error())
 		return
 	}

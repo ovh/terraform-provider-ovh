@@ -102,6 +102,20 @@ Id is set to the order Id. In addition, the following attributes are exported:
 * `service_name`: service name
 * `type` - Possible values for ip type
 
+## Timeouts
+
+```terraform
+resource "ovh_ip_service" "ipblock" {
+  # ...
+
+  timeouts {
+    create = "1h"
+  }
+}
+```
+
+* `create` - (Default 30m)
+
 ## Import
 
 The resource can be imported using its `service_name`, E.g.,

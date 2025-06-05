@@ -3,9 +3,10 @@ resource "ovh_cloud_project_containerregistry_iam" "my_iam" {
   registry_id  = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx"
 
   #optional field
-  delete_users      = false
+  delete_users = false
 }
 
-output "oidc_client_secret" {
-  value = ovh_cloud_project_containerregistry_iam.my_iam.iam_enabled
+output "iam-enabled" {
+  value     = ovh_cloud_project_containerregistry_iam.my_iam.iam_enabled
+  sensitive = true
 }

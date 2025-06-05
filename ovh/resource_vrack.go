@@ -16,14 +16,15 @@ func resourceVrack() *schema.Resource {
 		Update: resourceVrackUpdate,
 		Read:   resourceVrackRead,
 		Delete: resourceVrackDelete,
-
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				return []*schema.ResourceData{d}, nil
 			},
 		},
-
 		Schema: resourceVrackSchema(),
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(defaultOrderTimeout),
+		},
 	}
 }
 
@@ -65,7 +66,7 @@ func resourceVrackCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
 	// Order vRack and wait for it to be delivered
-	if err := orderCreateFromResource(d, meta, "vrack", true); err != nil {
+	if err := orderCreateFromResource(d, meta, "vrack", true, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("could not order vrack: %q", err)
 	}
 

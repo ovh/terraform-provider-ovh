@@ -28,6 +28,9 @@ func resourceCloudProject() *schema.Resource {
 			},
 		},
 		Schema: resourceCloudProjectSchema(),
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(defaultOrderTimeout),
+		},
 	}
 }
 
@@ -72,7 +75,7 @@ func resourceCloudProjectSchema() map[string]*schema.Schema {
 func resourceCloudProjectCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
-	if err := orderCreateFromResource(d, meta, "cloud", true); err != nil {
+	if err := orderCreateFromResource(d, meta, "cloud", true, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("could not order cloud project: %q", err)
 	}
 
