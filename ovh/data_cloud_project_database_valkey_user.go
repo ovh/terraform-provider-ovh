@@ -93,7 +93,7 @@ func dataSourceCloudProjectDatabaseValkeyUserRead(ctx context.Context, d *schema
 			url.PathEscape(clusterId),
 			url.PathEscape(id),
 		)
-		res := &CloudProjectDatabaseValkeyUserResponse{}
+		res := &CloudProjectDatabaseRedisUserResponse{}
 
 		log.Printf("[DEBUG] Will read user %s from cluster %s from project %s", id, clusterId, serviceName)
 		if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {

@@ -117,7 +117,7 @@ func resourceCloudProjectDatabaseValkeyUserImportState(d *schema.ResourceData, m
 
 func resourceCloudProjectDatabaseValkeyUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	f := func() interface{} {
-		return (&CloudProjectDatabaseValkeyUserCreateOpts{}).FromResource(d)
+		return (&CloudProjectDatabaseRedisUserCreateOpts{}).FromResource(d)
 	}
 	return postCloudProjectDatabaseUser(ctx, d, meta, "valkey", dataSourceCloudProjectDatabaseValkeyUserRead, resourceCloudProjectDatabaseValkeyUserRead, resourceCloudProjectDatabaseValkeyUserUpdate, f)
 }
@@ -133,7 +133,7 @@ func resourceCloudProjectDatabaseValkeyUserRead(ctx context.Context, d *schema.R
 		url.PathEscape(clusterId),
 		url.PathEscape(id),
 	)
-	res := &CloudProjectDatabaseValkeyUserResponse{}
+	res := &CloudProjectDatabaseRedisUserResponse{}
 
 	log.Printf("[DEBUG] Will read user %s from cluster %s from project %s", id, clusterId, serviceName)
 	if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
@@ -153,7 +153,7 @@ func resourceCloudProjectDatabaseValkeyUserRead(ctx context.Context, d *schema.R
 
 func resourceCloudProjectDatabaseValkeyUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	f := func() interface{} {
-		return (&CloudProjectDatabaseValkeyUserUpdateOpts{}).FromResource(d)
+		return (&CloudProjectDatabaseRedisUserUpdateOpts{}).FromResource(d)
 	}
 	return updateCloudProjectDatabaseUser(ctx, d, meta, "valkey", resourceCloudProjectDatabaseValkeyUserRead, f)
 }

@@ -33,6 +33,7 @@ output "name" {
   * `opensearch`
   * `postgresql`
   * `redis`
+  * `valkey`
 
 * `cluster_id` - (Required) Cluster ID
 
