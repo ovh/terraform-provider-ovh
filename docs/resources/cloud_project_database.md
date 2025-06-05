@@ -151,6 +151,18 @@ resource "ovh_cloud_project_database" "grafana" {
   }
   flavor        = "db1-4"
 }
+
+resource "ovh_cloud_project_database" "valkeydb" {
+  service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  description   = "my-first-valkey"
+  engine        = "valkey"
+  version       = "8.0"
+  plan          = "essential"
+  nodes {
+    region  = "BHS"
+  }
+  flavor        = "db1-4"
+}
 ```
 
 To deploy a business PostgreSQL service with two nodes on public network:
@@ -224,7 +236,8 @@ The following arguments are supported:
   * MongoDB: Enum: "discovery", "production", "advanced".
   * Mysql, PosgreSQL, Cassandra, M3DB, : Enum: "essential", "business", "enterprise".
   * M3 Aggregator: "business", "enterprise".
-  * Redis: "essential", "business"
+  * Redis: "essential", "business".
+  * Valkey: "essential", "business".
 * `version` - (Required) The version of the engine in which the service should be deployed
 * `backup_regions` - List of region where backups are pushed. Not more than 1 regions for MongoDB. Not more than 2 regions for the other engines with one being the same as the nodes[].region field
 * `backup_time` - Time on which backups start every day (this parameter is not usable on the following engines: "m3db", "grafana", "kafka", "kafkaconnect", "kafkamirrormaker", "opensearch", "m3aggregator").

@@ -26,7 +26,7 @@ func dataSourceCloudProjectDatabasePrometheus() *schema.Resource {
 				Description:      "Name of the engine of the service",
 				ForceNew:         true,
 				Required:         true,
-				ValidateDiagFunc: helpers.ValidateDiagEnum([]string{"cassandra", "kafka", "kafkaConnect", "kafkaMirrorMaker", "mysql", "opensearch", "postgresql", "redis"}),
+				ValidateDiagFunc: helpers.ValidateDiagEnum([]string{"cassandra", "kafka", "kafkaConnect", "kafkaMirrorMaker", "mysql", "opensearch", "postgresql", "redis", "valkey"}),
 			},
 			"cluster_id": {
 				Type:        schema.TypeString,

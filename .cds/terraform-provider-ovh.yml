@@ -231,6 +231,18 @@ workflow:
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
+  Tests_CloudProjectDatabaseValkey:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run CloudProjectDatabaseValkey
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.cloudprojectdatabase}}"
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
   Tests_CloudProjectRancher:
     application: terraform-provider-ovh
     depends_on:
@@ -835,6 +847,7 @@ workflow:
     - Tests_CloudProjectDatabaseOpensearchUser
     - Tests_CloudProjectDatabasePostgresql
     - Tests_CloudProjectDatabaseRedis
+    - Tests_CloudProjectDatabaseValkey
     - Tests_TestAccCloudProjectDatabaseUser
     - Tests_TestAccCloudProjectDatabasesDataSource_basic
     - Tests_TestAccCloudProjectDatabaseDataSource_basic
