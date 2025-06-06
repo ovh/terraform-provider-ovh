@@ -1454,6 +1454,7 @@ func (opts *CloudProjectDatabaseM3dbUserUpdateOpts) FromResource(d *schema.Resou
 	opts.Group = d.Get("group").(string)
 	return opts
 }
+
 // // Namespace
 
 func DiffDurationRfc3339(k, old, new string, d *schema.ResourceData) bool {
