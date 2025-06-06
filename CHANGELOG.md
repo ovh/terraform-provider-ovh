@@ -1,3 +1,32 @@
+## 2.4.0 (June 6, 2025)
+
+⚙️ General:
+
+* Add global option `api_rate_limit` to limit the number of concurrent calls to OVHcloud API ([#979](https://github.com/ovh/terraform-provider-ovh/pull/979))
+
+🎉 Features:
+
+* New resource: `ovh_cloud_project_containerregistry_iam` ([#907](https://github.com/ovh/terraform-provider-ovh/pull/907))
+* New resource: `ovh_cloud_project_database_valkey_user` ([#994](https://github.com/ovh/terraform-provider-ovh/pull/994))
+
+* New datasource: `ovh_cloud_project_database_valkey_user` ([#994](https://github.com/ovh/terraform-provider-ovh/pull/994))
+
+💪 Improvements:
+
+* `r/ovh_cloud_project_containerregistry`: Add `iam_enabled` field ([#907](https://github.com/ovh/terraform-provider-ovh/pull/907))
+* `r/ovh_cloud_project_database`: Add `valkey` engine ([#994](https://github.com/ovh/terraform-provider-ovh/pull/994))
+* Add ability to configure the creation timeout for resources that are created via an order ([#1004](https://github.com/ovh/terraform-provider-ovh/pull/1004))
+
+* `d/ovh_cloud_project_containerregistry`: Add `iam_enabled` field ([#907](https://github.com/ovh/terraform-provider-ovh/pull/907))
+* `d/ovh_cloud_project_containerregistries`: Add `iam_enabled` field ([#907](https://github.com/ovh/terraform-provider-ovh/pull/907))
+
+
+📚 Documentation:
+
+* `r/ovh_cloud_project_kube_nodepool`: Add missing field `availability_zones` ([#989](https://github.com/ovh/terraform-provider-ovh/pull/989))
+
+❤️ Thanks for your contributions ❤️
+
 ## 2.3.0 (May 22, 2025)
 
 ⚙️ General:
