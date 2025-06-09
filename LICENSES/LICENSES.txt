@@ -10,6 +10,7 @@ Packages:
 github.com/ProtonMail/go-crypto; BSD-3-Clause
 github.com/agext/levenshtein; Apache-2.0
 github.com/apparentlymart/go-textseg/v15; Apache-2.0
+github.com/benbjohnson/clock; MIT
 github.com/cloudflare/circl; BSD-3-Clause
 github.com/fatih/color; MIT
 github.com/golang/go; BSD-3-Clause
@@ -54,6 +55,7 @@ github.com/vmihailenco/msgpack; BSD-2-Clause
 github.com/vmihailenco/tagparser/v2; BSD-2-Clause
 github.com/ybriffa/rfc3339; Unknown. See go/github.com/ybriffa/rfc3339/LICENSE file
 github.com/zclconf/go-cty; MIT
+go.uber.org/ratelimit; MIT
 golang.org/x/crypto; BSD-3-Clause
 golang.org/x/exp; BSD-3-Clause
 golang.org/x/mod; BSD-3-Clause
