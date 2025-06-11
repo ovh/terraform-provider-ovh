@@ -584,3 +584,27 @@ func testAccPreCheckIamResourceGroup(t *testing.T) {
 	checkEnvOrSkip(t, "OVH_VRACK_SERVICE_TEST")
 	checkEnvOrSkip(t, "OVH_VPS")
 }
+
+// Checks that the environment variables needed ofr the /storage/netapp acceptance tests
+// are set.
+func testAccPreCheckStorageEfs(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_STORAGE_EFS_SERVICE_TEST")
+}
+
+func testAccCheckStorageEfsExists(t *testing.T) {
+	type efsServiceResponse struct {
+		ID     string `json:"id"`
+		Status string `json:"status"`
+	}
+
+	r := efsServiceResponse{}
+
+	endpoint := fmt.Sprintf("/storage/netapp/%s", url.PathEscape(os.Getenv("OVH_STORAGE_EFS_SERVICE_TEST")))
+
+	err := testAccOVHClient.Get(endpoint, &r)
+	if err != nil {
+		t.Fatalf("Error: %q\n", err)
+	}
+	t.Logf("Read Storage EFS service %s -> state: '%s', serviceName: %s", endpoint, r.Status, r.ID)
+}
