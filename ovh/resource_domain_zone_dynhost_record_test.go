@@ -33,8 +33,8 @@ func testSweepDomainZoneDynhostRecord(region string) error {
 	}
 
 	records := make([]string, 0)
-	if err := client.Get(fmt.Sprintf("/domain/zone/%s/dynhost/record", url.PathEscape(zoneName)), &records); err != nil {
-		return fmt.Errorf("Error calling /domain/zone/%s/dynhost/record:\n\t %q", zoneName, err)
+	if err := client.Get(fmt.Sprintf("/domain/zone/%s/dynHost/record", url.PathEscape(zoneName)), &records); err != nil {
+		return fmt.Errorf("Error calling /domain/zone/%s/dynHost/record:\n\t %q", zoneName, err)
 	}
 
 	if len(records) == 0 {
@@ -45,15 +45,15 @@ func testSweepDomainZoneDynhostRecord(region string) error {
 	for _, rec := range records {
 		record := &DomainZoneDynhostRecordModel{}
 
-		if err := client.Get(fmt.Sprintf("/domain/zone/%s/dynhost/record/%s", url.PathEscape(zoneName), url.PathEscape(rec)), &record); err != nil {
-			return fmt.Errorf("Error calling /domain/zone/%s/dynhost/record/%s:\n\t %q", zoneName, rec, err)
+		if err := client.Get(fmt.Sprintf("/domain/zone/%s/dynHost/record/%s", url.PathEscape(zoneName), url.PathEscape(rec)), &record); err != nil {
+			return fmt.Errorf("Error calling /domain/zone/%s/dynHost/record/%s:\n\t %q", zoneName, rec, err)
 		}
 
 		log.Printf("[DEBUG] record found %v", record)
 
 		err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 			log.Printf("[INFO] Deleting record %v", record)
-			if err := client.Delete(fmt.Sprintf("/domain/zone/%s/dynhost/record/%v", zoneName, rec), nil); err != nil {
+			if err := client.Delete(fmt.Sprintf("/domain/zone/%s/dynHost/record/%v", zoneName, rec), nil); err != nil {
 				return resource.RetryableError(err)
 			}
 			// Successful delete

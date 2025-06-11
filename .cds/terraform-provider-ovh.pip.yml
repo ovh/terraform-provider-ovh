@@ -67,3 +67,6 @@ parameters:
   skipthistest.vcd:
     type: boolean
     description: Skip VCD tests
+  skipthistest.storageefs:
+    type: boolean
+    description: Skip Storage EFS tests
