@@ -109,6 +109,11 @@ func resourceCloudProjectNetworkPrivate() *schema.Resource {
 				},
 				Set: RegionAttributesHash,
 			},
+			"regions_openstack_ids": {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem:     schema.TypeString,
+			},
 			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -189,6 +194,7 @@ func resourceCloudProjectNetworkPrivateRead(d *schema.ResourceData, meta interfa
 
 	regions_status := make([]map[string]interface{}, 0)
 	regions_attributes := make([]map[string]interface{}, 0)
+	regions_openstack_ids := map[string]string{}
 	regions := make([]string, 0)
 
 	for i := range r.Regions {
@@ -198,6 +204,8 @@ func resourceCloudProjectNetworkPrivateRead(d *schema.ResourceData, meta interfa
 		region_attributes["openstackid"] = r.Regions[i].OpenStackId
 		regions_attributes = append(regions_attributes, region_attributes)
 
+		regions_openstack_ids[r.Regions[i].Region] = r.Regions[i].OpenStackId
+
 		region_status := make(map[string]interface{})
 		region_status["region"] = r.Regions[i].Region
 		region_status["status"] = r.Regions[i].Status
@@ -206,6 +214,7 @@ func resourceCloudProjectNetworkPrivateRead(d *schema.ResourceData, meta interfa
 		regions = append(regions, fmt.Sprintf(r.Regions[i].Region))
 	}
 	d.Set("regions_attributes", regions_attributes)
+	d.Set("regions_openstack_ids", regions_openstack_ids)
 	d.Set("regions_status", regions_status)
 	d.Set("regions", regions)
 

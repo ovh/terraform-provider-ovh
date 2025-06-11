@@ -71,6 +71,12 @@ func CloudProjectNetworkPrivateDataSourceSchema(ctx context.Context) schema.Sche
 			Description:         "Details about private network in region",
 			MarkdownDescription: "Details about private network in region",
 		},
+		"regions_openstack_ids": schema.MapAttribute{
+			CustomType:          ovhtypes.NewTfMapNestedType[ovhtypes.TfStringValue](ctx),
+			Computed:            true,
+			Description:         "Network openstack ids for each region",
+			MarkdownDescription: "Network openstack ids for each region",
+		},
 		"status": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
 			Computed:            true,
@@ -97,13 +103,14 @@ func CloudProjectNetworkPrivateDataSourceSchema(ctx context.Context) schema.Sche
 }
 
 type CloudProjectNetworkPrivateModel struct {
-	Name        ovhtypes.TfStringValue                   `tfsdk:"name" json:"name"`
-	NetworkId   ovhtypes.TfStringValue                   `tfsdk:"network_id" json:"id"`
-	Regions     ovhtypes.TfListNestedValue[RegionsValue] `tfsdk:"regions" json:"regions"`
-	ServiceName ovhtypes.TfStringValue                   `tfsdk:"service_name" json:"serviceName"`
-	Status      ovhtypes.TfStringValue                   `tfsdk:"status" json:"status"`
-	Type        ovhtypes.TfStringValue                   `tfsdk:"type" json:"type"`
-	VlanId      ovhtypes.TfInt64Value                    `tfsdk:"vlan_id" json:"vlanId"`
+	Name                ovhtypes.TfStringValue                            `tfsdk:"name" json:"name"`
+	NetworkId           ovhtypes.TfStringValue                            `tfsdk:"network_id" json:"id"`
+	Regions             ovhtypes.TfListNestedValue[RegionsValue]          `tfsdk:"regions" json:"regions"`
+	RegionsOpenstackIds ovhtypes.TfMapNestedValue[ovhtypes.TfStringValue] `tfsdk:"regions_openstack_ids" json:"regions_openstack_ids"`
+	ServiceName         ovhtypes.TfStringValue                            `tfsdk:"service_name" json:"serviceName"`
+	Status              ovhtypes.TfStringValue                            `tfsdk:"status" json:"status"`
+	Type                ovhtypes.TfStringValue                            `tfsdk:"type" json:"type"`
+	VlanId              ovhtypes.TfInt64Value                             `tfsdk:"vlan_id" json:"vlanId"`
 }
 
 func (v *CloudProjectNetworkPrivateModel) MergeWith(other *CloudProjectNetworkPrivateModel) {
@@ -134,6 +141,10 @@ func (v *CloudProjectNetworkPrivateModel) MergeWith(other *CloudProjectNetworkPr
 
 	if (v.VlanId.IsUnknown() || v.VlanId.IsNull()) && !other.VlanId.IsUnknown() {
 		v.VlanId = other.VlanId
+	}
+
+	if (v.RegionsOpenstackIds.IsUnknown() || v.RegionsOpenstackIds.IsNull()) && !other.RegionsOpenstackIds.IsUnknown() {
+		v.RegionsOpenstackIds = other.RegionsOpenstackIds
 	}
 
 }

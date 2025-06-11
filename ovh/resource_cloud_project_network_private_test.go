@@ -14,7 +14,7 @@ func TestAccCloudProjectNetworkPrivate_basic(t *testing.T) {
       service_name = "%s"
 	  name         = "network_test"
 	  regions      = ["GRA11", "GRA9"]
-	  vlan_id      = 0
+	  vlan_id      = 11
 	}
 `, os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"))
 
@@ -23,7 +23,7 @@ func TestAccCloudProjectNetworkPrivate_basic(t *testing.T) {
       service_name = "%s"
 	  name         = "network_test"
 	  regions      = ["GRA11"]
-	  vlan_id      = 0
+	  vlan_id      = 11
 	}
 `, os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"))
 	resource.Test(t, resource.TestCase{
@@ -35,6 +35,8 @@ func TestAccCloudProjectNetworkPrivate_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
 						"ovh_cloud_project_network_private.testnetwork", "regions.#", "2"),
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_project_network_private.testnetwork", "regions_openstack_ids.%", "2"),
 				),
 			},
 			{
@@ -42,6 +44,8 @@ func TestAccCloudProjectNetworkPrivate_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
 						"ovh_cloud_project_network_private.testnetwork", "regions.#", "1"),
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_project_network_private.testnetwork", "regions_openstack_ids.%", "1"),
 				),
 			},
 		},
