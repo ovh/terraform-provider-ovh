@@ -30,4 +30,4 @@ The contributions should be submitted through new GitHub Pull Requests.
 
 ## Submiting an Issue:
 
-In addition to contributions, we welcome [bug reports](https://github.com/ovh/terraform-provider-ovh/issues/new?assignees=&labels=&template=Bug_Report.md) and [feature requests](https://github.com/ovh/terraform-provider-ovh/issues/new?assignees=&labels=enhancement&template=Feature_Request.md).
+In addition to contributions, we welcome [bug reports](https://github.com/ovh/terraform-provider-ovh/issues/new?template=report-a-bug.md), [resource or datasource requests](https://github.com/ovh/terraform-provider-ovh/issues/new?template=request-a-new-resource-and-or-datasource.md), [documentation errors reports](https://github.com/ovh/terraform-provider-ovh/issues/new?template=report-a-documentation-error.md) and [feature requests](https://github.com/ovh/terraform-provider-ovh/issues/new?template=request-a-feature.md).
