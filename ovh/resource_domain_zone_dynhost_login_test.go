@@ -33,8 +33,8 @@ func testSweepDomainZoneDynhostLogin(region string) error {
 	}
 
 	logins := make([]string, 0)
-	if err := client.Get(fmt.Sprintf("/domain/zone/%s/dynhost/login", url.PathEscape(zoneName)), &logins); err != nil {
-		return fmt.Errorf("Error calling /domain/zone/%s/dynhost/login:\n\t %q", zoneName, err)
+	if err := client.Get(fmt.Sprintf("/domain/zone/%s/dynHost/login", url.PathEscape(zoneName)), &logins); err != nil {
+		return fmt.Errorf("Error calling /domain/zone/%s/dynHost/login:\n\t %q", zoneName, err)
 	}
 
 	if len(logins) == 0 {
@@ -45,15 +45,15 @@ func testSweepDomainZoneDynhostLogin(region string) error {
 	for _, l := range logins {
 		login := &DomainZoneDynhostLoginModel{}
 
-		if err := client.Get(fmt.Sprintf("/domain/zone/%s/dynhost/login/%s", url.PathEscape(zoneName), url.PathEscape(l)), &login); err != nil {
-			return fmt.Errorf("Error calling /domain/zone/%s/dynhost/login/%s:\n\t %q", zoneName, l, err)
+		if err := client.Get(fmt.Sprintf("/domain/zone/%s/dynHost/login/%s", url.PathEscape(zoneName), url.PathEscape(l)), &login); err != nil {
+			return fmt.Errorf("Error calling /domain/zone/%s/dynHost/login/%s:\n\t %q", zoneName, l, err)
 		}
 
 		log.Printf("[DEBUG] login found %v", login)
 
 		err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 			log.Printf("[INFO] Deleting login %v", login)
-			if err := client.Delete(fmt.Sprintf("/domain/zone/%s/dynhost/login/%s", url.PathEscape(zoneName), url.PathEscape(l)), nil); err != nil {
+			if err := client.Delete(fmt.Sprintf("/domain/zone/%s/dynHost/login/%s", url.PathEscape(zoneName), url.PathEscape(l)), nil); err != nil {
 				return resource.RetryableError(err)
 			}
 			// Successful delete
