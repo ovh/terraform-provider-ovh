@@ -6,6 +6,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
+
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -14,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 )
@@ -67,6 +68,12 @@ func VpsResourceSchema(ctx context.Context) schema.Schema {
 			Computed:            true,
 			Description:         "IAM resource metadata",
 			MarkdownDescription: "IAM resource metadata",
+		},
+		"image_id": schema.StringAttribute{
+			CustomType:          ovhtypes.TfStringType{},
+			Optional:            true,
+			Description:         "Id of the image to install on the VPS",
+			MarkdownDescription: "Id of the image to install on the VPS",
 		},
 		"keymap": schema.StringAttribute{
 			CustomType:  ovhtypes.TfStringType{},
@@ -201,6 +208,12 @@ func VpsResourceSchema(ctx context.Context) schema.Schema {
 				),
 			},
 		},
+		"public_ssh_key": schema.StringAttribute{
+			CustomType:          ovhtypes.TfStringType{},
+			Optional:            true,
+			Description:         "Public SSH key to pre-install on your VPS",
+			MarkdownDescription: "Public SSH key to pre-install on your VPS",
+		},
 		"service_name": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
 			Computed:            true,
@@ -275,15 +288,14 @@ type VpsModel struct {
 	OvhSubsidiary ovhtypes.TfStringValue                      `tfsdk:"ovh_subsidiary" json:"ovhSubsidiary"`
 	Plan          ovhtypes.TfListNestedValue[PlanValue]       `tfsdk:"plan" json:"plan"`
 	PlanOption    ovhtypes.TfListNestedValue[PlanOptionValue] `tfsdk:"plan_option" json:"planOption"`
+	// Installation options
+	PublicSSHKey ovhtypes.TfStringValue `tfsdk:"public_ssh_key" json:"publicSshKey"`
+	ImageId      ovhtypes.TfStringValue `tfsdk:"image_id" json:"imageId"`
 }
 
-func (v *VpsModel) ToOrder() *OrderModel {
-	return &OrderModel{
-		Order:         v.Order,
-		OvhSubsidiary: v.OvhSubsidiary,
-		Plan:          v.Plan,
-		PlanOption:    v.PlanOption,
-	}
+type InstallOptionsModel struct {
+	PublicSSHKey ovhtypes.TfStringValue `tfsdk:"public_ssh_key" json:"publicSshKey"`
+	ImageId      ovhtypes.TfStringValue `tfsdk:"image_id" json:"imageId"`
 }
 
 func (v *VpsModel) MergeWith(other *VpsModel) {
@@ -299,6 +311,10 @@ func (v *VpsModel) MergeWith(other *VpsModel) {
 		v.Iam = other.Iam
 	} else if !other.Iam.IsUnknown() {
 		v.Iam.MergeWith(&other.Iam)
+	}
+
+	if (v.ImageId.IsUnknown() || v.ImageId.IsNull()) && !other.ImageId.IsUnknown() {
+		v.ImageId = other.ImageId
 	}
 
 	if (v.Keymap.IsUnknown() || v.Keymap.IsNull()) && !other.Keymap.IsUnknown() {
@@ -329,6 +345,10 @@ func (v *VpsModel) MergeWith(other *VpsModel) {
 
 	if (v.OfferType.IsUnknown() || v.OfferType.IsNull()) && !other.OfferType.IsUnknown() {
 		v.OfferType = other.OfferType
+	}
+
+	if (v.PublicSSHKey.IsUnknown() || v.PublicSSHKey.IsNull()) && !other.PublicSSHKey.IsUnknown() {
+		v.PublicSSHKey = other.PublicSSHKey
 	}
 
 	if (v.ServiceName.IsUnknown() || v.ServiceName.IsNull()) && !other.ServiceName.IsUnknown() {
@@ -367,6 +387,22 @@ func (v *VpsModel) MergeWith(other *VpsModel) {
 
 	if (v.PlanOption.IsUnknown() || v.PlanOption.IsNull()) && !other.PlanOption.IsUnknown() {
 		v.PlanOption = other.PlanOption
+	}
+}
+
+func (v *VpsModel) ToOrder() *OrderModel {
+	return &OrderModel{
+		Order:         v.Order,
+		OvhSubsidiary: v.OvhSubsidiary,
+		Plan:          v.Plan,
+		PlanOption:    v.PlanOption,
+	}
+}
+
+func (v *VpsModel) ToInstallOptions() *InstallOptionsModel {
+	return &InstallOptionsModel{
+		ImageId:      v.ImageId,
+		PublicSSHKey: v.PublicSSHKey,
 	}
 }
 
@@ -1015,7 +1051,7 @@ func (v ModelValue) Attributes() map[string]attr.Value {
 	}
 }
 func (v ModelValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	attrTypes := make(map[string]tftypes.Type, 9)
+	attrTypes := make(map[string]tftypes.Type, 11)
 
 	var val tftypes.Value
 	var err error
@@ -1038,7 +1074,7 @@ func (v ModelValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error)
 
 	switch v.state {
 	case attr.ValueStateKnown:
-		vals := make(map[string]tftypes.Value, 9)
+		vals := make(map[string]tftypes.Value, 11)
 
 		val, err = v.AvailableOptions.ToTerraformValue(ctx)
 
