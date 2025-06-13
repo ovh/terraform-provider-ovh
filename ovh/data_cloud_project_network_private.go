@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
 var _ datasource.DataSourceWithConfigure = (*cloudProjectNetworkPrivateDataSource)(nil)
@@ -63,6 +65,17 @@ func (d *cloudProjectNetworkPrivateDataSource) Read(ctx context.Context, req dat
 		)
 		return
 	}
+
+	// Compute RegionsOpenstackIds map from Regions list
+	internal_openstack_ids := map[string]attr.Value{}
+	for _, region_attrs := range data.Regions.Elements() {
+		internal_openstack_ids[region_attrs.(RegionsValue).Region.ValueString()] = region_attrs.(RegionsValue).OpenstackId
+	}
+
+	regions_openstack_ids, diags := ovhtypes.NewTfMapNestedValue[ovhtypes.TfStringValue](ctx, internal_openstack_ids)
+	resp.Diagnostics.Append(diags...)
+
+	data.RegionsOpenstackIds = regions_openstack_ids
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

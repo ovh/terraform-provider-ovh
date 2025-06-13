@@ -24,6 +24,8 @@ func TestAccDataSourceCloudProjectNetworkPrivate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.ovh_cloud_project_network_private.private", "service_name", os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")),
 					resource.TestCheckResourceAttr("data.ovh_cloud_project_network_private.private", "network_id", os.Getenv("OVH_CLOUD_PROJECT_PRIVATE_NETWORK_TEST")),
 					resource.TestCheckResourceAttrSet("data.ovh_cloud_project_network_private.private", "name"),
+					resource.TestCheckResourceAttrSet("data.ovh_cloud_project_network_private.private", "regions.#"),
+					resource.TestCheckResourceAttrSet("data.ovh_cloud_project_network_private.private", "regions_openstack_ids.%"),
 				),
 			},
 		},
