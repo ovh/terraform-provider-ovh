@@ -350,13 +350,6 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 				boolplanmodifier.UseStateForUnknown(),
 			},
 		},
-		"properties": schema.MapAttribute{
-			CustomType:          ovhtypes.NewTfMapNestedType[ovhtypes.TfStringValue](ctx),
-			Optional:            true,
-			Description:         "Arbitrary properties to pass to cloud-init's config drive datasource",
-			MarkdownDescription: "Arbitrary properties to pass to cloud-init's config drive datasource",
-			DeprecationMessage:  "Attribute 'properties' is deprecated and has no effect",
-		},
 		"rack": schema.StringAttribute{
 			CustomType: ovhtypes.TfStringType{},
 			Computed:   true,
@@ -715,7 +708,6 @@ type DedicatedServerModel struct {
 	Os                      ovhtypes.TfStringValue                             `tfsdk:"os" json:"os"`
 	PowerState              ovhtypes.TfStringValue                             `tfsdk:"power_state" json:"powerState"`
 	ProfessionalUse         ovhtypes.TfBoolValue                               `tfsdk:"professional_use" json:"professionalUse"`
-	Properties              ovhtypes.TfMapNestedValue[ovhtypes.TfStringValue]  `tfsdk:"properties" json:"properties"`
 	Rack                    ovhtypes.TfStringValue                             `tfsdk:"rack" json:"rack"`
 	PreventInstallOnCreate  ovhtypes.TfBoolValue                               `tfsdk:"prevent_install_on_create" json:"-"`
 	PreventInstallOnImport  ovhtypes.TfBoolValue                               `tfsdk:"prevent_install_on_import" json:"-"`
@@ -810,20 +802,12 @@ func (v *DedicatedServerModel) MergeWith(other *DedicatedServerModel) {
 		v.Os = other.Os
 	}
 
-	if (v.Properties.IsUnknown() || v.Properties.IsNull()) && !other.Properties.IsUnknown() {
-		v.Properties = other.Properties
-	}
-
 	if (v.PowerState.IsUnknown() || v.PowerState.IsNull()) && !other.PowerState.IsUnknown() {
 		v.PowerState = other.PowerState
 	}
 
 	if (v.ProfessionalUse.IsUnknown() || v.ProfessionalUse.IsNull()) && !other.ProfessionalUse.IsUnknown() {
 		v.ProfessionalUse = other.ProfessionalUse
-	}
-
-	if (v.Properties.IsUnknown() || v.Properties.IsNull()) && !other.Properties.IsUnknown() {
-		v.Properties = other.Properties
 	}
 
 	if (v.Rack.IsUnknown() || v.Rack.IsNull()) && !other.Rack.IsUnknown() {
@@ -932,19 +916,18 @@ func (v *DedicatedServerModel) ToOrder() *OrderModel {
 }
 
 type DedicatedServerWritableModel struct {
-	BootId            *ovhtypes.TfInt64Value                             `tfsdk:"boot_id" json:"bootId,omitempty"`
-	BootScript        *ovhtypes.TfStringValue                            `tfsdk:"boot_script" json:"bootScript,omitempty"`
-	Customizations    *CustomizationsWritableValue                       `tfsdk:"customizations" json:"customizations,omitempty"`
-	EfiBootloaderPath *ovhtypes.TfStringValue                            `tfsdk:"efi_bootloader_path" json:"efiBootloaderPath,omitempty"`
-	Monitoring        *ovhtypes.TfBoolValue                              `tfsdk:"monitoring" json:"monitoring,omitempty"`
-	NoIntervention    *ovhtypes.TfBoolValue                              `tfsdk:"no_intervention" json:"noIntervention,omitempty"`
-	Properties        *ovhtypes.TfMapNestedValue[ovhtypes.TfStringValue] `tfsdk:"properties" json:"properties,omitempty"`
-	RescueMail        *ovhtypes.TfStringValue                            `tfsdk:"rescue_mail" json:"rescueMail,omitempty"`
-	RescueSshKey      *ovhtypes.TfStringValue                            `tfsdk:"rescue_ssh_key" json:"rescueSshKey,omitempty"`
-	RootDevice        *ovhtypes.TfStringValue                            `tfsdk:"root_device" json:"rootDevice,omitempty"`
-	State             *ovhtypes.TfStringValue                            `tfsdk:"state" json:"state,omitempty"`
-	Storage           []*StorageWritableValue                            `tfsdk:"storage" json:"storage,omitempty"`
-	Os                *ovhtypes.TfStringValue                            `tfsdk:"os" json:"operatingSystem,omitempty"`
+	BootId            *ovhtypes.TfInt64Value       `tfsdk:"boot_id" json:"bootId,omitempty"`
+	BootScript        *ovhtypes.TfStringValue      `tfsdk:"boot_script" json:"bootScript,omitempty"`
+	Customizations    *CustomizationsWritableValue `tfsdk:"customizations" json:"customizations,omitempty"`
+	EfiBootloaderPath *ovhtypes.TfStringValue      `tfsdk:"efi_bootloader_path" json:"efiBootloaderPath,omitempty"`
+	Monitoring        *ovhtypes.TfBoolValue        `tfsdk:"monitoring" json:"monitoring,omitempty"`
+	NoIntervention    *ovhtypes.TfBoolValue        `tfsdk:"no_intervention" json:"noIntervention,omitempty"`
+	RescueMail        *ovhtypes.TfStringValue      `tfsdk:"rescue_mail" json:"rescueMail,omitempty"`
+	RescueSshKey      *ovhtypes.TfStringValue      `tfsdk:"rescue_ssh_key" json:"rescueSshKey,omitempty"`
+	RootDevice        *ovhtypes.TfStringValue      `tfsdk:"root_device" json:"rootDevice,omitempty"`
+	State             *ovhtypes.TfStringValue      `tfsdk:"state" json:"state,omitempty"`
+	Storage           []*StorageWritableValue      `tfsdk:"storage" json:"storage,omitempty"`
+	Os                *ovhtypes.TfStringValue      `tfsdk:"os" json:"operatingSystem,omitempty"`
 }
 
 func (v DedicatedServerModel) ToCreate() *DedicatedServerWritableModel {
@@ -1005,10 +988,6 @@ func (v DedicatedServerModel) ToReinstall(onlyOS bool) *DedicatedServerWritableM
 			for _, elem := range v.Storage.Elements() {
 				res.Storage = append(res.Storage, elem.(StorageValue).ToCreate())
 			}
-		}
-
-		if !v.Properties.IsUnknown() && !v.Properties.IsNull() {
-			res.Properties = &v.Properties
 		}
 	}
 
