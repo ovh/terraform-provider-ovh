@@ -35,7 +35,7 @@ func (r *vpsResource) Metadata(ctx context.Context, req resource.MetadataRequest
 	resp.TypeName = req.ProviderTypeName + "_vps"
 }
 
-func (d *vpsResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *vpsResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -49,10 +49,10 @@ func (d *vpsResource) Configure(_ context.Context, req resource.ConfigureRequest
 		return
 	}
 
-	d.config = config
+	r.config = config
 }
 
-func (d *vpsResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *vpsResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = VpsResourceSchema(ctx)
 }
 
@@ -105,6 +105,28 @@ func (r *vpsResource) Create(ctx context.Context, req resource.CreateRequest, re
 			err.Error(),
 		)
 		return
+	}
+
+	// Update install options if needed
+	if installOptionsHasBeenSet(data) {
+		endpoint := "/vps/" + url.PathEscape(data.ServiceName.ValueString()) + "/rebuild"
+		if err := r.config.OVHClient.Post(endpoint, data.ToInstallOptions(), nil); err != nil {
+			resp.Diagnostics.AddError(
+				fmt.Sprintf("Error calling Post %s", endpoint),
+				err.Error(),
+			)
+			return
+		}
+
+		// Wait for reinstallation to complete
+		err := r.waitForVPSReinstall(ctx, data.ServiceName.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error fetching updated resource",
+				err.Error(),
+			)
+			return
+		}
 	}
 
 	// Read updated resource
@@ -173,6 +195,33 @@ func (r *vpsResource) Update(ctx context.Context, req resource.UpdateRequest, re
 		return
 	}
 
+	// Update install options if needed
+	if installOptionsHasChanged(planData, data) {
+		if validateInstallOptions(planData) {
+			resp.Diagnostics.AddError("Invalid VPS install options", "To define a public_ssh_key value, you have to also set a value for image_id")
+			return
+		}
+
+		endpoint := "/vps/" + url.PathEscape(data.ServiceName.ValueString()) + "/rebuild"
+		if err := r.config.OVHClient.Post(endpoint, planData.ToInstallOptions(), nil); err != nil {
+			resp.Diagnostics.AddError(
+				fmt.Sprintf("Error calling Post %s", endpoint),
+				err.Error(),
+			)
+			return
+		}
+
+		// Wait for reinstallation to complete
+		err := r.waitForVPSReinstall(ctx, data.ServiceName.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error fetching updated resource",
+				err.Error(),
+			)
+			return
+		}
+	}
+
 	// Read updated resource
 	responseData, err := r.waitForVPSUpdate(ctx, data.ServiceName.ValueString(), &planData)
 	if err != nil {
@@ -188,6 +237,45 @@ func (r *vpsResource) Update(ctx context.Context, req resource.UpdateRequest, re
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)
+}
+
+func (r *vpsResource) waitForVPSReinstall(ctx context.Context, serviceName string) error {
+	var responseData VpsModel
+
+	err := retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
+		// Read updated resource
+		endpoint := "/vps/" + url.PathEscape(serviceName)
+		if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
+			return retry.NonRetryableError(fmt.Errorf("error calling GET %s", endpoint))
+		}
+
+		// Update is succesfull, return
+		if responseData.State.ValueString() != "running" {
+			return retry.RetryableError(errors.New("waiting for vps to finish reinstallation"))
+		}
+
+		return nil
+
+	})
+
+	return err
+}
+
+func installOptionsHasChanged(planData, data VpsModel) bool {
+	return planData.ImageId.ValueString() != data.ImageId.ValueString() ||
+		planData.PublicSSHKey.ValueString() != data.PublicSSHKey.ValueString()
+}
+
+func installOptionsHasBeenSet(data VpsModel) bool {
+	return !data.ImageId.IsNull() || !data.PublicSSHKey.IsNull()
+}
+
+func validateInstallOptions(planData VpsModel) bool {
+	// image_id is mandatory to call /vps/{serviceName}/rebuild
+	if installOptionsHasBeenSet(planData) {
+		return !planData.ImageId.IsNull()
+	}
+	return true
 }
 
 func (r *vpsResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
