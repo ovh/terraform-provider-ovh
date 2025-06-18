@@ -5,9 +5,12 @@ import (
 	"log"
 	"net/url"
 	"sort"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers/hashcode"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/ovhwrap"
 )
 
 var (
@@ -321,9 +324,11 @@ func orderCartGenericProductRead(d *schema.ResourceData, meta interface{}) error
 		product,
 	)
 
-	err := config.OVHClient.Get(endpoint, &res)
-	if err != nil {
-		return fmt.Errorf("Error calling Get %s:\n\t %q", endpoint, err)
+	// retry on error because this call can result in error sometimes
+	// while it is being investigated by concerned team we put a three-time
+	// retry in case of error
+	if err := getCartGenericProductPlan(*config.OVHClient, endpoint, &res, 3); err != nil {
+		return fmt.Errorf("error calling Get %s:\n\t %q", endpoint, err)
 	}
 
 	plans := make([]map[string]interface{}, len(res))
@@ -382,6 +387,22 @@ func orderCartGenericOptionsRead(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
+func getCartGenericProductPlan(client ovhwrap.Client, endpoint string, result *[]OrderCartGenericProduct, maxRetries int) error {
+	var err error
+	for attempt := 0; attempt <= maxRetries; attempt++ {
+		if err = client.Get(endpoint, result); err == nil {
+			return nil
+		}
+		errOvh, ok := err.(*ovh.APIError)
+		if ok && errOvh.Code != 500 {
+			// don't retry non-500 errors
+			return err
+		}
+		time.Sleep(2 * time.Second)
+	}
+	return err
+}
+
 func orderCartGenericProductPlanRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 	cartId := d.Get("cart_id").(string)
@@ -405,7 +426,10 @@ func orderCartGenericProductPlanRead(d *schema.ResourceData, meta interface{}) e
 		catalogName,
 	)
 
-	if err := config.OVHClient.Get(endpoint, &res); err != nil {
+	// retry on error because this call can result in error sometimes
+	// while it is being investigated by concerned team we put a three-times
+	// retry in case of error
+	if err := getCartGenericProductPlan(*config.OVHClient, endpoint, &res, 3); err != nil {
 		return fmt.Errorf("error calling Get %s:\n\t %q", endpoint, err)
 	}
 
