@@ -48,6 +48,15 @@ func resourceDedicatedServerReinstallTask() *schema.Resource {
 				Description: "OS reinstallation customizations",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"config_drive_metadata": {
+							Type:        schema.TypeMap,
+							Optional:    true,
+							ForceNew:    true,
+							Description: "Config Drive MetaData",
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
 						"config_drive_user_data": {
 							Type:        schema.TypeString,
 							Optional:    true,
@@ -124,15 +133,6 @@ func resourceDedicatedServerReinstallTask() *schema.Resource {
 							Description: "SSH Public Key",
 						},
 					},
-				},
-			},
-			"properties": {
-				Type:        schema.TypeMap,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "Arbitrary properties to pass to cloud-init's config drive datasource",
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
 				},
 			},
 			"storage": {
