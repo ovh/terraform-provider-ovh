@@ -1,13 +1,17 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/ovhwrap"
 )
 
 func resourceIpReverse() *schema.Resource {
@@ -51,6 +55,13 @@ func resourceIpReverse() *schema.Resource {
 				ForceNew: true,
 				Required: true,
 			},
+
+			"readiness_timeout_duration": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Required: false,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -79,18 +90,58 @@ func resourceIpReverseCreate(d *schema.ResourceData, meta interface{}) error {
 	opts := (&IpReverseCreateOpts{}).FromResource(d)
 	res := &IpReverse{}
 
-	err := config.OVHClient.Post(
-		fmt.Sprintf("/ip/%s/reverse", url.PathEscape(ip)),
-		opts,
-		&res,
-	)
+	readinessTimeoutDurationAttr, isReadinessTimeoutDefined := d.GetOk("readiness_timeout_duration")
+
+	retryDuration := 1 * time.Minute
+	if isReadinessTimeoutDefined {
+		var err error
+		retryDuration, err = time.ParseDuration(readinessTimeoutDurationAttr.(string))
+		if err != nil {
+			return fmt.Errorf("failed to create OVH IP Reverse: cannot parse readiness_timeout_seconds attribute: %s", err)
+		}
+	}
+
+	err := postIpReverseWithRetry(context.TODO(), *config.OVHClient, fmt.Sprintf("/ip/%s/reverse", url.PathEscape(ip)), opts, res, retryDuration)
 	if err != nil {
-		return fmt.Errorf("Failed to create OVH IP Reverse: %s", err)
+		return fmt.Errorf("failed to create OVH IP Reverse: %s", err)
 	}
 
 	d.SetId(res.IpReverse)
 
 	return resourceIpReverseRead(d, meta)
+}
+
+func postIpReverseWithRetry(parentCtx context.Context, client ovhwrap.Client, endpoint string, opts *IpReverseCreateOpts, result *IpReverse, retryDuration time.Duration) error {
+	ctx, cancel := context.WithTimeout(parentCtx, retryDuration)
+	defer cancel()
+
+	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		err := client.Post(
+			endpoint,
+			opts,
+			&result,
+		)
+
+		if err == nil {
+			return err
+		}
+
+		errOvh, ok := err.(*ovh.APIError)
+		if ok && errOvh.Code != 400 {
+			// don't retry non-400 errors
+			return err
+		}
+
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("retry duration exhausted for ovh_ip_reverse resource creation: %w", err)
+		case <-ticker.C:
+			continue
+		}
+	}
 }
 
 func resourceIpReverseRead(d *schema.ResourceData, meta interface{}) error {
