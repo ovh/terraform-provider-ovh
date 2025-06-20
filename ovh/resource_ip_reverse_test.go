@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/url"
 	"os"
+	"regexp"
 	"testing"
 	"time"
 
@@ -18,6 +19,7 @@ resource "ovh_ip_reverse" "reverse" {
     ip = "%s"
     ip_reverse = "%s"
     reverse = "%s"
+	readiness_timeout_duration = %q
 }
 `
 
@@ -71,7 +73,7 @@ func TestAccIpReverse_basic(t *testing.T) {
 	ip := os.Getenv("OVH_IP_TEST")
 	reverse := os.Getenv("OVH_IP_REVERSE_TEST")
 
-	config := fmt.Sprintf(testAccIpReverseConfig, block, ip, reverse)
+	config := fmt.Sprintf(testAccIpReverseConfig, block, ip, reverse, "60s")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheckIp(t) },
@@ -83,6 +85,7 @@ func TestAccIpReverse_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("ovh_ip_reverse.reverse", "ip", block),
 					resource.TestCheckResourceAttr("ovh_ip_reverse.reverse", "ip_reverse", ip),
 					resource.TestCheckResourceAttr("ovh_ip_reverse.reverse", "reverse", reverse),
+					resource.TestCheckResourceAttr("ovh_ip_reverse.reverse", "readiness_timeout_duration", "60s"),
 				),
 			},
 			{
@@ -90,6 +93,25 @@ func TestAccIpReverse_basic(t *testing.T) {
 				ImportState:         true,
 				ImportStateIdPrefix: block + "|",
 				ImportStateVerify:   true,
+			},
+		},
+	})
+}
+
+func TestAccIpReverse_invalidDuration(t *testing.T) {
+	block := os.Getenv("OVH_IP_BLOCK_TEST")
+	ip := os.Getenv("OVH_IP_TEST")
+	reverse := os.Getenv("OVH_IP_REVERSE_TEST")
+
+	config := fmt.Sprintf(testAccIpReverseConfig, block, ip, reverse, "1xyz")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheckIp(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      config,
+				ExpectError: regexp.MustCompile(`cannot parse readiness_timeout_seconds attribute`),
 			},
 		},
 	})
