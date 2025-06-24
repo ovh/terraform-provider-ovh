@@ -732,7 +732,7 @@ func (v *DedicatedServerModel) MergeWith(other *DedicatedServerModel) {
 		v.BootId = other.BootId
 	}
 
-	if (v.BootScript.IsUnknown() || v.BootScript.IsNull()) && !other.BootScript.IsUnknown() {
+	if v.BootScript.IsUnknown() && !other.BootScript.IsUnknown() {
 		v.BootScript = other.BootScript
 	}
 
@@ -754,7 +754,7 @@ func (v *DedicatedServerModel) MergeWith(other *DedicatedServerModel) {
 		v.DisplayName = other.DisplayName
 	}
 
-	if (v.EfiBootloaderPath.IsUnknown() || v.EfiBootloaderPath.IsNull()) && !other.EfiBootloaderPath.IsUnknown() {
+	if v.EfiBootloaderPath.IsUnknown() && !other.EfiBootloaderPath.IsUnknown() {
 		v.EfiBootloaderPath = other.EfiBootloaderPath
 	}
 
@@ -824,7 +824,7 @@ func (v *DedicatedServerModel) MergeWith(other *DedicatedServerModel) {
 		v.Region = other.Region
 	}
 
-	if (v.RescueMail.IsUnknown() || v.RescueMail.IsNull()) && !other.RescueMail.IsUnknown() {
+	if v.RescueMail.IsUnknown() && !other.RescueMail.IsUnknown() {
 		v.RescueMail = other.RescueMail
 	}
 
@@ -836,7 +836,7 @@ func (v *DedicatedServerModel) MergeWith(other *DedicatedServerModel) {
 		v.Reverse = other.Reverse
 	}
 
-	if (v.RootDevice.IsUnknown() || v.RootDevice.IsNull()) && !other.RootDevice.IsUnknown() {
+	if v.RootDevice.IsUnknown() && !other.RootDevice.IsUnknown() {
 		v.RootDevice = other.RootDevice
 	}
 
@@ -997,23 +997,32 @@ func (v DedicatedServerModel) ToReinstall(onlyOS bool) *DedicatedServerWritableM
 	return res
 }
 
-func (v DedicatedServerModel) ToUpdate() *DedicatedServerWritableModel {
+func (v DedicatedServerModel) ToUpdate(stateData *DedicatedServerModel) *DedicatedServerWritableModel {
 	res := &DedicatedServerWritableModel{}
 	emptyString := ovhtypes.NewTfStringValue("")
+
+	// Just init to an empty struct to avoid checking `if nil` every time
+	if stateData == nil {
+		stateData = &DedicatedServerModel{}
+	}
 
 	if !v.BootId.IsUnknown() {
 		res.BootId = &v.BootId
 	}
 
-	if v.BootScript.IsNull() {
+	// If there was a previous value in the state and a null value
+	// in the plan, send and empty string to the API.
+	if v.BootScript.IsNull() && stateData.BootScript.ValueString() != "" {
 		res.BootScript = &emptyString
-	} else if !v.BootScript.IsUnknown() {
+	} else if !v.BootScript.IsUnknown() && !v.BootScript.IsNull() {
 		res.BootScript = &v.BootScript
 	}
 
-	if v.EfiBootloaderPath.IsNull() {
+	// If there was a previous value in the state and a null value
+	// in the plan, send and empty string to the API.
+	if v.EfiBootloaderPath.IsNull() && stateData.EfiBootloaderPath.ValueString() != "" {
 		res.EfiBootloaderPath = &emptyString
-	} else if !v.EfiBootloaderPath.IsUnknown() {
+	} else if !v.EfiBootloaderPath.IsUnknown() && !v.EfiBootloaderPath.IsNull() {
 		res.EfiBootloaderPath = &v.EfiBootloaderPath
 	}
 
@@ -1025,19 +1034,27 @@ func (v DedicatedServerModel) ToUpdate() *DedicatedServerWritableModel {
 		res.NoIntervention = &v.NoIntervention
 	}
 
-	if v.RescueMail.IsNull() {
+	// If there was a previous value in the state and a null value
+	// in the plan, send and empty string to the API.
+	if v.RescueMail.IsNull() && stateData.RescueMail.ValueString() != "" {
 		res.RescueMail = &emptyString
-	} else if !v.RescueMail.IsUnknown() {
+	} else if !v.RescueMail.IsUnknown() && !v.RescueMail.IsNull() {
 		res.RescueMail = &v.RescueMail
 	}
 
-	if !v.RescueSshKey.IsUnknown() {
+	// If there was a previous value in the state and a null value
+	// in the plan, send and empty string to the API.
+	if v.RescueSshKey.IsNull() && stateData.RescueSshKey.ValueString() != "" {
+		res.RescueSshKey = &emptyString
+	} else if !v.RescueSshKey.IsUnknown() && !v.RescueSshKey.IsNull() {
 		res.RescueSshKey = &v.RescueSshKey
 	}
 
-	if v.RootDevice.IsNull() {
+	// If there was a previous value in the state and a null value
+	// in the plan, send and empty string to the API.
+	if v.RootDevice.IsNull() && stateData.RootDevice.ValueString() != "" {
 		res.RootDevice = &emptyString
-	} else if !v.RootDevice.IsUnknown() {
+	} else if !v.RootDevice.IsUnknown() && !v.RootDevice.IsNull() {
 		res.RootDevice = &v.RootDevice
 	}
 
