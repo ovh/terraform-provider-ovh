@@ -28,3 +28,11 @@ resource "ovh_me_identity_group" "my_group" {
 * `default_group` - Is the group a default and immutable one.
 * `creation` - Creation date of this group.
 * `last_update` - Date of the last update of this group.
+
+## Import
+
+Identity groups can be imported using their `name`:
+
+```bash
+$ terraform import ovh_me_identity_group.my_identity_group name
+```
