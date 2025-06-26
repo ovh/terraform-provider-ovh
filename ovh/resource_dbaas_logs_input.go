@@ -144,13 +144,11 @@ func resourceDbaasLogsInputSchema() map[string]*schema.Schema {
 			Description: "IP blocks",
 			Elem:        &schema.Schema{Type: schema.TypeString},
 			Optional:    true,
-			Computed:    true,
 		},
 		"exposed_port": {
 			Type:        schema.TypeString,
 			Description: "Port",
 			Optional:    true,
-			Computed:    true,
 		},
 		"nb_instance": {
 			Type:          schema.TypeInt,
