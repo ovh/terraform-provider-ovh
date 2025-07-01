@@ -1,3 +1,42 @@
+## 2.5.0 (July 1, 2025)
+
+⚙️ General:
+
+* Bump dependencies ([#1010](https://github.com/ovh/terraform-provider-ovh/pull/1010))
+
+🎉 Features:
+
+* New resource: `ovh_domain_zone_dynhost_login` ([#1001](https://github.com/ovh/terraform-provider-ovh/pull/1001))
+* New resource: `ovh_domain_zone_dynhost_record` ([#1001](https://github.com/ovh/terraform-provider-ovh/pull/1001))
+* New resource: `ovh_storage_efs_share` ([#1003](https://github.com/ovh/terraform-provider-ovh/pull/1003))
+* New resource: `ovh_storage_efs_share_acl` ([#1003](https://github.com/ovh/terraform-provider-ovh/pull/1003))
+* New resource: `ovh_storage_efs_share_snapshot` ([#1003](https://github.com/ovh/terraform-provider-ovh/pull/1003))
+
+* New datasource: `ovh_storage_efs` ([#1003](https://github.com/ovh/terraform-provider-ovh/pull/1003))
+* New datasource: `ovh_storage_efs_share_access_path` ([#1003](https://github.com/ovh/terraform-provider-ovh/pull/1003))
+* New datasource: `ovh_storage_efs_share_access_paths` ([#1003](https://github.com/ovh/terraform-provider-ovh/pull/1003))
+
+💪 Improvements:
+
+* `r/ovh_ip_reverse`: Add field `readiness_timeout_duration` ([#1021](https://github.com/ovh/terraform-provider-ovh/pull/1021))
+* `r/ovh_cloud_project_network_private`: Add field `regions_openstack_ids` ([#1011](https://github.com/ovh/terraform-provider-ovh/pull/1011))
+* `r/ovh_vps`: Add fields `public_ssh_key` and `image_id` to allow installation of the server ([#1015](https://github.com/ovh/terraform-provider-ovh/pull/1015))
+
+* `d/ovh_cloud_project_network_private`: Add field `regions_openstack_ids` ([#1011](https://github.com/ovh/terraform-provider-ovh/pull/1011))
+
+🐜 Bug fixes:
+
+* Retry failing calls when fetching order plans ([#1018](https://github.com/ovh/terraform-provider-ovh/pull/1018))
+* `r/ovh_dedicated_server`: Correctly send string parameters when updating the resource ([#1002](https://github.com/ovh/terraform-provider-ovh/pull/1002))
+
+📚 Documentation:
+
+* Licenses update ([#1008](https://github.com/ovh/terraform-provider-ovh/pull/1008))
+* Fix contributing doc ([#1012](https://github.com/ovh/terraform-provider-ovh/pull/1012))
+* `r/ovh_me_identity_group`: Add import documentation ([#1024](https://github.com/ovh/terraform-provider-ovh/pull/1024))
+
+❤️ Thanks for your contributions ❤️
+
 ## 2.4.0 (June 6, 2025)
 
 ⚙️ General:
