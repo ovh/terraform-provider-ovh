@@ -475,6 +475,7 @@ func testAccPreCheckOrderDedicatedServer(t *testing.T) {
 func testAccPreCheckVPS(t *testing.T) {
 	testAccPreCheckCredentials(t)
 	checkEnvOrSkip(t, "OVH_VPS")
+	checkEnvOrSkip(t, "OVH_VPS_IMAGE_ID")
 }
 
 func testAccPreCheckOkms(t *testing.T) {
