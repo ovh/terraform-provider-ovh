@@ -90,7 +90,7 @@ resource "ovh_dedicated_server" "server" {
   * `configuration` - Representation of a configuration item to personalize product
     * `label` - (Required) Identifier of the resource
     * `value` - (Required) Path to the resource in API.OVH.COM
-* `service_name` - (Optional) The service_name of your dedicated server. This field can be used to avoid ordering a dedicated server at creation and just create the resource using an already existing service
+* `service_name` - (Optional, Forces replacement) The service_name of your dedicated server. This field can be used to avoid ordering a dedicated server at creation and just create the resource using an already existing service
 
 ### Editable fields of a dedicated server
 

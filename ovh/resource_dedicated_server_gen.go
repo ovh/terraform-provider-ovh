@@ -425,6 +425,7 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 			MarkdownDescription: "The internal name of your dedicated server",
 			PlanModifiers: []planmodifier.String{
 				stringplanmodifier.UseStateForUnknown(),
+				stringplanmodifier.RequiresReplace(),
 			},
 		},
 		"state": schema.StringAttribute{
