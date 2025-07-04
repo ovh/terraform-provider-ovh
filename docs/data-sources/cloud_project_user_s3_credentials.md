@@ -1,5 +1,5 @@
 ---
-subcategory : "Cloud Project"
+subcategory : "Object Storage"
 ---
 
 # ovh_cloud_project_user_s3_credentials (Data Source)
