@@ -24,9 +24,10 @@ resource "ovh_cloud_project_containerregistry_user" "user" {
 
 ## Argument Reference
 
-* `service_name` - The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
-
-* `registry_id` - Registry ID
+* `service_name` - (Required) The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
+* `registry_id` - (Required) Registry ID
+* `login` - (Required) User name
+* `email` - (Required) User email
 
 ## Attributes Reference
 
@@ -35,4 +36,4 @@ The following attributes are exported:
 * `email` - User email
 * `id` - User ID
 * `password` - (Sensitive) User password
-* `user` - User name
+* `user` - User name (same as `login`)

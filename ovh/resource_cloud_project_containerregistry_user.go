@@ -36,13 +36,13 @@ func resourceCloudProjectContainerRegistryUser() *schema.Resource {
 			"login": {
 				Type:        schema.TypeString,
 				ForceNew:    true,
-				Description: "Registry name",
+				Description: "User login",
 				Required:    true,
 			},
 			"email": {
 				Type:        schema.TypeString,
 				ForceNew:    true,
-				Description: "User email.",
+				Description: "User email",
 				Required:    true,
 			},
 
@@ -55,7 +55,7 @@ func resourceCloudProjectContainerRegistryUser() *schema.Resource {
 			},
 			"user": {
 				Type:        schema.TypeString,
-				Description: "User name",
+				Description: "User login",
 				Computed:    true,
 			},
 		},
