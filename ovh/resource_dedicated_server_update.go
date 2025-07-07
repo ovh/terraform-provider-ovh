@@ -12,10 +12,11 @@ import (
 
 func resourceDedicatedServerUpdate() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceDedicatedServerUpdateCreateOrUpdate,
-		UpdateContext: resourceDedicatedServerUpdateCreateOrUpdate,
-		ReadContext:   resourceDedicatedServerUpdateRead,
-		DeleteContext: resourceDedicatedServerUpdateDelete,
+		CreateContext:      resourceDedicatedServerUpdateCreateOrUpdate,
+		UpdateContext:      resourceDedicatedServerUpdateCreateOrUpdate,
+		ReadContext:        resourceDedicatedServerUpdateRead,
+		DeleteContext:      resourceDedicatedServerUpdateDelete,
+		DeprecationMessage: "Use ovh_dedicated_server instead. This resource will be removed in the next major version.",
 
 		Schema: map[string]*schema.Schema{
 			"service_name": {
