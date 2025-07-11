@@ -151,7 +151,7 @@ func resourceSavingsPlanCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Get subscribables savings plans
 	log.Print("[DEBUG] Will fetch subscribables savings plans")
-	endpoint := fmt.Sprintf("/services/%d/savingsPlans/subscribable?productCode=%s", serviceId, url.QueryEscape(flavor))
+	endpoint := fmt.Sprintf("/services/%d/savingsPlans/subscribable?productCode=%q", serviceId, url.QueryEscape(flavor))
 	subscribables := []savingsPlansSubscribable{}
 	if err := config.OVHClient.Get(endpoint, &subscribables); err != nil {
 		return fmt.Errorf("error calling GET %s:\n\t %q", endpoint, err)
