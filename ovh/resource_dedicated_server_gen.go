@@ -65,6 +65,12 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 		},
 		"customizations": schema.SingleNestedAttribute{
 			Attributes: map[string]schema.Attribute{
+				"config_drive_metadata": schema.MapAttribute{
+					CustomType:          ovhtypes.NewTfMapNestedType[ovhtypes.TfStringValue](ctx),
+					Optional:            true,
+					Description:         "Config Drive MetaData",
+					MarkdownDescription: "Config Drive MetaData",
+				},
 				"config_drive_user_data": schema.StringAttribute{
 					CustomType:          ovhtypes.TfStringType{},
 					Optional:            true,
@@ -338,12 +344,6 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 			PlanModifiers: []planmodifier.Bool{
 				boolplanmodifier.UseStateForUnknown(),
 			},
-		},
-		"properties": schema.MapAttribute{
-			CustomType:          ovhtypes.NewTfMapNestedType[ovhtypes.TfStringValue](ctx),
-			Optional:            true,
-			Description:         "Arbitrary properties to pass to cloud-init's config drive datasource",
-			MarkdownDescription: "Arbitrary properties to pass to cloud-init's config drive datasource",
 		},
 		"rack": schema.StringAttribute{
 			CustomType: ovhtypes.TfStringType{},
@@ -702,7 +702,6 @@ type DedicatedServerModel struct {
 	Os                      ovhtypes.TfStringValue                             `tfsdk:"os" json:"os"`
 	PowerState              ovhtypes.TfStringValue                             `tfsdk:"power_state" json:"powerState"`
 	ProfessionalUse         ovhtypes.TfBoolValue                               `tfsdk:"professional_use" json:"professionalUse"`
-	Properties              ovhtypes.TfMapNestedValue[ovhtypes.TfStringValue]  `tfsdk:"properties" json:"properties"`
 	Rack                    ovhtypes.TfStringValue                             `tfsdk:"rack" json:"rack"`
 	PreventInstallOnCreate  ovhtypes.TfBoolValue                               `tfsdk:"prevent_install_on_create" json:"-"`
 	PreventInstallOnImport  ovhtypes.TfBoolValue                               `tfsdk:"prevent_install_on_import" json:"-"`
@@ -793,20 +792,12 @@ func (v *DedicatedServerModel) MergeWith(other *DedicatedServerModel) {
 		v.Os = other.Os
 	}
 
-	if (v.Properties.IsUnknown() || v.Properties.IsNull()) && !other.Properties.IsUnknown() {
-		v.Properties = other.Properties
-	}
-
 	if (v.PowerState.IsUnknown() || v.PowerState.IsNull()) && !other.PowerState.IsUnknown() {
 		v.PowerState = other.PowerState
 	}
 
 	if (v.ProfessionalUse.IsUnknown() || v.ProfessionalUse.IsNull()) && !other.ProfessionalUse.IsUnknown() {
 		v.ProfessionalUse = other.ProfessionalUse
-	}
-
-	if (v.Properties.IsUnknown() || v.Properties.IsNull()) && !other.Properties.IsUnknown() {
-		v.Properties = other.Properties
 	}
 
 	if (v.Rack.IsUnknown() || v.Rack.IsNull()) && !other.Rack.IsUnknown() {
@@ -915,19 +906,18 @@ func (v *DedicatedServerModel) ToOrder() *OrderModel {
 }
 
 type DedicatedServerWritableModel struct {
-	BootId            *ovhtypes.TfInt64Value                             `tfsdk:"boot_id" json:"bootId,omitempty"`
-	BootScript        *ovhtypes.TfStringValue                            `tfsdk:"boot_script" json:"bootScript,omitempty"`
-	Customizations    *CustomizationsWritableValue                       `tfsdk:"customizations" json:"customizations,omitempty"`
-	EfiBootloaderPath *ovhtypes.TfStringValue                            `tfsdk:"efi_bootloader_path" json:"efiBootloaderPath,omitempty"`
-	Monitoring        *ovhtypes.TfBoolValue                              `tfsdk:"monitoring" json:"monitoring,omitempty"`
-	NoIntervention    *ovhtypes.TfBoolValue                              `tfsdk:"no_intervention" json:"noIntervention,omitempty"`
-	Properties        *ovhtypes.TfMapNestedValue[ovhtypes.TfStringValue] `tfsdk:"properties" json:"properties,omitempty"`
-	RescueMail        *ovhtypes.TfStringValue                            `tfsdk:"rescue_mail" json:"rescueMail,omitempty"`
-	RescueSshKey      *ovhtypes.TfStringValue                            `tfsdk:"rescue_ssh_key" json:"rescueSshKey,omitempty"`
-	RootDevice        *ovhtypes.TfStringValue                            `tfsdk:"root_device" json:"rootDevice,omitempty"`
-	State             *ovhtypes.TfStringValue                            `tfsdk:"state" json:"state,omitempty"`
-	Storage           []*StorageWritableValue                            `tfsdk:"storage" json:"storage,omitempty"`
-	Os                *ovhtypes.TfStringValue                            `tfsdk:"os" json:"operatingSystem,omitempty"`
+	BootId            *ovhtypes.TfInt64Value       `tfsdk:"boot_id" json:"bootId,omitempty"`
+	BootScript        *ovhtypes.TfStringValue      `tfsdk:"boot_script" json:"bootScript,omitempty"`
+	Customizations    *CustomizationsWritableValue `tfsdk:"customizations" json:"customizations,omitempty"`
+	EfiBootloaderPath *ovhtypes.TfStringValue      `tfsdk:"efi_bootloader_path" json:"efiBootloaderPath,omitempty"`
+	Monitoring        *ovhtypes.TfBoolValue        `tfsdk:"monitoring" json:"monitoring,omitempty"`
+	NoIntervention    *ovhtypes.TfBoolValue        `tfsdk:"no_intervention" json:"noIntervention,omitempty"`
+	RescueMail        *ovhtypes.TfStringValue      `tfsdk:"rescue_mail" json:"rescueMail,omitempty"`
+	RescueSshKey      *ovhtypes.TfStringValue      `tfsdk:"rescue_ssh_key" json:"rescueSshKey,omitempty"`
+	RootDevice        *ovhtypes.TfStringValue      `tfsdk:"root_device" json:"rootDevice,omitempty"`
+	State             *ovhtypes.TfStringValue      `tfsdk:"state" json:"state,omitempty"`
+	Storage           []*StorageWritableValue      `tfsdk:"storage" json:"storage,omitempty"`
+	Os                *ovhtypes.TfStringValue      `tfsdk:"os" json:"operatingSystem,omitempty"`
 }
 
 func (v DedicatedServerModel) ToCreate() *DedicatedServerWritableModel {
@@ -988,10 +978,6 @@ func (v DedicatedServerModel) ToReinstall(onlyOS bool) *DedicatedServerWritableM
 			for _, elem := range v.Storage.Elements() {
 				res.Storage = append(res.Storage, elem.(StorageValue).ToCreate())
 			}
-		}
-
-		if !v.Properties.IsUnknown() && !v.Properties.IsNull() {
-			res.Properties = &v.Properties
 		}
 	}
 
@@ -1091,6 +1077,24 @@ func (t CustomizationsType) ValueFromObject(ctx context.Context, in basetypes.Ob
 
 	attributes := in.Attributes()
 
+	configDriveMetadataAttribute, ok := attributes["config_drive_metadata"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`config_drive_metadata is missing from object`)
+
+		return nil, diags
+	}
+
+	configDriveMetadataVal, ok := configDriveMetadataAttribute.(ovhtypes.TfMapNestedValue[ovhtypes.TfStringValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`config_drive_metadata expected to be ovhtypes.TfMapNestedValue[ovhtypes.TfStringValue], was: %T`, configDriveMetadataAttribute))
+	}
+
 	configDriveUserDataAttribute, ok := attributes["config_drive_user_data"]
 
 	if !ok {
@@ -1312,6 +1316,7 @@ func (t CustomizationsType) ValueFromObject(ctx context.Context, in basetypes.Ob
 	}
 
 	return CustomizationsValue{
+		ConfigDriveMetadata:             configDriveMetadataVal,
 		ConfigDriveUserData:             configDriveUserDataVal,
 		EfiBootloaderPath:               efiBootloaderPathVal,
 		Hostname:                        hostnameVal,
@@ -1391,6 +1396,24 @@ func NewCustomizationsValue(attributeTypes map[string]attr.Type, attributes map[
 		return NewCustomizationsValueUnknown(), diags
 	}
 
+	configDriveMetadataAttribute, ok := attributes["config_drive_metadata"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`config_drive_metadata is missing from object`)
+
+		return NewCustomizationsValueUnknown(), diags
+	}
+
+	configDriveMetadataVal, ok := configDriveMetadataAttribute.(ovhtypes.TfMapNestedValue[ovhtypes.TfStringValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`config_drive_metadata expected to be ovhtypes.TfMapNestedValue[ovhtypes.TfStringValue], was: %T`, configDriveMetadataAttribute))
+	}
+
 	configDriveUserDataAttribute, ok := attributes["config_drive_user_data"]
 
 	if !ok {
@@ -1612,6 +1635,7 @@ func NewCustomizationsValue(attributeTypes map[string]attr.Type, attributes map[
 	}
 
 	return CustomizationsValue{
+		ConfigDriveMetadata:             configDriveMetadataVal,
 		ConfigDriveUserData:             configDriveUserDataVal,
 		EfiBootloaderPath:               efiBootloaderPathVal,
 		Hostname:                        hostnameVal,
@@ -1696,6 +1720,7 @@ func (t CustomizationsType) ValueType(ctx context.Context) attr.Value {
 var _ basetypes.ObjectValuable = CustomizationsValue{}
 
 type CustomizationsValue struct {
+	ConfigDriveMetadata             ovhtypes.TfMapNestedValue[ovhtypes.TfStringValue] `tfsdk:"config_drive_metadata" json:"configDriveMetadata"`
 	ConfigDriveUserData             ovhtypes.TfStringValue                            `tfsdk:"config_drive_user_data" json:"configDriveUserData"`
 	EfiBootloaderPath               ovhtypes.TfStringValue                            `tfsdk:"efi_bootloader_path" json:"efiBootloaderPath"`
 	Hostname                        ovhtypes.TfStringValue                            `tfsdk:"hostname" json:"hostname"`
@@ -1712,6 +1737,7 @@ type CustomizationsValue struct {
 }
 
 type CustomizationsWritableValue struct {
+	ConfigDriveMetadata             *ovhtypes.TfMapNestedValue[ovhtypes.TfStringValue] `json:"ConfigDriveMetadata,omitempty"`
 	ConfigDriveUserData             *ovhtypes.TfStringValue                            `json:"configDriveUserData,omitempty"`
 	EfiBootloaderPath               *ovhtypes.TfStringValue                            `json:"efiBootloaderPath,omitempty"`
 	Hostname                        *ovhtypes.TfStringValue                            `json:"hostname,omitempty"`
@@ -1777,6 +1803,10 @@ func (v CustomizationsValue) ToCreate() *CustomizationsWritableValue {
 		res.ConfigDriveUserData = &v.ConfigDriveUserData
 	}
 
+	if !v.ConfigDriveMetadata.IsNull() {
+		res.ConfigDriveMetadata = &v.ConfigDriveMetadata
+	}
+
 	return res
 }
 
@@ -1787,6 +1817,7 @@ func (v *CustomizationsValue) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &tmp); err != nil {
 		return err
 	}
+	v.ConfigDriveMetadata = tmp.ConfigDriveMetadata
 	v.ConfigDriveUserData = tmp.ConfigDriveUserData
 	v.EfiBootloaderPath = tmp.EfiBootloaderPath
 	v.Hostname = tmp.Hostname
@@ -1806,6 +1837,10 @@ func (v *CustomizationsValue) UnmarshalJSON(data []byte) error {
 }
 
 func (v *CustomizationsValue) MergeWith(other *CustomizationsValue) {
+
+	if (v.ConfigDriveMetadata.IsUnknown() || v.ConfigDriveMetadata.IsNull()) && !other.ConfigDriveMetadata.IsUnknown() {
+		v.ConfigDriveMetadata = other.ConfigDriveMetadata
+	}
 
 	if (v.ConfigDriveUserData.IsUnknown() || v.ConfigDriveUserData.IsNull()) && !other.ConfigDriveUserData.IsUnknown() {
 		v.ConfigDriveUserData = other.ConfigDriveUserData
@@ -1862,6 +1897,7 @@ func (v *CustomizationsValue) MergeWith(other *CustomizationsValue) {
 
 func (v CustomizationsValue) Attributes() map[string]attr.Value {
 	return map[string]attr.Value{
+		"configDriveMetadata":             v.ConfigDriveMetadata,
 		"configDriveUserData":             v.ConfigDriveUserData,
 		"efiBootloaderPath":               v.EfiBootloaderPath,
 		"hostname":                        v.Hostname,
@@ -1882,6 +1918,9 @@ func (v CustomizationsValue) ToTerraformValue(ctx context.Context) (tftypes.Valu
 	var val tftypes.Value
 	var err error
 
+	attrTypes["config_drive_metadata"] = basetypes.MapType{
+		ElemType: types.StringType,
+	}.TerraformType(ctx)
 	attrTypes["config_drive_user_data"] = basetypes.StringType{}.TerraformType(ctx)
 	attrTypes["efi_bootloader_path"] = basetypes.StringType{}.TerraformType(ctx)
 	attrTypes["hostname"] = basetypes.StringType{}.TerraformType(ctx)
@@ -1902,6 +1941,14 @@ func (v CustomizationsValue) ToTerraformValue(ctx context.Context) (tftypes.Valu
 	switch v.state {
 	case attr.ValueStateKnown:
 		vals := make(map[string]tftypes.Value, 12)
+
+		val, err = v.ConfigDriveMetadata.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["config_drive_metadata"] = val
 
 		val, err = v.ConfigDriveUserData.ToTerraformValue(ctx)
 
@@ -2030,6 +2077,7 @@ func (v CustomizationsValue) ToObjectValue(ctx context.Context) (basetypes.Objec
 
 	objVal, diags := types.ObjectValue(
 		map[string]attr.Type{
+			"config_drive_metadata":              ovhtypes.NewTfMapNestedType[ovhtypes.TfStringValue](ctx),
 			"config_drive_user_data":             ovhtypes.TfStringType{},
 			"efi_bootloader_path":                ovhtypes.TfStringType{},
 			"hostname":                           ovhtypes.TfStringType{},
@@ -2044,6 +2092,7 @@ func (v CustomizationsValue) ToObjectValue(ctx context.Context) (basetypes.Objec
 			"ssh_key":                            ovhtypes.TfStringType{},
 		},
 		map[string]attr.Value{
+			"config_drive_metadata":              v.ConfigDriveMetadata,
 			"config_drive_user_data":             v.ConfigDriveUserData,
 			"efi_bootloader_path":                v.EfiBootloaderPath,
 			"hostname":                           v.Hostname,
@@ -2074,6 +2123,10 @@ func (v CustomizationsValue) Equal(o attr.Value) bool {
 
 	if v.state != attr.ValueStateKnown {
 		return true
+	}
+
+	if !v.ConfigDriveMetadata.Equal(other.ConfigDriveMetadata) {
+		return false
 	}
 
 	if !v.ConfigDriveUserData.Equal(other.ConfigDriveUserData) {
@@ -2137,6 +2190,7 @@ func (v CustomizationsValue) Type(ctx context.Context) attr.Type {
 
 func (v CustomizationsValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
 	return map[string]attr.Type{
+		"config_drive_metadata":              ovhtypes.NewTfMapNestedType[ovhtypes.TfStringValue](ctx),
 		"config_drive_user_data":             ovhtypes.TfStringType{},
 		"efi_bootloader_path":                ovhtypes.TfStringType{},
 		"hostname":                           ovhtypes.TfStringType{},
