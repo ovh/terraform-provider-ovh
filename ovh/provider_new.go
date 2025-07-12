@@ -271,6 +271,7 @@ func (p *OvhProvider) Resources(_ context.Context) []func() resource.Resource {
 		NewCloudProjectLoadbalancerResource,
 		NewCloudProjectRancherResource,
 		NewCloudProjectRegionNetworkResource,
+		NewCloudProjectRegionResource,
 		NewCloudProjectSshKeyResource,
 		NewCloudProjectStorageResource,
 		NewCloudProjectVolumeBackupResource,
