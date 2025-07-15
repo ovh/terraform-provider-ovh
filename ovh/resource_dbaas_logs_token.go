@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"strings"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 )
 
@@ -41,6 +43,20 @@ func (d *dbaasLogsTokenResource) Configure(_ context.Context, req resource.Confi
 
 func (d *dbaasLogsTokenResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = DbaasLogsTokenResourceSchema(ctx)
+}
+
+func (r *dbaasLogsTokenResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	parts := strings.Split(req.ID, "/")
+	if len(parts) != 2 {
+		resp.Diagnostics.AddError(
+			"Invalid Import ID",
+			fmt.Sprintf("Expected import ID in the format 'serviceName/tokenId', got: %s", req.ID),
+		)
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_name"), parts[0])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("token_id"), parts[1])...)
 }
 
 func (r *dbaasLogsTokenResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
