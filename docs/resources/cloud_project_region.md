@@ -18,7 +18,7 @@ resource "ovh_cloud_project_region" "region" {
 
 ### Required
 
-- `region` (String) Region to add on your project
+- `region` (String) Region to add to your project
 - `service_name` (String) Service name
 
 ### Read-Only
