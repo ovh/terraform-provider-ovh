@@ -1,4 +1,4 @@
-resource "ovh_cloud_project_containerregistry_iam" "my-iam" {
+resource "ovh_cloud_project_containerregistry_iam" "registry_iam" {
   # ...
 
   timeouts {

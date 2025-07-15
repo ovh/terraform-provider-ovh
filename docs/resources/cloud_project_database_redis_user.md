@@ -45,7 +45,7 @@ data "ovh_cloud_project_database" "redis" {
 }
 
 # Change password_reset with the datetime each time you want to reset the password to trigger an update
-resource "ovh_cloud_project_database_redis_user" "userDatetime" {
+resource "ovh_cloud_project_database_redis_user" "user_datetime" {
   service_name    = data.ovh_cloud_project_database.redis.service_name
   cluster_id      = data.ovh_cloud_project_database.redis.id
   categories      = ["+@set", "+@sortedset"]
@@ -61,7 +61,7 @@ variable "something" {
 }
 
 # Set password_reset to be based on the update of another variable to reset the password
-resource "ovh_cloud_project_database_redis_user" "userMd5" {
+resource "ovh_cloud_project_database_redis_user" "user_md5" {
   service_name    = data.ovh_cloud_project_database.redis.service_name
   cluster_id      = data.ovh_cloud_project_database.redis.id
   categories      = ["+@set", "+@sortedset"]

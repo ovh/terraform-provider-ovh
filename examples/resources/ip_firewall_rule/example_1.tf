@@ -1,4 +1,4 @@
-resource "ovh_ip_firewall_rule" "my_firewall_rule" {
+resource "ovh_ip_firewall_rule" "deny_tcp" {
   ip             = "XXXXXX"
   ip_on_firewall = "XXXXXX"
   sequence       = 0
