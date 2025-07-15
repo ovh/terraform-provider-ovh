@@ -49,7 +49,7 @@ data "ovh_cloud_project_database" "db" {
   id            = "ZZZZ"
 }
 
-resource "ovh_cloud_project_database_user" "userDatetime" {
+resource "ovh_cloud_project_database_user" "user_datetime" {
   service_name    = data.ovh_cloud_project_database.db.service_name
   engine          = data.ovh_cloud_project_database.db.engine
   cluster_id      = data.ovh_cloud_project_database.db.id
@@ -57,7 +57,7 @@ resource "ovh_cloud_project_database_user" "userDatetime" {
   password_reset  = "2024-01-02T11:00:00Z"
 }
 
-resource "ovh_cloud_project_database_user" "userMd5" {
+resource "ovh_cloud_project_database_user" "user_md5" {
   service_name    = data.ovh_cloud_project_database.db.service_name
   engine          = data.ovh_cloud_project_database.db.engine
   cluster_id      = data.ovh_cloud_project_database.db.id

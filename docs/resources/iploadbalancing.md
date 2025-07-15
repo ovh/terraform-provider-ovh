@@ -38,7 +38,7 @@ data "ovh_order_cart_product_options_plan" "bhs" {
   options_plan_code = "iplb-zone-lb1-rbx"
 }
 
-resource "ovh_iploadbalancing" "iplb-lb1" {
+resource "ovh_iploadbalancing" "iplb_lb1" {
   ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
   display_name   = "my ip loadbalancing"
 

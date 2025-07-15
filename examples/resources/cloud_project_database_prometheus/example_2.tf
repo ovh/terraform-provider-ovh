@@ -5,7 +5,7 @@ data "ovh_cloud_project_database" "db" {
 }
 
 # Set password_reset to be based on the update of another variable to reset the password
-resource "ovh_cloud_project_database_prometheus" "prometheusDatetime" {
+resource "ovh_cloud_project_database_prometheus" "prometheus_datetime" {
   service_name    = data.ovh_cloud_project_database.db.service_name
   engine          = data.ovh_cloud_project_database.db.engine
   cluster_id      = data.ovh_cloud_project_database.db.id
@@ -16,7 +16,7 @@ variable "something" {
   type = string
 }
 
-resource "ovh_cloud_project_database_prometheus" "prometheusMd5" {
+resource "ovh_cloud_project_database_prometheus" "prometheus_md5" {
   service_name    = data.ovh_cloud_project_database.db.service_name
   engine          = data.ovh_cloud_project_database.db.engine
   cluster_id      = data.ovh_cloud_project_database.db.id

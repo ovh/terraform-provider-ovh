@@ -56,7 +56,7 @@ The following arguments are supported:
 ## Timeouts
 
 ```terraform
-resource "ovh_cloud_project_containerregistry_oidc" "my-oidc" {
+resource "ovh_cloud_project_containerregistry_oidc" "my_oidc" {
   # ...
 
   timeouts {

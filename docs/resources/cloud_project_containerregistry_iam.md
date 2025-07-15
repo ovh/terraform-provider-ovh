@@ -9,7 +9,7 @@ Creates an IAM configuration in an OVHcloud Managed Private Registry.
 ## Example Usage
 
 ```terraform
-resource "ovh_cloud_project_containerregistry_iam" "my_iam" {
+resource "ovh_cloud_project_containerregistry_iam" "registry_iam" {
   service_name = "XXXXXX"
   registry_id  = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx"
 
@@ -17,8 +17,8 @@ resource "ovh_cloud_project_containerregistry_iam" "my_iam" {
   delete_users = false
 }
 
-output "iam-enabled" {
-  value     = ovh_cloud_project_containerregistry_iam.my_iam.iam_enabled
+output "iam_enabled" {
+  value     = ovh_cloud_project_containerregistry_iam.registry_iam.iam_enabled
   sensitive = true
 }
 ```
@@ -34,7 +34,7 @@ The following arguments are supported:
 ## Timeouts
 
 ```terraform
-resource "ovh_cloud_project_containerregistry_iam" "my-iam" {
+resource "ovh_cloud_project_containerregistry_iam" "registry_iam" {
   # ...
 
   timeouts {
