@@ -5,6 +5,7 @@ package ovh
 import (
 	"context"
 	"encoding/json"
+
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -12,6 +13,11 @@ import (
 
 func DomainZoneDynhostLoginResourceSchema(ctx context.Context) schema.Schema {
 	attrs := map[string]schema.Attribute{
+		"id": schema.StringAttribute{
+			CustomType:  ovhtypes.TfStringType{},
+			Computed:    true,
+			Description: "Unique identifier for the resource",
+		},
 		"login": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
 			Computed:            true,
@@ -58,6 +64,7 @@ func DomainZoneDynhostLoginResourceSchema(ctx context.Context) schema.Schema {
 }
 
 type DomainZoneDynhostLoginModel struct {
+	ID          ovhtypes.TfStringValue `tfsdk:"id" json:"-"`
 	Login       ovhtypes.TfStringValue `tfsdk:"login" json:"login"`
 	LoginSuffix ovhtypes.TfStringValue `tfsdk:"login_suffix" json:"loginSuffix"`
 	Password    ovhtypes.TfStringValue `tfsdk:"password" json:"password"`
@@ -67,6 +74,9 @@ type DomainZoneDynhostLoginModel struct {
 }
 
 func (v *DomainZoneDynhostLoginModel) MergeWith(other *DomainZoneDynhostLoginModel) {
+	if (v.ID.IsUnknown() || v.ID.IsNull()) && !other.ID.IsUnknown() {
+		v.ID = other.ID
+	}
 
 	if (v.Login.IsUnknown() || v.Login.IsNull()) && !other.Login.IsUnknown() {
 		v.Login = other.Login
@@ -91,7 +101,6 @@ func (v *DomainZoneDynhostLoginModel) MergeWith(other *DomainZoneDynhostLoginMod
 	if (v.ZoneName.IsUnknown() || v.ZoneName.IsNull()) && !other.ZoneName.IsUnknown() {
 		v.ZoneName = other.ZoneName
 	}
-
 }
 
 func (v DomainZoneDynhostLoginModel) ToCreate() *DomainZoneDynhostLoginModel {

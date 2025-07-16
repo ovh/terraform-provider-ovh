@@ -82,6 +82,8 @@ func (r *domainZoneImportResource) Create(ctx context.Context, req resource.Crea
 	}
 	data.ExportedContent = types.NewTfStringValue(export)
 
+	data.ID = data.ZoneName
+
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

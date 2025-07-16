@@ -57,6 +57,7 @@ func (r *dbaasLogsTokenResource) ImportState(ctx context.Context, req resource.I
 
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_name"), parts[0])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("token_id"), parts[1])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), parts[1])...)
 }
 
 func (r *dbaasLogsTokenResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -104,6 +105,7 @@ func (r *dbaasLogsTokenResource) Create(ctx context.Context, req resource.Create
 	}
 
 	responseData.MergeWith(&data)
+	responseData.ID = responseData.TokenId
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)

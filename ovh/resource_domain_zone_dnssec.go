@@ -63,6 +63,7 @@ func (r *domainZoneDnssecResource) Create(ctx context.Context, req resource.Crea
 	}
 
 	responseData.MergeWith(&data)
+	responseData.ID = responseData.ZoneName
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)

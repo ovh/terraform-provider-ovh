@@ -4,6 +4,7 @@ package ovh
 
 import (
 	"context"
+
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
@@ -16,6 +17,11 @@ import (
 
 func IploadbalancingUdpFarmServerResourceSchema(ctx context.Context) schema.Schema {
 	attrs := map[string]schema.Attribute{
+		"id": schema.StringAttribute{
+			CustomType:  ovhtypes.TfStringType{},
+			Computed:    true,
+			Description: "Unique identifier for the resource",
+		},
 		"address": schema.StringAttribute{
 			CustomType: ovhtypes.TfStringType{},
 			Required:   true,
@@ -87,6 +93,7 @@ func IploadbalancingUdpFarmServerResourceSchema(ctx context.Context) schema.Sche
 }
 
 type IploadbalancingUdpFarmServerModel struct {
+	ID          ovhtypes.TfStringValue `tfsdk:"id" json:"-"`
 	Address     ovhtypes.TfStringValue `tfsdk:"address" json:"address"`
 	BackendId   ovhtypes.TfInt64Value  `tfsdk:"backend_id" json:"backendId"`
 	DisplayName ovhtypes.TfStringValue `tfsdk:"display_name" json:"displayName"`
@@ -98,6 +105,9 @@ type IploadbalancingUdpFarmServerModel struct {
 }
 
 func (v *IploadbalancingUdpFarmServerModel) MergeWith(other *IploadbalancingUdpFarmServerModel) {
+	if (v.ID.IsUnknown() || v.ID.IsNull()) && !other.ID.IsUnknown() {
+		v.ID = other.ID
+	}
 
 	if (v.Address.IsUnknown() || v.Address.IsNull()) && !other.Address.IsUnknown() {
 		v.Address = other.Address

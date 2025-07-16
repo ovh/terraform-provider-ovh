@@ -71,6 +71,7 @@ func (r *ipFirewallRuleResource) ImportState(ctx context.Context, req resource.I
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("ip"), ip)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("ip_on_firewall"), ipOnFirewall)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("sequence"), sequence)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), fmt.Sprintf("%s/%s/%d", ip, ipOnFirewall, sequence))...)
 }
 
 func (r *ipFirewallRuleResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -123,6 +124,7 @@ func (r *ipFirewallRuleResource) Create(ctx context.Context, req resource.Create
 	}
 
 	responseData.MergeWith(&data)
+	responseData.ID = ovhtypes.NewTfStringValue(responseData.Ip.ValueString() + "/" + responseData.IpOnFirewall.ValueString() + "/" + strconv.FormatInt(responseData.Sequence.ValueInt64(), 10))
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)

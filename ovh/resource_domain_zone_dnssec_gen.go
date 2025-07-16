@@ -14,6 +14,11 @@ import (
 func DomainZoneDnssecResourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				CustomType:  ovhtypes.TfStringType{},
+				Computed:    true,
+				Description: "Unique identifier for the resource",
+			},
 			"status": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Computed:            true,
@@ -34,11 +39,16 @@ func DomainZoneDnssecResourceSchema(ctx context.Context) schema.Schema {
 }
 
 type DomainZoneDnssecModel struct {
+	ID       ovhtypes.TfStringValue `tfsdk:"id" json:"-"`
 	Status   ovhtypes.TfStringValue `tfsdk:"status" json:"status"`
 	ZoneName ovhtypes.TfStringValue `tfsdk:"zone_name" json:"zoneName"`
 }
 
 func (v *DomainZoneDnssecModel) MergeWith(other *DomainZoneDnssecModel) {
+	if (v.ID.IsUnknown() || v.ID.IsNull()) && !other.ID.IsUnknown() {
+		v.ID = other.ID
+	}
+
 	if (v.Status.IsUnknown() || v.Status.IsNull()) && !other.Status.IsUnknown() {
 		v.Status = other.Status
 	}

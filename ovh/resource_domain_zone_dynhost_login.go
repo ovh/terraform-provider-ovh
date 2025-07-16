@@ -6,6 +6,7 @@ import (
 	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
 var _ resource.ResourceWithConfigure = (*domainZoneDynhostLoginResource)(nil)
@@ -62,6 +63,8 @@ func (r *domainZoneDynhostLoginResource) Create(ctx context.Context, req resourc
 	}
 
 	responseData.MergeWith(&data)
+
+	responseData.ID = ovhtypes.NewTfStringValue(responseData.ZoneName.ValueString() + "/" + responseData.Login.ValueString())
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)

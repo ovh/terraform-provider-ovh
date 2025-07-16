@@ -4,6 +4,7 @@ package ovh
 
 import (
 	"context"
+
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -12,6 +13,11 @@ import (
 
 func DbaasLogsTokenResourceSchema(ctx context.Context) schema.Schema {
 	attrs := map[string]schema.Attribute{
+		"id": schema.StringAttribute{
+			CustomType:  ovhtypes.TfStringType{},
+			Computed:    true,
+			Description: "Unique identifier for the resource",
+		},
 		"cluster_id": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
 			Optional:            true,
@@ -106,6 +112,7 @@ func (v *DbaasLogsTokenReadModel) toModel() *DbaasLogsTokenModel {
 }
 
 type DbaasLogsTokenModel struct {
+	ID          ovhtypes.TfStringValue `tfsdk:"id" json:"-"`
 	ClusterId   ovhtypes.TfStringValue `tfsdk:"cluster_id" json:"clusterId"`
 	CreatedAt   ovhtypes.TfStringValue `tfsdk:"created_at" json:"createdAt"`
 	Name        ovhtypes.TfStringValue `tfsdk:"name" json:"name"`
@@ -116,6 +123,10 @@ type DbaasLogsTokenModel struct {
 }
 
 func (v *DbaasLogsTokenModel) MergeWith(other *DbaasLogsTokenModel) {
+	if (v.ID.IsUnknown() || v.ID.IsNull()) && !other.ID.IsUnknown() {
+		v.ID = other.ID
+	}
+
 	if (v.ClusterId.IsUnknown() || v.ClusterId.IsNull()) && !other.ClusterId.IsUnknown() {
 		v.ClusterId = other.ClusterId
 	}

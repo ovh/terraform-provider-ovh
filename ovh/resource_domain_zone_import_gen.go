@@ -13,6 +13,11 @@ import (
 
 func DomainZoneImportResourceSchema(ctx context.Context) schema.Schema {
 	attrs := map[string]schema.Attribute{
+		"id": schema.StringAttribute{
+			CustomType:  ovhtypes.TfStringType{},
+			Computed:    true,
+			Description: "Unique identifier for the resource",
+		},
 		"zone_file": schema.StringAttribute{
 			CustomType: ovhtypes.TfStringType{},
 			Required:   true,
@@ -45,6 +50,7 @@ func DomainZoneImportResourceSchema(ctx context.Context) schema.Schema {
 }
 
 type DomainZoneImportModel struct {
+	ID              ovhtypes.TfStringValue `tfsdk:"id" json:"-"`
 	ZoneFile        ovhtypes.TfStringValue `tfsdk:"zone_file" json:"zoneFile"`
 	ZoneName        ovhtypes.TfStringValue `tfsdk:"zone_name" json:"zoneName"`
 	ExportedContent ovhtypes.TfStringValue `tfsdk:"exported_content" json:"-"`

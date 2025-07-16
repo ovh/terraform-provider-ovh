@@ -133,6 +133,7 @@ func (r *vrackDedicatedCloudDatacenterResource) ImportState(ctx context.Context,
 
 	// service_name is not updated in Read GET response.
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_name"), targetServiceName)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), req.ID)...)
 }
 
 func (r *vrackDedicatedCloudDatacenterResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

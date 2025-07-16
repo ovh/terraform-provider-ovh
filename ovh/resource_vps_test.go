@@ -142,6 +142,7 @@ func TestAccResourceVps_reinstallImageOnly(t *testing.T) {
 						"ovh_vps.myvps", "display_name", displayName),
 					resource.TestCheckResourceAttr(
 						"ovh_vps.myvps", "image_id", "45b2f222-ab10-44ed-863f-720942762b6f"),
+					resource.TestCheckResourceAttrSet("ovh_vps.myvps", "id"),
 				),
 			},
 		},

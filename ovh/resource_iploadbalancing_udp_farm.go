@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
 var (
@@ -68,6 +69,7 @@ func (r *iploadbalancingUdpFarmResource) Create(ctx context.Context, req resourc
 	}
 
 	responseData.MergeWith(&data)
+	responseData.ID = ovhtypes.NewTfStringValue(fmt.Sprintf("%s/%d", data.ServiceName.ValueString(), responseData.FarmId.ValueInt64()))
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)
@@ -175,4 +177,5 @@ func (r *iploadbalancingUdpFarmResource) ImportState(ctx context.Context, req re
 
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_name"), serviceName)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("farm_id"), farmId)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), req.ID)...)
 }

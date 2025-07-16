@@ -4,6 +4,7 @@ package ovh
 
 import (
 	"context"
+
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -12,6 +13,11 @@ import (
 func IpFirewallResourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				CustomType:  ovhtypes.TfStringType{},
+				Computed:    true,
+				Description: "Unique identifier for the resource",
+			},
 			"enabled": schema.BoolAttribute{
 				CustomType: ovhtypes.TfBoolType{},
 				Computed:   true,
@@ -40,6 +46,7 @@ func IpFirewallResourceSchema(ctx context.Context) schema.Schema {
 }
 
 type IpFirewallModel struct {
+	ID           ovhtypes.TfStringValue `tfsdk:"id" json:"-"`
 	Enabled      ovhtypes.TfBoolValue   `tfsdk:"enabled" json:"enabled"`
 	Ip           ovhtypes.TfStringValue `tfsdk:"ip" json:"ip"`
 	IpOnFirewall ovhtypes.TfStringValue `tfsdk:"ip_on_firewall" json:"ipOnFirewall"`
@@ -47,6 +54,10 @@ type IpFirewallModel struct {
 }
 
 func (v *IpFirewallModel) MergeWith(other *IpFirewallModel) {
+	if (v.ID.IsUnknown() || v.ID.IsNull()) && !other.ID.IsUnknown() {
+		v.ID = other.ID
+	}
+
 	if (v.Enabled.IsUnknown() || v.Enabled.IsNull()) && !other.Enabled.IsUnknown() {
 		v.Enabled = other.Enabled
 	}

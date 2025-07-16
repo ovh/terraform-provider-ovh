@@ -20,6 +20,11 @@ import (
 func IpFirewallRuleResourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				CustomType:  ovhtypes.TfStringType{},
+				Computed:    true,
+				Description: "Unique identifier for the resource",
+			},
 			"action": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Required:            true,
@@ -197,6 +202,7 @@ func IpFirewallRuleResourceSchema(ctx context.Context) schema.Schema {
 }
 
 type IpFirewallRuleModel struct {
+	ID                  ovhtypes.TfStringValue `tfsdk:"id" json:"-"`
 	Action              ovhtypes.TfStringValue `tfsdk:"action" json:"action"`
 	CreationDate        ovhtypes.TfStringValue `tfsdk:"creation_date" json:"creationDate"`
 	Destination         ovhtypes.TfStringValue `tfsdk:"destination" json:"destination"`
@@ -219,6 +225,7 @@ type IpFirewallRuleModel struct {
 // a separate model to write and read because some properties don't have the
 // same type everywhere.
 type IpFirewallRuleResponseModel struct {
+	ID                  ovhtypes.TfStringValue `tfsdk:"id" json:"-"`
 	Action              ovhtypes.TfStringValue `tfsdk:"action" json:"action"`
 	CreationDate        ovhtypes.TfStringValue `tfsdk:"creation_date" json:"creationDate"`
 	Destination         ovhtypes.TfStringValue `tfsdk:"destination" json:"destination"`
@@ -238,6 +245,10 @@ type IpFirewallRuleResponseModel struct {
 }
 
 func (v *IpFirewallRuleModel) MergeWith(other *IpFirewallRuleModel) {
+	if (v.ID.IsUnknown() || v.ID.IsNull()) && !other.ID.IsUnknown() {
+		v.ID = other.ID
+	}
+
 	if (v.Action.IsUnknown() || v.Action.IsNull()) && !other.Action.IsUnknown() {
 		v.Action = other.Action
 	}
@@ -296,6 +307,10 @@ func (v *IpFirewallRuleModel) MergeWith(other *IpFirewallRuleModel) {
 }
 
 func (v *IpFirewallRuleResponseModel) MergeWith(other *IpFirewallRuleModel) {
+	if (v.ID.IsUnknown() || v.ID.IsNull()) && !other.ID.IsUnknown() {
+		v.ID = other.ID
+	}
+
 	if (v.Action.IsUnknown() || v.Action.IsNull()) && !other.Action.IsUnknown() {
 		v.Action = other.Action
 	}

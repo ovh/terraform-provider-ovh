@@ -4,6 +4,7 @@ package ovh
 
 import (
 	"context"
+
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -13,6 +14,11 @@ import (
 
 func IploadbalancingUdpFarmResourceSchema(ctx context.Context) schema.Schema {
 	attrs := map[string]schema.Attribute{
+		"id": schema.StringAttribute{
+			CustomType:  ovhtypes.TfStringType{},
+			Computed:    true,
+			Description: "Unique identifier for the resource",
+		},
 		"display_name": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
 			Optional:            true,
@@ -63,6 +69,7 @@ func IploadbalancingUdpFarmResourceSchema(ctx context.Context) schema.Schema {
 }
 
 type IploadbalancingUdpFarmModel struct {
+	ID             ovhtypes.TfStringValue `tfsdk:"id" json:"-"`
 	DisplayName    ovhtypes.TfStringValue `tfsdk:"display_name" json:"displayName"`
 	FarmId         ovhtypes.TfInt64Value  `tfsdk:"farm_id" json:"farmId"`
 	Port           ovhtypes.TfInt64Value  `tfsdk:"port" json:"port"`
@@ -72,6 +79,10 @@ type IploadbalancingUdpFarmModel struct {
 }
 
 func (v *IploadbalancingUdpFarmModel) MergeWith(other *IploadbalancingUdpFarmModel) {
+	if (v.ID.IsUnknown() || v.ID.IsNull()) && !other.ID.IsUnknown() {
+		v.ID = other.ID
+	}
+
 	if (v.DisplayName.IsUnknown() || v.DisplayName.IsNull()) && !other.DisplayName.IsUnknown() {
 		v.DisplayName = other.DisplayName
 	}

@@ -64,6 +64,7 @@ func (r *vpsResource) ImportState(ctx context.Context, req resource.ImportStateR
 		ListValue: basetypes.NewListValueMust(PlanValue{}.Type(ctx), make([]attr.Value, 0)),
 	})...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_name"), req.ID)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), req.ID)...)
 }
 
 func (r *vpsResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -140,6 +141,7 @@ func (r *vpsResource) Create(ctx context.Context, req resource.CreateRequest, re
 	}
 
 	data.MergeWith(responseData)
+	data.ID = data.ServiceName
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

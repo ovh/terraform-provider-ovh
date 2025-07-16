@@ -6,6 +6,7 @@ import (
 	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
 var _ resource.ResourceWithConfigure = (*vrackDedicatedCloudResource)(nil)
@@ -81,6 +82,7 @@ func (r *vrackDedicatedCloudResource) Create(ctx context.Context, req resource.C
 	}
 
 	data.MergeWith(&responseData)
+	data.ID = ovhtypes.NewTfStringValue(fmt.Sprintf("%s/%s", data.ServiceName.ValueString(), data.DedicatedCloud.ValueString()))
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
