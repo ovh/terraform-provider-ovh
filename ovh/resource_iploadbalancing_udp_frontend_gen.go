@@ -4,6 +4,7 @@ package ovh
 
 import (
 	"context"
+
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -14,6 +15,11 @@ import (
 func IploadbalancingUdpFrontendResourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				CustomType:  ovhtypes.TfStringType{},
+				Computed:    true,
+				Description: "Unique identifier for the resource",
+			},
 			"dedicated_ipfo": schema.ListAttribute{
 				CustomType:          ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
 				Optional:            true,
@@ -71,6 +77,7 @@ func IploadbalancingUdpFrontendResourceSchema(ctx context.Context) schema.Schema
 }
 
 type IploadbalancingUdpFrontendModel struct {
+	ID            ovhtypes.TfStringValue                             `tfsdk:"id" json:"-"`
 	DedicatedIpfo ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] `tfsdk:"dedicated_ipfo" json:"dedicatedIpfo"`
 	DefaultFarmId ovhtypes.TfInt64Value                              `tfsdk:"default_farm_id" json:"defaultFarmId"`
 	Disabled      ovhtypes.TfBoolValue                               `tfsdk:"disabled" json:"disabled"`
@@ -82,6 +89,9 @@ type IploadbalancingUdpFrontendModel struct {
 }
 
 func (v *IploadbalancingUdpFrontendModel) MergeWith(other *IploadbalancingUdpFrontendModel) {
+	if (v.ID.IsUnknown() || v.ID.IsNull()) && !other.ID.IsUnknown() {
+		v.ID = other.ID
+	}
 
 	if (v.DedicatedIpfo.IsUnknown() || v.DedicatedIpfo.IsNull()) && !other.DedicatedIpfo.IsUnknown() {
 		v.DedicatedIpfo = other.DedicatedIpfo
@@ -114,7 +124,6 @@ func (v *IploadbalancingUdpFrontendModel) MergeWith(other *IploadbalancingUdpFro
 	if (v.Zone.IsUnknown() || v.Zone.IsNull()) && !other.Zone.IsUnknown() {
 		v.Zone = other.Zone
 	}
-
 }
 
 type IploadbalancingUdpFrontendWritableModel struct {

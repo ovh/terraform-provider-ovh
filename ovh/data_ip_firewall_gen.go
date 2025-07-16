@@ -4,6 +4,7 @@ package ovh
 
 import (
 	"context"
+
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -12,6 +13,11 @@ import (
 func IpFirewallDataSourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				CustomType:  ovhtypes.TfStringType{},
+				Computed:    true,
+				Description: "Unique identifier for the resource",
+			},
 			"enabled": schema.BoolAttribute{
 				CustomType: ovhtypes.TfBoolType{},
 				Computed:   true,

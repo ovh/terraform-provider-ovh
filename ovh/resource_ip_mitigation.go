@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/ovh/go-ovh/ovh"
+	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
 var _ resource.ResourceWithConfigure = (*ipMitigationResource)(nil)
@@ -86,6 +87,7 @@ func (r *ipMitigationResource) Create(ctx context.Context, req resource.CreateRe
 	}
 
 	responseData.MergeWith(&data)
+	responseData.ID = ovhtypes.NewTfStringValue(responseData.Ip.ValueString() + "/" + responseData.IpOnMitigation.ValueString())
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)

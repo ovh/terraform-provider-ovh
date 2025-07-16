@@ -22,6 +22,11 @@ import (
 
 func VpsResourceSchema(ctx context.Context) schema.Schema {
 	attrs := map[string]schema.Attribute{
+		"id": schema.StringAttribute{
+			CustomType:  ovhtypes.TfStringType{},
+			Computed:    true,
+			Description: "Unique identifier for the resource",
+		},
 		"cluster": schema.StringAttribute{
 			CustomType: ovhtypes.TfStringType{},
 			Computed:   true,
@@ -268,6 +273,7 @@ func VpsResourceSchema(ctx context.Context) schema.Schema {
 }
 
 type VpsModel struct {
+	ID                 ovhtypes.TfStringValue                             `tfsdk:"id" json:"-"`
 	Cluster            ovhtypes.TfStringValue                             `tfsdk:"cluster" json:"cluster"`
 	DisplayName        ovhtypes.TfStringValue                             `tfsdk:"display_name" json:"displayName"`
 	Iam                IamValue                                           `tfsdk:"iam" json:"iam"`
@@ -299,6 +305,10 @@ type InstallOptionsModel struct {
 }
 
 func (v *VpsModel) MergeWith(other *VpsModel) {
+	if (v.ID.IsUnknown() || v.ID.IsNull()) && !other.ID.IsUnknown() {
+		v.ID = other.ID
+	}
+
 	if (v.Cluster.IsUnknown() || v.Cluster.IsNull()) && !other.Cluster.IsUnknown() {
 		v.Cluster = other.Cluster
 	}

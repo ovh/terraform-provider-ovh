@@ -27,6 +27,11 @@ import (
 
 func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 	attrs := map[string]schema.Attribute{
+		"id": schema.StringAttribute{
+			CustomType:  ovhtypes.TfStringType{},
+			Computed:    true,
+			Description: "Unique identifier for the resource",
+		},
 		"availability_zone": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
 			Computed:            true,
@@ -684,6 +689,7 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 }
 
 type DedicatedServerModel struct {
+	ID                      ovhtypes.TfStringValue                             `tfsdk:"id" json:"-"`
 	AvailabilityZone        ovhtypes.TfStringValue                             `tfsdk:"availability_zone" json:"availabilityZone"`
 	BootId                  ovhtypes.TfInt64Value                              `tfsdk:"boot_id" json:"bootId"`
 	BootScript              ovhtypes.TfStringValue                             `tfsdk:"boot_script" json:"bootScript"`
@@ -725,6 +731,10 @@ type DedicatedServerModel struct {
 }
 
 func (v *DedicatedServerModel) MergeWith(other *DedicatedServerModel) {
+	if (v.ID.IsUnknown() || v.ID.IsNull()) && !other.ID.IsUnknown() {
+		v.ID = other.ID
+	}
+
 	if (v.AvailabilityZone.IsUnknown() || v.AvailabilityZone.IsNull()) && !other.AvailabilityZone.IsUnknown() {
 		v.AvailabilityZone = other.AvailabilityZone
 	}

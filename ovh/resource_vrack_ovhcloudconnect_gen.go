@@ -5,6 +5,7 @@ package ovh
 import (
 	"context"
 	"encoding/json"
+
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -14,6 +15,11 @@ import (
 
 func VrackOvhcloudconnectResourceSchema(ctx context.Context) schema.Schema {
 	attrs := map[string]schema.Attribute{
+		"id": schema.StringAttribute{
+			CustomType:  ovhtypes.TfStringType{},
+			Computed:    true,
+			Description: "Unique identifier for the resource",
+		},
 		"ovh_cloud_connect": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
 			Required:            true,
@@ -40,11 +46,15 @@ func VrackOvhcloudconnectResourceSchema(ctx context.Context) schema.Schema {
 }
 
 type VrackOvhcloudconnectModel struct {
+	ID              ovhtypes.TfStringValue `tfsdk:"id" json:"-"`
 	ServiceName     ovhtypes.TfStringValue `tfsdk:"service_name" json:"serviceName"`
 	OvhCloudConnect ovhtypes.TfStringValue `tfsdk:"ovh_cloud_connect" json:"ovhCloudConnect"`
 }
 
 func (v *VrackOvhcloudconnectModel) MergeWith(other *VrackOvhcloudconnectModel) {
+	if (v.ID.IsUnknown() || v.ID.IsNull()) && !other.ID.IsUnknown() {
+		v.ID = other.ID
+	}
 
 	if (v.OvhCloudConnect.IsUnknown() || v.OvhCloudConnect.IsNull()) && !other.OvhCloudConnect.IsUnknown() {
 		v.OvhCloudConnect = other.OvhCloudConnect

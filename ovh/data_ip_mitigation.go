@@ -6,6 +6,7 @@ import (
 	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
 var _ datasource.DataSourceWithConfigure = (*ipMitigationDataSource)(nil)
@@ -62,6 +63,8 @@ func (d *ipMitigationDataSource) Read(ctx context.Context, req datasource.ReadRe
 		)
 		return
 	}
+
+	data.ID = ovhtypes.NewTfStringValue(data.Ip.ValueString() + "/" + data.IpOnMitigation.ValueString())
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

@@ -6,13 +6,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
+
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 )
@@ -183,7 +184,7 @@ func CloudProjectFlavorsDataSourceSchema(ctx context.Context) schema.Schema {
 type CloudProjectFlavorsModel struct {
 	Flavors     ovhtypes.TfListNestedValue[CloudProjectFlavorValue] `tfsdk:"flavors" json:"cloudProjectFlavor"`
 	Region      ovhtypes.TfStringValue                              `tfsdk:"region" json:"region"`
-	NameFilter  ovhtypes.TfStringValue                              `tfsdk:"name_filter" json:"_"`
+	NameFilter  ovhtypes.TfStringValue                              `tfsdk:"name_filter" json:"-"`
 	ServiceName ovhtypes.TfStringValue                              `tfsdk:"service_name" json:"serviceName"`
 }
 

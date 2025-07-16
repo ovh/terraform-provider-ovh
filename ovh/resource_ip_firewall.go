@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
 var (
@@ -63,6 +64,7 @@ func (r *ipFirewallResource) ImportState(ctx context.Context, req resource.Impor
 
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("ip"), ip)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("ip_on_firewall"), ipOnFirewall)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), ip+"/"+ipOnFirewall)...)
 }
 
 func (r *ipFirewallResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -84,6 +86,7 @@ func (r *ipFirewallResource) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	responseData.MergeWith(&data)
+	responseData.ID = ovhtypes.NewTfStringValue(responseData.Ip.ValueString() + "/" + responseData.IpOnFirewall.ValueString())
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)

@@ -15,6 +15,11 @@ import (
 func IpMitigationResourceSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				CustomType:  ovhtypes.TfStringType{},
+				Computed:    true,
+				Description: "Unique identifier for the resource",
+			},
 			"auto": schema.BoolAttribute{
 				CustomType:          ovhtypes.TfBoolType{},
 				Computed:            true,
@@ -57,6 +62,7 @@ func IpMitigationResourceSchema(ctx context.Context) schema.Schema {
 }
 
 type IpMitigationModel struct {
+	ID             ovhtypes.TfStringValue `tfsdk:"id" json:"-"`
 	Auto           ovhtypes.TfBoolValue   `tfsdk:"auto" json:"auto"`
 	Ip             ovhtypes.TfStringValue `tfsdk:"ip" json:"ip"`
 	IpOnMitigation ovhtypes.TfStringValue `tfsdk:"ip_on_mitigation" json:"ipOnMitigation"`
@@ -65,6 +71,10 @@ type IpMitigationModel struct {
 }
 
 func (v *IpMitigationModel) MergeWith(other *IpMitigationModel) {
+	if (v.ID.IsUnknown() || v.ID.IsNull()) && !other.ID.IsUnknown() {
+		v.ID = other.ID
+	}
+
 	if (v.Auto.IsUnknown() || v.Auto.IsNull()) && !other.Auto.IsUnknown() {
 		v.Auto = other.Auto
 	}

@@ -6,6 +6,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
+
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -14,13 +16,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 )
 
 func CloudProjectRegionStorageResourceSchema(ctx context.Context) schema.Schema {
 	attrs := map[string]schema.Attribute{
+		"id": schema.StringAttribute{
+			CustomType:  ovhtypes.TfStringType{},
+			Computed:    true,
+			Description: "Unique identifier for the resource",
+		},
 		"created_at": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
 			Computed:            true,
@@ -377,6 +383,7 @@ func CloudProjectRegionStorageResourceSchema(ctx context.Context) schema.Schema 
 }
 
 type CloudProjectRegionStorageModel struct {
+	ID           ovhtypes.TfStringValue                   `tfsdk:"id" json:"-"`
 	CreatedAt    ovhtypes.TfStringValue                   `tfsdk:"created_at" json:"createdAt"`
 	Encryption   EncryptionValue                          `tfsdk:"encryption" json:"encryption"`
 	Limit        ovhtypes.TfInt64Value                    `tfsdk:"limit" json:"limit"`
@@ -396,6 +403,10 @@ type CloudProjectRegionStorageModel struct {
 }
 
 func (v *CloudProjectRegionStorageModel) MergeWith(other *CloudProjectRegionStorageModel) {
+	if (v.ID.IsUnknown() || v.ID.IsNull()) && !other.ID.IsUnknown() {
+		v.ID = other.ID
+	}
+
 	if (v.CreatedAt.IsUnknown() || v.CreatedAt.IsNull()) && !other.CreatedAt.IsUnknown() {
 		v.CreatedAt = other.CreatedAt
 	}

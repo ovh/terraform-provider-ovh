@@ -5,6 +5,7 @@ package ovh
 import (
 	"context"
 	"encoding/json"
+
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -12,6 +13,11 @@ import (
 
 func VrackDedicatedCloudDatacenterResourceSchema(ctx context.Context) schema.Schema {
 	attrs := map[string]schema.Attribute{
+		"id": schema.StringAttribute{
+			CustomType:  ovhtypes.TfStringType{},
+			Computed:    true,
+			Description: "Unique identifier for the resource",
+		},
 		"datacenter": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
 			Required:            true,
@@ -44,6 +50,7 @@ func VrackDedicatedCloudDatacenterResourceSchema(ctx context.Context) schema.Sch
 }
 
 type VrackDedicatedCloudDatacenterModel struct {
+	ID                ovhtypes.TfStringValue `tfsdk:"id" json:"-"`
 	Datacenter        ovhtypes.TfStringValue `tfsdk:"datacenter" json:"datacenter"`
 	ServiceName       ovhtypes.TfStringValue `tfsdk:"service_name" json:"serviceName"`
 	TargetServiceName ovhtypes.TfStringValue `tfsdk:"target_service_name" json:"targetServiceName"`
@@ -51,6 +58,10 @@ type VrackDedicatedCloudDatacenterModel struct {
 }
 
 func (v *VrackDedicatedCloudDatacenterModel) MergeWith(other *VrackDedicatedCloudDatacenterModel) {
+	if (v.ID.IsUnknown() || v.ID.IsNull()) && !other.ID.IsUnknown() {
+		v.ID = other.ID
+	}
+
 	if (v.Datacenter.IsUnknown() || v.Datacenter.IsNull()) && !other.Datacenter.IsUnknown() {
 		v.Datacenter = other.Datacenter
 	}

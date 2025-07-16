@@ -40,6 +40,7 @@ func TestAccIPMitigationData_basic(t *testing.T) {
 						"data.ovh_ip_mitigation.mitigation_data", "auto", "false"),
 					resource.TestCheckResourceAttr(
 						"data.ovh_ip_mitigation.mitigation_data", "permanent", "true"),
+					resource.TestCheckResourceAttrSet("data.ovh_ip_mitigation.mitigation_data", "id"),
 				),
 			},
 		},

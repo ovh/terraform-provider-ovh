@@ -59,6 +59,7 @@ func (d *dedicatedServerResource) ImportState(ctx context.Context, req resource.
 	resp.Diagnostics.Append(resp.Private.SetKey(ctx, "is_imported", []byte("true"))...)
 	resp.Diagnostics.Append(resp.Private.SetKey(ctx, "run_count", []byte("0"))...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_name"), req.ID)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), req.ID)...)
 }
 
 func (r *dedicatedServerResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -120,6 +121,7 @@ func (r *dedicatedServerResource) Create(ctx context.Context, req resource.Creat
 	}
 
 	responseData.MergeWith(&data)
+	responseData.ID = responseData.ServiceName
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)
@@ -174,6 +176,7 @@ func (r *dedicatedServerResource) Read(ctx context.Context, req resource.ReadReq
 	}
 
 	responseData.MergeWith(&data)
+	responseData.ID = responseData.ServiceName
 
 	// Check if resource has just been imported. If it is the case, increase
 	// the run counter each time we go through this function. The run counter
@@ -297,6 +300,7 @@ func (r *dedicatedServerResource) Update(ctx context.Context, req resource.Updat
 
 	responseData.MergeWith(&planData)
 	responseData.MergeWith(&stateData)
+	responseData.ID = responseData.ServiceName
 
 	// Explicitely set Customizations/Properties/Storage to what was defined in the plan
 	// as we can't determine the right thing to do in MergeWith function
