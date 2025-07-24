@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/go-ovh/ovh"
 )
 
 func resourceCloudProjectContainerRegistryOIDC() *schema.Resource {
@@ -148,6 +149,12 @@ func resourceCloudProjectContainerRegistryOIDCRead(d *schema.ResourceData, meta 
 	log.Printf("[DEBUG] Will read oidc from registry %s and project: %s", registryID, serviceName)
 	err := config.OVHClient.Get(endpoint, res)
 	if err != nil {
+		if ovhErr, ok := err.(*ovh.APIError); ok && ovhErr.Code == 404 {
+			// If the resource does not exist, remove it from the state to force recreation
+			log.Printf("[DEBUG] Registry %s OIDC does not exist, removing from state", registryID)
+			d.SetId("")
+			return nil
+		}
 		return fmt.Errorf("calling get %s %w", endpoint, err)
 	}
 	for k, v := range res.ToMap() {
