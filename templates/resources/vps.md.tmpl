@@ -16,7 +16,7 @@ Creates an OVHcloud Virtual Private Server (VPS).
 
 ~> **WARNING** `BANK_ACCOUNT` is not supported anymore, please update your default payment method to `SEPA_DIRECT_DEBIT`
 
-~> **NOTE** During VPS creation, the OS must be configured through the `plan.configuration` argument, using `vps_os` as key, and values from [catalog](https://eu.api.ovh.com/console/?section=%2Forder&branch=v1#get-/order/catalog/public/vps) data). The `image_id` argument should be used only when reinstalling a server.
+~> **NOTE** During VPS creation, the OS must be configured through the `plan.configuration` argument, using `vps_os` as key, and values from [catalog](https://eu.api.ovh.com/console/?section=%2Forder&branch=v1#get-/order/catalog/public/vps) data). The `image_id` argument should be used only when reinstalling a server. The available values for `image_id` can be found using this [API call](https://eu.api.ovh.com/console/?section=%2Fvps&branch=v1#get-/vps/-serviceName-/images/available)
 
 ## Example Usage
 
