@@ -24,6 +24,7 @@ const (
 	kubeClusterPrivateNetworkConfigurationKey = "private_network_configuration"
 	kubeClusterUpdatePolicyKey                = "update_policy"
 	kubeClusterVersionKey                     = "version"
+	kubeClusterPlanKey                        = "plan"
 
 	kubeClusterProxyModeKey = "kube_proxy_mode"
 
@@ -68,6 +69,13 @@ func resourceCloudProjectKube() *schema.Resource {
 				Computed: true,
 				Optional: true,
 				ForceNew: false,
+			},
+			kubeClusterPlanKey: {
+				Type:         schema.TypeString,
+				Computed:     true,
+				Optional:     true,
+				ForceNew:     false,
+				ValidateFunc: helpers.ValidateEnum([]string{"standard", "free"}),
 			},
 			kubeClusterCustomizationApiServerKey: {
 				Type:          schema.TypeSet,
@@ -622,6 +630,17 @@ func resourceCloudProjectKubeUpdate(d *schema.ResourceData, meta interface{}) er
 			return fmt.Errorf("timeout while waiting kube %s to be READY: %w", d.Id(), err)
 		}
 		log.Printf("[DEBUG] kube %s is READY", d.Id())
+	}
+
+	if d.HasChanges(kubeClusterPlanKey) {
+		oldValue, newValue := d.GetChange(kubeClusterPlanKey)
+		newPlan := newValue.(string)
+		oldPlan := oldValue.(string)
+		if oldPlan == "standard" {
+			return fmt.Errorf("you cannot migrate from %s to %s", oldPlan, newPlan)
+		}
+
+		return fmt.Errorf("migrate from %s to %s is not available yet", oldPlan, newPlan)
 	}
 
 	if d.HasChange(kubeClusterUpdatePolicyKey) {

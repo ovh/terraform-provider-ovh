@@ -33,6 +33,7 @@ type CloudProjectKubeCreateOpts struct {
 	PrivateNetworkConfiguration *privateNetworkConfiguration `json:"privateNetworkConfiguration,omitempty"`
 	Region                      string                       `json:"region"`
 	Version                     *string                      `json:"version,omitempty"`
+	Plan                        *string                      `json:"plan,omitempty"`
 	UpdatePolicy                *string                      `json:"updatePolicy,omitempty"`
 	Customization               *Customization               `json:"customization,omitempty"`
 	KubeProxyMode               *string                      `json:"kubeProxyMode,omitempty"`
@@ -76,6 +77,7 @@ type AdmissionPlugins struct {
 func (opts *CloudProjectKubeCreateOpts) FromResource(d *schema.ResourceData) {
 	opts.Region = d.Get("region").(string)
 	opts.Version = helpers.GetNilStringPointerFromData(d, "version")
+	opts.Plan = helpers.GetNilStringPointerFromData(d, kubeClusterPlanKey)
 	opts.Name = helpers.GetNilStringPointerFromData(d, "name")
 	opts.UpdatePolicy = helpers.GetNilStringPointerFromData(d, "update_policy")
 	opts.LoadBalancersSubnetId = helpers.GetNilStringPointerFromData(d, "load_balancers_subnet_id")
@@ -275,6 +277,7 @@ type CloudProjectKubeResponse struct {
 	UpdatePolicy           string        `json:"updatePolicy"`
 	Url                    string        `json:"url"`
 	Version                string        `json:"version"`
+	Plan                   string        `json:"plan"`
 	Customization          Customization `json:"customization"`
 	KubeProxyMode          string        `json:"kubeProxyMode"`
 }
@@ -294,6 +297,7 @@ func (v *CloudProjectKubeResponse) ToMap(d *schema.ResourceData) map[string]inte
 	obj["status"] = v.Status
 	obj["update_policy"] = v.UpdatePolicy
 	obj["url"] = v.Url
+	obj[kubeClusterPlanKey] = v.Plan
 	versionPatch, err := version.NewVersion(v.Version)
 	if err != nil {
 		// if fail, return to the previous implementation

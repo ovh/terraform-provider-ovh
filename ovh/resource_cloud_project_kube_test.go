@@ -1051,6 +1051,7 @@ func TestAccCloudProjectKube_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "version", version),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", kubeClusterPlanKey),
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig_attributes.0.host"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig_attributes.0.cluster_ca_certificate"),
@@ -1110,6 +1111,7 @@ func TestAccCloudProjectKubeEmptyVersion_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "version"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", kubeClusterPlanKey),
 				),
 			},
 			{
@@ -1119,6 +1121,7 @@ func TestAccCloudProjectKubeEmptyVersion_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, updatedName),
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "version"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", kubeClusterPlanKey),
 				),
 			},
 		},
