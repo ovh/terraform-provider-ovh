@@ -27,7 +27,7 @@ Creates an OVHcloud Virtual Private Server (VPS).
 The following arguments are supported:
 
 * `display_name` - Custom display name
-* `image_id` - (String) Id of the image to install on the VPS. This attribute is only useful to trigger a VPS reinstallation.
+* `image_id` - (String) Id of the image to install on the VPS. This attribute is only useful to trigger a VPS reinstallation. The available values can be found using this [API call](https://eu.api.ovh.com/console/?section=%2Fvps&branch=v1#get-/vps/-serviceName-/images/available)
 * `netboot_mode` - VPS netboot mode (local┃rescue)
 * `ovh_subsidiary` - (Required) OVHcloud Subsidiary. Country of OVHcloud legal entity you'll be billed by. List of supported subsidiaries available on API at [/1.0/me.json](https://eu.api.ovh.com/console-preview/?section=%2Fme&branch=v1#get-/me)
 * `plan` - (Required) Product Plan to order
