@@ -191,7 +191,7 @@ func resourceCloudProjectFailoverIpAttachCreate(d *schema.ResourceData, meta int
 			// is not allocated yet.
 			ovhError, isOvhApiError := err.(*ovh.APIError)
 			if isOvhApiError && ovhError.Code == 400 {
-				log.Printf("[INFO] container registry id %s on project %s deleted", id, serviceName)
+				log.Printf("[INFO] IP with id=%s not attached yet, retrying…", id)
 				return retry.RetryableError(fmt.Errorf("error calling POST %s: %q", endpoint, err))
 			} else {
 				return retry.NonRetryableError(fmt.Errorf("failed to attach failover IP: %s", err))
