@@ -77,7 +77,7 @@ func resourceCloudProjectContainerRegistryOIDC() *schema.Resource {
 			},
 			"oidc_verify_cert": {
 				Type:     schema.TypeBool,
-				Required: false,
+				Computed: true,
 				Optional: true,
 			},
 			"oidc_auto_onboard": {
