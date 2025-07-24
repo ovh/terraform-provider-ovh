@@ -138,8 +138,7 @@ func resourceCloudProjectFailoverIpAttachRead(d *schema.ResourceData, meta inter
 	}
 
 	if !match {
-		return fmt.Errorf("your query returned no results, " +
-			"please change your search criteria and try again")
+		return fmt.Errorf("failover IP %s cannot be found in cloud project %s", d.Get("ip").(string), serviceName)
 	}
 
 	return nil
@@ -173,8 +172,7 @@ func resourceCloudProjectFailoverIpAttachCreate(d *schema.ResourceData, meta int
 	}
 
 	if !match {
-		return fmt.Errorf("your query returned no results, " +
-			"please change your search criteria and try again")
+		return fmt.Errorf("failover IP %s cannot be found in cloud project %s", d.Get("ip").(string), serviceName)
 	}
 
 	id := d.Get("id").(string)
@@ -186,14 +184,14 @@ func resourceCloudProjectFailoverIpAttachCreate(d *schema.ResourceData, meta int
 		url.PathEscape(id),
 	)
 
-	retry.RetryContext(context.Background(), 5*time.Minute, func() *retry.RetryError {
+	err := retry.RetryContext(context.Background(), 5*time.Minute, func() *retry.RetryError {
 		ip := &FailoverIp{}
 		if err := config.OVHClient.Post(endpoint, opts, ip); err != nil {
 			// Retry 400 errors because it can mean that the instance IP
 			// is not allocated yet.
 			ovhError, isOvhApiError := err.(*ovh.APIError)
 			if isOvhApiError && ovhError.Code == 400 {
-				log.Printf("[INFO] container registry id %s on project %s deleted", id, serviceName)
+				log.Printf("[INFO] IP with id=%s not attached yet, retrying…", id)
 				return retry.RetryableError(fmt.Errorf("error calling POST %s: %q", endpoint, err))
 			} else {
 				return retry.NonRetryableError(fmt.Errorf("failed to attach failover IP: %s", err))
@@ -211,6 +209,10 @@ func resourceCloudProjectFailoverIpAttachCreate(d *schema.ResourceData, meta int
 
 		return nil
 	})
+
+	if err != nil {
+		return err
+	}
 
 	for d.Get("status").(string) == "operationPending" {
 		if err := resourceCloudProjectFailoverIpAttachRead(d, meta); err != nil {
