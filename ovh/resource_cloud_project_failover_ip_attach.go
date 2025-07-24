@@ -138,8 +138,7 @@ func resourceCloudProjectFailoverIpAttachRead(d *schema.ResourceData, meta inter
 	}
 
 	if !match {
-		return fmt.Errorf("your query returned no results, " +
-			"please change your search criteria and try again")
+		return fmt.Errorf("failover IP %s cannot be found in cloud project %s", d.Get("ip").(string), serviceName)
 	}
 
 	return nil
@@ -173,8 +172,7 @@ func resourceCloudProjectFailoverIpAttachCreate(d *schema.ResourceData, meta int
 	}
 
 	if !match {
-		return fmt.Errorf("your query returned no results, " +
-			"please change your search criteria and try again")
+		return fmt.Errorf("failover IP %s cannot be found in cloud project %s", d.Get("ip").(string), serviceName)
 	}
 
 	id := d.Get("id").(string)
@@ -186,7 +184,7 @@ func resourceCloudProjectFailoverIpAttachCreate(d *schema.ResourceData, meta int
 		url.PathEscape(id),
 	)
 
-	retry.RetryContext(context.Background(), 5*time.Minute, func() *retry.RetryError {
+	err := retry.RetryContext(context.Background(), 5*time.Minute, func() *retry.RetryError {
 		ip := &FailoverIp{}
 		if err := config.OVHClient.Post(endpoint, opts, ip); err != nil {
 			// Retry 400 errors because it can mean that the instance IP
@@ -211,6 +209,10 @@ func resourceCloudProjectFailoverIpAttachCreate(d *schema.ResourceData, meta int
 
 		return nil
 	})
+
+	if err != nil {
+		return err
+	}
 
 	for d.Get("status").(string) == "operationPending" {
 		if err := resourceCloudProjectFailoverIpAttachRead(d, meta); err != nil {
