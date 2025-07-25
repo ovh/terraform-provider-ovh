@@ -246,29 +246,8 @@ func CloudProjectRegionStorageResourceSchema(ctx context.Context) schema.Schema 
 										Description:         "Prefix filter",
 										MarkdownDescription: "Prefix filter",
 									},
-									"tags": schema.ListNestedAttribute{
-										NestedObject: schema.NestedAttributeObject{
-											Attributes: map[string]schema.Attribute{
-												"key": schema.StringAttribute{
-													CustomType:          ovhtypes.TfStringType{},
-													Required:            true,
-													Description:         "Tag key",
-													MarkdownDescription: "Tag key",
-												},
-												"value": schema.StringAttribute{
-													CustomType:          ovhtypes.TfStringType{},
-													Required:            true,
-													Description:         "Tag value",
-													MarkdownDescription: "Tag value",
-												},
-											},
-											CustomType: ReplicationRulesFilterTagsType{
-												ObjectType: types.ObjectType{
-													AttrTypes: ReplicationRulesFilterTagsValue{}.AttributeTypes(ctx),
-												},
-											},
-										},
-										CustomType:          ovhtypes.NewTfListNestedType[ReplicationRulesFilterTagsValue](ctx),
+									"tags": schema.MapAttribute{
+										CustomType:          ovhtypes.NewTfMapNestedType[ovhtypes.TfStringValue](ctx),
 										Optional:            true,
 										Computed:            true,
 										Description:         "Tags filter",
@@ -3396,12 +3375,12 @@ func (t ReplicationRulesFilterType) ValueFromObject(ctx context.Context, in base
 		return nil, diags
 	}
 
-	tagsVal, ok := tagsAttribute.(ovhtypes.TfListNestedValue[ReplicationRulesFilterTagsValue])
+	tagsVal, ok := tagsAttribute.(ovhtypes.TfMapNestedValue[ovhtypes.TfStringValue])
 
 	if !ok {
 		diags.AddError(
 			"Attribute Wrong Type",
-			fmt.Sprintf(`tags expected to be ovhtypes.TfListNestedValue[ReplicationRulesFilterTagsValue], was: %T`, tagsAttribute))
+			fmt.Sprintf(`tags expected to be ovhtypes.TfMapNestedValue[ovhtypes.TfStringValue], was: %T`, tagsAttribute))
 	}
 
 	if diags.HasError() {
@@ -3506,12 +3485,12 @@ func NewReplicationRulesFilterValue(attributeTypes map[string]attr.Type, attribu
 		return NewReplicationRulesFilterValueUnknown(), diags
 	}
 
-	tagsVal, ok := tagsAttribute.(ovhtypes.TfListNestedValue[ReplicationRulesFilterTagsValue])
+	tagsVal, ok := tagsAttribute.(ovhtypes.TfMapNestedValue[ovhtypes.TfStringValue])
 
 	if !ok {
 		diags.AddError(
 			"Attribute Wrong Type",
-			fmt.Sprintf(`tags expected to be ovhtypes.TfListNestedValue[ReplicationRulesFilterTagsValue], was: %T`, tagsAttribute))
+			fmt.Sprintf(`tags expected to be ovhtypes.TfMapNestedValue[ovhtypes.TfStringValue], was: %T`, tagsAttribute))
 	}
 
 	if diags.HasError() {
@@ -3593,15 +3572,15 @@ func (t ReplicationRulesFilterType) ValueType(ctx context.Context) attr.Value {
 var _ basetypes.ObjectValuable = ReplicationRulesFilterValue{}
 
 type ReplicationRulesFilterValue struct {
-	Prefix ovhtypes.TfStringValue                                      `tfsdk:"prefix" json:"prefix"`
-	Tags   ovhtypes.TfListNestedValue[ReplicationRulesFilterTagsValue] `tfsdk:"tags" json:"tags"`
+	Prefix ovhtypes.TfStringValue                            `tfsdk:"prefix" json:"prefix"`
+	Tags   ovhtypes.TfMapNestedValue[ovhtypes.TfStringValue] `tfsdk:"tags" json:"tags"`
 	state  attr.ValueState
 }
 
 type ReplicationRulesFilterWritableValue struct {
 	*ReplicationRulesFilterValue `json:"-"`
-	Prefix                       *ovhtypes.TfStringValue                                      `json:"prefix,omitempty"`
-	Tags                         *ovhtypes.TfListNestedValue[ReplicationRulesFilterTagsValue] `json:"tags,omitempty"`
+	Prefix                       *ovhtypes.TfStringValue                            `json:"prefix,omitempty"`
+	Tags                         *ovhtypes.TfMapNestedValue[ovhtypes.TfStringValue] `json:"tags,omitempty"`
 }
 
 func (v ReplicationRulesFilterValue) ToCreate() *ReplicationRulesFilterWritableValue {
@@ -3655,25 +3634,6 @@ func (v *ReplicationRulesFilterValue) MergeWith(other *ReplicationRulesFilterVal
 
 	if (v.Tags.IsUnknown() || v.Tags.IsNull()) && !other.Tags.IsUnknown() {
 		v.Tags = other.Tags
-	} else if !other.Tags.IsUnknown() {
-		newSlice := make([]attr.Value, 0)
-		elems := v.Tags.Elements()
-		newElems := other.Tags.Elements()
-
-		if len(elems) != len(newElems) {
-			v.Tags = other.Tags
-		} else {
-			for idx, e := range elems {
-				tmp := e.(ReplicationRulesFilterTagsValue)
-				tmp2 := newElems[idx].(ReplicationRulesFilterTagsValue)
-				tmp.MergeWith(&tmp2)
-				newSlice = append(newSlice, tmp)
-			}
-
-			v.Tags = ovhtypes.TfListNestedValue[ReplicationRulesFilterTagsValue]{
-				ListValue: basetypes.NewListValueMust(ReplicationRulesFilterTagsValue{}.Type(context.Background()), newSlice),
-			}
-		}
 	}
 
 	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
@@ -3694,8 +3654,8 @@ func (v ReplicationRulesFilterValue) ToTerraformValue(ctx context.Context) (tfty
 	var err error
 
 	attrTypes["prefix"] = basetypes.StringType{}.TerraformType(ctx)
-	attrTypes["tags"] = basetypes.ListType{
-		ElemType: ReplicationRulesFilterTagsValue{}.Type(ctx),
+	attrTypes["tags"] = basetypes.MapType{
+		ElemType: ovhtypes.TfStringType{},
 	}.TerraformType(ctx)
 
 	objectType := tftypes.Object{AttributeTypes: attrTypes}
@@ -3752,7 +3712,7 @@ func (v ReplicationRulesFilterValue) ToObjectValue(ctx context.Context) (basetyp
 	objVal, diags := types.ObjectValue(
 		map[string]attr.Type{
 			"prefix": ovhtypes.TfStringType{},
-			"tags":   ovhtypes.NewTfListNestedType[ReplicationRulesFilterTagsValue](ctx),
+			"tags":   ovhtypes.NewTfMapNestedType[ovhtypes.TfStringValue](ctx),
 		},
 		map[string]attr.Value{
 			"prefix": v.Prefix,
@@ -3799,446 +3759,7 @@ func (v ReplicationRulesFilterValue) Type(ctx context.Context) attr.Type {
 func (v ReplicationRulesFilterValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
 	return map[string]attr.Type{
 		"prefix": ovhtypes.TfStringType{},
-		"tags":   ovhtypes.NewTfListNestedType[ReplicationRulesFilterTagsValue](ctx),
-	}
-}
-
-var _ basetypes.ObjectTypable = ReplicationRulesFilterTagsType{}
-
-type ReplicationRulesFilterTagsType struct {
-	basetypes.ObjectType
-}
-
-func (t ReplicationRulesFilterTagsType) Equal(o attr.Type) bool {
-	other, ok := o.(ReplicationRulesFilterTagsType)
-
-	if !ok {
-		return false
-	}
-
-	return t.ObjectType.Equal(other.ObjectType)
-}
-
-func (t ReplicationRulesFilterTagsType) String() string {
-	return "ReplicationRulesFilterTagsType"
-}
-
-func (t ReplicationRulesFilterTagsType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	attributes := in.Attributes()
-
-	keyAttribute, ok := attributes["key"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`key is missing from object`)
-
-		return nil, diags
-	}
-
-	keyVal, ok := keyAttribute.(ovhtypes.TfStringValue)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`key expected to be ovhtypes.TfStringValue, was: %T`, keyAttribute))
-	}
-
-	valueAttribute, ok := attributes["value"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`value is missing from object`)
-
-		return nil, diags
-	}
-
-	valueVal, ok := valueAttribute.(ovhtypes.TfStringValue)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`value expected to be ovhtypes.TfStringValue, was: %T`, valueAttribute))
-	}
-
-	if diags.HasError() {
-		return nil, diags
-	}
-
-	return ReplicationRulesFilterTagsValue{
-		Key:   keyVal,
-		Value: valueVal,
-		state: attr.ValueStateKnown,
-	}, diags
-}
-
-func NewReplicationRulesFilterTagsValueNull() ReplicationRulesFilterTagsValue {
-	return ReplicationRulesFilterTagsValue{
-		state: attr.ValueStateNull,
-	}
-}
-
-func NewReplicationRulesFilterTagsValueUnknown() ReplicationRulesFilterTagsValue {
-	return ReplicationRulesFilterTagsValue{
-		state: attr.ValueStateUnknown,
-	}
-}
-
-func NewReplicationRulesFilterTagsValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (ReplicationRulesFilterTagsValue, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
-	ctx := context.Background()
-
-	for name, attributeType := range attributeTypes {
-		attribute, ok := attributes[name]
-
-		if !ok {
-			diags.AddError(
-				"Missing ReplicationRulesFilterTagsValue Attribute Value",
-				"While creating a ReplicationRulesFilterTagsValue value, a missing attribute value was detected. "+
-					"A ReplicationRulesFilterTagsValue must contain values for all attributes, even if null or unknown. "+
-					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
-					fmt.Sprintf("ReplicationRulesFilterTagsValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
-			)
-
-			continue
-		}
-
-		if !attributeType.Equal(attribute.Type(ctx)) {
-			diags.AddError(
-				"Invalid ReplicationRulesFilterTagsValue Attribute Type",
-				"While creating a ReplicationRulesFilterTagsValue value, an invalid attribute value was detected. "+
-					"A ReplicationRulesFilterTagsValue must use a matching attribute type for the value. "+
-					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
-					fmt.Sprintf("ReplicationRulesFilterTagsValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
-					fmt.Sprintf("ReplicationRulesFilterTagsValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
-			)
-		}
-	}
-
-	for name := range attributes {
-		_, ok := attributeTypes[name]
-
-		if !ok {
-			diags.AddError(
-				"Extra ReplicationRulesFilterTagsValue Attribute Value",
-				"While creating a ReplicationRulesFilterTagsValue value, an extra attribute value was detected. "+
-					"A ReplicationRulesFilterTagsValue must not contain values beyond the expected attribute types. "+
-					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
-					fmt.Sprintf("Extra ReplicationRulesFilterTagsValue Attribute Name: %s", name),
-			)
-		}
-	}
-
-	if diags.HasError() {
-		return NewReplicationRulesFilterTagsValueUnknown(), diags
-	}
-
-	keyAttribute, ok := attributes["key"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`key is missing from object`)
-
-		return NewReplicationRulesFilterTagsValueUnknown(), diags
-	}
-
-	keyVal, ok := keyAttribute.(ovhtypes.TfStringValue)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`key expected to be ovhtypes.TfStringValue, was: %T`, keyAttribute))
-	}
-
-	valueAttribute, ok := attributes["value"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`value is missing from object`)
-
-		return NewReplicationRulesFilterTagsValueUnknown(), diags
-	}
-
-	valueVal, ok := valueAttribute.(ovhtypes.TfStringValue)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`value expected to be ovhtypes.TfStringValue, was: %T`, valueAttribute))
-	}
-
-	if diags.HasError() {
-		return NewReplicationRulesFilterTagsValueUnknown(), diags
-	}
-
-	return ReplicationRulesFilterTagsValue{
-		Key:   keyVal,
-		Value: valueVal,
-		state: attr.ValueStateKnown,
-	}, diags
-}
-
-func NewReplicationRulesFilterTagsValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) ReplicationRulesFilterTagsValue {
-	object, diags := NewReplicationRulesFilterTagsValue(attributeTypes, attributes)
-
-	if diags.HasError() {
-		// This could potentially be added to the diag package.
-		diagsStrings := make([]string, 0, len(diags))
-
-		for _, diagnostic := range diags {
-			diagsStrings = append(diagsStrings, fmt.Sprintf(
-				"%s | %s | %s",
-				diagnostic.Severity(),
-				diagnostic.Summary(),
-				diagnostic.Detail()))
-		}
-
-		panic("NewReplicationRulesFilterTagsValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
-	}
-
-	return object
-}
-
-func (t ReplicationRulesFilterTagsType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
-	if in.Type() == nil {
-		return NewReplicationRulesFilterTagsValueNull(), nil
-	}
-
-	if !in.Type().Equal(t.TerraformType(ctx)) {
-		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
-	}
-
-	if !in.IsKnown() {
-		return NewReplicationRulesFilterTagsValueUnknown(), nil
-	}
-
-	if in.IsNull() {
-		return NewReplicationRulesFilterTagsValueNull(), nil
-	}
-
-	attributes := map[string]attr.Value{}
-
-	val := map[string]tftypes.Value{}
-
-	err := in.As(&val)
-
-	if err != nil {
-		return nil, err
-	}
-
-	for k, v := range val {
-		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
-
-		if err != nil {
-			return nil, err
-		}
-
-		attributes[k] = a
-	}
-
-	return NewReplicationRulesFilterTagsValueMust(ReplicationRulesFilterTagsValue{}.AttributeTypes(ctx), attributes), nil
-}
-
-func (t ReplicationRulesFilterTagsType) ValueType(ctx context.Context) attr.Value {
-	return ReplicationRulesFilterTagsValue{}
-}
-
-var _ basetypes.ObjectValuable = ReplicationRulesFilterTagsValue{}
-
-type ReplicationRulesFilterTagsValue struct {
-	Key   ovhtypes.TfStringValue `tfsdk:"key" json:"key"`
-	Value ovhtypes.TfStringValue `tfsdk:"value" json:"value"`
-	state attr.ValueState
-}
-
-type ReplicationRulesFilterTagsWritableValue struct {
-	*ReplicationRulesFilterTagsValue `json:"-"`
-	Key                              *ovhtypes.TfStringValue `json:"key,omitempty"`
-	Value                            *ovhtypes.TfStringValue `json:"value,omitempty"`
-}
-
-func (v ReplicationRulesFilterTagsValue) ToCreate() *ReplicationRulesFilterTagsWritableValue {
-	res := &ReplicationRulesFilterTagsWritableValue{}
-
-	if !v.Key.IsNull() {
-		res.Key = &v.Key
-	}
-
-	if !v.Value.IsNull() {
-		res.Value = &v.Value
-	}
-
-	return res
-}
-
-func (v ReplicationRulesFilterTagsValue) ToUpdate() *ReplicationRulesFilterTagsWritableValue {
-	res := &ReplicationRulesFilterTagsWritableValue{}
-
-	if !v.Key.IsNull() {
-		res.Key = &v.Key
-	}
-
-	if !v.Value.IsNull() {
-		res.Value = &v.Value
-	}
-
-	return res
-}
-
-func (v *ReplicationRulesFilterTagsValue) UnmarshalJSON(data []byte) error {
-	type JsonReplicationRulesFilterTagsValue ReplicationRulesFilterTagsValue
-
-	var tmp JsonReplicationRulesFilterTagsValue
-	if err := json.Unmarshal(data, &tmp); err != nil {
-		return err
-	}
-	v.Key = tmp.Key
-	v.Value = tmp.Value
-
-	v.state = attr.ValueStateKnown
-
-	return nil
-}
-
-func (v *ReplicationRulesFilterTagsValue) MergeWith(other *ReplicationRulesFilterTagsValue) {
-
-	if (v.Key.IsUnknown() || v.Key.IsNull()) && !other.Key.IsUnknown() {
-		v.Key = other.Key
-	}
-
-	if (v.Value.IsUnknown() || v.Value.IsNull()) && !other.Value.IsUnknown() {
-		v.Value = other.Value
-	}
-
-	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
-		v.state = other.state
-	}
-}
-
-func (v ReplicationRulesFilterTagsValue) Attributes() map[string]attr.Value {
-	return map[string]attr.Value{
-		"key":   v.Key,
-		"value": v.Value,
-	}
-}
-func (v ReplicationRulesFilterTagsValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	attrTypes := make(map[string]tftypes.Type, 2)
-
-	var val tftypes.Value
-	var err error
-
-	attrTypes["key"] = basetypes.StringType{}.TerraformType(ctx)
-	attrTypes["value"] = basetypes.StringType{}.TerraformType(ctx)
-
-	objectType := tftypes.Object{AttributeTypes: attrTypes}
-
-	switch v.state {
-	case attr.ValueStateKnown:
-		vals := make(map[string]tftypes.Value, 2)
-
-		val, err = v.Key.ToTerraformValue(ctx)
-
-		if err != nil {
-			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
-		}
-
-		vals["key"] = val
-
-		val, err = v.Value.ToTerraformValue(ctx)
-
-		if err != nil {
-			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
-		}
-
-		vals["value"] = val
-
-		if err := tftypes.ValidateValue(objectType, vals); err != nil {
-			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
-		}
-
-		return tftypes.NewValue(objectType, vals), nil
-	case attr.ValueStateNull:
-		return tftypes.NewValue(objectType, nil), nil
-	case attr.ValueStateUnknown:
-		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
-	default:
-		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
-	}
-}
-
-func (v ReplicationRulesFilterTagsValue) IsNull() bool {
-	return v.state == attr.ValueStateNull
-}
-
-func (v ReplicationRulesFilterTagsValue) IsUnknown() bool {
-	return v.state == attr.ValueStateUnknown
-}
-
-func (v ReplicationRulesFilterTagsValue) String() string {
-	return "ReplicationRulesFilterTagsValue"
-}
-
-func (v ReplicationRulesFilterTagsValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	objVal, diags := types.ObjectValue(
-		map[string]attr.Type{
-			"key":   ovhtypes.TfStringType{},
-			"value": ovhtypes.TfStringType{},
-		},
-		map[string]attr.Value{
-			"key":   v.Key,
-			"value": v.Value,
-		})
-
-	return objVal, diags
-}
-
-func (v ReplicationRulesFilterTagsValue) Equal(o attr.Value) bool {
-	other, ok := o.(ReplicationRulesFilterTagsValue)
-
-	if !ok {
-		return false
-	}
-
-	if v.state != other.state {
-		return false
-	}
-
-	if v.state != attr.ValueStateKnown {
-		return true
-	}
-
-	if !v.Key.Equal(other.Key) {
-		return false
-	}
-
-	if !v.Value.Equal(other.Value) {
-		return false
-	}
-
-	return true
-}
-
-func (v ReplicationRulesFilterTagsValue) Type(ctx context.Context) attr.Type {
-	return ReplicationRulesFilterTagsType{
-		basetypes.ObjectType{
-			AttrTypes: v.AttributeTypes(ctx),
-		},
-	}
-}
-
-func (v ReplicationRulesFilterTagsValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
-	return map[string]attr.Type{
-		"key":   ovhtypes.TfStringType{},
-		"value": ovhtypes.TfStringType{},
+		"tags":   ovhtypes.NewTfMapNestedType[ovhtypes.TfStringValue](ctx),
 	}
 }
 
