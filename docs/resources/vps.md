@@ -12,7 +12,7 @@ Creates an OVHcloud Virtual Private Server (VPS).
 
 ~> **WARNING** `BANK_ACCOUNT` is not supported anymore, please update your default payment method to `SEPA_DIRECT_DEBIT`
 
-~> **NOTE** During VPS creation, the OS must be configured through the `plan.configuration` argument, using `vps_os` as key, and values from [catalog](https://eu.api.ovh.com/console/?section=%2Forder&branch=v1#get-/order/catalog/public/vps) data). The `image_id` argument should be used only when reinstalling a server.
+~> **NOTE** During VPS creation, the OS must be configured through the `plan.configuration` argument, using `vps_os` as key, and values from [catalog](https://eu.api.ovh.com/console/?section=%2Forder&branch=v1#get-/order/catalog/public/vps) data). The `image_id` argument should be used only when reinstalling a server. The available values for `image_id` can be found using this [API call](https://eu.api.ovh.com/console/?section=%2Fvps&branch=v1#get-/vps/-serviceName-/images/available)
 
 ## Example Usage
 
@@ -68,7 +68,7 @@ output "vps_display_name" {
 The following arguments are supported:
 
 * `display_name` - Custom display name
-* `image_id` - (String) Id of the image to install on the VPS. This attribute is only useful to trigger a VPS reinstallation.
+* `image_id` - (String) Id of the image to install on the VPS. This attribute is only useful to trigger a VPS reinstallation. The available values can be found using this [API call](https://eu.api.ovh.com/console/?section=%2Fvps&branch=v1#get-/vps/-serviceName-/images/available)
 * `netboot_mode` - VPS netboot mode (local┃rescue)
 * `ovh_subsidiary` - (Required) OVHcloud Subsidiary. Country of OVHcloud legal entity you'll be billed by. List of supported subsidiaries available on API at [/1.0/me.json](https://eu.api.ovh.com/console-preview/?section=%2Fme&branch=v1#get-/me)
 * `plan` - (Required) Product Plan to order
