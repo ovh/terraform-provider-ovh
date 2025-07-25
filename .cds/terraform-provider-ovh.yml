@@ -821,6 +821,18 @@ workflow:
     pipeline: terraform-provider-ovh-testacc
     when:
     - success
+  Tests_Location:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run Location
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.location}}"
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
   terraform-provider-ovh:
     application: terraform-provider-ovh
     parameters:
@@ -907,6 +919,7 @@ workflow:
     - Tests_DedicatedCloud
     - Tests_VMwareCloudDirector
     - Tests_StorageEfs
+    - Tests_Location
     environment: acctests
     one_at_a_time: true
     pipeline: terraform-provider-ovh-run-sweepers
