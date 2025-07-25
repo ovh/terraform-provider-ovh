@@ -70,3 +70,6 @@ parameters:
   skipthistest.storageefs:
     type: boolean
     description: Skip Storage EFS tests
+  skipthistest.location:
+    type: boolean
+    description: Skip Location tests
