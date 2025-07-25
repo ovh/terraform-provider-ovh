@@ -1,3 +1,45 @@
+## 2.6.0 (July 25, 2025)
+
+⚙️ General:
+
+* Bump dependencies ([#1052](https://github.com/ovh/terraform-provider-ovh/pull/1052))
+
+🎉 Features:
+
+* New resource: `ovh_cloud_project_region` ([#1044](https://github.com/ovh/terraform-provider-ovh/pull/1044))
+
+* New datasource: `ovh_cloud_project_gateway` ([#1061](https://github.com/ovh/terraform-provider-ovh/pull/1061))
+* New datasource: `ovh_location` ([#1063](https://github.com/ovh/terraform-provider-ovh/pull/1063))
+
+💪 Improvements:
+
+* `r/ovh_dbaas_logs_token`: Resource can now be imported ([#1045](https://github.com/ovh/terraform-provider-ovh/pull/1045))
+* Ensure all resources have an ID ([#1047](https://github.com/ovh/terraform-provider-ovh/pull/1047))
+
+⚠️ Deprecations:
+
+* `r/ovh_dedicated_server_update`: Resource is now deprecated ([#1036](https://github.com/ovh/terraform-provider-ovh/pull/1036))
+
+🐜 Bug fixes:
+
+* `r/ovh_dedicated_server`: Changing `service_name` forces recreation of the resource ([#1033](https://github.com/ovh/terraform-provider-ovh/pull/1033))
+* `r/ovh_dedicated_server_update`: Changing `service_name` forces recreation of the resource ([#1033](https://github.com/ovh/terraform-provider-ovh/pull/1033))
+* `r/ovh_savings_plan`: Perform an exact match when searching for a product code ([#1040](https://github.com/ovh/terraform-provider-ovh/pull/1040))
+* `r/ovh_dbaas_logs_input`: Fix fields in example ([#1053](https://github.com/ovh/terraform-provider-ovh/pull/1053))
+* `r/ovh_cloud_project_failover_ip_attach`: Correctly check errors and improve error messages ([#1056](https://github.com/ovh/terraform-provider-ovh/pull/1056))
+* `r/ovh_cloud_project_containerregistry_oidc`: Attribute `oidc_verify_cert` is computed when not input by the user ([#1057](https://github.com/ovh/terraform-provider-ovh/pull/1057))
+* `r/ovh_cloud_project_containerregistry_oidc`: Recreate OIDC config when removed outside Terraform ([#1058](https://github.com/ovh/terraform-provider-ovh/pull/1058))
+* `r/ovh_cloud_project_storage`: Set the right type for replication tags ([#1060](https://github.com/ovh/terraform-provider-ovh/pull/1060))
+
+📚 Documentation:
+
+* Update subcategories of several public cloud resources ([#1035](https://github.com/ovh/terraform-provider-ovh/pull/1035))
+* `r/ovh_cloud_project_containerregistry_user`: Fix resource documentation ([#1037](https://github.com/ovh/terraform-provider-ovh/pull/1037))
+* Ensure naming convention in examples ([#1046](https://github.com/ovh/terraform-provider-ovh/pull/1046))
+* `r/ovh_vps`: Add clarifications on image selection ([#1055](https://github.com/ovh/terraform-provider-ovh/pull/1055))
+
+❤️ Thanks for your contributions ❤️
+
 ## 2.5.0 (July 1, 2025)
 
 ⚙️ General:
