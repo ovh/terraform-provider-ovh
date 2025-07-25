@@ -211,6 +211,7 @@ func (p *OvhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 		NewCloudProjectFlavorDataSource,
 		NewCloudProjectFlavorsDataSource,
 		NewCloudProjectFloatingipsDataSource,
+		NewCloudProjectGatewayDataSource,
 		NewCloudProjectGatewayInterfaceDataSource,
 		NewCloudProjectImageDataSource,
 		NewCloudProjectImagesDataSource,
