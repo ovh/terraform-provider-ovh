@@ -124,7 +124,7 @@ func resourceOvhDomainZoneRecordCreate(d *schema.ResourceData, meta interface{})
 	// this is an API response BUG known by OVH team
 	// with no planned fix
 	// Workaround is to filter records matching the attributes
-	// and keep the last id if there are doublons
+	// and keep the last id if there are duplicates
 	if resultRecord.Id == 0 {
 		log.Printf("[WARN] Known OVH API Bug with Inconsistency API result (id = 0): %v", resultRecord)
 		records := make([]int, 0)
@@ -172,13 +172,14 @@ func resourceOvhDomainZoneRecordRead(d *schema.ResourceData, meta interface{}) e
 	config := meta.(*Config)
 
 	record, err := ovhDomainZoneRecord(config.OVHClient, d, d.Id(), d.IsNewResource())
-
 	if err != nil {
 		return err
 	}
 
 	if record == nil {
-		return fmt.Errorf("record %v has been deleted.", d.Id())
+		// ID already set to "", so just return
+		log.Print("record has been deleted")
+		return nil
 	}
 
 	d.Set("zone", record.Zone)
