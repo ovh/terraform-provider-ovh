@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -521,6 +522,8 @@ func resourceCloudProjectInstanceDelete(ctx context.Context, d *schema.ResourceD
 	}
 
 	d.SetId("")
+
+	time.Sleep(time.Second * 20) // Wait a bit to ensure the instance is deleted before returning
 
 	log.Printf("[DEBUG] Deleted Public Cloud %s Instance %s", serviceName, id)
 	return nil
