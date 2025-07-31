@@ -119,7 +119,6 @@ type DedicatedServerTask struct {
 type DedicatedServerReinstallTaskCreateOpts struct {
 	Os             string                                      `json:"operatingSystem"`
 	Customizations *DedicatedServerReinstallTaskCustomizations `json:"customizations,omitempty"`
-	Properties     map[string]interface{}                      `json:"properties,omitempty"`
 	Storage        []DedicatedServerReinstallTaskStorage       `json:"storage,omitempty"`
 }
 
@@ -129,11 +128,6 @@ func (opts *DedicatedServerReinstallTaskCreateOpts) FromResource(d *schema.Resou
 	Customizations := d.Get("customizations").([]interface{})
 	if len(Customizations) == 1 {
 		opts.Customizations = (&DedicatedServerReinstallTaskCustomizations{}).FromResource(d, "customizations.0")
-	}
-
-	Properties := d.Get("properties").(map[string]interface{})
-	if len(Properties) >= 1 {
-		opts.Properties = d.Get("properties").(map[string]interface{})
 	}
 
 	Storage := d.Get("storage").([]interface{})
@@ -184,6 +178,7 @@ type ExtrasDetails struct {
 }
 
 type DedicatedServerReinstallTaskCustomizations struct {
+	ConfigDriveMetadata             map[string]interface{} `json:"configDriveMetadata,omitempty"`
 	ConfigDriveUserData             *string                `json:"configDriveUserData,omitempty"`
 	EfiBootloaderPath               *string                `json:"efiBootloaderPath,omitempty"`
 	Hostname                        *string                `json:"hostname,omitempty"`
@@ -199,6 +194,7 @@ type DedicatedServerReinstallTaskCustomizations struct {
 }
 
 func (opts *DedicatedServerReinstallTaskCustomizations) FromResource(d *schema.ResourceData, parent string) *DedicatedServerReinstallTaskCustomizations {
+	opts.ConfigDriveMetadata = helpers.GetMapFromData(d, fmt.Sprintf("%s.config_drive_metadata", parent))
 	opts.ConfigDriveUserData = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.config_drive_user_data", parent))
 	opts.EfiBootloaderPath = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.efi_bootloader_path", parent))
 	opts.Hostname = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.hostname", parent))
