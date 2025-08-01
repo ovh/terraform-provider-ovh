@@ -35,7 +35,7 @@ func resourceDbaasLogsOutputGraylogStream() *schema.Resource {
 			},
 			"title": {
 				Type:        schema.TypeString,
-				Description: "Stream description",
+				Description: "Stream name",
 				Required:    true,
 			},
 
