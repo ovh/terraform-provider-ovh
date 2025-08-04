@@ -37,8 +37,8 @@ resource "ovh_dbaas_logs_output_graylog_stream" "stream" {
 
 The following arguments are supported:
 * `service_name` - (Required) The service name
+* `title` - (Required) Stream name
 * `description` - (Required) Stream description
-* `title` - (Required) Stream description
 * `parent_stream_id` - Parent stream ID
 * `retention_id` - Retention ID
 * `cold_storage_compression` - Cold storage compression method. One of "LZMA", "GZIP", "DEFLATED", "ZSTD"
