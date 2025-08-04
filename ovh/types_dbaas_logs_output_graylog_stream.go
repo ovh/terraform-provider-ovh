@@ -160,3 +160,9 @@ type DbaasLogsOutputGraylogStreamRule struct {
 	Field string `json:"field"`
 	Value string `json:"value"`
 }
+
+// DbaasLogsOutputGraylogStreamURL represents a URL entry for a Graylog stream.
+type DbaasLogsOutputGraylogStreamURL struct {
+	Address string `json:"address"`
+	Type    string `json:"type"`
+}
