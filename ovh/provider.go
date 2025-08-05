@@ -156,6 +156,7 @@ func Provider() *schema.Provider {
 			"ovh_dbaas_logs_clusters":                                        dataSourceDbaasLogsClusters(),
 			"ovh_dbaas_logs_input_engine":                                    dataSourceDbaasLogsInputEngine(),
 			"ovh_dbaas_logs_output_graylog_stream":                           dataSourceDbaasLogsOutputGraylogStream(),
+			"ovh_dbaas_logs_output_graylog_stream_url":                       dataSourceDbaasLogsOutputGraylogStreamURL(),
 			"ovh_dbaas_logs_output_opensearch_index":                         dataSourceDbaasLogsOutputOpensearchIndex(),
 			"ovh_dedicated_ceph":                                             dataSourceDedicatedCeph(),
 			"ovh_dedicated_installation_templates":                           dataSourceDedicatedInstallationTemplates(),
