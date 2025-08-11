@@ -50,7 +50,7 @@ The following arguments are supported:
 * `indexing_enabled` - Enable ES indexing
 * `indexing_max_size` - Maximum indexing size (in GB)
 * `indexing_notify_enabled` - If set, notify when size is near 80, 90 or 100 % of the maximum configured setting
-* `pause_indexing_on_max_size` - If set, pause indexing when maximum size is reach
+* `pause_indexing_on_max_size` - If set, pause indexing when maximum size is reached
 * `web_socket_enabled` - Enable Websocket
 
 ## Attributes Reference
