@@ -66,3 +66,11 @@ Id is set to the output stream Id. In addition, the following attributes are exp
 * `stream_id` - Stream ID
 * `updated_at` - Stream last updater
 * `write_token` - Write token of the stream (empty if the caller is not the owner of the stream)
+
+## Import
+
+DBaas logs output Graylog stream can be imported using the `service_name` of the cluster and `stream_id` of the graylog output stream, separated by "/" E.g.,
+
+```bash
+$ terraform import ovh_dbaas_logs_output_graylog_stream.ldp ldp-az-12345/9d2f9cf8-9f92-1337-c0f3-48a0213d2c6f
+```
