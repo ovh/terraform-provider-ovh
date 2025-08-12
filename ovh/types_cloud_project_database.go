@@ -79,6 +79,7 @@ type CloudProjectDatabaseResponse struct {
 	Plan                  string                                      `json:"plan"`
 	NodeNumber            int                                         `json:"nodeNumber"`
 	Region                string                                      `json:"region"`
+	DeletionProtection    bool                                        `json:"deletionProtection"`
 	RestAPI               bool                                        `json:"restApi"`
 	SchemaRegistry        bool                                        `json:"schemaRegistry"`
 	Status                string                                      `json:"status"`
@@ -110,6 +111,7 @@ func (r CloudProjectDatabaseResponse) toMap() map[string]interface{} {
 	obj["endpoints"] = endpoints
 
 	obj["flavor"] = r.Flavor
+	obj["deletion_protection"] = r.DeletionProtection
 	obj["kafka_rest_api"] = r.RestAPI
 	obj["kafka_schema_registry"] = r.SchemaRegistry
 	obj["maintenance_time"] = r.MaintenanceTime
@@ -274,17 +276,18 @@ func (opts *CloudProjectDatabaseCreateOpts) fromResource(d *schema.ResourceData)
 }
 
 type CloudProjectDatabaseUpdateOpts struct {
-	AclsEnabled     bool                                `json:"aclsEnabled,omitempty"`
-	Backups         *CloudProjectDatabaseBackups        `json:"backups,omitempty"`
-	Description     string                              `json:"description,omitempty"`
-	Disk            CloudProjectDatabaseDisk            `json:"disk,omitempty"`
-	Flavor          string                              `json:"flavor,omitempty"`
-	IPRestrictions  []CloudProjectDatabaseIPRestriction `json:"ipRestrictions,omitempty"`
-	MaintenanceTime string                              `json:"maintenanceTime,omitempty"`
-	Plan            string                              `json:"plan,omitempty"`
-	RestAPI         bool                                `json:"restApi,omitempty"`
-	SchemaRegistry  bool                                `json:"schemaRegistry,omitempty"`
-	Version         string                              `json:"version,omitempty"`
+	AclsEnabled        bool                                `json:"aclsEnabled,omitempty"`
+	Backups            *CloudProjectDatabaseBackups        `json:"backups,omitempty"`
+	Description        string                              `json:"description,omitempty"`
+	Disk               CloudProjectDatabaseDisk            `json:"disk,omitempty"`
+	Flavor             string                              `json:"flavor,omitempty"`
+	IPRestrictions     []CloudProjectDatabaseIPRestriction `json:"ipRestrictions,omitempty"`
+	MaintenanceTime    string                              `json:"maintenanceTime,omitempty"`
+	Plan               string                              `json:"plan,omitempty"`
+	DeletionProtection bool                                `json:"deletionProtection,omitempty"`
+	RestAPI            bool                                `json:"restApi,omitempty"`
+	SchemaRegistry     bool                                `json:"schemaRegistry,omitempty"`
+	Version            string                              `json:"version,omitempty"`
 }
 
 func (opts *CloudProjectDatabaseUpdateOpts) fromResource(d *schema.ResourceData) (*CloudProjectDatabaseUpdateOpts, error) {
@@ -302,6 +305,8 @@ func (opts *CloudProjectDatabaseUpdateOpts) fromResource(d *schema.ResourceData)
 	opts.Flavor = d.Get("flavor").(string)
 	opts.Version = d.Get("version").(string)
 	opts.Disk = CloudProjectDatabaseDisk{Size: d.Get("disk_size").(int)}
+
+	opts.DeletionProtection = d.Get("deletion_protection").(bool)
 
 	ipRests := d.Get("ip_restrictions").(*schema.Set).List()
 	opts.IPRestrictions = make([]CloudProjectDatabaseIPRestriction, len(ipRests))
