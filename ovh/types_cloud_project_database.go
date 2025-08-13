@@ -276,7 +276,7 @@ func (opts *CloudProjectDatabaseCreateOpts) fromResource(d *schema.ResourceData)
 }
 
 type CloudProjectDatabaseUpdateOpts struct {
-	AclsEnabled        bool                                `json:"aclsEnabled,omitempty"`
+	AclsEnabled        *bool                               `json:"aclsEnabled,omitempty"`
 	Backups            *CloudProjectDatabaseBackups        `json:"backups,omitempty"`
 	Description        string                              `json:"description,omitempty"`
 	Disk               CloudProjectDatabaseDisk            `json:"disk,omitempty"`
@@ -284,20 +284,23 @@ type CloudProjectDatabaseUpdateOpts struct {
 	IPRestrictions     []CloudProjectDatabaseIPRestriction `json:"ipRestrictions,omitempty"`
 	MaintenanceTime    string                              `json:"maintenanceTime,omitempty"`
 	Plan               string                              `json:"plan,omitempty"`
-	DeletionProtection bool                                `json:"deletionProtection,omitempty"`
-	RestAPI            bool                                `json:"restApi,omitempty"`
-	SchemaRegistry     bool                                `json:"schemaRegistry,omitempty"`
+	DeletionProtection *bool                               `json:"deletionProtection,omitempty"`
+	RestAPI            *bool                               `json:"restApi,omitempty"`
+	SchemaRegistry     *bool                               `json:"schemaRegistry,omitempty"`
 	Version            string                              `json:"version,omitempty"`
 }
 
 func (opts *CloudProjectDatabaseUpdateOpts) fromResource(d *schema.ResourceData) (*CloudProjectDatabaseUpdateOpts, error) {
 	engine := d.Get("engine").(string)
 	if engine == "opensearch" {
-		opts.AclsEnabled = d.Get("opensearch_acls_enabled").(bool)
+		AclsEnabledBool := d.Get("opensearch_acls_enabled").(bool)
+		opts.AclsEnabled = &AclsEnabledBool
 	}
 	if engine == "kafka" {
-		opts.RestAPI = d.Get("kafka_rest_api").(bool)
-		opts.SchemaRegistry = d.Get("kafka_schema_registry").(bool)
+		restAPIBool := d.Get("kafka_rest_api").(bool)
+		opts.RestAPI = &restAPIBool
+		shemaRegistryBool := d.Get("kafka_schema_registry").(bool)
+		opts.SchemaRegistry = &shemaRegistryBool
 	}
 
 	opts.Description = d.Get("description").(string)
@@ -306,7 +309,8 @@ func (opts *CloudProjectDatabaseUpdateOpts) fromResource(d *schema.ResourceData)
 	opts.Version = d.Get("version").(string)
 	opts.Disk = CloudProjectDatabaseDisk{Size: d.Get("disk_size").(int)}
 
-	opts.DeletionProtection = d.Get("deletion_protection").(bool)
+	deletionProtectionBool := d.Get("deletion_protection").(bool)
+	opts.DeletionProtection = &deletionProtectionBool
 
 	ipRests := d.Get("ip_restrictions").(*schema.Set).List()
 	opts.IPRestrictions = make([]CloudProjectDatabaseIPRestriction, len(ipRests))
