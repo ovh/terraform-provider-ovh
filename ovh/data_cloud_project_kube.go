@@ -266,6 +266,40 @@ func dataSourceCloudProjectKube() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"kubeconfig": {
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
+			},
+			"kubeconfig_attributes": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Sensitive:   true,
+				Description: "The kubeconfig configuration file of the Kubernetes cluster",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"host": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"cluster_ca_certificate": {
+							Type:      schema.TypeString,
+							Computed:  true,
+							Sensitive: true,
+						},
+						"client_certificate": {
+							Type:      schema.TypeString,
+							Computed:  true,
+							Sensitive: true,
+						},
+						"client_key": {
+							Type:      schema.TypeString,
+							Computed:  true,
+							Sensitive: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -294,6 +328,45 @@ func dataSourceCloudProjectKubeRead(d *schema.ResourceData, meta interface{}) er
 			d.SetId(fmt.Sprint(v))
 		}
 	}
+
+	// add kubeconfig in state
+	if err := dataSourceKubeconfig(d, meta); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func dataSourceKubeconfig(d *schema.ResourceData, meta interface{}) error {
+	serviceName := d.Get("service_name").(string)
+	var kubeId string
+
+	// For data source, use kube_id instead of d.Id()
+	if id := d.Get("kube_id"); id != nil {
+		kubeId = id.(string)
+	} else {
+		kubeId = d.Id()
+	}
+
+	kubeConfig, err := getKubeconfig(meta.(*Config), serviceName, kubeId)
+	if err != nil {
+		return err
+	}
+
+	if len(kubeConfig.Clusters) == 0 || len(kubeConfig.Users) == 0 {
+		return fmt.Errorf("kubeconfig is invalid")
+	}
+
+	// raw kubeconfig
+	d.Set("kubeconfig", kubeConfig.Raw)
+
+	// kubeconfig attributes
+	kubeconf := map[string]interface{}{}
+	kubeconf["host"] = kubeConfig.Clusters[0].Cluster.Server
+	kubeconf["cluster_ca_certificate"] = kubeConfig.Clusters[0].Cluster.CertificateAuthorityData
+	kubeconf["client_certificate"] = kubeConfig.Users[0].User.ClientCertificateData
+	kubeconf["client_key"] = kubeConfig.Users[0].User.ClientKeyData
+	_ = d.Set("kubeconfig_attributes", []map[string]interface{}{kubeconf})
 
 	return nil
 }
