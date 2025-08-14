@@ -37,7 +37,6 @@ The following arguments are supported:
 * `role_name` - The name of a role. See `role_names`.
 
 * `role_names` - A list of role names. Values can be:
-  - admin
   - administrator
   - ai_training_operator
   - ai_training_read
