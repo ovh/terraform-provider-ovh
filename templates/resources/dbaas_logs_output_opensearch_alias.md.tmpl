@@ -38,3 +38,11 @@ Id is set to the opensearch alias Id. In addition, the following attributes are 
 * `nb_stream` - Number of streams linked
 * `streams` - List of attached streams id
 * `updated_at` - Input last update
+
+## Import
+
+DBaaS logs Opensearch output alias can be imported using the `service_name` and `alias_id`, separated by "/" E.g.,
+
+```bash
+$ terraform import ovh_dbaas_logs_output_opensearch_alias.this ldp-XX-NNNNN/7e2301b6-c0fe-41d9-bc58-44fd844f1e3e
+```
