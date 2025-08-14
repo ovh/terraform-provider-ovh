@@ -49,7 +49,6 @@ func resourceDbaasLogsOutputGraylogStream() *schema.Resource {
 			"retention_id": {
 				Type:        schema.TypeString,
 				Description: "Retention ID",
-				Computed:    true,
 				Optional:    true,
 				ForceNew:    true,
 			},
@@ -59,7 +58,6 @@ func resourceDbaasLogsOutputGraylogStream() *schema.Resource {
 				Type:        schema.TypeString,
 				Description: "Cold storage compression method",
 				Optional:    true,
-				Computed:    true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
 					err := helpers.ValidateStringEnum(strings.ToUpper(v.(string)), []string{
 						"LZMA",
@@ -77,7 +75,6 @@ func resourceDbaasLogsOutputGraylogStream() *schema.Resource {
 				Type:        schema.TypeString,
 				Description: "ColdStorage content",
 				Optional:    true,
-				Computed:    true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
 					err := helpers.ValidateStringEnum(strings.ToUpper(v.(string)), []string{
 						"ALL",
@@ -93,25 +90,21 @@ func resourceDbaasLogsOutputGraylogStream() *schema.Resource {
 			"cold_storage_enabled": {
 				Type:        schema.TypeBool,
 				Description: "Is Cold storage enabled?",
-				Computed:    true,
 				Optional:    true,
 			},
 			"cold_storage_notify_enabled": {
 				Type:        schema.TypeBool,
 				Description: "Notify on new Cold storage archive",
-				Computed:    true,
 				Optional:    true,
 			},
 			"cold_storage_retention": {
 				Type:        schema.TypeInt,
 				Description: "Cold storage retention in year",
-				Computed:    true,
 				Optional:    true,
 			},
 			"cold_storage_target": {
 				Type:        schema.TypeString,
 				Description: "ColdStorage destination",
-				Computed:    true,
 				Optional:    true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
 					err := helpers.ValidateStringEnum(strings.ToUpper(v.(string)), []string{
@@ -127,31 +120,26 @@ func resourceDbaasLogsOutputGraylogStream() *schema.Resource {
 			"indexing_enabled": {
 				Type:        schema.TypeBool,
 				Description: "Enable ES indexing",
-				Computed:    true,
 				Optional:    true,
 			},
 			"indexing_max_size": {
 				Type:        schema.TypeInt,
 				Description: "Maximum indexing size (in GB)",
-				Computed:    true,
 				Optional:    true,
 			},
 			"indexing_notify_enabled": {
 				Type:        schema.TypeBool,
 				Description: "If set, notify when size is near 80, 90 or 100 % of the maximum configured setting",
-				Computed:    true,
 				Optional:    true,
 			},
 			"pause_indexing_on_max_size": {
 				Type:        schema.TypeBool,
 				Description: "If set, pause indexing when maximum size is reach",
-				Computed:    true,
 				Optional:    true,
 			},
 			"web_socket_enabled": {
 				Type:        schema.TypeBool,
 				Description: "Enable Websocket",
-				Computed:    true,
 				Optional:    true,
 			},
 
