@@ -77,6 +77,11 @@ func resourceCloudProjectDatabase() *schema.Resource {
 					},
 				},
 			},
+			"deletion_protection": {
+				Type:        schema.TypeBool,
+				Description: "Enable deletion protection",
+				Optional:    true,
+			},
 			"kafka_rest_api": {
 				Type:        schema.TypeBool,
 				Description: "Defines whether the REST API is enabled on a Kafka cluster",
@@ -305,7 +310,8 @@ func resourceCloudProjectDatabaseCreate(ctx context.Context, d *schema.ResourceD
 	if (engine != "mongodb" && len(d.Get("advanced_configuration").(map[string]interface{})) > 0) ||
 		(engine == "kafka" && d.Get("kafka_rest_api").(bool)) ||
 		(engine == "kafka" && d.Get("kafka_schema_registry").(bool)) ||
-		(engine == "opensearch" && d.Get("opensearch_acls_enabled").(bool)) {
+		(engine == "opensearch" && d.Get("opensearch_acls_enabled").(bool)) ||
+		d.Get("deletion_protection").(bool) {
 		return resourceCloudProjectDatabaseUpdate(ctx, d, meta)
 	}
 
