@@ -55,7 +55,7 @@ The following attributes are exported:
   * `description` - Description of the IP restriction
   * `ip` - Authorized IP
   * `status` - Current status of the IP restriction.
-* `deletion_protection` - Enable delation protection
+* `deletion_protection` - Enable deletion protection
 * `kafka_rest_api` - Defines whether the REST API is enabled on a kafka cluster.
 * `kafka_schema_registry` - Defines whether the schema registry is enabled on a Kafka cluster
 * `maintenance_time` - Time on which maintenances can start every day.
