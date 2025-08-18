@@ -408,29 +408,6 @@ func (v *CloudProjectRegionStorageModel) MergeWith(other *CloudProjectRegionStor
 		v.Name = other.Name
 	}
 
-	if (v.Objects.IsUnknown() || v.Objects.IsNull()) && !other.Objects.IsUnknown() {
-		v.Objects = other.Objects
-	} else if !other.Objects.IsUnknown() {
-		newSlice := make([]attr.Value, 0)
-		elems := v.Objects.Elements()
-		newElems := other.Objects.Elements()
-
-		if len(elems) != len(newElems) {
-			v.Objects = other.Objects
-		} else {
-			for idx, e := range elems {
-				tmp := e.(ObjectsValue)
-				tmp2 := newElems[idx].(ObjectsValue)
-				tmp.MergeWith(&tmp2)
-				newSlice = append(newSlice, tmp)
-			}
-
-			v.Objects = ovhtypes.TfListNestedValue[ObjectsValue]{
-				ListValue: basetypes.NewListValueMust(ObjectsValue{}.Type(context.Background()), newSlice),
-			}
-		}
-	}
-
 	if (v.ObjectsCount.IsUnknown() || v.ObjectsCount.IsNull()) && !other.ObjectsCount.IsUnknown() {
 		v.ObjectsCount = other.ObjectsCount
 	}
@@ -1944,10 +1921,9 @@ func (v *ReplicationValue) UnmarshalJSON(data []byte) error {
 }
 
 func (v *ReplicationValue) MergeWith(other *ReplicationValue) {
-
 	if (v.Rules.IsUnknown() || v.Rules.IsNull()) && !other.Rules.IsUnknown() {
 		v.Rules = other.Rules
-	} else if !other.Rules.IsUnknown() {
+	} else if !other.Rules.IsUnknown() && !other.Rules.IsNull() {
 		newSlice := make([]attr.Value, 0)
 		elems := v.Rules.Elements()
 		newElems := other.Rules.Elements()
