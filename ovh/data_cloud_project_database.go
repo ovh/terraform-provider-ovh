@@ -133,7 +133,7 @@ func dataSourceCloudProjectDatabase() *schema.Resource {
 			"deletion_protection": {
 				Type:        schema.TypeBool,
 				Description: "Enable deletion protection",
-				Optional:    true,
+				Computed:    true,
 			},
 			"kafka_rest_api": {
 				Type:        schema.TypeBool,
