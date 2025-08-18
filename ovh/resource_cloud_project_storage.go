@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -91,7 +92,19 @@ func (r *cloudProjectStorageResource) Read(ctx context.Context, req resource.Rea
 		return
 	}
 
-	endpoint := "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/region/" + url.PathEscape(data.RegionName.ValueString()) + "/storage/" + url.PathEscape(data.Name.ValueString())
+	// Add filters if defined
+	queryParams := url.Values{}
+	if !data.Limit.IsNull() && !data.Limit.IsUnknown() {
+		queryParams.Add("limit", strconv.FormatInt(data.Limit.ValueInt64(), 10))
+	}
+	if !data.Marker.IsNull() && !data.Marker.IsUnknown() {
+		queryParams.Add("marker", data.Marker.ValueString())
+	}
+	if !data.Prefix.IsNull() && !data.Prefix.IsUnknown() {
+		queryParams.Add("prefix", data.Prefix.ValueString())
+	}
+
+	endpoint := "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/region/" + url.PathEscape(data.RegionName.ValueString()) + "/storage/" + url.PathEscape(data.Name.ValueString()) + "?" + queryParams.Encode()
 	if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Get %s", endpoint),
@@ -100,10 +113,10 @@ func (r *cloudProjectStorageResource) Read(ctx context.Context, req resource.Rea
 		return
 	}
 
-	data.MergeWith(&responseData)
+	responseData.MergeWith(&data)
 
 	// Save updated data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)
 }
 
 func (r *cloudProjectStorageResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -131,8 +144,20 @@ func (r *cloudProjectStorageResource) Update(ctx context.Context, req resource.U
 		return
 	}
 
+	// Add filters if defined
+	queryParams := url.Values{}
+	if !planData.Limit.IsNull() && !planData.Limit.IsUnknown() {
+		queryParams.Add("limit", strconv.FormatInt(planData.Limit.ValueInt64(), 10))
+	}
+	if !planData.Marker.IsNull() && !planData.Marker.IsUnknown() {
+		queryParams.Add("marker", planData.Marker.ValueString())
+	}
+	if !planData.Prefix.IsNull() && !planData.Prefix.IsUnknown() {
+		queryParams.Add("prefix", planData.Prefix.ValueString())
+	}
+
 	// Read updated resource
-	endpoint = "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/region/" + url.PathEscape(data.RegionName.ValueString()) + "/storage/" + url.PathEscape(data.Name.ValueString())
+	endpoint = "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/region/" + url.PathEscape(data.RegionName.ValueString()) + "/storage/" + url.PathEscape(data.Name.ValueString()) + "?" + queryParams.Encode()
 	if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Get %s", endpoint),
