@@ -2,6 +2,7 @@ package ovh
 
 import (
 	"fmt"
+	"math/rand"
 	"net/url"
 	"os"
 	"testing"
@@ -242,6 +243,7 @@ func TestAccCloudProjectInstance_privateNetworkCreate(t *testing.T) {
 	}
 
 	networkName := acctest.RandomWithPrefix(test_prefix)
+	vlanID := rand.Intn(4000)
 
 	var testCreateInstance = fmt.Sprintf(`
 			resource "ovh_cloud_project_instance" "instance" {
@@ -262,7 +264,7 @@ func TestAccCloudProjectInstance_privateNetworkCreate(t *testing.T) {
 					private {
 						network_create {
 							name = "%s"
-							vlan_id = 1237
+							vlan_id = %d
 							subnet{
 								ip_version = 4
 								cidr = "10.0.0.1/20"
@@ -278,7 +280,8 @@ func TestAccCloudProjectInstance_privateNetworkCreate(t *testing.T) {
 		image,
 		flavor,
 		os.Getenv("OVH_CLOUD_PROJECT_SSH_NAME_TEST"),
-		networkName)
+		networkName,
+		vlanID)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
