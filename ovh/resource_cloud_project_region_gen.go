@@ -22,6 +22,11 @@ import (
 
 func CloudProjectRegionResourceSchema(ctx context.Context) schema.Schema {
 	attrs := map[string]schema.Attribute{
+		"id": schema.StringAttribute{
+			CustomType:  ovhtypes.TfStringType{},
+			Computed:    true,
+			Description: "Unique identifier for the resource",
+		},
 		"availability_zones": schema.ListAttribute{
 			CustomType:          ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
 			Computed:            true,
@@ -136,6 +141,7 @@ func CloudProjectRegionResourceSchema(ctx context.Context) schema.Schema {
 }
 
 type CloudProjectRegionModel struct {
+	ID                 ovhtypes.TfStringValue                             `tfsdk:"id" json:"-"`
 	AvailabilityZones  ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] `tfsdk:"availability_zones" json:"availabilityZones"`
 	ContinentCode      ovhtypes.TfStringValue                             `tfsdk:"continent_code" json:"continentCode"`
 	CountryCode        ovhtypes.TfStringValue                             `tfsdk:"country_code" json:"countryCode"`
@@ -151,6 +157,9 @@ type CloudProjectRegionModel struct {
 }
 
 func (v *CloudProjectRegionModel) MergeWith(other *CloudProjectRegionModel) {
+	if (v.ID.IsUnknown() || v.ID.IsNull()) && !other.ID.IsUnknown() {
+		v.ID = other.ID
+	}
 
 	if (v.AvailabilityZones.IsUnknown() || v.AvailabilityZones.IsNull()) && !other.AvailabilityZones.IsUnknown() {
 		v.AvailabilityZones = other.AvailabilityZones
