@@ -37,3 +37,6 @@ examples/kube-nodepool-deployment/.terraform.lock.hcl
 examples/kube-nodepool-deployment/.terraform.tfstate.lock.info
 examples/kube-nodepool-deployment/logs
 examples/kube-nodepool-deployment/my-kube-cluster-*.yml
+
+# Documentation exclusions
+docs/resources/dedicated_server_networking.md
