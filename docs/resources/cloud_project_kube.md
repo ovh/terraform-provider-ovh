@@ -8,7 +8,7 @@ Creates a OVHcloud Managed Kubernetes Service cluster in a public cloud project.
 
 ## Example Usage
 
-Create a simple Kubernetes cluster in `GRA11` region:
+Create a simple Kubernetes Free cluster in `GRA11` region:
 
 ```terraform
 resource "ovh_cloud_project_kube" "my_cluster" {
@@ -26,7 +26,7 @@ resource "ovh_cloud_project_kube_nodepool" "node_pool_1" {
 }
 ```
 
-Create a simple Kubernetes cluster in `GRA11` region and export its kubeconfig file:
+Create a simple Kubernetes Free cluster in `GRA11` region and export its kubeconfig file:
 
 ```terraform
 resource "ovh_cloud_project_kube" "my_cluster" {
@@ -41,7 +41,7 @@ output "kubeconfig_file" {
 }
 ```
 
-Create a simple Kubernetes cluster in `GRA11` region and read kubeconfig attributes:
+Create a simple Kubernetes Free cluster in `GRA11` region and read kubeconfig attributes:
 
 -> Sensitive attributes cannot be displayed using `terraform output` command. You need to specify the output's name: `terraform output my_cluster_host`.
 
@@ -73,7 +73,7 @@ output "my_cluster_client_key" {
 }
 ```
 
-Create a simple Kubernetes cluster in `GRA11` region and use kubeconfig with [Helm provider](https://registry.terraform.io/providers/hashicorp/helm/latest/docs):
+Create a simple Kubernetes Free cluster in `GRA11` region and use kubeconfig with [Helm provider](https://registry.terraform.io/providers/hashicorp/helm/latest/docs):
 
 ```terraform
 resource "ovh_cloud_project_kube" "my_cluster" {
@@ -94,7 +94,7 @@ provider "helm" {
 # Ready to use Helm provider
 ```
 
-Create a Kubernetes cluster in `GRA11` region with API Server AdmissionPlugins configuration:
+Create a Kubernetes Free cluster in `GRA11` region with API Server AdmissionPlugins configuration:
 
 ```terraform
 resource "ovh_cloud_project_kube" "my_cluster" {
@@ -110,7 +110,7 @@ resource "ovh_cloud_project_kube" "my_cluster" {
 }
 ```
 
-Create a Kubernetes cluster in `GRA11` region with Kube proxy configuration, by specifying iptables or ipvs configurations:
+Create a Kubernetes Free cluster in `GRA11` region with Kube proxy configuration, by specifying iptables or ipvs configurations:
 
 ```terraform
 resource "ovh_cloud_project_kube" "my_cluster" {
@@ -137,7 +137,7 @@ resource "ovh_cloud_project_kube" "my_cluster" {
 }
 ```
 
-Kubernetes cluster creation on a private network / subnet in `GRA11` region with a managed gateway:
+Kubernetes Free cluster creation on a private network / subnet in `GRA11` region with a managed gateway:
 
 ```terraform
 resource "ovh_cloud_project_network_private" "network" {
@@ -183,7 +183,7 @@ resource "ovh_cloud_project_kube" "my_cluster" {
 }
 ```
 
-Create a multi-zone Kubernetes cluster (on 3 availability zones):
+Create a multi-zone Kubernetes Standard cluster (on 3 availability zones):
 
 ```terraform
 resource "ovh_cloud_project_network_private" "network" {
@@ -219,6 +219,7 @@ resource "ovh_cloud_project_kube" "my_multizone_cluster" {
   service_name  = ovh_cloud_project_network_private.network.service_name
   name          = "multi-zone-mks"
   region        = "EU-WEST-PAR"
+  plan          = "standard"
 
   private_network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
   nodes_subnet_id    = ovh_cloud_project_network_private_subnet.subnet.id
@@ -267,6 +268,7 @@ The following arguments are supported:
 * `name` - (Optional) The name of the kubernetes cluster.
 * `region` - a valid OVHcloud public cloud region ID in which the kubernetes cluster will be available. Ex.: "GRA9". Defaults to all public cloud regions. **Changing this value recreates the resource.**
 * `version` - (Optional) kubernetes version to use. Changing this value updates the resource. Defaults to the latest available.
+* `plan` - (Optional) Plan of the MKS cluster `free` or `standard`. Default to `free`. Migration to another plan is not implemented yet.
 * `kube_proxy_mode` - (Optional) Selected mode for kube-proxy. **Changing this value recreates the resource, including ETCD user data.** Defaults to `iptables`.
 * `customization` - **Deprecated** (Optional) Use `customization_apiserver` and `customization_kube_proxy` instead. Kubernetes cluster customization
   * `apiserver` - Kubernetes API server customization

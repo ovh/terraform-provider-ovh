@@ -80,7 +80,6 @@ Id is set to the order Id. In addition, the following attributes are exported:
 * `last_update` - Last update date of the DNS zone
 * `name` - Zone name
 * `name_servers` - Name servers that host the DNS zone
-* `urn` - URN of the DNS Zone to be used inside an IAM policy
 
 * `order` - Details about an Order
   * `date` - date

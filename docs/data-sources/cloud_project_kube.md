@@ -35,6 +35,7 @@ The following attributes are exported:
 * `name` - The name of the managed kubernetes cluster.
 * `region` - The OVHcloud public cloud region ID of the managed kubernetes cluster.
 * `version` - Kubernetes version of the managed kubernetes cluster.
+* `plan` - Plan of the managed kubernetes cluster.
 * `private_network_id` - OpenStack private network (or vrack) ID to use.
 * `load_balancers_subnet_id` - Openstack private network (or vRack) ID to use for load balancers.
 * `nodes_subnet_id` - Openstack private network (or vRack) ID to use for nodes.
