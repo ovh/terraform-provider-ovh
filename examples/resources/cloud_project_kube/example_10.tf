@@ -32,6 +32,7 @@ resource "ovh_cloud_project_kube" "my_multizone_cluster" {
   service_name  = ovh_cloud_project_network_private.network.service_name
   name          = "multi-zone-mks"
   region        = "EU-WEST-PAR"
+  plan          = "standard"
 
   private_network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
   nodes_subnet_id    = ovh_cloud_project_network_private_subnet.subnet.id

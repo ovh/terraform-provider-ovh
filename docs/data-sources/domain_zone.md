@@ -27,4 +27,3 @@ data "ovh_domain_zone" "root_zone" {
 * `has_dns_anycast` - hasDnsAnycast flag of the DNS zone
 * `name_servers` - Name servers that host the DNS zone
 * `dnssec_supported` - Is DNSSEC supported by this zone
-* `urn` - URN of the DNS Zone to be used inside an IAM policy

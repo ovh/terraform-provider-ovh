@@ -30,6 +30,13 @@ func dataSourceCloudProjectKube() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"plan": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     false,
+				Default:      "free",
+				ValidateFunc: helpers.ValidateEnum([]string{"standard", "free"}),
+			},
 			kubeClusterProxyModeKey: {
 				Type:         schema.TypeString,
 				Optional:     true,

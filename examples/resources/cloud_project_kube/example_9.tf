@@ -2,6 +2,7 @@ resource "ovh_cloud_project_kube" "my_multizone_cluster" {
   service_name       = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
   name               = "terraform-multi-zone-cluster"
   region             = "EU-WEST-PAR"
+  plan               = "standard"
 
   private_network_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
   nodes_subnet_id    = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" //Subnet must has a OVHcloud Gateway/OpenStack router

@@ -37,8 +37,8 @@ resource "ovh_dbaas_logs_output_graylog_stream" "stream" {
 
 The following arguments are supported:
 * `service_name` - (Required) The service name
-* `title` - (Required) Stream name
 * `description` - (Required) Stream description
+* `title` - (Required) Stream description
 * `parent_stream_id` - Parent stream ID
 * `retention_id` - Retention ID
 * `cold_storage_compression` - Cold storage compression method. One of "LZMA", "GZIP", "DEFLATED", "ZSTD"
@@ -50,7 +50,7 @@ The following arguments are supported:
 * `indexing_enabled` - Enable ES indexing
 * `indexing_max_size` - Maximum indexing size (in GB)
 * `indexing_notify_enabled` - If set, notify when size is near 80, 90 or 100 % of the maximum configured setting
-* `pause_indexing_on_max_size` - If set, pause indexing when maximum size is reached
+* `pause_indexing_on_max_size` - If set, pause indexing when maximum size is reach
 * `web_socket_enabled` - Enable Websocket
 
 ## Attributes Reference
@@ -66,11 +66,3 @@ Id is set to the output stream Id. In addition, the following attributes are exp
 * `stream_id` - Stream ID
 * `updated_at` - Stream last updater
 * `write_token` - Write token of the stream (empty if the caller is not the owner of the stream)
-
-## Import
-
-DBaas logs output Graylog stream can be imported using the `service_name` of the cluster and `stream_id` of the graylog output stream, separated by "/" E.g.,
-
-```bash
-$ terraform import ovh_dbaas_logs_output_graylog_stream.ldp ldp-az-12345/9d2f9cf8-9f92-1337-c0f3-48a0213d2c6f
-```
