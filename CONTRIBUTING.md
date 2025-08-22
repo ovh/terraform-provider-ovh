@@ -19,6 +19,7 @@ This project accepts contributions. In order to contribute, you should pay atten
 - The examples of resources and datasources in the documentation must follow the [Terraform style guidelines](https://developer.hashicorp.com/terraform/language/style)
 - Check your documentation through [Terraform Doc Preview Tool](https://registry.terraform.io/tools/doc-preview)
 - When adding a documentation page, use the `subcategory:` tag in the [YAML Frontmatter](https://developer.hashicorp.com/terraform/registry/providers/docs#yaml-frontmatter) with a value equals to the product name defined in the OVHcloud [product map](https://www.product-map.ovh/)
+- New documentation pages should be added first in the directory `templates/`, with the examples being placed in the `examples/` directory. Once this is done, the content in `docs/` directory must be generated with [tfplugindocs](https://github.com/hashicorp/terraform-plugin-docs?tab=readme-ov-file#usage).
 
 ## Acceptance tests:
 

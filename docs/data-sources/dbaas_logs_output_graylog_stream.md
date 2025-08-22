@@ -18,7 +18,7 @@ data "ovh_dbaas_logs_output_graylog_stream" "stream" {
 ## Argument Reference
 
 * `service_name` - The service name. It's the ID of your Logs Data Platform instance.
-* `title` - Stream description
+* `title` - Stream name
 
 ## Attributes Reference
 
