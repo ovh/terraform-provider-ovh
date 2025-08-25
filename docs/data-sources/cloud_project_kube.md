@@ -17,6 +17,15 @@ data "ovh_cloud_project_kube" "my_kube_cluster" {
 output "version" {
   value = data.ovh_cloud_project_kube.my_kube_cluster.version
 }
+
+output "kubeconfig" {
+  value = data.ovh_cloud_project_kube.my_kube_cluster.kubeconfig
+  sensitive = true
+}
+
+output "kube_host" {
+  value = data.ovh_cloud_project_kube.my_kube_cluster.kubeconfig_attributes[0].host
+}
 ```
 
 ## Argument Reference
@@ -46,6 +55,12 @@ The following attributes are exported:
 * `status` - Cluster status. Should be normally set to 'READY'.
 * `update_policy` - Cluster update policy. Choose between [ALWAYS_UPDATE,MINIMAL_DOWNTIME,NEVER_UPDATE]'.
 * `url` - Management URL of your cluster.
+* `kubeconfig` - (Sensitive) Raw kubeconfig file content for connecting to the cluster.
+* `kubeconfig_attributes` - (Sensitive) Structured kubeconfig data for connecting to the cluster.
+  * `host` - Kubernetes API server endpoint.
+  * `cluster_ca_certificate` - (Sensitive) Cluster certificate authority data.
+  * `client_certificate` - (Sensitive) Client certificate data for authentication.
+  * `client_key` - (Sensitive) Client private key data for authentication.
 * `kube_proxy_mode` - Selected mode for kube-proxy.
 * `customization` - **Deprecated** (Optional) Use `customization_apiserver` and `customization_kube_proxy` instead. Kubernetes cluster customization
   * `apiserver` - Kubernetes API server customization
