@@ -1,3 +1,37 @@
+## 2.7.0 (August 25, 2025)
+
+🎉 Features:
+
+* New datasource: `ovh_dbaas_logs_output_graylog_stream_url` ([#1072](https://github.com/ovh/terraform-provider-ovh/pull/1072))
+
+💪 Improvements:
+
+* `r/ovh_cloud_project_region`: Add `id` property ([#1091](https://github.com/ovh/terraform-provider-ovh/pull/1091))
+* `r/ovh_cloud_project_kube`: Add `plan` attribute ([#1090](https://github.com/ovh/terraform-provider-ovh/pull/1090))
+* `d/ovh_cloud_project_kube`: Add `plan` attribute ([#1090](https://github.com/ovh/terraform-provider-ovh/pull/1090))
+* `d/ovh_cloud_project_kube`: Add attributes `plan`, `kubeconfig` and `kubeconfig_attributes` ([#1059](https://github.com/ovh/terraform-provider-ovh/pull/1059), [#1090](https://github.com/ovh/terraform-provider-ovh/pull/1090))
+
+🐜 Bug fixes:
+
+* `r/ovh_domain_zone`: Recreate resource when deleted outside Terraform ([#1067](https://github.com/ovh/terraform-provider-ovh/pull/1067))
+* `r/ovh_cloud_project_instance`: Ensure resource is correctly deleted ([#1068](https://github.com/ovh/terraform-provider-ovh/pull/1068))
+* `r/ovh_cloud_project_storage`: Correctly use parameters to filter returned objects ([#1088](https://github.com/ovh/terraform-provider-ovh/pull/1088))
+* Fix several acceptance tests ([#1089](https://github.com/ovh/terraform-provider-ovh/pull/1089), [#1094](https://github.com/ovh/terraform-provider-ovh/pull/1094))
+
+📚 Documentation:
+
+* Updated contribution guidelines ([#1078](https://github.com/ovh/terraform-provider-ovh/pull/1078))
+* `r/ovh_dbaas_logs_output_graylog_stream`: Add import documentation ([#1079](https://github.com/ovh/terraform-provider-ovh/pull/1079))
+* `r/ovh_dbaas_logs_output_opensearch_alias`: Add import documentation ([#1084](https://github.com/ovh/terraform-provider-ovh/pull/1084))
+* `r/ovh_dbaas_logs_output_graylog_stream`: Fix invalid description of field `title` ([#1070](https://github.com/ovh/terraform-provider-ovh/pull/1070), [#1071](https://github.com/ovh/terraform-provider-ovh/pull/1071))
+* `r/ovh_me_api_oauth2_client` Add missing field `identity` in documentation ([#1077](https://github.com/ovh/terraform-provider-ovh/pull/1077))
+* `d/ovh_me_api_oauth2_client` Add missing field `identity` in documentation ([#1077](https://github.com/ovh/terraform-provider-ovh/pull/1077))
+* `r/ovh_domain_zone` Add missing field `urn` in documentation ([#1077](https://github.com/ovh/terraform-provider-ovh/pull/1077))
+* `d/ovh_domain_zone` Add missing field `urn` in documentation ([#1077](https://github.com/ovh/terraform-provider-ovh/pull/1077))
+* `r/ovh_cloud_project_user`: Update list of roles ([#1081](https://github.com/ovh/terraform-provider-ovh/pull/1081))
+
+❤️ Thanks for your contributions ❤️
+
 ## 2.6.0 (July 25, 2025)
 
 ⚙️ General:
