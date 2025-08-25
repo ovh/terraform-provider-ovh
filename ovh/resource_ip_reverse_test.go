@@ -89,10 +89,11 @@ func TestAccIpReverse_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:        "ovh_ip_reverse.reverse",
-				ImportState:         true,
-				ImportStateIdPrefix: block + "|",
-				ImportStateVerify:   true,
+				ResourceName:            "ovh_ip_reverse.reverse",
+				ImportState:             true,
+				ImportStateIdPrefix:     block + "|",
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"readiness_timeout_duration"},
 			},
 		},
 	})

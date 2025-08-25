@@ -5,19 +5,21 @@ import (
 	"os"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func TestAccResourceDbaasLogsToken_basic(t *testing.T) {
 	serviceName := os.Getenv("OVH_DBAAS_LOGS_SERVICE_TEST")
+	tokenName := acctest.RandomWithPrefix(test_prefix)
 
 	config := fmt.Sprintf(`
 		resource "ovh_dbaas_logs_token" "tok" {
 			service_name = "%s"
-			name         = "TestToken"
+			name         = "%s"
 		}
-	`, serviceName)
+	`, serviceName, tokenName)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheckDbaasLogs(t) },
@@ -26,7 +28,7 @@ func TestAccResourceDbaasLogsToken_basic(t *testing.T) {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_dbaas_logs_token.tok", "name", "TestToken"),
+					resource.TestCheckResourceAttr("ovh_dbaas_logs_token.tok", "name", tokenName),
 					resource.TestCheckResourceAttr("ovh_dbaas_logs_token.tok", "service_name", serviceName),
 					resource.TestCheckResourceAttrSet("ovh_dbaas_logs_token.tok", "value"),
 					resource.TestCheckResourceAttrSet("ovh_dbaas_logs_token.tok", "token_id"),
