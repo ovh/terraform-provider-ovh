@@ -107,7 +107,7 @@ func resourceCloudProjectRegionLoadbalancerSubscriptionsCreate(ctx context.Conte
 	log.Printf("[DEBUG] Will create Log subscription : %+v for loadbalancer %s on region %s from project %s", params, loadbalancerID, regionName, serviceName)
 	err := config.OVHClient.Post(endpoint, params, res)
 	if err != nil {
-		diag.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
+		return diag.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
 	}
 
 	log.Printf("[DEBUG] Waiting for Log subscription operation %s to be READY", res.OperationID)

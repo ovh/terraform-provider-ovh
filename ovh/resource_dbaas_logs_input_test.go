@@ -44,7 +44,7 @@ resource "ovh_dbaas_logs_input" "input" {
 			input_section = <<EOF
 				beats {
 					port => 6514
-					ssl => true
+					ssl_enabled => true
 					ssl_certificate => "/etc/ssl/private/server.crt"
 					ssl_key => "/etc/ssl/private/server.key"
 				}
@@ -85,7 +85,7 @@ resource "ovh_dbaas_logs_input" "input" {
 			input_section = <<EOF
 				beats {
 					port => 6514
-					ssl => true
+					ssl_enabled => true
 					ssl_certificate => "/etc/ssl/private/server.crt"
 					ssl_key => "/etc/ssl/private/server.key"
 				}
@@ -126,7 +126,7 @@ resource "ovh_dbaas_logs_input" "input" {
 			input_section = <<EOF
 				beats {
 					port => 6514
-					ssl => true
+					ssl_enabled => true
 					ssl_certificate => "/etc/ssl/private/server.crt"
 					ssl_key => "/etc/ssl/private/server.key"
 				}

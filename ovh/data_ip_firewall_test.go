@@ -9,7 +9,7 @@ import (
 )
 
 func TestAccIPFirewall_data(t *testing.T) {
-	ip := os.Getenv("OVH_IP_TEST")
+	ip := os.Getenv("OVH_IP_FIREWALL_TEST")
 	testAccIPFirewallConfig := fmt.Sprintf(`
 		resource "ovh_ip_firewall" "firewall" {
 			ip             = "%s"
