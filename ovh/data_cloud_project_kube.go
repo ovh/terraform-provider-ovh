@@ -366,7 +366,7 @@ func dataSourceKubeconfig(d *schema.ResourceData, meta interface{}) error {
 	kubeconf["cluster_ca_certificate"] = kubeConfig.Clusters[0].Cluster.CertificateAuthorityData
 	kubeconf["client_certificate"] = kubeConfig.Users[0].User.ClientCertificateData
 	kubeconf["client_key"] = kubeConfig.Users[0].User.ClientKeyData
-	_ = d.Set("kubeconfig_attributes", []map[string]interface{}{kubeconf})
+	d.Set("kubeconfig_attributes", []map[string]interface{}{kubeconf})
 
 	return nil
 }

@@ -6,3 +6,12 @@ data "ovh_cloud_project_kube" "my_kube_cluster" {
 output "version" {
   value = data.ovh_cloud_project_kube.my_kube_cluster.version
 }
+
+output "kubeconfig" {
+  value = data.ovh_cloud_project_kube.my_kube_cluster.kubeconfig
+  sensitive = true
+}
+
+output "kube_host" {
+  value = data.ovh_cloud_project_kube.my_kube_cluster.kubeconfig_attributes[0].host
+}
