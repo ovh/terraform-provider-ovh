@@ -2,6 +2,7 @@ package ovh
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
 	"testing"
 
@@ -10,13 +11,14 @@ import (
 
 func TestAccCloudProjectLoadBalancer_basic(t *testing.T) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	vlanId := rand.Intn(4000)
 
 	config := fmt.Sprintf(`
 		resource "ovh_cloud_project_network_private" "mypriv" {
 			service_name = "%s"
 			name         = "network_test"
 			regions      = ["GRA11", "GRA9"]
-			vlan_id      = 100
+			vlan_id      = %d
 		}
 
 		resource "ovh_cloud_project_network_private_subnet" "myprivsub" {
@@ -61,7 +63,7 @@ func TestAccCloudProjectLoadBalancer_basic(t *testing.T) {
 				}
 			]
 		}
-	`, serviceName)
+	`, serviceName, vlanId)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheckCloud(t); testAccCheckCloudProjectExists(t) },

@@ -780,7 +780,19 @@ workflow:
     environment: acctests
     one_at_a_time: true
     parameters:
-      testargs: -run 'TestAccIPFirewall|TestAccIPMitigation'
+      testargs: -run 'TestAccIPFirewall'
+      skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.ip}}"
+    pipeline: terraform-provider-ovh-testacc
+    when:
+    - success
+  Tests_IPMitigation:
+    application: terraform-provider-ovh
+    depends_on:
+    - terraform-provider-ovh-pre-sweepers
+    environment: acctests
+    one_at_a_time: true
+    parameters:
+      testargs: -run 'TestAccIPMitigation'
       skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.ip}}"
     pipeline: terraform-provider-ovh-testacc
     when:
@@ -913,6 +925,7 @@ workflow:
     - Tests_TestAccResourceIpService_basic
     - Tests_TestAccIpMove_basic
     - Tests_IPFirewall
+    - Tests_IPMitigation
     - Tests_Okms
     - Tests_SavingsPlan
     - Tests_CloudProjectRancher

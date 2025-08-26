@@ -6,8 +6,10 @@ import (
 	"net"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 )
 
@@ -243,14 +245,23 @@ func resourceCloudProjectNetworkPrivateSubnetDelete(d *schema.ResourceData, meta
 		url.PathEscape(id),
 	)
 
-	if err := config.OVHClient.Delete(endpoint, nil); err != nil {
-		return fmt.Errorf("calling DELETE %s:\n\t %q", endpoint, err)
+	// Retry deletion as it can take some time before all related resources are cleaned up
+	for range 10 {
+		if err := config.OVHClient.Delete(endpoint, nil); err != nil {
+			if ovhErr, ok := err.(*ovh.APIError); ok && ovhErr.Code == 400 {
+				log.Printf("[DEBUG] Still waiting for subnet %s to be deletable: %q", id, ovhErr.Message)
+				time.Sleep(30 * time.Second)
+				continue
+			}
+			return fmt.Errorf("calling DELETE %s:\n\t %q", endpoint, err)
+		}
+
+		d.SetId("")
+		log.Printf("[DEBUG] Deleted Public Cloud %s Private Network %s Subnet %s", serviceName, networkId, id)
+		return nil
 	}
 
-	d.SetId("")
-
-	log.Printf("[DEBUG] Deleted Public Cloud %s Private Network %s Subnet %s", serviceName, networkId, id)
-	return nil
+	return fmt.Errorf("timeout deleting subnet %s", id)
 }
 
 func resourceCloudProjectNetworkPrivateSubnetValidateIP(v interface{}, k string) (ws []string, errors []error) {

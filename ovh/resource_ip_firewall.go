@@ -143,7 +143,7 @@ func (r *ipFirewallResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 
 	// Read updated resource
-	err := retry.RetryContext(ctx, time.Minute, func() *retry.RetryError {
+	err := retry.RetryContext(ctx, 10*time.Minute, func() *retry.RetryError {
 		if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
 			return retry.NonRetryableError(err)
 		}
