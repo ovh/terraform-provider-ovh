@@ -43,13 +43,13 @@ resource "ovh_cloud_project_network_private" "mypriv" {
 	service_name  = ovh_vrack_cloudproject.attach.project_id
 	vlan_id       = "%d"
 	name          = "%s"
-	regions       = ["GRA11"]
+	regions       = ["GRA9"]
 }
 
 resource "ovh_cloud_project_network_private_subnet" "myprivsub" {
 	service_name  = ovh_cloud_project_network_private.mypriv.service_name
 	network_id    = ovh_cloud_project_network_private.mypriv.id
-	region        = "GRA11"
+	region        = "GRA9"
 	start         = "10.0.0.2"
 	end           = "10.0.0.8"
 	network       = "10.0.0.0/24"
@@ -59,7 +59,7 @@ resource "ovh_cloud_project_network_private_subnet" "myprivsub" {
 resource "ovh_cloud_project_network_private_subnet" "my_other_privsub" {
 	service_name  = ovh_cloud_project_network_private.mypriv.service_name
 	network_id    = ovh_cloud_project_network_private.mypriv.id
-	region        = "GRA11"
+	region        = "GRA9"
 	start         = "10.0.1.10"
 	end           = "10.0.1.254"
 	network       = "10.0.1.0/24"
