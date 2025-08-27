@@ -70,3 +70,41 @@ func TestAccIpMove_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccIpMove_block(t *testing.T) {
+	ipBlock := os.Getenv("OVH_IP_BLOCK_MOVE_TEST")
+	routedToServiceName := os.Getenv("OVH_IP_MOVE_SERVICE_NAME_TEST")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheckIpMove(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+					resource "ovh_ip_move" "move" {
+						ip = "%s"
+						routed_to {
+							service_name = "%s"
+						}
+					}`,
+					ipBlock, routedToServiceName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_ip_move.move", "routed_to.0.service_name", routedToServiceName),
+				),
+			},
+			{
+				Config: fmt.Sprintf(`
+					resource "ovh_ip_move" "move" {
+						ip = "%s"
+						routed_to {
+							service_name = ""
+						}
+					}`,
+					ipBlock),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_ip_move.move", "routed_to.0.service_name", ""),
+				),
+			},
+		},
+	})
+}

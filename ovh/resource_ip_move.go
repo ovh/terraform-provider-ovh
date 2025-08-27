@@ -115,7 +115,13 @@ func resourceIpMoveSchema() map[string]*schema.Schema {
 func resoursIpMoveCreate(d *schema.ResourceData, meta interface{}) error {
 	// later on this ID will be replaced by the task if when we need to create it (see resourceIpMoveUpdate)
 	d.SetId(d.Get("ip").(string))
-	return resourceIpMoveUpdate(d, meta)
+
+	err := resourceIpMoveUpdate(d, meta)
+	if err != nil {
+		d.SetId("")
+	}
+
+	return err
 }
 
 // resourceIpMoveUpdate will move an ip to a provided service name or detach (= park) it otherwise
@@ -160,7 +166,7 @@ func resourceIpMoveUpdate(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		log.Printf("[WARNING] - resource ID %s is not an int64/not a task ID. Cannot get last task state", d.Id())
 	}
-	err = resourceIpServiceReadByServiceName(d, *serviceName, config)
+	err = resourceIpServiceReadByServiceName(d, serviceName, config)
 	if err != nil {
 		return err
 	}
@@ -168,11 +174,11 @@ func resourceIpMoveUpdate(d *schema.ResourceData, meta interface{}) error {
 	currentlyRoutedService := GetRoutedToServiceName(d)
 	// no need to update if ip is already routed to the appropriate service
 	if reflect.DeepEqual(currentlyRoutedService, opts.To) {
-		log.Printf("[DEBUG] Won't do anything as ip %s (service name = %s) is already routed to service %v", ip, *serviceName, currentlyRoutedService)
+		log.Printf("[DEBUG] Won't do anything as ip %s (service name = %s) is already routed to service %v", ip, serviceName, currentlyRoutedService)
 		return nil
 	} else {
 		if opts.To == nil {
-			log.Printf("[DEBUG] Will move ip %s (service name = %s) from service %s to IP parking", ip, *serviceName, *currentlyRoutedService)
+			log.Printf("[DEBUG] Will move ip %s (service name = %s) from service %s to IP parking", ip, serviceName, *currentlyRoutedService)
 			endpoint := fmt.Sprintf("/ip/%s/park",
 				url.PathEscape(ip),
 			)
@@ -181,7 +187,7 @@ func resourceIpMoveUpdate(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("calling Post %s: %q", endpoint, err)
 			}
 		} else {
-			log.Printf("[DEBUG] Will move ip %s (service name = %s) from service %v to service %s", ip, *serviceName, currentlyRoutedService, *opts.To)
+			log.Printf("[DEBUG] Will move ip %s (service name = %s) from service %v to service %s", ip, serviceName, currentlyRoutedService, *opts.To)
 			endpoint := fmt.Sprintf("/ip/%s/move",
 				url.PathEscape(ip),
 			)
@@ -269,7 +275,7 @@ func resourceIpRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	config := meta.(*Config)
-	return resourceIpServiceReadByServiceName(d, *serviceName, config)
+	return resourceIpServiceReadByServiceName(d, serviceName, config)
 }
 
 // resourceIpMoveDelete is an empty implementation as move do not actually create API objects but rather updates the underlying ip spec (by modifying its routed_to service)
