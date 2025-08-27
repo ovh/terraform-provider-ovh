@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/ovhwrap"
@@ -44,6 +46,18 @@ func (d *cloudProjectVolumeResource) Configure(_ context.Context, req resource.C
 
 func (d *cloudProjectVolumeResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = CloudProjectVolumeResourceSchema(ctx)
+}
+
+func (r *cloudProjectVolumeResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	splits := strings.Split(req.ID, "/")
+	if len(splits) != 3 {
+		resp.Diagnostics.AddError("Given ID is malformed", "ID must be formatted like the following: <service_name>/<region_name>/<volume_id>")
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_name"), splits[0])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("region_name"), splits[1])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("volume_id"), splits[2])...)
 }
 
 func (r *cloudProjectVolumeResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

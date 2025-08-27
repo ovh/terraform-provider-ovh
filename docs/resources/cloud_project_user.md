@@ -72,3 +72,21 @@ The following attributes are exported:
 * `service_name` - See Argument Reference above.
 * `status` - the status of the user. should be normally set to 'ok'.
 * `username` - the username generated for the user. This username can be used with the Openstack API.
+
+## Import
+
+The resource can be imported using the public cloud project ID and the user ID, e.g.,
+
+```terraform
+import {
+  to = ovh_cloud_project_user.user
+  id = "<public cloud project ID>/<user ID>"
+}
+```
+
+```bash
+$ terraform plan -generate-config-out=user.tf
+$ terraform apply
+```
+
+The file `user.tf` will then contain the imported resource's configuration, that can be copied next to the `import` block above. See https://developer.hashicorp.com/terraform/language/import/generating-configuration for more details.

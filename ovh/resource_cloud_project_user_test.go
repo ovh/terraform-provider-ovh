@@ -45,6 +45,13 @@ func TestAccCloudProjectUser_basic(t *testing.T) {
 					testAccCheckCloudProjectUserOpenRC("ovh_cloud_project_user.user", t),
 				),
 			},
+			{
+				ResourceName:            "ovh_cloud_project_user.user",
+				ImportStateIdPrefix:     os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST") + "/",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
 		},
 	})
 }

@@ -1,4 +1,4 @@
-resource "ovh_cloud_project_volume" "vol" {
+resource "ovh_cloud_project_volume" "volume" {
    region_name  = "xxx"
    service_name = "yyyyy"
    description  = "Terraform volume"
