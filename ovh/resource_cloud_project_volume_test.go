@@ -64,6 +64,13 @@ func TestAccCloudProjectVolume_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("ovh_cloud_project_volume.volume", "size", "20"),
 				),
 			},
+			{
+				ResourceName:            "ovh_cloud_project_volume.volume",
+				ImportStateIdPrefix:     serviceName + "/" + regionName + "/",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"type", "description"},
+			},
 		},
 	})
 }

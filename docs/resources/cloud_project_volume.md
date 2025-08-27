@@ -9,7 +9,7 @@ Create volume in a public cloud project.
 ## Example Usage
 
 ```terraform
-resource "ovh_cloud_project_volume" "vol" {
+resource "ovh_cloud_project_volume" "volume" {
    region_name  = "xxx"
    service_name = "yyyyy"
    description  = "Terraform volume"
@@ -40,3 +40,21 @@ The following attributes are exported:
 * `name` - Name of the volume
 * `size` - Size of the volume
 * `id` - id of the volume
+
+## Import
+
+The resource can be imported using the public cloud project ID, region and the volume ID, e.g.,
+
+```terraform
+import {
+  to = ovh_cloud_project_volume.volume
+  id = "<public cloud project ID>/<region>/<volume ID>"
+}
+```
+
+```bash
+$ terraform plan -generate-config-out=volume.tf
+$ terraform apply
+```
+
+The file `volume.tf` will then contain the imported resource's configuration, that can be copied next to the `import` block above. See https://developer.hashicorp.com/terraform/language/import/generating-configuration for more details.
