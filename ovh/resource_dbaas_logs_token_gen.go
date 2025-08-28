@@ -21,7 +21,6 @@ func DbaasLogsTokenResourceSchema(ctx context.Context) schema.Schema {
 		"cluster_id": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
 			Optional:            true,
-			Computed:            true,
 			Description:         "Cluster ID",
 			MarkdownDescription: "Cluster ID",
 			PlanModifiers: []planmodifier.String{
