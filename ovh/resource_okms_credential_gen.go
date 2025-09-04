@@ -41,6 +41,16 @@ func handleCsrReplace(ctx context.Context, req planmodifier.StringRequest, resp 
 
 func OkmsCredentialResourceSchema(ctx context.Context) schema.Schema {
 	attrs := map[string]schema.Attribute{
+		"certificate_type": schema.StringAttribute{
+			CustomType:          ovhtypes.TfStringType{},
+			Optional:            true,
+			Computed:            true,
+			Description:         "Type of the certificate (ECDSA or RSA)",
+			MarkdownDescription: "Type of the certificate (ECDSA or RSA)",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.RequiresReplaceIfConfigured(),
+			},
+		},
 		"certificate_pem": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
 			Computed:            true,
@@ -169,25 +179,30 @@ func OkmsCredentialResourceSchema(ctx context.Context) schema.Schema {
 }
 
 type OkmsCredentialResourceModel struct {
-	CertificatePem ovhtypes.TfStringValue                             `tfsdk:"certificate_pem" json:"certificatePem"`
-	CreatedAt      ovhtypes.TfStringValue                             `tfsdk:"created_at" json:"createdAt"`
-	Csr            ovhtypes.TfStringValue                             `tfsdk:"csr" json:"csr"`
-	Description    ovhtypes.TfStringValue                             `tfsdk:"description" json:"description"`
-	ExpiredAt      ovhtypes.TfStringValue                             `tfsdk:"expired_at" json:"expiredAt"`
-	FromCsr        ovhtypes.TfBoolValue                               `tfsdk:"from_csr" json:"fromCsr"`
-	Id             ovhtypes.TfStringValue                             `tfsdk:"id" json:"id"`
-	IdentityUrns   ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] `tfsdk:"identity_urns" json:"identityURNs"`
-	Name           ovhtypes.TfStringValue                             `tfsdk:"name" json:"name"`
-	OkmsId         ovhtypes.TfStringValue                             `tfsdk:"okms_id" json:"okmsId"`
-	PrivateKeyPem  ovhtypes.TfStringValue                             `tfsdk:"private_key_pem" json:"privateKeyPem"`
-	Status         ovhtypes.TfStringValue                             `tfsdk:"status" json:"status"`
-	Validity       ovhtypes.TfInt64Value                              `tfsdk:"validity" json:"validity"`
+	CertificatePem  ovhtypes.TfStringValue                             `tfsdk:"certificate_pem" json:"certificatePem"`
+	CertificateType ovhtypes.TfStringValue                             `tfsdk:"certificate_type" json:"certificateType"`
+	CreatedAt       ovhtypes.TfStringValue                             `tfsdk:"created_at" json:"createdAt"`
+	Csr             ovhtypes.TfStringValue                             `tfsdk:"csr" json:"csr"`
+	Description     ovhtypes.TfStringValue                             `tfsdk:"description" json:"description"`
+	ExpiredAt       ovhtypes.TfStringValue                             `tfsdk:"expired_at" json:"expiredAt"`
+	FromCsr         ovhtypes.TfBoolValue                               `tfsdk:"from_csr" json:"fromCsr"`
+	Id              ovhtypes.TfStringValue                             `tfsdk:"id" json:"id"`
+	IdentityUrns    ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] `tfsdk:"identity_urns" json:"identityURNs"`
+	Name            ovhtypes.TfStringValue                             `tfsdk:"name" json:"name"`
+	OkmsId          ovhtypes.TfStringValue                             `tfsdk:"okms_id" json:"okmsId"`
+	PrivateKeyPem   ovhtypes.TfStringValue                             `tfsdk:"private_key_pem" json:"privateKeyPem"`
+	Status          ovhtypes.TfStringValue                             `tfsdk:"status" json:"status"`
+	Validity        ovhtypes.TfInt64Value                              `tfsdk:"validity" json:"validity"`
 }
 
 func (o *OkmsCredentialResourceModel) MergeWith(other *OkmsCredentialResourceModel) {
 
 	if (o.CertificatePem.IsUnknown() || o.CertificatePem.IsNull()) && !other.CertificatePem.IsUnknown() {
 		o.CertificatePem = other.CertificatePem
+	}
+
+	if (o.CertificateType.IsUnknown() || o.CertificateType.IsNull()) && !other.CertificateType.IsUnknown() {
+		o.CertificateType = other.CertificateType
 	}
 
 	if (o.CreatedAt.IsUnknown() || o.CreatedAt.IsNull()) && !other.CreatedAt.IsUnknown() {
@@ -241,11 +256,12 @@ func (o *OkmsCredentialResourceModel) MergeWith(other *OkmsCredentialResourceMod
 }
 
 type OkmsCredentialWritableResourceModel struct {
-	Csr          *ovhtypes.TfStringValue                             `tfsdk:"csr" json:"csr,omitempty"`
-	Description  *ovhtypes.TfStringValue                             `tfsdk:"description" json:"description,omitempty"`
-	IdentityUrns *ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] `tfsdk:"identity_urns" json:"identityURNs,omitempty"`
-	Name         *ovhtypes.TfStringValue                             `tfsdk:"name" json:"name,omitempty"`
-	Validity     *ovhtypes.TfInt64Value                              `tfsdk:"validity" json:"validity,omitempty"`
+	Csr             *ovhtypes.TfStringValue                             `tfsdk:"csr" json:"csr,omitempty"`
+	CertificateType *ovhtypes.TfStringValue                             `tfsdk:"certificate_type" json:"certificateType,omitempty"`
+	Description     *ovhtypes.TfStringValue                             `tfsdk:"description" json:"description,omitempty"`
+	IdentityUrns    *ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] `tfsdk:"identity_urns" json:"identityURNs,omitempty"`
+	Name            *ovhtypes.TfStringValue                             `tfsdk:"name" json:"name,omitempty"`
+	Validity        *ovhtypes.TfInt64Value                              `tfsdk:"validity" json:"validity,omitempty"`
 }
 
 func (v OkmsCredentialResourceModel) ToCreate() *OkmsCredentialWritableResourceModel {
@@ -253,6 +269,10 @@ func (v OkmsCredentialResourceModel) ToCreate() *OkmsCredentialWritableResourceM
 
 	if !v.Csr.IsUnknown() {
 		res.Csr = &v.Csr
+	}
+
+	if !v.CertificateType.IsUnknown() {
+		res.CertificateType = &v.CertificateType
 	}
 
 	if !v.Description.IsUnknown() {
@@ -279,6 +299,10 @@ func (v OkmsCredentialResourceModel) ToUpdate() *OkmsCredentialWritableResourceM
 
 	if !v.Csr.IsUnknown() {
 		res.Csr = &v.Csr
+	}
+
+	if !v.CertificateType.IsUnknown() {
+		res.CertificateType = &v.CertificateType
 	}
 
 	if !v.Description.IsUnknown() {

@@ -16,6 +16,22 @@ resource "ovh_okms_credential" "cred_no_csr" {
   name          = "cred"
   identity_urns = ["urn:v1:eu:identity:account:${data.ovh_me.current_account.nichandle}"]
   description   = "Credential without CSR"
+  certificate_type = "ECDSA"
+}
+
+# Write the generated certificate and private key to local files
+provider "local" {}
+
+resource "local_file" "credential_certificate" {
+  content         = ovh_okms_credential.cred_no_csr.certificate_pem
+  filename        = "${path.module}/certificate.pem"
+  file_permission = "0600"
+}
+
+resource "local_sensitive_file" "credential_private_key" {
+  content         = ovh_okms_credential.cred_no_csr.private_key_pem
+  filename        = "${path.module}/private.key"
+  file_permission = "0600"
 }
 
 resource "ovh_okms_credential" "cred_from_csr" {
@@ -24,6 +40,7 @@ resource "ovh_okms_credential" "cred_from_csr" {
   identity_urns = ["urn:v1:eu:identity:account:${data.ovh_me.current_account.nichandle}"]
   csr           = file("cred.csr")
   description   = "Credential from CSR"
+  certificate_type = "ECDSA"
 }
 ```
 
@@ -40,9 +57,11 @@ resource "ovh_okms_credential" "cred_from_csr" {
 - `csr` (String) Certificate Signing Request. The CSR should be encoded in the PEM format. If this argument is not set, the server will generate a CSR for this credential, and the corresponding private key will be returned in the `private_key_pem` attribute.
 - `description` (String) Description of the credential (max 200 characters)
 - `validity` (Number) Validity in days (default: 365 days, max: 365 days)
+- `certificate_type` (String) Type of the certificate key algorithm. Allowed values: `ECDSA`, `RSA`. Default to `ECDSA`. Changing forces a new credential.
 
 ## Attributes Reference
 
+- `certificate_type` (String) Type of the certificate key algorithm (`ECDSA` or `RSA`).
 - `certificate_pem` (String) Certificate PEM of the credential.
 - `created_at` (String) Creation time of the credential
 - `expired_at` (String) Expiration time of the credential

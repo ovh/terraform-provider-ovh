@@ -10,6 +10,12 @@ import (
 
 func okmsCredentialAttributes(ctx context.Context) map[string]schema.Attribute {
 	return map[string]schema.Attribute{
+		"certificate_type": schema.StringAttribute{
+			CustomType:          ovhtypes.TfStringType{},
+			Computed:            true,
+			Description:         "Type of the certificate (ECDSA or RSA)",
+			MarkdownDescription: "Type of the certificate (ECDSA or RSA)",
+		},
 		"certificate_pem": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
 			Computed:            true,
@@ -84,19 +90,24 @@ func OkmsCredentialDataSourceSchema(ctx context.Context) schema.Schema {
 }
 
 type OkmsCredentialModel struct {
-	CertificatePem ovhtypes.TfStringValue                             `tfsdk:"certificate_pem" json:"certificatePem"`
-	CreatedAt      ovhtypes.TfStringValue                             `tfsdk:"created_at" json:"createdAt"`
-	Description    ovhtypes.TfStringValue                             `tfsdk:"description" json:"description"`
-	ExpiredAt      ovhtypes.TfStringValue                             `tfsdk:"expired_at" json:"expiredAt"`
-	FromCsr        ovhtypes.TfBoolValue                               `tfsdk:"from_csr" json:"fromCsr"`
-	Id             ovhtypes.TfStringValue                             `tfsdk:"id" json:"id"`
-	IdentityUrns   ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] `tfsdk:"identity_urns" json:"identityURNs"`
-	Name           ovhtypes.TfStringValue                             `tfsdk:"name" json:"name"`
-	OkmsId         ovhtypes.TfStringValue                             `tfsdk:"okms_id" json:"okmsId"`
-	Status         ovhtypes.TfStringValue                             `tfsdk:"status" json:"status"`
+	CertificateType ovhtypes.TfStringValue                             `tfsdk:"certificate_type" json:"certificateType"`
+	CertificatePem  ovhtypes.TfStringValue                             `tfsdk:"certificate_pem" json:"certificatePem"`
+	CreatedAt       ovhtypes.TfStringValue                             `tfsdk:"created_at" json:"createdAt"`
+	Description     ovhtypes.TfStringValue                             `tfsdk:"description" json:"description"`
+	ExpiredAt       ovhtypes.TfStringValue                             `tfsdk:"expired_at" json:"expiredAt"`
+	FromCsr         ovhtypes.TfBoolValue                               `tfsdk:"from_csr" json:"fromCsr"`
+	Id              ovhtypes.TfStringValue                             `tfsdk:"id" json:"id"`
+	IdentityUrns    ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] `tfsdk:"identity_urns" json:"identityURNs"`
+	Name            ovhtypes.TfStringValue                             `tfsdk:"name" json:"name"`
+	OkmsId          ovhtypes.TfStringValue                             `tfsdk:"okms_id" json:"okmsId"`
+	Status          ovhtypes.TfStringValue                             `tfsdk:"status" json:"status"`
 }
 
 func (o *OkmsCredentialModel) MergeWith(other *OkmsCredentialModel) {
+
+	if (o.CertificateType.IsUnknown() || o.CertificateType.IsNull()) && !other.CertificateType.IsUnknown() {
+		o.CertificateType = other.CertificateType
+	}
 
 	if (o.CertificatePem.IsUnknown() || o.CertificatePem.IsNull()) && !other.CertificatePem.IsUnknown() {
 		o.CertificatePem = other.CertificatePem

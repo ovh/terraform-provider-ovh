@@ -83,6 +83,7 @@ func kmsCredStateNoCsrChecks(resName string) []statecheck.StateCheck {
 func kmsCredDatasourceChecks(resName string, datasourceName string) []statecheck.StateCheck {
 	checks := []statecheck.StateCheck{}
 	for _, key := range []string{
+		"certificate_type",
 		"certificate_pem",
 		"created_at",
 		"description",
@@ -214,6 +215,24 @@ resource "ovh_okms_credential" "cred" {
 }
 `
 
+// Configuration template for certificate_type testing
+const confOkmsCredCertType = `
+data "ovh_me" "current_account" {}
+
+resource "ovh_okms" "kms" {
+	ovh_subsidiary = "FR"
+	display_name   = "%[1]s"
+	region         = "eu-west-sbg"
+}
+
+resource "ovh_okms_credential" "cred" {
+	okms_id         = ovh_okms.kms.id
+	name            = "%[2]s"
+	identity_urns   = ["urn:v1:eu:identity:account:${data.ovh_me.current_account.nichandle}"]
+	certificate_type = "%[3]s"
+}
+`
+
 func TestAccOkmsCredImport(t *testing.T) {
 	kmsId := os.Getenv("OVH_OKMS")
 	credId := os.Getenv("OVH_OKMS_CREDENTIAL")
@@ -227,6 +246,51 @@ func TestAccOkmsCredImport(t *testing.T) {
 				ImportState:   true,
 				ImportStateId: fmt.Sprintf("%s/%s", kmsId, credId),
 				Config:        fmt.Sprintf(confOkmsCredImport, kmsId),
+			},
+		},
+	})
+}
+
+// Test that setting certificate_type works and changing it forces replacement.
+func TestAccOkmsCredCertificateType(t *testing.T) {
+	kmsName := acctest.RandomWithPrefix(test_prefix)
+	credName := acctest.RandomWithPrefix(test_prefix)
+
+	cfgRSA := fmt.Sprintf(confOkmsCredCertType, kmsName, credName, "RSA")
+	cfgECDSA := fmt.Sprintf(confOkmsCredCertType, kmsName, credName, "ECDSA")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheckCredentials(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: cfgRSA,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"ovh_okms_credential.cred",
+						tfjsonpath.New("certificate_type"),
+						knownvalue.StringExact("RSA"),
+					),
+				},
+			},
+			{
+				Config: cfgECDSA,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+						plancheck.ExpectResourceAction(
+							"ovh_okms_credential.cred",
+							plancheck.ResourceActionReplace,
+						),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"ovh_okms_credential.cred",
+						tfjsonpath.New("certificate_type"),
+						knownvalue.StringExact("ECDSA"),
+					),
+				},
 			},
 		},
 	})
