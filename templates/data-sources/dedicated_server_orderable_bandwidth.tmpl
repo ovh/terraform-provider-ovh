@@ -1,0 +1,28 @@
+---
+subcategory : "Dedicated Server"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_dedicated_server_orderable_bandwidth (Data Source)
+
+Use this data source to get the hardward information about a dedicated server associated with your OVHcloud Account.
+
+## Example Usage
+
+{{tffile "examples/data-sources/dedicated_server_orderable_bandwidth/example_1.tf"}}
+
+## Argument Reference
+
+* `service_name` - (Required) The internal name of your dedicated server.
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `orderable` - Whether or not additional bandwidth is orderable
+* `platinium` - Additional orderable platinium bandwidth
+* `ultimate` - Additional orderable ultimate bandwidth
+* `premium` - Additional orderable premium bandwidth
