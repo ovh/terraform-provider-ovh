@@ -6,6 +6,7 @@ import (
 	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/datasources/cloud_project_rancher"
 )
 
 var _ datasource.DataSourceWithConfigure = (*cloudProjectRancherDataSource)(nil)
@@ -40,11 +41,11 @@ func (d *cloudProjectRancherDataSource) Configure(_ context.Context, req datasou
 }
 
 func (d *cloudProjectRancherDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = CloudProjectRancherDataSourceSchema(ctx)
+	resp.Schema = cloud_project_rancher.CloudProjectRancherDataSourceSchema(ctx)
 }
 
 func (d *cloudProjectRancherDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data CloudProjectRancherModel
+	var data cloud_project_rancher.CloudProjectRancherModel
 
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)

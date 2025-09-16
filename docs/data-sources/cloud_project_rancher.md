@@ -38,6 +38,7 @@ data "ovh_cloud_project_rancher" "rancher" {
 Read-Only:
 
 - `bootstrap_password` (String, Sensitive) Bootstrap password of the managed Rancher service, returned only on creation
+- `iam_auth_enabled` (Bool) Allows Rancher to use identities managed by OVHcloud IAM (Identity and Access Management) to control access
 - `ip_restrictions` (Attributes List) List of allowed CIDR blocks for a managed Rancher service's IP restrictions. When empty, any IP is allowed (see [below for nested schema](#nestedatt--current_state--ip_restrictions))
 - `name` (String) Name of the managed Rancher service
 - `networking` (Attributes) Networking properties of a managed Rancher service (see [below for nested schema](#nestedatt--current_state--networking))
@@ -90,6 +91,7 @@ Read-Only:
 
 Read-Only:
 
+- `iam_auth_enabled` (Bool) Allows Rancher to use identities managed by OVHcloud IAM (Identity and Access Management) to control access
 - `ip_restrictions` (Attributes List) List of allowed CIDR blocks for a managed Rancher service's IP restrictions. When empty, any IP is allowed (see [below for nested schema](#nestedatt--target_spec--ip_restrictions))
 - `name` (String) Name of the managed Rancher service
 - `plan` (String) Plan of the managed Rancher service. Available plans for an existing managed Rancher can be retrieved using GET /rancher/rancherID/capabilities/plan
