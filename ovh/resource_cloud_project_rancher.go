@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/resources/cloud_project_rancher"
 )
 
 var _ resource.ResourceWithConfigure = (*cloudProjectRancherResource)(nil)
@@ -44,7 +45,7 @@ func (r *cloudProjectRancherResource) Configure(_ context.Context, req resource.
 }
 
 func (r *cloudProjectRancherResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = CloudProjectRancherResourceSchema(ctx)
+	resp.Schema = cloud_project_rancher.CloudProjectRancherResourceSchema(ctx)
 }
 
 func (r *cloudProjectRancherResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
@@ -59,7 +60,7 @@ func (r *cloudProjectRancherResource) ImportState(ctx context.Context, req resou
 }
 
 func (r *cloudProjectRancherResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data, responseData CloudProjectRancherModel
+	var data, responseData cloud_project_rancher.CloudProjectRancherModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
@@ -99,7 +100,7 @@ func (r *cloudProjectRancherResource) Create(ctx context.Context, req resource.C
 }
 
 func (r *cloudProjectRancherResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data, responseData CloudProjectRancherModel
+	var data, responseData cloud_project_rancher.CloudProjectRancherModel
 
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
@@ -120,7 +121,7 @@ func (r *cloudProjectRancherResource) Read(ctx context.Context, req resource.Rea
 }
 
 func (r *cloudProjectRancherResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, planData, responseData CloudProjectRancherModel
+	var data, planData, responseData cloud_project_rancher.CloudProjectRancherModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &planData)...)
@@ -136,8 +137,8 @@ func (r *cloudProjectRancherResource) Update(ctx context.Context, req resource.U
 
 	// Version is mandatory when updating resource, so use the current one if not defined in config
 	updateData := planData.ToUpdate()
-	if updateData.TargetSpec.Version == nil {
-		updateData.TargetSpec.Version = &data.CurrentState.Version
+	if updateData.TargetSpec.Version.IsNull() || updateData.TargetSpec.Version.IsUnknown() {
+		updateData.TargetSpec.Version = data.CurrentState.Version
 	}
 
 	// Update resource
@@ -167,7 +168,7 @@ func (r *cloudProjectRancherResource) Update(ctx context.Context, req resource.U
 }
 
 func (r *cloudProjectRancherResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data CloudProjectRancherModel
+	var data cloud_project_rancher.CloudProjectRancherModel
 
 	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
