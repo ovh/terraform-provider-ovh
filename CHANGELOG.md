@@ -1,3 +1,34 @@
+## 2.8.0 (September 25, 2025)
+
+🎉 Features:
+
+* New datasource: `ovh_dedicated_server_orderable_bandwidth` ([#1109](https://github.com/ovh/terraform-provider-ovh/pull/1109))
+* New datasource: `ovh_dedicated_server_orderable_bandwidth_vrack` ([#1109](https://github.com/ovh/terraform-provider-ovh/pull/1109))
+
+💪 Improvements:
+
+* `r/ovh_cloud_project_volume`: Add import capability ([#1102](https://github.com/ovh/terraform-provider-ovh/pull/1102))
+* `r/ovh_okms_credential` Add property `certificate_type` ([#1108](https://github.com/ovh/terraform-provider-ovh/pull/1108))
+* `r/ovh_cloud_project_database` Add property `deletion_protection` ([#1082](https://github.com/ovh/terraform-provider-ovh/pull/1082))
+* `r/ovh_cloud_project_rancher` Add property `iam_auth_enabled` ([#1116](https://github.com/ovh/terraform-provider-ovh/pull/1116))
+
+* `d/ovh_okms_credential` Add property `certificate_type` ([#1108](https://github.com/ovh/terraform-provider-ovh/pull/1108))
+* `d/ovh_cloud_project_database` Add property `deletion_protection` ([#1082](https://github.com/ovh/terraform-provider-ovh/pull/1082))
+* `d/ovh_cloud_project_rancher` Add property `iam_auth_enabled` ([#1116](https://github.com/ovh/terraform-provider-ovh/pull/1116))
+
+🐜 Bug fixes:
+
+* `r/ovh_ip_move`: Correctly handle IP blocks ([#1101](https://github.com/ovh/terraform-provider-ovh/pull/1101))
+* Fix acceptance tests ([#1098](https://github.com/ovh/terraform-provider-ovh/pull/1098), [#1100](https://github.com/ovh/terraform-provider-ovh/pull/1100))
+* Readme: use `dev_overrides` to test locally built provider ([#1110](https://github.com/ovh/terraform-provider-ovh/pull/1110))
+
+📚 Documentation:
+
+* `r/ovh_cloud_project_user`: Add import documentation ([#1102](https://github.com/ovh/terraform-provider-ovh/pull/1102))
+* `r/ovh_dedicated_server`: Explain how to retrieve plans and plan options ([#1111](https://github.com/ovh/terraform-provider-ovh/pull/1111))
+
+❤️ Thanks for your contributions ❤️
+
 ## 2.7.0 (August 25, 2025)
 
 🎉 Features:
