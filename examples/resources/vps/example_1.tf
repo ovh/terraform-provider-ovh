@@ -1,26 +1,15 @@
 data "ovh_me" "my_account" {}
 
-data "ovh_order_cart" "mycart" {
-  ovh_subsidiary = data.ovh_me.my_account.ovh_subsidiary
-}
-
-data "ovh_order_cart_product_plan" "vps" {
-  cart_id        = data.ovh_order_cart.mycart.id
-  price_capacity = "renew"
-  product        = "vps"
-  plan_code      = "vps-le-2-2-40"
-}
-
 resource "ovh_vps" "my_vps" {
   display_name = "dev_vps"
 
   image_id = "45b2f222-ab10-44ed-863f-720942762b6f"
 
-  ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
+  ovh_subsidiary = data.ovh_me.my_account.ovh_subsidiary
   plan = [
     {
       duration     = "P1M"
-      plan_code    = data.ovh_order_cart_product_plan.vps.plan_code
+      plan_code    = "vps-le-2-2-40"
       pricing_mode = "default"
 
       configuration = [
@@ -30,7 +19,7 @@ resource "ovh_vps" "my_vps" {
         },
         {
           label = "vps_os"
-          value = "Debian 10"
+          value = "Debian 13"
         }
       ]
     }

@@ -98,6 +98,9 @@ func (r *vpsResource) Create(ctx context.Context, req resource.CreateRequest, re
 		StringValue: basetypes.NewStringValue(serviceName),
 	}
 
+	// Save early data into Terraform state, to make sure a reapply will not reorder a new VPS
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+
 	// Update resource
 	endpoint := "/vps/" + url.PathEscape(data.ServiceName.ValueString())
 	if err := r.config.OVHClient.Put(endpoint, data.ToUpdate(), nil); err != nil {

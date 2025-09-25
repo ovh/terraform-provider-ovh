@@ -12,34 +12,23 @@ Creates an OVHcloud Virtual Private Server (VPS).
 
 ~> **WARNING** `BANK_ACCOUNT` is not supported anymore, please update your default payment method to `SEPA_DIRECT_DEBIT`
 
-~> **NOTE** During VPS creation, the OS must be configured through the `plan.configuration` argument, using `vps_os` as key, and values from [catalog](https://eu.api.ovh.com/console/?section=%2Forder&branch=v1#get-/order/catalog/public/vps) data). The `image_id` argument should be used only when reinstalling a server. The available values for `image_id` can be found using this [API call](https://eu.api.ovh.com/console/?section=%2Fvps&branch=v1#get-/vps/-serviceName-/images/available)
+~> **NOTE** During VPS creation, the OS must be configured through the `plan.configuration` argument, using `vps_os` as key, and values from [catalog](https://eu.api.ovh.com/console/?section=%2Forder&branch=v1#get-/order/catalog/public/vps) data). If you provide a `public_ssh_key` during VPS creation, you will have to provide `image_id` as well. The `image_id` argument should be used only when reinstalling a server. The available values for `image_id` can be found using this [API call](https://eu.api.ovh.com/console/?section=%2Fvps&branch=v1#get-/vps/-serviceName-/images/available)
 
 ## Example Usage
 
 ```terraform
 data "ovh_me" "my_account" {}
 
-data "ovh_order_cart" "mycart" {
-  ovh_subsidiary = data.ovh_me.my_account.ovh_subsidiary
-}
-
-data "ovh_order_cart_product_plan" "vps" {
-  cart_id        = data.ovh_order_cart.mycart.id
-  price_capacity = "renew"
-  product        = "vps"
-  plan_code      = "vps-le-2-2-40"
-}
-
 resource "ovh_vps" "my_vps" {
   display_name = "dev_vps"
 
   image_id = "45b2f222-ab10-44ed-863f-720942762b6f"
 
-  ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
+  ovh_subsidiary = data.ovh_me.my_account.ovh_subsidiary
   plan = [
     {
       duration     = "P1M"
-      plan_code    = data.ovh_order_cart_product_plan.vps.plan_code
+      plan_code    = "vps-le-2-2-40"
       pricing_mode = "default"
 
       configuration = [
@@ -49,7 +38,7 @@ resource "ovh_vps" "my_vps" {
         },
         {
           label = "vps_os"
-          value = "Debian 10"
+          value = "Debian 13"
         }
       ]
     }
@@ -68,7 +57,7 @@ output "vps_display_name" {
 The following arguments are supported:
 
 * `display_name` - Custom display name
-* `image_id` - (String) Id of the image to install on the VPS. This attribute is only useful to trigger a VPS reinstallation. The available values can be found using this [API call](https://eu.api.ovh.com/console/?section=%2Fvps&branch=v1#get-/vps/-serviceName-/images/available)
+* `image_id` - (String) Id of the image to install on the VPS. This attribute is useful to trigger a VPS reinstallation, and during VPS creation if you want to configure a `public_ssh_key`. The available values can be found using this [API call](https://eu.api.ovh.com/console/?section=%2Fvps&branch=v1#get-/vps/-serviceName-/images/available)
 * `netboot_mode` - VPS netboot mode (local┃rescue)
 * `ovh_subsidiary` - (Required) OVHcloud Subsidiary. Country of OVHcloud legal entity you'll be billed by. List of supported subsidiaries available on API at [/1.0/me.json](https://eu.api.ovh.com/console-preview/?section=%2Fme&branch=v1#get-/me)
 * `plan` - (Required) Product Plan to order
