@@ -15,7 +15,7 @@ builds:
   flags:
     - -trimpath
   ldflags:
-    - '-s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X github.com/ovh/terraform-provider-ovh/ovh.providerVersion={{.Version}} -X github.com/ovh/terraform-provider-ovh/ovh.providerCommit={{.Commit}}'
+    - '-s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X github.com/ovh/terraform-provider-ovh/v2/ovh.providerVersion={{.Version}} -X github.com/ovh/terraform-provider-ovh/v2/ovh.providerCommit={{.Commit}}'
   goos:
     - freebsd
     - windows
@@ -39,7 +39,7 @@ checksum:
 signs:
   - artifacts: checksum
     args:
-      # if you are using this in a GitHub action or some other automated pipeline, you 
+      # if you are using this in a GitHub action or some other automated pipeline, you
       # need to pass the batch flag to indicate its not interactive.
       - "--batch"
       - "--local-user"
