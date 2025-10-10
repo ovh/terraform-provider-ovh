@@ -269,7 +269,7 @@ The following attributes are exported:
   * `description` - See Argument Reference above.
   * `ip` - See Argument Reference above.
   * `status` - Current status of the IP restriction.
-* `deletion_protection` - See Argument Reference above.
+* `deletion_protection` - Enable deletion protection
 * `kafka_rest_api` - See Argument Reference above.
 * `kafka_schema_registry` - See Argument Reference above.
 * `maintenance_time` - Time on which maintenances can start every day.

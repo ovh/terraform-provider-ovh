@@ -8,7 +8,9 @@ For example, the {{ .SchemaMarkdown }} template can be used to replace manual sc
 
 # ovh_cloud_project_database_ip_restriction
 
-Deprecated: Use ip_restriction field in cloud_project_database resource instead. Continuing to use the ovh_cloud_project_database_ip_restriction resource to add an IP restriction to a cloud_project_database resource will cause the cloud_project_database resource to be updated on every apply
+~> **DEPRECATED** Use `ip_restrictions` field in `ovh_cloud_project_database` resource instead. Using the `ovh_cloud_project_database_ip_restriction` resource to add an IP restriction to a `ovh_cloud_project_database` resource will cause its update on each apply
+
+~> **NOTE** This resource is only compatible with the following engines: **cassandra, grafana, kafka, kakfaConnect, m3db, mongodb, mysql, opensearch, postgres, redis**
 
 Apply IP restrictions to an OVHcloud Managed Database cluster.
 

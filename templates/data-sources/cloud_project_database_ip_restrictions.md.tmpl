@@ -8,7 +8,9 @@ For example, the {{ .SchemaMarkdown }} template can be used to replace manual sc
 
 # ovh_cloud_project_database_ip_restrictions (Data Source)
 
-Deprecated: Use ip_restrictions field in cloud_project_database datasource instead.
+~> **DEPRECATED** Use `ip_restrictions` field in `ovh_cloud_project_database` resource instead.
+
+~> **NOTE** This resource is only compatible with the following engines: **cassandra, grafana, kafka, kakfaConnect, m3db, mongodb, mysql, opensearch, postgres, redis**
 
 Use this data source to get the list of IP restrictions associated with a public cloud project.
 
