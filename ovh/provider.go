@@ -276,6 +276,7 @@ func Provider() *schema.Provider {
 			"ovh_hosting_privatedatabase_whitelist":                          resourceHostingPrivateDatabaseWhitelist(),
 			"ovh_iam_policy":                                                 resourceIamPolicy(),
 			"ovh_iam_permissions_group":                                      resourceIamPermissionsGroup(),
+			"ovh_iam_resource_tags":                                          resourceIamResourceTags(),
 			"ovh_iam_resource_group":                                         resourceIamResourceGroup(),
 			"ovh_ip_reverse":                                                 resourceIpReverse(),
 			"ovh_ip_service":                                                 resourceIpService(),
