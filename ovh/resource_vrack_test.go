@@ -23,6 +23,14 @@ data "ovh_order_cart_product_plan" "vrack" {
  plan_code      = "vrack"
 }
 
+data "ovh_order_cart_product_options_plan" "eu_west_rbx_15g" {
+ cart_id           = data.ovh_order_cart_product_plan.vrack.cart_id
+ price_capacity    = data.ovh_order_cart_product_plan.vrack.price_capacity
+ product           = data.ovh_order_cart_product_plan.vrack.product
+ plan_code         = data.ovh_order_cart_product_plan.vrack.plan_code
+ options_plan_code = "vrack-outgoing-bandwidth-limit-eu-west-rbx-15g"
+}
+
 resource "ovh_vrack" "vrack" {
  ovh_subsidiary = data.ovh_order_cart.mycart.ovh_subsidiary
  name          = "%s"
@@ -32,6 +40,12 @@ resource "ovh_vrack" "vrack" {
    duration     = data.ovh_order_cart_product_plan.vrack.selected_price.0.duration
    plan_code    = data.ovh_order_cart_product_plan.vrack.plan_code
    pricing_mode = data.ovh_order_cart_product_plan.vrack.selected_price.0.pricing_mode
+ }
+
+ plan_option {
+	duration     = data.ovh_order_cart_product_options_plan.eu_west_rbx_15g.selected_price.0.duration
+	plan_code    = data.ovh_order_cart_product_options_plan.eu_west_rbx_15g.options_plan_code
+	pricing_mode = data.ovh_order_cart_product_options_plan.eu_west_rbx_15g.selected_price.0.pricing_mode
  }
 }
 `
