@@ -586,6 +586,11 @@ func testAccPreCheckIamResourceGroup(t *testing.T) {
 	checkEnvOrSkip(t, "OVH_VPS")
 }
 
+func testAccPreCheckIamResourceTagsOvhPrefixed(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_IAM_RESOURCE_OVH_PREFIXED_IP_URN_TEST")
+}
+
 // Checks that the environment variables needed ofr the /storage/netapp acceptance tests
 // are set.
 func testAccPreCheckStorageEfs(t *testing.T) {

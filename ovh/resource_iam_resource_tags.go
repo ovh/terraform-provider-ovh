@@ -22,7 +22,6 @@ func resourceIamResourceTags() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceIamResourceTagsImport,
 		},
-		CustomizeDiff: customizeDiffIgnoreOvhTags,
 		Schema: map[string]*schema.Schema{
 			"resource_urn": {
 				Type:        schema.TypeString,
@@ -38,6 +37,7 @@ func resourceIamResourceTags() *schema.Resource {
 					Type: schema.TypeString,
 				},
 				ValidateDiagFunc: validateTags,
+				DiffSuppressFunc: suppressOvhTagsDiff,
 			},
 		},
 	}
@@ -82,52 +82,19 @@ func validateTags(v interface{}, path cty.Path) diag.Diagnostics {
 	return diags
 }
 
-// customizeDiffIgnoreOvhTags ignores differences in ovh: prefixed tags
+// suppressOvhTagsDiff suppresses diffs for ovh: prefixed tags
 // These tags are managed by OVH and should not cause drift detection
-func customizeDiffIgnoreOvhTags(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
-	if !d.HasChange("tags") {
-		return nil
-	}
-
-	oldTags, newTags := d.GetChange("tags")
-	oldTagsMap := oldTags.(map[string]interface{})
-	newTagsMap := newTags.(map[string]interface{})
-
-	// Check if the only differences are ovh: prefixed tags
-	// If so, clear the diff for the tags attribute
-	hasNonOvhDiff := false
-
-	// Check for added/changed tags (excluding ovh: prefix)
-	for key, newVal := range newTagsMap {
-		if strings.HasPrefix(key, "ovh:") {
-			continue
-		}
-		oldVal, existed := oldTagsMap[key]
-		if !existed || oldVal != newVal {
-			hasNonOvhDiff = true
-			break
+func suppressOvhTagsDiff(k, old, new string, d *schema.ResourceData) bool {
+	// k will be in format "tags.key_name" or just "tags" for the whole map
+	// We only want to suppress individual tag keys that start with "ovh:"
+	if strings.HasPrefix(k, "tags.") {
+		tagKey := strings.TrimPrefix(k, "tags.")
+		// Suppress diff if this is an ovh: prefixed tag
+		if strings.HasPrefix(tagKey, "ovh:") {
+			return true
 		}
 	}
-
-	// Check for removed tags (excluding ovh: prefix)
-	if !hasNonOvhDiff {
-		for key := range oldTagsMap {
-			if strings.HasPrefix(key, "ovh:") {
-				continue
-			}
-			if _, exists := newTagsMap[key]; !exists {
-				hasNonOvhDiff = true
-				break
-			}
-		}
-	}
-
-	// If only ovh: prefixed tags changed, clear the diff
-	if !hasNonOvhDiff {
-		return d.Clear("tags")
-	}
-
-	return nil
+	return false
 }
 
 func resourceIamResourceTagsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
