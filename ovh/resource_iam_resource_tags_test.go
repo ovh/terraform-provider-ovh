@@ -262,6 +262,31 @@ func TestAccResourceIamResourceTags_manyTags(t *testing.T) {
 	})
 }
 
+// TestAccResourceIamResource_resourceWithOvhPrefixedTags tests resource with ovh: prefixed tags
+func TestAccResourceIamResourceTags_resourceWithOvhPrefixedTags(t *testing.T) {
+	ovhPrefixedResourceURN := os.Getenv("OVH_IAM_RESOURCE_OVH_PREFIXED_IP_URN_TEST")
+	resourceName := "ovh_iam_resource_tags.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheckIamResourceTagsOvhPrefixed(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceIamResourceTagsConfig_resourceWithOvhPrefixedTags(ovhPrefixedResourceURN),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceName, "resource_urn"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "5"),
+					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("tags.%s-tag1", test_prefix), "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.ovh:isAdditionalIp", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "tags.ovh:routedTo"),
+					resource.TestCheckResourceAttrSet(resourceName, "tags.ovh:type"),
+					resource.TestCheckResourceAttrSet(resourceName, "tags.ovh:version"),
+				),
+			},
+		},
+	})
+}
+
 // TestAccResourceIamResource_invalidTagKey tests validation of invalid tag keys
 func TestAccResourceIamResourceTags_invalidTagKey(t *testing.T) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
@@ -353,7 +378,7 @@ data "ovh_cloud_project" "project" {
 
 resource "ovh_iam_resource_tags" "test" {
   resource_urn = data.ovh_cloud_project.project.iam.urn
-  
+
   tags = {
     "%s-environment" = "test"
     "%s-managed_by"  = "terraform"
@@ -371,7 +396,7 @@ data "ovh_cloud_project" "project" {
 
 resource "ovh_iam_resource_tags" "test" {
   resource_urn = data.ovh_cloud_project.project.iam.urn
-  
+
   tags = {
     "%s-environment" = "production"
     "%s-managed_by"  = "terraform"
@@ -390,7 +415,7 @@ data "ovh_cloud_project" "project" {
 
 resource "ovh_iam_resource_tags" "test" {
   resource_urn = data.ovh_cloud_project.project.iam.urn
-  
+
   tags = {
     "%s-managed_by" = "terraform"
   }
@@ -407,7 +432,7 @@ data "ovh_cloud_project" "project" {
 
 resource "ovh_iam_resource_tags" "test" {
   resource_urn = data.ovh_cloud_project.project.iam.urn
-  
+
   tags = {
     "%s-app:name"      = "my-app"
     "%s-cost_center"   = "12345"
@@ -428,7 +453,7 @@ data "ovh_cloud_project" "project" {
 
 resource "ovh_iam_resource_tags" "test" {
   resource_urn = data.ovh_cloud_project.project.iam.urn
-  
+
   tags = {}
 }
 `, serviceName)
@@ -443,7 +468,7 @@ data "ovh_cloud_project" "project" {
 
 resource "ovh_iam_resource_tags" "test" {
   resource_urn = data.ovh_cloud_project.project.iam.urn
-  
+
   tags = {
     "%s-tag1"  = "value1"
     "%s-tag2"  = "value2"
@@ -460,6 +485,19 @@ resource "ovh_iam_resource_tags" "test" {
 `, serviceName, test_prefix, test_prefix, test_prefix, test_prefix, test_prefix, test_prefix, test_prefix, test_prefix, test_prefix, test_prefix)
 }
 
+// testAccResourceIamResourceTagsConfig_resourceWithOvhPrefixedTags returns a configuration with a resource having ovh: prefixed tags
+func testAccResourceIamResourceTagsConfig_resourceWithOvhPrefixedTags(ovhPrefixedResourceURN string) string {
+	return fmt.Sprintf(`
+resource "ovh_iam_resource_tags" "test" {
+  resource_urn = "%s"
+
+  tags = {
+    "%s-tag1"  = "value1"
+  }
+}
+`, ovhPrefixedResourceURN, test_prefix)
+}
+
 // testAccResourceIamResourceTagsConfig_invalidKey returns a configuration with an invalid tag key (contains invalid character)
 func testAccResourceIamResourceTagsConfig_invalidKey(serviceName string) string {
 	return fmt.Sprintf(`
@@ -469,7 +507,7 @@ data "ovh_cloud_project" "project" {
 
 resource "ovh_iam_resource_tags" "test" {
   resource_urn = data.ovh_cloud_project.project.iam.urn
-  
+
   tags = {
     "invalid key!" = "value"
   }
@@ -486,7 +524,7 @@ data "ovh_cloud_project" "project" {
 
 resource "ovh_iam_resource_tags" "test" {
   resource_urn = data.ovh_cloud_project.project.iam.urn
-  
+
   tags = {
     "%s-key" = "invalid value!"
   }
@@ -505,7 +543,7 @@ data "ovh_cloud_project" "project" {
 
 resource "ovh_iam_resource_tags" "test" {
   resource_urn = data.ovh_cloud_project.project.iam.urn
-  
+
   tags = {
     "%s" = "value"
   }
@@ -524,7 +562,7 @@ data "ovh_cloud_project" "project" {
 
 resource "ovh_iam_resource_tags" "test" {
   resource_urn = data.ovh_cloud_project.project.iam.urn
-  
+
   tags = {
     "%s-key" = "%s"
   }
@@ -541,7 +579,7 @@ data "ovh_cloud_project" "project" {
 
 resource "ovh_iam_resource_tags" "test" {
   resource_urn = data.ovh_cloud_project.project.iam.urn
-  
+
   tags = {
     "ovh:managed" = "true"
   }
