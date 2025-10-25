@@ -148,8 +148,7 @@ func resourceIamResourceTagsCreate(ctx context.Context, d *schema.ResourceData, 
 		"tags": tagsMap,
 	}
 
-	var result IamResourceDetails
-	err := config.OVHClient.PutWithContext(ctx, endpoint, updateBody, &result)
+	err := config.OVHClient.PutWithContext(ctx, endpoint, updateBody, nil)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("failed to create tags: %w", err))
 	}
@@ -221,8 +220,7 @@ func resourceIamResourceTagsUpdate(ctx context.Context, d *schema.ResourceData, 
 			"tags": configTags,
 		}
 
-		var result IamResourceDetails
-		err := config.OVHClient.PutWithContext(ctx, endpoint, updateBody, &result)
+		err := config.OVHClient.PutWithContext(ctx, endpoint, updateBody, nil)
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("failed to update tags: %w", err))
 		}
@@ -243,8 +241,7 @@ func resourceIamResourceTagsDelete(ctx context.Context, d *schema.ResourceData, 
 		"tags": map[string]string{},
 	}
 
-	var result IamResourceDetails
-	err := config.OVHClient.PutWithContext(ctx, endpoint, updateBody, &result)
+	err := config.OVHClient.PutWithContext(ctx, endpoint, updateBody, nil)
 	if err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
