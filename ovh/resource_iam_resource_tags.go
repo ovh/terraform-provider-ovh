@@ -170,7 +170,7 @@ func resourceIamResourceTagsRead(ctx context.Context, d *schema.ResourceData, me
 	endpoint := fmt.Sprintf("/v2/iam/resource/%s", url.PathEscape(resourceURN))
 	err := config.OVHClient.GetWithContext(ctx, endpoint, &resourceDetails)
 	if err != nil {
-		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
+		return diag.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
 	}
 
 	// Sync all tags to state (including ovh: prefixed system tags)
