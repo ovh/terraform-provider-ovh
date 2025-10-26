@@ -162,12 +162,6 @@ func resourceIamResourceTagsImport(ctx context.Context, d *schema.ResourceData, 
 		return nil, err
 	}
 
-	// Call Read to populate the rest of the state
-	diags := resourceIamResourceTagsRead(ctx, d, meta)
-	if diags.HasError() {
-		return nil, fmt.Errorf("failed to read resource during import: %v", diags)
-	}
-
 	return []*schema.ResourceData{d}, nil
 }
 
