@@ -4,7 +4,7 @@ data "ovh_cloud_project" "my_project" {
 }
 
 resource "ovh_iam_resource_tags" "project_tags" {
-  resource_urn = data.ovh_cloud_project.my_project.iam.urn
+  urn = data.ovh_cloud_project.my_project.iam.urn
 
   tags = {
     environment = "test"

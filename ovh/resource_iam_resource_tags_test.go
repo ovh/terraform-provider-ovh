@@ -97,7 +97,7 @@ func TestAccResourceIamResourceTags_basic(t *testing.T) {
 			{
 				Config: testAccResourceIamResourceTagsConfig_basic(serviceName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, "resource_urn"),
+					resource.TestCheckResourceAttrSet(resourceName, "urn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("tags.%s-environment", test_prefix), "test"),
 					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("tags.%s-managed_by", test_prefix), "terraform"),
@@ -120,7 +120,7 @@ func TestAccResourceIamResourceTags_update(t *testing.T) {
 				// Step 1: Create with initial tags
 				Config: testAccResourceIamResourceTagsConfig_basic(serviceName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, "resource_urn"),
+					resource.TestCheckResourceAttrSet(resourceName, "urn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("tags.%s-environment", test_prefix), "test"),
 					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("tags.%s-managed_by", test_prefix), "terraform"),
@@ -130,7 +130,7 @@ func TestAccResourceIamResourceTags_update(t *testing.T) {
 				// Step 2: Update tags - modify existing, add new, remove one
 				Config: testAccResourceIamResourceTagsConfig_update(serviceName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, "resource_urn"),
+					resource.TestCheckResourceAttrSet(resourceName, "urn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("tags.%s-environment", test_prefix), "production"),
 					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("tags.%s-managed_by", test_prefix), "terraform"),
@@ -141,7 +141,7 @@ func TestAccResourceIamResourceTags_update(t *testing.T) {
 				// Step 3: Remove all tags except one
 				Config: testAccResourceIamResourceTagsConfig_minimal(serviceName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, "resource_urn"),
+					resource.TestCheckResourceAttrSet(resourceName, "urn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("tags.%s-managed_by", test_prefix), "terraform"),
 				),
@@ -162,7 +162,7 @@ func TestAccResourceIamResourceTags_import(t *testing.T) {
 			{
 				Config: testAccResourceIamResourceTagsConfig_basic(serviceName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, "resource_urn"),
+					resource.TestCheckResourceAttrSet(resourceName, "urn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("tags.%s-environment", test_prefix), "test"),
 					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("tags.%s-managed_by", test_prefix), "terraform"),
@@ -189,7 +189,7 @@ func TestAccResourceIamResourceTags_complexTags(t *testing.T) {
 			{
 				Config: testAccResourceIamResourceTagsConfig_complex(serviceName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, "resource_urn"),
+					resource.TestCheckResourceAttrSet(resourceName, "urn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "5"),
 					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("tags.%s-app:name", test_prefix), "my-app"),
 					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("tags.%s-cost_center", test_prefix), "12345"),
@@ -214,7 +214,7 @@ func TestAccResourceIamResourceTags_emptyTags(t *testing.T) {
 			{
 				Config: testAccResourceIamResourceTagsConfig_empty(serviceName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, "resource_urn"),
+					resource.TestCheckResourceAttrSet(resourceName, "urn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -222,7 +222,7 @@ func TestAccResourceIamResourceTags_emptyTags(t *testing.T) {
 				// Add tags after starting with empty
 				Config: testAccResourceIamResourceTagsConfig_basic(serviceName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, "resource_urn"),
+					resource.TestCheckResourceAttrSet(resourceName, "urn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("tags.%s-environment", test_prefix), "test"),
 					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("tags.%s-managed_by", test_prefix), "terraform"),
@@ -244,7 +244,7 @@ func TestAccResourceIamResourceTags_manyTags(t *testing.T) {
 			{
 				Config: testAccResourceIamResourceTagsConfig_many(serviceName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, "resource_urn"),
+					resource.TestCheckResourceAttrSet(resourceName, "urn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "10"),
 					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("tags.%s-tag1", test_prefix), "value1"),
 					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("tags.%s-tag2", test_prefix), "value2"),
@@ -274,7 +274,7 @@ func TestAccResourceIamResourceTags_resourceWithOvhPrefixedTags(t *testing.T) {
 			{
 				Config: testAccResourceIamResourceTagsConfig_resourceWithOvhPrefixedTags(ovhPrefixedResourceURN),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, "resource_urn"),
+					resource.TestCheckResourceAttrSet(resourceName, "urn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "5"),
 					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("tags.%s-tag1", test_prefix), "value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.ovh:isAdditionalIp", "true"),
@@ -377,7 +377,7 @@ data "ovh_cloud_project" "project" {
 }
 
 resource "ovh_iam_resource_tags" "test" {
-  resource_urn = data.ovh_cloud_project.project.iam.urn
+  urn = data.ovh_cloud_project.project.iam.urn
 
   tags = {
     "%s-environment" = "test"
@@ -395,7 +395,7 @@ data "ovh_cloud_project" "project" {
 }
 
 resource "ovh_iam_resource_tags" "test" {
-  resource_urn = data.ovh_cloud_project.project.iam.urn
+  urn = data.ovh_cloud_project.project.iam.urn
 
   tags = {
     "%s-environment" = "production"
@@ -414,7 +414,7 @@ data "ovh_cloud_project" "project" {
 }
 
 resource "ovh_iam_resource_tags" "test" {
-  resource_urn = data.ovh_cloud_project.project.iam.urn
+  urn = data.ovh_cloud_project.project.iam.urn
 
   tags = {
     "%s-managed_by" = "terraform"
@@ -431,7 +431,7 @@ data "ovh_cloud_project" "project" {
 }
 
 resource "ovh_iam_resource_tags" "test" {
-  resource_urn = data.ovh_cloud_project.project.iam.urn
+  urn = data.ovh_cloud_project.project.iam.urn
 
   tags = {
     "%s-app:name"      = "my-app"
@@ -452,7 +452,7 @@ data "ovh_cloud_project" "project" {
 }
 
 resource "ovh_iam_resource_tags" "test" {
-  resource_urn = data.ovh_cloud_project.project.iam.urn
+  urn = data.ovh_cloud_project.project.iam.urn
 
   tags = {}
 }
@@ -467,7 +467,7 @@ data "ovh_cloud_project" "project" {
 }
 
 resource "ovh_iam_resource_tags" "test" {
-  resource_urn = data.ovh_cloud_project.project.iam.urn
+  urn = data.ovh_cloud_project.project.iam.urn
 
   tags = {
     "%s-tag1"  = "value1"
@@ -489,7 +489,7 @@ resource "ovh_iam_resource_tags" "test" {
 func testAccResourceIamResourceTagsConfig_resourceWithOvhPrefixedTags(ovhPrefixedResourceURN string) string {
 	return fmt.Sprintf(`
 resource "ovh_iam_resource_tags" "test" {
-  resource_urn = "%s"
+  urn = "%s"
 
   tags = {
     "%s-tag1"  = "value1"
@@ -506,7 +506,7 @@ data "ovh_cloud_project" "project" {
 }
 
 resource "ovh_iam_resource_tags" "test" {
-  resource_urn = data.ovh_cloud_project.project.iam.urn
+  urn = data.ovh_cloud_project.project.iam.urn
 
   tags = {
     "invalid key!" = "value"
@@ -523,7 +523,7 @@ data "ovh_cloud_project" "project" {
 }
 
 resource "ovh_iam_resource_tags" "test" {
-  resource_urn = data.ovh_cloud_project.project.iam.urn
+  urn = data.ovh_cloud_project.project.iam.urn
 
   tags = {
     "%s-key" = "invalid value!"
@@ -542,7 +542,7 @@ data "ovh_cloud_project" "project" {
 }
 
 resource "ovh_iam_resource_tags" "test" {
-  resource_urn = data.ovh_cloud_project.project.iam.urn
+  urn = data.ovh_cloud_project.project.iam.urn
 
   tags = {
     "%s" = "value"
@@ -561,7 +561,7 @@ data "ovh_cloud_project" "project" {
 }
 
 resource "ovh_iam_resource_tags" "test" {
-  resource_urn = data.ovh_cloud_project.project.iam.urn
+  urn = data.ovh_cloud_project.project.iam.urn
 
   tags = {
     "%s-key" = "%s"
@@ -578,7 +578,7 @@ data "ovh_cloud_project" "project" {
 }
 
 resource "ovh_iam_resource_tags" "test" {
-  resource_urn = data.ovh_cloud_project.project.iam.urn
+  urn = data.ovh_cloud_project.project.iam.urn
 
   tags = {
     "ovh:managed" = "true"

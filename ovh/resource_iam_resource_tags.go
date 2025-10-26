@@ -23,7 +23,7 @@ func resourceIamResourceTags() *schema.Resource {
 			StateContext: resourceIamResourceTagsImport,
 		},
 		Schema: map[string]*schema.Schema{
-			"resource_urn": {
+			"urn": {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
@@ -99,7 +99,7 @@ func suppressOvhTagsDiff(k, old, new string, d *schema.ResourceData) bool {
 
 func resourceIamResourceTagsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
-	resourceURN := d.Get("resource_urn").(string)
+	resourceURN := d.Get("urn").(string)
 	endpoint := fmt.Sprintf("/v2/iam/resource/%s", url.PathEscape(resourceURN))
 
 	// Get tags from configuration and convert to map[string]string
@@ -157,8 +157,8 @@ func resourceIamResourceTagsImport(ctx context.Context, d *schema.ResourceData, 
 	// The ID passed to import is the resource URN
 	resourceURN := d.Id()
 
-	// Set the resource_urn field from the import ID
-	if err := d.Set("resource_urn", resourceURN); err != nil {
+	// Set the urn field from the import ID
+	if err := d.Set("urn", resourceURN); err != nil {
 		return nil, err
 	}
 

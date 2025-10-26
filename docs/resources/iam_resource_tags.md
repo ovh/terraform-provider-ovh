@@ -14,7 +14,7 @@ This resource allows you to apply and manage tags on OVHcloud resources identifi
 
 ```terraform
 resource "ovh_iam_resource_tags" "project_tags" {
-  resource_urn = "urn:v1:eu:resource:cloudProject:1234567890abcdef"
+  urn = "urn:v1:eu:resource:cloudProject:1234567890abcdef"
   
   tags = {
     environment    = "staging"
@@ -35,7 +35,7 @@ data "ovh_cloud_project" "my_project" {
 }
 
 resource "ovh_iam_resource_tags" "project_tags" {
-  resource_urn = data.ovh_cloud_project.my_project.iam.urn
+  urn = data.ovh_cloud_project.my_project.iam.urn
 
   tags = {
     environment = "production"
@@ -49,7 +49,7 @@ resource "ovh_iam_resource_tags" "project_tags" {
 
 The following arguments are supported:
 
-* `resource_urn` - (Required, ForceNew) The URN (Uniform Resource Name) of the resource to manage tags for. Changing this forces a new resource to be created. The URN format is typically `urn:v1:{region}:resource:{resourceType}:{resourceId}`.
+* `urn` - (Required, ForceNew) The URN (Uniform Resource Name) of the resource to manage tags for. Changing this forces a new resource to be created. The URN format is typically `urn:v1:{region}:resource:{resourceType}:{resourceId}`.
 
 * `tags` - (Optional) A map of tags to apply to the resource. Each tag consists of a key-value pair. Tag keys must match the pattern `^[a-zA-Z0-9_.:/=+@-]{1,128}$` (1-128 characters) and values must match `^[a-zA-Z0-9_.:/=+@-]{0,256}$` (0-256 characters). Both keys and values can contain alphanumeric characters, underscores, dots, colons, slashes, equals signs, plus signs, at signs, and hyphens. **Note:** Tags with keys prefixed by `ovh:` are managed by OVH and cannot be set via the API.
 
