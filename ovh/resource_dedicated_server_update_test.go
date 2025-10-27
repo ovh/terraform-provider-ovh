@@ -68,13 +68,13 @@ func testAccDedicatedServerUpdateConfig(restore bool) string {
 }
 
 const testAccDedicatedServerUpdateConfig_Basic = `
-data ovh_dedicated_server_boots "rescue" {
+data "ovh_dedicated_server_boots" "rescue" {
   service_name = "%s"
   boot_type    = "rescue"
   kernel       = "rescue12-customer"
 }
 
-resource ovh_dedicated_server_update "server" {
+resource "ovh_dedicated_server_update" "server" {
   service_name = data.ovh_dedicated_server_boots.rescue.service_name
   boot_id      = data.ovh_dedicated_server_boots.rescue.result[0]
   monitoring   = true
@@ -89,12 +89,12 @@ output test {
 `
 
 const testAccDedicatedServerUpdateConfig_Restore = `
-data ovh_dedicated_server_boots "harddisk" {
+data "ovh_dedicated_server_boots" "harddisk" {
   service_name = "%s"
   boot_type    = "harddisk"
 }
 
-resource ovh_dedicated_server_update "server" {
+resource "ovh_dedicated_server_update" "server" {
   service_name = data.ovh_dedicated_server_boots.harddisk.service_name
   boot_id      = data.ovh_dedicated_server_boots.harddisk.result[0]
   monitoring   = false

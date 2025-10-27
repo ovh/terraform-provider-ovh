@@ -1,4 +1,4 @@
-data ovh_iploadbalancing "iplb" {
+data "ovh_iploadbalancing" "iplb" {
   service_name = "loadbalancer-xxxxxxxxxxxxxxxxxx"
 }
 
@@ -7,7 +7,7 @@ resource "ovh_vrack_iploadbalancing" "vip_lb" {
   ip_loadbalancing = data.ovh_iploadbalancing.iplb.service_name
 }
 
-resource ovh_iploadbalancing_vrack_network "network" {
+resource "ovh_iploadbalancing_vrack_network" "network" {
   service_name = ovh_vrack_iploadbalancing.vip_lb.ip_loadbalancing
   subnet       = "10.0.0.0/16"
   vlan         = 1

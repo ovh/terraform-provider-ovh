@@ -1,1 +1,1 @@
-data ovh_vracks vracks {}
+data "ovh_vracks" "vracks" {}

@@ -28,7 +28,7 @@ func TestAccIpLoadbalancingVrackNetworkDataSource_basic(t *testing.T) {
 }
 
 var testAccIpLoadbalancingVrackNetworkDatasourceConfig_basic = fmt.Sprintf(`
-data ovh_iploadbalancing "iplb" {
+data "ovh_iploadbalancing" "iplb" {
   service_name = "%s"
 }
 
@@ -37,7 +37,7 @@ resource "ovh_vrack_iploadbalancing" "viplb" {
   ip_loadbalancing = data.ovh_iploadbalancing.iplb.service_name
 }
 
-resource ovh_iploadbalancing_vrack_network "network" {
+resource "ovh_iploadbalancing_vrack_network" "network" {
   service_name = ovh_vrack_iploadbalancing.viplb.ip_loadbalancing
   subnet       = "%s"
   vlan         = %s
@@ -45,7 +45,7 @@ resource ovh_iploadbalancing_vrack_network "network" {
   display_name = "terraform_testacc"
 }
 
-data ovh_iploadbalancing_vrack_network "network" {
+data "ovh_iploadbalancing_vrack_network" "network" {
   service_name = data.ovh_iploadbalancing.iplb.service_name
   vrack_network_id  = ovh_iploadbalancing_vrack_network.network.vrack_network_id
 }

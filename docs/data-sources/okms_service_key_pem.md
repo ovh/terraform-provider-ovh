@@ -9,7 +9,7 @@ Use this data source to retrieve information about a KMS service key, in the PEM
 ## Example Usage
 
 ```terraform
-data "ovh_okms_service_pem" "key_info" {
+data "ovh_okms_service_key_pem" "key_info" {
   okms_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
   id      = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 }

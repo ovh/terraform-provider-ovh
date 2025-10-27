@@ -9,7 +9,7 @@ Use this data source to get the list of Vrack IDs available for your OVHcloud ac
 ## Example Usage
 
 ```terraform
-data ovh_vracks vracks {}
+data "ovh_vracks" "vracks" {}
 ```
 
 ## Argument Reference

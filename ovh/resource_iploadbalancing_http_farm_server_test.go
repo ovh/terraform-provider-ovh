@@ -15,11 +15,11 @@ import (
 
 const (
 	testAccIpLoadbalancingHttpFarmServerConfig_templ = `
-data ovh_iploadbalancing iplb {
+data "ovh_iploadbalancing" iplb {
   service_name = "%s"
 }
 
-resource ovh_iploadbalancing_http_farm testacc {
+resource "ovh_iploadbalancing_http_farm" testacc {
   service_name     = data.ovh_iploadbalancing.iplb.id
   display_name     = "%s"
   port = 8080
@@ -34,7 +34,7 @@ resource ovh_iploadbalancing_http_farm testacc {
 	testAccIpLoadbalancingHttpFarmServerConfig_step0 = `
 %s
 
-resource ovh_iploadbalancing_http_farm_server testacc {
+resource "ovh_iploadbalancing_http_farm_server" testacc {
   service_name = data.ovh_iploadbalancing.iplb.id
   farm_id      = ovh_iploadbalancing_http_farm.testacc.id
   address      = "10.0.0.11"
@@ -47,7 +47,7 @@ resource ovh_iploadbalancing_http_farm_server testacc {
 	testAccIpLoadbalancingHttpFarmServerConfig_step1 = `
 %s
 
-resource ovh_iploadbalancing_http_farm_server testacc {
+resource "ovh_iploadbalancing_http_farm_server" testacc {
   service_name     = data.ovh_iploadbalancing.iplb.id
   farm_id = ovh_iploadbalancing_http_farm.testacc.id
   address = "10.0.0.11"
@@ -62,7 +62,7 @@ resource ovh_iploadbalancing_http_farm_server testacc {
 	testAccIpLoadbalancingHttpFarmServerConfig_step2 = `
 %s
 
-resource ovh_iploadbalancing_http_farm_server testacc {
+resource "ovh_iploadbalancing_http_farm_server" testacc {
   service_name     = data.ovh_iploadbalancing.iplb.id
   farm_id = ovh_iploadbalancing_http_farm.testacc.id
   address = "10.0.0.11"
@@ -77,7 +77,7 @@ resource ovh_iploadbalancing_http_farm_server testacc {
 	testAccIpLoadbalancingHttpFarmServerConfig_step3 = `
 %s
 
-resource ovh_iploadbalancing_http_farm_server testacc {
+resource "ovh_iploadbalancing_http_farm_server" testacc {
   service_name     = data.ovh_iploadbalancing.iplb.id
   farm_id = ovh_iploadbalancing_http_farm.testacc.id
   address = "10.0.0.11"
@@ -91,7 +91,7 @@ resource ovh_iploadbalancing_http_farm_server testacc {
 	testAccIpLoadbalancingHttpFarmServerConfig_step4 = `
 %s
 
-resource ovh_iploadbalancing_http_farm_server testacc {
+resource "ovh_iploadbalancing_http_farm_server" testacc {
   service_name     = data.ovh_iploadbalancing.iplb.id
   farm_id = ovh_iploadbalancing_http_farm.testacc.id
   address = "10.0.0.11"
@@ -106,7 +106,7 @@ resource ovh_iploadbalancing_http_farm_server testacc {
 	testAccIpLoadbalancingHttpFarmServerConfig_step5 = `
 %s
 
-resource ovh_iploadbalancing_http_farm_server testacc {
+resource "ovh_iploadbalancing_http_farm_server" testacc {
   service_name     = data.ovh_iploadbalancing.iplb.id
   farm_id = ovh_iploadbalancing_http_farm.testacc.id
   address = "10.0.0.11"
@@ -121,7 +121,7 @@ resource ovh_iploadbalancing_http_farm_server testacc {
 	testAccIpLoadbalancingHttpFarmServerConfig_step6 = `
 %s
 
-resource ovh_iploadbalancing_http_farm_server testacc {
+resource "ovh_iploadbalancing_http_farm_server" testacc {
   service_name     = data.ovh_iploadbalancing.iplb.id
   farm_id = ovh_iploadbalancing_http_farm.testacc.id
   address = "10.0.0.11"
@@ -134,7 +134,7 @@ resource ovh_iploadbalancing_http_farm_server testacc {
 `
 	testAccIpLoadbalancingHttpFarmServerConfig_step7 = `
 %s
-resource ovh_iploadbalancing_http_farm_server testacc {
+resource "ovh_iploadbalancing_http_farm_server" testacc {
   service_name     = data.ovh_iploadbalancing.iplb.id
   farm_id = ovh_iploadbalancing_http_farm.testacc.id
   address = "10.0.0.11"

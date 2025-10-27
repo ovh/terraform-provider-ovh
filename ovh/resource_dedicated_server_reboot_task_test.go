@@ -47,20 +47,20 @@ func testAccDedicatedServerRebootConfig() string {
 }
 
 const testAccDedicatedServerRebootConfig_Basic = `
-data ovh_dedicated_server_boots "rescue" {
+data "ovh_dedicated_server_boots" "rescue" {
   service_name = "%s"
   boot_type    = "rescue"
   kernel       = "rescue12-customer"
 }
 
-resource ovh_dedicated_server_update "server" {
+resource "ovh_dedicated_server_update" "server" {
   service_name = data.ovh_dedicated_server_boots.rescue.service_name
   boot_id      = data.ovh_dedicated_server_boots.rescue.result[0]
   monitoring   = true
   state        = "ok"
 }
 
-resource ovh_dedicated_server_reboot_task "server_reboot" {
+resource "ovh_dedicated_server_reboot_task" "server_reboot" {
   service_name = data.ovh_dedicated_server_boots.rescue.service_name
 
   keepers = [

@@ -206,12 +206,12 @@ func testAccDedicatedServerReinstallConfig(config string) string {
 }
 
 const testAccDedicatedServerReinstallConfig_Basic = `
-data ovh_dedicated_server_boots "harddisk" {
+data "ovh_dedicated_server_boots" "harddisk" {
   service_name = "%s"
   boot_type    = "harddisk"
 }
 
-resource ovh_dedicated_server_update "server" {
+resource "ovh_dedicated_server_update" "server" {
   service_name        = data.ovh_dedicated_server_boots.harddisk.service_name
   boot_id             = data.ovh_dedicated_server_boots.harddisk.result[0]
   monitoring          = false
@@ -226,17 +226,17 @@ resource "ovh_dedicated_server_reinstall_task" "server_reinstall" {
 `
 
 const testAccDedicatedServerReinstallConfig_RebootOnDestroy = `
-data ovh_dedicated_server_boots "harddisk" {
+data "ovh_dedicated_server_boots" "harddisk" {
   service_name = "%s"
   boot_type    = "harddisk"
 }
 
-data ovh_dedicated_server_boots "rescue" {
+data "ovh_dedicated_server_boots" "rescue" {
   service_name = data.ovh_dedicated_server_boots.harddisk.service_name
   boot_type    = "rescue"
 }
 
-resource ovh_dedicated_server_update "server" {
+resource "ovh_dedicated_server_update" "server" {
   service_name        = data.ovh_dedicated_server_boots.harddisk.service_name
   boot_id             = data.ovh_dedicated_server_boots.harddisk.result[0]
   monitoring          = false
@@ -244,7 +244,7 @@ resource ovh_dedicated_server_update "server" {
   efi_bootloader_path = "\\efi\\debian\\grubx64.efi"
 }
 
-resource ovh_dedicated_server_reinstall_task "server_reinstall" {
+resource "ovh_dedicated_server_reinstall_task" "server_reinstall" {
   service_name      = data.ovh_dedicated_server_boots.harddisk.service_name
   os     = "debian12_64"
   bootid_on_destroy = data.ovh_dedicated_server_boots.rescue.result[0]
@@ -252,12 +252,12 @@ resource ovh_dedicated_server_reinstall_task "server_reinstall" {
 `
 
 const testAccDedicatedServerReinstallConfig_Customizations = `
-data ovh_dedicated_server_boots "harddisk" {
+data "ovh_dedicated_server_boots" "harddisk" {
   service_name = "%s"
   boot_type    = "harddisk"
 }
 
-resource ovh_dedicated_server_update "server" {
+resource "ovh_dedicated_server_update" "server" {
   service_name = data.ovh_dedicated_server_boots.harddisk.service_name
   boot_id      = data.ovh_dedicated_server_boots.harddisk.result[0]
   monitoring   = false
@@ -275,12 +275,12 @@ resource "ovh_dedicated_server_reinstall_task" "server_reinstall" {
 }
 `
 const testAccDedicatedServerReinstallConfig_Byolinux = `
-data ovh_dedicated_server_boots "harddisk" {
+data "ovh_dedicated_server_boots" "harddisk" {
   service_name = "%s"
   boot_type    = "harddisk"
 }
 
-resource ovh_dedicated_server_update "server" {
+resource "ovh_dedicated_server_update" "server" {
   service_name = data.ovh_dedicated_server_boots.harddisk.service_name
   boot_id      = data.ovh_dedicated_server_boots.harddisk.result[0]
   monitoring   = false
@@ -306,12 +306,12 @@ resource "ovh_dedicated_server_reinstall_task" "server_reinstall" {
 `
 
 const testAccDedicatedServerReinstallConfig_Storage = `
-data ovh_dedicated_server_boots "harddisk" {
+data "ovh_dedicated_server_boots" "harddisk" {
   service_name = "%s"
   boot_type    = "harddisk"
 }
 
-resource ovh_dedicated_server_update "server" {
+resource "ovh_dedicated_server_update" "server" {
   service_name = data.ovh_dedicated_server_boots.harddisk.service_name
   boot_id      = data.ovh_dedicated_server_boots.harddisk.result[0]
   monitoring   = false
