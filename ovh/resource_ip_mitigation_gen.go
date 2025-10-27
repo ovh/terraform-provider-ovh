@@ -50,6 +50,7 @@ func IpMitigationResourceSchema(ctx context.Context) schema.Schema {
 				Optional:            true,
 				Description:         "Set on true if your ip is on permanent mitigation",
 				MarkdownDescription: "Set on true if your ip is on permanent mitigation",
+				DeprecationMessage:  "Attribute 'permanent' is deprecated and has no effect.",
 			},
 			"state": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
@@ -106,16 +107,6 @@ func (v IpMitigationModel) ToCreate() *IpMitigationWritableModel {
 
 	if !v.IpOnMitigation.IsUnknown() {
 		res.IpOnMitigation = &v.IpOnMitigation
-	}
-
-	return res
-}
-
-func (v IpMitigationModel) ToUpdate() *IpMitigationWritableModel {
-	res := &IpMitigationWritableModel{}
-
-	if !v.Permanent.IsUnknown() {
-		res.Permanent = &v.Permanent
 	}
 
 	return res

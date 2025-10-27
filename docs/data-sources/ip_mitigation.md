@@ -24,6 +24,6 @@ data "ovh_ip_mitigation" "mitigation_data" {
 
 * `ip` - The IP or the CIDR
 * `ip_on_mitigation` - IPv4 address
-* `permanent ` - Set on true if the IP is on permanent mitigation
+* `permanent ` - (Deprecated) Set on true if the IP is on permanent mitigation
 * `state` - Current state of the IP on mitigation
 * `auto` - Set on true if the IP is on auto-mitigation
