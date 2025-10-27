@@ -32,7 +32,7 @@ const (
 	testAccIpLoadbalancingVrackNetworkSubnet   = "10.0.1.0/24"
 	testAccIpLoadbalancingVrackNetworkNatIp    = "10.0.1.0/27"
 	testAccIpLoadbalancingVrackNetworkConfig   = `
-data ovh_iploadbalancing "iplb" {
+data "ovh_iploadbalancing" "iplb" {
   service_name = "%s"
 }
 
@@ -41,7 +41,7 @@ resource "ovh_vrack_iploadbalancing" "viplb" {
   ip_loadbalancing = data.ovh_iploadbalancing.iplb.service_name
 }
 
-resource ovh_iploadbalancing_vrack_network "network" {
+resource "ovh_iploadbalancing_vrack_network" "network" {
   service_name = ovh_vrack_iploadbalancing.viplb.ip_loadbalancing
   subnet       = "%s"
   vlan         = %s

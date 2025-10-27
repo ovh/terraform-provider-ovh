@@ -9,7 +9,7 @@ Use this data source to get the list of Vrack network ids available for your IPL
 ## Example Usage
 
 ```terraform
-data ovh_iploadbalancing_vrack_networks "lb_networks" {
+data "ovh_iploadbalancing_vrack_networks" "lb_networks" {
   service_name = "XXXXXX"
   subnet       = "10.0.0.0/24"
 }

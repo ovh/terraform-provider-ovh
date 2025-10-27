@@ -9,7 +9,7 @@ Use this data source to retrieve data associated with a KMS credential, such as 
 ## Example Usage
 
 ```terraform
-data "ovh_okms_resource" "kms" {
+data "ovh_okms_credential" "kms" {
   okms_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
   id      = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 }
