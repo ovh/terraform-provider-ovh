@@ -40,4 +40,4 @@ resource "" "" {
 - [ ] My changes generate no new warnings or issues
 - [ ] I have added acceptance tests that prove my fix is effective or that my feature works
 - [ ] New and existing acceptance tests pass locally with my changes
-- [ ] I ran succesfully `go mod vendor` if I added or modify `go.mod` file
+- [ ] I ran successfully `go mod vendor` if I added or modify `go.mod` file
