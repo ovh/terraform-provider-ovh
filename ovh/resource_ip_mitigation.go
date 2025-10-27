@@ -117,54 +117,7 @@ func (r *ipMitigationResource) Read(ctx context.Context, req resource.ReadReques
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *ipMitigationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, planData, responseData IpMitigationModel
-
-	// Read Terraform plan data into the model
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &planData)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// Read Terraform prior state data into the model
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// Update resource
-	endpoint := "/ip/" + url.PathEscape(data.Ip.ValueString()) + "/mitigation/" + url.PathEscape(data.IpOnMitigation.ValueString())
-	if err := r.config.OVHClient.Put(endpoint, planData.ToUpdate(), nil); err != nil {
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("Error calling Put %s", endpoint),
-			err.Error(),
-		)
-		return
-	}
-
-	// Read updated resource
-	err := retry.RetryContext(ctx, 10*time.Minute, func() *retry.RetryError {
-		readErr := r.config.OVHClient.Get(endpoint, &responseData)
-		if readErr != nil {
-			return retry.NonRetryableError(readErr)
-		}
-
-		if responseData.State.ValueString() == "ok" {
-			return nil
-		}
-
-		return retry.RetryableError(errors.New("waiting for resource state to be ok"))
-	})
-
-	if err != nil {
-		resp.Diagnostics.AddError("error waiting status to be ok", err.Error())
-		return
-	}
-
-	responseData.MergeWith(&planData)
-
-	// Save updated data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)
+func (r *ipMitigationResource) Update(_ context.Context, _ resource.UpdateRequest, _ *resource.UpdateResponse) {
 }
 
 func (r *ipMitigationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

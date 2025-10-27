@@ -41,6 +41,7 @@ func IpMitigationDataSourceSchema(ctx context.Context) schema.Schema {
 				Computed:            true,
 				Description:         "Set on true if your ip is on permanent mitigation",
 				MarkdownDescription: "Set on true if your ip is on permanent mitigation",
+				DeprecationMessage:  "Attribute 'permanent' is deprecated and has no effect.",
 			},
 			"state": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},

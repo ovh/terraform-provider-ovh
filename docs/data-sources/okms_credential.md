@@ -22,7 +22,7 @@ data "ovh_okms_credential" "kms" {
 
 ## Attributes Reference
 
-- `certificate_type` (String) Type of the certificate (ECDSA or RSA)
+- `certificate_type` (String) Type of certificate key (`ECDSA` or `RSA`).
 - `certificate_pem` (String) PEM encoded certificate of the credential
 - `created_at` (String) Creation time of the credential
 - `description` (String) Description of the credential
