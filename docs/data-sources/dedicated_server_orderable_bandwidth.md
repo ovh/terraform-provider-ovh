@@ -2,14 +2,14 @@
 subcategory : "Dedicated Server"
 ---
 
-# ovh_dedicated_server_order_bandwidth (Data Source)
+# ovh_dedicated_server_orderable_bandwidth (Data Source)
 
 Use this data source to get the list of orderable additional bandwidth for a dedicated server associated with your OVHcloud Account.
 
 ## Example Usage
 
 ```terraform
-data "ovh_dedicated_server_orderable_bandwidth" "bp" {
+data "ovh_dedicated_server_orderable_bandwidth" "spec" {
   service_name = "myserver"
 }
 ```
@@ -22,7 +22,7 @@ data "ovh_dedicated_server_orderable_bandwidth" "bp" {
 
 The following attributes are exported:
 
-* `orderable` - Wether or not additional bandwidth is orderable.
-* `platinium` - The list of orderable platinimum bandwidth in mbps.
-* `ultimate` - The list of orderable ultimate bandwidth in mbps.
-* `premium` - The list of orderable premium bandwidth in mbps.
+* `orderable` - Whether or not additional bandwidth is orderable
+* `platinium` - Additional orderable platinium bandwidth
+* `ultimate` - Additional orderable ultimate bandwidth
+* `premium` - Additional orderable premium bandwidth
