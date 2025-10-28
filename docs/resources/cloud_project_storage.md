@@ -108,7 +108,7 @@ Optional:
 
 Optional:
 
-- `status` (String) Versioning status
+- `status` (String) Versioning status (E.g. "enabled", "disabled" or "suspended")
 
 <a id="nestedatt--objects"></a>
 
