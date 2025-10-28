@@ -1,14 +1,13 @@
-# Basic example showing how to tag a cloud project
 data "ovh_cloud_project" "my_project" {
-  service_name = "01234567890123456798012345678901"
+  service_name = "<public cloud project ID>"
 }
 
 resource "ovh_iam_resource_tags" "project_tags" {
   urn = data.ovh_cloud_project.my_project.iam.urn
 
   tags = {
-    environment = "test"
-    team        = "perso"
-    managed_by  = "opentofu"
+    environment = "production"
+    team        = "platform"
+    managed_by  = "terraform"
   }
 }

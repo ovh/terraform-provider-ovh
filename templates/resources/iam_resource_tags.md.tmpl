@@ -12,38 +12,11 @@ This resource allows you to apply and manage tags on OVHcloud resources identifi
 
 ### Basic Usage
 
-```terraform
-resource "ovh_iam_resource_tags" "project_tags" {
-  urn = "urn:v1:eu:resource:cloudProject:1234567890abcdef"
-  
-  tags = {
-    environment    = "staging"
-    cost_center    = "engineering"
-    project        = "web-app"
-    owner          = "team@example.com"
-    backup_policy  = "daily"
-    compliance     = "gdpr"
-  }
-}
-```
+{{tffile "examples/resources/iam_resource_tags/example_2.tf"}}
 
 ### Using with Data Source
 
-```terraform
-data "ovh_cloud_project" "my_project" {
-  service_name = "<public cloud project ID>"
-}
-
-resource "ovh_iam_resource_tags" "project_tags" {
-  urn = data.ovh_cloud_project.my_project.iam.urn
-
-  tags = {
-    environment = "production"
-    team        = "platform"
-    managed_by  = "terraform"
-  }
-}
-```
+{{tffile "examples/resources/iam_resource_tags/example_1.tf"}}
 
 ## Argument Reference
 

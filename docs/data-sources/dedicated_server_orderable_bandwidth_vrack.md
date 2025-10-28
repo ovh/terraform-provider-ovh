@@ -2,14 +2,14 @@
 subcategory : "Dedicated Server"
 ---
 
-# ovh_dedicated_server_order_bandwidth_vrack (Data Source)
+# ovh_dedicated_server_orderable_bandwidth_vrack (Data Source)
 
-Use this data source to get the list of orderable additional vrack bandwidth for a dedicated server associated with your OVHcloud Account.
+Use this data source to get the orderable vrack bandwidth information about a dedicated server associated with your OVHcloud Account.
 
 ## Example Usage
 
 ```terraform
-data "ovh_dedicated_server_orderable_bandwidth_vrack" "bp" {
+data "ovh_dedicated_server_orderable_bandwidth_vrack" "spec" {
   service_name = "myserver"
 }
 ```
@@ -22,5 +22,5 @@ data "ovh_dedicated_server_orderable_bandwidth_vrack" "bp" {
 
 The following attributes are exported:
 
-* `orderable` - Wether or not additional bandwidth is orderable.
-* `vrack` - The list of orderable vrack bandwidth in mbps.
+* `orderable` - Whether or not additional bandwidth is orderable
+* `vrack` - Additional orderable vrack bandwidth

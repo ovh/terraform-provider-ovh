@@ -695,7 +695,7 @@ workflow:
     environment: acctests
     one_at_a_time: true
     parameters:
-      testargs: -run TestAccIam
+      testargs: -run 'TestAccIam|TestAccResourceIam'
       skipthispipeline: "{{.workflow.terraform-provider-ovh.pip.skipthistest.iam}}"
     pipeline: terraform-provider-ovh-testacc
     when:
