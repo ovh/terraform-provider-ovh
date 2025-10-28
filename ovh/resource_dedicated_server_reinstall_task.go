@@ -130,7 +130,7 @@ func resourceDedicatedServerReinstallTask() *schema.Resource {
 				Type:        schema.TypeMap,
 				Optional:    true,
 				ForceNew:    true,
-				Description: "Arbitrary properties to pass to cloud-init's config drive datasource",
+				Description: "Attribute 'properties' is deprecated and has no effect",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},

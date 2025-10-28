@@ -19,8 +19,4 @@ resource "ovh_dedicated_server_reinstall_task" "server_install" {
     image_check_sum_type = "sha512"
     image_url           = "https://github.com/ashmonger/akution_test/releases/download/0.5-compress/deb11k6.qcow2"
   }
-  properties = {
-    essential = "false"
-    role      = "webservers"
-  }
 }

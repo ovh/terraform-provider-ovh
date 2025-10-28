@@ -349,6 +349,7 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 			Optional:            true,
 			Description:         "Arbitrary properties to pass to cloud-init's config drive datasource",
 			MarkdownDescription: "Arbitrary properties to pass to cloud-init's config drive datasource",
+			DeprecationMessage:  "Attribute 'properties' is deprecated and has no effect",
 		},
 		"rack": schema.StringAttribute{
 			CustomType: ovhtypes.TfStringType{},

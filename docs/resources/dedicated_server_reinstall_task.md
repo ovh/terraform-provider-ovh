@@ -128,10 +128,6 @@ resource "ovh_dedicated_server_reinstall_task" "server_install" {
     image_check_sum_type = "sha512"
     image_url           = "https://github.com/ashmonger/akution_test/releases/download/0.5-compress/deb11k6.qcow2"
   }
-  properties = {
-    essential = "false"
-    role      = "webservers"
-  }
 }
 ```
 
@@ -241,7 +237,7 @@ The following arguments are supported:
 
 ~> **WARNING** Some customizations may be required on some Operating Systems. [Check how to list the available and required customization(s) for your operating system](https://help.ovhcloud.com/csm/en-dedicated-servers-api-os-installation?id=kb_article_view&sysparm_article=KB0061951#os-inputs) (do not forget to adapt camel case customization name to snake case parameter).
 
-* `properties` - Arbitrary properties to pass to cloud-init's config drive datasource. It supports any key with any string value.
+* `properties` - Deprecated, has no effect
 
 * `storage`: OS reinstallation storage configurations. [More details about disks, hardware/software RAID and partitioning configuration](https://help.ovhcloud.com/csm/en-dedicated-servers-api-partitioning?id=kb_article_view&sysparm_article=KB0043882) (do not forget to adapt camel case parameters to snake case parameters).
   * `disk_group_id`: Disk group id to install the OS to (default is 0, meaning automatic).
