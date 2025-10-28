@@ -109,6 +109,7 @@ resource "ovh_dedicated_server" "server" {
 
 * `os` - Operating System to install
 * `customizations` - Customization of the OS configuration
+  * `config_drive_metadata` - Config Drive MetaData
   * `config_drive_user_data` - Config Drive UserData
   * `efi_bootloader_path` - Path of the EFI bootloader from the OS installed on the server
   * `hostname` - Custom hostname

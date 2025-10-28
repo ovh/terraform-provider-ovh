@@ -184,6 +184,7 @@ type ExtrasDetails struct {
 }
 
 type DedicatedServerReinstallTaskCustomizations struct {
+	ConfigDriveMetadata             map[string]interface{} `json:"configDriveMetadata,omitempty"`
 	ConfigDriveUserData             *string                `json:"configDriveUserData,omitempty"`
 	EfiBootloaderPath               *string                `json:"efiBootloaderPath,omitempty"`
 	Hostname                        *string                `json:"hostname,omitempty"`
@@ -199,6 +200,7 @@ type DedicatedServerReinstallTaskCustomizations struct {
 }
 
 func (opts *DedicatedServerReinstallTaskCustomizations) FromResource(d *schema.ResourceData, parent string) *DedicatedServerReinstallTaskCustomizations {
+	opts.ConfigDriveMetadata = helpers.GetMapFromData(d, fmt.Sprintf("%s.config_drive_metadata", parent))
 	opts.ConfigDriveUserData = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.config_drive_user_data", parent))
 	opts.EfiBootloaderPath = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.efi_bootloader_path", parent))
 	opts.Hostname = helpers.GetNilStringPointerFromData(d, fmt.Sprintf("%s.hostname", parent))
