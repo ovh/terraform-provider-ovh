@@ -109,6 +109,7 @@ resource "ovh_dedicated_server" "server" {
 
 * `os` - Operating System to install
 * `customizations` - Customization of the OS configuration
+  * `config_drive_metadata` - Config Drive MetaData
   * `config_drive_user_data` - Config Drive UserData
   * `efi_bootloader_path` - Path of the EFI bootloader from the OS installed on the server
   * `hostname` - Custom hostname
@@ -139,7 +140,7 @@ resource "ovh_dedicated_server" "server" {
       * `raid_level` - Software raid type
       * `size` - Partition size in MiB
     * `scheme_name` - Partitioning scheme (if applicable with selected operating system)
-* `properties` - Arbitrary properties to pass to cloud-init's config drive datasource
+* `properties` - Deprecated, has no effect
 
 ### Arguments used to control the lifecycle of a dedicated server
 

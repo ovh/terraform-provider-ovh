@@ -37,7 +37,7 @@ terraform apply
 
 ## Second step: backport your previous task details into the imported resource
 
-This step is manual and requires you to convert the previous installation details from resource `ovh_dedicated_server_install_task` to the new fields of resource `ovh_dedicated_server`: `os`, `customizations`, `properties` and `storage`.
+This step is manual and requires you to convert the previous installation details from resource `ovh_dedicated_server_install_task` to the new fields of resource `ovh_dedicated_server`: `os`, `customizations` and `storage`.
 
 Let's take an example: if you previously used the following configuration:
 
@@ -74,7 +74,6 @@ resource "ovh_dedicated_server" "srv" {
     ssh_key                  = "ssh-ed25519 AAAAC3..."
   }
   os         = "debian12_64"
-  properties = null
   storage    = null
 }
 ```
