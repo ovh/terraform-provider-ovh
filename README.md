@@ -130,6 +130,7 @@ In order to run the full suite of Acceptance tests you will need to have the fol
 - a [Load Balancer](https://www.ovh.ie/solutions/load-balancer/)
 - a registered [Domain](https://www.ovh.ie/domains/)
 - a [Cloud Project](https://www.ovh.ie/public-cloud/instances/)
+- a [KMS](https://www.ovhcloud.com/en-gb/identity-security-operations/key-management-service/)
 
 You will also need to setup your [OVH API](https://api.ovh.com) credentials. (see [documentation](https://www.terraform.io/docs/providers/ovh/index.html#configuration-reference))
 
@@ -169,6 +170,7 @@ export OVH_DOMAIN_NS3_HOST_TEST="..."
 export OVH_DOMAIN_DS_RECORD_ALGORITHM_TEST="..."
 export OVH_DOMAIN_DS_RECORD_PUBLIC_KEY_TEST="..."
 export OVH_DOMAIN_DS_RECORD_TAG_TEST="..."
+export OVH_OKMS="..."
 
 $ make testacc
 ```
