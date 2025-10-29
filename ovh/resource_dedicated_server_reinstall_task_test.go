@@ -292,7 +292,7 @@ resource "ovh_dedicated_server_reinstall_task" "server_reinstall" {
   os = "byolinux_64"
   customizations {
     hostname = "mon-tux"
-    image_url = "https://github.com/ashmonger/akution_test/releases/download/0.6-fixCache/deb11k6.qcow2"
+    image_url = "https://github.com/ashmonger/akution_test/releases/latest/download/deb11k6.qcow2"
 	efi_bootloader_path = "\\efi\\debian\\grubx64.efi"
 	ssh_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIrODOo0SvY5f0TlQNvGHIRKzr4bHPa+D5bYF18RiOgP email@example.com"
 	config_drive_user_data = "c3NoX2F1dGhvcml6ZWRfa2V5czoKICAtIHNzaC1yc2EgQUFBQUI4ZGpZaXc9PSBteXNlbGZAbXlkb21haW4ubmV0Cgp1c2VyczoKICAtIG5hbWU6IHBhdGllbnQwCiAgICBzdWRvOiBBTEw9KEFMTCkgTk9QQVNTV0Q6QUxMCiAgICBncm91cHM6IHVzZXJzLCBzdWRvCiAgICBzaGVsbDogL2Jpbi9iYXNoCiAgICBsb2NrX3Bhc3N3ZDogZmFsc2UKICAgIHNzaF9hdXRob3JpemVkX2tleXM6CiAgICAgIC0gc3NoLXJzYSBBQUFBQjhkallpdz09IG15c2VsZkBteWRvbWFpbi5uZXQKZGlzYWJsZV9yb290OiBmYWxzZQpwYWNrYWdlczoKICAtIHZpbQogIC0gdHJlZQpmaW5hbF9tZXNzYWdlOiBUaGUgc3lzdGVtIGlzIGZpbmFsbHkgdXAsIGFmdGVyICRVUFRJTUUgc2Vjb25kcw=="
