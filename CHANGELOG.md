@@ -1,3 +1,38 @@
+## 2.9.0 (November 4, 2025)
+
+🎉 Features:
+
+* New resource: `ovh_iam_resource_tags` ([#1131](https://github.com/ovh/terraform-provider-ovh/pull/1131))
+* New resource: `ovh_okms_secret` ([#1105](https://github.com/ovh/terraform-provider-ovh/pull/1105))
+
+* New datasource: `ovh_okms_secret` ([#1105](https://github.com/ovh/terraform-provider-ovh/pull/1105))
+* New datasource: `ovh_domain_zone_record` ([#1136](https://github.com/ovh/terraform-provider-ovh/pull/1136))
+* New datasource: `ovh_domain_zone_records` ([#1136](https://github.com/ovh/terraform-provider-ovh/pull/1136))
+
+💪 Improvements:
+
+* `r/ovh_vrack`: Add bandwidth option in tests ([#1130](https://github.com/ovh/terraform-provider-ovh/pull/1130))
+
+⚠️ Deprecations:
+
+* `r/ovh_ip_mitigation`: Attribute `permanent` is now deprecated ([#1132](https://github.com/ovh/terraform-provider-ovh/pull/1132))
+* `r/ovh_dedicated_server`: Attribute `properties` is now deprecated ([#1135](https://github.com/ovh/terraform-provider-ovh/pull/1135))
+* `r/ovh_dedicated_server_reinstall_task`: Attribute `properties` is now deprecated ([#1135](https://github.com/ovh/terraform-provider-ovh/pull/1135))
+
+🐜 Bug fixes:
+
+* Make sure to have the provider version in the User-Agent of requests ([#1121](https://github.com/ovh/terraform-provider-ovh/pull/1121))
+* `r/ovh_vps`: Save resource in state before trying to reinstall the VPS ([#1120](https://github.com/ovh/terraform-provider-ovh/pull/1120))
+
+📚 Documentation:
+
+* `r/ovh_cloud_project_database_ip_restriction`: Clarify usage of the resource ([#1127](https://github.com/ovh/terraform-provider-ovh/pull/1127))
+* Fix some typos in several documentations ([#1133](https://github.com/ovh/terraform-provider-ovh/pull/1133))
+* Fix some typo in the pull request template ([#1134](https://github.com/ovh/terraform-provider-ovh/pull/1134))
+* `r/ovh_cloud_project_storage`: Add allowed versioning status ([#1104](https://github.com/ovh/terraform-provider-ovh/pull/1104))
+
+❤️ Thanks for your contributions ❤️
+
 ## 2.8.0 (September 25, 2025)
 
 🎉 Features:
