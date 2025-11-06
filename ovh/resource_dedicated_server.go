@@ -302,10 +302,9 @@ func (r *dedicatedServerResource) Update(ctx context.Context, req resource.Updat
 	responseData.MergeWith(&stateData)
 	responseData.ID = responseData.ServiceName
 
-	// Explicitely set Customizations/Properties/Storage to what was defined in the plan
+	// Explicitely set Customizations/Storage to what was defined in the plan
 	// as we can't determine the right thing to do in MergeWith function
 	responseData.Customizations = planData.Customizations
-	responseData.Properties = planData.Properties
 	responseData.Storage = planData.Storage
 
 	// Same thing for the flags to control reinstallation, set the plan value explicitly
@@ -464,8 +463,7 @@ func (r *dedicatedServerResource) reinstallDedicatedServer(ctx context.Context, 
 		if planData.Os.ValueString() != "" &&
 			stateData.Os.ValueString() != planData.Os.ValueString() ||
 			!stateData.Customizations.Equal(planData.Customizations) ||
-			!stateData.Storage.Equal(planData.Storage) ||
-			!stateData.Properties.Equal(planData.Properties) {
+			!stateData.Storage.Equal(planData.Storage) {
 			shouldReinstall = true
 		}
 	}
