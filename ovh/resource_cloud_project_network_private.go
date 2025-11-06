@@ -295,11 +295,12 @@ func resourceCloudProjectNetworkPrivateUpdate(d *schema.ResourceData, meta inter
 		}
 	}
 
+	regionOpenstackIDs := d.Get("regions_openstack_ids").(map[string]any)
 	for _, reg := range regionsToRemove {
-		endpoint = fmt.Sprintf("/cloud/project/%s/network/private/%s/region/%s",
+		endpoint = fmt.Sprintf("/cloud/project/%s/region/%s/network/%s",
 			url.PathEscape(serviceName),
-			url.PathEscape(d.Id()),
 			url.PathEscape(reg),
+			url.PathEscape(regionOpenstackIDs[reg].(string)),
 		)
 
 		if err := config.OVHClient.Delete(endpoint, params); err != nil {
