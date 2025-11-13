@@ -146,7 +146,7 @@ func loadNodelPoolTemplateFromResource(i interface{}) (*CloudProjectKubeNodePool
 	}
 
 	templateSet := i.(*schema.Set).List()
-	if templateSet == nil || len(templateSet) == 0 {
+	if len(templateSet) == 0 {
 		return &template, nil
 	}
 

@@ -67,7 +67,7 @@ func (r *storageEfsShareSnapshotResource) Create(ctx context.Context, req resour
 	resWait, err := r.WaitForSnapshotCreation(ctx, r.config.OVHClient, data.ServiceName.ValueString(), data.ShareId.ValueString(), responseData.Id.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			fmt.Sprintf("Error calling Operation"),
+			"Error calling Operation",
 			err.Error(),
 		)
 		return

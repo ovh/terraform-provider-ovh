@@ -81,7 +81,7 @@ func (r *cloudProjectVolumeResource) Create(ctx context.Context, req resource.Cr
 	resWait, err := r.WaitForVolumeCreation(ctx, r.config.OVHClient, data.ServiceName.ValueString(), responseData.Id.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			fmt.Sprintf("Error calling Operation"),
+			"Error calling Operation",
 			err.Error(),
 		)
 		return
