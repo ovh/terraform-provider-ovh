@@ -6,6 +6,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
+
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -14,9 +16,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 )
 
 func CloudProjectAlertingResourceSchema(ctx context.Context) schema.Schema {
@@ -89,8 +92,11 @@ func CloudProjectAlertingResourceSchema(ctx context.Context) schema.Schema {
 				MarkdownDescription: "Monthly threshold for this alerting in currency",
 			},
 			"service_name": schema.StringAttribute{
-				CustomType:          ovhtypes.TfStringType{},
-				Required:            true,
+				CustomType: ovhtypes.TfStringType{},
+				Required:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 				Description:         "The project id",
 				MarkdownDescription: "The project id",
 			},
