@@ -136,7 +136,7 @@ func (opts *IpLoadbalancingFarmCreateOrUpdateOpts) FromResource(d *schema.Resour
 	opts.Zone = d.Get("zone").(string)
 
 	probe := d.Get("probe").([]interface{})
-	if probe != nil && len(probe) == 1 {
+	if len(probe) == 1 {
 		opts.Probe = (&IpLoadbalancingFarmBackendProbe{}).FromResource(d, "probe.0")
 	}
 
@@ -260,7 +260,7 @@ func (opts *IPLoadbalancingHttpRouteOpts) FromResource(d *schema.ResourceData) *
 	opts.DisplayName = helpers.GetNilStringPointerFromData(d, "display_name")
 
 	actions := d.Get("action").([]interface{})
-	if actions != nil && len(actions) == 1 {
+	if len(actions) == 1 {
 		opts.Action = *((&IPLoadbalancingHttpRouteActionOpts{}).FromResource(d, "action.0"))
 	}
 
@@ -355,7 +355,7 @@ func (opts *IPLoadbalancingTcpRouteOpts) FromResource(d *schema.ResourceData) *I
 	opts.DisplayName = helpers.GetNilStringPointerFromData(d, "display_name")
 
 	actions := d.Get("action").([]interface{})
-	if actions != nil && len(actions) == 1 {
+	if len(actions) == 1 {
 		opts.Action = *((&IPLoadbalancingTcpRouteActionOpts{}).FromResource(d, "action.0"))
 	}
 

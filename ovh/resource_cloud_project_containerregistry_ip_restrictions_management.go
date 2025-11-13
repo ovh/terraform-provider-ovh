@@ -1,7 +1,6 @@
 package ovh
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -47,7 +46,7 @@ func resourceCloudProjectContainerRegistryIPRestrictionsManagement() *schema.Res
 						ipRestriction := ipRestrictionInterface.(map[string]interface{})
 
 						if ipRestriction["ip_block"] == nil {
-							return nil, []error{errors.New(fmt.Sprintf("ipBlock attribute is mandatory for ip_restrictions: %s", path))}
+							return nil, []error{fmt.Errorf("ipBlock attribute is mandatory for ip_restrictions: %s", path)}
 						}
 
 						ipBlockString := ipRestriction["ip_block"].(string)

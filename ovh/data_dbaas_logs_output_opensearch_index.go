@@ -113,7 +113,7 @@ func dataSourceDbaasLogsOutputOpensearchIndexRead(ctx context.Context, d *schema
 			strings.ToLower(nameFilter),
 		)
 
-		if strings.ToLower(index.Name) == strings.ToLower(nameFilter) {
+		if strings.EqualFold(index.Name, nameFilter) {
 			indexes = append(indexes, index)
 		}
 	}

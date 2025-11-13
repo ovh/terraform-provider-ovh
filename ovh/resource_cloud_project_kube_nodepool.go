@@ -1,7 +1,6 @@
 package ovh
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -227,11 +226,11 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 												taint := taintInterface.(map[string]interface{})
 
 												if taint["key"] == nil {
-													return nil, []error{errors.New(fmt.Sprintf("key attribute is mandatory for taint: %s", path))}
+													return nil, []error{fmt.Errorf("key attribute is mandatory for taint: %s", path)}
 												}
 
 												if taint["effect"] == nil {
-													return nil, []error{errors.New(fmt.Sprintf("effect attribute is mandatory for taint: %s", path))}
+													return nil, []error{fmt.Errorf("effect attribute is mandatory for taint: %s", path)}
 												}
 
 												effectString := taint["effect"].(string)

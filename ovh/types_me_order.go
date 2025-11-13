@@ -68,7 +68,7 @@ type MeOrderDetailOperationResource struct {
 
 type MeOrderPaymentOpts struct {
 	PaymentMean   string `json:"paymentMean"`
-	PaymentMeanId *int64 `json:"paymentMeanId,omitEmpty"`
+	PaymentMeanId *int64 `json:"paymentMeanId,omitempty"`
 }
 type MeOrderPaymentMethodOpts struct {
 	PaymentMethod PaymentMethod `json:"paymentMethod"`
