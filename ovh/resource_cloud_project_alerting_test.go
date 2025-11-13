@@ -48,7 +48,7 @@ func TestAccCloudProjectAlerting_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"ovh_cloud_project_alerting.alert", "formatted_monthly_threshold.currency_code", "EUR"),
 					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_alerting.alert", "formatted_monthly_threshold.text", "3000.00 €"),
+						"ovh_cloud_project_alerting.alert", "formatted_monthly_threshold.text", "3 000,00 €"),
 					resource.TestCheckResourceAttr(
 						"ovh_cloud_project_alerting.alert", "formatted_monthly_threshold.value", "3000"),
 				),
@@ -65,7 +65,7 @@ func TestAccCloudProjectAlerting_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"ovh_cloud_project_alerting.alert", "formatted_monthly_threshold.currency_code", "EUR"),
 					resource.TestCheckResourceAttr(
-						"ovh_cloud_project_alerting.alert", "formatted_monthly_threshold.text", "100.00 €"),
+						"ovh_cloud_project_alerting.alert", "formatted_monthly_threshold.text", "100,00 €"),
 					resource.TestCheckResourceAttr(
 						"ovh_cloud_project_alerting.alert", "formatted_monthly_threshold.value", "100"),
 				),
