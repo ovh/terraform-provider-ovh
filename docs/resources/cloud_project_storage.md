@@ -35,6 +35,7 @@ resource "ovh_cloud_project_storage" "storage" {
 ### Optional
 
 - `encryption` (Attributes) Encryption configuration (see [below for nested schema](#nestedatt--encryption))
+- `hide_objects` (Boolean) If true, objects list will not be saved in state (useful for large buckets)
 - `limit` (Number) Limit the number of objects returned (1000 maximum, defaults to 1000)
 - `marker` (String) Key to start with when listing objects
 - `owner_id` (Number) Container owner user ID
