@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
 var _ resource.ResourceWithConfigure = (*cloudProjectStorageResource)(nil)
@@ -115,6 +116,10 @@ func (r *cloudProjectStorageResource) Read(ctx context.Context, req resource.Rea
 
 	responseData.MergeWith(&data)
 
+	if data.HideObjects.ValueBool() {
+		responseData.Objects = ovhtypes.NewListNestedObjectValueOfNull[ObjectsValue](ctx)
+	}
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)
 }
@@ -167,6 +172,10 @@ func (r *cloudProjectStorageResource) Update(ctx context.Context, req resource.U
 	}
 
 	responseData.MergeWith(&planData)
+
+	if planData.HideObjects.ValueBool() {
+		responseData.Objects = ovhtypes.NewListNestedObjectValueOfNull[ObjectsValue](ctx)
+	}
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)

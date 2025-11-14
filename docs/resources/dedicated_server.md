@@ -140,7 +140,7 @@ resource "ovh_dedicated_server" "server" {
       * `raid_level` - Software raid type
       * `size` - Partition size in MiB
     * `scheme_name` - Partitioning scheme (if applicable with selected operating system)
-* `properties` - Deprecated, has no effect
+* `properties` - Attribute 'properties' is deprecated and has no effect
 
 ### Arguments used to control the lifecycle of a dedicated server
 

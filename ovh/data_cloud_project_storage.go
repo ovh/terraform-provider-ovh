@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
 var _ datasource.DataSourceWithConfigure = (*cloudProjectStorageDataSource)(nil)
@@ -73,6 +74,10 @@ func (d *cloudProjectStorageDataSource) Read(ctx context.Context, req datasource
 			err.Error(),
 		)
 		return
+	}
+
+	if data.HideObjects.ValueBool() {
+		data.Objects = ovhtypes.NewListNestedObjectValueOfNull[ObjectsValue](ctx)
 	}
 
 	// Save data into Terraform state

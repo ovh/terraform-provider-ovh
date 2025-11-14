@@ -142,6 +142,11 @@ func CloudProjectRegionStorageResourceSchema(ctx context.Context) schema.Schema 
 			Description:         "Container objects",
 			MarkdownDescription: "Container objects",
 		},
+		"hide_objects": schema.BoolAttribute{
+			CustomType:  ovhtypes.TfBoolType{},
+			Optional:    true,
+			Description: "If true, objects list will not be saved in state (useful for large buckets)",
+		},
 		"objects_count": schema.Int64Attribute{
 			CustomType:          ovhtypes.TfInt64Type{},
 			Computed:            true,
@@ -369,6 +374,7 @@ type CloudProjectRegionStorageModel struct {
 	Marker       ovhtypes.TfStringValue                   `tfsdk:"marker" json:"marker"`
 	Name         ovhtypes.TfStringValue                   `tfsdk:"name" json:"name"`
 	Objects      ovhtypes.TfListNestedValue[ObjectsValue] `tfsdk:"objects" json:"objects"`
+	HideObjects  ovhtypes.TfBoolValue                     `tfsdk:"hide_objects" json:"-"`
 	ObjectsCount ovhtypes.TfInt64Value                    `tfsdk:"objects_count" json:"objectsCount"`
 	ObjectsSize  ovhtypes.TfInt64Value                    `tfsdk:"objects_size" json:"objectsSize"`
 	OwnerId      ovhtypes.TfInt64Value                    `tfsdk:"owner_id" json:"ownerId"`
@@ -414,6 +420,10 @@ func (v *CloudProjectRegionStorageModel) MergeWith(other *CloudProjectRegionStor
 
 	if (v.ObjectsSize.IsUnknown() || v.ObjectsSize.IsNull()) && !other.ObjectsSize.IsUnknown() {
 		v.ObjectsSize = other.ObjectsSize
+	}
+
+	if (v.HideObjects.IsUnknown() || v.HideObjects.IsNull()) && !other.HideObjects.IsUnknown() {
+		v.HideObjects = other.HideObjects
 	}
 
 	if (v.OwnerId.IsUnknown() || v.OwnerId.IsNull()) && !other.OwnerId.IsUnknown() {
