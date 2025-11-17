@@ -70,19 +70,19 @@ In addition to the arguments above, the following attributes are exported:
 - `version` (Number) The resolved version number (requested or current latest).
 - `data` (String, Sensitive) Raw JSON secret payload (present only if `include_data` is true).
 - `metadata` (Block) Secret metadata:
-	- `cas_required` (Boolean)
-	- `created_at` (String)
-	- `updated_at` (String)
-	- `current_version` (Number)
-	- `oldest_version` (Number)
-	- `max_versions` (Number)
-	- `deactivate_version_after` (String)
-	- `custom_metadata` (Map of String)
+  - `cas_required` (Boolean)
+  - `created_at` (String)
+  - `updated_at` (String)
+  - `current_version` (Number)
+  - `oldest_version` (Number)
+  - `max_versions` (Number)
+  - `deactivate_version_after` (String)
+  - `custom_metadata` (Map of String)
 - `iam` (Block) IAM resource metadata:
-	- `display_name` (String)
-	- `id` (String)
-	- `tags` (Map of String)
-	- `urn` (String)
+  - `display_name` (String)
+  - `id` (String)
+  - `tags` (Map of String)
+  - `urn` (String)
 
 ## Behavior & Notes
 

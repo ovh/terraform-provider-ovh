@@ -28,6 +28,7 @@ data "ovh_cloud_project_storage" "storage" {
 
 ### Optional
 
+- `hide_objects` (Boolean) If true, objects list will not be saved in state (useful for large buckets)
 - `limit` (Number) Limit the number of objects returned (1000 maximum, defaults to 1000)
 - `marker` (String) Key to start with when listing objects
 - `prefix` (String) List objects whose key begins with this prefix
