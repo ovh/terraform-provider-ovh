@@ -14,7 +14,7 @@ var (
 
 func MePaymentMeanBankAccounts(c *ovhwrap.Client) ([]*MePaymentMeanBankAccount, error) {
 	ids := &[]int64{}
-	endpoint := fmt.Sprintf("/me/paymentMean/bankAccount")
+	endpoint := "/me/paymentMean/bankAccount"
 	if err := c.Get(endpoint, ids); err != nil {
 		return nil, fmt.Errorf("Error calling GET %s", endpoint)
 	}
@@ -39,7 +39,7 @@ func MePaymentMeanBankAccounts(c *ovhwrap.Client) ([]*MePaymentMeanBankAccount, 
 
 func MePaymentMeanCreditCards(c *ovhwrap.Client) ([]*MePaymentMeanCreditCard, error) {
 	ids := &[]int64{}
-	endpoint := fmt.Sprintf("/me/paymentMean/creditCard")
+	endpoint := "/me/paymentMean/creditCard"
 	if err := c.Get(endpoint, ids); err != nil {
 		return nil, fmt.Errorf("Error calling GET %s", endpoint)
 	}
@@ -64,7 +64,7 @@ func MePaymentMeanCreditCards(c *ovhwrap.Client) ([]*MePaymentMeanCreditCard, er
 
 func MePaymentMeanPaypals(c *ovhwrap.Client) ([]*MePaymentMeanPaypal, error) {
 	ids := &[]int64{}
-	endpoint := fmt.Sprintf("/me/paymentMean/paypal")
+	endpoint := "/me/paymentMean/paypal"
 	if err := c.Get(endpoint, ids); err != nil {
 		return nil, fmt.Errorf("Error calling GET %s", endpoint)
 	}

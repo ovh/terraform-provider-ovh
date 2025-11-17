@@ -236,7 +236,7 @@ func recursiveWaitTaskFinished(d *schema.ResourceData, meta interface{}, ipTask 
 	case IpTaskStatusCancelled, IpTaskStatusOvhError, IpTaskStatusCustomerError:
 		return helpers.GetNilBoolPointer(false), fmt.Errorf("could not assign IP %s to service %v as Ip task is %s", ip, opts.To, ipTask.Status)
 	}
-	timeDiff := time.Now().Sub(ipTask.StartDate)
+	timeDiff := time.Since(ipTask.StartDate)
 	if timeDiff < taskExpiresAfter {
 		log.Printf("[DEBUG] ipTask.Status is currently: %s. Waiting %d second (we allow %f more seconds for the task to complete)", ipTask.Status, waitingTimeInSecondsBeforeRefreshState, taskExpiresAfter.Seconds()-timeDiff.Seconds())
 		time.Sleep(waitingTimeInSecondsBeforeRefreshState * time.Second)

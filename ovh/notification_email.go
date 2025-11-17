@@ -12,7 +12,7 @@ func notificationEmailSortedIds(config *Config) ([]int64, error) {
 	log.Printf("[DEBUG] Will read notification emails ids")
 	res := []int64{}
 
-	endpoint := fmt.Sprintf("/me/notification/email/history")
+	endpoint := "/me/notification/email/history"
 	if err := config.OVHClient.Get(endpoint, &res); err != nil {
 		return nil, fmt.Errorf("calling Get %s:\n\t %q", endpoint, err)
 	}

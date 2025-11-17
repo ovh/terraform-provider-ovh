@@ -33,11 +33,11 @@ const (
 )
 
 type IpTask struct {
-	Comment     *string            `json:"comment;omitempty"`
-	Destination *IpServiceRoutedTo `json:"routedTo;omitempty"`
-	DoneDate    *time.Time         `json:"doneDate;omitempty"`
+	Comment     *string            `json:"comment,omitempty"`
+	Destination *IpServiceRoutedTo `json:"routedTo,omitempty"`
+	DoneDate    *time.Time         `json:"doneDate,omitempty"`
 	Function    IpTaskFunctionEnum `json:"function"`
-	LastUpdate  *time.Time         `json:"lastUpdate;omitempty"`
+	LastUpdate  *time.Time         `json:"lastUpdate,omitempty"`
 	StartDate   time.Time          `json:"startDate"`
 	Status      IpTaskStatusEnum   `json:"status"`
 	TaskId      int64              `json:"taskId"`

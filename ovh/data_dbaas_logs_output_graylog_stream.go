@@ -183,7 +183,7 @@ func dataSourceDbaasLogsOutputGraylogStreamRead(ctx context.Context, d *schema.R
 			strings.ToLower(titleFilter),
 		)
 
-		if strings.ToLower(stream.Title) == strings.ToLower(titleFilter) {
+		if strings.EqualFold(stream.Title, titleFilter) {
 			streams = append(streams, stream)
 		}
 	}

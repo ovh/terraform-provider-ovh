@@ -18,6 +18,8 @@ import (
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 )
 
 func CloudProjectRegionStorageResourceSchema(ctx context.Context) schema.Schema {
@@ -78,6 +80,7 @@ func CloudProjectRegionStorageResourceSchema(ctx context.Context) schema.Schema 
 			Required:            true,
 			Description:         "Container name",
 			MarkdownDescription: "Container name",
+			PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
 		},
 		"objects": schema.ListNestedAttribute{
 			NestedObject: schema.NestedAttributeObject{
@@ -184,6 +187,7 @@ func CloudProjectRegionStorageResourceSchema(ctx context.Context) schema.Schema 
 			Required:            true,
 			Description:         "Region name",
 			MarkdownDescription: "Region name",
+			PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
 		},
 		"replication": schema.SingleNestedAttribute{
 			Attributes: map[string]schema.Attribute{

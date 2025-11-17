@@ -73,7 +73,7 @@ func (opts *IpMoveOpts) FromResource(d *schema.ResourceData) (*IpMoveOpts, error
 
 func GetRoutedToServiceName(d *schema.ResourceData) *string {
 	routedTo := (d.Get("routed_to")).([]interface{})
-	if routedTo == nil || len(routedTo) == 0 || routedTo[0] == nil {
+	if len(routedTo) == 0 || routedTo[0] == nil {
 		return nil
 	}
 	serviceName := (routedTo[0].(map[string]interface{}))["service_name"].(string)
