@@ -82,17 +82,17 @@ func (r *okmsSecretResource) Create(ctx context.Context, req resource.CreateRequ
 }
 
 func (r *okmsSecretResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data, responseData OkmsSecretModel
+	var secretFromState, currentSecret OkmsSecretModel
 
 	// Read Terraform prior state data into the model
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &secretFromState)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	endpoint := "/v2/okms/resource/" + url.PathEscape(data.OkmsId.ValueString()) + "/secret/" + url.PathEscape(data.Path.ValueString()) + ""
+	endpoint := "/v2/okms/resource/" + url.PathEscape(secretFromState.OkmsId.ValueString()) + "/secret/" + url.PathEscape(secretFromState.Path.ValueString())
 
-	if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
+	if err := r.config.OVHClient.Get(endpoint, &currentSecret); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Get %s", endpoint),
 			err.Error(),
@@ -100,10 +100,57 @@ func (r *okmsSecretResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	data.MergeWith(&responseData)
+	// Update metadata and IAM from API response
+	secretFromState.Metadata = currentSecret.Metadata
+	secretFromState.Iam = currentSecret.Iam
+
+	// Fetch the current version details including data for drift detection
+	currentVersion := currentSecret.Metadata.CurrentVersion.ValueInt64()
+	versionEndpoint := "/v2/okms/resource/" + url.PathEscape(secretFromState.OkmsId.ValueString()) + "/secret/" + url.PathEscape(secretFromState.Path.ValueString()) + "/version/" + fmt.Sprintf("%d", currentVersion) + "?includeData=true"
+
+	var currentSecretVersion struct {
+		Id            *int64          `json:"id"`
+		CreatedAt     *string         `json:"createdAt"`
+		State         *string         `json:"state"`
+		DeactivatedAt *string         `json:"deactivatedAt"`
+		Data          json.RawMessage `json:"data"`
+	}
+	if err := r.config.OVHClient.Get(versionEndpoint, &currentSecretVersion); err == nil {
+		// Update version computed fields
+		if currentSecretVersion.Id != nil {
+			secretFromState.Version.Id = ovhtypes.NewTfInt64Value(*currentSecretVersion.Id)
+		}
+		if currentSecretVersion.CreatedAt != nil {
+			secretFromState.Version.CreatedAt = ovhtypes.NewTfStringValue(*currentSecretVersion.CreatedAt)
+		}
+		if currentSecretVersion.State != nil {
+			secretFromState.Version.State = ovhtypes.NewTfStringValue(*currentSecretVersion.State)
+		}
+		if currentSecretVersion.DeactivatedAt != nil {
+			secretFromState.Version.DeactivatedAt = ovhtypes.NewTfStringValue(*currentSecretVersion.DeactivatedAt)
+		} else {
+			secretFromState.Version.DeactivatedAt = ovhtypes.NewTfStringNull()
+		}
+
+		// Check version state and data for drift detection
+		if currentSecretVersion.State != nil && *currentSecretVersion.State == "DELETED" {
+			// Version is deleted - mark data as empty to force drift detection
+			secretFromState.Version.Data = ovhtypes.NewTfStringValue("")
+		} else if len(currentSecretVersion.Data) > 0 {
+			// Version is active - compare data for drift
+			actualData := string(currentSecretVersion.Data)
+			configData := secretFromState.Version.Data.ValueString()
+
+			if !semanticJSONEqual(configData, actualData) {
+				// Data differs - update state with actual value so Terraform shows drift
+				secretFromState.Version.Data = ovhtypes.NewTfStringValue(actualData)
+			}
+		}
+	}
+	// Silently ignore errors - drift detection is best-effort
 
 	// Save updated data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &secretFromState)...)
 }
 
 func (r *okmsSecretResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -242,6 +289,34 @@ func buildMetadataPayload(meta *MetadataValue) map[string]any {
 		return nil
 	}
 	return mp
+}
+
+// semanticJSONEqual compares two JSON strings for semantic equality,
+// ignoring formatting differences like whitespace and key ordering.
+func semanticJSONEqual(a, b string) bool {
+	var objA, objB interface{}
+
+	// Try to parse both as JSON
+	if err := json.Unmarshal([]byte(a), &objA); err != nil {
+		// Not valid JSON, fall back to string comparison
+		return a == b
+	}
+	if err := json.Unmarshal([]byte(b), &objB); err != nil {
+		// Not valid JSON, fall back to string comparison
+		return a == b
+	}
+
+	// Re-marshal both in canonical form and compare
+	normalizedA, err := json.Marshal(objA)
+	if err != nil {
+		return a == b
+	}
+	normalizedB, err := json.Marshal(objB)
+	if err != nil {
+		return a == b
+	}
+
+	return string(normalizedA) == string(normalizedB)
 }
 
 // populateVersionComputedFields fills secret version attributes
