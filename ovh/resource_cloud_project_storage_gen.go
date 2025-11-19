@@ -235,6 +235,11 @@ func CloudProjectRegionStorageResourceSchema(ctx context.Context) schema.Schema 
 											),
 										},
 									},
+									"remove_on_main_bucket_deletion": schema.BoolAttribute{
+										CustomType:  ovhtypes.TfBoolType{},
+										Optional:    true,
+										Description: "Whether to remove replicated bucket when the main bucket is deleted",
+									},
 								},
 								CustomType: ReplicationRulesDestinationType{
 									ObjectType: types.ObjectType{
@@ -787,7 +792,7 @@ func (v *EncryptionValue) MergeWith(other *EncryptionValue) {
 
 func (v EncryptionValue) Attributes() map[string]attr.Value {
 	return map[string]attr.Value{
-		"sseAlgorithm": v.SseAlgorithm,
+		"sse_algorithm": v.SseAlgorithm,
 	}
 }
 func (v EncryptionValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
@@ -1459,14 +1464,14 @@ func (v *ObjectsValue) MergeWith(other *ObjectsValue) {
 
 func (v ObjectsValue) Attributes() map[string]attr.Value {
 	return map[string]attr.Value{
-		"etag":           v.Etag,
-		"isDeleteMarker": v.IsDeleteMarker,
-		"isLatest":       v.IsLatest,
-		"key":            v.Key,
-		"lastModified":   v.LastModified,
-		"size":           v.Size,
-		"storageClass":   v.StorageClass,
-		"versionId":      v.VersionId,
+		"etag":             v.Etag,
+		"is_delete_marker": v.IsDeleteMarker,
+		"is_latest":        v.IsLatest,
+		"key":              v.Key,
+		"last_modified":    v.LastModified,
+		"size":             v.Size,
+		"storage_class":    v.StorageClass,
+		"version_id":       v.VersionId,
 	}
 }
 func (v ObjectsValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
@@ -2605,12 +2610,12 @@ func (v *ReplicationRulesValue) MergeWith(other *ReplicationRulesValue) {
 
 func (v ReplicationRulesValue) Attributes() map[string]attr.Value {
 	return map[string]attr.Value{
-		"deleteMarkerReplication": v.DeleteMarkerReplication,
-		"destination":             v.Destination,
-		"filter":                  v.Filter,
-		"id":                      v.Id,
-		"priority":                v.Priority,
-		"status":                  v.Status,
+		"delete_marker_replication": v.DeleteMarkerReplication,
+		"destination":               v.Destination,
+		"filter":                    v.Filter,
+		"id":                        v.Id,
+		"priority":                  v.Priority,
+		"status":                    v.Status,
 	}
 }
 func (v ReplicationRulesValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
@@ -2882,15 +2887,34 @@ func (t ReplicationRulesDestinationType) ValueFromObject(ctx context.Context, in
 			fmt.Sprintf(`storage_class expected to be ovhtypes.TfStringValue, was: %T`, storageClassAttribute))
 	}
 
+	removeOnMainBucketDeletionAttribute, ok := attributes["remove_on_main_bucket_deletion"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`remove_on_main_bucket_deletion is missing from object`)
+
+		return nil, diags
+	}
+
+	removeOnMainBucketDeletionVal, ok := removeOnMainBucketDeletionAttribute.(ovhtypes.TfBoolValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`remove_on_main_bucket_deletion expected to be ovhtypes.TfBoolValue, was: %T`, removeOnMainBucketDeletionAttribute))
+	}
+
 	if diags.HasError() {
 		return nil, diags
 	}
 
 	return ReplicationRulesDestinationValue{
-		Name:         nameVal,
-		Region:       regionVal,
-		StorageClass: storageClassVal,
-		state:        attr.ValueStateKnown,
+		Name:                       nameVal,
+		Region:                     regionVal,
+		StorageClass:               storageClassVal,
+		RemoveOnMainBucketDeletion: removeOnMainBucketDeletionVal,
+		state:                      attr.ValueStateKnown,
 	}, diags
 }
 
@@ -3011,15 +3035,34 @@ func NewReplicationRulesDestinationValue(attributeTypes map[string]attr.Type, at
 			fmt.Sprintf(`storage_class expected to be ovhtypes.TfStringValue, was: %T`, storageClassAttribute))
 	}
 
+	removeOnMainBucketDeletionAttribute, ok := attributes["remove_on_main_bucket_deletion"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`remove_on_main_bucket_deletion is missing from object`)
+
+		return NewReplicationRulesDestinationValueUnknown(), diags
+	}
+
+	removeOnMainBucketDeletionVal, ok := removeOnMainBucketDeletionAttribute.(ovhtypes.TfBoolValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`remove_on_main_bucket_deletion expected to be ovhtypes.TfBoolValue, was: %T`, removeOnMainBucketDeletionAttribute))
+	}
+
 	if diags.HasError() {
 		return NewReplicationRulesDestinationValueUnknown(), diags
 	}
 
 	return ReplicationRulesDestinationValue{
-		Name:         nameVal,
-		Region:       regionVal,
-		StorageClass: storageClassVal,
-		state:        attr.ValueStateKnown,
+		Name:                       nameVal,
+		Region:                     regionVal,
+		StorageClass:               storageClassVal,
+		RemoveOnMainBucketDeletion: removeOnMainBucketDeletionVal,
+		state:                      attr.ValueStateKnown,
 	}, diags
 }
 
@@ -3091,10 +3134,11 @@ func (t ReplicationRulesDestinationType) ValueType(ctx context.Context) attr.Val
 var _ basetypes.ObjectValuable = ReplicationRulesDestinationValue{}
 
 type ReplicationRulesDestinationValue struct {
-	Name         ovhtypes.TfStringValue `tfsdk:"name" json:"name"`
-	Region       ovhtypes.TfStringValue `tfsdk:"region" json:"region"`
-	StorageClass ovhtypes.TfStringValue `tfsdk:"storage_class" json:"storageClass"`
-	state        attr.ValueState
+	Name                       ovhtypes.TfStringValue `tfsdk:"name" json:"name"`
+	Region                     ovhtypes.TfStringValue `tfsdk:"region" json:"region"`
+	StorageClass               ovhtypes.TfStringValue `tfsdk:"storage_class" json:"storageClass"`
+	RemoveOnMainBucketDeletion ovhtypes.TfBoolValue   `tfsdk:"remove_on_main_bucket_deletion" json:"-"`
+	state                      attr.ValueState
 }
 
 type ReplicationRulesDestinationWritableValue struct {
@@ -3150,6 +3194,7 @@ func (v *ReplicationRulesDestinationValue) UnmarshalJSON(data []byte) error {
 	v.Name = tmp.Name
 	v.Region = tmp.Region
 	v.StorageClass = tmp.StorageClass
+	v.RemoveOnMainBucketDeletion = tmp.RemoveOnMainBucketDeletion
 
 	v.state = attr.ValueStateKnown
 
@@ -3170,6 +3215,10 @@ func (v *ReplicationRulesDestinationValue) MergeWith(other *ReplicationRulesDest
 		v.StorageClass = other.StorageClass
 	}
 
+	if (v.RemoveOnMainBucketDeletion.IsUnknown() || v.RemoveOnMainBucketDeletion.IsNull()) && !other.RemoveOnMainBucketDeletion.IsUnknown() {
+		v.RemoveOnMainBucketDeletion = other.RemoveOnMainBucketDeletion
+	}
+
 	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
 		v.state = other.state
 	}
@@ -3177,13 +3226,14 @@ func (v *ReplicationRulesDestinationValue) MergeWith(other *ReplicationRulesDest
 
 func (v ReplicationRulesDestinationValue) Attributes() map[string]attr.Value {
 	return map[string]attr.Value{
-		"name":         v.Name,
-		"region":       v.Region,
-		"storageClass": v.StorageClass,
+		"name":                           v.Name,
+		"region":                         v.Region,
+		"storage_class":                  v.StorageClass,
+		"remove_on_main_bucket_deletion": v.RemoveOnMainBucketDeletion,
 	}
 }
 func (v ReplicationRulesDestinationValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	attrTypes := make(map[string]tftypes.Type, 3)
+	attrTypes := make(map[string]tftypes.Type, 4)
 
 	var val tftypes.Value
 	var err error
@@ -3191,12 +3241,13 @@ func (v ReplicationRulesDestinationValue) ToTerraformValue(ctx context.Context) 
 	attrTypes["name"] = basetypes.StringType{}.TerraformType(ctx)
 	attrTypes["region"] = basetypes.StringType{}.TerraformType(ctx)
 	attrTypes["storage_class"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["remove_on_main_bucket_deletion"] = basetypes.BoolType{}.TerraformType(ctx)
 
 	objectType := tftypes.Object{AttributeTypes: attrTypes}
 
 	switch v.state {
 	case attr.ValueStateKnown:
-		vals := make(map[string]tftypes.Value, 3)
+		vals := make(map[string]tftypes.Value, 4)
 
 		val, err = v.Name.ToTerraformValue(ctx)
 
@@ -3222,10 +3273,17 @@ func (v ReplicationRulesDestinationValue) ToTerraformValue(ctx context.Context) 
 
 		vals["storage_class"] = val
 
-		if err := tftypes.ValidateValue(objectType, vals); err != nil {
+		val, err = v.RemoveOnMainBucketDeletion.ToTerraformValue(ctx)
+
+		if err != nil {
 			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
 		}
 
+		vals["remove_on_main_bucket_deletion"] = val
+
+		if err := tftypes.ValidateValue(objectType, vals); err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
 		return tftypes.NewValue(objectType, vals), nil
 	case attr.ValueStateNull:
 		return tftypes.NewValue(objectType, nil), nil
@@ -3253,14 +3311,16 @@ func (v ReplicationRulesDestinationValue) ToObjectValue(ctx context.Context) (ba
 
 	objVal, diags := types.ObjectValue(
 		map[string]attr.Type{
-			"name":          ovhtypes.TfStringType{},
-			"region":        ovhtypes.TfStringType{},
-			"storage_class": ovhtypes.TfStringType{},
+			"name":                           ovhtypes.TfStringType{},
+			"region":                         ovhtypes.TfStringType{},
+			"storage_class":                  ovhtypes.TfStringType{},
+			"remove_on_main_bucket_deletion": ovhtypes.TfBoolType{},
 		},
 		map[string]attr.Value{
-			"name":          v.Name,
-			"region":        v.Region,
-			"storage_class": v.StorageClass,
+			"name":                           v.Name,
+			"region":                         v.Region,
+			"storage_class":                  v.StorageClass,
+			"remove_on_main_bucket_deletion": v.RemoveOnMainBucketDeletion,
 		})
 
 	return objVal, diags
@@ -3293,6 +3353,10 @@ func (v ReplicationRulesDestinationValue) Equal(o attr.Value) bool {
 		return false
 	}
 
+	if !v.RemoveOnMainBucketDeletion.Equal(other.RemoveOnMainBucketDeletion) {
+		return false
+	}
+
 	return true
 }
 
@@ -3306,9 +3370,10 @@ func (v ReplicationRulesDestinationValue) Type(ctx context.Context) attr.Type {
 
 func (v ReplicationRulesDestinationValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
 	return map[string]attr.Type{
-		"name":          ovhtypes.TfStringType{},
-		"region":        ovhtypes.TfStringType{},
-		"storage_class": ovhtypes.TfStringType{},
+		"name":                           ovhtypes.TfStringType{},
+		"region":                         ovhtypes.TfStringType{},
+		"storage_class":                  ovhtypes.TfStringType{},
+		"remove_on_main_bucket_deletion": ovhtypes.TfBoolType{},
 	}
 }
 
