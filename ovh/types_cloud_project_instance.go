@@ -100,7 +100,7 @@ type CloudProjectInstanceCreateOpts struct {
 	SshKey           *SshKey       `json:"sshKey,omitempty"`
 	SshKeyCreate     *SshKeyCreate `json:"sshKeyCreate,omitempty"`
 	UserData         *string       `json:"userData,omitempty"`
-	Networks         []*Network    `json:"network,omitempty"`
+	Network          *Network      `json:"network,omitempty"`
 }
 
 type Address struct {
@@ -282,61 +282,34 @@ func GetSshKeyCreate(i interface{}) *SshKeyCreate {
 func GetNetwork(mapping map[string]interface{}) *Network {
 	networkOutput := &Network{}
 
-	// Public NIC
 	if v, ok := mapping["public"]; ok {
 		networkOutput.Public = v.(bool)
 	}
 
-	// Private NICs
 	privateRaw, ok := mapping["private"]
-	if !ok || privateRaw == nil || privateRaw.(*schema.Set).Len() == 0 {
+	if !ok || privateRaw == nil {
 		return networkOutput
 	}
 
 	privateSet := privateRaw.(*schema.Set).List()
+	if len(privateSet) == 0 {
+		return networkOutput
+	}
+
 	networkOutput.Private = make([]*PrivateNetwork, 0, len(privateSet))
 
 	for _, priv := range privateSet {
-		private := priv.(map[string]interface{})
+		privateMap := priv.(map[string]interface{})
 		pn := &PrivateNetwork{}
 
-		if floatingIP, ok := private["floating_ip"]; ok && floatingIP != nil {
-			for _, float := range floatingIP.(*schema.Set).List() {
-				params := float.(map[string]interface{})
-				pn.FloatingIP = &PrivateNetworkFloatingIP{ID: params["id"].(string)}
+		if v, ok := privateMap["ip"]; ok && v != nil {
+			if ipVal, ok := v.(string); ok && ipVal != "" {
+				pn.IP = ipVal
 			}
 		}
 
-		if floatingIPCreate, ok := private["floating_ip_create"]; ok && floatingIPCreate != nil {
-			for _, float := range floatingIPCreate.(*schema.Set).List() {
-				params := float.(map[string]interface{})
-				pn.FloatingIPCreate = &PrivateNetworkFloatingIPCreate{Description: params["description"].(string)}
-			}
-		}
-
-		if gateway, ok := private["gateway"]; ok && gateway != nil {
-			for _, g := range gateway.(*schema.Set).List() {
-				params := g.(map[string]interface{})
-				pn.Gateway = &PrivateNetworkGateway{ID: params["id"].(string)}
-			}
-		}
-
-		if gatewayCreate, ok := private["gateway_create"]; ok && gatewayCreate != nil {
-			for _, gc := range gatewayCreate.(*schema.Set).List() {
-				params := gc.(map[string]interface{})
-				pn.GatewayCreate = &PrivateNetworkGatewayCreate{
-					Model: params["model"].(string),
-					Name:  params["name"].(string),
-				}
-			}
-		}
-
-		if ip, ok := private["ip"]; ok && ip != nil {
-			pn.IP = ip.(string)
-		}
-
-		if networkMap, ok := private["network"]; ok && networkMap != nil {
-			for _, net := range networkMap.(*schema.Set).List() {
+		if v, ok := privateMap["network"]; ok && v != nil {
+			for _, net := range v.(*schema.Set).List() {
 				params := net.(map[string]interface{})
 				pn.Network = &PrivateNetworkInformation{
 					ID:       params["id"].(string),
@@ -345,14 +318,16 @@ func GetNetwork(mapping map[string]interface{}) *Network {
 			}
 		}
 
-		if networkCreate, ok := private["network_create"]; ok && networkCreate != nil {
-			for _, net := range networkCreate.(*schema.Set).List() {
+		if v, ok := privateMap["network_create"]; ok && v != nil {
+			for _, net := range v.(*schema.Set).List() {
 				params := net.(map[string]interface{})
-				pn.NetworkCreate = &PrivateNetworkInformationCreate{Name: params["name"].(string)}
+				pn.NetworkCreate = &PrivateNetworkInformationCreate{
+					Name: params["name"].(string),
+				}
 
 				if vlanID, ok := params["vlan_id"]; ok && vlanID != nil {
-					intVlanID := vlanID.(int)
-					pn.NetworkCreate.VlanId = &intVlanID
+					val := vlanID.(int)
+					pn.NetworkCreate.VlanId = &val
 				}
 
 				if subnetVal, ok := params["subnet"]; ok && subnetVal != nil {
@@ -364,6 +339,43 @@ func GetNetwork(mapping map[string]interface{}) *Network {
 							IPVersion:  sn["ip_version"].(int),
 						}
 					}
+				}
+			}
+		}
+
+		if v, ok := privateMap["floating_ip"]; ok && v != nil {
+			for _, float := range v.(*schema.Set).List() {
+				params := float.(map[string]interface{})
+				pn.FloatingIP = &PrivateNetworkFloatingIP{
+					ID: params["id"].(string),
+				}
+			}
+		}
+
+		if v, ok := privateMap["floating_ip_create"]; ok && v != nil {
+			for _, float := range v.(*schema.Set).List() {
+				params := float.(map[string]interface{})
+				pn.FloatingIPCreate = &PrivateNetworkFloatingIPCreate{
+					Description: params["description"].(string),
+				}
+			}
+		}
+
+		if v, ok := privateMap["gateway"]; ok && v != nil {
+			for _, g := range v.(*schema.Set).List() {
+				params := g.(map[string]interface{})
+				pn.Gateway = &PrivateNetworkGateway{
+					ID: params["id"].(string),
+				}
+			}
+		}
+
+		if v, ok := privateMap["gateway_create"]; ok && v != nil {
+			for _, gc := range v.(*schema.Set).List() {
+				params := gc.(map[string]interface{})
+				pn.GatewayCreate = &PrivateNetworkGatewayCreate{
+					Model: params["model"].(string),
+					Name:  params["name"].(string),
 				}
 			}
 		}
@@ -381,7 +393,14 @@ func (cpir *CloudProjectInstanceCreateOpts) FromResource(d *schema.ResourceData)
 	cpir.Group = GetGroup(d.Get("group"))
 	cpir.SshKey = GetSshKey(d.Get("ssh_key"))
 	cpir.SshKeyCreate = GetSshKeyCreate(d.Get("ssh_key_create"))
-	cpir.Networks = expandNetworks(d.Get("network"))
+
+	if v := d.Get("network"); v != nil {
+		netSet := v.(*schema.Set).List()
+		if len(netSet) > 0 {
+			cpir.Network = GetNetwork(netSet[0].(map[string]interface{}))
+		}
+	}
+
 	cpir.BillingPeriod = d.Get("billing_period").(string)
 	cpir.Name = d.Get("name").(string)
 	cpir.AvailabilityZone = helpers.GetNilStringPointerFromData(d, "availability_zone")
@@ -409,19 +428,4 @@ func waitForCloudProjectInstance(ctx context.Context, c *ovhwrap.Client, service
 	})
 
 	return err
-}
-
-func expandNetworks(i interface{}) []*Network {
-	if i == nil {
-		return nil
-	}
-
-	networksSet := i.(*schema.Set).List()
-	networks := make([]*Network, 0, len(networksSet))
-
-	for _, n := range networksSet {
-		networks = append(networks, GetNetwork(n.(map[string]interface{})))
-	}
-
-	return networks
 }
