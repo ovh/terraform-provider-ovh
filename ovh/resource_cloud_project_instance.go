@@ -184,11 +184,10 @@ func resourceCloudProjectInstance() *schema.Resource {
 				ForceNew:    true,
 			},
 			"network": {
-				Type:        schema.TypeSet,
+				Type:        schema.TypeList,
 				Required:    true,
 				ForceNew:    true,
-				MaxItems:    1,
-				Description: "Network information",
+				Description: "Network information(multiple NICs)",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"public": {
@@ -197,10 +196,9 @@ func resourceCloudProjectInstance() *schema.Resource {
 							Optional:    true,
 						},
 						"private": {
-							Type:        schema.TypeSet,
+							Type:        schema.TypeList,
 							Optional:    true,
 							ForceNew:    true,
-							MaxItems:    1,
 							Description: "Private network information",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -425,6 +423,7 @@ func resourceCloudProjectInstance() *schema.Resource {
 			},
 		},
 	}
+
 }
 
 func resourceCloudProjectInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -439,9 +438,24 @@ func resourceCloudProjectInstanceCreate(ctx context.Context, d *schema.ResourceD
 		url.PathEscape(region),
 	)
 
+	payload := map[string]interface{}{
+		"auto_backup":      params.AutoBackup,
+		"availabilityZone": params.AvailabilityZone,
+		"billingPeriod":    params.BillingPeriod,
+		"bootFrom":         params.BootFrom,
+		"bulk":             params.Bulk,
+		"flavor":           params.Flavor,
+		"group":            params.Group,
+		"name":             params.Name,
+		"sshKey":           params.SshKey,
+		"sshKeyCreate":     params.SshKeyCreate,
+		"userData":         params.UserData,
+		"network":          networksToPayload(params.Networks), // multi NIC
+	}
+
 	r := &CloudProjectOperationResponse{}
-	if err := config.OVHClient.Post(endpoint, params, r); err != nil {
-		return diag.Errorf("calling %s with params %v:\n\t %q", endpoint, params, err)
+	if err := config.OVHClient.Post(endpoint, payload, r); err != nil {
+		return diag.Errorf("calling %s with params %v:\n\t %q", endpoint, payload, err)
 	}
 
 	instanceID, err := waitForCloudProjectOperation(ctx, config.OVHClient, serviceName, r.Id, "instance#create", d.Timeout(schema.TimeoutCreate))
@@ -527,4 +541,77 @@ func resourceCloudProjectInstanceDelete(ctx context.Context, d *schema.ResourceD
 
 	log.Printf("[DEBUG] Deleted Public Cloud %s Instance %s", serviceName, id)
 	return nil
+}
+
+func networksToPayload(networks []*Network) []interface{} {
+	payload := make([]interface{}, 0, len(networks))
+	for _, net := range networks {
+		netMap := map[string]interface{}{
+			"public": net.Public,
+		}
+
+		if len(net.Private) > 0 {
+			privateList := make([]interface{}, 0, len(net.Private))
+			for _, p := range net.Private {
+				pMap := map[string]interface{}{}
+
+				if p.FloatingIP != nil {
+					pMap["floating_ip"] = []map[string]interface{}{
+						{"id": p.FloatingIP.ID},
+					}
+				}
+
+				if p.FloatingIPCreate != nil {
+					pMap["floating_ip_create"] = []map[string]interface{}{
+						{"description": p.FloatingIPCreate.Description},
+					}
+				}
+
+				if p.Gateway != nil {
+					pMap["gateway"] = []map[string]interface{}{
+						{"id": p.Gateway.ID},
+					}
+				}
+
+				if p.GatewayCreate != nil {
+					pMap["gateway_create"] = []map[string]interface{}{
+						{"model": p.GatewayCreate.Model, "name": p.GatewayCreate.Name},
+					}
+				}
+
+				if p.IP != "" {
+					pMap["ip"] = p.IP
+				}
+
+				if p.Network != nil {
+					pMap["network"] = []map[string]interface{}{
+						{"id": p.Network.ID, "subnet_id": p.Network.SubnetID},
+					}
+				}
+
+				if p.NetworkCreate != nil {
+					subnetList := []map[string]interface{}{
+						{
+							"cidr":        p.NetworkCreate.Subnet.CIDR,
+							"enable_dhcp": p.NetworkCreate.Subnet.EnableDHCP,
+							"ip_version":  p.NetworkCreate.Subnet.IPVersion,
+						},
+					}
+					pMap["network_create"] = []map[string]interface{}{
+						{
+							"name":    p.NetworkCreate.Name,
+							"vlan_id": p.NetworkCreate.VlanId,
+							"subnet":  subnetList,
+						},
+					}
+				}
+
+				privateList = append(privateList, pMap)
+			}
+			netMap["private"] = privateList
+		}
+
+		payload = append(payload, netMap)
+	}
+	return payload
 }

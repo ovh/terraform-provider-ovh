@@ -40,8 +40,8 @@ type SshKeyCreate struct {
 }
 
 type Network struct {
-	Public  bool            `json:"public"`
-	Private *PrivateNetwork `json:"private,omitempty"`
+	Public  bool              `json:"public"`
+	Private []*PrivateNetwork `json:"private,omitempty"`
 }
 
 type PrivateNetwork struct {
@@ -100,7 +100,7 @@ type CloudProjectInstanceCreateOpts struct {
 	SshKey           *SshKey       `json:"sshKey,omitempty"`
 	SshKeyCreate     *SshKeyCreate `json:"sshKeyCreate,omitempty"`
 	UserData         *string       `json:"userData,omitempty"`
-	Network          *Network      `json:"network,omitempty"`
+	Networks         []*Network    `json:"network,omitempty"`
 }
 
 type Address struct {
@@ -279,102 +279,99 @@ func GetSshKeyCreate(i interface{}) *SshKeyCreate {
 	return &sshCreateOutput
 }
 
-func GetNetwork(i interface{}) *Network {
-	if i == nil {
-		return nil
+func GetNetwork(mapping map[string]interface{}) *Network {
+	networkOutput := &Network{}
+
+	// Public NIC
+	if v, ok := mapping["public"]; ok {
+		networkOutput.Public = v.(bool)
 	}
-	networkOutput := Network{}
 
-	networkSet := i.(*schema.Set).List()
-	for _, network := range networkSet {
-		mapping := network.(map[string]interface{})
-		networkOutput.Public = mapping["public"].(bool)
+	// Private NICs
+	privateRaw, ok := mapping["private"]
+	if !ok || privateRaw == nil || privateRaw.(*schema.Set).Len() == 0 {
+		return networkOutput
+	}
 
-		privateNet, ok := mapping["private"]
-		if !ok || privateNet == nil || privateNet.(*schema.Set).Len() == 0 {
-			continue
+	privateSet := privateRaw.(*schema.Set).List()
+	networkOutput.Private = make([]*PrivateNetwork, 0, len(privateSet))
+
+	for _, priv := range privateSet {
+		private := priv.(map[string]interface{})
+		pn := &PrivateNetwork{}
+
+		if floatingIP, ok := private["floating_ip"]; ok && floatingIP != nil {
+			for _, float := range floatingIP.(*schema.Set).List() {
+				params := float.(map[string]interface{})
+				pn.FloatingIP = &PrivateNetworkFloatingIP{ID: params["id"].(string)}
+			}
 		}
 
-		for _, priv := range privateNet.(*schema.Set).List() {
-			networkOutput.Private = &PrivateNetwork{}
-			private := priv.(map[string]interface{})
+		if floatingIPCreate, ok := private["floating_ip_create"]; ok && floatingIPCreate != nil {
+			for _, float := range floatingIPCreate.(*schema.Set).List() {
+				params := float.(map[string]interface{})
+				pn.FloatingIPCreate = &PrivateNetworkFloatingIPCreate{Description: params["description"].(string)}
+			}
+		}
 
-			if floatingIP, ok := private["floating_ip"]; ok {
-				for _, float := range floatingIP.(*schema.Set).List() {
-					params := float.(map[string]interface{})
-					networkOutput.Private.FloatingIP = &PrivateNetworkFloatingIP{
-						ID: params["id"].(string),
-					}
+		if gateway, ok := private["gateway"]; ok && gateway != nil {
+			for _, g := range gateway.(*schema.Set).List() {
+				params := g.(map[string]interface{})
+				pn.Gateway = &PrivateNetworkGateway{ID: params["id"].(string)}
+			}
+		}
+
+		if gatewayCreate, ok := private["gateway_create"]; ok && gatewayCreate != nil {
+			for _, gc := range gatewayCreate.(*schema.Set).List() {
+				params := gc.(map[string]interface{})
+				pn.GatewayCreate = &PrivateNetworkGatewayCreate{
+					Model: params["model"].(string),
+					Name:  params["name"].(string),
 				}
 			}
+		}
 
-			if floatingIPCreate, ok := private["floating_ip_create"]; ok {
-				for _, float := range floatingIPCreate.(*schema.Set).List() {
-					params := float.(map[string]interface{})
-					networkOutput.Private.FloatingIPCreate = &PrivateNetworkFloatingIPCreate{
-						Description: params["description"].(string),
-					}
+		if ip, ok := private["ip"]; ok && ip != nil {
+			pn.IP = ip.(string)
+		}
+
+		if networkMap, ok := private["network"]; ok && networkMap != nil {
+			for _, net := range networkMap.(*schema.Set).List() {
+				params := net.(map[string]interface{})
+				pn.Network = &PrivateNetworkInformation{
+					ID:       params["id"].(string),
+					SubnetID: params["subnet_id"].(string),
 				}
 			}
+		}
 
-			if gateway, ok := private["gateway"]; ok {
-				for _, gateway := range gateway.(*schema.Set).List() {
-					params := gateway.(map[string]interface{})
-					networkOutput.Private.Gateway = &PrivateNetworkGateway{
-						ID: params["id"].(string),
-					}
+		if networkCreate, ok := private["network_create"]; ok && networkCreate != nil {
+			for _, net := range networkCreate.(*schema.Set).List() {
+				params := net.(map[string]interface{})
+				pn.NetworkCreate = &PrivateNetworkInformationCreate{Name: params["name"].(string)}
+
+				if vlanID, ok := params["vlan_id"]; ok && vlanID != nil {
+					intVlanID := vlanID.(int)
+					pn.NetworkCreate.VlanId = &intVlanID
 				}
-			}
 
-			if gatewayCreate, ok := private["gateway_create"]; ok {
-				for _, gateway := range gatewayCreate.(*schema.Set).List() {
-					params := gateway.(map[string]interface{})
-					networkOutput.Private.GatewayCreate = &PrivateNetworkGatewayCreate{
-						Model: params["model"].(string),
-						Name:  params["name"].(string),
-					}
-				}
-			}
-
-			networkOutput.Private.IP = private["ip"].(string)
-
-			if network, ok := private["network"]; ok {
-				for _, net := range network.(*schema.Set).List() {
-					params := net.(map[string]interface{})
-					networkOutput.Private.Network = &PrivateNetworkInformation{
-						ID:       params["id"].(string),
-						SubnetID: params["subnet_id"].(string),
-					}
-				}
-			}
-
-			if networkCreate, ok := private["network_create"]; ok {
-				for _, net := range networkCreate.(*schema.Set).List() {
-					params := net.(map[string]interface{})
-					networkOutput.Private.NetworkCreate = &PrivateNetworkInformationCreate{
-						Name: params["name"].(string),
-					}
-
-					if vlanID, ok := params["vlan_id"]; ok {
-						intVlanID := vlanID.(int)
-						networkOutput.Private.NetworkCreate.VlanId = &intVlanID
-					}
-
-					for _, subnet := range params["subnet"].(*schema.Set).List() {
-						subnetParams := subnet.(map[string]interface{})
-						networkOutput.Private.NetworkCreate.Subnet = PrivateNetworkInformationSubnetCreate{
-							CIDR:       subnetParams["cidr"].(string),
-							EnableDHCP: subnetParams["enable_dhcp"].(bool),
-							IPVersion:  subnetParams["ip_version"].(int),
+				if subnetVal, ok := params["subnet"]; ok && subnetVal != nil {
+					for _, subnet := range subnetVal.(*schema.Set).List() {
+						sn := subnet.(map[string]interface{})
+						pn.NetworkCreate.Subnet = PrivateNetworkInformationSubnetCreate{
+							CIDR:       sn["cidr"].(string),
+							EnableDHCP: sn["enable_dhcp"].(bool),
+							IPVersion:  sn["ip_version"].(int),
 						}
 					}
 				}
 			}
 		}
 
+		networkOutput.Private = append(networkOutput.Private, pn)
 	}
 
-	return &networkOutput
+	return networkOutput
 }
 
 func (cpir *CloudProjectInstanceCreateOpts) FromResource(d *schema.ResourceData) {
@@ -384,7 +381,7 @@ func (cpir *CloudProjectInstanceCreateOpts) FromResource(d *schema.ResourceData)
 	cpir.Group = GetGroup(d.Get("group"))
 	cpir.SshKey = GetSshKey(d.Get("ssh_key"))
 	cpir.SshKeyCreate = GetSshKeyCreate(d.Get("ssh_key_create"))
-	cpir.Network = GetNetwork(d.Get("network"))
+	cpir.Networks = expandNetworks(d.Get("network"))
 	cpir.BillingPeriod = d.Get("billing_period").(string)
 	cpir.Name = d.Get("name").(string)
 	cpir.AvailabilityZone = helpers.GetNilStringPointerFromData(d, "availability_zone")
@@ -412,4 +409,19 @@ func waitForCloudProjectInstance(ctx context.Context, c *ovhwrap.Client, service
 	})
 
 	return err
+}
+
+func expandNetworks(i interface{}) []*Network {
+	if i == nil {
+		return nil
+	}
+
+	networksSet := i.(*schema.Set).List()
+	networks := make([]*Network, 0, len(networksSet))
+
+	for _, n := range networksSet {
+		networks = append(networks, GetNetwork(n.(map[string]interface{})))
+	}
+
+	return networks
 }
