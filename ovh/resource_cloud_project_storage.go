@@ -3,6 +3,7 @@ package ovh
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
@@ -10,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/ovh/go-ovh/ovh"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
@@ -251,5 +253,34 @@ func (r *cloudProjectStorageResource) Delete(ctx context.Context, req resource.D
 			fmt.Sprintf("Error calling Delete %s", endpoint),
 			err.Error(),
 		)
+	}
+
+	// If replicas exist, delete them manually after the main bucket deletion if option is set
+	for _, rule := range data.Replication.Rules.Elements() {
+		destination := rule.(ReplicationRulesValue).Destination
+
+		// Empty region means that replica is already deleted
+		if destination.Region.ValueString() == "" {
+			continue
+		}
+
+		if destination.RemoveOnMainBucketDeletion.ValueBool() {
+			replicaEndpoint := "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) +
+				"/region/" + url.PathEscape(destination.Region.ValueString()) +
+				"/storage/" + url.PathEscape(destination.Name.ValueString())
+
+			tflog.Info(ctx, fmt.Sprintf("removing replica bucket %s", replicaEndpoint))
+			if err := r.config.OVHClient.Delete(replicaEndpoint, nil); err != nil {
+				if ovhErr, ok := err.(*ovh.APIError); ok && ovhErr.Code == http.StatusNotFound {
+					// If replica was already deleted, ignore the error
+					continue
+				}
+
+				resp.Diagnostics.AddError(
+					fmt.Sprintf("Error removing replica %s", replicaEndpoint),
+					err.Error(),
+				)
+			}
+		}
 	}
 }
