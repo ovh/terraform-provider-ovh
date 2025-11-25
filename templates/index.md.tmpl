@@ -148,6 +148,8 @@ The following arguments are supported:
 
 * `api_rate_limit` - (Optional) Specify the API request rate limit, X operations by seconds. If omitted, unlimited.
 
+* `ignore_init_error` - (Optional) **⚠️ Use with caution and only if you know what you are doing.** If set to `true`, the provider will skip authentication validation during initialization. If omitted, the `OVH_IGNORE_INIT_ERROR` environment variable is used. This allows the provider to load even with invalid credentials, but any actual API calls will still fail. This is intended for development/testing purposes only where valid credentials are not available but the provider configuration must be present.
+
 ## Terraform State storage in an OVHcloud Object Storage (S3 compatibility)
 
 In order to store your Terraform states on a High Performance (S3) OVHcloud Object Storage, please follow the [guide](https://help.ovhcloud.com/csm/en-public-cloud-compute-terraform-high-perf-object-storage-backend-state?id=kb_article_view&sysparm_article=KB0051345).
