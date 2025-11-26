@@ -174,10 +174,12 @@ func CloudProjectVolumeResourceSchema(ctx context.Context) schema.Schema {
 			Validators: []validator.String{
 				stringvalidator.OneOf(
 					"classic",
-					"classic-BETA",
+					"classic-luks",
+					"classic-multiattach",
 					"high-speed",
-					"high-speed-BETA",
+					"high-speed-luks",
 					"high-speed-gen2",
+					"high-speed-gen2-luks",
 				),
 			},
 			PlanModifiers: []planmodifier.String{
