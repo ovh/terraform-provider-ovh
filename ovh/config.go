@@ -34,6 +34,9 @@ type Config struct {
 	// Extra user-agent information
 	UserAgentExtra string
 
+	// Ignore initialization errors
+	IgnoreInitError bool
+
 	OVHClient     *ovhwrap.Client
 	authenticated bool
 	authFailed    error
@@ -93,6 +96,13 @@ func (c *Config) loadAndValidate() error {
 		return err
 	}
 
+	// If OVHClient is nil (because we ignored client creation error),
+	// skip the authentication validation step entirely.
+	if c.IgnoreInitError && c.OVHClient == nil {
+		log.Printf("[WARN] OVH client is nil, skipping authentication validation")
+		return nil
+	}
+
 	c.lockAuth.Lock()
 	defer c.lockAuth.Unlock()
 
@@ -101,8 +111,24 @@ func (c *Config) loadAndValidate() error {
 	}
 
 	if !c.authenticated {
+		// If OVHClient is nil (OAuth error was ignored during load), skip validation
+		if c.OVHClient == nil {
+			if c.IgnoreInitError {
+				log.Printf("[WARN] OVH client not initialized, skipping authentication validation")
+				return nil
+			}
+			return fmt.Errorf("OVH client not initialized")
+		}
+
 		var details OvhAuthDetails
 		if err := c.OVHClient.Get("/auth/details", &details); err != nil {
+			// Allow ignoring the /auth/details verification step when OVH_IGNORE_INIT_ERROR=true
+			// and using OAuth2 (ClientID provided).
+			if c.IgnoreInitError {
+				log.Printf("[WARN] Ignoring /auth/details verification error: %v", err)
+				// Leave c.authenticated=false so runtime calls may retry auth
+				return nil
+			}
 			c.authFailed = fmt.Errorf("OVH client seems to be misconfigured: %q", err)
 			return c.authFailed
 		}
@@ -122,6 +148,11 @@ func (c *Config) loadAndValidate() error {
 func (c *Config) load() error {
 	targetClient, err := clientDefault(c)
 	if err != nil {
+		// Allow ignoring client creation errors when OVH_IGNORE_INIT_ERROR=true
+		if c.IgnoreInitError {
+			log.Printf("[WARN] Ignoring client creation error: %v", err)
+			return nil
+		}
 		return fmt.Errorf("error getting ovh client: %q", err)
 	}
 

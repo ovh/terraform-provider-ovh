@@ -2,6 +2,8 @@ package ovh
 
 import (
 	"context"
+	"os"
+	"strconv"
 	"sync"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -68,6 +70,10 @@ func (p *OvhProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *
 			"user_agent_extra": schema.StringAttribute{
 				Optional:    true,
 				Description: descriptions["user_agent_extra"],
+			},
+			"ignore_init_error": schema.BoolAttribute{
+				Optional:    true,
+				Description: descriptions["ignore_init_error"],
 			},
 			"api_rate_limit": schema.Int32Attribute{
 				Optional:    true,
@@ -189,6 +195,11 @@ func (p *OvhProvider) Configure(ctx context.Context, req provider.ConfigureReque
 	if !config.UserAgentExtra.IsNull() {
 		clientConfig.UserAgentExtra = config.UserAgentExtra.ValueString()
 	}
+	if !config.IgnoreInitError.IsNull() {
+		clientConfig.IgnoreInitError = config.IgnoreInitError.ValueBool()
+	} else if v := os.Getenv("OVH_IGNORE_INIT_ERROR"); v != "" {
+		clientConfig.IgnoreInitError, _ = strconv.ParseBool(v)
+	}
 	if !config.ApiRateLimit.IsNull() {
 		clientConfig.ApiRateLimit = ratelimit.New(int(config.ApiRateLimit.ValueInt32()))
 	} else {
@@ -196,8 +207,17 @@ func (p *OvhProvider) Configure(ctx context.Context, req provider.ConfigureReque
 	}
 
 	if err := clientConfig.loadAndValidate(); err != nil {
-		resp.Diagnostics.AddError(err.Error(), "failed to init OVH API client")
-		return
+		if !clientConfig.IgnoreInitError {
+			resp.Diagnostics.AddError(err.Error(), "failed to init OVH API client")
+			return
+		}
+
+		resp.Diagnostics.AddWarning(
+			"OVH Provider loaded with invalid credentials",
+			"IgnoreInitError  is set to 'true' and client initialization was skipped. "+
+				"The provider will load successfully, but any actual API calls to OVH resources or data sources will fail. "+
+				"This is intended for development/testing purposes only.",
+		)
 	}
 
 	resp.DataSourceData = &clientConfig
@@ -323,5 +343,6 @@ type ovhProviderModel struct {
 	ClientID          types.String `tfsdk:"client_id"`
 	ClientSecret      types.String `tfsdk:"client_secret"`
 	UserAgentExtra    types.String `tfsdk:"user_agent_extra"`
+	IgnoreInitError   types.Bool   `tfsdk:"ignore_init_error"`
 	ApiRateLimit      types.Int32  `tfsdk:"api_rate_limit"`
 }
