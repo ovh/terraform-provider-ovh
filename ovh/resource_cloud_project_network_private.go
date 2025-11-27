@@ -211,7 +211,7 @@ func resourceCloudProjectNetworkPrivateRead(d *schema.ResourceData, meta interfa
 		region_status["status"] = r.Regions[i].Status
 		regions_status = append(regions_status, region_status)
 
-		regions = append(regions, fmt.Sprintf(r.Regions[i].Region))
+		regions = append(regions, r.Regions[i].Region)
 	}
 	d.Set("regions_attributes", regions_attributes)
 	d.Set("regions_openstack_ids", regions_openstack_ids)
