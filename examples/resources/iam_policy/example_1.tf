@@ -20,3 +20,42 @@ resource "ovh_iam_policy" "manager" {
     "account:apiovh:*",
   ]
 }
+
+resource "ovh_iam_policy" "ip_prod_access" {
+  name        = "ip_prod_access"
+  description = "Allow access only from a specific IP to resources tagged prod"
+  identities  = [ovh_me_identity_group.my_group.urn]
+  resources   = ["urn:v1:eu:resource:vps:*"]
+
+  allow = [
+    "vps:apiovh:*",
+  ]
+
+  conditions {
+    operator = "MATCH"
+    values = {
+      "resource.Tag(environment)" = "prod"
+      "request.IP"                = "192.72.0.1"
+    }
+  }
+}
+
+resource "ovh_iam_policy" "workdays_expiring" {
+  name        = "workdays_expiring"
+  description = "Allow access only on workdays, expires end of 2026"
+  identities  = [ovh_me_identity_group.my_group.urn]
+  resources   = ["urn:v1:eu:resource:vps:*"]
+
+  allow = [
+    "vps:apiovh:*",
+  ]
+
+  conditions {
+    operator = "MATCH"
+    values = {
+      "date(Europe/Paris).WeekDay.In" = "monday,tuesday,wednesday,thursday,friday"
+    }
+  }
+
+  expired_at = "2026-12-31T23:59:59Z"
+}
