@@ -184,7 +184,7 @@ func resourceCloudProjectInstance() *schema.Resource {
 				ForceNew:    true,
 			},
 			"network": {
-				Type:        schema.TypeSet,
+				Type:        schema.TypeList,
 				Required:    true,
 				ForceNew:    true,
 				MaxItems:    1,
@@ -197,17 +197,15 @@ func resourceCloudProjectInstance() *schema.Resource {
 							Optional:    true,
 						},
 						"private": {
-							Type:        schema.TypeSet,
+							Type:        schema.TypeList,
 							Optional:    true,
 							ForceNew:    true,
-							MaxItems:    1,
 							Description: "Private network information",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"floating_ip": {
 										Type:        schema.TypeSet,
 										Optional:    true,
-										MaxItems:    1,
 										Description: "Existing floating IP",
 										ForceNew:    true,
 										Elem: &schema.Resource{
@@ -425,12 +423,14 @@ func resourceCloudProjectInstance() *schema.Resource {
 			},
 		},
 	}
+
 }
 
 func resourceCloudProjectInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	region := d.Get("region").(string)
+
 	params := new(CloudProjectInstanceCreateOpts)
 	params.FromResource(d)
 
