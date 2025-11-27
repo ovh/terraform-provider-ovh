@@ -1,3 +1,33 @@
+## 2.10.0 (November 27, 2025)
+
+⚙️ General:
+
+* Bump dependency golang.org/x/crypto from 0.38.0 to 0.45.0 ([#1161](https://github.com/ovh/terraform-provider-ovh/pull/1161))
+
+🎉 Features:
+
+* Add provider option `ignore_init_error` to ignore initialization errors in specific scenarios ([#1163](https://github.com/ovh/terraform-provider-ovh/pull/1163))
+
+💪 Improvements:
+
+* `r/ovh_cloud_project_storage`: Add option to delete bucket replicas on resource deletion ([#1158](https://github.com/ovh/terraform-provider-ovh/pull/1158))
+* `r/ovh_cloud_project_storage`: Add field to avoid saving objects in state ([#1154](https://github.com/ovh/terraform-provider-ovh/pull/1154))
+
+🐜 Bug fixes:
+
+* `r/ovh_cloud_project_storage`: `name` and `region` attributes modification now triggers a resource re-creation ([#1152](https://github.com/ovh/terraform-provider-ovh/pull/1152))
+* `r/ovh_cloud_project_volume`: Fix available volume types list ([#1167](https://github.com/ovh/terraform-provider-ovh/pull/1167))
+* `r/ovh_cloud_project_user_s3_credential`: Do not remove ID in case of read error ([#1160](https://github.com/ovh/terraform-provider-ovh/pull/1160))
+* `r/ovh_cloud_project_loadbalancer`: Wait for flavor update to complete before saving state ([#1153](https://github.com/ovh/terraform-provider-ovh/pull/1153))
+* `r/ovh_cloud_project_alerting`: Handle email no longer returned by API ([#1151](https://github.com/ovh/terraform-provider-ovh/pull/1151))
+* `r/ovh_cloud_project_network_private`: Use correct route to delete regional networks ([#1145](https://github.com/ovh/terraform-provider-ovh/pull/1145))
+
+📚 Documentation:
+
+* `r/ovh_okms_secret`: Fix category in documentation ([#1144](https://github.com/ovh/terraform-provider-ovh/pull/1144))
+
+❤️ Thanks for your contributions ❤️
+
 ## 2.9.0 (November 4, 2025)
 
 🎉 Features:
