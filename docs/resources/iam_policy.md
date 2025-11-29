@@ -32,8 +32,8 @@ resource "ovh_iam_policy" "manager" {
   ]
 }
 
-resource "ovh_iam_policy" "ip_prod_access" {
-  name        = "ip_prod_access"
+resource "ovh_iam_policy" "ip_restricted_prod_access" {
+  name        = "ip_restricted_prod_access"
   description = "Allow access only from a specific IP to resources tagged prod"
   identities  = [ovh_me_identity_group.my_group.urn]
   resources   = ["urn:v1:eu:resource:vps:*"]
@@ -51,8 +51,8 @@ resource "ovh_iam_policy" "ip_prod_access" {
   }
 }
 
-resource "ovh_iam_policy" "workdays_expiring" {
-  name        = "workdays_expiring"
+resource "ovh_iam_policy" "workdays_and_ip_restricted_and_expiring" {
+  name        = "workdays_and_ip_restricted_and_expiring"
   description = "Allow access only on workdays, expires end of 2026"
   identities  = [ovh_me_identity_group.my_group.urn]
   resources   = ["urn:v1:eu:resource:vps:*"]
@@ -62,9 +62,18 @@ resource "ovh_iam_policy" "workdays_expiring" {
   ]
 
   conditions {
-    operator = "MATCH"
-    values = {
-      "date(Europe/Paris).WeekDay.In" = "monday,tuesday,wednesday,thursday,friday"
+    operator = "AND"
+    condition {
+      operator = "MATCH"
+      values = {
+        "date(Europe/Paris).WeekDay.In" = "monday,tuesday,wednesday,thursday,friday"
+      }
+    }
+    condition {
+      operator = "MATCH"
+      values = {
+        "request.IP" = "192.72.0.1"
+      }
     }
   }
 
