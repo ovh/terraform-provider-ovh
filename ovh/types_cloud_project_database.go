@@ -23,7 +23,7 @@ import (
 // Helper
 func diagnosticsToError(diags diag.Diagnostics) error {
 	if diags.HasError() {
-		return fmt.Errorf(diags[slices.IndexFunc(diags, func(d diag.Diagnostic) bool { return d.Severity == diag.Error })].Summary)
+		return fmt.Errorf("%s", diags[slices.IndexFunc(diags, func(d diag.Diagnostic) bool { return d.Severity == diag.Error })].Summary)
 	}
 	return nil
 }
