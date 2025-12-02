@@ -41,14 +41,28 @@ type IamPolicy struct {
 	Resources         []IamResource     `json:"resources"`
 	Permissions       IamPermissions    `json:"permissions"`
 	PermissionsGroups []PermissionGroup `json:"permissionsGroups"`
+	Conditions        *IamConditions    `json:"conditions,omitempty"`
 	CreatedAt         string            `json:"createdAt,omitempty"`
 	UpdatedAt         string            `json:"updatedAt,omitempty"`
+	ExpiredAt         string            `json:"expiredAt,omitempty"`
 	ReadOnly          bool              `json:"readOnly,omitempty"`
 	Owner             string            `json:"owner,omitempty"`
 }
 
 type PermissionGroup struct {
 	Urn string `json:"urn"`
+}
+
+type IamConditions struct {
+	Operator   string            `json:"operator"`
+	Values     map[string]string `json:"values,omitempty"`
+	Conditions []*IamCondition   `json:"conditions,omitempty"`
+}
+
+type IamCondition struct {
+	Operator   string            `json:"operator"`
+	Values     map[string]string `json:"values,omitempty"`
+	Conditions []*IamCondition   `json:"conditions,omitempty"`
 }
 
 func (p IamPolicy) ToMap() map[string]any {
@@ -94,8 +108,55 @@ func (p IamPolicy) ToMap() map[string]any {
 	if p.UpdatedAt != "" {
 		out["updated_at"] = p.UpdatedAt
 	}
+	if p.ExpiredAt != "" {
+		out["expired_at"] = p.ExpiredAt
+	}
+	if p.Conditions != nil {
+		out["conditions"] = []interface{}{conditionsToMap(p.Conditions)}
+	}
 
 	return out
+}
+
+// conditionsToMap converts IamConditions to a map for Terraform state
+func conditionsToMap(c *IamConditions) map[string]interface{} {
+	out := make(map[string]interface{})
+	out["operator"] = c.Operator
+
+	if len(c.Values) > 0 {
+		out["values"] = c.Values
+	}
+
+	if len(c.Conditions) > 0 {
+		conditions := make([]interface{}, 0, len(c.Conditions))
+		for _, cond := range c.Conditions {
+			conditions = append(conditions, conditionToMap(cond))
+		}
+		out["condition"] = conditions
+	}
+
+	return out
+}
+
+// conditionToMap converts a single IamCondition to a map, handling nested conditions recursively
+func conditionToMap(cond *IamCondition) map[string]interface{} {
+	condMap := make(map[string]interface{})
+	condMap["operator"] = cond.Operator
+
+	if len(cond.Values) > 0 {
+		condMap["values"] = cond.Values
+	}
+
+	// Handle nested conditions recursively
+	if len(cond.Conditions) > 0 {
+		nestedConds := make([]interface{}, 0, len(cond.Conditions))
+		for _, nested := range cond.Conditions {
+			nestedConds = append(nestedConds, conditionToMap(nested))
+		}
+		condMap["condition"] = nestedConds
+	}
+
+	return condMap
 }
 
 // IamResource represent a possible information returned when viewing a policy
