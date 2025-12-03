@@ -91,8 +91,9 @@ resource "ovh_dedicated_server" "server" {
     * `label` - (Required) Identifier of the resource
     * `value` - (Required) Path to the resource in API.OVH.COM
 * `service_name` - (Optional, Forces replacement) The service_name of your dedicated server. This field can be used to avoid ordering a dedicated server at creation and just create the resource using an already existing service
+* `range` - (Optional) Range of the dedicated server to order. Can be `standard` or `eco`. Defaults to `standard`
 
-~> **Note** To get the available plans, you can use the API console to first [create a cart](https://eu.api.ovh.com/console/?section=%2Forder&branch=v1#post-/order/cart) and then use the created cart ID to fetch the available plans using [the following call](https://eu.api.ovh.com/console/?section=%2Forder&branch=v1#get-/order/cart/-cartId-/baremetalServers). Once you've found the right plan, you can use [this call](https://eu.api.ovh.com/console/?section=%2Forder&branch=v1#get-/order/cart/-cartId-/baremetalServers/options) to get the available options for this plan.
+~> **Note** To get the available plans, you can use the API console to first [create a cart](https://eu.api.ovh.com/console/?section=%2Forder&branch=v1#post-/order/cart) and then use the created cart ID to fetch the available plans using [the following call](https://eu.api.ovh.com/console/?section=%2Forder&branch=v1#get-/order/cart/-cartId-/baremetalServers) (or `/order/cart/{cartId}/eco` for eco servers). Once you've found the right plan, you can use [this call](https://eu.api.ovh.com/console/?section=%2Forder&branch=v1#get-/order/cart/-cartId-/baremetalServers/options) to get the available options for this plan.
 
 ### Editable fields of a dedicated server
 
