@@ -82,6 +82,13 @@ func (r *cloudProjectStorageResource) Create(ctx context.Context, req resource.C
 
 	responseData.MergeWith(&data)
 
+	// Set the ID as composite key: service_name/region_name/name
+	compositeID := fmt.Sprintf("%s/%s/%s",
+		data.ServiceName.ValueString(),
+		data.RegionName.ValueString(),
+		data.Name.ValueString())
+	responseData.ID = ovhtypes.NewTfStringValue(compositeID)
+
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)
 }
@@ -121,6 +128,13 @@ func (r *cloudProjectStorageResource) Read(ctx context.Context, req resource.Rea
 	if data.HideObjects.ValueBool() {
 		responseData.Objects = ovhtypes.NewListNestedObjectValueOfNull[ObjectsValue](ctx)
 	}
+
+	// Set the ID as composite key: service_name/region_name/name
+	compositeID := fmt.Sprintf("%s/%s/%s",
+		data.ServiceName.ValueString(),
+		data.RegionName.ValueString(),
+		data.Name.ValueString())
+	responseData.ID = ovhtypes.NewTfStringValue(compositeID)
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)
@@ -178,6 +192,13 @@ func (r *cloudProjectStorageResource) Update(ctx context.Context, req resource.U
 	if planData.HideObjects.ValueBool() {
 		responseData.Objects = ovhtypes.NewListNestedObjectValueOfNull[ObjectsValue](ctx)
 	}
+
+	// Set the ID as composite key: service_name/region_name/name
+	compositeID := fmt.Sprintf("%s/%s/%s",
+		data.ServiceName.ValueString(),
+		data.RegionName.ValueString(),
+		data.Name.ValueString())
+	responseData.ID = ovhtypes.NewTfStringValue(compositeID)
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)
