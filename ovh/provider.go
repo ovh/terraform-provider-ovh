@@ -35,6 +35,9 @@ var (
 		// Extra info in user-agent
 		"user_agent_extra": "Extra information to append to the user-agent",
 
+		// Ignore initialization errors
+		"ignore_init_error": "If set to true, initialization errors (like invalid OAuth credentials) will be ignored",
+
 		// OVH API Rate Limit
 		"api_rate_limit": "Specify the API request rate limit, X operations by seconds (default: unlimited)",
 	}
@@ -83,6 +86,12 @@ func Provider() *schema.Provider {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: descriptions["user_agent_extra"],
+			},
+			"ignore_init_error": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: descriptions["ignore_init_error"],
+				DefaultFunc: schema.EnvDefaultFunc("OVH_IGNORE_INIT_ERROR", false),
 			},
 			"api_rate_limit": {
 				Type:        schema.TypeInt,
@@ -340,6 +349,9 @@ func ConfigureContextFunc(context context.Context, d *schema.ResourceData) (inte
 	}
 	if v, ok := d.GetOk("user_agent_extra"); ok {
 		config.UserAgentExtra = v.(string)
+	}
+	if v, ok := d.GetOk("ignore_init_error"); ok {
+		config.IgnoreInitError = v.(bool)
 	}
 	if v, ok := d.GetOk("api_rate_limit"); ok {
 		config.ApiRateLimit = ratelimit.New(v.(int))

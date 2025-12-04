@@ -78,10 +78,10 @@ func dataSourceDbaasLogsInputEngineRead(d *schema.ResourceData, meta interface{}
 		}
 
 		match := true
-		if nameFilter != nil && strings.ToLower(engine.Name) != strings.ToLower(*nameFilter) {
+		if nameFilter != nil && !strings.EqualFold(engine.Name, *nameFilter) {
 			match = false
 		}
-		if versionFilter != nil && strings.ToLower(engine.Version) != strings.ToLower(*versionFilter) {
+		if versionFilter != nil && !strings.EqualFold(engine.Version, *versionFilter) {
 			match = false
 		}
 		if isDeprecatedFilter != nil && engine.IsDeprecated != *isDeprecatedFilter {

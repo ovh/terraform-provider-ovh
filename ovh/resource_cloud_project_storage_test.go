@@ -76,6 +76,7 @@ func TestAccCloudProjectRegionStorage_withReplication(t *testing.T) {
 									destination = {
 										name   = "%s"
 										region = "GRA"
+										remove_on_main_bucket_deletion = true
 									}
 									filter = {
 										"prefix" = "test"
@@ -123,6 +124,7 @@ func TestAccCloudProjectRegionStorage_withReplication(t *testing.T) {
 									destination = {
 										name   = "%s"
 										region = "GRA"
+										remove_on_main_bucket_deletion = true
 									}
 									filter = {
 										"prefix" = "test-updated"
@@ -156,7 +158,9 @@ func TestAccCloudProjectRegionStorage_withReplication(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: "name",
 				ResourceName:                         "ovh_cloud_project_storage.storage",
 				ImportStateId:                        fmt.Sprintf("%s/GRA/%s", os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"), bucketName),
-				ImportStateVerifyIgnore:              []string{"created_at"}, // Ignore created_at since its value is invalid in response of the POST.
+				// Ignore created_at since its value is invalid in response of the POST.
+				// Also ignore remove_on_main_bucket_deletion since its computed value is not returned by the API.
+				ImportStateVerifyIgnore: []string{"created_at", "replication.rules.0.destination.remove_on_main_bucket_deletion"},
 			},
 		},
 	})
