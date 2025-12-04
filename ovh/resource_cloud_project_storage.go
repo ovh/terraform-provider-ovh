@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/ovh/go-ovh/ovh"
+	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
 var _ resource.ResourceWithConfigure = (*cloudProjectStorageResource)(nil)
@@ -124,6 +125,10 @@ func (r *cloudProjectStorageResource) Read(ctx context.Context, req resource.Rea
 
 	responseData.MergeWith(&data)
 
+	if data.HideObjects.ValueBool() {
+		responseData.Objects = ovhtypes.NewListNestedObjectValueOfNull[ObjectsValue](ctx)
+	}
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)
 }
@@ -177,6 +182,10 @@ func (r *cloudProjectStorageResource) Update(ctx context.Context, req resource.U
 
 	responseData.MergeWith(&planData)
 
+	if planData.HideObjects.ValueBool() {
+		responseData.Objects = ovhtypes.NewListNestedObjectValueOfNull[ObjectsValue](ctx)
+	}
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)
 }
@@ -191,13 +200,43 @@ func (r *cloudProjectStorageResource) Delete(ctx context.Context, req resource.D
 		return
 	}
 
-	endpoint := "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) +
-		"/region/" + url.PathEscape(data.RegionName.ValueString()) +
-		"/storage/" + url.PathEscape(data.Name.ValueString()) +
+	if err := r.deleteBucket(ctx, data.ServiceName.ValueString(), data.RegionName.ValueString(), data.Name.ValueString()); err != nil {
+		resp.Diagnostics.AddError(
+			"Error deleting bucket: "+data.Name.ValueString(),
+			err.Error(),
+		)
+		return
+	}
+
+	// If replicas exist, delete them manually after the main bucket deletion if option is set
+	for _, rule := range data.Replication.Rules.Elements() {
+		destination := rule.(ReplicationRulesValue).Destination
+
+		// Empty region means that replica is already deleted
+		if destination.Region.ValueString() == "" {
+			continue
+		}
+
+		if destination.RemoveOnMainBucketDeletion.ValueBool() {
+			tflog.Info(ctx, fmt.Sprintf("removing replica bucket %s", destination.Name.ValueString()))
+			if err := r.deleteBucket(ctx, data.ServiceName.ValueString(), destination.Region.ValueString(), destination.Name.ValueString()); err != nil {
+				resp.Diagnostics.AddError(
+					fmt.Sprintf("Error removing replica %s", destination.Name.ValueString()),
+					err.Error(),
+				)
+			}
+		}
+	}
+}
+
+func (r *cloudProjectStorageResource) deleteBucket(ctx context.Context, serviceName, regionName, storageName string) error {
+	endpoint := "/cloud/project/" + url.PathEscape(serviceName) +
+		"/region/" + url.PathEscape(regionName) +
+		"/storage/" + url.PathEscape(storageName) +
 		"/object?withVersions=true"
-	bulkDeleteEndpoint := "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) +
-		"/region/" + url.PathEscape(data.RegionName.ValueString()) +
-		"/storage/" + url.PathEscape(data.Name.ValueString()) +
+	bulkDeleteEndpoint := "/cloud/project/" + url.PathEscape(serviceName) +
+		"/region/" + url.PathEscape(regionName) +
+		"/storage/" + url.PathEscape(storageName) +
 		"/bulkDeleteObjects"
 
 	// Try to empty bucket to be able to destroy it completely.
@@ -211,11 +250,7 @@ func (r *cloudProjectStorageResource) Delete(ctx context.Context, req resource.D
 		)
 
 		if err := r.config.OVHClient.GetWithContext(ctx, endpoint, &objects); err != nil {
-			resp.Diagnostics.AddError(
-				fmt.Sprintf("Error calling Get %s", endpoint),
-				err.Error(),
-			)
-			return
+			return fmt.Errorf("error calling GET %s: %w", endpoint, err)
 		}
 
 		if len(objects) == 0 {
@@ -233,23 +268,23 @@ func (r *cloudProjectStorageResource) Delete(ctx context.Context, req resource.D
 		if err := r.config.OVHClient.PostWithContext(ctx, bulkDeleteEndpoint, map[string]any{
 			"objects": idsToDelete,
 		}, nil); err != nil {
-			resp.Diagnostics.AddError(
-				fmt.Sprintf("Error calling Post %s", bulkDeleteEndpoint),
-				err.Error(),
-			)
-			return
+			return fmt.Errorf("error calling POST %s: %w", bulkDeleteEndpoint, err)
 		}
 	}
 
-	endpoint = "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) +
-		"/region/" + url.PathEscape(data.RegionName.ValueString()) +
-		"/storage/" + url.PathEscape(data.Name.ValueString())
+	endpoint = "/cloud/project/" + url.PathEscape(serviceName) +
+		"/region/" + url.PathEscape(regionName) +
+		"/storage/" + url.PathEscape(storageName)
 
 	// Delete bucket itself
-	if err := r.config.OVHClient.Delete(endpoint, nil); err != nil {
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("Error calling Delete %s", endpoint),
-			err.Error(),
-		)
+	if err := r.config.OVHClient.DeleteWithContext(ctx, endpoint, nil); err != nil {
+		if ovhErr, ok := err.(*ovh.APIError); ok && ovhErr.Code == http.StatusNotFound {
+			// If bucket was already deleted, ignore the error
+			return nil
+		}
+
+		return fmt.Errorf("error calling DELETE %s: %w", endpoint, err)
 	}
+
+	return nil
 }

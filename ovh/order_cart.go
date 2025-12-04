@@ -530,9 +530,7 @@ func orderCartCreate(meta interface{}, params *OrderCartCreateOpts, assign bool)
 	r := &OrderCart{}
 
 	log.Printf("[DEBUG] Will create order cart: %v", params)
-	endpoint := fmt.Sprintf(
-		"/order/cart",
-	)
+	endpoint := "/order/cart"
 
 	err := config.OVHClient.Post(endpoint, params, r)
 	if err != nil {

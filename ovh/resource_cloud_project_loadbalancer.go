@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
@@ -156,7 +158,7 @@ func (r *cloudProjectLoadbalancerResource) Read(ctx context.Context, req resourc
 }
 
 func (r *cloudProjectLoadbalancerResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, planData, responseData CloudProjectRegionLoadbalancerModel
+	var data, planData CloudProjectRegionLoadbalancerModel
 
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &planData)...)
@@ -180,13 +182,10 @@ func (r *cloudProjectLoadbalancerResource) Update(ctx context.Context, req resou
 		return
 	}
 
-	// Read updated resource
-	endpoint = "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/region/" + url.PathEscape(data.RegionName.ValueString()) + "/loadbalancing/loadbalancer/" + url.PathEscape(data.Id.ValueString())
-	if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("Error calling Get %s", endpoint),
-			err.Error(),
-		)
+	// Wait for flavor to be updated (if changed) and read updated data
+	responseData, err := r.waitForLoadBalancerToBeReady(ctx, endpoint, planData.FlavorId.ValueString(), defaultCloudOperationTimeout)
+	if err != nil {
+		resp.Diagnostics.AddError("error waiting for load balancer to be ready", err.Error())
 		return
 	}
 
@@ -218,4 +217,26 @@ func (r *cloudProjectLoadbalancerResource) Delete(ctx context.Context, req resou
 			err.Error(),
 		)
 	}
+}
+
+func (r *cloudProjectLoadbalancerResource) waitForLoadBalancerToBeReady(ctx context.Context, path, expectedFlavor string, timeout time.Duration) (*CloudProjectRegionLoadbalancerModel, error) {
+	var responseData CloudProjectRegionLoadbalancerModel
+
+	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
+		var resp CloudProjectRegionLoadbalancerModel
+		if err := r.config.OVHClient.GetWithContext(ctx, path, &resp); err != nil {
+			return retry.NonRetryableError(err)
+		}
+
+		if resp.FlavorId.ValueString() != expectedFlavor {
+			time.Sleep(5 * time.Second)
+			return retry.RetryableError(fmt.Errorf("waiting for load balancer to have the expected flavor (current: %s, expected: %s)", resp.FlavorId.ValueString(), expectedFlavor))
+		}
+
+		responseData = resp
+
+		return nil
+	})
+
+	return &responseData, err
 }
