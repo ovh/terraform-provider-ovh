@@ -109,6 +109,13 @@ func (r *cloudProjectStorageResource) Read(ctx context.Context, req resource.Rea
 
 	endpoint := "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/region/" + url.PathEscape(data.RegionName.ValueString()) + "/storage/" + url.PathEscape(data.Name.ValueString()) + "?" + queryParams.Encode()
 	if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
+		// Handle 404 errors by removing the resource from state
+		// This allows Terraform to recreate resources deleted outside of Terraform
+		if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == http.StatusNotFound {
+			tflog.Warn(ctx, fmt.Sprintf("Resource not found, removing from state: %s", endpoint))
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Get %s", endpoint),
 			err.Error(),
