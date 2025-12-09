@@ -73,6 +73,40 @@ func TestAccIamPolicyDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccIamPolicyDataSource_withConditionsAndExpiration(t *testing.T) {
+	name := acctest.RandomWithPrefix(test_prefix)
+	desc := "IAM policy with conditions and expiration created by Terraform Acc"
+	userName := acctest.RandomWithPrefix(test_prefix)
+	res := "urn:v1:eu:resource:vps:*"
+	expiration := "2025-12-31T23:59:59Z"
+	config := fmt.Sprintf(testAccIamPolicyDataSourceConfig, userName, userName, name, desc, res, expiration)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheckCredentials(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.ovh_iam_policy.policy", "name", name),
+					resource.TestCheckResourceAttr("data.ovh_iam_policy.policy", "description", desc),
+					resource.TestCheckResourceAttr("data.ovh_iam_policy.policy", "expired_at", expiration),
+					resource.TestCheckResourceAttr("data.ovh_iam_policy.policy", "conditions.#", "1"),
+					resource.TestCheckResourceAttr("data.ovh_iam_policy.policy", "conditions.0.operator", "OR"),
+					resource.TestCheckResourceAttr("data.ovh_iam_policy.policy", "conditions.0.condition.#", "2"),
+					resource.TestCheckResourceAttr("data.ovh_iam_policy.policy", "conditions.0.condition.0.operator", "MATCH"),
+					resource.TestCheckResourceAttr("data.ovh_iam_policy.policy", "conditions.0.condition.0.values.%", "2"),
+					resource.TestCheckResourceAttr("data.ovh_iam_policy.policy", "conditions.0.condition.0.values.resource.Tag(environment)", "production"),
+					resource.TestCheckResourceAttr("data.ovh_iam_policy.policy", "conditions.0.condition.0.values.resource.Tag(team)", "platform"),
+					resource.TestCheckResourceAttr("data.ovh_iam_policy.policy", "conditions.0.condition.1.operator", "MATCH"),
+					resource.TestCheckResourceAttr("data.ovh_iam_policy.policy", "conditions.0.condition.1.values.%", "1"),
+					resource.TestCheckResourceAttr("data.ovh_iam_policy.policy", "conditions.0.condition.1.values.date(Europe/Paris).WeekDay", "monday"),
+				),
+			},
+		},
+	})
+}
+
 func checkIamPolicyResourceAttr(name, polName, desc, resourceURN, allowAction, exceptAction, denyAction string) []resource.TestCheckFunc {
 	// we are not checking identity urn because they are dynamic and depend on the test account NIC
 	checks := []resource.TestCheckFunc{
@@ -156,5 +190,45 @@ output "keys_present" {
 		contains(data.ovh_iam_policies.policies.policies, ovh_iam_policy.policy_1.id) &&
 		contains(data.ovh_iam_policies.policies.policies, ovh_iam_policy.policy_2.id)
 	)
+}
+`
+
+const testAccIamPolicyDataSourceConfig = `
+resource "ovh_me_identity_user" "test_user" {
+	login = "%s"
+	email = "%s@terraform.test"
+	password = "qwe123!@#"
+}
+
+resource "ovh_iam_policy" "policy1" {
+	name        = "%s"
+	description = "%s"
+	identities  = [ovh_me_identity_user.test_user.urn]
+	resources   = ["%s"]
+	allow       = ["vps:apiovh:*"]
+	expired_at  = "%s"
+
+	conditions {
+		operator = "OR"
+		
+		condition {
+			operator = "MATCH"
+			values = {
+				"resource.Tag(environment)" = "production"
+				"resource.Tag(team)"        = "platform"
+			}
+		}
+		
+		condition {
+			operator = "MATCH"
+			values = {
+				"date(Europe/Paris).WeekDay" = "monday"
+			}
+		}
+	}
+}
+
+data "ovh_iam_policy" "policy" {
+	id = ovh_iam_policy.policy1.id
 }
 `
