@@ -472,6 +472,11 @@ func testAccPreCheckOrderDedicatedServer(t *testing.T) {
 	checkEnvOrSkip(t, "OVH_TESTACC_ORDER_DEDICATED_SERVER")
 }
 
+func testAccPreCheckOrderDedicatedServerEco(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_TESTACC_ORDER_DEDICATED_SERVER_ECO")
+}
+
 func testAccPreCheckVPS(t *testing.T) {
 	testAccPreCheckCredentials(t)
 	checkEnvOrSkip(t, "OVH_VPS")
