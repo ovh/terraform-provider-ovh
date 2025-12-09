@@ -77,4 +77,5 @@ The following attributes are exported:
 
 * `gateway` - Your gateway
 * `ip` - Your IP block
+* `zone` - Where you want your block announced on the network
 * `region` - See Argument Reference above.
