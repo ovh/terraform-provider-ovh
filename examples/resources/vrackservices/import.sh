@@ -1,0 +1,1 @@
+terraform import ovh_vrackservices.my-vrackservices vrs-xxx-xxx-xxx-xxx
