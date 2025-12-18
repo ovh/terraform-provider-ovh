@@ -208,6 +208,41 @@ func TestAccIamPolicy_withExpirationAndConditions(t *testing.T) {
 	})
 }
 
+func TestAccIamPolicy_withMaxDepthConditions(t *testing.T) {
+	name := acctest.RandomWithPrefix(test_prefix)
+	desc := "IAM policy with maximum depth conditions (3 levels) created by Terraform Acc"
+	userName := acctest.RandomWithPrefix(test_prefix)
+	res := "urn:v1:eu:resource:vps:*"
+	config := fmt.Sprintf(testAccIamPolicyMaxDepthConditionsConfig, userName, userName, name, desc, res)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheckCredentials(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_iam_policy.policy1", "name", name),
+					resource.TestCheckResourceAttr("ovh_iam_policy.policy1", "description", desc),
+					// Level 1: AND operator
+					resource.TestCheckResourceAttr("ovh_iam_policy.policy1", "conditions.0.operator", "AND"),
+					// Level 2: First OR condition
+					resource.TestCheckResourceAttr("ovh_iam_policy.policy1", "conditions.0.condition.0.operator", "OR"),
+					// Level 3: First MATCH under first OR
+					resource.TestCheckResourceAttr("ovh_iam_policy.policy1", "conditions.0.condition.0.condition.0.operator", "MATCH"),
+					resource.TestCheckResourceAttr("ovh_iam_policy.policy1", "conditions.0.condition.0.condition.0.values.resource.Tag(environment)", "production"),
+					// Level 3: Second MATCH under first OR
+					resource.TestCheckResourceAttr("ovh_iam_policy.policy1", "conditions.0.condition.0.condition.1.operator", "MATCH"),
+					resource.TestCheckResourceAttr("ovh_iam_policy.policy1", "conditions.0.condition.0.condition.1.values.resource.Tag(environment)", "staging"),
+					// Level 2: Second condition (MATCH for team)
+					resource.TestCheckResourceAttr("ovh_iam_policy.policy1", "conditions.0.condition.1.operator", "MATCH"),
+					resource.TestCheckResourceAttr("ovh_iam_policy.policy1", "conditions.0.condition.1.values.resource.Tag(team)", "platform"),
+				),
+			},
+		},
+	})
+}
+
 const testAccIamPolicyConfig = `
 resource "ovh_me_identity_user" "test_user" {
 	login = "%s"
@@ -351,5 +386,50 @@ resource "ovh_iam_policy" "policy1" {
       "resource.Tag(Environment)" = "development"
     }
   }
+}
+`
+
+const testAccIamPolicyMaxDepthConditionsConfig = `
+resource "ovh_me_identity_user" "test_user" {
+	login = "%s"
+	email = "%s@terraform.test"
+	password = "qwe123!@#"
+}
+
+resource "ovh_iam_policy" "policy1" {
+	name        = "%s"
+	description = "%s"
+	identities  = [ovh_me_identity_user.test_user.urn]
+	resources   = ["%s"]
+	allow       = ["vps:apiovh:*"]
+	
+	conditions {
+		operator = "AND"
+		
+		condition {
+			operator = "OR"
+			
+			condition {
+				operator = "MATCH"
+				values = {
+					"resource.Tag(environment)" = "production"
+				}
+			}
+			
+			condition {
+				operator = "MATCH"
+				values = {
+					"resource.Tag(environment)" = "staging"
+				}
+			}
+		}
+		
+		condition {
+			operator = "MATCH"
+			values = {
+				"resource.Tag(team)" = "platform"
+			}
+		}
+	}
 }
 `
