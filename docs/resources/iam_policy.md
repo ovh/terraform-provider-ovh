@@ -96,7 +96,7 @@ resource "ovh_iam_policy" "workdays_and_ip_restricted_and_expiring" {
 
 ### Conditions
 
-The `conditions` block supports:
+The `conditions` block supports nested conditions with a maximum depth of 3 levels:
 
 * `operator` - (Required) Operator to combine conditions. Valid values are `AND`, `OR`, `NOT`, or `MATCH`.
 * `condition` - (Optional) List of condition blocks. Each condition supports:
@@ -105,6 +105,8 @@ The `conditions` block supports:
     * Resource tags: `resource.Tag(tag_name)` (e.g., `resource.Tag(environment)`)
     * Date/time: `date(timezone).WeekDay`, `date(timezone).WeekDay.In` (e.g., `date(Europe/Paris).WeekDay`)
     * Request attributes: `request.IP`
+
+**Note:** Conditions can be nested up to 3 levels deep. The `MATCH` operator is terminal and cannot have sub-conditions.
 
 ## Attributes Reference
 

@@ -171,12 +171,6 @@ func datasourceIamPolicyRead(ctx context.Context, d *schema.ResourceData, meta a
 		return diag.FromErr(err)
 	}
 
-	// Debug: Log what we got from the API
-	polMap := pol.ToMap()
-	for k, v := range polMap {
-		d.Set(k, v)
-	}
-
 	// Explicitly set the new attributes to ensure they're available
 	if pol.ExpiredAt != "" {
 		d.Set("expired_at", pol.ExpiredAt)
