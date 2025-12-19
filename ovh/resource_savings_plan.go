@@ -48,6 +48,19 @@ func resourceSavingsPlan() *schema.Resource {
 					return nil, nil
 				},
 			},
+			"deployment_type": {
+				Type:        schema.TypeString,
+				Description: "Deployment type of the Savings Plan (1AZ / 3AZ)",
+				Optional:    true,
+				ValidateFunc: func(v any, s string) ([]string, []error) {
+					value := strings.ToUpper(v.(string))
+					if value != "1AZ" && value != "3AZ" {
+						return nil, []error{fmt.Errorf("invalid deployment_type %q, valid values are 1AZ or 3AZ", value)}
+					}
+					return nil, nil
+				},
+				Default: "1AZ",
+			},
 			"period": {
 				Type:        schema.TypeString,
 				Description: "Periodicity of the Savings Plan",
@@ -111,7 +124,7 @@ func resourceSavingsPlan() *schema.Resource {
 	}
 }
 
-func resourceSavingsPlanImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceSavingsPlanImport(d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	config := meta.(*Config)
 
 	importID := d.Id()
@@ -134,12 +147,59 @@ func resourceSavingsPlanImport(d *schema.ResourceData, meta interface{}) ([]*sch
 	return []*schema.ResourceData{d}, nil
 }
 
-func resourceSavingsPlanCreate(d *schema.ResourceData, meta interface{}) error {
-	serviceName := d.Get("service_name").(string)
+func fetchSavingsPlanOffers(config *Config, d *schema.ResourceData, serviceID int) ([]savingsPlansSubscribable, error) {
 	flavor := strings.ReplaceAll(d.Get("flavor").(string), "_", " ")
 	if flavor == "rancher" {
 		flavor = "rancher standard"
 	}
+
+	deploymentType := strings.ToUpper(d.Get("deployment_type").(string))
+	if strings.HasPrefix(flavor, "rancher") && deploymentType != "1AZ" {
+		return nil, fmt.Errorf("invalid deployment_type %q for flavor %q, only 1AZ is supported", deploymentType, flavor)
+
+	}
+
+	fullFlavor := flavor
+	if deploymentType == "3AZ" {
+		fullFlavor += " 3AZ"
+	}
+
+	endpoint := fmt.Sprintf("/services/%d/savingsPlans/subscribable?productCode=%q", serviceID, url.QueryEscape(fullFlavor))
+	subscribables := []savingsPlansSubscribable{}
+	if err := config.OVHClient.Get(endpoint, &subscribables); err != nil {
+		return nil, fmt.Errorf("error calling GET %s:\n\t %q", endpoint, err)
+	}
+
+	if strings.HasPrefix(flavor, "rancher") || deploymentType == "3AZ" {
+		return subscribables, nil
+	}
+
+	// Fetch 3AZ flavors to be able to find the 1AZ ones
+	threeAZPlans := []savingsPlansSubscribable{}
+	endpoint = fmt.Sprintf("/services/%d/savingsPlans/subscribable?productCode=%q", serviceID, url.QueryEscape(flavor+" 3AZ"))
+	if err := config.OVHClient.Get(endpoint, &threeAZPlans); err != nil {
+		return nil, fmt.Errorf("error calling GET %s:\n\t %q", endpoint, err)
+	}
+
+	// Extract offer IDs of 3AZ plans
+	threeAZOfferIDs := make(map[string]struct{})
+	for _, plan := range threeAZPlans {
+		threeAZOfferIDs[plan.OfferID] = struct{}{}
+	}
+
+	// Filter out 3AZ plans to keep only 1AZ ones
+	var oneAZPlans []savingsPlansSubscribable
+	for _, plan := range subscribables {
+		if _, ok := threeAZOfferIDs[plan.OfferID]; !ok {
+			oneAZPlans = append(oneAZPlans, plan)
+		}
+	}
+
+	return oneAZPlans, nil
+}
+
+func resourceSavingsPlanCreate(d *schema.ResourceData, meta any) error {
+	serviceName := d.Get("service_name").(string)
 	config := meta.(*Config)
 
 	// Retrieve service ID
@@ -151,14 +211,14 @@ func resourceSavingsPlanCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Get subscribables savings plans
 	log.Print("[DEBUG] Will fetch subscribables savings plans")
-	endpoint := fmt.Sprintf("/services/%d/savingsPlans/subscribable?productCode=%q", serviceId, url.QueryEscape(flavor))
-	subscribables := []savingsPlansSubscribable{}
-	if err := config.OVHClient.Get(endpoint, &subscribables); err != nil {
-		return fmt.Errorf("error calling GET %s:\n\t %q", endpoint, err)
+	subscribables, err := fetchSavingsPlanOffers(config, d, serviceId)
+	if err != nil {
+		return err
 	}
+	log.Printf("[DEBUG] Retrieved %d subscribable savings plans", len(subscribables))
 
 	// Search for a savings plan corresponding to the given parameters
-	endpoint = fmt.Sprintf("/services/%d/savingsPlans/subscribe/simulate", serviceId)
+	endpoint := fmt.Sprintf("/services/%d/savingsPlans/subscribe/simulate", serviceId)
 	for _, subscribable := range subscribables {
 		var (
 			req = savingsPlansSimulateRequest{
@@ -207,7 +267,7 @@ func resourceSavingsPlanCreate(d *schema.ResourceData, meta interface{}) error {
 	return errors.New("no savings plan available with the given parameters")
 }
 
-func resourceSavingsPlanRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSavingsPlanRead(d *schema.ResourceData, meta any) error {
 	serviceID := d.Get("service_id").(int)
 	config := meta.(*Config)
 
@@ -228,7 +288,7 @@ func resourceSavingsPlanRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceSavingsPlanUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceSavingsPlanUpdate(d *schema.ResourceData, meta any) error {
 	serviceID := d.Get("service_id").(int)
 	config := meta.(*Config)
 
@@ -271,7 +331,7 @@ func resourceSavingsPlanUpdate(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceSavingsPlanDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSavingsPlanDelete(d *schema.ResourceData, meta any) error {
 	// Does nothing, savings plans cannot be deleted
 	d.SetId("")
 	return nil
