@@ -29,6 +29,7 @@ The following arguments are supported:
 * `size` - (Required) Size of the Savings Plan
 * `display_name` - (Required) Custom display name, used in invoices
 * `auto_renewal` - Whether Savings Plan should be renewed at the end of the period (defaults to false)
+* `deployment_type` - (Optional) Deployment type of the Savings Plan. Can be either `1AZ` or `3AZ`. Defaults to `1AZ` and cannot be set to `3AZ` for Rancher flavors.
 
 ### Available flavors
 
