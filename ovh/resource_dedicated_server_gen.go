@@ -376,6 +376,18 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 			Description:         "Defines whether the server should not be reinstalled when importing the resource",
 			MarkdownDescription: "Defines whether the server should not be reinstalled when importing the resource",
 		},
+		"range": schema.StringAttribute{
+			CustomType:          ovhtypes.TfStringType{},
+			Optional:            true,
+			Description:         "Range of the dedicated server to order. Can be 'standard' or 'eco'. Defaults to 'standard'",
+			MarkdownDescription: "Range of the dedicated server to order. Can be `standard` or `eco`. Defaults to `standard`",
+			Validators: []validator.String{
+				stringvalidator.OneOf(
+					"standard",
+					"eco",
+				),
+			},
+		},
 		"region": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
 			Computed:            true,
@@ -719,6 +731,7 @@ type DedicatedServerModel struct {
 	Rack                    ovhtypes.TfStringValue                             `tfsdk:"rack" json:"rack"`
 	PreventInstallOnCreate  ovhtypes.TfBoolValue                               `tfsdk:"prevent_install_on_create" json:"-"`
 	PreventInstallOnImport  ovhtypes.TfBoolValue                               `tfsdk:"prevent_install_on_import" json:"-"`
+	Range                   ovhtypes.TfStringValue                             `tfsdk:"range" json:"-"`
 	Region                  ovhtypes.TfStringValue                             `tfsdk:"region" json:"region"`
 	RescueMail              ovhtypes.TfStringValue                             `tfsdk:"rescue_mail" json:"rescueMail"`
 	RescueSshKey            ovhtypes.TfStringValue                             `tfsdk:"rescue_ssh_key" json:"rescueSshKey"`
@@ -836,6 +849,10 @@ func (v *DedicatedServerModel) MergeWith(other *DedicatedServerModel) {
 
 	if (v.PreventInstallOnImport.IsUnknown() || v.PreventInstallOnImport.IsNull()) && !other.PreventInstallOnImport.IsUnknown() {
 		v.PreventInstallOnImport = other.PreventInstallOnImport
+	}
+
+	if (v.Range.IsUnknown() || v.Range.IsNull()) && !other.Range.IsUnknown() {
+		v.Range = other.Range
 	}
 
 	if (v.Region.IsUnknown() || v.Region.IsNull()) && !other.Region.IsUnknown() {
