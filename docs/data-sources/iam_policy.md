@@ -32,3 +32,14 @@ data "ovh_iam_policy" "my_policy" {
 * `created_at` - Creation date of this group.
 * `updated_at` - Date of the last update of this group.
 * `read_only` - Indicates that the policy is a default one.
+* `expired_at` - Expiration date of the policy.
+* `conditions` - Conditions restricting the policy.
+
+### Conditions
+
+The `conditions` block returns:
+
+* `operator` - Operator to combine conditions.
+* `condition` - List of condition blocks. Each condition supports:
+  * `operator` - Operator for this condition.
+  * `values` - Map of key-value pairs to match.
