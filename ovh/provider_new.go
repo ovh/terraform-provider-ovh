@@ -265,6 +265,8 @@ func (p *OvhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 		NewDomainZoneRecordsDataSource,
 		NewIpFirewallDataSource,
 		NewIpFirewallRuleDataSource,
+		NewIploadbalancingsDataSource,
+		NewIploadbalancingNatIpsDataSource,
 		NewIpMitigationDataSource,
 		NewLocationDataSource,
 		NewOkmsCredentialDataSource,
