@@ -298,11 +298,13 @@ type VpsModel struct {
 	// Installation options
 	PublicSSHKey ovhtypes.TfStringValue `tfsdk:"public_ssh_key" json:"publicSshKey"`
 	ImageId      ovhtypes.TfStringValue `tfsdk:"image_id" json:"imageId"`
+	DoNotSendPassword      ovhtypes.TfBoolValue `tfsdk:"do_not_send_password" json:"doNotSendPassword"`
 }
 
 type InstallOptionsModel struct {
 	PublicSSHKey ovhtypes.TfStringValue `tfsdk:"public_ssh_key" json:"publicSshKey"`
 	ImageId      ovhtypes.TfStringValue `tfsdk:"image_id" json:"imageId"`
+	DoNotSendPassword      ovhtypes.TfBoolValue `tfsdk:"do_not_send_password" json:"doNotSendPassword"`
 }
 
 func (v *VpsModel) MergeWith(other *VpsModel) {
@@ -414,6 +416,7 @@ func (v *VpsModel) ToInstallOptions() *InstallOptionsModel {
 	return &InstallOptionsModel{
 		ImageId:      v.ImageId,
 		PublicSSHKey: v.PublicSSHKey,
+		DoNotSendPassword: v.DoNotSendPassword,
 	}
 }
 
