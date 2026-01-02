@@ -58,6 +58,9 @@ parameters:
   skipthistest.vrack:
     type: boolean
     description: Skip vRack tests
+  skipthistest.vrackservices:
+    type: boolean
+    description: Skip VrackServices tests
   skipthistest.okms:
     type: boolean
     description: Skip OKMS tests
