@@ -286,6 +286,8 @@ In order to run the Acceptance Tests for development, the following environment 
 
 * `OVH_TESTACC_ORDER_VRACKSERVICES` - set this variable to "yes" will order and test Vrack Services.
 
+* `OVH_TESTACC_VRACK_SERVICES_ID_TEST` - The ID of your vRack Service.
+
 * `OVH_TESTACC_ORDER_CLOUDPROJECT` - set this variable to "yes" will order cloud projects.
 
 * `OVH_TESTACC_ORDER_DOMAIN` - set this variable to "mydomain.ovh" to run tests for domain zones.
