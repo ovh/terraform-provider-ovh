@@ -53,7 +53,7 @@ func waitForDedicatedServerTask(serviceName string, task *DedicatedServerTask, c
 		Pending:    []string{"init", "todo", "doing"},
 		Target:     []string{"done"},
 		Refresh:    refreshFunc,
-		Timeout:    45 * time.Minute,
+		Timeout:    60 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}

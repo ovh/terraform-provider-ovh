@@ -19,7 +19,7 @@ func resourceDedicatedServerReinstallTask() *schema.Resource {
 		Delete: resourceDedicatedServerReinstallTaskDelete,
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(45 * time.Minute),
+			Create: schema.DefaultTimeout(60 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
