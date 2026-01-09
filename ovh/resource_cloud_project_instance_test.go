@@ -380,3 +380,118 @@ func TestAccCloudProjectInstance_privateNetworkAlreadyExists(t *testing.T) {
 		},
 	})
 }
+
+func TestAccCloudProjectInstance_multiNIC(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+	flavor, image, err := getFlavorAndImage(serviceName, region)
+	if err != nil {
+		t.Skipf("failed to retrieve a flavor and an image: %s", err)
+	}
+
+	rName := acctest.RandomWithPrefix(test_prefix)
+	netName1 := fmt.Sprintf("%s_net1", rName)
+	netName2 := fmt.Sprintf("%s_net2", rName)
+
+	vlanID1 := rand.Intn(2000) + 2
+	vlanID2 := vlanID1 + 1
+
+	var testCreateInstanceMultiNIC = fmt.Sprintf(`
+		resource "private" "net1" {
+			service_name = "%s"
+			name         = "%s"
+			regions      = ["%s"]
+			vlan_id      = %d
+		}
+
+		resource "ovh_cloud_project_subnet" "sub1" {
+			service_name = "%s"
+			network_id   = private.net1.id
+			region       = "%s"
+			network      = "192.168.1.0/24"
+			dhcp         = true
+			start        = "192.168.1.100"
+			end          = "192.168.1.200"
+			no_gateway   = false
+		}
+
+		resource "private" "net2" {
+			service_name = "%s"
+			name         = "%s"
+			regions      = ["%s"]
+			vlan_id      = %d
+		}
+
+		resource "ovh_cloud_project_subnet" "sub2" {
+			service_name = "%s"
+			network_id   = private.net2.id
+			region       = "%s"
+			network      = "192.168.2.0/24"
+			dhcp         = true
+			start        = "192.168.2.100"
+			end          = "192.168.2.200"
+			no_gateway   = false
+		}
+
+		resource "ovh_cloud_project_instance" "multi_nic" {
+			service_name = "%s"
+			region       = "%s"
+			name         = "%s"
+            billing_period = "hourly"
+			
+			flavor {
+				flavor_id = "%s"
+			}
+            boot_from {
+                image_id = "%s"
+            }
+
+			network {
+                # Interface Publique
+				public = true
+
+                # Interface Privée 1
+				private {
+					network {
+						id        = private.net1.id
+						subnet_id = ovh_cloud_project_subnet.sub1.id
+					}
+				}
+
+                # Interface Privée 2
+				private {
+					network {
+						id        = private.net2.id
+						subnet_id = ovh_cloud_project_subnet.sub2.id
+					}
+				}
+			}
+		}
+	`,
+		serviceName, netName1, region, vlanID1,
+		serviceName, region,
+		serviceName, netName2, region, vlanID2,
+		serviceName, region,
+		serviceName, region, rName, flavor, image,
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloud(t)
+			testAccCheckCloudProjectExists(t)
+		},
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testCreateInstanceMultiNIC,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_instance.multi_nic", "id"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_instance.multi_nic", "network.0.private.#", "2"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_instance.multi_nic", "addresses.0.ip"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_instance.multi_nic", "addresses.1.ip"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_instance.multi_nic", "addresses.2.ip"),
+				),
+			},
+		},
+	})
+}
