@@ -1,6 +1,7 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/url"
@@ -8,8 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/ovhwrap"
@@ -195,8 +196,8 @@ func resourceCloudProjectContainerRegistryCreate(d *schema.ResourceData, meta in
 	}
 	d.SetId(reg.Id)
 	log.Printf("[DEBUG] container registry created with id %s", reg.Id)
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"INSTALLING"},
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{"INSTALLING", "DELIVERING"},
 		Target:     []string{"READY"},
 		Refresh:    waitForCloudProjectContainerRegistry(config.OVHClient, serviceName, d.Id()),
 		Timeout:    60 * time.Minute,
@@ -204,7 +205,7 @@ func resourceCloudProjectContainerRegistryCreate(d *schema.ResourceData, meta in
 		MinTimeout: 3 * time.Second,
 	}
 
-	if _, err := stateConf.WaitForState(); err != nil {
+	if _, err := stateConf.WaitForStateContext(context.Background()); err != nil {
 		return fmt.Errorf("waiting for registry (%s): %s", d.Id(), err)
 	}
 	log.Printf("[INFO] container registry created with id %s", reg.Id)
@@ -323,7 +324,7 @@ func cloudProjectContainerRegistryPlanUpdate(d *schema.ResourceData, meta interf
 		return fmt.Errorf("Error calling put %s:\n\t %q", endpoint, err)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"SCALING_UP"},
 		Target:     []string{"READY"},
 		Refresh:    waitForCloudProjectContainerRegistry(config.OVHClient, serviceName, d.Id()),
@@ -332,7 +333,7 @@ func cloudProjectContainerRegistryPlanUpdate(d *schema.ResourceData, meta interf
 		MinTimeout: 3 * time.Second,
 	}
 
-	if _, err := stateConf.WaitForState(); err != nil {
+	if _, err := stateConf.WaitForStateContext(context.Background()); err != nil {
 		return fmt.Errorf("waiting for registry (%s): %s", d.Id(), err)
 	}
 
@@ -356,7 +357,7 @@ func resourceCloudProjectContainerRegistryDelete(d *schema.ResourceData, meta in
 		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"DELETING"},
 		Target:     []string{"DELETED", "deleted"},
 		Refresh:    waitForCloudProjectContainerRegistry(config.OVHClient, serviceName, d.Id()),
@@ -365,7 +366,7 @@ func resourceCloudProjectContainerRegistryDelete(d *schema.ResourceData, meta in
 		MinTimeout: 3 * time.Second,
 	}
 
-	if _, err := stateConf.WaitForState(); err != nil {
+	if _, err := stateConf.WaitForStateContext(context.Background()); err != nil {
 		return fmt.Errorf("Deleting container registry %s from project %s: %s", id, serviceName, err)
 	}
 
@@ -374,7 +375,7 @@ func resourceCloudProjectContainerRegistryDelete(d *schema.ResourceData, meta in
 	return nil
 }
 
-func waitForCloudProjectContainerRegistry(c *ovhwrap.Client, serviceName, id string) resource.StateRefreshFunc {
+func waitForCloudProjectContainerRegistry(c *ovhwrap.Client, serviceName, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		r := &CloudProjectContainerRegistry{}
 		endpoint := fmt.Sprintf(
