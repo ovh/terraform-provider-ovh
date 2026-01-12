@@ -181,6 +181,7 @@ func (r *dedicatedServerResource) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
+	responseData.DisplayName = responseData.Iam.DisplayName
 	responseData.MergeWith(&data)
 	responseData.ID = responseData.ServiceName
 
