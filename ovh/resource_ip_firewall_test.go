@@ -54,6 +54,14 @@ resource "ovh_ip_firewall" "firewall" {
 }
 `
 
+const testAccIPFirewallEnabledConfig = `
+resource "ovh_ip_firewall" "firewall" {
+	ip             = "%s"
+	ip_on_firewall = "%s"
+	enabled        = true
+}
+`
+
 func TestAccIPFirewall_basic(t *testing.T) {
 	ip := os.Getenv("OVH_IP_FIREWALL_TEST")
 
@@ -77,6 +85,30 @@ func TestAccIPFirewall_basic(t *testing.T) {
 			},
 			{
 				Config: updatedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"ovh_ip_firewall.firewall", "ip_on_firewall", ip),
+					resource.TestCheckResourceAttr(
+						"ovh_ip_firewall.firewall", "state", "ok"),
+					resource.TestCheckResourceAttr(
+						"ovh_ip_firewall.firewall", "enabled", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIPFirewall_createEnabled(t *testing.T) {
+	ip := os.Getenv("OVH_IP_FIREWALL_TEST")
+
+	config := fmt.Sprintf(testAccIPFirewallEnabledConfig, ip, ip)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheckIp(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
 						"ovh_ip_firewall.firewall", "ip_on_firewall", ip),

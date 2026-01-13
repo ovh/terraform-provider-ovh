@@ -88,6 +88,38 @@ func (r *ipFirewallResource) Create(ctx context.Context, req resource.CreateRequ
 	responseData.MergeWith(&data)
 	responseData.ID = ovhtypes.NewTfStringValue(responseData.Ip.ValueString() + "/" + responseData.IpOnFirewall.ValueString())
 
+	// If enabled is explicitly set to true, we need to update the firewall
+	// because the POST endpoint doesn't accept the enabled parameter
+	if !data.Enabled.IsUnknown() && !data.Enabled.IsNull() && data.Enabled.ValueBool() {
+		updateEndpoint := "/ip/" + url.PathEscape(data.Ip.ValueString()) + "/firewall/" + url.PathEscape(responseData.IpOnFirewall.ValueString())
+		if err := r.config.OVHClient.Put(updateEndpoint, data.ToUpdate(), nil); err != nil {
+			resp.Diagnostics.AddError(
+				fmt.Sprintf("Error calling Put %s to enable firewall", updateEndpoint),
+				err.Error(),
+			)
+			return
+		}
+
+		// Wait for the firewall to be ready after enabling
+		err := retry.RetryContext(ctx, 10*time.Minute, func() *retry.RetryError {
+			if err := r.config.OVHClient.Get(updateEndpoint, &responseData); err != nil {
+				return retry.NonRetryableError(err)
+			}
+
+			if responseData.State.ValueString() == "ok" {
+				return nil
+			}
+
+			return retry.RetryableError(errors.New("waiting for state to be OK"))
+		})
+		if err != nil {
+			resp.Diagnostics.AddError("Failed to get updated resource after enabling", err.Error())
+			return
+		}
+
+		responseData.MergeWith(&data)
+	}
+
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)
 }
