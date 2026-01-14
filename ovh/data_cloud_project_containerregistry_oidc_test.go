@@ -41,6 +41,8 @@ func TestAccCloudProjectContainerRegistryOIDCDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"data.ovh_cloud_project_containerregistry_oidc.oidcData", "oidc_scope", "openid,profile,email,offline_access"),
 					resource.TestCheckResourceAttr(
+						"data.ovh_cloud_project_containerregistry_oidc.oidcData", "oidc_group_filter", "groupFilter"),
+					resource.TestCheckResourceAttr(
 						"data.ovh_cloud_project_containerregistry_oidc.oidcData", "oidc_groups_claim", "groupsClaim"),
 					resource.TestCheckResourceAttr(
 						"data.ovh_cloud_project_containerregistry_oidc.oidcData", "oidc_admin_group", "adminGroup"),
@@ -79,6 +81,7 @@ resource "ovh_cloud_project_containerregistry_oidc" "oidc" {
 	oidc_client_id = "clientID"
 	oidc_client_secret = "clientSecret"
 	oidc_scope = "openid,profile,email,offline_access"
+	oidc_group_filter = "groupFilter"
 	oidc_groups_claim = "groupsClaim"
 	oidc_admin_group = "adminGroup"
 	oidc_verify_cert = "true"

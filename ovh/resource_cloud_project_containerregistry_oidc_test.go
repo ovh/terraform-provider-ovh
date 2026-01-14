@@ -34,6 +34,7 @@ resource "ovh_cloud_project_containerregistry_oidc" "my-oidc" {
 	oidc_client_id = "%s"
 	oidc_client_secret = "clientSecret"
 	oidc_scope = "openid,profile,email,offline_access"
+	oidc_group_filter = "groupFilter"
 	oidc_groups_claim = "groupsClaim"
 	oidc_admin_group = "adminGroup"
 	oidc_verify_cert = "true"
@@ -82,6 +83,7 @@ func TestAccCloudProjectContainerRegistryOIDC_full(t *testing.T) {
 					resource.TestCheckResourceAttr("ovh_cloud_project_containerregistry_oidc.my-oidc", "oidc_client_id", "clientID"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_containerregistry_oidc.my-oidc", "oidc_client_secret", "clientSecret"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_containerregistry_oidc.my-oidc", "oidc_scope", "openid,profile,email,offline_access"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_containerregistry_oidc.my-oidc", "oidc_group_filter", "groupFilter"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_containerregistry_oidc.my-oidc", "oidc_groups_claim", "groupsClaim"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_containerregistry_oidc.my-oidc", "oidc_admin_group", "adminGroup"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_containerregistry_oidc.my-oidc", "oidc_verify_cert", "true"),
@@ -107,6 +109,7 @@ func TestAccCloudProjectContainerRegistryOIDC_full(t *testing.T) {
 					resource.TestCheckResourceAttr("ovh_cloud_project_containerregistry_oidc.my-oidc", "oidc_client_id", "clientIDModified"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_containerregistry_oidc.my-oidc", "oidc_client_secret", "clientSecret"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_containerregistry_oidc.my-oidc", "oidc_scope", "openid,profile,email,offline_access"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_containerregistry_oidc.my-oidc", "oidc_group_filter", "groupFilter"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_containerregistry_oidc.my-oidc", "oidc_groups_claim", "groupsClaim"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_containerregistry_oidc.my-oidc", "oidc_admin_group", "adminGroup"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_containerregistry_oidc.my-oidc", "oidc_verify_cert", "true"),
