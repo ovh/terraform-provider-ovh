@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/ovh/go-ovh/ovh"
 )
 
 var _ resource.ResourceWithConfigure = (*domainZoneDnssecResource)(nil)
@@ -110,6 +111,9 @@ func (r *domainZoneDnssecResource) Delete(ctx context.Context, req resource.Dele
 	// Delete API call logic
 	endpoint := "/domain/zone/" + url.PathEscape(data.ZoneName.ValueString()) + "/dnssec"
 	if err := r.config.OVHClient.Delete(endpoint, nil); err != nil {
+		if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
+			return
+		}
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Delete %s", endpoint),
 			err.Error(),
