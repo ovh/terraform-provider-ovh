@@ -122,7 +122,7 @@ resource "ovh_dedicated_server" "server" {
   * `language` - Display Language
   * `post_installation_script` - Post-Installation Script
   * `post_installation_script_extension` - Post-Installation Script File Extension
-  * `ssh_key` - SSH Public Key
+  * `sshKey` - SSH Public Key
 * `storage` - Storage customization
   * `disk_group_id` - Disk group id
   * `hardware_raid` - Hardware Raid configurations
