@@ -90,6 +90,29 @@ output "user_password" {
 }
 ```
 
+To reset the password of the existing default user:
+```
+data "ovh_cloud_project_database" "valkey" {
+  service_name  = "XXXX"
+  engine        = "valkey"
+  id            = "ZZZZ"
+}
+
+resource "ovh_cloud_project_database_valkey_user" "default_user" {
+  service_name    = data.ovh_cloud_project_database.valkey.service_name
+  cluster_id      = data.ovh_cloud_project_database.valkey.id
+  categories      = ["+@all"]
+  keys            = ["*"]
+  name            = "default"
+  password_reset  = "reset"
+}
+
+output "default_user_password" {
+  value = ovh_cloud_project_database_valkey_user.default_user.password
+  sensitive = true
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -100,7 +123,7 @@ The following arguments are supported:
 * `channels` - (Optional: if omit, all channels) Channels of the user.
 * `commands` - (Optional) Commands of the user.
 * `keys` - (Optional) Keys of the user.
-* `name` - (Required, Forces new resource) Name of the user.
+* `name` - (Required, Forces new resource) Name of the user. A user named "default" is mapped with an already created user and reset his password instead of creating a new user.
 * `password_reset` - (Optional) Arbitrary string to change to trigger a password update. Use the `terraform refresh` command after executing `terraform apply` to update the output with the new password.
 
 ## Attributes Reference

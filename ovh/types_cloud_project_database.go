@@ -750,7 +750,7 @@ func importCloudProjectDatabaseUser(d *schema.ResourceData, meta interface{}) ([
 
 func postCloudProjectDatabaseUser(ctx context.Context, d *schema.ResourceData, meta interface{}, engine string, dsReadFunc, readFunc schema.ReadContextFunc, updateFunc schema.UpdateContextFunc, f func() interface{}) diag.Diagnostics {
 	name := d.Get("name").(string)
-	if name == "avnadmin" && engine != "redis" && engine != "valkey" {
+	if (name == "avnadmin" && engine != "redis" && engine != "valkey") || (name == "default" && (engine == "redis" || engine == "valkey")) {
 		diags := dsReadFunc(ctx, d, meta)
 		if diags.HasError() {
 			return diags
@@ -811,8 +811,9 @@ func updateCloudProjectDatabaseUser(ctx context.Context, d *schema.ResourceData,
 	serviceName := d.Get("service_name").(string)
 	clusterId := d.Get("cluster_id").(string)
 	isAvnAdmin := d.Get("name").(string) == "avnadmin"
+	isDefault := d.Get("name").(string) == "default"
 	// The M3DB condition must be remove when avnadmin password reset will be possible on this engine
-	passwordReset := d.HasChange("password_reset") || (d.IsNewResource() && isAvnAdmin && engine != "m3db")
+	passwordReset := d.HasChange("password_reset") || (d.IsNewResource() && isAvnAdmin && engine != "m3db") || (d.IsNewResource() && isDefault && (engine == "valkey" || engine == "redis"))
 	id := d.Id()
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/user/%s",
@@ -822,7 +823,7 @@ func updateCloudProjectDatabaseUser(ctx context.Context, d *schema.ResourceData,
 		url.PathEscape(id),
 	)
 
-	if !(isAvnAdmin && engine == "postgresql") {
+	if !(isAvnAdmin && engine == "postgresql") && !(isDefault && (engine == "valkey" || engine == "redis")) {
 		params := f()
 
 		log.Printf("[DEBUG] Will update user: %+v from cluster %s from project %s", params, clusterId, serviceName)
@@ -854,7 +855,7 @@ func updateCloudProjectDatabaseUser(ctx context.Context, d *schema.ResourceData,
 
 func deleteCloudProjectDatabaseUser(ctx context.Context, d *schema.ResourceData, meta interface{}, engine string) diag.Diagnostics {
 	name := d.Get("name").(string)
-	if name == "avnadmin" && engine != "redis" && engine != "valkey" {
+	if (name == "avnadmin" && engine != "redis" && engine != "valkey") || (name == "default" && (engine == "redis" || engine == "valkey")) {
 		d.SetId("")
 		return nil
 	}
