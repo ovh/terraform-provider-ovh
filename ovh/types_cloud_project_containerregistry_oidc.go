@@ -13,6 +13,7 @@ type CloudProjectContainerRegistryOIDCProvider struct {
 	Scope        string `json:"scope"`
 
 	// Optional fields
+	GroupFilter string `json:"groupFilter,omitempty"`
 	GroupsClaim string `json:"groupsClaim,omitempty"`
 	AdminGroup  string `json:"adminGroup,omitempty"`
 	VerifyCert  bool   `json:"verifyCert,omitempty"`
@@ -37,6 +38,7 @@ type CloudProjectContainerRegistryOIDCResponse struct {
 	Scope    string `json:"scope"`
 
 	// Non required
+	GroupFilter string `json:"groupFilter"`
 	GroupsClaim string `json:"groupsClaim"`
 	AdminGroup  string `json:"adminGroup"`
 	VerifyCert  bool   `json:"verifyCert"`
@@ -64,6 +66,7 @@ func newCloudProjectContainerRegistryOIDCProvider(d *schema.ResourceData) *Cloud
 		ClientID:     d.Get("oidc_client_id").(string),
 		ClientSecret: d.Get("oidc_client_secret").(string),
 		Scope:        d.Get("oidc_scope").(string),
+		GroupFilter:  d.Get("oidc_group_filter").(string),
 		GroupsClaim:  d.Get("oidc_groups_claim").(string),
 		AdminGroup:   d.Get("oidc_admin_group").(string),
 		VerifyCert:   d.Get("oidc_verify_cert").(bool),
@@ -78,6 +81,7 @@ func (v CloudProjectContainerRegistryOIDCResponse) ToMap() map[string]interface{
 	obj["oidc_endpoint"] = v.Endpoint
 	obj["oidc_client_id"] = v.ClientID
 	obj["oidc_scope"] = v.Scope
+	obj["oidc_group_filter"] = v.GroupFilter
 	obj["oidc_groups_claim"] = v.GroupsClaim
 	obj["oidc_admin_group"] = v.AdminGroup
 	obj["oidc_verify_cert"] = v.VerifyCert

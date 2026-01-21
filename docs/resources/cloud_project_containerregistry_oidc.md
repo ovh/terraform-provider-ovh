@@ -21,6 +21,7 @@ resource "ovh_cloud_project_containerregistry_oidc" "my_oidc" {
   oidc_scope         = "openid,profile,email,offline_access"
 
   #optional field
+  oidc_group_filter = "harbor-admin"
   oidc_groups_claim = "groups"
   oidc_admin_group  = "harbor-admin"
   oidc_verify_cert  = true
@@ -46,6 +47,7 @@ The following arguments are supported:
 * `oidc_client_id` - The client ID with which Harbor is registered as client application with the OIDC provider.
 * `oidc_client_secret` - The secret for the Harbor client application.
 * `oidc_scope` - The scope sent to OIDC server during authentication. It's a comma-separated string that must contain 'openid' and usually also contains 'profile' and 'email'. To obtain refresh tokens it should also contain 'offline_access'.
+* `oidc_group_filter` - The regular expression to select matching groups from the Group Claim Name list. Matching groups are added to Harbor. This filter does not limit the users’ capability to log in into Harbor.
 * `oidc_groups_claim` - The name of Claim in the ID token whose value is the list of group names.
 * `oidc_admin_group` - Specify an OIDC admin group name. All OIDC users in this group will have harbor admin privilege. Keep it blank if you do not want to.
 * `oidc_verify_cert` - Set it to `false` if your OIDC server is hosted via self-signed certificate.

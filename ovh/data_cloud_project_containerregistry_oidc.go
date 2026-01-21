@@ -44,6 +44,11 @@ func dataSourceCloudProjectContainerRegistryOIDC() *schema.Resource {
 				Required: false,
 				Optional: true,
 			},
+			"oidc_group_filter": {
+				Type:     schema.TypeString,
+				Required: false,
+				Optional: true,
+			},
 			"oidc_groups_claim": {
 				Type:     schema.TypeString,
 				Required: false,
