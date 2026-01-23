@@ -42,6 +42,7 @@ resource "ovh_cloud_project_storage" "storage" {
 - `prefix` (String) List objects whose key begins with this prefix
 - `replication` (Attributes) Replication configuration (see [below for nested schema](#nestedatt--replication))
 - `versioning` (Attributes) Versioning configuration (see [below for nested schema](#nestedatt--versioning))
+- `object_lock` (Attributes) Object lock configuration (see [below for nested schema](#nestedatt--object_lock))
 
 ### Read-Only
 
@@ -111,6 +112,26 @@ Optional:
 Optional:
 
 - `status` (String) Versioning status (E.g. "enabled", "disabled" or "suspended")
+
+<a id="nestedatt--object_lock"></a>
+
+### Nested Schema for `object_lock`
+
+Optional:
+
+- `rule` (Attributes) Object lock default rule (see [below for nested schema](#nestedatt--object_lock--rule))
+- `status` (String) Object lock status (accepted values: `enabled`, `disabled`)
+
+<a id="nestedatt--object_lock--rule"></a>
+
+### Nested Schema for `object_lock.rule`
+
+Optional:
+
+Required:
+
+- `mode` (String) Object lock mode (accepted values: `compliance`, `governance`)
+- `period` (String) The retention period that the default retention configuration must apply (e.g., P30D for 30 days)
 
 <a id="nestedatt--objects"></a>
 
