@@ -243,3 +243,25 @@ type MePaymentMeanIcon struct {
 	Data *string `json:"data"`
 	Name *string `json:"name"`
 }
+
+type MeIdentityUserTokenResponse struct {
+	Creation    string  `json:"creation"`
+	Description string  `json:"description"`
+	ExpiresAt   string  `json:"expiresAt"`
+	LastUsed    *string `json:"lastUsed"`
+	Name        string  `json:"name"`
+	Token       string  `json:"token"`
+}
+
+type MeIdentityUserTokenCreateOpts struct {
+	Description string `json:"description"`
+	ExpiresAt   string `json:"expiresAt,omitempty"`
+	ExpiresIn   int    `json:"expiresIn,omitempty"`
+	Name        string `json:"name"`
+}
+
+type MeIdentityUserTokenUpdateOpts struct {
+	Description string `json:"description,omitempty"`
+	ExpiresAt   string `json:"expiresAt,omitempty"`
+	ExpiresIn   int    `json:"expiresIn,omitempty"`
+}

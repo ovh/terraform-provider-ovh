@@ -1,0 +1,25 @@
+---
+subcategory : "Account Management (IAM)"
+---
+
+# ovh_me_identity_user_token
+
+Creates a token for an identity user.
+
+## Example Usage
+
+{{tffile "examples/resources/me_identity_user_token/example_1.tf"}}
+
+## Argument Reference
+
+* `user_login` - (Required) User's login suffix.
+* `name` - (Required) Token name.
+* `description` - (Required) Token description.
+* `expires_at` - (Optional) Token expiration date.
+* `expires_in` - (Optional) Token validity duration in seconds.
+
+## Attributes Reference
+
+* `token` - The token value.
+* `creation` - Creation date of this token.
+* `last_used` - Last use of this token.
