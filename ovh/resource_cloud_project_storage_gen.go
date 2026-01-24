@@ -341,7 +341,8 @@ func CloudProjectRegionStorageResourceSchema(ctx context.Context) schema.Schema 
 					Attributes: map[string]schema.Attribute{
 						"mode": schema.StringAttribute{
 							CustomType:          ovhtypes.TfStringType{},
-							Required:            true,
+							Optional:            true,
+							Computed:            true,
 							Description:         "Object lock mode",
 							MarkdownDescription: "Object lock mode",
 							Validators: []validator.String{
@@ -353,7 +354,8 @@ func CloudProjectRegionStorageResourceSchema(ctx context.Context) schema.Schema 
 						},
 						"period": schema.StringAttribute{
 							CustomType:          ovhtypes.TfStringType{},
-							Required:            true,
+							Optional:            true,
+							Computed:            true,
 							Description:         "The retention period that the default retention configuration must apply (e.g., P30D for 30 days)",
 							MarkdownDescription: "The retention period that the default retention configuration must apply (e.g., P30D for 30 days)",
 						},
@@ -370,7 +372,8 @@ func CloudProjectRegionStorageResourceSchema(ctx context.Context) schema.Schema 
 				},
 				"status": schema.StringAttribute{
 					CustomType:          ovhtypes.TfStringType{},
-					Required:            true,
+					Optional:            true,
+					Computed:            true,
 					Description:         "Object lock status",
 					MarkdownDescription: "Object lock status",
 					Validators: []validator.String{
