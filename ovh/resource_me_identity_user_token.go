@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/ovh/go-ovh/ovh"
 )
 
 var _ resource.ResourceWithConfigure = (*MeIdentityUserTokenResource)(nil)
@@ -177,7 +178,7 @@ func (r *MeIdentityUserTokenResource) Read(ctx context.Context, req resource.Rea
 	var apiResp MeIdentityUserTokenResponse
 	err := r.config.OVHClient.GetWithContext(ctx, endpoint, &apiResp)
 	if err != nil {
-		if strings.Contains(err.Error(), "404") {
+		if ovhErr, ok := err.(*ovh.APIError); ok && ovhErr.Code == 404 {
 			resp.State.RemoveResource(ctx)
 			return
 		}
@@ -294,7 +295,7 @@ func (r *MeIdentityUserTokenResource) Delete(ctx context.Context, req resource.D
 	err := r.config.OVHClient.DeleteWithContext(ctx, endpoint, nil)
 	if err != nil {
 		// Ignore 404
-		if strings.Contains(err.Error(), "404") {
+		if ovhErr, ok := err.(*ovh.APIError); ok && ovhErr.Code == 404 {
 			return
 		}
 		resp.Diagnostics.AddError(
