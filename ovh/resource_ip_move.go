@@ -6,12 +6,10 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"reflect"
 	"strconv"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 	"golang.org/x/exp/slices"
@@ -21,14 +19,14 @@ import (
 // Usually, time taken for such a task is around 1 minute, here we tolerate 5 minutes
 const taskExpiresAfter = 300 * time.Second
 
-// waitingTimeInSecondsBeforeRefreshState number if seconds to wait before making a new API call to refresh ip task state
+// waitingTimeInSecondsBeforeRefreshState number of seconds to wait before making a new API call to refresh ip task state
 const waitingTimeInSecondsBeforeRefreshState = 10
 
 var ipTaskUnrecoverableErrors = []int{http.StatusBadRequest, http.StatusUnauthorized, http.StatusForbidden, http.StatusNotFound}
 
 func resourceIpServiceMove() *schema.Resource {
 	return &schema.Resource{
-		Create: resoursIpMoveCreate,
+		Create: resourceIpMoveCreate,
 		Update: resourceIpMoveUpdate,
 		Read:   resourceIpRead,
 		Delete: resourceIpMoveDelete,
@@ -52,18 +50,14 @@ func resourceIpMoveSchema() map[string]*schema.Schema {
 			Optional:    true,
 			Computed:    true,
 		},
-
-		//computed
 		"can_be_terminated": {
 			Type:     schema.TypeBool,
 			Computed: true,
 		},
-
 		"country": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-
 		"ip": {
 			Type:     schema.TypeString,
 			Required: true,
@@ -85,12 +79,18 @@ func resourceIpMoveSchema() map[string]*schema.Schema {
 						Description: "Service where ip is routed to",
 						Required:    true,
 					},
+					"next_hop": {
+						Type:        schema.TypeString,
+						Description: "Next hop for the IP routing",
+						Optional:    true,
+					},
 				},
 			},
 		},
 		"service_name": {
-			Type:     schema.TypeString,
-			Computed: true,
+			Type:        schema.TypeString,
+			Description: "Kept for compatibility; not populated by this resource",
+			Computed:    true,
 		},
 		"type": {
 			Type:        schema.TypeString,
@@ -112,7 +112,24 @@ func resourceIpMoveSchema() map[string]*schema.Schema {
 	return schema
 }
 
-func resoursIpMoveCreate(d *schema.ResourceData, meta interface{}) error {
+func equalStringPtr(a, b *string) bool {
+	if a == nil && b == nil {
+		return true
+	}
+	if a == nil || b == nil {
+		return false
+	}
+	return *a == *b
+}
+
+func stringPtrOr(p *string, alt string) string {
+	if p == nil {
+		return alt
+	}
+	return *p
+}
+
+func resourceIpMoveCreate(d *schema.ResourceData, meta interface{}) error {
 	// later on this ID will be replaced by the task if when we need to create it (see resourceIpMoveUpdate)
 	d.SetId(d.Get("ip").(string))
 
@@ -137,23 +154,16 @@ func resourceIpMoveUpdate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	serviceName, err := helpers.ServiceNameFromIpBlock(ip)
-	if err != nil {
-		return err
-	}
-	err = d.Set("service_name", serviceName)
-	if err != nil {
-		return err
-	}
-
 	ipTask := &IpTask{}
 	taskId, err := strconv.ParseInt(d.Id(), 10, 64)
 	if err == nil {
 		// if previous task is not done yet we need to wait for it to be completed
-		if d.Get("task_status") != nil {
-			ipTask.Status = IpTaskStatusEnum(d.Get("task_status").(string))
+		status := d.Get("task_status").(string)
+		start := d.Get("task_start_date").(string)
+		if status != "" && start != "" {
+			ipTask.Status = IpTaskStatusEnum(status)
 			ipTask.TaskId = taskId
-			taskStartDate, err := time.Parse(time.RFC3339, d.Get("task_start_date").(string))
+			taskStartDate, err := time.Parse(time.RFC3339, start)
 			if err != nil {
 				return err
 			}
@@ -166,19 +176,16 @@ func resourceIpMoveUpdate(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		log.Printf("[WARNING] - resource ID %s is not an int64/not a task ID. Cannot get last task state", d.Id())
 	}
-	err = resourceIpServiceReadByServiceName(d, serviceName, config)
-	if err != nil {
-		return err
-	}
 
 	currentlyRoutedService := GetRoutedToServiceName(d)
+	currentNextHop := GetRoutedToNextHop(d)
 	// no need to update if ip is already routed to the appropriate service
-	if reflect.DeepEqual(currentlyRoutedService, opts.To) {
-		log.Printf("[DEBUG] Won't do anything as ip %s (service name = %s) is already routed to service %v", ip, serviceName, currentlyRoutedService)
+	if equalStringPtr(currentlyRoutedService, opts.To) && equalStringPtr(currentNextHop, opts.NextHop) {
+		log.Printf("[DEBUG] Won't do anything as ip %s is already routed to service %v", ip, currentlyRoutedService)
 		return nil
 	} else {
 		if opts.To == nil {
-			log.Printf("[DEBUG] Will move ip %s (service name = %s) from service %s to IP parking", ip, serviceName, *currentlyRoutedService)
+			log.Printf("[DEBUG] Will move ip %s from service %s to IP parking", ip, stringPtrOr(currentlyRoutedService, "<none>"))
 			endpoint := fmt.Sprintf("/ip/%s/park",
 				url.PathEscape(ip),
 			)
@@ -187,7 +194,7 @@ func resourceIpMoveUpdate(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("calling Post %s: %q", endpoint, err)
 			}
 		} else {
-			log.Printf("[DEBUG] Will move ip %s (service name = %s) from service %v to service %s", ip, serviceName, currentlyRoutedService, *opts.To)
+			log.Printf("[DEBUG] Will move ip %s from service %v to service %s", ip, currentlyRoutedService, *opts.To)
 			endpoint := fmt.Sprintf("/ip/%s/move",
 				url.PathEscape(ip),
 			)
@@ -265,64 +272,11 @@ func resourceIpTaskRead(d *schema.ResourceData, ipTask *IpTask, meta interface{}
 }
 
 func resourceIpRead(d *schema.ResourceData, meta interface{}) error {
-	ip := d.Get("ip").(string)
-	serviceName, err := helpers.ServiceNameFromIpBlock(ip)
-	if err != nil {
-		return err
-	}
-	err = d.Set("service_name", serviceName)
-	if err != nil {
-		return err
-	}
-	config := meta.(*Config)
-	return resourceIpServiceReadByServiceName(d, serviceName, config)
+	// No-op: no remote state to refresh for this move-only resource
+	return nil
 }
 
 // resourceIpMoveDelete is an empty implementation as move do not actually create API objects but rather updates the underlying ip spec (by modifying its routed_to service)
 func resourceIpMoveDelete(d *schema.ResourceData, meta interface{}) error {
-	return nil
-}
-
-func resourceIpServiceReadByServiceName(d *schema.ResourceData, serviceName string, config *Config) error {
-	r := &IpService{}
-	endpoint := fmt.Sprintf("/ip/service/%s",
-		url.PathEscape(serviceName),
-	)
-	var err error
-	// This retry logic is there to handle a known API bug
-	// which happens while an ipblock is attached/detached from
-	// a Vrack
-	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
-		if err := config.OVHClient.Get(endpoint, &r); err != nil {
-			if errOvh, ok := err.(*ovh.APIError); ok {
-				if errOvh.Code == 400 {
-					log.Printf("[DEBUG] known API bug when attaching/detaching vrack")
-					return resource.RetryableError(err)
-				}
-				return resource.NonRetryableError(err)
-			}
-
-			err = helpers.CheckDeleted(d, err, endpoint)
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-
-			return nil
-		}
-
-		// Successful Get
-		return nil
-	})
-
-	if err != nil {
-		return err
-	}
-
-	d.Set("service_name", serviceName)
-	// set resource attributes
-	for k, v := range r.ToMap() {
-		d.Set(k, v)
-	}
-
 	return nil
 }

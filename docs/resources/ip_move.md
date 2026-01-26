@@ -19,6 +19,20 @@ resource "ovh_ip_move" "move_ip_to_load_balancer_xxxxx" {
 }
 ```
 
+## Move IP `1.2.3.4` to a PCI project with nexthop to a VM
+
+For PCI projects, use the project ID as `service_name`, and the target VM ID as `nexthop`.
+
+```terraform
+resource "ovh_ip_move" "move_ip_to_pci_service" {
+  ip = "1.2.3.4"
+  routed_to {
+    service_name = "PROJECT_ID"  # e.g. 11111111-2222-3333-4444-555555555555
+    next_hop     = "VM_ID"       # e.g. a2b3c4d5-1111-2222-3333-4444-555555555555
+  }
+}
+```
+
 ## Park IP/Detach IP `1.2.3.4` from any service
 
 ```terraform
@@ -37,6 +51,7 @@ The following arguments are supported:
 * `ip` - (Required) IP block that we want to attach to a different service
 * `routed_to` - (Required) Service to route the IP to. If null, the IP will be [parked](https://api.ovh.com/console/#/ip/%7Bip%7D/park~POST) instead of [moved](https://api.ovh.com/console/#/ip/%7Bip%7D/move~POST)
   * `service_name` - (Required) Name of the service to route the IP to. IP will be parked if this value is an empty string
+  * `next_hop` - (Optional) Next hop of destination service
 
 ## Attributes Reference
 
@@ -49,7 +64,7 @@ Attributes are mostly the same as for [ovh_ip_service](https://registry.terrafor
 * `organisation_id` - IP block organisation Id
 * `routed_to` - Routage information
   * `service_name` - Service where ip is routed to
-* `service_name`: Service name in the form of `ip-<part-1>.<part-2>.<part-3>.<part-4>`
+* `service_name`: Kept for compatibility; not populated by this resource
 * `type` - Possible values for ip type
 * `task_status` - Status field of the current IP task that is in charge of changing the service the IP is attached to
 * `task_start_date` - Starting date and time field of the current IP task that is in charge of changing the service the IP is attached to

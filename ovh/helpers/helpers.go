@@ -495,25 +495,3 @@ func ValidateHostingPrivateDatabaseUserGrant(value string) error {
 		"rw",
 	})
 }
-
-func ServiceNameFromIpBlock(ip string) (string, error) {
-	if parsedIP, ipNet, err := net.ParseCIDR(ip); err == nil {
-		prefixLength, _ := ipNet.Mask.Size()
-
-		if prefixLength == 32 {
-			// Single IP, omit the mask
-			return fmt.Sprintf("ip-%s", parsedIP.String()), nil
-		}
-
-		// IP block, keep the mask
-		return fmt.Sprintf("ip-%s/%d", parsedIP.String(), prefixLength), nil
-	}
-
-	// If not a CIDR, try parsing as a single IP
-	parsedIP := net.ParseIP(ip)
-	if parsedIP == nil {
-		return "", fmt.Errorf("ip %s is not a valid IP nor a valid CIDR", ip)
-	}
-
-	return fmt.Sprintf("ip-%s", parsedIP.String()), nil
-}
