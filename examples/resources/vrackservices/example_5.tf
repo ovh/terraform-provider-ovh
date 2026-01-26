@@ -26,7 +26,7 @@ resource "ovh_vrackservices" "my-vrackservices" {
       configuration = [
         {
           label = "region_name"
-          value = locals.region
+          value = local.region
         }
       ]
     }

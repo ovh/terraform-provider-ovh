@@ -455,7 +455,7 @@ func testAccPreCheckVRackIpWithRegion(t *testing.T) {
 	checkEnvOrSkip(t, "OVH_VRACK_IP_REGION")
 }
 
-// Checks that the environment variables needed to order /vrackServices and basic acceptance tests
+// Checks that the environment variables needed for /vrackServices order and basic acceptance tests
 // are set.
 func testAccPreCheckVrackServices(t *testing.T) {
 	testAccPreCheckCredentials(t)
@@ -465,7 +465,7 @@ func testAccPreCheckVrackServices(t *testing.T) {
 	checkEnvOrSkip(t, "OVH_STORAGE_EFS_SERVICE_TEST")
 }
 
-// Checks that the environment variables needed to /vrackServices datasource basic acceptance tests
+// Checks that the environment variables needed for /vrackServices datasource basic acceptance tests
 // are set.
 func testAccPreCheckVrackServicesData(t *testing.T) {
 	testAccPreCheckCredentials(t)

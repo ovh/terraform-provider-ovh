@@ -111,7 +111,7 @@ func (r *vrackServicesResource) Create(ctx context.Context, req resource.CreateR
 		return
 	}
 
-	// Wait for udpate
+	// Wait for update
 	if err := helpers.WaitForAPIv2ResourceStatusReady(ctx, r.config.OVHClient, endpoint); err != nil {
 		resp.Diagnostics.AddError("Error waiting for resource to be ready", err.Error())
 		return
@@ -185,7 +185,7 @@ func (r *vrackServicesResource) Update(ctx context.Context, req resource.UpdateR
 		}
 	}
 
-	// Wait for udpate
+	// Wait for update
 	if err := helpers.WaitForAPIv2ResourceStatusReady(ctx, r.config.OVHClient, endpoint); err != nil {
 		resp.Diagnostics.AddError("Error waiting for resource to be ready", err.Error())
 		return

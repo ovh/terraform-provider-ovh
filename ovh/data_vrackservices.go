@@ -54,7 +54,7 @@ func (d *vrackservicesDataSource) Read(ctx context.Context, req datasource.ReadR
 	}
 
 	// Read API call logic
-	endpoint := "/v2/vrackServices/resource/" + url.PathEscape(data.VrackServicesId.ValueString()) + ""
+	endpoint := "/v2/vrackServices/resource/" + url.PathEscape(data.VrackServicesId.ValueString())
 
 	if err := d.config.OVHClient.Get(endpoint, &data); err != nil {
 		resp.Diagnostics.AddError(
