@@ -335,6 +335,25 @@ func TestAccCloudProjectRegionStorage_withObjectLock(t *testing.T) {
 				//   a config value to preserve. This is expected behavior.
 				ImportStateVerifyIgnore: []string{"created_at", "object_lock.rule.period"},
 			},
+			// Step 9: P1Y (1 Year) -> Test year-based duration
+			{
+				Config: fmt.Sprintf(`
+					resource "ovh_cloud_project_storage" "storage" {
+						service_name = "%s"
+						region_name = "GRA"
+						name = "%s"
+						object_lock = {
+							status = "enabled"
+							rule = {
+								mode = "compliance"
+								period = "P1Y"
+							}
+						}
+					}`, serviceName, bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_project_storage.storage", "object_lock.rule.period", "P1Y"),
+				),
+			},
 		},
 	})
 }

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/ovh/go-ovh/ovh"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
+	"github.com/peterhellberg/duration"
 )
 
 var _ resource.ResourceWithConfigure = (*cloudProjectStorageResource)(nil)
@@ -401,35 +402,17 @@ func (r *cloudProjectStorageResource) fixISO8601Diff(expected, actual *CloudProj
 		return
 	}
 
-	// Helper to parse simple ISO 8601 duration (P<n>D or P<n>W)
-	parseDuration := func(s string) (int, error) {
-		s = strings.ToUpper(s)
-		if !strings.HasPrefix(s, "P") {
-			return 0, fmt.Errorf("invalid prefix")
-		}
-		s = s[1:]
+	// Parse both periods using the duration library
+	expectedDur, err1 := duration.Parse(expectedPeriod)
+	actualDur, err2 := duration.Parse(actualPeriod)
 
-		if strings.HasSuffix(s, "D") {
-			val, err := strconv.Atoi(s[:len(s)-1])
-			if err != nil {
-				return 0, err
-			}
-			return val, nil
-		}
-		if strings.HasSuffix(s, "W") {
-			val, err := strconv.Atoi(s[:len(s)-1])
-			if err != nil {
-				return 0, err
-			}
-			return val * 7, nil
-		}
-		return 0, fmt.Errorf("unsupported suffix")
+	if err1 != nil || err2 != nil {
+		// If parsing fails, skip normalization
+		return
 	}
 
-	expectedDays, err1 := parseDuration(expectedPeriod)
-	actualDays, err2 := parseDuration(actualPeriod)
-
-	if err1 == nil && err2 == nil && expectedDays == actualDays {
+	// Compare the underlying time.Duration values
+	if expectedDur == actualDur {
 		// If semantically equal, update actual to match expected to avoid Terraform diff
 		actual.ObjectLock.Rule.Period = expected.ObjectLock.Rule.Period
 	}
