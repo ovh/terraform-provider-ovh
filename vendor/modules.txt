@@ -293,6 +293,9 @@ github.com/oklog/run
 # github.com/ovh/go-ovh v1.7.0
 ## explicit; go 1.18
 github.com/ovh/go-ovh/ovh
+# github.com/peterhellberg/duration v0.0.2
+## explicit; go 1.19
+github.com/peterhellberg/duration
 # github.com/vmihailenco/msgpack v4.0.4+incompatible
 ## explicit
 github.com/vmihailenco/msgpack
