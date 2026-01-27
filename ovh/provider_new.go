@@ -320,6 +320,7 @@ func (p *OvhProvider) Resources(_ context.Context) []func() resource.Resource {
 		NewIploadbalancingUdpFarmResource,
 		NewIploadbalancingUdpFarmServerResource,
 		NewIpMitigationResource,
+		NewMeIdentityUserTokenResource,
 		NewOkmsResource,
 		NewOkmsCredentialResource,
 		NewOkmsServiceKeyResource,
