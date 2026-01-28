@@ -6,6 +6,8 @@
 
 🎉 Features:
 
+* New resource: `ovh_account_logs` ([#1013](https://github.com/ovh/terraform-provider-ovh/issues/1013))
+* New datasource: `ovh_account_logs` ([#1013](https://github.com/ovh/terraform-provider-ovh/issues/1013))
 * Add provider option `ignore_init_error` to ignore initialization errors in specific scenarios ([#1163](https://github.com/ovh/terraform-provider-ovh/pull/1163))
 
 💪 Improvements:
