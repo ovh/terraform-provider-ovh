@@ -1,3 +1,37 @@
+## 2.11.0 (January 28, 2026)
+
+🎉 Features:
+
+* New resource: `ovh_vrackservices` ([#1196](https://github.com/ovh/terraform-provider-ovh/pull/1196))
+* New resource: `ovh_me_identity_user_token` ([#1215](https://github.com/ovh/terraform-provider-ovh/pull/1215))
+* New resource: `ovh_cloud_project_storage_replication_job` ([#1214](https://github.com/ovh/terraform-provider-ovh/pull/1214))
+
+* New datasource: `ovh_vrackservices` ([#1196](https://github.com/ovh/terraform-provider-ovh/pull/1196))
+* New datasource: `ovh_iploadbalancing_nat_ips` ([#1194](https://github.com/ovh/terraform-provider-ovh/pull/1194))
+* New datasource: `ovh_iploadbalancings` ([#1194](https://github.com/ovh/terraform-provider-ovh/pull/1194))
+
+💪 Improvements:
+
+* `r/ovh_cloud_project_savings_plan`: Add 1AZ/3AZ choice ([#1190](https://github.com/ovh/terraform-provider-ovh/pull/1190))
+* `r/ovh_iam_policy`: Add conditions and expiration support ([#1170](https://github.com/ovh/terraform-provider-ovh/pull/1170))
+* `r/ovh_dedicated_server`: Support eco server lineup ([#1179](https://github.com/ovh/terraform-provider-ovh/pull/1179))
+* `r/ovh_cloud_project_containerregistry_oidc`: Add `group_filter` parameter ([#1205](https://github.com/ovh/terraform-provider-ovh/pull/1205))
+* `r/ovh_cloud_project_storage`: Add `object_lock` support ([#1212](https://github.com/ovh/terraform-provider-ovh/pull/1212))
+* `r/ovh_cloud_project_database`: Add ValKey default user password reset ([#1209](https://github.com/ovh/terraform-provider-ovh/pull/1209))
+* `r/ovh_dedicated_server_reinstall_task`: Change default timeout from 45min to 2h ([#1203](https://github.com/ovh/terraform-provider-ovh/pull/1203))
+
+🐜 Bug fixes:
+
+* `r/ovh_cloud_project_containerregistry_oidc`: Consider "INSTALLING" as a valid pending state ([#1174](https://github.com/ovh/terraform-provider-ovh/pull/1174))
+* `r/ovh_cloud_project_storage`: Handle 404 errors in Read function ([#1177](https://github.com/ovh/terraform-provider-ovh/pull/1177))
+* `r/ovh_cloud_project_storage`: Populate ID field ([#1178](https://github.com/ovh/terraform-provider-ovh/pull/1178))
+* `r/okms_secret`: Detect drift on data change ([#1162](https://github.com/ovh/terraform-provider-ovh/pull/1162))
+* `r/ovh_domain_zone_dnssec`: Ignore 404 API errors when deleting ([#1206](https://github.com/ovh/terraform-provider-ovh/pull/1206))
+* `r/ovh_dedicated_server`: Update display name on read ([#1201](https://github.com/ovh/terraform-provider-ovh/pull/1201))
+* `r/ovh_cloud_project_containerregistry`: Add additional pending state + replace deprecated functions ([#1202](https://github.com/ovh/terraform-provider-ovh/pull/1202))
+
+❤️ Thanks for your contributions ❤️
+
 ## 2.10.0 (November 27, 2025)
 
 ⚙️ General:
