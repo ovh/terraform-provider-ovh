@@ -10,9 +10,11 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/ovh/go-ovh/ovh"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
+	"github.com/peterhellberg/duration"
 )
 
 var _ resource.ResourceWithConfigure = (*cloudProjectStorageResource)(nil)
@@ -50,6 +52,75 @@ func (d *cloudProjectStorageResource) Schema(ctx context.Context, req resource.S
 	resp.Schema = CloudProjectRegionStorageResourceSchema(ctx)
 }
 
+func (r *cloudProjectStorageResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	// 1. Skip if the entire resource is being created or destroyed
+	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
+		return
+	}
+
+	// 2. Extract the Configuration and State for the object_lock attribute
+	var config, state, plan ObjectLockValue
+
+	// We check the Config to see if the user removed the block
+	req.Config.GetAttribute(ctx, path.Root("object_lock"), &config)
+	req.State.GetAttribute(ctx, path.Root("object_lock"), &state)
+	req.Plan.GetAttribute(ctx, path.Root("object_lock"), &plan)
+
+	// 3. Logic: If it's in State (Enabled) but NOT in Config (Removed)
+	if config.IsNull() && !state.IsNull() {
+		if state.Status.ValueString() == "enabled" {
+			// A. Force the attribute in the Plan to be Null (this breaks the "No Changes" loop)
+			resp.Plan.SetAttribute(ctx, path.Root("object_lock"), types.ObjectNull(plan.AttributeTypes(ctx)))
+
+			// B. Explicitly trigger the resource replacement
+			resp.RequiresReplace = append(resp.RequiresReplace, path.Root("object_lock"))
+
+			// C. Add a helpful message to the CLI
+			resp.Diagnostics.AddWarning(
+				"Removing Object Lock - Bucket Replacement Required",
+				"The object_lock configuration has been removed from the Terraform configuration. "+
+					"Object Lock cannot be disabled once enabled on a bucket. "+
+					"Terraform will DESTROY the existing bucket and CREATE a new one without Object Lock. "+
+					"WARNING: All objects in the bucket will be permanently deleted.",
+			)
+		}
+	}
+
+	// 4. Logic: If object_lock exists in both config and state, check for status changes
+	if !config.IsNull() && !state.IsNull() {
+		if !config.Status.IsNull() && !state.Status.IsNull() {
+			configStatus := config.Status.ValueString()
+			stateStatus := state.Status.ValueString()
+
+			// Status change from enabled to disabled requires replacement
+			if stateStatus == "enabled" && configStatus == "disabled" {
+				resp.RequiresReplace = append(resp.RequiresReplace, path.Root("object_lock"))
+
+				resp.Diagnostics.AddWarning(
+					"Disabling Object Lock - Bucket Replacement Required",
+					"Object Lock status is being changed from 'enabled' to 'disabled'. "+
+						"Object Lock cannot be disabled once enabled on a bucket. "+
+						"Terraform will DESTROY the existing bucket and CREATE a new one. "+
+						"WARNING: All objects in the bucket will be permanently deleted.",
+				)
+			}
+
+			// Status change from disabled to enabled requires replacement
+			if stateStatus == "disabled" && configStatus == "enabled" {
+				resp.RequiresReplace = append(resp.RequiresReplace, path.Root("object_lock"))
+
+				resp.Diagnostics.AddWarning(
+					"Enabling Object Lock - Bucket Replacement Required",
+					"Object Lock status is being changed from 'disabled' to 'enabled'. "+
+						"Object Lock must be enabled at bucket creation. "+
+						"Terraform will DESTROY the existing bucket and CREATE a new one. "+
+						"WARNING: All objects in the bucket will be permanently deleted.",
+				)
+			}
+		}
+	}
+}
+
 func (r *cloudProjectStorageResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	splits := strings.Split(req.ID, "/")
 	if len(splits) != 3 {
@@ -81,6 +152,7 @@ func (r *cloudProjectStorageResource) Create(ctx context.Context, req resource.C
 	}
 
 	responseData.MergeWith(&data)
+	r.fixISO8601Diff(&data, &responseData)
 
 	// Set the ID as composite key: service_name/region_name/name
 	compositeID := fmt.Sprintf("%s/%s/%s",
@@ -131,6 +203,7 @@ func (r *cloudProjectStorageResource) Read(ctx context.Context, req resource.Rea
 	}
 
 	responseData.MergeWith(&data)
+	r.fixISO8601Diff(&data, &responseData)
 
 	if data.HideObjects.ValueBool() {
 		responseData.Objects = ovhtypes.NewListNestedObjectValueOfNull[ObjectsValue](ctx)
@@ -195,6 +268,7 @@ func (r *cloudProjectStorageResource) Update(ctx context.Context, req resource.U
 	}
 
 	responseData.MergeWith(&planData)
+	r.fixISO8601Diff(&planData, &responseData)
 
 	if planData.HideObjects.ValueBool() {
 		responseData.Objects = ovhtypes.NewListNestedObjectValueOfNull[ObjectsValue](ctx)
@@ -308,4 +382,38 @@ func (r *cloudProjectStorageResource) deleteBucket(ctx context.Context, serviceN
 	}
 
 	return nil
+}
+
+func (r *cloudProjectStorageResource) fixISO8601Diff(expected, actual *CloudProjectRegionStorageModel) {
+	if expected.ObjectLock.IsNull() || expected.ObjectLock.IsUnknown() ||
+		actual.ObjectLock.IsNull() || actual.ObjectLock.IsUnknown() {
+		return
+	}
+
+	if expected.ObjectLock.Rule.IsNull() || expected.ObjectLock.Rule.IsUnknown() ||
+		actual.ObjectLock.Rule.IsNull() || actual.ObjectLock.Rule.IsUnknown() {
+		return
+	}
+
+	expectedPeriod := expected.ObjectLock.Rule.Period.ValueString()
+	actualPeriod := actual.ObjectLock.Rule.Period.ValueString()
+
+	if expectedPeriod == actualPeriod {
+		return
+	}
+
+	// Parse both periods using the duration library
+	expectedDur, err1 := duration.Parse(expectedPeriod)
+	actualDur, err2 := duration.Parse(actualPeriod)
+
+	if err1 != nil || err2 != nil {
+		// If parsing fails, skip normalization
+		return
+	}
+
+	// Compare the underlying time.Duration values
+	if expectedDur == actualDur {
+		// If semantically equal, update actual to match expected to avoid Terraform diff
+		actual.ObjectLock.Rule.Period = expected.ObjectLock.Rule.Period
+	}
 }
