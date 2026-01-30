@@ -68,7 +68,21 @@ type IpMoveOpts struct {
 
 func (opts *IpMoveOpts) FromResource(d *schema.ResourceData) (*IpMoveOpts, error) {
 	opts.To = GetRoutedToServiceName(d)
+	opts.NextHop = GetRoutedToNextHop(d)
 	return opts, nil
+}
+
+func GetRoutedToNextHop(d *schema.ResourceData) *string {
+	routedTo := (d.Get("routed_to")).([]interface{})
+	if len(routedTo) == 0 || routedTo[0] == nil {
+		return nil
+	}
+	nextHop, exists := (routedTo[0].(map[string]interface{}))["next_hop"]
+	if !exists || nextHop == nil || nextHop == "" {
+		return nil
+	}
+	nextHopStr := nextHop.(string)
+	return &nextHopStr
 }
 
 func GetRoutedToServiceName(d *schema.ResourceData) *string {

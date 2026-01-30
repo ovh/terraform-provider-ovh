@@ -108,3 +108,32 @@ func TestAccIpMove_block(t *testing.T) {
 		},
 	})
 }
+
+func TestAccIpMove_withNexthop(t *testing.T) {
+	routedToServiceName := os.Getenv("OVH_IP_MOVE_SERVICE_NAME_TEST")
+	nextHop := "192.168.1.1" // Example nexthop IP
+
+	configWithNexthop := fmt.Sprintf(`
+		resource "ovh_ip_move" "move" {
+			ip = "%s"
+			routed_to {
+				service_name = "%s"
+				next_hop      = "%s"
+			}
+		}`,
+		os.Getenv("OVH_IP_BLOCK_MOVE_TEST"), routedToServiceName, nextHop)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheckIpMove(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: configWithNexthop,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_ip_move.move", "routed_to.0.service_name", routedToServiceName),
+					resource.TestCheckResourceAttr("ovh_ip_move.move", "routed_to.0.next_hop", nextHop),
+				),
+			},
+		},
+	})
+}
