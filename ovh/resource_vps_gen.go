@@ -38,6 +38,11 @@ func VpsResourceSchema(ctx context.Context) schema.Schema {
 			Description:         "Set the name displayed in Manager for your VPS (max 50 chars)",
 			MarkdownDescription: "Set the name displayed in Manager for your VPS (max 50 chars)",
 		},
+		"do_not_send_password": schema.BoolAttribute{
+			CustomType: ovhtypes.TfBoolType{},
+			Optional:   true,
+			Computed:   true,
+		},
 		"iam": schema.SingleNestedAttribute{
 			Attributes: map[string]schema.Attribute{
 				"display_name": schema.StringAttribute{
@@ -296,13 +301,15 @@ type VpsModel struct {
 	Plan          ovhtypes.TfListNestedValue[PlanValue]       `tfsdk:"plan" json:"plan"`
 	PlanOption    ovhtypes.TfListNestedValue[PlanOptionValue] `tfsdk:"plan_option" json:"planOption"`
 	// Installation options
-	PublicSSHKey ovhtypes.TfStringValue `tfsdk:"public_ssh_key" json:"publicSshKey"`
-	ImageId      ovhtypes.TfStringValue `tfsdk:"image_id" json:"imageId"`
+	PublicSSHKey      ovhtypes.TfStringValue `tfsdk:"public_ssh_key" json:"publicSshKey"`
+	ImageId           ovhtypes.TfStringValue `tfsdk:"image_id" json:"imageId"`
+	DoNotSendPassword ovhtypes.TfBoolValue   `tfsdk:"do_not_send_password" json:"doNotSendPassword"`
 }
 
 type InstallOptionsModel struct {
-	PublicSSHKey ovhtypes.TfStringValue `tfsdk:"public_ssh_key" json:"publicSshKey"`
-	ImageId      ovhtypes.TfStringValue `tfsdk:"image_id" json:"imageId"`
+	PublicSSHKey      ovhtypes.TfStringValue `tfsdk:"public_ssh_key" json:"publicSshKey"`
+	ImageId           ovhtypes.TfStringValue `tfsdk:"image_id" json:"imageId"`
+	DoNotSendPassword ovhtypes.TfBoolValue   `tfsdk:"do_not_send_password" json:"doNotSendPassword"`
 }
 
 func (v *VpsModel) MergeWith(other *VpsModel) {
@@ -412,8 +419,9 @@ func (v *VpsModel) ToOrder() *OrderModel {
 
 func (v *VpsModel) ToInstallOptions() *InstallOptionsModel {
 	return &InstallOptionsModel{
-		ImageId:      v.ImageId,
-		PublicSSHKey: v.PublicSSHKey,
+		ImageId:           v.ImageId,
+		PublicSSHKey:      v.PublicSSHKey,
+		DoNotSendPassword: v.DoNotSendPassword,
 	}
 }
 
