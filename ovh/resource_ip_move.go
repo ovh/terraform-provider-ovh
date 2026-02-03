@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"reflect"
 	"strconv"
 	"time"
 
@@ -28,7 +27,7 @@ var ipTaskUnrecoverableErrors = []int{http.StatusBadRequest, http.StatusUnauthor
 
 func resourceIpServiceMove() *schema.Resource {
 	return &schema.Resource{
-		Create: resoursIpMoveCreate,
+		Create: resourceIpMoveCreate,
 		Update: resourceIpMoveUpdate,
 		Read:   resourceIpRead,
 		Delete: resourceIpMoveDelete,
@@ -112,7 +111,7 @@ func resourceIpMoveSchema() map[string]*schema.Schema {
 	return schema
 }
 
-func resoursIpMoveCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceIpMoveCreate(d *schema.ResourceData, meta interface{}) error {
 	// later on this ID will be replaced by the task if when we need to create it (see resourceIpMoveUpdate)
 	d.SetId(d.Get("ip").(string))
 
@@ -173,84 +172,100 @@ func resourceIpMoveUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	currentlyRoutedService := GetRoutedToServiceName(d)
 	// no need to update if ip is already routed to the appropriate service
-	if reflect.DeepEqual(currentlyRoutedService, opts.To) {
+	if stringPtrEqual(currentlyRoutedService, opts.To) {
 		log.Printf("[DEBUG] Won't do anything as ip %s (service name = %s) is already routed to service %v", ip, serviceName, currentlyRoutedService)
 		return nil
-	} else {
-		if opts.To == nil {
-			log.Printf("[DEBUG] Will move ip %s (service name = %s) from service %s to IP parking", ip, serviceName, *currentlyRoutedService)
-			endpoint := fmt.Sprintf("/ip/%s/park",
-				url.PathEscape(ip),
-			)
-			// retrieve the task
-			if err := config.OVHClient.Post(endpoint, nil, ipTask); err != nil {
-				return fmt.Errorf("calling Post %s: %q", endpoint, err)
-			}
-		} else {
-			log.Printf("[DEBUG] Will move ip %s (service name = %s) from service %v to service %s", ip, serviceName, currentlyRoutedService, *opts.To)
-			endpoint := fmt.Sprintf("/ip/%s/move",
-				url.PathEscape(ip),
-			)
-			if err := config.OVHClient.Post(endpoint, opts, ipTask); err != nil {
-				return fmt.Errorf("calling Post %s: %q", endpoint, err)
-			}
-		}
-		d.SetId(fmt.Sprint(ipTask.TaskId))
-		if err = d.Set("task_start_date", ipTask.StartDate.Format(time.RFC3339)); err != nil {
-			return err
-		}
+	}
 
-		_, err = waitForTaskFinished(d, meta, ipTask, ip, opts)
-		if err != nil {
-			return err
+	if opts.To == nil {
+		var currentService string
+		if currentlyRoutedService != nil {
+			currentService = *currentlyRoutedService
+		}
+		log.Printf("[DEBUG] Will move ip %s (service name = %s) from service %s to IP parking", ip, serviceName, currentService)
+		endpoint := fmt.Sprintf("/ip/%s/park",
+			url.PathEscape(ip),
+		)
+		// retrieve the task
+		if err := config.OVHClient.Post(endpoint, nil, ipTask); err != nil {
+			return fmt.Errorf("calling Post %s: %q", endpoint, err)
+		}
+	} else {
+		log.Printf("[DEBUG] Will move ip %s (service name = %s) from service %v to service %s", ip, serviceName, currentlyRoutedService, *opts.To)
+		endpoint := fmt.Sprintf("/ip/%s/move",
+			url.PathEscape(ip),
+		)
+		if err := config.OVHClient.Post(endpoint, opts, ipTask); err != nil {
+			return fmt.Errorf("calling Post %s: %q", endpoint, err)
 		}
 	}
+	d.SetId(fmt.Sprint(ipTask.TaskId))
+	if err = d.Set("task_start_date", ipTask.StartDate.Format(time.RFC3339)); err != nil {
+		return err
+	}
+
+	_, err = waitForTaskFinished(d, meta, ipTask, ip, opts)
+	if err != nil {
+		return err
+	}
+
 	return resourceIpRead(d, meta)
 }
 
-// waitForTaskFinished queries GET /ip/:ip/task/:taskId route until task state is in a terminal success or error state or until waitingTimeInSecondsBeforeRefreshState is reached
+// waitForTaskFinished queries GET /ip/:ip/task/:taskId route until task state is in a terminal success or error state or until taskExpiresAfter is reached
 // and returns :
 //   - finishedWithSuccess : true if task ended with success, false if ended with error, nil if not ended at all
 //   - err : nil if no error is encountered in the process, any met error otherwise
 //
 // in any case before returning, "task_status" field of d will be updated with the last known ipTask.Status
 func waitForTaskFinished(d *schema.ResourceData, meta interface{}, ipTask *IpTask, ip string, opts *IpMoveOpts) (finishedWithSuccess *bool, err error) {
-	finishedWithSuccess, err = recursiveWaitTaskFinished(d, meta, ipTask, ip, opts)
-	var errSet error
-	if ipTask != nil {
-		errSet = d.Set("task_status", ipTask.Status)
-	}
-
-	return finishedWithSuccess, errors.Join(err, errSet)
-}
-
-// recursiveWaitTaskFinished checks a given ipTask and return true if task status is in a state that we consider finished.
-// and calls itself again if task is not finished while task is not yet expired
-func recursiveWaitTaskFinished(d *schema.ResourceData, meta interface{}, ipTask *IpTask, ip string, opts *IpMoveOpts) (finished *bool, err error) {
 	if ipTask == nil {
 		return helpers.GetNilBoolPointer(false), fmt.Errorf("could not assign IP %s to service %v as Ip task does not exist", ip, opts.To)
 	}
-	switch ipTask.Status {
-	case IpTaskStatusDone:
-		return helpers.GetNilBoolPointer(true), nil
-	case IpTaskStatusCancelled, IpTaskStatusOvhError, IpTaskStatusCustomerError:
-		return helpers.GetNilBoolPointer(false), fmt.Errorf("could not assign IP %s to service %v as Ip task is %s", ip, opts.To, ipTask.Status)
-	}
-	timeDiff := time.Since(ipTask.StartDate)
-	if timeDiff < taskExpiresAfter {
-		log.Printf("[DEBUG] ipTask.Status is currently: %s. Waiting %d second (we allow %f more seconds for the task to complete)", ipTask.Status, waitingTimeInSecondsBeforeRefreshState, taskExpiresAfter.Seconds()-timeDiff.Seconds())
+
+	var result *bool
+	for {
+		switch ipTask.Status {
+		case IpTaskStatusDone:
+			result = helpers.GetNilBoolPointer(true)
+			err = d.Set("task_status", ipTask.Status)
+			return result, err
+		case IpTaskStatusCancelled, IpTaskStatusOvhError, IpTaskStatusCustomerError:
+			result = helpers.GetNilBoolPointer(false)
+			errSet := d.Set("task_status", ipTask.Status)
+			return result, errors.Join(fmt.Errorf("could not assign IP %s to service %v as Ip task is %s", ip, opts.To, ipTask.Status), errSet)
+		}
+
+		timeDiff := time.Since(ipTask.StartDate)
+		if timeDiff >= taskExpiresAfter {
+			log.Printf("[WARNING] - waitForTaskFinished max time reached without the task having reached a terminal state")
+			_ = d.Set("task_status", ipTask.Status)
+			return nil, nil
+		}
+
+		log.Printf("[DEBUG] ipTask.Status is currently: %s. Waiting %d seconds (we allow %f more seconds for the task to complete)", ipTask.Status, waitingTimeInSecondsBeforeRefreshState, taskExpiresAfter.Seconds()-timeDiff.Seconds())
 		time.Sleep(waitingTimeInSecondsBeforeRefreshState * time.Second)
+
 		err = resourceIpTaskRead(d, ipTask, meta)
 		if errOvh, ok := err.(*ovh.APIError); ok {
-			// bad request, unauthorized, forbidden & not found errors are unrecoverable, so there is no point
+			// bad request, unauthorized, forbidden & not found errors are unrecoverable
 			if slices.Contains(ipTaskUnrecoverableErrors, errOvh.Code) {
+				_ = d.Set("task_status", ipTask.Status)
 				return helpers.GetNilBoolPointer(false), err
 			}
 		}
-		return recursiveWaitTaskFinished(d, meta, ipTask, ip, opts)
 	}
-	log.Printf("[WARNING] - waitForTaskFinished max number of retries reached without the task having reached a terminal state")
-	return nil, nil
+}
+
+// stringPtrEqual compares two string pointers for equality
+func stringPtrEqual(a, b *string) bool {
+	if a == nil && b == nil {
+		return true
+	}
+	if a == nil || b == nil {
+		return false
+	}
+	return *a == *b
 }
 
 func resourceIpTaskRead(d *schema.ResourceData, ipTask *IpTask, meta interface{}) error {
