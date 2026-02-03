@@ -166,7 +166,7 @@ func resourceIpMoveUpdate(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		log.Printf("[WARNING] - resource ID %s is not an int64/not a task ID. Cannot get last task state", d.Id())
 	}
-	err = resourceIpServiceReadByServiceName(d, serviceName, config)
+	err = resourceIpReadByIp(d, ip, config)
 	if err != nil {
 		return err
 	}
@@ -275,7 +275,7 @@ func resourceIpRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	config := meta.(*Config)
-	return resourceIpServiceReadByServiceName(d, serviceName, config)
+	return resourceIpReadByIp(d, ip, config)
 }
 
 // resourceIpMoveDelete is an empty implementation as move do not actually create API objects but rather updates the underlying ip spec (by modifying its routed_to service)
@@ -283,10 +283,10 @@ func resourceIpMoveDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceIpServiceReadByServiceName(d *schema.ResourceData, serviceName string, config *Config) error {
-	r := &IpService{}
-	endpoint := fmt.Sprintf("/ip/service/%s",
-		url.PathEscape(serviceName),
+func resourceIpReadByIp(d *schema.ResourceData, ip string, config *Config) error {
+	r := &Ip{}
+	endpoint := fmt.Sprintf("/ip/%s",
+		url.PathEscape(ip),
 	)
 	var err error
 	// This retry logic is there to handle a known API bug
@@ -318,7 +318,6 @@ func resourceIpServiceReadByServiceName(d *schema.ResourceData, serviceName stri
 		return err
 	}
 
-	d.Set("service_name", serviceName)
 	// set resource attributes
 	for k, v := range r.ToMap() {
 		d.Set(k, v)
