@@ -69,13 +69,13 @@ output "api_key" {
 Updating the secret (new version) while enforcing optimistic concurrency control using CAS:
 
 ```terraform
+
 resource "ovh_okms_secret" "example" {
 	okms_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 	path    = "app/api_credentials"
 
 	# Ensure no concurrent update happened: set cas to the current version
-	# (metadata.current_version is populated after first apply)
-	cas = ovh_okms_secret.example.metadata.current_version
+	cas = 1
 
 	metadata = {
 		cas_required = true
