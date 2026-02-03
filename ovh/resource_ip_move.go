@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 	"golang.org/x/exp/slices"
@@ -303,34 +302,9 @@ func resourceIpReadByIp(d *schema.ResourceData, ip string, config *Config) error
 	endpoint := fmt.Sprintf("/ip/%s",
 		url.PathEscape(ip),
 	)
-	var err error
-	// This retry logic is there to handle a known API bug
-	// which happens while an ipblock is attached/detached from
-	// a Vrack
-	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
-		if err := config.OVHClient.Get(endpoint, &r); err != nil {
-			if errOvh, ok := err.(*ovh.APIError); ok {
-				if errOvh.Code == 400 {
-					log.Printf("[DEBUG] known API bug when attaching/detaching vrack")
-					return resource.RetryableError(err)
-				}
-				return resource.NonRetryableError(err)
-			}
 
-			err = helpers.CheckDeleted(d, err, endpoint)
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-
-			return nil
-		}
-
-		// Successful Get
-		return nil
-	})
-
-	if err != nil {
-		return err
+	if err := config.OVHClient.Get(endpoint, &r); err != nil {
+		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
 	// set resource attributes
