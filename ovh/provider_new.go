@@ -329,6 +329,7 @@ func (p *OvhProvider) Resources(_ context.Context) []func() resource.Resource {
 		NewOvhcloudConnectPopConfigResource,
 		NewOvhcloudConnectPopDatacenterConfigResource,
 		NewOvhcloudConnectPopDatacenterExtraConfigResource,
+		NewStorageEfsResource,
 		NewStorageEfsShareResource,
 		NewStorageEfsShareSnapshotResource,
 		NewStorageEfsShareAclResource,
