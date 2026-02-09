@@ -313,7 +313,8 @@ In order to run the Acceptance Tests for development, the following environment 
 * `OVH_CLOUD_PROJECT_WORKFLOW_BACKUP_REGION_TEST` - The openstack region in which the workflow will be defined
 * `OVH_CLOUD_PROJECT_WORKFLOW_BACKUP_INSTANCE_ID_TEST` - The openstack id of the instance to backup
 
-* `OVH_STORAGE_EFS_SERVICE_TEST` - The service name of your Enteprise File Storage service
+* `OVH_TESTACC_ORDER_STORAGE_EFS` - Set this variable to "yes" will order an EFS
+* `OVH_STORAGE_EFS_SERVICE_TEST` - The service name of your Enterprise File Storage service
 
 ### Using a locally built terraform-provider-ovh
 
