@@ -46,3 +46,11 @@ The following attributes are exported:
 * `ip_restrictions` - IP restrictions applied on Harbor UI and API.
   * `description` - The Description of Whitelisted IpBlock.
   * `ip_block` - Whitelisted IpBlock.
+
+## Import
+
+OVHcloud Managed Private Registry IP restrictions of management type can be imported using the `service_name` and `registry_id`, separated by "/" E.g.,
+
+```bash
+$ terraform import ovh_cloud_project_containerregistry_ip_restrictions_management.my_ip_restrictions service_name/registry_id
+```

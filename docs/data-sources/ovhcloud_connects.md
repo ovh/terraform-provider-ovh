@@ -2,7 +2,7 @@
 subcategory : "Ovhcloud Connect (OCC)"
 ---
 
-# ovh_ovhcloud_connect (Data Source)
+# ovh_ovhcloud_connects (Data Source)
 
 Get the details of your Ovhcloud Connect products.
 

@@ -37,3 +37,11 @@ The following attributes are exported:
 * `id` - User ID
 * `password` - (Sensitive) User password
 * `user` - User name (same as `login`)
+
+## Import
+
+OVHcloud Managed Private Registry user can be imported using the `service_name`, `registry_id` and `id` of the user, separated by "/" E.g.,
+
+```bash
+$ terraform import ovh_cloud_project_containerregistry_user.my_user service_name/registry_id/user_id
+```

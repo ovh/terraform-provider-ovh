@@ -33,3 +33,11 @@ resource "ovh_cloud_project_failover_ip_attach" "failover_ip" {
 * `routedTo` - Instance where ip is routed to
 * `status` - Ip status, can be `ok` or `operationPending`
 * `subType` - IP sub type, can be `cloud` or `ovh`
+
+## Import
+
+A cloud project failover IP attachment can be imported using the `id` (failover IP block ID) E.g.,
+
+```bash
+$ terraform import ovh_cloud_project_failover_ip_attach.my_ip id
+```

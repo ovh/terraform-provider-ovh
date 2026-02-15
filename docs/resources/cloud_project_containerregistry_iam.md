@@ -31,6 +31,14 @@ The following arguments are supported:
 * `registry_id` - The ID of the Managed Private Registry. **Changing this value recreates the resource.**
 * `delete_users` - Delete existing users from Harbor. IAM can't be enabled if there is at least one user already created. This parameter is only used at IAM configuration creation. **Changing this value recreates the resource.**
 
+## Attributes Reference
+
+The following attributes are exported:
+
+* `service_name` - See Argument Reference above.
+* `registry_id` - See Argument Reference above.
+* `iam_enabled` - Whether IAM is enabled for the registry.
+
 ## Timeouts
 
 ```terraform

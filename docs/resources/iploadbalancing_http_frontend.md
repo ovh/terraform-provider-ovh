@@ -2,7 +2,7 @@
 subcategory : "Load Balancer (IPLB)"
 ---
 
-# ovh\_iploadbalancing\_http_frontend
+# ovh_iploadbalancing_http_frontend
 
 Creates a backend HTTP server group (frontend) to be used by loadbalancing frontend(s)
 

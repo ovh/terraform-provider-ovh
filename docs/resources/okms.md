@@ -50,3 +50,11 @@ Read-Only:
 - `id` (String) Unique identifier of the resource
 - `tags` (Map of String) Resource tags. Tags that were internally computed are prefixed with ovh:
 - `urn` (String) Unique resource name used in policies
+
+## Import
+
+An OVHcloud KMS can be imported using the `id` E.g.,
+
+```bash
+$ terraform import ovh_okms.new_kms id
+```

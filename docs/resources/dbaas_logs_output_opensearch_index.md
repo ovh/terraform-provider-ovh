@@ -38,3 +38,11 @@ Id is set to the opensearch index Id. In addition, the following attributes are 
 * `name` - Index name
 * `nb_shard` - Number of shard
 * `updated_at` - Index last update
+
+## Import
+
+A DBaaS Logs Opensearch output index can be imported using the `service_name` and `id`, separated by "/" E.g.,
+
+```bash
+$ terraform import ovh_dbaas_logs_output_opensearch_index.index service_name/id
+```

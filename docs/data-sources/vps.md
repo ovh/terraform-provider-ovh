@@ -2,7 +2,7 @@
 subcategory : "VPS"
 ---
 
-# ovh\_vps (Data Source)
+# ovh_vps (Data Source)
 
 Use this data source to retrieve information about a vps associated with your OVHcloud Account.
 
@@ -18,9 +18,9 @@ data "ovh_vps" "server" {
 
 * `service_name` - (Required) The service_name of your dedicated server.
 
-## Attribute Reference
+## Attributes Reference
 
-`id` is set with the service\_name of the vps name (ex: "vps-123456.ovh.net")
+`id` is set with the service_name of the vps name (ex: "vps-123456.ovh.net")
 
 In addition, the following attributes are exported:
 

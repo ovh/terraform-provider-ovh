@@ -2,7 +2,7 @@
 subcategory : "Account Management (IAM)"
 ---
 
-# ovh_iam_policy (Data Source)
+# ovh_iam_policies (Data Source)
 
 Use this data source to list the existing IAM policies of an account.
 

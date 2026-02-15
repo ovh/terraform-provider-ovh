@@ -51,3 +51,11 @@ The following arguments are supported:
 The following attributes are exported:
 
 * `vrack_network_id` - (Required) Internal Load Balancer identifier of the vRack private network
+
+## Import
+
+An IP Loadbalancing vRack network can be imported using the `service_name` and `vrack_network_id`, separated by "/" E.g.,
+
+```bash
+$ terraform import ovh_iploadbalancing_vrack_network.network service_name/vrack_network_id
+```

@@ -68,3 +68,11 @@ resource "ovh_okms_credential" "cred_from_csr" {
 - `id` (String) ID of the credential
 - `private_key_pem` (String, Sensitive) Private Key PEM of the credential if no CSR is provided
 - `status` (String) Status of the credential
+
+## Import
+
+An OVHcloud KMS credential can be imported using the `okms_id` and `id`, separated by "/" E.g.,
+
+```bash
+$ terraform import ovh_okms_credential.cred okms_id/credential_id
+```

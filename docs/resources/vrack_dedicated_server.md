@@ -31,3 +31,11 @@ The following attributes are exported:
 
 * `service_name` - See Argument Reference above.
 * `server_id` - See Argument Reference above.
+
+## Import
+
+A vRack dedicated server attachment can be imported using the `service_name` and `server_id`, separated by "/" E.g.,
+
+```bash
+$ terraform import ovh_vrack_dedicated_server.vds service_name/server_id
+```

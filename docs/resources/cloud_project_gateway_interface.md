@@ -79,5 +79,5 @@ The following attributes are exported:
 A gateway interface can be imported using the `service_name`, `region`, `id` (identifier of the gateway) and `interface_id` properties, separated by a `/`.
 
 ```bash
-$ terraform import ovh_cloud_project_gateway.gateway service_name/region/id/interface_id
+$ terraform import ovh_cloud_project_gateway_interface.interface service_name/region/id/interface_id
 ```

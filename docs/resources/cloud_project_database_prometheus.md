@@ -139,5 +139,5 @@ resource "ovh_cloud_project_database_prometheus" "prometheus" {
 OVHcloud Managed database clusters prometheus can be imported using the `service_name`, `engine` and `cluster_id`, separated by "/" E.g.,
 
 ```bash
-$ terraform import ovh_cloud_project_database_mongodb_prometheus.my_prometheus service_name/engine/cluster_id
+$ terraform import ovh_cloud_project_database_prometheus.my_prometheus service_name/engine/cluster_id
 ```

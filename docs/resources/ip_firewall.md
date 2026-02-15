@@ -28,3 +28,11 @@ resource "ovh_ip_firewall" "my_firewall" {
 * `ip_on_firewall` - IPv4 address
 * `enabled` - Whether firewall is enabled
 * `state` - Current state of your ip on firewall
+
+## Import
+
+An IP firewall can be imported using the `ip` and `ip_on_firewall`, separated by "/" E.g.,
+
+```bash
+$ terraform import ovh_ip_firewall.my_firewall 1.2.3.4/32/1.2.3.4
+```

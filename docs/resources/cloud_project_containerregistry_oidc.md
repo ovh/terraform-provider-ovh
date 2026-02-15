@@ -55,6 +55,24 @@ The following arguments are supported:
 * `oidc_user_claim` - The name of the claim in the ID Token where the username is retrieved from. If not specified, it will default to 'name' (only useful when automatic Onboarding is enabled).
 * `delete_users` - Delete existing users from Harbor. OIDC can't be enabled if there is at least one user already created. This parameter is only used at OIDC configuration creation. **Changing this value recreates the resource.**
 
+## Attributes Reference
+
+The following attributes are exported:
+
+* `service_name` - See Argument Reference above.
+* `registry_id` - See Argument Reference above.
+* `oidc_name` - See Argument Reference above.
+* `oidc_endpoint` - See Argument Reference above.
+* `oidc_client_id` - See Argument Reference above.
+* `oidc_client_secret` - (Sensitive) See Argument Reference above.
+* `oidc_scope` - See Argument Reference above.
+* `oidc_group_filter` - See Argument Reference above.
+* `oidc_groups_claim` - See Argument Reference above.
+* `oidc_admin_group` - See Argument Reference above.
+* `oidc_verify_cert` - See Argument Reference above.
+* `oidc_auto_onboard` - See Argument Reference above.
+* `oidc_user_claim` - See Argument Reference above.
+
 ## Timeouts
 
 ```terraform

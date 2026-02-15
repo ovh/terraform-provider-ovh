@@ -37,3 +37,26 @@ The following arguments are supported:
 * `name` - (Mandatory) The worflow name that is used in the UI
 * `rotation`- (Mandatory) The number of backup that are retained.
 * `backup_name` - (Optional) The name of the backup files that are created. If empty, the `name` attribute is used.
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `id` - The workflow ID.
+* `service_name` - See Argument Reference above.
+* `region_name` - See Argument Reference above.
+* `cron` - See Argument Reference above.
+* `instance_id` - See Argument Reference above.
+* `max_execution_count` - See Argument Reference above.
+* `name` - See Argument Reference above.
+* `rotation` - See Argument Reference above.
+* `backup_name` - See Argument Reference above.
+* `created_at` - The creation date of the workflow.
+
+## Import
+
+A cloud project workflow backup can be imported using the `id` (workflow ID) E.g.,
+
+```bash
+$ terraform import ovh_cloud_project_workflow_backup.my_workflow id
+```

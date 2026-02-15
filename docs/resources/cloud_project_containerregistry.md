@@ -59,3 +59,11 @@ The following attributes are exported:
 * `url` - Access url of the registry
 * `version` - Version of your registry
 * `iam_enabled` - OVHCloud IAM enabled
+
+## Import
+
+OVHcloud Managed Private Registry can be imported using the `service_name` and `id` of the registry, separated by "/" E.g.,
+
+```bash
+$ terraform import ovh_cloud_project_containerregistry.my_registry service_name/registry_id
+```
