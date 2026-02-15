@@ -8,7 +8,7 @@ Moves a given IP to a different service, or inversely, parks it if empty service
 
 ## Example Usage
 
-## Move IP `1.2.3.4` to service loadbalancer-XXXXX
+### Move IP `1.2.3.4` to service loadbalancer-XXXXX
 
 ```terraform
 resource "ovh_ip_move" "move_ip_to_load_balancer_xxxxx" {
@@ -19,7 +19,7 @@ resource "ovh_ip_move" "move_ip_to_load_balancer_xxxxx" {
 }
 ```
 
-## Park IP/Detach IP `1.2.3.4` from any service
+### Park IP/Detach IP `1.2.3.4` from any service
 
 ```terraform
 resource "ovh_ip_move" "park_ip" {

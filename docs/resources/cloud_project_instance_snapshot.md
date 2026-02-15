@@ -6,6 +6,8 @@ subcategory : "Instances"
 
 Create and manage snapshots for an instance in a public cloud project.
 
+## Example Usage
+
 ```terraform
 resource "ovh_cloud_project_instance_snapshot" "snapshot" {
   service_name  = "<public cloud project ID>"
@@ -38,3 +40,11 @@ resource "ovh_cloud_project_instance_snapshot" "snapshot" {
 - `type` (String) Image type
 - `user` (String) User to connect with
 - `visibility` (String) Image visibility
+
+## Import
+
+A cloud project instance snapshot can be imported using the `service_name` and `snapshot_id`, separated by "/" E.g.,
+
+```bash
+$ terraform import ovh_cloud_project_instance_snapshot.my_snapshot service_name/snapshot_id
+```

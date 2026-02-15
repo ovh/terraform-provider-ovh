@@ -36,3 +36,11 @@ The following attributes are exported:
 * `network` - See Argument Reference above.
 * `netmask` - See Argument Reference above.
 * `family` - IP family. `IPv4` or `IPv6`
+
+## Import
+
+A dedicated CEPH ACL can be imported using the `service_name` and `acl_id`, separated by "/" E.g.,
+
+```bash
+$ terraform import ovh_dedicated_ceph_acl.my_acl service_name/acl_id
+```

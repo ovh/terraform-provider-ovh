@@ -114,3 +114,11 @@ The `conditions` block supports nested conditions with a maximum depth of 3 leve
 * `created_at` - Creation date of this group.
 * `updated_at` - Date of the last update of this group.
 * `read_only` - Indicates that the policy is a default one.
+
+## Import
+
+An IAM policy can be imported using the `id` E.g.,
+
+```bash
+$ terraform import ovh_iam_policy.manager policy_id
+```

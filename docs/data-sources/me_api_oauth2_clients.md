@@ -2,14 +2,14 @@
 subcategory : "Account Management (IAM)"
 ---
 
-# ovh_me_api_oauth2_client (Data Source)
+# ovh_me_api_oauth2_clients (Data Source)
 
 Use this data source to retrieve information the list of existing OAuth2 service account IDs.
 
 ## Example Usage
 
 ```terraform
-data "ovh_me_api_oauth2_client" "my_oauth2_clients" {
+data "ovh_me_api_oauth2_clients" "my_oauth2_clients" {
 }
 ```
 

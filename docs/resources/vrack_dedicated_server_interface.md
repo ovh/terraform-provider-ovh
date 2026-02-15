@@ -35,3 +35,11 @@ The following attributes are exported:
 
 * `service_name` - See Argument Reference above.
 * `interface_id` - See Argument Reference above.
+
+## Import
+
+A vRack dedicated server interface attachment can be imported using the `service_name` and `interface_id`, separated by "/" E.g.,
+
+```bash
+$ terraform import ovh_vrack_dedicated_server_interface.vdsi service_name/interface_id
+```

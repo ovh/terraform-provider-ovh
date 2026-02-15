@@ -44,6 +44,22 @@ The following arguments are supported:
 * `oidc_signing_algs` - Array of signing algorithms accepted. Default is `RS256`.
 * `oidc_ca_content` - Content of the certificate for the CA, in Base64 format, that signed your identity provider's web certificate. Defaults to the host's root CAs.
 
+## Attributes Reference
+
+The following attributes are exported:
+
+* `service_name` - See Argument Reference above.
+* `kube_id` - See Argument Reference above.
+* `client_id` - See Argument Reference above.
+* `issuer_url` - See Argument Reference above.
+* `oidc_username_claim` - See Argument Reference above.
+* `oidc_username_prefix` - See Argument Reference above.
+* `oidc_groups_claim` - See Argument Reference above.
+* `oidc_groups_prefix` - See Argument Reference above.
+* `oidc_required_claim` - See Argument Reference above.
+* `oidc_signing_algs` - See Argument Reference above.
+* `oidc_ca_content` - See Argument Reference above.
+
 ## Timeouts
 
 ```terraform

@@ -84,3 +84,11 @@ Id is set to the input Id. In addition, the following attributes are exported:
 * `status` - init: configuration required, pending: ready to start, running: available
 * `updated_at` - Input last update
 * `current_nb_instance` - Number of instance running (returned by the API)
+
+## Import
+
+DBaaS Logs input can be imported using the `service_name` and `id` of the input, separated by "/" E.g.,
+
+```bash
+$ terraform import ovh_dbaas_logs_input.my_input service_name/input_id
+```

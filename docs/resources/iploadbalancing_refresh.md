@@ -2,7 +2,7 @@
 subcategory : "Load Balancer (IPLB)"
 ---
 
-# ovh\_iploadbalancing\_refresh
+# ovh_iploadbalancing_refresh
 
 Applies changes from other `ovh_iploadbalancing_*` resources to the production configuration of loadbalancers.
 
