@@ -38,3 +38,11 @@ resource "ovh_me_identity_user_token" "token" {
 * `token` - The token value.
 * `creation` - Creation date of this token.
 * `last_used` - Last use of this token.
+
+## Import
+
+A user identity token can be imported using the `user_login` and `name`, separated by "/" E.g.,
+
+```bash
+$ terraform import ovh_me_identity_user_token.token user_login/token_name
+```

@@ -1,8 +1,5 @@
 ---
-page_title: "ovh_vrackservices Resource - terraform-provider-ovh"
 subcategory: "Vrack Services"
-description: |-
-  
 ---
 
 # ovh_vrackservices (Resource)

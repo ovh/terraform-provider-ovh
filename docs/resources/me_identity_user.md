@@ -33,3 +33,11 @@ resource "ovh_me_identity_user" "my_user" {
 * `last_update` - Last update of this user.
 * `password_last_update` - When the user changed his password for the last time.
 * `status` - Current user's status.
+
+## Import
+
+An identity user can be imported using the `login` E.g.,
+
+```bash
+$ terraform import ovh_me_identity_user.my_user login
+```

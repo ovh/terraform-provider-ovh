@@ -39,3 +39,11 @@ data "ovh_iam_reference_actions" "vps" {
 * `created_at` - Creation date of this group.
 * `updated_at` - Date of the last update of this group.
 * `read_only` - Indicates that the permissions group is a default one.
+
+## Import
+
+An IAM permissions group can be imported using the `id` E.g.,
+
+```bash
+$ terraform import ovh_iam_permissions_group.read_vps permissions_group_id
+```

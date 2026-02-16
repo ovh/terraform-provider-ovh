@@ -46,3 +46,11 @@ The following attributes are exported:
 * `ip_restrictions` - IP restrictions applied on artifact manager component.
   * `description` - The Description of Whitelisted IpBlock.
   * `ip_block` - Whitelisted IpBlock (CIDR format).
+
+## Import
+
+OVHcloud Managed Private Registry IP restrictions of registry type can be imported using the `service_name` and `registry_id`, separated by "/" E.g.,
+
+```bash
+$ terraform import ovh_cloud_project_containerregistry_ip_restrictions_registry.my_ip_restrictions service_name/registry_id
+```

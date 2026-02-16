@@ -301,7 +301,7 @@ The following arguments are supported:
 
   In order to use the gateway IP advertised by the private network subnet DHCP, the following configuration shall be used.
 
-  ```hcl
+  ```terraform
   private_network_configuration {
       default_vrack_gateway              = ""
       private_network_routing_as_default = true

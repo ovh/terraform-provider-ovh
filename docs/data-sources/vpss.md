@@ -2,7 +2,7 @@
 subcategory : "VPS"
 ---
 
-# vpss (Data Source)
+# ovh_vpss (Data Source)
 
 Use this data source to get the list of VPS associated with your OVH Account.
 

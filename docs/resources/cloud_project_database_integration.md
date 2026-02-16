@@ -43,7 +43,7 @@ The following arguments are supported:
 
 * `service_name` - (Required, Forces new resource) The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 
-* `engine` - (Required, Forces new resource) The engine of the database cluster you want to add. You can find the complete list of available engine in the [public documentation](https://docs.ovh.com/gb/en/publiccloud/databases). All engines available exept `mongodb`.
+* `engine` - (Required, Forces new resource) The engine of the database cluster you want to add. You can find the complete list of available engine in the [public documentation](https://docs.ovh.com/gb/en/publiccloud/databases). All engines available except `mongodb`.
 
 * `cluster_id` - (Required, Forces new resource) Cluster ID.
 
@@ -71,7 +71,7 @@ The following attributes are exported:
 * `cluster_id` - See Argument Reference above.
 * `destination_service_id` - See Argument Reference above.
 * `engine` - See Argument Reference above.
-* `id` - - ID of the integration.
+* `id` - ID of the integration.
 * `parameters` - See Argument Reference above.
 * `service_name` - See Argument Reference above.
 * `source_service_id` - See Argument Reference above.
@@ -81,7 +81,7 @@ The following attributes are exported:
 ## Timeouts
 
 ```terraform
-resource "ovh_cloud_project_database_user" "user" {
+resource "ovh_cloud_project_database_integration" "integration" {
   # ...
 
   timeouts {
@@ -97,8 +97,8 @@ resource "ovh_cloud_project_database_user" "user" {
 
 ## Import
 
-OVHcloud Managed database clusters users can be imported using the `service_name`, `engine`, `cluster_id` and `id` of the user, separated by "/" E.g.,
+OVHcloud Managed database cluster integrations can be imported using the `service_name`, `engine`, `cluster_id` and `id` of the integration, separated by "/" E.g.,
 
 ```bash
-$ terraform import ovh_cloud_project_database_user.my_user service_name/engine/cluster_id/id
+$ terraform import ovh_cloud_project_database_integration.my_integration service_name/engine/cluster_id/id
 ```

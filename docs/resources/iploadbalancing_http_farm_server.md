@@ -2,7 +2,7 @@
 subcategory : "Load Balancer (IPLB)"
 ---
 
-# ovh\_iploadbalancing\_http_farm\_server
+# ovh_iploadbalancing_http_farm_server
 
 Creates a backend server entry linked to HTTP loadbalancing group (farm)
 

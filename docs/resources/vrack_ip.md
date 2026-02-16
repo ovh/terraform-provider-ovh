@@ -79,3 +79,11 @@ The following attributes are exported:
 * `ip` - Your IP block
 * `zone` - Where you want your block announced on the network
 * `region` - See Argument Reference above.
+
+## Import
+
+A vRack IP block attachment can be imported using the `service_name` and `block`, separated by "," E.g.,
+
+```bash
+$ terraform import ovh_vrack_ip.vrack_block service_name,ip_block
+```
