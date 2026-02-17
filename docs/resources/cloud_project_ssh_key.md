@@ -23,11 +23,11 @@ resource "ovh_cloud_project_ssh_key" "key" {
 
 - `name` (String) SSH key name
 - `public_key` (String) SSH public key
-- `service_name` (String) Service name
 
 ### Optional
 
 - `region` (String) Region to create SSH key
+- `service_name` (String) Service name. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 
 ### Read-Only
 

@@ -22,12 +22,12 @@ resource "ovh_cloud_project_volume_backup" "backup" {
 ### Required
 
 - `region_name` (String) Region name
-- `service_name` (String) Service name
 - `volume_id` (String) ID of the volume to backup
 
 ### Optional
 
 - `name` (String) name of the backup
+- `service_name` (String) Service name. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 
 ### Read-Only
 

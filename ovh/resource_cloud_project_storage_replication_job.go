@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"os"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -54,6 +55,19 @@ func (r *cloudProjectStorageReplicationJobResource) Create(ctx context.Context, 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	// Handle service_name: use provided value or fall back to environment variable
+	if data.ServiceName.IsNull() || data.ServiceName.IsUnknown() || data.ServiceName.ValueString() == "" {
+		envServiceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE")
+		if envServiceName == "" {
+			resp.Diagnostics.AddError(
+				"Missing service_name",
+				"The service_name attribute is required. Please provide it in the resource configuration or set the OVH_CLOUD_PROJECT_SERVICE environment variable.",
+			)
+			return
+		}
+		data.ServiceName = ovhtypes.NewTfStringValue(envServiceName)
 	}
 
 	// Trigger the replication job
@@ -110,8 +124,8 @@ func CloudProjectStorageReplicationJobResourceSchema(ctx context.Context) schema
 			},
 			"service_name": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
-				Required:            true,
-				Description:         "The ID of the public cloud project",
+				Optional:            true,
+				Description:         "The ID of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.",
 				MarkdownDescription: "The ID of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),

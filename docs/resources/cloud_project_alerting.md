@@ -20,7 +20,6 @@ resource "ovh_cloud_project_alerting" "my_alert" {
 ## Argument Reference
 
 * `service_name` - The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
-
 * `delay` - Delay between two alerts in seconds
 * `email` - Email to contact
 * `monthly_threshold` - Monthly threshold for this alerting in currency

@@ -4,6 +4,14 @@ subcategory : "Load Balancer (Public Cloud / Octavia)"
 
 # ovh_cloud_project_loadbalancer
 
+Create a load balancer in a public cloud project.
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `service_name` - (Optional) ID of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
+
 ## Example Usage
 
 ```terraform
