@@ -22,8 +22,11 @@ resource "ovh_cloud_project_instance_snapshot" "snapshot" {
 ### Required
 
 - `instance_id` (String, Forces new resource) Instance ID
-- `service_name` (String, Forces new resource) Service name
 - `name` (String, Forces new resource) Snapshot name
+
+### Optional
+
+- `service_name` (String, Forces new resource) Service name. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 
 ### Read-Only
 

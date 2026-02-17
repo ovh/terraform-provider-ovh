@@ -19,7 +19,10 @@ resource "ovh_cloud_project_region" "region" {
 ### Required
 
 - `region` (String) Region to add to your project
-- `service_name` (String) Service name
+
+### Optional
+
+- `service_name` (String) Service name. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 
 ### Read-Only
 

@@ -26,7 +26,7 @@ resource "ovh_cloud_project_region_network" "net" {
 
 The following arguments are supported:
 
-* `service_name` - (Required) The id of the public cloud project
+* `service_name` - (Optional) The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 * `region_name` - (Required) Network region
 * `name` - (Required) Name of the network
 * `subnet` - (Required) Parameters to create a subnet

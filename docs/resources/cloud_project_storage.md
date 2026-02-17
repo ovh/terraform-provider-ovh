@@ -69,7 +69,6 @@ resource "ovh_cloud_project_storage" "storage_with_lock" {
 
 - `name` (String) Container name
 - `region_name` (String) Region name
-- `service_name` (String) Service name
 
 ### Optional
 
@@ -78,6 +77,7 @@ resource "ovh_cloud_project_storage" "storage_with_lock" {
 - `limit` (Number) Limit the number of objects returned (1000 maximum, defaults to 1000)
 - `marker` (String) Key to start with when listing objects
 - `owner_id` (Number) Container owner user ID
+- `service_name` (String) Service name. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 - `prefix` (String) List objects whose key begins with this prefix
 - `replication` (Attributes) Replication configuration (see [below for nested schema](#nestedatt--replication))
 - `versioning` (Attributes) Versioning configuration (see [below for nested schema](#nestedatt--versioning))
