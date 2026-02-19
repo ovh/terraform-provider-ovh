@@ -33,9 +33,10 @@ func resourceCloudProjectFailoverIpAttachSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"service_name": {
 			Type:        schema.TypeString,
-			Description: "The service name",
+			Description: "The service name. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.",
 			ForceNew:    true,
 			Required:    true,
+			DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
 		},
 
 		"block": {

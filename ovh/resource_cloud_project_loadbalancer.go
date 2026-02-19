@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
@@ -86,6 +87,19 @@ func (r *cloudProjectLoadbalancerResource) Create(ctx context.Context, req resou
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	// Handle service_name: use provided value or fall back to environment variable
+	if data.ServiceName.IsNull() || data.ServiceName.IsUnknown() || data.ServiceName.ValueString() == "" {
+		envServiceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE")
+		if envServiceName == "" {
+			resp.Diagnostics.AddError(
+				"Missing service_name",
+				"The service_name attribute is required. Please provide it in the resource configuration or set the OVH_CLOUD_PROJECT_SERVICE environment variable.",
+			)
+			return
+		}
+		data.ServiceName = types.NewTfStringValue(envServiceName)
 	}
 
 	// Create resource and get operation ID

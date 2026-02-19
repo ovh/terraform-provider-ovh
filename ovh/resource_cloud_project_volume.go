@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/ovhwrap"
+	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
 var _ resource.ResourceWithConfigure = (*cloudProjectVolumeResource)(nil)
@@ -67,6 +69,19 @@ func (r *cloudProjectVolumeResource) Create(ctx context.Context, req resource.Cr
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	// Handle service_name: use provided value or fall back to environment variable
+	if data.ServiceName.IsNull() || data.ServiceName.IsUnknown() || data.ServiceName.ValueString() == "" {
+		envServiceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE")
+		if envServiceName == "" {
+			resp.Diagnostics.AddError(
+				"Missing service_name",
+				"The service_name attribute is required. Please provide it in the resource configuration or set the OVH_CLOUD_PROJECT_SERVICE environment variable.",
+			)
+			return
+		}
+		data.ServiceName = ovhtypes.NewTfStringValue(envServiceName)
 	}
 
 	endpoint := "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/region/" + url.PathEscape(data.RegionName.ValueString()) + "/volume"

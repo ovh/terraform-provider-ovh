@@ -80,9 +80,9 @@ func CloudProjectRegionResourceSchema(ctx context.Context) schema.Schema {
 		},
 		"service_name": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
-			Required:            true,
-			Description:         "Service name",
-			MarkdownDescription: "Service name",
+			Optional:            true,
+			Description:         "Service name. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.",
+			MarkdownDescription: "Service name. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.",
 			PlanModifiers: []planmodifier.String{
 				stringplanmodifier.RequiresReplace(),
 			},
