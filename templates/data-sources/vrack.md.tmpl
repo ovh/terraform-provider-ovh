@@ -1,0 +1,37 @@
+---
+subcategory : "vRack"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_vrack (Data Source)
+
+Use this data source to get Vrack information.
+
+## Example Usage
+
+{{tffile "examples/data-sources/vrack/example_1.tf"}}
+
+## Argument Reference
+
+This datasource takes no argument.
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `service_name` - The vrack service name for your OVHcloud account, e.g pn-000000.
+* `name` - The name defined for the vrack
+* `description` - The vrack description
+- `iam` (Attributes) IAM resource metadata (see [below for nested schema](#nestedatt--iam))
+
+<a id="nestedatt--iam"></a>
+### Nested Schema for `iam`
+
+Read-Only:
+
+- `id` (String) Unique identifier of the resource
+- `state` (String) Resource state
+- `urn` (String) Unique resource name used in policies
