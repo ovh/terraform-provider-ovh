@@ -146,6 +146,19 @@ resource "ovh_iploadbalancing_tcp_farm_server" testacc {
   on_marked_down = "shutdown-sessions"
 }
 `
+	testAccIpLoadbalancingTcpFarmServerConfig_step8 = `
+%s
+
+resource "ovh_iploadbalancing_tcp_farm_server" testacc {
+	service_name = data.ovh_iploadbalancing.iplb.id
+	farm_id      = ovh_iploadbalancing_tcp_farm.testacc.id
+	address      = "10.0.0.11"
+	status       = "active"
+	display_name = "testBackendB"
+	port         = 8080
+	weight       = 0
+}
+`
 )
 
 func init() {
@@ -316,6 +329,20 @@ func TestAccIpLoadbalancingTcpFarmServerBasic(t *testing.T) {
 					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "backup", "true"),
 					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "on_marked_down", "shutdown-sessions"),
 				),
+			},
+			{
+				Config: fmt.Sprintf(testAccIpLoadbalancingTcpFarmServerConfig_step8, prefix),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "address", "10.0.0.11"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "status", "active"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "port", "8080"),
+					resource.TestCheckResourceAttr("ovh_iploadbalancing_tcp_farm_server.testacc", "weight", "0"),
+				),
+			},
+			{
+				Config:             fmt.Sprintf(testAccIpLoadbalancingTcpFarmServerConfig_step8, prefix),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
 			},
 		},
 	})
