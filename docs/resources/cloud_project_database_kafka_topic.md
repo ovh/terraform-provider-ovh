@@ -2,6 +2,8 @@
 subcategory : "Managed Databases"
 ---
 
+~> **DEPRECATED:** Use `ovh_cloud_managed_database_kafka_topic` instead. This resource will be removed in the next major version.
+
 # ovh_cloud_project_database_kafka_topic
 
 Creates a topic for a kafka cluster associated with a public cloud project.

@@ -1,0 +1,40 @@
+---
+subcategory : "Managed Databases"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_cloud_managed_analytics_log_subscription (Data Source)
+
+Use this data source to get information about a log subscription for a cluster associated with a public cloud project.
+
+## Example Usage
+
+{{tffile "examples/data-sources/cloud_managed_analytics_log_subscription/example_1.tf"}}
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `service_name` - (Required) The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
+* `engine` - (Required) The database engine for which you want to retrieve a subscription. To get a full list of available engine visit. [public documentation](https://docs.ovh.com/gb/en/publiccloud/databases).
+* `cluster_id` - (Required) Cluster ID.
+* `id` - (Required) Id of the log subscription.
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `cluster_id` - See Argument Reference above.
+* `created_at` - Creation date of the subscription.
+* `engine` - See Argument Reference above.
+* `id` - ID of the log subscription.
+* `kind` - Log kind name of this subscription.
+* `ldp_service_name` - Name of the destination log service.
+* `resource_name` - Name of subscribed resource, where the logs come from.
+* `resource_type` - Type of subscribed resource, where the logs come from.
+* `service_name` - See Argument Reference above.
+* `stream_id` - See Argument Reference above.
+* `updated_at` - Last update date of the subscription.

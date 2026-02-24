@@ -2,6 +2,8 @@
 subcategory : "Managed Databases"
 ---
 
+~> **DEPRECATED:** Use `ovh_cloud_managed_database` or `ovh_cloud_managed_analytics` instead (depending on the engine). This resource will be removed in the next major version.
+
 # ovh_cloud_project_database
 
 Creates a OVHcloud Managed Database Service in a public cloud project.

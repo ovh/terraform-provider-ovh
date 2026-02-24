@@ -2,6 +2,8 @@
 subcategory : "Managed Databases"
 ---
 
+~> **DEPRECATED:** Use `ovh_cloud_managed_databases` instead. This data source will be removed in the next major version.
+
 # ovh_cloud_project_databases (Data Source)
 
 Use this data source to get the list of managed databases of a public cloud project.

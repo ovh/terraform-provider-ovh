@@ -2,6 +2,8 @@
 subcategory : "Managed Databases"
 ---
 
+~> **DEPRECATED:** Use `ovh_cloud_managed_database_mongodb_prometheus` instead. This resource will be removed in the next major version.
+
 # ovh_cloud_project_database_mongodb_prometheus
 
 Creates a prometheus for a MongoDB cluster associated with a public cloud project.
