@@ -1,0 +1,8 @@
+data "ovh_cloud_managed_analytics_m3db_namespaces" "namespaces" {
+  service_name  = "XXX"
+  cluster_id    = "YYY"
+}
+
+output "namespace_ids" {
+  value = data.ovh_cloud_managed_analytics_m3db_namespaces.namespaces.namespace_ids
+}
