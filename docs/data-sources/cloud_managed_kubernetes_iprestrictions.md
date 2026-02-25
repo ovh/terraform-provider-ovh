@@ -2,22 +2,20 @@
 subcategory : "Managed Kubernetes Service (MKS)"
 ---
 
-~> **DEPRECATED:** Use `ovh_cloud_managed_kubernetes_iprestrictions` instead. This data source will be removed in the next major version.
-
-# ovh_cloud_project_kube_iprestrictions (Data Source)
+# ovh_cloud_managed_kubernetes_iprestrictions (Data Source)
 
 Use this data source to get a OVHcloud Managed Kubernetes Service cluster IP restrictions.
 
 ## Example Usage
 
 ```terraform
-data "ovh_cloud_project_kube_iprestrictions" "ip_restrictions" {
+data "ovh_cloud_managed_kubernetes_iprestrictions" "ip_restrictions" {
   service_name = "XXXXXX"
   kube_id      = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx"
 }
 
 output "ips" {
-  value = data.ovh_cloud_project_kube_iprestrictions.ip_restrictions.ips
+  value = data.ovh_cloud_managed_kubernetes_iprestrictions.ip_restrictions.ips
 }
 ```
 

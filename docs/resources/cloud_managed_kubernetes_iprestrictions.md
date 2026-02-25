@@ -2,16 +2,14 @@
 subcategory : "Managed Kubernetes Service (MKS)"
 ---
 
-~> **DEPRECATED:** Use `ovh_cloud_managed_kubernetes_iprestrictions` instead. This resource will be removed in the next major version.
-
-# ovh_cloud_project_kube_iprestrictions
+# ovh_cloud_managed_kubernetes_iprestrictions
 
 Apply IP restrictions to an OVHcloud Managed Kubernetes cluster.
 
 ## Example Usage
 
 ```terraform
-resource "ovh_cloud_project_kube_iprestrictions" "vrack_only" {
+resource "ovh_cloud_managed_kubernetes_iprestrictions" "vrack_only" {
   service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
   kube_id      = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx"
   ips          = ["10.42.0.0/16"]
@@ -33,7 +31,7 @@ No additional attributes than the ones provided are exported.
 ## Timeouts
 
 ```terraform
-resource "ovh_cloud_project_kube_iprestrictions" "vrack_only" {
+resource "ovh_cloud_managed_kubernetes_iprestrictions" "vrack_only" {
   # ...
 
   timeouts {
@@ -52,5 +50,5 @@ resource "ovh_cloud_project_kube_iprestrictions" "vrack_only" {
 OVHcloud Managed Kubernetes Service cluster IP restrictions can be imported using the `service_name` and the `id` of the cluster, separated by "/" E.g.,
 
 ```bash
-$ terraform import ovh_cloud_project_kube_iprestrictions.iprestrictions service_name/kube_id
+$ terraform import ovh_cloud_managed_kubernetes_iprestrictions.iprestrictions service_name/kube_id
 ```

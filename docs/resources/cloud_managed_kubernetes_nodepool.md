@@ -2,9 +2,7 @@
 subcategory : "Managed Kubernetes Service (MKS)"
 ---
 
-~> **DEPRECATED:** Use `ovh_cloud_managed_kubernetes_nodepool` instead. This resource will be removed in the next major version.
-
-# ovh_cloud_project_kube_nodepool
+# ovh_cloud_managed_kubernetes_nodepool
 
 Creates a nodepool in a OVHcloud Managed Kubernetes Service cluster.
 
@@ -13,7 +11,7 @@ Creates a nodepool in a OVHcloud Managed Kubernetes Service cluster.
 Create a simple node pool in your Kubernetes cluster:
 
 ```terraform
-resource "ovh_cloud_project_kube_nodepool" "node_pool" {
+resource "ovh_cloud_managed_kubernetes_nodepool" "node_pool" {
   service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
   kube_id       = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
   name          = "my-pool-1" //Warning: "_" char is not allowed!
@@ -25,7 +23,7 @@ resource "ovh_cloud_project_kube_nodepool" "node_pool" {
 Create a node pool on a specific availability zones for Kubernetes cluster (with multi-zones support):
 
 ```terraform
-resource "ovh_cloud_project_kube_nodepool" "node_pool_multi_zones" {
+resource "ovh_cloud_managed_kubernetes_nodepool" "node_pool_multi_zones" {
   service_name       = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
   kube_id            = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
   name               = "my-pool-zone-a" //Warning: "_" char is not allowed!
@@ -38,7 +36,7 @@ resource "ovh_cloud_project_kube_nodepool" "node_pool_multi_zones" {
 Create an advanced node pool in your Kubernetes cluster:
 
 ```terraform
-resource "ovh_cloud_project_kube_nodepool" "pool" {
+resource "ovh_cloud_managed_kubernetes_nodepool" "pool" {
   service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
   kube_id       = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
   name          = "my-pool"
@@ -118,7 +116,7 @@ In addition, the following attributes are exported:
 ## Timeouts
 
 ```terraform
-resource "ovh_cloud_project_kube_nodepool" "pool" {
+resource "ovh_cloud_managed_kubernetes_nodepool" "pool" {
   # ...
 
   timeouts {
@@ -138,5 +136,5 @@ resource "ovh_cloud_project_kube_nodepool" "pool" {
 OVHcloud Managed Kubernetes Service cluster node pool can be imported using the `service_name`, the `id` of the cluster, and the `id` of the nodepool separated by "/" E.g.,
 
 ```bash
-$ terraform import ovh_cloud_project_kube_nodepool.pool service_name/kube_id/poolid
+$ terraform import ovh_cloud_managed_kubernetes_nodepool.pool service_name/kube_id/poolid
 ```

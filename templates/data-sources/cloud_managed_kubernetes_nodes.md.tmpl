@@ -2,24 +2,17 @@
 subcategory : "Managed Kubernetes Service (MKS)"
 ---
 
-~> **DEPRECATED:** Use `ovh_cloud_managed_kubernetes_nodes` instead. This data source will be removed in the next major version.
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
 
-# ovh_cloud_project_kube_nodes (Data Source)
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_cloud_managed_kubernetes_nodes (Data Source)
 
 Use this data source to get a list of OVHcloud Managed Kubernetes nodes.
 
 ## Example Usage
 
-```terraform
-data "ovh_cloud_project_kube_nodes" "nodes" {
-  service_name  = "XXXXXX"
-  kube_id       = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxx"
-}
-
-output "nodes" {
-  value = data.ovh_cloud_project_kube_nodes.nodes
-}
-```
+{{tffile "examples/data-sources/cloud_managed_kubernetes_nodes/example_1.tf"}}
 
 ## Argument Reference
 

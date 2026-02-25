@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-func TestAccCloudProjectKubeIPRestrictionsDataSource_basic(t *testing.T) {
+func TestAccCloudManagedKubernetesIPRestrictionsDataSource_basic(t *testing.T) {
 	name := acctest.RandomWithPrefix(test_prefix)
 	region := os.Getenv("OVH_CLOUD_PROJECT_KUBE_REGION_TEST")
 
@@ -30,9 +30,9 @@ func TestAccCloudProjectKubeIPRestrictionsDataSource_basic(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
-						"data.ovh_cloud_project_kube_iprestrictions.iprestrictionsData", "service_name", os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")),
+						"data.ovh_cloud_managed_kubernetes_iprestrictions.iprestrictionsData", "service_name", os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")),
 					resource.TestCheckResourceAttr(
-						"data.ovh_cloud_project_kube_iprestrictions.iprestrictionsData", "ips.0", "10.42.0.0/16"),
+						"data.ovh_cloud_managed_kubernetes_iprestrictions.iprestrictionsData", "ips.0", "10.42.0.0/16"),
 				),
 			},
 		},
@@ -40,29 +40,29 @@ func TestAccCloudProjectKubeIPRestrictionsDataSource_basic(t *testing.T) {
 }
 
 var testAccCloudProjectKubeIPRestrictionsDataSourceConfig = `
-resource "ovh_cloud_project_kube" "cluster" {
+resource "ovh_cloud_managed_kubernetes" "cluster" {
 	service_name  = "%s"
 	name          = "%s"
 	region        = "%s"
 }
 
-resource "ovh_cloud_project_kube_iprestrictions" "iprestrictions" {
-	service_name  = ovh_cloud_project_kube.cluster.service_name
-	kube_id       = ovh_cloud_project_kube.cluster.id
+resource "ovh_cloud_managed_kubernetes_iprestrictions" "iprestrictions" {
+	service_name  = ovh_cloud_managed_kubernetes.cluster.service_name
+	kube_id       = ovh_cloud_managed_kubernetes.cluster.id
 	ips           = ["10.42.0.0/16"]
 
 	depends_on = [
-		ovh_cloud_project_kube.cluster
+		ovh_cloud_managed_kubernetes.cluster
 	]
 
 }
 
-data "ovh_cloud_project_kube_iprestrictions" "iprestrictionsData" {
-  service_name = ovh_cloud_project_kube.cluster.service_name
-  kube_id = ovh_cloud_project_kube.cluster.id
+data "ovh_cloud_managed_kubernetes_iprestrictions" "iprestrictionsData" {
+  service_name = ovh_cloud_managed_kubernetes.cluster.service_name
+  kube_id = ovh_cloud_managed_kubernetes.cluster.id
 
 	depends_on = [
-		ovh_cloud_project_kube_iprestrictions.iprestrictions
+		ovh_cloud_managed_kubernetes_iprestrictions.iprestrictions
 	]
 }
 `

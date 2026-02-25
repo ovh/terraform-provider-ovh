@@ -2,9 +2,11 @@
 subcategory : "Managed Kubernetes Service (MKS)"
 ---
 
-~> **DEPRECATED:** Use `ovh_cloud_managed_kubernetes_nodepool` instead. This resource will be removed in the next major version.
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
 
-# ovh_cloud_project_kube_nodepool
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_cloud_managed_kubernetes_nodepool
 
 Creates a nodepool in a OVHcloud Managed Kubernetes Service cluster.
 
@@ -12,63 +14,15 @@ Creates a nodepool in a OVHcloud Managed Kubernetes Service cluster.
 
 Create a simple node pool in your Kubernetes cluster:
 
-```terraform
-resource "ovh_cloud_project_kube_nodepool" "node_pool" {
-  service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  kube_id       = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-  name          = "my-pool-1" //Warning: "_" char is not allowed!
-  flavor_name   = "b3-8"
-  desired_nodes = 3
-}
-```
+{{tffile "examples/resources/cloud_managed_kubernetes_nodepool/example_1.tf"}}
 
 Create a node pool on a specific availability zones for Kubernetes cluster (with multi-zones support):
 
-```terraform
-resource "ovh_cloud_project_kube_nodepool" "node_pool_multi_zones" {
-  service_name       = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  kube_id            = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-  name               = "my-pool-zone-a" //Warning: "_" char is not allowed!
-  flavor_name        = "b3-8"
-  desired_nodes      = 3
-  availability_zones = ["eu-west-par-a"] //Currently, only one zone is supported
-}
-```
+{{tffile "examples/resources/cloud_managed_kubernetes_nodepool/example_4.tf"}}
 
 Create an advanced node pool in your Kubernetes cluster:
 
-```terraform
-resource "ovh_cloud_project_kube_nodepool" "pool" {
-  service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  kube_id       = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-  name          = "my-pool"
-  flavor_name   = "b3-8"
-  desired_nodes = 3
-  template {
-    metadata {
-      annotations = {
-        k1 = "v1"
-        k2 = "v2"
-      }
-      finalizers = []
-      labels = {
-        k3 = "v3"
-        k4 = "v4"
-      }
-    }
-    spec {
-      unschedulable = false
-      taints = [
-        {
-          effect = "PreferNoSchedule"
-          key    = "k"
-          value  = "v"
-        }
-      ]
-    }
-  }
-}
-```
+{{tffile "examples/resources/cloud_managed_kubernetes_nodepool/example_2.tf"}}
 
 ## Argument Reference
 
@@ -117,17 +71,7 @@ In addition, the following attributes are exported:
 
 ## Timeouts
 
-```terraform
-resource "ovh_cloud_project_kube_nodepool" "pool" {
-  # ...
-
-  timeouts {
-    create = "1h"
-    update = "45m"
-    delete = "50s"
-  }
-}
-```
+{{tffile "examples/resources/cloud_managed_kubernetes_nodepool/example_3.tf"}}
 
 * `create` - (Default 20m)
 * `update` - (Default 10m)
@@ -138,5 +82,5 @@ resource "ovh_cloud_project_kube_nodepool" "pool" {
 OVHcloud Managed Kubernetes Service cluster node pool can be imported using the `service_name`, the `id` of the cluster, and the `id` of the nodepool separated by "/" E.g.,
 
 ```bash
-$ terraform import ovh_cloud_project_kube_nodepool.pool service_name/kube_id/poolid
+$ terraform import ovh_cloud_managed_kubernetes_nodepool.pool service_name/kube_id/poolid
 ```

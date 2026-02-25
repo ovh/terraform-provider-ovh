@@ -2,18 +2,16 @@
 subcategory : "Managed Kubernetes Service (MKS)"
 ---
 
-~> **DEPRECATED:** Use `ovh_cloud_managed_kubernetes_oidc` instead. This resource will be removed in the next major version.
-
-# ovh_cloud_project_kube_oidc
+# ovh_cloud_managed_kubernetes_oidc
 
 Creates an OIDC configuration in an OVHcloud Managed Kubernetes cluster.
 
 ## Example Usage
 
 ```terraform
-resource "ovh_cloud_project_kube_oidc" "my_oidc" {
+resource "ovh_cloud_managed_kubernetes_oidc" "my_oidc" {
   service_name = var.projectid
-  kube_id      = ovh_cloud_project_kube.mykube.id
+  kube_id      = ovh_cloud_managed_kubernetes.mykube.id
 
   #required field
   client_id    = "xxx"
@@ -65,7 +63,7 @@ The following attributes are exported:
 ## Timeouts
 
 ```terraform
-resource "ovh_cloud_project_kube_oidc" "oidc" {
+resource "ovh_cloud_managed_kubernetes_oidc" "oidc" {
   # ...
 
   timeouts {
@@ -84,5 +82,5 @@ resource "ovh_cloud_project_kube_oidc" "oidc" {
 OVHcloud Managed Kubernetes Service cluster OIDC can be imported using the tenant `service_name` and cluster id `kube_id` separated by "/" E.g.,
 
 ```bash
-$ terraform import ovh_cloud_project_kube_oidc.my-oidc service_name/kube_id
+$ terraform import ovh_cloud_managed_kubernetes_oidc.my-oidc service_name/kube_id
 ```

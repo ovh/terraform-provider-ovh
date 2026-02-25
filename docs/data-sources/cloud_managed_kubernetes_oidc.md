@@ -2,22 +2,20 @@
 subcategory : "Managed Kubernetes Service (MKS)"
 ---
 
-~> **DEPRECATED:** Use `ovh_cloud_managed_kubernetes_oidc` instead. This data source will be removed in the next major version.
-
-# ovh_cloud_project_kube_oidc (Data Source)
+# ovh_cloud_managed_kubernetes_oidc (Data Source)
 
 Use this data source to get a OVHcloud Managed Kubernetes Service cluster OIDC.
 
 ## Example Usage
 
 ```terraform
-data "ovh_cloud_project_kube_oidc" "oidc" {
+data "ovh_cloud_managed_kubernetes_oidc" "oidc" {
   service_name = "XXXXXX"
   kube_id      = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx"
 }
 
 output "oidc-val" {
-  value = data.ovh_cloud_project_kube_oidc.oidc.client_id
+  value = data.ovh_cloud_managed_kubernetes_oidc.oidc.client_id
 }
 ```
 

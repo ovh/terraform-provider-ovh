@@ -2,21 +2,17 @@
 subcategory : "Managed Kubernetes Service (MKS)"
 ---
 
-~> **DEPRECATED:** Use `ovh_cloud_managed_kubernetes_iprestrictions` instead. This resource will be removed in the next major version.
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
 
-# ovh_cloud_project_kube_iprestrictions
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_cloud_managed_kubernetes_iprestrictions
 
 Apply IP restrictions to an OVHcloud Managed Kubernetes cluster.
 
 ## Example Usage
 
-```terraform
-resource "ovh_cloud_project_kube_iprestrictions" "vrack_only" {
-  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  kube_id      = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx"
-  ips          = ["10.42.0.0/16"]
-}
-```
+{{tffile "examples/resources/cloud_managed_kubernetes_iprestrictions/example_1.tf"}}
 
 ## Argument Reference
 
@@ -32,17 +28,7 @@ No additional attributes than the ones provided are exported.
 
 ## Timeouts
 
-```terraform
-resource "ovh_cloud_project_kube_iprestrictions" "vrack_only" {
-  # ...
-
-  timeouts {
-    create = "1h"
-    update = "45m"
-    delete = "50s"
-  }
-}
-```
+{{tffile "examples/resources/cloud_managed_kubernetes_iprestrictions/example_2.tf"}}
 * `create` - (Default 10m)
 * `update` - (Default 5m)
 * `delete` - (Default 5m)
@@ -52,5 +38,5 @@ resource "ovh_cloud_project_kube_iprestrictions" "vrack_only" {
 OVHcloud Managed Kubernetes Service cluster IP restrictions can be imported using the `service_name` and the `id` of the cluster, separated by "/" E.g.,
 
 ```bash
-$ terraform import ovh_cloud_project_kube_iprestrictions.iprestrictions service_name/kube_id
+$ terraform import ovh_cloud_managed_kubernetes_iprestrictions.iprestrictions service_name/kube_id
 ```

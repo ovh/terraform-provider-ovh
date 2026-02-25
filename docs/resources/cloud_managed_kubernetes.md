@@ -2,9 +2,7 @@
 subcategory : "Managed Kubernetes Service (MKS)"
 ---
 
-~> **DEPRECATED:** Use `ovh_cloud_managed_kubernetes` instead. This resource will be removed in the next major version.
-
-# ovh_cloud_project_kube
+# ovh_cloud_managed_kubernetes
 
 Creates a OVHcloud Managed Kubernetes Service cluster in a public cloud project.
 
@@ -13,15 +11,15 @@ Creates a OVHcloud Managed Kubernetes Service cluster in a public cloud project.
 Create a simple Kubernetes Free cluster in `GRA11` region:
 
 ```terraform
-resource "ovh_cloud_project_kube" "my_cluster" {
+resource "ovh_cloud_managed_kubernetes" "my_cluster" {
   service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
   name         = "my_kube_cluster"
   region       = "GRA11"
 }
 
-resource "ovh_cloud_project_kube_nodepool" "node_pool_1" {
-  service_name  = ovh_cloud_project_kube.my_cluster.service_name
-  kube_id       = ovh_cloud_project_kube.my_cluster.id
+resource "ovh_cloud_managed_kubernetes_nodepool" "node_pool_1" {
+  service_name  = ovh_cloud_managed_kubernetes.my_cluster.service_name
+  kube_id       = ovh_cloud_managed_kubernetes.my_cluster.id
   name          = "my-pool-1"
   flavor_name   = "b3-8"
   desired_nodes = 3
@@ -31,14 +29,14 @@ resource "ovh_cloud_project_kube_nodepool" "node_pool_1" {
 Create a simple Kubernetes Free cluster in `GRA11` region and export its kubeconfig file:
 
 ```terraform
-resource "ovh_cloud_project_kube" "my_cluster" {
+resource "ovh_cloud_managed_kubernetes" "my_cluster" {
   service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
   name         = "my_kube_cluster"
   region       = "GRA11"
 }
 
 output "kubeconfig_file" {
-  value     = ovh_cloud_project_kube.my_cluster.kubeconfig
+  value     = ovh_cloud_managed_kubernetes.my_cluster.kubeconfig
   sensitive = true
 }
 ```
@@ -48,29 +46,29 @@ Create a simple Kubernetes Free cluster in `GRA11` region and read kubeconfig at
 -> Sensitive attributes cannot be displayed using `terraform output` command. You need to specify the output's name: `terraform output my_cluster_host`.
 
 ```terraform
-resource "ovh_cloud_project_kube" "my_cluster" {
+resource "ovh_cloud_managed_kubernetes" "my_cluster" {
   service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
   name         = "my_kube_cluster"
   region       = "GRA11"
 }
 
 output "my_cluster_host" {
-  value = ovh_cloud_project_kube.my_cluster.kubeconfig_attributes[0].host
+  value = ovh_cloud_managed_kubernetes.my_cluster.kubeconfig_attributes[0].host
   sensitive = true
 }
 
 output "my_cluster_cluster_ca_certificate" {
-  value = ovh_cloud_project_kube.my_cluster.kubeconfig_attributes[0].cluster_ca_certificate
+  value = ovh_cloud_managed_kubernetes.my_cluster.kubeconfig_attributes[0].cluster_ca_certificate
   sensitive = true
 }
 
 output "my_cluster_client_certificate" {
-  value = ovh_cloud_project_kube.my_cluster.kubeconfig_attributes[0].client_certificate
+  value = ovh_cloud_managed_kubernetes.my_cluster.kubeconfig_attributes[0].client_certificate
   sensitive = true
 }
 
 output "my_cluster_client_key" {
-  value = ovh_cloud_project_kube.my_cluster.kubeconfig_attributes[0].client_key
+  value = ovh_cloud_managed_kubernetes.my_cluster.kubeconfig_attributes[0].client_key
   sensitive = true
 }
 ```
@@ -78,7 +76,7 @@ output "my_cluster_client_key" {
 Create a simple Kubernetes Free cluster in `GRA11` region and use kubeconfig with [Helm provider](https://registry.terraform.io/providers/hashicorp/helm/latest/docs):
 
 ```terraform
-resource "ovh_cloud_project_kube" "my_cluster" {
+resource "ovh_cloud_managed_kubernetes" "my_cluster" {
   service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
   name         = "my_kube_cluster"
   region       = "GRA11"
@@ -86,10 +84,10 @@ resource "ovh_cloud_project_kube" "my_cluster" {
 
 provider "helm" {
   kubernetes {
-    host                    = ovh_cloud_project_kube.my_cluster.kubeconfig_attributes[0].host
-    client_certificate      = base64decode(ovh_cloud_project_kube.my_cluster.kubeconfig_attributes[0].client_certificate)
-    client_key              = base64decode(ovh_cloud_project_kube.my_cluster.kubeconfig_attributes[0].client_key)
-    cluster_ca_certificate  = base64decode(ovh_cloud_project_kube.my_cluster.kubeconfig_attributes[0].cluster_ca_certificate)
+    host                    = ovh_cloud_managed_kubernetes.my_cluster.kubeconfig_attributes[0].host
+    client_certificate      = base64decode(ovh_cloud_managed_kubernetes.my_cluster.kubeconfig_attributes[0].client_certificate)
+    client_key              = base64decode(ovh_cloud_managed_kubernetes.my_cluster.kubeconfig_attributes[0].client_key)
+    cluster_ca_certificate  = base64decode(ovh_cloud_managed_kubernetes.my_cluster.kubeconfig_attributes[0].cluster_ca_certificate)
   }
 }
 
@@ -99,7 +97,7 @@ provider "helm" {
 Create a Kubernetes Free cluster in `GRA11` region with API Server AdmissionPlugins configuration:
 
 ```terraform
-resource "ovh_cloud_project_kube" "my_cluster" {
+resource "ovh_cloud_managed_kubernetes" "my_cluster" {
   service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
   name          = "my_kube_cluster"
   region        = "GRA11"
@@ -115,7 +113,7 @@ resource "ovh_cloud_project_kube" "my_cluster" {
 Create a Kubernetes Free cluster in `GRA11` region with Kube proxy configuration, by specifying iptables or ipvs configurations:
 
 ```terraform
-resource "ovh_cloud_project_kube" "my_cluster" {
+resource "ovh_cloud_managed_kubernetes" "my_cluster" {
   service_name    = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
   name            = "my_kube_cluster"
   region          = "GRA11"
@@ -171,7 +169,7 @@ resource "ovh_cloud_project_gateway" "gateway" {
   subnet_id  = ovh_cloud_project_network_private_subnet.subnet.id
 }
 
-resource "ovh_cloud_project_kube" "my_cluster" {
+resource "ovh_cloud_managed_kubernetes" "my_cluster" {
   service_name  = var.service_name
   name          = "test-kube-attach"
   region        = "GRA11"
@@ -217,7 +215,7 @@ resource "ovh_cloud_project_gateway" "gateway" {
   subnet_id  = ovh_cloud_project_network_private_subnet.subnet.id
 }
 
-resource "ovh_cloud_project_kube" "my_multizone_cluster" {
+resource "ovh_cloud_managed_kubernetes" "my_multizone_cluster" {
   service_name  = ovh_cloud_project_network_private.network.service_name
   name          = "multi-zone-mks"
   region        = "EU-WEST-PAR"
@@ -229,27 +227,27 @@ resource "ovh_cloud_project_kube" "my_multizone_cluster" {
   depends_on    = [ ovh_cloud_project_gateway.gateway ] //Gateway is mandatory for multizones cluster
 }
 
-resource "ovh_cloud_project_kube_nodepool" "node_pool_multi_zones_a" {
+resource "ovh_cloud_managed_kubernetes_nodepool" "node_pool_multi_zones_a" {
   service_name       = ovh_cloud_project_network_private.network.service_name
-  kube_id            = ovh_cloud_project_kube.my_multizone_cluster.id
+  kube_id            = ovh_cloud_managed_kubernetes.my_multizone_cluster.id
   name               = "my-pool-zone-a" //Warning: "_" char is not allowed!
   flavor_name        = "b3-8"
   desired_nodes      = 3
   availability_zones = ["eu-west-par-a"] //Currently, only one zone is supported
 }
 
-resource "ovh_cloud_project_kube_nodepool" "node_pool_multi_zones_b" {
+resource "ovh_cloud_managed_kubernetes_nodepool" "node_pool_multi_zones_b" {
   service_name       = ovh_cloud_project_network_private.network.service_name
-  kube_id            = ovh_cloud_project_kube.my_multizone_cluster.id
+  kube_id            = ovh_cloud_managed_kubernetes.my_multizone_cluster.id
   name               = "my-pool-zone-b"
   flavor_name        = "b3-8"
   desired_nodes      = 3
   availability_zones = ["eu-west-par-b"]
 }
 
-resource "ovh_cloud_project_kube_nodepool" "node_pool_multi_zones_c" {
+resource "ovh_cloud_managed_kubernetes_nodepool" "node_pool_multi_zones_c" {
   service_name       = ovh_cloud_project_network_private.network.service_name
-  kube_id            = ovh_cloud_project_kube.my_multizone_cluster.id
+  kube_id            = ovh_cloud_managed_kubernetes.my_multizone_cluster.id
   name               = "my-pool-zone-c"
   flavor_name        = "b3-8"
   desired_nodes      = 3
@@ -257,7 +255,7 @@ resource "ovh_cloud_project_kube_nodepool" "node_pool_multi_zones_c" {
 }
 
 output "kubeconfig_file_eu_west_par" {
-  value     = ovh_cloud_project_kube.my_multizone_cluster.kubeconfig
+  value     = ovh_cloud_managed_kubernetes.my_multizone_cluster.kubeconfig
   sensitive = true
 }
 ```
@@ -341,7 +339,7 @@ The following attributes are exported:
 ## Timeouts
 
 ```terraform
-resource "ovh_cloud_project_kube" "my_kube_cluster" {
+resource "ovh_cloud_managed_kubernetes" "my_kube_cluster" {
   # ...
 
   timeouts {
@@ -360,5 +358,5 @@ resource "ovh_cloud_project_kube" "my_kube_cluster" {
 OVHcloud Managed Kubernetes Service clusters can be imported using the `service_name` and the `id` of the cluster, separated by "/" E.g.,
 
 ```bash
-$ terraform import ovh_cloud_project_kube.my_kube_cluster service_name/kube_id
+$ terraform import ovh_cloud_managed_kubernetes.my_kube_cluster service_name/kube_id
 ```

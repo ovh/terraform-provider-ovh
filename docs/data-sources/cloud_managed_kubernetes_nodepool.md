@@ -2,23 +2,21 @@
 subcategory : "Managed Kubernetes Service (MKS)"
 ---
 
-~> **DEPRECATED:** Use `ovh_cloud_managed_kubernetes_nodepool` instead. This data source will be removed in the next major version.
-
-# ovh_cloud_project_kube_nodepool (Data Source)
+# ovh_cloud_managed_kubernetes_nodepool (Data Source)
 
 Use this data source to get a OVHcloud Managed Kubernetes node pool.
 
 ## Example Usage
 
 ```terraform
-data "ovh_cloud_project_kube_nodepool" "nodepool" {
+data "ovh_cloud_managed_kubernetes_nodepool" "nodepool" {
   service_name  = "XXXXXX"
   kube_id       = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxx"
   name          = "xxxxxx"
 }
 
 output "max_nodes" {
-  value = data.ovh_cloud_project_kube_nodepool.nodepool.max_nodes
+  value = data.ovh_cloud_managed_kubernetes_nodepool.nodepool.max_nodes
 }
 ```
 

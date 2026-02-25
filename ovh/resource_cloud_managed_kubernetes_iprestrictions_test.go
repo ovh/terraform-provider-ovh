@@ -11,23 +11,23 @@ import (
 )
 
 var testAccCloudProjectKubeIpRestrictionsConfig = `
-resource "ovh_cloud_project_kube" "cluster" {
+resource "ovh_cloud_managed_kubernetes" "cluster" {
 	service_name  = "%s"
 	name          = "%s"
 	region        = "%s"
 }
 
-resource "ovh_cloud_project_kube_iprestrictions" "iprestrictions" {
-	service_name  = ovh_cloud_project_kube.cluster.service_name
-	kube_id       = ovh_cloud_project_kube.cluster.id
+resource "ovh_cloud_managed_kubernetes_iprestrictions" "iprestrictions" {
+	service_name  = ovh_cloud_managed_kubernetes.cluster.service_name
+	kube_id       = ovh_cloud_managed_kubernetes.cluster.id
 	ips           = %s
 }
 `
 
-func TestAccCloudProjectKubeIpRestrictions_basic(t *testing.T) {
+func TestAccCloudManagedKubernetesIpRestrictions_basic(t *testing.T) {
 	name := acctest.RandomWithPrefix(test_prefix)
 	region := os.Getenv("OVH_CLOUD_PROJECT_KUBE_REGION_TEST")
-	resourceName := "ovh_cloud_project_kube_iprestrictions.iprestrictions"
+	resourceName := "ovh_cloud_managed_kubernetes_iprestrictions.iprestrictions"
 
 	ips1 := `["10.42.0.0/16"]`
 	config1 := fmt.Sprintf(
@@ -58,19 +58,19 @@ func TestAccCloudProjectKubeIpRestrictions_basic(t *testing.T) {
 			{
 				Config: config1,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
-					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube_iprestrictions.iprestrictions", "ips.0", "10.42.0.0/16"),
+					resource.TestCheckResourceAttr("ovh_cloud_managed_kubernetes.cluster", "region", region),
+					resource.TestCheckResourceAttrSet("ovh_cloud_managed_kubernetes.cluster", "kubeconfig"),
+					resource.TestCheckResourceAttr("ovh_cloud_managed_kubernetes.cluster", "name", name),
+					resource.TestCheckResourceAttr("ovh_cloud_managed_kubernetes_iprestrictions.iprestrictions", "ips.0", "10.42.0.0/16"),
 				),
 			},
 			{
 				Config: config2,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
-					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube_iprestrictions.iprestrictions", "ips.1", "10.43.0.0/16"),
+					resource.TestCheckResourceAttr("ovh_cloud_managed_kubernetes.cluster", "region", region),
+					resource.TestCheckResourceAttrSet("ovh_cloud_managed_kubernetes.cluster", "kubeconfig"),
+					resource.TestCheckResourceAttr("ovh_cloud_managed_kubernetes.cluster", "name", name),
+					resource.TestCheckResourceAttr("ovh_cloud_managed_kubernetes_iprestrictions.iprestrictions", "ips.1", "10.43.0.0/16"),
 				),
 			},
 			{

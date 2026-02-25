@@ -2,31 +2,29 @@
 subcategory : "Managed Kubernetes Service (MKS)"
 ---
 
-~> **DEPRECATED:** Use `ovh_cloud_managed_kubernetes` instead. This data source will be removed in the next major version.
-
-# ovh_cloud_project_kube (Data Source)
+# ovh_cloud_managed_kubernetes (Data Source)
 
 Use this data source to get a OVHcloud Managed Kubernetes Service cluster.
 
 ## Example Usage
 
 ```terraform
-data "ovh_cloud_project_kube" "my_kube_cluster" {
+data "ovh_cloud_managed_kubernetes" "my_kube_cluster" {
   service_name = "XXXXXX"
   kube_id      = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxx"
 }
 
 output "version" {
-  value = data.ovh_cloud_project_kube.my_kube_cluster.version
+  value = data.ovh_cloud_managed_kubernetes.my_kube_cluster.version
 }
 
 output "kubeconfig" {
-  value = data.ovh_cloud_project_kube.my_kube_cluster.kubeconfig
+  value = data.ovh_cloud_managed_kubernetes.my_kube_cluster.kubeconfig
   sensitive = true
 }
 
 output "kube_host" {
-  value = data.ovh_cloud_project_kube.my_kube_cluster.kubeconfig_attributes[0].host
+  value = data.ovh_cloud_managed_kubernetes.my_kube_cluster.kubeconfig_attributes[0].host
 }
 ```
 
