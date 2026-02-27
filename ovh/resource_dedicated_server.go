@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"os"
 	"strconv"
 
 	"github.com/ovh/go-ovh/ovh"
@@ -181,7 +182,9 @@ func (r *dedicatedServerResource) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
-	responseData.DisplayName = responseData.Iam.DisplayName
+	if os.Getenv("TERRAFORM_OVH_RESTORE_BAREMETAL_DISPLAYNAME_BEHAVIOUR") != "1" {
+		responseData.DisplayName = responseData.Iam.DisplayName
+	}
 	responseData.MergeWith(&data)
 	responseData.ID = responseData.ServiceName
 
