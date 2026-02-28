@@ -2,6 +2,8 @@
 subcategory : "Managed Databases"
 ---
 
+~> **DEPRECATED:** Use `ovh_cloud_managed_database_ip_restrictions` instead. This data source will be removed in the next major version.
+
 # ovh_cloud_project_database_ip_restrictions (Data Source)
 
 ~> **DEPRECATED** Use `ip_restrictions` field in `ovh_cloud_project_database` resource instead.

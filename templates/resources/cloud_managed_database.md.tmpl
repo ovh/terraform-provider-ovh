@@ -1,0 +1,118 @@
+---
+subcategory : "Managed Databases"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_cloud_managed_database
+
+Creates a OVHcloud Managed Database Service in a public cloud project.
+
+## Important
+
+To learn more about OVHcloud Public Cloud Database please visit our [public documentation](https://docs.ovh.com/gb/en/publiccloud/databases).
+
+You can visit our dedicated Discord channel: https://discord.gg/PwPqWUpN8G. Ask questions, provide feedback and interact directly with the team that builds our databases services and terraform provider.
+
+## Supported Engines
+
+This resource supports the following database engines: `postgresql`, `mysql`, `mongodb`, `valkey`.
+
+For analytics engines (`kafka`, `kafkaconnect`, `kafkamirrormaker`, `opensearch`, `grafana`), use [`ovh_cloud_managed_analytics`](cloud_managed_analytics.md) instead.
+
+## Example Usage
+
+Minimum settings for each engine (region choice is up to the user):
+
+{{tffile "examples/resources/cloud_managed_database/example_1.tf"}}
+
+To deploy a business PostgreSQL service with two nodes on public network:
+
+{{tffile "examples/resources/cloud_managed_database/example_2.tf"}}
+
+To deploy an enterprise MongoDB service with three nodes on private network:
+
+{{tffile "examples/resources/cloud_managed_database/example_3.tf"}}
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `service_name` - (Required, Forces new resource) The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
+* `description` - (Optional) Small description of the database service.
+* `engine` - (Required, Forces new resource) The database engine you want to deploy. Supported values: `postgresql`, `mysql`, `mongodb`, `valkey`.
+* `flavor` - (Required) A valid OVHcloud public cloud database flavor name in which the nodes will be started. Ex: "db1-7". Changing this value upgrade the nodes with the new flavor. You can find the list of flavor names: https://www.ovhcloud.com/fr/public-cloud/prices/
+* `ip_restrictions` - (Optional) IP Blocks authorized to access to the cluster.
+  * `description` - (Optional) Description of the IP restriction
+  * `ip` - (Optional) Authorized IP
+* `deletion_protection` - (Optional) Enable deletion protection
+* `nodes` - (Required, Minimum Items: 1) List of nodes object. Multi region cluster are not yet available, all node should be identical.
+  * `network_id` - (Optional, Forces new resource) Private network id in which the node should be deployed. It's the regional openstackId of the private network
+  * `region` - (Required, Forces new resource) Public cloud region in which the node should be deployed. Ex: "GRA'.
+  * `subnet_id` - (Optional, Forces new resource) Private subnet ID in which the node is.
+* `disk_size` - (Optional) The disk size (in GB) of the database service.
+* `advanced_configuration` - (Optional) Advanced configuration key / value (not available for MongoDB).
+* `plan` - (Required) Plan of the cluster.
+  * MongoDB: Enum: "discovery", "production", "advanced".
+  * MySQL, PostgreSQL: Enum: "essential", "business", "enterprise".
+  * Valkey: "essential", "business".
+* `version` - (Required) The version of the engine in which the service should be deployed
+* `backup_regions` - List of region where backups are pushed. Not more than 1 regions for MongoDB. Not more than 2 regions for the other engines with one being the same as the nodes[].region field
+* `backup_time` - Time on which backups start every day.
+* `maintenance_time` - Time on which maintenances can start every day.
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `id` - Public Cloud Database Service ID
+* `service_name` - See Argument Reference above.
+* `backup_regions` - See Argument Reference above.
+* `backup_time` - See Argument Reference above.
+* `created_at` - Date of the creation of the cluster.
+* `description` - See Argument Reference above.
+* `endpoints` - List of all endpoints objects of the service.
+  * `component` - Type of component the URI relates to.
+  * `domain` - Domain of the cluster.
+  * `path` - Path of the endpoint.
+  * `port` - Connection port for the endpoint.
+  * `scheme` - Scheme used to generate the URI.
+  * `ssl` - Defines whether the endpoint uses SSL.
+  * `ssl_mode` - SSL mode used to connect to the service if the SSL is enabled.
+  * `uri` - URI of the endpoint.
+* `engine` - See Argument Reference above.
+* `flavor` - See Argument Reference above.
+* `ip_restrictions` - See Argument Reference above.
+  * `description` - See Argument Reference above.
+  * `ip` - See Argument Reference above.
+  * `status` - Current status of the IP restriction.
+* `deletion_protection` - Enable deletion protection
+* `maintenance_time` - Time on which maintenances can start every day.
+* `network_type` - Type of network of the cluster.
+* `nodes` - See Argument Reference above.
+  * `network_id` - See Argument Reference above.
+  * `region` - See Argument Reference above.
+  * `subnet_id` - See Argument Reference above.
+* `plan` - See Argument Reference above.
+* `status` - Current status of the cluster.
+* `version` - See Argument Reference above.
+* `disk_size` - See Argument Reference above.
+* `disk_type` - Defines the disk type of the database service.
+* `advanced_configuration` - Advanced configuration key / value.
+
+## Timeouts
+
+{{tffile "examples/resources/cloud_managed_database/example_4.tf"}}
+* `create` - (Default 20m)
+* `update` - (Default 40m)
+* `delete` - (Default 20m)
+
+## Import
+
+OVHcloud Managed database clusters can be imported using the `service_name`, `engine`, `id` of the cluster, separated by "/" E.g.,
+
+```bash
+$ terraform import ovh_cloud_managed_database.my_database_cluster service_name/engine/id
+```

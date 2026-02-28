@@ -1,0 +1,83 @@
+---
+subcategory : "Managed Databases"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_cloud_managed_analytics_prometheus
+
+Creates a prometheus for a database cluster associated with a public cloud project.
+
+With this resource you can create a prometheus for the following database engine:
+
+* `cassandra`
+* `kafka`
+* `kafkaConnect`
+* `kafkaMirrorMaker`
+* `mysql`
+* `opensearch`
+* `postgresql`
+* `redis`
+* `valkey`
+
+## Example Usage
+
+Create a Prometheus for a database. Output the prometheus user generated password with command `terraform output prom_password`.
+
+{{tffile "examples/resources/cloud_managed_analytics_prometheus/example_1.tf"}}
+
+-> **NOTE** To reset password of the prometheus user previously created, update the `password_reset` attribute. Use the `terraform refresh` command after executing `terraform apply` to update the output with the new password. This attribute can be an arbitrary string but we recommend 2 formats:
+- a datetime to keep a trace of the last reset
+- a md5 of other variables to automatically trigger it based on this variable update
+
+{{tffile "examples/resources/cloud_managed_analytics_prometheus/example_2.tf"}}
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `service_name` - (Required, Forces new resource) The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
+* `engine` - (Required, Forces new resource) The engine of the database cluster you want to add. You can find the complete list of available engine in the [public documentation](https://docs.ovh.com/gb/en/publiccloud/databases). Available engines:
+  * `cassandra`
+  * `kafka`
+  * `kafkaConnect`
+  * `kafkaMirrorMaker`
+  * `mysql`
+  * `opensearch`
+  * `postgresql`
+  * `redis`
+  * `valkey`
+* `cluster_id` - (Required, Forces new resource) Cluster ID.
+* `password_reset` - (Optional) Arbitrary string to change to trigger a password update. Use the `terraform refresh` command after executing `terraform apply` to update the output with the new password.
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `cluster_id` - See Argument Reference above.
+* `engine` - See Argument Reference above.
+* `id` - Cluster ID.
+* `password` - (Sensitive) Password of the user.
+* `password_reset` - Arbitrary string to change to trigger a password update.
+* `service_name` - See Argument Reference above.
+* `targets` - List of all endpoint targets.
+  * `Host` - Host of the endpoint.
+  * `Port` - Connection port for the endpoint.
+* `username` - name of the prometheus user.
+
+## Timeouts
+
+{{tffile "examples/resources/cloud_managed_analytics_prometheus/example_3.tf"}}
+* `create` - (Default 20m)
+* `update` - (Default 20m)
+* `delete` - (Default 20m)
+
+## Import
+
+OVHcloud Managed database clusters prometheus can be imported using the `service_name`, `engine` and `cluster_id`, separated by "/" E.g.,
+
+```bash
+$ terraform import ovh_cloud_managed_analytics_mongodb_prometheus.my_prometheus service_name/engine/cluster_id
+```

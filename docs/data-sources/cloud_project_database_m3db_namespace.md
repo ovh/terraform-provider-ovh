@@ -2,6 +2,8 @@
 subcategory : "Managed Databases"
 ---
 
+~> **DEPRECATED:** Use `ovh_cloud_managed_database_m3db_namespace` instead. This data source will be removed in the next major version.
+
 # ovh_cloud_project_database_m3db_namespace (Data Source)
 
 Use this data source to get information about a namespace of a M3DB cluster associated with a public cloud project.
