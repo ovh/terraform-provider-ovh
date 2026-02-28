@@ -472,6 +472,24 @@ func testAccPreCheckVrackServicesData(t *testing.T) {
 	checkEnvOrSkip(t, "OVH_TESTACC_VRACK_SERVICES_ID_TEST")
 }
 
+// Checks that the environment variables needed for the /vrack/{serviceName}/publicRoutingPriority/{priorityId} acceptance tests
+// are set.
+func testAccPreCheckPublicRoutingPriority(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_VRACK_SERVICE_TEST")
+	checkEnvOrSkip(t, "OVH_VRACK_PUBLIC_ROUTING_PRIORITY_REGION_TEST")
+	checkEnvOrSkip(t, "OVH_VRACK_PUBLIC_ROUTING_PRIORITY_AZ_A_TEST")
+	checkEnvOrSkip(t, "OVH_VRACK_PUBLIC_ROUTING_PRIORITY_AZ_B_TEST")
+	checkEnvOrSkip(t, "OVH_VRACK_PUBLIC_ROUTING_PRIORITY_AZ_C_TEST")
+}
+
+// Checks that the environment variables needed for /vrack datasource basic acceptance tests
+// are set.
+func testAccPreCheckVrackData(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_VRACK_SERVICE_TEST")
+}
+
 // Checks that the environment variables needed for the /me/paymentMean acceptance tests
 // are set.
 func testAccPreCheckMePaymentMean(t *testing.T) {

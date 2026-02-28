@@ -1,0 +1,45 @@
+---
+subcategory : "vRack"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_vrack_public_routing_priority
+
+Create a new publicRoutingPriority for the vrack in a given region.
+
+## Example Usage
+
+Create a basic public routing priority
+
+{{tffile "examples/resources/vrack_public_routing_priority/example_1.tf"}}
+
+Use the vRack datasource and configure a public routing priority
+
+{{tffile "examples/resources/vrack_public_routing_priority/example_2.tf"}}
+
+Import an existing public routing priority
+
+{{tffile "examples/resources/vrack_public_routing_priority/example_3.tf"}}
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `service_name` - (Required) The internal name of your vrack
+* `region` - (Required) The region you want the public routing priority to be created on.
+* `availability_zones` - (Required) A list of objects that allows to define on which AZ the Block should be active in priority, it is important to keep the objects sorted by ascending "priority" order.
+
+## Attributes Reference
+
+No additional attribute is exported.
+
+## Import
+
+The public routing priority can be imported using the vRack `service_name` (vRack identifier) and the publicRoutingPriority (Id), separated by "/" E.g.,
+
+```bash
+$ terraform import ovh_vrack_public_routing_priority.vrack_publicRoutingPriority "<service_name>/<publicRoutingPriorityId>"
+```

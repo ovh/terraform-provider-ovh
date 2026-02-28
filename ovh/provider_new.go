@@ -289,6 +289,7 @@ func (p *OvhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 		NewVmwareCloudDirectorOrganizationDataSource,
 		NewVrackservicessDataSource,
 		NewVrackservicesDataSource,
+		NewVrackDataSource,
 	}
 }
 
@@ -341,6 +342,7 @@ func (p *OvhProvider) Resources(_ context.Context) []func() resource.Resource {
 		NewVrackIpv6RoutedSubrangeResource,
 		NewVrackDedicatedCloudDatacenterResource,
 		NewVrackServicesResource,
+		NewVrackPublicRoutingPriorityResource,
 	}
 }
 
