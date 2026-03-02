@@ -1,0 +1,39 @@
+---
+subcategory : "Managed Databases"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_cloud_managed_database_postgresql_connection_pool (Data Source)
+
+Use this data source to get information about a connection pool of a postgresql cluster associated with a public cloud project.
+
+## Example Usage
+
+{{tffile "examples/data-sources/cloud_managed_database_postgresql_connection_pool/example_1.tf"}}
+
+## Argument Reference
+
+* `service_name` - (Required) The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
+* `cluster_id` - (Required) Cluster ID.
+* `name` - (Required) Name of the Connection pool.
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `service_name` - See Argument Reference above
+* `cluster_id` - See Argument Reference above
+* `name` - See Argument Reference above
+* `database_id` - Database ID for a database that belongs to the Database cluster given above.
+* `mode` - Connection mode to the connection pool Available modes:
+  * `session`
+  * `statement`
+  * `transaction`
+* `size` - Size of the connection pool.
+* `user_id` - Database user authorized to connect to the pool, if none all the users are allowed.
+* `port` - Port of the connection pool.
+* `ssl_mode` - Ssl connection mode for the pool.
+* `uri` - Connection URI to the pool.

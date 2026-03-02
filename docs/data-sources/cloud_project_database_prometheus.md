@@ -2,6 +2,8 @@
 subcategory : "Managed Databases"
 ---
 
+~> **DEPRECATED:** Use `ovh_cloud_managed_database_prometheus` instead. This data source will be removed in the next major version.
+
 # ovh_cloud_project_database_prometheus (Data Source)
 
 Use this data source to get information about a prometheus of a database cluster associated with a public cloud project. For mongodb, please use ovh_cloud_project_database_mongodb_prometheus datasource

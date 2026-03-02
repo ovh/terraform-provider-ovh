@@ -2,6 +2,8 @@
 subcategory : "Managed Databases"
 ---
 
+~> **DEPRECATED:** Use `ovh_cloud_managed_database_postgresql_user` instead. This resource will be removed in the next major version.
+
 # ovh_cloud_project_database_postgresql_user
 
 Creates an user for a PostgreSQL cluster associated with a public cloud project.

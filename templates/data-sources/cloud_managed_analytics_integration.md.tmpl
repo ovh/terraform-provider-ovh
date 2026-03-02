@@ -1,0 +1,39 @@
+---
+subcategory : "Managed Databases"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_cloud_managed_analytics_integration (Data Source)
+
+Use this data source to get information about an integration of a database cluster associated with a public cloud project.
+
+## Example Usage
+
+{{tffile "examples/data-sources/cloud_managed_analytics_integration/example_1.tf"}}
+
+## Argument Reference
+
+* `service_name` - (Required) The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
+
+* `engine` - (Required, Forces new resource) The engine of the database cluster you want to add. You can find the complete list of available engine in the [public documentation](https://docs.ovh.com/gb/en/publiccloud/databases). All engines available exept `mongodb`
+
+* `cluster_id` - (Required, Forces new resource) Cluster ID.
+
+* `id` - (Required) Integration ID
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `cluster_id` - See Argument Reference above.
+* `destination_service_id` - ID of the destination service.
+* `engine` - See Argument Reference above.
+* `id` - See Argument Reference above.
+* `parameters` - Parameters for the integration.
+* `service_name` - See Argument Reference above.
+* `source_service_id` - ID of the source service.
+* `status` - Current status of the integration.
+* `type` - Type of the integration.
