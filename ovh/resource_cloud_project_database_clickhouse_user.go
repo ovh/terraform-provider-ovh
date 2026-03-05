@@ -13,15 +13,15 @@ import (
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 )
 
-func resourceCloudProjectDatabaseOpensearchUser() *schema.Resource {
+func resourceCloudProjectDatabaseClickhouseUser() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceCloudProjectDatabaseOpensearchUserCreate,
-		ReadContext:   resourceCloudProjectDatabaseOpensearchUserRead,
-		DeleteContext: resourceCloudProjectDatabaseOpensearchUserDelete,
-		UpdateContext: resourceCloudProjectDatabaseOpensearchUserUpdate,
+		CreateContext: resourceCloudProjectDatabaseClickhouseUserCreate,
+		ReadContext:   resourceCloudProjectDatabaseClickhouseUserRead,
+		DeleteContext: resourceCloudProjectDatabaseClickhouseUserDelete,
+		UpdateContext: resourceCloudProjectDatabaseClickhouseUserUpdate,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceCloudProjectDatabaseOpensearchUserImportState,
+			State: resourceCloudProjectDatabaseClickhouseUserImportState,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -42,25 +42,6 @@ func resourceCloudProjectDatabaseOpensearchUser() *schema.Resource {
 				Description: "Id of the database cluster",
 				ForceNew:    true,
 				Required:    true,
-			},
-			"acls": {
-				Type:        schema.TypeSet,
-				Description: "Acls of the user",
-				Optional:    true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"pattern": {
-							Type:        schema.TypeString,
-							Description: "Pattern of the ACL",
-							Required:    true,
-						},
-						"permission": {
-							Type:        schema.TypeString,
-							Description: "Permission of the ACL",
-							Required:    true,
-						},
-					},
-				},
 			},
 			"name": {
 				Type:        schema.TypeString,
@@ -86,6 +67,13 @@ func resourceCloudProjectDatabaseOpensearchUser() *schema.Resource {
 				Sensitive:   true,
 				Computed:    true,
 			},
+			"roles": {
+				Type:        schema.TypeSet,
+				Description: "Roles the user belongs to",
+				Optional:    true,
+				Computed:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 			"status": {
 				Type:        schema.TypeString,
 				Description: "Current status of the user",
@@ -102,29 +90,29 @@ func resourceCloudProjectDatabaseOpensearchUser() *schema.Resource {
 	}
 }
 
-func resourceCloudProjectDatabaseOpensearchUserImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceCloudProjectDatabaseClickhouseUserImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	return importCloudProjectDatabaseUser(d, meta)
 }
 
-func resourceCloudProjectDatabaseOpensearchUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCloudProjectDatabaseClickhouseUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	f := func() interface{} {
-		return (&CloudProjectDatabaseOpensearchUserCreateOpts{}).FromResource(d)
+		return (&CloudProjectDatabaseUserCreateOpts{}).FromResource(d)
 	}
-	return postCloudProjectDatabaseUser(ctx, d, meta, "opensearch", dataSourceCloudProjectDatabaseOpensearchUserRead, resourceCloudProjectDatabaseOpensearchUserRead, resourceCloudProjectDatabaseOpensearchUserUpdate, f)
+	return postCloudProjectDatabaseUser(ctx, d, meta, "clickhouse", dataSourceCloudProjectDatabaseClickhouseUserRead, resourceCloudProjectDatabaseClickhouseUserRead, resourceCloudProjectDatabaseClickhouseUserUpdate, f)
 }
 
-func resourceCloudProjectDatabaseOpensearchUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCloudProjectDatabaseClickhouseUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterID := d.Get("cluster_id").(string)
 	id := d.Id()
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/database/opensearch/%s/user/%s",
+	endpoint := fmt.Sprintf("/cloud/project/%s/database/clickhouse/%s/user/%s",
 		url.PathEscape(serviceName),
 		url.PathEscape(clusterID),
 		url.PathEscape(id),
 	)
-	res := &CloudProjectDatabaseOpensearchUserResponse{}
+	res := &CloudProjectDatabaseClickhouseUserResponse{}
 
 	log.Printf("[DEBUG] Will read user %s from cluster %s from project %s", id, clusterID, serviceName)
 	if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
@@ -143,13 +131,26 @@ func resourceCloudProjectDatabaseOpensearchUserRead(ctx context.Context, d *sche
 	return nil
 }
 
-func resourceCloudProjectDatabaseOpensearchUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	f := func() interface{} {
-		return (&CloudProjectDatabaseOpensearchUserUpdateOpts{}).FromResource(d)
+func resourceCloudProjectDatabaseClickhouseUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	serviceName := d.Get("service_name").(string)
+	clusterID := d.Get("cluster_id").(string)
+	id := d.Id()
+
+	endpoint := fmt.Sprintf("/cloud/project/%s/database/clickhouse/%s/user/%s/credentials/reset",
+		url.PathEscape(serviceName),
+		url.PathEscape(clusterID),
+		url.PathEscape(id),
+	)
+	res := &CloudProjectDatabaseUserResponse{}
+	log.Printf("[DEBUG] Will update user password for cluster %s from project %s", clusterID, serviceName)
+	err := postFuncCloudProjectDatabaseUser(ctx, d, meta, "clickhouse", endpoint, nil, res, schema.TimeoutUpdate)
+	if err != nil {
+		return diag.FromErr(err)
 	}
-	return updateCloudProjectDatabaseUser(ctx, d, meta, "opensearch", resourceCloudProjectDatabaseOpensearchUserRead, f)
+
+	return resourceCloudProjectDatabaseClickhouseUserRead(ctx, d, meta)
 }
 
-func resourceCloudProjectDatabaseOpensearchUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return deleteCloudProjectDatabaseUser(ctx, d, meta, "opensearch")
+func resourceCloudProjectDatabaseClickhouseUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return deleteCloudProjectDatabaseUser(ctx, d, meta, "clickhouse")
 }

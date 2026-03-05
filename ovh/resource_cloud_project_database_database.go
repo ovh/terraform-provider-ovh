@@ -40,7 +40,7 @@ func resourceCloudProjectDatabaseDatabase() *schema.Resource {
 				Description:      "Name of the engine of the service",
 				ForceNew:         true,
 				Required:         true,
-				ValidateDiagFunc: helpers.ValidateDiagEnum([]string{"mysql", "postgresql"}),
+				ValidateDiagFunc: helpers.ValidateDiagEnum([]string{"clickhouse", "mysql", "postgresql"}),
 			},
 			"cluster_id": {
 				Type:        schema.TypeString,
@@ -66,18 +66,18 @@ func resourceCloudProjectDatabaseDatabase() *schema.Resource {
 }
 
 func resourceCloudProjectDatabaseDatabaseImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	givenId := d.Id()
+	givenID := d.Id()
 	n := 4
-	splitId := strings.SplitN(givenId, "/", n)
-	if len(splitId) != n {
+	splitID := strings.SplitN(givenID, "/", n)
+	if len(splitID) != n {
 		return nil, fmt.Errorf("import Id is not service_name/engine/cluster_id/id formatted")
 	}
-	serviceName := splitId[0]
-	engine := splitId[1]
-	clusterId := splitId[2]
-	id := splitId[3]
+	serviceName := splitID[0]
+	engine := splitID[1]
+	clusterID := splitID[2]
+	id := splitID[3]
 	d.SetId(id)
-	d.Set("cluster_id", clusterId)
+	d.Set("cluster_id", clusterID)
 	d.Set("engine", engine)
 	d.Set("service_name", serviceName)
 
@@ -90,31 +90,31 @@ func resourceCloudProjectDatabaseDatabaseCreate(ctx context.Context, d *schema.R
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	engine := d.Get("engine").(string)
-	clusterId := d.Get("cluster_id").(string)
+	clusterID := d.Get("cluster_id").(string)
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/database",
 		url.PathEscape(serviceName),
 		url.PathEscape(engine),
-		url.PathEscape(clusterId),
+		url.PathEscape(clusterID),
 	)
 
 	params := (&CloudProjectDatabaseDatabaseCreateOpts{}).FromResource(d)
 	res := &CloudProjectDatabaseDatabaseResponse{}
 
-	log.Printf("[DEBUG] Will create database: %+v for cluster %s from project %s", params, clusterId, serviceName)
+	log.Printf("[DEBUG] Will create database: %+v for cluster %s from project %s", params, clusterID, serviceName)
 	err := config.OVHClient.PostWithContext(ctx, endpoint, params, res)
 	if err != nil {
 		return diag.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
 	}
 
-	log.Printf("[DEBUG] Waiting for database %s to be READY", res.Id)
-	err = waitForCloudProjectDatabaseDatabaseReady(ctx, config.OVHClient, serviceName, engine, clusterId, res.Id, d.Timeout(schema.TimeoutCreate))
+	log.Printf("[DEBUG] Waiting for database %s to be READY", res.ID)
+	err = waitForCloudProjectDatabaseDatabaseReady(ctx, config.OVHClient, serviceName, engine, clusterID, res.ID, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
-		return diag.Errorf("timeout while waiting database %s to be READY: %s", res.Id, err.Error())
+		return diag.Errorf("timeout while waiting database %s to be READY: %s", res.ID, err.Error())
 	}
-	log.Printf("[DEBUG] database %s is READY", res.Id)
+	log.Printf("[DEBUG] database %s is READY", res.ID)
 
-	d.SetId(res.Id)
+	d.SetId(res.ID)
 
 	return resourceCloudProjectDatabaseDatabaseRead(ctx, d, meta)
 }
@@ -123,19 +123,19 @@ func resourceCloudProjectDatabaseDatabaseRead(ctx context.Context, d *schema.Res
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	engine := d.Get("engine").(string)
-	clusterId := d.Get("cluster_id").(string)
+	clusterID := d.Get("cluster_id").(string)
 	id := d.Id()
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/database/%s",
 		url.PathEscape(serviceName),
 		url.PathEscape(engine),
-		url.PathEscape(clusterId),
+		url.PathEscape(clusterID),
 		url.PathEscape(id),
 	)
 
 	res := &CloudProjectDatabaseDatabaseResponse{}
 
-	log.Printf("[DEBUG] Will read database %s from cluster %s from project %s", id, clusterId, serviceName)
+	log.Printf("[DEBUG] Will read database %s from cluster %s from project %s", id, clusterID, serviceName)
 	if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
@@ -155,24 +155,24 @@ func resourceCloudProjectDatabaseDatabaseDelete(ctx context.Context, d *schema.R
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	engine := d.Get("engine").(string)
-	clusterId := d.Get("cluster_id").(string)
+	clusterID := d.Get("cluster_id").(string)
 	id := d.Id()
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/database/%s",
 		url.PathEscape(serviceName),
 		url.PathEscape(engine),
-		url.PathEscape(clusterId),
+		url.PathEscape(clusterID),
 		url.PathEscape(id),
 	)
 
-	log.Printf("[DEBUG] Will delete database %s from cluster %s from project %s", id, clusterId, serviceName)
+	log.Printf("[DEBUG] Will delete database %s from cluster %s from project %s", id, clusterID, serviceName)
 	err := config.OVHClient.DeleteWithContext(ctx, endpoint, nil)
 	if err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
 	log.Printf("[DEBUG] Waiting for database %s to be DELETED", id)
-	err = waitForCloudProjectDatabaseDatabaseDeleted(ctx, config.OVHClient, serviceName, engine, clusterId, id, d.Timeout(schema.TimeoutDelete))
+	err = waitForCloudProjectDatabaseDatabaseDeleted(ctx, config.OVHClient, serviceName, engine, clusterID, id, d.Timeout(schema.TimeoutDelete))
 	if err != nil {
 		return diag.Errorf("timeout while waiting database %s to be DELETED: %s", id, err.Error())
 	}

@@ -43,7 +43,7 @@ func resourceCloudProjectDatabaseUser() *schema.Resource {
 				Description:      "Name of the engine of the service",
 				ForceNew:         true,
 				Required:         true,
-				ValidateDiagFunc: helpers.ValidateDiagEnum([]string{"cassandra", "mysql", "kafka", "kafkaConnect", "grafana"}),
+				ValidateDiagFunc: helpers.ValidateDiagEnum([]string{"clickhouse", "mysql", "kafka", "kafkaConnect", "grafana"}),
 			},
 			"cluster_id": {
 				Type:        schema.TypeString,
@@ -92,18 +92,18 @@ func resourceCloudProjectDatabaseUser() *schema.Resource {
 }
 
 func resourceCloudProjectDatabaseUserImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	givenId := d.Id()
+	givenID := d.Id()
 	n := 4
-	splitId := strings.SplitN(givenId, "/", n)
-	if len(splitId) != n {
+	splitID := strings.SplitN(givenID, "/", n)
+	if len(splitID) != n {
 		return nil, fmt.Errorf("import Id is not service_name/engine/cluster_id/id formatted")
 	}
-	serviceName := splitId[0]
-	engine := splitId[1]
-	clusterId := splitId[2]
-	id := splitId[3]
+	serviceName := splitID[0]
+	engine := splitID[1]
+	clusterID := splitID[2]
+	id := splitID[3]
 	d.SetId(id)
-	d.Set("cluster_id", clusterId)
+	d.Set("cluster_id", clusterID)
 	d.Set("engine", engine)
 	d.Set("service_name", serviceName)
 
@@ -124,19 +124,19 @@ func resourceCloudProjectDatabaseUserRead(ctx context.Context, d *schema.Resourc
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	engine := d.Get("engine").(string)
-	clusterId := d.Get("cluster_id").(string)
+	clusterID := d.Get("cluster_id").(string)
 	id := d.Id()
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/user/%s",
 		url.PathEscape(serviceName),
 		url.PathEscape(engine),
-		url.PathEscape(clusterId),
+		url.PathEscape(clusterID),
 		url.PathEscape(id),
 	)
 
 	res := &CloudProjectDatabaseUserResponse{}
 
-	log.Printf("[DEBUG] Will read user %s from cluster %s from project %s", id, clusterId, serviceName)
+	log.Printf("[DEBUG] Will read user %s from cluster %s from project %s", id, clusterID, serviceName)
 	if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
@@ -155,17 +155,17 @@ func resourceCloudProjectDatabaseUserRead(ctx context.Context, d *schema.Resourc
 func resourceCloudProjectDatabaseUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	serviceName := d.Get("service_name").(string)
 	engine := d.Get("engine").(string)
-	clusterId := d.Get("cluster_id").(string)
+	clusterID := d.Get("cluster_id").(string)
 	id := d.Id()
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/user/%s/credentials/reset",
 		url.PathEscape(serviceName),
 		url.PathEscape(engine),
-		url.PathEscape(clusterId),
+		url.PathEscape(clusterID),
 		url.PathEscape(id),
 	)
 	res := &CloudProjectDatabaseUserResponse{}
-	log.Printf("[DEBUG] Will update user password for cluster %s from project %s", clusterId, serviceName)
+	log.Printf("[DEBUG] Will update user password for cluster %s from project %s", clusterID, serviceName)
 	err := postFuncCloudProjectDatabaseUser(ctx, d, meta, engine, endpoint, nil, res, schema.TimeoutUpdate)
 	if err != nil {
 		return diag.FromErr(err)

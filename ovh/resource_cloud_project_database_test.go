@@ -32,7 +32,7 @@ func testSweepCloudProjectDatabase(region string) error {
 		log.Print("[DEBUG] OVH_CLOUD_PROJECT_SERVICE_TEST is not set. No database to sweep")
 		return nil
 	}
-	databases := []string{"cassandra", "grafana", "kafka", "kafkaConnect", "kafkaMirrorMaker", "m3aggregator", "m3db", "mongodb", "mysql", "opensearch", "postgresql", "redis", "valkey"}
+	databases := []string{"clickhouse", "grafana", "kafka", "kafkaConnect", "kafkaMirrorMaker", "mongodb", "mysql", "opensearch", "postgresql", "valkey"}
 
 	for _, database := range databases {
 		idsToSweep := []string{}
