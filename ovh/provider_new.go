@@ -295,6 +295,7 @@ func (p *OvhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 // Resources defines the resources implemented in the provider.
 func (p *OvhProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
+		NewCloudInstanceResource,
 		NewCloudProjectAlertingResource,
 		NewCloudProjectGatewayInterfaceResource,
 		NewCloudProjectInstanceSnapshotResource,
@@ -308,6 +309,7 @@ func (p *OvhProvider) Resources(_ context.Context) []func() resource.Resource {
 		NewCloudProjectStorageResource,
 		NewCloudProjectVolumeBackupResource,
 		NewCloudProjectVolumeResource,
+		NewCloudStorageBlockVolumeResource,
 		NewDbaasLogsTokenResource,
 		NewDedicatedServerResource,
 		NewDomainNameResource,
