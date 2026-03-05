@@ -26,7 +26,7 @@ func dataSourceCloudProjectDatabaseCertificates() *schema.Resource {
 				Type:             schema.TypeString,
 				Description:      "Name of the engine of the service",
 				Required:         true,
-				ValidateDiagFunc: helpers.ValidateDiagEnum([]string{"cassandra", "kafka", "mysql", "postgresql"}),
+				ValidateDiagFunc: helpers.ValidateDiagEnum([]string{"clickhouse", "kafka", "mysql", "postgresql"}),
 			},
 			"cluster_id": {
 				Type:        schema.TypeString,

@@ -52,17 +52,17 @@ func dataSourceCloudProjectDatabaseKafkaUserAccess() *schema.Resource {
 func dataSourceCloudProjectDatabaseKafkaUserAccessRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
-	clusterId := d.Get("cluster_id").(string)
-	userId := d.Get("user_id").(string)
+	clusterID := d.Get("cluster_id").(string)
+	userID := d.Get("user_id").(string)
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/database/kafka/%s/user/%s/access",
 		url.PathEscape(serviceName),
-		url.PathEscape(clusterId),
-		url.PathEscape(userId),
+		url.PathEscape(clusterID),
+		url.PathEscape(userID),
 	)
 	res := &CloudProjectDatabaseKafkaUserAccessResponse{}
 
-	log.Printf("[DEBUG] Will read certificates of user %s from cluster %s from project %s", userId, clusterId, serviceName)
+	log.Printf("[DEBUG] Will read certificates of user %s from cluster %s from project %s", userID, clusterID, serviceName)
 	if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
