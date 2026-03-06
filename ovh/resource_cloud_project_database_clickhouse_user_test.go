@@ -41,8 +41,14 @@ func TestAccCloudProjectDatabaseClickhouseUser_basic(t *testing.T) {
 	if version == "" {
 		version = os.Getenv("OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST")
 	}
-	region := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_REGION_TEST")
-	flavor := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_FLAVOR_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_CLICKHOUSE_REGION_TEST")
+	if region == "" {
+		region = os.Getenv("OVH_CLOUD_PROJECT_DATABASE_REGION_TEST")
+	}
+	flavor := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_CLICKHOUSE_FLAVOR_TEST")
+	if flavor == "" {
+		flavor = os.Getenv("OVH_CLOUD_PROJECT_DATABASE_FLAVOR_TEST")
+	}
 	description := acctest.RandomWithPrefix(test_prefix)
 	name := "johndoe"
 
