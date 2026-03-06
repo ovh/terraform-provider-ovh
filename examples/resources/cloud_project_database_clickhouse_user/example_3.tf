@@ -1,4 +1,4 @@
-resource "ovh_cloud_project_database_redis_user" "user" {
+resource "ovh_cloud_project_database_clickhouse_user" "user" {
   # ...
 
   timeouts {

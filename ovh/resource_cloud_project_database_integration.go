@@ -77,7 +77,7 @@ func resourceCloudProjectDatabaseIntegration() *schema.Resource {
 				ForceNew:         true,
 				Optional:         true,
 				Computed:         true,
-				ValidateDiagFunc: helpers.ValidateDiagEnum([]string{"grafanaDashboard", "grafanaDatasource", "kafkaConnect", "kafkaLogs", "kafkaMirrorMaker", "m3aggregator", "m3dbMetrics", "opensearchLogs", "postgresqlMetrics"}),
+				ValidateDiagFunc: helpers.ValidateDiagEnum([]string{"grafanaDashboard", "grafanaDatasource", "kafkaConnect", "kafkaLogs", "kafkaMirrorMaker", "opensearchLogs", "postgresqlMetrics"}),
 			},
 
 			//Computed
@@ -91,18 +91,18 @@ func resourceCloudProjectDatabaseIntegration() *schema.Resource {
 }
 
 func resourceCloudProjectDatabaseIntegrationImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	givenId := d.Id()
+	givenID := d.Id()
 	n := 4
-	splitId := strings.SplitN(givenId, "/", n)
-	if len(splitId) != n {
+	splitID := strings.SplitN(givenID, "/", n)
+	if len(splitID) != n {
 		return nil, fmt.Errorf("import Id is not service_name/engine/cluster_id/id formatted")
 	}
-	serviceName := splitId[0]
-	engine := splitId[1]
-	clusterId := splitId[2]
-	id := splitId[3]
+	serviceName := splitID[0]
+	engine := splitID[1]
+	clusterID := splitID[2]
+	id := splitID[3]
 	d.SetId(id)
-	d.Set("cluster_id", clusterId)
+	d.Set("cluster_id", clusterID)
 	d.Set("engine", engine)
 	d.Set("service_name", serviceName)
 
@@ -115,31 +115,31 @@ func resourceCloudProjectDatabaseIntegrationCreate(ctx context.Context, d *schem
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	engine := d.Get("engine").(string)
-	clusterId := d.Get("cluster_id").(string)
+	clusterID := d.Get("cluster_id").(string)
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/integration",
 		url.PathEscape(serviceName),
 		url.PathEscape(engine),
-		url.PathEscape(clusterId),
+		url.PathEscape(clusterID),
 	)
 
 	params := (&CloudProjectDatabaseIntegrationCreateOpts{}).FromResource(d)
 	res := &CloudProjectDatabaseIntegrationResponse{}
 
-	log.Printf("[DEBUG] Will create integration: %+v for cluster %s from project %s", params, clusterId, serviceName)
+	log.Printf("[DEBUG] Will create integration: %+v for cluster %s from project %s", params, clusterID, serviceName)
 	err := config.OVHClient.PostWithContext(ctx, endpoint, params, res)
 	if err != nil {
 		return diag.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
 	}
 
-	log.Printf("[DEBUG] Waiting for integration %s to be READY", res.Id)
-	err = waitForCloudProjectDatabaseIntegrationReady(ctx, config.OVHClient, serviceName, engine, clusterId, res.Id, d.Timeout(schema.TimeoutCreate))
+	log.Printf("[DEBUG] Waiting for integration %s to be READY", res.ID)
+	err = waitForCloudProjectDatabaseIntegrationReady(ctx, config.OVHClient, serviceName, engine, clusterID, res.ID, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
-		return diag.Errorf("timeout while waiting integration %s to be READY: %s", res.Id, err.Error())
+		return diag.Errorf("timeout while waiting integration %s to be READY: %s", res.ID, err.Error())
 	}
-	log.Printf("[DEBUG] integration %s is READY", res.Id)
+	log.Printf("[DEBUG] integration %s is READY", res.ID)
 
-	d.SetId(res.Id)
+	d.SetId(res.ID)
 	return resourceCloudProjectDatabaseIntegrationRead(ctx, d, meta)
 }
 
@@ -147,19 +147,19 @@ func resourceCloudProjectDatabaseIntegrationRead(ctx context.Context, d *schema.
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	engine := d.Get("engine").(string)
-	clusterId := d.Get("cluster_id").(string)
+	clusterID := d.Get("cluster_id").(string)
 	id := d.Id()
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/integration/%s",
 		url.PathEscape(serviceName),
 		url.PathEscape(engine),
-		url.PathEscape(clusterId),
+		url.PathEscape(clusterID),
 		url.PathEscape(id),
 	)
 
 	res := &CloudProjectDatabaseIntegrationResponse{}
 
-	log.Printf("[DEBUG] Will read integration %s from cluster %s from project %s", id, clusterId, serviceName)
+	log.Printf("[DEBUG] Will read integration %s from cluster %s from project %s", id, clusterID, serviceName)
 	if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
@@ -179,24 +179,24 @@ func resourceCloudProjectDatabaseIntegrationDelete(ctx context.Context, d *schem
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	engine := d.Get("engine").(string)
-	clusterId := d.Get("cluster_id").(string)
+	clusterID := d.Get("cluster_id").(string)
 	id := d.Id()
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/integration/%s",
 		url.PathEscape(serviceName),
 		url.PathEscape(engine),
-		url.PathEscape(clusterId),
+		url.PathEscape(clusterID),
 		url.PathEscape(id),
 	)
 
-	log.Printf("[DEBUG] Will delete integration %s from cluster %s from project %s", id, clusterId, serviceName)
+	log.Printf("[DEBUG] Will delete integration %s from cluster %s from project %s", id, clusterID, serviceName)
 	err := config.OVHClient.DeleteWithContext(ctx, endpoint, nil)
 	if err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
 	log.Printf("[DEBUG] Waiting for integration %s to be DELETED", id)
-	err = waitForCloudProjectDatabaseIntegrationDeleted(ctx, config.OVHClient, serviceName, engine, clusterId, id, d.Timeout(schema.TimeoutDelete))
+	err = waitForCloudProjectDatabaseIntegrationDeleted(ctx, config.OVHClient, serviceName, engine, clusterID, id, d.Timeout(schema.TimeoutDelete))
 	if err != nil {
 		return diag.Errorf("timeout while waiting integration %s to be DELETED: %s", id, err.Error())
 	}

@@ -2,21 +2,21 @@
 subcategory : "Managed Databases"
 ---
 
-# ovh_cloud_project_database_redis_user (Data Source)
+# ovh_cloud_project_database_clickhouse_user (Data Source)
 
-Use this data source to get information about a user of a redis cluster associated with a public cloud project.
+Use this data source to get information about a user of a clickhouse cluster associated with a public cloud project.
 
 ## Example Usage
 
 ```terraform
-data "ovh_cloud_project_database_redis_user" "redis_user" {
+data "ovh_cloud_project_database_clickhouse_user" "pg_user" {
   service_name  = "XXX"
   cluster_id    = "YYY"
   name          = "ZZZ"
 }
 
-output "redis_user_commands" {
-  value = data.ovh_cloud_project_database_redis_user.redis_user.commands
+output "pg_user_roles" {
+  value = data.ovh_cloud_project_database_clickhouse_user.pg_user.roles
 }
 ```
 
@@ -26,19 +26,16 @@ output "redis_user_commands" {
 
 * `cluster_id` - (Required) Cluster ID
 
-* `name` - (Required) Name of the user
+* `name` - (Required) Name of the user.
 
 ## Attributes Reference
 
 The following attributes are exported:
 
-* `categories` - Categories of the user.
-* `channels` - Channels of the user.
 * `cluster_id` - See Argument Reference above.
-* `commands` - Commands of the user.
 * `created_at` - Date of the creation of the user.
 * `id` - ID of the user.
-* `keys` - Keys of the user.
-* `name` - See Argument Reference above.
+* `roles` - Roles the user belongs to.
 * `service_name` - Current status of the user.
 * `status` - Current status of the user.
+* `name` - Name of the user.

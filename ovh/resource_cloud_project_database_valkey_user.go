@@ -117,7 +117,7 @@ func resourceCloudProjectDatabaseValkeyUserImportState(d *schema.ResourceData, m
 
 func resourceCloudProjectDatabaseValkeyUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	f := func() interface{} {
-		return (&CloudProjectDatabaseRedisUserCreateOpts{}).FromResource(d)
+		return (&CloudProjectDatabaseValkeyUserCreateOpts{}).FromResource(d)
 	}
 	return postCloudProjectDatabaseUser(ctx, d, meta, "valkey", dataSourceCloudProjectDatabaseValkeyUserRead, resourceCloudProjectDatabaseValkeyUserRead, resourceCloudProjectDatabaseValkeyUserUpdate, f)
 }
@@ -125,17 +125,17 @@ func resourceCloudProjectDatabaseValkeyUserCreate(ctx context.Context, d *schema
 func resourceCloudProjectDatabaseValkeyUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
-	clusterId := d.Get("cluster_id").(string)
+	clusterID := d.Get("cluster_id").(string)
 	id := d.Id()
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/database/valkey/%s/user/%s",
 		url.PathEscape(serviceName),
-		url.PathEscape(clusterId),
+		url.PathEscape(clusterID),
 		url.PathEscape(id),
 	)
-	res := &CloudProjectDatabaseRedisUserResponse{}
+	res := &CloudProjectDatabaseValkeyUserResponse{}
 
-	log.Printf("[DEBUG] Will read user %s from cluster %s from project %s", id, clusterId, serviceName)
+	log.Printf("[DEBUG] Will read user %s from cluster %s from project %s", id, clusterID, serviceName)
 	if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
@@ -153,7 +153,7 @@ func resourceCloudProjectDatabaseValkeyUserRead(ctx context.Context, d *schema.R
 
 func resourceCloudProjectDatabaseValkeyUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	f := func() interface{} {
-		return (&CloudProjectDatabaseRedisUserUpdateOpts{}).FromResource(d)
+		return (&CloudProjectDatabaseValkeyUserUpdateOpts{}).FromResource(d)
 	}
 	return updateCloudProjectDatabaseUser(ctx, d, meta, "valkey", resourceCloudProjectDatabaseValkeyUserRead, f)
 }
