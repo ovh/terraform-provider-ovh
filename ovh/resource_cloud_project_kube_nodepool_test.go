@@ -255,6 +255,40 @@ resource "ovh_cloud_project_kube_nodepool" "pool" {
 
 `
 
+var testAccCloudProjectKubeNodePoolConfigMaxNodesReducedBelowDesired = `
+resource "ovh_cloud_project_kube" "cluster" {
+  service_name = "%s"
+  name         = "%s"
+  region       = "%s"
+  version      = "%s"
+}
+
+resource "ovh_cloud_project_kube_nodepool" "pool" {
+  service_name  = ovh_cloud_project_kube.cluster.service_name
+  kube_id       = ovh_cloud_project_kube.cluster.id
+  name          = ovh_cloud_project_kube.cluster.name
+  flavor_name   = "b2-7"
+  min_nodes     = 0
+  max_nodes     = 1
+  template {
+    metadata {
+      annotations = {
+        a2 = "av2"
+      }
+      finalizers = []
+      labels = {
+        l2 = "lv2"
+      }
+    }
+    spec {
+      unschedulable = false
+      taints = []
+    }
+  }
+}
+
+`
+
 var testAccCloudProjectKubeNodePoolConfigUpdatedScaleToZero = `
 resource "ovh_cloud_project_kube" "cluster" {
   service_name = "%s"
@@ -496,6 +530,13 @@ func TestAccCloudProjectKubeNodePoolRessource(t *testing.T) {
 		region,
 		version,
 	)
+	configMaxNodesReducedBelowDesired := fmt.Sprintf(
+		testAccCloudProjectKubeNodePoolConfigMaxNodesReducedBelowDesired,
+		os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"),
+		name,
+		region,
+		version,
+	)
 	configUpdatedScaleToZero := fmt.Sprintf(
 		testAccCloudProjectKubeNodePoolConfigUpdatedScaleToZero,
 		os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"),
@@ -611,6 +652,16 @@ func TestAccCloudProjectKubeNodePoolRessource(t *testing.T) {
 
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.spec.0.taints.#", "0"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.spec.0.unschedulable", "false"),
+				),
+			},
+			{
+				// Reduce max_nodes below the current desired_nodes without setting desired_nodes
+				// explicitly. The provider should automatically cap desired_nodes to the new
+				// max_nodes so the API accepts the request and the pool downscales.
+				Config: configMaxNodesReducedBelowDesired,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "max_nodes", "1"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "desired_nodes", "1"),
 				),
 			},
 			{
