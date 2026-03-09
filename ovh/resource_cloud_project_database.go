@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
+	"golang.org/x/exp/slices"
 )
 
 func resourceCloudProjectDatabase() *schema.Resource {
@@ -174,7 +175,7 @@ func resourceCloudProjectDatabase() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return d.Get("engine").(string) == "mongodb" || new == old
+					return slices.Contains([]string{"mongodb", "clickhouse"}, d.Get("engine").(string)) || new == old
 				},
 			},
 			"maintenance_time": {
@@ -307,7 +308,7 @@ func resourceCloudProjectDatabaseCreate(ctx context.Context, d *schema.ResourceD
 
 	d.SetId(res.ID)
 
-	if (engine != "mongodb" && len(d.Get("advanced_configuration").(map[string]interface{})) > 0) ||
+	if (engine != "clickhouse" && engine != "mongodb" && len(d.Get("advanced_configuration").(map[string]interface{})) > 0) ||
 		(engine == "kafka" && d.Get("kafka_rest_api").(bool)) ||
 		(engine == "kafka" && d.Get("kafka_schema_registry").(bool)) ||
 		(engine == "opensearch" && d.Get("opensearch_acls_enabled").(bool)) ||
@@ -352,7 +353,7 @@ func resourceCloudProjectDatabaseRead(ctx context.Context, d *schema.ResourceDat
 
 	res.Region = node.Region
 
-	if engine != "mongodb" {
+	if engine != "clickhouse" && engine != "mongodb" {
 		advancedConfigEndpoint := fmt.Sprintf("%s/advancedConfiguration", serviceEndpoint)
 		advancedConfigMap := &map[string]string{}
 		if err := config.OVHClient.GetWithContext(ctx, advancedConfigEndpoint, advancedConfigMap); err != nil {

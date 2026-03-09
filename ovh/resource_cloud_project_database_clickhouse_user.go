@@ -1,0 +1,156 @@
+package ovh
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"net/url"
+	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
+)
+
+func resourceCloudProjectDatabaseClickhouseUser() *schema.Resource {
+	return &schema.Resource{
+		CreateContext: resourceCloudProjectDatabaseClickhouseUserCreate,
+		ReadContext:   resourceCloudProjectDatabaseClickhouseUserRead,
+		DeleteContext: resourceCloudProjectDatabaseClickhouseUserDelete,
+		UpdateContext: resourceCloudProjectDatabaseClickhouseUserUpdate,
+
+		Importer: &schema.ResourceImporter{
+			State: resourceCloudProjectDatabaseClickhouseUserImportState,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(20 * time.Minute),
+			Update: schema.DefaultTimeout(20 * time.Minute),
+			Delete: schema.DefaultTimeout(20 * time.Minute),
+		},
+
+		Schema: map[string]*schema.Schema{
+			"service_name": {
+				Type:        schema.TypeString,
+				ForceNew:    true,
+				Required:    true,
+				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
+			},
+			"cluster_id": {
+				Type:        schema.TypeString,
+				Description: "Id of the database cluster",
+				ForceNew:    true,
+				Required:    true,
+			},
+			"name": {
+				Type:        schema.TypeString,
+				Description: "Name of the user",
+				ForceNew:    true,
+				Required:    true,
+			},
+			"password_reset": {
+				Type:        schema.TypeString,
+				Description: "Arbitrary string to change to trigger a password update",
+				Optional:    true,
+			},
+
+			//Computed
+			"created_at": {
+				Type:        schema.TypeString,
+				Description: "Date of the creation of the user",
+				Computed:    true,
+			},
+			"password": {
+				Type:        schema.TypeString,
+				Description: "Password of the user",
+				Sensitive:   true,
+				Computed:    true,
+			},
+			"roles": {
+				Type:        schema.TypeSet,
+				Description: "Roles the user belongs to",
+				Optional:    true,
+				Computed:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
+			"status": {
+				Type:        schema.TypeString,
+				Description: "Current status of the user",
+				Computed:    true,
+			},
+		},
+
+		CustomizeDiff: customdiff.ComputedIf(
+			"password",
+			func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+				return d.HasChange("password_reset")
+			},
+		),
+	}
+}
+
+func resourceCloudProjectDatabaseClickhouseUserImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	return importCloudProjectDatabaseUser(d, meta)
+}
+
+func resourceCloudProjectDatabaseClickhouseUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	f := func() interface{} {
+		return (&CloudProjectDatabaseUserCreateOpts{}).FromResource(d)
+	}
+	return postCloudProjectDatabaseUser(ctx, d, meta, "clickhouse", dataSourceCloudProjectDatabaseClickhouseUserRead, resourceCloudProjectDatabaseClickhouseUserRead, resourceCloudProjectDatabaseClickhouseUserUpdate, f)
+}
+
+func resourceCloudProjectDatabaseClickhouseUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	config := meta.(*Config)
+	serviceName := d.Get("service_name").(string)
+	clusterID := d.Get("cluster_id").(string)
+	id := d.Id()
+
+	endpoint := fmt.Sprintf("/cloud/project/%s/database/clickhouse/%s/user/%s",
+		url.PathEscape(serviceName),
+		url.PathEscape(clusterID),
+		url.PathEscape(id),
+	)
+	res := &CloudProjectDatabaseClickhouseUserResponse{}
+
+	log.Printf("[DEBUG] Will read user %s from cluster %s from project %s", id, clusterID, serviceName)
+	if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
+		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
+	}
+
+	for k, v := range res.ToMap() {
+		if k != "id" {
+			d.Set(k, v)
+		} else {
+			d.SetId(fmt.Sprint(v))
+		}
+	}
+
+	log.Printf("[DEBUG] Read user %+v", res)
+	return nil
+}
+
+func resourceCloudProjectDatabaseClickhouseUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	serviceName := d.Get("service_name").(string)
+	clusterID := d.Get("cluster_id").(string)
+	id := d.Id()
+
+	endpoint := fmt.Sprintf("/cloud/project/%s/database/clickhouse/%s/user/%s/credentials/reset",
+		url.PathEscape(serviceName),
+		url.PathEscape(clusterID),
+		url.PathEscape(id),
+	)
+	res := &CloudProjectDatabaseUserResponse{}
+	log.Printf("[DEBUG] Will update user password for cluster %s from project %s", clusterID, serviceName)
+	err := postFuncCloudProjectDatabaseUser(ctx, d, meta, "clickhouse", endpoint, nil, res, schema.TimeoutUpdate)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	return resourceCloudProjectDatabaseClickhouseUserRead(ctx, d, meta)
+}
+
+func resourceCloudProjectDatabaseClickhouseUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return deleteCloudProjectDatabaseUser(ctx, d, meta, "clickhouse")
+}
