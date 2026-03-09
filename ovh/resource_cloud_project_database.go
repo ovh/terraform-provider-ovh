@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"slices"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
-	"golang.org/x/exp/slices"
 )
 
 func resourceCloudProjectDatabase() *schema.Resource {
@@ -44,10 +44,11 @@ func resourceCloudProjectDatabase() *schema.Resource {
 				Optional:    true,
 			},
 			"engine": {
-				Type:        schema.TypeString,
-				Description: "Name of the engine of the service",
-				ForceNew:    true,
-				Required:    true,
+				Type:             schema.TypeString,
+				Description:      "Name of the engine of the service",
+				ForceNew:         true,
+				Required:         true,
+				ValidateDiagFunc: helpers.ValidateDiagEnum(engines),
 			},
 			"flavor": {
 				Type:        schema.TypeString,
