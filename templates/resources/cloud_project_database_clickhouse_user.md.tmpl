@@ -8,11 +8,11 @@ For example, the {{ .SchemaMarkdown }} template can be used to replace manual sc
 
 # ovh_cloud_project_database_clickhouse_user
 
-Creates an user for a ClickHouse cluster associated with a public cloud project.
+Creates an user for a Clickhouse cluster associated with a public cloud project.
 
 ## Example Usage
 
-Create a user johndoe in a ClickHouse database. Output the user generated password with command `terraform output user_password`.
+Create a user johndoe in a Clickhouse database. Output the user generated password with command `terraform output user_password`.
 {{tffile "examples/resources/cloud_project_database_clickhouse_user/example_1.tf"}}
 
 -> **NOTE** To reset password of the user previously created, update the `password_reset` attribute. Use the `terraform refresh` command after executing `terraform apply` to update the output with the new password. This attribute can be an arbitrary string but we recommend 2 formats:
@@ -53,7 +53,7 @@ The following attributes are exported:
 
 ## Import
 
-OVHcloud Managed ClickHouse clusters users can be imported using the `service_name`, `cluster_id` and `id` of the user, separated by "/" E.g.,
+OVHcloud Managed Clickhouse clusters users can be imported using the `service_name`, `cluster_id` and `id` of the user, separated by "/" E.g.,
 
 ```bash
 $ terraform import ovh_cloud_project_database_clickhouse_user.my_user service_name/cluster_id/id

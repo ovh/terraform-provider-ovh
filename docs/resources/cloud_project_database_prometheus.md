@@ -9,6 +9,7 @@ Creates a prometheus for a database cluster associated with a public cloud proje
 With this resource you can create a prometheus for the following database engine:
 
 * `cassandra`
+* `clickhouse`
 * `kafka`
 * `kafkaConnect`
 * `kafkaMirrorMaker`

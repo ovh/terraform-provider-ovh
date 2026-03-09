@@ -2444,9 +2444,7 @@ func updateCloudProjectDatabasePrometheus(ctx context.Context, d *schema.Resourc
 	return readFunc(ctx, d, meta)
 }
 
-// Clickhouse
-
-// // User
+// Clickhouse User
 
 type CloudProjectDatabaseClickhouseUserResponse struct {
 	CreatedAt string   `json:"createdAt"`
