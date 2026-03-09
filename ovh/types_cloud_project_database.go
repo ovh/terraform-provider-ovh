@@ -28,7 +28,7 @@ func diagnosticsToError(diags diag.Diagnostics) error {
 	return nil
 }
 
-var engines = []string{"clickhouse", "grafana", "kafka", "kafkaConnect", "kafkaMirrorMaker", "mongodb", "mysql", "opensearch", "postgresql", "valkey"}
+var engines = []string{"cassandra", "clickhouse", "grafana", "kafka", "kafkaConnect", "kafkaMirrorMaker", "m3aggregator", "m3db", "mongodb", "mysql", "opensearch", "postgresql", "redis", "valkey"}
 
 // enginesWithoutBackupTime is the list of engines
 // for which "backup_time" is not customizable
