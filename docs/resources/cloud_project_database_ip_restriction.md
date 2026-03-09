@@ -2,6 +2,8 @@
 subcategory : "Managed Databases"
 ---
 
+~> **DEPRECATED:** Use `ovh_cloud_managed_database_ip_restriction` instead. This resource will be removed in the next major version.
+
 # ovh_cloud_project_database_ip_restriction
 
 ~> **DEPRECATED** Use `ip_restrictions` field in `ovh_cloud_project_database` resource instead. Using the `ovh_cloud_project_database_ip_restriction` resource to add an IP restriction to a `ovh_cloud_project_database` resource will cause its update on each apply

@@ -2,6 +2,8 @@
 subcategory : "Managed Databases"
 ---
 
+~> **DEPRECATED:** Use `ovh_cloud_managed_database_mongodb_user` instead. This data source will be removed in the next major version.
+
 # ovh_cloud_project_database_mongodb_user (Data Source)
 
 Use this data source to get information about a user of a mongodb cluster associated with a public cloud project.

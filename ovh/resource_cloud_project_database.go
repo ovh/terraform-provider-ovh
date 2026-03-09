@@ -442,3 +442,28 @@ func resourceCloudProjectDatabaseDelete(ctx context.Context, d *schema.ResourceD
 
 	return nil
 }
+
+var cloudManagedDatabaseEngines = []string{"postgresql", "mysql", "mongodb", "valkey"}
+var cloudManagedAnalyticsEngines = []string{"kafka", "kafkaconnect", "kafkamirrormaker", "opensearch", "grafana"}
+
+func resourceWithEngineRestriction(base *schema.Resource, allowedEngines []string, resourceName string) *schema.Resource {
+	originalCreate := base.CreateContext
+	base.CreateContext = func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+		engine := d.Get("engine").(string)
+		for _, allowed := range allowedEngines {
+			if engine == allowed {
+				return originalCreate(ctx, d, meta)
+			}
+		}
+		return diag.Errorf("engine %q is not supported by %s. Allowed engines: %s", engine, resourceName, strings.Join(allowedEngines, ", "))
+	}
+	return base
+}
+
+func resourceCloudManagedDatabase() *schema.Resource {
+	return resourceWithEngineRestriction(resourceCloudProjectDatabase(), cloudManagedDatabaseEngines, "ovh_cloud_managed_database")
+}
+
+func resourceCloudManagedAnalytics() *schema.Resource {
+	return resourceWithEngineRestriction(resourceCloudProjectDatabase(), cloudManagedAnalyticsEngines, "ovh_cloud_managed_analytics")
+}

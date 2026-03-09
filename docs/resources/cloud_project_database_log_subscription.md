@@ -2,6 +2,8 @@
 subcategory : "Managed Databases"
 ---
 
+~> **DEPRECATED:** Use `ovh_cloud_managed_database_log_subscription` instead. This resource will be removed in the next major version.
+
 # ovh_cloud_project_database_log_subscription
 
 Creates a log subscription for a cluster associated with a public cloud project.

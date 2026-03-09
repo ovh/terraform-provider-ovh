@@ -2,6 +2,8 @@
 subcategory : "Managed Databases"
 ---
 
+~> **DEPRECATED:** Use `ovh_cloud_managed_database_kafka_schemaregistryacl` instead. This resource will be removed in the next major version.
+
 # ovh_cloud_project_database_kafka_schemaregistryacl
 
 Creates a schema registry ACL for a Kafka cluster associated with a public cloud project.

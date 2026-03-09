@@ -2,6 +2,8 @@
 subcategory : "Managed Databases"
 ---
 
+~> **DEPRECATED:** Use `ovh_cloud_managed_database_capabilities` instead. This data source will be removed in the next major version.
+
 # ovh_cloud_project_database_capabilities (Data Source)
 
 Use this data source to get information about capabilities of a public cloud project.
