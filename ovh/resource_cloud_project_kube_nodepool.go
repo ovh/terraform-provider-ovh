@@ -353,6 +353,16 @@ func resourceCloudProjectKubeNodePoolUpdate(d *schema.ResourceData, meta interfa
 		return err
 	}
 
+	if params.MaxNodes != nil && params.DesiredNodes == nil {
+		current := &CloudProjectKubeNodePoolResponse{}
+		if err := config.OVHClient.Get(endpoint, current); err == nil {
+			if current.DesiredNodes > *params.MaxNodes {
+				log.Printf("[DEBUG] desired_nodes (%d) exceeds new max_nodes (%d), capping desired_nodes to max_nodes", current.DesiredNodes, *params.MaxNodes)
+				params.DesiredNodes = params.MaxNodes
+			}
+		}
+	}
+
 	log.Printf("[DEBUG] Will update nodepool: %#v", *params)
 	err = config.OVHClient.Put(endpoint, params, nil)
 	if err != nil {
