@@ -8,23 +8,16 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 )
 
-func dataSourceCloudProjectDatabaseUser() *schema.Resource {
+func dataSourceCloudProjectDatabaseClickhouseUser() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceCloudProjectDatabaseUserRead,
+		ReadContext: dataSourceCloudProjectDatabaseClickhouseUserRead,
 		Schema: map[string]*schema.Schema{
 			"service_name": {
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
-			},
-			"engine": {
-				Type:             schema.TypeString,
-				Description:      "Name of the engine of the service",
-				Required:         true,
-				ValidateDiagFunc: helpers.ValidateDiagEnum([]string{"cassandra", "clickhouse", "mysql", "kafka", "kafkaConnect", "grafana"}),
 			},
 			"cluster_id": {
 				Type:        schema.TypeString,
@@ -43,6 +36,12 @@ func dataSourceCloudProjectDatabaseUser() *schema.Resource {
 				Description: "Date of the creation of the user",
 				Computed:    true,
 			},
+			"roles": {
+				Type:        schema.TypeSet,
+				Description: "Roles the user belongs to",
+				Computed:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 			"status": {
 				Type:        schema.TypeString,
 				Description: "Current status of the user",
@@ -52,37 +51,33 @@ func dataSourceCloudProjectDatabaseUser() *schema.Resource {
 	}
 }
 
-func dataSourceCloudProjectDatabaseUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceCloudProjectDatabaseClickhouseUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
-	engine := d.Get("engine").(string)
-	clusterId := d.Get("cluster_id").(string)
+	clusterID := d.Get("cluster_id").(string)
 	name := d.Get("name").(string)
 
-	listEndpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/user",
+	listEndpoint := fmt.Sprintf("/cloud/project/%s/database/clickhouse/%s/user",
 		url.PathEscape(serviceName),
-		url.PathEscape(engine),
-		url.PathEscape(clusterId),
+		url.PathEscape(clusterID),
 	)
 
 	listRes := make([]string, 0)
 
-	log.Printf("[DEBUG] Will read users from cluster %s from project %s", clusterId, serviceName)
+	log.Printf("[DEBUG] Will read users from cluster %s from project %s", clusterID, serviceName)
 	if err := config.OVHClient.GetWithContext(ctx, listEndpoint, &listRes); err != nil {
 		return diag.Errorf("Error calling GET %s:\n\t %q", listEndpoint, err)
 	}
 
 	for _, id := range listRes {
-		endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/user/%s",
+		endpoint := fmt.Sprintf("/cloud/project/%s/database/clickhouse/%s/user/%s",
 			url.PathEscape(serviceName),
-			url.PathEscape(engine),
-			url.PathEscape(clusterId),
+			url.PathEscape(clusterID),
 			url.PathEscape(id),
 		)
+		res := &CloudProjectDatabaseClickhouseUserResponse{}
 
-		res := &CloudProjectDatabaseUserResponse{}
-
-		log.Printf("[DEBUG] Will read user %s from cluster %s from project %s", id, clusterId, serviceName)
+		log.Printf("[DEBUG] Will read user %s from cluster %s from project %s", id, clusterID, serviceName)
 		if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
 			return diag.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
 		}
@@ -100,5 +95,5 @@ func dataSourceCloudProjectDatabaseUserRead(ctx context.Context, d *schema.Resou
 		}
 	}
 
-	return diag.Errorf("User name %s not found for cluster %s from project %s", name, clusterId, serviceName)
+	return diag.Errorf("User name %s not found for cluster %s from project %s", name, clusterID, serviceName)
 }

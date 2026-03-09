@@ -333,7 +333,7 @@ func (opts *CloudProjectDatabaseUpdateOpts) fromResource(d *schema.ResourceData)
 	}
 
 	time := d.Get("backup_time").(string)
-	if engine != "kafka" && (len(regions) != 0 || time != "") {
+	if engine != "kafka" && engine != "clickhouse" && (len(regions) != 0 || time != "") {
 		opts.Backups = &CloudProjectDatabaseBackups{
 			Regions: regions,
 			Time:    time,
@@ -2442,4 +2442,29 @@ func updateCloudProjectDatabasePrometheus(ctx context.Context, d *schema.Resourc
 	d.Set("password", res.Password)
 
 	return readFunc(ctx, d, meta)
+}
+
+// Clickhouse
+
+// // User
+
+type CloudProjectDatabaseClickhouseUserResponse struct {
+	CreatedAt string   `json:"createdAt"`
+	ID        string   `json:"id"`
+	Password  string   `json:"password"`
+	Roles     []string `json:"roles"`
+	Status    string   `json:"status"`
+	Username  string   `json:"username"`
+}
+
+func (r CloudProjectDatabaseClickhouseUserResponse) ToMap() map[string]interface{} {
+	obj := make(map[string]interface{})
+
+	obj["created_at"] = r.CreatedAt
+	obj["id"] = r.ID
+	obj["name"] = r.Username
+	obj["roles"] = r.Roles
+	obj["status"] = r.Status
+
+	return obj
 }
