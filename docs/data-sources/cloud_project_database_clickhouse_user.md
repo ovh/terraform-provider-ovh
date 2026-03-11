@@ -36,12 +36,6 @@ The following attributes are exported:
 * `created_at` - Date of the creation of the user.
 * `id` - ID of the user.
 * `roles` - Roles the user belongs to.
-<<<<<<< HEAD
-* `service_name` - Current status of the user.
-* `status` - Current status of the user.
-* `name` - Name of the user.
-=======
 * `service_name` - See Argument Reference above.
 * `status` - Current status of the user.
 * `name` - Name of the user.
->>>>>>> eef2ef9c (add clickhouse engine (#1243))
