@@ -70,7 +70,6 @@ func resourceCloudProjectDatabaseClickhouseUser() *schema.Resource {
 			"roles": {
 				Type:        schema.TypeSet,
 				Description: "Roles the user belongs to",
-				Optional:    true,
 				Computed:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
