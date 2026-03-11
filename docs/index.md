@@ -235,13 +235,19 @@ In order to run the Acceptance Tests for development, the following environment 
 
 * `OVH_CLOUD_PROJECT_DATABASE_POSTGRESQL_VERSION_TEST` - The version of the postgresql to test. if not set `OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST` is use.
 
+* `OVH_CLOUD_PROJECT_DATABASE_CLICKHOUSE_VERSION_TEST` - The version of the clickhouse to test. if not set `OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST` is used.
+
 * `OVH_CLOUD_PROJECT_DATABASE_REDIS_VERSION_TEST` - The version of the redis to test. if not set `OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST` is use.
 
 * `OVH_CLOUD_PROJECT_DATABASE_VALKEY_VERSION_TEST` - The version of the valkey to test. if not set `OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST` is use.
 
 * `OVH_CLOUD_PROJECT_DATABASE_REGION_TEST` - The region of the database service to test.
 
+* `OVH_CLOUD_PROJECT_DATABASE_CLICKHOUSE_REGION_TEST` - The region of the clickhouse to test. if not set `OVH_CLOUD_PROJECT_DATABASE_REGION_TEST` is used.
+
 * `OVH_CLOUD_PROJECT_DATABASE_FLAVOR_TEST` - The node flavor of the database service to test.
+
+* `OVH_CLOUD_PROJECT_DATABASE_CLICKHOUSE_FLAVOR_TEST` - The flavor of the clickhouse to test. if not set `OVH_CLOUD_PROJECT_DATABASE_FLAVOR_TEST` is used.
 
 * `OVH_CLOUD_PROJECT_DATABASE_IP_RESTRICTION_IP_TEST` - The IP restriction to test.
 

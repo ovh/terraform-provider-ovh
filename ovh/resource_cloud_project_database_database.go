@@ -40,7 +40,7 @@ func resourceCloudProjectDatabaseDatabase() *schema.Resource {
 				Description:      "Name of the engine of the service",
 				ForceNew:         true,
 				Required:         true,
-				ValidateDiagFunc: helpers.ValidateDiagEnum([]string{"mysql", "postgresql"}),
+				ValidateDiagFunc: helpers.ValidateDiagEnum([]string{"clickhouse", "mysql", "postgresql"}),
 			},
 			"cluster_id": {
 				Type:        schema.TypeString,

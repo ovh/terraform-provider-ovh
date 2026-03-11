@@ -26,6 +26,7 @@ output "certificates_ca" {
 
 * `engine` - (Required) The engine of the database cluster you want database information. To get a full list of available engine visit: [public documentation](https://docs.ovh.com/gb/en/publiccloud/databases). Available engines:
   * `cassandra`
+  * `clickhouse`
   * `kafka`
   * `mysql`
   * `postgresql`

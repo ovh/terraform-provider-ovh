@@ -8,6 +8,7 @@ Creates a database for a database cluster associated with a public cloud project
 
 With this resource you can create a database for the following database engine:
 
+* `clickhouse`
 * `mysql`
 * `postgresql`
 
@@ -35,6 +36,7 @@ The following arguments are supported:
 * `service_name` - (Required, Forces new resource) The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 
 * `engine` - (Required, Forces new resource) The engine of the database cluster you want to add. You can find the complete list of available engine in the [public documentation](https://docs.ovh.com/gb/en/publiccloud/databases). Available engines:
+  * `clickhouse`
   * `mysql`
   * `postgresql`
 

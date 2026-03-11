@@ -256,7 +256,7 @@ func dataSourceCloudProjectDatabaseRead(ctx context.Context, d *schema.ResourceD
 
 	res.Region = node.Region
 
-	if engine != "mongodb" {
+	if engine != "clickhouse" && engine != "mongodb" {
 		advancedConfigEndpoint := fmt.Sprintf("%s/advancedConfiguration", serviceEndpoint)
 		advancedConfigMap := &map[string]string{}
 		if err := config.OVHClient.GetWithContext(ctx, advancedConfigEndpoint, advancedConfigMap); err != nil {
