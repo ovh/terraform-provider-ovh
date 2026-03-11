@@ -192,13 +192,13 @@ The following arguments are supported:
 * `disk_size` - (Optional) The disk size (in GB) of the database service.
 * `advanced_configuration` - (Optional) Advanced configuration key / value.
 * `plan` - (Required) Plan of the cluster.
+  * Clickhouse: "production".
   * MongoDB: "discovery", "production", "advanced".
   * MySQL, PostgreSQL: "essential", "business", "enterprise".
-  * M3 Aggregator: "business", "enterprise".
   * Valkey: "essential", "business".
 * `version` - (Required) The version of the engine in which the service should be deployed
 * `backup_regions` - List of region where backups are pushed. Not more than 1 regions for MongoDB. Not more than 2 regions for the other engines with one being the same as the nodes[].region field
-* `backup_time` - Time on which backups start every day (this parameter is not usable on the following engines: "grafana", "kafka", "kafkaConnect", "kafkaMirrorMaker", "opensearch", "m3aggregator").
+* `backup_time` - Time on which backups start every day (this parameter is not usable on the following engines: "grafana", "kafka", "kafkaconnect", "kafkamirrormaker", "opensearch").
 * `maintenance_time` - Time on which maintenances can start every day.
 
 ## Attributes Reference
