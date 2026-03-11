@@ -235,8 +235,6 @@ In order to run the Acceptance Tests for development, the following environment 
 
 * `OVH_CLOUD_PROJECT_DATABASE_CLICKHOUSE_VERSION_TEST` - The version of the clickhouse to test. if not set `OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST` is used.
 
-* `OVH_CLOUD_PROJECT_DATABASE_CLICKHOUSE_VERSION_TEST` - The version of the clickhouse to test. if not set `OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST` is used.
-
 * `OVH_CLOUD_PROJECT_DATABASE_VALKEY_VERSION_TEST` - The version of the valkey to test. if not set `OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST` is used.
 
 * `OVH_CLOUD_PROJECT_DATABASE_REGION_TEST` - The region of the database service to test.

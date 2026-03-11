@@ -94,12 +94,12 @@ func resourceCloudProjectDatabaseOpensearchPatternCreate(ctx context.Context, d 
 		return diag.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
 	}
 
-	log.Printf("[DEBUG] Waiting for topic %s to be READY", res.ID)
+	log.Printf("[DEBUG] Waiting for pattern %s to be READY", res.ID)
 	err = waitForCloudProjectDatabaseOpensearchPatternReady(ctx, config.OVHClient, serviceName, clusterID, res.ID, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
-		return diag.Errorf("timeout while waiting topic %s to be READY: %s", res.ID, err.Error())
+		return diag.Errorf("timeout while waiting pattern %s to be READY: %s", res.ID, err.Error())
 	}
-	log.Printf("[DEBUG] topic %s is READY", res.ID)
+	log.Printf("[DEBUG] pattern %s is READY", res.ID)
 
 	d.SetId(res.ID)
 

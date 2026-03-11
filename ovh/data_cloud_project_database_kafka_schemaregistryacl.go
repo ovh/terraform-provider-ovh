@@ -62,7 +62,7 @@ func dataSourceCloudProjectDatabaseKafkaSchemaRegistryACLRead(ctx context.Contex
 		url.PathEscape(clusterID),
 		url.PathEscape(id),
 	)
-	res := &CloudProjectDatabaseKafkaACLResponse{}
+	res := &CloudProjectDatabaseKafkaSchemaRegistryACLResponse{}
 
 	log.Printf("[DEBUG] Will read schema registry ACL %s from cluster %s from project %s", id, clusterID, serviceName)
 	if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
