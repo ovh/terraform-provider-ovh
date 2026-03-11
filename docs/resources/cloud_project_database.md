@@ -193,7 +193,7 @@ The following arguments are supported:
 * `advanced_configuration` - (Optional) Advanced configuration key / value.
 * `plan` - (Required) Plan of the cluster.
   * MongoDB: "discovery", "production", "advanced".
-  * MySQL, PosgreSQL: "essential", "business", "enterprise".
+  * MySQL, PostgreSQL: "essential", "business", "enterprise".
   * M3 Aggregator: "business", "enterprise".
   * Valkey: "essential", "business".
 * `version` - (Required) The version of the engine in which the service should be deployed
