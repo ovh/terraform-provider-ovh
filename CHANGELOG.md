@@ -1,3 +1,39 @@
+## 2.12.0 (March 11, 2026)
+
+⚙️ General:
+
+* Bump `github.com/cloudflare/circl` from 1.6.1 to 1.6.3 ([#1237](https://github.com/ovh/terraform-provider-ovh/pull/1237))
+
+🎉 Features:
+
+* New resource: `ovh_storage_efs` ([#1228](https://github.com/ovh/terraform-provider-ovh/pull/1228))
+* New resource: `ovh_cloud_project_storage_object_bucket_lifecycle_configuration` ([#1234](https://github.com/ovh/terraform-provider-ovh/pull/1234))
+* New resource: `ovh_cloud_project_database_clickhouse_user` ([#1243](https://github.com/ovh/terraform-provider-ovh/pull/1243))
+
+* New datasource: `ovh_cloud_project_storage_object_bucket_lifecycle_configuration` ([#1234](https://github.com/ovh/terraform-provider-ovh/pull/1234))
+* New datasource: `ovh_cloud_project_database_clickhouse_user` ([#1243](https://github.com/ovh/terraform-provider-ovh/pull/1243))
+
+💪 Improvements:
+
+* `r/ovh_cloud_project_database`: Add ClickHouse engine support ([#1243](https://github.com/ovh/terraform-provider-ovh/pull/1243))
+* `r/ovh_ip_move`: Remove useless calls to `/ip/service` ([#1216](https://github.com/ovh/terraform-provider-ovh/pull/1216))
+* `r/ovh_vps`: Add `do_not_send_password` attribute ([#1197](https://github.com/ovh/terraform-provider-ovh/pull/1197))
+* Ensure all cloud resources can take cloud project ID from `OVH_CLOUD_PROJECT_SERVICE` env var ([#1233](https://github.com/ovh/terraform-provider-ovh/pull/1233))
+
+🐜 Bug fixes:
+
+* `r/ovh_cloud_project_kube_oidc`: Include "UPDATING" as valid pending state ([#1226](https://github.com/ovh/terraform-provider-ovh/pull/1226))
+* `r/ovh_iploadbalancing_tcp_farm_server`: Fix drift when weight is 0 ([#1235](https://github.com/ovh/terraform-provider-ovh/pull/1235))
+* `r/ovh_dedicated_server`: Restore display name behaviour ([#1238](https://github.com/ovh/terraform-provider-ovh/pull/1238))
+
+📚 Documentation:
+
+* Add example with encryption in object storage doc ([#1221](https://github.com/ovh/terraform-provider-ovh/pull/1221))
+* Fix documentation for `ovh_okms_credential` and `ovh_okms_secret` ([#1223](https://github.com/ovh/terraform-provider-ovh/pull/1223))
+* Fix typos and missing doc parts ([#1231](https://github.com/ovh/terraform-provider-ovh/pull/1231))
+
+❤️ Thanks for your contributions ❤️
+
 ## 2.11.0 (January 28, 2026)
 
 🎉 Features:
