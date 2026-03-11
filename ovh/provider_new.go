@@ -299,6 +299,8 @@ func (p *OvhProvider) Resources(_ context.Context) []func() resource.Resource {
 		NewCloudNetworkPrivateVrackResource,
 		NewCloudNetworkPrivateVrackSubnetResource,
 		NewCloudStorageObjectBucketResource,
+		NewCloudStorageObjectBucketLifecycleResource,
+		NewCloudStorageObjectBucketReplicationResource,
 		NewCloudProjectAlertingResource,
 		NewCloudProjectGatewayInterfaceResource,
 		NewCloudProjectInstanceSnapshotResource,
