@@ -51,9 +51,8 @@ func (d *cloudInstanceFlavorDataSource) Read(ctx context.Context, req datasource
 		return
 	}
 
-	endpoint := "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) +
-		"/reference/instance/flavor/" + url.PathEscape(data.FlavorId.ValueString()) +
-		"?region=" + url.QueryEscape(data.RegionName.ValueString())
+	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) +
+		"/reference/instance/flavor/" + url.PathEscape(data.FlavorId.ValueString())
 
 	if err := d.config.OVHClient.Get(endpoint, &data); err != nil {
 		resp.Diagnostics.AddError(

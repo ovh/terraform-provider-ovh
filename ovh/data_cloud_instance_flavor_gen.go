@@ -206,9 +206,9 @@ func CloudInstanceFlavorsDataSourceSchema(ctx context.Context) schema.Schema {
 }
 
 type CloudInstanceFlavorsModel struct {
-	ServiceName ovhtypes.TfStringValue                                      `tfsdk:"service_name" json:"-"`
-	RegionName  ovhtypes.TfStringValue                                      `tfsdk:"region_name" json:"-"`
-	Name        ovhtypes.TfStringValue                                      `tfsdk:"name" json:"-"`
+	ServiceName ovhtypes.TfStringValue                                `tfsdk:"service_name" json:"-"`
+	RegionName  ovhtypes.TfStringValue                                `tfsdk:"region_name" json:"-"`
+	Name        ovhtypes.TfStringValue                                `tfsdk:"name" json:"-"`
 	Flavors     ovhtypes.TfListNestedValue[CloudInstanceFlavorsValue] `tfsdk:"flavors" json:"flavors"`
 }
 

@@ -206,9 +206,9 @@ func CloudInstanceImagesDataSourceSchema(ctx context.Context) schema.Schema {
 }
 
 type CloudInstanceImagesModel struct {
-	ServiceName ovhtypes.TfStringValue                                    `tfsdk:"service_name" json:"-"`
-	RegionName  ovhtypes.TfStringValue                                    `tfsdk:"region_name" json:"-"`
-	Name        ovhtypes.TfStringValue                                    `tfsdk:"name" json:"-"`
+	ServiceName ovhtypes.TfStringValue                               `tfsdk:"service_name" json:"-"`
+	RegionName  ovhtypes.TfStringValue                               `tfsdk:"region_name" json:"-"`
+	Name        ovhtypes.TfStringValue                               `tfsdk:"name" json:"-"`
 	Images      ovhtypes.TfListNestedValue[CloudInstanceImagesValue] `tfsdk:"images" json:"images"`
 }
 

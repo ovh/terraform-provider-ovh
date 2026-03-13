@@ -55,8 +55,7 @@ func (d *cloudInstanceFlavorsDataSource) Read(ctx context.Context, req datasourc
 		return
 	}
 
-	endpoint := "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) +
-		"/reference/instance/flavor?region=" + url.QueryEscape(data.RegionName.ValueString())
+	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/reference/instance/flavor"
 
 	var arr []CloudInstanceFlavorsValue
 	if err := d.config.OVHClient.Get(endpoint, &arr); err != nil {
