@@ -28,8 +28,9 @@ func TestAccCloudProjectSSHKey_basic(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("ovh_cloud_project_ssh_key.key", "name", keyName),
-					resource.TestCheckResourceAttr("ovh_cloud_project_ssh_key.key", "regions.#", "1"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_ssh_key.key", "regions.0", "GRA9"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_ssh_key.key", "region", "GRA9"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_ssh_key.key", "finger_print"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_ssh_key.key", "resource_status", "READY"),
 				),
 			},
 		},

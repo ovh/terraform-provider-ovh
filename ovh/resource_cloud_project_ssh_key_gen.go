@@ -47,19 +47,24 @@ func CloudProjectSshKeyResourceSchema(ctx context.Context) schema.Schema {
 		},
 		"region": schema.StringAttribute{
 			CustomType: ovhtypes.TfStringType{},
-			Optional:   true,
-			Computed:   true,
+			Required:   true,
 			PlanModifiers: []planmodifier.String{
 				stringplanmodifier.RequiresReplace(),
 			},
 			Description:         "Region to create SSH key",
 			MarkdownDescription: "Region to create SSH key",
 		},
-		"regions": schema.ListAttribute{
-			CustomType:          ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+		"resource_status": schema.StringAttribute{
+			CustomType:          ovhtypes.TfStringType{},
 			Computed:            true,
-			Description:         "SSH key regions",
-			MarkdownDescription: "SSH key regions",
+			Description:         "SSH key resource status (READY, CREATING, DELETING, ERROR)",
+			MarkdownDescription: "SSH key resource status (READY, CREATING, DELETING, ERROR)",
+		},
+		"checksum": schema.StringAttribute{
+			CustomType:          ovhtypes.TfStringType{},
+			Computed:            true,
+			Description:         "SSH key checksum for concurrency control",
+			MarkdownDescription: "SSH key checksum for concurrency control",
 		},
 		"service_name": schema.StringAttribute{
 			CustomType: ovhtypes.TfStringType{},
@@ -73,82 +78,116 @@ func CloudProjectSshKeyResourceSchema(ctx context.Context) schema.Schema {
 	}
 
 	return schema.Schema{
-		Description: "",
+		Description: "Creates an SSH key in a Public Cloud project (API v2).",
 		Attributes:  attrs,
 	}
 }
 
+// CloudProjectSshKeyModel represents the Terraform state for an SSH key.
 type CloudProjectSshKeyModel struct {
-	FingerPrint ovhtypes.TfStringValue                             `tfsdk:"finger_print" json:"fingerPrint"`
-	Id          ovhtypes.TfStringValue                             `tfsdk:"id" json:"id"`
-	Name        ovhtypes.TfStringValue                             `tfsdk:"name" json:"name"`
-	PublicKey   ovhtypes.TfStringValue                             `tfsdk:"public_key" json:"publicKey"`
-	Region      ovhtypes.TfStringValue                             `tfsdk:"region" json:"region"`
-	Regions     ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] `tfsdk:"regions" json:"regions"`
-	ServiceName ovhtypes.TfStringValue                             `tfsdk:"service_name" json:"serviceName"`
+	FingerPrint    ovhtypes.TfStringValue `tfsdk:"finger_print" json:"-"`
+	Id             ovhtypes.TfStringValue `tfsdk:"id" json:"-"`
+	Name           ovhtypes.TfStringValue `tfsdk:"name" json:"-"`
+	PublicKey      ovhtypes.TfStringValue `tfsdk:"public_key" json:"-"`
+	Region         ovhtypes.TfStringValue `tfsdk:"region" json:"-"`
+	ResourceStatus ovhtypes.TfStringValue `tfsdk:"resource_status" json:"-"`
+	Checksum       ovhtypes.TfStringValue `tfsdk:"checksum" json:"-"`
+	ServiceName    ovhtypes.TfStringValue `tfsdk:"service_name" json:"-"`
 }
 
 func (v *CloudProjectSshKeyModel) MergeWith(other *CloudProjectSshKeyModel) {
-
 	if (v.FingerPrint.IsUnknown() || v.FingerPrint.IsNull()) && !other.FingerPrint.IsUnknown() {
 		v.FingerPrint = other.FingerPrint
 	}
-
 	if (v.Id.IsUnknown() || v.Id.IsNull()) && !other.Id.IsUnknown() {
 		v.Id = other.Id
 	}
-
 	if (v.Name.IsUnknown() || v.Name.IsNull()) && !other.Name.IsUnknown() {
 		v.Name = other.Name
 	}
-
 	if (v.PublicKey.IsUnknown() || v.PublicKey.IsNull()) && !other.PublicKey.IsUnknown() {
 		v.PublicKey = other.PublicKey
 	}
-
 	if (v.Region.IsUnknown() || v.Region.IsNull()) && !other.Region.IsUnknown() {
 		v.Region = other.Region
 	}
-
-	if (v.Regions.IsUnknown() || v.Regions.IsNull()) && !other.Regions.IsUnknown() {
-		v.Regions = other.Regions
+	if (v.ResourceStatus.IsUnknown() || v.ResourceStatus.IsNull()) && !other.ResourceStatus.IsUnknown() {
+		v.ResourceStatus = other.ResourceStatus
 	}
-
+	if (v.Checksum.IsUnknown() || v.Checksum.IsNull()) && !other.Checksum.IsUnknown() {
+		v.Checksum = other.Checksum
+	}
 	if (v.ServiceName.IsUnknown() || v.ServiceName.IsNull()) && !other.ServiceName.IsUnknown() {
 		v.ServiceName = other.ServiceName
 	}
-
 }
 
-func (v CloudProjectSshKeyModel) ToCreate() *CloudProjectSshKeyModel {
-	res := &CloudProjectSshKeyModel{}
+// --- APIv2 request/response types ---
 
-	if !v.Name.IsUnknown() {
-		res.Name = v.Name
-	}
-
-	if !v.PublicKey.IsUnknown() {
-		res.PublicKey = v.PublicKey
-	}
-
-	if !v.Region.IsUnknown() {
-		res.Region = v.Region
-	}
-
-	return res
+// sshKeyLocation represents the location object in APIv2.
+type sshKeyLocation struct {
+	Region string `json:"region"`
 }
 
-func (v *CloudProjectSshKeyModel) MarshalJSON() ([]byte, error) {
-	toMarshal := map[string]any{}
-	if !v.Name.IsNull() && !v.Name.IsUnknown() {
-		toMarshal["name"] = v.Name
-	}
-	if !v.PublicKey.IsNull() && !v.PublicKey.IsUnknown() {
-		toMarshal["publicKey"] = v.PublicKey
-	}
-	if !v.Region.IsNull() && !v.Region.IsUnknown() {
-		toMarshal["region"] = v.Region
-	}
+// sshKeyTargetSpec represents the targetSpec in APIv2.
+type sshKeyTargetSpec struct {
+	Name      string         `json:"name"`
+	PublicKey string         `json:"publicKey,omitempty"`
+	Type      string         `json:"type,omitempty"`
+	Location  sshKeyLocation `json:"location"`
+}
 
-	return json.Marshal(toMarshal)
+// sshKeyCurrentState represents the currentState in APIv2.
+type sshKeyCurrentState struct {
+	Name        string         `json:"name"`
+	PublicKey   string         `json:"publicKey"`
+	Fingerprint string         `json:"fingerprint,omitempty"`
+	Type        string         `json:"type,omitempty"`
+	Location    sshKeyLocation `json:"location"`
+}
+
+// sshKeyCreateRequest is the POST body for creating an SSH key.
+type sshKeyCreateRequest struct {
+	TargetSpec sshKeyTargetSpec `json:"targetSpec"`
+}
+
+// sshKeyEnvelope is the full resource envelope returned by APIv2.
+type sshKeyEnvelope struct {
+	ID             string             `json:"id"`
+	Checksum       string             `json:"checksum"`
+	ResourceStatus string             `json:"resourceStatus"`
+	TargetSpec     sshKeyTargetSpec   `json:"targetSpec"`
+	CurrentState   sshKeyCurrentState `json:"currentState"`
+	CreatedAt      string             `json:"createdAt"`
+	UpdatedAt      string             `json:"updatedAt"`
+	CurrentTasks   json.RawMessage    `json:"currentTasks"`
+}
+
+// toModel converts an APIv2 envelope to a Terraform model.
+func (e *sshKeyEnvelope) toModel() *CloudProjectSshKeyModel {
+	m := &CloudProjectSshKeyModel{
+		Id:             ovhtypes.NewTfStringValue(e.ID),
+		ResourceStatus: ovhtypes.NewTfStringValue(e.ResourceStatus),
+		Checksum:       ovhtypes.NewTfStringValue(e.Checksum),
+	}
+	// Prefer currentState fields, fall back to targetSpec
+	if e.CurrentState.Name != "" {
+		m.Name = ovhtypes.NewTfStringValue(e.CurrentState.Name)
+	} else {
+		m.Name = ovhtypes.NewTfStringValue(e.TargetSpec.Name)
+	}
+	if e.CurrentState.PublicKey != "" {
+		m.PublicKey = ovhtypes.NewTfStringValue(e.CurrentState.PublicKey)
+	} else if e.TargetSpec.PublicKey != "" {
+		m.PublicKey = ovhtypes.NewTfStringValue(e.TargetSpec.PublicKey)
+	}
+	if e.CurrentState.Fingerprint != "" {
+		m.FingerPrint = ovhtypes.NewTfStringValue(e.CurrentState.Fingerprint)
+	}
+	if e.CurrentState.Location.Region != "" {
+		m.Region = ovhtypes.NewTfStringValue(e.CurrentState.Location.Region)
+	} else {
+		m.Region = ovhtypes.NewTfStringValue(e.TargetSpec.Location.Region)
+	}
+	return m
 }
