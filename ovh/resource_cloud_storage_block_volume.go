@@ -54,8 +54,9 @@ func (r *cloudStorageBlockVolumeResource) Configure(ctx context.Context, req res
 }
 
 var volumeMutableAttrs = MutableAttrs{
-	Strings: []string{"name"},
+	Strings: []string{"name", "volume_type"},
 	Int64s:  []string{"size"},
+	Bools:   []string{"bootable"},
 }
 
 func (r *cloudStorageBlockVolumeResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -94,11 +95,14 @@ func (r *cloudStorageBlockVolumeResource) Schema(ctx context.Context, req resour
 			"volume_type": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Required:            true,
-				Description:         "Volume type (CLASSIC, CLASSIC_LUKS, CLASSIC_MULTIATTACH, HIGH_SPEED, HIGH_SPEED_GEN2, HIGH_SPEED_GEN2_LUKS, HIGH_SPEED_LUKS)",
-				MarkdownDescription: "Volume type (`CLASSIC`, `CLASSIC_LUKS`, `CLASSIC_MULTIATTACH`, `HIGH_SPEED`, `HIGH_SPEED_GEN2`, `HIGH_SPEED_GEN2_LUKS`, `HIGH_SPEED_LUKS`)",
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				Description:         "Volume type (CLASSIC, CLASSIC_LUKS, CLASSIC_MULTIATTACH, HIGH_SPEED, HIGH_SPEED_GEN2, HIGH_SPEED_GEN2_LUKS, HIGH_SPEED_LUKS). Can be changed after creation (triggers online retype).",
+				MarkdownDescription: "Volume type (`CLASSIC`, `CLASSIC_LUKS`, `CLASSIC_MULTIATTACH`, `HIGH_SPEED`, `HIGH_SPEED_GEN2`, `HIGH_SPEED_GEN2_LUKS`, `HIGH_SPEED_LUKS`). Can be changed after creation (triggers online retype).",
+			},
+			"bootable": schema.BoolAttribute{
+				Optional:            true,
+				Computed:            true,
+				Description:         "Whether the volume is bootable",
+				MarkdownDescription: "Whether the volume is bootable",
 			},
 			"create_from": schema.SingleNestedAttribute{
 				Optional:            true,
@@ -191,6 +195,11 @@ func (r *cloudStorageBlockVolumeResource) Schema(ctx context.Context, req resour
 						Computed:            true,
 						Description:         "Volume type (CLASSIC, CLASSIC_LUKS, CLASSIC_MULTIATTACH, HIGH_SPEED, HIGH_SPEED_GEN2, HIGH_SPEED_GEN2_LUKS, HIGH_SPEED_LUKS)",
 						MarkdownDescription: "Volume type (`CLASSIC`, `CLASSIC_LUKS`, `CLASSIC_MULTIATTACH`, `HIGH_SPEED`, `HIGH_SPEED_GEN2`, `HIGH_SPEED_GEN2_LUKS`, `HIGH_SPEED_LUKS`)",
+					},
+					"bootable": schema.BoolAttribute{
+						Computed:            true,
+						Description:         "Whether the volume is bootable",
+						MarkdownDescription: "Whether the volume is bootable",
 					},
 					"status": schema.StringAttribute{
 						CustomType:          ovhtypes.TfStringType{},

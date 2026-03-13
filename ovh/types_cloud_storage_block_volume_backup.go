@@ -29,13 +29,13 @@ type CloudStorageBlockVolumeBackupModel struct {
 
 // API response types
 type CloudStorageBlockVolumeBackupAPIResponse struct {
-	Id             string                                        `json:"id"`
-	Checksum       string                                        `json:"checksum"`
-	CreatedAt      string                                        `json:"createdAt"`
-	UpdatedAt      string                                        `json:"updatedAt"`
-	ResourceStatus string                                        `json:"resourceStatus"`
-	CurrentState   *CloudStorageBlockVolumeBackupCurrentState    `json:"currentState,omitempty"`
-	TargetSpec     *CloudStorageBlockVolumeBackupTargetSpec      `json:"targetSpec,omitempty"`
+	Id             string                                     `json:"id"`
+	Checksum       string                                     `json:"checksum"`
+	CreatedAt      string                                     `json:"createdAt"`
+	UpdatedAt      string                                     `json:"updatedAt"`
+	ResourceStatus string                                     `json:"resourceStatus"`
+	CurrentState   *CloudStorageBlockVolumeBackupCurrentState `json:"currentState,omitempty"`
+	TargetSpec     *CloudStorageBlockVolumeBackupTargetSpec   `json:"targetSpec,omitempty"`
 }
 
 type CloudStorageBlockVolumeBackupCurrentState struct {
@@ -64,7 +64,7 @@ type CloudStorageBlockVolumeBackupCreatePayload struct {
 
 // Update payload — only mutable fields (name, description)
 type CloudStorageBlockVolumeBackupUpdatePayload struct {
-	Checksum   string                                        `json:"checksum"`
+	Checksum   string                                         `json:"checksum"`
 	TargetSpec *CloudStorageBlockVolumeBackupUpdateTargetSpec `json:"targetSpec"`
 }
 

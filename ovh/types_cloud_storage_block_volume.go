@@ -15,6 +15,7 @@ type CloudStorageBlockVolumeModel struct {
 	Size        types.Int64            `tfsdk:"size"`
 	Region      ovhtypes.TfStringValue `tfsdk:"region"`
 	VolumeType  ovhtypes.TfStringValue `tfsdk:"volume_type"`
+	Bootable    types.Bool             `tfsdk:"bootable"`
 	CreateFrom  types.Object           `tfsdk:"create_from"`
 
 	Id             ovhtypes.TfStringValue `tfsdk:"id"`
@@ -41,6 +42,7 @@ type CloudStorageBlockVolumeCurrentState struct {
 	Name       string                           `json:"name,omitempty"`
 	Size       int64                            `json:"size,omitempty"`
 	VolumeType string                           `json:"volumeType,omitempty"`
+	Bootable   *bool                            `json:"bootable,omitempty"`
 	Status     string                           `json:"status,omitempty"`
 }
 
@@ -53,6 +55,7 @@ type CloudStorageBlockVolumeTarget struct {
 	Name       string                             `json:"name,omitempty"`
 	Size       int64                              `json:"size,omitempty"`
 	VolumeType string                             `json:"volumeType,omitempty"`
+	Bootable   *bool                              `json:"bootable,omitempty"`
 	CreateFrom *CloudStorageBlockVolumeCreateFrom `json:"createFrom,omitempty"`
 }
 
@@ -87,6 +90,11 @@ func (m *CloudStorageBlockVolumeModel) ToCreate() *CloudStorageBlockVolumeCreate
 		VolumeType: m.VolumeType.ValueString(),
 	}
 
+	if !m.Bootable.IsNull() && !m.Bootable.IsUnknown() {
+		b := m.Bootable.ValueBool()
+		target.Bootable = &b
+	}
+
 	if !m.CreateFrom.IsNull() && !m.CreateFrom.IsUnknown() {
 		attrs := m.CreateFrom.Attributes()
 		if backupIDVal, ok := attrs["backup_id"]; ok {
@@ -102,11 +110,16 @@ func (m *CloudStorageBlockVolumeModel) ToCreate() *CloudStorageBlockVolumeCreate
 }
 
 // ToUpdate converts the Terraform model to the API update payload
-// Note: volumeType is immutable and not included in update payload
 func (m *CloudStorageBlockVolumeModel) ToUpdate(checksum string) *CloudStorageBlockVolumeUpdatePayload {
 	target := &CloudStorageBlockVolumeTarget{
-		Name: m.Name.ValueString(),
-		Size: m.Size.ValueInt64(),
+		Name:       m.Name.ValueString(),
+		Size:       m.Size.ValueInt64(),
+		VolumeType: m.VolumeType.ValueString(),
+	}
+
+	if !m.Bootable.IsNull() && !m.Bootable.IsUnknown() {
+		b := m.Bootable.ValueBool()
+		target.Bootable = &b
 	}
 
 	return &CloudStorageBlockVolumeUpdatePayload{Checksum: checksum, TargetSpec: target}
@@ -119,6 +132,7 @@ func BlockVolumeCurrentStateAttrTypes() map[string]attr.Type {
 		"name":        ovhtypes.TfStringType{},
 		"size":        types.Int64Type,
 		"volume_type": ovhtypes.TfStringType{},
+		"bootable":    types.BoolType,
 		"status":      ovhtypes.TfStringType{},
 	}
 }
@@ -138,6 +152,11 @@ func (m *CloudStorageBlockVolumeModel) MergeWith(ctx context.Context, response *
 			map[string]attr.Value{"region": ovhtypes.TfStringValue{StringValue: types.StringValue(response.CurrentState.Location.Region)}},
 		)
 
+		bootableVal := types.BoolValue(false)
+		if response.CurrentState.Bootable != nil {
+			bootableVal = types.BoolValue(*response.CurrentState.Bootable)
+		}
+
 		currentStateObj, _ := types.ObjectValue(
 			BlockVolumeCurrentStateAttrTypes(),
 			map[string]attr.Value{
@@ -145,6 +164,7 @@ func (m *CloudStorageBlockVolumeModel) MergeWith(ctx context.Context, response *
 				"name":        ovhtypes.TfStringValue{StringValue: types.StringValue(response.CurrentState.Name)},
 				"size":        types.Int64Value(response.CurrentState.Size),
 				"volume_type": ovhtypes.TfStringValue{StringValue: types.StringValue(response.CurrentState.VolumeType)},
+				"bootable":    bootableVal,
 				"status":      ovhtypes.TfStringValue{StringValue: types.StringValue(response.CurrentState.Status)},
 			},
 		)
@@ -163,6 +183,11 @@ func (m *CloudStorageBlockVolumeModel) MergeWith(ctx context.Context, response *
 		m.Size = types.Int64Value(response.TargetSpec.Size)
 		if response.TargetSpec.VolumeType != "" {
 			m.VolumeType = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.VolumeType)}
+		}
+		if response.TargetSpec.Bootable != nil {
+			m.Bootable = types.BoolValue(*response.TargetSpec.Bootable)
+		} else if m.Bootable.IsUnknown() {
+			m.Bootable = types.BoolNull()
 		}
 
 		// Preserve create_from in state if it was set
