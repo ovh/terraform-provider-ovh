@@ -359,7 +359,7 @@ func (r *cloudStorageFileShareResource) Create(ctx context.Context, req resource
 
 	createPayload := data.ToCreate(ctx)
 
-	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/storage/file"
+	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/storage/file/share"
 
 	var responseData CloudStorageFileShareAPIResponse
 	if err := r.config.OVHClient.Post(endpoint, createPayload, &responseData); err != nil {
@@ -381,7 +381,7 @@ func (r *cloudStorageFileShareResource) Create(ctx context.Context, req resource
 	}
 
 	// Read final state
-	endpoint = "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/storage/file/" + url.PathEscape(responseData.Id)
+	endpoint = "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/storage/file/share/" + url.PathEscape(responseData.Id)
 	if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Get %s", endpoint),
@@ -403,7 +403,7 @@ func (r *cloudStorageFileShareResource) Read(ctx context.Context, req resource.R
 		return
 	}
 
-	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/storage/file/" + url.PathEscape(data.Id.ValueString())
+	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/storage/file/share/" + url.PathEscape(data.Id.ValueString())
 
 	var responseData CloudStorageFileShareAPIResponse
 	if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
@@ -434,7 +434,7 @@ func (r *cloudStorageFileShareResource) Update(ctx context.Context, req resource
 
 	updatePayload := planData.ToUpdate(ctx, data.Checksum.ValueString())
 
-	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/storage/file/" + url.PathEscape(data.Id.ValueString())
+	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/storage/file/share/" + url.PathEscape(data.Id.ValueString())
 
 	var responseData CloudStorageFileShareAPIResponse
 	if err := r.config.OVHClient.Put(endpoint, updatePayload, &responseData); err != nil {
@@ -477,7 +477,7 @@ func (r *cloudStorageFileShareResource) Delete(ctx context.Context, req resource
 		return
 	}
 
-	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/storage/file/" + url.PathEscape(data.Id.ValueString())
+	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/storage/file/share/" + url.PathEscape(data.Id.ValueString())
 
 	if err := r.config.OVHClient.Delete(endpoint, nil); err != nil {
 		if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
@@ -496,7 +496,7 @@ func (r *cloudStorageFileShareResource) Delete(ctx context.Context, req resource
 		Target:  []string{"DELETED"},
 		Refresh: func() (any, string, error) {
 			res := &CloudStorageFileShareAPIResponse{}
-			endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/storage/file/" + url.PathEscape(data.Id.ValueString())
+			endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/storage/file/share/" + url.PathEscape(data.Id.ValueString())
 			err := r.config.OVHClient.GetWithContext(ctx, endpoint, res)
 			if err != nil {
 				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
@@ -525,7 +525,7 @@ func (r *cloudStorageFileShareResource) waitForFileShareReady(ctx context.Contex
 		Target:  []string{"READY"},
 		Refresh: func() (any, string, error) {
 			res := &CloudStorageFileShareAPIResponse{}
-			endpoint := "/v2/publicCloud/project/" + url.PathEscape(serviceName) + "/storage/file/" + url.PathEscape(fileShareId)
+			endpoint := "/v2/publicCloud/project/" + url.PathEscape(serviceName) + "/storage/file/share/" + url.PathEscape(fileShareId)
 			err := r.config.OVHClient.GetWithContext(ctx, endpoint, res)
 			if err != nil {
 				return res, "", err
