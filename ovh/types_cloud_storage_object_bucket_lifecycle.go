@@ -178,9 +178,11 @@ func apiLifecycleRulesToTFList(apiRules []CloudBucketLifecycleRule, stateRules t
 }
 
 func apiLifecycleRuleToTFObject(r CloudBucketLifecycleRule) basetypes.ObjectValue {
-	// filter
+	// filter — treat an effectively empty filter (no prefix, no tags, no size constraints)
+	// as null, because S3 always returns a filter object even when none was configured.
 	filterObj := types.ObjectNull(lifecycleFilterAttrTypes())
-	if r.Filter != nil {
+	if r.Filter != nil && (r.Filter.Prefix != "" || len(r.Filter.Tags) > 0 ||
+		r.Filter.ObjectSizeGreaterThan != 0 || r.Filter.ObjectSizeLessThan != 0) {
 		var tagsVal basetypes.MapValue
 		if len(r.Filter.Tags) > 0 {
 			tagVals := make(map[string]attr.Value, len(r.Filter.Tags))
@@ -191,35 +193,60 @@ func apiLifecycleRuleToTFObject(r CloudBucketLifecycleRule) basetypes.ObjectValu
 		} else {
 			tagsVal = types.MapNull(types.StringType)
 		}
+		// Use null for zero-value size fields (0 means "not set")
+		sizeGT := basetypes.NewInt64Null()
+		if r.Filter.ObjectSizeGreaterThan != 0 {
+			sizeGT = types.Int64Value(r.Filter.ObjectSizeGreaterThan)
+		}
+		sizeLT := basetypes.NewInt64Null()
+		if r.Filter.ObjectSizeLessThan != 0 {
+			sizeLT = types.Int64Value(r.Filter.ObjectSizeLessThan)
+		}
 		filterObj, _ = types.ObjectValue(lifecycleFilterAttrTypes(), map[string]attr.Value{
 			"prefix":                   ovhtypes.TfStringValue{StringValue: types.StringValue(r.Filter.Prefix)},
 			"tags":                     tagsVal,
-			"object_size_greater_than": types.Int64Value(r.Filter.ObjectSizeGreaterThan),
-			"object_size_less_than":    types.Int64Value(r.Filter.ObjectSizeLessThan),
+			"object_size_greater_than": sizeGT,
+			"object_size_less_than":    sizeLT,
 		})
 	}
 
 	// expiration
 	expirationObj := types.ObjectNull(lifecycleExpirationAttrTypes())
 	if r.Expiration != nil {
+		dateVal := ovhtypes.TfStringValue{StringValue: types.StringNull()}
+		if r.Expiration.Date != "" {
+			dateVal = ovhtypes.TfStringValue{StringValue: types.StringValue(r.Expiration.Date)}
+		}
+		// Use null for expired_object_delete_marker when false (Go zero value = not set by API)
+		expDeleteMarker := basetypes.NewBoolNull()
+		if r.Expiration.ExpiredObjectDeleteMarker {
+			expDeleteMarker = types.BoolValue(true)
+		}
 		expirationObj, _ = types.ObjectValue(lifecycleExpirationAttrTypes(), map[string]attr.Value{
-			"date":                         ovhtypes.TfStringValue{StringValue: types.StringValue(r.Expiration.Date)},
+			"date":                         dateVal,
 			"days":                         types.Int64Value(r.Expiration.Days),
-			"expired_object_delete_marker": types.BoolValue(r.Expiration.ExpiredObjectDeleteMarker),
+			"expired_object_delete_marker": expDeleteMarker,
 		})
 	}
 
-	// transitions
-	transElems := make([]attr.Value, 0, len(r.Transitions))
-	for _, t := range r.Transitions {
-		transObj, _ := types.ObjectValue(lifecycleTransitionAttrTypes(), map[string]attr.Value{
-			"date":          ovhtypes.TfStringValue{StringValue: types.StringValue(t.Date)},
-			"days":          types.Int64Value(t.Days),
-			"storage_class": ovhtypes.TfStringValue{StringValue: types.StringValue(t.StorageClass)},
-		})
-		transElems = append(transElems, transObj)
+	// transitions — null when empty, not an empty list
+	transitionsVal := types.ListNull(types.ObjectType{AttrTypes: lifecycleTransitionAttrTypes()})
+	if len(r.Transitions) > 0 {
+		transElems := make([]attr.Value, 0, len(r.Transitions))
+		for _, t := range r.Transitions {
+			transDateVal := ovhtypes.TfStringValue{StringValue: types.StringNull()}
+			if t.Date != "" {
+				transDateVal = ovhtypes.TfStringValue{StringValue: types.StringValue(t.Date)}
+			}
+			transObj, _ := types.ObjectValue(lifecycleTransitionAttrTypes(), map[string]attr.Value{
+				"date":          transDateVal,
+				"days":          types.Int64Value(t.Days),
+				"storage_class": ovhtypes.TfStringValue{StringValue: types.StringValue(t.StorageClass)},
+			})
+			transElems = append(transElems, transObj)
+		}
+		transitionsVal, _ = types.ListValue(types.ObjectType{AttrTypes: lifecycleTransitionAttrTypes()}, transElems)
 	}
-	transitionsVal, _ := types.ListValue(types.ObjectType{AttrTypes: lifecycleTransitionAttrTypes()}, transElems)
 
 	// noncurrent_version_expiration
 	ncveObj := types.ObjectNull(lifecycleNoncurrentExpAttrTypes())
@@ -230,17 +257,20 @@ func apiLifecycleRuleToTFObject(r CloudBucketLifecycleRule) basetypes.ObjectValu
 		})
 	}
 
-	// noncurrent_version_transitions
-	ncvtElems := make([]attr.Value, 0, len(r.NoncurrentVersionTransitions))
-	for _, t := range r.NoncurrentVersionTransitions {
-		ncvtObj, _ := types.ObjectValue(lifecycleNoncurrentTransAttrTypes(), map[string]attr.Value{
-			"noncurrent_days":           types.Int64Value(t.NoncurrentDays),
-			"newer_noncurrent_versions": types.Int64Value(t.NewerNoncurrentVersions),
-			"storage_class":             ovhtypes.TfStringValue{StringValue: types.StringValue(t.StorageClass)},
-		})
-		ncvtElems = append(ncvtElems, ncvtObj)
+	// noncurrent_version_transitions — null when empty, not an empty list
+	ncvtVal := types.ListNull(types.ObjectType{AttrTypes: lifecycleNoncurrentTransAttrTypes()})
+	if len(r.NoncurrentVersionTransitions) > 0 {
+		ncvtElems := make([]attr.Value, 0, len(r.NoncurrentVersionTransitions))
+		for _, t := range r.NoncurrentVersionTransitions {
+			ncvtObj, _ := types.ObjectValue(lifecycleNoncurrentTransAttrTypes(), map[string]attr.Value{
+				"noncurrent_days":           types.Int64Value(t.NoncurrentDays),
+				"newer_noncurrent_versions": types.Int64Value(t.NewerNoncurrentVersions),
+				"storage_class":             ovhtypes.TfStringValue{StringValue: types.StringValue(t.StorageClass)},
+			})
+			ncvtElems = append(ncvtElems, ncvtObj)
+		}
+		ncvtVal, _ = types.ListValue(types.ObjectType{AttrTypes: lifecycleNoncurrentTransAttrTypes()}, ncvtElems)
 	}
-	ncvtVal, _ := types.ListValue(types.ObjectType{AttrTypes: lifecycleNoncurrentTransAttrTypes()}, ncvtElems)
 
 	// abort_incomplete_multipart_upload
 	abortObj := types.ObjectNull(lifecycleAbortIncompleteAttrTypes())

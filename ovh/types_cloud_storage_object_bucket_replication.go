@@ -107,19 +107,39 @@ func apiReplicationRulesToTFList(apiRules []CloudBucketReplicationRule, stateRul
 		}
 	}
 
+	// Build a map of state rule objects by ID for fallback values
+	stateRuleByID := make(map[string]types.Object)
+	if !stateRules.IsNull() && !stateRules.IsUnknown() {
+		for _, elem := range stateRules.Elements() {
+			obj, ok := elem.(types.Object)
+			if !ok {
+				continue
+			}
+			idVal, ok := obj.Attributes()["id"].(ovhtypes.TfStringValue)
+			if !ok {
+				continue
+			}
+			stateRuleByID[idVal.ValueString()] = obj
+		}
+	}
+
 	elems := make([]attr.Value, 0, len(ordered))
 	for _, r := range ordered {
-		elems = append(elems, apiReplicationRuleToTFObject(r))
+		stateObj, hasState := stateRuleByID[r.ID]
+		if !hasState {
+			stateObj = types.ObjectNull(replicationRuleAttrTypes())
+		}
+		elems = append(elems, apiReplicationRuleToTFObject(r, stateObj))
 	}
 
 	list, _ := types.ListValue(ruleElemType, elems)
 	return list
 }
 
-func apiReplicationRuleToTFObject(r CloudBucketReplicationRule) basetypes.ObjectValue {
-	// filter
+func apiReplicationRuleToTFObject(r CloudBucketReplicationRule, stateRule types.Object) basetypes.ObjectValue {
+	// filter — treat effectively empty filter as null (same pattern as lifecycle)
 	filterObj := types.ObjectNull(replicationFilterAttrTypes())
-	if r.Filter != nil {
+	if r.Filter != nil && (r.Filter.Prefix != "" || len(r.Filter.Tags) > 0) {
 		var tagsVal basetypes.MapValue
 		if len(r.Filter.Tags) > 0 {
 			tagVals := make(map[string]attr.Value, len(r.Filter.Tags))
@@ -136,11 +156,26 @@ func apiReplicationRuleToTFObject(r CloudBucketReplicationRule) basetypes.Object
 		})
 	}
 
-	// destination (always present)
+	// destination — preserve region from state when API returns empty
+	regionVal := ovhtypes.TfStringValue{StringValue: types.StringValue(r.Destination.Region)}
+	if r.Destination.Region == "" && !stateRule.IsNull() && !stateRule.IsUnknown() {
+		if destObj, ok := stateRule.Attributes()["destination"].(types.Object); ok && !destObj.IsNull() {
+			if stateRegion, ok := destObj.Attributes()["region"].(ovhtypes.TfStringValue); ok && !stateRegion.IsNull() {
+				regionVal = stateRegion
+			}
+		}
+	}
+
+	// storage_class — null when empty
+	storageClassVal := ovhtypes.TfStringValue{StringValue: types.StringNull()}
+	if r.Destination.StorageClass != "" {
+		storageClassVal = ovhtypes.TfStringValue{StringValue: types.StringValue(r.Destination.StorageClass)}
+	}
+
 	destinationObj, _ := types.ObjectValue(replicationDestinationAttrTypes(), map[string]attr.Value{
 		"name":          ovhtypes.TfStringValue{StringValue: types.StringValue(r.Destination.Name)},
-		"region":        ovhtypes.TfStringValue{StringValue: types.StringValue(r.Destination.Region)},
-		"storage_class": ovhtypes.TfStringValue{StringValue: types.StringValue(r.Destination.StorageClass)},
+		"region":        regionVal,
+		"storage_class": storageClassVal,
 	})
 
 	obj, _ := types.ObjectValue(replicationRuleAttrTypes(), map[string]attr.Value{
