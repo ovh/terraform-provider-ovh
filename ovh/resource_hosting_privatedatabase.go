@@ -39,6 +39,15 @@ func resourceHostingPrivateDatabaseSchema() map[string]*schema.Schema {
 		},
 
 		// Computed
+		"advanced_configuration": {
+			Type:        schema.TypeMap,
+			Optional:    true,
+			Computed:    true,
+			Description: "Advanced configuration key / value",
+			Elem: &schema.Schema{
+				Type: schema.TypeString,
+			},
+		},
 		"urn": {
 			Type:     schema.TypeString,
 			Computed: true,
@@ -170,14 +179,36 @@ func resourceHostingPrivateDatabaseUpdate(d *schema.ResourceData, meta interface
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 
-	log.Printf("[DEBUG] Will update privateDatabase: %s", serviceName)
-	opts := (&HostingPrivateDatabaseOpts{}).FromResource(d)
-	endpoint := fmt.Sprintf("/hosting/privateDatabase/%s", url.PathEscape(serviceName))
-	if err := config.OVHClient.Put(endpoint, opts, nil); err != nil {
-		return fmt.Errorf("calling Put %s: %q", endpoint, err)
+	if d.HasChange("display_name") {
+		log.Printf("[DEBUG] Will update privateDatabase: %s", serviceName)
+		opts := (&HostingPrivateDatabaseOpts{}).FromResource(d)
+		endpoint := fmt.Sprintf("/hosting/privateDatabase/%s", url.PathEscape(serviceName))
+		if err := config.OVHClient.Put(endpoint, opts, nil); err != nil {
+			return fmt.Errorf("calling Put %s: %q", endpoint, err)
+		}
+	}
+
+	if d.HasChange("advanced_configuration") {
+		log.Printf("[DEBUG] Will update privateDatabase config: %s", serviceName)
+		configEndpoint := fmt.Sprintf("/hosting/privateDatabase/%s/config/update", url.PathEscape(serviceName))
+		acParams := d.Get("advanced_configuration").(map[string]interface{})
+		parameters := make([]map[string]interface{}, 0, len(acParams))
+		for k, v := range acParams {
+			parameters = append(parameters, map[string]interface{}{
+				"key":   k,
+				"value": v,
+			})
+		}
+		payload := map[string]interface{}{
+			"parameters": parameters,
+		}
+		if err := config.OVHClient.Post(configEndpoint, payload, nil); err != nil {
+			return fmt.Errorf("calling Post %s with params %+v:\n\t %q", configEndpoint, payload, err)
+		}
 	}
 
 	return resourceHostingPrivateDatabaseRead(d, meta)
+
 }
 
 func resourceHostingPrivateDatabaseRead(d *schema.ResourceData, meta interface{}) error {
@@ -194,6 +225,46 @@ func resourceHostingPrivateDatabaseRead(d *schema.ResourceData, meta interface{}
 
 	for k, v := range ds.ToMap() {
 		d.Set(k, v)
+	}
+
+	configEndpoint := fmt.Sprintf("/hosting/privateDatabase/%s/config", url.PathEscape(serviceName))
+	var rawCfg map[string]interface{}
+	if err := config.OVHClient.Get(configEndpoint, &rawCfg); err != nil {
+		return fmt.Errorf("calling Get %s: %q", configEndpoint, err)
+	}
+
+	// The OVH API returns the advanced configuration as an object containing a "details"
+	// array (each item includes "key" and "value", plus metadata). The Terraform schema
+	// for advanced_configuration is a simple key/value map, so we flatten it here.
+	advancedCfg := make(map[string]interface{})
+
+	if detailsRaw, ok := rawCfg["details"]; ok {
+		if details, ok := detailsRaw.([]interface{}); ok {
+			for _, item := range details {
+				m, ok := item.(map[string]interface{})
+				if !ok {
+					continue
+				}
+				key, _ := m["key"].(string)
+				if key == "" {
+					continue
+				}
+				if v, exists := m["value"]; exists && v != nil {
+					advancedCfg[key] = fmt.Sprint(v)
+				}
+			}
+		}
+	} else {
+		// Backward/alternate API shapes: keep any top-level keys as strings.
+		for k, v := range rawCfg {
+			if v != nil {
+				advancedCfg[k] = fmt.Sprint(v)
+			}
+		}
+	}
+
+	if err := d.Set("advanced_configuration", advancedCfg); err != nil {
+		return fmt.Errorf("setting advanced_configuration from %s: %w", configEndpoint, err)
 	}
 
 	return nil
