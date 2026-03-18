@@ -13,6 +13,7 @@ resource "ovh_me_identity_user" "my_user" {
   description = "Some custom description"
   email       = "my_login@example.com"
   group       = "DEFAULT"
+  groups      = ["my_group", "another_group"]
   login       = "my_login"
   password    = "super-s3cr3t!password"
 }
@@ -22,7 +23,8 @@ resource "ovh_me_identity_user" "my_user" {
 
 * `description` - User description.
 * `email` - User's email.
-* `group` - User's group.
+* `group` - User's main group.
+* `groups` - (Optional) Additional groups the user belongs to (other than the main group).
 * `login` - User's login suffix.
 * `password` - User's password.
 

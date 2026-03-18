@@ -18,7 +18,8 @@ Creates an identity user.
 
 * `description` - User description.
 * `email` - User's email.
-* `group` - User's group.
+* `group` - User's main group.
+* `groups` - (Optional) Additional groups the user belongs to (other than the main group).
 * `login` - User's login suffix.
 * `password` - User's password.
 
@@ -29,3 +30,11 @@ Creates an identity user.
 * `last_update` - Last update of this user.
 * `password_last_update` - When the user changed his password for the last time.
 * `status` - Current user's status.
+
+## Import
+
+An identity user can be imported using the `login` E.g.,
+
+```bash
+$ terraform import ovh_me_identity_user.my_user login
+```
