@@ -48,6 +48,8 @@ The following attributes are exported:
 * `autoscaling_scale_down_unneeded_time_seconds` - (Optional) scaleDownUnneededTimeSeconds autoscaling parameter How long a node should be unneeded before it is eligible for scale down
 * `autoscaling_scale_down_unready_time_seconds` - (Optional) scaleDownUnreadyTimeSeconds autoscaling parameter How long an unready node should be unneeded before it is eligible for scale down
 * `autoscaling_scale_down_utilization_threshold` - (Optional) scaleDownUtilizationThreshold autoscaling parameter Node utilization level, defined as sum of requested resources divided by capacity, below which a node can be considered for scale down
+* `attach_floating_ips` - Floating IPs attachment configuration for pool nodes.
+  * `enabled` - Whether floating IPs attachment is enabled on nodes of this pool.
 * `available_nodes` - Number of nodes which are actually ready in the pool
 * `created_at` - Creation date
 * `current_nodes` - Number of nodes present in the pool
