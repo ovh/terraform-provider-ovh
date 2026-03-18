@@ -231,6 +231,10 @@ func (r *cloudStorageFileShareSnapshotResource) Create(ctx context.Context, req 
 		return
 	}
 
+	// Save state immediately so the resource ID is tracked even if the workflow fails
+	data.MergeWith(ctx, &responseData)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+
 	// Wait for snapshot to be READY
 	_, err := r.waitForFileShareSnapshotReady(ctx, data.ServiceName.ValueString(), responseData.Id)
 	if err != nil {

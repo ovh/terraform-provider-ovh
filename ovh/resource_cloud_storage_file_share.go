@@ -370,6 +370,10 @@ func (r *cloudStorageFileShareResource) Create(ctx context.Context, req resource
 		return
 	}
 
+	// Save state immediately so the resource ID is tracked even if the workflow fails
+	data.MergeWith(ctx, &responseData)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+
 	// Wait for file share to be READY
 	_, err := r.waitForFileShareReady(ctx, data.ServiceName.ValueString(), responseData.Id)
 	if err != nil {

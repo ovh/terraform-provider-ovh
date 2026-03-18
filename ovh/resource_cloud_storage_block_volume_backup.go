@@ -219,6 +219,10 @@ func (r *cloudStorageBlockVolumeBackupResource) Create(ctx context.Context, req 
 		return
 	}
 
+	// Save state immediately so the resource ID is tracked even if the workflow fails
+	data.MergeWith(ctx, &responseData)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+
 	// Wait for backup to be READY
 	_, err := r.waitForBackupReady(ctx, data.ServiceName.ValueString(), responseData.Id)
 	if err != nil {

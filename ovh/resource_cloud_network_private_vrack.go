@@ -196,6 +196,10 @@ func (r *cloudNetworkPrivateVrackResource) Create(ctx context.Context, req resou
 		return
 	}
 
+	// Save state immediately so the resource ID is tracked even if the workflow fails
+	data.MergeWith(ctx, &responseData)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+
 	// Wait for network to be READY
 	_, err := r.waitForReady(ctx, data.ServiceName.ValueString(), responseData.Id)
 	if err != nil {

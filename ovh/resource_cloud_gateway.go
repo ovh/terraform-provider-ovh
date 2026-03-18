@@ -267,6 +267,10 @@ func (r *cloudGatewayResource) Create(ctx context.Context, req resource.CreateRe
 		return
 	}
 
+	// Save state immediately so the resource ID is tracked even if the workflow fails
+	data.MergeWith(ctx, &responseData)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+
 	// Wait for gateway to be READY
 	_, err := r.waitForGatewayReady(ctx, data.ServiceName.ValueString(), responseData.Id)
 	if err != nil {

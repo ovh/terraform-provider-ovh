@@ -393,7 +393,7 @@ func (r *cloudInstanceResource) Create(ctx context.Context, req resource.CreateR
 	// Build the request payload
 	createPayload := data.ToCreate()
 
-	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/instance"
+	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/compute/instance"
 
 	var responseData CloudInstanceAPIResponse
 	if err := r.config.OVHClient.Post(endpoint, createPayload, &responseData); err != nil {
@@ -403,6 +403,10 @@ func (r *cloudInstanceResource) Create(ctx context.Context, req resource.CreateR
 		)
 		return
 	}
+
+	// Save state immediately so the resource ID is tracked even if the workflow fails
+	data.MergeWith(ctx, &responseData)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 
 	// Wait for instance to be READY
 	_, err := r.waitForInstanceReady(ctx, data.ServiceName.ValueString(), responseData.Id)
@@ -415,7 +419,7 @@ func (r *cloudInstanceResource) Create(ctx context.Context, req resource.CreateR
 	}
 
 	// Read the final state
-	endpoint = "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/instance/" + url.PathEscape(responseData.Id)
+	endpoint = "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/compute/instance/" + url.PathEscape(responseData.Id)
 	if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Get %s", endpoint),
@@ -440,7 +444,7 @@ func (r *cloudInstanceResource) Read(ctx context.Context, req resource.ReadReque
 		return
 	}
 
-	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/instance/" + url.PathEscape(data.Id.ValueString())
+	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/compute/instance/" + url.PathEscape(data.Id.ValueString())
 
 	var responseData CloudInstanceAPIResponse
 	if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
@@ -475,7 +479,7 @@ func (r *cloudInstanceResource) Update(ctx context.Context, req resource.UpdateR
 	// Build the update payload with checksum for optimistic concurrency
 	updatePayload := planData.ToUpdate(data.Checksum.ValueString())
 
-	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/instance/" + url.PathEscape(data.Id.ValueString())
+	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/compute/instance/" + url.PathEscape(data.Id.ValueString())
 
 	var responseData CloudInstanceAPIResponse
 	if err := r.config.OVHClient.Put(endpoint, updatePayload, &responseData); err != nil {
@@ -520,7 +524,7 @@ func (r *cloudInstanceResource) Delete(ctx context.Context, req resource.DeleteR
 		return
 	}
 
-	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/instance/" + url.PathEscape(data.Id.ValueString())
+	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/compute/instance/" + url.PathEscape(data.Id.ValueString())
 
 	if err := r.config.OVHClient.Delete(endpoint, nil); err != nil {
 		if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
@@ -539,7 +543,7 @@ func (r *cloudInstanceResource) Delete(ctx context.Context, req resource.DeleteR
 		Target:  []string{"DELETED"},
 		Refresh: func() (interface{}, string, error) {
 			res := &CloudInstanceAPIResponse{}
-			endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/instance/" + url.PathEscape(data.Id.ValueString())
+			endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/compute/instance/" + url.PathEscape(data.Id.ValueString())
 			err := r.config.OVHClient.GetWithContext(ctx, endpoint, res)
 			if err != nil {
 				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
@@ -568,7 +572,7 @@ func (r *cloudInstanceResource) waitForInstanceReady(ctx context.Context, servic
 		Target:  []string{"READY"},
 		Refresh: func() (interface{}, string, error) {
 			res := &CloudInstanceAPIResponse{}
-			endpoint := "/v2/publicCloud/project/" + url.PathEscape(serviceName) + "/instance/" + url.PathEscape(instanceId)
+			endpoint := "/v2/publicCloud/project/" + url.PathEscape(serviceName) + "/compute/instance/" + url.PathEscape(instanceId)
 			err := r.config.OVHClient.GetWithContext(ctx, endpoint, res)
 			if err != nil {
 				return res, "", err

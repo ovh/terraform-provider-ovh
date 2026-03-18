@@ -219,6 +219,10 @@ func (r *cloudStorageBlockVolumeSnapshotResource) Create(ctx context.Context, re
 		return
 	}
 
+	// Save state immediately so the resource ID is tracked even if the workflow fails
+	data.MergeWith(ctx, &responseData)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+
 	// Wait for snapshot to be READY
 	_, err := r.waitForSnapshotReady(ctx, data.ServiceName.ValueString(), responseData.Id)
 	if err != nil {
