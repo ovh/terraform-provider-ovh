@@ -45,88 +45,117 @@ func (d *cloudProjectSshKeyResource) Schema(ctx context.Context, req resource.Sc
 	resp.Schema = CloudProjectSshKeyResourceSchema(ctx)
 }
 
-func (r *cloudProjectSshKeyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data, responseData CloudProjectSshKeyModel
+// sshKeyBaseEndpoint returns the base API v2 endpoint for SSH keys.
+func sshKeyBaseEndpoint(serviceName string) string {
+	return "/v2/publicCloud/project/" + url.PathEscape(serviceName) + "/sshKey"
+}
 
-	// Read Terraform plan data into the model
+// sshKeyEndpoint returns the API v2 endpoint for a specific SSH key.
+func sshKeyEndpoint(serviceName, name string) string {
+	return sshKeyBaseEndpoint(serviceName) + "/" + url.PathEscape(name)
+}
+
+// resolveServiceName returns the service_name from the model or environment variable.
+func (r *cloudProjectSshKeyResource) resolveServiceName(data *CloudProjectSshKeyModel, resp *resource.CreateResponse) string {
+	if !data.ServiceName.IsNull() && !data.ServiceName.IsUnknown() && data.ServiceName.ValueString() != "" {
+		return data.ServiceName.ValueString()
+	}
+	envServiceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE")
+	if envServiceName == "" {
+		resp.Diagnostics.AddError(
+			"Missing service_name",
+			"The service_name attribute is required. Please provide it in the resource configuration or set the OVH_CLOUD_PROJECT_SERVICE environment variable.",
+		)
+		return ""
+	}
+	data.ServiceName = ovhtypes.NewTfStringValue(envServiceName)
+	return envServiceName
+}
+
+func (r *cloudProjectSshKeyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var data CloudProjectSshKeyModel
+
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// Handle service_name: use provided value or fall back to environment variable
-	if data.ServiceName.IsNull() || data.ServiceName.IsUnknown() || data.ServiceName.ValueString() == "" {
-		envServiceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE")
-		if envServiceName == "" {
-			resp.Diagnostics.AddError(
-				"Missing service_name",
-				"The service_name attribute is required. Please provide it in the resource configuration or set the OVH_CLOUD_PROJECT_SERVICE environment variable.",
-			)
-			return
-		}
-		data.ServiceName = ovhtypes.NewTfStringValue(envServiceName)
+	serviceName := r.resolveServiceName(&data, resp)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	endpoint := "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/sshkey"
-	if err := r.config.OVHClient.Post(endpoint, data.ToCreate(), &responseData); err != nil {
+	createReq := sshKeyCreateRequest{
+		Name:      data.Name.ValueString(),
+		PublicKey: data.PublicKey.ValueString(),
+	}
+
+	var sshKey sshKeyResponse
+	endpoint := sshKeyBaseEndpoint(serviceName)
+	if err := r.config.OVHClient.PostWithContext(ctx, endpoint, createReq, &sshKey); err != nil {
 		resp.Diagnostics.AddError(
-			fmt.Sprintf("Error calling Post %s", endpoint),
+			fmt.Sprintf("Error calling POST %s", endpoint),
 			err.Error(),
 		)
 		return
 	}
 
-	responseData.MergeWith(&data)
+	responseData := sshKey.toModel()
+	responseData.ServiceName = data.ServiceName
 
-	// Save data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, responseData)...)
 }
 
 func (r *cloudProjectSshKeyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data, responseData CloudProjectSshKeyModel
+	var data CloudProjectSshKeyModel
 
-	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	endpoint := "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/sshkey/" + url.PathEscape(data.Id.ValueString())
+	endpoint := sshKeyEndpoint(
+		data.ServiceName.ValueString(),
+		data.Name.ValueString(),
+	)
 
-	if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
+	var sshKey sshKeyResponse
+	if err := r.config.OVHClient.GetWithContext(ctx, endpoint, &sshKey); err != nil {
 		resp.Diagnostics.AddError(
-			fmt.Sprintf("Error calling Get %s", endpoint),
+			fmt.Sprintf("Error calling GET %s", endpoint),
 			err.Error(),
 		)
 		return
 	}
 
-	data.MergeWith(&responseData)
+	responseData := sshKey.toModel()
+	responseData.ServiceName = data.ServiceName
 
-	// Save updated data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, responseData)...)
 }
 
 func (r *cloudProjectSshKeyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	resp.Diagnostics.AddError("not implemented", "this func should never be called")
+	resp.Diagnostics.AddError("not implemented", "SSH keys are immutable — this func should never be called")
 }
 
 func (r *cloudProjectSshKeyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var data CloudProjectSshKeyModel
 
-	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// Delete API call logic
-	endpoint := "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/sshkey/" + url.PathEscape(data.Id.ValueString())
-	if err := r.config.OVHClient.Delete(endpoint, nil); err != nil {
+	endpoint := sshKeyEndpoint(
+		data.ServiceName.ValueString(),
+		data.Name.ValueString(),
+	)
+
+	if err := r.config.OVHClient.DeleteWithContext(ctx, endpoint, nil); err != nil {
 		resp.Diagnostics.AddError(
-			fmt.Sprintf("Error calling Delete %s", endpoint),
+			fmt.Sprintf("Error calling DELETE %s", endpoint),
 			err.Error(),
 		)
+		return
 	}
 }
