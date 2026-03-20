@@ -17,7 +17,7 @@ resource "ovh_cloud_security_group" "sg" {
 
   rule {
     direction        = "INGRESS"
-    ether_type       = "IPV4"
+    ethernet_type       = "IPV4"
     protocol         = "TCP"
     port_range_min   = 22
     port_range_max   = 22
@@ -27,7 +27,7 @@ resource "ovh_cloud_security_group" "sg" {
 
   rule {
     direction        = "INGRESS"
-    ether_type       = "IPV4"
+    ethernet_type       = "IPV4"
     protocol         = "TCP"
     port_range_min   = 443
     port_range_max   = 443
@@ -47,7 +47,7 @@ The following arguments are supported:
 * `description` - (Optional) Description of the security group.
 * `rule` - (Optional) List of security group rules. Each rule supports:
   * `direction` - (Required) Direction of the rule (`INGRESS` or `EGRESS`).
-  * `ether_type` - (Required) Ether type (`IPV4` or `IPV6`).
+  * `ethernet_type` - (Required) Ether type (`IPV4` or `IPV6`).
   * `protocol` - (Optional) Protocol (`TCP`, `UDP`, `ICMP`, etc.).
   * `port_range_min` - (Optional) Minimum port number.
   * `port_range_max` - (Optional) Maximum port number.
@@ -71,7 +71,7 @@ The following attributes are exported:
   * `rules` - Current security group rules:
     * `id` - Rule ID.
     * `direction` - Direction of the rule.
-    * `ether_type` - Ether type.
+    * `ethernet_type` - Ether type.
     * `protocol` - Protocol.
     * `port_range_min` - Minimum port number.
     * `port_range_max` - Maximum port number.

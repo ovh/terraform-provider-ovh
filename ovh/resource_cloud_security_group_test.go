@@ -46,7 +46,7 @@ resource "ovh_cloud_security_group" "test" {
 
   rule {
     direction        = "INGRESS"
-    ether_type       = "IPV4"
+    ethernet_type       = "IPV4"
     protocol         = "TCP"
     port_range_min   = 22
     port_range_max   = 22
@@ -71,7 +71,7 @@ resource "ovh_cloud_security_group" "test" {
 					resource.TestCheckResourceAttr("ovh_cloud_security_group.test", "description", "Test security group"),
 					resource.TestCheckResourceAttr("ovh_cloud_security_group.test", "rule.#", "1"),
 					resource.TestCheckResourceAttr("ovh_cloud_security_group.test", "rule.0.direction", "INGRESS"),
-					resource.TestCheckResourceAttr("ovh_cloud_security_group.test", "rule.0.ether_type", "IPV4"),
+					resource.TestCheckResourceAttr("ovh_cloud_security_group.test", "rule.0.ethernet_type", "IPV4"),
 					resource.TestCheckResourceAttr("ovh_cloud_security_group.test", "rule.0.protocol", "TCP"),
 					resource.TestCheckResourceAttr("ovh_cloud_security_group.test", "rule.0.port_range_min", "22"),
 					resource.TestCheckResourceAttr("ovh_cloud_security_group.test", "rule.0.port_range_max", "22"),
@@ -109,7 +109,7 @@ resource "ovh_cloud_security_group" "test" {
 
   rule {
     direction        = "INGRESS"
-    ether_type       = "IPV4"
+    ethernet_type       = "IPV4"
     protocol         = "TCP"
     port_range_min   = 22
     port_range_max   = 22
@@ -128,7 +128,7 @@ resource "ovh_cloud_security_group" "test" {
 
   rule {
     direction        = "INGRESS"
-    ether_type       = "IPV4"
+    ethernet_type       = "IPV4"
     protocol         = "TCP"
     port_range_min   = 22
     port_range_max   = 22
@@ -138,7 +138,7 @@ resource "ovh_cloud_security_group" "test" {
 
   rule {
     direction        = "INGRESS"
-    ether_type       = "IPV4"
+    ethernet_type       = "IPV4"
     protocol         = "TCP"
     port_range_min   = 443
     port_range_max   = 443

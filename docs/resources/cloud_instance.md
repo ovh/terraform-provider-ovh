@@ -34,6 +34,35 @@ resource "ovh_cloud_instance" "instance" {
 }
 ```
 
+### With instance group (anti-affinity)
+
+```terraform
+resource "ovh_cloud_instance_group" "web_group" {
+  service_name = "xxxxxxxxxx"
+  name         = "web-anti-affinity"
+  policy       = "ANTI_AFFINITY"
+  region       = "GRA1"
+}
+
+resource "ovh_cloud_instance" "web_1" {
+  service_name = "xxxxxxxxxx"
+  name         = "web-1"
+  flavor_id    = "068a57cf-b1b4-428f-9b17-4f32a526390c"
+  image_id     = "8d75e170-1ef9-4e25-8fc8-d231929e56e8"
+  region       = "GRA1"
+  group_id     = ovh_cloud_instance_group.web_group.id
+}
+
+resource "ovh_cloud_instance" "web_2" {
+  service_name = "xxxxxxxxxx"
+  name         = "web-2"
+  flavor_id    = "068a57cf-b1b4-428f-9b17-4f32a526390c"
+  image_id     = "8d75e170-1ef9-4e25-8fc8-d231929e56e8"
+  region       = "GRA1"
+  group_id     = ovh_cloud_instance_group.web_group.id
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -51,6 +80,7 @@ The following arguments are supported:
   * `floating_ip_id` - (Optional) Floating IP ID for the network.
 * `volume_ids` - (Optional) List of volume IDs to attach to the instance.
 * `ssh_key_name` - (Optional) SSH key name to associate with the instance.
+* `group_id` - (Optional) Instance group ID to assign this instance to (placement policy). **Changing this value recreates the resource.**
 
 ## Attributes Reference
 
@@ -93,6 +123,7 @@ The following attributes are exported:
     * `name` - Volume name.
     * `size` - Volume size in GB.
   * `security_groups` - Security groups attached to the instance.
+  * `group_id` - Instance group ID this instance belongs to.
 
 ## Import
 

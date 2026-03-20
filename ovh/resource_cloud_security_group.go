@@ -68,9 +68,9 @@ func securityGroupStateRuleSchemaAttributes() map[string]schema.Attribute {
 			CustomType: ovhtypes.TfStringType{}, Computed: true,
 			Description: "Direction of the rule", MarkdownDescription: "Direction of the rule",
 		},
-		"ether_type": schema.StringAttribute{
+		"ethernet_type": schema.StringAttribute{
 			CustomType: ovhtypes.TfStringType{}, Computed: true,
-			Description: "Ether type", MarkdownDescription: "Ether type",
+			Description: "Ethernet type", MarkdownDescription: "Ethernet type",
 		},
 		"protocol": schema.StringAttribute{
 			CustomType: ovhtypes.TfStringType{}, Computed: true,
@@ -147,11 +147,11 @@ func (r *cloudSecurityGroupResource) Schema(ctx context.Context, req resource.Sc
 							Description:         "Direction of the rule (INGRESS or EGRESS)",
 							MarkdownDescription: "Direction of the rule (`INGRESS` or `EGRESS`)",
 						},
-						"ether_type": schema.StringAttribute{
+						"ethernet_type": schema.StringAttribute{
 							CustomType:          ovhtypes.TfStringType{},
 							Required:            true,
-							Description:         "Ether type (IPV4 or IPV6)",
-							MarkdownDescription: "Ether type (`IPV4` or `IPV6`)",
+							Description:         "Ethernet type (IPV4 or IPV6)",
+							MarkdownDescription: "Ethernet type (`IPV4` or `IPV6`)",
 						},
 						"protocol": schema.StringAttribute{
 							CustomType:          ovhtypes.TfStringType{},

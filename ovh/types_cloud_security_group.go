@@ -69,7 +69,7 @@ type CloudSecurityGroupAPILocation struct {
 
 type CloudSecurityGroupAPITargetRule struct {
 	Direction      string                            `json:"direction"`
-	EtherType      string                            `json:"etherType"`
+	EthernetType   string                            `json:"ethernetType"`
 	Protocol       string                            `json:"protocol,omitempty"`
 	PortRangeMin   *int64                            `json:"portRangeMin,omitempty"`
 	PortRangeMax   *int64                            `json:"portRangeMax,omitempty"`
@@ -81,7 +81,7 @@ type CloudSecurityGroupAPITargetRule struct {
 type CloudSecurityGroupAPIStateRule struct {
 	Id             string                            `json:"id,omitempty"`
 	Direction      string                            `json:"direction"`
-	EtherType      string                            `json:"etherType"`
+	EthernetType   string                            `json:"ethernetType"`
 	Protocol       string                            `json:"protocol,omitempty"`
 	PortRangeMin   *int64                            `json:"portRangeMin,omitempty"`
 	PortRangeMax   *int64                            `json:"portRangeMax,omitempty"`
@@ -149,8 +149,8 @@ func buildSecurityGroupTargetRules(ruleList types.List) []CloudSecurityGroupAPIT
 		if v, ok := attrs["direction"].(ovhtypes.TfStringValue); ok && !v.IsNull() && !v.IsUnknown() {
 			rule.Direction = v.ValueString()
 		}
-		if v, ok := attrs["ether_type"].(ovhtypes.TfStringValue); ok && !v.IsNull() && !v.IsUnknown() {
-			rule.EtherType = v.ValueString()
+		if v, ok := attrs["ethernet_type"].(ovhtypes.TfStringValue); ok && !v.IsNull() && !v.IsUnknown() {
+			rule.EthernetType = v.ValueString()
 		}
 		if v, ok := attrs["protocol"].(ovhtypes.TfStringValue); ok && !v.IsNull() && !v.IsUnknown() {
 			rule.Protocol = v.ValueString()
@@ -185,7 +185,7 @@ func buildSecurityGroupTargetRules(ruleList types.List) []CloudSecurityGroupAPIT
 func SecurityGroupRuleAttrTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"direction":        ovhtypes.TfStringType{},
-		"ether_type":       ovhtypes.TfStringType{},
+		"ethernet_type":    ovhtypes.TfStringType{},
 		"protocol":         ovhtypes.TfStringType{},
 		"port_range_min":   types.Int64Type,
 		"port_range_max":   types.Int64Type,
@@ -200,7 +200,7 @@ func SecurityGroupCurrentStateRuleAttrTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"id":               ovhtypes.TfStringType{},
 		"direction":        ovhtypes.TfStringType{},
-		"ether_type":       ovhtypes.TfStringType{},
+		"ethernet_type":    ovhtypes.TfStringType{},
 		"protocol":         ovhtypes.TfStringType{},
 		"port_range_min":   types.Int64Type,
 		"port_range_max":   types.Int64Type,
@@ -261,7 +261,7 @@ func buildStateRulesList(apiRules []CloudSecurityGroupAPIStateRule) basetypes.Li
 			map[string]attr.Value{
 				"id":               ovhtypes.TfStringValue{StringValue: types.StringValue(rule.Id)},
 				"direction":        ovhtypes.TfStringValue{StringValue: types.StringValue(rule.Direction)},
-				"ether_type":       ovhtypes.TfStringValue{StringValue: types.StringValue(rule.EtherType)},
+				"ethernet_type":    ovhtypes.TfStringValue{StringValue: types.StringValue(rule.EthernetType)},
 				"protocol":         ovhtypes.TfStringValue{StringValue: types.StringValue(rule.Protocol)},
 				"port_range_min":   portRangeMin,
 				"port_range_max":   portRangeMax,
@@ -377,7 +377,7 @@ func (m *CloudSecurityGroupModel) MergeWith(ctx context.Context, response *Cloud
 					ruleAttrTypes,
 					map[string]attr.Value{
 						"direction":        ovhtypes.TfStringValue{StringValue: types.StringValue(rule.Direction)},
-						"ether_type":       ovhtypes.TfStringValue{StringValue: types.StringValue(rule.EtherType)},
+						"ethernet_type":    ovhtypes.TfStringValue{StringValue: types.StringValue(rule.EthernetType)},
 						"protocol":         protocolVal,
 						"port_range_min":   portRangeMin,
 						"port_range_max":   portRangeMax,

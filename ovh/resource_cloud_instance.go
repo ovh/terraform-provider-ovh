@@ -155,6 +155,15 @@ func (r *cloudInstanceResource) Schema(ctx context.Context, req resource.SchemaR
 				Description:         "SSH key name to associate with the instance",
 				MarkdownDescription: "SSH key name to associate with the instance",
 			},
+			"group_id": schema.StringAttribute{
+				CustomType:          ovhtypes.TfStringType{},
+				Optional:            true,
+				Description:         "Instance group ID to assign this instance to (placement policy, immutable after creation)",
+				MarkdownDescription: "Instance group ID to assign this instance to (placement policy, immutable after creation)",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
 			// Computed attributes
 			"id": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
@@ -363,6 +372,11 @@ func (r *cloudInstanceResource) Schema(ctx context.Context, req resource.SchemaR
 						ElementType: types.StringType,
 						Computed:    true,
 						Description: "Security groups attached to the instance",
+					},
+					"group_id": schema.StringAttribute{
+						CustomType:  ovhtypes.TfStringType{},
+						Computed:    true,
+						Description: "Instance group ID this instance belongs to",
 					},
 				},
 			},

@@ -23,6 +23,7 @@ type CloudInstanceModel struct {
 	VolumeIds        ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] `tfsdk:"volume_ids"`
 	Networks         types.List                                         `tfsdk:"networks"`
 	SSHKeyName       ovhtypes.TfStringValue                             `tfsdk:"ssh_key_name"`
+	GroupId          ovhtypes.TfStringValue                             `tfsdk:"group_id"`
 
 	// Computed
 	Id             ovhtypes.TfStringValue `tfsdk:"id"`
@@ -55,6 +56,11 @@ type CloudInstanceAPICurrentState struct {
 	Networks       []CloudInstanceAPINetwork `json:"networks,omitempty"`
 	Volumes        []CloudInstanceAPIVolume  `json:"volumes,omitempty"`
 	SecurityGroups []string                  `json:"securityGroups,omitempty"`
+	Group          *CloudInstanceAPIGroupRef `json:"group,omitempty"`
+}
+
+type CloudInstanceAPIGroupRef struct {
+	Id string `json:"id"`
 }
 
 type CloudInstanceAPIFlavor struct {
@@ -102,6 +108,7 @@ type CloudInstanceAPITargetSpec struct {
 	SSHKeyName string                       `json:"sshKeyName,omitempty"`
 	Networks   []CloudInstanceAPINetworkRef `json:"networks"`
 	Volumes    []CloudInstanceAPIVolumeRef  `json:"volumes"`
+	Group      *CloudInstanceAPIGroupRef    `json:"group,omitempty"`
 }
 
 type CloudInstanceAPIFlavorRef struct {
@@ -158,6 +165,11 @@ func (m *CloudInstanceModel) ToCreate() *CloudInstanceCreatePayload {
 	// Set availability zone if provided
 	if !m.AvailabilityZone.IsNull() && !m.AvailabilityZone.IsUnknown() {
 		targetSpec.Location.AvailabilityZone = m.AvailabilityZone.ValueString()
+	}
+
+	// Set group if provided (immutable, only on create)
+	if !m.GroupId.IsNull() && !m.GroupId.IsUnknown() {
+		targetSpec.Group = &CloudInstanceAPIGroupRef{Id: m.GroupId.ValueString()}
 	}
 
 	// Build networks from structured networks if provided
@@ -364,6 +376,7 @@ func CurrentStateAttrTypes() map[string]attr.Type {
 		"security_groups": types.ListType{
 			ElemType: types.StringType,
 		},
+		"group_id": ovhtypes.TfStringType{},
 	}
 }
 
@@ -384,6 +397,11 @@ func (m *CloudInstanceModel) MergeWith(ctx context.Context, response *CloudInsta
 	// Update region from targetSpec if available
 	if response.TargetSpec != nil && response.TargetSpec.Location != nil {
 		m.Region = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Location.Region)}
+	}
+
+	// Update group_id from targetSpec if available
+	if response.TargetSpec != nil && response.TargetSpec.Group != nil {
+		m.GroupId = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Group.Id)}
 	}
 }
 
@@ -558,6 +576,14 @@ func buildCurrentStateObject(ctx context.Context, state *CloudInstanceAPICurrent
 		securityGroupsVal = types.ListNull(types.StringType)
 	}
 
+	// Build group_id value
+	var groupIdVal attr.Value
+	if state.Group != nil && state.Group.Id != "" {
+		groupIdVal = ovhtypes.TfStringValue{StringValue: types.StringValue(state.Group.Id)}
+	} else {
+		groupIdVal = ovhtypes.TfStringValue{StringValue: types.StringValue("")}
+	}
+
 	// Build the complete current_state object
 	currentStateObj, _ := types.ObjectValue(
 		CurrentStateAttrTypes(),
@@ -572,6 +598,7 @@ func buildCurrentStateObject(ctx context.Context, state *CloudInstanceAPICurrent
 			"networks":        networksVal,
 			"volumes":         volumesVal,
 			"security_groups": securityGroupsVal,
+			"group_id":        groupIdVal,
 		},
 	)
 
