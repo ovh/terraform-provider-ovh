@@ -9,12 +9,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-func TestAccCloudProjectSSHKey_basic(t *testing.T) {
+func TestAccCloudSshKey_basic(t *testing.T) {
 	keyName := acctest.RandomWithPrefix(test_prefix)
 	config := fmt.Sprintf(`
-	resource "ovh_cloud_project_ssh_key" "key" {
+	resource "ovh_cloud_ssh_key" "key" {
 		service_name = "%s"
-		region       = "GRA9"
 		name         = "%s"
 		public_key   = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAAgQC9xPpdqP3sx2H+gcBm65tJEaUbuifQ1uGkgrWtNY0PRKNNPdy+3yoVOtxk6Vjo4YZ0EU/JhmQfnrK7X7Q5vhqYxmozi0LiTRt0BxgqHJ+4hWTWMIOgr+C2jLx7ZsCReRk+fy5AHr6h0PHQEuXVLXeUy/TDyuY2JPtUZ5jcqvLYgQ== my-nuclear-power-plant"
 	}
@@ -27,9 +26,10 @@ func TestAccCloudProjectSSHKey_basic(t *testing.T) {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_cloud_project_ssh_key.key", "name", keyName),
-					resource.TestCheckResourceAttr("ovh_cloud_project_ssh_key.key", "regions.#", "1"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_ssh_key.key", "regions.0", "GRA9"),
+					resource.TestCheckResourceAttr("ovh_cloud_ssh_key.key", "name", keyName),
+					resource.TestCheckResourceAttrSet("ovh_cloud_ssh_key.key", "public_key"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_ssh_key.key", "created_at"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_ssh_key.key", "updated_at"),
 				),
 			},
 		},

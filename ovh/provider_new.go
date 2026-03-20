@@ -237,6 +237,7 @@ func (p *OvhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 		NewCloudProjectImagesDataSource,
 		NewCloudInstanceFlavorDataSource,
 		NewCloudInstanceFlavorsDataSource,
+		NewCloudInstanceGroupDataSource,
 		NewCloudInstanceImageDataSource,
 		NewCloudInstanceImagesDataSource,
 		NewCloudProjectLoadbalancerDataSource,
@@ -300,6 +301,7 @@ func (p *OvhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 func (p *OvhProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewCloudInstanceResource,
+		NewCloudInstanceGroupResource,
 		NewCloudNetworkPrivateVrackResource,
 		NewCloudNetworkPrivateVrackSubnetResource,
 		NewCloudStorageObjectBucketResource,
@@ -319,6 +321,8 @@ func (p *OvhProvider) Resources(_ context.Context) []func() resource.Resource {
 		NewCloudProjectVolumeBackupResource,
 		NewCloudProjectVolumeResource,
 		NewCloudFloatingIpResource,
+		NewCloudSecurityGroupResource,
+		NewCloudSshKeyResource,
 		NewCloudInstanceBackupResource,
 		NewCloudGatewayResource,
 		NewCloudStorageBlockVolumeBackupResource,
