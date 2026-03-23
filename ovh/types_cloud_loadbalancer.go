@@ -12,8 +12,8 @@ import (
 // CloudLoadbalancerModel represents the Terraform model for the loadbalancer resource
 type CloudLoadbalancerModel struct {
 	// Required — immutable
-	ServiceName ovhtypes.TfStringValue `tfsdk:"service_name"`
-	Region      ovhtypes.TfStringValue `tfsdk:"region"`
+	ServiceName  ovhtypes.TfStringValue `tfsdk:"service_name"`
+	Region       ovhtypes.TfStringValue `tfsdk:"region"`
 	VipNetworkId ovhtypes.TfStringValue `tfsdk:"vip_network_id"`
 	VipSubnetId  ovhtypes.TfStringValue `tfsdk:"vip_subnet_id"`
 	FlavorId     ovhtypes.TfStringValue `tfsdk:"flavor_id"`

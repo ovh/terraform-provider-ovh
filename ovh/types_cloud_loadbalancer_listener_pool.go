@@ -47,13 +47,13 @@ type CloudLoadbalancerListenerPoolAPILocation struct {
 }
 
 type CloudLoadbalancerListenerPoolAPIResponse struct {
-	Id             string                                          `json:"id"`
-	Checksum       string                                          `json:"checksum"`
-	CreatedAt      string                                          `json:"createdAt"`
-	UpdatedAt      string                                          `json:"updatedAt"`
-	ResourceStatus string                                          `json:"resourceStatus"`
-	CurrentState   *CloudLoadbalancerListenerPoolAPICurrentState   `json:"currentState,omitempty"`
-	TargetSpec     *CloudLoadbalancerListenerPoolAPITargetSpec     `json:"targetSpec,omitempty"`
+	Id             string                                        `json:"id"`
+	Checksum       string                                        `json:"checksum"`
+	CreatedAt      string                                        `json:"createdAt"`
+	UpdatedAt      string                                        `json:"updatedAt"`
+	ResourceStatus string                                        `json:"resourceStatus"`
+	CurrentState   *CloudLoadbalancerListenerPoolAPICurrentState `json:"currentState,omitempty"`
+	TargetSpec     *CloudLoadbalancerListenerPoolAPITargetSpec   `json:"targetSpec,omitempty"`
 }
 
 type CloudLoadbalancerListenerPoolAPICurrentState struct {
