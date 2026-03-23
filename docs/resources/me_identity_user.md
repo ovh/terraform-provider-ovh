@@ -6,6 +6,10 @@ subcategory : "Account Management (IAM)"
 
 Creates an identity user.
 
+~> **NOTE** The `groups` attribute manages group memberships inline. Alternatively, you can use
+the [`ovh_me_identity_group_membership`](me_identity_group_membership) resource to manage memberships as standalone resources.
+Do not use both approaches for the same user, as they will conflict with each other.
+
 ## Example Usage
 
 ```terraform
@@ -24,7 +28,7 @@ resource "ovh_me_identity_user" "my_user" {
 * `description` - User description.
 * `email` - User's email.
 * `group` - User's main group.
-* `groups` - (Optional) Additional groups the user belongs to (other than the main group).
+* `groups` - (Optional) Additional groups the user belongs to (other than the main group). Conflicts with `ovh_me_identity_group_membership`. Use one approach or the other, not both.
 * `login` - User's login suffix.
 * `password` - User's password.
 

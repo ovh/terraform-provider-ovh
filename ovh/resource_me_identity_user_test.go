@@ -247,5 +247,6 @@ resource "ovh_me_identity_user" "user_1" {
 	group       = "%s"
 	login       = "%s"
 	password    = "%s"
+	groups      = []
 }
 `

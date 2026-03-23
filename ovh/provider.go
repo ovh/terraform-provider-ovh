@@ -306,6 +306,7 @@ func Provider() *schema.Provider {
 			"ovh_iploadbalancing_tcp_route_rule":                             resourceIPLoadbalancingTcpRouteRule(),
 			"ovh_iploadbalancing_vrack_network":                              resourceIPLoadbalancingVrackNetwork(),
 			"ovh_me_identity_group":                                          resourceMeIdentityGroup(),
+			"ovh_me_identity_group_membership":                               resourceMeIdentityGroupMembership(),
 			"ovh_me_api_oauth2_client":                                       resourceApiOauth2Client(),
 			"ovh_me_identity_user":                                           resourceMeIdentityUser(),
 			"ovh_savings_plan":                                               resourceSavingsPlan(),

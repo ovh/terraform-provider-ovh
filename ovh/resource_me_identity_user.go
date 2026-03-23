@@ -46,6 +46,7 @@ func resourceMeIdentityUser() *schema.Resource {
 			"groups": {
 				Type:        schema.TypeSet,
 				Optional:    true,
+				Computed:    true,
 				Description: "Additional groups the user belongs to (other than the main group)",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
