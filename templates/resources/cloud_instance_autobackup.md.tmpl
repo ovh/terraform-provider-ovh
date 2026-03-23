@@ -1,0 +1,97 @@
+---
+subcategory : "Compute"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_cloud_instance_autobackup
+
+Manage a scheduled automatic backup (Mistral crontrigger) for a Public Cloud instance.
+
+~> **NOTE:** Changing any attribute will destroy and recreate the autobackup resource (autobackups are immutable).
+
+## Example Usage
+
+### Local autobackup
+
+{{tffile "examples/resources/cloud_instance_autobackup/example_1.tf"}}
+
+### Cross-region autobackup
+
+{{tffile "examples/resources/cloud_instance_autobackup/example_2.tf"}}
+
+## Schema
+
+### Required
+
+- `cron` (String) Cron schedule pattern (e.g. `0 2 * * *`)
+- `image_name` (String) Backup image name prefix
+- `instance_id` (String) ID of the source instance
+- `name` (String) Crontrigger name
+- `project_id` (String) Public Cloud project ID
+- `region` (String) OpenStack region
+- `rotation` (Number) Number of backup versions to keep (minimum 1)
+
+### Optional
+
+- `distant` (Attributes) Cross-region backup configuration (see [below for nested schema](#nestedatt--distant))
+
+### Read-Only
+
+- `checksum` (String) Resource checksum for concurrency control
+- `created_at` (String) Creation timestamp (RFC 3339)
+- `current_state` (Attributes) Current state from the infrastructure (see [below for nested schema](#nestedatt--current_state))
+- `id` (String) Autobackup (crontrigger) ID
+- `resource_status` (String) Resource status (`READY`, `CREATING`, `DELETING`, `ERROR`)
+- `updated_at` (String) Last update timestamp (RFC 3339)
+
+<a id="nestedatt--distant"></a>
+
+### Nested Schema for `distant`
+
+Optional:
+
+- `image_name` (String) Image name for the cross-region backup copy
+- `region` (String) Target region for cross-region backup
+
+<a id="nestedatt--current_state"></a>
+
+### Nested Schema for `current_state`
+
+Read-Only:
+
+- `cron` (String) Cron schedule pattern
+- `distant` (Attributes) Cross-region backup configuration (see [below for nested schema](#nestedatt--current_state--distant))
+- `image_name` (String) Backup image name prefix
+- `instance_id` (String) Source instance ID
+- `name` (String) Crontrigger name
+- `next_execution_time` (String) Next scheduled execution time
+- `region` (String) OpenStack region
+- `rotation` (Number) Number of backup versions to keep
+- `workflow_name` (String) OpenStack Mistral workflow name
+
+<a id="nestedatt--current_state--distant"></a>
+
+### Nested Schema for `current_state.distant`
+
+Read-Only:
+
+- `image_name` (String) Image name for the cross-region backup copy
+- `region` (String) Target region for cross-region backup
+
+## Import
+
+An autobackup can be imported using the `project_id` and `id` attributes. Using the following configuration:
+
+{{tffile "examples/resources/cloud_instance_autobackup/example_3.tf"}}
+
+You can then run:
+
+```bash
+$ terraform plan -generate-config-out=autobackup.tf
+$ terraform apply
+```
+
+The file `autobackup.tf` will then contain the imported resource's configuration, that can be copied next to the `import` block above. See https://developer.hashicorp.com/terraform/language/import/generating-configuration for more details.
