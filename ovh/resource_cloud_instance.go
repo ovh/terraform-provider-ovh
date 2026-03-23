@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/ovh/go-ovh/ovh"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
@@ -54,9 +53,9 @@ func (r *cloudInstanceResource) Configure(ctx context.Context, req resource.Conf
 }
 
 var instanceMutableAttrs = MutableAttrs{
-	Strings:           []string{"name", "flavor_id", "image_id", "ssh_key_name"},
+	Strings:           []string{"name", "flavor_id", "image_id", "ssh_key_name", "power_state"},
 	Lists:             []string{"networks"},
-	CustomStringLists: []string{"volume_ids"},
+	CustomStringLists: []string{"volume_ids", "security_group_ids"},
 }
 
 func (r *cloudInstanceResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -149,6 +148,12 @@ func (r *cloudInstanceResource) Schema(ctx context.Context, req resource.SchemaR
 				Description:         "List of volume IDs to attach to the instance",
 				MarkdownDescription: "List of volume IDs to attach to the instance",
 			},
+			"security_group_ids": schema.ListAttribute{
+				CustomType:          ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+				Optional:            true,
+				Description:         "List of security group IDs to apply to the instance",
+				MarkdownDescription: "List of security group IDs to apply to the instance",
+			},
 			"ssh_key_name": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Optional:            true,
@@ -163,6 +168,13 @@ func (r *cloudInstanceResource) Schema(ctx context.Context, req resource.SchemaR
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+			},
+			"power_state": schema.StringAttribute{
+				CustomType:          ovhtypes.TfStringType{},
+				Optional:            true,
+				Computed:            true,
+				Description:         "Desired power state of the instance (ACTIVE, SHUTOFF, SHELVED, RESCUE)",
+				MarkdownDescription: "Desired power state of the instance (ACTIVE, SHUTOFF, SHELVED, RESCUE)",
 			},
 			// Computed attributes
 			"id": schema.StringAttribute{
@@ -204,7 +216,6 @@ func (r *cloudInstanceResource) Schema(ctx context.Context, req resource.SchemaR
 					OutOfSyncPlanModifier(),
 				},
 			},
-
 			// Current state (computed, read-only)
 			"current_state": schema.SingleNestedAttribute{
 				Computed:    true,
@@ -261,6 +272,10 @@ func (r *cloudInstanceResource) Schema(ctx context.Context, req resource.SchemaR
 								Description: "Image status",
 							},
 						},
+					},
+					"locked": schema.BoolAttribute{
+						Computed:    true,
+						Description: "Whether the instance is locked against modifications",
 					},
 					"name": schema.StringAttribute{
 						CustomType:  ovhtypes.TfStringType{},
@@ -368,15 +383,28 @@ func (r *cloudInstanceResource) Schema(ctx context.Context, req resource.SchemaR
 							},
 						},
 					},
-					"security_groups": schema.ListAttribute{
-						ElementType: types.StringType,
+					"security_groups": schema.ListNestedAttribute{
 						Computed:    true,
 						Description: "Security groups attached to the instance",
+						NestedObject: schema.NestedAttributeObject{
+							Attributes: map[string]schema.Attribute{
+								"id": schema.StringAttribute{
+									CustomType:  ovhtypes.TfStringType{},
+									Computed:    true,
+									Description: "Security group identifier",
+								},
+							},
+						},
 					},
 					"group_id": schema.StringAttribute{
 						CustomType:  ovhtypes.TfStringType{},
 						Computed:    true,
 						Description: "Instance group ID this instance belongs to",
+					},
+					"power_state": schema.StringAttribute{
+						CustomType:  ovhtypes.TfStringType{},
+						Computed:    true,
+						Description: "Current power state of the instance",
 					},
 				},
 			},

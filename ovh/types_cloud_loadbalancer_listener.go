@@ -45,13 +45,13 @@ type CloudLoadbalancerListenerModel struct {
 // API response types
 
 type CloudLoadbalancerListenerAPIResponse struct {
-	Id             string                                     `json:"id"`
-	Checksum       string                                     `json:"checksum"`
-	CreatedAt      string                                     `json:"createdAt"`
-	UpdatedAt      string                                     `json:"updatedAt"`
-	ResourceStatus string                                     `json:"resourceStatus"`
-	CurrentState   *CloudLoadbalancerListenerAPICurrentState  `json:"currentState,omitempty"`
-	TargetSpec     *CloudLoadbalancerListenerAPITargetSpec    `json:"targetSpec,omitempty"`
+	Id             string                                    `json:"id"`
+	Checksum       string                                    `json:"checksum"`
+	CreatedAt      string                                    `json:"createdAt"`
+	UpdatedAt      string                                    `json:"updatedAt"`
+	ResourceStatus string                                    `json:"resourceStatus"`
+	CurrentState   *CloudLoadbalancerListenerAPICurrentState `json:"currentState,omitempty"`
+	TargetSpec     *CloudLoadbalancerListenerAPITargetSpec   `json:"targetSpec,omitempty"`
 }
 
 type CloudLoadbalancerListenerAPIInsertHeaders struct {

@@ -21,9 +21,11 @@ type CloudInstanceModel struct {
 	// Optional
 	AvailabilityZone ovhtypes.TfStringValue                             `tfsdk:"availability_zone"`
 	VolumeIds        ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] `tfsdk:"volume_ids"`
+	SecurityGroupIds ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] `tfsdk:"security_group_ids"`
 	Networks         types.List                                         `tfsdk:"networks"`
 	SSHKeyName       ovhtypes.TfStringValue                             `tfsdk:"ssh_key_name"`
 	GroupId          ovhtypes.TfStringValue                             `tfsdk:"group_id"`
+	PowerState       ovhtypes.TfStringValue                             `tfsdk:"power_state"`
 
 	// Computed
 	Id             ovhtypes.TfStringValue `tfsdk:"id"`
@@ -46,20 +48,26 @@ type CloudInstanceAPIResponse struct {
 }
 
 type CloudInstanceAPICurrentState struct {
-	Flavor         *CloudInstanceAPIFlavor   `json:"flavor,omitempty"`
-	Image          *CloudInstanceAPIImage    `json:"image,omitempty"`
-	Name           string                    `json:"name,omitempty"`
-	HostId         string                    `json:"hostId,omitempty"`
-	SSHKeyName     string                    `json:"sshKeyName,omitempty"`
-	ProjectId      string                    `json:"projectId,omitempty"`
-	UserId         string                    `json:"userId,omitempty"`
-	Networks       []CloudInstanceAPINetwork `json:"networks,omitempty"`
-	Volumes        []CloudInstanceAPIVolume  `json:"volumes,omitempty"`
-	SecurityGroups []string                  `json:"securityGroups,omitempty"`
-	Group          *CloudInstanceAPIGroupRef `json:"group,omitempty"`
+	Flavor         *CloudInstanceAPIFlavor            `json:"flavor,omitempty"`
+	Image          *CloudInstanceAPIImage             `json:"image,omitempty"`
+	Locked         bool                               `json:"locked"`
+	Name           string                             `json:"name,omitempty"`
+	HostId         string                             `json:"hostId,omitempty"`
+	SSHKeyName     string                             `json:"sshKeyName,omitempty"`
+	ProjectId      string                             `json:"projectId,omitempty"`
+	UserId         string                             `json:"userId,omitempty"`
+	Networks       []CloudInstanceAPINetwork          `json:"networks,omitempty"`
+	Volumes        []CloudInstanceAPIVolume           `json:"volumes,omitempty"`
+	SecurityGroups []CloudInstanceAPISecurityGroupRef `json:"securityGroups,omitempty"`
+	Group          *CloudInstanceAPIGroupRef          `json:"group,omitempty"`
+	PowerState     string                             `json:"powerState,omitempty"`
 }
 
 type CloudInstanceAPIGroupRef struct {
+	Id string `json:"id"`
+}
+
+type CloudInstanceAPISecurityGroupRef struct {
 	Id string `json:"id"`
 }
 
@@ -101,14 +109,16 @@ type CloudInstanceAPIVolume struct {
 }
 
 type CloudInstanceAPITargetSpec struct {
-	Flavor     *CloudInstanceAPIFlavorRef   `json:"flavor"`
-	Image      *CloudInstanceAPIImageRef    `json:"image"`
-	Location   *CloudInstanceAPILocation    `json:"location,omitempty"`
-	Name       string                       `json:"name"`
-	SSHKeyName string                       `json:"sshKeyName,omitempty"`
-	Networks   []CloudInstanceAPINetworkRef `json:"networks"`
-	Volumes    []CloudInstanceAPIVolumeRef  `json:"volumes"`
-	Group      *CloudInstanceAPIGroupRef    `json:"group,omitempty"`
+	Flavor         *CloudInstanceAPIFlavorRef         `json:"flavor"`
+	Image          *CloudInstanceAPIImageRef          `json:"image"`
+	Location       *CloudInstanceAPILocation          `json:"location,omitempty"`
+	Name           string                             `json:"name"`
+	SSHKeyName     string                             `json:"sshKeyName,omitempty"`
+	Networks       []CloudInstanceAPINetworkRef       `json:"networks"`
+	Volumes        []CloudInstanceAPIVolumeRef        `json:"volumes"`
+	SecurityGroups []CloudInstanceAPISecurityGroupRef `json:"securityGroups,omitempty"`
+	Group          *CloudInstanceAPIGroupRef          `json:"group,omitempty"`
+	PowerState     string                             `json:"powerState,omitempty"`
 }
 
 type CloudInstanceAPIFlavorRef struct {
@@ -165,6 +175,11 @@ func (m *CloudInstanceModel) ToCreate() *CloudInstanceCreatePayload {
 	// Set availability zone if provided
 	if !m.AvailabilityZone.IsNull() && !m.AvailabilityZone.IsUnknown() {
 		targetSpec.Location.AvailabilityZone = m.AvailabilityZone.ValueString()
+	}
+
+	// Set power state if provided
+	if !m.PowerState.IsNull() && !m.PowerState.IsUnknown() {
+		targetSpec.PowerState = m.PowerState.ValueString()
 	}
 
 	// Set group if provided (immutable, only on create)
@@ -234,6 +249,19 @@ func (m *CloudInstanceModel) ToCreate() *CloudInstanceCreatePayload {
 		targetSpec.Volumes = volumes
 	}
 
+	// Add security groups if specified
+	if !m.SecurityGroupIds.IsNull() && !m.SecurityGroupIds.IsUnknown() {
+		securityGroups := make([]CloudInstanceAPISecurityGroupRef, 0)
+		for _, sgId := range m.SecurityGroupIds.Elements() {
+			if strVal, ok := sgId.(ovhtypes.TfStringValue); ok {
+				securityGroups = append(securityGroups, CloudInstanceAPISecurityGroupRef{
+					Id: strVal.ValueString(),
+				})
+			}
+		}
+		targetSpec.SecurityGroups = securityGroups
+	}
+
 	return &CloudInstanceCreatePayload{
 		TargetSpec: targetSpec,
 	}
@@ -249,6 +277,11 @@ func (m *CloudInstanceModel) ToUpdate(checksum string) *CloudInstanceUpdatePaylo
 			Id: m.ImageId.ValueString(),
 		},
 		Name: m.Name.ValueString(),
+	}
+
+	// Set power state if provided
+	if !m.PowerState.IsNull() && !m.PowerState.IsUnknown() {
+		targetSpec.PowerState = m.PowerState.ValueString()
 	}
 
 	// Build networks from structured networks if provided
@@ -313,6 +346,19 @@ func (m *CloudInstanceModel) ToUpdate(checksum string) *CloudInstanceUpdatePaylo
 		targetSpec.Volumes = volumes
 	}
 
+	// Add security groups if specified
+	if !m.SecurityGroupIds.IsNull() && !m.SecurityGroupIds.IsUnknown() {
+		securityGroups := make([]CloudInstanceAPISecurityGroupRef, 0)
+		for _, sgId := range m.SecurityGroupIds.Elements() {
+			if strVal, ok := sgId.(ovhtypes.TfStringValue); ok {
+				securityGroups = append(securityGroups, CloudInstanceAPISecurityGroupRef{
+					Id: strVal.ValueString(),
+				})
+			}
+		}
+		targetSpec.SecurityGroups = securityGroups
+	}
+
 	return &CloudInstanceUpdatePayload{
 		Checksum:   checksum,
 		TargetSpec: targetSpec,
@@ -338,6 +384,7 @@ func CurrentStateAttrTypes() map[string]attr.Type {
 				"status": ovhtypes.TfStringType{},
 			},
 		},
+		"locked":       types.BoolType,
 		"name":         ovhtypes.TfStringType{},
 		"host_id":      ovhtypes.TfStringType{},
 		"ssh_key_name": ovhtypes.TfStringType{},
@@ -374,9 +421,14 @@ func CurrentStateAttrTypes() map[string]attr.Type {
 			},
 		},
 		"security_groups": types.ListType{
-			ElemType: types.StringType,
+			ElemType: types.ObjectType{
+				AttrTypes: map[string]attr.Type{
+					"id": ovhtypes.TfStringType{},
+				},
+			},
 		},
-		"group_id": ovhtypes.TfStringType{},
+		"group_id":    ovhtypes.TfStringType{},
+		"power_state": ovhtypes.TfStringType{},
 	}
 }
 
@@ -394,6 +446,11 @@ func (m *CloudInstanceModel) MergeWith(ctx context.Context, response *CloudInsta
 		m.CurrentState = types.ObjectNull(CurrentStateAttrTypes())
 	}
 
+	// Update power state from targetSpec if available
+	if response.TargetSpec != nil && response.TargetSpec.PowerState != "" {
+		m.PowerState = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.PowerState)}
+	}
+
 	// Update region from targetSpec if available
 	if response.TargetSpec != nil && response.TargetSpec.Location != nil {
 		m.Region = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Location.Region)}
@@ -402,6 +459,17 @@ func (m *CloudInstanceModel) MergeWith(ctx context.Context, response *CloudInsta
 	// Update group_id from targetSpec if available
 	if response.TargetSpec != nil && response.TargetSpec.Group != nil {
 		m.GroupId = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Group.Id)}
+	}
+
+	// Update security_group_ids from targetSpec if available
+	if response.TargetSpec != nil && response.TargetSpec.SecurityGroups != nil {
+		sgIds := make([]attr.Value, len(response.TargetSpec.SecurityGroups))
+		for i, sg := range response.TargetSpec.SecurityGroups {
+			sgIds[i] = ovhtypes.TfStringValue{StringValue: types.StringValue(sg.Id)}
+		}
+		var zero ovhtypes.TfStringValue
+		listValue := basetypes.NewListValueMust(zero.Type(ctx), sgIds)
+		m.SecurityGroupIds = ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]{ListValue: listValue}
 	}
 }
 
@@ -565,15 +633,25 @@ func buildCurrentStateObject(ctx context.Context, state *CloudInstanceAPICurrent
 	}
 
 	// Build security groups list
+	sgAttrTypes := map[string]attr.Type{
+		"id": ovhtypes.TfStringType{},
+	}
+
 	var securityGroupsVal basetypes.ListValue
 	if state.SecurityGroups != nil {
-		sgVals := make([]attr.Value, len(state.SecurityGroups))
+		sgObjs := make([]attr.Value, len(state.SecurityGroups))
 		for i, sg := range state.SecurityGroups {
-			sgVals[i] = types.StringValue(sg)
+			sgObj, _ := types.ObjectValue(
+				sgAttrTypes,
+				map[string]attr.Value{
+					"id": ovhtypes.TfStringValue{StringValue: types.StringValue(sg.Id)},
+				},
+			)
+			sgObjs[i] = sgObj
 		}
-		securityGroupsVal, _ = types.ListValue(types.StringType, sgVals)
+		securityGroupsVal, _ = types.ListValue(types.ObjectType{AttrTypes: sgAttrTypes}, sgObjs)
 	} else {
-		securityGroupsVal = types.ListNull(types.StringType)
+		securityGroupsVal = types.ListNull(types.ObjectType{AttrTypes: sgAttrTypes})
 	}
 
 	// Build group_id value
@@ -590,6 +668,7 @@ func buildCurrentStateObject(ctx context.Context, state *CloudInstanceAPICurrent
 		map[string]attr.Value{
 			"flavor":          flavorObj,
 			"image":           imageObj,
+			"locked":          types.BoolValue(state.Locked),
 			"name":            ovhtypes.TfStringValue{StringValue: types.StringValue(state.Name)},
 			"host_id":         ovhtypes.TfStringValue{StringValue: types.StringValue(state.HostId)},
 			"ssh_key_name":    ovhtypes.TfStringValue{StringValue: types.StringValue(state.SSHKeyName)},
@@ -599,6 +678,7 @@ func buildCurrentStateObject(ctx context.Context, state *CloudInstanceAPICurrent
 			"volumes":         volumesVal,
 			"security_groups": securityGroupsVal,
 			"group_id":        groupIdVal,
+			"power_state":     ovhtypes.TfStringValue{StringValue: types.StringValue(state.PowerState)},
 		},
 	)
 

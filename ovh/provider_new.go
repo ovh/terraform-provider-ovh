@@ -240,6 +240,7 @@ func (p *OvhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 		NewCloudRegionDataSource,
 		NewCloudRegionsDataSource,
 		NewCloudInstanceGroupDataSource,
+		NewCloudInstanceEventsDataSource,
 		NewCloudInstanceImageDataSource,
 		NewCloudInstanceImagesDataSource,
 		NewCloudProjectLoadbalancerDataSource,
