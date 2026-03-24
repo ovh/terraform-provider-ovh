@@ -128,7 +128,7 @@ func (v DbaasLogsInputConfigurationFlowgger) ToMap() map[string]interface{} {
 }
 
 func (opts *DbaasLogsInputConfigurationFlowgger) FromResourceWithPath(d *schema.ResourceData, path string) *DbaasLogsInputConfigurationFlowgger {
-	opts.LogFormat = d.Get(fmt.Sprintf("%s.log_framing", path)).(string)
-	opts.LogFraming = d.Get(fmt.Sprintf("%s.log_format", path)).(string)
+	opts.LogFormat = d.Get(fmt.Sprintf("%s.log_format", path)).(string)
+	opts.LogFraming = d.Get(fmt.Sprintf("%s.log_framing", path)).(string)
 	return opts
 }
