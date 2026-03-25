@@ -2,17 +2,17 @@ package ovh
 
 import (
 	"fmt"
-	"os"
-	"strconv"
-	"testing"
-
 	"log"
+	"os"
 	"regexp"
+	"strconv"
 	"strings"
+	"testing"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
@@ -274,6 +274,29 @@ func TestAccDomainZoneRecord_updateType(t *testing.T) {
 	})
 }
 
+func TestAccDomainZoneRecord_EmptyPlanForTXT(t *testing.T) {
+	zone := os.Getenv("OVH_ZONE_TEST")
+	subdomain := acctest.RandomWithPrefix(test_prefix)
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheckDomain(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckOvhDomainZoneRecordDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCheckOvhDomainZoneRecordConfig_TXT(zone, subdomain, "test", 3600),
+			},
+			{
+				Config: testAccCheckOvhDomainZoneRecordConfig_TXT(zone, subdomain, "test", 3600),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckOvhDomainZoneRecordDestroy(s *terraform.State) error {
 	provider := testAccProvider.Meta().(*Config)
 	zone := os.Getenv("OVH_ZONE_TEST")
@@ -357,6 +380,17 @@ resource "ovh_domain_zone_record" "foobar" {
 	subdomain = "%s"
 	target = "%s"
 	fieldtype = "CNAME"
+	ttl = %d
+}`, zone, subdomain, target, ttl)
+}
+
+func testAccCheckOvhDomainZoneRecordConfig_TXT(zone, subdomain, target string, ttl int) string {
+	return fmt.Sprintf(`
+resource "ovh_domain_zone_record" "foobar" {
+	zone = "%s"
+	subdomain = "%s"
+	target = "%s"
+	fieldtype = "TXT"
 	ttl = %d
 }`, zone, subdomain, target, ttl)
 }
