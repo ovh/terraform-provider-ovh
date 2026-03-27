@@ -41,6 +41,12 @@ func resourceCloudProjectSchema() map[string]*schema.Schema {
 			Optional: true,
 			Computed: true,
 		},
+		"deletion_protection": {
+			Type:        schema.TypeBool,
+			Description: "Prevent the cloud project from being destroyed. Defaults to false.",
+			Optional:    true,
+			Default:     false,
+		},
 
 		// computed
 		"urn": {
@@ -155,6 +161,10 @@ func resourceCloudProjectRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceCloudProjectDelete(d *schema.ResourceData, meta interface{}) error {
+	if d.Get("deletion_protection").(bool) {
+		return fmt.Errorf("cloud project %s is protected from deletion. Set deletion_protection to false before destroying", d.Id())
+	}
+
 	config := meta.(*Config)
 	serviceName := d.Get("project_id").(string)
 
