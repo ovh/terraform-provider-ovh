@@ -86,8 +86,8 @@ func (r *cloudKeymanagerContainerResource) Schema(ctx context.Context, req resou
 			"type": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Required:            true,
-				Description:         "Type of the container (e.g., generic, rsa, certificate)",
-				MarkdownDescription: "Type of the container (e.g., `generic`, `rsa`, `certificate`)",
+				Description:         "Type of the container. Possible values: CERTIFICATE, GENERIC, RSA",
+				MarkdownDescription: "Type of the container. Possible values: `CERTIFICATE`, `GENERIC`, `RSA`",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -153,16 +153,20 @@ func (r *cloudKeymanagerContainerResource) Schema(ctx context.Context, req resou
 						Computed:   true,
 					},
 					"type": schema.StringAttribute{
-						CustomType: ovhtypes.TfStringType{},
-						Computed:   true,
+						CustomType:          ovhtypes.TfStringType{},
+						Computed:            true,
+						Description:         "Type of the container. Possible values: CERTIFICATE, GENERIC, RSA",
+						MarkdownDescription: "Type of the container. Possible values: `CERTIFICATE`, `GENERIC`, `RSA`",
 					},
 					"container_ref": schema.StringAttribute{
 						CustomType: ovhtypes.TfStringType{},
 						Computed:   true,
 					},
 					"status": schema.StringAttribute{
-						CustomType: ovhtypes.TfStringType{},
-						Computed:   true,
+						CustomType:          ovhtypes.TfStringType{},
+						Computed:            true,
+						Description:         "Status of the container. Possible values: ACTIVE, ERROR",
+						MarkdownDescription: "Status of the container. Possible values: `ACTIVE`, `ERROR`",
 					},
 					"region": schema.StringAttribute{
 						CustomType: ovhtypes.TfStringType{},

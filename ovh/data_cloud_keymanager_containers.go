@@ -106,16 +106,18 @@ func (d *cloudKeymanagerContainersDataSource) Schema(ctx context.Context, req da
 									Computed:   true,
 								},
 								"type": schema.StringAttribute{
-									CustomType: ovhtypes.TfStringType{},
-									Computed:   true,
+									CustomType:  ovhtypes.TfStringType{},
+									Computed:    true,
+									Description: "Type of the container. Possible values: CERTIFICATE, GENERIC, RSA",
 								},
 								"container_ref": schema.StringAttribute{
 									CustomType: ovhtypes.TfStringType{},
 									Computed:   true,
 								},
 								"status": schema.StringAttribute{
-									CustomType: ovhtypes.TfStringType{},
-									Computed:   true,
+									CustomType:  ovhtypes.TfStringType{},
+									Computed:    true,
+									Description: "Status of the container. Possible values: ACTIVE, ERROR",
 								},
 								"region": schema.StringAttribute{
 									CustomType: ovhtypes.TfStringType{},

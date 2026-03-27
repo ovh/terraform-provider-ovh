@@ -40,27 +40,27 @@ type CloudKeymanagerSecretModel struct {
 
 // API response types for Secret
 type CloudKeymanagerSecretAPIResponse struct {
-	Id             string                            `json:"id"`
-	Checksum       string                            `json:"checksum"`
-	CreatedAt      string                            `json:"createdAt"`
-	UpdatedAt      string                            `json:"updatedAt"`
-	ResourceStatus string                            `json:"resourceStatus"`
+	Id             string                             `json:"id"`
+	Checksum       string                             `json:"checksum"`
+	CreatedAt      string                             `json:"createdAt"`
+	UpdatedAt      string                             `json:"updatedAt"`
+	ResourceStatus string                             `json:"resourceStatus"`
 	CurrentState   *CloudKeymanagerSecretCurrentState `json:"currentState,omitempty"`
 	TargetSpec     *CloudKeymanagerSecretTargetSpec   `json:"targetSpec,omitempty"`
 }
 
 type CloudKeymanagerSecretCurrentState struct {
-	Name                   string                   `json:"name,omitempty"`
-	SecretType             string                   `json:"secretType,omitempty"`
-	Algorithm              string                   `json:"algorithm,omitempty"`
-	BitLength              *int64                   `json:"bitLength,omitempty"`
-	Mode                   string                   `json:"mode,omitempty"`
-	PayloadContentType     string                   `json:"payloadContentType,omitempty"`
-	Expiration             string                   `json:"expiration,omitempty"`
-	SecretRef              string                   `json:"secretRef,omitempty"`
-	Status                 string                   `json:"status,omitempty"`
-	Location               *CloudKeymanagerLocation `json:"location,omitempty"`
-	Metadata               map[string]string        `json:"metadata,omitempty"`
+	Name               string                   `json:"name,omitempty"`
+	SecretType         string                   `json:"secretType,omitempty"`
+	Algorithm          string                   `json:"algorithm,omitempty"`
+	BitLength          *int64                   `json:"bitLength,omitempty"`
+	Mode               string                   `json:"mode,omitempty"`
+	PayloadContentType string                   `json:"payloadContentType,omitempty"`
+	Expiration         string                   `json:"expiration,omitempty"`
+	SecretRef          string                   `json:"secretRef,omitempty"`
+	Status             string                   `json:"status,omitempty"`
+	Location           *CloudKeymanagerLocation `json:"location,omitempty"`
+	Metadata           map[string]string        `json:"metadata,omitempty"`
 }
 
 type CloudKeymanagerLocation struct {
@@ -87,7 +87,7 @@ type CloudKeymanagerSecretCreatePayload struct {
 
 // Update payload
 type CloudKeymanagerSecretUpdatePayload struct {
-	Checksum   string                                `json:"checksum"`
+	Checksum   string                                 `json:"checksum"`
 	TargetSpec *CloudKeymanagerSecretUpdateTargetSpec `json:"targetSpec"`
 }
 
@@ -146,17 +146,17 @@ func (m *CloudKeymanagerSecretModel) ToUpdate(ctx context.Context) *CloudKeymana
 // KeymanagerSecretCurrentStateAttrTypes returns the attribute types for the secret current_state object
 func KeymanagerSecretCurrentStateAttrTypes() map[string]attr.Type {
 	return map[string]attr.Type{
-		"name":                     ovhtypes.TfStringType{},
-		"secret_type":              ovhtypes.TfStringType{},
-		"algorithm":                ovhtypes.TfStringType{},
-		"bit_length":               types.Int64Type,
-		"mode":                     ovhtypes.TfStringType{},
-		"payload_content_type":     ovhtypes.TfStringType{},
-		"expiration":               ovhtypes.TfStringType{},
-		"secret_ref":               ovhtypes.TfStringType{},
-		"status":                   ovhtypes.TfStringType{},
-		"region":                   ovhtypes.TfStringType{},
-		"metadata":                 types.MapType{ElemType: types.StringType},
+		"name":                 ovhtypes.TfStringType{},
+		"secret_type":          ovhtypes.TfStringType{},
+		"algorithm":            ovhtypes.TfStringType{},
+		"bit_length":           types.Int64Type,
+		"mode":                 ovhtypes.TfStringType{},
+		"payload_content_type": ovhtypes.TfStringType{},
+		"expiration":           ovhtypes.TfStringType{},
+		"secret_ref":           ovhtypes.TfStringType{},
+		"status":               ovhtypes.TfStringType{},
+		"region":               ovhtypes.TfStringType{},
+		"metadata":             types.MapType{ElemType: types.StringType},
 	}
 }
 
@@ -184,17 +184,17 @@ func buildKeymanagerSecretCurrentStateObject(ctx context.Context, state *CloudKe
 	obj, _ := types.ObjectValue(
 		KeymanagerSecretCurrentStateAttrTypes(),
 		map[string]attr.Value{
-			"name":                     ovhtypes.TfStringValue{StringValue: types.StringValue(state.Name)},
-			"secret_type":              ovhtypes.TfStringValue{StringValue: types.StringValue(state.SecretType)},
-			"algorithm":                ovhtypes.TfStringValue{StringValue: types.StringValue(state.Algorithm)},
-			"bit_length":               types.Int64Value(bitLength),
-			"mode":                     ovhtypes.TfStringValue{StringValue: types.StringValue(state.Mode)},
-			"payload_content_type":     ovhtypes.TfStringValue{StringValue: types.StringValue(state.PayloadContentType)},
-			"expiration":               ovhtypes.TfStringValue{StringValue: types.StringValue(state.Expiration)},
-			"secret_ref":               ovhtypes.TfStringValue{StringValue: types.StringValue(state.SecretRef)},
-			"status":                   ovhtypes.TfStringValue{StringValue: types.StringValue(state.Status)},
-			"region":                   ovhtypes.TfStringValue{StringValue: types.StringValue(region)},
-			"metadata":                 metadataMap,
+			"name":                 ovhtypes.TfStringValue{StringValue: types.StringValue(state.Name)},
+			"secret_type":          ovhtypes.TfStringValue{StringValue: types.StringValue(state.SecretType)},
+			"algorithm":            ovhtypes.TfStringValue{StringValue: types.StringValue(state.Algorithm)},
+			"bit_length":           types.Int64Value(bitLength),
+			"mode":                 ovhtypes.TfStringValue{StringValue: types.StringValue(state.Mode)},
+			"payload_content_type": ovhtypes.TfStringValue{StringValue: types.StringValue(state.PayloadContentType)},
+			"expiration":           ovhtypes.TfStringValue{StringValue: types.StringValue(state.Expiration)},
+			"secret_ref":           ovhtypes.TfStringValue{StringValue: types.StringValue(state.SecretRef)},
+			"status":               ovhtypes.TfStringValue{StringValue: types.StringValue(state.Status)},
+			"region":               ovhtypes.TfStringValue{StringValue: types.StringValue(region)},
+			"metadata":             metadataMap,
 		},
 	)
 
@@ -284,12 +284,12 @@ type CloudKeymanagerContainerAPIResponse struct {
 }
 
 type CloudKeymanagerContainerCurrentState struct {
-	Name         string                       `json:"name,omitempty"`
-	Type         string                       `json:"type,omitempty"`
-	SecretRefs   []CloudKeymanagerSecretRef   `json:"secretRefs,omitempty"`
-	ContainerRef string                       `json:"containerRef,omitempty"`
-	Status       string                       `json:"status,omitempty"`
-	Location     *CloudKeymanagerLocation     `json:"location,omitempty"`
+	Name         string                     `json:"name,omitempty"`
+	Type         string                     `json:"type,omitempty"`
+	SecretRefs   []CloudKeymanagerSecretRef `json:"secretRefs,omitempty"`
+	ContainerRef string                     `json:"containerRef,omitempty"`
+	Status       string                     `json:"status,omitempty"`
+	Location     *CloudKeymanagerLocation   `json:"location,omitempty"`
 }
 
 type CloudKeymanagerContainerTargetSpec struct {
@@ -300,8 +300,8 @@ type CloudKeymanagerContainerTargetSpec struct {
 }
 
 type CloudKeymanagerSecretRef struct {
-	Name   string                    `json:"name,omitempty"`
-	Secret *CloudKeymanagerSecretID  `json:"secret,omitempty"`
+	Name   string                   `json:"name,omitempty"`
+	Secret *CloudKeymanagerSecretID `json:"secret,omitempty"`
 }
 
 type CloudKeymanagerSecretID struct {
@@ -664,6 +664,52 @@ type CloudKeymanagerSecretConsumersDataSourceModel struct {
 
 // KeymanagerSecretConsumerAttrTypes returns the attribute types for a consumer list item
 func KeymanagerSecretConsumerAttrTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"id":            ovhtypes.TfStringType{},
+		"service":       ovhtypes.TfStringType{},
+		"resource_type": ovhtypes.TfStringType{},
+		"resource_id":   ovhtypes.TfStringType{},
+	}
+}
+
+// ===========================
+// Container Consumer types
+// ===========================
+
+// CloudKeymanagerContainerConsumerModel represents the Terraform model for a container consumer
+type CloudKeymanagerContainerConsumerModel struct {
+	ServiceName  ovhtypes.TfStringValue `tfsdk:"service_name"`
+	ContainerId  ovhtypes.TfStringValue `tfsdk:"container_id"`
+	Service      ovhtypes.TfStringValue `tfsdk:"service"`
+	ResourceType ovhtypes.TfStringValue `tfsdk:"resource_type"`
+	ResourceId   ovhtypes.TfStringValue `tfsdk:"resource_id"`
+	Id           ovhtypes.TfStringValue `tfsdk:"id"`
+}
+
+// CloudKeymanagerContainerConsumerAPIResponse is the API response for a single container consumer
+type CloudKeymanagerContainerConsumerAPIResponse struct {
+	Id           string `json:"id"`
+	Service      string `json:"service"`
+	ResourceType string `json:"resourceType"`
+	ResourceId   string `json:"resourceId"`
+}
+
+// CloudKeymanagerContainerConsumerPayload is the request body for registering a container consumer
+type CloudKeymanagerContainerConsumerPayload struct {
+	Service      string `json:"service"`
+	ResourceType string `json:"resourceType"`
+	ResourceId   string `json:"resourceId"`
+}
+
+// CloudKeymanagerContainerConsumersDataSourceModel is the Terraform model for listing container consumers
+type CloudKeymanagerContainerConsumersDataSourceModel struct {
+	ServiceName ovhtypes.TfStringValue `tfsdk:"service_name"`
+	ContainerId ovhtypes.TfStringValue `tfsdk:"container_id"`
+	Consumers   types.List             `tfsdk:"consumers"`
+}
+
+// KeymanagerContainerConsumerAttrTypes returns the attribute types for a container consumer list item
+func KeymanagerContainerConsumerAttrTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"id":            ovhtypes.TfStringType{},
 		"service":       ovhtypes.TfStringType{},

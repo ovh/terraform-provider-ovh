@@ -35,4 +35,12 @@ The following attributes are exported:
   * `region` - Region of the container.
   * `name` - Name of the container.
   * `type` - Type of the container.
-  * `current_state` - Current state of the container as reported by OpenStack Barbican.
+  * `current_state` - Current state of the container as reported by OpenStack Barbican:
+    * `name` - Name of the container.
+    * `type` - Type of the container. Possible values: `CERTIFICATE`, `GENERIC`, `RSA`.
+    * `container_ref` - OpenStack reference URL for the container.
+    * `status` - Status of the container. Possible values: `ACTIVE`, `ERROR`.
+    * `region` - Region of the container.
+    * `secret_refs` - List of secret references:
+      * `name` - Name of the secret reference.
+      * `secret_id` - ID of the referenced secret.
