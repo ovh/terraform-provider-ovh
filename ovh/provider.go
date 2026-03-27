@@ -211,6 +211,8 @@ func Provider() *schema.Provider {
 			"ovh_order_cart_product_options_plan":                            dataSourceOrderCartProductOptionsPlan(),
 			"ovh_order_cart_product_plan":                                    dataSourceOrderCartProductPlan(),
 			"ovh_vps":                                                        dataSourceVPS(),
+			"ovh_vps_available_images":                                       dataSourceVPSAvailableImages(),
+			"ovh_vps_available_image":                                        dataSourceVPSAvailableImage(),
 			"ovh_vpss":                                                       dataSourceVPSs(),
 			"ovh_vracks":                                                     dataSourceVracks(),
 		},
