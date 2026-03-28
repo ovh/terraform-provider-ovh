@@ -727,6 +727,10 @@ func cloudProjectKubeExists(serviceName, id string, client *ovhwrap.Client) erro
 }
 
 func waitForCloudProjectKubeReady(client *ovhwrap.Client, serviceName, kubeId string, pending []string, target []string, timeout time.Duration) error {
+	return waitForCloudProjectKubeReadyWithDelay(client, serviceName, kubeId, pending, target, timeout, 5*time.Second)
+}
+
+func waitForCloudProjectKubeReadyWithDelay(client *ovhwrap.Client, serviceName, kubeId string, pending []string, target []string, timeout time.Duration, delay time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: pending,
 		Target:  target,
@@ -741,7 +745,7 @@ func waitForCloudProjectKubeReady(client *ovhwrap.Client, serviceName, kubeId st
 			return res, res.Status, nil
 		},
 		Timeout:    timeout,
-		Delay:      5 * time.Second,
+		Delay:      delay,
 		MinTimeout: 3 * time.Second,
 	}
 
