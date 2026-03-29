@@ -140,7 +140,7 @@ func resourceCloudProjectDatabaseClickhouseUserUpdate(ctx context.Context, d *sc
 		url.PathEscape(clusterID),
 		url.PathEscape(id),
 	)
-	res := &CloudProjectDatabaseUserResponse{}
+	res := &CloudProjectDatabaseClickhouseUserResponse{}
 	log.Printf("[DEBUG] Will update user password for cluster %s from project %s", clusterID, serviceName)
 	err := postFuncCloudProjectDatabaseUser(ctx, d, meta, "clickhouse", endpoint, nil, res, schema.TimeoutUpdate)
 	if err != nil {

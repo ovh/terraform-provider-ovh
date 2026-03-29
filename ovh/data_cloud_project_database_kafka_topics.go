@@ -42,15 +42,15 @@ func dataSourceCloudProjectDatabaseKafkaTopics() *schema.Resource {
 func dataSourceCloudProjectDatabaseKafkaTopicsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
-	clusterId := d.Get("cluster_id").(string)
+	clusterID := d.Get("cluster_id").(string)
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/database/kafka/%s/topic",
 		url.PathEscape(serviceName),
-		url.PathEscape(clusterId),
+		url.PathEscape(clusterID),
 	)
 	res := make([]string, 0)
 
-	log.Printf("[DEBUG] Will read topics from cluster %s from project %s", clusterId, serviceName)
+	log.Printf("[DEBUG] Will read topics from cluster %s from project %s", clusterID, serviceName)
 	if err := config.OVHClient.GetWithContext(ctx, endpoint, &res); err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
