@@ -84,11 +84,10 @@ func TestAccCloudProjectGateway(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            "ovh_cloud_project_gateway.gateway",
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"network_id", "subnet_id"},
-				ImportStateIdFunc:       testAccCloudProjectGatewayImportId("ovh_cloud_project_gateway.gateway"),
+				ResourceName:      "ovh_cloud_project_gateway.gateway",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccCloudProjectGatewayImportId("ovh_cloud_project_gateway.gateway"),
 			},
 			{
 				Config: config,
