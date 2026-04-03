@@ -628,6 +628,13 @@ func testAccPreCheckStorageEfs(t *testing.T) {
 	checkEnvOrSkip(t, "OVH_STORAGE_EFS_SERVICE_TEST")
 }
 
+// Checks that the environment variables needed for the /email/domain acceptance tests
+// are set.
+func testAccPreCheckEmailDomain(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_EMAIL_DOMAIN_TEST")
+}
+
 func testAccCheckStorageEfsExists(t *testing.T) {
 	type efsServiceResponse struct {
 		ID     string `json:"id"`
