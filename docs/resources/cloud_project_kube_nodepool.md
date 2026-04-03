@@ -86,6 +86,8 @@ The following arguments are supported:
 * `autoscaling_scale_down_unneeded_time_seconds` - (Optional) scaleDownUnneededTimeSeconds autoscaling parameter How long a node should be unneeded before it is eligible for scale down
 * `autoscaling_scale_down_unready_time_seconds` - (Optional) scaleDownUnreadyTimeSeconds autoscaling parameter How long an unready node should be unneeded before it is eligible for scale down
 * `autoscaling_scale_down_utilization_threshold` - (Optional) scaleDownUtilizationThreshold autoscaling parameter Node utilization level, defined as sum of requested resources divided by capacity, below which a node can be considered for scale down
+* `attach_floating_ips` - (Optional) Configuration for floating IP attachment on pool nodes. **Changing this value recreates the resource.**
+  * `enabled` - (Required) Enable or disable floating IPs attachment on nodes of this pool
 * `template ` - (Optional) Managed Kubernetes nodepool template, which is a complex object constituted by two main nested objects:
   * `metadata` - Metadata of each node in the pool
     * `annotations` - Annotations to apply to each node

@@ -257,6 +257,23 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"attach_floating_ips": {
+				Type:        schema.TypeSet,
+				Description: "Enable the attachment of floating IPs to pool nodes",
+				Optional:    true,
+				ForceNew:    true,
+				MaxItems:    1,
+				Set:         CustomSchemaSetFunc(),
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:        schema.TypeBool,
+							Description: "Enable or disable floating IPs attachment on nodes of this pool",
+							Required:    true,
+						},
+					},
+				},
+			},
 		},
 	}
 }

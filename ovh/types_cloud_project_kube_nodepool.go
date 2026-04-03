@@ -17,18 +17,23 @@ const (
 	PreferNoSchedule
 )
 
+type CloudProjectKubeNodePoolAttachFloatingIps struct {
+	Enabled bool `json:"enabled"`
+}
+
 type CloudProjectKubeNodePoolCreateOpts struct {
-	AntiAffinity      *bool                                `json:"antiAffinity,omitempty"`
-	Autoscale         *bool                                `json:"autoscale,omitempty"`
-	AvailabilityZones *[]string                            `json:"availabilityZones,omitempty"`
-	DesiredNodes      *int                                 `json:"desiredNodes,omitempty"`
-	FlavorName        string                               `json:"flavorName"`
-	MaxNodes          *int                                 `json:"maxNodes,omitempty"`
-	MinNodes          *int                                 `json:"minNodes,omitempty"`
-	MonthlyBilled     *bool                                `json:"monthlyBilled,omitempty"`
-	Name              *string                              `json:"name,omitempty"`
-	Autoscaling       *CloudProjectKubeNodePoolAutoscaling `json:"autoscaling,omitempty"`
-	Template          *CloudProjectKubeNodePoolTemplate    `json:"template,omitempty"`
+	AntiAffinity      *bool                                      `json:"antiAffinity,omitempty"`
+	AttachFloatingIps *CloudProjectKubeNodePoolAttachFloatingIps `json:"attachFloatingIps,omitempty"`
+	Autoscale         *bool                                      `json:"autoscale,omitempty"`
+	AvailabilityZones *[]string                                  `json:"availabilityZones,omitempty"`
+	DesiredNodes      *int                                       `json:"desiredNodes,omitempty"`
+	FlavorName        string                                     `json:"flavorName"`
+	MaxNodes          *int                                       `json:"maxNodes,omitempty"`
+	MinNodes          *int                                       `json:"minNodes,omitempty"`
+	MonthlyBilled     *bool                                      `json:"monthlyBilled,omitempty"`
+	Name              *string                                    `json:"name,omitempty"`
+	Autoscaling       *CloudProjectKubeNodePoolAutoscaling       `json:"autoscaling,omitempty"`
+	Template          *CloudProjectKubeNodePoolTemplate          `json:"template,omitempty"`
 }
 
 type TaintEffectType int
@@ -102,6 +107,16 @@ func (opts *CloudProjectKubeNodePoolCreateOpts) FromResource(d *schema.ResourceD
 	opts.MinNodes = helpers.GetNilIntPointerFromDataAndNilIfNotPresent(d, "min_nodes")
 	opts.MonthlyBilled = helpers.GetNilBoolPointerFromData(d, "monthly_billed")
 	opts.Name = helpers.GetNilStringPointerFromData(d, "name")
+
+	if v, ok := d.GetOk("attach_floating_ips"); ok {
+		attachFloatingIpsList := v.(*schema.Set).List()
+		if len(attachFloatingIpsList) > 0 {
+			attachFloatingIpsMap := attachFloatingIpsList[0].(map[string]interface{})
+			opts.AttachFloatingIps = &CloudProjectKubeNodePoolAttachFloatingIps{
+				Enabled: attachFloatingIpsMap["enabled"].(bool),
+			}
+		}
+	}
 
 	template, err := loadNodelPoolTemplateFromResource(d.Get("template"))
 
@@ -305,32 +320,38 @@ func (s *CloudProjectKubeNodePoolUpdateOpts) String() string {
 }
 
 type CloudProjectKubeNodePoolResponse struct {
-	Autoscale         bool                                `json:"autoscale"`
-	AntiAffinity      bool                                `json:"antiAffinity"`
-	AvailabilityZones []string                            `json:"availabilityZones"`
-	AvailableNodes    int                                 `json:"availableNodes"`
-	CreatedAt         string                              `json:"createdAt"`
-	CurrentNodes      int                                 `json:"currentNodes"`
-	DesiredNodes      int                                 `json:"desiredNodes"`
-	Flavor            string                              `json:"flavor"`
-	Id                string                              `json:"id"`
-	MaxNodes          int                                 `json:"maxNodes"`
-	MinNodes          int                                 `json:"minNodes"`
-	MonthlyBilled     bool                                `json:"monthlyBilled"`
-	Name              string                              `json:"name"`
-	ProjectId         string                              `json:"projectId"`
-	SizeStatus        string                              `json:"sizeStatus"`
-	Status            string                              `json:"status"`
-	UpToDateNodes     int                                 `json:"upToDateNodes"`
-	UpdatedAt         string                              `json:"updatedAt"`
-	Autoscaling       CloudProjectKubeNodePoolAutoscaling `json:"autoscaling"`
-	Template          *CloudProjectKubeNodePoolTemplate   `json:"template,omitempty"`
+	Autoscale         bool                                       `json:"autoscale"`
+	AntiAffinity      bool                                       `json:"antiAffinity"`
+	AttachFloatingIps *CloudProjectKubeNodePoolAttachFloatingIps `json:"attachFloatingIps,omitempty"`
+	AvailabilityZones []string                                   `json:"availabilityZones"`
+	AvailableNodes    int                                        `json:"availableNodes"`
+	CreatedAt         string                                     `json:"createdAt"`
+	CurrentNodes      int                                        `json:"currentNodes"`
+	DesiredNodes      int                                        `json:"desiredNodes"`
+	Flavor            string                                     `json:"flavor"`
+	Id                string                                     `json:"id"`
+	MaxNodes          int                                        `json:"maxNodes"`
+	MinNodes          int                                        `json:"minNodes"`
+	MonthlyBilled     bool                                       `json:"monthlyBilled"`
+	Name              string                                     `json:"name"`
+	ProjectId         string                                     `json:"projectId"`
+	SizeStatus        string                                     `json:"sizeStatus"`
+	Status            string                                     `json:"status"`
+	UpToDateNodes     int                                        `json:"upToDateNodes"`
+	UpdatedAt         string                                     `json:"updatedAt"`
+	Autoscaling       CloudProjectKubeNodePoolAutoscaling        `json:"autoscaling"`
+	Template          *CloudProjectKubeNodePoolTemplate          `json:"template,omitempty"`
 }
 
 func (v CloudProjectKubeNodePoolResponse) ToMap() map[string]interface{} {
 	obj := make(map[string]interface{})
 	obj["anti_affinity"] = v.AntiAffinity
 	obj["autoscale"] = v.Autoscale
+	if v.AttachFloatingIps != nil {
+		obj["attach_floating_ips"] = []map[string]interface{}{
+			{"enabled": v.AttachFloatingIps.Enabled},
+		}
+	}
 	obj["availability_zones"] = v.AvailabilityZones
 	obj["available_nodes"] = v.AvailableNodes
 	obj["created_at"] = v.CreatedAt
