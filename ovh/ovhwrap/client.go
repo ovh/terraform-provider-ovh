@@ -4,6 +4,7 @@ package ovhwrap
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/ovh/go-ovh/ovh"
 	"go.uber.org/ratelimit"
@@ -22,6 +23,9 @@ func NewClient(ovhClient *ovh.Client, rateLimiter ratelimit.Limiter) *Client {
 }
 
 func (c *Client) _CallAPIWithContext(ctx context.Context, method, url string, req, res interface{}, auth bool) error {
+	if c == nil {
+		return fmt.Errorf("OVH API client is not initialized, check your provider credentials configuration")
+	}
 	c.RateLimiter.Take()
 	return c.CallAPIWithContext(ctx, method, url, req, res, auth)
 }
