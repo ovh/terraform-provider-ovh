@@ -360,6 +360,13 @@ func resourceCloudProjectKubeNodePoolUpdate(d *schema.ResourceData, meta interfa
 				log.Printf("[DEBUG] desired_nodes (%d) exceeds new max_nodes (%d), capping desired_nodes to max_nodes", current.DesiredNodes, *params.MaxNodes)
 				params.DesiredNodes = params.MaxNodes
 			}
+		} else {
+			log.Printf("[WARN] failed to GET existing nodepool %s before update (skipping desired_nodes capping): %v", d.Id(), err)
+			if apiErr, ok := err.(*ovh.APIError); ok && apiErr.Code == 404 {
+				// Nodepool not found when attempting pre-update GET; proceed without capping.
+			} else {
+				return fmt.Errorf("failed to GET existing nodepool %s before update: %w", d.Id(), err)
+			}
 		}
 	}
 
