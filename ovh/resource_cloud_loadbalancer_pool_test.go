@@ -160,6 +160,104 @@ resource "ovh_cloud_loadbalancer_pool" "test" {
 	})
 }
 
+func TestAccCloudLoadbalancerPool_withHealthMonitor(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	loadbalancerId := os.Getenv("OVH_CLOUD_LOADBALANCER_ID_TEST")
+
+	poolName := acctest.RandomWithPrefix(testAccResourceCloudLoadbalancerPoolNamePrefix)
+
+	config := fmt.Sprintf(`
+resource "ovh_cloud_loadbalancer_pool" "test" {
+  service_name    = "%s"
+  loadbalancer_id = "%s"
+  name            = "%s"
+  protocol        = "HTTP"
+  algorithm       = "ROUND_ROBIN"
+
+  health_monitor {
+    type           = "HTTP"
+    delay          = 5
+    timeout        = 3
+    max_retries    = 3
+    url_path       = "/healthz"
+    http_method    = "GET"
+    expected_codes = "200"
+  }
+}
+`, serviceName, loadbalancerId, poolName)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloudLoadbalancerPool(t)
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_loadbalancer_pool.test", "name", poolName),
+					resource.TestCheckResourceAttr("ovh_cloud_loadbalancer_pool.test", "protocol", "HTTP"),
+					resource.TestCheckResourceAttr("ovh_cloud_loadbalancer_pool.test", "algorithm", "ROUND_ROBIN"),
+					resource.TestCheckResourceAttr("ovh_cloud_loadbalancer_pool.test", "health_monitor.type", "HTTP"),
+					resource.TestCheckResourceAttr("ovh_cloud_loadbalancer_pool.test", "health_monitor.delay", "5"),
+					resource.TestCheckResourceAttr("ovh_cloud_loadbalancer_pool.test", "health_monitor.timeout", "3"),
+					resource.TestCheckResourceAttr("ovh_cloud_loadbalancer_pool.test", "health_monitor.max_retries", "3"),
+					resource.TestCheckResourceAttr("ovh_cloud_loadbalancer_pool.test", "health_monitor.url_path", "/healthz"),
+					resource.TestCheckResourceAttr("ovh_cloud_loadbalancer_pool.test", "health_monitor.http_method", "GET"),
+					resource.TestCheckResourceAttr("ovh_cloud_loadbalancer_pool.test", "health_monitor.expected_codes", "200"),
+					resource.TestCheckResourceAttr("ovh_cloud_loadbalancer_pool.test", "resource_status", "READY"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_loadbalancer_pool.test", "current_state.health_monitor.type"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCloudLoadbalancerPool_withHealthMonitorTCP(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	loadbalancerId := os.Getenv("OVH_CLOUD_LOADBALANCER_ID_TEST")
+
+	poolName := acctest.RandomWithPrefix(testAccResourceCloudLoadbalancerPoolNamePrefix)
+
+	config := fmt.Sprintf(`
+resource "ovh_cloud_loadbalancer_pool" "test" {
+  service_name    = "%s"
+  loadbalancer_id = "%s"
+  name            = "%s"
+  protocol        = "TCP"
+  algorithm       = "ROUND_ROBIN"
+
+  health_monitor {
+    type        = "TCP"
+    delay       = 10
+    timeout     = 5
+    max_retries = 2
+  }
+}
+`, serviceName, loadbalancerId, poolName)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloudLoadbalancerPool(t)
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_loadbalancer_pool.test", "name", poolName),
+					resource.TestCheckResourceAttr("ovh_cloud_loadbalancer_pool.test", "protocol", "TCP"),
+					resource.TestCheckResourceAttr("ovh_cloud_loadbalancer_pool.test", "health_monitor.type", "TCP"),
+					resource.TestCheckResourceAttr("ovh_cloud_loadbalancer_pool.test", "health_monitor.delay", "10"),
+					resource.TestCheckResourceAttr("ovh_cloud_loadbalancer_pool.test", "health_monitor.timeout", "5"),
+					resource.TestCheckResourceAttr("ovh_cloud_loadbalancer_pool.test", "health_monitor.max_retries", "2"),
+					resource.TestCheckResourceAttr("ovh_cloud_loadbalancer_pool.test", "resource_status", "READY"),
+				),
+			},
+		},
+	})
+}
+
 func testAccPreCheckCloudLoadbalancerPool(t *testing.T) {
 	testAccPreCheckCredentials(t)
 	if os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST") == "" {
