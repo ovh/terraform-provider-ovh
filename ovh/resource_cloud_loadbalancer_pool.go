@@ -18,24 +18,24 @@ import (
 )
 
 var (
-	_ resource.Resource                = (*cloudLoadbalancerListenerPoolResource)(nil)
-	_ resource.ResourceWithConfigure   = (*cloudLoadbalancerListenerPoolResource)(nil)
-	_ resource.ResourceWithImportState = (*cloudLoadbalancerListenerPoolResource)(nil)
+	_ resource.Resource                = (*cloudLoadbalancerPoolResource)(nil)
+	_ resource.ResourceWithConfigure   = (*cloudLoadbalancerPoolResource)(nil)
+	_ resource.ResourceWithImportState = (*cloudLoadbalancerPoolResource)(nil)
 )
 
-func NewCloudLoadbalancerListenerPoolResource() resource.Resource {
-	return &cloudLoadbalancerListenerPoolResource{}
+func NewCloudLoadbalancerPoolResource() resource.Resource {
+	return &cloudLoadbalancerPoolResource{}
 }
 
-type cloudLoadbalancerListenerPoolResource struct {
+type cloudLoadbalancerPoolResource struct {
 	config *Config
 }
 
-func (r *cloudLoadbalancerListenerPoolResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_cloud_loadbalancer_listener_pool"
+func (r *cloudLoadbalancerPoolResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_cloud_loadbalancer_pool"
 }
 
-func (r *cloudLoadbalancerListenerPoolResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *cloudLoadbalancerPoolResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -57,9 +57,9 @@ var poolMutableAttrs = MutableAttrs{
 	Objects: []string{"persistence"},
 }
 
-func (r *cloudLoadbalancerListenerPoolResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *cloudLoadbalancerPoolResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Creates a pool for a listener in a public cloud loadbalancer.",
+		Description: "Creates a pool in a public cloud loadbalancer.",
 		Attributes: map[string]schema.Attribute{
 			"service_name": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
@@ -75,15 +75,6 @@ func (r *cloudLoadbalancerListenerPoolResource) Schema(ctx context.Context, req 
 				Required:            true,
 				Description:         "ID of the loadbalancer",
 				MarkdownDescription: "ID of the loadbalancer",
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			"listener_id": schema.StringAttribute{
-				CustomType:          ovhtypes.TfStringType{},
-				Required:            true,
-				Description:         "ID of the listener",
-				MarkdownDescription: "ID of the listener",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -226,45 +217,34 @@ func (r *cloudLoadbalancerListenerPoolResource) Schema(ctx context.Context, req 
 						Computed:    true,
 						Description: "Provisioning status of the pool",
 					},
-					"region": schema.StringAttribute{
-						CustomType:  ovhtypes.TfStringType{},
-						Computed:    true,
-						Description: "Region",
-					},
-					"availability_zone": schema.StringAttribute{
-						CustomType:  ovhtypes.TfStringType{},
-						Computed:    true,
-						Description: "Availability zone",
-					},
 				},
 			},
 		},
 	}
 }
 
-func (r *cloudLoadbalancerListenerPoolResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *cloudLoadbalancerPoolResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	splits := strings.Split(req.ID, "/")
-	if len(splits) != 4 {
-		resp.Diagnostics.AddError("Given ID is malformed", "ID must be formatted like the following: <service_name>/<loadbalancer_id>/<listener_id>/<pool_id>")
+	if len(splits) != 3 {
+		resp.Diagnostics.AddError("Given ID is malformed", "ID must be formatted like the following: <service_name>/<loadbalancer_id>/<pool_id>")
 		return
 	}
 
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_name"), splits[0])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("loadbalancer_id"), splits[1])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("listener_id"), splits[2])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), splits[3])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), splits[2])...)
 }
 
-func (r *cloudLoadbalancerListenerPoolResource) poolEndpoint(serviceName, loadbalancerId, listenerId string) string {
-	return "/v2/publicCloud/project/" + url.PathEscape(serviceName) + "/loadbalancer/" + url.PathEscape(loadbalancerId) + "/listener/" + url.PathEscape(listenerId) + "/pool"
+func (r *cloudLoadbalancerPoolResource) poolEndpoint(serviceName, loadbalancerId string) string {
+	return "/v2/publicCloud/project/" + url.PathEscape(serviceName) + "/loadbalancer/" + url.PathEscape(loadbalancerId) + "/pool"
 }
 
-func (r *cloudLoadbalancerListenerPoolResource) poolEndpointWithId(serviceName, loadbalancerId, listenerId, poolId string) string {
-	return r.poolEndpoint(serviceName, loadbalancerId, listenerId) + "/" + url.PathEscape(poolId)
+func (r *cloudLoadbalancerPoolResource) poolEndpointWithId(serviceName, loadbalancerId, poolId string) string {
+	return r.poolEndpoint(serviceName, loadbalancerId) + "/" + url.PathEscape(poolId)
 }
 
-func (r *cloudLoadbalancerListenerPoolResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data CloudLoadbalancerListenerPoolModel
+func (r *cloudLoadbalancerPoolResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var data CloudLoadbalancerPoolModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -273,9 +253,9 @@ func (r *cloudLoadbalancerListenerPoolResource) Create(ctx context.Context, req 
 
 	createPayload := data.ToCreate()
 
-	endpoint := r.poolEndpoint(data.ServiceName.ValueString(), data.LoadbalancerId.ValueString(), data.ListenerId.ValueString())
+	endpoint := r.poolEndpoint(data.ServiceName.ValueString(), data.LoadbalancerId.ValueString())
 
-	var responseData CloudLoadbalancerListenerPoolAPIResponse
+	var responseData CloudLoadbalancerPoolAPIResponse
 	if err := r.config.OVHClient.Post(endpoint, createPayload, &responseData); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Post %s", endpoint),
@@ -289,7 +269,7 @@ func (r *cloudLoadbalancerListenerPoolResource) Create(ctx context.Context, req 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 
 	// Wait for pool to be READY
-	_, err := r.waitForPoolReady(ctx, data.ServiceName.ValueString(), data.LoadbalancerId.ValueString(), data.ListenerId.ValueString(), responseData.Id)
+	_, err := r.waitForPoolReady(ctx, data.ServiceName.ValueString(), data.LoadbalancerId.ValueString(), responseData.Id)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error waiting for pool to be ready",
@@ -299,7 +279,7 @@ func (r *cloudLoadbalancerListenerPoolResource) Create(ctx context.Context, req 
 	}
 
 	// Read final state
-	endpoint = r.poolEndpointWithId(data.ServiceName.ValueString(), data.LoadbalancerId.ValueString(), data.ListenerId.ValueString(), responseData.Id)
+	endpoint = r.poolEndpointWithId(data.ServiceName.ValueString(), data.LoadbalancerId.ValueString(), responseData.Id)
 	if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Get %s", endpoint),
@@ -313,17 +293,17 @@ func (r *cloudLoadbalancerListenerPoolResource) Create(ctx context.Context, req 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *cloudLoadbalancerListenerPoolResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data CloudLoadbalancerListenerPoolModel
+func (r *cloudLoadbalancerPoolResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var data CloudLoadbalancerPoolModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	endpoint := r.poolEndpointWithId(data.ServiceName.ValueString(), data.LoadbalancerId.ValueString(), data.ListenerId.ValueString(), data.Id.ValueString())
+	endpoint := r.poolEndpointWithId(data.ServiceName.ValueString(), data.LoadbalancerId.ValueString(), data.Id.ValueString())
 
-	var responseData CloudLoadbalancerListenerPoolAPIResponse
+	var responseData CloudLoadbalancerPoolAPIResponse
 	if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Get %s", endpoint),
@@ -337,8 +317,8 @@ func (r *cloudLoadbalancerListenerPoolResource) Read(ctx context.Context, req re
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *cloudLoadbalancerListenerPoolResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, planData CloudLoadbalancerListenerPoolModel
+func (r *cloudLoadbalancerPoolResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var data, planData CloudLoadbalancerPoolModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &planData)...)
 	if resp.Diagnostics.HasError() {
@@ -352,9 +332,9 @@ func (r *cloudLoadbalancerListenerPoolResource) Update(ctx context.Context, req 
 
 	updatePayload := planData.ToUpdate(data.Checksum.ValueString())
 
-	endpoint := r.poolEndpointWithId(data.ServiceName.ValueString(), data.LoadbalancerId.ValueString(), data.ListenerId.ValueString(), data.Id.ValueString())
+	endpoint := r.poolEndpointWithId(data.ServiceName.ValueString(), data.LoadbalancerId.ValueString(), data.Id.ValueString())
 
-	var responseData CloudLoadbalancerListenerPoolAPIResponse
+	var responseData CloudLoadbalancerPoolAPIResponse
 	if err := r.config.OVHClient.Put(endpoint, updatePayload, &responseData); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Put %s", endpoint),
@@ -364,7 +344,7 @@ func (r *cloudLoadbalancerListenerPoolResource) Update(ctx context.Context, req 
 	}
 
 	// Wait for pool to be READY
-	_, err := r.waitForPoolReady(ctx, data.ServiceName.ValueString(), data.LoadbalancerId.ValueString(), data.ListenerId.ValueString(), data.Id.ValueString())
+	_, err := r.waitForPoolReady(ctx, data.ServiceName.ValueString(), data.LoadbalancerId.ValueString(), data.Id.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error waiting for pool to be ready after update",
@@ -387,15 +367,15 @@ func (r *cloudLoadbalancerListenerPoolResource) Update(ctx context.Context, req 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &planData)...)
 }
 
-func (r *cloudLoadbalancerListenerPoolResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data CloudLoadbalancerListenerPoolModel
+func (r *cloudLoadbalancerPoolResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var data CloudLoadbalancerPoolModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	endpoint := r.poolEndpointWithId(data.ServiceName.ValueString(), data.LoadbalancerId.ValueString(), data.ListenerId.ValueString(), data.Id.ValueString())
+	endpoint := r.poolEndpointWithId(data.ServiceName.ValueString(), data.LoadbalancerId.ValueString(), data.Id.ValueString())
 
 	if err := r.config.OVHClient.Delete(endpoint, nil); err != nil {
 		if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
@@ -413,8 +393,8 @@ func (r *cloudLoadbalancerListenerPoolResource) Delete(ctx context.Context, req 
 		Pending: []string{"DELETING"},
 		Target:  []string{"DELETED"},
 		Refresh: func() (interface{}, string, error) {
-			res := &CloudLoadbalancerListenerPoolAPIResponse{}
-			endpoint := r.poolEndpointWithId(data.ServiceName.ValueString(), data.LoadbalancerId.ValueString(), data.ListenerId.ValueString(), data.Id.ValueString())
+			res := &CloudLoadbalancerPoolAPIResponse{}
+			endpoint := r.poolEndpointWithId(data.ServiceName.ValueString(), data.LoadbalancerId.ValueString(), data.Id.ValueString())
 			err := r.config.OVHClient.GetWithContext(ctx, endpoint, res)
 			if err != nil {
 				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
@@ -437,13 +417,13 @@ func (r *cloudLoadbalancerListenerPoolResource) Delete(ctx context.Context, req 
 	}
 }
 
-func (r *cloudLoadbalancerListenerPoolResource) waitForPoolReady(ctx context.Context, serviceName, loadbalancerId, listenerId, poolId string) (interface{}, error) {
+func (r *cloudLoadbalancerPoolResource) waitForPoolReady(ctx context.Context, serviceName, loadbalancerId, poolId string) (interface{}, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{"CREATING", "UPDATING", "PENDING", "OUT_OF_SYNC"},
 		Target:  []string{"READY"},
 		Refresh: func() (interface{}, string, error) {
-			res := &CloudLoadbalancerListenerPoolAPIResponse{}
-			endpoint := r.poolEndpointWithId(serviceName, loadbalancerId, listenerId, poolId)
+			res := &CloudLoadbalancerPoolAPIResponse{}
+			endpoint := r.poolEndpointWithId(serviceName, loadbalancerId, poolId)
 			err := r.config.OVHClient.GetWithContext(ctx, endpoint, res)
 			if err != nil {
 				return res, "", err

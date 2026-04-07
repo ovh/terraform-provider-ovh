@@ -54,7 +54,7 @@ func (r *cloudLoadbalancerListenerResource) Configure(ctx context.Context, req r
 }
 
 var listenerMutableAttrs = MutableAttrs{
-	Strings:           []string{"name", "description", "default_tls_container_ref"},
+	Strings:           []string{"name", "description", "default_tls_container_ref", "default_pool_id"},
 	Int64s:            []string{"connection_limit", "timeout_client_data", "timeout_member_data", "timeout_member_connect", "timeout_tcp_inspect"},
 	Objects:           []string{"insert_headers"},
 	CustomStringLists: []string{"allowed_cidrs", "sni_container_refs", "tls_versions"},
@@ -184,6 +184,13 @@ func (r *cloudLoadbalancerListenerResource) Schema(ctx context.Context, req reso
 				Description:         "Reference to the default TLS container",
 				MarkdownDescription: "Reference to the default TLS container",
 			},
+			"default_pool_id": schema.StringAttribute{
+				CustomType:          ovhtypes.TfStringType{},
+				Optional:            true,
+				Computed:            true,
+				Description:         "ID of the default pool for this listener",
+				MarkdownDescription: "ID of the default pool for this listener",
+			},
 			"sni_container_refs": schema.ListAttribute{
 				CustomType:          ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
 				Optional:            true,
@@ -297,6 +304,11 @@ func (r *cloudLoadbalancerListenerResource) Schema(ctx context.Context, req reso
 						CustomType:  ovhtypes.TfStringType{},
 						Computed:    true,
 						Description: "Reference to the default TLS container",
+					},
+					"default_pool_id": schema.StringAttribute{
+						CustomType:  ovhtypes.TfStringType{},
+						Computed:    true,
+						Description: "ID of the default pool for this listener",
 					},
 					"region": schema.StringAttribute{
 						CustomType:  ovhtypes.TfStringType{},
