@@ -9,12 +9,11 @@ import (
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
-// CloudLoadbalancerListenerPoolModel represents the Terraform model for the pool resource
-type CloudLoadbalancerListenerPoolModel struct {
+// CloudLoadbalancerPoolModel represents the Terraform model for the pool resource
+type CloudLoadbalancerPoolModel struct {
 	// Required — immutable
 	ServiceName    ovhtypes.TfStringValue `tfsdk:"service_name"`
 	LoadbalancerId ovhtypes.TfStringValue `tfsdk:"loadbalancer_id"`
-	ListenerId     ovhtypes.TfStringValue `tfsdk:"listener_id"`
 	Protocol       ovhtypes.TfStringValue `tfsdk:"protocol"`
 
 	// Required — mutable
@@ -36,61 +35,55 @@ type CloudLoadbalancerListenerPoolModel struct {
 
 // API Response types
 
-type CloudLoadbalancerListenerPoolAPISessionPersistence struct {
+type CloudLoadbalancerPoolAPISessionPersistence struct {
 	Type       string `json:"type"`
 	CookieName string `json:"cookieName,omitempty"`
 }
 
-type CloudLoadbalancerListenerPoolAPILocation struct {
-	Region           string `json:"region"`
-	AvailabilityZone string `json:"availabilityZone,omitempty"`
+type CloudLoadbalancerPoolAPIResponse struct {
+	Id             string                                  `json:"id"`
+	Checksum       string                                  `json:"checksum"`
+	CreatedAt      string                                  `json:"createdAt"`
+	UpdatedAt      string                                  `json:"updatedAt"`
+	ResourceStatus string                                  `json:"resourceStatus"`
+	CurrentState   *CloudLoadbalancerPoolAPICurrentState   `json:"currentState,omitempty"`
+	TargetSpec     *CloudLoadbalancerPoolAPITargetSpec     `json:"targetSpec,omitempty"`
 }
 
-type CloudLoadbalancerListenerPoolAPIResponse struct {
-	Id             string                                        `json:"id"`
-	Checksum       string                                        `json:"checksum"`
-	CreatedAt      string                                        `json:"createdAt"`
-	UpdatedAt      string                                        `json:"updatedAt"`
-	ResourceStatus string                                        `json:"resourceStatus"`
-	CurrentState   *CloudLoadbalancerListenerPoolAPICurrentState `json:"currentState,omitempty"`
-	TargetSpec     *CloudLoadbalancerListenerPoolAPITargetSpec   `json:"targetSpec,omitempty"`
+type CloudLoadbalancerPoolAPICurrentState struct {
+	Name               string                                     `json:"name,omitempty"`
+	Description        string                                     `json:"description,omitempty"`
+	Protocol           string                                     `json:"protocol"`
+	Algorithm          string                                     `json:"algorithm"`
+	Persistence        *CloudLoadbalancerPoolAPISessionPersistence `json:"persistence,omitempty"`
+	OperatingStatus    string                                     `json:"operatingStatus,omitempty"`
+	ProvisioningStatus string                                     `json:"provisioningStatus,omitempty"`
 }
 
-type CloudLoadbalancerListenerPoolAPICurrentState struct {
-	Name               string                                              `json:"name,omitempty"`
-	Description        string                                              `json:"description,omitempty"`
-	Protocol           string                                              `json:"protocol"`
-	Algorithm          string                                              `json:"algorithm"`
-	Persistence        *CloudLoadbalancerListenerPoolAPISessionPersistence `json:"persistence,omitempty"`
-	OperatingStatus    string                                              `json:"operatingStatus,omitempty"`
-	ProvisioningStatus string                                              `json:"provisioningStatus,omitempty"`
-	Location           *CloudLoadbalancerListenerPoolAPILocation           `json:"location,omitempty"`
-}
-
-type CloudLoadbalancerListenerPoolAPITargetSpec struct {
-	Name        string                                              `json:"name,omitempty"`
-	Description string                                              `json:"description"`
-	Protocol    string                                              `json:"protocol"`
-	Algorithm   string                                              `json:"algorithm"`
-	Persistence *CloudLoadbalancerListenerPoolAPISessionPersistence `json:"persistence,omitempty"`
+type CloudLoadbalancerPoolAPITargetSpec struct {
+	Name        string                                     `json:"name,omitempty"`
+	Description string                                     `json:"description"`
+	Protocol    string                                     `json:"protocol"`
+	Algorithm   string                                     `json:"algorithm"`
+	Persistence *CloudLoadbalancerPoolAPISessionPersistence `json:"persistence,omitempty"`
 }
 
 // Create payload
-type CloudLoadbalancerListenerPoolCreatePayload struct {
-	TargetSpec *CloudLoadbalancerListenerPoolAPITargetSpec `json:"targetSpec"`
+type CloudLoadbalancerPoolCreatePayload struct {
+	TargetSpec *CloudLoadbalancerPoolAPITargetSpec `json:"targetSpec"`
 }
 
 // Update payload — uses a separate struct without protocol (immutable)
-type CloudLoadbalancerListenerPoolUpdateTargetSpec struct {
-	Name        string                                              `json:"name,omitempty"`
-	Description string                                              `json:"description"`
-	Algorithm   string                                              `json:"algorithm"`
-	Persistence *CloudLoadbalancerListenerPoolAPISessionPersistence `json:"persistence,omitempty"`
+type CloudLoadbalancerPoolUpdateTargetSpec struct {
+	Name        string                                     `json:"name,omitempty"`
+	Description string                                     `json:"description"`
+	Algorithm   string                                     `json:"algorithm"`
+	Persistence *CloudLoadbalancerPoolAPISessionPersistence `json:"persistence,omitempty"`
 }
 
-type CloudLoadbalancerListenerPoolUpdatePayload struct {
-	Checksum   string                                         `json:"checksum"`
-	TargetSpec *CloudLoadbalancerListenerPoolUpdateTargetSpec `json:"targetSpec"`
+type CloudLoadbalancerPoolUpdatePayload struct {
+	Checksum   string                                `json:"checksum"`
+	TargetSpec *CloudLoadbalancerPoolUpdateTargetSpec `json:"targetSpec"`
 }
 
 // poolPersistenceAttrTypes returns the attribute types for the persistence object
@@ -102,8 +95,8 @@ func poolPersistenceAttrTypes() map[string]attr.Type {
 }
 
 // ToCreate converts the Terraform model to the API create payload
-func (m *CloudLoadbalancerListenerPoolModel) ToCreate() *CloudLoadbalancerListenerPoolCreatePayload {
-	targetSpec := &CloudLoadbalancerListenerPoolAPITargetSpec{
+func (m *CloudLoadbalancerPoolModel) ToCreate() *CloudLoadbalancerPoolCreatePayload {
+	targetSpec := &CloudLoadbalancerPoolAPITargetSpec{
 		Protocol:  m.Protocol.ValueString(),
 		Algorithm: m.Algorithm.ValueString(),
 	}
@@ -121,7 +114,7 @@ func (m *CloudLoadbalancerListenerPoolModel) ToCreate() *CloudLoadbalancerListen
 	// Handle optional persistence
 	if !m.Persistence.IsNull() && !m.Persistence.IsUnknown() {
 		attrs := m.Persistence.Attributes()
-		p := &CloudLoadbalancerListenerPoolAPISessionPersistence{}
+		p := &CloudLoadbalancerPoolAPISessionPersistence{}
 		if typeVal, ok := attrs["type"].(ovhtypes.TfStringValue); ok {
 			p.Type = typeVal.ValueString()
 		}
@@ -131,13 +124,13 @@ func (m *CloudLoadbalancerListenerPoolModel) ToCreate() *CloudLoadbalancerListen
 		targetSpec.Persistence = p
 	}
 
-	return &CloudLoadbalancerListenerPoolCreatePayload{TargetSpec: targetSpec}
+	return &CloudLoadbalancerPoolCreatePayload{TargetSpec: targetSpec}
 }
 
 // ToUpdate converts the Terraform model to the API update payload
 // Note: protocol is immutable and not included in update payload
-func (m *CloudLoadbalancerListenerPoolModel) ToUpdate(checksum string) *CloudLoadbalancerListenerPoolUpdatePayload {
-	targetSpec := &CloudLoadbalancerListenerPoolUpdateTargetSpec{
+func (m *CloudLoadbalancerPoolModel) ToUpdate(checksum string) *CloudLoadbalancerPoolUpdatePayload {
+	targetSpec := &CloudLoadbalancerPoolUpdateTargetSpec{
 		Algorithm: m.Algorithm.ValueString(),
 	}
 
@@ -154,7 +147,7 @@ func (m *CloudLoadbalancerListenerPoolModel) ToUpdate(checksum string) *CloudLoa
 	// Handle optional persistence
 	if !m.Persistence.IsNull() && !m.Persistence.IsUnknown() {
 		attrs := m.Persistence.Attributes()
-		p := &CloudLoadbalancerListenerPoolAPISessionPersistence{}
+		p := &CloudLoadbalancerPoolAPISessionPersistence{}
 		if typeVal, ok := attrs["type"].(ovhtypes.TfStringValue); ok {
 			p.Type = typeVal.ValueString()
 		}
@@ -164,7 +157,7 @@ func (m *CloudLoadbalancerListenerPoolModel) ToUpdate(checksum string) *CloudLoa
 		targetSpec.Persistence = p
 	}
 
-	return &CloudLoadbalancerListenerPoolUpdatePayload{
+	return &CloudLoadbalancerPoolUpdatePayload{
 		Checksum:   checksum,
 		TargetSpec: targetSpec,
 	}
@@ -182,13 +175,11 @@ func PoolCurrentStateAttrTypes() map[string]attr.Type {
 		},
 		"operating_status":    ovhtypes.TfStringType{},
 		"provisioning_status": ovhtypes.TfStringType{},
-		"region":              ovhtypes.TfStringType{},
-		"availability_zone":   ovhtypes.TfStringType{},
 	}
 }
 
 // buildPoolPersistenceObject constructs the persistence object from API response
-func buildPoolPersistenceObject(p *CloudLoadbalancerListenerPoolAPISessionPersistence) basetypes.ObjectValue {
+func buildPoolPersistenceObject(p *CloudLoadbalancerPoolAPISessionPersistence) basetypes.ObjectValue {
 	cookieNameVal := ovhtypes.TfStringValue{StringValue: types.StringNull()}
 	if p.CookieName != "" {
 		cookieNameVal = ovhtypes.TfStringValue{StringValue: types.StringValue(p.CookieName)}
@@ -205,17 +196,7 @@ func buildPoolPersistenceObject(p *CloudLoadbalancerListenerPoolAPISessionPersis
 }
 
 // buildPoolCurrentStateObject constructs the current_state object from API response
-func buildPoolCurrentStateObject(ctx context.Context, state *CloudLoadbalancerListenerPoolAPICurrentState) basetypes.ObjectValue {
-	// Build region and availability_zone from location
-	regionVal := ovhtypes.TfStringValue{StringValue: types.StringValue("")}
-	azVal := ovhtypes.TfStringValue{StringValue: types.StringValue("")}
-	if state.Location != nil {
-		regionVal = ovhtypes.TfStringValue{StringValue: types.StringValue(state.Location.Region)}
-		if state.Location.AvailabilityZone != "" {
-			azVal = ovhtypes.TfStringValue{StringValue: types.StringValue(state.Location.AvailabilityZone)}
-		}
-	}
-
+func buildPoolCurrentStateObject(ctx context.Context, state *CloudLoadbalancerPoolAPICurrentState) basetypes.ObjectValue {
 	// Build persistence object
 	var persistenceVal basetypes.ObjectValue
 	if state.Persistence != nil {
@@ -234,8 +215,6 @@ func buildPoolCurrentStateObject(ctx context.Context, state *CloudLoadbalancerLi
 			"persistence":         persistenceVal,
 			"operating_status":    ovhtypes.TfStringValue{StringValue: types.StringValue(state.OperatingStatus)},
 			"provisioning_status": ovhtypes.TfStringValue{StringValue: types.StringValue(state.ProvisioningStatus)},
-			"region":              regionVal,
-			"availability_zone":   azVal,
 		},
 	)
 
@@ -243,7 +222,7 @@ func buildPoolCurrentStateObject(ctx context.Context, state *CloudLoadbalancerLi
 }
 
 // MergeWith merges API response data into the Terraform model
-func (m *CloudLoadbalancerListenerPoolModel) MergeWith(ctx context.Context, response *CloudLoadbalancerListenerPoolAPIResponse) {
+func (m *CloudLoadbalancerPoolModel) MergeWith(ctx context.Context, response *CloudLoadbalancerPoolAPIResponse) {
 	m.Id = ovhtypes.TfStringValue{StringValue: types.StringValue(response.Id)}
 	m.Checksum = ovhtypes.TfStringValue{StringValue: types.StringValue(response.Checksum)}
 	m.CreatedAt = ovhtypes.TfStringValue{StringValue: types.StringValue(response.CreatedAt)}

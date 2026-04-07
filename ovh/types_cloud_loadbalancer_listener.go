@@ -21,6 +21,7 @@ type CloudLoadbalancerListenerModel struct {
 	Name ovhtypes.TfStringValue `tfsdk:"name"`
 
 	// Optional — mutable
+	DefaultPoolId          ovhtypes.TfStringValue                             `tfsdk:"default_pool_id"`
 	Description            ovhtypes.TfStringValue                             `tfsdk:"description"`
 	ConnectionLimit        types.Int64                                        `tfsdk:"connection_limit"`
 	AllowedCidrs           ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] `tfsdk:"allowed_cidrs"`
@@ -54,6 +55,10 @@ type CloudLoadbalancerListenerAPIResponse struct {
 	TargetSpec     *CloudLoadbalancerListenerAPITargetSpec   `json:"targetSpec,omitempty"`
 }
 
+type CloudLoadbalancerListenerAPIPoolRef struct {
+	Id string `json:"id"`
+}
+
 type CloudLoadbalancerListenerAPIInsertHeaders struct {
 	XForwardedFor     bool `json:"xForwardedFor,omitempty"`
 	XForwardedPort    bool `json:"xForwardedPort,omitempty"`
@@ -81,6 +86,7 @@ type CloudLoadbalancerListenerAPICurrentState struct {
 	TimeoutTcpInspect      *int                                       `json:"timeoutTcpInspect,omitempty"`
 	InsertHeaders          *CloudLoadbalancerListenerAPIInsertHeaders `json:"insertHeaders,omitempty"`
 	DefaultTlsContainerRef string                                     `json:"defaultTlsContainerRef,omitempty"`
+	DefaultPool            *CloudLoadbalancerListenerAPIPoolRef       `json:"defaultPool,omitempty"`
 	SniContainerRefs       []string                                   `json:"sniContainerRefs,omitempty"`
 	TlsVersions            []string                                   `json:"tlsVersions,omitempty"`
 	OperatingStatus        string                                     `json:"operatingStatus,omitempty"`
@@ -101,6 +107,7 @@ type CloudLoadbalancerListenerAPITargetSpec struct {
 	TimeoutTcpInspect      *int                                       `json:"timeoutTcpInspect,omitempty"`
 	InsertHeaders          *CloudLoadbalancerListenerAPIInsertHeaders `json:"insertHeaders,omitempty"`
 	DefaultTlsContainerRef string                                     `json:"defaultTlsContainerRef,omitempty"`
+	DefaultPool            *CloudLoadbalancerListenerAPIPoolRef       `json:"defaultPool,omitempty"`
 	SniContainerRefs       []string                                   `json:"sniContainerRefs,omitempty"`
 	TlsVersions            []string                                   `json:"tlsVersions,omitempty"`
 }
@@ -116,6 +123,7 @@ type CloudLoadbalancerListenerAPIUpdateTargetSpec struct {
 	TimeoutTcpInspect      *int                                       `json:"timeoutTcpInspect,omitempty"`
 	InsertHeaders          *CloudLoadbalancerListenerAPIInsertHeaders `json:"insertHeaders,omitempty"`
 	DefaultTlsContainerRef string                                     `json:"defaultTlsContainerRef,omitempty"`
+	DefaultPool            *CloudLoadbalancerListenerAPIPoolRef       `json:"defaultPool,omitempty"`
 	SniContainerRefs       []string                                   `json:"sniContainerRefs,omitempty"`
 	TlsVersions            []string                                   `json:"tlsVersions,omitempty"`
 }
@@ -160,6 +168,7 @@ func ListenerCurrentStateAttrTypes() map[string]attr.Type {
 		"operating_status":          ovhtypes.TfStringType{},
 		"provisioning_status":       ovhtypes.TfStringType{},
 		"default_tls_container_ref": ovhtypes.TfStringType{},
+		"default_pool_id":           ovhtypes.TfStringType{},
 		"region":                    ovhtypes.TfStringType{},
 		"availability_zone":         ovhtypes.TfStringType{},
 		"insert_headers": types.ObjectType{
@@ -227,6 +236,11 @@ func buildListenerCurrentStateObject(ctx context.Context, state *CloudLoadbalanc
 		availabilityZone = state.Location.AvailabilityZone
 	}
 
+	defaultPoolIdVal := ovhtypes.TfStringValue{StringValue: types.StringNull()}
+	if state.DefaultPool != nil && state.DefaultPool.Id != "" {
+		defaultPoolIdVal = ovhtypes.TfStringValue{StringValue: types.StringValue(state.DefaultPool.Id)}
+	}
+
 	var connectionLimit attr.Value
 	if state.ConnectionLimit != nil {
 		connectionLimit = types.Int64Value(int64(*state.ConnectionLimit))
@@ -277,6 +291,7 @@ func buildListenerCurrentStateObject(ctx context.Context, state *CloudLoadbalanc
 			"operating_status":          ovhtypes.TfStringValue{StringValue: types.StringValue(state.OperatingStatus)},
 			"provisioning_status":       ovhtypes.TfStringValue{StringValue: types.StringValue(state.ProvisioningStatus)},
 			"default_tls_container_ref": ovhtypes.TfStringValue{StringValue: types.StringValue(state.DefaultTlsContainerRef)},
+			"default_pool_id":           defaultPoolIdVal,
 			"region":                    ovhtypes.TfStringValue{StringValue: types.StringValue(region)},
 			"availability_zone":         ovhtypes.TfStringValue{StringValue: types.StringValue(availabilityZone)},
 			"insert_headers":            buildInsertHeadersFromAPI(state.InsertHeaders),
@@ -369,6 +384,12 @@ func (m *CloudLoadbalancerListenerModel) ToCreate() *CloudLoadbalancerListenerCr
 		targetSpec.DefaultTlsContainerRef = m.DefaultTlsContainerRef.ValueString()
 	}
 
+	if !m.DefaultPoolId.IsNull() && !m.DefaultPoolId.IsUnknown() {
+		targetSpec.DefaultPool = &CloudLoadbalancerListenerAPIPoolRef{
+			Id: m.DefaultPoolId.ValueString(),
+		}
+	}
+
 	targetSpec.InsertHeaders = extractInsertHeadersFromModel(m.InsertHeaders)
 	targetSpec.AllowedCidrs = extractStringListFromModel(m.AllowedCidrs)
 	targetSpec.SniContainerRefs = extractStringListFromModel(m.SniContainerRefs)
@@ -410,6 +431,12 @@ func (m *CloudLoadbalancerListenerModel) ToUpdate(checksum string) *CloudLoadbal
 
 	if !m.DefaultTlsContainerRef.IsNull() && !m.DefaultTlsContainerRef.IsUnknown() {
 		targetSpec.DefaultTlsContainerRef = m.DefaultTlsContainerRef.ValueString()
+	}
+
+	if !m.DefaultPoolId.IsNull() && !m.DefaultPoolId.IsUnknown() {
+		targetSpec.DefaultPool = &CloudLoadbalancerListenerAPIPoolRef{
+			Id: m.DefaultPoolId.ValueString(),
+		}
 	}
 
 	targetSpec.InsertHeaders = extractInsertHeadersFromModel(m.InsertHeaders)
@@ -483,6 +510,13 @@ func (m *CloudLoadbalancerListenerModel) MergeWith(ctx context.Context, response
 		// Handle defaultTlsContainerRef
 		if response.TargetSpec.DefaultTlsContainerRef != "" || (!m.DefaultTlsContainerRef.IsNull() && !m.DefaultTlsContainerRef.IsUnknown()) {
 			m.DefaultTlsContainerRef = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.DefaultTlsContainerRef)}
+		}
+
+		// Handle defaultPool
+		if response.TargetSpec.DefaultPool != nil && response.TargetSpec.DefaultPool.Id != "" {
+			m.DefaultPoolId = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.DefaultPool.Id)}
+		} else if m.DefaultPoolId.IsNull() || m.DefaultPoolId.IsUnknown() {
+			m.DefaultPoolId = ovhtypes.TfStringValue{StringValue: types.StringNull()}
 		}
 
 		// Handle insert_headers from targetSpec
