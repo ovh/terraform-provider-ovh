@@ -54,7 +54,7 @@ func (r *cloudLoadbalancerPoolResource) Configure(ctx context.Context, req resou
 
 var poolMutableAttrs = MutableAttrs{
 	Strings: []string{"name", "description", "algorithm"},
-	Objects: []string{"persistence"},
+	Objects: []string{"persistence", "health_monitor"},
 }
 
 func (r *cloudLoadbalancerPoolResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -122,6 +122,78 @@ func (r *cloudLoadbalancerPoolResource) Schema(ctx context.Context, req resource
 						Optional:            true,
 						Description:         "Cookie name for APP_COOKIE persistence type",
 						MarkdownDescription: "Cookie name for `APP_COOKIE` persistence type",
+					},
+				},
+			},
+			"health_monitor": schema.SingleNestedAttribute{
+				Optional:            true,
+				Description:         "Health monitor configuration",
+				MarkdownDescription: "Health monitor configuration",
+				Attributes: map[string]schema.Attribute{
+					"type": schema.StringAttribute{
+						CustomType:          ovhtypes.TfStringType{},
+						Required:            true,
+						Description:         "Health monitor type (HTTP, HTTPS, PING, TCP, UDP_CONNECT, SCTP, TLS_HELLO)",
+						MarkdownDescription: "Health monitor type (`HTTP`, `HTTPS`, `PING`, `TCP`, `UDP_CONNECT`, `SCTP`, `TLS_HELLO`)",
+						PlanModifiers: []planmodifier.String{
+							stringplanmodifier.RequiresReplace(),
+						},
+					},
+					"delay": schema.Int64Attribute{
+						Required:            true,
+						Description:         "Seconds between health checks",
+						MarkdownDescription: "Seconds between health checks",
+					},
+					"timeout": schema.Int64Attribute{
+						Required:            true,
+						Description:         "Seconds to wait for a health check response",
+						MarkdownDescription: "Seconds to wait for a health check response",
+					},
+					"max_retries": schema.Int64Attribute{
+						Required:            true,
+						Description:         "Number of consecutive health check failures before marking member as unhealthy (1-10)",
+						MarkdownDescription: "Number of consecutive health check failures before marking member as unhealthy (1-10)",
+					},
+					"max_retries_down": schema.Int64Attribute{
+						Optional:            true,
+						Description:         "Number of consecutive health check failures before marking member as ERROR (1-10)",
+						MarkdownDescription: "Number of consecutive health check failures before marking member as ERROR (1-10)",
+					},
+					"name": schema.StringAttribute{
+						CustomType:          ovhtypes.TfStringType{},
+						Optional:            true,
+						Description:         "Health monitor name",
+						MarkdownDescription: "Health monitor name",
+					},
+					"url_path": schema.StringAttribute{
+						CustomType:          ovhtypes.TfStringType{},
+						Optional:            true,
+						Description:         "URL path for HTTP/HTTPS health checks",
+						MarkdownDescription: "URL path for HTTP/HTTPS health checks",
+					},
+					"http_method": schema.StringAttribute{
+						CustomType:          ovhtypes.TfStringType{},
+						Optional:            true,
+						Description:         "HTTP method for health checks (GET, HEAD, POST, PUT, DELETE, PATCH, OPTIONS, TRACE)",
+						MarkdownDescription: "HTTP method for health checks (`GET`, `HEAD`, `POST`, `PUT`, `DELETE`, `PATCH`, `OPTIONS`, `TRACE`)",
+					},
+					"http_version": schema.StringAttribute{
+						CustomType:          ovhtypes.TfStringType{},
+						Optional:            true,
+						Description:         "HTTP version for health checks (1.0 or 1.1)",
+						MarkdownDescription: "HTTP version for health checks (`1.0` or `1.1`)",
+					},
+					"expected_codes": schema.StringAttribute{
+						CustomType:          ovhtypes.TfStringType{},
+						Optional:            true,
+						Description:         "Expected HTTP response codes (e.g. 200, 200-202)",
+						MarkdownDescription: "Expected HTTP response codes (e.g. `200`, `200-202`)",
+					},
+					"domain_name": schema.StringAttribute{
+						CustomType:          ovhtypes.TfStringType{},
+						Optional:            true,
+						Description:         "Domain name for health check requests",
+						MarkdownDescription: "Domain name for health check requests",
 					},
 				},
 			},
@@ -204,6 +276,78 @@ func (r *cloudLoadbalancerPoolResource) Schema(ctx context.Context, req resource
 								CustomType:  ovhtypes.TfStringType{},
 								Computed:    true,
 								Description: "Cookie name for APP_COOKIE persistence type",
+							},
+						},
+					},
+					"health_monitor": schema.SingleNestedAttribute{
+						Computed:    true,
+						Description: "Health monitor configuration",
+						Attributes: map[string]schema.Attribute{
+							"id": schema.StringAttribute{
+								CustomType:  ovhtypes.TfStringType{},
+								Computed:    true,
+								Description: "Health monitor ID",
+							},
+							"type": schema.StringAttribute{
+								CustomType:  ovhtypes.TfStringType{},
+								Computed:    true,
+								Description: "Health monitor type",
+							},
+							"delay": schema.Int64Attribute{
+								Computed:    true,
+								Description: "Seconds between health checks",
+							},
+							"timeout": schema.Int64Attribute{
+								Computed:    true,
+								Description: "Seconds to wait for a health check response",
+							},
+							"max_retries": schema.Int64Attribute{
+								Computed:    true,
+								Description: "Number of consecutive health check failures before marking member as unhealthy",
+							},
+							"max_retries_down": schema.Int64Attribute{
+								Computed:    true,
+								Description: "Number of consecutive health check failures before marking member as ERROR",
+							},
+							"name": schema.StringAttribute{
+								CustomType:  ovhtypes.TfStringType{},
+								Computed:    true,
+								Description: "Health monitor name",
+							},
+							"url_path": schema.StringAttribute{
+								CustomType:  ovhtypes.TfStringType{},
+								Computed:    true,
+								Description: "URL path for HTTP/HTTPS health checks",
+							},
+							"http_method": schema.StringAttribute{
+								CustomType:  ovhtypes.TfStringType{},
+								Computed:    true,
+								Description: "HTTP method for health checks",
+							},
+							"http_version": schema.StringAttribute{
+								CustomType:  ovhtypes.TfStringType{},
+								Computed:    true,
+								Description: "HTTP version for health checks",
+							},
+							"expected_codes": schema.StringAttribute{
+								CustomType:  ovhtypes.TfStringType{},
+								Computed:    true,
+								Description: "Expected HTTP response codes",
+							},
+							"domain_name": schema.StringAttribute{
+								CustomType:  ovhtypes.TfStringType{},
+								Computed:    true,
+								Description: "Domain name for health check requests",
+							},
+							"operating_status": schema.StringAttribute{
+								CustomType:  ovhtypes.TfStringType{},
+								Computed:    true,
+								Description: "Operating status of the health monitor",
+							},
+							"provisioning_status": schema.StringAttribute{
+								CustomType:  ovhtypes.TfStringType{},
+								Computed:    true,
+								Description: "Provisioning status of the health monitor",
 							},
 						},
 					},
