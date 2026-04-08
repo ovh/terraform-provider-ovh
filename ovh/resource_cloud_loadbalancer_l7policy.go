@@ -172,6 +172,7 @@ func (r *cloudLoadbalancerL7PolicyResource) Schema(ctx context.Context, req reso
 						},
 						"invert": schema.BoolAttribute{
 							Optional:            true,
+							Computed:            true,
 							Description:         "Whether to invert the rule match",
 							MarkdownDescription: "Whether to invert the rule match",
 						},

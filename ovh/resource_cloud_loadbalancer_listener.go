@@ -154,26 +154,32 @@ func (r *cloudLoadbalancerListenerResource) Schema(ctx context.Context, req reso
 				Attributes: map[string]schema.Attribute{
 					"x_forwarded_for": schema.BoolAttribute{
 						Optional:    true,
+						Computed:    true,
 						Description: "Insert X-Forwarded-For header",
 					},
 					"x_forwarded_port": schema.BoolAttribute{
 						Optional:    true,
+						Computed:    true,
 						Description: "Insert X-Forwarded-Port header",
 					},
 					"x_forwarded_proto": schema.BoolAttribute{
 						Optional:    true,
+						Computed:    true,
 						Description: "Insert X-Forwarded-Proto header",
 					},
 					"x_ssl_client_verify": schema.BoolAttribute{
 						Optional:    true,
+						Computed:    true,
 						Description: "Insert X-SSL-Client-Verify header",
 					},
 					"x_ssl_client_has_cert": schema.BoolAttribute{
 						Optional:    true,
+						Computed:    true,
 						Description: "Insert X-SSL-Client-Has-Cert header",
 					},
 					"x_ssl_client_dn": schema.BoolAttribute{
 						Optional:    true,
+						Computed:    true,
 						Description: "Insert X-SSL-Client-DN header",
 					},
 				},
