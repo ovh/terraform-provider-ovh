@@ -30,6 +30,25 @@ func dataSourceCloudProjectKubeNodepool() *schema.Resource {
 			},
 
 			// computed
+			"attach_floating_ips": {
+				Description: "Floating IPs attachment configuration for pool nodes",
+				Optional:    true,
+				Computed:    true,
+				Type:        schema.TypeSet,
+				MaxItems:    1,
+				Set:         CustomSchemaSetFunc(),
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:        schema.TypeBool,
+							Description: "Whether floating IPs attachment is enabled on nodes of this pool",
+							Optional:    true,
+							Computed:    true,
+							ForceNew:    false,
+						},
+					},
+				},
+			},
 			"autoscale": {
 				Type:        schema.TypeBool,
 				Description: "Enable auto-scaling for the pool",
@@ -209,20 +228,6 @@ func dataSourceCloudProjectKubeNodepool() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
-				},
-			},
-			"attach_floating_ips": {
-				Type:        schema.TypeSet,
-				Description: "Floating IPs attachment configuration for pool nodes",
-				Computed:    true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"enabled": {
-							Type:        schema.TypeBool,
-							Description: "Whether floating IPs attachment is enabled on nodes of this pool",
-							Computed:    true,
-						},
-					},
 				},
 			},
 		},
