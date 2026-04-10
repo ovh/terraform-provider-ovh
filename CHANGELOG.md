@@ -1,3 +1,30 @@
+## 2.13.0 (April 10, 2026)
+
+⚙️ General:
+
+* Bump `google.golang.org/grpc` from 1.69.4 to 1.79.3 ([#1258](https://github.com/ovh/terraform-provider-ovh/pull/1258))
+
+🎉 Features:
+
+* New resource: `ovh_cloud_project_file_storage_share` ([#1265](https://github.com/ovh/terraform-provider-ovh/pull/1265))
+
+💪 Improvements:
+
+* `r/ovh_cloud_project`: Add client-side `deletion_protection` attribute ([#1270](https://github.com/ovh/terraform-provider-ovh/pull/1270))
+* `r/ovh_cloud_project_kube_nodepool`: Add `attach_floating_ips` field ([#1276](https://github.com/ovh/terraform-provider-ovh/pull/1276), [#1284](https://github.com/ovh/terraform-provider-ovh/pull/1284))
+* `r/ovh_hosting_private_database`: Add `advanced_configuration` support ([#1244](https://github.com/ovh/terraform-provider-ovh/pull/1244))
+
+🐜 Bug fixes:
+
+* Prevent nil pointer panic when OVH client is not initialized ([#1277](https://github.com/ovh/terraform-provider-ovh/pull/1277))
+* `r/ovh_cloud_project_kube_oidc`: Increase OIDC delay ([#1271](https://github.com/ovh/terraform-provider-ovh/pull/1271))
+* `r/ovh_vps`: Use state when `do_not_send_password` field is unknown ([#1267](https://github.com/ovh/terraform-provider-ovh/pull/1267))
+* `r/ovh_domain_zone_record`: Ignore unquoted TXT changes ([#1264](https://github.com/ovh/terraform-provider-ovh/pull/1264))
+* `r/ovh_dbaas_logs_input`: Fix flowgger configuration options field ([#1263](https://github.com/ovh/terraform-provider-ovh/pull/1263))
+* `r/ovh_dedicated_server_install_task`: Fix null default values in installation templates ([#1256](https://github.com/ovh/terraform-provider-ovh/pull/1256))
+
+❤️ Thanks for your contributions ❤️
+
 ## 2.12.0 (March 11, 2026)
 
 ⚙️ General:
