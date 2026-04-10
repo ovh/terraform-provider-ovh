@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 )
 
 func init() {
@@ -128,7 +129,7 @@ func TestAccResourceDbaasLogsOutputOpensearchAlias_basic(t *testing.T) {
 		resource "ovh_dbaas_logs_output_opensearch_alias" "alias" {
 			service_name = "%s"
 			description  = "%s"
-			suffix        = "%s"
+			suffix       = "%s"
 		}
 		`,
 		serviceName,
@@ -164,14 +165,14 @@ func TestAccResourceDbaasLogsOutputOpensearchAlias_withIndex(t *testing.T) {
 		resource "ovh_dbaas_logs_output_opensearch_index" "idx" {
 			service_name = "%s"
 			description  = "%s"
-			suffix        = "%s"
-			nb_shard = 1
+			suffix       = "%s"
+			nb_shard     = 1
 		}
 
 		resource "ovh_dbaas_logs_output_opensearch_alias" "aliasWithIdx" {
 			service_name = "%s"
 			description  = "%s"
-			suffix        = "%s"
+			suffix       = "%s"
 			indexes = [ovh_dbaas_logs_output_opensearch_index.idx.index_id]
 		}
 		`,
@@ -221,7 +222,7 @@ func TestAccResourceDbaasLogsOutputOpensearchAlias_withStream(t *testing.T) {
 		resource "ovh_dbaas_logs_output_opensearch_alias" "aliasWithStream" {
 			service_name = "%s"
 			description  = "%s"
-			suffix        = "%s"
+			suffix       = "%s"
 			streams = [ovh_dbaas_logs_output_graylog_stream.stream.stream_id]
 		}
 		`,
@@ -251,6 +252,77 @@ func TestAccResourceDbaasLogsOutputOpensearchAlias_withStream(t *testing.T) {
 						"streams.#",
 					),
 				),
+			},
+		},
+	})
+}
+
+func TestAccResourceDbaasLogsOutputOpensearchAlias_withMultipleStreamsAndMultipleAliases(t *testing.T) {
+	serviceName := os.Getenv("OVH_DBAAS_LOGS_SERVICE_TEST")
+	desc := acctest.RandomWithPrefix(test_prefix)
+	title := acctest.RandomWithPrefix(test_prefix)
+	suffix := acctest.RandomWithPrefix(test_prefix)
+
+	config := fmt.Sprintf(`
+		resource "ovh_dbaas_logs_output_graylog_stream" "stream" {
+			count		 = 2
+			service_name = "%s"
+			description  = "%s-${count.index}"
+			title        = "%s-${count.index}"
+		}
+		resource "ovh_dbaas_logs_output_opensearch_alias" "alias" {
+			count        = length(ovh_dbaas_logs_output_graylog_stream.stream)
+			service_name = "%s"
+			description  = "%s-${count.index}"
+			suffix       = "%s-${count.index}"
+			streams = [ovh_dbaas_logs_output_graylog_stream.stream[count.index].id]
+		}
+		`,
+		serviceName,
+		desc,
+		title,
+		serviceName,
+		desc,
+		suffix,
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { testAccPreCheckDbaasLogs(t) },
+
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"ovh_dbaas_logs_output_opensearch_alias.alias.0",
+						"description",
+						desc+"-0",
+					),
+					resource.TestCheckResourceAttr(
+						"ovh_dbaas_logs_output_opensearch_alias.alias.0",
+						"streams.#",
+						"1",
+					),
+					resource.TestCheckResourceAttr(
+						"ovh_dbaas_logs_output_opensearch_alias.alias.1",
+						"description",
+						desc+"-1",
+					),
+					resource.TestCheckResourceAttr(
+						"ovh_dbaas_logs_output_opensearch_alias.alias.1",
+						"streams.#",
+						"1",
+					),
+				),
+			},
+			{
+				Config: config,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})

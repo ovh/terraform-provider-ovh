@@ -173,6 +173,7 @@ export OVH_DOMAIN_DS_RECORD_PUBLIC_KEY_TEST="..."
 export OVH_DOMAIN_DS_RECORD_TAG_TEST="..."
 export OVH_OKMS="..."
 export OVH_STORAGE_EFS_SERVICE_TEST="..."
+export OVH_DBAAS_LOGS_SERVICE_TEST="..."
 
 $ make testacc
 ```
