@@ -44,10 +44,11 @@ func resourceCloudProjectDatabase() *schema.Resource {
 				Optional:    true,
 			},
 			"engine": {
-				Type:        schema.TypeString,
-				Description: "Name of the engine of the service",
-				ForceNew:    true,
-				Required:    true,
+				Type:             schema.TypeString,
+				Description:      "Name of the engine of the service",
+				ForceNew:         true,
+				Required:         true,
+				ValidateDiagFunc: helpers.ValidateDiagEnum(engines),
 			},
 			"flavor": {
 				Type:        schema.TypeString,
