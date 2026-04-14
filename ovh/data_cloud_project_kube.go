@@ -225,7 +225,225 @@ func dataSourceCloudProjectKube() *schema.Resource {
 					},
 				},
 			},
-
+			"customization_cilium": {
+				Type:        schema.TypeSet,
+				Description: "Allow the customization of the Cilium deployment",
+				Computed:    true,
+				Optional:    true,
+				MaxItems:    1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cluster_mesh": {
+							Type:        schema.TypeSet,
+							Computed:    true,
+							Description: "Customize Cilium's cluster mesh feature",
+							Optional:    true,
+							MaxItems:    1,
+							Set:         CustomSchemaSetFunc(),
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"enabled": {
+										Type:        schema.TypeBool,
+										Description: "Enable or disable the Cilium's Cluster mesh feature",
+										Computed:    true,
+										Optional:    true,
+									},
+									"api_server": {
+										Type:        schema.TypeSet,
+										Description: "Define how the cluster mesh will be exposed",
+										Computed:    true,
+										Optional:    true,
+										MaxItems:    1,
+										Set:         CustomSchemaSetFunc(),
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"node_port": {
+													Type:        schema.TypeInt,
+													Description: "If the ServiceType is \"NodePort\", define on which port the service will be exposed",
+													Computed:    true,
+													Optional:    true,
+												},
+												"service_type": {
+													Type:        schema.TypeString,
+													Description: "Define if the cluster mesh service is will be exposed by a K8s Service of type NodePort or LoadBalancer",
+													Computed:    true,
+													Optional:    true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"hubble": {
+							Type:        schema.TypeSet,
+							Description: "Allow the customization of the Hubble deployment",
+							Computed:    true,
+							Optional:    true,
+							MaxItems:    1,
+							Set:         CustomSchemaSetFunc(),
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"enabled": {
+										Type:        schema.TypeBool,
+										Description: "Enable or disable the Hubble deployment",
+										Computed:    true,
+										Optional:    true,
+									},
+									"relay": {
+										Type:        schema.TypeSet,
+										Description: "Allow the customization of the Relay deployment",
+										Computed:    true,
+										Optional:    true,
+										MaxItems:    1,
+										Set:         CustomSchemaSetFunc(),
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"enabled": {
+													Type:        schema.TypeBool,
+													Description: "Enable or disable the Relay deployment",
+													Computed:    true,
+													Optional:    true,
+												},
+											},
+										},
+									},
+									"ui": {
+										Type:        schema.TypeSet,
+										Computed:    true,
+										Description: "Allow the customization of the Hubble's UI deployment",
+										Optional:    true,
+										MaxItems:    1,
+										Set:         CustomSchemaSetFunc(),
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"enabled": {
+													Type:        schema.TypeBool,
+													Description: "Enable or disable the Hubble's UI deployment",
+													Computed:    true,
+													Optional:    true,
+												},
+												"backend_resources": {
+													Type:        schema.TypeSet,
+													Description: "Allow the customization of the Hubble UI Backend",
+													Computed:    true,
+													Optional:    true,
+													MaxItems:    1,
+													Set:         CustomSchemaSetFunc(),
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"limits": {
+																Type:        schema.TypeSet,
+																Description: "Define the limits of the Hubble UI Backend",
+																Computed:    true,
+																Optional:    true,
+																MaxItems:    1,
+																Set:         CustomSchemaSetFunc(),
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"cpu": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																			Optional: true,
+																		},
+																		"memory": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																			Optional: true,
+																		},
+																	},
+																},
+															},
+															"requests": {
+																Type:        schema.TypeSet,
+																Description: "Define the requests of the Hubble UI Backend",
+																Computed:    true,
+																Optional:    true,
+																MaxItems:    1,
+																Set:         CustomSchemaSetFunc(),
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"cpu": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																			Optional: true,
+																		},
+																		"memory": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																			Optional: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+												"frontend_resources": {
+													Type:        schema.TypeSet,
+													Description: "Allow the customization of the Hubble UI Frontend",
+													Computed:    true,
+													Optional:    true,
+													MaxItems:    1,
+													Set:         CustomSchemaSetFunc(),
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"limits": {
+																Type:        schema.TypeSet,
+																Description: "Define the limits of the Hubble UI Frontend",
+																Computed:    true,
+																Optional:    true,
+																MaxItems:    1,
+																Set:         CustomSchemaSetFunc(),
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"cpu": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																			Optional: true,
+																		},
+																		"memory": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																			Optional: true,
+																		},
+																	},
+																},
+															},
+															"requests": {
+																Type:        schema.TypeSet,
+																Description: "Define the requests of the Hubble UI Frontend",
+																Computed:    true,
+																Optional:    true,
+																MaxItems:    1,
+																Set:         CustomSchemaSetFunc(),
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"cpu": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																			Optional: true,
+																		},
+																		"memory": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																			Optional: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"private_network_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -303,6 +521,32 @@ func dataSourceCloudProjectKube() *schema.Resource {
 							Type:      schema.TypeString,
 							Computed:  true,
 							Sensitive: true,
+						},
+					},
+				},
+			},
+			"ip_allocation_policy": {
+				Description: "IP Allocation policy for the MKS cluster",
+				Optional:    true,
+				Computed:    true,
+				Type:        schema.TypeSet,
+				MaxItems:    1,
+				Set:         CustomSchemaSetFunc(),
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"pods_ipv4_cidr": {
+							Type:        schema.TypeString,
+							Description: "The Kubernetes cluster's pods CIDR",
+							Optional:    true,
+							Computed:    true,
+							Default:     nil,
+						},
+						"services_ipv4_cidr": {
+							Type:        schema.TypeString,
+							Description: "The Kubernetes cluster's services CIDR",
+							Optional:    true,
+							Computed:    true,
+							Default:     nil,
 						},
 					},
 				},

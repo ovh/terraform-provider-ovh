@@ -384,6 +384,11 @@ resource "ovh_cloud_project_kube" "cluster" {
   version      = var.version_k8s
   plan         = "standard"
 
+  ip_allocation_policy {
+     pods_ipv4_cidr = "10.5.0.0/16"
+     services_ipv4_cidr = "10.6.0.0/16"
+  }
+
   private_network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
   nodes_subnet_id    = ovh_cloud_project_network_private_subnet.subnet.id
 }
@@ -736,6 +741,8 @@ func TestAccCloudProjectKubeNodePoolRessource(t *testing.T) {
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "version", version),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "ip_allocation_policy.0.pods_ipv4_cidr", "10.5.0.0/16"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "ip_allocation_policy.0.services_ipv4_cidr", "10.6.0.0/16"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "name", name),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "flavor_name", "b3-8"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "desired_nodes", "1"),
