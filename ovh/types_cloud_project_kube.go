@@ -122,15 +122,15 @@ type CloudProjectKubeIPAllocationPolicy struct {
 }
 
 func (opts *CloudProjectKubeCreateOpts) FromResource(d *schema.ResourceData) {
-	opts.Region = d.Get("region").(string)
-	opts.Version = helpers.GetNilStringPointerFromData(d, "version")
+	opts.Region = d.Get(kubeRegionKey).(string)
+	opts.Version = helpers.GetNilStringPointerFromData(d, kubeVersionKey)
 	opts.Plan = helpers.GetNilStringPointerFromData(d, kubeClusterPlanKey)
-	opts.Name = helpers.GetNilStringPointerFromData(d, "name")
-	opts.UpdatePolicy = helpers.GetNilStringPointerFromData(d, "update_policy")
-	opts.LoadBalancersSubnetId = helpers.GetNilStringPointerFromData(d, "load_balancers_subnet_id")
-	opts.NodesSubnetId = helpers.GetNilStringPointerFromData(d, "nodes_subnet_id")
-	opts.PrivateNetworkId = helpers.GetNilStringPointerFromData(d, "private_network_id")
-	opts.PrivateNetworkConfiguration = loadPrivateNetworkConfiguration(d.Get("private_network_configuration"))
+	opts.Name = helpers.GetNilStringPointerFromData(d, kubeNameKey)
+	opts.UpdatePolicy = helpers.GetNilStringPointerFromData(d, kubeClusterUpdatePolicyKey)
+	opts.LoadBalancersSubnetId = helpers.GetNilStringPointerFromData(d, kubeClusterLoadBalancersSubnetIdKey)
+	opts.NodesSubnetId = helpers.GetNilStringPointerFromData(d, kubeClusterNodesSubnetIdKey)
+	opts.PrivateNetworkId = helpers.GetNilStringPointerFromData(d, kubeClusterPrivateNetworkIDKey)
+	opts.PrivateNetworkConfiguration = loadPrivateNetworkConfiguration(d.Get(kubeClusterPrivateNetworkConfigurationKey))
 	opts.KubeProxyMode = helpers.GetNilStringPointerFromData(d, kubeClusterProxyModeKey)
 
 	opts.Customization = &Customization{
@@ -139,7 +139,7 @@ func (opts *CloudProjectKubeCreateOpts) FromResource(d *schema.ResourceData) {
 		Cilium:    loadCiliumCustomizationFromResource(d.Get(kubeClusterCustomizationCiliumKey)),
 	}
 
-	ipAllocationPolicy, err := loadIPAllocationPolicyFromResource(d.Get("ip_allocation_policy"))
+	ipAllocationPolicy, err := loadIPAllocatqqionPolicyFromResource(d.Get(kubeClusterIpAllocationPolicyKey))
 	if err != nil {
 		log.Printf("[DEBUG] issue on loadIPAllocationPolicyFromResource: %s", err)
 	}
@@ -178,7 +178,7 @@ func loadApiServerCustomization(apiServerAdmissionPlugins interface{}) *APIServe
 	customizationSet := apiServerAdmissionPlugins.(*schema.Set).List()
 	if len(customizationSet) > 0 {
 		customization := customizationSet[0].(map[string]interface{})
-		admissionPluginsSet := customization["admissionplugins"].(*schema.Set).List()
+		admissionPluginsSet := customization[kubeClusterCustomizationAdmissionPluginsKey].(*schema.Set).List()
 		admissionPlugins := admissionPluginsSet[0].(map[string]interface{})
 
 		readApiServerAdmissionPlugins(admissionPlugins, apiServerOutput)
@@ -201,13 +201,13 @@ func loadIPAllocationPolicyFromResource(i interface{}) (*CloudProjectKubeIPAlloc
 	}
 
 	// Due to this bug https://github.com/hashicorp/terraform-plugin-sdk/pull/1042
-	// when updating the 'template' object there is two objects, one is empty, take the not empty one
+	// when updating the 'ip_allocation_policy' object there are two objects, one is empty, so take the non-empty one
 	ipAllocationPolicyObject := ipAllocationPolicySet[0].(map[string]interface{}) // by default take the first one
 	for _, to := range ipAllocationPolicySet {
 		empty := true
 
 		object := to.(map[string]interface{})
-		if object["pods_ipv4_cidr"].(string) != "" || object["services_ipv4_cidr"].(string) != "" {
+		if object[kubeClusterPodsIpv4CidrKey].(string) != "" || object[kubeClusterServicesIpv4CidrKey].(string) != "" {
 			empty = false
 		}
 
@@ -220,15 +220,15 @@ func loadIPAllocationPolicyFromResource(i interface{}) (*CloudProjectKubeIPAlloc
 	}
 
 	return &CloudProjectKubeIPAllocationPolicy{
-		PodsIpv4Cidr:     helpers.GetNilStringPointerFromData(ipAllocationPolicyObject, "pods_ipv4_cidr"),
-		ServicesIpv4Cidr: helpers.GetNilStringPointerFromData(ipAllocationPolicyObject, "services_ipv4_cidr"),
+		PodsIpv4Cidr:     helpers.GetNilStringPointerFromData(ipAllocationPolicyObject, kubeClusterPodsIpv4CidrKey),
+		ServicesIpv4Cidr: helpers.GetNilStringPointerFromData(ipAllocationPolicyObject, kubeClusterServicesIpv4CidrKey),
 	}, nil
 }
 
 func readApiServerAdmissionPlugins(admissionPlugins map[string]interface{}, apiServerOutput *APIServer) {
 	// Enabled admission plugins
 	{
-		stringArray := admissionPlugins["enabled"].([]interface{})
+		stringArray := admissionPlugins[kubeClusterCustomizationEnabledKey].([]interface{})
 		enabled := make([]string, 0, len(stringArray))
 		for _, s := range stringArray {
 			enabled = append(enabled, s.(string))
@@ -238,7 +238,7 @@ func readApiServerAdmissionPlugins(admissionPlugins map[string]interface{}, apiS
 
 	// Disabled admission plugins
 	{
-		stringArray := admissionPlugins["disabled"].([]interface{})
+		stringArray := admissionPlugins[kubeClusterCustomizationDisabledKey].([]interface{})
 		disabled := make([]string, 0, len(stringArray))
 		for _, s := range stringArray {
 			disabled = append(disabled, s.(string))
@@ -261,11 +261,11 @@ func loadDeprecatedApiServerCustomization(deprecatedApiServerCustomizationInterf
 	oldCustomizationSet := deprecatedApiServerCustomizationInterface.(*schema.Set).List()
 	if len(oldCustomizationSet) > 0 {
 		oldApiServerCustomization := oldCustomizationSet[0].(map[string]interface{})
-		oldApiServerCustomizationSet := oldApiServerCustomization["apiserver"].(*schema.Set).List()
+		oldApiServerCustomizationSet := oldApiServerCustomization[kubeClusterCustomizationApiServerNestedKey].(*schema.Set).List()
 
 		if len(oldApiServerCustomizationSet) > 0 {
 			oldApiServerCustomizationAdmissionPlugins := oldApiServerCustomizationSet[0].(map[string]interface{})
-			oldApiServerCustomizationAdmissionPluginsSet := oldApiServerCustomizationAdmissionPlugins["admissionplugins"].(*schema.Set).List()
+			oldApiServerCustomizationAdmissionPluginsSet := oldApiServerCustomizationAdmissionPlugins[kubeClusterCustomizationAdmissionPluginsKey].(*schema.Set).List()
 			admissionPlugins := oldApiServerCustomizationAdmissionPluginsSet[0].(map[string]interface{})
 
 			readApiServerAdmissionPlugins(admissionPlugins, apiServerOutput)
@@ -295,25 +295,25 @@ func loadKubeProxyCustomization(kubeProxyCustomizationInterface interface{}) *ku
 
 		// Nested IPTables customization
 		{
-			ipTablesSet := kubeProxy["iptables"].(*schema.Set).List()
+			ipTablesSet := kubeProxy[kubeClusterCustomizationIptablesKey].(*schema.Set).List()
 			if len(ipTablesSet) > 0 {
 				ipTables := ipTablesSet[0].(map[string]interface{})
-				kubeProxyOutput.IPTables.MinSyncPeriod = helpers.GetNilStringPointerFromData(ipTables, "min_sync_period")
-				kubeProxyOutput.IPTables.SyncPeriod = helpers.GetNilStringPointerFromData(ipTables, "sync_period")
+				kubeProxyOutput.IPTables.MinSyncPeriod = helpers.GetNilStringPointerFromData(ipTables, kubeClusterCustomizationMinSyncPeriodKey)
+				kubeProxyOutput.IPTables.SyncPeriod = helpers.GetNilStringPointerFromData(ipTables, kubeClusterCustomizationSyncPeriodKey)
 			}
 		}
 
 		// Nested IPVS customization
 		{
-			ipvsSet := kubeProxy["ipvs"].(*schema.Set).List()
+			ipvsSet := kubeProxy[kubeClusterCustomizationIpvsKey].(*schema.Set).List()
 			if len(ipvsSet) > 0 {
 				ipvs := ipvsSet[0].(map[string]interface{})
-				kubeProxyOutput.IPVS.MinSyncPeriod = helpers.GetNilStringPointerFromData(ipvs, "min_sync_period")
-				kubeProxyOutput.IPVS.Scheduler = helpers.GetNilStringPointerFromData(ipvs, "scheduler")
-				kubeProxyOutput.IPVS.SyncPeriod = helpers.GetNilStringPointerFromData(ipvs, "sync_period")
-				kubeProxyOutput.IPVS.TCPFinTimeout = helpers.GetNilStringPointerFromData(ipvs, "tcp_fin_timeout")
-				kubeProxyOutput.IPVS.TCPTimeout = helpers.GetNilStringPointerFromData(ipvs, "tcp_timeout")
-				kubeProxyOutput.IPVS.UDPTimeout = helpers.GetNilStringPointerFromData(ipvs, "udp_timeout")
+				kubeProxyOutput.IPVS.MinSyncPeriod = helpers.GetNilStringPointerFromData(ipvs, kubeClusterCustomizationMinSyncPeriodKey)
+				kubeProxyOutput.IPVS.Scheduler = helpers.GetNilStringPointerFromData(ipvs, kubeClusterCustomizationSchedulerKey)
+				kubeProxyOutput.IPVS.SyncPeriod = helpers.GetNilStringPointerFromData(ipvs, kubeClusterCustomizationSyncPeriodKey)
+				kubeProxyOutput.IPVS.TCPFinTimeout = helpers.GetNilStringPointerFromData(ipvs, kubeClusterCustomizationTcpFinTimeoutKey)
+				kubeProxyOutput.IPVS.TCPTimeout = helpers.GetNilStringPointerFromData(ipvs, kubeClusterCustomizationTcpTimeoutKey)
+				kubeProxyOutput.IPVS.UDPTimeout = helpers.GetNilStringPointerFromData(ipvs, kubeClusterCustomizationUdpTimeoutKey)
 			}
 		}
 	}
@@ -330,8 +330,8 @@ func loadPrivateNetworkConfiguration(i interface{}) *privateNetworkConfiguration
 	pncSet := i.(*schema.Set).List()
 	for _, pnc := range pncSet {
 		mapping := pnc.(map[string]interface{})
-		pncOutput.DefaultVrackGateway = mapping["default_vrack_gateway"].(string)
-		pncOutput.PrivateNetworkRoutingAsDefault = mapping["private_network_routing_as_default"].(bool)
+		pncOutput.DefaultVrackGateway = mapping[kubeClusterDefaultVrackGatewayKey].(string)
+		pncOutput.PrivateNetworkRoutingAsDefault = mapping[kubeClusterPrivateNetworkRoutingAsDefault].(bool)
 	}
 	return &pncOutput
 }
@@ -374,28 +374,28 @@ type CloudProjectKubeResponse struct {
 
 func (v *CloudProjectKubeResponse) ToMap(d *schema.ResourceData) map[string]interface{} {
 	obj := make(map[string]interface{})
-	obj["control_plane_is_up_to_date"] = v.ControlPlaneIsUpToDate
-	obj["id"] = v.Id
-	obj["is_up_to_date"] = v.IsUpToDate
+	obj[kubeClusterControlPlaneIsUpToDateKey] = v.ControlPlaneIsUpToDate
+	obj[kubeNodeIdKey] = v.Id
+	obj[kubeClusterIsUpToDateKey] = v.IsUpToDate
 	obj[kubeClusterLoadBalancersSubnetIdKey] = v.LoadBalancersSubnetId
-	obj["name"] = v.Name
-	obj["next_upgrade_versions"] = v.NextUpgradeVersions
+	obj[kubeNameKey] = v.Name
+	obj[kubeClusterNextUpgradeVersionsKey] = v.NextUpgradeVersions
 	obj[kubeClusterNodesSubnetIdKey] = v.NodesSubnetId
-	obj["nodes_url"] = v.NodesUrl
-	obj["private_network_id"] = v.PrivateNetworkId
-	obj["region"] = v.Region
-	obj["status"] = v.Status
-	obj["update_policy"] = v.UpdatePolicy
-	obj["url"] = v.Url
+	obj[kubeClusterNodesUrlKey] = v.NodesUrl
+	obj[kubeClusterPrivateNetworkIDKey] = v.PrivateNetworkId
+	obj[kubeRegionKey] = v.Region
+	obj[kubeStatusKey] = v.Status
+	obj[kubeClusterUpdatePolicyKey] = v.UpdatePolicy
+	obj[kubeClusterUrlKey] = v.Url
 	obj[kubeClusterPlanKey] = v.Plan
 	loadKubeIPAllocationPolicy(obj, v)
 	versionPatch, err := version.NewVersion(v.Version)
 	if err != nil {
 		// if fail, return to the previous implementation
-		obj["version"] = v.Version[:strings.LastIndex(v.Version, ".")]
+		obj[kubeVersionKey] = v.Version[:strings.LastIndex(v.Version, ".")]
 	} else {
 		// versionPatch.String() return a true semantic version (0.0.0)
-		obj["version"] = v.Version[:strings.LastIndex(versionPatch.String(), ".")]
+		obj[kubeVersionKey] = v.Version[:strings.LastIndex(versionPatch.String(), ".")]
 	}
 	obj[kubeClusterProxyModeKey] = v.KubeProxyMode
 
@@ -424,46 +424,46 @@ func loadKubeProxyCustomizationToMap(obj map[string]interface{}, v *CloudProject
 	if v.Customization.KubeProxy.IPTables != nil {
 		data := make(map[string]interface{})
 		if vv := v.Customization.KubeProxy.IPTables.MinSyncPeriod; vv != nil && *vv != "" {
-			data["min_sync_period"] = vv
+			data[kubeClusterCustomizationMinSyncPeriodKey] = vv
 		}
 
 		if vv := v.Customization.KubeProxy.IPTables.SyncPeriod; vv != nil && *vv != "" {
-			data["sync_period"] = vv
+			data[kubeClusterCustomizationSyncPeriodKey] = vv
 		}
 
 		if len(data) > 0 {
-			obj[kubeClusterCustomizationKubeProxyKey].([]map[string]interface{})[0]["iptables"] = []map[string]interface{}{data}
+			obj[kubeClusterCustomizationKubeProxyKey].([]map[string]interface{})[0][kubeClusterCustomizationIptablesKey] = []map[string]interface{}{data}
 		}
 	}
 
 	if v.Customization.KubeProxy.IPVS != nil {
 		data := make(map[string]interface{})
 		if vv := v.Customization.KubeProxy.IPVS.MinSyncPeriod; vv != nil && *vv != "" {
-			data["min_sync_period"] = vv
+			data[kubeClusterCustomizationMinSyncPeriodKey] = vv
 		}
 
 		if vv := v.Customization.KubeProxy.IPVS.Scheduler; vv != nil && *vv != "" {
-			data["scheduler"] = vv
+			data[kubeClusterCustomizationSchedulerKey] = vv
 		}
 
 		if vv := v.Customization.KubeProxy.IPVS.SyncPeriod; vv != nil && *vv != "" {
-			data["sync_period"] = vv
+			data[kubeClusterCustomizationSyncPeriodKey] = vv
 		}
 
 		if vv := v.Customization.KubeProxy.IPVS.TCPFinTimeout; vv != nil && *vv != "" {
-			data["tcp_fin_timeout"] = vv
+			data[kubeClusterCustomizationTcpFinTimeoutKey] = vv
 		}
 
 		if vv := v.Customization.KubeProxy.IPVS.TCPTimeout; vv != nil && *vv != "" {
-			data["tcp_timeout"] = vv
+			data[kubeClusterCustomizationTcpTimeoutKey] = vv
 		}
 
 		if vv := v.Customization.KubeProxy.IPVS.UDPTimeout; vv != nil && *vv != "" {
-			data["udp_timeout"] = vv
+			data[kubeClusterCustomizationUdpTimeoutKey] = vv
 		}
 
 		if len(data) > 0 {
-			obj[kubeClusterCustomizationKubeProxyKey].([]map[string]interface{})[0]["ipvs"] = []map[string]interface{}{data}
+			obj[kubeClusterCustomizationKubeProxyKey].([]map[string]interface{})[0][kubeClusterCustomizationIpvsKey] = []map[string]interface{}{data}
 		}
 	}
 
@@ -477,12 +477,12 @@ func loadKubeProxyCustomizationToMap(obj map[string]interface{}, v *CloudProject
 func loadDeprecatedApiServerCustomizationToMap(obj map[string]interface{}, v *CloudProjectKubeResponse) {
 	obj[kubeClusterCustomization] = []map[string]interface{}{
 		{
-			"apiserver": []map[string]interface{}{
+			kubeClusterCustomizationApiServerNestedKey: []map[string]interface{}{
 				{
-					"admissionplugins": []map[string]interface{}{
+					kubeClusterCustomizationAdmissionPluginsKey: []map[string]interface{}{
 						{
-							"enabled":  v.Customization.APIServer.AdmissionPlugins.Enabled,
-							"disabled": v.Customization.APIServer.AdmissionPlugins.Disabled,
+							kubeClusterCustomizationEnabledKey:  v.Customization.APIServer.AdmissionPlugins.Enabled,
+							kubeClusterCustomizationDisabledKey: v.Customization.APIServer.AdmissionPlugins.Disabled,
 						},
 					},
 				},
@@ -494,10 +494,10 @@ func loadDeprecatedApiServerCustomizationToMap(obj map[string]interface{}, v *Cl
 func loadApiServerCustomizationToMap(obj map[string]interface{}, v *CloudProjectKubeResponse) {
 	obj[kubeClusterCustomizationApiServerKey] = []map[string]interface{}{
 		{
-			"admissionplugins": []map[string]interface{}{
+			kubeClusterCustomizationAdmissionPluginsKey: []map[string]interface{}{
 				{
-					"enabled":  v.Customization.APIServer.AdmissionPlugins.Enabled,
-					"disabled": v.Customization.APIServer.AdmissionPlugins.Disabled,
+					kubeClusterCustomizationEnabledKey:  v.Customization.APIServer.AdmissionPlugins.Enabled,
+					kubeClusterCustomizationDisabledKey: v.Customization.APIServer.AdmissionPlugins.Disabled,
 				},
 			},
 		},
@@ -505,10 +505,10 @@ func loadApiServerCustomizationToMap(obj map[string]interface{}, v *CloudProject
 }
 
 func loadKubeIPAllocationPolicy(obj map[string]interface{}, v *CloudProjectKubeResponse) {
-	obj["ip_allocation_policy"] = []map[string]interface{}{
+	obj[kubeClusterIpAllocationPolicyKey] = []map[string]interface{}{
 		{
-			"pods_ipv4_cidr":     v.IPAllocationPolicy.PodsIpv4Cidr,
-			"services_ipv4_cidr": v.IPAllocationPolicy.ServicesIpv4Cidr,
+			kubeClusterPodsIpv4CidrKey:     v.IPAllocationPolicy.PodsIpv4Cidr,
+			kubeClusterServicesIpv4CidrKey: v.IPAllocationPolicy.ServicesIpv4Cidr,
 		},
 	}
 }
@@ -524,59 +524,59 @@ func loadKubeCustomizationCilium(obj map[string]interface{}, v *CloudProjectKube
 		clusterMeshMap := map[string]interface{}{}
 
 		if v.Customization.Cilium.ClusterMesh.Enabled != nil {
-			clusterMeshMap["enabled"] = *v.Customization.Cilium.ClusterMesh.Enabled
+			clusterMeshMap[kubeClusterCustomizationEnabledKey] = *v.Customization.Cilium.ClusterMesh.Enabled
 		}
 
 		if v.Customization.Cilium.ClusterMesh.ApiServer != nil {
 			apiServerMap := map[string]interface{}{}
 			if v.Customization.Cilium.ClusterMesh.ApiServer.NodePort != nil {
-				apiServerMap["node_port"] = *v.Customization.Cilium.ClusterMesh.ApiServer.NodePort
+				apiServerMap[kubeClusterCiliumNodePortKey] = *v.Customization.Cilium.ClusterMesh.ApiServer.NodePort
 			}
 			if v.Customization.Cilium.ClusterMesh.ApiServer.ServiceType != nil {
-				apiServerMap["service_type"] = *v.Customization.Cilium.ClusterMesh.ApiServer.ServiceType
+				apiServerMap[kubeClusterCiliumServiceTypeKey] = *v.Customization.Cilium.ClusterMesh.ApiServer.ServiceType
 			}
 			if len(apiServerMap) > 0 {
-				clusterMeshMap["api_server"] = []map[string]interface{}{apiServerMap}
+				clusterMeshMap[kubeClusterCiliumApiServerKey] = []map[string]interface{}{apiServerMap}
 			}
 		}
 
-		ciliumMap["cluster_mesh"] = []map[string]interface{}{clusterMeshMap}
+		ciliumMap[kubeClusterCiliumClusterMeshKey] = []map[string]interface{}{clusterMeshMap}
 	}
 
 	if v.Customization.Cilium.Hubble != nil {
 		hubbleMap := map[string]interface{}{}
 
 		if v.Customization.Cilium.Hubble.Enabled != nil {
-			hubbleMap["enabled"] = *v.Customization.Cilium.Hubble.Enabled
+			hubbleMap[kubeClusterCustomizationEnabledKey] = *v.Customization.Cilium.Hubble.Enabled
 		}
 
 		if v.Customization.Cilium.Hubble.Relay != nil {
 			relayMap := map[string]interface{}{}
 			if v.Customization.Cilium.Hubble.Relay.Enabled != nil {
-				relayMap["enabled"] = *v.Customization.Cilium.Hubble.Relay.Enabled
+				relayMap[kubeClusterCustomizationEnabledKey] = *v.Customization.Cilium.Hubble.Relay.Enabled
 			}
-			hubbleMap["relay"] = []map[string]interface{}{relayMap}
+			hubbleMap[kubeClusterCiliumRelayKey] = []map[string]interface{}{relayMap}
 		}
 
 		if v.Customization.Cilium.Hubble.UI != nil {
 			uiMap := map[string]interface{}{}
 
 			if v.Customization.Cilium.Hubble.UI.Enabled != nil {
-				uiMap["enabled"] = *v.Customization.Cilium.Hubble.UI.Enabled
+				uiMap[kubeClusterCustomizationEnabledKey] = *v.Customization.Cilium.Hubble.UI.Enabled
 			}
 
 			if v.Customization.Cilium.Hubble.UI.BackendResources != nil {
-				uiMap["backend_resources"] = []map[string]interface{}{loadCiliumResourcesToMap(v.Customization.Cilium.Hubble.UI.BackendResources)}
+				uiMap[kubeClusterCiliumBackendResources] = []map[string]interface{}{loadCiliumResourcesToMap(v.Customization.Cilium.Hubble.UI.BackendResources)}
 			}
 
 			if v.Customization.Cilium.Hubble.UI.FrontendResources != nil {
-				uiMap["frontend_resources"] = []map[string]interface{}{loadCiliumResourcesToMap(v.Customization.Cilium.Hubble.UI.FrontendResources)}
+				uiMap[kubeClusterCiliumFrontendResources] = []map[string]interface{}{loadCiliumResourcesToMap(v.Customization.Cilium.Hubble.UI.FrontendResources)}
 			}
 
-			hubbleMap["ui"] = []map[string]interface{}{uiMap}
+			hubbleMap[kubeClusterCiliumUiKey] = []map[string]interface{}{uiMap}
 		}
 
-		ciliumMap["hubble"] = []map[string]interface{}{hubbleMap}
+		ciliumMap[kubeClusterCiliumHubbleKey] = []map[string]interface{}{hubbleMap}
 	}
 
 	obj[kubeClusterCustomizationCiliumKey] = []map[string]interface{}{ciliumMap}
@@ -588,23 +588,23 @@ func loadCiliumResourcesToMap(r *CloudProjectKubeCiliumCustomizationResources) m
 	if r.Limits != nil {
 		limitsMap := map[string]interface{}{}
 		if r.Limits.CPU != nil {
-			limitsMap["cpu"] = *r.Limits.CPU
+			limitsMap[kubeClusterCiliumCpuKey] = *r.Limits.CPU
 		}
 		if r.Limits.Memory != nil {
-			limitsMap["memory"] = *r.Limits.Memory
+			limitsMap[kubeClusterCiliumMemoryKey] = *r.Limits.Memory
 		}
-		resourcesMap["limits"] = []map[string]interface{}{limitsMap}
+		resourcesMap[kubeClusterCiliumLimitsKey] = []map[string]interface{}{limitsMap}
 	}
 
 	if r.Requests != nil {
 		requestsMap := map[string]interface{}{}
 		if r.Requests.CPU != nil {
-			requestsMap["cpu"] = *r.Requests.CPU
+			requestsMap[kubeClusterCiliumCpuKey] = *r.Requests.CPU
 		}
 		if r.Requests.Memory != nil {
-			requestsMap["memory"] = *r.Requests.Memory
+			requestsMap[kubeClusterCiliumMemoryKey] = *r.Requests.Memory
 		}
-		resourcesMap["requests"] = []map[string]interface{}{requestsMap}
+		resourcesMap[kubeClusterCiliumRequestsKey] = []map[string]interface{}{requestsMap}
 	}
 
 	return resourcesMap
@@ -626,26 +626,26 @@ func loadCiliumCustomizationFromResource(i interface{}) *CloudProjectKubeCiliumC
 	output := &CloudProjectKubeCiliumCustomization{}
 
 	// cluster_mesh
-	if clusterMeshRaw, ok := cilium["cluster_mesh"]; ok {
+	if clusterMeshRaw, ok := cilium[kubeClusterCiliumClusterMeshKey]; ok {
 		clusterMeshSet := clusterMeshRaw.(*schema.Set).List()
 		if len(clusterMeshSet) > 0 {
 			clusterMeshMap := clusterMeshSet[0].(map[string]interface{})
 			output.ClusterMesh = &CloudProjectKubeCiliumCustomizationClusterMesh{}
 
-			if v, ok := clusterMeshMap["enabled"].(bool); ok {
+			if v, ok := clusterMeshMap[kubeClusterCustomizationEnabledKey].(bool); ok {
 				output.ClusterMesh.Enabled = &v
 			}
 
-			if apiServerRaw, ok := clusterMeshMap["api_server"]; ok {
+			if apiServerRaw, ok := clusterMeshMap[kubeClusterCiliumApiServerKey]; ok {
 				apiServerSet := apiServerRaw.(*schema.Set).List()
 				if len(apiServerSet) > 0 {
 					apiServerMap := apiServerSet[0].(map[string]interface{})
 					output.ClusterMesh.ApiServer = &CloudProjectKubeCiliumCustomizationClusterMeshApiServer{}
 
-					if v, ok := apiServerMap["node_port"].(int); ok && v != 0 {
+					if v, ok := apiServerMap[kubeClusterCiliumNodePortKey].(int); ok && v != 0 {
 						output.ClusterMesh.ApiServer.NodePort = &v
 					}
-					if v, ok := apiServerMap["service_type"].(string); ok && v != "" {
+					if v, ok := apiServerMap[kubeClusterCiliumServiceTypeKey].(string); ok && v != "" {
 						output.ClusterMesh.ApiServer.ServiceType = &v
 					}
 				}
@@ -654,44 +654,44 @@ func loadCiliumCustomizationFromResource(i interface{}) *CloudProjectKubeCiliumC
 	}
 
 	// hubble
-	if hubbleRaw, ok := cilium["hubble"]; ok {
+	if hubbleRaw, ok := cilium[kubeClusterCiliumHubbleKey]; ok {
 		hubbleSet := hubbleRaw.(*schema.Set).List()
 		if len(hubbleSet) > 0 {
 			hubbleMap := hubbleSet[0].(map[string]interface{})
 			output.Hubble = &CloudProjectKubeCiliumCustomizationHubble{}
 
-			if v, ok := hubbleMap["enabled"].(bool); ok {
+			if v, ok := hubbleMap[kubeClusterCustomizationEnabledKey].(bool); ok {
 				output.Hubble.Enabled = &v
 			}
 
 			// relay
-			if relayRaw, ok := hubbleMap["relay"]; ok {
+			if relayRaw, ok := hubbleMap[kubeClusterCiliumRelayKey]; ok {
 				relaySet := relayRaw.(*schema.Set).List()
 				if len(relaySet) > 0 {
 					relayMap := relaySet[0].(map[string]interface{})
 					output.Hubble.Relay = &CloudProjectKubeCiliumCustomizationHubbleRelay{}
-					if v, ok := relayMap["enabled"].(bool); ok {
+					if v, ok := relayMap[kubeClusterCustomizationEnabledKey].(bool); ok {
 						output.Hubble.Relay.Enabled = &v
 					}
 				}
 			}
 
 			// ui
-			if uiRaw, ok := hubbleMap["ui"]; ok {
+			if uiRaw, ok := hubbleMap[kubeClusterCiliumUiKey]; ok {
 				uiSet := uiRaw.(*schema.Set).List()
 				if len(uiSet) > 0 {
 					uiMap := uiSet[0].(map[string]interface{})
 					output.Hubble.UI = &CloudProjectKubeCiliumCustomizationHubbleUI{}
 
-					if v, ok := uiMap["enabled"].(bool); ok {
+					if v, ok := uiMap[kubeClusterCustomizationEnabledKey].(bool); ok {
 						output.Hubble.UI.Enabled = &v
 					}
 
-					if backendRaw, ok := uiMap["backend_resources"]; ok {
+					if backendRaw, ok := uiMap[kubeClusterCiliumBackendResources]; ok {
 						output.Hubble.UI.BackendResources = loadCiliumResourcesFromMap(backendRaw.(*schema.Set).List())
 					}
 
-					if frontendRaw, ok := uiMap["frontend_resources"]; ok {
+					if frontendRaw, ok := uiMap[kubeClusterCiliumFrontendResources]; ok {
 						output.Hubble.UI.FrontendResources = loadCiliumResourcesFromMap(frontendRaw.(*schema.Set).List())
 					}
 				}
@@ -710,29 +710,29 @@ func loadCiliumResourcesFromMap(setList []interface{}) *CloudProjectKubeCiliumCu
 	resourcesMap := setList[0].(map[string]interface{})
 	output := &CloudProjectKubeCiliumCustomizationResources{}
 
-	if limitsRaw, ok := resourcesMap["limits"]; ok {
+	if limitsRaw, ok := resourcesMap[kubeClusterCiliumLimitsKey]; ok {
 		limitsList := limitsRaw.(*schema.Set).List()
 		if len(limitsList) > 0 {
 			limitsMap := limitsList[0].(map[string]interface{})
 			output.Limits = &CloudProjectKubeCiliumCustomizationResourcesType{}
-			if v, ok := limitsMap["cpu"].(string); ok && v != "" {
+			if v, ok := limitsMap[kubeClusterCiliumCpuKey].(string); ok && v != "" {
 				output.Limits.CPU = &v
 			}
-			if v, ok := limitsMap["memory"].(string); ok && v != "" {
+			if v, ok := limitsMap[kubeClusterCiliumMemoryKey].(string); ok && v != "" {
 				output.Limits.Memory = &v
 			}
 		}
 	}
 
-	if requestsRaw, ok := resourcesMap["requests"]; ok {
+	if requestsRaw, ok := resourcesMap[kubeClusterCiliumRequestsKey]; ok {
 		requestsList := requestsRaw.(*schema.Set).List()
 		if len(requestsList) > 0 {
 			requestsMap := requestsList[0].(map[string]interface{})
 			output.Requests = &CloudProjectKubeCiliumCustomizationResourcesType{}
-			if v, ok := requestsMap["cpu"].(string); ok && v != "" {
+			if v, ok := requestsMap[kubeClusterCiliumCpuKey].(string); ok && v != "" {
 				output.Requests.CPU = &v
 			}
-			if v, ok := requestsMap["memory"].(string); ok && v != "" {
+			if v, ok := requestsMap[kubeClusterCiliumMemoryKey].(string); ok && v != "" {
 				output.Requests.Memory = &v
 			}
 		}
@@ -785,17 +785,17 @@ type CloudProjectKubeNodeResponse struct {
 
 func (v CloudProjectKubeNodeResponse) ToMap() map[string]interface{} {
 	obj := make(map[string]interface{})
-	obj["created_at"] = v.CreatedAt
-	obj["deployed_at"] = v.DeployedAt
-	obj["flavor"] = v.Flavor
-	obj["id"] = v.Id
-	obj["instance_id"] = v.InstanceId
-	obj["is_up_to_date"] = v.IsUpToDate
-	obj["name"] = v.Name
-	obj["node_pool_id"] = v.NodePoolId
-	obj["project_id"] = v.ProjectId
-	obj["status"] = v.Status
-	obj["updated_at"] = v.UpdatedAt
-	obj["version"] = v.Version
+	obj[kubeCreatedAtKey] = v.CreatedAt
+	obj[kubeNodeDeployedAtKey] = v.DeployedAt
+	obj[kubeFlavorKey] = v.Flavor
+	obj[kubeNodeIdKey] = v.Id
+	obj[kubeNodeInstanceIdKey] = v.InstanceId
+	obj[kubeClusterIsUpToDateKey] = v.IsUpToDate
+	obj[kubeNameKey] = v.Name
+	obj[kubeNodePoolIdKey] = v.NodePoolId
+	obj[kubeProjectIdKey] = v.ProjectId
+	obj[kubeStatusKey] = v.Status
+	obj[kubeUpdatedAtKey] = v.UpdatedAt
+	obj[kubeVersionKey] = v.Version
 	return obj
 }

@@ -13,24 +13,24 @@ func dataSourceCloudProjectKube() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceCloudProjectKubeRead,
 		Schema: map[string]*schema.Schema{
-			"service_name": {
+			kubeServiceNameKey: {
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
 			},
-			"kube_id": {
+			kubeKubeIdKey: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": {
+			kubeNameKey: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"version": {
+			kubeVersionKey: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"plan": {
+			kubeClusterPlanKey: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     false,
@@ -47,35 +47,29 @@ func dataSourceCloudProjectKube() *schema.Resource {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Optional: true,
-				// Required: true,
 				ForceNew: false,
-				// MaxItems: 1,
-				Set: CustomSchemaSetFunc(),
+				Set:      CustomSchemaSetFunc(),
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"admissionplugins": {
+						kubeClusterCustomizationAdmissionPluginsKey: {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Optional: true,
-							// Required: true,
 							ForceNew: false,
-							// MaxItems: 1,
-							Set: CustomSchemaSetFunc(),
+							Set:      CustomSchemaSetFunc(),
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"enabled": {
+									kubeClusterCustomizationEnabledKey: {
 										Type:     schema.TypeList,
 										Computed: true,
 										Optional: true,
-										// Required: true,
 										ForceNew: false,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
-									"disabled": {
+									kubeClusterCustomizationDisabledKey: {
 										Type:     schema.TypeList,
 										Computed: true,
 										Optional: true,
-										// Required: true,
 										ForceNew: false,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
@@ -94,7 +88,7 @@ func dataSourceCloudProjectKube() *schema.Resource {
 				Deprecated: fmt.Sprintf("Use %s instead", kubeClusterCustomizationApiServerKey),
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"apiserver": {
+						kubeClusterCustomizationApiServerNestedKey: {
 							Type:       schema.TypeSet,
 							Computed:   true,
 							Optional:   true,
@@ -103,7 +97,7 @@ func dataSourceCloudProjectKube() *schema.Resource {
 							Deprecated: fmt.Sprintf("Use %s instead", kubeClusterCustomizationApiServerKey),
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"admissionplugins": {
+									kubeClusterCustomizationAdmissionPluginsKey: {
 										Type:     schema.TypeSet,
 										Computed: true,
 										Optional: true,
@@ -111,14 +105,14 @@ func dataSourceCloudProjectKube() *schema.Resource {
 										Set:      CustomSchemaSetFunc(),
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"enabled": {
+												kubeClusterCustomizationEnabledKey: {
 													Type:     schema.TypeList,
 													Computed: true,
 													Optional: true,
 													ForceNew: false,
 													Elem:     &schema.Schema{Type: schema.TypeString},
 												},
-												"disabled": {
+												kubeClusterCustomizationDisabledKey: {
 													Type:     schema.TypeList,
 													Computed: true,
 													Optional: true,
@@ -142,7 +136,7 @@ func dataSourceCloudProjectKube() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"iptables": {
+						kubeClusterCustomizationIptablesKey: {
 							Type:     schema.TypeSet,
 							Computed: false,
 							Optional: true,
@@ -151,14 +145,14 @@ func dataSourceCloudProjectKube() *schema.Resource {
 							Set:      CustomIPVSIPTablesSchemaSetFunc(),
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"min_sync_period": {
+									kubeClusterCustomizationMinSyncPeriodKey: {
 										Type:         schema.TypeString,
 										Computed:     false,
 										Optional:     true,
 										ForceNew:     false,
 										ValidateFunc: helpers.ValidateRFC3339Duration,
 									},
-									"sync_period": {
+									kubeClusterCustomizationSyncPeriodKey: {
 										Type:         schema.TypeString,
 										Computed:     false,
 										Optional:     true,
@@ -168,7 +162,7 @@ func dataSourceCloudProjectKube() *schema.Resource {
 								},
 							},
 						},
-						"ipvs": {
+						kubeClusterCustomizationIpvsKey: {
 							Type:     schema.TypeSet,
 							Computed: false,
 							Optional: true,
@@ -177,42 +171,42 @@ func dataSourceCloudProjectKube() *schema.Resource {
 							Set:      CustomIPVSIPTablesSchemaSetFunc(),
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"min_sync_period": {
+									kubeClusterCustomizationMinSyncPeriodKey: {
 										Type:         schema.TypeString,
 										Computed:     false,
 										Optional:     true,
 										ForceNew:     false,
 										ValidateFunc: helpers.ValidateRFC3339Duration,
 									},
-									"sync_period": {
+									kubeClusterCustomizationSyncPeriodKey: {
 										Type:         schema.TypeString,
 										Computed:     false,
 										Optional:     true,
 										ForceNew:     false,
 										ValidateFunc: helpers.ValidateRFC3339Duration,
 									},
-									"scheduler": {
+									kubeClusterCustomizationSchedulerKey: {
 										Type:         schema.TypeString,
 										Computed:     false,
 										Optional:     true,
 										ForceNew:     false,
 										ValidateFunc: helpers.ValidateEnum([]string{"rr", "lc", "dh", "sh", "sed", "nq"}),
 									},
-									"tcp_fin_timeout": {
+									kubeClusterCustomizationTcpFinTimeoutKey: {
 										Type:         schema.TypeString,
 										Computed:     false,
 										Optional:     true,
 										ForceNew:     false,
 										ValidateFunc: helpers.ValidateRFC3339Duration,
 									},
-									"tcp_timeout": {
+									kubeClusterCustomizationTcpTimeoutKey: {
 										Type:         schema.TypeString,
 										Computed:     false,
 										Optional:     true,
 										ForceNew:     false,
 										ValidateFunc: helpers.ValidateRFC3339Duration,
 									},
-									"udp_timeout": {
+									kubeClusterCustomizationUdpTimeoutKey: {
 										Type:         schema.TypeString,
 										Computed:     false,
 										Optional:     true,
@@ -225,7 +219,7 @@ func dataSourceCloudProjectKube() *schema.Resource {
 					},
 				},
 			},
-			"customization_cilium": {
+			kubeClusterCustomizationCiliumKey: {
 				Type:        schema.TypeSet,
 				Description: "Allow the customization of the Cilium deployment",
 				Computed:    true,
@@ -233,7 +227,7 @@ func dataSourceCloudProjectKube() *schema.Resource {
 				MaxItems:    1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cluster_mesh": {
+						kubeClusterCiliumClusterMeshKey: {
 							Type:        schema.TypeSet,
 							Computed:    true,
 							Description: "Customize Cilium's cluster mesh feature",
@@ -242,13 +236,13 @@ func dataSourceCloudProjectKube() *schema.Resource {
 							Set:         CustomSchemaSetFunc(),
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"enabled": {
+									kubeClusterCustomizationEnabledKey: {
 										Type:        schema.TypeBool,
 										Description: "Enable or disable the Cilium's Cluster mesh feature",
 										Computed:    true,
 										Optional:    true,
 									},
-									"api_server": {
+									kubeClusterCiliumApiServerKey: {
 										Type:        schema.TypeSet,
 										Description: "Define how the cluster mesh will be exposed",
 										Computed:    true,
@@ -257,13 +251,13 @@ func dataSourceCloudProjectKube() *schema.Resource {
 										Set:         CustomSchemaSetFunc(),
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"node_port": {
+												kubeClusterCiliumNodePortKey: {
 													Type:        schema.TypeInt,
 													Description: "If the ServiceType is \"NodePort\", define on which port the service will be exposed",
 													Computed:    true,
 													Optional:    true,
 												},
-												"service_type": {
+												kubeClusterCiliumServiceTypeKey: {
 													Type:        schema.TypeString,
 													Description: "Define if the cluster mesh service is will be exposed by a K8s Service of type NodePort or LoadBalancer",
 													Computed:    true,
@@ -275,7 +269,7 @@ func dataSourceCloudProjectKube() *schema.Resource {
 								},
 							},
 						},
-						"hubble": {
+						kubeClusterCiliumHubbleKey: {
 							Type:        schema.TypeSet,
 							Description: "Allow the customization of the Hubble deployment",
 							Computed:    true,
@@ -284,13 +278,13 @@ func dataSourceCloudProjectKube() *schema.Resource {
 							Set:         CustomSchemaSetFunc(),
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"enabled": {
+									kubeClusterCustomizationEnabledKey: {
 										Type:        schema.TypeBool,
 										Description: "Enable or disable the Hubble deployment",
 										Computed:    true,
 										Optional:    true,
 									},
-									"relay": {
+									kubeClusterCiliumRelayKey: {
 										Type:        schema.TypeSet,
 										Description: "Allow the customization of the Relay deployment",
 										Computed:    true,
@@ -299,7 +293,7 @@ func dataSourceCloudProjectKube() *schema.Resource {
 										Set:         CustomSchemaSetFunc(),
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"enabled": {
+												kubeClusterCustomizationEnabledKey: {
 													Type:        schema.TypeBool,
 													Description: "Enable or disable the Relay deployment",
 													Computed:    true,
@@ -308,7 +302,7 @@ func dataSourceCloudProjectKube() *schema.Resource {
 											},
 										},
 									},
-									"ui": {
+									kubeClusterCiliumUiKey: {
 										Type:        schema.TypeSet,
 										Computed:    true,
 										Description: "Allow the customization of the Hubble's UI deployment",
@@ -317,13 +311,13 @@ func dataSourceCloudProjectKube() *schema.Resource {
 										Set:         CustomSchemaSetFunc(),
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"enabled": {
+												kubeClusterCustomizationEnabledKey: {
 													Type:        schema.TypeBool,
 													Description: "Enable or disable the Hubble's UI deployment",
 													Computed:    true,
 													Optional:    true,
 												},
-												"backend_resources": {
+												kubeClusterCiliumBackendResources: {
 													Type:        schema.TypeSet,
 													Description: "Allow the customization of the Hubble UI Backend",
 													Computed:    true,
@@ -332,7 +326,7 @@ func dataSourceCloudProjectKube() *schema.Resource {
 													Set:         CustomSchemaSetFunc(),
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"limits": {
+															kubeClusterCiliumLimitsKey: {
 																Type:        schema.TypeSet,
 																Description: "Define the limits of the Hubble UI Backend",
 																Computed:    true,
@@ -341,12 +335,12 @@ func dataSourceCloudProjectKube() *schema.Resource {
 																Set:         CustomSchemaSetFunc(),
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"cpu": {
+																		kubeClusterCiliumCpuKey: {
 																			Type:     schema.TypeString,
 																			Computed: true,
 																			Optional: true,
 																		},
-																		"memory": {
+																		kubeClusterCiliumMemoryKey: {
 																			Type:     schema.TypeString,
 																			Computed: true,
 																			Optional: true,
@@ -354,7 +348,7 @@ func dataSourceCloudProjectKube() *schema.Resource {
 																	},
 																},
 															},
-															"requests": {
+															kubeClusterCiliumRequestsKey: {
 																Type:        schema.TypeSet,
 																Description: "Define the requests of the Hubble UI Backend",
 																Computed:    true,
@@ -363,12 +357,12 @@ func dataSourceCloudProjectKube() *schema.Resource {
 																Set:         CustomSchemaSetFunc(),
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"cpu": {
+																		kubeClusterCiliumCpuKey: {
 																			Type:     schema.TypeString,
 																			Computed: true,
 																			Optional: true,
 																		},
-																		"memory": {
+																		kubeClusterCiliumMemoryKey: {
 																			Type:     schema.TypeString,
 																			Computed: true,
 																			Optional: true,
@@ -379,7 +373,7 @@ func dataSourceCloudProjectKube() *schema.Resource {
 														},
 													},
 												},
-												"frontend_resources": {
+												kubeClusterCiliumFrontendResources: {
 													Type:        schema.TypeSet,
 													Description: "Allow the customization of the Hubble UI Frontend",
 													Computed:    true,
@@ -388,7 +382,7 @@ func dataSourceCloudProjectKube() *schema.Resource {
 													Set:         CustomSchemaSetFunc(),
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"limits": {
+															kubeClusterCiliumLimitsKey: {
 																Type:        schema.TypeSet,
 																Description: "Define the limits of the Hubble UI Frontend",
 																Computed:    true,
@@ -397,12 +391,12 @@ func dataSourceCloudProjectKube() *schema.Resource {
 																Set:         CustomSchemaSetFunc(),
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"cpu": {
+																		kubeClusterCiliumCpuKey: {
 																			Type:     schema.TypeString,
 																			Computed: true,
 																			Optional: true,
 																		},
-																		"memory": {
+																		kubeClusterCiliumMemoryKey: {
 																			Type:     schema.TypeString,
 																			Computed: true,
 																			Optional: true,
@@ -410,7 +404,7 @@ func dataSourceCloudProjectKube() *schema.Resource {
 																	},
 																},
 															},
-															"requests": {
+															kubeClusterCiliumRequestsKey: {
 																Type:        schema.TypeSet,
 																Description: "Define the requests of the Hubble UI Frontend",
 																Computed:    true,
@@ -419,12 +413,12 @@ func dataSourceCloudProjectKube() *schema.Resource {
 																Set:         CustomSchemaSetFunc(),
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"cpu": {
+																		kubeClusterCiliumCpuKey: {
 																			Type:     schema.TypeString,
 																			Computed: true,
 																			Optional: true,
 																		},
-																		"memory": {
+																		kubeClusterCiliumMemoryKey: {
 																			Type:     schema.TypeString,
 																			Computed: true,
 																			Optional: true,
@@ -444,42 +438,42 @@ func dataSourceCloudProjectKube() *schema.Resource {
 					},
 				},
 			},
-			"private_network_id": {
+			kubeClusterPrivateNetworkIDKey: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"control_plane_is_up_to_date": {
+			kubeClusterControlPlaneIsUpToDateKey: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"is_up_to_date": {
+			kubeClusterIsUpToDateKey: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"next_upgrade_versions": {
+			kubeClusterNextUpgradeVersionsKey: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
-			"nodes_url": {
+			kubeClusterNodesUrlKey: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"region": {
+			kubeRegionKey: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"status": {
+			kubeStatusKey: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"update_policy": {
+			kubeClusterUpdatePolicyKey: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"url": {
+			kubeClusterUrlKey: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -491,33 +485,33 @@ func dataSourceCloudProjectKube() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"kubeconfig": {
+			kubeClusterKubeconfigKey: {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
 			},
-			"kubeconfig_attributes": {
+			kubeClusterKubeconfigAttributesKey: {
 				Type:        schema.TypeList,
 				Computed:    true,
 				Sensitive:   true,
 				Description: "The kubeconfig configuration file of the Kubernetes cluster",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"host": {
+						kubeClusterKubeconfigHostKey: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"cluster_ca_certificate": {
+						kubeClusterKubeconfigClusterCaCertificateKey: {
 							Type:      schema.TypeString,
 							Computed:  true,
 							Sensitive: true,
 						},
-						"client_certificate": {
+						kubeClusterKubeconfigClientCertificateKey: {
 							Type:      schema.TypeString,
 							Computed:  true,
 							Sensitive: true,
 						},
-						"client_key": {
+						kubeClusterKubeconfigClientKeyKey: {
 							Type:      schema.TypeString,
 							Computed:  true,
 							Sensitive: true,
@@ -525,7 +519,7 @@ func dataSourceCloudProjectKube() *schema.Resource {
 					},
 				},
 			},
-			"ip_allocation_policy": {
+			kubeClusterIpAllocationPolicyKey: {
 				Description: "IP Allocation policy for the MKS cluster",
 				Optional:    true,
 				Computed:    true,
@@ -534,14 +528,14 @@ func dataSourceCloudProjectKube() *schema.Resource {
 				Set:         CustomSchemaSetFunc(),
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"pods_ipv4_cidr": {
+						kubeClusterPodsIpv4CidrKey: {
 							Type:        schema.TypeString,
 							Description: "The Kubernetes cluster's pods CIDR",
 							Optional:    true,
 							Computed:    true,
 							Default:     nil,
 						},
-						"services_ipv4_cidr": {
+						kubeClusterServicesIpv4CidrKey: {
 							Type:        schema.TypeString,
 							Description: "The Kubernetes cluster's services CIDR",
 							Optional:    true,
@@ -557,8 +551,8 @@ func dataSourceCloudProjectKube() *schema.Resource {
 
 func dataSourceCloudProjectKubeRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-	serviceName := d.Get("service_name").(string)
-	kubeId := d.Get("kube_id").(string)
+	serviceName := d.Get(kubeServiceNameKey).(string)
+	kubeId := d.Get(kubeKubeIdKey).(string)
 
 	log.Printf("[DEBUG] Will read public cloud kube %s for project: %s", kubeId, serviceName)
 
@@ -589,11 +583,11 @@ func dataSourceCloudProjectKubeRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func dataSourceKubeconfig(d *schema.ResourceData, meta interface{}) error {
-	serviceName := d.Get("service_name").(string)
+	serviceName := d.Get(kubeServiceNameKey).(string)
 	var kubeId string
 
 	// For data source, use kube_id instead of d.Id()
-	if id := d.Get("kube_id"); id != nil {
+	if id := d.Get(kubeKubeIdKey); id != nil {
 		kubeId = id.(string)
 	} else {
 		kubeId = d.Id()
@@ -609,15 +603,15 @@ func dataSourceKubeconfig(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// raw kubeconfig
-	d.Set("kubeconfig", kubeConfig.Raw)
+	d.Set(kubeClusterKubeconfigKey, kubeConfig.Raw)
 
 	// kubeconfig attributes
 	kubeconf := map[string]interface{}{}
-	kubeconf["host"] = kubeConfig.Clusters[0].Cluster.Server
-	kubeconf["cluster_ca_certificate"] = kubeConfig.Clusters[0].Cluster.CertificateAuthorityData
-	kubeconf["client_certificate"] = kubeConfig.Users[0].User.ClientCertificateData
-	kubeconf["client_key"] = kubeConfig.Users[0].User.ClientKeyData
-	d.Set("kubeconfig_attributes", []map[string]interface{}{kubeconf})
+	kubeconf[kubeClusterKubeconfigHostKey] = kubeConfig.Clusters[0].Cluster.Server
+	kubeconf[kubeClusterKubeconfigClusterCaCertificateKey] = kubeConfig.Clusters[0].Cluster.CertificateAuthorityData
+	kubeconf[kubeClusterKubeconfigClientCertificateKey] = kubeConfig.Users[0].User.ClientCertificateData
+	kubeconf[kubeClusterKubeconfigClientKeyKey] = kubeConfig.Users[0].User.ClientKeyData
+	d.Set(kubeClusterKubeconfigAttributesKey, []map[string]interface{}{kubeconf})
 
 	return nil
 }
