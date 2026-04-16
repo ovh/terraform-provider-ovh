@@ -227,6 +227,12 @@ func dataSourceCloudProjectKube() *schema.Resource {
 				MaxItems:    1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						kubeClusterCiliumClusterID: {
+							Type:        schema.TypeInt,
+							Description: "Cilium' cluster Id of this MKSCluster. Must be defined between 1 and 255 if you are using the ClusterMeshing feature.",
+							Computed:    true,
+							Optional:    true,
+						},
 						kubeClusterCiliumClusterMeshKey: {
 							Type:        schema.TypeSet,
 							Computed:    true,

@@ -73,6 +73,7 @@ type kubeProxyCustomizationIPVS struct {
 }
 
 type CloudProjectKubeCiliumCustomization struct {
+	ClusterId   *int                                            `json:"clusterId,omitempty"`
 	ClusterMesh *CloudProjectKubeCiliumCustomizationClusterMesh `json:"clusterMesh,omitempty"`
 	Hubble      *CloudProjectKubeCiliumCustomizationHubble      `json:"hubble,omitempty"`
 }
@@ -520,6 +521,10 @@ func loadKubeCustomizationCilium(obj map[string]interface{}, v *CloudProjectKube
 
 	ciliumMap := map[string]interface{}{}
 
+	if v.Customization.Cilium.ClusterId != nil {
+		ciliumMap[kubeClusterCiliumClusterID] = *v.Customization.Cilium.ClusterId
+	}
+
 	if v.Customization.Cilium.ClusterMesh != nil {
 		clusterMeshMap := map[string]interface{}{}
 
@@ -624,6 +629,10 @@ func loadCiliumCustomizationFromResource(i interface{}) *CloudProjectKubeCiliumC
 
 	cilium := ciliumSet[0].(map[string]interface{})
 	output := &CloudProjectKubeCiliumCustomization{}
+
+	if v, ok := cilium[kubeClusterCiliumClusterID].(int); ok && v != 0 {
+		output.ClusterId = &v
+	}
 
 	// cluster_mesh
 	if clusterMeshRaw, ok := cilium[kubeClusterCiliumClusterMeshKey]; ok {

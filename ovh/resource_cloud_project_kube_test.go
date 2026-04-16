@@ -1538,3 +1538,635 @@ resource "ovh_cloud_project_kube" "cluster" {
 		},
 	})
 }
+
+// ============================================================================
+// customization_cilium tests
+// ============================================================================
+
+var testAccCloudProjectKubeCustomizationCiliumCreateConfig = `
+variable "service_name" {
+  default = "%s"
+}
+variable "name" {
+  default = "%s"
+}
+variable "region" {
+  default = "%s"
+}
+variable "version_k8s" {
+  default = "%s"
+}
+variable "random_vlan" {
+  default = %d
+}
+
+resource "ovh_cloud_project_network_private" "network" {
+  service_name = var.service_name
+  vlan_id      = var.random_vlan
+  name         = "terraform_mks_temp_network_can_be_deleted_${var.random_vlan}"
+  regions      = [ var.region ]
+}
+
+resource "ovh_cloud_project_network_private_subnet" "subnet" {
+  service_name = ovh_cloud_project_network_private.network.service_name
+  network_id   = ovh_cloud_project_network_private.network.id
+
+  # whatever region, for test purpose
+  region     = var.region
+  start      = "192.168.0.100"
+  end        = "192.168.254.200"
+  network    = "192.168.0.0/16"
+  dhcp       = true
+  no_gateway = false
+}
+
+resource "ovh_cloud_project_gateway" "gateway" {
+  service_name = ovh_cloud_project_network_private.network.service_name
+  name       = "gateway"
+  model      = "s"
+  region     = var.region
+  network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
+  subnet_id  = ovh_cloud_project_network_private_subnet.subnet.id
+}
+
+resource "ovh_cloud_project_kube" "cluster" {
+    depends_on    = [ ovh_cloud_project_gateway.gateway ]
+    service_name  = var.service_name
+    name          = var.name
+    region        = var.region
+    version       = var.version_k8s
+    plan          = "standard"
+
+    private_network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
+    nodes_subnet_id    = ovh_cloud_project_network_private_subnet.subnet.id
+}
+`
+
+var testAccCloudProjectKubeCustomizationCiliumHubbleEnabledConfig = `
+variable "service_name" {
+  default = "%s"
+}
+variable "name" {
+  default = "%s"
+}
+variable "region" {
+  default = "%s"
+}
+variable "version_k8s" {
+  default = "%s"
+}
+variable "random_vlan" {
+  default = %d
+}
+
+resource "ovh_cloud_project_network_private" "network" {
+  service_name = var.service_name
+  vlan_id      = var.random_vlan
+  name         = "terraform_mks_temp_network_can_be_deleted_${var.random_vlan}"
+  regions      = [ var.region ]
+}
+
+resource "ovh_cloud_project_network_private_subnet" "subnet" {
+  service_name = ovh_cloud_project_network_private.network.service_name
+  network_id   = ovh_cloud_project_network_private.network.id
+
+  # whatever region, for test purpose
+  region     = var.region
+  start      = "192.168.0.100"
+  end        = "192.168.254.200"
+  network    = "192.168.0.0/16"
+  dhcp       = true
+  no_gateway = false
+}
+
+resource "ovh_cloud_project_gateway" "gateway" {
+  service_name = ovh_cloud_project_network_private.network.service_name
+  name       = "gateway"
+  model      = "s"
+  region     = var.region
+  network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
+  subnet_id  = ovh_cloud_project_network_private_subnet.subnet.id
+}
+
+resource "ovh_cloud_project_kube" "cluster" {
+    depends_on    = [ ovh_cloud_project_gateway.gateway ]
+    service_name  = var.service_name
+    name          = var.name
+    region        = var.region
+    version       = var.version_k8s
+    plan          = "standard"
+
+    private_network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
+    nodes_subnet_id    = ovh_cloud_project_network_private_subnet.subnet.id
+
+	customization_cilium {
+		hubble {
+			enabled = true
+			relay {
+				enabled = true
+			}
+			ui {
+				enabled = true
+			}
+		}
+	}
+}
+`
+
+var testAccCloudProjectKubeCustomizationCiliumHubbleDisabledConfig = `
+variable "service_name" {
+  default = "%s"
+}
+variable "name" {
+  default = "%s"
+}
+variable "region" {
+  default = "%s"
+}
+variable "version_k8s" {
+  default = "%s"
+}
+variable "random_vlan" {
+  default = %d
+}
+
+resource "ovh_cloud_project_network_private" "network" {
+  service_name = var.service_name
+  vlan_id      = var.random_vlan
+  name         = "terraform_mks_temp_network_can_be_deleted_${var.random_vlan}"
+  regions      = [ var.region ]
+}
+
+resource "ovh_cloud_project_network_private_subnet" "subnet" {
+  service_name = ovh_cloud_project_network_private.network.service_name
+  network_id   = ovh_cloud_project_network_private.network.id
+
+  # whatever region, for test purpose
+  region     = var.region
+  start      = "192.168.0.100"
+  end        = "192.168.254.200"
+  network    = "192.168.0.0/16"
+  dhcp       = true
+  no_gateway = false
+}
+
+resource "ovh_cloud_project_gateway" "gateway" {
+  service_name = ovh_cloud_project_network_private.network.service_name
+  name       = "gateway"
+  model      = "s"
+  region     = var.region
+  network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
+  subnet_id  = ovh_cloud_project_network_private_subnet.subnet.id
+}
+
+resource "ovh_cloud_project_kube" "cluster" {
+    depends_on    = [ ovh_cloud_project_gateway.gateway ]
+    service_name  = var.service_name
+    name          = var.name
+    region        = var.region
+    version       = var.version_k8s
+    plan          = "standard"
+
+    private_network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
+    nodes_subnet_id    = ovh_cloud_project_network_private_subnet.subnet.id
+
+	customization_cilium {
+		hubble {
+			enabled = false
+			relay {
+				enabled = false
+			}
+			ui {
+				enabled = false
+			}
+		}
+	}
+}
+`
+
+var testAccCloudProjectKubeCustomizationCiliumClusterMeshEnabledConfig = `variable "service_name" {
+  default = "%s"
+}
+variable "name" {
+  default = "%s"
+}
+variable "region" {
+  default = "%s"
+}
+variable "version_k8s" {
+  default = "%s"
+}
+variable "random_vlan" {
+  default = %d
+}
+
+resource "ovh_cloud_project_network_private" "network" {
+  service_name = var.service_name
+  vlan_id      = var.random_vlan
+  name         = "terraform_mks_temp_network_can_be_deleted_${var.random_vlan}"
+  regions      = [ var.region ]
+}
+
+resource "ovh_cloud_project_network_private_subnet" "subnet" {
+  service_name = ovh_cloud_project_network_private.network.service_name
+  network_id   = ovh_cloud_project_network_private.network.id
+
+  # whatever region, for test purpose
+  region     = var.region
+  start      = "192.168.0.100"
+  end        = "192.168.254.200"
+  network    = "192.168.0.0/16"
+  dhcp       = true
+  no_gateway = false
+}
+
+resource "ovh_cloud_project_gateway" "gateway" {
+  service_name = ovh_cloud_project_network_private.network.service_name
+  name       = "gateway"
+  model      = "s"
+  region     = var.region
+  network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
+  subnet_id  = ovh_cloud_project_network_private_subnet.subnet.id
+}
+
+resource "ovh_cloud_project_kube" "cluster" {
+    depends_on    = [ ovh_cloud_project_gateway.gateway ]
+    service_name  = var.service_name
+    name          = var.name
+    region        = var.region
+    version       = var.version_k8s
+    plan          = "standard"
+
+    private_network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
+    nodes_subnet_id    = ovh_cloud_project_network_private_subnet.subnet.id
+
+	customization_cilium {
+		cluster_id = 42
+		cluster_mesh {
+			enabled = true
+		}
+	}
+}
+`
+
+var testAccCloudProjectKubeCustomizationCiliumFullConfig = `
+variable "service_name" {
+  default = "%s"
+}
+variable "name" {
+  default = "%s"
+}
+variable "region" {
+  default = "%s"
+}
+variable "version_k8s" {
+  default = "%s"
+}
+variable "random_vlan" {
+  default = %d
+}
+
+resource "ovh_cloud_project_network_private" "network" {
+  service_name = var.service_name
+  vlan_id      = var.random_vlan
+  name         = "terraform_mks_temp_network_can_be_deleted_${var.random_vlan}"
+  regions      = [ var.region ]
+}
+
+resource "ovh_cloud_project_network_private_subnet" "subnet" {
+  service_name = ovh_cloud_project_network_private.network.service_name
+  network_id   = ovh_cloud_project_network_private.network.id
+
+  # whatever region, for test purpose
+  region     = var.region
+  start      = "192.168.0.100"
+  end        = "192.168.254.200"
+  network    = "192.168.0.0/16"
+  dhcp       = true
+  no_gateway = false
+}
+
+resource "ovh_cloud_project_gateway" "gateway" {
+  service_name = ovh_cloud_project_network_private.network.service_name
+  name       = "gateway"
+  model      = "s"
+  region     = var.region
+  network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
+  subnet_id  = ovh_cloud_project_network_private_subnet.subnet.id
+}
+
+resource "ovh_cloud_project_kube" "cluster" {
+    depends_on    = [ ovh_cloud_project_gateway.gateway ]
+    service_name  = var.service_name
+    name          = var.name
+    region        = var.region
+    version       = var.version_k8s
+    plan          = "standard"
+
+    private_network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
+    nodes_subnet_id    = ovh_cloud_project_network_private_subnet.subnet.id
+
+	customization_cilium {
+		cluster_id = 42
+		hubble {
+			enabled = true
+			relay {
+				enabled = true
+			}
+			ui {
+				enabled = true
+			}
+		}
+		cluster_mesh {
+			enabled = true
+		}
+	}
+}
+`
+
+var testAccCloudProjectKubeCustomizationCiliumClusterIDConfig = `
+variable "service_name" {
+  default = "%s"
+}
+variable "name" {
+  default = "%s"
+}
+variable "region" {
+  default = "%s"
+}
+variable "version_k8s" {
+  default = "%s"
+}
+variable "random_vlan" {
+  default = %d
+}
+
+resource "ovh_cloud_project_network_private" "network" {
+  service_name = var.service_name
+  vlan_id      = var.random_vlan
+  name         = "terraform_mks_temp_network_can_be_deleted_${var.random_vlan}"
+  regions      = [ var.region ]
+}
+
+resource "ovh_cloud_project_network_private_subnet" "subnet" {
+  service_name = ovh_cloud_project_network_private.network.service_name
+  network_id   = ovh_cloud_project_network_private.network.id
+
+  # whatever region, for test purpose
+  region     = var.region
+  start      = "192.168.0.100"
+  end        = "192.168.254.200"
+  network    = "192.168.0.0/16"
+  dhcp       = true
+  no_gateway = false
+}
+
+resource "ovh_cloud_project_gateway" "gateway" {
+  service_name = ovh_cloud_project_network_private.network.service_name
+  name       = "gateway"
+  model      = "s"
+  region     = var.region
+  network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
+  subnet_id  = ovh_cloud_project_network_private_subnet.subnet.id
+}
+
+resource "ovh_cloud_project_kube" "cluster" {
+    depends_on    = [ ovh_cloud_project_gateway.gateway ]
+    service_name  = var.service_name
+    name          = var.name
+    region        = var.region
+    version       = var.version_k8s
+    plan          = "standard"
+
+    private_network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
+    nodes_subnet_id    = ovh_cloud_project_network_private_subnet.subnet.id
+
+	customization_cilium {
+		cluster_id = 42
+	}
+}
+`
+
+// TestAccCloudProjectKubeCustomizationCiliumHubble tests enabling and
+// disabling Cilium's Hubble observability stack (hubble, relay, ui).
+func TestAccCloudProjectKubeCustomizationCiliumHubble(t *testing.T) {
+	// region := os.Getenv("OVH_CLOUD_PROJECT_KUBE_REGION_TEST")
+	// force the region to RBX-A
+	region := "RBX-A"
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	name := acctest.RandomWithPrefix(test_prefix)
+	version := os.Getenv("OVH_CLOUD_PROJECT_KUBE_VERSION_TEST")
+
+	createConfig := fmt.Sprintf(
+		testAccCloudProjectKubeCustomizationCiliumCreateConfig,
+		serviceName,
+		name,
+		region,
+		version,
+		rand.IntN(4092)+1, // randomize the vlanID to use
+	)
+
+	hubbleEnabledConfig := fmt.Sprintf(
+		testAccCloudProjectKubeCustomizationCiliumHubbleEnabledConfig,
+		serviceName,
+		name,
+		region,
+		version,
+		rand.IntN(4092)+1, // randomize the vlanID to use
+	)
+
+	hubbleDisabledConfig := fmt.Sprintf(
+		testAccCloudProjectKubeCustomizationCiliumHubbleDisabledConfig,
+		serviceName,
+		name,
+		region,
+		version,
+		rand.IntN(4092)+1, // randomize the vlanID to use
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloud(t)
+			testAccCheckCloudProjectExists(t)
+			testAccPreCheckKubernetes(t)
+		},
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				// No cilium customization: API should return computed defaults.
+				Config: createConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeNameKey, name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "service_name", serviceName),
+				),
+			},
+			{
+				// Enable hubble, relay and ui.
+				Config: hubbleEnabledConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeNameKey, name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_cilium.0.hubble.0.enabled", "true"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_cilium.0.hubble.0.relay.0.enabled", "true"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_cilium.0.hubble.0.ui.0.enabled", "true"),
+				),
+			},
+			{
+				// Disable hubble, relay and ui.
+				Config: hubbleDisabledConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeNameKey, name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_cilium.0.hubble.0.enabled", "false"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_cilium.0.hubble.0.relay.0.enabled", "false"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_cilium.0.hubble.0.ui.0.enabled", "false"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccCloudProjectKubeCustomizationCiliumClusterMesh tests enabling
+// Cilium's cluster mesh feature.
+func TestAccCloudProjectKubeCustomizationCiliumClusterMesh(t *testing.T) {
+	// region := os.Getenv("OVH_CLOUD_PROJECT_KUBE_REGION_TEST")
+	// force the region to RBX-A
+	region := "RBX-A"
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	name := acctest.RandomWithPrefix(test_prefix)
+	version := os.Getenv("OVH_CLOUD_PROJECT_KUBE_VERSION_TEST")
+
+	createConfig := fmt.Sprintf(
+		testAccCloudProjectKubeCustomizationCiliumCreateConfig,
+		serviceName,
+		name,
+		region,
+		version,
+		rand.IntN(4092)+1, // randomize the vlanID to use
+	)
+
+	clusterMeshEnabledConfig := fmt.Sprintf(
+		testAccCloudProjectKubeCustomizationCiliumClusterMeshEnabledConfig,
+		serviceName,
+		name,
+		region,
+		version,
+		rand.IntN(4092)+1, // randomize the vlanID to use
+	)
+
+	clusterIDConfig := fmt.Sprintf(
+		testAccCloudProjectKubeCustomizationCiliumClusterIDConfig,
+		serviceName,
+		name,
+		region,
+		version,
+		rand.IntN(4092)+1, // randomize the vlanID to use
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloud(t)
+			testAccCheckCloudProjectExists(t)
+			testAccPreCheckKubernetes(t)
+		},
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				// No cilium customization.
+				Config: createConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeNameKey, name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "service_name", serviceName),
+				),
+			},
+			{
+				// Enable cluster mesh with a cluster_id.
+				Config: clusterMeshEnabledConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeNameKey, name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_cilium.0.cluster_id", "42"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_cilium.0.cluster_mesh.0.enabled", "true"),
+				),
+			},
+			{
+				// Set cluster_id only.
+				Config: clusterIDConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeNameKey, name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_cilium.0.cluster_id", "42"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccCloudProjectKubeCustomizationCiliumFull tests enabling both Hubble
+// and cluster mesh simultaneously, then verifies all nested attributes.
+func TestAccCloudProjectKubeCustomizationCiliumFull(t *testing.T) {
+	// region := os.Getenv("OVH_CLOUD_PROJECT_KUBE_REGION_TEST")
+	// force the region to RBX-A
+	region := "RBX-A"
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	name := acctest.RandomWithPrefix(test_prefix)
+	version := os.Getenv("OVH_CLOUD_PROJECT_KUBE_VERSION_TEST")
+
+	createConfig := fmt.Sprintf(
+		testAccCloudProjectKubeCustomizationCiliumCreateConfig,
+		serviceName,
+		name,
+		region,
+		version,
+		rand.IntN(4092)+1, // randomize the vlanID to use
+	)
+
+	fullConfig := fmt.Sprintf(
+		testAccCloudProjectKubeCustomizationCiliumFullConfig,
+		serviceName,
+		name,
+		region,
+		version,
+		rand.IntN(4092)+1, // randomize the vlanID to use
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloud(t)
+			testAccCheckCloudProjectExists(t)
+			testAccPreCheckKubernetes(t)
+		},
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				// No cilium customization: defaults from API.
+				Config: createConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeNameKey, name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "service_name", serviceName),
+				),
+			},
+			{
+				// Enable both hubble and cluster mesh.
+				Config: fullConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeNameKey, name),
+					// cluster_id
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_cilium.0.cluster_id", "42"),
+					// hubble
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_cilium.0.hubble.0.enabled", "true"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_cilium.0.hubble.0.relay.0.enabled", "true"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_cilium.0.hubble.0.ui.0.enabled", "true"),
+					// cluster mesh
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_cilium.0.cluster_mesh.0.enabled", "true"),
+				),
+			},
+			{
+				// Remove all cilium customization and verify we're back to defaults.
+				Config: createConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeNameKey, name),
+				),
+			},
+		},
+	})
+}

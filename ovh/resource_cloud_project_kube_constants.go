@@ -62,6 +62,7 @@ const (
 
 	// customization_cilium sub-attributes
 	kubeClusterCiliumClusterMeshKey    = "cluster_mesh"
+	kubeClusterCiliumClusterID         = "cluster_id"
 	kubeClusterCiliumHubbleKey         = "hubble"
 	kubeClusterCiliumApiServerKey      = "api_server"
 	kubeClusterCiliumNodePortKey       = "node_port"
