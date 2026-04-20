@@ -13,13 +13,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 )
 
 const testAccResourceDbaasLogsInput_basic = `
 data "ovh_dbaas_logs_input_engine" "logstash" {	
 	service_name  = "%s"
 	name          = "%s"
-	version       = "%s"
+	version       = "9.x"
 }
 
 resource "ovh_dbaas_logs_output_graylog_stream" "stream" {
@@ -58,7 +59,7 @@ const testAccResourceDbaasLogsInput_updated = `
 data "ovh_dbaas_logs_input_engine" "logstash" {
 	service_name  = "%s"
 	name          = "%s"
-	version       = "%s"
+	version       = "9.x"
 }
 
 resource "ovh_dbaas_logs_output_graylog_stream" "stream" {
@@ -99,7 +100,7 @@ const testAccResourceDbaasLogsInput_noNetwork = `
 data "ovh_dbaas_logs_input_engine" "logstash" {
 	service_name  = "%s"
 	name          = "%s"
-	version       = "%s"
+	version       = "9.x"
 }
 
 resource "ovh_dbaas_logs_output_graylog_stream" "stream" {
@@ -120,6 +121,47 @@ resource "ovh_dbaas_logs_input" "input" {
 	autoscale          = true
 	min_scale_instance = 2
 	max_scale_instance = 4
+
+	configuration {
+		logstash {
+			input_section = <<EOF
+				beats {
+					port => 6514
+					ssl_enabled => true
+					ssl_certificate => "/etc/ssl/private/server.crt"
+					ssl_key => "/etc/ssl/private/server.key"
+				}
+			EOF
+		}
+	}
+}
+`
+
+const testAccResourceDbaasLogsInput_multiple = `
+data "ovh_dbaas_logs_input_engine" "logstash" {
+	service_name  = "%s"
+	name          = "%s"
+	version       = "9.x"
+}
+
+resource "ovh_dbaas_logs_output_graylog_stream" "stream" {
+	count        = 2
+	service_name = "%s"
+	title        = "%s-${count.index}"
+	description  = "%s-${count.index}"
+}
+
+resource "ovh_dbaas_logs_input" "input" {
+	count        = 2
+	service_name = ovh_dbaas_logs_output_graylog_stream.stream[count.index].service_name
+	description  = ovh_dbaas_logs_output_graylog_stream.stream[count.index].description
+	title        = ovh_dbaas_logs_output_graylog_stream.stream[count.index].title
+	engine_id    = data.ovh_dbaas_logs_input_engine.logstash.id
+	stream_id    = ovh_dbaas_logs_output_graylog_stream.stream[count.index].id
+
+	allowed_networks = ["10.0.0.0/16"]
+	exposed_port     = "6154"
+	nb_instance      = %d
 
 	configuration {
 		logstash {
@@ -238,18 +280,17 @@ func testSweepDbaasInput(region string) error {
 func TestAccResourceDbaasLogsInput_basic(t *testing.T) {
 	serviceName := os.Getenv("OVH_DBAAS_LOGS_SERVICE_TEST")
 	name := "LOGSTASH"
-	version := os.Getenv("OVH_DBAAS_LOGS_LOGSTASH_VERSION_TEST")
 	title := acctest.RandomWithPrefix(test_prefix)
 	desc := acctest.RandomWithPrefix(test_prefix)
 
 	config := fmt.Sprintf(testAccResourceDbaasLogsInput_basic,
-		serviceName, name, version, serviceName, title, desc, 2)
+		serviceName, name, serviceName, title, desc, 2)
 	configWithMoreInstances := fmt.Sprintf(testAccResourceDbaasLogsInput_basic,
-		serviceName, name, version, serviceName, title, desc, 4)
+		serviceName, name, serviceName, title, desc, 4)
 	configUpdated := fmt.Sprintf(testAccResourceDbaasLogsInput_updated,
-		serviceName, name, version, serviceName, title, desc)
+		serviceName, name, serviceName, title, desc)
 	configNoNetwork := fmt.Sprintf(testAccResourceDbaasLogsInput_noNetwork,
-		serviceName, name, version, serviceName, title, desc)
+		serviceName, name, serviceName, title, desc)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() { testAccPreCheckDbaasLogsInput(t) },
@@ -359,6 +400,57 @@ func TestAccResourceDbaasLogsInput_basic(t *testing.T) {
 			{
 				Config: configNoNetwork,
 				Check:  resource.TestCheckResourceAttr("ovh_dbaas_logs_input.input", "allowed_networks.#", "0"),
+			},
+		},
+	})
+}
+
+func TestAccResourceDbaasLogsInput_multiple(t *testing.T) {
+	serviceName := os.Getenv("OVH_DBAAS_LOGS_SERVICE_TEST")
+	name := "LOGSTASH"
+	title := acctest.RandomWithPrefix(test_prefix)
+	desc := acctest.RandomWithPrefix(test_prefix)
+
+	config := fmt.Sprintf(testAccResourceDbaasLogsInput_multiple,
+		serviceName, name, serviceName, title, desc, 1)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { testAccPreCheckDbaasLogsInput(t) },
+
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"ovh_dbaas_logs_input.input.0",
+						"description",
+						desc+"-0",
+					),
+					resource.TestCheckResourceAttr(
+						"ovh_dbaas_logs_input.input.0",
+						"title",
+						title+"-0",
+					),
+					resource.TestCheckResourceAttr(
+						"ovh_dbaas_logs_input.input.1",
+						"description",
+						desc+"-1",
+					),
+					resource.TestCheckResourceAttr(
+						"ovh_dbaas_logs_input.input.1",
+						"title",
+						title+"-1",
+					),
+				),
+			},
+			{
+				Config: config,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
