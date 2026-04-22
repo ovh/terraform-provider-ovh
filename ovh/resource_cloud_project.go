@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/url"
 	"regexp"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/go-ovh/ovh"
@@ -97,6 +98,13 @@ func resourceCloudProjectCreate(d *schema.ResourceData, meta interface{}) error 
 
 	d.SetId(serviceName)
 	d.Set("project_id", serviceName)
+
+	// After order delivery, the project may not be immediately available in the API.
+	// Retry the GET for up to 10 minutes to avoid a spurious 404 error.
+	endpoint := fmt.Sprintf("/cloud/project/%s", url.PathEscape(serviceName))
+	if err := helpers.WaitAvailable(config.OVHClient, endpoint, 10*time.Minute); err != nil {
+		return fmt.Errorf("waiting for cloud project %s to become available: %q", serviceName, err)
+	}
 
 	return resourceCloudProjectUpdate(d, meta)
 }
