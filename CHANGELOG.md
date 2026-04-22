@@ -1,3 +1,13 @@
+## 2.13.1 (April 22, 2026)
+
+🐜 Bug fixes:
+
+* `r/ovh_cloud_project`: Make sure project is really delivered after order ([#1295](https://github.com/ovh/terraform-provider-ovh/pull/1295))
+* `r/ovh_dbaas_logs_input`: Retry calls to Logs Data Platform inputs ([#1289](https://github.com/ovh/terraform-provider-ovh/pull/1289))
+* `r/ovh_dbaas_logs_output_graylog_stream`, `r/ovh_dbaas_logs_output_opensearch_alias`: Retry calls to Logs Data Platform streams and aliases ([#1286](https://github.com/ovh/terraform-provider-ovh/pull/1286))
+
+❤️ Thanks for your contributions ❤️
+
 ## 2.13.0 (April 10, 2026)
 
 ⚙️ General:
