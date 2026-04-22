@@ -1,0 +1,59 @@
+---
+subcategory : "Object Storage (S3)"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates. */ -}}
+
+# ovh_cloud_storage_object_bucket_object (Data Source)
+
+Reads a single S3 object's metadata, optionally a specific version, using the v2 API.
+
+## Example Usage
+
+{{tffile "examples/data-sources/ovh_cloud_storage_object_bucket_object/data-source.tf"}}
+
+## Schema
+
+### Required
+
+- `bucket_name` (String) Name of the bucket
+- `object_key` (String) Object key (path within the bucket)
+- `service_name` (String) Service name of the resource representing the id of the cloud project
+
+### Optional
+
+- `version_id` (String) Version identifier. When set, the data source reads metadata for that specific version.
+
+### Read-Only
+
+- `e_tag` (String) Entity tag (ETag) of the object
+- `is_common_prefix` (Boolean) Whether this entry is a common-prefix grouping rather than an object
+- `is_delete_marker` (Boolean) Whether this version is a delete marker
+- `is_latest` (Boolean) Whether this version is the latest version of the object
+- `key` (String) Object key as returned by the API
+- `last_modified` (String) Date and time at which the object was last modified
+- `legal_hold` (String) Current legal hold status of the object (`ON`, `OFF`)
+- `replication_status` (String) Replication status (`COMPLETED`, `FAILED`, `NONE`, `PENDING`, `REPLICA`)
+- `response_version_id` (String) Version identifier returned by the API for the object
+- `restore_status` (Attributes) Restore status for objects stored in archive tiers (see [below for nested schema](#nestedatt--restore_status))
+- `retention` (Attributes) Current retention (object lock) configuration (see [below for nested schema](#nestedatt--retention))
+- `size` (Number) Size of the object in bytes
+- `storage_class` (String) Storage class (`DEEP_ARCHIVE`, `GLACIER`, `GLACIER_IR`, `HIGH_PERF`, `INTELLIGENT_TIERING`, `ONEZONE_IA`, `STANDARD`, `STANDARD_IA`)
+
+<a id="nestedatt--restore_status"></a>
+
+### Nested Schema for `restore_status`
+
+Read-Only:
+
+- `expire_date` (String) Date and time at which the restored copy expires
+- `in_progress` (Boolean) Whether a restore operation is currently in progress
+
+<a id="nestedatt--retention"></a>
+
+### Nested Schema for `retention`
+
+Read-Only:
+
+- `mode` (String) Retention mode applied to the object (`COMPLIANCE`, `GOVERNANCE`, `NONE`)
+- `retain_until_date` (String) Date and time until which the object is retained

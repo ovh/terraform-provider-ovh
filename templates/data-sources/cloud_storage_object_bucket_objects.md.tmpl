@@ -1,0 +1,37 @@
+---
+subcategory : "Object Storage (S3)"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates. */ -}}
+
+# ovh_cloud_storage_object_bucket_objects (Data Source)
+
+Lists objects in an S3 bucket using the v2 API. The response is a single page controlled by `limit`, `key_marker` and `version_id_marker`; follow `next_key_marker` (and `is_truncated`) to fetch subsequent pages.
+
+## Example Usage
+
+{{tffile "examples/data-sources/ovh_cloud_storage_object_bucket_objects/data-source.tf"}}
+
+## Schema
+
+### Required
+
+- `bucket_name` (String) Name of the bucket to list objects from
+- `service_name` (String) Service name of the resource representing the id of the cloud project
+
+### Optional
+
+- `delimiter` (String) Character to group keys into common prefixes (directory-like listing)
+- `key_marker` (String) Key to resume listing from
+- `limit` (Number) Maximum number of entries to return (API hard cap: 1000)
+- `prefix` (String) Return only objects whose key begins with this prefix
+- `version_id_marker` (String) Version ID to resume listing from (only used when `with_versions` is true and `key_marker` is set)
+- `with_versions` (Boolean) When true, list all versions (and delete markers) rather than only current objects
+
+### Read-Only
+
+- `is_truncated` (Boolean) Whether more objects exist beyond the current page
+- `next_key_marker` (String) Key to pass as `key_marker` for the next page; empty when `is_truncated` is false
+- `objects` (Attributes List) Objects, common prefixes and (when `with_versions` is set) delete markers returned for the current page
+
+Each element of `objects` exposes the same fields as the single-object data source `ovh_cloud_storage_object_bucket_object`.

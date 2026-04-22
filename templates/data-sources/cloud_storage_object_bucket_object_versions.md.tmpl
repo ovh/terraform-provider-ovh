@@ -1,0 +1,36 @@
+---
+subcategory : "Object Storage (S3)"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates. */ -}}
+
+# ovh_cloud_storage_object_bucket_object_versions (Data Source)
+
+Lists versions (and delete markers) of a single S3 object using the v2 API. The response is a single page controlled by `limit`, `key_marker` and `version_id_marker`; follow `next_key_marker` / `next_version_id_marker` to fetch subsequent pages.
+
+## Example Usage
+
+{{tffile "examples/data-sources/ovh_cloud_storage_object_bucket_object_versions/data-source.tf"}}
+
+## Schema
+
+### Required
+
+- `bucket_name` (String) Name of the bucket
+- `object_key` (String) Object key whose versions to list
+- `service_name` (String) Service name of the resource representing the id of the cloud project
+
+### Optional
+
+- `key_marker` (String) Key to resume listing from
+- `limit` (Number) Maximum number of entries to return (API hard cap: 1000)
+- `version_id_marker` (String) Version ID to resume listing from (must be paired with `key_marker`)
+
+### Read-Only
+
+- `is_truncated` (Boolean) Whether more versions exist beyond the current page
+- `next_key_marker` (String) Key to pass as `key_marker` for the next page; empty when `is_truncated` is false
+- `next_version_id_marker` (String) Version ID to pass as `version_id_marker` for the next page; empty when `is_truncated` is false
+- `objects` (Attributes List) Object versions and delete markers returned for the current page
+
+Each element of `objects` exposes the same fields as the single-object data source `ovh_cloud_storage_object_bucket_object`.

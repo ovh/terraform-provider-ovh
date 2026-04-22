@@ -1,0 +1,68 @@
+---
+subcategory : "Object Storage (S3)"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates. */ -}}
+
+# ovh_cloud_storage_object_bucket_object_lock
+
+Manages retention (object lock) and legal hold settings on a single S3 object, optionally a specific version, using the v2 API.
+
+~> **NOTE:** S3 object lock is immutable once set. Destroying this resource only removes it from Terraform state; it does **not** remove the retention or legal hold from the object itself. In particular:
+
+- `COMPLIANCE` retention cannot be cleared at all before the retain-until date passes.
+- `GOVERNANCE` retention can only be cleared with a bypass-governance header, which the OVH v2 API does not expose.
+- Legal hold can in principle be cleared with a PUT, but removing the Terraform resource does not necessarily mean the user wants to disable it, so the backend is left untouched.
+
+If you want to change retention or legal hold after destroying the resource, re-create it (or another `ovh_cloud_storage_object_bucket_object_lock`) with the desired values.
+
+## Example Usage
+
+{{tffile "examples/resources/ovh_cloud_storage_object_bucket_object_lock/resource.tf"}}
+
+## Schema
+
+### Required
+
+- `bucket_name` (String) Name of the bucket
+- `object_key` (String) Object key (path within the bucket)
+- `service_name` (String) Service name of the resource representing the id of the cloud project
+
+### Optional
+
+- `legal_hold` (Attributes) Legal hold configuration to apply (see [below for nested schema](#nestedatt--legal_hold))
+- `retention` (Attributes) Retention (object lock) configuration to apply (see [below for nested schema](#nestedatt--retention))
+- `version_id` (String) Version identifier of the object. When set, the resource manages the lock on that specific version.
+
+### Read-Only
+
+- `id` (String) Resource identifier formatted as `<service_name>/<bucket_name>/<url-encoded object_key>` or `<service_name>/<bucket_name>/<url-encoded object_key>/<version_id>` when a version is targeted.
+
+<a id="nestedatt--retention"></a>
+
+### Nested Schema for `retention`
+
+Required:
+
+- `mode` (String) Retention mode. One of `COMPLIANCE` or `GOVERNANCE`. The third enum value `NONE` is rejected by the API with HTTP 400.
+- `retain_until_date` (String) RFC 3339 date/time until which the object is retained.
+
+<a id="nestedatt--legal_hold"></a>
+
+### Nested Schema for `legal_hold`
+
+Required:
+
+- `status` (String) Legal hold status. One of `ON` or `OFF`.
+
+## Import
+
+Because object keys can contain `/`, the object key inside the import ID must be URL-encoded (the same scheme used when the resource is created).
+
+```bash
+# object (no version)
+terraform import ovh_cloud_storage_object_bucket_object_lock.example '<service_name>/<bucket_name>/<url-encoded object_key>'
+
+# specific version
+terraform import ovh_cloud_storage_object_bucket_object_lock.example '<service_name>/<bucket_name>/<url-encoded object_key>/<version_id>'
+```
