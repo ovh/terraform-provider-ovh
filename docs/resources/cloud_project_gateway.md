@@ -73,8 +73,6 @@ The following attributes are exported:
 ## Import
 
 A gateway can be imported using the `service_name`, `region` and `id` (identifier of the gateway) properties, separated by a `/`.
-However, please note that in the case of a gateway import, `network_id` and `subnet_id` values used at gateway creation are not injected back in the state.
-If you want to define these properties on your imported resource, you have to add an "ignore_changes" lifecycle argument in order not to trigger a recreation, as suggested in the following example. 
 
 ```terraform
 resource "ovh_cloud_project_gateway" "imported_gateway" {
@@ -84,9 +82,6 @@ resource "ovh_cloud_project_gateway" "imported_gateway" {
   region       = "<my-region>"
   network_id   = "<my-imported-gateway-network-id>"
   subnet_id    = "<my-imported-gateway-subnet-id>"
-  lifecycle {
-    ignore_changes = [network_id, subnet_id]
-  }
 }
 
 import {
