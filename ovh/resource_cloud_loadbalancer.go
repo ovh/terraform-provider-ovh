@@ -7,11 +7,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/ovh/go-ovh/ovh"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
@@ -105,11 +107,19 @@ func (r *cloudLoadbalancerResource) Schema(ctx context.Context, req resource.Sch
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"flavor_id": schema.StringAttribute{
+			"flavor_name": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Required:            true,
-				Description:         "ID of the loadbalancer flavor",
-				MarkdownDescription: "ID of the loadbalancer flavor",
+				Description:         "Loadbalancer flavor name",
+				MarkdownDescription: "Loadbalancer flavor name",
+				Validators: []validator.String{
+					stringvalidator.OneOf(
+						"small",
+						"medium",
+						"large",
+						"xl",
+					),
+				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -418,7 +428,7 @@ func (r *cloudLoadbalancerResource) Delete(ctx context.Context, req resource.Del
 			}
 			return res, res.ResourceStatus, nil
 		},
-		Timeout:    20 * time.Minute,
+		Timeout:    60 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 5 * time.Second,
 	}
@@ -444,7 +454,7 @@ func (r *cloudLoadbalancerResource) waitForLoadbalancerReady(ctx context.Context
 			}
 			return res, res.ResourceStatus, nil
 		},
-		Timeout:    20 * time.Minute,
+		Timeout:    60 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 5 * time.Second,
 	}

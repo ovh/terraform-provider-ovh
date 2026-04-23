@@ -16,7 +16,7 @@ type CloudLoadbalancerModel struct {
 	Region       ovhtypes.TfStringValue `tfsdk:"region"`
 	VipNetworkId ovhtypes.TfStringValue `tfsdk:"vip_network_id"`
 	VipSubnetId  ovhtypes.TfStringValue `tfsdk:"vip_subnet_id"`
-	FlavorId     ovhtypes.TfStringValue `tfsdk:"flavor_id"`
+	FlavorName   ovhtypes.TfStringValue `tfsdk:"flavor_name"`
 
 	// Optional — immutable
 	AvailabilityZone ovhtypes.TfStringValue `tfsdk:"availability_zone"`
@@ -47,7 +47,7 @@ type CloudLoadbalancerAPISubnetRef struct {
 }
 
 type CloudLoadbalancerAPIFlavorRef struct {
-	ID string `json:"id"`
+	Name string `json:"name"`
 }
 
 type CloudLoadbalancerAPILocation struct {
@@ -116,7 +116,7 @@ func (m *CloudLoadbalancerModel) ToCreate() *CloudLoadbalancerCreatePayload {
 			ID: m.VipSubnetId.ValueString(),
 		},
 		Flavor: &CloudLoadbalancerAPIFlavorRef{
-			ID: m.FlavorId.ValueString(),
+			Name: m.FlavorName.ValueString(),
 		},
 	}
 
@@ -222,7 +222,7 @@ func buildLoadbalancerCurrentStateObject(ctx context.Context, state *CloudLoadba
 	// Build flavor object
 	var flavorVal basetypes.ObjectValue
 	if state.Flavor != nil {
-		flavorVal = buildLoadbalancerRefObject(state.Flavor.ID)
+		flavorVal = buildLoadbalancerRefObject(state.Flavor.Name)
 	} else {
 		flavorVal = types.ObjectNull(loadbalancerRefAttrTypes())
 	}
@@ -286,7 +286,7 @@ func (m *CloudLoadbalancerModel) MergeWith(ctx context.Context, response *CloudL
 			m.VipSubnetId = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.VipSubnet.ID)}
 		}
 		if response.TargetSpec.Flavor != nil {
-			m.FlavorId = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Flavor.ID)}
+			m.FlavorName = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Flavor.Name)}
 		}
 	}
 }
