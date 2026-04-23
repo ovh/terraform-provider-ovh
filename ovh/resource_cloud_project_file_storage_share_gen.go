@@ -60,11 +60,13 @@ func CloudProjectFileStorageShareResourceSchema(ctx context.Context) schema.Sche
 		},
 		"network_id": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
-			Required:            true,
+			Optional:            true,
+			Computed:            true,
 			Description:         "Private network ID",
 			MarkdownDescription: "Private network ID",
 			PlanModifiers: []planmodifier.String{
-				stringplanmodifier.RequiresReplace(),
+				stringplanmodifier.RequiresReplaceIfConfigured(),
+				stringplanmodifier.UseStateForUnknown(),
 			},
 		},
 		"protocol": schema.StringAttribute{
@@ -98,9 +100,14 @@ func CloudProjectFileStorageShareResourceSchema(ctx context.Context) schema.Sche
 		},
 		"share_network_id": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
+			Optional:            true,
 			Computed:            true,
 			Description:         "Share network ID",
 			MarkdownDescription: "Share network ID",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.RequiresReplaceIfConfigured(),
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"size": schema.Int64Attribute{
 			CustomType:          ovhtypes.TfInt64Type{},
@@ -158,11 +165,13 @@ func CloudProjectFileStorageShareResourceSchema(ctx context.Context) schema.Sche
 		},
 		"subnet_id": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
-			Required:            true,
+			Optional:            true,
+			Computed:            true,
 			Description:         "Subnet ID",
 			MarkdownDescription: "Subnet ID",
 			PlanModifiers: []planmodifier.String{
-				stringplanmodifier.RequiresReplace(),
+				stringplanmodifier.RequiresReplaceIfConfigured(),
+				stringplanmodifier.UseStateForUnknown(),
 			},
 		},
 		"type": schema.StringAttribute{
@@ -292,6 +301,10 @@ func (v CloudProjectFileStorageShareModel) ToCreate() *CloudProjectFileStorageSh
 		res.NetworkId = v.NetworkId
 	}
 
+	if !v.ShareNetworkId.IsUnknown() {
+		res.ShareNetworkId = v.ShareNetworkId
+	}
+
 	if !v.Size.IsUnknown() {
 		res.Size = v.Size
 	}
@@ -334,6 +347,7 @@ type CloudProjectFileStorageShareCreateModel struct {
 	Description      ovhtypes.TfStringValue `json:"description"`
 	Name             ovhtypes.TfStringValue `json:"name"`
 	NetworkId        ovhtypes.TfStringValue `json:"networkId"`
+	ShareNetworkId   ovhtypes.TfStringValue `json:"shareNetworkId"`
 	Size             ovhtypes.TfInt64Value  `json:"size"`
 	SnapshotId       ovhtypes.TfStringValue `json:"snapshotId"`
 	SubnetId         ovhtypes.TfStringValue `json:"subnetId"`
@@ -357,6 +371,9 @@ func (v *CloudProjectFileStorageShareCreateModel) MarshalJSON() ([]byte, error) 
 	}
 	if !v.NetworkId.IsNull() && !v.NetworkId.IsUnknown() {
 		toMarshal["networkId"] = v.NetworkId
+	}
+	if !v.ShareNetworkId.IsNull() && !v.ShareNetworkId.IsUnknown() {
+		toMarshal["shareNetworkId"] = v.ShareNetworkId
 	}
 	if !v.Size.IsNull() && !v.Size.IsUnknown() {
 		toMarshal["size"] = v.Size
