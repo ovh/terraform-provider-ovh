@@ -58,17 +58,17 @@ func resourceCloudProjectDatabaseOpensearchPattern() *schema.Resource {
 }
 
 func resourceCloudProjectDatabaseOpensearchPatternImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	givenId := d.Id()
+	givenID := d.Id()
 	n := 3
-	splitId := strings.SplitN(givenId, "/", n)
-	if len(splitId) != n {
+	splitID := strings.SplitN(givenID, "/", n)
+	if len(splitID) != n {
 		return nil, fmt.Errorf("import Id is not service_name/cluster_id/id formatted")
 	}
-	serviceName := splitId[0]
-	clusterId := splitId[1]
-	id := splitId[2]
+	serviceName := splitID[0]
+	clusterID := splitID[1]
+	id := splitID[2]
 	d.SetId(id)
-	d.Set("cluster_id", clusterId)
+	d.Set("cluster_id", clusterID)
 	d.Set("service_name", serviceName)
 
 	results := make([]*schema.ResourceData, 1)
@@ -79,29 +79,29 @@ func resourceCloudProjectDatabaseOpensearchPatternImportState(d *schema.Resource
 func resourceCloudProjectDatabaseOpensearchPatternCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
-	clusterId := d.Get("cluster_id").(string)
+	clusterID := d.Get("cluster_id").(string)
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/database/opensearch/%s/pattern",
 		url.PathEscape(serviceName),
-		url.PathEscape(clusterId),
+		url.PathEscape(clusterID),
 	)
 	params := (&CloudProjectDatabaseOpensearchPatternCreateOpts{}).FromResource(d)
 	res := &CloudProjectDatabaseOpensearchPatternResponse{}
 
-	log.Printf("[DEBUG] Will create pattern: %+v for cluster %s from project %s", params, clusterId, serviceName)
+	log.Printf("[DEBUG] Will create pattern: %+v for cluster %s from project %s", params, clusterID, serviceName)
 	err := config.OVHClient.PostWithContext(ctx, endpoint, params, res)
 	if err != nil {
 		return diag.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
 	}
 
-	log.Printf("[DEBUG] Waiting for topic %s to be READY", res.Id)
-	err = waitForCloudProjectDatabaseOpensearchPatternReady(ctx, config.OVHClient, serviceName, clusterId, res.Id, d.Timeout(schema.TimeoutCreate))
+	log.Printf("[DEBUG] Waiting for pattern %s to be READY", res.ID)
+	err = waitForCloudProjectDatabaseOpensearchPatternReady(ctx, config.OVHClient, serviceName, clusterID, res.ID, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
-		return diag.Errorf("timeout while waiting topic %s to be READY: %s", res.Id, err.Error())
+		return diag.Errorf("timeout while waiting pattern %s to be READY: %s", res.ID, err.Error())
 	}
-	log.Printf("[DEBUG] topic %s is READY", res.Id)
+	log.Printf("[DEBUG] pattern %s is READY", res.ID)
 
-	d.SetId(res.Id)
+	d.SetId(res.ID)
 
 	return resourceCloudProjectDatabaseOpensearchPatternRead(ctx, d, meta)
 }
@@ -109,17 +109,17 @@ func resourceCloudProjectDatabaseOpensearchPatternCreate(ctx context.Context, d 
 func resourceCloudProjectDatabaseOpensearchPatternRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
-	clusterId := d.Get("cluster_id").(string)
+	clusterID := d.Get("cluster_id").(string)
 	id := d.Id()
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/database/opensearch/%s/pattern/%s",
 		url.PathEscape(serviceName),
-		url.PathEscape(clusterId),
+		url.PathEscape(clusterID),
 		url.PathEscape(id),
 	)
 	res := &CloudProjectDatabaseOpensearchPatternResponse{}
 
-	log.Printf("[DEBUG] Will read pattern %s from cluster %s from project %s", id, clusterId, serviceName)
+	log.Printf("[DEBUG] Will read pattern %s from cluster %s from project %s", id, clusterID, serviceName)
 	if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
@@ -139,23 +139,23 @@ func resourceCloudProjectDatabaseOpensearchPatternRead(ctx context.Context, d *s
 func resourceCloudProjectDatabaseOpensearchPatternDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
-	clusterId := d.Get("cluster_id").(string)
+	clusterID := d.Get("cluster_id").(string)
 	id := d.Id()
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/database/opensearch/%s/pattern/%s",
 		url.PathEscape(serviceName),
-		url.PathEscape(clusterId),
+		url.PathEscape(clusterID),
 		url.PathEscape(id),
 	)
 
-	log.Printf("[DEBUG] Will delete pattern %s from cluster %s from project %s", id, clusterId, serviceName)
+	log.Printf("[DEBUG] Will delete pattern %s from cluster %s from project %s", id, clusterID, serviceName)
 	err := config.OVHClient.DeleteWithContext(ctx, endpoint, nil)
 	if err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
 	log.Printf("[DEBUG] Waiting for pattern %s to be DELETED", id)
-	err = waitForCloudProjectDatabaseOpensearchPatternDeleted(ctx, config.OVHClient, serviceName, clusterId, id, d.Timeout(schema.TimeoutDelete))
+	err = waitForCloudProjectDatabaseOpensearchPatternDeleted(ctx, config.OVHClient, serviceName, clusterID, id, d.Timeout(schema.TimeoutDelete))
 	if err != nil {
 		return diag.Errorf("timeout while waiting pattern %s to be DELETED: %s", id, err.Error())
 	}
