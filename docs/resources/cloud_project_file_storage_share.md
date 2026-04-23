@@ -31,8 +31,9 @@ The following arguments are supported:
 * `name` - (Optional) Share name.
 * `size` - (Optional) Share size in Gigabytes.
 * `type` - (Optional, Forces new resource) Share type. Currently only `standard-1az` is supported.
-* `network_id` - (Required, Forces new resource) Private network ID.
-* `subnet_id` - (Required, Forces new resource) Subnet ID.
+* `network_id` - (Optional, Forces new resource) Private network ID.
+* `subnet_id` - (Optional, Forces new resource) Subnet ID.
+* `share_network_id` - (Optional, Forces new resource) ID of an existing share network. Exactly one of `share_network_id` or the pair (`network_id`, `subnet_id`) must be set.
 * `snapshot_id` - (Optional, Forces new resource) Snapshot ID used to create the share.
 * `availability_zone` - (Optional, Forces new resource) Availability zone of the share (required in 3AZ regions).
 
