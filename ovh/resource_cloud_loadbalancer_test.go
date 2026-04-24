@@ -17,7 +17,7 @@ func TestAccCloudLoadbalancer_basic(t *testing.T) {
 	region := os.Getenv("OVH_CLOUD_PROJECT_LOADBALANCER_REGION_TEST")
 	vipNetworkId := os.Getenv("OVH_CLOUD_PROJECT_LOADBALANCER_VIP_NETWORK_ID_TEST")
 	vipSubnetId := os.Getenv("OVH_CLOUD_PROJECT_LOADBALANCER_VIP_SUBNET_ID_TEST")
-	flavorId := os.Getenv("OVH_CLOUD_PROJECT_LOADBALANCER_FLAVOR_ID_TEST")
+	flavorName := os.Getenv("OVH_CLOUD_PROJECT_LOADBALANCER_FLAVOR_NAME_TEST")
 
 	lbName := acctest.RandomWithPrefix(testAccResourceCloudLoadbalancerNamePrefix)
 
@@ -28,9 +28,9 @@ resource "ovh_cloud_loadbalancer" "test" {
   region         = "%s"
   vip_network_id = "%s"
   vip_subnet_id  = "%s"
-  flavor_id      = "%s"
+  flavor_name    = "%s"
 }
-`, serviceName, lbName, region, vipNetworkId, vipSubnetId, flavorId)
+`, serviceName, lbName, region, vipNetworkId, vipSubnetId, flavorName)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -46,7 +46,7 @@ resource "ovh_cloud_loadbalancer" "test" {
 					resource.TestCheckResourceAttr("ovh_cloud_loadbalancer.test", "region", region),
 					resource.TestCheckResourceAttr("ovh_cloud_loadbalancer.test", "vip_network_id", vipNetworkId),
 					resource.TestCheckResourceAttr("ovh_cloud_loadbalancer.test", "vip_subnet_id", vipSubnetId),
-					resource.TestCheckResourceAttr("ovh_cloud_loadbalancer.test", "flavor_id", flavorId),
+					resource.TestCheckResourceAttr("ovh_cloud_loadbalancer.test", "flavor_name", flavorName),
 					resource.TestCheckResourceAttrSet("ovh_cloud_loadbalancer.test", "id"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_loadbalancer.test", "checksum"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_loadbalancer.test", "created_at"),
@@ -73,7 +73,7 @@ func TestAccCloudLoadbalancer_update(t *testing.T) {
 	region := os.Getenv("OVH_CLOUD_PROJECT_LOADBALANCER_REGION_TEST")
 	vipNetworkId := os.Getenv("OVH_CLOUD_PROJECT_LOADBALANCER_VIP_NETWORK_ID_TEST")
 	vipSubnetId := os.Getenv("OVH_CLOUD_PROJECT_LOADBALANCER_VIP_SUBNET_ID_TEST")
-	flavorId := os.Getenv("OVH_CLOUD_PROJECT_LOADBALANCER_FLAVOR_ID_TEST")
+	flavorName := os.Getenv("OVH_CLOUD_PROJECT_LOADBALANCER_FLAVOR_NAME_TEST")
 
 	lbName := acctest.RandomWithPrefix(testAccResourceCloudLoadbalancerNamePrefix)
 	updatedName := acctest.RandomWithPrefix(testAccResourceCloudLoadbalancerNamePrefix)
@@ -85,10 +85,10 @@ resource "ovh_cloud_loadbalancer" "test" {
   region         = "%s"
   vip_network_id = "%s"
   vip_subnet_id  = "%s"
-  flavor_id      = "%s"
+  flavor_name    = "%s"
   description    = "initial description"
 }
-`, serviceName, lbName, region, vipNetworkId, vipSubnetId, flavorId)
+`, serviceName, lbName, region, vipNetworkId, vipSubnetId, flavorName)
 
 	updatedConfig := fmt.Sprintf(`
 resource "ovh_cloud_loadbalancer" "test" {
@@ -97,10 +97,10 @@ resource "ovh_cloud_loadbalancer" "test" {
   region         = "%s"
   vip_network_id = "%s"
   vip_subnet_id  = "%s"
-  flavor_id      = "%s"
+  flavor_name    = "%s"
   description    = "updated description"
 }
-`, serviceName, updatedName, region, vipNetworkId, vipSubnetId, flavorId)
+`, serviceName, updatedName, region, vipNetworkId, vipSubnetId, flavorName)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -142,8 +142,8 @@ func testAccPreCheckCloudLoadbalancer(t *testing.T) {
 	if os.Getenv("OVH_CLOUD_PROJECT_LOADBALANCER_VIP_SUBNET_ID_TEST") == "" {
 		t.Skip("OVH_CLOUD_PROJECT_LOADBALANCER_VIP_SUBNET_ID_TEST not set")
 	}
-	if os.Getenv("OVH_CLOUD_PROJECT_LOADBALANCER_FLAVOR_ID_TEST") == "" {
-		t.Skip("OVH_CLOUD_PROJECT_LOADBALANCER_FLAVOR_ID_TEST not set")
+	if os.Getenv("OVH_CLOUD_PROJECT_LOADBALANCER_FLAVOR_NAME_TEST") == "" {
+		t.Skip("OVH_CLOUD_PROJECT_LOADBALANCER_FLAVOR_NAME_TEST not set")
 	}
 }
 

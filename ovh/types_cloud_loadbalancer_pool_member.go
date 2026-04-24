@@ -48,36 +48,36 @@ type CloudLoadbalancerPoolMemberAPISubnetRef struct {
 }
 
 type CloudLoadbalancerPoolMemberAPIResponse struct {
-	Id             string                                        `json:"id"`
-	Checksum       string                                        `json:"checksum"`
-	CreatedAt      string                                        `json:"createdAt"`
-	UpdatedAt      string                                        `json:"updatedAt"`
-	ResourceStatus string                                        `json:"resourceStatus"`
-	CurrentState   *CloudLoadbalancerPoolMemberAPICurrentState   `json:"currentState,omitempty"`
-	TargetSpec     *CloudLoadbalancerPoolMemberAPITargetSpec     `json:"targetSpec,omitempty"`
+	Id             string                                      `json:"id"`
+	Checksum       string                                      `json:"checksum"`
+	CreatedAt      string                                      `json:"createdAt"`
+	UpdatedAt      string                                      `json:"updatedAt"`
+	ResourceStatus string                                      `json:"resourceStatus"`
+	CurrentState   *CloudLoadbalancerPoolMemberAPICurrentState `json:"currentState,omitempty"`
+	TargetSpec     *CloudLoadbalancerPoolMemberAPITargetSpec   `json:"targetSpec,omitempty"`
 }
 
 type CloudLoadbalancerPoolMemberAPICurrentState struct {
-	Name               string                                    `json:"name,omitempty"`
-	Address            string                                    `json:"address"`
-	ProtocolPort       int64                                     `json:"protocolPort"`
-	Weight             int64                                     `json:"weight"`
-	Subnet             *CloudLoadbalancerPoolMemberAPISubnetRef  `json:"subnet,omitempty"`
-	OperatingStatus    string                                    `json:"operatingStatus,omitempty"`
-	ProvisioningStatus string                                    `json:"provisioningStatus,omitempty"`
-	Backup             bool                                      `json:"backup,omitempty"`
-	Monitor            *CloudLoadbalancerPoolMemberAPIMonitor    `json:"monitor,omitempty"`
+	Name               string                                   `json:"name,omitempty"`
+	Address            string                                   `json:"address"`
+	ProtocolPort       int64                                    `json:"protocolPort"`
+	Weight             int64                                    `json:"weight"`
+	Subnet             *CloudLoadbalancerPoolMemberAPISubnetRef `json:"subnet,omitempty"`
+	OperatingStatus    string                                   `json:"operatingStatus,omitempty"`
+	ProvisioningStatus string                                   `json:"provisioningStatus,omitempty"`
+	Backup             bool                                     `json:"backup,omitempty"`
+	Monitor            *CloudLoadbalancerPoolMemberAPIMonitor   `json:"monitor,omitempty"`
 }
 
 // TargetSpec for POST (all fields including immutable)
 type CloudLoadbalancerPoolMemberAPITargetSpec struct {
-	Name         string                                  `json:"name,omitempty"`
-	Address      string                                  `json:"address"`
-	ProtocolPort int64                                   `json:"protocolPort"`
-	Weight       *int64                                  `json:"weight,omitempty"`
+	Name         string                                   `json:"name,omitempty"`
+	Address      string                                   `json:"address"`
+	ProtocolPort int64                                    `json:"protocolPort"`
+	Weight       *int64                                   `json:"weight,omitempty"`
 	Subnet       *CloudLoadbalancerPoolMemberAPISubnetRef `json:"subnet,omitempty"`
-	Monitor      *CloudLoadbalancerPoolMemberAPIMonitor  `json:"monitor,omitempty"`
-	Backup       *bool                                   `json:"backup,omitempty"`
+	Monitor      *CloudLoadbalancerPoolMemberAPIMonitor   `json:"monitor,omitempty"`
+	Backup       *bool                                    `json:"backup,omitempty"`
 }
 
 // UpdateTargetSpec for PUT (only mutable fields — no address, no protocolPort, no subnet)
@@ -95,7 +95,7 @@ type CloudLoadbalancerPoolMemberCreatePayload struct {
 
 // Update payload
 type CloudLoadbalancerPoolMemberUpdatePayload struct {
-	Checksum   string                                        `json:"checksum"`
+	Checksum   string                                          `json:"checksum"`
 	TargetSpec *CloudLoadbalancerPoolMemberAPIUpdateTargetSpec `json:"targetSpec"`
 }
 

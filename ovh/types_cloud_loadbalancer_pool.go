@@ -20,10 +20,10 @@ type CloudLoadbalancerPoolModel struct {
 	Algorithm ovhtypes.TfStringValue `tfsdk:"algorithm"`
 
 	// Optional — mutable
-	Name           ovhtypes.TfStringValue `tfsdk:"name"`
-	Description    ovhtypes.TfStringValue `tfsdk:"description"`
-	Persistence    types.Object           `tfsdk:"persistence"`
-	HealthMonitor  types.Object           `tfsdk:"health_monitor"`
+	Name          ovhtypes.TfStringValue `tfsdk:"name"`
+	Description   ovhtypes.TfStringValue `tfsdk:"description"`
+	Persistence   types.Object           `tfsdk:"persistence"`
+	HealthMonitor types.Object           `tfsdk:"health_monitor"`
 
 	// Computed
 	Id             ovhtypes.TfStringValue `tfsdk:"id"`
@@ -73,13 +73,13 @@ type CloudLoadbalancerPoolAPIHealthMonitorCurrentState struct {
 }
 
 type CloudLoadbalancerPoolAPIResponse struct {
-	Id             string                                  `json:"id"`
-	Checksum       string                                  `json:"checksum"`
-	CreatedAt      string                                  `json:"createdAt"`
-	UpdatedAt      string                                  `json:"updatedAt"`
-	ResourceStatus string                                  `json:"resourceStatus"`
-	CurrentState   *CloudLoadbalancerPoolAPICurrentState   `json:"currentState,omitempty"`
-	TargetSpec     *CloudLoadbalancerPoolAPITargetSpec     `json:"targetSpec,omitempty"`
+	Id             string                                `json:"id"`
+	Checksum       string                                `json:"checksum"`
+	CreatedAt      string                                `json:"createdAt"`
+	UpdatedAt      string                                `json:"updatedAt"`
+	ResourceStatus string                                `json:"resourceStatus"`
+	CurrentState   *CloudLoadbalancerPoolAPICurrentState `json:"currentState,omitempty"`
+	TargetSpec     *CloudLoadbalancerPoolAPITargetSpec   `json:"targetSpec,omitempty"`
 }
 
 type CloudLoadbalancerPoolAPICurrentState struct {
@@ -87,17 +87,17 @@ type CloudLoadbalancerPoolAPICurrentState struct {
 	Description        string                                             `json:"description,omitempty"`
 	Protocol           string                                             `json:"protocol"`
 	Algorithm          string                                             `json:"algorithm"`
-	Persistence        *CloudLoadbalancerPoolAPISessionPersistence         `json:"persistence,omitempty"`
-	HealthMonitor      *CloudLoadbalancerPoolAPIHealthMonitorCurrentState  `json:"healthMonitor,omitempty"`
+	Persistence        *CloudLoadbalancerPoolAPISessionPersistence        `json:"persistence,omitempty"`
+	HealthMonitor      *CloudLoadbalancerPoolAPIHealthMonitorCurrentState `json:"healthMonitor,omitempty"`
 	OperatingStatus    string                                             `json:"operatingStatus,omitempty"`
 	ProvisioningStatus string                                             `json:"provisioningStatus,omitempty"`
 }
 
 type CloudLoadbalancerPoolAPITargetSpec struct {
-	Name          string                                     `json:"name,omitempty"`
-	Description   string                                     `json:"description"`
-	Protocol      string                                     `json:"protocol"`
-	Algorithm     string                                     `json:"algorithm"`
+	Name          string                                      `json:"name,omitempty"`
+	Description   string                                      `json:"description"`
+	Protocol      string                                      `json:"protocol"`
+	Algorithm     string                                      `json:"algorithm"`
 	Persistence   *CloudLoadbalancerPoolAPISessionPersistence `json:"persistence,omitempty"`
 	HealthMonitor *CloudLoadbalancerPoolAPIHealthMonitor      `json:"healthMonitor,omitempty"`
 }
@@ -109,15 +109,15 @@ type CloudLoadbalancerPoolCreatePayload struct {
 
 // Update payload — uses a separate struct without protocol (immutable)
 type CloudLoadbalancerPoolUpdateTargetSpec struct {
-	Name          string                                     `json:"name,omitempty"`
-	Description   string                                     `json:"description"`
-	Algorithm     string                                     `json:"algorithm"`
+	Name          string                                      `json:"name,omitempty"`
+	Description   string                                      `json:"description"`
+	Algorithm     string                                      `json:"algorithm"`
 	Persistence   *CloudLoadbalancerPoolAPISessionPersistence `json:"persistence,omitempty"`
 	HealthMonitor *CloudLoadbalancerPoolAPIHealthMonitor      `json:"healthMonitor,omitempty"`
 }
 
 type CloudLoadbalancerPoolUpdatePayload struct {
-	Checksum   string                                `json:"checksum"`
+	Checksum   string                                 `json:"checksum"`
 	TargetSpec *CloudLoadbalancerPoolUpdateTargetSpec `json:"targetSpec"`
 }
 
@@ -149,20 +149,20 @@ func healthMonitorAttrTypes() map[string]attr.Type {
 // healthMonitorCurrentStateAttrTypes returns the attribute types for the health_monitor in current_state
 func healthMonitorCurrentStateAttrTypes() map[string]attr.Type {
 	return map[string]attr.Type{
-		"id":                   ovhtypes.TfStringType{},
-		"type":                 ovhtypes.TfStringType{},
-		"delay":                types.Int64Type,
-		"timeout":              types.Int64Type,
-		"max_retries":          types.Int64Type,
-		"max_retries_down":     types.Int64Type,
-		"name":                 ovhtypes.TfStringType{},
-		"url_path":             ovhtypes.TfStringType{},
-		"http_method":          ovhtypes.TfStringType{},
-		"http_version":         ovhtypes.TfStringType{},
-		"expected_codes":       ovhtypes.TfStringType{},
-		"domain_name":          ovhtypes.TfStringType{},
-		"operating_status":     ovhtypes.TfStringType{},
-		"provisioning_status":  ovhtypes.TfStringType{},
+		"id":                  ovhtypes.TfStringType{},
+		"type":                ovhtypes.TfStringType{},
+		"delay":               types.Int64Type,
+		"timeout":             types.Int64Type,
+		"max_retries":         types.Int64Type,
+		"max_retries_down":    types.Int64Type,
+		"name":                ovhtypes.TfStringType{},
+		"url_path":            ovhtypes.TfStringType{},
+		"http_method":         ovhtypes.TfStringType{},
+		"http_version":        ovhtypes.TfStringType{},
+		"expected_codes":      ovhtypes.TfStringType{},
+		"domain_name":         ovhtypes.TfStringType{},
+		"operating_status":    ovhtypes.TfStringType{},
+		"provisioning_status": ovhtypes.TfStringType{},
 	}
 }
 
@@ -335,20 +335,20 @@ func buildHealthMonitorCurrentStateObject(hm *CloudLoadbalancerPoolAPIHealthMoni
 	obj, _ := types.ObjectValue(
 		healthMonitorCurrentStateAttrTypes(),
 		map[string]attr.Value{
-			"id":                   ovhtypes.TfStringValue{StringValue: types.StringValue(hm.ID)},
-			"type":                 ovhtypes.TfStringValue{StringValue: types.StringValue(hm.Type)},
-			"delay":                types.Int64Value(int64(hm.Delay)),
-			"timeout":              types.Int64Value(int64(hm.Timeout)),
-			"max_retries":          types.Int64Value(int64(hm.MaxRetries)),
-			"max_retries_down":     types.Int64Value(int64(hm.MaxRetriesDown)),
-			"name":                 nameVal,
-			"url_path":             urlPathVal,
-			"http_method":          httpMethodVal,
-			"http_version":         httpVersionVal,
-			"expected_codes":       expectedCodesVal,
-			"domain_name":          domainNameVal,
-			"operating_status":     ovhtypes.TfStringValue{StringValue: types.StringValue(hm.OperatingStatus)},
-			"provisioning_status":  ovhtypes.TfStringValue{StringValue: types.StringValue(hm.ProvisioningStatus)},
+			"id":                  ovhtypes.TfStringValue{StringValue: types.StringValue(hm.ID)},
+			"type":                ovhtypes.TfStringValue{StringValue: types.StringValue(hm.Type)},
+			"delay":               types.Int64Value(int64(hm.Delay)),
+			"timeout":             types.Int64Value(int64(hm.Timeout)),
+			"max_retries":         types.Int64Value(int64(hm.MaxRetries)),
+			"max_retries_down":    types.Int64Value(int64(hm.MaxRetriesDown)),
+			"name":                nameVal,
+			"url_path":            urlPathVal,
+			"http_method":         httpMethodVal,
+			"http_version":        httpVersionVal,
+			"expected_codes":      expectedCodesVal,
+			"domain_name":         domainNameVal,
+			"operating_status":    ovhtypes.TfStringValue{StringValue: types.StringValue(hm.OperatingStatus)},
+			"provisioning_status": ovhtypes.TfStringValue{StringValue: types.StringValue(hm.ProvisioningStatus)},
 		},
 	)
 	return obj
