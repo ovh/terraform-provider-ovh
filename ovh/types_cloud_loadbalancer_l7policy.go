@@ -90,13 +90,13 @@ type CloudLoadbalancerL7PolicyAPICurrentState struct {
 }
 
 type CloudLoadbalancerL7PolicyAPIResponse struct {
-	Id             string                                     `json:"id"`
-	Checksum       string                                     `json:"checksum"`
-	CreatedAt      string                                     `json:"createdAt"`
-	UpdatedAt      string                                     `json:"updatedAt"`
-	ResourceStatus string                                     `json:"resourceStatus"`
-	CurrentState   *CloudLoadbalancerL7PolicyAPICurrentState  `json:"currentState,omitempty"`
-	TargetSpec     *CloudLoadbalancerL7PolicyAPITargetSpec    `json:"targetSpec,omitempty"`
+	Id             string                                    `json:"id"`
+	Checksum       string                                    `json:"checksum"`
+	CreatedAt      string                                    `json:"createdAt"`
+	UpdatedAt      string                                    `json:"updatedAt"`
+	ResourceStatus string                                    `json:"resourceStatus"`
+	CurrentState   *CloudLoadbalancerL7PolicyAPICurrentState `json:"currentState,omitempty"`
+	TargetSpec     *CloudLoadbalancerL7PolicyAPITargetSpec   `json:"targetSpec,omitempty"`
 }
 
 // Create payload
@@ -119,7 +119,7 @@ type CloudLoadbalancerL7PolicyUpdateTargetSpec struct {
 
 type CloudLoadbalancerL7PolicyUpdatePayload struct {
 	Checksum   string                                     `json:"checksum"`
-	TargetSpec *CloudLoadbalancerL7PolicyUpdateTargetSpec  `json:"targetSpec"`
+	TargetSpec *CloudLoadbalancerL7PolicyUpdateTargetSpec `json:"targetSpec"`
 }
 
 // l7PolicyRuleAttrTypes returns the attribute types for a single rule in the rules list.
@@ -143,14 +143,14 @@ func l7PolicyRuleElementType() attr.Type {
 // l7PolicyCurrentStateRuleAttrTypes returns the attribute types for a rule in current_state.
 func l7PolicyCurrentStateRuleAttrTypes() map[string]attr.Type {
 	return map[string]attr.Type{
-		"id":                   ovhtypes.TfStringType{},
-		"type":                 ovhtypes.TfStringType{},
-		"compare_type":         ovhtypes.TfStringType{},
-		"value":                ovhtypes.TfStringType{},
-		"key":                  ovhtypes.TfStringType{},
-		"invert":               types.BoolType,
-		"operating_status":     ovhtypes.TfStringType{},
-		"provisioning_status":  ovhtypes.TfStringType{},
+		"id":                  ovhtypes.TfStringType{},
+		"type":                ovhtypes.TfStringType{},
+		"compare_type":        ovhtypes.TfStringType{},
+		"value":               ovhtypes.TfStringType{},
+		"key":                 ovhtypes.TfStringType{},
+		"invert":              types.BoolType,
+		"operating_status":    ovhtypes.TfStringType{},
+		"provisioning_status": ovhtypes.TfStringType{},
 	}
 }
 
