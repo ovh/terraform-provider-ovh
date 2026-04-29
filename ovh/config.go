@@ -162,7 +162,9 @@ func (c *Config) load() error {
 		targetClient.Client.Transport = cleanhttp.DefaultTransport()
 	}
 
-	httpClient.Transport = logging.NewTransport("OVH", httpClient.Transport)
+	// Chain transports: schemasVersion (adds X-Schemas-Version for /v2/ paths)
+	// → logging (logs request/response) → original transport (sends over the wire).
+	httpClient.Transport = newSchemasVersionTransport(logging.NewTransport("OVH", httpClient.Transport))
 	c.OVHClient = ovhwrap.NewClient(targetClient, c.ApiRateLimit)
 	return nil
 }
