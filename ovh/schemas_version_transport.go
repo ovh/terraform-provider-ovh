@@ -12,7 +12,7 @@ const schemasVersionHeader = "X-Schemas-Version"
 // schemasVersion is the schema version requested by this client.
 // Bump this value when a new schema version is released and the provider
 // has been updated to match.
-const schemasVersion = "1.0"
+const schemasVersion = "0.0"
 
 // schemasVersionTransport is an http.RoundTripper middleware that injects the
 // X-Schemas-Version header on every request whose path starts with "/v2/".
