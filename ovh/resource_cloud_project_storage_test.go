@@ -555,3 +555,49 @@ func TestAccCloudProjectRegionStorage_statusChangeTriggersReplacement(t *testing
 		},
 	})
 }
+
+func TestAccCloudProjectRegionStorage_withTags(t *testing.T) {
+	bucketName := acctest.RandomWithPrefix(test_prefix)
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheckCloud(t); testAccCheckCloudProjectExists(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Step 1: Create bucket with tags
+			{
+				Config: fmt.Sprintf(`
+					resource "ovh_cloud_project_storage" "storage" {
+						service_name = "%s"
+						region_name = "GRA"
+						name = "%s"
+						tags = {
+							environment = "test"
+							team        = "platform"
+						}
+					}`, serviceName, bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_project_storage.storage", "name", bucketName),
+					resource.TestCheckResourceAttr("ovh_cloud_project_storage.storage", "tags.environment", "test"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_storage.storage", "tags.team", "platform"),
+				),
+			},
+			// Step 2: Update tags
+			{
+				Config: fmt.Sprintf(`
+					resource "ovh_cloud_project_storage" "storage" {
+						service_name = "%s"
+						region_name = "GRA"
+						name = "%s"
+						tags = {
+							environment = "production"
+						}
+					}`, serviceName, bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_project_storage.storage", "tags.environment", "production"),
+					resource.TestCheckNoResourceAttr("ovh_cloud_project_storage.storage", "tags.team"),
+				),
+			},
+		},
+	})
+}
