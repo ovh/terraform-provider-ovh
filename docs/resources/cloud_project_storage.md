@@ -85,7 +85,7 @@ resource "ovh_cloud_project_storage" "storage_with_tags" {
 
 - `name` (String) Container name
 - `region_name` (String) Region name
-- `service_name` (String) Service name
+- `service_name` (String) Service name. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 
 ### Optional
 
