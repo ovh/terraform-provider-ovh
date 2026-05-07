@@ -5,6 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
@@ -54,15 +55,24 @@ type CloudInstanceAutobackupAPITargetSpec struct {
 }
 
 type CloudInstanceAutobackupAPICurrentState struct {
-	Name              string                              `json:"name"`
-	ImageName         string                              `json:"imageName"`
-	Cron              string                              `json:"cron"`
-	Rotation          int64                               `json:"rotation"`
-	Location          *CloudInstanceAutobackupAPILocation `json:"location"`
-	Instance          *CloudInstanceAutobackupAPIRef      `json:"instance"`
-	WorkflowName      string                              `json:"workflowName,omitempty"`
-	NextExecutionTime string                              `json:"nextExecutionTime,omitempty"`
-	Distant           *CloudInstanceAutobackupAPIDistant  `json:"distant,omitempty"`
+	Name              string                                  `json:"name"`
+	ImageName         string                                  `json:"imageName"`
+	Cron              string                                  `json:"cron"`
+	Rotation          int64                                   `json:"rotation"`
+	Location          *CloudInstanceAutobackupAPILocation     `json:"location"`
+	Instance          *CloudInstanceAutobackupAPIRef          `json:"instance"`
+	WorkflowName      string                                  `json:"workflowName,omitempty"`
+	NextExecutionTime string                                  `json:"nextExecutionTime,omitempty"`
+	Distant           *CloudInstanceAutobackupAPIDistant      `json:"distant,omitempty"`
+	LastExecutions    []CloudInstanceAutobackupAPIExecution   `json:"lastExecutions"`
+}
+
+type CloudInstanceAutobackupAPIExecution struct {
+	Id           string  `json:"id"`
+	StartedAt    *string `json:"startedAt"`
+	UpdatedAt    *string `json:"updatedAt"`
+	State        string  `json:"state"`
+	ErrorMessage *string `json:"errorMessage"`
 }
 
 type CloudInstanceAutobackupAPILocation struct {
@@ -154,6 +164,17 @@ func (m *CloudInstanceAutobackupModel) MergeWith(ctx context.Context, resp *Clou
 	}
 }
 
+// cloudInstanceAutobackupExecutionAttrTypes returns the attribute types for a single last_executions entry.
+func cloudInstanceAutobackupExecutionAttrTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"id":            ovhtypes.TfStringType{},
+		"started_at":    ovhtypes.TfStringType{},
+		"updated_at":    ovhtypes.TfStringType{},
+		"state":         ovhtypes.TfStringType{},
+		"error_message": ovhtypes.TfStringType{},
+	}
+}
+
 // cloudInstanceAutobackupCurrentStateAttrTypes returns the attribute types map for building current_state objects.
 func cloudInstanceAutobackupCurrentStateAttrTypes() map[string]attr.Type {
 	return map[string]attr.Type{
@@ -171,7 +192,21 @@ func cloudInstanceAutobackupCurrentStateAttrTypes() map[string]attr.Type {
 				"image_name": ovhtypes.TfStringType{},
 			},
 		},
+		"last_executions": types.ListType{
+			ElemType: types.ObjectType{
+				AttrTypes: cloudInstanceAutobackupExecutionAttrTypes(),
+			},
+		},
 	}
+}
+
+// nullableTfString converts a *string from the API into the matching ovhtypes.TfStringValue,
+// using a null TF value when the pointer is nil.
+func nullableTfString(s *string) ovhtypes.TfStringValue {
+	if s == nil {
+		return ovhtypes.TfStringValue{StringValue: types.StringNull()}
+	}
+	return ovhtypes.TfStringValue{StringValue: types.StringValue(*s)}
 }
 
 func buildAutobackupCurrentStateObject(state *CloudInstanceAutobackupAPICurrentState) types.Object {
@@ -208,6 +243,30 @@ func buildAutobackupCurrentStateObject(state *CloudInstanceAutobackupAPICurrentS
 	} else {
 		attrs["distant"] = types.ObjectNull(cloudInstanceAutobackupDistantAttrTypes())
 	}
+
+	// Build last_executions list (null when the API returned null/absent — typical of LIST or Mistral failure).
+	executionElemType := types.ObjectType{AttrTypes: cloudInstanceAutobackupExecutionAttrTypes()}
+	var executionsVal basetypes.ListValue
+	if state.LastExecutions != nil {
+		execObjs := make([]attr.Value, len(state.LastExecutions))
+		for i, exec := range state.LastExecutions {
+			execObj, _ := types.ObjectValue(
+				cloudInstanceAutobackupExecutionAttrTypes(),
+				map[string]attr.Value{
+					"id":            ovhtypes.TfStringValue{StringValue: types.StringValue(exec.Id)},
+					"started_at":    nullableTfString(exec.StartedAt),
+					"updated_at":    nullableTfString(exec.UpdatedAt),
+					"state":         ovhtypes.TfStringValue{StringValue: types.StringValue(exec.State)},
+					"error_message": nullableTfString(exec.ErrorMessage),
+				},
+			)
+			execObjs[i] = execObj
+		}
+		executionsVal, _ = types.ListValue(executionElemType, execObjs)
+	} else {
+		executionsVal = types.ListNull(executionElemType)
+	}
+	attrs["last_executions"] = executionsVal
 
 	obj, _ := types.ObjectValue(cloudInstanceAutobackupCurrentStateAttrTypes(), attrs)
 	return obj

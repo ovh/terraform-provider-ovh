@@ -225,6 +225,39 @@ func cloudInstanceAutobackupCurrentStateSchemaAttributes() map[string]schema.Att
 				},
 			},
 		},
+		"last_executions": schema.ListNestedAttribute{
+			Computed:    true,
+			Description: "Last backup executions (up to 5, newest first). Populated on GET only; null when unavailable.",
+			NestedObject: schema.NestedAttributeObject{
+				Attributes: map[string]schema.Attribute{
+					"id": schema.StringAttribute{
+						CustomType:  ovhtypes.TfStringType{},
+						Computed:    true,
+						Description: "Mistral execution identifier",
+					},
+					"started_at": schema.StringAttribute{
+						CustomType:  ovhtypes.TfStringType{},
+						Computed:    true,
+						Description: "Execution start timestamp (RFC 3339)",
+					},
+					"updated_at": schema.StringAttribute{
+						CustomType:  ovhtypes.TfStringType{},
+						Computed:    true,
+						Description: "Execution last update timestamp (RFC 3339)",
+					},
+					"state": schema.StringAttribute{
+						CustomType:  ovhtypes.TfStringType{},
+						Computed:    true,
+						Description: "Execution state (SUCCESS, ERROR, RUNNING, IDLE)",
+					},
+					"error_message": schema.StringAttribute{
+						CustomType:  ovhtypes.TfStringType{},
+						Computed:    true,
+						Description: "Error message when state is ERROR; null otherwise",
+					},
+				},
+			},
+		},
 	}
 }
 
