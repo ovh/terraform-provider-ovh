@@ -207,6 +207,21 @@ func (r *cloudStorageBlockVolumeResource) Schema(ctx context.Context, req resour
 						Description:         "Volume status (AVAILABLE, IN_USE, CREATING, DELETING, ATTACHING, DETACHING, EXTENDING, ERROR, ERROR_DELETING, ERROR_BACKING_UP, ERROR_RESTORING, ERROR_EXTENDING)",
 						MarkdownDescription: "Volume status (`AVAILABLE`, `IN_USE`, `CREATING`, `DELETING`, `ATTACHING`, `DETACHING`, `EXTENDING`, `ERROR`, `ERROR_DELETING`, `ERROR_BACKING_UP`, `ERROR_RESTORING`, `ERROR_EXTENDING`)",
 					},
+					"attached_instances": schema.ListNestedAttribute{
+						Computed:            true,
+						Description:         "Instances currently attached to this volume",
+						MarkdownDescription: "Instances currently attached to this volume",
+						NestedObject: schema.NestedAttributeObject{
+							Attributes: map[string]schema.Attribute{
+								"id": schema.StringAttribute{
+									CustomType:          ovhtypes.TfStringType{},
+									Computed:            true,
+									Description:         "Identifier of the attached instance",
+									MarkdownDescription: "Identifier of the attached instance",
+								},
+							},
+						},
+					},
 				},
 			},
 		},

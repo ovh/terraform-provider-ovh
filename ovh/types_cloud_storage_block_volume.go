@@ -38,12 +38,17 @@ type CloudStorageBlockVolumeAPIResponse struct {
 }
 
 type CloudStorageBlockVolumeCurrentState struct {
-	Location   *CloudStorageBlockVolumeLocation `json:"location,omitempty"`
-	Name       string                           `json:"name,omitempty"`
-	Size       int64                            `json:"size,omitempty"`
-	VolumeType string                           `json:"volumeType,omitempty"`
-	Bootable   *bool                            `json:"bootable,omitempty"`
-	Status     string                           `json:"status,omitempty"`
+	Location           *CloudStorageBlockVolumeLocation            `json:"location,omitempty"`
+	Name               string                                      `json:"name,omitempty"`
+	Size               int64                                       `json:"size,omitempty"`
+	VolumeType         string                                      `json:"volumeType,omitempty"`
+	Bootable           *bool                                       `json:"bootable,omitempty"`
+	Status             string                                      `json:"status,omitempty"`
+	AttachedInstances  []CloudStorageBlockVolumeAttachedInstance   `json:"attachedInstances,omitempty"`
+}
+
+type CloudStorageBlockVolumeAttachedInstance struct {
+	Id string `json:"id"`
 }
 
 type CloudStorageBlockVolumeCreateFrom struct {
@@ -125,15 +130,23 @@ func (m *CloudStorageBlockVolumeModel) ToUpdate(checksum string) *CloudStorageBl
 	return &CloudStorageBlockVolumeUpdatePayload{Checksum: checksum, TargetSpec: target}
 }
 
+// BlockVolumeAttachedInstanceAttrTypes returns the attribute types for an attached instance object
+func BlockVolumeAttachedInstanceAttrTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"id": ovhtypes.TfStringType{},
+	}
+}
+
 // BlockVolumeCurrentStateAttrTypes returns the attribute types for the current_state object
 func BlockVolumeCurrentStateAttrTypes() map[string]attr.Type {
 	return map[string]attr.Type{
-		"location":    types.ObjectType{AttrTypes: map[string]attr.Type{"region": ovhtypes.TfStringType{}}},
-		"name":        ovhtypes.TfStringType{},
-		"size":        types.Int64Type,
-		"volume_type": ovhtypes.TfStringType{},
-		"bootable":    types.BoolType,
-		"status":      ovhtypes.TfStringType{},
+		"location":           types.ObjectType{AttrTypes: map[string]attr.Type{"region": ovhtypes.TfStringType{}}},
+		"name":               ovhtypes.TfStringType{},
+		"size":               types.Int64Type,
+		"volume_type":        ovhtypes.TfStringType{},
+		"bootable":           types.BoolType,
+		"status":             ovhtypes.TfStringType{},
+		"attached_instances": types.ListType{ElemType: types.ObjectType{AttrTypes: BlockVolumeAttachedInstanceAttrTypes()}},
 	}
 }
 
@@ -157,15 +170,34 @@ func (m *CloudStorageBlockVolumeModel) MergeWith(ctx context.Context, response *
 			bootableVal = types.BoolValue(*response.CurrentState.Bootable)
 		}
 
+		attachedInstanceObjType := types.ObjectType{AttrTypes: BlockVolumeAttachedInstanceAttrTypes()}
+		var attachedInstancesVal types.List
+		if response.CurrentState.AttachedInstances != nil {
+			elems := make([]attr.Value, len(response.CurrentState.AttachedInstances))
+			for i, ai := range response.CurrentState.AttachedInstances {
+				obj, _ := types.ObjectValue(
+					BlockVolumeAttachedInstanceAttrTypes(),
+					map[string]attr.Value{
+						"id": ovhtypes.TfStringValue{StringValue: types.StringValue(ai.Id)},
+					},
+				)
+				elems[i] = obj
+			}
+			attachedInstancesVal, _ = types.ListValue(attachedInstanceObjType, elems)
+		} else {
+			attachedInstancesVal = types.ListNull(attachedInstanceObjType)
+		}
+
 		currentStateObj, _ := types.ObjectValue(
 			BlockVolumeCurrentStateAttrTypes(),
 			map[string]attr.Value{
-				"location":    locObj,
-				"name":        ovhtypes.TfStringValue{StringValue: types.StringValue(response.CurrentState.Name)},
-				"size":        types.Int64Value(response.CurrentState.Size),
-				"volume_type": ovhtypes.TfStringValue{StringValue: types.StringValue(response.CurrentState.VolumeType)},
-				"bootable":    bootableVal,
-				"status":      ovhtypes.TfStringValue{StringValue: types.StringValue(response.CurrentState.Status)},
+				"location":           locObj,
+				"name":               ovhtypes.TfStringValue{StringValue: types.StringValue(response.CurrentState.Name)},
+				"size":               types.Int64Value(response.CurrentState.Size),
+				"volume_type":        ovhtypes.TfStringValue{StringValue: types.StringValue(response.CurrentState.VolumeType)},
+				"bootable":           bootableVal,
+				"status":             ovhtypes.TfStringValue{StringValue: types.StringValue(response.CurrentState.Status)},
+				"attached_instances": attachedInstancesVal,
 			},
 		)
 
