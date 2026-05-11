@@ -31,9 +31,11 @@ data "ovh_cloud_quota" "quota" {
 					resource.TestCheckResourceAttrSet(
 						"data.ovh_cloud_quota.quota", "id"),
 					resource.TestCheckResourceAttrSet(
-						"data.ovh_cloud_quota.quota", "current_state.profile"),
+						"data.ovh_cloud_quota.quota", "checksum"),
 					resource.TestCheckResourceAttrSet(
-						"data.ovh_cloud_quota.quota", "current_state.available_profiles.#"),
+						"data.ovh_cloud_quota.quota", "current_state.manual_quota"),
+					resource.TestCheckResourceAttrSet(
+						"data.ovh_cloud_quota.quota", "current_state.regions.#"),
 				),
 			},
 		},
