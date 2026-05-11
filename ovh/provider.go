@@ -40,6 +40,9 @@ var (
 
 		// OVH API Rate Limit
 		"api_rate_limit": "Specify the API request rate limit, X operations by seconds (default: unlimited)",
+
+		// Profile support
+		"profile": "The name of the OVH configuration profile to use from the .ovh.conf file (uses [profile:<name>] section format)",
 	}
 )
 
@@ -97,6 +100,12 @@ func Provider() *schema.Provider {
 				Type:        schema.TypeInt,
 				Optional:    true,
 				Description: descriptions["api_rate_limit"],
+			},
+			"profile": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: descriptions["profile"],
+				DefaultFunc: schema.EnvDefaultFunc("OVH_PROFILE", nil),
 			},
 		},
 
@@ -354,6 +363,9 @@ func ConfigureContextFunc(context context.Context, d *schema.ResourceData) (inte
 	}
 	if v, ok := d.GetOk("ignore_init_error"); ok {
 		config.IgnoreInitError = v.(bool)
+	}
+	if v, ok := d.GetOk("profile"); ok {
+		config.Profile = v.(string)
 	}
 	if v, ok := d.GetOk("api_rate_limit"); ok {
 		config.ApiRateLimit = ratelimit.New(v.(int))
