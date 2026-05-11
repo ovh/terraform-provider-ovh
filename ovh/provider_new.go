@@ -84,6 +84,10 @@ func (p *OvhProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *
 				Optional:    true,
 				Description: descriptions["api_rate_limit"],
 			},
+			"profile": schema.StringAttribute{
+				Optional:    true,
+				Description: descriptions["profile"],
+			},
 		},
 	}
 }
@@ -215,6 +219,11 @@ func (p *OvhProvider) Configure(ctx context.Context, req provider.ConfigureReque
 		clientConfig.IgnoreInitError = config.IgnoreInitError.ValueBool()
 	} else if v := os.Getenv("OVH_IGNORE_INIT_ERROR"); v != "" {
 		clientConfig.IgnoreInitError, _ = strconv.ParseBool(v)
+	}
+	if !config.Profile.IsNull() {
+		clientConfig.Profile = config.Profile.ValueString()
+	} else if v := os.Getenv("OVH_PROFILE"); v != "" {
+		clientConfig.Profile = v
 	}
 	if !config.ApiRateLimit.IsNull() {
 		clientConfig.ApiRateLimit = ratelimit.New(int(config.ApiRateLimit.ValueInt32()))
@@ -480,4 +489,5 @@ type ovhProviderModel struct {
 	HttpHeaders       types.Map    `tfsdk:"http_headers"`
 	IgnoreInitError   types.Bool   `tfsdk:"ignore_init_error"`
 	ApiRateLimit      types.Int32  `tfsdk:"api_rate_limit"`
+	Profile           types.String `tfsdk:"profile"`
 }
