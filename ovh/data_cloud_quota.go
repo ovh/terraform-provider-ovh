@@ -10,22 +10,22 @@ import (
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
-var _ datasource.DataSourceWithConfigure = (*cloudProjectQuotaDataSource)(nil)
+var _ datasource.DataSourceWithConfigure = (*cloudQuotaDataSource)(nil)
 
-// NewCloudProjectQuotaDataSource returns a new quota data source.
-func NewCloudProjectQuotaDataSource() datasource.DataSource {
-	return &cloudProjectQuotaDataSource{}
+// NewCloudQuotaDataSource returns a new quota data source.
+func NewCloudQuotaDataSource() datasource.DataSource {
+	return &cloudQuotaDataSource{}
 }
 
-type cloudProjectQuotaDataSource struct {
+type cloudQuotaDataSource struct {
 	config *Config
 }
 
-func (d *cloudProjectQuotaDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_cloud_project_quota"
+func (d *cloudQuotaDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_cloud_quota"
 }
 
-func (d *cloudProjectQuotaDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *cloudQuotaDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -42,7 +42,7 @@ func (d *cloudProjectQuotaDataSource) Configure(_ context.Context, req datasourc
 	d.config = config
 }
 
-func (d *cloudProjectQuotaDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *cloudQuotaDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	usageAttrs := map[string]schema.Attribute{
 		"limit": schema.Int64Attribute{
 			Computed:    true,
@@ -115,10 +115,27 @@ func (d *cloudProjectQuotaDataSource) Schema(_ context.Context, _ datasource.Sch
 				Computed:    true,
 				Description: "Desired quota specification for the project.",
 				Attributes: map[string]schema.Attribute{
-					"profile": schema.StringAttribute{
-						CustomType:  ovhtypes.TfStringType{},
+					"manual_quota": schema.BoolAttribute{
 						Computed:    true,
-						Description: "Name of the quota profile applied to the project.",
+						Description: "When true, automatic quota upgrades are disabled for this project.",
+					},
+					"regions": schema.ListNestedAttribute{
+						Computed:    true,
+						Description: "Target quota profile per region.",
+						NestedObject: schema.NestedAttributeObject{
+							Attributes: map[string]schema.Attribute{
+								"region": schema.StringAttribute{
+									CustomType:  ovhtypes.TfStringType{},
+									Computed:    true,
+									Description: "Region where the profile applies.",
+								},
+								"profile": schema.StringAttribute{
+									CustomType:  ovhtypes.TfStringType{},
+									Computed:    true,
+									Description: "Quota profile to apply in this region.",
+								},
+							},
+						},
 					},
 				},
 			},
@@ -126,10 +143,9 @@ func (d *cloudProjectQuotaDataSource) Schema(_ context.Context, _ datasource.Sch
 				Computed:    true,
 				Description: "Current quota state of the project.",
 				Attributes: map[string]schema.Attribute{
-					"profile": schema.StringAttribute{
-						CustomType:  ovhtypes.TfStringType{},
+					"manual_quota": schema.BoolAttribute{
 						Computed:    true,
-						Description: "Name of the currently applied quota profile.",
+						Description: "When true, automatic quota upgrades are disabled for this project.",
 					},
 
 					// --- Available profiles ---
@@ -146,63 +162,59 @@ func (d *cloudProjectQuotaDataSource) Schema(_ context.Context, _ datasource.Sch
 								"compute": schema.SingleNestedAttribute{
 									Computed: true,
 									Attributes: map[string]schema.Attribute{
-										"instances":            schema.Int64Attribute{Computed: true},
-										"cores":                schema.Int64Attribute{Computed: true},
-										"ram":                  schema.Int64Attribute{Computed: true},
-										"security_groups":      schema.Int64Attribute{Computed: true},
-										"security_group_rules": schema.Int64Attribute{Computed: true},
-										"server_groups":        schema.Int64Attribute{Computed: true},
-										"server_group_members": schema.Int64Attribute{Computed: true},
+										"cores":     schema.Int64Attribute{Computed: true},
+										"instances": schema.Int64Attribute{Computed: true},
+										"memory":    schema.Int64Attribute{Computed: true},
 									},
 								},
-								"block_storage": schema.SingleNestedAttribute{
+								"volume": schema.SingleNestedAttribute{
 									Computed: true,
 									Attributes: map[string]schema.Attribute{
-										"volumes":          schema.Int64Attribute{Computed: true},
-										"gigabytes":        schema.Int64Attribute{Computed: true},
-										"snapshots":        schema.Int64Attribute{Computed: true},
-										"backups":          schema.Int64Attribute{Computed: true},
-										"backup_gigabytes": schema.Int64Attribute{Computed: true},
+										"backup_size_total": schema.Int64Attribute{Computed: true},
+										"backups":           schema.Int64Attribute{Computed: true},
+										"size_total":        schema.Int64Attribute{Computed: true},
+										"snapshots":         schema.Int64Attribute{Computed: true},
+										"volumes":           schema.Int64Attribute{Computed: true},
 									},
 								},
 								"network": schema.SingleNestedAttribute{
 									Computed: true,
 									Attributes: map[string]schema.Attribute{
-										"networks":             schema.Int64Attribute{Computed: true},
-										"subnets":              schema.Int64Attribute{Computed: true},
 										"floating_ips":         schema.Int64Attribute{Computed: true},
 										"gateways":             schema.Int64Attribute{Computed: true},
-										"security_groups":      schema.Int64Attribute{Computed: true},
+										"networks":             schema.Int64Attribute{Computed: true},
 										"security_group_rules": schema.Int64Attribute{Computed: true},
+										"security_groups":      schema.Int64Attribute{Computed: true},
+										"subnets":              schema.Int64Attribute{Computed: true},
 									},
 								},
 								"loadbalancer": schema.SingleNestedAttribute{
 									Computed: true,
 									Attributes: map[string]schema.Attribute{
-										"loadbalancers":  schema.Int64Attribute{Computed: true},
-										"listeners":      schema.Int64Attribute{Computed: true},
-										"pools":          schema.Int64Attribute{Computed: true},
-										"members":        schema.Int64Attribute{Computed: true},
-										"healthmonitors": schema.Int64Attribute{Computed: true},
-										"l7_policies":    schema.Int64Attribute{Computed: true},
-										"l7_rules":       schema.Int64Attribute{Computed: true},
+										"health_monitors": schema.Int64Attribute{Computed: true},
+										"l7_policies":     schema.Int64Attribute{Computed: true},
+										"l7_rules":        schema.Int64Attribute{Computed: true},
+										"listeners":       schema.Int64Attribute{Computed: true},
+										"loadbalancers":   schema.Int64Attribute{Computed: true},
+										"members":         schema.Int64Attribute{Computed: true},
+										"pools":           schema.Int64Attribute{Computed: true},
 									},
 								},
 								"key_manager": schema.SingleNestedAttribute{
 									Computed: true,
 									Attributes: map[string]schema.Attribute{
-										"secrets":    schema.Int64Attribute{Computed: true},
 										"containers": schema.Int64Attribute{Computed: true},
+										"secrets":    schema.Int64Attribute{Computed: true},
 									},
 								},
 								"share": schema.SingleNestedAttribute{
 									Computed: true,
 									Attributes: map[string]schema.Attribute{
-										"shares":           schema.Int64Attribute{Computed: true},
-										"gigabytes":        schema.Int64Attribute{Computed: true},
-										"snapshots":        schema.Int64Attribute{Computed: true},
-										"backups":          schema.Int64Attribute{Computed: true},
-										"backup_gigabytes": schema.Int64Attribute{Computed: true},
+										"backup_size_total": schema.Int64Attribute{Computed: true},
+										"backups":           schema.Int64Attribute{Computed: true},
+										"shares":            schema.Int64Attribute{Computed: true},
+										"size_total":        schema.Int64Attribute{Computed: true},
+										"snapshots":         schema.Int64Attribute{Computed: true},
 									},
 								},
 								"keypair": schema.SingleNestedAttribute{
@@ -218,74 +230,79 @@ func (d *cloudProjectQuotaDataSource) Schema(_ context.Context, _ datasource.Sch
 					// --- Per-region usage ---
 					"regions": schema.ListNestedAttribute{
 						Computed:    true,
-						Description: "Per-region quota usage reported by OpenStack.",
+						Description: "Per-region quota state reported by OpenStack.",
 						NestedObject: schema.NestedAttributeObject{
 							Attributes: map[string]schema.Attribute{
 								"region": schema.StringAttribute{
 									CustomType:  ovhtypes.TfStringType{},
 									Computed:    true,
-									Description: "Region name (e.g. GRA7).",
+									Description: "Region name (e.g. GRA11).",
+								},
+								"profile": schema.StringAttribute{
+									CustomType:  ovhtypes.TfStringType{},
+									Computed:    true,
+									Description: "Currently applied quota profile name in this region.",
 								},
 								"compute": schema.SingleNestedAttribute{
 									Computed: true,
 									Attributes: map[string]schema.Attribute{
-										"instances": schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
 										"cores":     schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
+										"instances": schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
 										"memory":    schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
 									},
 								},
 								"volume": schema.SingleNestedAttribute{
 									Computed: true,
 									Attributes: map[string]schema.Attribute{
-										"volumes":          schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
-										"gigabytes":        schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
-										"snapshots":        schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
-										"backups":          schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
-										"backup_gigabytes": schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
-										"per_volume_size":  schema.SingleNestedAttribute{Computed: true, Attributes: limitAttrs},
+										"backup_size_total": schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
+										"backups":           schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
+										"per_volume_size":   schema.SingleNestedAttribute{Computed: true, Attributes: limitAttrs},
+										"size_total":        schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
+										"snapshots":         schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
+										"volumes":           schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
 									},
 								},
 								"network": schema.SingleNestedAttribute{
 									Computed: true,
 									Attributes: map[string]schema.Attribute{
-										"networks":             schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
-										"subnets":              schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
 										"floating_ips":         schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
 										"gateways":             schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
-										"security_groups":      schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
+										"networks":             schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
 										"security_group_rules": schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
+										"security_groups":      schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
+										"subnets":              schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
 									},
 								},
 								"loadbalancer": schema.SingleNestedAttribute{
 									Computed: true,
 									Attributes: map[string]schema.Attribute{
-										"loadbalancers":  schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
-										"listeners":      schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
-										"pools":          schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
-										"members":        schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
-										"healthmonitors": schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
-										"l7_policies":    schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
-										"l7_rules":       schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
+										"health_monitors": schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
+										"l7_policies":     schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
+										"l7_rules":        schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
+										"listeners":       schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
+										"loadbalancers":   schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
+										"members":         schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
+										"pools":           schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
 									},
 								},
 								"key_manager": schema.SingleNestedAttribute{
 									Computed: true,
 									Attributes: map[string]schema.Attribute{
-										"secrets":    schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
 										"containers": schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
+										"secrets":    schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
 									},
 								},
 								"share": schema.SingleNestedAttribute{
 									Computed: true,
 									Attributes: map[string]schema.Attribute{
-										"shares":             schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
-										"size_total":         schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
-										"snapshots":          schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
-										"snapshot_gigabytes": schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
-										"backups":            schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
-										"backup_gigabytes":   schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
-										"share_networks":     schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
-										"per_share_size":     schema.SingleNestedAttribute{Computed: true, Attributes: limitAttrs},
+										"backup_size_total":   schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
+										"backups":             schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
+										"per_share_size":      schema.SingleNestedAttribute{Computed: true, Attributes: limitAttrs},
+										"share_networks":      schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
+										"shares":              schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
+										"size_total":          schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
+										"snapshot_size_total": schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
+										"snapshots":           schema.SingleNestedAttribute{Computed: true, Attributes: usageAttrs},
 									},
 								},
 								"keypair": schema.SingleNestedAttribute{
@@ -303,8 +320,8 @@ func (d *cloudProjectQuotaDataSource) Schema(_ context.Context, _ datasource.Sch
 	}
 }
 
-func (d *cloudProjectQuotaDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data CloudProjectQuotaModel
+func (d *cloudQuotaDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var data CloudQuotaModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -316,7 +333,7 @@ func (d *cloudProjectQuotaDataSource) Read(ctx context.Context, req datasource.R
 		endpoint += "?region=" + url.QueryEscape(data.Region.ValueString())
 	}
 
-	var responseData CloudProjectQuotaAPIResponse
+	var responseData CloudQuotaAPIResponse
 	if err := d.config.OVHClient.Get(endpoint, &responseData); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Get %s", endpoint),
