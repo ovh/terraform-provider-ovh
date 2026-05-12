@@ -4,7 +4,7 @@ subcategory : "Cloud Project"
 
 # ovh_cloud_quota (Data Source)
 
-Fetch read-only quota information for a public cloud project: target quota profile per region, manual-quota flag, list of available profiles with their caps, and per-region applied profile + usage reported by OpenStack.
+Fetch read-only quota information for a public cloud project: target quota profile per region, prevent-automatic-quota-upgrade flag, list of available profiles with their caps, and per-region applied profile + usage reported by OpenStack.
 
 ## Example Usage
 
@@ -39,13 +39,12 @@ The following attributes are exported:
 * `checksum` - Computed hash representing the current target specification value.
 * `created_at` - Creation date (RFC3339).
 * `updated_at` - Last update date (RFC3339).
-* `target_spec` - Desired quota specification:
-  * `manual_quota` - When true, automatic quota upgrades are disabled for this project.
-  * `regions` - Target quota profile per region:
-    * `region` - Region where the profile applies.
-    * `profile` - Quota profile to apply in this region.
+* `prevent_automatic_quota_upgrade` - When true, automatic quota upgrades are disabled for this project.
+* `regions` - Target quota profile per region:
+  * `region` - Region where the profile applies.
+  * `profile` - Quota profile to apply in this region.
 * `current_state` - Current quota state:
-  * `manual_quota` - When true, automatic quota upgrades are disabled for this project.
+  * `prevent_automatic_quota_upgrade` - When true, automatic quota upgrades are disabled for this project.
   * `available_profiles` - List of available quota profiles with their caps:
     * `name` - Profile name.
     * `compute` - Compute caps: `cores`, `instances`, `memory`.

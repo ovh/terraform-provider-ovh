@@ -10,10 +10,20 @@ import (
 )
 
 // CloudQuotaModel is the Terraform model for the quota data source.
+//
+// Following the apiv2 convention used by other resources (e.g.
+// ovh_cloud_instance, ovh_cloud_loadbalancer), the API's targetSpec envelope
+// is flattened to top-level attributes (`regions`,
+// `prevent_automatic_quota_upgrade`) and is NOT exposed as a nested
+// `target_spec` block.
 type CloudQuotaModel struct {
 	// Input
 	ServiceName ovhtypes.TfStringValue `tfsdk:"service_name"`
 	Region      ovhtypes.TfStringValue `tfsdk:"region"`
+
+	// Flattened targetSpec (computed for the data source)
+	PreventAutomaticQuotaUpgrade types.Bool `tfsdk:"prevent_automatic_quota_upgrade"`
+	Regions                      types.List `tfsdk:"regions"`
 
 	// Envelope (computed)
 	Id             ovhtypes.TfStringValue `tfsdk:"id"`
@@ -21,8 +31,45 @@ type CloudQuotaModel struct {
 	Checksum       ovhtypes.TfStringValue `tfsdk:"checksum"`
 	CreatedAt      ovhtypes.TfStringValue `tfsdk:"created_at"`
 	UpdatedAt      ovhtypes.TfStringValue `tfsdk:"updated_at"`
-	TargetSpec     types.Object           `tfsdk:"target_spec"`
 	CurrentState   types.Object           `tfsdk:"current_state"`
+}
+
+// CloudQuotaResourceModel is the Terraform model for the writable quota
+// resource. It mirrors CloudQuotaModel but omits the data-source-only
+// `region` filter so that the resource schema and the model line up.
+type CloudQuotaResourceModel struct {
+	ServiceName ovhtypes.TfStringValue `tfsdk:"service_name"`
+
+	// Flattened targetSpec (required for the resource)
+	PreventAutomaticQuotaUpgrade types.Bool `tfsdk:"prevent_automatic_quota_upgrade"`
+	Regions                      types.List `tfsdk:"regions"`
+
+	// Envelope (computed)
+	Id             ovhtypes.TfStringValue `tfsdk:"id"`
+	ResourceStatus ovhtypes.TfStringValue `tfsdk:"resource_status"`
+	Checksum       ovhtypes.TfStringValue `tfsdk:"checksum"`
+	CreatedAt      ovhtypes.TfStringValue `tfsdk:"created_at"`
+	UpdatedAt      ovhtypes.TfStringValue `tfsdk:"updated_at"`
+	CurrentState   types.Object           `tfsdk:"current_state"`
+}
+
+// MergeWith populates the resource model from the API response.
+func (m *CloudQuotaResourceModel) MergeWith(_ context.Context, response *CloudQuotaAPIResponse) {
+	m.Id = ovhtypes.TfStringValue{StringValue: types.StringValue(response.Id)}
+	m.ResourceStatus = ovhtypes.TfStringValue{StringValue: types.StringValue(response.ResourceStatus)}
+	m.Checksum = ovhtypes.TfStringValue{StringValue: types.StringValue(response.Checksum)}
+	m.CreatedAt = ovhtypes.TfStringValue{StringValue: types.StringValue(response.CreatedAt)}
+	m.UpdatedAt = ovhtypes.TfStringValue{StringValue: types.StringValue(response.UpdatedAt)}
+
+	if response.TargetSpec != nil {
+		m.PreventAutomaticQuotaUpgrade = types.BoolValue(response.TargetSpec.PreventAutomaticQuotaUpgrade)
+		m.Regions = buildQuotaTargetSpecRegionsList(response.TargetSpec.Regions)
+	} else {
+		m.PreventAutomaticQuotaUpgrade = types.BoolNull()
+		m.Regions = types.ListNull(quotaTargetSpecRegionElementType())
+	}
+
+	m.CurrentState = buildQuotaCurrentStateObject(response.CurrentState)
 }
 
 // ------------------------------------------------------------------
@@ -186,14 +233,14 @@ type CloudQuotaRegionTargetSpecAPI struct {
 }
 
 type CloudQuotaTargetSpecAPI struct {
-	ManualQuota bool                            `json:"manualQuota"`
-	Regions     []CloudQuotaRegionTargetSpecAPI `json:"regions,omitempty"`
+	PreventAutomaticQuotaUpgrade bool                            `json:"preventAutomaticQuotaUpgrade"`
+	Regions                      []CloudQuotaRegionTargetSpecAPI `json:"regions,omitempty"`
 }
 
 type CloudQuotaCurrentStateAPI struct {
-	ManualQuota       bool                              `json:"manualQuota"`
-	AvailableProfiles []CloudQuotaAvailableProfileAPI   `json:"availableProfiles,omitempty"`
-	Regions           []CloudQuotaRegionCurrentStateAPI `json:"regions,omitempty"`
+	PreventAutomaticQuotaUpgrade bool                              `json:"preventAutomaticQuotaUpgrade"`
+	AvailableProfiles            []CloudQuotaAvailableProfileAPI   `json:"availableProfiles,omitempty"`
+	Regions                      []CloudQuotaRegionCurrentStateAPI `json:"regions,omitempty"`
 }
 
 type CloudQuotaAPIResponse struct {
@@ -225,7 +272,7 @@ func quotaLimitAttrTypes() map[string]attr.Type {
 	}
 }
 
-// ----- target_spec -----
+// ----- flattened top-level `regions` (mirrors targetSpec.regions[]) -----
 
 func quotaTargetSpecRegionAttrTypes() map[string]attr.Type {
 	return map[string]attr.Type{
@@ -236,13 +283,6 @@ func quotaTargetSpecRegionAttrTypes() map[string]attr.Type {
 
 func quotaTargetSpecRegionElementType() attr.Type {
 	return types.ObjectType{AttrTypes: quotaTargetSpecRegionAttrTypes()}
-}
-
-func quotaTargetSpecAttrTypes() map[string]attr.Type {
-	return map[string]attr.Type{
-		"manual_quota": types.BoolType,
-		"regions":      types.ListType{ElemType: quotaTargetSpecRegionElementType()},
-	}
 }
 
 // ----- available_profiles -----
@@ -418,9 +458,9 @@ func quotaRegionElementType() attr.Type {
 
 func quotaCurrentStateAttrTypes() map[string]attr.Type {
 	return map[string]attr.Type{
-		"manual_quota":       types.BoolType,
-		"available_profiles": types.ListType{ElemType: quotaAvailableProfileElementType()},
-		"regions":            types.ListType{ElemType: quotaRegionElementType()},
+		"prevent_automatic_quota_upgrade": types.BoolType,
+		"available_profiles":              types.ListType{ElemType: quotaAvailableProfileElementType()},
+		"regions":                         types.ListType{ElemType: quotaRegionElementType()},
 	}
 }
 
@@ -449,7 +489,7 @@ func buildQuotaLimitObject(l CloudQuotaLimitAPI) basetypes.ObjectValue {
 	return obj
 }
 
-// ----- target_spec -----
+// ----- flattened top-level regions (mirrors targetSpec.regions[]) -----
 
 func buildQuotaTargetSpecRegionObject(r CloudQuotaRegionTargetSpecAPI) basetypes.ObjectValue {
 	region := ""
@@ -473,17 +513,6 @@ func buildQuotaTargetSpecRegionsList(regions []CloudQuotaRegionTargetSpecAPI) ba
 	}
 	val, _ := types.ListValue(quotaTargetSpecRegionElementType(), elems)
 	return val
-}
-
-func buildQuotaTargetSpecObject(t *CloudQuotaTargetSpecAPI) basetypes.ObjectValue {
-	if t == nil {
-		return types.ObjectNull(quotaTargetSpecAttrTypes())
-	}
-	obj, _ := types.ObjectValue(quotaTargetSpecAttrTypes(), map[string]attr.Value{
-		"manual_quota": types.BoolValue(t.ManualQuota),
-		"regions":      buildQuotaTargetSpecRegionsList(t.Regions),
-	})
-	return obj
 }
 
 // ----- available_profiles -----
@@ -760,20 +789,31 @@ func buildQuotaCurrentStateObject(state *CloudQuotaCurrentStateAPI) basetypes.Ob
 		return types.ObjectNull(quotaCurrentStateAttrTypes())
 	}
 	obj, _ := types.ObjectValue(quotaCurrentStateAttrTypes(), map[string]attr.Value{
-		"manual_quota":       types.BoolValue(state.ManualQuota),
-		"available_profiles": buildQuotaAvailableProfilesList(state.AvailableProfiles),
-		"regions":            buildQuotaRegionsList(state.Regions),
+		"prevent_automatic_quota_upgrade": types.BoolValue(state.PreventAutomaticQuotaUpgrade),
+		"available_profiles":              buildQuotaAvailableProfilesList(state.AvailableProfiles),
+		"regions":                         buildQuotaRegionsList(state.Regions),
 	})
 	return obj
 }
 
-// MergeWith copies API response fields into the Terraform model.
+// MergeWith copies API response fields into the Terraform model. The flattened
+// targetSpec attributes (`prevent_automatic_quota_upgrade`, `regions`) are
+// populated from response.TargetSpec to match the apiv2 convention used by
+// other resources like ovh_cloud_instance.
 func (m *CloudQuotaModel) MergeWith(_ context.Context, response *CloudQuotaAPIResponse) {
 	m.Id = ovhtypes.TfStringValue{StringValue: types.StringValue(response.Id)}
 	m.ResourceStatus = ovhtypes.TfStringValue{StringValue: types.StringValue(response.ResourceStatus)}
 	m.Checksum = ovhtypes.TfStringValue{StringValue: types.StringValue(response.Checksum)}
 	m.CreatedAt = ovhtypes.TfStringValue{StringValue: types.StringValue(response.CreatedAt)}
 	m.UpdatedAt = ovhtypes.TfStringValue{StringValue: types.StringValue(response.UpdatedAt)}
-	m.TargetSpec = buildQuotaTargetSpecObject(response.TargetSpec)
+
+	if response.TargetSpec != nil {
+		m.PreventAutomaticQuotaUpgrade = types.BoolValue(response.TargetSpec.PreventAutomaticQuotaUpgrade)
+		m.Regions = buildQuotaTargetSpecRegionsList(response.TargetSpec.Regions)
+	} else {
+		m.PreventAutomaticQuotaUpgrade = types.BoolNull()
+		m.Regions = types.ListNull(quotaTargetSpecRegionElementType())
+	}
+
 	m.CurrentState = buildQuotaCurrentStateObject(response.CurrentState)
 }

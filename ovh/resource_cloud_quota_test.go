@@ -29,17 +29,14 @@ func TestAccCloudQuotaResource_basic(t *testing.T) {
 	configFor := func(profile string) string {
 		return fmt.Sprintf(`
 resource "ovh_cloud_quota" "quota" {
-  service_name = "%s"
-
-  target_spec = {
-    manual_quota = false
-    regions = [
-      {
-        region  = "%s"
-        profile = "%s"
-      },
-    ]
-  }
+  service_name                    = "%s"
+  prevent_automatic_quota_upgrade = false
+  regions = [
+    {
+      region  = "%s"
+      profile = "%s"
+    },
+  ]
 }
 `, serviceName, region, profile)
 	}
@@ -58,13 +55,13 @@ resource "ovh_cloud_quota" "quota" {
 					resource.TestCheckResourceAttrSet(
 						"ovh_cloud_quota.quota", "checksum"),
 					resource.TestCheckResourceAttr(
-						"ovh_cloud_quota.quota", "target_spec.manual_quota", "false"),
+						"ovh_cloud_quota.quota", "prevent_automatic_quota_upgrade", "false"),
 					resource.TestCheckResourceAttr(
-						"ovh_cloud_quota.quota", "target_spec.regions.#", "1"),
+						"ovh_cloud_quota.quota", "regions.#", "1"),
 					resource.TestCheckResourceAttr(
-						"ovh_cloud_quota.quota", "target_spec.regions.0.region", region),
+						"ovh_cloud_quota.quota", "regions.0.region", region),
 					resource.TestCheckResourceAttr(
-						"ovh_cloud_quota.quota", "target_spec.regions.0.profile", profile1),
+						"ovh_cloud_quota.quota", "regions.0.profile", profile1),
 					resource.TestCheckResourceAttrSet(
 						"ovh_cloud_quota.quota", "current_state.regions.#"),
 				),
@@ -73,9 +70,9 @@ resource "ovh_cloud_quota" "quota" {
 				Config: configFor(profile2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
-						"ovh_cloud_quota.quota", "target_spec.regions.0.region", region),
+						"ovh_cloud_quota.quota", "regions.0.region", region),
 					resource.TestCheckResourceAttr(
-						"ovh_cloud_quota.quota", "target_spec.regions.0.profile", profile2),
+						"ovh_cloud_quota.quota", "regions.0.profile", profile2),
 					resource.TestCheckResourceAttrSet(
 						"ovh_cloud_quota.quota", "checksum"),
 				),

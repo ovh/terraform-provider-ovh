@@ -11,33 +11,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/ovh/go-ovh/ovh"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
 // ------------------------------------------------------------------
-// Resource model — distinct from CloudQuotaModel (data source) since
-// target_spec is a user-provided Required block here.
+// Resource model — top-level mutable attributes mirror targetSpec.
+// We share CloudQuotaModel from types_cloud_quota.go so that the
+// data source and resource expose the same flattened shape.
 // ------------------------------------------------------------------
-
-// CloudQuotaResourceModel is the Terraform model for the writable quota resource.
-type CloudQuotaResourceModel struct {
-	ServiceName ovhtypes.TfStringValue `tfsdk:"service_name"`
-
-	// User input
-	TargetSpec types.Object `tfsdk:"target_spec"`
-
-	// Computed envelope
-	Id             ovhtypes.TfStringValue `tfsdk:"id"`
-	ResourceStatus ovhtypes.TfStringValue `tfsdk:"resource_status"`
-	Checksum       ovhtypes.TfStringValue `tfsdk:"checksum"`
-	CreatedAt      ovhtypes.TfStringValue `tfsdk:"created_at"`
-	UpdatedAt      ovhtypes.TfStringValue `tfsdk:"updated_at"`
-	CurrentState   types.Object           `tfsdk:"current_state"`
-}
 
 // ------------------------------------------------------------------
 // PUT payload types
@@ -45,8 +28,8 @@ type CloudQuotaResourceModel struct {
 
 // CloudQuotaUpdateTargetSpecAPI is the wire payload for the update target spec.
 type CloudQuotaUpdateTargetSpecAPI struct {
-	ManualQuota bool                            `json:"manualQuota"`
-	Regions     []CloudQuotaRegionTargetSpecAPI `json:"regions"`
+	PreventAutomaticQuotaUpgrade bool                            `json:"preventAutomaticQuotaUpgrade"`
+	Regions                      []CloudQuotaRegionTargetSpecAPI `json:"regions"`
 }
 
 // CloudQuotaUpdateAPI is the wire payload for PUT /quota.
@@ -56,54 +39,36 @@ type CloudQuotaUpdateAPI struct {
 }
 
 // ------------------------------------------------------------------
-// Helpers — extract target_spec from the Terraform model into the API payload
+// Helpers — extract top-level fields from the Terraform model into
+// the API payload.
 // ------------------------------------------------------------------
 
-type quotaTargetSpecRegionPlan struct {
+type quotaRegionPlan struct {
 	Region  ovhtypes.TfStringValue `tfsdk:"region"`
 	Profile ovhtypes.TfStringValue `tfsdk:"profile"`
 }
 
-type quotaTargetSpecPlan struct {
-	ManualQuota types.Bool                  `tfsdk:"manual_quota"`
-	Regions     []quotaTargetSpecRegionPlan `tfsdk:"regions"`
-}
+func (m *CloudQuotaResourceModel) toTargetSpecAPI(ctx context.Context) (CloudQuotaUpdateTargetSpecAPI, error) {
+	regions := make([]CloudQuotaRegionTargetSpecAPI, 0)
 
-func (m *CloudQuotaResourceModel) targetSpecToAPI(ctx context.Context) (CloudQuotaUpdateTargetSpecAPI, error) {
-	var plan quotaTargetSpecPlan
-	diags := m.TargetSpec.As(ctx, &plan, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	})
-	if diags.HasError() {
-		return CloudQuotaUpdateTargetSpecAPI{}, fmt.Errorf("invalid target_spec: %s", diags)
-	}
-
-	regions := make([]CloudQuotaRegionTargetSpecAPI, 0, len(plan.Regions))
-	for _, r := range plan.Regions {
-		regions = append(regions, CloudQuotaRegionTargetSpecAPI{
-			Location: &CloudQuotaLocationAPI{Region: r.Region.ValueString()},
-			Profile:  r.Profile.ValueString(),
-		})
+	if !m.Regions.IsNull() && !m.Regions.IsUnknown() {
+		var plan []quotaRegionPlan
+		diags := m.Regions.ElementsAs(ctx, &plan, false)
+		if diags.HasError() {
+			return CloudQuotaUpdateTargetSpecAPI{}, fmt.Errorf("invalid regions: %s", diags)
+		}
+		for _, r := range plan {
+			regions = append(regions, CloudQuotaRegionTargetSpecAPI{
+				Location: &CloudQuotaLocationAPI{Region: r.Region.ValueString()},
+				Profile:  r.Profile.ValueString(),
+			})
+		}
 	}
 
 	return CloudQuotaUpdateTargetSpecAPI{
-		ManualQuota: plan.ManualQuota.ValueBool(),
-		Regions:     regions,
+		PreventAutomaticQuotaUpgrade: m.PreventAutomaticQuotaUpgrade.ValueBool(),
+		Regions:                      regions,
 	}, nil
-}
-
-// MergeWith copies API response into the resource model. The user-provided
-// target_spec block must remain stable, so we rebuild it from
-// response.TargetSpec exactly like the data source does.
-func (m *CloudQuotaResourceModel) MergeWith(_ context.Context, response *CloudQuotaAPIResponse) {
-	m.Id = ovhtypes.TfStringValue{StringValue: types.StringValue(response.Id)}
-	m.ResourceStatus = ovhtypes.TfStringValue{StringValue: types.StringValue(response.ResourceStatus)}
-	m.Checksum = ovhtypes.TfStringValue{StringValue: types.StringValue(response.Checksum)}
-	m.CreatedAt = ovhtypes.TfStringValue{StringValue: types.StringValue(response.CreatedAt)}
-	m.UpdatedAt = ovhtypes.TfStringValue{StringValue: types.StringValue(response.UpdatedAt)}
-	m.TargetSpec = buildQuotaTargetSpecObject(response.TargetSpec)
-	m.CurrentState = buildQuotaCurrentStateObject(response.CurrentState)
 }
 
 // ------------------------------------------------------------------
@@ -145,12 +110,13 @@ func (r *cloudQuotaResource) Configure(_ context.Context, req resource.Configure
 }
 
 var quotaMutableAttrs = MutableAttrs{
-	Objects: []string{"target_spec"},
+	Bools: []string{"prevent_automatic_quota_upgrade"},
+	Lists: []string{"regions"},
 }
 
 func (r *cloudQuotaResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Manages the public cloud project quota: applied profile per region and manual-quota toggle. There is exactly one quota envelope per project; importing a project's quota uses the service name as id.",
+		Description: "Manages the public cloud project quota: applied profile per region and automatic-quota-upgrade toggle. There is exactly one quota envelope per project; importing a project's quota uses the service name as id.",
 		Attributes: map[string]schema.Attribute{
 			"service_name": schema.StringAttribute{
 				CustomType:  ovhtypes.TfStringType{},
@@ -160,30 +126,26 @@ func (r *cloudQuotaResource) Schema(_ context.Context, _ resource.SchemaRequest,
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"target_spec": schema.SingleNestedAttribute{
+
+			// Flattened targetSpec
+			"prevent_automatic_quota_upgrade": schema.BoolAttribute{
 				Required:    true,
-				Description: "Desired quota specification for the project. Regions omitted are left unchanged upstream.",
-				Attributes: map[string]schema.Attribute{
-					"manual_quota": schema.BoolAttribute{
-						Required:    true,
-						Description: "When true, automatic quota upgrades are disabled for this project.",
-					},
-					"regions": schema.ListNestedAttribute{
-						Required:    true,
-						Description: "Target quota profile per region.",
-						NestedObject: schema.NestedAttributeObject{
-							Attributes: map[string]schema.Attribute{
-								"region": schema.StringAttribute{
-									CustomType:  ovhtypes.TfStringType{},
-									Required:    true,
-									Description: "Region where the profile applies (e.g. GRA11).",
-								},
-								"profile": schema.StringAttribute{
-									CustomType:  ovhtypes.TfStringType{},
-									Required:    true,
-									Description: "Quota profile to apply in this region. Available values are in current_state.available_profiles.",
-								},
-							},
+				Description: "When true, automatic quota upgrades are disabled for this project.",
+			},
+			"regions": schema.ListNestedAttribute{
+				Required:    true,
+				Description: "Target quota profile per region. Regions omitted are left unchanged upstream.",
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"region": schema.StringAttribute{
+							CustomType:  ovhtypes.TfStringType{},
+							Required:    true,
+							Description: "Region where the profile applies (e.g. GRA11).",
+						},
+						"profile": schema.StringAttribute{
+							CustomType:  ovhtypes.TfStringType{},
+							Required:    true,
+							Description: "Quota profile to apply in this region. Available values are in current_state.available_profiles.",
 						},
 					},
 				},
@@ -249,7 +211,7 @@ func cloudQuotaCurrentStateSchemaAttrs() map[string]schema.Attribute {
 	}
 
 	return map[string]schema.Attribute{
-		"manual_quota": schema.BoolAttribute{Computed: true},
+		"prevent_automatic_quota_upgrade": schema.BoolAttribute{Computed: true},
 		"available_profiles": schema.ListNestedAttribute{
 			Computed: true,
 			NestedObject: schema.NestedAttributeObject{
@@ -445,10 +407,14 @@ func (r *cloudQuotaResource) putQuota(ctx context.Context, serviceName string, s
 	return &final, nil
 }
 
+// waitForQuotaReady polls the quota envelope until ResourceStatus reaches READY.
+// Matches the wait pattern used by every other apiv2 resource in this provider
+// (instance, loadbalancer, etc.) — ERROR is intentionally NOT a target state so
+// that a failed reconcile surfaces as an "unrecognized state" error.
 func (r *cloudQuotaResource) waitForQuotaReady(ctx context.Context, serviceName string) (interface{}, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{"CREATING", "UPDATING", "PENDING"},
-		Target:  []string{"READY", "OUT_OF_SYNC", "ERROR"},
+		Pending: []string{"CREATING", "UPDATING", "PENDING", "OUT_OF_SYNC"},
+		Target:  []string{"READY"},
 		Refresh: func() (interface{}, string, error) {
 			res := &CloudQuotaAPIResponse{}
 			endpoint := "/v2/publicCloud/project/" + url.PathEscape(serviceName) + "/quota"
@@ -459,8 +425,8 @@ func (r *cloudQuotaResource) waitForQuotaReady(ctx context.Context, serviceName 
 			return res, res.ResourceStatus, nil
 		},
 		Timeout:    20 * time.Minute,
-		Delay:      5 * time.Second,
-		MinTimeout: 3 * time.Second,
+		Delay:      10 * time.Second,
+		MinTimeout: 5 * time.Second,
 	}
 	return stateConf.WaitForStateContext(ctx)
 }
@@ -472,9 +438,9 @@ func (r *cloudQuotaResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	spec, err := data.targetSpecToAPI(ctx)
+	spec, err := data.toTargetSpecAPI(ctx)
 	if err != nil {
-		resp.Diagnostics.AddError("Invalid target_spec", err.Error())
+		resp.Diagnostics.AddError("Invalid quota target spec", err.Error())
 		return
 	}
 
@@ -517,9 +483,9 @@ func (r *cloudQuotaResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	spec, err := planData.targetSpecToAPI(ctx)
+	spec, err := planData.toTargetSpecAPI(ctx)
 	if err != nil {
-		resp.Diagnostics.AddError("Invalid target_spec", err.Error())
+		resp.Diagnostics.AddError("Invalid quota target spec", err.Error())
 		return
 	}
 
@@ -533,8 +499,8 @@ func (r *cloudQuotaResource) Update(ctx context.Context, req resource.UpdateRequ
 	resp.Diagnostics.Append(resp.State.Set(ctx, &planData)...)
 }
 
-func (r *cloudQuotaResource) Delete(ctx context.Context, _ resource.DeleteRequest, _ *resource.DeleteResponse) {
+func (r *cloudQuotaResource) Delete(_ context.Context, _ resource.DeleteRequest, _ *resource.DeleteResponse) {
 	// The quota envelope is a singleton owned by the project and cannot be
 	// deleted. Removing the resource from Terraform state is the only action.
-	_ = ctx
 }
+

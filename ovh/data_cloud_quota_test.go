@@ -33,7 +33,7 @@ data "ovh_cloud_quota" "quota" {
 					resource.TestCheckResourceAttrSet(
 						"data.ovh_cloud_quota.quota", "checksum"),
 					resource.TestCheckResourceAttrSet(
-						"data.ovh_cloud_quota.quota", "current_state.manual_quota"),
+						"data.ovh_cloud_quota.quota", "current_state.prevent_automatic_quota_upgrade"),
 					resource.TestCheckResourceAttrSet(
 						"data.ovh_cloud_quota.quota", "current_state.regions.#"),
 				),

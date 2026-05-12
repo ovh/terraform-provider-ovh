@@ -111,39 +111,36 @@ func (d *cloudQuotaDataSource) Schema(_ context.Context, _ datasource.SchemaRequ
 				Computed:    true,
 				Description: "Last update date (RFC3339).",
 			},
-			"target_spec": schema.SingleNestedAttribute{
+
+			// Flattened targetSpec
+			"prevent_automatic_quota_upgrade": schema.BoolAttribute{
 				Computed:    true,
-				Description: "Desired quota specification for the project.",
-				Attributes: map[string]schema.Attribute{
-					"manual_quota": schema.BoolAttribute{
-						Computed:    true,
-						Description: "When true, automatic quota upgrades are disabled for this project.",
-					},
-					"regions": schema.ListNestedAttribute{
-						Computed:    true,
-						Description: "Target quota profile per region.",
-						NestedObject: schema.NestedAttributeObject{
-							Attributes: map[string]schema.Attribute{
-								"region": schema.StringAttribute{
-									CustomType:  ovhtypes.TfStringType{},
-									Computed:    true,
-									Description: "Region where the profile applies.",
-								},
-								"profile": schema.StringAttribute{
-									CustomType:  ovhtypes.TfStringType{},
-									Computed:    true,
-									Description: "Quota profile to apply in this region.",
-								},
-							},
+				Description: "When true, automatic quota upgrades are disabled for this project.",
+			},
+			"regions": schema.ListNestedAttribute{
+				Computed:    true,
+				Description: "Target quota profile per region.",
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"region": schema.StringAttribute{
+							CustomType:  ovhtypes.TfStringType{},
+							Computed:    true,
+							Description: "Region where the profile applies.",
+						},
+						"profile": schema.StringAttribute{
+							CustomType:  ovhtypes.TfStringType{},
+							Computed:    true,
+							Description: "Quota profile to apply in this region.",
 						},
 					},
 				},
 			},
+
 			"current_state": schema.SingleNestedAttribute{
 				Computed:    true,
 				Description: "Current quota state of the project.",
 				Attributes: map[string]schema.Attribute{
-					"manual_quota": schema.BoolAttribute{
+					"prevent_automatic_quota_upgrade": schema.BoolAttribute{
 						Computed:    true,
 						Description: "When true, automatic quota upgrades are disabled for this project.",
 					},
@@ -329,7 +326,7 @@ func (d *cloudQuotaDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	}
 
 	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/quota"
-	if !data.Region.IsNull() && !data.Region.IsUnknown() && data.Region.ValueString() != "" {
+	if data.Region.ValueString() != "" {
 		endpoint += "?region=" + url.QueryEscape(data.Region.ValueString())
 	}
 
