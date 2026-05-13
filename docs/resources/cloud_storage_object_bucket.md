@@ -50,7 +50,7 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `id` - Bucket ID (same as bucket name).
+* `id` - Bucket identifier returned by the API. In multi-region deployments this is the composite form `UPPERCASE_REGION_BUCKETNAME` (e.g. `GRA_my-bucket`); in single-region deployments it is just the bucket name.
 * `checksum` - Computed hash representing the current target specification value.
 * `created_at` - Creation date of the bucket.
 * `updated_at` - Last update date of the bucket.
@@ -71,15 +71,15 @@ The following attributes are exported:
 
 ## Import
 
-A cloud storage object bucket can be imported using the `service_name` and `bucket_name`, separated by `/`:
+A cloud storage object bucket can be imported using its `service_name`, `region` and API-side bucket `id`, separated by `/`. The API-side `id` is the composite form `UPPERCASE_REGION_BUCKETNAME` in multi-region deployments (e.g. `GRA_my-bucket`) and just the bucket name in single-region deployments:
 
 ```terraform
 import {
   to = ovh_cloud_storage_object_bucket.bucket
-  id = "<service_name>/<bucket_name>"
+  id = "<service_name>/<region>/<id>"
 }
 ```
 
 ```bash
-$ terraform import ovh_cloud_storage_object_bucket.bucket service_name/bucket_name
+$ terraform import ovh_cloud_storage_object_bucket.bucket service_name/region/id
 ```

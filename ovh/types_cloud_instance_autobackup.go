@@ -55,16 +55,16 @@ type CloudInstanceAutobackupAPITargetSpec struct {
 }
 
 type CloudInstanceAutobackupAPICurrentState struct {
-	Name              string                                  `json:"name"`
-	ImageName         string                                  `json:"imageName"`
-	Cron              string                                  `json:"cron"`
-	Rotation          int64                                   `json:"rotation"`
-	Location          *CloudInstanceAutobackupAPILocation     `json:"location"`
-	Instance          *CloudInstanceAutobackupAPIRef          `json:"instance"`
-	WorkflowName      string                                  `json:"workflowName,omitempty"`
-	NextExecutionTime string                                  `json:"nextExecutionTime,omitempty"`
-	Distant           *CloudInstanceAutobackupAPIDistant      `json:"distant,omitempty"`
-	LastExecutions    []CloudInstanceAutobackupAPIExecution   `json:"lastExecutions"`
+	Name              string                                `json:"name"`
+	ImageName         string                                `json:"imageName"`
+	Cron              string                                `json:"cron"`
+	Rotation          int64                                 `json:"rotation"`
+	Location          *CloudInstanceAutobackupAPILocation   `json:"location"`
+	Instance          *CloudInstanceAutobackupAPIRef        `json:"instance"`
+	WorkflowName      string                                `json:"workflowName,omitempty"`
+	NextExecutionTime string                                `json:"nextExecutionTime,omitempty"`
+	Distant           *CloudInstanceAutobackupAPIDistant    `json:"distant,omitempty"`
+	LastExecutions    []CloudInstanceAutobackupAPIExecution `json:"lastExecutions"`
 }
 
 type CloudInstanceAutobackupAPIExecution struct {

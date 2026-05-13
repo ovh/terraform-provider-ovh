@@ -28,7 +28,11 @@ func testAccCloudStorageObjectBucketImportStateIdFunc(resourceName string) resou
 		if !ok {
 			return "", fmt.Errorf("not found: %s", resourceName)
 		}
-		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["service_name"], rs.Primary.Attributes["id"]), nil
+		return fmt.Sprintf("%s/%s/%s",
+			rs.Primary.Attributes["service_name"],
+			rs.Primary.Attributes["region"],
+			rs.Primary.Attributes["id"],
+		), nil
 	}
 }
 
