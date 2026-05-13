@@ -57,6 +57,7 @@ var volumeMutableAttrs = MutableAttrs{
 	Strings: []string{"name", "volume_type"},
 	Int64s:  []string{"size"},
 	Bools:   []string{"bootable"},
+	Objects: []string{"encryption"},
 }
 
 func (r *cloudStorageBlockVolumeResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -95,14 +96,28 @@ func (r *cloudStorageBlockVolumeResource) Schema(ctx context.Context, req resour
 			"volume_type": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Required:            true,
-				Description:         "Volume type (CLASSIC, CLASSIC_LUKS, CLASSIC_MULTIATTACH, HIGH_SPEED, HIGH_SPEED_GEN2, HIGH_SPEED_GEN2_LUKS, HIGH_SPEED_LUKS). Can be changed after creation (triggers online retype).",
-				MarkdownDescription: "Volume type (`CLASSIC`, `CLASSIC_LUKS`, `CLASSIC_MULTIATTACH`, `HIGH_SPEED`, `HIGH_SPEED_GEN2`, `HIGH_SPEED_GEN2_LUKS`, `HIGH_SPEED_LUKS`). Can be changed after creation (triggers online retype).",
+				Description:         "Volume type (CLASSIC, HIGH_SPEED, HIGH_SPEED_GEN2). Can be changed after creation (triggers online retype).",
+				MarkdownDescription: "Volume type (`CLASSIC`, `HIGH_SPEED`, `HIGH_SPEED_GEN2`). Can be changed after creation (triggers online retype).",
 			},
 			"bootable": schema.BoolAttribute{
 				Optional:            true,
 				Computed:            true,
 				Description:         "Whether the volume is bootable",
 				MarkdownDescription: "Whether the volume is bootable",
+			},
+			"encryption": schema.SingleNestedAttribute{
+				Optional:            true,
+				Computed:            true,
+				Description:         "Encryption configuration for the volume",
+				MarkdownDescription: "Encryption configuration for the volume",
+				Attributes: map[string]schema.Attribute{
+					"enabled": schema.BoolAttribute{
+						Optional:            true,
+						Computed:            true,
+						Description:         "Whether the volume is encrypted at rest with LUKS",
+						MarkdownDescription: "Whether the volume is encrypted at rest with LUKS",
+					},
+				},
 			},
 			"create_from": schema.SingleNestedAttribute{
 				Optional:            true,
@@ -193,13 +208,25 @@ func (r *cloudStorageBlockVolumeResource) Schema(ctx context.Context, req resour
 					"volume_type": schema.StringAttribute{
 						CustomType:          ovhtypes.TfStringType{},
 						Computed:            true,
-						Description:         "Volume type (CLASSIC, CLASSIC_LUKS, CLASSIC_MULTIATTACH, HIGH_SPEED, HIGH_SPEED_GEN2, HIGH_SPEED_GEN2_LUKS, HIGH_SPEED_LUKS)",
-						MarkdownDescription: "Volume type (`CLASSIC`, `CLASSIC_LUKS`, `CLASSIC_MULTIATTACH`, `HIGH_SPEED`, `HIGH_SPEED_GEN2`, `HIGH_SPEED_GEN2_LUKS`, `HIGH_SPEED_LUKS`)",
+						Description:         "Volume type (CLASSIC, HIGH_SPEED, HIGH_SPEED_GEN2)",
+						MarkdownDescription: "Volume type (`CLASSIC`, `HIGH_SPEED`, `HIGH_SPEED_GEN2`)",
 					},
 					"bootable": schema.BoolAttribute{
 						Computed:            true,
 						Description:         "Whether the volume is bootable",
 						MarkdownDescription: "Whether the volume is bootable",
+					},
+					"encryption": schema.SingleNestedAttribute{
+						Computed:            true,
+						Description:         "Encryption configuration of the volume",
+						MarkdownDescription: "Encryption configuration of the volume",
+						Attributes: map[string]schema.Attribute{
+							"enabled": schema.BoolAttribute{
+								Computed:            true,
+								Description:         "Whether the volume is encrypted at rest with LUKS",
+								MarkdownDescription: "Whether the volume is encrypted at rest with LUKS",
+							},
+						},
 					},
 					"status": schema.StringAttribute{
 						CustomType:          ovhtypes.TfStringType{},

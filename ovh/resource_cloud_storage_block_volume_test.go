@@ -23,6 +23,10 @@ resource "ovh_cloud_storage_block_volume" "volume" {
   size         = 10
   region       = "%s"
   volume_type  = "CLASSIC"
+
+  encryption = {
+    enabled = false
+  }
 }
 `, serviceName, volumeName, region)
 
@@ -41,6 +45,8 @@ resource "ovh_cloud_storage_block_volume" "volume" {
 					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume", "size", "10"),
 					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume", "region", region),
 					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume", "volume_type", "CLASSIC"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume", "encryption.enabled", "false"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume", "current_state.encryption.enabled", "false"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume.volume", "id"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume.volume", "checksum"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume.volume", "created_at"),
@@ -74,6 +80,10 @@ resource "ovh_cloud_storage_block_volume" "volume" {
   size         = 10
   region       = "%s"
   volume_type  = "CLASSIC"
+
+  encryption = {
+    enabled = false
+  }
 }
 `, serviceName, volumeName, region)
 
@@ -84,6 +94,10 @@ resource "ovh_cloud_storage_block_volume" "volume" {
   size         = 20
   region       = "%s"
   volume_type  = "CLASSIC"
+
+  encryption = {
+    enabled = false
+  }
 }
 `, serviceName, updatedName, region)
 
@@ -99,6 +113,7 @@ resource "ovh_cloud_storage_block_volume" "volume" {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume", "name", volumeName),
 					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume", "size", "10"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume", "encryption.enabled", "false"),
 				),
 			},
 			{
@@ -106,8 +121,84 @@ resource "ovh_cloud_storage_block_volume" "volume" {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume", "name", updatedName),
 					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume", "size", "20"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume", "encryption.enabled", "false"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume.volume", "id"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume.volume", "checksum"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccCloudStorageBlockVolume_encryptionToggle verifies that toggling
+// `encryption.enabled` retypes the volume in place (mutable, no replacement).
+func TestAccCloudStorageBlockVolume_encryptionToggle(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+
+	volumeName := acctest.RandomWithPrefix(testAccResourceCloudStorageBlockVolumeNamePrefix)
+
+	plainConfig := fmt.Sprintf(`
+resource "ovh_cloud_storage_block_volume" "volume" {
+  service_name = "%s"
+  name         = "%s"
+  size         = 10
+  region       = "%s"
+  volume_type  = "CLASSIC"
+
+  encryption = {
+    enabled = false
+  }
+}
+`, serviceName, volumeName, region)
+
+	encryptedConfig := fmt.Sprintf(`
+resource "ovh_cloud_storage_block_volume" "volume" {
+  service_name = "%s"
+  name         = "%s"
+  size         = 10
+  region       = "%s"
+  volume_type  = "CLASSIC"
+
+  encryption = {
+    enabled = true
+  }
+}
+`, serviceName, volumeName, region)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloud(t)
+			testAccCheckCloudProjectExists(t)
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: plainConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume", "volume_type", "CLASSIC"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume", "encryption.enabled", "false"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume", "current_state.encryption.enabled", "false"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume.volume", "id"),
+				),
+			},
+			{
+				// Toggle encryption on — must be an in-place update (no replacement).
+				Config: encryptedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume", "volume_type", "CLASSIC"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume", "encryption.enabled", "true"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume", "current_state.encryption.enabled", "true"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume.volume", "id"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume.volume", "checksum"),
+				),
+			},
+			{
+				// Toggle encryption back off — also in-place.
+				Config: plainConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume", "encryption.enabled", "false"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume", "current_state.encryption.enabled", "false"),
 				),
 			},
 		},
