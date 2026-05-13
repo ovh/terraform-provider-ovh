@@ -114,10 +114,10 @@ func (r *cloudLoadbalancerResource) Schema(ctx context.Context, req resource.Sch
 				MarkdownDescription: "Loadbalancer flavor name",
 				Validators: []validator.String{
 					stringvalidator.OneOf(
-						"small",
-						"medium",
-						"large",
-						"xl",
+						"SMALL",
+						"MEDIUM",
+						"LARGE",
+						"XL",
 					),
 				},
 				PlanModifiers: []planmodifier.String{

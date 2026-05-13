@@ -17,7 +17,7 @@ func TestAccCloudLoadbalancer_basic(t *testing.T) {
 	region := os.Getenv("OVH_CLOUD_PROJECT_LOADBALANCER_REGION_TEST")
 	vipNetworkId := os.Getenv("OVH_CLOUD_PROJECT_LOADBALANCER_VIP_NETWORK_ID_TEST")
 	vipSubnetId := os.Getenv("OVH_CLOUD_PROJECT_LOADBALANCER_VIP_SUBNET_ID_TEST")
-	flavorName := "small"
+	flavorName := "SMALL"
 
 	lbName := acctest.RandomWithPrefix(testAccResourceCloudLoadbalancerNamePrefix)
 
@@ -73,7 +73,7 @@ func TestAccCloudLoadbalancer_update(t *testing.T) {
 	region := os.Getenv("OVH_CLOUD_PROJECT_LOADBALANCER_REGION_TEST")
 	vipNetworkId := os.Getenv("OVH_CLOUD_PROJECT_LOADBALANCER_VIP_NETWORK_ID_TEST")
 	vipSubnetId := os.Getenv("OVH_CLOUD_PROJECT_LOADBALANCER_VIP_SUBNET_ID_TEST")
-	flavorName := "small"
+	flavorName := "SMALL"
 
 	lbName := acctest.RandomWithPrefix(testAccResourceCloudLoadbalancerNamePrefix)
 	updatedName := acctest.RandomWithPrefix(testAccResourceCloudLoadbalancerNamePrefix)

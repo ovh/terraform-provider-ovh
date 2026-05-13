@@ -15,7 +15,7 @@ resource "ovh_cloud_loadbalancer" "lb" {
   region         = "GRA1"
   vip_network_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
   vip_subnet_id  = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-  flavor_id      = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+  flavor_name    = "SMALL"
   description    = "My load balancer"
 }
 ```
@@ -29,7 +29,7 @@ The following arguments are supported:
 * `name` - (Required) Load balancer name.
 * `vip_network_id` - (Required) ID of the network for the VIP. **Changing this value recreates the resource.**
 * `vip_subnet_id` - (Required) ID of the subnet for the VIP. **Changing this value recreates the resource.**
-* `flavor_id` - (Required) ID of the load balancer flavor. **Changing this value recreates the resource.**
+* `flavor_name` - (Required) Name of the load balancer flavor. Must be one of `SMALL`, `MEDIUM`, `LARGE`, `XL`. **Changing this value recreates the resource.**
 * `availability_zone` - (Optional) Availability zone for the load balancer. **Changing this value recreates the resource.**
 * `description` - (Optional) Load balancer description.
 

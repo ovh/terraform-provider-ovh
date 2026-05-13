@@ -65,9 +65,19 @@ func (r *cloudStorageObjectBucketReplicationResource) Schema(_ context.Context, 
 				},
 			},
 			"bucket_name": schema.StringAttribute{
+				CustomType: ovhtypes.TfStringType{},
+				Required:   true,
+				Description: "The source bucket's API identifier. In multi-region deployments, format is " +
+					"`UPPERCASE_REGION_BUCKETNAME` (e.g. `GRA_my-bucket`); in single-region deployments, " +
+					"just the bucket name.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"region": schema.StringAttribute{
 				CustomType:  ovhtypes.TfStringType{},
 				Required:    true,
-				Description: "Name of the source bucket",
+				Description: "Region of the source bucket. Required to disambiguate when the same bucket name exists in multiple regions.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -75,7 +85,7 @@ func (r *cloudStorageObjectBucketReplicationResource) Schema(_ context.Context, 
 			"id": schema.StringAttribute{
 				CustomType:  ovhtypes.TfStringType{},
 				Computed:    true,
-				Description: "Resource identifier (service_name/bucket_name)",
+				Description: "Resource identifier (service_name/region/bucket_name)",
 			},
 			"rules": schema.ListNestedAttribute{
 				Required:    true,
@@ -147,12 +157,13 @@ func (r *cloudStorageObjectBucketReplicationResource) Schema(_ context.Context, 
 
 func (r *cloudStorageObjectBucketReplicationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	splits := strings.Split(req.ID, "/")
-	if len(splits) != 2 {
-		resp.Diagnostics.AddError("Given ID is malformed", "ID must be formatted like: <service_name>/<bucket_name>")
+	if len(splits) != 3 {
+		resp.Diagnostics.AddError("Given ID is malformed", "ID must be formatted like: <service_name>/<region>/<bucket_name>")
 		return
 	}
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_name"), splits[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("bucket_name"), splits[1])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("region"), splits[1])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("bucket_name"), splits[2])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), req.ID)...)
 }
 
@@ -174,7 +185,7 @@ func (r *cloudStorageObjectBucketReplicationResource) Create(ctx context.Context
 		return
 	}
 
-	data.Id = ovhtypes.TfStringValue{StringValue: types.StringValue(data.ServiceName.ValueString() + "/" + data.BucketName.ValueString())}
+	data.Id = ovhtypes.TfStringValue{StringValue: types.StringValue(data.ServiceName.ValueString() + "/" + data.Region.ValueString() + "/" + data.BucketName.ValueString())}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

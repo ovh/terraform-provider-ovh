@@ -138,9 +138,11 @@ func (r *cloudStorageObjectBucketResource) Schema(ctx context.Context, req resou
 
 			// Computed attributes
 			"id": schema.StringAttribute{
-				CustomType:  ovhtypes.TfStringType{},
-				Computed:    true,
-				Description: "Bucket ID (same as bucket name)",
+				CustomType: ovhtypes.TfStringType{},
+				Computed:   true,
+				Description: "Bucket identifier returned by the API. " +
+					"In multi-region deployments this is the composite form `UPPERCASE_REGION_BUCKETNAME` " +
+					"(e.g. `GRA_my-bucket`); in single-region deployments it is just the bucket name.",
 			},
 			"checksum": schema.StringAttribute{
 				CustomType:  ovhtypes.TfStringType{},
@@ -250,13 +252,17 @@ func (r *cloudStorageObjectBucketResource) Schema(ctx context.Context, req resou
 
 func (r *cloudStorageObjectBucketResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	splits := strings.Split(req.ID, "/")
-	if len(splits) != 2 {
-		resp.Diagnostics.AddError("Given ID is malformed", "ID must be formatted like the following: <service_name>/<bucket_name>")
+	if len(splits) != 3 {
+		resp.Diagnostics.AddError(
+			"Given ID is malformed",
+			"ID must be formatted like the following: <service_name>/<region>/<bucket_name>",
+		)
 		return
 	}
 
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_name"), splits[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), splits[1])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("region"), splits[1])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), splits[2])...)
 }
 
 func (r *cloudStorageObjectBucketResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -284,8 +290,8 @@ func (r *cloudStorageObjectBucketResource) Create(ctx context.Context, req resou
 	data.MergeWith(ctx, &responseData)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 
-	// Wait for bucket to be READY
-	_, err := r.waitForReady(ctx, data.ServiceName.ValueString(), responseData.Id)
+	// Wait for bucket to be READY using the API-returned id
+	_, err := r.waitForReady(ctx, data.ServiceName.ValueString(), data.Id.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error waiting for bucket to be ready",
@@ -295,7 +301,8 @@ func (r *cloudStorageObjectBucketResource) Create(ctx context.Context, req resou
 	}
 
 	// Read the final state
-	endpoint = "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/storage/object/bucket/" + url.PathEscape(responseData.Id)
+	endpoint = "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) +
+		"/storage/object/bucket/" + url.PathEscape(data.Id.ValueString())
 	if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Get %s", endpoint),
@@ -317,7 +324,8 @@ func (r *cloudStorageObjectBucketResource) Read(ctx context.Context, req resourc
 		return
 	}
 
-	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/storage/object/bucket/" + url.PathEscape(data.Id.ValueString())
+	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) +
+		"/storage/object/bucket/" + url.PathEscape(data.Id.ValueString())
 
 	var responseData CloudBucketAPIResponse
 	if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
@@ -348,7 +356,8 @@ func (r *cloudStorageObjectBucketResource) Update(ctx context.Context, req resou
 
 	updatePayload := planData.ToUpdate(ctx, data.Checksum.ValueString())
 
-	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/storage/object/bucket/" + url.PathEscape(data.Id.ValueString())
+	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) +
+		"/storage/object/bucket/" + url.PathEscape(data.Id.ValueString())
 
 	var responseData CloudBucketAPIResponse
 	if err := r.config.OVHClient.Put(endpoint, updatePayload, &responseData); err != nil {
@@ -391,7 +400,8 @@ func (r *cloudStorageObjectBucketResource) Delete(ctx context.Context, req resou
 		return
 	}
 
-	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/storage/object/bucket/" + url.PathEscape(data.Id.ValueString())
+	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) +
+		"/storage/object/bucket/" + url.PathEscape(data.Id.ValueString())
 
 	if err := r.config.OVHClient.Delete(endpoint, nil); err != nil {
 		if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
@@ -410,7 +420,8 @@ func (r *cloudStorageObjectBucketResource) Delete(ctx context.Context, req resou
 		Target:  []string{"DELETED"},
 		Refresh: func() (interface{}, string, error) {
 			res := &CloudBucketAPIResponse{}
-			endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/storage/object/bucket/" + url.PathEscape(data.Id.ValueString())
+			endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) +
+				"/storage/object/bucket/" + url.PathEscape(data.Id.ValueString())
 			err := r.config.OVHClient.GetWithContext(ctx, endpoint, res)
 			if err != nil {
 				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
@@ -433,13 +444,14 @@ func (r *cloudStorageObjectBucketResource) Delete(ctx context.Context, req resou
 	}
 }
 
-func (r *cloudStorageObjectBucketResource) waitForReady(ctx context.Context, serviceName, bucketName string) (interface{}, error) {
+func (r *cloudStorageObjectBucketResource) waitForReady(ctx context.Context, serviceName, bucketID string) (interface{}, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{"CREATING", "UPDATING", "PENDING", "OUT_OF_SYNC"},
 		Target:  []string{"READY"},
 		Refresh: func() (interface{}, string, error) {
 			res := &CloudBucketAPIResponse{}
-			endpoint := "/v2/publicCloud/project/" + url.PathEscape(serviceName) + "/storage/object/bucket/" + url.PathEscape(bucketName)
+			endpoint := "/v2/publicCloud/project/" + url.PathEscape(serviceName) +
+				"/storage/object/bucket/" + url.PathEscape(bucketID)
 			err := r.config.OVHClient.GetWithContext(ctx, endpoint, res)
 			if err != nil {
 				return res, "", err

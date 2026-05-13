@@ -11,6 +11,7 @@ import (
 type CloudStorageObjectBucketReplicationModel struct {
 	ServiceName ovhtypes.TfStringValue `tfsdk:"service_name"`
 	BucketName  ovhtypes.TfStringValue `tfsdk:"bucket_name"`
+	Region      ovhtypes.TfStringValue `tfsdk:"region"`
 	Id          ovhtypes.TfStringValue `tfsdk:"id"`
 	Rules       types.List             `tfsdk:"rules"`
 }
