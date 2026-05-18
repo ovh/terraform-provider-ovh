@@ -42,7 +42,10 @@ The following arguments are supported:
 * `name` - (Required) Volume name.
 * `size` - (Required) Size of the volume in GB.
 * `region` - (Required) Region where the volume will be created. **Changing this value recreates the resource.**
-* `volume_type` - (Required) Volume type (`CLASSIC`, `HIGH_SPEED`, `HIGH_SPEED_GEN2`). **Changing this value recreates the resource.**
+* `volume_type` - (Required) Volume type (`CLASSIC`, `HIGH_SPEED`, `HIGH_SPEED_GEN2`). Can be changed after creation (triggers online retype).
+* `bootable` - (Optional) Whether the volume is bootable.
+* `encryption` - (Optional) Encryption configuration for the volume.
+  * `enabled` - (Optional) Whether the volume is encrypted at rest with LUKS.
 * `create_from` - (Optional) Source to create the volume from. **Changing this value recreates the resource.**
   * `backup_id` - (Optional) Identifier of a backup to restore the volume from.
 
@@ -61,6 +64,9 @@ The following attributes are exported:
   * `name` - Volume name.
   * `size` - Size of the volume in GB.
   * `volume_type` - Volume type (`CLASSIC`, `HIGH_SPEED`, `HIGH_SPEED_GEN2`).
+  * `bootable` - Whether the volume is bootable.
+  * `encryption` - Encryption configuration of the volume:
+    * `enabled` - Whether the volume is encrypted at rest with LUKS.
   * `status` - Volume status (`AVAILABLE`, `IN_USE`, `CREATING`, `DELETING`, `ATTACHING`, `DETACHING`, `EXTENDING`, `ERROR`, `ERROR_DELETING`, `ERROR_BACKING_UP`, `ERROR_RESTORING`, `ERROR_EXTENDING`).
 
 ## Import

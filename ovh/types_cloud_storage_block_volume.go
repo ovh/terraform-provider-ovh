@@ -16,6 +16,7 @@ type CloudStorageBlockVolumeModel struct {
 	Region      ovhtypes.TfStringValue `tfsdk:"region"`
 	VolumeType  ovhtypes.TfStringValue `tfsdk:"volume_type"`
 	Bootable    types.Bool             `tfsdk:"bootable"`
+	Encryption  types.Object           `tfsdk:"encryption"`
 	CreateFrom  types.Object           `tfsdk:"create_from"`
 
 	Id             ovhtypes.TfStringValue `tfsdk:"id"`
@@ -38,13 +39,18 @@ type CloudStorageBlockVolumeAPIResponse struct {
 }
 
 type CloudStorageBlockVolumeCurrentState struct {
-	Location           *CloudStorageBlockVolumeLocation            `json:"location,omitempty"`
-	Name               string                                      `json:"name,omitempty"`
-	Size               int64                                       `json:"size,omitempty"`
-	VolumeType         string                                      `json:"volumeType,omitempty"`
-	Bootable           *bool                                       `json:"bootable,omitempty"`
-	Status             string                                      `json:"status,omitempty"`
-	AttachedInstances  []CloudStorageBlockVolumeAttachedInstance   `json:"attachedInstances,omitempty"`
+	Location          *CloudStorageBlockVolumeLocation          `json:"location,omitempty"`
+	Name              string                                    `json:"name,omitempty"`
+	Size              int64                                     `json:"size,omitempty"`
+	VolumeType        string                                    `json:"volumeType,omitempty"`
+	Bootable          *bool                                     `json:"bootable,omitempty"`
+	Status            string                                    `json:"status,omitempty"`
+	Encryption        *CloudStorageBlockVolumeEncryption        `json:"encryption,omitempty"`
+	AttachedInstances []CloudStorageBlockVolumeAttachedInstance `json:"attachedInstances,omitempty"`
+}
+
+type CloudStorageBlockVolumeEncryption struct {
+	Enabled bool `json:"enabled"`
 }
 
 type CloudStorageBlockVolumeAttachedInstance struct {
@@ -61,6 +67,7 @@ type CloudStorageBlockVolumeTarget struct {
 	Size       int64                              `json:"size,omitempty"`
 	VolumeType string                             `json:"volumeType,omitempty"`
 	Bootable   *bool                              `json:"bootable,omitempty"`
+	Encryption *CloudStorageBlockVolumeEncryption `json:"encryption,omitempty"`
 	CreateFrom *CloudStorageBlockVolumeCreateFrom `json:"createFrom,omitempty"`
 }
 
@@ -86,6 +93,13 @@ func CreateFromAttrTypes() map[string]attr.Type {
 	}
 }
 
+// BlockVolumeEncryptionAttrTypes returns the attribute types for the encryption object
+func BlockVolumeEncryptionAttrTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"enabled": types.BoolType,
+	}
+}
+
 // ToCreate converts the Terraform model to the API create payload
 func (m *CloudStorageBlockVolumeModel) ToCreate() *CloudStorageBlockVolumeCreatePayload {
 	target := &CloudStorageBlockVolumeTarget{
@@ -98,6 +112,17 @@ func (m *CloudStorageBlockVolumeModel) ToCreate() *CloudStorageBlockVolumeCreate
 	if !m.Bootable.IsNull() && !m.Bootable.IsUnknown() {
 		b := m.Bootable.ValueBool()
 		target.Bootable = &b
+	}
+
+	if !m.Encryption.IsNull() && !m.Encryption.IsUnknown() {
+		attrs := m.Encryption.Attributes()
+		if enabledVal, ok := attrs["enabled"]; ok {
+			if boolVal, ok := enabledVal.(types.Bool); ok && !boolVal.IsNull() && !boolVal.IsUnknown() {
+				target.Encryption = &CloudStorageBlockVolumeEncryption{
+					Enabled: boolVal.ValueBool(),
+				}
+			}
+		}
 	}
 
 	if !m.CreateFrom.IsNull() && !m.CreateFrom.IsUnknown() {
@@ -127,6 +152,17 @@ func (m *CloudStorageBlockVolumeModel) ToUpdate(checksum string) *CloudStorageBl
 		target.Bootable = &b
 	}
 
+	if !m.Encryption.IsNull() && !m.Encryption.IsUnknown() {
+		attrs := m.Encryption.Attributes()
+		if enabledVal, ok := attrs["enabled"]; ok {
+			if boolVal, ok := enabledVal.(types.Bool); ok && !boolVal.IsNull() && !boolVal.IsUnknown() {
+				target.Encryption = &CloudStorageBlockVolumeEncryption{
+					Enabled: boolVal.ValueBool(),
+				}
+			}
+		}
+	}
+
 	return &CloudStorageBlockVolumeUpdatePayload{Checksum: checksum, TargetSpec: target}
 }
 
@@ -146,6 +182,7 @@ func BlockVolumeCurrentStateAttrTypes() map[string]attr.Type {
 		"volume_type":        ovhtypes.TfStringType{},
 		"bootable":           types.BoolType,
 		"status":             ovhtypes.TfStringType{},
+		"encryption":         types.ObjectType{AttrTypes: BlockVolumeEncryptionAttrTypes()},
 		"attached_instances": types.ListType{ElemType: types.ObjectType{AttrTypes: BlockVolumeAttachedInstanceAttrTypes()}},
 	}
 }
@@ -188,6 +225,18 @@ func (m *CloudStorageBlockVolumeModel) MergeWith(ctx context.Context, response *
 			attachedInstancesVal = types.ListNull(attachedInstanceObjType)
 		}
 
+		var encryptionObj types.Object
+		if response.CurrentState.Encryption != nil {
+			encryptionObj, _ = types.ObjectValue(
+				BlockVolumeEncryptionAttrTypes(),
+				map[string]attr.Value{
+					"enabled": types.BoolValue(response.CurrentState.Encryption.Enabled),
+				},
+			)
+		} else {
+			encryptionObj = types.ObjectNull(BlockVolumeEncryptionAttrTypes())
+		}
+
 		currentStateObj, _ := types.ObjectValue(
 			BlockVolumeCurrentStateAttrTypes(),
 			map[string]attr.Value{
@@ -197,6 +246,7 @@ func (m *CloudStorageBlockVolumeModel) MergeWith(ctx context.Context, response *
 				"volume_type":        ovhtypes.TfStringValue{StringValue: types.StringValue(response.CurrentState.VolumeType)},
 				"bootable":           bootableVal,
 				"status":             ovhtypes.TfStringValue{StringValue: types.StringValue(response.CurrentState.Status)},
+				"encryption":         encryptionObj,
 				"attached_instances": attachedInstancesVal,
 			},
 		)
@@ -220,6 +270,18 @@ func (m *CloudStorageBlockVolumeModel) MergeWith(ctx context.Context, response *
 			m.Bootable = types.BoolValue(*response.TargetSpec.Bootable)
 		} else if m.Bootable.IsUnknown() {
 			m.Bootable = types.BoolNull()
+		}
+
+		if response.TargetSpec.Encryption != nil {
+			encryptionObj, _ := types.ObjectValue(
+				BlockVolumeEncryptionAttrTypes(),
+				map[string]attr.Value{
+					"enabled": types.BoolValue(response.TargetSpec.Encryption.Enabled),
+				},
+			)
+			m.Encryption = encryptionObj
+		} else if m.Encryption.IsUnknown() {
+			m.Encryption = types.ObjectNull(BlockVolumeEncryptionAttrTypes())
 		}
 
 		// Preserve create_from in state if it was set
