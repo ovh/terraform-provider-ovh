@@ -140,11 +140,7 @@ func (opts *CloudProjectKubeCreateOpts) FromResource(d *schema.ResourceData) {
 		Cilium:    loadCiliumCustomizationFromResource(d.Get(kubeClusterCustomizationCiliumKey)),
 	}
 
-	ipAllocationPolicy, err := loadIPAllocatqqionPolicyFromResource(d.Get(kubeClusterIpAllocationPolicyKey))
-	if err != nil {
-		log.Printf("[DEBUG] issue on loadIPAllocationPolicyFromResource: %s", err)
-	}
-	opts.IPAllocationPolicy = ipAllocationPolicy
+	opts.IPAllocationPolicy = loadIPAllocationPolicyFromResource(d.Get(kubeClusterIpAllocationPolicyKey))
 
 	// load the filled api server customization
 	// both the new and the deprecated syntax are supported, but they are mutual exclusive
@@ -191,14 +187,14 @@ func loadApiServerCustomization(apiServerAdmissionPlugins interface{}) *APIServe
 	return apiServerOutput
 }
 
-func loadIPAllocationPolicyFromResource(i interface{}) (*CloudProjectKubeIPAllocationPolicy, error) {
+func loadIPAllocationPolicyFromResource(i interface{}) *CloudProjectKubeIPAllocationPolicy {
 	if i == nil {
-		return nil, nil
+		return nil
 	}
 
 	ipAllocationPolicySet := i.(*schema.Set).List()
 	if len(ipAllocationPolicySet) == 0 {
-		return nil, nil
+		return nil
 	}
 
 	// Due to this bug https://github.com/hashicorp/terraform-plugin-sdk/pull/1042
@@ -223,7 +219,7 @@ func loadIPAllocationPolicyFromResource(i interface{}) (*CloudProjectKubeIPAlloc
 	return &CloudProjectKubeIPAllocationPolicy{
 		PodsIpv4Cidr:     helpers.GetNilStringPointerFromData(ipAllocationPolicyObject, kubeClusterPodsIpv4CidrKey),
 		ServicesIpv4Cidr: helpers.GetNilStringPointerFromData(ipAllocationPolicyObject, kubeClusterServicesIpv4CidrKey),
-	}, nil
+	}
 }
 
 func readApiServerAdmissionPlugins(admissionPlugins map[string]interface{}, apiServerOutput *APIServer) {

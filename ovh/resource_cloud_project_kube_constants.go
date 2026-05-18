@@ -129,6 +129,16 @@ const (
 	kubeOidcCaContentKey      = "oidc_ca_content"
 )
 
+// Log Subscription attributes
+const (
+	kubeLogSubscriptionIdKey           = "subscription_id"
+	kubeLogSubscriptionKindKey         = "kind"
+	kubeLogSubscriptionStreamIdKey     = "stream_id"
+	kubeLogSubscriptionResourceKey     = "resource"
+	kubeLogSubscriptionResourceNameKey = "name"
+	kubeLogSubscriptionResourceTypeKey = "type"
+)
+
 // IP Restrictions attributes
 const (
 	kubeIpRestrictionsIpsKey = "ips"

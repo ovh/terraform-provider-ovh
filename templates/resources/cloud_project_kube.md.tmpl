@@ -116,15 +116,15 @@ The following arguments are supported:
           * `cpu` - (Optional) CPU limit (e.g. `"500m"`).
           * `memory` - (Optional) Memory limit (e.g. `"128Mi"`).
         * `requests` - (Optional) Resource requests.
-          * `cpu` - (Optional) CPU request.
-          * `memory` - (Optional) Memory request.
+          * `cpu` - (Optional) CPU request (e.g. `"500m"`).
+          * `memory` - (Optional) Memory request (e.g. `"128Mi"`).
       * `frontend_resources` - (Optional) Resource requests and limits for the Hubble UI frontend.
         * `limits` - (Optional) Resource limits.
-          * `cpu` - (Optional) CPU limit.
-          * `memory` - (Optional) Memory limit.
+          * `cpu` - (Optional) CPU limit (e.g. `"500m"`).
+          * `memory` - (Optional) Memory limit (e.g. `"128Mi"`).
         * `requests` - (Optional) Resource requests.
-          * `cpu` - (Optional) CPU request.
-          * `memory` - (Optional) Memory request.
+          * `cpu` - (Optional) CPU request (e.g. `"500m"`).
+          * `memory` - (Optional) Memory request (e.g. `"128Mi"`).
 * `ip_allocation_policy` - (Optional) IP allocation policy of the cluster. **Changing this value recreates the resource.**
   * `pods_ipv4_cidr` - (Optional) CIDR for the cluster's pods (e.g. `"10.5.0.0/16"`). **Changing this value recreates the resource.**
   * `services_ipv4_cidr` - (Optional) CIDR for the cluster's services (e.g. `"10.6.0.0/16"`). **Changing this value recreates the resource.**
