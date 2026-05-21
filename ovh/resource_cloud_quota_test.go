@@ -13,10 +13,11 @@ import (
 // flip to a second profile to validate the update path.
 //
 // Required env:
-//   OVH_CLOUD_PROJECT_SERVICE_TEST        — project id
-//   OVH_CLOUD_PROJECT_QUOTA_REGION_TEST   — region to mutate (e.g. GRA11)
-//   OVH_CLOUD_PROJECT_QUOTA_PROFILE_TEST  — initial profile name
-//   OVH_CLOUD_PROJECT_QUOTA_PROFILE2_TEST — second profile name (update step)
+//
+//	OVH_CLOUD_PROJECT_SERVICE_TEST        — project id
+//	OVH_CLOUD_PROJECT_QUOTA_REGION_TEST   — region to mutate (e.g. GRA11)
+//	OVH_CLOUD_PROJECT_QUOTA_PROFILE_TEST  — initial profile name
+//	OVH_CLOUD_PROJECT_QUOTA_PROFILE2_TEST — second profile name (update step)
 //
 // Both profiles must exist in current_state.available_profiles for the
 // project. The test skips if any of these are unset.

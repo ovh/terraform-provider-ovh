@@ -297,6 +297,8 @@ func (p *OvhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 		NewCloudKeymanagerContainersDataSource,
 		NewCloudKeymanagerSecretConsumersDataSource,
 		NewCloudKeymanagerContainerConsumersDataSource,
+		NewCloudStorageBlockVolumeSnapshotsDataSource,
+		NewCloudStorageBlockVolumeBackupsDataSource,
 		NewOvhcloudConnectDatacentersDataSource,
 		NewOvhcloudConnectConfigPopDatacenterExtrasDataSource,
 		NewOvhcloudConnectConfigPopDatacentersDataSource,

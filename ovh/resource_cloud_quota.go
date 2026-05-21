@@ -503,4 +503,3 @@ func (r *cloudQuotaResource) Delete(_ context.Context, _ resource.DeleteRequest,
 	// The quota envelope is a singleton owned by the project and cannot be
 	// deleted. Removing the resource from Terraform state is the only action.
 }
-
