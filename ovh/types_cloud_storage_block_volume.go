@@ -15,7 +15,6 @@ type CloudStorageBlockVolumeModel struct {
 	Size        types.Int64            `tfsdk:"size"`
 	Region      ovhtypes.TfStringValue `tfsdk:"region"`
 	VolumeType  ovhtypes.TfStringValue `tfsdk:"volume_type"`
-	Bootable    types.Bool             `tfsdk:"bootable"`
 	Encryption  types.Object           `tfsdk:"encryption"`
 	CreateFrom  types.Object           `tfsdk:"create_from"`
 
@@ -58,7 +57,9 @@ type CloudStorageBlockVolumeAttachedInstance struct {
 }
 
 type CloudStorageBlockVolumeCreateFrom struct {
-	BackupID string `json:"backupId,omitempty"`
+	BackupID   string `json:"backupId,omitempty"`
+	SnapshotID string `json:"snapshotId,omitempty"`
+	ImageID    string `json:"imageId,omitempty"`
 }
 
 type CloudStorageBlockVolumeTarget struct {
@@ -66,7 +67,6 @@ type CloudStorageBlockVolumeTarget struct {
 	Name       string                             `json:"name,omitempty"`
 	Size       int64                              `json:"size,omitempty"`
 	VolumeType string                             `json:"volumeType,omitempty"`
-	Bootable   *bool                              `json:"bootable,omitempty"`
 	Encryption *CloudStorageBlockVolumeEncryption `json:"encryption,omitempty"`
 	CreateFrom *CloudStorageBlockVolumeCreateFrom `json:"createFrom,omitempty"`
 }
@@ -89,7 +89,9 @@ type CloudStorageBlockVolumeUpdatePayload struct {
 // CreateFromAttrTypes returns the attribute types for the create_from object
 func CreateFromAttrTypes() map[string]attr.Type {
 	return map[string]attr.Type{
-		"backup_id": ovhtypes.TfStringType{},
+		"backup_id":   ovhtypes.TfStringType{},
+		"snapshot_id": ovhtypes.TfStringType{},
+		"image_id":    ovhtypes.TfStringType{},
 	}
 }
 
@@ -109,11 +111,6 @@ func (m *CloudStorageBlockVolumeModel) ToCreate() *CloudStorageBlockVolumeCreate
 		VolumeType: m.VolumeType.ValueString(),
 	}
 
-	if !m.Bootable.IsNull() && !m.Bootable.IsUnknown() {
-		b := m.Bootable.ValueBool()
-		target.Bootable = &b
-	}
-
 	if !m.Encryption.IsNull() && !m.Encryption.IsUnknown() {
 		attrs := m.Encryption.Attributes()
 		if enabledVal, ok := attrs["enabled"]; ok {
@@ -127,12 +124,32 @@ func (m *CloudStorageBlockVolumeModel) ToCreate() *CloudStorageBlockVolumeCreate
 
 	if !m.CreateFrom.IsNull() && !m.CreateFrom.IsUnknown() {
 		attrs := m.CreateFrom.Attributes()
+		createFrom := &CloudStorageBlockVolumeCreateFrom{}
+		hasCreateFrom := false
+
 		if backupIDVal, ok := attrs["backup_id"]; ok {
 			if strVal, ok := backupIDVal.(ovhtypes.TfStringValue); ok && !strVal.IsNull() && !strVal.IsUnknown() && strVal.ValueString() != "" {
-				target.CreateFrom = &CloudStorageBlockVolumeCreateFrom{
-					BackupID: strVal.ValueString(),
-				}
+				createFrom.BackupID = strVal.ValueString()
+				hasCreateFrom = true
 			}
+		}
+
+		if snapshotIDVal, ok := attrs["snapshot_id"]; ok {
+			if strVal, ok := snapshotIDVal.(ovhtypes.TfStringValue); ok && !strVal.IsNull() && !strVal.IsUnknown() && strVal.ValueString() != "" {
+				createFrom.SnapshotID = strVal.ValueString()
+				hasCreateFrom = true
+			}
+		}
+
+		if imageIDVal, ok := attrs["image_id"]; ok {
+			if strVal, ok := imageIDVal.(ovhtypes.TfStringValue); ok && !strVal.IsNull() && !strVal.IsUnknown() && strVal.ValueString() != "" {
+				createFrom.ImageID = strVal.ValueString()
+				hasCreateFrom = true
+			}
+		}
+
+		if hasCreateFrom {
+			target.CreateFrom = createFrom
 		}
 	}
 
@@ -145,11 +162,6 @@ func (m *CloudStorageBlockVolumeModel) ToUpdate(checksum string) *CloudStorageBl
 		Name:       m.Name.ValueString(),
 		Size:       m.Size.ValueInt64(),
 		VolumeType: m.VolumeType.ValueString(),
-	}
-
-	if !m.Bootable.IsNull() && !m.Bootable.IsUnknown() {
-		b := m.Bootable.ValueBool()
-		target.Bootable = &b
 	}
 
 	if !m.Encryption.IsNull() && !m.Encryption.IsUnknown() {
@@ -266,11 +278,6 @@ func (m *CloudStorageBlockVolumeModel) MergeWith(ctx context.Context, response *
 		if response.TargetSpec.VolumeType != "" {
 			m.VolumeType = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.VolumeType)}
 		}
-		if response.TargetSpec.Bootable != nil {
-			m.Bootable = types.BoolValue(*response.TargetSpec.Bootable)
-		} else if m.Bootable.IsUnknown() {
-			m.Bootable = types.BoolNull()
-		}
 
 		if response.TargetSpec.Encryption != nil {
 			encryptionObj, _ := types.ObjectValue(
@@ -285,11 +292,14 @@ func (m *CloudStorageBlockVolumeModel) MergeWith(ctx context.Context, response *
 		}
 
 		// Preserve create_from in state if it was set
-		if response.TargetSpec.CreateFrom != nil && response.TargetSpec.CreateFrom.BackupID != "" {
+		cf := response.TargetSpec.CreateFrom
+		if cf != nil && (cf.BackupID != "" || cf.SnapshotID != "" || cf.ImageID != "") {
 			createFromObj, _ := types.ObjectValue(
 				CreateFromAttrTypes(),
 				map[string]attr.Value{
-					"backup_id": ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.CreateFrom.BackupID)},
+					"backup_id":   ovhtypes.TfStringValue{StringValue: types.StringValue(cf.BackupID)},
+					"snapshot_id": ovhtypes.TfStringValue{StringValue: types.StringValue(cf.SnapshotID)},
+					"image_id":    ovhtypes.TfStringValue{StringValue: types.StringValue(cf.ImageID)},
 				},
 			)
 			m.CreateFrom = createFromObj

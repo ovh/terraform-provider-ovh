@@ -56,7 +56,6 @@ func (r *cloudStorageBlockVolumeResource) Configure(ctx context.Context, req res
 var volumeMutableAttrs = MutableAttrs{
 	Strings: []string{"name", "volume_type"},
 	Int64s:  []string{"size"},
-	Bools:   []string{"bootable"},
 	Objects: []string{"encryption"},
 }
 
@@ -99,12 +98,6 @@ func (r *cloudStorageBlockVolumeResource) Schema(ctx context.Context, req resour
 				Description:         "Volume type (CLASSIC, HIGH_SPEED, HIGH_SPEED_GEN2). Can be changed after creation (triggers online retype).",
 				MarkdownDescription: "Volume type (`CLASSIC`, `HIGH_SPEED`, `HIGH_SPEED_GEN2`). Can be changed after creation (triggers online retype).",
 			},
-			"bootable": schema.BoolAttribute{
-				Optional:            true,
-				Computed:            true,
-				Description:         "Whether the volume is bootable",
-				MarkdownDescription: "Whether the volume is bootable",
-			},
 			"encryption": schema.SingleNestedAttribute{
 				Optional:            true,
 				Computed:            true,
@@ -132,6 +125,18 @@ func (r *cloudStorageBlockVolumeResource) Schema(ctx context.Context, req resour
 						Optional:            true,
 						Description:         "Identifier of a backup to restore the volume from",
 						MarkdownDescription: "Identifier of a backup to restore the volume from",
+					},
+					"snapshot_id": schema.StringAttribute{
+						CustomType:          ovhtypes.TfStringType{},
+						Optional:            true,
+						Description:         "Identifier of a snapshot to create the volume from",
+						MarkdownDescription: "Identifier of a snapshot to create the volume from",
+					},
+					"image_id": schema.StringAttribute{
+						CustomType:          ovhtypes.TfStringType{},
+						Optional:            true,
+						Description:         "UUID of a Glance image to create the volume from. The resulting volume will be bootable. volumeType is required when using this field.",
+						MarkdownDescription: "UUID of a Glance image to create the volume from. The resulting volume will be bootable. `volumeType` is required when using this field.",
 					},
 				},
 			},

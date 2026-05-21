@@ -205,6 +205,65 @@ resource "ovh_cloud_storage_block_volume" "volume" {
 	})
 }
 
+// TestAccCloudStorageBlockVolume_createFromImage verifies that a volume can be
+// created from a Glance image using the create_from.image_id field.
+func TestAccCloudStorageBlockVolume_createFromImage(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+	imageID := os.Getenv("OVH_CLOUD_PROJECT_GLANCE_IMAGE_ID_TEST")
+
+	if imageID == "" {
+		t.Skip("OVH_CLOUD_PROJECT_GLANCE_IMAGE_ID_TEST is not set; skipping create_from.image_id test")
+	}
+
+	volumeName := acctest.RandomWithPrefix(testAccResourceCloudStorageBlockVolumeNamePrefix)
+
+	config := fmt.Sprintf(`
+resource "ovh_cloud_storage_block_volume" "volume_from_image" {
+  service_name = "%s"
+  name         = "%s"
+  size         = 10
+  region       = "%s"
+  volume_type  = "CLASSIC"
+
+  create_from = {
+    image_id = "%s"
+  }
+}
+`, serviceName, volumeName, region, imageID)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloud(t)
+			testAccCheckCloudProjectExists(t)
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume_from_image", "service_name", serviceName),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume_from_image", "name", volumeName),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume_from_image", "size", "10"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume_from_image", "region", region),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume_from_image", "volume_type", "CLASSIC"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume_from_image", "create_from.image_id", imageID),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume_from_image", "current_state.bootable", "true"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume.volume_from_image", "id"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume.volume_from_image", "checksum"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume_from_image", "resource_status", "READY"),
+				),
+			},
+			{
+				ResourceName:      "ovh_cloud_storage_block_volume.volume_from_image",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccCloudStorageBlockVolumeImportStateIdFunc("ovh_cloud_storage_block_volume.volume_from_image"),
+			},
+		},
+	})
+}
+
 const testAccResourceCloudStorageBlockVolumeNamePrefix = "tf-test-volume-v2-"
 
 func testAccCloudStorageBlockVolumeImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
