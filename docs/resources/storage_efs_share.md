@@ -43,3 +43,25 @@ resource "ovh_storage_efs_share" "share" {
 - `created_at` (String) Share creation date
 - `id` (String) Share ID
 - `status` (String) Share status
+
+## Import
+
+An EFS share can be imported using its `service_name` and `id` fields.
+
+Using the following configuration:
+
+```terraform
+import {
+  to = ovh_storage_efs_share.share
+  id = "<service_name>/<id>"
+}
+```
+
+You can then run:
+
+```bash
+$ terraform plan -generate-config-out=share.tf
+$ terraform apply
+```
+
+The file `share.tf` will then contain the imported resource's configuration, that can be copied next to the `import` block above. See https://developer.hashicorp.com/terraform/language/import/generating-configuration for more details.
