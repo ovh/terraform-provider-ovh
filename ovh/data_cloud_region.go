@@ -52,7 +52,7 @@ func (d *cloudRegionDataSource) Read(ctx context.Context, req datasource.ReadReq
 	}
 
 	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) +
-		"/reference/region/" + url.PathEscape(data.RegionName.ValueString())
+		"/reference/region/" + url.PathEscape(data.Region.ValueString())
 
 	if err := d.config.OVHClient.Get(endpoint, &data); err != nil {
 		resp.Diagnostics.AddError(

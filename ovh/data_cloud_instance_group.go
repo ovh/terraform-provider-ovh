@@ -90,29 +90,23 @@ func (d *cloudInstanceGroupDataSource) Schema(ctx context.Context, req datasourc
 				Description:         "Instance group readiness in the system (CREATING, DELETING, ERROR, READY)",
 				MarkdownDescription: "Instance group readiness in the system (`CREATING`, `DELETING`, `ERROR`, `READY`)",
 			},
-			"target_spec": schema.SingleNestedAttribute{
-				Computed:    true,
-				Description: "Target specification of the instance group",
-				Attributes: map[string]schema.Attribute{
-					"name": schema.StringAttribute{
-						CustomType:          ovhtypes.TfStringType{},
-						Computed:            true,
-						Description:         "Name of the instance group",
-						MarkdownDescription: "Name of the instance group",
-					},
-					"policy": schema.StringAttribute{
-						CustomType:          ovhtypes.TfStringType{},
-						Computed:            true,
-						Description:         "Policy of the instance group",
-						MarkdownDescription: "Policy of the instance group",
-					},
-					"region": schema.StringAttribute{
-						CustomType:          ovhtypes.TfStringType{},
-						Computed:            true,
-						Description:         "Region of the instance group",
-						MarkdownDescription: "Region of the instance group",
-					},
-				},
+			"name": schema.StringAttribute{
+				CustomType:          ovhtypes.TfStringType{},
+				Computed:            true,
+				Description:         "Name of the instance group",
+				MarkdownDescription: "Name of the instance group",
+			},
+			"policy": schema.StringAttribute{
+				CustomType:          ovhtypes.TfStringType{},
+				Computed:            true,
+				Description:         "Policy of the instance group",
+				MarkdownDescription: "Policy of the instance group",
+			},
+			"region": schema.StringAttribute{
+				CustomType:          ovhtypes.TfStringType{},
+				Computed:            true,
+				Description:         "Region of the instance group",
+				MarkdownDescription: "Region of the instance group",
 			},
 			"current_state": schema.SingleNestedAttribute{
 				Computed:    true,

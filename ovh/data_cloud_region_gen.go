@@ -23,7 +23,7 @@ func CloudRegionDataSourceSchema(ctx context.Context) schema.Schema {
 			Description:         "Service name",
 			MarkdownDescription: "Service name",
 		},
-		"region_name": schema.StringAttribute{
+		"region": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
 			Required:            true,
 			Description:         "Region name",
@@ -80,7 +80,7 @@ func CloudRegionDataSourceSchema(ctx context.Context) schema.Schema {
 
 type CloudRegionModel struct {
 	ServiceName       ovhtypes.TfStringValue `tfsdk:"service_name" json:"-"`
-	RegionName        ovhtypes.TfStringValue `tfsdk:"region_name" json:"-"`
+	Region            ovhtypes.TfStringValue `tfsdk:"region" json:"-"`
 	Name              ovhtypes.TfStringValue `tfsdk:"name" json:"name"`
 	Status            ovhtypes.TfStringValue `tfsdk:"status" json:"status"`
 	Continent         ovhtypes.TfStringValue `tfsdk:"continent" json:"continent"`

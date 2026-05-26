@@ -12,13 +12,13 @@ import (
 // CloudInstanceAutobackupModel is the Terraform model for the autobackup resource.
 type CloudInstanceAutobackupModel struct {
 	// Required — immutable (all trigger replace)
-	ProjectId  ovhtypes.TfStringValue `tfsdk:"project_id"`
-	Name       ovhtypes.TfStringValue `tfsdk:"name"`
-	ImageName  ovhtypes.TfStringValue `tfsdk:"image_name"`
-	Cron       ovhtypes.TfStringValue `tfsdk:"cron"`
-	Rotation   ovhtypes.TfInt64Value  `tfsdk:"rotation"`
-	Region     ovhtypes.TfStringValue `tfsdk:"region"`
-	InstanceId ovhtypes.TfStringValue `tfsdk:"instance_id"`
+	ServiceName ovhtypes.TfStringValue `tfsdk:"service_name"`
+	Name        ovhtypes.TfStringValue `tfsdk:"name"`
+	ImageName   ovhtypes.TfStringValue `tfsdk:"image_name"`
+	Cron        ovhtypes.TfStringValue `tfsdk:"cron"`
+	Rotation    ovhtypes.TfInt64Value  `tfsdk:"rotation"`
+	Region      ovhtypes.TfStringValue `tfsdk:"region"`
+	InstanceId  ovhtypes.TfStringValue `tfsdk:"instance_id"`
 
 	// Optional — immutable
 	Distant types.Object `tfsdk:"distant"`
@@ -145,6 +145,7 @@ func (m *CloudInstanceAutobackupModel) MergeWith(ctx context.Context, resp *Clou
 		if resp.TargetSpec.Instance != nil {
 			m.InstanceId = ovhtypes.TfStringValue{StringValue: types.StringValue(resp.TargetSpec.Instance.Id)}
 		}
+		// ServiceName is not returned by the API — kept from config
 		if resp.TargetSpec.Distant != nil {
 			distObj, _ := types.ObjectValue(cloudInstanceAutobackupDistantAttrTypes(), map[string]attr.Value{
 				"region":     ovhtypes.TfStringValue{StringValue: types.StringValue(resp.TargetSpec.Distant.Region)},

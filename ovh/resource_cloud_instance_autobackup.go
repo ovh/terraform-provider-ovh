@@ -54,7 +54,7 @@ func (r *cloudInstanceAutobackupResource) Schema(ctx context.Context, req resour
 		Description: "Creates an autobackup (Mistral crontrigger) for a Public Cloud instance.",
 		Attributes: map[string]schema.Attribute{
 			// Required — immutable
-			"project_id": schema.StringAttribute{
+			"service_name": schema.StringAttribute{
 				CustomType:  ovhtypes.TfStringType{},
 				Required:    true,
 				Description: "Public Cloud project ID",
@@ -264,11 +264,11 @@ func cloudInstanceAutobackupCurrentStateSchemaAttributes() map[string]schema.Att
 func (r *cloudInstanceAutobackupResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	splits := strings.Split(req.ID, "/")
 	if len(splits) != 2 {
-		resp.Diagnostics.AddError("Given ID is malformed", "ID must be formatted like the following: <project_id>/<autobackup_id>")
+		resp.Diagnostics.AddError("Given ID is malformed", "ID must be formatted like the following: <service_name>/<autobackup_id>")
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("project_id"), splits[0])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_name"), splits[0])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), splits[1])...)
 }
 
@@ -282,7 +282,7 @@ func (r *cloudInstanceAutobackupResource) Create(ctx context.Context, req resour
 
 	createPayload := data.ToCreate()
 
-	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ProjectId.ValueString()) + "/compute/autobackup"
+	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/compute/autobackup"
 
 	var responseData CloudInstanceAutobackupAPIResponse
 	if err := r.config.OVHClient.Post(endpoint, createPayload, &responseData); err != nil {
@@ -291,7 +291,7 @@ func (r *cloudInstanceAutobackupResource) Create(ctx context.Context, req resour
 	}
 
 	// Wait for resource to be ready
-	endpoint = "/v2/publicCloud/project/" + url.PathEscape(data.ProjectId.ValueString()) + "/compute/autobackup/" + url.PathEscape(responseData.Id)
+	endpoint = "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/compute/autobackup/" + url.PathEscape(responseData.Id)
 	if err := helpers.WaitForAPIv2ResourceStatusReady(ctx, r.config.OVHClient, endpoint); err != nil {
 		resp.Diagnostics.AddError("Error waiting for autobackup to be ready", err.Error())
 		return
@@ -316,7 +316,7 @@ func (r *cloudInstanceAutobackupResource) Read(ctx context.Context, req resource
 		return
 	}
 
-	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ProjectId.ValueString()) + "/compute/autobackup/" + url.PathEscape(data.Id.ValueString())
+	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/compute/autobackup/" + url.PathEscape(data.Id.ValueString())
 
 	var responseData CloudInstanceAutobackupAPIResponse
 	if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
@@ -342,7 +342,7 @@ func (r *cloudInstanceAutobackupResource) Delete(ctx context.Context, req resour
 		return
 	}
 
-	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ProjectId.ValueString()) + "/compute/autobackup/" + url.PathEscape(data.Id.ValueString())
+	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/compute/autobackup/" + url.PathEscape(data.Id.ValueString())
 	if err := r.config.OVHClient.Delete(endpoint, nil); err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Error calling Delete %s", endpoint), err.Error())
 	}

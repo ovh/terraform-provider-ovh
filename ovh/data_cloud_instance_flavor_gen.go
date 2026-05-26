@@ -23,11 +23,11 @@ func CloudInstanceFlavorDataSourceSchema(ctx context.Context) schema.Schema {
 			Description:         "Service name",
 			MarkdownDescription: "Service name",
 		},
-		"region_name": schema.StringAttribute{
+		"region": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
-			Required:            true,
-			Description:         "Region name",
-			MarkdownDescription: "Region name",
+			Optional:            true,
+			Description:         "Filter by region (used as ?region= query parameter)",
+			MarkdownDescription: "Filter by region (used as `?region=` query parameter)",
 		},
 		"flavor_id": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
@@ -98,7 +98,7 @@ func CloudInstanceFlavorDataSourceSchema(ctx context.Context) schema.Schema {
 
 type CloudInstanceFlavorModel struct {
 	ServiceName ovhtypes.TfStringValue `tfsdk:"service_name" json:"-"`
-	RegionName  ovhtypes.TfStringValue `tfsdk:"region_name" json:"-"`
+	Region      ovhtypes.TfStringValue `tfsdk:"region" json:"-"`
 	FlavorId    ovhtypes.TfStringValue `tfsdk:"flavor_id" json:"-"`
 	Id          ovhtypes.TfStringValue `tfsdk:"id" json:"id"`
 	Name        ovhtypes.TfStringValue `tfsdk:"name" json:"name"`
@@ -119,11 +119,11 @@ func CloudInstanceFlavorsDataSourceSchema(ctx context.Context) schema.Schema {
 			Description:         "Service name",
 			MarkdownDescription: "Service name",
 		},
-		"region_name": schema.StringAttribute{
+		"region": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
-			Required:            true,
-			Description:         "Region name",
-			MarkdownDescription: "Region name",
+			Optional:            true,
+			Description:         "Filter by region (used as ?region= query parameter)",
+			MarkdownDescription: "Filter by region (used as `?region=` query parameter)",
 		},
 		"name": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
@@ -207,7 +207,7 @@ func CloudInstanceFlavorsDataSourceSchema(ctx context.Context) schema.Schema {
 
 type CloudInstanceFlavorsModel struct {
 	ServiceName ovhtypes.TfStringValue                                `tfsdk:"service_name" json:"-"`
-	RegionName  ovhtypes.TfStringValue                                `tfsdk:"region_name" json:"-"`
+	Region      ovhtypes.TfStringValue                                `tfsdk:"region" json:"-"`
 	Name        ovhtypes.TfStringValue                                `tfsdk:"name" json:"-"`
 	Flavors     ovhtypes.TfListNestedValue[CloudInstanceFlavorsValue] `tfsdk:"flavors" json:"flavors"`
 }
