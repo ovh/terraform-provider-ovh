@@ -39,6 +39,9 @@ func VpsResourceSchema(ctx context.Context) schema.Schema {
 			Computed:            true,
 			Description:         "Set the name displayed in Manager for your VPS (max 50 chars)",
 			MarkdownDescription: "Set the name displayed in Manager for your VPS (max 50 chars)",
+			Validators: []validator.String{
+				stringvalidator.LengthAtMost(50),
+			},
 		},
 		"do_not_send_password": schema.BoolAttribute{
 			CustomType: ovhtypes.TfBoolType{},
