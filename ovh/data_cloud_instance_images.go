@@ -57,6 +57,9 @@ func (d *cloudInstanceImagesDataSource) Read(ctx context.Context, req datasource
 
 	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) +
 		"/reference/instance/image"
+	if !data.Region.IsNull() && !data.Region.IsUnknown() && data.Region.ValueString() != "" {
+		endpoint += "?region=" + url.QueryEscape(data.Region.ValueString())
+	}
 
 	var arr []CloudInstanceImagesValue
 	if err := d.config.OVHClient.Get(endpoint, &arr); err != nil {

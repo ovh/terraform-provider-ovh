@@ -31,6 +31,11 @@ type CloudInstanceGroupDataSourceModel struct {
 	ServiceName     ovhtypes.TfStringValue `tfsdk:"service_name"`
 	InstanceGroupId ovhtypes.TfStringValue `tfsdk:"instance_group_id"`
 
+	// Computed — flattened from targetSpec
+	Name   ovhtypes.TfStringValue `tfsdk:"name"`
+	Policy ovhtypes.TfStringValue `tfsdk:"policy"`
+	Region ovhtypes.TfStringValue `tfsdk:"region"`
+
 	// Computed
 	Id             ovhtypes.TfStringValue `tfsdk:"id"`
 	Checksum       ovhtypes.TfStringValue `tfsdk:"checksum"`
@@ -38,7 +43,6 @@ type CloudInstanceGroupDataSourceModel struct {
 	UpdatedAt      ovhtypes.TfStringValue `tfsdk:"updated_at"`
 	ResourceStatus ovhtypes.TfStringValue `tfsdk:"resource_status"`
 	CurrentState   types.Object           `tfsdk:"current_state"`
-	TargetSpec     types.Object           `tfsdk:"target_spec"`
 }
 
 // API response types
@@ -107,15 +111,6 @@ func InstanceGroupCurrentStateAttrTypes() map[string]attr.Type {
 	}
 }
 
-// InstanceGroupTargetSpecAttrTypes returns the attribute types for the target_spec object (data source)
-func InstanceGroupTargetSpecAttrTypes() map[string]attr.Type {
-	return map[string]attr.Type{
-		"name":   ovhtypes.TfStringType{},
-		"policy": ovhtypes.TfStringType{},
-		"region": ovhtypes.TfStringType{},
-	}
-}
-
 // buildInstanceGroupCurrentStateObject constructs the current_state object from the API response
 func buildInstanceGroupCurrentStateObject(ctx context.Context, state *CloudInstanceGroupAPICurrentState) types.Object {
 	region := ""
@@ -123,7 +118,6 @@ func buildInstanceGroupCurrentStateObject(ctx context.Context, state *CloudInsta
 		region = state.Location.Region
 	}
 
-	// Build members list
 	memberAttrTypes := map[string]attr.Type{
 		"id": ovhtypes.TfStringType{},
 	}
@@ -158,25 +152,6 @@ func buildInstanceGroupCurrentStateObject(ctx context.Context, state *CloudInsta
 	return obj
 }
 
-// buildInstanceGroupTargetSpecObject constructs the target_spec object from the API response (data source)
-func buildInstanceGroupTargetSpecObject(ctx context.Context, spec *CloudInstanceGroupAPITargetSpec) types.Object {
-	region := ""
-	if spec.Location != nil {
-		region = spec.Location.Region
-	}
-
-	obj, _ := types.ObjectValue(
-		InstanceGroupTargetSpecAttrTypes(),
-		map[string]attr.Value{
-			"name":   ovhtypes.TfStringValue{StringValue: types.StringValue(spec.Name)},
-			"policy": ovhtypes.TfStringValue{StringValue: types.StringValue(spec.Policy)},
-			"region": ovhtypes.TfStringValue{StringValue: types.StringValue(region)},
-		},
-	)
-
-	return obj
-}
-
 // MergeWith merges API response data into the Terraform model (resource)
 func (m *CloudInstanceGroupModel) MergeWith(ctx context.Context, response *CloudInstanceGroupAPIResponse) {
 	m.Id = ovhtypes.TfStringValue{StringValue: types.StringValue(response.Id)}
@@ -191,7 +166,6 @@ func (m *CloudInstanceGroupModel) MergeWith(ctx context.Context, response *Cloud
 		m.CurrentState = types.ObjectNull(InstanceGroupCurrentStateAttrTypes())
 	}
 
-	// Update fields from targetSpec if available
 	if response.TargetSpec != nil {
 		m.Name = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Name)}
 		m.Policy = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Policy)}
@@ -216,8 +190,10 @@ func (m *CloudInstanceGroupDataSourceModel) MergeWith(ctx context.Context, respo
 	}
 
 	if response.TargetSpec != nil {
-		m.TargetSpec = buildInstanceGroupTargetSpecObject(ctx, response.TargetSpec)
-	} else {
-		m.TargetSpec = types.ObjectNull(InstanceGroupTargetSpecAttrTypes())
+		m.Name = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Name)}
+		m.Policy = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Policy)}
+		if response.TargetSpec.Location != nil {
+			m.Region = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Location.Region)}
+		}
 	}
 }

@@ -45,7 +45,7 @@ func (d *cloudInstanceAutobackupDataSource) Schema(ctx context.Context, req data
 	resp.Schema = schema.Schema{
 		Description: "Reads an autobackup (Mistral crontrigger) for a Public Cloud instance.",
 		Attributes: map[string]schema.Attribute{
-			"project_id": schema.StringAttribute{
+			"service_name": schema.StringAttribute{
 				CustomType:  ovhtypes.TfStringType{},
 				Required:    true,
 				Description: "Public Cloud project ID",
@@ -232,7 +232,7 @@ func (d *cloudInstanceAutobackupDataSource) Read(ctx context.Context, req dataso
 		return
 	}
 
-	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ProjectId.ValueString()) + "/compute/autobackup/" + url.PathEscape(data.Id.ValueString())
+	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/compute/autobackup/" + url.PathEscape(data.Id.ValueString())
 
 	var responseData CloudInstanceAutobackupAPIResponse
 	if err := d.config.OVHClient.Get(endpoint, &responseData); err != nil {

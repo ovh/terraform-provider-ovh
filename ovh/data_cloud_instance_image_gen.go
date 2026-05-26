@@ -23,11 +23,11 @@ func CloudInstanceImageDataSourceSchema(ctx context.Context) schema.Schema {
 			Description:         "Service name",
 			MarkdownDescription: "Service name",
 		},
-		"region_name": schema.StringAttribute{
+		"region": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
-			Required:            true,
-			Description:         "Region name",
-			MarkdownDescription: "Region name",
+			Optional:            true,
+			Description:         "Filter by region (used as ?region= query parameter)",
+			MarkdownDescription: "Filter by region (used as `?region=` query parameter)",
 		},
 		"image_id": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
@@ -98,7 +98,7 @@ func CloudInstanceImageDataSourceSchema(ctx context.Context) schema.Schema {
 
 type CloudInstanceImageModel struct {
 	ServiceName ovhtypes.TfStringValue `tfsdk:"service_name" json:"-"`
-	RegionName  ovhtypes.TfStringValue `tfsdk:"region_name" json:"-"`
+	Region      ovhtypes.TfStringValue `tfsdk:"region" json:"-"`
 	ImageId     ovhtypes.TfStringValue `tfsdk:"image_id" json:"-"`
 	Id          ovhtypes.TfStringValue `tfsdk:"id" json:"id"`
 	Name        ovhtypes.TfStringValue `tfsdk:"name" json:"name"`
@@ -119,11 +119,11 @@ func CloudInstanceImagesDataSourceSchema(ctx context.Context) schema.Schema {
 			Description:         "Service name",
 			MarkdownDescription: "Service name",
 		},
-		"region_name": schema.StringAttribute{
+		"region": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
-			Required:            true,
-			Description:         "Region name",
-			MarkdownDescription: "Region name",
+			Optional:            true,
+			Description:         "Filter by region (used as ?region= query parameter)",
+			MarkdownDescription: "Filter by region (used as `?region=` query parameter)",
 		},
 		"name": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
@@ -207,7 +207,7 @@ func CloudInstanceImagesDataSourceSchema(ctx context.Context) schema.Schema {
 
 type CloudInstanceImagesModel struct {
 	ServiceName ovhtypes.TfStringValue                               `tfsdk:"service_name" json:"-"`
-	RegionName  ovhtypes.TfStringValue                               `tfsdk:"region_name" json:"-"`
+	Region      ovhtypes.TfStringValue                               `tfsdk:"region" json:"-"`
 	Name        ovhtypes.TfStringValue                               `tfsdk:"name" json:"-"`
 	Images      ovhtypes.TfListNestedValue[CloudInstanceImagesValue] `tfsdk:"images" json:"images"`
 }
