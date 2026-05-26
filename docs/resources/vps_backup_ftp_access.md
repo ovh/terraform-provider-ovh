@@ -47,3 +47,13 @@ Backup FTP ACLs can be imported using their composite id:
 ```bash
 $ terraform import ovh_vps_backup_ftp_access.acl "vpsXXXXXX.ovh.net|203.0.113.0/24"
 ```
+
+## Compatibility
+
+This resource wraps `/vps/{serviceName}/backupftp/access`. Live cross-region probing on 2026-05-26 shows
+the endpoint is present in the **EU** and **CA** API schemas (`eu.api.ovh.com`,
+`ca.api.ovh.com`) but **NOT** in the **US** schema (`api.us.ovhcloud.com`).
+
+On a US-region VPS the OVHcloud API returns
+`404: Got an invalid (or empty) URL`. Use this resource on EU or CA accounts,
+or wait for OVH to expose this endpoint on US.

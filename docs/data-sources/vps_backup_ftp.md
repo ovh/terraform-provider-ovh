@@ -32,3 +32,13 @@ data "ovh_vps_backup_ftp" "backup" {
 * `usage` - Map describing the current storage usage:
   * `usage.unit` - Unit of the usage value (e.g. `GB`).
   * `usage.value` - Numeric usage value.
+
+## Compatibility
+
+This data source wraps `GET /vps/{serviceName}/backupftp`. Live cross-region probing on 2026-05-26 shows
+the endpoint is present in the **EU** and **CA** API schemas (`eu.api.ovh.com`,
+`ca.api.ovh.com`) but **NOT** in the **US** schema (`api.us.ovhcloud.com`).
+
+On a US-region VPS the OVHcloud API returns
+`404: Got an invalid (or empty) URL`. Use this data source on EU or CA accounts,
+or wait for OVH to expose this endpoint on US.
