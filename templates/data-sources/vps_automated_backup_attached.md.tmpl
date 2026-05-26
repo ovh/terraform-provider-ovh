@@ -1,0 +1,29 @@
+---
+subcategory : "VPS"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_vps_automated_backup_attached (Data Source)
+
+Use this data source to retrieve information about the attached automated backup for an OVHcloud VPS.
+
+## Example Usage
+
+{{tffile "examples/data-sources/vps_automated_backup_attached/example_1.tf"}}
+
+## Argument Reference
+
+* `service_name` - (Required) The service_name of your VPS.
+
+## Attributes Reference
+
+(See generated docs/data-sources/vps_automated_backup_attached.md for the full attribute list.)
+
+* `id` - The ID of the attached automated backup.
+* `creation_date` - Date when the backup was created.
+* `description` - Description of the backup.
+* `size` - Size of the backup in GB.
+* `state` - State of the attached backup.

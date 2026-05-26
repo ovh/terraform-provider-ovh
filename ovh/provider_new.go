@@ -287,6 +287,10 @@ func (p *OvhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 		NewStorageEfsShareAccessPathDataSource,
 		NewVmwareCloudDirectorBackupDataSource,
 		NewVmwareCloudDirectorOrganizationDataSource,
+		NewVpsDistributionDataSource,
+		NewVpsDistributionSoftwareDataSource,
+		NewVpsDistributionSoftwareItemDataSource,
+		NewVpsMigrationDataSource,
 		NewVrackservicessDataSource,
 		NewVrackservicesDataSource,
 	}
@@ -337,6 +341,7 @@ func (p *OvhProvider) Resources(_ context.Context) []func() resource.Resource {
 		NewStorageEfsShareSnapshotResource,
 		NewStorageEfsShareAclResource,
 		NewVpsResource,
+		NewVpsMigrationResource,
 		NewVrackOvhcloudconnectResource,
 		NewVrackDedicatedCloudResource,
 		NewVrackIpv6RoutedSubrangeResource,

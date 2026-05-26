@@ -1,0 +1,52 @@
+---
+subcategory : "VPS"
+---
+
+# ovh_vps_disk
+
+Manages monitoring settings on an existing OVHcloud VPS disk.
+
+~> **NOTE** This resource does **not** provision an additional disk. Disks are
+ordered through the `plan_option` block on the parent `ovh_vps` resource using
+a `option-additional-disk-2025-XXXXg` plan code. `ovh_vps_disk` only manages the
+two writable fields exposed by the API on an already-existing disk:
+`monitoring` and `lowFreeSpaceThreshold`.
+
+~> **NOTE** Because the API does not expose a way to delete a disk via this
+endpoint, the `destroy` operation does not remove the underlying disk. Instead,
+it resets `monitoring` to `true`, clears `low_free_space_threshold`, and removes
+the resource from Terraform state. To actually remove the disk, remove the
+corresponding `plan_option` block from the parent `ovh_vps` resource.
+
+## Example Usage
+
+{{tffile "examples/resources/vps_disk/example_1.tf"}}
+
+## Argument Reference
+
+* `service_name` - (Required, ForceNew) The internal name of the VPS (e.g.
+  `vps-XXXXXX.vps.ovh.net`).
+* `disk_id` - (Required, ForceNew) Numeric identifier of the disk attached to
+  the VPS. The list of disk IDs can be retrieved via the `ovh_vps_disks` data
+  source.
+* `monitoring` - (Optional) Enable or disable OVHcloud monitoring on the disk.
+* `low_free_space_threshold` - (Optional) Threshold (in MiB) below which a
+  low-free-space alert is raised.
+
+## Attributes Reference
+
+The following attributes are exported in addition to the arguments above:
+
+* `id` - `service_name|disk_id` composite identifier.
+* `type` - Disk type (`primary` or `additional`).
+* `state` - Disk state (`connected`, `disconnected`, `pending`).
+* `size` - Disk size in GiB.
+* `bandwidth_limit` - Disk bandwidth limit.
+
+## Import
+
+A VPS disk can be imported using the composite identifier `service_name|disk_id`:
+
+```sh
+terraform import ovh_vps_disk.disk vps-XXXXXX.vps.ovh.net|1234
+```

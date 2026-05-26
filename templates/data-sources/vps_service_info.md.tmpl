@@ -1,0 +1,37 @@
+---
+subcategory : "VPS"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_vps_service_info (Data Source)
+
+Use this data source to retrieve service information about an OVHcloud VPS.
+
+## Example Usage
+
+{{tffile "examples/data-sources/vps_service_info/example_1.tf"}}
+
+## Argument Reference
+
+* `service_name` - (Required) The service_name of your VPS.
+
+## Attributes Reference
+
+(See generated docs/data-sources/vps_service_info.md for the full attribute list.)
+
+* `id` - The ID of the service.
+* `contact_admin` - Admin contact for the service.
+* `contact_billing` - Billing contact for the service.
+* `contact_tech` - Technical contact for the service.
+* `creation` - Creation date of the service.
+* `domain` - Domain name of the service.
+* `expiration` - Expiration date of the service.
+* `possible_renew_period` - List of possible renew periods.
+* `renew` - Renew configuration.
+* `renew_day_of_month` - Renewal day of the month.
+* `renew_frequency` - Renewal frequency.
+* `renew_period` - Renewal period.
+* `status` - Status of the service.

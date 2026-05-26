@@ -1,0 +1,46 @@
+---
+subcategory : "VPS"
+---
+
+# ovh_vps_secondary_dns_domain (Resource)
+
+Registers a secondary DNS domain on a VPS so the VPS's OVHcloud-managed
+secondary nameservers slave the given zone from your master server.
+
+~> **NOTE** The OVHcloud API endpoint `PUT /vps/{serviceName}/secondaryDnsDomains/{domain}` is **deprecated and scheduled for removal on 2025-10-15**. This provider therefore exposes no in-place update path: changing `ip` after creation forces a delete-and-recreate (`ForceNew`), which mirrors the only safe API workflow (DELETE then re-POST).
+
+## Example Usage
+
+```terraform
+resource "ovh_vps_secondary_dns_domain" "example" {
+  service_name = "vpsXXXXX.ovh.net"
+  domain       = "example.com"
+  ip          = "203.0.113.10"
+}
+```
+
+## Argument Reference
+
+* `service_name` - (Required, ForceNew) The internal name of your VPS.
+* `domain` - (Required, ForceNew) The domain to slave.
+* `ip` - (Optional, ForceNew) IPv4 of the master DNS server for this zone. Required by the API for the initial POST in most cases. Changing this value forces resource recreation because the upstream PUT is deprecated.
+
+## Attributes Reference
+
+In addition to the arguments above, the following attributes are exported:
+
+* `id` - Composite ID in the form `service_name|domain`.
+* `dns` - The OVHcloud secondary DNS server hostname assigned to this zone.
+* `ip_master` - The master IP recorded by the API.
+* `creation_date` - Date the secondary DNS slaving was created.
+
+## Import
+
+A secondary DNS domain can be imported using `service_name|domain`:
+
+```terraform
+import {
+  to = ovh_vps_secondary_dns_domain.example
+  id = "vpsXXXXX.ovh.net|example.com"
+}
+```

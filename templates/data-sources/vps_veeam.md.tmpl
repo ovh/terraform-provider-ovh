@@ -1,0 +1,23 @@
+---
+subcategory : "VPS"
+---
+
+# ovh_vps_veeam (Data Source)
+
+Use this data source to know whether Veeam backup is enabled on a VPS.
+
+## Example Usage
+
+```hcl
+data "ovh_vps_veeam" "server" {
+  service_name = "vps-xxxxxx.vps.ovh.net"
+}
+```
+
+## Argument Reference
+
+* `service_name` - (Required) The internal name of your VPS.
+
+## Attributes Reference
+
+* `backup` - Whether the Veeam backup option is enabled on this VPS.

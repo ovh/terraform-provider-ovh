@@ -1,0 +1,24 @@
+---
+subcategory : "VPS"
+---
+
+# ovh_vps_ip_country_available (Data Source)
+
+Use this data source to list the geolocation values that can be requested
+when ordering an additional IP for the given VPS.
+
+## Example Usage
+
+```terraform
+data "ovh_vps_ip_country_available" "countries" {
+  service_name = "vpsXXXXX.ovh.net"
+}
+```
+
+## Argument Reference
+
+* `service_name` - (Required) The internal name of your VPS.
+
+## Attributes Reference
+
+* `result` - List of allowed geolocation country codes.

@@ -1,3 +1,49 @@
+## Unreleased
+
+🎉 Features:
+
+* New resource: `ovh_vps_snapshot` and data sources `d/ovh_vps_snapshot`, `d/ovh_vps_snapshot_download`
+* New resource: `ovh_vps_snapshot_revert`
+* New resource: `ovh_vps_abort_snapshot`
+* New resource: `ovh_vps_automated_backup_reschedule` and data sources `d/ovh_vps_automated_backup`, `d/ovh_vps_automated_backup_attached`, `d/ovh_vps_automated_backup_restore_points`
+* New resource: `ovh_vps_automated_backup_restore`
+* New resource: `ovh_vps_backup_ftp_access` and data sources `d/ovh_vps_backup_ftp`, `d/ovh_vps_backup_ftp_access`, `d/ovh_vps_backup_ftp_authorizable_blocks`
+* New resource: `ovh_vps_backup_ftp_password`
+* New resource: `ovh_vps_disk` and data sources `d/ovh_vps_disk`, `d/ovh_vps_disks`, `d/ovh_vps_disk_usage`, `d/ovh_vps_disk_monitoring`
+* New resource: `ovh_vps_ip_reverse` and data sources `d/ovh_vps_ip`, `d/ovh_vps_ip_country_available`, `d/ovh_vps_status`
+* New resource: `ovh_vps_secondary_dns_domain` and data sources `d/ovh_vps_secondary_dns_domain`, `d/ovh_vps_secondary_dns_domains`, `d/ovh_vps_secondary_dns_name_server_available`
+* New resource: `ovh_vps_veeam_restore` and data sources `d/ovh_vps_veeam`, `d/ovh_vps_veeam_restore_points`, `d/ovh_vps_veeam_restore_point`, `d/ovh_vps_veeam_restored_backup`
+* New resource: `ovh_vps_migration` and data source `d/ovh_vps_migration`
+* New resource: `ovh_vps_vnc` and data source `d/ovh_vps_console_url`
+* New resource: `ovh_vps_service_info` and data source `d/ovh_vps_service_info`
+* New resource: `ovh_vps_change_contact`
+* New resource: `ovh_vps_reboot`
+* New resource: `ovh_vps_start`
+* New resource: `ovh_vps_stop`
+* New resource: `ovh_vps_set_password`
+* New resource: `ovh_vps_reinstall`
+* New resource: `ovh_vrack_vps` and data sources `d/ovh_vrack_vps`, `d/ovh_vrack_vpss`
+* New data sources: `d/ovh_vps_available_image`, `d/ovh_vps_available_images`, `d/ovh_vps_current_image`
+* New data sources: `d/ovh_vps_template`, `d/ovh_vps_templates`, `d/ovh_vps_template_software`
+* New data sources: `d/ovh_vps_distribution`, `d/ovh_vps_distribution_software`, `d/ovh_vps_distribution_software_item`
+* New data sources: `d/ovh_vps_models`, `d/ovh_vps_available_upgrade`, `d/ovh_vps_datacenters`, `d/ovh_vps_order_rule_datacenter`, `d/ovh_vps_order_rule_os_choices`
+* New data sources: `d/ovh_vps_option`, `d/ovh_vps_options`
+* New data sources: `d/ovh_vps_task`, `d/ovh_vps_tasks`
+
+🐜 Bug fixes:
+
+* `r/ovh_vps`: Fix `sla_monitoring` being silently dropped on initial create (`ToCreate()` was defined but never called)
+* `r/ovh_vps`: Add length validator on `display_name` (max 50 chars as documented)
+* `d/ovh_vps`: Rename `SlaMonitorting` field to `SlaMonitoring` (typo fix)
+* `d/ovh_vps`: Fix `cloud-ram` offer-type lookup key to `cloudram` (matches API enum)
+* `d/ovh_vps`: Expose previously-missing `model.*` fields (`disk`, `vcore`, `memory`, `available_options`, `datacenter`, `maximum_additionnal_ip`)
+* `r/ovh_vps`: Fix `TestAccResourceVps_doNotSendPassword` test fixture mismatch
+
+📚 Documentation:
+
+* `r/ovh_vps`: Update `model.version` enum list to include values through `2025v1`
+* `r/ovh_vps`: Remove boilerplate copy from `dedicated_server` / `private database` in resource and data-source docs
+
 ## 2.13.1 (April 22, 2026)
 
 🐜 Bug fixes:

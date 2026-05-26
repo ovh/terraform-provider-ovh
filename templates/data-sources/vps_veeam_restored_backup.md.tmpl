@@ -1,0 +1,26 @@
+---
+subcategory : "VPS"
+---
+
+# ovh_vps_veeam_restored_backup (Data Source)
+
+Use this data source to get the currently mounted Veeam restore on a VPS.
+
+## Example Usage
+
+```hcl
+data "ovh_vps_veeam_restored_backup" "current" {
+  service_name = "vps-xxxxxx.vps.ovh.net"
+}
+```
+
+## Argument Reference
+
+* `service_name` - (Required) The internal name of your VPS.
+
+## Attributes Reference
+
+* `restore_point_id` - ID of the currently mounted Veeam restore point.
+* `state` - State of the restored backup (`mounted`, `restoring`, `unmounted`, `unmounting`).
+* `access_nfs` - NFS access information.
+* `access_smb` - SMB access information.

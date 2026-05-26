@@ -1,0 +1,32 @@
+---
+subcategory : "VPS"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_vps_change_contact
+
+Manages contact changes for an OVHcloud VPS service.
+
+## Example Usage
+
+{{tffile "examples/resources/vps_change_contact/example_1.tf"}}
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `service_name` - (Required) The service_name of your VPS.
+* `contact_admin` - (Optional) NIC handle of the admin contact to set.
+* `contact_billing` - (Optional) NIC handle of the billing contact to set.
+* `contact_tech` - (Optional) NIC handle of the technical contact to set.
+
+## Attributes Reference
+
+(See generated docs/resources/vps_change_contact.md for the full attribute list.)
+
+The following attributes are exported:
+
+* `id` - The ID of the contact change task.

@@ -75,6 +75,36 @@ func dataSourceVPS() *schema.Resource {
 				},
 				Computed: true,
 			},
+			"model_disk": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"model_vcore": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"model_memory": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"model_available_options": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"model_datacenter": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"model_maximum_additionnal_ip": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"ips": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -122,13 +152,19 @@ func dataSourceVPSRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("netbootmode", vps.NetbootMode)
 	d.Set("keymap", vps.Keymap)
 	d.Set("offertype", vps.OfferType)
-	d.Set("slamonitoring", vps.SlaMonitorting)
+	d.Set("slamonitoring", vps.SlaMonitoring)
 	d.Set("displayname", vps.DisplayName)
 	var model = make(map[string]string)
 	model["name"] = vps.Model.Name
 	model["offer"] = vps.Model.Offer
 	model["version"] = vps.Model.Version
 	d.Set("model", model)
+	d.Set("model_disk", vps.Model.Disk)
+	d.Set("model_vcore", vps.Model.Vcore)
+	d.Set("model_memory", vps.Model.Memory)
+	d.Set("model_available_options", vps.Model.AvailableOptions)
+	d.Set("model_datacenter", vps.Model.Datacenter)
+	d.Set("model_maximum_additionnal_ip", vps.Model.MaximumAdditionnalIp)
 	d.Set("type", ovhvps_getType(vps.OfferType, vps.Model.Name, vps.Model.Version))
 
 	ips := []string{}

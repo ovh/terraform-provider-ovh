@@ -41,3 +41,9 @@ examples/kube-nodepool-deployment/my-kube-cluster-*.yml
 
 # Documentation exclusions
 docs/resources/dedicated_server_networking.md
+
+.claude/
+
+# Local PR description drafts (pre-upstreaming prep)
+.pr-drafts/
+.test-logs/

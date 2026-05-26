@@ -1,0 +1,44 @@
+---
+subcategory : "VPS"
+---
+
+# ovh_vps_models (Data Source)
+
+Use this data source to list all VPS models offered in the range of a given VPS service.
+
+## Example Usage
+
+```terraform
+data "ovh_vps_models" "models" {
+  service_name = "vps-xxxxxx.vps.ovh.net"
+}
+```
+
+## Argument Reference
+
+* `service_name` - (Required) The service name of an existing VPS.
+
+## Attributes Reference
+
+* `models` - List of available models in the range:
+  * `name` - The model name (e.g. `model1`).
+  * `offer` - Human-readable description (e.g. `VPS Starter`).
+  * `version` - Model version (e.g. `2019v3`).
+  * `vcore` - Number of vCPU cores.
+  * `memory` - Memory in MB.
+  * `disk` - Disk size in GB.
+  * `datacenter` - List of datacenter codes where the model is available.
+  * `available_options` - Options available for the model.
+  * `maximum_additionnal_ip` - Maximum number of additional IPs.
+
+## Compatibility
+
+This data source is part of the OVHcloud public VPS API schema, but the
+underlying endpoint may not be implemented for every VPS lineup. Live
+testing on a `vps-le-2-2-40` (2019v1) US instance returns
+`404: Got an invalid (or empty) URL`. The endpoint is
+exposed on EU and CA regions; availability on the US API depends on the VPS product generation.
+
+If you receive a 404 from this data source, your VPS plan likely does
+not expose this endpoint. See [the OVHcloud VPS API console](https://api.us.ovhcloud.com/console/#/vps)
+for what's available on your specific service.

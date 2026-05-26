@@ -51,15 +51,18 @@ The following arguments are supported:
 
 The following attributes are exported:
 
+* `id` - Service name of the VPS (e.g., "vps-123456.vps.ovh.net"); identical to `service_name`
+* `service_name` - Service name of the VPS
 * `iam` - IAM resource information
-  * `urn` - URN of the private database, used when writing IAM policies
+  * `urn` - URN of the VPS, used when writing IAM policies
   * `display_name` - Resource display name
   * `id` - Unique identifier of the resource in the IAM
   * `tags` - Resource tags. Tags that were internally computed are prefixed with `ovh:`
 * `cluster` - VPS cluster
 * `display_name` - Custom display name
+* `do_not_send_password` - Whether the default password creation email was skipped at install time
 * `keymap` - KVM keyboard layout on VPS Cloud
-* `memory_limit` - RAM of this VPS
+* `memory_limit` - RAM of this VPS (in MB)
 * `model` - Structure describing characteristics of a VPS model
   * `available_options` - All options the VPS can have (additionalDisk┃automatedBackup┃cpanel┃ftpbackup┃plesk┃snapshot┃veeam┃windows)
   * `datacenter` - Datacenters where this model is available
@@ -69,19 +72,19 @@ The following attributes are exported:
   * `name` - Plan code of the VPS
   * `offer` - Description of this VPS offer
   * `vcore` - Number of vcores
-  * `version` - All versions that VPS can have (2013v1┃2014v1┃2015v1┃2017v1┃2017v2┃2017v3┃2018v1┃2018v2┃2019v1)
+  * `version` - All versions that VPS can have (2013v1┃2014v1┃2015v1┃2017v1┃2017v2┃2017v3┃2018v1┃2018v2┃2019v1┃2025v1)
 * `monitoring_ip_blocks` - IP blocks for OVH monitoring servers
 * `name` - Name of the VPS
 * `netboot_mode` - VPS netboot mode (local┃rescue)
 * `offer_type` - All offers a VPS can have (beta-classic┃classic┃cloud┃cloudram┃game-classic┃lowlat┃ssd)
-* `sla_monitoring`
+* `sla_monitoring` - Whether OVHcloud SLA monitoring is enabled on this VPS
 * `state` - State of the VPS (backuping┃installing┃maintenance┃rebooting┃rescued┃running┃stopped┃stopping┃upgrading)
 * `vcore` - Number of vcores
-* `zone` - OpenStask region where the VPS is located
+* `zone` - OpenStack region where the VPS is located
 
 ## Import
 
-OVHcloud VPS database can be imported using the `service_name`, E.g.,
+OVHcloud VPS can be imported using the `service_name`, E.g.,
 
 {{tffile "examples/resources/vps/example_2.tf"}}
 

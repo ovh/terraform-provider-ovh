@@ -1,0 +1,22 @@
+---
+subcategory : "VPS"
+---
+
+# ovh_vps_secondary_dns_domain (Data Source)
+
+Reads a single secondary DNS domain slaved on a VPS.
+
+## Example Usage
+
+{{tffile "examples/data-sources/vps_secondary_dns_domain/example_1.tf"}}
+
+## Argument Reference
+
+* `service_name` - (Required) The internal name of your VPS.
+* `domain` - (Required) The slaved domain to look up.
+
+## Attributes Reference
+
+* `dns` - The OVHcloud secondary DNS server hostname assigned to this zone.
+* `ip_master` - The master IP recorded by the API.
+* `creation_date` - Date the secondary DNS slaving was created.

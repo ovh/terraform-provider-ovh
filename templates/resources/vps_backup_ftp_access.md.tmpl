@@ -1,0 +1,33 @@
+---
+subcategory : "VPS"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_vps_backup_ftp_access
+
+Manages FTP backup access rules for an OVHcloud VPS.
+
+## Example Usage
+
+{{tffile "examples/resources/vps_backup_ftp_access/example_1.tf"}}
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `service_name` - (Required) The service_name of your VPS.
+* `ip_block` - (Required) The IP block to authorize for FTP backup access.
+* `ftp` - (Optional) Whether FTP access is enabled for this block.
+* `nfs` - (Optional) Whether NFS access is enabled for this block.
+* `cifs` - (Optional) Whether CIFS access is enabled for this block.
+
+## Attributes Reference
+
+(See generated docs/resources/vps_backup_ftp_access.md for the full attribute list.)
+
+The following attributes are exported:
+
+* `id` - The ID of the FTP backup access rule.

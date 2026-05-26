@@ -1,0 +1,29 @@
+---
+subcategory : "VPS"
+---
+
+# ovh_vps_veeam_restore_points (Data Source)
+
+Use this data source to list available Veeam restore point IDs for a VPS.
+
+## Example Usage
+
+```hcl
+data "ovh_vps_veeam_restore_points" "points" {
+  service_name = "vps-xxxxxx.vps.ovh.net"
+}
+
+data "ovh_vps_veeam_restore_points" "recent" {
+  service_name  = "vps-xxxxxx.vps.ovh.net"
+  creation_time = "2024-01-01T00:00:00Z"
+}
+```
+
+## Argument Reference
+
+* `service_name` - (Required) The internal name of your VPS.
+* `creation_time` - (Optional) Filter restore points by creation time (RFC3339).
+
+## Attributes Reference
+
+* `result` - List of Veeam restore point IDs.

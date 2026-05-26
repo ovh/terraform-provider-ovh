@@ -1,0 +1,47 @@
+---
+subcategory : "VPS"
+---
+
+# ovh_vps_ip_reverse (Resource)
+
+Manages the reverse DNS (PTR) record for an IP address attached to a VPS.
+
+## Example Usage
+
+{{tffile "examples/resources/vps_ip_reverse/example_1.tf"}}
+
+## Argument Reference
+
+* `service_name` - (Required, ForceNew) The internal name of your VPS.
+* `ip_address` - (Required, ForceNew) The IP address to manage.
+* `reverse` - (Required) The reverse DNS record (PTR) to set.
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `id` - Identifier of the form `service_name|ip_address`.
+* `version` - IP version (`v4` or `v6`).
+* `type` - IP type (`primary` or `additional`).
+* `gateway` - Gateway of the IP, if any.
+* `geolocation` - Geolocation of the IP (read-only, set at order time).
+
+## Releasing an additional IP
+
+Destroying this resource only **clears** the reverse DNS record. It does
+**not** release the underlying additional IP, because the OVH API
+`DELETE /vps/{serviceName}/ips/{ipAddress}` releases (and ends billing
+for) the additional IP, which is a destructive billing operation that
+should not happen as a side effect of removing a PTR record.
+
+To actually release an additional IP, use the OVHcloud cart termination
+flow for that IP.
+
+## Import
+
+The resource can be imported using the `service_name` and `ip_address`,
+separated by `|`:
+
+```bash
+$ terraform import ovh_vps_ip_reverse.rev 'vpsXXXXX.ovh.net|192.0.2.1'
+```

@@ -1,0 +1,20 @@
+---
+subcategory : "VPS"
+---
+
+# ovh_vps_disks (Data Source)
+
+Use this data source to list the IDs of disks attached to a VPS.
+
+## Example Usage
+
+{{tffile "examples/data-sources/vps_disks/example_1.tf"}}
+
+## Argument Reference
+
+* `service_name` - (Required) The internal name of the VPS (e.g.
+  `vps-XXXXXX.vps.ovh.net`).
+
+## Attributes Reference
+
+* `result` - The list of disk IDs attached to the VPS.

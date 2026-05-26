@@ -1,0 +1,32 @@
+---
+subcategory : "vRack"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_vrack_vps
+
+Attaches an OVHcloud VPS to a vRack.
+
+## Example Usage
+
+{{tffile "examples/resources/vrack_vps/example_1.tf"}}
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `service_name` - (Required) The service_name of your vRack.
+* `vps` - (Required) The service_name of the VPS to attach.
+
+## Attributes Reference
+
+(See generated docs/resources/vrack_vps.md for the full attribute list.)
+
+The following attributes are exported:
+
+* `id` - The ID of the vRack VPS association.
+* `service_name` - The service_name of the vRack.
+* `vps` - The service_name of the attached VPS.

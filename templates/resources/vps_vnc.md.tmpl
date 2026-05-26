@@ -1,0 +1,55 @@
+---
+subcategory : "VPS"
+---
+
+# ovh_vps_vnc (Resource)
+
+Opens a VNC console session on an OVHcloud VPS by calling
+`POST /vps/{serviceName}/openConsoleAccess` and exposes the resulting
+host / port / password in Terraform state.
+
+~> **WARNING** The credentials returned by OVHcloud are **one-shot**:
+the API issues a fresh session intended for immediate use, with no
+companion GET endpoint and no explicit close call. This resource
+therefore:
+
+* Stores the credentials in state once at create time.
+* Has a no-op Read (the values are treated as opaque after creation).
+* Has a no-op Delete (the session auto-expires server-side); destroying
+  the resource simply drops it from state.
+* Forces replacement on any change to `service_name` or `protocol`,
+  which re-issues fresh credentials via a new POST.
+
+Because the password is stored in Terraform state, ensure your state
+backend is encrypted.
+
+## Example Usage
+
+```hcl
+resource "ovh_vps_vnc" "session" {
+  service_name = "vps-xxxxxx.vps.ovh.net"
+  protocol     = "VNC"
+}
+
+output "vnc_endpoint" {
+  value = "${ovh_vps_vnc.session.host}:${ovh_vps_vnc.session.port}"
+}
+
+output "vnc_password" {
+  value     = ovh_vps_vnc.session.password
+  sensitive = true
+}
+```
+
+## Argument Reference
+
+* `service_name` - (Required, ForceNew) The service_name of your VPS.
+* `protocol` - (Required, ForceNew) The VNC protocol to open. One of
+  `VNC` or `VNCOverWebSocket`.
+
+## Attributes Reference
+
+* `id` - Composed as `<service_name>/<protocol>`.
+* `host` - VNC host to connect to.
+* `port` - VNC TCP port to connect to.
+* `password` - One-shot VNC password. Sensitive.

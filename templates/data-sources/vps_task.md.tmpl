@@ -1,0 +1,31 @@
+---
+subcategory : "VPS"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh\_vps\_task (Data Source)
+
+Use this data source to retrieve information about a specific task running on a VPS associated with your OVHcloud Account.
+
+## Example Usage
+
+{{tffile "examples/data-sources/vps_task/example_1.tf"}}
+
+## Argument Reference
+
+* `service_name` - (Required) The service name of your VPS (ex: "vps-123456.vps.ovh.net").
+* `id` - (Required) The numeric ID of the task to look up.
+
+## Attributes Reference
+
+`id` is set to the numeric ID of the task.
+
+The following attributes are exported:
+
+* `date` - The creation date of the task (RFC3339).
+* `type` - The task type (ex: "rebootVm", "reinstallVm").
+* `state` - The current state of the task. One of: `blocked`, `cancelled`, `doing`, `done`, `error`, `paused`, `todo`, `waitingAck`.
+* `progress` - The completion progress, as an integer percentage.

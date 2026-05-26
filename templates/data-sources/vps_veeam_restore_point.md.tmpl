@@ -1,0 +1,25 @@
+---
+subcategory : "VPS"
+---
+
+# ovh_vps_veeam_restore_point (Data Source)
+
+Use this data source to retrieve details of a Veeam restore point.
+
+## Example Usage
+
+```hcl
+data "ovh_vps_veeam_restore_point" "point" {
+  service_name     = "vps-xxxxxx.vps.ovh.net"
+  restore_point_id = 12345
+}
+```
+
+## Argument Reference
+
+* `service_name` - (Required) The internal name of your VPS.
+* `restore_point_id` - (Required) The ID of the Veeam restore point.
+
+## Attributes Reference
+
+* `creation_time` - Creation time of the restore point.

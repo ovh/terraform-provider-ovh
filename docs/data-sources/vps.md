@@ -16,7 +16,7 @@ data "ovh_vps" "server" {
 
 ## Argument Reference
 
-* `service_name` - (Required) The service_name of your dedicated server.
+* `service_name` - (Required) The internal name of your VPS service.
 
 ## Attributes Reference
 

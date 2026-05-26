@@ -1,0 +1,36 @@
+---
+subcategory : "VPS"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_vps_service_info
+
+Manages service-level settings (such as renewal configuration) for an OVHcloud VPS.
+
+## Example Usage
+
+{{tffile "examples/resources/vps_service_info/example_1.tf"}}
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `service_name` - (Required) The service_name of your VPS.
+* `renew` - (Optional) Renewal configuration for the service.
+  * `automatic` - (Optional) Whether automatic renewal is enabled.
+  * `delete_at_expiration` - (Optional) Whether to delete the service at expiration.
+  * `forced` - (Optional) Whether renewal is forced.
+  * `period` - (Optional) Renewal period.
+
+## Attributes Reference
+
+(See generated docs/resources/vps_service_info.md for the full attribute list.)
+
+The following attributes are exported:
+
+* `id` - The ID of the service.
+* `status` - Current status of the service.
+* `expiration` - Expiration date of the service.

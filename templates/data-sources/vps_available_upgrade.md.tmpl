@@ -1,0 +1,35 @@
+---
+subcategory : "VPS"
+---
+
+# ovh\_vps\_available\_upgrade (Data Source)
+
+Use this data source to retrieve the list of VPS models a given VPS service can be upgraded to.
+
+## Example Usage
+
+```hcl
+data "ovh_vps_available_upgrade" "upgrades" {
+  service_name = "vps-xxxxxx.vps.ovh.net"
+}
+```
+
+## Argument Reference
+
+* `service_name` - (Required) The service name of an existing VPS.
+
+## Attributes Reference
+
+* `models` - List of upgrade target models (same shape as `ovh_vps_models.models`).
+
+## Compatibility
+
+This data source is part of the OVHcloud public VPS API schema, but the
+underlying endpoint may not be implemented for every VPS lineup. Live
+testing on a `vps-le-2-2-40` (2019v1) US instance returns
+`404: Got an invalid (or empty) URL`. The endpoint is
+exposed on EU and CA regions; availability on the US API depends on the VPS product generation.
+
+If you receive a 404 from this data source, your VPS plan likely does
+not expose this endpoint. See [the OVHcloud VPS API console](https://api.us.ovhcloud.com/console/#/vps)
+for what's available on your specific service.
