@@ -9,7 +9,7 @@ import (
 func TestAccVPSDatacentersDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheckVPS(t)
+			testAccPreCheckCredentials(t)
 			skipIfEndpointMissing(t, "/vps/datacenter")
 		},
 		Providers: testAccProviders,
