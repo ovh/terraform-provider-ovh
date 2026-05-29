@@ -1,0 +1,57 @@
+---
+subcategory : "VPS"
+---
+
+# ovh_vps_veeam_restore
+
+Mounts (or fully restores) a Veeam restore point on a VPS. The resource
+wraps the OVHcloud `POST /vps/{serviceName}/veeam/restorePoints/{id}/restore`
+endpoint and waits for the underlying task to complete. Destroying the
+resource calls `DELETE /vps/{serviceName}/veeam/restoredBackup` to unmount
+the restore.
+
+All attributes are `ForceNew` — the resource is immutable.
+
+## Example Usage
+
+```hcl
+resource "ovh_vps_veeam_restore" "expose" {
+  service_name     = "vps-xxxxxx.vps.ovh.net"
+  restore_point_id = 12345
+  full             = false
+  export           = "nfs"
+}
+
+resource "ovh_vps_veeam_restore" "full_restore" {
+  service_name     = "vps-xxxxxx.vps.ovh.net"
+  restore_point_id = 12345
+  full             = true
+  export           = "smb"
+  change_password  = true
+}
+```
+
+## Argument Reference
+
+* `service_name` - (Required, ForceNew) The internal name of your VPS.
+* `restore_point_id` - (Required, ForceNew) ID of the Veeam restore point to mount.
+* `full` - (Required, ForceNew) `true` to perform a full restore, `false` to only expose the backup over the chosen protocol.
+* `export` - (Required, ForceNew) Export protocol used to expose the restore point. Must be `nfs` or `smb`.
+* `change_password` - (Optional, ForceNew) Whether to change the VPS administration password. Only valid when `full = true`.
+
+## Attributes Reference
+
+* `state` - State of the restored backup.
+* `access_nfs` - NFS access information.
+* `access_smb` - SMB access information.
+* `task_id` - ID of the restore task created on the OVHcloud side.
+
+## Compatibility
+
+This resource wraps `/vps/{serviceName}/veeam/restorePoints`. Live cross-region probing on 2026-05-26 shows
+the endpoint is present in the **EU** and **CA** API schemas (`eu.api.ovh.com`,
+`ca.api.ovh.com`) but **NOT** in the **US** schema (`api.us.ovhcloud.com`).
+
+On a US-region VPS the OVHcloud API returns
+`404: Got an invalid (or empty) URL`. Use this resource on EU or CA accounts,
+or wait for OVH to expose this endpoint on US.

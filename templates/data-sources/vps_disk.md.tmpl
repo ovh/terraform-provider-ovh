@@ -1,0 +1,30 @@
+---
+subcategory : "VPS"
+---
+
+# ovh_vps_disk (Data Source)
+
+Use this data source to retrieve information about a specific disk attached to a VPS.
+
+## Example Usage
+
+{{tffile "examples/data-sources/vps_disk/example_1.tf"}}
+
+## Argument Reference
+
+* `service_name` - (Required) The internal name of the VPS (e.g.
+  `vps-XXXXXX.vps.ovh.net`).
+* `disk_id` - (Required) Numeric identifier of the disk attached to the VPS.
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `id` - `service_name|disk_id` composite identifier.
+* `type` - Disk type (`primary` or `additional`).
+* `state` - Disk state (`connected`, `disconnected`, `pending`).
+* `size` - Disk size in GiB.
+* `bandwidth_limit` - Disk bandwidth limit.
+* `monitoring` - Whether OVHcloud monitoring is enabled on the disk.
+* `low_free_space_threshold` - Threshold (in MiB) below which a low-free-space
+  alert is raised.

@@ -1,0 +1,40 @@
+---
+subcategory : "VPS"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_vps_current_image (Data Source)
+
+Use this data source to retrieve information about the current image installed on an OVHcloud VPS.
+
+## Example Usage
+
+{{tffile "examples/data-sources/vps_current_image/example_1.tf"}}
+
+## Argument Reference
+
+* `service_name` - (Required) The service_name of your VPS.
+
+## Attributes Reference
+
+(See generated docs/data-sources/vps_current_image.md for the full attribute list.)
+
+* `id` - The ID of the current image.
+* `description` - Description of the current image.
+* `name` - Name of the current image.
+* `variant` - Variant of the current image.
+
+## Compatibility
+
+This data source is part of the OVHcloud public VPS API schema, but the
+underlying endpoint may not be implemented for every VPS lineup. Live
+testing on a `vps-le-2-2-40` (2019v1) US instance returns
+`404: Got an invalid (or empty) URL`. The endpoint is
+exposed on EU and CA regions; availability on the US API depends on the VPS product generation.
+
+If you receive a 404 from this data source, your VPS plan likely does
+not expose this endpoint. See [the OVHcloud VPS API console](https://api.us.ovhcloud.com/console/#/vps)
+for what's available on your specific service.

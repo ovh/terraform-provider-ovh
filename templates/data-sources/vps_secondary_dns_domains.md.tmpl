@@ -1,0 +1,19 @@
+---
+subcategory : "VPS"
+---
+
+# ovh_vps_secondary_dns_domains (Data Source)
+
+Lists all secondary DNS domains slaved on a VPS.
+
+## Example Usage
+
+{{tffile "examples/data-sources/vps_secondary_dns_domains/example_1.tf"}}
+
+## Argument Reference
+
+* `service_name` - (Required) The internal name of your VPS.
+
+## Attributes Reference
+
+* `result` - Sorted list of slaved domains.

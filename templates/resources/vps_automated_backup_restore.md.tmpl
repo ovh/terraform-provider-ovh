@@ -1,0 +1,31 @@
+---
+subcategory : "VPS"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_vps_automated_backup_restore
+
+Restores an OVHcloud VPS from an automated backup restore point.
+
+## Example Usage
+
+{{tffile "examples/resources/vps_automated_backup_restore/example_1.tf"}}
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `service_name` - (Required) The service_name of your VPS.
+* `restore_point` - (Required) The restore point to use for the restore operation.
+* `type` - (Required) The type of restore (file┃full).
+
+## Attributes Reference
+
+(See generated docs/resources/vps_automated_backup_restore.md for the full attribute list.)
+
+The following attributes are exported:
+
+* `id` - The ID of the restore operation.

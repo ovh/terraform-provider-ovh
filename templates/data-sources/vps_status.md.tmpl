@@ -1,0 +1,35 @@
+---
+subcategory : "VPS"
+---
+
+# ovh_vps_status (Data Source)
+
+Use this data source to retrieve the network/service probe status of a VPS
+(ping, dns, http, https, ssh, smtp, tools).
+
+## Example Usage
+
+{{tffile "examples/data-sources/vps_status/example_1.tf"}}
+
+## Argument Reference
+
+* `service_name` - (Required) The internal name of your VPS.
+
+## Attributes Reference
+
+* `probes` - List of service probes:
+  * `service` - Service name (ping, dns, http, https, ssh, smtp, tools).
+  * `port` - TCP/UDP port (when applicable).
+  * `state` - Probe state (typically `up` or `down`).
+
+## Compatibility
+
+This data source is part of the OVHcloud public VPS API schema, but the
+underlying endpoint may not be implemented for every VPS lineup. Live
+testing on a `vps-le-2-2-40` (2019v1) US instance returns
+`404: Got an invalid (or empty) URL`. The endpoint is
+exposed on EU and CA regions but not on the US API (as of 2026-05-26).
+
+If you receive a 404 from this data source, your VPS plan likely does
+not expose this endpoint. See [the OVHcloud VPS API console](https://api.us.ovhcloud.com/console/#/vps)
+for what's available on your specific service.

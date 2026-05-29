@@ -103,7 +103,7 @@ func (r *vpsResource) Create(ctx context.Context, req resource.CreateRequest, re
 
 	// Update resource
 	endpoint := "/vps/" + url.PathEscape(data.ServiceName.ValueString())
-	if err := r.config.OVHClient.Put(endpoint, data.ToUpdate(), nil); err != nil {
+	if err := r.config.OVHClient.Put(endpoint, data.ToCreate(), nil); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Put %s", endpoint),
 			err.Error(),

@@ -1,0 +1,42 @@
+---
+subcategory : "VPS"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_vps_change_contact
+
+Manages contact changes for an OVHcloud VPS service.
+
+## Example Usage
+
+{{tffile "examples/resources/vps_change_contact/example_1.tf"}}
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `service_name` - (Required) The service_name of your VPS.
+* `contact_admin` - (Optional) NIC handle of the admin contact to set.
+* `contact_billing` - (Optional) NIC handle of the billing contact to set.
+* `contact_tech` - (Optional) NIC handle of the technical contact to set.
+
+## Attributes Reference
+
+(See generated docs/resources/vps_change_contact.md for the full attribute list.)
+
+The following attributes are exported:
+
+* `id` - The ID of the contact change task.
+
+## Compatibility
+
+This resource wraps `POST /vps/{serviceName}/changeContact`. Live cross-region probing on 2026-05-26 shows
+the endpoint is present in the **EU** and **CA** API schemas (`eu.api.ovh.com`,
+`ca.api.ovh.com`) but **NOT** in the **US** schema (`api.us.ovhcloud.com`).
+
+On a US-region VPS the OVHcloud API returns
+`404: Got an invalid (or empty) URL`. Use this resource on EU or CA accounts,
+or wait for OVH to expose this endpoint on US.

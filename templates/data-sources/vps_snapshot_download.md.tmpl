@@ -1,0 +1,27 @@
+---
+subcategory : "VPS"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_vps_snapshot_download (Data Source)
+
+Use this data source to retrieve download information for the snapshot of an OVHcloud VPS.
+
+## Example Usage
+
+{{tffile "examples/data-sources/vps_snapshot_download/example_1.tf"}}
+
+## Argument Reference
+
+* `service_name` - (Required) The service_name of your VPS.
+
+## Attributes Reference
+
+(See generated docs/data-sources/vps_snapshot_download.md for the full attribute list.)
+
+* `id` - The ID of the snapshot download.
+* `url` - The download URL for the snapshot.
+* `expiration_date` - Expiration date of the download URL.

@@ -1,0 +1,40 @@
+---
+subcategory : "VPS"
+---
+
+# ovh\_vps\_distribution (Data Source)
+
+Use this data source to retrieve the distribution currently installed on one of
+your VPS. This complements `ovh_vps_distribution_template` (which describes a
+catalog template) by reporting what is actually running on the VPS right now,
+which is useful for drift detection and inventory.
+
+## Example Usage
+
+{{tffile "examples/data-sources/vps_distribution/example_1.tf"}}
+
+## Argument Reference
+
+* `service_name` - (Required) The internal name of your VPS (e.g. `vpsXXXXX.ovh.net`).
+
+## Attributes Reference
+
+* `id` - Template id of the installed distribution.
+* `name` - Template name (e.g. `Debian 12`).
+* `distribution` - Distribution family (e.g. `Debian`).
+* `bit_format` - Architecture bit format (`32` or `64`). The OVH API returns
+  this field as a JSON string; the provider exposes it as an integer.
+* `locale` - Default locale of the installed distribution.
+* `available_language` - Languages available for the installed distribution.
+
+## Compatibility
+
+This data source is part of the OVHcloud public VPS API schema, but the
+underlying endpoint may not be implemented for every VPS lineup. Live
+testing on a `vps-le-2-2-40` (2019v1) US instance returns
+`404: Got an invalid (or empty) URL`. The endpoint is
+exposed on EU and CA regions; on the US API it is only present for legacy VPS plans (pre-2019).
+
+If you receive a 404 from this data source, your VPS plan likely does
+not expose this endpoint. See [the OVHcloud VPS API console](https://api.us.ovhcloud.com/console/#/vps)
+for what's available on your specific service.

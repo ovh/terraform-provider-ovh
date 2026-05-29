@@ -1,0 +1,30 @@
+---
+subcategory : "VPS"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_vps_automated_backup (Data Source)
+
+Use this data source to retrieve information about automated backup settings for an OVHcloud VPS.
+
+## Example Usage
+
+{{tffile "examples/data-sources/vps_automated_backup/example_1.tf"}}
+
+## Argument Reference
+
+* `service_name` - (Required) The service_name of your VPS.
+
+## Attributes Reference
+
+(See generated docs/data-sources/vps_automated_backup.md for the full attribute list.)
+
+* `id` - The ID of the automated backup configuration.
+* `cron_pattern` - The cron pattern for automated backups.
+* `days_retention` - Number of days backups are retained.
+* `enabled` - Whether automated backup is enabled.
+* `max_capacity` - Maximum backup capacity.
+* `state` - State of the automated backup.

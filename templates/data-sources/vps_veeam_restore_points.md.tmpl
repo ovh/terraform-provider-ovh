@@ -1,0 +1,39 @@
+---
+subcategory : "VPS"
+---
+
+# ovh_vps_veeam_restore_points (Data Source)
+
+Use this data source to list available Veeam restore point IDs for a VPS.
+
+## Example Usage
+
+```hcl
+data "ovh_vps_veeam_restore_points" "points" {
+  service_name = "vps-xxxxxx.vps.ovh.net"
+}
+
+data "ovh_vps_veeam_restore_points" "recent" {
+  service_name  = "vps-xxxxxx.vps.ovh.net"
+  creation_time = "2024-01-01T00:00:00Z"
+}
+```
+
+## Argument Reference
+
+* `service_name` - (Required) The internal name of your VPS.
+* `creation_time` - (Optional) Filter restore points by creation time (RFC3339).
+
+## Attributes Reference
+
+* `result` - List of Veeam restore point IDs.
+
+## Compatibility
+
+This data source wraps `GET /vps/{serviceName}/veeam/restorePoints`. Live cross-region probing on 2026-05-26 shows
+the endpoint is present in the **EU** and **CA** API schemas (`eu.api.ovh.com`,
+`ca.api.ovh.com`) but **NOT** in the **US** schema (`api.us.ovhcloud.com`).
+
+On a US-region VPS the OVHcloud API returns
+`404: Got an invalid (or empty) URL`. Use this data source on EU or CA accounts,
+or wait for OVH to expose this endpoint on US.

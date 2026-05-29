@@ -1,0 +1,119 @@
+---
+subcategory : "VPS"
+---
+
+# ovh_vps_reinstall
+
+Reinstall a VPS using the **legacy template-based** flow.
+
+This resource wraps the `POST /vps/{serviceName}/reinstall` endpoint, which
+takes a numeric `templateId` from the legacy OVH VPS template catalogue. This
+is distinct from the newer image-based `/rebuild` flow already exposed on
+the `ovh_vps` resource through the `image_id` attribute — many existing VPS
+fleets, as well as some current VPS plans, still rely exclusively on this
+legacy path.
+
+Use the `ovh_vps_templates` / `ovh_vps_template` data sources to discover
+template ids that are valid for your VPS plan.
+
+~> **WARNING** Reinstalling a VPS is destructive — all data on the VPS will
+be lost. This resource is a one-shot task: it triggers a reinstall on
+create, has no meaningful read or update, and is a no-op on destroy
+(state-only). Changing any input forces re-creation, which triggers another
+reinstall.
+
+~> **WARNING** OVH may purge old task records from its database after a
+while, so a 404 on the underlying task is intentionally ignored on read to
+prevent Terraform from re-running the reinstall on the next refresh.
+
+## Example Usage
+
+### Example 1 - Reinstall with an SSH key name from /me/sshKey
+
+```terraform
+# Reinstall a VPS using the legacy template-based path (numeric templateId).
+#
+# Use the ovh_vps_templates / ovh_vps_template data sources to discover a
+# template id that is compatible with your VPS plan.
+
+resource "ovh_vps_reinstall" "reinstall" {
+  service_name = "vpsXXXXXX.vps.ovh.net"
+  template_id  = 1144 # e.g. Debian 12
+  language     = "en"
+
+  # Provide either ssh_keys (by name from /me/sshKey) and/or a raw public_ssh_key.
+  ssh_keys = ["my-key"]
+
+  # Optional: re-run the reinstall when one of these values changes.
+  triggers = {
+    rebuild_at = "2025-01-01T00:00:00Z"
+  }
+}
+```
+
+### Example 2 - Reinstall with a raw public SSH key and suppressed password email
+
+```terraform
+# Reinstall a VPS with a raw public SSH key and suppressed root password email.
+#
+# When do_not_send_password = true, make sure ssh_keys or public_ssh_key is
+# also set, otherwise you will not be able to log in to the reinstalled VPS.
+
+resource "ovh_vps_reinstall" "reinstall" {
+  service_name         = "vpsXXXXXX.vps.ovh.net"
+  template_id          = 1144
+  language             = "en"
+  public_ssh_key       = "ssh-ed25519 AAAAC3Nz... user@host"
+  do_not_send_password = true
+}
+```
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `service_name` - (Required, ForceNew) The internal name of your VPS
+  (e.g. `vpsXXXXXX.vps.ovh.net`).
+
+* `template_id` - (Required, ForceNew) Legacy numeric template id to install.
+
+* `language` - (Optional, ForceNew) Display language for the installation.
+  Defaults to `"en"`.
+
+* `software_ids` - (Optional, ForceNew) List of legacy software ids to install
+  on top of the template.
+
+* `ssh_keys` - (Optional, ForceNew) List of SSH key **names** (as registered
+  under `/me/sshKey`) to install on the VPS.
+
+* `public_ssh_key` - (Optional, ForceNew, Sensitive) Raw public SSH key to
+  install on the VPS. May be combined with `ssh_keys`; the API accepts both,
+  though most users only need one.
+
+* `do_not_send_password` - (Optional, ForceNew) If `true`, suppress the
+  generated-root-password email. Default `false`. The API will still accept
+  this request when no SSH key is provided, but you will then have no way to
+  log in — the provider emits a warning in that case but does not error.
+
+* `triggers` - (Optional, ForceNew) Arbitrary map of strings that, when
+  changed, forces this resource to be recreated and a new reinstall task to
+  be triggered.
+
+## Attributes Reference
+
+In addition to the arguments above, the following attributes are exported:
+
+* `id` - The task id (same value as `task_id`, as a string).
+* `task_id` - The numeric id of the reinstall task.
+* `task_state` - The terminal state of the reinstall task (should be
+  `"done"` on success).
+
+## Compatibility
+
+This resource wraps `POST /vps/{serviceName}/reinstall`. Live cross-region probing on 2026-05-26 shows
+the endpoint is present in the **EU** and **CA** API schemas (`eu.api.ovh.com`,
+`ca.api.ovh.com`) but **NOT** in the **US** schema (`api.us.ovhcloud.com`).
+
+On a US-region VPS the OVHcloud API returns
+`404: Got an invalid (or empty) URL`. Use this resource on EU or CA accounts,
+or wait for OVH to expose this endpoint on US.

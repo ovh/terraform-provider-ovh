@@ -1,0 +1,32 @@
+---
+subcategory : "VPS"
+---
+
+# ovh\_vps\_order\_rule\_datacenter (Data Source)
+
+Use this data source to discover the datacenters available for a VPS plan prior to ordering it.
+
+## Example Usage
+
+```hcl
+data "ovh_vps_order_rule_datacenter" "vps_le_1" {
+  ovh_subsidiary = "US"
+  plan_code      = "vps-le-1-2-20"
+}
+```
+
+## Argument Reference
+
+* `ovh_subsidiary` - (Required) The OVH subsidiary (e.g. `FR`, `US`, `CA`, `DE`, `GB`).
+* `plan_code` - (Required) The plan code of the VPS to order.
+* `os` - (Optional) Filter availability by OS family.
+
+## Attributes Reference
+
+* `datacenters` - List of datacenters where the plan can be ordered:
+  * `code` - Short datacenter code.
+  * `datacenter` - Full datacenter name.
+  * `days_before_delivery` - Estimated number of days before delivery.
+  * `status` - Overall availability status.
+  * `linux_status` - Availability status for Linux.
+  * `windows_status` - Availability status for Windows.

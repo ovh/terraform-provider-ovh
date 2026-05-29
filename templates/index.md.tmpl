@@ -280,6 +280,42 @@ In order to run the Acceptance Tests for development, the following environment 
 * `OVH_TESTACC_ORDER_STORAGE_EFS` - Set this variable to "yes" will order an EFS
 * `OVH_STORAGE_EFS_SERVICE_TEST` - The service name of your Enterprise File Storage service
 
+### VPS
+
+* `OVH_VPS` - The service name of an existing VPS used for non-ordering tests.
+
+* `OVH_VPS_IMAGE_ID` - The image ID used by the VPS `/rebuild` reinstall tests.
+
+* `OVH_VPS_BACKUP_FTP_IP_BLOCK` - The CIDR block used for backup FTP ACL tests (e.g. `203.0.113.0/24`).
+
+* `OVH_VPS_DISK_ID` - The numeric disk ID present on the test VPS.
+
+* `OVH_VPS_IP` - An additional IP address attached to the test VPS, used by ip_reverse and ip data source tests.
+
+* `OVH_VPS_IP_REVERSE` - The reverse DNS string to set on the IP (e.g. `vps.example.com`).
+
+* `OVH_VPS_MIGRATION_DATE` - The RFC3339 datetime used to schedule a 2020 to 2025 migration.
+
+* `OVH_VPS_MIGRATION_TARGET_PLAN` - The planCode to migrate to (e.g. `vps-2025-model1`).
+
+* `OVH_VPS_OPTION` - The name of a subscribed VPS option to test against (defaults to `snapshot`).
+
+* `OVH_VPS_RESTORE_POINT` - The RFC3339 datetime of an automated-backup restore point.
+
+* `OVH_VPS_SECONDARY_DNS_DOMAIN` - The domain name to use in secondary-DNS tests.
+
+* `OVH_VPS_SECONDARY_DNS_IP` - The IPv4 address of the master DNS server used in secondary-DNS tests.
+
+* `OVH_VPS_SNAPSHOT_SERVICE_NAME` - The VPS service name that has an existing snapshot.
+
+* `OVH_VPS_SOFTWARE_ID` - The numeric software ID used by template/distribution software tests.
+
+* `OVH_VPS_TASK_ID` - The numeric task ID used by the task data source tests.
+
+* `OVH_VPS_TEMPLATE_ID` - The numeric template ID used by legacy template tests.
+
+* `OVH_VPS_VEEAM_RESTORE_POINT_ID` - The numeric restore-point ID used by Veeam tests.
+
 ### Using a locally built terraform-provider-ovh
 
 If you wish to test the provider from the local version you just built, you can try the following method.

@@ -125,6 +125,20 @@ func (opts *VrackDedicatedServerCreateOpts) FromResource(d *schema.ResourceData)
 	return opts
 }
 
+type VrackVps struct {
+	Vrack string `json:"vrack"`
+	Vps   string `json:"vps"`
+}
+
+type VrackVpsCreateOpts struct {
+	Vps string `json:"vps"`
+}
+
+func (opts *VrackVpsCreateOpts) FromResource(d *schema.ResourceData) *VrackVpsCreateOpts {
+	opts.Vps = d.Get("vps_service_name").(string)
+	return opts
+}
+
 type VrackCloudProject struct {
 	Vrack   string `json:"vrack"`
 	Project string `json:"project"`

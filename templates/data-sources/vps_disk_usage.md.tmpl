@@ -1,0 +1,24 @@
+---
+subcategory : "VPS"
+---
+
+# ovh_vps_disk_usage (Data Source)
+
+Use this data source to retrieve the current usage of a VPS disk.
+
+## Example Usage
+
+{{tffile "examples/data-sources/vps_disk_usage/example_1.tf"}}
+
+## Argument Reference
+
+* `service_name` - (Required) The internal name of the VPS (e.g.
+  `vps-XXXXXX.vps.ovh.net`).
+* `disk_id` - (Required) Numeric identifier of the disk attached to the VPS.
+* `type` - (Optional) Type of usage to query. One of `max` or `used`. Defaults
+  to `used`.
+
+## Attributes Reference
+
+* `unit` - The unit of the returned value (e.g. `GB`).
+* `value` - The numeric usage value.
