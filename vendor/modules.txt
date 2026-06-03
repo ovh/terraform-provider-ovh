@@ -180,8 +180,10 @@ github.com/hashicorp/terraform-plugin-framework/types/basetypes
 github.com/hashicorp/terraform-plugin-framework-validators/helpers/validatordiag
 github.com/hashicorp/terraform-plugin-framework-validators/helpers/validatorfuncerr
 github.com/hashicorp/terraform-plugin-framework-validators/int64validator
+github.com/hashicorp/terraform-plugin-framework-validators/internal/configvalidator
 github.com/hashicorp/terraform-plugin-framework-validators/internal/schemavalidator
 github.com/hashicorp/terraform-plugin-framework-validators/listvalidator
+github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator
 github.com/hashicorp/terraform-plugin-framework-validators/setvalidator
 github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator
 # github.com/hashicorp/terraform-plugin-go v0.26.0

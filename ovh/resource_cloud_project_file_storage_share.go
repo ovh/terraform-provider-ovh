@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -17,8 +18,9 @@ import (
 )
 
 var (
-	_ resource.ResourceWithConfigure   = (*cloudProjectFileStorageShareResource)(nil)
-	_ resource.ResourceWithImportState = (*cloudProjectFileStorageShareResource)(nil)
+	_ resource.ResourceWithConfigure        = (*cloudProjectFileStorageShareResource)(nil)
+	_ resource.ResourceWithImportState      = (*cloudProjectFileStorageShareResource)(nil)
+	_ resource.ResourceWithConfigValidators = (*cloudProjectFileStorageShareResource)(nil)
 )
 
 func NewCloudProjectFileStorageShareResource() resource.Resource {
@@ -52,6 +54,23 @@ func (r *cloudProjectFileStorageShareResource) Configure(_ context.Context, req 
 
 func (r *cloudProjectFileStorageShareResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = CloudProjectFileStorageShareResourceSchema(ctx)
+}
+
+func (r *cloudProjectFileStorageShareResource) ConfigValidators(_ context.Context) []resource.ConfigValidator {
+	return []resource.ConfigValidator{
+		resourcevalidator.ExactlyOneOf(
+			path.MatchRoot("share_network_id"),
+			path.MatchRoot("network_id"),
+		),
+		resourcevalidator.RequiredTogether(
+			path.MatchRoot("network_id"),
+			path.MatchRoot("subnet_id"),
+		),
+		resourcevalidator.Conflicting(
+			path.MatchRoot("share_network_id"),
+			path.MatchRoot("subnet_id"),
+		),
+	}
 }
 
 func (r *cloudProjectFileStorageShareResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
