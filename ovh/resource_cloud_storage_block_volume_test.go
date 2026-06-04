@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
@@ -131,7 +132,7 @@ resource "ovh_cloud_storage_block_volume" "volume" {
 }
 
 // TestAccCloudStorageBlockVolume_encryptionToggle verifies that toggling
-// `encryption.enabled` retypes the volume in place (mutable, no replacement).
+// `encryption.enabled` recreates the volume.
 func TestAccCloudStorageBlockVolume_encryptionToggle(t *testing.T) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
 	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
@@ -183,8 +184,17 @@ resource "ovh_cloud_storage_block_volume" "volume" {
 				),
 			},
 			{
-				// Toggle encryption on — must be an in-place update (no replacement).
+				// Toggle encryption on — must replace the resource.
 				Config: encryptedConfig,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+						plancheck.ExpectResourceAction(
+							"ovh_cloud_storage_block_volume.volume",
+							plancheck.ResourceActionReplace,
+						),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume", "volume_type", "CLASSIC"),
 					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume", "encryption.enabled", "true"),
@@ -194,8 +204,17 @@ resource "ovh_cloud_storage_block_volume" "volume" {
 				),
 			},
 			{
-				// Toggle encryption back off — also in-place.
+				// Toggle encryption back off — also replaces the resource.
 				Config: plainConfig,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+						plancheck.ExpectResourceAction(
+							"ovh_cloud_storage_block_volume.volume",
+							plancheck.ResourceActionReplace,
+						),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume", "encryption.enabled", "false"),
 					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume", "current_state.encryption.enabled", "false"),

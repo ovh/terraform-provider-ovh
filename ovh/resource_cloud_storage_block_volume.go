@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -56,7 +57,6 @@ func (r *cloudStorageBlockVolumeResource) Configure(ctx context.Context, req res
 var volumeMutableAttrs = MutableAttrs{
 	Strings: []string{"name", "volume_type"},
 	Int64s:  []string{"size"},
-	Objects: []string{"encryption"},
 }
 
 func (r *cloudStorageBlockVolumeResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -101,14 +101,20 @@ func (r *cloudStorageBlockVolumeResource) Schema(ctx context.Context, req resour
 			"encryption": schema.SingleNestedAttribute{
 				Optional:            true,
 				Computed:            true,
-				Description:         "Encryption configuration for the volume",
-				MarkdownDescription: "Encryption configuration for the volume",
+				Description:         "Encryption configuration for the volume. Changing this value recreates the resource.",
+				MarkdownDescription: "Encryption configuration for the volume. **Changing this value recreates the resource.**",
+				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.RequiresReplace(),
+				},
 				Attributes: map[string]schema.Attribute{
 					"enabled": schema.BoolAttribute{
 						Optional:            true,
 						Computed:            true,
 						Description:         "Whether the volume is encrypted at rest with LUKS",
 						MarkdownDescription: "Whether the volume is encrypted at rest with LUKS",
+						PlanModifiers: []planmodifier.Bool{
+							boolplanmodifier.RequiresReplace(),
+						},
 					},
 				},
 			},

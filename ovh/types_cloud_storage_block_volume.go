@@ -164,17 +164,6 @@ func (m *CloudStorageBlockVolumeModel) ToUpdate(checksum string) *CloudStorageBl
 		VolumeType: m.VolumeType.ValueString(),
 	}
 
-	if !m.Encryption.IsNull() && !m.Encryption.IsUnknown() {
-		attrs := m.Encryption.Attributes()
-		if enabledVal, ok := attrs["enabled"]; ok {
-			if boolVal, ok := enabledVal.(types.Bool); ok && !boolVal.IsNull() && !boolVal.IsUnknown() {
-				target.Encryption = &CloudStorageBlockVolumeEncryption{
-					Enabled: boolVal.ValueBool(),
-				}
-			}
-		}
-	}
-
 	return &CloudStorageBlockVolumeUpdatePayload{Checksum: checksum, TargetSpec: target}
 }
 
