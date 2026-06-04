@@ -65,8 +65,8 @@ func testAccCheckIpMoveDestroy(s *terraform.State) error {
 			continue
 		}
 
-		if len(r.RoutedTo) > 0 && r.RoutedTo[0].ServiceName != "" {
-			return fmt.Errorf("IP %s still routed to a service: %s", ip, r.RoutedTo[0].ServiceName)
+		if r.RoutedTo != nil && r.RoutedTo.ServiceName != "" {
+			return fmt.Errorf("IP %s still routed to a service: %s", ip, r.RoutedTo.ServiceName)
 		}
 	}
 

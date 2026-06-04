@@ -442,20 +442,20 @@ func CloudProjectRegionStorageResourceSchema(ctx context.Context) schema.Schema 
 }
 
 type CloudProjectRegionStorageModel struct {
-	ID           ovhtypes.TfStringValue                   `tfsdk:"id" json:"-"`
-	CreatedAt    ovhtypes.TfStringValue                   `tfsdk:"created_at" json:"createdAt"`
-	Encryption   EncryptionValue                          `tfsdk:"encryption" json:"encryption"`
-	Limit        ovhtypes.TfInt64Value                    `tfsdk:"limit" json:"limit"`
-	Marker       ovhtypes.TfStringValue                   `tfsdk:"marker" json:"marker"`
-	Name         ovhtypes.TfStringValue                   `tfsdk:"name" json:"name"`
-	Objects      ovhtypes.TfListNestedValue[ObjectsValue] `tfsdk:"objects" json:"objects"`
-	HideObjects  ovhtypes.TfBoolValue                     `tfsdk:"hide_objects" json:"-"`
-	ObjectsCount ovhtypes.TfInt64Value                    `tfsdk:"objects_count" json:"objectsCount"`
-	ObjectsSize  ovhtypes.TfInt64Value                    `tfsdk:"objects_size" json:"objectsSize"`
-	OwnerId      ovhtypes.TfInt64Value                    `tfsdk:"owner_id" json:"ownerId"`
-	Prefix       ovhtypes.TfStringValue                   `tfsdk:"prefix" json:"prefix"`
-	Region       ovhtypes.TfStringValue                   `tfsdk:"region" json:"region"`
-	RegionName   ovhtypes.TfStringValue                   `tfsdk:"region_name" json:"regionName"`
+	ID           ovhtypes.TfStringValue                            `tfsdk:"id" json:"-"`
+	CreatedAt    ovhtypes.TfStringValue                            `tfsdk:"created_at" json:"createdAt"`
+	Encryption   EncryptionValue                                   `tfsdk:"encryption" json:"encryption"`
+	Limit        ovhtypes.TfInt64Value                             `tfsdk:"limit" json:"limit"`
+	Marker       ovhtypes.TfStringValue                            `tfsdk:"marker" json:"marker"`
+	Name         ovhtypes.TfStringValue                            `tfsdk:"name" json:"name"`
+	Objects      ovhtypes.TfListNestedValue[ObjectsValue]          `tfsdk:"objects" json:"objects"`
+	HideObjects  ovhtypes.TfBoolValue                              `tfsdk:"hide_objects" json:"-"`
+	ObjectsCount ovhtypes.TfInt64Value                             `tfsdk:"objects_count" json:"objectsCount"`
+	ObjectsSize  ovhtypes.TfInt64Value                             `tfsdk:"objects_size" json:"objectsSize"`
+	OwnerId      ovhtypes.TfInt64Value                             `tfsdk:"owner_id" json:"ownerId"`
+	Prefix       ovhtypes.TfStringValue                            `tfsdk:"prefix" json:"prefix"`
+	Region       ovhtypes.TfStringValue                            `tfsdk:"region" json:"region"`
+	RegionName   ovhtypes.TfStringValue                            `tfsdk:"region_name" json:"regionName"`
 	Replication  ReplicationValue                                  `tfsdk:"replication" json:"replication"`
 	ServiceName  ovhtypes.TfStringValue                            `tfsdk:"service_name" json:"serviceName"`
 	Tags         ovhtypes.TfMapNestedValue[ovhtypes.TfStringValue] `tfsdk:"tags" json:"tags"`
@@ -551,13 +551,13 @@ func (v *CloudProjectRegionStorageModel) MergeWith(other *CloudProjectRegionStor
 }
 
 type CloudProjectRegionStorageWritableModel struct {
-	Encryption  *EncryptionWritableValue                            `tfsdk:"encryption" json:"encryption,omitempty"`
-	Name        *ovhtypes.TfStringValue                             `tfsdk:"name" json:"name,omitempty"`
-	OwnerId     *ovhtypes.TfInt64Value                              `tfsdk:"owner_id" json:"ownerId,omitempty"`
-	Tags        *ovhtypes.TfMapNestedValue[ovhtypes.TfStringValue]  `tfsdk:"tags" json:"tags,omitempty"`
-	ObjectLock  *ObjectLockWritableValue                            `tfsdk:"object_lock" json:"objectLock,omitempty"`
-	Replication *ReplicationWritableValue                           `tfsdk:"replication" json:"replication,omitempty"`
-	Versioning  *VersioningWritableValue                            `tfsdk:"versioning" json:"versioning,omitempty"`
+	Encryption  *EncryptionWritableValue                           `tfsdk:"encryption" json:"encryption,omitempty"`
+	Name        *ovhtypes.TfStringValue                            `tfsdk:"name" json:"name,omitempty"`
+	OwnerId     *ovhtypes.TfInt64Value                             `tfsdk:"owner_id" json:"ownerId,omitempty"`
+	Tags        *ovhtypes.TfMapNestedValue[ovhtypes.TfStringValue] `tfsdk:"tags" json:"tags,omitempty"`
+	ObjectLock  *ObjectLockWritableValue                           `tfsdk:"object_lock" json:"objectLock,omitempty"`
+	Replication *ReplicationWritableValue                          `tfsdk:"replication" json:"replication,omitempty"`
+	Versioning  *VersioningWritableValue                           `tfsdk:"versioning" json:"versioning,omitempty"`
 }
 
 func (v CloudProjectRegionStorageModel) ToCreate() *CloudProjectRegionStorageWritableModel {
