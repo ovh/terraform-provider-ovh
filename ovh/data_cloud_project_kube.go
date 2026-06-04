@@ -229,7 +229,7 @@ func dataSourceCloudProjectKube() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						kubeClusterCiliumClusterID: {
 							Type:        schema.TypeInt,
-							Description: "Cilium' cluster Id of this MKSCluster. Must be defined between 1 and 255 if you are using the ClusterMeshing feature.",
+							Description: "Cilium cluster ID of this MKS cluster. Must be between 1 and 255 when using the ClusterMesh feature.",
 							Computed:    true,
 							Optional:    true,
 						},
@@ -265,7 +265,7 @@ func dataSourceCloudProjectKube() *schema.Resource {
 												},
 												kubeClusterCiliumServiceTypeKey: {
 													Type:        schema.TypeString,
-													Description: "Define if the cluster mesh service is will be exposed by a K8s Service of type NodePort or LoadBalancer",
+													Description: "Define if the cluster mesh service is exposed by a K8s Service of type NodePort or LoadBalancer",
 													Computed:    true,
 													Optional:    true,
 												},

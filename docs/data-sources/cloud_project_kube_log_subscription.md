@@ -20,8 +20,6 @@ output "resource-name" {
 }
 ```
 
-~> **Note:** The OVHcloud APIv6 token used by the provider must have `GET` access on the following URI in its token ACL: `/dbaas/logs/*/operation/*`
-
 ## Argument Reference
 
 The following arguments are supported:

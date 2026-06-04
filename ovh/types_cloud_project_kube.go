@@ -795,7 +795,7 @@ func (v CloudProjectKubeNodeResponse) ToMap() map[string]interface{} {
 	obj[kubeFlavorKey] = v.Flavor
 	obj[kubeNodeIdKey] = v.Id
 	obj[kubeNodeInstanceIdKey] = v.InstanceId
-	obj[kubeClusterIsUpToDateKey] = v.IsUpToDate
+	obj[kubeNodeIsUpToDateKey] = v.IsUpToDate
 	obj[kubeNameKey] = v.Name
 	obj[kubeNodePoolIdKey] = v.NodePoolId
 	obj[kubeProjectIdKey] = v.ProjectId

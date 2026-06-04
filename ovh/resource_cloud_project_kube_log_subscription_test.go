@@ -78,7 +78,7 @@ func TestAccCloudProjectKubeLogSubscription_basic(t *testing.T) {
 			{
 				Config: config,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PostApplyPostRefresh: []plancheck.PlanCheck{
+					PreApply: []plancheck.PlanCheck{
 						ExpectEmptyPlan(),
 					},
 				},
