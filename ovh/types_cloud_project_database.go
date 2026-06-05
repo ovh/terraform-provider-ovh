@@ -279,10 +279,11 @@ type CloudProjectDatabaseUpdateOpts struct {
 	AclsEnabled        *bool                               `json:"aclsEnabled,omitempty"`
 	Backups            *CloudProjectDatabaseBackups        `json:"backups,omitempty"`
 	Description        string                              `json:"description,omitempty"`
-	Disk               CloudProjectDatabaseDisk            `json:"disk,omitempty"`
+	Disk               *CloudProjectDatabaseDisk           `json:"disk,omitempty"`
 	Flavor             string                              `json:"flavor,omitempty"`
 	IPRestrictions     []CloudProjectDatabaseIPRestriction `json:"ipRestrictions,omitempty"`
 	MaintenanceTime    string                              `json:"maintenanceTime,omitempty"`
+	NodeNumber         *int                                `json:"nodeNumber,omitempty"`
 	Plan               string                              `json:"plan,omitempty"`
 	DeletionProtection *bool                               `json:"deletionProtection,omitempty"`
 	RestAPI            *bool                               `json:"restApi,omitempty"`
@@ -292,6 +293,13 @@ type CloudProjectDatabaseUpdateOpts struct {
 
 func (opts *CloudProjectDatabaseUpdateOpts) fromResource(d *schema.ResourceData) (*CloudProjectDatabaseUpdateOpts, error) {
 	engine := d.Get("engine").(string)
+
+	// For PostgreSQL, send only the attributes that actually changed so the
+	// PUT payload contains the modified values instead of the whole object.
+	if engine == "postgresql" {
+		return opts.fromResourcePostgresql(d)
+	}
+
 	if engine == "opensearch" {
 		AclsEnabledBool := d.Get("opensearch_acls_enabled").(bool)
 		opts.AclsEnabled = &AclsEnabledBool
@@ -307,7 +315,12 @@ func (opts *CloudProjectDatabaseUpdateOpts) fromResource(d *schema.ResourceData)
 	opts.Plan = d.Get("plan").(string)
 	opts.Flavor = d.Get("flavor").(string)
 	opts.Version = d.Get("version").(string)
-	opts.Disk = CloudProjectDatabaseDisk{Size: d.Get("disk_size").(int)}
+	diskSize := d.Get("disk_size").(int)
+	opts.Disk = &CloudProjectDatabaseDisk{Size: diskSize}
+
+	// Get node count from nodes list
+	nbOfNodes := d.Get("nodes.#").(int)
+	opts.NodeNumber = &nbOfNodes
 
 	deletionProtectionBool := d.Get("deletion_protection").(bool)
 	opts.DeletionProtection = &deletionProtectionBool
@@ -341,6 +354,67 @@ func (opts *CloudProjectDatabaseUpdateOpts) fromResource(d *schema.ResourceData)
 	}
 
 	opts.MaintenanceTime = d.Get("maintenance_time").(string)
+
+	return opts, nil
+}
+
+// fromResourcePostgresql builds the update payload for PostgreSQL clusters.
+// Only the attributes that actually changed are populated, so the PUT payload
+// contains the modified values instead of the whole object. Notably nodeNumber
+// is never sent.
+func (opts *CloudProjectDatabaseUpdateOpts) fromResourcePostgresql(d *schema.ResourceData) (*CloudProjectDatabaseUpdateOpts, error) {
+	if d.HasChange("description") {
+		opts.Description = d.Get("description").(string)
+	}
+	if d.HasChange("plan") {
+		opts.Plan = d.Get("plan").(string)
+	}
+	if d.HasChange("flavor") {
+		opts.Flavor = d.Get("flavor").(string)
+	}
+	if d.HasChange("version") {
+		opts.Version = d.Get("version").(string)
+	}
+	if d.HasChange("disk_size") {
+		diskSize := d.Get("disk_size").(int)
+		opts.Disk = &CloudProjectDatabaseDisk{Size: diskSize}
+	}
+
+	if d.HasChange("deletion_protection") {
+		deletionProtectionBool := d.Get("deletion_protection").(bool)
+		opts.DeletionProtection = &deletionProtectionBool
+	}
+
+	if d.HasChange("ip_restrictions") {
+		ipRests := d.Get("ip_restrictions").(*schema.Set).List()
+		opts.IPRestrictions = make([]CloudProjectDatabaseIPRestriction, len(ipRests))
+		for i, ir := range ipRests {
+			ipRestMap := ir.(map[string]interface{})
+			opts.IPRestrictions[i] = CloudProjectDatabaseIPRestriction{
+				Description: ipRestMap["description"].(string),
+				IP:          ipRestMap["ip"].(string),
+			}
+		}
+	}
+
+	if d.HasChange("backup_regions") || d.HasChange("backup_time") {
+		regions, err := helpers.StringsFromSchema(d, "backup_regions")
+		if err != nil {
+			return nil, err
+		}
+
+		time := d.Get("backup_time").(string)
+		if len(regions) != 0 || time != "" {
+			opts.Backups = &CloudProjectDatabaseBackups{
+				Regions: regions,
+				Time:    time,
+			}
+		}
+	}
+
+	if d.HasChange("maintenance_time") {
+		opts.MaintenanceTime = d.Get("maintenance_time").(string)
+	}
 
 	return opts, nil
 }

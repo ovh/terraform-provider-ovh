@@ -277,3 +277,80 @@ func TestAccCloudProjectDatabase_invalidBackupTimeUpdate(t *testing.T) {
 		},
 	})
 }
+
+// TestAccCloudProjectDatabase_postgresqlPlanAndNodesUpdate verifies that changing both
+// plan and nodes together triggers an in-place update, not a destroy/recreate.
+func TestAccCloudProjectDatabase_postgresqlPlanAndNodesUpdate(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	version := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_POSTGRESQL_VERSION_TEST")
+	if version == "" {
+		version = os.Getenv("OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST")
+	}
+	region := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_REGION_TEST")
+	flavor := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_FLAVOR_TEST")
+	description := acctest.RandomWithPrefix(test_prefix)
+
+	// Initial configuration: essential plan with 1 node
+	configInitial := fmt.Sprintf(`
+		resource "ovh_cloud_project_database" "db" {
+			service_name = "%s"
+			description  = "%s"
+			engine       = "postgresql"
+			version      = "%s"
+			plan         = "essential"
+			flavor       = "%s"
+			nodes {
+				region = "%s"
+			}
+		}
+	`, serviceName, description, version, flavor, region)
+
+	// Updated configuration: business plan with 2 nodes
+	configUpdated := fmt.Sprintf(`
+		resource "ovh_cloud_project_database" "db" {
+			service_name = "%s"
+			description  = "%s"
+			engine       = "postgresql"
+			version      = "%s"
+			plan         = "business"
+			flavor       = "%s"
+			nodes {
+				region = "%s"
+			}
+			nodes {
+				region = "%s"
+			}
+		}
+	`, serviceName, description, version, flavor, region, region)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheckCloudDatabase(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: configInitial,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_project_database.db", "plan", "essential"),
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_project_database.db", "nodes.#", "1"),
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_project_database.db", "nodes.0.region", region),
+				),
+			},
+			{
+				Config: configUpdated,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_project_database.db", "plan", "essential"),
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_project_database.db", "nodes.#", "2"),
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_project_database.db", "nodes.0.region", region),
+					resource.TestCheckResourceAttr(
+						"ovh_cloud_project_database.db", "nodes.1.region", region),
+				),
+			},
+		},
+	})
+}

@@ -2,6 +2,7 @@ package ovh
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/url"
@@ -109,13 +110,11 @@ func resourceCloudProjectDatabase() *schema.Resource {
 						"network_id": {
 							Type:        schema.TypeString,
 							Description: "Private network ID in which the node is. It's the regional openstackId of the private network.",
-							ForceNew:    true,
 							Optional:    true,
 						},
 						"region": {
 							Type:        schema.TypeString,
 							Description: "Region of the node",
-							ForceNew:    true,
 							Required:    true,
 						},
 						"subnet_id": {
@@ -383,11 +382,15 @@ func resourceCloudProjectDatabaseUpdate(ctx context.Context, d *schema.ResourceD
 		url.PathEscape(engine),
 		url.PathEscape(d.Id()),
 	)
+
 	params, err := (&CloudProjectDatabaseUpdateOpts{}).fromResource(d)
 	if err != nil {
 		return diag.Errorf("service update failed : %q", err)
 	}
 	log.Printf("[DEBUG] Will update database: %+v", params)
+	if jsonPayload, err := json.Marshal(params); err == nil {
+		log.Printf("[DEBUG] JSON payload for update: %s", string(jsonPayload))
+	}
 	err = config.OVHClient.PutWithContext(ctx, endpoint, params, nil)
 	if err != nil {
 		return diag.Errorf("calling Put %s with params %v:\n\t %q", endpoint, params, err)
