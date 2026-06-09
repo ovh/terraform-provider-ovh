@@ -91,6 +91,15 @@ func (r *cloudStorageBlockVolumeBackupResource) Schema(ctx context.Context, req 
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"availability_zone": schema.StringAttribute{
+				CustomType:          ovhtypes.TfStringType{},
+				Optional:            true,
+				Description:         "Availability zone within the region. Changing this value recreates the resource.",
+				MarkdownDescription: "Availability zone within the region. **Changing this value recreates the resource.**",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
 			"volume_id": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Required:            true,

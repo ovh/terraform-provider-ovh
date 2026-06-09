@@ -42,6 +42,7 @@ The following arguments are supported:
 * `name` - (Required) The name of the backup.
 * `description` - (Optional) A description for the backup.
 * `region` - (Required) The region where the backup will be created. Changing this value recreates the resource.
+* `availability_zone` - (Optional) Availability zone within the region. Changing this value recreates the resource.
 * `volume_id` - (Required) The ID of the volume to back up. Changing this value recreates the resource.
 
 ## Attributes Reference

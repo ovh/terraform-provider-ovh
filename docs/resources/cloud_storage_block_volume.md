@@ -28,7 +28,7 @@ resource "ovh_cloud_storage_block_volume" "restored" {
   region       = "GRA1"
   volume_type  = "CLASSIC"
 
-  create_from {
+  create_from = {
     backup_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
   }
 }
@@ -42,12 +42,14 @@ The following arguments are supported:
 * `name` - (Required) Volume name.
 * `size` - (Required) Size of the volume in GB.
 * `region` - (Required) Region where the volume will be created. **Changing this value recreates the resource.**
-* `volume_type` - (Required) Volume type (`CLASSIC`, `HIGH_SPEED`, `HIGH_SPEED_GEN2`). Can be changed after creation (triggers online retype).
-* `bootable` - (Optional) Whether the volume is bootable.
-* `encryption` - (Optional) Encryption configuration for the volume.
+* `availability_zone` - (Optional) Availability zone within the region. **Changing this value recreates the resource.**
+* `volume_type` - (Optional) Volume type (`CLASSIC`, `HIGH_SPEED`, `HIGH_SPEED_GEN2`). Optional when creating from a backup or snapshot (inherited from the source). Changing it after creation triggers an online retype.
+* `encryption` - (Optional) Encryption configuration for the volume. **Changing this value recreates the resource.**
   * `enabled` - (Optional) Whether the volume is encrypted at rest with LUKS.
-* `create_from` - (Optional) Source to create the volume from. **Changing this value recreates the resource.**
+* `create_from` - (Optional) Source to create the volume from (backup, snapshot, or image; only one may be set). **Changing this value recreates the resource.**
   * `backup_id` - (Optional) Identifier of a backup to restore the volume from.
+  * `snapshot_id` - (Optional) Identifier of a snapshot to create the volume from.
+  * `image_id` - (Optional) Identifier of a Glance image to create the volume from. The resulting volume is bootable; `volume_type` is required when using this field.
 
 ## Attributes Reference
 
@@ -61,6 +63,7 @@ The following attributes are exported:
 * `current_state` - Current state of the block storage volume:
   * `location` - Current location:
     * `region` - Region.
+    * `availability_zone` - Availability zone within the region.
   * `name` - Volume name.
   * `size` - Size of the volume in GB.
   * `volume_type` - Volume type (`CLASSIC`, `HIGH_SPEED`, `HIGH_SPEED_GEN2`).

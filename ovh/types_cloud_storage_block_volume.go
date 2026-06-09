@@ -10,13 +10,14 @@ import (
 
 // CloudStorageBlockVolumeModel represents the Terraform model for the block storage resource
 type CloudStorageBlockVolumeModel struct {
-	ServiceName ovhtypes.TfStringValue `tfsdk:"service_name"`
-	Name        ovhtypes.TfStringValue `tfsdk:"name"`
-	Size        types.Int64            `tfsdk:"size"`
-	Region      ovhtypes.TfStringValue `tfsdk:"region"`
-	VolumeType  ovhtypes.TfStringValue `tfsdk:"volume_type"`
-	Encryption  types.Object           `tfsdk:"encryption"`
-	CreateFrom  types.Object           `tfsdk:"create_from"`
+	ServiceName      ovhtypes.TfStringValue `tfsdk:"service_name"`
+	Name             ovhtypes.TfStringValue `tfsdk:"name"`
+	Size             types.Int64            `tfsdk:"size"`
+	Region           ovhtypes.TfStringValue `tfsdk:"region"`
+	AvailabilityZone ovhtypes.TfStringValue `tfsdk:"availability_zone"`
+	VolumeType       ovhtypes.TfStringValue `tfsdk:"volume_type"`
+	Encryption       types.Object           `tfsdk:"encryption"`
+	CreateFrom       types.Object           `tfsdk:"create_from"`
 
 	Id             ovhtypes.TfStringValue `tfsdk:"id"`
 	Checksum       ovhtypes.TfStringValue `tfsdk:"checksum"`
@@ -72,7 +73,8 @@ type CloudStorageBlockVolumeTarget struct {
 }
 
 type CloudStorageBlockVolumeLocation struct {
-	Region string `json:"region,omitempty"`
+	Region           string `json:"region,omitempty"`
+	AvailabilityZone string `json:"availabilityZone,omitempty"`
 }
 
 // Create payload
@@ -102,53 +104,54 @@ func BlockVolumeEncryptionAttrTypes() map[string]attr.Type {
 	}
 }
 
+// BlockVolumeLocationAttrTypes returns the attribute types for the current_state location object
+func BlockVolumeLocationAttrTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"region":            ovhtypes.TfStringType{},
+		"availability_zone": ovhtypes.TfStringType{},
+	}
+}
+
 // ToCreate converts the Terraform model to the API create payload
 func (m *CloudStorageBlockVolumeModel) ToCreate() *CloudStorageBlockVolumeCreatePayload {
+	location := &CloudStorageBlockVolumeLocation{Region: m.Region.ValueString()}
+	if !m.AvailabilityZone.IsNull() && !m.AvailabilityZone.IsUnknown() {
+		location.AvailabilityZone = m.AvailabilityZone.ValueString()
+	}
+
 	target := &CloudStorageBlockVolumeTarget{
-		Location:   &CloudStorageBlockVolumeLocation{Region: m.Region.ValueString()},
-		Name:       m.Name.ValueString(),
-		Size:       m.Size.ValueInt64(),
-		VolumeType: m.VolumeType.ValueString(),
+		Location: location,
+		Name:     m.Name.ValueString(),
+		Size:     m.Size.ValueInt64(),
+	}
+
+	// volumeType is optional on the API: omit it when creating from a backup or
+	// snapshot so it is inherited from the source.
+	if !m.VolumeType.IsNull() && !m.VolumeType.IsUnknown() && m.VolumeType.ValueString() != "" {
+		target.VolumeType = m.VolumeType.ValueString()
 	}
 
 	if !m.Encryption.IsNull() && !m.Encryption.IsUnknown() {
-		attrs := m.Encryption.Attributes()
-		if enabledVal, ok := attrs["enabled"]; ok {
-			if boolVal, ok := enabledVal.(types.Bool); ok && !boolVal.IsNull() && !boolVal.IsUnknown() {
-				target.Encryption = &CloudStorageBlockVolumeEncryption{
-					Enabled: boolVal.ValueBool(),
-				}
-			}
+		if enabledVal, ok := m.Encryption.Attributes()["enabled"].(types.Bool); ok && !enabledVal.IsNull() && !enabledVal.IsUnknown() {
+			target.Encryption = &CloudStorageBlockVolumeEncryption{Enabled: enabledVal.ValueBool()}
 		}
 	}
 
 	if !m.CreateFrom.IsNull() && !m.CreateFrom.IsUnknown() {
 		attrs := m.CreateFrom.Attributes()
-		createFrom := &CloudStorageBlockVolumeCreateFrom{}
-		hasCreateFrom := false
-
-		if backupIDVal, ok := attrs["backup_id"]; ok {
-			if strVal, ok := backupIDVal.(ovhtypes.TfStringValue); ok && !strVal.IsNull() && !strVal.IsUnknown() && strVal.ValueString() != "" {
-				createFrom.BackupID = strVal.ValueString()
-				hasCreateFrom = true
+		getString := func(key string) string {
+			if v, ok := attrs[key].(ovhtypes.TfStringValue); ok && !v.IsNull() && !v.IsUnknown() {
+				return v.ValueString()
 			}
+			return ""
 		}
 
-		if snapshotIDVal, ok := attrs["snapshot_id"]; ok {
-			if strVal, ok := snapshotIDVal.(ovhtypes.TfStringValue); ok && !strVal.IsNull() && !strVal.IsUnknown() && strVal.ValueString() != "" {
-				createFrom.SnapshotID = strVal.ValueString()
-				hasCreateFrom = true
-			}
+		createFrom := &CloudStorageBlockVolumeCreateFrom{
+			BackupID:   getString("backup_id"),
+			SnapshotID: getString("snapshot_id"),
+			ImageID:    getString("image_id"),
 		}
-
-		if imageIDVal, ok := attrs["image_id"]; ok {
-			if strVal, ok := imageIDVal.(ovhtypes.TfStringValue); ok && !strVal.IsNull() && !strVal.IsUnknown() && strVal.ValueString() != "" {
-				createFrom.ImageID = strVal.ValueString()
-				hasCreateFrom = true
-			}
-		}
-
-		if hasCreateFrom {
+		if createFrom.BackupID != "" || createFrom.SnapshotID != "" || createFrom.ImageID != "" {
 			target.CreateFrom = createFrom
 		}
 	}
@@ -156,12 +159,17 @@ func (m *CloudStorageBlockVolumeModel) ToCreate() *CloudStorageBlockVolumeCreate
 	return &CloudStorageBlockVolumeCreatePayload{TargetSpec: target}
 }
 
-// ToUpdate converts the Terraform model to the API update payload
+// ToUpdate converts the Terraform model to the API update payload. The update
+// target spec only carries mutable fields (name, size, volumeType); location,
+// encryption and createFrom are immutable and must not be sent.
 func (m *CloudStorageBlockVolumeModel) ToUpdate(checksum string) *CloudStorageBlockVolumeUpdatePayload {
 	target := &CloudStorageBlockVolumeTarget{
-		Name:       m.Name.ValueString(),
-		Size:       m.Size.ValueInt64(),
-		VolumeType: m.VolumeType.ValueString(),
+		Name: m.Name.ValueString(),
+		Size: m.Size.ValueInt64(),
+	}
+
+	if !m.VolumeType.IsNull() && !m.VolumeType.IsUnknown() && m.VolumeType.ValueString() != "" {
+		target.VolumeType = m.VolumeType.ValueString()
 	}
 
 	return &CloudStorageBlockVolumeUpdatePayload{Checksum: checksum, TargetSpec: target}
@@ -177,7 +185,7 @@ func BlockVolumeAttachedInstanceAttrTypes() map[string]attr.Type {
 // BlockVolumeCurrentStateAttrTypes returns the attribute types for the current_state object
 func BlockVolumeCurrentStateAttrTypes() map[string]attr.Type {
 	return map[string]attr.Type{
-		"location":           types.ObjectType{AttrTypes: map[string]attr.Type{"region": ovhtypes.TfStringType{}}},
+		"location":           types.ObjectType{AttrTypes: BlockVolumeLocationAttrTypes()},
 		"name":               ovhtypes.TfStringType{},
 		"size":               types.Int64Type,
 		"volume_type":        ovhtypes.TfStringType{},
@@ -198,9 +206,19 @@ func (m *CloudStorageBlockVolumeModel) MergeWith(ctx context.Context, response *
 
 	// Build current_state from API currentState
 	if response.CurrentState != nil {
+		region := ""
+		availabilityZone := ""
+		if response.CurrentState.Location != nil {
+			region = response.CurrentState.Location.Region
+			availabilityZone = response.CurrentState.Location.AvailabilityZone
+		}
+
 		locObj, _ := types.ObjectValue(
-			map[string]attr.Type{"region": ovhtypes.TfStringType{}},
-			map[string]attr.Value{"region": ovhtypes.TfStringValue{StringValue: types.StringValue(response.CurrentState.Location.Region)}},
+			BlockVolumeLocationAttrTypes(),
+			map[string]attr.Value{
+				"region":            ovhtypes.TfStringValue{StringValue: types.StringValue(region)},
+				"availability_zone": ovhtypes.TfStringValue{StringValue: types.StringValue(availabilityZone)},
+			},
 		)
 
 		bootableVal := types.BoolValue(false)
@@ -266,29 +284,34 @@ func (m *CloudStorageBlockVolumeModel) MergeWith(ctx context.Context, response *
 		m.Size = types.Int64Value(response.TargetSpec.Size)
 		if response.TargetSpec.VolumeType != "" {
 			m.VolumeType = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.VolumeType)}
+		} else if response.CurrentState != nil && response.CurrentState.VolumeType != "" {
+			// create-from-{backup,snapshot}: volumeType is inherited from the source and
+			// is not echoed in targetSpec; resolve the computed value from currentState
+			// so it never stays unknown after apply.
+			m.VolumeType = ovhtypes.TfStringValue{StringValue: types.StringValue(response.CurrentState.VolumeType)}
 		}
 
-		if response.TargetSpec.Encryption != nil {
-			encryptionObj, _ := types.ObjectValue(
-				BlockVolumeEncryptionAttrTypes(),
-				map[string]attr.Value{
-					"enabled": types.BoolValue(response.TargetSpec.Encryption.Enabled),
-				},
-			)
-			m.Encryption = encryptionObj
-		} else if m.Encryption.IsUnknown() {
-			m.Encryption = types.ObjectNull(BlockVolumeEncryptionAttrTypes())
-		}
+		// availability_zone and encryption are Optional (not Computed) immutable inputs;
+		// MergeWith leaves them at their configured value so they never become unknown
+		// on an unrelated update (which would spuriously force a replacement).
 
-		// Preserve create_from in state if it was set
+		// Preserve create_from in state if a source was set. Empty fields must be
+		// null (not "") to exactly match a config that sets only one of the three
+		// sources, otherwise Terraform reports an inconsistent result after apply.
+		strOrNull := func(s string) ovhtypes.TfStringValue {
+			if s == "" {
+				return ovhtypes.TfStringValue{StringValue: types.StringNull()}
+			}
+			return ovhtypes.TfStringValue{StringValue: types.StringValue(s)}
+		}
 		cf := response.TargetSpec.CreateFrom
 		if cf != nil && (cf.BackupID != "" || cf.SnapshotID != "" || cf.ImageID != "") {
 			createFromObj, _ := types.ObjectValue(
 				CreateFromAttrTypes(),
 				map[string]attr.Value{
-					"backup_id":   ovhtypes.TfStringValue{StringValue: types.StringValue(cf.BackupID)},
-					"snapshot_id": ovhtypes.TfStringValue{StringValue: types.StringValue(cf.SnapshotID)},
-					"image_id":    ovhtypes.TfStringValue{StringValue: types.StringValue(cf.ImageID)},
+					"backup_id":   strOrNull(cf.BackupID),
+					"snapshot_id": strOrNull(cf.SnapshotID),
+					"image_id":    strOrNull(cf.ImageID),
 				},
 			)
 			m.CreateFrom = createFromObj

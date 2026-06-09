@@ -3,5 +3,5 @@ resource "ovh_cloud_storage_block_volume" "example" {
   name         = "my-volume"
   size         = 10
   region       = "GRA1"
-  volume_type = "STANDARD"
+  volume_type  = "CLASSIC"
 }

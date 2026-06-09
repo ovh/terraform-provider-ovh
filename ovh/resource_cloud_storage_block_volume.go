@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -14,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/ovh/go-ovh/ovh"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
@@ -92,15 +94,32 @@ func (r *cloudStorageBlockVolumeResource) Schema(ctx context.Context, req resour
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"availability_zone": schema.StringAttribute{
+				CustomType:          ovhtypes.TfStringType{},
+				Optional:            true,
+				Description:         "Availability zone within the region. Changing this value recreates the resource.",
+				MarkdownDescription: "Availability zone within the region. **Changing this value recreates the resource.**",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
 			"volume_type": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
-				Required:            true,
-				Description:         "Volume type (CLASSIC, HIGH_SPEED, HIGH_SPEED_GEN2). Can be changed after creation (triggers online retype).",
-				MarkdownDescription: "Volume type (`CLASSIC`, `HIGH_SPEED`, `HIGH_SPEED_GEN2`). Can be changed after creation (triggers online retype).",
+				Optional:            true,
+				Computed:            true,
+				Description:         "Volume type (CLASSIC, HIGH_SPEED, HIGH_SPEED_GEN2). Optional when creating from a backup or snapshot (inherited from source). Can be changed after creation (triggers online retype).",
+				MarkdownDescription: "Volume type (`CLASSIC`, `HIGH_SPEED`, `HIGH_SPEED_GEN2`). Optional when creating from a backup or snapshot (inherited from source). Can be changed after creation (triggers online retype).",
+				Validators: []validator.String{
+					stringvalidator.OneOf("CLASSIC", "HIGH_SPEED", "HIGH_SPEED_GEN2"),
+				},
+				PlanModifiers: []planmodifier.String{
+					// Inherited from the source when omitted (create-from): keep the prior
+					// value rather than going unknown (and showing a perpetual diff).
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"encryption": schema.SingleNestedAttribute{
 				Optional:            true,
-				Computed:            true,
 				Description:         "Encryption configuration for the volume. Changing this value recreates the resource.",
 				MarkdownDescription: "Encryption configuration for the volume. **Changing this value recreates the resource.**",
 				PlanModifiers: []planmodifier.Object{
@@ -108,8 +127,7 @@ func (r *cloudStorageBlockVolumeResource) Schema(ctx context.Context, req resour
 				},
 				Attributes: map[string]schema.Attribute{
 					"enabled": schema.BoolAttribute{
-						Optional:            true,
-						Computed:            true,
+						Required:            true,
 						Description:         "Whether the volume is encrypted at rest with LUKS",
 						MarkdownDescription: "Whether the volume is encrypted at rest with LUKS",
 						PlanModifiers: []planmodifier.Bool{
@@ -202,6 +220,12 @@ func (r *cloudStorageBlockVolumeResource) Schema(ctx context.Context, req resour
 								Computed:            true,
 								Description:         "Region",
 								MarkdownDescription: "Region",
+							},
+							"availability_zone": schema.StringAttribute{
+								CustomType:          ovhtypes.TfStringType{},
+								Computed:            true,
+								Description:         "Availability zone within the region",
+								MarkdownDescription: "Availability zone within the region",
 							},
 						},
 					},
