@@ -59,6 +59,120 @@ func TestCloudStorageBlockVolumeToUpdate_DoesNotIncludeEncryption(t *testing.T) 
 	}
 }
 
+// blockVolumeAPIResponse builds a minimal API response for MergeWith tests.
+// targetEncryption and currentEncryption may be nil; currentState is omitted
+// entirely when withCurrentState is false.
+func blockVolumeAPIResponse(withCurrentState bool, targetEncryption, currentEncryption *CloudStorageBlockVolumeEncryption) *CloudStorageBlockVolumeAPIResponse {
+	response := &CloudStorageBlockVolumeAPIResponse{
+		Id:             "volume-id",
+		Checksum:       "checksum-123",
+		CreatedAt:      "2026-01-01T00:00:00Z",
+		UpdatedAt:      "2026-01-01T00:00:00Z",
+		ResourceStatus: "READY",
+		TargetSpec: &CloudStorageBlockVolumeTarget{
+			Location:   &CloudStorageBlockVolumeLocation{Region: "GRA9"},
+			Name:       "test-volume",
+			Size:       20,
+			VolumeType: "CLASSIC",
+			Encryption: targetEncryption,
+		},
+	}
+
+	if withCurrentState {
+		response.CurrentState = &CloudStorageBlockVolumeCurrentState{
+			Location:   &CloudStorageBlockVolumeLocation{Region: "GRA9"},
+			Name:       "test-volume",
+			Size:       20,
+			VolumeType: "CLASSIC",
+			Status:     "available",
+			Encryption: currentEncryption,
+		}
+	}
+
+	return response
+}
+
+func encryptionObjectValue(t *testing.T, enabled bool) types.Object {
+	t.Helper()
+	return types.ObjectValueMust(
+		BlockVolumeEncryptionAttrTypes(),
+		map[string]attr.Value{
+			"enabled": types.BoolValue(enabled),
+		},
+	)
+}
+
+// TestCloudStorageBlockVolumeMergeWith_EncryptionBackfillFromCurrentState
+// covers the defensive backfill: when the API GET omits targetSpec.encryption,
+// the root encryption attribute must be filled from currentState.encryption so
+// that UseStateForUnknown keeps plans stable for volumes created without an
+// encryption block.
+func TestCloudStorageBlockVolumeMergeWith_EncryptionBackfillFromCurrentState(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("targetSpec encryption nil, currentState encryption set", func(t *testing.T) {
+		model := CloudStorageBlockVolumeModel{
+			Encryption: types.ObjectNull(BlockVolumeEncryptionAttrTypes()),
+		}
+		model.MergeWith(ctx, blockVolumeAPIResponse(true, nil, &CloudStorageBlockVolumeEncryption{Enabled: false}))
+
+		want := encryptionObjectValue(t, false)
+		if !model.Encryption.Equal(want) {
+			t.Fatalf("expected encryption to be backfilled from currentState (%s), got %s", want, model.Encryption)
+		}
+	})
+
+	t.Run("targetSpec encryption set wins over currentState", func(t *testing.T) {
+		model := CloudStorageBlockVolumeModel{
+			Encryption: types.ObjectUnknown(BlockVolumeEncryptionAttrTypes()),
+		}
+		model.MergeWith(ctx, blockVolumeAPIResponse(true,
+			&CloudStorageBlockVolumeEncryption{Enabled: true},
+			&CloudStorageBlockVolumeEncryption{Enabled: false},
+		))
+
+		want := encryptionObjectValue(t, true)
+		if !model.Encryption.Equal(want) {
+			t.Fatalf("expected encryption to come from targetSpec (%s), got %s", want, model.Encryption)
+		}
+	})
+
+	t.Run("both targetSpec and currentState encryption absent leaves value as-is", func(t *testing.T) {
+		prior := encryptionObjectValue(t, true)
+		model := CloudStorageBlockVolumeModel{
+			Encryption: prior,
+		}
+		model.MergeWith(ctx, blockVolumeAPIResponse(true, nil, nil))
+
+		if !model.Encryption.Equal(prior) {
+			t.Fatalf("expected encryption to be left untouched (%s), got %s", prior, model.Encryption)
+		}
+	})
+
+	t.Run("currentState absent entirely leaves value as-is", func(t *testing.T) {
+		prior := types.ObjectNull(BlockVolumeEncryptionAttrTypes())
+		model := CloudStorageBlockVolumeModel{
+			Encryption: prior,
+		}
+		model.MergeWith(ctx, blockVolumeAPIResponse(false, nil, nil))
+
+		if !model.Encryption.Equal(prior) {
+			t.Fatalf("expected encryption to be left untouched (%s), got %s", prior, model.Encryption)
+		}
+	})
+
+	t.Run("both absent with unknown value falls back to null", func(t *testing.T) {
+		model := CloudStorageBlockVolumeModel{
+			Encryption: types.ObjectUnknown(BlockVolumeEncryptionAttrTypes()),
+		}
+		model.MergeWith(ctx, blockVolumeAPIResponse(true, nil, nil))
+
+		if !model.Encryption.IsNull() {
+			t.Fatalf("expected unknown encryption to be resolved to null, got %s", model.Encryption)
+		}
+	})
+}
+
 func TestCloudStorageBlockVolumeSchema_EncryptionEnabledRequiresReplace(t *testing.T) {
 	ctx := context.Background()
 	r := &cloudStorageBlockVolumeResource{}
