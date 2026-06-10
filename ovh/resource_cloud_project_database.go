@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 	"golang.org/x/exp/slices"
@@ -109,13 +110,11 @@ func resourceCloudProjectDatabase() *schema.Resource {
 						"network_id": {
 							Type:        schema.TypeString,
 							Description: "Private network ID in which the node is. It's the regional openstackId of the private network.",
-							ForceNew:    true,
 							Optional:    true,
 						},
 						"region": {
 							Type:        schema.TypeString,
 							Description: "Region of the node",
-							ForceNew:    true,
 							Required:    true,
 						},
 						"subnet_id": {
@@ -256,6 +255,27 @@ func resourceCloudProjectDatabase() *schema.Resource {
 				Computed:    true,
 			},
 		},
+
+		// Manage adding or removing
+		CustomizeDiff: customdiff.ForceNewIfChange("nodes", func(ctx context.Context, old, new, meta interface{}) bool {
+			oldNodes := old.([]interface{})
+			newNodes := new.([]interface{})
+
+			minLen := len(oldNodes)
+			if len(newNodes) < minLen {
+				minLen = len(newNodes)
+			}
+
+			for i := 0; i < minLen; i++ {
+				o := oldNodes[i].(map[string]interface{})
+				n := newNodes[i].(map[string]interface{})
+				if o["region"] != n["region"] || o["network_id"] != n["network_id"] {
+					return true
+				}
+			}
+
+			return false
+		}),
 	}
 }
 
