@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -14,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/ovh/go-ovh/ovh"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
@@ -77,11 +80,17 @@ func (r *cloudStorageBlockVolumeResource) Schema(ctx context.Context, req resour
 				Required:            true,
 				Description:         "Volume name",
 				MarkdownDescription: "Volume name",
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
 			},
 			"size": schema.Int64Attribute{
 				Required:            true,
 				Description:         "Size of the volume in GB",
 				MarkdownDescription: "Size of the volume in GB",
+				Validators: []validator.Int64{
+					int64validator.AtLeast(1),
+				},
 			},
 			"region": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
@@ -97,6 +106,9 @@ func (r *cloudStorageBlockVolumeResource) Schema(ctx context.Context, req resour
 				Required:            true,
 				Description:         "Volume type (CLASSIC, HIGH_SPEED, HIGH_SPEED_GEN2). Can be changed after creation (triggers online retype).",
 				MarkdownDescription: "Volume type (`CLASSIC`, `HIGH_SPEED`, `HIGH_SPEED_GEN2`). Can be changed after creation (triggers online retype).",
+				Validators: []validator.String{
+					stringvalidator.OneOf("CLASSIC", "HIGH_SPEED", "HIGH_SPEED_GEN2"),
+				},
 			},
 			"encryption": schema.SingleNestedAttribute{
 				Optional:            true,
@@ -104,6 +116,11 @@ func (r *cloudStorageBlockVolumeResource) Schema(ctx context.Context, req resour
 				Description:         "Encryption configuration for the volume. Changing this value recreates the resource.",
 				MarkdownDescription: "Encryption configuration for the volume. **Changing this value recreates the resource.**",
 				PlanModifiers: []planmodifier.Object{
+					// UseStateForUnknown MUST run before RequiresReplace: when the
+					// config omits `encryption`, the framework marks this computed
+					// attribute unknown on every plan with changes, and RequiresReplace
+					// would otherwise see unknown != state and force a spurious replace.
+					objectplanmodifier.UseStateForUnknown(),
 					objectplanmodifier.RequiresReplace(),
 				},
 				Attributes: map[string]schema.Attribute{
@@ -113,6 +130,7 @@ func (r *cloudStorageBlockVolumeResource) Schema(ctx context.Context, req resour
 						Description:         "Whether the volume is encrypted at rest with LUKS",
 						MarkdownDescription: "Whether the volume is encrypted at rest with LUKS",
 						PlanModifiers: []planmodifier.Bool{
+							boolplanmodifier.UseStateForUnknown(),
 							boolplanmodifier.RequiresReplace(),
 						},
 					},
@@ -131,6 +149,14 @@ func (r *cloudStorageBlockVolumeResource) Schema(ctx context.Context, req resour
 						Optional:            true,
 						Description:         "Identifier of a backup to restore the volume from",
 						MarkdownDescription: "Identifier of a backup to restore the volume from",
+						Validators: []validator.String{
+							// Exactly one source must be set when create_from is present.
+							// The validated attribute (backup_id) is implicitly included.
+							stringvalidator.ExactlyOneOf(
+								path.MatchRelative().AtParent().AtName("snapshot_id"),
+								path.MatchRelative().AtParent().AtName("image_id"),
+							),
+						},
 					},
 					"snapshot_id": schema.StringAttribute{
 						CustomType:          ovhtypes.TfStringType{},
@@ -151,6 +177,13 @@ func (r *cloudStorageBlockVolumeResource) Schema(ctx context.Context, req resour
 				Computed:            true,
 				Description:         "Volume ID",
 				MarkdownDescription: "Volume ID",
+				PlanModifiers: []planmodifier.String{
+					// An ID never changes once created. Without this, the framework
+					// marks `id` unknown on every in-place update, which cascades a
+					// spurious replacement to dependent resources referencing it
+					// (e.g. backups/snapshots via volume_id, which is RequiresReplace).
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"checksum": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
@@ -166,6 +199,10 @@ func (r *cloudStorageBlockVolumeResource) Schema(ctx context.Context, req resour
 				Computed:            true,
 				Description:         "Creation date of the volume",
 				MarkdownDescription: "Creation date of the volume",
+				PlanModifiers: []planmodifier.String{
+					// Creation date never changes after create.
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"updated_at": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
