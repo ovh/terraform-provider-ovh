@@ -11,8 +11,13 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
 
 func init() {
@@ -162,6 +167,85 @@ func TestAccCloudProjectDatabase_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"ovh_cloud_project_database.db", "maintenance_time", "01:00:00"),
 				),
+			},
+		},
+	})
+}
+
+func testAccCloudProjectDatabasePlanUpgradeConfig(serviceName, description, engine, version, region, flavor, plan string, nbNodes int) string {
+	nodes := strings.Repeat(fmt.Sprintf(`
+	nodes {
+		region = "%s"
+	}`, region), nbNodes)
+
+	return fmt.Sprintf(`
+resource "ovh_cloud_project_database" "db" {
+	service_name = "%s"
+	description  = "%s"
+	engine       = "%s"
+	version      = "%s"
+	plan         = "%s"
+	flavor       = "%s"%s
+}
+`, serviceName, description, engine, version, plan, flavor, nodes)
+}
+
+func TestAccCloudProjectDatabase_planUpgradeNoReplace(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	engine := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_ENGINE_TEST")
+	version := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_REGION_TEST")
+	flavor := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_FLAVOR_TEST")
+	description := acctest.RandomWithPrefix(test_prefix)
+
+	configEssential := testAccCloudProjectDatabasePlanUpgradeConfig(serviceName, description, engine, version, region, flavor, "essential", 1)
+	configBusiness := testAccCloudProjectDatabasePlanUpgradeConfig(serviceName, description, engine, version, region, flavor, "business", 2)
+
+	compareIDSame := statecheck.CompareValue(compare.ValuesSame())
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheckCloudDatabase(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: configEssential,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"ovh_cloud_project_database.db",
+						tfjsonpath.New("plan"),
+						knownvalue.StringExact("essential")),
+					statecheck.ExpectKnownValue(
+						"ovh_cloud_project_database.db",
+						tfjsonpath.New("nodes"),
+						knownvalue.ListSizeExact(1)),
+					compareIDSame.AddStateValue(
+						"ovh_cloud_project_database.db",
+						tfjsonpath.New("id")),
+				},
+			},
+			{
+				Config: configBusiness,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(
+							"ovh_cloud_project_database.db",
+							plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(
+						"ovh_cloud_project_database.db",
+						tfjsonpath.New("plan"),
+						knownvalue.StringExact("business")),
+					statecheck.ExpectKnownValue(
+						"ovh_cloud_project_database.db",
+						tfjsonpath.New("nodes"),
+						knownvalue.ListSizeExact(2)),
+					// Same id as step 1 => updated in place, not recreated.
+					compareIDSame.AddStateValue(
+						"ovh_cloud_project_database.db",
+						tfjsonpath.New("id")),
+				},
 			},
 		},
 	})
