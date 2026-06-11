@@ -57,7 +57,7 @@ func EmailDomainAccountDataSourceSchema(ctx context.Context) schema.Schema {
 	}
 }
 
-type EmailDomainAccountModel struct {
+type EmailDomainAccountDataSourceModel struct {
 	AccountName ovhtypes.TfStringValue `tfsdk:"account_name" json:"accountName"`
 	Description ovhtypes.TfStringValue `tfsdk:"description" json:"description"`
 	Domain      ovhtypes.TfStringValue `tfsdk:"domain" json:"domain"`
@@ -66,7 +66,7 @@ type EmailDomainAccountModel struct {
 	Size        ovhtypes.TfInt64Value  `tfsdk:"size" json:"size"`
 }
 
-func (v *EmailDomainAccountModel) MergeWith(other *EmailDomainAccountModel) {
+func (v *EmailDomainAccountDataSourceModel) MergeWith(other *EmailDomainAccountDataSourceModel) {
 	if (v.AccountName.IsUnknown() || v.AccountName.IsNull()) && !other.AccountName.IsUnknown() {
 		v.AccountName = other.AccountName
 	}

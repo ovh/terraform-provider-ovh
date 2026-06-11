@@ -44,7 +44,7 @@ func (d *emailDomainAccountDataSource) Schema(ctx context.Context, req datasourc
 }
 
 func (d *emailDomainAccountDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data EmailDomainAccountModel
+	var data EmailDomainAccountDataSourceModel
 
 	// Read Terraform configuration data into the model
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
