@@ -137,6 +137,8 @@ func resourceCloudProjectDatabaseKafkaTopicCreate(ctx context.Context, d *schema
 					return retry.NonRetryableError(fmt.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err))
 				}
 
+				d.SetId(res.Id)
+
 				log.Printf("[DEBUG] Waiting for topic %s to be READY", res.Id)
 				err = waitForCloudProjectDatabaseKafkaTopicReady(ctx, config.OVHClient, serviceName, clusterId, res.Id, d.Timeout(schema.TimeoutCreate))
 				if err != nil {
@@ -144,7 +146,6 @@ func resourceCloudProjectDatabaseKafkaTopicCreate(ctx context.Context, d *schema
 				}
 				log.Printf("[DEBUG] topic %s is READY", res.Id)
 
-				d.SetId(res.Id)
 				readDiags := resourceCloudProjectDatabaseKafkaTopicRead(ctx, d, meta)
 				err = diagnosticsToError(readDiags)
 				if err != nil {

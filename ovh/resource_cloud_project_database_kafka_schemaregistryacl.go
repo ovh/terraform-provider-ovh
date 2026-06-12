@@ -100,14 +100,14 @@ func resourceCloudProjectDatabaseKafkaSchemaRegistryAclCreate(ctx context.Contex
 		return diag.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
 	}
 
+	d.SetId(res.Id)
+
 	log.Printf("[DEBUG] Waiting for schema registry acl %s to be READY", res.Id)
 	err = waitForCloudProjectDatabaseKafkaSchemaRegistryAclReady(ctx, config.OVHClient, serviceName, clusterId, res.Id, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return diag.Errorf("timeout while waiting schema registry ACL %s to be READY: %s", res.Id, err.Error())
 	}
 	log.Printf("[DEBUG] schema registry acl %s is READY", res.Id)
-
-	d.SetId(res.Id)
 
 	return resourceCloudProjectDatabaseKafkaSchemaRegistryAclRead(ctx, d, meta)
 }

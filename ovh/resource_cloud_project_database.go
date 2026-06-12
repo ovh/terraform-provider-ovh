@@ -319,14 +319,14 @@ func resourceCloudProjectDatabaseCreate(ctx context.Context, d *schema.ResourceD
 		return diag.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
 	}
 
+	d.SetId(res.ID)
+
 	log.Printf("[DEBUG] Waiting for database %s to be READY", res.ID)
 	err = waitForCloudProjectDatabaseReady(ctx, config.OVHClient, serviceName, engine, res.ID, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return diag.Errorf("timeout while waiting database %s to be READY: %s", res.ID, err.Error())
 	}
 	log.Printf("[DEBUG] database %s is READY", res.ID)
-
-	d.SetId(res.ID)
 
 	if (engine != "clickhouse" && engine != "mongodb" && len(d.Get("advanced_configuration").(map[string]interface{})) > 0) ||
 		(engine == "kafka" && d.Get("kafka_rest_api").(bool)) ||

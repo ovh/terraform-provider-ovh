@@ -779,7 +779,6 @@ func postCloudProjectDatabaseUser(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(err)
 	}
 
-	d.SetId(res.Id)
 	return readFunc(ctx, d, meta)
 }
 
@@ -792,7 +791,28 @@ func postFuncCloudProjectDatabaseUser(ctx context.Context, d *schema.ResourceDat
 		if errOvh, ok := err.(*ovh.APIError); engine == "mongodb" && ok && (errOvh.Code == 409) {
 			return err
 		}
-		return fmt.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
+
+		// Terraform-side hotfix until the API 500 root cause is found: on 409/500 the user
+		// may already exist, so recover it by name to stay idempotent.
+		errOvh, ok := err.(*ovh.APIError)
+		name := d.Get("name").(string)
+		if ok && (errOvh.Code == 409 || errOvh.Code == 500) && name != "" && strings.HasSuffix(endpoint, "/user") {
+			recoveredId, rerr := findCloudProjectDatabaseUserIDByName(ctx, config.OVHClient, serviceName, engine, clusterId, name)
+			if rerr != nil {
+				return fmt.Errorf("calling Post %s with params %+v returned %q; failed to recover the user by name: %w", endpoint, params, err, rerr)
+			}
+			if recoveredId == "" {
+				return fmt.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
+			}
+			log.Printf("[WARN] Post %s returned an error (%q) but user %q already exists with id %s; adopting it into the state", endpoint, err, name, recoveredId)
+			res.Id = recoveredId
+		} else {
+			return fmt.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
+		}
+	}
+
+	if strings.HasSuffix(endpoint, "/user") {
+		d.SetId(res.Id)
 	}
 
 	log.Printf("[DEBUG] Waiting for user %s to be READY", res.Id)
@@ -804,6 +824,37 @@ func postFuncCloudProjectDatabaseUser(ctx context.Context, d *schema.ResourceDat
 
 	d.Set("password", res.Password)
 	return nil
+}
+
+// findCloudProjectDatabaseUserIDByName returns the id of the user matching name, or "" if none.
+func findCloudProjectDatabaseUserIDByName(ctx context.Context, client *ovhwrap.Client, serviceName, engine, clusterId, name string) (string, error) {
+	listEndpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/user",
+		url.PathEscape(serviceName),
+		url.PathEscape(engine),
+		url.PathEscape(clusterId),
+	)
+	ids := make([]string, 0)
+	if err := client.GetWithContext(ctx, listEndpoint, &ids); err != nil {
+		return "", fmt.Errorf("calling GET %s: %w", listEndpoint, err)
+	}
+
+	for _, id := range ids {
+		res := &CloudProjectDatabaseUserResponse{}
+		getEndpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/user/%s",
+			url.PathEscape(serviceName),
+			url.PathEscape(engine),
+			url.PathEscape(clusterId),
+			url.PathEscape(id),
+		)
+		if err := client.GetWithContext(ctx, getEndpoint, res); err != nil {
+			return "", fmt.Errorf("calling GET %s: %w", getEndpoint, err)
+		}
+		if res.Username == name {
+			return res.Id, nil
+		}
+	}
+
+	return "", nil
 }
 
 func updateCloudProjectDatabaseUser(ctx context.Context, d *schema.ResourceData, meta interface{}, engine string, readFunc schema.ReadContextFunc, f func() interface{}) diag.Diagnostics {
@@ -974,6 +1025,37 @@ func (v CloudProjectDatabaseDatabaseResponse) ToMap() map[string]interface{} {
 	obj["name"] = v.Name
 
 	return obj
+}
+
+// findCloudProjectDatabaseDatabaseIDByName returns the id of the database matching name, or "" if none.
+func findCloudProjectDatabaseDatabaseIDByName(ctx context.Context, client *ovhwrap.Client, serviceName, engine, clusterId, name string) (string, error) {
+	listEndpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/database",
+		url.PathEscape(serviceName),
+		url.PathEscape(engine),
+		url.PathEscape(clusterId),
+	)
+	ids := make([]string, 0)
+	if err := client.GetWithContext(ctx, listEndpoint, &ids); err != nil {
+		return "", fmt.Errorf("calling GET %s: %w", listEndpoint, err)
+	}
+
+	for _, id := range ids {
+		res := &CloudProjectDatabaseDatabaseResponse{}
+		getEndpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/database/%s",
+			url.PathEscape(serviceName),
+			url.PathEscape(engine),
+			url.PathEscape(clusterId),
+			url.PathEscape(id),
+		)
+		if err := client.GetWithContext(ctx, getEndpoint, res); err != nil {
+			return "", fmt.Errorf("calling GET %s: %w", getEndpoint, err)
+		}
+		if res.Name == name {
+			return res.Id, nil
+		}
+	}
+
+	return "", nil
 }
 
 type CloudProjectDatabaseDatabaseCreateOpts struct {

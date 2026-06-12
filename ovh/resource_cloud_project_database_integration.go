@@ -132,6 +132,8 @@ func resourceCloudProjectDatabaseIntegrationCreate(ctx context.Context, d *schem
 		return diag.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
 	}
 
+	d.SetId(res.Id)
+
 	log.Printf("[DEBUG] Waiting for integration %s to be READY", res.Id)
 	err = waitForCloudProjectDatabaseIntegrationReady(ctx, config.OVHClient, serviceName, engine, clusterId, res.Id, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
@@ -139,7 +141,6 @@ func resourceCloudProjectDatabaseIntegrationCreate(ctx context.Context, d *schem
 	}
 	log.Printf("[DEBUG] integration %s is READY", res.Id)
 
-	d.SetId(res.Id)
 	return resourceCloudProjectDatabaseIntegrationRead(ctx, d, meta)
 }
 
