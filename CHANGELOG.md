@@ -1,3 +1,45 @@
+## 2.14.0 (June 12, 2026)
+
+⚙️ General:
+
+* Inject schemas version header in `/v2` API requests ([#1300](https://github.com/ovh/terraform-provider-ovh/pull/1300))
+
+🎉 Features:
+
+* New resource: `ovh_cloud_storage_block_volume` ([#1338](https://github.com/ovh/terraform-provider-ovh/pull/1338))
+* New resource: `ovh_cloud_storage_block_volume_backup` ([#1338](https://github.com/ovh/terraform-provider-ovh/pull/1338))
+* New resource: `ovh_cloud_storage_block_volume_snapshot` ([#1338](https://github.com/ovh/terraform-provider-ovh/pull/1338))
+* New resource: `ovh_cloud_project_file_storage_share_network` ([#1297](https://github.com/ovh/terraform-provider-ovh/pull/1297))
+* New resource: `ovh_dbaas_logs_encryption_key` ([#1278](https://github.com/ovh/terraform-provider-ovh/pull/1278))
+* New resource: `ovh_email_domain_account` ([#1280](https://github.com/ovh/terraform-provider-ovh/pull/1280), [#1329](https://github.com/ovh/terraform-provider-ovh/pull/1329))
+* New resource: `ovh_vrack_public_routing_priority` ([#1227](https://github.com/ovh/terraform-provider-ovh/pull/1227))
+
+* New datasource: `ovh_cloud_storage_block_volume` ([#1338](https://github.com/ovh/terraform-provider-ovh/pull/1338))
+* New datasource: `ovh_cloud_storage_block_volumes` ([#1338](https://github.com/ovh/terraform-provider-ovh/pull/1338))
+* New datasource: `ovh_cloud_storage_block_volume_backup` ([#1338](https://github.com/ovh/terraform-provider-ovh/pull/1338))
+* New datasource: `ovh_cloud_storage_block_volume_backups` ([#1338](https://github.com/ovh/terraform-provider-ovh/pull/1338))
+* New datasource: `ovh_cloud_storage_block_volume_snapshot` ([#1338](https://github.com/ovh/terraform-provider-ovh/pull/1338))
+* New datasource: `ovh_cloud_storage_block_volume_snapshots` ([#1338](https://github.com/ovh/terraform-provider-ovh/pull/1338))
+* New datasource: `ovh_dbaas_logs_encryption_key` ([#1278](https://github.com/ovh/terraform-provider-ovh/pull/1278))
+* New datasource: `ovh_email_domain_account` ([#1279](https://github.com/ovh/terraform-provider-ovh/pull/1279))
+* New datasource: `ovh_email_domain_accounts` ([#1279](https://github.com/ovh/terraform-provider-ovh/pull/1279))
+* New datasource: `ovh_vrack` ([#1227](https://github.com/ovh/terraform-provider-ovh/pull/1227))
+
+💪 Improvements:
+
+* `r/ovh_cloud_project_file_storage_share`: Allow using `share_network_id` as an alternative to `network_id`/`subnet_id` ([#1297](https://github.com/ovh/terraform-provider-ovh/pull/1297))
+* `r/ovh_cloud_project_storage`: Add `tags` attribute ([#1304](https://github.com/ovh/terraform-provider-ovh/pull/1304))
+* `r/ovh_ip_move`: Park IP when deleting the resource ([#1301](https://github.com/ovh/terraform-provider-ovh/pull/1301))
+* `r/ovh_storage_efs_share`, `r/ovh_storage_efs_share_acl`, `r/ovh_storage_efs_share_snapshot`: Add import support ([#1317](https://github.com/ovh/terraform-provider-ovh/pull/1317))
+
+🐜 Bug fixes:
+
+* `r/ovh_cloud_project_database`: Scale nodes in place, keep region and network changes as ForceNew ([#1336](https://github.com/ovh/terraform-provider-ovh/pull/1336))
+* `r/ovh_cloud_project_database_*`: Make resource creation idempotent on 409/500 errors ([#1339](https://github.com/ovh/terraform-provider-ovh/pull/1339))
+* `r/ovh_cloud_project_kube_nodepool`: Cap `desired_nodes` when reducing `max_nodes` ([#1241](https://github.com/ovh/terraform-provider-ovh/pull/1241))
+
+❤️ Thanks for your contributions ❤️
+
 ## 2.13.1 (April 22, 2026)
 
 🐜 Bug fixes:
