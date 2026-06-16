@@ -319,6 +319,14 @@ func (m *CloudGatewayModel) MergeWith(ctx context.Context, response *CloudGatewa
 			modelVal := ovhtypes.TfStringValue{StringValue: types.StringNull()}
 			if response.TargetSpec.ExternalGateway.Model != "" {
 				modelVal = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.ExternalGateway.Model)}
+			} else if !m.ExternalGateway.IsNull() && !m.ExternalGateway.IsUnknown() {
+				// The API may not echo back the model (e.g. on POST / early provisioning
+				// responses). Preserve the planned/prior model already in state so the
+				// configured value is not clobbered to null, which would otherwise cause
+				// a perpetual diff on external_gateway.model.
+				if priorModel, ok := m.ExternalGateway.Attributes()["model"].(ovhtypes.TfStringValue); ok && !priorModel.IsNull() && !priorModel.IsUnknown() {
+					modelVal = priorModel
+				}
 			}
 			m.ExternalGateway, _ = types.ObjectValue(
 				ExternalGatewayAttrTypes(),
