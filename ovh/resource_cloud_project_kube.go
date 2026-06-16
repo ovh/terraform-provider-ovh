@@ -573,7 +573,7 @@ func resourceCloudProjectKubeUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 
 		log.Printf("[DEBUG] Waiting for kube %s to be READY", d.Id())
-		if err := waitForCloudProjectKubeReady(config.OVHClient, serviceName, d.Id(), []string{"REDEPLOYING", "RESETTING"}, []string{"READY"}, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := waitForCloudProjectKubeReady(config.OVHClient, serviceName, d.Id(), []string{"UPDATING", "REDEPLOYING", "RESETTING"}, []string{"READY"}, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("timeout while waiting kube %s to be READY: %w", d.Id(), err)
 		}
 
