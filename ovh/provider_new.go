@@ -285,6 +285,8 @@ func (p *OvhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 		NewCloudStorageBlockVolumeBackupsDataSource,
 		NewCloudStorageBlockVolumeDataSource,
 		NewCloudStorageBlockVolumesDataSource,
+		NewCloudRegionDataSource,
+		NewCloudRegionsDataSource,
 		NewOvhcloudConnectDatacentersDataSource,
 		NewOvhcloudConnectConfigPopDatacenterExtrasDataSource,
 		NewOvhcloudConnectConfigPopDatacentersDataSource,
