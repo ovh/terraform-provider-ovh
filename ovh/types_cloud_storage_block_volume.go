@@ -95,6 +95,16 @@ func CreateFromAttrTypes() map[string]attr.Type {
 	}
 }
 
+// stringValueOrNull returns a null TfStringValue for an empty string, otherwise
+// the wrapped value. Used so optional, non-computed attributes the API echoes
+// back as "" stay null in state and don't trip "inconsistent result after apply".
+func stringValueOrNull(s string) ovhtypes.TfStringValue {
+	if s == "" {
+		return ovhtypes.TfStringValue{StringValue: types.StringNull()}
+	}
+	return ovhtypes.TfStringValue{StringValue: types.StringValue(s)}
+}
+
 // BlockVolumeEncryptionAttrTypes returns the attribute types for the encryption object
 func BlockVolumeEncryptionAttrTypes() map[string]attr.Type {
 	return map[string]attr.Type{
@@ -268,11 +278,23 @@ func (m *CloudStorageBlockVolumeModel) MergeWith(ctx context.Context, response *
 			m.VolumeType = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.VolumeType)}
 		}
 
+		// Populate the root encryption from targetSpec when present, otherwise
+		// fall back to currentState (the API only echoes encryption in targetSpec
+		// when it was explicitly requested). Without this fallback the value is
+		// null in state when encryption is omitted from config, and on a later
+		// update the Computed+RequiresReplace attribute re-plans as unknown and
+		// forces a spurious replacement (e.g. on a volume_type retype).
+		var encryptionSrc *CloudStorageBlockVolumeEncryption
 		if response.TargetSpec.Encryption != nil {
+			encryptionSrc = response.TargetSpec.Encryption
+		} else if response.CurrentState != nil {
+			encryptionSrc = response.CurrentState.Encryption
+		}
+		if encryptionSrc != nil {
 			encryptionObj, _ := types.ObjectValue(
 				BlockVolumeEncryptionAttrTypes(),
 				map[string]attr.Value{
-					"enabled": types.BoolValue(response.TargetSpec.Encryption.Enabled),
+					"enabled": types.BoolValue(encryptionSrc.Enabled),
 				},
 			)
 			m.Encryption = encryptionObj
@@ -286,9 +308,9 @@ func (m *CloudStorageBlockVolumeModel) MergeWith(ctx context.Context, response *
 			createFromObj, _ := types.ObjectValue(
 				CreateFromAttrTypes(),
 				map[string]attr.Value{
-					"backup_id":   ovhtypes.TfStringValue{StringValue: types.StringValue(cf.BackupID)},
-					"snapshot_id": ovhtypes.TfStringValue{StringValue: types.StringValue(cf.SnapshotID)},
-					"image_id":    ovhtypes.TfStringValue{StringValue: types.StringValue(cf.ImageID)},
+					"backup_id":   stringValueOrNull(cf.BackupID),
+					"snapshot_id": stringValueOrNull(cf.SnapshotID),
+					"image_id":    stringValueOrNull(cf.ImageID),
 				},
 			)
 			m.CreateFrom = createFromObj

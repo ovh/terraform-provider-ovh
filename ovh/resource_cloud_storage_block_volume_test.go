@@ -34,8 +34,7 @@ resource "ovh_cloud_storage_block_volume" "volume" {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheckCloud(t)
-			testAccCheckCloudProjectExists(t)
+			testAccPreCheckCloudRegion(t)
 		},
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -105,8 +104,7 @@ resource "ovh_cloud_storage_block_volume" "volume" {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheckCloud(t)
-			testAccCheckCloudProjectExists(t)
+			testAccPreCheckCloudRegion(t)
 		},
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -170,8 +168,7 @@ resource "ovh_cloud_storage_block_volume" "volume" {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheckCloud(t)
-			testAccCheckCloudProjectExists(t)
+			testAccPreCheckCloudRegion(t)
 		},
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -254,8 +251,7 @@ resource "ovh_cloud_storage_block_volume" "volume_from_image" {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheckCloud(t)
-			testAccCheckCloudProjectExists(t)
+			testAccPreCheckCloudRegion(t)
 		},
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -347,8 +343,7 @@ resource "ovh_cloud_storage_block_volume" "restored_inferred_type" {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheckCloud(t)
-			testAccCheckCloudProjectExists(t)
+			testAccPreCheckCloudRegion(t)
 		},
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -372,9 +367,10 @@ resource "ovh_cloud_storage_block_volume" "restored_inferred_type" {
 	})
 }
 
-// TestAccCloudStorageBlockVolume_createFromSnapshot verifies volume_type
-// handling when creating from a snapshot: an explicit value is honored by the
-// API, and an omitted value is inferred from the source volume.
+// TestAccCloudStorageBlockVolume_createFromSnapshot verifies that creating a
+// volume from a snapshot infers volume_type from the source volume when it is
+// omitted. (Overriding volume_type from a snapshot is rejected by the API, so
+// only the inferred case is exercised here.)
 func TestAccCloudStorageBlockVolume_createFromSnapshot(t *testing.T) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
 	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
@@ -397,18 +393,6 @@ resource "ovh_cloud_storage_block_volume_snapshot" "snapshot" {
   name         = "%[2]s-snapshot"
 }
 
-resource "ovh_cloud_storage_block_volume" "from_snapshot_explicit_type" {
-  service_name = "%[1]s"
-  name         = "%[2]s-from-snapshot-explicit"
-  size         = 10
-  region       = "%[3]s"
-  volume_type  = "HIGH_SPEED"
-
-  create_from = {
-    snapshot_id = ovh_cloud_storage_block_volume_snapshot.snapshot.id
-  }
-}
-
 resource "ovh_cloud_storage_block_volume" "from_snapshot_inferred_type" {
   service_name = "%[1]s"
   name         = "%[2]s-from-snapshot-inferred"
@@ -423,20 +407,13 @@ resource "ovh_cloud_storage_block_volume" "from_snapshot_inferred_type" {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheckCloud(t)
-			testAccCheckCloudProjectExists(t)
+			testAccPreCheckCloudRegion(t)
 		},
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.from_snapshot_explicit_type", "volume_type", "HIGH_SPEED"),
-					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.from_snapshot_explicit_type", "current_state.volume_type", "HIGH_SPEED"),
-					resource.TestCheckResourceAttrPair("ovh_cloud_storage_block_volume.from_snapshot_explicit_type", "create_from.snapshot_id", "ovh_cloud_storage_block_volume_snapshot.snapshot", "id"),
-					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.from_snapshot_explicit_type", "resource_status", "READY"),
-					resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume.from_snapshot_explicit_type", "id"),
-					resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume.from_snapshot_explicit_type", "checksum"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume.from_snapshot_inferred_type", "volume_type"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume.from_snapshot_inferred_type", "current_state.volume_type"),
 					resource.TestCheckResourceAttrPair("ovh_cloud_storage_block_volume.from_snapshot_inferred_type", "create_from.snapshot_id", "ovh_cloud_storage_block_volume_snapshot.snapshot", "id"),
@@ -470,8 +447,7 @@ resource "ovh_cloud_storage_block_volume" "volume" {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheckCloud(t)
-			testAccCheckCloudProjectExists(t)
+			testAccPreCheckCloudRegion(t)
 		},
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -549,8 +525,7 @@ resource "ovh_cloud_storage_block_volume" "from_backup_encrypted" {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheckCloud(t)
-			testAccCheckCloudProjectExists(t)
+			testAccPreCheckCloudRegion(t)
 		},
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -578,8 +553,7 @@ const testAccBlockVolumeBogusID = "00000000-0000-4000-8000-000000000000"
 func testAccCloudStorageBlockVolumeExpectError(t *testing.T, config, errRegex string) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheckCloud(t)
-			testAccCheckCloudProjectExists(t)
+			testAccPreCheckCloudRegion(t)
 		},
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -653,6 +627,8 @@ resource "ovh_cloud_storage_block_volume" "neg" {
 
 // TestAccCloudStorageBlockVolume_invalidEncryptedBackupRestoredPlain asserts a
 // backup of an encrypted volume cannot be restored into a non-encrypted volume.
+// The API accepts the create call but the volume fails to provision, so the
+// error surfaces while waiting for the volume to become READY.
 func TestAccCloudStorageBlockVolume_invalidEncryptedBackupRestoredPlain(t *testing.T) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
 	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
@@ -683,7 +659,7 @@ resource "ovh_cloud_storage_block_volume" "neg" {
   create_from  = { backup_id = ovh_cloud_storage_block_volume_backup.enc_bkp.id }
   encryption   = { enabled = false }
 }
-`, serviceName, volumeName, region), "Error calling Post")
+`, serviceName, volumeName, region), "unexpected state 'ERROR'")
 }
 
 // TestAccCloudStorageBlockVolume_invalidNonexistentBackup asserts create_from

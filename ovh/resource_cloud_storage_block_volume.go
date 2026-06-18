@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -14,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/ovh/go-ovh/ovh"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
@@ -95,8 +97,15 @@ func (r *cloudStorageBlockVolumeResource) Schema(ctx context.Context, req resour
 			"volume_type": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Optional:            true,
-				Description:         "Volume type (CLASSIC, HIGH_SPEED, HIGH_SPEED_GEN2). Can be changed after creation (triggers online retype).",
-				MarkdownDescription: "Volume type (`CLASSIC`, `HIGH_SPEED`, `HIGH_SPEED_GEN2`). Can be changed after creation (triggers online retype).",
+				Computed:            true,
+				Description:         "Volume type (CLASSIC, HIGH_SPEED, HIGH_SPEED_GEN2). Can be changed after creation (triggers online retype). When omitted (e.g. creating from a backup or snapshot) it is inferred from the source volume.",
+				MarkdownDescription: "Volume type (`CLASSIC`, `HIGH_SPEED`, `HIGH_SPEED_GEN2`). Can be changed after creation (triggers online retype). When omitted (e.g. creating from a backup or snapshot) it is inferred from the source volume.",
+				Validators: []validator.String{
+					stringvalidator.OneOf("CLASSIC", "HIGH_SPEED", "HIGH_SPEED_GEN2"),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"encryption": schema.SingleNestedAttribute{
 				Optional:            true,
@@ -104,6 +113,7 @@ func (r *cloudStorageBlockVolumeResource) Schema(ctx context.Context, req resour
 				Description:         "Encryption configuration for the volume. Changing this value recreates the resource.",
 				MarkdownDescription: "Encryption configuration for the volume. **Changing this value recreates the resource.**",
 				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.UseStateForUnknown(),
 					objectplanmodifier.RequiresReplace(),
 				},
 				Attributes: map[string]schema.Attribute{
@@ -113,6 +123,7 @@ func (r *cloudStorageBlockVolumeResource) Schema(ctx context.Context, req resour
 						Description:         "Whether the volume is encrypted at rest with LUKS",
 						MarkdownDescription: "Whether the volume is encrypted at rest with LUKS",
 						PlanModifiers: []planmodifier.Bool{
+							boolplanmodifier.UseStateForUnknown(),
 							boolplanmodifier.RequiresReplace(),
 						},
 					},
