@@ -77,18 +77,12 @@ func (r *cloudNetworkPrivateVrackResource) Schema(ctx context.Context, req resou
 				Required:    true,
 				Description: "Network name",
 			},
-			"location": schema.SingleNestedAttribute{
+			"region": schema.StringAttribute{
+				CustomType:  ovhtypes.TfStringType{},
 				Required:    true,
-				Description: "Location of the network",
-				Attributes: map[string]schema.Attribute{
-					"region": schema.StringAttribute{
-						CustomType:  ovhtypes.TfStringType{},
-						Required:    true,
-						Description: "Region where the network will be created. Changing this value recreates the resource.",
-						PlanModifiers: []planmodifier.String{
-							stringplanmodifier.RequiresReplace(),
-						},
-					},
+				Description: "Region where the network will be created. Changing this value recreates the resource.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 

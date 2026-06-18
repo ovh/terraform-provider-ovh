@@ -19,9 +19,7 @@ func TestAccDataSourceCloudNetworkPrivateVracks_basic(t *testing.T) {
 resource "ovh_cloud_network_private_vrack" "test" {
   service_name = "%s"
   name         = "%s"
-  location = {
-    region = "%s"
-  }
+  region       = "%s"
 }
 
 data "ovh_cloud_network_private_vracks" "test" {

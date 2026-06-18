@@ -22,10 +22,7 @@ resource "ovh_cloud_network_private_vrack_subnet" "subnet" {
   cidr         = "10.0.0.0/24"
   dhcp_enabled = true
   gateway_ip   = "10.0.0.1"
-
-  location = {
-    region = "GRA1"
-  }
+  region       = "GRA1"
 
   dns_nameservers = [
     "213.186.33.99",
@@ -48,9 +45,8 @@ The following arguments are supported:
 * `network_id` - (Required) Network ID of the parent private network. **Changing this value recreates the resource.**
 * `name` - (Required) Subnet name.
 * `cidr` - (Required) CIDR address range for the subnet (e.g. `10.0.0.0/24`). **Changing this value recreates the resource.**
-* `location` - (Required) Target location of the subnet:
-  * `region` - (Required) Region where the subnet will be created. **Changing this value recreates the resource.**
-  * `availability_zone` - (Optional) Availability zone within the region.
+* `region` - (Required) Region where the subnet will be created. **Changing this value recreates the resource.**
+* `availability_zone` - (Optional) Availability zone within the region.
 * `description` - (Optional) Subnet description.
 * `dhcp_enabled` - (Optional) Whether DHCP is enabled on the subnet.
 * `dns_nameservers` - (Optional) List of DNS nameserver addresses.

@@ -574,32 +574,20 @@ func CloudNetworkPrivateSubnetResourceSchema(ctx context.Context) schema.Schema 
 				stringplanmodifier.UseStateForUnknown(),
 			},
 		},
-		"location": schema.SingleNestedAttribute{
-			Attributes: map[string]schema.Attribute{
-				"availability_zone": schema.StringAttribute{
-					CustomType:          ovhtypes.TfStringType{},
-					Optional:            true,
-					Description:         "Availability zone within the region",
-					MarkdownDescription: "Availability zone within the region",
-				},
-				"region": schema.StringAttribute{
-					CustomType:          ovhtypes.TfStringType{},
-					Required:            true,
-					Description:         "Region code",
-					MarkdownDescription: "Region code",
-					PlanModifiers: []planmodifier.String{
-						stringplanmodifier.RequiresReplace(),
-					},
-				},
-			},
-			CustomType: TargetSpecLocationType{
-				ObjectType: types.ObjectType{
-					AttrTypes: TargetSpecLocationValue{}.AttributeTypes(ctx),
-				},
-			},
+		"region": schema.StringAttribute{
+			CustomType:          ovhtypes.TfStringType{},
 			Required:            true,
-			Description:         "Target location",
-			MarkdownDescription: "Target location",
+			Description:         "Region code",
+			MarkdownDescription: "Region code",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.RequiresReplace(),
+			},
+		},
+		"availability_zone": schema.StringAttribute{
+			CustomType:          ovhtypes.TfStringType{},
+			Optional:            true,
+			Description:         "Availability zone within the region",
+			MarkdownDescription: "Availability zone within the region",
 		},
 		"name": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
@@ -636,14 +624,15 @@ type CloudNetworkPrivateSubnetModel struct {
 	// the resource root. They carry json:"-" because the targetSpec object is
 	// (un)marshaled explicitly in MarshalJSON/UnmarshalJSON via the
 	// CloudNetworkPrivateSubnetTargetSpecValue DTO, never at the JSON root.
-	AllocationPools ovhtypes.TfListNestedValue[TargetSpecAllocationPoolsValue] `tfsdk:"allocation_pools" json:"-"`
-	Cidr            ovhtypes.TfStringValue                                     `tfsdk:"cidr" json:"-"`
-	Description     ovhtypes.TfStringValue                                     `tfsdk:"description" json:"-"`
-	DhcpEnabled     ovhtypes.TfBoolValue                                       `tfsdk:"dhcp_enabled" json:"-"`
-	DnsNameservers  ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]         `tfsdk:"dns_nameservers" json:"-"`
-	GatewayIp       ovhtypes.TfStringValue                                     `tfsdk:"gateway_ip" json:"-"`
-	Location        TargetSpecLocationValue                                    `tfsdk:"location" json:"-"`
-	Name            ovhtypes.TfStringValue                                     `tfsdk:"name" json:"-"`
+	AllocationPools  ovhtypes.TfListNestedValue[TargetSpecAllocationPoolsValue] `tfsdk:"allocation_pools" json:"-"`
+	Cidr             ovhtypes.TfStringValue                                     `tfsdk:"cidr" json:"-"`
+	Description      ovhtypes.TfStringValue                                     `tfsdk:"description" json:"-"`
+	DhcpEnabled      ovhtypes.TfBoolValue                                       `tfsdk:"dhcp_enabled" json:"-"`
+	DnsNameservers   ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]         `tfsdk:"dns_nameservers" json:"-"`
+	GatewayIp        ovhtypes.TfStringValue                                     `tfsdk:"gateway_ip" json:"-"`
+	Region           ovhtypes.TfStringValue                                     `tfsdk:"region" json:"-"`
+	AvailabilityZone ovhtypes.TfStringValue                                     `tfsdk:"availability_zone" json:"-"`
+	Name             ovhtypes.TfStringValue                                     `tfsdk:"name" json:"-"`
 }
 
 func (v *CloudNetworkPrivateSubnetModel) MergeWith(other *CloudNetworkPrivateSubnetModel) {
@@ -709,10 +698,12 @@ func (v *CloudNetworkPrivateSubnetModel) MergeWith(other *CloudNetworkPrivateSub
 		v.GatewayIp = other.GatewayIp
 	}
 
-	if v.Location.IsUnknown() && !other.Location.IsUnknown() {
-		v.Location = other.Location
-	} else if !other.Location.IsUnknown() {
-		v.Location.MergeWith(&other.Location)
+	if (v.Region.IsUnknown() || v.Region.IsNull()) && !other.Region.IsUnknown() {
+		v.Region = other.Region
+	}
+
+	if (v.AvailabilityZone.IsUnknown() || v.AvailabilityZone.IsNull()) && !other.AvailabilityZone.IsUnknown() {
+		v.AvailabilityZone = other.AvailabilityZone
 	}
 
 	if (v.Name.IsUnknown() || v.Name.IsNull()) && !other.Name.IsUnknown() {
@@ -723,7 +714,22 @@ func (v *CloudNetworkPrivateSubnetModel) MergeWith(other *CloudNetworkPrivateSub
 
 // targetSpecValue assembles the lifted root fields back into the
 // CloudNetworkPrivateSubnetTargetSpecValue DTO used for JSON (un)marshaling.
+//
+// location is create-only (immutable): the API rejects targetSpec.location on
+// PUT. We therefore build a known location only when region is set. On update,
+// the DTO's ToUpdate() drops the location, which clears the lifted region/AZ
+// (see ToUpdate), so region is null here and the location stays null — and the
+// DTO MarshalJSON omits a null location.
 func (v CloudNetworkPrivateSubnetModel) targetSpecValue() CloudNetworkPrivateSubnetTargetSpecValue {
+	location := NewTargetSpecLocationValueNull()
+	if !v.Region.IsNull() && !v.Region.IsUnknown() {
+		location = TargetSpecLocationValue{
+			AvailabilityZone: v.AvailabilityZone,
+			Region:           v.Region,
+			state:            attr.ValueStateKnown,
+		}
+	}
+
 	return CloudNetworkPrivateSubnetTargetSpecValue{
 		AllocationPools: v.AllocationPools,
 		Cidr:            v.Cidr,
@@ -731,7 +737,7 @@ func (v CloudNetworkPrivateSubnetModel) targetSpecValue() CloudNetworkPrivateSub
 		DhcpEnabled:     v.DhcpEnabled,
 		DnsNameservers:  v.DnsNameservers,
 		GatewayIp:       v.GatewayIp,
-		Location:        v.Location,
+		Location:        location,
 		Name:            v.Name,
 		state:           attr.ValueStateKnown,
 	}
@@ -747,7 +753,8 @@ func (v CloudNetworkPrivateSubnetModel) ToCreate() *CloudNetworkPrivateSubnetMod
 	res.DhcpEnabled = created.DhcpEnabled
 	res.DnsNameservers = created.DnsNameservers
 	res.GatewayIp = created.GatewayIp
-	res.Location = created.Location
+	res.Region = created.Location.Region
+	res.AvailabilityZone = created.Location.AvailabilityZone
 	res.Name = created.Name
 
 	return res
@@ -767,7 +774,8 @@ func (v CloudNetworkPrivateSubnetModel) ToUpdate() *CloudNetworkPrivateSubnetMod
 	res.DhcpEnabled = updated.DhcpEnabled
 	res.DnsNameservers = updated.DnsNameservers
 	res.GatewayIp = updated.GatewayIp
-	res.Location = updated.Location
+	res.Region = updated.Location.Region
+	res.AvailabilityZone = updated.Location.AvailabilityZone
 	res.Name = updated.Name
 
 	return res
@@ -826,7 +834,8 @@ func (v *CloudNetworkPrivateSubnetModel) UnmarshalJSON(data []byte) error {
 		v.DhcpEnabled = shadow.TargetSpec.DhcpEnabled
 		v.DnsNameservers = shadow.TargetSpec.DnsNameservers
 		v.GatewayIp = shadow.TargetSpec.GatewayIp
-		v.Location = shadow.TargetSpec.Location
+		v.Region = shadow.TargetSpec.Location.Region
+		v.AvailabilityZone = shadow.TargetSpec.Location.AvailabilityZone
 		v.Name = shadow.TargetSpec.Name
 	}
 
