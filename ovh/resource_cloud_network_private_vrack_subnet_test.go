@@ -94,6 +94,151 @@ resource "ovh_cloud_network_private_vrack_subnet" "test" {
 	})
 }
 
+// TestAccCloudNetworkPrivateVrackSubnet_withAllOptions creates a subnet exercising
+// all optional attributes: gateway_ip, dns_nameservers and allocation_pools.
+func TestAccCloudNetworkPrivateVrackSubnet_withAllOptions(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+
+	networkName := acctest.RandomWithPrefix(testAccResourceCloudNetworkPrivateVrackNamePrefix)
+	subnetName := acctest.RandomWithPrefix(testAccResourceCloudNetworkPrivateVrackSubnetNamePrefix)
+
+	config := fmt.Sprintf(`
+resource "ovh_cloud_network_private_vrack" "network" {
+  service_name = "%s"
+  name         = "%s"
+  region       = "%s"
+}
+
+resource "ovh_cloud_network_private_vrack_subnet" "test" {
+  service_name    = ovh_cloud_network_private_vrack.network.service_name
+  network_id      = ovh_cloud_network_private_vrack.network.id
+  name            = "%s"
+  cidr            = "10.0.0.0/24"
+  region          = "%s"
+  dhcp_enabled    = true
+  gateway_ip      = "10.0.0.1"
+  dns_nameservers = ["1.1.1.1", "8.8.8.8"]
+
+  allocation_pools = [
+    {
+      start = "10.0.0.10"
+      end   = "10.0.0.100"
+    },
+  ]
+}
+`, serviceName, networkName, region, subnetName, region)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloudNetworkPrivateVrackSubnet(t)
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack_subnet.test", "name", subnetName),
+					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack_subnet.test", "cidr", "10.0.0.0/24"),
+					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack_subnet.test", "dhcp_enabled", "true"),
+					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack_subnet.test", "gateway_ip", "10.0.0.1"),
+					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack_subnet.test", "dns_nameservers.#", "2"),
+					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack_subnet.test", "dns_nameservers.0", "1.1.1.1"),
+					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack_subnet.test", "dns_nameservers.1", "8.8.8.8"),
+					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack_subnet.test", "allocation_pools.#", "1"),
+					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack_subnet.test", "allocation_pools.0.start", "10.0.0.10"),
+					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack_subnet.test", "allocation_pools.0.end", "10.0.0.100"),
+					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack_subnet.test", "resource_status", "READY"),
+					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack_subnet.test", "current_state.gateway_ip", "10.0.0.1"),
+					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack_subnet.test", "current_state.dhcp_enabled", "true"),
+				),
+			},
+			// Test import
+			{
+				ResourceName:      "ovh_cloud_network_private_vrack_subnet.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccCloudNetworkPrivateVrackSubnetImportStateIdFunc("ovh_cloud_network_private_vrack_subnet.test"),
+			},
+		},
+	})
+}
+
+// TestAccCloudNetworkPrivateVrackSubnet_updateMutableFields toggles dhcp_enabled and
+// updates dns_nameservers / gateway_ip in place (these are mutable, no replacement).
+func TestAccCloudNetworkPrivateVrackSubnet_updateMutableFields(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+
+	networkName := acctest.RandomWithPrefix(testAccResourceCloudNetworkPrivateVrackNamePrefix)
+	subnetName := acctest.RandomWithPrefix(testAccResourceCloudNetworkPrivateVrackSubnetNamePrefix)
+
+	config := fmt.Sprintf(`
+resource "ovh_cloud_network_private_vrack" "network" {
+  service_name = "%s"
+  name         = "%s"
+  region       = "%s"
+}
+
+resource "ovh_cloud_network_private_vrack_subnet" "test" {
+  service_name    = ovh_cloud_network_private_vrack.network.service_name
+  network_id      = ovh_cloud_network_private_vrack.network.id
+  name            = "%s"
+  cidr            = "10.0.0.0/24"
+  region          = "%s"
+  dhcp_enabled    = false
+  dns_nameservers = ["1.1.1.1"]
+}
+`, serviceName, networkName, region, subnetName, region)
+
+	updatedConfig := fmt.Sprintf(`
+resource "ovh_cloud_network_private_vrack" "network" {
+  service_name = "%s"
+  name         = "%s"
+  region       = "%s"
+}
+
+resource "ovh_cloud_network_private_vrack_subnet" "test" {
+  service_name    = ovh_cloud_network_private_vrack.network.service_name
+  network_id      = ovh_cloud_network_private_vrack.network.id
+  name            = "%s"
+  cidr            = "10.0.0.0/24"
+  region          = "%s"
+  dhcp_enabled    = true
+  dns_nameservers = ["8.8.8.8", "8.8.4.4"]
+}
+`, serviceName, networkName, region, subnetName, region)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloudNetworkPrivateVrackSubnet(t)
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack_subnet.test", "dhcp_enabled", "false"),
+					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack_subnet.test", "dns_nameservers.#", "1"),
+					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack_subnet.test", "dns_nameservers.0", "1.1.1.1"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_network_private_vrack_subnet.test", "id"),
+				),
+			},
+			{
+				Config: updatedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack_subnet.test", "dhcp_enabled", "true"),
+					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack_subnet.test", "dns_nameservers.#", "2"),
+					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack_subnet.test", "dns_nameservers.0", "8.8.8.8"),
+					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack_subnet.test", "dns_nameservers.1", "8.8.4.4"),
+					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack_subnet.test", "current_state.dhcp_enabled", "true"),
+					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack_subnet.test", "resource_status", "READY"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccCloudNetworkPrivateVrackSubnet_update(t *testing.T) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
 	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")

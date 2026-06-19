@@ -77,6 +77,48 @@ resource "ovh_cloud_network_private_vrack" "test" {
 	})
 }
 
+func TestAccCloudNetworkPrivateVrack_withDescription(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+
+	networkName := acctest.RandomWithPrefix(testAccResourceCloudNetworkPrivateVrackNamePrefix)
+
+	config := fmt.Sprintf(`
+resource "ovh_cloud_network_private_vrack" "test" {
+  service_name = "%s"
+  name         = "%s"
+  region       = "%s"
+  description  = "network created by acceptance test"
+}
+`, serviceName, networkName, region)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloudNetworkPrivateVrack(t)
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack.test", "name", networkName),
+					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack.test", "description", "network created by acceptance test"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_network_private_vrack.test", "id"),
+					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack.test", "resource_status", "READY"),
+					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack.test", "current_state.description", "network created by acceptance test"),
+				),
+			},
+			// Test import
+			{
+				ResourceName:      "ovh_cloud_network_private_vrack.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccCloudNetworkPrivateVrackImportStateIdFunc("ovh_cloud_network_private_vrack.test"),
+			},
+		},
+	})
+}
+
 func TestAccCloudNetworkPrivateVrack_update(t *testing.T) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
 	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
