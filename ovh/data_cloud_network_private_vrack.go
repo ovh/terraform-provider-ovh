@@ -60,10 +60,16 @@ func (d *cloudNetworkPrivateVrackDataSource) Schema(ctx context.Context, req dat
 				Computed:    true,
 				Description: "Network name",
 			},
-			"region": schema.StringAttribute{
-				CustomType:  ovhtypes.TfStringType{},
+			"location": schema.SingleNestedAttribute{
 				Computed:    true,
-				Description: "Region of the network",
+				Description: "Location of the network",
+				Attributes: map[string]schema.Attribute{
+					"region": schema.StringAttribute{
+						CustomType:  ovhtypes.TfStringType{},
+						Computed:    true,
+						Description: "Region of the network",
+					},
+				},
 			},
 			"description": schema.StringAttribute{
 				CustomType:  ovhtypes.TfStringType{},

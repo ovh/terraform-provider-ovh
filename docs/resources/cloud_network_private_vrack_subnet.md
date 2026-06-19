@@ -16,22 +16,27 @@ resource "ovh_cloud_network_private_vrack" "network" {
 }
 
 resource "ovh_cloud_network_private_vrack_subnet" "subnet" {
-  service_name = ovh_cloud_network_private_vrack.network.service_name
+  project_id   = ovh_cloud_network_private_vrack.network.service_name
   network_id   = ovh_cloud_network_private_vrack.network.id
   name         = "my-subnet"
   cidr         = "10.0.0.0/24"
-  region       = "GRA1"
   dhcp_enabled = true
   gateway_ip   = "10.0.0.1"
+
+  location = {
+    region = "GRA1"
+  }
 
   dns_nameservers = [
     "213.186.33.99",
   ]
 
-  allocation_pools {
-    start = "10.0.0.2"
-    end   = "10.0.0.254"
-  }
+  allocation_pools = [
+    {
+      start = "10.0.0.2"
+      end   = "10.0.0.254"
+    },
+  ]
 }
 ```
 
@@ -39,11 +44,13 @@ resource "ovh_cloud_network_private_vrack_subnet" "subnet" {
 
 The following arguments are supported:
 
-* `service_name` - (Required) Service name of the resource representing the id of the cloud project. **Changing this value recreates the resource.**
+* `project_id` - (Required) Project ID (service name of the cloud project). **Changing this value recreates the resource.**
 * `network_id` - (Required) Network ID of the parent private network. **Changing this value recreates the resource.**
 * `name` - (Required) Subnet name.
 * `cidr` - (Required) CIDR address range for the subnet (e.g. `10.0.0.0/24`). **Changing this value recreates the resource.**
-* `region` - (Required) Region where the subnet will be created. **Changing this value recreates the resource.**
+* `location` - (Required) Target location of the subnet:
+  * `region` - (Required) Region where the subnet will be created. **Changing this value recreates the resource.**
+  * `availability_zone` - (Optional) Availability zone within the region.
 * `description` - (Optional) Subnet description.
 * `dhcp_enabled` - (Optional) Whether DHCP is enabled on the subnet.
 * `dns_nameservers` - (Optional) List of DNS nameserver addresses.
@@ -76,15 +83,15 @@ The following attributes are exported:
 
 ## Import
 
-A cloud private network subnet can be imported using the `service_name`, `network_id` and `subnet_id`, separated by `/`:
+A cloud private network subnet can be imported using the `project_id`, `network_id` and `id`, separated by `/`:
 
 ```terraform
 import {
   to = ovh_cloud_network_private_vrack_subnet.subnet
-  id = "<service_name>/<network_id>/<subnet_id>"
+  id = "<project_id>/<network_id>/<id>"
 }
 ```
 
 ```bash
-$ terraform import ovh_cloud_network_private_vrack_subnet.subnet service_name/network_id/subnet_id
+$ terraform import ovh_cloud_network_private_vrack_subnet.subnet project_id/network_id/id
 ```

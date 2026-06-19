@@ -98,8 +98,12 @@ func (r *cloudStorageBlockVolumeResource) Schema(ctx context.Context, req resour
 			"volume_type": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Optional:            true,
+				Computed:            true,
 				Description:         "Volume type (CLASSIC, HIGH_SPEED, HIGH_SPEED_GEN2). Can be changed after creation (triggers online retype).",
 				MarkdownDescription: "Volume type (`CLASSIC`, `HIGH_SPEED`, `HIGH_SPEED_GEN2`). Can be changed after creation (triggers online retype).",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"encryption": schema.SingleNestedAttribute{
 				Optional:            true,

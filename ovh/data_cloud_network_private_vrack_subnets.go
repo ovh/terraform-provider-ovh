@@ -55,10 +55,12 @@ func (d *cloudNetworkPrivateVrackSubnetsDataSource) Configure(_ context.Context,
 // element of the plural data source list.
 func SubnetListItemAttrTypes() map[string]attr.Type {
 	return map[string]attr.Type{
-		"id":           ovhtypes.TfStringType{},
-		"name":         ovhtypes.TfStringType{},
-		"cidr":         ovhtypes.TfStringType{},
-		"region":       ovhtypes.TfStringType{},
+		"id":   ovhtypes.TfStringType{},
+		"name": ovhtypes.TfStringType{},
+		"cidr": ovhtypes.TfStringType{},
+		"location": types.ObjectType{
+			AttrTypes: subnetDataLocationAttrTypes(),
+		},
 		"description":  ovhtypes.TfStringType{},
 		"dhcp_enabled": types.BoolType,
 		"dns_nameservers": types.ListType{
@@ -114,10 +116,16 @@ func (d *cloudNetworkPrivateVrackSubnetsDataSource) Schema(ctx context.Context, 
 							Computed:    true,
 							Description: "CIDR address range for the subnet",
 						},
-						"region": schema.StringAttribute{
-							CustomType:  ovhtypes.TfStringType{},
+						"location": schema.SingleNestedAttribute{
 							Computed:    true,
-							Description: "Region of the subnet",
+							Description: "Location details",
+							Attributes: map[string]schema.Attribute{
+								"region": schema.StringAttribute{
+									CustomType:  ovhtypes.TfStringType{},
+									Computed:    true,
+									Description: "Region code",
+								},
+							},
 						},
 						"description": schema.StringAttribute{
 							CustomType:  ovhtypes.TfStringType{},
@@ -209,6 +217,24 @@ func (d *cloudNetworkPrivateVrackSubnetsDataSource) Schema(ctx context.Context, 
 									Computed:    true,
 									Description: "Default gateway IP address",
 								},
+								"allocation_pools": schema.ListNestedAttribute{
+									Computed:    true,
+									Description: "IP address allocation pools",
+									NestedObject: schema.NestedAttributeObject{
+										Attributes: map[string]schema.Attribute{
+											"start": schema.StringAttribute{
+												CustomType:  ovhtypes.TfStringType{},
+												Computed:    true,
+												Description: "Start IP address of the pool",
+											},
+											"end": schema.StringAttribute{
+												CustomType:  ovhtypes.TfStringType{},
+												Computed:    true,
+												Description: "End IP address of the pool",
+											},
+										},
+									},
+								},
 								"host_routes": schema.ListNestedAttribute{
 									Computed:    true,
 									Description: "Static host routes",
@@ -282,7 +308,7 @@ func (d *cloudNetworkPrivateVrackSubnetsDataSource) Read(ctx context.Context, re
 func buildSubnetListItemObject(response *CloudSubnetAPIResponse) basetypes.ObjectValue {
 	nameVal := ovhtypes.TfStringValue{StringValue: types.StringNull()}
 	cidrVal := ovhtypes.TfStringValue{StringValue: types.StringNull()}
-	regionVal := ovhtypes.TfStringValue{StringValue: types.StringNull()}
+	locationVal := types.ObjectNull(subnetDataLocationAttrTypes())
 	descVal := ovhtypes.TfStringValue{StringValue: types.StringNull()}
 	gatewayIPVal := ovhtypes.TfStringValue{StringValue: types.StringNull()}
 	dhcpVal := types.BoolNull()
@@ -298,7 +324,12 @@ func buildSubnetListItemObject(response *CloudSubnetAPIResponse) basetypes.Objec
 		gatewayIPVal = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.GatewayIP)}
 
 		if response.TargetSpec.Location != nil {
-			regionVal = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Location.Region)}
+			locationVal, _ = types.ObjectValue(
+				subnetDataLocationAttrTypes(),
+				map[string]attr.Value{
+					"region": ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Location.Region)},
+				},
+			)
 		}
 
 		if response.TargetSpec.DHCPEnabled != nil {
@@ -342,7 +373,7 @@ func buildSubnetListItemObject(response *CloudSubnetAPIResponse) basetypes.Objec
 			"id":               ovhtypes.TfStringValue{StringValue: types.StringValue(response.Id)},
 			"name":             nameVal,
 			"cidr":             cidrVal,
-			"region":           regionVal,
+			"location":         locationVal,
 			"description":      descVal,
 			"dhcp_enabled":     dhcpVal,
 			"dns_nameservers":  dnsVal,

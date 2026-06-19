@@ -71,10 +71,16 @@ func (d *cloudNetworkPrivateVrackSubnetDataSource) Schema(ctx context.Context, r
 				Computed:    true,
 				Description: "CIDR address range for the subnet",
 			},
-			"region": schema.StringAttribute{
-				CustomType:  ovhtypes.TfStringType{},
+			"location": schema.SingleNestedAttribute{
 				Computed:    true,
-				Description: "Region of the subnet",
+				Description: "Location details",
+				Attributes: map[string]schema.Attribute{
+					"region": schema.StringAttribute{
+						CustomType:  ovhtypes.TfStringType{},
+						Computed:    true,
+						Description: "Region code",
+					},
+				},
 			},
 			"description": schema.StringAttribute{
 				CustomType:  ovhtypes.TfStringType{},
@@ -165,6 +171,24 @@ func (d *cloudNetworkPrivateVrackSubnetDataSource) Schema(ctx context.Context, r
 						CustomType:  ovhtypes.TfStringType{},
 						Computed:    true,
 						Description: "Default gateway IP address",
+					},
+					"allocation_pools": schema.ListNestedAttribute{
+						Computed:    true,
+						Description: "IP address allocation pools",
+						NestedObject: schema.NestedAttributeObject{
+							Attributes: map[string]schema.Attribute{
+								"start": schema.StringAttribute{
+									CustomType:  ovhtypes.TfStringType{},
+									Computed:    true,
+									Description: "Start IP address of the pool",
+								},
+								"end": schema.StringAttribute{
+									CustomType:  ovhtypes.TfStringType{},
+									Computed:    true,
+									Description: "End IP address of the pool",
+								},
+							},
+						},
 					},
 					"host_routes": schema.ListNestedAttribute{
 						Computed:    true,

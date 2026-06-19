@@ -2,41 +2,46 @@ package ovh
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/ovh/go-ovh/ovh"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
 var (
-	_ resource.Resource                = (*cloudNetworkPrivateVrackSubnetResource)(nil)
-	_ resource.ResourceWithConfigure   = (*cloudNetworkPrivateVrackSubnetResource)(nil)
-	_ resource.ResourceWithImportState = (*cloudNetworkPrivateVrackSubnetResource)(nil)
+	_ resource.Resource                = (*cloudNetworkPrivateSubnetResource)(nil)
+	_ resource.ResourceWithConfigure   = (*cloudNetworkPrivateSubnetResource)(nil)
+	_ resource.ResourceWithImportState = (*cloudNetworkPrivateSubnetResource)(nil)
 )
 
 func NewCloudNetworkPrivateVrackSubnetResource() resource.Resource {
-	return &cloudNetworkPrivateVrackSubnetResource{}
+	return &cloudNetworkPrivateSubnetResource{}
 }
 
-type cloudNetworkPrivateVrackSubnetResource struct {
+type cloudNetworkPrivateSubnetResource struct {
 	config *Config
 }
 
-func (r *cloudNetworkPrivateVrackSubnetResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *cloudNetworkPrivateSubnetResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_cloud_network_private_vrack_subnet"
 }
 
-func (r *cloudNetworkPrivateVrackSubnetResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *cloudNetworkPrivateSubnetResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -53,276 +58,91 @@ func (r *cloudNetworkPrivateVrackSubnetResource) Configure(ctx context.Context, 
 	r.config = config
 }
 
-var subnetMutableAttrs = MutableAttrs{
-	Strings: []string{"name", "description", "gateway_ip"},
-	Bools:   []string{"dhcp_enabled"},
-	Lists:   []string{"dns_nameservers", "allocation_pools"},
+func (r *cloudNetworkPrivateSubnetResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = CloudNetworkPrivateSubnetResourceSchema(ctx)
 }
 
-func (r *cloudNetworkPrivateVrackSubnetResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		Description: "Creates a subnet in a private network (vRack) in a public cloud project using the v2 API.",
-		Attributes: map[string]schema.Attribute{
-			// Required attributes
-			"service_name": schema.StringAttribute{
-				CustomType:  ovhtypes.TfStringType{},
-				Required:    true,
-				Description: "Service name of the resource representing the id of the cloud project",
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			"network_id": schema.StringAttribute{
-				CustomType:  ovhtypes.TfStringType{},
-				Required:    true,
-				Description: "Network ID of the parent private network",
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			"name": schema.StringAttribute{
-				CustomType:  ovhtypes.TfStringType{},
-				Required:    true,
-				Description: "Subnet name",
-			},
-			"cidr": schema.StringAttribute{
-				CustomType:  ovhtypes.TfStringType{},
-				Required:    true,
-				Description: "CIDR address range for the subnet",
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			"region": schema.StringAttribute{
-				CustomType:  ovhtypes.TfStringType{},
-				Required:    true,
-				Description: "Region where the subnet will be created",
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-
-			// Optional attributes
-			"description": schema.StringAttribute{
-				CustomType:  ovhtypes.TfStringType{},
-				Optional:    true,
-				Description: "Subnet description",
-			},
-			"dhcp_enabled": schema.BoolAttribute{
-				Optional:    true,
-				Description: "Whether DHCP is enabled on the subnet",
-			},
-			"dns_nameservers": schema.ListAttribute{
-				ElementType: types.StringType,
-				Optional:    true,
-				Description: "DNS nameservers for the subnet",
-			},
-			"gateway_ip": schema.StringAttribute{
-				CustomType:  ovhtypes.TfStringType{},
-				Optional:    true,
-				Description: "Default gateway IP address",
-			},
-			"allocation_pools": schema.ListNestedAttribute{
-				Optional:    true,
-				Description: "IP address allocation pools",
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"start": schema.StringAttribute{
-							CustomType:  ovhtypes.TfStringType{},
-							Required:    true,
-							Description: "Start IP address of the pool",
-						},
-						"end": schema.StringAttribute{
-							CustomType:  ovhtypes.TfStringType{},
-							Required:    true,
-							Description: "End IP address of the pool",
-						},
-					},
-				},
-			},
-
-			// Computed attributes
-			"id": schema.StringAttribute{
-				CustomType:  ovhtypes.TfStringType{},
-				Computed:    true,
-				Description: "Subnet ID",
-			},
-			"checksum": schema.StringAttribute{
-				CustomType:  ovhtypes.TfStringType{},
-				Computed:    true,
-				Description: "Computed hash representing the current target specification value",
-				PlanModifiers: []planmodifier.String{
-					UnknownDuringUpdateStringModifier(subnetMutableAttrs),
-				},
-			},
-			"created_at": schema.StringAttribute{
-				CustomType:  ovhtypes.TfStringType{},
-				Computed:    true,
-				Description: "Creation date of the subnet",
-			},
-			"updated_at": schema.StringAttribute{
-				CustomType:  ovhtypes.TfStringType{},
-				Computed:    true,
-				Description: "Last update date of the subnet",
-				PlanModifiers: []planmodifier.String{
-					UnknownDuringUpdateStringModifier(subnetMutableAttrs),
-				},
-			},
-			"resource_status": schema.StringAttribute{
-				CustomType:  ovhtypes.TfStringType{},
-				Computed:    true,
-				Description: "Subnet readiness in the system (CREATING, DELETING, ERROR, OUT_OF_SYNC, READY, UPDATING)",
-				PlanModifiers: []planmodifier.String{
-					OutOfSyncPlanModifier(),
-				},
-			},
-
-			// Current state (computed, read-only)
-			"current_state": schema.SingleNestedAttribute{
-				Computed:    true,
-				Description: "Current state of the subnet",
-				PlanModifiers: []planmodifier.Object{
-					UnknownDuringUpdateObjectModifier(subnetMutableAttrs),
-				},
-				Attributes: map[string]schema.Attribute{
-					"name": schema.StringAttribute{
-						CustomType:  ovhtypes.TfStringType{},
-						Computed:    true,
-						Description: "Subnet name",
-					},
-					"cidr": schema.StringAttribute{
-						CustomType:  ovhtypes.TfStringType{},
-						Computed:    true,
-						Description: "CIDR address range",
-					},
-					"description": schema.StringAttribute{
-						CustomType:  ovhtypes.TfStringType{},
-						Computed:    true,
-						Description: "Subnet description",
-					},
-					"dhcp_enabled": schema.BoolAttribute{
-						Computed:    true,
-						Description: "Whether DHCP is enabled",
-					},
-					"dns_nameservers": schema.ListAttribute{
-						ElementType: types.StringType,
-						Computed:    true,
-						Description: "DNS nameservers",
-					},
-					"gateway_ip": schema.StringAttribute{
-						CustomType:  ovhtypes.TfStringType{},
-						Computed:    true,
-						Description: "Default gateway IP address",
-					},
-					"host_routes": schema.ListNestedAttribute{
-						Computed:    true,
-						Description: "Static host routes",
-						NestedObject: schema.NestedAttributeObject{
-							Attributes: map[string]schema.Attribute{
-								"destination": schema.StringAttribute{
-									CustomType:  ovhtypes.TfStringType{},
-									Computed:    true,
-									Description: "Destination CIDR",
-								},
-								"next_hop": schema.StringAttribute{
-									CustomType:  ovhtypes.TfStringType{},
-									Computed:    true,
-									Description: "Next hop IP address",
-								},
-							},
-						},
-					},
-					"location": schema.SingleNestedAttribute{
-						Computed:    true,
-						Description: "Location details",
-						Attributes: map[string]schema.Attribute{
-							"region": schema.StringAttribute{
-								CustomType:  ovhtypes.TfStringType{},
-								Computed:    true,
-								Description: "Region code",
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-func (r *cloudNetworkPrivateVrackSubnetResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *cloudNetworkPrivateSubnetResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	splits := strings.Split(req.ID, "/")
 	if len(splits) != 3 {
-		resp.Diagnostics.AddError("Given ID is malformed", "ID must be formatted like the following: <service_name>/<network_id>/<subnet_id>")
+		resp.Diagnostics.AddError("Given ID is malformed", "ID must be formatted like the following: <project_id>/<network_id>/<id>")
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_name"), splits[0])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("project_id"), splits[0])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("network_id"), splits[1])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), splits[2])...)
 }
 
-func (r *cloudNetworkPrivateVrackSubnetResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data CloudSubnetModel
+func (r *cloudNetworkPrivateSubnetResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var data, responseData CloudNetworkPrivateSubnetModel
 
+	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	createPayload := data.ToCreate()
+	base := "/v2/publicCloud/project/" + url.PathEscape(data.ProjectId.ValueString()) + "/network/" + url.PathEscape(data.NetworkId.ValueString()) + "/subnet"
 
-	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/network/" + url.PathEscape(data.NetworkId.ValueString()) + "/subnet"
-
-	var responseData CloudSubnetAPIResponse
-	if err := r.config.OVHClient.Post(endpoint, createPayload, &responseData); err != nil {
+	if err := r.config.OVHClient.Post(base, data.ToCreate(), &responseData); err != nil {
 		resp.Diagnostics.AddError(
-			fmt.Sprintf("Error calling Post %s", endpoint),
+			fmt.Sprintf("Error calling Post %s", base),
 			err.Error(),
 		)
 		return
 	}
 
-	// Save state immediately so the resource ID is tracked even if the workflow fails
-	data.MergeWith(ctx, &responseData)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	// The response body does not carry the identity fields, re-attach them from
+	// the request-side model so the ID is tracked even if the wait below fails.
+	responseData.ProjectId = data.ProjectId
+	responseData.NetworkId = data.NetworkId
+	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	// Wait for subnet to be READY
-	_, err := r.waitForReady(ctx, data.ServiceName.ValueString(), data.NetworkId.ValueString(), responseData.Id)
-	if err != nil {
+	// Wait for the subnet to be READY. The backend recover step rewrites the
+	// targetSpec and checksum during this wait.
+	itemEndpoint := base + "/" + url.PathEscape(responseData.Id.ValueString())
+	if err := helpers.WaitForAPIv2ResourceStatusReady(ctx, r.config.OVHClient, itemEndpoint); err != nil {
+		resp.Diagnostics.AddError("Error waiting for subnet to be ready", err.Error())
+		return
+	}
+
+	// Read the final, post-recover state.
+	var finalData CloudNetworkPrivateSubnetModel
+	if err := r.config.OVHClient.Get(itemEndpoint, &finalData); err != nil {
 		resp.Diagnostics.AddError(
-			"Error waiting for subnet to be ready",
+			fmt.Sprintf("Error calling Get %s", itemEndpoint),
 			err.Error(),
 		)
 		return
 	}
 
-	// Read the final state
-	endpoint = "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/network/" + url.PathEscape(data.NetworkId.ValueString()) + "/subnet/" + url.PathEscape(responseData.Id)
-	if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("Error calling Get %s", endpoint),
-			err.Error(),
-		)
-		return
-	}
+	finalData.ProjectId = data.ProjectId
+	finalData.NetworkId = data.NetworkId
 
-	data.MergeWith(ctx, &responseData)
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &finalData)...)
 }
 
-func (r *cloudNetworkPrivateVrackSubnetResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data CloudSubnetModel
+func (r *cloudNetworkPrivateSubnetResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var data, responseData CloudNetworkPrivateSubnetModel
 
+	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/network/" + url.PathEscape(data.NetworkId.ValueString()) + "/subnet/" + url.PathEscape(data.Id.ValueString())
+	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ProjectId.ValueString()) + "/network/" + url.PathEscape(data.NetworkId.ValueString()) + "/subnet/" + url.PathEscape(data.Id.ValueString())
 
-	var responseData CloudSubnetAPIResponse
 	if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
+		if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Get %s", endpoint),
 			err.Error(),
@@ -330,30 +150,37 @@ func (r *cloudNetworkPrivateVrackSubnetResource) Read(ctx context.Context, req r
 		return
 	}
 
-	data.MergeWith(ctx, &responseData)
+	// Overwrite state with the API truth (re-attaching identity). We deliberately
+	// do not call the fill-only MergeWith: overwriting target_spec from the API is
+	// what surfaces drift.
+	responseData.ProjectId = data.ProjectId
+	responseData.NetworkId = data.NetworkId
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	// Save updated data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)
 }
 
-func (r *cloudNetworkPrivateVrackSubnetResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, planData CloudSubnetModel
+func (r *cloudNetworkPrivateSubnetResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var planData, state CloudNetworkPrivateSubnetModel
 
+	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &planData)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	// Read Terraform prior state data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	updatePayload := planData.ToUpdate(data.Checksum.ValueString())
+	// Use the latest post-READY checksum from state for the concurrency control.
+	planData.Checksum = state.Checksum
 
-	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/network/" + url.PathEscape(data.NetworkId.ValueString()) + "/subnet/" + url.PathEscape(data.Id.ValueString())
+	endpoint := "/v2/publicCloud/project/" + url.PathEscape(state.ProjectId.ValueString()) + "/network/" + url.PathEscape(state.NetworkId.ValueString()) + "/subnet/" + url.PathEscape(state.Id.ValueString())
 
-	var responseData CloudSubnetAPIResponse
-	if err := r.config.OVHClient.Put(endpoint, updatePayload, &responseData); err != nil {
+	if err := r.config.OVHClient.Put(endpoint, planData.ToUpdate(), nil); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Put %s", endpoint),
 			err.Error(),
@@ -361,18 +188,15 @@ func (r *cloudNetworkPrivateVrackSubnetResource) Update(ctx context.Context, req
 		return
 	}
 
-	// Wait for subnet to be READY
-	_, err := r.waitForReady(ctx, data.ServiceName.ValueString(), data.NetworkId.ValueString(), data.Id.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error waiting for subnet to be ready after update",
-			err.Error(),
-		)
+	// Wait for the subnet to be READY after the update.
+	if err := helpers.WaitForAPIv2ResourceStatusReady(ctx, r.config.OVHClient, endpoint); err != nil {
+		resp.Diagnostics.AddError("Error waiting for subnet to be ready after update", err.Error())
 		return
 	}
 
-	// Read the final state
-	if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
+	// Read the final, post-recover state.
+	var finalData CloudNetworkPrivateSubnetModel
+	if err := r.config.OVHClient.Get(endpoint, &finalData); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Get %s", endpoint),
 			err.Error(),
@@ -380,20 +204,23 @@ func (r *cloudNetworkPrivateVrackSubnetResource) Update(ctx context.Context, req
 		return
 	}
 
-	planData.MergeWith(ctx, &responseData)
+	finalData.ProjectId = state.ProjectId
+	finalData.NetworkId = state.NetworkId
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &planData)...)
+	// Save updated data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &finalData)...)
 }
 
-func (r *cloudNetworkPrivateVrackSubnetResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data CloudSubnetModel
+func (r *cloudNetworkPrivateSubnetResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var data CloudNetworkPrivateSubnetModel
 
+	// Read Terraform prior state data into the model
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/network/" + url.PathEscape(data.NetworkId.ValueString()) + "/subnet/" + url.PathEscape(data.Id.ValueString())
+	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ProjectId.ValueString()) + "/network/" + url.PathEscape(data.NetworkId.ValueString()) + "/subnet/" + url.PathEscape(data.Id.ValueString())
 
 	if err := r.config.OVHClient.Delete(endpoint, nil); err != nil {
 		if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
@@ -411,8 +238,7 @@ func (r *cloudNetworkPrivateVrackSubnetResource) Delete(ctx context.Context, req
 		Pending: []string{"DELETING"},
 		Target:  []string{"DELETED"},
 		Refresh: func() (interface{}, string, error) {
-			res := &CloudSubnetAPIResponse{}
-			endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/network/" + url.PathEscape(data.NetworkId.ValueString()) + "/subnet/" + url.PathEscape(data.Id.ValueString())
+			res := &CloudNetworkPrivateSubnetModel{}
 			err := r.config.OVHClient.GetWithContext(ctx, endpoint, res)
 			if err != nil {
 				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
@@ -420,7 +246,7 @@ func (r *cloudNetworkPrivateVrackSubnetResource) Delete(ctx context.Context, req
 				}
 				return res, "", err
 			}
-			return res, res.ResourceStatus, nil
+			return res, res.ResourceStatus.ValueString(), nil
 		},
 		Timeout:    20 * time.Minute,
 		Delay:      10 * time.Second,
@@ -435,23 +261,574 @@ func (r *cloudNetworkPrivateVrackSubnetResource) Delete(ctx context.Context, req
 	}
 }
 
-func (r *cloudNetworkPrivateVrackSubnetResource) waitForReady(ctx context.Context, serviceName, networkId, subnetId string) (interface{}, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{"CREATING", "UPDATING", "PENDING", "OUT_OF_SYNC"},
-		Target:  []string{"READY"},
-		Refresh: func() (interface{}, string, error) {
-			res := &CloudSubnetAPIResponse{}
-			endpoint := "/v2/publicCloud/project/" + url.PathEscape(serviceName) + "/network/" + url.PathEscape(networkId) + "/subnet/" + url.PathEscape(subnetId)
-			err := r.config.OVHClient.GetWithContext(ctx, endpoint, res)
-			if err != nil {
-				return res, "", err
-			}
-			return res, res.ResourceStatus, nil
+func CloudNetworkPrivateSubnetResourceSchema(ctx context.Context) schema.Schema {
+	attrs := map[string]schema.Attribute{
+		"checksum": schema.StringAttribute{
+			CustomType:          ovhtypes.TfStringType{},
+			Computed:            true,
+			Description:         "Computed hash representing the current target specification value",
+			MarkdownDescription: "Computed hash representing the current target specification value",
 		},
-		Timeout:    20 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 5 * time.Second,
+		"created_at": schema.StringAttribute{
+			CustomType:          ovhtypes.TfStringType{},
+			Computed:            true,
+			Description:         "Creation date of the subnet",
+			MarkdownDescription: "Creation date of the subnet",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
+		},
+		"current_state": schema.SingleNestedAttribute{
+			Attributes: map[string]schema.Attribute{
+				"allocation_pools": schema.ListNestedAttribute{
+					NestedObject: schema.NestedAttributeObject{
+						Attributes: map[string]schema.Attribute{
+							"end": schema.StringAttribute{
+								CustomType:          ovhtypes.TfStringType{},
+								Computed:            true,
+								Description:         "End IP address of the pool",
+								MarkdownDescription: "End IP address of the pool",
+							},
+							"start": schema.StringAttribute{
+								CustomType:          ovhtypes.TfStringType{},
+								Computed:            true,
+								Description:         "Start IP address of the pool",
+								MarkdownDescription: "Start IP address of the pool",
+							},
+						},
+						CustomType: CurrentStateAllocationPoolsType{
+							ObjectType: types.ObjectType{
+								AttrTypes: CurrentStateAllocationPoolsValue{}.AttributeTypes(ctx),
+							},
+						},
+					},
+					CustomType:          ovhtypes.NewTfListNestedType[CurrentStateAllocationPoolsValue](ctx),
+					Computed:            true,
+					Description:         "Allocation pools",
+					MarkdownDescription: "Allocation pools",
+				},
+				"cidr": schema.StringAttribute{
+					CustomType:          ovhtypes.TfStringType{},
+					Computed:            true,
+					Description:         "CIDR address range",
+					MarkdownDescription: "CIDR address range",
+				},
+				"description": schema.StringAttribute{
+					CustomType:          ovhtypes.TfStringType{},
+					Computed:            true,
+					Description:         "Subnet description",
+					MarkdownDescription: "Subnet description",
+				},
+				"dhcp_enabled": schema.BoolAttribute{
+					CustomType:          ovhtypes.TfBoolType{},
+					Computed:            true,
+					Description:         "Whether DHCP is enabled",
+					MarkdownDescription: "Whether DHCP is enabled",
+				},
+				"dns_nameservers": schema.ListAttribute{
+					CustomType:          ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+					Computed:            true,
+					Description:         "DNS nameservers",
+					MarkdownDescription: "DNS nameservers",
+				},
+				"gateway_ip": schema.StringAttribute{
+					CustomType:          ovhtypes.TfStringType{},
+					Computed:            true,
+					Description:         "Default gateway IP",
+					MarkdownDescription: "Default gateway IP",
+				},
+				"host_routes": schema.ListNestedAttribute{
+					NestedObject: schema.NestedAttributeObject{
+						Attributes: map[string]schema.Attribute{
+							"destination": schema.StringAttribute{
+								CustomType:          ovhtypes.TfStringType{},
+								Computed:            true,
+								Description:         "Destination CIDR",
+								MarkdownDescription: "Destination CIDR",
+							},
+							"next_hop": schema.StringAttribute{
+								CustomType:          ovhtypes.TfStringType{},
+								Computed:            true,
+								Description:         "Next hop IP address",
+								MarkdownDescription: "Next hop IP address",
+							},
+						},
+						CustomType: CurrentStateHostRoutesType{
+							ObjectType: types.ObjectType{
+								AttrTypes: CurrentStateHostRoutesValue{}.AttributeTypes(ctx),
+							},
+						},
+					},
+					CustomType:          ovhtypes.NewTfListNestedType[CurrentStateHostRoutesValue](ctx),
+					Computed:            true,
+					Description:         "Static host routes",
+					MarkdownDescription: "Static host routes",
+				},
+				"location": schema.SingleNestedAttribute{
+					Attributes: map[string]schema.Attribute{
+						"availability_zone": schema.StringAttribute{
+							CustomType:          ovhtypes.TfStringType{},
+							Computed:            true,
+							Description:         "Availability zone within the region",
+							MarkdownDescription: "Availability zone within the region",
+						},
+						"region": schema.StringAttribute{
+							CustomType:          ovhtypes.TfStringType{},
+							Computed:            true,
+							Description:         "Region code",
+							MarkdownDescription: "Region code",
+						},
+					},
+					CustomType: CurrentStateLocationType{
+						ObjectType: types.ObjectType{
+							AttrTypes: CurrentStateLocationValue{}.AttributeTypes(ctx),
+						},
+					},
+					Computed:            true,
+					Description:         "Location details",
+					MarkdownDescription: "Location details",
+				},
+				"name": schema.StringAttribute{
+					CustomType:          ovhtypes.TfStringType{},
+					Computed:            true,
+					Description:         "Subnet name",
+					MarkdownDescription: "Subnet name",
+				},
+			},
+			CustomType: CloudNetworkPrivateSubnetCurrentStateType{
+				ObjectType: types.ObjectType{
+					AttrTypes: CloudNetworkPrivateSubnetCurrentStateValue{}.AttributeTypes(ctx),
+				},
+			},
+			Computed:            true,
+			Description:         "Current state of the subnet",
+			MarkdownDescription: "Current state of the subnet",
+		},
+		"current_tasks": schema.ListNestedAttribute{
+			NestedObject: schema.NestedAttributeObject{
+				Attributes: map[string]schema.Attribute{
+					"errors": schema.ListNestedAttribute{
+						NestedObject: schema.NestedAttributeObject{
+							Attributes: map[string]schema.Attribute{
+								"message": schema.StringAttribute{
+									CustomType:          ovhtypes.TfStringType{},
+									Computed:            true,
+									Description:         "Error description",
+									MarkdownDescription: "Error description",
+								},
+							},
+							CustomType: CurrentTasksErrorsType{
+								ObjectType: types.ObjectType{
+									AttrTypes: CurrentTasksErrorsValue{}.AttributeTypes(ctx),
+								},
+							},
+						},
+						CustomType:          ovhtypes.NewTfListNestedType[CurrentTasksErrorsValue](ctx),
+						Computed:            true,
+						Description:         "Errors that occured on the task",
+						MarkdownDescription: "Errors that occured on the task",
+					},
+					"id": schema.StringAttribute{
+						CustomType:          ovhtypes.TfStringType{},
+						Computed:            true,
+						Description:         "Identifier of the current task",
+						MarkdownDescription: "Identifier of the current task",
+					},
+					"link": schema.StringAttribute{
+						CustomType:          ovhtypes.TfStringType{},
+						Computed:            true,
+						Description:         "Link to the task details",
+						MarkdownDescription: "Link to the task details",
+					},
+					"status": schema.StringAttribute{
+						CustomType:          ovhtypes.TfStringType{},
+						Computed:            true,
+						Description:         "Current global status of the current task",
+						MarkdownDescription: "Current global status of the current task",
+					},
+					"type": schema.StringAttribute{
+						CustomType:          ovhtypes.TfStringType{},
+						Computed:            true,
+						Description:         "Type of the current task",
+						MarkdownDescription: "Type of the current task",
+					},
+				},
+				CustomType: CloudNetworkPrivateSubnetCurrentTasksType{
+					ObjectType: types.ObjectType{
+						AttrTypes: CloudNetworkPrivateSubnetCurrentTasksValue{}.AttributeTypes(ctx),
+					},
+				},
+			},
+			CustomType:          ovhtypes.NewTfListNestedType[CloudNetworkPrivateSubnetCurrentTasksValue](ctx),
+			Computed:            true,
+			Description:         "Ongoing asynchronous tasks related to the subnet",
+			MarkdownDescription: "Ongoing asynchronous tasks related to the subnet",
+		},
+		"id": schema.StringAttribute{
+			CustomType:          ovhtypes.TfStringType{},
+			Computed:            true,
+			Description:         "Unique identifier of the subnet",
+			MarkdownDescription: "Unique identifier of the subnet",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
+		},
+		"network_id": schema.StringAttribute{
+			CustomType:          ovhtypes.TfStringType{},
+			Required:            true,
+			Description:         "Network ID",
+			MarkdownDescription: "Network ID",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.RequiresReplace(),
+			},
+		},
+		"project_id": schema.StringAttribute{
+			CustomType:          ovhtypes.TfStringType{},
+			Required:            true,
+			Description:         "Project ID",
+			MarkdownDescription: "Project ID",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.RequiresReplace(),
+			},
+		},
+		"resource_status": schema.StringAttribute{
+			CustomType:          ovhtypes.TfStringType{},
+			Computed:            true,
+			Description:         "Subnet readiness in the system",
+			MarkdownDescription: "Subnet readiness in the system",
+			PlanModifiers: []planmodifier.String{
+				OutOfSyncPlanModifier(),
+			},
+		},
+		"allocation_pools": schema.ListNestedAttribute{
+			NestedObject: schema.NestedAttributeObject{
+				Attributes: map[string]schema.Attribute{
+					"end": schema.StringAttribute{
+						CustomType:          ovhtypes.TfStringType{},
+						Optional:            true,
+						Computed:            true,
+						Description:         "End IP address of the pool",
+						MarkdownDescription: "End IP address of the pool",
+					},
+					"start": schema.StringAttribute{
+						CustomType:          ovhtypes.TfStringType{},
+						Optional:            true,
+						Computed:            true,
+						Description:         "Start IP address of the pool",
+						MarkdownDescription: "Start IP address of the pool",
+					},
+				},
+				CustomType: TargetSpecAllocationPoolsType{
+					ObjectType: types.ObjectType{
+						AttrTypes: TargetSpecAllocationPoolsValue{}.AttributeTypes(ctx),
+					},
+				},
+			},
+			CustomType:          ovhtypes.NewTfListNestedType[TargetSpecAllocationPoolsValue](ctx),
+			Optional:            true,
+			Computed:            true,
+			Description:         "IP address allocation pools",
+			MarkdownDescription: "IP address allocation pools",
+			PlanModifiers: []planmodifier.List{
+				listplanmodifier.UseStateForUnknown(),
+			},
+		},
+		"cidr": schema.StringAttribute{
+			CustomType:          ovhtypes.TfStringType{},
+			Required:            true,
+			Description:         "CIDR address range (immutable after creation)",
+			MarkdownDescription: "CIDR address range (immutable after creation)",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.RequiresReplace(),
+			},
+		},
+		"description": schema.StringAttribute{
+			CustomType:          ovhtypes.TfStringType{},
+			Optional:            true,
+			Description:         "Subnet description",
+			MarkdownDescription: "Subnet description",
+		},
+		"dhcp_enabled": schema.BoolAttribute{
+			CustomType:          ovhtypes.TfBoolType{},
+			Optional:            true,
+			Computed:            true,
+			Description:         "Whether DHCP is enabled",
+			MarkdownDescription: "Whether DHCP is enabled",
+			PlanModifiers: []planmodifier.Bool{
+				boolplanmodifier.UseStateForUnknown(),
+			},
+		},
+		"dns_nameservers": schema.ListAttribute{
+			CustomType:          ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+			Optional:            true,
+			Description:         "DNS nameservers for the subnet",
+			MarkdownDescription: "DNS nameservers for the subnet",
+		},
+		"gateway_ip": schema.StringAttribute{
+			CustomType:          ovhtypes.TfStringType{},
+			Optional:            true,
+			Computed:            true,
+			Description:         "Default gateway IP address",
+			MarkdownDescription: "Default gateway IP address",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
+		},
+		"location": schema.SingleNestedAttribute{
+			Attributes: map[string]schema.Attribute{
+				"availability_zone": schema.StringAttribute{
+					CustomType:          ovhtypes.TfStringType{},
+					Optional:            true,
+					Description:         "Availability zone within the region",
+					MarkdownDescription: "Availability zone within the region",
+				},
+				"region": schema.StringAttribute{
+					CustomType:          ovhtypes.TfStringType{},
+					Required:            true,
+					Description:         "Region code",
+					MarkdownDescription: "Region code",
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+				},
+			},
+			CustomType: TargetSpecLocationType{
+				ObjectType: types.ObjectType{
+					AttrTypes: TargetSpecLocationValue{}.AttributeTypes(ctx),
+				},
+			},
+			Required:            true,
+			Description:         "Target location",
+			MarkdownDescription: "Target location",
+		},
+		"name": schema.StringAttribute{
+			CustomType:          ovhtypes.TfStringType{},
+			Required:            true,
+			Description:         "Subnet name",
+			MarkdownDescription: "Subnet name",
+		},
+		"updated_at": schema.StringAttribute{
+			CustomType:          ovhtypes.TfStringType{},
+			Computed:            true,
+			Description:         "Last update date of the subnet",
+			MarkdownDescription: "Last update date of the subnet",
+		},
 	}
 
-	return stateConf.WaitForStateContext(ctx)
+	return schema.Schema{
+		Description: "",
+		Attributes:  attrs,
+	}
+}
+
+type CloudNetworkPrivateSubnetModel struct {
+	Checksum       ovhtypes.TfStringValue                                                 `tfsdk:"checksum" json:"checksum"`
+	CreatedAt      ovhtypes.TfStringValue                                                 `tfsdk:"created_at" json:"createdAt"`
+	CurrentState   CloudNetworkPrivateSubnetCurrentStateValue                             `tfsdk:"current_state" json:"currentState"`
+	CurrentTasks   ovhtypes.TfListNestedValue[CloudNetworkPrivateSubnetCurrentTasksValue] `tfsdk:"current_tasks" json:"currentTasks"`
+	Id             ovhtypes.TfStringValue                                                 `tfsdk:"id" json:"id"`
+	NetworkId      ovhtypes.TfStringValue                                                 `tfsdk:"network_id" json:"networkId"`
+	ProjectId      ovhtypes.TfStringValue                                                 `tfsdk:"project_id" json:"projectId"`
+	ResourceStatus ovhtypes.TfStringValue                                                 `tfsdk:"resource_status" json:"resourceStatus"`
+	UpdatedAt      ovhtypes.TfStringValue                                                 `tfsdk:"updated_at" json:"updatedAt"`
+
+	// Target-spec fields, lifted from the former nested target_spec object to
+	// the resource root. They carry json:"-" because the targetSpec object is
+	// (un)marshaled explicitly in MarshalJSON/UnmarshalJSON via the
+	// CloudNetworkPrivateSubnetTargetSpecValue DTO, never at the JSON root.
+	AllocationPools ovhtypes.TfListNestedValue[TargetSpecAllocationPoolsValue] `tfsdk:"allocation_pools" json:"-"`
+	Cidr            ovhtypes.TfStringValue                                     `tfsdk:"cidr" json:"-"`
+	Description     ovhtypes.TfStringValue                                     `tfsdk:"description" json:"-"`
+	DhcpEnabled     ovhtypes.TfBoolValue                                       `tfsdk:"dhcp_enabled" json:"-"`
+	DnsNameservers  ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]         `tfsdk:"dns_nameservers" json:"-"`
+	GatewayIp       ovhtypes.TfStringValue                                     `tfsdk:"gateway_ip" json:"-"`
+	Location        TargetSpecLocationValue                                    `tfsdk:"location" json:"-"`
+	Name            ovhtypes.TfStringValue                                     `tfsdk:"name" json:"-"`
+}
+
+func (v *CloudNetworkPrivateSubnetModel) MergeWith(other *CloudNetworkPrivateSubnetModel) {
+
+	if (v.Checksum.IsUnknown() || v.Checksum.IsNull()) && !other.Checksum.IsUnknown() {
+		v.Checksum = other.Checksum
+	}
+
+	if (v.CreatedAt.IsUnknown() || v.CreatedAt.IsNull()) && !other.CreatedAt.IsUnknown() {
+		v.CreatedAt = other.CreatedAt
+	}
+
+	if (v.CurrentState.IsUnknown() || v.CurrentState.IsNull()) && !other.CurrentState.IsUnknown() {
+		v.CurrentState = other.CurrentState
+	}
+
+	if (v.CurrentTasks.IsUnknown() || v.CurrentTasks.IsNull()) && !other.CurrentTasks.IsUnknown() {
+		v.CurrentTasks = other.CurrentTasks
+	}
+
+	if (v.Id.IsUnknown() || v.Id.IsNull()) && !other.Id.IsUnknown() {
+		v.Id = other.Id
+	}
+
+	if (v.NetworkId.IsUnknown() || v.NetworkId.IsNull()) && !other.NetworkId.IsUnknown() {
+		v.NetworkId = other.NetworkId
+	}
+
+	if (v.ProjectId.IsUnknown() || v.ProjectId.IsNull()) && !other.ProjectId.IsUnknown() {
+		v.ProjectId = other.ProjectId
+	}
+
+	if (v.ResourceStatus.IsUnknown() || v.ResourceStatus.IsNull()) && !other.ResourceStatus.IsUnknown() {
+		v.ResourceStatus = other.ResourceStatus
+	}
+
+	if (v.UpdatedAt.IsUnknown() || v.UpdatedAt.IsNull()) && !other.UpdatedAt.IsUnknown() {
+		v.UpdatedAt = other.UpdatedAt
+	}
+
+	// Lifted target-spec fields.
+	if (v.AllocationPools.IsUnknown() || v.AllocationPools.IsNull()) && !other.AllocationPools.IsUnknown() {
+		v.AllocationPools = other.AllocationPools
+	}
+
+	if (v.Cidr.IsUnknown() || v.Cidr.IsNull()) && !other.Cidr.IsUnknown() {
+		v.Cidr = other.Cidr
+	}
+
+	if (v.Description.IsUnknown() || v.Description.IsNull()) && !other.Description.IsUnknown() {
+		v.Description = other.Description
+	}
+
+	if (v.DhcpEnabled.IsUnknown() || v.DhcpEnabled.IsNull()) && !other.DhcpEnabled.IsUnknown() {
+		v.DhcpEnabled = other.DhcpEnabled
+	}
+
+	if (v.DnsNameservers.IsUnknown() || v.DnsNameservers.IsNull()) && !other.DnsNameservers.IsUnknown() {
+		v.DnsNameservers = other.DnsNameservers
+	}
+
+	if (v.GatewayIp.IsUnknown() || v.GatewayIp.IsNull()) && !other.GatewayIp.IsUnknown() {
+		v.GatewayIp = other.GatewayIp
+	}
+
+	if v.Location.IsUnknown() && !other.Location.IsUnknown() {
+		v.Location = other.Location
+	} else if !other.Location.IsUnknown() {
+		v.Location.MergeWith(&other.Location)
+	}
+
+	if (v.Name.IsUnknown() || v.Name.IsNull()) && !other.Name.IsUnknown() {
+		v.Name = other.Name
+	}
+
+}
+
+// targetSpecValue assembles the lifted root fields back into the
+// CloudNetworkPrivateSubnetTargetSpecValue DTO used for JSON (un)marshaling.
+func (v CloudNetworkPrivateSubnetModel) targetSpecValue() CloudNetworkPrivateSubnetTargetSpecValue {
+	return CloudNetworkPrivateSubnetTargetSpecValue{
+		AllocationPools: v.AllocationPools,
+		Cidr:            v.Cidr,
+		Description:     v.Description,
+		DhcpEnabled:     v.DhcpEnabled,
+		DnsNameservers:  v.DnsNameservers,
+		GatewayIp:       v.GatewayIp,
+		Location:        v.Location,
+		Name:            v.Name,
+		state:           attr.ValueStateKnown,
+	}
+}
+
+func (v CloudNetworkPrivateSubnetModel) ToCreate() *CloudNetworkPrivateSubnetModel {
+	res := &CloudNetworkPrivateSubnetModel{}
+
+	created := v.targetSpecValue().ToCreate()
+	res.AllocationPools = created.AllocationPools
+	res.Cidr = created.Cidr
+	res.Description = created.Description
+	res.DhcpEnabled = created.DhcpEnabled
+	res.DnsNameservers = created.DnsNameservers
+	res.GatewayIp = created.GatewayIp
+	res.Location = created.Location
+	res.Name = created.Name
+
+	return res
+}
+
+func (v CloudNetworkPrivateSubnetModel) ToUpdate() *CloudNetworkPrivateSubnetModel {
+	res := &CloudNetworkPrivateSubnetModel{}
+
+	if !v.Checksum.IsUnknown() {
+		res.Checksum = v.Checksum
+	}
+
+	updated := v.targetSpecValue().ToUpdate()
+	res.AllocationPools = updated.AllocationPools
+	res.Cidr = updated.Cidr
+	res.Description = updated.Description
+	res.DhcpEnabled = updated.DhcpEnabled
+	res.DnsNameservers = updated.DnsNameservers
+	res.GatewayIp = updated.GatewayIp
+	res.Location = updated.Location
+	res.Name = updated.Name
+
+	return res
+}
+
+func (v *CloudNetworkPrivateSubnetModel) MarshalJSON() ([]byte, error) {
+	toMarshal := map[string]any{}
+	if !v.Checksum.IsNull() && !v.Checksum.IsUnknown() {
+		toMarshal["checksum"] = v.Checksum
+	}
+
+	// The lifted root fields are re-nested under targetSpec for the wire format.
+	// The DTO's own MarshalJSON only emits the non-null/non-unknown sub-fields.
+	targetSpec := v.targetSpecValue()
+	toMarshal["targetSpec"] = &targetSpec
+
+	return json.Marshal(toMarshal)
+}
+
+// UnmarshalJSON decodes the API envelope into the flat model. The nested
+// targetSpec object is decoded into the lifted root fields via the
+// CloudNetworkPrivateSubnetTargetSpecValue DTO; currentState / currentTasks
+// keep their own value-type decoders.
+func (v *CloudNetworkPrivateSubnetModel) UnmarshalJSON(data []byte) error {
+	var shadow struct {
+		Checksum       ovhtypes.TfStringValue                                                 `json:"checksum"`
+		CreatedAt      ovhtypes.TfStringValue                                                 `json:"createdAt"`
+		CurrentState   CloudNetworkPrivateSubnetCurrentStateValue                             `json:"currentState"`
+		CurrentTasks   ovhtypes.TfListNestedValue[CloudNetworkPrivateSubnetCurrentTasksValue] `json:"currentTasks"`
+		Id             ovhtypes.TfStringValue                                                 `json:"id"`
+		NetworkId      ovhtypes.TfStringValue                                                 `json:"networkId"`
+		ProjectId      ovhtypes.TfStringValue                                                 `json:"projectId"`
+		ResourceStatus ovhtypes.TfStringValue                                                 `json:"resourceStatus"`
+		UpdatedAt      ovhtypes.TfStringValue                                                 `json:"updatedAt"`
+		TargetSpec     *CloudNetworkPrivateSubnetTargetSpecValue                              `json:"targetSpec"`
+	}
+
+	if err := json.Unmarshal(data, &shadow); err != nil {
+		return err
+	}
+
+	v.Checksum = shadow.Checksum
+	v.CreatedAt = shadow.CreatedAt
+	v.CurrentState = shadow.CurrentState
+	v.CurrentTasks = shadow.CurrentTasks
+	v.Id = shadow.Id
+	v.NetworkId = shadow.NetworkId
+	v.ProjectId = shadow.ProjectId
+	v.ResourceStatus = shadow.ResourceStatus
+	v.UpdatedAt = shadow.UpdatedAt
+
+	if shadow.TargetSpec != nil {
+		v.AllocationPools = shadow.TargetSpec.AllocationPools
+		v.Cidr = shadow.TargetSpec.Cidr
+		v.Description = shadow.TargetSpec.Description
+		v.DhcpEnabled = shadow.TargetSpec.DhcpEnabled
+		v.DnsNameservers = shadow.TargetSpec.DnsNameservers
+		v.GatewayIp = shadow.TargetSpec.GatewayIp
+		v.Location = shadow.TargetSpec.Location
+		v.Name = shadow.TargetSpec.Name
+	}
+
+	return nil
 }

@@ -12,8 +12,10 @@ Creates a private network (vRack) in a public cloud project.
 resource "ovh_cloud_network_private_vrack" "network" {
   service_name = "xxxxxxxxxx"
   name         = "my-private-network"
-  region       = "GRA1"
-  description  = "My private network"
+  location = {
+    region = "GRA1"
+  }
+  description = "My private network"
 }
 ```
 
@@ -23,7 +25,8 @@ The following arguments are supported:
 
 * `service_name` - (Required) Service name of the resource representing the id of the cloud project. **Changing this value recreates the resource.**
 * `name` - (Required) Network name.
-* `region` - (Required) Region where the network will be created. **Changing this value recreates the resource.**
+* `location` - (Required) Location of the network:
+  * `region` - (Required) Region where the network will be created. **Changing this value recreates the resource.**
 * `description` - (Optional) Network description. **Changing this value recreates the resource.**
 
 ## Attributes Reference

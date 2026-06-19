@@ -16,7 +16,7 @@ type CloudSubnetModel struct {
 	NetworkId   ovhtypes.TfStringValue `tfsdk:"network_id"`
 	Name        ovhtypes.TfStringValue `tfsdk:"name"`
 	CIDR        ovhtypes.TfStringValue `tfsdk:"cidr"`
-	Region      ovhtypes.TfStringValue `tfsdk:"region"`
+	Location    types.Object           `tfsdk:"location"`
 
 	// Optional
 	Description     ovhtypes.TfStringValue `tfsdk:"description"`
@@ -46,14 +46,15 @@ type CloudSubnetAPIResponse struct {
 }
 
 type CloudSubnetAPICurrentState struct {
-	Name           string                    `json:"name,omitempty"`
-	CIDR           string                    `json:"cidr,omitempty"`
-	Description    string                    `json:"description,omitempty"`
-	DHCPEnabled    *bool                     `json:"dhcpEnabled,omitempty"`
-	DNSNameservers []string                  `json:"dnsNameservers,omitempty"`
-	GatewayIP      string                    `json:"gatewayIp,omitempty"`
-	HostRoutes     []CloudSubnetAPIHostRoute `json:"hostRoutes,omitempty"`
-	Location       *CloudSubnetAPILocation   `json:"location,omitempty"`
+	Name            string                         `json:"name,omitempty"`
+	CIDR            string                         `json:"cidr,omitempty"`
+	Description     string                         `json:"description,omitempty"`
+	DHCPEnabled     *bool                          `json:"dhcpEnabled,omitempty"`
+	DNSNameservers  []string                       `json:"dnsNameservers,omitempty"`
+	GatewayIP       string                         `json:"gatewayIp,omitempty"`
+	AllocationPools []CloudSubnetAPIAllocationPool `json:"allocationPools,omitempty"`
+	HostRoutes      []CloudSubnetAPIHostRoute      `json:"hostRoutes,omitempty"`
+	Location        *CloudSubnetAPILocation        `json:"location,omitempty"`
 }
 
 type CloudSubnetAPILocation struct {
@@ -101,13 +102,25 @@ type CloudSubnetUpdatePayload struct {
 	TargetSpec *CloudSubnetAPIPutTargetSpec `json:"targetSpec"`
 }
 
+// subnetModelRegion extracts the region string from the data-source model's
+// location object (or "" when unset).
+func (m *CloudSubnetModel) subnetModelRegion() string {
+	if m.Location.IsNull() || m.Location.IsUnknown() {
+		return ""
+	}
+	if v, ok := m.Location.Attributes()["region"].(ovhtypes.TfStringValue); ok {
+		return v.ValueString()
+	}
+	return ""
+}
+
 // ToCreate converts the Terraform model to the API create payload
 func (m *CloudSubnetModel) ToCreate() *CloudSubnetCreatePayload {
 	targetSpec := &CloudSubnetAPITargetSpec{
 		Name: m.Name.ValueString(),
 		CIDR: m.CIDR.ValueString(),
 		Location: &CloudSubnetAPILocation{
-			Region: m.Region.ValueString(),
+			Region: m.subnetModelRegion(),
 		},
 	}
 
@@ -225,6 +238,9 @@ func SubnetCurrentStateAttrTypes() map[string]attr.Type {
 			ElemType: types.StringType,
 		},
 		"gateway_ip": ovhtypes.TfStringType{},
+		"allocation_pools": types.ListType{
+			ElemType: types.ObjectType{AttrTypes: subnetAllocationPoolAttrTypes()},
+		},
 		"host_routes": types.ListType{
 			ElemType: types.ObjectType{
 				AttrTypes: map[string]attr.Type{
@@ -255,27 +271,37 @@ func (m *CloudSubnetModel) MergeWith(ctx context.Context, response *CloudSubnetA
 		m.CurrentState = types.ObjectNull(SubnetCurrentStateAttrTypes())
 	}
 
-	// Set flattened root-level fields from targetSpec ONLY. The optional root
-	// attributes mirror caller intent (what the API echoes back in targetSpec)
-	// and must stay null when the caller omitted them. The realized backend
-	// values (Neutron-resolved gateway, dhcp, pools, ...) are exposed solely
-	// via the computed current_state object built above and must NEVER be
-	// surfaced as these root attributes.
+	// Set flattened root-level fields from targetSpec. The Neutron-defaulted
+	// attributes dhcp_enabled and gateway_ip are Optional+Computed: when the
+	// caller omits them, the backend resolves defaults and writes them into
+	// targetSpec at creation, so the API echoes them back here and they are
+	// stored in state. Their UseStateForUnknown plan modifiers keep the
+	// API-returned value stable across subsequent plans/applies (no spurious
+	// diff, no inconsistent-result error). The rule is therefore: if targetSpec
+	// carries the field, set it; otherwise set it to null.
 	//
-	// These optional attributes are Optional-not-Computed with no plan
-	// modifiers, so the framework never leaves them "unknown": an omitted
-	// field is simply null. The rule is therefore: if targetSpec carries the
-	// field, set it; otherwise set it to null.
+	// allocation_pools is Optional-only (config-driven): it is read from config
+	// in ToCreate/ToUpdate but is intentionally NOT overwritten from the API
+	// response (see the allocation_pools note below) to avoid reintroducing a
+	// server-vs-config diff.
 	//
 	// network_id is a path parameter (not part of targetSpec) and is left
 	// sourced from state/input.
+	m.Location = types.ObjectNull(subnetDataLocationAttrTypes())
 	if response.TargetSpec != nil {
 		// Required fields, always set from targetSpec
 		m.Name = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Name)}
 		m.CIDR = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.CIDR)}
 
 		if response.TargetSpec.Location != nil {
-			m.Region = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Location.Region)}
+			m.Location, _ = types.ObjectValue(
+				subnetDataLocationAttrTypes(),
+				map[string]attr.Value{
+					"region": ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Location.Region)},
+				},
+			)
+		} else {
+			m.Location = types.ObjectNull(subnetDataLocationAttrTypes())
 		}
 
 		if response.TargetSpec.Description != "" {
@@ -306,23 +332,11 @@ func (m *CloudSubnetModel) MergeWith(ctx context.Context, response *CloudSubnetA
 			m.DNSNameservers = types.ListNull(types.StringType)
 		}
 
-		allocationPoolObjType := types.ObjectType{AttrTypes: subnetAllocationPoolAttrTypes()}
-		if response.TargetSpec.AllocationPools != nil {
-			poolObjs := make([]attr.Value, len(response.TargetSpec.AllocationPools))
-			for i, pool := range response.TargetSpec.AllocationPools {
-				poolObj, _ := types.ObjectValue(
-					subnetAllocationPoolAttrTypes(),
-					map[string]attr.Value{
-						"start": ovhtypes.TfStringValue{StringValue: types.StringValue(pool.Start)},
-						"end":   ovhtypes.TfStringValue{StringValue: types.StringValue(pool.End)},
-					},
-				)
-				poolObjs[i] = poolObj
-			}
-			m.AllocationPools = types.ListValueMust(allocationPoolObjType, poolObjs)
-		} else {
-			m.AllocationPools = types.ListNull(allocationPoolObjType)
-		}
+		// allocation_pools is Optional-only (not Computed) and therefore purely
+		// config-driven: the model already carries the value the user configured
+		// (or null when unset). We intentionally do NOT overwrite m.AllocationPools
+		// from the API response here — doing so would reintroduce a server-vs-config
+		// diff. ToCreate/ToUpdate still read m.AllocationPools to build the payload.
 	}
 }
 
@@ -332,6 +346,14 @@ func subnetAllocationPoolAttrTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"start": ovhtypes.TfStringType{},
 		"end":   ovhtypes.TfStringType{},
+	}
+}
+
+// subnetDataLocationAttrTypes returns the attr types for the root-level
+// location object exposed by the subnet data sources.
+func subnetDataLocationAttrTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"region": ovhtypes.TfStringType{},
 	}
 }
 
@@ -373,6 +395,23 @@ func buildSubnetCurrentStateObject(state *CloudSubnetAPICurrentState) basetypes.
 		dnsVal = types.ListNull(types.StringType)
 	}
 
+	// Build allocation_pools list
+	allocationPoolElemType := types.ObjectType{AttrTypes: subnetAllocationPoolAttrTypes()}
+	var allocationPoolsVal basetypes.ListValue
+	if state.AllocationPools != nil {
+		poolObjs := make([]attr.Value, len(state.AllocationPools))
+		for i, pool := range state.AllocationPools {
+			poolObj, _ := types.ObjectValue(subnetAllocationPoolAttrTypes(), map[string]attr.Value{
+				"start": ovhtypes.TfStringValue{StringValue: types.StringValue(pool.Start)},
+				"end":   ovhtypes.TfStringValue{StringValue: types.StringValue(pool.End)},
+			})
+			poolObjs[i] = poolObj
+		}
+		allocationPoolsVal, _ = types.ListValue(allocationPoolElemType, poolObjs)
+	} else {
+		allocationPoolsVal = types.ListNull(allocationPoolElemType)
+	}
+
 	// Build host_routes list
 	hostRouteAttrTypes := map[string]attr.Type{
 		"destination": ovhtypes.TfStringType{},
@@ -400,14 +439,15 @@ func buildSubnetCurrentStateObject(state *CloudSubnetAPICurrentState) basetypes.
 	currentStateObj, _ := types.ObjectValue(
 		SubnetCurrentStateAttrTypes(),
 		map[string]attr.Value{
-			"name":            ovhtypes.TfStringValue{StringValue: types.StringValue(state.Name)},
-			"cidr":            ovhtypes.TfStringValue{StringValue: types.StringValue(state.CIDR)},
-			"description":     ovhtypes.TfStringValue{StringValue: types.StringValue(state.Description)},
-			"dhcp_enabled":    dhcpVal,
-			"dns_nameservers": dnsVal,
-			"gateway_ip":      ovhtypes.TfStringValue{StringValue: types.StringValue(state.GatewayIP)},
-			"host_routes":     hostRoutesVal,
-			"location":        locationObj,
+			"name":             ovhtypes.TfStringValue{StringValue: types.StringValue(state.Name)},
+			"cidr":             ovhtypes.TfStringValue{StringValue: types.StringValue(state.CIDR)},
+			"description":      ovhtypes.TfStringValue{StringValue: types.StringValue(state.Description)},
+			"dhcp_enabled":     dhcpVal,
+			"dns_nameservers":  dnsVal,
+			"gateway_ip":       ovhtypes.TfStringValue{StringValue: types.StringValue(state.GatewayIP)},
+			"allocation_pools": allocationPoolsVal,
+			"host_routes":      hostRoutesVal,
+			"location":         locationObj,
 		},
 	)
 

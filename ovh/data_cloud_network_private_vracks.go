@@ -54,10 +54,12 @@ func (d *cloudNetworkPrivateVracksDataSource) Configure(_ context.Context, req d
 // element of the plural data source list.
 func NetworkListItemAttrTypes() map[string]attr.Type {
 	return map[string]attr.Type{
-		"id":              ovhtypes.TfStringType{},
-		"name":            ovhtypes.TfStringType{},
-		"description":     ovhtypes.TfStringType{},
-		"region":          ovhtypes.TfStringType{},
+		"id":          ovhtypes.TfStringType{},
+		"name":        ovhtypes.TfStringType{},
+		"description": ovhtypes.TfStringType{},
+		"location": types.ObjectType{
+			AttrTypes: vrackLocationAttrTypes(),
+		},
 		"checksum":        ovhtypes.TfStringType{},
 		"created_at":      ovhtypes.TfStringType{},
 		"updated_at":      ovhtypes.TfStringType{},
@@ -97,10 +99,16 @@ func (d *cloudNetworkPrivateVracksDataSource) Schema(ctx context.Context, req da
 							Computed:    true,
 							Description: "Network description",
 						},
-						"region": schema.StringAttribute{
-							CustomType:  ovhtypes.TfStringType{},
+						"location": schema.SingleNestedAttribute{
 							Computed:    true,
-							Description: "Region of the network",
+							Description: "Location of the network",
+							Attributes: map[string]schema.Attribute{
+								"region": schema.StringAttribute{
+									CustomType:  ovhtypes.TfStringType{},
+									Computed:    true,
+									Description: "Region of the network",
+								},
+							},
 						},
 						"checksum": schema.StringAttribute{
 							CustomType:  ovhtypes.TfStringType{},
@@ -191,13 +199,18 @@ func (d *cloudNetworkPrivateVracksDataSource) Read(ctx context.Context, req data
 func buildNetworkListItemObject(response *CloudNetworkAPIResponse) basetypes.ObjectValue {
 	nameVal := ovhtypes.TfStringValue{StringValue: types.StringNull()}
 	descVal := ovhtypes.TfStringValue{StringValue: types.StringNull()}
-	regionVal := ovhtypes.TfStringValue{StringValue: types.StringNull()}
+	locationVal := types.ObjectNull(vrackLocationAttrTypes())
 
 	if response.TargetSpec != nil {
 		nameVal = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Name)}
 		descVal = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Description)}
 		if response.TargetSpec.Location != nil {
-			regionVal = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Location.Region)}
+			locationVal, _ = types.ObjectValue(
+				vrackLocationAttrTypes(),
+				map[string]attr.Value{
+					"region": ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Location.Region)},
+				},
+			)
 		}
 	}
 
@@ -214,7 +227,7 @@ func buildNetworkListItemObject(response *CloudNetworkAPIResponse) basetypes.Obj
 			"id":              ovhtypes.TfStringValue{StringValue: types.StringValue(response.Id)},
 			"name":            nameVal,
 			"description":     descVal,
-			"region":          regionVal,
+			"location":        locationVal,
 			"checksum":        ovhtypes.TfStringValue{StringValue: types.StringValue(response.Checksum)},
 			"created_at":      ovhtypes.TfStringValue{StringValue: types.StringValue(response.CreatedAt)},
 			"updated_at":      ovhtypes.TfStringValue{StringValue: types.StringValue(response.UpdatedAt)},

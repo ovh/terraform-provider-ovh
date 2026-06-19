@@ -34,7 +34,8 @@ The following attributes are exported:
 
 * `name` - Subnet name.
 * `cidr` - CIDR address range for the subnet.
-* `region` - Region of the subnet.
+* `location` - Location details:
+  * `region` - Region code.
 * `description` - Subnet description.
 * `dhcp_enabled` - Whether DHCP is enabled on the subnet.
 * `dns_nameservers` - DNS nameservers for the subnet.

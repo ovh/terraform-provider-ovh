@@ -14,33 +14,37 @@ func TestAccDataSourceCloudNetworkPrivateVrackSubnets_basic(t *testing.T) {
 	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
 
 	networkName := acctest.RandomWithPrefix(testAccResourceCloudNetworkPrivateVrackNamePrefix)
-	subnetName := acctest.RandomWithPrefix(testAccResourceCloudNetworkPrivateVrackSubnetNamePrefix)
+	subnetName := acctest.RandomWithPrefix(testAccResourceCloudNetworkPrivateSubnetNamePrefix)
 
 	config := fmt.Sprintf(`
 resource "ovh_cloud_network_private_vrack" "network" {
   service_name = "%s"
   name         = "%s"
-  region       = "%s"
+  location = {
+	region = "%s"
+  }
 }
 
 resource "ovh_cloud_network_private_vrack_subnet" "test" {
-  service_name = ovh_cloud_network_private_vrack.network.service_name
+  project_id   = ovh_cloud_network_private_vrack.network.service_name
   network_id   = ovh_cloud_network_private_vrack.network.id
   name         = "%s"
   cidr         = "10.0.0.0/24"
-  region       = "%s"
   dhcp_enabled = true
+  location = {
+    region = "%s"
+  }
 }
 
 data "ovh_cloud_network_private_vrack_subnets" "test" {
-  service_name = ovh_cloud_network_private_vrack_subnet.test.service_name
+  service_name = ovh_cloud_network_private_vrack_subnet.test.project_id
   network_id   = ovh_cloud_network_private_vrack_subnet.test.network_id
 }
 `, serviceName, networkName, region, subnetName, region)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheckCloudNetworkPrivateVrackSubnet(t)
+			testAccPreCheckCloudNetworkPrivateSubnet(t)
 		},
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{

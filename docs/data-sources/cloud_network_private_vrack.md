@@ -31,7 +31,8 @@ The following arguments are supported:
 The following attributes are exported:
 
 * `name` - Network name.
-* `region` - Region of the network.
+* `location` - Location of the network:
+  * `region` - Region of the network.
 * `description` - Network description.
 * `checksum` - Computed hash representing the current target specification value.
 * `created_at` - Creation date of the network.

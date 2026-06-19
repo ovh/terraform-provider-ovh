@@ -19,7 +19,9 @@ func TestAccDataSourceCloudNetworkPrivateVrack_basic(t *testing.T) {
 resource "ovh_cloud_network_private_vrack" "test" {
   service_name = "%s"
   name         = "%s"
-  region       = "%s"
+  location = {
+    region = "%s"
+  }
 }
 
 data "ovh_cloud_network_private_vrack" "test" {
@@ -39,7 +41,7 @@ data "ovh_cloud_network_private_vrack" "test" {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.ovh_cloud_network_private_vrack.test", "service_name", serviceName),
 					resource.TestCheckResourceAttr("data.ovh_cloud_network_private_vrack.test", "name", networkName),
-					resource.TestCheckResourceAttr("data.ovh_cloud_network_private_vrack.test", "region", region),
+					resource.TestCheckResourceAttr("data.ovh_cloud_network_private_vrack.test", "location.region", region),
 					resource.TestCheckResourceAttrSet("data.ovh_cloud_network_private_vrack.test", "id"),
 					resource.TestCheckResourceAttrSet("data.ovh_cloud_network_private_vrack.test", "checksum"),
 					resource.TestCheckResourceAttrSet("data.ovh_cloud_network_private_vrack.test", "created_at"),

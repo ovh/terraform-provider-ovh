@@ -14,7 +14,7 @@ type CloudNetworkPrivateVrackModel struct {
 	// Required
 	ServiceName ovhtypes.TfStringValue `tfsdk:"service_name"`
 	Name        ovhtypes.TfStringValue `tfsdk:"name"`
-	Region      ovhtypes.TfStringValue `tfsdk:"region"`
+	Location    types.Object           `tfsdk:"location"`
 
 	// Optional
 	Description ovhtypes.TfStringValue `tfsdk:"description"`
@@ -70,12 +70,42 @@ type CloudNetworkUpdatePayload struct {
 	TargetSpec *CloudNetworkAPIPutTargetSpec `json:"targetSpec"`
 }
 
+// vrackLocationAttrTypes returns the attribute types for the root-level
+// location object exposed by the network resource and data sources.
+func vrackLocationAttrTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"region": ovhtypes.TfStringType{},
+	}
+}
+
+// vrackLocationRegion extracts the region value out of a root-level location
+// object. It returns an empty string when the object is null/unknown or does
+// not contain a region attribute.
+func vrackLocationRegion(location types.Object) string {
+	if location.IsNull() || location.IsUnknown() {
+		return ""
+	}
+
+	attrs := location.Attributes()
+	regionAttr, ok := attrs["region"]
+	if !ok {
+		return ""
+	}
+
+	region, ok := regionAttr.(ovhtypes.TfStringValue)
+	if !ok {
+		return ""
+	}
+
+	return region.ValueString()
+}
+
 // ToCreate converts the Terraform model to the API create payload
 func (m *CloudNetworkPrivateVrackModel) ToCreate() *CloudNetworkCreatePayload {
 	targetSpec := &CloudNetworkAPITargetSpec{
 		Name: m.Name.ValueString(),
 		Location: &CloudNetworkAPILocation{
-			Region: m.Region.ValueString(),
+			Region: vrackLocationRegion(m.Location),
 		},
 	}
 
@@ -136,7 +166,14 @@ func (m *CloudNetworkPrivateVrackModel) MergeWith(ctx context.Context, response 
 		}
 
 		if response.TargetSpec.Location != nil {
-			m.Region = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Location.Region)}
+			m.Location, _ = types.ObjectValue(
+				vrackLocationAttrTypes(),
+				map[string]attr.Value{
+					"region": ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Location.Region)},
+				},
+			)
+		} else {
+			m.Location = types.ObjectNull(vrackLocationAttrTypes())
 		}
 	}
 }

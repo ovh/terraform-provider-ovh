@@ -32,7 +32,8 @@ The following attributes are exported:
   * `id` - Network ID.
   * `name` - Network name.
   * `description` - Network description.
-  * `region` - Region of the network.
+  * `location` - Location of the network:
+    * `region` - Region of the network.
   * `checksum` - Computed hash representing the current target specification value.
   * `created_at` - Creation date of the network.
   * `updated_at` - Last update date of the network.

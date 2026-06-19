@@ -14,26 +14,30 @@ func TestAccDataSourceCloudNetworkPrivateVrackSubnet_basic(t *testing.T) {
 	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
 
 	networkName := acctest.RandomWithPrefix(testAccResourceCloudNetworkPrivateVrackNamePrefix)
-	subnetName := acctest.RandomWithPrefix(testAccResourceCloudNetworkPrivateVrackSubnetNamePrefix)
+	subnetName := acctest.RandomWithPrefix(testAccResourceCloudNetworkPrivateSubnetNamePrefix)
 
 	config := fmt.Sprintf(`
 resource "ovh_cloud_network_private_vrack" "network" {
   service_name = "%s"
   name         = "%s"
-  region       = "%s"
+  location = {
+	region = "%s"
+  }
 }
 
 resource "ovh_cloud_network_private_vrack_subnet" "test" {
-  service_name = ovh_cloud_network_private_vrack.network.service_name
+  project_id   = ovh_cloud_network_private_vrack.network.service_name
   network_id   = ovh_cloud_network_private_vrack.network.id
   name         = "%s"
   cidr         = "10.0.0.0/24"
-  region       = "%s"
   dhcp_enabled = true
+  location = {
+    region = "%s"
+  }
 }
 
 data "ovh_cloud_network_private_vrack_subnet" "test" {
-  service_name = ovh_cloud_network_private_vrack_subnet.test.service_name
+  service_name = ovh_cloud_network_private_vrack_subnet.test.project_id
   network_id   = ovh_cloud_network_private_vrack_subnet.test.network_id
   id           = ovh_cloud_network_private_vrack_subnet.test.id
 }
@@ -41,7 +45,7 @@ data "ovh_cloud_network_private_vrack_subnet" "test" {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			testAccPreCheckCloudNetworkPrivateVrackSubnet(t)
+			testAccPreCheckCloudNetworkPrivateSubnet(t)
 		},
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -51,7 +55,7 @@ data "ovh_cloud_network_private_vrack_subnet" "test" {
 					resource.TestCheckResourceAttr("data.ovh_cloud_network_private_vrack_subnet.test", "service_name", serviceName),
 					resource.TestCheckResourceAttr("data.ovh_cloud_network_private_vrack_subnet.test", "name", subnetName),
 					resource.TestCheckResourceAttr("data.ovh_cloud_network_private_vrack_subnet.test", "cidr", "10.0.0.0/24"),
-					resource.TestCheckResourceAttr("data.ovh_cloud_network_private_vrack_subnet.test", "region", region),
+					resource.TestCheckResourceAttr("data.ovh_cloud_network_private_vrack_subnet.test", "location.region", region),
 					resource.TestCheckResourceAttr("data.ovh_cloud_network_private_vrack_subnet.test", "dhcp_enabled", "true"),
 					resource.TestCheckResourceAttrSet("data.ovh_cloud_network_private_vrack_subnet.test", "id"),
 					resource.TestCheckResourceAttrSet("data.ovh_cloud_network_private_vrack_subnet.test", "network_id"),

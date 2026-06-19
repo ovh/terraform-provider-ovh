@@ -241,23 +241,27 @@ func TestAccCloudGateway_withSubnets(t *testing.T) {
 	}
 
 	networkName := acctest.RandomWithPrefix(testAccResourceCloudNetworkPrivateVrackNamePrefix)
-	subnetName := acctest.RandomWithPrefix(testAccResourceCloudNetworkPrivateVrackSubnetNamePrefix)
+	subnetName := acctest.RandomWithPrefix(testAccResourceCloudNetworkPrivateSubnetNamePrefix)
 	gatewayName := acctest.RandomWithPrefix(testAccResourceCloudGatewayNamePrefix)
 
 	config := fmt.Sprintf(`
 resource "ovh_cloud_network_private_vrack" "network" {
   service_name = "%s"
   name         = "%s"
-  region       = "%s"
+  location = {
+    region = "%s"
+  }
 }
 
 resource "ovh_cloud_network_private_vrack_subnet" "subnet" {
-  service_name = ovh_cloud_network_private_vrack.network.service_name
+  project_id   = ovh_cloud_network_private_vrack.network.service_name
   network_id   = ovh_cloud_network_private_vrack.network.id
   name         = "%s"
   cidr         = "10.0.0.0/24"
-  region       = "%s"
   dhcp_enabled = true
+  location = {
+    region = "%s"
+  }
 }
 
 resource "ovh_cloud_gateway" "test" {
