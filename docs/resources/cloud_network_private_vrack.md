@@ -16,6 +16,7 @@ resource "ovh_cloud_network_private_vrack" "network" {
     region = "GRA1"
   }
   description = "My private network"
+  vlan_id     = 100
 }
 ```
 
@@ -28,6 +29,7 @@ The following arguments are supported:
 * `location` - (Required) Location of the network:
   * `region` - (Required) Region where the network will be created. **Changing this value recreates the resource.**
 * `description` - (Optional) Network description. **Changing this value recreates the resource.**
+* `vlan_id` - (Optional) VLAN ID of the network (0-4096). Assigned by the API if not set. **Changing this value recreates the resource.** Not supported in localzone regions.
 
 ## Attributes Reference
 
@@ -41,6 +43,7 @@ The following attributes are exported:
 * `current_state` - Current state of the network:
   * `name` - Network name.
   * `description` - Network description.
+  * `vlan_id` - VLAN ID.
   * `location` - Location details:
     * `region` - Region code.
 

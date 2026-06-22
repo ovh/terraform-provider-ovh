@@ -34,6 +34,7 @@ The following attributes are exported:
 * `location` - Location of the network:
   * `region` - Region of the network.
 * `description` - Network description.
+* `vlan_id` - VLAN ID of the network.
 * `checksum` - Computed hash representing the current target specification value.
 * `created_at` - Creation date of the network.
 * `updated_at` - Last update date of the network.
@@ -41,5 +42,6 @@ The following attributes are exported:
 * `current_state` - Current state of the network:
   * `name` - Network name.
   * `description` - Network description.
+  * `vlan_id` - VLAN ID of the network.
   * `location` - Location details:
     * `region` - Region code.

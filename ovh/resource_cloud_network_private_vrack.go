@@ -7,11 +7,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/ovh/go-ovh/ovh"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
@@ -98,6 +101,16 @@ func (r *cloudNetworkPrivateVrackResource) Schema(ctx context.Context, req resou
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"vlan_id": schema.Int64Attribute{
+				CustomType:  ovhtypes.TfInt64Type{},
+				Optional:    true,
+				Computed:    true,
+				Description: "VLAN ID of the network (0-4096). Assigned by the API if not set. Changing this value recreates the resource. Not supported in localzone regions.",
+				Validators:  []validator.Int64{int64validator.Between(0, 4096)},
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplaceIfConfigured(),
+				},
+			},
 
 			// Computed attributes
 			"id": schema.StringAttribute{
@@ -152,6 +165,11 @@ func (r *cloudNetworkPrivateVrackResource) Schema(ctx context.Context, req resou
 						CustomType:  ovhtypes.TfStringType{},
 						Computed:    true,
 						Description: "Network description",
+					},
+					"vlan_id": schema.Int64Attribute{
+						CustomType:  ovhtypes.TfInt64Type{},
+						Computed:    true,
+						Description: "VLAN ID of the network",
 					},
 					"location": schema.SingleNestedAttribute{
 						Computed:    true,

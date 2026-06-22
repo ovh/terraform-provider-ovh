@@ -18,6 +18,7 @@ type CloudNetworkPrivateVrackModel struct {
 
 	// Optional
 	Description ovhtypes.TfStringValue `tfsdk:"description"`
+	VlanId      ovhtypes.TfInt64Value  `tfsdk:"vlan_id"`
 
 	// Computed
 	Id             ovhtypes.TfStringValue `tfsdk:"id"`
@@ -43,6 +44,7 @@ type CloudNetworkAPICurrentState struct {
 	Name        string                   `json:"name,omitempty"`
 	Description string                   `json:"description,omitempty"`
 	Location    *CloudNetworkAPILocation `json:"location,omitempty"`
+	VlanId      *int64                   `json:"vlanId,omitempty"`
 }
 
 type CloudNetworkAPILocation struct {
@@ -53,6 +55,7 @@ type CloudNetworkAPITargetSpec struct {
 	Name        string                   `json:"name"`
 	Description string                   `json:"description,omitempty"`
 	Location    *CloudNetworkAPILocation `json:"location,omitempty"`
+	VlanId      *int64                   `json:"vlanId,omitempty"`
 }
 
 type CloudNetworkAPIPutTargetSpec struct {
@@ -113,6 +116,11 @@ func (m *CloudNetworkPrivateVrackModel) ToCreate() *CloudNetworkCreatePayload {
 		targetSpec.Description = m.Description.ValueString()
 	}
 
+	if !m.VlanId.IsNull() && !m.VlanId.IsUnknown() {
+		v := m.VlanId.ValueInt64()
+		targetSpec.VlanId = &v
+	}
+
 	return &CloudNetworkCreatePayload{
 		TargetSpec: targetSpec,
 	}
@@ -133,6 +141,7 @@ func NetworkCurrentStateAttrTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"name":        ovhtypes.TfStringType{},
 		"description": ovhtypes.TfStringType{},
+		"vlan_id":     ovhtypes.TfInt64Type{},
 		"location": types.ObjectType{
 			AttrTypes: map[string]attr.Type{
 				"region": ovhtypes.TfStringType{},
@@ -163,6 +172,13 @@ func (m *CloudNetworkPrivateVrackModel) MergeWith(ctx context.Context, response 
 		// Keep description null if user didn't set it and API returns empty
 		if response.TargetSpec.Description != "" || (!m.Description.IsNull() && !m.Description.IsUnknown()) {
 			m.Description = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Description)}
+		}
+
+		// VLAN ID is computed: always set from the API response
+		if response.TargetSpec.VlanId != nil {
+			m.VlanId = ovhtypes.TfInt64Value{Int64Value: types.Int64Value(*response.TargetSpec.VlanId)}
+		} else {
+			m.VlanId = ovhtypes.TfInt64Value{Int64Value: types.Int64Null()}
 		}
 
 		if response.TargetSpec.Location != nil {
@@ -196,11 +212,19 @@ func buildNetworkCurrentStateObject(state *CloudNetworkAPICurrentState) basetype
 		})
 	}
 
+	var vlanIdVal ovhtypes.TfInt64Value
+	if state.VlanId != nil {
+		vlanIdVal = ovhtypes.TfInt64Value{Int64Value: types.Int64Value(*state.VlanId)}
+	} else {
+		vlanIdVal = ovhtypes.TfInt64Value{Int64Value: types.Int64Null()}
+	}
+
 	currentStateObj, _ := types.ObjectValue(
 		NetworkCurrentStateAttrTypes(),
 		map[string]attr.Value{
 			"name":        ovhtypes.TfStringValue{StringValue: types.StringValue(state.Name)},
 			"description": ovhtypes.TfStringValue{StringValue: types.StringValue(state.Description)},
+			"vlan_id":     vlanIdVal,
 			"location":    locationObj,
 		},
 	)

@@ -57,6 +57,7 @@ func NetworkListItemAttrTypes() map[string]attr.Type {
 		"id":          ovhtypes.TfStringType{},
 		"name":        ovhtypes.TfStringType{},
 		"description": ovhtypes.TfStringType{},
+		"vlan_id":     ovhtypes.TfInt64Type{},
 		"location": types.ObjectType{
 			AttrTypes: vrackLocationAttrTypes(),
 		},
@@ -98,6 +99,11 @@ func (d *cloudNetworkPrivateVracksDataSource) Schema(ctx context.Context, req da
 							CustomType:  ovhtypes.TfStringType{},
 							Computed:    true,
 							Description: "Network description",
+						},
+						"vlan_id": schema.Int64Attribute{
+							CustomType:  ovhtypes.TfInt64Type{},
+							Computed:    true,
+							Description: "VLAN ID of the network",
 						},
 						"location": schema.SingleNestedAttribute{
 							Computed:    true,
@@ -143,6 +149,11 @@ func (d *cloudNetworkPrivateVracksDataSource) Schema(ctx context.Context, req da
 									CustomType:  ovhtypes.TfStringType{},
 									Computed:    true,
 									Description: "Network description",
+								},
+								"vlan_id": schema.Int64Attribute{
+									CustomType:  ovhtypes.TfInt64Type{},
+									Computed:    true,
+									Description: "VLAN ID of the network",
 								},
 								"location": schema.SingleNestedAttribute{
 									Computed:    true,
@@ -199,11 +210,15 @@ func (d *cloudNetworkPrivateVracksDataSource) Read(ctx context.Context, req data
 func buildNetworkListItemObject(response *CloudNetworkAPIResponse) basetypes.ObjectValue {
 	nameVal := ovhtypes.TfStringValue{StringValue: types.StringNull()}
 	descVal := ovhtypes.TfStringValue{StringValue: types.StringNull()}
+	vlanIdVal := ovhtypes.TfInt64Value{Int64Value: types.Int64Null()}
 	locationVal := types.ObjectNull(vrackLocationAttrTypes())
 
 	if response.TargetSpec != nil {
 		nameVal = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Name)}
 		descVal = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Description)}
+		if response.TargetSpec.VlanId != nil {
+			vlanIdVal = ovhtypes.TfInt64Value{Int64Value: types.Int64Value(*response.TargetSpec.VlanId)}
+		}
 		if response.TargetSpec.Location != nil {
 			locationVal, _ = types.ObjectValue(
 				vrackLocationAttrTypes(),
@@ -227,6 +242,7 @@ func buildNetworkListItemObject(response *CloudNetworkAPIResponse) basetypes.Obj
 			"id":              ovhtypes.TfStringValue{StringValue: types.StringValue(response.Id)},
 			"name":            nameVal,
 			"description":     descVal,
+			"vlan_id":         vlanIdVal,
 			"location":        locationVal,
 			"checksum":        ovhtypes.TfStringValue{StringValue: types.StringValue(response.Checksum)},
 			"created_at":      ovhtypes.TfStringValue{StringValue: types.StringValue(response.CreatedAt)},

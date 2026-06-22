@@ -76,6 +76,11 @@ func (d *cloudNetworkPrivateVrackDataSource) Schema(ctx context.Context, req dat
 				Computed:    true,
 				Description: "Network description",
 			},
+			"vlan_id": schema.Int64Attribute{
+				CustomType:  ovhtypes.TfInt64Type{},
+				Computed:    true,
+				Description: "VLAN ID of the network",
+			},
 			"checksum": schema.StringAttribute{
 				CustomType:  ovhtypes.TfStringType{},
 				Computed:    true,
@@ -109,6 +114,11 @@ func (d *cloudNetworkPrivateVrackDataSource) Schema(ctx context.Context, req dat
 						CustomType:  ovhtypes.TfStringType{},
 						Computed:    true,
 						Description: "Network description",
+					},
+					"vlan_id": schema.Int64Attribute{
+						CustomType:  ovhtypes.TfInt64Type{},
+						Computed:    true,
+						Description: "VLAN ID of the network",
 					},
 					"location": schema.SingleNestedAttribute{
 						Computed:    true,
