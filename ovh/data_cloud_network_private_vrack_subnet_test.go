@@ -26,7 +26,7 @@ resource "ovh_cloud_network_private_vrack" "network" {
 }
 
 resource "ovh_cloud_network_private_vrack_subnet" "test" {
-  project_id   = ovh_cloud_network_private_vrack.network.service_name
+  service_name = ovh_cloud_network_private_vrack.network.service_name
   network_id   = ovh_cloud_network_private_vrack.network.id
   name         = "%s"
   cidr         = "10.0.0.0/24"
@@ -37,7 +37,7 @@ resource "ovh_cloud_network_private_vrack_subnet" "test" {
 }
 
 data "ovh_cloud_network_private_vrack_subnet" "test" {
-  service_name = ovh_cloud_network_private_vrack_subnet.test.project_id
+  service_name = ovh_cloud_network_private_vrack_subnet.test.service_name
   network_id   = ovh_cloud_network_private_vrack_subnet.test.network_id
   id           = ovh_cloud_network_private_vrack_subnet.test.id
 }

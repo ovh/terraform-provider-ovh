@@ -10,13 +10,13 @@ Creates a subnet in a private network (vRack) in a public cloud project.
 
 ```terraform
 resource "ovh_cloud_network_private_vrack" "network" {
-  service_name = "xxxxxxxxxx"
+  service_name = "<public cloud project ID>"
   name         = "my-private-network"
   region       = "GRA1"
 }
 
 resource "ovh_cloud_network_private_vrack_subnet" "subnet" {
-  project_id   = ovh_cloud_network_private_vrack.network.service_name
+  service_name = ovh_cloud_network_private_vrack.network.service_name
   network_id   = ovh_cloud_network_private_vrack.network.id
   name         = "my-subnet"
   cidr         = "10.0.0.0/24"
@@ -44,7 +44,7 @@ resource "ovh_cloud_network_private_vrack_subnet" "subnet" {
 
 The following arguments are supported:
 
-* `project_id` - (Required) Project ID (service name of the cloud project). **Changing this value recreates the resource.**
+* `service_name` - (Required) Service name (ID of the cloud project). **Changing this value recreates the resource.**
 * `network_id` - (Required) Network ID of the parent private network. **Changing this value recreates the resource.**
 * `name` - (Required) Subnet name.
 * `cidr` - (Required) CIDR address range for the subnet (e.g. `10.0.0.0/24`). **Changing this value recreates the resource.**
@@ -83,15 +83,15 @@ The following attributes are exported:
 
 ## Import
 
-A cloud private network subnet can be imported using the `project_id`, `network_id` and `id`, separated by `/`:
+A cloud private network subnet can be imported using the `service_name`, `network_id` and `id`, separated by `/`:
 
 ```terraform
 import {
   to = ovh_cloud_network_private_vrack_subnet.subnet
-  id = "<project_id>/<network_id>/<id>"
+  id = "<service_name>/<network_id>/<id>"
 }
 ```
 
 ```bash
-$ terraform import ovh_cloud_network_private_vrack_subnet.subnet project_id/network_id/id
+$ terraform import ovh_cloud_network_private_vrack_subnet.subnet service_name/network_id/id
 ```

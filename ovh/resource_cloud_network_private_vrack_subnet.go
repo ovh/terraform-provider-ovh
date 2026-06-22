@@ -65,11 +65,11 @@ func (r *cloudNetworkPrivateSubnetResource) Schema(ctx context.Context, req reso
 func (r *cloudNetworkPrivateSubnetResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	splits := strings.Split(req.ID, "/")
 	if len(splits) != 3 {
-		resp.Diagnostics.AddError("Given ID is malformed", "ID must be formatted like the following: <project_id>/<network_id>/<id>")
+		resp.Diagnostics.AddError("Given ID is malformed", "ID must be formatted like the following: <service_name>/<network_id>/<id>")
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("project_id"), splits[0])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_name"), splits[0])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("network_id"), splits[1])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), splits[2])...)
 }
@@ -83,7 +83,7 @@ func (r *cloudNetworkPrivateSubnetResource) Create(ctx context.Context, req reso
 		return
 	}
 
-	base := "/v2/publicCloud/project/" + url.PathEscape(data.ProjectId.ValueString()) + "/network/" + url.PathEscape(data.NetworkId.ValueString()) + "/subnet"
+	base := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/network/" + url.PathEscape(data.NetworkId.ValueString()) + "/subnet"
 
 	if err := r.config.OVHClient.Post(base, data.ToCreate(), &responseData); err != nil {
 		resp.Diagnostics.AddError(
@@ -95,7 +95,7 @@ func (r *cloudNetworkPrivateSubnetResource) Create(ctx context.Context, req reso
 
 	// The response body does not carry the identity fields, re-attach them from
 	// the request-side model so the ID is tracked even if the wait below fails.
-	responseData.ProjectId = data.ProjectId
+	responseData.ServiceName = data.ServiceName
 	responseData.NetworkId = data.NetworkId
 	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)
 	if resp.Diagnostics.HasError() {
@@ -120,7 +120,7 @@ func (r *cloudNetworkPrivateSubnetResource) Create(ctx context.Context, req reso
 		return
 	}
 
-	finalData.ProjectId = data.ProjectId
+	finalData.ServiceName = data.ServiceName
 	finalData.NetworkId = data.NetworkId
 
 	// Save data into Terraform state
@@ -136,7 +136,7 @@ func (r *cloudNetworkPrivateSubnetResource) Read(ctx context.Context, req resour
 		return
 	}
 
-	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ProjectId.ValueString()) + "/network/" + url.PathEscape(data.NetworkId.ValueString()) + "/subnet/" + url.PathEscape(data.Id.ValueString())
+	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/network/" + url.PathEscape(data.NetworkId.ValueString()) + "/subnet/" + url.PathEscape(data.Id.ValueString())
 
 	if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
 		if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
@@ -153,7 +153,7 @@ func (r *cloudNetworkPrivateSubnetResource) Read(ctx context.Context, req resour
 	// Overwrite state with the API truth (re-attaching identity). We deliberately
 	// do not call the fill-only MergeWith: overwriting target_spec from the API is
 	// what surfaces drift.
-	responseData.ProjectId = data.ProjectId
+	responseData.ServiceName = data.ServiceName
 	responseData.NetworkId = data.NetworkId
 
 	// Save updated data into Terraform state
@@ -178,7 +178,7 @@ func (r *cloudNetworkPrivateSubnetResource) Update(ctx context.Context, req reso
 	// Use the latest post-READY checksum from state for the concurrency control.
 	planData.Checksum = state.Checksum
 
-	endpoint := "/v2/publicCloud/project/" + url.PathEscape(state.ProjectId.ValueString()) + "/network/" + url.PathEscape(state.NetworkId.ValueString()) + "/subnet/" + url.PathEscape(state.Id.ValueString())
+	endpoint := "/v2/publicCloud/project/" + url.PathEscape(state.ServiceName.ValueString()) + "/network/" + url.PathEscape(state.NetworkId.ValueString()) + "/subnet/" + url.PathEscape(state.Id.ValueString())
 
 	if err := r.config.OVHClient.Put(endpoint, planData.ToUpdate(), nil); err != nil {
 		resp.Diagnostics.AddError(
@@ -204,7 +204,7 @@ func (r *cloudNetworkPrivateSubnetResource) Update(ctx context.Context, req reso
 		return
 	}
 
-	finalData.ProjectId = state.ProjectId
+	finalData.ServiceName = state.ServiceName
 	finalData.NetworkId = state.NetworkId
 
 	// Save updated data into Terraform state
@@ -220,7 +220,7 @@ func (r *cloudNetworkPrivateSubnetResource) Delete(ctx context.Context, req reso
 		return
 	}
 
-	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ProjectId.ValueString()) + "/network/" + url.PathEscape(data.NetworkId.ValueString()) + "/subnet/" + url.PathEscape(data.Id.ValueString())
+	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/network/" + url.PathEscape(data.NetworkId.ValueString()) + "/subnet/" + url.PathEscape(data.Id.ValueString())
 
 	if err := r.config.OVHClient.Delete(endpoint, nil); err != nil {
 		if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
@@ -482,11 +482,11 @@ func CloudNetworkPrivateSubnetResourceSchema(ctx context.Context) schema.Schema 
 				stringplanmodifier.RequiresReplace(),
 			},
 		},
-		"project_id": schema.StringAttribute{
+		"service_name": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
 			Required:            true,
-			Description:         "Project ID",
-			MarkdownDescription: "Project ID",
+			Description:         "Service name",
+			MarkdownDescription: "Service name",
 			PlanModifiers: []planmodifier.String{
 				stringplanmodifier.RequiresReplace(),
 			},
@@ -628,7 +628,7 @@ type CloudNetworkPrivateSubnetModel struct {
 	CurrentTasks   ovhtypes.TfListNestedValue[CloudNetworkPrivateSubnetCurrentTasksValue] `tfsdk:"current_tasks" json:"currentTasks"`
 	Id             ovhtypes.TfStringValue                                                 `tfsdk:"id" json:"id"`
 	NetworkId      ovhtypes.TfStringValue                                                 `tfsdk:"network_id" json:"networkId"`
-	ProjectId      ovhtypes.TfStringValue                                                 `tfsdk:"project_id" json:"projectId"`
+	ServiceName    ovhtypes.TfStringValue                                                 `tfsdk:"service_name" json:"projectId"`
 	ResourceStatus ovhtypes.TfStringValue                                                 `tfsdk:"resource_status" json:"resourceStatus"`
 	UpdatedAt      ovhtypes.TfStringValue                                                 `tfsdk:"updated_at" json:"updatedAt"`
 
@@ -672,8 +672,8 @@ func (v *CloudNetworkPrivateSubnetModel) MergeWith(other *CloudNetworkPrivateSub
 		v.NetworkId = other.NetworkId
 	}
 
-	if (v.ProjectId.IsUnknown() || v.ProjectId.IsNull()) && !other.ProjectId.IsUnknown() {
-		v.ProjectId = other.ProjectId
+	if (v.ServiceName.IsUnknown() || v.ServiceName.IsNull()) && !other.ServiceName.IsUnknown() {
+		v.ServiceName = other.ServiceName
 	}
 
 	if (v.ResourceStatus.IsUnknown() || v.ResourceStatus.IsNull()) && !other.ResourceStatus.IsUnknown() {
@@ -799,7 +799,7 @@ func (v *CloudNetworkPrivateSubnetModel) UnmarshalJSON(data []byte) error {
 		CurrentTasks   ovhtypes.TfListNestedValue[CloudNetworkPrivateSubnetCurrentTasksValue] `json:"currentTasks"`
 		Id             ovhtypes.TfStringValue                                                 `json:"id"`
 		NetworkId      ovhtypes.TfStringValue                                                 `json:"networkId"`
-		ProjectId      ovhtypes.TfStringValue                                                 `json:"projectId"`
+		ServiceName    ovhtypes.TfStringValue                                                 `json:"projectId"`
 		ResourceStatus ovhtypes.TfStringValue                                                 `json:"resourceStatus"`
 		UpdatedAt      ovhtypes.TfStringValue                                                 `json:"updatedAt"`
 		TargetSpec     *CloudNetworkPrivateSubnetTargetSpecValue                              `json:"targetSpec"`
@@ -815,7 +815,7 @@ func (v *CloudNetworkPrivateSubnetModel) UnmarshalJSON(data []byte) error {
 	v.CurrentTasks = shadow.CurrentTasks
 	v.Id = shadow.Id
 	v.NetworkId = shadow.NetworkId
-	v.ProjectId = shadow.ProjectId
+	v.ServiceName = shadow.ServiceName
 	v.ResourceStatus = shadow.ResourceStatus
 	v.UpdatedAt = shadow.UpdatedAt
 

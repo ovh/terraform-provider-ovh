@@ -31,7 +31,7 @@ func testAccCloudNetworkPrivateSubnetImportStateIdFunc(resourceName string) reso
 			return "", fmt.Errorf("not found: %s", resourceName)
 		}
 		return fmt.Sprintf("%s/%s/%s",
-			rs.Primary.Attributes["project_id"],
+			rs.Primary.Attributes["service_name"],
 			rs.Primary.Attributes["network_id"],
 			rs.Primary.Attributes["id"],
 		), nil
@@ -54,7 +54,7 @@ resource "ovh_cloud_network_private_vrack" "network" {
 }
 
 resource "ovh_cloud_network_private_vrack_subnet" "test" {
-  project_id = ovh_cloud_network_private_vrack.network.service_name
+  service_name = ovh_cloud_network_private_vrack.network.service_name
   network_id = ovh_cloud_network_private_vrack.network.id
 
   name = "%s"
@@ -74,7 +74,7 @@ resource "ovh_cloud_network_private_vrack_subnet" "test" {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack_subnet.test", "project_id", serviceName),
+					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack_subnet.test", "service_name", serviceName),
 					resource.TestCheckResourceAttrSet("ovh_cloud_network_private_vrack_subnet.test", "network_id"),
 					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack_subnet.test", "name", subnetName),
 					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack_subnet.test", "cidr", "10.0.0.0/24"),
@@ -118,7 +118,7 @@ resource "ovh_cloud_network_private_vrack" "network" {
 }
 
 resource "ovh_cloud_network_private_vrack_subnet" "test" {
-  project_id = ovh_cloud_network_private_vrack.network.service_name
+  service_name = ovh_cloud_network_private_vrack.network.service_name
   network_id = ovh_cloud_network_private_vrack.network.id
 
   name            = "%s"
@@ -192,7 +192,7 @@ resource "ovh_cloud_network_private_vrack" "network" {
 }
 
 resource "ovh_cloud_network_private_vrack_subnet" "test" {
-  project_id = ovh_cloud_network_private_vrack.network.service_name
+  service_name = ovh_cloud_network_private_vrack.network.service_name
   network_id = ovh_cloud_network_private_vrack.network.id
 
   name            = "%s"
@@ -216,7 +216,7 @@ resource "ovh_cloud_network_private_vrack" "network" {
 }
 
 resource "ovh_cloud_network_private_vrack_subnet" "test" {
-  project_id = ovh_cloud_network_private_vrack.network.service_name
+  service_name = ovh_cloud_network_private_vrack.network.service_name
   network_id = ovh_cloud_network_private_vrack.network.id
 
   name            = "%s"
@@ -281,7 +281,7 @@ resource "ovh_cloud_network_private_vrack" "network" {
 }
 
 resource "ovh_cloud_network_private_vrack_subnet" "test" {
-  project_id = ovh_cloud_network_private_vrack.network.service_name
+  service_name = ovh_cloud_network_private_vrack.network.service_name
   network_id = ovh_cloud_network_private_vrack.network.id
 
   name        = "%s"
@@ -303,7 +303,7 @@ resource "ovh_cloud_network_private_vrack" "network" {
 }
 
 resource "ovh_cloud_network_private_vrack_subnet" "test" {
-  project_id = ovh_cloud_network_private_vrack.network.service_name
+  service_name = ovh_cloud_network_private_vrack.network.service_name
   network_id = ovh_cloud_network_private_vrack.network.id
 
   name        = "%s"

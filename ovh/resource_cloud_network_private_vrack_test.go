@@ -128,6 +128,7 @@ func TestAccCloudNetworkPrivateVrack_withVlanId(t *testing.T) {
 	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
 
 	networkName := acctest.RandomWithPrefix(testAccResourceCloudNetworkPrivateVrackNamePrefix)
+	vlanId := acctest.RandIntRange(0, 4094)
 
 	config := fmt.Sprintf(`
 resource "ovh_cloud_network_private_vrack" "test" {
@@ -136,9 +137,9 @@ resource "ovh_cloud_network_private_vrack" "test" {
   location = {
     region = "%s"
   }
-  vlan_id = 100
+  vlan_id = %d
 }
-`, serviceName, networkName, region)
+`, serviceName, networkName, region, vlanId)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -150,10 +151,10 @@ resource "ovh_cloud_network_private_vrack" "test" {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack.test", "name", networkName),
-					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack.test", "vlan_id", "100"),
+					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack.test", "vlan_id", fmt.Sprintf("%d", vlanId)),
 					resource.TestCheckResourceAttrSet("ovh_cloud_network_private_vrack.test", "id"),
 					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack.test", "resource_status", "READY"),
-					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack.test", "current_state.vlan_id", "100"),
+					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack.test", "current_state.vlan_id", fmt.Sprintf("%d", vlanId)),
 				),
 			},
 			// Test import

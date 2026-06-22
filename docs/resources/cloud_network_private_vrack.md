@@ -10,7 +10,7 @@ Creates a private network (vRack) in a public cloud project.
 
 ```terraform
 resource "ovh_cloud_network_private_vrack" "network" {
-  service_name = "xxxxxxxxxx"
+  service_name = "<public cloud project ID>"
   name         = "my-private-network"
   location = {
     region = "GRA1"
