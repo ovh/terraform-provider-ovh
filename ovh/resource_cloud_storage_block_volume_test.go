@@ -283,6 +283,56 @@ resource "ovh_cloud_storage_block_volume" "volume_from_image" {
 	})
 }
 
+// TestAccCloudStorageBlockVolume_noServiceName validates that when service_name
+// is omitted from the resource configuration, the provider falls back to the
+// OVH_CLOUD_PROJECT_SERVICE environment variable at plan time (via the
+// EnvDefaultString plan modifier) and that this does not produce a perpetual
+// diff / phantom replace on subsequent plans.
+func TestAccCloudStorageBlockVolume_noServiceName(t *testing.T) {
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+
+	volumeName := acctest.RandomWithPrefix(testAccResourceCloudStorageBlockVolumeNamePrefix)
+
+	config := fmt.Sprintf(`
+resource "ovh_cloud_storage_block_volume" "volume" {
+  name        = "%s"
+  size        = 10
+  region      = "%s"
+  volume_type = "CLASSIC"
+
+  encryption = {
+    enabled = false
+  }
+}
+`, volumeName, region)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloud(t)
+			testAccCheckCloudProjectExists(t)
+			checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_SERVICE")
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume", "name", volumeName),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume", "service_name", os.Getenv("OVH_CLOUD_PROJECT_SERVICE")),
+					resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume.volume", "id"),
+				),
+			},
+			{
+				// Re-planning with service_name still omitted must be a no-op:
+				// the EnvDefaultString modifier injects the env value so the plan
+				// matches state and RequiresReplace does not fire (regression guard).
+				Config:   config,
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
 const testAccResourceCloudStorageBlockVolumeNamePrefix = "tf-test-volume-v2-"
 
 func testAccCloudStorageBlockVolumeImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {

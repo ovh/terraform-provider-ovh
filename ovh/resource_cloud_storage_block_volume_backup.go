@@ -62,10 +62,13 @@ func (r *cloudStorageBlockVolumeBackupResource) Schema(ctx context.Context, req 
 		Attributes: map[string]schema.Attribute{
 			"service_name": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
-				Required:            true,
-				Description:         "Service name of the resource representing the id of the cloud project",
-				MarkdownDescription: "Service name of the resource representing the id of the cloud project",
+				Optional:            true,
+				Computed:            true,
+				Description:         "Service name of the resource representing the id of the cloud project. If omitted, the OVH_CLOUD_PROJECT_SERVICE environment variable is used.",
+				MarkdownDescription: "Service name of the resource representing the id of the cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.",
 				PlanModifiers: []planmodifier.String{
+					EnvDefaultString("OVH_CLOUD_PROJECT_SERVICE"),
+					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
@@ -203,6 +206,10 @@ func (r *cloudStorageBlockVolumeBackupResource) Create(ctx context.Context, req 
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if !requireResolvedServiceName(data.ServiceName, &resp.Diagnostics) {
 		return
 	}
 
