@@ -47,7 +47,7 @@ func CloudSshKeyResourceSchema(ctx context.Context) schema.Schema {
 			Optional:   true,
 			Computed:   true,
 			PlanModifiers: []planmodifier.String{
-				EnvDefaultString("OVH_CLOUD_PROJECT_SERVICE"),
+				EnvDefaultString("OVH_CLOUD_PROJECT_SERVICE", true),
 				stringplanmodifier.UseStateForUnknown(),
 				stringplanmodifier.RequiresReplace(),
 			},

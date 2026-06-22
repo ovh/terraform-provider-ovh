@@ -54,7 +54,7 @@ func cloudSshKeyEndpoint(serviceName, name string) string {
 	return cloudSshKeyBaseEndpoint(serviceName) + "/" + url.PathEscape(name)
 }
 
-func (r *cloudSshKeyResource) resolveServiceName(data *CloudSshKeyModel, diags interface{ AddError(string, string) }) string {
+func (r *cloudSshKeyResource) resolveServiceName(data *CloudSshKeyModel, diags errorDiagnostics) string {
 	if !data.ServiceName.IsNull() && !data.ServiceName.IsUnknown() && data.ServiceName.ValueString() != "" {
 		return data.ServiceName.ValueString()
 	}

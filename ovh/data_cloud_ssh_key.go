@@ -47,7 +47,7 @@ func (d *cloudSshKeyDataSource) Schema(ctx context.Context, req datasource.Schem
 // resolveCloudSshKeyServiceName returns the service name from the given value, falling
 // back to the OVH_CLOUD_PROJECT_SERVICE environment variable when it is not set. When the
 // environment variable is used, the provided value is updated so it ends up in the state.
-func resolveCloudSshKeyServiceName(serviceName *ovhtypes.TfStringValue, diags interface{ AddError(string, string) }) string {
+func resolveCloudSshKeyServiceName(serviceName *ovhtypes.TfStringValue, diags errorDiagnostics) string {
 	if !serviceName.IsNull() && !serviceName.IsUnknown() && serviceName.ValueString() != "" {
 		return serviceName.ValueString()
 	}

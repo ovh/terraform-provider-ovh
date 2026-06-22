@@ -23,37 +23,58 @@ import (
 // The attribute MUST be declared as both Optional and Computed for the
 // framework to accept a planned value that differs from the (null) config.
 //
-// If the env var is unset/empty the plan value is left unchanged so any
-// downstream guard (e.g. an apply-time required-attribute check) still applies.
-func EnvDefaultString(envVar string) planmodifier.String {
-	return envDefaultString{envVar: envVar}
+// When required is true, the modifier raises a "missing value" diagnostic at
+// plan time if the value cannot be resolved from the configuration, the
+// environment variable, or pre-existing state. When required is false, an
+// unresolvable value is left untouched.
+func EnvDefaultString(envVar string, required bool) planmodifier.String {
+	return envDefaultString{envVar: envVar, required: required}
 }
 
 type envDefaultString struct {
-	envVar string
+	envVar   string
+	required bool
 }
 
 func (m envDefaultString) Description(_ context.Context) string {
-	return fmt.Sprintf("If unset in configuration, defaults to the %s environment variable", m.envVar)
+	required := ""
+	if m.required {
+		required = " (required)"
+	}
+	return fmt.Sprintf("If unset in configuration, defaults to the %s environment variable%s", m.envVar, required)
 }
 
 func (m envDefaultString) MarkdownDescription(_ context.Context) string {
-	return fmt.Sprintf("If unset in configuration, defaults to the `%s` environment variable", m.envVar)
+	required := ""
+	if m.required {
+		required = " (required)"
+	}
+	return fmt.Sprintf("If unset in configuration, defaults to the `%s` environment variable%s", m.envVar, required)
 }
 
 func (m envDefaultString) PlanModifyString(_ context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
-	// User set the attribute explicitly in config: keep their value untouched.
+	// 1. Destroy: req.Plan is null — nothing to default, never error.
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+	// 2. Explicit config wins.
 	if !req.ConfigValue.IsNull() && !req.ConfigValue.IsUnknown() {
 		return
 	}
-
-	// Config is null/unknown: fall back to the environment variable at plan time.
-	envValue := os.Getenv(m.envVar)
-	if envValue == "" {
-		// No env value to inject. Leave the plan value unchanged so any
-		// apply-time guard remains the final arbiter.
+	// 3. Fall back to the env var at plan time.
+	if env := os.Getenv(m.envVar); env != "" {
+		resp.PlanValue = types.StringValue(env)
 		return
 	}
-
-	resp.PlanValue = types.StringValue(envValue)
+	// 4. No config, no env: if the value is already in state, keep it (UseStateForUnknown supplies it). Never error here.
+	if !req.StateValue.IsNull() && !req.StateValue.IsUnknown() {
+		return
+	}
+	// 5. Truly unresolvable (fresh create, nothing anywhere). Error only if required.
+	if m.required {
+		resp.Diagnostics.AddError(
+			fmt.Sprintf("Missing %s", req.Path),
+			fmt.Sprintf("Set it in the configuration or via the %s environment variable.", m.envVar),
+		)
+	}
 }

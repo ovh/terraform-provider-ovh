@@ -70,7 +70,7 @@ func (r *cloudStorageBlockVolumeResource) Schema(ctx context.Context, req resour
 				Description:         "Service name of the resource representing the id of the cloud project. If omitted, the OVH_CLOUD_PROJECT_SERVICE environment variable is used.",
 				MarkdownDescription: "Service name of the resource representing the id of the cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.",
 				PlanModifiers: []planmodifier.String{
-					EnvDefaultString("OVH_CLOUD_PROJECT_SERVICE"),
+					EnvDefaultString("OVH_CLOUD_PROJECT_SERVICE", true),
 					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -285,10 +285,6 @@ func (r *cloudStorageBlockVolumeResource) Create(ctx context.Context, req resour
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if !requireResolvedServiceName(data.ServiceName, &resp.Diagnostics) {
 		return
 	}
 
