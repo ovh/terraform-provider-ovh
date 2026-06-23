@@ -227,6 +227,8 @@ func (p *OvhProvider) Configure(ctx context.Context, req provider.ConfigureReque
 // DataSources defines the data sources implemented in the provider.
 func (p *OvhProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
+		NewCloudSecurityGroupDataSource,
+		NewCloudSecurityGroupsDataSource,
 		NewCloudProjectDatabaseIPRestrictionsDataSource,
 		NewCloudProjectFlavorDataSource,
 		NewCloudProjectFlavorsDataSource,
@@ -307,6 +309,7 @@ func (p *OvhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 // Resources defines the resources implemented in the provider.
 func (p *OvhProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
+		NewCloudSecurityGroupResource,
 		NewCloudProjectAlertingResource,
 		NewCloudProjectFileStorageShareResource,
 		NewCloudProjectFileStorageShareNetworkResource,
