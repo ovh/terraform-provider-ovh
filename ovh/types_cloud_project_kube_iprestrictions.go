@@ -14,7 +14,7 @@ type CloudProjectKubeIpRestrictionsCreateOrUpdateOpts struct {
 type CloudProjectKubeIpRestrictionsResponse = []string
 
 func (opts *CloudProjectKubeIpRestrictionsCreateOrUpdateOpts) FromResource(d *schema.ResourceData) *CloudProjectKubeIpRestrictionsCreateOrUpdateOpts {
-	opts.Ips, _ = helpers.StringsFromSchema(d, "ips")
+	opts.Ips, _ = helpers.StringsFromSchema(d, kubeIpRestrictionsIpsKey)
 	return opts
 }
 

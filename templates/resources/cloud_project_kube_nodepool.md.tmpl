@@ -31,7 +31,7 @@ The following arguments are supported:
 * `service_name` - The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used. **Changing this value recreates the resource.**
 * `kube_id` - The id of the managed kubernetes cluster. **Changing this value recreates the resource.**
 * `name` - (Optional) The name of the nodepool. Warning: `_` char is not allowed! **Changing this value recreates the resource.**
-* `flavor_name` - a valid OVHcloud public cloud flavor ID in which the nodes will be started. Ex: "b2-7". You can find the list of flavor IDs: https://www.ovhcloud.com/fr/public-cloud/prices/. **Changing this value recreates the resource.**
+* `flavor_name` - a valid OVHcloud public cloud flavor ID in which the nodes will be started. Ex: "b3-8". You can find the list of flavor IDs: https://www.ovhcloud.com/fr/public-cloud/prices/. **Changing this value recreates the resource.**
 * `desired_nodes` - number of nodes to start.
 * `availability_zones` - (Optional) list of availability zones to associate the pool - **mandatory for multi-zone** cluster - only one zone is supported at the moment.
 * `max_nodes` - maximum number of nodes allowed in the pool. Setting `desired_nodes` over this value will raise an error.

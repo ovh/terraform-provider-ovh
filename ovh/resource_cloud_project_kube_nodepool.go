@@ -33,20 +33,20 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"service_name": {
+			kubeServiceNameKey: {
 				Type:        schema.TypeString,
 				Description: "Service name",
 				Required:    true,
 				ForceNew:    true,
 				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
 			},
-			"kube_id": {
+			kubeKubeIdKey: {
 				Type:        schema.TypeString,
 				Description: "Kube ID",
 				Required:    true,
 				ForceNew:    true,
 			},
-			"attach_floating_ips": {
+			kubeNodePoolAttachFloatingIpsKey: {
 				Description: "Floating IPs attachment configuration for pool nodes",
 				Optional:    true,
 				Computed:    true,
@@ -56,7 +56,7 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 				Default:     nil,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						kubeClusterCustomizationEnabledKey: {
 							Type:        schema.TypeBool,
 							Description: "Whether floating IPs attachment is enabled on nodes of this pool",
 							Optional:    true,
@@ -67,70 +67,70 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 					},
 				},
 			},
-			"autoscale": {
+			kubeNodePoolAutoscaleKey: {
 				Type:        schema.TypeBool,
 				Description: "Enable auto-scaling for the pool",
 				Optional:    true,
 				Computed:    true,
 				ForceNew:    false,
 			},
-			"autoscaling_scale_down_unneeded_time_seconds": {
+			kubeNodePoolAutoscalingScaleDownUnneededTimeSecondsKey: {
 				Description: "scaleDownUnneededTimeSeconds for autoscaling",
 				Optional:    true,
 				Computed:    true,
 				Type:        schema.TypeInt,
 			},
-			"autoscaling_scale_down_unready_time_seconds": {
+			kubeNodePoolAutoscalingScaleDownUnreadyTimeSecondsKey: {
 				Description: "scaleDownUnreadyTimeSeconds for autoscaling",
 				Optional:    true,
 				Computed:    true,
 				Type:        schema.TypeInt,
 			},
-			"autoscaling_scale_down_utilization_threshold": {
+			kubeNodePoolAutoscalingScaleDownUtilizationThresholdKey: {
 				Description: "scaleDownUtilizationThreshold for autoscaling",
 				Optional:    true,
 				Computed:    true,
 				Type:        schema.TypeFloat,
 			},
-			"anti_affinity": {
+			kubeNodePoolAntiAffinityKey: {
 				Type:        schema.TypeBool,
 				Description: "Enable anti affinity groups for nodes in the pool",
 				Optional:    true,
 				Computed:    true,
 				ForceNew:    true,
 			},
-			"flavor_name": {
+			kubeNodePoolFlavorNameKey: {
 				Type:        schema.TypeString,
 				Description: "Flavor name",
 				Required:    true,
 				ForceNew:    true,
 			},
-			"desired_nodes": {
+			kubeNodePoolDesiredNodesKey: {
 				Type:        schema.TypeInt,
 				Description: "Number of nodes you desire in the pool",
 				Optional:    true,
 				Computed:    true,
 			},
-			"name": {
+			kubeNameKey: {
 				Type:        schema.TypeString,
 				Description: "NodePool resource name",
 				Optional:    true,
 				Computed:    true,
 				ForceNew:    true,
 			},
-			"max_nodes": {
+			kubeNodePoolMaxNodesKey: {
 				Type:        schema.TypeInt,
 				Description: "Number of nodes you desire in the pool",
 				Computed:    true,
 				Optional:    true,
 			},
-			"min_nodes": {
+			kubeNodePoolMinNodesKey: {
 				Type:        schema.TypeInt,
 				Description: "Number of nodes you desire in the pool",
 				Computed:    true,
 				Optional:    true,
 			},
-			"monthly_billed": {
+			kubeNodePoolMonthlyBilledKey: {
 				Type:        schema.TypeBool,
 				Description: "Enable monthly billing on all nodes in the pool",
 				Optional:    true,
@@ -139,52 +139,52 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 			},
 
 			// computed
-			"available_nodes": {
+			kubeNodePoolAvailableNodesKey: {
 				Type:        schema.TypeInt,
 				Description: "Number of nodes which are actually ready in the pool",
 				Computed:    true,
 			},
-			"created_at": {
+			kubeCreatedAtKey: {
 				Type:        schema.TypeString,
 				Description: "Creation date",
 				Computed:    true,
 			},
-			"current_nodes": {
+			kubeNodePoolCurrentNodesKey: {
 				Type:        schema.TypeInt,
 				Description: "Number of nodes present in the pool",
 				Computed:    true,
 			},
-			"flavor": {
+			kubeFlavorKey: {
 				Type:        schema.TypeString,
 				Description: "Flavor name",
 				Computed:    true,
 			},
-			"project_id": {
+			kubeProjectIdKey: {
 				Type:        schema.TypeString,
 				Description: "Project id",
 				Computed:    true,
 			},
-			"size_status": {
+			kubeNodePoolSizeStatusKey: {
 				Type:        schema.TypeString,
 				Description: "Status describing the state between number of nodes wanted and available ones",
 				Computed:    true,
 			},
-			"status": {
+			kubeStatusKey: {
 				Type:        schema.TypeString,
 				Description: "Current status",
 				Computed:    true,
 			},
-			"up_to_date_nodes": {
+			kubeNodePoolUpToDateNodesKey: {
 				Type:        schema.TypeInt,
 				Description: "Number of nodes with latest version installed in the pool",
 				Computed:    true,
 			},
-			"updated_at": {
+			kubeUpdatedAtKey: {
 				Type:        schema.TypeString,
 				Description: "Last update date",
 				Computed:    true,
 			},
-			"template": {
+			kubeNodePoolTemplateKey: {
 				Description: "Node pool template",
 				Optional:    true,
 				Type:        schema.TypeSet,
@@ -192,7 +192,7 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 				Set:         CustomSchemaSetFunc(),
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"metadata": {
+						kubeNodePoolTemplateMetadataKey: {
 							Description: "metadata",
 							Required:    true,
 							Type:        schema.TypeSet,
@@ -200,20 +200,20 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 							Set:         CustomSchemaSetFunc(),
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"finalizers": {
+									kubeNodePoolTemplateFinalizersKey: {
 										Description: "finalizers",
 										Required:    true,
 										Type:        schema.TypeList,
 										Elem:        &schema.Schema{Type: schema.TypeString},
 									},
-									"labels": {
+									kubeNodePoolTemplateLabelsKey: {
 										Description: "labels",
 										Required:    true,
 										Type:        schema.TypeMap,
 										Elem:        &schema.Schema{Type: schema.TypeString},
 										Set:         schema.HashString,
 									},
-									"annotations": {
+									kubeNodePoolTemplateAnnotationsKey: {
 										Description: "annotations",
 										Required:    true,
 										Type:        schema.TypeMap,
@@ -223,7 +223,7 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 								},
 							},
 						},
-						"spec": {
+						kubeNodePoolTemplateSpecKey: {
 							Description: "spec",
 							Required:    true,
 							Type:        schema.TypeSet,
@@ -231,12 +231,12 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 							Set:         CustomSchemaSetFunc(),
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"unschedulable": {
+									kubeNodePoolTemplateUnschedulableKey: {
 										Description: "unschedulable",
 										Required:    true,
 										Type:        schema.TypeBool,
 									},
-									"taints": {
+									kubeNodePoolTemplateTaintsKey: {
 										Description: "taints",
 										Required:    true,
 										Type:        schema.TypeList,
@@ -246,15 +246,15 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 											ValidateFunc: func(taintInterface interface{}, path string) (warning []string, errorList []error) {
 												taint := taintInterface.(map[string]interface{})
 
-												if taint["key"] == nil {
+												if taint[kubeNodePoolTemplateTaintKeyKey] == nil {
 													return nil, []error{fmt.Errorf("key attribute is mandatory for taint: %s", path)}
 												}
 
-												if taint["effect"] == nil {
+												if taint[kubeNodePoolTemplateTaintEffectKey] == nil {
 													return nil, []error{fmt.Errorf("effect attribute is mandatory for taint: %s", path)}
 												}
 
-												effectString := taint["effect"].(string)
+												effectString := taint[kubeNodePoolTemplateTaintEffectKey].(string)
 												effect := TaintEffecTypeToID[effectString]
 												if effect == NotATaint {
 													return nil, []error{fmt.Errorf("effect: %s is not a allowable taint %#v", effectString, TaintEffecTypeToID)}
@@ -270,7 +270,7 @@ func resourceCloudProjectKubeNodePool() *schema.Resource {
 					},
 				},
 			},
-			"availability_zones": {
+			kubeNodePoolAvailabilityZonesKey: {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
@@ -292,8 +292,8 @@ func resourceCloudProjectKubeNodePoolImportState(d *schema.ResourceData, meta in
 	kubeId := splitId[1]
 	id := splitId[2]
 	d.SetId(id)
-	d.Set("kube_id", kubeId)
-	d.Set("service_name", serviceName)
+	d.Set(kubeKubeIdKey, kubeId)
+	d.Set(kubeServiceNameKey, serviceName)
 
 	results := make([]*schema.ResourceData, 1)
 	results[0] = d
@@ -302,8 +302,8 @@ func resourceCloudProjectKubeNodePoolImportState(d *schema.ResourceData, meta in
 
 func resourceCloudProjectKubeNodePoolCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-	serviceName := d.Get("service_name").(string)
-	kubeId := d.Get("kube_id").(string)
+	serviceName := d.Get(kubeServiceNameKey).(string)
+	kubeId := d.Get(kubeKubeIdKey).(string)
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/nodepool", serviceName, kubeId)
 	params, err := (&CloudProjectKubeNodePoolCreateOpts{}).FromResource(d)
@@ -340,8 +340,8 @@ func resourceCloudProjectKubeNodePoolCreate(d *schema.ResourceData, meta interfa
 
 func resourceCloudProjectKubeNodePoolRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-	serviceName := d.Get("service_name").(string)
-	kubeId := d.Get("kube_id").(string)
+	serviceName := d.Get(kubeServiceNameKey).(string)
+	kubeId := d.Get(kubeKubeIdKey).(string)
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/nodepool/%s", serviceName, kubeId, d.Id())
 	res := &CloudProjectKubeNodePoolResponse{}
@@ -365,8 +365,8 @@ func resourceCloudProjectKubeNodePoolRead(d *schema.ResourceData, meta interface
 
 func resourceCloudProjectKubeNodePoolUpdate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-	serviceName := d.Get("service_name").(string)
-	kubeId := d.Get("kube_id").(string)
+	serviceName := d.Get(kubeServiceNameKey).(string)
+	kubeId := d.Get(kubeKubeIdKey).(string)
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/nodepool/%s", serviceName, kubeId, d.Id())
 	params, err := (&CloudProjectKubeNodePoolUpdateOpts{}).FromResource(d)
@@ -409,8 +409,8 @@ func resourceCloudProjectKubeNodePoolUpdate(d *schema.ResourceData, meta interfa
 
 func resourceCloudProjectKubeNodePoolDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-	serviceName := d.Get("service_name").(string)
-	kubeId := d.Get("kube_id").(string)
+	serviceName := d.Get(kubeServiceNameKey).(string)
+	kubeId := d.Get(kubeKubeIdKey).(string)
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/nodepool/%s", serviceName, kubeId, d.Id())
 

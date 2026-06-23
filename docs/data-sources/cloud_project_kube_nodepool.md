@@ -37,7 +37,7 @@ The following attributes are exported:
 * `service_name` - See Argument Reference above.
 * `kube_id` - See Argument Reference above.
 * `name` - (Optional) The name of the nodepool. Changing this value recreates the resource. Warning: "_" char is not allowed!
-* `flavor_name` - a valid OVHcloud public cloud flavor ID in which the nodes will be started. Ex: "b2-7". Changing this value recreates the resource. You can find the list of flavor IDs: https://www.ovhcloud.com/fr/public-cloud/prices/
+* `flavor_name` - a valid OVHcloud public cloud flavor ID in which the nodes will be started. Ex: "b3-8". Changing this value recreates the resource. You can find the list of flavor IDs: https://www.ovhcloud.com/fr/public-cloud/prices/
 * `desired_nodes` - number of nodes to start.
 * `availability_zones` - list of availability zones to associate the pool - **mandatory for multi-zone** cluster - only one zone is supported at the moment.
 * `max_nodes` - maximum number of nodes allowed in the pool. Setting `desired_nodes` over this value will raise an error.

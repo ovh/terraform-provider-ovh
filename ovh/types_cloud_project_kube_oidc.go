@@ -42,44 +42,44 @@ type CloudProjectKubeOIDCResponse struct {
 }
 
 func (opts *CloudProjectKubeOIDCCreateOpts) FromResource(d *schema.ResourceData) *CloudProjectKubeOIDCCreateOpts {
-	opts.ClientID = d.Get("client_id").(string)
-	opts.IssuerUrl = d.Get("issuer_url").(string)
-	opts.UsernameClaim = d.Get("oidc_username_claim").(string)
-	opts.UsernamePrefix = d.Get("oidc_username_prefix").(string)
-	opts.GroupsClaim, _ = helpers.StringsFromSchema(d, "oidc_groups_claim")
-	opts.GroupsPrefix = d.Get("oidc_groups_prefix").(string)
-	opts.RequiredClaim, _ = helpers.StringsFromSchema(d, "oidc_required_claim")
-	opts.SigningAlgs, _ = helpers.StringsFromSchema(d, "oidc_signing_algs")
-	opts.CaContent = d.Get("oidc_ca_content").(string)
+	opts.ClientID = d.Get(kubeOidcClientIdKey).(string)
+	opts.IssuerUrl = d.Get(kubeOidcIssuerUrlKey).(string)
+	opts.UsernameClaim = d.Get(kubeOidcUsernameClaimKey).(string)
+	opts.UsernamePrefix = d.Get(kubeOidcUsernamePrefixKey).(string)
+	opts.GroupsClaim, _ = helpers.StringsFromSchema(d, kubeOidcGroupsClaimKey)
+	opts.GroupsPrefix = d.Get(kubeOidcGroupsPrefixKey).(string)
+	opts.RequiredClaim, _ = helpers.StringsFromSchema(d, kubeOidcRequiredClaimKey)
+	opts.SigningAlgs, _ = helpers.StringsFromSchema(d, kubeOidcSigningAlgsKey)
+	opts.CaContent = d.Get(kubeOidcCaContentKey).(string)
 
 	return opts
 }
 
 func (opts *CloudProjectKubeOIDCUpdateOpts) FromResource(d *schema.ResourceData) *CloudProjectKubeOIDCUpdateOpts {
-	opts.ClientID = d.Get("client_id").(string)
-	opts.IssuerUrl = d.Get("issuer_url").(string)
-	opts.UsernameClaim = d.Get("oidc_username_claim").(string)
-	opts.UsernamePrefix = d.Get("oidc_username_prefix").(string)
-	opts.GroupsClaim, _ = helpers.StringsFromSchema(d, "oidc_groups_claim")
-	opts.GroupsPrefix = d.Get("oidc_groups_prefix").(string)
-	opts.RequiredClaim, _ = helpers.StringsFromSchema(d, "oidc_required_claim")
-	opts.SigningAlgs, _ = helpers.StringsFromSchema(d, "oidc_signing_algs")
-	opts.CaContent = d.Get("oidc_ca_content").(string)
+	opts.ClientID = d.Get(kubeOidcClientIdKey).(string)
+	opts.IssuerUrl = d.Get(kubeOidcIssuerUrlKey).(string)
+	opts.UsernameClaim = d.Get(kubeOidcUsernameClaimKey).(string)
+	opts.UsernamePrefix = d.Get(kubeOidcUsernamePrefixKey).(string)
+	opts.GroupsClaim, _ = helpers.StringsFromSchema(d, kubeOidcGroupsClaimKey)
+	opts.GroupsPrefix = d.Get(kubeOidcGroupsPrefixKey).(string)
+	opts.RequiredClaim, _ = helpers.StringsFromSchema(d, kubeOidcRequiredClaimKey)
+	opts.SigningAlgs, _ = helpers.StringsFromSchema(d, kubeOidcSigningAlgsKey)
+	opts.CaContent = d.Get(kubeOidcCaContentKey).(string)
 
 	return opts
 }
 
 func (v CloudProjectKubeOIDCResponse) ToMap() map[string]interface{} {
 	obj := make(map[string]interface{})
-	obj["client_id"] = v.ClientID
-	obj["issuer_url"] = v.IssuerUrl
-	obj["oidc_username_claim"] = v.UsernameClaim
-	obj["oidc_username_prefix"] = v.UsernamePrefix
-	obj["oidc_groups_claim"] = v.GroupsClaim
-	obj["oidc_groups_prefix"] = v.GroupsPrefix
-	obj["oidc_required_claim"] = v.RequiredClaim
-	obj["oidc_signing_algs"] = v.SigningAlgs
-	obj["oidc_ca_content"] = v.CaContent
+	obj[kubeOidcClientIdKey] = v.ClientID
+	obj[kubeOidcIssuerUrlKey] = v.IssuerUrl
+	obj[kubeOidcUsernameClaimKey] = v.UsernameClaim
+	obj[kubeOidcUsernamePrefixKey] = v.UsernamePrefix
+	obj[kubeOidcGroupsClaimKey] = v.GroupsClaim
+	obj[kubeOidcGroupsPrefixKey] = v.GroupsPrefix
+	obj[kubeOidcRequiredClaimKey] = v.RequiredClaim
+	obj[kubeOidcSigningAlgsKey] = v.SigningAlgs
+	obj[kubeOidcCaContentKey] = v.CaContent
 
 	return obj
 }

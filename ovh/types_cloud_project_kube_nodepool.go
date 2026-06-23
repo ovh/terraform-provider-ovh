@@ -93,23 +93,23 @@ var TaintEffecTypeToID = map[string]TaintEffectType{
 func GetAutoscalingOpts(d *schema.ResourceData) (*CloudProjectKubeNodePoolAutoscaling, error) {
 	var autoscaling CloudProjectKubeNodePoolAutoscaling
 	var e error
-	autoscaling.ScaleDownUtilizationThreshold, e = helpers.GetNilFloat64PointerFromData(d, "autoscaling_scale_down_utilization_threshold")
-	autoscaling.ScaleDownUnneededTimeSeconds = helpers.GetNilIntPointerFromData(d, "autoscaling_scale_down_unneeded_time_seconds")
-	autoscaling.ScaleDownUnreadyTimeSeconds = helpers.GetNilIntPointerFromData(d, "autoscaling_scale_down_unready_time_seconds")
+	autoscaling.ScaleDownUtilizationThreshold, e = helpers.GetNilFloat64PointerFromData(d, kubeNodePoolAutoscalingScaleDownUtilizationThresholdKey)
+	autoscaling.ScaleDownUnneededTimeSeconds = helpers.GetNilIntPointerFromData(d, kubeNodePoolAutoscalingScaleDownUnneededTimeSecondsKey)
+	autoscaling.ScaleDownUnreadyTimeSeconds = helpers.GetNilIntPointerFromData(d, kubeNodePoolAutoscalingScaleDownUnreadyTimeSecondsKey)
 	return &autoscaling, e
 }
 
 func (opts *CloudProjectKubeNodePoolCreateOpts) FromResource(d *schema.ResourceData) (*CloudProjectKubeNodePoolCreateOpts, error) {
-	opts.Autoscale = helpers.GetNilBoolPointerFromData(d, "autoscale")
-	opts.AntiAffinity = helpers.GetNilBoolPointerFromData(d, "anti_affinity")
-	opts.DesiredNodes = helpers.GetNilIntPointerFromDataAndNilIfNotPresent(d, "desired_nodes")
-	opts.FlavorName = d.Get("flavor_name").(string)
-	opts.MaxNodes = helpers.GetNilIntPointerFromDataAndNilIfNotPresent(d, "max_nodes")
-	opts.MinNodes = helpers.GetNilIntPointerFromDataAndNilIfNotPresent(d, "min_nodes")
-	opts.MonthlyBilled = helpers.GetNilBoolPointerFromData(d, "monthly_billed")
-	opts.Name = helpers.GetNilStringPointerFromData(d, "name")
+	opts.Autoscale = helpers.GetNilBoolPointerFromData(d, kubeNodePoolAutoscaleKey)
+	opts.AntiAffinity = helpers.GetNilBoolPointerFromData(d, kubeNodePoolAntiAffinityKey)
+	opts.DesiredNodes = helpers.GetNilIntPointerFromDataAndNilIfNotPresent(d, kubeNodePoolDesiredNodesKey)
+	opts.FlavorName = d.Get(kubeNodePoolFlavorNameKey).(string)
+	opts.MaxNodes = helpers.GetNilIntPointerFromDataAndNilIfNotPresent(d, kubeNodePoolMaxNodesKey)
+	opts.MinNodes = helpers.GetNilIntPointerFromDataAndNilIfNotPresent(d, kubeNodePoolMinNodesKey)
+	opts.MonthlyBilled = helpers.GetNilBoolPointerFromData(d, kubeNodePoolMonthlyBilledKey)
+	opts.Name = helpers.GetNilStringPointerFromData(d, kubeNameKey)
 
-	template, err := loadNodelPoolTemplateFromResource(d.Get("template"))
+	template, err := loadNodelPoolTemplateFromResource(d.Get(kubeNodePoolTemplateKey))
 
 	if err != nil {
 		return nil, err
@@ -121,13 +121,13 @@ func (opts *CloudProjectKubeNodePoolCreateOpts) FromResource(d *schema.ResourceD
 		return nil, err
 	}
 
-	availabilityZones, err := helpers.StringsFromSchema(d, "availability_zones")
+	availabilityZones, err := helpers.StringsFromSchema(d, kubeNodePoolAvailabilityZonesKey)
 	if err != nil {
 		return nil, err
 	}
 	opts.AvailabilityZones = &availabilityZones
 
-	attachFloatingIps, err := loadNodePoolAttachFloatingIpsFromResource(d.Get("attach_floating_ips"))
+	attachFloatingIps, err := loadNodePoolAttachFloatingIpsFromResource(d.Get(kubeNodePoolAttachFloatingIpsKey))
 	if err != nil {
 		return nil, err
 	}
@@ -156,7 +156,7 @@ func loadNodePoolAttachFloatingIpsFromResource(i interface{}) (*CloudProjectKube
 		empty := true
 
 		object := to.(map[string]interface{})
-		if object["enabled"].(bool) == true {
+		if object[kubeClusterCustomizationEnabledKey].(bool) == true {
 			empty = false
 		}
 
@@ -169,7 +169,7 @@ func loadNodePoolAttachFloatingIpsFromResource(i interface{}) (*CloudProjectKube
 	}
 
 	return &CloudProjectKubeNodepoolAttachFloatingIps{
-		Enabled: attachFIPsObject["enabled"].(bool),
+		Enabled: attachFIPsObject[kubeClusterCustomizationEnabledKey].(bool),
 	}, nil
 }
 
@@ -207,18 +207,18 @@ func loadNodelPoolTemplateFromResource(i interface{}) (*CloudProjectKubeNodePool
 			taints      []interface{}
 		)
 
-		metadataSet := to.(map[string]interface{})["metadata"].(*schema.Set).List()
+		metadataSet := to.(map[string]interface{})[kubeNodePoolTemplateMetadataKey].(*schema.Set).List()
 		if len(metadataSet) > 0 {
 			metadata := metadataSet[0].(map[string]interface{})
-			annotations = metadata["annotations"].(map[string]interface{})
-			labels = metadata["labels"].(map[string]interface{})
-			finalizers = metadata["finalizers"].([]interface{})
+			annotations = metadata[kubeNodePoolTemplateAnnotationsKey].(map[string]interface{})
+			labels = metadata[kubeNodePoolTemplateLabelsKey].(map[string]interface{})
+			finalizers = metadata[kubeNodePoolTemplateFinalizersKey].([]interface{})
 		}
 
-		specSet := to.(map[string]interface{})["spec"].(*schema.Set).List()
+		specSet := to.(map[string]interface{})[kubeNodePoolTemplateSpecKey].(*schema.Set).List()
 		if len(specSet) > 0 {
 			spec := specSet[0].(map[string]interface{})
-			taints = spec["taints"].([]interface{})
+			taints = spec[kubeNodePoolTemplateTaintsKey].([]interface{})
 		}
 
 		if len(annotations) == 0 && len(labels) == 0 && len(finalizers) == 0 && len(taints) == 0 {
@@ -231,12 +231,12 @@ func loadNodelPoolTemplateFromResource(i interface{}) (*CloudProjectKubeNodePool
 
 	// metadata
 	{
-		metadataSet := templateObject["metadata"].(*schema.Set).List()
+		metadataSet := templateObject[kubeNodePoolTemplateMetadataKey].(*schema.Set).List()
 		if len(metadataSet) > 0 {
 			metadata := metadataSet[0].(map[string]interface{})
 
 			// metadata.annotations
-			annotations := metadata["annotations"].(map[string]interface{})
+			annotations := metadata[kubeNodePoolTemplateAnnotationsKey].(map[string]interface{})
 			if len(annotations) > 0 {
 				for k, v := range annotations {
 					template.Metadata.Annotations[k] = v.(string)
@@ -244,7 +244,7 @@ func loadNodelPoolTemplateFromResource(i interface{}) (*CloudProjectKubeNodePool
 			}
 
 			// metadata.finalizers
-			finalizers := metadata["finalizers"].([]interface{})
+			finalizers := metadata[kubeNodePoolTemplateFinalizersKey].([]interface{})
 			if len(finalizers) > 0 {
 				for _, finalizer := range finalizers {
 					template.Metadata.Finalizers = append(template.Metadata.Finalizers, finalizer.(string))
@@ -252,7 +252,7 @@ func loadNodelPoolTemplateFromResource(i interface{}) (*CloudProjectKubeNodePool
 			}
 
 			// metadata.labels
-			labels := metadata["labels"].(map[string]interface{})
+			labels := metadata[kubeNodePoolTemplateLabelsKey].(map[string]interface{})
 			if len(labels) > 0 {
 				for k, v := range labels {
 					template.Metadata.Labels[k] = v.(string)
@@ -263,14 +263,14 @@ func loadNodelPoolTemplateFromResource(i interface{}) (*CloudProjectKubeNodePool
 
 	// spec
 	{
-		specSet := templateObject["spec"].(*schema.Set).List()
+		specSet := templateObject[kubeNodePoolTemplateSpecKey].(*schema.Set).List()
 		if len(specSet) > 0 {
 			spec := specSet[0].(map[string]interface{})
 
 			// spec.taints
-			taints := spec["taints"].([]interface{})
+			taints := spec[kubeNodePoolTemplateTaintsKey].([]interface{})
 			for _, taint := range taints {
-				effectString := taint.(map[string]interface{})["effect"].(string)
+				effectString := taint.(map[string]interface{})[kubeNodePoolTemplateTaintEffectKey].(string)
 				effect := TaintEffecTypeToID[effectString]
 				if effect == NotATaint {
 					return nil, fmt.Errorf("effect: %s is not a allowable taint %#v", effectString, TaintEffecTypeToID)
@@ -278,17 +278,17 @@ func loadNodelPoolTemplateFromResource(i interface{}) (*CloudProjectKubeNodePool
 
 				taintObject := Taint{
 					Effect: effect,
-					Key:    taint.(map[string]interface{})["key"].(string),
+					Key:    taint.(map[string]interface{})[kubeNodePoolTemplateTaintKeyKey].(string),
 				}
-				if taint.(map[string]interface{})["value"] != nil {
-					taintObject.Value = taint.(map[string]interface{})["value"].(string)
+				if taint.(map[string]interface{})[kubeNodePoolTemplateTaintValueKey] != nil {
+					taintObject.Value = taint.(map[string]interface{})[kubeNodePoolTemplateTaintValueKey].(string)
 				}
 
 				template.Spec.Taints = append(template.Spec.Taints, taintObject)
 			}
 
 			// spec.unschedulable
-			template.Spec.Unschedulable = spec["unschedulable"].(bool)
+			template.Spec.Unschedulable = spec[kubeNodePoolTemplateUnschedulableKey].(bool)
 		}
 	}
 
@@ -324,18 +324,18 @@ func (e *TaintEffectType) UnmarshalJSON(b []byte) error {
 }
 
 func (opts *CloudProjectKubeNodePoolUpdateOpts) FromResource(d *schema.ResourceData) (*CloudProjectKubeNodePoolUpdateOpts, error) {
-	opts.Autoscale = helpers.GetNilBoolPointerFromData(d, "autoscale")
-	opts.DesiredNodes = helpers.GetNilIntPointerFromDataAndNilIfNotPresent(d, "desired_nodes")
-	opts.MaxNodes = helpers.GetNilIntPointerFromDataAndNilIfNotPresent(d, "max_nodes")
-	opts.MinNodes = helpers.GetNilIntPointerFromDataAndNilIfNotPresent(d, "min_nodes")
+	opts.Autoscale = helpers.GetNilBoolPointerFromData(d, kubeNodePoolAutoscaleKey)
+	opts.DesiredNodes = helpers.GetNilIntPointerFromDataAndNilIfNotPresent(d, kubeNodePoolDesiredNodesKey)
+	opts.MaxNodes = helpers.GetNilIntPointerFromDataAndNilIfNotPresent(d, kubeNodePoolMaxNodesKey)
+	opts.MinNodes = helpers.GetNilIntPointerFromDataAndNilIfNotPresent(d, kubeNodePoolMinNodesKey)
 	var autoscaling CloudProjectKubeNodePoolAutoscaling
 	var e error
-	autoscaling.ScaleDownUtilizationThreshold, e = helpers.GetNilFloat64PointerFromData(d, "autoscaling_scale_down_utilization_threshold")
-	autoscaling.ScaleDownUnneededTimeSeconds = helpers.GetNilIntPointerFromData(d, "autoscaling_scale_down_unneeded_time_seconds")
-	autoscaling.ScaleDownUnreadyTimeSeconds = helpers.GetNilIntPointerFromData(d, "autoscaling_scale_down_unready_time_seconds")
+	autoscaling.ScaleDownUtilizationThreshold, e = helpers.GetNilFloat64PointerFromData(d, kubeNodePoolAutoscalingScaleDownUtilizationThresholdKey)
+	autoscaling.ScaleDownUnneededTimeSeconds = helpers.GetNilIntPointerFromData(d, kubeNodePoolAutoscalingScaleDownUnneededTimeSecondsKey)
+	autoscaling.ScaleDownUnreadyTimeSeconds = helpers.GetNilIntPointerFromData(d, kubeNodePoolAutoscalingScaleDownUnreadyTimeSecondsKey)
 	opts.Autoscaling = &autoscaling
 
-	template, err := loadNodelPoolTemplateFromResource(d.Get("template"))
+	template, err := loadNodelPoolTemplateFromResource(d.Get(kubeNodePoolTemplateKey))
 	if err != nil {
 		return nil, err
 	} else if e != nil {
@@ -343,7 +343,7 @@ func (opts *CloudProjectKubeNodePoolUpdateOpts) FromResource(d *schema.ResourceD
 	}
 	opts.Template = template
 
-	attachFloatingIPs, err := loadNodePoolAttachFloatingIpsFromResource(d.Get("attach_floating_ips"))
+	attachFloatingIPs, err := loadNodePoolAttachFloatingIpsFromResource(d.Get(kubeNodePoolAttachFloatingIpsKey))
 	if err != nil {
 		return nil, err
 	}
@@ -382,33 +382,33 @@ type CloudProjectKubeNodePoolResponse struct {
 
 func (v CloudProjectKubeNodePoolResponse) ToMap() map[string]interface{} {
 	obj := make(map[string]interface{})
-	obj["anti_affinity"] = v.AntiAffinity
-	obj["autoscale"] = v.Autoscale
-	obj["availability_zones"] = v.AvailabilityZones
-	obj["available_nodes"] = v.AvailableNodes
-	obj["created_at"] = v.CreatedAt
-	obj["current_nodes"] = v.CurrentNodes
-	obj["desired_nodes"] = v.DesiredNodes
-	obj["flavor"] = v.Flavor
-	obj["flavor_name"] = v.Flavor
-	obj["id"] = v.Id
-	obj["max_nodes"] = v.MaxNodes
-	obj["min_nodes"] = v.MinNodes
-	obj["monthly_billed"] = v.MonthlyBilled
-	obj["name"] = v.Name
-	obj["project_id"] = v.ProjectId
-	obj["size_status"] = v.SizeStatus
-	obj["status"] = v.Status
-	obj["up_to_date_nodes"] = v.UpToDateNodes
-	obj["updated_at"] = v.UpdatedAt
-	obj["autoscaling_scale_down_utilization_threshold"] = v.Autoscaling.ScaleDownUtilizationThreshold
-	obj["autoscaling_scale_down_unneeded_time_seconds"] = v.Autoscaling.ScaleDownUnneededTimeSeconds
-	obj["autoscaling_scale_down_unready_time_seconds"] = v.Autoscaling.ScaleDownUnreadyTimeSeconds
+	obj[kubeNodePoolAntiAffinityKey] = v.AntiAffinity
+	obj[kubeNodePoolAutoscaleKey] = v.Autoscale
+	obj[kubeNodePoolAvailabilityZonesKey] = v.AvailabilityZones
+	obj[kubeNodePoolAvailableNodesKey] = v.AvailableNodes
+	obj[kubeCreatedAtKey] = v.CreatedAt
+	obj[kubeNodePoolCurrentNodesKey] = v.CurrentNodes
+	obj[kubeNodePoolDesiredNodesKey] = v.DesiredNodes
+	obj[kubeFlavorKey] = v.Flavor
+	obj[kubeNodePoolFlavorNameKey] = v.Flavor
+	obj[kubeNodeIdKey] = v.Id
+	obj[kubeNodePoolMaxNodesKey] = v.MaxNodes
+	obj[kubeNodePoolMinNodesKey] = v.MinNodes
+	obj[kubeNodePoolMonthlyBilledKey] = v.MonthlyBilled
+	obj[kubeNameKey] = v.Name
+	obj[kubeProjectIdKey] = v.ProjectId
+	obj[kubeNodePoolSizeStatusKey] = v.SizeStatus
+	obj[kubeStatusKey] = v.Status
+	obj[kubeNodePoolUpToDateNodesKey] = v.UpToDateNodes
+	obj[kubeUpdatedAtKey] = v.UpdatedAt
+	obj[kubeNodePoolAutoscalingScaleDownUtilizationThresholdKey] = v.Autoscaling.ScaleDownUtilizationThreshold
+	obj[kubeNodePoolAutoscalingScaleDownUnneededTimeSecondsKey] = v.Autoscaling.ScaleDownUnneededTimeSeconds
+	obj[kubeNodePoolAutoscalingScaleDownUnreadyTimeSecondsKey] = v.Autoscaling.ScaleDownUnreadyTimeSeconds
 
 	if v.AttachFloatingIPs != nil {
-		obj["attach_floating_ips"] = []map[string]interface{}{
+		obj[kubeNodePoolAttachFloatingIpsKey] = []map[string]interface{}{
 			{
-				"enabled": v.AttachFloatingIPs.Enabled,
+				kubeClusterCustomizationEnabledKey: v.AttachFloatingIPs.Enabled,
 			},
 		}
 	}
@@ -429,32 +429,32 @@ func (v CloudProjectKubeNodePoolResponse) ToMap() map[string]interface{} {
 	if v.Template != nil && !reflect.DeepEqual(v.Template, emptyTemplateResponse) {
 		// template.spec
 		specData := map[string]interface{}{
-			"unschedulable": v.Template.Spec.Unschedulable,
+			kubeNodePoolTemplateUnschedulableKey: v.Template.Spec.Unschedulable,
 		}
 
 		var taints []map[string]interface{}
 		for _, taint := range v.Template.Spec.Taints {
 			t := map[string]interface{}{
-				"effect": taint.Effect.String(),
-				"key":    taint.Key,
-				"value":  taint.Value,
+				kubeNodePoolTemplateTaintEffectKey: taint.Effect.String(),
+				kubeNodePoolTemplateTaintKeyKey:    taint.Key,
+				kubeNodePoolTemplateTaintValueKey:  taint.Value,
 			}
 
 			taints = append(taints, t)
 		}
-		specData["taints"] = taints
+		specData[kubeNodePoolTemplateTaintsKey] = taints
 
-		obj["template"] = []map[string]interface{}{
+		obj[kubeNodePoolTemplateKey] = []map[string]interface{}{
 			{
 				// template.metadata
-				"metadata": []map[string]interface{}{
+				kubeNodePoolTemplateMetadataKey: []map[string]interface{}{
 					{
-						"finalizers":  v.Template.Metadata.Finalizers,
-						"labels":      v.Template.Metadata.Labels,
-						"annotations": v.Template.Metadata.Annotations,
+						kubeNodePoolTemplateFinalizersKey:  v.Template.Metadata.Finalizers,
+						kubeNodePoolTemplateLabelsKey:      v.Template.Metadata.Labels,
+						kubeNodePoolTemplateAnnotationsKey: v.Template.Metadata.Annotations,
 					},
 				},
-				"spec": []map[string]interface{}{specData},
+				kubeNodePoolTemplateSpecKey: []map[string]interface{}{specData},
 			},
 		}
 	}
