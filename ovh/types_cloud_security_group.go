@@ -284,7 +284,9 @@ func buildSecurityGroupTargetRulesList(rules []CloudSecurityGroupAPITargetRule) 
 	ruleAttrTypes := SecurityGroupRuleAttrTypes()
 	ruleObjType := types.ObjectType{AttrTypes: ruleAttrTypes}
 
-	if rules == nil {
+	// An empty array from the API is treated like an absent one (null), so an
+	// omitted `rule` config round-trips instead of becoming an empty list.
+	if len(rules) == 0 {
 		return types.ListNull(ruleObjType)
 	}
 
@@ -402,7 +404,9 @@ func (m *CloudSecurityGroupModel) MergeWith(ctx context.Context, response *Cloud
 			m.Region = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Location.Region)}
 		}
 
-		// Rebuild rule list from targetSpec rules to keep Terraform state in sync
+		// Rebuild rule list from targetSpec rules to keep Terraform state in sync.
+		// An empty array from the API is treated like an absent one (null), so an
+		// omitted `rule` config round-trips instead of becoming an empty list.
 		m.Rule = buildSecurityGroupTargetRulesList(response.TargetSpec.Rules)
 	}
 }

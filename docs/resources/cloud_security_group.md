@@ -10,7 +10,7 @@ Creates a security group in a public cloud project.
 
 ```terraform
 resource "ovh_cloud_security_group" "sg" {
-  service_name = "xxxxxxxxxx"
+  service_name = "<public cloud project ID>"
   region       = "GRA1"
   name         = "my-security-group"
   description  = "Allow SSH and HTTPS"
@@ -33,7 +33,7 @@ resource "ovh_cloud_security_group" "sg" {
       port_range_max   = 443
       remote_ip_prefix = "0.0.0.0/0"
       description      = "HTTPS"
-    },
+    }
   ]
 }
 ```
