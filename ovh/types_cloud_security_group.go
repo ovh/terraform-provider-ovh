@@ -323,8 +323,10 @@ func (m *CloudSecurityGroupModel) MergeWith(ctx context.Context, response *Cloud
 			m.Region = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Location.Region)}
 		}
 
-		// Rebuild rule list from targetSpec rules to keep Terraform state in sync
-		if response.TargetSpec.Rules != nil {
+		// Rebuild rule list from targetSpec rules to keep Terraform state in sync.
+		// An empty array from the API is treated like an absent one (null), so an
+		// omitted `rule` config round-trips instead of becoming an empty list.
+		if len(response.TargetSpec.Rules) > 0 {
 			ruleAttrTypes := SecurityGroupRuleAttrTypes()
 			ruleObjs := make([]attr.Value, len(response.TargetSpec.Rules))
 			for i, rule := range response.TargetSpec.Rules {

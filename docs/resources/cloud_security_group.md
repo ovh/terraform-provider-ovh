@@ -15,25 +15,26 @@ resource "ovh_cloud_security_group" "sg" {
   name         = "my-security-group"
   description  = "Allow SSH and HTTPS"
 
-  rule {
-    direction        = "INGRESS"
-    ethernet_type       = "IPV4"
-    protocol         = "TCP"
-    port_range_min   = 22
-    port_range_max   = 22
-    remote_ip_prefix = "0.0.0.0/0"
-    description      = "SSH"
-  }
-
-  rule {
-    direction        = "INGRESS"
-    ethernet_type       = "IPV4"
-    protocol         = "TCP"
-    port_range_min   = 443
-    port_range_max   = 443
-    remote_ip_prefix = "0.0.0.0/0"
-    description      = "HTTPS"
-  }
+  rule = [
+    {
+      direction        = "INGRESS"
+      ethernet_type    = "IPV4"
+      protocol         = "TCP"
+      port_range_min   = 22
+      port_range_max   = 22
+      remote_ip_prefix = "0.0.0.0/0"
+      description      = "SSH"
+    },
+    {
+      direction        = "INGRESS"
+      ethernet_type    = "IPV4"
+      protocol         = "TCP"
+      port_range_min   = 443
+      port_range_max   = 443
+      remote_ip_prefix = "0.0.0.0/0"
+      description      = "HTTPS"
+    }
+  ]
 }
 ```
 
