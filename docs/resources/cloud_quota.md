@@ -15,7 +15,7 @@ Regions omitted from `regions` are left unchanged upstream.
 
 ```hcl
 resource "ovh_cloud_quota" "this" {
-  service_name                    = var.service_name
+  service_name                    = <Public cloud project id>
   prevent_automatic_quota_upgrade = false
   regions = [
     {
@@ -44,8 +44,8 @@ resource "ovh_cloud_quota" "this" {
 ## Attributes Reference
 
 - `id` — Resource identifier (the project id).
-- `resource_status` — Quota readiness (`CREATING`, `UPDATING`, `PENDING`,
-  `ERROR`, `OUT_OF_SYNC`, `READY`).
+- `resource_status` — Quota readiness in the system (`CREATING`, `UPDATING`,
+  `DELETING`, `OUT_OF_SYNC`, `READY`, `ERROR`, `SUSPENDED`, `UNKNOWN`).
 - `checksum` — Computed hash of the current target specification, used for
   optimistic concurrency on updates.
 - `created_at`, `updated_at` — Envelope timestamps (RFC3339).

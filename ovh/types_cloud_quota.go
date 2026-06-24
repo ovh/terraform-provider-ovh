@@ -54,7 +54,15 @@ type CloudQuotaResourceModel struct {
 }
 
 // MergeWith populates the resource model from the API response.
-func (m *CloudQuotaResourceModel) MergeWith(_ context.Context, response *CloudQuotaAPIResponse) {
+//
+// The quota envelope is a singleton whose targetSpec.regions lists EVERY region
+// the project has a quota in, while this resource manages only the regions the
+// user configured. The input `regions` attribute is therefore reconciled
+// against the regions already present in the model (the prior state on Read, the
+// planned regions on Create/Update): server regions are filtered down to the
+// managed set and their profiles refreshed from the response. When the model
+// has no regions yet (import), the full server list is adopted.
+func (m *CloudQuotaResourceModel) MergeWith(ctx context.Context, response *CloudQuotaAPIResponse) {
 	m.Id = ovhtypes.TfStringValue{StringValue: types.StringValue(response.Id)}
 	m.ResourceStatus = ovhtypes.TfStringValue{StringValue: types.StringValue(response.ResourceStatus)}
 	m.Checksum = ovhtypes.TfStringValue{StringValue: types.StringValue(response.Checksum)}
@@ -63,7 +71,7 @@ func (m *CloudQuotaResourceModel) MergeWith(_ context.Context, response *CloudQu
 
 	if response.TargetSpec != nil {
 		m.PreventAutomaticQuotaUpgrade = types.BoolValue(response.TargetSpec.PreventAutomaticQuotaUpgrade)
-		m.Regions = buildQuotaTargetSpecRegionsList(response.TargetSpec.Regions)
+		m.Regions = reconcileManagedQuotaRegions(ctx, m.Regions, response.TargetSpec.Regions)
 	} else {
 		m.PreventAutomaticQuotaUpgrade = types.BoolNull()
 		m.Regions = types.ListNull(quotaTargetSpecRegionElementType())
@@ -72,13 +80,57 @@ func (m *CloudQuotaResourceModel) MergeWith(_ context.Context, response *CloudQu
 	m.CurrentState = buildQuotaCurrentStateObject(response.CurrentState)
 }
 
+// reconcileManagedQuotaRegions narrows the singleton's full targetSpec.regions
+// down to the set the resource manages.
+//
+//   - prior has regions  → keep only server regions whose region matches one in
+//     prior, refreshing each profile from the server (drift detection). A managed
+//     region absent from the server is dropped.
+//   - prior is null/empty → adopt the full server list (import: the managed
+//     subset is unknown).
+func reconcileManagedQuotaRegions(ctx context.Context, prior basetypes.ListValue, serverRegions []CloudQuotaRegionTargetSpecAPI) basetypes.ListValue {
+	managed := managedQuotaRegionNames(ctx, prior)
+	if len(managed) == 0 {
+		return buildQuotaTargetSpecRegionsList(serverRegions)
+	}
+
+	elems := make([]attr.Value, 0, len(managed))
+	for _, r := range serverRegions {
+		region := ""
+		if r.Location != nil {
+			region = r.Location.Region
+		}
+		if managed[region] {
+			elems = append(elems, buildQuotaTargetSpecRegionObject(r))
+		}
+	}
+	val, _ := types.ListValue(quotaTargetSpecRegionElementType(), elems)
+	return val
+}
+
+// managedQuotaRegionNames returns the set of region names currently held in the
+// `regions` list value (prior state or plan).
+func managedQuotaRegionNames(ctx context.Context, regions basetypes.ListValue) map[string]bool {
+	if regions.IsNull() || regions.IsUnknown() {
+		return nil
+	}
+	var plan []quotaRegionPlan
+	if diags := regions.ElementsAs(ctx, &plan, false); diags.HasError() {
+		return nil
+	}
+	names := make(map[string]bool, len(plan))
+	for _, p := range plan {
+		names[p.Region.ValueString()] = true
+	}
+	return names
+}
+
 // ------------------------------------------------------------------
 // API response structs — mirror the public-cloud-apiv2 model.Quota
 // ------------------------------------------------------------------
 
 type CloudQuotaLocationAPI struct {
-	Region           string `json:"region"`
-	AvailabilityZone string `json:"availabilityZone,omitempty"`
+	Region string `json:"region"`
 }
 
 type CloudQuotaUsageAPI struct {
@@ -243,6 +295,20 @@ type CloudQuotaCurrentStateAPI struct {
 	Regions                      []CloudQuotaRegionCurrentStateAPI `json:"regions,omitempty"`
 }
 
+// ----- currentTasks (common.CurrentTask[]) -----
+
+type CloudQuotaTaskErrorAPI struct {
+	Message string `json:"message"`
+}
+
+type CloudQuotaCurrentTaskAPI struct {
+	Id     string                   `json:"id"`
+	Type   string                   `json:"type"`
+	Status string                   `json:"status"`
+	Link   string                   `json:"link"`
+	Errors []CloudQuotaTaskErrorAPI `json:"errors,omitempty"`
+}
+
 type CloudQuotaAPIResponse struct {
 	Id             string                     `json:"id"`
 	ResourceStatus string                     `json:"resourceStatus"`
@@ -251,6 +317,7 @@ type CloudQuotaAPIResponse struct {
 	UpdatedAt      string                     `json:"updatedAt"`
 	TargetSpec     *CloudQuotaTargetSpecAPI   `json:"targetSpec,omitempty"`
 	CurrentState   *CloudQuotaCurrentStateAPI `json:"currentState,omitempty"`
+	CurrentTasks   []CloudQuotaCurrentTaskAPI `json:"currentTasks,omitempty"`
 }
 
 // ------------------------------------------------------------------
