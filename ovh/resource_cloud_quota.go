@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -59,8 +60,10 @@ func (m *CloudQuotaResourceModel) toTargetSpecAPI(ctx context.Context) (CloudQuo
 		}
 		for _, r := range plan {
 			regions = append(regions, CloudQuotaRegionTargetSpecAPI{
-				Location: &CloudQuotaLocationAPI{Region: r.Region.ValueString()},
-				Profile:  r.Profile.ValueString(),
+				Location: &CloudQuotaLocationAPI{
+					Region: r.Region.ValueString(),
+				},
+				Profile: r.Profile.ValueString(),
 			})
 		}
 	}
@@ -159,7 +162,7 @@ func (r *cloudQuotaResource) Schema(_ context.Context, _ resource.SchemaRequest,
 			"resource_status": schema.StringAttribute{
 				CustomType:  ovhtypes.TfStringType{},
 				Computed:    true,
-				Description: "Quota readiness (CREATING, UPDATING, PENDING, ERROR, OUT_OF_SYNC, READY).",
+				Description: "Quota readiness in the system (CREATING, UPDATING, DELETING, OUT_OF_SYNC, READY, ERROR, SUSPENDED, UNKNOWN).",
 				PlanModifiers: []planmodifier.String{
 					OutOfSyncPlanModifier(),
 				},
@@ -373,20 +376,15 @@ func (r *cloudQuotaResource) ImportState(ctx context.Context, req resource.Impor
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_name"), req.ID)...)
 }
 
-// putQuota applies the desired target spec, polls for terminal status, and
-// returns the final envelope. The quota envelope is always present per
-// project so this is also used for "create".
-func (r *cloudQuotaResource) putQuota(ctx context.Context, serviceName string, spec CloudQuotaUpdateTargetSpecAPI) (*CloudQuotaAPIResponse, error) {
+// putQuota applies the desired target spec under the given optimistic-concurrency
+// checksum, polls for terminal status, and returns the final envelope. A
+// concurrent change invalidates the checksum and surfaces as an error (no retry).
+// The quota envelope is always present per project so this is also used for "create".
+func (r *cloudQuotaResource) putQuota(ctx context.Context, serviceName, checksum string, spec CloudQuotaUpdateTargetSpecAPI) (*CloudQuotaAPIResponse, error) {
 	endpoint := "/v2/publicCloud/project/" + url.PathEscape(serviceName) + "/quota"
 
-	// Fetch current envelope to get the latest checksum.
-	var current CloudQuotaAPIResponse
-	if err := r.config.OVHClient.GetWithContext(ctx, endpoint, &current); err != nil {
-		return nil, fmt.Errorf("error fetching current quota envelope: %w", err)
-	}
-
 	payload := CloudQuotaUpdateAPI{
-		Checksum:   current.Checksum,
+		Checksum:   checksum,
 		TargetSpec: spec,
 	}
 
@@ -407,20 +405,39 @@ func (r *cloudQuotaResource) putQuota(ctx context.Context, serviceName string, s
 	return &final, nil
 }
 
+// quotaTaskErrorSuffix collects any task error messages from the envelope so a
+// failed reconcile can surface the real cause instead of a bare status.
+func quotaTaskErrorSuffix(res *CloudQuotaAPIResponse) string {
+	var msgs []string
+	for _, t := range res.CurrentTasks {
+		for _, e := range t.Errors {
+			if e.Message != "" {
+				msgs = append(msgs, e.Message)
+			}
+		}
+	}
+	if len(msgs) == 0 {
+		return ""
+	}
+	return ": " + strings.Join(msgs, "; ")
+}
+
 // waitForQuotaReady polls the quota envelope until ResourceStatus reaches READY.
-// Matches the wait pattern used by every other apiv2 resource in this provider
-// (instance, loadbalancer, etc.) — ERROR is intentionally NOT a target state so
-// that a failed reconcile surfaces as an "unrecognized state" error.
-func (r *cloudQuotaResource) waitForQuotaReady(ctx context.Context, serviceName string) (interface{}, error) {
+// The pending states mirror common.ResourceStatusEnum's non-terminal values; a
+// reconcile that lands in ERROR is surfaced immediately (with any task error
+// messages) rather than spun on until the timeout.
+func (r *cloudQuotaResource) waitForQuotaReady(ctx context.Context, serviceName string) (any, error) {
+	endpoint := "/v2/publicCloud/project/" + url.PathEscape(serviceName) + "/quota"
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{"CREATING", "UPDATING", "PENDING", "OUT_OF_SYNC"},
+		Pending: []string{"CREATING", "UPDATING", "OUT_OF_SYNC", "SUSPENDED", "UNKNOWN"},
 		Target:  []string{"READY"},
-		Refresh: func() (interface{}, string, error) {
+		Refresh: func() (any, string, error) {
 			res := &CloudQuotaAPIResponse{}
-			endpoint := "/v2/publicCloud/project/" + url.PathEscape(serviceName) + "/quota"
-			err := r.config.OVHClient.GetWithContext(ctx, endpoint, res)
-			if err != nil {
+			if err := r.config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
 				return res, "", err
+			}
+			if res.ResourceStatus == "ERROR" {
+				return res, res.ResourceStatus, fmt.Errorf("quota reconcile failed (status ERROR)%s", quotaTaskErrorSuffix(res))
 			}
 			return res, res.ResourceStatus, nil
 		},
@@ -444,7 +461,16 @@ func (r *cloudQuotaResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	final, err := r.putQuota(ctx, data.ServiceName.ValueString(), spec)
+	// Create has no prior state, so read the singleton envelope once to obtain
+	// the current checksum for the optimistic-concurrency guard.
+	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/quota"
+	var current CloudQuotaAPIResponse
+	if err := r.config.OVHClient.GetWithContext(ctx, endpoint, &current); err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Error calling Get %s", endpoint), err.Error())
+		return
+	}
+
+	final, err := r.putQuota(ctx, data.ServiceName.ValueString(), current.Checksum, spec)
 	if err != nil {
 		resp.Diagnostics.AddError("Error applying quota target spec", err.Error())
 		return
@@ -477,8 +503,12 @@ func (r *cloudQuotaResource) Read(ctx context.Context, req resource.ReadRequest,
 }
 
 func (r *cloudQuotaResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var planData CloudQuotaResourceModel
+	var planData, stateData CloudQuotaResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &planData)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(req.State.Get(ctx, &stateData)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -489,7 +519,7 @@ func (r *cloudQuotaResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	final, err := r.putQuota(ctx, planData.ServiceName.ValueString(), spec)
+	final, err := r.putQuota(ctx, planData.ServiceName.ValueString(), stateData.Checksum.ValueString(), spec)
 	if err != nil {
 		resp.Diagnostics.AddError("Error applying quota target spec", err.Error())
 		return
