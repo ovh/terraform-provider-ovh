@@ -67,7 +67,7 @@ The following arguments are supported:
 * `name` - Name of the volume
 * `size` - Size (GB) of the volume
 * `type` - Type of the volume **Changing this value recreates the resource.** Available types are: classic, classic-luks, classic-multiattach, high-speed, high-speed-luks, high-speed-gen2, high-speed-gen2-luks
-* `encryption` - Optional. Volume encryption configuration. Customer managed keys (CMK) are only available in supported regions (preprod and 3AZ). **Changing this value recreates the resource.**
+* `encryption` - Optional. Volume encryption configuration. Customer managed keys (CMK) are only available in supported regions (3AZ). **Changing this value recreates the resource.**
   * `encrypted` - Whether the volume is encrypted. Setting this auto-derives a LUKS volume type.
   * `kms` - Optional. Customer managed key (CMK) reference. Omit to use OVH managed keys (OMK).
     * `domain_id` - OKMS domain ID holding the customer managed key.
