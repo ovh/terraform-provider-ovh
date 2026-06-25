@@ -7,11 +7,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/ovh/go-ovh/ovh"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
@@ -74,6 +76,9 @@ func (r *cloudStorageBlockVolumeBackupResource) Schema(ctx context.Context, req 
 				Required:            true,
 				Description:         "Backup name",
 				MarkdownDescription: "Backup name",
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
 			},
 			"description": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
@@ -105,6 +110,11 @@ func (r *cloudStorageBlockVolumeBackupResource) Schema(ctx context.Context, req 
 				Computed:            true,
 				Description:         "Backup ID",
 				MarkdownDescription: "Backup ID",
+				PlanModifiers: []planmodifier.String{
+					// An ID never changes once created; keep it known during updates
+					// so dependent resources are not spuriously replaced.
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"checksum": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
@@ -120,6 +130,10 @@ func (r *cloudStorageBlockVolumeBackupResource) Schema(ctx context.Context, req 
 				Computed:            true,
 				Description:         "Creation date of the backup",
 				MarkdownDescription: "Creation date of the backup",
+				PlanModifiers: []planmodifier.String{
+					// Creation date never changes after create.
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"updated_at": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},

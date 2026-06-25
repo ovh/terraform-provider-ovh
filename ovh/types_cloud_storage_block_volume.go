@@ -276,6 +276,19 @@ func (m *CloudStorageBlockVolumeModel) MergeWith(ctx context.Context, response *
 				},
 			)
 			m.Encryption = encryptionObj
+		} else if response.CurrentState != nil && response.CurrentState.Encryption != nil {
+			// Defensive backfill: encryption is immutable at the OpenStack level,
+			// so currentState.encryption is authoritative when targetSpec omits it.
+			// Keeping the root attribute populated (instead of null) lets
+			// UseStateForUnknown stabilize plans for volumes created without an
+			// encryption block, avoiding spurious RequiresReplace diffs.
+			encryptionObj, _ := types.ObjectValue(
+				BlockVolumeEncryptionAttrTypes(),
+				map[string]attr.Value{
+					"enabled": types.BoolValue(response.CurrentState.Encryption.Enabled),
+				},
+			)
+			m.Encryption = encryptionObj
 		} else if m.Encryption.IsUnknown() {
 			m.Encryption = types.ObjectNull(BlockVolumeEncryptionAttrTypes())
 		}
