@@ -3,6 +3,7 @@ package ovh
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -278,6 +279,96 @@ resource "ovh_cloud_storage_block_volume" "volume_from_image" {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateIdFunc: testAccCloudStorageBlockVolumeImportStateIdFunc("ovh_cloud_storage_block_volume.volume_from_image"),
+			},
+		},
+	})
+}
+
+// TestAccCloudStorageBlockVolume_noServiceName validates that when service_name
+// is omitted from the resource configuration, the provider falls back to the
+// OVH_CLOUD_PROJECT_SERVICE environment variable at plan time (via the
+// EnvDefaultString plan modifier) and that this does not produce a perpetual
+// diff / phantom replace on subsequent plans.
+func TestAccCloudStorageBlockVolume_noServiceName(t *testing.T) {
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+
+	volumeName := acctest.RandomWithPrefix(testAccResourceCloudStorageBlockVolumeNamePrefix)
+
+	config := fmt.Sprintf(`
+resource "ovh_cloud_storage_block_volume" "volume" {
+  name        = "%s"
+  size        = 10
+  region      = "%s"
+  volume_type = "CLASSIC"
+
+  encryption = {
+    enabled = false
+  }
+}
+`, volumeName, region)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloud(t)
+			testAccCheckCloudProjectExists(t)
+			checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_SERVICE")
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume", "name", volumeName),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume", "service_name", os.Getenv("OVH_CLOUD_PROJECT_SERVICE")),
+					resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume.volume", "id"),
+				),
+			},
+			{
+				// Re-planning with service_name still omitted must be a no-op:
+				// the EnvDefaultString modifier injects the env value so the plan
+				// matches state and RequiresReplace does not fire (regression guard).
+				Config:   config,
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+// TestAccCloudStorageBlockVolume_missingServiceName validates that when
+// service_name is omitted from the configuration AND the
+// OVH_CLOUD_PROJECT_SERVICE environment variable is unset, the EnvDefaultString
+// plan modifier (required: true) raises a "Missing" diagnostic at plan time.
+func TestAccCloudStorageBlockVolume_missingServiceName(t *testing.T) {
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+
+	volumeName := acctest.RandomWithPrefix(testAccResourceCloudStorageBlockVolumeNamePrefix)
+
+	config := fmt.Sprintf(`
+resource "ovh_cloud_storage_block_volume" "volume" {
+  name        = "%s"
+  size        = 10
+  region      = "%s"
+  volume_type = "CLASSIC"
+
+  encryption = {
+    enabled = false
+  }
+}
+`, volumeName, region)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloud(t)
+			// Ensure the env var is unset for the duration of this test so the
+			// plan modifier cannot resolve service_name from anywhere.
+			t.Setenv("OVH_CLOUD_PROJECT_SERVICE", "")
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      config,
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile(`Missing`),
 			},
 		},
 	})
