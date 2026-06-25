@@ -284,6 +284,71 @@ resource "ovh_cloud_storage_block_volume" "volume_from_image" {
 	})
 }
 
+// TestAccCloudStorageBlockVolume_recoverDefaults verifies that a volume created
+// WITHOUT an `encryption` block does not produce a perpetual diff.
+func TestAccCloudStorageBlockVolume_recoverDefaults(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+
+	volumeName := acctest.RandomWithPrefix(testAccResourceCloudStorageBlockVolumeNamePrefix)
+
+	// Config omits `encryption` block entirely so that the
+	// recover step is responsible for populating both.
+	config := fmt.Sprintf(`
+resource "ovh_cloud_storage_block_volume" "volume" {
+  service_name = "%s"
+  name         = "%s"
+  size         = 10
+  region       = "%s"
+  volume_type  = "CLASSIC"
+}
+`, serviceName, volumeName, region)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloud(t)
+			testAccCheckCloudProjectExists(t)
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume", "service_name", serviceName),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume", "name", volumeName),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume", "size", "10"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume", "region", region),
+					// volume_type was omitted; recover must have populated it.
+					resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume.volume", "volume_type"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume.volume", "current_state.volume_type"),
+					// encryption block was omitted; recover must have populated enabled.
+					resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume.volume", "encryption.enabled"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume.volume", "id"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume.volume", "checksum"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume.volume", "resource_status"),
+				),
+			},
+			{
+				// Re-applying the SAME config must yield an empty plan. This is the
+				// core assertion: the recover-populated volume_type and encryption
+				// must not cause an "inconsistent result" or a perpetual diff.
+				Config: config,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				ResourceName:      "ovh_cloud_storage_block_volume.volume",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccCloudStorageBlockVolumeImportStateIdFunc("ovh_cloud_storage_block_volume.volume"),
+			},
+		},
+	})
+}
+
 // TestAccCloudStorageBlockVolume_noServiceName validates that when service_name
 // is omitted from the resource configuration, the provider falls back to the
 // OVH_CLOUD_PROJECT_SERVICE environment variable at plan time (via the
