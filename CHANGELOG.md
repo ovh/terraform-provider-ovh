@@ -1,3 +1,44 @@
+## 2.15.0 (June 25, 2026)
+
+🎉 Features:
+
+* New resource: `ovh_cloud_gateway` ([#1354](https://github.com/ovh/terraform-provider-ovh/pull/1354))
+* New resource: `ovh_cloud_network_private_vrack` ([#1354](https://github.com/ovh/terraform-provider-ovh/pull/1354))
+* New resource: `ovh_cloud_network_private_vrack_subnet` ([#1354](https://github.com/ovh/terraform-provider-ovh/pull/1354))
+* New resource: `ovh_cloud_security_group` ([#1355](https://github.com/ovh/terraform-provider-ovh/pull/1355))
+* New resource: `ovh_cloud_ssh_key` ([#1352](https://github.com/ovh/terraform-provider-ovh/pull/1352))
+* New resource: `ovh_cloud_project_kube_log_subscription` ([#1313](https://github.com/ovh/terraform-provider-ovh/pull/1313))
+
+* New datasource: `ovh_cloud_gateway` ([#1354](https://github.com/ovh/terraform-provider-ovh/pull/1354))
+* New datasource: `ovh_cloud_gateways` ([#1354](https://github.com/ovh/terraform-provider-ovh/pull/1354))
+* New datasource: `ovh_cloud_network_private_vrack` ([#1354](https://github.com/ovh/terraform-provider-ovh/pull/1354))
+* New datasource: `ovh_cloud_network_private_vracks` ([#1354](https://github.com/ovh/terraform-provider-ovh/pull/1354))
+* New datasource: `ovh_cloud_network_private_vrack_subnet` ([#1354](https://github.com/ovh/terraform-provider-ovh/pull/1354))
+* New datasource: `ovh_cloud_network_private_vrack_subnets` ([#1354](https://github.com/ovh/terraform-provider-ovh/pull/1354))
+* New datasource: `ovh_cloud_security_group` ([#1355](https://github.com/ovh/terraform-provider-ovh/pull/1355))
+* New datasource: `ovh_cloud_security_groups` ([#1355](https://github.com/ovh/terraform-provider-ovh/pull/1355))
+* New datasource: `ovh_cloud_ssh_key` ([#1352](https://github.com/ovh/terraform-provider-ovh/pull/1352))
+* New datasource: `ovh_cloud_ssh_keys` ([#1352](https://github.com/ovh/terraform-provider-ovh/pull/1352))
+* New datasource: `ovh_cloud_region` ([#1347](https://github.com/ovh/terraform-provider-ovh/pull/1347))
+* New datasource: `ovh_cloud_regions` ([#1347](https://github.com/ovh/terraform-provider-ovh/pull/1347))
+* New datasource: `ovh_cloud_project_kube_log_subscription` ([#1313](https://github.com/ovh/terraform-provider-ovh/pull/1313))
+
+💪 Improvements:
+
+* `r/ovh_cloud_project_volume`: Add ability to create CMK encrypted volumes through the `encryption` attribute ([#1337](https://github.com/ovh/terraform-provider-ovh/pull/1337))
+* `r/ovh_cloud_project_kube`: Add `ip_allocation_policy` and `customization_cilium` parameters ([#1313](https://github.com/ovh/terraform-provider-ovh/pull/1313))
+* `r/ovh_cloud_storage_block_volume`: Support `OVH_CLOUD_PROJECT_SERVICE` env var as fallback for `service_name` ([#1352](https://github.com/ovh/terraform-provider-ovh/pull/1352))
+
+🐜 Bug fixes:
+
+* `r/ovh_cloud_project_kube`: Accept `UPDATING` as a valid pending state when waiting for the cluster to be ready ([#1344](https://github.com/ovh/terraform-provider-ovh/pull/1344))
+
+📚 Documentation:
+
+* `r/ovh_cloud_project_network_private_subnet_v2`: Document the `gateway_ip` attribute ([#1330](https://github.com/ovh/terraform-provider-ovh/pull/1330))
+
+❤️ Thanks for your contributions ❤️
+
 ## 2.14.0 (June 12, 2026)
 
 ⚙️ General:
