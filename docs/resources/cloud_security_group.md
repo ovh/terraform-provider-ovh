@@ -74,7 +74,8 @@ The following attributes are exported:
 * `current_state` - Current state of the security group:
   * `name` - Name of the security group.
   * `description` - Description of the security group.
-  * `region` - Region of the security group.
+  * `location` - Location details:
+    * `region` - Region.
   * `rules` - User-specified security group rules with their IDs:
     * `id` - Rule ID.
     * `direction` - Direction of the rule.

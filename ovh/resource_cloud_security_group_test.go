@@ -84,7 +84,7 @@ resource "ovh_cloud_security_group" "test" {
 					resource.TestCheckResourceAttr("ovh_cloud_security_group.test", "resource_status", "READY"),
 					// current_state must reflect the created rule, with an OpenStack-assigned rule ID
 					resource.TestCheckResourceAttr("ovh_cloud_security_group.test", "current_state.name", name),
-					resource.TestCheckResourceAttr("ovh_cloud_security_group.test", "current_state.region", region),
+					resource.TestCheckResourceAttr("ovh_cloud_security_group.test", "current_state.location.region", region),
 					resource.TestCheckResourceAttr("ovh_cloud_security_group.test", "current_state.rules.#", "1"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_security_group.test", "current_state.rules.0.id"),
 				),

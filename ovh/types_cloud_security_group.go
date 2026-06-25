@@ -210,6 +210,14 @@ func SecurityGroupCurrentStateRuleAttrTypes() map[string]attr.Type {
 	}
 }
 
+// securityGroupLocationAttrTypes returns the attribute types for the nested
+// location object exposed by the current_state and the data sources.
+func securityGroupLocationAttrTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"region": ovhtypes.TfStringType{},
+	}
+}
+
 // SecurityGroupCurrentStateAttrTypes returns the attribute types for current_state
 func SecurityGroupCurrentStateAttrTypes() map[string]attr.Type {
 	ruleObjType := types.ObjectType{
@@ -218,7 +226,9 @@ func SecurityGroupCurrentStateAttrTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"name":        ovhtypes.TfStringType{},
 		"description": ovhtypes.TfStringType{},
-		"region":      ovhtypes.TfStringType{},
+		"location": types.ObjectType{
+			AttrTypes: securityGroupLocationAttrTypes(),
+		},
 		"rules": types.ListType{
 			ElemType: ruleObjType,
 		},
@@ -358,9 +368,14 @@ func buildSecurityGroupTargetRulesList(rules []CloudSecurityGroupAPITargetRule) 
 }
 
 func buildSecurityGroupCurrentStateObject(ctx context.Context, state *CloudSecurityGroupAPICurrentState) types.Object {
-	region := ""
+	locationVal := types.ObjectNull(securityGroupLocationAttrTypes())
 	if state.Location != nil {
-		region = state.Location.Region
+		locationVal, _ = types.ObjectValue(
+			securityGroupLocationAttrTypes(),
+			map[string]attr.Value{
+				"region": ovhtypes.TfStringValue{StringValue: types.StringValue(state.Location.Region)},
+			},
+		)
 	}
 
 	obj, _ := types.ObjectValue(
@@ -368,7 +383,7 @@ func buildSecurityGroupCurrentStateObject(ctx context.Context, state *CloudSecur
 		map[string]attr.Value{
 			"name":          ovhtypes.TfStringValue{StringValue: types.StringValue(state.Name)},
 			"description":   ovhtypes.TfStringValue{StringValue: types.StringValue(state.Description)},
-			"region":        ovhtypes.TfStringValue{StringValue: types.StringValue(region)},
+			"location":      locationVal,
 			"rules":         buildStateRulesList(state.Rules),
 			"default_rules": buildStateRulesList(state.DefaultRules),
 		},

@@ -219,15 +219,21 @@ func (r *cloudGatewayResource) Schema(ctx context.Context, req resource.SchemaRe
 							},
 						},
 					},
-					"region": schema.StringAttribute{
-						CustomType:  ovhtypes.TfStringType{},
+					"location": schema.SingleNestedAttribute{
 						Computed:    true,
-						Description: "Region",
-					},
-					"availability_zone": schema.StringAttribute{
-						CustomType:  ovhtypes.TfStringType{},
-						Computed:    true,
-						Description: "Availability zone",
+						Description: "Location details",
+						Attributes: map[string]schema.Attribute{
+							"region": schema.StringAttribute{
+								CustomType:  ovhtypes.TfStringType{},
+								Computed:    true,
+								Description: "Region",
+							},
+							"availability_zone": schema.StringAttribute{
+								CustomType:  ovhtypes.TfStringType{},
+								Computed:    true,
+								Description: "Availability zone",
+							},
+						},
 					},
 				},
 			},

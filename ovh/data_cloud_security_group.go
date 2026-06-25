@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
@@ -108,10 +110,16 @@ func securityGroupDataSourceCurrentStateSchema() schema.SingleNestedAttribute {
 				Computed:    true,
 				Description: "Description of the security group",
 			},
-			"region": schema.StringAttribute{
-				CustomType:  ovhtypes.TfStringType{},
+			"location": schema.SingleNestedAttribute{
 				Computed:    true,
-				Description: "Region of the security group",
+				Description: "Location details",
+				Attributes: map[string]schema.Attribute{
+					"region": schema.StringAttribute{
+						CustomType:  ovhtypes.TfStringType{},
+						Computed:    true,
+						Description: "Region",
+					},
+				},
 			},
 			"rules": schema.ListNestedAttribute{
 				Computed:    true,
@@ -145,10 +153,16 @@ func (d *cloudSecurityGroupDataSource) Schema(ctx context.Context, req datasourc
 				Required:    true,
 				Description: "Security group ID",
 			},
-			"region": schema.StringAttribute{
-				CustomType:  ovhtypes.TfStringType{},
+			"location": schema.SingleNestedAttribute{
 				Computed:    true,
-				Description: "Region of the security group",
+				Description: "Location of the security group",
+				Attributes: map[string]schema.Attribute{
+					"region": schema.StringAttribute{
+						CustomType:  ovhtypes.TfStringType{},
+						Computed:    true,
+						Description: "Region",
+					},
+				},
 			},
 			"name": schema.StringAttribute{
 				CustomType:  ovhtypes.TfStringType{},
@@ -231,8 +245,25 @@ func (d *cloudSecurityGroupDataSource) Schema(ctx context.Context, req datasourc
 	}
 }
 
+// cloudSecurityGroupDataSourceModel is the Terraform state model for this data
+// source. It mirrors the resource model but exposes the location as a nested
+// object (the group is fetched by ID, so region is computed, not user input).
+type cloudSecurityGroupDataSourceModel struct {
+	ServiceName    ovhtypes.TfStringValue `tfsdk:"service_name"`
+	Id             ovhtypes.TfStringValue `tfsdk:"id"`
+	Location       types.Object           `tfsdk:"location"`
+	Name           ovhtypes.TfStringValue `tfsdk:"name"`
+	Description    ovhtypes.TfStringValue `tfsdk:"description"`
+	Rule           types.List             `tfsdk:"rule"`
+	Checksum       ovhtypes.TfStringValue `tfsdk:"checksum"`
+	CreatedAt      ovhtypes.TfStringValue `tfsdk:"created_at"`
+	UpdatedAt      ovhtypes.TfStringValue `tfsdk:"updated_at"`
+	ResourceStatus ovhtypes.TfStringValue `tfsdk:"resource_status"`
+	CurrentState   types.Object           `tfsdk:"current_state"`
+}
+
 func (d *cloudSecurityGroupDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data CloudSecurityGroupModel
+	var data cloudSecurityGroupDataSourceModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -250,7 +281,33 @@ func (d *cloudSecurityGroupDataSource) Read(ctx context.Context, req datasource.
 		return
 	}
 
-	data.MergeWith(ctx, &responseData)
+	// Reuse the resource model's mapping, then project it onto the data source
+	// model which exposes the location as a nested computed object.
+	var m CloudSecurityGroupModel
+	m.ServiceName = data.ServiceName
+	m.Id = data.Id
+	m.MergeWith(ctx, &responseData)
+
+	locationVal, diags := types.ObjectValue(
+		securityGroupLocationAttrTypes(),
+		map[string]attr.Value{
+			"region": m.Region,
+		},
+	)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	data.Location = locationVal
+	data.Name = m.Name
+	data.Description = m.Description
+	data.Rule = m.Rule
+	data.Checksum = m.Checksum
+	data.CreatedAt = m.CreatedAt
+	data.UpdatedAt = m.UpdatedAt
+	data.ResourceStatus = m.ResourceStatus
+	data.CurrentState = m.CurrentState
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
