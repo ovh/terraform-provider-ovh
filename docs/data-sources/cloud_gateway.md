@@ -30,8 +30,9 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `region` - Region of the gateway.
-* `availability_zone` - Availability zone of the gateway.
+* `location` - Location of the gateway:
+  * `region` - Region.
+  * `availability_zone` - Availability zone.
 * `name` - Gateway name.
 * `description` - Gateway description.
 * `external_gateway` - External gateway configuration:
@@ -52,5 +53,6 @@ The following attributes are exported:
   * `external_ip` - External IP address assigned to the gateway.
   * `subnets` - Currently attached subnets:
     * `id` - Subnet ID.
-  * `region` - Region.
-  * `availability_zone` - Availability zone.
+  * `location` - Location details:
+    * `region` - Region.
+    * `availability_zone` - Availability zone.

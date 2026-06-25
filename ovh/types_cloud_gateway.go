@@ -198,6 +198,15 @@ func gatewaySubnetAttrTypes() map[string]attr.Type {
 	}
 }
 
+// gatewayLocationAttrTypes returns the attribute types for the nested location
+// object exposed by the current_state and the data sources.
+func gatewayLocationAttrTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"region":            ovhtypes.TfStringType{},
+		"availability_zone": ovhtypes.TfStringType{},
+	}
+}
+
 // GatewayCurrentStateAttrTypes returns the attribute types for the current_state object
 func GatewayCurrentStateAttrTypes() map[string]attr.Type {
 	return map[string]attr.Type{
@@ -213,8 +222,9 @@ func GatewayCurrentStateAttrTypes() map[string]attr.Type {
 				AttrTypes: gatewaySubnetAttrTypes(),
 			},
 		},
-		"region":            ovhtypes.TfStringType{},
-		"availability_zone": ovhtypes.TfStringType{},
+		"location": types.ObjectType{
+			AttrTypes: gatewayLocationAttrTypes(),
+		},
 	}
 }
 
@@ -240,14 +250,16 @@ func buildGatewayCurrentStateObject(ctx context.Context, state *CloudGatewayAPIC
 		subnetsVal = types.ListNull(subnetObjType)
 	}
 
-	// Build region and availability_zone from location
-	regionVal := ovhtypes.TfStringValue{StringValue: types.StringValue("")}
-	azVal := ovhtypes.TfStringValue{StringValue: types.StringValue("")}
+	// Build the nested location object from the API location
+	locationVal := types.ObjectNull(gatewayLocationAttrTypes())
 	if state.Location != nil {
-		regionVal = ovhtypes.TfStringValue{StringValue: types.StringValue(state.Location.Region)}
-		if state.Location.AvailabilityZone != "" {
-			azVal = ovhtypes.TfStringValue{StringValue: types.StringValue(state.Location.AvailabilityZone)}
-		}
+		locationVal, _ = types.ObjectValue(
+			gatewayLocationAttrTypes(),
+			map[string]attr.Value{
+				"region":            ovhtypes.TfStringValue{StringValue: types.StringValue(state.Location.Region)},
+				"availability_zone": ovhtypes.TfStringValue{StringValue: types.StringValue(state.Location.AvailabilityZone)},
+			},
+		)
 	}
 
 	// Build external_gateway object
@@ -277,14 +289,13 @@ func buildGatewayCurrentStateObject(ctx context.Context, state *CloudGatewayAPIC
 	currentStateObj, _ := types.ObjectValue(
 		GatewayCurrentStateAttrTypes(),
 		map[string]attr.Value{
-			"name":              ovhtypes.TfStringValue{StringValue: types.StringValue(state.Name)},
-			"description":       ovhtypes.TfStringValue{StringValue: types.StringValue(state.Description)},
-			"status":            ovhtypes.TfStringValue{StringValue: types.StringValue(state.Status)},
-			"external_gateway":  externalGatewayVal,
-			"external_ip":       ovhtypes.TfStringValue{StringValue: types.StringValue(state.ExternalIP)},
-			"subnets":           subnetsVal,
-			"region":            regionVal,
-			"availability_zone": azVal,
+			"name":             ovhtypes.TfStringValue{StringValue: types.StringValue(state.Name)},
+			"description":      ovhtypes.TfStringValue{StringValue: types.StringValue(state.Description)},
+			"status":           ovhtypes.TfStringValue{StringValue: types.StringValue(state.Status)},
+			"external_gateway": externalGatewayVal,
+			"external_ip":      ovhtypes.TfStringValue{StringValue: types.StringValue(state.ExternalIP)},
+			"subnets":          subnetsVal,
+			"location":         locationVal,
 		},
 	)
 

@@ -48,9 +48,7 @@ func TestAccCloudNetworkPrivateVrackSubnet_basic(t *testing.T) {
 resource "ovh_cloud_network_private_vrack" "network" {
   service_name = "%s"
   name         = "terraform_testacc_private_net"
-  location     = {
-	region = "%s"
-  }
+  region       = "%s"
 }
 
 resource "ovh_cloud_network_private_vrack_subnet" "test" {
@@ -59,9 +57,7 @@ resource "ovh_cloud_network_private_vrack_subnet" "test" {
 
   name = "%s"
   cidr = "10.0.0.0/24"
-  location = {
-    region = "%s"
-  }
+  region       = "%s"
 }
 `, serviceName, region, subnetName, region)
 
@@ -78,7 +74,7 @@ resource "ovh_cloud_network_private_vrack_subnet" "test" {
 					resource.TestCheckResourceAttrSet("ovh_cloud_network_private_vrack_subnet.test", "network_id"),
 					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack_subnet.test", "name", subnetName),
 					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack_subnet.test", "cidr", "10.0.0.0/24"),
-					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack_subnet.test", "location.region", region),
+					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack_subnet.test", "region", region),
 					resource.TestCheckResourceAttrSet("ovh_cloud_network_private_vrack_subnet.test", "id"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_network_private_vrack_subnet.test", "checksum"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_network_private_vrack_subnet.test", "created_at"),
@@ -112,9 +108,7 @@ func TestAccCloudNetworkPrivateVrackSubnet_withAllOptions(t *testing.T) {
 resource "ovh_cloud_network_private_vrack" "network" {
   service_name = "%s"
   name         = "terraform_testacc_private_net"
-  location     = {
-    region = "%s"
-  }
+  region       = "%s"
 }
 
 resource "ovh_cloud_network_private_vrack_subnet" "test" {
@@ -126,9 +120,7 @@ resource "ovh_cloud_network_private_vrack_subnet" "test" {
   dhcp_enabled    = true
   gateway_ip      = "10.0.0.1"
   dns_nameservers = ["1.1.1.1", "8.8.8.8"]
-  location = {
-    region = "%s"
-  }
+  region       = "%s"
   allocation_pools = [
     {
       start = "10.0.0.10"
@@ -186,9 +178,7 @@ func TestAccCloudNetworkPrivateVrackSubnet_updateMutableFields(t *testing.T) {
 resource "ovh_cloud_network_private_vrack" "network" {
   service_name = "%s"
   name         = "terraform_testacc_private_net"
-  location     = {
-    region = "%s"
-  }
+  region       = "%s"
 }
 
 resource "ovh_cloud_network_private_vrack_subnet" "test" {
@@ -200,9 +190,7 @@ resource "ovh_cloud_network_private_vrack_subnet" "test" {
   description     = "initial description"
   dhcp_enabled    = false
   dns_nameservers = ["1.1.1.1"]
-  location = {
-    region = "%s"
-  }
+  region       = "%s"
 }
 `, serviceName, region, subnetName, region)
 
@@ -210,9 +198,7 @@ resource "ovh_cloud_network_private_vrack_subnet" "test" {
 resource "ovh_cloud_network_private_vrack" "network" {
   service_name = "%s"
   name         = "terraform_testacc_private_net"
-  location     = {
-	region = "%s"
-  }
+  region       = "%s"
 }
 
 resource "ovh_cloud_network_private_vrack_subnet" "test" {
@@ -224,9 +210,7 @@ resource "ovh_cloud_network_private_vrack_subnet" "test" {
   description     = "updated description"
   dhcp_enabled    = true
   dns_nameservers = ["8.8.8.8", "8.8.4.4"]
-  location = {
-    region = "%s"
-  }
+  region       = "%s"
 }
 `, serviceName, region, updatedName, region)
 
@@ -275,9 +259,7 @@ func TestAccCloudNetworkPrivateVrackSubnet_update(t *testing.T) {
 resource "ovh_cloud_network_private_vrack" "network" {
   service_name = "%s"
   name         = "terraform_testacc_private_net"
-  location     = {
-    region = "%s"
-  }
+  region       = "%s"
 }
 
 resource "ovh_cloud_network_private_vrack_subnet" "test" {
@@ -287,9 +269,7 @@ resource "ovh_cloud_network_private_vrack_subnet" "test" {
   name        = "%s"
   cidr        = "10.0.0.0/24"
   description = "initial description"
-  location = {
-    region = "%s"
-  }
+  region       = "%s"
 }
 `, serviceName, region, subnetName, region)
 
@@ -297,9 +277,7 @@ resource "ovh_cloud_network_private_vrack_subnet" "test" {
 resource "ovh_cloud_network_private_vrack" "network" {
   service_name = "%s"
   name         = "terraform_testacc_private_net"
-  location     = {
-    region = "%s"
-  }
+  region       = "%s"
 }
 
 resource "ovh_cloud_network_private_vrack_subnet" "test" {
@@ -309,9 +287,7 @@ resource "ovh_cloud_network_private_vrack_subnet" "test" {
   name        = "%s"
   cidr        = "10.0.0.0/24"
   description = "updated description"
-  location = {
-    region = "%s"
-  }
+  region       = "%s"
 }
 `, serviceName, region, updatedName, region)
 

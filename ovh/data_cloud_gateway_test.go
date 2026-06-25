@@ -48,7 +48,7 @@ data "ovh_cloud_gateway" "test" {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.ovh_cloud_gateway.test", "service_name", serviceName),
 					resource.TestCheckResourceAttr("data.ovh_cloud_gateway.test", "name", gatewayName),
-					resource.TestCheckResourceAttr("data.ovh_cloud_gateway.test", "region", region),
+					resource.TestCheckResourceAttr("data.ovh_cloud_gateway.test", "location.region", region),
 					resource.TestCheckResourceAttr("data.ovh_cloud_gateway.test", "external_gateway.enabled", "true"),
 					resource.TestCheckResourceAttr("data.ovh_cloud_gateway.test", "external_gateway.model", gatewayModel),
 					resource.TestCheckResourceAttrSet("data.ovh_cloud_gateway.test", "id"),

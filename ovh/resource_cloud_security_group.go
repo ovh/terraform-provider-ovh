@@ -250,11 +250,17 @@ func (r *cloudSecurityGroupResource) Schema(ctx context.Context, req resource.Sc
 						Description:         "Description of the security group",
 						MarkdownDescription: "Description of the security group",
 					},
-					"region": schema.StringAttribute{
-						CustomType:          ovhtypes.TfStringType{},
-						Computed:            true,
-						Description:         "Region of the security group",
-						MarkdownDescription: "Region of the security group",
+					"location": schema.SingleNestedAttribute{
+						Computed:    true,
+						Description: "Location details",
+						Attributes: map[string]schema.Attribute{
+							"region": schema.StringAttribute{
+								CustomType:          ovhtypes.TfStringType{},
+								Computed:            true,
+								Description:         "Region code",
+								MarkdownDescription: "Region code",
+							},
+						},
 					},
 					"rules": schema.ListNestedAttribute{
 						Computed:    true,

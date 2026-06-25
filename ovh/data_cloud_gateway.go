@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
@@ -55,15 +57,21 @@ func (d *cloudGatewayDataSource) Schema(ctx context.Context, req datasource.Sche
 				Required:    true,
 				Description: "Gateway ID",
 			},
-			"region": schema.StringAttribute{
-				CustomType:  ovhtypes.TfStringType{},
+			"location": schema.SingleNestedAttribute{
 				Computed:    true,
-				Description: "Region of the gateway",
-			},
-			"availability_zone": schema.StringAttribute{
-				CustomType:  ovhtypes.TfStringType{},
-				Computed:    true,
-				Description: "Availability zone of the gateway",
+				Description: "Location of the gateway",
+				Attributes: map[string]schema.Attribute{
+					"region": schema.StringAttribute{
+						CustomType:  ovhtypes.TfStringType{},
+						Computed:    true,
+						Description: "Region",
+					},
+					"availability_zone": schema.StringAttribute{
+						CustomType:  ovhtypes.TfStringType{},
+						Computed:    true,
+						Description: "Availability zone",
+					},
+				},
 			},
 			"name": schema.StringAttribute{
 				CustomType:  ovhtypes.TfStringType{},
@@ -167,15 +175,21 @@ func (d *cloudGatewayDataSource) Schema(ctx context.Context, req datasource.Sche
 							},
 						},
 					},
-					"region": schema.StringAttribute{
-						CustomType:  ovhtypes.TfStringType{},
+					"location": schema.SingleNestedAttribute{
 						Computed:    true,
-						Description: "Region",
-					},
-					"availability_zone": schema.StringAttribute{
-						CustomType:  ovhtypes.TfStringType{},
-						Computed:    true,
-						Description: "Availability zone",
+						Description: "Location details",
+						Attributes: map[string]schema.Attribute{
+							"region": schema.StringAttribute{
+								CustomType:  ovhtypes.TfStringType{},
+								Computed:    true,
+								Description: "Region",
+							},
+							"availability_zone": schema.StringAttribute{
+								CustomType:  ovhtypes.TfStringType{},
+								Computed:    true,
+								Description: "Availability zone",
+							},
+						},
 					},
 				},
 			},
@@ -183,8 +197,26 @@ func (d *cloudGatewayDataSource) Schema(ctx context.Context, req datasource.Sche
 	}
 }
 
+// cloudGatewayDataSourceModel is the Terraform state model for this data source.
+// It mirrors the resource model but exposes the location as a nested object
+// (the gateway is fetched by ID, so region/AZ are computed, not user input).
+type cloudGatewayDataSourceModel struct {
+	ServiceName     ovhtypes.TfStringValue                             `tfsdk:"service_name"`
+	Id              ovhtypes.TfStringValue                             `tfsdk:"id"`
+	Location        types.Object                                       `tfsdk:"location"`
+	Name            ovhtypes.TfStringValue                             `tfsdk:"name"`
+	Description     ovhtypes.TfStringValue                             `tfsdk:"description"`
+	ExternalGateway types.Object                                       `tfsdk:"external_gateway"`
+	SubnetIds       ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] `tfsdk:"subnet_ids"`
+	Checksum        ovhtypes.TfStringValue                             `tfsdk:"checksum"`
+	CreatedAt       ovhtypes.TfStringValue                             `tfsdk:"created_at"`
+	UpdatedAt       ovhtypes.TfStringValue                             `tfsdk:"updated_at"`
+	ResourceStatus  ovhtypes.TfStringValue                             `tfsdk:"resource_status"`
+	CurrentState    types.Object                                       `tfsdk:"current_state"`
+}
+
 func (d *cloudGatewayDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data CloudGatewayModel
+	var data cloudGatewayDataSourceModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -202,7 +234,35 @@ func (d *cloudGatewayDataSource) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	data.MergeWith(ctx, &responseData)
+	// Reuse the resource model's mapping, then project it onto the data source
+	// model which exposes the location as a nested computed object.
+	var m CloudGatewayModel
+	m.ServiceName = data.ServiceName
+	m.Id = data.Id
+	m.MergeWith(ctx, &responseData)
+
+	locationVal, diags := types.ObjectValue(
+		gatewayLocationAttrTypes(),
+		map[string]attr.Value{
+			"region":            m.Region,
+			"availability_zone": m.AvailabilityZone,
+		},
+	)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	data.Location = locationVal
+	data.Name = m.Name
+	data.Description = m.Description
+	data.ExternalGateway = m.ExternalGateway
+	data.SubnetIds = m.SubnetIds
+	data.Checksum = m.Checksum
+	data.CreatedAt = m.CreatedAt
+	data.UpdatedAt = m.UpdatedAt
+	data.ResourceStatus = m.ResourceStatus
+	data.CurrentState = m.CurrentState
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

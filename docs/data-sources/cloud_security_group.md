@@ -30,7 +30,8 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `region` - Region of the security group.
+* `location` - Location of the security group:
+  * `region` - Region.
 * `name` - Name of the security group.
 * `description` - Description of the security group.
 * `rule` - List of security group rules. Each rule exports:
@@ -49,7 +50,8 @@ The following attributes are exported:
 * `current_state` - Current state of the security group:
   * `name` - Name of the security group.
   * `description` - Description of the security group.
-  * `region` - Region of the security group.
+  * `location` - Location details:
+    * `region` - Region.
   * `rules` - User-specified security group rules with their IDs:
     * `id` - Rule ID.
     * `direction` - Direction of the rule.

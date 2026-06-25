@@ -42,9 +42,7 @@ func TestAccCloudNetworkPrivateVrack_basic(t *testing.T) {
 resource "ovh_cloud_network_private_vrack" "test" {
   service_name = "%s"
   name         = "%s"
-  location = {
-    region = "%s"
-  }
+  region       = "%s"
 }
 `, serviceName, networkName, region)
 
@@ -59,7 +57,7 @@ resource "ovh_cloud_network_private_vrack" "test" {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack.test", "service_name", serviceName),
 					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack.test", "name", networkName),
-					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack.test", "location.region", region),
+					resource.TestCheckResourceAttr("ovh_cloud_network_private_vrack.test", "region", region),
 					resource.TestCheckResourceAttrSet("ovh_cloud_network_private_vrack.test", "id"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_network_private_vrack.test", "checksum"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_network_private_vrack.test", "created_at"),
@@ -89,9 +87,7 @@ func TestAccCloudNetworkPrivateVrack_withDescription(t *testing.T) {
 resource "ovh_cloud_network_private_vrack" "test" {
   service_name = "%s"
   name         = "%s"
-  location = {
-    region = "%s"
-  }
+  region       = "%s"
   description  = "network created by acceptance test"
 }
 `, serviceName, networkName, region)
@@ -134,9 +130,7 @@ func TestAccCloudNetworkPrivateVrack_withVlanId(t *testing.T) {
 resource "ovh_cloud_network_private_vrack" "test" {
   service_name = "%s"
   name         = "%s"
-  location = {
-    region = "%s"
-  }
+  region       = "%s"
   vlan_id = %d
 }
 `, serviceName, networkName, region, vlanId)
@@ -179,9 +173,7 @@ func TestAccCloudNetworkPrivateVrack_update(t *testing.T) {
 resource "ovh_cloud_network_private_vrack" "test" {
   service_name = "%s"
   name         = "%s"
-  location = {
-    region = "%s"
-  }
+  region       = "%s"
 }
 `, serviceName, networkName, region)
 
@@ -189,9 +181,7 @@ resource "ovh_cloud_network_private_vrack" "test" {
 resource "ovh_cloud_network_private_vrack" "test" {
   service_name = "%s"
   name         = "%s"
-  location = {
-    region = "%s"
-  }
+  region       = "%s"
 }
 `, serviceName, updatedName, region)
 

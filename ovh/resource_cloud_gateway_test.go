@@ -248,9 +248,7 @@ func TestAccCloudGateway_withSubnets(t *testing.T) {
 resource "ovh_cloud_network_private_vrack" "network" {
   service_name = "%s"
   name         = "%s"
-  location = {
-    region = "%s"
-  }
+  region       = "%s"
 }
 
 resource "ovh_cloud_network_private_vrack_subnet" "subnet" {
@@ -259,9 +257,7 @@ resource "ovh_cloud_network_private_vrack_subnet" "subnet" {
   name         = "%s"
   cidr         = "10.0.0.0/24"
   dhcp_enabled = true
-  location = {
-    region = "%s"
-  }
+  region       = "%s"
 }
 
 resource "ovh_cloud_gateway" "test" {

@@ -32,7 +32,9 @@ The following attributes are exported:
   * `id` - Gateway ID.
   * `name` - Gateway name.
   * `description` - Gateway description.
-  * `region` - Region of the gateway.
+  * `location` - Location of the gateway:
+    * `region` - Region.
+    * `availability_zone` - Availability zone.
   * `external_gateway` - External gateway configuration:
     * `enabled` - Whether the external gateway is enabled.
     * `model` - External gateway sizing model.
@@ -50,5 +52,6 @@ The following attributes are exported:
     * `external_ip` - External IP address assigned to the gateway.
     * `subnets` - Currently attached subnets:
       * `id` - Subnet ID.
-    * `region` - Region.
-    * `availability_zone` - Availability zone.
+    * `location` - Location details:
+      * `region` - Region.
+      * `availability_zone` - Availability zone.

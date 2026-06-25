@@ -58,7 +58,9 @@ func SecurityGroupListItemAttrTypes() map[string]attr.Type {
 		"id":          ovhtypes.TfStringType{},
 		"name":        ovhtypes.TfStringType{},
 		"description": ovhtypes.TfStringType{},
-		"region":      ovhtypes.TfStringType{},
+		"location": types.ObjectType{
+			AttrTypes: securityGroupLocationAttrTypes(),
+		},
 		"rule": types.ListType{
 			ElemType: ruleObjType,
 		},
@@ -101,10 +103,16 @@ func (d *cloudSecurityGroupsDataSource) Schema(ctx context.Context, req datasour
 							Computed:    true,
 							Description: "Description of the security group",
 						},
-						"region": schema.StringAttribute{
-							CustomType:  ovhtypes.TfStringType{},
+						"location": schema.SingleNestedAttribute{
 							Computed:    true,
-							Description: "Region of the security group",
+							Description: "Location of the security group",
+							Attributes: map[string]schema.Attribute{
+								"region": schema.StringAttribute{
+									CustomType:  ovhtypes.TfStringType{},
+									Computed:    true,
+									Description: "Region",
+								},
+							},
 						},
 						"rule": schema.ListNestedAttribute{
 							Computed:    true,
@@ -215,7 +223,7 @@ func (d *cloudSecurityGroupsDataSource) Read(ctx context.Context, req datasource
 func buildSecurityGroupListItemObject(ctx context.Context, response *CloudSecurityGroupAPIResponse) basetypes.ObjectValue {
 	nameVal := ovhtypes.TfStringValue{StringValue: types.StringNull()}
 	descVal := ovhtypes.TfStringValue{StringValue: types.StringNull()}
-	regionVal := ovhtypes.TfStringValue{StringValue: types.StringNull()}
+	locationVal := types.ObjectNull(securityGroupLocationAttrTypes())
 	ruleVal := types.ListNull(types.ObjectType{AttrTypes: SecurityGroupRuleAttrTypes()})
 
 	if response.TargetSpec != nil {
@@ -226,7 +234,12 @@ func buildSecurityGroupListItemObject(ctx context.Context, response *CloudSecuri
 		}
 
 		if response.TargetSpec.Location != nil {
-			regionVal = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Location.Region)}
+			locationVal, _ = types.ObjectValue(
+				securityGroupLocationAttrTypes(),
+				map[string]attr.Value{
+					"region": ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Location.Region)},
+				},
+			)
 		}
 
 		ruleVal = buildSecurityGroupTargetRulesList(response.TargetSpec.Rules)
@@ -245,7 +258,7 @@ func buildSecurityGroupListItemObject(ctx context.Context, response *CloudSecuri
 			"id":              ovhtypes.TfStringValue{StringValue: types.StringValue(response.Id)},
 			"name":            nameVal,
 			"description":     descVal,
-			"region":          regionVal,
+			"location":        locationVal,
 			"rule":            ruleVal,
 			"checksum":        ovhtypes.TfStringValue{StringValue: types.StringValue(response.Checksum)},
 			"created_at":      ovhtypes.TfStringValue{StringValue: types.StringValue(response.CreatedAt)},

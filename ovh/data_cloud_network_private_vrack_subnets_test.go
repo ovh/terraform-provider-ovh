@@ -20,9 +20,7 @@ func TestAccDataSourceCloudNetworkPrivateVrackSubnets_basic(t *testing.T) {
 resource "ovh_cloud_network_private_vrack" "network" {
   service_name = "%s"
   name         = "%s"
-  location = {
-	region = "%s"
-  }
+  region       = "%s"
 }
 
 resource "ovh_cloud_network_private_vrack_subnet" "test" {
@@ -31,9 +29,7 @@ resource "ovh_cloud_network_private_vrack_subnet" "test" {
   name         = "%s"
   cidr         = "10.0.0.0/24"
   dhcp_enabled = true
-  location = {
-    region = "%s"
-  }
+  region       = "%s"
 }
 
 data "ovh_cloud_network_private_vrack_subnets" "test" {

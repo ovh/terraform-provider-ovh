@@ -57,7 +57,9 @@ func GatewayListItemAttrTypes() map[string]attr.Type {
 		"id":          ovhtypes.TfStringType{},
 		"name":        ovhtypes.TfStringType{},
 		"description": ovhtypes.TfStringType{},
-		"region":      ovhtypes.TfStringType{},
+		"location": types.ObjectType{
+			AttrTypes: gatewayLocationAttrTypes(),
+		},
 		"external_gateway": types.ObjectType{
 			AttrTypes: ExternalGatewayAttrTypes(),
 		},
@@ -100,10 +102,21 @@ func (d *cloudGatewaysDataSource) Schema(ctx context.Context, req datasource.Sch
 							Computed:    true,
 							Description: "Gateway description",
 						},
-						"region": schema.StringAttribute{
-							CustomType:  ovhtypes.TfStringType{},
+						"location": schema.SingleNestedAttribute{
 							Computed:    true,
-							Description: "Region of the gateway",
+							Description: "Location of the gateway",
+							Attributes: map[string]schema.Attribute{
+								"region": schema.StringAttribute{
+									CustomType:  ovhtypes.TfStringType{},
+									Computed:    true,
+									Description: "Region",
+								},
+								"availability_zone": schema.StringAttribute{
+									CustomType:  ovhtypes.TfStringType{},
+									Computed:    true,
+									Description: "Availability zone",
+								},
+							},
 						},
 						"external_gateway": schema.SingleNestedAttribute{
 							Computed:    true,
@@ -192,15 +205,21 @@ func (d *cloudGatewaysDataSource) Schema(ctx context.Context, req datasource.Sch
 										},
 									},
 								},
-								"region": schema.StringAttribute{
-									CustomType:  ovhtypes.TfStringType{},
+								"location": schema.SingleNestedAttribute{
 									Computed:    true,
-									Description: "Region",
-								},
-								"availability_zone": schema.StringAttribute{
-									CustomType:  ovhtypes.TfStringType{},
-									Computed:    true,
-									Description: "Availability zone",
+									Description: "Location details",
+									Attributes: map[string]schema.Attribute{
+										"region": schema.StringAttribute{
+											CustomType:  ovhtypes.TfStringType{},
+											Computed:    true,
+											Description: "Region",
+										},
+										"availability_zone": schema.StringAttribute{
+											CustomType:  ovhtypes.TfStringType{},
+											Computed:    true,
+											Description: "Availability zone",
+										},
+									},
 								},
 							},
 						},
@@ -246,7 +265,7 @@ func (d *cloudGatewaysDataSource) Read(ctx context.Context, req datasource.ReadR
 func buildGatewayListItemObject(ctx context.Context, response *CloudGatewayAPIResponse) basetypes.ObjectValue {
 	nameVal := ovhtypes.TfStringValue{StringValue: types.StringNull()}
 	descVal := ovhtypes.TfStringValue{StringValue: types.StringNull()}
-	regionVal := ovhtypes.TfStringValue{StringValue: types.StringNull()}
+	locationVal := types.ObjectNull(gatewayLocationAttrTypes())
 	externalGatewayVal := types.ObjectNull(ExternalGatewayAttrTypes())
 
 	if response.TargetSpec != nil {
@@ -254,7 +273,13 @@ func buildGatewayListItemObject(ctx context.Context, response *CloudGatewayAPIRe
 		descVal = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Description)}
 
 		if response.TargetSpec.Location != nil {
-			regionVal = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Location.Region)}
+			locationVal, _ = types.ObjectValue(
+				gatewayLocationAttrTypes(),
+				map[string]attr.Value{
+					"region":            ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Location.Region)},
+					"availability_zone": ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Location.AvailabilityZone)},
+				},
+			)
 		}
 
 		if response.TargetSpec.ExternalGateway != nil {
@@ -285,7 +310,7 @@ func buildGatewayListItemObject(ctx context.Context, response *CloudGatewayAPIRe
 			"id":               ovhtypes.TfStringValue{StringValue: types.StringValue(response.Id)},
 			"name":             nameVal,
 			"description":      descVal,
-			"region":           regionVal,
+			"location":         locationVal,
 			"external_gateway": externalGatewayVal,
 			"checksum":         ovhtypes.TfStringValue{StringValue: types.StringValue(response.Checksum)},
 			"created_at":       ovhtypes.TfStringValue{StringValue: types.StringValue(response.CreatedAt)},

@@ -14,7 +14,7 @@ type CloudNetworkPrivateVrackModel struct {
 	// Required
 	ServiceName ovhtypes.TfStringValue `tfsdk:"service_name"`
 	Name        ovhtypes.TfStringValue `tfsdk:"name"`
-	Location    types.Object           `tfsdk:"location"`
+	Region      ovhtypes.TfStringValue `tfsdk:"region"`
 
 	// Optional
 	Description ovhtypes.TfStringValue `tfsdk:"description"`
@@ -81,34 +81,12 @@ func vrackLocationAttrTypes() map[string]attr.Type {
 	}
 }
 
-// vrackLocationRegion extracts the region value out of a root-level location
-// object. It returns an empty string when the object is null/unknown or does
-// not contain a region attribute.
-func vrackLocationRegion(location types.Object) string {
-	if location.IsNull() || location.IsUnknown() {
-		return ""
-	}
-
-	attrs := location.Attributes()
-	regionAttr, ok := attrs["region"]
-	if !ok {
-		return ""
-	}
-
-	region, ok := regionAttr.(ovhtypes.TfStringValue)
-	if !ok {
-		return ""
-	}
-
-	return region.ValueString()
-}
-
 // ToCreate converts the Terraform model to the API create payload
 func (m *CloudNetworkPrivateVrackModel) ToCreate() *CloudNetworkCreatePayload {
 	targetSpec := &CloudNetworkAPITargetSpec{
 		Name: m.Name.ValueString(),
 		Location: &CloudNetworkAPILocation{
-			Region: vrackLocationRegion(m.Location),
+			Region: m.Region.ValueString(),
 		},
 	}
 
@@ -182,14 +160,7 @@ func (m *CloudNetworkPrivateVrackModel) MergeWith(ctx context.Context, response 
 		}
 
 		if response.TargetSpec.Location != nil {
-			m.Location, _ = types.ObjectValue(
-				vrackLocationAttrTypes(),
-				map[string]attr.Value{
-					"region": ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Location.Region)},
-				},
-			)
-		} else {
-			m.Location = types.ObjectNull(vrackLocationAttrTypes())
+			m.Region = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Location.Region)}
 		}
 	}
 }
