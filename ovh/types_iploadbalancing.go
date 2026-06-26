@@ -253,7 +253,7 @@ type IPLoadbalancingHttpRouteOpts struct {
 	Action      IPLoadbalancingHttpRouteActionOpts `json:"action"`                //Action triggered when all rules match
 	DisplayName *string                            `json:"displayName,omitempty"` //Human readable name for your route, this field is for you
 	FrontendId  *int64                             `json:"frontendId,omitempty"`  //Route traffic for this frontend
-	Weight      *int64                             `json:"weight,omitempty"`      //Route priority ([0..255]). 0 if null. Highest priority routes are evaluated first. Only the first matching route will trigger an action
+    Weight      *int64                             `json:"weight"`                //Route priority ([0..255]). 0 if null. Highest priority routes are evaluated first. Only the first matching route will trigger an action
 }
 
 func (opts *IPLoadbalancingHttpRouteOpts) FromResource(d *schema.ResourceData) *IPLoadbalancingHttpRouteOpts {
@@ -265,7 +265,8 @@ func (opts *IPLoadbalancingHttpRouteOpts) FromResource(d *schema.ResourceData) *
 	}
 
 	opts.FrontendId = helpers.GetNilInt64PointerFromData(d, "frontend_id")
-	opts.Weight = helpers.GetNilInt64PointerFromData(d, "weight")
+    weight := int64(d.Get("weight").(int))
+    opts.Weight = &weight
 
 	return opts
 }
@@ -348,7 +349,7 @@ type IPLoadbalancingTcpRouteOpts struct {
 	Action      IPLoadbalancingTcpRouteActionOpts `json:"action"`                //Action triggered when all rules match
 	DisplayName *string                           `json:"displayName,omitempty"` //Human readable name for your route, this field is for you
 	FrontendId  *int64                            `json:"frontendId,omitempty"`  //Route traffic for this frontend
-	Weight      *int64                            `json:"weight,omitempty"`      //Route priority ([0..255]). 0 if null. Highest priority routes are evaluated first. Only the first matching route will trigger an action
+    Weight      *int64                            `json:"weight"`                //Route priority ([0..255]). 0 if null. Highest priority routes are evaluated first. Only the first matching route will trigger an action
 }
 
 func (opts *IPLoadbalancingTcpRouteOpts) FromResource(d *schema.ResourceData) *IPLoadbalancingTcpRouteOpts {
@@ -360,7 +361,8 @@ func (opts *IPLoadbalancingTcpRouteOpts) FromResource(d *schema.ResourceData) *I
 	}
 
 	opts.FrontendId = helpers.GetNilInt64PointerFromData(d, "frontend_id")
-	opts.Weight = helpers.GetNilInt64PointerFromData(d, "weight")
+    weight := int64(d.Get("weight").(int))
+    opts.Weight = &weight
 
 	return opts
 }
