@@ -292,9 +292,18 @@ func resourceIpRead(d *schema.ResourceData, meta interface{}) error {
 	return resourceIpReadByIp(d, ip, config)
 }
 
-// resourceIpMoveDelete is an empty implementation as move do not actually create API objects but rather updates the underlying ip spec (by modifying its routed_to service)
+// resourceIpMoveDelete parks the IP when the resource is deleted by setting an empty service_name and calling update
+// it marks the IP as avialable on manager
 func resourceIpMoveDelete(d *schema.ResourceData, meta interface{}) error {
-	return nil
+	err := d.Set("routed_to", []interface{}{
+		map[string]interface{}{
+			"service_name": "",
+		},
+	})
+	if err != nil {
+		return err
+	}
+	return resourceIpMoveUpdate(d, meta)
 }
 
 func resourceIpReadByIp(d *schema.ResourceData, ip string, config *Config) error {

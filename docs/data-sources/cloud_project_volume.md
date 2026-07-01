@@ -4,6 +4,8 @@ subcategory : "Block Storage"
 
 # ovh_cloud_project_volume
 
+~> **NOTE** Prefer using the new `ovh_cloud_storage_block_volume*` resources and data sources instead.
+
 Get information about a volume in a public cloud project
 
 ## Example Usage

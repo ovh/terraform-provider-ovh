@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/ovh/go-ovh/ovh"
+
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/ovhwrap"
 )
@@ -69,6 +70,13 @@ func resourceOvhDomainZoneRecord() *schema.Resource {
 			"target": {
 				Type:     schema.TypeString,
 				Required: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// The API silently quotes TXT fields
+					if d.Get("fieldtype").(string) == "TXT" && fmt.Sprintf("\"%s\"", new) == old {
+						return true
+					}
+					return new == old
+				},
 			},
 			"ttl": {
 				Type:     schema.TypeInt,

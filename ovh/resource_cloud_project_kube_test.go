@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"math/rand/v2"
 	"os"
 	"regexp"
 	"strconv"
@@ -15,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
@@ -134,11 +136,11 @@ resource "ovh_cloud_project_network_private_subnet" "networksubnet2" {
 resource "ovh_cloud_project_gateway" "gateway" {
 	service_name = ovh_cloud_project_network_private.network.service_name
 	model      = "s"
-	name = "gateway"
+	name       = "gateway"
 	region     = "{{ .Region }}"
 	network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
 	subnet_id  = ovh_cloud_project_network_private_subnet.networksubnet.id
-  }
+}
 resource "ovh_cloud_project_kube" "cluster" {
 	service_name  = "{{ .ServiceName }}"
 	name          = "{{ .Name }}"
@@ -194,6 +196,137 @@ resource "ovh_cloud_project_kube" "cluster" {
 }
 `
 
+var testAccCloudProjectKubeIpAllocationPolicyConfig = `
+variable "service_name" {
+  default = "%s"
+}
+variable "name" {
+  default = "%s"
+}
+variable "region" {
+  default = "%s"
+}
+variable "version_k8s" {
+  default = "%s"
+}
+variable "random_vlan" {
+  default = %d
+}
+
+resource "ovh_cloud_project_network_private" "network" {
+  service_name = var.service_name
+  vlan_id      = var.random_vlan
+  name         = "terraform_mks_temp_network_can_be_deleted_${var.random_vlan}"
+  regions      = [ var.region ]
+}
+
+resource "ovh_cloud_project_network_private_subnet" "subnet" {
+  service_name = ovh_cloud_project_network_private.network.service_name
+  network_id   = ovh_cloud_project_network_private.network.id
+
+  # whatever region, for test purpose
+  region     = var.region
+  start      = "192.168.0.100"
+  end        = "192.168.254.200"
+  network    = "192.168.0.0/16"
+  dhcp       = true
+  no_gateway = false
+}
+
+resource "ovh_cloud_project_gateway" "gateway" {
+  service_name = ovh_cloud_project_network_private.network.service_name
+  name       = "gateway"
+  model      = "s"
+  region     = var.region
+  network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
+  subnet_id  = ovh_cloud_project_network_private_subnet.subnet.id
+}
+
+resource "ovh_cloud_project_kube" "cluster" {
+  depends_on   = [ ovh_cloud_project_gateway.gateway ]
+  service_name = var.service_name
+  name         = var.name
+  region       = var.region
+  version      = var.version_k8s
+  plan         = "standard"
+
+  ip_allocation_policy {
+    pods_ipv4_cidr     = "10.5.0.0/16"
+    services_ipv4_cidr = "10.6.0.0/16"
+  }
+
+  private_network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
+  nodes_subnet_id    = ovh_cloud_project_network_private_subnet.subnet.id
+}
+`
+
+// testAccCloudProjectKubeIpAllocationPolicyUpdatedConfig is identical to
+// testAccCloudProjectKubeIpAllocationPolicyConfig but uses a different
+// pods_ipv4_cidr to trigger a ForceNew cluster recreation.
+var testAccCloudProjectKubeIpAllocationPolicyUpdatedConfig = `
+variable "service_name" {
+  default = "%s"
+}
+variable "name" {
+  default = "%s"
+}
+variable "region" {
+  default = "%s"
+}
+variable "version_k8s" {
+  default = "%s"
+}
+variable "random_vlan" {
+  default = %d
+}
+
+resource "ovh_cloud_project_network_private" "network" {
+  service_name = var.service_name
+  vlan_id      = var.random_vlan
+  name         = "terraform_mks_temp_network_can_be_deleted_${var.random_vlan}"
+  regions      = [ var.region ]
+}
+
+resource "ovh_cloud_project_network_private_subnet" "subnet" {
+  service_name = ovh_cloud_project_network_private.network.service_name
+  network_id   = ovh_cloud_project_network_private.network.id
+
+  # whatever region, for test purpose
+  region     = var.region
+  start      = "192.168.0.100"
+  end        = "192.168.254.200"
+  network    = "192.168.0.0/16"
+  dhcp       = true
+  no_gateway = false
+}
+
+resource "ovh_cloud_project_gateway" "gateway" {
+  service_name = ovh_cloud_project_network_private.network.service_name
+  name       = "gateway"
+  model      = "s"
+  region     = var.region
+  network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
+  subnet_id  = ovh_cloud_project_network_private_subnet.subnet.id
+}
+
+resource "ovh_cloud_project_kube" "cluster" {
+  depends_on   = [ ovh_cloud_project_gateway.gateway ]
+  service_name = var.service_name
+  name         = var.name
+  region       = var.region
+  version      = var.version_k8s
+  plan         = "standard"
+
+  ip_allocation_policy {
+    pods_ipv4_cidr     = "10.7.0.0/16"
+    services_ipv4_cidr = "10.6.0.0/16"
+  }
+
+  private_network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
+  nodes_subnet_id    = ovh_cloud_project_network_private_subnet.subnet.id
+}
+`
+
 type configData struct {
 	Region                         string
 	Regions                        string
@@ -237,7 +370,7 @@ func TestAccCloudProjectKubeCustomizationApiServerAdmissionPlugins(t *testing.T)
 				// no apiserver customization, should contain default values from API
 				Config: createConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "service_name", serviceName),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_apiserver.0.admissionplugins.0.disabled.#", "0"),
@@ -251,7 +384,7 @@ func TestAccCloudProjectKubeCustomizationApiServerAdmissionPlugins(t *testing.T)
 			{
 				Config: updatedConfigEnabledAndDisabled,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "service_name", serviceName),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_apiserver.0.admissionplugins.0.enabled.0", "NodeRestriction"),
@@ -291,7 +424,7 @@ func TestAccCloudProjectKubeDeprecatedCustomizationApiServerAdmissionPlugins(t *
 			{
 				Config: createConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "service_name", serviceName),
 
@@ -394,7 +527,7 @@ resource "ovh_cloud_project_kube" "cluster" {
 				// no kube proxy mode specified, should contain default values from API
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "service_name", serviceName),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "kube_proxy_mode", "iptables"),
@@ -404,7 +537,7 @@ resource "ovh_cloud_project_kube" "cluster" {
 			{
 				Config: updatedConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "service_name", serviceName),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "kube_proxy_mode", "iptables"),
@@ -416,7 +549,7 @@ resource "ovh_cloud_project_kube" "cluster" {
 			{
 				Config: updatedConfigWithDifferentTime,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "service_name", serviceName),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "kube_proxy_mode", "iptables"),
@@ -428,7 +561,7 @@ resource "ovh_cloud_project_kube" "cluster" {
 			{
 				Config: updatedConfigNewArgument,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "service_name", serviceName),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "kube_proxy_mode", "iptables"),
@@ -533,7 +666,7 @@ resource "ovh_cloud_project_kube" "cluster" {
 				// no kube proxy mode specified, should contain default values from API
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "service_name", serviceName),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "kube_proxy_mode", "ipvs"),
@@ -543,7 +676,7 @@ resource "ovh_cloud_project_kube" "cluster" {
 			{
 				Config: updatedConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "service_name", serviceName),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "kube_proxy_mode", "ipvs"),
@@ -559,7 +692,7 @@ resource "ovh_cloud_project_kube" "cluster" {
 			{
 				Config: updatedConfigWithDifferentTime,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "service_name", serviceName),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "kube_proxy_mode", "ipvs"),
@@ -575,7 +708,7 @@ resource "ovh_cloud_project_kube" "cluster" {
 			{
 				Config: updatedConfigAllArguments,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "service_name", serviceName),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "kube_proxy_mode", "ipvs"),
@@ -752,7 +885,7 @@ resource "ovh_cloud_project_kube" "cluster" {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "service_name", serviceName),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "kube_proxy_mode", "iptables"),
@@ -779,7 +912,7 @@ resource "ovh_cloud_project_kube" "cluster" {
 			{
 				Config: updatedConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "service_name", serviceName),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "kube_proxy_mode", "iptables"),
@@ -893,7 +1026,7 @@ resource "ovh_cloud_project_kube" "cluster" {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "service_name", serviceName),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "kube_proxy_mode", "iptables"),
@@ -920,7 +1053,7 @@ resource "ovh_cloud_project_kube" "cluster" {
 			{
 				Config: updatedConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "service_name", serviceName),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "kube_proxy_mode", "iptables"),
@@ -992,7 +1125,6 @@ func TestAccCloudProjectKubeVRack(t *testing.T) {
 			testAccPreCheckCloud(t)
 			testAccCheckCloudProjectExists(t)
 			testAccPreCheckKubernetes(t)
-			testAccPreCheckKubernetesVRack(t)
 		},
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -1001,7 +1133,7 @@ func TestAccCloudProjectKubeVRack(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "version"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "private_network_configuration.0.default_vrack_gateway", configData1.DefaultVrackGateway),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "private_network_configuration.0.private_network_routing_as_default", strconv.FormatBool(configData1.PrivateNetworkRoutingAsDefault)),
@@ -1012,11 +1144,92 @@ func TestAccCloudProjectKubeVRack(t *testing.T) {
 				Config: configUpdated.String(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "version"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "private_network_configuration.0.default_vrack_gateway", configData2.DefaultVrackGateway),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "private_network_configuration.0.private_network_routing_as_default", strconv.FormatBool(configData2.PrivateNetworkRoutingAsDefault)),
 					resource.TestCheckResourceAttrPair("ovh_cloud_project_kube.cluster", "load_balancers_subnet_id", "ovh_cloud_project_network_private_subnet.networksubnet2", "id"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccCloudProjectKubeIpAllocationPolicy tests that ip_allocation_policy
+// CIDRs are correctly set on cluster creation, that the plan is idempotent,
+// and that changing pods_ipv4_cidr triggers a cluster recreation (ForceNew).
+func TestAccCloudProjectKubeIpAllocationPolicy(t *testing.T) {
+	region := "RBX-A" // standard plan required
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	name := acctest.RandomWithPrefix(test_prefix)
+	version := os.Getenv("OVH_CLOUD_PROJECT_KUBE_VERSION_TEST")
+	vlanId := rand.IntN(4092) + 1
+
+	config := fmt.Sprintf(
+		testAccCloudProjectKubeIpAllocationPolicyConfig,
+		serviceName,
+		name,
+		region,
+		version,
+		vlanId,
+	)
+
+	configUpdated := fmt.Sprintf(
+		testAccCloudProjectKubeIpAllocationPolicyUpdatedConfig,
+		serviceName,
+		name,
+		region,
+		version,
+		vlanId,
+	)
+
+	var originalID string
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloud(t)
+			testAccCheckCloudProjectExists(t)
+			testAccPreCheckKubernetes(t)
+		},
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "ip_allocation_policy.0.pods_ipv4_cidr", "10.5.0.0/16"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "ip_allocation_policy.0.services_ipv4_cidr", "10.6.0.0/16"),
+					// Capture cluster ID to verify recreation in the next apply step
+					resource.TestCheckResourceAttrWith("ovh_cloud_project_kube.cluster", "id", func(v string) error {
+						originalID = v
+						return nil
+					}),
+				),
+			},
+			{
+				// Idempotency check: re-plan with the same ip_allocation_policy, expect no changes
+				Config: config,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				// ForceNew check: changing pods_ipv4_cidr must destroy and recreate the cluster
+				Config: configUpdated,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "ip_allocation_policy.0.pods_ipv4_cidr", "10.7.0.0/16"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "ip_allocation_policy.0.services_ipv4_cidr", "10.6.0.0/16"),
+					resource.TestCheckResourceAttrWith("ovh_cloud_project_kube.cluster", "id", func(v string) error {
+						if v == originalID {
+							return fmt.Errorf("expected cluster to be recreated after pods_ipv4_cidr change, but ID is unchanged: %s", v)
+						}
+						return nil
+					}),
 				),
 			},
 		},
@@ -1049,9 +1262,9 @@ func TestAccCloudProjectKube_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "version", version),
-					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", kubeClusterPlanKey),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "plan"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig_attributes.0.host"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig_attributes.0.cluster_ca_certificate"),
@@ -1109,9 +1322,9 @@ func TestAccCloudProjectKubeEmptyVersion_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "version"),
-					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", kubeClusterPlanKey),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "plan"),
 				),
 			},
 			{
@@ -1119,9 +1332,9 @@ func TestAccCloudProjectKubeEmptyVersion_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, updatedName),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", updatedName),
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "version"),
-					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", kubeClusterPlanKey),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "plan"),
 				),
 			},
 		},
@@ -1162,7 +1375,7 @@ func TestAccCloudProjectKubeUpdatePolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "update_policy", "ALWAYS_UPDATE"),
 				),
 			},
@@ -1171,7 +1384,7 @@ func TestAccCloudProjectKubeUpdatePolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, updatedName),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", updatedName),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "update_policy", "NEVER_UPDATE"),
 				),
 			},
@@ -1217,8 +1430,8 @@ func TestAccCloudProjectKubeUpdateVersion_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, name),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterVersionKey, version1),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "version", version1),
 				),
 			},
 			{
@@ -1226,8 +1439,8 @@ func TestAccCloudProjectKubeUpdateVersion_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterNameKey, updatedName),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", kubeClusterVersionKey, version2),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", updatedName),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "version", version2),
 				),
 			},
 		},
@@ -1443,6 +1656,714 @@ resource "ovh_cloud_project_kube" "cluster" {
 }`,
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+// ============================================================================
+// customization_cilium tests
+// ============================================================================
+
+var testAccCloudProjectKubeCustomizationCiliumCreateConfig = `
+variable "service_name" {
+  default = "%s"
+}
+variable "name" {
+  default = "%s"
+}
+variable "region" {
+  default = "%s"
+}
+variable "version_k8s" {
+  default = "%s"
+}
+variable "random_vlan" {
+  default = %d
+}
+
+resource "ovh_cloud_project_network_private" "network" {
+  service_name = var.service_name
+  vlan_id      = var.random_vlan
+  name         = "terraform_mks_temp_network_can_be_deleted_${var.random_vlan}"
+  regions      = [ var.region ]
+}
+
+resource "ovh_cloud_project_network_private_subnet" "subnet" {
+  service_name = ovh_cloud_project_network_private.network.service_name
+  network_id   = ovh_cloud_project_network_private.network.id
+
+  # whatever region, for test purpose
+  region     = var.region
+  start      = "192.168.0.100"
+  end        = "192.168.254.200"
+  network    = "192.168.0.0/16"
+  dhcp       = true
+  no_gateway = false
+}
+
+resource "ovh_cloud_project_gateway" "gateway" {
+  service_name = ovh_cloud_project_network_private.network.service_name
+  name       = "gateway"
+  model      = "s"
+  region     = var.region
+  network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
+  subnet_id  = ovh_cloud_project_network_private_subnet.subnet.id
+}
+
+resource "ovh_cloud_project_kube" "cluster" {
+    depends_on    = [ ovh_cloud_project_gateway.gateway ]
+    service_name  = var.service_name
+    name          = var.name
+    region        = var.region
+    version       = var.version_k8s
+    plan          = "standard"
+
+    private_network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
+    nodes_subnet_id    = ovh_cloud_project_network_private_subnet.subnet.id
+}
+`
+
+var testAccCloudProjectKubeCustomizationCiliumHubbleEnabledConfig = `
+variable "service_name" {
+  default = "%s"
+}
+variable "name" {
+  default = "%s"
+}
+variable "region" {
+  default = "%s"
+}
+variable "version_k8s" {
+  default = "%s"
+}
+variable "random_vlan" {
+  default = %d
+}
+
+resource "ovh_cloud_project_network_private" "network" {
+  service_name = var.service_name
+  vlan_id      = var.random_vlan
+  name         = "terraform_mks_temp_network_can_be_deleted_${var.random_vlan}"
+  regions      = [ var.region ]
+}
+
+resource "ovh_cloud_project_network_private_subnet" "subnet" {
+  service_name = ovh_cloud_project_network_private.network.service_name
+  network_id   = ovh_cloud_project_network_private.network.id
+
+  # whatever region, for test purpose
+  region     = var.region
+  start      = "192.168.0.100"
+  end        = "192.168.254.200"
+  network    = "192.168.0.0/16"
+  dhcp       = true
+  no_gateway = false
+}
+
+resource "ovh_cloud_project_gateway" "gateway" {
+  service_name = ovh_cloud_project_network_private.network.service_name
+  name       = "gateway"
+  model      = "s"
+  region     = var.region
+  network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
+  subnet_id  = ovh_cloud_project_network_private_subnet.subnet.id
+}
+
+resource "ovh_cloud_project_kube" "cluster" {
+    depends_on    = [ ovh_cloud_project_gateway.gateway ]
+    service_name  = var.service_name
+    name          = var.name
+    region        = var.region
+    version       = var.version_k8s
+    plan          = "standard"
+
+    private_network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
+    nodes_subnet_id    = ovh_cloud_project_network_private_subnet.subnet.id
+
+	customization_cilium {
+		hubble {
+			enabled = true
+			relay {
+				enabled = true
+			}
+			ui {
+				enabled = true
+			}
+		}
+	}
+}
+`
+
+var testAccCloudProjectKubeCustomizationCiliumHubbleDisabledConfig = `
+variable "service_name" {
+  default = "%s"
+}
+variable "name" {
+  default = "%s"
+}
+variable "region" {
+  default = "%s"
+}
+variable "version_k8s" {
+  default = "%s"
+}
+variable "random_vlan" {
+  default = %d
+}
+
+resource "ovh_cloud_project_network_private" "network" {
+  service_name = var.service_name
+  vlan_id      = var.random_vlan
+  name         = "terraform_mks_temp_network_can_be_deleted_${var.random_vlan}"
+  regions      = [ var.region ]
+}
+
+resource "ovh_cloud_project_network_private_subnet" "subnet" {
+  service_name = ovh_cloud_project_network_private.network.service_name
+  network_id   = ovh_cloud_project_network_private.network.id
+
+  # whatever region, for test purpose
+  region     = var.region
+  start      = "192.168.0.100"
+  end        = "192.168.254.200"
+  network    = "192.168.0.0/16"
+  dhcp       = true
+  no_gateway = false
+}
+
+resource "ovh_cloud_project_gateway" "gateway" {
+  service_name = ovh_cloud_project_network_private.network.service_name
+  name       = "gateway"
+  model      = "s"
+  region     = var.region
+  network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
+  subnet_id  = ovh_cloud_project_network_private_subnet.subnet.id
+}
+
+resource "ovh_cloud_project_kube" "cluster" {
+    depends_on    = [ ovh_cloud_project_gateway.gateway ]
+    service_name  = var.service_name
+    name          = var.name
+    region        = var.region
+    version       = var.version_k8s
+    plan          = "standard"
+
+    private_network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
+    nodes_subnet_id    = ovh_cloud_project_network_private_subnet.subnet.id
+
+	customization_cilium {
+		hubble {
+			enabled = false
+			relay {
+				enabled = false
+			}
+			ui {
+				enabled = false
+			}
+		}
+	}
+}
+`
+
+var testAccCloudProjectKubeCustomizationCiliumClusterMeshEnabledConfig = `variable "service_name" {
+  default = "%s"
+}
+variable "name" {
+  default = "%s"
+}
+variable "region" {
+  default = "%s"
+}
+variable "version_k8s" {
+  default = "%s"
+}
+variable "random_vlan" {
+  default = %d
+}
+
+resource "ovh_cloud_project_network_private" "network" {
+  service_name = var.service_name
+  vlan_id      = var.random_vlan
+  name         = "terraform_mks_temp_network_can_be_deleted_${var.random_vlan}"
+  regions      = [ var.region ]
+}
+
+resource "ovh_cloud_project_network_private_subnet" "subnet" {
+  service_name = ovh_cloud_project_network_private.network.service_name
+  network_id   = ovh_cloud_project_network_private.network.id
+
+  # whatever region, for test purpose
+  region     = var.region
+  start      = "192.168.0.100"
+  end        = "192.168.254.200"
+  network    = "192.168.0.0/16"
+  dhcp       = true
+  no_gateway = false
+}
+
+resource "ovh_cloud_project_gateway" "gateway" {
+  service_name = ovh_cloud_project_network_private.network.service_name
+  name       = "gateway"
+  model      = "s"
+  region     = var.region
+  network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
+  subnet_id  = ovh_cloud_project_network_private_subnet.subnet.id
+}
+
+resource "ovh_cloud_project_kube" "cluster" {
+    depends_on    = [ ovh_cloud_project_gateway.gateway ]
+    service_name  = var.service_name
+    name          = var.name
+    region        = var.region
+    version       = var.version_k8s
+    plan          = "standard"
+
+    private_network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
+    nodes_subnet_id    = ovh_cloud_project_network_private_subnet.subnet.id
+
+	customization_cilium {
+		cluster_id = 42
+		cluster_mesh {
+			enabled = true
+		}
+	}
+}
+`
+
+var testAccCloudProjectKubeCustomizationCiliumFullConfig = `
+variable "service_name" {
+  default = "%s"
+}
+variable "name" {
+  default = "%s"
+}
+variable "region" {
+  default = "%s"
+}
+variable "version_k8s" {
+  default = "%s"
+}
+variable "random_vlan" {
+  default = %d
+}
+
+resource "ovh_cloud_project_network_private" "network" {
+  service_name = var.service_name
+  vlan_id      = var.random_vlan
+  name         = "terraform_mks_temp_network_can_be_deleted_${var.random_vlan}"
+  regions      = [ var.region ]
+}
+
+resource "ovh_cloud_project_network_private_subnet" "subnet" {
+  service_name = ovh_cloud_project_network_private.network.service_name
+  network_id   = ovh_cloud_project_network_private.network.id
+
+  # whatever region, for test purpose
+  region     = var.region
+  start      = "192.168.0.100"
+  end        = "192.168.254.200"
+  network    = "192.168.0.0/16"
+  dhcp       = true
+  no_gateway = false
+}
+
+resource "ovh_cloud_project_gateway" "gateway" {
+  service_name = ovh_cloud_project_network_private.network.service_name
+  name       = "gateway"
+  model      = "s"
+  region     = var.region
+  network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
+  subnet_id  = ovh_cloud_project_network_private_subnet.subnet.id
+}
+
+resource "ovh_cloud_project_kube" "cluster" {
+    depends_on    = [ ovh_cloud_project_gateway.gateway ]
+    service_name  = var.service_name
+    name          = var.name
+    region        = var.region
+    version       = var.version_k8s
+    plan          = "standard"
+
+    private_network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
+    nodes_subnet_id    = ovh_cloud_project_network_private_subnet.subnet.id
+
+	customization_cilium {
+		cluster_id = 42
+		hubble {
+			enabled = true
+			relay {
+				enabled = true
+			}
+			ui {
+				enabled = true
+			}
+		}
+		cluster_mesh {
+			enabled = true
+		}
+	}
+}
+`
+
+var testAccCloudProjectKubeCustomizationCiliumClusterIDConfig = `
+variable "service_name" {
+  default = "%s"
+}
+variable "name" {
+  default = "%s"
+}
+variable "region" {
+  default = "%s"
+}
+variable "version_k8s" {
+  default = "%s"
+}
+variable "random_vlan" {
+  default = %d
+}
+
+resource "ovh_cloud_project_network_private" "network" {
+  service_name = var.service_name
+  vlan_id      = var.random_vlan
+  name         = "terraform_mks_temp_network_can_be_deleted_${var.random_vlan}"
+  regions      = [ var.region ]
+}
+
+resource "ovh_cloud_project_network_private_subnet" "subnet" {
+  service_name = ovh_cloud_project_network_private.network.service_name
+  network_id   = ovh_cloud_project_network_private.network.id
+
+  # whatever region, for test purpose
+  region     = var.region
+  start      = "192.168.0.100"
+  end        = "192.168.254.200"
+  network    = "192.168.0.0/16"
+  dhcp       = true
+  no_gateway = false
+}
+
+resource "ovh_cloud_project_gateway" "gateway" {
+  service_name = ovh_cloud_project_network_private.network.service_name
+  name       = "gateway"
+  model      = "s"
+  region     = var.region
+  network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
+  subnet_id  = ovh_cloud_project_network_private_subnet.subnet.id
+}
+
+resource "ovh_cloud_project_kube" "cluster" {
+    depends_on    = [ ovh_cloud_project_gateway.gateway ]
+    service_name  = var.service_name
+    name          = var.name
+    region        = var.region
+    version       = var.version_k8s
+    plan          = "standard"
+
+    private_network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
+    nodes_subnet_id    = ovh_cloud_project_network_private_subnet.subnet.id
+
+	customization_cilium {
+		cluster_id = 42
+	}
+}
+`
+
+// TestAccCloudProjectKubeCustomizationCiliumHubble tests enabling and
+// disabling Cilium's Hubble observability stack (hubble, relay, ui).
+func TestAccCloudProjectKubeCustomizationCiliumHubble(t *testing.T) {
+	// region := os.Getenv("OVH_CLOUD_PROJECT_KUBE_REGION_TEST")
+	// force the region to RBX-A
+	region := "RBX-A"
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	name := acctest.RandomWithPrefix(test_prefix)
+	version := os.Getenv("OVH_CLOUD_PROJECT_KUBE_VERSION_TEST")
+	vlanID := rand.IntN(4092) + 1
+
+	createConfig := fmt.Sprintf(
+		testAccCloudProjectKubeCustomizationCiliumCreateConfig,
+		serviceName,
+		name,
+		region,
+		version,
+		vlanID,
+	)
+
+	hubbleEnabledConfig := fmt.Sprintf(
+		testAccCloudProjectKubeCustomizationCiliumHubbleEnabledConfig,
+		serviceName,
+		name,
+		region,
+		version,
+		vlanID,
+	)
+
+	hubbleDisabledConfig := fmt.Sprintf(
+		testAccCloudProjectKubeCustomizationCiliumHubbleDisabledConfig,
+		serviceName,
+		name,
+		region,
+		version,
+		vlanID,
+	)
+
+	var clusterID string
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloud(t)
+			testAccCheckCloudProjectExists(t)
+			testAccPreCheckKubernetes(t)
+		},
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				// No cilium customization: API should return computed defaults.
+				Config: createConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "service_name", serviceName),
+					// Capture cluster ID to verify no recreation occurs on config changes below
+					resource.TestCheckResourceAttrWith("ovh_cloud_project_kube.cluster", "id", func(v string) error {
+						clusterID = v
+						return nil
+					}),
+				),
+			},
+			{
+				// Enable hubble, relay and ui — must be an in-place update, not a recreation.
+				Config: hubbleEnabledConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_cilium.0.hubble.0.enabled", "true"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_cilium.0.hubble.0.relay.0.enabled", "true"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_cilium.0.hubble.0.ui.0.enabled", "true"),
+					resource.TestCheckResourceAttrWith("ovh_cloud_project_kube.cluster", "id", func(v string) error {
+						if v != clusterID {
+							return fmt.Errorf("expected cluster to be updated in-place, but it was recreated (old ID: %s, new ID: %s)", clusterID, v)
+						}
+						return nil
+					}),
+				),
+			},
+			{
+				// Disable hubble, relay and ui — must be an in-place update, not a recreation.
+				Config: hubbleDisabledConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_cilium.0.hubble.0.enabled", "false"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_cilium.0.hubble.0.relay.0.enabled", "false"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_cilium.0.hubble.0.ui.0.enabled", "false"),
+					resource.TestCheckResourceAttrWith("ovh_cloud_project_kube.cluster", "id", func(v string) error {
+						if v != clusterID {
+							return fmt.Errorf("expected cluster to be updated in-place, but it was recreated (old ID: %s, new ID: %s)", clusterID, v)
+						}
+						return nil
+					}),
+				),
+			},
+			// No re-creation (idempotency)
+			{
+				Config: hubbleDisabledConfig,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+// TestAccCloudProjectKubeCustomizationCiliumClusterMesh tests enabling
+// Cilium's cluster mesh feature.
+func TestAccCloudProjectKubeCustomizationCiliumClusterMesh(t *testing.T) {
+	// region := os.Getenv("OVH_CLOUD_PROJECT_KUBE_REGION_TEST")
+	// force the region to RBX-A
+	region := "RBX-A"
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	name := acctest.RandomWithPrefix(test_prefix)
+	version := os.Getenv("OVH_CLOUD_PROJECT_KUBE_VERSION_TEST")
+	vlanID := rand.IntN(4092) + 1
+
+	createConfig := fmt.Sprintf(
+		testAccCloudProjectKubeCustomizationCiliumCreateConfig,
+		serviceName,
+		name,
+		region,
+		version,
+		vlanID,
+	)
+
+	clusterMeshEnabledConfig := fmt.Sprintf(
+		testAccCloudProjectKubeCustomizationCiliumClusterMeshEnabledConfig,
+		serviceName,
+		name,
+		region,
+		version,
+		vlanID,
+	)
+
+	clusterIDConfig := fmt.Sprintf(
+		testAccCloudProjectKubeCustomizationCiliumClusterIDConfig,
+		serviceName,
+		name,
+		region,
+		version,
+		vlanID,
+	)
+
+	var clusterID string
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloud(t)
+			testAccCheckCloudProjectExists(t)
+			testAccPreCheckKubernetes(t)
+		},
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				// No cilium customization.
+				Config: createConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "service_name", serviceName),
+					resource.TestCheckResourceAttrWith("ovh_cloud_project_kube.cluster", "id", func(v string) error {
+						clusterID = v
+						return nil
+					}),
+				),
+			},
+			{
+				// Enable cluster mesh with a cluster_id.
+				Config: clusterMeshEnabledConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_cilium.0.cluster_id", "42"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_cilium.0.cluster_mesh.0.enabled", "true"),
+					resource.TestCheckResourceAttrWith("ovh_cloud_project_kube.cluster", "id", func(v string) error {
+						if v != clusterID {
+							return fmt.Errorf("expected cluster to be updated in-place, but it was recreated (old ID: %s, new ID: %s)", clusterID, v)
+						}
+						return nil
+					}),
+				),
+			},
+			{
+				// Set cluster_id only.
+				Config: clusterIDConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_cilium.0.cluster_id", "42"),
+					resource.TestCheckResourceAttrWith("ovh_cloud_project_kube.cluster", "id", func(v string) error {
+						if v != clusterID {
+							return fmt.Errorf("expected cluster to be updated in-place, but it was recreated (old ID: %s, new ID: %s)", clusterID, v)
+						}
+						return nil
+					}),
+				),
+			},
+		},
+	})
+}
+
+// TestAccCloudProjectKubeCustomizationCiliumFull tests enabling both Hubble
+// and cluster mesh simultaneously, then verifies all nested attributes.
+func TestAccCloudProjectKubeCustomizationCiliumFull(t *testing.T) {
+	// region := os.Getenv("OVH_CLOUD_PROJECT_KUBE_REGION_TEST")
+	// force the region to RBX-A
+	region := "RBX-A"
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	name := acctest.RandomWithPrefix(test_prefix)
+	version := os.Getenv("OVH_CLOUD_PROJECT_KUBE_VERSION_TEST")
+	vlanID := rand.IntN(4092) + 1
+
+	createConfig := fmt.Sprintf(
+		testAccCloudProjectKubeCustomizationCiliumCreateConfig,
+		serviceName,
+		name,
+		region,
+		version,
+		vlanID,
+	)
+
+	fullConfig := fmt.Sprintf(
+		testAccCloudProjectKubeCustomizationCiliumFullConfig,
+		serviceName,
+		name,
+		region,
+		version,
+		vlanID,
+	)
+
+	var clusterID string
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloud(t)
+			testAccCheckCloudProjectExists(t)
+			testAccPreCheckKubernetes(t)
+		},
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				// No cilium customization: defaults from API.
+				Config: createConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "service_name", serviceName),
+					resource.TestCheckResourceAttrWith("ovh_cloud_project_kube.cluster", "id", func(v string) error {
+						clusterID = v
+						return nil
+					}),
+				),
+			},
+			{
+				// Enable both hubble and cluster mesh.
+				Config: fullConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
+					// cluster_id
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_cilium.0.cluster_id", "42"),
+					// hubble
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_cilium.0.hubble.0.enabled", "true"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_cilium.0.hubble.0.relay.0.enabled", "true"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_cilium.0.hubble.0.ui.0.enabled", "true"),
+					// cluster mesh
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "customization_cilium.0.cluster_mesh.0.enabled", "true"),
+					resource.TestCheckResourceAttrWith("ovh_cloud_project_kube.cluster", "id", func(v string) error {
+						if v != clusterID {
+							return fmt.Errorf("expected cluster to be updated in-place, but it was recreated (old ID: %s, new ID: %s)", clusterID, v)
+						}
+						return nil
+					}),
+				),
+			},
+			// No re-creation (idempotency)
+			{
+				Config: fullConfig,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				// Remove all cilium customization and verify we're back to defaults.
+				Config: createConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
+					resource.TestCheckResourceAttrWith("ovh_cloud_project_kube.cluster", "id", func(v string) error {
+						if v != clusterID {
+							return fmt.Errorf("expected cluster to be updated in-place, but it was recreated (old ID: %s, new ID: %s)", clusterID, v)
+						}
+						return nil
+					}),
+				),
 			},
 		},
 	})

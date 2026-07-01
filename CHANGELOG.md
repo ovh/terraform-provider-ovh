@@ -1,3 +1,159 @@
+## 2.15.0 (June 25, 2026)
+
+🎉 Features:
+
+* New resource: `ovh_cloud_gateway` ([#1354](https://github.com/ovh/terraform-provider-ovh/pull/1354))
+* New resource: `ovh_cloud_network_private_vrack` ([#1354](https://github.com/ovh/terraform-provider-ovh/pull/1354))
+* New resource: `ovh_cloud_network_private_vrack_subnet` ([#1354](https://github.com/ovh/terraform-provider-ovh/pull/1354))
+* New resource: `ovh_cloud_security_group` ([#1355](https://github.com/ovh/terraform-provider-ovh/pull/1355))
+* New resource: `ovh_cloud_ssh_key` ([#1352](https://github.com/ovh/terraform-provider-ovh/pull/1352))
+* New resource: `ovh_cloud_project_kube_log_subscription` ([#1313](https://github.com/ovh/terraform-provider-ovh/pull/1313))
+
+* New datasource: `ovh_cloud_gateway` ([#1354](https://github.com/ovh/terraform-provider-ovh/pull/1354))
+* New datasource: `ovh_cloud_gateways` ([#1354](https://github.com/ovh/terraform-provider-ovh/pull/1354))
+* New datasource: `ovh_cloud_network_private_vrack` ([#1354](https://github.com/ovh/terraform-provider-ovh/pull/1354))
+* New datasource: `ovh_cloud_network_private_vracks` ([#1354](https://github.com/ovh/terraform-provider-ovh/pull/1354))
+* New datasource: `ovh_cloud_network_private_vrack_subnet` ([#1354](https://github.com/ovh/terraform-provider-ovh/pull/1354))
+* New datasource: `ovh_cloud_network_private_vrack_subnets` ([#1354](https://github.com/ovh/terraform-provider-ovh/pull/1354))
+* New datasource: `ovh_cloud_security_group` ([#1355](https://github.com/ovh/terraform-provider-ovh/pull/1355))
+* New datasource: `ovh_cloud_security_groups` ([#1355](https://github.com/ovh/terraform-provider-ovh/pull/1355))
+* New datasource: `ovh_cloud_ssh_key` ([#1352](https://github.com/ovh/terraform-provider-ovh/pull/1352))
+* New datasource: `ovh_cloud_ssh_keys` ([#1352](https://github.com/ovh/terraform-provider-ovh/pull/1352))
+* New datasource: `ovh_cloud_region` ([#1347](https://github.com/ovh/terraform-provider-ovh/pull/1347))
+* New datasource: `ovh_cloud_regions` ([#1347](https://github.com/ovh/terraform-provider-ovh/pull/1347))
+* New datasource: `ovh_cloud_project_kube_log_subscription` ([#1313](https://github.com/ovh/terraform-provider-ovh/pull/1313))
+
+💪 Improvements:
+
+* `r/ovh_cloud_project_volume`: Add ability to create CMK encrypted volumes through the `encryption` attribute ([#1337](https://github.com/ovh/terraform-provider-ovh/pull/1337))
+* `r/ovh_cloud_project_kube`: Add `ip_allocation_policy` and `customization_cilium` parameters ([#1313](https://github.com/ovh/terraform-provider-ovh/pull/1313))
+* `r/ovh_cloud_storage_block_volume`: Support `OVH_CLOUD_PROJECT_SERVICE` env var as fallback for `service_name` ([#1352](https://github.com/ovh/terraform-provider-ovh/pull/1352))
+
+🐜 Bug fixes:
+
+* `r/ovh_cloud_project_kube`: Accept `UPDATING` as a valid pending state when waiting for the cluster to be ready ([#1344](https://github.com/ovh/terraform-provider-ovh/pull/1344))
+
+📚 Documentation:
+
+* `r/ovh_cloud_project_network_private_subnet_v2`: Document the `gateway_ip` attribute ([#1330](https://github.com/ovh/terraform-provider-ovh/pull/1330))
+
+❤️ Thanks for your contributions ❤️
+
+## 2.14.0 (June 12, 2026)
+
+⚙️ General:
+
+* Inject schemas version header in `/v2` API requests ([#1300](https://github.com/ovh/terraform-provider-ovh/pull/1300))
+
+🎉 Features:
+
+* New resource: `ovh_cloud_storage_block_volume` ([#1338](https://github.com/ovh/terraform-provider-ovh/pull/1338))
+* New resource: `ovh_cloud_storage_block_volume_backup` ([#1338](https://github.com/ovh/terraform-provider-ovh/pull/1338))
+* New resource: `ovh_cloud_storage_block_volume_snapshot` ([#1338](https://github.com/ovh/terraform-provider-ovh/pull/1338))
+* New resource: `ovh_cloud_project_file_storage_share_network` ([#1297](https://github.com/ovh/terraform-provider-ovh/pull/1297))
+* New resource: `ovh_dbaas_logs_encryption_key` ([#1278](https://github.com/ovh/terraform-provider-ovh/pull/1278))
+* New resource: `ovh_email_domain_account` ([#1280](https://github.com/ovh/terraform-provider-ovh/pull/1280), [#1329](https://github.com/ovh/terraform-provider-ovh/pull/1329))
+* New resource: `ovh_vrack_public_routing_priority` ([#1227](https://github.com/ovh/terraform-provider-ovh/pull/1227))
+
+* New datasource: `ovh_cloud_storage_block_volume` ([#1338](https://github.com/ovh/terraform-provider-ovh/pull/1338))
+* New datasource: `ovh_cloud_storage_block_volumes` ([#1338](https://github.com/ovh/terraform-provider-ovh/pull/1338))
+* New datasource: `ovh_cloud_storage_block_volume_backup` ([#1338](https://github.com/ovh/terraform-provider-ovh/pull/1338))
+* New datasource: `ovh_cloud_storage_block_volume_backups` ([#1338](https://github.com/ovh/terraform-provider-ovh/pull/1338))
+* New datasource: `ovh_cloud_storage_block_volume_snapshot` ([#1338](https://github.com/ovh/terraform-provider-ovh/pull/1338))
+* New datasource: `ovh_cloud_storage_block_volume_snapshots` ([#1338](https://github.com/ovh/terraform-provider-ovh/pull/1338))
+* New datasource: `ovh_dbaas_logs_encryption_key` ([#1278](https://github.com/ovh/terraform-provider-ovh/pull/1278))
+* New datasource: `ovh_email_domain_account` ([#1279](https://github.com/ovh/terraform-provider-ovh/pull/1279))
+* New datasource: `ovh_email_domain_accounts` ([#1279](https://github.com/ovh/terraform-provider-ovh/pull/1279))
+* New datasource: `ovh_vrack` ([#1227](https://github.com/ovh/terraform-provider-ovh/pull/1227))
+
+💪 Improvements:
+
+* `r/ovh_cloud_project_file_storage_share`: Allow using `share_network_id` as an alternative to `network_id`/`subnet_id` ([#1297](https://github.com/ovh/terraform-provider-ovh/pull/1297))
+* `r/ovh_cloud_project_storage`: Add `tags` attribute ([#1304](https://github.com/ovh/terraform-provider-ovh/pull/1304))
+* `r/ovh_ip_move`: Park IP when deleting the resource ([#1301](https://github.com/ovh/terraform-provider-ovh/pull/1301))
+* `r/ovh_storage_efs_share`, `r/ovh_storage_efs_share_acl`, `r/ovh_storage_efs_share_snapshot`: Add import support ([#1317](https://github.com/ovh/terraform-provider-ovh/pull/1317))
+
+🐜 Bug fixes:
+
+* `r/ovh_cloud_project_database`: Scale nodes in place, keep region and network changes as ForceNew ([#1336](https://github.com/ovh/terraform-provider-ovh/pull/1336))
+* `r/ovh_cloud_project_database_*`: Make resource creation idempotent on 409/500 errors ([#1339](https://github.com/ovh/terraform-provider-ovh/pull/1339))
+* `r/ovh_cloud_project_kube_nodepool`: Cap `desired_nodes` when reducing `max_nodes` ([#1241](https://github.com/ovh/terraform-provider-ovh/pull/1241))
+
+❤️ Thanks for your contributions ❤️
+
+## 2.13.1 (April 22, 2026)
+
+🐜 Bug fixes:
+
+* `r/ovh_cloud_project`: Make sure project is really delivered after order ([#1295](https://github.com/ovh/terraform-provider-ovh/pull/1295))
+* `r/ovh_dbaas_logs_input`: Retry calls to Logs Data Platform inputs ([#1289](https://github.com/ovh/terraform-provider-ovh/pull/1289))
+* `r/ovh_dbaas_logs_output_graylog_stream`, `r/ovh_dbaas_logs_output_opensearch_alias`: Retry calls to Logs Data Platform streams and aliases ([#1286](https://github.com/ovh/terraform-provider-ovh/pull/1286))
+
+❤️ Thanks for your contributions ❤️
+
+## 2.13.0 (April 10, 2026)
+
+⚙️ General:
+
+* Bump `google.golang.org/grpc` from 1.69.4 to 1.79.3 ([#1258](https://github.com/ovh/terraform-provider-ovh/pull/1258))
+
+🎉 Features:
+
+* New resource: `ovh_cloud_project_file_storage_share` ([#1265](https://github.com/ovh/terraform-provider-ovh/pull/1265))
+
+💪 Improvements:
+
+* `r/ovh_cloud_project`: Add client-side `deletion_protection` attribute ([#1270](https://github.com/ovh/terraform-provider-ovh/pull/1270))
+* `r/ovh_cloud_project_kube_nodepool`: Add `attach_floating_ips` field ([#1276](https://github.com/ovh/terraform-provider-ovh/pull/1276), [#1284](https://github.com/ovh/terraform-provider-ovh/pull/1284))
+* `r/ovh_hosting_private_database`: Add `advanced_configuration` support ([#1244](https://github.com/ovh/terraform-provider-ovh/pull/1244))
+
+🐜 Bug fixes:
+
+* Prevent nil pointer panic when OVH client is not initialized ([#1277](https://github.com/ovh/terraform-provider-ovh/pull/1277))
+* `r/ovh_cloud_project_kube_oidc`: Increase OIDC delay ([#1271](https://github.com/ovh/terraform-provider-ovh/pull/1271))
+* `r/ovh_vps`: Use state when `do_not_send_password` field is unknown ([#1267](https://github.com/ovh/terraform-provider-ovh/pull/1267))
+* `r/ovh_domain_zone_record`: Ignore unquoted TXT changes ([#1264](https://github.com/ovh/terraform-provider-ovh/pull/1264))
+* `r/ovh_dbaas_logs_input`: Fix flowgger configuration options field ([#1263](https://github.com/ovh/terraform-provider-ovh/pull/1263))
+* `r/ovh_dedicated_server_install_task`: Fix null default values in installation templates ([#1256](https://github.com/ovh/terraform-provider-ovh/pull/1256))
+
+❤️ Thanks for your contributions ❤️
+
+## 2.12.0 (March 11, 2026)
+
+⚙️ General:
+
+* Bump `github.com/cloudflare/circl` from 1.6.1 to 1.6.3 ([#1237](https://github.com/ovh/terraform-provider-ovh/pull/1237))
+
+🎉 Features:
+
+* New resource: `ovh_storage_efs` ([#1228](https://github.com/ovh/terraform-provider-ovh/pull/1228))
+* New resource: `ovh_cloud_project_storage_object_bucket_lifecycle_configuration` ([#1234](https://github.com/ovh/terraform-provider-ovh/pull/1234))
+* New resource: `ovh_cloud_project_database_clickhouse_user` ([#1243](https://github.com/ovh/terraform-provider-ovh/pull/1243))
+
+* New datasource: `ovh_cloud_project_storage_object_bucket_lifecycle_configuration` ([#1234](https://github.com/ovh/terraform-provider-ovh/pull/1234))
+* New datasource: `ovh_cloud_project_database_clickhouse_user` ([#1243](https://github.com/ovh/terraform-provider-ovh/pull/1243))
+
+💪 Improvements:
+
+* `r/ovh_cloud_project_database`: Add ClickHouse engine support ([#1243](https://github.com/ovh/terraform-provider-ovh/pull/1243))
+* `r/ovh_ip_move`: Remove useless calls to `/ip/service` ([#1216](https://github.com/ovh/terraform-provider-ovh/pull/1216))
+* `r/ovh_vps`: Add `do_not_send_password` attribute ([#1197](https://github.com/ovh/terraform-provider-ovh/pull/1197))
+* Ensure all cloud resources can take cloud project ID from `OVH_CLOUD_PROJECT_SERVICE` env var ([#1233](https://github.com/ovh/terraform-provider-ovh/pull/1233))
+
+🐜 Bug fixes:
+
+* `r/ovh_cloud_project_kube_oidc`: Include "UPDATING" as valid pending state ([#1226](https://github.com/ovh/terraform-provider-ovh/pull/1226))
+* `r/ovh_iploadbalancing_tcp_farm_server`: Fix drift when weight is 0 ([#1235](https://github.com/ovh/terraform-provider-ovh/pull/1235))
+* `r/ovh_dedicated_server`: Restore display name behaviour ([#1238](https://github.com/ovh/terraform-provider-ovh/pull/1238))
+
+📚 Documentation:
+
+* Add example with encryption in object storage doc ([#1221](https://github.com/ovh/terraform-provider-ovh/pull/1221))
+* Fix documentation for `ovh_okms_credential` and `ovh_okms_secret` ([#1223](https://github.com/ovh/terraform-provider-ovh/pull/1223))
+* Fix typos and missing doc parts ([#1231](https://github.com/ovh/terraform-provider-ovh/pull/1231))
+
+❤️ Thanks for your contributions ❤️
+
 ## 2.11.0 (January 28, 2026)
 
 🎉 Features:

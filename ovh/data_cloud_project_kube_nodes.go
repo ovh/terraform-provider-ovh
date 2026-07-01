@@ -15,81 +15,81 @@ func dataSourceCloudProjectKubeNodes() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceCloudProjectKubeNodesRead,
 		Schema: map[string]*schema.Schema{
-			"service_name": {
+			kubeServiceNameKey: {
 				Type:        schema.TypeString,
 				Description: "Service name",
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
 			},
-			"kube_id": {
+			kubeKubeIdKey: {
 				Type:        schema.TypeString,
 				Description: "Kube ID",
 				Required:    true,
 			},
 
 			// Computed
-			"nodes": {
+			kubeNodesKey: {
 				Type:        schema.TypeList,
 				Description: "Nodes composing the cluster",
 				Computed:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"created_at": {
+						kubeCreatedAtKey: {
 							Type:        schema.TypeString,
 							Description: "Creation date",
 							Computed:    true,
 						},
-						"deployed_at": {
+						kubeNodeDeployedAtKey: {
 							Type:        schema.TypeString,
 							Description: "Node deployment date",
 							Computed:    true,
 						},
-						"flavor": {
+						kubeFlavorKey: {
 							Type:        schema.TypeString,
 							Description: "Flavor name",
 							Computed:    true,
 						},
-						"id": {
+						kubeNodeIdKey: {
 							Type:        schema.TypeString,
 							Description: "Node ID",
 							Computed:    true,
 						},
-						"instance_id": {
+						kubeNodeInstanceIdKey: {
 							Type:        schema.TypeString,
 							Description: "Public Cloud instance ID",
 							Computed:    true,
 						},
-						"is_up_to_date": {
+						kubeNodeIsUpToDateKey: {
 							Type:        schema.TypeBool,
 							Description: "True if the node is up to date",
 							Computed:    true,
 						},
-						"name": {
+						kubeNameKey: {
 							Type:        schema.TypeString,
 							Description: "Node name",
 							Computed:    true,
 						},
-						"node_pool_id": {
+						kubeNodePoolIdKey: {
 							Type:        schema.TypeString,
 							Description: "NodePool parent ID",
 							Computed:    true,
 						},
-						"project_id": {
+						kubeProjectIdKey: {
 							Type:        schema.TypeString,
 							Description: "Project ID",
 							Computed:    true,
 						},
-						"status": {
+						kubeStatusKey: {
 							Type:        schema.TypeString,
 							Description: "Current status",
 							Computed:    true,
 						},
-						"updated_at": {
+						kubeUpdatedAtKey: {
 							Type:        schema.TypeString,
 							Description: "Last update date",
 							Computed:    true,
 						},
-						"version": {
+						kubeVersionKey: {
 							Type:        schema.TypeString,
 							Description: "Node version",
 							Computed:    true,
@@ -103,8 +103,8 @@ func dataSourceCloudProjectKubeNodes() *schema.Resource {
 
 func dataSourceCloudProjectKubeNodesRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-	serviceName := d.Get("service_name").(string)
-	kubeId := d.Get("kube_id").(string)
+	serviceName := d.Get(kubeServiceNameKey).(string)
+	kubeId := d.Get(kubeKubeIdKey).(string)
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/node",
 		url.PathEscape(serviceName),
@@ -128,7 +128,7 @@ func dataSourceCloudProjectKubeNodesRead(d *schema.ResourceData, meta interface{
 	sort.Strings(ids)
 
 	d.SetId(hashcode.Strings(ids))
-	d.Set("nodes", nodes)
+	d.Set(kubeNodesKey, nodes)
 
 	log.Printf("[DEBUG] Read nodes: %+v", res)
 	return nil

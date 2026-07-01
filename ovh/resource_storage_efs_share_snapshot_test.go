@@ -6,23 +6,10 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
-func TestAccStorageEfsShareSnapshot_basic(t *testing.T) {
-	serviceName := os.Getenv("OVH_STORAGE_EFS_SERVICE_TEST")
-
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"time": {
-				VersionConstraint: "0.13.1",
-				Source:            "registry.terraform.io/hashicorp/time",
-			},
-		},
-		PreCheck: func() { testAccPreCheckStorageEfs(t); testAccCheckStorageEfsExists(t) },
-		Steps: []resource.TestStep{
-			{
-				Config: fmt.Sprintf(`
+const testAccStorageEfsShareSnapshotConfig_basic = `
 resource "ovh_storage_efs_share" "share" {
   service_name = "%s"
   name         = "share"
@@ -44,7 +31,24 @@ resource "ovh_storage_efs_share_snapshot" "snapshot" {
   share_id = ovh_storage_efs_share.share.id
   name = "snapshot"
   description = "My snapshot"
-}`,
+}
+`
+
+func TestAccStorageEfsShareSnapshot_basic(t *testing.T) {
+	serviceName := os.Getenv("OVH_STORAGE_EFS_SERVICE_TEST")
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"time": {
+				VersionConstraint: "0.13.1",
+				Source:            "registry.terraform.io/hashicorp/time",
+			},
+		},
+		PreCheck: func() { testAccPreCheckStorageEfs(t); testAccCheckStorageEfsExists(t) },
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(testAccStorageEfsShareSnapshotConfig_basic,
 					serviceName,
 					serviceName,
 				),
@@ -103,4 +107,58 @@ resource "ovh_storage_efs_share_snapshot" "snapshot" {
 		},
 	})
 
+}
+
+func TestAccStorageEfsShareSnapshot_import(t *testing.T) {
+	serviceName := os.Getenv("OVH_STORAGE_EFS_SERVICE_TEST")
+	config := fmt.Sprintf(testAccStorageEfsShareSnapshotConfig_basic, serviceName, serviceName)
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"time": {
+				VersionConstraint: "0.13.1",
+				Source:            "registry.terraform.io/hashicorp/time",
+			},
+		},
+		PreCheck: func() { testAccPreCheckStorageEfs(t); testAccCheckStorageEfsExists(t) },
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_storage_efs_share.share", "service_name", serviceName),
+					resource.TestCheckResourceAttrSet("ovh_storage_efs_share_snapshot.snapshot", "id"),
+					resource.TestCheckResourceAttrSet("ovh_storage_efs_share_snapshot.snapshot", "share_id"),
+					resource.TestCheckResourceAttrSet("ovh_storage_efs_share_snapshot.snapshot", "created_at"),
+					resource.TestCheckResourceAttrSet("ovh_storage_efs_share_snapshot.snapshot", "path"),
+					resource.TestCheckResourceAttr("ovh_storage_efs_share_snapshot.snapshot", "name", "snapshot"),
+					resource.TestCheckResourceAttr("ovh_storage_efs_share_snapshot.snapshot", "description", "My snapshot"),
+					resource.TestCheckResourceAttr("ovh_storage_efs_share_snapshot.snapshot", "status", "available"),
+					resource.TestCheckResourceAttr("ovh_storage_efs_share_snapshot.snapshot", "type", "manual"),
+				),
+			},
+			{
+				ResourceName:            "ovh_storage_efs_share_snapshot.snapshot",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+				ImportStateIdFunc:       testAccStorageEfsShareSnapshotImportId("ovh_storage_efs_share_snapshot.snapshot"),
+			},
+		},
+	})
+}
+
+func testAccStorageEfsShareSnapshotImportId(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("resource not found: %s", resourceName)
+		}
+		return fmt.Sprintf(
+			"%s/%s/%s",
+			rs.Primary.Attributes["service_name"],
+			rs.Primary.Attributes["share_id"],
+			rs.Primary.Attributes["id"],
+		), nil
+	}
 }
