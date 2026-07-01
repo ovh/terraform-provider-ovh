@@ -44,4 +44,4 @@ The following attributes are exported:
 * `engine` - See Argument Reference above.
 * `id` - ID of the database.
 * `name` - Name of the database.
-* `service_name` - Current status of the database.
+* `service_name` - See Argument Reference above.

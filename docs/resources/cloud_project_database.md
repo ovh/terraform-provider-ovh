@@ -17,24 +17,6 @@ You can visit our dedicated Discord channel: https://discord.gg/PwPqWUpN8G. Ask 
 Minimum settings for each engine (region choice is up to the user):
 
 ```terraform
-resource "ovh_cloud_project_database" "cassandradb" {
-  service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  description   = "my-first-cassandra"
-  engine        = "cassandra"
-  version       = "4.0"
-  plan          = "essential"
-  nodes {
-    region  = "BHS"
-  }
-  nodes {
-    region  = "BHS"
-  }
-  nodes {
-    region  = "BHS"
-  }
-  flavor        = "db1-4"
-}
-
 resource "ovh_cloud_project_database" "kafkadb" {
   service_name          = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
   description           = "my-first-kafka"
@@ -53,18 +35,6 @@ resource "ovh_cloud_project_database" "kafkadb" {
   nodes {
     region  = "DE"
   }
-}
-
-resource "ovh_cloud_project_database" "m3db" {
-  service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  description   = "my-first-m3db"
-  engine        = "m3db"
-  version       = "1.2"
-  plan          = "essential"
-  nodes {
-    region  = "BHS"
-  }
-  flavor        = "db1-7"
 }
 
 resource "ovh_cloud_project_database" "mongodb" {
@@ -126,18 +96,6 @@ resource "ovh_cloud_project_database" "pgsqldb" {
     description = "ip 2"
     ip = "178.97.7.0/24"
   }
-}
-
-resource "ovh_cloud_project_database" "redisdb" {
-  service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  description   = "my-first-redis"
-  engine        = "redis"
-  version       = "6.2"
-  plan          = "essential"
-  nodes {
-    region  = "BHS"
-  }
-  flavor        = "db1-4"
 }
 
 resource "ovh_cloud_project_database" "grafana" {
@@ -234,14 +192,13 @@ The following arguments are supported:
 * `disk_size` - (Optional) The disk size (in GB) of the database service.
 * `advanced_configuration` - (Optional) Advanced configuration key / value.
 * `plan` - (Required) Plan of the cluster.
-  * MongoDB: Enum: "discovery", "production", "advanced".
-  * Mysql, PosgreSQL, Cassandra, M3DB, : Enum: "essential", "business", "enterprise".
-  * M3 Aggregator: "business", "enterprise".
-  * Redis: "essential", "business".
+  * Clickhouse: "production".
+  * MongoDB: "discovery", "production", "advanced".
+  * MySQL, PostgreSQL: "essential", "business", "enterprise".
   * Valkey: "essential", "business".
 * `version` - (Required) The version of the engine in which the service should be deployed
 * `backup_regions` - List of region where backups are pushed. Not more than 1 regions for MongoDB. Not more than 2 regions for the other engines with one being the same as the nodes[].region field
-* `backup_time` - Time on which backups start every day (this parameter is not usable on the following engines: "m3db", "grafana", "kafka", "kafkaconnect", "kafkamirrormaker", "opensearch", "m3aggregator").
+* `backup_time` - Time on which backups start every day (this parameter is not usable on the following engines: "grafana", "kafka", "kafkaconnect", "kafkamirrormaker", "opensearch").
 * `maintenance_time` - Time on which maintenances can start every day.
 
 ## Attributes Reference

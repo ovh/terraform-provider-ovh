@@ -49,17 +49,17 @@ func dataSourceCloudProjectDatabaseOpensearchPattern() *schema.Resource {
 func dataSourceCloudProjectDatabaseOpensearchPatternRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
-	clusterId := d.Get("cluster_id").(string)
+	clusterID := d.Get("cluster_id").(string)
 	id := d.Get("id").(string)
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/database/opensearch/%s/pattern/%s",
 		url.PathEscape(serviceName),
-		url.PathEscape(clusterId),
+		url.PathEscape(clusterID),
 		url.PathEscape(id),
 	)
 	res := &CloudProjectDatabaseOpensearchPatternResponse{}
 
-	log.Printf("[DEBUG] Will read pattern %s from cluster %s from project %s", id, clusterId, serviceName)
+	log.Printf("[DEBUG] Will read pattern %s from cluster %s from project %s", id, clusterID, serviceName)
 	if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}

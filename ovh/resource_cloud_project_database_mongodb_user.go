@@ -136,7 +136,7 @@ func resourceCloudProjectDatabaseMongodbUserCreate(ctx context.Context, d *schem
 					return retry.NonRetryableError(rErr)
 				}
 
-				d.SetId(res.Id)
+				d.SetId(res.ID)
 				readDiags := resourceCloudProjectDatabaseMongodbUserRead(ctx, d, meta)
 				rErr = diagnosticsToError(readDiags)
 				if rErr != nil {
