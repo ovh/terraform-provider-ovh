@@ -1,5 +1,5 @@
 ---
-subcategory: "Cloud Project"
+subcategory: "File Storage"
 ---
 
 # ovh_cloud_project_file_storage_share (Resource)
