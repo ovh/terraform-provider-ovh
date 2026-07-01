@@ -3,6 +3,9 @@ package ovh
 import (
 	"fmt"
 	"log"
+	"os"
+	"os/user"
+	"strings"
 	"sync"
 
 	cleanhttp "github.com/hashicorp/go-cleanhttp"
@@ -10,6 +13,7 @@ import (
 	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/ovhwrap"
 	"go.uber.org/ratelimit"
+	"gopkg.in/ini.v1"
 )
 
 var providerVersion, providerCommit string
@@ -37,12 +41,114 @@ type Config struct {
 	// Ignore initialization errors
 	IgnoreInitError bool
 
+	// Profile name to load from .ovh.conf
+	Profile string
+
 	OVHClient     *ovhwrap.Client
 	authenticated bool
 	authFailed    error
 	lockAuth      *sync.Mutex
 
 	ApiRateLimit ratelimit.Limiter
+}
+
+// ovhConfPaths holds the default paths to look for OVH configuration files.
+var ovhConfPaths = []string{
+	"/etc/ovh.conf",
+	"~/.ovh.conf",
+	"./ovh.conf",
+}
+
+// loadOvhConf loads the OVH INI configuration from the standard configuration file paths.
+func loadOvhConf() (*ini.File, error) {
+	paths := []interface{}{}
+
+	var home string
+
+	for _, path := range ovhConfPaths {
+		if strings.HasPrefix(path, "~/") {
+			if home == "" {
+				if usr, err := user.Current(); err == nil {
+					home = usr.HomeDir
+				} else if h := os.Getenv("HOME"); h != "" {
+					home = h
+				} else {
+					continue
+				}
+			}
+			path = home + path[1:]
+		}
+		paths = append(paths, path)
+	}
+
+	if len(paths) == 0 {
+		return ini.Empty(), nil
+	}
+
+	return ini.LooseLoad(paths[0], paths[1:]...)
+}
+
+// applyProfile loads configuration values from a named profile in the OVH configuration
+// files and applies them to the Config struct. Profile sections use the format [profile:<name>].
+//
+// Values are only applied if they are not already set in the Config struct (i.e., not
+// provided via Terraform HCL). Environment variables take precedence over profile values;
+// if an env var is set for a field, the profile value is skipped so that go-ovh's own
+// config loading can pick up the env var.
+func (c *Config) applyProfile() error {
+	if c.Profile == "" {
+		return nil
+	}
+
+	cfg, err := loadOvhConf()
+	if err != nil {
+		return fmt.Errorf("cannot load OVH configuration file for profile %q: %w", c.Profile, err)
+	}
+
+	sectionName := "profile:" + c.Profile
+	if !cfg.HasSection(sectionName) {
+		return fmt.Errorf("profile %q not found in OVH configuration files", c.Profile)
+	}
+
+	section := cfg.Section(sectionName)
+
+	// getVal returns the value of the given key from the profile section,
+	// but returns an empty string if the corresponding env variable is already
+	// set (so that go-ovh's own loadConfig can handle the env var with higher
+	// priority than the profile).
+	getVal := func(key, envVar string) string {
+		if os.Getenv(envVar) != "" {
+			return ""
+		}
+		if section.HasKey(key) {
+			return section.Key(key).String()
+		}
+		return ""
+	}
+
+	if c.Endpoint == "" {
+		c.Endpoint = getVal("endpoint", "OVH_ENDPOINT")
+	}
+	if c.AccessToken == "" {
+		c.AccessToken = getVal("access_token", "OVH_ACCESS_TOKEN")
+	}
+	if c.ApplicationKey == "" {
+		c.ApplicationKey = getVal("application_key", "OVH_APPLICATION_KEY")
+	}
+	if c.ApplicationSecret == "" {
+		c.ApplicationSecret = getVal("application_secret", "OVH_APPLICATION_SECRET")
+	}
+	if c.ConsumerKey == "" {
+		c.ConsumerKey = getVal("consumer_key", "OVH_CONSUMER_KEY")
+	}
+	if c.ClientID == "" {
+		c.ClientID = getVal("client_id", "OVH_CLIENT_ID")
+	}
+	if c.ClientSecret == "" {
+		c.ClientSecret = getVal("client_secret", "OVH_CLIENT_SECRET")
+	}
+
+	return nil
 }
 
 func clientDefault(c *Config) (*ovh.Client, error) {
@@ -146,6 +252,12 @@ func (c *Config) loadAndValidate() error {
 }
 
 func (c *Config) load() error {
+	// Apply profile configuration before creating the client, so that profile
+	// values are available to clientDefault.
+	if err := c.applyProfile(); err != nil {
+		return err
+	}
+
 	targetClient, err := clientDefault(c)
 	if err != nil {
 		// Allow ignoring client creation errors when OVH_IGNORE_INIT_ERROR=true
