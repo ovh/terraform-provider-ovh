@@ -379,7 +379,16 @@ func resourceCloudProjectDatabaseRead(ctx context.Context, d *schema.ResourceDat
 		if err := config.OVHClient.GetWithContext(ctx, advancedConfigEndpoint, advancedConfigMap); err != nil {
 			return diag.Errorf("unable to get database %s advanced configuration: %v", res.ID, err)
 		}
-		res.AdvancedConfiguration = *advancedConfigMap
+		// Only retain keys that are explicitly configured to avoid perpetual diffs
+		// caused by API-returned defaults that the user never set.
+		configuredKeys := d.Get("advanced_configuration").(map[string]interface{})
+		filtered := make(map[string]string, len(configuredKeys))
+		for k, v := range *advancedConfigMap {
+			if _, ok := configuredKeys[k]; ok {
+				filtered[k] = v
+			}
+		}
+		res.AdvancedConfiguration = filtered
 	}
 
 	for k, v := range res.toMap() {
