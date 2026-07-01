@@ -6,9 +6,13 @@ import (
 	"log"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/go-ovh/ovh"
+
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 )
 
@@ -235,8 +239,18 @@ func resourceDbaasLogsOutputGraylogStreamCreate(ctx context.Context, d *schema.R
 		"/dbaas/logs/%s/output/graylog/stream",
 		url.PathEscape(serviceName),
 	)
-	if err := config.OVHClient.Post(endpoint, opts, res); err != nil {
-		return diag.Errorf("Error calling post %s:\n\t %q", endpoint, err)
+	err := retry.Retry(d.Timeout(schema.TimeoutCreate)-time.Minute, func() *retry.RetryError {
+		err := config.OVHClient.Post(endpoint, opts, res)
+		if err != nil {
+			if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Class == DBAAS_LOGS_BUSY_ERROR {
+				return retry.RetryableError(err)
+			}
+			return retry.NonRetryableError(err)
+		}
+		return nil
+	})
+	if err != nil {
+		return diag.Errorf("Error creating stream, calling POST %s:\n\t %q", endpoint, err)
 	}
 
 	// Wait for operation status
@@ -358,7 +372,17 @@ func resourceDbaasLogsOutputGraylogStreamDelete(ctx context.Context, d *schema.R
 		url.PathEscape(id),
 	)
 
-	if err := config.OVHClient.Delete(endpoint, res); err != nil {
+	err := retry.Retry(d.Timeout(schema.TimeoutDelete)-time.Minute, func() *retry.RetryError {
+		err := config.OVHClient.Delete(endpoint, res)
+		if err != nil {
+			if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Class == DBAAS_LOGS_BUSY_ERROR {
+				return retry.RetryableError(err)
+			}
+			return retry.NonRetryableError(err)
+		}
+		return nil
+	})
+	if err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 

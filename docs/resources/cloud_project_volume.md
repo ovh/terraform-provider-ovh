@@ -4,6 +4,8 @@ subcategory : "Cloud Project"
 
 # ovh_cloud_project_volume
 
+~> **NOTE** Prefer using the new `ovh_cloud_storage_block_volume` resource instead.
+
 Create volume in a public cloud project.
 
 ## Example Usage
@@ -19,16 +21,59 @@ resource "ovh_cloud_project_volume" "volume" {
 }
 ```
 
+### Encrypted volume with a customer managed key (CMK)
+
+```terraform
+resource "ovh_cloud_project_volume" "encrypted_volume" {
+   region_name  = "xxx"
+   service_name = "yyyyy"
+   description  = "Terraform encrypted volume"
+   name         = "encryptedVolume"
+   size         = 15
+   type         = "classic"
+
+   encryption = {
+     encrypted = true
+     kms = {
+       domain_id      = "<okms domain id>"
+       service_key_id = "<okms service key id>"
+     }
+   }
+}
+```
+
+Omit the `kms` block to encrypt the volume with OVH managed keys (OMK):
+
+```terraform
+resource "ovh_cloud_project_volume" "encrypted_volume" {
+   region_name  = "xxx"
+   service_name = "yyyyy"
+   name         = "encryptedVolume"
+   size         = 15
+   type         = "classic"
+
+   encryption = {
+     encrypted = true
+   }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
 * `service_name` - Optional. The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used. **Changing this value recreates the resource.**
 * `region_name` - Required. A valid OVHcloud public cloud region name in which the volume will be available. Ex.: "GRA11". **Changing this value recreates the resource.**
+* `availability_zone` - Optional. Availability zone in which the volume is created. Required when `region_name` is a 3AZ region. **Changing this value recreates the resource.**
 * `description` - A description of the volume
 * `name` - Name of the volume
 * `size` - Size (GB) of the volume
 * `type` - Type of the volume **Changing this value recreates the resource.** Available types are: classic, classic-luks, classic-multiattach, high-speed, high-speed-luks, high-speed-gen2, high-speed-gen2-luks
+* `encryption` - Optional. Volume encryption configuration. Customer managed keys (CMK) are only available in supported regions (3AZ). **Changing this value recreates the resource.**
+  * `encrypted` - Whether the volume is encrypted. Setting this auto-derives a LUKS volume type.
+  * `kms` - Optional. Customer managed key (CMK) reference. Omit to use OVH managed keys (OMK).
+    * `domain_id` - OKMS domain ID holding the customer managed key.
+    * `service_key_id` - OKMS service key ID used to encrypt the volume.
 
 ## Attributes Reference
 
@@ -40,6 +85,7 @@ The following attributes are exported:
 * `name` - Name of the volume
 * `size` - Size of the volume
 * `id` - id of the volume
+* `encryption` - Volume encryption configuration (see above).
 
 ## Import
 

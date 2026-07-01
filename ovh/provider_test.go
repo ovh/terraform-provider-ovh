@@ -212,7 +212,6 @@ func testAccPreCheckDbaasLogs(t *testing.T) {
 func testAccPreCheckDbaasLogsInput(t *testing.T) {
 	testAccPreCheckCredentials(t)
 	checkEnvOrSkip(t, "OVH_DBAAS_LOGS_SERVICE_TEST")
-	checkEnvOrSkip(t, "OVH_DBAAS_LOGS_LOGSTASH_VERSION_TEST")
 }
 
 func testAccPreCheckDbaasLogsCluster(t *testing.T) {
@@ -336,13 +335,6 @@ func testAccPreCheckKubernetes(t *testing.T) {
 	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_KUBE_PREV_VERSION_TEST")
 }
 
-// Checks that the environment variables needed for the /vrack/{service}/cloudProject acceptance tests
-// are set.
-func testAccPreCheckKubernetesVRack(t *testing.T) {
-	testAccPreCheckCredentials(t)
-	checkEnvOrSkip(t, "OVH_VRACK_SERVICE_TEST")
-}
-
 // Checks that the environment variables needed for the /vrack/{service}/ovhCloudConnect/{ovhCloudConnect} acceptance tests
 // are set.
 func testAccPreCheckOCCVRack(t *testing.T) {
@@ -464,6 +456,24 @@ func testAccPreCheckVrackServices(t *testing.T) {
 func testAccPreCheckVrackServicesData(t *testing.T) {
 	testAccPreCheckCredentials(t)
 	checkEnvOrSkip(t, "OVH_TESTACC_VRACK_SERVICES_ID_TEST")
+}
+
+// Checks that the environment variables needed for the /vrack/{serviceName}/publicRoutingPriority/{priorityId} acceptance tests
+// are set.
+func testAccPreCheckPublicRoutingPriority(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_VRACK_SERVICE_TEST")
+	checkEnvOrSkip(t, "OVH_VRACK_PUBLIC_ROUTING_PRIORITY_REGION_TEST")
+	checkEnvOrSkip(t, "OVH_VRACK_PUBLIC_ROUTING_PRIORITY_AZ_A_TEST")
+	checkEnvOrSkip(t, "OVH_VRACK_PUBLIC_ROUTING_PRIORITY_AZ_B_TEST")
+	checkEnvOrSkip(t, "OVH_VRACK_PUBLIC_ROUTING_PRIORITY_AZ_C_TEST")
+}
+
+// Checks that the environment variables needed for /vrack datasource basic acceptance tests
+// are set.
+func testAccPreCheckVrackData(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_VRACK_SERVICE_TEST")
 }
 
 // Checks that the environment variables needed for the /me/paymentMean acceptance tests
@@ -620,6 +630,13 @@ func testAccPreCheckOrderStorageEfs(t *testing.T) {
 func testAccPreCheckStorageEfs(t *testing.T) {
 	testAccPreCheckCredentials(t)
 	checkEnvOrSkip(t, "OVH_STORAGE_EFS_SERVICE_TEST")
+}
+
+// Checks that the environment variables needed for the /email/domain acceptance tests
+// are set.
+func testAccPreCheckEmailDomain(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_EMAIL_DOMAIN_TEST")
 }
 
 func testAccCheckStorageEfsExists(t *testing.T) {

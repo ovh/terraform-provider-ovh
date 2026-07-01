@@ -31,7 +31,7 @@ The following attributes are exported:
 * `service_name` - See Argument Reference above.
 * `kube_id` - See Argument Reference above.
 * `name` - (Optional) The name of the nodepool. Changing this value recreates the resource. Warning: "_" char is not allowed!
-* `flavor_name` - a valid OVHcloud public cloud flavor ID in which the nodes will be started. Ex: "b2-7". Changing this value recreates the resource. You can find the list of flavor IDs: https://www.ovhcloud.com/fr/public-cloud/prices/
+* `flavor_name` - a valid OVHcloud public cloud flavor ID in which the nodes will be started. Ex: "b3-8". Changing this value recreates the resource. You can find the list of flavor IDs: https://www.ovhcloud.com/fr/public-cloud/prices/
 * `desired_nodes` - number of nodes to start.
 * `availability_zones` - list of availability zones to associate the pool - **mandatory for multi-zone** cluster - only one zone is supported at the moment.
 * `max_nodes` - maximum number of nodes allowed in the pool. Setting `desired_nodes` over this value will raise an error.
@@ -42,6 +42,8 @@ The following attributes are exported:
 * `autoscaling_scale_down_unneeded_time_seconds` - (Optional) scaleDownUnneededTimeSeconds autoscaling parameter How long a node should be unneeded before it is eligible for scale down
 * `autoscaling_scale_down_unready_time_seconds` - (Optional) scaleDownUnreadyTimeSeconds autoscaling parameter How long an unready node should be unneeded before it is eligible for scale down
 * `autoscaling_scale_down_utilization_threshold` - (Optional) scaleDownUtilizationThreshold autoscaling parameter Node utilization level, defined as sum of requested resources divided by capacity, below which a node can be considered for scale down
+* `attach_floating_ips` - Floating IPs attachment configuration for pool nodes.
+  * `enabled` - Whether floating IPs attachment is enabled on nodes of this pool.
 * `available_nodes` - Number of nodes which are actually ready in the pool
 * `created_at` - Creation date
 * `current_nodes` - Number of nodes present in the pool

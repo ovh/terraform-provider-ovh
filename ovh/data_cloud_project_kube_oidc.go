@@ -11,63 +11,63 @@ func dataSourceCloudProjectKubeOIDC() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceCloudProjectKubeOIDCRead,
 		Schema: map[string]*schema.Schema{
-			"service_name": {
+			kubeServiceNameKey: {
 				Type:        schema.TypeString,
 				Description: "Service name",
 				Required:    true,
 				ForceNew:    true,
 				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
 			},
-			"kube_id": {
+			kubeKubeIdKey: {
 				Type:        schema.TypeString,
 				Description: "Kube ID",
 				Required:    true,
 				ForceNew:    true,
 			},
-			"client_id": {
+			kubeOidcClientIdKey: {
 				Type:     schema.TypeString,
 				Required: false,
 				Optional: true,
 			},
-			"issuer_url": {
+			kubeOidcIssuerUrlKey: {
 				Type:     schema.TypeString,
 				Required: false,
 				Optional: true,
 			},
-			"oidc_username_claim": {
+			kubeOidcUsernameClaimKey: {
 				Type:     schema.TypeString,
 				Required: false,
 				Optional: true,
 			},
-			"oidc_username_prefix": {
+			kubeOidcUsernamePrefixKey: {
 				Type:     schema.TypeString,
 				Required: false,
 				Optional: true,
 			},
-			"oidc_groups_claim": {
+			kubeOidcGroupsClaimKey: {
 				Type:     schema.TypeList,
 				Required: false,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"oidc_groups_prefix": {
+			kubeOidcGroupsPrefixKey: {
 				Type:     schema.TypeString,
 				Required: false,
 				Optional: true,
 			},
-			"oidc_required_claim": {
+			kubeOidcRequiredClaimKey: {
 				Type:     schema.TypeList,
 				Required: false,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"oidc_signing_algs": {
+			kubeOidcSigningAlgsKey: {
 				Type:     schema.TypeList,
 				Required: false,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"oidc_ca_content": {
+			kubeOidcCaContentKey: {
 				Type:     schema.TypeString,
 				Required: false,
 				Optional: true,
@@ -78,8 +78,8 @@ func dataSourceCloudProjectKubeOIDC() *schema.Resource {
 
 func dataSourceCloudProjectKubeOIDCRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-	serviceName := d.Get("service_name").(string)
-	kubeId := d.Get("kube_id").(string)
+	serviceName := d.Get(kubeServiceNameKey).(string)
+	kubeId := d.Get(kubeKubeIdKey).(string)
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/openIdConnect", serviceName, kubeId)
 	res := &CloudProjectKubeOIDCResponse{}

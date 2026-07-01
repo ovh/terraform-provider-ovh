@@ -260,6 +260,66 @@ output "kubeconfig_file_eu_west_par" {
 }
 ```
 
+Create a multi-zone Kubernetes Standard cluster with Cilium cluster mesh feature:
+
+```terraform
+resource "ovh_cloud_project_kube" "my_multizone_cluster" {
+  service_name = ovh_cloud_project_network_private.network.service_name
+  name         = "custom-cilium-configuration-mks"
+  region       = "RBX-A"
+  plan         = "standard"
+
+  ip_allocation_policy {
+    pods_ipv4_cidr     = "10.7.0.0/16"
+    services_ipv4_cidr = "10.6.0.0/16"
+  }
+
+  private_network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
+  nodes_subnet_id    = ovh_cloud_project_network_private_subnet.subnet.id
+
+  customization_cilium {
+    cluster_id = 1
+    cluster_mesh {
+      enabled = true
+      api_server {
+        service_type = "LoadBalancer"
+      }
+    }
+    hubble {
+      enabled = true # default true
+      relay {
+        enabled = true # default true
+      }
+      ui {
+        enabled = true # default true
+        backend_resources {
+          # no limits or requests by default
+          limits {
+            cpu    = "500m"
+            memory = "500Mi"
+          }
+          requests {
+            cpu    = "50m"
+            memory = "50Mi"
+          }
+        }
+        frontend_resources {
+          # no limits or requests by default
+          limits {
+            cpu    = "500m"
+            memory = "500Mi"
+          }
+          requests {
+            cpu    = "50m"
+            memory = "50Mi"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -301,13 +361,43 @@ The following arguments are supported:
 
   In order to use the gateway IP advertised by the private network subnet DHCP, the following configuration shall be used.
 
-  ```terraform
+  ```hcl
   private_network_configuration {
       default_vrack_gateway              = ""
       private_network_routing_as_default = true
   }
   ```
 * `update_policy` - Cluster update policy. Choose between [ALWAYS_UPDATE, MINIMAL_DOWNTIME, NEVER_UPDATE].
+* `customization_cilium` - (Optional) Cilium CNI customization.
+  * `cluster_id` - (Optional) Cilium cluster ID, must be between 1 and 255. Required when using the ClusterMesh feature.
+  * `cluster_mesh` - (Optional) ClusterMesh feature configuration.
+    * `enabled` - (Optional) Enable or disable the ClusterMesh feature.
+    * `api_server` - (Optional) Define how the ClusterMesh API server is exposed.
+      * `node_port` - (Optional) NodePort on which the ClusterMesh API server is exposed. Only used when `service_type` is `NodePort`.
+      * `service_type` - (Optional) Service type used to expose the ClusterMesh API server (`NodePort` or `LoadBalancer`).
+  * `hubble` - (Optional) Hubble observability stack configuration.
+    * `enabled` - (Optional) Enable or disable Hubble.
+    * `relay` - (Optional) Hubble Relay configuration.
+      * `enabled` - (Optional) Enable or disable Hubble Relay.
+    * `ui` - (Optional) Hubble UI configuration.
+      * `enabled` - (Optional) Enable or disable the Hubble UI.
+      * `backend_resources` - (Optional) Resource requests and limits for the Hubble UI backend.
+        * `limits` - (Optional) Resource limits.
+          * `cpu` - (Optional) CPU limit (e.g. `"500m"`).
+          * `memory` - (Optional) Memory limit (e.g. `"128Mi"`).
+        * `requests` - (Optional) Resource requests.
+          * `cpu` - (Optional) CPU request (e.g. `"500m"`).
+          * `memory` - (Optional) Memory request (e.g. `"128Mi"`).
+      * `frontend_resources` - (Optional) Resource requests and limits for the Hubble UI frontend.
+        * `limits` - (Optional) Resource limits.
+          * `cpu` - (Optional) CPU limit (e.g. `"500m"`).
+          * `memory` - (Optional) Memory limit (e.g. `"128Mi"`).
+        * `requests` - (Optional) Resource requests.
+          * `cpu` - (Optional) CPU request (e.g. `"500m"`).
+          * `memory` - (Optional) Memory request (e.g. `"128Mi"`).
+* `ip_allocation_policy` - (Optional) IP allocation policy of the cluster. **Changing this value recreates the resource.**
+  * `pods_ipv4_cidr` - (Optional) CIDR for the cluster's pods (e.g. `"10.5.0.0/16"`). **Changing this value recreates the resource.**
+  * `services_ipv4_cidr` - (Optional) CIDR for the cluster's services (e.g. `"10.6.0.0/16"`). **Changing this value recreates the resource.**
 
 ## Attributes Reference
 
@@ -335,6 +425,8 @@ The following attributes are exported:
 * `version` - See Argument Reference above.
 * `customization_apiserver` - See Argument Reference above.
 * `customization_kube_proxy` - See Argument Reference above.
+* `customization_cilium` - See Argument Reference above.
+* `ip_allocation_policy` - See Argument Reference above.
 
 ## Timeouts
 

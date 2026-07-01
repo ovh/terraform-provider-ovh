@@ -4,6 +4,8 @@ subcategory : "Cloud Project"
 
 # ovh_cloud_project_volume_backup
 
+~> **NOTE** Prefer using the new `ovh_cloud_storage_block_volume_backup` resource instead.
+
 Manage backups for the given volume in a public cloud project.
 
 ## Example Usage

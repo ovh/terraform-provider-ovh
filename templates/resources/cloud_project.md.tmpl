@@ -39,6 +39,7 @@ You may want to associate an already-existing vRack to the cloud project at crea
 The following arguments are supported:
 
 - `urn` - The URN of the cloud project
+- `deletion_protection` - (Optional) Prevent the cloud project from being destroyed. When set to `true`, `terraform destroy` will fail with an error. You must set this to `false` and run `terraform apply` before the resource can be destroyed. Defaults to `false`.
 - `description` - A description associated with the user.
 - `ovh_subsidiary` - (Required) OVHcloud Subsidiary. Country of OVHcloud legal entity you'll be billed by. List of supported subsidiaries available on API at [/1.0/me.json under `models.nichandle.OvhSubsidiaryEnum`](https://eu.api.ovh.com/1.0/me.json)
 - `plan` - (Required) Product Plan to order

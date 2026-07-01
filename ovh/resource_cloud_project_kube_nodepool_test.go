@@ -3,6 +3,7 @@ package ovh
 import (
 	"fmt"
 	"log"
+	"math/rand/v2"
 	"os"
 	"regexp"
 	"strings"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
@@ -85,7 +87,7 @@ resource "ovh_cloud_project_kube_nodepool" "pool" {
   service_name  = "xxx"
   kube_id       = "xxx"
   name          = "xxx"
-  flavor_name   = "b2-7"
+  flavor_name   = "c3-4"
   desired_nodes = 1
   min_nodes     = 0
   max_nodes     = 1
@@ -118,7 +120,7 @@ resource "ovh_cloud_project_kube_nodepool" "pool" {
   service_name  = "xxx"
   kube_id       = "xxx"
   name          = "xxx"
-  flavor_name   = "b2-7"
+  flavor_name   = "c3-4"
   desired_nodes = 1
   min_nodes     = 0
   max_nodes     = 1
@@ -151,7 +153,7 @@ resource "ovh_cloud_project_kube_nodepool" "pool" {
   service_name  = "xxx"
   kube_id       = "xxx"
   name          = "xxx"
-  flavor_name   = "b2-7"
+  flavor_name   = "c3-4"
   desired_nodes = 1
   min_nodes     = 0
   max_nodes     = 1
@@ -191,7 +193,7 @@ resource "ovh_cloud_project_kube_nodepool" "pool" {
   service_name  = ovh_cloud_project_kube.cluster.service_name
   kube_id       = ovh_cloud_project_kube.cluster.id
   name          = ovh_cloud_project_kube.cluster.name
-  flavor_name   = "b2-7"
+  flavor_name   = "c3-4"
   desired_nodes = 1
   min_nodes     = 0
   max_nodes     = 1
@@ -232,10 +234,44 @@ resource "ovh_cloud_project_kube_nodepool" "pool" {
   service_name  = ovh_cloud_project_kube.cluster.service_name
   kube_id       = ovh_cloud_project_kube.cluster.id
   name          = ovh_cloud_project_kube.cluster.name
-  flavor_name   = "b2-7"
+  flavor_name   = "c3-4"
   desired_nodes = 2
   min_nodes     = 0
   max_nodes     = 2
+  template {
+    metadata {
+      annotations = {
+        a2 = "av2"
+      }
+      finalizers = []
+      labels = {
+        l2 = "lv2"
+      }
+    }
+    spec {
+      unschedulable = false
+      taints = []
+    }
+  }
+}
+
+`
+
+var testAccCloudProjectKubeNodePoolConfigMaxNodesReducedBelowDesired = `
+resource "ovh_cloud_project_kube" "cluster" {
+  service_name = "%s"
+  name         = "%s"
+  region       = "%s"
+  version      = "%s"
+}
+
+resource "ovh_cloud_project_kube_nodepool" "pool" {
+  service_name  = ovh_cloud_project_kube.cluster.service_name
+  kube_id       = ovh_cloud_project_kube.cluster.id
+  name          = ovh_cloud_project_kube.cluster.name
+  flavor_name   = "b2-7"
+  min_nodes     = 0
+  max_nodes     = 1
   template {
     metadata {
       annotations = {
@@ -267,7 +303,7 @@ resource "ovh_cloud_project_kube_nodepool" "pool" {
   service_name  = ovh_cloud_project_kube.cluster.service_name
   kube_id       = ovh_cloud_project_kube.cluster.id
   name          = ovh_cloud_project_kube.cluster.name
-  flavor_name   = "b2-7"
+  flavor_name   = "c3-4"
   desired_nodes = 0
   min_nodes     = 0
   max_nodes     = 2
@@ -302,7 +338,7 @@ resource "ovh_cloud_project_kube_nodepool" "pool" {
   service_name  = ovh_cloud_project_kube.cluster.service_name
   kube_id       = ovh_cloud_project_kube.cluster.id
   name          = ovh_cloud_project_kube.cluster.name
-  flavor_name   = "b2-7"
+  flavor_name   = "c3-4"
   desired_nodes = 1
   template {
     metadata {
@@ -329,6 +365,146 @@ resource "ovh_cloud_project_kube_nodepool" "pool" {
 
 `
 
+var testAccCloudProjectKubeNodePoolConfigStandard = `
+variable "service_name" {
+  default = "%s"
+}
+variable "name" {
+  default = "%s"
+}
+variable "region" {
+  default = "%s"
+}
+variable "version_k8s" {
+  default = "%s"
+}
+variable "random_vlan" {
+  default = %d
+}
+
+resource "ovh_cloud_project_network_private" "network" {
+  service_name = var.service_name
+  vlan_id      = var.random_vlan
+  name         = "terraform_mks_temp_network_can_be_deleted_${var.random_vlan}"
+  regions      = [ var.region ]
+}
+
+resource "ovh_cloud_project_network_private_subnet" "subnet" {
+  service_name = ovh_cloud_project_network_private.network.service_name
+  network_id   = ovh_cloud_project_network_private.network.id
+
+  # whatever region, for test purpose
+  region     = var.region
+  start      = "192.168.0.100"
+  end        = "192.168.254.200"
+  network    = "192.168.0.0/16"
+  dhcp       = true
+  no_gateway = false
+}
+
+resource "ovh_cloud_project_gateway" "gateway" {
+  service_name = ovh_cloud_project_network_private.network.service_name
+  name       = "gateway"
+  model      = "s"
+  region     = var.region
+  network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
+  subnet_id  = ovh_cloud_project_network_private_subnet.subnet.id
+}
+
+resource "ovh_cloud_project_kube" "cluster" {
+  depends_on   = [ ovh_cloud_project_gateway.gateway ]
+  service_name = var.service_name
+  name         = var.name
+  region       = var.region
+  version      = var.version_k8s
+  plan         = "standard"
+
+  private_network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
+  nodes_subnet_id    = ovh_cloud_project_network_private_subnet.subnet.id
+}
+
+resource "ovh_cloud_project_kube_nodepool" "pool" {
+  service_name  = ovh_cloud_project_kube.cluster.service_name
+  kube_id       = ovh_cloud_project_kube.cluster.id
+  name          = ovh_cloud_project_kube.cluster.name
+  flavor_name   = "b3-8"
+  desired_nodes = 1
+  attach_floating_ips {
+    enabled = false
+  }
+}
+`
+
+var testAccCloudProjectKubeNodePoolConfigWithFloatingIPs = `
+variable "service_name" {
+  default = "%s"
+}
+variable "name" {
+  default = "%s"
+}
+variable "region" {
+  default = "%s"
+}
+variable "version_k8s" {
+  default = "%s"
+}
+variable "random_vlan" {
+  default = %d
+}
+
+resource "ovh_cloud_project_network_private" "network" {
+  service_name = var.service_name
+  vlan_id      = var.random_vlan
+  name         = "terraform_mks_temp_network_can_be_deleted_${var.random_vlan}"
+  regions      = [ var.region ]
+}
+
+resource "ovh_cloud_project_network_private_subnet" "subnet" {
+  service_name = ovh_cloud_project_network_private.network.service_name
+  network_id   = ovh_cloud_project_network_private.network.id
+
+  # whatever region, for test purpose
+  region     = var.region
+  start      = "192.168.0.100"
+  end        = "192.168.254.200"
+  network    = "192.168.0.0/16"
+  dhcp       = true
+  no_gateway = false
+}
+
+resource "ovh_cloud_project_gateway" "gateway" {
+  service_name = ovh_cloud_project_network_private.network.service_name
+  name       = "gateway"
+  model      = "s"
+  region     = var.region
+  network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
+  subnet_id  = ovh_cloud_project_network_private_subnet.subnet.id
+}
+
+resource "ovh_cloud_project_kube" "cluster" {
+  depends_on   = [ ovh_cloud_project_gateway.gateway ]
+  service_name = var.service_name
+  name         = var.name
+  region       = var.region
+  version      = var.version_k8s
+  plan         = "standard"
+
+  private_network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
+  nodes_subnet_id    = ovh_cloud_project_network_private_subnet.subnet.id
+}
+
+resource "ovh_cloud_project_kube_nodepool" "pool" {
+  service_name  = ovh_cloud_project_kube.cluster.service_name
+  kube_id       = ovh_cloud_project_kube.cluster.id
+  name          = ovh_cloud_project_kube.cluster.name
+  flavor_name   = "b3-8"
+  desired_nodes = 1
+  attach_floating_ips {
+    enabled = true
+  }
+}
+`
+
 var testAccCloudProjectKubeNodePoolConfigAutoscalingUpdated = `
 resource "ovh_cloud_project_kube" "cluster" {
   service_name = "%s"
@@ -341,7 +517,7 @@ resource "ovh_cloud_project_kube_nodepool" "pool" {
   service_name  = ovh_cloud_project_kube.cluster.service_name
   kube_id       = ovh_cloud_project_kube.cluster.id
   name          = ovh_cloud_project_kube.cluster.name
-  flavor_name   = "b2-7"
+  flavor_name   = "c3-4"
   desired_nodes = 0
   min_nodes     = 0
   max_nodes     = 2
@@ -378,7 +554,7 @@ resource "ovh_cloud_project_kube_nodepool" "pool" {
   service_name  = ovh_cloud_project_kube.cluster.service_name
   kube_id       = ovh_cloud_project_kube.cluster.id
   name          = ovh_cloud_project_kube.cluster.name
-  flavor_name   = "b2-7"
+  flavor_name   = "c3-4"
   desired_nodes = 0
   min_nodes     = 0
   max_nodes     = 2
@@ -415,7 +591,7 @@ resource "ovh_cloud_project_kube_nodepool" "pool" {
   service_name  = ovh_cloud_project_kube.cluster.service_name
   kube_id       = ovh_cloud_project_kube.cluster.id
   name          = ovh_cloud_project_kube.cluster.name
-  flavor_name   = "b2-7"
+  flavor_name   = "c3-4"
   desired_nodes = 0
   min_nodes     = 0
   max_nodes     = 2
@@ -452,7 +628,7 @@ resource "ovh_cloud_project_kube_nodepool" "pool" {
   service_name  = ovh_cloud_project_kube.cluster.service_name
   kube_id       = ovh_cloud_project_kube.cluster.id
   name          = ovh_cloud_project_kube.cluster.name
-  flavor_name   = "b2-7"
+  flavor_name   = "c3-4"
   desired_nodes = 0
   min_nodes     = 0
   max_nodes     = 2
@@ -491,6 +667,13 @@ func TestAccCloudProjectKubeNodePoolRessource(t *testing.T) {
 	)
 	configUpdated := fmt.Sprintf(
 		testAccCloudProjectKubeNodePoolConfigUpdated,
+		os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"),
+		name,
+		region,
+		version,
+	)
+	configMaxNodesReducedBelowDesired := fmt.Sprintf(
+		testAccCloudProjectKubeNodePoolConfigMaxNodesReducedBelowDesired,
 		os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"),
 		name,
 		region,
@@ -554,10 +737,13 @@ func TestAccCloudProjectKubeNodePoolRessource(t *testing.T) {
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "version", version),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "name", name),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "flavor_name", "b2-7"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "flavor_name", "c3-4"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "desired_nodes", "1"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "min_nodes", "0"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "max_nodes", "100"),
+
+					// Attach_floating_ips not set
+					resource.TestCheckNoResourceAttr("ovh_cloud_project_kube_nodepool.pool", "attach_floating_ips.0.enabled"),
 
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.annotations.a1", "av1"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.finalizers.0", "finalizer.extensions/v1beta1"),
@@ -577,10 +763,13 @@ func TestAccCloudProjectKubeNodePoolRessource(t *testing.T) {
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "version", version),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "name", name),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "flavor_name", "b2-7"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "flavor_name", "c3-4"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "desired_nodes", "1"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "min_nodes", "0"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "max_nodes", "1"),
+
+					// Attach_floating_ips not set
+					resource.TestCheckNoResourceAttr("ovh_cloud_project_kube_nodepool.pool", "attach_floating_ips.0.enabled"),
 
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.annotations.a1", "av1"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.finalizers.0", "finalizer.extensions/v1beta1"),
@@ -600,10 +789,12 @@ func TestAccCloudProjectKubeNodePoolRessource(t *testing.T) {
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "version", version),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "name", name),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "flavor_name", "b2-7"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "flavor_name", "c3-4"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "desired_nodes", "2"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "min_nodes", "0"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "max_nodes", "2"),
+
+					resource.TestCheckNoResourceAttr("ovh_cloud_project_kube_nodepool.pool", "attach_floating_ips.0.enabled"),
 
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.annotations.a2", "av2"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.finalizers.#", "0"),
@@ -614,6 +805,16 @@ func TestAccCloudProjectKubeNodePoolRessource(t *testing.T) {
 				),
 			},
 			{
+				// Reduce max_nodes below the current desired_nodes without setting desired_nodes
+				// explicitly. The provider should automatically cap desired_nodes to the new
+				// max_nodes so the API accepts the request and the pool downscales.
+				Config: configMaxNodesReducedBelowDesired,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "max_nodes", "1"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "desired_nodes", "1"),
+				),
+			},
+			{
 				Config: configUpdatedScaleToZero,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", region),
@@ -621,10 +822,12 @@ func TestAccCloudProjectKubeNodePoolRessource(t *testing.T) {
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "version", version),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "name", name),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "flavor_name", "b2-7"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "flavor_name", "c3-4"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "desired_nodes", "0"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "min_nodes", "0"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "max_nodes", "2"),
+
+					resource.TestCheckNoResourceAttr("ovh_cloud_project_kube_nodepool.pool", "attach_floating_ips.0.enabled"),
 
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.annotations.a2", "av2"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.finalizers.#", "0"),
@@ -645,10 +848,12 @@ func TestAccCloudProjectKubeNodePoolRessource(t *testing.T) {
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "version", version),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "name", name),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "flavor_name", "b2-7"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "flavor_name", "c3-4"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "desired_nodes", "0"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "min_nodes", "0"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "max_nodes", "2"),
+
+					resource.TestCheckNoResourceAttr("ovh_cloud_project_kube_nodepool.pool", "attach_floating_ips.0.enabled"),
 
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.annotations.a2", "av2"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.finalizers.#", "0"),
@@ -670,10 +875,12 @@ func TestAccCloudProjectKubeNodePoolRessource(t *testing.T) {
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "version", version),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "name", name),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "flavor_name", "b2-7"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "flavor_name", "c3-4"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "desired_nodes", "0"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "min_nodes", "0"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "max_nodes", "2"),
+
+					resource.TestCheckNoResourceAttr("ovh_cloud_project_kube_nodepool.pool", "attach_floating_ips.0.enabled"),
 
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.annotations.a2", "av2"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.finalizers.#", "0"),
@@ -695,10 +902,12 @@ func TestAccCloudProjectKubeNodePoolRessource(t *testing.T) {
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "version", version),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "name", name),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "flavor_name", "b2-7"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "flavor_name", "c3-4"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "desired_nodes", "0"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "min_nodes", "0"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "max_nodes", "2"),
+
+					resource.TestCheckNoResourceAttr("ovh_cloud_project_kube_nodepool.pool", "attach_floating_ips.0.enabled"),
 
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.annotations.a2", "av2"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.finalizers.#", "0"),
@@ -720,10 +929,12 @@ func TestAccCloudProjectKubeNodePoolRessource(t *testing.T) {
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "version", version),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "name", name),
-					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "flavor_name", "b2-7"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "flavor_name", "c3-4"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "desired_nodes", "0"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "min_nodes", "0"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "max_nodes", "2"),
+
+					resource.TestCheckNoResourceAttr("ovh_cloud_project_kube_nodepool.pool", "attach_floating_ips.0.enabled"),
 
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.annotations.a2", "av2"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_kube_nodepool.pool", "template.0.metadata.0.finalizers.#", "0"),
@@ -745,6 +956,95 @@ func TestAccCloudProjectKubeNodePoolRessource(t *testing.T) {
 					poolId := state.RootModule().Resources[resourceName].Primary.ID
 					kubernetesClusterID := state.RootModule().Resources["ovh_cloud_project_kube.cluster"].Primary.ID
 					return fmt.Sprintf("%s/%s/%s", os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"), kubernetesClusterID, poolId), nil
+				},
+			},
+		},
+	})
+}
+
+// TestAccCloudProjectKubeNodePool_AttachFloatingIPs tests enabling and disabling
+// the attach_floating_ips block on a node pool.
+// This feature requires a Standard Plan cluster, which is only available in the RBX-A region.
+func TestAccCloudProjectKubeNodePool_AttachFloatingIPs(t *testing.T) {
+	name := acctest.RandomWithPrefix(test_prefix)
+	version := os.Getenv("OVH_CLOUD_PROJECT_KUBE_VERSION_TEST")
+	resourceName := "ovh_cloud_project_kube_nodepool.pool"
+	vlanID := rand.IntN(4092) + 1
+
+	// attach_floating_ips { enabled = false } — standard plan, private network
+	configDisabled := fmt.Sprintf(
+		testAccCloudProjectKubeNodePoolConfigStandard,
+		os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"),
+		name,
+		"RBX-A", // Standard Plan only available in RBX-A
+		version,
+		vlanID,
+	)
+
+	// attach_floating_ips { enabled = true } — standard plan, private network
+	configEnabled := fmt.Sprintf(
+		testAccCloudProjectKubeNodePoolConfigWithFloatingIPs,
+		os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"),
+		name,
+		"RBX-A", // Standard Plan only available in RBX-A
+		version,
+		vlanID,
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloud(t)
+			testAccCheckCloudProjectExists(t)
+			testAccPreCheckKubernetes(t)
+		},
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: configDisabled,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", "RBX-A"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "version", version),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "flavor_name", "b3-8"),
+					resource.TestCheckResourceAttr(resourceName, "desired_nodes", "1"),
+					resource.TestCheckResourceAttr(resourceName, "min_nodes", "0"),
+					resource.TestCheckResourceAttr(resourceName, "max_nodes", "100"),
+					resource.TestCheckResourceAttr(resourceName, "attach_floating_ips.0.enabled", "false"),
+				),
+			},
+			{
+				// Idempotency check: re-plan with attach_floating_ips.enabled = false, expect no changes
+				Config: configDisabled,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				Config: configEnabled,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "region", "RBX-A"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_project_kube.cluster", "kubeconfig"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "name", name),
+					resource.TestCheckResourceAttr("ovh_cloud_project_kube.cluster", "version", version),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "flavor_name", "b3-8"),
+					resource.TestCheckResourceAttr(resourceName, "desired_nodes", "1"),
+					resource.TestCheckResourceAttr(resourceName, "min_nodes", "0"),
+					resource.TestCheckResourceAttr(resourceName, "max_nodes", "100"),
+					resource.TestCheckResourceAttr(resourceName, "attach_floating_ips.0.enabled", "true"),
+				),
+			},
+			{
+				// Idempotency check: re-plan with attach_floating_ips.enabled = true, expect no changes
+				Config: configEnabled,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						ExpectEmptyPlan(),
+					},
 				},
 			},
 		},

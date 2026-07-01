@@ -6,11 +6,15 @@ import (
 	"log"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
+	"github.com/ovh/go-ovh/ovh"
 	"golang.org/x/exp/slices"
+
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 )
 
 func resourceDbaasLogsOutputOpensearchAlias() *schema.Resource {
@@ -130,8 +134,18 @@ func resourceDbaasLogsOutputOpensearchAliasCreate(ctx context.Context, d *schema
 		"/dbaas/logs/%s/output/opensearch/alias",
 		url.PathEscape(serviceName),
 	)
-	if err := config.OVHClient.Post(endpoint, opts, res); err != nil {
-		return diag.Errorf("Error calling post %s:\n\t %q", endpoint, err)
+	err := retry.Retry(d.Timeout(schema.TimeoutCreate)-time.Minute, func() *retry.RetryError {
+		err := config.OVHClient.Post(endpoint, opts, res)
+		if err != nil {
+			if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Class == DBAAS_LOGS_BUSY_ERROR {
+				return retry.RetryableError(err)
+			}
+			return retry.NonRetryableError(err)
+		}
+		return nil
+	})
+	if err != nil {
+		return diag.Errorf("Error creating alias, calling POST %s:\n\t %q", endpoint, err)
 	}
 
 	// Wait for operation status
@@ -155,7 +169,7 @@ func resourceDbaasLogsOutputOpensearchAliasCreate(ctx context.Context, d *schema
 	}
 	streams := d.Get("streams").(*schema.Set)
 	for _, stream := range streams.List() {
-		if err = resourceDbaasLogsOutputOpensearchAliasAttachStream(ctx, config, serviceName, *id, stream.(string)); err != nil {
+		if err = resourceDbaasLogsOutputOpensearchAliasAttachStream(ctx, d, config, serviceName, *id, stream.(string)); err != nil {
 			return diag.FromErr(err)
 		}
 	}
@@ -219,14 +233,14 @@ func resourceDbaasLogsOutputOpensearchAliasUpdate(ctx context.Context, d *schema
 		newStreams := newStreamsSet.List()
 		for _, idx := range oldStreams {
 			if !slices.Contains(newStreams, idx) {
-				if err := resourceDbaasLogsOutputOpensearchAliasDetachStream(ctx, config, serviceName, id, idx.(string)); err != nil {
+				if err := resourceDbaasLogsOutputOpensearchAliasDetachStream(ctx, d, config, serviceName, id, idx.(string)); err != nil {
 					return diag.FromErr(err)
 				}
 			}
 		}
 		for _, idx := range newStreams {
 			if !slices.Contains(oldStreams, idx) {
-				if err := resourceDbaasLogsOutputOpensearchAliasAttachStream(ctx, config, serviceName, id, idx.(string)); err != nil {
+				if err := resourceDbaasLogsOutputOpensearchAliasAttachStream(ctx, d, config, serviceName, id, idx.(string)); err != nil {
 					return diag.FromErr(err)
 				}
 			}
@@ -291,7 +305,7 @@ func resourceDbaasLogsOutputOpensearchAliasDelete(ctx context.Context, d *schema
 	}
 	streams := d.Get("streams").(*schema.Set)
 	for _, stream := range streams.List() {
-		if err := resourceDbaasLogsOutputOpensearchAliasDetachStream(ctx, config, serviceName, id, stream.(string)); err != nil {
+		if err := resourceDbaasLogsOutputOpensearchAliasDetachStream(ctx, d, config, serviceName, id, stream.(string)); err != nil {
 			return diag.FromErr(err)
 		}
 	}
@@ -304,7 +318,18 @@ func resourceDbaasLogsOutputOpensearchAliasDelete(ctx context.Context, d *schema
 		url.PathEscape(id),
 	)
 
-	if err := config.OVHClient.Delete(endpoint, res); err != nil {
+	err := retry.Retry(d.Timeout(schema.TimeoutDelete)-time.Minute, func() *retry.RetryError {
+		err := config.OVHClient.Delete(endpoint, res)
+		if err != nil {
+			if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Class == DBAAS_LOGS_BUSY_ERROR {
+				return retry.RetryableError(err)
+			}
+			return retry.NonRetryableError(err)
+		}
+		return nil
+	})
+
+	if err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
@@ -349,15 +374,25 @@ func resourceDbaasLogsOutputOpensearchAliasDetachIndex(ctx context.Context, conf
 	return nil
 }
 
-func resourceDbaasLogsOutputOpensearchAliasAttachStream(ctx context.Context, config *Config, serviceName, aliasID, streamId string) error {
+func resourceDbaasLogsOutputOpensearchAliasAttachStream(ctx context.Context, d *schema.ResourceData, config *Config, serviceName, aliasID, streamId string) error {
 	endpoint := fmt.Sprintf("/dbaas/logs/%s/output/opensearch/alias/%s/stream", url.PathEscape(serviceName), url.PathEscape(aliasID))
 	res := &DbaasLogsOperation{}
 
-	if err := config.OVHClient.Post(endpoint, &DbaasLogsOutputOpensearchAliasStreamCreate{StreamID: streamId}, &res); err != nil {
-		return fmt.Errorf("Error calling post %s:\n\t %q", endpoint, err)
+	err := retry.Retry(d.Timeout(schema.TimeoutCreate)-time.Minute, func() *retry.RetryError {
+		err := config.OVHClient.Post(endpoint, &DbaasLogsOutputOpensearchAliasStreamCreate{StreamID: streamId}, &res)
+		if err != nil {
+			if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Class == DBAAS_LOGS_BUSY_ERROR {
+				return retry.RetryableError(err)
+			}
+			return retry.NonRetryableError(err)
+		}
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("Error attaching stream, calling POST %s:\n\t %q", endpoint, err)
 	}
 
-	_, err := waitForDbaasLogsOperation(ctx, config.OVHClient, serviceName, res.OperationId)
+	_, err = waitForDbaasLogsOperation(ctx, config.OVHClient, serviceName, res.OperationId)
 	if err != nil {
 		return err
 	}
@@ -365,15 +400,26 @@ func resourceDbaasLogsOutputOpensearchAliasAttachStream(ctx context.Context, con
 	return nil
 }
 
-func resourceDbaasLogsOutputOpensearchAliasDetachStream(ctx context.Context, config *Config, serviceName, aliasID, streamId string) error {
+func resourceDbaasLogsOutputOpensearchAliasDetachStream(ctx context.Context, d *schema.ResourceData, config *Config, serviceName, aliasID, streamId string) error {
 	endpoint := fmt.Sprintf("/dbaas/logs/%s/output/opensearch/alias/%s/stream/%s", url.PathEscape(serviceName), url.PathEscape(aliasID), url.PathEscape(streamId))
 	res := &DbaasLogsOperation{}
 
-	if err := config.OVHClient.DeleteWithContext(ctx, endpoint, &res); err != nil {
-		return fmt.Errorf("Error calling delete %s:\n\t %q", endpoint, err)
+	err := retry.Retry(d.Timeout(schema.TimeoutDelete)-time.Minute, func() *retry.RetryError {
+		err := config.OVHClient.DeleteWithContext(ctx, endpoint, &res)
+		if err != nil {
+			if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Class == DBAAS_LOGS_BUSY_ERROR {
+				return retry.RetryableError(err)
+			}
+			return retry.NonRetryableError(err)
+		}
+		return nil
+	})
+
+	if err != nil {
+		return fmt.Errorf("Error detaching stream, calling DELETE %s:\n\t %q", endpoint, err)
 	}
 
-	_, err := waitForDbaasLogsOperation(ctx, config.OVHClient, serviceName, res.OperationId)
+	_, err = waitForDbaasLogsOperation(ctx, config.OVHClient, serviceName, res.OperationId)
 	if err != nil {
 		return err
 	}

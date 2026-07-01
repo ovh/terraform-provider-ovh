@@ -59,6 +59,7 @@ output "privatedatabase_service_name" {
 The following arguments are supported:
 
 * `description` - Custom description on your privatedatabase order.
+* `advanced_configuration` - (Optional) Advanced configuration key / value.
 * `ovh_subsidiary` - (Required) OVHcloud Subsidiary. Country of OVHcloud legal entity you'll be billed by. List of supported subsidiaries available on API at [/1.0/me.json under `models.nichandle.OvhSubsidiaryEnum`](https://eu.api.ovh.com/1.0/me.json)
 * `plan` - (Required) Product Plan to order
   * `duration` - (Required) duration.
@@ -78,6 +79,7 @@ The following attributes are exported:
 * `urn` - URN of the private database, used when writing IAM policies
 * `cpu` - Number of CPU on your private database
 * `datacenter` - Datacenter where this private database is located
+* `advanced_configuration` - Advanced configuration key / value
 * `display_name` - Name displayed in customer panel for your private database
 * `hostname` - Private database hostname
 * `hostname_ftp` - Private database FTP hostname

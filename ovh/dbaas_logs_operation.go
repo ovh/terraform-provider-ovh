@@ -9,8 +9,11 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/ovhwrap"
 )
+
+const DBAAS_LOGS_BUSY_ERROR = "Client::Forbidden::Busy"
 
 func waitForDbaasLogsOperation(ctx context.Context, c *ovhwrap.Client, serviceName, id string) (*DbaasLogsOperation, error) {
 	// Wait for operation status

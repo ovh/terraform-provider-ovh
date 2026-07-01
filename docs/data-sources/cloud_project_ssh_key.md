@@ -5,6 +5,8 @@ description: "Get SSH key"
 
 # ovh_cloud_project_ssh_key (Data Source)
 
+~> **NOTE** Prefer using the new `ovh_cloud_ssh_key` data source instead.
+
 Retrieve information about a SSH key.
 
 ## Example Usage

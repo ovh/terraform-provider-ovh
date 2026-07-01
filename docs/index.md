@@ -167,7 +167,7 @@ resource "ovh_cloud_project_kube_nodepool" "node_pool" {
   service_name  = var.service_name
   kube_id       = ovh_cloud_project_kube.my_kube_cluster.id
   name          = "my-pool" //Warning: "_" char is not allowed!
-  flavor_name   = "b2-7"
+  flavor_name   = "b3-8"
   desired_nodes = 3
   max_nodes     = 3
   min_nodes     = 3
@@ -212,6 +212,12 @@ In order to run the Acceptance Tests for development, the following environment 
 * `OVH_IPLB_IPFO_TEST`- An array of FailOver IPs (also known as Additional IPs) that shall be associated with the IPLB Service
 
 * `OVH_VRACK_SERVICE_TEST` - The ID of the vRack to use.
+
+* `OVH_VRACK_PUBLIC_ROUTING_PRIORITY_REGION_TEST` - The region of the vRack for the Public Routing Priority to test.
+* `OVH_VRACK_PUBLIC_ROUTING_PRIORITY_ID_TEST` - The Id of the Public Routing Priority to test, it is used for import only.
+* `OVH_VRACK_PUBLIC_ROUTING_PRIORITY_AZ_A_TEST` - An AZ of the vRack for the Public Routing Priority to test.
+* `OVH_VRACK_PUBLIC_ROUTING_PRIORITY_AZ_B_TEST` - An AZ of the vRack for the Public Routing Priority to test.
+* `OVH_VRACK_PUBLIC_ROUTING_PRIORITY_AZ_C_TEST` - An AZ of the vRack for the Public Routing Priority to test.
 
 * `OVH_CLOUD_LOADBALANCER_ID_TEST` - The ID of the LoadBalancer to use.
 

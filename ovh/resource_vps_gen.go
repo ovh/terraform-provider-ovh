@@ -18,6 +18,8 @@ import (
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 )
 
 func VpsResourceSchema(ctx context.Context) schema.Schema {
@@ -42,6 +44,9 @@ func VpsResourceSchema(ctx context.Context) schema.Schema {
 			CustomType: ovhtypes.TfBoolType{},
 			Optional:   true,
 			Computed:   true,
+			PlanModifiers: []planmodifier.Bool{
+				boolplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"iam": schema.SingleNestedAttribute{
 			Attributes: map[string]schema.Attribute{

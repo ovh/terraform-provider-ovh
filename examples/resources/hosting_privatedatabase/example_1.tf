@@ -30,6 +30,10 @@ resource "ovh_hosting_privatedatabase" "database" {
       value = "postgresql_12"
     }
   }
+
+  advanced_configuration = {
+    log_min_messages = "ERROR"
+  }
 }
 
 output "privatedatabase_service_name" {

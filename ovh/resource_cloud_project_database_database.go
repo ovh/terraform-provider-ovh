@@ -10,6 +10,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 )
 
@@ -104,8 +105,24 @@ func resourceCloudProjectDatabaseDatabaseCreate(ctx context.Context, d *schema.R
 	log.Printf("[DEBUG] Will create database: %+v for cluster %s from project %s", params, clusterID, serviceName)
 	err := config.OVHClient.PostWithContext(ctx, endpoint, params, res)
 	if err != nil {
-		return diag.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
+		// Terraform-side hotfix until the API 500 root cause is found: on 409/500 the database
+		// may already exist, so recover it by name to stay idempotent.
+		errOvh, ok := err.(*ovh.APIError)
+		if !ok || (errOvh.Code != 409 && errOvh.Code != 500) {
+			return diag.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
+		}
+		recoveredId, rerr := findCloudProjectDatabaseDatabaseIDByName(ctx, config.OVHClient, serviceName, engine, clusterID, params.Name)
+		if rerr != nil {
+			return diag.Errorf("calling Post %s with params %+v returned %q; failed to recover the database by name: %s", endpoint, params, err, rerr.Error())
+		}
+		if recoveredId == "" {
+			return diag.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
+		}
+		log.Printf("[WARN] Post %s returned an error (%q) but database %q already exists with id %s; adopting it into the state", endpoint, err, params.Name, recoveredId)
+		res.ID = recoveredId
 	}
+
+	d.SetId(res.ID)
 
 	log.Printf("[DEBUG] Waiting for database %s to be READY", res.ID)
 	err = waitForCloudProjectDatabaseDatabaseReady(ctx, config.OVHClient, serviceName, engine, clusterID, res.ID, d.Timeout(schema.TimeoutCreate))
@@ -115,6 +132,13 @@ func resourceCloudProjectDatabaseDatabaseCreate(ctx context.Context, d *schema.R
 	log.Printf("[DEBUG] database %s is READY", res.ID)
 
 	d.SetId(res.ID)
+
+	log.Printf("[DEBUG] Waiting for database %s to be READY", res.ID)
+	err = waitForCloudProjectDatabaseDatabaseReady(ctx, config.OVHClient, serviceName, engine, clusterID, res.ID, d.Timeout(schema.TimeoutCreate))
+	if err != nil {
+		return diag.Errorf("timeout while waiting database %s to be READY: %s", res.ID, err.Error())
+	}
+	log.Printf("[DEBUG] database %s is READY", res.ID)
 
 	return resourceCloudProjectDatabaseDatabaseRead(ctx, d, meta)
 }

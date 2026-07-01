@@ -40,6 +40,8 @@ The following arguments are supported:
 
 * `enable_gateway_ip` - Set to true if you want to set a default gateway IP. Changing this value recreates the resource. Defaults to true.
 
+* `gateway_ip` - (Optional) The IP of the gateway used by the subnet. If not provided, it is computed automatically. Changing this value recreates the resource.
+
 * `dns_nameservers` - DNS nameservers used by DHCP Changing this value recreates the resource. Defaults to OVH default DNS nameserver.
 
 * `host_route` - List of custom host routes. Changing this value recreates the resource.

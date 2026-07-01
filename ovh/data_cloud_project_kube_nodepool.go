@@ -12,120 +12,139 @@ func dataSourceCloudProjectKubeNodepool() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceCloudProjectKubeNodePoolRead,
 		Schema: map[string]*schema.Schema{
-			"service_name": {
+			kubeServiceNameKey: {
 				Type:        schema.TypeString,
 				Description: "Service name",
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
 			},
-			"kube_id": {
+			kubeKubeIdKey: {
 				Type:        schema.TypeString,
 				Description: "Kube ID",
 				Required:    true,
 			},
-			"name": {
+			kubeNameKey: {
 				Type:        schema.TypeString,
 				Description: "NodePool resource name",
 				Required:    true,
 			},
 
 			// computed
-			"autoscale": {
+			kubeNodePoolAttachFloatingIpsKey: {
+				Description: "Floating IPs attachment configuration for pool nodes",
+				Optional:    true,
+				Computed:    true,
+				Type:        schema.TypeSet,
+				MaxItems:    1,
+				Set:         CustomSchemaSetFunc(),
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						kubeClusterCustomizationEnabledKey: {
+							Type:        schema.TypeBool,
+							Description: "Whether floating IPs attachment is enabled on nodes of this pool",
+							Optional:    true,
+							Computed:    true,
+							ForceNew:    false,
+						},
+					},
+				},
+			},
+			kubeNodePoolAutoscaleKey: {
 				Type:        schema.TypeBool,
 				Description: "Enable auto-scaling for the pool",
 				Computed:    true,
 			},
-			"anti_affinity": {
+			kubeNodePoolAntiAffinityKey: {
 				Type:        schema.TypeBool,
 				Description: "Enable anti affinity groups for nodes in the pool",
 				Computed:    true,
 			},
-			"flavor_name": {
+			kubeNodePoolFlavorNameKey: {
 				Type:        schema.TypeString,
 				Description: "Flavor name",
 				Computed:    true,
 			},
-			"desired_nodes": {
+			kubeNodePoolDesiredNodesKey: {
 				Type:        schema.TypeInt,
 				Description: "Number of nodes you desire in the pool",
 				Computed:    true,
 			},
-			"max_nodes": {
+			kubeNodePoolMaxNodesKey: {
 				Type:        schema.TypeInt,
 				Description: "Number of nodes you desire in the pool",
 				Computed:    true,
 			},
-			"min_nodes": {
+			kubeNodePoolMinNodesKey: {
 				Type:        schema.TypeInt,
 				Description: "Number of nodes you desire in the pool",
 				Computed:    true,
 			},
-			"monthly_billed": {
+			kubeNodePoolMonthlyBilledKey: {
 				Type:        schema.TypeBool,
 				Description: "Enable monthly billing on all nodes in the pool",
 				Computed:    true,
 			},
-			"available_nodes": {
+			kubeNodePoolAvailableNodesKey: {
 				Type:        schema.TypeInt,
 				Description: "Number of nodes which are actually ready in the pool",
 				Computed:    true,
 			},
-			"created_at": {
+			kubeCreatedAtKey: {
 				Type:        schema.TypeString,
 				Description: "Creation date",
 				Computed:    true,
 			},
-			"current_nodes": {
+			kubeNodePoolCurrentNodesKey: {
 				Type:        schema.TypeInt,
 				Description: "Number of nodes present in the pool",
 				Computed:    true,
 			},
-			"flavor": {
+			kubeFlavorKey: {
 				Type:        schema.TypeString,
 				Description: "Flavor name",
 				Computed:    true,
 			},
-			"project_id": {
+			kubeProjectIdKey: {
 				Type:        schema.TypeString,
 				Description: "Project id",
 				Computed:    true,
 			},
-			"size_status": {
+			kubeNodePoolSizeStatusKey: {
 				Type:        schema.TypeString,
 				Description: "Status describing the state between number of nodes wanted and available ones",
 				Computed:    true,
 			},
-			"status": {
+			kubeStatusKey: {
 				Type:        schema.TypeString,
 				Description: "Current status",
 				Computed:    true,
 			},
-			"up_to_date_nodes": {
+			kubeNodePoolUpToDateNodesKey: {
 				Type:        schema.TypeInt,
 				Description: "Number of nodes with latest version installed in the pool",
 				Computed:    true,
 			},
-			"updated_at": {
+			kubeUpdatedAtKey: {
 				Type:        schema.TypeString,
 				Description: "Last update date",
 				Computed:    true,
 			},
-			"autoscaling_scale_down_unneeded_time_seconds": {
+			kubeNodePoolAutoscalingScaleDownUnneededTimeSecondsKey: {
 				Type:        schema.TypeInt,
 				Description: "scaleDownUnneededTimeSeconds for autoscaling",
 				Computed:    true,
 			},
-			"autoscaling_scale_down_unready_time_seconds": {
+			kubeNodePoolAutoscalingScaleDownUnreadyTimeSecondsKey: {
 				Type:        schema.TypeInt,
 				Description: "scaleDownUnreadyTimeSeconds for autoscaling",
 				Computed:    true,
 			},
-			"autoscaling_scale_down_utilization_threshold": {
+			kubeNodePoolAutoscalingScaleDownUtilizationThresholdKey: {
 				Type:        schema.TypeFloat,
 				Description: "scaleDownUtilizationThreshold for autoscaling",
 				Computed:    true,
 			},
-			"template": {
+			kubeNodePoolTemplateKey: {
 				Description: "Node pool template",
 				Optional:    true,
 				Type:        schema.TypeSet,
@@ -137,7 +156,7 @@ func dataSourceCloudProjectKubeNodepool() *schema.Resource {
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"metadata": {
+						kubeNodePoolTemplateMetadataKey: {
 							Description: "metadata",
 							Optional:    true,
 							Type:        schema.TypeSet,
@@ -149,20 +168,20 @@ func dataSourceCloudProjectKubeNodepool() *schema.Resource {
 							},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"finalizers": {
+									kubeNodePoolTemplateFinalizersKey: {
 										Description: "finalizers",
 										Optional:    true,
 										Type:        schema.TypeList,
 										Elem:        &schema.Schema{Type: schema.TypeString},
 									},
-									"labels": {
+									kubeNodePoolTemplateLabelsKey: {
 										Description: "labels",
 										Optional:    true,
 										Type:        schema.TypeMap,
 										Elem:        &schema.Schema{Type: schema.TypeString},
 										Set:         schema.HashString,
 									},
-									"annotations": {
+									kubeNodePoolTemplateAnnotationsKey: {
 										Description: "annotations",
 										Optional:    true,
 										Type:        schema.TypeMap,
@@ -172,7 +191,7 @@ func dataSourceCloudProjectKubeNodepool() *schema.Resource {
 								},
 							},
 						},
-						"spec": {
+						kubeNodePoolTemplateSpecKey: {
 							Description: "spec",
 							Optional:    true,
 							Type:        schema.TypeSet,
@@ -184,12 +203,12 @@ func dataSourceCloudProjectKubeNodepool() *schema.Resource {
 							},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"unschedulable": {
+									kubeNodePoolTemplateUnschedulableKey: {
 										Description: "unschedulable",
 										Optional:    true,
 										Type:        schema.TypeBool,
 									},
-									"taints": {
+									kubeNodePoolTemplateTaintsKey: {
 										Description: "taints",
 										Optional:    true,
 										Type:        schema.TypeList,
@@ -204,7 +223,7 @@ func dataSourceCloudProjectKubeNodepool() *schema.Resource {
 					},
 				},
 			},
-			"availability_zones": {
+			kubeNodePoolAvailabilityZonesKey: {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Schema{
@@ -217,9 +236,9 @@ func dataSourceCloudProjectKubeNodepool() *schema.Resource {
 
 func dataSourceCloudProjectKubeNodePoolRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-	serviceName := d.Get("service_name").(string)
-	kubeId := d.Get("kube_id").(string)
-	nodepoolName := d.Get("name").(string)
+	serviceName := d.Get(kubeServiceNameKey).(string)
+	kubeId := d.Get(kubeKubeIdKey).(string)
+	nodepoolName := d.Get(kubeNameKey).(string)
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/nodepool", serviceName, kubeId)
 	var res []CloudProjectKubeNodePoolResponse

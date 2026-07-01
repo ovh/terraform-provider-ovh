@@ -421,6 +421,13 @@ func CloudProjectRegionStorageResourceSchema(ctx context.Context) schema.Schema 
 			Description:         "Versioning configuration",
 			MarkdownDescription: "Versioning configuration",
 		},
+		"tags": schema.MapAttribute{
+			CustomType:          ovhtypes.NewTfMapNestedType[ovhtypes.TfStringValue](ctx),
+			Optional:            true,
+			Computed:            true,
+			Description:         "Container tags",
+			MarkdownDescription: "Container tags",
+		},
 		"virtual_host": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
 			Computed:            true,
@@ -435,25 +442,26 @@ func CloudProjectRegionStorageResourceSchema(ctx context.Context) schema.Schema 
 }
 
 type CloudProjectRegionStorageModel struct {
-	ID           ovhtypes.TfStringValue                   `tfsdk:"id" json:"-"`
-	CreatedAt    ovhtypes.TfStringValue                   `tfsdk:"created_at" json:"createdAt"`
-	Encryption   EncryptionValue                          `tfsdk:"encryption" json:"encryption"`
-	Limit        ovhtypes.TfInt64Value                    `tfsdk:"limit" json:"limit"`
-	Marker       ovhtypes.TfStringValue                   `tfsdk:"marker" json:"marker"`
-	Name         ovhtypes.TfStringValue                   `tfsdk:"name" json:"name"`
-	Objects      ovhtypes.TfListNestedValue[ObjectsValue] `tfsdk:"objects" json:"objects"`
-	HideObjects  ovhtypes.TfBoolValue                     `tfsdk:"hide_objects" json:"-"`
-	ObjectsCount ovhtypes.TfInt64Value                    `tfsdk:"objects_count" json:"objectsCount"`
-	ObjectsSize  ovhtypes.TfInt64Value                    `tfsdk:"objects_size" json:"objectsSize"`
-	OwnerId      ovhtypes.TfInt64Value                    `tfsdk:"owner_id" json:"ownerId"`
-	Prefix       ovhtypes.TfStringValue                   `tfsdk:"prefix" json:"prefix"`
-	Region       ovhtypes.TfStringValue                   `tfsdk:"region" json:"region"`
-	RegionName   ovhtypes.TfStringValue                   `tfsdk:"region_name" json:"regionName"`
-	Replication  ReplicationValue                         `tfsdk:"replication" json:"replication"`
-	ServiceName  ovhtypes.TfStringValue                   `tfsdk:"service_name" json:"serviceName"`
-	ObjectLock   ObjectLockValue                          `tfsdk:"object_lock" json:"objectLock"`
-	Versioning   VersioningValue                          `tfsdk:"versioning" json:"versioning"`
-	VirtualHost  ovhtypes.TfStringValue                   `tfsdk:"virtual_host" json:"virtualHost"`
+	ID           ovhtypes.TfStringValue                            `tfsdk:"id" json:"-"`
+	CreatedAt    ovhtypes.TfStringValue                            `tfsdk:"created_at" json:"createdAt"`
+	Encryption   EncryptionValue                                   `tfsdk:"encryption" json:"encryption"`
+	Limit        ovhtypes.TfInt64Value                             `tfsdk:"limit" json:"limit"`
+	Marker       ovhtypes.TfStringValue                            `tfsdk:"marker" json:"marker"`
+	Name         ovhtypes.TfStringValue                            `tfsdk:"name" json:"name"`
+	Objects      ovhtypes.TfListNestedValue[ObjectsValue]          `tfsdk:"objects" json:"objects"`
+	HideObjects  ovhtypes.TfBoolValue                              `tfsdk:"hide_objects" json:"-"`
+	ObjectsCount ovhtypes.TfInt64Value                             `tfsdk:"objects_count" json:"objectsCount"`
+	ObjectsSize  ovhtypes.TfInt64Value                             `tfsdk:"objects_size" json:"objectsSize"`
+	OwnerId      ovhtypes.TfInt64Value                             `tfsdk:"owner_id" json:"ownerId"`
+	Prefix       ovhtypes.TfStringValue                            `tfsdk:"prefix" json:"prefix"`
+	Region       ovhtypes.TfStringValue                            `tfsdk:"region" json:"region"`
+	RegionName   ovhtypes.TfStringValue                            `tfsdk:"region_name" json:"regionName"`
+	Replication  ReplicationValue                                  `tfsdk:"replication" json:"replication"`
+	ServiceName  ovhtypes.TfStringValue                            `tfsdk:"service_name" json:"serviceName"`
+	Tags         ovhtypes.TfMapNestedValue[ovhtypes.TfStringValue] `tfsdk:"tags" json:"tags"`
+	ObjectLock   ObjectLockValue                                   `tfsdk:"object_lock" json:"objectLock"`
+	Versioning   VersioningValue                                   `tfsdk:"versioning" json:"versioning"`
+	VirtualHost  ovhtypes.TfStringValue                            `tfsdk:"virtual_host" json:"virtualHost"`
 }
 
 func (v *CloudProjectRegionStorageModel) MergeWith(other *CloudProjectRegionStorageModel) {
@@ -521,6 +529,10 @@ func (v *CloudProjectRegionStorageModel) MergeWith(other *CloudProjectRegionStor
 		v.ServiceName = other.ServiceName
 	}
 
+	if (v.Tags.IsUnknown() || v.Tags.IsNull()) && !other.Tags.IsUnknown() {
+		v.Tags = other.Tags
+	}
+
 	if v.ObjectLock.IsUnknown() && !other.ObjectLock.IsUnknown() {
 		v.ObjectLock = other.ObjectLock
 	} else if !other.ObjectLock.IsUnknown() {
@@ -539,12 +551,13 @@ func (v *CloudProjectRegionStorageModel) MergeWith(other *CloudProjectRegionStor
 }
 
 type CloudProjectRegionStorageWritableModel struct {
-	Encryption  *EncryptionWritableValue  `tfsdk:"encryption" json:"encryption,omitempty"`
-	Name        *ovhtypes.TfStringValue   `tfsdk:"name" json:"name,omitempty"`
-	OwnerId     *ovhtypes.TfInt64Value    `tfsdk:"owner_id" json:"ownerId,omitempty"`
-	ObjectLock  *ObjectLockWritableValue  `tfsdk:"object_lock" json:"objectLock,omitempty"`
-	Replication *ReplicationWritableValue `tfsdk:"replication" json:"replication,omitempty"`
-	Versioning  *VersioningWritableValue  `tfsdk:"versioning" json:"versioning,omitempty"`
+	Encryption  *EncryptionWritableValue                           `tfsdk:"encryption" json:"encryption,omitempty"`
+	Name        *ovhtypes.TfStringValue                            `tfsdk:"name" json:"name,omitempty"`
+	OwnerId     *ovhtypes.TfInt64Value                             `tfsdk:"owner_id" json:"ownerId,omitempty"`
+	Tags        *ovhtypes.TfMapNestedValue[ovhtypes.TfStringValue] `tfsdk:"tags" json:"tags,omitempty"`
+	ObjectLock  *ObjectLockWritableValue                           `tfsdk:"object_lock" json:"objectLock,omitempty"`
+	Replication *ReplicationWritableValue                          `tfsdk:"replication" json:"replication,omitempty"`
+	Versioning  *VersioningWritableValue                           `tfsdk:"versioning" json:"versioning,omitempty"`
 }
 
 func (v CloudProjectRegionStorageModel) ToCreate() *CloudProjectRegionStorageWritableModel {
@@ -560,6 +573,10 @@ func (v CloudProjectRegionStorageModel) ToCreate() *CloudProjectRegionStorageWri
 
 	if !v.OwnerId.IsUnknown() {
 		res.OwnerId = &v.OwnerId
+	}
+
+	if !v.Tags.IsUnknown() {
+		res.Tags = &v.Tags
 	}
 
 	if !v.ObjectLock.IsUnknown() {
@@ -582,6 +599,10 @@ func (v CloudProjectRegionStorageModel) ToUpdate() *CloudProjectRegionStorageWri
 
 	if !v.Encryption.IsUnknown() {
 		res.Encryption = v.Encryption.ToUpdate()
+	}
+
+	if !v.Tags.IsUnknown() {
+		res.Tags = &v.Tags
 	}
 
 	if !v.ObjectLock.IsUnknown() {

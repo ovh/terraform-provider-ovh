@@ -38,3 +38,10 @@ func (v UnitAndValue) ToMap() map[string]interface{} {
 type ConfirmTerminationOpts struct {
 	Token string `json:"token"`
 }
+
+// errorDiagnostics is the subset of diag.Diagnostics used to report errors. It
+// lets helpers accept either a resource or a data source diagnostics value
+// without depending on the concrete type.
+type errorDiagnostics interface {
+	AddError(summary, detail string)
+}

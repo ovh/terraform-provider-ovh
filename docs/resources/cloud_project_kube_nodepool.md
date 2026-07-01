@@ -75,7 +75,7 @@ The following arguments are supported:
 * `service_name` - The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used. **Changing this value recreates the resource.**
 * `kube_id` - The id of the managed kubernetes cluster. **Changing this value recreates the resource.**
 * `name` - (Optional) The name of the nodepool. Warning: `_` char is not allowed! **Changing this value recreates the resource.**
-* `flavor_name` - a valid OVHcloud public cloud flavor ID in which the nodes will be started. Ex: "b2-7". You can find the list of flavor IDs: https://www.ovhcloud.com/fr/public-cloud/prices/. **Changing this value recreates the resource.**
+* `flavor_name` - a valid OVHcloud public cloud flavor ID in which the nodes will be started. Ex: "b3-8". You can find the list of flavor IDs: https://www.ovhcloud.com/fr/public-cloud/prices/. **Changing this value recreates the resource.**
 * `desired_nodes` - number of nodes to start.
 * `availability_zones` - (Optional) list of availability zones to associate the pool - **mandatory for multi-zone** cluster - only one zone is supported at the moment.
 * `max_nodes` - maximum number of nodes allowed in the pool. Setting `desired_nodes` over this value will raise an error.
@@ -86,6 +86,8 @@ The following arguments are supported:
 * `autoscaling_scale_down_unneeded_time_seconds` - (Optional) scaleDownUnneededTimeSeconds autoscaling parameter How long a node should be unneeded before it is eligible for scale down
 * `autoscaling_scale_down_unready_time_seconds` - (Optional) scaleDownUnreadyTimeSeconds autoscaling parameter How long an unready node should be unneeded before it is eligible for scale down
 * `autoscaling_scale_down_utilization_threshold` - (Optional) scaleDownUtilizationThreshold autoscaling parameter Node utilization level, defined as sum of requested resources divided by capacity, below which a node can be considered for scale down
+* `attach_floating_ips` - (Optional) Configuration for floating IP attachment on pool nodes.
+  * `enabled` - (Optional) Enable or disable floating IPs attachment on nodes of this pool. Default to `false`.
 * `template ` - (Optional) Managed Kubernetes nodepool template, which is a complex object constituted by two main nested objects:
   * `metadata` - Metadata of each node in the pool
     * `annotations` - Annotations to apply to each node

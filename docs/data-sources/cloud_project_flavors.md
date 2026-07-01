@@ -25,7 +25,7 @@ data "ovh_cloud_project_flavors" "flavors" {
 ### Optional
 
 - `region` (String) Flavor region
-- `name_filter` (String) Filter flavors using the given name (strict equality, e.g. b2-7)
+- `name_filter` (String) Filter flavors using the given name (strict equality, e.g. b3-8)
 
 ### Read-Only
 

@@ -129,6 +129,42 @@ func testSweepCloudProject(region string) error {
 	return nil
 }
 
+func TestResourceCloudProjectDelete_deletionProtection(t *testing.T) {
+	resourceDef := resourceCloudProject()
+	d := resourceDef.TestResourceData()
+	d.SetId("test-project-id")
+	d.Set("project_id", "test-project-id")
+	d.Set("deletion_protection", true)
+
+	err := resourceCloudProjectDelete(d, &Config{})
+	if err == nil {
+		t.Fatal("expected error when deletion_protection is true, got nil")
+	}
+	if !strings.Contains(err.Error(), "protected from deletion") {
+		t.Fatalf("expected deletion protection error, got: %s", err)
+	}
+
+	// Verify that deletion_protection=false does not trigger the guard.
+	// The delete will panic downstream due to nil API client, but the
+	// important thing is that the deletion protection guard did not fire.
+	d2 := resourceDef.TestResourceData()
+	d2.SetId("test-project-id")
+	d2.Set("project_id", "test-project-id")
+	d2.Set("deletion_protection", false)
+
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				// Expected: nil client panic means we passed the guard
+			}
+		}()
+		err = resourceCloudProjectDelete(d2, &Config{})
+		if err != nil && strings.Contains(err.Error(), "protected from deletion") {
+			t.Fatalf("should not get deletion protection error when set to false, got: %s", err)
+		}
+	}()
+}
+
 func TestAccResourceCloudProject_basic(t *testing.T) {
 	desc := acctest.RandomWithPrefix(test_prefix)
 
