@@ -4,7 +4,7 @@ subcategory: "Block Storage"
 
 # ovh_cloud_project_volume_backup
 
-~> **DEPRECATED** This resource is deprecated. Use `ovh_cloud_storage_block_volume_backup` instead.
+~> **NOTE** Prefer using the new `ovh_cloud_storage_block_volume_backup` resource instead.
 
 Manage backups for the given volume in a public cloud project.
 
