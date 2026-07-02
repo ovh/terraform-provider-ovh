@@ -1,5 +1,5 @@
 ---
-subcategory: "Cloud Storage"
+subcategory: "Block Storage"
 ---
 
 # ovh_cloud_storage_block_volume_snapshot
