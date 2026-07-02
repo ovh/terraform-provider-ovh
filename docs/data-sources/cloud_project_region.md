@@ -1,5 +1,5 @@
 ---
-subcategory: "Instances"
+subcategory: "Cloud Project"
 ---
 
 # ovh_cloud_project_region (Data Source)
