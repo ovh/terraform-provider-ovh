@@ -4,7 +4,7 @@ subcategory: "Block Storage"
 
 # ovh_cloud_project_volume
 
-~> **NOTE** Prefer using the new `ovh_cloud_storage_block_volume` resource instead.
+~> **DEPRECATED** This resource is deprecated. Use `ovh_cloud_storage_block_volume` instead.
 
 Create volume in a public cloud project.
 
