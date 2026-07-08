@@ -1,3 +1,60 @@
+## 2.16.0 (July 8, 2026)
+
+⚙️ General:
+
+* Bump `golang.org/x/net` from 0.48.0 to 0.55.0 ([#1369](https://github.com/ovh/terraform-provider-ovh/pull/1369))
+
+🎉 Features:
+
+* New resource: `ovh_cloud_floating_ip` ([#1373](https://github.com/ovh/terraform-provider-ovh/pull/1373))
+* New resource: `ovh_cloud_key_manager_container` ([#1370](https://github.com/ovh/terraform-provider-ovh/pull/1370))
+* New resource: `ovh_cloud_key_manager_container_consumer` ([#1370](https://github.com/ovh/terraform-provider-ovh/pull/1370))
+* New resource: `ovh_cloud_key_manager_secret` ([#1370](https://github.com/ovh/terraform-provider-ovh/pull/1370))
+* New resource: `ovh_cloud_key_manager_secret_consumer` ([#1370](https://github.com/ovh/terraform-provider-ovh/pull/1370))
+* New resource: `ovh_cloud_quota` ([#1358](https://github.com/ovh/terraform-provider-ovh/pull/1358))
+* New resource: `ovh_cloud_storage_file_share` ([#1371](https://github.com/ovh/terraform-provider-ovh/pull/1371))
+* New resource: `ovh_cloud_storage_file_share_network` ([#1371](https://github.com/ovh/terraform-provider-ovh/pull/1371))
+* New resource: `ovh_cloud_storage_file_share_snapshot` ([#1371](https://github.com/ovh/terraform-provider-ovh/pull/1371))
+
+* New datasource: `ovh_cloud_additional_ip` ([#1373](https://github.com/ovh/terraform-provider-ovh/pull/1373))
+* New datasource: `ovh_cloud_additional_ips` ([#1373](https://github.com/ovh/terraform-provider-ovh/pull/1373))
+* New datasource: `ovh_cloud_ext_net_ip` ([#1373](https://github.com/ovh/terraform-provider-ovh/pull/1373))
+* New datasource: `ovh_cloud_ext_net_ips` ([#1373](https://github.com/ovh/terraform-provider-ovh/pull/1373))
+* New datasource: `ovh_cloud_floating_ip` ([#1373](https://github.com/ovh/terraform-provider-ovh/pull/1373))
+* New datasource: `ovh_cloud_floating_ips` ([#1373](https://github.com/ovh/terraform-provider-ovh/pull/1373))
+* New datasource: `ovh_cloud_public_ips` ([#1373](https://github.com/ovh/terraform-provider-ovh/pull/1373))
+* New datasource: `ovh_cloud_key_manager_container` ([#1370](https://github.com/ovh/terraform-provider-ovh/pull/1370))
+* New datasource: `ovh_cloud_key_manager_containers` ([#1370](https://github.com/ovh/terraform-provider-ovh/pull/1370))
+* New datasource: `ovh_cloud_key_manager_container_consumer` ([#1370](https://github.com/ovh/terraform-provider-ovh/pull/1370))
+* New datasource: `ovh_cloud_key_manager_container_consumers` ([#1370](https://github.com/ovh/terraform-provider-ovh/pull/1370))
+* New datasource: `ovh_cloud_key_manager_secret` ([#1370](https://github.com/ovh/terraform-provider-ovh/pull/1370))
+* New datasource: `ovh_cloud_key_manager_secrets` ([#1370](https://github.com/ovh/terraform-provider-ovh/pull/1370))
+* New datasource: `ovh_cloud_key_manager_secret_consumer` ([#1370](https://github.com/ovh/terraform-provider-ovh/pull/1370))
+* New datasource: `ovh_cloud_key_manager_secret_consumers` ([#1370](https://github.com/ovh/terraform-provider-ovh/pull/1370))
+* New datasource: `ovh_cloud_key_manager_secret_payload` ([#1370](https://github.com/ovh/terraform-provider-ovh/pull/1370))
+* New datasource: `ovh_cloud_quota` ([#1358](https://github.com/ovh/terraform-provider-ovh/pull/1358))
+* New datasource: `ovh_cloud_storage_file_share` ([#1371](https://github.com/ovh/terraform-provider-ovh/pull/1371))
+* New datasource: `ovh_cloud_storage_file_shares` ([#1371](https://github.com/ovh/terraform-provider-ovh/pull/1371))
+* New datasource: `ovh_cloud_storage_file_share_network` ([#1371](https://github.com/ovh/terraform-provider-ovh/pull/1371))
+* New datasource: `ovh_cloud_storage_file_share_networks` ([#1371](https://github.com/ovh/terraform-provider-ovh/pull/1371))
+* New datasource: `ovh_cloud_storage_file_share_snapshot` ([#1371](https://github.com/ovh/terraform-provider-ovh/pull/1371))
+* New datasource: `ovh_cloud_storage_file_share_snapshots` ([#1371](https://github.com/ovh/terraform-provider-ovh/pull/1371))
+
+💪 Improvements:
+
+* `r/ovh_dbaas_logs_output_graylog_stream`: Add `encryption_keys_ids` attribute ([#1348](https://github.com/ovh/terraform-provider-ovh/pull/1348))
+
+🐜 Bug fixes:
+
+* `r/ovh_iploadbalancing_http_route`, `r/ovh_iploadbalancing_tcp_route`: Treat a `weight` of `0` as a real value instead of null ([#1363](https://github.com/ovh/terraform-provider-ovh/pull/1363))
+
+📚 Documentation:
+
+* Reorganize documentation `subcategory` metadata to group pages by product ([#1367](https://github.com/ovh/terraform-provider-ovh/pull/1367))
+* `r/ovh_iam_resource_tags`: Fix URN resource type in examples (`cloudProject` → `publicCloudProject`) ([#1353](https://github.com/ovh/terraform-provider-ovh/pull/1353))
+
+❤️ Thanks for your contributions ❤️
+
 ## 2.15.0 (June 25, 2026)
 
 🎉 Features:
