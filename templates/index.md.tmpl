@@ -122,6 +122,47 @@ You can find more details about the configuration parsing on repository [go-ovh]
 
 To list and revoke your API keys, you can read [the following documentation](https://help.ovhcloud.com/csm/en-ie-api-getting-started-ovhcloud-api?id=kb_article_view&sysparm_article=KB0042786#list-and-revoke-your-keys).
 
+### Configuration profiles
+
+The provider supports named configuration profiles, similar to the `ovhcloud-cli` tool. This allows you to store multiple sets of credentials in a single `.ovh.conf` file and select which one to use via the `profile` argument (or the `OVH_PROFILE` environment variable).
+
+Profile sections use the format `[profile:<name>]` in the `.ovh.conf` file:
+
+```ini
+[profile:personal]
+endpoint=ovh-eu
+client_id=personal_client_id
+client_secret=personal_client_secret
+
+[profile:work]
+endpoint=ovh-ca
+application_key=work_app_key
+application_secret=work_app_secret
+consumer_key=work_consumer_key
+```
+
+To use a profile in your Terraform configuration:
+
+```terraform
+provider "ovh" {
+  profile = "personal"
+}
+```
+
+Or via environment variable:
+
+```sh
+export OVH_PROFILE=personal
+```
+
+The configuration files are looked up in the same locations as the standard `.ovh.conf` file:
+
+1. Current working directory: `./ovh.conf`
+2. Current user's home directory: `~/.ovh.conf`
+3. System wide configuration: `/etc/ovh.conf`
+
+The priority order for credential resolution is: HCL provider arguments > environment variables > profile values > default `.ovh.conf` sections (loaded by go-ovh).
+
 ## Example Usage
 
 {{tffile "examples/example_3.tf"}}
@@ -149,6 +190,8 @@ The following arguments are supported:
 * `api_rate_limit` - (Optional) Specify the API request rate limit, X operations by seconds. If omitted, unlimited.
 
 * `ignore_init_error` - (Optional) **⚠️ Use with caution and only if you know what you are doing.** If set to `true`, the provider will skip authentication validation during initialization. If omitted, the `OVH_IGNORE_INIT_ERROR` environment variable is used. This allows the provider to load even with invalid credentials, but any actual API calls will still fail. This is intended for development/testing purposes only where valid credentials are not available but the provider configuration must be present.
+
+* `profile` - (Optional) The name of the OVH configuration profile to use from the `.ovh.conf` file. Uses the `[profile:<name>]` section format. If omitted, the `OVH_PROFILE` environment variable is used.
 
 ## Terraform State storage in an OVHcloud Object Storage (S3 compatibility)
 
