@@ -65,10 +65,13 @@ func (r *cloudStorageBlockVolumeResource) Schema(ctx context.Context, req resour
 		Attributes: map[string]schema.Attribute{
 			"service_name": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
-				Required:            true,
-				Description:         "Service name of the resource representing the id of the cloud project",
-				MarkdownDescription: "Service name of the resource representing the id of the cloud project",
+				Optional:            true,
+				Computed:            true,
+				Description:         "Service name of the resource representing the id of the cloud project. If omitted, the OVH_CLOUD_PROJECT_SERVICE environment variable is used.",
+				MarkdownDescription: "Service name of the resource representing the id of the cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.",
 				PlanModifiers: []planmodifier.String{
+					EnvDefaultString("OVH_CLOUD_PROJECT_SERVICE", true),
+					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
@@ -95,8 +98,12 @@ func (r *cloudStorageBlockVolumeResource) Schema(ctx context.Context, req resour
 			"volume_type": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Optional:            true,
+				Computed:            true,
 				Description:         "Volume type (CLASSIC, HIGH_SPEED, HIGH_SPEED_GEN2). Can be changed after creation (triggers online retype).",
 				MarkdownDescription: "Volume type (`CLASSIC`, `HIGH_SPEED`, `HIGH_SPEED_GEN2`). Can be changed after creation (triggers online retype).",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"encryption": schema.SingleNestedAttribute{
 				Optional:            true,

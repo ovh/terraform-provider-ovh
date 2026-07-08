@@ -14,7 +14,7 @@ This resource allows you to apply and manage tags on OVHcloud resources identifi
 
 ```terraform
 resource "ovh_iam_resource_tags" "project_tags" {
-  urn = "urn:v1:eu:resource:cloudProject:1234567890abcdef"
+  urn = "urn:v1:eu:resource:publicCloudProject:1234567890abcdef"
   
   tags = {
     environment    = "staging"
@@ -64,7 +64,7 @@ In addition to all arguments above, the following attributes are exported:
 IAM resource tags can be imported using the resource URN:
 
 ```bash
-terraform import ovh_iam_resource_tags.my_tags "urn:v1:eu:resource:cloudProject:1234567890abcdef"
+terraform import ovh_iam_resource_tags.my_tags "urn:v1:eu:resource:publicCloudProject:1234567890abcdef"
 ```
 
 After importing, you should update your Terraform configuration to match the imported state. The import will bring in all tags currently applied to the resource, but only tags defined in your configuration will be managed by Terraform.

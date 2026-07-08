@@ -18,6 +18,7 @@ import (
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 )
@@ -29,6 +30,16 @@ func CloudProjectVolumeResourceSchema(ctx context.Context) schema.Schema {
 			Computed:            true,
 			Description:         "The action of the operation",
 			MarkdownDescription: "The action of the operation",
+		},
+		"availability_zone": schema.StringAttribute{
+			CustomType:          ovhtypes.TfStringType{},
+			Optional:            true,
+			Computed:            true,
+			Description:         "Availability zone of the volume (required for volumes in a 3AZ region)",
+			MarkdownDescription: "Availability zone of the volume (required for volumes in a 3AZ region)",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.RequiresReplace(),
+			},
 		},
 		"completed_at": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
@@ -48,6 +59,62 @@ func CloudProjectVolumeResourceSchema(ctx context.Context) schema.Schema {
 			Computed:            true,
 			Description:         "Volume description",
 			MarkdownDescription: "Volume description",
+		},
+		"encryption": schema.SingleNestedAttribute{
+			Attributes: map[string]schema.Attribute{
+				"encrypted": schema.BoolAttribute{
+					CustomType:          ovhtypes.TfBoolType{},
+					Optional:            true,
+					Computed:            true,
+					Description:         "Create the volume as encrypted (auto-derives a LUKS volume type when set)",
+					MarkdownDescription: "Create the volume as encrypted (auto-derives a LUKS volume type when set)",
+					PlanModifiers: []planmodifier.Bool{
+						boolplanmodifier.RequiresReplace(),
+					},
+				},
+				"kms": schema.SingleNestedAttribute{
+					Attributes: map[string]schema.Attribute{
+						"domain_id": schema.StringAttribute{
+							CustomType:          ovhtypes.TfStringType{},
+							Optional:            true,
+							Computed:            true,
+							Description:         "OKMS domain ID holding the customer managed key",
+							MarkdownDescription: "OKMS domain ID holding the customer managed key",
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+						},
+						"service_key_id": schema.StringAttribute{
+							CustomType:          ovhtypes.TfStringType{},
+							Optional:            true,
+							Computed:            true,
+							Description:         "OKMS service key ID used to encrypt the volume",
+							MarkdownDescription: "OKMS service key ID used to encrypt the volume",
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+						},
+					},
+					CustomType: VolumeEncryptionKmsType{
+						ObjectType: types.ObjectType{
+							AttrTypes: VolumeEncryptionKmsValue{}.AttributeTypes(ctx),
+						},
+					},
+					Optional:            true,
+					Computed:            true,
+					Description:         "Customer managed key (CMK) reference. Omit for OVH managed keys (OMK).",
+					MarkdownDescription: "Customer managed key (CMK) reference. Omit for OVH managed keys (OMK).",
+				},
+			},
+			CustomType: VolumeEncryptionType{
+				ObjectType: types.ObjectType{
+					AttrTypes: VolumeEncryptionValue{}.AttributeTypes(ctx),
+				},
+			},
+			Optional:            true,
+			Computed:            true,
+			Description:         "Volume encryption configuration. CMK is only available in supported regions (preprod and 3AZ).",
+			MarkdownDescription: "Volume encryption configuration. CMK is only available in supported regions (preprod and 3AZ).",
 		},
 		"id": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
@@ -201,31 +268,37 @@ func CloudProjectVolumeResourceSchema(ctx context.Context) schema.Schema {
 }
 
 type CloudProjectVolumeModelOp struct {
-	Action        ovhtypes.TfStringValue                             `tfsdk:"action" json:"action"`
-	CompletedAt   ovhtypes.TfStringValue                             `tfsdk:"completed_at" json:"completedAt"`
-	CreatedAt     ovhtypes.TfStringValue                             `tfsdk:"created_at" json:"createdAt"`
-	Description   ovhtypes.TfStringValue                             `tfsdk:"description" json:"description"`
-	Id            ovhtypes.TfStringValue                             `tfsdk:"id" json:"id"`
-	ImageId       ovhtypes.TfStringValue                             `tfsdk:"image_id" json:"imageId"`
-	InstanceId    ovhtypes.TfStringValue                             `tfsdk:"instance_id" json:"instanceId"`
-	Name          ovhtypes.TfStringValue                             `tfsdk:"name" json:"name"`
-	Progress      ovhtypes.TfInt64Value                              `tfsdk:"progress" json:"progress"`
-	RegionName    ovhtypes.TfStringValue                             `tfsdk:"region_name" json:"regionName"`
-	Regions       ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] `tfsdk:"regions" json:"regions"`
-	ResourceId    ovhtypes.TfStringValue                             `tfsdk:"resource_id" json:"resourceId"`
-	ServiceName   ovhtypes.TfStringValue                             `tfsdk:"service_name" json:"serviceName"`
-	Size          ovhtypes.TfInt64Value                              `tfsdk:"size" json:"size"`
-	SnapshotId    ovhtypes.TfStringValue                             `tfsdk:"snapshot_id" json:"snapshotId"`
-	StartedAt     ovhtypes.TfStringValue                             `tfsdk:"started_at" json:"startedAt"`
-	Status        ovhtypes.TfStringValue                             `tfsdk:"status" json:"status"`
-	SubOperations ovhtypes.TfListNestedValue[SubOperationsValue]     `tfsdk:"sub_operations" json:"subOperations"`
-	Type          ovhtypes.TfStringValue                             `tfsdk:"type" json:"type"`
-	VolumeId      ovhtypes.TfStringValue                             `tfsdk:"volume_id" json:"volumeId"`
+	Action           ovhtypes.TfStringValue                             `tfsdk:"action" json:"action"`
+	AvailabilityZone ovhtypes.TfStringValue                             `tfsdk:"availability_zone" json:"availabilityZone"`
+	CompletedAt      ovhtypes.TfStringValue                             `tfsdk:"completed_at" json:"completedAt"`
+	CreatedAt        ovhtypes.TfStringValue                             `tfsdk:"created_at" json:"createdAt"`
+	Description      ovhtypes.TfStringValue                             `tfsdk:"description" json:"description"`
+	Encryption       VolumeEncryptionValue                              `tfsdk:"encryption" json:"encryption"`
+	Id               ovhtypes.TfStringValue                             `tfsdk:"id" json:"id"`
+	ImageId          ovhtypes.TfStringValue                             `tfsdk:"image_id" json:"imageId"`
+	InstanceId       ovhtypes.TfStringValue                             `tfsdk:"instance_id" json:"instanceId"`
+	Name             ovhtypes.TfStringValue                             `tfsdk:"name" json:"name"`
+	Progress         ovhtypes.TfInt64Value                              `tfsdk:"progress" json:"progress"`
+	RegionName       ovhtypes.TfStringValue                             `tfsdk:"region_name" json:"regionName"`
+	Regions          ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] `tfsdk:"regions" json:"regions"`
+	ResourceId       ovhtypes.TfStringValue                             `tfsdk:"resource_id" json:"resourceId"`
+	ServiceName      ovhtypes.TfStringValue                             `tfsdk:"service_name" json:"serviceName"`
+	Size             ovhtypes.TfInt64Value                              `tfsdk:"size" json:"size"`
+	SnapshotId       ovhtypes.TfStringValue                             `tfsdk:"snapshot_id" json:"snapshotId"`
+	StartedAt        ovhtypes.TfStringValue                             `tfsdk:"started_at" json:"startedAt"`
+	Status           ovhtypes.TfStringValue                             `tfsdk:"status" json:"status"`
+	SubOperations    ovhtypes.TfListNestedValue[SubOperationsValue]     `tfsdk:"sub_operations" json:"subOperations"`
+	Type             ovhtypes.TfStringValue                             `tfsdk:"type" json:"type"`
+	VolumeId         ovhtypes.TfStringValue                             `tfsdk:"volume_id" json:"volumeId"`
 }
 
 func (v *CloudProjectVolumeModelOp) MergeWith(other *CloudProjectVolumeModelOp) {
 	if (v.Action.IsUnknown() || v.Action.IsNull()) && !other.Action.IsUnknown() {
 		v.Action = other.Action
+	}
+
+	if (v.AvailabilityZone.IsUnknown() || v.AvailabilityZone.IsNull()) && !other.AvailabilityZone.IsUnknown() {
+		v.AvailabilityZone = other.AvailabilityZone
 	}
 
 	if (v.CompletedAt.IsUnknown() || v.CompletedAt.IsNull()) && !other.CompletedAt.IsUnknown() {
@@ -238,6 +311,12 @@ func (v *CloudProjectVolumeModelOp) MergeWith(other *CloudProjectVolumeModelOp) 
 
 	if (v.Description.IsUnknown() || v.Description.IsNull()) && !other.Description.IsUnknown() {
 		v.Description = other.Description
+	}
+
+	if v.Encryption.IsUnknown() && !other.Encryption.IsUnknown() {
+		v.Encryption = other.Encryption
+	} else if !other.Encryption.IsUnknown() {
+		v.Encryption.MergeWith(&other.Encryption)
 	}
 
 	if (v.Id.IsUnknown() || v.Id.IsNull()) && !other.Id.IsUnknown() {
@@ -308,8 +387,16 @@ func (v *CloudProjectVolumeModelOp) MergeWith(other *CloudProjectVolumeModelOp) 
 func (v CloudProjectVolumeModelOp) ToCreate() *CloudProjectVolumeModelOp {
 	res := &CloudProjectVolumeModelOp{}
 
+	if !v.AvailabilityZone.IsUnknown() {
+		res.AvailabilityZone = v.AvailabilityZone
+	}
+
 	if !v.Description.IsUnknown() {
 		res.Description = v.Description
+	}
+
+	if !v.Encryption.IsUnknown() {
+		res.Encryption = v.Encryption
 	}
 
 	if !v.ImageId.IsUnknown() {
@@ -355,8 +442,14 @@ func (v CloudProjectVolumeModelOp) ToUpdate() *CloudProjectVolumeModelOp {
 
 func (v *CloudProjectVolumeModelOp) MarshalJSON() ([]byte, error) {
 	toMarshal := map[string]any{}
+	if !v.AvailabilityZone.IsNull() && !v.AvailabilityZone.IsUnknown() {
+		toMarshal["availabilityZone"] = v.AvailabilityZone
+	}
 	if !v.Description.IsNull() && !v.Description.IsUnknown() {
 		toMarshal["description"] = v.Description
+	}
+	if !v.Encryption.IsNull() && !v.Encryption.IsUnknown() {
+		toMarshal["encryption"] = v.Encryption.ToCreate()
 	}
 	if !v.ImageId.IsNull() && !v.ImageId.IsUnknown() {
 		toMarshal["imageId"] = v.ImageId
@@ -782,5 +875,896 @@ func (v SubOperationsValue) AttributeTypes(ctx context.Context) map[string]attr.
 	return map[string]attr.Type{
 		"resource_id":   ovhtypes.TfStringType{},
 		"resource_type": ovhtypes.TfStringType{},
+	}
+}
+
+var _ basetypes.ObjectTypable = VolumeEncryptionType{}
+
+type VolumeEncryptionType struct {
+	basetypes.ObjectType
+}
+
+func (t VolumeEncryptionType) Equal(o attr.Type) bool {
+	other, ok := o.(VolumeEncryptionType)
+
+	if !ok {
+		return false
+	}
+
+	return t.ObjectType.Equal(other.ObjectType)
+}
+
+func (t VolumeEncryptionType) String() string {
+	return "VolumeEncryptionType"
+}
+
+func (t VolumeEncryptionType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	attributes := in.Attributes()
+
+	encryptedAttribute, ok := attributes["encrypted"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`encrypted is missing from object`)
+
+		return nil, diags
+	}
+
+	encryptedVal, ok := encryptedAttribute.(ovhtypes.TfBoolValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`encrypted expected to be ovhtypes.TfBoolValue, was: %T`, encryptedAttribute))
+	}
+
+	kmsAttribute, ok := attributes["kms"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`kms is missing from object`)
+
+		return nil, diags
+	}
+
+	kmsVal, ok := kmsAttribute.(VolumeEncryptionKmsValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`kms expected to be VolumeEncryptionKmsValue, was: %T`, kmsAttribute))
+	}
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return VolumeEncryptionValue{
+		Encrypted: encryptedVal,
+		Kms:       kmsVal,
+		state:     attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVolumeEncryptionValueNull() VolumeEncryptionValue {
+	return VolumeEncryptionValue{
+		state: attr.ValueStateNull,
+	}
+}
+
+func NewVolumeEncryptionValueUnknown() VolumeEncryptionValue {
+	return VolumeEncryptionValue{
+		state: attr.ValueStateUnknown,
+	}
+}
+
+func NewVolumeEncryptionValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (VolumeEncryptionValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
+	ctx := context.Background()
+
+	for name, attributeType := range attributeTypes {
+		attribute, ok := attributes[name]
+
+		if !ok {
+			diags.AddError(
+				"Missing VolumeEncryptionValue Attribute Value",
+				"While creating a VolumeEncryptionValue value, a missing attribute value was detected. "+
+					"A VolumeEncryptionValue must contain values for all attributes, even if null or unknown. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VolumeEncryptionValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
+			)
+
+			continue
+		}
+
+		if !attributeType.Equal(attribute.Type(ctx)) {
+			diags.AddError(
+				"Invalid VolumeEncryptionValue Attribute Type",
+				"While creating a VolumeEncryptionValue value, an invalid attribute value was detected. "+
+					"A VolumeEncryptionValue must use a matching attribute type for the value. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VolumeEncryptionValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
+					fmt.Sprintf("VolumeEncryptionValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
+			)
+		}
+	}
+
+	for name := range attributes {
+		_, ok := attributeTypes[name]
+
+		if !ok {
+			diags.AddError(
+				"Extra VolumeEncryptionValue Attribute Value",
+				"While creating a VolumeEncryptionValue value, an extra attribute value was detected. "+
+					"A VolumeEncryptionValue must not contain values beyond the expected attribute types. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("Extra VolumeEncryptionValue Attribute Name: %s", name),
+			)
+		}
+	}
+
+	if diags.HasError() {
+		return NewVolumeEncryptionValueUnknown(), diags
+	}
+
+	encryptedAttribute, ok := attributes["encrypted"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`encrypted is missing from object`)
+
+		return NewVolumeEncryptionValueUnknown(), diags
+	}
+
+	encryptedVal, ok := encryptedAttribute.(ovhtypes.TfBoolValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`encrypted expected to be ovhtypes.TfBoolValue, was: %T`, encryptedAttribute))
+	}
+
+	kmsAttribute, ok := attributes["kms"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`kms is missing from object`)
+
+		return NewVolumeEncryptionValueUnknown(), diags
+	}
+
+	kmsVal, ok := kmsAttribute.(VolumeEncryptionKmsValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`kms expected to be VolumeEncryptionKmsValue, was: %T`, kmsAttribute))
+	}
+
+	if diags.HasError() {
+		return NewVolumeEncryptionValueUnknown(), diags
+	}
+
+	return VolumeEncryptionValue{
+		Encrypted: encryptedVal,
+		Kms:       kmsVal,
+		state:     attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVolumeEncryptionValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) VolumeEncryptionValue {
+	object, diags := NewVolumeEncryptionValue(attributeTypes, attributes)
+
+	if diags.HasError() {
+		// This could potentially be added to the diag package.
+		diagsStrings := make([]string, 0, len(diags))
+
+		for _, diagnostic := range diags {
+			diagsStrings = append(diagsStrings, fmt.Sprintf(
+				"%s | %s | %s",
+				diagnostic.Severity(),
+				diagnostic.Summary(),
+				diagnostic.Detail()))
+		}
+
+		panic("NewVolumeEncryptionValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
+	}
+
+	return object
+}
+
+func (t VolumeEncryptionType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+	if in.Type() == nil {
+		return NewVolumeEncryptionValueNull(), nil
+	}
+
+	if !in.Type().Equal(t.TerraformType(ctx)) {
+		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
+	}
+
+	if !in.IsKnown() {
+		return NewVolumeEncryptionValueUnknown(), nil
+	}
+
+	if in.IsNull() {
+		return NewVolumeEncryptionValueNull(), nil
+	}
+
+	attributes := map[string]attr.Value{}
+
+	val := map[string]tftypes.Value{}
+
+	err := in.As(&val)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range val {
+		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
+
+		if err != nil {
+			return nil, err
+		}
+
+		attributes[k] = a
+	}
+
+	return NewVolumeEncryptionValueMust(VolumeEncryptionValue{}.AttributeTypes(ctx), attributes), nil
+}
+
+func (t VolumeEncryptionType) ValueType(ctx context.Context) attr.Value {
+	return VolumeEncryptionValue{}
+}
+
+var _ basetypes.ObjectValuable = VolumeEncryptionValue{}
+
+type VolumeEncryptionValue struct {
+	Encrypted ovhtypes.TfBoolValue     `tfsdk:"encrypted" json:"encrypted"`
+	Kms       VolumeEncryptionKmsValue `tfsdk:"kms" json:"kms"`
+	state     attr.ValueState
+}
+
+type VolumeEncryptionWritableValue struct {
+	*VolumeEncryptionValue `json:"-"`
+	Encrypted              *ovhtypes.TfBoolValue             `json:"encrypted,omitempty"`
+	Kms                    *VolumeEncryptionKmsWritableValue `json:"kms,omitempty"`
+}
+
+func (v VolumeEncryptionValue) ToCreate() *VolumeEncryptionWritableValue {
+	res := &VolumeEncryptionWritableValue{}
+
+	if !v.Encrypted.IsNull() {
+		res.Encrypted = &v.Encrypted
+	}
+
+	if !v.Kms.IsNull() {
+		res.Kms = v.Kms.ToCreate()
+	}
+
+	return res
+}
+
+func (v VolumeEncryptionValue) ToUpdate() *VolumeEncryptionWritableValue {
+	res := &VolumeEncryptionWritableValue{}
+
+	if !v.Encrypted.IsNull() {
+		res.Encrypted = &v.Encrypted
+	}
+
+	if !v.Kms.IsNull() {
+		res.Kms = v.Kms.ToUpdate()
+	}
+
+	return res
+}
+
+func (v *VolumeEncryptionValue) UnmarshalJSON(data []byte) error {
+	type JsonVolumeEncryptionValue VolumeEncryptionValue
+
+	var tmp JsonVolumeEncryptionValue
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		return err
+	}
+	v.Encrypted = tmp.Encrypted
+	v.Kms = tmp.Kms
+
+	v.state = attr.ValueStateKnown
+
+	return nil
+}
+
+func (v *VolumeEncryptionValue) MergeWith(other *VolumeEncryptionValue) {
+	if (v.Encrypted.IsUnknown() || v.Encrypted.IsNull()) && !other.Encrypted.IsUnknown() {
+		v.Encrypted = other.Encrypted
+	}
+
+	if v.Kms.IsUnknown() && !other.Kms.IsUnknown() {
+		v.Kms = other.Kms
+	} else if !other.Kms.IsUnknown() {
+		v.Kms.MergeWith(&other.Kms)
+	}
+
+	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
+		v.state = other.state
+	}
+}
+
+func (v VolumeEncryptionValue) Attributes() map[string]attr.Value {
+	return map[string]attr.Value{
+		"encrypted": v.Encrypted,
+		"kms":       v.Kms,
+	}
+}
+
+func (v VolumeEncryptionValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
+	attrTypes := make(map[string]tftypes.Type, 2)
+
+	var val tftypes.Value
+	var err error
+
+	attrTypes["encrypted"] = basetypes.BoolType{}.TerraformType(ctx)
+	attrTypes["kms"] = VolumeEncryptionKmsValue{}.Type(ctx).TerraformType(ctx)
+
+	objectType := tftypes.Object{AttributeTypes: attrTypes}
+
+	switch v.state {
+	case attr.ValueStateKnown:
+		vals := make(map[string]tftypes.Value, 2)
+
+		val, err = v.Encrypted.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["encrypted"] = val
+
+		val, err = v.Kms.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["kms"] = val
+
+		if err := tftypes.ValidateValue(objectType, vals); err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		return tftypes.NewValue(objectType, vals), nil
+	case attr.ValueStateNull:
+		return tftypes.NewValue(objectType, nil), nil
+	case attr.ValueStateUnknown:
+		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
+	default:
+		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
+	}
+}
+
+func (v VolumeEncryptionValue) IsNull() bool {
+	return v.state == attr.ValueStateNull
+}
+
+func (v VolumeEncryptionValue) IsUnknown() bool {
+	return v.state == attr.ValueStateUnknown
+}
+
+func (v VolumeEncryptionValue) String() string {
+	return "VolumeEncryptionValue"
+}
+
+func (v VolumeEncryptionValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	kmsType := VolumeEncryptionKmsType{
+		ObjectType: types.ObjectType{
+			AttrTypes: VolumeEncryptionKmsValue{}.AttributeTypes(ctx),
+		},
+	}
+
+	objVal, diags := types.ObjectValue(
+		map[string]attr.Type{
+			"encrypted": ovhtypes.TfBoolType{},
+			"kms":       kmsType,
+		},
+		map[string]attr.Value{
+			"encrypted": v.Encrypted,
+			"kms":       v.Kms,
+		})
+
+	return objVal, diags
+}
+
+func (v VolumeEncryptionValue) Equal(o attr.Value) bool {
+	other, ok := o.(VolumeEncryptionValue)
+
+	if !ok {
+		return false
+	}
+
+	if v.state != other.state {
+		return false
+	}
+
+	if v.state != attr.ValueStateKnown {
+		return true
+	}
+
+	if !v.Encrypted.Equal(other.Encrypted) {
+		return false
+	}
+
+	if !v.Kms.Equal(other.Kms) {
+		return false
+	}
+
+	return true
+}
+
+func (v VolumeEncryptionValue) Type(ctx context.Context) attr.Type {
+	return VolumeEncryptionType{
+		basetypes.ObjectType{
+			AttrTypes: v.AttributeTypes(ctx),
+		},
+	}
+}
+
+func (v VolumeEncryptionValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
+	return map[string]attr.Type{
+		"encrypted": ovhtypes.TfBoolType{},
+		"kms": VolumeEncryptionKmsType{
+			ObjectType: types.ObjectType{
+				AttrTypes: VolumeEncryptionKmsValue{}.AttributeTypes(ctx),
+			},
+		},
+	}
+}
+
+var _ basetypes.ObjectTypable = VolumeEncryptionKmsType{}
+
+type VolumeEncryptionKmsType struct {
+	basetypes.ObjectType
+}
+
+func (t VolumeEncryptionKmsType) Equal(o attr.Type) bool {
+	other, ok := o.(VolumeEncryptionKmsType)
+
+	if !ok {
+		return false
+	}
+
+	return t.ObjectType.Equal(other.ObjectType)
+}
+
+func (t VolumeEncryptionKmsType) String() string {
+	return "VolumeEncryptionKmsType"
+}
+
+func (t VolumeEncryptionKmsType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	attributes := in.Attributes()
+
+	domainIdAttribute, ok := attributes["domain_id"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`domain_id is missing from object`)
+
+		return nil, diags
+	}
+
+	domainIdVal, ok := domainIdAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`domain_id expected to be ovhtypes.TfStringValue, was: %T`, domainIdAttribute))
+	}
+
+	serviceKeyIdAttribute, ok := attributes["service_key_id"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`service_key_id is missing from object`)
+
+		return nil, diags
+	}
+
+	serviceKeyIdVal, ok := serviceKeyIdAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`service_key_id expected to be ovhtypes.TfStringValue, was: %T`, serviceKeyIdAttribute))
+	}
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return VolumeEncryptionKmsValue{
+		DomainId:     domainIdVal,
+		ServiceKeyId: serviceKeyIdVal,
+		state:        attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVolumeEncryptionKmsValueNull() VolumeEncryptionKmsValue {
+	return VolumeEncryptionKmsValue{
+		state: attr.ValueStateNull,
+	}
+}
+
+func NewVolumeEncryptionKmsValueUnknown() VolumeEncryptionKmsValue {
+	return VolumeEncryptionKmsValue{
+		state: attr.ValueStateUnknown,
+	}
+}
+
+func NewVolumeEncryptionKmsValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (VolumeEncryptionKmsValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
+	ctx := context.Background()
+
+	for name, attributeType := range attributeTypes {
+		attribute, ok := attributes[name]
+
+		if !ok {
+			diags.AddError(
+				"Missing VolumeEncryptionKmsValue Attribute Value",
+				"While creating a VolumeEncryptionKmsValue value, a missing attribute value was detected. "+
+					"A VolumeEncryptionKmsValue must contain values for all attributes, even if null or unknown. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VolumeEncryptionKmsValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
+			)
+
+			continue
+		}
+
+		if !attributeType.Equal(attribute.Type(ctx)) {
+			diags.AddError(
+				"Invalid VolumeEncryptionKmsValue Attribute Type",
+				"While creating a VolumeEncryptionKmsValue value, an invalid attribute value was detected. "+
+					"A VolumeEncryptionKmsValue must use a matching attribute type for the value. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VolumeEncryptionKmsValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
+					fmt.Sprintf("VolumeEncryptionKmsValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
+			)
+		}
+	}
+
+	for name := range attributes {
+		_, ok := attributeTypes[name]
+
+		if !ok {
+			diags.AddError(
+				"Extra VolumeEncryptionKmsValue Attribute Value",
+				"While creating a VolumeEncryptionKmsValue value, an extra attribute value was detected. "+
+					"A VolumeEncryptionKmsValue must not contain values beyond the expected attribute types. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("Extra VolumeEncryptionKmsValue Attribute Name: %s", name),
+			)
+		}
+	}
+
+	if diags.HasError() {
+		return NewVolumeEncryptionKmsValueUnknown(), diags
+	}
+
+	domainIdAttribute, ok := attributes["domain_id"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`domain_id is missing from object`)
+
+		return NewVolumeEncryptionKmsValueUnknown(), diags
+	}
+
+	domainIdVal, ok := domainIdAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`domain_id expected to be ovhtypes.TfStringValue, was: %T`, domainIdAttribute))
+	}
+
+	serviceKeyIdAttribute, ok := attributes["service_key_id"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`service_key_id is missing from object`)
+
+		return NewVolumeEncryptionKmsValueUnknown(), diags
+	}
+
+	serviceKeyIdVal, ok := serviceKeyIdAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`service_key_id expected to be ovhtypes.TfStringValue, was: %T`, serviceKeyIdAttribute))
+	}
+
+	if diags.HasError() {
+		return NewVolumeEncryptionKmsValueUnknown(), diags
+	}
+
+	return VolumeEncryptionKmsValue{
+		DomainId:     domainIdVal,
+		ServiceKeyId: serviceKeyIdVal,
+		state:        attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVolumeEncryptionKmsValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) VolumeEncryptionKmsValue {
+	object, diags := NewVolumeEncryptionKmsValue(attributeTypes, attributes)
+
+	if diags.HasError() {
+		// This could potentially be added to the diag package.
+		diagsStrings := make([]string, 0, len(diags))
+
+		for _, diagnostic := range diags {
+			diagsStrings = append(diagsStrings, fmt.Sprintf(
+				"%s | %s | %s",
+				diagnostic.Severity(),
+				diagnostic.Summary(),
+				diagnostic.Detail()))
+		}
+
+		panic("NewVolumeEncryptionKmsValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
+	}
+
+	return object
+}
+
+func (t VolumeEncryptionKmsType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+	if in.Type() == nil {
+		return NewVolumeEncryptionKmsValueNull(), nil
+	}
+
+	if !in.Type().Equal(t.TerraformType(ctx)) {
+		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
+	}
+
+	if !in.IsKnown() {
+		return NewVolumeEncryptionKmsValueUnknown(), nil
+	}
+
+	if in.IsNull() {
+		return NewVolumeEncryptionKmsValueNull(), nil
+	}
+
+	attributes := map[string]attr.Value{}
+
+	val := map[string]tftypes.Value{}
+
+	err := in.As(&val)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range val {
+		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
+
+		if err != nil {
+			return nil, err
+		}
+
+		attributes[k] = a
+	}
+
+	return NewVolumeEncryptionKmsValueMust(VolumeEncryptionKmsValue{}.AttributeTypes(ctx), attributes), nil
+}
+
+func (t VolumeEncryptionKmsType) ValueType(ctx context.Context) attr.Value {
+	return VolumeEncryptionKmsValue{}
+}
+
+var _ basetypes.ObjectValuable = VolumeEncryptionKmsValue{}
+
+type VolumeEncryptionKmsValue struct {
+	DomainId     ovhtypes.TfStringValue `tfsdk:"domain_id" json:"domainId"`
+	ServiceKeyId ovhtypes.TfStringValue `tfsdk:"service_key_id" json:"serviceKeyId"`
+	state        attr.ValueState
+}
+
+type VolumeEncryptionKmsWritableValue struct {
+	*VolumeEncryptionKmsValue `json:"-"`
+	DomainId                  *ovhtypes.TfStringValue `json:"domainId,omitempty"`
+	ServiceKeyId              *ovhtypes.TfStringValue `json:"serviceKeyId,omitempty"`
+}
+
+func (v VolumeEncryptionKmsValue) ToCreate() *VolumeEncryptionKmsWritableValue {
+	res := &VolumeEncryptionKmsWritableValue{}
+
+	if !v.DomainId.IsNull() {
+		res.DomainId = &v.DomainId
+	}
+
+	if !v.ServiceKeyId.IsNull() {
+		res.ServiceKeyId = &v.ServiceKeyId
+	}
+
+	return res
+}
+
+func (v VolumeEncryptionKmsValue) ToUpdate() *VolumeEncryptionKmsWritableValue {
+	res := &VolumeEncryptionKmsWritableValue{}
+
+	if !v.DomainId.IsNull() {
+		res.DomainId = &v.DomainId
+	}
+
+	if !v.ServiceKeyId.IsNull() {
+		res.ServiceKeyId = &v.ServiceKeyId
+	}
+
+	return res
+}
+
+func (v *VolumeEncryptionKmsValue) UnmarshalJSON(data []byte) error {
+	type JsonVolumeEncryptionKmsValue VolumeEncryptionKmsValue
+
+	var tmp JsonVolumeEncryptionKmsValue
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		return err
+	}
+	v.DomainId = tmp.DomainId
+	v.ServiceKeyId = tmp.ServiceKeyId
+
+	v.state = attr.ValueStateKnown
+
+	return nil
+}
+
+func (v *VolumeEncryptionKmsValue) MergeWith(other *VolumeEncryptionKmsValue) {
+
+	if (v.DomainId.IsUnknown() || v.DomainId.IsNull()) && !other.DomainId.IsUnknown() {
+		v.DomainId = other.DomainId
+	}
+
+	if (v.ServiceKeyId.IsUnknown() || v.ServiceKeyId.IsNull()) && !other.ServiceKeyId.IsUnknown() {
+		v.ServiceKeyId = other.ServiceKeyId
+	}
+
+	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
+		v.state = other.state
+	}
+}
+
+func (v VolumeEncryptionKmsValue) Attributes() map[string]attr.Value {
+	return map[string]attr.Value{
+		"domainId":     v.DomainId,
+		"serviceKeyId": v.ServiceKeyId,
+	}
+}
+
+func (v VolumeEncryptionKmsValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
+	attrTypes := make(map[string]tftypes.Type, 2)
+
+	var val tftypes.Value
+	var err error
+
+	attrTypes["domain_id"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["service_key_id"] = basetypes.StringType{}.TerraformType(ctx)
+
+	objectType := tftypes.Object{AttributeTypes: attrTypes}
+
+	switch v.state {
+	case attr.ValueStateKnown:
+		vals := make(map[string]tftypes.Value, 2)
+
+		val, err = v.DomainId.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["domain_id"] = val
+
+		val, err = v.ServiceKeyId.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["service_key_id"] = val
+
+		if err := tftypes.ValidateValue(objectType, vals); err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		return tftypes.NewValue(objectType, vals), nil
+	case attr.ValueStateNull:
+		return tftypes.NewValue(objectType, nil), nil
+	case attr.ValueStateUnknown:
+		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
+	default:
+		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
+	}
+}
+
+func (v VolumeEncryptionKmsValue) IsNull() bool {
+	return v.state == attr.ValueStateNull
+}
+
+func (v VolumeEncryptionKmsValue) IsUnknown() bool {
+	return v.state == attr.ValueStateUnknown
+}
+
+func (v VolumeEncryptionKmsValue) String() string {
+	return "VolumeEncryptionKmsValue"
+}
+
+func (v VolumeEncryptionKmsValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	objVal, diags := types.ObjectValue(
+		map[string]attr.Type{
+			"domain_id":      ovhtypes.TfStringType{},
+			"service_key_id": ovhtypes.TfStringType{},
+		},
+		map[string]attr.Value{
+			"domain_id":      v.DomainId,
+			"service_key_id": v.ServiceKeyId,
+		})
+
+	return objVal, diags
+}
+
+func (v VolumeEncryptionKmsValue) Equal(o attr.Value) bool {
+	other, ok := o.(VolumeEncryptionKmsValue)
+
+	if !ok {
+		return false
+	}
+
+	if v.state != other.state {
+		return false
+	}
+
+	if v.state != attr.ValueStateKnown {
+		return true
+	}
+
+	if !v.DomainId.Equal(other.DomainId) {
+		return false
+	}
+
+	if !v.ServiceKeyId.Equal(other.ServiceKeyId) {
+		return false
+	}
+
+	return true
+}
+
+func (v VolumeEncryptionKmsValue) Type(ctx context.Context) attr.Type {
+	return VolumeEncryptionKmsType{
+		basetypes.ObjectType{
+			AttrTypes: v.AttributeTypes(ctx),
+		},
+	}
+}
+
+func (v VolumeEncryptionKmsValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
+	return map[string]attr.Type{
+		"domain_id":      ovhtypes.TfStringType{},
+		"service_key_id": ovhtypes.TfStringType{},
 	}
 }

@@ -1,5 +1,5 @@
 ---
-subcategory : "Cloud Project"
+subcategory: "Instances"
 ---
 
 # ovh_cloud_security_groups (Data Source)
@@ -32,7 +32,8 @@ The following attributes are exported:
   * `id` - Security group ID.
   * `name` - Name of the security group.
   * `description` - Description of the security group.
-  * `region` - Region of the security group.
+  * `location` - Location of the security group:
+    * `region` - Region.
   * `rule` - List of security group rules:
     * `direction` - Direction of the rule (`INGRESS` or `EGRESS`).
     * `ethernet_type` - Ethernet type (`IPV4` or `IPV6`).
@@ -49,7 +50,8 @@ The following attributes are exported:
   * `current_state` - Current state of the security group:
     * `name` - Name of the security group.
     * `description` - Description of the security group.
-    * `region` - Region of the security group.
+    * `location` - Location details:
+      * `region` - Region.
     * `rules` - User-specified security group rules with their IDs:
       * `id` - Rule ID.
       * `direction` - Direction of the rule.

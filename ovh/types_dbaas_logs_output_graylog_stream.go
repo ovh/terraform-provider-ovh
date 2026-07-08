@@ -6,29 +6,30 @@ import (
 )
 
 type DbaasLogsOutputGraylogStream struct {
-	CanAlert                 bool    `json:"canAlert"`
-	ColdStorageCompression   *string `json:"coldStorageCompression"`
-	ColdStorageContent       *string `json:"coldStorageContent"`
-	ColdStorageEnabled       *bool   `json:"coldStorageEnabled"`
-	ColdStorageNotifyEnabled *bool   `json:"coldStorageNotifyEnabled"`
-	ColdStorageRetention     *int64  `json:"coldStorageRetention"`
-	ColdStorageTarget        *string `json:"coldStorageTarget"`
-	CreatedAt                string  `json:"createdAt"`
-	Description              string  `json:"description"`
-	IndexingEnabled          *bool   `json:"indexingEnabled"`
-	IndexingMaxSize          *int64  `json:"indexingMaxSize"`
-	IndexingNotifyEnabled    *bool   `json:"indexingNotifyEnabled"`
-	IsEditable               bool    `json:"isEditable"`
-	IsShareable              bool    `json:"isShareable"`
-	NbAlertCondition         int64   `json:"nbAlertCondition"`
-	NbArchive                int64   `json:"nbArchive"`
-	ParentStreamId           *string `json:"parentStreamId"`
-	PauseIndexingOnMaxSize   *bool   `json:"pauseIndexingOnMaxSize"`
-	RetentionId              string  `json:"retentionId"`
-	StreamId                 string  `json:"streamId"`
-	Title                    string  `json:"title"`
-	UpdatedAt                string  `json:"updatedAt"`
-	WebSocketEnabled         *bool   `json:"webSocketEnabled"`
+	CanAlert                 bool     `json:"canAlert"`
+	ColdStorageCompression   *string  `json:"coldStorageCompression"`
+	ColdStorageContent       *string  `json:"coldStorageContent"`
+	ColdStorageEnabled       *bool    `json:"coldStorageEnabled"`
+	ColdStorageNotifyEnabled *bool    `json:"coldStorageNotifyEnabled"`
+	ColdStorageRetention     *int64   `json:"coldStorageRetention"`
+	ColdStorageTarget        *string  `json:"coldStorageTarget"`
+	CreatedAt                string   `json:"createdAt"`
+	Description              string   `json:"description"`
+	EncryptionKeysIds        []string `json:"encryptionKeysIds"`
+	IndexingEnabled          *bool    `json:"indexingEnabled"`
+	IndexingMaxSize          *int64   `json:"indexingMaxSize"`
+	IndexingNotifyEnabled    *bool    `json:"indexingNotifyEnabled"`
+	IsEditable               bool     `json:"isEditable"`
+	IsShareable              bool     `json:"isShareable"`
+	NbAlertCondition         int64    `json:"nbAlertCondition"`
+	NbArchive                int64    `json:"nbArchive"`
+	ParentStreamId           *string  `json:"parentStreamId"`
+	PauseIndexingOnMaxSize   *bool    `json:"pauseIndexingOnMaxSize"`
+	RetentionId              string   `json:"retentionId"`
+	StreamId                 string   `json:"streamId"`
+	Title                    string   `json:"title"`
+	UpdatedAt                string   `json:"updatedAt"`
+	WebSocketEnabled         *bool    `json:"webSocketEnabled"`
 }
 
 func (v DbaasLogsOutputGraylogStream) ToMap() map[string]interface{} {
@@ -63,6 +64,9 @@ func (v DbaasLogsOutputGraylogStream) ToMap() map[string]interface{} {
 	if v.ColdStorageTarget != nil {
 		obj["cold_storage_target"] = *v.ColdStorageTarget
 	}
+	if v.EncryptionKeysIds != nil {
+		obj["encryption_keys_ids"] = v.EncryptionKeysIds
+	}
 	if v.IndexingEnabled != nil {
 		obj["indexing_enabled"] = *v.IndexingEnabled
 	}
@@ -83,21 +87,22 @@ func (v DbaasLogsOutputGraylogStream) ToMap() map[string]interface{} {
 }
 
 type DbaasLogsOutputGraylogStreamCreateOpts struct {
-	ColdStorageCompression   *string `json:"coldStorageCompression,omitempty"`
-	ColdStorageContent       *string `json:"coldStorageContent,omitempty"`
-	ColdStorageEnabled       *bool   `json:"coldStorageEnabled,omitempty"`
-	ColdStorageNotifyEnabled *bool   `json:"coldStorageNotifyEnabled,omitempty"`
-	ColdStorageRetention     *int64  `json:"coldStorageRetention,omitempty"`
-	ColdStorageTarget        *string `json:"coldStorageTarget,omitempty"`
-	Description              string  `json:"description"`
-	IndexingEnabled          *bool   `json:"indexingEnabled,omitempty"`
-	IndexingMaxSize          *int64  `json:"indexingMaxSize,omitempty"`
-	IndexingNotifyEnabled    *bool   `json:"indexingNotifyEnabled,omitempty"`
-	ParentStreamId           *string `json:"parentStreamId,omitempty"`
-	PauseIndexingOnMaxSize   *bool   `json:"pauseIndexingOnMaxSize,omitempty"`
-	RetentionId              *string `json:"retentionId,omitempty"`
-	Title                    string  `json:"title"`
-	WebSocketEnabled         *bool   `json:"webSocketEnabled,omitempty"`
+	ColdStorageCompression   *string  `json:"coldStorageCompression,omitempty"`
+	ColdStorageContent       *string  `json:"coldStorageContent,omitempty"`
+	ColdStorageEnabled       *bool    `json:"coldStorageEnabled,omitempty"`
+	ColdStorageNotifyEnabled *bool    `json:"coldStorageNotifyEnabled,omitempty"`
+	ColdStorageRetention     *int64   `json:"coldStorageRetention,omitempty"`
+	ColdStorageTarget        *string  `json:"coldStorageTarget,omitempty"`
+	Description              string   `json:"description"`
+	EncryptionKeysIds        []string `json:"encryptionKeysIds,omitempty"`
+	IndexingEnabled          *bool    `json:"indexingEnabled,omitempty"`
+	IndexingMaxSize          *int64   `json:"indexingMaxSize,omitempty"`
+	IndexingNotifyEnabled    *bool    `json:"indexingNotifyEnabled,omitempty"`
+	ParentStreamId           *string  `json:"parentStreamId,omitempty"`
+	PauseIndexingOnMaxSize   *bool    `json:"pauseIndexingOnMaxSize,omitempty"`
+	RetentionId              *string  `json:"retentionId,omitempty"`
+	Title                    string   `json:"title"`
+	WebSocketEnabled         *bool    `json:"webSocketEnabled,omitempty"`
 }
 
 func (opts *DbaasLogsOutputGraylogStreamCreateOpts) FromResource(d *schema.ResourceData) *DbaasLogsOutputGraylogStreamCreateOpts {
@@ -108,6 +113,7 @@ func (opts *DbaasLogsOutputGraylogStreamCreateOpts) FromResource(d *schema.Resou
 	opts.ColdStorageRetention = helpers.GetNilInt64PointerFromData(d, "cold_storage_retention")
 	opts.ColdStorageTarget = helpers.GetNilStringPointerFromData(d, "cold_storage_target")
 	opts.Description = d.Get("description").(string)
+	opts.EncryptionKeysIds, _ = helpers.StringsFromSchema(d, "encryption_keys_ids")
 	opts.IndexingEnabled = helpers.GetNilBoolPointerFromData(d, "indexing_enabled")
 	opts.IndexingMaxSize = helpers.GetNilInt64PointerFromData(d, "indexing_max_size")
 	opts.IndexingNotifyEnabled = helpers.GetNilBoolPointerFromData(d, "indexing_notify_enabled")
@@ -121,21 +127,22 @@ func (opts *DbaasLogsOutputGraylogStreamCreateOpts) FromResource(d *schema.Resou
 }
 
 type DbaasLogsOutputGraylogStreamUpdateOpts struct {
-	ColdStorageCompression   *string `json:"coldStorageCompression,omitempty"`
-	ColdStorageContent       *string `json:"coldStorageContent,omitempty"`
-	ColdStorageEnabled       *bool   `json:"coldStorageEnabled,omitempty"`
-	ColdStorageNotifyEnabled *bool   `json:"coldStorageNotifyEnabled,omitempty"`
-	ColdStorageRetention     *int64  `json:"coldStorageRetention,omitempty"`
-	ColdStorageTarget        *string `json:"coldStorageTarget,omitempty"`
-	Description              string  `json:"description"`
-	IndexingEnabled          *bool   `json:"indexingEnabled,omitempty"`
-	IndexingMaxSize          *int64  `json:"indexingMaxSize,omitempty"`
-	IndexingNotifyEnabled    *bool   `json:"indexingNotifyEnabled,omitempty"`
-	ParentStreamId           *string `json:"parentStreamId,omitempty"`
-	PauseIndexingOnMaxSize   *bool   `json:"pauseIndexingOnMaxSize,omitempty"`
-	RetentionId              *string `json:"retentionId"`
-	Title                    string  `json:"title"`
-	WebSocketEnabled         *bool   `json:"webSocketEnabled,omitempty"`
+	ColdStorageCompression   *string  `json:"coldStorageCompression,omitempty"`
+	ColdStorageContent       *string  `json:"coldStorageContent,omitempty"`
+	ColdStorageEnabled       *bool    `json:"coldStorageEnabled,omitempty"`
+	ColdStorageNotifyEnabled *bool    `json:"coldStorageNotifyEnabled,omitempty"`
+	ColdStorageRetention     *int64   `json:"coldStorageRetention,omitempty"`
+	ColdStorageTarget        *string  `json:"coldStorageTarget,omitempty"`
+	Description              string   `json:"description"`
+	EncryptionKeysIds        []string `json:"encryptionKeysIds,omitempty"`
+	IndexingEnabled          *bool    `json:"indexingEnabled,omitempty"`
+	IndexingMaxSize          *int64   `json:"indexingMaxSize,omitempty"`
+	IndexingNotifyEnabled    *bool    `json:"indexingNotifyEnabled,omitempty"`
+	ParentStreamId           *string  `json:"parentStreamId,omitempty"`
+	PauseIndexingOnMaxSize   *bool    `json:"pauseIndexingOnMaxSize,omitempty"`
+	RetentionId              *string  `json:"retentionId"`
+	Title                    string   `json:"title"`
+	WebSocketEnabled         *bool    `json:"webSocketEnabled,omitempty"`
 }
 
 func (opts *DbaasLogsOutputGraylogStreamUpdateOpts) FromResource(d *schema.ResourceData) *DbaasLogsOutputGraylogStreamUpdateOpts {
@@ -146,6 +153,7 @@ func (opts *DbaasLogsOutputGraylogStreamUpdateOpts) FromResource(d *schema.Resou
 	opts.ColdStorageRetention = helpers.GetNilInt64PointerFromData(d, "cold_storage_retention")
 	opts.ColdStorageTarget = helpers.GetNilStringPointerFromData(d, "cold_storage_target")
 	opts.Description = d.Get("description").(string)
+	opts.EncryptionKeysIds, _ = helpers.StringsFromSchema(d, "encryption_keys_ids")
 	opts.IndexingEnabled = helpers.GetNilBoolPointerFromData(d, "indexing_enabled")
 	opts.IndexingMaxSize = helpers.GetNilInt64PointerFromData(d, "indexing_max_size")
 	opts.IndexingNotifyEnabled = helpers.GetNilBoolPointerFromData(d, "indexing_notify_enabled")

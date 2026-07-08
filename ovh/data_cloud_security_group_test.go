@@ -52,7 +52,7 @@ data "ovh_cloud_security_group" "test" {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.ovh_cloud_security_group.test", "service_name", serviceName),
 					resource.TestCheckResourceAttr("data.ovh_cloud_security_group.test", "name", name),
-					resource.TestCheckResourceAttr("data.ovh_cloud_security_group.test", "region", region),
+					resource.TestCheckResourceAttr("data.ovh_cloud_security_group.test", "location.region", region),
 					resource.TestCheckResourceAttrPair(
 						"data.ovh_cloud_security_group.test", "id",
 						"ovh_cloud_security_group.test", "id",

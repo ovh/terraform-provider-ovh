@@ -4,6 +4,8 @@ subcategory : "Cloud Project"
 
 # ovh_cloud_project_ssh_key (Resource)
 
+~> **NOTE** Prefer using the new `ovh_cloud_ssh_key` resource instead.
+
 Create a SSH key in the given public cloud project.
 
 ## Example Usage
