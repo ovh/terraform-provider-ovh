@@ -4,6 +4,8 @@ subcategory : "Public IPs"
 
 # ovh_cloud_project_floatingips
 
+~> **NOTE** We recommend using the `ovh_cloud_floating_ips` data source instead. Floating IPs can now also be managed directly with the `ovh_cloud_floating_ip` resource.
+
 Use this data source to get the floating IPs of a public cloud project.
 
 ## Example Usage

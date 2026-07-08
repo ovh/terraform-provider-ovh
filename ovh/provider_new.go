@@ -227,12 +227,19 @@ func (p *OvhProvider) Configure(ctx context.Context, req provider.ConfigureReque
 // DataSources defines the data sources implemented in the provider.
 func (p *OvhProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
+		NewCloudAdditionalIPDataSource,
+		NewCloudAdditionalIPsDataSource,
+		NewCloudExtNetIPDataSource,
+		NewCloudExtNetIPsDataSource,
+		NewCloudFloatingIPDataSource,
+		NewCloudFloatingIPsDataSource,
 		NewCloudGatewayDataSource,
 		NewCloudGatewaysDataSource,
 		NewCloudNetworkPrivateVrackDataSource,
 		NewCloudNetworkPrivateVracksDataSource,
 		NewCloudNetworkPrivateVrackSubnetDataSource,
 		NewCloudNetworkPrivateVrackSubnetsDataSource,
+		NewCloudPublicIPsDataSource,
 		NewCloudQuotaDataSource,
 		NewCloudSecurityGroupDataSource,
 		NewCloudSecurityGroupsDataSource,
@@ -333,6 +340,7 @@ func (p *OvhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 // Resources defines the resources implemented in the provider.
 func (p *OvhProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
+		NewCloudFloatingIPResource,
 		NewCloudGatewayResource,
 		NewCloudNetworkPrivateVrackResource,
 		NewCloudNetworkPrivateVrackSubnetResource,
