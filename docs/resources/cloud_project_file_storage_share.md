@@ -4,6 +4,8 @@ subcategory: "File Storage"
 
 # ovh_cloud_project_file_storage_share (Resource)
 
+~> **NOTE** Prefer using the new `ovh_cloud_storage_file_share` resource instead.
+
 Creates a file storage share in a public cloud project.
 
 ## Example Usage
