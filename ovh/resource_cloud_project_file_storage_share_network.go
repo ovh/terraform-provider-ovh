@@ -62,7 +62,7 @@ func (r *cloudProjectFileStorageShareNetworkResource) ImportState(ctx context.Co
 
 func (r *cloudProjectFileStorageShareNetworkResource) endpoint(serviceName, regionName string) string {
 	return "/cloud/project/" + url.PathEscape(serviceName) +
-		"/region/" + url.PathEscape(regionName) + "/sharenetwork"
+		"/region/" + url.PathEscape(regionName) + "/shareNetwork"
 }
 
 func (r *cloudProjectFileStorageShareNetworkResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
