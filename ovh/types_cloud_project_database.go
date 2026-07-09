@@ -31,7 +31,7 @@ var engines = []string{"clickhouse", "grafana", "kafka", "kafkaConnect", "kafkaM
 
 // enginesWithoutBackupTime is the list of engines
 // for which "backup_time" is not customizable
-var enginesWithoutBackupTime = []string{"grafana", "kafka", "kafkaconnect", "kafkamirrormaker", "opensearch"}
+var enginesWithoutBackupTime = []string{"grafana", "kafka", "kafkaConnect", "kafkaMirrorMaker", "opensearch"}
 
 type CloudProjectDatabaseBackups struct {
 	Regions []string `json:"regions,omitempty"`
