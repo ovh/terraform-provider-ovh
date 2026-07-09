@@ -1,8 +1,10 @@
 ---
-subcategory: "Cloud Project"
+subcategory: "File Storage"
 ---
 
 # ovh_cloud_project_file_storage_share_network (Resource)
+
+~> **NOTE** Prefer using the new `ovh_cloud_storage_file_share_network` resource instead.
 
 Creates a share network in a public cloud project.
 

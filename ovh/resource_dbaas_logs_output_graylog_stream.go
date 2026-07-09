@@ -128,6 +128,12 @@ func resourceDbaasLogsOutputGraylogStream() *schema.Resource {
 					return
 				},
 			},
+			"encryption_keys_ids": {
+				Type:        schema.TypeSet,
+				Description: "Set of encryption key IDs used to encrypt stream archives",
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 			"indexing_enabled": {
 				Type:        schema.TypeBool,
 				Description: "Enable ES indexing",

@@ -8,6 +8,8 @@ Creates a DBaaS Logs Graylog output stream.
 
 ## Example Usage
 
+### Example 1 - Basic stream
+
 ```terraform
 resource "ovh_dbaas_logs_output_graylog_stream" "stream" {
   service_name = "...."
@@ -16,7 +18,7 @@ resource "ovh_dbaas_logs_output_graylog_stream" "stream" {
 }
 ```
 
-To define the retention of the stream, you can use the following configuration:
+### Example 2 - Stream retention
 
 ```terraform
 data "ovh_dbaas_logs_cluster_retention" "retention" {
@@ -33,6 +35,27 @@ resource "ovh_dbaas_logs_output_graylog_stream" "stream" {
 }
 ```
 
+### Example 3 - Cold Storage encryption using a PGP public key
+
+```terraform
+resource "ovh_dbaas_logs_encryption_key" "key" {
+  service_name = "ldp-xx-xxxxx"
+  title        = "my PGP key"
+  content      = file("my-pgp-public-key.asc")
+  fingerprint  = "ABCDEF1234567890ABCDEF1234567890ABCDEF12"
+}
+
+resource "ovh_dbaas_logs_output_graylog_stream" "stream" {
+  service_name            = "ldp-xx-xxxxx"
+  title                   = "my stream"
+  description             = "my encrypted graylog stream"
+  cold_storage_enabled    = true
+  cold_storage_target     = "PCA"
+  cold_storage_retention  = 1
+  encryption_keys_ids     = [ovh_dbaas_logs_encryption_key.key.id]
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -42,11 +65,12 @@ The following arguments are supported:
 * `parent_stream_id` - Parent stream ID
 * `retention_id` - Retention ID
 * `cold_storage_compression` - Cold storage compression method. One of "LZMA", "GZIP", "DEFLATED", "ZSTD"
-* `cold_storage_content` - ColdStorage content. One of "ALL", "GLEF", "PLAIN"
+* `cold_storage_content` - ColdStorage content. One of "ALL", "GELF", "PLAIN"
 * `cold_storage_enabled` - Is Cold storage enabled?
 * `cold_storage_notify_enabled` - Notify on new Cold storage archive
 * `cold_storage_retention` - Cold storage retention in year
 * `cold_storage_target` - ColdStorage destination. One of "PCA", "PCS"
+* `encryption_keys_ids` - Set of encryption key IDs used to encrypt stream archives
 * `indexing_enabled` - Enable ES indexing
 * `indexing_max_size` - Maximum indexing size (in GB)
 * `indexing_notify_enabled` - If set, notify when size is near 80, 90 or 100 % of the maximum configured setting
@@ -62,9 +86,9 @@ Id is set to the output stream Id. In addition, the following attributes are exp
 * `is_editable` - Indicates if you are allowed to edit entry
 * `is_shareable` - Indicates if you are allowed to share entry
 * `nb_alert_condition` - Number of alert condition
-* `nb_archive` - Number of coldstored archivesr
+* `nb_archive` - Number of coldstored archives
 * `stream_id` - Stream ID
-* `updated_at` - Stream last updater
+* `updated_at` - Stream last update
 * `write_token` - Write token of the stream (empty if the caller is not the owner of the stream)
 
 ## Import

@@ -263,6 +263,10 @@ func (r *cloudStorageBlockVolumeBackupResource) Read(ctx context.Context, req re
 
 	var responseData CloudStorageBlockVolumeBackupAPIResponse
 	if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
+		if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Get %s", endpoint),
 			err.Error(),
