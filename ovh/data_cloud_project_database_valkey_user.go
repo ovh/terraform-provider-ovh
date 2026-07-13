@@ -72,16 +72,16 @@ func dataSourceCloudProjectDatabaseValkeyUser() *schema.Resource {
 func dataSourceCloudProjectDatabaseValkeyUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
-	clusterId := d.Get("cluster_id").(string)
+	clusterID := d.Get("cluster_id").(string)
 
 	listEndpoint := fmt.Sprintf("/cloud/project/%s/database/valkey/%s/user",
 		url.PathEscape(serviceName),
-		url.PathEscape(clusterId),
+		url.PathEscape(clusterID),
 	)
 
 	listRes := make([]string, 0)
 
-	log.Printf("[DEBUG] Will read users from cluster %s from project %s", clusterId, serviceName)
+	log.Printf("[DEBUG] Will read users from cluster %s from project %s", clusterID, serviceName)
 	if err := config.OVHClient.GetWithContext(ctx, listEndpoint, &listRes); err != nil {
 		return diag.Errorf("Error calling GET %s:\n\t %q", listEndpoint, err)
 	}
@@ -90,12 +90,12 @@ func dataSourceCloudProjectDatabaseValkeyUserRead(ctx context.Context, d *schema
 	for _, id := range listRes {
 		endpoint := fmt.Sprintf("/cloud/project/%s/database/valkey/%s/user/%s",
 			url.PathEscape(serviceName),
-			url.PathEscape(clusterId),
+			url.PathEscape(clusterID),
 			url.PathEscape(id),
 		)
-		res := &CloudProjectDatabaseRedisUserResponse{}
+		res := &CloudProjectDatabaseValkeyUserResponse{}
 
-		log.Printf("[DEBUG] Will read user %s from cluster %s from project %s", id, clusterId, serviceName)
+		log.Printf("[DEBUG] Will read user %s from cluster %s from project %s", id, clusterID, serviceName)
 		if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
 			return diag.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
 		}
@@ -113,5 +113,5 @@ func dataSourceCloudProjectDatabaseValkeyUserRead(ctx context.Context, d *schema
 		}
 	}
 
-	return diag.Errorf("User name %s not found for cluster %s from project %s", name, clusterId, serviceName)
+	return diag.Errorf("User name %s not found for cluster %s from project %s", name, clusterID, serviceName)
 }

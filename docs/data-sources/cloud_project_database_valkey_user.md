@@ -40,5 +40,5 @@ The following attributes are exported:
 * `id` - ID of the user.
 * `keys` - Keys of the user.
 * `name` - See Argument Reference above.
-* `service_name` - Current status of the user.
+* `service_name` - See Argument Reference above.
 * `status` - Current status of the user.

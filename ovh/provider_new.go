@@ -243,7 +243,6 @@ func (p *OvhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 		NewCloudQuotaDataSource,
 		NewCloudSecurityGroupDataSource,
 		NewCloudSecurityGroupsDataSource,
-		NewCloudProjectDatabaseIPRestrictionsDataSource,
 		NewCloudProjectFlavorDataSource,
 		NewCloudProjectFlavorsDataSource,
 		NewCloudProjectFloatingipsDataSource,

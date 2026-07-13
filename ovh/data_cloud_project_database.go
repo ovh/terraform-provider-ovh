@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 )
 
 func dataSourceCloudProjectDatabase() *schema.Resource {
@@ -20,9 +21,10 @@ func dataSourceCloudProjectDatabase() *schema.Resource {
 				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
 			},
 			"engine": {
-				Type:        schema.TypeString,
-				Description: "Name of the engine of the service",
-				Required:    true,
+				Type:             schema.TypeString,
+				Description:      "Name of the engine of the service",
+				Required:         true,
+				ValidateDiagFunc: helpers.ValidateDiagEnum(engines),
 			},
 			"id": {
 				Type:        schema.TypeString,

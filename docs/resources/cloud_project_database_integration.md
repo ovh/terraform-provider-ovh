@@ -59,8 +59,6 @@ The following arguments are supported:
   * `kafkaConnect`
   * `kafkaLogs`
   * `kafkaMirrorMaker`
-  * `m3aggregator`
-  * `m3dbMetrics`
   * `opensearchLogs`
   * `postgresqlMetrics`
 
