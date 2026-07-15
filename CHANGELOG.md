@@ -1,3 +1,28 @@
+## 2.17.0 (July 15, 2026)
+
+⚙️ General:
+
+* Bump `golang.org/x/crypto` from 0.51.0 to 0.52.0 ([#1372](https://github.com/ovh/terraform-provider-ovh/pull/1372))
+
+🧹 Cleaning:
+
+The deprecated `cassandra`, `m3db`, `m3aggregator` and `redis` database engines are no longer supported. The `ovh_cloud_project_database_ip_restriction` resource (deprecated since [#600](https://github.com/ovh/terraform-provider-ovh/pull/600) in favor of declaring IP restrictions directly on `ovh_cloud_project_database`) is also removed.
+
+* `r/ovh_cloud_project_database`: The `engine` attribute is now validated client-side against the list of supported engines (`clickhouse`, `grafana`, `kafka`, `kafkaConnect`, `kafkaMirrorMaker`, `mongodb`, `mysql`, `opensearch`, `postgresql`, `valkey`); the deprecated `cassandra`, `m3db`, `m3aggregator` and `redis` engines are no longer accepted ([#1239](https://github.com/ovh/terraform-provider-ovh/pull/1239))
+* Resources removed: `ovh_cloud_project_database_m3db_namespace`, `ovh_cloud_project_database_m3db_user`, `ovh_cloud_project_database_redis_user`, `ovh_cloud_project_database_ip_restriction` ([#1239](https://github.com/ovh/terraform-provider-ovh/pull/1239))
+* Datasources removed: `ovh_cloud_project_database_m3db_namespace`, `ovh_cloud_project_database_m3db_namespaces`, `ovh_cloud_project_database_m3db_user`, `ovh_cloud_project_database_redis_user`, `ovh_cloud_project_database_ip_restrictions` ([#1239](https://github.com/ovh/terraform-provider-ovh/pull/1239))
+
+💪 Improvements:
+
+* `r/ovh_cloud_floating_ip`, `d/ovh_cloud_floating_ip`, `d/ovh_cloud_floating_ips`, `d/ovh_cloud_additional_ip`, `d/ovh_cloud_additional_ips`, `d/ovh_cloud_ext_net_ip`, `d/ovh_cloud_ext_net_ips`, `d/ovh_cloud_public_ips`: Support `OVH_CLOUD_PROJECT_SERVICE` env var as fallback for `service_name` ([#1380](https://github.com/ovh/terraform-provider-ovh/pull/1380))
+
+🐜 Bug fixes:
+
+* `r/ovh_cloud_project_database`: Use the correct camelCase engine names (`kafkaConnect`, `kafkaMirrorMaker`) when determining which engines do not support `backup_time` ([#1239](https://github.com/ovh/terraform-provider-ovh/pull/1239))
+* `r/ovh_cloud_project_file_storage_share_network`: Fix the API endpoint path used for share networks (`sharenetwork` → `shareNetwork`) ([#1376](https://github.com/ovh/terraform-provider-ovh/pull/1376))
+
+❤️ Thanks for your contributions ❤️
+
 ## 2.16.0 (July 8, 2026)
 
 ⚙️ General:
