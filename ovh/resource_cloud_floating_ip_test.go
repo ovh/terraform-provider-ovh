@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
@@ -112,6 +113,63 @@ resource "ovh_cloud_floating_ip" "test" {
 						return nil
 					}),
 				),
+			},
+		},
+	})
+}
+
+// TestAccCloudFloatingIP_serviceNameFromEnv validates that when service_name is
+// omitted from the resource configuration, the provider falls back to the
+// OVH_CLOUD_PROJECT_SERVICE environment variable at plan time (via the
+// EnvDefaultString plan modifier) and that this does not produce a perpetual
+// diff / phantom replace on subsequent plans.
+func TestAccCloudFloatingIP_serviceNameFromEnv(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+
+	// Make the project id resolvable from the environment so the resource can be
+	// configured without an explicit service_name.
+	t.Setenv("OVH_CLOUD_PROJECT_SERVICE", serviceName)
+
+	description := acctest.RandomWithPrefix(testAccResourceCloudFloatingIPDescriptionPrefix)
+
+	// service_name is intentionally omitted from the config: it must be resolved
+	// from OVH_CLOUD_PROJECT_SERVICE by the EnvDefaultString plan modifier.
+	config := fmt.Sprintf(`
+resource "ovh_cloud_floating_ip" "test" {
+  region      = "%s"
+  description = "%s"
+}
+`, region, description)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloudPublicIP(t)
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					// The env default was applied even though service_name was
+					// absent from the config.
+					resource.TestCheckResourceAttr("ovh_cloud_floating_ip.test", "service_name", serviceName),
+					resource.TestCheckResourceAttr("ovh_cloud_floating_ip.test", "region", region),
+					resource.TestCheckResourceAttr("ovh_cloud_floating_ip.test", "description", description),
+					resource.TestCheckResourceAttr("ovh_cloud_floating_ip.test", "resource_status", "READY"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_floating_ip.test", "id"),
+				),
+			},
+			{
+				// Re-planning with service_name still omitted must be a no-op:
+				// the EnvDefaultString modifier injects the env value so the plan
+				// matches state and RequiresReplace does not fire (regression guard).
+				Config: config,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})

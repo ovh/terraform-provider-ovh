@@ -20,7 +20,7 @@ resource "ovh_cloud_floating_ip" "ip" {
 
 The following arguments are supported:
 
-* `service_name` - (Required) Service name of the resource representing the id of the cloud project. **Changing this value recreates the resource.**
+* `service_name` - (Required) Service name of the resource representing the id of the cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used. **Changing this value recreates the resource.**
 * `region` - (Required) Region where the floating IP will be created. **Changing this value recreates the resource.**
 * `availability_zone` - (Optional) Availability zone for the floating IP. **Changing this value recreates the resource.**
 * `description` - (Optional) Description of the floating IP. This is the only argument that can be updated in place.

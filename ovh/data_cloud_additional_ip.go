@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"os"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -48,8 +49,9 @@ func (d *cloudAdditionalIPDataSource) Schema(ctx context.Context, req datasource
 		Attributes: map[string]schema.Attribute{
 			"service_name": schema.StringAttribute{
 				CustomType:  ovhtypes.TfStringType{},
-				Required:    true,
-				Description: "Service name of the resource representing the id of the cloud project",
+				Optional:    true,
+				Computed:    true,
+				Description: "Service name of the resource representing the id of the cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.",
 			},
 			"id": schema.StringAttribute{
 				CustomType:  ovhtypes.TfStringType{},
@@ -180,6 +182,19 @@ func (d *cloudAdditionalIPDataSource) Read(ctx context.Context, req datasource.R
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	if data.ServiceName.IsNull() || data.ServiceName.ValueString() == "" {
+		envServiceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE")
+		if envServiceName == "" {
+			resp.Diagnostics.AddError(
+				"Missing service_name",
+				"The service_name attribute is required. Provide it in the data source "+
+					"configuration or set the OVH_CLOUD_PROJECT_SERVICE environment variable.",
+			)
+			return
+		}
+		data.ServiceName = ovhtypes.NewTfStringValue(envServiceName)
 	}
 
 	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/publicIp/additional/" + url.PathEscape(data.Id.ValueString())

@@ -84,3 +84,48 @@ data "ovh_cloud_ext_net_ip" "test" {
 		},
 	})
 }
+
+// TestAccDataSourceCloudExtNetIP_serviceNameFromEnv mirrors the _basic test but
+// omits service_name from the data block: the data source must resolve the
+// project id from the OVH_CLOUD_PROJECT_SERVICE environment variable.
+func TestAccDataSourceCloudExtNetIP_serviceNameFromEnv(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+	flavor, image, err := getFlavorAndImage(serviceName, region)
+	if err != nil {
+		t.Skipf("failed to retrieve a flavor and an image: %s", err)
+	}
+
+	t.Setenv("OVH_CLOUD_PROJECT_SERVICE", serviceName)
+
+	// The instance keeps an explicit service_name so setup stays deterministic;
+	// only the data block relies on the environment fallback.
+	config := testAccCloudExtNetIPInstanceConfig(serviceName, region, image, flavor) + `
+data "ovh_cloud_ext_net_ip" "test" {
+  id = [for address in ovh_cloud_project_instance.instance.addresses : address.ip if address.version == 4][0]
+}
+`
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloudExtNetIP(t)
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.ovh_cloud_ext_net_ip.test", "service_name", serviceName),
+					resource.TestCheckResourceAttrSet("data.ovh_cloud_ext_net_ip.test", "id"),
+					resource.TestCheckResourceAttrSet("data.ovh_cloud_ext_net_ip.test", "resource_status"),
+					resource.TestCheckResourceAttrSet("data.ovh_cloud_ext_net_ip.test", "current_state.ip"),
+					resource.TestCheckResourceAttrSet("data.ovh_cloud_ext_net_ip.test", "current_state.id"),
+					resource.TestCheckResourceAttrPair(
+						"data.ovh_cloud_ext_net_ip.test", "id",
+						"data.ovh_cloud_ext_net_ip.test", "current_state.ip",
+					),
+				),
+			},
+		},
+	})
+}

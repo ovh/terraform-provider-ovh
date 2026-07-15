@@ -45,3 +45,45 @@ data "ovh_cloud_floating_ips" "test" {
 		},
 	})
 }
+
+// TestAccDataSourceCloudFloatingIPs_serviceNameFromEnv mirrors the _basic test
+// but omits service_name from the data block: the data source must resolve the
+// project id from the OVH_CLOUD_PROJECT_SERVICE environment variable.
+func TestAccDataSourceCloudFloatingIPs_serviceNameFromEnv(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+
+	t.Setenv("OVH_CLOUD_PROJECT_SERVICE", serviceName)
+
+	description := acctest.RandomWithPrefix(testAccResourceCloudFloatingIPDescriptionPrefix)
+
+	// The resource keeps an explicit service_name so setup stays deterministic;
+	// only the data block relies on the environment fallback.
+	config := fmt.Sprintf(`
+resource "ovh_cloud_floating_ip" "test" {
+  service_name = "%s"
+  region       = "%s"
+  description  = "%s"
+}
+
+data "ovh_cloud_floating_ips" "test" {
+  depends_on = [ovh_cloud_floating_ip.test]
+}
+`, serviceName, region, description)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloudPublicIP(t)
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.ovh_cloud_floating_ips.test", "service_name", serviceName),
+					resource.TestCheckResourceAttrWith("data.ovh_cloud_floating_ips.test", "floating_ips.#", testAccCheckCloudPublicIPListNotEmpty),
+				),
+			},
+		},
+	})
+}
