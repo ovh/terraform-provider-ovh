@@ -23,7 +23,7 @@ output "floating_ip_status" {
 
 The following arguments are supported:
 
-* `service_name` - (Required) Service name of the resource representing the id of the cloud project.
+* `service_name` - (Required) Service name of the resource representing the id of the cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 * `id` - (Required) IP address of the floating IP.
 
 ## Attributes Reference
