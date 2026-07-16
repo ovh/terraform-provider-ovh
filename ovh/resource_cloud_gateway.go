@@ -437,6 +437,10 @@ func (r *cloudGatewayResource) waitForGatewayReady(ctx context.Context, serviceN
 			if err != nil {
 				return res, "", err
 			}
+			// ERROR is terminal: surface it with the task reason instead of a generic unexpected-state.
+			if res.ResourceStatus == "ERROR" {
+				return res, res.ResourceStatus, cloudResourceErrorFromTasks("gateway", gatewayId, res.CurrentTasks)
+			}
 			return res, res.ResourceStatus, nil
 		},
 		Timeout:    20 * time.Minute,

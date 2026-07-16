@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
@@ -217,16 +218,20 @@ func TestAccCloudKeyManagerSecret_symmetric(t *testing.T) {
 	name := acctest.RandomWithPrefix(test_prefix)
 
 	// SYMMETRIC key with no payload: the service generates the key material from
-	// the algorithm/bit_length/mode triple.
+	// the algorithm/bit_length/mode triple. secret_type, algorithm and mode are
+	// all written lower case on purpose to exercise the upper-case normalization:
+	// apiv2 upper-cases the three of them on every read path
+	// (internal/secret/mapping.go TypeFromOpenStack / AlgorithmFromOpenStack /
+	// ModeFromOpenStack), so state must read back upper-cased with no plan diff.
 	config := fmt.Sprintf(`
 resource "ovh_cloud_key_manager_secret" "test" {
   service_name = "%s"
   region       = "%s"
   name         = "%s"
-  secret_type  = "SYMMETRIC"
-  algorithm    = "AES"
+  secret_type  = "symmetric"
+  algorithm    = "aes"
   bit_length   = 256
-  mode         = "CBC"
+  mode         = "cbc"
 }
 `, serviceName, region, name)
 
@@ -255,6 +260,14 @@ resource "ovh_cloud_key_manager_secret" "test" {
 					resource.TestCheckResourceAttrSet("ovh_cloud_key_manager_secret.test", "checksum"),
 					resource.TestCheckResourceAttr("ovh_cloud_key_manager_secret.test", "resource_status", "READY"),
 				),
+			},
+			{
+				// The lower-case secret_type/algorithm/mode must not produce a
+				// perpetual diff, nor a forced replace on their RequiresReplace.
+				Config: config,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
 			},
 			// Test import
 			{

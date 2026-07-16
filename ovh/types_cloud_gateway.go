@@ -48,6 +48,7 @@ type CloudGatewayAPIResponse struct {
 	ResourceStatus string                       `json:"resourceStatus"`
 	CurrentState   *CloudGatewayAPICurrentState `json:"currentState,omitempty"`
 	TargetSpec     *CloudGatewayAPITargetSpec   `json:"targetSpec,omitempty"`
+	CurrentTasks   []CloudResourceTask          `json:"currentTasks"`
 }
 
 type CloudGatewayAPICurrentState struct {
