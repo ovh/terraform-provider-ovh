@@ -49,7 +49,15 @@ type CloudStorageBlockVolumeCurrentState struct {
 }
 
 type CloudStorageBlockVolumeEncryption struct {
-	Enabled bool `json:"enabled"`
+	Enabled bool                                  `json:"enabled"`
+	Kms     *CloudStorageBlockVolumeEncryptionKMS `json:"kms,omitempty"`
+}
+
+// CloudStorageBlockVolumeEncryptionKMS references a customer-managed OKMS key (CMK).
+// Set at creation only; the API never allows updating it.
+type CloudStorageBlockVolumeEncryptionKMS struct {
+	DomainID     string `json:"domainId"`
+	ServiceKeyID string `json:"serviceKeyId"`
 }
 
 type CloudStorageBlockVolumeAttachedInstance struct {
@@ -99,7 +107,33 @@ func CreateFromAttrTypes() map[string]attr.Type {
 func BlockVolumeEncryptionAttrTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"enabled": types.BoolType,
+		"kms":     types.ObjectType{AttrTypes: BlockVolumeEncryptionKMSAttrTypes()},
 	}
+}
+
+// BlockVolumeEncryptionKMSAttrTypes returns the attribute types for the encryption.kms object
+func BlockVolumeEncryptionKMSAttrTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"domain_id":      ovhtypes.TfStringType{},
+		"service_key_id": ovhtypes.TfStringType{},
+	}
+}
+
+// buildBlockVolumeEncryptionKMSObject builds the encryption.kms object value from the API
+// representation, returning a null object when kms is not set (plain/OMK volumes).
+func buildBlockVolumeEncryptionKMSObject(kms *CloudStorageBlockVolumeEncryptionKMS) types.Object {
+	if kms == nil {
+		return types.ObjectNull(BlockVolumeEncryptionKMSAttrTypes())
+	}
+
+	obj, _ := types.ObjectValue(
+		BlockVolumeEncryptionKMSAttrTypes(),
+		map[string]attr.Value{
+			"domain_id":      ovhtypes.TfStringValue{StringValue: types.StringValue(kms.DomainID)},
+			"service_key_id": ovhtypes.TfStringValue{StringValue: types.StringValue(kms.ServiceKeyID)},
+		},
+	)
+	return obj
 }
 
 // ToCreate converts the Terraform model to the API create payload
@@ -117,6 +151,33 @@ func (m *CloudStorageBlockVolumeModel) ToCreate() *CloudStorageBlockVolumeCreate
 			if boolVal, ok := enabledVal.(types.Bool); ok && !boolVal.IsNull() && !boolVal.IsUnknown() {
 				target.Encryption = &CloudStorageBlockVolumeEncryption{
 					Enabled: boolVal.ValueBool(),
+				}
+			}
+		}
+
+		if target.Encryption != nil {
+			if kmsVal, ok := attrs["kms"]; ok {
+				if kmsObj, ok := kmsVal.(types.Object); ok && !kmsObj.IsNull() && !kmsObj.IsUnknown() {
+					kmsAttrs := kmsObj.Attributes()
+
+					var domainID, serviceKeyID string
+					if v, ok := kmsAttrs["domain_id"]; ok {
+						if strVal, ok := v.(ovhtypes.TfStringValue); ok && !strVal.IsNull() && !strVal.IsUnknown() {
+							domainID = strVal.ValueString()
+						}
+					}
+					if v, ok := kmsAttrs["service_key_id"]; ok {
+						if strVal, ok := v.(ovhtypes.TfStringValue); ok && !strVal.IsNull() && !strVal.IsUnknown() {
+							serviceKeyID = strVal.ValueString()
+						}
+					}
+
+					if domainID != "" || serviceKeyID != "" {
+						target.Encryption.Kms = &CloudStorageBlockVolumeEncryptionKMS{
+							DomainID:     domainID,
+							ServiceKeyID: serviceKeyID,
+						}
+					}
 				}
 			}
 		}
@@ -232,6 +293,7 @@ func (m *CloudStorageBlockVolumeModel) MergeWith(ctx context.Context, response *
 				BlockVolumeEncryptionAttrTypes(),
 				map[string]attr.Value{
 					"enabled": types.BoolValue(response.CurrentState.Encryption.Enabled),
+					"kms":     buildBlockVolumeEncryptionKMSObject(response.CurrentState.Encryption.Kms),
 				},
 			)
 		} else {
@@ -273,6 +335,7 @@ func (m *CloudStorageBlockVolumeModel) MergeWith(ctx context.Context, response *
 				BlockVolumeEncryptionAttrTypes(),
 				map[string]attr.Value{
 					"enabled": types.BoolValue(response.TargetSpec.Encryption.Enabled),
+					"kms":     buildBlockVolumeEncryptionKMSObject(response.TargetSpec.Encryption.Kms),
 				},
 			)
 			m.Encryption = encryptionObj

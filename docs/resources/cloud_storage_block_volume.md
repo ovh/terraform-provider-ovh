@@ -10,7 +10,7 @@ Creates a block storage volume in a public cloud project.
 
 ```terraform
 resource "ovh_cloud_storage_block_volume" "volume" {
-  service_name = "xxxxxxxxxx"
+  service_name = <Public cloud project id>
   name         = "my-volume"
   size         = 10
   region       = "GRA1"
@@ -22,7 +22,7 @@ resource "ovh_cloud_storage_block_volume" "volume" {
 
 ```terraform
 resource "ovh_cloud_storage_block_volume" "restored" {
-  service_name = "xxxxxxxxxx"
+  service_name = <Public cloud project id>
   name         = "my-restored-volume"
   size         = 10
   region       = "GRA1"
@@ -30,6 +30,26 @@ resource "ovh_cloud_storage_block_volume" "restored" {
 
   create_from = {
     backup_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+  }
+}
+```
+
+### Create with a customer-managed key (CMK)
+
+```terraform
+resource "ovh_cloud_storage_block_volume" "cmk_volume" {
+  service_name = <Public cloud project id>
+  name         = "my-cmk-volume"
+  size         = 10
+  region       = "GRA1"
+  volume_type  = "HIGH_SPEED"
+
+  encryption = {
+    enabled = true
+    kms = {
+      domain_id      = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+      service_key_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+    }
   }
 }
 ```
@@ -43,8 +63,11 @@ The following arguments are supported:
 * `size` - (Required) Size of the volume in GB.
 * `region` - (Required) Region where the volume will be created. **Changing this value recreates the resource.**
 * `volume_type` - (Optional) Volume type (`CLASSIC`, `HIGH_SPEED`, `HIGH_SPEED_GEN2`). Can be changed after creation (triggers online retype).
-* `encryption` - (Optional) Encryption configuration for the volume.
+* `encryption` - (Optional) Encryption configuration for the volume. **Changing this value recreates the resource.**
   * `enabled` - (Optional) Whether the volume is encrypted at rest with LUKS.
+  * `kms` - (Optional) Customer-managed key (CMK) reference used to encrypt the volume. Set at creation only; the whole `encryption` block is immutable and **cannot be changed afterwards.**
+    * `domain_id` - (Optional) OKMS domain ID owning the service key.
+    * `service_key_id` - (Optional) OKMS service key ID used to encrypt the volume.
 * `create_from` - (Optional) Source to create the volume from. **Changing this value recreates the resource.**
   * `backup_id` - (Optional) Identifier of a backup to restore the volume from.
   * `snapshot_id` - (Optional) Identifier of a snapshot to create the volume from.
@@ -68,6 +91,9 @@ The following attributes are exported:
   * `bootable` - Whether the volume is bootable.
   * `encryption` - Encryption configuration of the volume:
     * `enabled` - Whether the volume is encrypted at rest with LUKS.
+    * `kms` - Customer-managed key (CMK) reference used to encrypt the volume:
+      * `domain_id` - OKMS domain ID owning the service key.
+      * `service_key_id` - OKMS service key ID used to encrypt the volume.
   * `status` - Volume status (`AVAILABLE`, `IN_USE`, `CREATING`, `DELETING`, `ATTACHING`, `DETACHING`, `EXTENDING`, `ERROR`, `ERROR_DELETING`, `ERROR_BACKING_UP`, `ERROR_RESTORING`, `ERROR_EXTENDING`).
 
 ## Import
