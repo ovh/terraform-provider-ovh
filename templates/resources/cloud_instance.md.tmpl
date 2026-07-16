@@ -1,0 +1,29 @@
+---
+subcategory : "Instances"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_cloud_instance
+
+Creates an instance in a public cloud project.
+
+~> **WARNING** Changing `image_id` rebuilds the instance and **wipes the root disk**. Back up any data on the root disk before changing the image.
+
+~> **WARNING** Do not also manage a share's access rules on another resource while it is attached through `shares`: the share will report an `OUT_OF_SYNC` status.
+
+## Example Usage
+
+{{tffile "examples/resources/cloud_instance/resource.tf"}}
+
+{{ .SchemaMarkdown }}
+
+## Import
+
+An instance in a public cloud project can be imported using the `service_name` and `id` (identifier of the instance) properties, separated by a `/`.
+
+```bash
+$ terraform import ovh_cloud_instance.instance service_name/id
+```

@@ -1,0 +1,29 @@
+---
+subcategory : "Instances"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_cloud_instance_group
+
+Creates an instance group (placement group) in a public cloud project.
+
+~> **WARNING** An instance group is **immutable**: it has no update route. Changing any attribute (`name`, `region`, `policy`) forces the group to be destroyed and re-created.
+
+~> **NOTE** Membership is set only at instance-creation time through the instance's `group_id`; this resource never manages members.
+
+## Example Usage
+
+{{tffile "examples/resources/cloud_instance_group/resource.tf"}}
+
+{{ .SchemaMarkdown }}
+
+## Import
+
+An instance group in a public cloud project can be imported using the `service_name` and `id` (identifier of the instance group) properties, separated by a `/`.
+
+```bash
+$ terraform import ovh_cloud_instance_group.group service_name/id
+```

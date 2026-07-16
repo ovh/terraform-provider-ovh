@@ -517,10 +517,16 @@ func testAccPreCheckOkmsCredential(t *testing.T) {
 
 func testAccPreCheckCloudInstance(t *testing.T) {
 	testAccPreCheckCredentials(t)
-	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_NETWORK_PRIVATE_TEST")
-	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_NETWORK_PRIVATE_SUBNET_TEST")
-	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_FLOATING_IP_ID")
-	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_GATEWAY_ID")
+	for _, v := range []string{
+		"OVH_CLOUD_PROJECT_SERVICE_TEST",
+		"OVH_INSTANCE_REGION_TEST",
+		"OVH_INSTANCE_FLAVOR_ID_TEST",
+		"OVH_INSTANCE_IMAGE_ID_TEST",
+	} {
+		if os.Getenv(v) == "" {
+			t.Skipf("%s must be set for ovh_cloud_instance acceptance tests", v)
+		}
+	}
 }
 
 func testAccCheckVRackExists(t *testing.T) {
