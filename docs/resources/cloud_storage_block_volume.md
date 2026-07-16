@@ -10,7 +10,7 @@ Creates a block storage volume in a public cloud project.
 
 ```terraform
 resource "ovh_cloud_storage_block_volume" "volume" {
-  service_name = <Public cloud project id>
+  service_name = "xxxxxxxxxx"
   name         = "my-volume"
   size         = 10
   region       = "GRA1"
@@ -22,7 +22,7 @@ resource "ovh_cloud_storage_block_volume" "volume" {
 
 ```terraform
 resource "ovh_cloud_storage_block_volume" "restored" {
-  service_name = <Public cloud project id>
+  service_name = "xxxxxxxxxx"
   name         = "my-restored-volume"
   size         = 10
   region       = "GRA1"
@@ -38,7 +38,7 @@ resource "ovh_cloud_storage_block_volume" "restored" {
 
 ```terraform
 resource "ovh_cloud_storage_block_volume" "cmk_volume" {
-  service_name = <Public cloud project id>
+  service_name = "xxxxxxxxxx"
   name         = "my-cmk-volume"
   size         = 10
   region       = "GRA1"
