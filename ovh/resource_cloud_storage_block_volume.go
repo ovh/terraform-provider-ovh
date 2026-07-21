@@ -95,6 +95,17 @@ func (r *cloudStorageBlockVolumeResource) Schema(ctx context.Context, req resour
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"availability_zone": schema.StringAttribute{
+				CustomType:          ovhtypes.TfStringType{},
+				Optional:            true,
+				Computed:            true,
+				Description:         "Availability zone where the volume will be created",
+				MarkdownDescription: "Availability zone where the volume will be created",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
 			"volume_type": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Optional:            true,
@@ -111,6 +122,7 @@ func (r *cloudStorageBlockVolumeResource) Schema(ctx context.Context, req resour
 				Description:         "Encryption configuration for the volume. Changing this value recreates the resource.",
 				MarkdownDescription: "Encryption configuration for the volume. **Changing this value recreates the resource.**",
 				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.UseStateForUnknown(),
 					objectplanmodifier.RequiresReplace(),
 				},
 				Attributes: map[string]schema.Attribute{
@@ -120,6 +132,7 @@ func (r *cloudStorageBlockVolumeResource) Schema(ctx context.Context, req resour
 						Description:         "Whether the volume is encrypted at rest with LUKS",
 						MarkdownDescription: "Whether the volume is encrypted at rest with LUKS",
 						PlanModifiers: []planmodifier.Bool{
+							boolplanmodifier.UseStateForUnknown(),
 							boolplanmodifier.RequiresReplace(),
 						},
 					},
@@ -209,6 +222,12 @@ func (r *cloudStorageBlockVolumeResource) Schema(ctx context.Context, req resour
 								Computed:            true,
 								Description:         "Region",
 								MarkdownDescription: "Region",
+							},
+							"availability_zone": schema.StringAttribute{
+								CustomType:          ovhtypes.TfStringType{},
+								Computed:            true,
+								Description:         "Availability zone",
+								MarkdownDescription: "Availability zone",
 							},
 						},
 					},

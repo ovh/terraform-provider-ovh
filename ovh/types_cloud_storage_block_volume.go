@@ -10,13 +10,14 @@ import (
 
 // CloudStorageBlockVolumeModel represents the Terraform model for the block storage resource
 type CloudStorageBlockVolumeModel struct {
-	ServiceName ovhtypes.TfStringValue `tfsdk:"service_name"`
-	Name        ovhtypes.TfStringValue `tfsdk:"name"`
-	Size        types.Int64            `tfsdk:"size"`
-	Region      ovhtypes.TfStringValue `tfsdk:"region"`
-	VolumeType  ovhtypes.TfStringValue `tfsdk:"volume_type"`
-	Encryption  types.Object           `tfsdk:"encryption"`
-	CreateFrom  types.Object           `tfsdk:"create_from"`
+	ServiceName      ovhtypes.TfStringValue `tfsdk:"service_name"`
+	Name             ovhtypes.TfStringValue `tfsdk:"name"`
+	Size             types.Int64            `tfsdk:"size"`
+	Region           ovhtypes.TfStringValue `tfsdk:"region"`
+	AvailabilityZone ovhtypes.TfStringValue `tfsdk:"availability_zone"`
+	VolumeType       ovhtypes.TfStringValue `tfsdk:"volume_type"`
+	Encryption       types.Object           `tfsdk:"encryption"`
+	CreateFrom       types.Object           `tfsdk:"create_from"`
 
 	Id             ovhtypes.TfStringValue `tfsdk:"id"`
 	Checksum       ovhtypes.TfStringValue `tfsdk:"checksum"`
@@ -72,7 +73,8 @@ type CloudStorageBlockVolumeTarget struct {
 }
 
 type CloudStorageBlockVolumeLocation struct {
-	Region string `json:"region,omitempty"`
+	Region           string `json:"region,omitempty"`
+	AvailabilityZone string `json:"availabilityZone,omitempty"`
 }
 
 // Create payload
@@ -109,6 +111,10 @@ func (m *CloudStorageBlockVolumeModel) ToCreate() *CloudStorageBlockVolumeCreate
 		Name:       m.Name.ValueString(),
 		Size:       m.Size.ValueInt64(),
 		VolumeType: m.VolumeType.ValueString(),
+	}
+
+	if !m.AvailabilityZone.IsNull() && !m.AvailabilityZone.IsUnknown() {
+		target.Location.AvailabilityZone = m.AvailabilityZone.ValueString()
 	}
 
 	if !m.Encryption.IsNull() && !m.Encryption.IsUnknown() {
@@ -177,7 +183,7 @@ func BlockVolumeAttachedInstanceAttrTypes() map[string]attr.Type {
 // BlockVolumeCurrentStateAttrTypes returns the attribute types for the current_state object
 func BlockVolumeCurrentStateAttrTypes() map[string]attr.Type {
 	return map[string]attr.Type{
-		"location":           types.ObjectType{AttrTypes: map[string]attr.Type{"region": ovhtypes.TfStringType{}}},
+		"location":           types.ObjectType{AttrTypes: map[string]attr.Type{"region": ovhtypes.TfStringType{}, "availability_zone": ovhtypes.TfStringType{}}},
 		"name":               ovhtypes.TfStringType{},
 		"size":               types.Int64Type,
 		"volume_type":        ovhtypes.TfStringType{},
@@ -199,8 +205,11 @@ func (m *CloudStorageBlockVolumeModel) MergeWith(ctx context.Context, response *
 	// Build current_state from API currentState
 	if response.CurrentState != nil {
 		locObj, _ := types.ObjectValue(
-			map[string]attr.Type{"region": ovhtypes.TfStringType{}},
-			map[string]attr.Value{"region": ovhtypes.TfStringValue{StringValue: types.StringValue(response.CurrentState.Location.Region)}},
+			map[string]attr.Type{"region": ovhtypes.TfStringType{}, "availability_zone": ovhtypes.TfStringType{}},
+			map[string]attr.Value{
+				"region":            ovhtypes.TfStringValue{StringValue: types.StringValue(response.CurrentState.Location.Region)},
+				"availability_zone": ovhtypes.TfStringValue{StringValue: types.StringValue(response.CurrentState.Location.AvailabilityZone)},
+			},
 		)
 
 		bootableVal := types.BoolValue(false)
@@ -261,6 +270,7 @@ func (m *CloudStorageBlockVolumeModel) MergeWith(ctx context.Context, response *
 	if response.TargetSpec != nil {
 		if response.TargetSpec.Location != nil {
 			m.Region = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Location.Region)}
+			m.AvailabilityZone = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Location.AvailabilityZone)}
 		}
 		m.Name = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Name)}
 		m.Size = types.Int64Value(response.TargetSpec.Size)
