@@ -439,6 +439,66 @@ resource "ovh_cloud_storage_block_volume" "volume" {
 	})
 }
 
+// TestAccCloudStorageBlockVolume_availabilityZone verifies that a volume can be
+// created pinned to a specific availability zone via the root-level
+// `availability_zone` attribute, and that the AZ is reflected both at the root
+// and inside current_state.location.
+func TestAccCloudStorageBlockVolume_availabilityZone(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+
+	// Per explicit instruction, these values are hardcoded for this test.
+	const (
+		region           = "EU-WEST-PAR"
+		availabilityZone = "eu-west-par-a"
+	)
+
+	volumeName := acctest.RandomWithPrefix(testAccResourceCloudStorageBlockVolumeNamePrefix)
+
+	config := fmt.Sprintf(`
+resource "ovh_cloud_storage_block_volume" "volume" {
+  service_name      = "%s"
+  name              = "%s"
+  size              = 10
+  region            = "%s"
+  availability_zone = "%s"
+  volume_type       = "HIGH_SPEED_GEN2"
+
+  encryption = {
+    enabled = false
+  }
+}
+`, serviceName, volumeName, region, availabilityZone)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloud(t)
+			testAccCheckCloudProjectExists(t)
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume", "service_name", serviceName),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume", "name", volumeName),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume", "region", region),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume", "availability_zone", availabilityZone),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume", "current_state.location.availability_zone", availabilityZone),
+					resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume.volume", "id"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume.volume", "checksum"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.volume", "resource_status", "READY"),
+				),
+			},
+			{
+				ResourceName:      "ovh_cloud_storage_block_volume.volume",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccCloudStorageBlockVolumeImportStateIdFunc("ovh_cloud_storage_block_volume.volume"),
+			},
+		},
+	})
+}
+
 const testAccResourceCloudStorageBlockVolumeNamePrefix = "tf-test-volume-v2-"
 
 func testAccCloudStorageBlockVolumeImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
