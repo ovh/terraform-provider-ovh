@@ -112,9 +112,10 @@ func (r *cloudKeyManagerSecretResource) Schema(ctx context.Context, req resource
 			"algorithm": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Optional:            true,
-				Description:         "Algorithm associated with the secret (e.g., AES, RSA)",
-				MarkdownDescription: "Algorithm associated with the secret (e.g., `AES`, `RSA`)",
+				Description:         "Algorithm associated with the secret (e.g., AES, RSA). The value is normalized to upper case to match the API.",
+				MarkdownDescription: "Algorithm associated with the secret (e.g., `AES`, `RSA`). The value is normalized to upper case to match the API.",
 				PlanModifiers: []planmodifier.String{
+					UpperCaseString(),
 					stringplanmodifier.RequiresReplace(),
 				},
 			},

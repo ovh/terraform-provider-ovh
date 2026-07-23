@@ -217,14 +217,16 @@ func TestAccCloudKeyManagerSecret_symmetric(t *testing.T) {
 	name := acctest.RandomWithPrefix(test_prefix)
 
 	// SYMMETRIC key with no payload: the service generates the key material from
-	// the algorithm/bit_length/mode triple.
+	// the algorithm/bit_length/mode triple. algorithm is written lower case on
+	// purpose to exercise the upper-case normalization: the API always returns it
+	// upper-cased, so state must read back "AES" with no plan diff.
 	config := fmt.Sprintf(`
 resource "ovh_cloud_key_manager_secret" "test" {
   service_name = "%s"
   region       = "%s"
   name         = "%s"
   secret_type  = "SYMMETRIC"
-  algorithm    = "AES"
+  algorithm    = "aes"
   bit_length   = 256
   mode         = "CBC"
 }
