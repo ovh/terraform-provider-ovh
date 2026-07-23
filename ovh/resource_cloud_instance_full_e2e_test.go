@@ -50,6 +50,7 @@ resource "ovh_cloud_network_private_vrack_subnet" "subnet" {
   network_id   = ovh_cloud_network_private_vrack.net.id
   name         = "%s"
   cidr         = "10.0.0.0/24"
+  gateway_ip   = "10.0.0.1"
   dhcp_enabled = true
   region       = "%s"
 }
@@ -190,10 +191,10 @@ func TestAccCloudInstance_fullStack(t *testing.T) {
 	const rn = "ovh_cloud_instance.test"
 
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
-	region := os.Getenv("OVH_INSTANCE_REGION_TEST")
-	flavorID := os.Getenv("OVH_INSTANCE_FLAVOR_ID_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+	flavorID := resolveInstanceFlavorID(t, serviceName, region, testAccInstanceFlavorName)
 	flavorID2 := os.Getenv("OVH_INSTANCE_FLAVOR_ID_2_TEST") // optional resize target
-	imageID := os.Getenv("OVH_INSTANCE_IMAGE_ID_TEST")
+	imageID := resolveInstanceImageID(t, serviceName, region, testAccInstanceImageName)
 
 	if flavorID2 == "" {
 		flavorID2 = flavorID // fall back to a rename-only resize

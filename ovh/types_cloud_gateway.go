@@ -48,6 +48,16 @@ type CloudGatewayAPIResponse struct {
 	ResourceStatus string                       `json:"resourceStatus"`
 	CurrentState   *CloudGatewayAPICurrentState `json:"currentState,omitempty"`
 	TargetSpec     *CloudGatewayAPITargetSpec   `json:"targetSpec,omitempty"`
+	CurrentTasks   []cloudGatewayTask           `json:"currentTasks"`
+}
+
+// cloudGatewayTask mirrors apiv2 model.ResourceTask; used only for wait/diagnostics, not state.
+type cloudGatewayTask struct {
+	Type   string `json:"type"`
+	Status string `json:"status"`
+	Errors []struct {
+		Message string `json:"message"`
+	} `json:"errors"`
 }
 
 type CloudGatewayAPICurrentState struct {

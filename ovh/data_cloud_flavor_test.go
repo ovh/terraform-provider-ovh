@@ -10,7 +10,8 @@ import (
 
 func TestAccDataSourceCloudFlavor_basic(t *testing.T) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
-	flavorID := os.Getenv("OVH_INSTANCE_FLAVOR_ID_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+	flavorID := resolveInstanceFlavorID(t, serviceName, region, testAccInstanceFlavorName)
 
 	config := fmt.Sprintf(`
 data "ovh_cloud_flavor" "test" {

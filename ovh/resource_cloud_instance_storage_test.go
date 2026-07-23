@@ -28,9 +28,9 @@ func TestAccCloudInstance_volumesAttachDetach(t *testing.T) {
 	const rn = "ovh_cloud_instance.test"
 
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
-	region := os.Getenv("OVH_INSTANCE_REGION_TEST")
-	flavorID := os.Getenv("OVH_INSTANCE_FLAVOR_ID_TEST")
-	imageID := os.Getenv("OVH_INSTANCE_IMAGE_ID_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+	flavorID := resolveInstanceFlavorID(t, serviceName, region, testAccInstanceFlavorName)
+	imageID := resolveInstanceImageID(t, serviceName, region, testAccInstanceImageName)
 
 	volName1 := acctest.RandomWithPrefix("tf-test-inst-vol1")
 	volName2 := acctest.RandomWithPrefix("tf-test-inst-vol2")
@@ -173,9 +173,9 @@ func TestAccCloudInstance_sharesReadWrite(t *testing.T) {
 	const rn = "ovh_cloud_instance.test"
 
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
-	region := os.Getenv("OVH_INSTANCE_REGION_TEST")
-	flavorID := os.Getenv("OVH_INSTANCE_FLAVOR_ID_TEST")
-	imageID := os.Getenv("OVH_INSTANCE_IMAGE_ID_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+	flavorID := resolveInstanceFlavorID(t, serviceName, region, testAccInstanceFlavorName)
+	imageID := resolveInstanceImageID(t, serviceName, region, testAccInstanceImageName)
 
 	vrackNetName := acctest.RandomWithPrefix("tf-test-inst-vnet")
 	vrackSubnetName := acctest.RandomWithPrefix("tf-test-inst-vsub")
@@ -217,9 +217,9 @@ func TestAccCloudInstance_sharesReadOnlyAndDefault(t *testing.T) {
 	const rn = "ovh_cloud_instance.test"
 
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
-	region := os.Getenv("OVH_INSTANCE_REGION_TEST")
-	flavorID := os.Getenv("OVH_INSTANCE_FLAVOR_ID_TEST")
-	imageID := os.Getenv("OVH_INSTANCE_IMAGE_ID_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+	flavorID := resolveInstanceFlavorID(t, serviceName, region, testAccInstanceFlavorName)
+	imageID := resolveInstanceImageID(t, serviceName, region, testAccInstanceImageName)
 
 	cases := []struct {
 		name            string
@@ -280,9 +280,9 @@ func TestAccCloudInstance_shareAttachDetach(t *testing.T) {
 	const rn = "ovh_cloud_instance.test"
 
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
-	region := os.Getenv("OVH_INSTANCE_REGION_TEST")
-	flavorID := os.Getenv("OVH_INSTANCE_FLAVOR_ID_TEST")
-	imageID := os.Getenv("OVH_INSTANCE_IMAGE_ID_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+	flavorID := resolveInstanceFlavorID(t, serviceName, region, testAccInstanceFlavorName)
+	imageID := resolveInstanceImageID(t, serviceName, region, testAccInstanceImageName)
 
 	vrackNetName := acctest.RandomWithPrefix("tf-test-inst-vnet")
 	vrackSubnetName := acctest.RandomWithPrefix("tf-test-inst-vsub")

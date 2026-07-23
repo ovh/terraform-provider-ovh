@@ -2,6 +2,7 @@ package ovh
 
 import (
 	"context"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -157,14 +158,45 @@ type CloudInstanceAPICurrentState struct {
 	UserId         string                         `json:"userId,omitempty"`
 }
 
+// CloudInstanceAPITaskError is a single error reported on an in-progress task.
+type CloudInstanceAPITaskError struct {
+	Message string `json:"message,omitempty"`
+}
+
+// CloudInstanceAPICurrentTask is an asynchronous operation reconciling the
+// instance towards its target spec. When an operation fails it carries the
+// failure reason in Errors.
+type CloudInstanceAPICurrentTask struct {
+	Id     string                      `json:"id,omitempty"`
+	Type   string                      `json:"type,omitempty"`
+	Status string                      `json:"status,omitempty"`
+	Link   string                      `json:"link,omitempty"`
+	Errors []CloudInstanceAPITaskError `json:"errors,omitempty"`
+}
+
 type CloudInstanceAPIResponse struct {
 	Id             string                        `json:"id"`
 	Checksum       string                        `json:"checksum"`
 	CreatedAt      string                        `json:"createdAt"`
 	UpdatedAt      string                        `json:"updatedAt"`
 	ResourceStatus string                        `json:"resourceStatus"`
+	CurrentTasks   []CloudInstanceAPICurrentTask `json:"currentTasks,omitempty"`
 	TargetSpec     *CloudInstanceAPITargetSpec   `json:"targetSpec,omitempty"`
 	CurrentState   *CloudInstanceAPICurrentState `json:"currentState,omitempty"`
+}
+
+// taskErrorSummary joins the error messages from any failed current tasks into
+// a human-readable string, for surfacing why an instance entered ERROR state.
+func (r *CloudInstanceAPIResponse) taskErrorSummary() string {
+	var msgs []string
+	for _, t := range r.CurrentTasks {
+		for _, e := range t.Errors {
+			if e.Message != "" {
+				msgs = append(msgs, e.Message)
+			}
+		}
+	}
+	return strings.Join(msgs, "; ")
 }
 
 type CloudInstanceCreatePayload struct {
@@ -587,7 +619,7 @@ func buildInstanceCurrentStateObject(ctx context.Context, state *CloudInstanceAP
 // buildInstanceNetworksRootList rebuilds the mutable root `networks` list from targetSpec.
 func buildInstanceNetworksRootList(ts *CloudInstanceAPITargetSpec) types.List {
 	objType := types.ObjectType{AttrTypes: instanceNetworkRefAttrTypes()}
-	if ts == nil || ts.Networks == nil {
+	if ts == nil || len(ts.Networks) == 0 {
 		return types.ListNull(objType)
 	}
 	items := make([]attr.Value, 0, len(ts.Networks))
@@ -618,7 +650,7 @@ func buildInstanceNetworksRootList(ts *CloudInstanceAPITargetSpec) types.List {
 // buildInstanceSharesRootList rebuilds the mutable root `shares` list from targetSpec.
 func buildInstanceSharesRootList(ts *CloudInstanceAPITargetSpec) types.List {
 	objType := types.ObjectType{AttrTypes: instanceShareRefAttrTypes()}
-	if ts == nil || ts.Shares == nil {
+	if ts == nil || len(ts.Shares) == 0 {
 		return types.ListNull(objType)
 	}
 	items := make([]attr.Value, 0, len(ts.Shares))
@@ -679,8 +711,10 @@ func (m *CloudInstanceModel) MergeWith(ctx context.Context, response *CloudInsta
 		m.Networks = buildInstanceNetworksRootList(ts)
 		m.Shares = buildInstanceSharesRootList(ts)
 
-		// volume_ids / security_group_ids from targetSpec
-		if ts.Volumes != nil {
+		// volume_ids / security_group_ids from targetSpec. These are Optional
+		// (non-Computed): an omitted attribute is null in config, so the API
+		// echoing back an empty array must map to null, not an empty list.
+		if len(ts.Volumes) > 0 {
 			vals := make([]attr.Value, len(ts.Volumes))
 			for i, v := range ts.Volumes {
 				vals[i] = str(v.Id)
@@ -689,7 +723,7 @@ func (m *CloudInstanceModel) MergeWith(ctx context.Context, response *CloudInsta
 		} else {
 			m.VolumeIds = ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]{ListValue: basetypes.NewListNull(ovhtypes.TfStringType{})}
 		}
-		if ts.SecurityGroups != nil {
+		if len(ts.SecurityGroups) > 0 {
 			vals := make([]attr.Value, len(ts.SecurityGroups))
 			for i, sg := range ts.SecurityGroups {
 				vals[i] = str(sg.Id)
@@ -698,5 +732,43 @@ func (m *CloudInstanceModel) MergeWith(ctx context.Context, response *CloudInsta
 		} else {
 			m.SecurityGroupIds = ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]{ListValue: basetypes.NewListNull(ovhtypes.TfStringType{})}
 		}
+	}
+
+	// The flat region/availability_zone come from targetSpec (the requested
+	// spec), but the availability zone is often platform-assigned and only
+	// surfaces in currentState. Fall back to the observed location so the flat
+	// fields don't disagree with current_state.location.
+	if response.CurrentState != nil && response.CurrentState.Location != nil {
+		loc := response.CurrentState.Location
+		if m.Region.IsNull() || m.Region.ValueString() == "" {
+			m.Region = str(loc.Region)
+		}
+		if (m.AvailabilityZone.IsNull() || m.AvailabilityZone.ValueString() == "") && loc.AvailabilityZone != "" {
+			m.AvailabilityZone = str(loc.AvailabilityZone)
+		}
+	}
+
+	// availability_zone is Optional+Computed: when neither the requested spec nor
+	// the observed state carries one (e.g. a non-3AZ region), the planned value
+	// stays unknown. It must be known after apply, so resolve it to null.
+	if m.AvailabilityZone.IsUnknown() {
+		m.AvailabilityZone = ovhtypes.TfStringValue{StringValue: types.StringNull()}
+	}
+
+	// power_state is Optional+Computed and defaults server-side. If the target
+	// spec didn't echo it back, fall back to the observed state, then null, so
+	// the value is always known after apply.
+	if m.PowerState.IsUnknown() {
+		if response.CurrentState != nil && response.CurrentState.PowerState != "" {
+			m.PowerState = str(response.CurrentState.PowerState)
+		} else {
+			m.PowerState = ovhtypes.TfStringValue{StringValue: types.StringNull()}
+		}
+	}
+
+	// image_id is Optional+Computed: guard against an unknown leaking through if
+	// the target spec omitted it and the else-branch above wasn't reached.
+	if m.ImageId.IsUnknown() {
+		m.ImageId = ovhtypes.TfStringValue{StringValue: types.StringNull()}
 	}
 }

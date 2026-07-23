@@ -42,6 +42,7 @@ resource "ovh_cloud_network_private_vrack_subnet" "subnet" {
   network_id   = ovh_cloud_network_private_vrack.net.id
   name         = "%s"
   cidr         = "10.0.0.0/24"
+  gateway_ip   = "10.0.0.1"
   dhcp_enabled = true
   region       = "%s"
 }
@@ -93,9 +94,9 @@ func TestAccCloudInstance_privateNetwork(t *testing.T) {
 	const rn = "ovh_cloud_instance.test"
 
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
-	region := os.Getenv("OVH_INSTANCE_REGION_TEST")
-	flavorID := os.Getenv("OVH_INSTANCE_FLAVOR_ID_TEST")
-	imageID := os.Getenv("OVH_INSTANCE_IMAGE_ID_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+	flavorID := resolveInstanceFlavorID(t, serviceName, region, testAccInstanceFlavorName)
+	imageID := resolveInstanceImageID(t, serviceName, region, testAccInstanceImageName)
 
 	netName := acctest.RandomWithPrefix("tf-test-inst-net")
 	subnetName := acctest.RandomWithPrefix("tf-test-inst-subnet")
@@ -155,9 +156,9 @@ func TestAccCloudInstance_multiNIC(t *testing.T) {
 	const rn = "ovh_cloud_instance.test"
 
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
-	region := os.Getenv("OVH_INSTANCE_REGION_TEST")
-	flavorID := os.Getenv("OVH_INSTANCE_FLAVOR_ID_TEST")
-	imageID := os.Getenv("OVH_INSTANCE_IMAGE_ID_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+	flavorID := resolveInstanceFlavorID(t, serviceName, region, testAccInstanceFlavorName)
+	imageID := resolveInstanceImageID(t, serviceName, region, testAccInstanceImageName)
 
 	netName := acctest.RandomWithPrefix("tf-test-inst-net")
 	subnetName := acctest.RandomWithPrefix("tf-test-inst-subnet")
@@ -209,9 +210,9 @@ func TestAccCloudInstance_attachDetachNIC(t *testing.T) {
 	const rn = "ovh_cloud_instance.test"
 
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
-	region := os.Getenv("OVH_INSTANCE_REGION_TEST")
-	flavorID := os.Getenv("OVH_INSTANCE_FLAVOR_ID_TEST")
-	imageID := os.Getenv("OVH_INSTANCE_IMAGE_ID_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+	flavorID := resolveInstanceFlavorID(t, serviceName, region, testAccInstanceFlavorName)
+	imageID := resolveInstanceImageID(t, serviceName, region, testAccInstanceImageName)
 
 	netName := acctest.RandomWithPrefix("tf-test-inst-net")
 	subnetName := acctest.RandomWithPrefix("tf-test-inst-subnet")
@@ -297,8 +298,9 @@ resource "ovh_cloud_instance" "test" {
 }
 
 // TestAccCloudInstance_floatingIP wires a floating IP (same region) onto a
-// public NIC through networks[].floating_ip_id and asserts the association
-// surfaces in the observed state.
+// private NIC through networks[].floating_ip_id and asserts the association
+// surfaces in the observed state. apiv2 only associates a floating IP to a
+// private port, not to the Ext-Net/public port.
 //
 // The instance's floating_ip_id expects the OpenStack UUID of the floating IP,
 // which the ovh_cloud_floating_ip resource exposes as current_state.id (its
@@ -307,13 +309,29 @@ func TestAccCloudInstance_floatingIP(t *testing.T) {
 	const rn = "ovh_cloud_instance.test"
 
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
-	region := os.Getenv("OVH_INSTANCE_REGION_TEST")
-	flavorID := os.Getenv("OVH_INSTANCE_FLAVOR_ID_TEST")
-	imageID := os.Getenv("OVH_INSTANCE_IMAGE_ID_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+	flavorID := resolveInstanceFlavorID(t, serviceName, region, testAccInstanceFlavorName)
+	imageID := resolveInstanceImageID(t, serviceName, region, testAccInstanceImageName)
 
+	netName := acctest.RandomWithPrefix("tf-test-inst-net")
+	subnetName := acctest.RandomWithPrefix("tf-test-inst-subnet")
 	name := acctest.RandomWithPrefix("test-inst-fip")
 
-	config := fmt.Sprintf(`
+	gwName := acctest.RandomWithPrefix("tf-test-inst-fip-gw")
+
+	config := testAccCloudInstanceNetSubnetConfig(serviceName, region, netName, subnetName) + fmt.Sprintf(`
+resource "ovh_cloud_gateway" "gw" {
+  service_name = ovh_cloud_network_private_vrack.net.service_name
+  name         = "%s"
+  region       = "%s"
+  subnet_ids   = [ovh_cloud_network_private_vrack_subnet.subnet.id]
+
+  external_gateway = {
+    enabled = true
+    model   = "S"
+  }
+}
+
 resource "ovh_cloud_floating_ip" "fip" {
   service_name = "%s"
   region       = "%s"
@@ -329,12 +347,18 @@ resource "ovh_cloud_instance" "test" {
 
   networks = [
     {
-      public         = true
+      public         = false
+      network_id     = ovh_cloud_network_private_vrack.net.id
+      subnet_id      = ovh_cloud_network_private_vrack_subnet.subnet.id
       floating_ip_id = ovh_cloud_floating_ip.fip.current_state.id
     },
   ]
+
+  # A floating IP can only be associated once the subnet is attached to a gateway
+  # with an external gateway enabled, so the instance must be created after it.
+  depends_on = [ovh_cloud_gateway.gw]
 }
-`, serviceName, region, acctest.RandomWithPrefix("tf-test-inst-fip"), serviceName, region, name, flavorID, imageID)
+`, gwName, region, serviceName, region, acctest.RandomWithPrefix("tf-test-inst-fip"), serviceName, region, name, flavorID, imageID)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheckCloudInstanceNet(t) },
@@ -347,8 +371,9 @@ resource "ovh_cloud_instance" "test" {
 					resource.TestCheckResourceAttr(rn, "networks.#", "1"),
 					// The requested floating_ip_id is the floating IP OpenStack UUID.
 					resource.TestCheckResourceAttrPair(rn, "networks.0.floating_ip_id", "ovh_cloud_floating_ip.fip", "current_state.id"),
-					// The association is reflected in the observed state.
-					resource.TestCheckResourceAttrSet(rn, "current_state.networks.0.floating_ip_id"),
+					// The association is reflected in the observed state (order-independent:
+					// current_state.networks is sorted by network id).
+					testAccCheckInstanceAnyNetworkAttrSet(rn, "floating_ip_id"),
 				),
 			},
 		},
@@ -362,9 +387,9 @@ func TestAccCloudInstance_gatewayEgress(t *testing.T) {
 	const rn = "ovh_cloud_instance.test"
 
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
-	region := os.Getenv("OVH_INSTANCE_REGION_TEST")
-	flavorID := os.Getenv("OVH_INSTANCE_FLAVOR_ID_TEST")
-	imageID := os.Getenv("OVH_INSTANCE_IMAGE_ID_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+	flavorID := resolveInstanceFlavorID(t, serviceName, region, testAccInstanceFlavorName)
+	imageID := resolveInstanceImageID(t, serviceName, region, testAccInstanceImageName)
 
 	netName := acctest.RandomWithPrefix("tf-test-inst-net")
 	subnetName := acctest.RandomWithPrefix("tf-test-inst-subnet")
@@ -426,9 +451,9 @@ func TestAccCloudInstance_securityGroupUpdate(t *testing.T) {
 	const rn = "ovh_cloud_instance.test"
 
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
-	region := os.Getenv("OVH_INSTANCE_REGION_TEST")
-	flavorID := os.Getenv("OVH_INSTANCE_FLAVOR_ID_TEST")
-	imageID := os.Getenv("OVH_INSTANCE_IMAGE_ID_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+	flavorID := resolveInstanceFlavorID(t, serviceName, region, testAccInstanceFlavorName)
+	imageID := resolveInstanceImageID(t, serviceName, region, testAccInstanceImageName)
 
 	sgName1 := acctest.RandomWithPrefix("tf-test-inst-sg1")
 	sgName2 := acctest.RandomWithPrefix("tf-test-inst-sg2")

@@ -256,6 +256,7 @@ resource "ovh_cloud_network_private_vrack_subnet" "subnet" {
   network_id   = ovh_cloud_network_private_vrack.network.id
   name         = "%s"
   cidr         = "10.0.0.0/24"
+  gateway_ip   = "10.0.0.1"
   dhcp_enabled = true
   region       = "%s"
 }

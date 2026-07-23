@@ -41,9 +41,9 @@ func testAccCloudInstanceImportStateIdFunc(resourceName string) resource.ImportS
 
 func TestAccCloudInstance_basic(t *testing.T) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
-	region := os.Getenv("OVH_INSTANCE_REGION_TEST")
-	flavorID := os.Getenv("OVH_INSTANCE_FLAVOR_ID_TEST")
-	imageID := os.Getenv("OVH_INSTANCE_IMAGE_ID_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+	flavorID := resolveInstanceFlavorID(t, serviceName, region, testAccInstanceFlavorName)
+	imageID := resolveInstanceImageID(t, serviceName, region, testAccInstanceImageName)
 	name := acctest.RandomWithPrefix("test-inst")
 
 	resource.Test(t, resource.TestCase{
@@ -76,10 +76,10 @@ func TestAccCloudInstance_basic(t *testing.T) {
 
 func TestAccCloudInstance_update(t *testing.T) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
-	region := os.Getenv("OVH_INSTANCE_REGION_TEST")
-	flavorID := os.Getenv("OVH_INSTANCE_FLAVOR_ID_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+	flavorID := resolveInstanceFlavorID(t, serviceName, region, testAccInstanceFlavorName)
 	flavorID2 := os.Getenv("OVH_INSTANCE_FLAVOR_ID_2_TEST") // optional resize target
-	imageID := os.Getenv("OVH_INSTANCE_IMAGE_ID_TEST")
+	imageID := resolveInstanceImageID(t, serviceName, region, testAccInstanceImageName)
 	name := acctest.RandomWithPrefix("test-inst")
 	nameUpdated := name + "-upd"
 
@@ -259,10 +259,10 @@ resource "ovh_cloud_instance" "test" {
 // re-applies the same config and asserts an empty plan.
 func TestAccCloudInstance_renameAndResize(t *testing.T) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
-	region := os.Getenv("OVH_INSTANCE_REGION_TEST")
-	flavorID := os.Getenv("OVH_INSTANCE_FLAVOR_ID_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+	flavorID := resolveInstanceFlavorID(t, serviceName, region, testAccInstanceFlavorName)
 	flavorID2 := os.Getenv("OVH_INSTANCE_FLAVOR_ID_2_TEST") // optional resize target
-	imageID := os.Getenv("OVH_INSTANCE_IMAGE_ID_TEST")
+	imageID := resolveInstanceImageID(t, serviceName, region, testAccInstanceImageName)
 	name := acctest.RandomWithPrefix("test-inst-resize")
 	nameUpdated := name + "-upd"
 
@@ -322,9 +322,9 @@ func TestAccCloudInstance_renameAndResize(t *testing.T) {
 // rebuilt in place (id stable) with the observed image reflecting the new image.
 func TestAccCloudInstance_rebuildImage(t *testing.T) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
-	region := os.Getenv("OVH_INSTANCE_REGION_TEST")
-	flavorID := os.Getenv("OVH_INSTANCE_FLAVOR_ID_TEST")
-	imageID := os.Getenv("OVH_INSTANCE_IMAGE_ID_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+	flavorID := resolveInstanceFlavorID(t, serviceName, region, testAccInstanceFlavorName)
+	imageID := resolveInstanceImageID(t, serviceName, region, testAccInstanceImageName)
 	imageID2 := os.Getenv("OVH_INSTANCE_IMAGE_ID_2_TEST") // optional rebuild target
 	name := acctest.RandomWithPrefix("test-inst-rebuild")
 
@@ -373,9 +373,9 @@ func TestAccCloudInstance_rebuildImage(t *testing.T) {
 // -> SHELVED -> ACTIVE and asserts each transition is applied in place.
 func TestAccCloudInstance_powerState(t *testing.T) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
-	region := os.Getenv("OVH_INSTANCE_REGION_TEST")
-	flavorID := os.Getenv("OVH_INSTANCE_FLAVOR_ID_TEST")
-	imageID := os.Getenv("OVH_INSTANCE_IMAGE_ID_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+	flavorID := resolveInstanceFlavorID(t, serviceName, region, testAccInstanceFlavorName)
+	imageID := resolveInstanceImageID(t, serviceName, region, testAccInstanceImageName)
 	name := acctest.RandomWithPrefix("test-inst-power")
 
 	var instanceID string
@@ -415,22 +415,24 @@ func TestAccCloudInstance_powerState(t *testing.T) {
 
 // TestAccCloudInstance_bootFromVolume creates a bootable block volume and boots
 // an instance from it (no image_id). It asserts image_id is null and no observed
-// image is reported. Requires OVH_CLOUD_PROJECT_GLANCE_IMAGE_ID_TEST for the
-// bootable source image.
+// image is reported. The bootable source image is resolved from the reference API.
 func TestAccCloudInstance_bootFromVolume(t *testing.T) {
+	// Boot-from-volume is not yet implemented in the public-cloud-apiv2 backend:
+	// instance create always passes imageRef and never builds a block-device
+	// mapping (boot_index=0) from the volumes list, so omitting image_id yields
+	// a 400 "Missing imageRef attribute". Re-enable once the backend supports it.
+	t.Skip("boot-from-volume unsupported by public-cloud-apiv2 backend (create requires imageRef)")
+
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
-	region := os.Getenv("OVH_INSTANCE_REGION_TEST")
-	flavorID := os.Getenv("OVH_INSTANCE_FLAVOR_ID_TEST")
-	glanceImageID := os.Getenv("OVH_CLOUD_PROJECT_GLANCE_IMAGE_ID_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+	flavorID := resolveInstanceFlavorID(t, serviceName, region, testAccInstanceFlavorName)
+	glanceImageID := resolveInstanceImageID(t, serviceName, region, testAccInstanceImageName)
 	name := acctest.RandomWithPrefix("test-inst-bfv")
 	volName := acctest.RandomWithPrefix("test-vol-bfv")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckCloudInstanceE2E(t)
-			// A bootable volume is built from a Glance image; the instance flavor
-			// must also be diskless-compatible with the target region.
-			checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_GLANCE_IMAGE_ID_TEST")
 		},
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -453,24 +455,25 @@ func TestAccCloudInstance_bootFromVolume(t *testing.T) {
 }
 
 // TestAccCloudInstance_availabilityZone verifies that an omitted availability
-// zone is assigned by the platform and stays stable (empty plan on re-apply),
-// and, when explicit AZ test values are provided, that changing the configured
-// zone forces a replace (RequiresReplaceIfConfigured).
+// zone does not cause a perpetual diff (empty plan on re-apply, incl. mono-AZ
+// regions where the AZ surfaces as null), and, when explicit AZ test values are
+// provided, that changing the configured zone forces a replace
+// (RequiresReplaceIfConfigured).
 func TestAccCloudInstance_availabilityZone(t *testing.T) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
-	region := os.Getenv("OVH_INSTANCE_REGION_TEST")
-	flavorID := os.Getenv("OVH_INSTANCE_FLAVOR_ID_TEST")
-	imageID := os.Getenv("OVH_INSTANCE_IMAGE_ID_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+	flavorID := resolveInstanceFlavorID(t, serviceName, region, testAccInstanceFlavorName)
+	imageID := resolveInstanceImageID(t, serviceName, region, testAccInstanceImageName)
 	azA := os.Getenv("OVH_INSTANCE_AZ_TEST")
 	azB := os.Getenv("OVH_INSTANCE_AZ_2_TEST")
 	name := acctest.RandomWithPrefix("test-inst-az")
 
 	steps := []resource.TestStep{
 		{
-			// (a) omit availability_zone -> platform assigns one.
+			// (a) omit availability_zone -> platform assigns one (may surface as
+			// null in mono-AZ regions where OpenStack reports "nova").
 			Config: testAccCloudInstanceConfigAZ(serviceName, region, flavorID, imageID, name, ""),
 			Check: resource.ComposeTestCheckFunc(
-				resource.TestCheckResourceAttrSet("ovh_cloud_instance.test", "availability_zone"),
 				resource.TestCheckResourceAttr("ovh_cloud_instance.test", "resource_status", "READY"),
 			),
 		},
@@ -520,9 +523,9 @@ func TestAccCloudInstance_availabilityZone(t *testing.T) {
 // the instance is replaced (ssh_key_name has RequiresReplace).
 func TestAccCloudInstance_forceNew(t *testing.T) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
-	region := os.Getenv("OVH_INSTANCE_REGION_TEST")
-	flavorID := os.Getenv("OVH_INSTANCE_FLAVOR_ID_TEST")
-	imageID := os.Getenv("OVH_INSTANCE_IMAGE_ID_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+	flavorID := resolveInstanceFlavorID(t, serviceName, region, testAccInstanceFlavorName)
+	imageID := resolveInstanceImageID(t, serviceName, region, testAccInstanceImageName)
 	name := acctest.RandomWithPrefix("test-inst-fn")
 	keyA := acctest.RandomWithPrefix("test-key-a")
 	keyB := acctest.RandomWithPrefix("test-key-b")
@@ -559,9 +562,9 @@ func TestAccCloudInstance_forceNew(t *testing.T) {
 // when a mutable attribute (name) changes.
 func TestAccCloudInstance_planModifiers(t *testing.T) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
-	region := os.Getenv("OVH_INSTANCE_REGION_TEST")
-	flavorID := os.Getenv("OVH_INSTANCE_FLAVOR_ID_TEST")
-	imageID := os.Getenv("OVH_INSTANCE_IMAGE_ID_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+	flavorID := resolveInstanceFlavorID(t, serviceName, region, testAccInstanceFlavorName)
+	imageID := resolveInstanceImageID(t, serviceName, region, testAccInstanceImageName)
 	name := acctest.RandomWithPrefix("test-inst-pm")
 	nameUpdated := name + "-upd"
 
@@ -593,9 +596,9 @@ func TestAccCloudInstance_planModifiers(t *testing.T) {
 // power_state and shares.access_level values at plan time.
 func TestAccCloudInstance_validators(t *testing.T) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
-	region := os.Getenv("OVH_INSTANCE_REGION_TEST")
-	flavorID := os.Getenv("OVH_INSTANCE_FLAVOR_ID_TEST")
-	imageID := os.Getenv("OVH_INSTANCE_IMAGE_ID_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+	flavorID := resolveInstanceFlavorID(t, serviceName, region, testAccInstanceFlavorName)
+	imageID := resolveInstanceImageID(t, serviceName, region, testAccInstanceImageName)
 	name := acctest.RandomWithPrefix("test-inst-val")
 
 	resource.Test(t, resource.TestCase{

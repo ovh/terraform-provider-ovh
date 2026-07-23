@@ -10,9 +10,9 @@ import (
 
 func TestAccDataSourceCloudInstance_basic(t *testing.T) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
-	region := os.Getenv("OVH_INSTANCE_REGION_TEST")
-	flavorID := os.Getenv("OVH_INSTANCE_FLAVOR_ID_TEST")
-	imageID := os.Getenv("OVH_INSTANCE_IMAGE_ID_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+	flavorID := resolveInstanceFlavorID(t, serviceName, region, testAccInstanceFlavorName)
+	imageID := resolveInstanceImageID(t, serviceName, region, testAccInstanceImageName)
 	name := acctest.RandomWithPrefix("test-inst-ds")
 
 	config := testAccCloudInstanceConfig(serviceName, region, flavorID, imageID, name) + `

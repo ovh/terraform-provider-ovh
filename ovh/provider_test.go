@@ -519,9 +519,7 @@ func testAccPreCheckCloudInstance(t *testing.T) {
 	testAccPreCheckCredentials(t)
 	for _, v := range []string{
 		"OVH_CLOUD_PROJECT_SERVICE_TEST",
-		"OVH_INSTANCE_REGION_TEST",
-		"OVH_INSTANCE_FLAVOR_ID_TEST",
-		"OVH_INSTANCE_IMAGE_ID_TEST",
+		"OVH_CLOUD_PROJECT_REGION_TEST",
 	} {
 		if os.Getenv(v) == "" {
 			t.Skipf("%s must be set for ovh_cloud_instance acceptance tests", v)

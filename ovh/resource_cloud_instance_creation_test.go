@@ -114,9 +114,9 @@ func TestAccCloudInstance_creationMatrix(t *testing.T) {
 	const rn = "ovh_cloud_instance.test"
 
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
-	region := os.Getenv("OVH_INSTANCE_REGION_TEST")
-	flavorID := os.Getenv("OVH_INSTANCE_FLAVOR_ID_TEST")
-	imageID := os.Getenv("OVH_INSTANCE_IMAGE_ID_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+	flavorID := resolveInstanceFlavorID(t, serviceName, region, testAccInstanceFlavorName)
+	imageID := resolveInstanceImageID(t, serviceName, region, testAccInstanceImageName)
 	az := os.Getenv("OVH_INSTANCE_AZ_TEST")
 
 	publicNet := `[{ public = true }]`

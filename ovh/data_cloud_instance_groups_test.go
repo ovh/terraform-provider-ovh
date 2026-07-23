@@ -10,7 +10,7 @@ import (
 
 func TestAccDataSourceCloudInstanceGroups_basic(t *testing.T) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
-	region := os.Getenv("OVH_INSTANCE_REGION_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
 	name := acctest.RandomWithPrefix("test-grp-list")
 
 	config := testAccCloudInstanceGroupConfig(serviceName, region, name) + `

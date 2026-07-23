@@ -10,7 +10,8 @@ import (
 
 func TestAccDataSourceCloudImage_basic(t *testing.T) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
-	imageID := os.Getenv("OVH_INSTANCE_IMAGE_ID_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+	imageID := resolveInstanceImageID(t, serviceName, region, testAccInstanceImageName)
 
 	config := fmt.Sprintf(`
 data "ovh_cloud_image" "test" {

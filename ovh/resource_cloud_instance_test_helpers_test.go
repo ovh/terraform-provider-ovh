@@ -3,6 +3,7 @@ package ovh
 import (
 	"fmt"
 	"log"
+	"net/url"
 	"os"
 	"strings"
 	"testing"
@@ -11,16 +12,75 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
+// Standard flavor/image used by the instance acceptance tests. Their IDs are
+// resolved at runtime from these names via the reference API (see
+// resolveInstanceFlavorID / resolveInstanceImageID), so tests don't depend on
+// hardcoded, region-specific UUIDs.
+const (
+	testAccInstanceFlavorName = "b3-8"
+	testAccInstanceImageName  = "Debian 13"
+)
+
+// resolveInstanceFlavorID resolves a flavor name (e.g. "b3-8") to its ID for the
+// given region using GET /v2/publicCloud/project/{sn}/reference/instance/flavor.
+// It returns "" when serviceName/region are unset so the caller's PreCheck can
+// skip cleanly; any other failure is fatal.
+func resolveInstanceFlavorID(t *testing.T, serviceName, region, name string) string {
+	t.Helper()
+	if serviceName == "" || region == "" {
+		return ""
+	}
+	testAccPreCheckCredentials(t)
+
+	endpoint := fmt.Sprintf("/v2/publicCloud/project/%s/reference/instance/flavor?region=%s",
+		url.PathEscape(serviceName), url.QueryEscape(region))
+	var flavors []CloudFlavorAPIResponse
+	if err := testAccOVHClient.Get(endpoint, &flavors); err != nil {
+		t.Fatalf("failed to list flavors (GET %s): %s", endpoint, err)
+	}
+	for _, f := range flavors {
+		if f.Name == name {
+			return f.Id
+		}
+	}
+	t.Fatalf("flavor %q not found in region %s", name, region)
+	return ""
+}
+
+// resolveInstanceImageID resolves an image name (e.g. "Debian 13") to its ID for
+// the given region using GET /v2/publicCloud/project/{sn}/reference/instance/image.
+func resolveInstanceImageID(t *testing.T, serviceName, region, name string) string {
+	t.Helper()
+	if serviceName == "" || region == "" {
+		return ""
+	}
+	testAccPreCheckCredentials(t)
+
+	endpoint := fmt.Sprintf("/v2/publicCloud/project/%s/reference/instance/image?region=%s",
+		url.PathEscape(serviceName), url.QueryEscape(region))
+	var images []CloudImageAPIResponse
+	if err := testAccOVHClient.Get(endpoint, &images); err != nil {
+		t.Fatalf("failed to list images (GET %s): %s", endpoint, err)
+	}
+	for _, i := range images {
+		if i.Name == name {
+			return i.Id
+		}
+	}
+	t.Fatalf("image %q not found in region %s", name, region)
+	return ""
+}
+
 // testAccPreCheckCloudInstanceNet is the shared PreCheck for cloud instance
-// tests that also exercise private networking (they require a vRack). Tier 2
-// reuses this for the private-network / storage compositions.
+// tests that also exercise private networking. The vRack private network and
+// subnet are created under the cloud project itself (service_name =
+// OVH_CLOUD_PROJECT_SERVICE_TEST); the only prerequisite is that the project is
+// attached to a vRack, which is not a separate input. Tier 2 reuses this for
+// the private-network / storage compositions.
 func testAccPreCheckCloudInstanceNet(t *testing.T) {
 	testAccPreCheckCredentials(t)
 	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_SERVICE_TEST")
-	checkEnvOrSkip(t, "OVH_INSTANCE_REGION_TEST")
-	checkEnvOrSkip(t, "OVH_VRACK_SERVICE_TEST")
-	checkEnvOrSkip(t, "OVH_INSTANCE_FLAVOR_ID_TEST")
-	checkEnvOrSkip(t, "OVH_INSTANCE_IMAGE_ID_TEST")
+	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_REGION_TEST")
 }
 
 // testAccPreCheckCloudInstanceE2E is the shared PreCheck for full end-to-end

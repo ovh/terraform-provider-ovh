@@ -16,7 +16,7 @@ func testAccPreCheckCloudInstanceGroup(t *testing.T) {
 	testAccPreCheckCredentials(t)
 	for _, v := range []string{
 		"OVH_CLOUD_PROJECT_SERVICE_TEST",
-		"OVH_INSTANCE_REGION_TEST",
+		"OVH_CLOUD_PROJECT_REGION_TEST",
 	} {
 		if os.Getenv(v) == "" {
 			t.Skipf("%s must be set for ovh_cloud_instance_group acceptance tests", v)
@@ -47,7 +47,7 @@ func testAccCloudInstanceGroupImportStateIdFunc(resourceName string) resource.Im
 
 func TestAccCloudInstanceGroup_basic(t *testing.T) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
-	region := os.Getenv("OVH_INSTANCE_REGION_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
 	name := acctest.RandomWithPrefix("test-grp")
 
 	resource.Test(t, resource.TestCase{
@@ -94,7 +94,7 @@ resource "ovh_cloud_instance_group" "test" {
 // changing the name (a RequiresReplace attribute) forces a replace.
 func TestAccCloudInstanceGroup_immutable(t *testing.T) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
-	region := os.Getenv("OVH_INSTANCE_REGION_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
 	name := acctest.RandomWithPrefix("test-grp-imm")
 	nameUpdated := acctest.RandomWithPrefix("test-grp-imm")
 
@@ -129,7 +129,7 @@ func TestAccCloudInstanceGroup_immutable(t *testing.T) {
 // an invalid placement policy at plan time.
 func TestAccCloudInstanceGroup_validators(t *testing.T) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
-	region := os.Getenv("OVH_INSTANCE_REGION_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
 	name := acctest.RandomWithPrefix("test-grp-val")
 
 	resource.Test(t, resource.TestCase{

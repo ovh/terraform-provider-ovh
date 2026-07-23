@@ -86,6 +86,15 @@ type CloudStorageBlockVolumeUpdatePayload struct {
 	TargetSpec *CloudStorageBlockVolumeTarget `json:"targetSpec"`
 }
 
+// nullableTfString returns a null TfStringValue for empty strings, so unset
+// optional fields stay null in state instead of becoming "".
+func nullableTfString(s string) ovhtypes.TfStringValue {
+	if s == "" {
+		return ovhtypes.TfStringValue{StringValue: types.StringNull()}
+	}
+	return ovhtypes.TfStringValue{StringValue: types.StringValue(s)}
+}
+
 // CreateFromAttrTypes returns the attribute types for the create_from object
 func CreateFromAttrTypes() map[string]attr.Type {
 	return map[string]attr.Type{
@@ -280,15 +289,16 @@ func (m *CloudStorageBlockVolumeModel) MergeWith(ctx context.Context, response *
 			m.Encryption = types.ObjectNull(BlockVolumeEncryptionAttrTypes())
 		}
 
-		// Preserve create_from in state if it was set
+		// Preserve create_from in state if it was set. Unset fields must stay
+		// null (not "") to match the plan and avoid inconsistent-result errors.
 		cf := response.TargetSpec.CreateFrom
 		if cf != nil && (cf.BackupID != "" || cf.SnapshotID != "" || cf.ImageID != "") {
 			createFromObj, _ := types.ObjectValue(
 				CreateFromAttrTypes(),
 				map[string]attr.Value{
-					"backup_id":   ovhtypes.TfStringValue{StringValue: types.StringValue(cf.BackupID)},
-					"snapshot_id": ovhtypes.TfStringValue{StringValue: types.StringValue(cf.SnapshotID)},
-					"image_id":    ovhtypes.TfStringValue{StringValue: types.StringValue(cf.ImageID)},
+					"backup_id":   nullableTfString(cf.BackupID),
+					"snapshot_id": nullableTfString(cf.SnapshotID),
+					"image_id":    nullableTfString(cf.ImageID),
 				},
 			)
 			m.CreateFrom = createFromObj

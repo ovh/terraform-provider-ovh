@@ -464,6 +464,15 @@ func (r *cloudInstanceResource) waitForInstanceReady(ctx context.Context, servic
 			if err != nil {
 				return res, "", err
 			}
+			// ERROR is terminal: stop polling and surface the reason reported by
+			// the failed task(s) instead of letting the SDK emit a generic
+			// "unexpected state 'ERROR'. last error: %!s(<nil>)".
+			if res.ResourceStatus == "ERROR" {
+				if reason := res.taskErrorSummary(); reason != "" {
+					return res, res.ResourceStatus, fmt.Errorf("instance %s entered ERROR state: %s", instanceId, reason)
+				}
+				return res, res.ResourceStatus, fmt.Errorf("instance %s entered ERROR state", instanceId)
+			}
 			return res, res.ResourceStatus, nil
 		},
 		Timeout:    60 * time.Minute,

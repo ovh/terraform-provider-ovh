@@ -51,17 +51,18 @@ func (d *cloudInstancesDataSource) Configure(_ context.Context, req datasource.C
 // InstanceListItemAttrTypes returns the attr types for one element of `instances`.
 func InstanceListItemAttrTypes() map[string]attr.Type {
 	return map[string]attr.Type{
-		"id":              ovhtypes.TfStringType{},
-		"name":            ovhtypes.TfStringType{},
-		"region":          ovhtypes.TfStringType{},
-		"flavor_id":       ovhtypes.TfStringType{},
-		"image_id":        ovhtypes.TfStringType{},
-		"power_state":     ovhtypes.TfStringType{},
-		"checksum":        ovhtypes.TfStringType{},
-		"created_at":      ovhtypes.TfStringType{},
-		"updated_at":      ovhtypes.TfStringType{},
-		"resource_status": ovhtypes.TfStringType{},
-		"current_state":   types.ObjectType{AttrTypes: InstanceCurrentStateAttrTypes()},
+		"id":                ovhtypes.TfStringType{},
+		"name":              ovhtypes.TfStringType{},
+		"region":            ovhtypes.TfStringType{},
+		"availability_zone": ovhtypes.TfStringType{},
+		"flavor_id":         ovhtypes.TfStringType{},
+		"image_id":          ovhtypes.TfStringType{},
+		"power_state":       ovhtypes.TfStringType{},
+		"checksum":          ovhtypes.TfStringType{},
+		"created_at":        ovhtypes.TfStringType{},
+		"updated_at":        ovhtypes.TfStringType{},
+		"resource_status":   ovhtypes.TfStringType{},
+		"current_state":     types.ObjectType{AttrTypes: InstanceCurrentStateAttrTypes()},
 	}
 }
 
@@ -74,17 +75,18 @@ func (d *cloudInstancesDataSource) Schema(ctx context.Context, req datasource.Sc
 				Computed:    true,
 				Description: "List of instances",
 				NestedObject: schema.NestedAttributeObject{Attributes: map[string]schema.Attribute{
-					"id":              schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true},
-					"name":            schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true},
-					"region":          schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true},
-					"flavor_id":       schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true},
-					"image_id":        schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true},
-					"power_state":     schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true},
-					"checksum":        schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true},
-					"created_at":      schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true},
-					"updated_at":      schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true},
-					"resource_status": schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true},
-					"current_state":   schema.SingleNestedAttribute{Computed: true, Attributes: instanceCurrentStateDataSourceSchemaAttributes()},
+					"id":                schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true},
+					"name":              schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true},
+					"region":            schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true},
+					"availability_zone": schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true},
+					"flavor_id":         schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true},
+					"image_id":          schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true},
+					"power_state":       schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true},
+					"checksum":          schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true},
+					"created_at":        schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true},
+					"updated_at":        schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true},
+					"resource_status":   schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true},
+					"current_state":     schema.SingleNestedAttribute{Computed: true, Attributes: instanceCurrentStateDataSourceSchemaAttributes()},
 				}},
 			},
 		},
@@ -120,6 +122,7 @@ func (d *cloudInstancesDataSource) Read(ctx context.Context, req datasource.Read
 func buildInstanceListItemObject(ctx context.Context, response *CloudInstanceAPIResponse) basetypes.ObjectValue {
 	nameVal := ovhtypes.TfStringValue{StringValue: types.StringNull()}
 	regionVal := ovhtypes.TfStringValue{StringValue: types.StringNull()}
+	azVal := ovhtypes.TfStringValue{StringValue: types.StringNull()}
 	flavorVal := ovhtypes.TfStringValue{StringValue: types.StringNull()}
 	imageVal := ovhtypes.TfStringValue{StringValue: types.StringNull()}
 	powerVal := ovhtypes.TfStringValue{StringValue: types.StringNull()}
@@ -129,6 +132,9 @@ func buildInstanceListItemObject(ctx context.Context, response *CloudInstanceAPI
 		nameVal = str(ts.Name)
 		if ts.Location != nil {
 			regionVal = str(ts.Location.Region)
+			if ts.Location.AvailabilityZone != "" {
+				azVal = str(ts.Location.AvailabilityZone)
+			}
 		}
 		if ts.Flavor != nil {
 			flavorVal = str(ts.Flavor.Id)
@@ -148,18 +154,31 @@ func buildInstanceListItemObject(ctx context.Context, response *CloudInstanceAPI
 		currentStateVal = types.ObjectNull(InstanceCurrentStateAttrTypes())
 	}
 
+	// Fall back to the observed location for region/availability_zone when the
+	// requested spec doesn't carry them (AZ is often platform-assigned).
+	if response.CurrentState != nil && response.CurrentState.Location != nil {
+		loc := response.CurrentState.Location
+		if regionVal.IsNull() || regionVal.ValueString() == "" {
+			regionVal = str(loc.Region)
+		}
+		if (azVal.IsNull() || azVal.ValueString() == "") && loc.AvailabilityZone != "" {
+			azVal = str(loc.AvailabilityZone)
+		}
+	}
+
 	obj, _ := types.ObjectValue(InstanceListItemAttrTypes(), map[string]attr.Value{
-		"id":              str(response.Id),
-		"name":            nameVal,
-		"region":          regionVal,
-		"flavor_id":       flavorVal,
-		"image_id":        imageVal,
-		"power_state":     powerVal,
-		"checksum":        str(response.Checksum),
-		"created_at":      str(response.CreatedAt),
-		"updated_at":      str(response.UpdatedAt),
-		"resource_status": str(response.ResourceStatus),
-		"current_state":   currentStateVal,
+		"id":                str(response.Id),
+		"name":              nameVal,
+		"region":            regionVal,
+		"availability_zone": azVal,
+		"flavor_id":         flavorVal,
+		"image_id":          imageVal,
+		"power_state":       powerVal,
+		"checksum":          str(response.Checksum),
+		"created_at":        str(response.CreatedAt),
+		"updated_at":        str(response.UpdatedAt),
+		"resource_status":   str(response.ResourceStatus),
+		"current_state":     currentStateVal,
 	})
 	return obj
 }
