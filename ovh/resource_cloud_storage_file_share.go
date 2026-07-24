@@ -55,7 +55,6 @@ func (r *cloudStorageFileShareResource) Configure(ctx context.Context, req resou
 var fileShareMutableAttrs = MutableAttrs{
 	Strings: []string{"name", "description"},
 	Int64s:  []string{"size"},
-	Lists:   []string{"access_rules"},
 }
 
 func (r *cloudStorageFileShareResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -137,28 +136,6 @@ func (r *cloudStorageFileShareResource) Schema(ctx context.Context, req resource
 				MarkdownDescription: "File share description",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"access_rules": schema.ListNestedAttribute{
-				Optional:            true,
-				Computed:            true,
-				Description:         "Access rules for the file share",
-				MarkdownDescription: "Access rules for the file share",
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"access_to": schema.StringAttribute{
-							CustomType:          ovhtypes.TfStringType{},
-							Required:            true,
-							Description:         "IP address or CIDR to grant access to",
-							MarkdownDescription: "IP address or CIDR to grant access to",
-						},
-						"access_level": schema.StringAttribute{
-							CustomType:          ovhtypes.TfStringType{},
-							Required:            true,
-							Description:         "Access level (READ_WRITE, READ_ONLY)",
-							MarkdownDescription: "Access level (`READ_WRITE`, `READ_ONLY`)",
-						},
-					},
 				},
 			},
 			"id": schema.StringAttribute{
@@ -275,44 +252,6 @@ func (r *cloudStorageFileShareResource) Schema(ctx context.Context, req resource
 									Computed:            true,
 									Description:         "Whether this is the preferred export location",
 									MarkdownDescription: "Whether this is the preferred export location",
-								},
-							},
-						},
-					},
-					"access_rules": schema.ListNestedAttribute{
-						Computed:    true,
-						Description: "Current access rules for the file share",
-						NestedObject: schema.NestedAttributeObject{
-							Attributes: map[string]schema.Attribute{
-								"id": schema.StringAttribute{
-									CustomType:          ovhtypes.TfStringType{},
-									Computed:            true,
-									Description:         "Access rule ID",
-									MarkdownDescription: "Access rule ID",
-								},
-								"access_to": schema.StringAttribute{
-									CustomType:          ovhtypes.TfStringType{},
-									Computed:            true,
-									Description:         "IP address or CIDR",
-									MarkdownDescription: "IP address or CIDR",
-								},
-								"access_level": schema.StringAttribute{
-									CustomType:          ovhtypes.TfStringType{},
-									Computed:            true,
-									Description:         "Access level",
-									MarkdownDescription: "Access level",
-								},
-								"state": schema.StringAttribute{
-									CustomType:          ovhtypes.TfStringType{},
-									Computed:            true,
-									Description:         "Access rule state",
-									MarkdownDescription: "Access rule state",
-								},
-								"created_at": schema.StringAttribute{
-									CustomType:          ovhtypes.TfStringType{},
-									Computed:            true,
-									Description:         "Access rule creation date",
-									MarkdownDescription: "Access rule creation date",
 								},
 							},
 						},

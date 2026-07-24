@@ -41,9 +41,6 @@ data "ovh_cloud_storage_file_shares" "shares" {
     * `region` - Region where the file share resides.
     * `availability_zone` - Availability zone where the file share resides.
   * `share_network_id` - ID of the share network the file share is attached to.
-  * `access_rules` - Access rules requested for the file share:
-    * `access_to` - IP address or CIDR granted access.
-    * `access_level` - Access level (`READ_WRITE`, `READ_ONLY`).
   * `checksum` - Computed hash representing the current target specification value.
   * `created_at` - Creation date of the file share.
   * `updated_at` - Last update date of the file share.
@@ -61,12 +58,6 @@ data "ovh_cloud_storage_file_shares" "shares" {
     * `export_locations` - Export locations for the file share:
       * `path` - Export path.
       * `preferred` - Whether this is the preferred export location.
-    * `access_rules` - Current access rules for the file share:
-      * `id` - Access rule ID.
-      * `access_to` - IP address or CIDR.
-      * `access_level` - Access level.
-      * `state` - Access rule state.
-      * `created_at` - Access rule creation date.
     * `capabilities` - Action-availability flags derived from the file share status:
       * `name` - Capability name.
       * `enabled` - Whether the capability is enabled.
