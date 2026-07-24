@@ -26,7 +26,6 @@ type CloudStorageFileShareModel struct {
 
 	// Optional — mutable
 	Description ovhtypes.TfStringValue `tfsdk:"description"`
-	AccessRules types.List             `tfsdk:"access_rules"`
 
 	// Computed
 	Id             ovhtypes.TfStringValue `tfsdk:"id"`
@@ -49,16 +48,15 @@ type CloudStorageFileShareAPIResponse struct {
 }
 
 type CloudStorageFileShareAPICurrentState struct {
-	Name            string                                      `json:"name,omitempty"`
-	Description     string                                      `json:"description,omitempty"`
-	Size            int64                                       `json:"size,omitempty"`
-	Protocol        string                                      `json:"protocol,omitempty"`
-	ShareType       string                                      `json:"shareType,omitempty"`
-	Location        *CloudStorageFileShareAPILocation           `json:"location,omitempty"`
-	ShareNetwork    *CloudStorageFileShareAPIShareNetworkRef    `json:"shareNetwork,omitempty"`
-	ExportLocations []CloudStorageFileShareAPIExportLocation    `json:"exportLocations,omitempty"`
-	AccessRules     []CloudStorageFileShareAPICurrentAccessRule `json:"accessRules,omitempty"`
-	Capabilities    []CloudStorageFileShareAPICapability        `json:"capabilities,omitempty"`
+	Name            string                                   `json:"name,omitempty"`
+	Description     string                                   `json:"description,omitempty"`
+	Size            int64                                    `json:"size,omitempty"`
+	Protocol        string                                   `json:"protocol,omitempty"`
+	ShareType       string                                   `json:"shareType,omitempty"`
+	Location        *CloudStorageFileShareAPILocation        `json:"location,omitempty"`
+	ShareNetwork    *CloudStorageFileShareAPIShareNetworkRef `json:"shareNetwork,omitempty"`
+	ExportLocations []CloudStorageFileShareAPIExportLocation `json:"exportLocations,omitempty"`
+	Capabilities    []CloudStorageFileShareAPICapability     `json:"capabilities,omitempty"`
 }
 
 type CloudStorageFileShareAPILocation struct {
@@ -69,14 +67,6 @@ type CloudStorageFileShareAPILocation struct {
 type CloudStorageFileShareAPIExportLocation struct {
 	Path      string `json:"path,omitempty"`
 	Preferred bool   `json:"preferred"`
-}
-
-type CloudStorageFileShareAPICurrentAccessRule struct {
-	Id          string `json:"id,omitempty"`
-	AccessTo    string `json:"accessTo,omitempty"`
-	AccessLevel string `json:"accessLevel,omitempty"`
-	State       string `json:"state,omitempty"`
-	CreatedAt   string `json:"createdAt,omitempty"`
 }
 
 type CloudStorageFileShareAPICapability struct {
@@ -96,20 +86,13 @@ type CloudStorageFileShareAPITargetSpec struct {
 	Protocol     string                                   `json:"protocol,omitempty"`
 	ShareType    string                                   `json:"shareType,omitempty"`
 	Location     *CloudStorageFileShareAPILocation        `json:"location,omitempty"`
-	AccessRules  []CloudStorageFileShareAPIAccessRule     `json:"accessRules,omitempty"`
 	ShareNetwork *CloudStorageFileShareAPIShareNetworkRef `json:"shareNetwork,omitempty"`
 }
 
-type CloudStorageFileShareAPIAccessRule struct {
-	AccessTo    string `json:"accessTo"`
-	AccessLevel string `json:"accessLevel"`
-}
-
 type CloudStorageFileShareAPIUpdateTargetSpec struct {
-	Name        string                               `json:"name,omitempty"`
-	Description string                               `json:"description"`
-	Size        int64                                `json:"size,omitempty"`
-	AccessRules []CloudStorageFileShareAPIAccessRule `json:"accessRules,omitempty"`
+	Name        string `json:"name,omitempty"`
+	Description string `json:"description"`
+	Size        int64  `json:"size,omitempty"`
 }
 
 // Create payload
@@ -121,20 +104,6 @@ type CloudStorageFileShareCreatePayload struct {
 type CloudStorageFileShareUpdatePayload struct {
 	Checksum   string                                    `json:"checksum"`
 	TargetSpec *CloudStorageFileShareAPIUpdateTargetSpec `json:"targetSpec"`
-}
-
-// AccessRule Terraform model for user-facing access_rules attribute
-type CloudStorageFileShareAccessRuleModel struct {
-	AccessTo    ovhtypes.TfStringValue `tfsdk:"access_to"`
-	AccessLevel ovhtypes.TfStringValue `tfsdk:"access_level"`
-}
-
-// FileShareAccessRuleAttrTypes returns the attribute types for access_rules list elements
-func FileShareAccessRuleAttrTypes() map[string]attr.Type {
-	return map[string]attr.Type{
-		"access_to":    ovhtypes.TfStringType{},
-		"access_level": ovhtypes.TfStringType{},
-	}
 }
 
 // fileShareLocationAttrTypes returns the attr types for the root-level location
@@ -167,8 +136,6 @@ func (m *CloudStorageFileShareModel) ToCreate(ctx context.Context) *CloudStorage
 	// shareNetwork is required: always attach the reference.
 	target.ShareNetwork = &CloudStorageFileShareAPIShareNetworkRef{Id: m.ShareNetworkId.ValueString()}
 
-	target.AccessRules = extractFileShareAccessRules(ctx, m.AccessRules)
-
 	return &CloudStorageFileShareCreatePayload{TargetSpec: target}
 }
 
@@ -183,29 +150,7 @@ func (m *CloudStorageFileShareModel) ToUpdate(ctx context.Context, checksum stri
 		target.Description = m.Description.ValueString()
 	}
 
-	target.AccessRules = extractFileShareAccessRules(ctx, m.AccessRules)
-
 	return &CloudStorageFileShareUpdatePayload{Checksum: checksum, TargetSpec: target}
-}
-
-// extractFileShareAccessRules converts the Terraform list to API access rules
-func extractFileShareAccessRules(ctx context.Context, accessRulesList types.List) []CloudStorageFileShareAPIAccessRule {
-	if accessRulesList.IsNull() || accessRulesList.IsUnknown() {
-		return nil
-	}
-
-	var rules []CloudStorageFileShareAccessRuleModel
-	accessRulesList.ElementsAs(ctx, &rules, false)
-
-	apiRules := make([]CloudStorageFileShareAPIAccessRule, len(rules))
-	for i, r := range rules {
-		apiRules[i] = CloudStorageFileShareAPIAccessRule{
-			AccessTo:    r.AccessTo.ValueString(),
-			AccessLevel: r.AccessLevel.ValueString(),
-		}
-	}
-
-	return apiRules
 }
 
 // FileShareCurrentStateAttrTypes returns the attribute types for the current_state object
@@ -225,19 +170,7 @@ func FileShareCurrentStateAttrTypes() map[string]attr.Type {
 			"path":      ovhtypes.TfStringType{},
 			"preferred": types.BoolType,
 		}}},
-		"access_rules": types.ListType{ElemType: types.ObjectType{AttrTypes: FileShareCurrentStateAccessRuleAttrTypes()}},
 		"capabilities": types.ListType{ElemType: types.ObjectType{AttrTypes: FileShareCurrentStateCapabilityAttrTypes()}},
-	}
-}
-
-// FileShareCurrentStateAccessRuleAttrTypes returns the attribute types for current_state access_rules
-func FileShareCurrentStateAccessRuleAttrTypes() map[string]attr.Type {
-	return map[string]attr.Type{
-		"id":           ovhtypes.TfStringType{},
-		"access_to":    ovhtypes.TfStringType{},
-		"access_level": ovhtypes.TfStringType{},
-		"state":        ovhtypes.TfStringType{},
-		"created_at":   ovhtypes.TfStringType{},
 	}
 }
 
@@ -284,24 +217,6 @@ func (m *CloudStorageFileShareModel) MergeWith(ctx context.Context, response *Cl
 		if response.TargetSpec.Location != nil {
 			m.Region = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Location.Region)}
 			m.AvailabilityZone = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Location.AvailabilityZone)}
-		}
-
-		// Set access_rules from targetSpec
-		if response.TargetSpec.AccessRules != nil {
-			ruleValues := make([]attr.Value, len(response.TargetSpec.AccessRules))
-			for i, r := range response.TargetSpec.AccessRules {
-				obj, _ := types.ObjectValue(
-					FileShareAccessRuleAttrTypes(),
-					map[string]attr.Value{
-						"access_to":    ovhtypes.TfStringValue{StringValue: types.StringValue(r.AccessTo)},
-						"access_level": ovhtypes.TfStringValue{StringValue: types.StringValue(r.AccessLevel)},
-					},
-				)
-				ruleValues[i] = obj
-			}
-			m.AccessRules, _ = types.ListValue(types.ObjectType{AttrTypes: FileShareAccessRuleAttrTypes()}, ruleValues)
-		} else if !m.AccessRules.IsNull() {
-			m.AccessRules, _ = types.ListValue(types.ObjectType{AttrTypes: FileShareAccessRuleAttrTypes()}, []attr.Value{})
 		}
 	}
 }
@@ -357,29 +272,6 @@ func buildFileShareCurrentStateObject(ctx context.Context, state *CloudStorageFi
 		exportLocList = types.ListValueMust(exportLocationType, []attr.Value{})
 	}
 
-	// Build access_rules list for current_state
-	accessRuleType := types.ObjectType{AttrTypes: FileShareCurrentStateAccessRuleAttrTypes()}
-	var accessRuleValues []attr.Value
-	for _, ar := range state.AccessRules {
-		obj, _ := types.ObjectValue(
-			FileShareCurrentStateAccessRuleAttrTypes(),
-			map[string]attr.Value{
-				"id":           ovhtypes.TfStringValue{StringValue: types.StringValue(ar.Id)},
-				"access_to":    ovhtypes.TfStringValue{StringValue: types.StringValue(ar.AccessTo)},
-				"access_level": ovhtypes.TfStringValue{StringValue: types.StringValue(ar.AccessLevel)},
-				"state":        ovhtypes.TfStringValue{StringValue: types.StringValue(ar.State)},
-				"created_at":   ovhtypes.TfStringValue{StringValue: types.StringValue(ar.CreatedAt)},
-			},
-		)
-		accessRuleValues = append(accessRuleValues, obj)
-	}
-	var accessRuleList types.List
-	if len(accessRuleValues) > 0 {
-		accessRuleList, _ = types.ListValue(accessRuleType, accessRuleValues)
-	} else {
-		accessRuleList = types.ListValueMust(accessRuleType, []attr.Value{})
-	}
-
 	// Build capabilities list for current_state
 	capabilityType := types.ObjectType{AttrTypes: FileShareCurrentStateCapabilityAttrTypes()}
 	var capabilityValues []attr.Value
@@ -412,7 +304,6 @@ func buildFileShareCurrentStateObject(ctx context.Context, state *CloudStorageFi
 			"location":         locObj,
 			"share_network_id": ovhtypes.TfStringValue{StringValue: types.StringValue(shareNetworkId)},
 			"export_locations": exportLocList,
-			"access_rules":     accessRuleList,
 			"capabilities":     capabilityList,
 		},
 	)

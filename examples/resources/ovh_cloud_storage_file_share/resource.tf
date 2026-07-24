@@ -6,11 +6,4 @@ resource "ovh_cloud_storage_file_share" "share" {
   protocol     = "NFS"
   share_type   = "STANDARD_1AZ"
   description  = "My NFS share"
-
-  access_rules = [
-    {
-      access_to    = "10.0.0.0/24"
-      access_level = "READ_WRITE"
-    }
-  ]
 }
