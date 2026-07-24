@@ -371,6 +371,7 @@ func (p *OvhProvider) Resources(_ context.Context) []func() resource.Resource {
 		NewCloudStorageFileShareResource,
 		NewCloudStorageFileShareNetworkResource,
 		NewCloudStorageFileShareSnapshotResource,
+		NewCloudFileStorageAclResource,
 		NewDbaasLogsEncryptionKeyResource,
 		NewDbaasLogsTokenResource,
 		NewDedicatedServerResource,

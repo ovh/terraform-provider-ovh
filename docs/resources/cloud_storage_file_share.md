@@ -17,13 +17,6 @@ resource "ovh_cloud_storage_file_share" "share" {
   protocol     = "NFS"
   share_type   = "STANDARD_1AZ"
   description  = "My NFS share"
-
-  access_rules = [
-    {
-      access_to    = "10.0.0.0/24"
-      access_level = "READ_WRITE"
-    }
-  ]
 }
 ```
 
@@ -40,9 +33,6 @@ The following arguments are supported:
 * `share_network_id` - (Required) ID of a pre-existing share network to attach the file share to. **Changing this value recreates the resource.**
 * `availability_zone` - (Optional) Availability zone where the file share will be created. **Changing this value recreates the resource.**
 * `description` - (Optional) File share description.
-* `access_rules` - (Optional) Access rules for the file share. Each rule has:
-  * `access_to` - (Required) IP address or CIDR to grant access to.
-  * `access_level` - (Required) Access level (`READ_WRITE`, `READ_ONLY`).
 
 ## Attributes Reference
 
@@ -66,12 +56,6 @@ The following attributes are exported:
   * `export_locations` - Export locations for the file share:
     * `path` - Export path.
     * `preferred` - Whether this is the preferred export location.
-  * `access_rules` - Current access rules for the file share:
-    * `id` - Access rule ID.
-    * `access_to` - IP address or CIDR.
-    * `access_level` - Access level.
-    * `state` - Access rule state.
-    * `created_at` - Access rule creation date.
   * `capabilities` - Action-availability flags derived from the file share status:
     * `name` - Capability name.
     * `enabled` - Whether the capability is enabled.

@@ -126,13 +126,6 @@ resource "ovh_cloud_storage_file_share" "share" {
   share_type       = "STANDARD_1AZ"
   share_network_id = ovh_cloud_storage_file_share_network.network.id
   description      = "updated description"
-
-  access_rules = [
-	{
-		access_to    = "10.0.0.0/24"
-		access_level = "READ_WRITE"
-	}
-  ]
 }
 `, serviceName, networkName, region, serviceName, updatedName, region)
 
@@ -157,8 +150,6 @@ resource "ovh_cloud_storage_file_share" "share" {
 					resource.TestCheckResourceAttr("ovh_cloud_storage_file_share.share", "name", updatedName),
 					resource.TestCheckResourceAttr("ovh_cloud_storage_file_share.share", "size", "200"),
 					resource.TestCheckResourceAttr("ovh_cloud_storage_file_share.share", "description", "updated description"),
-					resource.TestCheckResourceAttr("ovh_cloud_storage_file_share.share", "access_rules.0.access_to", "10.0.0.0/24"),
-					resource.TestCheckResourceAttr("ovh_cloud_storage_file_share.share", "access_rules.0.access_level", "READ_WRITE"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_storage_file_share.share", "id"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_storage_file_share.share", "checksum"),
 				),
