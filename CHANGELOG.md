@@ -1,3 +1,28 @@
+## 2.18.0 (July 27, 2026)
+
+⚙️ General:
+
+* Bump `google.golang.org/grpc` from 1.79.3 to 1.82.1 ([#1391](https://github.com/ovh/terraform-provider-ovh/pull/1391))
+* Trigger a CDS build when pushing on a branch ([#1382](https://github.com/ovh/terraform-provider-ovh/pull/1382))
+
+🎉 Features:
+
+* New resource: `ovh_cloud_storage_file_share_acl` ([#1390](https://github.com/ovh/terraform-provider-ovh/pull/1390))
+
+🧹 Cleaning:
+
+* `r/ovh_cloud_storage_file_share`, `d/ovh_cloud_storage_file_share`, `d/ovh_cloud_storage_file_shares`: The `access_rules` attribute is removed in favor of the new `ovh_cloud_storage_file_share_acl` resource ([#1390](https://github.com/ovh/terraform-provider-ovh/pull/1390))
+
+💪 Improvements:
+
+* `r/ovh_cloud_storage_block_volume`: Add `availability_zone` attribute ([#1389](https://github.com/ovh/terraform-provider-ovh/pull/1389))
+
+🐜 Bug fixes:
+
+* `r/ovh_cloud_storage_block_volume`: Keep the `encryption` attribute value from state when unchanged, to avoid unexpected volume replacements ([#1389](https://github.com/ovh/terraform-provider-ovh/pull/1389))
+
+❤️ Thanks for your contributions ❤️
+
 ## 2.17.0 (July 15, 2026)
 
 ⚙️ General:
