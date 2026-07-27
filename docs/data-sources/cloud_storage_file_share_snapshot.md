@@ -1,5 +1,5 @@
 ---
-subcategory: "Cloud Storage"
+subcategory: "File Storage"
 ---
 
 # ovh_cloud_storage_file_share_snapshot (Data Source)
