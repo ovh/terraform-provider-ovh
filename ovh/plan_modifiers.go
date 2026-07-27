@@ -37,6 +37,42 @@ func (m outOfSyncPlanModifier) PlanModifyString(_ context.Context, req planmodif
 	}
 }
 
+// RequiresReplaceIfOutOfSyncPlanModifier returns a plan modifier that forces
+// resource replacement when resource_status is OUT_OF_SYNC. Use this instead
+// of OutOfSyncPlanModifier for resources whose Update() cannot reconcile
+// drift (no PUT/resync endpoint exists), so destroy+recreate is the only
+// convergent remediation.
+//
+// Not built on stringplanmodifier.RequiresReplaceIf: that wrapper skips the
+// given function whenever req.PlanValue.Equal(req.StateValue), which is
+// always true here since resource_status is Computed-only (no config
+// counterpart) and the refreshed state value carries straight into the plan.
+func RequiresReplaceIfOutOfSyncPlanModifier() planmodifier.String {
+	return requiresReplaceIfOutOfSyncPlanModifier{}
+}
+
+type requiresReplaceIfOutOfSyncPlanModifier struct{}
+
+func (m requiresReplaceIfOutOfSyncPlanModifier) Description(_ context.Context) string {
+	return "Forces replacement when resource is OUT_OF_SYNC"
+}
+
+func (m requiresReplaceIfOutOfSyncPlanModifier) MarkdownDescription(_ context.Context) string {
+	return "Forces replacement when resource is OUT_OF_SYNC"
+}
+
+func (m requiresReplaceIfOutOfSyncPlanModifier) PlanModifyString(_ context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
+	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
+		return
+	}
+	if req.StateValue.IsUnknown() {
+		return
+	}
+	if req.StateValue.ValueString() == "OUT_OF_SYNC" {
+		resp.RequiresReplace = true
+	}
+}
+
 // MutableAttrs describes the mutable config attributes for a resource,
 // grouped by Terraform type so isUpdatePlanned can compare them correctly.
 type MutableAttrs struct {

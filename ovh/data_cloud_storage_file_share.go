@@ -98,24 +98,6 @@ func fileShareDataSourceAttributes() map[string]schema.Attribute {
 			Computed:    true,
 			Description: "ID of the share network the file share is attached to",
 		},
-		"access_rules": schema.ListNestedAttribute{
-			Computed:    true,
-			Description: "Access rules requested for the file share",
-			NestedObject: schema.NestedAttributeObject{
-				Attributes: map[string]schema.Attribute{
-					"access_to": schema.StringAttribute{
-						CustomType:  ovhtypes.TfStringType{},
-						Computed:    true,
-						Description: "IP address or CIDR granted access",
-					},
-					"access_level": schema.StringAttribute{
-						CustomType:  ovhtypes.TfStringType{},
-						Computed:    true,
-						Description: "Access level (READ_WRITE, READ_ONLY)",
-					},
-				},
-			},
-		},
 		"checksum": schema.StringAttribute{
 			CustomType:  ovhtypes.TfStringType{},
 			Computed:    true,
@@ -202,39 +184,6 @@ func fileShareDataSourceAttributes() map[string]schema.Attribute {
 						},
 					},
 				},
-				"access_rules": schema.ListNestedAttribute{
-					Computed:    true,
-					Description: "Current access rules for the file share",
-					NestedObject: schema.NestedAttributeObject{
-						Attributes: map[string]schema.Attribute{
-							"id": schema.StringAttribute{
-								CustomType:  ovhtypes.TfStringType{},
-								Computed:    true,
-								Description: "Access rule ID",
-							},
-							"access_to": schema.StringAttribute{
-								CustomType:  ovhtypes.TfStringType{},
-								Computed:    true,
-								Description: "IP address or CIDR",
-							},
-							"access_level": schema.StringAttribute{
-								CustomType:  ovhtypes.TfStringType{},
-								Computed:    true,
-								Description: "Access level",
-							},
-							"state": schema.StringAttribute{
-								CustomType:  ovhtypes.TfStringType{},
-								Computed:    true,
-								Description: "Access rule state",
-							},
-							"created_at": schema.StringAttribute{
-								CustomType:  ovhtypes.TfStringType{},
-								Computed:    true,
-								Description: "Access rule creation date",
-							},
-						},
-					},
-				},
 				"capabilities": schema.ListNestedAttribute{
 					Computed:    true,
 					Description: "Action-availability flags derived from the file share status",
@@ -305,30 +254,11 @@ type cloudStorageFileShareDataSourceModel struct {
 	ShareType      ovhtypes.TfStringValue `tfsdk:"share_type"`
 	Location       types.Object           `tfsdk:"location"`
 	ShareNetworkId ovhtypes.TfStringValue `tfsdk:"share_network_id"`
-	AccessRules    types.List             `tfsdk:"access_rules"`
 	Checksum       ovhtypes.TfStringValue `tfsdk:"checksum"`
 	CreatedAt      ovhtypes.TfStringValue `tfsdk:"created_at"`
 	UpdatedAt      ovhtypes.TfStringValue `tfsdk:"updated_at"`
 	ResourceStatus ovhtypes.TfStringValue `tfsdk:"resource_status"`
 	CurrentState   types.Object           `tfsdk:"current_state"`
-}
-
-// buildFileShareAccessRulesList builds the access_rules list value from a target spec.
-func buildFileShareAccessRulesList(rules []CloudStorageFileShareAPIAccessRule) types.List {
-	elemType := types.ObjectType{AttrTypes: FileShareAccessRuleAttrTypes()}
-	values := make([]attr.Value, 0, len(rules))
-	for _, r := range rules {
-		obj, _ := types.ObjectValue(
-			FileShareAccessRuleAttrTypes(),
-			map[string]attr.Value{
-				"access_to":    ovhtypes.TfStringValue{StringValue: types.StringValue(r.AccessTo)},
-				"access_level": ovhtypes.TfStringValue{StringValue: types.StringValue(r.AccessLevel)},
-			},
-		)
-		values = append(values, obj)
-	}
-	list, _ := types.ListValue(elemType, values)
-	return list
 }
 
 func (d *cloudStorageFileShareDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -384,10 +314,8 @@ func mapFileShareToDataSourceModel(ctx context.Context, v *CloudStorageFileShare
 		if v.TargetSpec.ShareNetwork != nil {
 			data.ShareNetworkId = ovhtypes.TfStringValue{StringValue: types.StringValue(v.TargetSpec.ShareNetwork.Id)}
 		}
-		data.AccessRules = buildFileShareAccessRulesList(v.TargetSpec.AccessRules)
 	} else {
 		data.Location = types.ObjectNull(fileShareLocationAttrTypes())
-		data.AccessRules = buildFileShareAccessRulesList(nil)
 	}
 
 	if v.CurrentState != nil {
