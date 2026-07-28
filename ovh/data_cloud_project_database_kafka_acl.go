@@ -57,7 +57,7 @@ func dataSourceCloudProjectDatabaseKafkaACLRead(ctx context.Context, d *schema.R
 	clusterID := d.Get("cluster_id").(string)
 	id := d.Get("id").(string)
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/database/kafka/%s/acl/%s",
+	endpoint := fmt.Sprintf("/cloud/project/%s/database/kafka/%s/topicAcl/%s",
 		url.PathEscape(serviceName),
 		url.PathEscape(clusterID),
 		url.PathEscape(id),
