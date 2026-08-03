@@ -149,7 +149,7 @@ Required:
 
 Optional:
 
-- `storage_class` (String) Destination storage class
+- `storage_class` (String) Destination storage class. Accepted values: `DEEP_ARCHIVE`, `GLACIER`, `GLACIER_IR`, `HIGH_PERF`, `INTELLIGENT_TIERING`, `ONEZONE_IA`, `STANDARD`, `STANDARD_IA`.
 - `remove_on_main_bucket_deletion` (Boolean) Whether to remove replicated bucket when the main bucket is deleted (make sure to apply your configuration when changing this value before deleting the main bucket)
 
 <a id="nestedatt--replication--rules--filter"></a>
