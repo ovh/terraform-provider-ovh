@@ -229,7 +229,12 @@ func CloudProjectRegionStorageResourceSchema(ctx context.Context) schema.Schema 
 										MarkdownDescription: "Destination storage class",
 										Validators: []validator.String{
 											stringvalidator.OneOf(
+												"DEEP_ARCHIVE",
+												"GLACIER",
+												"GLACIER_IR",
 												"HIGH_PERF",
+												"INTELLIGENT_TIERING",
+												"ONEZONE_IA",
 												"STANDARD",
 												"STANDARD_IA",
 											),

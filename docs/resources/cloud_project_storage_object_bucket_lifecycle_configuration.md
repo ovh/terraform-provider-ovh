@@ -225,7 +225,7 @@ Optional:
 
 - `noncurrent_days` (Number) Number of days after an object becomes noncurrent before it is transitioned.
 - `newer_noncurrent_versions` (Number) Number of noncurrent versions to retain in the same storage class before transitioning.
-- `storage_class` (String) The storage class to transition noncurrent objects to.
+- `storage_class` (String) The storage class to transition noncurrent objects to. Accepted values: `STANDARD`, `STANDARD_IA`, `GLACIER_IR`, `DEEP_ARCHIVE`.
 
 ## Import
 
