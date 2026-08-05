@@ -94,7 +94,9 @@ func CloudProjectAlertingResourceSchema(ctx context.Context) schema.Schema {
 			"service_name": schema.StringAttribute{
 				CustomType: ovhtypes.TfStringType{},
 				Optional:   true,
+				Computed:   true,
 				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplace(),
 				},
 				Description:         "The project id. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.",

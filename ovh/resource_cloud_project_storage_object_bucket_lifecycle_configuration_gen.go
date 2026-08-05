@@ -35,7 +35,7 @@ func CloudProjectStorageLifecycleConfigurationResourceSchema(ctx context.Context
 				Computed:            true,
 				Description:         "The ID of the public cloud project.",
 				MarkdownDescription: "The ID of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.",
-				PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown(), stringplanmodifier.RequiresReplace()},
 			},
 			"region_name": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
