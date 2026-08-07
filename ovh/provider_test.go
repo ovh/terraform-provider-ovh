@@ -515,12 +515,24 @@ func testAccPreCheckOkmsCredential(t *testing.T) {
 	checkEnvOrSkip(t, "OVH_OKMS_CREDENTIAL")
 }
 
+// testAccPreCheckCloudInstance gates the legacy v1 ovh_cloud_project_instance
+// tests, which need a pre-existing private network, subnet, floating IP and
+// gateway. Do not reuse it for the API v2 ovh_cloud_instance_* tests: they have
+// a different, much smaller prerequisite set (see testAccPreCheckCloudInstanceV2).
 func testAccPreCheckCloudInstance(t *testing.T) {
 	testAccPreCheckCredentials(t)
 	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_NETWORK_PRIVATE_TEST")
 	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_NETWORK_PRIVATE_SUBNET_TEST")
 	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_FLOATING_IP_ID")
 	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_GATEWAY_ID")
+}
+
+// testAccPreCheckCloudInstanceV2 gates the API v2 ovh_cloud_instance,
+// ovh_cloud_instance_flavor(s) and ovh_cloud_instance_image(s) tests.
+func testAccPreCheckCloudInstanceV2(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_SERVICE_TEST")
+	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_REGION_TEST")
 }
 
 func testAccCheckVRackExists(t *testing.T) {

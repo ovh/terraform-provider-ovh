@@ -103,18 +103,20 @@ func (r *cloudKeyManagerSecretResource) Schema(ctx context.Context, req resource
 			"secret_type": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Required:            true,
-				Description:         "Type of the secret (SYMMETRIC, PUBLIC, PRIVATE, PASSPHRASE, CERTIFICATE, OPAQUE)",
-				MarkdownDescription: "Type of the secret (`SYMMETRIC`, `PUBLIC`, `PRIVATE`, `PASSPHRASE`, `CERTIFICATE`, `OPAQUE`)",
+				Description:         "Type of the secret (SYMMETRIC, PUBLIC, PRIVATE, PASSPHRASE, CERTIFICATE, OPAQUE). The value is normalized to upper case to match the API.",
+				MarkdownDescription: "Type of the secret (`SYMMETRIC`, `PUBLIC`, `PRIVATE`, `PASSPHRASE`, `CERTIFICATE`, `OPAQUE`). The value is normalized to upper case to match the API.",
 				PlanModifiers: []planmodifier.String{
+					UpperCaseString(),
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"algorithm": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Optional:            true,
-				Description:         "Algorithm associated with the secret (e.g., AES, RSA)",
-				MarkdownDescription: "Algorithm associated with the secret (e.g., `AES`, `RSA`)",
+				Description:         "Algorithm associated with the secret (e.g., AES, RSA). The value is normalized to upper case to match the API.",
+				MarkdownDescription: "Algorithm associated with the secret (e.g., `AES`, `RSA`). The value is normalized to upper case to match the API.",
 				PlanModifiers: []planmodifier.String{
+					UpperCaseString(),
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
@@ -129,9 +131,10 @@ func (r *cloudKeyManagerSecretResource) Schema(ctx context.Context, req resource
 			"mode": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Optional:            true,
-				Description:         "Mode of the secret algorithm (e.g., CBC)",
-				MarkdownDescription: "Mode of the secret algorithm (e.g., `CBC`)",
+				Description:         "Mode of the secret algorithm (CBC, CTR). The value is normalized to upper case to match the API.",
+				MarkdownDescription: "Mode of the secret algorithm (`CBC`, `CTR`). The value is normalized to upper case to match the API.",
 				PlanModifiers: []planmodifier.String{
+					UpperCaseString(),
 					stringplanmodifier.RequiresReplace(),
 				},
 			},

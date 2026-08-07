@@ -12,7 +12,7 @@ Create an opaque secret with a base64-encoded payload:
 
 ```terraform
 resource "ovh_cloud_key_manager_secret" "secret" {
-  service_name = "Public cloud project ID"
+  service_name = "<Public cloud project id>"
   region       = "GRA"
   name         = "my-secret"
   secret_type  = "OPAQUE"
@@ -34,10 +34,10 @@ The following arguments are supported:
 * `region` - (Required, Forces new resource) Region where the secret will be created.
 * `availability_zone` - (Optional, Forces new resource) Availability zone where the secret will be created.
 * `name` - (Required, Forces new resource) Name of the secret.
-* `secret_type` - (Required, Forces new resource) Type of the secret. Possible values: `SYMMETRIC`, `PUBLIC`, `PRIVATE`, `PASSPHRASE`, `CERTIFICATE`, `OPAQUE`.
-* `algorithm` - (Optional, Forces new resource) Algorithm associated with the secret (e.g., `AES`, `RSA`).
+* `secret_type` - (Required, Forces new resource) Type of the secret. Possible values: `SYMMETRIC`, `PUBLIC`, `PRIVATE`, `PASSPHRASE`, `CERTIFICATE`, `OPAQUE`. The value is normalized to upper case to match the API, so `opaque` and `OPAQUE` are equivalent and neither shows up as drift.
+* `algorithm` - (Optional, Forces new resource) Algorithm associated with the secret (e.g., `AES`, `RSA`). The value is normalized to upper case to match the API.
 * `bit_length` - (Optional, Forces new resource) Bit length of the secret (e.g., `256`).
-* `mode` - (Optional, Forces new resource) Mode of the secret algorithm (e.g., `CBC`).
+* `mode` - (Optional, Forces new resource) Mode of the secret algorithm (`CBC`, `CTR`). The value is normalized to upper case to match the API.
 * `payload` - (Optional, Sensitive, Forces new resource) Secret payload data (base64-encoded). Write-only, never returned in responses. Requires `payload_content_type`.
 * `payload_content_type` - (Optional, Forces new resource) Content type of the secret payload. Possible values: `TEXT_PLAIN`, `APPLICATION_OCTET_STREAM`, `APPLICATION_PKIX_CERT`, `APPLICATION_PKCS8`.
 * `expiration` - (Optional, Forces new resource) Expiration date of the secret in RFC3339 format.
