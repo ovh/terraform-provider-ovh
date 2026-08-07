@@ -1,3 +1,39 @@
+## 2.19.0 (August 7, 2026)
+
+🎉 Features:
+
+* New resource: `ovh_cloud_instance` ([#1386](https://github.com/ovh/terraform-provider-ovh/pull/1386))
+* New resource: `ovh_cloud_instance_group` ([#1386](https://github.com/ovh/terraform-provider-ovh/pull/1386))
+
+* New datasource: `ovh_cloud_instance` ([#1386](https://github.com/ovh/terraform-provider-ovh/pull/1386))
+* New datasource: `ovh_cloud_instances` ([#1386](https://github.com/ovh/terraform-provider-ovh/pull/1386))
+* New datasource: `ovh_cloud_instance_flavor` ([#1386](https://github.com/ovh/terraform-provider-ovh/pull/1386))
+* New datasource: `ovh_cloud_instance_flavors` ([#1386](https://github.com/ovh/terraform-provider-ovh/pull/1386))
+* New datasource: `ovh_cloud_instance_group` ([#1386](https://github.com/ovh/terraform-provider-ovh/pull/1386))
+* New datasource: `ovh_cloud_instance_groups` ([#1386](https://github.com/ovh/terraform-provider-ovh/pull/1386))
+* New datasource: `ovh_cloud_instance_image` ([#1386](https://github.com/ovh/terraform-provider-ovh/pull/1386))
+* New datasource: `ovh_cloud_instance_images` ([#1386](https://github.com/ovh/terraform-provider-ovh/pull/1386))
+* New datasource: `ovh_cloud_storage_file_share_acl` ([#1393](https://github.com/ovh/terraform-provider-ovh/pull/1393))
+* New datasource: `ovh_cloud_storage_file_share_acls` ([#1393](https://github.com/ovh/terraform-provider-ovh/pull/1393))
+
+💪 Improvements:
+
+* `r/ovh_cloud_project_storage`: Accept `DEEP_ARCHIVE`, `GLACIER`, `GLACIER_IR`, `INTELLIGENT_TIERING` and `ONEZONE_IA` as replication rule `storage_class` values ([#1398](https://github.com/ovh/terraform-provider-ovh/pull/1398))
+* `r/ovh_cloud_project_storage_object_bucket_lifecycle_configuration`: Accept `DEEP_ARCHIVE` and `GLACIER_IR` as noncurrent version transition `storage_class` values ([#1398](https://github.com/ovh/terraform-provider-ovh/pull/1398))
+* `r/ovh_cloud_key_manager_secret`: Normalize `type`, `algorithm` and `mode` to upper case to match the API ([#1386](https://github.com/ovh/terraform-provider-ovh/pull/1386))
+
+🐜 Bug fixes:
+
+* `r/ovh_cloud_gateway`: Report the failing task reason when a gateway ends in `ERROR` instead of a generic unexpected-state error ([#1386](https://github.com/ovh/terraform-provider-ovh/pull/1386))
+* `r/ovh_cloud_storage_block_volume`: Keep unset `create_from` attributes null instead of `""`, to avoid inconsistent-result errors ([#1386](https://github.com/ovh/terraform-provider-ovh/pull/1386))
+
+📚 Documentation:
+
+* `r/ovh_cloud_project_storage`, `r/ovh_cloud_project_storage_object_bucket_lifecycle_configuration`: Document the accepted `storage_class` values ([#1398](https://github.com/ovh/terraform-provider-ovh/pull/1398))
+* File Storage pages: Fix the `subcategory` metadata (`Cloud Storage` → `File Storage`) ([#1393](https://github.com/ovh/terraform-provider-ovh/pull/1393))
+
+❤️ Thanks for your contributions ❤️
+
 ## 2.18.0 (July 27, 2026)
 
 ⚙️ General:
