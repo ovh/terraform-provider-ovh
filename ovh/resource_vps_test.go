@@ -1,6 +1,7 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
@@ -8,6 +9,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
+
+func TestVpsResourceSchemaDoesNotConstrainModelVersion(t *testing.T) {
+	s := VpsResourceSchema(context.Background())
+	model := mustSingleNested(t, s.Attributes["model"], "model")
+	version := mustStringAttribute(t, model.Attributes["version"], "version")
+
+	if len(version.Validators) != 0 {
+		t.Fatalf("model.version must accept new OVHcloud API values such as 2027v1")
+	}
+}
 
 const testAccVpsBasic = `
 data "ovh_me" "myaccount" {}
