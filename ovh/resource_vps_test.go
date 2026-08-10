@@ -15,8 +15,10 @@ func TestVpsResourceSchemaDoesNotConstrainModelVersion(t *testing.T) {
 	model := mustSingleNested(t, s.Attributes["model"], "model")
 	version := mustStringAttribute(t, model.Attributes["version"], "version")
 
-	if len(version.Validators) != 0 {
-		t.Fatalf("model.version must accept new OVHcloud API values such as 2027v1")
+	// model.version is API-returned and must keep accepting generations the
+	// provider has not enumerated yet (for example 2027v1).
+	if stringAttributeValidatorsReject(t, version, "2027v1") {
+		t.Fatalf("model.version rejected %q; future OVHcloud API values must be accepted", "2027v1")
 	}
 }
 
