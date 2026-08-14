@@ -413,7 +413,7 @@ func (v IpFirewallRuleModel) ToCreate() *IpFirewallRuleWritableModel {
 		res.SourcePort = &v.SourcePort
 	}
 
-	if !v.TcpOption.IsUnknown() || !v.Fragments.IsUnknown() {
+	if v.Protocol.ValueString() == "tcp" && (!v.TcpOption.IsUnknown() || !v.Fragments.IsUnknown()) {
 		option := TcpOptionWritableValue{}
 
 		if !v.TcpOption.IsUnknown() {
