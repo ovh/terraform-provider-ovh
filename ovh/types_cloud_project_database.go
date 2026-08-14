@@ -1788,7 +1788,7 @@ func waitForCloudProjectDatabaseKafkaACLReady(ctx context.Context, client *ovhwr
 		Target:  []string{"READY"},
 		Refresh: func() (interface{}, string, error) {
 			res := &CloudProjectDatabaseKafkaTopicResponse{}
-			endpoint := fmt.Sprintf("/cloud/project/%s/database/kafka/%s/acl/%s",
+			endpoint := fmt.Sprintf("/cloud/project/%s/database/kafka/%s/topicAcl/%s",
 				url.PathEscape(serviceName),
 				url.PathEscape(databaseID),
 				url.PathEscape(aclID),
@@ -1817,7 +1817,7 @@ func waitForCloudProjectDatabaseKafkaACLDeleted(ctx context.Context, client *ovh
 		Target:  []string{"DELETED"},
 		Refresh: func() (interface{}, string, error) {
 			res := &CloudProjectDatabaseKafkaTopicResponse{}
-			endpoint := fmt.Sprintf("/cloud/project/%s/database/kafka/%s/acl/%s",
+			endpoint := fmt.Sprintf("/cloud/project/%s/database/kafka/%s/topicAcl/%s",
 				url.PathEscape(serviceName),
 				url.PathEscape(databaseID),
 				url.PathEscape(aclID),

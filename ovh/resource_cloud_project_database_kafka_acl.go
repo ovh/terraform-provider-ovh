@@ -87,7 +87,7 @@ func resourceCloudProjectDatabaseKafkaACLCreate(ctx context.Context, d *schema.R
 	serviceName := d.Get("service_name").(string)
 	clusterID := d.Get("cluster_id").(string)
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/database/kafka/%s/acl",
+	endpoint := fmt.Sprintf("/cloud/project/%s/database/kafka/%s/topicAcl",
 		url.PathEscape(serviceName),
 		url.PathEscape(clusterID),
 	)
@@ -118,7 +118,7 @@ func resourceCloudProjectDatabaseKafkaACLRead(ctx context.Context, d *schema.Res
 	clusterID := d.Get("cluster_id").(string)
 	id := d.Id()
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/database/kafka/%s/acl/%s",
+	endpoint := fmt.Sprintf("/cloud/project/%s/database/kafka/%s/topicAcl/%s",
 		url.PathEscape(serviceName),
 		url.PathEscape(clusterID),
 		url.PathEscape(id),
@@ -148,7 +148,7 @@ func resourceCloudProjectDatabaseKafkaACLDelete(ctx context.Context, d *schema.R
 	clusterID := d.Get("cluster_id").(string)
 	id := d.Id()
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/database/kafka/%s/acl/%s",
+	endpoint := fmt.Sprintf("/cloud/project/%s/database/kafka/%s/topicAcl/%s",
 		url.PathEscape(serviceName),
 		url.PathEscape(clusterID),
 		url.PathEscape(id),
