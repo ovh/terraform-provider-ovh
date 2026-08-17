@@ -3,6 +3,7 @@ package ovh
 import (
 	"fmt"
 	"log"
+	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -44,6 +45,15 @@ func dataSourceMeIdentityUser() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "User's group",
+			},
+			"groups": {
+				Type:        schema.TypeSet,
+				Computed:    true,
+				Description: "Additional groups the user belongs to (other than the main group)",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Set: schema.HashString,
 			},
 			"last_update": {
 				Type:        schema.TypeString,
@@ -91,6 +101,34 @@ func dataSourceMeIdentityUserRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("last_update", identityUser.LastUpdate)
 	d.Set("password_last_update", identityUser.PasswordLastUpdate)
 	d.Set("status", identityUser.Status)
+
+	// Discover additional group memberships by listing all groups
+	// and checking which ones contain this user
+	var allGroups []string
+	if err := config.OVHClient.Get("/me/identity/group", &allGroups); err != nil {
+		return fmt.Errorf("unable to list identity groups:\n\t %q", err)
+	}
+
+	var memberGroups []string
+	for _, groupName := range allGroups {
+		// Skip the user's main group
+		if groupName == identityUser.Group {
+			continue
+		}
+		var users []string
+		groupEndpoint := fmt.Sprintf("/me/identity/group/%s/user", url.PathEscape(groupName))
+		if err := config.OVHClient.Get(groupEndpoint, &users); err != nil {
+			log.Printf("[WARN] Could not read users for group %s: %s", groupName, err)
+			continue
+		}
+		for _, u := range users {
+			if u == identityUser.Login {
+				memberGroups = append(memberGroups, groupName)
+				break
+			}
+		}
+	}
+	d.Set("groups", memberGroups)
 
 	return nil
 }
