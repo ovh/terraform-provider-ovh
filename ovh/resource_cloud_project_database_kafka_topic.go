@@ -202,13 +202,27 @@ func resourceCloudProjectDatabaseKafkaTopicUpdate(ctx context.Context, d *schema
 	)
 	params := (&CloudProjectDatabaseKafkaTopicUpdateOpts{}).FromResource(d)
 
-	log.Printf("[DEBUG] Will update topic %s from cluster %s from project %s", id, clusterID, serviceName)
-	err := config.OVHClient.PutWithContext(ctx, endpoint, params, nil)
-	if err != nil {
-		return diag.Errorf("calling Put %s with params %+v:\n\t %q", endpoint, params, err)
-	}
+	return diag.FromErr(
+		retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate),
+			func() *retry.RetryError {
+				log.Printf("[DEBUG] Will update topic %s from cluster %s from project %s", id, clusterID, serviceName)
+				err := config.OVHClient.PutWithContext(ctx, endpoint, params, nil)
+				if err != nil {
+					// The cluster rejects concurrent operations while it converges
+					if errOvh, ok := err.(*ovh.APIError); ok && (errOvh.Code == 409) {
+						return retry.RetryableError(err)
+					}
+					return retry.NonRetryableError(fmt.Errorf("calling Put %s with params %+v:\n\t %q", endpoint, params, err))
+				}
 
-	return resourceCloudProjectDatabaseKafkaTopicRead(ctx, d, meta)
+				readDiags := resourceCloudProjectDatabaseKafkaTopicRead(ctx, d, meta)
+				if err := diagnosticsToError(readDiags); err != nil {
+					return retry.NonRetryableError(err)
+				}
+				return nil
+			},
+		),
+	)
 }
 
 func resourceCloudProjectDatabaseKafkaTopicDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
