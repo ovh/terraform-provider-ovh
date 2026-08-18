@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/go-ovh/ovh"
@@ -20,6 +21,7 @@ func resourceCloudProjectDatabaseKafkaTopic() *schema.Resource {
 		CreateContext: resourceCloudProjectDatabaseKafkaTopicCreate,
 		ReadContext:   resourceCloudProjectDatabaseKafkaTopicRead,
 		DeleteContext: resourceCloudProjectDatabaseKafkaTopicDelete,
+		UpdateContext: resourceCloudProjectDatabaseKafkaTopicUpdate,
 
 		Importer: &schema.ResourceImporter{
 			State: resourceCloudProjectDatabaseKafkaTopicImportState,
@@ -27,6 +29,7 @@ func resourceCloudProjectDatabaseKafkaTopic() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(20 * time.Minute),
+			Update: schema.DefaultTimeout(20 * time.Minute),
 			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
@@ -54,7 +57,6 @@ func resourceCloudProjectDatabaseKafkaTopic() *schema.Resource {
 			"min_insync_replicas": {
 				Type:             schema.TypeInt,
 				Description:      "Minimum insync replica accepted for this topic",
-				ForceNew:         true,
 				Optional:         true,
 				Computed:         true,
 				ValidateDiagFunc: validateCloudProjectDatabaseKafkaTopicMinInsyncReplicasFunc,
@@ -62,7 +64,6 @@ func resourceCloudProjectDatabaseKafkaTopic() *schema.Resource {
 			"partitions": {
 				Type:             schema.TypeInt,
 				Description:      "Number of partitions for this topic",
-				ForceNew:         true,
 				Optional:         true,
 				Computed:         true,
 				ValidateDiagFunc: validateCloudProjectDatabaseKafkaTopicPartitionsFunc,
@@ -70,7 +71,6 @@ func resourceCloudProjectDatabaseKafkaTopic() *schema.Resource {
 			"replication": {
 				Type:             schema.TypeInt,
 				Description:      "Number of replication for this topic",
-				ForceNew:         true,
 				Optional:         true,
 				Computed:         true,
 				ValidateDiagFunc: validateCloudProjectDatabaseKafkaTopicReplicationFunc,
@@ -78,19 +78,22 @@ func resourceCloudProjectDatabaseKafkaTopic() *schema.Resource {
 			"retention_bytes": {
 				Type:        schema.TypeInt,
 				Description: "Number of bytes for the retention of the data for this topic",
-				ForceNew:    true,
 				Optional:    true,
 				Computed:    true,
 			},
 			"retention_hours": {
 				Type:             schema.TypeInt,
 				Description:      "Number of hours for the retention of the data for this topic",
-				ForceNew:         true,
 				Optional:         true,
 				Computed:         true,
 				ValidateDiagFunc: validateCloudProjectDatabaseKafkaTopicRetentionHoursFunc,
 			},
 		},
+
+		// Partitions can only be increased
+		CustomizeDiff: customdiff.ForceNewIfChange("partitions", func(ctx context.Context, old, new, meta interface{}) bool {
+			return new.(int) < old.(int)
+		}),
 	}
 }
 
@@ -184,6 +187,28 @@ func resourceCloudProjectDatabaseKafkaTopicRead(ctx context.Context, d *schema.R
 	}
 
 	return nil
+}
+
+func resourceCloudProjectDatabaseKafkaTopicUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	config := meta.(*Config)
+	serviceName := d.Get("service_name").(string)
+	clusterID := d.Get("cluster_id").(string)
+	id := d.Id()
+
+	endpoint := fmt.Sprintf("/cloud/project/%s/database/kafka/%s/topic/%s",
+		url.PathEscape(serviceName),
+		url.PathEscape(clusterID),
+		url.PathEscape(id),
+	)
+	params := (&CloudProjectDatabaseKafkaTopicUpdateOpts{}).FromResource(d)
+
+	log.Printf("[DEBUG] Will update topic %s from cluster %s from project %s", id, clusterID, serviceName)
+	err := config.OVHClient.PutWithContext(ctx, endpoint, params, nil)
+	if err != nil {
+		return diag.Errorf("calling Put %s with params %+v:\n\t %q", endpoint, params, err)
+	}
+
+	return resourceCloudProjectDatabaseKafkaTopicRead(ctx, d, meta)
 }
 
 func resourceCloudProjectDatabaseKafkaTopicDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
