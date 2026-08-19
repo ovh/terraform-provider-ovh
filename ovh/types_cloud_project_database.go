@@ -1658,6 +1658,24 @@ func (opts *CloudProjectDatabaseKafkaTopicCreateOpts) FromResource(d *schema.Res
 	return opts
 }
 
+type CloudProjectDatabaseKafkaTopicUpdateOpts struct {
+	MinInsyncReplicas int `json:"minInsyncReplicas"`
+	Partitions        int `json:"partitions"`
+	Replication       int `json:"replication"`
+	RetentionBytes    int `json:"retentionBytes"`
+	RetentionHours    int `json:"retentionHours"`
+}
+
+func (opts *CloudProjectDatabaseKafkaTopicUpdateOpts) FromResource(d *schema.ResourceData) *CloudProjectDatabaseKafkaTopicUpdateOpts {
+	opts.MinInsyncReplicas = d.Get("min_insync_replicas").(int)
+	opts.Partitions = d.Get("partitions").(int)
+	opts.Replication = d.Get("replication").(int)
+	opts.RetentionBytes = d.Get("retention_bytes").(int)
+	opts.RetentionHours = d.Get("retention_hours").(int)
+
+	return opts
+}
+
 func validateIsSupEqual(v, min int) (diags diag.Diagnostics) {
 	if v < min {
 		diags = append(diags, diag.Diagnostic{
