@@ -41,6 +41,11 @@ type VPSProperties struct {
 	DisplayName    *string `json:"displayName"`
 }
 
+type VPSImage struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
 func ovhvps_getType(offertype string, model_name string, model_version string) string {
 	var offertypeToOfferPrefix = make(map[string]string)
 	offertypeToOfferPrefix["cloud"] = "ceph-nvme"
