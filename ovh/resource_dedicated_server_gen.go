@@ -697,6 +697,87 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 				stringplanmodifier.UseStateForUnknown(),
 			},
 		},
+		"ips": schema.ListAttribute{
+			CustomType:          ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+			Computed:            true,
+			Description:         "Dedicated server ip blocks",
+			MarkdownDescription: "Dedicated server ip blocks",
+			ElementType:         ovhtypes.TfStringType{},
+		},
+		"vnis": schema.ListNestedAttribute{
+			NestedObject: schema.NestedAttributeObject{
+				Attributes: map[string]schema.Attribute{
+					"enabled": schema.BoolAttribute{
+						CustomType:          ovhtypes.TfBoolType{},
+						Computed:            true,
+						Description:         "VirtualNetworkInterface activation state",
+						MarkdownDescription: "VirtualNetworkInterface activation state",
+					},
+					"mode": schema.StringAttribute{
+						CustomType:          ovhtypes.TfStringType{},
+						Computed:            true,
+						Description:         "VirtualNetworkInterface mode (public,vrack,vrack_aggregation)",
+						MarkdownDescription: "VirtualNetworkInterface mode (public,vrack,vrack_aggregation)",
+					},
+					"name": schema.StringAttribute{
+						CustomType:          ovhtypes.TfStringType{},
+						Computed:            true,
+						Description:         "User defined VirtualNetworkInterface name",
+						MarkdownDescription: "User defined VirtualNetworkInterface name",
+					},
+					"uuid": schema.StringAttribute{
+						CustomType:          ovhtypes.TfStringType{},
+						Computed:            true,
+						Description:         "VirtualNetworkInterface unique id",
+						MarkdownDescription: "VirtualNetworkInterface unique id",
+					},
+					"server_name": schema.StringAttribute{
+						CustomType:          ovhtypes.TfStringType{},
+						Computed:            true,
+						Description:         "Server name",
+						MarkdownDescription: "Server name",
+					},
+					"vrack": schema.StringAttribute{
+						CustomType:          ovhtypes.TfStringType{},
+						Computed:            true,
+						Description:         "vRack name",
+						MarkdownDescription: "vRack name",
+					},
+					"nics": schema.ListAttribute{
+						CustomType:          ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+						Computed:            true,
+						Description:         "NetworkInterfaceControllers bound to this VirtualNetworkInterface",
+						MarkdownDescription: "NetworkInterfaceControllers bound to this VirtualNetworkInterface",
+						ElementType:         ovhtypes.TfStringType{},
+					},
+				},
+			},
+			CustomType:          ovhtypes.NewTfListNestedType[VniValue](ctx),
+			Computed:            true,
+			Description:         "The list of VirtualNetworkInterface associated with this server",
+			MarkdownDescription: "The list of VirtualNetworkInterface associated with this server",
+		},
+		"enabled_vrack_vnis": schema.ListAttribute{
+			CustomType:          ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+			Computed:            true,
+			Description:         "List of enabled vrack VNI uuids",
+			MarkdownDescription: "List of enabled vrack VNI uuids",
+			ElementType:         ovhtypes.TfStringType{},
+		},
+		"enabled_vrack_aggregation_vnis": schema.ListAttribute{
+			CustomType:          ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+			Computed:            true,
+			Description:         "List of enabled vrack_aggregation VNI uuids",
+			MarkdownDescription: "List of enabled vrack_aggregation VNI uuids",
+			ElementType:         ovhtypes.TfStringType{},
+		},
+		"enabled_public_vnis": schema.ListAttribute{
+			CustomType:          ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+			Computed:            true,
+			Description:         "List of enabled public VNI uuids",
+			MarkdownDescription: "List of enabled public VNI uuids",
+			ElementType:         ovhtypes.TfStringType{},
+		},
 	}
 	for k, v := range OrderResourceSchema(ctx).Attributes {
 		attrs[k] = v
@@ -708,46 +789,51 @@ func DedicatedServerResourceSchema(ctx context.Context) schema.Schema {
 }
 
 type DedicatedServerModel struct {
-	ID                      ovhtypes.TfStringValue                             `tfsdk:"id" json:"-"`
-	AvailabilityZone        ovhtypes.TfStringValue                             `tfsdk:"availability_zone" json:"availabilityZone"`
-	BootId                  ovhtypes.TfInt64Value                              `tfsdk:"boot_id" json:"bootId"`
-	BootScript              ovhtypes.TfStringValue                             `tfsdk:"boot_script" json:"bootScript"`
-	CommercialRange         ovhtypes.TfStringValue                             `tfsdk:"commercial_range" json:"commercialRange"`
-	Customizations          CustomizationsValue                                `tfsdk:"customizations" json:"customizations"`
-	Datacenter              ovhtypes.TfStringValue                             `tfsdk:"datacenter" json:"datacenter"`
-	DisplayName             ovhtypes.TfStringValue                             `tfsdk:"display_name" json:"displayName"`
-	EfiBootloaderPath       ovhtypes.TfStringValue                             `tfsdk:"efi_bootloader_path" json:"efiBootloaderPath"`
-	Iam                     IamValue                                           `tfsdk:"iam" json:"iam"`
-	Ip                      ovhtypes.TfStringValue                             `tfsdk:"ip" json:"ip"`
-	LinkSpeed               ovhtypes.TfInt64Value                              `tfsdk:"link_speed" json:"linkSpeed"`
-	Monitoring              ovhtypes.TfBoolValue                               `tfsdk:"monitoring" json:"monitoring"`
-	Name                    ovhtypes.TfStringValue                             `tfsdk:"name" json:"name"`
-	NewUpgradeSystem        ovhtypes.TfBoolValue                               `tfsdk:"new_upgrade_system" json:"newUpgradeSystem"`
-	NoIntervention          ovhtypes.TfBoolValue                               `tfsdk:"no_intervention" json:"noIntervention"`
-	Os                      ovhtypes.TfStringValue                             `tfsdk:"os" json:"os"`
-	PowerState              ovhtypes.TfStringValue                             `tfsdk:"power_state" json:"powerState"`
-	ProfessionalUse         ovhtypes.TfBoolValue                               `tfsdk:"professional_use" json:"professionalUse"`
-	Properties              ovhtypes.TfMapNestedValue[ovhtypes.TfStringValue]  `tfsdk:"properties" json:"properties"`
-	Rack                    ovhtypes.TfStringValue                             `tfsdk:"rack" json:"rack"`
-	PreventInstallOnCreate  ovhtypes.TfBoolValue                               `tfsdk:"prevent_install_on_create" json:"-"`
-	PreventInstallOnImport  ovhtypes.TfBoolValue                               `tfsdk:"prevent_install_on_import" json:"-"`
-	Range                   ovhtypes.TfStringValue                             `tfsdk:"range" json:"-"`
-	Region                  ovhtypes.TfStringValue                             `tfsdk:"region" json:"region"`
-	RescueMail              ovhtypes.TfStringValue                             `tfsdk:"rescue_mail" json:"rescueMail"`
-	RescueSshKey            ovhtypes.TfStringValue                             `tfsdk:"rescue_ssh_key" json:"rescueSshKey"`
-	Reverse                 ovhtypes.TfStringValue                             `tfsdk:"reverse" json:"reverse"`
-	RootDevice              ovhtypes.TfStringValue                             `tfsdk:"root_device" json:"rootDevice"`
-	ServerId                ovhtypes.TfInt64Value                              `tfsdk:"server_id" json:"serverId"`
-	ServiceName             ovhtypes.TfStringValue                             `tfsdk:"service_name" json:"serviceName"`
-	State                   ovhtypes.TfStringValue                             `tfsdk:"state" json:"state"`
-	SupportLevel            ovhtypes.TfStringValue                             `tfsdk:"support_level" json:"supportLevel"`
-	Storage                 ovhtypes.TfListNestedValue[StorageValue]           `tfsdk:"storage" json:"storage"`
-	KeepServiceAfterDestroy ovhtypes.TfBoolValue                               `tfsdk:"keep_service_after_destroy" json:"-"`
-	RunActionsBeforeDestroy ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] `tfsdk:"run_actions_before_destroy" json:"-"`
-	Order                   OrderValue                                         `tfsdk:"order" json:"order"`
-	OvhSubsidiary           ovhtypes.TfStringValue                             `tfsdk:"ovh_subsidiary" json:"ovhSubsidiary"`
-	Plan                    ovhtypes.TfListNestedValue[PlanValue]              `tfsdk:"plan" json:"plan"`
-	PlanOption              ovhtypes.TfListNestedValue[PlanOptionValue]        `tfsdk:"plan_option" json:"planOption"`
+	ID                          ovhtypes.TfStringValue                             `tfsdk:"id" json:"-"`
+	AvailabilityZone            ovhtypes.TfStringValue                             `tfsdk:"availability_zone" json:"availabilityZone"`
+	BootId                      ovhtypes.TfInt64Value                              `tfsdk:"boot_id" json:"bootId"`
+	BootScript                  ovhtypes.TfStringValue                             `tfsdk:"boot_script" json:"bootScript"`
+	CommercialRange             ovhtypes.TfStringValue                             `tfsdk:"commercial_range" json:"commercialRange"`
+	Customizations              CustomizationsValue                                `tfsdk:"customizations" json:"customizations"`
+	Datacenter                  ovhtypes.TfStringValue                             `tfsdk:"datacenter" json:"datacenter"`
+	DisplayName                 ovhtypes.TfStringValue                             `tfsdk:"display_name" json:"displayName"`
+	EfiBootloaderPath           ovhtypes.TfStringValue                             `tfsdk:"efi_bootloader_path" json:"efiBootloaderPath"`
+	Iam                         IamValue                                           `tfsdk:"iam" json:"iam"`
+	Ip                          ovhtypes.TfStringValue                             `tfsdk:"ip" json:"ip"`
+	Ips                         ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] `tfsdk:"ips" json:"ips"`
+	LinkSpeed                   ovhtypes.TfInt64Value                              `tfsdk:"link_speed" json:"linkSpeed"`
+	Monitoring                  ovhtypes.TfBoolValue                               `tfsdk:"monitoring" json:"monitoring"`
+	Name                        ovhtypes.TfStringValue                             `tfsdk:"name" json:"name"`
+	NewUpgradeSystem            ovhtypes.TfBoolValue                               `tfsdk:"new_upgrade_system" json:"newUpgradeSystem"`
+	NoIntervention              ovhtypes.TfBoolValue                               `tfsdk:"no_intervention" json:"noIntervention"`
+	Os                          ovhtypes.TfStringValue                             `tfsdk:"os" json:"os"`
+	PowerState                  ovhtypes.TfStringValue                             `tfsdk:"power_state" json:"powerState"`
+	ProfessionalUse             ovhtypes.TfBoolValue                               `tfsdk:"professional_use" json:"professionalUse"`
+	Properties                  ovhtypes.TfMapNestedValue[ovhtypes.TfStringValue]  `tfsdk:"properties" json:"properties"`
+	Rack                        ovhtypes.TfStringValue                             `tfsdk:"rack" json:"rack"`
+	PreventInstallOnCreate      ovhtypes.TfBoolValue                               `tfsdk:"prevent_install_on_create" json:"-"`
+	PreventInstallOnImport      ovhtypes.TfBoolValue                               `tfsdk:"prevent_install_on_import" json:"-"`
+	Range                       ovhtypes.TfStringValue                             `tfsdk:"range" json:"-"`
+	Region                      ovhtypes.TfStringValue                             `tfsdk:"region" json:"region"`
+	RescueMail                  ovhtypes.TfStringValue                             `tfsdk:"rescue_mail" json:"rescueMail"`
+	RescueSshKey                ovhtypes.TfStringValue                             `tfsdk:"rescue_ssh_key" json:"rescueSshKey"`
+	Reverse                     ovhtypes.TfStringValue                             `tfsdk:"reverse" json:"reverse"`
+	RootDevice                  ovhtypes.TfStringValue                             `tfsdk:"root_device" json:"rootDevice"`
+	ServerId                    ovhtypes.TfInt64Value                              `tfsdk:"server_id" json:"serverId"`
+	ServiceName                 ovhtypes.TfStringValue                             `tfsdk:"service_name" json:"serviceName"`
+	State                       ovhtypes.TfStringValue                             `tfsdk:"state" json:"state"`
+	SupportLevel                ovhtypes.TfStringValue                             `tfsdk:"support_level" json:"supportLevel"`
+	Storage                     ovhtypes.TfListNestedValue[StorageValue]           `tfsdk:"storage" json:"storage"`
+	Vnis                        ovhtypes.TfListNestedValue[VniValue]               `tfsdk:"vnis" json:"vnis"`
+	EnabledVrackVnis            ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] `tfsdk:"enabled_vrack_vnis" json:"enabledVrackVnis"`
+	EnabledVrackAggregationVnis ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] `tfsdk:"enabled_vrack_aggregation_vnis" json:"enabledVrackAggregationVnis"`
+	EnabledPublicVnis           ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] `tfsdk:"enabled_public_vnis" json:"enabledPublicVnis"`
+	KeepServiceAfterDestroy     ovhtypes.TfBoolValue                               `tfsdk:"keep_service_after_destroy" json:"-"`
+	RunActionsBeforeDestroy     ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] `tfsdk:"run_actions_before_destroy" json:"-"`
+	Order                       OrderValue                                         `tfsdk:"order" json:"order"`
+	OvhSubsidiary               ovhtypes.TfStringValue                             `tfsdk:"ovh_subsidiary" json:"ovhSubsidiary"`
+	Plan                        ovhtypes.TfListNestedValue[PlanValue]              `tfsdk:"plan" json:"plan"`
+	PlanOption                  ovhtypes.TfListNestedValue[PlanOptionValue]        `tfsdk:"plan_option" json:"planOption"`
 }
 
 func (v *DedicatedServerModel) MergeWith(other *DedicatedServerModel) {
@@ -893,6 +979,26 @@ func (v *DedicatedServerModel) MergeWith(other *DedicatedServerModel) {
 
 	if (v.SupportLevel.IsUnknown() || v.SupportLevel.IsNull()) && !other.SupportLevel.IsUnknown() {
 		v.SupportLevel = other.SupportLevel
+	}
+
+	if (v.Ips.IsUnknown() || v.Ips.IsNull()) && !other.Ips.IsUnknown() {
+		v.Ips = other.Ips
+	}
+
+	if (v.Vnis.IsUnknown() || v.Vnis.IsNull()) && !other.Vnis.IsUnknown() {
+		v.Vnis = other.Vnis
+	}
+
+	if (v.EnabledVrackVnis.IsUnknown() || v.EnabledVrackVnis.IsNull()) && !other.EnabledVrackVnis.IsUnknown() {
+		v.EnabledVrackVnis = other.EnabledVrackVnis
+	}
+
+	if (v.EnabledVrackAggregationVnis.IsUnknown() || v.EnabledVrackAggregationVnis.IsNull()) && !other.EnabledVrackAggregationVnis.IsUnknown() {
+		v.EnabledVrackAggregationVnis = other.EnabledVrackAggregationVnis
+	}
+
+	if (v.EnabledPublicVnis.IsUnknown() || v.EnabledPublicVnis.IsNull()) && !other.EnabledPublicVnis.IsUnknown() {
+		v.EnabledPublicVnis = other.EnabledPublicVnis
 	}
 
 	if (v.KeepServiceAfterDestroy.IsUnknown() || v.KeepServiceAfterDestroy.IsNull()) && !other.KeepServiceAfterDestroy.IsUnknown() {
@@ -5702,5 +5808,679 @@ func (v StoragePartitioningLayoutExtrasZpValue) Type(ctx context.Context) attr.T
 func (v StoragePartitioningLayoutExtrasZpValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
 	return map[string]attr.Type{
 		"name": ovhtypes.TfStringType{},
+	}
+}
+
+var _ basetypes.ObjectTypable = VniType{}
+
+type VniType struct {
+	basetypes.ObjectType
+}
+
+func (t VniType) Equal(o attr.Type) bool {
+	other, ok := o.(VniType)
+
+	if !ok {
+		return false
+	}
+
+	return t.ObjectType.Equal(other.ObjectType)
+}
+
+func (t VniType) String() string {
+	return "VniType"
+}
+
+func (t VniType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	attributes := in.Attributes()
+
+	enabledAttribute, ok := attributes["enabled"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`enabled is missing from object`)
+
+		return nil, diags
+	}
+
+	enabledVal, ok := enabledAttribute.(ovhtypes.TfBoolValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`enabled expected to be ovhtypes.TfBoolValue, was: %T`, enabledAttribute))
+	}
+
+	modeAttribute, ok := attributes["mode"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`mode is missing from object`)
+
+		return nil, diags
+	}
+
+	modeVal, ok := modeAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`mode expected to be ovhtypes.TfStringValue, was: %T`, modeAttribute))
+	}
+
+	nameAttribute, ok := attributes["name"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`name is missing from object`)
+
+		return nil, diags
+	}
+
+	nameVal, ok := nameAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`name expected to be ovhtypes.TfStringValue, was: %T`, nameAttribute))
+	}
+
+	uuidAttribute, ok := attributes["uuid"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`uuid is missing from object`)
+
+		return nil, diags
+	}
+
+	uuidVal, ok := uuidAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`uuid expected to be ovhtypes.TfStringValue, was: %T`, uuidAttribute))
+	}
+
+	serverNameAttribute, ok := attributes["server_name"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`server_name is missing from object`)
+
+		return nil, diags
+	}
+
+	serverNameVal, ok := serverNameAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`server_name expected to be ovhtypes.TfStringValue, was: %T`, serverNameAttribute))
+	}
+
+	vrackAttribute, ok := attributes["vrack"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`vrack is missing from object`)
+
+		return nil, diags
+	}
+
+	vrackVal, ok := vrackAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`vrack expected to be ovhtypes.TfStringValue, was: %T`, vrackAttribute))
+	}
+
+	nicsAttribute, ok := attributes["nics"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`nics is missing from object`)
+
+		return nil, diags
+	}
+
+	nicsVal, ok := nicsAttribute.(ovhtypes.TfListNestedValue[ovhtypes.TfStringValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`nics expected to be ovhtypes.TfListNestedValue[ovhtypes.TfStringValue], was: %T`, nicsAttribute))
+	}
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return VniValue{
+		Enabled:    enabledVal,
+		Mode:       modeVal,
+		Name:       nameVal,
+		Uuid:       uuidVal,
+		ServerName: serverNameVal,
+		Vrack:      vrackVal,
+		Nics:       nicsVal,
+		state:      attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVniValueNull() VniValue {
+	return VniValue{
+		state: attr.ValueStateNull,
+	}
+}
+
+func NewVniValueUnknown() VniValue {
+	return VniValue{
+		state: attr.ValueStateUnknown,
+	}
+}
+
+func NewVniValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (VniValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	ctx := context.Background()
+
+	for name, attributeType := range attributeTypes {
+		attribute, ok := attributes[name]
+
+		if !ok {
+			diags.AddError(
+				"Missing VniValue Attribute Value",
+				"While creating a VniValue value, a missing attribute value was detected. "+
+					"A VniValue must contain values for all attributes, even if null or unknown. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VniValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
+			)
+
+			continue
+		}
+
+		if !attributeType.Equal(attribute.Type(ctx)) {
+			diags.AddError(
+				"Invalid VniValue Attribute Type",
+				"While creating a VniValue value, an invalid attribute value was detected. "+
+					"A VniValue must use a matching attribute type for the value. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VniValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
+					fmt.Sprintf("VniValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
+			)
+		}
+	}
+
+	for name := range attributes {
+		_, ok := attributeTypes[name]
+
+		if !ok {
+			diags.AddError(
+				"Extra VniValue Attribute Value",
+				"While creating a VniValue value, an extra attribute value was detected. "+
+					"A VniValue must not contain values beyond the expected attribute types. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("Extra VniValue Attribute Name: %s", name),
+			)
+		}
+	}
+
+	if diags.HasError() {
+		return NewVniValueUnknown(), diags
+	}
+
+	enabledAttribute, ok := attributes["enabled"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`enabled is missing from object`)
+
+		return NewVniValueUnknown(), diags
+	}
+
+	enabledVal, ok := enabledAttribute.(ovhtypes.TfBoolValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`enabled expected to be ovhtypes.TfBoolValue, was: %T`, enabledAttribute))
+	}
+
+	modeAttribute, ok := attributes["mode"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`mode is missing from object`)
+
+		return NewVniValueUnknown(), diags
+	}
+
+	modeVal, ok := modeAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`mode expected to be ovhtypes.TfStringValue, was: %T`, modeAttribute))
+	}
+
+	nameAttribute, ok := attributes["name"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`name is missing from object`)
+
+		return NewVniValueUnknown(), diags
+	}
+
+	nameVal, ok := nameAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`name expected to be ovhtypes.TfStringValue, was: %T`, nameAttribute))
+	}
+
+	uuidAttribute, ok := attributes["uuid"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`uuid is missing from object`)
+
+		return NewVniValueUnknown(), diags
+	}
+
+	uuidVal, ok := uuidAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`uuid expected to be ovhtypes.TfStringValue, was: %T`, uuidAttribute))
+	}
+
+	serverNameAttribute, ok := attributes["server_name"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`server_name is missing from object`)
+
+		return NewVniValueUnknown(), diags
+	}
+
+	serverNameVal, ok := serverNameAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`server_name expected to be ovhtypes.TfStringValue, was: %T`, serverNameAttribute))
+	}
+
+	vrackAttribute, ok := attributes["vrack"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`vrack is missing from object`)
+
+		return NewVniValueUnknown(), diags
+	}
+
+	vrackVal, ok := vrackAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`vrack expected to be ovhtypes.TfStringValue, was: %T`, vrackAttribute))
+	}
+
+	nicsAttribute, ok := attributes["nics"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`nics is missing from object`)
+
+		return NewVniValueUnknown(), diags
+	}
+
+	nicsVal, ok := nicsAttribute.(ovhtypes.TfListNestedValue[ovhtypes.TfStringValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`nics expected to be ovhtypes.TfListNestedValue[ovhtypes.TfStringValue], was: %T`, nicsAttribute))
+	}
+
+	if diags.HasError() {
+		return NewVniValueUnknown(), diags
+	}
+
+	return VniValue{
+		Enabled:    enabledVal,
+		Mode:       modeVal,
+		Name:       nameVal,
+		Uuid:       uuidVal,
+		ServerName: serverNameVal,
+		Vrack:      vrackVal,
+		Nics:       nicsVal,
+		state:      attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVniValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) VniValue {
+	object, diags := NewVniValue(attributeTypes, attributes)
+
+	if diags.HasError() {
+		diagsStrings := make([]string, 0, len(diags))
+
+		for _, diagnostic := range diags {
+			diagsStrings = append(diagsStrings, fmt.Sprintf(
+				"%s | %s | %s",
+				diagnostic.Severity(),
+				diagnostic.Summary(),
+				diagnostic.Detail()))
+		}
+
+		panic("NewVniValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
+	}
+
+	return object
+}
+
+func (t VniType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+	if in.Type() == nil {
+		return NewVniValueNull(), nil
+	}
+
+	if !in.Type().Equal(t.TerraformType(ctx)) {
+		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
+	}
+
+	if !in.IsKnown() {
+		return NewVniValueUnknown(), nil
+	}
+
+	if in.IsNull() {
+		return NewVniValueNull(), nil
+	}
+
+	attributes := map[string]attr.Value{}
+
+	val := map[string]tftypes.Value{}
+
+	err := in.As(&val)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range val {
+		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
+
+		if err != nil {
+			return nil, err
+		}
+
+		attributes[k] = a
+	}
+
+	return NewVniValueMust(VniValue{}.AttributeTypes(ctx), attributes), nil
+}
+
+func (t VniType) ValueType(ctx context.Context) attr.Value {
+	return VniValue{}
+}
+
+var _ basetypes.ObjectValuable = VniValue{}
+
+type VniValue struct {
+	Enabled    ovhtypes.TfBoolValue                               `tfsdk:"enabled" json:"enabled"`
+	Mode       ovhtypes.TfStringValue                             `tfsdk:"mode" json:"mode"`
+	Name       ovhtypes.TfStringValue                             `tfsdk:"name" json:"name"`
+	Uuid       ovhtypes.TfStringValue                             `tfsdk:"uuid" json:"uuid"`
+	ServerName ovhtypes.TfStringValue                             `tfsdk:"server_name" json:"serverName"`
+	Vrack      ovhtypes.TfStringValue                             `tfsdk:"vrack" json:"vrack"`
+	Nics       ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] `tfsdk:"nics" json:"nics"`
+	state      attr.ValueState
+}
+
+func (v VniValue) Attributes() map[string]attr.Value {
+	return map[string]attr.Value{
+		"enabled":     v.Enabled,
+		"mode":        v.Mode,
+		"name":        v.Name,
+		"uuid":        v.Uuid,
+		"server_name": v.ServerName,
+		"vrack":       v.Vrack,
+		"nics":        v.Nics,
+	}
+}
+
+func (v *VniValue) MergeWith(other *VniValue) {
+	if (v.Enabled.IsUnknown() || v.Enabled.IsNull()) && !other.Enabled.IsUnknown() {
+		v.Enabled = other.Enabled
+	}
+
+	if (v.Mode.IsUnknown() || v.Mode.IsNull()) && !other.Mode.IsUnknown() {
+		v.Mode = other.Mode
+	}
+
+	if (v.Name.IsUnknown() || v.Name.IsNull()) && !other.Name.IsUnknown() {
+		v.Name = other.Name
+	}
+
+	if (v.Uuid.IsUnknown() || v.Uuid.IsNull()) && !other.Uuid.IsUnknown() {
+		v.Uuid = other.Uuid
+	}
+
+	if (v.ServerName.IsUnknown() || v.ServerName.IsNull()) && !other.ServerName.IsUnknown() {
+		v.ServerName = other.ServerName
+	}
+
+	if (v.Vrack.IsUnknown() || v.Vrack.IsNull()) && !other.Vrack.IsUnknown() {
+		v.Vrack = other.Vrack
+	}
+
+	if (v.Nics.IsUnknown() || v.Nics.IsNull()) && !other.Nics.IsUnknown() {
+		v.Nics = other.Nics
+	}
+
+	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
+		v.state = other.state
+	}
+}
+
+func (v VniValue) IsNull() bool {
+	return v.state == attr.ValueStateNull
+}
+
+func (v VniValue) IsUnknown() bool {
+	return v.state == attr.ValueStateUnknown
+}
+
+func (v VniValue) String() string {
+	return "VniValue"
+}
+
+func (v VniValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	objVal, diags := types.ObjectValue(
+		map[string]attr.Type{
+			"enabled":     ovhtypes.TfBoolType{},
+			"mode":        ovhtypes.TfStringType{},
+			"name":        ovhtypes.TfStringType{},
+			"uuid":        ovhtypes.TfStringType{},
+			"server_name": ovhtypes.TfStringType{},
+			"vrack":       ovhtypes.TfStringType{},
+			"nics":        ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+		},
+		map[string]attr.Value{
+			"enabled":     v.Enabled,
+			"mode":        v.Mode,
+			"name":        v.Name,
+			"uuid":        v.Uuid,
+			"server_name": v.ServerName,
+			"vrack":       v.Vrack,
+			"nics":        v.Nics,
+		})
+
+	return objVal, diags
+}
+
+func (v VniValue) Equal(o attr.Value) bool {
+	other, ok := o.(VniValue)
+
+	if !ok {
+		return false
+	}
+
+	if v.state != other.state {
+		return false
+	}
+
+	if v.state != attr.ValueStateKnown {
+		return true
+	}
+
+	if !v.Enabled.Equal(other.Enabled) {
+		return false
+	}
+
+	if !v.Mode.Equal(other.Mode) {
+		return false
+	}
+
+	if !v.Name.Equal(other.Name) {
+		return false
+	}
+
+	if !v.Uuid.Equal(other.Uuid) {
+		return false
+	}
+
+	if !v.ServerName.Equal(other.ServerName) {
+		return false
+	}
+
+	if !v.Vrack.Equal(other.Vrack) {
+		return false
+	}
+
+	if !v.Nics.Equal(other.Nics) {
+		return false
+	}
+
+	return true
+}
+
+func (v VniValue) Type(ctx context.Context) attr.Type {
+	return VniType{
+		basetypes.ObjectType{
+			AttrTypes: v.AttributeTypes(ctx),
+		},
+	}
+}
+
+func (v VniValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
+	return map[string]attr.Type{
+		"enabled":     ovhtypes.TfBoolType{},
+		"mode":        ovhtypes.TfStringType{},
+		"name":        ovhtypes.TfStringType{},
+		"uuid":        ovhtypes.TfStringType{},
+		"server_name": ovhtypes.TfStringType{},
+		"vrack":       ovhtypes.TfStringType{},
+		"nics":        ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+	}
+}
+
+func (v VniValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
+	attrTypes := make(map[string]tftypes.Type, 7)
+
+	var val tftypes.Value
+	var err error
+
+	attrTypes["enabled"] = basetypes.BoolType{}.TerraformType(ctx)
+	attrTypes["mode"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["name"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["uuid"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["server_name"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["vrack"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["nics"] = ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx).TerraformType(ctx)
+
+	objectType := tftypes.Object{AttributeTypes: attrTypes}
+
+	switch v.state {
+	case attr.ValueStateKnown:
+		vals := make(map[string]tftypes.Value, 7)
+
+		val, err = v.Enabled.ToTerraformValue(ctx)
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+		vals["enabled"] = val
+
+		val, err = v.Mode.ToTerraformValue(ctx)
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+		vals["mode"] = val
+
+		val, err = v.Name.ToTerraformValue(ctx)
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+		vals["name"] = val
+
+		val, err = v.Uuid.ToTerraformValue(ctx)
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+		vals["uuid"] = val
+
+		val, err = v.ServerName.ToTerraformValue(ctx)
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+		vals["server_name"] = val
+
+		val, err = v.Vrack.ToTerraformValue(ctx)
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+		vals["vrack"] = val
+
+		val, err = v.Nics.ToTerraformValue(ctx)
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+		vals["nics"] = val
+
+		if err := tftypes.ValidateValue(objectType, vals); err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		return tftypes.NewValue(objectType, vals), nil
+	case attr.ValueStateNull:
+		return tftypes.NewValue(objectType, nil), nil
+	case attr.ValueStateUnknown:
+		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
+	default:
+		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
 	}
 }
