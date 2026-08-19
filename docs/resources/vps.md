@@ -99,7 +99,7 @@ The following attributes are exported:
   * `name` - Plan code of the VPS
   * `offer` - Description of this VPS offer
   * `vcore` - Number of vcores
-  * `version` - All versions that VPS can have (2013v1┃2014v1┃2015v1┃2017v1┃2017v2┃2017v3┃2018v1┃2018v2┃2019v1)
+  * `version` - VPS model version returned by the OVHcloud API
 * `monitoring_ip_blocks` - IP blocks for OVH monitoring servers
 * `name` - Name of the VPS
 * `netboot_mode` - VPS netboot mode (local┃rescue)

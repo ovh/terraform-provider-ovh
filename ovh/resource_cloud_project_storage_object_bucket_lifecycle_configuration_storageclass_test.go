@@ -10,9 +10,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// runStorageClassValidators runs every validator declared on a StringAttribute
-// against the given value and returns whether any error diagnostic was raised.
-func runStorageClassValidators(t *testing.T, attr schema.StringAttribute, value string) bool {
+// stringAttributeValidatorsReject runs every validator declared on a
+// StringAttribute against the given value and returns whether any error
+// diagnostic was raised.
+func stringAttributeValidatorsReject(t *testing.T, attr schema.StringAttribute, value string) bool {
 	t.Helper()
 
 	req := validator.StringRequest{
@@ -73,12 +74,12 @@ func TestStorageClassLifecycleTransitionValidator(t *testing.T) {
 
 	accepted := []string{"DEEP_ARCHIVE", "GLACIER_IR", "STANDARD", "STANDARD_IA"}
 	for _, value := range accepted {
-		if runStorageClassValidators(t, storageClass, value) {
+		if stringAttributeValidatorsReject(t, storageClass, value) {
 			t.Errorf("lifecycle transition storage_class rejected %q but it should be accepted", value)
 		}
 	}
 
-	if !runStorageClassValidators(t, storageClass, "NOPE") {
+	if !stringAttributeValidatorsReject(t, storageClass, "NOPE") {
 		t.Errorf("lifecycle transition storage_class accepted bogus value %q but it should be rejected", "NOPE")
 	}
 }
@@ -109,12 +110,12 @@ func TestStorageClassReplicationDestinationValidator(t *testing.T) {
 		"STANDARD_IA",
 	}
 	for _, value := range accepted {
-		if runStorageClassValidators(t, storageClass, value) {
+		if stringAttributeValidatorsReject(t, storageClass, value) {
 			t.Errorf("replication destination storage_class rejected %q but it should be accepted", value)
 		}
 	}
 
-	if !runStorageClassValidators(t, storageClass, "NOPE") {
+	if !stringAttributeValidatorsReject(t, storageClass, "NOPE") {
 		t.Errorf("replication destination storage_class accepted bogus value %q but it should be rejected", "NOPE")
 	}
 }
