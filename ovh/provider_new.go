@@ -235,6 +235,8 @@ func (p *OvhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 		NewCloudFloatingIPsDataSource,
 		NewCloudGatewayDataSource,
 		NewCloudGatewaysDataSource,
+		NewCloudInstanceBackupDataSource,
+		NewCloudInstanceBackupsDataSource,
 		NewCloudInstanceDataSource,
 		NewCloudInstanceFlavorDataSource,
 		NewCloudInstanceFlavorsDataSource,
@@ -351,6 +353,7 @@ func (p *OvhProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewCloudFloatingIPResource,
 		NewCloudGatewayResource,
+		NewCloudInstanceBackupResource,
 		NewCloudInstanceGroupResource,
 		NewCloudInstanceResource,
 		NewCloudNetworkPrivateVrackResource,
