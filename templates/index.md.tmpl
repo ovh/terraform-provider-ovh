@@ -146,9 +146,21 @@ The following arguments are supported:
 
 * `user_agent_extra` - (Optional) Extra information to append at the end of the user-agent used when making API calls.
 
+* `http_headers` - (Optional) A map of extra HTTP headers to add to every request made to the OVH API. Example:
+
+```hcl
+provider "ovh" {
+  http_headers = {
+    foo = "bar"
+  }
+}
+```
+
+  If omitted, headers can instead be set via numbered `OVH_HTTP_HEADERS_0`, `OVH_HTTP_HEADERS_1`, ... environment variables, each formatted as a raw HTTP header line (e.g. `OVH_HTTP_HEADERS_0="foo: bar"`). This is mainly useful for injecting headers in acceptance tests (`make testacc`) without editing the test's provider configuration.
+
 * `api_rate_limit` - (Optional) Specify the API request rate limit, X operations by seconds. If omitted, unlimited.
 
-* `ignore_init_error` - (Optional) **⚠️ Use with caution and only if you know what you are doing.** If set to `true`, the provider will skip authentication validation during initialization. If omitted, the `OVH_IGNORE_INIT_ERROR` environment variable is used. This allows the provider to load even with invalid credentials, but any actual API calls will still fail. This is intended for development/testing purposes only where valid credentials are not available but the provider configuration must be present.
+* `ignore_init_error` - (Optional) **⚠️ Use with caution and only if you know what you are doing.** If set to `true`, the provider will not send the `/auth/details` validation request at all during initialization. If omitted, the `OVH_IGNORE_INIT_ERROR` environment variable is used. This allows the provider to load even with invalid or absent credentials, but any actual API calls will still fail unless the target endpoint doesn't require authentication. This is intended for development/testing purposes only where valid credentials are not available but the provider configuration must be present.
 
 ## Terraform State storage in an OVHcloud Object Storage (S3 compatibility)
 

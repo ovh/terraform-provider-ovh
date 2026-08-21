@@ -35,6 +35,9 @@ var (
 		// Extra info in user-agent
 		"user_agent_extra": "Extra information to append to the user-agent",
 
+		// Extra HTTP headers
+		"http_headers": "Extra HTTP headers to add to every request made to the OVH API",
+
 		// Ignore initialization errors
 		"ignore_init_error": "If set to true, initialization errors (like invalid OAuth credentials) will be ignored",
 
@@ -86,6 +89,12 @@ func Provider() *schema.Provider {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: descriptions["user_agent_extra"],
+			},
+			"http_headers": {
+				Type:        schema.TypeMap,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				Description: descriptions["http_headers"],
 			},
 			"ignore_init_error": {
 				Type:        schema.TypeBool,
@@ -345,6 +354,15 @@ func ConfigureContextFunc(context context.Context, d *schema.ResourceData) (inte
 	}
 	if v, ok := d.GetOk("user_agent_extra"); ok {
 		config.UserAgentExtra = v.(string)
+	}
+	if v, ok := d.GetOk("http_headers"); ok {
+		headers := make(map[string]string)
+		for k, val := range v.(map[string]interface{}) {
+			headers[k] = val.(string)
+		}
+		config.HttpHeaders = headers
+	} else if headers := httpHeadersFromEnv(); headers != nil {
+		config.HttpHeaders = headers
 	}
 	if v, ok := d.GetOk("ignore_init_error"); ok {
 		config.IgnoreInitError = v.(bool)
