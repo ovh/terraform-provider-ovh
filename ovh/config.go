@@ -34,6 +34,9 @@ type Config struct {
 	// Extra user-agent information
 	UserAgentExtra string
 
+	// Extra HTTP headers to add to every request
+	HttpHeaders map[string]string
+
 	// Ignore initialization errors
 	IgnoreInitError bool
 
@@ -120,15 +123,18 @@ func (c *Config) loadAndValidate() error {
 			return fmt.Errorf("OVH client not initialized")
 		}
 
+		// Skip the /auth/details verification call entirely when
+		// OVH_IGNORE_INIT_ERROR=true, instead of sending it and discarding
+		// a failure, so no request is made at all (e.g. for endpoints that
+		// don't support this check).
+		if c.IgnoreInitError {
+			log.Printf("[WARN] ignore_init_error is set, skipping /auth/details validation")
+			// Leave c.authenticated=false so runtime calls may retry auth
+			return nil
+		}
+
 		var details OvhAuthDetails
 		if err := c.OVHClient.Get("/auth/details", &details); err != nil {
-			// Allow ignoring the /auth/details verification step when OVH_IGNORE_INIT_ERROR=true
-			// and using OAuth2 (ClientID provided).
-			if c.IgnoreInitError {
-				log.Printf("[WARN] Ignoring /auth/details verification error: %v", err)
-				// Leave c.authenticated=false so runtime calls may retry auth
-				return nil
-			}
 			c.authFailed = fmt.Errorf("OVH client seems to be misconfigured: %q", err)
 			return c.authFailed
 		}
@@ -163,8 +169,9 @@ func (c *Config) load() error {
 	}
 
 	// Chain transports: schemasVersion (adds X-Schemas-Version for /v2/ paths)
+	// → extra headers (adds user-configured HTTP headers)
 	// → logging (logs request/response) → original transport (sends over the wire).
-	httpClient.Transport = newSchemasVersionTransport(logging.NewTransport("OVH", httpClient.Transport))
+	httpClient.Transport = newSchemasVersionTransport(newHeadersTransport(c.HttpHeaders, logging.NewTransport("OVH", httpClient.Transport)))
 	c.OVHClient = ovhwrap.NewClient(targetClient, c.ApiRateLimit)
 	return nil
 }

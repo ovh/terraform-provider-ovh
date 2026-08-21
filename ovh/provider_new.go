@@ -71,6 +71,11 @@ func (p *OvhProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *
 				Optional:    true,
 				Description: descriptions["user_agent_extra"],
 			},
+			"http_headers": schema.MapAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				Description: descriptions["http_headers"],
+			},
 			"ignore_init_error": schema.BoolAttribute{
 				Optional:    true,
 				Description: descriptions["ignore_init_error"],
@@ -194,6 +199,17 @@ func (p *OvhProvider) Configure(ctx context.Context, req provider.ConfigureReque
 	}
 	if !config.UserAgentExtra.IsNull() {
 		clientConfig.UserAgentExtra = config.UserAgentExtra.ValueString()
+	}
+	if !config.HttpHeaders.IsNull() {
+		headers := make(map[string]string, len(config.HttpHeaders.Elements()))
+		diags = config.HttpHeaders.ElementsAs(ctx, &headers, false)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		clientConfig.HttpHeaders = headers
+	} else if headers := httpHeadersFromEnv(); headers != nil {
+		clientConfig.HttpHeaders = headers
 	}
 	if !config.IgnoreInitError.IsNull() {
 		clientConfig.IgnoreInitError = config.IgnoreInitError.ValueBool()
@@ -432,6 +448,7 @@ type ovhProviderModel struct {
 	ClientID          types.String `tfsdk:"client_id"`
 	ClientSecret      types.String `tfsdk:"client_secret"`
 	UserAgentExtra    types.String `tfsdk:"user_agent_extra"`
+	HttpHeaders       types.Map    `tfsdk:"http_headers"`
 	IgnoreInitError   types.Bool   `tfsdk:"ignore_init_error"`
 	ApiRateLimit      types.Int32  `tfsdk:"api_rate_limit"`
 }
