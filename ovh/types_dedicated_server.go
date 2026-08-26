@@ -149,6 +149,7 @@ func (opts *DedicatedServerReinstallTaskCreateOpts) FromResource(d *schema.Resou
 
 type DedicatedServerReinstallTaskStorage struct {
 	DiskGroupId  int                   `json:"diskGroupId,omitempty"`
+	Erase        *bool                 `json:"erase,omitempty"`
 	HardwareRaid []HardwareRaidInstall `json:"hardwareRaid,omitempty"`
 	Partitioning *Partitioning         `json:"partitioning,omitempty"`
 }
@@ -219,8 +220,12 @@ func (opts *DedicatedServerReinstallTaskCustomizations) FromResource(d *schema.R
 
 func (opts *DedicatedServerReinstallTaskStorage) FromResource(d *schema.ResourceData, parent string) *DedicatedServerReinstallTaskStorage {
 	opts.DiskGroupId = d.Get(fmt.Sprintf("%s.disk_group_id", parent)).(int)
+	opts.Erase = helpers.GetNilBoolPointerFromData(d, fmt.Sprintf("%s.erase", parent))
 
-	opts.Partitioning = (&Partitioning{}).FromResource(d, fmt.Sprintf("%s.partitioning.0", parent))
+	partitioning := d.Get(fmt.Sprintf("%s.partitioning", parent)).([]interface{})
+	if len(partitioning) >= 1 {
+		opts.Partitioning = (&Partitioning{}).FromResource(d, fmt.Sprintf("%s.partitioning.0", parent))
+	}
 
 	hardwareRaid := d.Get(fmt.Sprintf("%s.hardware_raid", parent)).([]interface{})
 	if len(hardwareRaid) >= 1 {
