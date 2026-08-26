@@ -170,7 +170,7 @@ func resourceOvhDomainZoneRecordCreate(d *schema.ResourceData, meta interface{})
 	d.SetId(strconv.FormatInt(resultRecord.Id, 10))
 
 	if err := ovhDomainZoneRefresh(d, meta); err != nil {
-		log.Printf("[WARN] OVH Domain zone refresh after record creation failed: %s", err)
+		return err
 	}
 
 	return resourceOvhDomainZoneRecordRead(d, meta)
@@ -227,7 +227,7 @@ func resourceOvhDomainZoneRecordUpdate(d *schema.ResourceData, meta interface{})
 	}
 
 	if err := ovhDomainZoneRefresh(d, meta); err != nil {
-		log.Printf("[WARN] OVH Domain zone refresh after record update failed: %s", err)
+		return err
 	}
 
 	return resourceOvhDomainZoneRecordRead(d, meta)
@@ -243,11 +243,14 @@ func resourceOvhDomainZoneRecordDelete(d *schema.ResourceData, meta interface{})
 		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
-	d.SetId("")
-
+	// Refresh before clearing the ID: if the refresh fails the record is still
+	// published, so the resource must stay in state for the next apply to retry.
+	// Deleting an already deleted record is a no-op, see helpers.CheckDeleted.
 	if err := ovhDomainZoneRefresh(d, meta); err != nil {
-		log.Printf("[WARN] OVH Domain zone refresh after record deletion failed: %s", err)
+		return err
 	}
+
+	d.SetId("")
 
 	return nil
 }
