@@ -37,15 +37,15 @@ The following arguments are supported:
 
 * `name` - (Required, Forces new resource) Name of the topic. No spaces allowed.
 
-* `min_insync_replicas` - (Optional, Forces new resource) Minimum insync replica accepted for this topic. Should be superior to 0
+* `min_insync_replicas` - (Optional) Minimum insync replica accepted for this topic. Should be superior to 0
 
-* `partitions` - (Optional, Forces new resource) Number of partitions for this topic. Should be superior to 0
+* `partitions` - (Optional) Number of partitions for this topic. Should be superior to 0. Can only be increased: lowering it forces a new resource
 
-* `replication` - (Optional, Forces new resource) Number of replication for this topic. Should be superior to 1
+* `replication` - (Optional) Number of replication for this topic. Should be superior to 1
 
-* `retention_bytes` - (Optional, Forces new resource) Number of bytes for the retention of the data for this topic. Inferior to 0 means unlimited
+* `retention_bytes` - (Optional) Number of bytes for the retention of the data for this topic. Inferior to 0 means unlimited
 
-* `retention_hours` - (Optional, Forces new resource) Number of hours for the retention of the data for this topic. Should be superior to -2. Inferior to 0 means unlimited
+* `retention_hours` - (Optional) Number of hours for the retention of the data for this topic. Should be superior to -2. Inferior to 0 means unlimited
 
 ## Attributes Reference
 
@@ -69,11 +69,13 @@ resource "ovh_cloud_project_database_kafka_topic" "topic" {
 
   timeouts {
     create = "1h"
+    update = "45m"
     delete = "45m"
   }
 }
 ```
 * `create` - (Default 20m)
+* `update` - (Default 20m)
 * `delete` - (Default 20m)
 
 ## Import
