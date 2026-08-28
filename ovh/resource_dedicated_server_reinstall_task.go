@@ -48,6 +48,12 @@ func resourceDedicatedServerReinstallTask() *schema.Resource {
 				Description: "OS reinstallation customizations",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"app_to_install": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							ForceNew:    true,
+							Description: "Application to install with the auto installer",
+						},
 						"config_drive_metadata": {
 							Type:        schema.TypeMap,
 							Optional:    true,
