@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -89,22 +90,32 @@ func (r *cloudLoadbalancerResource) Schema(ctx context.Context, req resource.Sch
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"vip_network_id": schema.StringAttribute{
-				CustomType:          ovhtypes.TfStringType{},
+			"network": schema.SingleNestedAttribute{
 				Required:            true,
-				Description:         "ID of the network for the VIP",
-				MarkdownDescription: "ID of the network for the VIP",
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+				Description:         "Network of the VIP",
+				MarkdownDescription: "Network of the VIP",
+				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.RequiresReplace(),
 				},
-			},
-			"vip_subnet_id": schema.StringAttribute{
-				CustomType:          ovhtypes.TfStringType{},
-				Required:            true,
-				Description:         "ID of the subnet for the VIP",
-				MarkdownDescription: "ID of the subnet for the VIP",
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+				Attributes: map[string]schema.Attribute{
+					"id": schema.StringAttribute{
+						CustomType:          ovhtypes.TfStringType{},
+						Required:            true,
+						Description:         "ID of the network for the VIP",
+						MarkdownDescription: "ID of the network for the VIP",
+					},
+					"subnet_id": schema.StringAttribute{
+						CustomType:          ovhtypes.TfStringType{},
+						Required:            true,
+						Description:         "ID of the subnet for the VIP",
+						MarkdownDescription: "ID of the subnet for the VIP",
+					},
+					"ip": schema.StringAttribute{
+						CustomType:          ovhtypes.TfStringType{},
+						Optional:            true,
+						Description:         "IP of the VIP. Inside the subnet CIDR it pins the fixed VIP address, outside it must be an existing floating IP to associate. Left empty, the address is picked automatically",
+						MarkdownDescription: "IP of the VIP. Inside the subnet CIDR it pins the fixed VIP address, outside it must be an existing floating IP to associate. Left empty, the address is picked automatically",
+					},
 				},
 			},
 			"flavor_name": schema.StringAttribute{
@@ -192,11 +203,6 @@ func (r *cloudLoadbalancerResource) Schema(ctx context.Context, req resource.Sch
 						Computed:    true,
 						Description: "Loadbalancer description",
 					},
-					"vip_address": schema.StringAttribute{
-						CustomType:  ovhtypes.TfStringType{},
-						Computed:    true,
-						Description: "VIP address of the loadbalancer",
-					},
 					"operating_status": schema.StringAttribute{
 						CustomType:  ovhtypes.TfStringType{},
 						Computed:    true,
@@ -217,25 +223,37 @@ func (r *cloudLoadbalancerResource) Schema(ctx context.Context, req resource.Sch
 						Computed:    true,
 						Description: "Availability zone",
 					},
-					"vip_network": schema.SingleNestedAttribute{
+					"network": schema.SingleNestedAttribute{
 						Computed:    true,
-						Description: "VIP network reference",
+						Description: "VIP network",
 						Attributes: map[string]schema.Attribute{
 							"id": schema.StringAttribute{
 								CustomType:  ovhtypes.TfStringType{},
 								Computed:    true,
 								Description: "Network ID",
 							},
-						},
-					},
-					"vip_subnet": schema.SingleNestedAttribute{
-						Computed:    true,
-						Description: "VIP subnet reference",
-						Attributes: map[string]schema.Attribute{
-							"id": schema.StringAttribute{
+							"subnet_id": schema.StringAttribute{
 								CustomType:  ovhtypes.TfStringType{},
 								Computed:    true,
 								Description: "Subnet ID",
+							},
+							"addresses": schema.ListNestedAttribute{
+								Computed:    true,
+								Description: "Addresses carried by the VIP port",
+								NestedObject: schema.NestedAttributeObject{
+									Attributes: map[string]schema.Attribute{
+										"ip": schema.StringAttribute{
+											CustomType:  ovhtypes.TfStringType{},
+											Computed:    true,
+											Description: "IP address",
+										},
+										"type": schema.StringAttribute{
+											CustomType:  ovhtypes.TfStringType{},
+											Computed:    true,
+											Description: "Address type (FIXED, FLOATING)",
+										},
+									},
+								},
 							},
 						},
 					},

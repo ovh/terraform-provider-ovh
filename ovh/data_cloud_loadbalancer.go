@@ -65,20 +65,31 @@ func (d *cloudLoadbalancerDataSource) Schema(ctx context.Context, req datasource
 				Computed:    true,
 				Description: "Availability zone for the loadbalancer",
 			},
-			"vip_network_id": schema.StringAttribute{
-				CustomType:  ovhtypes.TfStringType{},
+			"network": schema.SingleNestedAttribute{
 				Computed:    true,
-				Description: "ID of the network for the VIP",
+				Description: "Network of the VIP",
+				Attributes: map[string]schema.Attribute{
+					"id": schema.StringAttribute{
+						CustomType:  ovhtypes.TfStringType{},
+						Computed:    true,
+						Description: "ID of the network for the VIP",
+					},
+					"subnet_id": schema.StringAttribute{
+						CustomType:  ovhtypes.TfStringType{},
+						Computed:    true,
+						Description: "ID of the subnet for the VIP",
+					},
+					"ip": schema.StringAttribute{
+						CustomType:  ovhtypes.TfStringType{},
+						Computed:    true,
+						Description: "IP requested for the VIP",
+					},
+				},
 			},
-			"vip_subnet_id": schema.StringAttribute{
+			"flavor_name": schema.StringAttribute{
 				CustomType:  ovhtypes.TfStringType{},
 				Computed:    true,
-				Description: "ID of the subnet for the VIP",
-			},
-			"flavor_id": schema.StringAttribute{
-				CustomType:  ovhtypes.TfStringType{},
-				Computed:    true,
-				Description: "ID of the loadbalancer flavor",
+				Description: "Name of the loadbalancer flavor",
 			},
 			"name": schema.StringAttribute{
 				CustomType:  ovhtypes.TfStringType{},
@@ -124,11 +135,6 @@ func (d *cloudLoadbalancerDataSource) Schema(ctx context.Context, req datasource
 						Computed:    true,
 						Description: "Loadbalancer description",
 					},
-					"vip_address": schema.StringAttribute{
-						CustomType:  ovhtypes.TfStringType{},
-						Computed:    true,
-						Description: "VIP address of the loadbalancer",
-					},
 					"operating_status": schema.StringAttribute{
 						CustomType:  ovhtypes.TfStringType{},
 						Computed:    true,
@@ -149,25 +155,37 @@ func (d *cloudLoadbalancerDataSource) Schema(ctx context.Context, req datasource
 						Computed:    true,
 						Description: "Availability zone",
 					},
-					"vip_network": schema.SingleNestedAttribute{
+					"network": schema.SingleNestedAttribute{
 						Computed:    true,
-						Description: "VIP network reference",
+						Description: "VIP network",
 						Attributes: map[string]schema.Attribute{
 							"id": schema.StringAttribute{
 								CustomType:  ovhtypes.TfStringType{},
 								Computed:    true,
 								Description: "Network ID",
 							},
-						},
-					},
-					"vip_subnet": schema.SingleNestedAttribute{
-						Computed:    true,
-						Description: "VIP subnet reference",
-						Attributes: map[string]schema.Attribute{
-							"id": schema.StringAttribute{
+							"subnet_id": schema.StringAttribute{
 								CustomType:  ovhtypes.TfStringType{},
 								Computed:    true,
 								Description: "Subnet ID",
+							},
+							"addresses": schema.ListNestedAttribute{
+								Computed:    true,
+								Description: "Addresses carried by the VIP port",
+								NestedObject: schema.NestedAttributeObject{
+									Attributes: map[string]schema.Attribute{
+										"ip": schema.StringAttribute{
+											CustomType:  ovhtypes.TfStringType{},
+											Computed:    true,
+											Description: "IP address",
+										},
+										"type": schema.StringAttribute{
+											CustomType:  ovhtypes.TfStringType{},
+											Computed:    true,
+											Description: "Address type (FIXED, FLOATING)",
+										},
+									},
+								},
 							},
 						},
 					},

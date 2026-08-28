@@ -1,5 +1,5 @@
 resource "ovh_cloud_network_private_vrack" "network" {
-  service_name = "xxxxxxxxxx"
+  service_name = <Public cloud project id>
   name         = "my-network"
   region       = "GRA1"
 }
@@ -13,11 +13,14 @@ resource "ovh_cloud_network_private_vrack_subnet" "subnet" {
 }
 
 resource "ovh_cloud_loadbalancer" "lb" {
-  service_name   = ovh_cloud_network_private_vrack.network.service_name
-  name           = "my-loadbalancer"
-  region         = "GRA1"
-  vip_network_id = ovh_cloud_network_private_vrack.network.id
-  vip_subnet_id  = ovh_cloud_network_private_vrack_subnet.subnet.id
-  flavor_id      = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-  description    = "My load balancer"
+  service_name = ovh_cloud_network_private_vrack.network.service_name
+  name         = "my-loadbalancer"
+  region       = "GRA1"
+  flavor_name  = "SMALL"
+  description  = "My load balancer"
+
+  network = {
+    id        = ovh_cloud_network_private_vrack.network.id
+    subnet_id = ovh_cloud_network_private_vrack_subnet.subnet.id
+  }
 }

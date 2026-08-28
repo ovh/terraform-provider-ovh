@@ -9,14 +9,12 @@ import (
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
-// CloudLoadbalancerModel represents the Terraform model for the loadbalancer resource
 type CloudLoadbalancerModel struct {
 	// Required — immutable
-	ServiceName  ovhtypes.TfStringValue `tfsdk:"service_name"`
-	Region       ovhtypes.TfStringValue `tfsdk:"region"`
-	VipNetworkId ovhtypes.TfStringValue `tfsdk:"vip_network_id"`
-	VipSubnetId  ovhtypes.TfStringValue `tfsdk:"vip_subnet_id"`
-	FlavorName   ovhtypes.TfStringValue `tfsdk:"flavor_name"`
+	ServiceName ovhtypes.TfStringValue `tfsdk:"service_name"`
+	Region      ovhtypes.TfStringValue `tfsdk:"region"`
+	Network     types.Object           `tfsdk:"network"`
+	FlavorName  ovhtypes.TfStringValue `tfsdk:"flavor_name"`
 
 	// Optional — immutable
 	AvailabilityZone ovhtypes.TfStringValue `tfsdk:"availability_zone"`
@@ -39,11 +37,20 @@ type CloudLoadbalancerModel struct {
 // API Response types
 
 type CloudLoadbalancerAPINetworkRef struct {
-	ID string `json:"id"`
+	ID       string `json:"id"`
+	SubnetID string `json:"subnetId"`
+	IP       string `json:"ip,omitempty"`
 }
 
-type CloudLoadbalancerAPISubnetRef struct {
-	ID string `json:"id"`
+type CloudLoadbalancerAPIAddress struct {
+	IP   string `json:"ip"`
+	Type string `json:"type"`
+}
+
+type CloudLoadbalancerAPINetwork struct {
+	ID        string                        `json:"id"`
+	SubnetID  string                        `json:"subnetId"`
+	Addresses []CloudLoadbalancerAPIAddress `json:"addresses,omitempty"`
 }
 
 type CloudLoadbalancerAPIFlavorRef struct {
@@ -66,23 +73,20 @@ type CloudLoadbalancerAPIResponse struct {
 }
 
 type CloudLoadbalancerAPICurrentState struct {
-	Name               string                          `json:"name,omitempty"`
-	Description        string                          `json:"description,omitempty"`
-	Location           *CloudLoadbalancerAPILocation   `json:"location,omitempty"`
-	VipAddress         string                          `json:"vipAddress,omitempty"`
-	VipNetwork         *CloudLoadbalancerAPINetworkRef `json:"vipNetwork,omitempty"`
-	VipSubnet          *CloudLoadbalancerAPISubnetRef  `json:"vipSubnet,omitempty"`
-	OperatingStatus    string                          `json:"operatingStatus,omitempty"`
-	ProvisioningStatus string                          `json:"provisioningStatus,omitempty"`
-	Flavor             *CloudLoadbalancerAPIFlavorRef  `json:"flavor,omitempty"`
+	Name               string                         `json:"name,omitempty"`
+	Description        string                         `json:"description,omitempty"`
+	Location           *CloudLoadbalancerAPILocation  `json:"location,omitempty"`
+	Network            *CloudLoadbalancerAPINetwork   `json:"network,omitempty"`
+	OperatingStatus    string                         `json:"operatingStatus,omitempty"`
+	ProvisioningStatus string                         `json:"provisioningStatus,omitempty"`
+	Flavor             *CloudLoadbalancerAPIFlavorRef `json:"flavor,omitempty"`
 }
 
 type CloudLoadbalancerAPITargetSpec struct {
 	Name        string                          `json:"name"`
 	Description string                          `json:"description,omitempty"`
 	Location    *CloudLoadbalancerAPILocation   `json:"location,omitempty"`
-	VipNetwork  *CloudLoadbalancerAPINetworkRef `json:"vipNetwork,omitempty"`
-	VipSubnet   *CloudLoadbalancerAPISubnetRef  `json:"vipSubnet,omitempty"`
+	Network     *CloudLoadbalancerAPINetworkRef `json:"network,omitempty"`
 	Flavor      *CloudLoadbalancerAPIFlavorRef  `json:"flavor,omitempty"`
 }
 
@@ -102,6 +106,22 @@ type CloudLoadbalancerUpdatePayload struct {
 	TargetSpec *CloudLoadbalancerUpdateTargetSpec `json:"targetSpec"`
 }
 
+func loadbalancerObjectString(attrs map[string]attr.Value, key string) string {
+	v, ok := attrs[key]
+	if !ok || v == nil || v.IsNull() || v.IsUnknown() {
+		return ""
+	}
+
+	switch s := v.(type) {
+	case ovhtypes.TfStringValue:
+		return s.ValueString()
+	case basetypes.StringValue:
+		return s.ValueString()
+	}
+
+	return ""
+}
+
 // ToCreate converts the Terraform model to the API create payload
 func (m *CloudLoadbalancerModel) ToCreate() *CloudLoadbalancerCreatePayload {
 	targetSpec := &CloudLoadbalancerAPITargetSpec{
@@ -109,15 +129,18 @@ func (m *CloudLoadbalancerModel) ToCreate() *CloudLoadbalancerCreatePayload {
 		Location: &CloudLoadbalancerAPILocation{
 			Region: m.Region.ValueString(),
 		},
-		VipNetwork: &CloudLoadbalancerAPINetworkRef{
-			ID: m.VipNetworkId.ValueString(),
-		},
-		VipSubnet: &CloudLoadbalancerAPISubnetRef{
-			ID: m.VipSubnetId.ValueString(),
-		},
 		Flavor: &CloudLoadbalancerAPIFlavorRef{
 			Name: m.FlavorName.ValueString(),
 		},
+	}
+
+	if !m.Network.IsNull() && !m.Network.IsUnknown() {
+		attrs := m.Network.Attributes()
+		targetSpec.Network = &CloudLoadbalancerAPINetworkRef{
+			ID:       loadbalancerObjectString(attrs, "id"),
+			SubnetID: loadbalancerObjectString(attrs, "subnet_id"),
+			IP:       loadbalancerObjectString(attrs, "ip"),
+		}
 	}
 
 	// Handle optional description
@@ -134,7 +157,7 @@ func (m *CloudLoadbalancerModel) ToCreate() *CloudLoadbalancerCreatePayload {
 }
 
 // ToUpdate converts the Terraform model to the API update payload
-// Note: location and refs are immutable and not included in update payload
+// Note: location, network and flavor are immutable and not included in update payload
 func (m *CloudLoadbalancerModel) ToUpdate(checksum string) *CloudLoadbalancerUpdatePayload {
 	targetSpec := &CloudLoadbalancerUpdateTargetSpec{
 		Name: m.Name.ValueString(),
@@ -151,10 +174,38 @@ func (m *CloudLoadbalancerModel) ToUpdate(checksum string) *CloudLoadbalancerUpd
 	}
 }
 
-// loadbalancerRefAttrTypes returns the attr types for a ref object (vip_network, vip_subnet, flavor)
+// loadbalancerRefAttrTypes returns the attr types for a ref object (flavor)
 func loadbalancerRefAttrTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"id": ovhtypes.TfStringType{},
+	}
+}
+
+// LoadbalancerNetworkAttrTypes returns the attribute types for the target spec network object
+func LoadbalancerNetworkAttrTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"id":        ovhtypes.TfStringType{},
+		"subnet_id": ovhtypes.TfStringType{},
+		"ip":        ovhtypes.TfStringType{},
+	}
+}
+
+// LoadbalancerAddressAttrTypes returns the attribute types for a current state VIP address
+func LoadbalancerAddressAttrTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"ip":   ovhtypes.TfStringType{},
+		"type": ovhtypes.TfStringType{},
+	}
+}
+
+// LoadbalancerCurrentStateNetworkAttrTypes returns the attribute types for the current state network object
+func LoadbalancerCurrentStateNetworkAttrTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"id":        ovhtypes.TfStringType{},
+		"subnet_id": ovhtypes.TfStringType{},
+		"addresses": types.ListType{
+			ElemType: types.ObjectType{AttrTypes: LoadbalancerAddressAttrTypes()},
+		},
 	}
 }
 
@@ -163,16 +214,12 @@ func LoadbalancerCurrentStateAttrTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"name":                ovhtypes.TfStringType{},
 		"description":         ovhtypes.TfStringType{},
-		"vip_address":         ovhtypes.TfStringType{},
 		"operating_status":    ovhtypes.TfStringType{},
 		"provisioning_status": ovhtypes.TfStringType{},
 		"region":              ovhtypes.TfStringType{},
 		"availability_zone":   ovhtypes.TfStringType{},
-		"vip_network": types.ObjectType{
-			AttrTypes: loadbalancerRefAttrTypes(),
-		},
-		"vip_subnet": types.ObjectType{
-			AttrTypes: loadbalancerRefAttrTypes(),
+		"network": types.ObjectType{
+			AttrTypes: LoadbalancerCurrentStateNetworkAttrTypes(),
 		},
 		"flavor": types.ObjectType{
 			AttrTypes: loadbalancerRefAttrTypes(),
@@ -191,6 +238,40 @@ func buildLoadbalancerRefObject(id string) basetypes.ObjectValue {
 	return obj
 }
 
+func buildLoadbalancerCurrentStateNetworkObject(network *CloudLoadbalancerAPINetwork) basetypes.ObjectValue {
+	if network == nil {
+		return types.ObjectNull(LoadbalancerCurrentStateNetworkAttrTypes())
+	}
+
+	addressObjType := types.ObjectType{AttrTypes: LoadbalancerAddressAttrTypes()}
+
+	addressesVal := types.ListNull(addressObjType)
+	if network.Addresses != nil {
+		elems := make([]attr.Value, len(network.Addresses))
+		for i, address := range network.Addresses {
+			elems[i], _ = types.ObjectValue(
+				LoadbalancerAddressAttrTypes(),
+				map[string]attr.Value{
+					"ip":   ovhtypes.TfStringValue{StringValue: types.StringValue(address.IP)},
+					"type": ovhtypes.TfStringValue{StringValue: types.StringValue(address.Type)},
+				},
+			)
+		}
+		addressesVal, _ = types.ListValue(addressObjType, elems)
+	}
+
+	obj, _ := types.ObjectValue(
+		LoadbalancerCurrentStateNetworkAttrTypes(),
+		map[string]attr.Value{
+			"id":        ovhtypes.TfStringValue{StringValue: types.StringValue(network.ID)},
+			"subnet_id": ovhtypes.TfStringValue{StringValue: types.StringValue(network.SubnetID)},
+			"addresses": addressesVal,
+		},
+	)
+
+	return obj
+}
+
 // buildLoadbalancerCurrentStateObject constructs the current_state object from API response
 func buildLoadbalancerCurrentStateObject(ctx context.Context, state *CloudLoadbalancerAPICurrentState) basetypes.ObjectValue {
 	// Build region and availability_zone from location
@@ -201,22 +282,6 @@ func buildLoadbalancerCurrentStateObject(ctx context.Context, state *CloudLoadba
 		if state.Location.AvailabilityZone != "" {
 			azVal = ovhtypes.TfStringValue{StringValue: types.StringValue(state.Location.AvailabilityZone)}
 		}
-	}
-
-	// Build vip_network object
-	var vipNetworkVal basetypes.ObjectValue
-	if state.VipNetwork != nil {
-		vipNetworkVal = buildLoadbalancerRefObject(state.VipNetwork.ID)
-	} else {
-		vipNetworkVal = types.ObjectNull(loadbalancerRefAttrTypes())
-	}
-
-	// Build vip_subnet object
-	var vipSubnetVal basetypes.ObjectValue
-	if state.VipSubnet != nil {
-		vipSubnetVal = buildLoadbalancerRefObject(state.VipSubnet.ID)
-	} else {
-		vipSubnetVal = types.ObjectNull(loadbalancerRefAttrTypes())
 	}
 
 	// Build flavor object
@@ -232,13 +297,11 @@ func buildLoadbalancerCurrentStateObject(ctx context.Context, state *CloudLoadba
 		map[string]attr.Value{
 			"name":                ovhtypes.TfStringValue{StringValue: types.StringValue(state.Name)},
 			"description":         ovhtypes.TfStringValue{StringValue: types.StringValue(state.Description)},
-			"vip_address":         ovhtypes.TfStringValue{StringValue: types.StringValue(state.VipAddress)},
 			"operating_status":    ovhtypes.TfStringValue{StringValue: types.StringValue(state.OperatingStatus)},
 			"provisioning_status": ovhtypes.TfStringValue{StringValue: types.StringValue(state.ProvisioningStatus)},
 			"region":              regionVal,
 			"availability_zone":   azVal,
-			"vip_network":         vipNetworkVal,
-			"vip_subnet":          vipSubnetVal,
+			"network":             buildLoadbalancerCurrentStateNetworkObject(state.Network),
 			"flavor":              flavorVal,
 		},
 	)
@@ -278,13 +341,35 @@ func (m *CloudLoadbalancerModel) MergeWith(ctx context.Context, response *CloudL
 			}
 		}
 
-		// Set flattened ref IDs from targetSpec
-		if response.TargetSpec.VipNetwork != nil {
-			m.VipNetworkId = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.VipNetwork.ID)}
+		if response.TargetSpec.Network != nil {
+			// The API never invents an ip: keep the configured one when it echoes back empty
+			configuredIP := ""
+			if !m.Network.IsNull() && !m.Network.IsUnknown() {
+				configuredIP = loadbalancerObjectString(m.Network.Attributes(), "ip")
+			}
+
+			ip := response.TargetSpec.Network.IP
+			if ip == "" {
+				ip = configuredIP
+			}
+
+			ipVal := ovhtypes.TfStringValue{StringValue: types.StringNull()}
+			if ip != "" {
+				ipVal = ovhtypes.TfStringValue{StringValue: types.StringValue(ip)}
+			}
+
+			m.Network, _ = types.ObjectValue(
+				LoadbalancerNetworkAttrTypes(),
+				map[string]attr.Value{
+					"id":        ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Network.ID)},
+					"subnet_id": ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Network.SubnetID)},
+					"ip":        ipVal,
+				},
+			)
+		} else if m.Network.IsUnknown() {
+			m.Network = types.ObjectNull(LoadbalancerNetworkAttrTypes())
 		}
-		if response.TargetSpec.VipSubnet != nil {
-			m.VipSubnetId = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.VipSubnet.ID)}
-		}
+
 		if response.TargetSpec.Flavor != nil {
 			m.FlavorName = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Flavor.Name)}
 		}
