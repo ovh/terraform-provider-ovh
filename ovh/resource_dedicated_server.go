@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -185,6 +186,116 @@ func (r *dedicatedServerResource) Read(ctx context.Context, req resource.ReadReq
 	if os.Getenv("TERRAFORM_OVH_RESTORE_BAREMETAL_DISPLAYNAME_BEHAVIOUR") != "1" {
 		responseData.DisplayName = responseData.Iam.DisplayName
 	}
+
+	// Fetch IPs
+	ipsEndpoint := fmt.Sprintf("/dedicated/server/%s/ips", url.PathEscape(data.ServiceName.ValueString()))
+	ips := &[]string{}
+	if err := r.config.OVHClient.Get(ipsEndpoint, ips); err != nil {
+		resp.Diagnostics.AddError(
+			fmt.Sprintf("Error calling Get %s", ipsEndpoint),
+			err.Error(),
+		)
+		return
+	}
+	responseData.Ips = ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]{
+		ListValue: types.ListValueMust(ovhtypes.TfStringType{}, func() []attr.Value {
+			result := make([]attr.Value, len(*ips))
+			for i, ip := range *ips {
+				result[i] = ovhtypes.TfStringValue{StringValue: types.StringValue(ip)}
+			}
+			return result
+		}()),
+	}
+
+	// Fetch VNIs
+	vnisEndpoint := fmt.Sprintf("/dedicated/server/%s/virtualNetworkInterface", url.PathEscape(data.ServiceName.ValueString()))
+	vniIds := &[]string{}
+	if err := r.config.OVHClient.Get(vnisEndpoint, vniIds); err != nil {
+		resp.Diagnostics.AddError(
+			fmt.Sprintf("Error calling Get %s", vnisEndpoint),
+			err.Error(),
+		)
+		return
+	}
+
+	enabledVrackVnis := []attr.Value{}
+	enabledVrackAggregationVnis := []attr.Value{}
+	enabledPublicVnis := []attr.Value{}
+	vniValues := []attr.Value{}
+
+	for _, vniId := range *vniIds {
+		vni := &DedicatedServerVNI{}
+		vniDetailEndpoint := fmt.Sprintf("/dedicated/server/%s/virtualNetworkInterface/%s", url.PathEscape(data.ServiceName.ValueString()), vniId)
+		if err := r.config.OVHClient.Get(vniDetailEndpoint, vni); err != nil {
+			resp.Diagnostics.AddError(
+				fmt.Sprintf("Error calling Get %s", vniDetailEndpoint),
+				err.Error(),
+			)
+			return
+		}
+
+		vniValue := VniValue{
+			Enabled:    ovhtypes.TfBoolValue{BoolValue: types.BoolValue(vni.Enabled)},
+			Mode:       ovhtypes.TfStringValue{StringValue: types.StringValue(vni.Mode)},
+			Name:       ovhtypes.TfStringValue{StringValue: types.StringValue(vni.Name)},
+			Uuid:       ovhtypes.TfStringValue{StringValue: types.StringValue(vni.Uuid)},
+			ServerName: ovhtypes.TfStringValue{StringValue: types.StringValue(vni.ServerName)},
+			Nics: ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]{
+				ListValue: types.ListValueMust(ovhtypes.TfStringType{}, func() []attr.Value {
+					result := make([]attr.Value, len(vni.NICs))
+					for i, nic := range vni.NICs {
+						result[i] = ovhtypes.TfStringValue{StringValue: types.StringValue(nic)}
+					}
+					return result
+				}()),
+			},
+			state: attr.ValueStateKnown,
+		}
+
+		if vni.Vrack != nil {
+			vniValue.Vrack = ovhtypes.TfStringValue{StringValue: types.StringValue(*vni.Vrack)}
+		}
+
+		vniValues = append(vniValues, vniValue)
+
+		if vni.Enabled {
+			switch vni.Mode {
+			case "vrack":
+				enabledVrackVnis = append(enabledVrackVnis, ovhtypes.TfStringValue{StringValue: types.StringValue(vni.Uuid)})
+			case "vrack_aggregation":
+				enabledVrackAggregationVnis = append(enabledVrackAggregationVnis, ovhtypes.TfStringValue{StringValue: types.StringValue(vni.Uuid)})
+			case "public":
+				enabledPublicVnis = append(enabledPublicVnis, ovhtypes.TfStringValue{StringValue: types.StringValue(vni.Uuid)})
+			default:
+				log.Printf("[WARN] unknown VNI mode for VNI %s: %s", vni.Uuid, vni.Mode)
+			}
+		}
+	}
+
+	if len(vniValues) > 0 {
+		responseData.Vnis = ovhtypes.TfListNestedValue[VniValue]{
+			ListValue: types.ListValueMust(VniValue{}.Type(ctx), vniValues),
+		}
+	}
+
+	if len(enabledVrackVnis) > 0 {
+		responseData.EnabledVrackVnis = ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]{
+			ListValue: types.ListValueMust(ovhtypes.TfStringType{}, enabledVrackVnis),
+		}
+	}
+
+	if len(enabledVrackAggregationVnis) > 0 {
+		responseData.EnabledVrackAggregationVnis = ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]{
+			ListValue: types.ListValueMust(ovhtypes.TfStringType{}, enabledVrackAggregationVnis),
+		}
+	}
+
+	if len(enabledPublicVnis) > 0 {
+		responseData.EnabledPublicVnis = ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]{
+			ListValue: types.ListValueMust(ovhtypes.TfStringType{}, enabledPublicVnis),
+		}
+	}
+
 	responseData.MergeWith(&data)
 	responseData.ID = responseData.ServiceName
 
