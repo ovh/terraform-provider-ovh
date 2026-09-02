@@ -410,6 +410,7 @@ func (p *OvhProvider) Resources(_ context.Context) []func() resource.Resource {
 		NewDomainZoneDnssecResource,
 		NewDomainZoneImportResource,
 		NewEmailDomainAccountResource,
+		NewEmailDomainRedirectionResource,
 		NewDomainZoneDynhostLoginResource,
 		NewDomainZoneDynhostRecordResource,
 		NewHostingPrivateDatabaseWebhostingNetworkResource,
