@@ -404,6 +404,20 @@ func testAccPreCheckIpLoadbalancing(t *testing.T) {
 	checkEnvOrSkip(t, "OVH_IPLB_IPFO_TEST")
 }
 
+// Checks that the environment variables needed for the /dedicatedCloud/{service}/user
+// acceptance tests are set.
+func testAccPreCheckDedicatedCloudUser(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_DEDICATED_CLOUD_TEST")
+}
+
+// Checks that the environment variables needed for the /dedicatedCloud/{service}/user/{userId}/objectRight
+// acceptance tests are set.
+func testAccPreCheckDedicatedCloudUserObjectRight(t *testing.T) {
+	testAccPreCheckDedicatedCloudUser(t)
+	checkEnvOrSkip(t, "OVH_DEDICATED_CLOUD_OBJECT_ID_TEST")
+}
+
 // Checks that the environment variables needed to order /ipLoadbalacing for acceptance tests
 // are set.
 func testAccPreCheckOrderIpLoadbalancing(t *testing.T) {

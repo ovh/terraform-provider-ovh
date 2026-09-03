@@ -324,6 +324,9 @@ In order to run the Acceptance Tests for development, the following environment 
 * `OVH_TESTACC_ORDER_STORAGE_EFS` - Set this variable to "yes" will order an EFS
 * `OVH_STORAGE_EFS_SERVICE_TEST` - The service name of your Enterprise File Storage service
 
+* `OVH_DEDICATED_CLOUD_TEST` - The service name of your Hosted Private Cloud (dedicatedCloud/PCC) to test against
+* `OVH_DEDICATED_CLOUD_OBJECT_ID_TEST` - The VMware MoRef of an existing object (e.g. a cluster) in the target PCC to grant a test object right on
+
 ### Using a locally built terraform-provider-ovh
 
 If you wish to test the provider from the local version you just built, you can try the following method.
