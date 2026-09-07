@@ -170,6 +170,54 @@ resource "ovh_cloud_project_database" "mongodb" {
 }
 ```
 
+### Network Update
+
+You can update the network of an existing database service without recreating it.
+
+To switch from public to private network, add `network_id` and `subnet_id` to the nodes:
+
+```terraform
+resource "ovh_cloud_project_database" "db" {
+  service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  description   = "my-database"
+  engine        = "postgresql"
+  version       = "14"
+  plan          = "business"
+  nodes {
+    region      = "GRA"
+    network_id  = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+    subnet_id   = "YYYYYYYY-YYYY-YYYY-YYYY-YYYYYYYYYYYY"
+  }
+  nodes {
+    region      = "GRA"
+    network_id  = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+    subnet_id   = "YYYYYYYY-YYYY-YYYY-YYYY-YYYYYYYYYYYY"
+  }
+  flavor        = "db1-4"
+}
+```
+
+To switch from private to public network, remove `network_id` and `subnet_id` from the nodes:
+
+```terraform
+resource "ovh_cloud_project_database" "db" {
+  service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  description   = "my-database"
+  engine        = "postgresql"
+  version       = "14"
+  plan          = "business"
+  nodes {
+    region      = "GRA"
+  }
+  nodes {
+    region      = "GRA"
+  }
+  flavor        = "db1-4"
+}
+```
+
+~> **Important:** Changing the network triggers a service rebuild. The service will go through `UPDATING` / `REBUILDING` states before returning to `RUNNING`. During this time the service may be temporarily unavailable. IP restrictions are cleared during a network change as the old IPs are no longer valid on the new network.
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -185,9 +233,9 @@ The following arguments are supported:
 * `kafka_rest_api` - (Optional) Defines whether the REST API is enabled on a kafka cluster
 * `kafka_schema_registry` - (Optional) Defines whether the schema registry is enabled on a Kafka cluster
 * `nodes` - (Required, Minimum Items: 1) List of nodes object. Multi region cluster are not yet available, all node should be identical.
-  * `network_id` - (Optional, Forces new resource) Private network id in which the node should be deployed. It's the regional openstackId of the private network
+  * `network_id` - (Optional) Private network id in which the node should be deployed. It's the regional openstackId of the private network. Can be updated in-place to change the network without recreating the service.
   * `region` - (Required, Forces new resource) Public cloud region in which the node should be deployed. Ex: "GRA'.
-  * `subnet_id` - (Optional, Forces new resource) Private subnet ID in which the node is.
+  * `subnet_id` - (Optional) Private subnet ID in which the node is. Can be updated in-place to change the network without recreating the service.
 * `opensearch_acls_enabled` - (Optional) Defines whether the ACLs are enabled on an OpenSearch cluster
 * `disk_size` - (Optional) The disk size (in GB) of the database service.
 * `advanced_configuration` - (Optional) Advanced configuration key / value.
