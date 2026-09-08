@@ -276,7 +276,6 @@ func Provider() *schema.Provider {
 			"ovh_dedicated_nasha_partition_snapshot":                         resourceDedicatedNASHAPartitionSnapshot(),
 			"ovh_dedicated_server_reinstall_task":                            resourceDedicatedServerReinstallTask(),
 			"ovh_dedicated_server_reboot_task":                               resourceDedicatedServerRebootTask(),
-			"ovh_dedicated_server_update":                                    resourceDedicatedServerUpdate(),
 			"ovh_dedicated_server_networking":                                resourceDedicatedServerNetworking(),
 			"ovh_domain_ds_records":                                          resourceDomainDsRecords(),
 			"ovh_domain_name_servers":                                        resourceDomainNameServers(),
