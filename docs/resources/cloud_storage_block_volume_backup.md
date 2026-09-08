@@ -42,6 +42,7 @@ The following arguments are supported:
 * `name` - (Required) The name of the backup.
 * `description` - (Optional) A description for the backup.
 * `region` - (Required) The region where the backup will be created. Changing this value recreates the resource.
+* `availability_zone` - (Optional) The availability zone where the backup will be created. Only meaningful in 3AZ regions; leave unset in 1AZ regions, where it is empty. Defaults to the value returned by the API. Changing this value recreates the resource.
 * `volume_id` - (Required) The ID of the volume to back up. Changing this value recreates the resource.
 
 ## Attributes Reference
@@ -56,6 +57,7 @@ The following attributes are exported:
 * `current_state` - Current state of the backup:
   * `location` - Current location:
     * `region` - Region.
+    * `availability_zone` - Availability zone. Empty in 1AZ regions.
   * `name` - Backup name.
   * `description` - Backup description.
   * `volume_id` - ID of the backed-up volume.

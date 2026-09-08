@@ -26,6 +26,7 @@ data "ovh_cloud_storage_block_volume_backup" "backup" {
 * `description` - Backup description.
 * `location` - Location of the backup:
   * `region` - Region.
+  * `availability_zone` - Availability zone. Empty in 1AZ regions.
 * `volume_id` - ID of the backed-up volume.
 * `size` - Size of the backup in GB.
 * `resource_status` - Backup readiness in the system (`CREATING`, `DELETING`, `ERROR`, `OUT_OF_SYNC`, `READY`, `UPDATING`).

@@ -96,6 +96,11 @@ func (d *cloudStorageBlockVolumeBackupsDataSource) Schema(ctx context.Context, r
 									Computed:    true,
 									Description: "Region",
 								},
+								"availability_zone": schema.StringAttribute{
+									CustomType:  ovhtypes.TfStringType{},
+									Computed:    true,
+									Description: "Availability zone",
+								},
 							},
 						},
 						"volume_id": schema.StringAttribute{
@@ -134,7 +139,8 @@ func backupListItemAttrTypes() map[string]attr.Type {
 		"name":        ovhtypes.TfStringType{},
 		"description": ovhtypes.TfStringType{},
 		"location": types.ObjectType{AttrTypes: map[string]attr.Type{
-			"region": ovhtypes.TfStringType{},
+			"region":            ovhtypes.TfStringType{},
+			"availability_zone": ovhtypes.TfStringType{},
 		}},
 		"volume_id":       ovhtypes.TfStringType{},
 		"size":            types.Int64Type,
@@ -173,10 +179,14 @@ func (d *cloudStorageBlockVolumeBackupsDataSource) Read(ctx context.Context, req
 		name := ""
 		description := ""
 		volumeId := ""
+		az := ""
 		if b.TargetSpec != nil {
 			name = b.TargetSpec.Name
 			description = b.TargetSpec.Description
 			volumeId = b.TargetSpec.VolumeId
+			if b.TargetSpec.Location != nil {
+				az = b.TargetSpec.Location.AvailabilityZone
+			}
 		}
 
 		size := int64(0)
@@ -194,13 +204,21 @@ func (d *cloudStorageBlockVolumeBackupsDataSource) Read(ctx context.Context, req
 			}
 			if b.CurrentState.Location != nil {
 				region = b.CurrentState.Location.Region
+				// Empty in 1AZ regions: keep the targetSpec value instead of blanking it.
+				if b.CurrentState.Location.AvailabilityZone != "" {
+					az = b.CurrentState.Location.AvailabilityZone
+				}
 			}
 		}
 
 		locObj, diags := types.ObjectValue(
-			map[string]attr.Type{"region": ovhtypes.TfStringType{}},
+			map[string]attr.Type{
+				"region":            ovhtypes.TfStringType{},
+				"availability_zone": ovhtypes.TfStringType{},
+			},
 			map[string]attr.Value{
-				"region": ovhtypes.TfStringValue{StringValue: types.StringValue(region)},
+				"region":            ovhtypes.TfStringValue{StringValue: types.StringValue(region)},
+				"availability_zone": ovhtypes.TfStringValue{StringValue: types.StringValue(az)},
 			},
 		)
 		resp.Diagnostics.Append(diags...)
