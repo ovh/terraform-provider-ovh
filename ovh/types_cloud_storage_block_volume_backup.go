@@ -117,9 +117,14 @@ func (m *CloudStorageBlockVolumeBackupModel) MergeWith(ctx context.Context, resp
 
 	// Build current_state from API currentState
 	if response.CurrentState != nil {
+		region := ""
+		if response.CurrentState.Location != nil {
+			region = response.CurrentState.Location.Region
+		}
+
 		locObj, _ := types.ObjectValue(
 			map[string]attr.Type{"region": ovhtypes.TfStringType{}},
-			map[string]attr.Value{"region": ovhtypes.TfStringValue{StringValue: types.StringValue(response.CurrentState.Location.Region)}},
+			map[string]attr.Value{"region": ovhtypes.TfStringValue{StringValue: types.StringValue(region)}},
 		)
 
 		currentStateObj, _ := types.ObjectValue(

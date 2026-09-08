@@ -25,6 +25,7 @@ resource "ovh_cloud_storage_block_volume_snapshot" "snapshot" {
   description  = "%s"
   region       = "%s"
   volume_id    = ovh_cloud_storage_block_volume.volume.id
+  %s
 }
 `
 
@@ -43,6 +44,7 @@ resource "ovh_cloud_storage_block_volume_snapshot" "snapshot" {
   description  = "%s"
   region       = "%s"
   volume_id    = ovh_cloud_storage_block_volume.volume.id
+  %s
 }
 `
 
@@ -52,12 +54,35 @@ func TestAccCloudStorageBlockVolumeSnapshot_basic(t *testing.T) {
 	volumeName := acctest.RandomWithPrefix(test_prefix)
 	snapshotName := acctest.RandomWithPrefix(test_prefix)
 	description := "test snapshot description"
+	// Optional: only set for 3AZ regions, where the API reports an availability zone.
+	az := os.Getenv("OVH_CLOUD_PROJECT_AZ_TEST")
+
+	azConfig := ""
+	if az != "" {
+		azConfig = fmt.Sprintf("availability_zone = %q", az)
+	}
 
 	config := fmt.Sprintf(
 		testAccCloudStorageBlockVolumeSnapshotConfig,
 		serviceName, volumeName, region,
-		serviceName, snapshotName, description, region,
+		serviceName, snapshotName, description, region, azConfig,
 	)
+
+	checks := []resource.TestCheckFunc{
+		resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume_snapshot.snapshot", "service_name", serviceName),
+		resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume_snapshot.snapshot", "name", snapshotName),
+		resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume_snapshot.snapshot", "description", description),
+		resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume_snapshot.snapshot", "region", region),
+		resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume_snapshot.snapshot", "id"),
+		resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume_snapshot.snapshot", "checksum"),
+		resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume_snapshot.snapshot", "created_at"),
+		resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume_snapshot.snapshot", "volume_id"),
+		resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume_snapshot.snapshot", "current_state.name"),
+		resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume_snapshot.snapshot", "current_state.volume_id"),
+	}
+	if az != "" {
+		checks = append(checks, resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume_snapshot.snapshot", "availability_zone", az))
+	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -68,18 +93,7 @@ func TestAccCloudStorageBlockVolumeSnapshot_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume_snapshot.snapshot", "service_name", serviceName),
-					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume_snapshot.snapshot", "name", snapshotName),
-					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume_snapshot.snapshot", "description", description),
-					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume_snapshot.snapshot", "region", region),
-					resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume_snapshot.snapshot", "id"),
-					resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume_snapshot.snapshot", "checksum"),
-					resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume_snapshot.snapshot", "created_at"),
-					resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume_snapshot.snapshot", "volume_id"),
-					resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume_snapshot.snapshot", "current_state.name"),
-					resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume_snapshot.snapshot", "current_state.volume_id"),
-				),
+				Check:  resource.ComposeTestCheckFunc(checks...),
 			},
 			{
 				ResourceName:      "ovh_cloud_storage_block_volume_snapshot.snapshot",
@@ -105,18 +119,34 @@ func TestAccCloudStorageBlockVolumeSnapshot_update(t *testing.T) {
 	snapshotNameUpdated := acctest.RandomWithPrefix(test_prefix)
 	description := "test snapshot description"
 	descriptionUpdated := "updated snapshot description"
+	// Optional: only set for 3AZ regions, where the API reports an availability zone.
+	az := os.Getenv("OVH_CLOUD_PROJECT_AZ_TEST")
+
+	azConfig := ""
+	if az != "" {
+		azConfig = fmt.Sprintf("availability_zone = %q", az)
+	}
 
 	config := fmt.Sprintf(
 		testAccCloudStorageBlockVolumeSnapshotConfig,
 		serviceName, volumeName, region,
-		serviceName, snapshotName, description, region,
+		serviceName, snapshotName, description, region, azConfig,
 	)
 
 	configUpdated := fmt.Sprintf(
 		testAccCloudStorageBlockVolumeSnapshotUpdatedConfig,
 		serviceName, volumeName, region,
-		serviceName, snapshotNameUpdated, descriptionUpdated, region,
+		serviceName, snapshotNameUpdated, descriptionUpdated, region, azConfig,
 	)
+
+	// AZ is immutable: it must survive a name/description update without a replace.
+	updatedChecks := []resource.TestCheckFunc{
+		resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume_snapshot.snapshot", "name", snapshotNameUpdated),
+		resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume_snapshot.snapshot", "description", descriptionUpdated),
+	}
+	if az != "" {
+		updatedChecks = append(updatedChecks, resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume_snapshot.snapshot", "availability_zone", az))
+	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -134,10 +164,7 @@ func TestAccCloudStorageBlockVolumeSnapshot_update(t *testing.T) {
 			},
 			{
 				Config: configUpdated,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume_snapshot.snapshot", "name", snapshotNameUpdated),
-					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume_snapshot.snapshot", "description", descriptionUpdated),
-				),
+				Check:  resource.ComposeTestCheckFunc(updatedChecks...),
 			},
 		},
 	})
