@@ -94,7 +94,7 @@ func resourceVrackIpCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	//set id
-	d.SetId(fmt.Sprintf("vrack_%s-dedicatedserver_%s", serviceName, opts.Block))
+	d.SetId(fmt.Sprintf("vrack_%s-block_%s", serviceName, opts.Block))
 
 	return resourceVrackIpRead(d, meta)
 }
