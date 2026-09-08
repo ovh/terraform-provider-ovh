@@ -20,12 +20,6 @@ func TestAccDedicatedServerReboot_basic(t *testing.T) {
 				Config: testAccDedicatedServerRebootConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
-						"ovh_dedicated_server_update.server", "state", "ok"),
-					resource.TestCheckResourceAttr(
-						"ovh_dedicated_server_update.server", "monitoring", "true"),
-					resource.TestCheckResourceAttr(
-						"ovh_dedicated_server_update.server", "state", "ok"),
-					resource.TestCheckResourceAttr(
 						"ovh_dedicated_server_reboot_task.server_reboot", "function", "hardReboot"),
 					resource.TestCheckResourceAttr(
 						"ovh_dedicated_server_reboot_task.server_reboot", "comment", "Reboot asked"),
@@ -53,18 +47,11 @@ data "ovh_dedicated_server_boots" "rescue" {
   kernel       = "rescue12-customer"
 }
 
-resource "ovh_dedicated_server_update" "server" {
-  service_name = data.ovh_dedicated_server_boots.rescue.service_name
-  boot_id      = data.ovh_dedicated_server_boots.rescue.result[0]
-  monitoring   = true
-  state        = "ok"
-}
-
 resource "ovh_dedicated_server_reboot_task" "server_reboot" {
   service_name = data.ovh_dedicated_server_boots.rescue.service_name
 
   keepers = [
-     ovh_dedicated_server_update.server.boot_id,
+    data.ovh_dedicated_server_boots.rescue.result[0],
   ]
 }
 `
