@@ -98,6 +98,16 @@ func fileShareDataSourceAttributes() map[string]schema.Attribute {
 			Computed:    true,
 			Description: "ID of the share network the file share is attached to",
 		},
+		"encryption": schema.SingleNestedAttribute{
+			Computed:    true,
+			Description: "Encryption configuration of the file share",
+			Attributes: map[string]schema.Attribute{
+				"enabled": schema.BoolAttribute{
+					Computed:    true,
+					Description: "Whether the file share is encrypted at rest with LUKS",
+				},
+			},
+		},
 		"checksum": schema.StringAttribute{
 			CustomType:  ovhtypes.TfStringType{},
 			Computed:    true,
@@ -166,6 +176,16 @@ func fileShareDataSourceAttributes() map[string]schema.Attribute {
 					CustomType:  ovhtypes.TfStringType{},
 					Computed:    true,
 					Description: "ID of the share network the file share is attached to",
+				},
+				"encryption": schema.SingleNestedAttribute{
+					Computed:    true,
+					Description: "Encryption configuration of the file share",
+					Attributes: map[string]schema.Attribute{
+						"enabled": schema.BoolAttribute{
+							Computed:    true,
+							Description: "Whether the file share is encrypted at rest with LUKS",
+						},
+					},
 				},
 				"export_locations": schema.ListNestedAttribute{
 					Computed:    true,
@@ -254,6 +274,7 @@ type cloudStorageFileShareDataSourceModel struct {
 	ShareType      ovhtypes.TfStringValue `tfsdk:"share_type"`
 	Location       types.Object           `tfsdk:"location"`
 	ShareNetworkId ovhtypes.TfStringValue `tfsdk:"share_network_id"`
+	Encryption     types.Object           `tfsdk:"encryption"`
 	Checksum       ovhtypes.TfStringValue `tfsdk:"checksum"`
 	CreatedAt      ovhtypes.TfStringValue `tfsdk:"created_at"`
 	UpdatedAt      ovhtypes.TfStringValue `tfsdk:"updated_at"`
@@ -314,11 +335,16 @@ func mapFileShareToDataSourceModel(ctx context.Context, v *CloudStorageFileShare
 		if v.TargetSpec.ShareNetwork != nil {
 			data.ShareNetworkId = ovhtypes.TfStringValue{StringValue: types.StringValue(v.TargetSpec.ShareNetwork.Id)}
 		}
+		data.Encryption = buildFileShareEncryptionObject(v.TargetSpec.Encryption)
 	} else {
 		data.Location = types.ObjectNull(fileShareLocationAttrTypes())
+		data.Encryption = types.ObjectNull(FileShareEncryptionAttrTypes())
 	}
 
 	if v.CurrentState != nil {
+		if v.CurrentState.Encryption != nil {
+			data.Encryption = buildFileShareEncryptionObject(v.CurrentState.Encryption)
+		}
 		data.CurrentState = buildFileShareCurrentStateObject(ctx, v.CurrentState)
 	} else {
 		data.CurrentState = types.ObjectNull(FileShareCurrentStateAttrTypes())

@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -128,6 +130,28 @@ func (r *cloudStorageFileShareResource) Schema(ctx context.Context, req resource
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"encryption": schema.SingleNestedAttribute{
+				Optional:            true,
+				Computed:            true,
+				Description:         "Encryption configuration for the file share. Set at creation only. Changing this value recreates the resource.",
+				MarkdownDescription: "Encryption configuration for the file share. Set at creation only. **Changing this value recreates the resource.**",
+				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.UseStateForUnknown(),
+					objectplanmodifier.RequiresReplace(),
+				},
+				Attributes: map[string]schema.Attribute{
+					"enabled": schema.BoolAttribute{
+						Optional:            true,
+						Computed:            true,
+						Description:         "Whether the file share is encrypted at rest with LUKS",
+						MarkdownDescription: "Whether the file share is encrypted at rest with LUKS",
+						PlanModifiers: []planmodifier.Bool{
+							boolplanmodifier.UseStateForUnknown(),
+							boolplanmodifier.RequiresReplace(),
+						},
+					},
+				},
+			},
 			"description": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Optional:            true,
@@ -236,6 +260,18 @@ func (r *cloudStorageFileShareResource) Schema(ctx context.Context, req resource
 						Computed:            true,
 						Description:         "ID of the share network the file share is attached to",
 						MarkdownDescription: "ID of the share network the file share is attached to",
+					},
+					"encryption": schema.SingleNestedAttribute{
+						Computed:            true,
+						Description:         "Encryption configuration of the file share",
+						MarkdownDescription: "Encryption configuration of the file share",
+						Attributes: map[string]schema.Attribute{
+							"enabled": schema.BoolAttribute{
+								Computed:            true,
+								Description:         "Whether the file share is encrypted at rest with LUKS",
+								MarkdownDescription: "Whether the file share is encrypted at rest with LUKS",
+							},
+						},
 					},
 					"export_locations": schema.ListNestedAttribute{
 						Computed:    true,
