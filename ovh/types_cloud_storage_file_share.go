@@ -19,6 +19,7 @@ type CloudStorageFileShareModel struct {
 	// Optional — immutable
 	AvailabilityZone ovhtypes.TfStringValue `tfsdk:"availability_zone"`
 	ShareNetworkId   ovhtypes.TfStringValue `tfsdk:"share_network_id"`
+	Encryption       types.Object           `tfsdk:"encryption"`
 
 	// Required — mutable
 	Name ovhtypes.TfStringValue `tfsdk:"name"`
@@ -57,6 +58,11 @@ type CloudStorageFileShareAPICurrentState struct {
 	ShareNetwork    *CloudStorageFileShareAPIShareNetworkRef `json:"shareNetwork,omitempty"`
 	ExportLocations []CloudStorageFileShareAPIExportLocation `json:"exportLocations,omitempty"`
 	Capabilities    []CloudStorageFileShareAPICapability     `json:"capabilities,omitempty"`
+	Encryption      *CloudStorageFileShareAPIEncryption      `json:"encryption,omitempty"`
+}
+
+type CloudStorageFileShareAPIEncryption struct {
+	Enabled bool `json:"enabled"`
 }
 
 type CloudStorageFileShareAPILocation struct {
@@ -87,6 +93,7 @@ type CloudStorageFileShareAPITargetSpec struct {
 	ShareType    string                                   `json:"shareType,omitempty"`
 	Location     *CloudStorageFileShareAPILocation        `json:"location,omitempty"`
 	ShareNetwork *CloudStorageFileShareAPIShareNetworkRef `json:"shareNetwork,omitempty"`
+	Encryption   *CloudStorageFileShareAPIEncryption      `json:"encryption,omitempty"`
 }
 
 type CloudStorageFileShareAPIUpdateTargetSpec struct {
@@ -104,6 +111,13 @@ type CloudStorageFileShareCreatePayload struct {
 type CloudStorageFileShareUpdatePayload struct {
 	Checksum   string                                    `json:"checksum"`
 	TargetSpec *CloudStorageFileShareAPIUpdateTargetSpec `json:"targetSpec"`
+}
+
+// FileShareEncryptionAttrTypes returns the attribute types for the encryption object
+func FileShareEncryptionAttrTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"enabled": types.BoolType,
+	}
 }
 
 // fileShareLocationAttrTypes returns the attr types for the root-level location
@@ -131,6 +145,14 @@ func (m *CloudStorageFileShareModel) ToCreate(ctx context.Context) *CloudStorage
 
 	if !m.AvailabilityZone.IsNull() && !m.AvailabilityZone.IsUnknown() {
 		target.Location.AvailabilityZone = m.AvailabilityZone.ValueString()
+	}
+
+	if !m.Encryption.IsNull() && !m.Encryption.IsUnknown() {
+		if enabledVal, ok := m.Encryption.Attributes()["enabled"]; ok {
+			if boolVal, ok := enabledVal.(types.Bool); ok && !boolVal.IsNull() && !boolVal.IsUnknown() {
+				target.Encryption = &CloudStorageFileShareAPIEncryption{Enabled: boolVal.ValueBool()}
+			}
+		}
 	}
 
 	// shareNetwork is required: always attach the reference.
@@ -171,6 +193,7 @@ func FileShareCurrentStateAttrTypes() map[string]attr.Type {
 			"preferred": types.BoolType,
 		}}},
 		"capabilities": types.ListType{ElemType: types.ObjectType{AttrTypes: FileShareCurrentStateCapabilityAttrTypes()}},
+		"encryption":   types.ObjectType{AttrTypes: FileShareEncryptionAttrTypes()},
 	}
 }
 
@@ -218,7 +241,27 @@ func (m *CloudStorageFileShareModel) MergeWith(ctx context.Context, response *Cl
 			m.Region = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Location.Region)}
 			m.AvailabilityZone = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Location.AvailabilityZone)}
 		}
+
+		if response.TargetSpec.Encryption != nil {
+			m.Encryption = buildFileShareEncryptionObject(response.TargetSpec.Encryption)
+		} else if m.Encryption.IsUnknown() {
+			m.Encryption = types.ObjectNull(FileShareEncryptionAttrTypes())
+		}
 	}
+}
+
+func buildFileShareEncryptionObject(encryption *CloudStorageFileShareAPIEncryption) types.Object {
+	if encryption == nil {
+		return types.ObjectNull(FileShareEncryptionAttrTypes())
+	}
+
+	obj, _ := types.ObjectValue(
+		FileShareEncryptionAttrTypes(),
+		map[string]attr.Value{
+			"enabled": types.BoolValue(encryption.Enabled),
+		},
+	)
+	return obj
 }
 
 // buildFileShareCurrentStateObject constructs the current_state object from the API response
@@ -305,6 +348,7 @@ func buildFileShareCurrentStateObject(ctx context.Context, state *CloudStorageFi
 			"share_network_id": ovhtypes.TfStringValue{StringValue: types.StringValue(shareNetworkId)},
 			"export_locations": exportLocList,
 			"capabilities":     capabilityList,
+			"encryption":       buildFileShareEncryptionObject(state.Encryption),
 		},
 	)
 
