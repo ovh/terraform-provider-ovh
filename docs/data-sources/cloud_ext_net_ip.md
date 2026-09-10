@@ -35,7 +35,7 @@ The following attributes are exported:
 * `updated_at` - Last update date of the external network IP.
 * `resource_status` - External network IP readiness in the system (`CREATING`, `DELETING`, `ERROR`, `OUT_OF_SYNC`, `READY`, `UPDATING`).
 * `current_state` - Current state of the external network IP:
-  * `id` - Identifier of the external network IP.
+  * `id` - Identifier of the external network IP, in the composite format `<portId>_<ip>` (for example `8e6b1f0a-1c2d-4e3f-9a8b-7c6d5e4f3a2b_51.68.12.34`). A dual-stack Ext-Net port backs both an IPv4 and an IPv6 resource, so the bare Neutron port ID is not unique per resource: the IP address is appended to make this identifier unique.
   * `ip` - IP address of the external network IP.
   * `associated_resource` - Resource the external network IP is currently attached to. Null when the IP is not attached to any resource:
     * `id` - ID of the associated resource.
