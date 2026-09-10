@@ -79,6 +79,11 @@ func (d *cloudStorageBlockVolumeSnapshotDataSource) Schema(ctx context.Context, 
 						Computed:    true,
 						Description: "Region",
 					},
+					"availability_zone": schema.StringAttribute{
+						CustomType:  ovhtypes.TfStringType{},
+						Computed:    true,
+						Description: "Availability zone",
+					},
 				},
 			},
 			"volume_id": schema.StringAttribute{
@@ -135,12 +140,14 @@ func (d *cloudStorageBlockVolumeSnapshotDataSource) Read(ctx context.Context, re
 	description := ""
 	volumeId := ""
 	region := ""
+	az := ""
 	if s.TargetSpec != nil {
 		name = s.TargetSpec.Name
 		description = s.TargetSpec.Description
 		volumeId = s.TargetSpec.VolumeId
 		if s.TargetSpec.Location != nil {
 			region = s.TargetSpec.Location.Region
+			az = s.TargetSpec.Location.AvailabilityZone
 		}
 	}
 
@@ -158,13 +165,21 @@ func (d *cloudStorageBlockVolumeSnapshotDataSource) Read(ctx context.Context, re
 		}
 		if s.CurrentState.Location != nil {
 			region = s.CurrentState.Location.Region
+			// Empty in 1AZ regions: keep the targetSpec value instead of blanking it.
+			if s.CurrentState.Location.AvailabilityZone != "" {
+				az = s.CurrentState.Location.AvailabilityZone
+			}
 		}
 	}
 
 	locObj, diags := types.ObjectValue(
-		map[string]attr.Type{"region": ovhtypes.TfStringType{}},
+		map[string]attr.Type{
+			"region":            ovhtypes.TfStringType{},
+			"availability_zone": ovhtypes.TfStringType{},
+		},
 		map[string]attr.Value{
-			"region": ovhtypes.TfStringValue{StringValue: types.StringValue(region)},
+			"region":            ovhtypes.TfStringValue{StringValue: types.StringValue(region)},
+			"availability_zone": ovhtypes.TfStringValue{StringValue: types.StringValue(az)},
 		},
 	)
 	resp.Diagnostics.Append(diags...)
