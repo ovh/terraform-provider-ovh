@@ -98,7 +98,7 @@ func (d *cloudExtNetIPsDataSource) Schema(ctx context.Context, req datasource.Sc
 								"id": schema.StringAttribute{
 									CustomType:  ovhtypes.TfStringType{},
 									Computed:    true,
-									Description: "Identifier of the external network IP",
+									Description: "Identifier of the external network IP, in the composite format `<portId>_<ip>` (for example `8e6b1f0a-1c2d-4e3f-9a8b-7c6d5e4f3a2b_51.68.12.34`). A dual-stack Ext-Net port backs both an IPv4 and an IPv6 resource, so the bare Neutron port ID is not unique per resource: the IP address is appended to make this identifier unique.",
 								},
 								"ip": schema.StringAttribute{
 									CustomType:  ovhtypes.TfStringType{},

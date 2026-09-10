@@ -3,10 +3,15 @@ package ovh
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
+
+// extNetIPCurrentStateIDRegexp matches the composite <portId>_<ip> identifier
+// returned in current_state.id.
+var extNetIPCurrentStateIDRegexp = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}_[0-9a-fA-F.:]+$`)
 
 // testAccCloudExtNetIPInstanceConfig returns the configuration of an
 // instance attached to a public network, so that an Ext-Net IP exists in the
@@ -75,6 +80,9 @@ data "ovh_cloud_ext_net_ip" "test" {
 					resource.TestCheckResourceAttrSet("data.ovh_cloud_ext_net_ip.test", "resource_status"),
 					resource.TestCheckResourceAttrSet("data.ovh_cloud_ext_net_ip.test", "current_state.ip"),
 					resource.TestCheckResourceAttrSet("data.ovh_cloud_ext_net_ip.test", "current_state.id"),
+					// current_state.id is the composite <portId>_<ip>, not a bare port UUID:
+					// a dual-stack port backs both an IPv4 and an IPv6 resource.
+					resource.TestMatchResourceAttr("data.ovh_cloud_ext_net_ip.test", "current_state.id", extNetIPCurrentStateIDRegexp),
 					resource.TestCheckResourceAttrPair(
 						"data.ovh_cloud_ext_net_ip.test", "id",
 						"data.ovh_cloud_ext_net_ip.test", "current_state.ip",
@@ -120,6 +128,9 @@ data "ovh_cloud_ext_net_ip" "test" {
 					resource.TestCheckResourceAttrSet("data.ovh_cloud_ext_net_ip.test", "resource_status"),
 					resource.TestCheckResourceAttrSet("data.ovh_cloud_ext_net_ip.test", "current_state.ip"),
 					resource.TestCheckResourceAttrSet("data.ovh_cloud_ext_net_ip.test", "current_state.id"),
+					// current_state.id is the composite <portId>_<ip>, not a bare port UUID:
+					// a dual-stack port backs both an IPv4 and an IPv6 resource.
+					resource.TestMatchResourceAttr("data.ovh_cloud_ext_net_ip.test", "current_state.id", extNetIPCurrentStateIDRegexp),
 					resource.TestCheckResourceAttrPair(
 						"data.ovh_cloud_ext_net_ip.test", "id",
 						"data.ovh_cloud_ext_net_ip.test", "current_state.ip",
