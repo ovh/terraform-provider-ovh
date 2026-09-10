@@ -10,7 +10,9 @@ import (
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
-// CloudInstanceModel is the Terraform model for the ovh_cloud_instance resource.
+// CloudInstanceModel carries the attributes shared by the ovh_cloud_instance
+// resource and the ovh_cloud_instance data source, which expose the same shape
+// except for the write-only user_data (see CloudInstanceResourceModel).
 type CloudInstanceModel struct {
 	// Required — immutable
 	ServiceName ovhtypes.TfStringValue `tfsdk:"service_name"`
@@ -40,6 +42,19 @@ type CloudInstanceModel struct {
 	UpdatedAt      ovhtypes.TfStringValue `tfsdk:"updated_at"`
 	ResourceStatus ovhtypes.TfStringValue `tfsdk:"resource_status"`
 	CurrentState   types.Object           `tfsdk:"current_state"`
+}
+
+// CloudInstanceResourceModel is the ovh_cloud_instance resource model: the shared
+// attributes plus the write-only user_data.
+//
+// user_data is deliberately NOT part of CloudInstanceModel. The API never returns
+// it, so the data source has nothing to expose, and keeping it out of the model
+// MergeWith writes into makes it structurally impossible for a read to clobber the
+// configured value with a null.
+type CloudInstanceResourceModel struct {
+	CloudInstanceModel
+
+	UserData ovhtypes.TfStringValue `tfsdk:"user_data"`
 }
 
 // ---------- API DTOs (camelCase JSON tags, mirror internal/model/instance.go) ----------
@@ -76,6 +91,8 @@ type CloudInstanceAPITargetSpec struct {
 	PowerState string                       `json:"powerState,omitempty"`
 	Group      *CloudInstanceRef            `json:"group,omitempty"`
 	SSHKeyName string                       `json:"sshKeyName,omitempty"`
+	// Write-only: accepted on create, never echoed back by GET or LIST.
+	UserData string `json:"userData,omitempty"`
 	// No omitempty: the API distinguishes null (apply the project's default
 	// security group on create, leave the groups unchanged on update) from an
 	// explicit empty array (apply no security group at all).
@@ -91,6 +108,13 @@ type CloudInstanceAPIUpdateTargetSpec struct {
 	Networks   []CloudInstanceAPINetworkRef `json:"networks,omitempty"`
 	Volumes    []CloudInstanceRef           `json:"volumes,omitempty"`
 	PowerState string                       `json:"powerState,omitempty"`
+	// Pointer, not string: the API reads userData as a tri-state on PUT — an
+	// absent key keeps the stored value, "" clears it, a non-empty value replaces
+	// it — and clearing or replacing REINSTALLS the instance (Nova rebuild on the
+	// current image, root disk wiped). omitempty drops only a nil pointer, so a
+	// pointer to "" still marshals as `"userData":""` (an explicit clear) while an
+	// untouched field marshals to nothing at all.
+	UserData *string `json:"userData,omitempty"`
 	// See CloudInstanceAPITargetSpec.SecurityGroups: null and [] differ.
 	SecurityGroups []CloudInstanceRef         `json:"securityGroups"`
 	Shares         []CloudInstanceAPIShareRef `json:"shares,omitempty"`
@@ -265,6 +289,9 @@ const (
 	instanceDescNetworkRefAutoAssignMd = "Attach a public interface with a public IP assigned by the platform. Only valid on an entry with no `network_id` and no `ip`, and on at most one entry"
 
 	instanceDescVolumeIds = "IDs of block-storage volumes attached to the instance"
+
+	instanceDescUserData   = "Cloud-init user data injected at boot, base64-encoded (standard encoding, 65535 bytes max). Pass it through base64encode(). Write-only: the API accepts it but never returns it, so the value is only ever read back from Terraform state and a change made outside Terraform stays invisible. WARNING: changing this value to another non-empty one reinstalls the instance (rebuild on the current image — the root disk is wiped); setting it to \"\" is an explicit clear and also reinstalls the instance; removing the argument from the configuration only drops it from state, the instance keeps the user data it booted with and is not rebuilt"
+	instanceDescUserDataMd = "Cloud-init user data injected at boot, base64-encoded (standard encoding, 65535 bytes max). Pass it through `base64encode()`. **Write-only**: the API accepts it but never returns it, so the value is only ever read back from Terraform state and a change made outside Terraform stays invisible. **WARNING**: changing this value to another non-empty one **reinstalls the instance** (rebuild on the current image — the root disk is wiped); setting it to `\"\"` is an explicit clear and **also reinstalls the instance**; removing the argument from the configuration only drops it from state, the instance keeps the user data it booted with and is **not** rebuilt"
 
 	// Read-only wordings for the data sources, where the root attributes expose
 	// the requested target spec rather than a writable input.
@@ -475,7 +502,7 @@ func customStringListToRefs(list ovhtypes.TfListNestedValue[ovhtypes.TfStringVal
 }
 
 // ToCreate builds the create payload including all fields (mutable + immutable).
-func (m *CloudInstanceModel) ToCreate() *CloudInstanceCreatePayload {
+func (m *CloudInstanceResourceModel) ToCreate() *CloudInstanceCreatePayload {
 	ts := &CloudInstanceAPITargetSpec{
 		Name:   m.Name.ValueString(),
 		Flavor: &CloudInstanceRef{Id: m.FlavorId.ValueString()},
@@ -499,6 +526,9 @@ func (m *CloudInstanceModel) ToCreate() *CloudInstanceCreatePayload {
 	if !m.GroupId.IsNull() && !m.GroupId.IsUnknown() && m.GroupId.ValueString() != "" {
 		ts.Group = &CloudInstanceRef{Id: m.GroupId.ValueString()}
 	}
+	if !m.UserData.IsNull() && !m.UserData.IsUnknown() && m.UserData.ValueString() != "" {
+		ts.UserData = m.UserData.ValueString()
+	}
 	ts.Networks = networksToAPI(m.Networks)
 	ts.Volumes = customStringListToRefs(m.VolumeIds)
 	ts.SecurityGroups = customStringListToRefs(m.SecurityGroupIds)
@@ -507,9 +537,33 @@ func (m *CloudInstanceModel) ToCreate() *CloudInstanceCreatePayload {
 	return &CloudInstanceCreatePayload{TargetSpec: ts}
 }
 
+// userDataForUpdate resolves the userData tri-state for a PUT from the planned
+// and prior (state) values.
+//
+// The API reinstalls the instance whenever the key is present and changes the
+// stored value — including `"userData": ""`, which clears it — so the key is
+// emitted ONLY when the configuration actually moved it. An attribute the user
+// never set (null) or left untouched must serialize as an absent key, never as
+// "": the latter would wipe the root disk on any unrelated update.
+func userDataForUpdate(planned, prior ovhtypes.TfStringValue) *string {
+	// Null plan = absent from config. Terraform drops the value from state, but
+	// the instance keeps whatever it booted with: there is no "unset" on the API
+	// side, and clearing would be a destructive reading of an omission.
+	if planned.IsNull() || planned.IsUnknown() {
+		return nil
+	}
+	if !prior.IsNull() && !prior.IsUnknown() && prior.ValueString() == planned.ValueString() {
+		return nil
+	}
+	v := planned.ValueString()
+	return &v
+}
+
 // ToUpdate builds the update payload with mutable fields only, plus checksum.
 // Location, sshKeyName and group are immutable and intentionally excluded.
-func (m *CloudInstanceModel) ToUpdate(checksum string) *CloudInstanceUpdatePayload {
+// priorUserData is the value held in state, needed to resolve the userData
+// tri-state; everything else comes from the plan.
+func (m *CloudInstanceResourceModel) ToUpdate(checksum string, priorUserData ovhtypes.TfStringValue) *CloudInstanceUpdatePayload {
 	ts := &CloudInstanceAPIUpdateTargetSpec{
 		Name:   m.Name.ValueString(),
 		Flavor: &CloudInstanceRef{Id: m.FlavorId.ValueString()},
@@ -521,6 +575,7 @@ func (m *CloudInstanceModel) ToUpdate(checksum string) *CloudInstanceUpdatePaylo
 	if !m.PowerState.IsNull() && !m.PowerState.IsUnknown() {
 		ts.PowerState = m.PowerState.ValueString()
 	}
+	ts.UserData = userDataForUpdate(m.UserData, priorUserData)
 	ts.Networks = networksToAPI(m.Networks)
 	ts.Volumes = customStringListToRefs(m.VolumeIds)
 	ts.SecurityGroups = customStringListToRefs(m.SecurityGroupIds)
@@ -848,6 +903,10 @@ func (m *CloudInstanceModel) priorSpec() instancePriorSpec {
 }
 
 // MergeWith copies the API response into the Terraform model.
+//
+// It cannot reach user_data: that attribute lives on CloudInstanceResourceModel,
+// outside the embedded model written here, so the configured write-only value
+// survives every create/read/update merge untouched.
 func (m *CloudInstanceModel) MergeWith(ctx context.Context, response *CloudInstanceAPIResponse, prior instancePriorSpec) {
 	m.Id = tfStr(response.Id)
 	m.Checksum = tfStr(response.Checksum)

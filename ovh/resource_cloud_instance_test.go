@@ -1,6 +1,7 @@
 package ovh
 
 import (
+	"encoding/base64"
 	"fmt"
 	"os"
 	"regexp"
@@ -175,6 +176,25 @@ resource "ovh_cloud_instance" "test" {
   ]
 }
 `, serviceName, keyName, testAccCloudSshKeyPublicKeyA, serviceName, region, name, flavorID, imageID)
+}
+
+// testAccCloudInstanceConfigUserData renders an instance config whose user_data
+// carries a cloud-init payload, base64-encoded the documented way.
+func testAccCloudInstanceConfigUserData(serviceName, region, flavorID, imageID, name, cloudInit string) string {
+	return fmt.Sprintf(`
+resource "ovh_cloud_instance" "test" {
+  service_name = "%s"
+  region       = "%s"
+  name         = "%s"
+  flavor_id    = "%s"
+  image_id     = "%s"
+  user_data    = base64encode(%q)
+
+  networks = [
+    { auto_assign_public_ip = true },
+  ]
+}
+`, serviceName, region, name, flavorID, imageID, cloudInit)
 }
 
 // testAccCloudInstanceConfigBootFromVolume renders a bootable block volume
@@ -358,6 +378,72 @@ func TestAccCloudInstance_rebuildImage(t *testing.T) {
 					resource.TestCheckResourceAttrWith("ovh_cloud_instance.test", "id", func(v string) error {
 						if v != instanceID {
 							return fmt.Errorf("instance was replaced during image rebuild: id changed from %q to %q", instanceID, v)
+						}
+						return nil
+					}),
+				),
+			},
+		},
+	})
+}
+
+// TestAccCloudInstance_userData creates an instance carrying cloud-init user data
+// and then changes it. The API applies a new userData by rebuilding the instance
+// on its current image, so the change must plan as an in-place Update and keep the
+// instance id — never a destroy/recreate. The middle step also locks the absence
+// of spurious drift: user_data is write-only, so a value the API never echoes back
+// must still produce an empty plan.
+func TestAccCloudInstance_userData(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+	flavorID := resolveInstanceFlavorID(t, serviceName, region, testAccInstanceFlavorName)
+	imageID := resolveInstanceImageID(t, serviceName, region, testAccInstanceImageName)
+	name := acctest.RandomWithPrefix("test-inst-ud")
+
+	const (
+		cloudInitA = "#cloud-config\npackages:\n  - nginx\n"
+		cloudInitB = "#cloud-config\npackages:\n  - htop\n"
+	)
+	encodedA := base64.StdEncoding.EncodeToString([]byte(cloudInitA))
+	encodedB := base64.StdEncoding.EncodeToString([]byte(cloudInitB))
+
+	var instanceID string
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheckCloudInstanceV2(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCloudInstanceConfigUserData(serviceName, region, flavorID, imageID, name, cloudInitA),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_instance.test", "user_data", encodedA),
+					resource.TestCheckResourceAttr("ovh_cloud_instance.test", "resource_status", "READY"),
+					resource.TestCheckResourceAttrWith("ovh_cloud_instance.test", "id", func(v string) error {
+						if v == "" {
+							return fmt.Errorf("expected instance id to be set")
+						}
+						instanceID = v
+						return nil
+					}),
+				),
+			},
+			{
+				Config:   testAccCloudInstanceConfigUserData(serviceName, region, flavorID, imageID, name, cloudInitA),
+				PlanOnly: true,
+			},
+			{
+				Config: testAccCloudInstanceConfigUserData(serviceName, region, flavorID, imageID, name, cloudInitB),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("ovh_cloud_instance.test", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_instance.test", "user_data", encodedB),
+					resource.TestCheckResourceAttr("ovh_cloud_instance.test", "resource_status", "READY"),
+					resource.TestCheckResourceAttrWith("ovh_cloud_instance.test", "id", func(v string) error {
+						if v != instanceID {
+							return fmt.Errorf("instance was replaced by a user_data change: id went from %q to %q", instanceID, v)
 						}
 						return nil
 					}),

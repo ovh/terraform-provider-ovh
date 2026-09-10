@@ -54,7 +54,7 @@ func (r *cloudInstanceResource) Configure(ctx context.Context, req resource.Conf
 }
 
 var instanceMutableAttrs = MutableAttrs{
-	Strings:           []string{"name", "flavor_id", "image_id", "power_state"},
+	Strings:           []string{"name", "flavor_id", "image_id", "power_state", "user_data"},
 	Lists:             []string{"networks", "shares"},
 	CustomStringLists: []string{"volume_ids", "security_group_ids"},
 }
@@ -134,6 +134,15 @@ func (r *cloudInstanceResource) Schema(ctx context.Context, req resource.SchemaR
 					stringvalidator.OneOf("ACTIVE", "SHUTOFF", "SHELVED"),
 				},
 				PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
+			},
+			// Mutable, and NOT RequiresReplace: the API applies a new value by
+			// rebuilding the instance in place, so its id and ports survive.
+			"user_data": schema.StringAttribute{
+				CustomType:          ovhtypes.TfStringType{},
+				Optional:            true,
+				Sensitive:           true,
+				Description:         instanceDescUserData,
+				MarkdownDescription: instanceDescUserDataMd,
 			},
 			"networks": schema.ListNestedAttribute{
 				Optional:    true,
@@ -335,7 +344,7 @@ func (r *cloudInstanceResource) ImportState(ctx context.Context, req resource.Im
 }
 
 func (r *cloudInstanceResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data CloudInstanceModel
+	var data CloudInstanceResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -375,7 +384,7 @@ func (r *cloudInstanceResource) Create(ctx context.Context, req resource.CreateR
 }
 
 func (r *cloudInstanceResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data CloudInstanceModel
+	var data CloudInstanceResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -399,7 +408,7 @@ func (r *cloudInstanceResource) Read(ctx context.Context, req resource.ReadReque
 }
 
 func (r *cloudInstanceResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, planData CloudInstanceModel
+	var data, planData CloudInstanceResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &planData)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -420,7 +429,9 @@ func (r *cloudInstanceResource) Update(ctx context.Context, req resource.UpdateR
 		return
 	}
 
-	updatePayload := planData.ToUpdate(currentData.Checksum)
+	// data holds the prior state: ToUpdate needs it to tell an unchanged user_data
+	// (absent key) from one the config actually moved (rebuild).
+	updatePayload := planData.ToUpdate(currentData.Checksum, data.UserData)
 
 	var responseData CloudInstanceAPIResponse
 	if err := r.config.OVHClient.Put(endpoint, updatePayload, &responseData); err != nil {
@@ -445,7 +456,7 @@ func (r *cloudInstanceResource) Update(ctx context.Context, req resource.UpdateR
 }
 
 func (r *cloudInstanceResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data CloudInstanceModel
+	var data CloudInstanceResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return

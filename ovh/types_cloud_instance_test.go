@@ -3,10 +3,13 @@ package ovh
 import (
 	"context"
 	"encoding/json"
+	"reflect"
+	"sort"
 	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	fwresource "github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
@@ -31,20 +34,23 @@ func customStringList(ids ...string) ovhtypes.TfListNestedValue[ovhtypes.TfStrin
 }
 
 func TestUnitCloudInstanceModelToCreate(t *testing.T) {
-	m := &CloudInstanceModel{
-		ServiceName:      strVal("proj"),
-		Region:           strVal("GRA11"),
-		AvailabilityZone: strNull(),
-		Name:             strVal("web-1"),
-		FlavorId:         strVal("flavor-uuid"),
-		ImageId:          strVal("image-uuid"),
-		PowerState:       strNull(),
-		SSHKeyName:       strVal("mykey"),
-		GroupId:          strNull(),
-		Networks:         types.ListNull(types.ObjectType{AttrTypes: instanceNetworkRefAttrTypes()}),
-		VolumeIds:        ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]{ListValue: basetypes.NewListNull(ovhtypes.TfStringType{})},
-		SecurityGroupIds: customStringList("sg-1"),
-		Shares:           types.ListNull(types.ObjectType{AttrTypes: instanceShareRefAttrTypes()}),
+	m := &CloudInstanceResourceModel{
+		CloudInstanceModel: CloudInstanceModel{
+			ServiceName:      strVal("proj"),
+			Region:           strVal("GRA11"),
+			AvailabilityZone: strNull(),
+			Name:             strVal("web-1"),
+			FlavorId:         strVal("flavor-uuid"),
+			ImageId:          strVal("image-uuid"),
+			PowerState:       strNull(),
+			SSHKeyName:       strVal("mykey"),
+			GroupId:          strNull(),
+			Networks:         types.ListNull(types.ObjectType{AttrTypes: instanceNetworkRefAttrTypes()}),
+			VolumeIds:        ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]{ListValue: basetypes.NewListNull(ovhtypes.TfStringType{})},
+			SecurityGroupIds: customStringList("sg-1"),
+			Shares:           types.ListNull(types.ObjectType{AttrTypes: instanceShareRefAttrTypes()}),
+		},
+		UserData: strVal("I2Nsb3VkLWNvbmZpZw=="),
 	}
 
 	payload := m.ToCreate()
@@ -67,6 +73,9 @@ func TestUnitCloudInstanceModelToCreate(t *testing.T) {
 	if payload.TargetSpec.SSHKeyName != "mykey" {
 		t.Fatalf("sshKeyName = %q, want mykey", payload.TargetSpec.SSHKeyName)
 	}
+	if payload.TargetSpec.UserData != "I2Nsb3VkLWNvbmZpZw==" {
+		t.Fatalf("userData = %q, want I2Nsb3VkLWNvbmZpZw==", payload.TargetSpec.UserData)
+	}
 	if len(payload.TargetSpec.SecurityGroups) != 1 || payload.TargetSpec.SecurityGroups[0].Id != "sg-1" {
 		t.Fatalf("securityGroups not set correctly: %+v", payload.TargetSpec.SecurityGroups)
 	}
@@ -78,22 +87,25 @@ func TestUnitCloudInstanceModelToCreate(t *testing.T) {
 }
 
 func TestUnitCloudInstanceModelToUpdate(t *testing.T) {
-	m := &CloudInstanceModel{
-		Region:           strVal("GRA11"),   // immutable — must NOT appear
-		AvailabilityZone: strVal("GRA11-a"), // immutable — must NOT appear
-		SSHKeyName:       strVal("mykey"),   // immutable — must NOT appear
-		GroupId:          strVal("grp-1"),   // immutable — must NOT appear
-		Name:             strVal("web-2"),
-		FlavorId:         strVal("flavor-uuid"),
-		ImageId:          strVal("image-uuid"),
-		PowerState:       strVal("SHUTOFF"),
-		Networks:         types.ListNull(types.ObjectType{AttrTypes: instanceNetworkRefAttrTypes()}),
-		VolumeIds:        ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]{ListValue: basetypes.NewListNull(ovhtypes.TfStringType{})},
-		SecurityGroupIds: ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]{ListValue: basetypes.NewListNull(ovhtypes.TfStringType{})},
-		Shares:           types.ListNull(types.ObjectType{AttrTypes: instanceShareRefAttrTypes()}),
+	m := &CloudInstanceResourceModel{
+		CloudInstanceModel: CloudInstanceModel{
+			Region:           strVal("GRA11"),   // immutable — must NOT appear
+			AvailabilityZone: strVal("GRA11-a"), // immutable — must NOT appear
+			SSHKeyName:       strVal("mykey"),   // immutable — must NOT appear
+			GroupId:          strVal("grp-1"),   // immutable — must NOT appear
+			Name:             strVal("web-2"),
+			FlavorId:         strVal("flavor-uuid"),
+			ImageId:          strVal("image-uuid"),
+			PowerState:       strVal("SHUTOFF"),
+			Networks:         types.ListNull(types.ObjectType{AttrTypes: instanceNetworkRefAttrTypes()}),
+			VolumeIds:        ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]{ListValue: basetypes.NewListNull(ovhtypes.TfStringType{})},
+			SecurityGroupIds: ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]{ListValue: basetypes.NewListNull(ovhtypes.TfStringType{})},
+			Shares:           types.ListNull(types.ObjectType{AttrTypes: instanceShareRefAttrTypes()}),
+		},
+		UserData: strNull(),
 	}
 
-	payload := m.ToUpdate("chk-123")
+	payload := m.ToUpdate("chk-123", strNull())
 
 	if payload.Checksum != "chk-123" {
 		t.Fatalf("checksum = %q, want chk-123", payload.Checksum)
@@ -472,13 +484,16 @@ func nullCustomStringList() ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] {
 // create, leave unchanged on update) from an explicit [] (no security group), so
 // both must survive JSON marshalling instead of being dropped by omitempty.
 func TestUnitCloudInstanceSecurityGroupsNullVersusEmpty(t *testing.T) {
-	base := CloudInstanceModel{
-		Region:    strVal("GRA11"),
-		Name:      strVal("web-1"),
-		FlavorId:  strVal("flavor-uuid"),
-		Networks:  types.ListNull(types.ObjectType{AttrTypes: instanceNetworkRefAttrTypes()}),
-		VolumeIds: nullCustomStringList(),
-		Shares:    types.ListNull(types.ObjectType{AttrTypes: instanceShareRefAttrTypes()}),
+	base := CloudInstanceResourceModel{
+		CloudInstanceModel: CloudInstanceModel{
+			Region:    strVal("GRA11"),
+			Name:      strVal("web-1"),
+			FlavorId:  strVal("flavor-uuid"),
+			Networks:  types.ListNull(types.ObjectType{AttrTypes: instanceNetworkRefAttrTypes()}),
+			VolumeIds: nullCustomStringList(),
+			Shares:    types.ListNull(types.ObjectType{AttrTypes: instanceShareRefAttrTypes()}),
+		},
+		UserData: strNull(),
 	}
 
 	cases := []struct {
@@ -504,7 +519,7 @@ func TestUnitCloudInstanceSecurityGroupsNullVersusEmpty(t *testing.T) {
 				t.Fatalf("create target spec must contain %s: %s", tc.want, string(b))
 			}
 
-			b, err = json.Marshal(m.ToUpdate("chk-1").TargetSpec)
+			b, err = json.Marshal(m.ToUpdate("chk-1", strNull()).TargetSpec)
 			if err != nil {
 				t.Fatalf("marshal update target spec: %s", err)
 			}
@@ -582,5 +597,197 @@ func TestUnitCloudInstanceMergeWithNilImage(t *testing.T) {
 	imgObj, _ := m.CurrentState.Attributes()["image"].(types.Object)
 	if !imgObj.IsNull() {
 		t.Fatalf("current_state.image should be null for boot-from-volume")
+	}
+}
+
+const (
+	testUserDataA = "I2Nsb3VkLWNvbmZpZwpwYWNrYWdlczoKICAtIG5naW54Cg=="
+	testUserDataB = "I2Nsb3VkLWNvbmZpZwpwYWNrYWdlczoKICAtIGh0b3AK"
+)
+
+// userDataUpdateModel builds a minimal resource model whose only interesting
+// field is user_data, for the tri-state assertions below.
+func userDataUpdateModel(planned ovhtypes.TfStringValue) *CloudInstanceResourceModel {
+	return &CloudInstanceResourceModel{
+		CloudInstanceModel: CloudInstanceModel{
+			Name:             strVal("web-1"),
+			FlavorId:         strVal("flavor-uuid"),
+			Networks:         types.ListNull(types.ObjectType{AttrTypes: instanceNetworkRefAttrTypes()}),
+			VolumeIds:        nullCustomStringList(),
+			SecurityGroupIds: nullCustomStringList(),
+			Shares:           types.ListNull(types.ObjectType{AttrTypes: instanceShareRefAttrTypes()}),
+		},
+		UserData: planned,
+	}
+}
+
+// The API reads userData as a tri-state on PUT: an absent key keeps the stored
+// value, "" clears it, a non-empty value replaces it — and both a clear and a
+// replace REINSTALL the instance (Nova rebuild, root disk wiped). So an attribute
+// the user never set, or left untouched, MUST marshal to no key at all: emitting
+// "" would wipe the root disk on every unrelated update.
+func TestUnitCloudInstanceUserDataUpdateTriState(t *testing.T) {
+	cases := []struct {
+		name  string
+		prior ovhtypes.TfStringValue
+		plan  ovhtypes.TfStringValue
+		want  string // "" means the key must be absent entirely
+	}{
+		{name: "never configured", prior: strNull(), plan: strNull(), want: ""},
+		{name: "unchanged", prior: strVal(testUserDataA), plan: strVal(testUserDataA), want: ""},
+		{name: "removed from config", prior: strVal(testUserDataA), plan: strNull(), want: ""},
+		{
+			name:  "unknown plan",
+			prior: strVal(testUserDataA),
+			plan:  ovhtypes.TfStringValue{StringValue: types.StringUnknown()},
+			want:  "",
+		},
+		{name: "first set", prior: strNull(), plan: strVal(testUserDataA), want: `"userData":"` + testUserDataA + `"`},
+		{name: "changed", prior: strVal(testUserDataA), plan: strVal(testUserDataB), want: `"userData":"` + testUserDataB + `"`},
+		{name: "cleared", prior: strVal(testUserDataA), plan: strVal(""), want: `"userData":""`},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			b, err := json.Marshal(userDataUpdateModel(tc.plan).ToUpdate("chk-1", tc.prior).TargetSpec)
+			if err != nil {
+				t.Fatalf("marshal update target spec: %s", err)
+			}
+			got := string(b)
+
+			if tc.want == "" {
+				if strings.Contains(got, "userData") {
+					t.Fatalf("update target spec must carry NO userData key — an empty one clears the user data and wipes the root disk: %s", got)
+				}
+				return
+			}
+			if !strings.Contains(got, tc.want) {
+				t.Fatalf("update target spec must contain %s: %s", tc.want, got)
+			}
+		})
+	}
+}
+
+// Same guarantee on create: an unset user_data sends no userData at all.
+func TestUnitCloudInstanceUserDataOnCreate(t *testing.T) {
+	m := userDataUpdateModel(strNull())
+	b, err := json.Marshal(m.ToCreate().TargetSpec)
+	if err != nil {
+		t.Fatalf("marshal create target spec: %s", err)
+	}
+	if strings.Contains(string(b), "userData") {
+		t.Fatalf("create target spec must carry no userData key when unset: %s", string(b))
+	}
+
+	m = userDataUpdateModel(strVal(testUserDataA))
+	if b, err = json.Marshal(m.ToCreate().TargetSpec); err != nil {
+		t.Fatalf("marshal create target spec: %s", err)
+	}
+	if want := `"userData":"` + testUserDataA + `"`; !strings.Contains(string(b), want) {
+		t.Fatalf("create target spec must contain %s: %s", want, string(b))
+	}
+}
+
+// user_data is write-only: GET and LIST never return it, so a merge must leave the
+// configured value alone. Terraform state holds the only copy.
+func TestUnitCloudInstanceUserDataSurvivesMerge(t *testing.T) {
+	ctx := context.Background()
+
+	m := userDataUpdateModel(strVal(testUserDataA))
+	m.MergeWith(ctx, &CloudInstanceAPIResponse{
+		Id:             "inst-ud",
+		ResourceStatus: "READY",
+		TargetSpec: &CloudInstanceAPITargetSpec{
+			Name:     "web-1",
+			Location: &CloudInstanceAPILocation{Region: "GRA11"},
+			// Should never happen (write-only), but even then the merge must not
+			// let a response value displace the configured one.
+			UserData: testUserDataB,
+		},
+	}, m.priorSpec())
+
+	if m.UserData.IsNull() || m.UserData.IsUnknown() {
+		t.Fatalf("user_data must survive a merge, got %+v", m.UserData)
+	}
+	if got := m.UserData.ValueString(); got != testUserDataA {
+		t.Fatalf("user_data = %q, want the configured %q preserved", got, testUserDataA)
+	}
+}
+
+// tfsdkTags collects a model's tfsdk tag names, following embedded structs the way
+// terraform-plugin-framework's reflection does.
+func tfsdkTags(t *testing.T, typ reflect.Type) map[string]bool {
+	t.Helper()
+	out := map[string]bool{}
+	for i := 0; i < typ.NumField(); i++ {
+		f := typ.Field(i)
+		if f.Anonymous {
+			if _, ok := f.Tag.Lookup("tfsdk"); ok {
+				t.Fatalf("embedded field %s must not carry a tfsdk tag, the framework rejects it", f.Name)
+			}
+			for k := range tfsdkTags(t, f.Type) {
+				out[k] = true
+			}
+			continue
+		}
+		tag, ok := f.Tag.Lookup("tfsdk")
+		if !ok {
+			t.Fatalf("field %s has no tfsdk tag", f.Name)
+		}
+		if tag == "-" {
+			continue
+		}
+		out[tag] = true
+	}
+	return out
+}
+
+func sortedKeys(m map[string]bool) []string {
+	out := make([]string, 0, len(m))
+	for k := range m {
+		out = append(out, k)
+	}
+	sort.Strings(out)
+	return out
+}
+
+// The framework demands exact parity between a model's tfsdk tags and the schema
+// it is read into and written from, in BOTH directions: an extra struct field or
+// an extra schema attribute fails at Get/Set time, at runtime, with no compile
+// error to warn you. The resource and the ovh_cloud_instance data source share
+// CloudInstanceModel, so an attribute added to the shared model silently breaks
+// the data source — which is exactly why write-only user_data lives on
+// CloudInstanceResourceModel instead.
+func TestUnitCloudInstanceModelsMatchSchemas(t *testing.T) {
+	ctx := context.Background()
+
+	schemaResp := &fwresource.SchemaResponse{}
+	(&cloudInstanceResource{}).Schema(ctx, fwresource.SchemaRequest{}, schemaResp)
+
+	resourceAttrs := map[string]bool{}
+	for name := range schemaResp.Schema.Attributes {
+		resourceAttrs[name] = true
+	}
+	resourceFields := tfsdkTags(t, reflect.TypeOf(CloudInstanceResourceModel{}))
+	if !reflect.DeepEqual(sortedKeys(resourceAttrs), sortedKeys(resourceFields)) {
+		t.Fatalf("resource schema and CloudInstanceResourceModel disagree:\n schema = %v\n  model = %v",
+			sortedKeys(resourceAttrs), sortedKeys(resourceFields))
+	}
+
+	dsAttrs := map[string]bool{}
+	for name := range instanceDataSourceAttributes(ctx) {
+		dsAttrs[name] = true
+	}
+	dsFields := tfsdkTags(t, reflect.TypeOf(CloudInstanceModel{}))
+	if !reflect.DeepEqual(sortedKeys(dsAttrs), sortedKeys(dsFields)) {
+		t.Fatalf("data source schema and CloudInstanceModel disagree:\n schema = %v\n  model = %v",
+			sortedKeys(dsAttrs), sortedKeys(dsFields))
+	}
+
+	if !resourceFields["user_data"] {
+		t.Fatal("the resource must expose user_data")
+	}
+	if dsFields["user_data"] || dsAttrs["user_data"] {
+		t.Fatal("the data source must NOT expose user_data: the API never returns it, so there is nothing to read back")
 	}
 }
