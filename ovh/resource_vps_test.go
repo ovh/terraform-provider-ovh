@@ -1,13 +1,64 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
 
+	resourceschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
+
+func TestVpsResourceSchemaModelVersionValidation(t *testing.T) {
+	ctx := context.Background()
+	schema := VpsResourceSchema(ctx)
+	model := schema.Attributes["model"].(resourceschema.SingleNestedAttribute)
+	version := model.Attributes["version"].(resourceschema.StringAttribute)
+	versionValidator := version.Validators[0]
+	expectedDescription := `value must be one of: ["2013v1" "2014v1" "2015v1" "2017v1" "2017v2" "2017v3" "2018v1" "2018v2" "2019v1" "2025v1" "2027v1"]`
+
+	if got := versionValidator.Description(ctx); got != expectedDescription {
+		t.Fatalf("expected plan type validator description %q, got %q", expectedDescription, got)
+	}
+
+	for _, planType := range []string{
+		"2013v1",
+		"2014v1",
+		"2015v1",
+		"2017v1",
+		"2017v2",
+		"2017v3",
+		"2018v1",
+		"2018v2",
+		"2019v1",
+		"2025v1",
+		"2027v1",
+	} {
+		t.Run(planType, func(t *testing.T) {
+			var response validator.StringResponse
+
+			versionValidator.ValidateString(ctx, validator.StringRequest{
+				ConfigValue: types.StringValue(planType),
+			}, &response)
+
+			if response.Diagnostics.HasError() {
+				t.Fatalf("expected plan type %q to be accepted, got diagnostics: %#v", planType, response.Diagnostics)
+			}
+		})
+	}
+
+	var response validator.StringResponse
+	versionValidator.ValidateString(ctx, validator.StringRequest{
+		ConfigValue: types.StringValue("unsupported-vps-plan"),
+	}, &response)
+	if !response.Diagnostics.HasError() {
+		t.Fatal("expected an unsupported plan type to be rejected")
+	}
+}
 
 const testAccVpsBasic = `
 data "ovh_me" "myaccount" {}

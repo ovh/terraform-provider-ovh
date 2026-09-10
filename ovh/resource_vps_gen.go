@@ -167,6 +167,7 @@ func VpsResourceSchema(ctx context.Context) schema.Schema {
 							"2018v2",
 							"2019v1",
 							"2025v1",
+							"2027v1",
 						),
 					},
 				},
