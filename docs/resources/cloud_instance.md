@@ -315,6 +315,65 @@ resource "ovh_cloud_instance" "with_shares" {
 }
 ```
 
+### Cloud-init user data
+
+`user_data` carries a cloud-init payload, base64-encoded (standard encoding,
+65535 bytes max). It is **write-only**: the API accepts it but never returns it,
+so Terraform state holds the only copy and a change made outside Terraform stays
+invisible.
+
+**WARNING**: what happens on an update depends on how `user_data` moves in the
+configuration. Removing the argument and setting it to `""` are **not** the same
+thing — `""` is the destructive one:
+
+* **Changed** to a different non-empty value → the API **reinstalls the instance**:
+  it is rebuilt on its current image and the **root disk is wiped**. The instance
+  id, ports and IPs survive (it is an in-place update, not a replacement), but
+  anything written to the root disk since boot is lost.
+* **Set to `""`** while state holds a value → an explicit clear, sent as-is to the
+  API. The instance is **reinstalled** exactly as above (root disk wiped).
+* **Argument removed** from the configuration → the provider leaves the key out of
+  the `PUT`; nothing happens server-side, the instance keeps the user data it
+  booted with and Terraform only drops the value from state. **No rebuild.**
+
+```terraform
+# From a file next to the configuration.
+resource "ovh_cloud_instance" "from_file" {
+  service_name = "<Public cloud project id>"
+  region       = "GRA11"
+  name         = "my-instance-with-cloud-init"
+  flavor_id    = "<flavor id>"
+  image_id     = "<image id>"
+  user_data    = base64encode(file("${path.module}/cloud-init.yaml"))
+
+  networks = [
+    { auto_assign_public_ip = true },
+  ]
+}
+
+# Inline, with a heredoc.
+resource "ovh_cloud_instance" "inline" {
+  service_name = "<Public cloud project id>"
+  region       = "GRA11"
+  name         = "my-instance-with-inline-cloud-init"
+  flavor_id    = "<flavor id>"
+  image_id     = "<image id>"
+
+  user_data = base64encode(<<-EOT
+    #cloud-config
+    packages:
+      - nginx
+    runcmd:
+      - [systemctl, enable, --now, nginx]
+  EOT
+  )
+
+  networks = [
+    { auto_assign_public_ip = true },
+  ]
+}
+```
+
 ### Power state
 
 ```terraform
@@ -391,6 +450,10 @@ The following arguments are supported:
 * `group_id` - (Optional) ID of the placement group the instance belongs to (immutable). This is the only way to make an instance a member of an [`ovh_cloud_instance_group`](cloud_instance_group.md). **Changing this value recreates the resource.**
 * `image_id` - (Optional) Image ID to boot from. Omit for a boot-from-volume instance. **WARNING**: changing it rebuilds the instance and **wipes the root disk**.
 * `power_state` - (Optional) Desired power state: `ACTIVE`, `SHUTOFF` or `SHELVED`. When omitted, the API applies `ACTIVE` server-side and echoes it back; the provider declares no default of its own.
+* `user_data` - (Optional, Sensitive) Cloud-init user data injected at boot, base64-encoded (standard encoding, 65535 bytes max). Pass it through `base64encode()`, for example `base64encode(file("cloud-init.yaml"))`. **Write-only**: the API accepts it but never returns it, so Terraform state holds the only copy and a change made outside Terraform stays invisible. **WARNING**: removing the argument and setting it to `""` are **not** the same thing — `""` is the destructive one:
+  * changed to a different non-empty value → the API **reinstalls the instance** (rebuilt on its current image, **root disk wiped**; instance id, ports and IPs survive, it is applied in place, not as a replacement);
+  * set to `""` while state holds a value → explicit clear, the instance is **reinstalled** as above (root disk wiped);
+  * argument removed from the configuration → the key is left out of the `PUT`, the instance keeps the user data it booted with and Terraform only drops the value from state — **no rebuild**.
 * `networks` - (Optional) Network interfaces attached to the instance. Entries keep the order they are written in; the API returns them sorted by network id and the provider re-orders them back to the configuration. Four shapes:
   * `auto_assign_public_ip` alone — public interface with a platform-assigned public IP (at most one such entry).
   * `ip` alone — a public IP the project already owns: an additional IP, or an Ext-Net IP of the project in the instance's region. Several are allowed and may coexist with `auto_assign_public_ip`.
@@ -480,6 +543,12 @@ is the single observed entry with no `id`.
 * `resource_status = "ERROR"` is terminal: polling stops at once and the
   provider surfaces the summary of the failed task(s) instead of a generic
   unexpected-state error.
+* `user_data` is write-only, so the provider only ever sends it when the
+  configuration moves it: an unchanged value, or an argument absent from the
+  configuration, is left out of the `PUT` entirely, which is what keeps an
+  unrelated update (a rename, a resize) from reinstalling the instance. An
+  explicit `""` is **not** an absence — it is sent as a clear and reinstalls the
+  instance.
 
 ## Import
 
@@ -496,3 +565,9 @@ import {
 ```bash
 $ terraform import ovh_cloud_instance.instance service_name/instance_id
 ```
+
+An imported instance carries no `user_data` in state, since the API never returns
+it. If the configuration sets `user_data`, the first apply after the import will
+therefore see a change and **reinstall the instance** (root disk wiped). Import an
+instance whose user data matters with `user_data` absent from the configuration
+first, then add it only when a rebuild is acceptable.
