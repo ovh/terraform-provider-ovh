@@ -18,6 +18,10 @@ resource "ovh_cloud_storage_file_share" "share" {
   share_type       = "STANDARD_1AZ"
   share_network_id = "<share network id>"
   description      = "My NFS share"
+
+  encryption = {
+    enabled = true
+  }
 }
 ```
 
@@ -33,6 +37,8 @@ The following arguments are supported:
 * `share_type` - (Required) File share type (e.g. `STANDARD_1AZ`). **Changing this value recreates the resource.**
 * `share_network_id` - (Required) ID of a pre-existing share network to attach the file share to. **Changing this value recreates the resource.**
 * `availability_zone` - (Optional) Availability zone where the file share will be created. **Changing this value recreates the resource.**
+* `encryption` - (Optional) Encryption configuration for the file share. Set at creation only. **Changing this value recreates the resource.**
+  * `enabled` - (Optional) Whether the file share is encrypted at rest with LUKS.
 * `description` - (Optional) File share description.
 
 ## Attributes Reference
@@ -54,6 +60,8 @@ The following attributes are exported:
   * `protocol` - File share protocol.
   * `share_type` - File share type.
   * `share_network_id` - ID of the share network the file share is attached to.
+  * `encryption` - Encryption configuration of the file share:
+    * `enabled` - Whether the file share is encrypted at rest with LUKS.
   * `export_locations` - Export locations for the file share:
     * `path` - Export path.
     * `preferred` - Whether this is the preferred export location.
