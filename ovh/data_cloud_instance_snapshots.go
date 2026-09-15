@@ -12,21 +12,21 @@ import (
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
-var _ datasource.DataSourceWithConfigure = (*cloudInstanceBackupsDataSource)(nil)
+var _ datasource.DataSourceWithConfigure = (*cloudInstanceSnapshotsDataSource)(nil)
 
-func NewCloudInstanceBackupsDataSource() datasource.DataSource {
-	return &cloudInstanceBackupsDataSource{}
+func NewCloudInstanceSnapshotsDataSource() datasource.DataSource {
+	return &cloudInstanceSnapshotsDataSource{}
 }
 
-type cloudInstanceBackupsDataSource struct {
+type cloudInstanceSnapshotsDataSource struct {
 	config *Config
 }
 
-func (d *cloudInstanceBackupsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_cloud_instance_backups"
+func (d *cloudInstanceSnapshotsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_cloud_instance_snapshots"
 }
 
-func (d *cloudInstanceBackupsDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *cloudInstanceSnapshotsDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -43,10 +43,10 @@ func (d *cloudInstanceBackupsDataSource) Configure(_ context.Context, req dataso
 	d.config = config
 }
 
-func (d *cloudInstanceBackupsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *cloudInstanceSnapshotsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description:         "List instance backups for a given instance in a public cloud project.",
-		MarkdownDescription: "List instance backups for a given instance in a public cloud project.",
+		Description:         "List instance snapshots for a given instance in a public cloud project.",
+		MarkdownDescription: "List instance snapshots for a given instance in a public cloud project.",
 		Attributes: map[string]schema.Attribute{
 			"service_name": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
@@ -57,34 +57,34 @@ func (d *cloudInstanceBackupsDataSource) Schema(ctx context.Context, req datasou
 			"region": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Required:            true,
-				Description:         "Region where the instance backups reside",
-				MarkdownDescription: "Region where the instance backups reside",
+				Description:         "Region where the instance snapshots reside",
+				MarkdownDescription: "Region where the instance snapshots reside",
 			},
 			"instance_id": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Required:            true,
-				Description:         "ID of the instance whose backups to list",
-				MarkdownDescription: "ID of the instance whose backups to list",
+				Description:         "ID of the instance whose snapshots to list",
+				MarkdownDescription: "ID of the instance whose snapshots to list",
 			},
-			"backups": schema.ListNestedAttribute{
+			"snapshots": schema.ListNestedAttribute{
 				Computed:            true,
-				Description:         "List of backups for the instance",
-				MarkdownDescription: "List of backups for the instance",
+				Description:         "List of snapshots for the instance",
+				MarkdownDescription: "List of snapshots for the instance",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{
 							CustomType:  ovhtypes.TfStringType{},
 							Computed:    true,
-							Description: "Backup ID",
+							Description: "Snapshot ID",
 						},
 						"name": schema.StringAttribute{
 							CustomType:  ovhtypes.TfStringType{},
 							Computed:    true,
-							Description: "Backup name",
+							Description: "Snapshot name",
 						},
 						"location": schema.SingleNestedAttribute{
 							Computed:    true,
-							Description: "Location of the backup",
+							Description: "Location of the snapshot",
 							Attributes: map[string]schema.Attribute{
 								"region": schema.StringAttribute{
 									CustomType:  ovhtypes.TfStringType{},
@@ -96,7 +96,7 @@ func (d *cloudInstanceBackupsDataSource) Schema(ctx context.Context, req datasou
 						"instance_id": schema.StringAttribute{
 							CustomType:  ovhtypes.TfStringType{},
 							Computed:    true,
-							Description: "ID of the backed-up instance",
+							Description: "ID of the snapshotted instance",
 						},
 						"size": schema.Int64Attribute{
 							Computed:    true,
@@ -115,7 +115,7 @@ func (d *cloudInstanceBackupsDataSource) Schema(ctx context.Context, req datasou
 						"resource_status": schema.StringAttribute{
 							CustomType:  ovhtypes.TfStringType{},
 							Computed:    true,
-							Description: "Backup readiness status",
+							Description: "Snapshot readiness status",
 						},
 					},
 				},
@@ -124,14 +124,14 @@ func (d *cloudInstanceBackupsDataSource) Schema(ctx context.Context, req datasou
 	}
 }
 
-type cloudInstanceBackupsDataSourceModel struct {
+type cloudInstanceSnapshotsDataSourceModel struct {
 	ServiceName ovhtypes.TfStringValue `tfsdk:"service_name"`
 	Region      ovhtypes.TfStringValue `tfsdk:"region"`
 	InstanceId  ovhtypes.TfStringValue `tfsdk:"instance_id"`
-	Backups     types.List             `tfsdk:"backups"`
+	Snapshots   types.List             `tfsdk:"snapshots"`
 }
 
-func instanceBackupListItemAttrTypes() map[string]attr.Type {
+func instanceSnapshotListItemAttrTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"id":   ovhtypes.TfStringType{},
 		"name": ovhtypes.TfStringType{},
@@ -146,8 +146,8 @@ func instanceBackupListItemAttrTypes() map[string]attr.Type {
 	}
 }
 
-func (d *cloudInstanceBackupsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data cloudInstanceBackupsDataSourceModel
+func (d *cloudInstanceSnapshotsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var data cloudInstanceSnapshotsDataSourceModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -155,10 +155,10 @@ func (d *cloudInstanceBackupsDataSource) Read(ctx context.Context, req datasourc
 	}
 
 	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) +
-		"/compute/backup?instanceId=" + url.QueryEscape(data.InstanceId.ValueString())
+		"/compute/snapshot?instanceId=" + url.QueryEscape(data.InstanceId.ValueString())
 
-	var apiBackups []CloudInstanceBackupAPIResponse
-	if err := d.config.OVHClient.Get(endpoint, &apiBackups); err != nil {
+	var apiSnapshots []CloudInstanceSnapshotAPIResponse
+	if err := d.config.OVHClient.Get(endpoint, &apiSnapshots); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Get %s", endpoint),
 			err.Error(),
@@ -166,8 +166,8 @@ func (d *cloudInstanceBackupsDataSource) Read(ctx context.Context, req datasourc
 		return
 	}
 
-	backupObjs := make([]attr.Value, 0, len(apiBackups))
-	for _, b := range apiBackups {
+	snapshotObjs := make([]attr.Value, 0, len(apiSnapshots))
+	for _, b := range apiSnapshots {
 		if b.CurrentState != nil && b.CurrentState.Location != nil &&
 			b.CurrentState.Location.Region != data.Region.ValueString() {
 			continue
@@ -213,7 +213,7 @@ func (d *cloudInstanceBackupsDataSource) Read(ctx context.Context, req datasourc
 		}
 
 		itemObj, diags := types.ObjectValue(
-			instanceBackupListItemAttrTypes(),
+			instanceSnapshotListItemAttrTypes(),
 			map[string]attr.Value{
 				"id":              ovhtypes.TfStringValue{StringValue: types.StringValue(b.Id)},
 				"name":            ovhtypes.TfStringValue{StringValue: types.StringValue(name)},
@@ -230,19 +230,19 @@ func (d *cloudInstanceBackupsDataSource) Read(ctx context.Context, req datasourc
 			return
 		}
 
-		backupObjs = append(backupObjs, itemObj)
+		snapshotObjs = append(snapshotObjs, itemObj)
 	}
 
-	backupsList, diags := types.ListValue(
-		types.ObjectType{AttrTypes: instanceBackupListItemAttrTypes()},
-		backupObjs,
+	snapshotsList, diags := types.ListValue(
+		types.ObjectType{AttrTypes: instanceSnapshotListItemAttrTypes()},
+		snapshotObjs,
 	)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	data.Backups = backupsList
+	data.Snapshots = snapshotsList
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

@@ -2,20 +2,20 @@
 subcategory: "Instances"
 ---
 
-# ovh_cloud_instance_backup (Data Source)
+# ovh_cloud_instance_snapshot (Data Source)
 
-Use this data source to retrieve information about an instance backup in a public cloud project.
+Use this data source to retrieve information about an instance snapshot in a public cloud project.
 
 ## Example Usage
 
 ```terraform
-data "ovh_cloud_instance_backup" "backup" {
+data "ovh_cloud_instance_snapshot" "snapshot" {
   service_name = "<Public cloud project id>"
-  id           = "<backup id>"
+  id           = "<snapshot id>"
 }
 
-output "backup_status" {
-  value = data.ovh_cloud_instance_backup.backup.resource_status
+output "snapshot_status" {
+  value = data.ovh_cloud_instance_snapshot.snapshot.resource_status
 }
 ```
 
@@ -24,19 +24,19 @@ output "backup_status" {
 The following arguments are supported:
 
 * `service_name` - (Required) Service name of the resource representing the id of the cloud project.
-* `id` - (Required) Backup ID.
+* `id` - (Required) Snapshot ID.
 
 ## Attributes Reference
 
 The following attributes are exported:
 
-* `name` - Backup name.
-* `location` - Location of the backup:
+* `name` - Snapshot name.
+* `location` - Location of the snapshot:
   * `region` - Region.
-* `instance_id` - ID of the backed-up instance.
+* `instance_id` - ID of the snapshotted instance.
 * `min_disk` - Minimum disk size in GB required to boot.
 * `min_ram` - Minimum RAM in MB required to boot.
 * `size` - Image size in bytes.
 * `status` - Image status in the backend.
 * `visibility` - Image visibility.
-* `resource_status` - Backup readiness in the system (`CREATING`, `DELETING`, `ERROR`, `OUT_OF_SYNC`, `READY`).
+* `resource_status` - Snapshot readiness in the system (`CREATING`, `DELETING`, `ERROR`, `OUT_OF_SYNC`, `READY`).

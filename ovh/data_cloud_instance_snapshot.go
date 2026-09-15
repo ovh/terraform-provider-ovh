@@ -12,21 +12,21 @@ import (
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
-var _ datasource.DataSourceWithConfigure = (*cloudInstanceBackupDataSource)(nil)
+var _ datasource.DataSourceWithConfigure = (*cloudInstanceSnapshotDataSource)(nil)
 
-func NewCloudInstanceBackupDataSource() datasource.DataSource {
-	return &cloudInstanceBackupDataSource{}
+func NewCloudInstanceSnapshotDataSource() datasource.DataSource {
+	return &cloudInstanceSnapshotDataSource{}
 }
 
-type cloudInstanceBackupDataSource struct {
+type cloudInstanceSnapshotDataSource struct {
 	config *Config
 }
 
-func (d *cloudInstanceBackupDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_cloud_instance_backup"
+func (d *cloudInstanceSnapshotDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_cloud_instance_snapshot"
 }
 
-func (d *cloudInstanceBackupDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *cloudInstanceSnapshotDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -43,10 +43,10 @@ func (d *cloudInstanceBackupDataSource) Configure(_ context.Context, req datasou
 	d.config = config
 }
 
-func (d *cloudInstanceBackupDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *cloudInstanceSnapshotDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description:         "Get an instance backup in a public cloud project.",
-		MarkdownDescription: "Get an instance backup in a public cloud project.",
+		Description:         "Get an instance snapshot in a public cloud project.",
+		MarkdownDescription: "Get an instance snapshot in a public cloud project.",
 		Attributes: map[string]schema.Attribute{
 			"service_name": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
@@ -57,17 +57,17 @@ func (d *cloudInstanceBackupDataSource) Schema(ctx context.Context, req datasour
 			"id": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Required:            true,
-				Description:         "Backup ID",
-				MarkdownDescription: "Backup ID",
+				Description:         "Snapshot ID",
+				MarkdownDescription: "Snapshot ID",
 			},
 			"name": schema.StringAttribute{
 				CustomType:  ovhtypes.TfStringType{},
 				Computed:    true,
-				Description: "Backup name",
+				Description: "Snapshot name",
 			},
 			"location": schema.SingleNestedAttribute{
 				Computed:    true,
-				Description: "Location of the backup",
+				Description: "Location of the snapshot",
 				Attributes: map[string]schema.Attribute{
 					"region": schema.StringAttribute{
 						CustomType:  ovhtypes.TfStringType{},
@@ -79,7 +79,7 @@ func (d *cloudInstanceBackupDataSource) Schema(ctx context.Context, req datasour
 			"instance_id": schema.StringAttribute{
 				CustomType:  ovhtypes.TfStringType{},
 				Computed:    true,
-				Description: "ID of the backed-up instance",
+				Description: "ID of the snapshotted instance",
 			},
 			"min_disk": schema.Int64Attribute{
 				Computed:    true,
@@ -106,13 +106,13 @@ func (d *cloudInstanceBackupDataSource) Schema(ctx context.Context, req datasour
 			"resource_status": schema.StringAttribute{
 				CustomType:  ovhtypes.TfStringType{},
 				Computed:    true,
-				Description: "Backup readiness status",
+				Description: "Snapshot readiness status",
 			},
 		},
 	}
 }
 
-type cloudInstanceBackupDataSourceModel struct {
+type cloudInstanceSnapshotDataSourceModel struct {
 	ServiceName    ovhtypes.TfStringValue `tfsdk:"service_name"`
 	Id             ovhtypes.TfStringValue `tfsdk:"id"`
 	Name           ovhtypes.TfStringValue `tfsdk:"name"`
@@ -126,8 +126,8 @@ type cloudInstanceBackupDataSourceModel struct {
 	ResourceStatus ovhtypes.TfStringValue `tfsdk:"resource_status"`
 }
 
-func (d *cloudInstanceBackupDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data cloudInstanceBackupDataSourceModel
+func (d *cloudInstanceSnapshotDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var data cloudInstanceSnapshotDataSourceModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -135,9 +135,9 @@ func (d *cloudInstanceBackupDataSource) Read(ctx context.Context, req datasource
 	}
 
 	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) +
-		"/compute/backup/" + url.PathEscape(data.Id.ValueString())
+		"/compute/snapshot/" + url.PathEscape(data.Id.ValueString())
 
-	var b CloudInstanceBackupAPIResponse
+	var b CloudInstanceSnapshotAPIResponse
 	if err := d.config.OVHClient.Get(endpoint, &b); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Get %s", endpoint),

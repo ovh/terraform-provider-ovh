@@ -8,7 +8,7 @@ import (
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
-type CloudInstanceBackupModel struct {
+type CloudInstanceSnapshotModel struct {
 	ServiceName ovhtypes.TfStringValue `tfsdk:"service_name"`
 	Region      ovhtypes.TfStringValue `tfsdk:"region"`
 	InstanceId  ovhtypes.TfStringValue `tfsdk:"instance_id"`
@@ -22,56 +22,56 @@ type CloudInstanceBackupModel struct {
 	CurrentState   types.Object           `tfsdk:"current_state"`
 }
 
-type CloudInstanceBackupAPIResponse struct {
-	Id             string                           `json:"id"`
-	Checksum       string                           `json:"checksum"`
-	CreatedAt      string                           `json:"createdAt"`
-	UpdatedAt      string                           `json:"updatedAt"`
-	ResourceStatus string                           `json:"resourceStatus"`
-	CurrentState   *CloudInstanceBackupCurrentState `json:"currentState,omitempty"`
-	TargetSpec     *CloudInstanceBackupTargetSpec   `json:"targetSpec,omitempty"`
+type CloudInstanceSnapshotAPIResponse struct {
+	Id             string                             `json:"id"`
+	Checksum       string                             `json:"checksum"`
+	CreatedAt      string                             `json:"createdAt"`
+	UpdatedAt      string                             `json:"updatedAt"`
+	ResourceStatus string                             `json:"resourceStatus"`
+	CurrentState   *CloudInstanceSnapshotCurrentState `json:"currentState,omitempty"`
+	TargetSpec     *CloudInstanceSnapshotTargetSpec   `json:"targetSpec,omitempty"`
 }
 
-type CloudInstanceBackupCurrentState struct {
-	Instance   *CloudInstanceBackupInstanceRef `json:"instance,omitempty"`
-	Location   *CloudInstanceBackupLocation    `json:"location,omitempty"`
-	MinDisk    int64                           `json:"minDisk,omitempty"`
-	MinRam     int64                           `json:"minRam,omitempty"`
-	Name       string                          `json:"name,omitempty"`
-	Size       int64                           `json:"size,omitempty"`
-	Status     string                          `json:"status,omitempty"`
-	Visibility string                          `json:"visibility,omitempty"`
+type CloudInstanceSnapshotCurrentState struct {
+	Instance   *CloudInstanceSnapshotInstanceRef `json:"instance,omitempty"`
+	Location   *CloudInstanceSnapshotLocation    `json:"location,omitempty"`
+	MinDisk    int64                             `json:"minDisk,omitempty"`
+	MinRam     int64                             `json:"minRam,omitempty"`
+	Name       string                            `json:"name,omitempty"`
+	Size       int64                             `json:"size,omitempty"`
+	Status     string                            `json:"status,omitempty"`
+	Visibility string                            `json:"visibility,omitempty"`
 }
 
-type CloudInstanceBackupTargetSpec struct {
-	Instance *CloudInstanceBackupInstanceRef `json:"instance,omitempty"`
-	Location *CloudInstanceBackupLocation    `json:"location,omitempty"`
-	Name     string                          `json:"name,omitempty"`
+type CloudInstanceSnapshotTargetSpec struct {
+	Instance *CloudInstanceSnapshotInstanceRef `json:"instance,omitempty"`
+	Location *CloudInstanceSnapshotLocation    `json:"location,omitempty"`
+	Name     string                            `json:"name,omitempty"`
 }
 
-type CloudInstanceBackupInstanceRef struct {
+type CloudInstanceSnapshotInstanceRef struct {
 	Id string `json:"id,omitempty"`
 }
 
-type CloudInstanceBackupLocation struct {
+type CloudInstanceSnapshotLocation struct {
 	Region string `json:"region,omitempty"`
 }
 
-type CloudInstanceBackupCreatePayload struct {
-	TargetSpec *CloudInstanceBackupTargetSpec `json:"targetSpec"`
+type CloudInstanceSnapshotCreatePayload struct {
+	TargetSpec *CloudInstanceSnapshotTargetSpec `json:"targetSpec"`
 }
 
-func (m *CloudInstanceBackupModel) ToCreate() *CloudInstanceBackupCreatePayload {
-	return &CloudInstanceBackupCreatePayload{
-		TargetSpec: &CloudInstanceBackupTargetSpec{
-			Instance: &CloudInstanceBackupInstanceRef{Id: m.InstanceId.ValueString()},
-			Location: &CloudInstanceBackupLocation{Region: m.Region.ValueString()},
+func (m *CloudInstanceSnapshotModel) ToCreate() *CloudInstanceSnapshotCreatePayload {
+	return &CloudInstanceSnapshotCreatePayload{
+		TargetSpec: &CloudInstanceSnapshotTargetSpec{
+			Instance: &CloudInstanceSnapshotInstanceRef{Id: m.InstanceId.ValueString()},
+			Location: &CloudInstanceSnapshotLocation{Region: m.Region.ValueString()},
 			Name:     m.Name.ValueString(),
 		},
 	}
 }
 
-func InstanceBackupCurrentStateAttrTypes() map[string]attr.Type {
+func InstanceSnapshotCurrentStateAttrTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"instance":   types.ObjectType{AttrTypes: map[string]attr.Type{"id": ovhtypes.TfStringType{}}},
 		"location":   types.ObjectType{AttrTypes: map[string]attr.Type{"region": ovhtypes.TfStringType{}}},
@@ -84,7 +84,7 @@ func InstanceBackupCurrentStateAttrTypes() map[string]attr.Type {
 	}
 }
 
-func (m *CloudInstanceBackupModel) MergeWith(ctx context.Context, response *CloudInstanceBackupAPIResponse) {
+func (m *CloudInstanceSnapshotModel) MergeWith(ctx context.Context, response *CloudInstanceSnapshotAPIResponse) {
 	m.Id = ovhtypes.TfStringValue{StringValue: types.StringValue(response.Id)}
 	m.Checksum = ovhtypes.TfStringValue{StringValue: types.StringValue(response.Checksum)}
 	m.CreatedAt = ovhtypes.TfStringValue{StringValue: types.StringValue(response.CreatedAt)}
@@ -115,7 +115,7 @@ func (m *CloudInstanceBackupModel) MergeWith(ctx context.Context, response *Clou
 		}
 
 		currentStateObj, _ := types.ObjectValue(
-			InstanceBackupCurrentStateAttrTypes(),
+			InstanceSnapshotCurrentStateAttrTypes(),
 			map[string]attr.Value{
 				"instance":   instanceObj,
 				"location":   locObj,
@@ -130,7 +130,7 @@ func (m *CloudInstanceBackupModel) MergeWith(ctx context.Context, response *Clou
 
 		m.CurrentState = currentStateObj
 	} else {
-		m.CurrentState = types.ObjectNull(InstanceBackupCurrentStateAttrTypes())
+		m.CurrentState = types.ObjectNull(InstanceSnapshotCurrentStateAttrTypes())
 	}
 
 	if response.TargetSpec != nil {
