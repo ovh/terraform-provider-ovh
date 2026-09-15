@@ -118,6 +118,22 @@ func (d *cloudStorageBlockVolumesDataSource) Schema(ctx context.Context, req dat
 									Computed:    true,
 									Description: "Whether the volume is encrypted at rest with LUKS",
 								},
+								"kms": schema.SingleNestedAttribute{
+									Computed:    true,
+									Description: "Customer-managed key (CMK) reference used to encrypt the volume",
+									Attributes: map[string]schema.Attribute{
+										"domain_id": schema.StringAttribute{
+											CustomType:  ovhtypes.TfStringType{},
+											Computed:    true,
+											Description: "OKMS domain ID owning the service key",
+										},
+										"service_key_id": schema.StringAttribute{
+											CustomType:  ovhtypes.TfStringType{},
+											Computed:    true,
+											Description: "OKMS service key ID used to encrypt the volume",
+										},
+									},
+								},
 							},
 						},
 						"attached_instances": schema.ListNestedAttribute{
@@ -247,6 +263,7 @@ func (d *cloudStorageBlockVolumesDataSource) Read(ctx context.Context, req datas
 				BlockVolumeEncryptionAttrTypes(),
 				map[string]attr.Value{
 					"enabled": types.BoolValue(encryption.Enabled),
+					"kms":     buildBlockVolumeEncryptionKMSObject(encryption.Kms),
 				},
 			)
 			resp.Diagnostics.Append(diags...)
