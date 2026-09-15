@@ -2,6 +2,7 @@ package ovh
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -284,7 +285,9 @@ type CloudProjectDatabaseUpdateOpts struct {
 	Flavor             string                              `json:"flavor,omitempty"`
 	IPRestrictions     []CloudProjectDatabaseIPRestriction `json:"ipRestrictions,omitempty"`
 	MaintenanceTime    string                              `json:"maintenanceTime,omitempty"`
+	NetworkID          json.RawMessage                     `json:"networkId,omitempty"`
 	Plan               string                              `json:"plan,omitempty"`
+	SubnetID           json.RawMessage                     `json:"subnetId,omitempty"`
 	DeletionProtection *bool                               `json:"deletionProtection,omitempty"`
 	RestAPI            *bool                               `json:"restApi,omitempty"`
 	SchemaRegistry     *bool                               `json:"schemaRegistry,omitempty"`
@@ -342,6 +345,41 @@ func (opts *CloudProjectDatabaseUpdateOpts) fromResource(d *schema.ResourceData)
 	}
 
 	opts.MaintenanceTime = d.Get("maintenance_time").(string)
+
+	// Handle network update: only send networkId/subnetId when they actually changed
+	if d.HasChange("nodes") {
+		oldNodes, newNodes := d.GetChange("nodes")
+		oldList := oldNodes.([]interface{})
+		newList := newNodes.([]interface{})
+
+		oldNetworkID := ""
+		if len(oldList) > 0 {
+			oldNetworkID = oldList[0].(map[string]interface{})["network_id"].(string)
+		}
+		newNetworkID := ""
+		newSubnetID := ""
+		if len(newList) > 0 {
+			newNetworkID = newList[0].(map[string]interface{})["network_id"].(string)
+			newSubnetID = newList[0].(map[string]interface{})["subnet_id"].(string)
+		}
+
+		oldSubnetID := ""
+		if len(oldList) > 0 {
+			oldSubnetID = oldList[0].(map[string]interface{})["subnet_id"].(string)
+		}
+
+		if oldNetworkID != newNetworkID || oldSubnetID != newSubnetID {
+			if newNetworkID == "" {
+				// Switch to public: send null
+				opts.NetworkID = json.RawMessage("null")
+				opts.SubnetID = json.RawMessage("null")
+			} else {
+				// Switch to private: send the UUID
+				opts.NetworkID, _ = json.Marshal(newNetworkID)
+				opts.SubnetID, _ = json.Marshal(newSubnetID)
+			}
+		}
+	}
 
 	return opts, nil
 }
