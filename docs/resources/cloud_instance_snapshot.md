@@ -2,18 +2,18 @@
 subcategory: "Instances"
 ---
 
-# ovh_cloud_instance_backup
+# ovh_cloud_instance_snapshot
 
-Creates an on-demand backup of an instance in a public cloud project.
+Creates an on-demand snapshot of an instance in a public cloud project.
 
 ## Example Usage
 
 ```terraform
-resource "ovh_cloud_instance_backup" "backup" {
+resource "ovh_cloud_instance_snapshot" "snapshot" {
   service_name = "<Public cloud project id>"
   region       = "GRA11"
   instance_id  = "<instance id>"
-  name         = "my-instance-backup"
+  name         = "my-instance-snapshot"
 }
 ```
 
@@ -22,9 +22,9 @@ resource "ovh_cloud_instance_backup" "backup" {
 The following arguments are supported:
 
 * `service_name` - (Optional) Service name of the resource representing the id of the cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used. Changing this value recreates the resource.
-* `region` - (Required) Region where the backup will be created. Changing this value recreates the resource.
-* `instance_id` - (Required) ID of the instance to back up. Changing this value recreates the resource.
-* `name` - (Required) Backup name. Changing this value recreates the resource.
+* `region` - (Required) Region where the snapshot will be created. Changing this value recreates the resource.
+* `instance_id` - (Required) ID of the instance to snapshot. Changing this value recreates the resource.
+* `name` - (Required) Snapshot name. Changing this value recreates the resource.
 
 -> All attributes are immutable: the resource does not support in-place updates, any change requires replacement.
 
@@ -32,27 +32,27 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `id` - Backup ID.
+* `id` - Snapshot ID.
 * `checksum` - Computed hash representing the current target specification value.
-* `created_at` - Creation date of the backup.
-* `updated_at` - Last update date of the backup.
-* `resource_status` - Backup readiness in the system (`CREATING`, `DELETING`, `ERROR`, `OUT_OF_SYNC`, `READY`).
-* `current_state` - Current state of the instance backup:
+* `created_at` - Creation date of the snapshot.
+* `updated_at` - Last update date of the snapshot.
+* `resource_status` - Snapshot readiness in the system (`CREATING`, `DELETING`, `ERROR`, `OUT_OF_SYNC`, `READY`).
+* `current_state` - Current state of the instance snapshot:
   * `instance` - Source instance reference:
     * `id` - Instance unique identifier.
   * `location` - Current location:
     * `region` - Region.
   * `min_disk` - Minimum disk size in GB required to boot.
   * `min_ram` - Minimum RAM in MB required to boot.
-  * `name` - Current backup name.
+  * `name` - Current snapshot name.
   * `size` - Image size in bytes.
   * `status` - Image status in the backend.
   * `visibility` - Image visibility.
 
 ## Import
 
-An instance backup can be imported using the `service_name` and the `id` of the backup, separated by "/":
+An instance snapshot can be imported using the `service_name` and the `id` of the snapshot, separated by "/":
 
 ```bash
-terraform import ovh_cloud_instance_backup.backup service_name/backup_id
+terraform import ovh_cloud_instance_snapshot.snapshot service_name/snapshot_id
 ```

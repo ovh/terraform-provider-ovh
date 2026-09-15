@@ -18,24 +18,24 @@ import (
 )
 
 var (
-	_ resource.Resource                = (*cloudInstanceBackupResource)(nil)
-	_ resource.ResourceWithConfigure   = (*cloudInstanceBackupResource)(nil)
-	_ resource.ResourceWithImportState = (*cloudInstanceBackupResource)(nil)
+	_ resource.Resource                = (*cloudInstanceSnapshotResource)(nil)
+	_ resource.ResourceWithConfigure   = (*cloudInstanceSnapshotResource)(nil)
+	_ resource.ResourceWithImportState = (*cloudInstanceSnapshotResource)(nil)
 )
 
-func NewCloudInstanceBackupResource() resource.Resource {
-	return &cloudInstanceBackupResource{}
+func NewCloudInstanceSnapshotResource() resource.Resource {
+	return &cloudInstanceSnapshotResource{}
 }
 
-type cloudInstanceBackupResource struct {
+type cloudInstanceSnapshotResource struct {
 	config *Config
 }
 
-func (r *cloudInstanceBackupResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_cloud_instance_backup"
+func (r *cloudInstanceSnapshotResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_cloud_instance_snapshot"
 }
 
-func (r *cloudInstanceBackupResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *cloudInstanceSnapshotResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -52,9 +52,9 @@ func (r *cloudInstanceBackupResource) Configure(ctx context.Context, req resourc
 	r.config = config
 }
 
-func (r *cloudInstanceBackupResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *cloudInstanceSnapshotResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Creates an on-demand instance backup in a public cloud project using the publicCloud API.",
+		Description: "Creates an on-demand instance snapshot in a public cloud project using the publicCloud API.",
 		Attributes: map[string]schema.Attribute{
 			"service_name": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
@@ -71,8 +71,8 @@ func (r *cloudInstanceBackupResource) Schema(ctx context.Context, req resource.S
 			"name": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Required:            true,
-				Description:         "Backup name",
-				MarkdownDescription: "Backup name",
+				Description:         "Snapshot name",
+				MarkdownDescription: "Snapshot name",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -80,8 +80,8 @@ func (r *cloudInstanceBackupResource) Schema(ctx context.Context, req resource.S
 			"region": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Required:            true,
-				Description:         "Region where the backup will be created",
-				MarkdownDescription: "Region where the backup will be created",
+				Description:         "Region where the snapshot will be created",
+				MarkdownDescription: "Region where the snapshot will be created",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -89,8 +89,8 @@ func (r *cloudInstanceBackupResource) Schema(ctx context.Context, req resource.S
 			"instance_id": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Required:            true,
-				Description:         "ID of the instance to back up",
-				MarkdownDescription: "ID of the instance to back up",
+				Description:         "ID of the instance to snapshot",
+				MarkdownDescription: "ID of the instance to snapshot",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -98,8 +98,8 @@ func (r *cloudInstanceBackupResource) Schema(ctx context.Context, req resource.S
 			"id": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Computed:            true,
-				Description:         "Backup ID",
-				MarkdownDescription: "Backup ID",
+				Description:         "Snapshot ID",
+				MarkdownDescription: "Snapshot ID",
 			},
 			"checksum": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
@@ -110,24 +110,24 @@ func (r *cloudInstanceBackupResource) Schema(ctx context.Context, req resource.S
 			"created_at": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Computed:            true,
-				Description:         "Creation date of the backup",
-				MarkdownDescription: "Creation date of the backup",
+				Description:         "Creation date of the snapshot",
+				MarkdownDescription: "Creation date of the snapshot",
 			},
 			"updated_at": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Computed:            true,
-				Description:         "Last update date of the backup",
-				MarkdownDescription: "Last update date of the backup",
+				Description:         "Last update date of the snapshot",
+				MarkdownDescription: "Last update date of the snapshot",
 			},
 			"resource_status": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Computed:            true,
-				Description:         "Backup readiness in the system (CREATING, DELETING, ERROR, OUT_OF_SYNC, READY)",
-				MarkdownDescription: "Backup readiness in the system (CREATING, DELETING, ERROR, OUT_OF_SYNC, READY)",
+				Description:         "Snapshot readiness in the system (CREATING, DELETING, ERROR, OUT_OF_SYNC, READY)",
+				MarkdownDescription: "Snapshot readiness in the system (CREATING, DELETING, ERROR, OUT_OF_SYNC, READY)",
 			},
 			"current_state": schema.SingleNestedAttribute{
 				Computed:    true,
-				Description: "Current state of the instance backup",
+				Description: "Current state of the instance snapshot",
 				Attributes: map[string]schema.Attribute{
 					"instance": schema.SingleNestedAttribute{
 						Computed:    true,
@@ -166,8 +166,8 @@ func (r *cloudInstanceBackupResource) Schema(ctx context.Context, req resource.S
 					"name": schema.StringAttribute{
 						CustomType:          ovhtypes.TfStringType{},
 						Computed:            true,
-						Description:         "Current backup name",
-						MarkdownDescription: "Current backup name",
+						Description:         "Current snapshot name",
+						MarkdownDescription: "Current snapshot name",
 					},
 					"size": schema.Int64Attribute{
 						Computed:            true,
@@ -192,10 +192,10 @@ func (r *cloudInstanceBackupResource) Schema(ctx context.Context, req resource.S
 	}
 }
 
-func (r *cloudInstanceBackupResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *cloudInstanceSnapshotResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	splits := strings.Split(req.ID, "/")
 	if len(splits) != 2 {
-		resp.Diagnostics.AddError("Given ID is malformed", "ID must be formatted like the following: <service_name>/<backup_id>")
+		resp.Diagnostics.AddError("Given ID is malformed", "ID must be formatted like the following: <service_name>/<snapshot_id>")
 		return
 	}
 
@@ -203,8 +203,8 @@ func (r *cloudInstanceBackupResource) ImportState(ctx context.Context, req resou
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), splits[1])...)
 }
 
-func (r *cloudInstanceBackupResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data CloudInstanceBackupModel
+func (r *cloudInstanceSnapshotResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var data CloudInstanceSnapshotModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -213,9 +213,9 @@ func (r *cloudInstanceBackupResource) Create(ctx context.Context, req resource.C
 
 	createPayload := data.ToCreate()
 
-	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/compute/backup"
+	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/compute/snapshot"
 
-	var responseData CloudInstanceBackupAPIResponse
+	var responseData CloudInstanceSnapshotAPIResponse
 	if err := r.config.OVHClient.Post(endpoint, createPayload, &responseData); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Post %s", endpoint),
@@ -228,16 +228,16 @@ func (r *cloudInstanceBackupResource) Create(ctx context.Context, req resource.C
 	data.MergeWith(ctx, &responseData)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 
-	_, err := r.waitForInstanceBackupReady(ctx, data.ServiceName.ValueString(), responseData.Id)
+	_, err := r.waitForInstanceSnapshotReady(ctx, data.ServiceName.ValueString(), responseData.Id)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error waiting for instance backup to be ready",
+			"Error waiting for instance snapshot to be ready",
 			err.Error(),
 		)
 		return
 	}
 
-	endpoint = "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/compute/backup/" + url.PathEscape(responseData.Id)
+	endpoint = "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/compute/snapshot/" + url.PathEscape(responseData.Id)
 	if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Get %s", endpoint),
@@ -251,17 +251,17 @@ func (r *cloudInstanceBackupResource) Create(ctx context.Context, req resource.C
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *cloudInstanceBackupResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data CloudInstanceBackupModel
+func (r *cloudInstanceSnapshotResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var data CloudInstanceSnapshotModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/compute/backup/" + url.PathEscape(data.Id.ValueString())
+	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/compute/snapshot/" + url.PathEscape(data.Id.ValueString())
 
-	var responseData CloudInstanceBackupAPIResponse
+	var responseData CloudInstanceSnapshotAPIResponse
 	if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
 		if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
 			resp.State.RemoveResource(ctx)
@@ -279,23 +279,23 @@ func (r *cloudInstanceBackupResource) Read(ctx context.Context, req resource.Rea
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *cloudInstanceBackupResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *cloudInstanceSnapshotResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	// All attributes are immutable (RequiresReplace); the API exposes no update endpoint.
 	resp.Diagnostics.AddError(
 		"Update not supported",
-		"ovh_cloud_instance_backup does not support in-place updates; all attributes require replacement.",
+		"ovh_cloud_instance_snapshot does not support in-place updates; all attributes require replacement.",
 	)
 }
 
-func (r *cloudInstanceBackupResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data CloudInstanceBackupModel
+func (r *cloudInstanceSnapshotResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var data CloudInstanceSnapshotModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/compute/backup/" + url.PathEscape(data.Id.ValueString())
+	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/compute/snapshot/" + url.PathEscape(data.Id.ValueString())
 
 	if err := r.config.OVHClient.Delete(endpoint, nil); err != nil {
 		if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
@@ -312,8 +312,8 @@ func (r *cloudInstanceBackupResource) Delete(ctx context.Context, req resource.D
 		Pending: []string{"DELETING"},
 		Target:  []string{"DELETED"},
 		Refresh: func() (interface{}, string, error) {
-			res := &CloudInstanceBackupAPIResponse{}
-			endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/compute/backup/" + url.PathEscape(data.Id.ValueString())
+			res := &CloudInstanceSnapshotAPIResponse{}
+			endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/compute/snapshot/" + url.PathEscape(data.Id.ValueString())
 			err := r.config.OVHClient.GetWithContext(ctx, endpoint, res)
 			if err != nil {
 				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
@@ -330,19 +330,19 @@ func (r *cloudInstanceBackupResource) Delete(ctx context.Context, req resource.D
 
 	if _, err := stateConf.WaitForStateContext(ctx); err != nil {
 		resp.Diagnostics.AddError(
-			"Error waiting for instance backup to be deleted",
+			"Error waiting for instance snapshot to be deleted",
 			err.Error(),
 		)
 	}
 }
 
-func (r *cloudInstanceBackupResource) waitForInstanceBackupReady(ctx context.Context, serviceName, backupId string) (interface{}, error) {
+func (r *cloudInstanceSnapshotResource) waitForInstanceSnapshotReady(ctx context.Context, serviceName, snapshotId string) (interface{}, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{"CREATING", "UPDATING", "PENDING", "OUT_OF_SYNC"},
 		Target:  []string{"READY"},
 		Refresh: func() (interface{}, string, error) {
-			res := &CloudInstanceBackupAPIResponse{}
-			endpoint := "/v2/publicCloud/project/" + url.PathEscape(serviceName) + "/compute/backup/" + url.PathEscape(backupId)
+			res := &CloudInstanceSnapshotAPIResponse{}
+			endpoint := "/v2/publicCloud/project/" + url.PathEscape(serviceName) + "/compute/snapshot/" + url.PathEscape(snapshotId)
 			err := r.config.OVHClient.GetWithContext(ctx, endpoint, res)
 			if err != nil {
 				return res, "", err
