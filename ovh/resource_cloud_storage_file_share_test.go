@@ -63,6 +63,7 @@ resource "ovh_cloud_storage_file_share" "share" {
 					resource.TestCheckResourceAttrSet("ovh_cloud_storage_file_share.share", "share_network_id"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_storage_file_share.share", "current_state.protocol"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_storage_file_share.share", "current_state.share_network_id"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_storage_file_share.share", "current_state.encryption.enabled"),
 				),
 			},
 			// Test import
@@ -153,6 +154,69 @@ resource "ovh_cloud_storage_file_share" "share" {
 					resource.TestCheckResourceAttrSet("ovh_cloud_storage_file_share.share", "id"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_storage_file_share.share", "checksum"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccCloudStorageFileShare_encrypted(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+
+	vrackNetName := acctest.RandomWithPrefix(testAccResourceCloudStorageFileShareVrackSubnetNamePrefix)
+	vrackSubnetName := acctest.RandomWithPrefix(testAccResourceCloudStorageFileShareVrackSubnetNamePrefix)
+	networkName := acctest.RandomWithPrefix(testAccResourceCloudStorageFileShareNetworkNamePrefix)
+	shareName := acctest.RandomWithPrefix(testAccResourceCloudStorageFileShareNamePrefix)
+
+	config := testAccVrackNetworkSubnetConfig(serviceName, region, vrackNetName, vrackSubnetName) + fmt.Sprintf(`
+resource "ovh_cloud_storage_file_share_network" "network" {
+  service_name = "%s"
+  name         = "%s"
+  network_id   = ovh_cloud_network_private_vrack.vrack_net.id
+  subnet_id    = ovh_cloud_network_private_vrack_subnet.vrack_subnet.id
+  region       = "%s"
+}
+
+resource "ovh_cloud_storage_file_share" "share" {
+  service_name     = "%s"
+  name             = "%s"
+  size             = 150
+  region           = "%s"
+  protocol         = "NFS"
+  share_type       = "STANDARD_1AZ"
+  share_network_id = ovh_cloud_storage_file_share_network.network.id
+
+  encryption = {
+    enabled = true
+  }
+}
+`, serviceName, networkName, region, serviceName, shareName, region)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloud(t)
+			testAccCheckCloudProjectExists(t)
+			testAccPreCheckVRack(t)
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_storage_file_share.share", "name", shareName),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_file_share.share", "share_type", "STANDARD_1AZ"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_file_share.share", "encryption.enabled", "true"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_file_share.share", "current_state.encryption.enabled", "true"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_storage_file_share.share", "id"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_storage_file_share.share", "checksum"),
+				),
+			},
+			// Test import
+			{
+				ResourceName:      "ovh_cloud_storage_file_share.share",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccCloudStorageFileShareImportStateIdFunc("ovh_cloud_storage_file_share.share"),
 			},
 		},
 	})

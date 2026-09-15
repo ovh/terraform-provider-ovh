@@ -31,6 +31,8 @@ data "ovh_cloud_storage_file_share" "share" {
   * `region` - Region where the file share resides.
   * `availability_zone` - Availability zone where the file share resides.
 * `share_network_id` - ID of the share network the file share is attached to.
+* `encryption` - Encryption configuration of the file share:
+  * `enabled` - Whether the file share is encrypted at rest with LUKS.
 * `checksum` - Computed hash representing the current target specification value.
 * `created_at` - Creation date of the file share.
 * `updated_at` - Last update date of the file share.
@@ -42,6 +44,8 @@ data "ovh_cloud_storage_file_share" "share" {
   * `protocol` - File share protocol.
   * `share_type` - File share type.
   * `share_network_id` - ID of the share network the file share is attached to.
+  * `encryption` - Encryption configuration of the file share:
+    * `enabled` - Whether the file share is encrypted at rest with LUKS.
   * `location` - Current location:
     * `region` - Region.
     * `availability_zone` - Availability zone.
