@@ -94,6 +94,17 @@ func (r *cloudStorageBlockVolumeSnapshotResource) Schema(ctx context.Context, re
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"availability_zone": schema.StringAttribute{
+				CustomType:          ovhtypes.TfStringType{},
+				Optional:            true,
+				Computed:            true,
+				Description:         "Availability zone where the snapshot will be created",
+				MarkdownDescription: "Availability zone where the snapshot will be created",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
 			"volume_id": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Required:            true,
@@ -158,6 +169,12 @@ func (r *cloudStorageBlockVolumeSnapshotResource) Schema(ctx context.Context, re
 								Computed:            true,
 								Description:         "Region",
 								MarkdownDescription: "Region",
+							},
+							"availability_zone": schema.StringAttribute{
+								CustomType:          ovhtypes.TfStringType{},
+								Computed:            true,
+								Description:         "Availability zone",
+								MarkdownDescription: "Availability zone",
 							},
 						},
 					},

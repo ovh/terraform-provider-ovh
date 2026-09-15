@@ -14,6 +14,8 @@ type CloudStorageBlockVolumeSnapshotModel struct {
 	ServiceName ovhtypes.TfStringValue `tfsdk:"service_name"`
 	Region      ovhtypes.TfStringValue `tfsdk:"region"`
 	VolumeId    ovhtypes.TfStringValue `tfsdk:"volume_id"`
+	// Optional — immutable
+	AvailabilityZone ovhtypes.TfStringValue `tfsdk:"availability_zone"`
 	// Required — mutable
 	Name ovhtypes.TfStringValue `tfsdk:"name"`
 	// Optional — mutable
@@ -54,7 +56,8 @@ type CloudStorageBlockVolumeSnapshotTargetSpec struct {
 }
 
 type CloudStorageBlockVolumeSnapshotLocation struct {
-	Region string `json:"region,omitempty"`
+	Region           string `json:"region,omitempty"`
+	AvailabilityZone string `json:"availabilityZone,omitempty"`
 }
 
 // Create payload
@@ -75,9 +78,14 @@ type CloudStorageBlockVolumeSnapshotUpdateTargetSpec struct {
 
 // ToCreate converts the Terraform model to the API create payload
 func (m *CloudStorageBlockVolumeSnapshotModel) ToCreate() *CloudStorageBlockVolumeSnapshotCreatePayload {
+	location := &CloudStorageBlockVolumeSnapshotLocation{Region: m.Region.ValueString()}
+	if !m.AvailabilityZone.IsNull() && !m.AvailabilityZone.IsUnknown() {
+		location.AvailabilityZone = m.AvailabilityZone.ValueString()
+	}
+
 	return &CloudStorageBlockVolumeSnapshotCreatePayload{
 		TargetSpec: &CloudStorageBlockVolumeSnapshotTargetSpec{
-			Location:    &CloudStorageBlockVolumeSnapshotLocation{Region: m.Region.ValueString()},
+			Location:    location,
 			Name:        m.Name.ValueString(),
 			Description: m.Description.ValueString(),
 			VolumeId:    m.VolumeId.ValueString(),
@@ -99,7 +107,10 @@ func (m *CloudStorageBlockVolumeSnapshotModel) ToUpdate(checksum string) *CloudS
 // SnapshotCurrentStateAttrTypes returns the attribute types for the current_state object
 func SnapshotCurrentStateAttrTypes() map[string]attr.Type {
 	return map[string]attr.Type{
-		"location":    types.ObjectType{AttrTypes: map[string]attr.Type{"region": ovhtypes.TfStringType{}}},
+		"location": types.ObjectType{AttrTypes: map[string]attr.Type{
+			"region":            ovhtypes.TfStringType{},
+			"availability_zone": ovhtypes.TfStringType{},
+		}},
 		"name":        ovhtypes.TfStringType{},
 		"description": ovhtypes.TfStringType{},
 		"volume_id":   ovhtypes.TfStringType{},
@@ -117,9 +128,22 @@ func (m *CloudStorageBlockVolumeSnapshotModel) MergeWith(ctx context.Context, re
 
 	// Build current_state from API currentState
 	if response.CurrentState != nil {
+		region := ""
+		az := ""
+		if response.CurrentState.Location != nil {
+			region = response.CurrentState.Location.Region
+			az = response.CurrentState.Location.AvailabilityZone
+		}
+
 		locObj, _ := types.ObjectValue(
-			map[string]attr.Type{"region": ovhtypes.TfStringType{}},
-			map[string]attr.Value{"region": ovhtypes.TfStringValue{StringValue: types.StringValue(response.CurrentState.Location.Region)}},
+			map[string]attr.Type{
+				"region":            ovhtypes.TfStringType{},
+				"availability_zone": ovhtypes.TfStringType{},
+			},
+			map[string]attr.Value{
+				"region":            ovhtypes.TfStringValue{StringValue: types.StringValue(region)},
+				"availability_zone": ovhtypes.TfStringValue{StringValue: types.StringValue(az)},
+			},
 		)
 
 		currentStateObj, _ := types.ObjectValue(
@@ -142,6 +166,7 @@ func (m *CloudStorageBlockVolumeSnapshotModel) MergeWith(ctx context.Context, re
 	if response.TargetSpec != nil {
 		if response.TargetSpec.Location != nil {
 			m.Region = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Location.Region)}
+			m.AvailabilityZone = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Location.AvailabilityZone)}
 		}
 		m.Name = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Name)}
 		m.Description = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Description)}

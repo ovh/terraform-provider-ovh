@@ -26,6 +26,7 @@ data "ovh_cloud_storage_block_volume_snapshot" "snapshot" {
 * `description` - Snapshot description.
 * `location` - Location of the snapshot:
   * `region` - Region.
+  * `availability_zone` - Availability zone. Empty in 1AZ regions.
 * `volume_id` - ID of the snapshotted volume.
 * `size` - Size of the snapshot in GB.
 * `resource_status` - Snapshot readiness in the system (`CREATING`, `DELETING`, `ERROR`, `OUT_OF_SYNC`, `READY`, `UPDATING`).
