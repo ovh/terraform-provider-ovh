@@ -34,5 +34,8 @@ data "ovh_cloud_storage_block_volumes" "volumes" {
   * `resource_status` - Volume readiness in the system (`CREATING`, `DELETING`, `ERROR`, `OUT_OF_SYNC`, `READY`, `UPDATING`).
   * `encryption` - Encryption configuration of the volume:
     * `enabled` - Whether the volume is encrypted at rest with LUKS.
+    * `kms` - Customer-managed key (CMK) reference used to encrypt the volume:
+      * `domain_id` - OKMS domain ID owning the service key.
+      * `service_key_id` - OKMS service key ID used to encrypt the volume.
   * `attached_instances` - Instances the volume is attached to:
     * `id` - Instance ID.

@@ -20,6 +20,7 @@ func TestCloudStorageBlockVolumeToUpdate_DoesNotIncludeEncryption(t *testing.T) 
 			BlockVolumeEncryptionAttrTypes(),
 			map[string]attr.Value{
 				"enabled": types.BoolValue(true),
+				"kms":     types.ObjectNull(BlockVolumeEncryptionKMSAttrTypes()),
 			},
 		),
 	}

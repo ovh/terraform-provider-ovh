@@ -225,6 +225,73 @@ resource "ovh_cloud_storage_block_volume" "volume" {
 	})
 }
 
+// TestAccCloudStorageBlockVolume_encryptionCMK verifies that a volume can be created
+// with a customer-managed key (CMK) via encryption.kms. It requires a valid OKMS
+// domain/service key, so it only runs when the CMK env vars are set.
+func TestAccCloudStorageBlockVolume_encryptionCMK(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+	kmsDomainID := os.Getenv("OVH_CLOUD_PROJECT_KMS_DOMAIN_ID_TEST")
+	kmsServiceKeyID := os.Getenv("OVH_CLOUD_PROJECT_KMS_SERVICE_KEY_ID_TEST")
+
+	volumeName := acctest.RandomWithPrefix(testAccResourceCloudStorageBlockVolumeNamePrefix)
+
+	config := fmt.Sprintf(`
+resource "ovh_cloud_storage_block_volume" "cmk_volume" {
+  service_name = "%s"
+  name         = "%s"
+  size         = 10
+  region       = "%s"
+  volume_type  = "HIGH_SPEED"
+
+  encryption = {
+    enabled = true
+    kms = {
+      domain_id      = "%s"
+      service_key_id = "%s"
+    }
+  }
+}
+`, serviceName, volumeName, region, kmsDomainID, kmsServiceKeyID)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloud(t)
+			testAccCheckCloudProjectExists(t)
+			if kmsDomainID == "" || kmsServiceKeyID == "" {
+				t.Skip("OVH_CLOUD_PROJECT_KMS_DOMAIN_ID_TEST and OVH_CLOUD_PROJECT_KMS_SERVICE_KEY_ID_TEST must be set for CMK acceptance test")
+			}
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.cmk_volume", "service_name", serviceName),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.cmk_volume", "name", volumeName),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.cmk_volume", "region", region),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.cmk_volume", "encryption.enabled", "true"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.cmk_volume", "encryption.kms.domain_id", kmsDomainID),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.cmk_volume", "encryption.kms.service_key_id", kmsServiceKeyID),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.cmk_volume", "current_state.encryption.enabled", "true"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.cmk_volume", "current_state.encryption.kms.domain_id", kmsDomainID),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.cmk_volume", "current_state.encryption.kms.service_key_id", kmsServiceKeyID),
+					resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume.cmk_volume", "id"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume.cmk_volume", "checksum"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume.cmk_volume", "resource_status", "READY"),
+				),
+			},
+			// Test import
+			{
+				ResourceName:      "ovh_cloud_storage_block_volume.cmk_volume",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccCloudStorageBlockVolumeImportStateIdFunc("ovh_cloud_storage_block_volume.cmk_volume"),
+			},
+		},
+	})
+}
+
 // TestAccCloudStorageBlockVolume_createFromImage verifies that a volume can be
 // created from a Glance image using the create_from.image_id field.
 func TestAccCloudStorageBlockVolume_createFromImage(t *testing.T) {
