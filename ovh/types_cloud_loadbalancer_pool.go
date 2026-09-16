@@ -354,14 +354,32 @@ func buildHealthMonitorCurrentStateObject(hm *CloudLoadbalancerPoolAPIHealthMoni
 	return obj
 }
 
+// healthMonitorStringOrNull keeps an optional health monitor string null when the
+// user did not set it and the API serializes the absent field as an empty string.
+// prior is the configured/planned health_monitor object, attr the nested field name.
+func healthMonitorStringOrNull(apiValue string, prior basetypes.ObjectValue, attr string) ovhtypes.TfStringValue {
+	if apiValue != "" {
+		return ovhtypes.TfStringValue{StringValue: types.StringValue(apiValue)}
+	}
+
+	if !prior.IsNull() && !prior.IsUnknown() {
+		if v, ok := prior.Attributes()[attr]; ok && !v.IsNull() && !v.IsUnknown() {
+			// User explicitly set an empty string: keep it.
+			return ovhtypes.TfStringValue{StringValue: types.StringValue("")}
+		}
+	}
+
+	return ovhtypes.TfStringValue{StringValue: types.StringNull()}
+}
+
 // buildHealthMonitorObject constructs the health_monitor object for targetSpec from API response
-func buildHealthMonitorObject(hm *CloudLoadbalancerPoolAPIHealthMonitor) basetypes.ObjectValue {
-	nameVal := ovhtypes.TfStringValue{StringValue: types.StringValue(hm.Name)}
-	urlPathVal := ovhtypes.TfStringValue{StringValue: types.StringValue(hm.URLPath)}
-	httpMethodVal := ovhtypes.TfStringValue{StringValue: types.StringValue(hm.HTTPMethod)}
-	httpVersionVal := ovhtypes.TfStringValue{StringValue: types.StringValue(hm.HTTPVersion)}
-	expectedCodesVal := ovhtypes.TfStringValue{StringValue: types.StringValue(hm.ExpectedCodes)}
-	domainNameVal := ovhtypes.TfStringValue{StringValue: types.StringValue(hm.DomainName)}
+func buildHealthMonitorObject(hm *CloudLoadbalancerPoolAPIHealthMonitor, prior basetypes.ObjectValue) basetypes.ObjectValue {
+	nameVal := healthMonitorStringOrNull(hm.Name, prior, "name")
+	urlPathVal := healthMonitorStringOrNull(hm.URLPath, prior, "url_path")
+	httpMethodVal := healthMonitorStringOrNull(hm.HTTPMethod, prior, "http_method")
+	httpVersionVal := healthMonitorStringOrNull(hm.HTTPVersion, prior, "http_version")
+	expectedCodesVal := healthMonitorStringOrNull(hm.ExpectedCodes, prior, "expected_codes")
+	domainNameVal := healthMonitorStringOrNull(hm.DomainName, prior, "domain_name")
 
 	var maxRetriesDownVal attr.Value
 	if hm.MaxRetriesDown != nil {
@@ -468,7 +486,7 @@ func (m *CloudLoadbalancerPoolModel) MergeWith(ctx context.Context, response *Cl
 
 		// Set health_monitor from targetSpec
 		if response.TargetSpec.HealthMonitor != nil {
-			m.HealthMonitor = buildHealthMonitorObject(response.TargetSpec.HealthMonitor)
+			m.HealthMonitor = buildHealthMonitorObject(response.TargetSpec.HealthMonitor, m.HealthMonitor)
 		} else {
 			m.HealthMonitor = types.ObjectNull(healthMonitorAttrTypes())
 		}

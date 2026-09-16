@@ -56,12 +56,12 @@ The following arguments are supported:
 * `protocol` - (Required) Protocol of the listener (`HTTP`, `HTTPS`, `SCTP`, `TCP`, `TERMINATED_HTTPS`, `UDP`). **Changing this value recreates the resource.**
 * `protocol_port` - (Required) Port number the listener listens on. **Changing this value recreates the resource.**
 * `description` - (Optional) Description of the listener.
-* `connection_limit` - (Optional) Maximum number of connections allowed.
+* `connection_limit` - (Optional) Maximum number of connections allowed. If omitted, the value assigned by the API is stored in the state.
 * `allowed_cidrs` - (Optional) List of CIDRs allowed to access the listener.
-* `timeout_client_data` - (Optional) Timeout for client data in milliseconds.
-* `timeout_member_data` - (Optional) Timeout for member data in milliseconds.
-* `timeout_member_connect` - (Optional) Timeout for member connection in milliseconds.
-* `timeout_tcp_inspect` - (Optional) Timeout for TCP inspect in milliseconds.
+* `timeout_client_data` - (Optional) Timeout for client data in milliseconds. If omitted, the default assigned by the API is stored in the state.
+* `timeout_member_data` - (Optional) Timeout for member data in milliseconds. If omitted, the default assigned by the API is stored in the state.
+* `timeout_member_connect` - (Optional) Timeout for member connection in milliseconds. If omitted, the default assigned by the API is stored in the state.
+* `timeout_tcp_inspect` - (Optional) Timeout for TCP inspect in milliseconds. If omitted, the default assigned by the API is stored in the state.
 * `insert_headers` - (Optional) Headers to insert into requests:
   * `x_forwarded_for` - (Optional) Insert X-Forwarded-For header.
   * `x_forwarded_port` - (Optional) Insert X-Forwarded-Port header.

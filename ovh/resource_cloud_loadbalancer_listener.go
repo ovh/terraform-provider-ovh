@@ -118,6 +118,7 @@ func (r *cloudLoadbalancerListenerResource) Schema(ctx context.Context, req reso
 			},
 			"connection_limit": schema.Int64Attribute{
 				Optional:            true,
+				Computed:            true,
 				Description:         "Maximum number of connections allowed",
 				MarkdownDescription: "Maximum number of connections allowed",
 			},
@@ -129,21 +130,25 @@ func (r *cloudLoadbalancerListenerResource) Schema(ctx context.Context, req reso
 			},
 			"timeout_client_data": schema.Int64Attribute{
 				Optional:            true,
+				Computed:            true,
 				Description:         "Timeout for client data in milliseconds",
 				MarkdownDescription: "Timeout for client data in milliseconds",
 			},
 			"timeout_member_data": schema.Int64Attribute{
 				Optional:            true,
+				Computed:            true,
 				Description:         "Timeout for member data in milliseconds",
 				MarkdownDescription: "Timeout for member data in milliseconds",
 			},
 			"timeout_member_connect": schema.Int64Attribute{
 				Optional:            true,
+				Computed:            true,
 				Description:         "Timeout for member connection in milliseconds",
 				MarkdownDescription: "Timeout for member connection in milliseconds",
 			},
 			"timeout_tcp_inspect": schema.Int64Attribute{
 				Optional:            true,
+				Computed:            true,
 				Description:         "Timeout for TCP inspect in milliseconds",
 				MarkdownDescription: "Timeout for TCP inspect in milliseconds",
 			},

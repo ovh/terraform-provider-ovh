@@ -126,11 +126,13 @@ func (r *cloudLoadbalancerPoolMemberResource) Schema(ctx context.Context, req re
 			},
 			"weight": schema.Int64Attribute{
 				Optional:            true,
+				Computed:            true,
 				Description:         "Weight of the member in the pool (0-256). Higher weight receives more traffic.",
 				MarkdownDescription: "Weight of the member in the pool (0-256). Higher weight receives more traffic.",
 			},
 			"backup": schema.BoolAttribute{
 				Optional:            true,
+				Computed:            true,
 				Description:         "When true, the member is a backup member and only receives traffic when all non-backup members are down",
 				MarkdownDescription: "When true, the member is a backup member and only receives traffic when all non-backup members are down",
 				PlanModifiers: []planmodifier.Bool{
