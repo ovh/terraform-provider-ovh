@@ -298,7 +298,7 @@ func (r *cloudLoadbalancerPoolMemberResource) Create(ctx context.Context, req re
 	endpoint := r.memberEndpoint(data.ServiceName.ValueString(), data.LoadbalancerId.ValueString(), data.PoolId.ValueString())
 
 	var responseData CloudLoadbalancerPoolMemberAPIResponse
-	if err := r.config.OVHClient.Post(endpoint, createPayload, &responseData); err != nil {
+	if err := cloudLoadbalancerPost(ctx, r.config.OVHClient, endpoint, createPayload, &responseData); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Post %s", endpoint),
 			err.Error(),
@@ -377,7 +377,7 @@ func (r *cloudLoadbalancerPoolMemberResource) Update(ctx context.Context, req re
 	endpoint := r.memberEndpointWithId(data.ServiceName.ValueString(), data.LoadbalancerId.ValueString(), data.PoolId.ValueString(), data.Id.ValueString())
 
 	var responseData CloudLoadbalancerPoolMemberAPIResponse
-	if err := r.config.OVHClient.Put(endpoint, updatePayload, &responseData); err != nil {
+	if err := cloudLoadbalancerPut(ctx, r.config.OVHClient, endpoint, updatePayload, &responseData); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Put %s", endpoint),
 			err.Error(),
@@ -419,7 +419,7 @@ func (r *cloudLoadbalancerPoolMemberResource) Delete(ctx context.Context, req re
 
 	endpoint := r.memberEndpointWithId(data.ServiceName.ValueString(), data.LoadbalancerId.ValueString(), data.PoolId.ValueString(), data.Id.ValueString())
 
-	if err := r.config.OVHClient.Delete(endpoint, nil); err != nil {
+	if err := cloudLoadbalancerDelete(ctx, r.config.OVHClient, endpoint, nil); err != nil {
 		if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
 			return
 		}

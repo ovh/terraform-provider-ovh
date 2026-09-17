@@ -129,8 +129,12 @@ func (r *cloudLoadbalancerL7PolicyResource) Schema(ctx context.Context, req reso
 				Description:         "Redirect URL for REDIRECT_TO_URL action",
 				MarkdownDescription: "Redirect URL for `REDIRECT_TO_URL` action",
 			},
+			// Computed as well as Optional: for the REDIRECT_* actions the API
+			// assigns a default code (302) when none is given, so the value
+			// must be unknown at plan time rather than null.
 			"redirect_http_code": schema.Int64Attribute{
 				Optional:            true,
+				Computed:            true,
 				Description:         "HTTP redirect code (301, 302, 303, 307, 308)",
 				MarkdownDescription: "HTTP redirect code (`301`, `302`, `303`, `307`, `308`)",
 			},
@@ -362,7 +366,7 @@ func (r *cloudLoadbalancerL7PolicyResource) Create(ctx context.Context, req reso
 	endpoint := r.l7PolicyEndpoint(data.ServiceName.ValueString(), data.LoadbalancerId.ValueString(), data.ListenerId.ValueString())
 
 	var responseData CloudLoadbalancerL7PolicyAPIResponse
-	if err := r.config.OVHClient.Post(endpoint, createPayload, &responseData); err != nil {
+	if err := cloudLoadbalancerPost(ctx, r.config.OVHClient, endpoint, createPayload, &responseData); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Post %s", endpoint),
 			err.Error(),
@@ -441,7 +445,7 @@ func (r *cloudLoadbalancerL7PolicyResource) Update(ctx context.Context, req reso
 	endpoint := r.l7PolicyItemEndpoint(data.ServiceName.ValueString(), data.LoadbalancerId.ValueString(), data.ListenerId.ValueString(), data.Id.ValueString())
 
 	var responseData CloudLoadbalancerL7PolicyAPIResponse
-	if err := r.config.OVHClient.Put(endpoint, updatePayload, &responseData); err != nil {
+	if err := cloudLoadbalancerPut(ctx, r.config.OVHClient, endpoint, updatePayload, &responseData); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Put %s", endpoint),
 			err.Error(),
@@ -483,7 +487,7 @@ func (r *cloudLoadbalancerL7PolicyResource) Delete(ctx context.Context, req reso
 
 	endpoint := r.l7PolicyItemEndpoint(data.ServiceName.ValueString(), data.LoadbalancerId.ValueString(), data.ListenerId.ValueString(), data.Id.ValueString())
 
-	if err := r.config.OVHClient.Delete(endpoint, nil); err != nil {
+	if err := cloudLoadbalancerDelete(ctx, r.config.OVHClient, endpoint, nil); err != nil {
 		if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
 			return
 		}
