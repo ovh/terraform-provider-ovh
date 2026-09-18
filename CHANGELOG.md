@@ -1,3 +1,31 @@
+## 2.20.0 (September 18, 2026)
+
+🎉 Features:
+
+* New resource: `ovh_cloud_instance_snapshot` ([#1405](https://github.com/ovh/terraform-provider-ovh/pull/1405), [#1433](https://github.com/ovh/terraform-provider-ovh/pull/1433))
+* New resource: `ovh_hosting_privatedatabase_webhosting_network` ([#1406](https://github.com/ovh/terraform-provider-ovh/pull/1406))
+
+* New datasource: `ovh_cloud_instance_snapshot` ([#1405](https://github.com/ovh/terraform-provider-ovh/pull/1405), [#1433](https://github.com/ovh/terraform-provider-ovh/pull/1433))
+* New datasource: `ovh_cloud_instance_snapshots` ([#1405](https://github.com/ovh/terraform-provider-ovh/pull/1405), [#1433](https://github.com/ovh/terraform-provider-ovh/pull/1433))
+
+💪 Improvements:
+
+* `provider`: Add `http_headers` to set extra HTTP headers on every request made to the OVH API (also configurable via `OVH_HTTP_HEADERS_*` environment variables) ([#1408](https://github.com/ovh/terraform-provider-ovh/pull/1408))
+* `r/ovh_cloud_instance`: Add `user_data` attribute to pass cloud-init user data at instance creation ([#1428](https://github.com/ovh/terraform-provider-ovh/pull/1428))
+* `r/ovh_cloud_storage_block_volume`, `d/ovh_cloud_storage_block_volume`, `d/ovh_cloud_storage_block_volumes`: Add `encryption.kms` to create volumes encrypted with a customer-managed key (CMK) ([#1383](https://github.com/ovh/terraform-provider-ovh/pull/1383))
+* `r/ovh_cloud_storage_file_share`, `d/ovh_cloud_storage_file_share`, `d/ovh_cloud_storage_file_shares`: Add `encryption` attribute to encrypt the share at rest with LUKS ([#1427](https://github.com/ovh/terraform-provider-ovh/pull/1427))
+* `r/ovh_cloud_storage_block_volume_snapshot`, `d/ovh_cloud_storage_block_volume_snapshot`, `d/ovh_cloud_storage_block_volume_snapshots`: Add `availability_zone` attribute ([#1426](https://github.com/ovh/terraform-provider-ovh/pull/1426))
+
+🐜 Bug fixes:
+
+* `r/ovh_cloud_project_database_kafka_acl`, `d/ovh_cloud_project_database_kafka_acl`, `d/ovh_cloud_project_database_kafka_acls`: Use the correct `topicAcl` API endpoints ([#1395](https://github.com/ovh/terraform-provider-ovh/pull/1395))
+
+📚 Documentation:
+
+* `d/ovh_cloud_ext_net_ip`, `d/ovh_cloud_ext_net_ips`: Document the composite `<portId>_<ip>` format of the `id` attribute ([#1430](https://github.com/ovh/terraform-provider-ovh/pull/1430))
+
+❤️ Thanks for your contributions ❤️
+
 ## 2.19.0 (August 7, 2026)
 
 🎉 Features:
