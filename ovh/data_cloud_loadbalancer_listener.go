@@ -87,8 +87,8 @@ func (d *cloudLoadbalancerListenerDataSource) Schema(ctx context.Context, req da
 				Description: "Maximum number of connections allowed",
 			},
 			"allowed_cidrs": schema.ListAttribute{
+				CustomType:  ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
 				Computed:    true,
-				ElementType: ovhtypes.TfStringType{},
 				Description: "List of CIDRs allowed to access the listener",
 			},
 			"timeout_client_data": schema.Int64Attribute{
@@ -148,13 +148,13 @@ func (d *cloudLoadbalancerListenerDataSource) Schema(ctx context.Context, req da
 				Description: "ID of the default pool for this listener",
 			},
 			"sni_container_refs": schema.ListAttribute{
+				CustomType:  ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
 				Computed:    true,
-				ElementType: ovhtypes.TfStringType{},
 				Description: "List of SNI container references",
 			},
 			"tls_versions": schema.ListAttribute{
+				CustomType:  ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
 				Computed:    true,
-				ElementType: ovhtypes.TfStringType{},
 				Description: "List of TLS versions allowed",
 			},
 
