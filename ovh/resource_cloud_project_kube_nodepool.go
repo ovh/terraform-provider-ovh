@@ -423,7 +423,7 @@ func resourceCloudProjectKubeNodePoolDelete(d *schema.ResourceData, meta interfa
 	log.Printf("[DEBUG] Waiting for nodepool %s to be DELETED", d.Id())
 	err = waitForCloudProjectKubeNodePoolDeleted(config.OVHClient, serviceName, kubeId, d.Id(), d.Timeout(schema.TimeoutDelete))
 	if err != nil {
-		return fmt.Errorf("timeout while waiting nodepool %s to be DELETED: %v", d.Id(), err)
+		return fmt.Errorf("timeout while waiting nodepool %s to be DELETED: %w", d.Id(), err)
 	}
 	log.Printf("[DEBUG] nodepool %s is DELETED", d.Id())
 
@@ -464,7 +464,7 @@ func waitForCloudProjectKubeNodePoolWithStateTarget(client *ovhwrap.Client, serv
 
 func waitForCloudProjectKubeNodePoolDeleted(client *ovhwrap.Client, serviceName, kubeId, id string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"DELETING"},
+		Pending: []string{"READY", "DELETING", "INSTALLING", "UPDATING", "REDEPLOYING", "RESIZING", "DOWNSCALING", "UPSCALING", "UNKNOWN"},
 		Target:  []string{"DELETED"},
 		Refresh: func() (interface{}, string, error) {
 			res := &CloudProjectKubeNodePoolResponse{}
