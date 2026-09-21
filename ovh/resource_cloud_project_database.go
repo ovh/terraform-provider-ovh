@@ -270,7 +270,7 @@ func resourceCloudProjectDatabase() *schema.Resource {
 			for i := 0; i < minLen; i++ {
 				o := oldNodes[i].(map[string]interface{})
 				n := newNodes[i].(map[string]interface{})
-				if o["region"] != n["region"] || o["network_id"] != n["network_id"] {
+				if o["region"] != n["region"] {
 					return true
 				}
 			}
