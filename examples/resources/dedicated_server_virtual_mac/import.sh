@@ -1,0 +1,1 @@
+terraform import ovh_dedicated_server_virtual_mac.vmac service_name/mac_address/ip_address
