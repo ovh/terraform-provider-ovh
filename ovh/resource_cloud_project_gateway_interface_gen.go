@@ -48,6 +48,7 @@ func CloudProjectGatewayInterfaceResourceSchema(ctx context.Context) schema.Sche
 		"service_name": schema.StringAttribute{
 			CustomType: ovhtypes.TfStringType{},
 			Optional:   true,
+			Computed:   true,
 			PlanModifiers: []planmodifier.String{
 				stringplanmodifier.RequiresReplace(),
 			},

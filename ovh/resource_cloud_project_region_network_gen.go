@@ -59,6 +59,7 @@ func CloudProjectRegionNetworkResourceSchema(ctx context.Context) schema.Schema 
 		"service_name": schema.StringAttribute{
 			CustomType: ovhtypes.TfStringType{},
 			Optional:   true,
+			Computed:   true,
 			PlanModifiers: []planmodifier.String{
 				stringplanmodifier.RequiresReplace(),
 			},
