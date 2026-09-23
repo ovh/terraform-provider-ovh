@@ -278,6 +278,7 @@ func Provider() *schema.Provider {
 			"ovh_dedicated_server_reboot_task":                               resourceDedicatedServerRebootTask(),
 			"ovh_dedicated_server_update":                                    resourceDedicatedServerUpdate(),
 			"ovh_dedicated_server_networking":                                resourceDedicatedServerNetworking(),
+			"ovh_dedicated_server_virtual_mac":                               resourceDedicatedServerVirtualMac(),
 			"ovh_domain_ds_records":                                          resourceDomainDsRecords(),
 			"ovh_domain_name_servers":                                        resourceDomainNameServers(),
 			"ovh_domain_zone":                                                resourceDomainZone(),

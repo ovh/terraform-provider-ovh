@@ -289,3 +289,19 @@ func (opts ExtrasDetails) FromResource(d *schema.ResourceData, parent string) Ex
 
 	return opts
 }
+
+type DedicatedServerVirtualMacCreateOpts struct {
+	IPAddress          string `json:"ipAddress"`
+	Type               string `json:"type"`
+	VirtualMachineName string `json:"virtualMachineName"`
+}
+
+type DedicatedServerVirtualMac struct {
+	MacAddress string `json:"macAddress"`
+	Type       string `json:"type"`
+}
+
+type DedicatedServerVirtualMacManagement struct {
+	IPAddress          string `json:"ipAddress"`
+	VirtualMachineName string `json:"virtualMachineName"`
+}
