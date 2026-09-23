@@ -28,6 +28,7 @@ resource "ovh_ip_firewall_rule" "deny_tcp" {
 * `destination_port` - Destination port for your rule. Only with TCP/UDP protocol
 * `fragments` - Fragments option
 * `source` - IPv4 CIDR notation (e.g., 192.0.2.0/24)
+* `source_port` - Source port for your rule. Only with TCP/UDP protocol
 * `tcp_option` - TCP option on your rule (syn|established)
 
 ## Attributes Reference
