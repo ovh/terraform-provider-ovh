@@ -2,6 +2,9 @@ package ovh
 
 import (
 	"context"
+	"encoding/json"
+	"slices"
+	"sort"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -11,11 +14,32 @@ import (
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
-func TestCloudStorageBlockVolumeToUpdate_DoesNotIncludeEncryption(t *testing.T) {
+func blockVolumeUpdateTargetSpecKeys(t *testing.T, payload *CloudStorageBlockVolumeUpdatePayload) (map[string]json.RawMessage, string) {
+	t.Helper()
+
+	raw, err := json.Marshal(payload)
+	if err != nil {
+		t.Fatalf("marshal update payload: %v", err)
+	}
+
+	var body struct {
+		Checksum   string                     `json:"checksum"`
+		TargetSpec map[string]json.RawMessage `json:"targetSpec"`
+	}
+	if err := json.Unmarshal(raw, &body); err != nil {
+		t.Fatalf("unmarshal update payload: %v", err)
+	}
+
+	return body.TargetSpec, body.Checksum
+}
+
+func TestCloudStorageBlockVolumeToUpdate_SendsOnlyMutableFields(t *testing.T) {
 	model := CloudStorageBlockVolumeModel{
-		Name:       ovhtypes.NewTfStringValue("test-volume"),
-		Size:       types.Int64Value(20),
-		VolumeType: ovhtypes.NewTfStringValue("CLASSIC"),
+		Name:             ovhtypes.NewTfStringValue("test-volume"),
+		Size:             types.Int64Value(20),
+		Region:           ovhtypes.NewTfStringValue("GRA9"),
+		AvailabilityZone: ovhtypes.NewTfStringValue("eu-west-gra-a"),
+		VolumeType:       ovhtypes.NewTfStringValue("CLASSIC"),
 		Encryption: types.ObjectValueMust(
 			BlockVolumeEncryptionAttrTypes(),
 			map[string]attr.Value{
@@ -23,35 +47,90 @@ func TestCloudStorageBlockVolumeToUpdate_DoesNotIncludeEncryption(t *testing.T) 
 				"kms":     types.ObjectNull(BlockVolumeEncryptionKMSAttrTypes()),
 			},
 		),
+		CreateFrom: types.ObjectValueMust(
+			CreateFromAttrTypes(),
+			map[string]attr.Value{
+				"backup_id":   ovhtypes.NewTfStringValue("backup-1"),
+				"snapshot_id": ovhtypes.TfStringValue{StringValue: types.StringNull()},
+				"image_id":    ovhtypes.TfStringValue{StringValue: types.StringNull()},
+			},
+		),
 	}
 
-	payload := model.ToUpdate("checksum-123")
-	if payload == nil {
-		t.Fatal("expected update payload to be non-nil")
+	spec, checksum := blockVolumeUpdateTargetSpecKeys(t, model.ToUpdate("checksum-123"))
+
+	if checksum != "checksum-123" {
+		t.Fatalf("unexpected checksum: got %q", checksum)
 	}
 
-	if payload.Checksum != "checksum-123" {
-		t.Fatalf("unexpected checksum: got %q", payload.Checksum)
+	got := make([]string, 0, len(spec))
+	for k := range spec {
+		got = append(got, k)
+	}
+	sort.Strings(got)
+
+	want := []string{"name", "size", "volumeType"}
+	if !slices.Equal(got, want) {
+		t.Fatalf("unexpected targetSpec keys: got %v, want %v", got, want)
 	}
 
-	if payload.TargetSpec == nil {
-		t.Fatal("expected targetSpec to be non-nil")
+	if string(spec["name"]) != `"test-volume"` {
+		t.Fatalf("unexpected targetSpec.name: got %s", spec["name"])
+	}
+	if string(spec["size"]) != "20" {
+		t.Fatalf("unexpected targetSpec.size: got %s", spec["size"])
+	}
+	if string(spec["volumeType"]) != `"CLASSIC"` {
+		t.Fatalf("unexpected targetSpec.volumeType: got %s", spec["volumeType"])
+	}
+}
+
+func TestCloudStorageBlockVolumeToUpdate_AlwaysCarriesNameAndSize(t *testing.T) {
+	model := CloudStorageBlockVolumeModel{
+		Name:       ovhtypes.NewTfStringValue(""),
+		Size:       types.Int64Value(0),
+		VolumeType: ovhtypes.NewTfStringValue("HIGH_SPEED"),
 	}
 
-	if payload.TargetSpec.Name != "test-volume" {
-		t.Fatalf("unexpected targetSpec.name: got %q", payload.TargetSpec.Name)
+	spec, _ := blockVolumeUpdateTargetSpecKeys(t, model.ToUpdate("checksum-123"))
+
+	for _, key := range []string{"name", "size"} {
+		if _, ok := spec[key]; !ok {
+			t.Fatalf("targetSpec.%s must always be on the wire: a real PUT clears an absent field", key)
+		}
+	}
+}
+
+func TestCloudStorageBlockVolumeToUpdate_OmitsEmptyVolumeType(t *testing.T) {
+	model := CloudStorageBlockVolumeModel{
+		Name:       ovhtypes.NewTfStringValue("test-volume"),
+		Size:       types.Int64Value(20),
+		VolumeType: ovhtypes.TfStringValue{StringValue: types.StringNull()},
+		CurrentState: types.ObjectValueMust(
+			BlockVolumeCurrentStateAttrTypes(),
+			map[string]attr.Value{
+				"location": types.ObjectValueMust(
+					map[string]attr.Type{"region": ovhtypes.TfStringType{}, "availability_zone": ovhtypes.TfStringType{}},
+					map[string]attr.Value{
+						"region":            ovhtypes.NewTfStringValue("GRA9"),
+						"availability_zone": ovhtypes.NewTfStringValue("eu-west-gra-a"),
+					},
+				),
+				"name":               ovhtypes.NewTfStringValue("test-volume"),
+				"size":               types.Int64Value(20),
+				"volume_type":        ovhtypes.NewTfStringValue("CLASSIC"),
+				"bootable":           types.BoolValue(false),
+				"status":             ovhtypes.NewTfStringValue("available"),
+				"encryption":         types.ObjectNull(BlockVolumeEncryptionAttrTypes()),
+				"attached_instances": types.ListNull(types.ObjectType{AttrTypes: BlockVolumeAttachedInstanceAttrTypes()}),
+			},
+		),
 	}
 
-	if payload.TargetSpec.Size != 20 {
-		t.Fatalf("unexpected targetSpec.size: got %d", payload.TargetSpec.Size)
-	}
+	spec, _ := blockVolumeUpdateTargetSpecKeys(t, model.ToUpdate("checksum-123"))
 
-	if payload.TargetSpec.VolumeType != "CLASSIC" {
-		t.Fatalf("unexpected targetSpec.volumeType: got %q", payload.TargetSpec.VolumeType)
-	}
-
-	if payload.TargetSpec.Encryption != nil {
-		t.Fatalf("expected targetSpec.encryption to be nil in update payload, got %+v", payload.TargetSpec.Encryption)
+	if v, ok := spec["volumeType"]; ok {
+		t.Fatalf("empty volume_type must not reach the PUT (not a VolumeTypeEnum member), got %s", v)
 	}
 }
 
