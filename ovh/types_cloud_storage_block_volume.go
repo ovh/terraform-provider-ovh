@@ -92,8 +92,19 @@ type CloudStorageBlockVolumeCreatePayload struct {
 
 // Update payload
 type CloudStorageBlockVolumeUpdatePayload struct {
-	Checksum   string                         `json:"checksum"`
-	TargetSpec *CloudStorageBlockVolumeTarget `json:"targetSpec"`
+	Checksum   string                               `json:"checksum"`
+	TargetSpec *CloudStorageBlockVolumeUpdateTarget `json:"targetSpec"`
+}
+
+// The update endpoint is a real PUT: a field absent from the body is cleared,
+// not kept. Hence no omitempty on name/size. The API's update model accepts
+// only these three; location, encryption and createFrom are immutable and are
+// carried over from the stored row, so they must never be sent.
+// volumeType keeps omitempty because "" is not a VolumeTypeEnum member: see ToUpdate.
+type CloudStorageBlockVolumeUpdateTarget struct {
+	Name       string `json:"name"`
+	Size       int64  `json:"size"`
+	VolumeType string `json:"volumeType,omitempty"`
 }
 
 // nullableTfString returns a null TfStringValue for empty strings, so unset
@@ -234,13 +245,19 @@ func (m *CloudStorageBlockVolumeModel) ToCreate() *CloudStorageBlockVolumeCreate
 
 // ToUpdate converts the Terraform model to the API update payload
 func (m *CloudStorageBlockVolumeModel) ToUpdate(checksum string) *CloudStorageBlockVolumeUpdatePayload {
-	target := &CloudStorageBlockVolumeTarget{
-		Name:       m.Name.ValueString(),
-		Size:       m.Size.ValueInt64(),
-		VolumeType: m.VolumeType.ValueString(),
+	// volume_type is Optional+Computed with UseStateForUnknown, so the plan value
+	// is empty only when the stored targetSpec.volumeType is already empty (no
+	// type pinned). Omitting it then is a faithful no-op; sending "" would be a
+	// rejected enum value, and substituting current_state.volume_type would pin a
+	// type the plan does not carry and fail the apply-consistency check.
+	return &CloudStorageBlockVolumeUpdatePayload{
+		Checksum: checksum,
+		TargetSpec: &CloudStorageBlockVolumeUpdateTarget{
+			Name:       m.Name.ValueString(),
+			Size:       m.Size.ValueInt64(),
+			VolumeType: m.VolumeType.ValueString(),
+		},
 	}
-
-	return &CloudStorageBlockVolumeUpdatePayload{Checksum: checksum, TargetSpec: target}
 }
 
 // BlockVolumeAttachedInstanceAttrTypes returns the attribute types for an attached instance object

@@ -100,14 +100,29 @@ type CloudInstanceAPITargetSpec struct {
 	Shares         []CloudInstanceAPIShareRef `json:"shares,omitempty"`
 }
 
-// Update target spec: mutable-only (no location / sshKeyName / group).
+// Update target spec: mutable-only. location, sshKeyName and group are absent
+// from the API's update model — sending one is a 400 unknown field, and the
+// server carries them over from the stored row.
+//
+// PUT is a real PUT: a field absent from the body is applied as empty, not kept.
+// Every key is therefore always marshalled (no omitempty) so the body states what
+// the plan holds. networks, volumes and shares are declarative lists diffed
+// against the current attachments, so a dropped key detaches every NIC, volume
+// and share mount. userData is the documented exception — see below.
 type CloudInstanceAPIUpdateTargetSpec struct {
-	Name       string                       `json:"name"`
-	Flavor     *CloudInstanceRef            `json:"flavor,omitempty"`
-	Image      *CloudInstanceRef            `json:"image,omitempty"`
-	Networks   []CloudInstanceAPINetworkRef `json:"networks,omitempty"`
-	Volumes    []CloudInstanceRef           `json:"volumes,omitempty"`
-	PowerState string                       `json:"powerState,omitempty"`
+	Name     string                       `json:"name"`
+	Flavor   CloudInstanceRef             `json:"flavor"`
+	Image    *CloudInstanceRef            `json:"image"`
+	Networks []CloudInstanceAPINetworkRef `json:"networks"`
+	Volumes  []CloudInstanceRef           `json:"volumes"`
+	Shares   []CloudInstanceAPIShareRef   `json:"shares"`
+	// Pointer so an unset attribute marshals as null, which the API defaults to
+	// ACTIVE. "" is not a PowerStateEnum member and is rejected.
+	PowerState *string `json:"powerState"`
+	// The documented exception to the real PUT above: userData is write-only — GET
+	// returns only its checksum, never the payload — so a caller cannot read the
+	// value back to re-send it, and an absent key still means "keep".
+	//
 	// Pointer, not string: the API reads userData as a tri-state on PUT — an
 	// absent key keeps the stored value, "" clears it, a non-empty value replaces
 	// it — and clearing or replacing REINSTALLS the instance (Nova rebuild on the
@@ -115,9 +130,9 @@ type CloudInstanceAPIUpdateTargetSpec struct {
 	// pointer to "" still marshals as `"userData":""` (an explicit clear) while an
 	// untouched field marshals to nothing at all.
 	UserData *string `json:"userData,omitempty"`
-	// See CloudInstanceAPITargetSpec.SecurityGroups: null and [] differ.
-	SecurityGroups []CloudInstanceRef         `json:"securityGroups"`
-	Shares         []CloudInstanceAPIShareRef `json:"shares,omitempty"`
+	// Never omitempty: the API reads an absent securityGroups as a clear, which
+	// leaves every port deny-all. [] says that deliberately.
+	SecurityGroups []CloudInstanceRef `json:"securityGroups"`
 }
 
 // Observed nested objects.
@@ -537,6 +552,15 @@ func (m *CloudInstanceResourceModel) ToCreate() *CloudInstanceCreatePayload {
 	return &CloudInstanceCreatePayload{TargetSpec: ts}
 }
 
+// A null list would read as "no entries" all the same, but an explicit [] says it
+// plainly and keeps every key of the body self-describing.
+func orEmpty[T any](s []T) []T {
+	if s == nil {
+		return []T{}
+	}
+	return s
+}
+
 // userDataForUpdate resolves the userData tri-state for a PUT from the planned
 // and prior (state) values.
 //
@@ -560,26 +584,31 @@ func userDataForUpdate(planned, prior ovhtypes.TfStringValue) *string {
 }
 
 // ToUpdate builds the update payload with mutable fields only, plus checksum.
-// Location, sshKeyName and group are immutable and intentionally excluded.
-// priorUserData is the value held in state, needed to resolve the userData
+// Every field the API's update model accepts is carried, because a real PUT
+// clears whatever the body omits — except userData, whose absent key still means
+// "keep". priorUserData is the value held in state, needed to resolve that
 // tri-state; everything else comes from the plan.
 func (m *CloudInstanceResourceModel) ToUpdate(checksum string, priorUserData ovhtypes.TfStringValue) *CloudInstanceUpdatePayload {
 	ts := &CloudInstanceAPIUpdateTargetSpec{
-		Name:   m.Name.ValueString(),
-		Flavor: &CloudInstanceRef{Id: m.FlavorId.ValueString()},
+		Name:     m.Name.ValueString(),
+		Flavor:   CloudInstanceRef{Id: m.FlavorId.ValueString()},
+		UserData: userDataForUpdate(m.UserData, priorUserData),
+		Networks: orEmpty(networksToAPI(m.Networks)),
+		Volumes:  orEmpty(customStringListToRefs(m.VolumeIds)),
+		Shares:   orEmpty(sharesToAPI(m.Shares)),
+		// Not orEmpty: [] is an explicit deny-all, so a plan that carries no list
+		// must not be turned into one. security_group_ids is Optional+Computed and
+		// always known at apply, so this is nil only in a degenerate merge.
+		SecurityGroups: customStringListToRefs(m.SecurityGroupIds),
 	}
 
 	if !m.ImageId.IsNull() && !m.ImageId.IsUnknown() && m.ImageId.ValueString() != "" {
 		ts.Image = &CloudInstanceRef{Id: m.ImageId.ValueString()}
 	}
 	if !m.PowerState.IsNull() && !m.PowerState.IsUnknown() {
-		ts.PowerState = m.PowerState.ValueString()
+		v := m.PowerState.ValueString()
+		ts.PowerState = &v
 	}
-	ts.UserData = userDataForUpdate(m.UserData, priorUserData)
-	ts.Networks = networksToAPI(m.Networks)
-	ts.Volumes = customStringListToRefs(m.VolumeIds)
-	ts.SecurityGroups = customStringListToRefs(m.SecurityGroupIds)
-	ts.Shares = sharesToAPI(m.Shares)
 
 	return &CloudInstanceUpdatePayload{Checksum: checksum, TargetSpec: ts}
 }
@@ -908,6 +937,12 @@ func (m *CloudInstanceModel) priorSpec() instancePriorSpec {
 // outside the embedded model written here, so the configured write-only value
 // survives every create/read/update merge untouched.
 func (m *CloudInstanceModel) MergeWith(ctx context.Context, response *CloudInstanceAPIResponse, prior instancePriorSpec) {
+	// Captured before the typed-null reset below: a response without a target spec
+	// says nothing about the security groups, and downgrading a known list to null
+	// would send `"securityGroups": null` on the next PUT — a request to remove
+	// every group, leaving the instance on a deny-all port.
+	priorSecurityGroupIds := m.SecurityGroupIds
+
 	m.Id = tfStr(response.Id)
 	m.Checksum = tfStr(response.Checksum)
 	m.CreatedAt = tfStr(response.CreatedAt)
@@ -1017,6 +1052,13 @@ func (m *CloudInstanceModel) MergeWith(ctx context.Context, response *CloudInsta
 	// the target spec omitted it and the else-branch above wasn't reached.
 	if m.ImageId.IsUnknown() {
 		m.ImageId = ovhtypes.TfStringValue{StringValue: types.StringNull()}
+	}
+
+	// Only a known prior is worth preserving: a null or unknown one holds nothing
+	// to keep, and manufacturing a list would invent an intent the config never
+	// expressed.
+	if response.TargetSpec == nil && !priorSecurityGroupIds.IsNull() && !priorSecurityGroupIds.IsUnknown() {
+		m.SecurityGroupIds = priorSecurityGroupIds
 	}
 
 	// security_group_ids is Optional+Computed and must be known after apply, even

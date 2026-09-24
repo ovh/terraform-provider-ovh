@@ -113,8 +113,8 @@ func TestUnitCloudInstanceModelToUpdate(t *testing.T) {
 	if payload.TargetSpec.Name != "web-2" {
 		t.Fatalf("name = %q, want web-2", payload.TargetSpec.Name)
 	}
-	if payload.TargetSpec.PowerState != "SHUTOFF" {
-		t.Fatalf("powerState = %q, want SHUTOFF", payload.TargetSpec.PowerState)
+	if payload.TargetSpec.PowerState == nil || *payload.TargetSpec.PowerState != "SHUTOFF" {
+		t.Fatalf("powerState = %v, want SHUTOFF", payload.TargetSpec.PowerState)
 	}
 	// Immutable fields must be absent from the update target spec JSON.
 	b, _ := json.Marshal(payload.TargetSpec)
@@ -580,6 +580,42 @@ func TestUnitCloudInstanceMergeWithSecurityGroups(t *testing.T) {
 	}
 }
 
+// A response with no target spec says nothing about the security groups. Letting
+// it null a known list would put that null back on the wire on the next PUT,
+// which the API reads as "remove every group" — a running instance stranded on a
+// deny-all port.
+func TestUnitCloudInstanceMergeWithoutTargetSpecKeepsKnownSecurityGroups(t *testing.T) {
+	ctx := context.Background()
+	noTargetSpec := func() *CloudInstanceAPIResponse {
+		return &CloudInstanceAPIResponse{Id: "inst-6", ResourceStatus: "UPDATING"}
+	}
+
+	m := &CloudInstanceModel{SecurityGroupIds: customStringList("sg-1", "sg-2")}
+	m.MergeWith(ctx, noTargetSpec(), m.priorSpec())
+	got := m.SecurityGroupIds.Elements()
+	if len(got) != 2 || got[0].(ovhtypes.TfStringValue).ValueString() != "sg-1" || got[1].(ovhtypes.TfStringValue).ValueString() != "sg-2" {
+		t.Fatalf("security_group_ids = %+v, want the prior [sg-1 sg-2] preserved", m.SecurityGroupIds)
+	}
+
+	// An explicit empty list is an intent of its own and survives too.
+	m = &CloudInstanceModel{SecurityGroupIds: emptyCustomStringList()}
+	m.MergeWith(ctx, noTargetSpec(), m.priorSpec())
+	if m.SecurityGroupIds.IsNull() || len(m.SecurityGroupIds.Elements()) != 0 {
+		t.Fatalf("explicit empty security_group_ids must survive: %+v", m.SecurityGroupIds)
+	}
+
+	// Nothing known to preserve: no value is manufactured, and the list keeps a
+	// usable element type so resp.State.Set cannot panic on it.
+	m = &CloudInstanceModel{SecurityGroupIds: nullCustomStringList()}
+	m.MergeWith(ctx, noTargetSpec(), m.priorSpec())
+	if !m.SecurityGroupIds.IsNull() {
+		t.Fatalf("a null prior must stay null: %+v", m.SecurityGroupIds)
+	}
+	if m.SecurityGroupIds.ElementType(ctx) == nil {
+		t.Fatal("security_group_ids must keep a typed element type")
+	}
+}
+
 // Boot-from-volume: image nil on both specs must yield a null image_id + null current_state.image.
 func TestUnitCloudInstanceMergeWithNilImage(t *testing.T) {
 	ctx := context.Background()
@@ -621,11 +657,12 @@ func userDataUpdateModel(planned ovhtypes.TfStringValue) *CloudInstanceResourceM
 	}
 }
 
-// The API reads userData as a tri-state on PUT: an absent key keeps the stored
-// value, "" clears it, a non-empty value replaces it — and both a clear and a
-// replace REINSTALL the instance (Nova rebuild, root disk wiped). So an attribute
-// the user never set, or left untouched, MUST marshal to no key at all: emitting
-// "" would wipe the root disk on every unrelated update.
+// userData is the documented exception to the real PUT: it is write-only — GET
+// returns only its checksum — so an absent key still keeps the stored payload,
+// "" clears it, and a non-empty value replaces it. Both a clear and a replace
+// REINSTALL the instance (Nova rebuild, root disk wiped), so an attribute the
+// user never set, or left untouched, MUST marshal to no key at all: emitting ""
+// would wipe the root disk on every unrelated update.
 func TestUnitCloudInstanceUserDataUpdateTriState(t *testing.T) {
 	cases := []struct {
 		name  string
@@ -663,6 +700,119 @@ func TestUnitCloudInstanceUserDataUpdateTriState(t *testing.T) {
 			}
 			if !strings.Contains(got, tc.want) {
 				t.Fatalf("update target spec must contain %s: %s", tc.want, got)
+			}
+		})
+	}
+}
+
+// A real PUT clears whatever the body omits, so every other field of the API's
+// update model is always present — even unset — and the three fields it does not
+// accept never are.
+func TestUnitCloudInstanceUpdateBodyCarriesEveryMutableField(t *testing.T) {
+	networks := types.ListValueMust(types.ObjectType{AttrTypes: instanceNetworkRefAttrTypes()}, []attr.Value{
+		types.ObjectValueMust(instanceNetworkRefAttrTypes(), map[string]attr.Value{
+			"network_id":            strVal("net-1"),
+			"subnet_id":             strVal("sub-1"),
+			"ip":                    strNull(),
+			"auto_assign_public_ip": types.BoolNull(),
+		}),
+	})
+	shares := types.ListValueMust(types.ObjectType{AttrTypes: instanceShareRefAttrTypes()}, []attr.Value{
+		types.ObjectValueMust(instanceShareRefAttrTypes(), map[string]attr.Value{
+			"id":           strVal("share-1"),
+			"access_level": strVal("READ_ONLY"),
+		}),
+	})
+
+	populated := CloudInstanceResourceModel{
+		CloudInstanceModel: CloudInstanceModel{
+			Region:           strVal("GRA11"),
+			AvailabilityZone: strVal("GRA11-a"),
+			SSHKeyName:       strVal("mykey"),
+			GroupId:          strVal("grp-1"),
+			Name:             strVal("web-1"),
+			FlavorId:         strVal("flavor-uuid"),
+			ImageId:          strVal("image-uuid"),
+			PowerState:       strVal("ACTIVE"),
+			Networks:         networks,
+			VolumeIds:        customStringList("vol-1"),
+			SecurityGroupIds: customStringList("sg-1"),
+			Shares:           shares,
+		},
+	}
+
+	// Same instance with every optional attribute unset: the keys must still be
+	// there, stating emptiness, instead of vanishing from the body.
+	bare := CloudInstanceResourceModel{
+		CloudInstanceModel: CloudInstanceModel{
+			Region:           strVal("GRA11"),
+			SSHKeyName:       strVal("mykey"),
+			GroupId:          strVal("grp-1"),
+			Name:             strVal("web-1"),
+			FlavorId:         strVal("flavor-uuid"),
+			ImageId:          strNull(),
+			PowerState:       strNull(),
+			Networks:         types.ListNull(types.ObjectType{AttrTypes: instanceNetworkRefAttrTypes()}),
+			VolumeIds:        nullCustomStringList(),
+			SecurityGroupIds: emptyCustomStringList(),
+			Shares:           types.ListNull(types.ObjectType{AttrTypes: instanceShareRefAttrTypes()}),
+		},
+	}
+
+	cases := []struct {
+		name  string
+		model CloudInstanceResourceModel
+		want  []string
+	}{
+		{
+			name:  "populated",
+			model: populated,
+			want: []string{
+				`"name":"web-1"`,
+				`"flavor":{"id":"flavor-uuid"}`,
+				`"image":{"id":"image-uuid"}`,
+				`"networks":[{"id":"net-1","subnetId":"sub-1"}]`,
+				`"volumes":[{"id":"vol-1"}]`,
+				`"shares":[{"id":"share-1","accessLevel":"READ_ONLY"}]`,
+				`"powerState":"ACTIVE"`,
+				`"securityGroups":[{"id":"sg-1"}]`,
+			},
+		},
+		{
+			name:  "everything unset",
+			model: bare,
+			want: []string{
+				`"name":"web-1"`,
+				`"flavor":{"id":"flavor-uuid"}`,
+				`"image":null`,
+				`"networks":[]`,
+				`"volumes":[]`,
+				`"shares":[]`,
+				`"powerState":null`,
+				`"securityGroups":[]`,
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			m := tc.model
+			b, err := json.Marshal(m.ToUpdate("chk-1", strNull()).TargetSpec)
+			if err != nil {
+				t.Fatalf("marshal update target spec: %s", err)
+			}
+			got := string(b)
+			for _, want := range tc.want {
+				if !strings.Contains(got, want) {
+					t.Fatalf("update target spec must contain %s: %s", want, got)
+				}
+			}
+			// The API's update model rejects these as unknown fields; the server
+			// carries the stored ones over instead.
+			for _, forbidden := range []string{"location", "region", "availabilityZone", "sshKeyName", "group"} {
+				if strings.Contains(got, forbidden) {
+					t.Fatalf("update target spec must not contain %q: %s", forbidden, got)
+				}
 			}
 		})
 	}
