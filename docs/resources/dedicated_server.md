@@ -161,6 +161,7 @@ resource "ovh_dedicated_server" "server" {
 * `commercial_range` - Dedicated server commercial range
 * `os` - Operating system
 * `ip` - Dedicated server ip (IPv4)
+* `ips` - Dedicated server ip blocks
 * `region` - Dedicated region localisation
 * `availability_zone` - Dedicated AZ localisation
 * `datacenter` - Dedicated datacenter localisation (bhs1,bhs2,...)
@@ -186,6 +187,17 @@ resource "ovh_dedicated_server" "server" {
 * `rescue_ssh_key` - Public SSH Key used in the rescue mode
 * `reverse` - Dedicated server reverse
 * `root_device` - Root device of the server
+* `vnis` - The list of VirtualNetworkInterface associated with this server
+  * `enabled` - VirtualNetworkInterface activation state
+  * `mode` - VirtualNetworkInterface mode (public,vrack,vrack_aggregation)
+  * `name` - User defined VirtualNetworkInterface name
+  * `server_name` - Server bound to this VirtualNetworkInterface
+  * `uuid` - VirtualNetworkInterface unique id
+  * `vrack` - vRack name
+  * `nics` - NetworkInterfaceControllers bound to this VirtualNetworkInterface
+* `enabled_vrack_vnis` - List of enabled vrack VNI uuids
+* `enabled_vrack_aggregation_vnis` - List of enabled vrack_aggregation VNI uuids
+* `enabled_public_vnis` - List of enabled public VNI uuids
 
 ## Import
 
