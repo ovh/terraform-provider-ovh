@@ -1,3 +1,48 @@
+## 2.21.0 (September 24, 2026)
+
+⚙️ General:
+
+* Bump `google.golang.org/grpc` from 1.82.1 to 1.83.2 ([#1415](https://github.com/ovh/terraform-provider-ovh/pull/1415), [#1445](https://github.com/ovh/terraform-provider-ovh/pull/1445))
+
+🎉 Features:
+
+* New resource: `ovh_cloud_loadbalancer` ([#1416](https://github.com/ovh/terraform-provider-ovh/pull/1416))
+* New resource: `ovh_cloud_loadbalancer_listener` ([#1416](https://github.com/ovh/terraform-provider-ovh/pull/1416))
+* New resource: `ovh_cloud_loadbalancer_pool` ([#1416](https://github.com/ovh/terraform-provider-ovh/pull/1416))
+* New resource: `ovh_cloud_loadbalancer_pool_member` ([#1416](https://github.com/ovh/terraform-provider-ovh/pull/1416))
+* New resource: `ovh_cloud_loadbalancer_l7policy` ([#1416](https://github.com/ovh/terraform-provider-ovh/pull/1416))
+* New resource: `ovh_dedicated_server_virtual_mac` ([#1444](https://github.com/ovh/terraform-provider-ovh/pull/1444))
+
+* New datasource: `ovh_cloud_loadbalancer` ([#1416](https://github.com/ovh/terraform-provider-ovh/pull/1416))
+* New datasource: `ovh_cloud_loadbalancers` ([#1416](https://github.com/ovh/terraform-provider-ovh/pull/1416))
+* New datasource: `ovh_cloud_loadbalancer_listener` ([#1416](https://github.com/ovh/terraform-provider-ovh/pull/1416))
+* New datasource: `ovh_cloud_loadbalancer_listeners` ([#1416](https://github.com/ovh/terraform-provider-ovh/pull/1416))
+* New datasource: `ovh_cloud_loadbalancer_pool` ([#1416](https://github.com/ovh/terraform-provider-ovh/pull/1416))
+* New datasource: `ovh_cloud_loadbalancer_pools` ([#1416](https://github.com/ovh/terraform-provider-ovh/pull/1416))
+* New datasource: `ovh_cloud_loadbalancer_pool_member` ([#1416](https://github.com/ovh/terraform-provider-ovh/pull/1416))
+* New datasource: `ovh_cloud_loadbalancer_pool_members` ([#1416](https://github.com/ovh/terraform-provider-ovh/pull/1416))
+* New datasource: `ovh_cloud_loadbalancer_l7policy` ([#1416](https://github.com/ovh/terraform-provider-ovh/pull/1416))
+* New datasource: `ovh_cloud_loadbalancer_l7policies` ([#1416](https://github.com/ovh/terraform-provider-ovh/pull/1416))
+
+💪 Improvements:
+
+* `r/ovh_cloud_project_database`: Update `network_id` and `subnet_id` in place instead of recreating the cluster, so a service can be switched between public and private networks with a simple `apply` ([#1420](https://github.com/ovh/terraform-provider-ovh/pull/1420))
+* `r/ovh_cloud_project_database_kafka_topic`: Update `min_insync_replicas`, `partitions`, `replication`, `retention_bytes` and `retention_hours` in place instead of recreating the topic, and add an `update` timeout. Lowering `partitions` still forces a new resource ([#1404](https://github.com/ovh/terraform-provider-ovh/pull/1404))
+* `r/ovh_vps`: Accept the `2027v1` value for `model.version` ([#1397](https://github.com/ovh/terraform-provider-ovh/pull/1397))
+
+🐜 Bug fixes:
+
+* `r/ovh_cloud_instance`: Send every mutable field of the update model on `PUT`. The API applies an absent key as empty, so partial payloads detached networks, volumes and shares, and reset `security_group_ids` to a deny-all port ([#1451](https://github.com/ovh/terraform-provider-ovh/pull/1451))
+* `r/ovh_cloud_storage_block_volume`: Always send `name` and `size` on update, and stop sending the immutable `location`, `encryption` and `create_from` fields, which the API rejects ([#1451](https://github.com/ovh/terraform-provider-ovh/pull/1451))
+* `r/ovh_cloud_project_database_kafka_topic`: Retry the update while the cluster rejects concurrent operations, instead of failing immediately ([#1404](https://github.com/ovh/terraform-provider-ovh/pull/1404))
+* `r/ovh_cloud_project_kube_nodepool`: Accept every transient node pool state while waiting for deletion, instead of failing when the pool is in any state other than `DELETING` ([#1439](https://github.com/ovh/terraform-provider-ovh/pull/1439))
+
+📚 Documentation:
+
+* `r/ovh_vps`: Document the `2025v1` and `2027v1` model versions ([#1397](https://github.com/ovh/terraform-provider-ovh/pull/1397))
+
+❤️ Thanks for your contributions ❤️
+
 ## 2.20.0 (September 18, 2026)
 
 🎉 Features:
