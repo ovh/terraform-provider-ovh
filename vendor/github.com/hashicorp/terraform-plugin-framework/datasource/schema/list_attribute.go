@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2021, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package schema
@@ -211,6 +211,18 @@ func (a ListAttribute) IsWriteOnly() bool {
 // ListValidators returns the Validators field value.
 func (a ListAttribute) ListValidators() []validator.List {
 	return a.Validators
+}
+
+// IsRequiredForImport returns false as this behavior is only relevant
+// for managed resource identity schema attributes.
+func (a ListAttribute) IsRequiredForImport() bool {
+	return false
+}
+
+// IsOptionalForImport returns false as this behavior is only relevant
+// for managed resource identity schema attributes.
+func (a ListAttribute) IsOptionalForImport() bool {
+	return false
 }
 
 // ValidateImplementation contains logic for validating the

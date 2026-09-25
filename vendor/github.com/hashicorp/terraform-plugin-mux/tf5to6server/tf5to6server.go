@@ -1,10 +1,12 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2020, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package tf5to6server
 
 import (
 	"context"
+	"fmt"
+	"slices"
 
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
@@ -108,6 +110,18 @@ func (s v5tov6Server) GetProviderSchema(ctx context.Context, req *tfprotov6.GetP
 	}
 
 	return tfprotov5tov6.GetProviderSchemaResponse(v5Resp), nil
+}
+
+func (s v5tov6Server) GetResourceIdentitySchemas(ctx context.Context, req *tfprotov6.GetResourceIdentitySchemasRequest) (*tfprotov6.GetResourceIdentitySchemasResponse, error) {
+
+	v5Req := tfprotov6tov5.GetResourceIdentitySchemasRequest(req)
+	v5Resp, err := s.v5Server.GetResourceIdentitySchemas(ctx, v5Req)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfprotov5tov6.GetResourceIdentitySchemasResponse(v5Resp), nil
 }
 
 func (s v5tov6Server) ImportResourceState(ctx context.Context, req *tfprotov6.ImportResourceStateRequest) (*tfprotov6.ImportResourceStateResponse, error) {
@@ -214,6 +228,17 @@ func (s v5tov6Server) UpgradeResourceState(ctx context.Context, req *tfprotov6.U
 	return tfprotov5tov6.UpgradeResourceStateResponse(v5Resp), nil
 }
 
+func (s v5tov6Server) UpgradeResourceIdentity(ctx context.Context, req *tfprotov6.UpgradeResourceIdentityRequest) (*tfprotov6.UpgradeResourceIdentityResponse, error) {
+	v5Req := tfprotov6tov5.UpgradeResourceIdentityRequest(req)
+	v5Resp, err := s.v5Server.UpgradeResourceIdentity(ctx, v5Req)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfprotov5tov6.UpgradeResourceIdentityResponse(v5Resp), nil
+}
+
 func (s v5tov6Server) ValidateDataResourceConfig(ctx context.Context, req *tfprotov6.ValidateDataResourceConfigRequest) (*tfprotov6.ValidateDataResourceConfigResponse, error) {
 	v5Req := tfprotov6tov5.ValidateDataSourceConfigRequest(req)
 	v5Resp, err := s.v5Server.ValidateDataSourceConfig(ctx, v5Req)
@@ -256,4 +281,290 @@ func (s v5tov6Server) ValidateResourceConfig(ctx context.Context, req *tfprotov6
 	}
 
 	return tfprotov5tov6.ValidateResourceConfigResponse(v5Resp), nil
+}
+
+func (s v5tov6Server) ValidateListResourceConfig(ctx context.Context, req *tfprotov6.ValidateListResourceConfigRequest) (*tfprotov6.ValidateListResourceConfigResponse, error) {
+	// TODO: Remove and call s.v5Server.ValidateListResourceConfig below directly once interface becomes required
+	listResourceServer, ok := s.v5Server.(tfprotov5.ListResourceServer)
+	if !ok {
+		v6Resp := &tfprotov6.ValidateListResourceConfigResponse{
+			Diagnostics: []*tfprotov6.Diagnostic{
+				{
+					Severity: tfprotov6.DiagnosticSeverityError,
+					Summary:  "ValidateListResourceConfig Not Implemented",
+					Detail: "A ValidateListResourceConfig call was received by the provider, however the provider does not implement the RPC. " +
+						"Either upgrade the provider to a version that implements ValidateListResourceConfig or this is a bug in Terraform that should be reported to the Terraform maintainers.",
+				},
+			},
+		}
+
+		return v6Resp, nil
+	}
+
+	v5Req := tfprotov6tov5.ValidateListResourceConfigRequest(req)
+
+	v5Resp, err := listResourceServer.ValidateListResourceConfig(ctx, v5Req)
+	if err != nil {
+		return nil, err
+	}
+
+	return tfprotov5tov6.ValidateListResourceConfigResponse(v5Resp), nil
+}
+
+func (s v5tov6Server) ListResource(ctx context.Context, req *tfprotov6.ListResourceRequest) (*tfprotov6.ListResourceServerStream, error) {
+	// TODO: Remove and call s.v5Server.ListResource below directly once interface becomes required
+	listResourceServer, ok := s.v5Server.(tfprotov5.ListResourceServer)
+	if !ok {
+		v6Resp := &tfprotov6.ListResourceServerStream{
+			Results: slices.Values([]tfprotov6.ListResourceResult{
+				{
+					Diagnostics: []*tfprotov6.Diagnostic{
+						{
+							Severity: tfprotov6.DiagnosticSeverityError,
+							Summary:  "ListResource Not Implemented",
+							Detail: "A ListResource call was received by the provider, however the provider does not implement the RPC. " +
+								"Either upgrade the provider to a version that implements ListResource or this is a bug in Terraform that should be reported to the Terraform maintainers.",
+						},
+					},
+				},
+			}),
+		}
+
+		return v6Resp, nil
+	}
+
+	v5Req := tfprotov6tov5.ListResourceRequest(req)
+
+	v5Resp, err := listResourceServer.ListResource(ctx, v5Req)
+	if err != nil {
+		return nil, err
+	}
+
+	return tfprotov5tov6.ListResourceServerStream(v5Resp), nil
+}
+
+func (s v5tov6Server) ValidateActionConfig(ctx context.Context, req *tfprotov6.ValidateActionConfigRequest) (*tfprotov6.ValidateActionConfigResponse, error) {
+	// TODO: Remove and call s.v5Server.ValidateActionConfig below directly once interface becomes required
+	actionServer, ok := s.v5Server.(tfprotov5.ActionServer)
+	if !ok {
+		v6Resp := &tfprotov6.ValidateActionConfigResponse{
+			Diagnostics: []*tfprotov6.Diagnostic{
+				{
+					Severity: tfprotov6.DiagnosticSeverityError,
+					Summary:  "ValidateActionConfig Not Implemented",
+					Detail: "A ValidateActionConfig call was received by the provider, however the provider does not implement the RPC. " +
+						"Either upgrade the provider to a version that implements ValidateActionConfig or this is a bug in Terraform that should be reported to the Terraform maintainers.",
+				},
+			},
+		}
+
+		return v6Resp, nil
+	}
+
+	v5Req := tfprotov6tov5.ValidateActionConfigRequest(req)
+
+	// v5Resp, err := s.v5Server.ValidateActionConfig(ctx, v5Req)
+	v5Resp, err := actionServer.ValidateActionConfig(ctx, v5Req)
+	if err != nil {
+		return nil, err
+	}
+
+	return tfprotov5tov6.ValidateActionConfigResponse(v5Resp), nil
+}
+
+func (s v5tov6Server) PlanAction(ctx context.Context, req *tfprotov6.PlanActionRequest) (*tfprotov6.PlanActionResponse, error) {
+	// TODO: Remove and call s.v5Server.PlanAction below directly once interface becomes required
+	actionServer, ok := s.v5Server.(tfprotov5.ActionServer)
+	if !ok {
+		v6Resp := &tfprotov6.PlanActionResponse{
+			Diagnostics: []*tfprotov6.Diagnostic{
+				{
+					Severity: tfprotov6.DiagnosticSeverityError,
+					Summary:  "PlanAction Not Implemented",
+					Detail: "A PlanAction call was received by the provider, however the provider does not implement the RPC. " +
+						"Either upgrade the provider to a version that implements PlanAction or this is a bug in Terraform that should be reported to the Terraform maintainers.",
+				},
+			},
+		}
+
+		return v6Resp, nil
+	}
+
+	v5Req := tfprotov6tov5.PlanActionRequest(req)
+
+	// v5Resp, err := s.v5Server.PlanAction(ctx, v5Req)
+	v5Resp, err := actionServer.PlanAction(ctx, v5Req)
+	if err != nil {
+		return nil, err
+	}
+
+	return tfprotov5tov6.PlanActionResponse(v5Resp), nil
+}
+
+func (s v5tov6Server) InvokeAction(ctx context.Context, req *tfprotov6.InvokeActionRequest) (*tfprotov6.InvokeActionServerStream, error) {
+	// TODO: Remove and call s.v5Server.InvokeAction below directly once interface becomes required
+	actionServer, ok := s.v5Server.(tfprotov5.ActionServer)
+	if !ok {
+		v6Resp := &tfprotov6.InvokeActionServerStream{
+			Events: slices.Values([]tfprotov6.InvokeActionEvent{
+				{
+					Type: tfprotov6.CompletedInvokeActionEventType{
+						Diagnostics: []*tfprotov6.Diagnostic{
+							{
+								Severity: tfprotov6.DiagnosticSeverityError,
+								Summary:  "InvokeAction Not Implemented",
+								Detail: "An InvokeAction call was received by the provider, however the provider does not implement the RPC. " +
+									"Either upgrade the provider to a version that implements InvokeAction or this is a bug in Terraform that should be reported to the Terraform maintainers.",
+							},
+						},
+					},
+				},
+			}),
+		}
+
+		return v6Resp, nil
+	}
+
+	v5Req := tfprotov6tov5.InvokeActionRequest(req)
+
+	// v5Resp, err := s.v5Server.InvokeAction(ctx, v5Req)
+	v5Resp, err := actionServer.InvokeAction(ctx, v5Req)
+	if err != nil {
+		return nil, err
+	}
+
+	return tfprotov5tov6.InvokeActionServerStream(v5Resp), nil
+}
+
+func (s v5tov6Server) ValidateStateStoreConfig(ctx context.Context, req *tfprotov6.ValidateStateStoreConfigRequest) (*tfprotov6.ValidateStateStoreConfigResponse, error) {
+	return &tfprotov6.ValidateStateStoreConfigResponse{
+		Diagnostics: []*tfprotov6.Diagnostic{
+			{
+				Severity: tfprotov6.DiagnosticSeverityError,
+				Summary:  "ValidateStateStoreConfig Not Implemented",
+				Detail: fmt.Sprintf(
+					"A ValidateStateStoreConfig call was received by the provider for state store %q, however the underlying provider server was built with protocol version 5 and does not support state stores. "+
+						"State stores are a protocol version 6 feature, and this call should not have been made. This is a bug in Terraform or terraform-plugin-mux and should be reported to the provider developers.",
+					req.TypeName),
+			},
+		},
+	}, nil
+}
+
+func (s v5tov6Server) ConfigureStateStore(ctx context.Context, req *tfprotov6.ConfigureStateStoreRequest) (*tfprotov6.ConfigureStateStoreResponse, error) {
+	return &tfprotov6.ConfigureStateStoreResponse{
+		Diagnostics: []*tfprotov6.Diagnostic{
+			{
+				Severity: tfprotov6.DiagnosticSeverityError,
+				Summary:  "ConfigureStateStore Not Implemented",
+				Detail: fmt.Sprintf(
+					"A ConfigureStateStore call was received by the provider for state store %q, however the underlying provider server was built with protocol version 5 and does not support state stores. "+
+						"State stores are a protocol version 6 feature, and this call should not have been made. This is a bug in Terraform or terraform-plugin-mux and should be reported to the provider developers.",
+					req.TypeName),
+			},
+		},
+	}, nil
+}
+
+func (s v5tov6Server) ReadStateBytes(ctx context.Context, req *tfprotov6.ReadStateBytesRequest) (*tfprotov6.ReadStateBytesStream, error) {
+	return &tfprotov6.ReadStateBytesStream{
+		Chunks: slices.Values([]tfprotov6.ReadStateByteChunk{
+			{
+				Diagnostics: []*tfprotov6.Diagnostic{
+					{
+						Severity: tfprotov6.DiagnosticSeverityError,
+						Summary:  "ReadStateBytes Not Implemented",
+						Detail: fmt.Sprintf(
+							"A ReadStateBytes call was received by the provider for state store %q, however the underlying provider server was built with protocol version 5 and does not support state stores. "+
+								"State stores are a protocol version 6 feature, and this call should not have been made. This is a bug in Terraform or terraform-plugin-mux and should be reported to the provider developers.",
+							req.TypeName),
+					},
+				},
+			},
+		}),
+	}, nil
+}
+
+func (s v5tov6Server) WriteStateBytes(ctx context.Context, req *tfprotov6.WriteStateBytesStream) (*tfprotov6.WriteStateBytesResponse, error) {
+	return &tfprotov6.WriteStateBytesResponse{
+		Diagnostics: []*tfprotov6.Diagnostic{
+			{
+				Severity: tfprotov6.DiagnosticSeverityError,
+				Summary:  "WriteStateBytes Not Implemented",
+				Detail: "A WriteStateBytes call was received by the provider, however the underlying provider server was built with protocol version 5 and does not support state stores. " +
+					"State stores are a protocol version 6 feature, and this call should not have been made. This is a bug in Terraform or terraform-plugin-mux and should be reported to the provider developers.",
+			},
+		},
+	}, nil
+}
+
+func (s v5tov6Server) GetStates(ctx context.Context, req *tfprotov6.GetStatesRequest) (*tfprotov6.GetStatesResponse, error) {
+	return &tfprotov6.GetStatesResponse{
+		Diagnostics: []*tfprotov6.Diagnostic{
+			{
+				Severity: tfprotov6.DiagnosticSeverityError,
+				Summary:  "GetStates Not Implemented",
+				Detail: fmt.Sprintf(
+					"A GetStates call was received by the provider for state store %q, however the underlying provider server was built with protocol version 5 and does not support state stores. "+
+						"State stores are a protocol version 6 feature, and this call should not have been made. This is a bug in Terraform or terraform-plugin-mux and should be reported to the provider developers.",
+					req.TypeName),
+			},
+		},
+	}, nil
+}
+
+func (s v5tov6Server) DeleteState(ctx context.Context, req *tfprotov6.DeleteStateRequest) (*tfprotov6.DeleteStateResponse, error) {
+	return &tfprotov6.DeleteStateResponse{
+		Diagnostics: []*tfprotov6.Diagnostic{
+			{
+				Severity: tfprotov6.DiagnosticSeverityError,
+				Summary:  "DeleteState Not Implemented",
+				Detail: fmt.Sprintf(
+					"A DeleteState call was received by the provider for state store %q, however the underlying provider server was built with protocol version 5 and does not support state stores. "+
+						"State stores are a protocol version 6 feature, and this call should not have been made. This is a bug in Terraform or terraform-plugin-mux and should be reported to the provider developers.",
+					req.TypeName),
+			},
+		},
+	}, nil
+}
+
+func (s v5tov6Server) LockState(ctx context.Context, req *tfprotov6.LockStateRequest) (*tfprotov6.LockStateResponse, error) {
+	return &tfprotov6.LockStateResponse{
+		Diagnostics: []*tfprotov6.Diagnostic{
+			{
+				Severity: tfprotov6.DiagnosticSeverityError,
+				Summary:  "LockState Not Implemented",
+				Detail: fmt.Sprintf(
+					"A LockState call was received by the provider for state store %q, however the underlying provider server was built with protocol version 5 and does not support state stores. "+
+						"State stores are a protocol version 6 feature, and this call should not have been made. This is a bug in Terraform or terraform-plugin-mux and should be reported to the provider developers.",
+					req.TypeName),
+			},
+		},
+	}, nil
+}
+
+func (s v5tov6Server) UnlockState(ctx context.Context, req *tfprotov6.UnlockStateRequest) (*tfprotov6.UnlockStateResponse, error) {
+	return &tfprotov6.UnlockStateResponse{
+		Diagnostics: []*tfprotov6.Diagnostic{
+			{
+				Severity: tfprotov6.DiagnosticSeverityError,
+				Summary:  "UnlockState Not Implemented",
+				Detail: fmt.Sprintf(
+					"An UnlockState call was received by the provider for state store %q, however the underlying provider server was built with protocol version 5 and does not support state stores. "+
+						"State stores are a protocol version 6 feature, and this call should not have been made. This is a bug in Terraform or terraform-plugin-mux and should be reported to the provider developers.",
+					req.TypeName),
+			},
+		},
+	}, nil
+}
+
+func (s v5tov6Server) GenerateResourceConfig(ctx context.Context, req *tfprotov6.GenerateResourceConfigRequest) (*tfprotov6.GenerateResourceConfigResponse, error) {
+	v5Req := tfprotov6tov5.GenerateResourceConfigRequest(req)
+	v5Resp, err := s.v5Server.GenerateResourceConfig(ctx, v5Req)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfprotov5tov6.GenerateResourceConfigResponse(v5Resp), nil
 }

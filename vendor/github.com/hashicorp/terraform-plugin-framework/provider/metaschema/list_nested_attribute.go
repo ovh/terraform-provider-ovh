@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2021, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package metaschema
@@ -164,5 +164,17 @@ func (a ListNestedAttribute) IsSensitive() bool {
 // IsWriteOnly returns false as write-only attributes are not relevant to provider meta schemas,
 // as these schemas describe data explicitly not saved to any artifact.
 func (a ListNestedAttribute) IsWriteOnly() bool {
+	return false
+}
+
+// IsRequiredForImport returns false as this behavior is only relevant
+// for managed resource identity schema attributes.
+func (a ListNestedAttribute) IsRequiredForImport() bool {
+	return false
+}
+
+// IsOptionalForImport returns false as this behavior is only relevant
+// for managed resource identity schema attributes.
+func (a ListNestedAttribute) IsOptionalForImport() bool {
 	return false
 }

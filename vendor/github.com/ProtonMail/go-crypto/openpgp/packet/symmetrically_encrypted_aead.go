@@ -68,10 +68,16 @@ func (se *SymmetricallyEncrypted) decryptAead(inputKey []byte) (io.ReadCloser, e
 		return nil, errors.StructuralError(fmt.Sprintf("invalid session key length for cipher: got %d bytes, but expected %d bytes", len(inputKey), se.Cipher.KeySize()))
 	}
 
-	aead, nonce := getSymmetricallyEncryptedAeadInstance(se.Cipher, se.Mode, inputKey, se.Salt[:], se.associatedData())
+	aead, nonce, err := getSymmetricallyEncryptedAeadInstance(se.Cipher, se.Mode, inputKey, se.Salt[:], se.associatedData())
+	if err != nil {
+		return nil, err
+	}
+
 	// Carry the first tagLen bytes
+	chunkSize := decodeAEADChunkSize(se.ChunkSizeByte)
 	tagLen := se.Mode.TagLength()
-	peekedBytes := make([]byte, tagLen)
+	chunkBytes := make([]byte, chunkSize+tagLen*2)
+	peekedBytes := chunkBytes[chunkSize+tagLen:]
 	n, err := io.ReadFull(se.Contents, peekedBytes)
 	if n < tagLen || (err != nil && err != io.EOF) {
 		return nil, errors.StructuralError("not enough data to decrypt:" + err.Error())
@@ -81,12 +87,13 @@ func (se *SymmetricallyEncrypted) decryptAead(inputKey []byte) (io.ReadCloser, e
 		aeadCrypter: aeadCrypter{
 			aead:           aead,
 			chunkSize:      decodeAEADChunkSize(se.ChunkSizeByte),
-			initialNonce:   nonce,
+			nonce:          nonce,
 			associatedData: se.associatedData(),
-			chunkIndex:     make([]byte, 8),
+			chunkIndex:     nonce[len(nonce)-8:],
 			packetTag:      packetTypeSymmetricallyEncryptedIntegrityProtected,
 		},
 		reader:      se.Contents,
+		chunkBytes:  chunkBytes,
 		peekedBytes: peekedBytes,
 	}, nil
 }
@@ -128,34 +135,44 @@ func serializeSymmetricallyEncryptedAead(ciphertext io.WriteCloser, cipherSuite 
 		return nil, err
 	}
 
-	aead, nonce := getSymmetricallyEncryptedAeadInstance(cipherSuite.Cipher, cipherSuite.Mode, inputKey, salt, prefix)
+	aead, nonce, err := getSymmetricallyEncryptedAeadInstance(cipherSuite.Cipher, cipherSuite.Mode, inputKey, salt, prefix)
+	if err != nil {
+		return nil, err
+	}
 
+	chunkSize := decodeAEADChunkSize(chunkSizeByte)
+	tagLen := aead.Overhead()
+	chunkBytes := make([]byte, chunkSize+tagLen)
 	return &aeadEncrypter{
 		aeadCrypter: aeadCrypter{
 			aead:           aead,
-			chunkSize:      decodeAEADChunkSize(chunkSizeByte),
+			chunkSize:      chunkSize,
 			associatedData: prefix,
-			chunkIndex:     make([]byte, 8),
-			initialNonce:   nonce,
+			nonce:          nonce,
+			chunkIndex:     nonce[len(nonce)-8:],
 			packetTag:      packetTypeSymmetricallyEncryptedIntegrityProtected,
 		},
-		writer: ciphertext,
+		writer:     ciphertext,
+		chunkBytes: chunkBytes,
 	}, nil
 }
 
-func getSymmetricallyEncryptedAeadInstance(c CipherFunction, mode AEADMode, inputKey, salt, associatedData []byte) (aead cipher.AEAD, nonce []byte) {
+func getSymmetricallyEncryptedAeadInstance(c CipherFunction, mode AEADMode, inputKey, salt, associatedData []byte) (aead cipher.AEAD, nonce []byte, err error) {
 	hkdfReader := hkdf.New(sha256.New, inputKey, salt, associatedData)
 
 	encryptionKey := make([]byte, c.KeySize())
 	_, _ = readFull(hkdfReader, encryptionKey)
 
-	// Last 64 bits of nonce are the counter
-	nonce = make([]byte, mode.IvLength()-8)
-
-	_, _ = readFull(hkdfReader, nonce)
-
 	blockCipher := c.new(encryptionKey)
-	aead = mode.new(blockCipher)
+	aead, err = mode.new(blockCipher)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	nonce = make([]byte, mode.IvLength())
+
+	// Last 64 bits of nonce are the counter
+	_, _ = readFull(hkdfReader, nonce[:len(nonce)-8])
 
 	return
 }

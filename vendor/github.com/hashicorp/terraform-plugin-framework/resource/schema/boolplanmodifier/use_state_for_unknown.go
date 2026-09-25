@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2021, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package boolplanmodifier
@@ -17,6 +17,10 @@ import (
 // and Computed attributes to an unknown value "(known after apply)" on update.
 // Using this plan modifier will instead display the prior state value in the
 // plan, unless a prior plan modifier adjusts the value.
+//
+// Null is also a known value in Terraform and will be copied to the planned value
+// by this plan modifier. For use-cases like a child attribute of a nested attribute or
+// if null is desired to be marked as unknown in the case of an update, use [UseNonNullStateForUnknown].
 func UseStateForUnknown() planmodifier.Bool {
 	return useStateForUnknownModifier{}
 }
@@ -36,8 +40,8 @@ func (m useStateForUnknownModifier) MarkdownDescription(_ context.Context) strin
 
 // PlanModifyBool implements the plan modification logic.
 func (m useStateForUnknownModifier) PlanModifyBool(_ context.Context, req planmodifier.BoolRequest, resp *planmodifier.BoolResponse) {
-	// Do nothing if there is no state value.
-	if req.StateValue.IsNull() {
+	// Do nothing if there is no state (resource is being created).
+	if req.State.Raw.IsNull() {
 		return
 	}
 
