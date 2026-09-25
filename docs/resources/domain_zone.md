@@ -10,6 +10,8 @@ Creates a domain zone.
 
 -> **NOTE** To order a product through Terraform, your account needs to have a default payment method defined. This can be done in the [OVHcloud Control Panel](https://www.ovh.com/manager/#/dedicated/billing/payment/method) or via API with the [/me/payment/method](https://api.ovh.com/console/#/me/payment/method~GET) endpoint.
 
+-> **NOTE** This resource is created through the OVHcloud order workflow and deleted through the termination workflow. If your consumer key has restricted access rules, it must allow the routes listed in [Consumer key access rules for resources that place orders](../guides/order_consumer_key_access_rules), in addition to `/domain/zone/*`.
+
 ~> **WARNING** `BANK_ACCOUNT` is not supported anymore, please update your default payment method to `SEPA_DIRECT_DEBIT`
 
 ## Example Usage
