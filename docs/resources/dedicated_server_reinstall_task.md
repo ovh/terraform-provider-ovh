@@ -225,6 +225,38 @@ resource "ovh_dedicated_server_reinstall_task" "server_install" {
 }
 ```
 
+### Example 7 - Linux Installation on diskGroup 1 while preserving data on diskGroup 2
+
+```terraform
+data "ovh_dedicated_server" "server" {
+  service_name = "nsxxxxxxx.ip-xx-xx-xx.eu"
+}
+
+data "ovh_dedicated_installation_template" "template" {
+  template_name = "debian12_64"
+}
+
+resource "ovh_dedicated_server_reinstall_task" "server_install" {
+  service_name = data.ovh_dedicated_server.server.service_name
+  os           = data.ovh_dedicated_installation_template.template.template_name
+  customizations {
+    hostname = "mon-tux"
+  }
+  storage {
+    disk_group_id = 1
+    partitioning {
+      scheme_name = "default"
+    }
+  }
+  storage {
+    disk_group_id = 2
+    erase         = false
+  }
+}
+```
+
+By default, every disk group of the server is erased during the OS installation, whether it is declared in the `storage` block or not. Declaring a `storage` block for a disk group with `erase = false` (and no `partitioning`/`hardware_raid`) is the only way to keep its existing data. The disk group actually receiving the OS installation cannot have `erase = false`, and a given `disk_group_id` cannot be declared more than once.
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -243,6 +275,7 @@ The following arguments are supported:
 
 * `storage`: OS reinstallation storage configurations. [More details about disks, hardware/software RAID and partitioning configuration](https://help.ovhcloud.com/csm/en-dedicated-servers-api-partitioning?id=kb_article_view&sysparm_article=KB0043882) (do not forget to adapt camel case parameters to snake case parameters).
   * `disk_group_id`: Disk group id to install the OS to (default is 0, meaning automatic).
+  * `erase`: Whether to erase this disk group's data (default is true). Set to false to keep existing data on a disk group not used for the OS installation. Cannot be set to false on the disk group receiving the OS installation, and a given `disk_group_id` cannot be declared more than once.
   * `hardware_raid`: Hardware Raid configurations (if not specified, all disks of the chosen disk group id will be configured in JBOD mode).
     * `arrays`: Number of arrays (default is 1)
     * `disks`: Total number of disks in the disk group involved in the hardware raid configuration (all disks of the disk group by default)
