@@ -119,7 +119,6 @@ type DedicatedServerTask struct {
 type DedicatedServerReinstallTaskCreateOpts struct {
 	Os             string                                      `json:"operatingSystem"`
 	Customizations *DedicatedServerReinstallTaskCustomizations `json:"customizations,omitempty"`
-	Properties     map[string]interface{}                      `json:"properties,omitempty"`
 	Storage        []DedicatedServerReinstallTaskStorage       `json:"storage,omitempty"`
 }
 
@@ -129,11 +128,6 @@ func (opts *DedicatedServerReinstallTaskCreateOpts) FromResource(d *schema.Resou
 	Customizations := d.Get("customizations").([]interface{})
 	if len(Customizations) == 1 {
 		opts.Customizations = (&DedicatedServerReinstallTaskCustomizations{}).FromResource(d, "customizations.0")
-	}
-
-	Properties := d.Get("properties").(map[string]interface{})
-	if len(Properties) >= 1 {
-		opts.Properties = d.Get("properties").(map[string]interface{})
 	}
 
 	Storage := d.Get("storage").([]interface{})
