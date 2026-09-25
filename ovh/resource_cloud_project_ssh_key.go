@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
@@ -77,6 +78,15 @@ func (r *cloudProjectSshKeyResource) Create(ctx context.Context, req resource.Cr
 	}
 
 	responseData.MergeWith(&data)
+
+	// The API trims surrounding whitespace from the public key it stores, so a
+	// key read with file() (which keeps the trailing newline of a .pub file)
+	// comes back different from the planned value. Keep the configured value
+	// when the two only differ by that whitespace, otherwise Terraform fails the
+	// apply with "Provider produced inconsistent result after apply".
+	if strings.TrimSpace(responseData.PublicKey.ValueString()) == strings.TrimSpace(data.PublicKey.ValueString()) {
+		responseData.PublicKey = data.PublicKey
+	}
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)
