@@ -1,5 +1,5 @@
 ---
-subcategory : "Object Storage"
+subcategory: "Object Storage"
 ---
 
 # ovh_cloud_storage_object_bucket (Data Source)
@@ -10,7 +10,7 @@ Get an S3&trade; compatible object storage bucket in a public cloud project.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "ovh_cloud_storage_object_bucket" "bucket" {
   service_name = <Public cloud project id>
   id           = "GRA_my-data-bucket"

@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
@@ -108,8 +110,8 @@ func (d *cloudS3BucketsDataSource) Read(ctx context.Context, req datasource.Read
 
 	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/storage/object/bucket"
 
-	var apiBuckets []CloudS3BucketAPIResponse
-	if err := d.config.OVHClient.Get(endpoint, &apiBuckets); err != nil {
+	apiBuckets, err := helpers.GetAllPagesV2[CloudS3BucketAPIResponse](ctx, d.config.OVHClient, endpoint)
+	if err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Get %s", endpoint),
 			err.Error(),
@@ -133,7 +135,7 @@ func (d *cloudS3BucketsDataSource) Read(ctx context.Context, req datasource.Read
 		if v.CurrentState != nil && v.CurrentState.Location != nil && v.CurrentState.Location.Region != "" {
 			region = v.CurrentState.Location.Region
 		}
-		if regionFilter != "" && region != regionFilter {
+		if regionFilter != "" && !strings.EqualFold(region, regionFilter) {
 			continue
 		}
 

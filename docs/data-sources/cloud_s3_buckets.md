@@ -1,5 +1,5 @@
 ---
-subcategory : "Object Storage"
+subcategory: "Object Storage"
 ---
 
 # ovh_cloud_s3_buckets (Data Source)
@@ -10,7 +10,7 @@ List the S3&trade; compatible object storage buckets in a public cloud project.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "ovh_cloud_s3_buckets" "buckets" {
   service_name = <Public cloud project id>
 }
@@ -18,7 +18,7 @@ data "ovh_cloud_s3_buckets" "buckets" {
 
 Filter the buckets by region:
 
-```hcl
+```terraform
 data "ovh_cloud_s3_buckets" "buckets" {
   service_name = <Public cloud project id>
   region       = "GRA"

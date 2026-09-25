@@ -36,6 +36,7 @@ data "ovh_cloud_s3_buckets" "buckets" {
 			testAccCheckCloudProjectExists(t)
 		},
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCloudS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: config,

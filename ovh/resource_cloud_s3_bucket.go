@@ -4,16 +4,20 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"regexp"
 	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/ovh/go-ovh/ovh"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
@@ -57,7 +61,52 @@ func (r *cloudS3BucketResource) Configure(ctx context.Context, req resource.Conf
 var s3BucketMutableAttrs = MutableAttrs{
 	Strings: []string{"owner_user_id"},
 	Maps:    []string{"tags"},
-	Objects: []string{"encryption", "versioning", "object_lock"},
+	Objects: []string{"encryption", "versioning"},
+}
+
+type s3BucketObjectLockRequiresVersioningEnabled struct{}
+
+func (v s3BucketObjectLockRequiresVersioningEnabled) Description(_ context.Context) string {
+	return "object_lock requires versioning.status to be ENABLED"
+}
+
+func (v s3BucketObjectLockRequiresVersioningEnabled) MarkdownDescription(ctx context.Context) string {
+	return "`object_lock` requires `versioning.status` to be `ENABLED`"
+}
+
+func (v s3BucketObjectLockRequiresVersioningEnabled) ValidateObject(ctx context.Context, req validator.ObjectRequest, resp *validator.ObjectResponse) {
+	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
+		return
+	}
+
+	// Also covers objectvalidator.AlsoRequires, which is not vendored.
+	var versioning types.Object
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("versioning"), &versioning)...)
+	if resp.Diagnostics.HasError() || versioning.IsUnknown() {
+		return
+	}
+	if versioning.IsNull() {
+		resp.Diagnostics.AddAttributeError(
+			req.Path,
+			"Invalid object_lock configuration",
+			"object_lock requires versioning to be set with status \"ENABLED\".",
+		)
+		return
+	}
+
+	var status ovhtypes.TfStringValue
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("versioning").AtName("status"), &status)...)
+	if resp.Diagnostics.HasError() || status.IsNull() || status.IsUnknown() {
+		return
+	}
+
+	if status.ValueString() != "ENABLED" {
+		resp.Diagnostics.AddAttributeError(
+			req.Path,
+			"Invalid object_lock configuration",
+			fmt.Sprintf("object_lock requires versioning.status to be \"ENABLED\", got %q.", status.ValueString()),
+		)
+	}
 }
 
 func (r *cloudS3BucketResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -66,10 +115,13 @@ func (r *cloudS3BucketResource) Schema(ctx context.Context, req resource.SchemaR
 		Attributes: map[string]schema.Attribute{
 			"service_name": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
-				Required:            true,
-				Description:         "Service name of the resource representing the id of the cloud project",
-				MarkdownDescription: "Service name of the resource representing the id of the cloud project",
+				Optional:            true,
+				Computed:            true,
+				Description:         "Service name of the resource representing the id of the cloud project. If omitted, the OVH_CLOUD_PROJECT_SERVICE environment variable is used.",
+				MarkdownDescription: "Service name of the resource representing the id of the cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.",
 				PlanModifiers: []planmodifier.String{
+					EnvDefaultString("OVH_CLOUD_PROJECT_SERVICE", true),
+					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
@@ -81,14 +133,28 @@ func (r *cloudS3BucketResource) Schema(ctx context.Context, req resource.SchemaR
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(3, 63),
+					stringvalidator.RegexMatches(
+						regexp.MustCompile(`^[a-z0-9][a-z0-9.-]*[a-z0-9]$`),
+						"must be lowercase alphanumeric, dots and hyphens, not starting or ending with a hyphen",
+					),
+				},
 			},
 			"region": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Required:            true,
-				Description:         "Region identifier where the bucket will be created (e.g. GRA, SBG, BHS)",
-				MarkdownDescription: "Region identifier where the bucket will be created (e.g. `GRA`, `SBG`, `BHS`)",
+				Description:         "Upper-case region identifier where the bucket will be created (e.g. GRA, SBG, BHS)",
+				MarkdownDescription: "Upper-case region identifier where the bucket will be created (e.g. `GRA`, `SBG`, `BHS`)",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					// The API upper-cases the region; a lower-case value would never match state.
+					stringvalidator.RegexMatches(
+						regexp.MustCompile(`^[A-Z0-9-]+$`),
+						"must be upper-case (e.g. \"GRA\")",
+					),
 				},
 			},
 			"owner_user_id": schema.StringAttribute{
@@ -137,8 +203,15 @@ func (r *cloudS3BucketResource) Schema(ctx context.Context, req resource.SchemaR
 			},
 			"object_lock": schema.SingleNestedAttribute{
 				Optional:            true,
-				Description:         "Object lock (WORM) configuration; requires versioning to be enabled",
-				MarkdownDescription: "Object lock (WORM) configuration; requires `versioning` to be enabled",
+				Description:         "Object lock (WORM) configuration; requires versioning.status to be ENABLED. Can only be set at bucket creation: changing it recreates the bucket.",
+				MarkdownDescription: "Object lock (WORM) configuration; requires `versioning.status` to be `ENABLED`. Can only be set at bucket creation: changing it recreates the bucket.",
+				// S3 arms object lock only at CreateBucket.
+				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.Object{
+					s3BucketObjectLockRequiresVersioningEnabled{},
+				},
 				Attributes: map[string]schema.Attribute{
 					"mode": schema.StringAttribute{
 						CustomType:          ovhtypes.TfStringType{},
@@ -153,11 +226,9 @@ func (r *cloudS3BucketResource) Schema(ctx context.Context, req resource.SchemaR
 						Required:            true,
 						Description:         "Number of days to retain objects",
 						MarkdownDescription: "Number of days to retain objects",
-					},
-					"retention_years": schema.Int64Attribute{
-						Computed:            true,
-						Description:         "Number of years to retain objects (read-only alternative to retention_days)",
-						MarkdownDescription: "Number of years to retain objects (read-only alternative to `retention_days`)",
+						Validators: []validator.Int64{
+							int64validator.AtLeast(1),
+						},
 					},
 				},
 			},
@@ -340,6 +411,8 @@ func (r *cloudS3BucketResource) Create(ctx context.Context, req resource.CreateR
 	}
 
 	endpoint = "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/storage/object/bucket/" + url.PathEscape(responseData.Id)
+	// json.Unmarshal merges into a non-zero struct: stale map keys/pointers would leak.
+	responseData = CloudS3BucketAPIResponse{}
 	if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Get %s", endpoint),
@@ -365,6 +438,10 @@ func (r *cloudS3BucketResource) Read(ctx context.Context, req resource.ReadReque
 
 	var responseData CloudS3BucketAPIResponse
 	if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
+		if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Get %s", endpoint),
 			err.Error(),
@@ -411,6 +488,7 @@ func (r *cloudS3BucketResource) Update(ctx context.Context, req resource.UpdateR
 		return
 	}
 
+	responseData = CloudS3BucketAPIResponse{}
 	if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Get %s", endpoint),
@@ -457,6 +535,9 @@ func (r *cloudS3BucketResource) Delete(ctx context.Context, req resource.DeleteR
 				}
 				return res, "", err
 			}
+			if res.ResourceStatus == "ERROR" {
+				return res, res.ResourceStatus, cloudResourceErrorFromTasks("bucket", data.Id.ValueString(), res.CurrentTasks)
+			}
 			return res, res.ResourceStatus, nil
 		},
 		Timeout:    20 * time.Minute,
@@ -474,7 +555,8 @@ func (r *cloudS3BucketResource) Delete(ctx context.Context, req resource.DeleteR
 
 func (r *cloudS3BucketResource) waitForS3BucketReady(ctx context.Context, serviceName, bucketId string) (any, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{"CREATING", "UPDATING", "PENDING", "OUT_OF_SYNC"},
+		// UNKNOWN: transient S3 5xx on HeadBucket.
+		Pending: []string{"CREATING", "UPDATING", "PENDING", "OUT_OF_SYNC", "UNKNOWN"},
 		Target:  []string{"READY"},
 		Refresh: func() (any, string, error) {
 			res := &CloudS3BucketAPIResponse{}
@@ -486,6 +568,9 @@ func (r *cloudS3BucketResource) waitForS3BucketReady(ctx context.Context, servic
 			// ERROR is terminal: surface it with the task reason instead of a generic unexpected-state.
 			if res.ResourceStatus == "ERROR" {
 				return res, res.ResourceStatus, cloudResourceErrorFromTasks("bucket", bucketId, res.CurrentTasks)
+			}
+			if res.ResourceStatus == "SUSPENDED" {
+				return res, res.ResourceStatus, fmt.Errorf("bucket %s is SUSPENDED: its region is in maintenance, retry once the maintenance is over", bucketId)
 			}
 			return res, res.ResourceStatus, nil
 		},

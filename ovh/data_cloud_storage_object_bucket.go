@@ -279,7 +279,7 @@ func (d *cloudStorageObjectBucketDataSource) Read(ctx context.Context, req datas
 		"/storage/object/bucket/" + url.PathEscape(data.Id.ValueString())
 
 	var v CloudS3BucketAPIResponse
-	if err := d.config.OVHClient.Get(endpoint, &v); err != nil {
+	if err := d.config.OVHClient.GetWithContext(ctx, endpoint, &v); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Get %s", endpoint),
 			err.Error(),

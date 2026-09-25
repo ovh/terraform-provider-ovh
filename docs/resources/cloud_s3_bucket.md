@@ -1,5 +1,5 @@
 ---
-subcategory : "Object Storage"
+subcategory: "Object Storage"
 ---
 
 # ovh_cloud_s3_bucket
@@ -31,7 +31,7 @@ resource "ovh_cloud_s3_bucket" "bucket" {
 }
 ```
 
-Object lock (WORM) requires versioning to be enabled:
+Object lock (WORM) requires `versioning.status` to be `ENABLED`, and can only be set when the bucket is created:
 
 ```terraform
 resource "ovh_cloud_s3_bucket" "locked" {
@@ -54,26 +54,24 @@ resource "ovh_cloud_s3_bucket" "locked" {
 
 The following arguments are supported:
 
-* `service_name` - (Required) Service name of the resource representing the id of the cloud project. **Changing this value recreates the resource.**
-* `name` - (Required) Bucket name (must be globally unique and DNS-compatible). **Changing this value recreates the resource.**
-* `region` - (Required) Region identifier where the bucket will be created (e.g. `GRA`, `SBG`, `BHS`). **Changing this value recreates the resource.**
+* `service_name` - (Optional) Service name of the resource representing the id of the cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used. **Changing this value recreates the resource.**
+* `name` - (Required) Bucket name (must be globally unique and DNS-compatible): 3 to 63 characters, lowercase letters, digits, dots and hyphens only, starting and ending with a letter or a digit. **Changing this value recreates the resource.**
+* `region` - (Required) Region identifier where the bucket will be created. Must be upper-case (e.g. `GRA`, `SBG`, `BHS`). **Changing this value recreates the resource.**
 * `owner_user_id` - (Optional) Owner user identifier.
 * `tags` - (Optional) Metadata tags for the bucket, as a map of strings.
 * `encryption` - (Optional) Server-side encryption configuration:
   * `algorithm` - (Required) Encryption algorithm. One of `AES256`, `PLAINTEXT`.
 * `versioning` - (Optional) Versioning configuration:
   * `status` - (Required) Versioning status. One of `DISABLED`, `ENABLED`, `SUSPENDED`.
-* `object_lock` - (Optional) Object lock (WORM) configuration. Requires `versioning.status` to be `ENABLED`:
+* `object_lock` - (Optional) Object lock (WORM) configuration. Requires `versioning` to be set with `status = "ENABLED"`. Object lock can only be armed at bucket creation. **Adding, changing or removing this block recreates the resource.**
   * `mode` - (Required) Object lock retention mode. One of `COMPLIANCE`, `GOVERNANCE`.
-  * `retention_days` - (Required) Number of days to retain objects.
+  * `retention_days` - (Required) Number of days to retain objects. Must be at least `1`.
 
 ## Attributes Reference
 
 The following attributes are exported:
 
 * `id` - Bucket identifier.
-* `object_lock`:
-  * `retention_years` - Number of years to retain objects. Read-only alternative to `retention_days`, set only on buckets locked outside of Terraform.
 * `checksum` - Computed hash representing the current target specification value.
 * `created_at` - Creation date of the bucket.
 * `updated_at` - Last update date of the bucket.
@@ -89,7 +87,7 @@ The following attributes are exported:
   * `object_lock` - Current object lock configuration:
     * `mode` - Object lock retention mode.
     * `retention_days` - Number of days to retain objects.
-    * `retention_years` - Number of years to retain objects.
+    * `retention_years` - Number of years to retain objects. Read-only alternative to `retention_days`, set only on buckets locked outside of Terraform.
   * `tags` - Current metadata tags.
   * `virtual_host` - Bucket virtual host, as a hostname without scheme (for example `my-data-bucket.s3.gra.io.cloud.ovh.net`). Only returned on a single bucket read.
   * `objects_count` - Bucket total objects count. Only returned on a single bucket read.
@@ -105,6 +103,8 @@ import {
   id = "<service_name>/<bucket_id>"
 }
 ```
+
+~> __NOTE__ The bucket `id` is the bare bucket name on a single-region API instance, and `<REGION>_<name>` (for example `GRA_my-data-bucket`) on a multi-region one.
 
 ```bash
 $ terraform import ovh_cloud_s3_bucket.bucket service_name/bucket_id

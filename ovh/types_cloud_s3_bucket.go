@@ -134,6 +134,14 @@ func S3BucketObjectLockAttrTypes() map[string]attr.Type {
 	}
 }
 
+// retention_years is read-only, so it lives only under current_state.object_lock.
+func S3BucketObjectLockSpecAttrTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"mode":           ovhtypes.TfStringType{},
+		"retention_days": types.Int64Type,
+	}
+}
+
 // S3BucketCurrentStateAttrTypes returns the attribute types for the current_state object
 func S3BucketCurrentStateAttrTypes() map[string]attr.Type {
 	return map[string]attr.Type{
@@ -209,6 +217,21 @@ func buildS3BucketObjectLockObject(objectLock *CloudS3BucketAPIObjectLock) types
 			"mode":            ovhtypes.TfStringValue{StringValue: types.StringValue(objectLock.Mode)},
 			"retention_days":  types.Int64Value(objectLock.RetentionDays),
 			"retention_years": nullableInt64(objectLock.RetentionYears),
+		},
+	)
+	return obj
+}
+
+func buildS3BucketObjectLockSpecObject(objectLock *CloudS3BucketAPIObjectLock) types.Object {
+	if objectLock == nil {
+		return types.ObjectNull(S3BucketObjectLockSpecAttrTypes())
+	}
+
+	obj, _ := types.ObjectValue(
+		S3BucketObjectLockSpecAttrTypes(),
+		map[string]attr.Value{
+			"mode":           ovhtypes.TfStringValue{StringValue: types.StringValue(objectLock.Mode)},
+			"retention_days": types.Int64Value(objectLock.RetentionDays),
 		},
 	)
 	return obj
@@ -354,17 +377,19 @@ func (m *CloudS3BucketModel) MergeWith(ctx context.Context, response *CloudS3Buc
 		return
 	}
 
-	if response.TargetSpec.Name != "" {
+	// Immutable and config-owned: the API normalizes them (region upper-cased), so writing
+	// them back breaks plan consistency. Only fill when unset (import).
+	if (m.Name.IsNull() || m.Name.IsUnknown()) && response.TargetSpec.Name != "" {
 		m.Name = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Name)}
 	}
-	if response.TargetSpec.Location != nil && response.TargetSpec.Location.Region != "" {
+	if (m.Region.IsNull() || m.Region.IsUnknown()) && response.TargetSpec.Location != nil && response.TargetSpec.Location.Region != "" {
 		m.Region = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Location.Region)}
 	}
 
 	m.OwnerUserId = nullableTfString(response.TargetSpec.OwnerUserId)
 	m.Encryption = buildS3BucketEncryptionObject(response.TargetSpec.Encryption)
 	m.Versioning = buildS3BucketVersioningObject(response.TargetSpec.Versioning)
-	m.ObjectLock = buildS3BucketObjectLockObject(response.TargetSpec.ObjectLock)
+	m.ObjectLock = buildS3BucketObjectLockSpecObject(response.TargetSpec.ObjectLock)
 
 	// An empty tags map is dropped by the API (omitempty), so keep a configured
 	// empty map instead of flipping it to null and breaking plan consistency.

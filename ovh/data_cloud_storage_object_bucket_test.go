@@ -42,6 +42,7 @@ data "ovh_cloud_storage_object_bucket" "by_id" {
 			testAccCheckCloudProjectExists(t)
 		},
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCloudS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: config,
