@@ -225,6 +225,13 @@ func resourceCloudProjectGatewayRead(d *schema.ResourceData, meta interface{}) e
 	d.SetId(r.Id)
 	d.Set("service_name", serviceName)
 
+	// Set network_id and subnet_id from the first interface (private network)
+	// These are ForceNew fields that must be tracked in state for proper lifecycle management
+	if len(r.Interfaces) > 0 {
+		d.Set("network_id", r.Interfaces[0].NetworkId)
+		d.Set("subnet_id", r.Interfaces[0].SubnetId)
+	}
+
 	externalInfos := make([]map[string]interface{}, 0)
 	if r.ExternalInformation != nil {
 		externalInfo := make(map[string]interface{})
