@@ -2,7 +2,7 @@
 subcategory : "Object Storage"
 ---
 
-# ovh_cloud_s3_bucket (Data Source)
+# ovh_cloud_storage_object_bucket (Data Source)
 
 Get an S3&trade; compatible object storage bucket in a public cloud project.
 
@@ -10,33 +10,17 @@ Get an S3&trade; compatible object storage bucket in a public cloud project.
 
 ## Example Usage
 
-Look the bucket up by name. `region` is required in this form:
-
 ```hcl
-data "ovh_cloud_s3_bucket" "bucket" {
+data "ovh_cloud_storage_object_bucket" "bucket" {
   service_name = <Public cloud project id>
-  name         = "my-data-bucket"
-  region       = "GRA"
+  id           = "GRA_my-data-bucket"
 }
 ```
-
-Or look it up by its API identifier:
-
-```hcl
-data "ovh_cloud_s3_bucket" "bucket" {
-  service_name = <Public cloud project id>
-  id           = "my-data-bucket"
-}
-```
-
-~> __NOTE__ The bucket `id` is the bare bucket name on a single-region API instance, and `<REGION>_<name>` (for example `GRA_my-data-bucket`) on a multi-region one. Because the provider cannot tell which mode the API instance runs in, the `name` + `region` form does not build the identifier: it lists the project's buckets and reads the identifier of the one matching that name and region. The `id` form is passed through untouched and therefore works on both. Since the listing route is paginated, prefer the `id` form on projects holding a large number of buckets.
 
 ## Argument Reference
 
 * `service_name` - (Required) The id of the public cloud project.
-* `id` - (Optional) The identifier of the bucket. Exactly one of `id` or `name` must be set.
-* `name` - (Optional) The name of the bucket. Requires `region`, and is mutually exclusive with `id`.
-* `region` - (Optional) The region identifier the bucket is located in. Only valid together with `name`.
+* `id` - (Required) Bucket identifier, in the `<REGION>_<name>` form (e.g. `GRA_my-data-bucket`).
 
 ## Attributes Reference
 

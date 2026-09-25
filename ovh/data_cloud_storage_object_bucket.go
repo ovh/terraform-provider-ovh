@@ -5,30 +5,27 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
-var _ datasource.DataSourceWithConfigure = (*cloudS3BucketDataSource)(nil)
+var _ datasource.DataSourceWithConfigure = (*cloudStorageObjectBucketDataSource)(nil)
 
-func NewCloudS3BucketDataSource() datasource.DataSource {
-	return &cloudS3BucketDataSource{}
+func NewCloudStorageObjectBucketDataSource() datasource.DataSource {
+	return &cloudStorageObjectBucketDataSource{}
 }
 
-type cloudS3BucketDataSource struct {
+type cloudStorageObjectBucketDataSource struct {
 	config *Config
 }
 
-func (d *cloudS3BucketDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_cloud_s3_bucket"
+func (d *cloudStorageObjectBucketDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_cloud_storage_object_bucket"
 }
 
-func (d *cloudS3BucketDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *cloudStorageObjectBucketDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -45,9 +42,6 @@ func (d *cloudS3BucketDataSource) Configure(_ context.Context, req datasource.Co
 	d.config = config
 }
 
-// s3BucketDataSourceAttributes returns the computed attributes describing a
-// bucket, shared between the singular data source (root attributes) and the
-// plural data source (list element attributes).
 func s3BucketDataSourceAttributes() map[string]schema.Attribute {
 	return map[string]schema.Attribute{
 		"id": schema.StringAttribute{
@@ -226,7 +220,7 @@ func s3BucketDataSourceAttributes() map[string]schema.Attribute {
 	}
 }
 
-func (d *cloudS3BucketDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *cloudStorageObjectBucketDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	attrs := map[string]schema.Attribute{
 		"service_name": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
@@ -236,38 +230,14 @@ func (d *cloudS3BucketDataSource) Schema(ctx context.Context, req datasource.Sch
 		},
 		"id": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
-			Optional:            true,
-			Computed:            true,
-			Description:         "Bucket identifier. Exactly one of id or name must be set.",
-			MarkdownDescription: "Bucket identifier. Exactly one of `id` or `name` must be set.",
-			Validators: []validator.String{
-				stringvalidator.ExactlyOneOf(path.MatchRoot("id"), path.MatchRoot("name")),
-			},
-		},
-		"name": schema.StringAttribute{
-			CustomType:          ovhtypes.TfStringType{},
-			Optional:            true,
-			Computed:            true,
-			Description:         "Bucket name. Requires region, and is mutually exclusive with id.",
-			MarkdownDescription: "Bucket name. Requires `region`, and is mutually exclusive with `id`.",
-			Validators: []validator.String{
-				stringvalidator.AlsoRequires(path.MatchRoot("region")),
-			},
-		},
-		"region": schema.StringAttribute{
-			CustomType:          ovhtypes.TfStringType{},
-			Optional:            true,
-			Description:         "Region identifier the bucket is located in. Only valid together with name.",
-			MarkdownDescription: "Region identifier the bucket is located in. Only valid together with `name`.",
-			Validators: []validator.String{
-				stringvalidator.AlsoRequires(path.MatchRoot("name")),
-			},
+			Required:            true,
+			Description:         "Bucket identifier, in the <REGION>_<name> form",
+			MarkdownDescription: "Bucket identifier, in the `<REGION>_<name>` form",
 		},
 	}
 
-	// Merge in the shared computed attributes (id and name are overridden above).
 	for name, attribute := range s3BucketDataSourceAttributes() {
-		if name == "id" || name == "name" {
+		if name == "id" {
 			continue
 		}
 		attrs[name] = attribute
@@ -280,15 +250,10 @@ func (d *cloudS3BucketDataSource) Schema(ctx context.Context, req datasource.Sch
 	}
 }
 
-// cloudS3BucketDataSourceModel is the Terraform state model for this data source.
-// It mirrors the resource read shape (target spec + envelope + current_state).
 type cloudS3BucketDataSourceModel struct {
-	ServiceName ovhtypes.TfStringValue `tfsdk:"service_name"`
-	Id          ovhtypes.TfStringValue `tfsdk:"id"`
-	Name        ovhtypes.TfStringValue `tfsdk:"name"`
-	// Region is a lookup argument only: never written back, so the state keeps
-	// matching the config for this Optional-without-Computed attribute.
-	Region         ovhtypes.TfStringValue `tfsdk:"region"`
+	ServiceName    ovhtypes.TfStringValue `tfsdk:"service_name"`
+	Id             ovhtypes.TfStringValue `tfsdk:"id"`
+	Name           ovhtypes.TfStringValue `tfsdk:"name"`
 	Location       types.Object           `tfsdk:"location"`
 	OwnerUserId    ovhtypes.TfStringValue `tfsdk:"owner_user_id"`
 	Encryption     types.Object           `tfsdk:"encryption"`
@@ -302,7 +267,7 @@ type cloudS3BucketDataSourceModel struct {
 	CurrentState   types.Object           `tfsdk:"current_state"`
 }
 
-func (d *cloudS3BucketDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *cloudStorageObjectBucketDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data cloudS3BucketDataSourceModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
@@ -310,18 +275,8 @@ func (d *cloudS3BucketDataSource) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 
-	bucketId := data.Id.ValueString()
-	if bucketId == "" {
-		var err error
-		bucketId, err = d.resolveS3BucketId(ctx, data.ServiceName.ValueString(), data.Name.ValueString(), data.Region.ValueString())
-		if err != nil {
-			resp.Diagnostics.AddError("Error resolving bucket identifier", err.Error())
-			return
-		}
-	}
-
 	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) +
-		"/storage/object/bucket/" + url.PathEscape(bucketId)
+		"/storage/object/bucket/" + url.PathEscape(data.Id.ValueString())
 
 	var v CloudS3BucketAPIResponse
 	if err := d.config.OVHClient.Get(endpoint, &v); err != nil {
@@ -337,52 +292,6 @@ func (d *cloudS3BucketDataSource) Read(ctx context.Context, req datasource.ReadR
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-// resolveS3BucketId looks the bucket up by name and region through the LIST
-// route. The API identifier is the bare bucket name on a mono-region instance
-// and REGION_name on a multi-region one, and the provider cannot tell which
-// mode the API runs in, so the id is read from the listing instead of built.
-func (d *cloudS3BucketDataSource) resolveS3BucketId(ctx context.Context, serviceName, name, region string) (string, error) {
-	endpoint := "/v2/publicCloud/project/" + url.PathEscape(serviceName) + "/storage/object/bucket"
-
-	var apiBuckets []CloudS3BucketAPIResponse
-	if err := d.config.OVHClient.GetWithContext(ctx, endpoint, &apiBuckets); err != nil {
-		return "", fmt.Errorf("error calling Get %s: %w", endpoint, err)
-	}
-
-	var matches []string
-	for _, b := range apiBuckets {
-		bucketName := ""
-		bucketRegion := ""
-		if b.TargetSpec != nil {
-			bucketName = b.TargetSpec.Name
-			if b.TargetSpec.Location != nil {
-				bucketRegion = b.TargetSpec.Location.Region
-			}
-		}
-		if b.CurrentState != nil {
-			if b.CurrentState.Name != "" {
-				bucketName = b.CurrentState.Name
-			}
-			if b.CurrentState.Location != nil && b.CurrentState.Location.Region != "" {
-				bucketRegion = b.CurrentState.Location.Region
-			}
-		}
-		if bucketName == name && bucketRegion == region {
-			matches = append(matches, b.Id)
-		}
-	}
-
-	switch len(matches) {
-	case 1:
-		return matches[0], nil
-	case 0:
-		return "", fmt.Errorf("no bucket named %q found in region %s", name, region)
-	default:
-		return "", fmt.Errorf("%d buckets named %q found in region %s, use id instead", len(matches), name, region)
-	}
-}
-
-// mapS3BucketToDataSourceModel populates the data source model from the API response.
 func mapS3BucketToDataSourceModel(ctx context.Context, v *CloudS3BucketAPIResponse, data *cloudS3BucketDataSourceModel) {
 	data.Id = ovhtypes.TfStringValue{StringValue: types.StringValue(v.Id)}
 	data.Checksum = ovhtypes.TfStringValue{StringValue: types.StringValue(v.Checksum)}

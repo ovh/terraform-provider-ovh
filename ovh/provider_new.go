@@ -345,7 +345,7 @@ func (p *OvhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 		NewCloudStorageFileShareSnapshotsDataSource,
 		NewCloudStorageFileShareAclDataSource,
 		NewCloudStorageFileShareAclsDataSource,
-		NewCloudS3BucketDataSource,
+		NewCloudStorageObjectBucketDataSource,
 		NewCloudS3BucketsDataSource,
 		NewCloudRegionDataSource,
 		NewCloudRegionsDataSource,
