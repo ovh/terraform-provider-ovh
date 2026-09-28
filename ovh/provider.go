@@ -181,6 +181,7 @@ func Provider() *schema.Provider {
 			"ovh_dedicated_nasha_partition":                                  dataSourceDedicatedNashaPartition(),
 			"ovh_dedicated_server":                                           dataSourceDedicatedServer(),
 			"ovh_dedicated_server_boots":                                     dataSourceDedicatedServerBoots(),
+			"ovh_dedicated_server_networking":                                dataSourceDedicatedServerNetworking(),
 			"ovh_dedicated_server_orderable_bandwidth":                       dataSourceDedicatedServerOrderableBandwidth(),
 			"ovh_dedicated_server_orderable_bandwidth_vrack":                 dataSourceDedicatedServerOrderableBandwidthVrack(),
 			"ovh_dedicated_servers":                                          dataSourceDedicatedServers(),

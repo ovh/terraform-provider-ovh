@@ -14,8 +14,9 @@ type DedicatedServerNetworking struct {
 }
 
 type DedicatedServerNetworkingInterface struct {
-	Macs []string `json:"macs"`
-	Type string   `json:"type"`
+	Macs                []string `json:"macs"`
+	Type                string   `json:"type"`
+	AggregationFallback *string  `json:"aggregationFallback,omitempty"`
 }
 
 type DedicatedServerNetworkingCreateOpts struct {
