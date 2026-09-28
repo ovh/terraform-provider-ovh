@@ -2,7 +2,7 @@
 subcategory: "Object Storage"
 ---
 
-# ovh_cloud_s3_bucket
+# ovh_cloud_storage_object_bucket
 
 Creates an S3&trade; compatible object storage bucket in a public cloud project.
 
@@ -11,7 +11,7 @@ Creates an S3&trade; compatible object storage bucket in a public cloud project.
 ## Example Usage
 
 ```terraform
-resource "ovh_cloud_s3_bucket" "bucket" {
+resource "ovh_cloud_storage_object_bucket" "bucket" {
   service_name  = <Public cloud project id>
   name          = "my-data-bucket"
   region        = "GRA"
@@ -34,7 +34,7 @@ resource "ovh_cloud_s3_bucket" "bucket" {
 Object lock (WORM) requires `versioning.status` to be `ENABLED`, and can only be set when the bucket is created:
 
 ```terraform
-resource "ovh_cloud_s3_bucket" "locked" {
+resource "ovh_cloud_storage_object_bucket" "locked" {
   service_name = <Public cloud project id>
   name         = "my-worm-bucket"
   region       = "GRA"
@@ -99,7 +99,7 @@ An S3&trade; compatible bucket can be imported using the `service_name` and the 
 
 ```terraform
 import {
-  to = ovh_cloud_s3_bucket.bucket
+  to = ovh_cloud_storage_object_bucket.bucket
   id = "<service_name>/<bucket_id>"
 }
 ```
@@ -107,5 +107,5 @@ import {
 ~> __NOTE__ The bucket `id` is the bare bucket name on a single-region API instance, and `<REGION>_<name>` (for example `GRA_my-data-bucket`) on a multi-region one.
 
 ```bash
-$ terraform import ovh_cloud_s3_bucket.bucket service_name/bucket_id
+$ terraform import ovh_cloud_storage_object_bucket.bucket service_name/bucket_id
 ```

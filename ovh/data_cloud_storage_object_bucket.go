@@ -42,7 +42,7 @@ func (d *cloudStorageObjectBucketDataSource) Configure(_ context.Context, req da
 	d.config = config
 }
 
-func s3BucketDataSourceAttributes() map[string]schema.Attribute {
+func storageObjectBucketDataSourceAttributes() map[string]schema.Attribute {
 	return map[string]schema.Attribute{
 		"id": schema.StringAttribute{
 			CustomType:  ovhtypes.TfStringType{},
@@ -236,7 +236,7 @@ func (d *cloudStorageObjectBucketDataSource) Schema(ctx context.Context, req dat
 		},
 	}
 
-	for name, attribute := range s3BucketDataSourceAttributes() {
+	for name, attribute := range storageObjectBucketDataSourceAttributes() {
 		if name == "id" {
 			continue
 		}
@@ -250,7 +250,7 @@ func (d *cloudStorageObjectBucketDataSource) Schema(ctx context.Context, req dat
 	}
 }
 
-type cloudS3BucketDataSourceModel struct {
+type cloudStorageObjectBucketDataSourceModel struct {
 	ServiceName    ovhtypes.TfStringValue `tfsdk:"service_name"`
 	Id             ovhtypes.TfStringValue `tfsdk:"id"`
 	Name           ovhtypes.TfStringValue `tfsdk:"name"`
@@ -268,7 +268,7 @@ type cloudS3BucketDataSourceModel struct {
 }
 
 func (d *cloudStorageObjectBucketDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data cloudS3BucketDataSourceModel
+	var data cloudStorageObjectBucketDataSourceModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -278,7 +278,7 @@ func (d *cloudStorageObjectBucketDataSource) Read(ctx context.Context, req datas
 	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) +
 		"/storage/object/bucket/" + url.PathEscape(data.Id.ValueString())
 
-	var v CloudS3BucketAPIResponse
+	var v CloudStorageObjectBucketAPIResponse
 	if err := d.config.OVHClient.GetWithContext(ctx, endpoint, &v); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Get %s", endpoint),
@@ -287,12 +287,12 @@ func (d *cloudStorageObjectBucketDataSource) Read(ctx context.Context, req datas
 		return
 	}
 
-	mapS3BucketToDataSourceModel(ctx, &v, &data)
+	mapStorageObjectBucketToDataSourceModel(ctx, &v, &data)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func mapS3BucketToDataSourceModel(ctx context.Context, v *CloudS3BucketAPIResponse, data *cloudS3BucketDataSourceModel) {
+func mapStorageObjectBucketToDataSourceModel(ctx context.Context, v *CloudStorageObjectBucketAPIResponse, data *cloudStorageObjectBucketDataSourceModel) {
 	data.Id = ovhtypes.TfStringValue{StringValue: types.StringValue(v.Id)}
 	data.Checksum = ovhtypes.TfStringValue{StringValue: types.StringValue(v.Checksum)}
 	data.CreatedAt = ovhtypes.TfStringValue{StringValue: types.StringValue(v.CreatedAt)}
@@ -301,18 +301,18 @@ func mapS3BucketToDataSourceModel(ctx context.Context, v *CloudS3BucketAPIRespon
 
 	if v.TargetSpec != nil {
 		data.Name = ovhtypes.TfStringValue{StringValue: types.StringValue(v.TargetSpec.Name)}
-		data.Location = buildS3BucketLocationObject(v.TargetSpec.Location)
+		data.Location = buildStorageObjectBucketLocationObject(v.TargetSpec.Location)
 		data.OwnerUserId = nullableTfString(v.TargetSpec.OwnerUserId)
-		data.Encryption = buildS3BucketEncryptionObject(v.TargetSpec.Encryption)
-		data.Versioning = buildS3BucketVersioningObject(v.TargetSpec.Versioning)
-		data.ObjectLock = buildS3BucketObjectLockObject(v.TargetSpec.ObjectLock)
-		data.Tags = buildS3BucketTagsMap(v.TargetSpec.Tags)
+		data.Encryption = buildStorageObjectBucketEncryptionObject(v.TargetSpec.Encryption)
+		data.Versioning = buildStorageObjectBucketVersioningObject(v.TargetSpec.Versioning)
+		data.ObjectLock = buildStorageObjectBucketObjectLockObject(v.TargetSpec.ObjectLock)
+		data.Tags = buildStorageObjectBucketTagsMap(v.TargetSpec.Tags)
 	} else {
-		data.Location = types.ObjectNull(S3BucketLocationAttrTypes())
+		data.Location = types.ObjectNull(StorageObjectBucketLocationAttrTypes())
 		data.OwnerUserId = nullableTfString("")
-		data.Encryption = types.ObjectNull(S3BucketEncryptionAttrTypes())
-		data.Versioning = types.ObjectNull(S3BucketVersioningAttrTypes())
-		data.ObjectLock = types.ObjectNull(S3BucketObjectLockAttrTypes())
+		data.Encryption = types.ObjectNull(StorageObjectBucketEncryptionAttrTypes())
+		data.Versioning = types.ObjectNull(StorageObjectBucketVersioningAttrTypes())
+		data.ObjectLock = types.ObjectNull(StorageObjectBucketObjectLockAttrTypes())
 		data.Tags = types.MapNull(ovhtypes.TfStringType{})
 	}
 
@@ -320,8 +320,8 @@ func mapS3BucketToDataSourceModel(ctx context.Context, v *CloudS3BucketAPIRespon
 		if v.CurrentState.Name != "" {
 			data.Name = ovhtypes.TfStringValue{StringValue: types.StringValue(v.CurrentState.Name)}
 		}
-		data.CurrentState = buildS3BucketCurrentStateObject(ctx, v.CurrentState)
+		data.CurrentState = buildStorageObjectBucketCurrentStateObject(ctx, v.CurrentState)
 	} else {
-		data.CurrentState = types.ObjectNull(S3BucketCurrentStateAttrTypes())
+		data.CurrentState = types.ObjectNull(StorageObjectBucketCurrentStateAttrTypes())
 	}
 }

@@ -24,24 +24,24 @@ import (
 )
 
 var (
-	_ resource.Resource                = (*cloudS3BucketResource)(nil)
-	_ resource.ResourceWithConfigure   = (*cloudS3BucketResource)(nil)
-	_ resource.ResourceWithImportState = (*cloudS3BucketResource)(nil)
+	_ resource.Resource                = (*cloudStorageObjectBucketResource)(nil)
+	_ resource.ResourceWithConfigure   = (*cloudStorageObjectBucketResource)(nil)
+	_ resource.ResourceWithImportState = (*cloudStorageObjectBucketResource)(nil)
 )
 
-func NewCloudS3BucketResource() resource.Resource {
-	return &cloudS3BucketResource{}
+func NewCloudStorageObjectBucketResource() resource.Resource {
+	return &cloudStorageObjectBucketResource{}
 }
 
-type cloudS3BucketResource struct {
+type cloudStorageObjectBucketResource struct {
 	config *Config
 }
 
-func (r *cloudS3BucketResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_cloud_s3_bucket"
+func (r *cloudStorageObjectBucketResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_cloud_storage_object_bucket"
 }
 
-func (r *cloudS3BucketResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *cloudStorageObjectBucketResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -58,23 +58,23 @@ func (r *cloudS3BucketResource) Configure(ctx context.Context, req resource.Conf
 	r.config = config
 }
 
-var s3BucketMutableAttrs = MutableAttrs{
+var storageObjectBucketMutableAttrs = MutableAttrs{
 	Strings: []string{"owner_user_id"},
 	Maps:    []string{"tags"},
 	Objects: []string{"encryption", "versioning"},
 }
 
-type s3BucketObjectLockRequiresVersioningEnabled struct{}
+type storageObjectBucketObjectLockRequiresVersioningEnabled struct{}
 
-func (v s3BucketObjectLockRequiresVersioningEnabled) Description(_ context.Context) string {
+func (v storageObjectBucketObjectLockRequiresVersioningEnabled) Description(_ context.Context) string {
 	return "object_lock requires versioning.status to be ENABLED"
 }
 
-func (v s3BucketObjectLockRequiresVersioningEnabled) MarkdownDescription(ctx context.Context) string {
+func (v storageObjectBucketObjectLockRequiresVersioningEnabled) MarkdownDescription(ctx context.Context) string {
 	return "`object_lock` requires `versioning.status` to be `ENABLED`"
 }
 
-func (v s3BucketObjectLockRequiresVersioningEnabled) ValidateObject(ctx context.Context, req validator.ObjectRequest, resp *validator.ObjectResponse) {
+func (v storageObjectBucketObjectLockRequiresVersioningEnabled) ValidateObject(ctx context.Context, req validator.ObjectRequest, resp *validator.ObjectResponse) {
 	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
 		return
 	}
@@ -109,7 +109,7 @@ func (v s3BucketObjectLockRequiresVersioningEnabled) ValidateObject(ctx context.
 	}
 }
 
-func (r *cloudS3BucketResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *cloudStorageObjectBucketResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "Creates an S3 compatible object storage bucket in a public cloud project using the publicCloud API.",
 		Attributes: map[string]schema.Attribute{
@@ -210,7 +210,7 @@ func (r *cloudS3BucketResource) Schema(ctx context.Context, req resource.SchemaR
 					objectplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.Object{
-					s3BucketObjectLockRequiresVersioningEnabled{},
+					storageObjectBucketObjectLockRequiresVersioningEnabled{},
 				},
 				Attributes: map[string]schema.Attribute{
 					"mode": schema.StringAttribute{
@@ -244,7 +244,7 @@ func (r *cloudS3BucketResource) Schema(ctx context.Context, req resource.SchemaR
 				Description:         "Computed hash representing the current target specification value",
 				MarkdownDescription: "Computed hash representing the current target specification value",
 				PlanModifiers: []planmodifier.String{
-					UnknownDuringUpdateStringModifier(s3BucketMutableAttrs),
+					UnknownDuringUpdateStringModifier(storageObjectBucketMutableAttrs),
 				},
 			},
 			"created_at": schema.StringAttribute{
@@ -259,7 +259,7 @@ func (r *cloudS3BucketResource) Schema(ctx context.Context, req resource.SchemaR
 				Description:         "Last update date of the bucket",
 				MarkdownDescription: "Last update date of the bucket",
 				PlanModifiers: []planmodifier.String{
-					UnknownDuringUpdateStringModifier(s3BucketMutableAttrs),
+					UnknownDuringUpdateStringModifier(storageObjectBucketMutableAttrs),
 				},
 			},
 			"resource_status": schema.StringAttribute{
@@ -275,18 +275,18 @@ func (r *cloudS3BucketResource) Schema(ctx context.Context, req resource.SchemaR
 				Computed:    true,
 				Description: "Current observed state of the bucket",
 				PlanModifiers: []planmodifier.Object{
-					UnknownDuringUpdateObjectModifier(s3BucketMutableAttrs),
+					UnknownDuringUpdateObjectModifier(storageObjectBucketMutableAttrs),
 				},
-				Attributes: s3BucketCurrentStateResourceAttributes(),
+				Attributes: storageObjectBucketCurrentStateResourceAttributes(),
 			},
 		},
 	}
 }
 
-// s3BucketCurrentStateResourceAttributes returns the current_state attributes of
+// storageObjectBucketCurrentStateResourceAttributes returns the current_state attributes of
 // the resource schema. The data sources declare the same shape with their own
 // schema package.
-func s3BucketCurrentStateResourceAttributes() map[string]schema.Attribute {
+func storageObjectBucketCurrentStateResourceAttributes() map[string]schema.Attribute {
 	return map[string]schema.Attribute{
 		"name": schema.StringAttribute{
 			CustomType:  ovhtypes.TfStringType{},
@@ -366,7 +366,7 @@ func s3BucketCurrentStateResourceAttributes() map[string]schema.Attribute {
 	}
 }
 
-func (r *cloudS3BucketResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *cloudStorageObjectBucketResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	splits := strings.Split(req.ID, "/")
 	if len(splits) != 2 {
 		resp.Diagnostics.AddError("Given ID is malformed", "ID must be formatted like the following: <service_name>/<bucket_id>")
@@ -377,8 +377,8 @@ func (r *cloudS3BucketResource) ImportState(ctx context.Context, req resource.Im
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), splits[1])...)
 }
 
-func (r *cloudS3BucketResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data CloudS3BucketModel
+func (r *cloudStorageObjectBucketResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var data CloudStorageObjectBucketModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -389,7 +389,7 @@ func (r *cloudS3BucketResource) Create(ctx context.Context, req resource.CreateR
 
 	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/storage/object/bucket"
 
-	var responseData CloudS3BucketAPIResponse
+	var responseData CloudStorageObjectBucketAPIResponse
 	if err := r.config.OVHClient.Post(endpoint, createPayload, &responseData); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Post %s", endpoint),
@@ -402,7 +402,7 @@ func (r *cloudS3BucketResource) Create(ctx context.Context, req resource.CreateR
 	data.MergeWith(ctx, &responseData)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 
-	if _, err := r.waitForS3BucketReady(ctx, data.ServiceName.ValueString(), responseData.Id); err != nil {
+	if _, err := r.waitForStorageObjectBucketReady(ctx, data.ServiceName.ValueString(), responseData.Id); err != nil {
 		resp.Diagnostics.AddError(
 			"Error waiting for bucket to be ready",
 			err.Error(),
@@ -412,7 +412,7 @@ func (r *cloudS3BucketResource) Create(ctx context.Context, req resource.CreateR
 
 	endpoint = "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/storage/object/bucket/" + url.PathEscape(responseData.Id)
 	// json.Unmarshal merges into a non-zero struct: stale map keys/pointers would leak.
-	responseData = CloudS3BucketAPIResponse{}
+	responseData = CloudStorageObjectBucketAPIResponse{}
 	if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Get %s", endpoint),
@@ -426,8 +426,8 @@ func (r *cloudS3BucketResource) Create(ctx context.Context, req resource.CreateR
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *cloudS3BucketResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data CloudS3BucketModel
+func (r *cloudStorageObjectBucketResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var data CloudStorageObjectBucketModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -436,7 +436,7 @@ func (r *cloudS3BucketResource) Read(ctx context.Context, req resource.ReadReque
 
 	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/storage/object/bucket/" + url.PathEscape(data.Id.ValueString())
 
-	var responseData CloudS3BucketAPIResponse
+	var responseData CloudStorageObjectBucketAPIResponse
 	if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
 		if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
 			resp.State.RemoveResource(ctx)
@@ -454,8 +454,8 @@ func (r *cloudS3BucketResource) Read(ctx context.Context, req resource.ReadReque
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *cloudS3BucketResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, planData CloudS3BucketModel
+func (r *cloudStorageObjectBucketResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var data, planData CloudStorageObjectBucketModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &planData)...)
 	if resp.Diagnostics.HasError() {
@@ -471,7 +471,7 @@ func (r *cloudS3BucketResource) Update(ctx context.Context, req resource.UpdateR
 
 	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/storage/object/bucket/" + url.PathEscape(data.Id.ValueString())
 
-	var responseData CloudS3BucketAPIResponse
+	var responseData CloudStorageObjectBucketAPIResponse
 	if err := r.config.OVHClient.Put(endpoint, updatePayload, &responseData); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Put %s", endpoint),
@@ -480,7 +480,7 @@ func (r *cloudS3BucketResource) Update(ctx context.Context, req resource.UpdateR
 		return
 	}
 
-	if _, err := r.waitForS3BucketReady(ctx, data.ServiceName.ValueString(), data.Id.ValueString()); err != nil {
+	if _, err := r.waitForStorageObjectBucketReady(ctx, data.ServiceName.ValueString(), data.Id.ValueString()); err != nil {
 		resp.Diagnostics.AddError(
 			"Error waiting for bucket to be ready after update",
 			err.Error(),
@@ -488,7 +488,7 @@ func (r *cloudS3BucketResource) Update(ctx context.Context, req resource.UpdateR
 		return
 	}
 
-	responseData = CloudS3BucketAPIResponse{}
+	responseData = CloudStorageObjectBucketAPIResponse{}
 	if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Get %s", endpoint),
@@ -502,8 +502,8 @@ func (r *cloudS3BucketResource) Update(ctx context.Context, req resource.UpdateR
 	resp.Diagnostics.Append(resp.State.Set(ctx, &planData)...)
 }
 
-func (r *cloudS3BucketResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data CloudS3BucketModel
+func (r *cloudStorageObjectBucketResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var data CloudStorageObjectBucketModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -527,7 +527,7 @@ func (r *cloudS3BucketResource) Delete(ctx context.Context, req resource.DeleteR
 		Pending: []string{"DELETING"},
 		Target:  []string{"DELETED"},
 		Refresh: func() (any, string, error) {
-			res := &CloudS3BucketAPIResponse{}
+			res := &CloudStorageObjectBucketAPIResponse{}
 			err := r.config.OVHClient.GetWithContext(ctx, endpoint, res)
 			if err != nil {
 				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
@@ -553,13 +553,13 @@ func (r *cloudS3BucketResource) Delete(ctx context.Context, req resource.DeleteR
 	}
 }
 
-func (r *cloudS3BucketResource) waitForS3BucketReady(ctx context.Context, serviceName, bucketId string) (any, error) {
+func (r *cloudStorageObjectBucketResource) waitForStorageObjectBucketReady(ctx context.Context, serviceName, bucketId string) (any, error) {
 	stateConf := &retry.StateChangeConf{
 		// UNKNOWN: transient S3 5xx on HeadBucket.
 		Pending: []string{"CREATING", "UPDATING", "PENDING", "OUT_OF_SYNC", "UNKNOWN"},
 		Target:  []string{"READY"},
 		Refresh: func() (any, string, error) {
-			res := &CloudS3BucketAPIResponse{}
+			res := &CloudStorageObjectBucketAPIResponse{}
 			endpoint := "/v2/publicCloud/project/" + url.PathEscape(serviceName) + "/storage/object/bucket/" + url.PathEscape(bucketId)
 			err := r.config.OVHClient.GetWithContext(ctx, endpoint, res)
 			if err != nil {

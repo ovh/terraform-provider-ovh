@@ -14,21 +14,21 @@ import (
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
-var _ datasource.DataSourceWithConfigure = (*cloudS3BucketsDataSource)(nil)
+var _ datasource.DataSourceWithConfigure = (*cloudStorageObjectBucketsDataSource)(nil)
 
-func NewCloudS3BucketsDataSource() datasource.DataSource {
-	return &cloudS3BucketsDataSource{}
+func NewCloudStorageObjectBucketsDataSource() datasource.DataSource {
+	return &cloudStorageObjectBucketsDataSource{}
 }
 
-type cloudS3BucketsDataSource struct {
+type cloudStorageObjectBucketsDataSource struct {
 	config *Config
 }
 
-func (d *cloudS3BucketsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_cloud_s3_buckets"
+func (d *cloudStorageObjectBucketsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_cloud_storage_object_buckets"
 }
 
-func (d *cloudS3BucketsDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *cloudStorageObjectBucketsDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -45,7 +45,7 @@ func (d *cloudS3BucketsDataSource) Configure(_ context.Context, req datasource.C
 	d.config = config
 }
 
-func (d *cloudS3BucketsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *cloudStorageObjectBucketsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "List the S3 compatible object storage buckets in a public cloud project.",
 		MarkdownDescription: "List the S3 compatible object storage buckets in a public cloud project.",
@@ -67,41 +67,41 @@ func (d *cloudS3BucketsDataSource) Schema(ctx context.Context, req datasource.Sc
 				Description:         "List of buckets",
 				MarkdownDescription: "List of buckets",
 				NestedObject: schema.NestedAttributeObject{
-					Attributes: s3BucketDataSourceAttributes(),
+					Attributes: storageObjectBucketDataSourceAttributes(),
 				},
 			},
 		},
 	}
 }
 
-// cloudS3BucketsDataSourceModel is the Terraform state model for this data source.
-type cloudS3BucketsDataSourceModel struct {
+// cloudStorageObjectBucketsDataSourceModel is the Terraform state model for this data source.
+type cloudStorageObjectBucketsDataSourceModel struct {
 	ServiceName ovhtypes.TfStringValue `tfsdk:"service_name"`
 	Region      ovhtypes.TfStringValue `tfsdk:"region"`
 	Buckets     types.List             `tfsdk:"buckets"`
 }
 
-// s3BucketListItemAttrTypes returns the attribute types for a single bucket item in the list.
-func s3BucketListItemAttrTypes() map[string]attr.Type {
+// storageObjectBucketListItemAttrTypes returns the attribute types for a single bucket item in the list.
+func storageObjectBucketListItemAttrTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"id":              ovhtypes.TfStringType{},
 		"name":            ovhtypes.TfStringType{},
-		"location":        types.ObjectType{AttrTypes: S3BucketLocationAttrTypes()},
+		"location":        types.ObjectType{AttrTypes: StorageObjectBucketLocationAttrTypes()},
 		"owner_user_id":   ovhtypes.TfStringType{},
-		"encryption":      types.ObjectType{AttrTypes: S3BucketEncryptionAttrTypes()},
-		"versioning":      types.ObjectType{AttrTypes: S3BucketVersioningAttrTypes()},
-		"object_lock":     types.ObjectType{AttrTypes: S3BucketObjectLockAttrTypes()},
+		"encryption":      types.ObjectType{AttrTypes: StorageObjectBucketEncryptionAttrTypes()},
+		"versioning":      types.ObjectType{AttrTypes: StorageObjectBucketVersioningAttrTypes()},
+		"object_lock":     types.ObjectType{AttrTypes: StorageObjectBucketObjectLockAttrTypes()},
 		"tags":            types.MapType{ElemType: ovhtypes.TfStringType{}},
 		"checksum":        ovhtypes.TfStringType{},
 		"created_at":      ovhtypes.TfStringType{},
 		"updated_at":      ovhtypes.TfStringType{},
 		"resource_status": ovhtypes.TfStringType{},
-		"current_state":   types.ObjectType{AttrTypes: S3BucketCurrentStateAttrTypes()},
+		"current_state":   types.ObjectType{AttrTypes: StorageObjectBucketCurrentStateAttrTypes()},
 	}
 }
 
-func (d *cloudS3BucketsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data cloudS3BucketsDataSourceModel
+func (d *cloudStorageObjectBucketsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var data cloudStorageObjectBucketsDataSourceModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -110,7 +110,7 @@ func (d *cloudS3BucketsDataSource) Read(ctx context.Context, req datasource.Read
 
 	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/storage/object/bucket"
 
-	apiBuckets, err := helpers.GetAllPagesV2[CloudS3BucketAPIResponse](ctx, d.config.OVHClient, endpoint)
+	apiBuckets, err := helpers.GetAllPagesV2[CloudStorageObjectBucketAPIResponse](ctx, d.config.OVHClient, endpoint)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Get %s", endpoint),
@@ -140,11 +140,11 @@ func (d *cloudS3BucketsDataSource) Read(ctx context.Context, req datasource.Read
 		}
 
 		// Reuse the singular mapping to keep the shape consistent.
-		var item cloudS3BucketDataSourceModel
-		mapS3BucketToDataSourceModel(ctx, &v, &item)
+		var item cloudStorageObjectBucketDataSourceModel
+		mapStorageObjectBucketToDataSourceModel(ctx, &v, &item)
 
 		obj, diags := types.ObjectValue(
-			s3BucketListItemAttrTypes(),
+			storageObjectBucketListItemAttrTypes(),
 			map[string]attr.Value{
 				"id":              item.Id,
 				"name":            item.Name,
@@ -170,7 +170,7 @@ func (d *cloudS3BucketsDataSource) Read(ctx context.Context, req datasource.Read
 	}
 
 	bucketsList, diags := types.ListValue(
-		types.ObjectType{AttrTypes: s3BucketListItemAttrTypes()},
+		types.ObjectType{AttrTypes: storageObjectBucketListItemAttrTypes()},
 		bucketObjs,
 	)
 	resp.Diagnostics.Append(diags...)
