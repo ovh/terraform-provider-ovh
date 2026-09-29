@@ -420,6 +420,8 @@ func (p *OvhProvider) Resources(_ context.Context) []func() resource.Resource {
 		NewCloudStorageFileShareAclResource,
 		NewDbaasLogsEncryptionKeyResource,
 		NewDbaasLogsTokenResource,
+		NewDedicatedCephPoolResource,
+		NewDedicatedCephUserResource,
 		NewDedicatedServerResource,
 		NewDomainNameResource,
 		NewDomainZoneDnssecResource,
