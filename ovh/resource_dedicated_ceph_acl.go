@@ -1,20 +1,27 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 )
 
+// dedicatedCephACLTimeout bounds each wait of a change: for the tasks in progress on the cluster,
+// the retries of the change while the cluster is locked, and the task of the change.
+const dedicatedCephACLTimeout = 30 * time.Minute
+
 func resourceDedicatedCephACL() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDedicatedCephACLCreate,
-		Read:   resourceDedicatedCephACLRead,
-		Delete: resourceDedicatedCephACLDelete,
+		// Without the timeout of the SDK, which would cut the waits for the other changes of the cluster
+		// short: each wait is bounded by dedicatedCephACLTimeout, and cancelled along with Terraform.
+		CreateWithoutTimeout: resourceDedicatedCephACLCreate,
+		Read:                 resourceDedicatedCephACLRead,
+		DeleteWithoutTimeout: resourceDedicatedCephACLDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceDedicatedCephACLImportState,
 		},
@@ -88,45 +95,41 @@ func resourceDedicatedCephACLList(d *schema.ResourceData, meta interface{}) ([]D
 	return aclResp, nil
 }
 
-func resourceDedicatedCephACLCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDedicatedCephACLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	acl := (&DedicatedCephACLCreateOpts{}).FromResource(d)
 	serviceName := d.Get("service_name").(string)
 	url := fmt.Sprintf("/dedicated/ceph/%s/acl", serviceName)
 
+	// Changes are made one at a time on a cluster, see lockDedicatedCephCluster.
+	unlock, err := lockDedicatedCephCluster(ctx, serviceName)
+	if err != nil {
+		return diag.Errorf("Error waiting for the other changes of %s:\n\t%q", serviceName, err)
+	}
+	defer unlock()
+
+	if err := waitDedicatedCephIdle(ctx, config.OVHClient, serviceName, dedicatedCephACLTimeout); err != nil {
+		return diag.Errorf("Error waiting for the tasks in progress on %s:\n\t%q", serviceName, err)
+	}
+
 	// create the ACL
 	var taskId string
-	err := config.OVHClient.Post(url, acl, &taskId)
+	err = retryDedicatedCephChange(ctx, dedicatedCephACLTimeout, func() error {
+		return config.OVHClient.PostWithContext(ctx, url, acl, &taskId)
+	})
 	if err != nil {
-		return fmt.Errorf("Error calling POST %s:\n\t%q", url, err)
+		return diag.Errorf("Error calling POST %s:\n\t%q", url, err)
 	}
 
 	// monitor task execution
-	stateConf := &resource.StateChangeConf{
-		Target: []string{"DONE"},
-		Refresh: func() (interface{}, string, error) {
-			url = fmt.Sprintf("/dedicated/ceph/%s/task/%s", serviceName, taskId)
-			var stateResp []DedicatedCephTask
-			err := config.OVHClient.Get(url, &stateResp)
-			if err != nil {
-				return nil, "", err
-			}
-			return d, stateResp[0].State, nil
-		},
-		Timeout:    10 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("Error waiting for CEPH ACL creation:\n\t %q", err)
+	if err := waitDedicatedCephTask(ctx, config.OVHClient, serviceName, taskId, dedicatedCephACLTimeout); err != nil {
+		return diag.Errorf("Error waiting for CEPH ACL creation:\n\t %q", err)
 	}
 
 	// grab the id of the ACL
 	acls, err := resourceDedicatedCephACLList(d, meta)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	found := false
 	for _, item := range acls {
@@ -137,10 +140,10 @@ func resourceDedicatedCephACLCreate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 	if !found {
-		return fmt.Errorf("Error listing CEPH ACL, :\n\t cannot find created ACL")
+		return diag.Errorf("Error listing CEPH ACL, :\n\t cannot find created ACL")
 	}
 
-	return resourceDedicatedCephACLRead(d, meta)
+	return diag.FromErr(resourceDedicatedCephACLRead(d, meta))
 }
 
 func resourceDedicatedCephACLRead(d *schema.ResourceData, meta interface{}) error {
@@ -159,37 +162,34 @@ func resourceDedicatedCephACLRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceDedicatedCephACLDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDedicatedCephACLDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 
 	serviceName := d.Get("service_name").(string)
 	url := fmt.Sprintf("/dedicated/ceph/%s/acl/%s", serviceName, d.Id())
-	var taskId string
-	err := config.OVHClient.Delete(url, &taskId)
+
+	// Changes are made one at a time on a cluster, see lockDedicatedCephCluster.
+	unlock, err := lockDedicatedCephCluster(ctx, serviceName)
 	if err != nil {
-		return fmt.Errorf("Error calling DELETE %s:\n\t%q", url, err)
+		return diag.Errorf("Error waiting for the other changes of %s:\n\t%q", serviceName, err)
+	}
+	defer unlock()
+
+	if err := waitDedicatedCephIdle(ctx, config.OVHClient, serviceName, dedicatedCephACLTimeout); err != nil {
+		return diag.Errorf("Error waiting for the tasks in progress on %s:\n\t%q", serviceName, err)
+	}
+
+	var taskId string
+	err = retryDedicatedCephChange(ctx, dedicatedCephACLTimeout, func() error {
+		return config.OVHClient.DeleteWithContext(ctx, url, &taskId)
+	})
+	if err != nil {
+		return diag.Errorf("Error calling DELETE %s:\n\t%q", url, err)
 	}
 
 	// monitor task execution
-	stateConf := &resource.StateChangeConf{
-		Target: []string{"DONE"},
-		Refresh: func() (interface{}, string, error) {
-			url = fmt.Sprintf("/dedicated/ceph/%s/task/%s", serviceName, taskId)
-			var stateResp []DedicatedCephTask
-			err := config.OVHClient.Get(url, &stateResp)
-			if err != nil {
-				return nil, "", err
-			}
-			return d, stateResp[0].State, nil
-		},
-		Timeout:    10 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("Error waiting for CEPH ACL deletion:\n\t %q", err)
+	if err := waitDedicatedCephTask(ctx, config.OVHClient, serviceName, taskId, dedicatedCephACLTimeout); err != nil {
+		return diag.Errorf("Error waiting for CEPH ACL deletion:\n\t %q", err)
 	}
 	d.SetId("")
 	return nil

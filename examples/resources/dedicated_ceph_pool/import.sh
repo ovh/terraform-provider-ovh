@@ -1,0 +1,1 @@
+terraform import ovh_dedicated_ceph_pool.my_pool service_name/pool_name
