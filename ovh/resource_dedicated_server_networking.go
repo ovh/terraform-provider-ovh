@@ -1,6 +1,7 @@
 package ovh
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"net/url"
@@ -10,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/ovh/go-ovh/ovh"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers/hashcode"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/ovhwrap"
 )
 
@@ -46,6 +48,10 @@ func resourceDedicatedServerNetworking() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 				Description: "Interface or interfaces aggregation.",
+				// Hash on the configured fields only (type + macs). The computed
+				// aggregation_fallback must not take part, or the element hash
+				// changes once the API fills it in and the whole set reads as a diff.
+				Set: resourceDedicatedServerNetworkingInterfaceHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"macs": {
@@ -65,6 +71,11 @@ func resourceDedicatedServerNetworking() *schema.Resource {
 							// we are not yet using go 1.18+ as such we cannot use any
 							// Once in 1.18 we can add a validation to enforce type is either public or vrack
 						},
+						"aggregation_fallback": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Mac address of the LACP fallback interface",
+						},
 					},
 				},
 			},
@@ -82,6 +93,26 @@ func resourceDedicatedServerNetworking() *schema.Resource {
 			},
 		},
 	}
+}
+
+func resourceDedicatedServerNetworkingInterfaceHash(v interface{}) int {
+	m := v.(map[string]interface{})
+
+	var macs []string
+	if raw, ok := m["macs"]; ok {
+		for _, mac := range raw.(*schema.Set).List() {
+			macs = append(macs, fmt.Sprint(mac))
+		}
+		sort.Strings(macs)
+	}
+
+	var buf bytes.Buffer
+	buf.WriteString(fmt.Sprintf("%s-", m["type"].(string)))
+	for _, mac := range macs {
+		buf.WriteString(fmt.Sprintf("%s-", mac))
+	}
+
+	return hashcode.String(buf.String())
 }
 
 func resourceDedicatedServerNetworkingCreate(d *schema.ResourceData, meta interface{}) error {
@@ -134,6 +165,9 @@ func resourceDedicatedServerNetworkingRead(d *schema.ResourceData, meta interfac
 
 		networkInterface := make(map[string]interface{})
 		networkInterface["type"] = networkInterfaceDetails.Type
+		if networkInterfaceDetails.AggregationFallback != nil {
+			networkInterface["aggregation_fallback"] = *networkInterfaceDetails.AggregationFallback
+		}
 		macs := networkInterfaceDetails.Macs
 
 		// we want the MACs associated to an interface to be in a determist order to avoid false positive diff
