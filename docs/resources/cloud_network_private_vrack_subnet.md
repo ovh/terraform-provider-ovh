@@ -49,7 +49,7 @@ The following arguments are supported:
 * `availability_zone` - (Optional) Availability zone within the region.
 * `description` - (Optional) Subnet description.
 * `dhcp_enabled` - (Optional) Whether DHCP is enabled on the subnet.
-* `dns_nameservers` - (Optional) List of DNS nameserver addresses.
+* `dns_nameservers` - (Optional) List of DNS nameserver addresses. When absent or empty on an IPv4 subnet, the OVHcloud public DNS resolver `213.186.33.99` is used.
 * `gateway_ip` - (Optional) Default gateway IP address.
 * `allocation_pools` - (Optional) IP address allocation pools:
   * `start` - (Required) Start IP address of the pool.

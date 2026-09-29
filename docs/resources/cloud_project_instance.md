@@ -61,6 +61,7 @@ The following arguments are supported:
         * `cidr` - (Optional, Forces new resource) Subnet range in CIDR notation
         * `enable_dhcp` - (Optional, Forces new resource) Whether to enable DHCP
         * `ip_version` - (Optional, Forces new resource) IP version
+        * `dns_nameservers` - (Optional, Forces new resource) DNS nameservers of the subnet. When absent or empty, the OVHcloud default public DNS resolver is used
 * `flavor` - (Required, Forces new resource) Flavor information
   * `flavor_id` - (Required, Forces new resource) Flavor ID. Flavors can be retrieved using `GET /cloud/project/{serviceName}/flavor`
 * `boot_from` - (Required, Forces new resource) Boot the instance from an image or a volume

@@ -561,8 +561,12 @@ func CloudNetworkPrivateSubnetResourceSchema(ctx context.Context) schema.Schema 
 		"dns_nameservers": schema.ListAttribute{
 			CustomType:          ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
 			Optional:            true,
-			Description:         "DNS nameservers for the subnet",
-			MarkdownDescription: "DNS nameservers for the subnet",
+			Computed:            true,
+			Description:         "DNS nameservers for the subnet (defaults to the OVHcloud public DNS resolver on IPv4 subnets)",
+			MarkdownDescription: "DNS nameservers for the subnet (defaults to the OVHcloud public DNS resolver on IPv4 subnets)",
+			PlanModifiers: []planmodifier.List{
+				listplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"gateway_ip": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},

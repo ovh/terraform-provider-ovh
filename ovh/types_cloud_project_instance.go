@@ -83,9 +83,10 @@ type PrivateNetworkInformationCreate struct {
 }
 
 type PrivateNetworkInformationSubnetCreate struct {
-	CIDR       string `json:"cidr,omitempty"`
-	EnableDHCP bool   `json:"enableDhcp"`
-	IPVersion  int    `json:"ipVersion,omitempty"`
+	CIDR           string   `json:"cidr,omitempty"`
+	EnableDHCP     bool     `json:"enableDhcp"`
+	IPVersion      int      `json:"ipVersion,omitempty"`
+	DNSNameServers []string `json:"dnsNameServers,omitempty"`
 }
 
 type CloudProjectInstanceCreateOpts struct {
@@ -366,6 +367,9 @@ func GetNetwork(i interface{}) *Network {
 							CIDR:       subnetParams["cidr"].(string),
 							EnableDHCP: subnetParams["enable_dhcp"].(bool),
 							IPVersion:  subnetParams["ip_version"].(int),
+						}
+						for _, dns := range subnetParams["dns_nameservers"].([]interface{}) {
+							networkOutput.Private.NetworkCreate.Subnet.DNSNameServers = append(networkOutput.Private.NetworkCreate.Subnet.DNSNameServers, dns.(string))
 						}
 					}
 				}

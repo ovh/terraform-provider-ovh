@@ -342,6 +342,16 @@ func resourceCloudProjectInstance() *schema.Resource {
 																Description: "IP version",
 																Optional:    true,
 															},
+															"dns_nameservers": {
+																Type:        schema.TypeList,
+																Description: "DNS nameservers of the subnet (absent or empty means the default public DNS resolver)",
+																Optional:    true,
+																ForceNew:    true,
+																Elem: &schema.Schema{
+																	Type:         schema.TypeString,
+																	ValidateFunc: resourceCloudProjectNetworkPrivateSubnetValidateIP,
+																},
+															},
 														},
 													},
 												},
