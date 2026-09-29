@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2021, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package schema
@@ -203,6 +203,18 @@ func (a SetAttribute) IsSensitive() bool {
 
 // IsWriteOnly returns false as write-only attributes are not supported in data source schemas.
 func (a SetAttribute) IsWriteOnly() bool {
+	return false
+}
+
+// IsRequiredForImport returns false as this behavior is only relevant
+// for managed resource identity schema attributes.
+func (a SetAttribute) IsRequiredForImport() bool {
+	return false
+}
+
+// IsOptionalForImport returns false as this behavior is only relevant
+// for managed resource identity schema attributes.
+func (a SetAttribute) IsOptionalForImport() bool {
 	return false
 }
 

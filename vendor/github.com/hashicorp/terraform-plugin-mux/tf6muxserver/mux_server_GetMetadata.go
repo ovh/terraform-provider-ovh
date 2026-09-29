@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2020, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package tf6muxserver
@@ -14,8 +14,8 @@ import (
 
 // GetMetadata merges the metadata returned by the
 // tfprotov6.ProviderServers associated with muxServer into a single response.
-// Resources and data sources must be returned from only one server or an error
-// diagnostic is returned.
+// Resources, data sources, ephemeral resources, list resources, actions, functions, and state stores must be returned
+// from only one server or an error diagnostic is returned.
 func (s *muxServer) GetMetadata(ctx context.Context, req *tfprotov6.GetMetadataRequest) (*tfprotov6.GetMetadataResponse, error) {
 	rpc := "GetMetadata"
 	ctx = logging.InitContext(ctx)
@@ -25,10 +25,13 @@ func (s *muxServer) GetMetadata(ctx context.Context, req *tfprotov6.GetMetadataR
 	defer s.serverDiscoveryMutex.Unlock()
 
 	resp := &tfprotov6.GetMetadataResponse{
+		Actions:            make([]tfprotov6.ActionMetadata, 0),
 		DataSources:        make([]tfprotov6.DataSourceMetadata, 0),
 		EphemeralResources: make([]tfprotov6.EphemeralResourceMetadata, 0),
+		ListResources:      make([]tfprotov6.ListResourceMetadata, 0),
 		Functions:          make([]tfprotov6.FunctionMetadata, 0),
 		Resources:          make([]tfprotov6.ResourceMetadata, 0),
+		StateStores:        make([]tfprotov6.StateStoreMetadata, 0),
 		ServerCapabilities: serverCapabilities,
 	}
 
@@ -43,6 +46,17 @@ func (s *muxServer) GetMetadata(ctx context.Context, req *tfprotov6.GetMetadataR
 		}
 
 		resp.Diagnostics = append(resp.Diagnostics, serverResp.Diagnostics...)
+
+		for _, action := range serverResp.Actions {
+			if actionMetadataContainsTypeName(resp.Actions, action.TypeName) {
+				resp.Diagnostics = append(resp.Diagnostics, actionDuplicateError(action.TypeName))
+
+				continue
+			}
+
+			s.actions[action.TypeName] = server
+			resp.Actions = append(resp.Actions, action)
+		}
 
 		for _, datasource := range serverResp.DataSources {
 			if datasourceMetadataContainsTypeName(resp.DataSources, datasource.TypeName) {
@@ -66,6 +80,17 @@ func (s *muxServer) GetMetadata(ctx context.Context, req *tfprotov6.GetMetadataR
 			resp.EphemeralResources = append(resp.EphemeralResources, ephemeralResource)
 		}
 
+		for _, listResource := range serverResp.ListResources {
+			if listResourceMetadataContainsTypeName(resp.ListResources, listResource.TypeName) {
+				resp.Diagnostics = append(resp.Diagnostics, listResourceDuplicateError(listResource.TypeName))
+
+				continue
+			}
+
+			s.listResources[listResource.TypeName] = server
+			resp.ListResources = append(resp.ListResources, listResource)
+		}
+
 		for _, function := range serverResp.Functions {
 			if functionMetadataContainsName(resp.Functions, function.Name) {
 				resp.Diagnostics = append(resp.Diagnostics, functionDuplicateError(function.Name))
@@ -75,6 +100,17 @@ func (s *muxServer) GetMetadata(ctx context.Context, req *tfprotov6.GetMetadataR
 
 			s.functions[function.Name] = server
 			resp.Functions = append(resp.Functions, function)
+		}
+
+		for _, stateStore := range serverResp.StateStores {
+			if stateStoreMetadataContainsTypeName(resp.StateStores, stateStore.TypeName) {
+				resp.Diagnostics = append(resp.Diagnostics, stateStoreDuplicateError(stateStore.TypeName))
+
+				continue
+			}
+
+			s.stateStores[stateStore.TypeName] = server
+			resp.StateStores = append(resp.StateStores, stateStore)
 		}
 
 		for _, resource := range serverResp.Resources {
@@ -91,6 +127,16 @@ func (s *muxServer) GetMetadata(ctx context.Context, req *tfprotov6.GetMetadataR
 	}
 
 	return resp, nil
+}
+
+func actionMetadataContainsTypeName(metadatas []tfprotov6.ActionMetadata, typeName string) bool {
+	for _, metadata := range metadatas {
+		if typeName == metadata.TypeName {
+			return true
+		}
+	}
+
+	return false
 }
 
 func datasourceMetadataContainsTypeName(metadatas []tfprotov6.DataSourceMetadata, typeName string) bool {
@@ -113,9 +159,29 @@ func ephemeralResourceMetadataContainsTypeName(metadatas []tfprotov6.EphemeralRe
 	return false
 }
 
+func listResourceMetadataContainsTypeName(metadatas []tfprotov6.ListResourceMetadata, typeName string) bool {
+	for _, metadata := range metadatas {
+		if typeName == metadata.TypeName {
+			return true
+		}
+	}
+
+	return false
+}
+
 func functionMetadataContainsName(metadatas []tfprotov6.FunctionMetadata, name string) bool {
 	for _, metadata := range metadatas {
 		if name == metadata.Name {
+			return true
+		}
+	}
+
+	return false
+}
+
+func stateStoreMetadataContainsTypeName(metadatas []tfprotov6.StateStoreMetadata, typeName string) bool {
+	for _, metadata := range metadatas {
+		if typeName == metadata.TypeName {
 			return true
 		}
 	}

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2020, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package tf6muxserver
@@ -14,8 +14,8 @@ import (
 
 // GetProviderSchema merges the schemas returned by the
 // tfprotov6.ProviderServers associated with muxServer into a single schema.
-// Resources and data sources must be returned from only one server. Provider
-// and ProviderMeta schemas must be identical between all servers.
+// Resources, data sources, ephemeral resources, list resources, actions, functions, and state stores must be returned
+// from only one server. Provider and ProviderMeta schemas must be identical between all servers.
 func (s *muxServer) GetProviderSchema(ctx context.Context, req *tfprotov6.GetProviderSchemaRequest) (*tfprotov6.GetProviderSchemaResponse, error) {
 	rpc := "GetProviderSchema"
 	ctx = logging.InitContext(ctx)
@@ -25,10 +25,13 @@ func (s *muxServer) GetProviderSchema(ctx context.Context, req *tfprotov6.GetPro
 	defer s.serverDiscoveryMutex.Unlock()
 
 	resp := &tfprotov6.GetProviderSchemaResponse{
+		ActionSchemas:            make(map[string]*tfprotov6.ActionSchema),
 		DataSourceSchemas:        make(map[string]*tfprotov6.Schema),
+		ListResourceSchemas:      make(map[string]*tfprotov6.Schema),
 		EphemeralResourceSchemas: make(map[string]*tfprotov6.Schema),
 		Functions:                make(map[string]*tfprotov6.Function),
 		ResourceSchemas:          make(map[string]*tfprotov6.Schema),
+		StateStoreSchemas:        make(map[string]*tfprotov6.Schema),
 		ServerCapabilities:       serverCapabilities,
 	}
 
@@ -74,6 +77,17 @@ func (s *muxServer) GetProviderSchema(ctx context.Context, req *tfprotov6.GetPro
 			}
 		}
 
+		for actionType, schema := range serverResp.ActionSchemas {
+			if _, ok := resp.ActionSchemas[actionType]; ok {
+				resp.Diagnostics = append(resp.Diagnostics, actionDuplicateError(actionType))
+
+				continue
+			}
+
+			s.actions[actionType] = server
+			resp.ActionSchemas[actionType] = schema
+		}
+
 		for resourceType, schema := range serverResp.ResourceSchemas {
 			if _, ok := resp.ResourceSchemas[resourceType]; ok {
 				resp.Diagnostics = append(resp.Diagnostics, resourceDuplicateError(resourceType))
@@ -117,6 +131,28 @@ func (s *muxServer) GetProviderSchema(ctx context.Context, req *tfprotov6.GetPro
 
 			s.ephemeralResources[ephemeralResourceType] = server
 			resp.EphemeralResourceSchemas[ephemeralResourceType] = schema
+		}
+
+		for listResourceType, schema := range serverResp.ListResourceSchemas {
+			if _, ok := resp.ListResourceSchemas[listResourceType]; ok {
+				resp.Diagnostics = append(resp.Diagnostics, listResourceDuplicateError(listResourceType))
+
+				continue
+			}
+
+			s.listResources[listResourceType] = server
+			resp.ListResourceSchemas[listResourceType] = schema
+		}
+
+		for stateStoreType, schema := range serverResp.StateStoreSchemas {
+			if _, ok := resp.StateStoreSchemas[stateStoreType]; ok {
+				resp.Diagnostics = append(resp.Diagnostics, stateStoreDuplicateError(stateStoreType))
+
+				continue
+			}
+
+			s.stateStores[stateStoreType] = server
+			resp.StateStoreSchemas[stateStoreType] = schema
 		}
 	}
 

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2021, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package schema
@@ -190,4 +190,16 @@ func (a BoolAttribute) IsWriteOnly() bool {
 // IsSensitive returns the Sensitive field value.
 func (a BoolAttribute) IsSensitive() bool {
 	return a.Sensitive
+}
+
+// IsRequiredForImport returns false as this behavior is only relevant
+// for managed resource identity schema attributes.
+func (a BoolAttribute) IsRequiredForImport() bool {
+	return false
+}
+
+// IsOptionalForImport returns false as this behavior is only relevant
+// for managed resource identity schema attributes.
+func (a BoolAttribute) IsOptionalForImport() bool {
+	return false
 }

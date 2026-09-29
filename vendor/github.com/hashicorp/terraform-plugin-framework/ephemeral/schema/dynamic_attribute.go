@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2021, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package schema
@@ -190,4 +190,16 @@ func (a DynamicAttribute) IsWriteOnly() bool {
 // DynamicValidators returns the Validators field value.
 func (a DynamicAttribute) DynamicValidators() []validator.Dynamic {
 	return a.Validators
+}
+
+// IsRequiredForImport returns false as this behavior is only relevant
+// for managed resource identity schema attributes.
+func (a DynamicAttribute) IsRequiredForImport() bool {
+	return false
+}
+
+// IsOptionalForImport returns false as this behavior is only relevant
+// for managed resource identity schema attributes.
+func (a DynamicAttribute) IsOptionalForImport() bool {
+	return false
 }

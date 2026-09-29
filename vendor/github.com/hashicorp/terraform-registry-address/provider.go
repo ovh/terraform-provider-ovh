@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2021, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package tfaddr
@@ -101,7 +101,7 @@ func NewProvider(hostname svchost.Hostname, namespace, typeName string) Provider
 
 	return Provider{
 		Type:      MustParseProviderPart(typeName),
-		Namespace: MustParseProviderPart(namespace),
+		Namespace: MustParseProviderNamespace(namespace),
 		Hostname:  hostname,
 	}
 }
@@ -126,6 +126,59 @@ func (pt Provider) LegacyString() string {
 // such a value is likely to either panic or otherwise misbehave.
 func (pt Provider) IsZero() bool {
 	return pt == Provider{}
+}
+
+// Validate returns error if the Provider representing "modern"
+// (Terraform 0.14+) address is not valid. Valid address implies
+// both valid namespace and a non-empty hostname.
+//
+// Validation makes assumptions equivalent to [ValidateProviderAddress].
+//
+// If you can guarantee [ValidateProviderAddress] was called
+// on the input and the [Provider] data was not mutated
+// you should not need to call this method.
+func (pt Provider) Validate() error {
+	if pt.IsZero() {
+		return &ParserError{
+			Summary: "Empty provider address",
+			Detail:  "Expected address composed of hostname, provider namespace and name",
+		}
+	}
+
+	if pt.Hostname == "" {
+		return &ParserError{
+			Summary: "Unknown hostname",
+			Detail:  "Expected hostname in the provider address to be set",
+		}
+	}
+	if pt.Namespace == "" {
+		return &ParserError{
+			Summary: "Unknown provider namespace",
+			Detail:  "Expected provider namespace to be set",
+		}
+	}
+	if pt.Type == "" {
+		return &ParserError{
+			Summary: "Unknown provider type",
+			Detail:  "Expected provider type to be set",
+		}
+	}
+
+	if !pt.HasKnownNamespace() {
+		return &ParserError{
+			Summary: "Unknown provider namespace",
+			Detail:  `Expected FQN in the format "hostname/namespace/name"`,
+		}
+	}
+
+	if pt.IsLegacy() {
+		return &ParserError{
+			Summary: "Invalid legacy provider namespace",
+			Detail:  `Expected FQN in the format "hostname/namespace/name"`,
+		}
+	}
+
+	return nil
 }
 
 // HasKnownNamespace returns true if the provider namespace is known
@@ -162,6 +215,31 @@ func (pt Provider) LessThan(other Provider) bool {
 	}
 }
 
+// MarshalText implements encoding.TextMarshaler interface.
+//
+// It encodes the [Provider] into an FQN, equivalent to [String]
+// or returns an error for an invalid [Provider].
+func (pt Provider) MarshalText() ([]byte, error) {
+	err := pt.Validate()
+	if err != nil {
+		return nil, err
+	}
+
+	return []byte(pt.String()), nil
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler interface.
+//
+// It decodes a valid provider address or returns an error
+// using [ParseProviderSource].
+//
+// [Validate] should be called on the decoded [Provider]
+// if modern-style Terraform 0.14+ addresses are expected.
+func (pt *Provider) UnmarshalText(text []byte) (err error) {
+	*pt, err = ParseProviderSource(string(text))
+	return
+}
+
 // IsLegacy returns true if the provider is a legacy-style provider
 func (pt Provider) IsLegacy() bool {
 	if pt.IsZero() {
@@ -182,9 +260,10 @@ func (pt Provider) Equals(other Provider) bool {
 // terraform-config-inspect.
 //
 // The following are valid source string formats:
-// 		name
-// 		namespace/name
-// 		hostname/namespace/name
+//
+//	name
+//	namespace/name
+//	hostname/namespace/name
 //
 // "name"-only format is parsed as -/name (i.e. legacy namespace)
 // requiring further identification of the namespace via Registry API
@@ -216,7 +295,7 @@ func ParseProviderSource(str string) (Provider, error) {
 			// or else we'd get errors round-tripping through legacy subsystems.
 			ret.Namespace = LegacyProviderNamespace
 		} else {
-			namespace, err := ParseProviderPart(givenNamespace)
+			namespace, err := ParseProviderNamespace(givenNamespace)
 			if err != nil {
 				return Provider{}, &ParserError{
 					Summary: "Invalid provider namespace",
@@ -296,7 +375,7 @@ func ParseProviderSource(str string) (Provider, error) {
 
 // MustParseProviderSource is a wrapper around ParseProviderSource that panics if
 // it returns an error.
-func MustParseProviderSource(raw string) (Provider) {
+func MustParseProviderSource(raw string) Provider {
 	p, err := ParseProviderSource(raw)
 	if err != nil {
 		panic(err)
@@ -332,7 +411,7 @@ func ValidateProviderAddress(raw string) error {
 		}
 	}
 
-	if !p.IsLegacy() {
+	if p.IsLegacy() {
 		return &ParserError{
 			Summary: "Invalid legacy provider namespace",
 			Detail:  `Expected FQN in the format "hostname/namespace/name"`,
@@ -376,9 +455,9 @@ func parseSourceStringParts(str string) ([]string, error) {
 	return parts, nil
 }
 
-// ParseProviderPart processes an addrs.Provider namespace or type string
-// provided by an end-user, producing a normalized version if possible or
-// an error if the string contains invalid characters.
+// ParseProviderPart processes an addrs.Provider type string provided by an
+// end-user, producing a normalized version if possible or an error if the
+// string contains invalid characters.
 //
 // A provider part is processed in the same way as an individual label in a DNS
 // domain name: it is transformed to lowercase per the usual DNS case mapping
@@ -400,9 +479,50 @@ func parseSourceStringParts(str string) ([]string, error) {
 // "google-beta" variant of the GCP provider, which has resource types that
 // start with the "google_" prefix instead.)
 //
+// Underscores are not permitted; namespaces have relaxed rules and are parsed
+// with ParseProviderNamespace instead.
+//
 // It's valid to pass the result of this function as the argument to a
 // subsequent call, in which case the result will be identical.
 func ParseProviderPart(given string) (string, error) {
+	return parseProviderPart(given, normalizeProviderPart)
+}
+
+// MustParseProviderPart is a wrapper around ParseProviderPart that panics if
+// it returns an error.
+func MustParseProviderPart(given string) string {
+	result, err := ParseProviderPart(given)
+	if err != nil {
+		panic(err.Error())
+	}
+	return result
+}
+
+// ParseProviderNamespace is like ParseProviderPart but additionally permits
+// underscores, which Terraform Cloud allows in the organization names it uses
+// as provider namespaces. Underscores remain invalid in a provider type, so
+// e.g. "google_beta" must still be parsed with ParseProviderPart and rejected.
+func ParseProviderNamespace(given string) (string, error) {
+	return parseProviderPart(given, normalizeProviderNamespace)
+}
+
+// MustParseProviderNamespace is a wrapper around ParseProviderNamespace that
+// panics if it returns an error.
+func MustParseProviderNamespace(given string) string {
+	result, err := ParseProviderNamespace(given)
+	if err != nil {
+		panic(err.Error())
+	}
+	return result
+}
+
+// providerPartNormalizer applies the character rules specific to one kind of
+// provider address part, returning the part's normalized form.
+type providerPartNormalizer func(given string) (string, error)
+
+// parseProviderPart applies the validation shared by every provider address
+// part, then defers to normalize for the part-specific rules.
+func parseProviderPart(given string, normalize providerPartNormalizer) (string, error) {
 	if len(given) == 0 {
 		return "", fmt.Errorf("must have at least one character")
 	}
@@ -427,20 +547,64 @@ func ParseProviderPart(given string) (string, error) {
 		return "", fmt.Errorf("cannot use multiple consecutive dashes")
 	}
 
+	return normalize(given)
+}
+
+// normalizeProviderPart applies the standard DNS-label normalization used for
+// hostnames, which permits only letters, digits, and dashes. Provider types
+// share these rules with the hostname part of an address; only namespaces
+// diverge (see normalizeProviderNamespace).
+func normalizeProviderPart(given string) (string, error) {
 	result, err := idna.Lookup.ToUnicode(given)
 	if err != nil {
 		return "", fmt.Errorf("must contain only letters, digits, and dashes, and may not use leading or trailing dashes")
 	}
-
 	return result, nil
 }
 
-// MustParseProviderPart is a wrapper around ParseProviderPart that panics if
-// it returns an error.
-func MustParseProviderPart(given string) string {
-	result, err := ParseProviderPart(given)
-	if err != nil {
-		panic(err.Error())
+// normalizeProviderNamespace additionally permits underscores (though not as a
+// leading or trailing character), which Terraform Cloud allows in the
+// organization names it uses as provider namespaces.
+func normalizeProviderNamespace(given string) (string, error) {
+	invalidErr := fmt.Errorf("must contain only letters, digits, dashes, and underscores, and may not use leading or trailing dashes or underscores")
+
+	// The relaxed IDNA profile below would also admit special ASCII characters
+	// such as '!' or '$', so reject any ASCII character that isn't a letter,
+	// digit, dash, or underscore. Non-ASCII runes are left to the profile so
+	// that international names normalize as before.
+	disallowed := func(r rune) bool {
+		switch {
+		case r > 127,
+			r >= 'a' && r <= 'z',
+			r >= 'A' && r <= 'Z',
+			r >= '0' && r <= '9',
+			r == '-', r == '_':
+			return false
+		default:
+			return true
+		}
 	}
-	return result
+	if strings.IndexFunc(given, disallowed) != -1 {
+		return "", invalidErr
+	}
+
+	// No leading or trailing underscores, matching the restriction on dashes
+	// (which the IDNA profile's hyphen checks enforce).
+	if strings.HasPrefix(given, "_") || strings.HasSuffix(given, "_") {
+		return "", invalidErr
+	}
+
+	// Mirrors the standard idna.Lookup profile but with StrictDomainName (the
+	// STD3 rules) disabled so that underscores are permitted; case folding and
+	// Unicode normalization are unchanged.
+	namespaceLookup := idna.New(
+		idna.MapForLookup(),
+		idna.BidiRule(),
+		idna.StrictDomainName(false),
+	)
+	result, err := namespaceLookup.ToUnicode(given)
+	if err != nil {
+		return "", invalidErr
+	}
+	return result, nil
 }
