@@ -222,6 +222,90 @@ resource "ovh_cloud_storage_file_share" "share" {
 	})
 }
 
+func TestAccCloudStorageFileShare_createFromSnapshot(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+
+	vrackNetName := acctest.RandomWithPrefix(testAccResourceCloudStorageFileShareVrackSubnetNamePrefix)
+	vrackSubnetName := acctest.RandomWithPrefix(testAccResourceCloudStorageFileShareVrackSubnetNamePrefix)
+	networkName := acctest.RandomWithPrefix(testAccResourceCloudStorageFileShareNetworkNamePrefix)
+	sourceShareName := acctest.RandomWithPrefix(testAccResourceCloudStorageFileShareNamePrefix)
+	snapshotName := acctest.RandomWithPrefix(testAccResourceCloudStorageFileShareNamePrefix)
+	shareFromSnapshotName := acctest.RandomWithPrefix(testAccResourceCloudStorageFileShareNamePrefix)
+
+	config := testAccVrackNetworkSubnetConfig(serviceName, region, vrackNetName, vrackSubnetName) + fmt.Sprintf(`
+resource "ovh_cloud_storage_file_share_network" "network" {
+  service_name = "%s"
+  name         = "%s"
+  network_id   = ovh_cloud_network_private_vrack.vrack_net.id
+  subnet_id    = ovh_cloud_network_private_vrack_subnet.vrack_subnet.id
+  region       = "%s"
+}
+
+resource "ovh_cloud_storage_file_share" "source" {
+  service_name     = "%s"
+  name             = "%s"
+  size             = 150
+  region           = "%s"
+  protocol         = "NFS"
+  share_type       = "STANDARD_1AZ"
+  share_network_id = ovh_cloud_storage_file_share_network.network.id
+}
+
+resource "ovh_cloud_storage_file_share_snapshot" "snapshot" {
+  service_name = "%s"
+  name         = "%s"
+  share_id     = ovh_cloud_storage_file_share.source.id
+}
+
+resource "ovh_cloud_storage_file_share" "share" {
+  service_name = "%s"
+  name         = "%s"
+  region       = "%s"
+  protocol     = "NFS"
+
+  create_from = {
+    snapshot_id = ovh_cloud_storage_file_share_snapshot.snapshot.id
+  }
+}
+`, serviceName, networkName, region, serviceName, sourceShareName, region, serviceName, snapshotName, serviceName, shareFromSnapshotName, region)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloud(t)
+			testAccCheckCloudProjectExists(t)
+			testAccPreCheckVRack(t)
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_storage_file_share.share", "name", shareFromSnapshotName),
+					resource.TestCheckResourceAttrPair("ovh_cloud_storage_file_share.share", "create_from.snapshot_id", "ovh_cloud_storage_file_share_snapshot.snapshot", "id"),
+					resource.TestCheckResourceAttrPair("ovh_cloud_storage_file_share.share", "size", "ovh_cloud_storage_file_share_snapshot.snapshot", "current_state.size"),
+					resource.TestCheckResourceAttrPair("ovh_cloud_storage_file_share.share", "share_type", "ovh_cloud_storage_file_share.source", "share_type"),
+					resource.TestCheckResourceAttrPair("ovh_cloud_storage_file_share.share", "share_network_id", "ovh_cloud_storage_file_share.source", "share_network_id"),
+					resource.TestCheckResourceAttrPair("ovh_cloud_storage_file_share.share", "encryption.enabled", "ovh_cloud_storage_file_share.source", "encryption.enabled"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_file_share.share", "resource_status", "READY"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_storage_file_share.share", "id"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_storage_file_share.share", "checksum"),
+				),
+			},
+			{
+				Config:   config,
+				PlanOnly: true,
+			},
+			{
+				ResourceName:      "ovh_cloud_storage_file_share.share",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccCloudStorageFileShareImportStateIdFunc("ovh_cloud_storage_file_share.share"),
+			},
+		},
+	})
+}
+
 const testAccResourceCloudStorageFileShareNamePrefix = "tf-test-fileshare-v2-"
 
 func testAccCloudStorageFileShareImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
