@@ -14,6 +14,8 @@ Orders a public cloud project.
 
 -> **NOTE** To order a product through Terraform, your account needs to have a default payment method defined. This can be done in the [OVHcloud Control Panel](https://www.ovh.com/manager/#/dedicated/billing/payment/method) or via API with the [/me/payment/method](https://api.ovh.com/console/#/me/payment/method~GET) endpoint.
 
+-> **NOTE** This resource is created through the OVHcloud order workflow and deleted through the termination workflow, even when the product is free. If your consumer key has restricted access rules, it must allow the routes listed in [Consumer key access rules for resources that place orders](../guides/order_consumer_key_access_rules), in addition to `/cloud/project/*`.
+
 ~> **WARNING** `BANK_ACCOUNT` is not supported anymore, please update your default payment method to `SEPA_DIRECT_DEBIT`
 
 ## Example Usage
@@ -39,6 +41,7 @@ You may want to associate an already-existing vRack to the cloud project at crea
 The following arguments are supported:
 
 - `urn` - The URN of the cloud project
+- `deletion_protection` - (Optional) Prevent the cloud project from being destroyed. When set to `true`, `terraform destroy` will fail with an error. You must set this to `false` and run `terraform apply` before the resource can be destroyed. Defaults to `false`.
 - `description` - A description associated with the user.
 - `ovh_subsidiary` - (Required) OVHcloud Subsidiary. Country of OVHcloud legal entity you'll be billed by. List of supported subsidiaries available on API at [/1.0/me.json under `models.nichandle.OvhSubsidiaryEnum`](https://eu.api.ovh.com/1.0/me.json)
 - `plan` - (Required) Product Plan to order

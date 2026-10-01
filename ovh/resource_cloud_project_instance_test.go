@@ -35,7 +35,7 @@ func getFlavorAndImage(project, region string) (string, string, error) {
 	}
 
 	for _, flav := range response {
-		if flav.Name != "b2-7" {
+		if flav.Name != "c3-4" {
 			continue
 		}
 
@@ -104,7 +104,7 @@ func TestAccCloudProjectInstance_basic(t *testing.T) {
 				Config: testCreateInstance,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_instance.instance", "id"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_instance.instance", "flavor_name", "b2-7"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_instance.instance", "flavor_name", "c3-4"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_instance.instance", "flavor_id", flavor),
 					resource.TestCheckResourceAttr("ovh_cloud_project_instance.instance", "image_id", image),
 					resource.TestCheckResourceAttr("ovh_cloud_project_instance.instance", "region", region),
@@ -223,7 +223,7 @@ func TestAccCloudProjectInstance_withSSHKeyCreate(t *testing.T) {
 				Config: testCreateInstance,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_instance.instance", "id"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_instance.instance", "flavor_name", "b2-7"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_instance.instance", "flavor_name", "c3-4"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_instance.instance", "flavor_id", flavor),
 					resource.TestCheckResourceAttr("ovh_cloud_project_instance.instance", "image_id", image),
 					resource.TestCheckResourceAttr("ovh_cloud_project_instance.instance", "region", region),
@@ -294,7 +294,7 @@ func TestAccCloudProjectInstance_privateNetworkCreate(t *testing.T) {
 				Config: testCreateInstance,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_instance.instance", "id"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_instance.instance", "flavor_name", "b2-7"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_instance.instance", "flavor_name", "c3-4"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_instance.instance", "flavor_id", flavor),
 					resource.TestCheckResourceAttr("ovh_cloud_project_instance.instance", "image_id", image),
 					resource.TestCheckResourceAttr("ovh_cloud_project_instance.instance", "region", region),
@@ -369,7 +369,7 @@ func TestAccCloudProjectInstance_privateNetworkAlreadyExists(t *testing.T) {
 				Config: testCreateInstance,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("ovh_cloud_project_instance.instance", "id"),
-					resource.TestCheckResourceAttr("ovh_cloud_project_instance.instance", "flavor_name", "b2-7"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_instance.instance", "flavor_name", "c3-4"),
 					resource.TestCheckResourceAttr("ovh_cloud_project_instance.instance", "flavor_id", flavor),
 					resource.TestCheckResourceAttr("ovh_cloud_project_instance.instance", "image_id", image),
 					resource.TestCheckResourceAttr("ovh_cloud_project_instance.instance", "region", region),

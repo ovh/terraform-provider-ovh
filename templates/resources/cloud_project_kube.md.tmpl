@@ -46,6 +46,10 @@ Create a multi-zone Kubernetes Standard cluster (on 3 availability zones):
 
 {{tffile "examples/resources/cloud_project_kube/example_10.tf"}}
 
+Create a multi-zone Kubernetes Standard cluster with Cilium cluster mesh feature:
+
+{{tffile "examples/resources/cloud_project_kube/example_11.tf"}}
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -94,6 +98,36 @@ The following arguments are supported:
   }
   ```
 * `update_policy` - Cluster update policy. Choose between [ALWAYS_UPDATE, MINIMAL_DOWNTIME, NEVER_UPDATE].
+* `customization_cilium` - (Optional) Cilium CNI customization.
+  * `cluster_id` - (Optional) Cilium cluster ID, must be between 1 and 255. Required when using the ClusterMesh feature.
+  * `cluster_mesh` - (Optional) ClusterMesh feature configuration.
+    * `enabled` - (Optional) Enable or disable the ClusterMesh feature.
+    * `api_server` - (Optional) Define how the ClusterMesh API server is exposed.
+      * `node_port` - (Optional) NodePort on which the ClusterMesh API server is exposed. Only used when `service_type` is `NodePort`.
+      * `service_type` - (Optional) Service type used to expose the ClusterMesh API server (`NodePort` or `LoadBalancer`).
+  * `hubble` - (Optional) Hubble observability stack configuration.
+    * `enabled` - (Optional) Enable or disable Hubble.
+    * `relay` - (Optional) Hubble Relay configuration.
+      * `enabled` - (Optional) Enable or disable Hubble Relay.
+    * `ui` - (Optional) Hubble UI configuration.
+      * `enabled` - (Optional) Enable or disable the Hubble UI.
+      * `backend_resources` - (Optional) Resource requests and limits for the Hubble UI backend.
+        * `limits` - (Optional) Resource limits.
+          * `cpu` - (Optional) CPU limit (e.g. `"500m"`).
+          * `memory` - (Optional) Memory limit (e.g. `"128Mi"`).
+        * `requests` - (Optional) Resource requests.
+          * `cpu` - (Optional) CPU request (e.g. `"500m"`).
+          * `memory` - (Optional) Memory request (e.g. `"128Mi"`).
+      * `frontend_resources` - (Optional) Resource requests and limits for the Hubble UI frontend.
+        * `limits` - (Optional) Resource limits.
+          * `cpu` - (Optional) CPU limit (e.g. `"500m"`).
+          * `memory` - (Optional) Memory limit (e.g. `"128Mi"`).
+        * `requests` - (Optional) Resource requests.
+          * `cpu` - (Optional) CPU request (e.g. `"500m"`).
+          * `memory` - (Optional) Memory request (e.g. `"128Mi"`).
+* `ip_allocation_policy` - (Optional) IP allocation policy of the cluster. **Changing this value recreates the resource.**
+  * `pods_ipv4_cidr` - (Optional) CIDR for the cluster's pods (e.g. `"10.5.0.0/16"`). **Changing this value recreates the resource.**
+  * `services_ipv4_cidr` - (Optional) CIDR for the cluster's services (e.g. `"10.6.0.0/16"`). **Changing this value recreates the resource.**
 
 ## Attributes Reference
 
@@ -121,6 +155,8 @@ The following attributes are exported:
 * `version` - See Argument Reference above.
 * `customization_apiserver` - See Argument Reference above.
 * `customization_kube_proxy` - See Argument Reference above.
+* `customization_cilium` - See Argument Reference above.
+* `ip_allocation_policy` - See Argument Reference above.
 
 ## Timeouts
 

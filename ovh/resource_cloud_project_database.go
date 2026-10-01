@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 	"golang.org/x/exp/slices"
@@ -44,10 +45,11 @@ func resourceCloudProjectDatabase() *schema.Resource {
 				Optional:    true,
 			},
 			"engine": {
-				Type:        schema.TypeString,
-				Description: "Name of the engine of the service",
-				ForceNew:    true,
-				Required:    true,
+				Type:             schema.TypeString,
+				Description:      "Name of the engine of the service",
+				ForceNew:         true,
+				Required:         true,
+				ValidateDiagFunc: helpers.ValidateDiagEnum(engines),
 			},
 			"flavor": {
 				Type:        schema.TypeString,
@@ -109,13 +111,11 @@ func resourceCloudProjectDatabase() *schema.Resource {
 						"network_id": {
 							Type:        schema.TypeString,
 							Description: "Private network ID in which the node is. It's the regional openstackId of the private network.",
-							ForceNew:    true,
 							Optional:    true,
 						},
 						"region": {
 							Type:        schema.TypeString,
 							Description: "Region of the node",
-							ForceNew:    true,
 							Required:    true,
 						},
 						"subnet_id": {
@@ -256,6 +256,27 @@ func resourceCloudProjectDatabase() *schema.Resource {
 				Computed:    true,
 			},
 		},
+
+		// Manage adding or removing
+		CustomizeDiff: customdiff.ForceNewIfChange("nodes", func(ctx context.Context, old, new, meta interface{}) bool {
+			oldNodes := old.([]interface{})
+			newNodes := new.([]interface{})
+
+			minLen := len(oldNodes)
+			if len(newNodes) < minLen {
+				minLen = len(newNodes)
+			}
+
+			for i := 0; i < minLen; i++ {
+				o := oldNodes[i].(map[string]interface{})
+				n := newNodes[i].(map[string]interface{})
+				if o["region"] != n["region"] {
+					return true
+				}
+			}
+
+			return false
+		}),
 	}
 }
 
@@ -299,14 +320,14 @@ func resourceCloudProjectDatabaseCreate(ctx context.Context, d *schema.ResourceD
 		return diag.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
 	}
 
+	d.SetId(res.ID)
+
 	log.Printf("[DEBUG] Waiting for database %s to be READY", res.ID)
 	err = waitForCloudProjectDatabaseReady(ctx, config.OVHClient, serviceName, engine, res.ID, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return diag.Errorf("timeout while waiting database %s to be READY: %s", res.ID, err.Error())
 	}
 	log.Printf("[DEBUG] database %s is READY", res.ID)
-
-	d.SetId(res.ID)
 
 	if (engine != "clickhouse" && engine != "mongodb" && len(d.Get("advanced_configuration").(map[string]interface{})) > 0) ||
 		(engine == "kafka" && d.Get("kafka_rest_api").(bool)) ||

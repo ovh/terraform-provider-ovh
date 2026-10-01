@@ -35,6 +35,9 @@ var (
 		// Extra info in user-agent
 		"user_agent_extra": "Extra information to append to the user-agent",
 
+		// Extra HTTP headers
+		"http_headers": "Extra HTTP headers to add to every request made to the OVH API",
+
 		// Ignore initialization errors
 		"ignore_init_error": "If set to true, initialization errors (like invalid OAuth credentials) will be ignored",
 
@@ -87,6 +90,12 @@ func Provider() *schema.Provider {
 				Optional:    true,
 				Description: descriptions["user_agent_extra"],
 			},
+			"http_headers": {
+				Type:        schema.TypeMap,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				Description: descriptions["http_headers"],
+			},
 			"ignore_init_error": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -120,16 +129,13 @@ func Provider() *schema.Provider {
 			"ovh_cloud_project_database_integrations":                        dataSourceCloudProjectDatabaseIntegrations(),
 			"ovh_cloud_project_database_kafka_acl":                           dataSourceCloudProjectDatabaseKafkaACL(),
 			"ovh_cloud_project_database_kafka_acls":                          dataSourceCloudProjectDatabaseKafkaAcls(),
-			"ovh_cloud_project_database_kafka_schemaregistryacl":             dataSourceCloudProjectDatabaseKafkaSchemaRegistryAcl(),
+			"ovh_cloud_project_database_kafka_schemaregistryacl":             dataSourceCloudProjectDatabaseKafkaSchemaRegistryACL(),
 			"ovh_cloud_project_database_kafka_schemaregistryacls":            dataSourceCloudProjectDatabaseKafkaSchemaRegistryAcls(),
 			"ovh_cloud_project_database_kafka_topic":                         dataSourceCloudProjectDatabaseKafkaTopic(),
 			"ovh_cloud_project_database_kafka_topics":                        dataSourceCloudProjectDatabaseKafkaTopics(),
 			"ovh_cloud_project_database_kafka_user_access":                   dataSourceCloudProjectDatabaseKafkaUserAccess(),
 			"ovh_cloud_project_database_log_subscription":                    dataSourceCloudProjectDatabaseLogSubscription(),
 			"ovh_cloud_project_database_log_subscriptions":                   dataSourceCloudProjectDatabaseLogSubscriptions(),
-			"ovh_cloud_project_database_m3db_namespace":                      dataSourceCloudProjectDatabaseM3dbNamespace(),
-			"ovh_cloud_project_database_m3db_namespaces":                     dataSourceCloudProjectDatabaseM3dbNamespaces(),
-			"ovh_cloud_project_database_m3db_user":                           dataSourceCloudProjectDatabaseM3dbUser(),
 			"ovh_cloud_project_database_mongodb_prometheus":                  dataSourceCloudProjectDatabaseMongodbPrometheus(),
 			"ovh_cloud_project_database_mongodb_user":                        dataSourceCloudProjectDatabaseMongodbUser(),
 			"ovh_cloud_project_database_opensearch_pattern":                  dataSourceCloudProjectDatabaseOpensearchPattern(),
@@ -138,7 +144,6 @@ func Provider() *schema.Provider {
 			"ovh_cloud_project_database_postgresql_user":                     dataSourceCloudProjectDatabasePostgresqlUser(),
 			"ovh_cloud_project_database_postgresql_connection_pool":          dataSourceCloudProjectDatabasePostgresqlConnectionPool(),
 			"ovh_cloud_project_database_postgresql_connection_pools":         dataSourceCloudProjectDatabasePostgresqlConnectionPools(),
-			"ovh_cloud_project_database_redis_user":                          dataSourceCloudProjectDatabaseRedisUser(),
 			"ovh_cloud_project_database_valkey_user":                         dataSourceCloudProjectDatabaseValkeyUser(),
 			"ovh_cloud_project_database_prometheus":                          dataSourceCloudProjectDatabasePrometheus(),
 			"ovh_cloud_project_database_user":                                dataSourceCloudProjectDatabaseUser(),
@@ -152,6 +157,7 @@ func Provider() *schema.Provider {
 			"ovh_cloud_project_kube_oidc":                                    dataSourceCloudProjectKubeOIDC(),
 			"ovh_cloud_project_kube_nodepool":                                dataSourceCloudProjectKubeNodepool(),
 			"ovh_cloud_project_kube_nodes":                                   dataSourceCloudProjectKubeNodes(),
+			"ovh_cloud_project_kube_log_subscription":                        dataSourceCloudProjectKubeLogSubscription(),
 			"ovh_cloud_project_region_loadbalancer_log_subscriptions":        dataSourceCloudProjectRegionLoadbalancerLogSubscriptions(),
 			"ovh_cloud_project_region_loadbalancer_log_subscription":         dataSourceCloudProjectRegionLoadbalancerLogSubscription(),
 			"ovh_cloud_project_region":                                       dataSourceCloudProjectRegion(),
@@ -175,6 +181,7 @@ func Provider() *schema.Provider {
 			"ovh_dedicated_nasha_partition":                                  dataSourceDedicatedNashaPartition(),
 			"ovh_dedicated_server":                                           dataSourceDedicatedServer(),
 			"ovh_dedicated_server_boots":                                     dataSourceDedicatedServerBoots(),
+			"ovh_dedicated_server_networking":                                dataSourceDedicatedServerNetworking(),
 			"ovh_dedicated_server_orderable_bandwidth":                       dataSourceDedicatedServerOrderableBandwidth(),
 			"ovh_dedicated_server_orderable_bandwidth_vrack":                 dataSourceDedicatedServerOrderableBandwidthVrack(),
 			"ovh_dedicated_servers":                                          dataSourceDedicatedServers(),
@@ -227,20 +234,16 @@ func Provider() *schema.Provider {
 			"ovh_cloud_project_database_clickhouse_user":                     resourceCloudProjectDatabaseClickhouseUser(),
 			"ovh_cloud_project_database_database":                            resourceCloudProjectDatabaseDatabase(),
 			"ovh_cloud_project_database_integration":                         resourceCloudProjectDatabaseIntegration(),
-			"ovh_cloud_project_database_ip_restriction":                      resourceCloudProjectDatabaseIpRestriction(),
-			"ovh_cloud_project_database_kafka_acl":                           resourceCloudProjectDatabaseKafkaAcl(),
-			"ovh_cloud_project_database_kafka_schemaregistryacl":             resourceCloudProjectDatabaseKafkaSchemaRegistryAcl(),
+			"ovh_cloud_project_database_kafka_acl":                           resourceCloudProjectDatabaseKafkaACL(),
+			"ovh_cloud_project_database_kafka_schemaregistryacl":             resourceCloudProjectDatabaseKafkaSchemaRegistryACL(),
 			"ovh_cloud_project_database_kafka_topic":                         resourceCloudProjectDatabaseKafkaTopic(),
 			"ovh_cloud_project_database_log_subscription":                    resourceCloudProjectDatabaseLogSubscription(),
-			"ovh_cloud_project_database_m3db_namespace":                      resourceCloudProjectDatabaseM3dbNamespace(),
-			"ovh_cloud_project_database_m3db_user":                           resourceCloudProjectDatabaseM3dbUser(),
 			"ovh_cloud_project_database_mongodb_prometheus":                  resourceCloudProjectDatabaseMongodbPrometheus(),
 			"ovh_cloud_project_database_mongodb_user":                        resourceCloudProjectDatabaseMongodbUser(),
 			"ovh_cloud_project_database_opensearch_pattern":                  resourceCloudProjectDatabaseOpensearchPattern(),
 			"ovh_cloud_project_database_opensearch_user":                     resourceCloudProjectDatabaseOpensearchUser(),
 			"ovh_cloud_project_database_postgresql_user":                     resourceCloudProjectDatabasePostgresqlUser(),
 			"ovh_cloud_project_database_postgresql_connection_pool":          resourceCloudProjectDatabasePostgresqlConnectionPool(),
-			"ovh_cloud_project_database_redis_user":                          resourceCloudProjectDatabaseRedisUser(),
 			"ovh_cloud_project_database_valkey_user":                         resourceCloudProjectDatabaseValkeyUser(),
 			"ovh_cloud_project_database_prometheus":                          resourceCloudProjectDatabasePrometheus(),
 			"ovh_cloud_project_database_user":                                resourceCloudProjectDatabaseUser(),
@@ -251,6 +254,7 @@ func Provider() *schema.Provider {
 			"ovh_cloud_project_kube_nodepool":                                resourceCloudProjectKubeNodePool(),
 			"ovh_cloud_project_kube_oidc":                                    resourceCloudProjectKubeOIDC(),
 			"ovh_cloud_project_kube_iprestrictions":                          resourceCloudProjectKubeIpRestrictions(),
+			"ovh_cloud_project_kube_log_subscription":                        resourceCloudProjectKubeLogSubscription(),
 			"ovh_cloud_project_network_private":                              resourceCloudProjectNetworkPrivate(),
 			"ovh_cloud_project_network_private_subnet":                       resourceCloudProjectNetworkPrivateSubnet(),
 			"ovh_cloud_project_network_private_subnet_v2":                    resourceCloudProjectNetworkPrivateSubnetV2(),
@@ -275,6 +279,7 @@ func Provider() *schema.Provider {
 			"ovh_dedicated_server_reboot_task":                               resourceDedicatedServerRebootTask(),
 			"ovh_dedicated_server_update":                                    resourceDedicatedServerUpdate(),
 			"ovh_dedicated_server_networking":                                resourceDedicatedServerNetworking(),
+			"ovh_dedicated_server_virtual_mac":                               resourceDedicatedServerVirtualMac(),
 			"ovh_domain_ds_records":                                          resourceDomainDsRecords(),
 			"ovh_domain_name_servers":                                        resourceDomainNameServers(),
 			"ovh_domain_zone":                                                resourceDomainZone(),
@@ -352,6 +357,15 @@ func ConfigureContextFunc(context context.Context, d *schema.ResourceData) (inte
 	}
 	if v, ok := d.GetOk("user_agent_extra"); ok {
 		config.UserAgentExtra = v.(string)
+	}
+	if v, ok := d.GetOk("http_headers"); ok {
+		headers := make(map[string]string)
+		for k, val := range v.(map[string]interface{}) {
+			headers[k] = val.(string)
+		}
+		config.HttpHeaders = headers
+	} else if headers := httpHeadersFromEnv(); headers != nil {
+		config.HttpHeaders = headers
 	}
 	if v, ok := d.GetOk("ignore_init_error"); ok {
 		config.IgnoreInitError = v.(bool)

@@ -29,6 +29,9 @@ func TestAccresourceDedicatedServerNetworking(t *testing.T) {
 					Check: resource.ComposeTestCheckFunc(
 						resource.TestCheckResourceAttr(
 							"ovh_dedicated_server_networking.server", "status", "active"),
+						resource.TestCheckTypeSetElemNestedAttrs(
+							"ovh_dedicated_server_networking.server", "interfaces.*",
+							map[string]string{"type": "public"}),
 					),
 				},
 			},

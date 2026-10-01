@@ -13,20 +13,20 @@ func dataSourceCloudProjectKubeIPRestrictions() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceCloudProjectKubeIpRestrictionsRead,
 		Schema: map[string]*schema.Schema{
-			"service_name": {
+			kubeServiceNameKey: {
 				Type:        schema.TypeString,
 				Description: "Service name",
 				Required:    true,
 				ForceNew:    true,
 				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
 			},
-			"kube_id": {
+			kubeKubeIdKey: {
 				Type:        schema.TypeString,
 				Description: "Kube ID",
 				Required:    true,
 				ForceNew:    true,
 			},
-			"ips": {
+			kubeIpRestrictionsIpsKey: {
 				Type:        schema.TypeSet,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Set:         schema.HashString,
@@ -39,8 +39,8 @@ func dataSourceCloudProjectKubeIPRestrictions() *schema.Resource {
 
 func dataSourceCloudProjectKubeIpRestrictionsRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-	serviceName := d.Get("service_name").(string)
-	kubeId := d.Get("kube_id").(string)
+	serviceName := d.Get(kubeServiceNameKey).(string)
+	kubeId := d.Get(kubeKubeIdKey).(string)
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/ipRestrictions", url.PathEscape(serviceName), url.PathEscape(kubeId))
 	var res CloudProjectKubeIpRestrictionsResponse
@@ -51,7 +51,7 @@ func dataSourceCloudProjectKubeIpRestrictionsRead(d *schema.ResourceData, meta i
 	}
 
 	d.SetId(kubeId)
-	d.Set("ips", res)
+	d.Set(kubeIpRestrictionsIpsKey, res)
 
 	log.Printf("[DEBUG] Read iprestrictions: %+v", res)
 	return nil

@@ -95,6 +95,8 @@ resource "ovh_dedicated_server" "server" {
 
 ~> **Note** To get the available plans, you can use the API console to first [create a cart](https://eu.api.ovh.com/console/?section=%2Forder&branch=v1#post-/order/cart) and then use the created cart ID to fetch the available plans using [the following call](https://eu.api.ovh.com/console/?section=%2Forder&branch=v1#get-/order/cart/-cartId-/baremetalServers) (or `/order/cart/{cartId}/eco` for eco servers). Once you've found the right plan, you can use [this call](https://eu.api.ovh.com/console/?section=%2Forder&branch=v1#get-/order/cart/-cartId-/baremetalServers/options) to get the available options for this plan.
 
+-> **NOTE** When `service_name` is not set, this resource orders a new server through the OVHcloud order workflow, and deleting it goes through the termination workflow. If your consumer key has restricted access rules, it must allow the routes listed in [Consumer key access rules for resources that place orders](../guides/order_consumer_key_access_rules), in addition to `/dedicated/server/*`.
+
 ### Editable fields of a dedicated server
 
 * `display_name` - Display name of your dedicated server

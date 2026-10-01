@@ -30,8 +30,10 @@ data "ovh_dbaas_logs_output_graylog_stream" "stream" {
 * `cold_storage_notify_enabled` - Notify on new Cold storage archive
 * `cold_storage_retention` - Cold storage retention in year
 * `cold_storage_target` - ColdStorage destination
+* `can_alert` - Indicates if the current user can create alert on the stream
 * `created_at` - Stream creation
 * `description` - Stream description
+* `encryption_keys_ids` - Set of encryption key IDs used to encrypt stream archives
 * `indexing_enabled` - Enable ES indexing
 * `indexing_max_size` - Maximum indexing size (in GB)
 * `indexing_notify_enabled` - If set, notify when size is near 80, 90 or 100 % of the maximum configured setting
@@ -40,7 +42,7 @@ data "ovh_dbaas_logs_output_graylog_stream" "stream" {
 * `nb_alert_condition` - Number of alert condition
 * `nb_archive` - Number of coldstored archives
 * `parent_stream_id` - Parent stream ID
-* `pause_indexing_on_max_size` - If set, pause indexing when maximum size is reach
+* `pause_indexing_on_max_size` - If set, pause indexing when maximum size is reached
 * `retention_id` - Retention ID
 * `stream_id` - Stream ID
 * `updated_at` - Stream last update

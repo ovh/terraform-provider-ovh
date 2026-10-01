@@ -72,6 +72,12 @@ func dataSourceDbaasLogsOutputGraylogStream() *schema.Resource {
 				Description: "Stream description",
 				Computed:    true,
 			},
+			"encryption_keys_ids": {
+				Type:        schema.TypeSet,
+				Description: "Set of encryption key IDs used to encrypt stream archives",
+				Computed:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+			},
 			"indexing_enabled": {
 				Type:        schema.TypeBool,
 				Description: "Enable ES indexing",

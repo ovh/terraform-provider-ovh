@@ -63,3 +63,25 @@ resource "time_sleep" "wait_10_seconds" {
 - `path` (String) Snapshot path
 - `status` (String) Snapshot status
 - `type` (String) Snapshot type
+
+## Import
+
+An EFS share snapshot can be imported using its `service_name`, `share_id` and `id` fields.
+
+Using the following configuration:
+
+```terraform
+import {
+  to = ovh_storage_efs_share_snapshot.snapshot
+  id = "<service_name>/<share_id>/<id>"
+}
+```
+
+You can then run:
+
+```bash
+$ terraform plan -generate-config-out=snapshot.tf
+$ terraform apply
+```
+
+The file `snapshot.tf` will then contain the imported resource's configuration, that can be copied next to the `import` block above. See https://developer.hashicorp.com/terraform/language/import/generating-configuration for more details.

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/go-ovh/ovh"
@@ -20,6 +21,7 @@ func resourceCloudProjectDatabaseKafkaTopic() *schema.Resource {
 		CreateContext: resourceCloudProjectDatabaseKafkaTopicCreate,
 		ReadContext:   resourceCloudProjectDatabaseKafkaTopicRead,
 		DeleteContext: resourceCloudProjectDatabaseKafkaTopicDelete,
+		UpdateContext: resourceCloudProjectDatabaseKafkaTopicUpdate,
 
 		Importer: &schema.ResourceImporter{
 			State: resourceCloudProjectDatabaseKafkaTopicImportState,
@@ -27,6 +29,7 @@ func resourceCloudProjectDatabaseKafkaTopic() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(20 * time.Minute),
+			Update: schema.DefaultTimeout(20 * time.Minute),
 			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
@@ -54,7 +57,6 @@ func resourceCloudProjectDatabaseKafkaTopic() *schema.Resource {
 			"min_insync_replicas": {
 				Type:             schema.TypeInt,
 				Description:      "Minimum insync replica accepted for this topic",
-				ForceNew:         true,
 				Optional:         true,
 				Computed:         true,
 				ValidateDiagFunc: validateCloudProjectDatabaseKafkaTopicMinInsyncReplicasFunc,
@@ -62,7 +64,6 @@ func resourceCloudProjectDatabaseKafkaTopic() *schema.Resource {
 			"partitions": {
 				Type:             schema.TypeInt,
 				Description:      "Number of partitions for this topic",
-				ForceNew:         true,
 				Optional:         true,
 				Computed:         true,
 				ValidateDiagFunc: validateCloudProjectDatabaseKafkaTopicPartitionsFunc,
@@ -70,7 +71,6 @@ func resourceCloudProjectDatabaseKafkaTopic() *schema.Resource {
 			"replication": {
 				Type:             schema.TypeInt,
 				Description:      "Number of replication for this topic",
-				ForceNew:         true,
 				Optional:         true,
 				Computed:         true,
 				ValidateDiagFunc: validateCloudProjectDatabaseKafkaTopicReplicationFunc,
@@ -78,34 +78,37 @@ func resourceCloudProjectDatabaseKafkaTopic() *schema.Resource {
 			"retention_bytes": {
 				Type:        schema.TypeInt,
 				Description: "Number of bytes for the retention of the data for this topic",
-				ForceNew:    true,
 				Optional:    true,
 				Computed:    true,
 			},
 			"retention_hours": {
 				Type:             schema.TypeInt,
 				Description:      "Number of hours for the retention of the data for this topic",
-				ForceNew:         true,
 				Optional:         true,
 				Computed:         true,
 				ValidateDiagFunc: validateCloudProjectDatabaseKafkaTopicRetentionHoursFunc,
 			},
 		},
+
+		// Partitions can only be increased
+		CustomizeDiff: customdiff.ForceNewIfChange("partitions", func(ctx context.Context, old, new, meta interface{}) bool {
+			return new.(int) < old.(int)
+		}),
 	}
 }
 
 func resourceCloudProjectDatabaseKafkaTopicImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	givenId := d.Id()
+	givenID := d.Id()
 	n := 3
-	splitId := strings.SplitN(givenId, "/", n)
-	if len(splitId) != n {
+	splitID := strings.SplitN(givenID, "/", n)
+	if len(splitID) != n {
 		return nil, fmt.Errorf("import Id is not service_name/cluster_id/id formatted")
 	}
-	serviceName := splitId[0]
-	clusterId := splitId[1]
-	id := splitId[2]
+	serviceName := splitID[0]
+	clusterID := splitID[1]
+	id := splitID[2]
 	d.SetId(id)
-	d.Set("cluster_id", clusterId)
+	d.Set("cluster_id", clusterID)
 	d.Set("service_name", serviceName)
 
 	results := make([]*schema.ResourceData, 1)
@@ -116,11 +119,11 @@ func resourceCloudProjectDatabaseKafkaTopicImportState(d *schema.ResourceData, m
 func resourceCloudProjectDatabaseKafkaTopicCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
-	clusterId := d.Get("cluster_id").(string)
+	clusterID := d.Get("cluster_id").(string)
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/database/kafka/%s/topic",
 		url.PathEscape(serviceName),
-		url.PathEscape(clusterId),
+		url.PathEscape(clusterID),
 	)
 	params := (&CloudProjectDatabaseKafkaTopicCreateOpts{}).FromResource(d)
 	res := &CloudProjectDatabaseKafkaTopicResponse{}
@@ -128,7 +131,7 @@ func resourceCloudProjectDatabaseKafkaTopicCreate(ctx context.Context, d *schema
 	return diag.FromErr(
 		retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate),
 			func() *retry.RetryError {
-				log.Printf("[DEBUG] Will create topic: %+v for cluster %s from project %s", params, clusterId, serviceName)
+				log.Printf("[DEBUG] Will create topic: %+v for cluster %s from project %s", params, clusterID, serviceName)
 				err := config.OVHClient.PostWithContext(ctx, endpoint, params, res)
 				if err != nil {
 					if errOvh, ok := err.(*ovh.APIError); ok && (errOvh.Code == 409) {
@@ -137,14 +140,15 @@ func resourceCloudProjectDatabaseKafkaTopicCreate(ctx context.Context, d *schema
 					return retry.NonRetryableError(fmt.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err))
 				}
 
-				log.Printf("[DEBUG] Waiting for topic %s to be READY", res.Id)
-				err = waitForCloudProjectDatabaseKafkaTopicReady(ctx, config.OVHClient, serviceName, clusterId, res.Id, d.Timeout(schema.TimeoutCreate))
-				if err != nil {
-					return retry.NonRetryableError(fmt.Errorf("timeout while waiting topic %s to be READY: %s", res.Id, err.Error()))
-				}
-				log.Printf("[DEBUG] topic %s is READY", res.Id)
+				d.SetId(res.ID)
 
-				d.SetId(res.Id)
+				log.Printf("[DEBUG] Waiting for topic %s to be READY", res.ID)
+				err = waitForCloudProjectDatabaseKafkaTopicReady(ctx, config.OVHClient, serviceName, clusterID, res.ID, d.Timeout(schema.TimeoutCreate))
+				if err != nil {
+					return retry.NonRetryableError(fmt.Errorf("timeout while waiting topic %s to be READY: %s", res.ID, err.Error()))
+				}
+				log.Printf("[DEBUG] topic %s is READY", res.ID)
+
 				readDiags := resourceCloudProjectDatabaseKafkaTopicRead(ctx, d, meta)
 				err = diagnosticsToError(readDiags)
 				if err != nil {
@@ -159,17 +163,17 @@ func resourceCloudProjectDatabaseKafkaTopicCreate(ctx context.Context, d *schema
 func resourceCloudProjectDatabaseKafkaTopicRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
-	clusterId := d.Get("cluster_id").(string)
+	clusterID := d.Get("cluster_id").(string)
 	id := d.Id()
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/database/kafka/%s/topic/%s",
 		url.PathEscape(serviceName),
-		url.PathEscape(clusterId),
+		url.PathEscape(clusterID),
 		url.PathEscape(id),
 	)
 	res := &CloudProjectDatabaseKafkaTopicResponse{}
 
-	log.Printf("[DEBUG] Will read topic %s from cluster %s from project %s", id, clusterId, serviceName)
+	log.Printf("[DEBUG] Will read topic %s from cluster %s from project %s", id, clusterID, serviceName)
 	if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
@@ -185,22 +189,58 @@ func resourceCloudProjectDatabaseKafkaTopicRead(ctx context.Context, d *schema.R
 	return nil
 }
 
-func resourceCloudProjectDatabaseKafkaTopicDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCloudProjectDatabaseKafkaTopicUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
-	clusterId := d.Get("cluster_id").(string)
+	clusterID := d.Get("cluster_id").(string)
 	id := d.Id()
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/database/kafka/%s/topic/%s",
 		url.PathEscape(serviceName),
-		url.PathEscape(clusterId),
+		url.PathEscape(clusterID),
+		url.PathEscape(id),
+	)
+	params := (&CloudProjectDatabaseKafkaTopicUpdateOpts{}).FromResource(d)
+
+	return diag.FromErr(
+		retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate),
+			func() *retry.RetryError {
+				log.Printf("[DEBUG] Will update topic %s from cluster %s from project %s", id, clusterID, serviceName)
+				err := config.OVHClient.PutWithContext(ctx, endpoint, params, nil)
+				if err != nil {
+					// The cluster rejects concurrent operations while it converges
+					if errOvh, ok := err.(*ovh.APIError); ok && (errOvh.Code == 409) {
+						return retry.RetryableError(err)
+					}
+					return retry.NonRetryableError(fmt.Errorf("calling Put %s with params %+v:\n\t %q", endpoint, params, err))
+				}
+
+				readDiags := resourceCloudProjectDatabaseKafkaTopicRead(ctx, d, meta)
+				if err := diagnosticsToError(readDiags); err != nil {
+					return retry.NonRetryableError(err)
+				}
+				return nil
+			},
+		),
+	)
+}
+
+func resourceCloudProjectDatabaseKafkaTopicDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	config := meta.(*Config)
+	serviceName := d.Get("service_name").(string)
+	clusterID := d.Get("cluster_id").(string)
+	id := d.Id()
+
+	endpoint := fmt.Sprintf("/cloud/project/%s/database/kafka/%s/topic/%s",
+		url.PathEscape(serviceName),
+		url.PathEscape(clusterID),
 		url.PathEscape(id),
 	)
 
 	return diag.FromErr(
 		retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete),
 			func() *retry.RetryError {
-				log.Printf("[DEBUG] Will delete topic  %s from cluster %s from project %s", id, clusterId, serviceName)
+				log.Printf("[DEBUG] Will delete topic  %s from cluster %s from project %s", id, clusterID, serviceName)
 				err := config.OVHClient.DeleteWithContext(ctx, endpoint, nil)
 				if err != nil {
 					if errOvh, ok := err.(*ovh.APIError); ok && (errOvh.Code == 409) {
@@ -214,7 +254,7 @@ func resourceCloudProjectDatabaseKafkaTopicDelete(ctx context.Context, d *schema
 				}
 
 				log.Printf("[DEBUG] Waiting for topic %s to be DELETED", id)
-				err = waitForCloudProjectDatabaseKafkaTopicDeleted(ctx, config.OVHClient, serviceName, clusterId, id, d.Timeout(schema.TimeoutDelete))
+				err = waitForCloudProjectDatabaseKafkaTopicDeleted(ctx, config.OVHClient, serviceName, clusterID, id, d.Timeout(schema.TimeoutDelete))
 				if err != nil {
 					return retry.NonRetryableError(fmt.Errorf("timeout while waiting topic %s to be DELETED: %s", id, err.Error()))
 				}

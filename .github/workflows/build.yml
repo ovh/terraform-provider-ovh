@@ -1,0 +1,23 @@
+
+# Terraform Provider CI workflow.
+# Runs compilation, go vet, gofmt check on pull requests.
+name: terraform-provider-ovh-build
+
+on:
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - name: Setup Go environment
+        uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
+        with:
+          go-version: '1.26'
+      - name: Check formatting
+        run: make fmtcheck
+      - name: Run go vet
+        run: make vet
+      - name: Build
+        run: make build

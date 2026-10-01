@@ -1,0 +1,54 @@
+package ovh
+
+import (
+	"fmt"
+	"os"
+	"testing"
+
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+)
+
+func TestAccDataSourceCloudGateways_basic(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+	gatewayModel := os.Getenv("OVH_CLOUD_GATEWAY_MODEL_TEST")
+	if gatewayModel == "" {
+		gatewayModel = "S"
+	}
+
+	gatewayName := acctest.RandomWithPrefix(testAccResourceCloudGatewayNamePrefix)
+
+	config := fmt.Sprintf(`
+resource "ovh_cloud_gateway" "test" {
+  service_name = "%s"
+  name         = "%s"
+  region       = "%s"
+
+  external_gateway = {
+    enabled = true
+    model   = "%s"
+  }
+}
+
+data "ovh_cloud_gateways" "test" {
+  service_name = ovh_cloud_gateway.test.service_name
+}
+`, serviceName, gatewayName, region, gatewayModel)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloudGateway(t)
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.ovh_cloud_gateways.test", "service_name", serviceName),
+					resource.TestCheckResourceAttrSet("data.ovh_cloud_gateways.test", "gateways.#"),
+				),
+			},
+		},
+	})
+}

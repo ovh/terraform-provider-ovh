@@ -32,20 +32,20 @@ func resourceCloudProjectKubeIpRestrictions() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"service_name": {
+			kubeServiceNameKey: {
 				Type:        schema.TypeString,
 				Description: "Service name",
 				Required:    true,
 				ForceNew:    true,
 				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
 			},
-			"kube_id": {
+			kubeKubeIdKey: {
 				Type:        schema.TypeString,
 				Description: "Kube ID",
 				Required:    true,
 				ForceNew:    true,
 			},
-			"ips": {
+			kubeIpRestrictionsIpsKey: {
 				Type:        schema.TypeSet,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Set:         schema.HashString,
@@ -65,8 +65,8 @@ func resourceCloudProjectKubeIpRestrictionsImportState(d *schema.ResourceData, m
 	serviceName := splitId[0]
 	kubeId := splitId[1]
 	d.SetId(kubeId)
-	d.Set("kube_id", kubeId)
-	d.Set("service_name", serviceName)
+	d.Set(kubeKubeIdKey, kubeId)
+	d.Set(kubeServiceNameKey, serviceName)
 
 	results := make([]*schema.ResourceData, 1)
 	results[0] = d
@@ -75,8 +75,8 @@ func resourceCloudProjectKubeIpRestrictionsImportState(d *schema.ResourceData, m
 
 func resourceCloudProjectKubeIpRestrictionsRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-	serviceName := d.Get("service_name").(string)
-	kubeId := d.Get("kube_id").(string)
+	serviceName := d.Get(kubeServiceNameKey).(string)
+	kubeId := d.Get(kubeKubeIdKey).(string)
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/ipRestrictions", url.PathEscape(serviceName), url.PathEscape(kubeId))
 	res := make(CloudProjectKubeIpRestrictionsResponse, 0)
@@ -87,7 +87,7 @@ func resourceCloudProjectKubeIpRestrictionsRead(d *schema.ResourceData, meta int
 	}
 
 	d.SetId(kubeId)
-	d.Set("ips", res)
+	d.Set(kubeIpRestrictionsIpsKey, res)
 
 	log.Printf("[DEBUG] Read iprestrictions: %+v", res)
 	return nil
@@ -95,8 +95,8 @@ func resourceCloudProjectKubeIpRestrictionsRead(d *schema.ResourceData, meta int
 
 func resourceCloudProjectKubeIpRestrictionsCreateOrUpdate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-	serviceName := d.Get("service_name").(string)
-	kubeId := d.Get("kube_id").(string)
+	serviceName := d.Get(kubeServiceNameKey).(string)
+	kubeId := d.Get(kubeKubeIdKey).(string)
 
 	params := (&CloudProjectKubeIpRestrictionsCreateOrUpdateOpts{}).FromResource(d)
 
@@ -113,8 +113,8 @@ func resourceCloudProjectKubeIpRestrictionsCreateOrUpdate(d *schema.ResourceData
 
 func resourceCloudProjectKubeIpRestrictionsDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
-	serviceName := d.Get("service_name").(string)
-	kubeId := d.Get("kube_id").(string)
+	serviceName := d.Get(kubeServiceNameKey).(string)
+	kubeId := d.Get(kubeKubeIdKey).(string)
 
 	return resourceCloudProjectKubeIpRestrictionsUpdate(d, config, serviceName, kubeId, &CloudProjectKubeIpRestrictionsCreateOrUpdateOpts{
 		Ips: []string{},

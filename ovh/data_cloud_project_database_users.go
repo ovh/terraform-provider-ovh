@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers/hashcode"
 )
 
@@ -22,9 +23,10 @@ func dataSourceCloudProjectDatabaseUsers() *schema.Resource {
 				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
 			},
 			"engine": {
-				Type:        schema.TypeString,
-				Description: "Name of the engine of the service",
-				Required:    true,
+				Type:             schema.TypeString,
+				Description:      "Name of the engine of the service",
+				Required:         true,
+				ValidateDiagFunc: helpers.ValidateDiagEnum(engines),
 			},
 			"cluster_id": {
 				Type:        schema.TypeString,
@@ -47,17 +49,17 @@ func dataSourceCloudProjectDatabaseUsersRead(ctx context.Context, d *schema.Reso
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	engine := d.Get("engine").(string)
-	clusterId := d.Get("cluster_id").(string)
+	clusterID := d.Get("cluster_id").(string)
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/user",
 		url.PathEscape(serviceName),
 		url.PathEscape(engine),
-		url.PathEscape(clusterId),
+		url.PathEscape(clusterID),
 	)
 
 	res := make([]string, 0)
 
-	log.Printf("[DEBUG] Will read users from cluster %s from project %s", clusterId, serviceName)
+	log.Printf("[DEBUG] Will read users from cluster %s from project %s", clusterID, serviceName)
 	if err := config.OVHClient.GetWithContext(ctx, endpoint, &res); err != nil {
 		return diag.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
 	}

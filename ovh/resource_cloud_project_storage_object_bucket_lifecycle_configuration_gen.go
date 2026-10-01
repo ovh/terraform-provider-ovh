@@ -214,6 +214,8 @@ func CloudProjectStorageLifecycleConfigurationResourceSchema(ctx context.Context
 										MarkdownDescription: "The storage class to which you want the object to transition.",
 										Validators: []validator.String{
 											stringvalidator.OneOf(
+												"DEEP_ARCHIVE",
+												"GLACIER_IR",
 												"STANDARD",
 												"STANDARD_IA",
 											),

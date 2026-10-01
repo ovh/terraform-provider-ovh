@@ -2,10 +2,12 @@ package ovh
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 var testAccIpMoveConfig = `
@@ -45,6 +47,32 @@ resource "ovh_ip_move" "move" {
 }
 `
 
+func testAccCheckIpMoveDestroy(s *terraform.State) error {
+	client := testAccProvider.Meta().(*Config).OVHClient
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "ovh_ip_move" {
+			continue
+		}
+
+		ip := rs.Primary.Attributes["ip"]
+		endpoint := fmt.Sprintf("/ip/%s", url.PathEscape(ip))
+
+		var r Ip
+		if err := client.Get(endpoint, &r); err != nil {
+			// If we get an error (e.g. 404), it might be that the whole IP block was deleted
+			// That's acceptable in a destroy phase for the parent ovh_ip_service.
+			continue
+		}
+
+		if r.RoutedTo != nil && r.RoutedTo.ServiceName != "" {
+			return fmt.Errorf("IP %s still routed to a service: %s", ip, r.RoutedTo.ServiceName)
+		}
+	}
+
+	return nil
+}
+
 func TestAccIpMove_basic(t *testing.T) {
 	routedToServiceName := os.Getenv("OVH_IP_MOVE_SERVICE_NAME_TEST")
 
@@ -52,8 +80,9 @@ func TestAccIpMove_basic(t *testing.T) {
 	parkConfig := fmt.Sprintf(testAccIpMoveConfig, "")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheckIpMove(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheckIpMove(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckIpMoveDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: moveConfig,
@@ -76,8 +105,9 @@ func TestAccIpMove_block(t *testing.T) {
 	routedToServiceName := os.Getenv("OVH_IP_MOVE_SERVICE_NAME_TEST")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheckIpMove(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheckIpMove(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckIpMoveDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(`

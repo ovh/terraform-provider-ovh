@@ -1,5 +1,5 @@
 resource "ovh_iam_resource_tags" "project_tags" {
-  urn = "urn:v1:eu:resource:cloudProject:1234567890abcdef"
+  urn = "urn:v1:eu:resource:publicCloudProject:1234567890abcdef"
   
   tags = {
     environment    = "staging"

@@ -71,6 +71,11 @@ func (p *OvhProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *
 				Optional:    true,
 				Description: descriptions["user_agent_extra"],
 			},
+			"http_headers": schema.MapAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				Description: descriptions["http_headers"],
+			},
 			"ignore_init_error": schema.BoolAttribute{
 				Optional:    true,
 				Description: descriptions["ignore_init_error"],
@@ -195,6 +200,17 @@ func (p *OvhProvider) Configure(ctx context.Context, req provider.ConfigureReque
 	if !config.UserAgentExtra.IsNull() {
 		clientConfig.UserAgentExtra = config.UserAgentExtra.ValueString()
 	}
+	if !config.HttpHeaders.IsNull() {
+		headers := make(map[string]string, len(config.HttpHeaders.Elements()))
+		diags = config.HttpHeaders.ElementsAs(ctx, &headers, false)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		clientConfig.HttpHeaders = headers
+	} else if headers := httpHeadersFromEnv(); headers != nil {
+		clientConfig.HttpHeaders = headers
+	}
 	if !config.IgnoreInitError.IsNull() {
 		clientConfig.IgnoreInitError = config.IgnoreInitError.ValueBool()
 	} else if v := os.Getenv("OVH_IGNORE_INIT_ERROR"); v != "" {
@@ -227,7 +243,33 @@ func (p *OvhProvider) Configure(ctx context.Context, req provider.ConfigureReque
 // DataSources defines the data sources implemented in the provider.
 func (p *OvhProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
-		NewCloudProjectDatabaseIPRestrictionsDataSource,
+		NewCloudAdditionalIPDataSource,
+		NewCloudAdditionalIPsDataSource,
+		NewCloudExtNetIPDataSource,
+		NewCloudExtNetIPsDataSource,
+		NewCloudFloatingIPDataSource,
+		NewCloudFloatingIPsDataSource,
+		NewCloudGatewayDataSource,
+		NewCloudGatewaysDataSource,
+		NewCloudInstanceSnapshotDataSource,
+		NewCloudInstanceSnapshotsDataSource,
+		NewCloudInstanceDataSource,
+		NewCloudInstanceFlavorDataSource,
+		NewCloudInstanceFlavorsDataSource,
+		NewCloudInstanceGroupDataSource,
+		NewCloudInstanceGroupsDataSource,
+		NewCloudInstanceImageDataSource,
+		NewCloudInstanceImagesDataSource,
+		NewCloudInstancesDataSource,
+		NewCloudNetworkPrivateVrackDataSource,
+		NewCloudNetworkPrivateVracksDataSource,
+		NewCloudNetworkPrivateVrackSubnetDataSource,
+		NewCloudNetworkPrivateVrackSubnetsDataSource,
+		NewCloudPublicIPsDataSource,
+		NewCloudQuotaDataSource,
+		NewCloudStorageObjectBucketsDataSource,
+		NewCloudSecurityGroupDataSource,
+		NewCloudSecurityGroupsDataSource,
 		NewCloudProjectFlavorDataSource,
 		NewCloudProjectFlavorsDataSource,
 		NewCloudProjectFloatingipsDataSource,
@@ -235,6 +277,16 @@ func (p *OvhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 		NewCloudProjectGatewayInterfaceDataSource,
 		NewCloudProjectImageDataSource,
 		NewCloudProjectImagesDataSource,
+		NewCloudLoadbalancerDataSource,
+		NewCloudLoadbalancersDataSource,
+		NewCloudLoadbalancerListenerDataSource,
+		NewCloudLoadbalancerListenersDataSource,
+		NewCloudLoadbalancerPoolDataSource,
+		NewCloudLoadbalancerPoolsDataSource,
+		NewCloudLoadbalancerPoolMemberDataSource,
+		NewCloudLoadbalancerPoolMembersDataSource,
+		NewCloudLoadbalancerL7PolicyDataSource,
+		NewCloudLoadbalancerL7PoliciesDataSource,
 		NewCloudProjectLoadbalancerDataSource,
 		NewCloudProjectLoadbalancersDataSource,
 		NewCloudProjectLoadbalancerFlavorsDataSource,
@@ -257,13 +309,18 @@ func (p *OvhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 		NewCloudProjectVolumeDataSource,
 		NewCloudProjectDataSource,
 		NewCloudProjectsDataSource,
+		NewCloudSshKeyDataSource,
+		NewCloudSshKeysDataSource,
 		NewDbaasLogsClusterRetentionDataSource,
+		NewDbaasLogsEncryptionKeyDataSource,
 		NewDedicatedCloudDataSource,
 		NewDedicatedServerSpecificationsHardwareDataSource,
 		NewDedicatedServerSpecificationsNetworkDataSource,
 		NewDomainZoneDnssecDataSource,
 		NewDomainZoneRecordDataSource,
 		NewDomainZoneRecordsDataSource,
+		NewEmailDomainAccountDataSource,
+		NewEmailDomainAccountsDataSource,
 		NewIpFirewallDataSource,
 		NewIpFirewallRuleDataSource,
 		NewIploadbalancingsDataSource,
@@ -276,6 +333,32 @@ func (p *OvhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 		NewOkmsServiceKeyJwkDataSource,
 		NewOkmsServiceKeyPemDataSource,
 		NewOkmsSecretDataSource,
+		NewCloudStorageBlockVolumeSnapshotDataSource,
+		NewCloudStorageBlockVolumeSnapshotsDataSource,
+		NewCloudStorageBlockVolumeBackupDataSource,
+		NewCloudStorageBlockVolumeBackupsDataSource,
+		NewCloudStorageBlockVolumeDataSource,
+		NewCloudStorageBlockVolumesDataSource,
+		NewCloudKeyManagerSecretDataSource,
+		NewCloudKeyManagerSecretsDataSource,
+		NewCloudKeyManagerSecretConsumersDataSource,
+		NewCloudKeyManagerSecretConsumerDataSource,
+		NewCloudKeyManagerSecretPayloadDataSource,
+		NewCloudKeyManagerContainerDataSource,
+		NewCloudKeyManagerContainersDataSource,
+		NewCloudKeyManagerContainerConsumersDataSource,
+		NewCloudKeyManagerContainerConsumerDataSource,
+		NewCloudStorageFileShareDataSource,
+		NewCloudStorageFileSharesDataSource,
+		NewCloudStorageFileShareNetworkDataSource,
+		NewCloudStorageFileShareNetworksDataSource,
+		NewCloudStorageFileShareSnapshotDataSource,
+		NewCloudStorageFileShareSnapshotsDataSource,
+		NewCloudStorageFileShareAclDataSource,
+		NewCloudStorageFileShareAclsDataSource,
+		NewCloudStorageObjectBucketDataSource,
+		NewCloudRegionDataSource,
+		NewCloudRegionsDataSource,
 		NewOvhcloudConnectDatacentersDataSource,
 		NewOvhcloudConnectConfigPopDatacenterExtrasDataSource,
 		NewOvhcloudConnectConfigPopDatacentersDataSource,
@@ -289,16 +372,34 @@ func (p *OvhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 		NewVmwareCloudDirectorOrganizationDataSource,
 		NewVrackservicessDataSource,
 		NewVrackservicesDataSource,
+		NewVrackDataSource,
 	}
 }
 
 // Resources defines the resources implemented in the provider.
 func (p *OvhProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
+		NewCloudFloatingIPResource,
+		NewCloudGatewayResource,
+		NewCloudInstanceSnapshotResource,
+		NewCloudInstanceGroupResource,
+		NewCloudInstanceResource,
+		NewCloudNetworkPrivateVrackResource,
+		NewCloudNetworkPrivateVrackSubnetResource,
+		NewCloudQuotaResource,
+		NewCloudStorageObjectBucketResource,
+		NewCloudSecurityGroupResource,
 		NewCloudProjectAlertingResource,
+		NewCloudProjectFileStorageShareResource,
+		NewCloudProjectFileStorageShareNetworkResource,
 		NewCloudProjectGatewayInterfaceResource,
 		NewCloudProjectInstanceSnapshotResource,
 		NewCloudProjectLoadbalancerResource,
+		NewCloudLoadbalancerResource,
+		NewCloudLoadbalancerListenerResource,
+		NewCloudLoadbalancerPoolResource,
+		NewCloudLoadbalancerPoolMemberResource,
+		NewCloudLoadbalancerL7PolicyResource,
 		NewCloudProjectRancherResource,
 		NewCloudProjectRegionNetworkResource,
 		NewCloudProjectRegionResource,
@@ -308,13 +409,28 @@ func (p *OvhProvider) Resources(_ context.Context) []func() resource.Resource {
 		NewCloudProjectStorageResource,
 		NewCloudProjectVolumeBackupResource,
 		NewCloudProjectVolumeResource,
+		NewCloudSshKeyResource,
+		NewCloudStorageBlockVolumeBackupResource,
+		NewCloudStorageBlockVolumeSnapshotResource,
+		NewCloudStorageBlockVolumeResource,
+		NewCloudKeyManagerSecretResource,
+		NewCloudKeyManagerContainerResource,
+		NewCloudKeyManagerSecretConsumerResource,
+		NewCloudKeyManagerContainerConsumerResource,
+		NewCloudStorageFileShareResource,
+		NewCloudStorageFileShareNetworkResource,
+		NewCloudStorageFileShareSnapshotResource,
+		NewCloudStorageFileShareAclResource,
+		NewDbaasLogsEncryptionKeyResource,
 		NewDbaasLogsTokenResource,
 		NewDedicatedServerResource,
 		NewDomainNameResource,
 		NewDomainZoneDnssecResource,
 		NewDomainZoneImportResource,
+		NewEmailDomainAccountResource,
 		NewDomainZoneDynhostLoginResource,
 		NewDomainZoneDynhostRecordResource,
+		NewHostingPrivateDatabaseWebhostingNetworkResource,
 		NewIpFirewallResource,
 		NewIpFirewallRuleResource,
 		NewIploadbalancingSslResource,
@@ -341,6 +457,7 @@ func (p *OvhProvider) Resources(_ context.Context) []func() resource.Resource {
 		NewVrackIpv6RoutedSubrangeResource,
 		NewVrackDedicatedCloudDatacenterResource,
 		NewVrackServicesResource,
+		NewVrackPublicRoutingPriorityResource,
 	}
 }
 
@@ -353,6 +470,7 @@ type ovhProviderModel struct {
 	ClientID          types.String `tfsdk:"client_id"`
 	ClientSecret      types.String `tfsdk:"client_secret"`
 	UserAgentExtra    types.String `tfsdk:"user_agent_extra"`
+	HttpHeaders       types.Map    `tfsdk:"http_headers"`
 	IgnoreInitError   types.Bool   `tfsdk:"ignore_init_error"`
 	ApiRateLimit      types.Int32  `tfsdk:"api_rate_limit"`
 }

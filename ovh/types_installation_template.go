@@ -65,7 +65,7 @@ func (v *InstallationTemplate) ToMap() map[string]interface{} {
 type InstallationTemplateInputs struct {
 	Name        string   `json:"name"`
 	Type        string   `json:"type"`
-	Description string   `json:"description,omitempty"`
+	Description *string  `json:"description,omitempty"`
 	Mandatory   bool     `json:"mandatory"`
 	Default     *string  `json:"default,omitempty"`
 	Enum        []string `json:"enum,omitempty"`
@@ -74,10 +74,14 @@ type InstallationTemplateInputs struct {
 func (v InstallationTemplateInputs) ToMap() map[string]interface{} {
 	obj := make(map[string]interface{})
 	obj["name"] = v.Name
-	obj["description"] = v.Description
+	if v.Description != nil {
+		obj["description"] = *v.Description
+	}
 	obj["type"] = v.Type
 	obj["mandatory"] = v.Mandatory
-	obj["default"] = *v.Default
+	if v.Default != nil {
+		obj["default"] = *v.Default
+	}
 	obj["enum"] = &v.Enum
 	return obj
 }

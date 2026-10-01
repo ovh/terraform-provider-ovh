@@ -1,0 +1,35 @@
+---
+subcategory : "Dedicated Server"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_dedicated_server_networking
+
+Manage the network interfaces aggregation (bonding) of a dedicated server.
+
+~> **WARNING** Changing the aggregation reinstalls the server networking and is a `ForceNew` operation. A public interface can only be aggregated with another public interface, and a vrack interface with another vrack interface: you cannot bond three interfaces and leave one alone, nor separate all four.
+
+## Example Usage
+
+{{tffile "examples/resources/dedicated_server_networking/example_1.tf"}}
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `service_name` - (Required) The internal name of your dedicated server.
+* `interfaces` - (Required) One or two interface aggregation blocks describing how the server NICs are grouped. Each block supports:
+  * `macs` - (Required) The list of MAC addresses of the physical interfaces to aggregate.
+  * `type` - (Required) The network type of the interface (`public` or `vrack`).
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `description` - Operation description.
+* `status` - Operation status.
+* `interfaces` - In addition to the arguments above, each interface block exports:
+  * `aggregation_fallback` - MAC address of the LACP fallback interface (the address the aggregation falls back to when the bond degrades to a single link).

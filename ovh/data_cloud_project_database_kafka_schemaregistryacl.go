@@ -11,9 +11,9 @@ import (
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 )
 
-func dataSourceCloudProjectDatabaseKafkaSchemaRegistryAcl() *schema.Resource {
+func dataSourceCloudProjectDatabaseKafkaSchemaRegistryACL() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceCloudProjectDatabaseKafkaSchemaRegistryAclRead,
+		ReadContext: dataSourceCloudProjectDatabaseKafkaSchemaRegistryACLRead,
 		Schema: map[string]*schema.Schema{
 			"service_name": {
 				Type:        schema.TypeString,
@@ -51,7 +51,7 @@ func dataSourceCloudProjectDatabaseKafkaSchemaRegistryAcl() *schema.Resource {
 	}
 }
 
-func dataSourceCloudProjectDatabaseKafkaSchemaRegistryAclRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceCloudProjectDatabaseKafkaSchemaRegistryACLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterID := d.Get("cluster_id").(string)
@@ -62,7 +62,7 @@ func dataSourceCloudProjectDatabaseKafkaSchemaRegistryAclRead(ctx context.Contex
 		url.PathEscape(clusterID),
 		url.PathEscape(id),
 	)
-	res := &CloudProjectDatabaseKafkaAclResponse{}
+	res := &CloudProjectDatabaseKafkaSchemaRegistryACLResponse{}
 
 	log.Printf("[DEBUG] Will read schema registry ACL %s from cluster %s from project %s", id, clusterID, serviceName)
 	if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {

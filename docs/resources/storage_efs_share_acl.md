@@ -49,3 +49,25 @@ resource "ovh_storage_efs_share_acl" "acl" {
 - `created_at` (String) Rule creation date
 - `id` (String) Rule ID
 - `status` (String) Rule status
+
+## Import
+
+An EFS share ACL can be imported using its `service_name`, `share_id` and `id` fields.
+
+Using the following configuration:
+
+```terraform
+import {
+  to = ovh_storage_efs_share_acl.acl
+  id = "<service_name>/<share_id>/<id>"
+}
+```
+
+You can then run:
+
+```bash
+$ terraform plan -generate-config-out=acl.tf
+$ terraform apply
+```
+
+The file `acl.tf` will then contain the imported resource's configuration, that can be copied next to the `import` block above. See https://developer.hashicorp.com/terraform/language/import/generating-configuration for more details.

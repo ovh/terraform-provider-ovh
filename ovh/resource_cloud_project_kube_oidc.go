@@ -27,59 +27,59 @@ func resourceCloudProjectKubeOIDC() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"service_name": {
+			kubeServiceNameKey: {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
 				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
 			},
-			"kube_id": {
+			kubeKubeIdKey: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"client_id": {
+			kubeOidcClientIdKey: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"issuer_url": {
+			kubeOidcIssuerUrlKey: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"oidc_username_claim": {
+			kubeOidcUsernameClaimKey: {
 				Type:     schema.TypeString,
 				Required: false,
 				Optional: true,
 			},
-			"oidc_username_prefix": {
+			kubeOidcUsernamePrefixKey: {
 				Type:     schema.TypeString,
 				Required: false,
 				Optional: true,
 			},
-			"oidc_groups_claim": {
+			kubeOidcGroupsClaimKey: {
 				Type:     schema.TypeList,
 				Required: false,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"oidc_groups_prefix": {
+			kubeOidcGroupsPrefixKey: {
 				Type:     schema.TypeString,
 				Required: false,
 				Optional: true,
 			},
-			"oidc_required_claim": {
+			kubeOidcRequiredClaimKey: {
 				Type:     schema.TypeList,
 				Required: false,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"oidc_signing_algs": {
+			kubeOidcSigningAlgsKey: {
 				Type:     schema.TypeList,
 				Required: false,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"oidc_ca_content": {
+			kubeOidcCaContentKey: {
 				Type:     schema.TypeString,
 				Required: false,
 				Optional: true,
@@ -99,8 +99,8 @@ func resourceCloudProjectKubeOIDCImportState(d *schema.ResourceData, meta interf
 	serviceName := splitId[0]
 	kubeID := splitId[1]
 	d.SetId(serviceName + "/" + kubeID)
-	d.Set("kube_id", kubeID)
-	d.Set("service_name", serviceName)
+	d.Set(kubeKubeIdKey, kubeID)
+	d.Set(kubeServiceNameKey, serviceName)
 
 	results := make([]*schema.ResourceData, 1)
 	results[0] = d
@@ -110,8 +110,8 @@ func resourceCloudProjectKubeOIDCImportState(d *schema.ResourceData, meta interf
 func resourceCloudProjectKubeOIDCCreate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
-	serviceName := d.Get("service_name").(string)
-	kubeID := d.Get("kube_id").(string)
+	serviceName := d.Get(kubeServiceNameKey).(string)
+	kubeID := d.Get(kubeKubeIdKey).(string)
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/openIdConnect", serviceName, kubeID)
 	params := (&CloudProjectKubeOIDCCreateOpts{}).FromResource(d)
@@ -126,7 +126,7 @@ func resourceCloudProjectKubeOIDCCreate(d *schema.ResourceData, meta interface{}
 	d.SetId(serviceName + "/" + kubeID)
 
 	log.Printf("[DEBUG] Waiting for kube %s to be READY", kubeID)
-	err = waitForCloudProjectKubeReady(config.OVHClient, serviceName, kubeID, []string{"INSTALLING", "UPDATING", "REDEPLOYING"}, []string{"READY"}, d.Timeout(schema.TimeoutCreate))
+	err = waitForCloudProjectKubeReadyWithDelay(config.OVHClient, serviceName, kubeID, []string{"INSTALLING", "UPDATING", "REDEPLOYING"}, []string{"READY"}, d.Timeout(schema.TimeoutCreate), 20*time.Second)
 	if err != nil {
 		return fmt.Errorf("timeout while waiting kube %s to be READY: %w", kubeID, err)
 	}
@@ -138,8 +138,8 @@ func resourceCloudProjectKubeOIDCCreate(d *schema.ResourceData, meta interface{}
 func resourceCloudProjectKubeOIDCRead(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
-	serviceName := d.Get("service_name").(string)
-	kubeID := d.Get("kube_id").(string)
+	serviceName := d.Get(kubeServiceNameKey).(string)
+	kubeID := d.Get(kubeKubeIdKey).(string)
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/openIdConnect", serviceName, kubeID)
 	res := &CloudProjectKubeOIDCResponse{}
@@ -164,8 +164,8 @@ func resourceCloudProjectKubeOIDCRead(d *schema.ResourceData, meta interface{}) 
 func resourceCloudProjectKubeOIDCUpdate(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
-	serviceName := d.Get("service_name").(string)
-	kubeID := d.Get("kube_id").(string)
+	serviceName := d.Get(kubeServiceNameKey).(string)
+	kubeID := d.Get(kubeKubeIdKey).(string)
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/openIdConnect", serviceName, kubeID)
 	params := (&CloudProjectKubeOIDCUpdateOpts{}).FromResource(d)
@@ -178,7 +178,7 @@ func resourceCloudProjectKubeOIDCUpdate(d *schema.ResourceData, meta interface{}
 	}
 
 	log.Printf("[DEBUG] Waiting for kube %s to be READY", kubeID)
-	err = waitForCloudProjectKubeReady(config.OVHClient, serviceName, kubeID, []string{"INSTALLING", "UPDATING", "REDEPLOYING"}, []string{"READY"}, d.Timeout(schema.TimeoutUpdate))
+	err = waitForCloudProjectKubeReadyWithDelay(config.OVHClient, serviceName, kubeID, []string{"INSTALLING", "UPDATING", "REDEPLOYING"}, []string{"READY"}, d.Timeout(schema.TimeoutUpdate), 20*time.Second)
 	if err != nil {
 		return fmt.Errorf("timeout while waiting kube %s to be READY: %w", kubeID, err)
 	}
@@ -190,8 +190,8 @@ func resourceCloudProjectKubeOIDCUpdate(d *schema.ResourceData, meta interface{}
 func resourceCloudProjectKubeOIDCDelete(d *schema.ResourceData, meta interface{}) error {
 	config := meta.(*Config)
 
-	serviceName := d.Get("service_name").(string)
-	kubeID := d.Get("kube_id").(string)
+	serviceName := d.Get(kubeServiceNameKey).(string)
+	kubeID := d.Get(kubeKubeIdKey).(string)
 
 	endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/openIdConnect", serviceName, kubeID)
 
@@ -202,7 +202,7 @@ func resourceCloudProjectKubeOIDCDelete(d *schema.ResourceData, meta interface{}
 	}
 
 	log.Printf("[DEBUG] Waiting for kube %s to be READY", kubeID)
-	err = waitForCloudProjectKubeReady(config.OVHClient, serviceName, kubeID, []string{"REDEPLOYING", "UPDATING"}, []string{"READY"}, d.Timeout(schema.TimeoutDelete))
+	err = waitForCloudProjectKubeReadyWithDelay(config.OVHClient, serviceName, kubeID, []string{"REDEPLOYING", "UPDATING"}, []string{"READY"}, d.Timeout(schema.TimeoutDelete), 20*time.Second)
 	if err != nil {
 		return fmt.Errorf("timeout while waiting kube %s to be READY: %w", kubeID, err)
 	}

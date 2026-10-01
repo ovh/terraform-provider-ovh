@@ -167,7 +167,7 @@ resource "ovh_cloud_project_kube_nodepool" "node_pool" {
   service_name  = var.service_name
   kube_id       = ovh_cloud_project_kube.my_kube_cluster.id
   name          = "my-pool" //Warning: "_" char is not allowed!
-  flavor_name   = "b2-7"
+  flavor_name   = "b3-8"
   desired_nodes = 3
   max_nodes     = 3
   min_nodes     = 3
@@ -194,9 +194,21 @@ The following arguments are supported:
 
 * `user_agent_extra` - (Optional) Extra information to append at the end of the user-agent used when making API calls.
 
+* `http_headers` - (Optional) A map of extra HTTP headers to add to every request made to the OVH API. Example:
+
+```hcl
+provider "ovh" {
+  http_headers = {
+    foo = "bar"
+  }
+}
+```
+
+  If omitted, headers can instead be set via numbered `OVH_HTTP_HEADERS_0`, `OVH_HTTP_HEADERS_1`, ... environment variables, each formatted as a raw HTTP header line (e.g. `OVH_HTTP_HEADERS_0="foo: bar"`). This is mainly useful for injecting headers in acceptance tests (`make testacc`) without editing the test's provider configuration.
+
 * `api_rate_limit` - (Optional) Specify the API request rate limit, X operations by seconds. If omitted, unlimited.
 
-* `ignore_init_error` - (Optional) **⚠️ Use with caution and only if you know what you are doing.** If set to `true`, the provider will skip authentication validation during initialization. If omitted, the `OVH_IGNORE_INIT_ERROR` environment variable is used. This allows the provider to load even with invalid credentials, but any actual API calls will still fail. This is intended for development/testing purposes only where valid credentials are not available but the provider configuration must be present.
+* `ignore_init_error` - (Optional) **⚠️ Use with caution and only if you know what you are doing.** If set to `true`, the provider will not send the `/auth/details` validation request at all during initialization. If omitted, the `OVH_IGNORE_INIT_ERROR` environment variable is used. This allows the provider to load even with invalid or absent credentials, but any actual API calls will still fail unless the target endpoint doesn't require authentication. This is intended for development/testing purposes only where valid credentials are not available but the provider configuration must be present.
 
 ## Terraform State storage in an OVHcloud Object Storage (S3 compatibility)
 
@@ -213,6 +225,12 @@ In order to run the Acceptance Tests for development, the following environment 
 
 * `OVH_VRACK_SERVICE_TEST` - The ID of the vRack to use.
 
+* `OVH_VRACK_PUBLIC_ROUTING_PRIORITY_REGION_TEST` - The region of the vRack for the Public Routing Priority to test.
+* `OVH_VRACK_PUBLIC_ROUTING_PRIORITY_ID_TEST` - The Id of the Public Routing Priority to test, it is used for import only.
+* `OVH_VRACK_PUBLIC_ROUTING_PRIORITY_AZ_A_TEST` - An AZ of the vRack for the Public Routing Priority to test.
+* `OVH_VRACK_PUBLIC_ROUTING_PRIORITY_AZ_B_TEST` - An AZ of the vRack for the Public Routing Priority to test.
+* `OVH_VRACK_PUBLIC_ROUTING_PRIORITY_AZ_C_TEST` - An AZ of the vRack for the Public Routing Priority to test.
+
 * `OVH_CLOUD_LOADBALANCER_ID_TEST` - The ID of the LoadBalancer to use.
 
 * `OVH_CLOUD_PROJECT_SERVICE_TEST` - The ID of your public cloud project.
@@ -225,21 +243,17 @@ In order to run the Acceptance Tests for development, the following environment 
 
 * `OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST` - The version of the database engine to test.
 
-* `OVH_CLOUD_PROJECT_DATABASE_KAFKA_VERSION_TEST` - The version of the kafka to test. if not set `OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST` is use.
+* `OVH_CLOUD_PROJECT_DATABASE_KAFKA_VERSION_TEST` - The version of the kafka to test. if not set `OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST` is used.
 
-* `OVH_CLOUD_PROJECT_DATABASE_M3DB_VERSION_TEST` - The version of the M3DB to test. if not set `OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST` is use.
+* `OVH_CLOUD_PROJECT_DATABASE_MONGODB_VERSION_TEST` - The version of the mongodb to test. if not set `OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST` is used.
 
-* `OVH_CLOUD_PROJECT_DATABASE_MONGODB_VERSION_TEST` - The version of the mongodb to test. if not set `OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST` is use.
+* `OVH_CLOUD_PROJECT_DATABASE_OPENSEARCH_VERSION_TEST` - The version of the opensearch to test. if not set `OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST` is used.
 
-* `OVH_CLOUD_PROJECT_DATABASE_OPENSEARCH_VERSION_TEST` - The version of the opensearch to test. if not set `OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST` is use.
-
-* `OVH_CLOUD_PROJECT_DATABASE_POSTGRESQL_VERSION_TEST` - The version of the postgresql to test. if not set `OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST` is use.
+* `OVH_CLOUD_PROJECT_DATABASE_POSTGRESQL_VERSION_TEST` - The version of the postgresql to test. if not set `OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST` is used.
 
 * `OVH_CLOUD_PROJECT_DATABASE_CLICKHOUSE_VERSION_TEST` - The version of the clickhouse to test. if not set `OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST` is used.
 
-* `OVH_CLOUD_PROJECT_DATABASE_REDIS_VERSION_TEST` - The version of the redis to test. if not set `OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST` is use.
-
-* `OVH_CLOUD_PROJECT_DATABASE_VALKEY_VERSION_TEST` - The version of the valkey to test. if not set `OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST` is use.
+* `OVH_CLOUD_PROJECT_DATABASE_VALKEY_VERSION_TEST` - The version of the valkey to test. if not set `OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST` is used.
 
 * `OVH_CLOUD_PROJECT_DATABASE_REGION_TEST` - The region of the database service to test.
 

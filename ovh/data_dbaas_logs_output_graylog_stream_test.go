@@ -122,3 +122,64 @@ func TestAccDataSourceDbaasLogsOutputGraylogStream_with_retention(t *testing.T) 
 		},
 	})
 }
+
+func TestAccDataSourceDbaasLogsOutputGraylogStream_with_encryption_keys(t *testing.T) {
+	serviceName := os.Getenv("OVH_DBAAS_LOGS_SERVICE_TEST")
+	pgpContent := os.Getenv("OVH_DBAAS_LOGS_ENCRYPTION_KEY_CONTENT_TEST")
+	pgpFingerprint := os.Getenv("OVH_DBAAS_LOGS_ENCRYPTION_KEY_FINGERPRINT_TEST")
+	title := acctest.RandomWithPrefix(test_prefix)
+	desc := acctest.RandomWithPrefix(test_prefix)
+
+	config := fmt.Sprintf(`
+		resource "ovh_dbaas_logs_encryption_key" "key" {
+			service_name = "%s"
+			title        = "%s"
+			content      = trimspace(<<-EOT
+%s
+EOT
+			)
+			fingerprint  = "%s"
+		}
+
+		resource "ovh_dbaas_logs_output_graylog_stream" "stream" {
+			service_name        = "%s"
+			title               = "%s"
+			description         = "%s"
+			encryption_keys_ids = [ovh_dbaas_logs_encryption_key.key.id]
+		}
+
+		data "ovh_dbaas_logs_output_graylog_stream" "stream" {
+			service_name = ovh_dbaas_logs_output_graylog_stream.stream.service_name
+			title        = ovh_dbaas_logs_output_graylog_stream.stream.title
+		}`,
+		serviceName,
+		title,
+		pgpContent,
+		pgpFingerprint,
+		serviceName,
+		title,
+		desc,
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() { testAccPreCheckDbaasLogsEncryptionKey(t) },
+
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"data.ovh_dbaas_logs_output_graylog_stream.stream",
+						"encryption_keys_ids.#",
+						"1",
+					),
+					resource.TestCheckTypeSetElemAttrPair(
+						"data.ovh_dbaas_logs_output_graylog_stream.stream", "encryption_keys_ids.*",
+						"ovh_dbaas_logs_encryption_key.key", "id",
+					),
+				),
+			},
+		},
+	})
+}

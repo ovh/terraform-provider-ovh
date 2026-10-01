@@ -6,9 +6,13 @@ import (
 	"log"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
+	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 )
 
@@ -23,6 +27,14 @@ func resourceDbaasLogsInput() *schema.Resource {
 		},
 
 		Schema: resourceDbaasLogsInputSchema(),
+
+		// Inputs can be very long to process (10 minutes by input)
+		// They are processed sequentially
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(60 * time.Minute),
+			Update: schema.DefaultTimeout(60 * time.Minute),
+			Delete: schema.DefaultTimeout(60 * time.Minute),
+		},
 	}
 }
 
@@ -256,8 +268,19 @@ func resourceDbaasLogsInputCreate(ctx context.Context, d *schema.ResourceData, m
 		"/dbaas/logs/%s/input",
 		url.PathEscape(serviceName),
 	)
-	if err := config.OVHClient.Post(endpoint, opts, res); err != nil {
-		return diag.Errorf("Error calling post %s:\n\t %q", endpoint, err)
+
+	err := retry.Retry(d.Timeout(schema.TimeoutCreate)-time.Minute, func() *retry.RetryError {
+		err := config.OVHClient.Post(endpoint, opts, res)
+		if err != nil {
+			if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Class == DBAAS_LOGS_BUSY_ERROR {
+				return retry.RetryableError(err)
+			}
+			return retry.NonRetryableError(err)
+		}
+		return nil
+	})
+	if err != nil {
+		return diag.Errorf("Error creating input, calling POST %s:\n\t %q", endpoint, err)
 	}
 
 	// Wait for operation status
@@ -300,8 +323,18 @@ func resourceDbaasLogsInputUpdate(ctx context.Context, d *schema.ResourceData, m
 		url.PathEscape(serviceName),
 		url.PathEscape(id),
 	)
-	if err := config.OVHClient.Put(endpoint, opts, res); err != nil {
-		return diag.Errorf("Error calling Put %s:\n\t %q", endpoint, err)
+	err := retry.Retry(d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *retry.RetryError {
+		err := config.OVHClient.Put(endpoint, opts, res)
+		if err != nil {
+			if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Class == DBAAS_LOGS_BUSY_ERROR {
+				return retry.RetryableError(err)
+			}
+			return retry.NonRetryableError(err)
+		}
+		return nil
+	})
+	if err != nil {
+		return diag.Errorf("Error updating input, calling PUT %s:\n\t %q", endpoint, err)
 	}
 
 	// Wait for operation status
@@ -326,9 +359,11 @@ func resourceDbaasLogsInputRead(ctx context.Context, d *schema.ResourceData, met
 		return diag.FromErr(err)
 	}
 
-	for k, v := range res.ToMap() {
-		if k != "id" {
-			d.Set(k, v)
+	if res != nil {
+		for k, v := range res.ToMap() {
+			if k != "id" {
+				d.Set(k, v)
+			}
 		}
 	}
 
@@ -377,7 +412,18 @@ func resourceDbaasLogsInputDelete(ctx context.Context, d *schema.ResourceData, m
 		url.PathEscape(id),
 	)
 
-	if err := config.OVHClient.Delete(endpoint, res); err != nil {
+	err := retry.Retry(d.Timeout(schema.TimeoutDelete)-time.Minute, func() *retry.RetryError {
+		err := config.OVHClient.DeleteWithContext(ctx, endpoint, &res)
+		if err != nil {
+			if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Class == DBAAS_LOGS_BUSY_ERROR {
+				return retry.RetryableError(err)
+			}
+			return retry.NonRetryableError(err)
+		}
+		return nil
+	})
+
+	if err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
@@ -407,8 +453,18 @@ func dbaasLogsInputConfigurationUpdate(ctx context.Context, d *schema.ResourceDa
 			url.PathEscape(serviceName),
 			url.PathEscape(id),
 		)
-		if err := config.OVHClient.Put(endpoint, flowggerOpts, res); err != nil {
-			return fmt.Errorf("error calling Put %s:\n\t %q", endpoint, err)
+		err := retry.Retry(d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *retry.RetryError {
+			err := config.OVHClient.Put(endpoint, flowggerOpts, res)
+			if err != nil {
+				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Class == DBAAS_LOGS_BUSY_ERROR {
+					return retry.RetryableError(err)
+				}
+				return retry.NonRetryableError(err)
+			}
+			return nil
+		})
+		if err != nil {
+			return fmt.Errorf("Error updating input configuration flowgger, calling PUT %s:\n\t %q", endpoint, err)
 		}
 	}
 
@@ -421,8 +477,18 @@ func dbaasLogsInputConfigurationUpdate(ctx context.Context, d *schema.ResourceDa
 			url.PathEscape(serviceName),
 			url.PathEscape(id),
 		)
-		if err := config.OVHClient.Put(endpoint, logstashOpts, res); err != nil {
-			return fmt.Errorf("error calling Put %s:\n\t %q", endpoint, err)
+		err := retry.Retry(d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *retry.RetryError {
+			err := config.OVHClient.Put(endpoint, logstashOpts, res)
+			if err != nil {
+				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Class == DBAAS_LOGS_BUSY_ERROR {
+					return retry.RetryableError(err)
+				}
+				return retry.NonRetryableError(err)
+			}
+			return nil
+		})
+		if err != nil {
+			return fmt.Errorf("Error updating input configuration logstash, calling PUT %s:\n\t %q", endpoint, err)
 		}
 	}
 
@@ -506,8 +572,18 @@ func dbaasLogsInputStart(ctx context.Context, d *schema.ResourceData, meta inter
 			url.PathEscape(serviceName),
 			url.PathEscape(id),
 		)
-		if err := config.OVHClient.Post(endpoint, nil, res); err != nil {
-			return fmt.Errorf("error calling Put %s:\n\t %q", endpoint, err)
+		err := retry.Retry(d.Timeout(schema.TimeoutCreate)-time.Minute, func() *retry.RetryError {
+			err := config.OVHClient.Post(endpoint, nil, res)
+			if err != nil {
+				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Class == DBAAS_LOGS_BUSY_ERROR {
+					return retry.RetryableError(err)
+				}
+				return retry.NonRetryableError(err)
+			}
+			return nil
+		})
+		if err != nil {
+			return fmt.Errorf("Error restarting input, calling POST %s:\n\t %q", endpoint, err)
 		}
 	}
 
@@ -517,8 +593,18 @@ func dbaasLogsInputStart(ctx context.Context, d *schema.ResourceData, meta inter
 			url.PathEscape(serviceName),
 			url.PathEscape(id),
 		)
-		if err := config.OVHClient.Post(endpoint, nil, res); err != nil {
-			return fmt.Errorf("error calling Put %s:\n\t %q", endpoint, err)
+		err := retry.Retry(d.Timeout(schema.TimeoutCreate)-time.Minute, func() *retry.RetryError {
+			err := config.OVHClient.Post(endpoint, nil, res)
+			if err != nil {
+				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Class == DBAAS_LOGS_BUSY_ERROR {
+					return retry.RetryableError(err)
+				}
+				return retry.NonRetryableError(err)
+			}
+			return nil
+		})
+		if err != nil {
+			return fmt.Errorf("Error starting input, calling POST %s:\n\t %q", endpoint, err)
 		}
 	}
 
@@ -558,8 +644,18 @@ func dbaasLogsInputEnd(ctx context.Context, d *schema.ResourceData, meta interfa
 		url.PathEscape(serviceName),
 		url.PathEscape(id),
 	)
-	if err := config.OVHClient.Post(endpoint, nil, res); err != nil {
-		return fmt.Errorf("error calling Put %s:\n\t %q", endpoint, err)
+	err = retry.Retry(d.Timeout(schema.TimeoutDelete)-time.Minute, func() *retry.RetryError {
+		err := config.OVHClient.Post(endpoint, nil, res)
+		if err != nil {
+			if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Class == DBAAS_LOGS_BUSY_ERROR {
+				return retry.RetryableError(err)
+			}
+			return retry.NonRetryableError(err)
+		}
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("Error ending input, calling POST %s:\n\t %q", endpoint, err)
 	}
 
 	// Wait for operation status

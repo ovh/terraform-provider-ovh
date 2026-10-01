@@ -24,7 +24,7 @@ func dataSourceCloudProjectDatabaseUser() *schema.Resource {
 				Type:             schema.TypeString,
 				Description:      "Name of the engine of the service",
 				Required:         true,
-				ValidateDiagFunc: helpers.ValidateDiagEnum([]string{"cassandra", "mysql", "kafka", "kafkaConnect", "grafana"}),
+				ValidateDiagFunc: helpers.ValidateDiagEnum([]string{"grafana", "kafka", "kafkaConnect", "mysql"}),
 			},
 			"cluster_id": {
 				Type:        schema.TypeString,
@@ -56,18 +56,18 @@ func dataSourceCloudProjectDatabaseUserRead(ctx context.Context, d *schema.Resou
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	engine := d.Get("engine").(string)
-	clusterId := d.Get("cluster_id").(string)
+	clusterID := d.Get("cluster_id").(string)
 	name := d.Get("name").(string)
 
 	listEndpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/user",
 		url.PathEscape(serviceName),
 		url.PathEscape(engine),
-		url.PathEscape(clusterId),
+		url.PathEscape(clusterID),
 	)
 
 	listRes := make([]string, 0)
 
-	log.Printf("[DEBUG] Will read users from cluster %s from project %s", clusterId, serviceName)
+	log.Printf("[DEBUG] Will read users from cluster %s from project %s", clusterID, serviceName)
 	if err := config.OVHClient.GetWithContext(ctx, listEndpoint, &listRes); err != nil {
 		return diag.Errorf("Error calling GET %s:\n\t %q", listEndpoint, err)
 	}
@@ -76,13 +76,13 @@ func dataSourceCloudProjectDatabaseUserRead(ctx context.Context, d *schema.Resou
 		endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/user/%s",
 			url.PathEscape(serviceName),
 			url.PathEscape(engine),
-			url.PathEscape(clusterId),
+			url.PathEscape(clusterID),
 			url.PathEscape(id),
 		)
 
 		res := &CloudProjectDatabaseUserResponse{}
 
-		log.Printf("[DEBUG] Will read user %s from cluster %s from project %s", id, clusterId, serviceName)
+		log.Printf("[DEBUG] Will read user %s from cluster %s from project %s", id, clusterID, serviceName)
 		if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
 			return diag.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
 		}
@@ -100,5 +100,5 @@ func dataSourceCloudProjectDatabaseUserRead(ctx context.Context, d *schema.Resou
 		}
 	}
 
-	return diag.Errorf("User name %s not found for cluster %s from project %s", name, clusterId, serviceName)
+	return diag.Errorf("User name %s not found for cluster %s from project %s", name, clusterID, serviceName)
 }

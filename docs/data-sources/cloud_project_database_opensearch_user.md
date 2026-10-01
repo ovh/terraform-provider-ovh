@@ -38,6 +38,6 @@ The following attributes are exported:
 * `acls` - Acls of the user.
   * `pattern` - Pattern of the ACL.
   * `permission` - Permission of the ACL.
-* `service_name` - Current status of the user.
+* `service_name` - See Argument Reference above.
 * `status` - Current status of the user.
 * `name` - Name of the user.
