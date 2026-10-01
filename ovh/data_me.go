@@ -196,7 +196,14 @@ func dataSourceMeRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set(k, v)
 	}
 
-	d.Set("urn", fmt.Sprintf("urn:v1:%s:resource:account:%s", config.Plate, me.Nichandle))
+	// The account ID used in URNs comes from /auth/details, as it may differ
+	// from the nichandle returned by /me in some regions. Fall back to the
+	// nichandle when /auth/details was not called (ignore_init_error).
+	account := config.Account
+	if account == "" {
+		account = me.Nichandle
+	}
+	d.Set("urn", fmt.Sprintf("urn:v1:%s:resource:account:%s", config.Plate, account))
 
 	return nil
 }
