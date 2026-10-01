@@ -218,7 +218,7 @@ func resourceMeIdentityUserDelete(d *schema.ResourceData, meta interface{}) erro
 	// Remove user from all additional groups before deleting
 	if v, ok := d.GetOk("groups"); ok {
 		for _, g := range v.(*schema.Set).List() {
-			if err := removeUserFromGroup(config, g.(string), id); err != nil && !isOvhNotFound(err) {
+			if err := removeUserFromGroup(config, g.(string), id); err != nil {
 				return err
 			}
 		}
@@ -300,6 +300,11 @@ func addUserToGroup(config *Config, group, login string) error {
 func removeUserFromGroup(config *Config, group, login string) error {
 	endpoint := fmt.Sprintf("/me/identity/group/%s/user/%s", url.PathEscape(group), url.PathEscape(login))
 	if err := config.OVHClient.Delete(endpoint, nil); err != nil {
+		// The group or the membership is already gone
+		if isOvhNotFound(err) {
+			log.Printf("[DEBUG] User %s is not a member of group %s anymore", login, group)
+			return nil
+		}
 		return fmt.Errorf("Error removing user %s from group %s:\n\t %q", login, group, err)
 	}
 	log.Printf("[DEBUG] Removed user %s from group %s", login, group)
