@@ -215,16 +215,20 @@ func resourceMeIdentityUserDelete(d *schema.ResourceData, meta interface{}) erro
 
 	id := d.Id()
 
-	// Remove user from all additional groups before deleting
-	if v, ok := d.GetOk("groups"); ok {
-		for _, g := range v.(*schema.Set).List() {
-			if err := removeUserFromGroup(config, g.(string), id); err != nil {
-				return err
-			}
+	// Remove user from all additional groups before deleting. Memberships are
+	// discovered again instead of read from state, as some of them may have been
+	// removed in the meantime (e.g. by ovh_me_identity_group_membership resources).
+	memberGroups, err := listIdentityUserAdditionalGroups(config, id, d.Get("group").(string))
+	if err != nil {
+		return err
+	}
+	for _, g := range memberGroups {
+		if err := removeUserFromGroup(config, g, id); err != nil {
+			return err
 		}
 	}
 
-	err := config.OVHClient.Delete(
+	err = config.OVHClient.Delete(
 		fmt.Sprintf("/me/identity/user/%s", id),
 		nil,
 	)
