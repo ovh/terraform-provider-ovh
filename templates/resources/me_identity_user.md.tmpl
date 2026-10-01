@@ -23,7 +23,7 @@ Do not use both approaches for the same user, as they will conflict with each ot
 * `description` - User description.
 * `email` - User's email.
 * `group` - User's main group.
-* `groups` - (Optional) Additional groups the user belongs to (other than the main group). Conflicts with `ovh_me_identity_group_membership`. Use one approach or the other, not both.
+* `groups` - (Optional) Additional groups the user belongs to (other than the main group). Must not contain the main group. If omitted, existing memberships are left untouched. Conflicts with `ovh_me_identity_group_membership`. Use one approach or the other, not both.
 * `login` - User's login suffix.
 * `password` - User's password.
 

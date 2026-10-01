@@ -1,11 +1,15 @@
 package ovh
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/url"
+	"slices"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 )
 
@@ -15,6 +19,8 @@ func resourceMeIdentityUser() *schema.Resource {
 		Read:   resourceMeIdentityUserRead,
 		Update: resourceMeIdentityUserUpdate,
 		Delete: resourceMeIdentityUserDelete,
+
+		CustomizeDiff: validateIdentityUserGroups,
 
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -111,33 +117,11 @@ func resourceMeIdentityUserRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("password_last_update", identityUser.PasswordLastUpdate)
 	d.Set("status", identityUser.Status)
 
-	// Discover all additional group memberships by listing all groups
-	// and checking which ones contain this user
-	var allGroups []string
-	if err := config.OVHClient.Get("/me/identity/group", &allGroups); err != nil {
-		log.Printf("[WARN] Could not list identity groups: %s", err)
-	} else {
-		var memberGroups []string
-		for _, groupName := range allGroups {
-			// Skip the user's main group
-			if groupName == identityUser.Group {
-				continue
-			}
-			var users []string
-			groupEndpoint := fmt.Sprintf("/me/identity/group/%s/user", url.PathEscape(groupName))
-			if err := config.OVHClient.Get(groupEndpoint, &users); err != nil {
-				log.Printf("[WARN] Could not read users for group %s: %s", groupName, err)
-				continue
-			}
-			for _, u := range users {
-				if u == identityUser.Login {
-					memberGroups = append(memberGroups, groupName)
-					break
-				}
-			}
-		}
-		d.Set("groups", memberGroups)
+	memberGroups, err := listIdentityUserAdditionalGroups(config, identityUser.Login, identityUser.Group)
+	if err != nil {
+		return err
 	}
+	d.Set("groups", memberGroups)
 
 	return nil
 }
@@ -234,8 +218,8 @@ func resourceMeIdentityUserDelete(d *schema.ResourceData, meta interface{}) erro
 	// Remove user from all additional groups before deleting
 	if v, ok := d.GetOk("groups"); ok {
 		for _, g := range v.(*schema.Set).List() {
-			if err := removeUserFromGroup(config, g.(string), id); err != nil {
-				log.Printf("[WARN] Could not remove user %s from group %s: %s", id, g.(string), err)
+			if err := removeUserFromGroup(config, g.(string), id); err != nil && !isOvhNotFound(err) {
+				return err
 			}
 		}
 	}
@@ -250,6 +234,56 @@ func resourceMeIdentityUserDelete(d *schema.ResourceData, meta interface{}) erro
 
 	log.Printf("[DEBUG] Deleted identity user %s", id)
 	d.SetId("")
+	return nil
+}
+
+// listIdentityUserAdditionalGroups returns the groups the given user belongs to,
+// excluding its main group. The API does not expose a user's groups directly,
+// so every group is listed and checked for the user.
+func listIdentityUserAdditionalGroups(config *Config, login, mainGroup string) ([]string, error) {
+	var allGroups []string
+	if err := config.OVHClient.Get("/me/identity/group", &allGroups); err != nil {
+		return nil, fmt.Errorf("Unable to list identity groups:\n\t %q", err)
+	}
+
+	memberGroups := []string{}
+	for _, groupName := range allGroups {
+		if groupName == mainGroup {
+			continue
+		}
+		var users []string
+		endpoint := fmt.Sprintf("/me/identity/group/%s/user", url.PathEscape(groupName))
+		if err := config.OVHClient.Get(endpoint, &users); err != nil {
+			// The group may have been deleted since it was listed
+			if isOvhNotFound(err) {
+				continue
+			}
+			return nil, fmt.Errorf("Unable to list users of identity group %s:\n\t %q", groupName, err)
+		}
+		if slices.Contains(users, login) {
+			memberGroups = append(memberGroups, groupName)
+		}
+	}
+
+	return memberGroups, nil
+}
+
+func isOvhNotFound(err error) bool {
+	var errOvh *ovh.APIError
+	return errors.As(err, &errOvh) && errOvh.Code == 404
+}
+
+// validateIdentityUserGroups rejects configurations listing the main group in "groups",
+// as the main group is never reported as an additional group and would cause a perpetual diff.
+func validateIdentityUserGroups(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsNull() || !rawConfig.IsKnown() || rawConfig.GetAttr("groups").IsNull() {
+		return nil
+	}
+	group := d.Get("group").(string)
+	if d.Get("groups").(*schema.Set).Contains(group) {
+		return fmt.Errorf("groups must not contain the main group %q", group)
+	}
 	return nil
 }
 

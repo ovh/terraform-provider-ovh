@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -36,34 +37,39 @@ func testSweepMeIdentityUser(region string) error {
 		return nil
 	}
 
+	// Collect group memberships once, as the API only lists users per group
+	var groups []string
+	if err := client.Get("/me/identity/group", &groups); err != nil {
+		return fmt.Errorf("Error calling /me/identity/group:\n\t %q", err)
+	}
+	userGroups := map[string][]string{}
+	for _, groupName := range groups {
+		var users []string
+		if err := client.Get(fmt.Sprintf("/me/identity/group/%s/user", url.PathEscape(groupName)), &users); err != nil {
+			log.Printf("[WARN] Could not list users for group %s: %s", groupName, err)
+			continue
+		}
+		for _, u := range users {
+			if strings.HasPrefix(u, test_prefix) {
+				userGroups[u] = append(userGroups[u], groupName)
+			}
+		}
+	}
+
 	for _, keyName := range names {
 		if !strings.HasPrefix(keyName, test_prefix) {
 			continue
 		}
 
 		log.Printf("[DEBUG] Identity user found %v", keyName)
-		err = resource.Retry(5*time.Minute, func() *resource.RetryError {
-			// Remove user from all groups before deleting
-			var groups []string
-			if err := client.Get("/me/identity/group", &groups); err != nil {
-				log.Printf("[WARN] Could not list groups for sweeper: %s", err)
-			} else {
-				for _, groupName := range groups {
-					var users []string
-					groupEndpoint := fmt.Sprintf("/me/identity/group/%s/user", url.PathEscape(groupName))
-					if err := client.Get(groupEndpoint, &users); err != nil {
-						continue
-					}
-					for _, u := range users {
-						if u == keyName {
-							log.Printf("[INFO] Removing user %s from group %s", keyName, groupName)
-							_ = client.Delete(fmt.Sprintf("/me/identity/group/%s/user/%s", url.PathEscape(groupName), url.PathEscape(keyName)), nil)
-							break
-						}
-					}
-				}
+		for _, groupName := range userGroups[keyName] {
+			log.Printf("[INFO] Removing user %s from group %s", keyName, groupName)
+			if err := client.Delete(fmt.Sprintf("/me/identity/group/%s/user/%s", url.PathEscape(groupName), url.PathEscape(keyName)), nil); err != nil {
+				log.Printf("[WARN] Could not remove user %s from group %s: %s", keyName, groupName, err)
 			}
+		}
 
+		err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 			log.Printf("[INFO] Deleting identity user %v", keyName)
 			if err := client.Delete(fmt.Sprintf("/me/identity/user/%s", keyName), nil); err != nil {
 				return resource.RetryableError(err)
@@ -171,6 +177,33 @@ func TestAccMeIdentityUser_withGroups(t *testing.T) {
 		},
 	})
 }
+
+func TestAccMeIdentityUser_mainGroupInGroups(t *testing.T) {
+	login := acctest.RandomWithPrefix(test_prefix)
+	password := base64.StdEncoding.EncodeToString([]byte(acctest.RandomWithPrefix(test_prefix)))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheckCredentials(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      fmt.Sprintf(testAccMeIdentityUserMainGroupInGroupsConfig, login, password),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile(`groups must not contain the main group "DEFAULT"`),
+			},
+		},
+	})
+}
+
+const testAccMeIdentityUserMainGroupInGroupsConfig = `
+resource "ovh_me_identity_user" "user_1" {
+	email    = "tf_acceptance_tests@example.com"
+	group    = "DEFAULT"
+	login    = "%s"
+	password = "%s"
+	groups   = ["DEFAULT"]
+}
+`
 
 const testAccMeIdentityUserConfig = `
 resource "ovh_me_identity_user" "user_1" {

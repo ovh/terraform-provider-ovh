@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 )
 
 func init() {
@@ -85,6 +86,47 @@ func TestAccMeIdentityGroupMembership_basic(t *testing.T) {
 	})
 }
 
+func TestAccMeIdentityGroupMembership_forceNew(t *testing.T) {
+	login := acctest.RandomWithPrefix(test_prefix)
+	groupName1 := acctest.RandomWithPrefix(test_prefix)
+	groupName2 := acctest.RandomWithPrefix(test_prefix)
+	password := base64.StdEncoding.EncodeToString([]byte(acctest.RandomWithPrefix(test_prefix)))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheckCredentials(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(testAccMeIdentityGroupMembershipConfig_twoGroups, groupName1, groupName2, login, password, "group_1"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_me_identity_group_membership.membership_1", "group", groupName1),
+				),
+			},
+			{
+				// Changing the group must replace the membership
+				Config: fmt.Sprintf(testAccMeIdentityGroupMembershipConfig_twoGroups, groupName1, groupName2, login, password, "group_2"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("ovh_me_identity_group_membership.membership_1", plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_me_identity_group_membership.membership_1", "group", groupName2),
+					resource.TestCheckResourceAttr("ovh_me_identity_group_membership.membership_1", "id", fmt.Sprintf("%s/%s", login, groupName2)),
+				),
+			},
+			{
+				// The user refreshes its memberships: only the new group remains
+				Config: fmt.Sprintf(testAccMeIdentityGroupMembershipConfig_twoGroups, groupName1, groupName2, login, password, "group_2"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_me_identity_user.user_1", "groups.#", "1"),
+					resource.TestCheckTypeSetElemAttr("ovh_me_identity_user.user_1", "groups.*", groupName2),
+				),
+			},
+		},
+	})
+}
+
 func TestAccMeIdentityGroupMembership_importBasic(t *testing.T) {
 	login := acctest.RandomWithPrefix(test_prefix)
 	groupName := acctest.RandomWithPrefix(test_prefix)
@@ -125,5 +167,32 @@ resource "ovh_me_identity_user" "user_1" {
 resource "ovh_me_identity_group_membership" "membership_1" {
 	login = ovh_me_identity_user.user_1.login
 	group = ovh_me_identity_group.group_1.name
+}
+`
+
+const testAccMeIdentityGroupMembershipConfig_twoGroups = `
+resource "ovh_me_identity_group" "group_1" {
+    description = "Test group 1 for membership resource"
+    name        = "%s"
+    role        = "NONE"
+}
+
+resource "ovh_me_identity_group" "group_2" {
+    description = "Test group 2 for membership resource"
+    name        = "%s"
+    role        = "NONE"
+}
+
+resource "ovh_me_identity_user" "user_1" {
+    description = "Test user for membership resource"
+    email       = "tf_acceptance_tests@example.com"
+    group       = "DEFAULT"
+    login       = "%s"
+    password    = "%s"
+}
+
+resource "ovh_me_identity_group_membership" "membership_1" {
+    login = ovh_me_identity_user.user_1.login
+    group = ovh_me_identity_group.%s.name
 }
 `
