@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -79,9 +80,13 @@ func (r *cloudStorageFileShareResource) Schema(ctx context.Context, req resource
 				MarkdownDescription: "File share name",
 			},
 			"size": schema.Int64Attribute{
-				Required:            true,
-				Description:         "Size of the file share in GB",
-				MarkdownDescription: "Size of the file share in GB",
+				Optional:            true,
+				Computed:            true,
+				Description:         "Size of the file share in GB. Required unless create_from is set; when omitted with create_from, the snapshot size is used",
+				MarkdownDescription: "Size of the file share in GB. Required unless `create_from` is set; when omitted with `create_from`, the snapshot size is used",
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
 			},
 			"region": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
@@ -103,20 +108,40 @@ func (r *cloudStorageFileShareResource) Schema(ctx context.Context, req resource
 			},
 			"share_type": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
-				Required:            true,
-				Description:         "File share type (e.g. STANDARD_1AZ)",
-				MarkdownDescription: "File share type (e.g. `STANDARD_1AZ`)",
+				Optional:            true,
+				Computed:            true,
+				Description:         "File share type (e.g. STANDARD_1AZ). Required unless create_from is set; with create_from, the type of the snapshot's source file share is used",
+				MarkdownDescription: "File share type (e.g. `STANDARD_1AZ`). Required unless `create_from` is set; with `create_from`, the type of the snapshot's source file share is used",
 				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"share_network_id": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
-				Required:            true,
-				Description:         "ID of a pre-existing share network to attach the file share to",
-				MarkdownDescription: "ID of a pre-existing share network to attach the file share to",
+				Optional:            true,
+				Computed:            true,
+				Description:         "ID of a pre-existing share network to attach the file share to. Required unless create_from is set; when omitted with create_from, the share network of the snapshot's source file share is used",
+				MarkdownDescription: "ID of a pre-existing share network to attach the file share to. Required unless `create_from` is set; when omitted with `create_from`, the share network of the snapshot's source file share is used",
 				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"create_from": schema.SingleNestedAttribute{
+				Optional:            true,
+				Description:         "Source to create the file share from. Changing this value recreates the resource.",
+				MarkdownDescription: "Source to create the file share from. **Changing this value recreates the resource.**",
+				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.RequiresReplace(),
+				},
+				Attributes: map[string]schema.Attribute{
+					"snapshot_id": schema.StringAttribute{
+						CustomType:          ovhtypes.TfStringType{},
+						Required:            true,
+						Description:         "Identifier of an available file share snapshot of the same project and region to create the file share from",
+						MarkdownDescription: "Identifier of an available file share snapshot of the same project and region to create the file share from",
+					},
 				},
 			},
 			"availability_zone": schema.StringAttribute{
@@ -133,8 +158,8 @@ func (r *cloudStorageFileShareResource) Schema(ctx context.Context, req resource
 			"encryption": schema.SingleNestedAttribute{
 				Optional:            true,
 				Computed:            true,
-				Description:         "Encryption configuration for the file share. Set at creation only. Changing this value recreates the resource.",
-				MarkdownDescription: "Encryption configuration for the file share. Set at creation only. **Changing this value recreates the resource.**",
+				Description:         "Encryption configuration for the file share. Set at creation only; with create_from, the encryption of the snapshot's source file share is used. Changing this value recreates the resource.",
+				MarkdownDescription: "Encryption configuration for the file share. Set at creation only; with `create_from`, the encryption of the snapshot's source file share is used. **Changing this value recreates the resource.**",
 				PlanModifiers: []planmodifier.Object{
 					objectplanmodifier.UseStateForUnknown(),
 					objectplanmodifier.RequiresReplace(),
@@ -355,9 +380,21 @@ func (r *cloudStorageFileShareResource) Create(ctx context.Context, req resource
 		return
 	}
 
+	attributesReplacedBySnapshotSource := data.attributesReplacedBySnapshotSource(&responseData)
+
 	// Save state immediately so the resource ID is tracked even if the workflow fails
 	data.MergeWith(ctx, &responseData)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+
+	if len(attributesReplacedBySnapshotSource) > 0 {
+		resp.Diagnostics.AddError(
+			"Configured values replaced by the snapshot's source file share",
+			"The file share was created from a snapshot and took these values from the snapshot's source file share: "+
+				strings.Join(attributesReplacedBySnapshotSource, "; ")+
+				". Remove these attributes from the configuration or set them to the source values.",
+		)
+		return
+	}
 
 	// Wait for file share to be READY
 	_, err := r.waitForFileShareReady(ctx, data.ServiceName.ValueString(), responseData.Id)

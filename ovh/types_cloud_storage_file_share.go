@@ -2,6 +2,7 @@ package ovh
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -10,25 +11,20 @@ import (
 
 // CloudStorageFileShareModel represents the Terraform model for the file storage share resource
 type CloudStorageFileShareModel struct {
-	// Required — immutable
 	ServiceName ovhtypes.TfStringValue `tfsdk:"service_name"`
 	Region      ovhtypes.TfStringValue `tfsdk:"region"`
 	Protocol    ovhtypes.TfStringValue `tfsdk:"protocol"`
-	ShareType   ovhtypes.TfStringValue `tfsdk:"share_type"`
 
-	// Optional — immutable
+	ShareType        ovhtypes.TfStringValue `tfsdk:"share_type"`
 	AvailabilityZone ovhtypes.TfStringValue `tfsdk:"availability_zone"`
 	ShareNetworkId   ovhtypes.TfStringValue `tfsdk:"share_network_id"`
 	Encryption       types.Object           `tfsdk:"encryption"`
+	CreateFrom       types.Object           `tfsdk:"create_from"`
 
-	// Required — mutable
-	Name ovhtypes.TfStringValue `tfsdk:"name"`
-	Size types.Int64            `tfsdk:"size"`
-
-	// Optional — mutable
+	Name        ovhtypes.TfStringValue `tfsdk:"name"`
+	Size        types.Int64            `tfsdk:"size"`
 	Description ovhtypes.TfStringValue `tfsdk:"description"`
 
-	// Computed
 	Id             ovhtypes.TfStringValue `tfsdk:"id"`
 	Checksum       ovhtypes.TfStringValue `tfsdk:"checksum"`
 	CreatedAt      ovhtypes.TfStringValue `tfsdk:"created_at"`
@@ -94,6 +90,11 @@ type CloudStorageFileShareAPITargetSpec struct {
 	Location     *CloudStorageFileShareAPILocation        `json:"location,omitempty"`
 	ShareNetwork *CloudStorageFileShareAPIShareNetworkRef `json:"shareNetwork,omitempty"`
 	Encryption   *CloudStorageFileShareAPIEncryption      `json:"encryption,omitempty"`
+	CreateFrom   *CloudStorageFileShareAPICreateFrom      `json:"createFrom,omitempty"`
+}
+
+type CloudStorageFileShareAPICreateFrom struct {
+	SnapshotId string `json:"snapshotId"`
 }
 
 type CloudStorageFileShareAPIUpdateTargetSpec struct {
@@ -120,6 +121,12 @@ func FileShareEncryptionAttrTypes() map[string]attr.Type {
 	}
 }
 
+func FileShareCreateFromAttrTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"snapshot_id": ovhtypes.TfStringType{},
+	}
+}
+
 // fileShareLocationAttrTypes returns the attr types for the root-level location
 // object exposed by the file share data sources.
 func fileShareLocationAttrTypes() map[string]attr.Type {
@@ -132,11 +139,17 @@ func fileShareLocationAttrTypes() map[string]attr.Type {
 // ToCreate converts the Terraform model to the API create payload
 func (m *CloudStorageFileShareModel) ToCreate(ctx context.Context) *CloudStorageFileShareCreatePayload {
 	target := &CloudStorageFileShareAPITargetSpec{
-		Name:      m.Name.ValueString(),
-		Size:      m.Size.ValueInt64(),
-		Protocol:  m.Protocol.ValueString(),
-		ShareType: m.ShareType.ValueString(),
-		Location:  &CloudStorageFileShareAPILocation{Region: m.Region.ValueString()},
+		Name:     m.Name.ValueString(),
+		Protocol: m.Protocol.ValueString(),
+		Location: &CloudStorageFileShareAPILocation{Region: m.Region.ValueString()},
+	}
+
+	if !m.Size.IsNull() && !m.Size.IsUnknown() {
+		target.Size = m.Size.ValueInt64()
+	}
+
+	if !m.ShareType.IsNull() && !m.ShareType.IsUnknown() {
+		target.ShareType = m.ShareType.ValueString()
 	}
 
 	if !m.Description.IsNull() && !m.Description.IsUnknown() {
@@ -155,10 +168,52 @@ func (m *CloudStorageFileShareModel) ToCreate(ctx context.Context) *CloudStorage
 		}
 	}
 
-	// shareNetwork is required: always attach the reference.
-	target.ShareNetwork = &CloudStorageFileShareAPIShareNetworkRef{Id: m.ShareNetworkId.ValueString()}
+	if !m.ShareNetworkId.IsNull() && !m.ShareNetworkId.IsUnknown() {
+		target.ShareNetwork = &CloudStorageFileShareAPIShareNetworkRef{Id: m.ShareNetworkId.ValueString()}
+	}
+
+	if snapshotId := m.createFromSnapshotId(); snapshotId != "" {
+		target.CreateFrom = &CloudStorageFileShareAPICreateFrom{SnapshotId: snapshotId}
+	}
 
 	return &CloudStorageFileShareCreatePayload{TargetSpec: target}
+}
+
+func (m *CloudStorageFileShareModel) createFromSnapshotId() string {
+	if m.CreateFrom.IsNull() || m.CreateFrom.IsUnknown() {
+		return ""
+	}
+	snapshotId, ok := m.CreateFrom.Attributes()["snapshot_id"].(ovhtypes.TfStringValue)
+	if !ok || snapshotId.IsNull() || snapshotId.IsUnknown() {
+		return ""
+	}
+	return snapshotId.ValueString()
+}
+
+func (m *CloudStorageFileShareModel) configuredEncryptionEnabled() (bool, bool) {
+	if m.Encryption.IsNull() || m.Encryption.IsUnknown() {
+		return false, false
+	}
+	enabled, ok := m.Encryption.Attributes()["enabled"].(types.Bool)
+	if !ok || enabled.IsNull() || enabled.IsUnknown() {
+		return false, false
+	}
+	return enabled.ValueBool(), true
+}
+
+func (m *CloudStorageFileShareModel) attributesReplacedBySnapshotSource(response *CloudStorageFileShareAPIResponse) []string {
+	if m.createFromSnapshotId() == "" || response.TargetSpec == nil {
+		return nil
+	}
+
+	var replacedAttributes []string
+	if !m.ShareType.IsNull() && !m.ShareType.IsUnknown() && m.ShareType.ValueString() != response.TargetSpec.ShareType {
+		replacedAttributes = append(replacedAttributes, fmt.Sprintf("share_type: configured %q, source file share has %q", m.ShareType.ValueString(), response.TargetSpec.ShareType))
+	}
+	if configuredEnabled, isConfigured := m.configuredEncryptionEnabled(); isConfigured && response.TargetSpec.Encryption != nil && configuredEnabled != response.TargetSpec.Encryption.Enabled {
+		replacedAttributes = append(replacedAttributes, fmt.Sprintf("encryption.enabled: configured %t, source file share has %t", configuredEnabled, response.TargetSpec.Encryption.Enabled))
+	}
+	return replacedAttributes
 }
 
 // ToUpdate converts the Terraform model to the API update payload
@@ -246,6 +301,17 @@ func (m *CloudStorageFileShareModel) MergeWith(ctx context.Context, response *Cl
 			m.Encryption = buildFileShareEncryptionObject(response.TargetSpec.Encryption)
 		} else if m.Encryption.IsUnknown() {
 			m.Encryption = types.ObjectNull(FileShareEncryptionAttrTypes())
+		}
+
+		if response.TargetSpec.CreateFrom != nil && response.TargetSpec.CreateFrom.SnapshotId != "" {
+			m.CreateFrom = types.ObjectValueMust(
+				FileShareCreateFromAttrTypes(),
+				map[string]attr.Value{
+					"snapshot_id": ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.CreateFrom.SnapshotId)},
+				},
+			)
+		} else if m.CreateFrom.IsNull() || m.CreateFrom.IsUnknown() {
+			m.CreateFrom = types.ObjectNull(FileShareCreateFromAttrTypes())
 		}
 	}
 }
