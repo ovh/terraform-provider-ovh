@@ -1,3 +1,33 @@
+## 2.22.0 (October 2, 2026)
+
+🎉 Features:
+
+* New resource: `ovh_cloud_storage_object_bucket` ([#1441](https://github.com/ovh/terraform-provider-ovh/pull/1441))
+
+* New datasource: `ovh_cloud_storage_object_bucket` ([#1441](https://github.com/ovh/terraform-provider-ovh/pull/1441))
+* New datasource: `ovh_cloud_storage_object_buckets` ([#1441](https://github.com/ovh/terraform-provider-ovh/pull/1441))
+* New datasource: `ovh_dedicated_server_networking` ([#1456](https://github.com/ovh/terraform-provider-ovh/pull/1456))
+
+💪 Improvements:
+
+* `r/ovh_cloud_storage_file_share`: Add `create_from.snapshot_id` to create a share from a share snapshot. `share_type`, `share_network_id` and `size` become optional, as a share created from a snapshot takes them from the source share and the snapshot ([#1457](https://github.com/ovh/terraform-provider-ovh/pull/1457))
+* `r/ovh_dedicated_server_networking`: Add the computed `aggregation_fallback` attribute on each interface, the MAC address to pin on a bonded interface so traffic keeps flowing when the LACP bond falls back to a single link ([#1456](https://github.com/ovh/terraform-provider-ovh/pull/1456))
+* `r/ovh_me_api_oauth2_client`: Add `discard_client_secret` to not keep the client secret in the Terraform state, for service accounts that never use it, like KMS access through certificates. Switching it back to `false` creates a new OAuth2 client ([#1459](https://github.com/ovh/terraform-provider-ovh/pull/1459))
+
+🐜 Bug fixes:
+
+* `d/ovh_me`: Build the computed `urn` from the account returned by `/auth/details`, as in some regions it differs from the nichandle returned by `/me` ([#1458](https://github.com/ovh/terraform-provider-ovh/pull/1458))
+* `r/ovh_cloud_project_ssh_key`: Keep the configured `public_key` when the API trims surrounding whitespace, instead of failing with an inconsistent result when the key is read with `file()` ([#1454](https://github.com/ovh/terraform-provider-ovh/pull/1454))
+
+📚 Documentation:
+
+* Add a guide listing the consumer key access rules needed by resources created through the order workflow, and link it from the affected resources ([#1450](https://github.com/ovh/terraform-provider-ovh/pull/1450))
+* `r/ovh_cloud_project_database`: Document `maintenance_time` ([#1447](https://github.com/ovh/terraform-provider-ovh/pull/1447))
+* `r/ovh_ip_firewall_rule`: Document `source_port` ([#1446](https://github.com/ovh/terraform-provider-ovh/pull/1446))
+* `r/ovh_me_api_oauth2_client`, `r/ovh_okms_credential`: Add examples of a service account accessing a KMS with a certificate, without keeping its client secret ([#1459](https://github.com/ovh/terraform-provider-ovh/pull/1459))
+
+❤️ Thanks for your contributions ❤️
+
 ## 2.21.0 (September 24, 2026)
 
 ⚙️ General:
