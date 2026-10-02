@@ -12,10 +12,10 @@ Creates a credential for an OVHcloud KMS.
 data "ovh_me" "myaccount" {}
 
 resource "ovh_okms_credential" "cred_no_csr" {
-  okms_id       = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-  name          = "cred"
-  identity_urns = ["urn:v1:eu:identity:account:${data.ovh_me.myaccount.nichandle}"]
-  description   = "Credential without CSR"
+  okms_id          = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+  name             = "cred"
+  identity_urns    = ["urn:v1:eu:identity:account:${data.ovh_me.myaccount.nichandle}"]
+  description      = "Credential without CSR"
   certificate_type = "ECDSA"
 }
 
@@ -40,6 +40,31 @@ resource "ovh_okms_credential" "cred_from_csr" {
   identity_urns = ["urn:v1:eu:identity:account:${data.ovh_me.myaccount.nichandle}"]
   csr           = file("cred.csr")
   description   = "Credential from CSR"
+}
+```
+
+A credential for a service account that only accesses the KMS with a certificate. The service account's client secret is not needed, so it is not kept in the Terraform state.
+
+```terraform
+# A service account only used through KMS certificates, its client secret is never stored
+resource "ovh_me_api_oauth2_client" "kms_service_account" {
+  name                  = "kms service account"
+  description           = "Service account accessing the KMS with a certificate"
+  flow                  = "CLIENT_CREDENTIALS"
+  discard_client_secret = true
+}
+
+resource "ovh_okms_credential" "service_account_cred" {
+  okms_id       = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+  name          = "service_account_cred"
+  identity_urns = [ovh_me_api_oauth2_client.kms_service_account.identity]
+  description   = "Credential for the KMS service account"
+}
+
+resource "local_sensitive_file" "service_account_private_key" {
+  content         = ovh_okms_credential.service_account_cred.private_key_pem
+  filename        = "${path.module}/service_account.key"
+  file_permission = "0600"
 }
 ```
 

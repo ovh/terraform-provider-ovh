@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 )
@@ -38,10 +39,15 @@ func resourceApiOauth2Client() *schema.Resource {
 
 				// Use the provided resource id as the client_id
 				d.Set("client_id", d.Id())
-
+				d.Set("discard_client_secret", false)
 				return []*schema.ResourceData{d}, nil
 			},
 		},
+		// When a previously created oauth2Client did not keep the client_secret value and now wants to,
+		// a new client must be created, so we force a new resource to be created.
+		CustomizeDiff: customdiff.ForceNewIfChange("discard_client_secret", func(ctx context.Context, old, new, meta any) bool {
+			return old.(bool) && !new.(bool)
+		}),
 		Schema: map[string]*schema.Schema{
 			"callback_urls": {
 				Type:        schema.TypeList,
@@ -82,6 +88,12 @@ func resourceApiOauth2Client() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"discard_client_secret": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Do not keep the client_secret value in Terraform state. The client secret will not be available for use in Terraform",
 			},
 		},
 	}
@@ -143,13 +155,30 @@ func resourceApiOauth2ClientCreate(ctx context.Context, d *schema.ResourceData, 
 
 	// Populate the state with the response body parameters
 	d.Set("client_id", response.ClientId)
-	d.Set("client_secret", response.ClientSecret)
+	// If discard_client_secret is true, we do not persist the client_secret in state. It will not be kept or usable in other steps.
+	discardClientSecret := d.Get("discard_client_secret").(bool)
+	if !discardClientSecret {
+		d.Set("client_secret", response.ClientSecret)
+	}
 
 	return resourceApiOauth2ClientRead(ctx, d, meta)
 }
 
 func resourceApiOauth2ClientUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
+
+	// Update the client_secret based on the "discard_client_secret" param.
+	oldDiscard, newDiscard := d.GetChange("discard_client_secret")
+	// From false to true: remove the secret from state
+	if d.HasChange("discard_client_secret") && !oldDiscard.(bool) && newDiscard.(bool) {
+		d.Set("client_secret", nil) // remove the value from the state
+		log.Printf("[DEBUG] client_secret value has been removed from terraform state")
+	}
+
+	// Only call the API when an attribute it knows about has changed
+	if !d.HasChanges("callback_urls", "description", "name") {
+		return resourceApiOauth2ClientRead(ctx, d, meta)
+	}
 
 	// Declare an empty array if no callback url is provided
 	callbackUrls := []string{}

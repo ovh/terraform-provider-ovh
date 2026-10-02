@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
@@ -149,6 +150,66 @@ func TestAccMeApiOauth2Client_importBasic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportStateId:     "fake_client|fake_secret|extra_data",
 				ExpectError:       regexp.MustCompile("Resource IDs with the pipe character should be formatted as"),
+			},
+		},
+	})
+}
+
+// Tests that the client secret is not kept in state when discard_client_secret is true
+func TestAccMeApiOauth2Client_discardClientSecret(t *testing.T) {
+	const resourceName = "ovh_me_api_oauth2_client.service_account_1"
+	const configDiscardClientSecret = `
+	resource "ovh_me_api_oauth2_client" "service_account_1" {
+		description           = "tf acc test discard client secret"
+		name                  = "tf acc test discard client secret"
+		flow                  = "CLIENT_CREDENTIALS"
+		discard_client_secret = %t
+	}`
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheckCredentials(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			// Create the object without keeping the client secret
+			{
+				Config: fmt.Sprintf(configDiscardClientSecret, true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrWith(resourceName, "client_id", apiOauth2ClientStringNotEmpty),
+					resource.TestCheckResourceAttr(resourceName, "discard_client_secret", "true"),
+					resource.TestCheckNoResourceAttr(resourceName, "client_secret"),
+				),
+			},
+			// Verify that the state matches the resource imported with its client_id
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"discard_client_secret"}, // Not known by the API, always false on import
+			},
+			// Keeping the client secret again requires a new oauth2 client
+			{
+				Config: fmt.Sprintf(configDiscardClientSecret, false),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "discard_client_secret", "false"),
+					resource.TestCheckResourceAttrWith(resourceName, "client_secret", apiOauth2ClientStringNotEmpty),
+				),
+			},
+			// Discarding the client secret of an existing oauth2 client is done in place
+			{
+				Config: fmt.Sprintf(configDiscardClientSecret, true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "discard_client_secret", "true"),
+					resource.TestCheckResourceAttr(resourceName, "client_secret", ""), // SDKv2 stores an unset string as empty
+				),
 			},
 		},
 	})
