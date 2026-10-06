@@ -135,15 +135,6 @@ func resourceDedicatedServerReinstallTask() *schema.Resource {
 					},
 				},
 			},
-			"properties": {
-				Type:        schema.TypeMap,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "Attribute 'properties' is deprecated and has no effect",
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
 			"storage": {
 				Type:        schema.TypeList,
 				Optional:    true,
