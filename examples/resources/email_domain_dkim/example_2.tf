@@ -2,16 +2,18 @@ resource "ovh_email_domain_dkim" "my_dkim" {
   domain = "example.com"
 }
 
-resource "ovh_domain_zone_record" "dkim_selectors" {
-  for_each = {
-    for selector in ovh_email_domain_dkim.my_dkim.selectors : selector.selector_name => selector
-  }
+# The selectors are only known once DKIM is enabled, and for_each needs its keys
+# at plan time. OVHcloud allocates exactly two and the list is sorted, so a fixed
+# count works on the first apply too.
+resource "cloudflare_dns_record" "dkim_selectors" {
+  count = 2
 
-  zone      = "example.com"
-  subdomain = "${each.key}._domainkey"
-  fieldtype = "CNAME"
-  ttl       = 3600
+  zone_id = var.cloudflare_zone_id
+  name    = "${ovh_email_domain_dkim.my_dkim.selectors[count.index].selector_name}._domainkey.example.com"
+  type    = "CNAME"
+  ttl     = 1
+  proxied = false
 
   # cname is a full zone-file line, the target is its last field
-  target = element(split(" ", each.value.cname), length(split(" ", each.value.cname)) - 1)
+  content = reverse(split(" ", ovh_email_domain_dkim.my_dkim.selectors[count.index].cname))[0]
 }

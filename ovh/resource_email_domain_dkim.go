@@ -101,9 +101,9 @@ func (r *emailDomainDkimResource) Configure(_ context.Context, req resource.Conf
 
 func (r *emailDomainDkimResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description: "Enables DKIM signing on an OVHcloud email domain (MX Plan / Zimbra). " +
+		Description: "Enables DKIM signing on an OVHcloud MX Plan email domain. " +
 			"Destroying the resource disables DKIM again.",
-		MarkdownDescription: "Enables DKIM signing on an OVHcloud email domain (MX Plan / Zimbra). " +
+		MarkdownDescription: "Enables DKIM signing on an OVHcloud MX Plan email domain. " +
 			"Destroying the resource disables DKIM again.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
@@ -304,6 +304,20 @@ func (r *emailDomainDkimResource) Create(ctx context.Context, req resource.Creat
 			return
 		}
 		resp.Diagnostics.AddError(fmt.Sprintf("Error calling Put %s", endpoint), err.Error())
+		return
+	}
+
+	// DKIM is on remotely from here. Save what is known before reading or
+	// polling, so a failure below leaves a tainted resource in state, which the
+	// next apply replaces, rather than an untracked activation that it could
+	// only meet with a 409.
+	data.ID = types.StringValue(domain)
+	data.Status = types.StringNull()
+	data.Autoconfig = types.BoolNull()
+	data.ActiveSelector = types.StringNull()
+	data.Selectors = types.ListNull(types.ObjectType{AttrTypes: emailDomainDkimSelectorAttrTypes})
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 

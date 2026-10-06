@@ -87,7 +87,7 @@ func testAccPreCheckEmailDomainDkim(t *testing.T) {
 	}
 
 	if !strings.Contains(strings.ToUpper(service.Offer), "MXPLAN") {
-		t.Skipf("%s is on the %q offer, which does not support DKIM: set OVH_EMAIL_DOMAIN_TEST to an MX Plan domain",
+		t.Skipf("%s is on the %q offer, which cannot enable DKIM through /email/domain: set OVH_EMAIL_DOMAIN_TEST to an MX Plan domain",
 			domain, service.Offer)
 	}
 }

@@ -8,7 +8,7 @@ For example, the {{ .SchemaMarkdown }} template can be used to replace manual sc
 
 # ovh_email_domain_dkim
 
-Enables DKIM signing on an OVHcloud email domain (MX Plan / Zimbra). Destroying the resource disables DKIM again.
+Enables DKIM signing on an OVHcloud MX Plan email domain. Destroying the resource disables DKIM again.
 
 OVHcloud allocates two selectors per domain and rotates the active one. Their CNAME records must be published in the
 DNS zone before signing can start. When the zone is hosted by OVHcloud this happens automatically and `autoconfig` is
@@ -19,20 +19,20 @@ DNS zone before signing can start. When the zone is hosted by OVHcloud this happ
 
 {{tffile "examples/resources/email_domain_dkim/example_1.tf"}}
 
-With the DNS zone hosted at OVHcloud, publishing the selectors is a matter of iterating over them:
+With the DNS zone hosted elsewhere, Cloudflare here, the `selectors` attribute feeds the records to publish:
 
 {{tffile "examples/resources/email_domain_dkim/example_2.tf"}}
 
-The same `selectors` output feeds a zone hosted by any other provider.
+A zone hosted by OVHcloud needs none of this: OVHcloud publishes the selectors itself.
 
 {{ .SchemaMarkdown | trimspace }}
 
 ## Notes
 
-The domain's offer has to support DKIM. An MX Plan or Zimbra service does; a redirect-only offer does not, and the API
-gives no useful signal about it: `PUT .../dkim/enable` returns `200`, no selector is ever allocated, and the status stays
-`disabled`. The resource surfaces that as an activation timeout after two minutes rather than reporting a success that
-never happened.
+The domain has to be on an MX Plan offer. Zimbra, Email Pro and Exchange domains have DKIM APIs of their own, and a
+redirect-only offer has none, which the API does not signal usefully: `PUT .../dkim/enable` returns `200`, no selector is
+ever allocated, and the status stays `disabled`. The resource surfaces that as an activation timeout after two minutes
+rather than reporting a success that never happened.
 
 Enabling DKIM is asynchronous. The resource polls until the status settles, capped at two minutes. Both `modifying` and
 `disabled` are treated as transient during activation: once the enable is accepted, the API can keep answering `disabled`
@@ -42,8 +42,10 @@ A successful apply does not by itself mean messages are being signed. If the sel
 status settles on `toConfigure` and the resource emits a warning rather than an error, since publishing them is a
 separate step and may well live in another provider's configuration.
 
-Creating the resource for a domain that already has DKIM on fails with a `409`, pointing at `terraform import`. Disabling
-DKIM outside Terraform removes the resource from state on the next refresh, so a subsequent apply re-enables it.
+Creating the resource for a domain that already has DKIM on fails with a `409`, pointing at `terraform import`. An
+activation that fails or times out after the enable call was accepted leaves the resource tainted instead, so the next
+apply disables and re-enables DKIM rather than meeting that `409`. Disabling DKIM outside Terraform removes the resource
+from state on the next refresh, so a subsequent apply re-enables it.
 
 `selectors` is sorted by `selector_name`. The API returns the list in no particular order and has been observed swapping
 two selectors between consecutive calls, which would otherwise churn this attribute on every refresh.
