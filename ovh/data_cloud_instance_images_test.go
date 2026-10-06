@@ -30,6 +30,7 @@ data "ovh_cloud_instance_images" "all" {
 					// The region filter must yield at least one populated image.
 					resource.TestCheckResourceAttrSet("data.ovh_cloud_instance_images.all", "images.0.name"),
 					resource.TestCheckResourceAttrSet("data.ovh_cloud_instance_images.all", "images.0.visibility"),
+					resource.TestCheckResourceAttrSet("data.ovh_cloud_instance_images.all", "images.0.os_type"),
 					resource.TestCheckResourceAttr("data.ovh_cloud_instance_images.all", "images.0.location.region", region),
 				),
 			},

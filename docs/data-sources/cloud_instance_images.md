@@ -74,6 +74,7 @@ The following attributes are exported:
   * `name` - Display name of the image as reported by the backend (for example the distribution and version, such as `Debian 12`).
   * `status` - Availability status of the image as reported by the backend. Only images in an active status can be used to create an instance.
   * `visibility` - Visibility scope of the image, for example whether it is a public OVHcloud-provided image or private to the project.
+  * `os_type` - Operating system type of the image (`LINUX`, `WINDOWS` or `BAREMETAL_LINUX`). Windows images can only boot on Windows flavors.
   * `min_disk` - Minimum root disk size, in GB, that an instance must provide to boot from this image. A flavor whose disk is smaller than this value cannot be used with the image.
   * `min_ram` - Minimum amount of memory, in MB, that an instance must provide to boot from this image. A flavor whose RAM is below this value cannot be used with the image.
   * `size` - Size of the image on the backend, expressed in bytes.

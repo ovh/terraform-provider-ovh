@@ -38,6 +38,7 @@ type CloudInstanceSnapshotCurrentState struct {
 	MinDisk    int64                             `json:"minDisk,omitempty"`
 	MinRam     int64                             `json:"minRam,omitempty"`
 	Name       string                            `json:"name,omitempty"`
+	OsType     string                            `json:"osType,omitempty"`
 	Size       int64                             `json:"size,omitempty"`
 	Status     string                            `json:"status,omitempty"`
 	Visibility string                            `json:"visibility,omitempty"`
@@ -81,6 +82,7 @@ func InstanceSnapshotCurrentStateAttrTypes() map[string]attr.Type {
 		"size":       types.Int64Type,
 		"status":     ovhtypes.TfStringType{},
 		"visibility": ovhtypes.TfStringType{},
+		"os_type":    ovhtypes.TfStringType{},
 	}
 }
 
@@ -125,6 +127,7 @@ func (m *CloudInstanceSnapshotModel) MergeWith(ctx context.Context, response *Cl
 				"size":       types.Int64Value(response.CurrentState.Size),
 				"status":     ovhtypes.TfStringValue{StringValue: types.StringValue(response.CurrentState.Status)},
 				"visibility": ovhtypes.TfStringValue{StringValue: types.StringValue(response.CurrentState.Visibility)},
+				"os_type":    ovhtypes.TfStringValue{StringValue: types.StringValue(response.CurrentState.OsType)},
 			},
 		)
 

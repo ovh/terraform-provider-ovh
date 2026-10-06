@@ -59,6 +59,7 @@ data "ovh_cloud_instance_snapshots" "empty" {
 					resource.TestCheckResourceAttr("data.ovh_cloud_instance_snapshots.snapshots", "snapshots.0.resource_status", "READY"),
 					resource.TestCheckResourceAttrSet("data.ovh_cloud_instance_snapshots.snapshots", "snapshots.0.status"),
 					resource.TestCheckResourceAttrSet("data.ovh_cloud_instance_snapshots.snapshots", "snapshots.0.visibility"),
+					resource.TestCheckResourceAttrSet("data.ovh_cloud_instance_snapshots.snapshots", "snapshots.0.os_type"),
 					resource.TestCheckResourceAttrPair(
 						"data.ovh_cloud_instance_snapshots.snapshots", "snapshots.0.instance_id",
 						"ovh_cloud_instance.instance", "id",

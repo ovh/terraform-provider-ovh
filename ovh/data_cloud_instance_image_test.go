@@ -31,6 +31,7 @@ data "ovh_cloud_instance_image" "test" {
 					resource.TestCheckResourceAttrSet("data.ovh_cloud_instance_image.test", "name"),
 					resource.TestCheckResourceAttrSet("data.ovh_cloud_instance_image.test", "size"),
 					resource.TestCheckResourceAttrSet("data.ovh_cloud_instance_image.test", "status"),
+					resource.TestCheckResourceAttrSet("data.ovh_cloud_instance_image.test", "os_type"),
 					resource.TestCheckResourceAttr("data.ovh_cloud_instance_image.test", "location.region", region),
 				),
 			},

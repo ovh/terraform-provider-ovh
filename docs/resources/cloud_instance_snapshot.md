@@ -48,6 +48,7 @@ The following attributes are exported:
   * `size` - Image size in bytes.
   * `status` - Image status in the backend.
   * `visibility` - Image visibility.
+  * `os_type` - Operating system type of the snapshot (`LINUX`, `WINDOWS` or `BAREMETAL_LINUX`), inherited from the image the source instance was created from.
 
 ## Import
 
