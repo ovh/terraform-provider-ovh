@@ -34,10 +34,11 @@ const (
 	dkimStatusToConfigure = "toConfigure"
 )
 
-// The API applies the change asynchronously.
+// The API applies both changes asynchronously.
 const (
-	dkimActivationPollInterval = 5 * time.Second
-	dkimActivationPollTimeout  = 2 * time.Minute
+	dkimPollInterval            = 5 * time.Second
+	dkimActivationPollTimeout   = 2 * time.Minute
+	dkimDeactivationPollTimeout = 5 * time.Minute
 )
 
 // emailDomainDkimSelectorAPI mirrors email.domain.DKIMSelector.
@@ -197,7 +198,7 @@ func (r *emailDomainDkimResource) waitForActivation(ctx context.Context, domain 
 		select {
 		case <-ctx.Done():
 			return res, ctx.Err()
-		case <-time.After(dkimActivationPollInterval):
+		case <-time.After(dkimPollInterval):
 		}
 
 		var err error
@@ -207,6 +208,33 @@ func (r *emailDomainDkimResource) waitForActivation(ctx context.Context, domain 
 	}
 
 	return res, nil
+}
+
+// waitForDeactivation polls until the domain reports "disabled" after a disable
+// call. Any other status means the change is still in flight, and returning
+// early would let a replacement call enable before it has finished.
+func (r *emailDomainDkimResource) waitForDeactivation(ctx context.Context, domain string) error {
+	deadline := time.Now().Add(dkimDeactivationPollTimeout)
+
+	for {
+		res, err := r.get(domain)
+		if err != nil {
+			return err
+		}
+		if res.Status == dkimStatusDisabled {
+			return nil
+		}
+
+		if time.Now().After(deadline) {
+			return fmt.Errorf("DKIM for domain %q is still %q after %s", domain, res.Status, dkimDeactivationPollTimeout)
+		}
+
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(dkimPollInterval):
+		}
+	}
 }
 
 // toModel maps an API payload onto the Terraform model.
@@ -412,6 +440,11 @@ func (r *emailDomainDkimResource) Delete(ctx context.Context, req resource.Delet
 	endpoint := "/email/domain/" + url.PathEscape(domain) + "/dkim/disable"
 	if err := r.config.OVHClient.Put(endpoint, nil, nil); err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Error calling Put %s", endpoint), err.Error())
+		return
+	}
+
+	if err := r.waitForDeactivation(ctx, domain); err != nil {
+		resp.Diagnostics.AddError("Error waiting for DKIM deactivation", err.Error())
 	}
 }
 

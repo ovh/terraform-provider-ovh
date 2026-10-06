@@ -80,6 +80,9 @@ Enabling DKIM is asynchronous. The resource polls until the status settles, capp
 `disabled` are treated as transient during activation: once the enable is accepted, the API can keep answering `disabled`
 for several seconds before it flips to `enabled`.
 
+Disabling is asynchronous too, so destroying the resource polls until the status reads `disabled`, capped at five
+minutes. A replacement therefore never calls enable while the disable is still under way.
+
 A successful apply does not by itself mean messages are being signed. If the selector records are not published yet, the
 status settles on `toConfigure` and the resource emits a warning rather than an error, since publishing them is a
 separate step and may well live in another provider's configuration.

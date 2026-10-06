@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 func init() {
@@ -98,6 +99,7 @@ func TestAccEmailDomainDkim_Basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheckEmailDomainDkim(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckEmailDomainDkimDisabled(domain),
 		Steps: []resource.TestStep{
 			// Error when domain is missing
 			{
@@ -119,10 +121,14 @@ func TestAccEmailDomainDkim_Basic(t *testing.T) {
 						return nil
 					}),
 					resource.TestCheckResourceAttrSet("ovh_email_domain_dkim.test", "autoconfig"),
-					resource.TestCheckResourceAttrSet("ovh_email_domain_dkim.test", "selectors.#"),
+					// The documented example indexes exactly two selectors.
+					resource.TestCheckResourceAttr("ovh_email_domain_dkim.test", "selectors.#", "2"),
 					resource.TestCheckResourceAttrSet("ovh_email_domain_dkim.test", "selectors.0.selector_name"),
 					resource.TestCheckResourceAttrSet("ovh_email_domain_dkim.test", "selectors.0.cname"),
 					resource.TestCheckResourceAttrSet("ovh_email_domain_dkim.test", "selectors.0.status"),
+					resource.TestCheckResourceAttrSet("ovh_email_domain_dkim.test", "selectors.1.selector_name"),
+					resource.TestCheckResourceAttrSet("ovh_email_domain_dkim.test", "selectors.1.cname"),
+					resource.TestCheckResourceAttrSet("ovh_email_domain_dkim.test", "selectors.1.status"),
 				),
 			},
 			// Import
@@ -134,6 +140,26 @@ func TestAccEmailDomainDkim_Basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+// testAccCheckEmailDomainDkimDisabled checks that destroy waited for the
+// deactivation to finish, rather than returning while it was in flight.
+func testAccCheckEmailDomainDkimDisabled(domain string) resource.TestCheckFunc {
+	return func(_ *terraform.State) error {
+		var dkim struct {
+			Status string `json:"status"`
+		}
+		endpoint := fmt.Sprintf("/email/domain/%s/dkim", url.PathEscape(domain))
+		if err := testAccOVHClient.Get(endpoint, &dkim); err != nil {
+			return fmt.Errorf("error calling %s: %w", endpoint, err)
+		}
+
+		if dkim.Status != dkimStatusDisabled {
+			return fmt.Errorf("DKIM on %s is %q after destroy, expected %q", domain, dkim.Status, dkimStatusDisabled)
+		}
+
+		return nil
+	}
 }
 
 func testAccEmailDomainDkimConfig_noDomain() string {
