@@ -3,7 +3,7 @@ name: Request a Feature
 about: " Request an enhancement to an existing resource, datasource, or the provider
   itself. "
 title: "[FEATURE]"
-labels: ''
+labels: ["Type: Feature"]
 assignees: ''
 
 ---

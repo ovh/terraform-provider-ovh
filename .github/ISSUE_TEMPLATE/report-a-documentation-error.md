@@ -2,7 +2,7 @@
 name: Report a Documentation Error
 about: Report an error in the provider documentation.
 title: "[DOCS]"
-labels: ''
+labels: ["Type: Documentation"]
 assignees: ''
 
 ---
