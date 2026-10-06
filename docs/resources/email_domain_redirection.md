@@ -55,7 +55,7 @@ resource "ovh_email_domain_redirection" "aliases" {
 
 ### Read-Only
 
-- `id` (String) Identifier of the redirection, assigned by OVHcloud
+- `id` (String) Identifier of the redirection, assigned by OVHcloud. Changing the target reassigns it
 
 ## Notes
 
