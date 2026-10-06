@@ -1,0 +1,1 @@
+terraform import ovh_dedicated_ceph_user.my_user service_name/user_name

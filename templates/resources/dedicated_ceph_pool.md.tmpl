@@ -1,0 +1,42 @@
+---
+subcategory : "Cloud Disk Array"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_dedicated_ceph_pool
+
+Creates a pool in a dedicated CEPH cluster (Cloud Disk Array).
+
+Destroying the resource deletes the pool and all of its data: the provider opens the deletion window of the pool, then deletes it.
+
+## Example Usage
+
+{{tffile "examples/resources/dedicated_ceph_pool/example_1.tf"}}
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `service_name` - (Required) The internal name of your dedicated CEPH. **Changing this value recreates the resource.**
+* `name` - (Required) Name of the pool. **Changing this value recreates the resource.**
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `id` - Identifier of the pool, formatted as `service_name/name`.
+* `pool_type` - Type of the pool (`ERASURE_CODED` or `REPLICATED`).
+* `backup` - Whether the pool is backed up.
+* `min_active_replicas` - Minimum number of active replicas.
+* `replica_count` - Number of replicas.
+
+## Import
+
+A dedicated CEPH pool can be imported using the `service_name` and the pool `name`, separated by "/" E.g.,
+
+```bash
+$ terraform import ovh_dedicated_ceph_pool.my_pool service_name/pool_name
+```
