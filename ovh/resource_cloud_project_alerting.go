@@ -78,9 +78,6 @@ func (r *cloudProjectAlertingResource) Create(ctx context.Context, req resource.
 
 	responseData.MergeWith(&data)
 
-	// Explicitly set email to the plan value as it's not returned by the API
-	responseData.Email = data.Email
-
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)
 }
@@ -146,9 +143,6 @@ func (r *cloudProjectAlertingResource) Update(ctx context.Context, req resource.
 	}
 
 	responseData.MergeWith(&planData)
-
-	// Explicitly set email to the plan value as it's not returned by the API
-	responseData.Email = planData.Email
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)
