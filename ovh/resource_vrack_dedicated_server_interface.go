@@ -43,7 +43,7 @@ func resourceVrackDedicatedServerInterfaceImportState(d *schema.ResourceData, me
 	}
 	serviceName := splitId[0]
 	interfaceId := splitId[1]
-	d.SetId(fmt.Sprintf("vrack_%s-dedicatedserver_%s", serviceName, interfaceId))
+	d.SetId(fmt.Sprintf("vrack_%s-dedicatedserverinterface_%s", serviceName, interfaceId))
 	d.Set("service_name", serviceName)
 	d.Set("interface_id", interfaceId)
 
