@@ -107,6 +107,7 @@ func (d *cloudInstanceImagesDataSource) Read(ctx context.Context, req datasource
 			"name":       m.Name,
 			"status":     m.Status,
 			"visibility": m.Visibility,
+			"os_type":    m.OsType,
 			"min_disk":   m.MinDisk,
 			"min_ram":    m.MinRam,
 			"size":       m.Size,

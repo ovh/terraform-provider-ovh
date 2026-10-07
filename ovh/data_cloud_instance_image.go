@@ -70,6 +70,12 @@ func instanceImageDataSourceAttributes() map[string]schema.Attribute {
 			Description:         "Visibility scope of the image, for example whether it is a public OVHcloud-provided image or private to the project.",
 			MarkdownDescription: "Visibility scope of the image, for example whether it is a public OVHcloud-provided image or private to the project.",
 		},
+		"os_type": schema.StringAttribute{
+			CustomType:          ovhtypes.TfStringType{},
+			Computed:            true,
+			Description:         "Operating system type of the image (LINUX, WINDOWS or BAREMETAL_LINUX). Windows images can only boot on Windows flavors.",
+			MarkdownDescription: "Operating system type of the image (LINUX, WINDOWS or BAREMETAL_LINUX). Windows images can only boot on Windows flavors.",
+		},
 		"min_disk": schema.Int64Attribute{
 			Computed:            true,
 			Description:         "Minimum root disk size, in GB, that an instance must provide to boot from this image. A flavor whose disk is smaller than this value cannot be used with the image.",

@@ -112,6 +112,11 @@ func (d *cloudInstanceSnapshotsDataSource) Schema(ctx context.Context, req datas
 							Computed:    true,
 							Description: "Image visibility",
 						},
+						"os_type": schema.StringAttribute{
+							CustomType:  ovhtypes.TfStringType{},
+							Computed:    true,
+							Description: "Operating system type of the snapshot (LINUX, WINDOWS or BAREMETAL_LINUX), inherited from the image the source instance was created from",
+						},
 						"resource_status": schema.StringAttribute{
 							CustomType:  ovhtypes.TfStringType{},
 							Computed:    true,
@@ -142,6 +147,7 @@ func instanceSnapshotListItemAttrTypes() map[string]attr.Type {
 		"size":            types.Int64Type,
 		"status":          ovhtypes.TfStringType{},
 		"visibility":      ovhtypes.TfStringType{},
+		"os_type":         ovhtypes.TfStringType{},
 		"resource_status": ovhtypes.TfStringType{},
 	}
 }
@@ -185,11 +191,13 @@ func (d *cloudInstanceSnapshotsDataSource) Read(ctx context.Context, req datasou
 		size := int64(0)
 		status := ""
 		visibility := ""
+		osType := ""
 		region := data.Region.ValueString()
 		if b.CurrentState != nil {
 			size = b.CurrentState.Size
 			status = b.CurrentState.Status
 			visibility = b.CurrentState.Visibility
+			osType = b.CurrentState.OsType
 			if b.CurrentState.Instance != nil && b.CurrentState.Instance.Id != "" {
 				instanceId = b.CurrentState.Instance.Id
 			}
@@ -222,6 +230,7 @@ func (d *cloudInstanceSnapshotsDataSource) Read(ctx context.Context, req datasou
 				"size":            types.Int64Value(size),
 				"status":          ovhtypes.TfStringValue{StringValue: types.StringValue(status)},
 				"visibility":      ovhtypes.TfStringValue{StringValue: types.StringValue(visibility)},
+				"os_type":         ovhtypes.TfStringValue{StringValue: types.StringValue(osType)},
 				"resource_status": ovhtypes.TfStringValue{StringValue: types.StringValue(b.ResourceStatus)},
 			},
 		)

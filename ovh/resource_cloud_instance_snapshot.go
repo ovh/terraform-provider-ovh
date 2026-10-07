@@ -186,6 +186,12 @@ func (r *cloudInstanceSnapshotResource) Schema(ctx context.Context, req resource
 						Description:         "Image visibility",
 						MarkdownDescription: "Image visibility",
 					},
+					"os_type": schema.StringAttribute{
+						CustomType:          ovhtypes.TfStringType{},
+						Computed:            true,
+						Description:         "Operating system type of the snapshot (LINUX, WINDOWS or BAREMETAL_LINUX), inherited from the image the source instance was created from",
+						MarkdownDescription: "Operating system type of the snapshot (LINUX, WINDOWS or BAREMETAL_LINUX), inherited from the image the source instance was created from",
+					},
 				},
 			},
 		},

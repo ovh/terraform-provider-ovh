@@ -13,6 +13,7 @@ type CloudInstanceImageAPIResponse struct {
 	Name       string                    `json:"name"`
 	Status     string                    `json:"status"`
 	Visibility string                    `json:"visibility"`
+	OsType     string                    `json:"osType"`
 	MinDisk    int64                     `json:"minDisk"`
 	MinRam     int64                     `json:"minRam"`
 	Size       int64                     `json:"size"`
@@ -27,6 +28,7 @@ type CloudInstanceImageModel struct {
 	Name        ovhtypes.TfStringValue `tfsdk:"name"`
 	Status      ovhtypes.TfStringValue `tfsdk:"status"`
 	Visibility  ovhtypes.TfStringValue `tfsdk:"visibility"`
+	OsType      ovhtypes.TfStringValue `tfsdk:"os_type"`
 	MinDisk     types.Int64            `tfsdk:"min_disk"`
 	MinRam      types.Int64            `tfsdk:"min_ram"`
 	Size        types.Int64            `tfsdk:"size"`
@@ -41,6 +43,7 @@ func instanceImageItemAttrTypes() map[string]attr.Type {
 		"name":       ovhtypes.TfStringType{},
 		"status":     ovhtypes.TfStringType{},
 		"visibility": ovhtypes.TfStringType{},
+		"os_type":    ovhtypes.TfStringType{},
 		"min_disk":   types.Int64Type,
 		"min_ram":    types.Int64Type,
 		"size":       types.Int64Type,
@@ -55,6 +58,7 @@ func (m *CloudInstanceImageModel) MergeWith(ctx context.Context, response *Cloud
 	m.Name = ovhtypes.TfStringValue{StringValue: types.StringValue(response.Name)}
 	m.Status = ovhtypes.TfStringValue{StringValue: types.StringValue(response.Status)}
 	m.Visibility = ovhtypes.TfStringValue{StringValue: types.StringValue(response.Visibility)}
+	m.OsType = ovhtypes.TfStringValue{StringValue: types.StringValue(response.OsType)}
 	m.MinDisk = types.Int64Value(response.MinDisk)
 	m.MinRam = types.Int64Value(response.MinRam)
 	m.Size = types.Int64Value(response.Size)
