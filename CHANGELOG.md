@@ -1,3 +1,22 @@
+## 2.23.0 (October 15, 2026)
+
+🎉 Features:
+
+* New resource: `ovh_dedicated_ceph_pool` ([#1463](https://github.com/ovh/terraform-provider-ovh/pull/1463))
+* New resource: `ovh_dedicated_ceph_user` ([#1463](https://github.com/ovh/terraform-provider-ovh/pull/1463))
+* New resource: `ovh_email_domain_dkim` ([#1413](https://github.com/ovh/terraform-provider-ovh/pull/1413))
+* New resource: `ovh_email_domain_redirection` ([#1417](https://github.com/ovh/terraform-provider-ovh/pull/1417))
+
+🐜 Bug fixes:
+
+* `r/ovh_vrack_ip`: New resources get the same ID format as imported ones, `vrack_<service_name>-block_<block>`. Existing resources keep their ID ([#1421](https://github.com/ovh/terraform-provider-ovh/pull/1421))
+
+📚 Documentation:
+
+* `r/ovh_domain_zone`: Clarify the DNS zone templates, and document `stub` as an empty zone containing only NS records ([#1464](https://github.com/ovh/terraform-provider-ovh/pull/1464))
+
+❤️ Thanks for your contributions ❤️
+
 ## 2.22.0 (October 2, 2026)
 
 🎉 Features:
