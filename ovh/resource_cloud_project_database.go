@@ -2,6 +2,7 @@ package ovh
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/url"
@@ -11,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 	"golang.org/x/exp/slices"
 )
@@ -299,6 +301,27 @@ func resourceCloudProjectDatabaseImportState(d *schema.ResourceData, meta interf
 	return results, nil
 }
 
+// errClassNoMatchingCompute is the OVHcloud API error class returned when
+// no compute offer matches the requested database nodes pattern.
+const errClassNoMatchingCompute = "Client::NotFound::NoMatchingCompute"
+
+// databaseNoMatchingComputeError turns the raw API error returned when no
+// compute matches the requested configuration into an error that names the
+// requested combination and says what to check. It returns nil when err is
+// not that API error, so callers fall back to their usual error handling.
+func databaseNoMatchingComputeError(err error, engine string, params *CloudProjectDatabaseCreateOpts) error {
+	var apiErr *ovh.APIError
+	if !errors.As(err, &apiErr) || apiErr.Class != errClassNoMatchingCompute {
+		return nil
+	}
+
+	return fmt.Errorf("no compute matches the requested configuration (engine %q, version %q, plan %q, flavor %q, region %q): "+
+		"the flavor may not be available for this engine version and plan in the requested region. "+
+		"Check the available combinations, for example with the ovh_cloud_project_database_capabilities data source, "+
+		"and adjust the flavor, plan or region: %w",
+		engine, params.Version, params.Plan, params.NodesPattern.Flavor, params.NodesPattern.Region, err)
+}
+
 func resourceCloudProjectDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
@@ -317,6 +340,9 @@ func resourceCloudProjectDatabaseCreate(ctx context.Context, d *schema.ResourceD
 	log.Printf("[DEBUG] Will create Database: %+v", params)
 	err = config.OVHClient.PostWithContext(ctx, endpoint, params, res)
 	if err != nil {
+		if ncErr := databaseNoMatchingComputeError(err, engine, params); ncErr != nil {
+			return diag.FromErr(ncErr)
+		}
 		return diag.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
 	}
 
