@@ -92,6 +92,10 @@ func resourceVrackDedicatedServerInterfaceRead(d *schema.ResourceData, meta inte
 		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
+	// Resources imported before the import ID was fixed hold another ID format, so the ID is
+	// set again to migrate them to the format used by Create and Import.
+	d.SetId(fmt.Sprintf("vrack_%s-dedicatedserverinterface_%s", serviceName, interfaceId))
+
 	d.Set("service_name", vds.Vrack)
 	d.Set("interface_id", vds.DedicatedServerInterface)
 	return nil
