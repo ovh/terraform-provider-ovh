@@ -2,7 +2,7 @@
 name: Request a New Resource and/or Datasource
 about: Request an entirely new resource and/or data source to add to the provider.
 title: "[NEW]"
-labels: ''
+labels: ["Type: New Resource"]
 assignees: ''
 
 ---

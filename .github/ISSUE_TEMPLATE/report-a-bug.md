@@ -2,7 +2,7 @@
 name: Report a Bug
 about: Let us know about an unexpected error, a crash, or otherwise incorrect behavior.
 title: "[BUG]"
-labels: ''
+labels: ["Type: Bug"]
 assignees: ''
 
 ---
