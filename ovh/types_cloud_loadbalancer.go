@@ -14,13 +14,13 @@ type CloudLoadbalancerModel struct {
 	ServiceName ovhtypes.TfStringValue `tfsdk:"service_name"`
 	Region      ovhtypes.TfStringValue `tfsdk:"region"`
 	Network     types.Object           `tfsdk:"network"`
-	FlavorName  ovhtypes.TfStringValue `tfsdk:"flavor_name"`
 
 	// Optional — immutable
 	AvailabilityZone ovhtypes.TfStringValue `tfsdk:"availability_zone"`
 
 	// Required — mutable
-	Name ovhtypes.TfStringValue `tfsdk:"name"`
+	Name       ovhtypes.TfStringValue `tfsdk:"name"`
+	FlavorName ovhtypes.TfStringValue `tfsdk:"flavor_name"` // a change resizes the loadbalancer in place
 
 	// Optional — mutable
 	Description ovhtypes.TfStringValue `tfsdk:"description"`
@@ -97,8 +97,9 @@ type CloudLoadbalancerCreatePayload struct {
 
 // Update payload — uses a separate struct without immutable fields
 type CloudLoadbalancerUpdateTargetSpec struct {
-	Name        string `json:"name"`
-	Description string `json:"description,omitempty"`
+	Name        string                         `json:"name"`
+	Description string                         `json:"description,omitempty"`
+	Flavor      *CloudLoadbalancerAPIFlavorRef `json:"flavor,omitempty"`
 }
 
 type CloudLoadbalancerUpdatePayload struct {
@@ -157,10 +158,17 @@ func (m *CloudLoadbalancerModel) ToCreate() *CloudLoadbalancerCreatePayload {
 }
 
 // ToUpdate converts the Terraform model to the API update payload
-// Note: location, network and flavor are immutable and not included in update payload
+// Note: location and network are immutable and not included in update payload.
+// A flavor different from the current one resizes the loadbalancer in place.
 func (m *CloudLoadbalancerModel) ToUpdate(checksum string) *CloudLoadbalancerUpdatePayload {
 	targetSpec := &CloudLoadbalancerUpdateTargetSpec{
 		Name: m.Name.ValueString(),
+	}
+
+	if !m.FlavorName.IsNull() && !m.FlavorName.IsUnknown() {
+		targetSpec.Flavor = &CloudLoadbalancerAPIFlavorRef{
+			Name: m.FlavorName.ValueString(),
+		}
 	}
 
 	// Handle optional description

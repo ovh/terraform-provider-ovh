@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
@@ -128,6 +129,7 @@ func TestAccCloudLoadbalancer_update(t *testing.T) {
 	vipNetworkId := os.Getenv("OVH_CLOUD_PROJECT_LOADBALANCER_VIP_NETWORK_ID_TEST")
 	vipSubnetId := os.Getenv("OVH_CLOUD_PROJECT_LOADBALANCER_VIP_SUBNET_ID_TEST")
 	flavorName := "SMALL"
+	resizedFlavorName := "MEDIUM"
 
 	lbName := acctest.RandomWithPrefix(testAccResourceCloudLoadbalancerNamePrefix)
 	updatedName := acctest.RandomWithPrefix(testAccResourceCloudLoadbalancerNamePrefix)
@@ -149,6 +151,7 @@ resource "ovh_cloud_loadbalancer" "test" {
 
 	config := fmt.Sprintf(configTemplate, serviceName, lbName, region, flavorName, "initial description", vipNetworkId, vipSubnetId)
 	updatedConfig := fmt.Sprintf(configTemplate, serviceName, updatedName, region, flavorName, "updated description", vipNetworkId, vipSubnetId)
+	resizedConfig := fmt.Sprintf(configTemplate, serviceName, updatedName, region, resizedFlavorName, "updated description", vipNetworkId, vipSubnetId)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -172,6 +175,20 @@ resource "ovh_cloud_loadbalancer" "test" {
 					resource.TestCheckResourceAttr("ovh_cloud_loadbalancer.test", "network.subnet_id", vipSubnetId),
 					resource.TestCheckResourceAttrSet("ovh_cloud_loadbalancer.test", "id"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_loadbalancer.test", "checksum"),
+				),
+			},
+			{
+				// Resizing is an in-place update: the plan must not replace the loadbalancer
+				Config: resizedConfig,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("ovh_cloud_loadbalancer.test", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_loadbalancer.test", "flavor_name", resizedFlavorName),
+					resource.TestCheckResourceAttr("ovh_cloud_loadbalancer.test", "name", updatedName),
+					resource.TestCheckResourceAttr("ovh_cloud_loadbalancer.test", "resource_status", "READY"),
 				),
 			},
 		},

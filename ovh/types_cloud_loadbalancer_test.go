@@ -2,6 +2,8 @@ package ovh
 
 import (
 	"context"
+	"encoding/json"
+	"slices"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -84,6 +86,99 @@ func TestCloudLoadbalancerToUpdate_DoesNotIncludeNetwork(t *testing.T) {
 
 	if payload.TargetSpec.Description != "desc" {
 		t.Fatalf("unexpected targetSpec.description: got %q", payload.TargetSpec.Description)
+	}
+}
+
+func TestCloudLoadbalancerToUpdate_IncludesFlavor(t *testing.T) {
+	model := CloudLoadbalancerModel{
+		Name:       ovhtypes.NewTfStringValue("test-lb"),
+		FlavorName: ovhtypes.NewTfStringValue("MEDIUM"),
+		Network:    loadbalancerNetworkObject("net-id", "subnet-id", ovhtypes.NewTfStringValue("10.0.0.37")),
+	}
+
+	payload := model.ToUpdate("checksum-123")
+	if payload.TargetSpec.Flavor == nil {
+		t.Fatal("expected targetSpec.flavor to be non-nil")
+	}
+
+	if payload.TargetSpec.Flavor.Name != "MEDIUM" {
+		t.Fatalf("unexpected targetSpec.flavor.name: got %q", payload.TargetSpec.Flavor.Name)
+	}
+
+	body, err := json.Marshal(payload)
+	if err != nil {
+		t.Fatalf("unexpected marshal error: %s", err)
+	}
+
+	var raw struct {
+		TargetSpec map[string]any `json:"targetSpec"`
+	}
+	if err := json.Unmarshal(body, &raw); err != nil {
+		t.Fatalf("unexpected unmarshal error: %s", err)
+	}
+
+	if _, ok := raw.TargetSpec["network"]; ok {
+		t.Fatal("expected targetSpec.network to be absent from the update payload")
+	}
+
+	if _, ok := raw.TargetSpec["location"]; ok {
+		t.Fatal("expected targetSpec.location to be absent from the update payload")
+	}
+}
+
+func TestCloudLoadbalancerToUpdate_OmitsUnknownFlavor(t *testing.T) {
+	model := CloudLoadbalancerModel{
+		Name:       ovhtypes.NewTfStringValue("test-lb"),
+		FlavorName: ovhtypes.TfStringValue{StringValue: types.StringUnknown()},
+	}
+
+	payload := model.ToUpdate("checksum-123")
+	if payload.TargetSpec.Flavor != nil {
+		t.Fatalf("expected targetSpec.flavor to be nil, got %+v", payload.TargetSpec.Flavor)
+	}
+}
+
+func TestCloudLoadbalancerMergeWith_FlavorFromTargetSpec(t *testing.T) {
+	model := CloudLoadbalancerModel{
+		FlavorName: ovhtypes.NewTfStringValue("SMALL"),
+		Network:    types.ObjectNull(LoadbalancerNetworkAttrTypes()),
+	}
+
+	model.MergeWith(context.Background(), &CloudLoadbalancerAPIResponse{
+		Id:             "lb-id",
+		ResourceStatus: "READY",
+		TargetSpec: &CloudLoadbalancerAPITargetSpec{
+			Name:   "test-lb",
+			Flavor: &CloudLoadbalancerAPIFlavorRef{Name: "LARGE"},
+		},
+	})
+
+	if got := model.FlavorName.ValueString(); got != "LARGE" {
+		t.Fatalf("unexpected flavor_name: got %q", got)
+	}
+}
+
+func TestCloudLoadbalancerSchema_FlavorNameIsMutable(t *testing.T) {
+	r := &cloudLoadbalancerResource{}
+	var resp resource.SchemaResponse
+
+	r.Schema(context.Background(), resource.SchemaRequest{}, &resp)
+
+	flavorName, ok := resp.Schema.Attributes["flavor_name"].(schema.StringAttribute)
+	if !ok {
+		t.Fatalf("expected flavor_name to be a StringAttribute, got %T", resp.Schema.Attributes["flavor_name"])
+	}
+
+	if !flavorName.Required {
+		t.Fatal("expected flavor_name to be required")
+	}
+
+	if len(flavorName.PlanModifiers) != 0 {
+		t.Fatalf("expected flavor_name to have no plan modifier (no RequiresReplace), got %d", len(flavorName.PlanModifiers))
+	}
+
+	if !slices.Contains(loadbalancerMutableAttrs.Strings, "flavor_name") {
+		t.Fatal("expected flavor_name to be listed in loadbalancerMutableAttrs")
 	}
 }
 

@@ -56,7 +56,7 @@ func (r *cloudLoadbalancerResource) Configure(ctx context.Context, req resource.
 }
 
 var loadbalancerMutableAttrs = MutableAttrs{
-	Strings: []string{"name", "description"},
+	Strings: []string{"name", "description", "flavor_name"},
 }
 
 func (r *cloudLoadbalancerResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -121,8 +121,8 @@ func (r *cloudLoadbalancerResource) Schema(ctx context.Context, req resource.Sch
 			"flavor_name": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Required:            true,
-				Description:         "Loadbalancer flavor name",
-				MarkdownDescription: "Loadbalancer flavor name",
+				Description:         "Loadbalancer flavor name (SMALL, MEDIUM, LARGE, XL). Changing it resizes the loadbalancer in place: Octavia fails it over onto the new flavor, which takes several minutes and can briefly interrupt traffic",
+				MarkdownDescription: "Loadbalancer flavor name (`SMALL`, `MEDIUM`, `LARGE`, `XL`). Changing it resizes the loadbalancer in place: Octavia fails it over onto the new flavor, which takes several minutes and can briefly interrupt traffic",
 				Validators: []validator.String{
 					stringvalidator.OneOf(
 						"SMALL",
@@ -130,9 +130,6 @@ func (r *cloudLoadbalancerResource) Schema(ctx context.Context, req resource.Sch
 						"LARGE",
 						"XL",
 					),
-				},
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"name": schema.StringAttribute{
