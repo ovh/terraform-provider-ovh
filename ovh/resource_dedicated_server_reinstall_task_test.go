@@ -68,6 +68,22 @@ func TestValidateDedicatedServerReinstallTaskStorage(t *testing.T) {
 			expectErr: true,
 		},
 		{
+			name: "legacy install block with only disk_group_id plus erase=false on another disk group",
+			storage: []interface{}{
+				storageBlock(1, true, false, false),
+				storageBlock(2, false, false, false),
+			},
+			expectErr: false,
+		},
+		{
+			name: "two legacy install blocks with only disk_group_id",
+			storage: []interface{}{
+				storageBlock(1, true, false, false),
+				storageBlock(2, true, false, false),
+			},
+			expectErr: true,
+		},
+		{
 			name: "duplicate disk_group_id",
 			storage: []interface{}{
 				storageBlock(2, true, false, false),

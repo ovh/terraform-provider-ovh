@@ -75,7 +75,7 @@ Here is the clear-text post-installation PowerShell script from the example abov
 
 {{tffile "examples/resources/dedicated_server_reinstall_task/example_7.tf"}}
 
-By default, every disk group of the server is erased during the OS installation, whether it is declared in the `storage` block or not. Declaring a `storage` block for a disk group with `erase = false` (and no `partitioning`/`hardware_raid`) is the only way to keep its existing data. The disk group actually receiving the OS installation cannot have `erase = false`, and a given `disk_group_id` cannot be declared more than once.
+By default, every disk group of the server is erased during the OS installation, whether it is declared in the `storage` block or not. Declaring a `storage` block for a disk group with `erase = false` (and no `partitioning`/`hardware_raid`) is the only way to keep its existing data. Any `storage` block not having `erase = false` designates the disk group receiving the OS installation (with the default partitioning when `partitioning` is omitted), so only one such block is allowed. The disk group actually receiving the OS installation cannot have `erase = false`, and a given `disk_group_id` cannot be declared more than once.
 
 ## Argument Reference
 

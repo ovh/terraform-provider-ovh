@@ -339,13 +339,28 @@ func resourceDedicatedServerReinstallTask() *schema.Resource {
 }
 
 func resourceDedicatedServerReinstallTaskCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
-	return validateDedicatedServerReinstallTaskStorage(diff.Get("storage").([]interface{}))
+	// Unknown values are read as zero values during planning, which would trigger false
+	// positives: defer validation until every value it relies on is known.
+	if !diff.NewValueKnown("storage") {
+		return nil
+	}
+	storage := diff.Get("storage").([]interface{})
+	for i := range storage {
+		for _, field := range []string{"disk_group_id", "erase", "partitioning", "hardware_raid"} {
+			if !diff.NewValueKnown(fmt.Sprintf("storage.%d.%s", i, field)) {
+				return nil
+			}
+		}
+	}
+
+	return validateDedicatedServerReinstallTaskStorage(storage)
 }
 
 // validateDedicatedServerReinstallTaskStorage checks the "storage" blocks against constraints
 // enforced by the OVH reinstall API: a disk group cannot have erase=false while also carrying
 // partitioning/hardware_raid (it is implicitly erased when installed on), the same disk_group_id
-// cannot be declared twice, and only one disk group may carry install attributes.
+// cannot be declared twice, and only one disk group may be the install target. Any block not
+// having erase=false is an install target (it is sent with partitioning, empty if not set).
 func validateDedicatedServerReinstallTaskStorage(storage []interface{}) error {
 	seenDiskGroupIds := map[int]bool{}
 	installTargets := 0
@@ -363,16 +378,16 @@ func validateDedicatedServerReinstallTaskStorage(storage []interface{}) error {
 		}
 		seenDiskGroupIds[diskGroupId] = true
 
-		if hasPartitioning || hasHardwareRaid {
+		if !erase && (hasPartitioning || hasHardwareRaid) {
+			errs = append(errs, fmt.Sprintf("storage block for disk_group_id %d cannot set erase = false while also configuring partitioning/hardware_raid: the disk group being installed on is always erased", diskGroupId))
+		}
+		if erase || hasPartitioning || hasHardwareRaid {
 			installTargets++
-			if !erase {
-				errs = append(errs, fmt.Sprintf("storage block for disk_group_id %d cannot set erase = false while also configuring partitioning/hardware_raid: the disk group being installed on is always erased", diskGroupId))
-			}
 		}
 	}
 
 	if installTargets > 1 {
-		errs = append(errs, fmt.Sprintf("only one \"storage\" block may carry partitioning/hardware_raid (the disk group being installed on), but %d were found", installTargets))
+		errs = append(errs, fmt.Sprintf("only one \"storage\" block may target the OS installation (every block not having erase = false does), but %d were found", installTargets))
 	}
 
 	if len(errs) > 0 {
