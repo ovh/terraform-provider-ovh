@@ -1,10 +1,12 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -17,6 +19,8 @@ func resourceDedicatedServerReinstallTask() *schema.Resource {
 		Update: resourceDedicatedServerReinstallTaskUpdate,
 		Read:   resourceDedicatedServerReinstallTaskRead,
 		Delete: resourceDedicatedServerReinstallTaskDelete,
+
+		CustomizeDiff: resourceDedicatedServerReinstallTaskCustomizeDiff,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),
@@ -156,6 +160,13 @@ func resourceDedicatedServerReinstallTask() *schema.Resource {
 							Optional:    true,
 							ForceNew:    true,
 							Description: "Disk group id (default is 0, meaning automatic)",
+						},
+						"erase": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Default:     true,
+							ForceNew:    true,
+							Description: "Whether to erase this disk group's data (default is true). Set to false to keep existing data on a disk group not used for the OS installation.",
 						},
 						"hardware_raid": {
 							Type:        schema.TypeList,
@@ -325,6 +336,64 @@ func resourceDedicatedServerReinstallTask() *schema.Resource {
 			},
 		},
 	}
+}
+
+func resourceDedicatedServerReinstallTaskCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+	// Unknown values are read as zero values during planning, which would trigger false
+	// positives: defer validation until every value it relies on is known.
+	if !diff.NewValueKnown("storage") {
+		return nil
+	}
+	storage := diff.Get("storage").([]interface{})
+	for i := range storage {
+		for _, field := range []string{"disk_group_id", "erase", "partitioning", "hardware_raid"} {
+			if !diff.NewValueKnown(fmt.Sprintf("storage.%d.%s", i, field)) {
+				return nil
+			}
+		}
+	}
+
+	return validateDedicatedServerReinstallTaskStorage(storage)
+}
+
+// validateDedicatedServerReinstallTaskStorage checks the "storage" blocks against constraints
+// enforced by the OVH reinstall API: a disk group cannot have erase=false while also carrying
+// partitioning/hardware_raid (it is implicitly erased when installed on), the same disk_group_id
+// cannot be declared twice, and only one disk group may be the install target. Any block not
+// having erase=false is an install target (it is sent with partitioning, empty if not set).
+func validateDedicatedServerReinstallTaskStorage(storage []interface{}) error {
+	seenDiskGroupIds := map[int]bool{}
+	installTargets := 0
+	var errs []string
+
+	for _, raw := range storage {
+		s := raw.(map[string]interface{})
+		diskGroupId := s["disk_group_id"].(int)
+		erase := s["erase"].(bool)
+		hasPartitioning := len(s["partitioning"].([]interface{})) > 0
+		hasHardwareRaid := len(s["hardware_raid"].([]interface{})) > 0
+
+		if seenDiskGroupIds[diskGroupId] {
+			errs = append(errs, fmt.Sprintf("disk_group_id %d is declared more than once in \"storage\"", diskGroupId))
+		}
+		seenDiskGroupIds[diskGroupId] = true
+
+		if !erase && (hasPartitioning || hasHardwareRaid) {
+			errs = append(errs, fmt.Sprintf("storage block for disk_group_id %d cannot set erase = false while also configuring partitioning/hardware_raid: the disk group being installed on is always erased", diskGroupId))
+		}
+		if erase || hasPartitioning || hasHardwareRaid {
+			installTargets++
+		}
+	}
+
+	if installTargets > 1 {
+		errs = append(errs, fmt.Sprintf("only one \"storage\" block may target the OS installation (every block not having erase = false does), but %d were found", installTargets))
+	}
+
+	if len(errs) > 0 {
+		return fmt.Errorf("invalid \"storage\" configuration:\n- %s", strings.Join(errs, "\n- "))
+	}
+	return nil
 }
 
 func resourceDedicatedServerReinstallTaskCreate(d *schema.ResourceData, meta interface{}) error {
