@@ -40,6 +40,22 @@ resource "ovh_cloud_loadbalancer" "lb" {
 }
 ```
 
+Resize the load balancer by changing `flavor_name` (here from `SMALL` to `MEDIUM`). The load balancer is updated in place, not recreated:
+
+```terraform
+resource "ovh_cloud_loadbalancer" "lb" {
+  service_name = <Public cloud project id>
+  name         = "my-loadbalancer"
+  region       = "GRA1"
+  flavor_name  = "MEDIUM"
+
+  network = {
+    id        = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+    subnet_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+  }
+}
+```
+
 Associate an existing floating IP to the VIP:
 
 ```terraform
@@ -68,7 +84,7 @@ The following arguments are supported:
   * `id` - (Required) ID of the network for the VIP.
   * `subnet_id` - (Required) ID of the subnet for the VIP. The subnet must belong to the network above.
   * `ip` - (Optional) IP of the VIP. When it belongs to the subnet CIDR, it pins the fixed VIP address: it must be inside the subnet allocation pool, must not be the subnet gateway IP and must not already be taken by another port. When it is outside the subnet CIDR, it must be an existing floating IP of the project in that region, not already associated with a port, and the subnet must be attached to a router with an external gateway; the floating IP is then associated to the VIP port. Left empty, the address is picked automatically inside the subnet.
-* `flavor_name` - (Required) Name of the load balancer flavor. Must be one of `SMALL`, `MEDIUM`, `LARGE`, `XL`. **Changing this value recreates the resource.**
+* `flavor_name` - (Required) Name of the load balancer flavor. Must be one of `SMALL`, `MEDIUM`, `LARGE`, `XL`. Changing this value resizes the load balancer in place: Octavia fails it over onto amphorae of the new flavor, which takes several minutes (the load balancer goes `UPDATING`, then `READY`) and can briefly interrupt traffic. The load balancer keeps its ID, VIP and listeners.
 * `availability_zone` - (Optional) Availability zone for the load balancer. **Changing this value recreates the resource.**
 * `description` - (Optional) Load balancer description.
 
