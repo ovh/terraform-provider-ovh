@@ -41,6 +41,38 @@ data "ovh_cloud_project_database_clickhouse_user" "user" {
 }
 `
 
+const testAccCloudProjectDatabaseClickhouseUserDatasourceConfig_Id = `
+resource "ovh_cloud_project_database" "db" {
+	service_name = "%s"
+	description  = "%s"
+	engine       = "clickhouse"
+	version      = "%s"
+	plan         = "production"
+	nodes {
+		region     = "%s"
+	}
+	nodes {
+		region     = "%s"
+	}
+	nodes {
+		region     = "%s"
+	}
+	flavor = "%s"
+}
+
+resource "ovh_cloud_project_database_clickhouse_user" "user" {
+	service_name = ovh_cloud_project_database.db.service_name
+	cluster_id   = ovh_cloud_project_database.db.id
+	name		 = "%s"
+}
+
+data "ovh_cloud_project_database_clickhouse_user" "user" {
+  service_name = ovh_cloud_project_database_clickhouse_user.user.service_name
+  cluster_id   = ovh_cloud_project_database_clickhouse_user.user.cluster_id
+  id           = ovh_cloud_project_database_clickhouse_user.user.id
+}
+`
+
 func TestAccCloudProjectDatabaseClickhouseUserDataSource_basic(t *testing.T) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
 	version := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_CLICKHOUSE_VERSION_TEST")
@@ -60,6 +92,57 @@ func TestAccCloudProjectDatabaseClickhouseUserDataSource_basic(t *testing.T) {
 
 	config := fmt.Sprintf(
 		testAccCloudProjectDatabaseClickhouseUserDatasourceConfig_Basic,
+		serviceName,
+		description,
+		version,
+		region,
+		region,
+		region,
+		flavor,
+		name,
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheckCloudDatabaseNoEngine(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(
+						"data.ovh_cloud_project_database_clickhouse_user.user", "created_at"),
+					resource.TestCheckResourceAttrSet(
+						"data.ovh_cloud_project_database_clickhouse_user.user", "roles.#"),
+					resource.TestCheckResourceAttrSet(
+						"data.ovh_cloud_project_database_clickhouse_user.user", "status"),
+					resource.TestCheckResourceAttr(
+						"data.ovh_cloud_project_database_clickhouse_user.user", "name", name,
+					),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCloudProjectDatabaseClickhouseUserDataSource_id(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	version := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_CLICKHOUSE_VERSION_TEST")
+	if version == "" {
+		version = os.Getenv("OVH_CLOUD_PROJECT_DATABASE_VERSION_TEST")
+	}
+	region := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_CLICKHOUSE_REGION_TEST")
+	if region == "" {
+		region = os.Getenv("OVH_CLOUD_PROJECT_DATABASE_REGION_TEST")
+	}
+	flavor := os.Getenv("OVH_CLOUD_PROJECT_DATABASE_CLICKHOUSE_FLAVOR_TEST")
+	if flavor == "" {
+		flavor = os.Getenv("OVH_CLOUD_PROJECT_DATABASE_FLAVOR_TEST")
+	}
+	description := acctest.RandomWithPrefix(test_prefix)
+	name := "johndoe"
+
+	config := fmt.Sprintf(
+		testAccCloudProjectDatabaseClickhouseUserDatasourceConfig_Id,
 		serviceName,
 		description,
 		version,

@@ -27,8 +27,15 @@ func dataSourceCloudProjectDatabaseMongodbUser() *schema.Resource {
 			"name": {
 				Type:             schema.TypeString,
 				Description:      "Name of the user with the authentication database in the format name@authDB",
-				Required:         true,
+				Optional:         true,
+				ExactlyOneOf:     []string{"name", "id"},
 				ValidateDiagFunc: validateCloudProjectDatabaseMongodbUserAuthenticationDatabase,
+			},
+			"id": {
+				Type:         schema.TypeString,
+				Description:  "ID of the user",
+				Optional:     true,
+				ExactlyOneOf: []string{"name", "id"},
 			},
 
 			//Computed
@@ -56,6 +63,30 @@ func dataSourceCloudProjectDatabaseMongodbUserRead(ctx context.Context, d *schem
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
 	clusterID := d.Get("cluster_id").(string)
+
+	if id := d.Get("id").(string); id != "" {
+		endpoint := fmt.Sprintf("/cloud/project/%s/database/mongodb/%s/user/%s",
+			url.PathEscape(serviceName),
+			url.PathEscape(clusterID),
+			url.PathEscape(id),
+		)
+		res := &CloudProjectDatabaseMongodbUserResponse{}
+
+		log.Printf("[DEBUG] Will read user %s from cluster %s from project %s", id, clusterID, serviceName)
+		if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
+			return diag.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
+		}
+
+		for k, v := range res.toMap() {
+			if k != "id" {
+				d.Set(k, v)
+			} else {
+				d.SetId(fmt.Sprint(v))
+			}
+		}
+		log.Printf("[DEBUG] Read user %+v", res)
+		return nil
+	}
 
 	listEndpoint := fmt.Sprintf("/cloud/project/%s/database/mongodb/%s/user",
 		url.PathEscape(serviceName),

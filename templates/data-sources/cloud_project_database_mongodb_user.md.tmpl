@@ -12,7 +12,11 @@ Use this data source to get information about a user of a mongodb cluster associ
 
 ## Example Usage
 
+Look up a user by name:
 {{tffile "examples/data-sources/cloud_project_database_mongodb_user/example_1.tf"}}
+
+Look up a user by id:
+{{tffile "examples/data-sources/cloud_project_database_mongodb_user/example_2.tf"}}
 
 ## Argument Reference
 
@@ -20,7 +24,9 @@ Use this data source to get information about a user of a mongodb cluster associ
 
 * `cluster_id` - (Required) Cluster ID
 
-* `name` - (Required) Name of the user with the authentication database in the format name@authDB, for example: johndoe@admin
+* `name` - (Optional) Name of the user with the authentication database in the format name@authDB, for example: johndoe@admin. Exactly one of `name` or `id` must be set.
+
+* `id` - (Optional) ID of the user. Exactly one of `name` or `id` must be set.
 
 ## Attributes Reference
 

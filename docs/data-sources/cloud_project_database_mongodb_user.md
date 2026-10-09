@@ -8,11 +8,27 @@ Use this data source to get information about a user of a mongodb cluster associ
 
 ## Example Usage
 
+Look up a user by name:
+
 ```terraform
 data "ovh_cloud_project_database_mongodb_user" "mongo_user" {
   service_name  = "XXX"
   cluster_id    = "YYY"
   name          = "ZZZ@admin"
+}
+
+output "mongo_user_roles" {
+  value = data.ovh_cloud_project_database_mongodb_user.mongo_user.roles
+}
+```
+
+Look up a user by id:
+
+```terraform
+data "ovh_cloud_project_database_mongodb_user" "mongo_user" {
+  service_name  = "XXX"
+  cluster_id    = "YYY"
+  id            = "WWW"
 }
 
 output "mongo_user_roles" {
@@ -26,7 +42,9 @@ output "mongo_user_roles" {
 
 * `cluster_id` - (Required) Cluster ID
 
-* `name` - (Required) Name of the user with the authentication database in the format name@authDB, for example: johndoe@admin
+* `name` - (Optional) Name of the user with the authentication database in the format name@authDB, for example: johndoe@admin. Exactly one of `name` or `id` must be set.
+
+* `id` - (Optional) ID of the user. Exactly one of `name` or `id` must be set.
 
 ## Attributes Reference
 

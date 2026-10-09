@@ -25,9 +25,16 @@ func dataSourceCloudProjectDatabasePostgresqlUser() *schema.Resource {
 				Required:    true,
 			},
 			"name": {
-				Type:        schema.TypeString,
-				Description: "Name of the user",
-				Required:    true,
+				Type:         schema.TypeString,
+				Description:  "Name of the user",
+				Optional:     true,
+				ExactlyOneOf: []string{"name", "id"},
+			},
+			"id": {
+				Type:         schema.TypeString,
+				Description:  "ID of the user",
+				Optional:     true,
+				ExactlyOneOf: []string{"name", "id"},
 			},
 
 			//Computed
@@ -56,6 +63,30 @@ func dataSourceCloudProjectDatabasePostgresqlUserRead(ctx context.Context, d *sc
 	serviceName := d.Get("service_name").(string)
 	clusterID := d.Get("cluster_id").(string)
 	name := d.Get("name").(string)
+
+	if id := d.Get("id").(string); id != "" {
+		endpoint := fmt.Sprintf("/cloud/project/%s/database/postgresql/%s/user/%s",
+			url.PathEscape(serviceName),
+			url.PathEscape(clusterID),
+			url.PathEscape(id),
+		)
+		res := &CloudProjectDatabasePostgresqlUserResponse{}
+
+		log.Printf("[DEBUG] Will read user %s from cluster %s from project %s", id, clusterID, serviceName)
+		if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
+			return diag.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
+		}
+
+		for k, v := range res.ToMap() {
+			if k != "id" {
+				d.Set(k, v)
+			} else {
+				d.SetId(fmt.Sprint(v))
+			}
+		}
+		log.Printf("[DEBUG] Read user %+v", res)
+		return nil
+	}
 
 	listEndpoint := fmt.Sprintf("/cloud/project/%s/database/postgresql/%s/user",
 		url.PathEscape(serviceName),

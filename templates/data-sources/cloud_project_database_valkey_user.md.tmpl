@@ -12,7 +12,11 @@ Use this data source to get information about a user of a valkey cluster associa
 
 ## Example Usage
 
+Look up a user by name:
 {{tffile "examples/data-sources/cloud_project_database_valkey_user/example_1.tf"}}
+
+Look up a user by id:
+{{tffile "examples/data-sources/cloud_project_database_valkey_user/example_2.tf"}}
 
 ## Argument Reference
 
@@ -20,7 +24,9 @@ Use this data source to get information about a user of a valkey cluster associa
 
 * `cluster_id` - (Required) Cluster ID
 
-* `name` - (Required) Name of the user
+* `name` - (Optional) Name of the user. Exactly one of `name` or `id` must be set.
+
+* `id` - (Optional) ID of the user. Exactly one of `name` or `id` must be set.
 
 ## Attributes Reference
 
