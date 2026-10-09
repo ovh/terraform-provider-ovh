@@ -9,24 +9,17 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers/hashcode"
 )
 
-func dataSourceCloudProjectDatabaseUsers() *schema.Resource {
+func dataSourceCloudProjectDatabaseMongodbUsers() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceCloudProjectDatabaseUsersRead,
+		ReadContext: dataSourceCloudProjectDatabaseMongodbUsersRead,
 		Schema: map[string]*schema.Schema{
 			"service_name": {
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("OVH_CLOUD_PROJECT_SERVICE", nil),
-			},
-			"engine": {
-				Type:             schema.TypeString,
-				Description:      "Name of the engine of the service",
-				Required:         true,
-				ValidateDiagFunc: helpers.ValidateDiagEnum(engines),
 			},
 			"cluster_id": {
 				Type:        schema.TypeString,
@@ -35,12 +28,6 @@ func dataSourceCloudProjectDatabaseUsers() *schema.Resource {
 			},
 
 			//Computed
-			"user_ids": {
-				Type:        schema.TypeList,
-				Description: "List of users ids",
-				Computed:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-			},
 			"users": {
 				Type:        schema.TypeList,
 				Description: "List of users with their details",
@@ -54,13 +41,19 @@ func dataSourceCloudProjectDatabaseUsers() *schema.Resource {
 						},
 						"name": {
 							Type:        schema.TypeString,
-							Description: "Name of the user",
+							Description: "Name of the user with the authentication database in the format name@authDB",
 							Computed:    true,
 						},
 						"created_at": {
 							Type:        schema.TypeString,
 							Description: "Date of the creation of the user",
 							Computed:    true,
+						},
+						"roles": {
+							Type:        schema.TypeSet,
+							Description: "Roles the user belongs to",
+							Computed:    true,
+							Elem:        &schema.Schema{Type: schema.TypeString},
 						},
 						"status": {
 							Type:        schema.TypeString,
@@ -74,48 +67,44 @@ func dataSourceCloudProjectDatabaseUsers() *schema.Resource {
 	}
 }
 
-func dataSourceCloudProjectDatabaseUsersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceCloudProjectDatabaseMongodbUsersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get("service_name").(string)
-	engine := d.Get("engine").(string)
 	clusterID := d.Get("cluster_id").(string)
 
-	endpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/user",
+	listEndpoint := fmt.Sprintf("/cloud/project/%s/database/mongodb/%s/user",
 		url.PathEscape(serviceName),
-		url.PathEscape(engine),
 		url.PathEscape(clusterID),
 	)
 
-	res := make([]string, 0)
+	listRes := make([]string, 0)
 
 	log.Printf("[DEBUG] Will read users from cluster %s from project %s", clusterID, serviceName)
-	if err := config.OVHClient.GetWithContext(ctx, endpoint, &res); err != nil {
-		return diag.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
+	if err := config.OVHClient.GetWithContext(ctx, listEndpoint, &listRes); err != nil {
+		return diag.Errorf("Error calling GET %s:\n\t %q", listEndpoint, err)
 	}
 
 	// sort.Strings sorts in place, returns nothing
-	sort.Strings(res)
+	sort.Strings(listRes)
 
-	users := make([]map[string]interface{}, 0, len(res))
-	for _, id := range res {
-		userEndpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/user/%s",
+	users := make([]map[string]interface{}, 0, len(listRes))
+	for _, id := range listRes {
+		endpoint := fmt.Sprintf("/cloud/project/%s/database/mongodb/%s/user/%s",
 			url.PathEscape(serviceName),
-			url.PathEscape(engine),
 			url.PathEscape(clusterID),
 			url.PathEscape(id),
 		)
-		user := &CloudProjectDatabaseUserResponse{}
+		res := &CloudProjectDatabaseMongodbUserResponse{}
 
 		log.Printf("[DEBUG] Will read user %s from cluster %s from project %s", id, clusterID, serviceName)
-		if err := config.OVHClient.GetWithContext(ctx, userEndpoint, user); err != nil {
-			return diag.Errorf("Error calling GET %s:\n\t %q", userEndpoint, err)
+		if err := config.OVHClient.GetWithContext(ctx, endpoint, res); err != nil {
+			return diag.Errorf("Error calling GET %s:\n\t %q", endpoint, err)
 		}
 
-		users = append(users, user.ToMap())
+		users = append(users, res.toMap())
 	}
 
-	d.SetId(hashcode.Strings(res))
-	d.Set("user_ids", res)
+	d.SetId(hashcode.Strings(listRes))
 	d.Set("users", users)
 
 	return nil

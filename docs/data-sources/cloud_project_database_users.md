@@ -36,3 +36,8 @@ output "user_ids" {
 * `engine` - See Argument Reference above.
 * `service_name` - See Argument Reference above.
 * `user_ids` - The list of users ids of the database cluster associated with the project.
+* `users` - The list of users of the database cluster associated with the project, with their details.
+  * `id` - ID of the user.
+  * `name` - Name of the user.
+  * `created_at` - Date of the creation of the user.
+  * `status` - Current status of the user.
