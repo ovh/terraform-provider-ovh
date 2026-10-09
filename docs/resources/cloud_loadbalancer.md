@@ -65,8 +65,8 @@ The following arguments are supported:
 * `region` - (Required) Region where the load balancer will be created. **Changing this value recreates the resource.**
 * `name` - (Required) Load balancer name.
 * `network` - (Required) Network of the VIP. **Changing any value of this block recreates the resource.**
-  * `id` - (Required) ID of the network for the VIP.
-  * `subnet_id` - (Required) ID of the subnet for the VIP. The subnet must belong to the network above.
+  * `id` - (Optional) ID of the network for the VIP. When omitted, the network of `subnet_id` is used.
+  * `subnet_id` - (Required) ID of the subnet for the VIP. When `id` is set, the subnet must belong to that network.
   * `ip` - (Optional) IP of the VIP. When it belongs to the subnet CIDR, it pins the fixed VIP address: it must be inside the subnet allocation pool, must not be the subnet gateway IP and must not already be taken by another port. When it is outside the subnet CIDR, it must be an existing floating IP of the project in that region, not already associated with a port, and the subnet must be attached to a router with an external gateway; the floating IP is then associated to the VIP port. Left empty, the address is picked automatically inside the subnet.
 * `flavor_name` - (Required) Name of the load balancer flavor. Must be one of `SMALL`, `MEDIUM`, `LARGE`, `XL`. **Changing this value recreates the resource.**
 * `availability_zone` - (Optional) Availability zone for the load balancer. **Changing this value recreates the resource.**

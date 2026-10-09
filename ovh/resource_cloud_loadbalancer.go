@@ -100,9 +100,9 @@ func (r *cloudLoadbalancerResource) Schema(ctx context.Context, req resource.Sch
 				Attributes: map[string]schema.Attribute{
 					"id": schema.StringAttribute{
 						CustomType:          ovhtypes.TfStringType{},
-						Required:            true,
-						Description:         "ID of the network for the VIP",
-						MarkdownDescription: "ID of the network for the VIP",
+						Optional:            true,
+						Description:         "ID of the network for the VIP. When omitted, the network of subnet_id is used",
+						MarkdownDescription: "ID of the network for the VIP. When omitted, the network of subnet_id is used",
 					},
 					"subnet_id": schema.StringAttribute{
 						CustomType:          ovhtypes.TfStringType{},

@@ -457,14 +457,14 @@ The following arguments are supported:
 * `networks` - (Optional) Network interfaces attached to the instance. Entries keep the order they are written in; the API returns them sorted by network id and the provider re-orders them back to the configuration. Four shapes:
   * `auto_assign_public_ip` alone — public interface with a platform-assigned public IP (at most one such entry).
   * `ip` alone — a public IP the project already owns: an additional IP, or an Ext-Net IP of the project in the instance's region. Several are allowed and may coexist with `auto_assign_public_ip`.
-  * `network_id` + `subnet_id` — private interface with an address picked by IPAM.
-  * `network_id` + `subnet_id` + `ip` — pins the port's fixed address when `ip` is inside the subnet CIDR, otherwise associates the existing floating IP `ip`.
+  * `subnet_id` (`network_id` optional) — private interface with an address picked by IPAM.
+  * `subnet_id` (`network_id` optional) + `ip` — pins the port's fixed address when `ip` is inside the subnet CIDR, otherwise associates the existing floating IP `ip`.
 
   Each entry supports:
-  * `network_id` - (Optional) Private network ID. Omit for a public interface.
-  * `subnet_id` - (Optional) Subnet ID within the private network. Required with `network_id`.
-  * `ip` - (Optional) IP address of this interface. Without `network_id`: a public IP the project already owns (additional IP, or an Ext-Net IP of the project in the instance's region). With `network_id` + `subnet_id`: pins the port's fixed address when inside the subnet CIDR, otherwise associates the existing floating IP with that address.
-  * `auto_assign_public_ip` - (Optional) Attach a public interface with a public IP assigned by the platform. Only valid on an entry with no `network_id` and no `ip`, and on at most one entry.
+  * `network_id` - (Optional) Private network ID. Optional on a private interface: when omitted, the network of `subnet_id` is used. Omit for a public interface.
+  * `subnet_id` - (Optional) Subnet ID of a private interface. Required for a private interface.
+  * `ip` - (Optional) IP address of this interface. Without `network_id` and `subnet_id`: a public IP the project already owns (additional IP, or an Ext-Net IP of the project in the instance's region). With `subnet_id`: pins the port's fixed address when inside the subnet CIDR, otherwise associates the existing floating IP with that address.
+  * `auto_assign_public_ip` - (Optional) Attach a public interface with a public IP assigned by the platform. Only valid on an entry with no `network_id`, no `subnet_id` and no `ip`, and on at most one entry.
 * `volume_ids` - (Optional) IDs of block-storage volumes attached to the instance.
 * `security_group_ids` - (Optional) IDs of security groups applied to all interfaces. Omit it to let the platform apply the project's `default` security group; set an explicit empty list (`[]`) to apply no security group at all (the instance then accepts no inbound traffic).
 * `shares` - (Optional) Filesystem shares attached to the instance. Each entry supports:

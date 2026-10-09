@@ -14,9 +14,11 @@ type CloudStorageFileShareNetworkModel struct {
 	// Required — immutable
 	ServiceName ovhtypes.TfStringValue `tfsdk:"service_name"`
 	Name        ovhtypes.TfStringValue `tfsdk:"name"`
-	NetworkId   ovhtypes.TfStringValue `tfsdk:"network_id"`
 	SubnetId    ovhtypes.TfStringValue `tfsdk:"subnet_id"`
 	Region      ovhtypes.TfStringValue `tfsdk:"region"`
+
+	// Optional, immutable: read from the subnet when omitted
+	NetworkId ovhtypes.TfStringValue `tfsdk:"network_id"`
 
 	// Optional — immutable
 	Description ovhtypes.TfStringValue `tfsdk:"description"`
@@ -79,9 +81,12 @@ type CloudStorageFileShareNetworkCreatePayload struct {
 func (m *CloudStorageFileShareNetworkModel) ToCreate() *CloudStorageFileShareNetworkCreatePayload {
 	target := &CloudStorageFileShareNetworkAPITargetSpec{
 		Name:     m.Name.ValueString(),
-		Network:  &CloudStorageFileShareNetworkAPINetworkRef{Id: m.NetworkId.ValueString()},
 		Subnet:   &CloudStorageFileShareNetworkAPISubnetRef{Id: m.SubnetId.ValueString()},
 		Location: &CloudStorageFileShareNetworkAPILocation{Region: m.Region.ValueString()},
+	}
+
+	if !m.NetworkId.IsNull() && !m.NetworkId.IsUnknown() {
+		target.Network = &CloudStorageFileShareNetworkAPINetworkRef{Id: m.NetworkId.ValueString()}
 	}
 
 	if !m.Description.IsNull() && !m.Description.IsUnknown() {
