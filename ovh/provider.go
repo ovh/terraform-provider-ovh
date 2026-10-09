@@ -138,6 +138,7 @@ func Provider() *schema.Provider {
 			"ovh_cloud_project_database_log_subscriptions":                   dataSourceCloudProjectDatabaseLogSubscriptions(),
 			"ovh_cloud_project_database_mongodb_prometheus":                  dataSourceCloudProjectDatabaseMongodbPrometheus(),
 			"ovh_cloud_project_database_mongodb_user":                        dataSourceCloudProjectDatabaseMongodbUser(),
+			"ovh_cloud_project_database_mongodb_users":                       dataSourceCloudProjectDatabaseMongodbUsers(),
 			"ovh_cloud_project_database_opensearch_pattern":                  dataSourceCloudProjectDatabaseOpensearchPattern(),
 			"ovh_cloud_project_database_opensearch_patterns":                 dataSourceCloudProjectDatabaseOpensearchPatterns(),
 			"ovh_cloud_project_database_opensearch_user":                     dataSourceCloudProjectDatabaseOpensearchUser(),
