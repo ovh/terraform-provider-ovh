@@ -146,12 +146,12 @@ func (r *cloudInstanceResource) Schema(ctx context.Context, req resource.SchemaR
 			},
 			"networks": schema.ListNestedAttribute{
 				Optional:    true,
-				Description: "Network interfaces attached to the instance. Entries keep the order they are written in; the API returns them sorted by network id and the provider re-orders them back to the configuration. Four shapes: auto_assign_public_ip alone for a platform-assigned public IP (at most one entry); ip alone for a public IP the project already owns (additional IP, or an Ext-Net IP of the project in the instance's region); network_id + subnet_id for a private interface with an IPAM address; network_id + subnet_id + ip to pin the fixed address when ip is inside the subnet CIDR, or to associate an existing floating IP otherwise",
+				Description: "Network interfaces attached to the instance. Entries keep the order they are written in; the API returns them sorted by network id and the provider re-orders them back to the configuration. Four shapes: auto_assign_public_ip alone for a platform-assigned public IP (at most one entry); ip alone for a public IP the project already owns (additional IP, or an Ext-Net IP of the project in the instance's region); subnet_id (network_id optional) for a private interface with an IPAM address; subnet_id (network_id optional) + ip to pin the fixed address when ip is inside the subnet CIDR, or to associate an existing floating IP otherwise",
 				MarkdownDescription: "Network interfaces attached to the instance. Entries keep the order they are written in; the API returns them sorted by network id and the provider re-orders them back to the configuration. Four shapes:\n" +
 					"  * `auto_assign_public_ip` alone — public interface with a platform-assigned public IP (at most one such entry)\n" +
 					"  * `ip` alone — a public IP the project already owns: an additional IP, or an Ext-Net IP of the project in the instance's region. Several are allowed and may coexist with `auto_assign_public_ip`\n" +
-					"  * `network_id` + `subnet_id` — private interface with an address picked by IPAM\n" +
-					"  * `network_id` + `subnet_id` + `ip` — pins the port's fixed address when `ip` is inside the subnet CIDR, otherwise associates the existing floating IP `ip`",
+					"  * `subnet_id` (`network_id` optional) — private interface with an address picked by IPAM\n" +
+					"  * `subnet_id` (`network_id` optional) + `ip` — pins the port's fixed address when `ip` is inside the subnet CIDR, otherwise associates the existing floating IP `ip`",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"network_id": schema.StringAttribute{

@@ -90,6 +90,42 @@ resource "ovh_cloud_storage_file_share_network" "network" {
 	})
 }
 
+func TestAccCloudStorageFileShareNetwork_subnetOnly(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+
+	vrackNetName := acctest.RandomWithPrefix(testAccResourceCloudStorageFileShareVrackSubnetNamePrefix)
+	vrackSubnetName := acctest.RandomWithPrefix(testAccResourceCloudStorageFileShareVrackSubnetNamePrefix)
+	networkName := acctest.RandomWithPrefix(testAccResourceCloudStorageFileShareNetworkNamePrefix)
+
+	config := testAccVrackNetworkSubnetConfig(serviceName, region, vrackNetName, vrackSubnetName) + fmt.Sprintf(`
+resource "ovh_cloud_storage_file_share_network" "network" {
+  service_name = "%s"
+  name         = "%s"
+  subnet_id    = ovh_cloud_network_private_vrack_subnet.vrack_subnet.id
+  region       = "%s"
+}
+`, serviceName, networkName, region)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloud(t)
+			testAccCheckCloudProjectExists(t)
+			testAccPreCheckVRack(t)
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckNoResourceAttr("ovh_cloud_storage_file_share_network.network", "network_id"),
+					resource.TestCheckResourceAttrPair("ovh_cloud_storage_file_share_network.network", "current_state.network_id", "ovh_cloud_network_private_vrack.vrack_net", "id"),
+				),
+			},
+		},
+	})
+}
+
 const testAccResourceCloudStorageFileShareNetworkNamePrefix = "tf-test-sharenet-v2-"
 
 func testAccCloudStorageFileShareNetworkImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {

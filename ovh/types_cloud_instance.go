@@ -295,13 +295,13 @@ const (
 	instanceDescCsGroup = "Instance (placement) group the instance belongs to, null when it is not part of any group"
 	instanceDescGroupId = "Identifier of the instance (placement) group"
 
-	instanceDescNetworkRefNetworkId    = "Private network ID. Omit for a public interface"
-	instanceDescNetworkRefSubnetId     = "Subnet ID within the private network. Required with network_id"
-	instanceDescNetworkRefSubnetIdMd   = "Subnet ID within the private network. Required with `network_id`"
-	instanceDescNetworkRefIp           = "IP address of this interface. Without network_id: a public IP the project already owns (additional IP, or an Ext-Net IP of the project in the instance's region). With network_id + subnet_id: pins the port's fixed address when inside the subnet CIDR, otherwise associates the existing floating IP with that address"
-	instanceDescNetworkRefIpMd         = "IP address of this interface. Without `network_id`: a public IP the project already owns (additional IP, or an Ext-Net IP of the project in the instance's region). With `network_id` + `subnet_id`: pins the port's fixed address when inside the subnet CIDR, otherwise associates the existing floating IP with that address"
-	instanceDescNetworkRefAutoAssign   = "Attach a public interface with a public IP assigned by the platform. Only valid on an entry with no network_id and no ip, and on at most one entry"
-	instanceDescNetworkRefAutoAssignMd = "Attach a public interface with a public IP assigned by the platform. Only valid on an entry with no `network_id` and no `ip`, and on at most one entry"
+	instanceDescNetworkRefNetworkId    = "Private network ID. Optional on a private interface: when omitted, the network of subnet_id is used. Omit for a public interface"
+	instanceDescNetworkRefSubnetId     = "Subnet ID of a private interface. Required for a private interface"
+	instanceDescNetworkRefSubnetIdMd   = "Subnet ID of a private interface. Required for a private interface"
+	instanceDescNetworkRefIp           = "IP address of this interface. Without network_id and subnet_id: a public IP the project already owns (additional IP, or an Ext-Net IP of the project in the instance's region). With subnet_id: pins the port's fixed address when inside the subnet CIDR, otherwise associates the existing floating IP with that address"
+	instanceDescNetworkRefIpMd         = "IP address of this interface. Without `network_id` and `subnet_id`: a public IP the project already owns (additional IP, or an Ext-Net IP of the project in the instance's region). With `subnet_id`: pins the port's fixed address when inside the subnet CIDR, otherwise associates the existing floating IP with that address"
+	instanceDescNetworkRefAutoAssign   = "Attach a public interface with a public IP assigned by the platform. Only valid on an entry with no network_id, no subnet_id and no ip, and on at most one entry"
+	instanceDescNetworkRefAutoAssignMd = "Attach a public interface with a public IP assigned by the platform. Only valid on an entry with no `network_id`, no `subnet_id` and no `ip`, and on at most one entry"
 
 	instanceDescVolumeIds = "IDs of block-storage volumes attached to the instance"
 
