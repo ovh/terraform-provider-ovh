@@ -6,6 +6,8 @@ subcategory : "Domain names"
 
 Provides a OVHcloud domain zone redirection.
 
+~> **NOTE** Creating, updating or deleting a redirection triggers a zone refresh (`POST /domain/zone/{zone}/refresh`), without which the change is recorded but never served by the OVHcloud DNS servers. The credentials used by the provider must therefore carry the `dnsZone:apiovh:refresh` permission in addition to the redirection permissions, otherwise the apply fails.
+
 ## Example Usage
 
 ```terraform
