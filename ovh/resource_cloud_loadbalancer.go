@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -94,27 +93,37 @@ func (r *cloudLoadbalancerResource) Schema(ctx context.Context, req resource.Sch
 				Required:            true,
 				Description:         "Network of the VIP",
 				MarkdownDescription: "Network of the VIP",
-				PlanModifiers: []planmodifier.Object{
-					objectplanmodifier.RequiresReplace(),
-				},
+				// RequiresReplace sits on each field, not on the object: an object-level
+				// one would see the unknown computed id and replace when id is removed.
 				Attributes: map[string]schema.Attribute{
 					"id": schema.StringAttribute{
 						CustomType:          ovhtypes.TfStringType{},
 						Optional:            true,
+						Computed:            true,
 						Description:         "ID of the network for the VIP. When omitted, the network of subnet_id is used",
 						MarkdownDescription: "ID of the network for the VIP. When omitted, the network of subnet_id is used",
+						PlanModifiers: []planmodifier.String{
+							stringplanmodifier.UseStateForUnknown(),
+							stringplanmodifier.RequiresReplace(),
+						},
 					},
 					"subnet_id": schema.StringAttribute{
 						CustomType:          ovhtypes.TfStringType{},
 						Required:            true,
 						Description:         "ID of the subnet for the VIP",
 						MarkdownDescription: "ID of the subnet for the VIP",
+						PlanModifiers: []planmodifier.String{
+							stringplanmodifier.RequiresReplace(),
+						},
 					},
 					"ip": schema.StringAttribute{
 						CustomType:          ovhtypes.TfStringType{},
 						Optional:            true,
 						Description:         "IP of the VIP. Inside the subnet CIDR it pins the fixed VIP address, outside it must be an existing floating IP to associate. Left empty, the address is picked automatically",
 						MarkdownDescription: "IP of the VIP. Inside the subnet CIDR it pins the fixed VIP address, outside it must be an existing floating IP to associate. Left empty, the address is picked automatically",
+						PlanModifiers: []planmodifier.String{
+							stringplanmodifier.RequiresReplace(),
+						},
 					},
 				},
 			},

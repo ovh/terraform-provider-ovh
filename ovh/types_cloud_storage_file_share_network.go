@@ -138,6 +138,7 @@ func (m *CloudStorageFileShareNetworkModel) MergeWith(ctx context.Context, respo
 	if response.TargetSpec != nil {
 		m.Name = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Name)}
 		m.Description = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Description)}
+		m.NetworkId = ovhtypes.TfStringValue{StringValue: types.StringNull()}
 		if response.TargetSpec.Network != nil && response.TargetSpec.Network.Id != "" {
 			m.NetworkId = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Network.Id)}
 		}
