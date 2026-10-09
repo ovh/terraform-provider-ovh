@@ -8,11 +8,27 @@ Use this data source to get information about a user of a valkey cluster associa
 
 ## Example Usage
 
+Look up a user by name:
+
 ```terraform
 data "ovh_cloud_project_database_valkey_user" "valkey_user" {
   service_name  = "XXX"
   cluster_id    = "YYY"
   name          = "ZZZ"
+}
+
+output "valkey_user_commands" {
+  value = data.ovh_cloud_project_database_valkey_user.valkey_user.commands
+}
+```
+
+Look up a user by id:
+
+```terraform
+data "ovh_cloud_project_database_valkey_user" "valkey_user" {
+  service_name  = "XXX"
+  cluster_id    = "YYY"
+  id            = "WWW"
 }
 
 output "valkey_user_commands" {
@@ -26,7 +42,9 @@ output "valkey_user_commands" {
 
 * `cluster_id` - (Required) Cluster ID
 
-* `name` - (Required) Name of the user
+* `name` - (Optional) Name of the user. Exactly one of `name` or `id` must be set.
+
+* `id` - (Optional) ID of the user. Exactly one of `name` or `id` must be set.
 
 ## Attributes Reference
 

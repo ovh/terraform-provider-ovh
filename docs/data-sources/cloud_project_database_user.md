@@ -8,12 +8,29 @@ Use this data source to get information about a user of a database cluster assoc
 
 ## Example Usage
 
+Look up a user by name:
+
 ```terraform
 data "ovh_cloud_project_database_user" "user" {
   service_name  = "XXX"
   engine        = "YYY"
   cluster_id    = "ZZZ"
   name          = "UUU"
+}
+
+output "user_name" {
+  value = data.ovh_cloud_project_database_user.user.name
+}
+```
+
+Look up a user by id:
+
+```terraform
+data "ovh_cloud_project_database_user" "user" {
+  service_name  = "XXX"
+  engine        = "YYY"
+  cluster_id    = "ZZZ"
+  id            = "VVV"
 }
 
 output "user_name" {
@@ -33,7 +50,9 @@ output "user_name" {
 
 * `cluster_id` - (Required) Cluster ID
 
-* `name` - (Required) Name of the user.
+* `name` - (Optional) Name of the user. Exactly one of `name` or `id` must be set.
+
+* `id` - (Optional) ID of the user. Exactly one of `name` or `id` must be set.
 
 ## Attributes Reference
 

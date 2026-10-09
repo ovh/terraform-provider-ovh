@@ -8,11 +8,27 @@ Use this data source to get information about a user of a opensearch cluster ass
 
 ## Example Usage
 
+Look up a user by name:
+
 ```terraform
 data "ovh_cloud_project_database_opensearch_user" "os_user" {
   service_name  = "XXX"
   cluster_id    = "YYY"
   name          = "ZZZ"
+}
+
+output "os_user_acls" {
+  value = data.ovh_cloud_project_database_opensearch_user.os_user.acls
+}
+```
+
+Look up a user by id:
+
+```terraform
+data "ovh_cloud_project_database_opensearch_user" "os_user" {
+  service_name  = "XXX"
+  cluster_id    = "YYY"
+  id            = "WWW"
 }
 
 output "os_user_acls" {
@@ -26,7 +42,9 @@ output "os_user_acls" {
 
 * `cluster_id` - (Required) Cluster ID
 
-* `name` - (Required) Name of the user.
+* `name` - (Optional) Name of the user. Exactly one of `name` or `id` must be set.
+
+* `id` - (Optional) ID of the user. Exactly one of `name` or `id` must be set.
 
 ## Attributes Reference
 
