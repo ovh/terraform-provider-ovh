@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"sort"
 	"strings"
 	"time"
 
@@ -2152,4 +2153,207 @@ func (r CloudProjectDatabaseClickhouseUserResponse) ToMap() map[string]interface
 	obj["status"] = r.Status
 
 	return obj
+}
+
+// errClassNoMatchingCompute is the API error class returned when creating a database
+// with a combination of engine, version, plan, region, flavor and nodes that does not exist.
+const errClassNoMatchingCompute = "Client::NotFound::NoMatchingCompute"
+
+// Availability statuses that do not allow to create a new database.
+var cloudProjectDatabaseNotCreatableStatuses = []string{"END_OF_LIFE", "END_OF_SALE", "UNAVAILABLE"}
+
+type CloudProjectDatabaseAvailabilitySize struct {
+	Unit  string `json:"unit"`
+	Value int    `json:"value"`
+}
+
+type CloudProjectDatabaseAvailability struct {
+	Engine    string `json:"engine"`
+	Version   string `json:"version"`
+	Plan      string `json:"plan"`
+	Region    string `json:"region"`
+	Lifecycle struct {
+		Status string `json:"status"`
+	} `json:"lifecycle"`
+	Specifications struct {
+		Flavor  string `json:"flavor"`
+		Network string `json:"network"`
+		Nodes   struct {
+			Minimum int `json:"minimum"`
+			Maximum int `json:"maximum"`
+		} `json:"nodes"`
+		Storage *struct {
+			Minimum CloudProjectDatabaseAvailabilitySize  `json:"minimum"`
+			Maximum CloudProjectDatabaseAvailabilitySize  `json:"maximum"`
+			Step    *CloudProjectDatabaseAvailabilitySize `json:"step"`
+		} `json:"storage"`
+	} `json:"specifications"`
+}
+
+// cloudProjectDatabaseAvailabilityStep checks one value of the requested configuration
+// against the availabilities.
+type cloudProjectDatabaseAvailabilityStep struct {
+	// requested describes the requested value, e.g. `flavor "db1-4"`
+	requested string
+	// context is added to the description of the next steps, e.g. "db1-4"
+	context string
+	keep    func(a CloudProjectDatabaseAvailability) bool
+	// available describes the value of an availability, used to list alternatives
+	available func(a CloudProjectDatabaseAvailability) string
+}
+
+// explainNoMatchingCompute finds the first value of the requested configuration that matches
+// no availability, and describes it along with the available values. It returns an empty
+// string when the whole configuration matches an availability.
+func explainNoMatchingCompute(availabilities []CloudProjectDatabaseAvailability, engine string, opts *CloudProjectDatabaseCreateOpts) string {
+	network := "public"
+	if opts.NetworkID != "" {
+		network = "private"
+	}
+
+	steps := []cloudProjectDatabaseAvailabilityStep{
+		{
+			requested: fmt.Sprintf("engine %q", engine),
+			context:   engine,
+			keep:      func(a CloudProjectDatabaseAvailability) bool { return a.Engine == engine },
+			available: func(a CloudProjectDatabaseAvailability) string { return a.Engine },
+		},
+		{
+			requested: fmt.Sprintf("version %q", opts.Version),
+			context:   opts.Version,
+			keep:      func(a CloudProjectDatabaseAvailability) bool { return a.Version == opts.Version },
+			available: func(a CloudProjectDatabaseAvailability) string { return a.Version },
+		},
+		{
+			requested: fmt.Sprintf("plan %q", opts.Plan),
+			context:   opts.Plan,
+			keep:      func(a CloudProjectDatabaseAvailability) bool { return a.Plan == opts.Plan },
+			available: func(a CloudProjectDatabaseAvailability) string { return a.Plan },
+		},
+		{
+			requested: fmt.Sprintf("region %q", opts.NodesPattern.Region),
+			context:   opts.NodesPattern.Region,
+			keep: func(a CloudProjectDatabaseAvailability) bool {
+				return strings.EqualFold(a.Region, opts.NodesPattern.Region)
+			},
+			available: func(a CloudProjectDatabaseAvailability) string { return a.Region },
+		},
+		{
+			requested: fmt.Sprintf("flavor %q", opts.NodesPattern.Flavor),
+			context:   opts.NodesPattern.Flavor,
+			keep: func(a CloudProjectDatabaseAvailability) bool {
+				return a.Specifications.Flavor == opts.NodesPattern.Flavor
+			},
+			available: func(a CloudProjectDatabaseAvailability) string { return a.Specifications.Flavor },
+		},
+		{
+			requested: fmt.Sprintf("%s network", network),
+			context:   network + " network",
+			keep:      func(a CloudProjectDatabaseAvailability) bool { return a.Specifications.Network == network },
+			available: func(a CloudProjectDatabaseAvailability) string { return a.Specifications.Network + " network" },
+		},
+		{
+			requested: fmt.Sprintf("node count %d", opts.NodesPattern.Number),
+			keep: func(a CloudProjectDatabaseAvailability) bool {
+				return opts.NodesPattern.Number >= a.Specifications.Nodes.Minimum &&
+					opts.NodesPattern.Number <= a.Specifications.Nodes.Maximum
+			},
+			available: func(a CloudProjectDatabaseAvailability) string {
+				if a.Specifications.Nodes.Minimum == a.Specifications.Nodes.Maximum {
+					return fmt.Sprintf("%d nodes", a.Specifications.Nodes.Minimum)
+				}
+				return fmt.Sprintf("%d to %d nodes", a.Specifications.Nodes.Minimum, a.Specifications.Nodes.Maximum)
+			},
+		},
+	}
+
+	// The disk size is optional, and only checked when the availability gives its limits in GB
+	if size := opts.Disk.Size; size > 0 {
+		steps = append(steps, cloudProjectDatabaseAvailabilityStep{
+			requested: fmt.Sprintf("disk size %d GB", size),
+			keep: func(a CloudProjectDatabaseAvailability) bool {
+				storage := a.Specifications.Storage
+				if storage == nil || storage.Minimum.Unit != "GB" || storage.Maximum.Unit != "GB" {
+					return true
+				}
+				if size < storage.Minimum.Value || size > storage.Maximum.Value {
+					return false
+				}
+				if storage.Step != nil && storage.Step.Unit == "GB" && storage.Step.Value > 0 {
+					return (size-storage.Minimum.Value)%storage.Step.Value == 0
+				}
+				return true
+			},
+			available: func(a CloudProjectDatabaseAvailability) string {
+				storage := a.Specifications.Storage
+				if storage == nil {
+					return "any disk size"
+				}
+				res := fmt.Sprintf("%d to %d %s", storage.Minimum.Value, storage.Maximum.Value, storage.Maximum.Unit)
+				if storage.Step != nil && storage.Step.Value > 0 {
+					res += fmt.Sprintf(" in steps of %d %s", storage.Step.Value, storage.Step.Unit)
+				}
+				return res
+			},
+		})
+	}
+
+	filter := func(availabilities []CloudProjectDatabaseAvailability, keep func(CloudProjectDatabaseAvailability) bool) []CloudProjectDatabaseAvailability {
+		var res []CloudProjectDatabaseAvailability
+		for _, a := range availabilities {
+			if keep(a) {
+				res = append(res, a)
+			}
+		}
+		return res
+	}
+
+	// Narrow down both all the availabilities and the ones that allow to create a database,
+	// to tell apart a value that does not exist from a value that is no longer sold.
+	all := availabilities
+	creatable := filter(availabilities, func(a CloudProjectDatabaseAvailability) bool {
+		return !slices.Contains(cloudProjectDatabaseNotCreatableStatuses, a.Lifecycle.Status)
+	})
+
+	var contexts []string
+	for _, step := range steps {
+		nextAll := filter(all, step.keep)
+		nextCreatable := filter(creatable, step.keep)
+
+		if len(nextCreatable) == 0 {
+			res := step.requested
+			if len(nextAll) > 0 {
+				res += " is " + strings.Join(uniqueSorted(nextAll, func(a CloudProjectDatabaseAvailability) string { return a.Lifecycle.Status }), ", ")
+			} else {
+				res += " is not available"
+			}
+			if len(contexts) > 0 {
+				res += " for " + strings.Join(contexts, " / ")
+			}
+			if available := uniqueSorted(creatable, step.available); len(available) > 0 {
+				res += " (available: " + strings.Join(available, ", ") + ")"
+			}
+			return res
+		}
+
+		all, creatable = nextAll, nextCreatable
+		if step.context != "" {
+			contexts = append(contexts, step.context)
+		}
+	}
+
+	return ""
+}
+
+func uniqueSorted(availabilities []CloudProjectDatabaseAvailability, value func(CloudProjectDatabaseAvailability) string) []string {
+	seen := map[string]bool{}
+	var res []string
+	for _, a := range availabilities {
+		if v := value(a); !seen[v] {
+			seen[v] = true
+			res = append(res, v)
+		}
+	}
+	sort.Strings(res)
+	return res
 }
