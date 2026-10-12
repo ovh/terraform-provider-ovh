@@ -91,7 +91,7 @@ func (r *domainZoneDnssecResource) Read(ctx context.Context, req resource.ReadRe
 	responseData.MergeWith(&data)
 
 	// Save updated data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)
 }
 
 func (r *domainZoneDnssecResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
