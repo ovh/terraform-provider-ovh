@@ -126,14 +126,14 @@ github.com/hashicorp/go-uuid
 # github.com/hashicorp/go-version v1.9.0
 ## explicit
 github.com/hashicorp/go-version
-# github.com/hashicorp/hc-install v0.9.5
-## explicit; go 1.25.0
+# github.com/hashicorp/hc-install v0.10.0
+## explicit; go 1.26.0
 github.com/hashicorp/hc-install
 github.com/hashicorp/hc-install/checkpoint
 github.com/hashicorp/hc-install/errors
 github.com/hashicorp/hc-install/fs
+github.com/hashicorp/hc-install/httpclient
 github.com/hashicorp/hc-install/internal/build
-github.com/hashicorp/hc-install/internal/httpclient
 github.com/hashicorp/hc-install/internal/pubkey
 github.com/hashicorp/hc-install/internal/releasesjson
 github.com/hashicorp/hc-install/internal/src
@@ -155,7 +155,7 @@ github.com/hashicorp/logutils
 ## explicit; go 1.25.0
 github.com/hashicorp/terraform-exec/internal/version
 github.com/hashicorp/terraform-exec/tfexec
-# github.com/hashicorp/terraform-json v0.28.0
+# github.com/hashicorp/terraform-json v0.29.0
 ## explicit; go 1.21
 github.com/hashicorp/terraform-json
 # github.com/hashicorp/terraform-plugin-framework v1.19.0
@@ -313,7 +313,7 @@ github.com/hashicorp/terraform-svchost
 github.com/hashicorp/yamux
 # github.com/kr/text v0.2.0
 ## explicit
-# github.com/mattn/go-colorable v0.1.15
+# github.com/mattn/go-colorable v0.1.16
 ## explicit; go 1.18
 github.com/mattn/go-colorable
 # github.com/mattn/go-isatty v0.0.24
@@ -374,7 +374,7 @@ github.com/zclconf/go-cty/cty/set
 # go.uber.org/ratelimit v0.3.1
 ## explicit; go 1.20
 go.uber.org/ratelimit
-# golang.org/x/crypto v0.57.0
+# golang.org/x/crypto v0.58.0
 ## explicit; go 1.26.0
 golang.org/x/crypto/argon2
 golang.org/x/crypto/blake2b
@@ -391,16 +391,16 @@ golang.org/x/crypto/internal/poly1305
 golang.org/x/crypto/sha3
 golang.org/x/crypto/ssh
 golang.org/x/crypto/ssh/internal/bcrypt_pbkdf
-# golang.org/x/exp v0.0.0-20260908205506-85c1c2202aba
+# golang.org/x/exp v0.0.0-20261011100332-faecfb24eb49
 ## explicit; go 1.26.0
 golang.org/x/exp/slices
-# golang.org/x/mod v0.41.0
+# golang.org/x/mod v0.42.0
 ## explicit; go 1.26.0
 golang.org/x/mod/internal/lazyregexp
 golang.org/x/mod/modfile
 golang.org/x/mod/module
 golang.org/x/mod/semver
-# golang.org/x/net v0.59.0
+# golang.org/x/net v0.61.0
 ## explicit; go 1.26.0
 golang.org/x/net/http/httpguts
 golang.org/x/net/http2
@@ -416,21 +416,21 @@ golang.org/x/net/trace
 golang.org/x/oauth2
 golang.org/x/oauth2/clientcredentials
 golang.org/x/oauth2/internal
-# golang.org/x/sync v0.23.0
+# golang.org/x/sync v0.24.0
 ## explicit; go 1.26.0
 golang.org/x/sync/errgroup
-# golang.org/x/sys v0.48.0
+# golang.org/x/sys v0.49.0
 ## explicit; go 1.26.0
 golang.org/x/sys/cpu
 golang.org/x/sys/unix
 golang.org/x/sys/windows
-# golang.org/x/text v0.42.0
+# golang.org/x/text v0.43.0
 ## explicit; go 1.26.0
 golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
-# golang.org/x/tools v0.50.0
+# golang.org/x/tools v0.52.0
 ## explicit; go 1.26.0
 golang.org/x/tools/cmd/stringer
 golang.org/x/tools/go/ast/edge
@@ -438,7 +438,6 @@ golang.org/x/tools/go/ast/inspector
 golang.org/x/tools/go/gcexportdata
 golang.org/x/tools/go/packages
 golang.org/x/tools/go/types/objectpath
-golang.org/x/tools/internal/aliases
 golang.org/x/tools/internal/event
 golang.org/x/tools/internal/event/core
 golang.org/x/tools/internal/event/keys
@@ -464,7 +463,7 @@ google.golang.org/appengine/internal/datastore
 google.golang.org/appengine/internal/log
 google.golang.org/appengine/internal/modules
 google.golang.org/appengine/internal/remote_api
-# google.golang.org/genproto/googleapis/rpc v0.0.0-20260921155816-b14227669459
+# google.golang.org/genproto/googleapis/rpc v0.0.0-20261005182115-fad411399dd8
 ## explicit; go 1.26.0
 google.golang.org/genproto/googleapis/rpc/status
 # google.golang.org/grpc v1.84.0

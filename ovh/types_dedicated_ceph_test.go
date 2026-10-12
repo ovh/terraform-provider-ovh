@@ -358,7 +358,7 @@ func TestRetryDedicatedCephChange(t *testing.T) {
 			}
 			if calls == 2 {
 				// The pool deletion wraps the client errors.
-				return fmt.Errorf("error calling Delete: %w", locked)
+				return fmt.Errorf("error calling Delete: %w", error(locked))
 			}
 			return nil
 		})
@@ -387,7 +387,7 @@ func TestRetryDedicatedCephChange(t *testing.T) {
 		calls := 0
 		err := retryDedicatedCephChange(ctx, time.Minute, func() error {
 			calls++
-			return fmt.Errorf("error calling Post: %w", serverError)
+			return fmt.Errorf("error calling Post: %w", error(serverError))
 		})
 		if calls != dedicatedCephServerErrorAttempts {
 			t.Errorf("expected %d calls, got %d", dedicatedCephServerErrorAttempts, calls)
