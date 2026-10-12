@@ -70,6 +70,14 @@ func TestAccCloudProjectDatabaseUsersDataSource_basic(t *testing.T) {
 						"data.ovh_cloud_project_database_users.users",
 						"user_ids.#",
 					),
+					resource.TestCheckResourceAttrSet(
+						"data.ovh_cloud_project_database_users.users",
+						"users.#",
+					),
+					resource.TestCheckResourceAttrSet(
+						"data.ovh_cloud_project_database_users.users",
+						"users.0.name",
+					),
 				),
 			},
 		},

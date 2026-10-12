@@ -41,6 +41,35 @@ func dataSourceCloudProjectDatabaseUsers() *schema.Resource {
 				Computed:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
+			"users": {
+				Type:        schema.TypeList,
+				Description: "List of users with their details",
+				Computed:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:        schema.TypeString,
+							Description: "ID of the user",
+							Computed:    true,
+						},
+						"name": {
+							Type:        schema.TypeString,
+							Description: "Name of the user",
+							Computed:    true,
+						},
+						"created_at": {
+							Type:        schema.TypeString,
+							Description: "Date of the creation of the user",
+							Computed:    true,
+						},
+						"status": {
+							Type:        schema.TypeString,
+							Description: "Current status of the user",
+							Computed:    true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -67,8 +96,27 @@ func dataSourceCloudProjectDatabaseUsersRead(ctx context.Context, d *schema.Reso
 	// sort.Strings sorts in place, returns nothing
 	sort.Strings(res)
 
+	users := make([]map[string]interface{}, 0, len(res))
+	for _, id := range res {
+		userEndpoint := fmt.Sprintf("/cloud/project/%s/database/%s/%s/user/%s",
+			url.PathEscape(serviceName),
+			url.PathEscape(engine),
+			url.PathEscape(clusterID),
+			url.PathEscape(id),
+		)
+		user := &CloudProjectDatabaseUserResponse{}
+
+		log.Printf("[DEBUG] Will read user %s from cluster %s from project %s", id, clusterID, serviceName)
+		if err := config.OVHClient.GetWithContext(ctx, userEndpoint, user); err != nil {
+			return diag.Errorf("Error calling GET %s:\n\t %q", userEndpoint, err)
+		}
+
+		users = append(users, user.ToMap())
+	}
+
 	d.SetId(hashcode.Strings(res))
 	d.Set("user_ids", res)
+	d.Set("users", users)
 
 	return nil
 }
