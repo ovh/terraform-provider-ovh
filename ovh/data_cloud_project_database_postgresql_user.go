@@ -28,12 +28,14 @@ func dataSourceCloudProjectDatabasePostgresqlUser() *schema.Resource {
 				Type:         schema.TypeString,
 				Description:  "Name of the user",
 				Optional:     true,
+				Computed:     true,
 				ExactlyOneOf: []string{"name", "id"},
 			},
 			"id": {
 				Type:         schema.TypeString,
 				Description:  "ID of the user",
 				Optional:     true,
+				Computed:     true,
 				ExactlyOneOf: []string{"name", "id"},
 			},
 
