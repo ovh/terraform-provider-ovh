@@ -103,6 +103,7 @@ func genericOrderSchema(withOptions bool) map[string]*schema.Schema {
 					"configuration": {
 						Type:        schema.TypeList,
 						Optional:    true,
+						ForceNew:    true,
 						Description: "Representation of a configuration item for personalizing product",
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
@@ -110,11 +111,13 @@ func genericOrderSchema(withOptions bool) map[string]*schema.Schema {
 									Type:        schema.TypeString,
 									Description: "Identifier of the resource",
 									Required:    true,
+									ForceNew:    true,
 								},
 								"value": {
 									Type:        schema.TypeString,
 									Description: "Path to the resource in API.OVH.COM",
 									Required:    true,
+									ForceNew:    true,
 								},
 							},
 						},
@@ -154,6 +157,7 @@ func genericOrderSchema(withOptions bool) map[string]*schema.Schema {
 					"configuration": {
 						Type:        schema.TypeList,
 						Optional:    true,
+						ForceNew:    true,
 						Description: "Representation of a configuration item for personalizing product",
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
@@ -161,11 +165,13 @@ func genericOrderSchema(withOptions bool) map[string]*schema.Schema {
 									Type:        schema.TypeString,
 									Description: "Identifier of the resource",
 									Required:    true,
+									ForceNew:    true,
 								},
 								"value": {
 									Type:        schema.TypeString,
 									Description: "Path to the resource in API.OVH.COM",
 									Required:    true,
+									ForceNew:    true,
 								},
 							},
 						},
