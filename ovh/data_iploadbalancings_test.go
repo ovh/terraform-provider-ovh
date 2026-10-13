@@ -13,7 +13,7 @@ func TestAccIpLoadbalancingsDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: `
-					data ovh_iploadbalancing_nat_ips iplbs {
+					data ovh_iploadbalancings iplbs {
 					}`,
 				Check: resource.TestCheckResourceAttrSet("data.ovh_iploadbalancings.iplbs", "iploadbalancings.#"),
 			},
