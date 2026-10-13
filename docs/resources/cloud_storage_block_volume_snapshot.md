@@ -62,6 +62,7 @@ The following attributes are exported:
   * `description` - Snapshot description.
   * `volume_id` - ID of the snapshotted volume.
   * `size` - Size of the snapshot in GB.
+  * `status` - Snapshot status (`AVAILABLE`, `BACKING_UP`, `CREATING`, `DELETED`, `DELETING`, `ERROR`, `ERROR_DELETING`, `RESTORING`, `UNMANAGING`, `UPDATING`).
 
 ## Import
 

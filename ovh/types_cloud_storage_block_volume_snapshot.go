@@ -46,6 +46,7 @@ type CloudStorageBlockVolumeSnapshotCurrentState struct {
 	Description string                                   `json:"description,omitempty"`
 	VolumeId    string                                   `json:"volumeId,omitempty"`
 	Size        int64                                    `json:"size,omitempty"`
+	Status      string                                   `json:"status,omitempty"`
 }
 
 type CloudStorageBlockVolumeSnapshotTargetSpec struct {
@@ -115,6 +116,7 @@ func SnapshotCurrentStateAttrTypes() map[string]attr.Type {
 		"description": ovhtypes.TfStringType{},
 		"volume_id":   ovhtypes.TfStringType{},
 		"size":        types.Int64Type,
+		"status":      ovhtypes.TfStringType{},
 	}
 }
 
@@ -154,6 +156,7 @@ func (m *CloudStorageBlockVolumeSnapshotModel) MergeWith(ctx context.Context, re
 				"description": ovhtypes.TfStringValue{StringValue: types.StringValue(response.CurrentState.Description)},
 				"volume_id":   ovhtypes.TfStringValue{StringValue: types.StringValue(response.CurrentState.VolumeId)},
 				"size":        types.Int64Value(response.CurrentState.Size),
+				"status":      ovhtypes.TfStringValue{StringValue: types.StringValue(response.CurrentState.Status)},
 			},
 		)
 
