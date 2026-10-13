@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
@@ -138,14 +139,15 @@ func (d *cloudNetworkPrivateVrackDataSource) Schema(ctx context.Context, req dat
 }
 
 func (d *cloudNetworkPrivateVrackDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data CloudNetworkPrivateVrackModel
+	var serviceName, id ovhtypes.TfStringValue
 
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("service_name"), &serviceName)...)
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("id"), &id)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/network/" + url.PathEscape(data.Id.ValueString())
+	endpoint := "/v2/publicCloud/project/" + url.PathEscape(serviceName.ValueString()) + "/network/" + url.PathEscape(id.ValueString())
 
 	var responseData CloudNetworkAPIResponse
 	if err := d.config.OVHClient.Get(endpoint, &responseData); err != nil {
@@ -156,7 +158,9 @@ func (d *cloudNetworkPrivateVrackDataSource) Read(ctx context.Context, req datas
 		return
 	}
 
-	data.MergeWith(ctx, &responseData)
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	// The data source exposes the same attributes as an element of the plural data source
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_name"), serviceName)...)
+	for name, value := range buildNetworkListItemObject(&responseData).Attributes() {
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(name), value)...)
+	}
 }
