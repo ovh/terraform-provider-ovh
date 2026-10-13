@@ -77,7 +77,8 @@ type CloudStorageObjectBucketAPIUpdateTargetSpec struct {
 	Encryption  *CloudStorageObjectBucketAPIEncryption `json:"encryption,omitempty"`
 	Versioning  *CloudStorageObjectBucketAPIVersioning `json:"versioning,omitempty"`
 	ObjectLock  *CloudStorageObjectBucketAPIObjectLock `json:"objectLock,omitempty"`
-	Tags        map[string]string                      `json:"tags,omitempty"`
+	// Never omitted: the API keeps the stored tags when the key is absent and clears them on {}.
+	Tags map[string]string `json:"tags"`
 }
 
 type CloudStorageObjectBucketAPICurrentState struct {
@@ -326,11 +327,15 @@ func (m *CloudStorageObjectBucketModel) ToCreate() *CloudStorageObjectBucketCrea
 
 // ToUpdate converts the Terraform model to the API update payload
 func (m *CloudStorageObjectBucketModel) ToUpdate(checksum string) *CloudStorageObjectBucketUpdatePayload {
+	tags := storageObjectBucketTagsToAPI(m.Tags)
+	if tags == nil {
+		tags = map[string]string{}
+	}
 	target := &CloudStorageObjectBucketAPIUpdateTargetSpec{
 		Encryption: storageObjectBucketEncryptionToAPI(m.Encryption),
 		Versioning: storageObjectBucketVersioningToAPI(m.Versioning),
 		ObjectLock: storageObjectBucketObjectLockToAPI(m.ObjectLock),
-		Tags:       storageObjectBucketTagsToAPI(m.Tags),
+		Tags:       tags,
 	}
 
 	if !m.OwnerUserId.IsNull() && !m.OwnerUserId.IsUnknown() {
