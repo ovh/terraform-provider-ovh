@@ -201,6 +201,12 @@ func (r *cloudStorageBlockVolumeSnapshotResource) Schema(ctx context.Context, re
 						Description:         "Size of the snapshot in GB",
 						MarkdownDescription: "Size of the snapshot in GB",
 					},
+					"status": schema.StringAttribute{
+						CustomType:          ovhtypes.TfStringType{},
+						Computed:            true,
+						Description:         "Snapshot status (AVAILABLE, BACKING_UP, CREATING, DELETED, DELETING, ERROR, ERROR_DELETING, RESTORING, UNMANAGING, UPDATING)",
+						MarkdownDescription: "Snapshot status (`AVAILABLE`, `BACKING_UP`, `CREATING`, `DELETED`, `DELETING`, `ERROR`, `ERROR_DELETING`, `RESTORING`, `UNMANAGING`, `UPDATING`)",
+					},
 				},
 			},
 		},

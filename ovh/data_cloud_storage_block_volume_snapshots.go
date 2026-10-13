@@ -112,6 +112,11 @@ func (d *cloudStorageBlockVolumeSnapshotsDataSource) Schema(ctx context.Context,
 							Computed:    true,
 							Description: "Size of the snapshot in GB",
 						},
+						"status": schema.StringAttribute{
+							CustomType:  ovhtypes.TfStringType{},
+							Computed:    true,
+							Description: "Snapshot status",
+						},
 						"resource_status": schema.StringAttribute{
 							CustomType:  ovhtypes.TfStringType{},
 							Computed:    true,
@@ -144,6 +149,7 @@ func snapshotListItemAttrTypes() map[string]attr.Type {
 		}},
 		"volume_id":       ovhtypes.TfStringType{},
 		"size":            types.Int64Type,
+		"status":          ovhtypes.TfStringType{},
 		"resource_status": ovhtypes.TfStringType{},
 	}
 }
@@ -190,9 +196,11 @@ func (d *cloudStorageBlockVolumeSnapshotsDataSource) Read(ctx context.Context, r
 		}
 
 		size := int64(0)
+		status := ""
 		region := data.Region.ValueString()
 		if s.CurrentState != nil {
 			size = s.CurrentState.Size
+			status = s.CurrentState.Status
 			if s.CurrentState.VolumeId != "" {
 				volumeId = s.CurrentState.VolumeId
 			}
@@ -235,6 +243,7 @@ func (d *cloudStorageBlockVolumeSnapshotsDataSource) Read(ctx context.Context, r
 				"location":        locObj,
 				"volume_id":       ovhtypes.TfStringValue{StringValue: types.StringValue(volumeId)},
 				"size":            types.Int64Value(size),
+				"status":          ovhtypes.TfStringValue{StringValue: types.StringValue(status)},
 				"resource_status": ovhtypes.TfStringValue{StringValue: types.StringValue(s.ResourceStatus)},
 			},
 		)

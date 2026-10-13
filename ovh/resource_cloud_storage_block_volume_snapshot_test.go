@@ -79,6 +79,7 @@ func TestAccCloudStorageBlockVolumeSnapshot_basic(t *testing.T) {
 		resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume_snapshot.snapshot", "volume_id"),
 		resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume_snapshot.snapshot", "current_state.name"),
 		resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume_snapshot.snapshot", "current_state.volume_id"),
+		resource.TestCheckResourceAttrSet("ovh_cloud_storage_block_volume_snapshot.snapshot", "current_state.status"),
 	}
 	if az != "" {
 		checks = append(checks, resource.TestCheckResourceAttr("ovh_cloud_storage_block_volume_snapshot.snapshot", "availability_zone", az))
