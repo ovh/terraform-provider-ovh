@@ -52,7 +52,7 @@ resource "ovh_dbaas_logs_input" "input" {
 The following arguments are supported:
 
 * `allowed_networks` - List of IP blocks
-* `configuration` - (Required) Input configuration
+* `configuration` - (Required) Input configuration. Changes are applied in place and the input is restarted. **Switching between `flowgger` and `logstash` recreates the resource.**
   * `flowgger` - (Optional) Flowgger configuration
     * `log_format` - Type of format to decode. One of "RFC5424", "LTSV", "GELF", "CAPNP"
     * `log_framing` - Indicates how messages are delimited. One of "LINE", "NUL", "SYSLEN", "CAPNP"

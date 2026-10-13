@@ -28,6 +28,8 @@ func resourceDbaasLogsInput() *schema.Resource {
 
 		Schema: resourceDbaasLogsInputSchema(),
 
+		CustomizeDiff: resourceDbaasLogsInputCustomizeDiff,
+
 		// Inputs can be very long to process (10 minutes by input)
 		// They are processed sequentially
 		Timeouts: &schema.ResourceTimeout{
@@ -68,7 +70,6 @@ func resourceDbaasLogsInputSchema() map[string]*schema.Schema {
 		"configuration": {
 			Type:        schema.TypeList,
 			Required:    true,
-			ForceNew:    true,
 			Description: "Input configuration",
 			MaxItems:    1,
 			Elem: &schema.Resource{
@@ -237,6 +238,36 @@ func resourceDbaasLogsInputSchema() map[string]*schema.Schema {
 	}
 
 	return schema
+}
+
+// Switching between flowgger and logstash requires a new input
+func resourceDbaasLogsInputCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	old, new := d.GetChange("configuration")
+	if dbaasLogsInputConfigurationType(old) == dbaasLogsInputConfigurationType(new) {
+		return nil
+	}
+	for _, key := range []string{"configuration.0.flowgger", "configuration.0.logstash"} {
+		if d.HasChange(key) {
+			if err := d.ForceNew(key); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func dbaasLogsInputConfigurationType(v interface{}) string {
+	confs, ok := v.([]interface{})
+	if !ok || len(confs) == 0 || confs[0] == nil {
+		return ""
+	}
+	conf := confs[0].(map[string]interface{})
+	for _, t := range []string{"flowgger", "logstash"} {
+		if l, ok := conf[t].([]interface{}); ok && len(l) > 0 {
+			return t
+		}
+	}
+	return ""
 }
 
 func resourceDbaasLogsInputImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
