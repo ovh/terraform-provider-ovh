@@ -115,6 +115,10 @@ func resourceVrackIpRead(d *schema.ResourceData, meta interface{}) error {
 		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
+	// Resources created before the ID was fixed hold another ID format, so the ID is set again
+	// to migrate them to the format used by Create and Import.
+	d.SetId(fmt.Sprintf("vrack_%s-block_%s", serviceName, block))
+
 	d.Set("block", ip.Ip)
 
 	// set resource attributes
