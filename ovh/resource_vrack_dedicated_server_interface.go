@@ -43,7 +43,7 @@ func resourceVrackDedicatedServerInterfaceImportState(d *schema.ResourceData, me
 	}
 	serviceName := splitId[0]
 	interfaceId := splitId[1]
-	d.SetId(fmt.Sprintf("vrack_%s-dedicatedserver_%s", serviceName, interfaceId))
+	d.SetId(fmt.Sprintf("vrack_%s-dedicatedserverinterface_%s", serviceName, interfaceId))
 	d.Set("service_name", serviceName)
 	d.Set("interface_id", interfaceId)
 
@@ -91,6 +91,10 @@ func resourceVrackDedicatedServerInterfaceRead(d *schema.ResourceData, meta inte
 	if err := config.OVHClient.Get(endpoint, vds); err != nil {
 		return helpers.CheckDeleted(d, err, endpoint)
 	}
+
+	// Resources imported before the import ID was fixed hold another ID format, so the ID is
+	// set again to migrate them to the format used by Create and Import.
+	d.SetId(fmt.Sprintf("vrack_%s-dedicatedserverinterface_%s", serviceName, interfaceId))
 
 	d.Set("service_name", vds.Vrack)
 	d.Set("interface_id", vds.DedicatedServerInterface)
