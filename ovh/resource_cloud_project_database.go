@@ -2,6 +2,7 @@ package ovh
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/url"
@@ -11,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 	"golang.org/x/exp/slices"
 )
@@ -317,6 +319,9 @@ func resourceCloudProjectDatabaseCreate(ctx context.Context, d *schema.ResourceD
 	log.Printf("[DEBUG] Will create Database: %+v", params)
 	err = config.OVHClient.PostWithContext(ctx, endpoint, params, res)
 	if err != nil {
+		if explanation := cloudProjectDatabaseExplainCreateError(ctx, config, serviceName, engine, params, err); explanation != "" {
+			return diag.Errorf("calling Post %s: %s\n\t %q", endpoint, explanation, err)
+		}
 		return diag.Errorf("calling Post %s with params %+v:\n\t %q", endpoint, params, err)
 	}
 
@@ -463,4 +468,28 @@ func resourceCloudProjectDatabaseDelete(ctx context.Context, d *schema.ResourceD
 	d.SetId("")
 
 	return nil
+}
+
+// cloudProjectDatabaseExplainCreateError explains a creation error when no compute matches the
+// requested configuration, using the availabilities of the project. It returns an empty string
+// for any other error, or when the availabilities cannot be fetched.
+func cloudProjectDatabaseExplainCreateError(ctx context.Context, config *Config, serviceName, engine string, params *CloudProjectDatabaseCreateOpts, err error) string {
+	var apiErr *ovh.APIError
+	if !errors.As(err, &apiErr) || apiErr.Class != errClassNoMatchingCompute {
+		return ""
+	}
+
+	endpoint := fmt.Sprintf("/cloud/project/%s/database/availability", url.PathEscape(serviceName))
+	var availabilities []CloudProjectDatabaseAvailability
+	if err := config.OVHClient.GetWithContext(ctx, endpoint, &availabilities); err != nil {
+		log.Printf("[WARN] failed to get database availabilities to explain creation error: %s", err)
+		return ""
+	}
+
+	explanation := explainNoMatchingCompute(availabilities, engine, params)
+	if explanation == "" {
+		return ""
+	}
+
+	return "no compute matches the requested configuration, " + explanation
 }

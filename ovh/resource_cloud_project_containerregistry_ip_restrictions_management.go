@@ -108,6 +108,11 @@ func resourceCloudProjectContainerRegistryIPRestrictionsManagementPut(d *schema.
 		return fmt.Errorf("Error calling put %s:\n\t %q", endpoint, err)
 	}
 
+	// The registry is updated asynchronously to apply the IP restrictions
+	if err := waitForCloudProjectContainerRegistryReady(config.OVHClient, serviceName, registryID); err != nil {
+		return fmt.Errorf("waiting for registry %s to apply the IP restrictions: %s", registryID, err)
+	}
+
 	d.SetId(serviceName + "/" + registryID)
 
 	log.Printf("[DEBUG] Registry %s IP restrictions of registry management are created", registryID)
@@ -166,6 +171,11 @@ func resourceCloudProjectContainerRegistryIPRestrictionsManagementDelete(d *sche
 	err := config.OVHClient.Put(endpoint, params, res)
 	if err != nil {
 		return fmt.Errorf("Error calling put %s:\n\t %q", endpoint, err)
+	}
+
+	// The registry is updated asynchronously to apply the IP restrictions
+	if err := waitForCloudProjectContainerRegistryReady(config.OVHClient, serviceName, registryID); err != nil {
+		return fmt.Errorf("waiting for registry %s to apply the IP restrictions: %s", registryID, err)
 	}
 
 	return nil

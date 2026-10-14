@@ -163,6 +163,37 @@ func TestAccDedicatedServerReinstall_storage(t *testing.T) {
 	})
 }
 
+func TestAccDedicatedServerReinstall_apptoinstall(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCredentials(t)
+			testAccPreCheckDedicatedServer(t)
+		},
+		Providers: testAccProviders,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"time": {
+				VersionConstraint: "0.10.0",
+				Source:            "hashicorp/time",
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDedicatedServerReinstallConfig("apptoinstall"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"ovh_dedicated_server_update.server", "state", "ok"),
+					resource.TestCheckResourceAttr(
+						"ovh_dedicated_server_update.server", "monitoring", "false"),
+					resource.TestCheckResourceAttr(
+						"ovh_dedicated_server_reinstall_task.server_reinstall", "function", "reinstallServer"),
+					resource.TestCheckResourceAttr(
+						"ovh_dedicated_server_reinstall_task.server_reinstall", "status", "done"),
+				),
+			},
+		},
+	})
+}
+
 func testAccDedicatedServerReinstallConfig(config string) string {
 	dedicated_server := os.Getenv("OVH_DEDICATED_SERVER")
 	sshKey := os.Getenv("OVH_SSH_KEY")
@@ -194,6 +225,13 @@ func testAccDedicatedServerReinstallConfig(config string) string {
 	if config == "storage" {
 		return fmt.Sprintf(
 			testAccDedicatedServerReinstallConfig_Storage,
+			dedicated_server,
+		)
+	}
+
+	if config == "apptoinstall" {
+		return fmt.Sprintf(
+			testAccDedicatedServerReinstallConfig_AppToInstall,
 			dedicated_server,
 		)
 	}
@@ -303,6 +341,29 @@ resource "ovh_dedicated_server_reinstall_task" "server_reinstall" {
 	http_headers = {
 		Authorization = "Basic bG9naW46cGFzc3dvcmQ="
 	}
+  }
+}
+`
+
+const testAccDedicatedServerReinstallConfig_AppToInstall = `
+data "ovh_dedicated_server_boots" "harddisk" {
+  service_name = "%s"
+  boot_type    = "harddisk"
+}
+
+resource "ovh_dedicated_server_update" "server" {
+  service_name = data.ovh_dedicated_server_boots.harddisk.service_name
+  boot_id      = data.ovh_dedicated_server_boots.harddisk.result[0]
+  monitoring   = false
+  state        = "ok"
+}
+
+resource "ovh_dedicated_server_reinstall_task" "server_reinstall" {
+  service_name = data.ovh_dedicated_server_boots.harddisk.service_name
+  os            = "ubuntu2404-withapp_64"
+  customizations {
+    hostname       = "mon-tux"
+    app_to_install = "wordpress"
   }
 }
 `
