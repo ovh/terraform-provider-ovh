@@ -163,6 +163,14 @@ resource "ovh_cloud_storage_object_bucket" "bucket" {
 }
 `, serviceName, bucketName, region)
 
+	untaggedConfig := fmt.Sprintf(`
+resource "ovh_cloud_storage_object_bucket" "bucket" {
+  service_name = "%s"
+  name         = "%s"
+  region       = "%s"
+}
+`, serviceName, bucketName, region)
+
 	updatedChecks := []resource.TestCheckFunc{
 		resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "versioning.status", "SUSPENDED"),
 		resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "encryption.algorithm", "AES256"),
@@ -204,6 +212,15 @@ resource "ovh_cloud_storage_object_bucket" "bucket" {
 					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "tags.env", "test"),
 					resource.TestCheckNoResourceAttr("ovh_cloud_storage_object_bucket.bucket", "tags.owner"),
 					resource.TestCheckNoResourceAttr("ovh_cloud_storage_object_bucket.bucket", "current_state.tags.owner"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "resource_status", "READY"),
+				),
+			},
+			{
+				Config: untaggedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckNoResourceAttr("ovh_cloud_storage_object_bucket.bucket", "tags.%"),
+					resource.TestCheckNoResourceAttr("ovh_cloud_storage_object_bucket.bucket", "tags.env"),
+					resource.TestCheckNoResourceAttr("ovh_cloud_storage_object_bucket.bucket", "current_state.tags.env"),
 					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "resource_status", "READY"),
 				),
 			},
