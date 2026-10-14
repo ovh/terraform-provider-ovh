@@ -6,11 +6,13 @@ import (
 	"log"
 	"net/url"
 	"os"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -89,6 +91,52 @@ resource "ovh_dbaas_logs_input" "input" {
 					ssl_enabled => true
 					ssl_certificate => "/etc/ssl/private/server.crt"
 					ssl_key => "/etc/ssl/private/server.key"
+				}
+			EOF
+		}
+	}
+}
+`
+
+const testAccResourceDbaasLogsInput_updatedConfiguration = `
+data "ovh_dbaas_logs_input_engine" "logstash" {
+	service_name  = "%s"
+	name          = "%s"
+	version       = "9.x"
+}
+
+resource "ovh_dbaas_logs_output_graylog_stream" "stream" {
+	service_name = "%s"
+	title        = "%s"
+	description  = "%s"
+}
+
+resource "ovh_dbaas_logs_input" "input" {
+	service_name = ovh_dbaas_logs_output_graylog_stream.stream.service_name
+	description  = ovh_dbaas_logs_output_graylog_stream.stream.description
+	title        = ovh_dbaas_logs_output_graylog_stream.stream.title
+	engine_id    = data.ovh_dbaas_logs_input_engine.logstash.id
+	stream_id    = ovh_dbaas_logs_output_graylog_stream.stream.id
+
+	allowed_networks   = ["10.0.0.0/16"]
+	exposed_port       = "6154"
+	autoscale          = true
+	min_scale_instance = 2
+	max_scale_instance = 4
+
+	configuration {
+		logstash {
+			input_section = <<EOF
+				beats {
+					port => 6514
+					ssl_enabled => true
+					ssl_certificate => "/etc/ssl/private/server.crt"
+					ssl_key => "/etc/ssl/private/server.key"
+				}
+			EOF
+			filter_section = <<EOF
+				mutate {
+					add_field => { "tf_updated" => "true" }
 				}
 			EOF
 		}
@@ -289,6 +337,8 @@ func TestAccResourceDbaasLogsInput_basic(t *testing.T) {
 		serviceName, name, serviceName, title, desc, 4)
 	configUpdated := fmt.Sprintf(testAccResourceDbaasLogsInput_updated,
 		serviceName, name, serviceName, title, desc)
+	configUpdatedConfiguration := fmt.Sprintf(testAccResourceDbaasLogsInput_updatedConfiguration,
+		serviceName, name, serviceName, title, desc)
 	configNoNetwork := fmt.Sprintf(testAccResourceDbaasLogsInput_noNetwork,
 		serviceName, name, serviceName, title, desc)
 
@@ -398,6 +448,19 @@ func TestAccResourceDbaasLogsInput_basic(t *testing.T) {
 				),
 			},
 			{
+				Config: configUpdatedConfiguration,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("ovh_dbaas_logs_input.input", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.TestMatchResourceAttr(
+					"ovh_dbaas_logs_input.input",
+					"configuration.0.logstash.0.filter_section",
+					regexp.MustCompile(`tf_updated`),
+				),
+			},
+			{
 				Config: configNoNetwork,
 				Check:  resource.TestCheckResourceAttr("ovh_dbaas_logs_input.input", "allowed_networks.#", "0"),
 			},
@@ -454,4 +517,64 @@ func TestAccResourceDbaasLogsInput_multiple(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestResourceDbaasLogsInput_configurationDiff(t *testing.T) {
+	state := &terraform.InstanceState{
+		ID: "input-id",
+		Attributes: map[string]string{
+			"id":                         "input-id",
+			"service_name":               "ldp-xx-12345",
+			"description":                "desc",
+			"engine_id":                  "engine-id",
+			"stream_id":                  "stream-id",
+			"title":                      "title",
+			"configuration.#":            "1",
+			"configuration.0.flowgger.#": "0",
+			"configuration.0.logstash.#": "1",
+			"configuration.0.logstash.0.input_section":   "beats { port => 6514 }",
+			"configuration.0.logstash.0.filter_section":  "",
+			"configuration.0.logstash.0.pattern_section": "",
+		},
+	}
+
+	for _, tc := range []struct {
+		name          string
+		configuration map[string]interface{}
+		requiresNew   bool
+	}{
+		{
+			name: "logstash update",
+			configuration: map[string]interface{}{
+				"logstash": []interface{}{map[string]interface{}{"input_section": "beats { port => 6515 }"}},
+			},
+			requiresNew: false,
+		},
+		{
+			name: "switch to flowgger",
+			configuration: map[string]interface{}{
+				"flowgger": []interface{}{map[string]interface{}{"log_format": "GELF", "log_framing": "NUL"}},
+			},
+			requiresNew: true,
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			config := terraform.NewResourceConfigRaw(map[string]interface{}{
+				"service_name":  "ldp-xx-12345",
+				"description":   "desc",
+				"engine_id":     "engine-id",
+				"stream_id":     "stream-id",
+				"title":         "title",
+				"configuration": []interface{}{tc.configuration},
+			})
+
+			diff, err := resourceDbaasLogsInput().Diff(context.Background(), state, config, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if diff.RequiresNew() != tc.requiresNew {
+				t.Errorf("RequiresNew() = %v, want %v", diff.RequiresNew(), tc.requiresNew)
+			}
+		})
+	}
 }
