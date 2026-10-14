@@ -375,6 +375,21 @@ func resourceCloudProjectContainerRegistryDelete(d *schema.ResourceData, meta in
 	return nil
 }
 
+// waitForCloudProjectContainerRegistryReady waits for the registry to be READY again after an update.
+func waitForCloudProjectContainerRegistryReady(c *ovhwrap.Client, serviceName, id string) error {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{"UPDATING"},
+		Target:     []string{"READY"},
+		Refresh:    waitForCloudProjectContainerRegistry(c, serviceName, id),
+		Timeout:    30 * time.Minute,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, err := stateConf.WaitForStateContext(context.Background())
+	return err
+}
+
 func waitForCloudProjectContainerRegistry(c *ovhwrap.Client, serviceName, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		r := &CloudProjectContainerRegistry{}
