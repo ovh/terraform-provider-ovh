@@ -56,8 +56,10 @@ type CloudStorageObjectBucketAPIVersioning struct {
 }
 
 type CloudStorageObjectBucketAPIObjectLock struct {
-	Mode          string `json:"mode"`
-	RetentionDays int64  `json:"retentionDays"`
+	Status string `json:"status"`
+	// mode and retentionDays form the optional default retention rule.
+	Mode          string `json:"mode,omitempty"`
+	RetentionDays *int64 `json:"retentionDays,omitempty"`
 	// retentionYears is read-only in the API contract: never sent, only read back.
 	RetentionYears *int64 `json:"retentionYears,omitempty"`
 }
@@ -128,6 +130,7 @@ func StorageObjectBucketVersioningAttrTypes() map[string]attr.Type {
 // StorageObjectBucketObjectLockAttrTypes returns the attribute types for the object_lock object
 func StorageObjectBucketObjectLockAttrTypes() map[string]attr.Type {
 	return map[string]attr.Type{
+		"status":          ovhtypes.TfStringType{},
 		"mode":            ovhtypes.TfStringType{},
 		"retention_days":  types.Int64Type,
 		"retention_years": types.Int64Type,
@@ -137,6 +140,7 @@ func StorageObjectBucketObjectLockAttrTypes() map[string]attr.Type {
 // retention_years is read-only, so it lives only under current_state.object_lock.
 func StorageObjectBucketObjectLockSpecAttrTypes() map[string]attr.Type {
 	return map[string]attr.Type{
+		"status":         ovhtypes.TfStringType{},
 		"mode":           ovhtypes.TfStringType{},
 		"retention_days": types.Int64Type,
 	}
@@ -214,8 +218,9 @@ func buildStorageObjectBucketObjectLockObject(objectLock *CloudStorageObjectBuck
 	obj, _ := types.ObjectValue(
 		StorageObjectBucketObjectLockAttrTypes(),
 		map[string]attr.Value{
-			"mode":            ovhtypes.TfStringValue{StringValue: types.StringValue(objectLock.Mode)},
-			"retention_days":  types.Int64Value(objectLock.RetentionDays),
+			"status":          ovhtypes.TfStringValue{StringValue: types.StringValue(objectLock.Status)},
+			"mode":            nullableTfString(objectLock.Mode),
+			"retention_days":  nullableInt64(objectLock.RetentionDays),
 			"retention_years": nullableInt64(objectLock.RetentionYears),
 		},
 	)
@@ -230,8 +235,9 @@ func buildStorageObjectBucketObjectLockSpecObject(objectLock *CloudStorageObject
 	obj, _ := types.ObjectValue(
 		StorageObjectBucketObjectLockSpecAttrTypes(),
 		map[string]attr.Value{
-			"mode":           ovhtypes.TfStringValue{StringValue: types.StringValue(objectLock.Mode)},
-			"retention_days": types.Int64Value(objectLock.RetentionDays),
+			"status":         ovhtypes.TfStringValue{StringValue: types.StringValue(objectLock.Status)},
+			"mode":           nullableTfString(objectLock.Mode),
+			"retention_days": nullableInt64(objectLock.RetentionDays),
 		},
 	)
 	return obj
@@ -259,13 +265,13 @@ func storageObjectBucketObjectString(attrs map[string]attr.Value, key string) st
 	return ""
 }
 
-func storageObjectBucketObjectInt64(attrs map[string]attr.Value, key string) int64 {
+func storageObjectBucketObjectInt64Ptr(attrs map[string]attr.Value, key string) *int64 {
 	if v, ok := attrs[key]; ok {
 		if iv, ok := v.(types.Int64); ok && !iv.IsNull() && !iv.IsUnknown() {
-			return iv.ValueInt64()
+			return iv.ValueInt64Pointer()
 		}
 	}
-	return 0
+	return nil
 }
 
 func storageObjectBucketEncryptionToAPI(o types.Object) *CloudStorageObjectBucketAPIEncryption {
@@ -288,8 +294,9 @@ func storageObjectBucketObjectLockToAPI(o types.Object) *CloudStorageObjectBucke
 	}
 	attrs := o.Attributes()
 	return &CloudStorageObjectBucketAPIObjectLock{
+		Status:        storageObjectBucketObjectString(attrs, "status"),
 		Mode:          storageObjectBucketObjectString(attrs, "mode"),
-		RetentionDays: storageObjectBucketObjectInt64(attrs, "retention_days"),
+		RetentionDays: storageObjectBucketObjectInt64Ptr(attrs, "retention_days"),
 	}
 }
 
