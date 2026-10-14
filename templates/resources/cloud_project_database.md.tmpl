@@ -24,11 +24,11 @@ Minimum settings for each engine (region choice is up to the user):
 
 {{tffile "examples/resources/cloud_project_database/example_1.tf"}}
 
-To deploy a business PostgreSQL service with two nodes on public network:
+To deploy a production PostgreSQL service with two nodes on public network:
 
 {{tffile "examples/resources/cloud_project_database/example_2.tf"}}
 
-To deploy an enterprise MongoDB service with three nodes on private network:
+To deploy a production MongoDB service with three nodes on private network:
 
 {{tffile "examples/resources/cloud_project_database/example_3.tf"}}
 
@@ -55,8 +55,8 @@ resource "ovh_cloud_project_database" "db" {
   service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
   description   = "my-database"
   engine        = "postgresql"
-  version       = "14"
-  plan          = "business"
+  version       = "18"
+  plan          = "production"
   nodes {
     region      = "GRA"
     network_id  = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
@@ -67,7 +67,7 @@ resource "ovh_cloud_project_database" "db" {
     network_id  = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
     subnet_id   = "YYYYYYYY-YYYY-YYYY-YYYY-YYYYYYYYYYYY"
   }
-  flavor        = "db1-4"
+  flavor        = "b3-8"
 }
 ```
 
@@ -78,15 +78,15 @@ resource "ovh_cloud_project_database" "db" {
   service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
   description   = "my-database"
   engine        = "postgresql"
-  version       = "14"
-  plan          = "business"
+  version       = "18"
+  plan          = "production"
   nodes {
     region      = "GRA"
   }
   nodes {
     region      = "GRA"
   }
-  flavor        = "db1-4"
+  flavor        = "b3-8"
 }
 ```
 
@@ -99,7 +99,7 @@ The following arguments are supported:
 * `service_name` - (Required, Forces new resource) The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 * `description` - (Optional) Small description of the database service.
 * `engine` - (Required, Forces new resource) The database engine you want to deploy. To get a full list of available engine visit. [public documentation](https://docs.ovh.com/gb/en/publiccloud/databases).
-* `flavor` - (Required) A valid OVHcloud public cloud database flavor name in which the nodes will be started. Ex: "db1-7". Changing this value upgrade the nodes with the new flavor. You can find the list of flavor names: https://www.ovhcloud.com/fr/public-cloud/prices/
+* `flavor` - (Required) A valid OVHcloud public cloud database flavor name in which the nodes will be started. Ex: "b3-8". Changing this value upgrade the nodes with the new flavor. You can find the list of flavor names: https://www.ovhcloud.com/fr/public-cloud/prices/
 * `ip_restrictions` - (Optional) IP Blocks authorized to access to the cluster.
   * `description` - (Optional) Description of the IP restriction
   * `ip` - (Optional) Authorized IP

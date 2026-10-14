@@ -1,14 +1,14 @@
 resource "ovh_cloud_project_database" "postgresql" {
-  service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  description   = "my-first-postgresql"
-  engine        = "postgresql"
-  version       = "14"
-  plan          = "business"
+  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  description  = "my-first-postgresql"
+  engine       = "postgresql"
+  version      = "18"
+  plan         = "production"
   nodes {
-    region  = "GRA"
+    region = "GRA"
   }
   nodes {
-    region  = "GRA"
+    region = "GRA"
   }
-  flavor        = "db1-15"
+  flavor = "b3-8"
 }
