@@ -297,7 +297,7 @@ The following arguments are supported:
 * `service_name` - (Required, Forces new resource) The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 * `description` - (Optional) Small description of the database service.
 * `engine` - (Required, Forces new resource) The database engine you want to deploy. To get a full list of available engine visit. [public documentation](https://docs.ovh.com/gb/en/publiccloud/databases).
-* `flavor` - (Required) A valid OVHcloud public cloud database flavor name in which the nodes will be started. Ex: "b3-8". Changing this value upgrade the nodes with the new flavor. You can find the list of flavor names: https://www.ovhcloud.com/fr/public-cloud/prices/
+* `flavor` - (Required) A valid OVHcloud public cloud database flavor name in which the nodes will be started. Ex: "b3-8". Changing this value upgrade the nodes with the new flavor. You can find the list of flavor names: https://www.ovhcloud.com/en/public-cloud/prices/
 * `ip_restrictions` - (Optional) IP Blocks authorized to access to the cluster.
   * `description` - (Optional) Description of the IP restriction
   * `ip` - (Optional) Authorized IP
