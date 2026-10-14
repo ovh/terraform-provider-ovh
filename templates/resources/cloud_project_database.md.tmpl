@@ -14,6 +14,8 @@ Creates a OVHcloud Managed Database Service in a public cloud project.
 
 To learn more about OVHcloud Public Cloud Database please visit our [public documentation](https://docs.ovh.com/gb/en/publiccloud/databases).
 
+The plans, flavors, number of nodes and regions available for each engine are listed in [Capabilities and Limitations of Public Cloud Databases](https://docs.ovhcloud.com/en/guides/public-cloud/databases/capabilities) (and [for PostgreSQL](https://docs.ovhcloud.com/en/guides/public-cloud/databases/postgresql-capabilities)).
+
 You can visit our dedicated Discord channel: https://discord.gg/PwPqWUpN8G. Ask questions, provide feedback and interact directly with the team that builds our databases services and terraform provider.
 
 ## Example Usage
@@ -30,6 +32,66 @@ To deploy an enterprise MongoDB service with three nodes on private network:
 
 {{tffile "examples/resources/cloud_project_database/example_3.tf"}}
 
+### Number of nodes
+
+The number of nodes of the cluster is the number of `nodes` blocks. Each plan requires a given number of nodes: for example, the MongoDB `production` plan requires exactly 3 nodes, and the `advanced` plan accepts 3 to 7 nodes. A wrong number of nodes fails at apply with a `NotEnoughNodes` error.
+
+To deploy a production MongoDB service with three nodes:
+
+{{tffile "examples/resources/cloud_project_database/example_5.tf"}}
+
+To deploy an advanced MongoDB service with five nodes:
+
+{{tffile "examples/resources/cloud_project_database/example_6.tf"}}
+
+### Network Update
+
+You can update the network of an existing database service without recreating it.
+
+To switch from public to private network, add `network_id` and `subnet_id` to the nodes:
+
+```terraform
+resource "ovh_cloud_project_database" "db" {
+  service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  description   = "my-database"
+  engine        = "postgresql"
+  version       = "14"
+  plan          = "business"
+  nodes {
+    region      = "GRA"
+    network_id  = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+    subnet_id   = "YYYYYYYY-YYYY-YYYY-YYYY-YYYYYYYYYYYY"
+  }
+  nodes {
+    region      = "GRA"
+    network_id  = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+    subnet_id   = "YYYYYYYY-YYYY-YYYY-YYYY-YYYYYYYYYYYY"
+  }
+  flavor        = "db1-4"
+}
+```
+
+To switch from private to public network, remove `network_id` and `subnet_id` from the nodes:
+
+```terraform
+resource "ovh_cloud_project_database" "db" {
+  service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  description   = "my-database"
+  engine        = "postgresql"
+  version       = "14"
+  plan          = "business"
+  nodes {
+    region      = "GRA"
+  }
+  nodes {
+    region      = "GRA"
+  }
+  flavor        = "db1-4"
+}
+```
+
+~> **Important:** Changing the network triggers a service rebuild. The service will go through `UPDATING` / `REBUILDING` states before returning to `RUNNING`. During this time the service may be temporarily unavailable. IP restrictions are cleared during a network change as the old IPs are no longer valid on the new network.
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -44,22 +106,22 @@ The following arguments are supported:
 * `deletion_protection` - (Optional) Enable deletion protection
 * `kafka_rest_api` - (Optional) Defines whether the REST API is enabled on a kafka cluster
 * `kafka_schema_registry` - (Optional) Defines whether the schema registry is enabled on a Kafka cluster
-* `nodes` - (Required, Minimum Items: 1) List of nodes object. Multi region cluster are not yet available, all node should be identical.
-  * `network_id` - (Optional, Forces new resource) Private network id in which the node should be deployed. It's the regional openstackId of the private network
-  * `region` - (Required, Forces new resource) Public cloud region in which the node should be deployed. Ex: "GRA'.
-  * `subnet_id` - (Optional, Forces new resource) Private subnet ID in which the node is.
+* `nodes` - (Required, Minimum Items: 1) List of nodes object. The number of `nodes` blocks is the number of nodes of the cluster, and must match the number of nodes required by the plan. Multi region clusters are not available: all nodes must be identical.
+  * `network_id` - (Optional) Private network id in which the node should be deployed. It's the regional openstackId of the private network. Can be updated in-place to change the network without recreating the service.
+  * `region` - (Required) Public cloud region in which the node should be deployed. Ex: "GRA". The cluster is created in the region of the first node. Changing it afterwards doesn't move the existing nodes.
+  * `subnet_id` - (Optional) Private subnet ID in which the node is. Can be updated in-place to change the network without recreating the service.
 * `opensearch_acls_enabled` - (Optional) Defines whether the ACLs are enabled on an OpenSearch cluster
 * `disk_size` - (Optional) The disk size (in GB) of the database service.
 * `advanced_configuration` - (Optional) Advanced configuration key / value.
-* `plan` - (Required) Plan of the cluster.
-  * Clickhouse: "production".
-  * MongoDB: "discovery", "production", "advanced".
-  * MySQL, PostgreSQL: "essential", "business", "enterprise".
-  * Valkey: "essential", "business".
+* `plan` - (Required) Plan of the cluster. The plans available, and the number of nodes they require, depend on the engine (see [Capabilities and Limitations](https://docs.ovhcloud.com/en/guides/public-cloud/databases/capabilities)). For example:
+  * ClickHouse: "discovery" (1 node), "production" (3 nodes).
+  * MongoDB: "production" (3 nodes), "advanced" (3 to 7 nodes).
+  * MySQL, PostgreSQL: "discovery" (1 node), "production" (2 nodes), "advanced" (3 nodes).
+  * Valkey: "discovery" (1 node), "production" (2 nodes).
 * `version` - (Required) The version of the engine in which the service should be deployed
 * `backup_regions` - List of region where backups are pushed. Not more than 1 regions for MongoDB. Not more than 2 regions for the other engines with one being the same as the nodes[].region field
 * `backup_time` - Time on which backups start every day (this parameter is not usable on the following engines: "grafana", "kafka", "kafkaconnect", "kafkamirrormaker", "opensearch").
-* `maintenance_time` - Time on which maintenances can start every day.
+* `maintenance_time` - Time on which maintenances can start every day. Format is: `hh:mm:ss` in UTC timezone, using 24 hours and zero padded values (e.g. `15:04:05`).
 
 ## Attributes Reference
 

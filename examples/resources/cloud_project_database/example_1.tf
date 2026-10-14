@@ -22,12 +22,18 @@ resource "ovh_cloud_project_database" "mongodb" {
   service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
   description  = "my-first-mongodb"
   engine       = "mongodb"
-  version      = "5.0"
-  plan         = "discovery"
+  version      = "8.0"
+  plan         = "production"
   nodes {
     region = "GRA"
   }
-  flavor = "db1-2"
+  nodes {
+    region = "GRA"
+  }
+  nodes {
+    region = "GRA"
+  }
+  flavor = "db2-2"
 }
 
 resource "ovh_cloud_project_database" "mysqldb" {
