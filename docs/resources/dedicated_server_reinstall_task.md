@@ -225,6 +225,45 @@ resource "ovh_dedicated_server_reinstall_task" "server_install" {
 }
 ```
 
+### Example 7 - Linux Installation with a pre-installed application
+
+```terraform
+data "ovh_dedicated_server" "server" {
+  service_name = "nsxxxxxxx.ip-xx-xx-xx.eu"
+}
+
+data "ovh_dedicated_installation_template" "template" {
+  template_name = "ubuntu2404-withapp_64"
+}
+
+locals {
+  app_to_install_input = one([
+    for input in data.ovh_dedicated_installation_template.template.inputs : input
+    if input.name == "appToInstall"
+  ])
+}
+
+# List of applications available for this OS
+output "available_apps" {
+  value = local.app_to_install_input.enum
+}
+
+resource "ovh_dedicated_server_reinstall_task" "server_reinstall" {
+  service_name = data.ovh_dedicated_server.server.service_name
+  os           = data.ovh_dedicated_installation_template.template.template_name
+  customizations {
+    hostname       = "mon-tux"
+    app_to_install = "wordpress"
+  }
+}
+```
+
+Only some operating systems can install an application during the installation (usually the `*-withapp_64` templates). To check whether an operating system supports it, and to list the available applications, look for an item named `appToInstall` in the `inputs` of the [ovh_dedicated_installation_template](https://registry.terraform.io/providers/ovh/ovh/latest/docs/data-sources/dedicated_installation_template) data source: its `enum` attribute holds the list of applications that can be installed. On these operating systems, `app_to_install` is mandatory.
+
+~> **WARNING** These operating systems do not support custom partitioning (`no_partitioning` is `true` in the [ovh_dedicated_installation_template](https://registry.terraform.io/providers/ovh/ovh/latest/docs/data-sources/dedicated_installation_template) data source), so the `storage` block cannot be used. A post-installation script is not supported either.
+
+If no SSH key is provided, the OS and application credentials are sent by email. They can also be retrieved with the [authenticationSecret API call](https://eu.api.ovh.com/console/?section=%2Fdedicated%2Fserver&branch=v1#post-/dedicated/server/-serviceName-/authenticationSecret).
+
 ## Argument Reference
 
 The following arguments are supported:
