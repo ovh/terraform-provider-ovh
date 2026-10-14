@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2020, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package releasesjson
@@ -17,8 +17,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-
-	"github.com/hashicorp/hc-install/internal/httpclient"
 )
 
 type Downloader struct {
@@ -26,6 +24,7 @@ type Downloader struct {
 	VerifyChecksum   bool
 	ArmoredPublicKey string
 	BaseURL          string
+	HTTPClient       *http.Client
 }
 
 type UnpackedProduct struct {
@@ -50,6 +49,7 @@ func (d *Downloader) DownloadAndUnpack(ctx context.Context, pv *ProductVersion, 
 			ProductVersion:   pv,
 			Logger:           d.Logger,
 			ArmoredPublicKey: d.ArmoredPublicKey,
+			HTTPClient:       d.HTTPClient,
 		}
 		verifiedChecksums, err := v.DownloadAndVerifyChecksums(ctx)
 		if err != nil {
@@ -62,8 +62,6 @@ func (d *Downloader) DownloadAndUnpack(ctx context.Context, pv *ProductVersion, 
 		}
 	}
 
-	client := httpclient.NewHTTPClient(d.Logger)
-
 	archiveURL, err := determineArchiveURL(pb.URL, d.BaseURL)
 	if err != nil {
 		return nil, err
@@ -75,7 +73,7 @@ func (d *Downloader) DownloadAndUnpack(ctx context.Context, pv *ProductVersion, 
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request for %q: %w", archiveURL, err)
 	}
-	resp, err := client.Do(req)
+	resp, err := d.HTTPClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -100,11 +98,18 @@ func (d *Downloader) DownloadAndUnpack(ctx context.Context, pv *ProductVersion, 
 	if err != nil {
 		return nil, err
 	}
-	defer pkgFile.Close()
-	pkgFilePath, err := filepath.Abs(pkgFile.Name())
+	defer func() {
+		pkgFile.Close()
+		filePath := pkgFile.Name()
+		err = os.Remove(filePath)
+		if err != nil {
+			d.Logger.Printf("failed to delete unpacked archive at %s: %s", filePath, err)
+			return
+		}
+		d.Logger.Printf("deleted unpacked archive at %s", filePath)
+	}()
 
 	up = &UnpackedProduct{}
-	up.PathsToRemove = append(up.PathsToRemove, pkgFilePath)
 
 	d.Logger.Printf("copying %q (%d bytes) to %s", pb.Filename, expectedSize, pkgFile.Name())
 
@@ -116,16 +121,20 @@ func (d *Downloader) DownloadAndUnpack(ctx context.Context, pv *ProductVersion, 
 
 		bytesCopied, err = io.Copy(h, r)
 		if err != nil {
-			return nil, err
+			d.Logger.Printf("failed to calculate hash of %q: %s", pb.Filename, err)
+			return up, err
 		}
 
 		calculatedSum := h.Sum(nil)
 		if !bytes.Equal(calculatedSum, verifiedChecksum) {
+			d.Logger.Printf("checksum does not match for %q (expected: %x, got: %x)",
+				pb.Filename, verifiedChecksum, calculatedSum)
 			return up, fmt.Errorf(
 				"checksum mismatch (expected: %x, got: %x)",
 				verifiedChecksum, calculatedSum,
 			)
 		}
+		d.Logger.Printf("checksum matches for %q", pb.Filename)
 	} else {
 		bytesCopied, err = io.Copy(pkgFile, pkgReader)
 		if err != nil {

@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2020, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package tf6muxserver
@@ -20,14 +20,23 @@ var _ tfprotov6.ProviderServer = &muxServer{}
 // gRPC servers, routing requests to them as if they were a single server. It
 // should always be instantiated by calling NewMuxServer().
 type muxServer struct {
+	// Routing for actions
+	actions map[string]tfprotov6.ProviderServer
+
 	// Routing for data source types
 	dataSources map[string]tfprotov6.ProviderServer
 
 	// Routing for ephemeral resource types
 	ephemeralResources map[string]tfprotov6.ProviderServer
 
+	// Routing for list resource types
+	listResources map[string]tfprotov6.ProviderServer
+
 	// Routing for functions
 	functions map[string]tfprotov6.ProviderServer
+
+	// Routing for state stores
+	stateStores map[string]tfprotov6.ProviderServer
 
 	// Routing for resource types
 	resources map[string]tfprotov6.ProviderServer
@@ -57,6 +66,41 @@ type muxServer struct {
 // ProviderServer is a function compatible with tf6server.Serve.
 func (s *muxServer) ProviderServer() tfprotov6.ProviderServer {
 	return s
+}
+
+func (s *muxServer) getActionServer(ctx context.Context, actionType string) (tfprotov6.ProviderServer, []*tfprotov6.Diagnostic, error) {
+	s.serverDiscoveryMutex.RLock()
+	server, ok := s.actions[actionType]
+	discoveryComplete := s.serverDiscoveryComplete
+	s.serverDiscoveryMutex.RUnlock()
+
+	if discoveryComplete {
+		if ok {
+			return server, s.serverDiscoveryDiagnostics, nil
+		}
+
+		return nil, []*tfprotov6.Diagnostic{
+			actionMissingError(actionType),
+		}, nil
+	}
+
+	err := s.serverDiscovery(ctx)
+
+	if err != nil || diagnosticsHasError(s.serverDiscoveryDiagnostics) {
+		return nil, s.serverDiscoveryDiagnostics, err
+	}
+
+	s.serverDiscoveryMutex.RLock()
+	server, ok = s.actions[actionType]
+	s.serverDiscoveryMutex.RUnlock()
+
+	if !ok {
+		return nil, []*tfprotov6.Diagnostic{
+			actionMissingError(actionType),
+		}, nil
+	}
+
+	return server, s.serverDiscoveryDiagnostics, nil
 }
 
 func (s *muxServer) getDataSourceServer(ctx context.Context, typeName string) (tfprotov6.ProviderServer, []*tfprotov6.Diagnostic, error) {
@@ -129,6 +173,41 @@ func (s *muxServer) getEphemeralResourceServer(ctx context.Context, typeName str
 	return server, s.serverDiscoveryDiagnostics, nil
 }
 
+func (s *muxServer) getListResourceServer(ctx context.Context, typeName string) (tfprotov6.ProviderServer, []*tfprotov6.Diagnostic, error) {
+	s.serverDiscoveryMutex.RLock()
+	server, ok := s.listResources[typeName]
+	discoveryComplete := s.serverDiscoveryComplete
+	s.serverDiscoveryMutex.RUnlock()
+
+	if discoveryComplete {
+		if ok {
+			return server, s.serverDiscoveryDiagnostics, nil
+		}
+
+		return nil, []*tfprotov6.Diagnostic{
+			listResourceMissingError(typeName),
+		}, nil
+	}
+
+	err := s.serverDiscovery(ctx)
+
+	if err != nil || diagnosticsHasError(s.serverDiscoveryDiagnostics) {
+		return nil, s.serverDiscoveryDiagnostics, err
+	}
+
+	s.serverDiscoveryMutex.RLock()
+	server, ok = s.listResources[typeName]
+	s.serverDiscoveryMutex.RUnlock()
+
+	if !ok {
+		return nil, []*tfprotov6.Diagnostic{
+			listResourceMissingError(typeName),
+		}, nil
+	}
+
+	return server, s.serverDiscoveryDiagnostics, nil
+}
+
 func (s *muxServer) getFunctionServer(ctx context.Context, name string) (tfprotov6.ProviderServer, []*tfprotov6.Diagnostic, error) {
 	s.serverDiscoveryMutex.RLock()
 	server, ok := s.functions[name]
@@ -158,6 +237,41 @@ func (s *muxServer) getFunctionServer(ctx context.Context, name string) (tfproto
 	if !ok {
 		return nil, []*tfprotov6.Diagnostic{
 			functionMissingError(name),
+		}, nil
+	}
+
+	return server, s.serverDiscoveryDiagnostics, nil
+}
+
+func (s *muxServer) getStateStoreServer(ctx context.Context, typeName string) (tfprotov6.ProviderServer, []*tfprotov6.Diagnostic, error) {
+	s.serverDiscoveryMutex.RLock()
+	server, ok := s.stateStores[typeName]
+	discoveryComplete := s.serverDiscoveryComplete
+	s.serverDiscoveryMutex.RUnlock()
+
+	if discoveryComplete {
+		if ok {
+			return server, s.serverDiscoveryDiagnostics, nil
+		}
+
+		return nil, []*tfprotov6.Diagnostic{
+			stateStoreMissingError(typeName),
+		}, nil
+	}
+
+	err := s.serverDiscovery(ctx)
+
+	if err != nil || diagnosticsHasError(s.serverDiscoveryDiagnostics) {
+		return nil, s.serverDiscoveryDiagnostics, err
+	}
+
+	s.serverDiscoveryMutex.RLock()
+	server, ok = s.stateStores[typeName]
+	s.serverDiscoveryMutex.RUnlock()
+
+	if !ok {
+		return nil, []*tfprotov6.Diagnostic{
+			stateStoreMissingError(typeName),
 		}, nil
 	}
 
@@ -202,7 +316,8 @@ func (s *muxServer) getResourceServer(ctx context.Context, typeName string) (tfp
 // serverDiscovery will populate the mux server "routing" for functions and
 // resource types by calling all underlying server GetMetadata RPC and falling
 // back to GetProviderSchema RPC. It is intended to only be called through
-// getDataSourceServer, getEphemeralResourceServer, getFunctionServer, and getResourceServer.
+// getActionServer, getDataSourceServer, getEphemeralResourceServer, getListResourceServer,
+// getFunctionServer, and getResourceServer.
 //
 // The error return represents gRPC errors, which except for the GetMetadata
 // call returning the gRPC unimplemented error, is always returned.
@@ -230,6 +345,16 @@ func (s *muxServer) serverDiscovery(ctx context.Context) error {
 			// Collect all underlying server diagnostics, but skip early return.
 			s.serverDiscoveryDiagnostics = append(s.serverDiscoveryDiagnostics, metadataResp.Diagnostics...)
 
+			for _, serverAction := range metadataResp.Actions {
+				if _, ok := s.actions[serverAction.TypeName]; ok {
+					s.serverDiscoveryDiagnostics = append(s.serverDiscoveryDiagnostics, actionDuplicateError(serverAction.TypeName))
+
+					continue
+				}
+
+				s.actions[serverAction.TypeName] = server
+			}
+
 			for _, serverDataSource := range metadataResp.DataSources {
 				if _, ok := s.dataSources[serverDataSource.TypeName]; ok {
 					s.serverDiscoveryDiagnostics = append(s.serverDiscoveryDiagnostics, dataSourceDuplicateError(serverDataSource.TypeName))
@@ -250,6 +375,16 @@ func (s *muxServer) serverDiscovery(ctx context.Context) error {
 				s.ephemeralResources[serverEphemeralResource.TypeName] = server
 			}
 
+			for _, serverListResource := range metadataResp.ListResources {
+				if _, ok := s.listResources[serverListResource.TypeName]; ok {
+					s.serverDiscoveryDiagnostics = append(s.serverDiscoveryDiagnostics, listResourceDuplicateError(serverListResource.TypeName))
+
+					continue
+				}
+
+				s.listResources[serverListResource.TypeName] = server
+			}
+
 			for _, serverFunction := range metadataResp.Functions {
 				if _, ok := s.functions[serverFunction.Name]; ok {
 					s.serverDiscoveryDiagnostics = append(s.serverDiscoveryDiagnostics, functionDuplicateError(serverFunction.Name))
@@ -258,6 +393,16 @@ func (s *muxServer) serverDiscovery(ctx context.Context) error {
 				}
 
 				s.functions[serverFunction.Name] = server
+			}
+
+			for _, serverStateStore := range metadataResp.StateStores {
+				if _, ok := s.stateStores[serverStateStore.TypeName]; ok {
+					s.serverDiscoveryDiagnostics = append(s.serverDiscoveryDiagnostics, stateStoreDuplicateError(serverStateStore.TypeName))
+
+					continue
+				}
+
+				s.stateStores[serverStateStore.TypeName] = server
 			}
 
 			for _, serverResource := range metadataResp.Resources {
@@ -292,6 +437,16 @@ func (s *muxServer) serverDiscovery(ctx context.Context) error {
 		// Collect all underlying server diagnostics, but skip early return.
 		s.serverDiscoveryDiagnostics = append(s.serverDiscoveryDiagnostics, providerSchemaResp.Diagnostics...)
 
+		for actionType := range providerSchemaResp.ActionSchemas {
+			if _, ok := s.actions[actionType]; ok {
+				s.serverDiscoveryDiagnostics = append(s.serverDiscoveryDiagnostics, actionDuplicateError(actionType))
+
+				continue
+			}
+
+			s.actions[actionType] = server
+		}
+
 		for typeName := range providerSchemaResp.DataSourceSchemas {
 			if _, ok := s.dataSources[typeName]; ok {
 				s.serverDiscoveryDiagnostics = append(s.serverDiscoveryDiagnostics, dataSourceDuplicateError(typeName))
@@ -312,6 +467,16 @@ func (s *muxServer) serverDiscovery(ctx context.Context) error {
 			s.ephemeralResources[typeName] = server
 		}
 
+		for typeName := range providerSchemaResp.ListResourceSchemas {
+			if _, ok := s.listResources[typeName]; ok {
+				s.serverDiscoveryDiagnostics = append(s.serverDiscoveryDiagnostics, listResourceDuplicateError(typeName))
+
+				continue
+			}
+
+			s.listResources[typeName] = server
+		}
+
 		for name := range providerSchemaResp.Functions {
 			if _, ok := s.functions[name]; ok {
 				s.serverDiscoveryDiagnostics = append(s.serverDiscoveryDiagnostics, functionDuplicateError(name))
@@ -320,6 +485,16 @@ func (s *muxServer) serverDiscovery(ctx context.Context) error {
 			}
 
 			s.functions[name] = server
+		}
+
+		for typeName := range providerSchemaResp.StateStoreSchemas {
+			if _, ok := s.stateStores[typeName]; ok {
+				s.serverDiscoveryDiagnostics = append(s.serverDiscoveryDiagnostics, stateStoreDuplicateError(typeName))
+
+				continue
+			}
+
+			s.stateStores[typeName] = server
 		}
 
 		for typeName := range providerSchemaResp.ResourceSchemas {
@@ -346,15 +521,22 @@ func (s *muxServer) serverDiscovery(ctx context.Context) error {
 //
 //   - All provider schemas exactly match
 //   - All provider meta schemas exactly match
+//   - Only one provider implements each action
 //   - Only one provider implements each managed resource
 //   - Only one provider implements each data source
 //   - Only one provider implements each function
 //   - Only one provider implements each ephemeral resource
+//   - Only one provider implements each list resource
+//   - Only one provider implements each resource identity
+//   - Only one provider implements each state store
 func NewMuxServer(_ context.Context, servers ...func() tfprotov6.ProviderServer) (*muxServer, error) {
 	result := muxServer{
+		actions:              make(map[string]tfprotov6.ProviderServer),
 		dataSources:          make(map[string]tfprotov6.ProviderServer),
 		ephemeralResources:   make(map[string]tfprotov6.ProviderServer),
+		listResources:        make(map[string]tfprotov6.ProviderServer),
 		functions:            make(map[string]tfprotov6.ProviderServer),
+		stateStores:          make(map[string]tfprotov6.ProviderServer),
 		resources:            make(map[string]tfprotov6.ProviderServer),
 		resourceCapabilities: make(map[string]*tfprotov6.ServerCapabilities),
 		servers:              make([]tfprotov6.ProviderServer, 0, len(servers)),

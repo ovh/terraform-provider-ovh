@@ -7,10 +7,12 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework/action"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
+	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -34,7 +36,19 @@ func (v AtLeastOneOfValidator) MarkdownDescription(_ context.Context) string {
 	return fmt.Sprintf("At least one of these attributes must be configured: %s", v.PathExpressions)
 }
 
+func (v AtLeastOneOfValidator) ValidateAction(ctx context.Context, req action.ValidateConfigRequest, resp *action.ValidateConfigResponse) {
+	resp.Diagnostics = v.Validate(ctx, req.Config)
+}
+
 func (v AtLeastOneOfValidator) ValidateDataSource(ctx context.Context, req datasource.ValidateConfigRequest, resp *datasource.ValidateConfigResponse) {
+	resp.Diagnostics = v.Validate(ctx, req.Config)
+}
+
+func (v AtLeastOneOfValidator) ValidateEphemeralResource(ctx context.Context, req ephemeral.ValidateConfigRequest, resp *ephemeral.ValidateConfigResponse) {
+	resp.Diagnostics = v.Validate(ctx, req.Config)
+}
+
+func (v AtLeastOneOfValidator) ValidateListResourceConfig(ctx context.Context, req list.ValidateConfigRequest, resp *list.ValidateConfigResponse) {
 	resp.Diagnostics = v.Validate(ctx, req.Config)
 }
 
@@ -43,10 +57,6 @@ func (v AtLeastOneOfValidator) ValidateProvider(ctx context.Context, req provide
 }
 
 func (v AtLeastOneOfValidator) ValidateResource(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
-	resp.Diagnostics = v.Validate(ctx, req.Config)
-}
-
-func (v AtLeastOneOfValidator) ValidateEphemeralResource(ctx context.Context, req ephemeral.ValidateConfigRequest, resp *ephemeral.ValidateConfigResponse) {
 	resp.Diagnostics = v.Validate(ctx, req.Config)
 }
 

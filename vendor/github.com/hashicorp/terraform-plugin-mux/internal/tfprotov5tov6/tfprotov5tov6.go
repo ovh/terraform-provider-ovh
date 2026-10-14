@@ -1,9 +1,11 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2020, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package tfprotov5tov6
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 )
@@ -14,12 +16,13 @@ func ApplyResourceChangeRequest(in *tfprotov5.ApplyResourceChangeRequest) *tfpro
 	}
 
 	return &tfprotov6.ApplyResourceChangeRequest{
-		Config:         DynamicValue(in.Config),
-		PlannedPrivate: in.PlannedPrivate,
-		PlannedState:   DynamicValue(in.PlannedState),
-		PriorState:     DynamicValue(in.PriorState),
-		ProviderMeta:   DynamicValue(in.ProviderMeta),
-		TypeName:       in.TypeName,
+		Config:          DynamicValue(in.Config),
+		PlannedPrivate:  in.PlannedPrivate,
+		PlannedState:    DynamicValue(in.PlannedState),
+		PriorState:      DynamicValue(in.PriorState),
+		ProviderMeta:    DynamicValue(in.ProviderMeta),
+		TypeName:        in.TypeName,
+		PlannedIdentity: ResourceIdentityData(in.PlannedIdentity),
 	}
 }
 
@@ -33,6 +36,7 @@ func ApplyResourceChangeResponse(in *tfprotov5.ApplyResourceChangeResponse) *tfp
 		NewState:                    DynamicValue(in.NewState),
 		Private:                     in.Private,
 		UnsafeToUseLegacyTypeSystem: in.UnsafeToUseLegacyTypeSystem, //nolint:staticcheck
+		NewIdentity:                 ResourceIdentityData(in.NewIdentity),
 	}
 }
 
@@ -172,8 +176,24 @@ func DynamicValue(in *tfprotov5.DynamicValue) *tfprotov6.DynamicValue {
 	}
 }
 
+func ResourceIdentityData(in *tfprotov5.ResourceIdentityData) *tfprotov6.ResourceIdentityData {
+	if in == nil {
+		return nil
+	}
+
+	return &tfprotov6.ResourceIdentityData{
+		IdentityData: DynamicValue(in.IdentityData),
+	}
+}
+
 func EphemeralResourceMetadata(in tfprotov5.EphemeralResourceMetadata) tfprotov6.EphemeralResourceMetadata {
 	return tfprotov6.EphemeralResourceMetadata{
+		TypeName: in.TypeName,
+	}
+}
+
+func ListResourceMetadata(in tfprotov5.ListResourceMetadata) tfprotov6.ListResourceMetadata {
+	return tfprotov6.ListResourceMetadata{
 		TypeName: in.TypeName,
 	}
 }
@@ -283,9 +303,11 @@ func GetMetadataResponse(in *tfprotov5.GetMetadataResponse) *tfprotov6.GetMetada
 	}
 
 	resp := &tfprotov6.GetMetadataResponse{
+		Actions:            make([]tfprotov6.ActionMetadata, 0, len(in.Actions)),
 		DataSources:        make([]tfprotov6.DataSourceMetadata, 0, len(in.DataSources)),
 		Diagnostics:        Diagnostics(in.Diagnostics),
 		EphemeralResources: make([]tfprotov6.EphemeralResourceMetadata, 0, len(in.Resources)),
+		ListResources:      make([]tfprotov6.ListResourceMetadata, 0, len(in.ListResources)),
 		Functions:          make([]tfprotov6.FunctionMetadata, 0, len(in.Functions)),
 		Resources:          make([]tfprotov6.ResourceMetadata, 0, len(in.Resources)),
 		ServerCapabilities: ServerCapabilities(in.ServerCapabilities),
@@ -299,12 +321,20 @@ func GetMetadataResponse(in *tfprotov5.GetMetadataResponse) *tfprotov6.GetMetada
 		resp.EphemeralResources = append(resp.EphemeralResources, EphemeralResourceMetadata(ephemeralResource))
 	}
 
+	for _, listResource := range in.ListResources {
+		resp.ListResources = append(resp.ListResources, ListResourceMetadata(listResource))
+	}
+
 	for _, function := range in.Functions {
 		resp.Functions = append(resp.Functions, FunctionMetadata(function))
 	}
 
 	for _, resource := range in.Resources {
 		resp.Resources = append(resp.Resources, ResourceMetadata(resource))
+	}
+
+	for _, action := range in.Actions {
+		resp.Actions = append(resp.Actions, ActionMetadata(action))
 	}
 
 	return resp
@@ -335,6 +365,12 @@ func GetProviderSchemaResponse(in *tfprotov5.GetProviderSchemaResponse) *tfproto
 		ephemeralResourceSchemas[k] = Schema(v)
 	}
 
+	listResourceSchemas := make(map[string]*tfprotov6.Schema, len(in.ListResourceSchemas))
+
+	for k, v := range in.ListResourceSchemas {
+		listResourceSchemas[k] = Schema(v)
+	}
+
 	functions := make(map[string]*tfprotov6.Function, len(in.Functions))
 
 	for name, function := range in.Functions {
@@ -347,15 +383,48 @@ func GetProviderSchemaResponse(in *tfprotov5.GetProviderSchemaResponse) *tfproto
 		resourceSchemas[k] = Schema(v)
 	}
 
+	actionSchemas := make(map[string]*tfprotov6.ActionSchema, len(in.ActionSchemas))
+
+	for k, v := range in.ActionSchemas {
+		actionSchemas[k] = ActionSchema(v)
+	}
+
 	return &tfprotov6.GetProviderSchemaResponse{
+		ActionSchemas:            actionSchemas,
 		DataSourceSchemas:        dataSourceSchemas,
 		Diagnostics:              Diagnostics(in.Diagnostics),
 		EphemeralResourceSchemas: ephemeralResourceSchemas,
+		ListResourceSchemas:      listResourceSchemas,
 		Functions:                functions,
 		Provider:                 Schema(in.Provider),
 		ProviderMeta:             Schema(in.ProviderMeta),
 		ResourceSchemas:          resourceSchemas,
 		ServerCapabilities:       ServerCapabilities(in.ServerCapabilities),
+	}
+}
+
+func GetResourceIdentitySchemasRequest(in *tfprotov5.GetResourceIdentitySchemasRequest) *tfprotov6.GetResourceIdentitySchemasRequest {
+	if in == nil {
+		return nil
+	}
+
+	return &tfprotov6.GetResourceIdentitySchemasRequest{}
+}
+
+func GetResourceIdentitySchemasResponse(in *tfprotov5.GetResourceIdentitySchemasResponse) *tfprotov6.GetResourceIdentitySchemasResponse {
+	if in == nil {
+		return nil
+	}
+
+	identitySchemas := make(map[string]*tfprotov6.ResourceIdentitySchema, len(in.IdentitySchemas))
+
+	for k, v := range in.IdentitySchemas {
+		identitySchemas[k] = ResourceIdentitySchema(v)
+	}
+
+	return &tfprotov6.GetResourceIdentitySchemasResponse{
+		Diagnostics:     Diagnostics(in.Diagnostics),
+		IdentitySchemas: identitySchemas,
 	}
 }
 
@@ -368,6 +437,7 @@ func ImportResourceStateRequest(in *tfprotov5.ImportResourceStateRequest) *tfpro
 		ClientCapabilities: ImportResourceStateClientCapabilities(in.ClientCapabilities),
 		ID:                 in.ID,
 		TypeName:           in.TypeName,
+		Identity:           ResourceIdentityData(in.Identity),
 	}
 }
 
@@ -412,6 +482,7 @@ func ImportedResources(in []*tfprotov5.ImportedResource) []*tfprotov6.ImportedRe
 			Private:  imp.Private,
 			State:    DynamicValue(imp.State),
 			TypeName: imp.TypeName,
+			Identity: ResourceIdentityData(imp.Identity),
 		})
 	}
 
@@ -424,12 +495,14 @@ func MoveResourceStateRequest(in *tfprotov5.MoveResourceStateRequest) *tfprotov6
 	}
 
 	return &tfprotov6.MoveResourceStateRequest{
-		SourcePrivate:         in.SourcePrivate,
-		SourceProviderAddress: in.SourceProviderAddress,
-		SourceSchemaVersion:   in.SourceSchemaVersion,
-		SourceState:           RawState(in.SourceState),
-		SourceTypeName:        in.SourceTypeName,
-		TargetTypeName:        in.TargetTypeName,
+		SourcePrivate:               in.SourcePrivate,
+		SourceProviderAddress:       in.SourceProviderAddress,
+		SourceSchemaVersion:         in.SourceSchemaVersion,
+		SourceState:                 RawState(in.SourceState),
+		SourceTypeName:              in.SourceTypeName,
+		TargetTypeName:              in.TargetTypeName,
+		SourceIdentity:              RawState(in.SourceIdentity),
+		SourceIdentitySchemaVersion: in.SourceIdentitySchemaVersion,
 	}
 }
 
@@ -439,9 +512,10 @@ func MoveResourceStateResponse(in *tfprotov5.MoveResourceStateResponse) *tfproto
 	}
 
 	return &tfprotov6.MoveResourceStateResponse{
-		Diagnostics:   Diagnostics(in.Diagnostics),
-		TargetPrivate: in.TargetPrivate,
-		TargetState:   DynamicValue(in.TargetState),
+		Diagnostics:    Diagnostics(in.Diagnostics),
+		TargetPrivate:  in.TargetPrivate,
+		TargetState:    DynamicValue(in.TargetState),
+		TargetIdentity: ResourceIdentityData(in.TargetIdentity),
 	}
 }
 
@@ -496,6 +570,7 @@ func PlanResourceChangeRequest(in *tfprotov5.PlanResourceChangeRequest) *tfproto
 		ProposedNewState:   DynamicValue(in.ProposedNewState),
 		ProviderMeta:       DynamicValue(in.ProviderMeta),
 		TypeName:           in.TypeName,
+		PriorIdentity:      ResourceIdentityData(in.PriorIdentity),
 	}
 }
 
@@ -523,6 +598,7 @@ func PlanResourceChangeResponse(in *tfprotov5.PlanResourceChangeResponse) *tfpro
 		PlannedState:                DynamicValue(in.PlannedState),
 		RequiresReplace:             in.RequiresReplace,
 		UnsafeToUseLegacyTypeSystem: in.UnsafeToUseLegacyTypeSystem, //nolint:staticcheck
+		PlannedIdentity:             ResourceIdentityData(in.PlannedIdentity),
 	}
 }
 
@@ -584,6 +660,7 @@ func ReadResourceRequest(in *tfprotov5.ReadResourceRequest) *tfprotov6.ReadResou
 		Private:            in.Private,
 		ProviderMeta:       DynamicValue(in.ProviderMeta),
 		TypeName:           in.TypeName,
+		CurrentIdentity:    ResourceIdentityData(in.CurrentIdentity),
 	}
 }
 
@@ -609,6 +686,7 @@ func ReadResourceResponse(in *tfprotov5.ReadResourceResponse) *tfprotov6.ReadRes
 		Diagnostics: Diagnostics(in.Diagnostics),
 		NewState:    DynamicValue(in.NewState),
 		Private:     in.Private,
+		NewIdentity: ResourceIdentityData(in.NewIdentity),
 	}
 }
 
@@ -658,16 +736,17 @@ func SchemaAttribute(in *tfprotov5.SchemaAttribute) *tfprotov6.SchemaAttribute {
 	}
 
 	return &tfprotov6.SchemaAttribute{
-		Computed:        in.Computed,
-		Deprecated:      in.Deprecated,
-		Description:     in.Description,
-		DescriptionKind: StringKind(in.DescriptionKind),
-		Name:            in.Name,
-		Optional:        in.Optional,
-		Required:        in.Required,
-		Sensitive:       in.Sensitive,
-		Type:            in.Type,
-		WriteOnly:       in.WriteOnly,
+		Computed:           in.Computed,
+		Deprecated:         in.Deprecated,
+		DeprecationMessage: in.DeprecationMessage,
+		Description:        in.Description,
+		DescriptionKind:    StringKind(in.DescriptionKind),
+		Name:               in.Name,
+		Optional:           in.Optional,
+		Required:           in.Required,
+		Sensitive:          in.Sensitive,
+		Type:               in.Type,
+		WriteOnly:          in.WriteOnly,
 	}
 }
 
@@ -697,12 +776,13 @@ func SchemaBlock(in *tfprotov5.SchemaBlock) *tfprotov6.SchemaBlock {
 	}
 
 	return &tfprotov6.SchemaBlock{
-		Attributes:      attrs,
-		BlockTypes:      nestedBlocks,
-		Deprecated:      in.Deprecated,
-		Description:     in.Description,
-		DescriptionKind: StringKind(in.DescriptionKind),
-		Version:         in.Version,
+		Attributes:         attrs,
+		BlockTypes:         nestedBlocks,
+		Deprecated:         in.Deprecated,
+		DeprecationMessage: in.DeprecationMessage,
+		Description:        in.Description,
+		DescriptionKind:    StringKind(in.DescriptionKind),
+		Version:            in.Version,
 	}
 }
 
@@ -717,6 +797,41 @@ func SchemaNestedBlock(in *tfprotov5.SchemaNestedBlock) *tfprotov6.SchemaNestedB
 		MinItems: in.MinItems,
 		Nesting:  tfprotov6.SchemaNestedBlockNestingMode(in.Nesting),
 		TypeName: in.TypeName,
+	}
+}
+
+func ResourceIdentitySchema(in *tfprotov5.ResourceIdentitySchema) *tfprotov6.ResourceIdentitySchema {
+	if in == nil {
+		return nil
+	}
+
+	var attrs []*tfprotov6.ResourceIdentitySchemaAttribute
+
+	if in.IdentityAttributes != nil {
+		attrs = make([]*tfprotov6.ResourceIdentitySchemaAttribute, 0, len(in.IdentityAttributes))
+
+		for _, attr := range in.IdentityAttributes {
+			attrs = append(attrs, ResourceIdentitySchemaAttribute(attr))
+		}
+	}
+
+	return &tfprotov6.ResourceIdentitySchema{
+		Version:            in.Version,
+		IdentityAttributes: attrs,
+	}
+}
+
+func ResourceIdentitySchemaAttribute(in *tfprotov5.ResourceIdentitySchemaAttribute) *tfprotov6.ResourceIdentitySchemaAttribute {
+	if in == nil {
+		return nil
+	}
+
+	return &tfprotov6.ResourceIdentitySchemaAttribute{
+		Name:              in.Name,
+		Type:              in.Type,
+		RequiredForImport: in.RequiredForImport,
+		OptionalForImport: in.OptionalForImport,
+		Description:       in.Description,
 	}
 }
 
@@ -774,6 +889,29 @@ func UpgradeResourceStateResponse(in *tfprotov5.UpgradeResourceStateResponse) *t
 	return &tfprotov6.UpgradeResourceStateResponse{
 		Diagnostics:   Diagnostics(in.Diagnostics),
 		UpgradedState: DynamicValue(in.UpgradedState),
+	}
+}
+
+func UpgradeResourceIdentityRequest(in *tfprotov5.UpgradeResourceIdentityRequest) *tfprotov6.UpgradeResourceIdentityRequest {
+	if in == nil {
+		return nil
+	}
+
+	return &tfprotov6.UpgradeResourceIdentityRequest{
+		TypeName:    in.TypeName,
+		Version:     in.Version,
+		RawIdentity: RawState(in.RawIdentity),
+	}
+}
+
+func UpgradeResourceIdentityResponse(in *tfprotov5.UpgradeResourceIdentityResponse) *tfprotov6.UpgradeResourceIdentityResponse {
+	if in == nil {
+		return nil
+	}
+
+	return &tfprotov6.UpgradeResourceIdentityResponse{
+		Diagnostics:      Diagnostics(in.Diagnostics),
+		UpgradedIdentity: ResourceIdentityData(in.UpgradedIdentity),
 	}
 }
 
@@ -870,6 +1008,219 @@ func ValidateResourceConfigResponse(in *tfprotov5.ValidateResourceTypeConfigResp
 	}
 
 	return &tfprotov6.ValidateResourceConfigResponse{
+		Diagnostics: Diagnostics(in.Diagnostics),
+	}
+}
+
+func ValidateListResourceConfigRequest(in *tfprotov5.ValidateListResourceConfigRequest) *tfprotov6.ValidateListResourceConfigRequest {
+	if in == nil {
+		return nil
+	}
+
+	return &tfprotov6.ValidateListResourceConfigRequest{
+		Config:   DynamicValue(in.Config),
+		TypeName: in.TypeName,
+	}
+}
+
+func ValidateListResourceConfigResponse(in *tfprotov5.ValidateListResourceConfigResponse) *tfprotov6.ValidateListResourceConfigResponse {
+	if in == nil {
+		return nil
+	}
+
+	return &tfprotov6.ValidateListResourceConfigResponse{
+		Diagnostics: Diagnostics(in.Diagnostics),
+	}
+}
+
+func ListResourceRequest(in *tfprotov5.ListResourceRequest) *tfprotov6.ListResourceRequest {
+	if in == nil {
+		return nil
+	}
+
+	return &tfprotov6.ListResourceRequest{
+		Config:   DynamicValue(in.Config),
+		TypeName: in.TypeName,
+	}
+}
+
+func ListResourceServerStream(in *tfprotov5.ListResourceServerStream) *tfprotov6.ListResourceServerStream {
+	if in == nil {
+		return nil
+	}
+
+	return &tfprotov6.ListResourceServerStream{
+		Results: func(yield func(tfprotov6.ListResourceResult) bool) {
+			for res := range in.Results {
+				if !yield(ListResourceResult(res)) {
+					break
+				}
+			}
+		},
+	}
+}
+
+func ListResourceResult(in tfprotov5.ListResourceResult) tfprotov6.ListResourceResult {
+	return tfprotov6.ListResourceResult{
+		DisplayName: in.DisplayName,
+		Resource:    DynamicValue(in.Resource),
+		Identity:    ResourceIdentityData(in.Identity),
+		Diagnostics: Diagnostics(in.Diagnostics),
+	}
+}
+
+func ActionMetadata(in tfprotov5.ActionMetadata) tfprotov6.ActionMetadata {
+	return tfprotov6.ActionMetadata{
+		TypeName: in.TypeName,
+	}
+}
+
+func ActionSchema(in *tfprotov5.ActionSchema) *tfprotov6.ActionSchema {
+	if in == nil {
+		return nil
+	}
+
+	actionSchema := &tfprotov6.ActionSchema{
+		Schema: Schema(in.Schema),
+	}
+	return actionSchema
+}
+
+func ValidateActionConfigRequest(in *tfprotov5.ValidateActionConfigRequest) *tfprotov6.ValidateActionConfigRequest {
+	if in == nil {
+		return nil
+	}
+
+	return &tfprotov6.ValidateActionConfigRequest{
+		Config:     DynamicValue(in.Config),
+		ActionType: in.ActionType,
+	}
+}
+
+func ValidateActionConfigResponse(in *tfprotov5.ValidateActionConfigResponse) *tfprotov6.ValidateActionConfigResponse {
+	if in == nil {
+		return nil
+	}
+
+	return &tfprotov6.ValidateActionConfigResponse{
+		Diagnostics: Diagnostics(in.Diagnostics),
+	}
+}
+
+func PlanActionRequest(in *tfprotov5.PlanActionRequest) *tfprotov6.PlanActionRequest {
+	if in == nil {
+		return nil
+	}
+
+	return &tfprotov6.PlanActionRequest{
+		ActionType:         in.ActionType,
+		Config:             DynamicValue(in.Config),
+		ClientCapabilities: PlanActionClientCapabilities(in.ClientCapabilities),
+	}
+}
+
+func PlanActionClientCapabilities(in *tfprotov5.PlanActionClientCapabilities) *tfprotov6.PlanActionClientCapabilities {
+	if in == nil {
+		return nil
+	}
+
+	resp := &tfprotov6.PlanActionClientCapabilities{
+		DeferralAllowed: in.DeferralAllowed,
+	}
+
+	return resp
+}
+
+func PlanActionResponse(in *tfprotov5.PlanActionResponse) *tfprotov6.PlanActionResponse {
+	if in == nil {
+		return nil
+	}
+
+	return &tfprotov6.PlanActionResponse{
+		Diagnostics: Diagnostics(in.Diagnostics),
+		Deferred:    Deferred(in.Deferred),
+	}
+}
+
+func InvokeActionClientCapabilities(in *tfprotov5.InvokeActionClientCapabilities) *tfprotov6.InvokeActionClientCapabilities {
+	if in == nil {
+		return nil
+	}
+
+	resp := &tfprotov6.InvokeActionClientCapabilities{}
+
+	return resp
+}
+
+func InvokeActionRequest(in *tfprotov5.InvokeActionRequest) *tfprotov6.InvokeActionRequest {
+	if in == nil {
+		return nil
+	}
+
+	return &tfprotov6.InvokeActionRequest{
+		ActionType:         in.ActionType,
+		ClientCapabilities: InvokeActionClientCapabilities(in.ClientCapabilities),
+		Config:             DynamicValue(in.Config),
+	}
+}
+
+func InvokeActionServerStream(in *tfprotov5.InvokeActionServerStream) *tfprotov6.InvokeActionServerStream {
+	if in == nil {
+		return nil
+	}
+
+	return &tfprotov6.InvokeActionServerStream{
+		Events: func(yield func(tfprotov6.InvokeActionEvent) bool) {
+			for res := range in.Events {
+				if !yield(InvokeActionEvent(res)) {
+					break
+				}
+			}
+		},
+	}
+}
+
+func InvokeActionEvent(in tfprotov5.InvokeActionEvent) tfprotov6.InvokeActionEvent {
+	switch event := (in.Type).(type) {
+	case tfprotov5.ProgressInvokeActionEventType:
+		return tfprotov6.InvokeActionEvent{
+			Type: tfprotov6.ProgressInvokeActionEventType{
+				Message: event.Message,
+			},
+		}
+	case tfprotov5.CompletedInvokeActionEventType:
+		return tfprotov6.InvokeActionEvent{
+			Type: tfprotov6.CompletedInvokeActionEventType{
+				Diagnostics: Diagnostics(event.Diagnostics),
+			},
+		}
+	}
+
+	// It is not currently possible to create tfprotov5.InvokeActionEventType
+	// implementations outside the terraform-plugin-go module. If this panic was reached,
+	// it implies that a new event type was introduced and needs to be implemented
+	// as a new case above.
+	panic(fmt.Sprintf("unimplemented tfprotov5.InvokeActionEventType type: %T", in.Type))
+}
+
+func GenerateResourceConfigRequest(in *tfprotov5.GenerateResourceConfigRequest) *tfprotov6.GenerateResourceConfigRequest {
+	if in == nil {
+		return nil
+	}
+
+	return &tfprotov6.GenerateResourceConfigRequest{
+		TypeName: in.TypeName,
+		State:    DynamicValue(in.State),
+	}
+}
+
+func GenerateResourceConfigResponse(in *tfprotov5.GenerateResourceConfigResponse) *tfprotov6.GenerateResourceConfigResponse {
+	if in == nil {
+		return nil
+	}
+
+	return &tfprotov6.GenerateResourceConfigResponse{
+		Config:      DynamicValue(in.Config),
 		Diagnostics: Diagnostics(in.Diagnostics),
 	}
 }

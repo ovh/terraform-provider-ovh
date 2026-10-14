@@ -57,11 +57,11 @@ func TestIsCloudLoadbalancerBusy(t *testing.T) {
 		},
 		{
 			name: "wrapped API error",
-			err: fmt.Errorf("calling Post: %w", &ovh.APIError{
+			err: fmt.Errorf("calling Post: %w", error(&ovh.APIError{
 				Code:    409,
 				Class:   "Client::Conflict::ResourceInInvalidState",
 				Message: "The parent load balancer is not in ACTIVE state.",
-			}),
+			})),
 			expected: true,
 		},
 	}

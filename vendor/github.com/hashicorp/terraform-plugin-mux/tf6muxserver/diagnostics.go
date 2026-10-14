@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright IBM Corp. 2020, 2026
 // SPDX-License-Identifier: MPL-2.0
 
 package tf6muxserver
@@ -6,6 +6,27 @@ package tf6muxserver
 import (
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 )
+
+func actionDuplicateError(actionType string) *tfprotov6.Diagnostic {
+	return &tfprotov6.Diagnostic{
+		Severity: tfprotov6.DiagnosticSeverityError,
+		Summary:  "Invalid Provider Server Combination",
+		Detail: "The combined provider has multiple implementations of the same action type across underlying providers. " +
+			"Actions must be implemented by only one underlying provider. " +
+			"This is always an issue in the provider implementation and should be reported to the provider developers.\n\n" +
+			"Duplicate action: " + actionType,
+	}
+}
+
+func actionMissingError(actionType string) *tfprotov6.Diagnostic {
+	return &tfprotov6.Diagnostic{
+		Severity: tfprotov6.DiagnosticSeverityError,
+		Summary:  "Action Not Implemented",
+		Detail: "The combined provider does not implement the requested action. " +
+			"This is always an issue in the provider implementation and should be reported to the provider developers.\n\n" +
+			"Missing action: " + actionType,
+	}
+}
 
 func dataSourceDuplicateError(typeName string) *tfprotov6.Diagnostic {
 	return &tfprotov6.Diagnostic{
@@ -46,6 +67,27 @@ func ephemeralResourceMissingError(typeName string) *tfprotov6.Diagnostic {
 		Detail: "The combined provider does not implement the requested ephemeral resource type. " +
 			"This is always an issue in the provider implementation and should be reported to the provider developers.\n\n" +
 			"Missing ephemeral resource type: " + typeName,
+	}
+}
+
+func listResourceDuplicateError(typeName string) *tfprotov6.Diagnostic {
+	return &tfprotov6.Diagnostic{
+		Severity: tfprotov6.DiagnosticSeverityError,
+		Summary:  "Invalid Provider Server Combination",
+		Detail: "The combined provider has multiple implementations of the same list resource type across underlying providers. " +
+			"List resource types must be implemented by only one underlying provider. " +
+			"This is always an issue in the provider implementation and should be reported to the provider developers.\n\n" +
+			"Duplicate list resource type: " + typeName,
+	}
+}
+
+func listResourceMissingError(typeName string) *tfprotov6.Diagnostic {
+	return &tfprotov6.Diagnostic{
+		Severity: tfprotov6.DiagnosticSeverityError,
+		Summary:  "List Resource Not Implemented",
+		Detail: "The combined provider does not implement the requested list resource type. " +
+			"This is always an issue in the provider implementation and should be reported to the provider developers.\n\n" +
+			"Missing list resource type: " + typeName,
 	}
 }
 
@@ -102,5 +144,37 @@ func resourceMissingError(typeName string) *tfprotov6.Diagnostic {
 		Detail: "The combined provider does not implement the requested resource type. " +
 			"This is always an issue in the provider implementation and should be reported to the provider developers.\n\n" +
 			"Missing resource type: " + typeName,
+	}
+}
+
+func resourceIdentityDuplicateError(typeName string) *tfprotov6.Diagnostic {
+	return &tfprotov6.Diagnostic{
+		Severity: tfprotov6.DiagnosticSeverityError,
+		Summary:  "Invalid Provider Server Combination",
+		Detail: "The combined provider has multiple implementations of the same resource identity across underlying providers. " +
+			"Resource identity types must be implemented by only one underlying provider. " +
+			"This is always an issue in the provider implementation and should be reported to the provider developers.\n\n" +
+			"Duplicate identity type for resource: " + typeName,
+	}
+}
+
+func stateStoreDuplicateError(typeName string) *tfprotov6.Diagnostic {
+	return &tfprotov6.Diagnostic{
+		Severity: tfprotov6.DiagnosticSeverityError,
+		Summary:  "Invalid Provider Server Combination",
+		Detail: "The combined provider has multiple implementations of the same state store across underlying providers. " +
+			"State stores must be implemented by only one underlying provider. " +
+			"This is always an issue in the provider implementation and should be reported to the provider developers.\n\n" +
+			"Duplicate state store: " + typeName,
+	}
+}
+
+func stateStoreMissingError(typeName string) *tfprotov6.Diagnostic {
+	return &tfprotov6.Diagnostic{
+		Severity: tfprotov6.DiagnosticSeverityError,
+		Summary:  "State Store Not Implemented",
+		Detail: "The combined provider does not implement the requested state store. " +
+			"This is always an issue in the provider implementation and should be reported to the provider developers.\n\n" +
+			"Missing state store: " + typeName,
 	}
 }

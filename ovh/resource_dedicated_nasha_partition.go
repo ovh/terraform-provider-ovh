@@ -76,14 +76,14 @@ func resourceDedicatedNASHAPartitionCreate(c context.Context, d *schema.Resource
 
 	err := config.OVHClient.Post(endpoint, partition, resp)
 	if err != nil {
-		return diag.Errorf("calling %s with params %q:\n\t %s", endpoint, partition, err.Error())
+		return diag.Errorf("calling %s with params %+v:\n\t %s", endpoint, partition, err.Error())
 	}
 
 	stateConf := resp.StateChangeConf(d, meta)
 
 	_, err = stateConf.WaitForStateContext(c)
 	if err != nil {
-		return diag.Errorf("waiting for HA-NAS partition (%q): %s", partition, err.Error())
+		return diag.Errorf("waiting for HA-NAS partition (%+v): %s", partition, err.Error())
 	}
 	log.Printf("[DEBUG] Created HA-NAS partition")
 
