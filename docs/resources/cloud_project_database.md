@@ -10,7 +10,17 @@ Creates a OVHcloud Managed Database Service in a public cloud project.
 
 To learn more about OVHcloud Public Cloud Database please visit our [public documentation](https://docs.ovh.com/gb/en/publiccloud/databases).
 
-The plans, flavors, number of nodes and regions available for each engine are listed in [Capabilities and Limitations of Public Cloud Databases](https://docs.ovhcloud.com/en/guides/public-cloud/databases/capabilities) (and [for PostgreSQL](https://docs.ovhcloud.com/en/guides/public-cloud/databases/postgresql-capabilities)).
+The plans, flavors, number of nodes and regions available for each engine are listed in [Capabilities and Limitations of Public Cloud Databases](https://docs.ovhcloud.com/en/guides/public-cloud/databases/capabilities).
+
+The capabilities documentation are helpful to find the properties of the configuration that matches your needs, such as plan, flavor, versions..
+
+| Database |   Capabilities  |
+| -------- | --------------- |
+| MySQL | https://docs.ovhcloud.com/en/guides/public-cloud/databases/mysql-capabilities|
+| PostgreSQL | https://docs.ovhcloud.com/en/guides/public-cloud/databases/postgresql-capabilities|
+| MongoDB| https://docs.ovhcloud.com/en/guides/public-cloud/databases/mongodb-concept-capabilities|
+| Valkey| https://docs.ovhcloud.com/en/guides/public-cloud/databases/valkey-capabilities|
+
 
 You can visit our dedicated Discord channel: https://discord.gg/PwPqWUpN8G. Ask questions, provide feedback and interact directly with the team that builds our databases services and terraform provider.
 
