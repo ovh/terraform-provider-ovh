@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
@@ -137,8 +139,25 @@ func (d *cloudNetworkPrivateVrackDataSource) Schema(ctx context.Context, req dat
 	}
 }
 
+// cloudNetworkPrivateVrackDataSourceModel is the Terraform state model for this data source.
+// It mirrors the resource model but exposes the location as a nested object
+// (the network is fetched by ID, so region is computed, not user input).
+type cloudNetworkPrivateVrackDataSourceModel struct {
+	ServiceName    ovhtypes.TfStringValue `tfsdk:"service_name"`
+	Id             ovhtypes.TfStringValue `tfsdk:"id"`
+	Name           ovhtypes.TfStringValue `tfsdk:"name"`
+	Location       types.Object           `tfsdk:"location"`
+	Description    ovhtypes.TfStringValue `tfsdk:"description"`
+	VlanId         ovhtypes.TfInt64Value  `tfsdk:"vlan_id"`
+	Checksum       ovhtypes.TfStringValue `tfsdk:"checksum"`
+	CreatedAt      ovhtypes.TfStringValue `tfsdk:"created_at"`
+	UpdatedAt      ovhtypes.TfStringValue `tfsdk:"updated_at"`
+	ResourceStatus ovhtypes.TfStringValue `tfsdk:"resource_status"`
+	CurrentState   types.Object           `tfsdk:"current_state"`
+}
+
 func (d *cloudNetworkPrivateVrackDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data CloudNetworkPrivateVrackModel
+	var data cloudNetworkPrivateVrackDataSourceModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -156,7 +175,33 @@ func (d *cloudNetworkPrivateVrackDataSource) Read(ctx context.Context, req datas
 		return
 	}
 
-	data.MergeWith(ctx, &responseData)
+	// Reuse the resource model's mapping, then project it onto the data source
+	// model which exposes the location as a nested computed object.
+	var m CloudNetworkPrivateVrackModel
+	m.ServiceName = data.ServiceName
+	m.Id = data.Id
+	m.MergeWith(ctx, &responseData)
+
+	locationVal, diags := types.ObjectValue(
+		vrackLocationAttrTypes(),
+		map[string]attr.Value{
+			"region": m.Region,
+		},
+	)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	data.Location = locationVal
+	data.Name = m.Name
+	data.Description = m.Description
+	data.VlanId = m.VlanId
+	data.Checksum = m.Checksum
+	data.CreatedAt = m.CreatedAt
+	data.UpdatedAt = m.UpdatedAt
+	data.ResourceStatus = m.ResourceStatus
+	data.CurrentState = m.CurrentState
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
