@@ -27,10 +27,12 @@
 * `r/ovh_cloud_project_database`: When the creation fails with `NoMatchingCompute`, the error now names the first value of the configuration (engine, version, plan, region, flavor, network, number of nodes or disk size) that matches no available configuration, with the available values ([#1483](https://github.com/ovh/terraform-provider-ovh/pull/1483))
 * `r/ovh_domain_zone_dnssec`: Save the `status` read from the API, so a DNSSEC activation cancelled by the API shows up as drift ([#1480](https://github.com/ovh/terraform-provider-ovh/pull/1480))
 * Resources created through the order workflow (e.g. `r/ovh_domain_zone`): Changing a `configuration` of `plan` or `plan_option`, like a DNS zone `template`, now replaces the resource instead of failing at apply ([#1479](https://github.com/ovh/terraform-provider-ovh/pull/1479))
+* `d/ovh_cloud_network_private_vrack`: Fix the `Value Conversion Error` that made every read of the data source fail ([#1499](https://github.com/ovh/terraform-provider-ovh/pull/1499))
 
 📚 Documentation:
 
 * `r/ovh_domain_zone`: Clarify the DNS zone templates, and document `stub` as an empty zone containing only NS records ([#1464](https://github.com/ovh/terraform-provider-ovh/pull/1464))
+* `r/ovh_cloud_project_database`: Explain that the number of `nodes` blocks sets the number of nodes, list the capabilities guide of each engine, and update the examples to plans, flavors and versions that are still available ([#1498](https://github.com/ovh/terraform-provider-ovh/pull/1498))
 
 ⚙️ General:
 
