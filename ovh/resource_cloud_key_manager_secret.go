@@ -7,12 +7,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/ovh/go-ovh/ovh"
@@ -103,20 +105,24 @@ func (r *cloudKeyManagerSecretResource) Schema(ctx context.Context, req resource
 			"secret_type": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Required:            true,
-				Description:         "Type of the secret (SYMMETRIC, PUBLIC, PRIVATE, PASSPHRASE, CERTIFICATE, OPAQUE). The value is normalized to upper case to match the API.",
-				MarkdownDescription: "Type of the secret (`SYMMETRIC`, `PUBLIC`, `PRIVATE`, `PASSPHRASE`, `CERTIFICATE`, `OPAQUE`). The value is normalized to upper case to match the API.",
+				Description:         "Type of the secret (SYMMETRIC, PUBLIC, PRIVATE, PASSPHRASE, CERTIFICATE, OPAQUE).",
+				MarkdownDescription: "Type of the secret (`SYMMETRIC`, `PUBLIC`, `PRIVATE`, `PASSPHRASE`, `CERTIFICATE`, `OPAQUE`).",
+				Validators: []validator.String{
+					stringvalidator.OneOf("SYMMETRIC", "PUBLIC", "PRIVATE", "PASSPHRASE", "CERTIFICATE", "OPAQUE"),
+				},
 				PlanModifiers: []planmodifier.String{
-					UpperCaseString(),
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"algorithm": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Optional:            true,
-				Description:         "Algorithm associated with the secret (e.g., AES, RSA). The value is normalized to upper case to match the API.",
-				MarkdownDescription: "Algorithm associated with the secret (e.g., `AES`, `RSA`). The value is normalized to upper case to match the API.",
+				Description:         "Algorithm associated with the secret (e.g., AES, RSA).",
+				MarkdownDescription: "Algorithm associated with the secret (e.g., `AES`, `RSA`).",
+				Validators: []validator.String{
+					stringvalidator.OneOf("AES", "DH", "DSA", "EC", "RSA"),
+				},
 				PlanModifiers: []planmodifier.String{
-					UpperCaseString(),
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
@@ -131,10 +137,12 @@ func (r *cloudKeyManagerSecretResource) Schema(ctx context.Context, req resource
 			"mode": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Optional:            true,
-				Description:         "Mode of the secret algorithm (CBC, CTR). The value is normalized to upper case to match the API.",
-				MarkdownDescription: "Mode of the secret algorithm (`CBC`, `CTR`). The value is normalized to upper case to match the API.",
+				Description:         "Mode of the secret algorithm (CBC, CTR).",
+				MarkdownDescription: "Mode of the secret algorithm (`CBC`, `CTR`).",
+				Validators: []validator.String{
+					stringvalidator.OneOf("CBC", "CTR"),
+				},
 				PlanModifiers: []planmodifier.String{
-					UpperCaseString(),
 					stringplanmodifier.RequiresReplace(),
 				},
 			},

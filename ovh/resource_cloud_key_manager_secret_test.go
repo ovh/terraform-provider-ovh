@@ -218,20 +218,16 @@ func TestAccCloudKeyManagerSecret_symmetric(t *testing.T) {
 	name := acctest.RandomWithPrefix(test_prefix)
 
 	// SYMMETRIC key with no payload: the service generates the key material from
-	// the algorithm/bit_length/mode triple. secret_type, algorithm and mode are
-	// all written lower case on purpose to exercise the upper-case normalization:
-	// apiv2 upper-cases the three of them on every read path
-	// (internal/secret/mapping.go TypeFromOpenStack / AlgorithmFromOpenStack /
-	// ModeFromOpenStack), so state must read back upper-cased with no plan diff.
+	// the algorithm/bit_length/mode triple.
 	config := fmt.Sprintf(`
 resource "ovh_cloud_key_manager_secret" "test" {
   service_name = "%s"
   region       = "%s"
   name         = "%s"
-  secret_type  = "symmetric"
-  algorithm    = "aes"
+  secret_type  = "SYMMETRIC"
+  algorithm    = "AES"
   bit_length   = 256
-  mode         = "cbc"
+  mode         = "CBC"
 }
 `, serviceName, region, name)
 
