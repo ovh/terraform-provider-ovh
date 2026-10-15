@@ -10,6 +10,21 @@ Creates a OVHcloud Managed Database Service in a public cloud project.
 
 To learn more about OVHcloud Public Cloud Database please visit our [public documentation](https://docs.ovh.com/gb/en/publiccloud/databases).
 
+The plans, flavors, number of nodes and regions available for each engine are listed in [Capabilities and Limitations of Public Cloud Databases](https://docs.ovhcloud.com/en/guides/public-cloud/databases/capabilities).
+
+The capabilities documentation are helpful to find the properties of the configuration that matches your needs, such as plan, flavor, versions..
+
+| Database |   Capabilities  |
+| -------- | --------------- |
+| MySQL | https://docs.ovhcloud.com/en/guides/public-cloud/databases/mysql-capabilities|
+| PostgreSQL | https://docs.ovhcloud.com/en/guides/public-cloud/databases/postgresql-capabilities|
+| MongoDB| https://docs.ovhcloud.com/en/guides/public-cloud/databases/mongodb-concept-capabilities|
+| Valkey| https://docs.ovhcloud.com/en/guides/public-cloud/databases/valkey-capabilities|
+| ClickHouse | https://docs.ovhcloud.com/en/guides/public-cloud/data-analytics/analytics/clickhouse-capabilities-limitations|
+| Kafka | https://docs.ovhcloud.com/en/guides/public-cloud/data-analytics/analytics/capabilities|
+| OpenSearch | https://docs.ovhcloud.com/en/guides/public-cloud/data-analytics/analytics/capabilities|
+
+
 You can visit our dedicated Discord channel: https://discord.gg/PwPqWUpN8G. Ask questions, provide feedback and interact directly with the team that builds our databases services and terraform provider.
 
 ## Example Usage
@@ -21,47 +36,53 @@ resource "ovh_cloud_project_database" "kafkadb" {
   service_name          = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
   description           = "my-first-kafka"
   engine                = "kafka"
-  version               = "3.8"
-  flavor                = "db1-4"
-  plan                  = "business"
+  version               = "4.3"
+  flavor                = "b3-8"
+  plan                  = "production"
   kafka_rest_api        = true
   kafka_schema_registry = true
   nodes {
-    region  = "DE"
+    region = "DE"
   }
   nodes {
-    region  = "DE"
+    region = "DE"
   }
   nodes {
-    region  = "DE"
+    region = "DE"
   }
 }
 
 resource "ovh_cloud_project_database" "mongodb" {
-  service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  description   = "my-first-mongodb"
-  engine        = "mongodb"
-  version       = "5.0"
-  plan          = "discovery"
+  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  description  = "my-first-mongodb"
+  engine       = "mongodb"
+  version      = "8.0"
+  plan         = "production"
   nodes {
-    region =  "GRA"
+    region = "GRA"
   }
-  flavor        = "db1-2"
+  nodes {
+    region = "GRA"
+  }
+  nodes {
+    region = "GRA"
+  }
+  flavor = "db2-2"
 }
 
 resource "ovh_cloud_project_database" "mysqldb" {
-  service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  description   = "my-first-mysql"
-  engine        = "mysql"
-  version       = "8"
-  plan          = "essential"
+  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  description  = "my-first-mysql"
+  engine       = "mysql"
+  version      = "8.4"
+  plan         = "discovery"
   nodes {
-    region  = "SBG"
+    region = "SBG"
   }
-  flavor        = "db1-4"
+  flavor = "b3-4"
   advanced_configuration = {
-    "mysql.sql_mode": "ANSI,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION,NO_ZERO_DATE,NO_ZERO_IN_DATE,STRICT_ALL_TABLES",
-    "mysql.sql_require_primary_key": "true"
+    "mysql.sql_mode" : "ANSI,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION,NO_ZERO_DATE,NO_ZERO_IN_DATE,STRICT_ALL_TABLES",
+    "mysql.sql_require_primary_key" : "true"
   }
 }
 
@@ -69,104 +90,168 @@ resource "ovh_cloud_project_database" "opensearchdb" {
   service_name            = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
   description             = "my-first-opensearch"
   engine                  = "opensearch"
-  version                 = "1"
-  plan                    = "essential"
+  version                 = "3.3"
+  plan                    = "discovery"
   opensearch_acls_enabled = true
   nodes {
     region = "UK"
   }
-  flavor                  = "db1-4"
+  flavor = "b3-4"
 }
 
 resource "ovh_cloud_project_database" "pgsqldb" {
-  service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  description   = "my-first-postgresql"
-  engine        = "postgresql"
-  version       = "14"
-  plan          = "essential"
+  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  description  = "my-first-postgresql"
+  engine       = "postgresql"
+  version      = "18"
+  plan         = "discovery"
   nodes {
-    region  = "WAW"
+    region = "WAW"
   }
-  flavor        = "db1-4"
+  flavor = "b3-4"
   ip_restrictions {
     description = "ip 1"
-    ip = "178.97.6.0/24"
+    ip          = "178.97.6.0/24"
   }
   ip_restrictions {
     description = "ip 2"
-    ip = "178.97.7.0/24"
+    ip          = "178.97.7.0/24"
   }
 }
 
 resource "ovh_cloud_project_database" "grafana" {
-  service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  description   = "my-first-grafana"
-  engine        = "grafana"
-  version       = "9.1"
-  plan          = "essential"
+  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  description  = "my-first-grafana"
+  engine       = "grafana"
+  version      = "11.6"
+  plan         = "production"
   nodes {
-    region =  "GRA"
+    region = "GRA"
   }
-  flavor        = "db1-4"
+  flavor = "b3-4"
 }
 
 resource "ovh_cloud_project_database" "valkeydb" {
-  service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  description   = "my-first-valkey"
-  engine        = "valkey"
-  version       = "8.0"
-  plan          = "essential"
+  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  description  = "my-first-valkey"
+  engine       = "valkey"
+  version      = "9.1"
+  plan         = "discovery"
   nodes {
-    region  = "BHS"
+    region = "BHS"
   }
-  flavor        = "db1-4"
+  flavor = "b3-4"
 }
 ```
 
-To deploy a business PostgreSQL service with two nodes on public network:
+To deploy a production PostgreSQL service with two nodes on public network:
 
 ```terraform
 resource "ovh_cloud_project_database" "postgresql" {
-  service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  description   = "my-first-postgresql"
-  engine        = "postgresql"
-  version       = "14"
-  plan          = "business"
+  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  description  = "my-first-postgresql"
+  engine       = "postgresql"
+  version      = "18"
+  plan         = "production"
   nodes {
-    region  = "GRA"
+    region = "GRA"
   }
   nodes {
-    region  = "GRA"
+    region = "GRA"
   }
-  flavor        = "db1-15"
+  flavor = "b3-8"
 }
 ```
 
-To deploy an enterprise MongoDB service with three nodes on private network:
+To deploy a production MongoDB service with three nodes on private network:
 
 ```terraform
 resource "ovh_cloud_project_database" "mongodb" {
-  service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  description   = "my-first-mongodb"
-  engine        = "mongodb"
-  version       = "5.0"
-  plan          = "production"
+  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  description  = "my-first-mongodb"
+  engine       = "mongodb"
+  version      = "8.0"
+  plan         = "production"
   nodes {
-    region      = "SBG"
-    subnet_id   = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
-    network_id  = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+    region     = "SBG"
+    subnet_id  = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+    network_id = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
   }
   nodes {
-    region      = "SBG"
-    subnet_id   = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
-    network_id  = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+    region     = "SBG"
+    subnet_id  = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+    network_id = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
   }
   nodes {
-    region      = "SBG"
-    subnet_id   = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
-    network_id  = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+    region     = "SBG"
+    subnet_id  = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+    network_id = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
   }
-  flavor        = "db1-30"
+  flavor = "db2-15"
+}
+```
+
+### Number of nodes
+
+The number of nodes of the cluster is the number of `nodes` blocks. Each plan requires a given number of nodes: for example, the MongoDB `production` plan requires exactly 3 nodes, and the `advanced` plan accepts 3 to 7 nodes. A wrong number of nodes fails at apply with a `NotEnoughNodes` error.
+
+To deploy a production MongoDB service with three nodes:
+
+```terraform
+# The number of nodes is the number of "nodes" blocks: the production plan of
+# MongoDB requires exactly 3 nodes. All nodes must be in the same region.
+# Plans, flavors and number of nodes of MongoDB:
+# https://docs.ovhcloud.com/en/guides/public-cloud/databases/mongodb-concept-capabilities
+resource "ovh_cloud_project_database" "mongodb_production" {
+  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  description  = "my-production-mongodb"
+  engine       = "mongodb"
+  version      = "8.0"
+  plan         = "production"
+  flavor       = "db2-2"
+
+  nodes {
+    region = "GRA"
+  }
+  nodes {
+    region = "GRA"
+  }
+  nodes {
+    region = "GRA"
+  }
+}
+```
+
+To deploy an advanced MongoDB service with five nodes:
+
+```terraform
+# The advanced plan of MongoDB accepts 3 to 7 nodes: this cluster has 5.
+# All nodes must be in the same region.
+# Plans, flavors and number of nodes of MongoDB:
+# https://docs.ovhcloud.com/en/guides/public-cloud/databases/mongodb-concept-capabilities
+resource "ovh_cloud_project_database" "mongodb_advanced" {
+  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  description  = "my-advanced-mongodb"
+  engine       = "mongodb"
+  version      = "8.0"
+  plan         = "advanced"
+  flavor       = "db2-15"
+
+  nodes {
+    region = "GRA"
+  }
+  nodes {
+    region = "GRA"
+  }
+  nodes {
+    region = "GRA"
+  }
+  nodes {
+    region = "GRA"
+  }
+  nodes {
+    region = "GRA"
+  }
 }
 ```
 
@@ -181,8 +266,8 @@ resource "ovh_cloud_project_database" "db" {
   service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
   description   = "my-database"
   engine        = "postgresql"
-  version       = "14"
-  plan          = "business"
+  version       = "18"
+  plan          = "production"
   nodes {
     region      = "GRA"
     network_id  = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
@@ -193,7 +278,7 @@ resource "ovh_cloud_project_database" "db" {
     network_id  = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
     subnet_id   = "YYYYYYYY-YYYY-YYYY-YYYY-YYYYYYYYYYYY"
   }
-  flavor        = "db1-4"
+  flavor        = "b3-8"
 }
 ```
 
@@ -204,15 +289,15 @@ resource "ovh_cloud_project_database" "db" {
   service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
   description   = "my-database"
   engine        = "postgresql"
-  version       = "14"
-  plan          = "business"
+  version       = "18"
+  plan          = "production"
   nodes {
     region      = "GRA"
   }
   nodes {
     region      = "GRA"
   }
-  flavor        = "db1-4"
+  flavor        = "b3-8"
 }
 ```
 
@@ -225,29 +310,29 @@ The following arguments are supported:
 * `service_name` - (Required, Forces new resource) The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 * `description` - (Optional) Small description of the database service.
 * `engine` - (Required, Forces new resource) The database engine you want to deploy. To get a full list of available engine visit. [public documentation](https://docs.ovh.com/gb/en/publiccloud/databases).
-* `flavor` - (Required) A valid OVHcloud public cloud database flavor name in which the nodes will be started. Ex: "db1-7". Changing this value upgrade the nodes with the new flavor. You can find the list of flavor names: https://www.ovhcloud.com/fr/public-cloud/prices/
+* `flavor` - (Required) A valid OVHcloud public cloud database flavor name in which the nodes will be started. Ex: "b3-8". Changing this value upgrade the nodes with the new flavor. You can find the list of flavor names: https://www.ovhcloud.com/en/public-cloud/prices/
 * `ip_restrictions` - (Optional) IP Blocks authorized to access to the cluster.
   * `description` - (Optional) Description of the IP restriction
   * `ip` - (Optional) Authorized IP
 * `deletion_protection` - (Optional) Enable deletion protection
 * `kafka_rest_api` - (Optional) Defines whether the REST API is enabled on a kafka cluster
 * `kafka_schema_registry` - (Optional) Defines whether the schema registry is enabled on a Kafka cluster
-* `nodes` - (Required, Minimum Items: 1) List of nodes object. Multi region cluster are not yet available, all node should be identical.
+* `nodes` - (Required, Minimum Items: 1) List of nodes object. The number of `nodes` blocks is the number of nodes of the cluster, and must match the number of nodes required by the plan. Multi region clusters are not available: all nodes must be identical.
   * `network_id` - (Optional) Private network id in which the node should be deployed. It's the regional openstackId of the private network. Can be updated in-place to change the network without recreating the service.
-  * `region` - (Required, Forces new resource) Public cloud region in which the node should be deployed. Ex: "GRA'.
+  * `region` - (Required) Public cloud region in which the node should be deployed. Ex: "GRA". The cluster is created in the region of the first node. Changing it afterwards doesn't move the existing nodes.
   * `subnet_id` - (Optional) Private subnet ID in which the node is. Can be updated in-place to change the network without recreating the service.
 * `opensearch_acls_enabled` - (Optional) Defines whether the ACLs are enabled on an OpenSearch cluster
 * `disk_size` - (Optional) The disk size (in GB) of the database service.
 * `advanced_configuration` - (Optional) Advanced configuration key / value.
-* `plan` - (Required) Plan of the cluster.
-  * Clickhouse: "production".
-  * MongoDB: "discovery", "production", "advanced".
-  * MySQL, PostgreSQL: "essential", "business", "enterprise".
-  * Valkey: "essential", "business".
+* `plan` - (Required) Plan of the cluster. The plans available, and the number of nodes they require, depend on the engine (see [Capabilities and Limitations](https://docs.ovhcloud.com/en/guides/public-cloud/databases/capabilities)). For example:
+  * ClickHouse: "discovery" (1 node), "production" (3 nodes).
+  * MongoDB: "production" (3 nodes), "advanced" (3 to 7 nodes).
+  * MySQL, PostgreSQL: "discovery" (1 node), "production" (2 nodes), "advanced" (3 nodes).
+  * Valkey: "discovery" (1 node), "production" (2 nodes).
 * `version` - (Required) The version of the engine in which the service should be deployed
 * `backup_regions` - List of region where backups are pushed. Not more than 1 regions for MongoDB. Not more than 2 regions for the other engines with one being the same as the nodes[].region field
 * `backup_time` - Time on which backups start every day (this parameter is not usable on the following engines: "grafana", "kafka", "kafkaconnect", "kafkamirrormaker", "opensearch").
-* `maintenance_time` - Time on which maintenances can start every day. Format is: `hh:mm:ss` in UTC timezone, using 24 hours and zero padded values (e.g. `15:04:05`). 
+* `maintenance_time` - Time on which maintenances can start every day. Format is: `hh:mm:ss` in UTC timezone, using 24 hours and zero padded values (e.g. `15:04:05`).
 
 ## Attributes Reference
 

@@ -158,11 +158,10 @@ variable "service_name" {
 resource "ovh_cloud_project_kube" "my_kube_cluster" {
   service_name = var.service_name
   name         = "my-super-kube-cluster"
-  region       = "GRA5"
-  version      = "1.22"
+  region       = "GRA11"
 }
 
-# Create a Node Pool for our Kubernetes clusterx
+# Create a Node Pool for our Kubernetes cluster
 resource "ovh_cloud_project_kube_nodepool" "node_pool" {
   service_name  = var.service_name
   kube_id       = ovh_cloud_project_kube.my_kube_cluster.id
@@ -261,7 +260,7 @@ In order to run the Acceptance Tests for development, the following environment 
 
 * `OVH_CLOUD_PROJECT_DATABASE_FLAVOR_TEST` - The node flavor of the database service to test.
 
-* `OVH_CLOUD_PROJECT_DATABASE_CLICKHOUSE_FLAVOR_TEST` - The flavor of the clickhouse to test. if not set `OVH_CLOUD_PROJECT_DATABASE_FLAVOR_TEST` is used.
+* `OVH_CLOUD_PROJECT_DATABASE_CLICKHOUSE_FLAVOR_TEST` - The node flavor of the clickhouse to test. if not set `OVH_CLOUD_PROJECT_DATABASE_FLAVOR_TEST` is used.
 
 * `OVH_CLOUD_PROJECT_DATABASE_IP_RESTRICTION_IP_TEST` - The IP restriction to test.
 
