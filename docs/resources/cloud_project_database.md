@@ -197,8 +197,8 @@ To deploy a production MongoDB service with three nodes:
 ```terraform
 # The number of nodes is the number of "nodes" blocks: the production plan of
 # MongoDB requires exactly 3 nodes. All nodes must be in the same region.
-# Plans, flavors and number of nodes for each engine:
-# https://docs.ovhcloud.com/en/guides/public-cloud/databases/capabilities
+# Plans, flavors and number of nodes of MongoDB:
+# https://docs.ovhcloud.com/en/guides/public-cloud/databases/mongodb-concept-capabilities
 resource "ovh_cloud_project_database" "mongodb_production" {
   service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
   description  = "my-production-mongodb"
@@ -224,8 +224,8 @@ To deploy an advanced MongoDB service with five nodes:
 ```terraform
 # The advanced plan of MongoDB accepts 3 to 7 nodes: this cluster has 5.
 # All nodes must be in the same region.
-# Plans, flavors and number of nodes for each engine:
-# https://docs.ovhcloud.com/en/guides/public-cloud/databases/capabilities
+# Plans, flavors and number of nodes of MongoDB:
+# https://docs.ovhcloud.com/en/guides/public-cloud/databases/mongodb-concept-capabilities
 resource "ovh_cloud_project_database" "mongodb_advanced" {
   service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
   description  = "my-advanced-mongodb"

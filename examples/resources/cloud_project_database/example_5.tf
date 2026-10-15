@@ -1,7 +1,7 @@
 # The number of nodes is the number of "nodes" blocks: the production plan of
 # MongoDB requires exactly 3 nodes. All nodes must be in the same region.
-# Plans, flavors and number of nodes for each engine:
-# https://docs.ovhcloud.com/en/guides/public-cloud/databases/capabilities
+# Plans, flavors and number of nodes of MongoDB:
+# https://docs.ovhcloud.com/en/guides/public-cloud/databases/mongodb-concept-capabilities
 resource "ovh_cloud_project_database" "mongodb_production" {
   service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
   description  = "my-production-mongodb"
