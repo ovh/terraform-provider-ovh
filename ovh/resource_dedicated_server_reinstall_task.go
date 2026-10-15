@@ -168,10 +168,15 @@ func resourceDedicatedServerReinstallTask() *schema.Resource {
 							Description: "Disk group id (default is 0, meaning automatic)",
 						},
 						"erase": {
-							Type:        schema.TypeBool,
-							Optional:    true,
-							Default:     true,
-							ForceNew:    true,
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+							ForceNew: true,
+							// States written before this attribute existed have no value for it: don't
+							// plan a replacement (i.e. a server reinstall) for the "" -> "true" upgrade diff.
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								return d.Id() != "" && old == "" && new == "true"
+							},
 							Description: "Whether to erase this disk group's data (default is true). Set to false to keep existing data on a disk group not used for the OS installation.",
 						},
 						"hardware_raid": {
@@ -410,6 +415,12 @@ func resourceDedicatedServerReinstallTaskCreate(d *schema.ResourceData, meta int
 		"/dedicated/server/%s/reinstall",
 		url.PathEscape(serviceName),
 	)
+
+	// Values unknown at plan time skipped validation in CustomizeDiff: run it again now they are known.
+	if err := validateDedicatedServerReinstallTaskStorage(d.Get("storage").([]interface{})); err != nil {
+		return err
+	}
+
 	opts := (&DedicatedServerReinstallTaskCreateOpts{}).FromResource(d)
 	task := DedicatedServerTask{}
 

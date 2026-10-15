@@ -1,10 +1,12 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
@@ -119,6 +121,50 @@ func TestValidateDedicatedServerReinstallTaskStorage(t *testing.T) {
 				t.Fatalf("expected no error, got: %v", err)
 			}
 		})
+	}
+}
+
+func TestDedicatedServerReinstallTaskStorageEraseDiff(t *testing.T) {
+	r := resourceDedicatedServerReinstallTask()
+	cfg := terraform.NewResourceConfigRaw(map[string]interface{}{
+		"service_name": "ns1234.ip-1-2-3.eu",
+		"os":           "debian12_64",
+		"storage": []interface{}{
+			map[string]interface{}{"disk_group_id": 1},
+		},
+	})
+
+	// State saved by a provider version without "erase": upgrading must not plan a replacement.
+	state := &terraform.InstanceState{
+		ID: "42",
+		Attributes: map[string]string{
+			"id":                      "42",
+			"service_name":            "ns1234.ip-1-2-3.eu",
+			"os":                      "debian12_64",
+			"storage.#":               "1",
+			"storage.0.disk_group_id": "1",
+		},
+	}
+	diff, err := r.Diff(context.Background(), state, cfg, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if diff != nil {
+		if attr, ok := diff.Attributes["storage.0.erase"]; ok {
+			t.Fatalf("expected no diff on storage.0.erase for an upgraded state, got %#v", attr)
+		}
+		if diff.RequiresNew() {
+			t.Fatalf("expected no replacement for an upgraded state, got %#v", diff.Attributes)
+		}
+	}
+
+	// A new resource still plans the default value.
+	diff, err = r.Diff(context.Background(), nil, cfg, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if attr, ok := diff.Attributes["storage.0.erase"]; !ok || attr.New != "true" {
+		t.Fatalf("expected storage.0.erase to be planned as true on create, got %#v", attr)
 	}
 }
 

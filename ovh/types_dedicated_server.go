@@ -222,7 +222,10 @@ func (opts *DedicatedServerReinstallTaskCustomizations) FromResource(d *schema.R
 
 func (opts *DedicatedServerReinstallTaskStorage) FromResource(d *schema.ResourceData, parent string) *DedicatedServerReinstallTaskStorage {
 	opts.DiskGroupId = d.Get(fmt.Sprintf("%s.disk_group_id", parent)).(int)
-	opts.Erase = helpers.GetNilBoolPointerFromData(d, fmt.Sprintf("%s.erase", parent))
+	// erase is only sent when false, true being the API default.
+	if !d.Get(fmt.Sprintf("%s.erase", parent)).(bool) {
+		opts.Erase = helpers.GetNilBoolPointer(false)
+	}
 
 	// A disk group kept with erase=false must not carry partitioning. Any other block is the
 	// install target and always sends partitioning (empty means API defaults), as before.
