@@ -542,6 +542,13 @@ func testAccPreCheckCloudInstanceV2(t *testing.T) {
 	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_REGION_TEST")
 }
 
+// testAccPreCheckCloudManagedKubernetes gates the API v2 ovh_cloud_managed_kubernetes tests.
+func testAccPreCheckCloudManagedKubernetes(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_SERVICE_TEST")
+	checkEnvOrSkip(t, "OVH_CLOUD_PROJECT_KUBE_REGION_TEST")
+}
+
 func testAccCheckVRackExists(t *testing.T) {
 	type vrackResponse struct {
 		Name        string `json:"name"`
