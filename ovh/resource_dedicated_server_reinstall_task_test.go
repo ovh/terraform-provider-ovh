@@ -1,12 +1,172 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
+
+func storageBlock(diskGroupId int, erase bool, withPartitioning, withHardwareRaid bool) map[string]interface{} {
+	partitioning := []interface{}{}
+	if withPartitioning {
+		partitioning = []interface{}{map[string]interface{}{}}
+	}
+
+	hardwareRaid := []interface{}{}
+	if withHardwareRaid {
+		hardwareRaid = []interface{}{map[string]interface{}{}}
+	}
+
+	return map[string]interface{}{
+		"disk_group_id": diskGroupId,
+		"erase":         erase,
+		"partitioning":  partitioning,
+		"hardware_raid": hardwareRaid,
+	}
+}
+
+func TestValidateDedicatedServerReinstallTaskStorage(t *testing.T) {
+	testCases := []struct {
+		name      string
+		storage   []interface{}
+		expectErr bool
+	}{
+		{
+			name:      "no storage blocks",
+			storage:   []interface{}{},
+			expectErr: false,
+		},
+		{
+			name: "single install block, no erase override",
+			storage: []interface{}{
+				storageBlock(0, true, true, false),
+			},
+			expectErr: false,
+		},
+		{
+			name: "install block plus erase=false on another disk group",
+			storage: []interface{}{
+				storageBlock(1, true, true, false),
+				storageBlock(2, false, false, false),
+			},
+			expectErr: false,
+		},
+		{
+			name: "erase=false combined with partitioning on the same block",
+			storage: []interface{}{
+				storageBlock(1, false, true, false),
+			},
+			expectErr: true,
+		},
+		{
+			name: "erase=false combined with hardware_raid on the same block",
+			storage: []interface{}{
+				storageBlock(1, false, false, true),
+			},
+			expectErr: true,
+		},
+		{
+			name: "legacy install block with only disk_group_id plus erase=false on another disk group",
+			storage: []interface{}{
+				storageBlock(1, true, false, false),
+				storageBlock(2, false, false, false),
+			},
+			expectErr: false,
+		},
+		{
+			name: "two legacy install blocks with only disk_group_id",
+			storage: []interface{}{
+				storageBlock(1, true, false, false),
+				storageBlock(2, true, false, false),
+			},
+			expectErr: true,
+		},
+		{
+			name: "duplicate disk_group_id",
+			storage: []interface{}{
+				storageBlock(2, true, false, false),
+				storageBlock(2, false, false, false),
+			},
+			expectErr: true,
+		},
+		{
+			name: "duplicate implicit disk_group_id (both default to 0)",
+			storage: []interface{}{
+				storageBlock(0, true, true, false),
+				storageBlock(0, true, false, false),
+			},
+			expectErr: true,
+		},
+		{
+			name: "more than one install target",
+			storage: []interface{}{
+				storageBlock(1, true, true, false),
+				storageBlock(2, true, false, true),
+			},
+			expectErr: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := validateDedicatedServerReinstallTaskStorage(tc.storage)
+			if tc.expectErr && err == nil {
+				t.Fatalf("expected an error, got none")
+			}
+			if !tc.expectErr && err != nil {
+				t.Fatalf("expected no error, got: %v", err)
+			}
+		})
+	}
+}
+
+func TestDedicatedServerReinstallTaskStorageEraseDiff(t *testing.T) {
+	r := resourceDedicatedServerReinstallTask()
+	cfg := terraform.NewResourceConfigRaw(map[string]interface{}{
+		"service_name": "ns1234.ip-1-2-3.eu",
+		"os":           "debian12_64",
+		"storage": []interface{}{
+			map[string]interface{}{"disk_group_id": 1},
+		},
+	})
+
+	// State saved by a provider version without "erase": upgrading must not plan a replacement.
+	state := &terraform.InstanceState{
+		ID: "42",
+		Attributes: map[string]string{
+			"id":                      "42",
+			"service_name":            "ns1234.ip-1-2-3.eu",
+			"os":                      "debian12_64",
+			"storage.#":               "1",
+			"storage.0.disk_group_id": "1",
+		},
+	}
+	diff, err := r.Diff(context.Background(), state, cfg, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if diff != nil {
+		if attr, ok := diff.Attributes["storage.0.erase"]; ok {
+			t.Fatalf("expected no diff on storage.0.erase for an upgraded state, got %#v", attr)
+		}
+		if diff.RequiresNew() {
+			t.Fatalf("expected no replacement for an upgraded state, got %#v", diff.Attributes)
+		}
+	}
+
+	// A new resource still plans the default value.
+	diff, err = r.Diff(context.Background(), nil, cfg, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if attr, ok := diff.Attributes["storage.0.erase"]; !ok || attr.New != "true" {
+		t.Fatalf("expected storage.0.erase to be planned as true on create, got %#v", attr)
+	}
+}
 
 func TestAccDedicatedServerReinstall_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
@@ -194,6 +354,39 @@ func TestAccDedicatedServerReinstall_apptoinstall(t *testing.T) {
 	})
 }
 
+func TestAccDedicatedServerReinstall_storageErase(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCredentials(t)
+			testAccPreCheckDedicatedServer(t)
+		},
+		Providers: testAccProviders,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"time": {
+				VersionConstraint: "0.10.0",
+				Source:            "hashicorp/time",
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDedicatedServerReinstallConfig("storageErase"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"ovh_dedicated_server_update.server", "state", "ok"),
+					resource.TestCheckResourceAttr(
+						"ovh_dedicated_server_update.server", "monitoring", "false"),
+					resource.TestCheckResourceAttr(
+						"ovh_dedicated_server_reinstall_task.server_reinstall", "function", "reinstallServer"),
+					resource.TestCheckResourceAttr(
+						"ovh_dedicated_server_reinstall_task.server_reinstall", "status", "done"),
+					resource.TestCheckResourceAttr(
+						"ovh_dedicated_server_reinstall_task.server_reinstall", "storage.1.erase", "false"),
+				),
+			},
+		},
+	})
+}
+
 func testAccDedicatedServerReinstallConfig(config string) string {
 	dedicated_server := os.Getenv("OVH_DEDICATED_SERVER")
 	sshKey := os.Getenv("OVH_SSH_KEY")
@@ -232,6 +425,13 @@ func testAccDedicatedServerReinstallConfig(config string) string {
 	if config == "apptoinstall" {
 		return fmt.Sprintf(
 			testAccDedicatedServerReinstallConfig_AppToInstall,
+			dedicated_server,
+		)
+	}
+
+	if config == "storageErase" {
+		return fmt.Sprintf(
+			testAccDedicatedServerReinstallConfig_StorageErase,
 			dedicated_server,
 		)
 	}
@@ -424,6 +624,38 @@ resource "ovh_dedicated_server_reinstall_task" "server_reinstall" {
         }
       }
     }
+  }
+}
+`
+
+const testAccDedicatedServerReinstallConfig_StorageErase = `
+data "ovh_dedicated_server_boots" "harddisk" {
+  service_name = "%s"
+  boot_type    = "harddisk"
+}
+
+resource "ovh_dedicated_server_update" "server" {
+  service_name = data.ovh_dedicated_server_boots.harddisk.service_name
+  boot_id      = data.ovh_dedicated_server_boots.harddisk.result[0]
+  monitoring   = false
+  state        = "ok"
+}
+
+resource "ovh_dedicated_server_reinstall_task" "server_reinstall" {
+  service_name     = data.ovh_dedicated_server_boots.harddisk.service_name
+  os = "debian12_64"
+  customizations {
+    hostname = "mon-tux"
+  }
+  storage {
+    disk_group_id = 1
+    partitioning {
+      scheme_name = "default"
+    }
+  }
+  storage {
+    disk_group_id = 2
+    erase         = false
   }
 }
 `
