@@ -10,6 +10,8 @@ Provides a OVHcloud domain zone record.
 
 ~> **WARNING** This resource and resource `ovh_domain_zone_import` should not be used together as `ovh_domain_zone_import` controls the whole DNS zone at once.
 
+~> **NOTE** Creating, updating or deleting a record triggers a zone refresh (`POST /domain/zone/{zone}/refresh`), without which the change is recorded but never served by the OVHcloud DNS servers. The credentials used by the provider must therefore carry the `dnsZone:apiovh:refresh` permission in addition to the record permissions, otherwise the apply fails.
+
 ## Example Usage
 
 ```terraform
