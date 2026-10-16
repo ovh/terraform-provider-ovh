@@ -48,6 +48,7 @@ func (d *cloudProjectVolumeResource) Configure(_ context.Context, req resource.C
 
 func (d *cloudProjectVolumeResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = CloudProjectVolumeResourceSchema(ctx)
+	resp.Schema.DeprecationMessage = "Use ovh_cloud_storage_block_volume instead. See https://registry.terraform.io/providers/ovh/ovh/latest/docs/guides/public_cloud_resources_migration"
 }
 
 func (r *cloudProjectVolumeResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

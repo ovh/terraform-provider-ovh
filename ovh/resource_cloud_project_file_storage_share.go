@@ -54,6 +54,7 @@ func (r *cloudProjectFileStorageShareResource) Configure(_ context.Context, req 
 
 func (r *cloudProjectFileStorageShareResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = CloudProjectFileStorageShareResourceSchema(ctx)
+	resp.Schema.DeprecationMessage = "Use ovh_cloud_storage_file_share instead. See https://registry.terraform.io/providers/ovh/ovh/latest/docs/guides/public_cloud_resources_migration"
 }
 
 func (r *cloudProjectFileStorageShareResource) ConfigValidators(_ context.Context) []resource.ConfigValidator {

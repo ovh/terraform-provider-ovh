@@ -113,6 +113,17 @@ func (r *cloudStorageFileShareNetworkResource) Schema(ctx context.Context, req r
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"availability_zone": schema.StringAttribute{
+				CustomType:          ovhtypes.TfStringType{},
+				Optional:            true,
+				Computed:            true,
+				Description:         "The availability zone where the share network will be created",
+				MarkdownDescription: "The availability zone where the share network will be created",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
 			"id": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Computed:            true,

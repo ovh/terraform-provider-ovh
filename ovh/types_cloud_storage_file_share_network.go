@@ -19,7 +19,8 @@ type CloudStorageFileShareNetworkModel struct {
 	Region      ovhtypes.TfStringValue `tfsdk:"region"`
 
 	// Optional — immutable
-	Description ovhtypes.TfStringValue `tfsdk:"description"`
+	Description      ovhtypes.TfStringValue `tfsdk:"description"`
+	AvailabilityZone ovhtypes.TfStringValue `tfsdk:"availability_zone"`
 
 	// Computed
 	Id             ovhtypes.TfStringValue `tfsdk:"id"`
@@ -87,6 +88,9 @@ func (m *CloudStorageFileShareNetworkModel) ToCreate() *CloudStorageFileShareNet
 	if !m.Description.IsNull() && !m.Description.IsUnknown() {
 		target.Description = m.Description.ValueString()
 	}
+	if !m.AvailabilityZone.IsNull() && !m.AvailabilityZone.IsUnknown() {
+		target.Location.AvailabilityZone = m.AvailabilityZone.ValueString()
+	}
 
 	return &CloudStorageFileShareNetworkCreatePayload{TargetSpec: target}
 }
@@ -141,6 +145,7 @@ func (m *CloudStorageFileShareNetworkModel) MergeWith(ctx context.Context, respo
 		}
 		if response.TargetSpec.Location != nil {
 			m.Region = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Location.Region)}
+			m.AvailabilityZone = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Location.AvailabilityZone)}
 		}
 	}
 }

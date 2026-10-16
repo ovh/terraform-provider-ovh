@@ -75,6 +75,7 @@ func (r *cloudProjectLoadbalancerResource) ImportState(ctx context.Context, req 
 
 func (d *cloudProjectLoadbalancerResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = CloudProjectLoadbalancerResourceSchema(ctx)
+	resp.Schema.DeprecationMessage = "Use ovh_cloud_loadbalancer instead. See https://registry.terraform.io/providers/ovh/ovh/latest/docs/guides/public_cloud_resources_migration"
 }
 
 func (r *cloudProjectLoadbalancerResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

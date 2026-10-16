@@ -48,6 +48,7 @@ func (d *cloudProjectRegionNetworkResource) Configure(_ context.Context, req res
 
 func (d *cloudProjectRegionNetworkResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = CloudProjectRegionNetworkResourceSchema(ctx)
+	resp.Schema.DeprecationMessage = "Use ovh_cloud_network_private_vrack and ovh_cloud_network_private_vrack_subnet instead. See https://registry.terraform.io/providers/ovh/ovh/latest/docs/guides/public_cloud_resources_migration"
 }
 
 func (r *cloudProjectRegionNetworkResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

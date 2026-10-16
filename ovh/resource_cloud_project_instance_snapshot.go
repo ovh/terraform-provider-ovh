@@ -46,6 +46,7 @@ func (d *cloudProjectInstanceSnapshotResource) Configure(_ context.Context, req 
 
 func (d *cloudProjectInstanceSnapshotResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = CloudProjectInstanceSnapshotResourceSchema(ctx)
+	resp.Schema.DeprecationMessage = "Use ovh_cloud_instance_snapshot instead. See https://registry.terraform.io/providers/ovh/ovh/latest/docs/guides/public_cloud_resources_migration"
 }
 
 func (d *cloudProjectInstanceSnapshotResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
