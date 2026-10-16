@@ -77,7 +77,7 @@ type CloudStorageObjectBucketAPIUpdateTargetSpec struct {
 	Encryption  *CloudStorageObjectBucketAPIEncryption `json:"encryption,omitempty"`
 	Versioning  *CloudStorageObjectBucketAPIVersioning `json:"versioning,omitempty"`
 	ObjectLock  *CloudStorageObjectBucketAPIObjectLock `json:"objectLock,omitempty"`
-	// Never omitted: the API keeps the stored tags when the key is absent and clears them on {}.
+	// Always sent, {} when unset, so removing every tag from the config clears them explicitly.
 	Tags map[string]string `json:"tags"`
 }
 
