@@ -125,6 +125,7 @@ func CloudProjectStorageReplicationJobResourceSchema(ctx context.Context) schema
 			"service_name": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Optional:            true,
+				Computed:            true,
 				Description:         "The ID of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.",
 				MarkdownDescription: "The ID of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.",
 				PlanModifiers: []planmodifier.String{
