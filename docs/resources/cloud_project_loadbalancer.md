@@ -4,6 +4,8 @@ subcategory : "Load Balancer (Public Cloud / Octavia)"
 
 # ovh_cloud_project_loadbalancer
 
+~> **NOTE** This resource relies on the Public Cloud API v1. Prefer the new `ovh_cloud_loadbalancer`, `ovh_cloud_loadbalancer_listener`, `ovh_cloud_loadbalancer_pool` and `ovh_cloud_loadbalancer_pool_member` resources. See the [migration guide](../guides/public_cloud_resources_migration) to move an existing resource without recreating it.
+
 Create a load balancer in a public cloud project.
 
 ## Argument Reference

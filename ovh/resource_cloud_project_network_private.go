@@ -32,10 +32,11 @@ func resourceOvhCloudProjectNetworkPrivateImportState(
 
 func resourceCloudProjectNetworkPrivate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCloudProjectNetworkPrivateCreate,
-		Read:   resourceCloudProjectNetworkPrivateRead,
-		Update: resourceCloudProjectNetworkPrivateUpdate,
-		Delete: resourceCloudProjectNetworkPrivateDelete,
+		DeprecationMessage: "Use ovh_cloud_network_private_vrack instead. See https://registry.terraform.io/providers/ovh/ovh/latest/docs/guides/public_cloud_resources_migration",
+		Create:             resourceCloudProjectNetworkPrivateCreate,
+		Read:               resourceCloudProjectNetworkPrivateRead,
+		Update:             resourceCloudProjectNetworkPrivateUpdate,
+		Delete:             resourceCloudProjectNetworkPrivateDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceOvhCloudProjectNetworkPrivateImportState,
 		},

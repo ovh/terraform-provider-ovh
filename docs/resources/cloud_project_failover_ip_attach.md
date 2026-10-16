@@ -4,6 +4,8 @@ subcategory : "Additional IP"
 
 # ovh_cloud_project_failover_ip_attach
 
+~> **NOTE** This resource relies on the Public Cloud API v1. Prefer the `networks` attribute of the new `ovh_cloud_instance` resource. See the [migration guide](../guides/public_cloud_resources_migration) to move an existing resource without recreating it.
+
 Attaches a failover IP address to a compute instance
 
 ## Example Usage

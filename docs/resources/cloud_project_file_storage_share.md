@@ -4,7 +4,7 @@ subcategory: "File Storage"
 
 # ovh_cloud_project_file_storage_share (Resource)
 
-~> **NOTE** Prefer using the new `ovh_cloud_storage_file_share` resource instead.
+~> **NOTE** This resource relies on the Public Cloud API v1. Prefer the new `ovh_cloud_storage_file_share` resource. See the [migration guide](../guides/public_cloud_resources_migration) to move an existing resource without recreating it.
 
 Creates a file storage share in a public cloud project.
 

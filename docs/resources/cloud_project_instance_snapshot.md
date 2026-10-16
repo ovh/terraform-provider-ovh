@@ -4,6 +4,8 @@ subcategory : "Instances"
 
 # ovh_cloud_project_instance_snapshot (Resource)
 
+~> **NOTE** This resource relies on the Public Cloud API v1. Prefer the new `ovh_cloud_instance_snapshot` resource. See the [migration guide](../guides/public_cloud_resources_migration) to move an existing resource without recreating it.
+
 Create and manage snapshots for an instance in a public cloud project.
 
 ## Example Usage

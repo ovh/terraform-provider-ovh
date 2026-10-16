@@ -4,6 +4,8 @@ subcategory : "Instances"
 
 # ovh_cloud_project_instance
 
+~> **NOTE** This data source relies on the Public Cloud API v1. Prefer the new `ovh_cloud_instance` data source. See the [migration guide](../guides/public_cloud_resources_migration).
+
 **This datasource uses a Beta API** Use this data source to get the instance of a public cloud project.
 
 ## Example Usage

@@ -51,6 +51,7 @@ func (d *cloudProjectStorageResource) Configure(_ context.Context, req resource.
 
 func (d *cloudProjectStorageResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = CloudProjectRegionStorageResourceSchema(ctx)
+	resp.Schema.DeprecationMessage = "Use ovh_cloud_storage_object_bucket instead. See https://registry.terraform.io/providers/ovh/ovh/latest/docs/guides/public_cloud_resources_migration"
 }
 
 func (r *cloudProjectStorageResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {

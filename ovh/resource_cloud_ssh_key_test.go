@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
 // Throwaway, well-formed SSH public keys used by the immutability tests. They
@@ -44,6 +45,19 @@ func TestAccCloudSshKey_basic(t *testing.T) {
 				// Re-planning the unchanged config must be a no-op (regression guard).
 				Config:   config,
 				PlanOnly: true,
+			},
+			{
+				ResourceName:                         "ovh_cloud_ssh_key.key",
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "name",
+				ImportStateIdFunc: func(state *terraform.State) (string, error) {
+					return fmt.Sprintf(
+						"%s/%s",
+						state.RootModule().Resources["ovh_cloud_ssh_key.key"].Primary.Attributes["service_name"],
+						state.RootModule().Resources["ovh_cloud_ssh_key.key"].Primary.Attributes["name"],
+					), nil
+				},
 			},
 		},
 	})
