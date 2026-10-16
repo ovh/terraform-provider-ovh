@@ -25,7 +25,8 @@ data "ovh_me_identity_user" "my_user" {
 * `creation` - Creation date of this user.
 * `description` - User description.
 * `email` - User's email.
-* `group` - User's group.
+* `group` - User's main group.
+* `groups` - Additional groups the user belongs to (other than the main group).
 * `last_update` - Last update of this user.
 * `password_last_update` - When the user changed his password for the last time.
 * `status` - Current user's status.
