@@ -13,7 +13,7 @@ resource "ovh_cloud_storage_block_volume" "volume" {
   service_name = "xxxxxxxxxx"
   name         = "my-volume"
   size         = 10
-  region       = "GRA1"
+  region       = "GRA11"
   volume_type  = "CLASSIC"
 }
 ```
@@ -25,7 +25,7 @@ resource "ovh_cloud_storage_block_volume" "restored" {
   service_name = "xxxxxxxxxx"
   name         = "my-restored-volume"
   size         = 10
-  region       = "GRA1"
+  region       = "GRA11"
   volume_type  = "CLASSIC"
 
   create_from = {
@@ -41,7 +41,7 @@ resource "ovh_cloud_storage_block_volume" "cmk_volume" {
   service_name = "xxxxxxxxxx"
   name         = "my-cmk-volume"
   size         = 10
-  region       = "GRA1"
+  region       = "GRA11"
   volume_type  = "HIGH_SPEED"
 
   encryption = {

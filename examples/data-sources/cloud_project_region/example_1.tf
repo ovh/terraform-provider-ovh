@@ -1,4 +1,4 @@
-data "ovh_cloud_project_region" "GRA1" {
+data "ovh_cloud_project_region" "GRA11" {
   service_name = "XXXXXX"
-  name         = "GRA1"
+  name         = "GRA11"
 }

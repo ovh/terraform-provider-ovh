@@ -12,7 +12,7 @@ Creates a load balancer in a public cloud project.
 resource "ovh_cloud_loadbalancer" "lb" {
   service_name = <Public cloud project id>
   name         = "my-loadbalancer"
-  region       = "GRA1"
+  region       = "GRA11"
   flavor_name  = "SMALL"
   description  = "My load balancer"
 
@@ -29,7 +29,7 @@ Pin the VIP to a fixed address of the subnet:
 resource "ovh_cloud_loadbalancer" "lb" {
   service_name = <Public cloud project id>
   name         = "my-loadbalancer"
-  region       = "GRA1"
+  region       = "GRA11"
   flavor_name  = "SMALL"
 
   network = {
@@ -46,7 +46,7 @@ Associate an existing floating IP to the VIP:
 resource "ovh_cloud_loadbalancer" "lb" {
   service_name = <Public cloud project id>
   name         = "my-loadbalancer"
-  region       = "GRA1"
+  region       = "GRA11"
   flavor_name  = "SMALL"
 
   network = {

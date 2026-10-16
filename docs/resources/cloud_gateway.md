@@ -12,7 +12,7 @@ Creates a gateway in a public cloud project.
 resource "ovh_cloud_network_private_vrack" "network" {
   service_name = "<public cloud project ID>"
   name         = "my-private-network"
-  region       = "GRA1"
+  region       = "GRA11"
 }
 
 resource "ovh_cloud_network_private_vrack_subnet" "subnet" {
@@ -20,12 +20,12 @@ resource "ovh_cloud_network_private_vrack_subnet" "subnet" {
   network_id   = ovh_cloud_network_private_vrack.network.id
   name         = "my-subnet"
   cidr         = "10.0.0.0/24"
-  region       = "GRA1"
+  region       = "GRA11"
 }
 
 resource "ovh_cloud_gateway" "gateway" {
   service_name = ovh_cloud_network_private_vrack.network.service_name
-  region       = "GRA1"
+  region       = "GRA11"
   name         = "my-gateway"
 
   external_gateway = {

@@ -9,9 +9,9 @@ Use this data source to retrieve information about a region associated with a pu
 ## Example Usage
 
 ```terraform
-data "ovh_cloud_project_region" "GRA1" {
+data "ovh_cloud_project_region" "GRA11" {
   service_name = "XXXXXX"
-  name         = "GRA1"
+  name         = "GRA11"
 }
 ```
 
@@ -28,7 +28,7 @@ data "ovh_cloud_project_region" "GRA1" {
 * `status`              - Openstack region status (DOWN | MAINTENANCE | UP)
 * `continent_code`      - The code of the geographic continent the region is running. E.g.: EU for Europe, US for America...
 * `country_code`        - Region country code
-* `datacenter_location` - The location code of the datacenter. E.g.: "GRA", meaning Gravelines, for region "GRA1"
+* `datacenter_location` - The location code of the datacenter. E.g.: "GRA", meaning Gravelines, for region "GRA11"
 * `availability_zones`  - Availability zones of the region
 * `ip_countries`        - Allowed countries for failover IP
 * `services`            - The list of public cloud services running within the region

@@ -11,7 +11,7 @@ Creates a floating IP in a public cloud project.
 ```terraform
 resource "ovh_cloud_floating_ip" "ip" {
   service_name = "<public cloud project ID>"
-  region       = "GRA1"
+  region       = "GRA11"
   description  = "my-floating-ip"
 }
 ```

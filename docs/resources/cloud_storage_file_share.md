@@ -13,7 +13,7 @@ resource "ovh_cloud_storage_file_share" "share" {
   service_name     = "<Public cloud project id>"
   name             = "my-share"
   size             = 150
-  region           = "GRA1"
+  region           = "GRA11"
   protocol         = "NFS"
   share_type       = "STANDARD_1AZ"
   share_network_id = "<share network id>"
@@ -37,7 +37,7 @@ resource "ovh_cloud_storage_file_share_snapshot" "snapshot" {
 resource "ovh_cloud_storage_file_share" "share_from_snapshot" {
   service_name = ovh_cloud_storage_file_share.share.service_name
   name         = "my-share-from-snapshot"
-  region       = "GRA1"
+  region       = "GRA11"
   protocol     = "NFS"
 
   create_from = {
