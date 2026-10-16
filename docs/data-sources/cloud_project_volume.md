@@ -26,7 +26,7 @@ data "ovh_cloud_project_volume" "volume" {
 
 ## Attributes Reference
 
-* `name` - The name of the volume (E.g.: "GRA", meaning Gravelines, for region "GRA1")
+* `name` - The name of the volume (E.g.: "GRA", meaning Gravelines, for region "GRA11")
 * `region_name` - The region name where volume is available
 * `service_name` - The id of the public cloud project.
 * `size` - The size of the volume

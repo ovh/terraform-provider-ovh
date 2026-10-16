@@ -12,7 +12,7 @@ Creates a private network (vRack) in a public cloud project.
 resource "ovh_cloud_network_private_vrack" "network" {
   service_name = "<public cloud project ID>"
   name         = "my-private-network"
-  region       = "GRA1"
+  region       = "GRA11"
   description = "My private network"
   vlan_id     = 100
 }

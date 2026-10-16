@@ -11,7 +11,7 @@ Creates a security group in a public cloud project.
 ```terraform
 resource "ovh_cloud_security_group" "sg" {
   service_name = "<public cloud project ID>"
-  region       = "GRA1"
+  region       = "GRA11"
   name         = "my-security-group"
   description  = "Allow SSH and HTTPS"
 

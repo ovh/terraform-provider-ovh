@@ -12,7 +12,7 @@ Creates a subnet in a private network (vRack) in a public cloud project.
 resource "ovh_cloud_network_private_vrack" "network" {
   service_name = "<public cloud project ID>"
   name         = "my-private-network"
-  region       = "GRA1"
+  region       = "GRA11"
 }
 
 resource "ovh_cloud_network_private_vrack_subnet" "subnet" {
@@ -22,7 +22,7 @@ resource "ovh_cloud_network_private_vrack_subnet" "subnet" {
   cidr         = "10.0.0.0/24"
   dhcp_enabled = true
   gateway_ip   = "10.0.0.1"
-  region       = "GRA1"
+  region       = "GRA11"
 
   dns_nameservers = [
     "213.186.33.99",

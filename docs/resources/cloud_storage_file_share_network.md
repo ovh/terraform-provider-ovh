@@ -17,7 +17,7 @@ resource "ovh_cloud_storage_file_share_network" "network" {
   description  = "Share network for my NFS shares"
   network_id   = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
   subnet_id    = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-  region       = "GRA1"
+  region       = "GRA11"
 }
 ```
 

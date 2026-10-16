@@ -12,7 +12,7 @@ Creates a subnet in a private network of a public cloud project.
 resource "ovh_cloud_project_network_private_subnet" "subnet" {
   service_name = "xxxxx"
   network_id   = "0234543"
-  region       = "GRA1"
+  region       = "GRA11"
   start        = "192.168.168.100"
   end          = "192.168.168.200"
   network      = "192.168.168.0/24"
@@ -37,7 +37,7 @@ The following arguments are supported:
 
 * `network` - (Required) Global network in CIDR format. Changing this value recreates the subnet
 
-* `region` - The region in which the network subnet will be created. Ex.: "GRA1". Changing this value recreates the resource.
+* `region` - The region in which the network subnet will be created. Ex.: "GRA11". Changing this value recreates the resource.
 
 * `no_gateway` - Set to true if you don't want to set a default gateway IP. Changing this value recreates the resource. Defaults to false.
 

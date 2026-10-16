@@ -13,7 +13,7 @@ resource "ovh_cloud_storage_file_share" "share" {
   service_name = "<public cloud project ID>"
   name         = "my-share"
   size         = 150
-  region       = "GRA1"
+  region       = "GRA11"
   protocol     = "NFS"
   share_type   = "STANDARD_1AZ"
 }
