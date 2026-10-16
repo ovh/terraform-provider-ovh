@@ -64,9 +64,9 @@ resource "ovh_domain_name" "domain" {
 
 Required:
 
-- `duration` (String) Duration selected for the purchase of the product (defaults to "P1Y")
+- `duration` (String) Duration selected for the purchase of the product, in ISO 8601 format, e.g. `P1Y` (one year), defaults to `P1Y`. It must come from the same price as `pricing_mode`, see [Choosing the plan, duration and pricing mode of an ordered product](../guides/order_plan).
 - `plan_code` (String) Identifier of the option offer
-- `pricing_mode` (String) Pricing mode selected for the purchase of the product
+- `pricing_mode` (String) Pricing mode selected for the purchase of the product, e.g. `default`. It must come from the same price as `duration`.
 
 Optional:
 
@@ -89,9 +89,9 @@ Required:
 
 Required:
 
-- `duration` (String) Duration selected for the purchase of the product
+- `duration` (String) Duration selected for the purchase of the product, in ISO 8601 format, e.g. `P1Y` (one year). It must come from the same price as `pricing_mode`, see [Choosing the plan, duration and pricing mode of an ordered product](../guides/order_plan).
 - `plan_code` (String) Identifier of the option offer
-- `pricing_mode` (String) Pricing mode selected for the purchase of the product
+- `pricing_mode` (String) Pricing mode selected for the purchase of the product, e.g. `default`. It must come from the same price as `duration`.
 - `quantity` (Number) Quantity of product desired
 
 Optional:
