@@ -88,10 +88,12 @@ func (r *cloudStorageFileShareNetworkResource) Schema(ctx context.Context, req r
 			},
 			"network_id": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
-				Required:            true,
-				Description:         "ID of the network backing the share network",
-				MarkdownDescription: "ID of the network backing the share network",
+				Optional:            true,
+				Computed:            true,
+				Description:         "ID of the network backing the share network. When omitted, the network of subnet_id is used",
+				MarkdownDescription: "ID of the network backing the share network. When omitted, the network of subnet_id is used",
 				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
