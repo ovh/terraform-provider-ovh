@@ -18,13 +18,13 @@ This project accepts contributions. In order to contribute, you should pay atten
 - Name your resources and datasources according to the API endpoint
 - The examples of resources and datasources in the documentation must follow the [Terraform style guidelines](https://developer.hashicorp.com/terraform/language/style)
 - Check your documentation through [Terraform Doc Preview Tool](https://registry.terraform.io/tools/doc-preview)
-- When adding a documentation page, use the `subcategory:` tag in the [YAML Frontmatter](https://developer.hashicorp.com/terraform/registry/providers/docs#yaml-frontmatter) with a value equals to the product name defined in the OVHcloud [product map](https://www.product-map.ovh/)
+- When adding a documentation page, use the `subcategory:` tag in the [YAML Frontmatter](https://developer.hashicorp.com/terraform/registry/providers/docs#yaml-frontmatter) with a value equal to the product name. Reuse a subcategory already used in the `docs/` directory when one fits the product
 - New documentation pages should be added first in the directory `templates/`, with the examples being placed in the `examples/` directory. Once this is done, the content in `docs/` directory must be generated with [tfplugindocs](https://github.com/hashicorp/terraform-plugin-docs?tab=readme-ov-file#usage).
 
 ## Acceptance tests:
 
 - Each resource and/or datasource need to have an acceptance test
-- If you use new environment variables, document them in `website/docs/index.html.markdown`
+- If you use new environment variables, document them in the "Testing and Development" section of `templates/index.md.tmpl`, then generate `docs/index.md`
 - Acceptance tests must be run and must pass
 - Don't forget to add or modify existing sweeper method if you think the acceptance tests may leave orphan resources on failure
 

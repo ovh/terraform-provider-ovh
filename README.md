@@ -12,32 +12,28 @@ The OVH Provider allows Terraform to manage [OVH](https://www.ovhcloud.com/) res
 Requirements
 ------------
 
-- [Terraform](https://www.terraform.io/downloads.html) 0.12.x
-- [Go](https://golang.org/doc/install) 1.27 (to build the provider plugin)
+- [Terraform](https://developer.hashicorp.com/terraform/install) 1.0+
+- [Go](https://go.dev/doc/install) 1.27 (to build the provider plugin)
 
 Building The Provider
 ---------------------
 
-Clone repository to: `$GOPATH/src/github.com/ovh/terraform-provider-ovh`
+Clone the repository anywhere on your machine, then build the provider:
 
 ```sh
-$ mkdir -p $GOPATH/src/github.com/terraform-providers/; cd $GOPATH/src/github.com/terraform-providers/
 $ git clone git@github.com:ovh/terraform-provider-ovh
-```
-
-Enter the provider directory and build the provider
-
-```sh
-$ cd $GOPATH/src/github.com/ovh/terraform-provider-ovh
+$ cd terraform-provider-ovh
 $ make build
 ```
+
+`make build` runs `go install`, which puts the `terraform-provider-ovh` binary in `$(go env GOPATH)/bin` (or in `$GOBIN` if it is set).
 
 Using the provider
 ----------------------
 
-Please see the documentation in the [Terraform registry](https://www.terraform.io/docs/providers/ovh/index.html).
+Please see the documentation in the [Terraform registry](https://registry.terraform.io/providers/ovh/ovh/latest/docs).
 
-Or you can browse the documentation within this repo [here](https://github.com/ovh/terraform-provider-ovh/tree/master/website/docs).
+Or you can browse the documentation within this repo [here](https://github.com/ovh/terraform-provider-ovh/tree/master/docs).
 
 Using the locally built provider
 ----------------------
@@ -49,7 +45,7 @@ If not already present, create a terraformrc file and add a dev override for the
 $ cat > ~/.terraformrc <<EOF
 provider_installation {
   dev_overrides {
-    "ovh/ovh" = "$GOPATH/bin/"
+    "ovh/ovh" = "$(go env GOPATH)/bin/"
   }
 
   direct {}
@@ -60,8 +56,6 @@ EOF
 Build the provider.
 
 ```sh
-# Set your target environment (OS_architecture): linux_amd64, darwin_amd64...
-$ export ENV="linux_amd64"
 $ make build
 ```
 
@@ -92,7 +86,7 @@ $ export OVH_APPLICATION_SECRET="..."
 $ export OVH_CONSUMER_KEY="..."
 
 # Initialize your project and remove existing dependencies lock file
-$ rm .terraform.lock.hcl && terraform init
+$ rm -f .terraform.lock.hcl && terraform init
 ...
 
 # Apply your resources & datasources
@@ -104,14 +98,14 @@ $ terraform apply
 Developing the Provider
 ---------------------------
 
-If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (version 1.27+ is *required*). You'll also need to correctly setup a [GOPATH](http://golang.org/doc/code.html#GOPATH), as well as adding `$GOPATH/bin` to your `$PATH`.
+If you wish to work on the provider, you'll first need [Go](https://go.dev/doc/install) installed on your machine (version 1.27+ is *required*).
 
-To compile the provider, run `make build`. This will build the provider and put the provider binary in the `$GOPATH/bin` directory.
+To compile the provider, run `make build`. This will build the provider and put the provider binary in the `$(go env GOPATH)/bin` directory.
 
 ```sh
 $ make build
 ...
-$ $GOPATH/bin/terraform-provider-ovh
+$ $(go env GOPATH)/bin/terraform-provider-ovh
 ...
 ```
 
@@ -126,13 +120,13 @@ $ make test
 
 In order to run the full suite of Acceptance tests you will need to have the following list of OVH products attached to your account:
 
-- a [Vrack](https://www.ovh.ie/solutions/vrack/)
-- a [Load Balancer](https://www.ovh.ie/solutions/load-balancer/)
-- a registered [Domain](https://www.ovh.ie/domains/)
-- a [Cloud Project](https://www.ovh.ie/public-cloud/instances/)
+- a [Vrack](https://www.ovhcloud.com/en-ie/network/vrack/)
+- a [Load Balancer](https://www.ovhcloud.com/en-ie/network/load-balancer/)
+- a registered [Domain](https://www.ovhcloud.com/en-ie/domains/)
+- a [Cloud Project](https://www.ovhcloud.com/en-ie/public-cloud/)
 - a [KMS](https://www.ovhcloud.com/en-gb/identity-security-operations/key-management-service/)
 
-You will also need to setup your [OVH API](https://api.ovh.com) credentials. (see [documentation](https://www.terraform.io/docs/providers/ovh/index.html#configuration-reference))
+You will also need to setup your [OVHcloud API](https://api.ovh.com) credentials (see [documentation](https://registry.terraform.io/providers/ovh/ovh/latest/docs#configuration-reference)).
 
 Once setup, please follow these steps to prepare an environment for running the Acceptance tests:
 
@@ -147,7 +141,7 @@ EOF
 $ source ~/.ovhrc
 ```
 
-In order for all the tests to pass you can run:
+The acceptance tests read their test services and values from environment variables. The most common ones are listed below, and the [Testing and Development](./docs/index.md#testing-and-development) section of the provider documentation describes more of them:
 
 ```sh
 export OVH_IP_TEST="..."
@@ -167,7 +161,7 @@ export OVH_VRACK_PUBLIC_ROUTING_PRIORITY_ID_TEST="..."
 export OVH_VRACK_PUBLIC_ROUTING_PRIORITY_AZ_A_TEST="..."
 export OVH_VRACK_PUBLIC_ROUTING_PRIORITY_AZ_B_TEST="..."
 export OVH_VRACK_PUBLIC_ROUTING_PRIORITY_AZ_C_TEST="..."
-export OVH_VRACK_SERVICES_SERVICE_TEST="..."
+export OVH_VRACKSERVICES_SERVICE_TEST="..."
 export OVH_ZONE_TEST="..."
 export OVH_DOMAIN_NS1_HOST_TEST="..."
 export OVH_DOMAIN_NS1_IP_TEST="..."
