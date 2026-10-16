@@ -26,10 +26,6 @@ func TestAccDedicatedServerReinstall_basic(t *testing.T) {
 				Config: testAccDedicatedServerReinstallConfig("basic"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
-						"ovh_dedicated_server_update.server", "state", "ok"),
-					resource.TestCheckResourceAttr(
-						"ovh_dedicated_server_update.server", "monitoring", "false"),
-					resource.TestCheckResourceAttr(
 						"ovh_dedicated_server_reinstall_task.server_reinstall", "function", "reinstallServer"),
 					resource.TestCheckResourceAttr(
 						"ovh_dedicated_server_reinstall_task.server_reinstall", "status", "done"),
@@ -56,10 +52,6 @@ func TestAccDedicatedServerReinstall_rebootondestroy(t *testing.T) {
 			{
 				Config: testAccDedicatedServerReinstallConfig("rebootondestroy"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						"ovh_dedicated_server_update.server", "state", "ok"),
-					resource.TestCheckResourceAttr(
-						"ovh_dedicated_server_update.server", "monitoring", "false"),
 					resource.TestCheckResourceAttr(
 						"ovh_dedicated_server_reinstall_task.server_reinstall", "function", "reinstallServer"),
 					resource.TestCheckResourceAttr(
@@ -88,10 +80,6 @@ func TestAccDedicatedServerReinstall_customizations(t *testing.T) {
 				Config: testAccDedicatedServerReinstallConfig("customizations"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
-						"ovh_dedicated_server_update.server", "state", "ok"),
-					resource.TestCheckResourceAttr(
-						"ovh_dedicated_server_update.server", "monitoring", "false"),
-					resource.TestCheckResourceAttr(
 						"ovh_dedicated_server_reinstall_task.server_reinstall", "function", "reinstallServer"),
 					resource.TestCheckResourceAttr(
 						"ovh_dedicated_server_reinstall_task.server_reinstall", "status", "done"),
@@ -119,10 +107,6 @@ func TestAccDedicatedServerReinstall_byolinux(t *testing.T) {
 				Config: testAccDedicatedServerReinstallConfig("byolinux"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
-						"ovh_dedicated_server_update.server", "state", "ok"),
-					resource.TestCheckResourceAttr(
-						"ovh_dedicated_server_update.server", "monitoring", "false"),
-					resource.TestCheckResourceAttr(
 						"ovh_dedicated_server_reinstall_task.server_reinstall", "function", "reinstallServer"),
 					resource.TestCheckResourceAttr(
 						"ovh_dedicated_server_reinstall_task.server_reinstall", "status", "done"),
@@ -149,10 +133,6 @@ func TestAccDedicatedServerReinstall_storage(t *testing.T) {
 			{
 				Config: testAccDedicatedServerReinstallConfig("storage"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						"ovh_dedicated_server_update.server", "state", "ok"),
-					resource.TestCheckResourceAttr(
-						"ovh_dedicated_server_update.server", "monitoring", "false"),
 					resource.TestCheckResourceAttr(
 						"ovh_dedicated_server_reinstall_task.server_reinstall", "function", "reinstallServer"),
 					resource.TestCheckResourceAttr(
@@ -249,14 +229,6 @@ data "ovh_dedicated_server_boots" "harddisk" {
   boot_type    = "harddisk"
 }
 
-resource "ovh_dedicated_server_update" "server" {
-  service_name        = data.ovh_dedicated_server_boots.harddisk.service_name
-  boot_id             = data.ovh_dedicated_server_boots.harddisk.result[0]
-  monitoring          = false
-  state               = "ok"
-  efi_bootloader_path = "\\efi\\debian\\grubx64.efi"
-}
-
 resource "ovh_dedicated_server_reinstall_task" "server_reinstall" {
   service_name     = data.ovh_dedicated_server_boots.harddisk.service_name
   os= "debian12_64"
@@ -274,14 +246,6 @@ data "ovh_dedicated_server_boots" "rescue" {
   boot_type    = "rescue"
 }
 
-resource "ovh_dedicated_server_update" "server" {
-  service_name        = data.ovh_dedicated_server_boots.harddisk.service_name
-  boot_id             = data.ovh_dedicated_server_boots.harddisk.result[0]
-  monitoring          = false
-  state               = "ok"
-  efi_bootloader_path = "\\efi\\debian\\grubx64.efi"
-}
-
 resource "ovh_dedicated_server_reinstall_task" "server_reinstall" {
   service_name      = data.ovh_dedicated_server_boots.harddisk.service_name
   os     = "debian12_64"
@@ -293,13 +257,6 @@ const testAccDedicatedServerReinstallConfig_Customizations = `
 data "ovh_dedicated_server_boots" "harddisk" {
   service_name = "%s"
   boot_type    = "harddisk"
-}
-
-resource "ovh_dedicated_server_update" "server" {
-  service_name = data.ovh_dedicated_server_boots.harddisk.service_name
-  boot_id      = data.ovh_dedicated_server_boots.harddisk.result[0]
-  monitoring   = false
-  state        = "ok"
 }
 
 resource "ovh_dedicated_server_reinstall_task" "server_reinstall" {
@@ -316,13 +273,6 @@ const testAccDedicatedServerReinstallConfig_Byolinux = `
 data "ovh_dedicated_server_boots" "harddisk" {
   service_name = "%s"
   boot_type    = "harddisk"
-}
-
-resource "ovh_dedicated_server_update" "server" {
-  service_name = data.ovh_dedicated_server_boots.harddisk.service_name
-  boot_id      = data.ovh_dedicated_server_boots.harddisk.result[0]
-  monitoring   = false
-  state        = "ok"
 }
 
 resource "ovh_dedicated_server_reinstall_task" "server_reinstall" {
@@ -372,13 +322,6 @@ const testAccDedicatedServerReinstallConfig_Storage = `
 data "ovh_dedicated_server_boots" "harddisk" {
   service_name = "%s"
   boot_type    = "harddisk"
-}
-
-resource "ovh_dedicated_server_update" "server" {
-  service_name = data.ovh_dedicated_server_boots.harddisk.service_name
-  boot_id      = data.ovh_dedicated_server_boots.harddisk.result[0]
-  monitoring   = false
-  state        = "ok"
 }
 
 resource "ovh_dedicated_server_reinstall_task" "server_reinstall" {
