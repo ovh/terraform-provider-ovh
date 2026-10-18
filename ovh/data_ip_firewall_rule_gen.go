@@ -44,6 +44,25 @@ func IpFirewallRuleDataSourceSchema(ctx context.Context) schema.Schema {
 				Description:         "Destination port for your rule. Only with TCP/UDP protocol",
 				MarkdownDescription: "Destination port for your rule. Only with TCP/UDP protocol",
 			},
+			"destination_port_range": schema.SingleNestedAttribute{
+				Computed:            true,
+				Description:         "Destination port range for your rule. Only with TCP/UDP protocol",
+				MarkdownDescription: "Destination port range for your rule. Only with TCP/UDP protocol",
+				Attributes: map[string]schema.Attribute{
+					"from": schema.Int64Attribute{
+						CustomType:          ovhtypes.TfInt64Type{},
+						Computed:            true,
+						Description:         "Start of the port range",
+						MarkdownDescription: "Start of the port range",
+					},
+					"to": schema.Int64Attribute{
+						CustomType:          ovhtypes.TfInt64Type{},
+						Computed:            true,
+						Description:         "End of the port range",
+						MarkdownDescription: "End of the port range",
+					},
+				},
+			},
 			"fragments": schema.BoolAttribute{
 				CustomType:          ovhtypes.TfBoolType{},
 				Computed:            true,
@@ -125,6 +144,25 @@ func IpFirewallRuleDataSourceSchema(ctx context.Context) schema.Schema {
 				Description:         "Source port for your rule. Only with TCP/UDP protocol",
 				MarkdownDescription: "Source port for your rule. Only with TCP/UDP protocol",
 			},
+			"source_port_range": schema.SingleNestedAttribute{
+				Computed:            true,
+				Description:         "Source port range for your rule. Only with TCP/UDP protocol",
+				MarkdownDescription: "Source port range for your rule. Only with TCP/UDP protocol",
+				Attributes: map[string]schema.Attribute{
+					"from": schema.Int64Attribute{
+						CustomType:          ovhtypes.TfInt64Type{},
+						Computed:            true,
+						Description:         "Start of the port range",
+						MarkdownDescription: "Start of the port range",
+					},
+					"to": schema.Int64Attribute{
+						CustomType:          ovhtypes.TfInt64Type{},
+						Computed:            true,
+						Description:         "End of the port range",
+						MarkdownDescription: "End of the port range",
+					},
+				},
+			},
 			"state": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Computed:            true,
@@ -148,18 +186,20 @@ func IpFirewallRuleDataSourceSchema(ctx context.Context) schema.Schema {
 }
 
 type IpFirewallRuleDataResponseModel struct {
-	Action          ovhtypes.TfStringValue `tfsdk:"action" json:"action"`
-	CreationDate    ovhtypes.TfStringValue `tfsdk:"creation_date" json:"creationDate"`
-	Destination     ovhtypes.TfStringValue `tfsdk:"destination" json:"destination"`
-	DestinationPort ovhtypes.TfStringValue `tfsdk:"destination_port" json:"destinationPort"`
-	Fragments       ovhtypes.TfBoolValue   `tfsdk:"fragments" json:"fragments"`
-	Ip              ovhtypes.TfStringValue `tfsdk:"ip" json:"ip"`
-	IpOnFirewall    ovhtypes.TfStringValue `tfsdk:"ip_on_firewall" json:"ipOnFirewall"`
-	Protocol        ovhtypes.TfStringValue `tfsdk:"protocol" json:"protocol"`
-	Rule            ovhtypes.TfStringValue `tfsdk:"rule" json:"rule"`
-	Sequence        ovhtypes.TfInt64Value  `tfsdk:"sequence" json:"sequence"`
-	Source          ovhtypes.TfStringValue `tfsdk:"source" json:"source"`
-	SourcePort      ovhtypes.TfStringValue `tfsdk:"source_port" json:"sourcePort"`
-	State           ovhtypes.TfStringValue `tfsdk:"state" json:"state"`
-	TcpOption       ovhtypes.TfStringValue `tfsdk:"tcp_option" json:"tcpOption"`
+	Action               ovhtypes.TfStringValue `tfsdk:"action" json:"action"`
+	CreationDate         ovhtypes.TfStringValue `tfsdk:"creation_date" json:"creationDate"`
+	Destination          ovhtypes.TfStringValue `tfsdk:"destination" json:"destination"`
+	DestinationPort      ovhtypes.TfStringValue `tfsdk:"destination_port" json:"destinationPort"`
+	DestinationPortRange *IPFirewallPortRange   `tfsdk:"destination_port_range" json:"-"` // Not returned by the API, computed from DestinationPort
+	Fragments            ovhtypes.TfBoolValue   `tfsdk:"fragments" json:"fragments"`
+	Ip                   ovhtypes.TfStringValue `tfsdk:"ip" json:"ip"`
+	IpOnFirewall         ovhtypes.TfStringValue `tfsdk:"ip_on_firewall" json:"ipOnFirewall"`
+	Protocol             ovhtypes.TfStringValue `tfsdk:"protocol" json:"protocol"`
+	Rule                 ovhtypes.TfStringValue `tfsdk:"rule" json:"rule"`
+	Sequence             ovhtypes.TfInt64Value  `tfsdk:"sequence" json:"sequence"`
+	Source               ovhtypes.TfStringValue `tfsdk:"source" json:"source"`
+	SourcePort           ovhtypes.TfStringValue `tfsdk:"source_port" json:"sourcePort"`
+	SourcePortRange      *IPFirewallPortRange   `tfsdk:"source_port_range" json:"-"` // Not returned by the API, computed from SourcePort
+	State                ovhtypes.TfStringValue `tfsdk:"state" json:"state"`
+	TcpOption            ovhtypes.TfStringValue `tfsdk:"tcp_option" json:"tcpOption"`
 }

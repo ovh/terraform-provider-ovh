@@ -66,3 +66,41 @@ func TestAccIPFirewallRule_data(t *testing.T) {
 		},
 	})
 }
+
+func TestAccIPFirewallRule_dataPortRange(t *testing.T) {
+	ip := os.Getenv("OVH_IP_FIREWALL_TEST")
+	config := testAccIPFirewallRulePortRangeConfig(ip, `
+		protocol               = "tcp"
+		destination_port_range = { from = 1000, to = 2000 }
+	`) + `
+		data "ovh_ip_firewall_rule" "rule_data" {
+			ip             = ovh_ip_firewall_rule.rule.ip
+			ip_on_firewall = ovh_ip_firewall_rule.rule.ip_on_firewall
+			sequence       = ovh_ip_firewall_rule.rule.sequence
+		}
+	`
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheckIp(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"data.ovh_ip_firewall_rule.rule_data", "state", "ok"),
+					resource.TestCheckResourceAttr(
+						"data.ovh_ip_firewall_rule.rule_data", "destination_port", "range 1000 2000"),
+					resource.TestCheckResourceAttr(
+						"data.ovh_ip_firewall_rule.rule_data", "destination_port_range.from", "1000"),
+					resource.TestCheckResourceAttr(
+						"data.ovh_ip_firewall_rule.rule_data", "destination_port_range.to", "2000"),
+					resource.TestCheckNoResourceAttr(
+						"data.ovh_ip_firewall_rule.rule_data", "source_port_range.from"),
+					resource.TestCheckNoResourceAttr(
+						"data.ovh_ip_firewall_rule.rule_data", "source_port"),
+				),
+			},
+		},
+	})
+}

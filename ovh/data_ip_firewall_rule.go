@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 var _ datasource.DataSourceWithConfigure = (*ipFirewallRuleDataSource)(nil)
@@ -65,6 +67,25 @@ func (d *ipFirewallRuleDataSource) Read(ctx context.Context, req datasource.Read
 			err.Error(),
 		)
 		return
+	}
+
+	// The API returns port ranges only as a desc string, such as "range 8000 8010".
+	if strings.HasPrefix(data.SourcePort.ValueString(), "range ") {
+		portRange, err := parsePortRange(data.SourcePort.ValueString())
+		if err != nil {
+			tflog.Error(ctx, fmt.Sprintf("error parsing firewall rule port range: %s", err))
+		} else {
+			data.SourcePortRange = portRange
+		}
+	}
+
+	if strings.HasPrefix(data.DestinationPort.ValueString(), "range ") {
+		portRange, err := parsePortRange(data.DestinationPort.ValueString())
+		if err != nil {
+			tflog.Error(ctx, fmt.Sprintf("error parsing firewall rule port range: %s", err))
+		} else {
+			data.DestinationPortRange = portRange
+		}
 	}
 
 	// Save data into Terraform state

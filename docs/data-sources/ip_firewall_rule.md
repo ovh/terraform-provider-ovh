@@ -30,11 +30,17 @@ data "ovh_ip_firewall_rule" "my_firewall_rule" {
 * `action` - Possible values for action (deny|permit)
 * `creation_date` - Creation date of the rule
 * `destination` - Destination IP for your rule
-* `destination_port` - Destination port for your rule. Only with TCP/UDP protocol
+* `destination_port` - Destination port or port range for your rule, as returned by the API (e.g. `eq 22` or `range 8000 8010`). Only with TCP/UDP protocol
+* `destination_port_range` - Destination port range for your rule, when it has one
+  * `from` - Start of the range
+  * `to` - End of the range
 * `fragments` - Fragments option
 * `protocol` - Possible values for protocol (ah|esp|gre|icmp|ipv4|tcp|udp)
 * `rule` - Description of the rule
 * `sequence` - Rule position in the rules array
 * `source` - IPv4 CIDR notation (e.g., 192.0.2.0/24)
-* `source_port` - Source port for your rule. Only with TCP/UDP protocol
+* `source_port` - Source port or port range for your rule, as returned by the API (e.g. `eq 22` or `range 8000 8010`). Only with TCP/UDP protocol
+* `source_port_range` - Source port range for your rule, when it has one
+  * `from` - Start of the range
+  * `to` - End of the range
 * `tcp_option` - TCP option on your rule (syn|established)
