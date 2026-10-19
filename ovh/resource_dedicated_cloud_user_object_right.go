@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"sync"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/ovh/go-ovh/ovh"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
@@ -70,12 +72,24 @@ func listDedicatedCloudUserObjectRightIds(ctx context.Context, r *dedicatedCloud
 	return set, nil
 }
 
-// resolveCreatedObjectRightId finds the objectRightId created by the preceding POST.
-// The create Task response carries no objectRightId, so the new id is found by diffing
-// the object right id list before and after creation. If Terraform creates several
-// ovh_dedicated_cloud_user_object_right resources for the SAME user concurrently, more
-// than one new id can appear in the diff; those candidates are disambiguated by matching
-// the requested right/type/vmware_object_id against each candidate's actual attributes.
+// dedicatedCloudUserObjectRightLocks serializes object right creation per service/user.
+// The create Task response carries no objectRightId, so the new id is resolved by diffing
+// the object right list before and after creation; running that sequence concurrently for
+// the same user would make the diffs overlap.
+var dedicatedCloudUserObjectRightLocks sync.Map
+
+func lockDedicatedCloudUserObjectRights(serviceName string, userId int64) func() {
+	m, _ := dedicatedCloudUserObjectRightLocks.LoadOrStore(fmt.Sprintf("%s/%d", serviceName, userId), &sync.Mutex{})
+	mu := m.(*sync.Mutex)
+	mu.Lock()
+	return mu.Unlock
+}
+
+// resolveCreatedObjectRightId finds the objectRightId created by the preceding POST by
+// diffing the object right id list before and after creation. Creation is serialized
+// per user within this provider, but rights may still be added out of band (console,
+// other tooling), so every candidate - even a sole one - is validated against the
+// requested right/type/vmware_object_id.
 func (r *dedicatedCloudUserObjectRightResource) resolveCreatedObjectRightId(ctx context.Context, serviceName string, userId int64, before map[int64]bool, after map[int64]bool, want *DedicatedCloudUserObjectRightModel) (int64, error) {
 	var candidates []int64
 	for id := range after {
@@ -86,10 +100,6 @@ func (r *dedicatedCloudUserObjectRightResource) resolveCreatedObjectRightId(ctx 
 
 	if len(candidates) == 0 {
 		return 0, fmt.Errorf("object right was created but no new object_right_id was found on %s/user/%d - the object right list may not be consistent yet, try importing it manually", serviceName, userId)
-	}
-
-	if len(candidates) == 1 {
-		return candidates[0], nil
 	}
 
 	var matches []int64
@@ -109,9 +119,9 @@ func (r *dedicatedCloudUserObjectRightResource) resolveCreatedObjectRightId(ctx 
 
 	if len(matches) != 1 {
 		return 0, fmt.Errorf(
-			"%d object rights were created concurrently on %s/user/%d and could not be unambiguously matched back to this resource - "+
-				"avoid creating multiple ovh_dedicated_cloud_user_object_right resources for the same user_id in parallel (e.g. via depends_on chaining)",
-			len(candidates), serviceName, userId,
+			"found %d new object right(s) on %s/user/%d of which %d match the requested right/type/vmware_object_id - "+
+				"the created object right could not be unambiguously identified (was an object right added outside Terraform at the same time?), import it manually",
+			len(candidates), serviceName, userId, len(matches),
 		)
 	}
 
@@ -129,6 +139,9 @@ func (r *dedicatedCloudUserObjectRightResource) Create(ctx context.Context, req 
 
 	serviceName := data.ServiceName.ValueString()
 	userId := data.UserId.ValueInt64()
+
+	unlock := lockDedicatedCloudUserObjectRights(serviceName, userId)
+	defer unlock()
 
 	idsBefore, err := listDedicatedCloudUserObjectRightIds(ctx, r, serviceName, userId)
 	if err != nil {
@@ -193,6 +206,10 @@ func (r *dedicatedCloudUserObjectRightResource) Read(ctx context.Context, req re
 
 	endpoint := dedicatedCloudUserObjectRightEndpoint(data.ServiceName.ValueString(), data.UserId.ValueInt64(), data.ObjectRightId.ValueInt64())
 	if err := r.config.OVHClient.GetWithContext(ctx, endpoint, &responseData); err != nil {
+		if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Get %s", endpoint),
 			err.Error(),
@@ -200,10 +217,12 @@ func (r *dedicatedCloudUserObjectRightResource) Read(ctx context.Context, req re
 		return
 	}
 
-	data.MergeWith(&responseData)
+	// API values take precedence so out-of-band changes show up as drift
+	responseData.MergeWith(&data)
+	responseData.ID = data.ID
 
 	// Save updated data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)
 }
 
 func (r *dedicatedCloudUserObjectRightResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -225,6 +244,9 @@ func (r *dedicatedCloudUserObjectRightResource) Delete(ctx context.Context, req 
 	var task DedicatedCloudTask
 	endpoint := dedicatedCloudUserObjectRightEndpoint(serviceName, userId, data.ObjectRightId.ValueInt64())
 	if err := r.config.OVHClient.DeleteWithContext(ctx, endpoint, &task); err != nil {
+		if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
+			return
+		}
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Delete %s", endpoint),
 			err.Error(),

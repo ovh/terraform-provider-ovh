@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/ovh/go-ovh/ovh"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
@@ -109,6 +110,10 @@ func (r *dedicatedCloudUserResource) Read(ctx context.Context, req resource.Read
 
 	endpoint := dedicatedCloudUserEndpoint(data.ServiceName.ValueString(), data.UserId.ValueInt64())
 	if err := r.config.OVHClient.GetWithContext(ctx, endpoint, &responseData); err != nil {
+		if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Get %s", endpoint),
 			err.Error(),
@@ -116,10 +121,13 @@ func (r *dedicatedCloudUserResource) Read(ctx context.Context, req resource.Read
 		return
 	}
 
-	data.MergeWith(&responseData)
+	// API values take precedence so out-of-band changes show up as drift;
+	// attributes not returned by the API (password, create-only inputs) are kept from state.
+	responseData.MergeWith(&data)
+	responseData.ID = data.ID
 
 	// Save updated data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)
 }
 
 func (r *dedicatedCloudUserResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -216,6 +224,9 @@ func (r *dedicatedCloudUserResource) Delete(ctx context.Context, req resource.De
 	var task DedicatedCloudTask
 	endpoint := dedicatedCloudUserEndpoint(serviceName, data.UserId.ValueInt64())
 	if err := r.config.OVHClient.DeleteWithContext(ctx, endpoint, &task); err != nil {
+		if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
+			return
+		}
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Delete %s", endpoint),
 			err.Error(),

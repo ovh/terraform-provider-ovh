@@ -10,7 +10,7 @@ This is the object-level permission model used to build a least-privilege setup:
 
 ~> The underlying API has no update endpoint for an object right: any change to `right`, `type`, `vmware_object_id` or `propagate` replaces the object right (delete + recreate).
 
-~> Creating several `ovh_dedicated_cloud_user_object_right` resources for the **same** `user_id` in parallel is not safe: the API's create response does not return the new right's id, so Terraform resolves it after the fact and concurrent creates for the same user can be misattributed. Chain such resources with `depends_on`, or apply with reduced parallelism.
+-> The API's create response does not return the new right's id, so the provider resolves it by comparing the user's object rights before and after creation. Creates for the same `user_id` are therefore serialized by the provider. If an object right with the same `type`, `vmware_object_id` and `right` is added outside Terraform for that user while the create is running, the id cannot be resolved unambiguously and the create fails; import the right manually in that case.
 
 ## Example Usage
 
