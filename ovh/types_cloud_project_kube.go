@@ -20,8 +20,9 @@ type CloudProjectKubePutOpts struct {
 }
 
 type privateNetworkConfiguration struct {
-	DefaultVrackGateway            string `json:"defaultVrackGateway"`
-	PrivateNetworkRoutingAsDefault bool   `json:"privateNetworkRoutingAsDefault"`
+	DefaultVrackGateway            *string `json:"defaultVrackGateway,omitempty"`
+	PrivateNetworkRoutingAsDefault *bool   `json:"privateNetworkRoutingAsDefault,omitempty"`
+	UseUserGateway                 *bool   `json:"useUserGateway,omitempty"`
 }
 
 type CloudProjectKubeUpdateLoadBalancersSubnetIdOpts struct {
@@ -41,6 +42,7 @@ type CloudProjectKubeCreateOpts struct {
 	LoadBalancersSubnetId       *string                             `json:"loadBalancersSubnetId,omitempty"`
 	NodesSubnetId               *string                             `json:"nodesSubnetId,omitempty"`
 	IPAllocationPolicy          *CloudProjectKubeIPAllocationPolicy `json:"ipAllocationPolicy,omitempty"`
+	DisablePublicNetworking     *bool                               `json:"disablePublicNetworking,omitempty"`
 }
 
 type Customization struct {
@@ -131,7 +133,10 @@ func (opts *CloudProjectKubeCreateOpts) FromResource(d *schema.ResourceData) {
 	opts.LoadBalancersSubnetId = helpers.GetNilStringPointerFromData(d, kubeClusterLoadBalancersSubnetIdKey)
 	opts.NodesSubnetId = helpers.GetNilStringPointerFromData(d, kubeClusterNodesSubnetIdKey)
 	opts.PrivateNetworkId = helpers.GetNilStringPointerFromData(d, kubeClusterPrivateNetworkIDKey)
-	opts.PrivateNetworkConfiguration = loadPrivateNetworkConfiguration(d.Get(kubeClusterPrivateNetworkConfigurationKey))
+	opts.PrivateNetworkConfiguration = loadPrivateNetworkConfiguration(d)
+	if v, ok := d.GetOkExists(kubeClusterDisablePublicNetworkingKey); ok {
+		opts.DisablePublicNetworking = helpers.GetNilBoolPointer(v.(bool))
+	}
 	opts.KubeProxyMode = helpers.GetNilStringPointerFromData(d, kubeClusterProxyModeKey)
 
 	opts.Customization = &Customization{
@@ -318,19 +323,51 @@ func loadKubeProxyCustomization(kubeProxyCustomizationInterface interface{}) *ku
 	return kubeProxyOutput
 }
 
-func loadPrivateNetworkConfiguration(i interface{}) *privateNetworkConfiguration {
-	if i == nil {
+// ToMap converts the API private network configuration, where unset attributes are null, to its Terraform representation.
+func (pnc *privateNetworkConfiguration) ToMap() []interface{} {
+	obj := map[string]interface{}{
+		kubeClusterDefaultVrackGatewayKey:         "",
+		kubeClusterPrivateNetworkRoutingAsDefault: false,
+		kubeClusterUseUserGatewayKey:              false,
+	}
+	if pnc.DefaultVrackGateway != nil {
+		obj[kubeClusterDefaultVrackGatewayKey] = *pnc.DefaultVrackGateway
+	}
+	if pnc.PrivateNetworkRoutingAsDefault != nil {
+		obj[kubeClusterPrivateNetworkRoutingAsDefault] = *pnc.PrivateNetworkRoutingAsDefault
+	}
+	if pnc.UseUserGateway != nil {
+		obj[kubeClusterUseUserGatewayKey] = *pnc.UseUserGateway
+	}
+	return []interface{}{obj}
+}
+
+// loadPrivateNetworkConfiguration reads private_network_configuration from the raw config,
+// so that unset attributes are omitted from the request instead of being sent as zero values.
+func loadPrivateNetworkConfiguration(d *schema.ResourceData) *privateNetworkConfiguration {
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsNull() {
 		return nil
 	}
-	pncOutput := privateNetworkConfiguration{}
-
-	pncSet := i.(*schema.Set).List()
-	for _, pnc := range pncSet {
-		mapping := pnc.(map[string]interface{})
-		pncOutput.DefaultVrackGateway = mapping[kubeClusterDefaultVrackGatewayKey].(string)
-		pncOutput.PrivateNetworkRoutingAsDefault = mapping[kubeClusterPrivateNetworkRoutingAsDefault].(bool)
+	raw := rawConfig.GetAttr(kubeClusterPrivateNetworkConfigurationKey)
+	if raw.IsNull() || !raw.IsKnown() || raw.LengthInt() == 0 {
+		return nil
 	}
-	return &pncOutput
+
+	pnc := raw.AsValueSlice()[0]
+	pncOutput := &privateNetworkConfiguration{}
+	if v := pnc.GetAttr(kubeClusterDefaultVrackGatewayKey); v.IsKnown() && !v.IsNull() {
+		// An empty string is meaningful (disabled), so it must be sent
+		defaultVrackGateway := v.AsString()
+		pncOutput.DefaultVrackGateway = &defaultVrackGateway
+	}
+	if v := pnc.GetAttr(kubeClusterPrivateNetworkRoutingAsDefault); v.IsKnown() && !v.IsNull() {
+		pncOutput.PrivateNetworkRoutingAsDefault = helpers.GetNilBoolPointer(v.True())
+	}
+	if v := pnc.GetAttr(kubeClusterUseUserGatewayKey); v.IsKnown() && !v.IsNull() {
+		pncOutput.UseUserGateway = helpers.GetNilBoolPointer(v.True())
+	}
+	return pncOutput
 }
 
 func (opts *CloudProjectKubeCreateOpts) String() string {
@@ -349,24 +386,26 @@ func (opts *CloudProjectKubeCreateOpts) String() string {
 }
 
 type CloudProjectKubeResponse struct {
-	ControlPlaneIsUpToDate bool                               `json:"controlPlaneIsUpToDate"`
-	Id                     string                             `json:"id"`
-	IsUpToDate             bool                               `json:"isUpToDate"`
-	LoadBalancersSubnetId  string                             `json:"loadBalancersSubnetId"`
-	Name                   string                             `json:"name"`
-	NextUpgradeVersions    []string                           `json:"nextUpgradeVersions"`
-	NodesSubnetId          string                             `json:"nodesSubnetId"`
-	NodesUrl               string                             `json:"nodesUrl"`
-	PrivateNetworkId       string                             `json:"privateNetworkId"`
-	Region                 string                             `json:"region"`
-	Status                 string                             `json:"status"`
-	UpdatePolicy           string                             `json:"updatePolicy"`
-	Url                    string                             `json:"url"`
-	Version                string                             `json:"version"`
-	Plan                   string                             `json:"plan"`
-	Customization          Customization                      `json:"customization"`
-	KubeProxyMode          string                             `json:"kubeProxyMode"`
-	IPAllocationPolicy     CloudProjectKubeIPAllocationPolicy `json:"ipAllocationPolicy"`
+	ControlPlaneIsUpToDate      bool                               `json:"controlPlaneIsUpToDate"`
+	Id                          string                             `json:"id"`
+	IsUpToDate                  bool                               `json:"isUpToDate"`
+	LoadBalancersSubnetId       string                             `json:"loadBalancersSubnetId"`
+	Name                        string                             `json:"name"`
+	NextUpgradeVersions         []string                           `json:"nextUpgradeVersions"`
+	NodesSubnetId               string                             `json:"nodesSubnetId"`
+	NodesUrl                    string                             `json:"nodesUrl"`
+	PrivateNetworkId            string                             `json:"privateNetworkId"`
+	Region                      string                             `json:"region"`
+	Status                      string                             `json:"status"`
+	UpdatePolicy                string                             `json:"updatePolicy"`
+	Url                         string                             `json:"url"`
+	Version                     string                             `json:"version"`
+	Plan                        string                             `json:"plan"`
+	Customization               Customization                      `json:"customization"`
+	KubeProxyMode               string                             `json:"kubeProxyMode"`
+	IPAllocationPolicy          CloudProjectKubeIPAllocationPolicy `json:"ipAllocationPolicy"`
+	DisablePublicNetworking     bool                               `json:"disablePublicNetworking"`
+	PrivateNetworkConfiguration *privateNetworkConfiguration       `json:"privateNetworkConfiguration"`
 }
 
 func (v *CloudProjectKubeResponse) ToMap(d *schema.ResourceData) map[string]interface{} {
@@ -395,6 +434,7 @@ func (v *CloudProjectKubeResponse) ToMap(d *schema.ResourceData) map[string]inte
 		obj[kubeVersionKey] = v.Version[:strings.LastIndex(versionPatch.String(), ".")]
 	}
 	obj[kubeClusterProxyModeKey] = v.KubeProxyMode
+	obj[kubeClusterDisablePublicNetworkingKey] = v.DisablePublicNetworking
 
 	if v.Customization.APIServer != nil {
 		if userIsUsingDeprecatedCustomizationSyntax(d) {

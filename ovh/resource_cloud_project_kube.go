@@ -1,6 +1,7 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/url"
@@ -26,6 +27,8 @@ func resourceCloudProjectKube() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: resourceCloudProjectKubeImportState,
 		},
+
+		CustomizeDiff: resourceCloudProjectKubeCustomizeDiff,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create:  schema.DefaultTimeout(15 * time.Minute),
@@ -482,17 +485,29 @@ func resourceCloudProjectKube() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						kubeClusterDefaultVrackGatewayKey: {
-							Required:    true,
+							Optional:    true,
 							Type:        schema.TypeString,
-							Description: "If defined, all egress traffic will be routed towards this IP address, which should belong to the private network. Empty string means disabled.",
+							Description: "If defined, all egress traffic will be routed towards this IP address, which should belong to the private network. Empty string means disabled. Default is empty.",
 						},
 						kubeClusterPrivateNetworkRoutingAsDefault: {
 							Type:        schema.TypeBool,
-							Required:    true,
+							Optional:    true,
 							Description: "Defines whether routing should default to using the nodes' private interface, instead of their public interface. Default is false.",
+						},
+						kubeClusterUseUserGatewayKey: {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Description: "When enabled, skips the prerequisite check for a router/gateway on the OpenStack subnet/network. By default (value false or not set), an OpenStack router/gateway is mandatory. Setting this attribute requires disable_public_networking to be true. Only available on the standard plan. Can only be set at cluster creation.",
 						},
 					},
 				},
+			},
+			kubeClusterDisablePublicNetworkingKey: {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Computed:    true,
+				ForceNew:    true,
+				Description: "Disable public connectivity. Node pools of such a cluster cannot attach floating IPs. Only available on the standard plan. Can only be set at cluster creation.",
 			},
 			kubeClusterLoadBalancersSubnetIdKey: {
 				Type:     schema.TypeString,
@@ -664,6 +679,39 @@ func CustomApiServerAdmissionPluginsSchemaSetFunc() schema.SchemaSetFunc {
 		out := fmt.Sprintf("%#v", i)
 		return schema.HashString(out)
 	}
+}
+
+// resourceCloudProjectKubeCustomizeDiff forces a new cluster when use_user_gateway changes.
+// ForceNew cannot be set on the nested attribute directly: it would also force a new cluster
+// on any change of the other private_network_configuration attributes, which are updatable.
+// ForceNew must target the nested attribute: on a set, ForceNew on the block only applies to
+// its item count, which stays at one when use_user_gateway is toggled inside the block.
+func resourceCloudProjectKubeCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
+	if !d.HasChange(kubeClusterPrivateNetworkConfigurationKey) {
+		return nil
+	}
+
+	oldValue, newValue := d.GetChange(kubeClusterPrivateNetworkConfigurationKey)
+	if cloudProjectKubeUseUserGatewayFromSet(oldValue) != cloudProjectKubeUseUserGatewayFromSet(newValue) {
+		pncSet := newValue.(*schema.Set)
+		if !cloudProjectKubeUseUserGatewayFromSet(newValue) {
+			pncSet = oldValue.(*schema.Set)
+		}
+		for _, pnc := range pncSet.List() {
+			return d.ForceNew(fmt.Sprintf("%s.%d.%s", kubeClusterPrivateNetworkConfigurationKey, pncSet.F(pnc), kubeClusterUseUserGatewayKey))
+		}
+	}
+
+	return nil
+}
+
+func cloudProjectKubeUseUserGatewayFromSet(i interface{}) bool {
+	for _, pnc := range i.(*schema.Set).List() {
+		if v, ok := pnc.(map[string]interface{})[kubeClusterUseUserGatewayKey].(bool); ok {
+			return v
+		}
+	}
+	return false
 }
 
 func resourceCloudProjectKubeImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -931,7 +979,7 @@ func resourceCloudProjectKubeUpdate(d *schema.ResourceData, meta interface{}) er
 
 	if d.HasChange(kubeClusterPrivateNetworkConfigurationKey) {
 		_, newValue := d.GetChange(kubeClusterPrivateNetworkConfigurationKey)
-		pncOutput := privateNetworkConfiguration{}
+		pncOutput := CloudProjectKubeUpdatePNCOpts{}
 
 		pncSet := newValue.(*schema.Set).List()
 		for _, pnc := range pncSet {
@@ -941,10 +989,7 @@ func resourceCloudProjectKubeUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 
 		endpoint := fmt.Sprintf("/cloud/project/%s/kube/%s/privateNetworkConfiguration", serviceName, d.Id())
-		err := config.OVHClient.Put(endpoint, CloudProjectKubeUpdatePNCOpts{
-			DefaultVrackGateway:            pncOutput.DefaultVrackGateway,
-			PrivateNetworkRoutingAsDefault: pncOutput.PrivateNetworkRoutingAsDefault,
-		}, nil)
+		err := config.OVHClient.Put(endpoint, pncOutput, nil)
 		if err != nil {
 			return err
 		}

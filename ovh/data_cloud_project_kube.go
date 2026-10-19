@@ -448,6 +448,30 @@ func dataSourceCloudProjectKube() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			kubeClusterDisablePublicNetworkingKey: {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			kubeClusterPrivateNetworkConfigurationKey: {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						kubeClusterDefaultVrackGatewayKey: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						kubeClusterPrivateNetworkRoutingAsDefault: {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						kubeClusterUseUserGatewayKey: {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+					},
+				},
+			},
 			kubeClusterControlPlaneIsUpToDateKey: {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -578,6 +602,9 @@ func dataSourceCloudProjectKubeRead(d *schema.ResourceData, meta interface{}) er
 		} else {
 			d.SetId(fmt.Sprint(v))
 		}
+	}
+	if res.PrivateNetworkConfiguration != nil {
+		d.Set(kubeClusterPrivateNetworkConfigurationKey, res.PrivateNetworkConfiguration.ToMap())
 	}
 
 	// add kubeconfig in state
