@@ -112,8 +112,8 @@ func IpFirewallRuleResourceSchema(ctx context.Context) schema.Schema {
 				CustomType:          ovhtypes.TfBoolType{},
 				Optional:            true,
 				Computed:            true,
-				Description:         "Fragments option",
-				MarkdownDescription: "Fragments option",
+				Description:         "Fragments option. Only with TCP protocol",
+				MarkdownDescription: "Fragments option. Only with TCP protocol",
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
 				},
@@ -268,8 +268,8 @@ func IpFirewallRuleResourceSchema(ctx context.Context) schema.Schema {
 				CustomType:          ovhtypes.TfStringType{},
 				Optional:            true,
 				Computed:            true,
-				Description:         "TCP option on your rule. Possible values: established or syn",
-				MarkdownDescription: "TCP option on your rule. Possible values: `established` or `syn`",
+				Description:         "TCP option on your rule. Possible values: established or syn. Only with TCP protocol",
+				MarkdownDescription: "TCP option on your rule. Possible values: `established` or `syn`. Only with TCP protocol",
 				Validators: []validator.String{
 					stringvalidator.OneOf(
 						"established",

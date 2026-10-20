@@ -225,7 +225,8 @@ func (r *ipFirewallRuleResource) Delete(ctx context.Context, req resource.Delete
 
 // ValidateConfig ensures the end of a port range is greater than its start. A range of a single port is refused too,
 // since the API silently converts it into a single port rule, causing a permanent replacement on every plan.
-// It also ensures port ranges are only used with the tcp and udp protocols.
+// It also ensures port ranges are only used with the tcp and udp protocols, and tcp_option and fragments only with
+// the tcp protocol, as the API refuses them otherwise.
 func (r *ipFirewallRuleResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
 	// Ensure port options are set only for TCP or UDP rules
 	var protocol ovhtypes.TfStringValue
@@ -253,6 +254,20 @@ func (r *ipFirewallRuleResource) ValidateConfig(ctx context.Context, req resourc
 		}
 	}
 
+	// The API only accepts tcp_option and fragments, sent together as the TCP option, with the tcp protocol
+	if !protocol.IsNull() && !protocol.IsUnknown() && protocol.ValueString() != "tcp" {
+		var tcpOption ovhtypes.TfStringValue
+		resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("tcp_option"), &tcpOption)...)
+		if !tcpOption.IsNull() {
+			resp.Diagnostics.AddAttributeError(path.Root("tcp_option"), "Invalid protocol for tcp_option", "tcp_option can only be used with the tcp protocol.")
+		}
+
+		var fragments ovhtypes.TfBoolValue
+		resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("fragments"), &fragments)...)
+		if !fragments.IsNull() {
+			resp.Diagnostics.AddAttributeError(path.Root("fragments"), "Invalid protocol for fragments", "fragments can only be used with the tcp protocol.")
+		}
+	}
 }
 
 // parsePortDesc parses a port desc returned by the API: "eq 22" gives a single port, "range 8000 8010" a range,
