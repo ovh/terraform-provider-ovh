@@ -355,9 +355,12 @@ The following arguments are supported:
 * `nodes_subnet_id` - (Optional) Subnet ID to use for nodes, this subnet must belong to `private_network_id`. Default uses the first subnet belonging to the private network with id `private_network_id`. This attribute requires `private_network_id` to be defined. **Cannot be updated, it can only be used at cluster creation or reset.**
 * `load_balancers_subnet_id` - (Optional) Subnet ID to use for Public Load Balancers, this subnet must belong to  `private_network_id`. Defaults to the same subnet as the nodes (see `nodes_subnet_id`). Requires `private_network_id` to be defined. See more network requirements in the [documentation](https://help.ovhcloud.com/csm/fr-public-cloud-kubernetes-expose-applications-using-load-balancer?id=kb_article_view&sysparm_article=KB0062873) for more information.
 
-* `private_network_configuration` - (Optional) The private network configuration. If this is set then the 2 parameters below shall be defined.
-  * `default_vrack_gateway` - If defined, all egress traffic will be routed towards this IP address, which should belong to the private network. Empty string means disabled.
-  * `private_network_routing_as_default` - Defines whether routing should default to using the nodes' private interface, instead of their public interface. Default is false.
+* `private_network_configuration` - (Optional) The private network configuration.
+  * `default_vrack_gateway` - (Optional) If defined, all egress traffic will be routed towards this IP address, which should belong to the private network. Empty string means disabled. Default is empty.
+  * `private_network_routing_as_default` - (Optional) Defines whether routing should default to using the nodes' private interface, instead of their public interface. Default is false.
+  * `use_user_gateway` - (Optional) When enabled, skips the prerequisite check for a router/gateway on the OpenStack subnet/network. By default (value false or not set), an OpenStack router/gateway is mandatory. Setting this attribute, to `true` or `false`, **requires `disable_public_networking` to be `true`**. Only available on the `standard` plan. **Changing this value recreates the resource.** Can only be set at cluster creation.
+
+  ~> **NOTE** `use_user_gateway` and `disable_public_networking` are only available on the `standard` plan. To use `use_user_gateway`, `disable_public_networking` **must** be set to `true`, otherwise the cluster creation is rejected by the API. This block is not read back from the API by this resource, so a change made outside of Terraform is not detected: use the `ovh_cloud_project_kube` data source to read it. Switching `use_user_gateway` between unset and `false` does not recreate the resource, as both are considered equivalent.
 
   In order to use the gateway IP advertised by the private network subnet DHCP, the following configuration shall be used.
 
@@ -367,6 +370,7 @@ The following arguments are supported:
       private_network_routing_as_default = true
   }
   ```
+* `disable_public_networking` - (Optional) Disable public connectivity. Node pools of such a cluster cannot attach floating IPs (`attach_floating_ips`). Must be `true` to use `private_network_configuration.use_user_gateway`. Only available on the `standard` plan. **Changing this value recreates the resource.** Can only be set at cluster creation.
 * `update_policy` - Cluster update policy. Choose between [ALWAYS_UPDATE, MINIMAL_DOWNTIME, NEVER_UPDATE].
 * `customization_cilium` - (Optional) Cilium CNI customization.
   * `cluster_id` - (Optional) Cilium cluster ID, must be between 1 and 255. Required when using the ClusterMesh feature.
@@ -404,6 +408,7 @@ The following arguments are supported:
 The following attributes are exported:
 
 * `control_plane_is_up_to_date` - True if control-plane is up-to-date.
+* `disable_public_networking` - See Argument Reference above.
 * `id` - Managed Kubernetes Service ID
 * `is_up_to_date` - True if all nodes and control-plane are up-to-date.
 * `kubeconfig` - The kubeconfig file. Use this file to connect to your kubernetes cluster.

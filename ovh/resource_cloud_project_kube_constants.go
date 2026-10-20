@@ -36,6 +36,8 @@ const (
 	kubeClusterServicesIpv4CidrKey            = "services_ipv4_cidr"
 	kubeClusterDefaultVrackGatewayKey         = "default_vrack_gateway"
 	kubeClusterPrivateNetworkRoutingAsDefault = "private_network_routing_as_default"
+	kubeClusterUseUserGatewayKey              = "use_user_gateway"
+	kubeClusterDisablePublicNetworkingKey     = "disable_public_networking"
 
 	// Deprecated
 	kubeClusterCustomization = "customization"

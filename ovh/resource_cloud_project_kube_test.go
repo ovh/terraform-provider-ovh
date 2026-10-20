@@ -2368,3 +2368,116 @@ func TestAccCloudProjectKubeCustomizationCiliumFull(t *testing.T) {
 		},
 	})
 }
+
+// ============================================================================
+// disable_public_networking / use_user_gateway tests
+// ============================================================================
+
+// testAccCloudProjectKubeNetworkingFlagsConfig deploys a private network without
+// any OpenStack gateway, as use_user_gateway skips the gateway prerequisite check.
+var testAccCloudProjectKubeNetworkingFlagsConfig = `
+variable "service_name" {
+  default = "%s"
+}
+variable "name" {
+  default = "%s"
+}
+variable "region" {
+  default = "%s"
+}
+variable "version_k8s" {
+  default = "%s"
+}
+variable "random_vlan" {
+  default = %d
+}
+
+resource "ovh_cloud_project_network_private" "network" {
+  service_name = var.service_name
+  vlan_id      = var.random_vlan
+  name         = "terraform_mks_temp_network_can_be_deleted_${var.random_vlan}"
+  regions      = [ var.region ]
+}
+
+resource "ovh_cloud_project_network_private_subnet" "subnet" {
+  service_name = ovh_cloud_project_network_private.network.service_name
+  network_id   = ovh_cloud_project_network_private.network.id
+
+  # whatever region, for test purpose
+  region     = var.region
+  start      = "192.168.0.100"
+  end        = "192.168.254.200"
+  network    = "192.168.0.0/16"
+  dhcp       = true
+  no_gateway = false
+}
+
+resource "ovh_cloud_project_kube" "cluster" {
+  service_name = var.service_name
+  name         = var.name
+  region       = var.region
+  version      = var.version_k8s
+  plan         = "standard"
+
+  private_network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
+  nodes_subnet_id    = ovh_cloud_project_network_private_subnet.subnet.id
+
+  disable_public_networking = true
+
+  private_network_configuration {
+    use_user_gateway = true
+  }
+}
+
+data "ovh_cloud_project_kube" "cluster" {
+  service_name = ovh_cloud_project_kube.cluster.service_name
+  kube_id      = ovh_cloud_project_kube.cluster.id
+}
+`
+
+func TestAccCloudProjectKubeNetworkingFlags(t *testing.T) {
+	name := acctest.RandomWithPrefix(test_prefix)
+	resourceName := "ovh_cloud_project_kube.cluster"
+
+	config := fmt.Sprintf(
+		testAccCloudProjectKubeNetworkingFlagsConfig,
+		os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"),
+		name,
+		"RBX-A", // standard plan required
+		os.Getenv("OVH_CLOUD_PROJECT_KUBE_VERSION_TEST"),
+		rand.IntN(4092)+1,
+	)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloud(t)
+			testAccCheckCloudProjectExists(t)
+			testAccPreCheckKubernetes(t)
+		},
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "disable_public_networking", "true"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "private_network_configuration.*", map[string]string{
+						"use_user_gateway": "true",
+					}),
+					resource.TestCheckResourceAttr("data.ovh_cloud_project_kube.cluster", "disable_public_networking", "true"),
+					resource.TestCheckTypeSetElemNestedAttrs("data.ovh_cloud_project_kube.cluster", "private_network_configuration.*", map[string]string{
+						"use_user_gateway": "true",
+					}),
+				),
+			},
+			{
+				// Idempotency check: re-plan with the same configuration, expect no changes
+				Config: config,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}

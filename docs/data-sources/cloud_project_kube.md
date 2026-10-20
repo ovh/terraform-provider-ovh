@@ -46,6 +46,11 @@ The following attributes are exported:
 * `version` - Kubernetes version of the managed kubernetes cluster.
 * `plan` - Plan of the managed kubernetes cluster.
 * `private_network_id` - OpenStack private network (or vrack) ID to use.
+* `disable_public_networking` - True if public connectivity is disabled. Only available on the `standard` plan.
+* `private_network_configuration` - The private network configuration.
+  * `default_vrack_gateway` - If defined, all egress traffic is routed towards this IP address, which belongs to the private network. Empty string means disabled.
+  * `private_network_routing_as_default` - True if routing defaults to using the nodes' private interface, instead of their public interface.
+  * `use_user_gateway` - True if the prerequisite check for a router/gateway on the OpenStack subnet/network is skipped. Only available on the `standard` plan, with `disable_public_networking` set to `true`.
 * `load_balancers_subnet_id` - Openstack private network (or vRack) ID to use for load balancers.
 * `nodes_subnet_id` - Openstack private network (or vRack) ID to use for nodes.
 * `control_plane_is_up_to_date` - True if control-plane is up-to-date.
