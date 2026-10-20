@@ -1,4 +1,4 @@
-## 2.23.0 (October 20, 2026)
+## 2.23.0 (October 23, 2026)
 
 🎉 Features:
 
@@ -15,13 +15,17 @@
 * `d/ovh_cloud_project_database_users`: Add the computed `users` list with the `id`, `name`, `created_at` and `status` of each user. `user_ids` is kept ([#1476](https://github.com/ovh/terraform-provider-ovh/pull/1476))
 * `d/ovh_cloud_project_database_user`, `d/ovh_cloud_project_database_clickhouse_user`, `d/ovh_cloud_project_database_mongodb_user`, `d/ovh_cloud_project_database_opensearch_user`, `d/ovh_cloud_project_database_postgresql_user`, `d/ovh_cloud_project_database_valkey_user`: Allow looking up a user by `id` instead of `name` ([#1477](https://github.com/ovh/terraform-provider-ovh/pull/1477))
 * `r/ovh_cloud_storage_block_volume_snapshot`, `d/ovh_cloud_storage_block_volume_snapshot`, `d/ovh_cloud_storage_block_volume_snapshots`: Add the computed snapshot status (`current_state.status` on the resource, `status` on the data sources), so a snapshot stuck in `ERROR_DELETING` no longer looks healthy ([#1485](https://github.com/ovh/terraform-provider-ovh/pull/1485))
+* `r/ovh_cloud_project_kube`, `d/ovh_cloud_project_kube`: Add `disable_public_networking` and `private_network_configuration.use_user_gateway`, to create a `standard` cluster without public networking that uses its own gateway. Both can only be set at creation: changing them replaces the cluster. `default_vrack_gateway` and `private_network_routing_as_default` are now optional ([#1511](https://github.com/ovh/terraform-provider-ovh/pull/1511))
 * `r/ovh_dbaas_logs_input`: Changing the `configuration` now updates the input in place and restarts it, instead of replacing it with a new ID, hostname and certificate. Switching between `logstash` and `flowgger` still replaces it ([#1487](https://github.com/ovh/terraform-provider-ovh/pull/1487))
 * `r/ovh_dedicated_server_reinstall_task`: Add `customizations.app_to_install`, to install an application on top of the OS with an OS that supports it, like `ubuntu2404-withapp_64` ([#1412](https://github.com/ovh/terraform-provider-ovh/pull/1412))
+* `r/ovh_ip_firewall_rule`, `d/ovh_ip_firewall_rule`: Add `destination_port_range` and `source_port_range` (`from`, `to`). A rule changed outside of Terraform now shows as drift. Rules with a range that were created outside of Terraform and imported need the matching block in their configuration to avoid a replacement ([#1512](https://github.com/ovh/terraform-provider-ovh/pull/1512))
 
 🐜 Bug fixes:
 
 * `r/ovh_cloud_project_containerregistry_ip_restrictions_management`, `r/ovh_cloud_project_containerregistry_ip_restrictions_registry`: Wait for the registry to be `READY` after each update, instead of failing with a 409 when the registry is still `UPDATING` ([#1489](https://github.com/ovh/terraform-provider-ovh/pull/1489))
-* `r/ovh_cloud_storage_object_bucket`: Removing tags now deletes them on the bucket. Before, the API kept the stored tags ([#1486](https://github.com/ovh/terraform-provider-ovh/pull/1486))
+* `r/ovh_cloud_key_manager_secret`: `secret_type`, `algorithm` and `mode` in lower case are now refused at validation, instead of failing with `Provider produced invalid plan` ([#1492](https://github.com/ovh/terraform-provider-ovh/pull/1492))
+* `r/ovh_cloud_project_database`: `advanced_configuration` only keeps the keys set in the configuration, so the default values returned by the API no longer show as a change on every plan. The full advanced configuration can be read with `d/ovh_cloud_project_database` ([#1364](https://github.com/ovh/terraform-provider-ovh/pull/1364))
+* `r/ovh_cloud_storage_object_bucket`: Removing tags now deletes them on the bucket. Before, the API kept the stored tags ([#1486](https://github.com/ovh/terraform-provider-ovh/pull/1486), [#1509](https://github.com/ovh/terraform-provider-ovh/pull/1509))
 * `r/ovh_vrack_ip`: New resources get the same ID format as imported ones, `vrack_<service_name>-block_<block>`. Existing resources are migrated to this ID on their next refresh ([#1421](https://github.com/ovh/terraform-provider-ovh/pull/1421), [#1470](https://github.com/ovh/terraform-provider-ovh/pull/1470))
 * `r/ovh_vrack_dedicated_server_interface`: Imported resources get the same ID format as created ones, `vrack_<service_name>-dedicatedserverinterface_<interface_id>`. Resources imported with the previous format are migrated to this ID on their next refresh ([#1468](https://github.com/ovh/terraform-provider-ovh/pull/1468))
 * `r/ovh_cloud_project_database`: When the creation fails with `NoMatchingCompute`, the error now names the first value of the configuration (engine, version, plan, region, flavor, network, number of nodes or disk size) that matches no available configuration, with the available values ([#1483](https://github.com/ovh/terraform-provider-ovh/pull/1483))
@@ -33,10 +37,13 @@
 
 * `r/ovh_domain_zone`: Clarify the DNS zone templates, and document `stub` as an empty zone containing only NS records ([#1464](https://github.com/ovh/terraform-provider-ovh/pull/1464))
 * `r/ovh_cloud_project_database`: Explain that the number of `nodes` blocks sets the number of nodes, list the capabilities guide of each engine, and update the examples to plans, flavors and versions that are still available ([#1498](https://github.com/ovh/terraform-provider-ovh/pull/1498))
+* Examples: Use the `GRA11` and `BHS5` regions instead of `GRA1` and `BHS1`, which are no longer Public Cloud regions ([#1505](https://github.com/ovh/terraform-provider-ovh/pull/1505))
+* `README.md`, `CONTRIBUTING.md`: Update the requirements (Terraform 1.0+), the build steps and the links ([#1504](https://github.com/ovh/terraform-provider-ovh/pull/1504))
 
 ⚙️ General:
 
 * Bump Go to 1.27.2 and dependencies ([#1481](https://github.com/ovh/terraform-provider-ovh/pull/1481))
+* Enable Dependabot version updates for Go modules and GitHub Actions ([#1501](https://github.com/ovh/terraform-provider-ovh/pull/1501), [#1502](https://github.com/ovh/terraform-provider-ovh/pull/1502))
 
 ❤️ Thanks for your contributions ❤️
 
