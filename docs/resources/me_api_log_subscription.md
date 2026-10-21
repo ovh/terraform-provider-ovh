@@ -18,7 +18,7 @@ resource "ovh_dbaas_logs_output_graylog_stream" "activity" {
 }
 
 resource "ovh_me_api_log_subscription" "activity" {
-  kind      = "default"
+  kind      = "access"
   stream_id = ovh_dbaas_logs_output_graylog_stream.activity.stream_id
 }
 ```
@@ -30,7 +30,7 @@ resource "ovh_me_api_log_subscription" "activity" {
 
 ### Required
 
-- `kind` (String) Log kind name to subscribe to, such as `default`. The kinds available are listed by `GET /me/api/log/kind`
+- `kind` (String) Log kind name to subscribe to. The kinds available are listed by `GET /me/api/log/kind`
 - `stream_id` (String) Identifier of the Logs Data Platform stream the logs are forwarded to
 
 ### Read-Only

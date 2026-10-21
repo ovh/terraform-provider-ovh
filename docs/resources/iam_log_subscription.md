@@ -30,7 +30,7 @@ resource "ovh_iam_log_subscription" "access_policy" {
 
 ### Required
 
-- `kind` (String) Log kind name to subscribe to, such as `default`. The kinds available are listed by `GET /v2/iam/log/kind`
+- `kind` (String) Log kind name to subscribe to. The kinds available are listed by `GET /v2/iam/log/kind`
 - `stream_id` (String) Identifier of the Logs Data Platform stream the logs are forwarded to
 
 ### Read-Only

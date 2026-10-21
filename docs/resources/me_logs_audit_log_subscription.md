@@ -30,7 +30,7 @@ resource "ovh_me_logs_audit_log_subscription" "audit" {
 
 ### Required
 
-- `kind` (String) Log kind name to subscribe to, such as `default`. The kinds available are listed by `GET /me/logs/audit/log/kind`
+- `kind` (String) Log kind name to subscribe to. The kinds available are listed by `GET /me/logs/audit/log/kind`
 - `stream_id` (String) Identifier of the Logs Data Platform stream the logs are forwarded to
 
 ### Read-Only

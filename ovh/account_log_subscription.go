@@ -166,7 +166,7 @@ func (r *accountLogSubscriptionResource) Schema(_ context.Context, _ resource.Sc
 				CustomType:          ovhtypes.TfStringType{},
 				Required:            true,
 				Description:         fmt.Sprintf("Log kind name to subscribe to. The kinds available are listed by GET %s", r.kindEndpoint()),
-				MarkdownDescription: fmt.Sprintf("Log kind name to subscribe to, such as `default`. The kinds available are listed by `GET %s`", r.kindEndpoint()),
+				MarkdownDescription: fmt.Sprintf("Log kind name to subscribe to. The kinds available are listed by `GET %s`", r.kindEndpoint()),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},

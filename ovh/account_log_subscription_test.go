@@ -347,7 +347,7 @@ resource "ovh_dbaas_logs_output_graylog_stream" "stream" {
 }
 
 resource "%s" "sub" {
-  kind      = "default"
+  kind      = "%s"
   stream_id = ovh_dbaas_logs_output_graylog_stream.stream.stream_id
 }
 `
@@ -359,7 +359,11 @@ func testAccAccountLogSubscription(t *testing.T, resourceType string) {
 	streamTitle := acctest.RandomWithPrefix(test_prefix)
 	resourceName := resourceType + ".sub"
 
-	config := fmt.Sprintf(testAccAccountLogSubscriptionConfig, ldpServiceName, streamTitle, streamTitle, resourceType)
+	kind := "default"
+	if resourceType == "ovh_me_api_log_subscription" {
+		kind = "access"
+	}
+	config := fmt.Sprintf(testAccAccountLogSubscriptionConfig, ldpServiceName, streamTitle, streamTitle, resourceType, kind)
 
 	acc.Test(t, acc.TestCase{
 		PreCheck:                 func() { testAccPreCheckDbaasLogs(t) },
@@ -369,7 +373,7 @@ func testAccAccountLogSubscription(t *testing.T, resourceType string) {
 				Config: config,
 				Check: acc.ComposeTestCheckFunc(
 					acc.TestCheckResourceAttrSet(resourceName, "id"),
-					acc.TestCheckResourceAttr(resourceName, "kind", "default"),
+					acc.TestCheckResourceAttr(resourceName, "kind", kind),
 					acc.TestCheckResourceAttrPair(resourceName, "stream_id", "ovh_dbaas_logs_output_graylog_stream.stream", "stream_id"),
 					acc.TestCheckResourceAttr(resourceName, "ldp_service_name", ldpServiceName),
 					acc.TestCheckResourceAttrSet(resourceName, "resource_name"),
