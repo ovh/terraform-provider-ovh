@@ -6,6 +6,9 @@
 * New resource: `ovh_dedicated_ceph_user` ([#1463](https://github.com/ovh/terraform-provider-ovh/pull/1463))
 * New resource: `ovh_email_domain_dkim` ([#1413](https://github.com/ovh/terraform-provider-ovh/pull/1413))
 * New resource: `ovh_email_domain_redirection` ([#1417](https://github.com/ovh/terraform-provider-ovh/pull/1417))
+* New resource: `ovh_iam_log_subscription`, to forward the access policy logs of the account to a Logs Data Platform stream ([#1514](https://github.com/ovh/terraform-provider-ovh/pull/1514))
+* New resource: `ovh_me_api_log_subscription`, to forward the activity logs of the account to a Logs Data Platform stream ([#1514](https://github.com/ovh/terraform-provider-ovh/pull/1514))
+* New resource: `ovh_me_logs_audit_log_subscription`, to forward the audit logs of the account to a Logs Data Platform stream ([#1514](https://github.com/ovh/terraform-provider-ovh/pull/1514))
 
 * New datasource: `ovh_cloud_project_database_mongodb_users` ([#1476](https://github.com/ovh/terraform-provider-ovh/pull/1476))
 
@@ -42,7 +45,7 @@
 
 ⚙️ General:
 
-* Bump Go to 1.27.2 and dependencies ([#1481](https://github.com/ovh/terraform-provider-ovh/pull/1481))
+* Bump Go to 1.27.3 and dependencies ([#1481](https://github.com/ovh/terraform-provider-ovh/pull/1481), [#1516](https://github.com/ovh/terraform-provider-ovh/pull/1516))
 * Enable Dependabot version updates for Go modules and GitHub Actions ([#1501](https://github.com/ovh/terraform-provider-ovh/pull/1501), [#1502](https://github.com/ovh/terraform-provider-ovh/pull/1502))
 
 ❤️ Thanks for your contributions ❤️
