@@ -406,6 +406,22 @@ resource "ovh_cloud_instance" "shelved" {
     { auto_assign_public_ip = true },
   ]
 }
+
+# Memory saved to disk and the VM stopped, resources kept on the hypervisor.
+# Switching power_state back to ACTIVE resumes it. PAUSED works the same way
+# but keeps the memory state in the host's RAM.
+resource "ovh_cloud_instance" "suspended" {
+  service_name = "<Public cloud project id>"
+  region       = "GRA11"
+  name         = "my-suspended-instance"
+  flavor_id    = "<flavor id>"
+  image_id     = "<image id>"
+  power_state  = "SUSPENDED"
+
+  networks = [
+    { auto_assign_public_ip = true },
+  ]
+}
 ```
 
 ### Joining an instance group
@@ -449,7 +465,7 @@ The following arguments are supported:
 * `ssh_key_name` - (Optional) Name of the SSH key injected at boot (immutable). Point it at the `name` of an [`ovh_cloud_ssh_key`](cloud_ssh_key.md). **Changing this value recreates the resource.**
 * `group_id` - (Optional) ID of the placement group the instance belongs to (immutable). This is the only way to make an instance a member of an [`ovh_cloud_instance_group`](cloud_instance_group.md). **Changing this value recreates the resource.**
 * `image_id` - (Optional) Image ID to boot from. Omit for a boot-from-volume instance. **WARNING**: changing it rebuilds the instance and **wipes the root disk**.
-* `power_state` - (Optional) Desired power state: `ACTIVE`, `SHUTOFF` or `SHELVED`. When omitted, the API applies `ACTIVE` server-side and echoes it back; the provider declares no default of its own.
+* `power_state` - (Optional) Desired power state: `ACTIVE`, `SHUTOFF`, `SHELVED`, `PAUSED` or `SUSPENDED`. Some moves cannot be made in one step, for example `PAUSED` to `SHUTOFF`: OpenStack only pauses or suspends an `ACTIVE` instance, and only stops one that is `ACTIVE` or in rescue. The API rejects such a move before changing anything, and `terraform apply` fails with an error that gives the route: apply `ACTIVE` first, then the target state. When omitted, the API applies `ACTIVE` server-side and echoes it back; the provider declares no default of its own.
 * `user_data` - (Optional, Sensitive) Cloud-init user data injected at boot, base64-encoded (standard encoding, 65535 bytes max). Pass it through `base64encode()`, for example `base64encode(file("cloud-init.yaml"))`. **Write-only**: the API accepts it but never returns it, so Terraform state holds the only copy and a change made outside Terraform stays invisible. **WARNING**: removing the argument and setting it to `""` are **not** the same thing — `""` is the destructive one:
   * changed to a different non-empty value → the API **reinstalls the instance** (rebuilt on its current image, **root disk wiped**; instance id, ports and IPs survive, it is applied in place, not as a replacement);
   * set to `""` while state holds a value → explicit clear, the instance is **reinstalled** as above (root disk wiped);
