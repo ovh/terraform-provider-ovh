@@ -258,13 +258,13 @@ func (r *ipFirewallRuleResource) ValidateConfig(ctx context.Context, req resourc
 	if !protocol.IsNull() && !protocol.IsUnknown() && protocol.ValueString() != "tcp" {
 		var tcpOption ovhtypes.TfStringValue
 		resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("tcp_option"), &tcpOption)...)
-		if !tcpOption.IsNull() {
+		if !tcpOption.IsNull() && !tcpOption.IsUnknown() {
 			resp.Diagnostics.AddAttributeError(path.Root("tcp_option"), "Invalid protocol for tcp_option", "tcp_option can only be used with the tcp protocol.")
 		}
 
 		var fragments ovhtypes.TfBoolValue
 		resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("fragments"), &fragments)...)
-		if !fragments.IsNull() {
+		if !fragments.IsNull() && !fragments.IsUnknown() {
 			resp.Diagnostics.AddAttributeError(path.Root("fragments"), "Invalid protocol for fragments", "fragments can only be used with the tcp protocol.")
 		}
 	}
