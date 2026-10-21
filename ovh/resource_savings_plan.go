@@ -7,8 +7,10 @@ import (
 	"net/url"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/peterhellberg/duration"
 )
 
 var validSavingsPlanFlavors = []string{
@@ -47,6 +49,11 @@ func resourceSavingsPlan() *schema.Resource {
 					}
 					return nil, nil
 				},
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					oldFlavor, _ := normalizeSavingsPlanFlavor(old)
+					newFlavor, _ := normalizeSavingsPlanFlavor(new)
+					return oldFlavor == newFlavor
+				},
 			},
 			"deployment_type": {
 				Type:        schema.TypeString,
@@ -63,9 +70,12 @@ func resourceSavingsPlan() *schema.Resource {
 			},
 			"period": {
 				Type:        schema.TypeString,
-				Description: "Periodicity of the Savings Plan",
+				Description: "Periodicity of the Savings Plan (P1Y or P3Y)",
 				ForceNew:    true,
 				Required:    true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return equalSavingsPlanPeriods(old, new)
+				},
 			},
 			"size": {
 				Type:        schema.TypeInt,
@@ -141,14 +151,47 @@ func resourceSavingsPlanImport(d *schema.ResourceData, meta any) ([]*schema.Reso
 	if err != nil {
 		return nil, err
 	}
+	d.Set("service_name", serviceName)
 	d.Set("service_id", serviceId)
 	d.SetId(savingsPlanID)
 
 	return []*schema.ResourceData{d}, nil
 }
 
+// normalizeSavingsPlanFlavor converts a flavor, as given in the configuration or
+// returned by the API (e.g. "B3-8 3AZ", "Rancher Standard"), to the form accepted
+// in the configuration (e.g. "b3-8", "rancher_standard") and its deployment type.
+func normalizeSavingsPlanFlavor(flavor string) (string, string) {
+	flavor = strings.ToLower(strings.TrimSpace(flavor))
+
+	deploymentType := "1AZ"
+	if base, ok := strings.CutSuffix(flavor, " 3az"); ok {
+		flavor = base
+		deploymentType = "3AZ"
+	}
+
+	flavor = strings.ReplaceAll(flavor, " ", "_")
+	if flavor == "rancher" {
+		flavor = "rancher_standard"
+	}
+
+	return flavor, deploymentType
+}
+
+// equalSavingsPlanPeriods returns whether two ISO 8601 periods last the same time, e.g. "P1Y" and "P12M".
+// The durations are compared rounded to the hour, as the library counts a month as a fraction of a year.
+func equalSavingsPlanPeriods(a, b string) bool {
+	if a == b {
+		return true
+	}
+
+	durationA, errA := duration.Parse(strings.ToUpper(a))
+	durationB, errB := duration.Parse(strings.ToUpper(b))
+	return errA == nil && errB == nil && durationA.Round(time.Hour) == durationB.Round(time.Hour)
+}
+
 func fetchSavingsPlanOffers(config *Config, d *schema.ResourceData, serviceID int) ([]savingsPlansSubscribable, error) {
-	flavor := strings.ReplaceAll(d.Get("flavor").(string), "_", " ")
+	flavor := strings.ReplaceAll(strings.ToLower(d.Get("flavor").(string)), "_", " ")
 	if flavor == "rancher" {
 		flavor = "rancher standard"
 	}
@@ -233,7 +276,7 @@ func resourceSavingsPlanCreate(d *schema.ResourceData, meta any) error {
 			return fmt.Errorf("error calling POST %s:\n\t %q", endpoint, err)
 		}
 
-		if d.Get("period").(string) == resp.Period &&
+		if equalSavingsPlanPeriods(d.Get("period").(string), resp.Period) &&
 			d.Get("size").(int) == resp.Size {
 			// We found the right savings plan, execute subscription
 			endpoint = fmt.Sprintf("/services/%d/savingsPlans/subscribe/execute", serviceId)
@@ -277,6 +320,23 @@ func resourceSavingsPlanRead(d *schema.ResourceData, meta any) error {
 		return fmt.Errorf("error calling GET %s:\n\t %q", endpoint, err)
 	}
 
+	// Keep the flavor, deployment type and period from the state when they are
+	// equivalent to the API ones, so that existing states (e.g. "Rancher" or "P12M")
+	// don't plan a replacement, which would subscribe a new Savings Plan.
+	flavor, deploymentType := normalizeSavingsPlanFlavor(resp.Flavor)
+	if stateFlavor, _ := normalizeSavingsPlanFlavor(d.Get("flavor").(string)); stateFlavor != flavor {
+		d.Set("flavor", flavor)
+	}
+	if !strings.EqualFold(d.Get("deployment_type").(string), deploymentType) {
+		d.Set("deployment_type", deploymentType)
+	}
+
+	if !equalSavingsPlanPeriods(d.Get("period").(string), resp.Period) {
+		d.Set("period", resp.Period)
+	}
+
+	d.Set("display_name", resp.DisplayName)
+	d.Set("size", resp.Size)
 	d.Set("status", resp.Status)
 	d.Set("start_date", resp.StartDate)
 	d.Set("end_date", resp.EndDate)

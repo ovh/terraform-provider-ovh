@@ -6,15 +6,17 @@ subcategory : "Savings Plan"
 
 Create and manage an OVHcloud Savings Plan
 
+~> **WARNING** A Savings Plan is a commitment for its whole period and cannot be deleted. Removing it from your configuration or destroying it only removes it from the Terraform state. Changing `service_name`, `flavor` or `period` subscribes a new Savings Plan, and the current one keeps running until the end of its period.
+
 ## Example Usage
 
 ```terraform
 resource "ovh_savings_plan" "plan" {
   service_name = "<public cloud project ID>"
   flavor = "Rancher"
-  period = "P1M"
+  period = "P1Y"
   size = 2
-  display_name = "one_month_rancher_savings_plan"
+  display_name = "one_year_rancher_savings_plan"
   auto_renewal = true
 }
 ```
@@ -25,7 +27,7 @@ The following arguments are supported:
 
 * `service_name` - (Required) ID of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 * `flavor` - (Required) Savings Plan flavor. The list of available flavors can be retrieved in the [next section](#available-flavors).
-* `period` - (Required) Periodicity of the Savings Plan
+* `period` - (Required) Periodicity of the Savings Plan: `P1Y` (one year) or `P3Y` (three years)
 * `size` - (Required) Size of the Savings Plan
 * `display_name` - (Required) Custom display name, used in invoices
 * `auto_renewal` - Whether Savings Plan should be renewed at the end of the period (defaults to false)
@@ -55,7 +57,7 @@ The following attributes are exported:
 * `status` - Status of the Savings Plan
 * `start_date` - Start date of the Savings Plan
 * `end_date` - End date of the Savings Plan
-* `period_end_action` - Action performed when reaching the end of the period (controles by the `auto_renewal` parameter)
+* `period_end_action` - Action performed when reaching the end of the period (controlled by the `auto_renewal` parameter)
 * `period_start_date` - Start date of the current period
 * `period_end_date` - End date of the current period
 
@@ -66,3 +68,5 @@ A savings plan can be imported using the following format: `service_name` and `i
 ```bash
 $ terraform import ovh_savings_plan.plan service_name/savings_plan_id
 ```
+
+After the import, set `flavor`, `deployment_type`, `period`, `size` and `display_name` in your configuration to the values of the imported Savings Plan, as shown by `terraform state show`, so that Terraform doesn't plan to replace it.
