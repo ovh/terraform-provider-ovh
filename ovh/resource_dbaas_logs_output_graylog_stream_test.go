@@ -18,7 +18,12 @@ import (
 func init() {
 	resource.AddTestSweepers("ovh_dbaas_logs_output_graylog_stream", &resource.Sweeper{
 		Name: "ovh_dbaas_logs_output_graylog_stream",
-		F:    testSweepDbaasOutputGraylogStream,
+		Dependencies: []string{
+			"ovh_iam_log_subscription",
+			"ovh_me_api_log_subscription",
+			"ovh_me_logs_audit_log_subscription",
+		},
+		F: testSweepDbaasOutputGraylogStream,
 	})
 }
 

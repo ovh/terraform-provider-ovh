@@ -1,0 +1,29 @@
+---
+subcategory : "Account Management (IAM)"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_me_logs_audit_log_subscription
+
+Forwards the audit logs of the OVHcloud account to a Logs Data Platform stream.
+
+The account audit logs record the security related actions on the account, such as logins and password changes. See [Generating OVHcloud account logs with Logs Data Platform](https://docs.ovhcloud.com/en/guides/manage-and-operate/iam/logs-forwarding) for the content of the logs.
+
+## Example Usage
+
+{{tffile "examples/resources/me_logs_audit_log_subscription/example_1.tf"}}
+
+~> **Note:** The subscription is created and deleted asynchronously through a Logs Data Platform operation, so the APIv6 token used by the provider must have `GET` access on `/dbaas/logs/*/operation/*` in its token ACL. When the provider authenticates as an IAM user or a service account, its policies must allow `account:apiovh:me/logs/audit/log/subscription/create`, `/get` and `/delete`, and `ldp:apiovh:output/graylog/stream/forwardTo` on the Logs Data Platform service holding the stream.
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Import
+
+A subscription can be imported using its `id`, which `GET /me/logs/audit/log/subscription` lists:
+
+```bash
+$ terraform import ovh_me_logs_audit_log_subscription.audit subscription_id
+```
