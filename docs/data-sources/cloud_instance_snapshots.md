@@ -43,3 +43,4 @@ The following attributes are exported:
   * `visibility` - Image visibility.
   * `os_type` - Operating system type of the snapshot (`LINUX`, `WINDOWS` or `BAREMETAL_LINUX`), inherited from the image the source instance was created from.
   * `resource_status` - Snapshot readiness in the system (`CREATING`, `DELETING`, `ERROR`, `OUT_OF_SYNC`, `READY`).
+  * `can_be_deleted` - Whether the project can delete the snapshot: `false` when it is owned by another project or protected.
