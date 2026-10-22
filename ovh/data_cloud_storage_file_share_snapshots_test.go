@@ -50,7 +50,14 @@ data "ovh_cloud_storage_file_share_snapshots" "snapshots" {
 
   depends_on = [ovh_cloud_storage_file_share_snapshot.snapshot]
 }
-`, serviceName, networkName, region, serviceName, shareName, region, serviceName, snapshotName, serviceName)
+
+data "ovh_cloud_storage_file_share_snapshots" "share_snapshots" {
+  service_name = "%s"
+  share_id     = ovh_cloud_storage_file_share.share.id
+
+  depends_on = [ovh_cloud_storage_file_share_snapshot.snapshot]
+}
+`, serviceName, networkName, region, serviceName, shareName, region, serviceName, snapshotName, serviceName, serviceName)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -68,6 +75,15 @@ data "ovh_cloud_storage_file_share_snapshots" "snapshots" {
 					resource.TestCheckResourceAttrSet("data.ovh_cloud_storage_file_share_snapshots.snapshots", "share_snapshots.0.name"),
 					resource.TestCheckResourceAttrSet("data.ovh_cloud_storage_file_share_snapshots.snapshots", "share_snapshots.0.share_id"),
 					resource.TestCheckResourceAttrSet("data.ovh_cloud_storage_file_share_snapshots.snapshots", "share_snapshots.0.current_state.size"),
+					resource.TestCheckResourceAttr("data.ovh_cloud_storage_file_share_snapshots.share_snapshots", "share_snapshots.#", "1"),
+					resource.TestCheckResourceAttrPair(
+						"data.ovh_cloud_storage_file_share_snapshots.share_snapshots", "share_snapshots.0.id",
+						"ovh_cloud_storage_file_share_snapshot.snapshot", "id",
+					),
+					resource.TestCheckResourceAttrPair(
+						"data.ovh_cloud_storage_file_share_snapshots.share_snapshots", "share_snapshots.0.share_id",
+						"ovh_cloud_storage_file_share.share", "id",
+					),
 				),
 			},
 		},

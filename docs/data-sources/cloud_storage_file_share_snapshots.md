@@ -14,9 +14,19 @@ data "ovh_cloud_storage_file_share_snapshots" "snapshots" {
 }
 ```
 
+List only the snapshots of one file share:
+
+```hcl
+data "ovh_cloud_storage_file_share_snapshots" "share_snapshots" {
+  service_name = "<public cloud project ID>"
+  share_id     = "<file share ID>"
+}
+```
+
 ## Argument Reference
 
 * `service_name` - (Required) The id of the public cloud project.
+* `share_id` - (Optional) If set, only the snapshots of this file share are returned.
 
 ## Attributes Reference
 
