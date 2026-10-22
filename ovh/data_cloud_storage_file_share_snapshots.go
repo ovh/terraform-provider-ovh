@@ -54,6 +54,12 @@ func (d *cloudStorageFileShareSnapshotsDataSource) Schema(ctx context.Context, r
 				Description:         "Service name of the resource representing the id of the cloud project",
 				MarkdownDescription: "Service name of the resource representing the id of the cloud project",
 			},
+			"share_id": schema.StringAttribute{
+				CustomType:          ovhtypes.TfStringType{},
+				Optional:            true,
+				Description:         "If set, only the snapshots of this file share are returned",
+				MarkdownDescription: "If set, only the snapshots of this file share are returned",
+			},
 			"share_snapshots": schema.ListNestedAttribute{
 				Computed:            true,
 				Description:         "List of file storage snapshots",
@@ -69,6 +75,7 @@ func (d *cloudStorageFileShareSnapshotsDataSource) Schema(ctx context.Context, r
 // cloudStorageFileShareSnapshotsDataSourceModel is the Terraform state model for this data source.
 type cloudStorageFileShareSnapshotsDataSourceModel struct {
 	ServiceName    ovhtypes.TfStringValue `tfsdk:"service_name"`
+	ShareId        ovhtypes.TfStringValue `tfsdk:"share_id"`
 	ShareSnapshots types.List             `tfsdk:"share_snapshots"`
 }
 
@@ -96,6 +103,9 @@ func (d *cloudStorageFileShareSnapshotsDataSource) Read(ctx context.Context, req
 	}
 
 	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/storage/file/snapshot"
+	if !data.ShareId.IsNull() && data.ShareId.ValueString() != "" {
+		endpoint += "?shareId=" + url.QueryEscape(data.ShareId.ValueString())
+	}
 
 	var apiSnapshots []CloudStorageFileShareSnapshotAPIResponse
 	if err := d.config.OVHClient.Get(endpoint, &apiSnapshots); err != nil {
