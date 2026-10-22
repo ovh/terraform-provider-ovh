@@ -38,6 +38,7 @@ func CloudProjectVolumeResourceSchema(ctx context.Context) schema.Schema {
 			Description:         "Availability zone of the volume (required for volumes in a 3AZ region)",
 			MarkdownDescription: "Availability zone of the volume (required for volumes in a 3AZ region)",
 			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
 				stringplanmodifier.RequiresReplace(),
 			},
 		},
