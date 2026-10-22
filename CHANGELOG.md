@@ -21,6 +21,7 @@
 * `r/ovh_cloud_project_kube`, `d/ovh_cloud_project_kube`: Add `disable_public_networking` and `private_network_configuration.use_user_gateway`, to create a `standard` cluster without public networking that uses its own gateway. Both can only be set at creation: changing them replaces the cluster. `default_vrack_gateway` and `private_network_routing_as_default` are now optional ([#1511](https://github.com/ovh/terraform-provider-ovh/pull/1511))
 * `r/ovh_dbaas_logs_input`: Changing the `configuration` now updates the input in place and restarts it, instead of replacing it with a new ID, hostname and certificate. Switching between `logstash` and `flowgger` still replaces it ([#1487](https://github.com/ovh/terraform-provider-ovh/pull/1487))
 * `r/ovh_dedicated_server_reinstall_task`: Add `customizations.app_to_install`, to install an application on top of the OS with an OS that supports it, like `ubuntu2404-withapp_64` ([#1412](https://github.com/ovh/terraform-provider-ovh/pull/1412))
+* `r/ovh_dedicated_server_reinstall_task`: Add `storage.erase`. Set it to `false` on a disk group not used for the OS installation to keep its data ([#1409](https://github.com/ovh/terraform-provider-ovh/pull/1409))
 * `r/ovh_ip_firewall_rule`, `d/ovh_ip_firewall_rule`: Add `destination_port_range` and `source_port_range` (`from`, `to`). A rule changed outside of Terraform now shows as drift. Rules with a range that were created outside of Terraform and imported need the matching block in their configuration to avoid a replacement ([#1512](https://github.com/ovh/terraform-provider-ovh/pull/1512))
 
 🐜 Bug fixes:
@@ -33,6 +34,7 @@
 * `r/ovh_vrack_dedicated_server_interface`: Imported resources get the same ID format as created ones, `vrack_<service_name>-dedicatedserverinterface_<interface_id>`. Resources imported with the previous format are migrated to this ID on their next refresh ([#1468](https://github.com/ovh/terraform-provider-ovh/pull/1468))
 * `r/ovh_cloud_project_database`: When the creation fails with `NoMatchingCompute`, the error now names the first value of the configuration (engine, version, plan, region, flavor, network, number of nodes or disk size) that matches no available configuration, with the available values ([#1483](https://github.com/ovh/terraform-provider-ovh/pull/1483))
 * `r/ovh_domain_zone_dnssec`: Save the `status` read from the API, so a DNSSEC activation cancelled by the API shows up as drift ([#1480](https://github.com/ovh/terraform-provider-ovh/pull/1480))
+* `r/ovh_savings_plan`: Import now sets every argument, and a flavor or a period written differently from the API (`b3-8` / `B3-8`, `P12M` / `P1Y`) no longer plans a replacement, which subscribed a new Savings Plan. The documentation and examples now use the `P1Y` and `P3Y` periods, the only ones offered ([#1508](https://github.com/ovh/terraform-provider-ovh/pull/1508))
 * Resources created through the order workflow (e.g. `r/ovh_domain_zone`): Changing a `configuration` of `plan` or `plan_option`, like a DNS zone `template`, now replaces the resource instead of failing at apply ([#1479](https://github.com/ovh/terraform-provider-ovh/pull/1479))
 * `d/ovh_cloud_network_private_vrack`: Fix the `Value Conversion Error` that made every read of the data source fail ([#1499](https://github.com/ovh/terraform-provider-ovh/pull/1499))
 
@@ -40,6 +42,7 @@
 
 * `r/ovh_domain_zone`: Clarify the DNS zone templates, and document `stub` as an empty zone containing only NS records ([#1464](https://github.com/ovh/terraform-provider-ovh/pull/1464))
 * `r/ovh_cloud_project_database`: Explain that the number of `nodes` blocks sets the number of nodes, list the capabilities guide of each engine, and update the examples to plans, flavors and versions that are still available ([#1498](https://github.com/ovh/terraform-provider-ovh/pull/1498))
+* `r/ovh_cloud_project_storage`: Add a replication example ([#1517](https://github.com/ovh/terraform-provider-ovh/pull/1517))
 * Examples: Use the `GRA11` and `BHS5` regions instead of `GRA1` and `BHS1`, which are no longer Public Cloud regions ([#1505](https://github.com/ovh/terraform-provider-ovh/pull/1505))
 * `README.md`, `CONTRIBUTING.md`: Update the requirements (Terraform 1.0+), the build steps and the links ([#1504](https://github.com/ovh/terraform-provider-ovh/pull/1504))
 
