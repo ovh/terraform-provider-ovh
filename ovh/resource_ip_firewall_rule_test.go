@@ -191,6 +191,22 @@ func TestAccIPFirewallRule_portRange(t *testing.T) {
 			},
 			{
 				Config: testAccIPFirewallRulePortRangeConfig(ip, `
+					protocol   = "udp"
+					tcp_option = "established"
+				`),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile("Invalid protocol for tcp_option"),
+			},
+			{
+				Config: testAccIPFirewallRulePortRangeConfig(ip, `
+					protocol  = "icmp"
+					fragments = false
+				`),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile("Invalid protocol for fragments"),
+			},
+			{
+				Config: testAccIPFirewallRulePortRangeConfig(ip, `
 					protocol               = "tcp"
 					source_port            = 44
 					destination_port_range = { from = 1000, to = 2000 }

@@ -46,13 +46,13 @@ resource "ovh_ip_firewall_rule" "allow_app_ports" {
 * `destination_port_range` - Destination port range for your rule. Only with TCP/UDP protocol. Conflicts with `destination_port`
   * `from` - (Required) Start of the range, between 1 and 65535
   * `to` - (Required) End of the range, between 1 and 65535. Must be greater than `from`: for a single port, use `destination_port`
-* `fragments` - Fragments option
+* `fragments` - Fragments option. Only with TCP protocol
 * `source` - IPv4 CIDR notation (e.g., 192.0.2.0/24)
 * `source_port` - Source port for your rule. Only with TCP/UDP protocol. Conflicts with `source_port_range`
 * `source_port_range` - Source port range for your rule. Only with TCP/UDP protocol. Conflicts with `source_port`
   * `from` - (Required) Start of the range, between 1 and 65535
   * `to` - (Required) End of the range, between 1 and 65535. Must be greater than `from`: for a single port, use `source_port`
-* `tcp_option` - TCP option on your rule (syn|established)
+* `tcp_option` - TCP option on your rule (syn|established). Only with TCP protocol
 
 ## Attributes Reference
 
