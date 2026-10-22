@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 )
 
 func resourceCloudProjectKubeOIDC() *schema.Resource {
@@ -88,7 +89,7 @@ func resourceCloudProjectKubeOIDC() *schema.Resource {
 	}
 }
 
-func resourceCloudProjectKubeOIDCImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceCloudProjectKubeOIDCImportState(d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	givenId := d.Id()
 	log.Printf("[DEBUG] Importing cloud project kube OIDC %s", givenId)
 
@@ -107,7 +108,7 @@ func resourceCloudProjectKubeOIDCImportState(d *schema.ResourceData, meta interf
 	return results, nil
 }
 
-func resourceCloudProjectKubeOIDCCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectKubeOIDCCreate(d *schema.ResourceData, meta any) error {
 	config := meta.(*Config)
 
 	serviceName := d.Get(kubeServiceNameKey).(string)
@@ -135,7 +136,7 @@ func resourceCloudProjectKubeOIDCCreate(d *schema.ResourceData, meta interface{}
 	return resourceCloudProjectKubeOIDCRead(d, meta)
 }
 
-func resourceCloudProjectKubeOIDCRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectKubeOIDCRead(d *schema.ResourceData, meta any) error {
 	config := meta.(*Config)
 
 	serviceName := d.Get(kubeServiceNameKey).(string)
@@ -147,7 +148,7 @@ func resourceCloudProjectKubeOIDCRead(d *schema.ResourceData, meta interface{}) 
 	log.Printf("[DEBUG] Will read oidc from kube %s and project: %s", kubeID, serviceName)
 	err := config.OVHClient.Get(endpoint, res)
 	if err != nil {
-		return fmt.Errorf("calling get %s %w", endpoint, err)
+		return helpers.CheckDeleted(d, err, endpoint)
 	}
 	for k, v := range res.ToMap() {
 		if k != "id" {
@@ -161,7 +162,7 @@ func resourceCloudProjectKubeOIDCRead(d *schema.ResourceData, meta interface{}) 
 	return nil
 }
 
-func resourceCloudProjectKubeOIDCUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectKubeOIDCUpdate(d *schema.ResourceData, meta any) error {
 	config := meta.(*Config)
 
 	serviceName := d.Get(kubeServiceNameKey).(string)
@@ -187,7 +188,7 @@ func resourceCloudProjectKubeOIDCUpdate(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceCloudProjectKubeOIDCDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectKubeOIDCDelete(d *schema.ResourceData, meta any) error {
 	config := meta.(*Config)
 
 	serviceName := d.Get(kubeServiceNameKey).(string)
@@ -198,7 +199,7 @@ func resourceCloudProjectKubeOIDCDelete(d *schema.ResourceData, meta interface{}
 	log.Printf("[DEBUG] Will delete OIDC")
 	err := config.OVHClient.Delete(endpoint, nil)
 	if err != nil {
-		return fmt.Errorf("calling delete %s %w", endpoint, err)
+		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
 	log.Printf("[DEBUG] Waiting for kube %s to be READY", kubeID)

@@ -1,14 +1,17 @@
 package ovh
 
 import (
+	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
+	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 )
 
@@ -56,7 +59,7 @@ func resourceCloudProjectKubeIpRestrictions() *schema.Resource {
 	}
 }
 
-func resourceCloudProjectKubeIpRestrictionsImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceCloudProjectKubeIpRestrictionsImportState(d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	givenId := d.Id()
 	splitId := strings.SplitN(givenId, "/", 3)
 	if len(splitId) != 2 {
@@ -73,7 +76,7 @@ func resourceCloudProjectKubeIpRestrictionsImportState(d *schema.ResourceData, m
 	return results, nil
 }
 
-func resourceCloudProjectKubeIpRestrictionsRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectKubeIpRestrictionsRead(d *schema.ResourceData, meta any) error {
 	config := meta.(*Config)
 	serviceName := d.Get(kubeServiceNameKey).(string)
 	kubeId := d.Get(kubeKubeIdKey).(string)
@@ -93,7 +96,7 @@ func resourceCloudProjectKubeIpRestrictionsRead(d *schema.ResourceData, meta int
 	return nil
 }
 
-func resourceCloudProjectKubeIpRestrictionsCreateOrUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectKubeIpRestrictionsCreateOrUpdate(d *schema.ResourceData, meta any) error {
 	config := meta.(*Config)
 	serviceName := d.Get(kubeServiceNameKey).(string)
 	kubeId := d.Get(kubeKubeIdKey).(string)
@@ -111,14 +114,19 @@ func resourceCloudProjectKubeIpRestrictionsCreateOrUpdate(d *schema.ResourceData
 	return output
 }
 
-func resourceCloudProjectKubeIpRestrictionsDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudProjectKubeIpRestrictionsDelete(d *schema.ResourceData, meta any) error {
 	config := meta.(*Config)
 	serviceName := d.Get(kubeServiceNameKey).(string)
 	kubeId := d.Get(kubeKubeIdKey).(string)
 
-	return resourceCloudProjectKubeIpRestrictionsUpdate(d, config, serviceName, kubeId, &CloudProjectKubeIpRestrictionsCreateOrUpdateOpts{
+	err := resourceCloudProjectKubeIpRestrictionsUpdate(d, config, serviceName, kubeId, &CloudProjectKubeIpRestrictionsCreateOrUpdateOpts{
 		Ips: []string{},
 	})
+	// The kube cluster is not found, meaning it does not exist, so the deletion is not necessary.
+	if apierr, ok := errors.AsType[*ovh.APIError](err); ok && apierr.Code == http.StatusNotFound {
+		return nil
+	}
+	return err
 }
 
 func resourceCloudProjectKubeIpRestrictionsUpdate(d *schema.ResourceData, config *Config, serviceName string, kubeId string, params *CloudProjectKubeIpRestrictionsCreateOrUpdateOpts) error {
@@ -128,13 +136,13 @@ func resourceCloudProjectKubeIpRestrictionsUpdate(d *schema.ResourceData, config
 	log.Printf("[DEBUG] Will update iprestrictions: %+v", params)
 	err := config.OVHClient.Put(endpoint, params, &res)
 	if err != nil {
-		return fmt.Errorf("calling Put %s with params %s:\n\t %q", endpoint, params, err)
+		return fmt.Errorf("calling Put %s with params %s:\n\t %w", endpoint, params, err)
 	}
 
 	log.Printf("[DEBUG] Waiting for kube %s to be READY", kubeId)
 	err = waitForCloudProjectKubeReady(config.OVHClient, serviceName, kubeId, []string{"REDEPLOYING", "RESETTING"}, []string{"READY"}, d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
-		return fmt.Errorf("timeout while waiting kube %s to be READY: %v", kubeId, err)
+		return fmt.Errorf("timeout while waiting kube %s to be READY: %w", kubeId, err)
 	}
 	log.Printf("[DEBUG] kube %s is READY", kubeId)
 
