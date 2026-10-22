@@ -64,7 +64,9 @@ func CloudProjectSshKeyResourceSchema(ctx context.Context) schema.Schema {
 		"service_name": schema.StringAttribute{
 			CustomType: ovhtypes.TfStringType{},
 			Optional:   true,
+			Computed:   true,
 			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
 				stringplanmodifier.RequiresReplace(),
 			},
 			Description:         "Service name. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.",

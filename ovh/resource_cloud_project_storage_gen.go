@@ -335,8 +335,12 @@ func CloudProjectRegionStorageResourceSchema(ctx context.Context) schema.Schema 
 			MarkdownDescription: "Replication configuration",
 		},
 		"service_name": schema.StringAttribute{
-			CustomType:          ovhtypes.TfStringType{},
-			Optional:            true,
+			CustomType: ovhtypes.TfStringType{},
+			Optional:   true,
+			Computed:   true,
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 			Description:         "Service name. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.",
 			MarkdownDescription: "Service name. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.",
 		},
