@@ -93,7 +93,7 @@ func resourceCloudProjectKubeLogSubscription() *schema.Resource {
 	}
 }
 
-func resourceCloudProjectKubeLogSubscriptionImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceCloudProjectKubeLogSubscriptionImportState(d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	givenID := d.Id()
 	n := 3
 	splitID := strings.SplitN(givenID, "/", n)
@@ -114,7 +114,7 @@ func resourceCloudProjectKubeLogSubscriptionImportState(d *schema.ResourceData, 
 	return results, nil
 }
 
-func resourceCloudProjectKubeLogSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCloudProjectKubeLogSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get(kubeServiceNameKey).(string)
 	kubeID := d.Get(kubeKubeIdKey).(string)
@@ -152,7 +152,7 @@ func resourceCloudProjectKubeLogSubscriptionCreate(ctx context.Context, d *schem
 	return resourceCloudProjectKubeLogSubscriptionRead(ctx, d, meta)
 }
 
-func resourceCloudProjectKubeLogSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCloudProjectKubeLogSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get(kubeServiceNameKey).(string)
 	kubeID := d.Get(kubeKubeIdKey).(string)
@@ -179,7 +179,7 @@ func resourceCloudProjectKubeLogSubscriptionRead(ctx context.Context, d *schema.
 	return nil
 }
 
-func resourceCloudProjectKubeLogSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceCloudProjectKubeLogSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	config := meta.(*Config)
 	serviceName := d.Get(kubeServiceNameKey).(string)
 	kubeID := d.Get(kubeKubeIdKey).(string)
@@ -194,7 +194,7 @@ func resourceCloudProjectKubeLogSubscriptionDelete(ctx context.Context, d *schem
 	log.Printf("[DEBUG] Will delete kube log subscription %s from kube %s from project %s", subscriptionID, kubeID, serviceName)
 	err := config.OVHClient.DeleteWithContext(ctx, endpoint, nil)
 	if err != nil {
-		return diag.Errorf("calling DELETE %s:\n\t %q", endpoint, err)
+		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
 	log.Printf("[DEBUG] Deleted kube log subscription %s", subscriptionID)
