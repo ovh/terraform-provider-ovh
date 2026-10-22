@@ -75,17 +75,17 @@ resource "ovh_dedicated_server" "server" {
 
 * `ovh_subsidiary` - (Required) OVHcloud Subsidiary. Country of OVHcloud legal entity you'll be billed by. List of supported subsidiaries available on API at [/1.0/me.json under `models.nichandle.OvhSubsidiaryEnum`](https://eu.api.ovh.com/1.0/me.json)
 * `plan` - (Required) Product Plan to order
-  * `duration` - (Required) Duration
+  * `duration` - (Required) Duration of the subscription, in ISO 8601 format, e.g. `P1M` (one month) or `P1Y` (one year). It must come from the same price as `pricing_mode`, see [Choosing the plan, duration and pricing mode of an ordered product](../guides/order_plan).
   * `plan_code` - (Required) Plan code
-  * `pricing_mode` - (Required) Pricing mode identifier
+  * `pricing_mode` - (Required) Pricing mode, e.g. `default`. It must come from the same price as `duration`.
   * `catalog_name` - Catalog name
   * `configuration` - Representation of a configuration item to personalize product
     * `label` - (Required) Identifier of the resource
     * `value` - (Required) Path to the resource in API.OVH.COM
 * `plan_option` - Product Plan to order
-  * `duration` - (Required) duration
+  * `duration` - (Required) Duration of the subscription, in ISO 8601 format, e.g. `P1M` (one month) or `P1Y` (one year). It must come from the same price as `pricing_mode`, see [Choosing the plan, duration and pricing mode of an ordered product](../guides/order_plan).
   * `plan_code` - (Required) Plan code
-  * `pricing_mode` - (Required) Pricing model identifier
+  * `pricing_mode` - (Required) Pricing mode, e.g. `default`. It must come from the same price as `duration`.
   * `catalog_name` - Catalog name
   * `configuration` - Representation of a configuration item to personalize product
     * `label` - (Required) Identifier of the resource

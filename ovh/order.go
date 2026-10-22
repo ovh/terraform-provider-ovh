@@ -82,7 +82,7 @@ func genericOrderSchema(withOptions bool) map[string]*schema.Schema {
 				Schema: map[string]*schema.Schema{
 					"duration": {
 						Type:        schema.TypeString,
-						Description: "duration",
+						Description: "Duration of the subscription, in ISO 8601 format (e.g. P1M, P1Y)",
 						Required:    true,
 					},
 					"plan_code": {
@@ -92,7 +92,7 @@ func genericOrderSchema(withOptions bool) map[string]*schema.Schema {
 					},
 					"pricing_mode": {
 						Type:        schema.TypeString,
-						Description: "Pricing model identifier",
+						Description: "Pricing mode (e.g. default), from the same price as the duration",
 						Required:    true,
 					},
 					"catalog_name": {
@@ -136,7 +136,7 @@ func genericOrderSchema(withOptions bool) map[string]*schema.Schema {
 				Schema: map[string]*schema.Schema{
 					"duration": {
 						Type:        schema.TypeString,
-						Description: "duration",
+						Description: "Duration of the subscription, in ISO 8601 format (e.g. P1M, P1Y)",
 						Required:    true,
 					},
 					"plan_code": {
@@ -146,7 +146,7 @@ func genericOrderSchema(withOptions bool) map[string]*schema.Schema {
 					},
 					"pricing_mode": {
 						Type:        schema.TypeString,
-						Description: "Pricing model identifier",
+						Description: "Pricing mode (e.g. default), from the same price as the duration",
 						Required:    true,
 					},
 					"catalog_name": {

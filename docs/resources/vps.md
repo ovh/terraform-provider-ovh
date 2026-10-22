@@ -63,16 +63,16 @@ The following arguments are supported:
 * `netboot_mode` - VPS netboot mode (local┃rescue)
 * `ovh_subsidiary` - (Required) OVHcloud Subsidiary. Country of OVHcloud legal entity you'll be billed by. List of supported subsidiaries available on API at [/1.0/me.json](https://eu.api.ovh.com/console-preview/?section=%2Fme&branch=v1#get-/me)
 * `plan` - (Required) Product Plan to order
-  * `duration` - (Required) duration
+  * `duration` - (Required) Duration of the subscription, in ISO 8601 format, e.g. `P1M` (one month) or `P1Y` (one year). It must come from the same price as `pricing_mode`, see [Choosing the plan, duration and pricing mode of an ordered product](../guides/order_plan).
   * `plan_code` - (Required) Plan code
-  * `pricing_mode` - (Required) Pricing model identifier
+  * `pricing_mode` - (Required) Pricing mode, e.g. `default`. It must come from the same price as `duration`.
   * `configuration` - (Optional) Representation of a configuration item for personalizing product
     * `label` - (Required) Identifier of the resource
     * `value` - (Required) Path to the resource in api.ovh.com
 * `plan_option` - (Optional) Product Plan to order
-  * `duration` - (Required) duration
+  * `duration` - (Required) Duration of the subscription, in ISO 8601 format, e.g. `P1M` (one month) or `P1Y` (one year). It must come from the same price as `pricing_mode`, see [Choosing the plan, duration and pricing mode of an ordered product](../guides/order_plan).
   * `plan_code` - (Required) Plan code
-  * `pricing_mode` - (Required) Pricing model identifier
+  * `pricing_mode` - (Required) Pricing mode, e.g. `default`. It must come from the same price as `duration`.
   * `configuration` - (Optional) Representation of a configuration item for personalizing product. Available values can be retrieved on API using [catalog endpoint](https://eu.api.ovh.com/console/?section=%2Forder&branch=v1#get-/order/catalog/public/vps).
     * `label` - (Required) Identifier of the resource
     * `value` - (Required) Path to the resource in api.ovh.com
