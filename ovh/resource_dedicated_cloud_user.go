@@ -166,15 +166,12 @@ func (r *dedicatedCloudUserResource) Update(ctx context.Context, req resource.Up
 		return
 	}
 
-	if !planData.Password.IsUnknown() && !planData.Password.Equal(stateData.Password) {
+	if !planData.Password.IsUnknown() && !planData.Password.IsNull() && !planData.Password.Equal(stateData.Password) {
 		var passwordTask DedicatedCloudTask
 		passwordPayload := struct {
-			Password *string `json:"password,omitempty"`
-		}{}
-
-		if !planData.Password.IsNull() {
-			val := planData.Password.ValueString()
-			passwordPayload.Password = &val
+			Password string `json:"password"`
+		}{
+			Password: planData.Password.ValueString(),
 		}
 
 		passwordEndpoint := dedicatedCloudUserEndpoint(serviceName, userId) + "/changePassword"
