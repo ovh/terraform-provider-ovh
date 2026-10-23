@@ -2,6 +2,8 @@ package ovh
 
 import (
 	"context"
+	"encoding/json"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -63,6 +65,58 @@ func TestCloudLoadbalancerToCreate_NetworkWithoutIP(t *testing.T) {
 	payload := model.ToCreate()
 	if payload.TargetSpec.Network.IP != "" {
 		t.Fatalf("expected targetSpec.network.ip to be empty, got %q", payload.TargetSpec.Network.IP)
+	}
+}
+
+func TestCloudLoadbalancerToCreate_NetworkWithoutID(t *testing.T) {
+	model := CloudLoadbalancerModel{
+		Name:       ovhtypes.NewTfStringValue("test-lb"),
+		Region:     ovhtypes.NewTfStringValue("GRA11"),
+		FlavorName: ovhtypes.NewTfStringValue("SMALL"),
+		Network: types.ObjectValueMust(
+			LoadbalancerNetworkAttrTypes(),
+			map[string]attr.Value{
+				"id":        ovhtypes.TfStringValue{StringValue: types.StringUnknown()},
+				"subnet_id": ovhtypes.NewTfStringValue("subnet-id"),
+				"ip":        ovhtypes.TfStringValue{StringValue: types.StringNull()},
+			},
+		),
+	}
+
+	payloadJSON, err := json.Marshal(model.ToCreate())
+	if err != nil {
+		t.Fatalf("marshal create payload: %s", err)
+	}
+
+	expectedNetworkJSON := `"network":{"subnetId":"subnet-id"}`
+	if !strings.Contains(string(payloadJSON), expectedNetworkJSON) {
+		t.Fatalf("expected %s in the create payload, got %s", expectedNetworkJSON, payloadJSON)
+	}
+}
+
+func TestCloudLoadbalancerMergeWith_NetworkWithoutIDIsNull(t *testing.T) {
+	model := CloudLoadbalancerModel{
+		Network: types.ObjectValueMust(
+			LoadbalancerNetworkAttrTypes(),
+			map[string]attr.Value{
+				"id":        ovhtypes.TfStringValue{StringValue: types.StringUnknown()},
+				"subnet_id": ovhtypes.NewTfStringValue("subnet-id"),
+				"ip":        ovhtypes.TfStringValue{StringValue: types.StringNull()},
+			},
+		),
+	}
+
+	model.MergeWith(context.Background(), &CloudLoadbalancerAPIResponse{
+		Id: "lb-id",
+		TargetSpec: &CloudLoadbalancerAPITargetSpec{
+			Name:    "test-lb",
+			Network: &CloudLoadbalancerAPINetworkRef{SubnetID: "subnet-id"},
+		},
+	})
+
+	networkID := model.Network.Attributes()["id"]
+	if !networkID.IsNull() {
+		t.Fatalf("expected network.id to be null when the targetSpec carries none, got %s", networkID)
 	}
 }
 
@@ -197,23 +251,32 @@ func TestCloudLoadbalancerSchema_NetworkRequiresReplace(t *testing.T) {
 		t.Fatal("expected network to be required")
 	}
 
-	if len(networkAttr.PlanModifiers) == 0 {
-		t.Fatal("expected network object attribute to have a RequiresReplace plan modifier")
+	if len(networkAttr.PlanModifiers) != 0 {
+		t.Fatal("expected no object-level plan modifier on network: it would replace when network.id is removed")
 	}
 
 	id, ok := networkAttr.Attributes["id"].(schema.StringAttribute)
-	if !ok || !id.Required {
-		t.Fatal("expected network.id to be a required string attribute")
+	if !ok || !id.Optional || !id.Computed {
+		t.Fatal("expected network.id to be an optional, computed string attribute")
+	}
+	if len(id.PlanModifiers) != 2 {
+		t.Fatalf("expected network.id to carry UseStateForUnknown and RequiresReplace, got %d plan modifiers", len(id.PlanModifiers))
 	}
 
 	subnetId, ok := networkAttr.Attributes["subnet_id"].(schema.StringAttribute)
 	if !ok || !subnetId.Required {
 		t.Fatal("expected network.subnet_id to be a required string attribute")
 	}
+	if len(subnetId.PlanModifiers) != 1 {
+		t.Fatalf("expected network.subnet_id to carry RequiresReplace, got %d plan modifiers", len(subnetId.PlanModifiers))
+	}
 
 	ip, ok := networkAttr.Attributes["ip"].(schema.StringAttribute)
 	if !ok || !ip.Optional || ip.Computed {
 		t.Fatal("expected network.ip to be an optional, non-computed string attribute")
+	}
+	if len(ip.PlanModifiers) != 1 {
+		t.Fatalf("expected network.ip to carry RequiresReplace, got %d plan modifiers", len(ip.PlanModifiers))
 	}
 
 	currentState, ok := resp.Schema.Attributes["current_state"].(schema.SingleNestedAttribute)

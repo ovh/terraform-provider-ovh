@@ -226,10 +226,15 @@ func buildLoadbalancerListItemObject(ctx context.Context, response *CloudLoadbal
 				ipVal = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Network.IP)}
 			}
 
+			vipNetworkID := ovhtypes.TfStringValue{StringValue: types.StringNull()}
+			if response.TargetSpec.Network.ID != "" {
+				vipNetworkID = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Network.ID)}
+			}
+
 			networkVal, _ = types.ObjectValue(
 				LoadbalancerNetworkAttrTypes(),
 				map[string]attr.Value{
-					"id":        ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Network.ID)},
+					"id":        vipNetworkID,
 					"subnet_id": ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Network.SubnetID)},
 					"ip":        ipVal,
 				},
