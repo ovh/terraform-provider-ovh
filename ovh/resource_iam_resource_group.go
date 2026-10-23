@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 )
 
 func resourceIamResourceGroup() *schema.Resource {
@@ -75,9 +76,10 @@ func resourceIamResourceGroupRead(ctx context.Context, d *schema.ResourceData, m
 	id := d.Id()
 
 	var pol IamResourceGroup
-	err := config.OVHClient.GetWithContext(ctx, fmt.Sprintf("/v2/iam/resourceGroup/%s?details=true", url.PathEscape(id)), &pol)
+	endpoint := fmt.Sprintf("/v2/iam/resourceGroup/%s?details=true", url.PathEscape(id))
+	err := config.OVHClient.GetWithContext(ctx, endpoint, &pol)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
 	var urns []string
@@ -143,10 +145,10 @@ func resourceIamResourceGroupUpdate(ctx context.Context, d *schema.ResourceData,
 func resourceIamResourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	config := meta.(*Config)
 	id := d.Id()
-
-	err := config.OVHClient.DeleteWithContext(ctx, "/v2/iam/resourceGroup/"+url.PathEscape(id), nil)
+	endpoint := "/v2/iam/resourceGroup/" + url.PathEscape(id)
+	err := config.OVHClient.DeleteWithContext(ctx, endpoint, nil)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
 	return nil

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 )
 
 func resourceVrackVrackServices() *schema.Resource {
@@ -86,7 +87,7 @@ func resourceVrackVrackServicesRead(d *schema.ResourceData, meta interface{}) er
 	)
 
 	if err := config.OVHClient.Get(endpoint, nil); err != nil {
-		return fmt.Errorf("failed to get vrack-vrackServices link: %w", err)
+		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
 	return nil
@@ -105,7 +106,7 @@ func resourceVrackVrackServicesDelete(d *schema.ResourceData, meta interface{}) 
 	)
 
 	if err := config.OVHClient.Delete(endpoint, &task); err != nil {
-		return fmt.Errorf("error calling DELETE %s with %s/%s:\n\t %q", endpoint, serviceName, vrackServices, err)
+		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
 	if err := waitForVrackTask(&task, config.OVHClient); err != nil {
