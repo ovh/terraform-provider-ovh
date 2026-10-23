@@ -928,3 +928,97 @@ func TestCloudProjectKubeResponse_ToMap_NetworkingFlags(t *testing.T) {
 		})
 	}
 }
+
+func TestCloudProjectKube_KubeProxyModeDiff(t *testing.T) {
+	pnc := []interface{}{map[string]interface{}{kubeClusterUseUserGatewayKey: true}}
+
+	for _, tc := range []struct {
+		name        string
+		id          string
+		stateMode   string
+		plan        string
+		configMode  string
+		configPNC   []interface{}
+		wantErr     bool
+		requiresNew bool
+	}{
+		{name: "new standard cluster with kube_proxy_mode", plan: "standard", configMode: "iptables", wantErr: true},
+		{name: "new standard cluster with kube_proxy_mode and private network", plan: "standard", configMode: "iptables", configPNC: pnc, wantErr: true},
+		{name: "new standard cluster without kube_proxy_mode", plan: "standard"},
+		{name: "new free cluster with kube_proxy_mode", plan: "free", configMode: "ipvs"},
+		{name: "existing standard cluster with kube_proxy_mode", id: "kube-id", plan: "standard", configMode: "iptables"},
+		{name: "existing free cluster with same kube_proxy_mode", id: "kube-id", stateMode: "ipvs", plan: "free", configMode: "ipvs"},
+		{name: "existing free cluster with new kube_proxy_mode", id: "kube-id", stateMode: "ipvs", plan: "free", configMode: "iptables", requiresNew: true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			r := resourceCloudProjectKube()
+
+			var state *terraform.InstanceState
+			if tc.id != "" {
+				d := r.TestResourceData()
+				d.SetId(tc.id)
+				for k, v := range map[string]interface{}{
+					kubeServiceNameKey:      "xxx",
+					kubeRegionKey:           "GRA11",
+					kubeClusterPlanKey:      tc.plan,
+					kubeClusterProxyModeKey: tc.stateMode,
+				} {
+					if err := d.Set(k, v); err != nil {
+						t.Fatal(err)
+					}
+				}
+				state = d.State()
+			}
+
+			raw := map[string]interface{}{
+				kubeServiceNameKey: "xxx",
+				kubeRegionKey:      "GRA11",
+				kubeClusterPlanKey: tc.plan,
+			}
+			if tc.configMode != "" {
+				raw[kubeClusterProxyModeKey] = tc.configMode
+			}
+			if tc.configPNC != nil {
+				raw[kubeClusterPrivateNetworkConfigurationKey] = tc.configPNC
+			}
+
+			diff, err := r.Diff(context.Background(), state, terraform.NewResourceConfigRaw(raw), nil)
+			if (err != nil) != tc.wantErr {
+				t.Fatalf("Diff() error = %v, wantErr %v", err, tc.wantErr)
+			}
+			// A new cluster always requires a new resource, only check existing ones
+			if err != nil || tc.id == "" {
+				return
+			}
+			if diff.RequiresNew() != tc.requiresNew {
+				t.Errorf("RequiresNew() = %v, want %v (diff: %v)", diff.RequiresNew(), tc.requiresNew, diff)
+			}
+		})
+	}
+}
+
+func TestCloudProjectKubeResponse_ToMap_KubeProxyMode(t *testing.T) {
+	tests := []struct {
+		name string
+		body string
+		want interface{}
+	}{
+		{name: "free cluster keeps the API value", body: `{"version":"1.35.2-4","plan":"free","kubeProxyMode":"ipvs"}`, want: "ipvs"},
+		{name: "standard cluster is cleared", body: `{"version":"1.35.2-8","plan":"standard","kubeProxyMode":"ipvs"}`, want: nil},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			res := &CloudProjectKubeResponse{}
+			if err := json.Unmarshal([]byte(tt.body), res); err != nil {
+				t.Fatal(err)
+			}
+
+			obj := res.ToMap(nil)
+
+			if diff := cmp.Diff(tt.want, obj[kubeClusterProxyModeKey]); diff != "" {
+				t.Errorf("kube_proxy_mode mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}

@@ -434,6 +434,11 @@ func (v *CloudProjectKubeResponse) ToMap(d *schema.ResourceData) map[string]inte
 		obj[kubeVersionKey] = v.Version[:strings.LastIndex(versionPatch.String(), ".")]
 	}
 	obj[kubeClusterProxyModeKey] = v.KubeProxyMode
+	// Standard mode does not use kube_proxy, clear it from the state if it was previously set (<2.24)
+	if v.Plan == "standard" {
+		obj[kubeClusterProxyModeKey] = nil
+	}
+
 	obj[kubeClusterDisablePublicNetworkingKey] = v.DisablePublicNetworking
 
 	if v.Customization.APIServer != nil {

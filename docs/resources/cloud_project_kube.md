@@ -329,7 +329,7 @@ The following arguments are supported:
 * `region` - a valid OVHcloud public cloud region ID in which the kubernetes cluster will be available. Ex.: "GRA9". Defaults to all public cloud regions. **Changing this value recreates the resource.**
 * `version` - (Optional) kubernetes version to use. Changing this value updates the resource. Defaults to the latest available.
 * `plan` - (Optional) Plan of the MKS cluster `free` or `standard`. Default to `free`. Migration to another plan is not implemented yet.
-* `kube_proxy_mode` - (Optional) Selected mode for kube-proxy. **Changing this value recreates the resource, including ETCD user data.** Defaults to `iptables`.
+* `kube_proxy_mode` - (Optional) Selected mode for kube-proxy, `iptables` or `ipvs`. Only available on the `free` plan: setting it on a new `standard` cluster returns an error, and it is ignored on existing `standard` clusters. **Changing this value recreates the resource, including ETCD user data.**
 * `customization` - **Deprecated** (Optional) Use `customization_apiserver` and `customization_kube_proxy` instead. Kubernetes cluster customization
   * `apiserver` - Kubernetes API server customization
   * `kube_proxy` - Kubernetes kube-proxy customization
