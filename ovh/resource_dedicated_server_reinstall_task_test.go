@@ -124,7 +124,44 @@ func TestValidateDedicatedServerReinstallTaskStorage(t *testing.T) {
 	}
 }
 
-func TestDedicatedServerReinstallTaskStorageEraseDiff(t *testing.T) {
+func TestDedicatedServerReinstallTaskStateUpgradeV0(t *testing.T) {
+	partitioning := []interface{}{map[string]interface{}{"disks": 2}}
+	hardwareRaid := []interface{}{map[string]interface{}{"raid_level": 1}}
+
+	tests := []struct {
+		name     string
+		storage  map[string]interface{}
+		expected bool
+	}{
+		{"no erase", map[string]interface{}{"disk_group_id": 1}, true},
+		{"no erase, partitioning", map[string]interface{}{"partitioning": partitioning}, true},
+		{"erase false from a refresh, partitioning", map[string]interface{}{"erase": false, "partitioning": partitioning}, true},
+		{"erase false from a refresh, hardware_raid", map[string]interface{}{"erase": false, "hardware_raid": hardwareRaid}, true},
+		{"erase false, kept disk group", map[string]interface{}{"disk_group_id": 2, "erase": false}, false},
+		{"erase true", map[string]interface{}{"erase": true}, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rawState := map[string]interface{}{"id": "42", "storage": []interface{}{tt.storage}}
+			upgraded, err := resourceDedicatedServerReinstallTaskStateUpgradeV0(context.Background(), rawState, nil)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			got := upgraded["storage"].([]interface{})[0].(map[string]interface{})["erase"]
+			if got != tt.expected {
+				t.Fatalf("expected erase = %v, got %#v", tt.expected, got)
+			}
+		})
+	}
+
+	// States without storage are left as they are.
+	if _, err := resourceDedicatedServerReinstallTaskStateUpgradeV0(context.Background(), map[string]interface{}{"id": "42"}, nil); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestDedicatedServerReinstallTaskStorageEraseDefault(t *testing.T) {
 	r := resourceDedicatedServerReinstallTask()
 	cfg := terraform.NewResourceConfigRaw(map[string]interface{}{
 		"service_name": "ns1234.ip-1-2-3.eu",
@@ -134,32 +171,7 @@ func TestDedicatedServerReinstallTaskStorageEraseDiff(t *testing.T) {
 		},
 	})
 
-	// State saved by a provider version without "erase": upgrading must not plan a replacement.
-	state := &terraform.InstanceState{
-		ID: "42",
-		Attributes: map[string]string{
-			"id":                      "42",
-			"service_name":            "ns1234.ip-1-2-3.eu",
-			"os":                      "debian12_64",
-			"storage.#":               "1",
-			"storage.0.disk_group_id": "1",
-		},
-	}
-	diff, err := r.Diff(context.Background(), state, cfg, nil)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if diff != nil {
-		if attr, ok := diff.Attributes["storage.0.erase"]; ok {
-			t.Fatalf("expected no diff on storage.0.erase for an upgraded state, got %#v", attr)
-		}
-		if diff.RequiresNew() {
-			t.Fatalf("expected no replacement for an upgraded state, got %#v", diff.Attributes)
-		}
-	}
-
-	// A new resource still plans the default value.
-	diff, err = r.Diff(context.Background(), nil, cfg, nil)
+	diff, err := r.Diff(context.Background(), nil, cfg, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
