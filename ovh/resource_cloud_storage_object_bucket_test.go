@@ -287,3 +287,86 @@ resource "ovh_cloud_storage_object_bucket" "bucket" {
 		},
 	})
 }
+
+// Migration path from ovh_cloud_project_storage: a bucket created without Object Lock must
+// import cleanly, without the disabled lock reported by the API being planned as a replacement.
+func TestAccCloudStorageObjectBucket_importWithoutObjectLock(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	region := strings.ToUpper(os.Getenv("OVH_CLOUD_PROJECT_STORAGE_REGION_TEST"))
+
+	bucketName := acctest.RandomWithPrefix(test_prefix)
+
+	legacyConfig := fmt.Sprintf(`
+resource "ovh_cloud_project_storage" "legacy" {
+  service_name = "%s"
+  region_name  = "%s"
+  name         = "%s"
+
+  versioning = {
+    status = "enabled"
+  }
+}
+`, serviceName, region, bucketName)
+
+	bucketConfig := fmt.Sprintf(`
+data "ovh_cloud_storage_object_buckets" "all" {
+  service_name = "%[1]s"
+}
+
+resource "ovh_cloud_storage_object_bucket" "bucket" {
+  service_name = "%[1]s"
+  name         = "%[3]s"
+  region       = "%[2]s"
+
+  versioning = {
+    status = "ENABLED"
+  }
+}
+`, serviceName, region, bucketName)
+
+	migrationConfig := bucketConfig + fmt.Sprintf(`
+removed {
+  from = ovh_cloud_project_storage.legacy
+
+  lifecycle {
+    destroy = false
+  }
+}
+
+import {
+  to = ovh_cloud_storage_object_bucket.bucket
+  id = "%s/${one([for bucket in data.ovh_cloud_storage_object_buckets.all.buckets : bucket.id if bucket.current_state.name == "%s"])}"
+}
+`, serviceName, bucketName)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloudStorageObjectBucket(t)
+			testAccCheckCloudProjectExists(t)
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCloudStorageObjectBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: legacyConfig,
+			},
+			{
+				Config: migrationConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "name", bucketName),
+					resource.TestCheckNoResourceAttr("ovh_cloud_storage_object_bucket.bucket", "object_lock.mode"),
+					resource.TestCheckNoResourceAttr("ovh_cloud_storage_object_bucket.bucket", "current_state.object_lock.mode"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "versioning.status", "ENABLED"),
+				),
+			},
+			{
+				Config: bucketConfig,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}

@@ -106,6 +106,8 @@ import {
 
 ~> __NOTE__ The bucket `id` is the bare bucket name on a single-region API instance, and `<REGION>_<name>` (for example `GRA_my-data-bucket`) on a multi-region one.
 
+A bucket created without Object Lock (for example through `ovh_cloud_project_storage`) imports with no `object_lock` block: leave it unset in the configuration, as the lock cannot be armed after creation anyway.
+
 ```bash
 $ terraform import ovh_cloud_storage_object_bucket.bucket service_name/bucket_id
 ```

@@ -56,10 +56,22 @@ type CloudStorageObjectBucketAPIVersioning struct {
 }
 
 type CloudStorageObjectBucketAPIObjectLock struct {
+	// status is mandatory in the API contract: ENABLED when arming the lock, and DISABLED on
+	// buckets without Object Lock (e.g. created through ovh_cloud_project_storage), which come
+	// back with neither mode nor retention.
+	Status        string `json:"status,omitempty"`
 	Mode          string `json:"mode"`
 	RetentionDays int64  `json:"retentionDays"`
 	// retentionYears is read-only in the API contract: never sent, only read back.
 	RetentionYears *int64 `json:"retentionYears,omitempty"`
+}
+
+// storageObjectBucketObjectLockArmed reports whether the API object lock describes an armed
+// lock with a default retention rule, the only shape the schema can express. A disabled lock
+// carries no mode: mapping it to {mode: "", retention_days: 0} instead of null would plan a
+// replacement of every bucket without Object Lock, since object_lock is RequiresReplace.
+func storageObjectBucketObjectLockArmed(objectLock *CloudStorageObjectBucketAPIObjectLock) bool {
+	return objectLock != nil && objectLock.Status != "DISABLED" && objectLock.Mode != ""
 }
 
 type CloudStorageObjectBucketAPITargetSpec struct {
@@ -208,7 +220,7 @@ func buildStorageObjectBucketVersioningObject(versioning *CloudStorageObjectBuck
 }
 
 func buildStorageObjectBucketObjectLockObject(objectLock *CloudStorageObjectBucketAPIObjectLock) types.Object {
-	if objectLock == nil {
+	if !storageObjectBucketObjectLockArmed(objectLock) {
 		return types.ObjectNull(StorageObjectBucketObjectLockAttrTypes())
 	}
 
@@ -224,7 +236,7 @@ func buildStorageObjectBucketObjectLockObject(objectLock *CloudStorageObjectBuck
 }
 
 func buildStorageObjectBucketObjectLockSpecObject(objectLock *CloudStorageObjectBucketAPIObjectLock) types.Object {
-	if objectLock == nil {
+	if !storageObjectBucketObjectLockArmed(objectLock) {
 		return types.ObjectNull(StorageObjectBucketObjectLockSpecAttrTypes())
 	}
 
@@ -289,6 +301,7 @@ func storageObjectBucketObjectLockToAPI(o types.Object) *CloudStorageObjectBucke
 	}
 	attrs := o.Attributes()
 	return &CloudStorageObjectBucketAPIObjectLock{
+		Status:        "ENABLED",
 		Mode:          storageObjectBucketObjectString(attrs, "mode"),
 		RetentionDays: storageObjectBucketObjectInt64(attrs, "retention_days"),
 	}
