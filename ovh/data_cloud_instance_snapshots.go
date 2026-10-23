@@ -122,6 +122,10 @@ func (d *cloudInstanceSnapshotsDataSource) Schema(ctx context.Context, req datas
 							Computed:    true,
 							Description: "Snapshot readiness status",
 						},
+						"can_be_deleted": schema.BoolAttribute{
+							Computed:    true,
+							Description: "Whether the project can delete the snapshot: false when it is owned by another project or protected",
+						},
 					},
 				},
 			},
@@ -149,6 +153,7 @@ func instanceSnapshotListItemAttrTypes() map[string]attr.Type {
 		"visibility":      ovhtypes.TfStringType{},
 		"os_type":         ovhtypes.TfStringType{},
 		"resource_status": ovhtypes.TfStringType{},
+		"can_be_deleted":  types.BoolType,
 	}
 }
 
@@ -192,12 +197,14 @@ func (d *cloudInstanceSnapshotsDataSource) Read(ctx context.Context, req datasou
 		status := ""
 		visibility := ""
 		osType := ""
+		canBeDeleted := false
 		region := data.Region.ValueString()
 		if b.CurrentState != nil {
 			size = b.CurrentState.Size
 			status = b.CurrentState.Status
 			visibility = b.CurrentState.Visibility
 			osType = b.CurrentState.OsType
+			canBeDeleted = b.CurrentState.CanBeDeleted
 			if b.CurrentState.Instance != nil && b.CurrentState.Instance.Id != "" {
 				instanceId = b.CurrentState.Instance.Id
 			}
@@ -232,6 +239,7 @@ func (d *cloudInstanceSnapshotsDataSource) Read(ctx context.Context, req datasou
 				"visibility":      ovhtypes.TfStringValue{StringValue: types.StringValue(visibility)},
 				"os_type":         ovhtypes.TfStringValue{StringValue: types.StringValue(osType)},
 				"resource_status": ovhtypes.TfStringValue{StringValue: types.StringValue(b.ResourceStatus)},
+				"can_be_deleted":  types.BoolValue(canBeDeleted),
 			},
 		)
 		resp.Diagnostics.Append(diags...)

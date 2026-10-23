@@ -33,15 +33,16 @@ type CloudInstanceSnapshotAPIResponse struct {
 }
 
 type CloudInstanceSnapshotCurrentState struct {
-	Instance   *CloudInstanceSnapshotInstanceRef `json:"instance,omitempty"`
-	Location   *CloudInstanceSnapshotLocation    `json:"location,omitempty"`
-	MinDisk    int64                             `json:"minDisk,omitempty"`
-	MinRam     int64                             `json:"minRam,omitempty"`
-	Name       string                            `json:"name,omitempty"`
-	OsType     string                            `json:"osType,omitempty"`
-	Size       int64                             `json:"size,omitempty"`
-	Status     string                            `json:"status,omitempty"`
-	Visibility string                            `json:"visibility,omitempty"`
+	CanBeDeleted bool                              `json:"canBeDeleted"`
+	Instance     *CloudInstanceSnapshotInstanceRef `json:"instance,omitempty"`
+	Location     *CloudInstanceSnapshotLocation    `json:"location,omitempty"`
+	MinDisk      int64                             `json:"minDisk,omitempty"`
+	MinRam       int64                             `json:"minRam,omitempty"`
+	Name         string                            `json:"name,omitempty"`
+	OsType       string                            `json:"osType,omitempty"`
+	Size         int64                             `json:"size,omitempty"`
+	Status       string                            `json:"status,omitempty"`
+	Visibility   string                            `json:"visibility,omitempty"`
 }
 
 type CloudInstanceSnapshotTargetSpec struct {
