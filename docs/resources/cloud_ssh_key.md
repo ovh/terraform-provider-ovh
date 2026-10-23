@@ -35,3 +35,18 @@ The following attributes are exported:
 * `public_key` - SSH public key content.
 * `created_at` - Creation date of the SSH key (RFC 3339 format).
 * `updated_at` - Last update date of the SSH key (RFC 3339 format).
+
+## Import
+
+An SSH key can be imported using the `service_name` and the `name` of the key, separated by "/":
+
+```hcl
+import {
+  to = ovh_cloud_ssh_key.key
+  id = "<service_name>/<name>"
+}
+```
+
+```bash
+terraform import ovh_cloud_ssh_key.key <service_name>/<name>
+```

@@ -30,6 +30,7 @@ The following arguments are supported:
 * `network_id` - (Required) ID of the network backing the share network. **Changing this value recreates the resource.**
 * `subnet_id` - (Required) ID of the subnet backing the share network. **Changing this value recreates the resource.**
 * `region` - (Required) Region where the share network will be created. **Changing this value recreates the resource.**
+* `availability_zone` - (Optional) Availability zone where the share network will be created (required in 3-AZ regions). When omitted, this value is computed by the API. **Changing this value recreates the resource.**
 * `description` - (Optional) Share network description. When omitted, this value is computed by the API (which may return an empty value). **Changing this value recreates the resource.**
 
 ## Attributes Reference

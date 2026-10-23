@@ -14,9 +14,10 @@ import (
 
 func resourceCloudProjectInstance() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceCloudProjectInstanceCreate,
-		ReadContext:   resourceCloudProjectInstanceRead,
-		DeleteContext: resourceCloudProjectInstanceDelete,
+		DeprecationMessage: "Use ovh_cloud_instance instead. See https://registry.terraform.io/providers/ovh/ovh/latest/docs/guides/public_cloud_resources_migration",
+		CreateContext:      resourceCloudProjectInstanceCreate,
+		ReadContext:        resourceCloudProjectInstanceRead,
+		DeleteContext:      resourceCloudProjectInstanceDelete,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create:  schema.DefaultTimeout(defaultCloudOperationTimeout),

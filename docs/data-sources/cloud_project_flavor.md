@@ -4,6 +4,8 @@ subcategory: "Instances"
 
 # ovh_cloud_project_flavor
 
+~> **NOTE** This data source relies on the Public Cloud API v1. Prefer the new `ovh_cloud_instance_flavor` data source. See the [migration guide](../guides/public_cloud_resources_migration).
+
 Retrieves the given flavor in a public cloud project.
 
 ## Example Usage

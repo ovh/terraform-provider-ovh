@@ -4,6 +4,8 @@ subcategory : "Instances"
 
 # ovh_cloud_project_instances
 
+~> **NOTE** This data source relies on the Public Cloud API v1. Prefer the new `ovh_cloud_instances` data source. See the [migration guide](../guides/public_cloud_resources_migration).
+
 **This datasource uses a Beta API**
 
 Use this data source to get the list of instances in a region of a public cloud project.

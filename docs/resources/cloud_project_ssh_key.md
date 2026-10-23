@@ -4,7 +4,7 @@ subcategory : "Cloud Project"
 
 # ovh_cloud_project_ssh_key (Resource)
 
-~> **NOTE** Prefer using the new `ovh_cloud_ssh_key` resource instead.
+~> **NOTE** This resource relies on the Public Cloud API v1. Prefer the new `ovh_cloud_ssh_key` resource. See the [migration guide](../guides/public_cloud_resources_migration) to move an existing resource without recreating it.
 
 Create a SSH key in the given public cloud project.
 

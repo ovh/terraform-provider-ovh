@@ -4,7 +4,7 @@ subcategory: "Block Storage"
 
 # ovh_cloud_project_volume
 
-~> **NOTE** Prefer using the new `ovh_cloud_storage_block_volume*` resources and data sources instead.
+~> **NOTE** This data source relies on the Public Cloud API v1. Prefer the new `ovh_cloud_storage_block_volume` data source. See the [migration guide](../guides/public_cloud_resources_migration).
 
 Get information about a volume in a public cloud project
 

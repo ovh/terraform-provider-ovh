@@ -4,6 +4,8 @@ subcategory: "Private Network"
 
 # ovh_cloud_project_region_network
 
+~> **NOTE** This resource relies on the Public Cloud API v1. Prefer the new `ovh_cloud_network_private_vrack` and `ovh_cloud_network_private_vrack_subnet` resources. See the [migration guide](../guides/public_cloud_resources_migration) to move an existing resource without recreating it.
+
 Creates a network in a public cloud project.
 
 ## Example Usage

@@ -4,6 +4,8 @@ subcategory : "Load Balancer (Public Cloud / Octavia)"
 
 # ovh_cloud_project_loadbalancers
 
+~> **NOTE** This data source relies on the Public Cloud API v1. Prefer the new `ovh_cloud_loadbalancers` data source. See the [migration guide](../guides/public_cloud_resources_migration).
+
 List your public cloud loadbalancers.
 
 ## Example Usage

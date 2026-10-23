@@ -4,6 +4,8 @@ subcategory : "Instances"
 
 # ovh_cloud_project_instance
 
+~> **NOTE** This resource relies on the Public Cloud API v1. Prefer the new `ovh_cloud_instance` resource. See the [migration guide](../guides/public_cloud_resources_migration) to move an existing resource without recreating it.
+
 **This resource uses a Beta API** Creates an instance associated with a public cloud project.
 
 ## Example Usage
