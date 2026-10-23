@@ -472,7 +472,7 @@ func resourceCloudProjectInstanceRead(ctx context.Context, d *schema.ResourceDat
 
 	r := &CloudProjectInstanceResponse{}
 	if err := config.OVHClient.Get(endpoint, r); err != nil {
-		return diag.Errorf("Error calling Get %s:\n\t %q", endpoint, err)
+		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
 	d.Set("flavor_id", r.FlavorId)

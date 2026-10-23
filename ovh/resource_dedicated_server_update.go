@@ -103,20 +103,17 @@ func resourceDedicatedServerUpdateRead(ctx context.Context, d *schema.ResourceDa
 	serviceName := d.Get("service_name").(string)
 
 	ds := &DedicatedServer{}
+	endpoint := fmt.Sprintf(
+		"/dedicated/server/%s",
+		url.PathEscape(serviceName),
+	)
 	err := config.OVHClient.Get(
-		fmt.Sprintf(
-			"/dedicated/server/%s",
-			url.PathEscape(serviceName),
-		),
+		endpoint,
 		&ds,
 	)
 
 	if err != nil {
-		return diag.Errorf(
-			"Error calling GET /dedicated/server/%s:\n\t %q",
-			serviceName,
-			err,
-		)
+		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
 	d.Set("boot_id", ds.BootId)

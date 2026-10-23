@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 )
 
 func resourceIamPermissionsGroup() *schema.Resource {
@@ -75,9 +76,10 @@ func resourceIamPermissionsGroupsRead(ctx context.Context, d *schema.ResourceDat
 	config := meta.(*Config)
 
 	var pol IamPermissionsGroup
-	err := config.OVHClient.GetWithContext(ctx, "/v2/iam/permissionsGroup/"+url.PathEscape(d.Id()), &pol)
+	endpoint := "/v2/iam/permissionsGroup/" + url.PathEscape(d.Id())
+	err := config.OVHClient.GetWithContext(ctx, endpoint, &pol)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
 	for k, v := range pol.ToMap() {
@@ -131,10 +133,10 @@ func resourceIamPermissionsGroupUpdate(ctx context.Context, d *schema.ResourceDa
 
 func resourceIamPermissionsGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	config := meta.(*Config)
-
-	err := config.OVHClient.DeleteWithContext(ctx, "/v2/iam/permissionsGroup/"+url.PathEscape(d.Id()), nil)
+	endpoint := "/v2/iam/permissionsGroup/" + url.PathEscape(d.Id())
+	err := config.OVHClient.DeleteWithContext(ctx, endpoint, nil)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 
 	return nil

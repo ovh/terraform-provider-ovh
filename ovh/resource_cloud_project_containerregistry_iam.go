@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 )
 
 func resourceCloudProjectContainerRegistryIAM() *schema.Resource {
@@ -93,7 +94,7 @@ func resourceCloudProjectContainerRegistryIAMRead(d *schema.ResourceData, meta i
 
 	err := config.OVHClient.Get(endpoint, res)
 	if err != nil {
-		return fmt.Errorf("calling get %s %w", endpoint, err)
+		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
 	for k, v := range res.ToMap() {

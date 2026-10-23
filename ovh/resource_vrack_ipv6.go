@@ -209,7 +209,7 @@ func resourceVrackIpv6Read(d *schema.ResourceData, meta interface{}) error {
 
 	ipv6 := &VrackIpV6{}
 	if err := config.OVHClient.Get(endpoint, ipv6); err != nil {
-		return fmt.Errorf("failed to get vrack-ipv6 link: %w", err)
+		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
 	// set resource attributes
@@ -233,7 +233,7 @@ func resourceVrackIpv6Delete(d *schema.ResourceData, meta interface{}) error {
 	)
 
 	if err := config.OVHClient.Delete(endpoint, &task); err != nil {
-		return fmt.Errorf("error calling DELETE %s with %s/%s:\n\t %q", endpoint, serviceName, block, err)
+		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
 	if err := waitForVrackTask(&task, config.OVHClient); err != nil {
