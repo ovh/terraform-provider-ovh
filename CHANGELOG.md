@@ -1,3 +1,13 @@
+## 2.24.0 (October 29, 2026)
+
+💪 Improvements:
+
+* `d/ovh_cloud_instance_snapshots`: Add the computed `can_be_deleted` attribute ([#1524](https://github.com/ovh/terraform-provider-ovh/pull/1524))
+
+🐜 Bug fixes:
+
+* `r/ovh_cloud_project_kube`: Refuse `kube_proxy_mode` on new `standard` clusters, and stop planning a replacement on existing ones ([#1527](https://github.com/ovh/terraform-provider-ovh/pull/1527))
+
 ## 2.23.0 (October 22, 2026)
 
 🎉 Features:
