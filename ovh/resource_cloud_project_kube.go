@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-version"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/ovh/go-ovh/ovh"
@@ -28,7 +29,10 @@ func resourceCloudProjectKube() *schema.Resource {
 			State: resourceCloudProjectKubeImportState,
 		},
 
-		CustomizeDiff: resourceCloudProjectKubeCustomizeDiff,
+		CustomizeDiff: customdiff.All(
+			resourceCloudProjectKubeProxyModeDiff,
+			resourceCloudProjectKubeUserGatewayDiff,
+		),
 
 		Timeouts: &schema.ResourceTimeout{
 			Create:  schema.DefaultTimeout(15 * time.Minute),
@@ -58,6 +62,7 @@ func resourceCloudProjectKube() *schema.Resource {
 			},
 			kubeClusterPlanKey: {
 				Type:         schema.TypeString,
+				Description:  "Plan of the MKS cluster: `free` or `standard`. Migration to another plan is not implemented yet.",
 				Computed:     true,
 				Optional:     true,
 				ForceNew:     false,
@@ -473,10 +478,18 @@ func resourceCloudProjectKube() *schema.Resource {
 			},
 			kubeClusterProxyModeKey: {
 				Type:         schema.TypeString,
+				Description:  "Selected mode for kube-proxy: `iptables` or `ipvs`. Only available on the `free` plan.",
 				Optional:     true,
 				ForceNew:     true,
 				Computed:     true,
 				ValidateFunc: helpers.ValidateEnum([]string{"iptables", "ipvs"}),
+				DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+					// If the cluster already exists, do not offer to replace it
+					if d.Id() != "" && d.Get(kubeClusterPlanKey) == "standard" {
+						return true
+					}
+					return false
+				},
 			},
 			kubeClusterPrivateNetworkConfigurationKey: {
 				Type:     schema.TypeSet,
@@ -681,12 +694,12 @@ func CustomApiServerAdmissionPluginsSchemaSetFunc() schema.SchemaSetFunc {
 	}
 }
 
-// resourceCloudProjectKubeCustomizeDiff forces a new cluster when use_user_gateway changes.
+// resourceCloudProjectKubeUserGatewayDiff forces a new cluster when use_user_gateway changes.
 // ForceNew cannot be set on the nested attribute directly: it would also force a new cluster
 // on any change of the other private_network_configuration attributes, which are updatable.
 // ForceNew must target the nested attribute: on a set, ForceNew on the block only applies to
 // its item count, which stays at one when use_user_gateway is toggled inside the block.
-func resourceCloudProjectKubeCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
+func resourceCloudProjectKubeUserGatewayDiff(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
 	if !d.HasChange(kubeClusterPrivateNetworkConfigurationKey) {
 		return nil
 	}
@@ -702,6 +715,16 @@ func resourceCloudProjectKubeCustomizeDiff(_ context.Context, d *schema.Resource
 		}
 	}
 
+	return nil
+}
+
+// resourceCloudProjectKubeProxyModeDiff is used to control the plan for standard mode
+// cluster which does not use kube_proxy, but previously incorrectly allowed it with an API default.
+func resourceCloudProjectKubeProxyModeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	// When the plan is standard, kube proxy cannot be set at creation
+	if d.Id() == "" && d.Get(kubeClusterPlanKey) == "standard" && d.Get(kubeClusterProxyModeKey) != "" {
+		return fmt.Errorf("standard plan does not support %s", kubeClusterProxyModeKey)
+	}
 	return nil
 }
 
