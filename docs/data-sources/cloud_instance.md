@@ -57,7 +57,7 @@ actually observes.
 * `name` - Instance name.
 * `flavor_id` - Unique identifier of the flavor.
 * `image_id` - Identifier of the image the instance boots from, null for a boot-from-volume instance.
-* `power_state` - Requested power state of the instance (`ACTIVE`, `SHUTOFF` or `SHELVED`).
+* `power_state` - Requested power state of the instance (`ACTIVE`, `SHUTOFF`, `SHELVED`, `PAUSED` or `SUSPENDED`).
 * `networks` - Requested network interfaces of the instance, as recorded in its target specification:
   * `network_id` - Private network ID. Omit for a public interface.
   * `subnet_id` - Subnet ID within the private network. Required with `network_id`.
