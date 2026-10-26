@@ -26,7 +26,7 @@ resource "ovh_domain_zone" "zone" {
 
     configuration {
       label = "template"
-      value = "minimized"
+      value = "stub"
     }
   }
 }

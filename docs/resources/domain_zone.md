@@ -45,7 +45,7 @@ resource "ovh_domain_zone" "zone" {
 
     configuration {
       label = "template"
-      value = "minimized"
+      value = "stub"
     }
   }
 }
@@ -63,7 +63,7 @@ The following arguments are supported:
   * `catalog_name` - Catalog name
   * `configuration` - (Required) Representation of a configuration item for personalizing product. 2 configurations are required : one for `zone` and one for `template`
     * `label` - (Required) Identifier of the resource : `zone` or `template`
-    * `value` - (Required) For `zone`, the value is the zone name `myzone.example.com`. For `template`, the value can be:
+    * `value` - (Required) For `zone`, the value is the zone name `myzone.example.com`. For `template`, use `stub` for a zone managed with Terraform, and add its records with `ovh_domain_zone_record`. Changing the template replaces the zone. The value can be:
       * `basic` - The default pre-populated OVH zone.
       * `minimized` - The legacy pre-populated zone template.
       * `redirect` - A pre-populated zone template dedicated to HTTP redirection.
