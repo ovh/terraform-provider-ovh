@@ -139,7 +139,7 @@ func resourceCloudProjectFailoverIpAttachRead(d *schema.ResourceData, meta inter
 	}
 
 	if !match {
-		return fmt.Errorf("failover IP %s cannot be found in cloud project %s", d.Get("ip").(string), serviceName)
+		d.SetId("")
 	}
 
 	return nil

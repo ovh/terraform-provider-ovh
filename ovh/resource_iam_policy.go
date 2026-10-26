@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 )
 
 func resourceIamPolicy() *schema.Resource {
@@ -169,9 +170,10 @@ func resourceIamPolicy() *schema.Resource {
 func resourceIamPolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	config := meta.(*Config)
 	var pol IamPolicy
-	err := config.OVHClient.GetWithContext(ctx, "/v2/iam/policy/"+url.PathEscape(d.Id()), &pol)
+	endpoint := "/v2/iam/policy/" + url.PathEscape(d.Id())
+	err := config.OVHClient.GetWithContext(ctx, endpoint, &pol)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 	for k, v := range pol.ToMap() {
 		d.Set(k, v)
@@ -210,9 +212,10 @@ func resourceIamPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta a
 
 func resourceIamPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	config := meta.(*Config)
-	err := config.OVHClient.DeleteWithContext(ctx, "/v2/iam/policy/"+url.PathEscape(d.Id()), nil)
+	endpoint := "/v2/iam/policy/" + url.PathEscape(d.Id())
+	err := config.OVHClient.DeleteWithContext(ctx, endpoint, nil)
 	if err != nil {
-		return diag.FromErr(err)
+		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
 	return nil
 }
