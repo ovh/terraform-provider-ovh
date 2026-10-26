@@ -14,7 +14,7 @@ import (
 )
 
 func resourceDedicatedServerReinstallTask() *schema.Resource {
-	return &schema.Resource{
+	r := &schema.Resource{
 		Create: resourceDedicatedServerReinstallTaskCreate,
 		Update: resourceDedicatedServerReinstallTaskUpdate,
 		Read:   resourceDedicatedServerReinstallTaskRead,
@@ -168,15 +168,10 @@ func resourceDedicatedServerReinstallTask() *schema.Resource {
 							Description: "Disk group id (default is 0, meaning automatic)",
 						},
 						"erase": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-							ForceNew: true,
-							// States written before this attribute existed have no value for it: don't
-							// plan a replacement (i.e. a server reinstall) for the "" -> "true" upgrade diff.
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								return d.Id() != "" && old == "" && new == "true"
-							},
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Default:     true,
+							ForceNew:    true,
 							Description: "Whether to erase this disk group's data (default is true). Set to false to keep existing data on a disk group not used for the OS installation.",
 						},
 						"hardware_raid": {
@@ -347,6 +342,44 @@ func resourceDedicatedServerReinstallTask() *schema.Resource {
 			},
 		},
 	}
+
+	// States written before "erase" existed are upgraded to its default, so that it never
+	// shows up as a replacement (i.e. a server reinstall) on a provider upgrade.
+	r.SchemaVersion = 1
+	r.StateUpgraders = []schema.StateUpgrader{
+		{
+			Version: 0,
+			Type:    r.CoreConfigSchema().ImpliedType(),
+			Upgrade: resourceDedicatedServerReinstallTaskStateUpgradeV0,
+		},
+	}
+
+	return r
+}
+
+// resourceDedicatedServerReinstallTaskStateUpgradeV0 sets "erase" to true on the "storage" blocks
+// of a v0 state that have no value for it. Blocks with partitioning/hardware_raid are set to true
+// too: a refresh made by v2.23.0 wrote the zero value false on them, which is never a valid
+// configuration for an install target.
+func resourceDedicatedServerReinstallTaskStateUpgradeV0(ctx context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+	storage, ok := rawState["storage"].([]interface{})
+	if !ok {
+		return rawState, nil
+	}
+
+	for _, raw := range storage {
+		s, ok := raw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		partitioning, _ := s["partitioning"].([]interface{})
+		hardwareRaid, _ := s["hardware_raid"].([]interface{})
+		if erase, ok := s["erase"].(bool); !ok || (!erase && (len(partitioning) > 0 || len(hardwareRaid) > 0)) {
+			s["erase"] = true
+		}
+	}
+
+	return rawState, nil
 }
 
 func resourceDedicatedServerReinstallTaskCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
