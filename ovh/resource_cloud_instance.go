@@ -128,10 +128,10 @@ func (r *cloudInstanceResource) Schema(ctx context.Context, req resource.SchemaR
 				CustomType:          ovhtypes.TfStringType{},
 				Optional:            true,
 				Computed:            true,
-				Description:         "Desired power state: ACTIVE, SHUTOFF or SHELVED (defaults to ACTIVE)",
-				MarkdownDescription: "Desired power state: `ACTIVE`, `SHUTOFF` or `SHELVED` (defaults to `ACTIVE`)",
+				Description:         "Desired power state: ACTIVE, SHUTOFF, SHELVED, PAUSED or SUSPENDED (defaults to ACTIVE)",
+				MarkdownDescription: "Desired power state: `ACTIVE`, `SHUTOFF`, `SHELVED`, `PAUSED` or `SUSPENDED` (defaults to `ACTIVE`)",
 				Validators: []validator.String{
-					stringvalidator.OneOf("ACTIVE", "SHUTOFF", "SHELVED"),
+					stringvalidator.OneOf("ACTIVE", "SHUTOFF", "SHELVED", "PAUSED", "SUSPENDED"),
 				},
 				PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},

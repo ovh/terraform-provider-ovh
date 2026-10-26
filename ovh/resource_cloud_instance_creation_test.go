@@ -134,6 +134,8 @@ func TestAccCloudInstance_creationMatrix(t *testing.T) {
 		{name: "power_active", powerState: "ACTIVE", networks: publicNet},
 		{name: "power_shutoff", powerState: "SHUTOFF", networks: publicNet},
 		{name: "power_shelved", powerState: "SHELVED", networks: publicNet},
+		{name: "power_paused", powerState: "PAUSED", networks: publicNet},
+		{name: "power_suspended", powerState: "SUSPENDED", networks: publicNet},
 		{name: "with_ssh_key", withSSHKey: true, networks: publicNet},
 		{name: "with_availability_zone", withAZ: true, networks: publicNet},
 		{name: "one_security_group", sgCount: 1, networks: publicNet},

@@ -312,8 +312,8 @@ const (
 	// the requested target spec rather than a writable input.
 	instanceDescDsName             = "Instance name"
 	instanceDescDsImageId          = "Identifier of the image the instance boots from, null for a boot-from-volume instance"
-	instanceDescDsPowerState       = "Requested power state of the instance (ACTIVE, SHUTOFF or SHELVED)"
-	instanceDescDsPowerStateMd     = "Requested power state of the instance (`ACTIVE`, `SHUTOFF` or `SHELVED`)"
+	instanceDescDsPowerState       = "Requested power state of the instance (ACTIVE, SHUTOFF, SHELVED, PAUSED or SUSPENDED)"
+	instanceDescDsPowerStateMd     = "Requested power state of the instance (`ACTIVE`, `SHUTOFF`, `SHELVED`, `PAUSED` or `SUSPENDED`)"
 	instanceDescDsNetworks         = "Requested network interfaces of the instance, as recorded in its target specification"
 	instanceDescDsSecurityGroupIds = "IDs of the security groups applied to the instance's interfaces"
 	instanceDescDsShares           = "File storage shares requested to be attached to the instance"

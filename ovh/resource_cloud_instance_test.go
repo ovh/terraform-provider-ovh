@@ -454,7 +454,9 @@ func TestAccCloudInstance_userData(t *testing.T) {
 }
 
 // TestAccCloudInstance_powerState drives the instance through ACTIVE -> SHUTOFF
-// -> SHELVED -> ACTIVE and asserts each transition is applied in place.
+// -> SHELVED -> ACTIVE -> PAUSED -> ACTIVE -> SUSPENDED -> ACTIVE and asserts
+// each transition is applied in place. Nova only pauses or suspends an ACTIVE
+// server, hence the return to ACTIVE in between.
 func TestAccCloudInstance_powerState(t *testing.T) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
 	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
@@ -492,6 +494,10 @@ func TestAccCloudInstance_powerState(t *testing.T) {
 			powerStep("ACTIVE"),
 			powerStep("SHUTOFF"),
 			powerStep("SHELVED"),
+			powerStep("ACTIVE"),
+			powerStep("PAUSED"),
+			powerStep("ACTIVE"),
+			powerStep("SUSPENDED"),
 			powerStep("ACTIVE"),
 		},
 	})

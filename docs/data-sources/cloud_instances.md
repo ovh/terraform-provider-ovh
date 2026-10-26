@@ -50,7 +50,7 @@ The following attributes are exported:
   * `availability_zone` - Availability zone within the region where the instance is placed, null in regions that have none.
   * `flavor_id` - Unique identifier of the flavor.
   * `image_id` - Identifier of the image the instance boots from, null for a boot-from-volume instance.
-  * `power_state` - Requested power state of the instance (`ACTIVE`, `SHUTOFF` or `SHELVED`).
+  * `power_state` - Requested power state of the instance (`ACTIVE`, `SHUTOFF`, `SHELVED`, `PAUSED` or `SUSPENDED`).
   * `checksum` - Computed hash representing the current target specification value. It implements optimistic concurrency control: the value is echoed back on update and the request is rejected when it no longer matches server-side.
   * `created_at` - Creation date of the instance, as an RFC 3339 timestamp.
   * `updated_at` - Last modification date of the instance, as an RFC 3339 timestamp.
