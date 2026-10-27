@@ -1,9 +1,12 @@
 package ovh
 
 import (
+	"context"
 	"encoding/json"
 	"strings"
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestCloudProjectDatabaseUpdateOpts_networkSerialization(t *testing.T) {
@@ -65,4 +68,75 @@ func TestCloudProjectDatabaseUpdateOpts_networkSerialization(t *testing.T) {
 			t.Errorf("expected UUID subnetId, got: %s", data)
 		}
 	})
+}
+
+func TestCloudProjectDatabaseNodesDiff(t *testing.T) {
+	r := resourceCloudProjectDatabase()
+	state := &terraform.InstanceState{
+		ID: "42",
+		Attributes: map[string]string{
+			"id":             "42",
+			"service_name":   "p",
+			"engine":         "mongodb",
+			"version":        "8.0",
+			"plan":           "production",
+			"flavor":         "db2-2",
+			"description":    "d",
+			"nodes.#":        "3",
+			"nodes.0.region": "GRA",
+			"nodes.1.region": "GRA",
+			"nodes.2.region": "GRA",
+		},
+	}
+
+	tests := []struct {
+		name        string
+		regions     []string
+		existing    bool
+		expectErr   bool
+		requiresNew bool
+	}{
+		{"same nodes", []string{"GRA", "GRA", "GRA"}, true, false, false},
+		{"add a node", []string{"GRA", "GRA", "GRA", "GRA"}, true, false, false},
+		{"remove a node", []string{"GRA", "GRA"}, true, false, false},
+		{"move every node", []string{"RBX", "RBX", "RBX"}, true, false, true},
+		{"nodes in different regions", []string{"GRA", "RBX", "SBG"}, true, true, false},
+		{"new cluster in different regions", []string{"GRA", "RBX"}, false, true, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			nodes := []interface{}{}
+			for _, region := range tt.regions {
+				nodes = append(nodes, map[string]interface{}{"region": region})
+			}
+			cfg := terraform.NewResourceConfigRaw(map[string]interface{}{
+				"service_name": "p",
+				"engine":       "mongodb",
+				"version":      "8.0",
+				"plan":         "production",
+				"flavor":       "db2-2",
+				"description":  "d",
+				"nodes":        nodes,
+			})
+			s := state
+			if !tt.existing {
+				s = nil
+			}
+
+			diff, err := r.Diff(context.Background(), s, cfg, nil)
+			if tt.expectErr {
+				if err == nil {
+					t.Fatal("expected an error")
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if got := diff != nil && diff.RequiresNew(); got != tt.requiresNew {
+				t.Fatalf("expected RequiresNew = %v, got %v", tt.requiresNew, got)
+			}
+		})
+	}
 }
