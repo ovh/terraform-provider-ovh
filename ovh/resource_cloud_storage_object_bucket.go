@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/url"
-	"reflect"
 	"regexp"
 	"strings"
 	"time"
@@ -484,8 +483,14 @@ func (r *cloudStorageObjectBucketResource) Update(ctx context.Context, req resou
 
 	updatePayload := planData.ToUpdate(data.Checksum.ValueString())
 
-	// force_destroy is provider-side only: nothing to send when it is the only change
-	if reflect.DeepEqual(updatePayload, data.ToUpdate(data.Checksum.ValueString())) {
+	// force_destroy is provider-side only: nothing to send when it is the only change,
+	// unless the bucket is OUT_OF_SYNC and needs the PUT to be reconciled
+	if data.ResourceStatus.ValueString() != "OUT_OF_SYNC" &&
+		planData.OwnerUserId.Equal(data.OwnerUserId) &&
+		planData.Tags.Equal(data.Tags) &&
+		planData.Encryption.Equal(data.Encryption) &&
+		planData.Versioning.Equal(data.Versioning) &&
+		planData.ObjectLock.Equal(data.ObjectLock) {
 		data.ForceDestroy = planData.ForceDestroy
 		resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 		return

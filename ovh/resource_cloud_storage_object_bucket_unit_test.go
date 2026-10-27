@@ -19,7 +19,7 @@ import (
 )
 
 // newCloudStorageObjectBucketDeleteTest returns the bucket resource talking to a fake API serving
-// one bucket with the given objects, its delete state, and the list of the calls received.
+// one READY bucket with the given objects, its state, and the list of the calls received.
 // After a DELETE, the bucket is gone, or stays DELETING with a failed task when deleteFails is set.
 func newCloudStorageObjectBucketDeleteTest(t *testing.T, objects string, forceDestroy, deleteFails bool) (*cloudStorageObjectBucketResource, tfsdk.State, *[]string) {
 	t.Helper()
@@ -51,6 +51,8 @@ func newCloudStorageObjectBucketDeleteTest(t *testing.T, objects string, forceDe
 		case deleted:
 			w.WriteHeader(http.StatusNotFound)
 			fmt.Fprint(w, `{"message": "S3 bucket not found"}`)
+		default:
+			fmt.Fprint(w, `{"id": "GRA_my-bucket", "resourceStatus": "READY", "targetSpec": {"name": "my-bucket", "location": {"region": "GRA"}}}`)
 		}
 	})
 	server := httptest.NewServer(mux)
@@ -119,6 +121,60 @@ func TestCloudStorageObjectBucketDelete(t *testing.T) {
 			}
 			if strings.Join(*calls, ", ") != strings.Join(tc.wantCalls, ", ") {
 				t.Errorf("unexpected calls:\n got: %v\nwant: %v", *calls, tc.wantCalls)
+			}
+		})
+	}
+}
+
+func TestCloudStorageObjectBucketUpdate(t *testing.T) {
+	ctx := context.Background()
+
+	for name, tc := range map[string]struct {
+		status    string
+		emptyTags bool
+		wantCalls []string
+	}{
+		// force_destroy is provider-side only
+		"only force_destroy": {
+			status:    "READY",
+			wantCalls: nil,
+		},
+		// Same API payload, but the planned tags must be in the state
+		"tags from null to empty": {
+			status:    "READY",
+			emptyTags: true,
+			wantCalls: []string{"PUT bucket", "GET bucket", "GET bucket"},
+		},
+		// The PUT reconciles the drift
+		"out of sync": {
+			status:    "OUT_OF_SYNC",
+			wantCalls: []string{"PUT bucket", "GET bucket", "GET bucket"},
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			r, state, calls := newCloudStorageObjectBucketDeleteTest(t, "[]", false, false)
+			state.SetAttribute(ctx, path.Root("resource_status"), tc.status)
+
+			plan := tfsdk.Plan{Schema: state.Schema, Raw: state.Raw.Copy()}
+			plan.SetAttribute(ctx, path.Root("force_destroy"), true)
+			plan.SetAttribute(ctx, path.Root("resource_status"), "READY")
+			if tc.emptyTags {
+				plan.SetAttribute(ctx, path.Root("tags"), map[string]string{})
+			}
+
+			resp := resource.UpdateResponse{State: state}
+			r.Update(ctx, resource.UpdateRequest{Plan: plan, State: state}, &resp)
+			if resp.Diagnostics.HasError() {
+				t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+			}
+			if strings.Join(*calls, ", ") != strings.Join(tc.wantCalls, ", ") {
+				t.Errorf("unexpected calls:\n got: %v\nwant: %v", *calls, tc.wantCalls)
+			}
+
+			var got CloudStorageObjectBucketModel
+			resp.State.Get(ctx, &got)
+			if !got.ForceDestroy.ValueBool() {
+				t.Errorf("force_destroy not saved in the state")
 			}
 		})
 	}
