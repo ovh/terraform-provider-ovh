@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/ovh/go-ovh/ovh"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
@@ -119,6 +120,10 @@ func (r *cloudSshKeyResource) Read(ctx context.Context, req resource.ReadRequest
 
 	var sshKey cloudSshKeyResponse
 	if err := r.config.OVHClient.GetWithContext(ctx, endpoint, &sshKey); err != nil {
+		if helpers.IsNotFound(err) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling GET %s", endpoint),
 			err.Error(),
