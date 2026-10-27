@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -235,6 +236,8 @@ func (r *cloudStorageObjectBucketResource) Schema(ctx context.Context, req resou
 			},
 			"force_destroy": schema.BoolAttribute{
 				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(false),
 				Description:         "Delete all the objects of the bucket, including their versions, when destroying it. Defaults to false: destroying a bucket that still has objects fails. It must be applied before the destroy to take effect.",
 				MarkdownDescription: "Delete all the objects of the bucket, including their versions, when destroying it. Defaults to `false`: destroying a bucket that still has objects fails. It must be applied before the destroy to take effect.",
 			},
@@ -381,6 +384,7 @@ func (r *cloudStorageObjectBucketResource) ImportState(ctx context.Context, req 
 
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_name"), splits[0])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), splits[1])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("force_destroy"), false)...)
 }
 
 func (r *cloudStorageObjectBucketResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -456,6 +460,11 @@ func (r *cloudStorageObjectBucketResource) Read(ctx context.Context, req resourc
 	}
 
 	data.MergeWith(ctx, &responseData)
+
+	// Not returned by the API: states written before it existed get the default, to avoid a diff
+	if data.ForceDestroy.IsNull() {
+		data.ForceDestroy = types.BoolValue(false)
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

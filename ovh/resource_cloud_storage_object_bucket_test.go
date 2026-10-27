@@ -400,7 +400,7 @@ resource "ovh_cloud_storage_object_bucket" "bucket" {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCloudStorageObjectBucketForceDestroyConfig(serviceName, region, bucketName, bucket(""), "none"),
-				Check:  resource.TestCheckNoResourceAttr("ovh_cloud_storage_object_bucket.bucket", "force_destroy"),
+				Check:  resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "force_destroy", "false"),
 			},
 			{
 				Config: testAccCloudStorageObjectBucketForceDestroyConfig(serviceName, region, bucketName, bucket(""), "managed"),
