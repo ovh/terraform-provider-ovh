@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 )
 
 var _ resource.ResourceWithConfigure = (*domainZoneDynhostRecordResource)(nil)
@@ -80,6 +81,10 @@ func (r *domainZoneDynhostRecordResource) Read(ctx context.Context, req resource
 	endpoint := "/domain/zone/" + url.PathEscape(data.ZoneName.ValueString()) + "/dynHost/record/" + strconv.FormatInt(data.Id.ValueInt64(), 10)
 
 	if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
+		if helpers.IsNotFound(err) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Get %s", endpoint),
 			err.Error(),
