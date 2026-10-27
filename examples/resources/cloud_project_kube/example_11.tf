@@ -1,5 +1,5 @@
 resource "ovh_cloud_project_kube" "my_multizone_cluster" {
-  service_name = ovh_cloud_project_network_private.network.service_name
+  service_name = ovh_cloud_network_private_vrack.network.service_name
   name         = "custom-cilium-configuration-mks"
   region       = "RBX-A"
   plan         = "standard"
@@ -9,8 +9,8 @@ resource "ovh_cloud_project_kube" "my_multizone_cluster" {
     services_ipv4_cidr = "10.6.0.0/16"
   }
 
-  private_network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
-  nodes_subnet_id    = ovh_cloud_project_network_private_subnet.subnet.id
+  private_network_id = ovh_cloud_network_private_vrack.network.id
+  nodes_subnet_id    = ovh_cloud_network_private_vrack_subnet.subnet.id
 
   customization_cilium {
     cluster_id = 1

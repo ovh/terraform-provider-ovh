@@ -38,7 +38,7 @@ Create a Kubernetes Free cluster in `GRA11` region with Kube proxy configuration
 
 {{tffile "examples/resources/cloud_project_kube/example_6.tf"}}
 
-Kubernetes Free cluster creation on a private network / subnet in `GRA11` region with a managed gateway:
+Kubernetes Free cluster creation on a private network / subnet in `GRA11` region, with all egress traffic routed through a managed gateway:
 
 {{tffile "examples/resources/cloud_project_kube/example_7.tf"}}
 
@@ -49,6 +49,15 @@ Create a multi-zone Kubernetes Standard cluster (on 3 availability zones):
 Create a multi-zone Kubernetes Standard cluster with Cilium cluster mesh feature:
 
 {{tffile "examples/resources/cloud_project_kube/example_11.tf"}}
+
+### Get the egress IPs of the nodes
+
+To allow the nodes on an external service (for example `ovh_cloud_project_database_ip_restriction`), the IPs to allow depend on the network setup (see [#1230](https://github.com/ovh/terraform-provider-ovh/issues/1230)):
+
+* With a private network and `private_network_routing_as_default = true`, all nodes reach the internet through the gateway of the subnet, with a single IP: `ovh_cloud_gateway.current_state.external_ip` (see the private network example above).
+* Otherwise, each node reaches the internet with the public IP of its own instance. These IPs change when nodes are replaced, for example by autoscaling or an upgrade, so the allowed IPs are only updated on the next apply:
+
+{{tffile "examples/resources/cloud_project_kube/example_12.tf"}}
 
 ## Argument Reference
 
@@ -92,7 +101,7 @@ The following arguments are supported:
 
   ~> **NOTE** `use_user_gateway` and `disable_public_networking` are only available on the `standard` plan. To use `use_user_gateway`, `disable_public_networking` **must** be set to `true`, otherwise the cluster creation is rejected by the API. This block is not read back from the API by this resource, so a change made outside of Terraform is not detected: use the `ovh_cloud_project_kube` data source to read it. Switching `use_user_gateway` between unset and `false` does not recreate the resource, as both are considered equivalent.
 
-  In order to use the gateway IP advertised by the private network subnet DHCP, the following configuration shall be used.
+  In order to use the gateway IP advertised by the private network subnet DHCP, the following configuration shall be used. The gateway must have an external gateway (`ovh_cloud_gateway` with `external_gateway.enabled = true`), otherwise nodes have no internet access. All nodes then reach the internet with the gateway IP (`ovh_cloud_gateway.current_state.external_ip`).
 
   ```hcl
   private_network_configuration {
