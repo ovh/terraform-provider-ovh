@@ -121,7 +121,7 @@ The following arguments are supported:
 * `kafka_schema_registry` - (Optional) Defines whether the schema registry is enabled on a Kafka cluster
 * `nodes` - (Required, Minimum Items: 1) List of nodes object. The number of `nodes` blocks is the number of nodes of the cluster, and must match the number of nodes required by the plan. Multi region clusters are not available: all nodes must be identical.
   * `network_id` - (Optional) Private network id in which the node should be deployed. It's the regional openstackId of the private network. Can be updated in-place to change the network without recreating the service.
-  * `region` - (Required) Public cloud region in which the node should be deployed. Ex: "GRA". The cluster is created in the region of the first node. Changing it afterwards doesn't move the existing nodes.
+  * `region` - (Required) Public cloud region in which the node should be deployed. Ex: "GRA". Nodes can't be moved: changing the region of the nodes recreates the cluster.
   * `subnet_id` - (Optional) Private subnet ID in which the node is. Can be updated in-place to change the network without recreating the service.
 * `opensearch_acls_enabled` - (Optional) Defines whether the ACLs are enabled on an OpenSearch cluster
 * `disk_size` - (Optional) The disk size (in GB) of the database service.

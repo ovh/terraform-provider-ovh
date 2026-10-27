@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
@@ -259,27 +258,42 @@ func resourceCloudProjectDatabase() *schema.Resource {
 			},
 		},
 
-		// Manage adding or removing
-		CustomizeDiff: customdiff.ForceNewIfChange("nodes", func(ctx context.Context, old, new, meta interface{}) bool {
-			oldNodes := old.([]interface{})
-			newNodes := new.([]interface{})
-
-			minLen := len(oldNodes)
-			if len(newNodes) < minLen {
-				minLen = len(newNodes)
-			}
-
-			for i := 0; i < minLen; i++ {
-				o := oldNodes[i].(map[string]interface{})
-				n := newNodes[i].(map[string]interface{})
-				if o["region"] != n["region"] {
-					return true
-				}
-			}
-
-			return false
-		}),
+		CustomizeDiff: resourceCloudProjectDatabaseNodesDiff,
 	}
+}
+
+// resourceCloudProjectDatabaseNodesDiff refuses nodes in different regions or networks, which the API
+// can't create, and replaces the cluster when its region changes, as nodes can't be moved. Adding or
+// removing nodes stays an update.
+func resourceCloudProjectDatabaseNodesDiff(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	// d.ForceNew("nodes") only applies when the number of nodes changes: force it on the region itself
+	if d.Id() != "" && d.HasChange("nodes.0.region") {
+		if err := d.ForceNew("nodes.0.region"); err != nil {
+			return err
+		}
+	}
+
+	nbOfNodes := d.Get("nodes.#").(int)
+	nodes := make([]CloudProjectDatabaseNodes, 0, nbOfNodes)
+	for i := 0; i < nbOfNodes; i++ {
+		path := fmt.Sprintf("nodes.%d", i)
+		// Unknown values are checked again at creation
+		for _, field := range []string{"region", "network_id", "subnet_id"} {
+			if !d.NewValueKnown(path + "." + field) {
+				return nil
+			}
+		}
+		nodes = append(nodes, CloudProjectDatabaseNodes{
+			Region:    d.Get(path + ".region").(string),
+			NetworkID: d.Get(path + ".network_id").(string),
+			SubnetID:  d.Get(path + ".subnet_id").(string),
+		})
+	}
+	if err := checkNodesEquality(nodes); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func resourceCloudProjectDatabaseImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
