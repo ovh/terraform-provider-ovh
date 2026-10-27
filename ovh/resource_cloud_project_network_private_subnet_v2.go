@@ -173,6 +173,9 @@ func resourceCloudProjectNetworkPrivateSubnetV2Create(d *schema.ResourceData, me
 	if ok {
 		i := useDefaultPublicDNSResolverbool.(bool)
 		useDefaultPublicDNSResolver = &i
+	} else if dns := d.GetRawConfig().GetAttr("dns_nameservers"); dns.IsKnown() && !dns.IsNull() && dns.LengthInt() == 0 {
+		// An explicit empty list means no DNS: otherwise the API adds its default resolver
+		useDefaultPublicDNSResolver = new(bool)
 	}
 	gatewayIp := d.Get("gateway_ip").(string)
 
