@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 	"golang.org/x/exp/slices"
 )
@@ -66,6 +67,10 @@ func (r *vrackDedicatedCloudDatacenterResource) Read(ctx context.Context, req re
 	endpoint := "/vrack/" + url.PathEscape(data.ServiceName.ValueString()) + "/dedicatedCloudDatacenter/" + url.PathEscape(data.Datacenter.ValueString())
 
 	if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
+		if helpers.IsNotFound(err) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Get %s", endpoint),
 			err.Error(),
