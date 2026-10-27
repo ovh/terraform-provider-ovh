@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 )
 
 func resourceCloudProjectUserS3Credential() *schema.Resource {
@@ -119,7 +120,7 @@ func resourceCloudProjectUserS3CredentialRead(d *schema.ResourceData, meta inter
 	)
 
 	if err := config.OVHClient.Post(endpoint, nil, &s3Credential); err != nil {
-		return err
+		return helpers.CheckDeleted(d, err, endpoint)
 	}
 
 	// The API returns only secret key.

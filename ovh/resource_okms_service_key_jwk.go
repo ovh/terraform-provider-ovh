@@ -6,6 +6,7 @@ import (
 	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
@@ -93,6 +94,10 @@ func (r *okmsServiceKeyJwkResource) Read(ctx context.Context, req resource.ReadR
 	endpoint := "/v2/okms/resource/" + url.PathEscape(data.OkmsId.ValueString()) + "/serviceKey/" + url.PathEscape(data.Id.ValueString()) + "?format=JWK"
 
 	if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
+		if helpers.IsNotFound(err) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Get %s", endpoint),
 			err.Error(),
