@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/ovh/go-ovh/ovh"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
@@ -162,6 +163,10 @@ func (r *vpsResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 	// Read resource
 	responseData, err := r.waitForVPSUpdate(ctx, data.ServiceName.ValueString(), &data)
 	if err != nil {
+		if helpers.IsNotFound(err) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			"Error fetching resource",
 			err.Error(),
@@ -343,7 +348,7 @@ func (r *vpsResource) waitForVPSUpdate(ctx context.Context, serviceName string, 
 		// Read updated resource
 		endpoint := "/vps/" + url.PathEscape(serviceName)
 		if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
-			return retry.NonRetryableError(fmt.Errorf("error calling GET %s", endpoint))
+			return retry.NonRetryableError(fmt.Errorf("error calling GET %s: %w", endpoint, err))
 		}
 
 		// Update is succesfull, return
