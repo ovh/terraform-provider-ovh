@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 )
 
 var _ resource.ResourceWithConfigure = (*dbaasLogsEncryptionKeyResource)(nil)
@@ -121,6 +122,10 @@ func (r *dbaasLogsEncryptionKeyResource) Read(ctx context.Context, req resource.
 
 	endpoint := "/dbaas/logs/" + url.PathEscape(data.ServiceName.ValueString()) + "/encryptionKey/" + url.PathEscape(data.EncryptionKeyId.ValueString())
 	if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
+		if helpers.IsNotFound(err) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Get %s", endpoint),
 			err.Error(),
