@@ -137,98 +137,111 @@ resource "ovh_cloud_project_kube" "my_cluster" {
 }
 ```
 
-Kubernetes Free cluster creation on a private network / subnet in `GRA11` region with a managed gateway:
+Kubernetes Free cluster creation on a private network / subnet in `GRA11` region, with all egress traffic routed through a managed gateway:
 
 ```terraform
-resource "ovh_cloud_project_network_private" "network" {
+resource "ovh_cloud_network_private_vrack" "network" {
   service_name = var.service_name # Public Cloud service name
-  vlan_id     = 42
-  name       = "terraform_testacc_private_net"
-  regions    = ["GRA11"]
+  name         = "terraform_testacc_private_net"
+  region       = "GRA11"
+  vlan_id      = 42
 }
 
-resource "ovh_cloud_project_network_private_subnet" "subnet" {
-  service_name = var.service_name
-  network_id   = ovh_cloud_project_network_private.network.id
-
-  # whatever region, for test purpose
-  region     = "GRA11"
-  start      = "192.168.168.100"
-  end        = "192.168.168.200"
-  network    = "192.168.168.0/24"
-  dhcp       = true
-  no_gateway = false
+resource "ovh_cloud_network_private_vrack_subnet" "subnet" {
+  service_name = ovh_cloud_network_private_vrack.network.service_name
+  network_id   = ovh_cloud_network_private_vrack.network.id
+  name         = "terraform_testacc_private_subnet"
+  region       = "GRA11"
+  cidr         = "192.168.168.0/24"
+  gateway_ip   = "192.168.168.1"
+  dhcp_enabled = true
+  allocation_pools = [{
+    start = "192.168.168.100"
+    end   = "192.168.168.200"
+  }]
 }
 
-resource "ovh_cloud_project_gateway" "gateway" {
-  service_name = var.service_name
-  name       = "gateway"
-  model      = "s"
-  region     = "GRA11"
-  network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
-  subnet_id  = ovh_cloud_project_network_private_subnet.subnet.id
+resource "ovh_cloud_gateway" "gateway" {
+  service_name = ovh_cloud_network_private_vrack.network.service_name
+  name         = "gateway"
+  region       = "GRA11"
+  external_gateway = {
+    enabled = true
+    model   = "S"
+  }
+  subnet_ids = [ovh_cloud_network_private_vrack_subnet.subnet.id]
 }
 
 resource "ovh_cloud_project_kube" "my_cluster" {
-  service_name  = var.service_name
-  name          = "test-kube-attach"
-  region        = "GRA11"
+  service_name = ovh_cloud_network_private_vrack.network.service_name
+  name         = "test-kube-attach"
+  region       = "GRA11"
 
-  private_network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
-  nodes_subnet_id = ovh_cloud_project_network_private_subnet.subnet.id
+  private_network_id = ovh_cloud_network_private_vrack.network.id
+  nodes_subnet_id    = ovh_cloud_network_private_vrack_subnet.subnet.id
   private_network_configuration {
-      default_vrack_gateway              = ""
-      private_network_routing_as_default = false
+    default_vrack_gateway              = ""
+    private_network_routing_as_default = true
   }
+
+  depends_on = [ovh_cloud_gateway.gateway]
+}
+
+# All nodes reach the internet through the gateway: use this IP to allow them on external services
+output "egress_ip" {
+  value = ovh_cloud_gateway.gateway.current_state.external_ip
 }
 ```
 
 Create a multi-zone Kubernetes Standard cluster (on 3 availability zones):
 
 ```terraform
-resource "ovh_cloud_project_network_private" "network" {
+resource "ovh_cloud_network_private_vrack" "network" {
   service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" # Public Cloud service name
-  vlan_id      = 84
   name         = "terraform_mks_multiaz_private_net"
-  regions      = ["EU-WEST-PAR"]
+  region       = "EU-WEST-PAR"
+  vlan_id      = 84
 }
 
-resource "ovh_cloud_project_network_private_subnet" "subnet" {
-  service_name = ovh_cloud_project_network_private.network.service_name
-  network_id   = ovh_cloud_project_network_private.network.id
-
-  # whatever region, for test purpose
-  region     = "EU-WEST-PAR"
-  start      = "192.168.142.100"
-  end        = "192.168.142.200"
-  network    = "192.168.142.0/24"
-  dhcp       = true
-  no_gateway = false
+resource "ovh_cloud_network_private_vrack_subnet" "subnet" {
+  service_name = ovh_cloud_network_private_vrack.network.service_name
+  network_id   = ovh_cloud_network_private_vrack.network.id
+  name         = "terraform_mks_multiaz_private_subnet"
+  region       = "EU-WEST-PAR"
+  cidr         = "192.168.142.0/24"
+  gateway_ip   = "192.168.142.1"
+  dhcp_enabled = true
+  allocation_pools = [{
+    start = "192.168.142.100"
+    end   = "192.168.142.200"
+  }]
 }
 
-resource "ovh_cloud_project_gateway" "gateway" {
-  service_name = ovh_cloud_project_network_private.network.service_name
-  name       = "gateway"
-  model      = "s"
-  region     = "EU-WEST-PAR"
-  network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
-  subnet_id  = ovh_cloud_project_network_private_subnet.subnet.id
+resource "ovh_cloud_gateway" "gateway" {
+  service_name = ovh_cloud_network_private_vrack.network.service_name
+  name         = "gateway"
+  region       = "EU-WEST-PAR"
+  external_gateway = {
+    enabled = true
+    model   = "S"
+  }
+  subnet_ids = [ovh_cloud_network_private_vrack_subnet.subnet.id]
 }
 
 resource "ovh_cloud_project_kube" "my_multizone_cluster" {
-  service_name  = ovh_cloud_project_network_private.network.service_name
+  service_name  = ovh_cloud_network_private_vrack.network.service_name
   name          = "multi-zone-mks"
   region        = "EU-WEST-PAR"
   plan          = "standard"
 
-  private_network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
-  nodes_subnet_id    = ovh_cloud_project_network_private_subnet.subnet.id
+  private_network_id = ovh_cloud_network_private_vrack.network.id
+  nodes_subnet_id    = ovh_cloud_network_private_vrack_subnet.subnet.id
 
-  depends_on    = [ ovh_cloud_project_gateway.gateway ] //Gateway is mandatory for multizones cluster
+  depends_on    = [ ovh_cloud_gateway.gateway ] //Gateway is mandatory for multizones cluster
 }
 
 resource "ovh_cloud_project_kube_nodepool" "node_pool_multi_zones_a" {
-  service_name       = ovh_cloud_project_network_private.network.service_name
+  service_name       = ovh_cloud_network_private_vrack.network.service_name
   kube_id            = ovh_cloud_project_kube.my_multizone_cluster.id
   name               = "my-pool-zone-a" //Warning: "_" char is not allowed!
   flavor_name        = "b3-8"
@@ -237,7 +250,7 @@ resource "ovh_cloud_project_kube_nodepool" "node_pool_multi_zones_a" {
 }
 
 resource "ovh_cloud_project_kube_nodepool" "node_pool_multi_zones_b" {
-  service_name       = ovh_cloud_project_network_private.network.service_name
+  service_name       = ovh_cloud_network_private_vrack.network.service_name
   kube_id            = ovh_cloud_project_kube.my_multizone_cluster.id
   name               = "my-pool-zone-b"
   flavor_name        = "b3-8"
@@ -246,7 +259,7 @@ resource "ovh_cloud_project_kube_nodepool" "node_pool_multi_zones_b" {
 }
 
 resource "ovh_cloud_project_kube_nodepool" "node_pool_multi_zones_c" {
-  service_name       = ovh_cloud_project_network_private.network.service_name
+  service_name       = ovh_cloud_network_private_vrack.network.service_name
   kube_id            = ovh_cloud_project_kube.my_multizone_cluster.id
   name               = "my-pool-zone-c"
   flavor_name        = "b3-8"
@@ -264,7 +277,7 @@ Create a multi-zone Kubernetes Standard cluster with Cilium cluster mesh feature
 
 ```terraform
 resource "ovh_cloud_project_kube" "my_multizone_cluster" {
-  service_name = ovh_cloud_project_network_private.network.service_name
+  service_name = ovh_cloud_network_private_vrack.network.service_name
   name         = "custom-cilium-configuration-mks"
   region       = "RBX-A"
   plan         = "standard"
@@ -274,8 +287,8 @@ resource "ovh_cloud_project_kube" "my_multizone_cluster" {
     services_ipv4_cidr = "10.6.0.0/16"
   }
 
-  private_network_id = tolist(ovh_cloud_project_network_private.network.regions_attributes[*].openstackid)[0]
-  nodes_subnet_id    = ovh_cloud_project_network_private_subnet.subnet.id
+  private_network_id = ovh_cloud_network_private_vrack.network.id
+  nodes_subnet_id    = ovh_cloud_network_private_vrack_subnet.subnet.id
 
   customization_cilium {
     cluster_id = 1
@@ -317,6 +330,39 @@ resource "ovh_cloud_project_kube" "my_multizone_cluster" {
       }
     }
   }
+}
+```
+
+### Get the egress IPs of the nodes
+
+To allow the nodes on an external service (for example `ovh_cloud_project_database_ip_restriction`), the IPs to allow depend on the network setup (see [#1230](https://github.com/ovh/terraform-provider-ovh/issues/1230)):
+
+* With a private network and `private_network_routing_as_default = true`, all nodes reach the internet through the gateway of the subnet, with a single IP: `ovh_cloud_gateway.current_state.external_ip` (see the private network example above).
+* Otherwise, each node reaches the internet with the public IP of its own instance. These IPs change when nodes are replaced, for example by autoscaling or an upgrade, so the allowed IPs are only updated on the next apply:
+
+```terraform
+# The nodes only exist once the node pool is created: read them from another
+# configuration, or apply twice
+data "ovh_cloud_project_kube_nodes" "nodes" {
+  service_name = ovh_cloud_project_kube.my_cluster.service_name
+  kube_id      = ovh_cloud_project_kube.my_cluster.id
+}
+
+data "ovh_cloud_instance" "node" {
+  for_each     = { for node in data.ovh_cloud_project_kube_nodes.nodes.nodes : node.name => node.instance_id }
+  service_name = ovh_cloud_project_kube.my_cluster.service_name
+  id           = each.value
+}
+
+# Public IPv4 of each node, from its public (Ext-Net) interface
+output "nodes_egress_ips" {
+  value = flatten([
+    for instance in data.ovh_cloud_instance.node : [
+      for network in instance.current_state.networks : [
+        for address in network.addresses : address.ip if address.version == 4
+      ] if network.id == null || network.id == ""
+    ]
+  ])
 }
 ```
 
@@ -362,7 +408,7 @@ The following arguments are supported:
 
   ~> **NOTE** `use_user_gateway` and `disable_public_networking` are only available on the `standard` plan. To use `use_user_gateway`, `disable_public_networking` **must** be set to `true`, otherwise the cluster creation is rejected by the API. This block is not read back from the API by this resource, so a change made outside of Terraform is not detected: use the `ovh_cloud_project_kube` data source to read it. Switching `use_user_gateway` between unset and `false` does not recreate the resource, as both are considered equivalent.
 
-  In order to use the gateway IP advertised by the private network subnet DHCP, the following configuration shall be used.
+  In order to use the gateway IP advertised by the private network subnet DHCP, the following configuration shall be used. The gateway must have an external gateway (`ovh_cloud_gateway` with `external_gateway.enabled = true`), otherwise nodes have no internet access. All nodes then reach the internet with the gateway IP (`ovh_cloud_gateway.current_state.external_ip`).
 
   ```hcl
   private_network_configuration {
