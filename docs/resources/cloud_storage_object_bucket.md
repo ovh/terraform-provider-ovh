@@ -66,7 +66,7 @@ The following arguments are supported:
 * `object_lock` - (Optional) Object lock (WORM) configuration. Requires `versioning` to be set with `status = "ENABLED"`. Object lock can only be armed at bucket creation. **Adding, changing or removing this block recreates the resource.**
   * `mode` - (Required) Object lock retention mode. One of `COMPLIANCE`, `GOVERNANCE`.
   * `retention_days` - (Required) Number of days to retain objects. Must be at least `1`.
-* `force_destroy` - (Optional) Delete all the objects of the bucket, including their versions, when destroying it. Defaults to `false`: destroying a bucket that still has objects fails. Like any value read on destroy, it must be applied before the destroy to take effect. Objects locked by `object_lock` can't be deleted until their retention ends.
+* `force_destroy` - (Optional) Delete all the objects of the bucket, including their versions, when destroying it, so that it can be destroyed without error. These objects are not recoverable. Defaults to `false`: destroying a bucket that still has objects fails. Objects are only deleted when the bucket is destroyed, not when setting this argument to `true`, and a successful apply is required before the destroy to update this value in the state. Objects locked by `object_lock` can't be deleted until their retention ends.
 
 ~> __NOTE__ A bucket can only be deleted once empty: by default, destroying it fails while it still has objects or object versions, so its data is never deleted by Terraform. To delete it with its objects, set `force_destroy = true` and apply, then destroy it.
 
