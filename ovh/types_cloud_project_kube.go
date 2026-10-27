@@ -26,7 +26,7 @@ type privateNetworkConfiguration struct {
 }
 
 type CloudProjectKubeUpdateLoadBalancersSubnetIdOpts struct {
-	LoadBalancersSubnetId string `json:"loadBalancersSubnetId"`
+	LoadBalancersSubnetId *string `json:"loadBalancersSubnetId"`
 }
 
 type CloudProjectKubeCreateOpts struct {
