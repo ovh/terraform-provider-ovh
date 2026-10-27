@@ -411,7 +411,7 @@ resource "ovh_cloud_storage_object_bucket" "bucket" {
 				ExpectError: regexp.MustCompile("is not empty"),
 			},
 			{
-				// The bucket is still there, and force_destroy is applied without calling the API
+				// The bucket is still there, and force_destroy is saved in the state
 				Config: testAccCloudStorageObjectBucketForceDestroyConfig(serviceName, region, bucketName, bucket("force_destroy = true"), "removed"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "force_destroy", "true"),
