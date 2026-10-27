@@ -71,9 +71,12 @@ func resourceOvhDomainZoneRecord() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// The API silently quotes TXT fields
-					if d.Get("fieldtype").(string) == "TXT" && fmt.Sprintf("\"%s\"", new) == old {
-						return true
+					// The API silently quotes TXT fields, and splits long ones in 255 chars strings
+					if d.Get("fieldtype").(string) == "TXT" {
+						old = strings.ReplaceAll(old, "\" \"", "")
+						if fmt.Sprintf("\"%s\"", new) == old {
+							return true
+						}
 					}
 					return new == old
 				},
