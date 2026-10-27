@@ -976,7 +976,7 @@ func resourceCloudProjectKubeUpdate(d *schema.ResourceData, meta interface{}) er
 			url.PathEscape(serviceName),
 			url.PathEscape(id))
 		err := config.OVHClient.Put(endpoint, CloudProjectKubeUpdateLoadBalancersSubnetIdOpts{
-			LoadBalancersSubnetId: value,
+			LoadBalancersSubnetId: helpers.GetNilStringPointer(value),
 		}, nil)
 		if err != nil {
 			return err
