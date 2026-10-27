@@ -1041,7 +1041,8 @@ func (v DedicatedServerModel) ToUpdate(stateData *DedicatedServerModel) *Dedicat
 		stateData = &DedicatedServerModel{}
 	}
 
-	if !v.BootId.IsUnknown() {
+	// Only send changed boot fields: the API refuses bootId and bootScript in the same call
+	if !v.BootId.IsUnknown() && !v.BootId.Equal(stateData.BootId) {
 		res.BootId = &v.BootId
 	}
 
@@ -1049,7 +1050,7 @@ func (v DedicatedServerModel) ToUpdate(stateData *DedicatedServerModel) *Dedicat
 	// in the plan, send and empty string to the API.
 	if v.BootScript.IsNull() && stateData.BootScript.ValueString() != "" {
 		res.BootScript = &emptyString
-	} else if !v.BootScript.IsUnknown() && !v.BootScript.IsNull() {
+	} else if !v.BootScript.IsUnknown() && !v.BootScript.IsNull() && !v.BootScript.Equal(stateData.BootScript) {
 		res.BootScript = &v.BootScript
 	}
 
