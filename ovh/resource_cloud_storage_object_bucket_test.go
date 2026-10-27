@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -284,6 +285,140 @@ resource "ovh_cloud_storage_object_bucket" "bucket" {
 				ImportStateVerify: true,
 				ImportStateIdFunc: testAccCloudStorageObjectBucketImportStateIdFunc("ovh_cloud_storage_object_bucket.bucket"),
 			},
+		},
+	})
+}
+
+// testAccCloudStorageObjectBucketForceDestroyConfig returns a bucket and an S3 user. The object
+// step uploads an object with the AWS provider, once the S3 credential exists. Once forgotten
+// with a removed block, the object stays in the bucket when it is destroyed.
+func testAccCloudStorageObjectBucketForceDestroyConfig(serviceName, region, bucketName, bucket, objectStep string) string {
+	provider := `
+provider "aws" {
+  region                      = lower("%[2]s")
+  access_key                  = ovh_cloud_project_user_s3_credential.credential.access_key_id
+  secret_key                  = ovh_cloud_project_user_s3_credential.credential.secret_access_key
+  skip_credentials_validation = true
+  skip_metadata_api_check     = true
+  skip_region_validation      = true
+  skip_requesting_account_id  = true
+  endpoints {
+    s3 = "https://s3.${lower("%[2]s")}.io.cloud.ovh.net"
+  }
+}
+
+`
+	object := provider + `
+resource "aws_s3_object" "object" {
+  bucket     = "%[3]s"
+  key        = "dir/object.txt"
+  content    = "content"
+  depends_on = [ovh_cloud_storage_object_bucket.bucket, time_sleep.policy]
+}
+`
+	switch objectStep {
+	case "none":
+		object = ""
+	case "removed":
+		object = provider + `
+removed {
+  from = aws_s3_object.object
+  lifecycle {
+    destroy = false
+  }
+}
+`
+	}
+
+	if object != "" {
+		object = fmt.Sprintf(object, serviceName, region, bucketName)
+	}
+
+	return fmt.Sprintf(`
+resource "ovh_cloud_project_user" "user" {
+  service_name = "%[1]s"
+  description  = "%[3]s"
+  role_name    = "objectstore_operator"
+}
+
+resource "ovh_cloud_project_user_s3_credential" "credential" {
+  service_name = "%[1]s"
+  user_id      = ovh_cloud_project_user.user.id
+}
+
+resource "ovh_cloud_project_user_s3_policy" "policy" {
+  service_name = "%[1]s"
+  user_id      = ovh_cloud_project_user.user.id
+  policy = jsonencode({
+    Statement = [{
+      Sid      = "all"
+      Effect   = "Allow"
+      Action   = ["s3:*"]
+      Resource = ["arn:aws:s3:::%[3]s", "arn:aws:s3:::%[3]s/*"]
+    }]
+  })
+}
+
+# The S3 policy takes a few seconds to apply
+resource "time_sleep" "policy" {
+  create_duration = "30s"
+  depends_on      = [ovh_cloud_project_user_s3_policy.policy]
+}
+%[4]s
+%[5]s
+`, serviceName, region, bucketName, bucket, object)
+}
+
+func TestAccCloudStorageObjectBucket_forceDestroy(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	region := strings.ToUpper(os.Getenv("OVH_CLOUD_PROJECT_STORAGE_REGION_TEST"))
+	bucketName := acctest.RandomWithPrefix(test_prefix)
+
+	bucket := func(forceDestroy string) string {
+		return fmt.Sprintf(`
+resource "ovh_cloud_storage_object_bucket" "bucket" {
+  service_name  = "%s"
+  name          = "%s"
+  region        = "%s"
+  owner_user_id = ovh_cloud_project_user.user.id
+  %s
+}
+`, serviceName, bucketName, region, forceDestroy)
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloudStorageObjectBucket(t)
+			testAccCheckCloudProjectExists(t)
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"aws":  {VersionConstraint: "5.82.2", Source: "registry.terraform.io/hashicorp/aws"},
+			"time": {VersionConstraint: "0.13.1", Source: "registry.terraform.io/hashicorp/time"},
+		},
+		CheckDestroy: testAccCheckCloudStorageObjectBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCloudStorageObjectBucketForceDestroyConfig(serviceName, region, bucketName, bucket(""), "none"),
+				Check:  resource.TestCheckNoResourceAttr("ovh_cloud_storage_object_bucket.bucket", "force_destroy"),
+			},
+			{
+				Config: testAccCloudStorageObjectBucketForceDestroyConfig(serviceName, region, bucketName, bucket(""), "managed"),
+			},
+			{
+				// Destroying the bucket with its object fails, without sending the deletion
+				Config:      testAccCloudStorageObjectBucketForceDestroyConfig(serviceName, region, bucketName, "", "removed"),
+				ExpectError: regexp.MustCompile("is not empty"),
+			},
+			{
+				// The bucket is still there, and force_destroy is applied without calling the API
+				Config: testAccCloudStorageObjectBucketForceDestroyConfig(serviceName, region, bucketName, bucket("force_destroy = true"), "removed"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "force_destroy", "true"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "resource_status", "READY"),
+				),
+			},
+			// The final destroy empties the bucket, then deletes it
 		},
 	})
 }
