@@ -9,6 +9,7 @@ import (
 	"slices"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
@@ -95,6 +96,10 @@ func (r *okmsSecretResource) Read(ctx context.Context, req resource.ReadRequest,
 	endpoint := "/v2/okms/resource/" + url.PathEscape(secretFromState.OkmsId.ValueString()) + "/secret/" + url.PathEscape(secretFromState.Path.ValueString())
 
 	if err := r.config.OVHClient.Get(endpoint, &currentSecret); err != nil {
+		if helpers.IsNotFound(err) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Get %s", endpoint),
 			err.Error(),

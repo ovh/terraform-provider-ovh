@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/ovh/go-ovh/ovh"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
@@ -172,6 +173,10 @@ func (r *okmsResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	}
 
 	if err := r.getOkmsById(data.Id.ValueString(), &data); err != nil {
+		if helpers.IsNotFound(err) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error reading KMS %s", data.Id.ValueString()),
 			err.Error(),

@@ -2,8 +2,10 @@ package helpers
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"net"
+	"net/http"
 	"strings"
 	"time"
 
@@ -371,6 +373,12 @@ func ConditionalAttributeBool(buff *bytes.Buffer, name string, val *bool) {
 
 // CheckDeleted checks the error to see if it's a 404 (Not Found) and, if so,
 // sets the resource ID to the empty string instead of throwing an error.
+// IsNotFound returns true if err is an OVHcloud API error with a 404 status code
+func IsNotFound(err error) bool {
+	var errOvh *ovh.APIError
+	return errors.As(err, &errOvh) && errOvh.Code == http.StatusNotFound
+}
+
 func CheckDeleted(d *schema.ResourceData, err error, endpoint string) error {
 	errOvh, ok := err.(*ovh.APIError)
 	if ok {
