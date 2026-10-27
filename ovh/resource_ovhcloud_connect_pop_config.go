@@ -7,6 +7,7 @@ import (
 	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 )
 
 var _ resource.ResourceWithConfigure = (*ovhcloudConnectPopConfigResource)(nil)
@@ -102,6 +103,10 @@ func (r *ovhcloudConnectPopConfigResource) Read(ctx context.Context, req resourc
 	endpoint := "/ovhCloudConnect/" + url.PathEscape(data.ServiceName.ValueString()) + "/config/pop/" + url.PathEscape(data.Id.String())
 
 	if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
+		if helpers.IsNotFound(err) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Get %s", endpoint),
 			err.Error(),

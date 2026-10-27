@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/ovh/go-ovh/ovh"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 )
 
 var _ resource.ResourceWithConfigure = (*vrackPublicRoutingPriorityResource)(nil)
@@ -144,6 +145,10 @@ func (r *vrackPublicRoutingPriorityResource) Read(ctx context.Context, req resou
 	endpoint := "/vrack/" + url.PathEscape(data.ServiceName.ValueString()) + "/publicRoutingPriority/" + url.PathEscape(data.PriorityId.ValueString())
 
 	if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
+		if helpers.IsNotFound(err) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Get %s", endpoint),
 			err.Error(),

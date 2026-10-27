@@ -141,6 +141,10 @@ func (r *vrackServicesResource) Read(ctx context.Context, req resource.ReadReque
 
 	endpoint := "/v2/vrackServices/resource/" + url.PathEscape(data.Id.ValueString())
 	if err := r.config.OVHClient.GetWithContext(ctx, endpoint, &responseData); err != nil {
+		if helpers.IsNotFound(err) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Get %s", endpoint),
 			err.Error(),

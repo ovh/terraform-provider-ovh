@@ -6,6 +6,7 @@ import (
 	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
@@ -94,6 +95,10 @@ func (r *emailDomainAccountResource) Read(ctx context.Context, req resource.Read
 
 	endpoint := "/email/domain/" + url.PathEscape(data.Domain.ValueString()) + "/account/" + url.PathEscape(data.AccountName.ValueString())
 	if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
+		if helpers.IsNotFound(err) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Get %s", endpoint),
 			err.Error(),
