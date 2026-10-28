@@ -13,7 +13,7 @@ import (
 	"go.uber.org/ratelimit"
 )
 
-// Number of times a GET failing with a server error or a rate limit is retried
+// Number of times a GET failing with a server error
 const getRetries = 3
 
 type Client struct {
@@ -51,7 +51,7 @@ func (c *Client) _CallAPIWithContext(ctx context.Context, method, url string, re
 
 func isRetryable(err error) bool {
 	var errOvh *ovh.APIError
-	return errors.As(err, &errOvh) && (errOvh.Code >= http.StatusInternalServerError || errOvh.Code == http.StatusTooManyRequests)
+	return errors.As(err, &errOvh) && errOvh.Code >= http.StatusInternalServerError
 }
 
 func (c *Client) _CallAPI(method, path string, reqBody, resType interface{}, needAuth bool) error {
