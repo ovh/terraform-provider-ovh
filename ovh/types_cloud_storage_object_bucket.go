@@ -15,12 +15,14 @@ type CloudStorageObjectBucketModel struct {
 	Name        ovhtypes.TfStringValue `tfsdk:"name"`
 	Region      ovhtypes.TfStringValue `tfsdk:"region"`
 
+	// Optional — immutable
+	OwnerUserId types.Int64 `tfsdk:"owner_user_id"`
+
 	// Optional — mutable
-	OwnerUserId ovhtypes.TfStringValue `tfsdk:"owner_user_id"`
-	Tags        types.Map              `tfsdk:"tags"`
-	Encryption  types.Object           `tfsdk:"encryption"`
-	Versioning  types.Object           `tfsdk:"versioning"`
-	ObjectLock  types.Object           `tfsdk:"object_lock"`
+	Tags       types.Map    `tfsdk:"tags"`
+	Encryption types.Object `tfsdk:"encryption"`
+	Versioning types.Object `tfsdk:"versioning"`
+	ObjectLock types.Object `tfsdk:"object_lock"`
 
 	// Computed
 	Id             ovhtypes.TfStringValue `tfsdk:"id"`
@@ -65,7 +67,7 @@ type CloudStorageObjectBucketAPIObjectLock struct {
 type CloudStorageObjectBucketAPITargetSpec struct {
 	Name        string                                 `json:"name,omitempty"`
 	Location    *CloudStorageObjectBucketAPILocation   `json:"location,omitempty"`
-	OwnerUserId string                                 `json:"ownerUserId,omitempty"`
+	OwnerUserId int64                                  `json:"ownerUserId,omitempty"`
 	Encryption  *CloudStorageObjectBucketAPIEncryption `json:"encryption,omitempty"`
 	Versioning  *CloudStorageObjectBucketAPIVersioning `json:"versioning,omitempty"`
 	ObjectLock  *CloudStorageObjectBucketAPIObjectLock `json:"objectLock,omitempty"`
@@ -73,10 +75,9 @@ type CloudStorageObjectBucketAPITargetSpec struct {
 }
 
 type CloudStorageObjectBucketAPIUpdateTargetSpec struct {
-	OwnerUserId string                                 `json:"ownerUserId,omitempty"`
-	Encryption  *CloudStorageObjectBucketAPIEncryption `json:"encryption,omitempty"`
-	Versioning  *CloudStorageObjectBucketAPIVersioning `json:"versioning,omitempty"`
-	ObjectLock  *CloudStorageObjectBucketAPIObjectLock `json:"objectLock,omitempty"`
+	Encryption *CloudStorageObjectBucketAPIEncryption `json:"encryption,omitempty"`
+	Versioning *CloudStorageObjectBucketAPIVersioning `json:"versioning,omitempty"`
+	ObjectLock *CloudStorageObjectBucketAPIObjectLock `json:"objectLock,omitempty"`
 	// Always sent, {} when unset, so removing every tag from the config clears them explicitly.
 	Tags map[string]string `json:"tags"`
 }
@@ -92,6 +93,14 @@ type CloudStorageObjectBucketAPICurrentState struct {
 	// Pointers: the API only returns these on a single bucket GET, never on LIST.
 	ObjectsCount *int64 `json:"objectsCount,omitempty"`
 	ObjectsSize  *int64 `json:"objectsSize,omitempty"`
+}
+
+// 0 is the API's "absent" for ownerUserId (omitempty on both sides): null keeps a config without owner_user_id consistent.
+func storageObjectBucketOwnerUserId(id int64) types.Int64 {
+	if id == 0 {
+		return types.Int64Null()
+	}
+	return types.Int64Value(id)
 }
 
 // Create payload
@@ -319,7 +328,7 @@ func (m *CloudStorageObjectBucketModel) ToCreate() *CloudStorageObjectBucketCrea
 	}
 
 	if !m.OwnerUserId.IsNull() && !m.OwnerUserId.IsUnknown() {
-		target.OwnerUserId = m.OwnerUserId.ValueString()
+		target.OwnerUserId = m.OwnerUserId.ValueInt64()
 	}
 
 	return &CloudStorageObjectBucketCreatePayload{TargetSpec: target}
@@ -336,10 +345,6 @@ func (m *CloudStorageObjectBucketModel) ToUpdate(checksum string) *CloudStorageO
 		Versioning: storageObjectBucketVersioningToAPI(m.Versioning),
 		ObjectLock: storageObjectBucketObjectLockToAPI(m.ObjectLock),
 		Tags:       tags,
-	}
-
-	if !m.OwnerUserId.IsNull() && !m.OwnerUserId.IsUnknown() {
-		target.OwnerUserId = m.OwnerUserId.ValueString()
 	}
 
 	return &CloudStorageObjectBucketUpdatePayload{Checksum: checksum, TargetSpec: target}
@@ -391,7 +396,7 @@ func (m *CloudStorageObjectBucketModel) MergeWith(ctx context.Context, response 
 		m.Region = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Location.Region)}
 	}
 
-	m.OwnerUserId = nullableTfString(response.TargetSpec.OwnerUserId)
+	m.OwnerUserId = storageObjectBucketOwnerUserId(response.TargetSpec.OwnerUserId)
 	m.Encryption = buildStorageObjectBucketEncryptionObject(response.TargetSpec.Encryption)
 	m.Versioning = buildStorageObjectBucketVersioningObject(response.TargetSpec.Versioning)
 	m.ObjectLock = buildStorageObjectBucketObjectLockSpecObject(response.TargetSpec.ObjectLock)

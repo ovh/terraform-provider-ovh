@@ -87,7 +87,7 @@ func storageObjectBucketListItemAttrTypes() map[string]attr.Type {
 		"id":              ovhtypes.TfStringType{},
 		"name":            ovhtypes.TfStringType{},
 		"location":        types.ObjectType{AttrTypes: StorageObjectBucketLocationAttrTypes()},
-		"owner_user_id":   ovhtypes.TfStringType{},
+		"owner_user_id":   types.Int64Type,
 		"encryption":      types.ObjectType{AttrTypes: StorageObjectBucketEncryptionAttrTypes()},
 		"versioning":      types.ObjectType{AttrTypes: StorageObjectBucketVersioningAttrTypes()},
 		"object_lock":     types.ObjectType{AttrTypes: StorageObjectBucketObjectLockAttrTypes()},

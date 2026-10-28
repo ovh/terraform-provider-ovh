@@ -12,10 +12,10 @@ Creates an S3&trade; compatible object storage bucket in a public cloud project.
 
 ```terraform
 resource "ovh_cloud_storage_object_bucket" "bucket" {
-  service_name  = <Public cloud project id>
+  service_name  = "<Public cloud project id>"
   name          = "my-data-bucket"
   region        = "GRA"
-  owner_user_id = "<owner user id>"
+  owner_user_id = 12345
 
   versioning = {
     status = "ENABLED"
@@ -57,7 +57,7 @@ The following arguments are supported:
 * `service_name` - (Optional) Service name of the resource representing the id of the cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used. **Changing this value recreates the resource.**
 * `name` - (Required) Bucket name (must be globally unique and DNS-compatible): 3 to 63 characters, lowercase letters, digits, dots and hyphens only, starting and ending with a letter or a digit. **Changing this value recreates the resource.**
 * `region` - (Required) Region identifier where the bucket will be created. Must be upper-case (e.g. `GRA`, `SBG`, `BHS`). **Changing this value recreates the resource.**
-* `owner_user_id` - (Optional) Owner user identifier.
+* `owner_user_id` - (Optional) ID of the Public Cloud user (as in `ovh_cloud_project_user`) whose S3 credentials create the bucket, so that user owns it. Defaults to the project's management user. **Changing this value recreates the resource.**
 * `tags` - (Optional) Metadata tags for the bucket, as a map of strings.
 * `encryption` - (Optional) Server-side encryption configuration:
   * `algorithm` - (Required) Encryption algorithm. One of `AES256`, `PLAINTEXT`.

@@ -99,14 +99,15 @@ resource "ovh_cloud_storage_object_bucket" "bucket" {
 func TestAccCloudStorageObjectBucket_update(t *testing.T) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
 	region := strings.ToUpper(os.Getenv("OVH_CLOUD_PROJECT_STORAGE_REGION_TEST"))
-	// Optional: owner_user_id must reference an existing user, so it is only exercised when provided.
+	// Optional: owner_user_id must reference an existing user, so it is only exercised when provided;
+	// immutable, so it is set in every step.
 	ownerUserId := os.Getenv("OVH_CLOUD_PROJECT_S3_OWNER_USER_ID_TEST")
 
 	bucketName := acctest.RandomWithPrefix(test_prefix)
 
 	ownerLine := ""
 	if ownerUserId != "" {
-		ownerLine = fmt.Sprintf("owner_user_id = %q", ownerUserId)
+		ownerLine = fmt.Sprintf("owner_user_id = %s", ownerUserId)
 	}
 
 	config := fmt.Sprintf(`
@@ -114,6 +115,7 @@ resource "ovh_cloud_storage_object_bucket" "bucket" {
   service_name = "%s"
   name         = "%s"
   region       = "%s"
+  %s
 
   versioning = {
     status = "ENABLED"
@@ -123,7 +125,7 @@ resource "ovh_cloud_storage_object_bucket" "bucket" {
     env = "test"
   }
 }
-`, serviceName, bucketName, region)
+`, serviceName, bucketName, region, ownerLine)
 
 	updatedConfig := fmt.Sprintf(`
 resource "ovh_cloud_storage_object_bucket" "bucket" {
@@ -152,6 +154,7 @@ resource "ovh_cloud_storage_object_bucket" "bucket" {
   service_name = "%s"
   name         = "%s"
   region       = "%s"
+  %s
 
   versioning = {
     status = "SUSPENDED"
@@ -161,15 +164,16 @@ resource "ovh_cloud_storage_object_bucket" "bucket" {
     env = "test"
   }
 }
-`, serviceName, bucketName, region)
+`, serviceName, bucketName, region, ownerLine)
 
 	untaggedConfig := fmt.Sprintf(`
 resource "ovh_cloud_storage_object_bucket" "bucket" {
   service_name = "%s"
   name         = "%s"
   region       = "%s"
+  %s
 }
-`, serviceName, bucketName, region)
+`, serviceName, bucketName, region, ownerLine)
 
 	updatedChecks := []resource.TestCheckFunc{
 		resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "versioning.status", "SUSPENDED"),
@@ -206,7 +210,6 @@ resource "ovh_cloud_storage_object_bucket" "bucket" {
 			{
 				Config: prunedConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckNoResourceAttr("ovh_cloud_storage_object_bucket.bucket", "owner_user_id"),
 					resource.TestCheckNoResourceAttr("ovh_cloud_storage_object_bucket.bucket", "encryption.algorithm"),
 					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "tags.%", "1"),
 					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "tags.env", "test"),

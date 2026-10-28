@@ -28,7 +28,7 @@ data "ovh_cloud_storage_object_bucket" "bucket" {
 * `name` - Bucket name.
 * `location` - Target geographic region of the bucket:
   * `region` - Region identifier.
-* `owner_user_id` - Owner user identifier.
+* `owner_user_id` - ID of the Public Cloud user who owns the bucket (the project's management user when unset).
 * `encryption` - Server-side encryption configuration:
   * `algorithm` - Encryption algorithm (`AES256`, `PLAINTEXT`).
 * `versioning` - Versioning configuration:

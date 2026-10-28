@@ -65,10 +65,9 @@ func storageObjectBucketDataSourceAttributes() map[string]schema.Attribute {
 				},
 			},
 		},
-		"owner_user_id": schema.StringAttribute{
-			CustomType:  ovhtypes.TfStringType{},
+		"owner_user_id": schema.Int64Attribute{
 			Computed:    true,
-			Description: "Owner user identifier",
+			Description: "ID of the Public Cloud user who owns the bucket",
 		},
 		"encryption": schema.SingleNestedAttribute{
 			Computed:    true,
@@ -255,7 +254,7 @@ type cloudStorageObjectBucketDataSourceModel struct {
 	Id             ovhtypes.TfStringValue `tfsdk:"id"`
 	Name           ovhtypes.TfStringValue `tfsdk:"name"`
 	Location       types.Object           `tfsdk:"location"`
-	OwnerUserId    ovhtypes.TfStringValue `tfsdk:"owner_user_id"`
+	OwnerUserId    types.Int64            `tfsdk:"owner_user_id"`
 	Encryption     types.Object           `tfsdk:"encryption"`
 	Versioning     types.Object           `tfsdk:"versioning"`
 	ObjectLock     types.Object           `tfsdk:"object_lock"`
@@ -302,14 +301,14 @@ func mapStorageObjectBucketToDataSourceModel(ctx context.Context, v *CloudStorag
 	if v.TargetSpec != nil {
 		data.Name = ovhtypes.TfStringValue{StringValue: types.StringValue(v.TargetSpec.Name)}
 		data.Location = buildStorageObjectBucketLocationObject(v.TargetSpec.Location)
-		data.OwnerUserId = nullableTfString(v.TargetSpec.OwnerUserId)
+		data.OwnerUserId = storageObjectBucketOwnerUserId(v.TargetSpec.OwnerUserId)
 		data.Encryption = buildStorageObjectBucketEncryptionObject(v.TargetSpec.Encryption)
 		data.Versioning = buildStorageObjectBucketVersioningObject(v.TargetSpec.Versioning)
 		data.ObjectLock = buildStorageObjectBucketObjectLockObject(v.TargetSpec.ObjectLock)
 		data.Tags = buildStorageObjectBucketTagsMap(v.TargetSpec.Tags)
 	} else {
 		data.Location = types.ObjectNull(StorageObjectBucketLocationAttrTypes())
-		data.OwnerUserId = nullableTfString("")
+		data.OwnerUserId = types.Int64Null()
 		data.Encryption = types.ObjectNull(StorageObjectBucketEncryptionAttrTypes())
 		data.Versioning = types.ObjectNull(StorageObjectBucketVersioningAttrTypes())
 		data.ObjectLock = types.ObjectNull(StorageObjectBucketObjectLockAttrTypes())
