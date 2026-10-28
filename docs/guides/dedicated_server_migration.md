@@ -92,7 +92,7 @@ resource "ovh_dedicated_server" "srv" {
   #
 
   lifecycle {
-    ignore_changes = [os, customizations, properties, storage]
+    ignore_changes = [os, customizations, storage]
   }
 }
 ```
