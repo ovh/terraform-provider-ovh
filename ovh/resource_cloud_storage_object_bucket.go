@@ -576,12 +576,6 @@ func (r *cloudStorageObjectBucketResource) Delete(ctx context.Context, req resou
 			if res.ResourceStatus == "ERROR" {
 				return res, res.ResourceStatus, cloudResourceErrorFromTasks("bucket", data.Id.ValueString(), res.CurrentTasks)
 			}
-			// A refused deletion stays DELETING with a failed task: don't wait for the timeout
-			for _, task := range res.CurrentTasks {
-				if task.Status == "ERROR" {
-					return res, res.ResourceStatus, cloudResourceErrorFromTasks("bucket", data.Id.ValueString(), res.CurrentTasks)
-				}
-			}
 			return res, res.ResourceStatus, nil
 		},
 		Timeout:    20 * time.Minute,

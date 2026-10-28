@@ -20,8 +20,8 @@ import (
 
 // newCloudStorageObjectBucketDeleteTest returns the bucket resource talking to a fake API serving
 // one bucket with the given objects, its delete state, and the list of the calls received.
-// After a DELETE, the bucket is gone, or stays DELETING with a failed task when deleteFails is set.
-func newCloudStorageObjectBucketDeleteTest(t *testing.T, objects string, forceDestroy, deleteFails bool) (*cloudStorageObjectBucketResource, tfsdk.State, *[]string) {
+// After a DELETE, the bucket is gone.
+func newCloudStorageObjectBucketDeleteTest(t *testing.T, objects string, forceDestroy bool) (*cloudStorageObjectBucketResource, tfsdk.State, *[]string) {
 	t.Helper()
 	ctx := context.Background()
 	bucketPath := "/v2/publicCloud/project/xxx/storage/object/bucket/GRA_my-bucket"
@@ -46,8 +46,6 @@ func newCloudStorageObjectBucketDeleteTest(t *testing.T, objects string, forceDe
 		switch {
 		case r.Method == http.MethodDelete:
 			deleted = true
-		case deleted && deleteFails:
-			fmt.Fprint(w, `{"id": "GRA_my-bucket", "resourceStatus": "DELETING", "currentTasks": [{"type": "DELETE_S3_BUCKET", "status": "ERROR", "errors": [{"message": "The bucket is not empty"}]}]}`)
 		case deleted:
 			w.WriteHeader(http.StatusNotFound)
 			fmt.Fprint(w, `{"message": "S3 bucket not found"}`)
@@ -79,7 +77,6 @@ func TestCloudStorageObjectBucketDelete(t *testing.T) {
 	for name, tc := range map[string]struct {
 		objects      string
 		forceDestroy bool
-		deleteFails  bool
 		wantError    string
 		wantCalls    []string
 	}{
@@ -98,15 +95,9 @@ func TestCloudStorageObjectBucketDelete(t *testing.T) {
 			forceDestroy: true,
 			wantCalls:    []string{"GET object?withVersions=true", "POST bulkDeleteObjects", "GET object?withVersions=true", "DELETE bucket", "GET bucket"},
 		},
-		"failed deletion task": {
-			objects:     "[]",
-			deleteFails: true,
-			wantError:   "Error waiting for bucket to be deleted",
-			wantCalls:   []string{"GET object?withVersions=true", "DELETE bucket", "GET bucket"},
-		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			r, state, calls := newCloudStorageObjectBucketDeleteTest(t, tc.objects, tc.forceDestroy, tc.deleteFails)
+			r, state, calls := newCloudStorageObjectBucketDeleteTest(t, tc.objects, tc.forceDestroy)
 
 			resp := resource.DeleteResponse{State: state}
 			r.Delete(context.Background(), resource.DeleteRequest{State: state}, &resp)
