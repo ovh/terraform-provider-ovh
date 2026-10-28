@@ -4,6 +4,8 @@ subcategory: "Cloud Project"
 
 # ovh_cloud_project_regions (Data Source)
 
+~> **NOTE** This data source relies on the Public Cloud API v1. Prefer the new `ovh_cloud_regions` data source. See the [migration guide](../guides/public_cloud_resources_migration).
+
 Use this data source to get the regions of a public cloud project.
 
 ## Example Usage

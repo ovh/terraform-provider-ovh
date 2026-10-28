@@ -35,9 +35,10 @@ func resourceOvhCloudProjectNetworkPrivateSubnetV2ImportState(
 
 func resourceCloudProjectNetworkPrivateSubnetV2() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCloudProjectNetworkPrivateSubnetV2Create,
-		Read:   resourceCloudProjectNetworkPrivateSubnetV2Read,
-		Delete: resourceCloudProjectNetworkPrivateSubnetV2Delete,
+		DeprecationMessage: "Use ovh_cloud_network_private_vrack_subnet instead. See https://registry.terraform.io/providers/ovh/ovh/latest/docs/guides/public_cloud_resources_migration",
+		Create:             resourceCloudProjectNetworkPrivateSubnetV2Create,
+		Read:               resourceCloudProjectNetworkPrivateSubnetV2Read,
+		Delete:             resourceCloudProjectNetworkPrivateSubnetV2Delete,
 		Importer: &schema.ResourceImporter{
 			State: resourceOvhCloudProjectNetworkPrivateSubnetV2ImportState,
 		},

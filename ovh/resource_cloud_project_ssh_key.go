@@ -45,6 +45,7 @@ func (d *cloudProjectSshKeyResource) Configure(_ context.Context, req resource.C
 
 func (d *cloudProjectSshKeyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = CloudProjectSshKeyResourceSchema(ctx)
+	resp.Schema.DeprecationMessage = "Use ovh_cloud_ssh_key instead. See https://registry.terraform.io/providers/ovh/ovh/latest/docs/guides/public_cloud_resources_migration"
 }
 
 func (r *cloudProjectSshKeyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

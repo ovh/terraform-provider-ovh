@@ -4,6 +4,8 @@ subcategory: "Gateway"
 
 # ovh_cloud_project_gateway_interface
 
+~> **NOTE** This resource relies on the Public Cloud API v1. Prefer the `subnet_ids` attribute of the new `ovh_cloud_gateway` resource. See the [migration guide](../guides/public_cloud_resources_migration) to move an existing resource without recreating it.
+
 Create a new Gateway Interface for existing subnet in the specified public cloud project.
 
 ## Example Usage

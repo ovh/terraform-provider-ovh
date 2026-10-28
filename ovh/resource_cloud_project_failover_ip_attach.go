@@ -15,9 +15,10 @@ import (
 
 func resourceCloudProjectFailoverIpAttach() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCloudProjectFailoverIpAttachCreate,
-		Read:   resourceCloudProjectFailoverIpAttachRead,
-		Delete: resourceCloudProjectFailoverIpAttachDelete,
+		DeprecationMessage: "Use the networks attribute of ovh_cloud_instance instead. See https://registry.terraform.io/providers/ovh/ovh/latest/docs/guides/public_cloud_resources_migration",
+		Create:             resourceCloudProjectFailoverIpAttachCreate,
+		Read:               resourceCloudProjectFailoverIpAttachRead,
+		Delete:             resourceCloudProjectFailoverIpAttachDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {

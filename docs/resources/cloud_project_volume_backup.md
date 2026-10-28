@@ -4,7 +4,7 @@ subcategory: "Block Storage"
 
 # ovh_cloud_project_volume_backup
 
-~> **NOTE** Prefer using the new `ovh_cloud_storage_block_volume_backup` resource instead.
+~> **NOTE** This resource relies on the Public Cloud API v1. Prefer the new `ovh_cloud_storage_block_volume_backup` resource. See the [migration guide](../guides/public_cloud_resources_migration) to move an existing resource without recreating it.
 
 Manage backups for the given volume in a public cloud project.
 

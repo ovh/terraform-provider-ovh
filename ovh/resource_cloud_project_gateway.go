@@ -31,10 +31,11 @@ func resourceOvhCloudProjectGatewayImportState(d *schema.ResourceData, meta inte
 
 func resourceCloudProjectGateway() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCloudProjectGatewayCreate,
-		Read:   resourceCloudProjectGatewayRead,
-		Update: resourceCloudProjectGatewayUpdate,
-		Delete: resourceCloudProjectGatewayDelete,
+		DeprecationMessage: "Use ovh_cloud_gateway instead. See https://registry.terraform.io/providers/ovh/ovh/latest/docs/guides/public_cloud_resources_migration",
+		Create:             resourceCloudProjectGatewayCreate,
+		Read:               resourceCloudProjectGatewayRead,
+		Update:             resourceCloudProjectGatewayUpdate,
+		Delete:             resourceCloudProjectGatewayDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceOvhCloudProjectGatewayImportState,
 		},

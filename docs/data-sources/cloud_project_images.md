@@ -4,6 +4,8 @@ subcategory: "Instances"
 
 # ovh_cloud_project_images (Data Source)
 
+~> **NOTE** This data source relies on the Public Cloud API v1. Prefer the new `ovh_cloud_instance_images` data source. See the [migration guide](../guides/public_cloud_resources_migration).
+
 Get available images in the given public cloud project.
 
 ## Example Usage

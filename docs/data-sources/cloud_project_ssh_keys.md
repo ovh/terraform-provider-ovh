@@ -5,7 +5,7 @@ description: "Get SSH keys"
 
 # ovh_cloud_project_ssh_keys (Data Source)
 
-~> **NOTE** Prefer using the new `ovh_cloud_ssh_keys` data source instead.
+~> **NOTE** This data source relies on the Public Cloud API v1. Prefer the new `ovh_cloud_ssh_keys` data source. See the [migration guide](../guides/public_cloud_resources_migration).
 
 Get SSH keys in a Public Cloud project.
 

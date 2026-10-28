@@ -5,14 +5,19 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"strings"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
-var _ resource.ResourceWithConfigure = (*cloudSshKeyResource)(nil)
+var (
+	_ resource.ResourceWithConfigure   = (*cloudSshKeyResource)(nil)
+	_ resource.ResourceWithImportState = (*cloudSshKeyResource)(nil)
+)
 
 func NewCloudSshKeyResource() resource.Resource {
 	return &cloudSshKeyResource{}
@@ -103,6 +108,17 @@ func (r *cloudSshKeyResource) Create(ctx context.Context, req resource.CreateReq
 	responseData.ServiceName = data.ServiceName
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, responseData)...)
+}
+
+func (r *cloudSshKeyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	splits := strings.Split(req.ID, "/")
+	if len(splits) != 2 {
+		resp.Diagnostics.AddError("Given ID is malformed", "ID must be formatted like the following: <service_name>/<name>")
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_name"), splits[0])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), splits[1])...)
 }
 
 func (r *cloudSshKeyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {

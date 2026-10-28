@@ -4,6 +4,8 @@ subcategory : "Object Storage"
 
 # ovh_cloud_project_storage
 
+~> **NOTE** This data source relies on the Public Cloud API v1. Prefer the new `ovh_cloud_storage_object_bucket` data source. See the [migration guide](../guides/public_cloud_resources_migration).
+
 Get S3™* compatible storage container. \* S3 is a trademark filed by Amazon Technologies,Inc. OVHcloud's service is not sponsored by, endorsed by, or otherwise affiliated with Amazon Technologies,Inc.
 
 ## Example Usage
