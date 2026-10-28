@@ -57,6 +57,7 @@ The following attributes are exported:
 * `status` - Registry status
 * `updated_at` - Registry last update date
 * `url` - Access url of the registry
+* `oidc_callback_uri` - Callback URI of the registry, `<url>/c/oidc/callback`. Register it as a redirect URI on the OIDC provider before configuring `ovh_cloud_project_containerregistry_oidc`
 * `version` - Version of your registry
 * `iam_enabled` - OVHCloud IAM enabled
 

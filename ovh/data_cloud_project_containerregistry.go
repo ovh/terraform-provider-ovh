@@ -69,6 +69,11 @@ func dataSourceCloudProjectContainerRegistry() *schema.Resource {
 				Description: "Access url of the registry",
 				Computed:    true,
 			},
+			"oidc_callback_uri": {
+				Type:        schema.TypeString,
+				Description: "Callback URI to register on the OIDC provider, built from the registry url",
+				Computed:    true,
+			},
 			"version": {
 				Type:        schema.TypeString,
 				Description: "Version of your registry",

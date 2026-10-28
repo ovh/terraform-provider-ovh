@@ -2,6 +2,7 @@ package ovh
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
@@ -100,6 +101,15 @@ func (p *CloudProjectContainerRegistry) String() string {
 	)
 }
 
+// OIDCCallbackURI is the redirect URI to register on the OIDC provider: Harbor always serves
+// its OIDC callback on this path, it is not returned by the API
+func (r CloudProjectContainerRegistry) OIDCCallbackURI() string {
+	if r.Url == "" {
+		return ""
+	}
+	return strings.TrimSuffix(r.Url, "/") + "/c/oidc/callback"
+}
+
 func (r CloudProjectContainerRegistry) ToMap() map[string]interface{} {
 	obj := make(map[string]interface{})
 	obj["created_at"] = r.CreatedAt
@@ -112,6 +122,7 @@ func (r CloudProjectContainerRegistry) ToMap() map[string]interface{} {
 	obj["status"] = r.Status
 	obj["updated_at"] = r.UpdatedAt
 	obj["url"] = r.Url
+	obj["oidc_callback_uri"] = r.OIDCCallbackURI()
 	obj["version"] = r.Version
 	return obj
 }
