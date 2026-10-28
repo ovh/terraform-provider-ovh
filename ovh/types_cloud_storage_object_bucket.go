@@ -16,7 +16,7 @@ type CloudStorageObjectBucketModel struct {
 	Region      ovhtypes.TfStringValue `tfsdk:"region"`
 
 	// Optional — immutable
-	OwnerUserId types.Int64 `tfsdk:"owner_user_id"`
+	OwnerUserId ovhtypes.TfStringValue `tfsdk:"owner_user_id"`
 
 	// Optional — mutable
 	Tags       types.Map    `tfsdk:"tags"`
@@ -67,7 +67,7 @@ type CloudStorageObjectBucketAPIObjectLock struct {
 type CloudStorageObjectBucketAPITargetSpec struct {
 	Name        string                                 `json:"name,omitempty"`
 	Location    *CloudStorageObjectBucketAPILocation   `json:"location,omitempty"`
-	OwnerUserId int64                                  `json:"ownerUserId,omitempty"`
+	OwnerUserId string                                 `json:"ownerUserId,omitempty"`
 	Encryption  *CloudStorageObjectBucketAPIEncryption `json:"encryption,omitempty"`
 	Versioning  *CloudStorageObjectBucketAPIVersioning `json:"versioning,omitempty"`
 	ObjectLock  *CloudStorageObjectBucketAPIObjectLock `json:"objectLock,omitempty"`
@@ -93,14 +93,6 @@ type CloudStorageObjectBucketAPICurrentState struct {
 	// Pointers: the API only returns these on a single bucket GET, never on LIST.
 	ObjectsCount *int64 `json:"objectsCount,omitempty"`
 	ObjectsSize  *int64 `json:"objectsSize,omitempty"`
-}
-
-// 0 is the API's "absent" for ownerUserId (omitempty on both sides): null keeps a config without owner_user_id consistent.
-func storageObjectBucketOwnerUserId(id int64) types.Int64 {
-	if id == 0 {
-		return types.Int64Null()
-	}
-	return types.Int64Value(id)
 }
 
 // Create payload
@@ -328,7 +320,7 @@ func (m *CloudStorageObjectBucketModel) ToCreate() *CloudStorageObjectBucketCrea
 	}
 
 	if !m.OwnerUserId.IsNull() && !m.OwnerUserId.IsUnknown() {
-		target.OwnerUserId = m.OwnerUserId.ValueInt64()
+		target.OwnerUserId = m.OwnerUserId.ValueString()
 	}
 
 	return &CloudStorageObjectBucketCreatePayload{TargetSpec: target}
@@ -396,7 +388,7 @@ func (m *CloudStorageObjectBucketModel) MergeWith(ctx context.Context, response 
 		m.Region = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Location.Region)}
 	}
 
-	m.OwnerUserId = storageObjectBucketOwnerUserId(response.TargetSpec.OwnerUserId)
+	m.OwnerUserId = nullableTfString(response.TargetSpec.OwnerUserId)
 	m.Encryption = buildStorageObjectBucketEncryptionObject(response.TargetSpec.Encryption)
 	m.Versioning = buildStorageObjectBucketVersioningObject(response.TargetSpec.Versioning)
 	m.ObjectLock = buildStorageObjectBucketObjectLockSpecObject(response.TargetSpec.ObjectLock)

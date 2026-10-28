@@ -107,7 +107,7 @@ func TestAccCloudStorageObjectBucket_update(t *testing.T) {
 
 	ownerLine := ""
 	if ownerUserId != "" {
-		ownerLine = fmt.Sprintf("owner_user_id = %s", ownerUserId)
+		ownerLine = fmt.Sprintf("owner_user_id = %q", ownerUserId)
 	}
 
 	config := fmt.Sprintf(`
