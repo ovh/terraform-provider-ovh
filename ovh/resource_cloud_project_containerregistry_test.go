@@ -101,6 +101,13 @@ func TestAccCloudProjectContainerRegistry_basic(t *testing.T) {
 						"ovh_cloud_project_containerregistry.reg", "plan.0.name", "SMALL"),
 					resource.TestCheckResourceAttrSet(
 						"ovh_cloud_project_containerregistry.reg", "url"),
+					resource.TestCheckResourceAttrWith(
+						"ovh_cloud_project_containerregistry.reg", "oidc_callback_uri", func(value string) error {
+							if !strings.HasSuffix(value, "/c/oidc/callback") {
+								return fmt.Errorf("unexpected oidc_callback_uri %q", value)
+							}
+							return nil
+						}),
 				),
 			},
 			{
