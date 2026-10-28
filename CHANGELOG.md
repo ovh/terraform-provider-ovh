@@ -1,3 +1,64 @@
+## 2.24.0 (October 29, 2026)
+
+🎉 Features:
+
+* New resource: `ovh_cloud_private_endpoint` (alpha) ([#1550](https://github.com/ovh/terraform-provider-ovh/pull/1550))
+* New resource: `ovh_dedicated_cloud_user` ([#1418](https://github.com/ovh/terraform-provider-ovh/pull/1418))
+* New resource: `ovh_dedicated_cloud_user_object_right` ([#1418](https://github.com/ovh/terraform-provider-ovh/pull/1418))
+
+* New datasource: `ovh_cloud_private_endpoint` ([#1550](https://github.com/ovh/terraform-provider-ovh/pull/1550))
+* New datasource: `ovh_cloud_private_endpoints` ([#1550](https://github.com/ovh/terraform-provider-ovh/pull/1550))
+* New datasource: `ovh_cloud_private_endpoint_service_availabilities` ([#1550](https://github.com/ovh/terraform-provider-ovh/pull/1550))
+* New datasource: `ovh_dedicated_cloud_user` ([#1418](https://github.com/ovh/terraform-provider-ovh/pull/1418))
+* New datasource: `ovh_dedicated_cloud_user_object_right` ([#1418](https://github.com/ovh/terraform-provider-ovh/pull/1418))
+
+* Provider: Add the `profile` argument (or the `OVH_PROFILE` environment variable), to select a named profile of the `.ovh.conf` file, like the `ovhcloud` CLI ([#1310](https://github.com/ovh/terraform-provider-ovh/pull/1310))
+
+* The Public Cloud API v1 resources are deprecated. Use their Public Cloud API v2 replacements, as explained in the [migration guide](https://registry.terraform.io/providers/ovh/ovh/latest/docs/guides/public_cloud_resources_migration) ([#1506](https://github.com/ovh/terraform-provider-ovh/pull/1506)):
+  * `r/ovh_cloud_project_instance` → `r/ovh_cloud_instance`
+  * `r/ovh_cloud_project_instance_snapshot` → `r/ovh_cloud_instance_snapshot`
+  * `r/ovh_cloud_project_volume` → `r/ovh_cloud_storage_block_volume`
+  * `r/ovh_cloud_project_volume_backup` → `r/ovh_cloud_storage_block_volume_backup`
+  * `r/ovh_cloud_project_file_storage_share` → `r/ovh_cloud_storage_file_share`
+  * `r/ovh_cloud_project_file_storage_share_network` → `r/ovh_cloud_storage_file_share_network`
+  * `r/ovh_cloud_project_storage` → `r/ovh_cloud_storage_object_bucket`
+  * `r/ovh_cloud_project_network_private` → `r/ovh_cloud_network_private_vrack`, one per region
+  * `r/ovh_cloud_project_network_private_subnet`, `r/ovh_cloud_project_network_private_subnet_v2` → `r/ovh_cloud_network_private_vrack_subnet`
+  * `r/ovh_cloud_project_region_network` → `r/ovh_cloud_network_private_vrack` and `r/ovh_cloud_network_private_vrack_subnet`
+  * `r/ovh_cloud_project_gateway`, `r/ovh_cloud_project_gateway_interface` → `r/ovh_cloud_gateway`
+  * `r/ovh_cloud_project_loadbalancer` → `r/ovh_cloud_loadbalancer`, `r/ovh_cloud_loadbalancer_listener`, `r/ovh_cloud_loadbalancer_pool` and `r/ovh_cloud_loadbalancer_pool_member`
+  * `r/ovh_cloud_project_ssh_key` → `r/ovh_cloud_ssh_key`
+  * `r/ovh_cloud_project_failover_ip_attach` → the `networks` attribute of `r/ovh_cloud_instance`
+
+💪 Improvements:
+
+* Various resources: When a resource was deleted outside of Terraform, the plan now creates it again, instead of failing with a 404 ([#1528](https://github.com/ovh/terraform-provider-ovh/pull/1528), [#1538](https://github.com/ovh/terraform-provider-ovh/pull/1538), [#1539](https://github.com/ovh/terraform-provider-ovh/pull/1539), [#1540](https://github.com/ovh/terraform-provider-ovh/pull/1540), [#1541](https://github.com/ovh/terraform-provider-ovh/pull/1541), [#1542](https://github.com/ovh/terraform-provider-ovh/pull/1542), [#1543](https://github.com/ovh/terraform-provider-ovh/pull/1543), [#1544](https://github.com/ovh/terraform-provider-ovh/pull/1544), [#1545](https://github.com/ovh/terraform-provider-ovh/pull/1545), [#1546](https://github.com/ovh/terraform-provider-ovh/pull/1546), [#1549](https://github.com/ovh/terraform-provider-ovh/pull/1549))
+* Provider: A temporary API error (5xx or 429) while reading a resource or waiting for it to be ready is now retried, instead of failing the apply and tainting a resource that ends up healthy ([#1555](https://github.com/ovh/terraform-provider-ovh/pull/1555))
+* `r/ovh_cloud_ssh_key`: Support import ([#1506](https://github.com/ovh/terraform-provider-ovh/pull/1506))
+* `r/ovh_cloud_storage_file_share_network`: Add the `availability_zone` attribute ([#1506](https://github.com/ovh/terraform-provider-ovh/pull/1506))
+* `d/ovh_cloud_instance_snapshots`: Add the computed `can_be_deleted` attribute ([#1524](https://github.com/ovh/terraform-provider-ovh/pull/1524))
+* `r/ovh_cloud_instance`: `power_state` now accepts `PAUSED` and `SUSPENDED` ([#1523](https://github.com/ovh/terraform-provider-ovh/pull/1523))
+
+🐜 Bug fixes:
+
+* `r/ovh_cloud_project_database`: Changing the region of the nodes now replaces the cluster, and the plan now refuses nodes in different regions ([#1537](https://github.com/ovh/terraform-provider-ovh/pull/1537))
+* `r/ovh_cloud_project_kube`: After a reset of the kubeconfig, a refresh now gets the new kubeconfig ([#1552](https://github.com/ovh/terraform-provider-ovh/pull/1552))
+* `r/ovh_cloud_project_kube`: The plan now refuses `kube_proxy_mode` on new `standard` clusters, where it cannot be used, and no longer replaces existing ones ([#1527](https://github.com/ovh/terraform-provider-ovh/pull/1527))
+* `r/ovh_cloud_project_kube`: Removing `load_balancers_subnet_id` now clears it on the cluster ([#1533](https://github.com/ovh/terraform-provider-ovh/pull/1533))
+* `r/ovh_cloud_project_network_private_subnet_v2`: `dns_nameservers = []` now creates a subnet without DNS servers, instead of getting the default resolver and being replaced on every plan ([#1536](https://github.com/ovh/terraform-provider-ovh/pull/1536))
+* `r/ovh_dedicated_server`: Changing the boot settings no longer fails, now that only the changed fields are sent ([#1535](https://github.com/ovh/terraform-provider-ovh/pull/1535))
+* `r/ovh_dedicated_server_reinstall_task`: States saved with v2.22.0 or older now refresh correctly, instead of failing the validation of `partitioning` or planning a reinstall of the server ([#1531](https://github.com/ovh/terraform-provider-ovh/pull/1531))
+* `r/ovh_domain_zone_record`: The API return is now correctly parsed for `TXT` records longer than 255 characters, which no longer show a change on every plan ([#1534](https://github.com/ovh/terraform-provider-ovh/pull/1534))
+* `r/ovh_vps`: `do_not_send_password` is now kept in the state, instead of being unknown after the creation and lost on update ([#1556](https://github.com/ovh/terraform-provider-ovh/pull/1556))
+
+📚 Documentation:
+
+* Add the [migration guide](https://registry.terraform.io/providers/ovh/ovh/latest/docs/guides/public_cloud_resources_migration) from the Public Cloud API v1 resources to the new `ovh_cloud_*` ones ([#1506](https://github.com/ovh/terraform-provider-ovh/pull/1506))
+* `r/ovh_cloud_project_kube`: Use the `ovh_cloud_network_private_vrack`, `ovh_cloud_network_private_vrack_subnet` and `ovh_cloud_gateway` resources in the private network examples, and document how to get the egress IPs of the nodes ([#1548](https://github.com/ovh/terraform-provider-ovh/pull/1548))
+* `r/ovh_domain_zone`: Use the `stub` template in the example ([#1532](https://github.com/ovh/terraform-provider-ovh/pull/1532))
+
+❤️ Thanks for your contributions ❤️
+
 ## 2.23.0 (October 22, 2026)
 
 🎉 Features:
