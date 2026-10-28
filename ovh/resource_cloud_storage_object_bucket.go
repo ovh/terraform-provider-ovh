@@ -59,7 +59,6 @@ func (r *cloudStorageObjectBucketResource) Configure(ctx context.Context, req re
 }
 
 var storageObjectBucketMutableAttrs = MutableAttrs{
-	Strings: []string{"owner_user_id"},
 	Maps:    []string{"tags"},
 	Objects: []string{"encryption", "versioning"},
 }
@@ -160,8 +159,11 @@ func (r *cloudStorageObjectBucketResource) Schema(ctx context.Context, req resou
 			"owner_user_id": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Optional:            true,
-				Description:         "Owner user identifier",
-				MarkdownDescription: "Owner user identifier",
+				Description:         "Container owner user ID.",
+				MarkdownDescription: "Container owner user ID.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"tags": schema.MapAttribute{
 				ElementType:         ovhtypes.TfStringType{},

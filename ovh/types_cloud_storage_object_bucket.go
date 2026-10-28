@@ -15,12 +15,14 @@ type CloudStorageObjectBucketModel struct {
 	Name        ovhtypes.TfStringValue `tfsdk:"name"`
 	Region      ovhtypes.TfStringValue `tfsdk:"region"`
 
-	// Optional — mutable
+	// Optional — immutable
 	OwnerUserId ovhtypes.TfStringValue `tfsdk:"owner_user_id"`
-	Tags        types.Map              `tfsdk:"tags"`
-	Encryption  types.Object           `tfsdk:"encryption"`
-	Versioning  types.Object           `tfsdk:"versioning"`
-	ObjectLock  types.Object           `tfsdk:"object_lock"`
+
+	// Optional — mutable
+	Tags       types.Map    `tfsdk:"tags"`
+	Encryption types.Object `tfsdk:"encryption"`
+	Versioning types.Object `tfsdk:"versioning"`
+	ObjectLock types.Object `tfsdk:"object_lock"`
 
 	// Computed
 	Id             ovhtypes.TfStringValue `tfsdk:"id"`
@@ -73,10 +75,9 @@ type CloudStorageObjectBucketAPITargetSpec struct {
 }
 
 type CloudStorageObjectBucketAPIUpdateTargetSpec struct {
-	OwnerUserId string                                 `json:"ownerUserId,omitempty"`
-	Encryption  *CloudStorageObjectBucketAPIEncryption `json:"encryption,omitempty"`
-	Versioning  *CloudStorageObjectBucketAPIVersioning `json:"versioning,omitempty"`
-	ObjectLock  *CloudStorageObjectBucketAPIObjectLock `json:"objectLock,omitempty"`
+	Encryption *CloudStorageObjectBucketAPIEncryption `json:"encryption,omitempty"`
+	Versioning *CloudStorageObjectBucketAPIVersioning `json:"versioning,omitempty"`
+	ObjectLock *CloudStorageObjectBucketAPIObjectLock `json:"objectLock,omitempty"`
 	// Always sent, {} when unset, so removing every tag from the config clears them explicitly.
 	Tags map[string]string `json:"tags"`
 }
@@ -336,10 +337,6 @@ func (m *CloudStorageObjectBucketModel) ToUpdate(checksum string) *CloudStorageO
 		Versioning: storageObjectBucketVersioningToAPI(m.Versioning),
 		ObjectLock: storageObjectBucketObjectLockToAPI(m.ObjectLock),
 		Tags:       tags,
-	}
-
-	if !m.OwnerUserId.IsNull() && !m.OwnerUserId.IsUnknown() {
-		target.OwnerUserId = m.OwnerUserId.ValueString()
 	}
 
 	return &CloudStorageObjectBucketUpdatePayload{Checksum: checksum, TargetSpec: target}

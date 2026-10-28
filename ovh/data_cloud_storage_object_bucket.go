@@ -68,7 +68,7 @@ func storageObjectBucketDataSourceAttributes() map[string]schema.Attribute {
 		"owner_user_id": schema.StringAttribute{
 			CustomType:  ovhtypes.TfStringType{},
 			Computed:    true,
-			Description: "Owner user identifier",
+			Description: "Container owner user ID.",
 		},
 		"encryption": schema.SingleNestedAttribute{
 			Computed:    true,
