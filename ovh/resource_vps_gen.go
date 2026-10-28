@@ -341,6 +341,10 @@ func (v *VpsModel) MergeWith(other *VpsModel) {
 		v.ImageId = other.ImageId
 	}
 
+	if (v.DoNotSendPassword.IsUnknown() || v.DoNotSendPassword.IsNull()) && !other.DoNotSendPassword.IsUnknown() {
+		v.DoNotSendPassword = other.DoNotSendPassword
+	}
+
 	if (v.Keymap.IsUnknown() || v.Keymap.IsNull()) && !other.Keymap.IsUnknown() {
 		v.Keymap = other.Keymap
 	}
