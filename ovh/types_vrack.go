@@ -44,7 +44,6 @@ func (opts *VrackUpdateOpts) FromResource(d *schema.ResourceData) *VrackUpdateOp
 type VrackIp struct {
 	Gateway string `json:"gateway"`
 	Ip      string `json:"ip"`
-	Zone    string `json:"zone"`
 	Region  string `json:"region"`
 }
 
@@ -53,7 +52,6 @@ func (v VrackIp) ToMap() map[string]interface{} {
 
 	obj["gateway"] = v.Gateway
 	obj["ip"] = v.Ip
-	obj["zone"] = v.Zone
 	obj["region"] = v.Region
 
 	return obj
