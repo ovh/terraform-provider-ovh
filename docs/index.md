@@ -275,6 +275,16 @@ In order to run the Acceptance Tests for development, the following environment 
 
 * `OVH_CLOUD_LOADBALANCER_ID_TEST` - The ID of the LoadBalancer to use.
 
+* `OVH_CLOUD_PRIVATE_ENDPOINT_SERVICE_TEST` - The name of the service to expose through the private endpoint to test.
+
+* `OVH_CLOUD_PRIVATE_ENDPOINT_TIER_TEST` - The tier of the service to expose through the private endpoint to test.
+
+* `OVH_CLOUD_PRIVATE_ENDPOINT_SUBNET_TEST` - The ID of the subnet to allocate the private endpoint in.
+
+* `OVH_CLOUD_PRIVATE_ENDPOINT_NETWORK_TEST` - The ID of the network to allocate the private endpoint in. It must hold `OVH_CLOUD_PRIVATE_ENDPOINT_SUBNET_TEST` as its single IPv4 subnet.
+
+* `OVH_CLOUD_PRIVATE_ENDPOINT_VIP_ADDRESS_TEST` - A free private IP address of the subnet allocation pool, used to test a pinned endpoint address.
+
 * `OVH_CLOUD_PROJECT_SERVICE_TEST` - The ID of your public cloud project.
 
 * `OVH_CLOUD_PROJECT_CONTAINERREGISTRY_OIDC_ENDPOINT_TEST` - The OIDC endpoint of the container registry to test.
