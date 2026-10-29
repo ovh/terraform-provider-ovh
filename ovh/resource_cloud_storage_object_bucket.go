@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -234,6 +235,13 @@ func (r *cloudStorageObjectBucketResource) Schema(ctx context.Context, req resou
 					},
 				},
 			},
+			"force_destroy": schema.BoolAttribute{
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(false),
+				Description:         "Delete all the objects of the bucket, including their versions, when destroying it. Defaults to false: destroying a bucket that still has objects fails. It must be applied before the destroy to take effect.",
+				MarkdownDescription: "Delete all the objects of the bucket, including their versions, when destroying it. Defaults to `false`: destroying a bucket that still has objects fails. It must be applied before the destroy to take effect.",
+			},
 			"id": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Computed:            true,
@@ -377,6 +385,7 @@ func (r *cloudStorageObjectBucketResource) ImportState(ctx context.Context, req 
 
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_name"), splits[0])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), splits[1])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("force_destroy"), false)...)
 }
 
 func (r *cloudStorageObjectBucketResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -453,6 +462,11 @@ func (r *cloudStorageObjectBucketResource) Read(ctx context.Context, req resourc
 
 	data.MergeWith(ctx, &responseData)
 
+	// Not returned by the API: states written before it existed get the default, to avoid a diff
+	if data.ForceDestroy.IsNull() {
+		data.ForceDestroy = types.BoolValue(false)
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -514,6 +528,30 @@ func (r *cloudStorageObjectBucketResource) Delete(ctx context.Context, req resou
 
 	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/storage/object/bucket/" + url.PathEscape(data.Id.ValueString())
 
+	// The API keeps retrying a refused deletion and deletes the bucket once it is empty,
+	// so never ask to delete a bucket that still has objects
+	objects, err := r.listBucketObjectVersions(ctx, endpoint)
+	if err != nil {
+		if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
+			return
+		}
+		resp.Diagnostics.AddError(fmt.Sprintf("Error listing objects of bucket %s", data.Id.ValueString()), err.Error())
+		return
+	}
+	if len(objects) > 0 {
+		if !data.ForceDestroy.ValueBool() {
+			resp.Diagnostics.AddError(
+				fmt.Sprintf("Bucket %s is not empty", data.Id.ValueString()),
+				"Delete its objects first, or set force_destroy = true and apply before destroying it.",
+			)
+			return
+		}
+		if err := r.emptyBucket(ctx, endpoint, objects); err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Error emptying bucket %s", data.Id.ValueString()), err.Error())
+			return
+		}
+	}
+
 	if err := r.config.OVHClient.Delete(endpoint, nil); err != nil {
 		if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
 			return
@@ -553,6 +591,45 @@ func (r *cloudStorageObjectBucketResource) Delete(ctx context.Context, req resou
 			err.Error(),
 		)
 	}
+}
+
+// listBucketObjectVersions returns the first page of the objects of the bucket, including
+// their versions and delete markers, which also prevent its deletion
+func (r *cloudStorageObjectBucketResource) listBucketObjectVersions(ctx context.Context, bucketEndpoint string) ([]CloudStorageObjectBucketAPIObject, error) {
+	var objects []CloudStorageObjectBucketAPIObject
+	err := r.config.OVHClient.GetWithContext(ctx, bucketEndpoint+"/object?withVersions=true", &objects)
+	return objects, err
+}
+
+// emptyBucket deletes all the objects of the bucket, page by page, starting with the given first page
+func (r *cloudStorageObjectBucketResource) emptyBucket(ctx context.Context, bucketEndpoint string, objects []CloudStorageObjectBucketAPIObject) error {
+	for len(objects) > 0 {
+		// S3 deletes at most 1000 objects per call
+		for start := 0; start < len(objects); start += 1000 {
+			body := CloudStorageObjectBucketAPIBulkDelete{}
+			for _, object := range objects[start:min(start+1000, len(objects))] {
+				body.Objects = append(body.Objects, CloudStorageObjectBucketAPIObjectIdentifier{Key: object.Key, VersionId: object.VersionId})
+			}
+
+			var result CloudStorageObjectBucketAPIBulkDeleteResult
+			if err := r.config.OVHClient.PostWithContext(ctx, bucketEndpoint+"/bulkDeleteObjects", body, &result); err != nil {
+				return err
+			}
+			if len(result.Errors) > 0 {
+				var messages []string
+				for _, e := range result.Errors {
+					messages = append(messages, fmt.Sprintf("%s: %s (%s)", e.Key, e.Message, e.Code))
+				}
+				return fmt.Errorf("%d objects could not be deleted: %s", len(result.Errors), strings.Join(messages, "; "))
+			}
+		}
+
+		var err error
+		if objects, err = r.listBucketObjectVersions(ctx, bucketEndpoint); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (r *cloudStorageObjectBucketResource) waitForStorageObjectBucketReady(ctx context.Context, serviceName, bucketId string) (any, error) {
