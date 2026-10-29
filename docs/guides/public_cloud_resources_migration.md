@@ -937,7 +937,7 @@ Moving the IP to another instance means removing the entry from one instance and
 | `ovh_cloud_project_storage`, `_storages` | `ovh_cloud_storage_object_bucket`, `_buckets` | lookup by `id` (`<REGION>_<name>` on multi-region deployments); objects are no longer listed |
 | `ovh_cloud_project_volume`, `_volumes` | `ovh_cloud_storage_block_volume`, `_volumes` | lookup by `id`, no `region_name`; `attached_instances[*].id` is new |
 
-New data sources with no legacy counterpart: `ovh_cloud_public_ips` (every public IP of the project with its type), `ovh_cloud_ext_net_ip` and `_ips` (Ext-Net IPs), `ovh_cloud_additional_ip` and `_ips` (additional IPs), `ovh_cloud_quota`.
+New data sources with no legacy counterpart: `ovh_cloud_public_ips` (every public IP of the project with its type), `ovh_cloud_ext_net_ip` and `_ips` (Ext-Net IPs), `ovh_cloud_additional_ip` and `_ips` (additional IPs), `ovh_cloud_quota`, `ovh_cloud_storage_swift_container`, `_containers` and `_container_objects` (Swift containers and their objects).
 
 Before, a flavor lookup by name:
 

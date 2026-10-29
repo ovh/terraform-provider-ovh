@@ -82,6 +82,7 @@ type MutableAttrs struct {
 	Lists             []string // checked with types.List
 	Maps              []string // checked with types.Map
 	Objects           []string // checked with types.Object
+	Sets              []string // checked with types.Set
 	CustomStringLists []string // checked with ovhtypes.TfListNestedValue[TfStringValue]
 }
 
@@ -135,6 +136,14 @@ func isUpdatePlanned(ctx context.Context, state tfsdk.State, plan tfsdk.Plan, cf
 	}
 	for _, attr := range cfg.Objects {
 		var sv, pv types.Object
+		state.GetAttribute(ctx, path.Root(attr), &sv)
+		plan.GetAttribute(ctx, path.Root(attr), &pv)
+		if !sv.Equal(pv) {
+			return true
+		}
+	}
+	for _, attr := range cfg.Sets {
+		var sv, pv types.Set
 		state.GetAttribute(ctx, path.Root(attr), &sv)
 		plan.GetAttribute(ctx, path.Root(attr), &pv)
 		if !sv.Equal(pv) {
@@ -204,4 +213,27 @@ func (m unknownDuringUpdateObject) PlanModifyObject(ctx context.Context, req pla
 	if isUpdatePlanned(ctx, req.State, req.Plan, m.cfg) {
 		resp.PlanValue = types.ObjectUnknown(req.StateValue.AttributeTypes(ctx))
 	}
+}
+
+// UseStateForUnknownSet keeps the prior state of a computed set when the config
+// leaves it unset (setplanmodifier is not vendored).
+func UseStateForUnknownSet() planmodifier.Set {
+	return useStateForUnknownSet{}
+}
+
+type useStateForUnknownSet struct{}
+
+func (m useStateForUnknownSet) Description(_ context.Context) string {
+	return "Once set, the value of this attribute in state will not change."
+}
+
+func (m useStateForUnknownSet) MarkdownDescription(_ context.Context) string {
+	return "Once set, the value of this attribute in state will not change."
+}
+
+func (m useStateForUnknownSet) PlanModifySet(ctx context.Context, req planmodifier.SetRequest, resp *planmodifier.SetResponse) {
+	if req.StateValue.IsNull() || !req.PlanValue.IsUnknown() || req.ConfigValue.IsUnknown() {
+		return
+	}
+	resp.PlanValue = req.StateValue
 }
