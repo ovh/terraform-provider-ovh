@@ -1,3 +1,59 @@
+## 2.24.0 (October 29, 2026)
+
+🎉 Features:
+
+* New resource: `ovh_cloud_private_endpoint`, to expose a service in a private network of the project through a private IP address ([#1550](https://github.com/ovh/terraform-provider-ovh/pull/1550))
+* New resource: `ovh_cloud_storage_swift_container` ([#1561](https://github.com/ovh/terraform-provider-ovh/pull/1561))
+* New resource: `ovh_dedicated_cloud_user`, to manage the users of a Hosted Private Cloud ([#1418](https://github.com/ovh/terraform-provider-ovh/pull/1418))
+* New resource: `ovh_dedicated_cloud_user_object_right`, to grant a Hosted Private Cloud user a right on a VMware object (cluster, datastore, dvportgroup, folder, pool or vm) ([#1418](https://github.com/ovh/terraform-provider-ovh/pull/1418))
+
+* New datasource: `ovh_cloud_private_endpoint` ([#1550](https://github.com/ovh/terraform-provider-ovh/pull/1550))
+* New datasource: `ovh_cloud_private_endpoints` ([#1550](https://github.com/ovh/terraform-provider-ovh/pull/1550))
+* New datasource: `ovh_cloud_private_endpoint_service_availabilities`, to list the services reachable through a private endpoint in a region ([#1550](https://github.com/ovh/terraform-provider-ovh/pull/1550))
+* New datasource: `ovh_cloud_storage_swift_container` ([#1561](https://github.com/ovh/terraform-provider-ovh/pull/1561))
+* New datasource: `ovh_cloud_storage_swift_containers` ([#1561](https://github.com/ovh/terraform-provider-ovh/pull/1561))
+* New datasource: `ovh_cloud_storage_swift_container_objects` ([#1561](https://github.com/ovh/terraform-provider-ovh/pull/1561))
+* New datasource: `ovh_dedicated_cloud_user` ([#1418](https://github.com/ovh/terraform-provider-ovh/pull/1418))
+* New datasource: `ovh_dedicated_cloud_user_object_right` ([#1418](https://github.com/ovh/terraform-provider-ovh/pull/1418))
+
+💪 Improvements:
+
+* `provider`: Add `profile` (or the `OVH_PROFILE` environment variable), to use a `[profile:<name>]` section of the `.ovh.conf` file and keep several sets of credentials in one file ([#1310](https://github.com/ovh/terraform-provider-ovh/pull/1310))
+* `r/ovh_cloud_instance`, `d/ovh_cloud_instance`, `d/ovh_cloud_instances`: `power_state` accepts `PAUSED` and `SUSPENDED` ([#1523](https://github.com/ovh/terraform-provider-ovh/pull/1523))
+* `d/ovh_cloud_instance_snapshots`: Add the computed `can_be_deleted` attribute, `false` when the snapshot is owned by another project or protected ([#1524](https://github.com/ovh/terraform-provider-ovh/pull/1524))
+* `r/ovh_cloud_project_containerregistry`, `d/ovh_cloud_project_containerregistry`, `d/ovh_cloud_project_containerregistries`: Add the computed `oidc_callback_uri` attribute, the callback URI to register on the OIDC provider ([#1557](https://github.com/ovh/terraform-provider-ovh/pull/1557))
+* `r/ovh_cloud_ssh_key`: Add import, with the ID `<service_name>/<name>` ([#1506](https://github.com/ovh/terraform-provider-ovh/pull/1506))
+* `r/ovh_cloud_storage_file_share_network`: Add `availability_zone`. Changing it replaces the share network ([#1506](https://github.com/ovh/terraform-provider-ovh/pull/1506))
+
+⚠️ Deprecations:
+
+* `r/ovh_cloud_project_failover_ip_attach`, `r/ovh_cloud_project_file_storage_share`, `r/ovh_cloud_project_file_storage_share_network`, `r/ovh_cloud_project_gateway`, `r/ovh_cloud_project_gateway_interface`, `r/ovh_cloud_project_instance`, `r/ovh_cloud_project_instance_snapshot`, `r/ovh_cloud_project_loadbalancer`, `r/ovh_cloud_project_network_private`, `r/ovh_cloud_project_network_private_subnet`, `r/ovh_cloud_project_network_private_subnet_v2`, `r/ovh_cloud_project_region_network`, `r/ovh_cloud_project_ssh_key`, `r/ovh_cloud_project_storage`, `r/ovh_cloud_project_volume`, `r/ovh_cloud_project_volume_backup`: Deprecated in favor of the `ovh_cloud_*` resources. The new [Public Cloud resources migration guide](https://registry.terraform.io/providers/ovh/ovh/latest/docs/guides/public_cloud_resources_migration) maps each of them to its replacement ([#1506](https://github.com/ovh/terraform-provider-ovh/pull/1506))
+
+🐜 Bug fixes:
+
+* Resources deleted outside of Terraform are now removed from the state on refresh, so the next plan creates them again instead of failing, and destroying a resource already gone no longer fails. This applies to `r/ovh_cloud_gateway`, `r/ovh_cloud_loadbalancer`, `r/ovh_cloud_loadbalancer_l7policy`, `r/ovh_cloud_loadbalancer_listener`, `r/ovh_cloud_loadbalancer_pool`, `r/ovh_cloud_loadbalancer_pool_member`, `r/ovh_cloud_network_private_vrack`, `r/ovh_cloud_project_alerting`, `r/ovh_cloud_project_containerregistry_iam`, `r/ovh_cloud_project_failover_ip_attach`, `r/ovh_cloud_project_gateway_interface`, `r/ovh_cloud_project_instance`, `r/ovh_cloud_project_instance_snapshot`, `r/ovh_cloud_project_loadbalancer`, `r/ovh_cloud_project_rancher`, `r/ovh_cloud_project_region`, `r/ovh_cloud_project_region_network`, `r/ovh_cloud_project_ssh_key`, `r/ovh_cloud_project_user_s3_credential`, `r/ovh_cloud_project_volume`, `r/ovh_cloud_project_volume_backup`, `r/ovh_cloud_ssh_key`, `r/ovh_cloud_storage_file_share`, `r/ovh_cloud_storage_file_share_network`, `r/ovh_cloud_storage_file_share_snapshot`, `r/ovh_dbaas_logs_encryption_key`, `r/ovh_dbaas_logs_token`, `r/ovh_dedicated_server_update`, `r/ovh_domain_name`, `r/ovh_domain_zone_dnssec`, `r/ovh_domain_zone_dynhost_login`, `r/ovh_domain_zone_dynhost_record`, `r/ovh_domain_zone_import`, `r/ovh_email_domain_account`, `r/ovh_iam_permissions_group`, `r/ovh_iam_policy`, `r/ovh_iam_resource_group`, `r/ovh_iam_resource_tags`, `r/ovh_ip_firewall`, `r/ovh_ip_firewall_rule`, `r/ovh_ip_mitigation`, `r/ovh_iploadbalancing_ssl`, `r/ovh_iploadbalancing_udp_farm`, `r/ovh_iploadbalancing_udp_farm_server`, `r/ovh_iploadbalancing_udp_frontend`, `r/ovh_okms`, `r/ovh_okms_credential`, `r/ovh_okms_secret`, `r/ovh_okms_service_key`, `r/ovh_okms_service_key_jwk`, `r/ovh_ovhcloud_connect_pop_config`, `r/ovh_ovhcloud_connect_pop_datacenter_config`, `r/ovh_ovhcloud_connect_pop_datacenter_extra_config`, `r/ovh_storage_efs`, `r/ovh_storage_efs_share`, `r/ovh_storage_efs_share_acl`, `r/ovh_storage_efs_share_snapshot`, `r/ovh_vps`, `r/ovh_vrack_dedicated_cloud`, `r/ovh_vrack_dedicated_cloud_datacenter`, `r/ovh_vrack_ipv6`, `r/ovh_vrack_ipv6_routed_subrange`, `r/ovh_vrack_ovhcloudconnect`, `r/ovh_vrack_public_routing_priority`, `r/ovh_vrack_vrackservices`, `r/ovh_vrackservices` ([#1528](https://github.com/ovh/terraform-provider-ovh/pull/1528), [#1538](https://github.com/ovh/terraform-provider-ovh/pull/1538), [#1540](https://github.com/ovh/terraform-provider-ovh/pull/1540), [#1549](https://github.com/ovh/terraform-provider-ovh/pull/1549))
+* `r/ovh_cloud_project_database`: Changing the `region` of the nodes now replaces the cluster. Before, the plan showed an update that left the nodes in their region. Nodes in different regions or networks are now refused at plan time ([#1537](https://github.com/ovh/terraform-provider-ovh/pull/1537))
+* `r/ovh_cloud_project_kube`: `kube_proxy_mode` on a `standard` cluster, which does not use kube-proxy, no longer shows as drift or plans a replacement, and is removed from the state. Setting it on a new `standard` cluster is now refused at plan time ([#1527](https://github.com/ovh/terraform-provider-ovh/pull/1527))
+* `r/ovh_cloud_project_kube`: Removing `load_balancers_subnet_id` now unsets it on the cluster ([#1533](https://github.com/ovh/terraform-provider-ovh/pull/1533))
+* `r/ovh_cloud_project_network_private_subnet_v2`: An empty `dns_nameservers` list now creates a subnet without DNS server, instead of one with the default resolver ([#1536](https://github.com/ovh/terraform-provider-ovh/pull/1536))
+* `r/ovh_cloud_storage_object_bucket`: `owner_user_id` is now sent at creation, and changing it replaces the bucket ([#1558](https://github.com/ovh/terraform-provider-ovh/pull/1558))
+* `r/ovh_dedicated_server`: Only the changed boot fields are sent, as the API refuses `boot_id` and `boot_script` in the same call ([#1535](https://github.com/ovh/terraform-provider-ovh/pull/1535))
+* `r/ovh_dedicated_server_reinstall_task`: States saved before `storage.erase` existed are upgraded with `erase = true`, including blocks with partitioning or hardware RAID that a v2.23.0 refresh set to `false`. Before, such a `storage` block failed validation, or planned a replacement that reinstalled the server ([#1531](https://github.com/ovh/terraform-provider-ovh/pull/1531))
+* `r/ovh_domain_zone_record`: Long `TXT` records split by the API in 255-character strings no longer show as drift ([#1534](https://github.com/ovh/terraform-provider-ovh/pull/1534))
+* `r/ovh_vps`: `do_not_send_password`, which the API does not return, is kept from the state ([#1556](https://github.com/ovh/terraform-provider-ovh/pull/1556))
+
+📚 Documentation:
+
+* New guide to migrate from the `ovh_cloud_project_*` Public Cloud resources and data sources to the `ovh_cloud_*` ones, with a note on each legacy resource and data source ([#1506](https://github.com/ovh/terraform-provider-ovh/pull/1506), [#1561](https://github.com/ovh/terraform-provider-ovh/pull/1561))
+* `r/ovh_cloud_project_kube`: Use the v2 network resources in the examples, and document how to get the egress IPs of the nodes ([#1548](https://github.com/ovh/terraform-provider-ovh/pull/1548))
+* `r/ovh_domain_zone`: Use the `stub` template in the example, and describe each template ([#1532](https://github.com/ovh/terraform-provider-ovh/pull/1532))
+
+⚙️ General:
+
+* goreleaser: Replace the deprecated `archives.format` with `archives.formats` ([#1525](https://github.com/ovh/terraform-provider-ovh/pull/1525))
+
+❤️ Thanks for your contributions ❤️
+
 ## 2.23.0 (October 22, 2026)
 
 🎉 Features:
