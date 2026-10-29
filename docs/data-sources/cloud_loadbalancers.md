@@ -35,7 +35,7 @@ The following attributes are exported:
   * `region` - Region where the load balancer is located.
   * `availability_zone` - Availability zone for the load balancer.
   * `network` - Network of the VIP:
-    * `id` - ID of the network for the VIP.
+    * `id` - ID of the network for the VIP, as given at creation. Null when the load balancer was created with only a `subnet_id`; `current_state.network.id` holds the network in use.
     * `subnet_id` - ID of the subnet for the VIP.
     * `ip` - IP requested for the VIP.
   * `flavor_name` - Name of the load balancer flavor.
