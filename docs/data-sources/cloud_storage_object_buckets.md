@@ -43,7 +43,8 @@ data "ovh_cloud_storage_object_buckets" "buckets" {
   * `versioning` - Versioning configuration:
     * `status` - Versioning status (`DISABLED`, `ENABLED`, `SUSPENDED`).
   * `object_lock` - Object lock (WORM) configuration:
-    * `mode` - Object lock retention mode (`COMPLIANCE`, `GOVERNANCE`).
+    * `status` - Whether object lock is armed on the bucket (`ENABLED`, `DISABLED`).
+    * `mode` - Default retention mode (`COMPLIANCE`, `GOVERNANCE`), `null` without a default retention rule.
     * `retention_days` - Number of days to retain objects.
     * `retention_years` - Number of years to retain objects.
   * `tags` - Metadata tags for the bucket.
@@ -60,7 +61,8 @@ data "ovh_cloud_storage_object_buckets" "buckets" {
     * `versioning` - Current versioning configuration:
       * `status` - Versioning status.
     * `object_lock` - Current object lock configuration:
-      * `mode` - Object lock retention mode.
+      * `status` - Whether object lock is armed on the bucket (`ENABLED`, `DISABLED`).
+      * `mode` - Default retention mode, `null` without a default retention rule.
       * `retention_days` - Number of days to retain objects.
       * `retention_years` - Number of years to retain objects.
     * `tags` - Current metadata tags.

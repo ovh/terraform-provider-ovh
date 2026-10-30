@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -84,7 +85,18 @@ resource "ovh_cloud_storage_object_bucket" "bucket" {
 					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "current_state.name", bucketName),
 					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "current_state.location.region", region),
 					resource.TestCheckResourceAttrSet("ovh_cloud_storage_object_bucket.bucket", "current_state.virtual_host"),
+					resource.TestCheckNoResourceAttr("ovh_cloud_storage_object_bucket.bucket", "object_lock.%"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "current_state.object_lock.status", "DISABLED"),
 				),
+			},
+			// The always-present current_state.object_lock {status = DISABLED} must not re-plan an unset object_lock.
+			{
+				Config: config,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 			{
 				ResourceName:      "ovh_cloud_storage_object_bucket.bucket",
@@ -248,6 +260,7 @@ resource "ovh_cloud_storage_object_bucket" "bucket" {
   }
 
   object_lock = {
+    status         = "ENABLED"
     mode           = "GOVERNANCE"
     retention_days = 30
   }
@@ -265,8 +278,11 @@ resource "ovh_cloud_storage_object_bucket" "bucket" {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "object_lock.status", "ENABLED"),
 					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "object_lock.mode", "GOVERNANCE"),
 					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "object_lock.retention_days", "30"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "current_state.object_lock.status", "ENABLED"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "current_state.object_lock.mode", "GOVERNANCE"),
 					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "current_state.object_lock.retention_days", "30"),
 					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "versioning.status", "ENABLED"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_storage_object_bucket.bucket", "id"),
@@ -286,6 +302,121 @@ resource "ovh_cloud_storage_object_bucket" "bucket" {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateIdFunc: testAccCloudStorageObjectBucketImportStateIdFunc("ovh_cloud_storage_object_bucket.bucket"),
+			},
+		},
+	})
+}
+
+func TestAccCloudStorageObjectBucket_objectLockArmedWithoutRule(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	region := strings.ToUpper(os.Getenv("OVH_CLOUD_PROJECT_STORAGE_REGION_TEST"))
+
+	bucketName := acctest.RandomWithPrefix(test_prefix)
+
+	config := fmt.Sprintf(`
+resource "ovh_cloud_storage_object_bucket" "bucket" {
+  service_name = "%s"
+  name         = "%s"
+  region       = "%s"
+
+  versioning = {
+    status = "ENABLED"
+  }
+
+  object_lock = {
+    status = "ENABLED"
+  }
+}
+`, serviceName, bucketName, region)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloudStorageObjectBucket(t)
+			testAccCheckCloudProjectExists(t)
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCloudStorageObjectBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "object_lock.status", "ENABLED"),
+					resource.TestCheckNoResourceAttr("ovh_cloud_storage_object_bucket.bucket", "object_lock.mode"),
+					resource.TestCheckNoResourceAttr("ovh_cloud_storage_object_bucket.bucket", "object_lock.retention_days"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "current_state.object_lock.status", "ENABLED"),
+					resource.TestCheckNoResourceAttr("ovh_cloud_storage_object_bucket.bucket", "current_state.object_lock.mode"),
+				),
+			},
+			{
+				Config: config,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccCloudStorageObjectBucket_objectLockValidation(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	region := strings.ToUpper(os.Getenv("OVH_CLOUD_PROJECT_STORAGE_REGION_TEST"))
+
+	bucketName := acctest.RandomWithPrefix(test_prefix)
+
+	configFor := func(versioning, objectLock string) string {
+		return fmt.Sprintf(`
+resource "ovh_cloud_storage_object_bucket" "bucket" {
+  service_name = "%s"
+  name         = "%s"
+  region       = "%s"
+  %s
+  object_lock = {
+    %s
+  }
+}
+`, serviceName, bucketName, region, versioning, objectLock)
+	}
+	versioningEnabled := `versioning = { status = "ENABLED" }`
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloudStorageObjectBucket(t)
+			testAccCheckCloudProjectExists(t)
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCloudStorageObjectBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      configFor(versioningEnabled, `mode = "GOVERNANCE"`),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile(`"status" is required`),
+			},
+			{
+				Config:      configFor(versioningEnabled, `status = "ARMED"`),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile(`must be one of`),
+			},
+			{
+				Config:      configFor("", `status = "ENABLED"`),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile(`object_lock requires versioning`),
+			},
+			{
+				Config:      configFor(versioningEnabled, "status = \"ENABLED\"\n    mode = \"GOVERNANCE\""),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile(`must be set together`),
+			},
+			{
+				Config:      configFor(versioningEnabled, "status = \"ENABLED\"\n    retention_days = 30"),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile(`must be set together`),
+			},
+			{
+				Config:      configFor(versioningEnabled, "status = \"DISABLED\"\n    mode = \"GOVERNANCE\"\n    retention_days = 30"),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile(`require status "ENABLED"`),
 			},
 		},
 	})
