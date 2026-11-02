@@ -26,7 +26,7 @@ resource "ovh_cloud_key_manager_secret_consumer" "consumer" {
 
 The following arguments are supported:
 
-* `service_name` - (Required, Forces new resource) The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
+* `service_name` - (Optional) Service name of the resource representing the id of the cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used. **Changing this value recreates the resource.**
 * `secret_id` - (Required, Forces new resource) UUID of the secret to register the consumer on.
 * `service` - (Required, Forces new resource) OpenStack service type of the consumer. Possible values: `COMPUTE`, `IMAGE`, `LOADBALANCER`, `NETWORK`.
 * `resource_type` - (Required, Forces new resource) Type of the resource consuming the secret. Possible values: `IMAGE`, `INSTANCE`, `LOADBALANCER`.

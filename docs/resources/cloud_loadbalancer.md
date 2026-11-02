@@ -61,7 +61,7 @@ resource "ovh_cloud_loadbalancer" "lb" {
 
 The following arguments are supported:
 
-* `service_name` - (Required) Service name of the resource representing the id of the cloud project. **Changing this value recreates the resource.**
+* `service_name` - (Optional) Service name of the resource representing the id of the cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used. **Changing this value recreates the resource.**
 * `region` - (Required) Region where the load balancer will be created. **Changing this value recreates the resource.**
 * `name` - (Required) Load balancer name.
 * `network` - (Required) Network of the VIP. **Changing any value of this block recreates the resource.**

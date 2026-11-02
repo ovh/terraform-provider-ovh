@@ -25,7 +25,7 @@ resource "ovh_cloud_storage_file_share_network" "network" {
 
 The following arguments are supported:
 
-* `service_name` - (Required) Service name of the resource representing the id of the cloud project. **Changing this value recreates the resource.**
+* `service_name` - (Optional) Service name of the resource representing the id of the cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used. **Changing this value recreates the resource.**
 * `name` - (Required) Share network name. **Changing this value recreates the resource.**
 * `network_id` - (Required) ID of the network backing the share network. **Changing this value recreates the resource.**
 * `subnet_id` - (Required) ID of the subnet backing the share network. **Changing this value recreates the resource.**
