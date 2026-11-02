@@ -48,7 +48,7 @@ resource "ovh_cloud_key_manager_container" "container" {
 
 The following arguments are supported:
 
-* `service_name` - (Required, Forces new resource) The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
+* `service_name` - (Optional) Service name of the resource representing the id of the cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used. **Changing this value recreates the resource.**
 * `region` - (Required, Forces new resource) Region where the container will be created.
 * `availability_zone` - (Optional, Forces new resource) Availability zone where the container will be created.
 * `name` - (Required, Forces new resource) Name of the container.

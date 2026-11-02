@@ -457,7 +457,7 @@ resource "ovh_cloud_instance" "grouped" {
 
 The following arguments are supported:
 
-* `service_name` - (Required) Service name of the resource representing the id of the cloud project. **Changing this value recreates the resource.**
+* `service_name` - (Optional) Service name of the resource representing the id of the cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used. **Changing this value recreates the resource.**
 * `region` - (Required) Region where the instance is created. **Changing this value recreates the resource.**
 * `name` - (Required) Instance name.
 * `flavor_id` - (Required) Flavor ID. Changing it resizes the instance in place.
