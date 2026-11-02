@@ -179,7 +179,7 @@ func dataSourceIpLoadbalancingRead(d *schema.ResourceData, meta interface{}) err
 			continue
 		}
 
-		if v, ok := d.GetOk("zone"); ok && !zonesEquals(v.([]string), iplb.Zone) {
+		if v, ok := d.GetOk("zone"); ok && !zonesEquals(v.(*schema.Set), iplb.Zone) {
 			continue
 		}
 		if v, ok := d.GetOk("offer"); ok && v.(string) != iplb.Offer {
@@ -277,24 +277,17 @@ func dataSourceIpLoadbalancingAttributes(config *Config, d *schema.ResourceData,
 	return nil
 }
 
-func zonesEquals(a, b []string) bool {
-	if a == nil && b == nil {
-		return true
-	}
-
-	if a == nil || b == nil {
+// zonesEquals reports whether the zones set in the configuration (a TypeSet,
+// so unordered) holds exactly the zones of the IPLB returned by the API.
+func zonesEquals(want *schema.Set, got []string) bool {
+	if want.Len() != len(got) {
 		return false
 	}
 
-	if len(a) != len(b) {
-		return false
+	gotSet := schema.NewSet(schema.HashString, nil)
+	for _, z := range got {
+		gotSet.Add(z)
 	}
 
-	for i := range a {
-		if a[i] != b[i] {
-			return false
-		}
-	}
-
-	return true
+	return want.Equal(gotSet)
 }
