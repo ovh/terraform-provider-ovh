@@ -141,11 +141,11 @@ func (v storageObjectBucketObjectLockRequiresVersioningEnabled) ValidateObject(c
 type storageObjectBucketObjectLockRetentionRule struct{}
 
 func (v storageObjectBucketObjectLockRetentionRule) Description(_ context.Context) string {
-	return "object_lock.mode and object_lock.retention_days must be set together, and only with status ENABLED"
+	return "object_lock.mode must be set together with exactly one of object_lock.retention_days or object_lock.retention_years, and only with status ENABLED"
 }
 
 func (v storageObjectBucketObjectLockRetentionRule) MarkdownDescription(ctx context.Context) string {
-	return "`object_lock.mode` and `object_lock.retention_days` must be set together, and only with `status = \"ENABLED\"`"
+	return "`object_lock.mode` must be set together with exactly one of `object_lock.retention_days` or `object_lock.retention_years`, and only with `status = \"ENABLED\"`"
 }
 
 func (v storageObjectBucketObjectLockRetentionRule) ValidateObject(ctx context.Context, req validator.ObjectRequest, resp *validator.ObjectResponse) {
@@ -156,15 +156,29 @@ func (v storageObjectBucketObjectLockRetentionRule) ValidateObject(ctx context.C
 	attrs := req.ConfigValue.Attributes()
 	mode, hasMode := attrs["mode"]
 	retentionDays, hasRetentionDays := attrs["retention_days"]
-	if !hasMode || !hasRetentionDays || mode.IsUnknown() || retentionDays.IsUnknown() {
+	retentionYears, hasRetentionYears := attrs["retention_years"]
+	if !hasMode || !hasRetentionDays || !hasRetentionYears {
+		return
+	}
+	if mode.IsUnknown() || retentionDays.IsUnknown() || retentionYears.IsUnknown() {
 		return
 	}
 
-	if mode.IsNull() != retentionDays.IsNull() {
+	if !retentionDays.IsNull() && !retentionYears.IsNull() {
 		resp.Diagnostics.AddAttributeError(
 			req.Path,
 			"Invalid object_lock configuration",
-			"object_lock.mode and object_lock.retention_days must be set together.",
+			"object_lock.retention_days and object_lock.retention_years cannot both be set.",
+		)
+		return
+	}
+
+	hasRetentionPeriod := !retentionDays.IsNull() || !retentionYears.IsNull()
+	if mode.IsNull() == hasRetentionPeriod {
+		resp.Diagnostics.AddAttributeError(
+			req.Path,
+			"Invalid object_lock configuration",
+			"object_lock.mode must be set together with object_lock.retention_days or object_lock.retention_years.",
 		)
 		return
 	}
@@ -174,7 +188,7 @@ func (v storageObjectBucketObjectLockRetentionRule) ValidateObject(ctx context.C
 		resp.Diagnostics.AddAttributeError(
 			req.Path,
 			"Invalid object_lock configuration",
-			fmt.Sprintf("object_lock.mode and object_lock.retention_days require status \"ENABLED\", got %q.", status),
+			fmt.Sprintf("object_lock.mode and its retention period require status \"ENABLED\", got %q.", status),
 		)
 	}
 }
@@ -276,8 +290,8 @@ func (r *cloudStorageObjectBucketResource) Schema(ctx context.Context, req resou
 			},
 			"object_lock": schema.SingleNestedAttribute{
 				Optional:            true,
-				Description:         "Object lock (WORM) configuration; status ENABLED requires versioning.status to be ENABLED. Changing status (an absent block counts as DISABLED) recreates the bucket; mode and retention_days are updated in place.",
-				MarkdownDescription: "Object lock (WORM) configuration; `status = \"ENABLED\"` requires `versioning.status` to be `ENABLED`. Changing `status` (an absent block counts as `DISABLED`) recreates the bucket; `mode` and `retention_days` are updated in place.",
+				Description:         "Object lock (WORM) configuration; status ENABLED requires versioning.status to be ENABLED. Changing status (an absent block counts as DISABLED) recreates the bucket; mode, retention_days and retention_years are updated in place.",
+				MarkdownDescription: "Object lock (WORM) configuration; `status = \"ENABLED\"` requires `versioning.status` to be `ENABLED`. Changing `status` (an absent block counts as `DISABLED`) recreates the bucket; `mode`, `retention_days` and `retention_years` are updated in place.",
 				PlanModifiers: []planmodifier.Object{
 					objectplanmodifier.RequiresReplaceIf(
 						storageObjectBucketObjectLockStatusChanged,
@@ -302,16 +316,24 @@ func (r *cloudStorageObjectBucketResource) Schema(ctx context.Context, req resou
 					"mode": schema.StringAttribute{
 						CustomType:          ovhtypes.TfStringType{},
 						Optional:            true,
-						Description:         "Default retention mode (COMPLIANCE, GOVERNANCE); requires retention_days and status ENABLED",
-						MarkdownDescription: "Default retention mode (`COMPLIANCE`, `GOVERNANCE`); requires `retention_days` and `status = \"ENABLED\"`",
+						Description:         "Default retention mode (COMPLIANCE, GOVERNANCE); requires retention_days or retention_years, and status ENABLED",
+						MarkdownDescription: "Default retention mode (`COMPLIANCE`, `GOVERNANCE`); requires `retention_days` or `retention_years`, and `status = \"ENABLED\"`",
 						Validators: []validator.String{
 							stringvalidator.OneOf("COMPLIANCE", "GOVERNANCE"),
 						},
 					},
 					"retention_days": schema.Int64Attribute{
 						Optional:            true,
-						Description:         "Number of days the default retention rule locks new objects for; requires mode",
-						MarkdownDescription: "Number of days the default retention rule locks new objects for; requires `mode`",
+						Description:         "Number of days the default retention rule locks new objects for; requires mode, exclusive with retention_years",
+						MarkdownDescription: "Number of days the default retention rule locks new objects for; requires `mode`, exclusive with `retention_years`",
+						Validators: []validator.Int64{
+							int64validator.AtLeast(1),
+						},
+					},
+					"retention_years": schema.Int64Attribute{
+						Optional:            true,
+						Description:         "Number of years the default retention rule locks new objects for; requires mode, exclusive with retention_days",
+						MarkdownDescription: "Number of years the default retention rule locks new objects for; requires `mode`, exclusive with `retention_days`",
 						Validators: []validator.Int64{
 							int64validator.AtLeast(1),
 						},

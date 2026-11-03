@@ -8,6 +8,7 @@
 
 * `r/ovh_cloud_storage_object_bucket`, `d/ovh_cloud_storage_object_bucket`, `d/ovh_cloud_storage_object_buckets`: Add the computed `current_state.object_lock.status` attribute, always set, `DISABLED` for a bucket without object lock
 * `r/ovh_cloud_storage_object_bucket`: Changing or removing the `object_lock` default retention rule (`mode`, `retention_days`) now updates the bucket in place. Only changing `object_lock.status` recreates it, an absent block counting as `DISABLED`
+* `r/ovh_cloud_storage_object_bucket`: Add the optional `object_lock.retention_years` attribute, an alternative to `retention_days` for a default retention rule counted in years; set one or the other, never both
 
 🐜 Bug fixes:
 
