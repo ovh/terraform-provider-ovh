@@ -237,6 +237,22 @@ func TestDedicatedCephUserMergeWith(t *testing.T) {
 	}
 }
 
+func TestDedicatedCephUserMergeWithDiscardKey(t *testing.T) {
+	user := &DedicatedCephUser{Name: "user", Key: "secret"}
+
+	model := DedicatedCephUserModel{ServiceName: ovhtypes.NewTfStringValue("ceph"), DiscardKey: types.BoolValue(true)}
+	model.MergeWith(user)
+	if !model.Key.IsNull() {
+		t.Errorf("expected a null key when discard_key is set, got %v", model.Key)
+	}
+
+	model.DiscardKey = types.BoolValue(false)
+	model.MergeWith(user)
+	if got := model.Key.ValueString(); got != "secret" {
+		t.Errorf("unexpected key %q", got)
+	}
+}
+
 func TestDedicatedCephPoolMergeWith(t *testing.T) {
 	model := DedicatedCephPoolModel{ServiceName: ovhtypes.NewTfStringValue("ceph")}
 	model.MergeWith(&DedicatedCephPool{Name: "pool", PoolType: "REPLICATED", Backup: true, MinActiveReplicas: 2, ReplicaCount: 3})
@@ -302,6 +318,85 @@ func TestDedicatedCephImportState(t *testing.T) {
 			}
 			if resp.Diagnostics.HasError() {
 				t.Errorf("unexpected diagnostics: %v", resp.Diagnostics)
+			}
+		})
+	}
+}
+
+// The configuration is not known when importing a user, so its key must not be stored before the
+// configuration asks for it.
+func TestDedicatedCephUserImportDiscardsKey(t *testing.T) {
+	ctx := context.Background()
+	r := &dedicatedCephUserResource{}
+
+	var schemaResp resource.SchemaResponse
+	r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+	resp := resource.ImportStateResponse{
+		State: tfsdk.State{
+			Schema: schemaResp.Schema,
+			Raw:    tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), nil),
+		},
+	}
+	r.ImportState(ctx, resource.ImportStateRequest{ID: "ceph/name"}, &resp)
+
+	var discardKey types.Bool
+	resp.Diagnostics.Append(resp.State.GetAttribute(ctx, path.Root("discard_key"), &discardKey)...)
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	}
+	if !discardKey.ValueBool() {
+		t.Errorf("expected discard_key to be set on import, got %v", discardKey)
+	}
+}
+
+func TestDedicatedCephUserModifyPlanDiscardsKey(t *testing.T) {
+	ctx := context.Background()
+	r := &dedicatedCephUserResource{}
+
+	var schemaResp resource.SchemaResponse
+	r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+	unknownKey := ovhtypes.TfStringValue{StringValue: basetypes.NewStringUnknown()}
+	for name, tt := range map[string]struct {
+		discardKey types.Bool
+		key, want  ovhtypes.TfStringValue
+	}{
+		"discard_key=true":  {types.BoolValue(true), ovhtypes.NewTfStringValue("secret"), ovhtypes.NewTfStringNull()},
+		"discard_key=false": {types.BoolValue(false), ovhtypes.NewTfStringValue("secret"), ovhtypes.NewTfStringValue("secret")},
+		// The null key of a state where it was discarded, kept in the plan by UseStateForUnknown.
+		"discard_key=false, key discarded before": {types.BoolValue(false), ovhtypes.NewTfStringNull(), unknownKey},
+		// discard_key known at apply only: the key kept from the state may be discarded then.
+		"discard_key unknown": {types.BoolUnknown(), ovhtypes.NewTfStringValue("secret"), unknownKey},
+	} {
+		t.Run(name, func(t *testing.T) {
+			plan := tfsdk.Plan{Schema: schemaResp.Schema}
+			plan.Raw = tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), nil)
+			model := DedicatedCephUserModel{
+				ID:              ovhtypes.NewTfStringValue("ceph/user"),
+				ServiceName:     ovhtypes.NewTfStringValue("ceph"),
+				Name:            ovhtypes.NewTfStringValue("user"),
+				PoolPermissions: dedicatedCephUserPoolPermissionsNull(),
+				DiscardKey:      tt.discardKey,
+				Key:             tt.key,
+				MonCaps:         ovhtypes.NewTfStringNull(),
+				OsdCaps:         ovhtypes.NewTfStringNull(),
+				MdsCaps:         ovhtypes.NewTfStringNull(),
+			}
+			if diags := plan.Set(ctx, &model); diags.HasError() {
+				t.Fatalf("unexpected diagnostics: %v", diags)
+			}
+
+			resp := resource.ModifyPlanResponse{Plan: plan}
+			r.ModifyPlan(ctx, resource.ModifyPlanRequest{Plan: plan}, &resp)
+
+			var key ovhtypes.TfStringValue
+			resp.Diagnostics.Append(resp.Plan.GetAttribute(ctx, path.Root("key"), &key)...)
+			if resp.Diagnostics.HasError() {
+				t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+			}
+			if !key.StringValue.Equal(tt.want.StringValue) {
+				t.Errorf("expected the planned key %v, got %v", tt.want, key)
 			}
 		})
 	}

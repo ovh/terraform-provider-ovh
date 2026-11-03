@@ -169,6 +169,17 @@ func TestAccDedicatedCephUser_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateId:     serviceName + "/" + name,
 				ImportStateVerify: true,
+				// An import discards the key until the configuration asks for it.
+				ImportStateVerifyIgnore: []string{"discard_key", "key"},
+				ImportStatePersist:      true,
+			},
+			{
+				// The configuration does not set discard_key: the apply after the import reads the key.
+				Config: fmt.Sprintf(testAccDedicatedCephUserConfigPermissions, serviceName, name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "discard_key", "false"),
+					resource.TestCheckResourceAttrSet(resourceName, "key"),
+				),
 			},
 			{
 				Config: fmt.Sprintf(testAccDedicatedCephUserConfigPermissionsUpdated, serviceName, name),
@@ -260,6 +271,48 @@ func TestAccDedicatedCephUser_disappears(t *testing.T) {
 					return testAccDeleteDedicatedCephUser(testAccOVHClient, serviceName, name)
 				},
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+const testAccDedicatedCephUserConfigDiscardKey = `
+resource "ovh_dedicated_ceph_user" "user" {
+  service_name = "%[1]s"
+  name         = "%[2]s"
+  discard_key  = %[3]t
+}
+`
+
+// The key must not be stored when discard_key is set, and must be read again once it is unset.
+func TestAccDedicatedCephUser_discardKey(t *testing.T) {
+	serviceName := os.Getenv("OVH_DEDICATED_CEPH")
+	name := acctest.RandomWithPrefix(test_prefix)
+	resourceName := "ovh_dedicated_ceph_user.user"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheckDedicatedCeph(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(testAccDedicatedCephUserConfigDiscardKey, serviceName, name, true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "discard_key", "true"),
+					resource.TestCheckNoResourceAttr(resourceName, "key"),
+				),
+			},
+			{
+				Config: fmt.Sprintf(testAccDedicatedCephUserConfigDiscardKey, serviceName, name, false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "discard_key", "false"),
+					resource.TestCheckResourceAttrSet(resourceName, "key"),
+				),
+			},
+			{
+				Config: fmt.Sprintf(testAccDedicatedCephUserConfigDiscardKey, serviceName, name, true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckNoResourceAttr(resourceName, "key"),
+				),
 			},
 		},
 	})
