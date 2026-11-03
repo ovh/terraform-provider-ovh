@@ -3,11 +3,18 @@ package ovh
 import (
 	"context"
 	"net/url"
+	"sync"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 )
+
+// iamPolicyLock serializes IAM policy writes. The API locks the account's
+// policies while one of them is being written and rejects concurrent writes
+// with a 500 instead of waiting, which Terraform routinely triggers since it
+// applies sibling policies in parallel.
+var iamPolicyLock sync.Mutex
 
 func resourceIamPolicy() *schema.Resource {
 	// Define the deepest level first (e.g., 3 levels deep)
@@ -185,7 +192,9 @@ func resourceIamPolicyCreate(ctx context.Context, d *schema.ResourceData, meta a
 	config := meta.(*Config)
 	req := prepareIamPolicyCall(d)
 	var pol IamPolicy
+	iamPolicyLock.Lock()
 	err := config.OVHClient.PostWithContext(ctx, "/v2/iam/policy", req, &pol)
+	iamPolicyLock.Unlock()
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -200,7 +209,9 @@ func resourceIamPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta a
 	config := meta.(*Config)
 	req := prepareIamPolicyCall(d)
 	var pol IamPolicy
+	iamPolicyLock.Lock()
 	err := config.OVHClient.PutWithContext(ctx, "/v2/iam/policy/"+url.PathEscape(d.Id()), req, &pol)
+	iamPolicyLock.Unlock()
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -213,7 +224,9 @@ func resourceIamPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta a
 func resourceIamPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	config := meta.(*Config)
 	endpoint := "/v2/iam/policy/" + url.PathEscape(d.Id())
+	iamPolicyLock.Lock()
 	err := config.OVHClient.DeleteWithContext(ctx, endpoint, nil)
+	iamPolicyLock.Unlock()
 	if err != nil {
 		return diag.FromErr(helpers.CheckDeleted(d, err, endpoint))
 	}
