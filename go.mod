@@ -19,7 +19,7 @@ require (
 	github.com/ybriffa/rfc3339 v0.0.0-20220203155318-1789e3fd6e70
 	go.uber.org/ratelimit v0.3.1
 	golang.org/x/exp v0.0.0-20261014143641-f0251eb4aa3e
-	golang.org/x/net v0.61.0
+	golang.org/x/net v0.62.0
 	gopkg.in/ini.v1 v1.67.3
 	gopkg.in/yaml.v3 v3.0.1
 )
