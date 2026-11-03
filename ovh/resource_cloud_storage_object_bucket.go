@@ -60,7 +60,7 @@ func (r *cloudStorageObjectBucketResource) Configure(ctx context.Context, req re
 
 var storageObjectBucketMutableAttrs = MutableAttrs{
 	Maps:    []string{"tags"},
-	Objects: []string{"encryption", "versioning"},
+	Objects: []string{"encryption", "versioning", "object_lock"},
 }
 
 type storageObjectBucketObjectLockRequiresVersioningEnabled struct{}
@@ -205,11 +205,17 @@ func (r *cloudStorageObjectBucketResource) Schema(ctx context.Context, req resou
 			},
 			"object_lock": schema.SingleNestedAttribute{
 				Optional:            true,
-				Description:         "Object lock (WORM) configuration; requires versioning.status to be ENABLED. Can only be set at bucket creation: changing it recreates the bucket.",
-				MarkdownDescription: "Object lock (WORM) configuration; requires `versioning.status` to be `ENABLED`. Can only be set at bucket creation: changing it recreates the bucket.",
-				// S3 arms object lock only at CreateBucket.
+				Description:         "Object lock (WORM) configuration; requires versioning.status to be ENABLED. Setting it to {} enables object lock without a default retention rule. Object lock can only be enabled at bucket creation: adding or removing it recreates the bucket, while mode and retention_days are updated in place.",
+				MarkdownDescription: "Object lock (WORM) configuration; requires `versioning.status` to be `ENABLED`. Setting it to `{}` enables object lock without a default retention rule. Object lock can only be enabled at bucket creation: adding or removing it recreates the bucket, while `mode` and `retention_days` are updated in place.",
+				// S3 arms object lock only at CreateBucket; the default retention rule is mutable.
 				PlanModifiers: []planmodifier.Object{
-					objectplanmodifier.RequiresReplace(),
+					objectplanmodifier.RequiresReplaceIf(
+						func(ctx context.Context, req planmodifier.ObjectRequest, resp *objectplanmodifier.RequiresReplaceIfFuncResponse) {
+							resp.RequiresReplace = req.StateValue.IsNull() != req.PlanValue.IsNull()
+						},
+						"Enabling or disabling object lock recreates the bucket.",
+						"Enabling or disabling object lock recreates the bucket.",
+					),
 				},
 				Validators: []validator.Object{
 					storageObjectBucketObjectLockRequiresVersioningEnabled{},
@@ -217,19 +223,21 @@ func (r *cloudStorageObjectBucketResource) Schema(ctx context.Context, req resou
 				Attributes: map[string]schema.Attribute{
 					"mode": schema.StringAttribute{
 						CustomType:          ovhtypes.TfStringType{},
-						Required:            true,
-						Description:         "Object lock retention mode (COMPLIANCE, GOVERNANCE)",
-						MarkdownDescription: "Object lock retention mode (`COMPLIANCE`, `GOVERNANCE`)",
+						Optional:            true,
+						Description:         "Default retention mode (COMPLIANCE, GOVERNANCE); requires retention_days",
+						MarkdownDescription: "Default retention mode (`COMPLIANCE`, `GOVERNANCE`); requires `retention_days`",
 						Validators: []validator.String{
 							stringvalidator.OneOf("COMPLIANCE", "GOVERNANCE"),
+							stringvalidator.AlsoRequires(path.MatchRelative().AtParent().AtName("retention_days")),
 						},
 					},
 					"retention_days": schema.Int64Attribute{
-						Required:            true,
-						Description:         "Number of days to retain objects",
-						MarkdownDescription: "Number of days to retain objects",
+						Optional:            true,
+						Description:         "Number of days the default retention rule locks new objects for; requires mode",
+						MarkdownDescription: "Number of days the default retention rule locks new objects for; requires `mode`",
 						Validators: []validator.Int64{
 							int64validator.AtLeast(1),
+							int64validator.AlsoRequires(path.MatchRelative().AtParent().AtName("mode")),
 						},
 					},
 				},

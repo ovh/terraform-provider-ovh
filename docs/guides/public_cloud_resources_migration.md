@@ -432,6 +432,7 @@ Access rules and snapshots have their own resources, `ovh_cloud_storage_file_sha
 | `encryption { sse_algorithm }` | `encryption = { algorithm }`, `"AES256"` or `"PLAINTEXT"` |
 | `versioning { status = "enabled" }` | `versioning = { status = "ENABLED" }` |
 | `object_lock { status = "enabled", rule { mode = "governance", period = "P30D" } }` | `object_lock = { mode = "GOVERNANCE", retention_days = 30 }`; the block's presence replaces `status` |
+| `object_lock { status = "enabled" }`, no `rule` | `object_lock = {}` |
 | `replication { rules [...] }` | not supported |
 | `hide_objects`, `limit`, `marker`, `prefix`, `objects[*]` | removed; the resource no longer lists objects |
 | `virtual_host`, `objects_count`, `objects_size` | `current_state.{virtual_host, objects_count, objects_size}` |
@@ -456,7 +457,9 @@ resource "ovh_cloud_storage_object_bucket" "assets" {
 }
 ```
 
-~> **Object lock recreates the bucket.** Adding, changing or removing the `object_lock` block on the new resource replaces the bucket. Translate the legacy block exactly, including the retention period converted to days, and check that the plan after import shows no change before applying.
+~> **Object lock recreates the bucket.** Adding or removing the `object_lock` block on the new resource replaces the bucket; changing `mode` or `retention_days` updates it in place. Translate the legacy block exactly, and check that the plan after import shows no replacement before applying.
+
+-> **Retention periods in years.** The new resource only manages a default retention in days. A legacy `period` in years (for example `P1Y`) is not read back as days: after import, the plan shows an in-place update of `object_lock`, and applying replaces the yearly rule with the configured `retention_days`. To keep the yearly rule, add `object_lock` to the resource's `lifecycle { ignore_changes }`.
 
 ~> Lifecycle configurations (`ovh_cloud_project_storage_object_bucket_lifecycle_configuration`) and replication jobs keep their legacy resources. They reference the bucket by name, so they keep working after the bucket itself is migrated.
 

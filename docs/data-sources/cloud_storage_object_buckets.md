@@ -42,7 +42,7 @@ data "ovh_cloud_storage_object_buckets" "buckets" {
     * `algorithm` - Encryption algorithm (`AES256`, `PLAINTEXT`).
   * `versioning` - Versioning configuration:
     * `status` - Versioning status (`DISABLED`, `ENABLED`, `SUSPENDED`).
-  * `object_lock` - Object lock (WORM) configuration:
+  * `object_lock` - Object lock (WORM) configuration. Unset when object lock is disabled:
     * `mode` - Object lock retention mode (`COMPLIANCE`, `GOVERNANCE`).
     * `retention_days` - Number of days to retain objects.
     * `retention_years` - Number of years to retain objects.

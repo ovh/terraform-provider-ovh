@@ -31,7 +31,7 @@ resource "ovh_cloud_storage_object_bucket" "bucket" {
 }
 ```
 
-Object lock (WORM) requires `versioning.status` to be `ENABLED`, and can only be set when the bucket is created:
+Object lock (WORM) requires `versioning.status` to be `ENABLED`, and can only be enabled when the bucket is created. The default retention rule (`mode` and `retention_days`) can be changed afterwards; leave both out (`object_lock = {}`) to enable object lock without a default rule:
 
 ```terraform
 resource "ovh_cloud_storage_object_bucket" "locked" {
@@ -63,9 +63,9 @@ The following arguments are supported:
   * `algorithm` - (Required) Encryption algorithm. One of `AES256`, `PLAINTEXT`.
 * `versioning` - (Optional) Versioning configuration:
   * `status` - (Required) Versioning status. One of `DISABLED`, `ENABLED`, `SUSPENDED`.
-* `object_lock` - (Optional) Object lock (WORM) configuration. Requires `versioning` to be set with `status = "ENABLED"`. Object lock can only be armed at bucket creation. **Adding, changing or removing this block recreates the resource.**
-  * `mode` - (Required) Object lock retention mode. One of `COMPLIANCE`, `GOVERNANCE`.
-  * `retention_days` - (Required) Number of days to retain objects. Must be at least `1`.
+* `object_lock` - (Optional) Object lock (WORM) configuration. Requires `versioning` to be set with `status = "ENABLED"`. Object lock can only be armed at bucket creation. **Adding or removing this block recreates the resource.** `mode` and `retention_days` define the default retention rule and are updated in place; omit both to enable object lock without a default rule. A default retention set in years outside of Terraform (in the OVHcloud Control Panel, or with a `P<n>Y` period on `ovh_cloud_project_storage`) cannot be managed by this resource: it shows as a difference, and applying replaces it with the configured `retention_days` rule.
+  * `mode` - (Optional) Default retention mode. One of `COMPLIANCE`, `GOVERNANCE`. Requires `retention_days`.
+  * `retention_days` - (Optional) Number of days the default retention rule locks new objects for. Must be at least `1`. Requires `mode`.
 
 ## Attributes Reference
 

@@ -254,6 +254,66 @@ resource "ovh_cloud_storage_object_bucket" "bucket" {
 }
 `, serviceName, bucketName, region)
 
+	taggedConfig := fmt.Sprintf(`
+resource "ovh_cloud_storage_object_bucket" "bucket" {
+  service_name = "%s"
+  name         = "%s"
+  region       = "%s"
+
+  versioning = {
+    status = "ENABLED"
+  }
+
+  object_lock = {
+    mode           = "GOVERNANCE"
+    retention_days = 30
+  }
+
+  tags = {
+    env = "test"
+  }
+}
+`, serviceName, bucketName, region)
+
+	noRuleConfig := fmt.Sprintf(`
+resource "ovh_cloud_storage_object_bucket" "bucket" {
+  service_name = "%s"
+  name         = "%s"
+  region       = "%s"
+
+  versioning = {
+    status = "ENABLED"
+  }
+
+  object_lock = {}
+
+  tags = {
+    env = "test"
+  }
+}
+`, serviceName, bucketName, region)
+
+	newRuleConfig := fmt.Sprintf(`
+resource "ovh_cloud_storage_object_bucket" "bucket" {
+  service_name = "%s"
+  name         = "%s"
+  region       = "%s"
+
+  versioning = {
+    status = "ENABLED"
+  }
+
+  object_lock = {
+    mode           = "GOVERNANCE"
+    retention_days = 60
+  }
+
+  tags = {
+    env = "test"
+  }
+}
+`, serviceName, bucketName, region)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckCloudStorageObjectBucket(t)
@@ -280,6 +340,44 @@ resource "ovh_cloud_storage_object_bucket" "bucket" {
 						plancheck.ExpectEmptyPlan(),
 					},
 				},
+			},
+			// Updating a locked bucket must resend the object lock status, which the API requires.
+			{
+				Config: taggedConfig,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("ovh_cloud_storage_object_bucket.bucket", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "tags.env", "test"),
+			},
+			// Removing the default retention rule keeps the lock armed and updates in place.
+			{
+				Config: noRuleConfig,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("ovh_cloud_storage_object_bucket.bucket", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckNoResourceAttr("ovh_cloud_storage_object_bucket.bucket", "object_lock.mode"),
+					resource.TestCheckNoResourceAttr("ovh_cloud_storage_object_bucket.bucket", "current_state.object_lock.mode"),
+					resource.TestCheckNoResourceAttr("ovh_cloud_storage_object_bucket.bucket", "current_state.object_lock.retention_days"),
+				),
+			},
+			// Adding a rule with a new retention to an armed bucket also updates in place.
+			{
+				Config: newRuleConfig,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("ovh_cloud_storage_object_bucket.bucket", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "object_lock.retention_days", "60"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "current_state.object_lock.mode", "GOVERNANCE"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "current_state.object_lock.retention_days", "60"),
+				),
 			},
 			{
 				ResourceName:      "ovh_cloud_storage_object_bucket.bucket",
