@@ -24,6 +24,9 @@ type CloudStorageObjectBucketModel struct {
 	Versioning types.Object `tfsdk:"versioning"`
 	ObjectLock types.Object `tfsdk:"object_lock"`
 
+	// Provider-side only, never sent to the API
+	ForceDestroy types.Bool `tfsdk:"force_destroy"`
+
 	// Computed
 	Id             ovhtypes.TfStringValue `tfsdk:"id"`
 	Checksum       ovhtypes.TfStringValue `tfsdk:"checksum"`
@@ -34,6 +37,31 @@ type CloudStorageObjectBucketModel struct {
 }
 
 // API response types
+
+// CloudStorageObjectBucketAPIObject is an object, object version or delete marker of a bucket
+type CloudStorageObjectBucketAPIObject struct {
+	Key       string  `json:"key"`
+	VersionId *string `json:"versionId,omitempty"`
+}
+
+type CloudStorageObjectBucketAPIObjectIdentifier struct {
+	Key       string  `json:"key"`
+	VersionId *string `json:"versionId,omitempty"`
+}
+
+type CloudStorageObjectBucketAPIBulkDelete struct {
+	Objects []CloudStorageObjectBucketAPIObjectIdentifier `json:"objects"`
+}
+
+type CloudStorageObjectBucketAPIBulkDeleteResult struct {
+	Errors []CloudStorageObjectBucketAPIBulkDeleteError `json:"errors"`
+}
+
+type CloudStorageObjectBucketAPIBulkDeleteError struct {
+	Key     string `json:"key"`
+	Code    string `json:"code"`
+	Message string `json:"message"`
+}
 type CloudStorageObjectBucketAPIResponse struct {
 	Id             string                                   `json:"id"`
 	Checksum       string                                   `json:"checksum"`
