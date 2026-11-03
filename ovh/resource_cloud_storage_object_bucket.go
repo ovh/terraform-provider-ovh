@@ -60,12 +60,34 @@ func (r *cloudStorageObjectBucketResource) Configure(ctx context.Context, req re
 
 var storageObjectBucketMutableAttrs = MutableAttrs{
 	Maps:    []string{"tags"},
-	Objects: []string{"encryption", "versioning"},
+	Objects: []string{"encryption", "versioning", "object_lock"},
 }
 
 // storageObjectBucketObjectLockStatus returns the configured object_lock.status, or "" when null or unknown.
 func storageObjectBucketObjectLockStatus(o types.Object) string {
 	return storageObjectBucketObjectString(o.Attributes(), "status")
+}
+
+// S3 arms or disarms object lock only at CreateBucket, while the API updates the
+// default retention rule in place. An absent block is an unlocked bucket.
+func storageObjectBucketObjectLockStatusChanged(ctx context.Context, req planmodifier.ObjectRequest, resp *objectplanmodifier.RequiresReplaceIfFuncResponse) {
+	effectiveStatus := func(o types.Object) (string, bool) {
+		if o.IsNull() {
+			return "DISABLED", true
+		}
+		if o.IsUnknown() {
+			return "", false
+		}
+		status, ok := o.Attributes()["status"]
+		if !ok || status.IsUnknown() {
+			return "", false
+		}
+		return storageObjectBucketObjectLockStatus(o), true
+	}
+
+	planned, plannedKnown := effectiveStatus(req.PlanValue)
+	prior, priorKnown := effectiveStatus(req.StateValue)
+	resp.RequiresReplace = !plannedKnown || !priorKnown || planned != prior
 }
 
 type storageObjectBucketObjectLockRequiresVersioningEnabled struct{}
@@ -254,11 +276,14 @@ func (r *cloudStorageObjectBucketResource) Schema(ctx context.Context, req resou
 			},
 			"object_lock": schema.SingleNestedAttribute{
 				Optional:            true,
-				Description:         "Object lock (WORM) configuration; status ENABLED requires versioning.status to be ENABLED. Can only be set at bucket creation: changing it recreates the bucket.",
-				MarkdownDescription: "Object lock (WORM) configuration; `status = \"ENABLED\"` requires `versioning.status` to be `ENABLED`. Can only be set at bucket creation: changing it recreates the bucket.",
-				// S3 arms object lock only at CreateBucket.
+				Description:         "Object lock (WORM) configuration; status ENABLED requires versioning.status to be ENABLED. Changing status (an absent block counts as DISABLED) recreates the bucket; mode and retention_days are updated in place.",
+				MarkdownDescription: "Object lock (WORM) configuration; `status = \"ENABLED\"` requires `versioning.status` to be `ENABLED`. Changing `status` (an absent block counts as `DISABLED`) recreates the bucket; `mode` and `retention_days` are updated in place.",
 				PlanModifiers: []planmodifier.Object{
-					objectplanmodifier.RequiresReplace(),
+					objectplanmodifier.RequiresReplaceIf(
+						storageObjectBucketObjectLockStatusChanged,
+						"Changing object_lock.status recreates the bucket; an absent block counts as DISABLED.",
+						"Changing `object_lock.status` recreates the bucket; an absent block counts as `DISABLED`.",
+					),
 				},
 				Validators: []validator.Object{
 					storageObjectBucketObjectLockRequiresVersioningEnabled{},

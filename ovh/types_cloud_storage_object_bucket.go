@@ -245,6 +245,11 @@ func buildStorageObjectBucketObjectLockSpecObject(objectLock *CloudStorageObject
 	return obj
 }
 
+func storageObjectBucketObjectLockIsBareDisabled(objectLock *CloudStorageObjectBucketAPIObjectLock) bool {
+	return objectLock != nil && objectLock.Status == "DISABLED" && objectLock.Mode == "" &&
+		objectLock.RetentionDays == nil && objectLock.RetentionYears == nil
+}
+
 func buildStorageObjectBucketTagsMap(tags map[string]string) types.Map {
 	if tags == nil {
 		return types.MapNull(ovhtypes.TfStringType{})
@@ -398,7 +403,11 @@ func (m *CloudStorageObjectBucketModel) MergeWith(ctx context.Context, response 
 	m.OwnerUserId = nullableTfString(response.TargetSpec.OwnerUserId)
 	m.Encryption = buildStorageObjectBucketEncryptionObject(response.TargetSpec.Encryption)
 	m.Versioning = buildStorageObjectBucketVersioningObject(response.TargetSpec.Versioning)
-	m.ObjectLock = buildStorageObjectBucketObjectLockSpecObject(response.TargetSpec.ObjectLock)
+	// Buckets the API adopted from S3 store {status: DISABLED}: keep an unset
+	// object_lock null so importing them plans neither an update nor a replacement.
+	if !(m.ObjectLock.IsNull() && storageObjectBucketObjectLockIsBareDisabled(response.TargetSpec.ObjectLock)) {
+		m.ObjectLock = buildStorageObjectBucketObjectLockSpecObject(response.TargetSpec.ObjectLock)
+	}
 
 	// An empty tags map is dropped by the API (omitempty), so keep a configured
 	// empty map instead of flipping it to null and breaking plan consistency.

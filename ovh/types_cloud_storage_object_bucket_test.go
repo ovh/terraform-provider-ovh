@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
@@ -156,6 +158,30 @@ func TestCloudStorageObjectBucketMergeWith_ObjectLock(t *testing.T) {
 		}
 	})
 
+	t.Run("unconfigured object_lock stays null when the target spec is a bare DISABLED", func(t *testing.T) {
+		model := CloudStorageObjectBucketModel{ObjectLock: types.ObjectNull(StorageObjectBucketObjectLockSpecAttrTypes())}
+		model.MergeWith(ctx, &CloudStorageObjectBucketAPIResponse{
+			TargetSpec: &CloudStorageObjectBucketAPITargetSpec{Name: "bucket", ObjectLock: disabled},
+		})
+
+		if !model.ObjectLock.IsNull() {
+			t.Fatalf("object_lock = %v, want null", model.ObjectLock)
+		}
+	})
+
+	t.Run("configured DISABLED object_lock is kept", func(t *testing.T) {
+		model := CloudStorageObjectBucketModel{
+			ObjectLock: storageObjectBucketObjectLockValue(t, "DISABLED", ovhtypes.TfStringValue{StringValue: types.StringNull()}, types.Int64Null()),
+		}
+		model.MergeWith(ctx, &CloudStorageObjectBucketAPIResponse{
+			TargetSpec: &CloudStorageObjectBucketAPITargetSpec{Name: "bucket", ObjectLock: disabled},
+		})
+
+		if got := storageObjectBucketObjectLockStatus(model.ObjectLock); got != "DISABLED" {
+			t.Fatalf("object_lock.status = %q, want DISABLED", got)
+		}
+	})
+
 	t.Run("enabled without rule maps mode and retention_days to null", func(t *testing.T) {
 		model := CloudStorageObjectBucketModel{}
 		model.MergeWith(ctx, &CloudStorageObjectBucketAPIResponse{
@@ -214,5 +240,46 @@ func TestCloudStorageObjectBucketToCreate_NullTagsOmitted(t *testing.T) {
 	}
 	if _, ok := body.TargetSpec["tags"]; ok {
 		t.Fatalf("tags should be omitted from create target spec when null: %v", body.TargetSpec)
+	}
+}
+
+func TestStorageObjectBucketObjectLockStatusChanged(t *testing.T) {
+	ctx := context.Background()
+	noMode := ovhtypes.TfStringValue{StringValue: types.StringNull()}
+	null := types.ObjectNull(StorageObjectBucketObjectLockSpecAttrTypes())
+	disabled := storageObjectBucketObjectLockValue(t, "DISABLED", noMode, types.Int64Null())
+	enabled := storageObjectBucketObjectLockValue(t, "ENABLED", noMode, types.Int64Null())
+	rule30 := storageObjectBucketObjectLockValue(t, "ENABLED", ovhtypes.NewTfStringValue("GOVERNANCE"), types.Int64Value(30))
+	rule60 := storageObjectBucketObjectLockValue(t, "ENABLED", ovhtypes.NewTfStringValue("COMPLIANCE"), types.Int64Value(60))
+	unknownStatus := types.ObjectValueMust(StorageObjectBucketObjectLockSpecAttrTypes(), map[string]attr.Value{
+		"status":         ovhtypes.TfStringValue{StringValue: types.StringUnknown()},
+		"mode":           noMode,
+		"retention_days": types.Int64Null(),
+	})
+
+	cases := map[string]struct {
+		state, plan types.Object
+		want        bool
+	}{
+		"null to DISABLED is in place":       {state: null, plan: disabled, want: false},
+		"DISABLED to null is in place":       {state: disabled, plan: null, want: false},
+		"retention rule change is in place":  {state: rule30, plan: rule60, want: false},
+		"retention rule removal is in place": {state: rule30, plan: enabled, want: false},
+		"null to ENABLED replaces":           {state: null, plan: enabled, want: true},
+		"DISABLED to ENABLED replaces":       {state: disabled, plan: rule30, want: true},
+		"ENABLED to null replaces":           {state: rule30, plan: null, want: true},
+		"ENABLED to DISABLED replaces":       {state: enabled, plan: disabled, want: true},
+		"unknown planned object replaces":    {state: disabled, plan: types.ObjectUnknown(StorageObjectBucketObjectLockSpecAttrTypes()), want: true},
+		"unknown planned status replaces":    {state: enabled, plan: unknownStatus, want: true},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			resp := &objectplanmodifier.RequiresReplaceIfFuncResponse{}
+			storageObjectBucketObjectLockStatusChanged(ctx, planmodifier.ObjectRequest{StateValue: tc.state, PlanValue: tc.plan}, resp)
+			if resp.RequiresReplace != tc.want {
+				t.Fatalf("RequiresReplace = %t, want %t", resp.RequiresReplace, tc.want)
+			}
+		})
 	}
 }

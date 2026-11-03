@@ -267,6 +267,22 @@ resource "ovh_cloud_storage_object_bucket" "bucket" {
 }
 `, serviceName, bucketName, region)
 
+	armedOnlyConfig := fmt.Sprintf(`
+resource "ovh_cloud_storage_object_bucket" "bucket" {
+  service_name = "%s"
+  name         = "%s"
+  region       = "%s"
+
+  versioning = {
+    status = "ENABLED"
+  }
+
+  object_lock = {
+    status = "ENABLED"
+  }
+}
+`, serviceName, bucketName, region)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckCloudStorageObjectBucket(t)
@@ -302,6 +318,106 @@ resource "ovh_cloud_storage_object_bucket" "bucket" {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateIdFunc: testAccCloudStorageObjectBucketImportStateIdFunc("ovh_cloud_storage_object_bucket.bucket"),
+			},
+			{
+				Config: strings.Replace(config, "retention_days = 30", "retention_days = 60", 1),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("ovh_cloud_storage_object_bucket.bucket", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "object_lock.retention_days", "60"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "current_state.object_lock.retention_days", "60"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "resource_status", "READY"),
+				),
+			},
+			{
+				Config: armedOnlyConfig,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("ovh_cloud_storage_object_bucket.bucket", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "object_lock.status", "ENABLED"),
+					resource.TestCheckNoResourceAttr("ovh_cloud_storage_object_bucket.bucket", "object_lock.mode"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "current_state.object_lock.status", "ENABLED"),
+					resource.TestCheckNoResourceAttr("ovh_cloud_storage_object_bucket.bucket", "current_state.object_lock.mode"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCloudStorageObjectBucket_objectLockStatusChange(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	region := strings.ToUpper(os.Getenv("OVH_CLOUD_PROJECT_STORAGE_REGION_TEST"))
+
+	bucketName := acctest.RandomWithPrefix(test_prefix)
+
+	configFor := func(objectLock string) string {
+		return fmt.Sprintf(`
+resource "ovh_cloud_storage_object_bucket" "bucket" {
+  service_name = "%s"
+  name         = "%s"
+  region       = "%s"
+
+  versioning = {
+    status = "ENABLED"
+  }
+  %s
+}
+`, serviceName, bucketName, region, objectLock)
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloudStorageObjectBucket(t)
+			testAccCheckCloudProjectExists(t)
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCloudStorageObjectBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: configFor(""),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "current_state.object_lock.status", "DISABLED"),
+				),
+			},
+			// An absent block and status DISABLED are the same unlocked bucket.
+			{
+				Config: configFor(`object_lock = { status = "DISABLED" }`),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("ovh_cloud_storage_object_bucket.bucket", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "object_lock.status", "DISABLED"),
+				),
+			},
+			{
+				Config: configFor(""),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("ovh_cloud_storage_object_bucket.bucket", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckNoResourceAttr("ovh_cloud_storage_object_bucket.bucket", "object_lock.%"),
+				),
+			},
+			{
+				Config: configFor(`object_lock = { status = "ENABLED" }`),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("ovh_cloud_storage_object_bucket.bucket", plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "current_state.object_lock.status", "ENABLED"),
+				),
 			},
 		},
 	})
@@ -391,7 +507,7 @@ resource "ovh_cloud_storage_object_bucket" "bucket" {
 			{
 				Config:      configFor(versioningEnabled, `mode = "GOVERNANCE"`),
 				PlanOnly:    true,
-				ExpectError: regexp.MustCompile(`"status" is required`),
+				ExpectError: regexp.MustCompile(`"status"\s+is\s+required`),
 			},
 			{
 				Config:      configFor(versioningEnabled, `status = "ARMED"`),

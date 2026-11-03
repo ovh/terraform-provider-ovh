@@ -1,3 +1,18 @@
+## Unreleased
+
+🧨 Breaking changes:
+
+* `r/ovh_cloud_storage_object_bucket`: `object_lock.status` (`ENABLED`, `DISABLED`) is now required, and `mode` and `retention_days` are now optional, so object lock can be armed without a default retention rule. Add `status = "ENABLED"` to every existing `object_lock` block: configurations without it fail validation. The bucket is not recreated
+
+💪 Improvements:
+
+* `r/ovh_cloud_storage_object_bucket`, `d/ovh_cloud_storage_object_bucket`, `d/ovh_cloud_storage_object_buckets`: Add the computed `current_state.object_lock.status` attribute, always set, `DISABLED` for a bucket without object lock
+* `r/ovh_cloud_storage_object_bucket`: Changing or removing the `object_lock` default retention rule (`mode`, `retention_days`) now updates the bucket in place. Only changing `object_lock.status` recreates it, an absent block counting as `DISABLED`
+
+🐜 Bug fixes:
+
+* `r/ovh_cloud_storage_object_bucket`: Importing a bucket without object lock that was not created with Terraform no longer plans to recreate it
+
 ## 2.24.0 (October 29, 2026)
 
 🎉 Features:
