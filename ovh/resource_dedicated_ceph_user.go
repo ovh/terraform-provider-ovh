@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/ovh/go-ovh/ovh"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
@@ -31,6 +32,7 @@ var (
 	_ resource.Resource                   = (*dedicatedCephUserResource)(nil)
 	_ resource.ResourceWithConfigure      = (*dedicatedCephUserResource)(nil)
 	_ resource.ResourceWithImportState    = (*dedicatedCephUserResource)(nil)
+	_ resource.ResourceWithModifyPlan     = (*dedicatedCephUserResource)(nil)
 	_ resource.ResourceWithValidateConfig = (*dedicatedCephUserResource)(nil)
 )
 
@@ -47,6 +49,7 @@ type DedicatedCephUserModel struct {
 	ServiceName     ovhtypes.TfStringValue `tfsdk:"service_name"`
 	Name            ovhtypes.TfStringValue `tfsdk:"name"`
 	PoolPermissions types.List             `tfsdk:"pool_permissions"`
+	DiscardKey      types.Bool             `tfsdk:"discard_key"`
 	Key             ovhtypes.TfStringValue `tfsdk:"key"`
 	MonCaps         ovhtypes.TfStringValue `tfsdk:"mon_caps"`
 	OsdCaps         ovhtypes.TfStringValue `tfsdk:"osd_caps"`
@@ -84,10 +87,16 @@ func DedicatedCephUserPoolPermissionAttrTypes() map[string]attr.Type {
 	}
 }
 
+// MergeWith sets the attributes read from the API. The key is left null when discard_key is set, so
+// that it never reaches the state.
 func (m *DedicatedCephUserModel) MergeWith(user *DedicatedCephUser) {
 	m.ID = ovhtypes.NewTfStringValue(m.ServiceName.ValueString() + "/" + user.Name)
 	m.Name = ovhtypes.NewTfStringValue(user.Name)
-	m.Key = ovhtypes.NewTfStringValue(user.Key)
+	if m.DiscardKey.ValueBool() {
+		m.Key = ovhtypes.NewTfStringNull()
+	} else {
+		m.Key = ovhtypes.NewTfStringValue(user.Key)
+	}
 	m.MonCaps = ovhtypes.NewTfStringValue(user.MonCaps)
 	m.OsdCaps = ovhtypes.NewTfStringValue(user.OsdCaps)
 	if user.MdsCaps != nil {
@@ -209,20 +218,20 @@ func (r *dedicatedCephUserResource) Configure(ctx context.Context, req resource.
 	r.config = config
 }
 
-// dedicatedCephUserPermissionDefault defaults an omitted permission flag to false.
-type dedicatedCephUserPermissionDefault struct{}
+// dedicatedCephUserFalseDefault defaults an omitted boolean, such as a permission flag, to false.
+type dedicatedCephUserFalseDefault struct{}
 
-var _ defaults.Bool = dedicatedCephUserPermissionDefault{}
+var _ defaults.Bool = dedicatedCephUserFalseDefault{}
 
-func (d dedicatedCephUserPermissionDefault) Description(ctx context.Context) string {
+func (d dedicatedCephUserFalseDefault) Description(ctx context.Context) string {
 	return "value defaults to false"
 }
 
-func (d dedicatedCephUserPermissionDefault) MarkdownDescription(ctx context.Context) string {
+func (d dedicatedCephUserFalseDefault) MarkdownDescription(ctx context.Context) string {
 	return "value defaults to `false`"
 }
 
-func (d dedicatedCephUserPermissionDefault) DefaultBool(ctx context.Context, req defaults.BoolRequest, resp *defaults.BoolResponse) {
+func (d dedicatedCephUserFalseDefault) DefaultBool(ctx context.Context, req defaults.BoolRequest, resp *defaults.BoolResponse) {
 	resp.PlanValue = types.BoolValue(false)
 }
 
@@ -230,7 +239,7 @@ func dedicatedCephUserPermissionFlag(description string) schema.BoolAttribute {
 	return schema.BoolAttribute{
 		Optional:            true,
 		Computed:            true,
-		Default:             dedicatedCephUserPermissionDefault{},
+		Default:             dedicatedCephUserFalseDefault{},
 		Description:         description,
 		MarkdownDescription: description,
 	}
@@ -278,13 +287,21 @@ func (r *dedicatedCephUserResource) Schema(ctx context.Context, req resource.Sch
 				},
 			},
 
+			"discard_key": schema.BoolAttribute{
+				Optional:            true,
+				Computed:            true,
+				Default:             dedicatedCephUserFalseDefault{},
+				Description:         "Do not keep the key of the user in the state. The key is then not available for use in Terraform",
+				MarkdownDescription: "Do not keep the key of the user in the state. The key is then not available for use in Terraform",
+			},
+
 			// Computed
 			"key": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Computed:            true,
 				Sensitive:           true,
-				Description:         "Key of the user to connect to the cluster",
-				MarkdownDescription: "Key of the user to connect to the cluster",
+				Description:         "Key of the user to connect to the cluster, null when discard_key is set",
+				MarkdownDescription: "Key of the user to connect to the cluster, null when `discard_key` is set",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -379,6 +396,33 @@ func (r *dedicatedCephUserResource) ValidateConfig(ctx context.Context, req reso
 	}
 
 	resp.Diagnostics.Append(validateDedicatedCephUserPoolPermissions(ctx, permissions)...)
+}
+
+// ModifyPlan plans a null key when discard_key is set, rather than the key kept from the state.
+// Otherwise, a key planned null (kept from a state where it was discarded) is unknown until the
+// apply reads it, as is the key when discard_key is not known yet.
+func (r *dedicatedCephUserResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+
+	var discardKey types.Bool
+	var key ovhtypes.TfStringValue
+	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("discard_key"), &discardKey)...)
+	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("key"), &key)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	unknownKey := ovhtypes.TfStringValue{StringValue: basetypes.NewStringUnknown()}
+	switch {
+	case discardKey.IsUnknown():
+		resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("key"), unknownKey)...)
+	case discardKey.ValueBool():
+		resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("key"), ovhtypes.NewTfStringNull())...)
+	case key.IsNull():
+		resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("key"), unknownKey)...)
+	}
 }
 
 func dedicatedCephUserEndpoint(serviceName, userName string) string {
@@ -537,6 +581,12 @@ func (r *dedicatedCephUserResource) Read(ctx context.Context, req resource.ReadR
 		return
 	}
 
+	// A state written before discard_key existed holds no value for it: it then defaults to false,
+	// as in the configuration, so that it shows no drift.
+	if data.DiscardKey.IsNull() {
+		data.DiscardKey = types.BoolValue(false)
+	}
+
 	userName := data.Name.ValueString()
 	user, permissions, err := r.fetch(ctx, data.ServiceName.ValueString(), userName)
 	if err != nil {
@@ -576,34 +626,13 @@ func (r *dedicatedCephUserResource) Update(ctx context.Context, req resource.Upd
 		return
 	}
 
-	serviceName := data.ServiceName.ValueString()
-	userName := data.Name.ValueString()
-
-	// Changes are made one at a time on a cluster, see lockDedicatedCephCluster.
-	unlock, err := lockDedicatedCephCluster(ctx, serviceName)
-	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Error waiting for the other changes of %s", serviceName), err.Error())
-		return
-	}
-	defer unlock()
-
-	if err := waitDedicatedCephIdle(ctx, r.config.OVHClient, serviceName, dedicatedCephUserTimeout); err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Error waiting for the tasks in progress on %s", serviceName), err.Error())
-		return
-	}
-
-	// pool_permissions is the only attribute that can be updated in place.
-	wanted, diags := data.ToPoolPermissions(ctx)
-	resp.Diagnostics.Append(diags...)
-	current, diags := state.ToPoolPermissions(ctx)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if err := r.setPoolPermissions(ctx, serviceName, userName, current, wanted); err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Error setting the pool permissions of user %s", userName), err.Error())
-		return
+	// pool_permissions and discard_key are the only attributes that can be updated in place, and
+	// discard_key changes nothing on the cluster.
+	if !data.PoolPermissions.Equal(state.PoolPermissions) {
+		resp.Diagnostics.Append(r.updatePoolPermissions(ctx, &data, &state)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	resp.Diagnostics.Append(r.refresh(ctx, &data)...)
@@ -613,6 +642,41 @@ func (r *dedicatedCephUserResource) Update(ctx context.Context, req resource.Upd
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+// updatePoolPermissions brings the pool permissions of the user from those of the state to those of
+// the plan.
+func (r *dedicatedCephUserResource) updatePoolPermissions(ctx context.Context, data, state *DedicatedCephUserModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	serviceName := data.ServiceName.ValueString()
+	userName := data.Name.ValueString()
+
+	// Changes are made one at a time on a cluster, see lockDedicatedCephCluster.
+	unlock, err := lockDedicatedCephCluster(ctx, serviceName)
+	if err != nil {
+		diags.AddError(fmt.Sprintf("Error waiting for the other changes of %s", serviceName), err.Error())
+		return diags
+	}
+	defer unlock()
+
+	if err := waitDedicatedCephIdle(ctx, r.config.OVHClient, serviceName, dedicatedCephUserTimeout); err != nil {
+		diags.AddError(fmt.Sprintf("Error waiting for the tasks in progress on %s", serviceName), err.Error())
+		return diags
+	}
+
+	wanted, wantedDiags := data.ToPoolPermissions(ctx)
+	diags.Append(wantedDiags...)
+	current, currentDiags := state.ToPoolPermissions(ctx)
+	diags.Append(currentDiags...)
+	if diags.HasError() {
+		return diags
+	}
+
+	if err := r.setPoolPermissions(ctx, serviceName, userName, current, wanted); err != nil {
+		diags.AddError(fmt.Sprintf("Error setting the pool permissions of user %s", userName), err.Error())
+	}
+	return diags
 }
 
 func (r *dedicatedCephUserResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -670,4 +734,7 @@ func (r *dedicatedCephUserResource) ImportState(ctx context.Context, req resourc
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_name"), splits[0])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("name"), splits[1])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), req.ID)...)
+	// The configuration is not known when importing, so the key is first discarded, never stored
+	// before the configuration asks for it: when discard_key is not set, the next apply reads it.
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("discard_key"), true)...)
 }
