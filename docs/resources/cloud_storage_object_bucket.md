@@ -31,7 +31,7 @@ resource "ovh_cloud_storage_object_bucket" "bucket" {
 }
 ```
 
-Object lock (WORM) requires `versioning.status` to be `ENABLED`, and can only be set when the bucket is created:
+Object lock (WORM) requires `versioning.status` to be `ENABLED`, and can only be armed when the bucket is created. `object_lock.status` defaults to `ENABLED`, so setting the block arms the lock. The default retention rule (`mode` + `retention_days`) is optional, and can be changed or removed in place; `object_lock = {}` arms the lock without one:
 
 ```terraform
 resource "ovh_cloud_storage_object_bucket" "locked" {
@@ -63,9 +63,11 @@ The following arguments are supported:
   * `algorithm` - (Required) Encryption algorithm. One of `AES256`, `PLAINTEXT`.
 * `versioning` - (Optional) Versioning configuration:
   * `status` - (Required) Versioning status. One of `DISABLED`, `ENABLED`, `SUSPENDED`.
-* `object_lock` - (Optional) Object lock (WORM) configuration. Requires `versioning` to be set with `status = "ENABLED"`. Object lock can only be armed at bucket creation. **Adding, changing or removing this block recreates the resource.**
-  * `mode` - (Required) Object lock retention mode. One of `COMPLIANCE`, `GOVERNANCE`.
-  * `retention_days` - (Required) Number of days to retain objects. Must be at least `1`.
+* `object_lock` - (Optional) Object lock (WORM) configuration. Object lock can only be armed at bucket creation. An absent block counts as `status = "DISABLED"`. **Changing `status` recreates the resource**; `mode`, `retention_days` and `retention_years` are updated in place.
+  * `status` - (Optional) Whether object lock is armed on the bucket. One of `ENABLED`, `DISABLED`. Defaults to `ENABLED`. `ENABLED` requires `versioning` to be set with `status = "ENABLED"`.
+  * `mode` - (Optional) Default retention mode. One of `COMPLIANCE`, `GOVERNANCE`. Must be set together with exactly one of `retention_days` or `retention_years`, and only when `status` is `ENABLED`.
+  * `retention_days` - (Optional) Number of days the default retention rule locks new objects for. Must be at least `1`, and set together with `mode`. Conflicts with `retention_years`.
+  * `retention_years` - (Optional) Number of years the default retention rule locks new objects for. Must be at least `1`, and set together with `mode`. Conflicts with `retention_days`.
 
 ## Attributes Reference
 
@@ -84,10 +86,11 @@ The following attributes are exported:
     * `algorithm` - Encryption algorithm.
   * `versioning` - Current versioning configuration:
     * `status` - Versioning status.
-  * `object_lock` - Current object lock configuration:
-    * `mode` - Object lock retention mode.
-    * `retention_days` - Number of days to retain objects.
-    * `retention_years` - Number of years to retain objects. Read-only alternative to `retention_days`, set only on buckets locked outside of Terraform.
+  * `object_lock` - Current object lock configuration, always present:
+    * `status` - Whether object lock is armed on the bucket (`ENABLED`, `DISABLED`).
+    * `mode` - Default retention mode, `null` without a default retention rule.
+    * `retention_days` - Number of days the default retention rule locks new objects for, `null` without a days-based default retention rule.
+    * `retention_years` - Number of years the default retention rule locks new objects for, `null` without a years-based default retention rule.
   * `tags` - Current metadata tags.
   * `virtual_host` - Bucket virtual host, as a hostname without scheme (for example `my-data-bucket.s3.gra.io.cloud.ovh.net`). Only returned on a single bucket read.
   * `objects_count` - Bucket total objects count. Only returned on a single bucket read.

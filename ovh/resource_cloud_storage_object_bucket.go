@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -60,21 +61,51 @@ func (r *cloudStorageObjectBucketResource) Configure(ctx context.Context, req re
 
 var storageObjectBucketMutableAttrs = MutableAttrs{
 	Maps:    []string{"tags"},
-	Objects: []string{"encryption", "versioning"},
+	Objects: []string{"encryption", "versioning", "object_lock"},
+}
+
+// storageObjectBucketObjectLockStatus resolves object_lock.status as the API sees it, or "" when unknown.
+// A null block is an unlocked bucket. A null status is the ENABLED default: the
+// framework applies it to the plan but not to the config, and a block in a 2.24.0
+// state, which had no status, always armed the lock.
+func storageObjectBucketObjectLockStatus(o types.Object) string {
+	if o.IsNull() {
+		return "DISABLED"
+	}
+	status, ok := o.Attributes()["status"].(ovhtypes.TfStringValue)
+	if o.IsUnknown() || !ok || status.IsUnknown() {
+		return ""
+	}
+	if status.IsNull() {
+		return "ENABLED"
+	}
+	return status.ValueString()
+}
+
+// S3 arms or disarms object lock only at CreateBucket, while the API updates the
+// default retention rule in place. An unknown status forces nothing: the API
+// rejects a real status change at apply.
+func storageObjectBucketObjectLockStatusChanged(ctx context.Context, req planmodifier.ObjectRequest, resp *objectplanmodifier.RequiresReplaceIfFuncResponse) {
+	planned := storageObjectBucketObjectLockStatus(req.PlanValue)
+	prior := storageObjectBucketObjectLockStatus(req.StateValue)
+	resp.RequiresReplace = planned != "" && prior != "" && planned != prior
 }
 
 type storageObjectBucketObjectLockRequiresVersioningEnabled struct{}
 
 func (v storageObjectBucketObjectLockRequiresVersioningEnabled) Description(_ context.Context) string {
-	return "object_lock requires versioning.status to be ENABLED"
+	return "object_lock with status ENABLED requires versioning.status to be ENABLED"
 }
 
 func (v storageObjectBucketObjectLockRequiresVersioningEnabled) MarkdownDescription(ctx context.Context) string {
-	return "`object_lock` requires `versioning.status` to be `ENABLED`"
+	return "`object_lock` with `status = \"ENABLED\"` requires `versioning.status` to be `ENABLED`"
 }
 
 func (v storageObjectBucketObjectLockRequiresVersioningEnabled) ValidateObject(ctx context.Context, req validator.ObjectRequest, resp *validator.ObjectResponse) {
 	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
+		return
+	}
+	if storageObjectBucketObjectLockStatus(req.ConfigValue) != "ENABLED" {
 		return
 	}
 
@@ -104,6 +135,61 @@ func (v storageObjectBucketObjectLockRequiresVersioningEnabled) ValidateObject(c
 			req.Path,
 			"Invalid object_lock configuration",
 			fmt.Sprintf("object_lock requires versioning.status to be \"ENABLED\", got %q.", status.ValueString()),
+		)
+	}
+}
+
+type storageObjectBucketObjectLockRetentionRule struct{}
+
+func (v storageObjectBucketObjectLockRetentionRule) Description(_ context.Context) string {
+	return "object_lock.mode must be set together with exactly one of object_lock.retention_days or object_lock.retention_years, and only with status ENABLED"
+}
+
+func (v storageObjectBucketObjectLockRetentionRule) MarkdownDescription(ctx context.Context) string {
+	return "`object_lock.mode` must be set together with exactly one of `object_lock.retention_days` or `object_lock.retention_years`, and only with `status = \"ENABLED\"`"
+}
+
+func (v storageObjectBucketObjectLockRetentionRule) ValidateObject(ctx context.Context, req validator.ObjectRequest, resp *validator.ObjectResponse) {
+	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
+		return
+	}
+
+	attrs := req.ConfigValue.Attributes()
+	mode, hasMode := attrs["mode"]
+	retentionDays, hasRetentionDays := attrs["retention_days"]
+	retentionYears, hasRetentionYears := attrs["retention_years"]
+	if !hasMode || !hasRetentionDays || !hasRetentionYears {
+		return
+	}
+	if mode.IsUnknown() || retentionDays.IsUnknown() || retentionYears.IsUnknown() {
+		return
+	}
+
+	if !retentionDays.IsNull() && !retentionYears.IsNull() {
+		resp.Diagnostics.AddAttributeError(
+			req.Path,
+			"Invalid object_lock configuration",
+			"object_lock.retention_days and object_lock.retention_years cannot both be set.",
+		)
+		return
+	}
+
+	hasRetentionPeriod := !retentionDays.IsNull() || !retentionYears.IsNull()
+	if mode.IsNull() == hasRetentionPeriod {
+		resp.Diagnostics.AddAttributeError(
+			req.Path,
+			"Invalid object_lock configuration",
+			"object_lock.mode must be set together with object_lock.retention_days or object_lock.retention_years.",
+		)
+		return
+	}
+
+	status := storageObjectBucketObjectLockStatus(req.ConfigValue)
+	if !mode.IsNull() && status != "" && status != "ENABLED" {
+		resp.Diagnostics.AddAttributeError(
+			req.Path,
+			"Invalid object_lock configuration",
+			fmt.Sprintf("object_lock.mode and its retention period require status \"ENABLED\", got %q.", status),
 		)
 	}
 }
@@ -205,29 +291,52 @@ func (r *cloudStorageObjectBucketResource) Schema(ctx context.Context, req resou
 			},
 			"object_lock": schema.SingleNestedAttribute{
 				Optional:            true,
-				Description:         "Object lock (WORM) configuration; requires versioning.status to be ENABLED. Can only be set at bucket creation: changing it recreates the bucket.",
-				MarkdownDescription: "Object lock (WORM) configuration; requires `versioning.status` to be `ENABLED`. Can only be set at bucket creation: changing it recreates the bucket.",
-				// S3 arms object lock only at CreateBucket.
+				Description:         "Object lock (WORM) configuration; status ENABLED requires versioning.status to be ENABLED. Changing status (an absent block counts as DISABLED) recreates the bucket; mode, retention_days and retention_years are updated in place.",
+				MarkdownDescription: "Object lock (WORM) configuration; `status = \"ENABLED\"` requires `versioning.status` to be `ENABLED`. Changing `status` (an absent block counts as `DISABLED`) recreates the bucket; `mode`, `retention_days` and `retention_years` are updated in place.",
 				PlanModifiers: []planmodifier.Object{
-					objectplanmodifier.RequiresReplace(),
+					objectplanmodifier.RequiresReplaceIf(
+						storageObjectBucketObjectLockStatusChanged,
+						"Changing object_lock.status recreates the bucket; an absent block counts as DISABLED.",
+						"Changing `object_lock.status` recreates the bucket; an absent block counts as `DISABLED`.",
+					),
 				},
 				Validators: []validator.Object{
 					storageObjectBucketObjectLockRequiresVersioningEnabled{},
+					storageObjectBucketObjectLockRetentionRule{},
 				},
 				Attributes: map[string]schema.Attribute{
+					"status": schema.StringAttribute{
+						CustomType:          ovhtypes.TfStringType{},
+						Optional:            true,
+						Computed:            true,
+						Default:             stringdefault.StaticString("ENABLED"),
+						Description:         "Whether object lock is armed on the bucket (ENABLED, DISABLED), with or without a default retention rule. Defaults to ENABLED",
+						MarkdownDescription: "Whether object lock is armed on the bucket (`ENABLED`, `DISABLED`), with or without a default retention rule. Defaults to `ENABLED`",
+						Validators: []validator.String{
+							stringvalidator.OneOf("ENABLED", "DISABLED"),
+						},
+					},
 					"mode": schema.StringAttribute{
 						CustomType:          ovhtypes.TfStringType{},
-						Required:            true,
-						Description:         "Object lock retention mode (COMPLIANCE, GOVERNANCE)",
-						MarkdownDescription: "Object lock retention mode (`COMPLIANCE`, `GOVERNANCE`)",
+						Optional:            true,
+						Description:         "Default retention mode (COMPLIANCE, GOVERNANCE); requires retention_days or retention_years, and status ENABLED",
+						MarkdownDescription: "Default retention mode (`COMPLIANCE`, `GOVERNANCE`); requires `retention_days` or `retention_years`, and `status = \"ENABLED\"`",
 						Validators: []validator.String{
 							stringvalidator.OneOf("COMPLIANCE", "GOVERNANCE"),
 						},
 					},
 					"retention_days": schema.Int64Attribute{
-						Required:            true,
-						Description:         "Number of days to retain objects",
-						MarkdownDescription: "Number of days to retain objects",
+						Optional:            true,
+						Description:         "Number of days the default retention rule locks new objects for; requires mode, exclusive with retention_years",
+						MarkdownDescription: "Number of days the default retention rule locks new objects for; requires `mode`, exclusive with `retention_years`",
+						Validators: []validator.Int64{
+							int64validator.AtLeast(1),
+						},
+					},
+					"retention_years": schema.Int64Attribute{
+						Optional:            true,
+						Description:         "Number of years the default retention rule locks new objects for; requires mode, exclusive with retention_days",
+						MarkdownDescription: "Number of years the default retention rule locks new objects for; requires `mode`, exclusive with `retention_days`",
 						Validators: []validator.Int64{
 							int64validator.AtLeast(1),
 						},
@@ -332,6 +441,11 @@ func storageObjectBucketCurrentStateResourceAttributes() map[string]schema.Attri
 			Computed:    true,
 			Description: "Current object lock configuration",
 			Attributes: map[string]schema.Attribute{
+				"status": schema.StringAttribute{
+					CustomType:  ovhtypes.TfStringType{},
+					Computed:    true,
+					Description: "Whether object lock is armed on the bucket (ENABLED, DISABLED)",
+				},
 				"mode": schema.StringAttribute{
 					CustomType:  ovhtypes.TfStringType{},
 					Computed:    true,

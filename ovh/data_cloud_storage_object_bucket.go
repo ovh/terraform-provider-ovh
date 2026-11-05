@@ -96,6 +96,11 @@ func storageObjectBucketDataSourceAttributes() map[string]schema.Attribute {
 			Computed:    true,
 			Description: "Object lock (WORM) configuration",
 			Attributes: map[string]schema.Attribute{
+				"status": schema.StringAttribute{
+					CustomType:  ovhtypes.TfStringType{},
+					Computed:    true,
+					Description: "Whether object lock is armed on the bucket (ENABLED, DISABLED)",
+				},
 				"mode": schema.StringAttribute{
 					CustomType:  ovhtypes.TfStringType{},
 					Computed:    true,
@@ -182,6 +187,11 @@ func storageObjectBucketDataSourceAttributes() map[string]schema.Attribute {
 					Computed:    true,
 					Description: "Current object lock configuration",
 					Attributes: map[string]schema.Attribute{
+						"status": schema.StringAttribute{
+							CustomType:  ovhtypes.TfStringType{},
+							Computed:    true,
+							Description: "Whether object lock is armed on the bucket (ENABLED, DISABLED)",
+						},
 						"mode": schema.StringAttribute{
 							CustomType:  ovhtypes.TfStringType{},
 							Computed:    true,

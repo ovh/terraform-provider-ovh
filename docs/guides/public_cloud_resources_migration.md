@@ -431,7 +431,9 @@ Access rules and snapshots have their own resources, `ovh_cloud_storage_file_sha
 | `owner_id` (number) | `owner_user_id` (string) |
 | `encryption { sse_algorithm }` | `encryption = { algorithm }`, `"AES256"` or `"PLAINTEXT"` |
 | `versioning { status = "enabled" }` | `versioning = { status = "ENABLED" }` |
-| `object_lock { status = "enabled", rule { mode = "governance", period = "P30D" } }` | `object_lock = { mode = "GOVERNANCE", retention_days = 30 }`; the block's presence replaces `status` |
+| `object_lock { status = "enabled" }` | `object_lock = {}`; `status` defaults to `"ENABLED"` |
+| `object_lock { status = "enabled", rule { mode = "governance", period = "P30D" } }` | `object_lock = { mode = "GOVERNANCE", retention_days = 30 }` |
+| `object_lock { status = "enabled", rule { mode = "governance", period = "P1Y" } }` | `object_lock = { mode = "GOVERNANCE", retention_years = 1 }`; set `retention_days` or `retention_years`, never both |
 | `replication { rules [...] }` | not supported |
 | `hide_objects`, `limit`, `marker`, `prefix`, `objects[*]` | removed; the resource no longer lists objects |
 | `virtual_host`, `objects_count`, `objects_size` | `current_state.{virtual_host, objects_count, objects_size}` |
@@ -456,7 +458,7 @@ resource "ovh_cloud_storage_object_bucket" "assets" {
 }
 ```
 
-~> **Object lock recreates the bucket.** Adding, changing or removing the `object_lock` block on the new resource replaces the bucket. Translate the legacy block exactly, including the retention period converted to days, and check that the plan after import shows no change before applying.
+~> **Changing the object lock status recreates the bucket.** Changing `object_lock.status` on the new resource replaces the bucket, and an absent block counts as `status = "DISABLED"`; `mode`, `retention_days` and `retention_years` are updated in place. Translate the legacy block exactly, a `P<n>D` period to `retention_days = <n>` and a `P<n>Y` period to `retention_years = <n>`, and check that the plan after import shows no change before applying.
 
 ~> Lifecycle configurations (`ovh_cloud_project_storage_object_bucket_lifecycle_configuration`) and replication jobs keep their legacy resources. They reference the bucket by name, so they keep working after the bucket itself is migrated.
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -84,7 +85,18 @@ resource "ovh_cloud_storage_object_bucket" "bucket" {
 					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "current_state.name", bucketName),
 					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "current_state.location.region", region),
 					resource.TestCheckResourceAttrSet("ovh_cloud_storage_object_bucket.bucket", "current_state.virtual_host"),
+					resource.TestCheckNoResourceAttr("ovh_cloud_storage_object_bucket.bucket", "object_lock.%"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "current_state.object_lock.status", "DISABLED"),
 				),
+			},
+			// The always-present current_state.object_lock {status = DISABLED} must not re-plan an unset object_lock.
+			{
+				Config: config,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 			{
 				ResourceName:      "ovh_cloud_storage_object_bucket.bucket",
@@ -232,6 +244,14 @@ resource "ovh_cloud_storage_object_bucket" "bucket" {
 }
 
 func TestAccCloudStorageObjectBucket_objectLock(t *testing.T) {
+	testAccCloudStorageObjectBucketObjectLock(t, "retention_days", "30", "60", "retention_years")
+}
+
+func TestAccCloudStorageObjectBucket_objectLockYears(t *testing.T) {
+	testAccCloudStorageObjectBucketObjectLock(t, "retention_years", "1", "2", "retention_days")
+}
+
+func testAccCloudStorageObjectBucketObjectLock(t *testing.T, retentionAttr, retentionValue, updatedRetentionValue, unsetAttr string) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
 	region := strings.ToUpper(os.Getenv("OVH_CLOUD_PROJECT_STORAGE_REGION_TEST"))
 
@@ -248,8 +268,24 @@ resource "ovh_cloud_storage_object_bucket" "bucket" {
   }
 
   object_lock = {
-    mode           = "GOVERNANCE"
-    retention_days = 30
+    mode = "GOVERNANCE"
+    %s = %s
+  }
+}
+`, serviceName, bucketName, region, retentionAttr, retentionValue)
+
+	armedOnlyConfig := fmt.Sprintf(`
+resource "ovh_cloud_storage_object_bucket" "bucket" {
+  service_name = "%s"
+  name         = "%s"
+  region       = "%s"
+
+  versioning = {
+    status = "ENABLED"
+  }
+
+  object_lock = {
+    status = "ENABLED"
   }
 }
 `, serviceName, bucketName, region)
@@ -265,9 +301,13 @@ resource "ovh_cloud_storage_object_bucket" "bucket" {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "object_lock.status", "ENABLED"),
 					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "object_lock.mode", "GOVERNANCE"),
-					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "object_lock.retention_days", "30"),
-					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "current_state.object_lock.retention_days", "30"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "object_lock."+retentionAttr, retentionValue),
+					resource.TestCheckNoResourceAttr("ovh_cloud_storage_object_bucket.bucket", "object_lock."+unsetAttr),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "current_state.object_lock.status", "ENABLED"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "current_state.object_lock.mode", "GOVERNANCE"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "current_state.object_lock."+retentionAttr, retentionValue),
 					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "versioning.status", "ENABLED"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_storage_object_bucket.bucket", "id"),
 				),
@@ -286,6 +326,219 @@ resource "ovh_cloud_storage_object_bucket" "bucket" {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateIdFunc: testAccCloudStorageObjectBucketImportStateIdFunc("ovh_cloud_storage_object_bucket.bucket"),
+			},
+			{
+				Config: strings.Replace(config, retentionAttr+" = "+retentionValue, retentionAttr+" = "+updatedRetentionValue, 1),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("ovh_cloud_storage_object_bucket.bucket", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "object_lock."+retentionAttr, updatedRetentionValue),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "current_state.object_lock."+retentionAttr, updatedRetentionValue),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "resource_status", "READY"),
+				),
+			},
+			{
+				Config: armedOnlyConfig,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("ovh_cloud_storage_object_bucket.bucket", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "object_lock.status", "ENABLED"),
+					resource.TestCheckNoResourceAttr("ovh_cloud_storage_object_bucket.bucket", "object_lock.mode"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "current_state.object_lock.status", "ENABLED"),
+					resource.TestCheckNoResourceAttr("ovh_cloud_storage_object_bucket.bucket", "current_state.object_lock.mode"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCloudStorageObjectBucket_objectLockStatusChange(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	region := strings.ToUpper(os.Getenv("OVH_CLOUD_PROJECT_STORAGE_REGION_TEST"))
+
+	bucketName := acctest.RandomWithPrefix(test_prefix)
+
+	configFor := func(objectLock string) string {
+		return fmt.Sprintf(`
+resource "ovh_cloud_storage_object_bucket" "bucket" {
+  service_name = "%s"
+  name         = "%s"
+  region       = "%s"
+
+  versioning = {
+    status = "ENABLED"
+  }
+  %s
+}
+`, serviceName, bucketName, region, objectLock)
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloudStorageObjectBucket(t)
+			testAccCheckCloudProjectExists(t)
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCloudStorageObjectBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: configFor(""),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "current_state.object_lock.status", "DISABLED"),
+				),
+			},
+			// An absent block and status DISABLED are the same unlocked bucket.
+			{
+				Config: configFor(`object_lock = { status = "DISABLED" }`),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("ovh_cloud_storage_object_bucket.bucket", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "object_lock.status", "DISABLED"),
+				),
+			},
+			{
+				Config: configFor(""),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("ovh_cloud_storage_object_bucket.bucket", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckNoResourceAttr("ovh_cloud_storage_object_bucket.bucket", "object_lock.%"),
+				),
+			},
+			{
+				Config: configFor(`object_lock = { status = "ENABLED" }`),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("ovh_cloud_storage_object_bucket.bucket", plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "current_state.object_lock.status", "ENABLED"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCloudStorageObjectBucket_objectLockArmedWithoutRule(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	region := strings.ToUpper(os.Getenv("OVH_CLOUD_PROJECT_STORAGE_REGION_TEST"))
+
+	bucketName := acctest.RandomWithPrefix(test_prefix)
+
+	config := fmt.Sprintf(`
+resource "ovh_cloud_storage_object_bucket" "bucket" {
+  service_name = "%s"
+  name         = "%s"
+  region       = "%s"
+
+  versioning = {
+    status = "ENABLED"
+  }
+
+  object_lock = {}
+}
+`, serviceName, bucketName, region)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloudStorageObjectBucket(t)
+			testAccCheckCloudProjectExists(t)
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCloudStorageObjectBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "object_lock.status", "ENABLED"),
+					resource.TestCheckNoResourceAttr("ovh_cloud_storage_object_bucket.bucket", "object_lock.mode"),
+					resource.TestCheckNoResourceAttr("ovh_cloud_storage_object_bucket.bucket", "object_lock.retention_days"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_object_bucket.bucket", "current_state.object_lock.status", "ENABLED"),
+					resource.TestCheckNoResourceAttr("ovh_cloud_storage_object_bucket.bucket", "current_state.object_lock.mode"),
+				),
+			},
+			{
+				Config: config,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccCloudStorageObjectBucket_objectLockValidation(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	region := strings.ToUpper(os.Getenv("OVH_CLOUD_PROJECT_STORAGE_REGION_TEST"))
+
+	bucketName := acctest.RandomWithPrefix(test_prefix)
+
+	configFor := func(versioning, objectLock string) string {
+		return fmt.Sprintf(`
+resource "ovh_cloud_storage_object_bucket" "bucket" {
+  service_name = "%s"
+  name         = "%s"
+  region       = "%s"
+  %s
+  object_lock = {
+    %s
+  }
+}
+`, serviceName, bucketName, region, versioning, objectLock)
+	}
+	versioningEnabled := `versioning = { status = "ENABLED" }`
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloudStorageObjectBucket(t)
+			testAccCheckCloudProjectExists(t)
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCloudStorageObjectBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      configFor("", ""),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile(`object_lock requires versioning`),
+			},
+			{
+				Config:      configFor(versioningEnabled, `status = "ARMED"`),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile(`must be one of`),
+			},
+			{
+				Config:      configFor("", `status = "ENABLED"`),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile(`object_lock requires versioning`),
+			},
+			{
+				Config:      configFor(versioningEnabled, "status = \"ENABLED\"\n    mode = \"GOVERNANCE\""),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile(`must be set together`),
+			},
+			{
+				Config:      configFor(versioningEnabled, "status = \"ENABLED\"\n    retention_days = 30"),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile(`must be set together`),
+			},
+			{
+				Config:      configFor(versioningEnabled, "status = \"DISABLED\"\n    mode = \"GOVERNANCE\"\n    retention_days = 30"),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile(`require status "ENABLED"`),
 			},
 		},
 	})

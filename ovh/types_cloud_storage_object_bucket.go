@@ -58,9 +58,10 @@ type CloudStorageObjectBucketAPIVersioning struct {
 }
 
 type CloudStorageObjectBucketAPIObjectLock struct {
-	Mode          string `json:"mode"`
-	RetentionDays int64  `json:"retentionDays"`
-	// retentionYears is read-only in the API contract: never sent, only read back.
+	Status string `json:"status"`
+	// mode plus retentionDays or retentionYears (never both) form the optional default retention rule.
+	Mode           string `json:"mode,omitempty"`
+	RetentionDays  *int64 `json:"retentionDays,omitempty"`
 	RetentionYears *int64 `json:"retentionYears,omitempty"`
 }
 
@@ -130,17 +131,10 @@ func StorageObjectBucketVersioningAttrTypes() map[string]attr.Type {
 // StorageObjectBucketObjectLockAttrTypes returns the attribute types for the object_lock object
 func StorageObjectBucketObjectLockAttrTypes() map[string]attr.Type {
 	return map[string]attr.Type{
+		"status":          ovhtypes.TfStringType{},
 		"mode":            ovhtypes.TfStringType{},
 		"retention_days":  types.Int64Type,
 		"retention_years": types.Int64Type,
-	}
-}
-
-// retention_years is read-only, so it lives only under current_state.object_lock.
-func StorageObjectBucketObjectLockSpecAttrTypes() map[string]attr.Type {
-	return map[string]attr.Type{
-		"mode":           ovhtypes.TfStringType{},
-		"retention_days": types.Int64Type,
 	}
 }
 
@@ -216,27 +210,18 @@ func buildStorageObjectBucketObjectLockObject(objectLock *CloudStorageObjectBuck
 	obj, _ := types.ObjectValue(
 		StorageObjectBucketObjectLockAttrTypes(),
 		map[string]attr.Value{
-			"mode":            ovhtypes.TfStringValue{StringValue: types.StringValue(objectLock.Mode)},
-			"retention_days":  types.Int64Value(objectLock.RetentionDays),
+			"status":          ovhtypes.TfStringValue{StringValue: types.StringValue(objectLock.Status)},
+			"mode":            nullableTfString(objectLock.Mode),
+			"retention_days":  nullableInt64(objectLock.RetentionDays),
 			"retention_years": nullableInt64(objectLock.RetentionYears),
 		},
 	)
 	return obj
 }
 
-func buildStorageObjectBucketObjectLockSpecObject(objectLock *CloudStorageObjectBucketAPIObjectLock) types.Object {
-	if objectLock == nil {
-		return types.ObjectNull(StorageObjectBucketObjectLockSpecAttrTypes())
-	}
-
-	obj, _ := types.ObjectValue(
-		StorageObjectBucketObjectLockSpecAttrTypes(),
-		map[string]attr.Value{
-			"mode":           ovhtypes.TfStringValue{StringValue: types.StringValue(objectLock.Mode)},
-			"retention_days": types.Int64Value(objectLock.RetentionDays),
-		},
-	)
-	return obj
+func storageObjectBucketObjectLockIsBareDisabled(objectLock *CloudStorageObjectBucketAPIObjectLock) bool {
+	return objectLock != nil && objectLock.Status == "DISABLED" && objectLock.Mode == "" &&
+		objectLock.RetentionDays == nil && objectLock.RetentionYears == nil
 }
 
 func buildStorageObjectBucketTagsMap(tags map[string]string) types.Map {
@@ -261,13 +246,13 @@ func storageObjectBucketObjectString(attrs map[string]attr.Value, key string) st
 	return ""
 }
 
-func storageObjectBucketObjectInt64(attrs map[string]attr.Value, key string) int64 {
+func storageObjectBucketObjectInt64Ptr(attrs map[string]attr.Value, key string) *int64 {
 	if v, ok := attrs[key]; ok {
 		if iv, ok := v.(types.Int64); ok && !iv.IsNull() && !iv.IsUnknown() {
-			return iv.ValueInt64()
+			return iv.ValueInt64Pointer()
 		}
 	}
-	return 0
+	return nil
 }
 
 func storageObjectBucketEncryptionToAPI(o types.Object) *CloudStorageObjectBucketAPIEncryption {
@@ -290,8 +275,10 @@ func storageObjectBucketObjectLockToAPI(o types.Object) *CloudStorageObjectBucke
 	}
 	attrs := o.Attributes()
 	return &CloudStorageObjectBucketAPIObjectLock{
-		Mode:          storageObjectBucketObjectString(attrs, "mode"),
-		RetentionDays: storageObjectBucketObjectInt64(attrs, "retention_days"),
+		Status:         storageObjectBucketObjectString(attrs, "status"),
+		Mode:           storageObjectBucketObjectString(attrs, "mode"),
+		RetentionDays:  storageObjectBucketObjectInt64Ptr(attrs, "retention_days"),
+		RetentionYears: storageObjectBucketObjectInt64Ptr(attrs, "retention_years"),
 	}
 }
 
@@ -391,7 +378,11 @@ func (m *CloudStorageObjectBucketModel) MergeWith(ctx context.Context, response 
 	m.OwnerUserId = nullableTfString(response.TargetSpec.OwnerUserId)
 	m.Encryption = buildStorageObjectBucketEncryptionObject(response.TargetSpec.Encryption)
 	m.Versioning = buildStorageObjectBucketVersioningObject(response.TargetSpec.Versioning)
-	m.ObjectLock = buildStorageObjectBucketObjectLockSpecObject(response.TargetSpec.ObjectLock)
+	// Buckets the API adopted from S3 store {status: DISABLED}: keep an unset
+	// object_lock null so importing them plans neither an update nor a replacement.
+	if !(m.ObjectLock.IsNull() && storageObjectBucketObjectLockIsBareDisabled(response.TargetSpec.ObjectLock)) {
+		m.ObjectLock = buildStorageObjectBucketObjectLockObject(response.TargetSpec.ObjectLock)
+	}
 
 	// An empty tags map is dropped by the API (omitempty), so keep a configured
 	// empty map instead of flipping it to null and breaking plan consistency.
