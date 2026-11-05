@@ -338,7 +338,7 @@ resource "ovh_cloud_storage_block_volume" "data" {
 | `name` | unchanged, **required** now; `description` is new |
 | `creation_date` | `created_at` |
 | `size`, `region` | `current_state.size`, `current_state.location.region` |
-| `status` | `resource_status` |
+| `status` | `current_state.status` (OpenStack) and `resource_status` (API) |
 
 ```terraform
 resource "ovh_cloud_project_volume_backup" "data" {
