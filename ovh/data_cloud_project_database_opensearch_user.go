@@ -79,7 +79,7 @@ func dataSourceCloudProjectDatabaseOpensearchUserRead(ctx context.Context, d *sc
 	clusterID := d.Get("cluster_id").(string)
 	name := d.Get("name").(string)
 
-	if id := d.Get("id").(string); id != "" {
+	if id, ok := d.Get("id").(string); ok && id != "" {
 		endpoint := fmt.Sprintf("/cloud/project/%s/database/opensearch/%s/user/%s",
 			url.PathEscape(serviceName),
 			url.PathEscape(clusterID),

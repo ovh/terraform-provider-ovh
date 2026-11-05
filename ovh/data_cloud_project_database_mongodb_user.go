@@ -66,7 +66,7 @@ func dataSourceCloudProjectDatabaseMongodbUserRead(ctx context.Context, d *schem
 	serviceName := d.Get("service_name").(string)
 	clusterID := d.Get("cluster_id").(string)
 
-	if id := d.Get("id").(string); id != "" {
+	if id, ok := d.Get("id").(string); ok && id != "" {
 		endpoint := fmt.Sprintf("/cloud/project/%s/database/mongodb/%s/user/%s",
 			url.PathEscape(serviceName),
 			url.PathEscape(clusterID),
