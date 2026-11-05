@@ -268,8 +268,7 @@ resource "ovh_cloud_storage_object_bucket" "bucket" {
   }
 
   object_lock = {
-    status = "ENABLED"
-    mode   = "GOVERNANCE"
+    mode = "GOVERNANCE"
     %s = %s
   }
 }
@@ -448,9 +447,7 @@ resource "ovh_cloud_storage_object_bucket" "bucket" {
     status = "ENABLED"
   }
 
-  object_lock = {
-    status = "ENABLED"
-  }
+  object_lock = {}
 }
 `, serviceName, bucketName, region)
 
@@ -514,9 +511,9 @@ resource "ovh_cloud_storage_object_bucket" "bucket" {
 		CheckDestroy:             testAccCheckCloudStorageObjectBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      configFor(versioningEnabled, `mode = "GOVERNANCE"`),
+				Config:      configFor("", ""),
 				PlanOnly:    true,
-				ExpectError: regexp.MustCompile(`"status"\s+is\s+required`),
+				ExpectError: regexp.MustCompile(`object_lock requires versioning`),
 			},
 			{
 				Config:      configFor(versioningEnabled, `status = "ARMED"`),

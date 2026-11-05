@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -63,31 +64,31 @@ var storageObjectBucketMutableAttrs = MutableAttrs{
 	Objects: []string{"encryption", "versioning", "object_lock"},
 }
 
-// storageObjectBucketObjectLockStatus returns the configured object_lock.status, or "" when null or unknown.
+// storageObjectBucketObjectLockStatus resolves object_lock.status as the API sees it, or "" when unknown.
+// A null block is an unlocked bucket. A null status is the ENABLED default: the
+// framework applies it to the plan but not to the config, and a block in a 2.24.0
+// state, which had no status, always armed the lock.
 func storageObjectBucketObjectLockStatus(o types.Object) string {
-	return storageObjectBucketObjectString(o.Attributes(), "status")
+	if o.IsNull() {
+		return "DISABLED"
+	}
+	status, ok := o.Attributes()["status"].(ovhtypes.TfStringValue)
+	if o.IsUnknown() || !ok || status.IsUnknown() {
+		return ""
+	}
+	if status.IsNull() {
+		return "ENABLED"
+	}
+	return status.ValueString()
 }
 
 // S3 arms or disarms object lock only at CreateBucket, while the API updates the
-// default retention rule in place. An absent block is an unlocked bucket.
+// default retention rule in place. An unknown status forces nothing: the API
+// rejects a real status change at apply.
 func storageObjectBucketObjectLockStatusChanged(ctx context.Context, req planmodifier.ObjectRequest, resp *objectplanmodifier.RequiresReplaceIfFuncResponse) {
-	effectiveStatus := func(o types.Object) (string, bool) {
-		if o.IsNull() {
-			return "DISABLED", true
-		}
-		if o.IsUnknown() {
-			return "", false
-		}
-		status, ok := o.Attributes()["status"]
-		if !ok || status.IsUnknown() {
-			return "", false
-		}
-		return storageObjectBucketObjectLockStatus(o), true
-	}
-
-	planned, plannedKnown := effectiveStatus(req.PlanValue)
-	prior, priorKnown := effectiveStatus(req.StateValue)
-	resp.RequiresReplace = !plannedKnown || !priorKnown || planned != prior
+	planned := storageObjectBucketObjectLockStatus(req.PlanValue)
+	prior := storageObjectBucketObjectLockStatus(req.StateValue)
+	resp.RequiresReplace = planned != "" && prior != "" && planned != prior
 }
 
 type storageObjectBucketObjectLockRequiresVersioningEnabled struct{}
@@ -306,9 +307,11 @@ func (r *cloudStorageObjectBucketResource) Schema(ctx context.Context, req resou
 				Attributes: map[string]schema.Attribute{
 					"status": schema.StringAttribute{
 						CustomType:          ovhtypes.TfStringType{},
-						Required:            true,
-						Description:         "Whether object lock is armed on the bucket (ENABLED, DISABLED), with or without a default retention rule",
-						MarkdownDescription: "Whether object lock is armed on the bucket (`ENABLED`, `DISABLED`), with or without a default retention rule",
+						Optional:            true,
+						Computed:            true,
+						Default:             stringdefault.StaticString("ENABLED"),
+						Description:         "Whether object lock is armed on the bucket (ENABLED, DISABLED), with or without a default retention rule. Defaults to ENABLED",
+						MarkdownDescription: "Whether object lock is armed on the bucket (`ENABLED`, `DISABLED`), with or without a default retention rule. Defaults to `ENABLED`",
 						Validators: []validator.String{
 							stringvalidator.OneOf("ENABLED", "DISABLED"),
 						},

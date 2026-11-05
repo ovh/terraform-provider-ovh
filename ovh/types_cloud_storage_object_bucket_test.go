@@ -297,22 +297,31 @@ func TestStorageObjectBucketObjectLockStatusChanged(t *testing.T) {
 		"retention_days":  types.Int64Null(),
 		"retention_years": types.Int64Null(),
 	})
+	rule30NoStatus := types.ObjectValueMust(StorageObjectBucketObjectLockAttrTypes(), map[string]attr.Value{
+		"status":          ovhtypes.TfStringValue{StringValue: types.StringNull()},
+		"mode":            ovhtypes.NewTfStringValue("GOVERNANCE"),
+		"retention_days":  types.Int64Value(30),
+		"retention_years": types.Int64Null(),
+	})
 
 	cases := map[string]struct {
 		state, plan types.Object
 		want        bool
 	}{
-		"null to DISABLED is in place":       {state: null, plan: disabled, want: false},
-		"DISABLED to null is in place":       {state: disabled, plan: null, want: false},
-		"retention rule change is in place":  {state: rule30, plan: rule60, want: false},
-		"days to years rule is in place":     {state: rule30, plan: rule1y, want: false},
-		"retention rule removal is in place": {state: rule30, plan: enabled, want: false},
-		"null to ENABLED replaces":           {state: null, plan: enabled, want: true},
-		"DISABLED to ENABLED replaces":       {state: disabled, plan: rule30, want: true},
-		"ENABLED to null replaces":           {state: rule30, plan: null, want: true},
-		"ENABLED to DISABLED replaces":       {state: enabled, plan: disabled, want: true},
-		"unknown planned object replaces":    {state: disabled, plan: types.ObjectUnknown(StorageObjectBucketObjectLockAttrTypes()), want: true},
-		"unknown planned status replaces":    {state: enabled, plan: unknownStatus, want: true},
+		"null to DISABLED is in place":        {state: null, plan: disabled, want: false},
+		"DISABLED to null is in place":        {state: disabled, plan: null, want: false},
+		"retention rule change is in place":   {state: rule30, plan: rule60, want: false},
+		"days to years rule is in place":      {state: rule30, plan: rule1y, want: false},
+		"retention rule removal is in place":  {state: rule30, plan: enabled, want: false},
+		"null to ENABLED replaces":            {state: null, plan: enabled, want: true},
+		"DISABLED to ENABLED replaces":        {state: disabled, plan: rule30, want: true},
+		"ENABLED to null replaces":            {state: rule30, plan: null, want: true},
+		"ENABLED to DISABLED replaces":        {state: enabled, plan: disabled, want: true},
+		"unknown planned object is in place":  {state: disabled, plan: types.ObjectUnknown(StorageObjectBucketObjectLockAttrTypes()), want: false},
+		"unknown planned status is in place":  {state: enabled, plan: unknownStatus, want: false},
+		"2.24.0 state to ENABLED is in place": {state: rule30NoStatus, plan: rule30, want: false},
+		"2.24.0 state to DISABLED replaces":   {state: rule30NoStatus, plan: disabled, want: true},
+		"2.24.0 state to null replaces":       {state: rule30NoStatus, plan: null, want: true},
 	}
 
 	for name, tc := range cases {
@@ -342,6 +351,12 @@ func TestStorageObjectBucketObjectLockRetentionRule(t *testing.T) {
 		"days without mode":        {lock: storageObjectBucketObjectLockValue(t, "ENABLED", storageObjectBucketNoMode, types.Int64Value(30), types.Int64Null()), wantErr: true},
 		"years without mode":       {lock: storageObjectBucketObjectLockValue(t, "ENABLED", storageObjectBucketNoMode, types.Int64Null(), types.Int64Value(1)), wantErr: true},
 		"years rule with DISABLED": {lock: storageObjectBucketObjectLockValue(t, "DISABLED", governance, types.Int64Null(), types.Int64Value(1)), wantErr: true},
+		"days rule without status": {lock: types.ObjectValueMust(StorageObjectBucketObjectLockAttrTypes(), map[string]attr.Value{
+			"status":          ovhtypes.TfStringValue{StringValue: types.StringNull()},
+			"mode":            governance,
+			"retention_days":  types.Int64Value(30),
+			"retention_years": types.Int64Null(),
+		})},
 	}
 
 	for name, tc := range cases {

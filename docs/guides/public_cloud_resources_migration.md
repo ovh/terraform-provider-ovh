@@ -431,9 +431,9 @@ Access rules and snapshots have their own resources, `ovh_cloud_storage_file_sha
 | `owner_id` (number) | `owner_user_id` (string) |
 | `encryption { sse_algorithm }` | `encryption = { algorithm }`, `"AES256"` or `"PLAINTEXT"` |
 | `versioning { status = "enabled" }` | `versioning = { status = "ENABLED" }` |
-| `object_lock { status = "enabled" }` | `object_lock = { status = "ENABLED" }` |
-| `object_lock { status = "enabled", rule { mode = "governance", period = "P30D" } }` | `object_lock = { status = "ENABLED", mode = "GOVERNANCE", retention_days = 30 }` |
-| `object_lock { status = "enabled", rule { mode = "governance", period = "P1Y" } }` | `object_lock = { status = "ENABLED", mode = "GOVERNANCE", retention_years = 1 }`; set `retention_days` or `retention_years`, never both |
+| `object_lock { status = "enabled" }` | `object_lock = {}`; `status` defaults to `"ENABLED"` |
+| `object_lock { status = "enabled", rule { mode = "governance", period = "P30D" } }` | `object_lock = { mode = "GOVERNANCE", retention_days = 30 }` |
+| `object_lock { status = "enabled", rule { mode = "governance", period = "P1Y" } }` | `object_lock = { mode = "GOVERNANCE", retention_years = 1 }`; set `retention_days` or `retention_years`, never both |
 | `replication { rules [...] }` | not supported |
 | `hide_objects`, `limit`, `marker`, `prefix`, `objects[*]` | removed; the resource no longer lists objects |
 | `virtual_host`, `objects_count`, `objects_size` | `current_state.{virtual_host, objects_count, objects_size}` |

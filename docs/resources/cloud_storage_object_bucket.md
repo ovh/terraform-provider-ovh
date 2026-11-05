@@ -31,7 +31,7 @@ resource "ovh_cloud_storage_object_bucket" "bucket" {
 }
 ```
 
-Object lock (WORM) requires `versioning.status` to be `ENABLED`, and can only be armed when the bucket is created. The default retention rule (`mode` + `retention_days`) is optional, and can be changed or removed in place:
+Object lock (WORM) requires `versioning.status` to be `ENABLED`, and can only be armed when the bucket is created. `object_lock.status` defaults to `ENABLED`, so setting the block arms the lock. The default retention rule (`mode` + `retention_days`) is optional, and can be changed or removed in place; `object_lock = {}` arms the lock without one:
 
 ```terraform
 resource "ovh_cloud_storage_object_bucket" "locked" {
@@ -44,7 +44,6 @@ resource "ovh_cloud_storage_object_bucket" "locked" {
   }
 
   object_lock = {
-    status         = "ENABLED"
     mode           = "GOVERNANCE"
     retention_days = 30
   }
@@ -65,7 +64,7 @@ The following arguments are supported:
 * `versioning` - (Optional) Versioning configuration:
   * `status` - (Required) Versioning status. One of `DISABLED`, `ENABLED`, `SUSPENDED`.
 * `object_lock` - (Optional) Object lock (WORM) configuration. Object lock can only be armed at bucket creation. An absent block counts as `status = "DISABLED"`. **Changing `status` recreates the resource**; `mode`, `retention_days` and `retention_years` are updated in place.
-  * `status` - (Required) Whether object lock is armed on the bucket. One of `ENABLED`, `DISABLED`. `ENABLED` requires `versioning` to be set with `status = "ENABLED"`.
+  * `status` - (Optional) Whether object lock is armed on the bucket. One of `ENABLED`, `DISABLED`. Defaults to `ENABLED`. `ENABLED` requires `versioning` to be set with `status = "ENABLED"`.
   * `mode` - (Optional) Default retention mode. One of `COMPLIANCE`, `GOVERNANCE`. Must be set together with exactly one of `retention_days` or `retention_years`, and only when `status` is `ENABLED`.
   * `retention_days` - (Optional) Number of days the default retention rule locks new objects for. Must be at least `1`, and set together with `mode`. Conflicts with `retention_years`.
   * `retention_years` - (Optional) Number of years the default retention rule locks new objects for. Must be at least `1`, and set together with `mode`. Conflicts with `retention_days`.
