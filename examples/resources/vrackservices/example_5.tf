@@ -1,4 +1,4 @@
-# Complete Vrack Services configuration
+# Vrack Services created by Terraform with a complete configuration
 # Once this plan executed, your ovh_vrackservices resource must be updated in your state using :
 #   `terraform plan -refresh-only`
 #   `terraform apply -refresh-only -auto-approve`
@@ -34,19 +34,25 @@ resource "ovh_vrackservices" "my-vrackservices" {
   target_spec = {
     subnets = [
       {
+        az           = "eu-west-lim-a"
         cidr         = "192.168.0.0/24"
         display_name = "my.subnet"
-        service_range = {
-          cidr = "192.168.0.0/29"
-        }
-        vlan = 30
-        service_endpoints = [
-          {
-            managed_service_urn = data.ovh_storage_efs.my-efs.iam.urn
-          }
-        ]
+        vlan         = 30
       },
     ]
+    services = {
+      service_range = [
+        {
+          cidr        = "192.168.0.0/29"
+          subnet_cidr = "192.168.0.0/24"
+          service_endpoints = [
+            {
+              managed_service_urn = data.ovh_storage_efs.my-efs.iam.urn
+            }
+          ]
+        },
+      ]
+    }
   }
 }
 

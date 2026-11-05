@@ -1,4 +1,4 @@
-# Vrack Service order
+# Vrack Services ordered by Terraform
 
 locals {
   region = "eu-west-lim"
