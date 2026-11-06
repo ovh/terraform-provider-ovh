@@ -19,6 +19,6 @@ resource "ovh_dedicated_server_reinstall_task" "server_install" {
     http_headers = {
       Authorization = "Basic bG9naW46cGFzc3dvcmQ="
     }
-    image_url           = "https://github.com/ashmonger/akution_test/releases/download/0.5-compress/deb11k6.qcow2"
+    image_url              = "https://github.com/ashmonger/akution_test/releases/latest/download/deb11k6.qcow2"
   }
 }
