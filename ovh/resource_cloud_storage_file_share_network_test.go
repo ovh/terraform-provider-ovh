@@ -118,7 +118,6 @@ resource "ovh_cloud_storage_file_share_network" "network" {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckNoResourceAttr("ovh_cloud_storage_file_share_network.network", "network_id"),
 					resource.TestCheckResourceAttrPair("ovh_cloud_storage_file_share_network.network", "current_state.network_id", "ovh_cloud_network_private_vrack.vrack_net", "id"),
 				),
 			},

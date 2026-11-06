@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
@@ -173,6 +174,125 @@ resource "ovh_cloud_loadbalancer" "test" {
 					resource.TestCheckResourceAttrSet("ovh_cloud_loadbalancer.test", "id"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_loadbalancer.test", "checksum"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccCloudLoadbalancer_subnetOnly(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_LOADBALANCER_REGION_TEST")
+	vipNetworkId := os.Getenv("OVH_CLOUD_PROJECT_LOADBALANCER_VIP_NETWORK_ID_TEST")
+	vipSubnetId := os.Getenv("OVH_CLOUD_PROJECT_LOADBALANCER_VIP_SUBNET_ID_TEST")
+	flavorName := "SMALL"
+
+	lbName := acctest.RandomWithPrefix(testAccResourceCloudLoadbalancerNamePrefix)
+	updatedName := acctest.RandomWithPrefix(testAccResourceCloudLoadbalancerNamePrefix)
+
+	configTemplate := `
+resource "ovh_cloud_loadbalancer" "test" {
+  service_name = "%s"
+  name         = "%s"
+  region       = "%s"
+  flavor_name  = "%s"
+  description  = "%s"
+
+  network = {
+    subnet_id = "%s"
+  }
+}
+`
+
+	config := fmt.Sprintf(configTemplate, serviceName, lbName, region, flavorName, "initial description", vipSubnetId)
+	updatedConfig := fmt.Sprintf(configTemplate, serviceName, updatedName, region, flavorName, "updated description", vipSubnetId)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloudLoadbalancer(t)
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_loadbalancer.test", "network.subnet_id", vipSubnetId),
+					resource.TestCheckResourceAttr("ovh_cloud_loadbalancer.test", "resource_status", "READY"),
+					resource.TestCheckResourceAttr("ovh_cloud_loadbalancer.test", "current_state.network.id", vipNetworkId),
+				),
+			},
+			{
+				Config: updatedConfig,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("ovh_cloud_loadbalancer.test", plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_loadbalancer.test", "name", updatedName),
+					resource.TestCheckResourceAttr("ovh_cloud_loadbalancer.test", "description", "updated description"),
+					resource.TestCheckResourceAttr("ovh_cloud_loadbalancer.test", "current_state.network.id", vipNetworkId),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCloudLoadbalancer_networkIdRemoved(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_LOADBALANCER_REGION_TEST")
+	vipNetworkId := os.Getenv("OVH_CLOUD_PROJECT_LOADBALANCER_VIP_NETWORK_ID_TEST")
+	vipSubnetId := os.Getenv("OVH_CLOUD_PROJECT_LOADBALANCER_VIP_SUBNET_ID_TEST")
+	flavorName := "SMALL"
+
+	lbName := acctest.RandomWithPrefix(testAccResourceCloudLoadbalancerNamePrefix)
+
+	configWithNetworkId := fmt.Sprintf(`
+resource "ovh_cloud_loadbalancer" "test" {
+  service_name = "%s"
+  name         = "%s"
+  region       = "%s"
+  flavor_name  = "%s"
+
+  network = {
+    id        = "%s"
+    subnet_id = "%s"
+  }
+}
+`, serviceName, lbName, region, flavorName, vipNetworkId, vipSubnetId)
+
+	configWithoutNetworkId := fmt.Sprintf(`
+resource "ovh_cloud_loadbalancer" "test" {
+  service_name = "%s"
+  name         = "%s"
+  region       = "%s"
+  flavor_name  = "%s"
+
+  network = {
+    subnet_id = "%s"
+  }
+}
+`, serviceName, lbName, region, flavorName, vipSubnetId)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloudLoadbalancer(t)
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: configWithNetworkId,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_loadbalancer.test", "network.id", vipNetworkId),
+					resource.TestCheckResourceAttr("ovh_cloud_loadbalancer.test", "resource_status", "READY"),
+				),
+			},
+			{
+				Config: configWithoutNetworkId,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})

@@ -104,7 +104,7 @@ func (r *cloudLoadbalancerResource) Schema(ctx context.Context, req resource.Sch
 						MarkdownDescription: "ID of the network for the VIP. When omitted, the network of subnet_id is used",
 						PlanModifiers: []planmodifier.String{
 							stringplanmodifier.UseStateForUnknown(),
-							stringplanmodifier.RequiresReplace(),
+							stringplanmodifier.RequiresReplaceIfConfigured(),
 						},
 					},
 					"subnet_id": schema.StringAttribute{
