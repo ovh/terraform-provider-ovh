@@ -1,4 +1,4 @@
-# Basic configuration
+# Vrack Services created by Terraform with a basic configuration
 
 locals {
   region = "eu-west-lim"
@@ -25,12 +25,18 @@ resource "ovh_vrackservices" "my-vrackservices" {
   target_spec = {
     subnets = [
       {
-        cidr         = "192.168.0.0/24"
-        service_range = {
-          cidr = "192.168.0.0/29"
-        }
-        service_endpoints = []
+        az   = "eu-west-lim-a"
+        cidr = "192.168.0.0/24"
       },
     ]
+    services = {
+      service_range = [
+        {
+          cidr              = "192.168.0.0/29"
+          subnet_cidr       = "192.168.0.0/24"
+          service_endpoints = []
+        },
+      ]
+    }
   }
 }
