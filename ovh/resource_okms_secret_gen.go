@@ -157,9 +157,25 @@ func OkmsSecretResourceSchema(ctx context.Context) schema.Schema {
 					MarkdownDescription: "Time of creation of the secret version",
 				},
 				"data": schema.StringAttribute{
-					CustomType: ovhtypes.TfStringType{},
-					Required:   true,
-					Sensitive:  true,
+					CustomType:          ovhtypes.TfStringType{},
+					Optional:            true,
+					Sensitive:           true,
+					Description:         "Secret data, stored in the Terraform state. Exactly one of data or data_wo must be set.",
+					MarkdownDescription: "Secret data, stored in the Terraform state. Exactly one of `data` or `data_wo` must be set.",
+				},
+				"data_wo": schema.StringAttribute{
+					CustomType:          ovhtypes.TfStringType{},
+					Optional:            true,
+					Sensitive:           true,
+					WriteOnly:           true,
+					Description:         "Write-only secret data, never stored in the Terraform state. Requires data_wo_version. Exactly one of data or data_wo must be set.",
+					MarkdownDescription: "Write-only secret data, never stored in the Terraform state. Requires `data_wo_version`. Exactly one of `data` or `data_wo` must be set.",
+				},
+				"data_wo_version": schema.Int64Attribute{
+					CustomType:          ovhtypes.TfInt64Type{},
+					Optional:            true,
+					Description:         "Version of data_wo. Changing it creates a new secret version from data_wo. Setting it on a resource that does not have it yet does not create a new version.",
+					MarkdownDescription: "Version of `data_wo`. Changing it creates a new secret version from `data_wo`. Setting it on a resource that does not have it yet does not create a new version.",
 				},
 				"deactivated_at": schema.StringAttribute{
 					CustomType:          ovhtypes.TfStringType{},
@@ -213,6 +229,8 @@ func (v MetadataValue) MarshalJSON() ([]byte, error) {
 type SecretVersionValue struct {
 	CreatedAt     ovhtypes.TfStringValue `tfsdk:"created_at" json:"createdAt"`
 	Data          ovhtypes.TfStringValue `tfsdk:"data" json:"data"`
+	DataWo        ovhtypes.TfStringValue `tfsdk:"data_wo" json:"-"`
+	DataWoVersion ovhtypes.TfInt64Value  `tfsdk:"data_wo_version" json:"-"`
 	DeactivatedAt ovhtypes.TfStringValue `tfsdk:"deactivated_at" json:"deactivatedAt"`
 	Id            ovhtypes.TfInt64Value  `tfsdk:"id" json:"id"`
 	State         ovhtypes.TfStringValue `tfsdk:"state" json:"state"`
@@ -271,6 +289,9 @@ func (v *SecretVersionValue) UnmarshalJSON(b []byte) error {
 		// Store exact raw JSON (no reformat) as string
 		v.Data = ovhtypes.NewTfStringValue(string(tmp.Data))
 	}
+	// Write-only data and its version are never returned by the API
+	v.DataWo = ovhtypes.NewTfStringNull()
+	v.DataWoVersion = ovhtypes.NewTfInt64ValueNull()
 	// DeactivatedAt
 	if tmp.DeactivatedAt != nil {
 		v.DeactivatedAt = ovhtypes.NewTfStringValue(*tmp.DeactivatedAt)
