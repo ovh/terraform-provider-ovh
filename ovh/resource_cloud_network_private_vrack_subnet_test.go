@@ -440,31 +440,24 @@ func TestCloudNetworkPrivateSubnetModel_hostRoutesFromAPI(t *testing.T) {
 
 func TestCloudNetworkPrivateSubnetModel_alignEmptyHostRoutes(t *testing.T) {
 	ctx := context.Background()
-	null := ovhtypes.NewListNestedObjectValueOfNull[TargetSpecHostRoutesValue](ctx)
-	unknown := ovhtypes.NewListNestedObjectValueOfUnknown[TargetSpecHostRoutesValue](ctx)
 	empty := testSubnetHostRoutes(ctx)
 	one := testSubnetHostRoutes(ctx, [2]string{"192.168.10.0/24", "10.0.0.254"})
 
 	cases := []struct {
-		name     string
-		got      ovhtypes.TfListNestedValue[TargetSpecHostRoutesValue]
-		expected ovhtypes.TfListNestedValue[TargetSpecHostRoutesValue]
-		want     ovhtypes.TfListNestedValue[TargetSpecHostRoutesValue]
+		name string
+		got  ovhtypes.TfListNestedValue[TargetSpecHostRoutesValue]
+		want ovhtypes.TfListNestedValue[TargetSpecHostRoutesValue]
 	}{
-		{"null from API keeps planned []", null, empty, empty},
-		{"absent from API keeps planned []", ovhtypes.TfListNestedValue[TargetSpecHostRoutesValue]{}, empty, empty},
-		{"[] from API keeps prior null", empty, null, null},
-		{"null from API with attribute left out stays null", null, null, null},
-		{"absent from API with unknown plan is a typed null", ovhtypes.TfListNestedValue[TargetSpecHostRoutesValue]{}, unknown, null},
-		{"[] from API with unknown plan stays []", empty, unknown, empty},
-		{"routes from API are kept", one, empty, one},
-		{"empty from API with routes planned is not hidden", empty, one, empty},
+		{"null from API is []", ovhtypes.NewListNestedObjectValueOfNull[TargetSpecHostRoutesValue](ctx), empty},
+		{"absent from API is []", ovhtypes.TfListNestedValue[TargetSpecHostRoutesValue]{}, empty},
+		{"[] from API stays []", empty, empty},
+		{"routes from API are kept", one, one},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			model := CloudNetworkPrivateSubnetModel{HostRoutes: tc.got}
-			model.alignEmptyHostRoutes(ctx, tc.expected)
+			model.alignEmptyHostRoutes(ctx)
 			if !model.HostRoutes.Equal(tc.want) {
 				t.Fatalf("host_routes = %s, want %s", model.HostRoutes, tc.want)
 			}
@@ -690,11 +683,17 @@ resource "ovh_cloud_network_private_vrack_subnet" "test" {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateIdFunc:       testAccCloudNetworkPrivateSubnetImportStateIdFunc(resourceName),
-				ImportStateVerifyIgnore: []string{"host_routes"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccCloudNetworkPrivateSubnetImportStateIdFunc(resourceName),
+			},
+			{
+				// An import block plans against `host_routes = []`: the import must be a no-op.
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateKind:   resource.ImportBlockWithID,
+				ImportStateIdFunc: testAccCloudNetworkPrivateSubnetImportStateIdFunc(resourceName),
 			},
 		},
 	})

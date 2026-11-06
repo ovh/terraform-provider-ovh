@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
@@ -98,7 +99,7 @@ func (r *cloudNetworkPrivateSubnetResource) Create(ctx context.Context, req reso
 	// the request-side model so the ID is tracked even if the wait below fails.
 	responseData.ServiceName = data.ServiceName
 	responseData.NetworkId = data.NetworkId
-	responseData.alignEmptyHostRoutes(ctx, data.HostRoutes)
+	responseData.alignEmptyHostRoutes(ctx)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -124,7 +125,7 @@ func (r *cloudNetworkPrivateSubnetResource) Create(ctx context.Context, req reso
 
 	finalData.ServiceName = data.ServiceName
 	finalData.NetworkId = data.NetworkId
-	finalData.alignEmptyHostRoutes(ctx, data.HostRoutes)
+	finalData.alignEmptyHostRoutes(ctx)
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &finalData)...)
@@ -158,7 +159,7 @@ func (r *cloudNetworkPrivateSubnetResource) Read(ctx context.Context, req resour
 	// what surfaces drift.
 	responseData.ServiceName = data.ServiceName
 	responseData.NetworkId = data.NetworkId
-	responseData.alignEmptyHostRoutes(ctx, data.HostRoutes)
+	responseData.alignEmptyHostRoutes(ctx)
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)
@@ -211,7 +212,7 @@ func (r *cloudNetworkPrivateSubnetResource) Update(ctx context.Context, req reso
 
 	finalData.ServiceName = state.ServiceName
 	finalData.NetworkId = state.NetworkId
-	finalData.alignEmptyHostRoutes(ctx, planData.HostRoutes)
+	finalData.alignEmptyHostRoutes(ctx)
 
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &finalData)...)
@@ -789,18 +790,15 @@ func (v *CloudNetworkPrivateSubnetModel) MergeWith(other *CloudNetworkPrivateSub
 
 }
 
-// The API may echo "no routes" as null or as []; keeping the plan's shape
-// stops `host_routes = []` from failing the apply or diffing on every plan.
-func (v *CloudNetworkPrivateSubnetModel) alignEmptyHostRoutes(ctx context.Context, expected ovhtypes.TfListNestedValue[TargetSpecHostRoutesValue]) {
+// The API may echo "no routes" as null or as []. Always storing [] keeps
+// `host_routes = []` and an imported subnet free of a null -> [] diff; the
+// Optional+Computed plan is never null, so [] cannot conflict with it.
+func (v *CloudNetworkPrivateSubnetModel) alignEmptyHostRoutes(ctx context.Context) {
 	if len(v.HostRoutes.Elements()) > 0 {
 		return
 	}
-	if !expected.IsUnknown() && len(expected.Elements()) == 0 {
-		v.HostRoutes = expected
-		return
-	}
-	if v.HostRoutes.IsNull() {
-		v.HostRoutes = ovhtypes.NewListNestedObjectValueOfNull[TargetSpecHostRoutesValue](ctx)
+	v.HostRoutes = ovhtypes.TfListNestedValue[TargetSpecHostRoutesValue]{
+		ListValue: basetypes.NewListValueMust(TargetSpecHostRoutesValue{}.Type(ctx), []attr.Value{}),
 	}
 }
 
