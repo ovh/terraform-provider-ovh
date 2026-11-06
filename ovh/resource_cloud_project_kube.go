@@ -574,6 +574,11 @@ func resourceCloudProjectKube() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			kubeClusterUpdatedAtKey: {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Last update date of the cluster",
+			},
 			kubeClusterKubeconfigKey: {
 				Type:      schema.TypeString,
 				Computed:  true,
@@ -810,12 +815,15 @@ func resourceCloudProjectKubeRead(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	if d.IsNewResource() || d.Get(kubeClusterKubeconfigKey) == "" || len(d.Get(kubeClusterKubeconfigAttributesKey).([]interface{})) == 0 {
-		// add kubeconfig in state
+	// Each call generates new credentials, so only generate a kubeconfig when the cluster changed
+	// since the last one: a reset of the kubeconfig renews the certificate authority
+	if d.IsNewResource() || d.Get(kubeClusterKubeconfigKey) == "" || len(d.Get(kubeClusterKubeconfigAttributesKey).([]interface{})) == 0 ||
+		d.Get(kubeClusterUpdatedAtKey).(string) != res.UpdatedAt {
 		if err := setKubeconfig(d, meta); err != nil {
 			return err
 		}
 	}
+	d.Set(kubeClusterUpdatedAtKey, res.UpdatedAt)
 
 	log.Printf("[DEBUG] Read kube %+v", res)
 	return nil

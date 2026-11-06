@@ -29,6 +29,7 @@ const (
 	kubeClusterNextUpgradeVersionsKey         = "next_upgrade_versions"
 	kubeClusterNodesUrlKey                    = "nodes_url"
 	kubeClusterUrlKey                         = "url"
+	kubeClusterUpdatedAtKey                   = "updated_at"
 	kubeClusterKubeconfigKey                  = "kubeconfig"
 	kubeClusterKubeconfigAttributesKey        = "kubeconfig_attributes"
 	kubeClusterIpAllocationPolicyKey          = "ip_allocation_policy"
