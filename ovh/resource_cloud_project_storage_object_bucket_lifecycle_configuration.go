@@ -51,6 +51,7 @@ func (r *cloudProjectStorageLifecycleConfigurationResource) Configure(_ context.
 
 func (r *cloudProjectStorageLifecycleConfigurationResource) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = CloudProjectStorageLifecycleConfigurationResourceSchema(ctx)
+	resp.Schema.DeprecationMessage = "Use ovh_cloud_storage_object_bucket_lifecycle instead. See https://registry.terraform.io/providers/ovh/ovh/latest/docs/guides/public_cloud_resources_migration"
 }
 
 func (r *cloudProjectStorageLifecycleConfigurationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
