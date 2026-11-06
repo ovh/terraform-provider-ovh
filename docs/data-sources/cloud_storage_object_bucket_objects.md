@@ -39,7 +39,7 @@ output "document_keys" {
 
 ## Argument Reference
 
-* `service_name` - (Required) The id of the public cloud project.
+* `service_name` - (Optional) The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 * `bucket_id` - (Required) Bucket identifier, in the `<REGION>_<name>` form (e.g. `GRA_my-bucket`).
 * `prefix` - (Optional) If set, only objects whose key starts with this prefix are returned.
 * `delimiter` - (Optional) If set, the keys that share a prefix up to the next occurrence of the delimiter are grouped into one entry with `is_common_prefix = true`. When unset, every object is listed recursively.

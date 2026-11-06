@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"os"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -52,9 +53,10 @@ func (d *cloudStorageObjectBucketObjectsDataSource) Schema(ctx context.Context, 
 		Attributes: map[string]schema.Attribute{
 			"service_name": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
-				Required:            true,
-				Description:         "Service name of the resource representing the id of the cloud project",
-				MarkdownDescription: "Service name of the resource representing the id of the cloud project",
+				Optional:            true,
+				Computed:            true,
+				Description:         "Service name of the resource representing the id of the cloud project. If omitted, the OVH_CLOUD_PROJECT_SERVICE environment variable is used.",
+				MarkdownDescription: "Service name of the resource representing the id of the cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.",
 			},
 			"bucket_id": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
@@ -102,6 +104,19 @@ func (d *cloudStorageObjectBucketObjectsDataSource) Read(ctx context.Context, re
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	if data.ServiceName.IsNull() || data.ServiceName.ValueString() == "" {
+		envServiceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE")
+		if envServiceName == "" {
+			resp.Diagnostics.AddError(
+				"Missing service_name",
+				"The service_name attribute is required. Provide it in the data source "+
+					"configuration or set the OVH_CLOUD_PROJECT_SERVICE environment variable.",
+			)
+			return
+		}
+		data.ServiceName = ovhtypes.NewTfStringValue(envServiceName)
 	}
 
 	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) +

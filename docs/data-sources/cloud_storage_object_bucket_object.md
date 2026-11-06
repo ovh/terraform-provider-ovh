@@ -24,7 +24,7 @@ output "report_size" {
 
 ## Argument Reference
 
-* `service_name` - (Required) The id of the public cloud project.
+* `service_name` - (Optional) The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 * `bucket_id` - (Required) Bucket identifier, in the `<REGION>_<name>` form (e.g. `GRA_my-bucket`).
 * `key` - (Required) Object key, its full path within the bucket (e.g. `documents/report.pdf`).
 
