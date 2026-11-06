@@ -537,7 +537,7 @@ removed {
 | `no_gateway` | `enable_gateway_ip` | no equivalent; `gateway_ip` is computed when omitted |
 | (none) | `gateway_ip`, `dns_nameservers` | unchanged |
 | (none) | `name` | `name`, **required** |
-| (none) | `host_route` | read-only under `current_state.host_routes` |
+| (none) | `host_route` | `host_routes = [{ destination, next_hop }]`, optional; updated in place |
 | (none) | `use_default_public_dns_resolver` | removed |
 | `ip_pools[*]` | (none) | `allocation_pools` |
 
@@ -581,7 +581,8 @@ resource "ovh_cloud_network_private_vrack_subnet" "subnet" {
 | `subnet.enable_dhcp` | `dhcp_enabled` |
 | `subnet.dns_name_servers` | `dns_nameservers` |
 | `subnet.name` | `name`, **required** |
-| `subnet.ip_version`, `subnet.enable_gateway_ip`, `subnet.use_default_public_dnsresolver`, `subnet.host_routes` | removed |
+| `subnet.host_routes` | `host_routes` on the subnet, same shape |
+| `subnet.ip_version`, `subnet.enable_gateway_ip`, `subnet.use_default_public_dnsresolver` | removed |
 
 ```terraform
 resource "ovh_cloud_project_region_network" "lz" {

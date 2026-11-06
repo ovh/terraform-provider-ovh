@@ -72,6 +72,9 @@ func SubnetListItemAttrTypes() map[string]attr.Type {
 				AttrTypes: subnetAllocationPoolAttrTypes(),
 			},
 		},
+		"host_routes": types.ListType{
+			ElemType: types.ObjectType{AttrTypes: subnetHostRouteAttrTypes()},
+		},
 		"checksum":        ovhtypes.TfStringType{},
 		"created_at":      ovhtypes.TfStringType{},
 		"updated_at":      ovhtypes.TfStringType{},
@@ -148,7 +151,7 @@ func (d *cloudNetworkPrivateVrackSubnetsDataSource) Schema(ctx context.Context, 
 						},
 						"allocation_pools": schema.ListNestedAttribute{
 							Computed:    true,
-							Description: "IP address allocation pools",
+							Description: "Ranges inside the subnet that addresses are handed out from automatically. When omitted on an IPv4 subnet with no gatewayIp, the whole CIDR is used except its first host address (for 10.0.0.0/24: 10.0.0.2 to 10.0.0.254).",
 							NestedObject: schema.NestedAttributeObject{
 								Attributes: map[string]schema.Attribute{
 									"start": schema.StringAttribute{
@@ -160,6 +163,24 @@ func (d *cloudNetworkPrivateVrackSubnetsDataSource) Schema(ctx context.Context, 
 										CustomType:  ovhtypes.TfStringType{},
 										Computed:    true,
 										Description: "End IP address of the pool",
+									},
+								},
+							},
+						},
+						"host_routes": schema.ListNestedAttribute{
+							Computed:    true,
+							Description: "Static routes handed to the instances of the subnet through DHCP",
+							NestedObject: schema.NestedAttributeObject{
+								Attributes: map[string]schema.Attribute{
+									"destination": schema.StringAttribute{
+										CustomType:  ovhtypes.TfStringType{},
+										Computed:    true,
+										Description: "CIDR reached through the next hop",
+									},
+									"next_hop": schema.StringAttribute{
+										CustomType:  ovhtypes.TfStringType{},
+										Computed:    true,
+										Description: "IP address, inside the subnet, that traffic to the destination is sent to",
 									},
 								},
 							},
@@ -316,6 +337,7 @@ func buildSubnetListItemObject(response *CloudSubnetAPIResponse) basetypes.Objec
 
 	allocationPoolObjType := types.ObjectType{AttrTypes: subnetAllocationPoolAttrTypes()}
 	allocationPoolsVal := types.ListNull(allocationPoolObjType)
+	hostRoutesVal := buildSubnetHostRoutesList(nil)
 
 	if response.TargetSpec != nil {
 		nameVal = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Name)}
@@ -358,6 +380,8 @@ func buildSubnetListItemObject(response *CloudSubnetAPIResponse) basetypes.Objec
 			}
 			allocationPoolsVal = types.ListValueMust(allocationPoolObjType, poolObjs)
 		}
+
+		hostRoutesVal = buildSubnetHostRoutesList(response.TargetSpec.HostRoutes)
 	}
 
 	var currentStateVal attr.Value
@@ -379,6 +403,7 @@ func buildSubnetListItemObject(response *CloudSubnetAPIResponse) basetypes.Objec
 			"dns_nameservers":  dnsVal,
 			"gateway_ip":       gatewayIPVal,
 			"allocation_pools": allocationPoolsVal,
+			"host_routes":      hostRoutesVal,
 			"checksum":         ovhtypes.TfStringValue{StringValue: types.StringValue(response.Checksum)},
 			"created_at":       ovhtypes.TfStringValue{StringValue: types.StringValue(response.CreatedAt)},
 			"updated_at":       ovhtypes.TfStringValue{StringValue: types.StringValue(response.UpdatedAt)},

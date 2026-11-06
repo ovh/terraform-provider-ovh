@@ -12,7 +12,7 @@ Creates a subnet in a private network (vRack) in a public cloud project.
 resource "ovh_cloud_network_private_vrack" "network" {
   service_name = "<public cloud project ID>"
   name         = "my-private-network"
-  region       = "GRA11"
+  region       = "GRA1"
 }
 
 resource "ovh_cloud_network_private_vrack_subnet" "subnet" {
@@ -22,7 +22,7 @@ resource "ovh_cloud_network_private_vrack_subnet" "subnet" {
   cidr         = "10.0.0.0/24"
   dhcp_enabled = true
   gateway_ip   = "10.0.0.1"
-  region       = "GRA11"
+  region       = "GRA1"
 
   dns_nameservers = [
     "213.186.33.99",
@@ -51,9 +51,12 @@ The following arguments are supported:
 * `dhcp_enabled` - (Optional) Whether DHCP is enabled on the subnet.
 * `dns_nameservers` - (Optional) List of DNS nameserver addresses.
 * `gateway_ip` - (Optional) Default gateway IP address.
-* `allocation_pools` - (Optional) IP address allocation pools:
+* `allocation_pools` - (Optional) Ranges inside the subnet that addresses are handed out from automatically. When omitted on an IPv4 subnet with no gatewayIp, the whole CIDR is used except its first host address (for 10.0.0.0/24: 10.0.0.2 to 10.0.0.254). Each pool has:
   * `start` - (Required) Start IP address of the pool.
   * `end` - (Required) End IP address of the pool.
+* `host_routes` - (Optional) Static routes handed to the instances of the subnet through DHCP. A list replaces the current routes. `host_routes = []` removes them all. When the attribute is left out, the current routes are kept. Each route has:
+  * `destination` - (Required) CIDR reached through the next hop.
+  * `next_hop` - (Required) IP address, inside the subnet, that traffic to the destination is sent to.
 
 ## Attributes Reference
 
