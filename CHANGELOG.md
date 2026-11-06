@@ -1,3 +1,34 @@
+## 2.25.0 (November 6, 2026)
+
+💪 Improvements:
+
+* `r/ovh_cloud_loadbalancer`: `network.id` is now optional. When omitted, the network of `network.subnet_id` is used, `network.id` stays `null` here and in `d/ovh_cloud_loadbalancers`, and `current_state.network.id` holds the network in use. Removing `network.id` from an existing configuration keeps the current value without recreating the load balancer; a different value still does ([#1581](https://github.com/ovh/terraform-provider-ovh/pull/1581))
+* `r/ovh_cloud_network_private_vrack_subnet`: Add `host_routes`, the static routes handed to the instances of the subnet through DHCP, as a list of `{ destination, next_hop }` updated in place. An empty list removes the routes, and leaving the attribute out keeps the current ones ([#1578](https://github.com/ovh/terraform-provider-ovh/pull/1578))
+* `d/ovh_cloud_network_private_vrack_subnet`, `d/ovh_cloud_network_private_vrack_subnets`: Add the computed `host_routes` attribute ([#1578](https://github.com/ovh/terraform-provider-ovh/pull/1578))
+* `r/ovh_cloud_storage_file_share_network`: `network_id` is now optional. When omitted, the network of `subnet_id` is used. Removing `network_id` from an existing configuration keeps the current value without recreating the share network; a different value still does ([#1581](https://github.com/ovh/terraform-provider-ovh/pull/1581))
+* `r/ovh_cloud_storage_object_bucket`: `object_lock` now matches the API. `status` (`ENABLED` or `DISABLED`, defaults to `ENABLED`) arms the lock, so `object_lock = {}` arms it without a default retention rule. The rule, `mode` with `retention_days` or the new `retention_years`, is optional and updated in place. Only a change of `status` replaces the bucket, where before any change of the block did ([#1573](https://github.com/ovh/terraform-provider-ovh/pull/1573))
+* `d/ovh_cloud_storage_object_bucket`, `d/ovh_cloud_storage_object_buckets`: Add `object_lock.status` ([#1573](https://github.com/ovh/terraform-provider-ovh/pull/1573))
+* `r/ovh_dedicated_ceph_user`: Add `discard_key`, to keep the key of the user out of the state. On import, `discard_key` is `true` in the state so that the key is not stored before the configuration is known. The next apply reads it when the configuration does not set `discard_key` ([#1574](https://github.com/ovh/terraform-provider-ovh/pull/1574))
+
+🐜 Bug fixes:
+
+* `r/ovh_cloud_project_database_user`, `r/ovh_cloud_project_database_clickhouse_user`, `r/ovh_cloud_project_database_mongodb_user`, `r/ovh_cloud_project_database_opensearch_user`, `r/ovh_cloud_project_database_postgresql_user`, `r/ovh_cloud_project_database_valkey_user`: Creating the built-in user (`avnadmin`, or `default` on Valkey) no longer crashes the provider with `interface conversion: interface {} is nil, not string`, a regression of v2.23.0. The existing user is adopted and its password reset, as before ([#1563](https://github.com/ovh/terraform-provider-ovh/pull/1563))
+* `r/ovh_cloud_storage_object_bucket`: Creating a bucket with `object_lock` no longer fails, as the lock status was not sent to the API, and the status is now read back. Importing a bucket without object lock, which the API reports as `status = "DISABLED"`, no longer plans a replacement ([#1573](https://github.com/ovh/terraform-provider-ovh/pull/1573))
+* `d/ovh_iploadbalancing`: Filtering by `zone` no longer crashes the provider ([#1564](https://github.com/ovh/terraform-provider-ovh/pull/1564))
+* `r/ovh_iam_policy`: Policies are now created, updated and deleted one at a time, as the API answers a 500 error to concurrent writes, which Terraform triggers when it applies several policies in parallel ([#1570](https://github.com/ovh/terraform-provider-ovh/pull/1570))
+
+📚 Documentation:
+
+* Public Cloud resources migration guide: Map `subnet.host_routes` of `ovh_cloud_project_region_network` and `host_route` of `ovh_cloud_project_network_private_subnet_v2` to `host_routes` of `ovh_cloud_network_private_vrack_subnet`, and update the `object_lock` mapping of `ovh_cloud_project_storage` for `status` and `retention_years` ([#1573](https://github.com/ovh/terraform-provider-ovh/pull/1573), [#1578](https://github.com/ovh/terraform-provider-ovh/pull/1578))
+* `r/ovh_cloud_network_private_vrack_subnet`, `d/ovh_cloud_network_private_vrack_subnet`, `d/ovh_cloud_network_private_vrack_subnets`: Describe the default `allocation_pools` ([#1578](https://github.com/ovh/terraform-provider-ovh/pull/1578))
+
+⚙️ General:
+
+* Public Cloud (`/v2/publicCloud`) API calls now request version `1.0` of the schemas through the `X-Schemas-Version` header, the other v2 calls keep `0.0` ([#1578](https://github.com/ovh/terraform-provider-ovh/pull/1578))
+* Bump `golang.org/x/net` from 0.61.0 to 0.62.0 ([#1569](https://github.com/ovh/terraform-provider-ovh/pull/1569))
+
+❤️ Thanks for your contributions ❤️
+
 ## 2.24.0 (October 29, 2026)
 
 🎉 Features:
