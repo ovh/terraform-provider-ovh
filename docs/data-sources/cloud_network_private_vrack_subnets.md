@@ -40,9 +40,12 @@ The following attributes are exported:
   * `dhcp_enabled` - Whether DHCP is enabled on the subnet.
   * `dns_nameservers` - DNS nameservers for the subnet.
   * `gateway_ip` - Default gateway IP address.
-  * `allocation_pools` - IP address allocation pools:
+  * `allocation_pools` - Ranges inside the subnet that addresses are handed out from automatically. When omitted on an IPv4 subnet with no gatewayIp, the whole CIDR is used except its first host address (for 10.0.0.0/24: 10.0.0.2 to 10.0.0.254). Each pool has:
     * `start` - Start IP address of the pool.
     * `end` - End IP address of the pool.
+  * `host_routes` - Static routes handed to the instances of the subnet through DHCP:
+    * `destination` - CIDR reached through the next hop.
+    * `next_hop` - IP address, inside the subnet, that traffic to the destination is sent to.
   * `checksum` - Computed hash representing the current target specification value.
   * `created_at` - Creation date of the subnet.
   * `updated_at` - Last update date of the subnet.

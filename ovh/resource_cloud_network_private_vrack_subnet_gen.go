@@ -3220,6 +3220,24 @@ func (t CloudNetworkPrivateSubnetTargetSpecType) ValueFromObject(ctx context.Con
 			fmt.Sprintf(`gateway_ip expected to be ovhtypes.TfStringValue, was: %T`, gatewayIpAttribute))
 	}
 
+	hostRoutesAttribute, ok := attributes["host_routes"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`host_routes is missing from object`)
+
+		return nil, diags
+	}
+
+	hostRoutesVal, ok := hostRoutesAttribute.(ovhtypes.TfListNestedValue[TargetSpecHostRoutesValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`host_routes expected to be ovhtypes.TfListNestedValue[TargetSpecHostRoutesValue], was: %T`, hostRoutesAttribute))
+	}
+
 	locationAttribute, ok := attributes["location"]
 
 	if !ok {
@@ -3267,6 +3285,7 @@ func (t CloudNetworkPrivateSubnetTargetSpecType) ValueFromObject(ctx context.Con
 		DhcpEnabled:     dhcpEnabledVal,
 		DnsNameservers:  dnsNameserversVal,
 		GatewayIp:       gatewayIpVal,
+		HostRoutes:      hostRoutesVal,
 		Location:        locationVal,
 		Name:            nameVal,
 		state:           attr.ValueStateKnown,
@@ -3444,6 +3463,24 @@ func NewCloudNetworkPrivateSubnetTargetSpecValue(attributeTypes map[string]attr.
 			fmt.Sprintf(`gateway_ip expected to be ovhtypes.TfStringValue, was: %T`, gatewayIpAttribute))
 	}
 
+	hostRoutesAttribute, ok := attributes["host_routes"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`host_routes is missing from object`)
+
+		return NewCloudNetworkPrivateSubnetTargetSpecValueUnknown(), diags
+	}
+
+	hostRoutesVal, ok := hostRoutesAttribute.(ovhtypes.TfListNestedValue[TargetSpecHostRoutesValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`host_routes expected to be ovhtypes.TfListNestedValue[TargetSpecHostRoutesValue], was: %T`, hostRoutesAttribute))
+	}
+
 	locationAttribute, ok := attributes["location"]
 
 	if !ok {
@@ -3491,6 +3528,7 @@ func NewCloudNetworkPrivateSubnetTargetSpecValue(attributeTypes map[string]attr.
 		DhcpEnabled:     dhcpEnabledVal,
 		DnsNameservers:  dnsNameserversVal,
 		GatewayIp:       gatewayIpVal,
+		HostRoutes:      hostRoutesVal,
 		Location:        locationVal,
 		Name:            nameVal,
 		state:           attr.ValueStateKnown,
@@ -3571,6 +3609,7 @@ type CloudNetworkPrivateSubnetTargetSpecValue struct {
 	DhcpEnabled     ovhtypes.TfBoolValue                                       `tfsdk:"dhcp_enabled" json:"dhcpEnabled"`
 	DnsNameservers  ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]         `tfsdk:"dns_nameservers" json:"dnsNameservers"`
 	GatewayIp       ovhtypes.TfStringValue                                     `tfsdk:"gateway_ip" json:"gatewayIp"`
+	HostRoutes      ovhtypes.TfListNestedValue[TargetSpecHostRoutesValue]      `tfsdk:"host_routes" json:"hostRoutes"`
 	Location        TargetSpecLocationValue                                    `tfsdk:"location" json:"location"`
 	Name            ovhtypes.TfStringValue                                     `tfsdk:"name" json:"name"`
 	state           attr.ValueState
@@ -3593,6 +3632,10 @@ func (v CloudNetworkPrivateSubnetTargetSpecValue) ToCreate() *CloudNetworkPrivat
 
 	if !v.GatewayIp.IsNull() {
 		res.GatewayIp = v.GatewayIp
+	}
+
+	if !v.HostRoutes.IsNull() {
+		res.HostRoutes = v.HostRoutes
 	}
 
 	if !v.Location.IsNull() {
@@ -3635,6 +3678,10 @@ func (v CloudNetworkPrivateSubnetTargetSpecValue) ToUpdate() *CloudNetworkPrivat
 		res.GatewayIp = v.GatewayIp
 	}
 
+	if !v.HostRoutes.IsNull() {
+		res.HostRoutes = v.HostRoutes
+	}
+
 	if !v.Name.IsNull() {
 		res.Name = v.Name
 	}
@@ -3668,6 +3715,9 @@ func (v CloudNetworkPrivateSubnetTargetSpecValue) MarshalJSON() ([]byte, error) 
 	if !v.GatewayIp.IsNull() && !v.GatewayIp.IsUnknown() {
 		toMarshal["gatewayIp"] = v.GatewayIp
 	}
+	if !v.HostRoutes.IsNull() && !v.HostRoutes.IsUnknown() {
+		toMarshal["hostRoutes"] = v.HostRoutes
+	}
 	if !v.Location.IsNull() && !v.Location.IsUnknown() {
 		toMarshal["location"] = v.Location
 	}
@@ -3691,6 +3741,7 @@ func (v *CloudNetworkPrivateSubnetTargetSpecValue) UnmarshalJSON(data []byte) er
 	v.DhcpEnabled = tmp.DhcpEnabled
 	v.DnsNameservers = tmp.DnsNameservers
 	v.GatewayIp = tmp.GatewayIp
+	v.HostRoutes = tmp.HostRoutes
 	v.Location = tmp.Location
 	v.Name = tmp.Name
 
@@ -3744,6 +3795,10 @@ func (v *CloudNetworkPrivateSubnetTargetSpecValue) MergeWith(other *CloudNetwork
 		v.GatewayIp = other.GatewayIp
 	}
 
+	if (v.HostRoutes.IsUnknown() || v.HostRoutes.IsNull()) && !other.HostRoutes.IsUnknown() {
+		v.HostRoutes = other.HostRoutes
+	}
+
 	if v.Location.IsUnknown() && !other.Location.IsUnknown() {
 		v.Location = other.Location
 	} else if !other.Location.IsUnknown() {
@@ -3767,12 +3822,13 @@ func (v CloudNetworkPrivateSubnetTargetSpecValue) Attributes() map[string]attr.V
 		"dhcpEnabled":     v.DhcpEnabled,
 		"dnsNameservers":  v.DnsNameservers,
 		"gatewayIp":       v.GatewayIp,
+		"hostRoutes":      v.HostRoutes,
 		"location":        v.Location,
 		"name":            v.Name,
 	}
 }
 func (v CloudNetworkPrivateSubnetTargetSpecValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	attrTypes := make(map[string]tftypes.Type, 8)
+	attrTypes := make(map[string]tftypes.Type, 9)
 
 	var val tftypes.Value
 	var err error
@@ -3787,6 +3843,9 @@ func (v CloudNetworkPrivateSubnetTargetSpecValue) ToTerraformValue(ctx context.C
 		ElemType: types.StringType,
 	}.TerraformType(ctx)
 	attrTypes["gateway_ip"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["host_routes"] = basetypes.ListType{
+		ElemType: TargetSpecHostRoutesValue{}.Type(ctx),
+	}.TerraformType(ctx)
 	attrTypes["location"] = basetypes.ObjectType{
 		AttrTypes: TargetSpecLocationValue{}.AttributeTypes(ctx),
 	}.TerraformType(ctx)
@@ -3796,7 +3855,7 @@ func (v CloudNetworkPrivateSubnetTargetSpecValue) ToTerraformValue(ctx context.C
 
 	switch v.state {
 	case attr.ValueStateKnown:
-		vals := make(map[string]tftypes.Value, 8)
+		vals := make(map[string]tftypes.Value, 9)
 
 		val, err = v.AllocationPools.ToTerraformValue(ctx)
 
@@ -3845,6 +3904,14 @@ func (v CloudNetworkPrivateSubnetTargetSpecValue) ToTerraformValue(ctx context.C
 		}
 
 		vals["gateway_ip"] = val
+
+		val, err = v.HostRoutes.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["host_routes"] = val
 
 		val, err = v.Location.ToTerraformValue(ctx)
 
@@ -3899,6 +3966,7 @@ func (v CloudNetworkPrivateSubnetTargetSpecValue) ToObjectValue(ctx context.Cont
 			"dhcp_enabled":     ovhtypes.TfBoolType{},
 			"dns_nameservers":  ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
 			"gateway_ip":       ovhtypes.TfStringType{},
+			"host_routes":      ovhtypes.NewTfListNestedType[TargetSpecHostRoutesValue](ctx),
 			"location": TargetSpecLocationType{
 				basetypes.ObjectType{
 					AttrTypes: TargetSpecLocationValue{}.AttributeTypes(ctx),
@@ -3913,6 +3981,7 @@ func (v CloudNetworkPrivateSubnetTargetSpecValue) ToObjectValue(ctx context.Cont
 			"dhcp_enabled":     v.DhcpEnabled,
 			"dns_nameservers":  v.DnsNameservers,
 			"gateway_ip":       v.GatewayIp,
+			"host_routes":      v.HostRoutes,
 			"location":         v.Location,
 			"name":             v.Name,
 		})
@@ -3959,6 +4028,10 @@ func (v CloudNetworkPrivateSubnetTargetSpecValue) Equal(o attr.Value) bool {
 		return false
 	}
 
+	if !v.HostRoutes.Equal(other.HostRoutes) {
+		return false
+	}
+
 	if !v.Location.Equal(other.Location) {
 		return false
 	}
@@ -3986,6 +4059,7 @@ func (v CloudNetworkPrivateSubnetTargetSpecValue) AttributeTypes(ctx context.Con
 		"dhcp_enabled":     ovhtypes.TfBoolType{},
 		"dns_nameservers":  ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
 		"gateway_ip":       ovhtypes.TfStringType{},
+		"host_routes":      ovhtypes.NewTfListNestedType[TargetSpecHostRoutesValue](ctx),
 		"location":         TargetSpecLocationValue{}.Type(ctx),
 		"name":             ovhtypes.TfStringType{},
 	}
@@ -4437,6 +4511,455 @@ func (v TargetSpecAllocationPoolsValue) AttributeTypes(ctx context.Context) map[
 	return map[string]attr.Type{
 		"end":   ovhtypes.TfStringType{},
 		"start": ovhtypes.TfStringType{},
+	}
+}
+
+var _ basetypes.ObjectTypable = TargetSpecHostRoutesType{}
+
+type TargetSpecHostRoutesType struct {
+	basetypes.ObjectType
+}
+
+func (t TargetSpecHostRoutesType) Equal(o attr.Type) bool {
+	other, ok := o.(TargetSpecHostRoutesType)
+
+	if !ok {
+		return false
+	}
+
+	return t.ObjectType.Equal(other.ObjectType)
+}
+
+func (t TargetSpecHostRoutesType) String() string {
+	return "TargetSpecHostRoutesType"
+}
+
+func (t TargetSpecHostRoutesType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	attributes := in.Attributes()
+
+	nextHopAttribute, ok := attributes["next_hop"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`next_hop is missing from object`)
+
+		return nil, diags
+	}
+
+	nextHopVal, ok := nextHopAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`next_hop expected to be ovhtypes.TfStringValue, was: %T`, nextHopAttribute))
+	}
+
+	destinationAttribute, ok := attributes["destination"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`destination is missing from object`)
+
+		return nil, diags
+	}
+
+	destinationVal, ok := destinationAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`destination expected to be ovhtypes.TfStringValue, was: %T`, destinationAttribute))
+	}
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return TargetSpecHostRoutesValue{
+		NextHop:     nextHopVal,
+		Destination: destinationVal,
+		state:       attr.ValueStateKnown,
+	}, diags
+}
+
+func NewTargetSpecHostRoutesValueNull() TargetSpecHostRoutesValue {
+	return TargetSpecHostRoutesValue{
+		state: attr.ValueStateNull,
+	}
+}
+
+func NewTargetSpecHostRoutesValueUnknown() TargetSpecHostRoutesValue {
+	return TargetSpecHostRoutesValue{
+		state: attr.ValueStateUnknown,
+	}
+}
+
+func NewTargetSpecHostRoutesValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (TargetSpecHostRoutesValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
+	ctx := context.Background()
+
+	for name, attributeType := range attributeTypes {
+		attribute, ok := attributes[name]
+
+		if !ok {
+			diags.AddError(
+				"Missing TargetSpecHostRoutesValue Attribute Value",
+				"While creating a TargetSpecHostRoutesValue value, a missing attribute value was detected. "+
+					"A TargetSpecHostRoutesValue must contain values for all attributes, even if null or unknown. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("TargetSpecHostRoutesValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
+			)
+
+			continue
+		}
+
+		if !attributeType.Equal(attribute.Type(ctx)) {
+			diags.AddError(
+				"Invalid TargetSpecHostRoutesValue Attribute Type",
+				"While creating a TargetSpecHostRoutesValue value, an invalid attribute value was detected. "+
+					"A TargetSpecHostRoutesValue must use a matching attribute type for the value. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("TargetSpecHostRoutesValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
+					fmt.Sprintf("TargetSpecHostRoutesValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
+			)
+		}
+	}
+
+	for name := range attributes {
+		_, ok := attributeTypes[name]
+
+		if !ok {
+			diags.AddError(
+				"Extra TargetSpecHostRoutesValue Attribute Value",
+				"While creating a TargetSpecHostRoutesValue value, an extra attribute value was detected. "+
+					"A TargetSpecHostRoutesValue must not contain values beyond the expected attribute types. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("Extra TargetSpecHostRoutesValue Attribute Name: %s", name),
+			)
+		}
+	}
+
+	if diags.HasError() {
+		return NewTargetSpecHostRoutesValueUnknown(), diags
+	}
+
+	nextHopAttribute, ok := attributes["next_hop"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`next_hop is missing from object`)
+
+		return NewTargetSpecHostRoutesValueUnknown(), diags
+	}
+
+	nextHopVal, ok := nextHopAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`next_hop expected to be ovhtypes.TfStringValue, was: %T`, nextHopAttribute))
+	}
+
+	destinationAttribute, ok := attributes["destination"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`destination is missing from object`)
+
+		return NewTargetSpecHostRoutesValueUnknown(), diags
+	}
+
+	destinationVal, ok := destinationAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`destination expected to be ovhtypes.TfStringValue, was: %T`, destinationAttribute))
+	}
+
+	if diags.HasError() {
+		return NewTargetSpecHostRoutesValueUnknown(), diags
+	}
+
+	return TargetSpecHostRoutesValue{
+		NextHop:     nextHopVal,
+		Destination: destinationVal,
+		state:       attr.ValueStateKnown,
+	}, diags
+}
+
+func NewTargetSpecHostRoutesValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) TargetSpecHostRoutesValue {
+	object, diags := NewTargetSpecHostRoutesValue(attributeTypes, attributes)
+
+	if diags.HasError() {
+		// This could potentially be added to the diag package.
+		diagsStrings := make([]string, 0, len(diags))
+
+		for _, diagnostic := range diags {
+			diagsStrings = append(diagsStrings, fmt.Sprintf(
+				"%s | %s | %s",
+				diagnostic.Severity(),
+				diagnostic.Summary(),
+				diagnostic.Detail()))
+		}
+
+		panic("NewTargetSpecHostRoutesValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
+	}
+
+	return object
+}
+
+func (t TargetSpecHostRoutesType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+	if in.Type() == nil {
+		return NewTargetSpecHostRoutesValueNull(), nil
+	}
+
+	if !in.Type().Equal(t.TerraformType(ctx)) {
+		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
+	}
+
+	if !in.IsKnown() {
+		return NewTargetSpecHostRoutesValueUnknown(), nil
+	}
+
+	if in.IsNull() {
+		return NewTargetSpecHostRoutesValueNull(), nil
+	}
+
+	attributes := map[string]attr.Value{}
+
+	val := map[string]tftypes.Value{}
+
+	err := in.As(&val)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range val {
+		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
+
+		if err != nil {
+			return nil, err
+		}
+
+		attributes[k] = a
+	}
+
+	return NewTargetSpecHostRoutesValueMust(TargetSpecHostRoutesValue{}.AttributeTypes(ctx), attributes), nil
+}
+
+func (t TargetSpecHostRoutesType) ValueType(ctx context.Context) attr.Value {
+	return TargetSpecHostRoutesValue{}
+}
+
+var _ basetypes.ObjectValuable = TargetSpecHostRoutesValue{}
+
+type TargetSpecHostRoutesValue struct {
+	NextHop     ovhtypes.TfStringValue `tfsdk:"next_hop" json:"nextHop"`
+	Destination ovhtypes.TfStringValue `tfsdk:"destination" json:"destination"`
+	state       attr.ValueState
+}
+
+func (v TargetSpecHostRoutesValue) ToCreate() *TargetSpecHostRoutesValue {
+	res := &TargetSpecHostRoutesValue{}
+
+	if !v.NextHop.IsNull() {
+		res.NextHop = v.NextHop
+	}
+
+	if !v.Destination.IsNull() {
+		res.Destination = v.Destination
+	}
+
+	res.state = attr.ValueStateKnown
+
+	return res
+}
+
+func (v TargetSpecHostRoutesValue) ToUpdate() *TargetSpecHostRoutesValue {
+	res := &TargetSpecHostRoutesValue{}
+
+	if !v.NextHop.IsNull() {
+		res.NextHop = v.NextHop
+	}
+
+	if !v.Destination.IsNull() {
+		res.Destination = v.Destination
+	}
+
+	res.state = attr.ValueStateKnown
+
+	return res
+}
+
+func (v TargetSpecHostRoutesValue) MarshalJSON() ([]byte, error) {
+	toMarshal := map[string]any{}
+	if !v.NextHop.IsNull() && !v.NextHop.IsUnknown() {
+		toMarshal["nextHop"] = v.NextHop
+	}
+	if !v.Destination.IsNull() && !v.Destination.IsUnknown() {
+		toMarshal["destination"] = v.Destination
+	}
+
+	return json.Marshal(toMarshal)
+}
+
+func (v *TargetSpecHostRoutesValue) UnmarshalJSON(data []byte) error {
+	type JsonTargetSpecHostRoutesValue TargetSpecHostRoutesValue
+
+	var tmp JsonTargetSpecHostRoutesValue
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		return err
+	}
+	v.NextHop = tmp.NextHop
+	v.Destination = tmp.Destination
+
+	v.state = attr.ValueStateKnown
+
+	return nil
+}
+
+func (v *TargetSpecHostRoutesValue) MergeWith(other *TargetSpecHostRoutesValue) {
+
+	if (v.NextHop.IsUnknown() || v.NextHop.IsNull()) && !other.NextHop.IsUnknown() {
+		v.NextHop = other.NextHop
+	}
+
+	if (v.Destination.IsUnknown() || v.Destination.IsNull()) && !other.Destination.IsUnknown() {
+		v.Destination = other.Destination
+	}
+
+	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
+		v.state = other.state
+	}
+}
+
+func (v TargetSpecHostRoutesValue) Attributes() map[string]attr.Value {
+	return map[string]attr.Value{
+		"next_hop":    v.NextHop,
+		"destination": v.Destination,
+	}
+}
+func (v TargetSpecHostRoutesValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
+	attrTypes := make(map[string]tftypes.Type, 2)
+
+	var val tftypes.Value
+	var err error
+
+	attrTypes["next_hop"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["destination"] = basetypes.StringType{}.TerraformType(ctx)
+
+	objectType := tftypes.Object{AttributeTypes: attrTypes}
+
+	switch v.state {
+	case attr.ValueStateKnown:
+		vals := make(map[string]tftypes.Value, 2)
+
+		val, err = v.NextHop.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["next_hop"] = val
+
+		val, err = v.Destination.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["destination"] = val
+
+		if err := tftypes.ValidateValue(objectType, vals); err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		return tftypes.NewValue(objectType, vals), nil
+	case attr.ValueStateNull:
+		return tftypes.NewValue(objectType, nil), nil
+	case attr.ValueStateUnknown:
+		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
+	default:
+		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
+	}
+}
+
+func (v TargetSpecHostRoutesValue) IsNull() bool {
+	return v.state == attr.ValueStateNull
+}
+
+func (v TargetSpecHostRoutesValue) IsUnknown() bool {
+	return v.state == attr.ValueStateUnknown
+}
+
+func (v TargetSpecHostRoutesValue) String() string {
+	return "TargetSpecHostRoutesValue"
+}
+
+func (v TargetSpecHostRoutesValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	objVal, diags := types.ObjectValue(
+		map[string]attr.Type{
+			"next_hop":    ovhtypes.TfStringType{},
+			"destination": ovhtypes.TfStringType{},
+		},
+		map[string]attr.Value{
+			"next_hop":    v.NextHop,
+			"destination": v.Destination,
+		})
+
+	return objVal, diags
+}
+
+func (v TargetSpecHostRoutesValue) Equal(o attr.Value) bool {
+	other, ok := o.(TargetSpecHostRoutesValue)
+
+	if !ok {
+		return false
+	}
+
+	if v.state != other.state {
+		return false
+	}
+
+	if v.state != attr.ValueStateKnown {
+		return true
+	}
+
+	if !v.NextHop.Equal(other.NextHop) {
+		return false
+	}
+
+	if !v.Destination.Equal(other.Destination) {
+		return false
+	}
+
+	return true
+}
+
+func (v TargetSpecHostRoutesValue) Type(ctx context.Context) attr.Type {
+	return TargetSpecHostRoutesType{
+		basetypes.ObjectType{
+			AttrTypes: v.AttributeTypes(ctx),
+		},
+	}
+}
+
+func (v TargetSpecHostRoutesValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
+	return map[string]attr.Type{
+		"next_hop":    ovhtypes.TfStringType{},
+		"destination": ovhtypes.TfStringType{},
 	}
 }
 
