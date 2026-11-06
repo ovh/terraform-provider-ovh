@@ -37,7 +37,7 @@ type CloudLoadbalancerModel struct {
 // API Response types
 
 type CloudLoadbalancerAPINetworkRef struct {
-	ID       string `json:"id"`
+	ID       string `json:"id,omitempty"`
 	SubnetID string `json:"subnetId"`
 	IP       string `json:"ip,omitempty"`
 }
@@ -358,10 +358,15 @@ func (m *CloudLoadbalancerModel) MergeWith(ctx context.Context, response *CloudL
 				ipVal = ovhtypes.TfStringValue{StringValue: types.StringValue(ip)}
 			}
 
+			vipNetworkID := ovhtypes.TfStringValue{StringValue: types.StringNull()}
+			if response.TargetSpec.Network.ID != "" {
+				vipNetworkID = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Network.ID)}
+			}
+
 			m.Network, _ = types.ObjectValue(
 				LoadbalancerNetworkAttrTypes(),
 				map[string]attr.Value{
-					"id":        ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Network.ID)},
+					"id":        vipNetworkID,
 					"subnet_id": ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Network.SubnetID)},
 					"ip":        ipVal,
 				},
