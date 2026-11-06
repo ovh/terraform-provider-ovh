@@ -4,6 +4,8 @@ subcategory : "Object Storage"
 
 # ovh_cloud_project_storage_object_bucket_lifecycle_configuration
 
+~> **NOTE** This resource relies on the Public Cloud API v1. Prefer the new `ovh_cloud_storage_object_bucket_lifecycle` resource. See the [migration guide](../guides/public_cloud_resources_migration) to move an existing resource without recreating it.
+
 Manage the S3™* compatible lifecycle configuration for an OVHcloud Object Storage bucket.
 
 (* S3 is a trademark filed by Amazon Technologies,Inc. OVHcloud's service is not sponsored by, endorsed by, or otherwise affiliated with Amazon Technologies,Inc.)
