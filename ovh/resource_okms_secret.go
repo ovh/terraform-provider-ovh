@@ -8,12 +8,19 @@ import (
 	"reflect"
 	"slices"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
-var _ resource.ResourceWithConfigure = (*okmsSecretResource)(nil)
+var (
+	_ resource.ResourceWithConfigure        = (*okmsSecretResource)(nil)
+	_ resource.ResourceWithConfigValidators = (*okmsSecretResource)(nil)
+)
 
 func NewOkmsSecretResource() resource.Resource {
 	return &okmsSecretResource{}
@@ -48,6 +55,36 @@ func (d *okmsSecretResource) Schema(ctx context.Context, req resource.SchemaRequ
 	resp.Schema = OkmsSecretResourceSchema(ctx)
 }
 
+func (r *okmsSecretResource) ConfigValidators(_ context.Context) []resource.ConfigValidator {
+	return []resource.ConfigValidator{
+		resourcevalidator.ExactlyOneOf(
+			path.MatchRoot("version").AtName("data"),
+			path.MatchRoot("version").AtName("data_wo"),
+		),
+		resourcevalidator.RequiredTogether(
+			path.MatchRoot("version").AtName("data_wo"),
+			path.MatchRoot("version").AtName("data_wo_version"),
+		),
+	}
+}
+
+// isWriteOnlyVersion reports whether the version data is managed through data_wo.
+// data_wo is always null outside the configuration, so data_wo_version is the marker.
+func isWriteOnlyVersion(v SecretVersionValue) bool {
+	return !v.DataWoVersion.IsNull() && !v.DataWoVersion.IsUnknown()
+}
+
+// getWriteOnlyData reads data_wo, which is only available in the configuration.
+func getWriteOnlyData(ctx context.Context, config tfsdk.Config, diags *diag.Diagnostics) *string {
+	var dataWo ovhtypes.TfStringValue
+	diags.Append(config.GetAttribute(ctx, path.Root("version").AtName("data_wo"), &dataWo)...)
+	if diags.HasError() || dataWo.IsNull() || dataWo.IsUnknown() {
+		return nil
+	}
+	value := dataWo.ValueString()
+	return &value
+}
+
 func (r *okmsSecretResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data, responseData OkmsSecretModel
 
@@ -64,8 +101,15 @@ func (r *okmsSecretResource) Create(ctx context.Context, req resource.CreateRequ
 		)
 	}
 
+	var dataWo *string
+	if isWriteOnlyVersion(data.Version) {
+		if dataWo = getWriteOnlyData(ctx, req.Config, &resp.Diagnostics); resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
 	endpoint := "/v2/okms/resource/" + url.PathEscape(data.OkmsId.ValueString()) + "/secret"
-	createPayload := buildSecretPayload(&data, true)
+	createPayload := buildSecretPayload(&data, true, dataWo)
 	if err := r.config.OVHClient.Post(endpoint, createPayload, &responseData); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Post %s", endpoint),
@@ -75,7 +119,8 @@ func (r *okmsSecretResource) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	responseData.MergeWith(&data)
-	if responseData.Version.Data.IsNull() || responseData.Version.Data.IsUnknown() {
+	if dataWo != nil || responseData.Version.Data.IsNull() || responseData.Version.Data.IsUnknown() {
+		// The planned version holds no data when it is write-only
 		responseData.Version = data.Version
 	}
 
@@ -111,9 +156,14 @@ func (r *okmsSecretResource) Read(ctx context.Context, req resource.ReadRequest,
 	secretFromState.Metadata = currentSecret.Metadata
 	secretFromState.Iam = currentSecret.Iam
 
-	// Fetch the current version details including data for drift detection
+	// Fetch the current version details, including data for drift detection unless
+	// the data is write-only: it must then never be read back into the state.
+	writeOnly := isWriteOnlyVersion(secretFromState.Version)
 	currentVersion := currentSecret.Metadata.CurrentVersion.ValueInt64()
-	versionEndpoint := "/v2/okms/resource/" + url.PathEscape(secretFromState.OkmsId.ValueString()) + "/secret/" + url.PathEscape(secretFromState.Path.ValueString()) + "/version/" + fmt.Sprintf("%d", currentVersion) + "?includeData=true"
+	versionEndpoint := "/v2/okms/resource/" + url.PathEscape(secretFromState.OkmsId.ValueString()) + "/secret/" + url.PathEscape(secretFromState.Path.ValueString()) + "/version/" + fmt.Sprintf("%d", currentVersion)
+	if !writeOnly {
+		versionEndpoint += "?includeData=true"
+	}
 
 	var currentSecretVersion struct {
 		Id            *int64          `json:"id"`
@@ -140,7 +190,9 @@ func (r *okmsSecretResource) Read(ctx context.Context, req resource.ReadRequest,
 		}
 
 		// Check version state and data for drift detection
-		if currentSecretVersion.State != nil && *currentSecretVersion.State == "DELETED" {
+		if writeOnly {
+			// No drift detection on write-only data
+		} else if currentSecretVersion.State != nil && *currentSecretVersion.State == "DELETED" {
 			// Version is deleted - mark data as empty to force drift detection
 			secretFromState.Version.Data = ovhtypes.NewTfStringValue("")
 		} else if len(currentSecretVersion.Data) > 0 {
@@ -190,18 +242,32 @@ func (r *okmsSecretResource) Update(ctx context.Context, req resource.UpdateRequ
 		// Mark version data null in the payload model so buildSecretPayload skips it.
 		planForPayload.Version.Data = ovhtypes.NewTfStringNull()
 	}
-	updatePayload := buildSecretPayload(&planForPayload, false)
+	// Write-only data: a new version is created only when data_wo_version changes.
+	// Going from no data_wo_version (data, or a state written before data_wo existed)
+	// to one adopts the current version as is, so that a secret whose data is managed
+	// outside of Terraform is never overwritten.
+	var dataWo *string
+	if isWriteOnlyVersion(planData.Version) && isWriteOnlyVersion(data.Version) &&
+		planData.Version.DataWoVersion.ValueInt64() != data.Version.DataWoVersion.ValueInt64() {
+		if dataWo = getWriteOnlyData(ctx, req.Config, &resp.Diagnostics); resp.Diagnostics.HasError() {
+			return
+		}
+	}
+	updatePayload := buildSecretPayload(&planForPayload, false, dataWo)
 	// cas (check-and-set) must be passed as query parameter
 	casQuery := ""
 	if !planData.Cas.IsNull() && !planData.Cas.IsUnknown() {
 		casQuery = "?cas=" + url.QueryEscape(fmt.Sprintf("%d", planData.Cas.ValueInt64()))
 	}
-	if err := r.config.OVHClient.Put(endpoint+casQuery, updatePayload, nil); err != nil {
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("Error calling Put %s", endpoint+casQuery),
-			err.Error(),
-		)
-		return
+	// Nothing to send, e.g. when moving from data to data_wo: the change only affects the state
+	if len(updatePayload) > 0 {
+		if err := r.config.OVHClient.Put(endpoint+casQuery, updatePayload, nil); err != nil {
+			resp.Diagnostics.AddError(
+				fmt.Sprintf("Error calling Put %s", endpoint+casQuery),
+				err.Error(),
+			)
+			return
+		}
 	}
 
 	// Read updated resource
@@ -215,6 +281,13 @@ func (r *okmsSecretResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 
 	responseData.MergeWith(&planData)
+	if isWriteOnlyVersion(planData.Version) {
+		// Keep the write-only data out of the state, along with any data from a previous state
+		responseData.Version = data.Version
+		responseData.Version.Data = ovhtypes.NewTfStringNull()
+		responseData.Version.DataWo = ovhtypes.NewTfStringNull()
+		responseData.Version.DataWoVersion = planData.Version.DataWoVersion
+	}
 
 	populateVersionComputedFields(r, &responseData, data.OkmsId.ValueString(), data.Path.ValueString())
 
@@ -244,12 +317,17 @@ func (r *okmsSecretResource) Delete(ctx context.Context, req resource.DeleteRequ
 
 // buildSecretPayload constructs the payload for create/update.
 // On create include path; on update path is immutable so omitted.
-func buildSecretPayload(m *OkmsSecretModel, isCreate bool) map[string]any {
+// dataWo, when set, is the write-only data to send as the new version.
+func buildSecretPayload(m *OkmsSecretModel, isCreate bool, dataWo *string) map[string]any {
 	payload := map[string]any{}
 	if isCreate && !m.Path.IsNull() && !m.Path.IsUnknown() {
 		payload["path"] = m.Path.ValueString()
 	}
-	if !m.Version.Data.IsNull() && !m.Version.Data.IsUnknown() {
+	if dataWo != nil {
+		if vp := buildVersionData(*dataWo); vp != nil {
+			payload["version"] = vp
+		}
+	} else if !m.Version.Data.IsNull() && !m.Version.Data.IsUnknown() {
 		if vp := buildVersionData(m.Version.Data.ValueString()); vp != nil {
 			payload["version"] = vp
 		}
