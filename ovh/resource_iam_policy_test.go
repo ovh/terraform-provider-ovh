@@ -127,6 +127,13 @@ func TestAccIamPolicy_withConditions(t *testing.T) {
 					resource.TestCheckResourceAttr("ovh_iam_policy.policy1", "conditions.0.condition.0.values.resource.Tag(environment)", "production"),
 				),
 			},
+			{
+				// Removing the conditions clears them from the state: no diff on the next plan
+				Config: fmt.Sprintf(testAccIamPolicyWithoutConditionsConfig, userName, userName, name, desc, res),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_iam_policy.policy1", "conditions.#", "0"),
+				),
+			},
 		},
 	})
 }
@@ -308,6 +315,22 @@ resource "ovh_iam_policy" "policy1" {
 			}
 		}
 	}
+}
+`
+
+const testAccIamPolicyWithoutConditionsConfig = `
+resource "ovh_me_identity_user" "test_user" {
+	login = "%s"
+	email = "%s@terraform.test"
+	password = "qwe123!@#"
+}
+
+resource "ovh_iam_policy" "policy1" {
+	name        = "%s"
+	description = "%s"
+	identities  = [ovh_me_identity_user.test_user.urn]
+	resources   = ["%s"]
+	allow       = ["vps:apiovh:*"]
 }
 `
 
