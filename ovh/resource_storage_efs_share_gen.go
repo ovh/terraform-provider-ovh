@@ -90,6 +90,9 @@ func StorageEfsShareResourceSchema(ctx context.Context) schema.Schema {
 			Validators: []validator.String{
 				stringvalidator.OneOf(
 					"available",
+					"backup_creating",
+					"backup_restoring",
+					"backup_restoring_error",
 					"creating",
 					"creating_from_snapshot",
 					"deleted",

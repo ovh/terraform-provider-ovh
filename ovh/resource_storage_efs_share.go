@@ -108,7 +108,7 @@ func (r *storageEfsShareResource) Create(ctx context.Context, req resource.Creat
 
 func (r *storageEfsShareResource) WaitForShareCreation(ctx context.Context, client *ovhwrap.Client, serviceName, shareID string) (interface{}, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{"creating", "creating_from_snapshot"},
+		Pending: []string{"backup_creating", "creating", "creating_from_snapshot"},
 		Target:  []string{"available"},
 		Refresh: func() (interface{}, string, error) {
 			res := &StorageEfsShareModel{}
