@@ -291,3 +291,38 @@ func TestAccOkmsSecretResource_createWithMetadata(t *testing.T) {
 		},
 	})
 }
+
+// Import by '{okmsId}/{path}', with a path containing slashes.
+func TestAccOkmsSecretResource_import(t *testing.T) {
+	okmsID := os.Getenv("OVH_OKMS")
+	if okmsID == "" {
+		checkEnvOrSkip(t, "OVH_OKMS")
+	}
+	path := fmt.Sprintf("tfacc-%s/nested/secret", acctest.RandString(6))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheckOkms(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(testAccOkmsSecretResourceConfigV1, okmsID, path),
+				Check:  resource.TestCheckResourceAttr("ovh_okms_secret.test", "version.id", "1"),
+			},
+			{
+				ResourceName:                         "ovh_okms_secret.test",
+				ImportState:                          true,
+				ImportStateId:                        okmsID + "/" + path,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "path",
+				// The create response does not hold the IAM metadata, the import does
+				ImportStateVerifyIgnore: []string{"iam"},
+			},
+			{
+				ResourceName:  "ovh_okms_secret.test",
+				ImportState:   true,
+				ImportStateId: okmsID,
+				ExpectError:   regexp.MustCompile(`ID should be of the format`),
+			},
+		},
+	})
+}
