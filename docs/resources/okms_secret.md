@@ -69,13 +69,13 @@ output "api_key" {
 Updating the secret (new version) while enforcing optimistic concurrency control using CAS:
 
 ```terraform
-
 resource "ovh_okms_secret" "example" {
 	okms_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 	path    = "app/api_credentials"
 
 	# Ensure no concurrent update happened: set cas to the current version
-	cas = 1
+	# (metadata.current_version is populated after first apply)
+	cas = ovh_okms_secret.example.metadata.current_version
 
 	metadata = {
 		cas_required = true
@@ -147,3 +147,13 @@ In addition to arguments above, the following attributes are exported:
 - Updating with a new `version.data` performs an API PUT that creates a new version; the previous version remains (subject to `max_versions`).
 - If `cas_required` is true, all write operations must include a correct `cas` query parameter (the expected current version number). Set `cas = ovh_okms_secret.example.metadata.current_version` to enforce optimistic concurrency. A mismatch causes the API to reject the update (preventing overwriting unseen changes).
 - `cas` is ignored on create (no existing version).
+
+## Import
+
+An OVHcloud KMS secret can be imported using the `okms_id` and the `path`, separated by "/". The path may itself contain "/". E.g.,
+
+```bash
+$ terraform import ovh_okms_secret.secret okms_id/app/api_credentials
+```
+
+The import reads the current version, including its data, into the state.
