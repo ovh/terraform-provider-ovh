@@ -82,6 +82,7 @@ The following attributes are exported:
   * `name` - File share name.
   * `description` - File share description.
   * `size` - Size of the file share in GB.
+  * `status` - File share status as reported by the infrastructure (`AVAILABLE`, `CREATING`, `EXTENDING`, `ERROR`, ...).
   * `protocol` - File share protocol.
   * `share_type` - File share type.
   * `share_network_id` - ID of the share network the file share is attached to.
@@ -94,6 +95,9 @@ The following attributes are exported:
     * `name` - Capability name.
     * `enabled` - Whether the capability is enabled.
     * `reason` - Reason why the capability is disabled, when applicable.
+  * `attachments` - Instances that declare the file share in their `shares` list (empty when none does):
+    * `id` - Instance ID.
+    * `access_level` - Access level the instance declares for the file share (`READ_WRITE`, `READ_ONLY`).
 
 ## Import
 
