@@ -43,9 +43,10 @@ func (d *cloudInstanceGroupDataSource) Schema(ctx context.Context, req datasourc
 	attrs := instanceGroupDataSourceAttributes()
 	attrs["service_name"] = schema.StringAttribute{
 		CustomType:          ovhtypes.TfStringType{},
-		Required:            true,
-		Description:         "Service name of the resource representing the id of the cloud project",
-		MarkdownDescription: "Service name of the resource representing the id of the cloud project",
+		Optional:            true,
+		Computed:            true,
+		Description:         "Service name of the resource representing the id of the cloud project. If omitted, the OVH_CLOUD_PROJECT_SERVICE environment variable is used.",
+		MarkdownDescription: "Service name of the resource representing the id of the cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.",
 	}
 	attrs["id"] = schema.StringAttribute{
 		CustomType:          ovhtypes.TfStringType{},
@@ -64,6 +65,11 @@ func (d *cloudInstanceGroupDataSource) Schema(ctx context.Context, req datasourc
 func (d *cloudInstanceGroupDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data CloudInstanceGroupModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	data.ServiceName = cloudProjectServiceNameOrEnv(data.ServiceName, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -91,8 +97,9 @@ func dsString(description string) schema.StringAttribute {
 
 // instanceGroupDataSourceAttributes builds the datasource schema: same shape as
 // the resource model but service_name+id are the only inputs and everything else
-// is Computed. Shared by the singular data source (which overrides service_name
-// and id to Required) and the `instance_groups[]` nested object of the plural one.
+// is Computed. Shared by the singular data source (which declares service_name
+// and overrides id to Required) and the `instance_groups[]` nested object of
+// the plural one.
 func instanceGroupDataSourceAttributes() map[string]schema.Attribute {
 	return map[string]schema.Attribute{
 		"id":     dsString("Unique identifier of the instance group, assigned at creation and used to reference it on the GET/DELETE routes."),

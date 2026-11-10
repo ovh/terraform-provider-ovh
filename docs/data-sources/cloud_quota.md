@@ -27,7 +27,7 @@ data "ovh_cloud_quota" "gra11_quota" {
 
 The following arguments are supported:
 
-* `service_name` - (Required) Service name of the resource representing the id of the cloud project.
+* `service_name` - (Optional) Service name of the resource representing the id of the cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 * `region` - (Optional) If set, restricts the per-region quota state to this single region. Otherwise all configured regions are returned.
 
 ## Attributes Reference

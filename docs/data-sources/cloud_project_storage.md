@@ -26,7 +26,6 @@ data "ovh_cloud_project_storage" "storage" {
 
 - `name` (String) Name
 - `region_name` (String) Region name
-- `service_name` (String) Service name
 
 ### Optional
 
@@ -34,6 +33,7 @@ data "ovh_cloud_project_storage" "storage" {
 - `limit` (Number) Limit the number of objects returned (1000 maximum, defaults to 1000)
 - `marker` (String) Key to start with when listing objects
 - `prefix` (String) List objects whose key begins with this prefix
+- `service_name` (String) Service name. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 
 ### Read-Only
 

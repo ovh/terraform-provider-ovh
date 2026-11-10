@@ -21,7 +21,7 @@ data "ovh_cloud_project_gateway_interface" "interface" {
 
 The following arguments are supported:
 
-* `service_name` - (Required) ID of the cloud project
+* `service_name` - (Optional) ID of the cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 * `region` - (Required) Region of the gateway
 * `id` - (Required) ID of the gateway
 * `interface_id` - (Required) ID of the interface

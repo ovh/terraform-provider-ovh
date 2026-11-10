@@ -22,9 +22,10 @@ func CloudProjectNetworkPrivateDataSourceSchema(ctx context.Context) schema.Sche
 	attrs := map[string]schema.Attribute{
 		"service_name": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
-			Required:            true,
-			Description:         "Service name",
-			MarkdownDescription: "Service name",
+			Optional:            true,
+			Computed:            true,
+			Description:         "Service name. If omitted, the OVH_CLOUD_PROJECT_SERVICE environment variable is used.",
+			MarkdownDescription: "Service name. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.",
 		},
 		"network_id": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},

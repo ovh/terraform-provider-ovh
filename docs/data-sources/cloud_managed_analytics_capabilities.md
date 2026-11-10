@@ -16,7 +16,7 @@ data "ovh_cloud_managed_analytics_capabilities" "capabilities" {
 
 ## Argument Reference
 
-* `service_name` - (Required) ID of the public cloud project.
+* `service_name` - (Optional) ID of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 
 ## Attributes Reference
 

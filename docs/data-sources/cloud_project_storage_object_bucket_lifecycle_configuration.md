@@ -26,6 +26,9 @@ data "ovh_cloud_project_storage_object_bucket_lifecycle_configuration" "lifecycl
 
 - `container_name` (String) Name of the storage container.
 - `region_name` (String) Region name of the storage container.
+
+### Optional
+
 - `service_name` (String) The ID of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 
 ### Read-Only

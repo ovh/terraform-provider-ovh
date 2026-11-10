@@ -53,6 +53,11 @@ func (d *cloudProjectImageDataSource) Read(ctx context.Context, req datasource.R
 		return
 	}
 
+	data.ServiceName = cloudProjectServiceNameOrEnv(data.ServiceName, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	// Read API call logic
 	endpoint := "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/image/" + url.PathEscape(data.ImageId.ValueString())
 	if err := d.config.OVHClient.Get(endpoint, &data); err != nil {
