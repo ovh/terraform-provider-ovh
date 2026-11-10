@@ -4,13 +4,18 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"strings"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
-var _ resource.ResourceWithConfigure = (*emailDomainAccountResource)(nil)
+var (
+	_ resource.ResourceWithConfigure   = (*emailDomainAccountResource)(nil)
+	_ resource.ResourceWithImportState = (*emailDomainAccountResource)(nil)
+)
 
 func NewEmailDomainAccountResource() resource.Resource {
 	return &emailDomainAccountResource{}
@@ -51,6 +56,18 @@ func (r *emailDomainAccountResource) Create(ctx context.Context, req resource.Cr
 	// Read Terraform plan data into the model
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// The password is optional in the schema only so that an imported account,
+	// whose password the API never returns, can be managed without setting it.
+	// Creating an account still needs one.
+	if data.Password.IsNull() {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("password"),
+			"Missing password",
+			"A password is required to create an email account.",
+		)
 		return
 	}
 
@@ -108,6 +125,10 @@ func (r *emailDomainAccountResource) Read(ctx context.Context, req resource.Read
 
 	data.MergeWith(&responseData)
 
+	// The id is not returned by the API. Updates used to plan it as unknown and
+	// store it as null, so it is set again here for the states that lost it.
+	data.ID = ovhtypes.NewTfStringValue(data.Domain.ValueString() + "/" + data.AccountName.ValueString())
+
 	// Save updated data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -137,8 +158,10 @@ func (r *emailDomainAccountResource) Update(ctx context.Context, req resource.Up
 		return
 	}
 
-	// If the password has changed, call the changePassword endpoint
-	if !planData.Password.Equal(data.Password) {
+	// If the password has changed, call the changePassword endpoint. A null
+	// password in the plan leaves the current one untouched: the API never
+	// returns it, so there is nothing to compare it with.
+	if !planData.Password.IsNull() && !planData.Password.Equal(data.Password) {
 		changePasswordEndpoint := "/email/domain/" + url.PathEscape(data.Domain.ValueString()) + "/account/" + url.PathEscape(data.AccountName.ValueString()) + "/changePassword"
 		changePasswordPayload := struct {
 			Password string `json:"password"`
@@ -186,4 +209,20 @@ func (r *emailDomainAccountResource) Delete(ctx context.Context, req resource.De
 			err.Error(),
 		)
 	}
+}
+
+func (r *emailDomainAccountResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	domain, accountName, found := strings.Cut(req.ID, "/")
+	if !found || domain == "" || accountName == "" {
+		resp.Diagnostics.AddError(
+			"Invalid import ID",
+			fmt.Sprintf("Expected an import ID of the form <domain>/<account_name>, got %q", req.ID),
+		)
+		return
+	}
+
+	// The password is not set: the API never returns it.
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), req.ID)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("domain"), domain)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("account_name"), accountName)...)
 }

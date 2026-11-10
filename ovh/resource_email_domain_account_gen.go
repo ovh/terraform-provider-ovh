@@ -19,6 +19,9 @@ func EmailDomainAccountResourceSchema(ctx context.Context) schema.Schema {
 			CustomType:  ovhtypes.TfStringType{},
 			Computed:    true,
 			Description: "Unique identifier for the resource",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"domain": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
@@ -40,10 +43,10 @@ func EmailDomainAccountResourceSchema(ctx context.Context) schema.Schema {
 		},
 		"password": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
-			Required:            true,
+			Optional:            true,
 			Sensitive:           true,
-			Description:         "Password of the email account",
-			MarkdownDescription: "Password of the email account",
+			Description:         "Password of the email account. Required to create an account. The API never returns it, so an imported account has none in state: leave it out to keep the current password, or set it to change it",
+			MarkdownDescription: "Password of the email account. Required to create an account. The API never returns it, so an imported account has none in state: leave it out to keep the current password, or set it to change it",
 		},
 		"description": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
