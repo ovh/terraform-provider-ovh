@@ -4,11 +4,17 @@ package ovhwrap
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
+	"time"
 
 	"github.com/ovh/go-ovh/ovh"
 	"go.uber.org/ratelimit"
 )
+
+// Number of times a GET failing with a server error
+const getRetries = 3
 
 type Client struct {
 	*ovh.Client
@@ -26,8 +32,26 @@ func (c *Client) _CallAPIWithContext(ctx context.Context, method, url string, re
 	if c == nil {
 		return fmt.Errorf("OVH API client is not initialized, check your provider credentials configuration")
 	}
-	c.RateLimiter.Take()
-	return c.CallAPIWithContext(ctx, method, url, req, res, auth)
+	// GET calls, used to read resources and poll their status, are allowed a few failures before failing the apply
+	// so that a transient API error.
+	for attempt := 0; ; attempt++ {
+		c.RateLimiter.Take()
+		err := c.CallAPIWithContext(ctx, method, url, req, res, auth)
+		if method != http.MethodGet || attempt == getRetries || !isRetryable(err) {
+			return err
+		}
+
+		select {
+		case <-ctx.Done():
+			return err
+		case <-time.After(time.Duration(1<<attempt) * time.Second):
+		}
+	}
+}
+
+func isRetryable(err error) bool {
+	var errOvh *ovh.APIError
+	return errors.As(err, &errOvh) && errOvh.Code >= http.StatusInternalServerError
 }
 
 func (c *Client) _CallAPI(method, path string, reqBody, resType interface{}, needAuth bool) error {
