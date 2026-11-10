@@ -14,7 +14,7 @@ resource "ovh_email_domain_account" "my_account" {
   account_name = "contact"
   password     = "AStr0ngP@ssw0rd!"
   description  = "Contact email account"
-  size         = 5368709120
+  size         = 5000000000
 }
 ```
 

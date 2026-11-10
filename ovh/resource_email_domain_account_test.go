@@ -80,20 +80,20 @@ func TestAccEmailDomainAccount_Basic(t *testing.T) {
 			},
 			// Successful creation
 			{
-				Config: testAccEmailDomainAccountConfig(domain, "testaccount", "P@ssw0rd1234!", "Test account", 5368709120),
+				Config: testAccEmailDomainAccountConfig(domain, "testaccount", "P@ssw0rd1234!", "Test account", 5000000000),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("ovh_email_domain_account.test", "domain", domain),
 					resource.TestCheckResourceAttr("ovh_email_domain_account.test", "account_name", "testaccount"),
 					resource.TestCheckResourceAttr("ovh_email_domain_account.test", "password", "P@ssw0rd1234!"),
 					resource.TestCheckResourceAttr("ovh_email_domain_account.test", "description", "Test account"),
-					resource.TestCheckResourceAttr("ovh_email_domain_account.test", "size", "5368709120"),
+					resource.TestCheckResourceAttr("ovh_email_domain_account.test", "size", "5000000000"),
 					resource.TestCheckResourceAttr("ovh_email_domain_account.test", "email", "testaccount@"+domain),
 					resource.TestCheckResourceAttr("ovh_email_domain_account.test", "is_blocked", "false"),
 				),
 			},
 			// Update description
 			{
-				Config: testAccEmailDomainAccountConfig(domain, "testaccount", "P@ssw0rd1234!", "Updated description", 5368709120),
+				Config: testAccEmailDomainAccountConfig(domain, "testaccount", "P@ssw0rd1234!", "Updated description", 5000000000),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("ovh_email_domain_account.test", "description", "Updated description"),
 					resource.TestCheckResourceAttr("ovh_email_domain_account.test", "account_name", "testaccount"),
@@ -103,7 +103,7 @@ func TestAccEmailDomainAccount_Basic(t *testing.T) {
 			},
 			// Update password
 			{
-				Config: testAccEmailDomainAccountConfig(domain, "testaccount", "N3wP@ssw0rd5678!", "Updated description", 5368709120),
+				Config: testAccEmailDomainAccountConfig(domain, "testaccount", "N3wP@ssw0rd5678!", "Updated description", 5000000000),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("ovh_email_domain_account.test", "password", "N3wP@ssw0rd5678!"),
 					resource.TestCheckResourceAttr("ovh_email_domain_account.test", "account_name", "testaccount"),
@@ -137,7 +137,7 @@ func TestAccEmailDomainAccount_withoutPassword(t *testing.T) {
 				ExpectError: regexp.MustCompile(`A password is required to create an email account`),
 			},
 			{
-				Config: testAccEmailDomainAccountConfig(domain, "testnopassword", "P@ssw0rd1234!", "No password", 5368709120),
+				Config: testAccEmailDomainAccountConfig(domain, "testnopassword", "P@ssw0rd1234!", "No password", 5000000000),
 				Check:  resource.TestCheckResourceAttr("ovh_email_domain_account.test", "password", "P@ssw0rd1234!"),
 			},
 			// Leaving the password out keeps the current one
@@ -156,7 +156,7 @@ func TestAccEmailDomainAccount_withoutPassword(t *testing.T) {
 			},
 			// Setting it again changes it
 			{
-				Config: testAccEmailDomainAccountConfig(domain, "testnopassword", "N3wP@ssw0rd5678!", "Still no password", 5368709120),
+				Config: testAccEmailDomainAccountConfig(domain, "testnopassword", "N3wP@ssw0rd5678!", "Still no password", 5000000000),
 				Check:  resource.TestCheckResourceAttr("ovh_email_domain_account.test", "password", "N3wP@ssw0rd5678!"),
 			},
 		},
