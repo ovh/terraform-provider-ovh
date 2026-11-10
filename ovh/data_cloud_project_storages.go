@@ -53,6 +53,11 @@ func (d *cloudProjectStoragesDataSource) Read(ctx context.Context, req datasourc
 		return
 	}
 
+	data.ServiceName = cloudProjectServiceNameOrEnv(data.ServiceName, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	// Read API call logic
 	endpoint := "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/region/" + url.PathEscape(data.RegionName.ValueString()) + "/storage"
 	if err := d.config.OVHClient.Get(endpoint, &data.Containers); err != nil {

@@ -79,8 +79,9 @@ func (d *cloudLoadbalancersDataSource) Schema(ctx context.Context, req datasourc
 		Attributes: map[string]schema.Attribute{
 			"service_name": schema.StringAttribute{
 				CustomType:  ovhtypes.TfStringType{},
-				Required:    true,
-				Description: "Service name of the resource representing the id of the cloud project",
+				Optional:    true,
+				Computed:    true,
+				Description: "Service name of the resource representing the id of the cloud project. If omitted, the OVH_CLOUD_PROJECT_SERVICE environment variable is used.",
 			},
 			"loadbalancers": schema.ListNestedAttribute{
 				Computed:    true,
@@ -170,6 +171,11 @@ func (d *cloudLoadbalancersDataSource) Read(ctx context.Context, req datasource.
 	var data CloudLoadbalancersModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	data.ServiceName = cloudProjectServiceNameOrEnv(data.ServiceName, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}

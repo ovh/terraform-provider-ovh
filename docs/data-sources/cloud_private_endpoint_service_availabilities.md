@@ -18,7 +18,7 @@ data "ovh_cloud_private_endpoint_service_availabilities" "availabilities" {
 
 ## Argument Reference
 
-* `service_name` - (Required) The id of the public cloud project.
+* `service_name` - (Optional) The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 * `region` - (Optional) Region filter. When set, only tiers available in that region are returned.
 
 ## Attributes Reference

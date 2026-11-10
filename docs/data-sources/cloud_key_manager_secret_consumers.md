@@ -21,7 +21,7 @@ output "consumer_services" {
 
 ## Argument Reference
 
-* `service_name` - (Required) The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
+* `service_name` - (Optional) The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used
 * `secret_id` - (Required) UUID of the secret.
 
 ## Attributes Reference

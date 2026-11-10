@@ -24,7 +24,7 @@ output "subnet_cidr" {
 
 The following arguments are supported:
 
-* `service_name` - (Required) Service name of the resource representing the id of the cloud project.
+* `service_name` - (Optional) Service name of the resource representing the id of the cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 * `network_id` - (Required) Network ID of the parent private network.
 * `id` - (Required) Subnet ID.
 

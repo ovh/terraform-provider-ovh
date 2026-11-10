@@ -48,8 +48,9 @@ func (d *cloudLoadbalancerL7PolicyDataSource) Schema(ctx context.Context, req da
 			// Required lookup keys
 			"service_name": schema.StringAttribute{
 				CustomType:  ovhtypes.TfStringType{},
-				Required:    true,
-				Description: "Service name of the resource representing the id of the cloud project",
+				Optional:    true,
+				Computed:    true,
+				Description: "Service name of the resource representing the id of the cloud project. If omitted, the OVH_CLOUD_PROJECT_SERVICE environment variable is used.",
 			},
 			"loadbalancer_id": schema.StringAttribute{
 				CustomType:  ovhtypes.TfStringType{},
@@ -167,6 +168,11 @@ func (d *cloudLoadbalancerL7PolicyDataSource) Read(ctx context.Context, req data
 	var data CloudLoadbalancerL7PolicyModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	data.ServiceName = cloudProjectServiceNameOrEnv(data.ServiceName, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}

@@ -38,8 +38,9 @@ func CloudProjectGatewayInterfaceDataSourceSchema(ctx context.Context) schema.Sc
 		},
 		"service_name": schema.StringAttribute{
 			CustomType:  ovhtypes.TfStringType{},
-			Required:    true,
-			Description: "Service name",
+			Optional:    true,
+			Computed:    true,
+			Description: "Service name. If omitted, the OVH_CLOUD_PROJECT_SERVICE environment variable is used.",
 		},
 		"subnet_id": schema.StringAttribute{
 			CustomType:  ovhtypes.TfStringType{},

@@ -25,7 +25,7 @@ data "ovh_cloud_project_gateway" "gateway" {
 
 - `id` (String) Id
 - `region` (String) Gateway region
-- `service_name` (String) Service name
+- `service_name` (String) Service name. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 
 ### Read-Only
 

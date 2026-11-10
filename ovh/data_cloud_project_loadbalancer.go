@@ -55,6 +55,11 @@ func (d *cloudProjectLoadbalancerDataSource) Read(ctx context.Context, req datas
 		return
 	}
 
+	data.ServiceName = cloudProjectServiceNameOrEnv(data.ServiceName, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	if data.ServiceName.IsNull() {
 		data.ServiceName.StringValue = basetypes.NewStringValue(os.Getenv("OVH_CLOUD_PROJECT_SERVICE"))
 	}

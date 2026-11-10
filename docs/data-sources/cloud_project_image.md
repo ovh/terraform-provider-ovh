@@ -23,7 +23,7 @@ data "ovh_cloud_project_image" "image" {
 ### Required
 
 - `image_id` (String) Image ID
-- `service_name` (String) Public cloud project ID
+- `service_name` (String) Public cloud project ID. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 
 ### Read-Only
 

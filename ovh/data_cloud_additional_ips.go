@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/url"
-	"os"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -190,17 +189,9 @@ func (d *cloudAdditionalIPsDataSource) Read(ctx context.Context, req datasource.
 		return
 	}
 
-	if data.ServiceName.IsNull() || data.ServiceName.ValueString() == "" {
-		envServiceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE")
-		if envServiceName == "" {
-			resp.Diagnostics.AddError(
-				"Missing service_name",
-				"The service_name attribute is required. Provide it in the data source "+
-					"configuration or set the OVH_CLOUD_PROJECT_SERVICE environment variable.",
-			)
-			return
-		}
-		data.ServiceName = ovhtypes.NewTfStringValue(envServiceName)
+	data.ServiceName = cloudProjectServiceNameOrEnv(data.ServiceName, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/publicIp/additional"

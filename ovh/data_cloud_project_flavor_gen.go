@@ -132,9 +132,10 @@ func CloudProjectFlavorDataSourceSchema(ctx context.Context) schema.Schema {
 		},
 		"service_name": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
-			Required:            true,
-			Description:         "Service name",
-			MarkdownDescription: "Service name",
+			Optional:            true,
+			Computed:            true,
+			Description:         "Service name. If omitted, the OVH_CLOUD_PROJECT_SERVICE environment variable is used.",
+			MarkdownDescription: "Service name. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.",
 		},
 		"id": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},

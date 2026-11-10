@@ -19,7 +19,7 @@ data "ovh_cloud_project_volume" "volume" {
 
 ## Argument Reference
 
-* `service_name` - (Required) The id of the public cloud project.
+* `service_name` - (Optional) The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 * `region_name` - (Required) A valid OVHcloud public cloud region name in which the volumes are available. Ex.: "GRA11".
 
 ## Attributes Reference

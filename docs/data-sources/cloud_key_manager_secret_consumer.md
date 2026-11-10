@@ -22,7 +22,7 @@ output "consumer_service" {
 
 ## Argument Reference
 
-* `service_name` - (Required) The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
+* `service_name` - (Optional) The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used
 * `secret_id` - (Required) UUID of the secret.
 * `consumer_id` - (Required) Consumer identifier, as returned in the `id` attribute of the `ovh_cloud_key_manager_secret_consumer` resource and the `id` field of the `ovh_cloud_key_manager_secret_consumers` data source (the base64 identifier expected by the get-one endpoint).
 
