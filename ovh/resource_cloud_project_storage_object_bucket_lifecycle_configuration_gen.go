@@ -213,12 +213,7 @@ func CloudProjectStorageLifecycleConfigurationResourceSchema(ctx context.Context
 										Description:         "The storage class to which you want the object to transition.",
 										MarkdownDescription: "The storage class to which you want the object to transition.",
 										Validators: []validator.String{
-											stringvalidator.OneOf(
-												"DEEP_ARCHIVE",
-												"GLACIER_IR",
-												"STANDARD",
-												"STANDARD_IA",
-											),
+											storageObjectBucketLifecycleStorageClassValidator,
 										},
 									},
 								},
@@ -253,6 +248,9 @@ func CloudProjectStorageLifecycleConfigurationResourceSchema(ctx context.Context
 										Optional:            true,
 										Description:         "The storage class to which you want the noncurrent object to transition.",
 										MarkdownDescription: "The storage class to which you want the noncurrent object to transition.",
+										Validators: []validator.String{
+											storageObjectBucketLifecycleStorageClassValidator,
+										},
 									},
 								},
 								CustomType: LifecycleRuleNoncurrentVersionTransitionType{

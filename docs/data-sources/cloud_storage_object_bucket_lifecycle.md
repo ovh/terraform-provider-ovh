@@ -53,7 +53,7 @@ output "lifecycle_rule_ids" {
   * `noncurrent_version_transitions` - Transitions of the noncurrent object versions to another storage class:
     * `noncurrent_days` - Number of days after a version becomes noncurrent before it is transitioned.
     * `newer_noncurrent_versions` - Number of most recent noncurrent versions to keep in their storage class.
-    * `storage_class` - Target storage class (`DEEP_ARCHIVE`, `GLACIER_IR`, `HIGH_PERF`, `STANDARD`, `STANDARD_IA`).
+    * `storage_class` - Target storage class (`DEEP_ARCHIVE`, `GLACIER_IR`, `STANDARD`, `STANDARD_IA`).
   * `abort_incomplete_multipart_upload` - Cleanup of incomplete multipart uploads:
     * `days_after_initiation` - Number of days after initiation before an incomplete multipart upload is aborted.
 

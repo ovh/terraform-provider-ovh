@@ -61,6 +61,8 @@ var storageObjectBucketLifecycleDateValidator = stringvalidator.RegexMatches(
 	"must be a date in the YYYY-MM-DD format",
 )
 
+var storageObjectBucketLifecycleStorageClassValidator = stringvalidator.OneOf("DEEP_ARCHIVE", "GLACIER_IR", "STANDARD", "STANDARD_IA")
+
 func (r *cloudStorageObjectBucketLifecycleResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description: "Manages the lifecycle configuration of an S3 compatible object storage bucket in a public cloud project using the publicCloud API. " +
@@ -191,7 +193,7 @@ func (r *cloudStorageObjectBucketLifecycleResource) Schema(ctx context.Context, 
 										Required:    true,
 										Description: "Target storage class for the transition (DEEP_ARCHIVE, GLACIER_IR, STANDARD, STANDARD_IA)",
 										Validators: []validator.String{
-											stringvalidator.OneOf("DEEP_ARCHIVE", "GLACIER_IR", "STANDARD", "STANDARD_IA"),
+											storageObjectBucketLifecycleStorageClassValidator,
 										},
 									},
 								},
@@ -232,9 +234,9 @@ func (r *cloudStorageObjectBucketLifecycleResource) Schema(ctx context.Context, 
 									"storage_class": schema.StringAttribute{
 										CustomType:  ovhtypes.TfStringType{},
 										Required:    true,
-										Description: "Target storage class for the transition (DEEP_ARCHIVE, GLACIER_IR, HIGH_PERF, STANDARD, STANDARD_IA)",
+										Description: "Target storage class for the transition (DEEP_ARCHIVE, GLACIER_IR, STANDARD, STANDARD_IA)",
 										Validators: []validator.String{
-											stringvalidator.OneOf("DEEP_ARCHIVE", "GLACIER_IR", "HIGH_PERF", "STANDARD", "STANDARD_IA"),
+											storageObjectBucketLifecycleStorageClassValidator,
 										},
 									},
 								},

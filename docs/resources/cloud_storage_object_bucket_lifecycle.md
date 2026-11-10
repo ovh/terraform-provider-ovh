@@ -114,7 +114,7 @@ The following arguments are supported:
   * `noncurrent_version_transitions` - (Optional) Transitions of the noncurrent object versions to another storage class (requires versioning on the bucket), at least one when set:
     * `noncurrent_days` - (Required) Number of days after a version becomes noncurrent before it is transitioned. Must be at least `1`.
     * `newer_noncurrent_versions` - (Optional) Number of most recent noncurrent versions to keep in their storage class. Must be at least `1`.
-    * `storage_class` - (Required) Target storage class. One of `DEEP_ARCHIVE`, `GLACIER_IR`, `HIGH_PERF`, `STANDARD`, `STANDARD_IA`.
+    * `storage_class` - (Required) Target storage class. One of `DEEP_ARCHIVE`, `GLACIER_IR`, `STANDARD`, `STANDARD_IA`.
   * `abort_incomplete_multipart_upload` - (Optional) Cleanup of incomplete multipart uploads:
     * `days_after_initiation` - (Required) Number of days after initiation before an incomplete multipart upload is aborted. Must be at least `1`.
 

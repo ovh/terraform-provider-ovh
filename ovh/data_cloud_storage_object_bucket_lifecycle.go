@@ -174,7 +174,7 @@ func (d *cloudStorageObjectBucketLifecycleDataSource) Schema(ctx context.Context
 									"storage_class": schema.StringAttribute{
 										CustomType:  ovhtypes.TfStringType{},
 										Computed:    true,
-										Description: "Target storage class for the transition (DEEP_ARCHIVE, GLACIER_IR, HIGH_PERF, STANDARD, STANDARD_IA)",
+										Description: "Target storage class for the transition (DEEP_ARCHIVE, GLACIER_IR, STANDARD, STANDARD_IA)",
 									},
 								},
 							},
