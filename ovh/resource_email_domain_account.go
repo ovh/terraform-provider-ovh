@@ -2,12 +2,16 @@ package ovh
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
@@ -16,6 +20,32 @@ var (
 	_ resource.ResourceWithConfigure   = (*emailDomainAccountResource)(nil)
 	_ resource.ResourceWithImportState = (*emailDomainAccountResource)(nil)
 )
+
+// Changes to an account are processed asynchronously. Until they are done, the
+// API answers 409 ("This pop is already being processed") to any other change,
+// and a deleted account still counts against the domain quota.
+const (
+	emailAccountPollInterval = 5 * time.Second
+	emailAccountPollTimeout  = 5 * time.Minute
+)
+
+// emailAccountRetryOnConflict calls f until the API stops answering 409, or the timeout.
+func emailAccountRetryOnConflict(ctx context.Context, f func() error) error {
+	deadline := time.Now().Add(emailAccountPollTimeout)
+	for {
+		err := f()
+		var apiErr *ovh.APIError
+		if err == nil || !errors.As(err, &apiErr) || apiErr.Code != http.StatusConflict || time.Now().After(deadline) {
+			return err
+		}
+
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(emailAccountPollInterval):
+		}
+	}
+}
 
 func NewEmailDomainAccountResource() resource.Resource {
 	return &emailDomainAccountResource{}
@@ -150,7 +180,9 @@ func (r *emailDomainAccountResource) Update(ctx context.Context, req resource.Up
 
 	// Update description and/or size via PUT
 	endpoint := "/email/domain/" + url.PathEscape(data.Domain.ValueString()) + "/account/" + url.PathEscape(data.AccountName.ValueString())
-	if err := r.config.OVHClient.Put(endpoint, planData.ToUpdate(), nil); err != nil {
+	if err := emailAccountRetryOnConflict(ctx, func() error {
+		return r.config.OVHClient.Put(endpoint, planData.ToUpdate(), nil)
+	}); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Put %s", endpoint),
 			err.Error(),
@@ -168,7 +200,9 @@ func (r *emailDomainAccountResource) Update(ctx context.Context, req resource.Up
 		}{
 			Password: planData.Password.ValueString(),
 		}
-		if err := r.config.OVHClient.Post(changePasswordEndpoint, changePasswordPayload, nil); err != nil {
+		if err := emailAccountRetryOnConflict(ctx, func() error {
+			return r.config.OVHClient.Post(changePasswordEndpoint, changePasswordPayload, nil)
+		}); err != nil {
 			resp.Diagnostics.AddError(
 				fmt.Sprintf("Error calling Post %s", changePasswordEndpoint),
 				err.Error(),
@@ -203,11 +237,47 @@ func (r *emailDomainAccountResource) Delete(ctx context.Context, req resource.De
 
 	// Delete API call logic
 	endpoint := "/email/domain/" + url.PathEscape(data.Domain.ValueString()) + "/account/" + url.PathEscape(data.AccountName.ValueString())
-	if err := r.config.OVHClient.Delete(endpoint, nil); err != nil {
+	if err := emailAccountRetryOnConflict(ctx, func() error {
+		return r.config.OVHClient.Delete(endpoint, nil)
+	}); err != nil {
+		if helpers.IsNotFound(err) {
+			return
+		}
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Delete %s", endpoint),
 			err.Error(),
 		)
+		return
+	}
+
+	// The deletion is asynchronous: wait for the account to be gone, so that
+	// it no longer counts against the quota of the domain.
+	deadline := time.Now().Add(emailAccountPollTimeout)
+	for {
+		var account EmailDomainAccountModel
+		err := r.config.OVHClient.Get(endpoint, &account)
+		if helpers.IsNotFound(err) {
+			return
+		}
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Error calling Get %s", endpoint), err.Error())
+			return
+		}
+		if time.Now().After(deadline) {
+			resp.Diagnostics.AddError(
+				"Email account not deleted",
+				fmt.Sprintf("%s@%s was still there %s after its deletion was accepted",
+					data.AccountName.ValueString(), data.Domain.ValueString(), emailAccountPollTimeout),
+			)
+			return
+		}
+
+		select {
+		case <-ctx.Done():
+			resp.Diagnostics.AddError("Email account not deleted", ctx.Err().Error())
+			return
+		case <-time.After(emailAccountPollInterval):
+		}
 	}
 }
 
