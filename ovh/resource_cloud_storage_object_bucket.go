@@ -679,6 +679,11 @@ func (r *cloudStorageObjectBucketResource) waitForStorageObjectBucketReady(ctx c
 			endpoint := "/v2/publicCloud/project/" + url.PathEscape(serviceName) + "/storage/object/bucket/" + url.PathEscape(bucketId)
 			err := r.config.OVHClient.GetWithContext(ctx, endpoint, res)
 			if err != nil {
+				// The API can answer 404 for several minutes after it accepted the
+				// POST, while the bucket already shows READY in the bucket list.
+				if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
+					return res, "CREATING", nil
+				}
 				return res, "", err
 			}
 			// ERROR is terminal: surface it with the task reason instead of a generic unexpected-state.
