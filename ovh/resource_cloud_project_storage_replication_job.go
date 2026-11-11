@@ -46,6 +46,7 @@ func (r *cloudProjectStorageReplicationJobResource) Configure(_ context.Context,
 
 func (r *cloudProjectStorageReplicationJobResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = CloudProjectStorageReplicationJobResourceSchema(ctx)
+	resp.Schema.DeprecationMessage = "Use ovh_cloud_storage_object_bucket_replication_job instead. See https://registry.terraform.io/providers/ovh/ovh/latest/docs/guides/public_cloud_resources_migration"
 }
 
 func (r *cloudProjectStorageReplicationJobResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
