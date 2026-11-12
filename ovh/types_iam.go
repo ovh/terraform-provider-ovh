@@ -78,39 +78,26 @@ func (p IamPolicy) ToMap() map[string]any {
 	}
 	out["resources"] = resources
 
-	// inline allow, except and deny
+	// Optional attributes are always set, even when empty: Read sets every key of
+	// this map, so an attribute left out would keep a stale value in the state
+	// once it is removed outside of Terraform or from the configuration.
 	allow, except, deny := p.Permissions.ToLists()
-	if len(allow) != 0 {
-		out["allow"] = allow
-	}
-	if len(except) != 0 {
-		out["except"] = except
-	}
-	if len(deny) != 0 {
-		out["deny"] = deny
-	}
+	out["allow"] = allow
+	out["except"] = except
+	out["deny"] = deny
 
-	if len(p.PermissionsGroups) != 0 {
-		var permGrps []string
-		for _, grp := range p.PermissionsGroups {
-			permGrps = append(permGrps, grp.Urn)
-		}
+	var permGrps []string
+	for _, grp := range p.PermissionsGroups {
+		permGrps = append(permGrps, grp.Urn)
+	}
+	out["permissions_groups"] = permGrps
 
-		out["permissions_groups"] = permGrps
-	}
+	out["description"] = p.Description
+	out["read_only"] = p.ReadOnly
+	out["updated_at"] = p.UpdatedAt
+	out["expired_at"] = p.ExpiredAt
 
-	if p.Description != "" {
-		out["description"] = p.Description
-	}
-	if p.ReadOnly {
-		out["read_only"] = p.ReadOnly
-	}
-	if p.UpdatedAt != "" {
-		out["updated_at"] = p.UpdatedAt
-	}
-	if p.ExpiredAt != "" {
-		out["expired_at"] = p.ExpiredAt
-	}
+	out["conditions"] = []interface{}{}
 	if p.Conditions != nil {
 		out["conditions"] = []interface{}{conditionsToMap(p.Conditions)}
 	}
