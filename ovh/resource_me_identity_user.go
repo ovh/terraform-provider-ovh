@@ -1,10 +1,15 @@
 package ovh
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log"
+	"net/url"
+	"slices"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 )
 
@@ -14,6 +19,8 @@ func resourceMeIdentityUser() *schema.Resource {
 		Read:   resourceMeIdentityUserRead,
 		Update: resourceMeIdentityUserUpdate,
 		Delete: resourceMeIdentityUserDelete,
+
+		CustomizeDiff: validateIdentityUserGroups,
 
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -40,7 +47,17 @@ func resourceMeIdentityUser() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "DEFAULT",
-				Description: "User's group",
+				Description: "User's main group",
+			},
+			"groups": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Computed:    true,
+				Description: "Additional groups the user belongs to (other than the main group)",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Set: schema.HashString,
 			},
 			"login": {
 				Type:        schema.TypeString,
@@ -100,6 +117,12 @@ func resourceMeIdentityUserRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("password_last_update", identityUser.PasswordLastUpdate)
 	d.Set("status", identityUser.Status)
 
+	memberGroups, err := listIdentityUserAdditionalGroups(config, identityUser.Login, identityUser.Group)
+	if err != nil {
+		return err
+	}
+	d.Set("groups", memberGroups)
+
 	return nil
 }
 
@@ -128,6 +151,16 @@ func resourceMeIdentityUserCreate(d *schema.ResourceData, meta interface{}) erro
 
 	d.SetId(login)
 
+	// Add user to additional groups
+	if v, ok := d.GetOk("groups"); ok {
+		for _, g := range v.(*schema.Set).List() {
+			groupName := g.(string)
+			if err := addUserToGroup(config, groupName, login); err != nil {
+				return err
+			}
+		}
+	}
+
 	return resourceMeIdentityUserRead(d, meta)
 }
 
@@ -153,6 +186,27 @@ func resourceMeIdentityUserUpdate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	log.Printf("[DEBUG] Updated identity user %s", id)
+
+	if d.HasChange("groups") {
+		old, new := d.GetChange("groups")
+		oldSet := old.(*schema.Set)
+		newSet := new.(*schema.Set)
+
+		toAdd := newSet.Difference(oldSet)
+		toRemove := oldSet.Difference(newSet)
+
+		for _, g := range toAdd.List() {
+			if err := addUserToGroup(config, g.(string), id); err != nil {
+				return err
+			}
+		}
+		for _, g := range toRemove.List() {
+			if err := removeUserFromGroup(config, g.(string), id); err != nil {
+				return err
+			}
+		}
+	}
+
 	return resourceMeIdentityUserRead(d, meta)
 }
 
@@ -160,7 +214,21 @@ func resourceMeIdentityUserDelete(d *schema.ResourceData, meta interface{}) erro
 	config := meta.(*Config)
 
 	id := d.Id()
-	err := config.OVHClient.Delete(
+
+	// Remove user from all additional groups before deleting. Memberships are
+	// discovered again instead of read from state, as some of them may have been
+	// removed in the meantime (e.g. by ovh_me_identity_group_membership resources).
+	memberGroups, err := listIdentityUserAdditionalGroups(config, id, d.Get("group").(string))
+	if err != nil {
+		return err
+	}
+	for _, g := range memberGroups {
+		if err := removeUserFromGroup(config, g, id); err != nil {
+			return err
+		}
+	}
+
+	err = config.OVHClient.Delete(
 		fmt.Sprintf("/me/identity/user/%s", id),
 		nil,
 	)
@@ -170,5 +238,79 @@ func resourceMeIdentityUserDelete(d *schema.ResourceData, meta interface{}) erro
 
 	log.Printf("[DEBUG] Deleted identity user %s", id)
 	d.SetId("")
+	return nil
+}
+
+// listIdentityUserAdditionalGroups returns the groups the given user belongs to,
+// excluding its main group. The API does not expose a user's groups directly,
+// so every group is listed and checked for the user.
+func listIdentityUserAdditionalGroups(config *Config, login, mainGroup string) ([]string, error) {
+	var allGroups []string
+	if err := config.OVHClient.Get("/me/identity/group", &allGroups); err != nil {
+		return nil, fmt.Errorf("Unable to list identity groups:\n\t %q", err)
+	}
+
+	memberGroups := []string{}
+	for _, groupName := range allGroups {
+		if groupName == mainGroup {
+			continue
+		}
+		var users []string
+		endpoint := fmt.Sprintf("/me/identity/group/%s/user", url.PathEscape(groupName))
+		if err := config.OVHClient.Get(endpoint, &users); err != nil {
+			// The group may have been deleted since it was listed
+			if isOvhNotFound(err) {
+				continue
+			}
+			return nil, fmt.Errorf("Unable to list users of identity group %s:\n\t %q", groupName, err)
+		}
+		if slices.Contains(users, login) {
+			memberGroups = append(memberGroups, groupName)
+		}
+	}
+
+	return memberGroups, nil
+}
+
+func isOvhNotFound(err error) bool {
+	var errOvh *ovh.APIError
+	return errors.As(err, &errOvh) && errOvh.Code == 404
+}
+
+// validateIdentityUserGroups rejects configurations listing the main group in "groups",
+// as the main group is never reported as an additional group and would cause a perpetual diff.
+func validateIdentityUserGroups(_ context.Context, d *schema.ResourceDiff, _ interface{}) error {
+	rawConfig := d.GetRawConfig()
+	if rawConfig.IsNull() || !rawConfig.IsKnown() || rawConfig.GetAttr("groups").IsNull() {
+		return nil
+	}
+	group := d.Get("group").(string)
+	if d.Get("groups").(*schema.Set).Contains(group) {
+		return fmt.Errorf("groups must not contain the main group %q", group)
+	}
+	return nil
+}
+
+func addUserToGroup(config *Config, group, login string) error {
+	params := map[string]string{"user": login}
+	endpoint := fmt.Sprintf("/me/identity/group/%s/user", url.PathEscape(group))
+	if err := config.OVHClient.Post(endpoint, params, nil); err != nil {
+		return fmt.Errorf("Error adding user %s to group %s:\n\t %q", login, group, err)
+	}
+	log.Printf("[DEBUG] Added user %s to group %s", login, group)
+	return nil
+}
+
+func removeUserFromGroup(config *Config, group, login string) error {
+	endpoint := fmt.Sprintf("/me/identity/group/%s/user/%s", url.PathEscape(group), url.PathEscape(login))
+	if err := config.OVHClient.Delete(endpoint, nil); err != nil {
+		// The group or the membership is already gone
+		if isOvhNotFound(err) {
+			log.Printf("[DEBUG] User %s is not a member of group %s anymore", login, group)
+			return nil
+		}
+		return fmt.Errorf("Error removing user %s from group %s:\n\t %q", login, group, err)
+	}
+	log.Printf("[DEBUG] Removed user %s from group %s", login, group)
 	return nil
 }

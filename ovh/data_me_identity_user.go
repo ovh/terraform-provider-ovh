@@ -43,7 +43,16 @@ func dataSourceMeIdentityUser() *schema.Resource {
 			"group": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "User's group",
+				Description: "User's main group",
+			},
+			"groups": {
+				Type:        schema.TypeSet,
+				Computed:    true,
+				Description: "Additional groups the user belongs to (other than the main group)",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Set: schema.HashString,
 			},
 			"last_update": {
 				Type:        schema.TypeString,
@@ -91,6 +100,12 @@ func dataSourceMeIdentityUserRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("last_update", identityUser.LastUpdate)
 	d.Set("password_last_update", identityUser.PasswordLastUpdate)
 	d.Set("status", identityUser.Status)
+
+	memberGroups, err := listIdentityUserAdditionalGroups(config, identityUser.Login, identityUser.Group)
+	if err != nil {
+		return err
+	}
+	d.Set("groups", memberGroups)
 
 	return nil
 }
