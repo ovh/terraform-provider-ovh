@@ -42,7 +42,7 @@ resource "ovh_cloud_security_group" "sg" {
 
 The following arguments are supported:
 
-* `service_name` - (Required) Service name of the resource representing the id of the cloud project. **Changing this value recreates the resource.**
+* `service_name` - (Optional) Service name of the resource representing the id of the cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used. **Changing this value recreates the resource.**
 * `region` - (Required) Region where the security group will be created. **Changing this value recreates the resource.**
 * `name` - (Required) Name of the security group.
 * `description` - (Optional) Description of the security group.

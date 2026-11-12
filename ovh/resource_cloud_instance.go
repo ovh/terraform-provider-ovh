@@ -66,10 +66,15 @@ func (r *cloudInstanceResource) Schema(ctx context.Context, req resource.SchemaR
 			// Immutable
 			"service_name": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
-				Required:            true,
-				Description:         instanceDescServiceName,
-				MarkdownDescription: instanceDescServiceName,
-				PlanModifiers:       []planmodifier.String{stringplanmodifier.RequiresReplace()},
+				Optional:            true,
+				Computed:            true,
+				Description:         "Service name of the resource representing the id of the cloud project. If omitted, the OVH_CLOUD_PROJECT_SERVICE environment variable is used.",
+				MarkdownDescription: "Service name of the resource representing the id of the cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.",
+				PlanModifiers: []planmodifier.String{
+					EnvDefaultString("OVH_CLOUD_PROJECT_SERVICE", true),
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"region": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},

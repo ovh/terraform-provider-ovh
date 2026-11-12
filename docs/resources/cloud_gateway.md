@@ -41,7 +41,7 @@ resource "ovh_cloud_gateway" "gateway" {
 
 The following arguments are supported:
 
-* `service_name` - (Required) Service name of the resource representing the id of the cloud project. **Changing this value recreates the resource.**
+* `service_name` - (Optional) Service name of the resource representing the id of the cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used. **Changing this value recreates the resource.**
 * `region` - (Required) Region where the gateway will be created. **Changing this value recreates the resource.**
 * `name` - (Required) Gateway name.
 * `availability_zone` - (Optional) Availability zone for the gateway. **Changing this value recreates the resource.**

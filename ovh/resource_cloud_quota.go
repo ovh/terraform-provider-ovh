@@ -122,10 +122,14 @@ func (r *cloudQuotaResource) Schema(_ context.Context, _ resource.SchemaRequest,
 		Description: "Manages the public cloud project quota: applied profile per region and automatic-quota-upgrade toggle. There is exactly one quota envelope per project; importing a project's quota uses the service name as id.",
 		Attributes: map[string]schema.Attribute{
 			"service_name": schema.StringAttribute{
-				CustomType:  ovhtypes.TfStringType{},
-				Required:    true,
-				Description: "Service name of the cloud project.",
+				CustomType:          ovhtypes.TfStringType{},
+				Optional:            true,
+				Computed:            true,
+				Description:         "Service name of the resource representing the id of the cloud project. If omitted, the OVH_CLOUD_PROJECT_SERVICE environment variable is used.",
+				MarkdownDescription: "Service name of the resource representing the id of the cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.",
 				PlanModifiers: []planmodifier.String{
+					EnvDefaultString("OVH_CLOUD_PROJECT_SERVICE", true),
+					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplace(),
 				},
 			},

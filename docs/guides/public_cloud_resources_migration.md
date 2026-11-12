@@ -32,7 +32,7 @@ Data sources follow the same renaming; see [Data sources](#data-sources) at the 
 
 What does **not** change:
 
-- `service_name` is still the Public Cloud project ID, and still falls back to the `OVH_CLOUD_PROJECT_SERVICE` environment variable on most resources.
+- `service_name` is still the Public Cloud project ID, and still falls back to the `OVH_CLOUD_PROJECT_SERVICE` environment variable when omitted from a resource.
 - `region` is still a flat string, for example `"GRA11"`. The `region_name` argument of some legacy resources becomes `region`.
 - The resource `id` is still the OpenStack identifier of the object, so the import IDs below can be read from the legacy state with `terraform state show`.
 
