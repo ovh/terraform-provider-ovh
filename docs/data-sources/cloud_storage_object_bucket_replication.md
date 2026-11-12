@@ -35,7 +35,7 @@ output "replication_destinations" {
   * `id` - Rule identifier.
   * `status` - Rule status (`DISABLED`, `ENABLED`).
   * `priority` - Rule priority.
-  * `delete_marker_replication` - Whether delete markers are replicated (`DISABLED`, `ENABLED`).
+  * `delete_marker_replication` - Whether delete markers are replicated (`DISABLED`, `ENABLED`). Always `DISABLED` when `filter.tags` is set.
   * `destination` - Destination of the replicated objects:
     * `name` - Name of the destination bucket.
     * `region` - Region of the destination bucket, `null` when the name matches no bucket of the project, or several.

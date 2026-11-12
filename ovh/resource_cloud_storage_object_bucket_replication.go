@@ -129,7 +129,7 @@ func (r *cloudStorageObjectBucketReplicationResource) Schema(ctx context.Context
 						"delete_marker_replication": schema.StringAttribute{
 							CustomType:  ovhtypes.TfStringType{},
 							Required:    true,
-							Description: "Whether delete markers are replicated (DISABLED, ENABLED)",
+							Description: "Whether delete markers are replicated (DISABLED, ENABLED). Must be DISABLED when filter.tags is set",
 							Validators: []validator.String{
 								stringvalidator.OneOf(storageObjectBucketReplicationStatusValues...),
 							},
@@ -253,6 +253,10 @@ func (r *cloudStorageObjectBucketReplicationResource) Read(ctx context.Context, 
 	if err := r.config.OVHClient.GetWithContext(ctx, endpoint, &responseData); err != nil {
 		if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
 			resp.State.RemoveResource(ctx)
+			return
+		}
+		if storageObjectBucketReadUnavailable(err, endpoint, &resp.Diagnostics) {
+			resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 			return
 		}
 		resp.Diagnostics.AddError(

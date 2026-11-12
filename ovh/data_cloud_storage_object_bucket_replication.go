@@ -87,7 +87,7 @@ func (d *cloudStorageObjectBucketReplicationDataSource) Schema(ctx context.Conte
 						"delete_marker_replication": schema.StringAttribute{
 							CustomType:  ovhtypes.TfStringType{},
 							Computed:    true,
-							Description: "Whether delete markers are replicated (DISABLED, ENABLED)",
+							Description: "Whether delete markers are replicated (DISABLED, ENABLED). Must be DISABLED when filter.tags is set",
 						},
 						"destination": schema.SingleNestedAttribute{
 							Computed:    true,

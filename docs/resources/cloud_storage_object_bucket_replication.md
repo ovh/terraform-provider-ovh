@@ -8,7 +8,7 @@ Manages the replication configuration of an S3&trade; compatible object storage 
 
 ~> __NOTE__ S3 is a trademark filed by Amazon Technologies, Inc. OVHcloud's service is not sponsored by, endorsed by, or otherwise affiliated with Amazon Technologies, Inc.
 
-This resource owns the whole replication configuration of the bucket. Creating and updating it replace every rule of the bucket with the `rules` list, and the change is applied synchronously. Destroying it removes every replication rule of the bucket. If the replication configuration is removed outside of Terraform, the next `terraform apply` recreates it.
+This resource owns the whole replication configuration of the bucket. Creating and updating it replace every rule of the bucket with the `rules` list, and the change is applied synchronously. Destroying it removes every replication rule of the bucket. If the replication configuration is removed outside of Terraform, the next `terraform apply` recreates it. A refresh during a region maintenance or an object storage outage keeps the last known state and shows a warning.
 
 Replication requires versioning on the source and the destination buckets. The `ovh_cloud_storage_object_bucket_replication_destinations` data source tells which buckets of the project can be a destination. Rules only apply to the objects written after they are set; use `ovh_cloud_storage_object_bucket_replication_job` to replicate the objects already in the bucket.
 
@@ -54,7 +54,7 @@ resource "ovh_cloud_storage_object_bucket_replication" "replication" {
       id                        = "archive-logs"
       status                    = "ENABLED"
       priority                  = 2
-      delete_marker_replication = "ENABLED"
+      delete_marker_replication = "DISABLED"
       filter = {
         prefix = "logs/"
         tags = {
@@ -81,7 +81,7 @@ The following arguments are supported:
   * `id` - (Required) Rule identifier, unique in the bucket.
   * `status` - (Required) Rule status. One of `DISABLED`, `ENABLED`.
   * `priority` - (Required) Rule priority.
-  * `delete_marker_replication` - (Required) Whether delete markers are replicated. One of `DISABLED`, `ENABLED`.
+  * `delete_marker_replication` - (Required) Whether delete markers are replicated. One of `DISABLED`, `ENABLED`. Must be `DISABLED` when `filter.tags` is set.
   * `destination` - (Required) Destination of the replicated objects:
     * `name` - (Required) Name of the destination bucket.
     * `region` - (Required) Region of the destination bucket (e.g. `GRA`), matched case-insensitively: it must be the region where the destination bucket lives.

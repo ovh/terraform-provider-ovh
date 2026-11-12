@@ -161,7 +161,7 @@ func TestCloudStorageObjectBucketReplicationMergeWith_Import(t *testing.T) {
 	}
 
 	response := CloudStorageObjectBucketReplicationAPIRules{Rules: []CloudStorageObjectBucketReplicationAPIRule{
-		{Id: "all", Status: "ENABLED", DeleteMarkerReplication: "ENABLED", Destination: CloudStorageObjectBucketReplicationAPIDestination{Name: "replica", StorageClass: "STANDARD"}, Filter: &CloudStorageObjectBucketReplicationAPIFilter{Tags: map[string]string{"env": "prod"}}},
+		{Id: "all", Status: "ENABLED", DeleteMarkerReplication: "DISABLED", Destination: CloudStorageObjectBucketReplicationAPIDestination{Name: "replica", StorageClass: "STANDARD"}, Filter: &CloudStorageObjectBucketReplicationAPIFilter{Tags: map[string]string{"env": "prod"}}},
 	}}
 
 	if diags := model.MergeWith(context.Background(), &response); diags.HasError() {

@@ -37,7 +37,7 @@ resource "ovh_cloud_storage_object_bucket_replication" "replication" {
       id                        = "archive-logs"
       status                    = "ENABLED"
       priority                  = 2
-      delete_marker_replication = "ENABLED"
+      delete_marker_replication = "DISABLED"
       filter = {
         prefix = "logs/"
         tags = {

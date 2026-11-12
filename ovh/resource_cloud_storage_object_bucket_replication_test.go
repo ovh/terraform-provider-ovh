@@ -112,7 +112,7 @@ func TestAccCloudStorageObjectBucketReplication_basic(t *testing.T) {
       id                        = "replicate-logs"
       status                    = "ENABLED"
       priority                  = 2
-      delete_marker_replication = "ENABLED"
+      delete_marker_replication = "DISABLED"
       filter = {
         prefix = "logs/"
         tags = {
@@ -149,7 +149,7 @@ func TestAccCloudStorageObjectBucketReplication_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccCloudStorageObjectBucketReplicationName, "rules.0.destination.region", replicaRegion),
 					resource.TestCheckNoResourceAttr(testAccCloudStorageObjectBucketReplicationName, "rules.0.filter.%"),
 					resource.TestCheckResourceAttr(testAccCloudStorageObjectBucketReplicationName, "rules.1.id", "replicate-logs"),
-					resource.TestCheckResourceAttr(testAccCloudStorageObjectBucketReplicationName, "rules.1.delete_marker_replication", "ENABLED"),
+					resource.TestCheckResourceAttr(testAccCloudStorageObjectBucketReplicationName, "rules.1.delete_marker_replication", "DISABLED"),
 					resource.TestCheckResourceAttr(testAccCloudStorageObjectBucketReplicationName, "rules.1.filter.prefix", "logs/"),
 					resource.TestCheckResourceAttr(testAccCloudStorageObjectBucketReplicationName, "rules.1.filter.tags.env", "prod"),
 					resource.TestCheckResourceAttr(testAccCloudStorageObjectBucketReplicationName, "rules.1.destination.storage_class", "STANDARD_IA"),
