@@ -237,3 +237,31 @@ func TestCloudStorageObjectBucketReplicationJobResourceSchemaMatchesModel(t *tes
 		t.Fatalf("set state: %v", diags)
 	}
 }
+
+func TestBuildStorageObjectBucketReplicationRule_Region(t *testing.T) {
+	cases := []struct {
+		name      string
+		prior     *storageObjectBucketReplicationRuleModel
+		apiRegion string
+		want      string
+	}{
+		{"case-only difference keeps prior", ptrStorageObjectBucketReplicationRule("all", "sbg"), "SBG", "sbg"},
+		{"real drift takes API", ptrStorageObjectBucketReplicationRule("all", "GRA"), "SBG", "SBG"},
+		{"empty API keeps prior", ptrStorageObjectBucketReplicationRule("all", "sbg"), "", "sbg"},
+		{"no prior takes API", nil, "SBG", "SBG"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			api := CloudStorageObjectBucketReplicationAPIRule{Id: "all", Destination: CloudStorageObjectBucketReplicationAPIDestination{Name: "replica", Region: tc.apiRegion}}
+			got := buildStorageObjectBucketReplicationRule(api, tc.prior).Destination.Region
+			if got.IsNull() || got.ValueString() != tc.want {
+				t.Fatalf("region = %v, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+func ptrStorageObjectBucketReplicationRule(id, region string) *storageObjectBucketReplicationRuleModel {
+	r := storageObjectBucketReplicationRule(id, region, nil)
+	return &r
+}

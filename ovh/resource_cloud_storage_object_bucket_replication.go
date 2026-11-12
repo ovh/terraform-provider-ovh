@@ -146,7 +146,7 @@ func (r *cloudStorageObjectBucketReplicationResource) Schema(ctx context.Context
 								"region": schema.StringAttribute{
 									CustomType:  ovhtypes.TfStringType{},
 									Required:    true,
-									Description: "Region of the destination bucket",
+									Description: "Region of the destination bucket, matched case-insensitively",
 								},
 								"storage_class": schema.StringAttribute{
 									CustomType:  ovhtypes.TfStringType{},

@@ -84,7 +84,7 @@ The following arguments are supported:
   * `delete_marker_replication` - (Required) Whether delete markers are replicated. One of `DISABLED`, `ENABLED`.
   * `destination` - (Required) Destination of the replicated objects:
     * `name` - (Required) Name of the destination bucket.
-    * `region` - (Required) Region of the destination bucket, in upper case (e.g. `GRA`).
+    * `region` - (Required) Region of the destination bucket (e.g. `GRA`), matched case-insensitively: it must be the region where the destination bucket lives.
     * `storage_class` - (Optional) Storage class of the replicated objects in the destination bucket. One of `DEEP_ARCHIVE`, `GLACIER`, `GLACIER_IR`, `HIGH_PERF`, `INTELLIGENT_TIERING`, `ONEZONE_IA`, `STANDARD`, `STANDARD_IA`. When omitted, the value reported by the API is kept in the state.
   * `filter` - (Optional) Objects the rule applies to. When omitted, the rule applies to every object of the bucket:
     * `prefix` - (Optional) Only objects whose key starts with this prefix.

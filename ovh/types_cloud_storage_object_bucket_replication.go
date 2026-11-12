@@ -2,6 +2,7 @@ package ovh
 
 import (
 	"context"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -176,11 +177,11 @@ func buildStorageObjectBucketReplicationRule(r CloudStorageObjectBucketReplicati
 		prior = &storageObjectBucketReplicationRuleModel{}
 	}
 
-	// The API reads the destination region back from the project's bucket listing and leaves it
-	// empty when the name matches no bucket or several, so the configured region is kept.
+	// The API rebuilds the region from the bucket listing (upper case, or empty when ambiguous), so a matching prior is kept.
 	region := nullableTfString(r.Destination.Region)
-	if r.Destination.Region == "" && !prior.Destination.Region.IsUnknown() {
-		region = prior.Destination.Region
+	priorRegion := prior.Destination.Region
+	if !priorRegion.IsUnknown() && (r.Destination.Region == "" || strings.EqualFold(priorRegion.ValueString(), r.Destination.Region)) {
+		region = priorRegion
 	}
 
 	return storageObjectBucketReplicationRuleModel{
