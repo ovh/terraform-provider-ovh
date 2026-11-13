@@ -1,4 +1,4 @@
-# Vrack Services associated to a vRack
+# Vrack Services created by Terraform and associated to a vRack
 
 locals {
   region = "eu-west-lim"

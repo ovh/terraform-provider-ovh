@@ -69,6 +69,17 @@ Once the order is placed, the provider reads it to find the created service:
 | `GET /services?resourceName={name}&routes=/domain/{serviceName}` | `ovh_domain_name` |
 | Terminate and confirm termination routes | See the table above |
 
+## Routes used to add or remove an option of an existing service
+
+Some resources order an option on a service that is already delivered when an entry is added to their `plan_option`, and terminate it when the entry is removed. For example, this is the case of the BGP option of `ovh_vrackservices`.
+
+| Route | When |
+|---|---|
+| `POST /order/cartServiceOption/{product}/{serviceName}` | Option added, with the cart, configuration, checkout and payment routes used on create |
+| `GET /services?resourceName={optionResourceName}` | Option removed, with the routes used on destroy |
+
+An option set when the resource is created is ordered with `POST /order/cart/{cartId}/{product}/options`, already listed in the routes used on create.
+
 ## Example access rules
 
 Access rules are path prefixes that accept a `*` wildcard, and they do not include the API version: a rule on `/okms/*` also applies to `/v2/okms/...`, while a rule written as `/v2/okms/*` grants nothing.
@@ -83,6 +94,7 @@ Replace `<product-path>` with the product API path from the table above. The fir
     { "method": "POST",   "path": "/order/cart" },
     { "method": "GET",    "path": "/order/cart/*" },
     { "method": "POST",   "path": "/order/cart/*" },
+    { "method": "POST",   "path": "/order/cartServiceOption/*" },
     { "method": "GET",    "path": "/me/order/*" },
     { "method": "POST",   "path": "/me/order/*/pay" },
     { "method": "POST",   "path": "/me/order/*/payWithRegisteredPaymentMean" },
@@ -104,6 +116,7 @@ Replace `<product-path>` with the product API path from the table above. The fir
 Notes:
 
 - `GET /me` can be left out if `ovh_subsidiary` is set in your configuration.
+- `/order/cartServiceOption/*` is only used to add an option to an existing service.
 - The destroy block can be left out if you never delete these resources with Terraform. `/services/*` is only used by `ovh_okms`, `ovh_vrackservices` and `ovh_domain_name`; the other resources terminate through their product API path, which is already covered by the last block.
 - A consumer key with restricted access rules is created with [`POST /auth/credential`](https://eu.api.ovh.com/console/?section=%2Fauth&branch=v1#post-/auth/credential) and then validated once in a browser.
 

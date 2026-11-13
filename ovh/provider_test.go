@@ -468,8 +468,19 @@ func testAccPreCheckVrackServices(t *testing.T) {
 	testAccPreCheckCredentials(t)
 	checkEnvOrSkip(t, "OVH_TESTACC_ORDER_VRACK_SERVICES")
 	checkEnvOrSkip(t, "OVH_VRACK_SERVICES_REGION")
+	checkEnvOrSkip(t, "OVH_VRACK_SERVICES_SUBNET_AZ")
 	checkEnvOrSkip(t, "OVH_VRACK_SERVICE_TEST")
 	checkEnvOrSkip(t, "OVH_STORAGE_EFS_SERVICE_TEST")
+}
+
+// Checks that the environment variables needed for the /vrackServices BGP option acceptance tests
+// are set.
+func testAccPreCheckVrackServicesBGP(t *testing.T) {
+	testAccPreCheckCredentials(t)
+	checkEnvOrSkip(t, "OVH_TESTACC_ORDER_VRACK_SERVICES_BGP")
+	checkEnvOrSkip(t, "OVH_VRACK_SERVICES_REGION")
+	checkEnvOrSkip(t, "OVH_VRACK_SERVICES_SUBNET_AZ")
+	checkEnvOrSkip(t, "OVH_VRACK_SERVICE_TEST")
 }
 
 // Checks that the environment variables needed for /vrackServices datasource basic acceptance tests

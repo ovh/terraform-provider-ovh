@@ -362,6 +362,12 @@ In order to run the Acceptance Tests for development, the following environment 
 
 * `OVH_TESTACC_VRACK_SERVICES_ID_TEST` - The ID of your vRack Service.
 
+* `OVH_VRACK_SERVICES_SUBNET_AZ` - The availability zone of the Vrack Services test subnet, in `OVH_VRACK_SERVICES_REGION`.
+
+* `OVH_TESTACC_ORDER_VRACK_SERVICES_BGP` - set this variable to "yes" will order and test the BGP option of Vrack Services.
+
+* `OVH_VRACK_SERVICES_BGP_ALLOWED_PREFIX_TEST` - An IPv4 block of your account, parked and eligible for BGP (/24 to /30), routed then unrouted by the BGP option test. Allowed prefix steps are skipped when not set.
+
 * `OVH_TESTACC_ORDER_CLOUDPROJECT` - set this variable to "yes" will order cloud projects.
 
 * `OVH_TESTACC_ORDER_DOMAIN` - set this variable to "mydomain.ovh" to run tests for domain zones.
