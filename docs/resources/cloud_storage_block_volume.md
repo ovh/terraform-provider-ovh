@@ -65,7 +65,7 @@ The following arguments are supported:
 * `volume_type` - (Optional) Volume type (`CLASSIC`, `HIGH_SPEED`, `HIGH_SPEED_GEN2`). Can be changed after creation (triggers online retype).
 * `encryption` - (Optional) Encryption configuration for the volume. **Changing this value recreates the resource.**
   * `enabled` - (Optional) Whether the volume is encrypted at rest with LUKS.
-  * `kms` - (Optional) Customer-managed key (CMK) reference used to encrypt the volume. Set at creation only; the whole `encryption` block is immutable and **cannot be changed afterwards.**
+  * `kms` - (Optional) Customer-managed key (CMK) reference used to encrypt the volume. Set at creation only; the whole `encryption` block is immutable and **cannot be changed afterwards.** When omitted, it holds the key the volume inherits from its source backup or snapshot; a key read back this way is never treated as a change, only a key set in the configuration that differs recreates the resource.
     * `domain_id` - (Optional) OKMS domain ID owning the service key.
     * `service_key_id` - (Optional) OKMS service key ID used to encrypt the volume.
 * `create_from` - (Optional) Source to create the volume from. **Changing this value recreates the resource.**

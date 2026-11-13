@@ -138,28 +138,34 @@ func (r *cloudStorageBlockVolumeResource) Schema(ctx context.Context, req resour
 					},
 					"kms": schema.SingleNestedAttribute{
 						Optional:            true,
-						Description:         "Customer-managed key (CMK) reference used to encrypt the volume. Set at creation only; cannot be changed afterwards.",
-						MarkdownDescription: "Customer-managed key (CMK) reference used to encrypt the volume. **Set at creation only; cannot be changed afterwards.**",
+						Computed:            true,
+						Description:         "Customer-managed key (CMK) reference used to encrypt the volume. Set at creation only; cannot be changed afterwards. When omitted, holds the key the volume inherits from its source backup or snapshot.",
+						MarkdownDescription: "Customer-managed key (CMK) reference used to encrypt the volume. **Set at creation only; cannot be changed afterwards.** When omitted, holds the key the volume inherits from its source backup or snapshot.",
 						PlanModifiers: []planmodifier.Object{
-							objectplanmodifier.RequiresReplace(),
+							objectplanmodifier.UseStateForUnknown(),
+							objectplanmodifier.RequiresReplaceIfConfigured(),
 						},
 						Attributes: map[string]schema.Attribute{
 							"domain_id": schema.StringAttribute{
 								CustomType:          ovhtypes.TfStringType{},
 								Optional:            true,
+								Computed:            true,
 								Description:         "OKMS domain ID owning the service key",
 								MarkdownDescription: "OKMS domain ID owning the service key",
 								PlanModifiers: []planmodifier.String{
-									stringplanmodifier.RequiresReplace(),
+									stringplanmodifier.UseStateForUnknown(),
+									stringplanmodifier.RequiresReplaceIfConfigured(),
 								},
 							},
 							"service_key_id": schema.StringAttribute{
 								CustomType:          ovhtypes.TfStringType{},
 								Optional:            true,
+								Computed:            true,
 								Description:         "OKMS service key ID used to encrypt the volume",
 								MarkdownDescription: "OKMS service key ID used to encrypt the volume",
 								PlanModifiers: []planmodifier.String{
-									stringplanmodifier.RequiresReplace(),
+									stringplanmodifier.UseStateForUnknown(),
+									stringplanmodifier.RequiresReplaceIfConfigured(),
 								},
 							},
 						},
