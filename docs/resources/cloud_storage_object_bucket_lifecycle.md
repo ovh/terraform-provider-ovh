@@ -8,7 +8,7 @@ Manages the lifecycle configuration of an S3&trade; compatible object storage bu
 
 ~> __NOTE__ S3 is a trademark filed by Amazon Technologies, Inc. OVHcloud's service is not sponsored by, endorsed by, or otherwise affiliated with Amazon Technologies, Inc.
 
-This resource owns the whole lifecycle configuration of the bucket. Creating and updating it replace every rule of the bucket with the `rules` list, and the change is applied synchronously. Destroying it removes every lifecycle rule of the bucket. If the lifecycle configuration is removed outside of Terraform, the next `terraform apply` recreates it.
+This resource owns the whole lifecycle configuration of the bucket. Creating and updating it replace every rule of the bucket with the `rules` list, and the change is applied synchronously. Destroying it removes every lifecycle rule of the bucket. If the lifecycle configuration is removed outside of Terraform, the next `terraform apply` recreates it. A refresh during a region maintenance or an object storage outage keeps the last known state and shows a warning.
 
 ## Example Usage
 

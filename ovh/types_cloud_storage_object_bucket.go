@@ -2,9 +2,14 @@ package ovh
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/ovh/go-ovh/ovh"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
@@ -390,4 +395,19 @@ func (m *CloudStorageObjectBucketModel) MergeWith(ctx context.Context, response 
 		return
 	}
 	m.Tags = buildStorageObjectBucketTagsMap(response.TargetSpec.Tags)
+}
+
+// storageObjectBucketReadUnavailable tells whether a failed GET of a bucket configuration must keep
+// the state: the API answers 409 while the bucket's region is in maintenance and 5xx while object
+// storage is unavailable, and dropping the state then would plan a create that fails.
+func storageObjectBucketReadUnavailable(err error, endpoint string, diags *diag.Diagnostics) bool {
+	var errOvh *ovh.APIError
+	if !errors.As(err, &errOvh) || (errOvh.Code != http.StatusConflict && errOvh.Code < http.StatusInternalServerError) {
+		return false
+	}
+	diags.AddWarning(
+		fmt.Sprintf("Kept the last known state of %s", endpoint),
+		fmt.Sprintf("Get %s answered %d: %s. The state was kept unchanged and will be refreshed once the bucket is reachable.", endpoint, errOvh.Code, errOvh.Message),
+	)
+	return true
 }

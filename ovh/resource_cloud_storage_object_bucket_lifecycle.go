@@ -333,6 +333,10 @@ func (r *cloudStorageObjectBucketLifecycleResource) Read(ctx context.Context, re
 			resp.State.RemoveResource(ctx)
 			return
 		}
+		if storageObjectBucketReadUnavailable(err, endpoint, &resp.Diagnostics) {
+			resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+			return
+		}
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Error calling Get %s", endpoint),
 			err.Error(),
