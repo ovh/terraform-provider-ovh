@@ -32,4 +32,5 @@ data "ovh_cloud_storage_block_volume_backups" "backups" {
     * `region` - Region.
   * `volume_id` - ID of the backed-up volume.
   * `size` - Size of the backup in GB.
+  * `status` - Backup status (`AVAILABLE`, `CREATING`, `DELETED`, `DELETING`, `ERROR`, `ERROR_DELETING`, `ERROR_RESTORING`, `RESTORING`, `UNMANAGING`).
   * `resource_status` - Backup readiness in the system (`CREATING`, `DELETING`, `ERROR`, `OUT_OF_SYNC`, `READY`, `UPDATING`).

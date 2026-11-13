@@ -90,6 +90,11 @@ func (d *cloudStorageBlockVolumeBackupDataSource) Schema(ctx context.Context, re
 				Computed:    true,
 				Description: "Size of the backup in GB",
 			},
+			"status": schema.StringAttribute{
+				CustomType:  ovhtypes.TfStringType{},
+				Computed:    true,
+				Description: "Backup status",
+			},
 			"resource_status": schema.StringAttribute{
 				CustomType:  ovhtypes.TfStringType{},
 				Computed:    true,
@@ -108,6 +113,7 @@ type cloudStorageBlockVolumeBackupDataSourceModel struct {
 	Location       types.Object           `tfsdk:"location"`
 	VolumeId       ovhtypes.TfStringValue `tfsdk:"volume_id"`
 	Size           types.Int64            `tfsdk:"size"`
+	Status         ovhtypes.TfStringValue `tfsdk:"status"`
 	ResourceStatus ovhtypes.TfStringValue `tfsdk:"resource_status"`
 }
 
@@ -145,8 +151,10 @@ func (d *cloudStorageBlockVolumeBackupDataSource) Read(ctx context.Context, req 
 	}
 
 	size := int64(0)
+	status := ""
 	if b.CurrentState != nil {
 		size = b.CurrentState.Size
+		status = b.CurrentState.Status
 		if b.CurrentState.VolumeId != "" {
 			volumeId = b.CurrentState.VolumeId
 		}
@@ -178,6 +186,7 @@ func (d *cloudStorageBlockVolumeBackupDataSource) Read(ctx context.Context, req 
 	data.Location = locObj
 	data.VolumeId = ovhtypes.TfStringValue{StringValue: types.StringValue(volumeId)}
 	data.Size = types.Int64Value(size)
+	data.Status = ovhtypes.TfStringValue{StringValue: types.StringValue(status)}
 	data.ResourceStatus = ovhtypes.TfStringValue{StringValue: types.StringValue(b.ResourceStatus)}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

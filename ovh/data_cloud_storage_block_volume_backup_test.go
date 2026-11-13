@@ -68,6 +68,7 @@ func TestAccDataSourceCloudStorageBlockVolumeBackup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.ovh_cloud_storage_block_volume_backup.backup", "name", backupName),
 					resource.TestCheckResourceAttr("data.ovh_cloud_storage_block_volume_backup.backup", "description", description),
 					resource.TestCheckResourceAttrSet("data.ovh_cloud_storage_block_volume_backup.backup", "size"),
+					resource.TestCheckResourceAttrSet("data.ovh_cloud_storage_block_volume_backup.backup", "status"),
 					resource.TestCheckResourceAttr("data.ovh_cloud_storage_block_volume_backup.backup", "location.region", region),
 				),
 			},
