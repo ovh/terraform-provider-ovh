@@ -18,7 +18,7 @@ data "ovh_cloud_project" "project" {
 
 The following arguments are supported:
 
-- `service_name` - (Required) The ID of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
+- `service_name` - (Optional) The ID of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used
 
 ## Attributes Reference
 

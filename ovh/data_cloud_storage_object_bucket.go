@@ -234,9 +234,10 @@ func (d *cloudStorageObjectBucketDataSource) Schema(ctx context.Context, req dat
 	attrs := map[string]schema.Attribute{
 		"service_name": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
-			Required:            true,
-			Description:         "Service name of the resource representing the id of the cloud project",
-			MarkdownDescription: "Service name of the resource representing the id of the cloud project",
+			Optional:            true,
+			Computed:            true,
+			Description:         "Service name of the resource representing the id of the cloud project. If omitted, the OVH_CLOUD_PROJECT_SERVICE environment variable is used.",
+			MarkdownDescription: "Service name of the resource representing the id of the cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.",
 		},
 		"id": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
@@ -281,6 +282,11 @@ func (d *cloudStorageObjectBucketDataSource) Read(ctx context.Context, req datas
 	var data cloudStorageObjectBucketDataSourceModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	data.ServiceName = cloudProjectServiceNameOrEnv(data.ServiceName, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}

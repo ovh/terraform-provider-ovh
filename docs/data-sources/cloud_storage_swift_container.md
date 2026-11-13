@@ -17,7 +17,7 @@ data "ovh_cloud_storage_swift_container" "container" {
 
 ## Argument Reference
 
-* `service_name` - (Required) The id of the public cloud project.
+* `service_name` - (Optional) The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 * `id` - (Required) Container identifier, in the `<REGION>_<name>` form (e.g. `GRA_my-container`).
 
 ## Attributes Reference

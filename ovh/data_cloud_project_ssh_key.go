@@ -53,6 +53,11 @@ func (d *cloudProjectSshKeyDataSource) Read(ctx context.Context, req datasource.
 		return
 	}
 
+	data.ServiceName = cloudProjectServiceNameOrEnv(data.ServiceName, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	// Read API call logic
 	endpoint := "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/sshkey/" + url.PathEscape(data.Id.ValueString())
 

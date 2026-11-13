@@ -17,7 +17,7 @@ data "ovh_cloud_storage_file_share_acls" "acls" {
 
 ## Argument Reference
 
-* `service_name` - (Required) The id of the public cloud project.
+* `service_name` - (Optional) The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 * `share_id` - (Required) The ID of the file storage share the access rules apply to.
 
 ## Attributes Reference

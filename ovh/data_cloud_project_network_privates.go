@@ -56,6 +56,11 @@ func (d *cloudProjectNetworkPrivatesDataSource) Read(ctx context.Context, req da
 		return
 	}
 
+	data.ServiceName = cloudProjectServiceNameOrEnv(data.ServiceName, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	// Read API call logic
 	endpoint := "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/network/private"
 
