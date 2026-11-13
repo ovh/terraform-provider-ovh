@@ -48,13 +48,20 @@ type CloudStorageFileShareAPICurrentState struct {
 	Name            string                                   `json:"name,omitempty"`
 	Description     string                                   `json:"description,omitempty"`
 	Size            int64                                    `json:"size,omitempty"`
+	Status          string                                   `json:"status,omitempty"`
 	Protocol        string                                   `json:"protocol,omitempty"`
 	ShareType       string                                   `json:"shareType,omitempty"`
 	Location        *CloudStorageFileShareAPILocation        `json:"location,omitempty"`
 	ShareNetwork    *CloudStorageFileShareAPIShareNetworkRef `json:"shareNetwork,omitempty"`
 	ExportLocations []CloudStorageFileShareAPIExportLocation `json:"exportLocations,omitempty"`
 	Capabilities    []CloudStorageFileShareAPICapability     `json:"capabilities,omitempty"`
+	Attachments     []CloudStorageFileShareAPIAttachment     `json:"attachments,omitempty"`
 	Encryption      *CloudStorageFileShareAPIEncryption      `json:"encryption,omitempty"`
+}
+
+type CloudStorageFileShareAPIAttachment struct {
+	Id          string `json:"id"`
+	AccessLevel string `json:"accessLevel"`
 }
 
 type CloudStorageFileShareAPIEncryption struct {
@@ -236,6 +243,7 @@ func FileShareCurrentStateAttrTypes() map[string]attr.Type {
 		"name":        ovhtypes.TfStringType{},
 		"description": ovhtypes.TfStringType{},
 		"size":        types.Int64Type,
+		"status":      ovhtypes.TfStringType{},
 		"protocol":    ovhtypes.TfStringType{},
 		"share_type":  ovhtypes.TfStringType{},
 		"location": types.ObjectType{AttrTypes: map[string]attr.Type{
@@ -248,7 +256,15 @@ func FileShareCurrentStateAttrTypes() map[string]attr.Type {
 			"preferred": types.BoolType,
 		}}},
 		"capabilities": types.ListType{ElemType: types.ObjectType{AttrTypes: FileShareCurrentStateCapabilityAttrTypes()}},
+		"attachments":  types.ListType{ElemType: types.ObjectType{AttrTypes: FileShareCurrentStateAttachmentAttrTypes()}},
 		"encryption":   types.ObjectType{AttrTypes: FileShareEncryptionAttrTypes()},
+	}
+}
+
+func FileShareCurrentStateAttachmentAttrTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"id":           ovhtypes.TfStringType{},
+		"access_level": ovhtypes.TfStringType{},
 	}
 }
 
@@ -402,18 +418,33 @@ func buildFileShareCurrentStateObject(ctx context.Context, state *CloudStorageFi
 		capabilityList = types.ListValueMust(capabilityType, []attr.Value{})
 	}
 
+	attachmentType := types.ObjectType{AttrTypes: FileShareCurrentStateAttachmentAttrTypes()}
+	attachmentValues := make([]attr.Value, 0, len(state.Attachments))
+	for _, attachment := range state.Attachments {
+		attachmentValues = append(attachmentValues, types.ObjectValueMust(
+			FileShareCurrentStateAttachmentAttrTypes(),
+			map[string]attr.Value{
+				"id":           ovhtypes.TfStringValue{StringValue: types.StringValue(attachment.Id)},
+				"access_level": ovhtypes.TfStringValue{StringValue: types.StringValue(attachment.AccessLevel)},
+			},
+		))
+	}
+	attachmentList := types.ListValueMust(attachmentType, attachmentValues)
+
 	obj, _ := types.ObjectValue(
 		FileShareCurrentStateAttrTypes(),
 		map[string]attr.Value{
 			"name":             ovhtypes.TfStringValue{StringValue: types.StringValue(state.Name)},
 			"description":      ovhtypes.TfStringValue{StringValue: types.StringValue(state.Description)},
 			"size":             types.Int64Value(state.Size),
+			"status":           ovhtypes.TfStringValue{StringValue: types.StringValue(state.Status)},
 			"protocol":         ovhtypes.TfStringValue{StringValue: types.StringValue(state.Protocol)},
 			"share_type":       ovhtypes.TfStringValue{StringValue: types.StringValue(state.ShareType)},
 			"location":         locObj,
 			"share_network_id": ovhtypes.TfStringValue{StringValue: types.StringValue(shareNetworkId)},
 			"export_locations": exportLocList,
 			"capabilities":     capabilityList,
+			"attachments":      attachmentList,
 			"encryption":       buildFileShareEncryptionObject(state.Encryption),
 		},
 	)

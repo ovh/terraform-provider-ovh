@@ -265,3 +265,50 @@ func TestCloudStorageFileShareAttributesReplacedBySnapshotSource(t *testing.T) {
 		})
 	}
 }
+
+func TestCloudStorageFileShareMergeWithReadsStatusAndAttachments(t *testing.T) {
+	model := CloudStorageFileShareModel{}
+
+	model.MergeWith(context.Background(), &CloudStorageFileShareAPIResponse{
+		CurrentState: &CloudStorageFileShareAPICurrentState{
+			Status: "EXTENDING",
+			Attachments: []CloudStorageFileShareAPIAttachment{
+				{Id: "instance-read-write", AccessLevel: "READ_WRITE"},
+				{Id: "instance-read-only", AccessLevel: "READ_ONLY"},
+			},
+		},
+	})
+
+	currentStateAttributes := model.CurrentState.Attributes()
+	if status := currentStateAttributes["status"].(ovhtypes.TfStringValue).ValueString(); status != "EXTENDING" {
+		t.Errorf("expected current_state.status EXTENDING, got %q", status)
+	}
+
+	attachmentType := types.ObjectType{AttrTypes: FileShareCurrentStateAttachmentAttrTypes()}
+	wantAttachments := types.ListValueMust(attachmentType, []attr.Value{
+		types.ObjectValueMust(FileShareCurrentStateAttachmentAttrTypes(), map[string]attr.Value{
+			"id":           ovhtypes.NewTfStringValue("instance-read-write"),
+			"access_level": ovhtypes.NewTfStringValue("READ_WRITE"),
+		}),
+		types.ObjectValueMust(FileShareCurrentStateAttachmentAttrTypes(), map[string]attr.Value{
+			"id":           ovhtypes.NewTfStringValue("instance-read-only"),
+			"access_level": ovhtypes.NewTfStringValue("READ_ONLY"),
+		}),
+	})
+	if got := currentStateAttributes["attachments"]; !got.Equal(wantAttachments) {
+		t.Errorf("current_state.attachments mismatch:\n got: %v\nwant: %v", got, wantAttachments)
+	}
+}
+
+func TestCloudStorageFileShareMergeWithOmittedAttachmentsIsEmptyList(t *testing.T) {
+	model := CloudStorageFileShareModel{}
+
+	model.MergeWith(context.Background(), &CloudStorageFileShareAPIResponse{
+		CurrentState: &CloudStorageFileShareAPICurrentState{Status: "AVAILABLE"},
+	})
+
+	attachments, ok := model.CurrentState.Attributes()["attachments"].(types.List)
+	if !ok || attachments.IsNull() || len(attachments.Elements()) != 0 {
+		t.Errorf("expected an empty current_state.attachments list, got %v", model.CurrentState.Attributes()["attachments"])
+	}
+}

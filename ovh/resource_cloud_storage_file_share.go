@@ -269,6 +269,12 @@ func (r *cloudStorageFileShareResource) Schema(ctx context.Context, req resource
 						Description:         "Size of the file share in GB",
 						MarkdownDescription: "Size of the file share in GB",
 					},
+					"status": schema.StringAttribute{
+						CustomType:          ovhtypes.TfStringType{},
+						Computed:            true,
+						Description:         "File share status as reported by the infrastructure (AVAILABLE, CREATING, EXTENDING, ERROR, ...)",
+						MarkdownDescription: "File share status as reported by the infrastructure (`AVAILABLE`, `CREATING`, `EXTENDING`, `ERROR`, ...)",
+					},
 					"protocol": schema.StringAttribute{
 						CustomType:          ovhtypes.TfStringType{},
 						Computed:            true,
@@ -339,6 +345,27 @@ func (r *cloudStorageFileShareResource) Schema(ctx context.Context, req resource
 									Computed:            true,
 									Description:         "Reason why the capability is disabled",
 									MarkdownDescription: "Reason why the capability is disabled",
+								},
+							},
+						},
+					},
+					"attachments": schema.ListNestedAttribute{
+						Computed:            true,
+						Description:         "Instances that declare the file share in their shares list",
+						MarkdownDescription: "Instances that declare the file share in their `shares` list",
+						NestedObject: schema.NestedAttributeObject{
+							Attributes: map[string]schema.Attribute{
+								"id": schema.StringAttribute{
+									CustomType:          ovhtypes.TfStringType{},
+									Computed:            true,
+									Description:         "Instance ID",
+									MarkdownDescription: "Instance ID",
+								},
+								"access_level": schema.StringAttribute{
+									CustomType:          ovhtypes.TfStringType{},
+									Computed:            true,
+									Description:         "Access level the instance declares for the file share (READ_WRITE, READ_ONLY)",
+									MarkdownDescription: "Access level the instance declares for the file share (`READ_WRITE`, `READ_ONLY`)",
 								},
 							},
 						},

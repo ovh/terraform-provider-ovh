@@ -64,6 +64,7 @@ data "ovh_cloud_storage_file_shares" "shares" {
 					resource.TestCheckResourceAttrSet("data.ovh_cloud_storage_file_shares.shares", "file_shares.0.protocol"),
 					resource.TestCheckResourceAttrSet("data.ovh_cloud_storage_file_shares.shares", "file_shares.0.share_network_id"),
 					resource.TestCheckResourceAttr("data.ovh_cloud_storage_file_shares.shares", "file_shares.0.location.region", region),
+					resource.TestCheckResourceAttrSet("data.ovh_cloud_storage_file_shares.shares", "file_shares.0.current_state.status"),
 				),
 			},
 		},

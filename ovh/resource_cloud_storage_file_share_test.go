@@ -64,6 +64,8 @@ resource "ovh_cloud_storage_file_share" "share" {
 					resource.TestCheckResourceAttrSet("ovh_cloud_storage_file_share.share", "current_state.protocol"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_storage_file_share.share", "current_state.share_network_id"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_storage_file_share.share", "current_state.encryption.enabled"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_file_share.share", "current_state.status", "AVAILABLE"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_file_share.share", "current_state.attachments.#", "0"),
 				),
 			},
 			// Test import

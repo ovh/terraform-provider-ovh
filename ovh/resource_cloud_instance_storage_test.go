@@ -161,14 +161,30 @@ resource "ovh_cloud_instance" "test" {
     },
   ]
 }
-`, serviceName, shareNetName, region, serviceName, shareName, region, serviceName, region, instName, flavorID, imageID, accessLevelLine)
+`, serviceName, shareNetName, region, serviceName, shareName, region, serviceName, region, instName, flavorID, imageID, accessLevelLine) + testAccCloudInstanceShareAttachmentsDataSourceConfig(serviceName)
+}
+
+// The share resource is applied before the instance declares it, so only a read
+// ordered after the instance sees the instance in current_state.attachments.
+func testAccCloudInstanceShareAttachmentsDataSourceConfig(serviceName string) string {
+	return fmt.Sprintf(`
+data "ovh_cloud_storage_file_share" "attached" {
+  service_name = "%s"
+  id           = ovh_cloud_storage_file_share.share.id
+
+  depends_on = [ovh_cloud_instance.test]
+}
+`, serviceName)
 }
 
 // TestAccCloudInstance_sharesReadWrite attaches a file share to an instance with
 // an explicit READ_WRITE access level and asserts both the requested and
 // observed share state, including that the share converges (not OUT_OF_SYNC).
 func TestAccCloudInstance_sharesReadWrite(t *testing.T) {
-	const rn = "ovh_cloud_instance.test"
+	const (
+		rn            = "ovh_cloud_instance.test"
+		attachedShare = "data.ovh_cloud_storage_file_share.attached"
+	)
 
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
 	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
@@ -203,6 +219,9 @@ func TestAccCloudInstance_sharesReadWrite(t *testing.T) {
 					resource.TestCheckResourceAttrSet(rn, "current_state.shares.0.id"),
 					resource.TestCheckResourceAttr(rn, "current_state.shares.0.access_level", "READ_WRITE"),
 					resource.TestCheckResourceAttrSet(rn, "current_state.shares.0.state"),
+					resource.TestCheckResourceAttr(attachedShare, "current_state.attachments.#", "1"),
+					resource.TestCheckResourceAttrPair(attachedShare, "current_state.attachments.0.id", rn, "id"),
+					resource.TestCheckResourceAttr(attachedShare, "current_state.attachments.0.access_level", "READ_WRITE"),
 				),
 			},
 		},
@@ -212,7 +231,10 @@ func TestAccCloudInstance_sharesReadWrite(t *testing.T) {
 // TestAccCloudInstance_sharesReadOnlyAndDefault covers the READ_ONLY access
 // level and the omitted-access_level case (server-defaulted to READ_WRITE).
 func TestAccCloudInstance_sharesReadOnlyAndDefault(t *testing.T) {
-	const rn = "ovh_cloud_instance.test"
+	const (
+		rn            = "ovh_cloud_instance.test"
+		attachedShare = "data.ovh_cloud_storage_file_share.attached"
+	)
 
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
 	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
@@ -263,6 +285,9 @@ func TestAccCloudInstance_sharesReadOnlyAndDefault(t *testing.T) {
 							resource.TestCheckResourceAttr(rn, "current_state.shares.#", "1"),
 							resource.TestCheckResourceAttr(rn, "current_state.shares.0.access_level", tc.wantAccessLevel),
 							resource.TestCheckResourceAttrSet(rn, "current_state.shares.0.state"),
+							resource.TestCheckResourceAttr(attachedShare, "current_state.attachments.#", "1"),
+							resource.TestCheckResourceAttrPair(attachedShare, "current_state.attachments.0.id", rn, "id"),
+							resource.TestCheckResourceAttr(attachedShare, "current_state.attachments.0.access_level", tc.wantAccessLevel),
 						),
 					},
 				},
@@ -274,7 +299,10 @@ func TestAccCloudInstance_sharesReadOnlyAndDefault(t *testing.T) {
 // TestAccCloudInstance_shareAttachDetach attaches a share, then detaches it in
 // place, asserting the share list transitions and the instance stays READY.
 func TestAccCloudInstance_shareAttachDetach(t *testing.T) {
-	const rn = "ovh_cloud_instance.test"
+	const (
+		rn            = "ovh_cloud_instance.test"
+		attachedShare = "data.ovh_cloud_storage_file_share.attached"
+	)
 
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
 	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
@@ -331,7 +359,7 @@ resource "ovh_cloud_instance" "test" {
     },
   ]
 }
-`, serviceName, region, name, flavorID, imageID)
+`, serviceName, region, name, flavorID, imageID) + testAccCloudInstanceShareAttachmentsDataSourceConfig(serviceName)
 
 	withoutShare := base + fmt.Sprintf(`
 resource "ovh_cloud_instance" "test" {
@@ -348,7 +376,7 @@ resource "ovh_cloud_instance" "test" {
     },
   ]
 }
-`, serviceName, region, name, flavorID, imageID)
+`, serviceName, region, name, flavorID, imageID) + testAccCloudInstanceShareAttachmentsDataSourceConfig(serviceName)
 
 	var instanceID string
 
@@ -362,6 +390,8 @@ resource "ovh_cloud_instance" "test" {
 					resource.TestCheckResourceAttr(rn, "resource_status", "READY"),
 					resource.TestCheckResourceAttr(rn, "shares.#", "1"),
 					resource.TestCheckResourceAttr(rn, "current_state.shares.#", "1"),
+					resource.TestCheckResourceAttr(attachedShare, "current_state.attachments.#", "1"),
+					resource.TestCheckResourceAttrPair(attachedShare, "current_state.attachments.0.id", rn, "id"),
 					captureInstanceID(rn, &instanceID),
 				),
 			},
@@ -376,6 +406,7 @@ resource "ovh_cloud_instance" "test" {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(rn, "shares.#", "0"),
 					resource.TestCheckResourceAttr(rn, "resource_status", "READY"),
+					resource.TestCheckResourceAttr(attachedShare, "current_state.attachments.#", "0"),
 					captureInstanceID(rn, &instanceID),
 				),
 			},

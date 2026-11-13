@@ -162,6 +162,11 @@ func fileShareDataSourceAttributes() map[string]schema.Attribute {
 					Computed:    true,
 					Description: "Size of the file share in GB",
 				},
+				"status": schema.StringAttribute{
+					CustomType:  ovhtypes.TfStringType{},
+					Computed:    true,
+					Description: "File share status as reported by the infrastructure (AVAILABLE, CREATING, EXTENDING, ERROR, ...)",
+				},
 				"protocol": schema.StringAttribute{
 					CustomType:  ovhtypes.TfStringType{},
 					Computed:    true,
@@ -222,6 +227,24 @@ func fileShareDataSourceAttributes() map[string]schema.Attribute {
 								CustomType:  ovhtypes.TfStringType{},
 								Computed:    true,
 								Description: "Reason why the capability is disabled",
+							},
+						},
+					},
+				},
+				"attachments": schema.ListNestedAttribute{
+					Computed:    true,
+					Description: "Instances that declare the file share in their shares list",
+					NestedObject: schema.NestedAttributeObject{
+						Attributes: map[string]schema.Attribute{
+							"id": schema.StringAttribute{
+								CustomType:  ovhtypes.TfStringType{},
+								Computed:    true,
+								Description: "Instance ID",
+							},
+							"access_level": schema.StringAttribute{
+								CustomType:  ovhtypes.TfStringType{},
+								Computed:    true,
+								Description: "Access level the instance declares for the file share (READ_WRITE, READ_ONLY)",
 							},
 						},
 					},

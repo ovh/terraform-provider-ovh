@@ -388,7 +388,8 @@ Share:
 | `snapshot_id` | `create_from = { snapshot_id }` |
 | `availability_zone` | unchanged |
 | `size` in GB | unchanged, resizes in place |
-| `is_public`, `status` | removed; see `resource_status` |
+| `status` | `current_state.status` (Manila, upper case: `available` becomes `AVAILABLE`) and `resource_status` (API) |
+| `is_public` | removed |
 | (export path) | `current_state.export_locations[*].path` |
 
 ```terraform
