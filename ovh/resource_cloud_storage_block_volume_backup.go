@@ -184,6 +184,49 @@ func (r *cloudStorageBlockVolumeBackupResource) Schema(ctx context.Context, req 
 						Description:         "Size of the backup in GB",
 						MarkdownDescription: "Size of the backup in GB",
 					},
+					"status": schema.StringAttribute{
+						CustomType:          ovhtypes.TfStringType{},
+						Computed:            true,
+						Description:         "Backup status (AVAILABLE, CREATING, DELETED, DELETING, ERROR, ERROR_DELETING, ERROR_RESTORING, RESTORING, UNMANAGING)",
+						MarkdownDescription: "Backup status (`AVAILABLE`, `CREATING`, `DELETED`, `DELETING`, `ERROR`, `ERROR_DELETING`, `ERROR_RESTORING`, `RESTORING`, `UNMANAGING`)",
+					},
+					"volume_type": schema.StringAttribute{
+						CustomType:          ovhtypes.TfStringType{},
+						Computed:            true,
+						Description:         "Type of the backed-up volume (CLASSIC, HIGH_SPEED, HIGH_SPEED_GEN2)",
+						MarkdownDescription: "Type of the backed-up volume (`CLASSIC`, `HIGH_SPEED`, `HIGH_SPEED_GEN2`)",
+					},
+					"encryption": schema.SingleNestedAttribute{
+						Computed:            true,
+						Description:         "Encryption configuration of the backed-up volume",
+						MarkdownDescription: "Encryption configuration of the backed-up volume",
+						Attributes: map[string]schema.Attribute{
+							"enabled": schema.BoolAttribute{
+								Computed:            true,
+								Description:         "Whether the backed-up volume is encrypted at rest with LUKS",
+								MarkdownDescription: "Whether the backed-up volume is encrypted at rest with LUKS",
+							},
+							"kms": schema.SingleNestedAttribute{
+								Computed:            true,
+								Description:         "Customer-managed key (CMK) reference used to encrypt the backed-up volume",
+								MarkdownDescription: "Customer-managed key (CMK) reference used to encrypt the backed-up volume",
+								Attributes: map[string]schema.Attribute{
+									"domain_id": schema.StringAttribute{
+										CustomType:          ovhtypes.TfStringType{},
+										Computed:            true,
+										Description:         "OKMS domain ID owning the service key",
+										MarkdownDescription: "OKMS domain ID owning the service key",
+									},
+									"service_key_id": schema.StringAttribute{
+										CustomType:          ovhtypes.TfStringType{},
+										Computed:            true,
+										Description:         "OKMS service key ID used to encrypt the backed-up volume",
+										MarkdownDescription: "OKMS service key ID used to encrypt the backed-up volume",
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},

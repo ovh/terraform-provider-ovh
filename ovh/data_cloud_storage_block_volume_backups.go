@@ -107,6 +107,42 @@ func (d *cloudStorageBlockVolumeBackupsDataSource) Schema(ctx context.Context, r
 							Computed:    true,
 							Description: "Size of the backup in GB",
 						},
+						"status": schema.StringAttribute{
+							CustomType:  ovhtypes.TfStringType{},
+							Computed:    true,
+							Description: "Backup status",
+						},
+						"volume_type": schema.StringAttribute{
+							CustomType:  ovhtypes.TfStringType{},
+							Computed:    true,
+							Description: "Type of the backed-up volume (CLASSIC, HIGH_SPEED, HIGH_SPEED_GEN2)",
+						},
+						"encryption": schema.SingleNestedAttribute{
+							Computed:    true,
+							Description: "Encryption configuration of the backed-up volume",
+							Attributes: map[string]schema.Attribute{
+								"enabled": schema.BoolAttribute{
+									Computed:    true,
+									Description: "Whether the backed-up volume is encrypted at rest with LUKS",
+								},
+								"kms": schema.SingleNestedAttribute{
+									Computed:    true,
+									Description: "Customer-managed key (CMK) reference used to encrypt the backed-up volume",
+									Attributes: map[string]schema.Attribute{
+										"domain_id": schema.StringAttribute{
+											CustomType:  ovhtypes.TfStringType{},
+											Computed:    true,
+											Description: "OKMS domain ID owning the service key",
+										},
+										"service_key_id": schema.StringAttribute{
+											CustomType:  ovhtypes.TfStringType{},
+											Computed:    true,
+											Description: "OKMS service key ID used to encrypt the backed-up volume",
+										},
+									},
+								},
+							},
+						},
 						"resource_status": schema.StringAttribute{
 							CustomType:  ovhtypes.TfStringType{},
 							Computed:    true,
@@ -138,6 +174,9 @@ func backupListItemAttrTypes() map[string]attr.Type {
 		}},
 		"volume_id":       ovhtypes.TfStringType{},
 		"size":            types.Int64Type,
+		"status":          ovhtypes.TfStringType{},
+		"volume_type":     ovhtypes.TfStringType{},
+		"encryption":      types.ObjectType{AttrTypes: BlockVolumeEncryptionAttrTypes()},
 		"resource_status": ovhtypes.TfStringType{},
 	}
 }
@@ -180,9 +219,15 @@ func (d *cloudStorageBlockVolumeBackupsDataSource) Read(ctx context.Context, req
 		}
 
 		size := int64(0)
+		status := ""
+		volumeType := ""
+		var encryption *CloudStorageBlockVolumeEncryption
 		region := data.Region.ValueString()
 		if b.CurrentState != nil {
 			size = b.CurrentState.Size
+			status = b.CurrentState.Status
+			volumeType = b.CurrentState.VolumeType
+			encryption = b.CurrentState.Encryption
 			if b.CurrentState.VolumeId != "" {
 				volumeId = b.CurrentState.VolumeId
 			}
@@ -217,6 +262,9 @@ func (d *cloudStorageBlockVolumeBackupsDataSource) Read(ctx context.Context, req
 				"location":        locObj,
 				"volume_id":       ovhtypes.TfStringValue{StringValue: types.StringValue(volumeId)},
 				"size":            types.Int64Value(size),
+				"status":          ovhtypes.TfStringValue{StringValue: types.StringValue(status)},
+				"volume_type":     nullableTfString(volumeType),
+				"encryption":      buildBackupEncryptionObject(encryption),
 				"resource_status": ovhtypes.TfStringValue{StringValue: types.StringValue(b.ResourceStatus)},
 			},
 		)

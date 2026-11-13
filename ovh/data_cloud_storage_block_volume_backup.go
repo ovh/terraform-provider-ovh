@@ -90,6 +90,42 @@ func (d *cloudStorageBlockVolumeBackupDataSource) Schema(ctx context.Context, re
 				Computed:    true,
 				Description: "Size of the backup in GB",
 			},
+			"status": schema.StringAttribute{
+				CustomType:  ovhtypes.TfStringType{},
+				Computed:    true,
+				Description: "Backup status",
+			},
+			"volume_type": schema.StringAttribute{
+				CustomType:  ovhtypes.TfStringType{},
+				Computed:    true,
+				Description: "Type of the backed-up volume (CLASSIC, HIGH_SPEED, HIGH_SPEED_GEN2)",
+			},
+			"encryption": schema.SingleNestedAttribute{
+				Computed:    true,
+				Description: "Encryption configuration of the backed-up volume",
+				Attributes: map[string]schema.Attribute{
+					"enabled": schema.BoolAttribute{
+						Computed:    true,
+						Description: "Whether the backed-up volume is encrypted at rest with LUKS",
+					},
+					"kms": schema.SingleNestedAttribute{
+						Computed:    true,
+						Description: "Customer-managed key (CMK) reference used to encrypt the backed-up volume",
+						Attributes: map[string]schema.Attribute{
+							"domain_id": schema.StringAttribute{
+								CustomType:  ovhtypes.TfStringType{},
+								Computed:    true,
+								Description: "OKMS domain ID owning the service key",
+							},
+							"service_key_id": schema.StringAttribute{
+								CustomType:  ovhtypes.TfStringType{},
+								Computed:    true,
+								Description: "OKMS service key ID used to encrypt the backed-up volume",
+							},
+						},
+					},
+				},
+			},
 			"resource_status": schema.StringAttribute{
 				CustomType:  ovhtypes.TfStringType{},
 				Computed:    true,
@@ -108,6 +144,9 @@ type cloudStorageBlockVolumeBackupDataSourceModel struct {
 	Location       types.Object           `tfsdk:"location"`
 	VolumeId       ovhtypes.TfStringValue `tfsdk:"volume_id"`
 	Size           types.Int64            `tfsdk:"size"`
+	Status         ovhtypes.TfStringValue `tfsdk:"status"`
+	VolumeType     ovhtypes.TfStringValue `tfsdk:"volume_type"`
+	Encryption     types.Object           `tfsdk:"encryption"`
 	ResourceStatus ovhtypes.TfStringValue `tfsdk:"resource_status"`
 }
 
@@ -145,8 +184,14 @@ func (d *cloudStorageBlockVolumeBackupDataSource) Read(ctx context.Context, req 
 	}
 
 	size := int64(0)
+	status := ""
+	volumeType := ""
+	var encryption *CloudStorageBlockVolumeEncryption
 	if b.CurrentState != nil {
 		size = b.CurrentState.Size
+		status = b.CurrentState.Status
+		volumeType = b.CurrentState.VolumeType
+		encryption = b.CurrentState.Encryption
 		if b.CurrentState.VolumeId != "" {
 			volumeId = b.CurrentState.VolumeId
 		}
@@ -178,6 +223,9 @@ func (d *cloudStorageBlockVolumeBackupDataSource) Read(ctx context.Context, req 
 	data.Location = locObj
 	data.VolumeId = ovhtypes.TfStringValue{StringValue: types.StringValue(volumeId)}
 	data.Size = types.Int64Value(size)
+	data.Status = ovhtypes.TfStringValue{StringValue: types.StringValue(status)}
+	data.VolumeType = nullableTfString(volumeType)
+	data.Encryption = buildBackupEncryptionObject(encryption)
 	data.ResourceStatus = ovhtypes.TfStringValue{StringValue: types.StringValue(b.ResourceStatus)}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
