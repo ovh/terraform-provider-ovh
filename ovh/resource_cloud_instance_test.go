@@ -229,6 +229,45 @@ resource "ovh_cloud_instance" "test" {
 `, serviceName, volName, region, glanceImageID, serviceName, region, name, flavorID, volumesBlock)
 }
 
+// testAccCloudInstanceConfigBootAndDataVolumes renders a bootable block volume
+// (created from a Glance image), a data volume, and an instance with no image_id
+// that declares them with volumesBlock (volume_ids or volumes).
+func testAccCloudInstanceConfigBootAndDataVolumes(serviceName, region, flavorID, glanceImageID, bootName, dataName, name, volumesBlock string) string {
+	return fmt.Sprintf(`
+resource "ovh_cloud_storage_block_volume" "boot" {
+  service_name = "%[1]s"
+  name         = "%[2]s"
+  size         = 20
+  region       = "%[3]s"
+  volume_type  = "CLASSIC"
+
+  create_from = {
+    image_id = "%[4]s"
+  }
+}
+
+resource "ovh_cloud_storage_block_volume" "data" {
+  service_name = "%[1]s"
+  name         = "%[5]s"
+  size         = 10
+  region       = "%[3]s"
+  volume_type  = "CLASSIC"
+}
+
+resource "ovh_cloud_instance" "test" {
+  service_name = "%[1]s"
+  region       = "%[3]s"
+  name         = "%[6]s"
+  flavor_id    = "%[7]s"
+  %[8]s
+
+  networks = [
+    { auto_assign_public_ip = true },
+  ]
+}
+`, serviceName, bootName, region, glanceImageID, dataName, name, flavorID, volumesBlock)
+}
+
 // testAccCloudInstanceConfigInvalidPowerState renders a config with an invalid
 // power_state to exercise the OneOf validator.
 func testAccCloudInstanceConfigInvalidPowerState(serviceName, region, flavorID, imageID, name string) string {
@@ -508,7 +547,11 @@ func TestAccCloudInstance_powerState(t *testing.T) {
 // instance from it (no image_id), declaring the volume with volumesBlock. It
 // asserts image_id is null, no observed image is reported, and the role BOOT is
 // read back. The bootable source image is resolved from the reference API.
-func testAccCloudInstanceBootFromVolume(t *testing.T, volumesBlock string, extra ...resource.TestCheckFunc) {
+//
+// With withImport, a last step imports the instance and verifies the imported
+// state against the applied one. Only an instance declared with volumes can be
+// verified: an import fills volumes, never the deprecated volume_ids.
+func testAccCloudInstanceBootFromVolume(t *testing.T, volumesBlock string, withImport bool, extra ...resource.TestCheckFunc) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
 	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
 	flavorID := resolveInstanceFlavorID(t, serviceName, region, testAccInstanceFlavorName)
@@ -527,6 +570,80 @@ func testAccCloudInstanceBootFromVolume(t *testing.T, volumesBlock string, extra
 		resource.TestCheckNoResourceAttr("ovh_cloud_instance.test", "current_state.image.id"),
 	}, extra...)
 
+	steps := []resource.TestStep{
+		{
+			Config: testAccCloudInstanceConfigBootFromVolume(serviceName, region, flavorID, glanceImageID, volName, name, volumesBlock),
+			Check:  resource.ComposeTestCheckFunc(checks...),
+			// What the API echoes back must match the configuration, role included.
+			ConfigPlanChecks: resource.ConfigPlanChecks{
+				PostApplyPreRefresh:  []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				PostApplyPostRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+			},
+		},
+	}
+	if withImport {
+		steps = append(steps, resource.TestStep{
+			ResourceName:      "ovh_cloud_instance.test",
+			ImportState:       true,
+			ImportStateVerify: true,
+			ImportStateIdFunc: testAccCloudInstanceImportStateIdFunc("ovh_cloud_instance.test"),
+		})
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloudInstanceE2E(t)
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps:                    steps,
+	})
+}
+
+// The deprecated volume_ids keeps booting from its first volume.
+func TestAccCloudInstance_bootFromVolume(t *testing.T) {
+	testAccCloudInstanceBootFromVolume(t, `volume_ids = [ovh_cloud_storage_block_volume.boot.id]`, false,
+		resource.TestCheckResourceAttr("ovh_cloud_instance.test", "volume_ids.#", "1"),
+		resource.TestCheckNoResourceAttr("ovh_cloud_instance.test", "volumes.#"),
+	)
+}
+
+func TestAccCloudInstance_bootFromVolumes(t *testing.T) {
+	testAccCloudInstanceBootFromVolume(t, `volumes = [{ id = ovh_cloud_storage_block_volume.boot.id, role = "BOOT" }]`, true,
+		resource.TestCheckResourceAttr("ovh_cloud_instance.test", "volumes.0.role", "BOOT"),
+		resource.TestCheckNoResourceAttr("ovh_cloud_instance.test", "volume_ids.#"),
+	)
+}
+
+// TestAccCloudInstance_volumeIdsToVolumes moves a boot-from-volume instance from
+// the deprecated volume_ids to volumes, with the role BOOT on the same volume. The
+// boot volume does not change, so this must be an in-place update: replacing the
+// instance would be the destructive path ModifyPlan exists to avoid. The roles
+// the API reports must match the configuration, DATA included, so that no plan is
+// left once applied. A last step imports the instance, which fills volumes.
+func TestAccCloudInstance_volumeIdsToVolumes(t *testing.T) {
+	const rn = "ovh_cloud_instance.test"
+
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+	flavorID := resolveInstanceFlavorID(t, serviceName, region, testAccInstanceFlavorName)
+	glanceImageID := resolveInstanceImageID(t, serviceName, region, testAccInstanceImageName)
+	name := acctest.RandomWithPrefix("test-inst-vol-migr")
+	bootName := acctest.RandomWithPrefix("test-vol-boot")
+	dataName := acctest.RandomWithPrefix("test-vol-data")
+
+	cfg := func(block string) string {
+		return testAccCloudInstanceConfigBootAndDataVolumes(serviceName, region, flavorID, glanceImageID, bootName, dataName, name, block)
+	}
+	observedRoles := resource.ComposeAggregateTestCheckFunc(
+		resource.TestCheckResourceAttr(rn, "resource_status", "READY"),
+		resource.TestCheckNoResourceAttr(rn, "image_id"),
+		resource.TestCheckResourceAttr(rn, "current_state.volumes.#", "2"),
+		resource.TestCheckTypeSetElemNestedAttrs(rn, "current_state.volumes.*", map[string]string{"name": bootName, "role": "BOOT"}),
+		resource.TestCheckTypeSetElemNestedAttrs(rn, "current_state.volumes.*", map[string]string{"name": dataName, "role": "DATA"}),
+	)
+
+	var instanceID string
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckCloudInstanceE2E(t)
@@ -534,26 +651,49 @@ func testAccCloudInstanceBootFromVolume(t *testing.T, volumesBlock string, extra
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCloudInstanceConfigBootFromVolume(serviceName, region, flavorID, glanceImageID, volName, name, volumesBlock),
-				Check:  resource.ComposeTestCheckFunc(checks...),
+				// With no image_id, the first volume of volume_ids is the boot volume.
+				Config: cfg(`volume_ids = [ovh_cloud_storage_block_volume.boot.id, ovh_cloud_storage_block_volume.data.id]`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					observedRoles,
+					resource.TestCheckResourceAttr(rn, "volume_ids.#", "2"),
+					resource.TestCheckNoResourceAttr(rn, "volumes.#"),
+					captureInstanceID(rn, &instanceID),
+				),
+			},
+			{
+				Config: cfg(`volumes = [
+    { id = ovh_cloud_storage_block_volume.boot.id, role = "BOOT" },
+    { id = ovh_cloud_storage_block_volume.data.id },
+  ]`),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					// An update in place, never a replacement.
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(rn, plancheck.ResourceActionUpdate),
+					},
+					// role is Optional+Computed with a default: once applied, the roles
+					// the API reports must leave nothing to change.
+					PostApplyPreRefresh:  []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+					PostApplyPostRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					observedRoles,
+					resource.TestCheckResourceAttr(rn, "volumes.#", "2"),
+					resource.TestCheckResourceAttr(rn, "volumes.0.role", "BOOT"),
+					resource.TestCheckResourceAttr(rn, "volumes.1.role", "DATA"),
+					resource.TestCheckNoResourceAttr(rn, "volume_ids.#"),
+					// Fails if the instance was replaced: its id would change.
+					captureInstanceID(rn, &instanceID),
+				),
+			},
+			{
+				// Import reads volumes back, with the BOOT role on the boot volume.
+				ResourceName:      rn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccCloudInstanceImportStateIdFunc(rn),
 			},
 		},
 	})
-}
-
-// The deprecated volume_ids keeps booting from its first volume.
-func TestAccCloudInstance_bootFromVolume(t *testing.T) {
-	testAccCloudInstanceBootFromVolume(t, `volume_ids = [ovh_cloud_storage_block_volume.boot.id]`,
-		resource.TestCheckResourceAttr("ovh_cloud_instance.test", "volume_ids.#", "1"),
-		resource.TestCheckNoResourceAttr("ovh_cloud_instance.test", "volumes.#"),
-	)
-}
-
-func TestAccCloudInstance_bootFromVolumes(t *testing.T) {
-	testAccCloudInstanceBootFromVolume(t, `volumes = [{ id = ovh_cloud_storage_block_volume.boot.id, role = "BOOT" }]`,
-		resource.TestCheckResourceAttr("ovh_cloud_instance.test", "volumes.0.role", "BOOT"),
-		resource.TestCheckNoResourceAttr("ovh_cloud_instance.test", "volume_ids.#"),
-	)
 }
 
 // The refused combination fails at plan, before any call to the API.
