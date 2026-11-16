@@ -57,6 +57,10 @@ func TestCloudManagedDatabasePostgresqlObjectDataSources(t *testing.T) {
 	}{
 		{"user", "/user", "id", "u1", managedDatabaseUserTestReady, "users",
 			NewCloudManagedDatabasePostgresqlUserDataSource, NewCloudManagedDatabasePostgresqlUsersDataSource},
+		{"database", "/database", "id", "d1", managedDatabaseDatabaseTestAnswer, "databases",
+			NewCloudManagedDatabaseDatabaseDataSource, NewCloudManagedDatabaseDatabasesDataSource},
+		{"connection pool", "/connectionPool", "id", "p1", managedDatabaseConnectionPoolTestAnswer(10, "null"), "connection_pools",
+			NewCloudManagedDatabasePostgresqlConnectionPoolDataSource, NewCloudManagedDatabasePostgresqlConnectionPoolsDataSource},
 		{"role", "/roles", "id", "r1", `{"id": "r1", "name": "replication", "checksum": "c1", "createdAt": "2026-11-12T10:00:00Z", "updatedAt": "2026-11-12T10:00:00Z"}`, "roles",
 			NewCloudManagedDatabaseRoleDataSource, NewCloudManagedDatabaseRolesDataSource},
 	} {
@@ -93,7 +97,10 @@ func TestCloudManagedDatabasePostgresqlObjectDataSources(t *testing.T) {
 }
 
 func testAccDataSourceCloudManagedDatabasePostgresqlObjectsConfig(name string) string {
-	return testAccCloudManagedDatabasePostgresqlUserConfig(name, "v1") + `
+	return testAccCloudManagedDatabasePostgresqlConnectionPoolConfig(name, `
+  mode    = "TRANSACTION"
+  size    = 10
+  user_id = ovh_cloud_managed_database_postgresql_user.user.id`) + `
 locals {
   service = {
     service_name = ovh_cloud_managed_database.db.service_name
@@ -112,6 +119,32 @@ data "ovh_cloud_managed_database_postgresql_user" "user" {
   service_name = local.service.service_name
   service_id   = local.service.service_id
   id           = ovh_cloud_managed_database_postgresql_user.user.id
+}
+
+data "ovh_cloud_managed_database_databases" "databases" {
+  service_name = local.service.service_name
+  engine       = local.service.engine
+  service_id   = local.service.service_id
+  depends_on   = [ovh_cloud_managed_database_database.database]
+}
+
+data "ovh_cloud_managed_database_database" "database" {
+  service_name = local.service.service_name
+  engine       = local.service.engine
+  service_id   = local.service.service_id
+  id           = ovh_cloud_managed_database_database.database.id
+}
+
+data "ovh_cloud_managed_database_postgresql_connection_pools" "pools" {
+  service_name = local.service.service_name
+  service_id   = local.service.service_id
+  depends_on   = [ovh_cloud_managed_database_postgresql_connection_pool.pool]
+}
+
+data "ovh_cloud_managed_database_postgresql_connection_pool" "pool" {
+  service_name = local.service.service_name
+  service_id   = local.service.service_id
+  id           = ovh_cloud_managed_database_postgresql_connection_pool.pool.id
 }
 
 data "ovh_cloud_managed_database_roles" "roles" {
@@ -142,6 +175,10 @@ func TestAccDataSourceCloudManagedDatabasePostgresqlObjects_basic(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckTypeSetElemAttrPair("data.ovh_cloud_managed_database_postgresql_users.users", "users.*.id", testAccCloudManagedDatabasePostgresqlUserResource, "id"),
 					resource.TestCheckResourceAttr("data.ovh_cloud_managed_database_postgresql_user.user", "username", "tfacc"),
+					resource.TestCheckTypeSetElemAttrPair("data.ovh_cloud_managed_database_databases.databases", "databases.*.id", testAccCloudManagedDatabasePostgresqlDatabaseResource, "id"),
+					resource.TestCheckResourceAttr("data.ovh_cloud_managed_database_database.database", "name", "tfacc"),
+					resource.TestCheckTypeSetElemAttrPair("data.ovh_cloud_managed_database_postgresql_connection_pools.pools", "connection_pools.*.id", testAccCloudManagedDatabasePostgresqlConnectionPoolResource, "id"),
+					resource.TestCheckResourceAttr("data.ovh_cloud_managed_database_postgresql_connection_pool.pool", "mode", "TRANSACTION"),
 					resource.TestCheckResourceAttrSet("data.ovh_cloud_managed_database_roles.roles", "roles.#"),
 					resource.TestCheckResourceAttrPair("data.ovh_cloud_managed_database_role.role", "name", "data.ovh_cloud_managed_database_roles.roles", "roles.0.name"),
 				),

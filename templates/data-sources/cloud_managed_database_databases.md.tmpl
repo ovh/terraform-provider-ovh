@@ -1,0 +1,33 @@
+---
+subcategory : "Managed Databases"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_cloud_managed_database_databases (Data Source)
+
+Use this data source to list the databases of a managed database service (mysql, postgresql), using the Cloud Databases API v2.
+
+## Example Usage
+
+{{tffile "examples/data-sources/cloud_managed_database_databases/example_1.tf"}}
+
+## Argument Reference
+
+* `service_name` - (Optional) ID of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
+* `engine` - (Required) Engine of the service: mysql, postgresql.
+* `service_id` - (Required) ID of the service.
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `databases` - The databases of the service.
+  * `checksum` - Hash of the database, computed by the API.
+  * `created_at` - Creation date of the database.
+  * `default` - Whether the database is the default one, created with the service.
+  * `id` - ID of the database.
+  * `name` - Name of the database.
+  * `updated_at` - Last update date of the database.
