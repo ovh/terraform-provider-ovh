@@ -12,10 +12,7 @@ const schemasVersionHeader = "X-Schemas-Version"
 // schemasVersion is the schema version requested by this client.
 // Bump this value when a new schema version is released and the provider
 // has been updated to match.
-const schemasVersion = "0.0"
-
-// publicCloudSchemasVersion is the schema version requested on /v2/publicCloud routes.
-const publicCloudSchemasVersion = "1.0"
+const schemasVersion = "1.0"
 
 // schemasVersionTransport is an http.RoundTripper middleware that injects the
 // X-Schemas-Version header on every request whose path starts with "/v2/".
@@ -29,11 +26,7 @@ func (t *schemasVersionTransport) RoundTrip(req *http.Request) (*http.Response, 
 	if strings.HasPrefix(req.URL.Path, "/v2/") {
 		// Clone the request so we don't mutate the caller's original.
 		req = req.Clone(req.Context())
-		version := schemasVersion
-		if strings.HasPrefix(req.URL.Path, "/v2/publicCloud/") {
-			version = publicCloudSchemasVersion
-		}
-		req.Header.Set(schemasVersionHeader, version)
+		req.Header.Set(schemasVersionHeader, schemasVersion)
 	}
 	return t.next.RoundTrip(req)
 }
