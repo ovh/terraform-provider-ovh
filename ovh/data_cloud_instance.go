@@ -88,8 +88,7 @@ func instanceDataSourceAttributes(ctx context.Context) map[string]schema.Attribu
 			"ip":                    schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescNetworkRefIp, MarkdownDescription: instanceDescNetworkRefIpMd},
 			"auto_assign_public_ip": schema.BoolAttribute{Computed: true, Description: instanceDescNetworkRefAutoAssign, MarkdownDescription: instanceDescNetworkRefAutoAssignMd},
 		}}},
-		"volume_ids":          schema.ListAttribute{CustomType: ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx), Computed: true, Description: instanceDescVolumeIds, MarkdownDescription: instanceDescVolumeIds, DeprecationMessage: "Use volumes, which carries the role of each volume."},
-		"boot_from_volume_id": schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescDsBootFromVolumeId, MarkdownDescription: instanceDescDsBootFromVolumeId},
+		"volume_ids": schema.ListAttribute{CustomType: ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx), Computed: true, Description: instanceDescVolumeIds, MarkdownDescription: instanceDescVolumeIds, DeprecationMessage: "Use volumes, which carries the role of each volume."},
 		"volumes": schema.ListNestedAttribute{Computed: true, Description: instanceDescVolumes, MarkdownDescription: instanceDescVolumesMd, NestedObject: schema.NestedAttributeObject{Attributes: map[string]schema.Attribute{
 			"id":   schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescVolumeRefId, MarkdownDescription: instanceDescVolumeRefId},
 			"role": schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescVolumeRole, MarkdownDescription: instanceDescVolumeRole},

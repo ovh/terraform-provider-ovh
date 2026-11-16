@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -58,21 +59,20 @@ func (r *cloudInstanceResource) Configure(ctx context.Context, req resource.Conf
 }
 
 var instanceMutableAttrs = MutableAttrs{
-	Strings:           []string{"name", "flavor_id", "image_id", "power_state", "user_data", "boot_from_volume_id"},
+	Strings:           []string{"name", "flavor_id", "image_id", "power_state", "user_data"},
 	Lists:             []string{"networks", "shares", "volumes"},
 	CustomStringLists: []string{"volume_ids", "security_group_ids"},
 }
 
 // ValidateConfig enforces the volume rules the API would otherwise reject at
-// apply, and keeps the three ways of declaring volumes from being mixed: volumes
-// alone, or boot_from_volume_id with volume_ids, or volume_ids alone (deprecated).
+// apply: volumes and the deprecated volume_ids cannot be mixed, at most one volume
+// is BOOT, and an image_id excludes a boot volume.
 func (r *cloudInstanceResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
 	var volumes types.List
 	var volumeIds ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]
-	var bootId, imageId ovhtypes.TfStringValue
+	var imageId ovhtypes.TfStringValue
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("volumes"), &volumes)...)
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("volume_ids"), &volumeIds)...)
-	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("boot_from_volume_id"), &bootId)...)
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("image_id"), &imageId)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -80,57 +80,53 @@ func (r *cloudInstanceResource) ValidateConfig(ctx context.Context, req resource
 
 	// A null is "not set"; an unknown may still turn out to be set, so only a
 	// known value counts as a conflict.
-	hasVolumes := !volumes.IsNull() && !volumes.IsUnknown()
-	if hasVolumes && !volumeIds.IsNull() && !volumeIds.IsUnknown() {
+	if !volumes.IsNull() && !volumes.IsUnknown() && !volumeIds.IsNull() && !volumeIds.IsUnknown() {
 		resp.Diagnostics.AddAttributeError(path.Root("volumes"), "Conflicting volume attributes",
-			"volumes cannot be combined with volume_ids. Use volumes alone, or boot_from_volume_id with volume_ids.")
+			"volumes cannot be combined with volume_ids. Use volumes alone: it gives each volume a role.")
 	}
-	if hasVolumes && knownString(bootId) != "" {
-		resp.Diagnostics.AddAttributeError(path.Root("boot_from_volume_id"), "Conflicting volume attributes",
-			"boot_from_volume_id cannot be combined with volumes: give the boot volume the role BOOT in volumes instead.")
-	}
-
-	boot := bootVolumeId(volumes, bootId)
 	if !volumes.IsUnknown() {
-		if boots := bootVolumeIds(volumes); len(boots) > 1 {
+		boots := bootVolumeIds(volumes)
+		if len(boots) > 1 {
 			resp.Diagnostics.AddAttributeError(path.Root("volumes"), "Several boot volumes",
 				"At most one entry of volumes can have the role BOOT.")
 		}
-	}
-	if boot != "" && knownString(imageId) != "" {
-		resp.Diagnostics.AddAttributeError(path.Root("image_id"), "Two boot sources",
-			"image_id and a boot volume (boot_from_volume_id, or a volume with the role BOOT) are mutually exclusive: an instance boots from one or the other.")
-	}
-	if id := knownString(bootId); id != "" && !volumeIds.IsNull() && !volumeIds.IsUnknown() {
-		for _, ref := range customStringListToRefs(volumeIds) {
-			if ref.Id == id {
-				resp.Diagnostics.AddAttributeError(path.Root("volume_ids"), "Boot volume listed twice",
-					"boot_from_volume_id is already attached: remove it from volume_ids, which only holds the data volumes.")
-			}
+		if len(boots) > 0 && knownString(imageId) != "" {
+			resp.Diagnostics.AddAttributeError(path.Root("image_id"), "Two boot sources",
+				"image_id and a volume with the role BOOT are mutually exclusive: an instance boots from one or the other.")
 		}
 	}
 }
 
 // ModifyPlan replaces the instance when its boot volume changes: the API only
-// lets the boot volume be chosen at creation. The boot volume is read from
-// whichever attribute carries it, so moving it from volumes to
-// boot_from_volume_id is not a change.
+// lets the boot volume be chosen at creation. The boot volume is read the same
+// way from the plan and from the state, so moving from volume_ids to volumes is
+// not a change.
 func (r *cloudInstanceResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
 		return
 	}
-	var plannedVolumes, priorVolumes types.List
-	var plannedBoot, priorBoot ovhtypes.TfStringValue
-	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("volumes"), &plannedVolumes)...)
-	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("volumes"), &priorVolumes)...)
-	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("boot_from_volume_id"), &plannedBoot)...)
-	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("boot_from_volume_id"), &priorBoot)...)
-	if resp.Diagnostics.HasError() || plannedVolumes.IsUnknown() || priorVolumes.IsUnknown() ||
-		plannedBoot.IsUnknown() || priorBoot.IsUnknown() {
+	read := func(get func(context.Context, path.Path, interface{}) diag.Diagnostics) (string, bool) {
+		var volumes types.List
+		var volumeIds ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]
+		var imageId ovhtypes.TfStringValue
+		resp.Diagnostics.Append(get(ctx, path.Root("volumes"), &volumes)...)
+		resp.Diagnostics.Append(get(ctx, path.Root("volume_ids"), &volumeIds)...)
+		resp.Diagnostics.Append(get(ctx, path.Root("image_id"), &imageId)...)
+		if resp.Diagnostics.HasError() || volumes.IsUnknown() || volumeIds.IsUnknown() || imageId.IsUnknown() {
+			return "", false
+		}
+		return bootVolumeId(volumes, volumeIds, imageId), true
+	}
+	planned, ok := read(req.Plan.GetAttribute)
+	if !ok {
 		return
 	}
-	if bootVolumeId(plannedVolumes, plannedBoot) != bootVolumeId(priorVolumes, priorBoot) {
-		resp.RequiresReplace = append(resp.RequiresReplace, path.Root("boot_from_volume_id"))
+	prior, ok := read(req.State.GetAttribute)
+	if !ok {
+		return
+	}
+	if planned != prior {
+		resp.RequiresReplace = append(resp.RequiresReplace, path.Root("volumes"))
 	}
 }
 
@@ -260,13 +256,7 @@ func (r *cloudInstanceResource) Schema(ctx context.Context, req resource.SchemaR
 				Optional:            true,
 				Description:         instanceDescVolumeIds,
 				MarkdownDescription: instanceDescVolumeIds,
-				DeprecationMessage:  "Use volumes, or boot_from_volume_id with volume_ids for the data volumes. volume_ids alone keeps working but cannot give a volume a role.",
-			},
-			"boot_from_volume_id": schema.StringAttribute{
-				CustomType:          ovhtypes.TfStringType{},
-				Optional:            true,
-				Description:         instanceDescBootFromVolumeId,
-				MarkdownDescription: instanceDescBootFromVolumeId,
+				DeprecationMessage:  "Use volumes, which gives each volume a role. volume_ids alone keeps working: without image_id, its first volume is the boot volume.",
 			},
 			"volumes": schema.ListNestedAttribute{
 				Optional:            true,

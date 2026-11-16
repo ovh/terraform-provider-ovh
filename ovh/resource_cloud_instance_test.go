@@ -200,7 +200,7 @@ resource "ovh_cloud_instance" "test" {
 // testAccCloudInstanceConfigBootFromVolume renders a bootable block volume
 // (created from a Glance image) plus an instance that boots from it, with no
 // image_id. volumesBlock is the HCL of the attribute under test: volume_ids
-// (deprecated), boot_from_volume_id, or volumes.
+// (deprecated) or volumes.
 func testAccCloudInstanceConfigBootFromVolume(serviceName, region, flavorID, glanceImageID, volName, name, volumesBlock string) string {
 	return fmt.Sprintf(`
 resource "ovh_cloud_storage_block_volume" "boot" {
@@ -545,15 +545,6 @@ func testAccCloudInstanceBootFromVolume(t *testing.T, volumesBlock string, extra
 func TestAccCloudInstance_bootFromVolume(t *testing.T) {
 	testAccCloudInstanceBootFromVolume(t, `volume_ids = [ovh_cloud_storage_block_volume.boot.id]`,
 		resource.TestCheckResourceAttr("ovh_cloud_instance.test", "volume_ids.#", "1"),
-		resource.TestCheckNoResourceAttr("ovh_cloud_instance.test", "boot_from_volume_id"),
-		resource.TestCheckNoResourceAttr("ovh_cloud_instance.test", "volumes.#"),
-	)
-}
-
-func TestAccCloudInstance_bootFromVolumeId(t *testing.T) {
-	testAccCloudInstanceBootFromVolume(t, `boot_from_volume_id = ovh_cloud_storage_block_volume.boot.id`,
-		resource.TestCheckResourceAttrPair("ovh_cloud_instance.test", "boot_from_volume_id", "ovh_cloud_storage_block_volume.boot", "id"),
-		resource.TestCheckNoResourceAttr("ovh_cloud_instance.test", "volume_ids.#"),
 		resource.TestCheckNoResourceAttr("ovh_cloud_instance.test", "volumes.#"),
 	)
 }
@@ -562,11 +553,10 @@ func TestAccCloudInstance_bootFromVolumes(t *testing.T) {
 	testAccCloudInstanceBootFromVolume(t, `volumes = [{ id = ovh_cloud_storage_block_volume.boot.id, role = "BOOT" }]`,
 		resource.TestCheckResourceAttr("ovh_cloud_instance.test", "volumes.0.role", "BOOT"),
 		resource.TestCheckNoResourceAttr("ovh_cloud_instance.test", "volume_ids.#"),
-		resource.TestCheckNoResourceAttr("ovh_cloud_instance.test", "boot_from_volume_id"),
 	)
 }
 
-// The refused combinations fail at plan, before any call to the API.
+// The refused combination fails at plan, before any call to the API.
 func TestAccCloudInstance_volumesConflicts(t *testing.T) {
 	cfg := func(block string) string {
 		return fmt.Sprintf(`
@@ -590,12 +580,7 @@ resource "ovh_cloud_instance" "test" {
 				ExpectError: regexp.MustCompile(`volumes cannot be combined with volume_ids`),
 			},
 			{
-				Config:      cfg("volumes = [{ id = \"a\", role = \"BOOT\" }]\n  boot_from_volume_id = \"b\""),
-				PlanOnly:    true,
-				ExpectError: regexp.MustCompile(`boot_from_volume_id cannot be combined with volumes`),
-			},
-			{
-				Config:      cfg("image_id = \"img\"\n  boot_from_volume_id = \"b\""),
+				Config:      cfg("image_id = \"img\"\n  volumes = [{ id = \"a\", role = \"BOOT\" }]"),
 				PlanOnly:    true,
 				ExpectError: regexp.MustCompile(`mutually exclusive`),
 			},

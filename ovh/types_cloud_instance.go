@@ -34,9 +34,7 @@ type CloudInstanceModel struct {
 	Volumes    types.List             `tfsdk:"volumes"`
 	// Deprecated, kept for compatibility: ids of the attached volumes, sent
 	// without a role.
-	VolumeIds ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] `tfsdk:"volume_ids"`
-	// Create-time shortcut for the volume the instance boots from.
-	BootFromVolumeId ovhtypes.TfStringValue                             `tfsdk:"boot_from_volume_id"`
+	VolumeIds        ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] `tfsdk:"volume_ids"`
 	SecurityGroupIds ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] `tfsdk:"security_group_ids"`
 	Shares           types.List                                         `tfsdk:"shares"`
 
@@ -318,13 +316,11 @@ const (
 	instanceDescNetworkRefAutoAssign   = "Attach a public interface with a public IP assigned by the platform. Only valid on an entry with no network_id and no ip, and on at most one entry"
 	instanceDescNetworkRefAutoAssignMd = "Attach a public interface with a public IP assigned by the platform. Only valid on an entry with no `network_id` and no `ip`, and on at most one entry"
 
-	instanceDescVolumes            = "Block-storage volumes attached to the instance, each with its role. Adding or removing an entry attaches or detaches the volume. To boot from a volume, omit image_id and give one entry the role BOOT: the boot volume can only be chosen at creation, cannot be detached, and is kept when the instance is deleted"
-	instanceDescVolumesMd          = "Block-storage volumes attached to the instance, each with its `role`. Adding or removing an entry attaches or detaches the volume. To boot from a volume, omit `image_id` and give one entry the role `BOOT`: the boot volume can only be chosen at creation, cannot be detached, and is kept when the instance is deleted"
-	instanceDescVolumeIds          = "IDs of block-storage volumes attached to the instance. DEPRECATED: use volumes, or boot_from_volume_id plus volume_ids. Cannot be combined with volumes"
-	instanceDescBootFromVolumeId   = "ID of the block-storage volume the instance boots from. Omit image_id when it is set. The boot volume can only be chosen at creation: changing it replaces the instance, it cannot be detached, and it is kept when the instance is deleted. Can be combined with volume_ids for the data volumes, but not with volumes"
-	instanceDescDsBootFromVolumeId = "ID of the volume the instance boots from, null for an instance booted from an image"
-	instanceDescVolumeRefId        = "ID of the block-storage volume"
-	instanceDescVolumeRefRole      = "Role of the volume: DATA (default) or BOOT. At most one volume can be BOOT, only when image_id is omitted. Changing which volume is BOOT replaces the instance"
+	instanceDescVolumes       = "Block-storage volumes attached to the instance, each with its role. Adding or removing an entry attaches or detaches the volume. To boot from a volume, omit image_id and give one entry the role BOOT: the boot volume can only be chosen at creation, cannot be detached, and is kept when the instance is deleted"
+	instanceDescVolumesMd     = "Block-storage volumes attached to the instance, each with its `role`. Adding or removing an entry attaches or detaches the volume. To boot from a volume, omit `image_id` and give one entry the role `BOOT`: the boot volume can only be chosen at creation, cannot be detached, and is kept when the instance is deleted"
+	instanceDescVolumeIds     = "IDs of block-storage volumes attached to the instance. DEPRECATED: use volumes, which carries the role of each volume. Cannot be combined with volumes. Without image_id, the first volume is the boot volume"
+	instanceDescVolumeRefId   = "ID of the block-storage volume"
+	instanceDescVolumeRefRole = "Role of the volume: DATA (default) or BOOT. At most one volume can be BOOT, only when image_id is omitted. Changing which volume is BOOT replaces the instance"
 
 	instanceDescUserData   = "Cloud-init user data injected at boot, base64-encoded (standard encoding, 65535 bytes max). Pass it through base64encode(). Write-only: the API accepts it but never returns it, so the value is only ever read back from Terraform state and a change made outside Terraform stays invisible. WARNING: changing this value to another non-empty one reinstalls the instance (rebuild on the current image — the root disk is wiped); setting it to \"\" is an explicit clear and also reinstalls the instance; removing the argument from the configuration only drops it from state, the instance keeps the user data it booted with and is not rebuilt"
 	instanceDescUserDataMd = "Cloud-init user data injected at boot, base64-encoded (standard encoding, 65535 bytes max). Pass it through `base64encode()`. **Write-only**: the API accepts it but never returns it, so the value is only ever read back from Terraform state and a change made outside Terraform stays invisible. **WARNING**: changing this value to another non-empty one **reinstalls the instance** (rebuild on the current image — the root disk is wiped); setting it to `\"\"` is an explicit clear and **also reinstalls the instance**; removing the argument from the configuration only drops it from state, the instance keeps the user data it booted with and is **not** rebuilt"
@@ -607,35 +603,42 @@ func volumeIdsToAPI(list ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]) []C
 }
 
 // volumesPayload builds targetSpec.volumes from whichever attribute the
-// configuration uses: volumes, or boot_from_volume_id plus volume_ids, or the
-// deprecated volume_ids alone.
+// configuration uses: volumes, or the deprecated volume_ids.
 //
-// On creation, volume_ids alone with no image_id keeps its documented meaning,
-// booting from the first volume: that volume is sent as BOOT, since the API
-// refuses an instance with no boot source. The same request would otherwise be a
-// 400.
+// On creation, volume_ids with no image_id keeps its documented meaning, booting
+// from the first volume: that volume is sent as BOOT, since the API refuses an
+// instance with no boot source. On update no role is sent for volume_ids: the API
+// keeps the stored boot volume.
 func (m *CloudInstanceModel) volumesPayload(create bool) []CloudInstanceAPIVolumeRef {
 	if !m.Volumes.IsNull() && !m.Volumes.IsUnknown() {
 		return volumesToAPI(m.Volumes)
 	}
 	refs := volumeIdsToAPI(m.VolumeIds)
-	if id := knownString(m.BootFromVolumeId); id != "" {
-		return append([]CloudInstanceAPIVolumeRef{{Id: id, Role: instanceVolumeRoleBoot}}, refs...)
-	}
 	if create && len(refs) > 0 && knownString(m.ImageId) == "" {
 		refs[0].Role = instanceVolumeRoleBoot
 	}
 	return refs
 }
 
-// bootVolumeId is the id of the volume the configuration makes the boot volume,
-// whichever attribute carries it, or "" when it names none.
-func bootVolumeId(volumes types.List, bootFromVolumeId ovhtypes.TfStringValue) string {
-	if id := knownString(bootFromVolumeId); id != "" {
-		return id
+// bootVolumeId is the id of the volume the instance boots from, whichever
+// attribute declares its volumes, or "" when it boots from an image.
+//
+// With volumes it is the entry with the role BOOT. With the deprecated volume_ids
+// it is the first one, when there is no image_id. This reads the same on a plan
+// and on a state, so moving from volume_ids to volumes is not a change of boot
+// volume.
+func bootVolumeId(volumes types.List, volumeIds ovhtypes.TfListNestedValue[ovhtypes.TfStringValue], imageId ovhtypes.TfStringValue) string {
+	if !volumes.IsNull() && !volumes.IsUnknown() {
+		if ids := bootVolumeIds(volumes); len(ids) > 0 {
+			return ids[0]
+		}
+		return ""
 	}
-	if ids := bootVolumeIds(volumes); len(ids) > 0 {
-		return ids[0]
+	if knownString(imageId) != "" {
+		return ""
+	}
+	if refs := customStringListToRefs(volumeIds); len(refs) > 0 {
+		return refs[0].Id
 	}
 	return ""
 }
@@ -831,16 +834,13 @@ type volumeForm int
 const (
 	volumeFormNone    volumeForm = iota // nothing to go by: import, or no volume
 	volumeFormVolumes                   // volumes
-	volumeFormBoot                      // boot_from_volume_id, plus volume_ids for the data volumes
-	volumeFormIds                       // volume_ids alone (deprecated)
+	volumeFormIds                       // volume_ids (deprecated)
 )
 
 func (p instancePriorSpec) volumeForm() volumeForm {
 	switch {
 	case !p.Volumes.IsNull():
 		return volumeFormVolumes
-	case !p.BootFromVolumeId.IsNull():
-		return volumeFormBoot
 	case !p.VolumeIds.IsNull():
 		return volumeFormIds
 	}
@@ -848,9 +848,12 @@ func (p instancePriorSpec) volumeForm() volumeForm {
 }
 
 // setVolumeForms fills the volume attributes from targetSpec. Only the attribute
-// the configuration uses is filled and the others stay null, otherwise the apply
+// the configuration uses is filled and the other stays null, otherwise the apply
 // result would not match the configuration. With nothing to go by, an import
-// fills volumes. A data source has no configuration and fills all three.
+// fills volumes. A data source has no configuration and fills both.
+//
+// volume_ids is the ids of targetSpec.volumes, boot volume included, in the order
+// the API returns them.
 func (m *CloudInstanceModel) setVolumeForms(ts *CloudInstanceAPITargetSpec, prior instancePriorSpec) {
 	if ts == nil || len(ts.Volumes) == 0 {
 		return
@@ -861,28 +864,12 @@ func (m *CloudInstanceModel) setVolumeForms(ts *CloudInstanceAPITargetSpec, prio
 	if all || form == volumeFormVolumes || form == volumeFormNone {
 		m.Volumes = buildInstanceVolumesRootList(ts)
 	}
-
-	var bootId string
-	var ids, dataIds []attr.Value
-	for _, v := range ts.Volumes {
-		ids = append(ids, tfStr(v.Id))
-		if volumeRoleOrData(v.Role) == instanceVolumeRoleBoot && bootId == "" {
-			bootId = v.Id
-			continue
+	if all || form == volumeFormIds {
+		ids := make([]attr.Value, len(ts.Volumes))
+		for i, v := range ts.Volumes {
+			ids[i] = tfStr(v.Id)
 		}
-		dataIds = append(dataIds, tfStr(v.Id))
-	}
-	if (all || form == volumeFormBoot) && bootId != "" {
-		m.BootFromVolumeId = tfStr(bootId)
-	}
-	// With a boot volume pulled out, volume_ids holds the data volumes only. In
-	// its deprecated form, and for a data source, it holds every id as before.
-	listed := ids
-	if form == volumeFormBoot && !all {
-		listed = dataIds
-	}
-	if (all || form == volumeFormBoot || form == volumeFormIds) && len(listed) > 0 {
-		m.VolumeIds = ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]{ListValue: basetypes.NewListValueMust(ovhtypes.TfStringType{}, listed)}
+		m.VolumeIds = ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]{ListValue: basetypes.NewListValueMust(ovhtypes.TfStringType{}, ids)}
 	}
 }
 
@@ -1135,24 +1122,22 @@ func buildInstanceSharesRootList(prior types.List, ts *CloudInstanceAPITargetSpe
 // merged model shaped like the configuration: list order and optionals the user
 // omitted but the API resolves and echoes back.
 type instancePriorSpec struct {
-	Networks         types.List
-	Shares           types.List
-	Volumes          types.List
-	VolumeIds        ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]
-	BootFromVolumeId ovhtypes.TfStringValue
-	// AllVolumeForms asks for volumes, volume_ids and boot_from_volume_id to be
-	// filled together: a data source has no configuration to follow.
+	Networks  types.List
+	Shares    types.List
+	Volumes   types.List
+	VolumeIds ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]
+	// AllVolumeForms asks for volumes and volume_ids to be filled together: a
+	// data source has no configuration to follow.
 	AllVolumeForms bool
 }
 
 // priorSpec snapshots the config-shaped values before a merge overwrites them.
 func (m *CloudInstanceModel) priorSpec() instancePriorSpec {
 	return instancePriorSpec{
-		Networks:         m.Networks,
-		Shares:           m.Shares,
-		Volumes:          m.Volumes,
-		VolumeIds:        m.VolumeIds,
-		BootFromVolumeId: m.BootFromVolumeId,
+		Networks:  m.Networks,
+		Shares:    m.Shares,
+		Volumes:   m.Volumes,
+		VolumeIds: m.VolumeIds,
 	}
 }
 
@@ -1186,7 +1171,6 @@ func (m *CloudInstanceModel) MergeWith(ctx context.Context, response *CloudInsta
 	m.Shares = types.ListNull(types.ObjectType{AttrTypes: instanceShareRefAttrTypes()})
 	m.Volumes = types.ListNull(types.ObjectType{AttrTypes: instanceVolumeRefAttrTypes()})
 	m.VolumeIds = ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]{ListValue: basetypes.NewListNull(ovhtypes.TfStringType{})}
-	m.BootFromVolumeId = ovhtypes.TfStringValue{StringValue: types.StringNull()}
 	m.SecurityGroupIds = ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]{ListValue: basetypes.NewListNull(ovhtypes.TfStringType{})}
 
 	if response.TargetSpec != nil {
@@ -1218,7 +1202,7 @@ func (m *CloudInstanceModel) MergeWith(ctx context.Context, response *CloudInsta
 		m.Networks = buildInstanceNetworksRootList(prior.Networks, ts)
 		m.Shares = buildInstanceSharesRootList(prior.Shares, ts)
 
-		// volumes, volume_ids and boot_from_volume_id from targetSpec. They are
+		// volumes and volume_ids from targetSpec. They are
 		// Optional (non-Computed): an omitted attribute is null in config, so the
 		// API echoing back an empty array must map to null, not an empty list.
 		m.setVolumeForms(ts, prior)

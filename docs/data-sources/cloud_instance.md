@@ -64,7 +64,6 @@ actually observes.
   * `ip` - IP address of this interface. Without `network_id`: a public IP the project already owns (additional IP, or an Ext-Net IP of the project in the instance's region). With `network_id` + `subnet_id`: pins the port's fixed address when inside the subnet CIDR, otherwise associates the existing floating IP with that address.
   * `auto_assign_public_ip` - Attach a public interface with a public IP assigned by the platform. Only valid on an entry with no `network_id` and no `ip`, and on at most one entry.
 * `volume_ids` - (**Deprecated**, use `volumes`) IDs of every block-storage volume attached to the instance, the boot volume included.
-* `boot_from_volume_id` - ID of the volume the instance boots from, null for an instance booted from an image.
 * `volumes` - Block-storage volumes attached to the instance. Each entry exposes:
   * `id` - ID of the block-storage volume.
   * `role` - Role of the volume for the instance: `BOOT` or `DATA`.

@@ -1016,7 +1016,6 @@ func TestUnitCloudInstanceMergeWithVolumeRole(t *testing.T) {
 // volumeCfg is the volume-related part of a configuration.
 type volumeCfg struct {
 	image   ovhtypes.TfStringValue
-	boot    ovhtypes.TfStringValue
 	ids     ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]
 	volumes types.List
 }
@@ -1024,7 +1023,6 @@ type volumeCfg struct {
 func newVolumeCfg() volumeCfg {
 	return volumeCfg{
 		image:   strNull(),
-		boot:    strNull(),
 		ids:     nullCustomStringList(),
 		volumes: types.ListNull(types.ObjectType{AttrTypes: instanceVolumeRefAttrTypes()}),
 	}
@@ -1047,28 +1045,13 @@ func TestUnitCloudInstanceValidateConfigVolumes(t *testing.T) {
 		wantErr bool
 	}{
 		{"nothing", with(func(c *volumeCfg) { c.image = strVal("img") }), false},
-		// The three accepted forms.
 		{"volumes alone", with(func(c *volumeCfg) { c.volumes = volumeRefList(map[string]string{"v1": "BOOT", "v2": ""}) }), false},
-		{"boot_from_volume_id with volume_ids", with(func(c *volumeCfg) { c.boot = strVal("b"); c.ids = customStringList("d1", "d2") }), false},
 		{"volume_ids alone (deprecated)", with(func(c *volumeCfg) { c.ids = customStringList("v1") }), false},
 		{"volume_ids with an image", with(func(c *volumeCfg) { c.image = strVal("img"); c.ids = customStringList("d1") }), false},
-		{"boot_from_volume_id alone", with(func(c *volumeCfg) { c.boot = strVal("b") }), false},
-		// The refused combinations.
 		{"volumes with volume_ids", with(func(c *volumeCfg) {
 			c.volumes = volumeRefList(map[string]string{"v1": ""})
 			c.ids = customStringList("d1")
 		}), true},
-		{"volumes with boot_from_volume_id", with(func(c *volumeCfg) {
-			c.volumes = volumeRefList(map[string]string{"v1": ""})
-			c.boot = strVal("b")
-		}), true},
-		{"all three", with(func(c *volumeCfg) {
-			c.volumes = volumeRefList(map[string]string{"v1": ""})
-			c.boot = strVal("b")
-			c.ids = customStringList("d1")
-		}), true},
-		// Boot source rules.
-		{"boot_from_volume_id with an image", with(func(c *volumeCfg) { c.boot = strVal("b"); c.image = strVal("img") }), true},
 		{"BOOT volume with an image", with(func(c *volumeCfg) {
 			c.image = strVal("img")
 			c.volumes = volumeRefList(map[string]string{"v1": "BOOT"})
@@ -1078,7 +1061,6 @@ func TestUnitCloudInstanceValidateConfigVolumes(t *testing.T) {
 			c.image = strVal("img")
 			c.volumes = volumeRefList(map[string]string{"v1": "DATA"})
 		}), false},
-		{"boot volume repeated in volume_ids", with(func(c *volumeCfg) { c.boot = strVal("b"); c.ids = customStringList("b", "d1") }), true},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -1097,7 +1079,7 @@ func instanceConfigRaw(t *testing.T, sch schema.Schema, c volumeCfg) tftypes.Val
 	t.Helper()
 	st := tfsdk.State{Schema: sch, Raw: tftypes.NewValue(sch.Type().TerraformType(context.Background()), nil)}
 	ctx := context.Background()
-	for name, v := range map[string]any{"image_id": c.image, "boot_from_volume_id": c.boot, "volume_ids": c.ids, "volumes": c.volumes} {
+	for name, v := range map[string]any{"image_id": c.image, "volume_ids": c.ids, "volumes": c.volumes} {
 		if d := st.SetAttribute(ctx, path.Root(name), v); d.HasError() {
 			t.Fatal(d)
 		}
@@ -1108,6 +1090,7 @@ func instanceConfigRaw(t *testing.T, sch schema.Schema, c volumeCfg) tftypes.Val
 // The payload follows whichever attribute the configuration uses.
 func TestUnitCloudInstanceVolumesPayload(t *testing.T) {
 	ref := func(id, role string) CloudInstanceAPIVolumeRef { return CloudInstanceAPIVolumeRef{Id: id, Role: role} }
+	nullVols := types.ListNull(types.ObjectType{AttrTypes: instanceVolumeRefAttrTypes()})
 	cases := []struct {
 		name   string
 		model  CloudInstanceModel
@@ -1116,10 +1099,6 @@ func TestUnitCloudInstanceVolumesPayload(t *testing.T) {
 	}{
 		{"volumes", CloudInstanceModel{Volumes: volumeRefList(map[string]string{"a": "BOOT", "b": ""})}, true,
 			[]CloudInstanceAPIVolumeRef{ref("a", "BOOT"), ref("b", "DATA")}},
-		{"boot_from_volume_id and volume_ids", CloudInstanceModel{BootFromVolumeId: strVal("b"), VolumeIds: customStringList("d1", "d2")}, true,
-			[]CloudInstanceAPIVolumeRef{ref("b", "BOOT"), ref("d1", ""), ref("d2", "")}},
-		{"boot_from_volume_id alone", CloudInstanceModel{BootFromVolumeId: strVal("b")}, false,
-			[]CloudInstanceAPIVolumeRef{ref("b", "BOOT")}},
 		// Deprecated volume_ids: with no image the first volume was the boot
 		// volume, and the API refuses an instance with no boot source.
 		{"volume_ids, no image, create", CloudInstanceModel{VolumeIds: customStringList("v1", "v2")}, true,
@@ -1134,7 +1113,9 @@ func TestUnitCloudInstanceVolumesPayload(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			m := tc.model
-			m.Volumes = orNullVolumes(m.Volumes)
+			if m.Volumes.ElementType(context.Background()) == nil {
+				m.Volumes = nullVols
+			}
 			if got := m.volumesPayload(tc.create); !reflect.DeepEqual(got, tc.want) {
 				t.Fatalf("payload = %+v, want %+v", got, tc.want)
 			}
@@ -1142,15 +1123,8 @@ func TestUnitCloudInstanceVolumesPayload(t *testing.T) {
 	}
 }
 
-func orNullVolumes(l types.List) types.List {
-	if l.ElementType(context.Background()) == nil {
-		return types.ListNull(types.ObjectType{AttrTypes: instanceVolumeRefAttrTypes()})
-	}
-	return l
-}
-
 // Reading back only fills the attribute the configuration uses, otherwise the
-// apply result would not match the plan. All three are filled for a data source.
+// apply result would not match the plan. Both are filled for a data source.
 func TestUnitCloudInstanceVolumeFormsRoundTrip(t *testing.T) {
 	ctx := context.Background()
 	resp := func() *CloudInstanceAPIResponse {
@@ -1162,9 +1136,7 @@ func TestUnitCloudInstanceVolumeFormsRoundTrip(t *testing.T) {
 			},
 		}
 	}
-	nullIds := nullCustomStringList()
 	nullVols := types.ListNull(types.ObjectType{AttrTypes: instanceVolumeRefAttrTypes()})
-
 	ids := func(l ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]) []string {
 		var out []string
 		for _, e := range l.Elements() {
@@ -1174,68 +1146,134 @@ func TestUnitCloudInstanceVolumeFormsRoundTrip(t *testing.T) {
 	}
 
 	t.Run("config uses volumes", func(t *testing.T) {
-		m := &CloudInstanceModel{Volumes: volumeRefList(map[string]string{"boot": "BOOT"}), VolumeIds: nullIds}
+		m := &CloudInstanceModel{Volumes: volumeRefList(map[string]string{"boot": "BOOT"}), VolumeIds: nullCustomStringList()}
 		m.MergeWith(ctx, resp(), m.priorSpec())
-		if m.VolumeIds.IsNull() && m.BootFromVolumeId.IsNull() && len(m.Volumes.Elements()) == 3 {
-			return
-		}
-		t.Fatalf("only volumes must be filled: volume_ids=%v boot=%v volumes=%d", m.VolumeIds, m.BootFromVolumeId, len(m.Volumes.Elements()))
-	})
-	t.Run("config uses boot_from_volume_id", func(t *testing.T) {
-		m := &CloudInstanceModel{BootFromVolumeId: strVal("boot"), VolumeIds: customStringList("d1", "d2"), Volumes: nullVols}
-		m.MergeWith(ctx, resp(), m.priorSpec())
-		if m.BootFromVolumeId.ValueString() != "boot" || !reflect.DeepEqual(ids(m.VolumeIds), []string{"d1", "d2"}) || !m.Volumes.IsNull() {
-			t.Fatalf("boot=%q volume_ids=%v volumes null=%v", m.BootFromVolumeId.ValueString(), ids(m.VolumeIds), m.Volumes.IsNull())
+		if !m.VolumeIds.IsNull() || len(m.Volumes.Elements()) != 3 {
+			t.Fatalf("only volumes must be filled: volume_ids=%v volumes=%d", m.VolumeIds, len(m.Volumes.Elements()))
 		}
 	})
-	t.Run("config uses volume_ids alone", func(t *testing.T) {
+	t.Run("config uses volume_ids", func(t *testing.T) {
 		m := &CloudInstanceModel{VolumeIds: customStringList("boot", "d1", "d2"), Volumes: nullVols}
 		m.MergeWith(ctx, resp(), m.priorSpec())
-		if !reflect.DeepEqual(ids(m.VolumeIds), []string{"boot", "d1", "d2"}) || !m.BootFromVolumeId.IsNull() || !m.Volumes.IsNull() {
-			t.Fatalf("volume_ids must keep every id, as before: %v, boot=%v", ids(m.VolumeIds), m.BootFromVolumeId)
+		if !reflect.DeepEqual(ids(m.VolumeIds), []string{"boot", "d1", "d2"}) || !m.Volumes.IsNull() {
+			t.Fatalf("volume_ids must hold every id, boot included, in the API order: %v", ids(m.VolumeIds))
 		}
 	})
 	t.Run("import fills volumes", func(t *testing.T) {
-		m := &CloudInstanceModel{Volumes: nullVols, VolumeIds: nullIds}
+		m := &CloudInstanceModel{Volumes: nullVols, VolumeIds: nullCustomStringList()}
 		m.MergeWith(ctx, resp(), m.priorSpec())
-		if len(m.Volumes.Elements()) != 3 || !m.VolumeIds.IsNull() || !m.BootFromVolumeId.IsNull() {
+		if len(m.Volumes.Elements()) != 3 || !m.VolumeIds.IsNull() {
 			t.Fatalf("import must fill volumes only")
 		}
 	})
-	t.Run("data source fills the three", func(t *testing.T) {
-		m := &CloudInstanceModel{Volumes: nullVols, VolumeIds: nullIds}
+	t.Run("data source fills both", func(t *testing.T) {
+		m := &CloudInstanceModel{Volumes: nullVols, VolumeIds: nullCustomStringList()}
 		prior := m.priorSpec()
 		prior.AllVolumeForms = true
 		m.MergeWith(ctx, resp(), prior)
-		if len(m.Volumes.Elements()) != 3 || m.BootFromVolumeId.ValueString() != "boot" ||
-			!reflect.DeepEqual(ids(m.VolumeIds), []string{"boot", "d1", "d2"}) {
-			t.Fatalf("data source: volumes=%d boot=%q volume_ids=%v", len(m.Volumes.Elements()), m.BootFromVolumeId.ValueString(), ids(m.VolumeIds))
+		if len(m.Volumes.Elements()) != 3 || !reflect.DeepEqual(ids(m.VolumeIds), []string{"boot", "d1", "d2"}) {
+			t.Fatalf("data source: volumes=%d volume_ids=%v", len(m.Volumes.Elements()), ids(m.VolumeIds))
 		}
 	})
 	t.Run("no volume at all stays null", func(t *testing.T) {
-		m := &CloudInstanceModel{Volumes: nullVols, VolumeIds: nullIds}
+		m := &CloudInstanceModel{Volumes: nullVols, VolumeIds: nullCustomStringList()}
 		r := resp()
 		r.TargetSpec.Volumes = nil
 		m.MergeWith(ctx, r, m.priorSpec())
-		if !m.Volumes.IsNull() || !m.VolumeIds.IsNull() || !m.BootFromVolumeId.IsNull() {
-			t.Fatal("all three must stay null")
+		if !m.Volumes.IsNull() || !m.VolumeIds.IsNull() {
+			t.Fatal("both must stay null")
 		}
 	})
 }
 
-// Moving the boot volume from one attribute to another is not a change of boot
-// volume, so it must not replace the instance.
-func TestUnitCloudInstanceBootVolumeIdAcrossForms(t *testing.T) {
+// The boot volume reads the same from a plan and from a state, whichever
+// attribute declares the volumes. Moving from volume_ids to volumes keeps it, so
+// it must not replace the instance; changing it does.
+func TestUnitCloudInstanceBootVolumeId(t *testing.T) {
 	nullVols := types.ListNull(types.ObjectType{AttrTypes: instanceVolumeRefAttrTypes()})
-	fromVolumes := bootVolumeId(volumeRefList(map[string]string{"b": "BOOT", "d": ""}), strNull())
-	fromBoot := bootVolumeId(nullVols, strVal("b"))
-	if fromVolumes != "b" || fromBoot != "b" {
-		t.Fatalf("volumes form = %q, boot_from_volume_id form = %q, want both b", fromVolumes, fromBoot)
+	nullIds := nullCustomStringList()
+	cases := []struct {
+		name    string
+		volumes types.List
+		ids     ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]
+		image   ovhtypes.TfStringValue
+		want    string
+	}{
+		{"volumes, BOOT entry", volumeRefList(map[string]string{"b": "BOOT", "d": ""}), nullIds, strNull(), "b"},
+		{"volumes, no BOOT", volumeRefList(map[string]string{"d": ""}), nullIds, strNull(), ""},
+		{"volume_ids, no image: first volume", nullVols, customStringList("b", "d"), strNull(), "b"},
+		{"volume_ids with an image: none", nullVols, customStringList("b", "d"), strVal("img"), ""},
+		{"nothing", nullVols, nullIds, strNull(), ""},
+		// volumes decides, even next to an image_id read from a state.
+		{"volumes win over image_id", volumeRefList(map[string]string{"b": "BOOT"}), nullIds, strVal("img"), "b"},
 	}
-	if got := bootVolumeId(volumeRefList(map[string]string{"d": ""}), strNull()); got != "" {
-		t.Fatalf("no boot volume must give \"\", got %q", got)
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := bootVolumeId(tc.volumes, tc.ids, tc.image); got != tc.want {
+				t.Fatalf("bootVolumeId = %q, want %q", got, tc.want)
+			}
+		})
 	}
-	if got := bootVolumeId(nullVols, strNull()); got != "" {
-		t.Fatalf("nothing must give \"\", got %q", got)
+
+	// volume_ids = ["b", "d"] -> volumes = [{b BOOT}, {d}] keeps b: no replacement.
+	from := bootVolumeId(nullVols, customStringList("b", "d"), strNull())
+	to := bootVolumeId(volumeRefList(map[string]string{"b": "BOOT", "d": ""}), nullIds, strNull())
+	if from != to {
+		t.Fatalf("moving from volume_ids to volumes changed the boot volume: %q -> %q", from, to)
+	}
+	// Reordering volume_ids changes the first volume, hence the boot volume.
+	if bootVolumeId(nullVols, customStringList("d", "b"), strNull()) == from {
+		t.Fatal("putting another volume first must change the boot volume")
+	}
+}
+
+// ModifyPlan end to end: moving from volume_ids to volumes keeps the boot volume
+// and must not replace the instance, while changing the boot volume must.
+func TestUnitCloudInstanceModifyPlanBootVolume(t *testing.T) {
+	ctx := context.Background()
+	r := &cloudInstanceResource{}
+	var sch fwresource.SchemaResponse
+	r.Schema(ctx, fwresource.SchemaRequest{}, &sch)
+
+	raw := func(c volumeCfg) tftypes.Value { return instanceConfigRaw(t, sch.Schema, c) }
+	with := func(f func(c *volumeCfg)) volumeCfg {
+		c := newVolumeCfg()
+		f(&c)
+		return c
+	}
+	idsB := with(func(c *volumeCfg) { c.ids = customStringList("b", "d") })
+	idsDB := with(func(c *volumeCfg) { c.ids = customStringList("d", "b") })
+	volsB := with(func(c *volumeCfg) { c.volumes = volumeRefList(map[string]string{"b": "BOOT", "d": ""}) })
+	volsD := with(func(c *volumeCfg) { c.volumes = volumeRefList(map[string]string{"b": "", "d": "BOOT"}) })
+	withImage := with(func(c *volumeCfg) { c.image = strVal("img"); c.ids = customStringList("d") })
+
+	cases := []struct {
+		name        string
+		state       volumeCfg
+		plan        volumeCfg
+		wantReplace bool
+	}{
+		{"volume_ids -> volumes, same boot", idsB, volsB, false},
+		{"volumes -> volume_ids, same boot", volsB, idsB, false},
+		{"unchanged", volsB, volsB, false},
+		{"volumes, another volume becomes BOOT", volsB, volsD, true},
+		{"volume_ids, another volume first", idsB, idsDB, true},
+		{"image: adding a data volume", withImage, with(func(c *volumeCfg) { c.image = strVal("img"); c.ids = customStringList("d", "e") }), false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			req := fwresource.ModifyPlanRequest{
+				State: tfsdk.State{Schema: sch.Schema, Raw: raw(tc.state)},
+				Plan:  tfsdk.Plan{Schema: sch.Schema, Raw: raw(tc.plan)},
+			}
+			resp := &fwresource.ModifyPlanResponse{}
+			r.ModifyPlan(ctx, req, resp)
+			if resp.Diagnostics.HasError() {
+				t.Fatal(resp.Diagnostics)
+			}
+			if got := len(resp.RequiresReplace) > 0; got != tc.wantReplace {
+				t.Fatalf("replace = %v, want %v", got, tc.wantReplace)
+			}
+		})
 	}
 }
