@@ -13,17 +13,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/ovh/go-ovh/ovh"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
 var (
-	_ resource.Resource                = (*cloudInstanceResource)(nil)
-	_ resource.ResourceWithConfigure   = (*cloudInstanceResource)(nil)
-	_ resource.ResourceWithImportState = (*cloudInstanceResource)(nil)
+	_ resource.Resource                   = (*cloudInstanceResource)(nil)
+	_ resource.ResourceWithConfigure      = (*cloudInstanceResource)(nil)
+	_ resource.ResourceWithImportState    = (*cloudInstanceResource)(nil)
+	_ resource.ResourceWithValidateConfig = (*cloudInstanceResource)(nil)
+	_ resource.ResourceWithModifyPlan     = (*cloudInstanceResource)(nil)
 )
 
 func NewCloudInstanceResource() resource.Resource {
@@ -54,9 +58,80 @@ func (r *cloudInstanceResource) Configure(ctx context.Context, req resource.Conf
 }
 
 var instanceMutableAttrs = MutableAttrs{
-	Strings:           []string{"name", "flavor_id", "image_id", "power_state", "user_data"},
-	Lists:             []string{"networks", "shares"},
+	Strings:           []string{"name", "flavor_id", "image_id", "power_state", "user_data", "boot_from_volume_id"},
+	Lists:             []string{"networks", "shares", "volumes"},
 	CustomStringLists: []string{"volume_ids", "security_group_ids"},
+}
+
+// ValidateConfig enforces the volume rules the API would otherwise reject at
+// apply, and keeps the three ways of declaring volumes from being mixed: volumes
+// alone, or boot_from_volume_id with volume_ids, or volume_ids alone (deprecated).
+func (r *cloudInstanceResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var volumes types.List
+	var volumeIds ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]
+	var bootId, imageId ovhtypes.TfStringValue
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("volumes"), &volumes)...)
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("volume_ids"), &volumeIds)...)
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("boot_from_volume_id"), &bootId)...)
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("image_id"), &imageId)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// A null is "not set"; an unknown may still turn out to be set, so only a
+	// known value counts as a conflict.
+	hasVolumes := !volumes.IsNull() && !volumes.IsUnknown()
+	if hasVolumes && !volumeIds.IsNull() && !volumeIds.IsUnknown() {
+		resp.Diagnostics.AddAttributeError(path.Root("volumes"), "Conflicting volume attributes",
+			"volumes cannot be combined with volume_ids. Use volumes alone, or boot_from_volume_id with volume_ids.")
+	}
+	if hasVolumes && knownString(bootId) != "" {
+		resp.Diagnostics.AddAttributeError(path.Root("boot_from_volume_id"), "Conflicting volume attributes",
+			"boot_from_volume_id cannot be combined with volumes: give the boot volume the role BOOT in volumes instead.")
+	}
+
+	boot := bootVolumeId(volumes, bootId)
+	if !volumes.IsUnknown() {
+		if boots := bootVolumeIds(volumes); len(boots) > 1 {
+			resp.Diagnostics.AddAttributeError(path.Root("volumes"), "Several boot volumes",
+				"At most one entry of volumes can have the role BOOT.")
+		}
+	}
+	if boot != "" && knownString(imageId) != "" {
+		resp.Diagnostics.AddAttributeError(path.Root("image_id"), "Two boot sources",
+			"image_id and a boot volume (boot_from_volume_id, or a volume with the role BOOT) are mutually exclusive: an instance boots from one or the other.")
+	}
+	if id := knownString(bootId); id != "" && !volumeIds.IsNull() && !volumeIds.IsUnknown() {
+		for _, ref := range customStringListToRefs(volumeIds) {
+			if ref.Id == id {
+				resp.Diagnostics.AddAttributeError(path.Root("volume_ids"), "Boot volume listed twice",
+					"boot_from_volume_id is already attached: remove it from volume_ids, which only holds the data volumes.")
+			}
+		}
+	}
+}
+
+// ModifyPlan replaces the instance when its boot volume changes: the API only
+// lets the boot volume be chosen at creation. The boot volume is read from
+// whichever attribute carries it, so moving it from volumes to
+// boot_from_volume_id is not a change.
+func (r *cloudInstanceResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
+		return
+	}
+	var plannedVolumes, priorVolumes types.List
+	var plannedBoot, priorBoot ovhtypes.TfStringValue
+	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("volumes"), &plannedVolumes)...)
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("volumes"), &priorVolumes)...)
+	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("boot_from_volume_id"), &plannedBoot)...)
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("boot_from_volume_id"), &priorBoot)...)
+	if resp.Diagnostics.HasError() || plannedVolumes.IsUnknown() || priorVolumes.IsUnknown() ||
+		plannedBoot.IsUnknown() || priorBoot.IsUnknown() {
+		return
+	}
+	if bootVolumeId(plannedVolumes, plannedBoot) != bootVolumeId(priorVolumes, priorBoot) {
+		resp.RequiresReplace = append(resp.RequiresReplace, path.Root("boot_from_volume_id"))
+	}
 }
 
 func (r *cloudInstanceResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -185,6 +260,39 @@ func (r *cloudInstanceResource) Schema(ctx context.Context, req resource.SchemaR
 				Optional:            true,
 				Description:         instanceDescVolumeIds,
 				MarkdownDescription: instanceDescVolumeIds,
+				DeprecationMessage:  "Use volumes, or boot_from_volume_id with volume_ids for the data volumes. volume_ids alone keeps working but cannot give a volume a role.",
+			},
+			"boot_from_volume_id": schema.StringAttribute{
+				CustomType:          ovhtypes.TfStringType{},
+				Optional:            true,
+				Description:         instanceDescBootFromVolumeId,
+				MarkdownDescription: instanceDescBootFromVolumeId,
+			},
+			"volumes": schema.ListNestedAttribute{
+				Optional:            true,
+				Description:         instanceDescVolumes,
+				MarkdownDescription: instanceDescVolumesMd,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"id": schema.StringAttribute{
+							CustomType:          ovhtypes.TfStringType{},
+							Required:            true,
+							Description:         instanceDescVolumeRefId,
+							MarkdownDescription: instanceDescVolumeRefId,
+						},
+						"role": schema.StringAttribute{
+							CustomType:          ovhtypes.TfStringType{},
+							Optional:            true,
+							Computed:            true,
+							Default:             stringdefault.StaticString(instanceVolumeRoleData),
+							Description:         instanceDescVolumeRefRole,
+							MarkdownDescription: instanceDescVolumeRefRole,
+							Validators: []validator.String{
+								stringvalidator.OneOf(instanceVolumeRoleBoot, instanceVolumeRoleData),
+							},
+						},
+					},
+				},
 			},
 			"security_group_ids": schema.ListAttribute{
 				CustomType:          ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
@@ -317,6 +425,7 @@ func instanceCurrentStateSchemaAttributes() map[string]schema.Attribute {
 			"id":   schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescVolumeId, MarkdownDescription: instanceDescVolumeId},
 			"name": schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescVolumeName, MarkdownDescription: instanceDescVolumeName},
 			"size": schema.Int64Attribute{Computed: true, Description: instanceDescVolumeSize, MarkdownDescription: instanceDescVolumeSize},
+			"role": schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescVolumeRole, MarkdownDescription: instanceDescVolumeRole},
 		}}},
 		"shares": schema.ListNestedAttribute{Computed: true, Description: instanceDescCsShares, MarkdownDescription: instanceDescCsShares, NestedObject: schema.NestedAttributeObject{Attributes: map[string]schema.Attribute{
 			"id":           schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescCsShareId, MarkdownDescription: instanceDescCsShareId},

@@ -28,10 +28,15 @@ type CloudInstanceModel struct {
 	FlavorId ovhtypes.TfStringValue `tfsdk:"flavor_id"`
 
 	// Optional — mutable
-	ImageId          ovhtypes.TfStringValue                             `tfsdk:"image_id"`
-	PowerState       ovhtypes.TfStringValue                             `tfsdk:"power_state"`
-	Networks         types.List                                         `tfsdk:"networks"`
-	VolumeIds        ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] `tfsdk:"volume_ids"`
+	ImageId    ovhtypes.TfStringValue `tfsdk:"image_id"`
+	PowerState ovhtypes.TfStringValue `tfsdk:"power_state"`
+	Networks   types.List             `tfsdk:"networks"`
+	Volumes    types.List             `tfsdk:"volumes"`
+	// Deprecated, kept for compatibility: ids of the attached volumes, sent
+	// without a role.
+	VolumeIds ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] `tfsdk:"volume_ids"`
+	// Create-time shortcut for the volume the instance boots from.
+	BootFromVolumeId ovhtypes.TfStringValue                             `tfsdk:"boot_from_volume_id"`
 	SecurityGroupIds ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] `tfsdk:"security_group_ids"`
 	Shares           types.List                                         `tfsdk:"shares"`
 
@@ -87,7 +92,7 @@ type CloudInstanceAPITargetSpec struct {
 	Image      *CloudInstanceRef            `json:"image,omitempty"`
 	Location   *CloudInstanceAPILocation    `json:"location,omitempty"`
 	Networks   []CloudInstanceAPINetworkRef `json:"networks,omitempty"`
-	Volumes    []CloudInstanceRef           `json:"volumes,omitempty"`
+	Volumes    []CloudInstanceAPIVolumeRef  `json:"volumes,omitempty"`
 	PowerState string                       `json:"powerState,omitempty"`
 	Group      *CloudInstanceRef            `json:"group,omitempty"`
 	SSHKeyName string                       `json:"sshKeyName,omitempty"`
@@ -114,7 +119,7 @@ type CloudInstanceAPIUpdateTargetSpec struct {
 	Flavor   CloudInstanceRef             `json:"flavor"`
 	Image    *CloudInstanceRef            `json:"image"`
 	Networks []CloudInstanceAPINetworkRef `json:"networks"`
-	Volumes  []CloudInstanceRef           `json:"volumes"`
+	Volumes  []CloudInstanceAPIVolumeRef  `json:"volumes"`
 	Shares   []CloudInstanceAPIShareRef   `json:"shares"`
 	// Pointer so an unset attribute marshals as null, which the API defaults to
 	// ACTIVE. "" is not a PowerStateEnum member and is rejected.
@@ -168,10 +173,19 @@ type CloudInstanceAPINetworkState struct {
 	Addresses []CloudInstanceAPIAddress `json:"addresses,omitempty"`
 }
 
+// CloudInstanceAPIVolumeRef is a targetSpec.volumes entry: a volume id and its
+// role for the instance. The role is BOOT or DATA; the API reads an omitted one
+// as DATA.
+type CloudInstanceAPIVolumeRef struct {
+	Id   string `json:"id"`
+	Role string `json:"role,omitempty"`
+}
+
 type CloudInstanceAPIVolume struct {
 	Id   string `json:"id"`
 	Name string `json:"name,omitempty"`
 	Size int64  `json:"size,omitempty"`
+	Role string `json:"role,omitempty"`
 }
 
 type CloudInstanceAPIShareState struct {
@@ -280,6 +294,7 @@ const (
 	instanceDescVolumeId   = "Unique identifier of the attached volume"
 	instanceDescVolumeName = "Display name of the attached volume"
 	instanceDescVolumeSize = "Size of the attached volume, in GB"
+	instanceDescVolumeRole = "Role of the volume for the instance: BOOT for the root volume of an instance booted from a volume, DATA for any other volume"
 
 	instanceDescCsShares             = "Observed instance-side share attachments, derived from the Manila access rules that target one of the instance's IPs. Only populated on a single-instance read, never in the list data source"
 	instanceDescCsShareId            = "Identifier of the attached file storage share"
@@ -303,7 +318,13 @@ const (
 	instanceDescNetworkRefAutoAssign   = "Attach a public interface with a public IP assigned by the platform. Only valid on an entry with no network_id and no ip, and on at most one entry"
 	instanceDescNetworkRefAutoAssignMd = "Attach a public interface with a public IP assigned by the platform. Only valid on an entry with no `network_id` and no `ip`, and on at most one entry"
 
-	instanceDescVolumeIds = "IDs of block-storage volumes attached to the instance"
+	instanceDescVolumes            = "Block-storage volumes attached to the instance, each with its role. Adding or removing an entry attaches or detaches the volume. To boot from a volume, omit image_id and give one entry the role BOOT: the boot volume can only be chosen at creation, cannot be detached, and is kept when the instance is deleted"
+	instanceDescVolumesMd          = "Block-storage volumes attached to the instance, each with its `role`. Adding or removing an entry attaches or detaches the volume. To boot from a volume, omit `image_id` and give one entry the role `BOOT`: the boot volume can only be chosen at creation, cannot be detached, and is kept when the instance is deleted"
+	instanceDescVolumeIds          = "IDs of block-storage volumes attached to the instance. DEPRECATED: use volumes, or boot_from_volume_id plus volume_ids. Cannot be combined with volumes"
+	instanceDescBootFromVolumeId   = "ID of the block-storage volume the instance boots from. Omit image_id when it is set. The boot volume can only be chosen at creation: changing it replaces the instance, it cannot be detached, and it is kept when the instance is deleted. Can be combined with volume_ids for the data volumes, but not with volumes"
+	instanceDescDsBootFromVolumeId = "ID of the volume the instance boots from, null for an instance booted from an image"
+	instanceDescVolumeRefId        = "ID of the block-storage volume"
+	instanceDescVolumeRefRole      = "Role of the volume: DATA (default) or BOOT. At most one volume can be BOOT, only when image_id is omitted. Changing which volume is BOOT replaces the instance"
 
 	instanceDescUserData   = "Cloud-init user data injected at boot, base64-encoded (standard encoding, 65535 bytes max). Pass it through base64encode(). Write-only: the API accepts it but never returns it, so the value is only ever read back from Terraform state and a change made outside Terraform stays invisible. WARNING: changing this value to another non-empty one reinstalls the instance (rebuild on the current image — the root disk is wiped); setting it to \"\" is an explicit clear and also reinstalls the instance; removing the argument from the configuration only drops it from state, the instance keeps the user data it booted with and is not rebuilt"
 	instanceDescUserDataMd = "Cloud-init user data injected at boot, base64-encoded (standard encoding, 65535 bytes max). Pass it through `base64encode()`. **Write-only**: the API accepts it but never returns it, so the value is only ever read back from Terraform state and a change made outside Terraform stays invisible. **WARNING**: changing this value to another non-empty one **reinstalls the instance** (rebuild on the current image — the root disk is wiped); setting it to `\"\"` is an explicit clear and **also reinstalls the instance**; removing the argument from the configuration only drops it from state, the instance keeps the user data it booted with and is **not** rebuilt"
@@ -395,6 +416,14 @@ func instanceVolumeAttrTypes() map[string]attr.Type {
 		"id":   ovhtypes.TfStringType{},
 		"name": ovhtypes.TfStringType{},
 		"size": types.Int64Type,
+		"role": ovhtypes.TfStringType{},
+	}
+}
+
+func instanceVolumeRefAttrTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"id":   ovhtypes.TfStringType{},
+		"role": ovhtypes.TfStringType{},
 	}
 }
 
@@ -516,6 +545,101 @@ func customStringListToRefs(list ovhtypes.TfListNestedValue[ovhtypes.TfStringVal
 	return out
 }
 
+// Volume roles, as the API spells them.
+const (
+	instanceVolumeRoleBoot = "BOOT"
+	instanceVolumeRoleData = "DATA"
+)
+
+// volumesToAPI converts the root volumes list into API volume refs. An omitted
+// role is sent as DATA, which is what the API reads it as.
+func volumesToAPI(list types.List) []CloudInstanceAPIVolumeRef {
+	if list.IsNull() || list.IsUnknown() {
+		return nil
+	}
+	out := make([]CloudInstanceAPIVolumeRef, 0, len(list.Elements()))
+	for _, elem := range list.Elements() {
+		obj, ok := elem.(types.Object)
+		if !ok {
+			continue
+		}
+		attrs := obj.Attributes()
+		ref := CloudInstanceAPIVolumeRef{Role: instanceVolumeRoleData}
+		if v, ok := attrs["id"].(ovhtypes.TfStringValue); ok && !v.IsNull() && !v.IsUnknown() {
+			ref.Id = v.ValueString()
+		}
+		if v, ok := attrs["role"].(ovhtypes.TfStringValue); ok && !v.IsNull() && !v.IsUnknown() && v.ValueString() != "" {
+			ref.Role = v.ValueString()
+		}
+		out = append(out, ref)
+	}
+	return out
+}
+
+// bootVolumeIds returns the ids of the volumes holding the BOOT role in a root
+// volumes list. Unknown or null entries are skipped.
+func bootVolumeIds(list types.List) []string {
+	var ids []string
+	for _, ref := range volumesToAPI(list) {
+		if ref.Role == instanceVolumeRoleBoot {
+			ids = append(ids, ref.Id)
+		}
+	}
+	return ids
+}
+
+func knownString(v ovhtypes.TfStringValue) string {
+	if v.IsNull() || v.IsUnknown() {
+		return ""
+	}
+	return v.ValueString()
+}
+
+// volumeIdsToAPI converts the deprecated volume_ids list into volume refs with no
+// role: the API reads an omitted role as DATA on creation and keeps the boot
+// volume's role on update.
+func volumeIdsToAPI(list ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]) []CloudInstanceAPIVolumeRef {
+	var out []CloudInstanceAPIVolumeRef
+	for _, id := range customStringListToRefs(list) {
+		out = append(out, CloudInstanceAPIVolumeRef{Id: id.Id})
+	}
+	return out
+}
+
+// volumesPayload builds targetSpec.volumes from whichever attribute the
+// configuration uses: volumes, or boot_from_volume_id plus volume_ids, or the
+// deprecated volume_ids alone.
+//
+// On creation, volume_ids alone with no image_id keeps its documented meaning,
+// booting from the first volume: that volume is sent as BOOT, since the API
+// refuses an instance with no boot source. The same request would otherwise be a
+// 400.
+func (m *CloudInstanceModel) volumesPayload(create bool) []CloudInstanceAPIVolumeRef {
+	if !m.Volumes.IsNull() && !m.Volumes.IsUnknown() {
+		return volumesToAPI(m.Volumes)
+	}
+	refs := volumeIdsToAPI(m.VolumeIds)
+	if id := knownString(m.BootFromVolumeId); id != "" {
+		return append([]CloudInstanceAPIVolumeRef{{Id: id, Role: instanceVolumeRoleBoot}}, refs...)
+	}
+	if create && len(refs) > 0 && knownString(m.ImageId) == "" {
+		refs[0].Role = instanceVolumeRoleBoot
+	}
+	return refs
+}
+
+// bootVolumeId is the id of the volume the configuration makes the boot volume,
+// whichever attribute carries it, or "" when it names none.
+func bootVolumeId(volumes types.List, bootFromVolumeId ovhtypes.TfStringValue) string {
+	if id := knownString(bootFromVolumeId); id != "" {
+		return id
+	}
+	if ids := bootVolumeIds(volumes); len(ids) > 0 {
+		return ids[0]
+	}
+	return ""
+}
+
 // ToCreate builds the create payload including all fields (mutable + immutable).
 func (m *CloudInstanceResourceModel) ToCreate() *CloudInstanceCreatePayload {
 	ts := &CloudInstanceAPITargetSpec{
@@ -545,7 +669,7 @@ func (m *CloudInstanceResourceModel) ToCreate() *CloudInstanceCreatePayload {
 		ts.UserData = m.UserData.ValueString()
 	}
 	ts.Networks = networksToAPI(m.Networks)
-	ts.Volumes = customStringListToRefs(m.VolumeIds)
+	ts.Volumes = m.volumesPayload(true)
 	ts.SecurityGroups = customStringListToRefs(m.SecurityGroupIds)
 	ts.Shares = sharesToAPI(m.Shares)
 
@@ -594,7 +718,7 @@ func (m *CloudInstanceResourceModel) ToUpdate(checksum string, priorUserData ovh
 		Flavor:   CloudInstanceRef{Id: m.FlavorId.ValueString()},
 		UserData: userDataForUpdate(m.UserData, priorUserData),
 		Networks: orEmpty(networksToAPI(m.Networks)),
-		Volumes:  orEmpty(customStringListToRefs(m.VolumeIds)),
+		Volumes:  orEmpty(m.volumesPayload(false)),
 		Shares:   orEmpty(sharesToAPI(m.Shares)),
 		// Not orEmpty: [] is an explicit deny-all, so a plan that carries no list
 		// must not be turned into one. security_group_ids is Optional+Computed and
@@ -693,6 +817,94 @@ func buildInstanceNetworkStateList(networks []CloudInstanceAPINetworkState) base
 	return types.ListValueMust(netObjType, items)
 }
 
+// volumeRoleOrData reads an absent role as DATA, like the API does.
+func volumeRoleOrData(role string) string {
+	if role == "" {
+		return instanceVolumeRoleData
+	}
+	return role
+}
+
+// volumeForm is the attribute a configuration uses to declare its volumes.
+type volumeForm int
+
+const (
+	volumeFormNone    volumeForm = iota // nothing to go by: import, or no volume
+	volumeFormVolumes                   // volumes
+	volumeFormBoot                      // boot_from_volume_id, plus volume_ids for the data volumes
+	volumeFormIds                       // volume_ids alone (deprecated)
+)
+
+func (p instancePriorSpec) volumeForm() volumeForm {
+	switch {
+	case !p.Volumes.IsNull():
+		return volumeFormVolumes
+	case !p.BootFromVolumeId.IsNull():
+		return volumeFormBoot
+	case !p.VolumeIds.IsNull():
+		return volumeFormIds
+	}
+	return volumeFormNone
+}
+
+// setVolumeForms fills the volume attributes from targetSpec. Only the attribute
+// the configuration uses is filled and the others stay null, otherwise the apply
+// result would not match the configuration. With nothing to go by, an import
+// fills volumes. A data source has no configuration and fills all three.
+func (m *CloudInstanceModel) setVolumeForms(ts *CloudInstanceAPITargetSpec, prior instancePriorSpec) {
+	if ts == nil || len(ts.Volumes) == 0 {
+		return
+	}
+	form := prior.volumeForm()
+	all := prior.AllVolumeForms
+
+	if all || form == volumeFormVolumes || form == volumeFormNone {
+		m.Volumes = buildInstanceVolumesRootList(ts)
+	}
+
+	var bootId string
+	var ids, dataIds []attr.Value
+	for _, v := range ts.Volumes {
+		ids = append(ids, tfStr(v.Id))
+		if volumeRoleOrData(v.Role) == instanceVolumeRoleBoot && bootId == "" {
+			bootId = v.Id
+			continue
+		}
+		dataIds = append(dataIds, tfStr(v.Id))
+	}
+	if (all || form == volumeFormBoot) && bootId != "" {
+		m.BootFromVolumeId = tfStr(bootId)
+	}
+	// With a boot volume pulled out, volume_ids holds the data volumes only. In
+	// its deprecated form, and for a data source, it holds every id as before.
+	listed := ids
+	if form == volumeFormBoot && !all {
+		listed = dataIds
+	}
+	if (all || form == volumeFormBoot || form == volumeFormIds) && len(listed) > 0 {
+		m.VolumeIds = ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]{ListValue: basetypes.NewListValueMust(ovhtypes.TfStringType{}, listed)}
+	}
+}
+
+// buildInstanceVolumesRootList rebuilds the mutable root volumes list from
+// targetSpec. The role is always set: the API echoes every volume with its role,
+// and the attribute defaults to DATA when the configuration leaves it out.
+func buildInstanceVolumesRootList(ts *CloudInstanceAPITargetSpec) types.List {
+	objType := types.ObjectType{AttrTypes: instanceVolumeRefAttrTypes()}
+	if ts == nil || len(ts.Volumes) == 0 {
+		return types.ListNull(objType)
+	}
+	items := make([]attr.Value, 0, len(ts.Volumes))
+	for _, v := range ts.Volumes {
+		obj, _ := types.ObjectValue(instanceVolumeRefAttrTypes(), map[string]attr.Value{
+			"id":   tfStr(v.Id),
+			"role": tfStr(volumeRoleOrData(v.Role)),
+		})
+		items = append(items, obj)
+	}
+	return types.ListValueMust(objType, items)
+}
+
 func buildInstanceVolumeStateList(volumes []CloudInstanceAPIVolume) basetypes.ListValue {
 	objType := types.ObjectType{AttrTypes: instanceVolumeAttrTypes()}
 	if volumes == nil {
@@ -704,6 +916,7 @@ func buildInstanceVolumeStateList(volumes []CloudInstanceAPIVolume) basetypes.Li
 			"id":   tfStr(v.Id),
 			"name": tfStr(v.Name),
 			"size": types.Int64Value(v.Size),
+			"role": tfStr(volumeRoleOrData(v.Role)),
 		})
 		items = append(items, obj)
 	}
@@ -922,13 +1135,25 @@ func buildInstanceSharesRootList(prior types.List, ts *CloudInstanceAPITargetSpe
 // merged model shaped like the configuration: list order and optionals the user
 // omitted but the API resolves and echoes back.
 type instancePriorSpec struct {
-	Networks types.List
-	Shares   types.List
+	Networks         types.List
+	Shares           types.List
+	Volumes          types.List
+	VolumeIds        ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]
+	BootFromVolumeId ovhtypes.TfStringValue
+	// AllVolumeForms asks for volumes, volume_ids and boot_from_volume_id to be
+	// filled together: a data source has no configuration to follow.
+	AllVolumeForms bool
 }
 
 // priorSpec snapshots the config-shaped values before a merge overwrites them.
 func (m *CloudInstanceModel) priorSpec() instancePriorSpec {
-	return instancePriorSpec{Networks: m.Networks, Shares: m.Shares}
+	return instancePriorSpec{
+		Networks:         m.Networks,
+		Shares:           m.Shares,
+		Volumes:          m.Volumes,
+		VolumeIds:        m.VolumeIds,
+		BootFromVolumeId: m.BootFromVolumeId,
+	}
 }
 
 // MergeWith copies the API response into the Terraform model.
@@ -959,7 +1184,9 @@ func (m *CloudInstanceModel) MergeWith(ctx context.Context, response *CloudInsta
 	// resp.State.Set when the response carries no target spec.
 	m.Networks = types.ListNull(types.ObjectType{AttrTypes: instanceNetworkRefAttrTypes()})
 	m.Shares = types.ListNull(types.ObjectType{AttrTypes: instanceShareRefAttrTypes()})
+	m.Volumes = types.ListNull(types.ObjectType{AttrTypes: instanceVolumeRefAttrTypes()})
 	m.VolumeIds = ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]{ListValue: basetypes.NewListNull(ovhtypes.TfStringType{})}
+	m.BootFromVolumeId = ovhtypes.TfStringValue{StringValue: types.StringNull()}
 	m.SecurityGroupIds = ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]{ListValue: basetypes.NewListNull(ovhtypes.TfStringType{})}
 
 	if response.TargetSpec != nil {
@@ -991,18 +1218,10 @@ func (m *CloudInstanceModel) MergeWith(ctx context.Context, response *CloudInsta
 		m.Networks = buildInstanceNetworksRootList(prior.Networks, ts)
 		m.Shares = buildInstanceSharesRootList(prior.Shares, ts)
 
-		// volume_ids from targetSpec. It is Optional (non-Computed): an omitted
-		// attribute is null in config, so the API echoing back an empty array must
-		// map to null, not an empty list.
-		if len(ts.Volumes) > 0 {
-			vals := make([]attr.Value, len(ts.Volumes))
-			for i, v := range ts.Volumes {
-				vals[i] = tfStr(v.Id)
-			}
-			m.VolumeIds = ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]{ListValue: basetypes.NewListValueMust(ovhtypes.TfStringType{}, vals)}
-		} else {
-			m.VolumeIds = ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]{ListValue: basetypes.NewListNull(ovhtypes.TfStringType{})}
-		}
+		// volumes, volume_ids and boot_from_volume_id from targetSpec. They are
+		// Optional (non-Computed): an omitted attribute is null in config, so the
+		// API echoing back an empty array must map to null, not an empty list.
+		m.setVolumeForms(ts, prior)
 
 		// security_group_ids is Optional+Computed: an omitted attribute is resolved
 		// server-side to the project's default security group, and an explicit empty

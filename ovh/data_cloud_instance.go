@@ -61,7 +61,9 @@ func (d *cloudInstanceDataSource) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 
-	data.MergeWith(ctx, &responseData, data.priorSpec())
+	prior := data.priorSpec()
+	prior.AllVolumeForms = true
+	data.MergeWith(ctx, &responseData, prior)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -86,7 +88,12 @@ func instanceDataSourceAttributes(ctx context.Context) map[string]schema.Attribu
 			"ip":                    schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescNetworkRefIp, MarkdownDescription: instanceDescNetworkRefIpMd},
 			"auto_assign_public_ip": schema.BoolAttribute{Computed: true, Description: instanceDescNetworkRefAutoAssign, MarkdownDescription: instanceDescNetworkRefAutoAssignMd},
 		}}},
-		"volume_ids":         schema.ListAttribute{CustomType: ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx), Computed: true, Description: instanceDescVolumeIds, MarkdownDescription: instanceDescVolumeIds},
+		"volume_ids":          schema.ListAttribute{CustomType: ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx), Computed: true, Description: instanceDescVolumeIds, MarkdownDescription: instanceDescVolumeIds, DeprecationMessage: "Use volumes, which carries the role of each volume."},
+		"boot_from_volume_id": schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescDsBootFromVolumeId, MarkdownDescription: instanceDescDsBootFromVolumeId},
+		"volumes": schema.ListNestedAttribute{Computed: true, Description: instanceDescVolumes, MarkdownDescription: instanceDescVolumesMd, NestedObject: schema.NestedAttributeObject{Attributes: map[string]schema.Attribute{
+			"id":   schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescVolumeRefId, MarkdownDescription: instanceDescVolumeRefId},
+			"role": schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescVolumeRole, MarkdownDescription: instanceDescVolumeRole},
+		}}},
 		"security_group_ids": schema.ListAttribute{CustomType: ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx), Computed: true, Description: instanceDescDsSecurityGroupIds, MarkdownDescription: instanceDescDsSecurityGroupIds},
 		"shares": schema.ListNestedAttribute{Computed: true, Description: instanceDescDsShares, MarkdownDescription: instanceDescDsShares, NestedObject: schema.NestedAttributeObject{Attributes: map[string]schema.Attribute{
 			"id":           schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescShareRefId, MarkdownDescription: instanceDescShareRefId},
@@ -148,6 +155,7 @@ func instanceCurrentStateDataSourceSchemaAttributes() map[string]schema.Attribut
 			"id":   schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescVolumeId, MarkdownDescription: instanceDescVolumeId},
 			"name": schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescVolumeName, MarkdownDescription: instanceDescVolumeName},
 			"size": schema.Int64Attribute{Computed: true, Description: instanceDescVolumeSize, MarkdownDescription: instanceDescVolumeSize},
+			"role": schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescVolumeRole, MarkdownDescription: instanceDescVolumeRole},
 		}}},
 		"shares": schema.ListNestedAttribute{Computed: true, Description: instanceDescCsShares, MarkdownDescription: instanceDescCsShares, NestedObject: schema.NestedAttributeObject{Attributes: map[string]schema.Attribute{
 			"id":           schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescCsShareId, MarkdownDescription: instanceDescCsShareId},

@@ -155,8 +155,18 @@ resource "ovh_cloud_instance" "private_only" {
 
 ### Boot from volume
 
-Omit `image_id` and pass a bootable volume in `volume_ids`. The instance's
+Omit `image_id` and name a bootable volume with `boot_from_volume_id`, or give
+it the role `BOOT` in `volumes`. The boot volume can only be chosen at creation,
+cannot be detached, and is kept when the instance is deleted. The instance's
 `current_state.image` stays null for a boot-from-volume instance.
+
+Volumes can be declared in one of two ways, which cannot be mixed:
+
+* `boot_from_volume_id` for the boot volume, with `volume_ids` for the data volumes.
+* `volumes`, a list of `{ id, role }`, where `role` is `DATA` by default.
+
+~> **Deprecated:** `volume_ids` on its own keeps working as before, but it cannot
+give a volume a role. Use `volumes`, or `boot_from_volume_id` with `volume_ids`.
 
 ```terraform
 resource "ovh_cloud_storage_block_volume" "boot" {
@@ -172,11 +182,11 @@ resource "ovh_cloud_storage_block_volume" "boot" {
 }
 
 resource "ovh_cloud_instance" "boot_from_volume" {
-  service_name = "<Public cloud project id>"
-  region       = "GRA11"
-  name         = "my-boot-from-volume-instance"
-  flavor_id    = "<flavor id>"
-  volume_ids   = [ovh_cloud_storage_block_volume.boot.id]
+  service_name        = "<Public cloud project id>"
+  region              = "GRA11"
+  name                = "my-boot-from-volume-instance"
+  flavor_id           = "<flavor id>"
+  boot_from_volume_id = ovh_cloud_storage_block_volume.boot.id
 
   networks = [
     { auto_assign_public_ip = true },
@@ -186,8 +196,9 @@ resource "ovh_cloud_instance" "boot_from_volume" {
 
 ### Attaching additional block volumes
 
-`volume_ids` is mutable: adding or removing an id attaches or detaches the
-volume in place, without recreating the instance.
+`volumes` and `volume_ids` are mutable: adding or removing an entry attaches or
+detaches the volume in place, without recreating the instance. `role` defaults
+to `DATA`.
 
 ```terraform
 resource "ovh_cloud_storage_block_volume" "data" {
@@ -204,7 +215,7 @@ resource "ovh_cloud_instance" "with_volumes" {
   name         = "my-instance-with-volumes"
   flavor_id    = "<flavor id>"
   image_id     = "<image id>"
-  volume_ids   = [ovh_cloud_storage_block_volume.data.id]
+  volumes      = [{ id = ovh_cloud_storage_block_volume.data.id }]
 
   networks = [
     { auto_assign_public_ip = true },
@@ -481,7 +492,11 @@ The following arguments are supported:
   * `subnet_id` - (Optional) Subnet ID within the private network. Required with `network_id`.
   * `ip` - (Optional) IP address of this interface. Without `network_id`: a public IP the project already owns (additional IP, or an Ext-Net IP of the project in the instance's region). With `network_id` + `subnet_id`: pins the port's fixed address when inside the subnet CIDR, otherwise associates the existing floating IP with that address.
   * `auto_assign_public_ip` - (Optional) Attach a public interface with a public IP assigned by the platform. Only valid on an entry with no `network_id` and no `ip`, and on at most one entry.
-* `volume_ids` - (Optional) IDs of block-storage volumes attached to the instance.
+* `volume_ids` - (Optional, **Deprecated**) IDs of block-storage volumes attached to the instance. Use `volumes`, or `boot_from_volume_id` with `volume_ids` for the data volumes. Cannot be combined with `volumes`. Without `image_id` and `boot_from_volume_id`, the first volume is the boot volume, as before.
+* `boot_from_volume_id` - (Optional) ID of the volume the instance boots from. Omit `image_id` when it is set. It can only be chosen at creation: changing it replaces the instance. It can be combined with `volume_ids` for the data volumes, but not with `volumes`, and must not be repeated in `volume_ids`.
+* `volumes` - (Optional) Block-storage volumes attached to the instance, each with a role. Cannot be combined with `volume_ids` or `boot_from_volume_id`. Adding or removing an entry attaches or detaches the volume. Each entry supports:
+  * `id` - (Required) ID of the block-storage volume.
+  * `role` - (Optional) Role of the volume: `DATA` (default) or `BOOT`. At most one volume can be `BOOT`, and only when `image_id` is omitted. The boot volume must be bootable, `available`, not multi-attach and in the region of the instance. It can only be chosen at creation: it cannot be detached, and changing which volume is `BOOT` replaces the instance.
 * `security_group_ids` - (Optional) IDs of security groups applied to all interfaces. Omit it to let the platform apply the project's `default` security group; set an explicit empty list (`[]`) to apply no security group at all (the instance then accepts no inbound traffic).
 * `shares` - (Optional) Filesystem shares attached to the instance. Each entry supports:
   * `id` - (Required) Identifier of the file storage share to attach. Adding the reference attaches the share to the instance, removing it detaches it.
@@ -534,6 +549,7 @@ The following attributes are exported:
     * `id` - Unique identifier of the attached volume.
     * `name` - Display name of the attached volume.
     * `size` - Size of the attached volume, in GB.
+    * `role` - Role of the volume for the instance: `BOOT` for the root volume of an instance booted from a volume, `DATA` for any other volume.
   * `shares` - Observed instance-side share attachments, derived from the Manila access rules that target one of the instance's IPs. Only populated on a single-instance read, never in the list data source:
     * `id` - Identifier of the attached file storage share.
     * `access_level` - Observed access level of the access rule for this instance (`READ_ONLY` or `READ_WRITE`).

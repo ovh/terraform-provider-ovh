@@ -186,7 +186,7 @@ Steps 1 and 5 do not change, except that there are no `import` and `removed` blo
 | `billing_period` | removed; the new resource bills hourly |
 | `flavor { flavor_id }` | `flavor_id`; a change resizes in place |
 | `boot_from { image_id }` | `image_id`; a change rebuilds the instance and wipes its root disk |
-| `boot_from { volume_id }` | `volume_ids = ["<volume ID>"]` with no `image_id`; the first bootable volume is the root disk |
+| `boot_from { volume_id }` | `boot_from_volume_id = "<volume ID>"` with no `image_id`. `volume_ids = ["<volume ID>"]` with no `image_id` still works but is deprecated |
 | `ssh_key { name }` | `ssh_key_name` |
 | `ssh_key_create { name, public_key }` | an `ovh_cloud_ssh_key` resource referenced through `ssh_key_name` |
 | `user_data` (plain text) | `user_data = base64encode(...)`, sensitive and write-only |
