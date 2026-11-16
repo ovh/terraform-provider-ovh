@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/ovhwrap"
@@ -1446,138 +1447,365 @@ func TestAccCloudManagedDatabasePostgresql_update(t *testing.T) {
 	})
 }
 
-// testAccCloudManagedEngineTestCase tests a service of the engine. config(name, step) renders, at step
-// v1 then v2, the service ovh_cloud_managed_<family>.db described as <name>-<step>, and the data source
-// of the service, named db. checks are the engine's own checks of v1, and v2 must update the service in
-// place. The import of the service is verified last.
-func testAccCloudManagedEngineTestCase(t *testing.T, category managedDatabaseCategory, engine string, config func(name, step string) string, checks ...resource.TestCheckFunc) resource.TestCase {
+// testAccCloudManagedEngineTestCase tests a service of the engine with its objects. config(name, step)
+// renders, at step v1 then v2, the service ovh_cloud_managed_<family>.db described as <name>-<step>, and
+// the data source of the service, named db. When the engine has users, it also renders the user named
+// tfacc, with password_reset = <step>, and the data sources of the users, named users and user; an
+// engine without users passes "". checks are the engine's own checks of v1, and v2 must update the
+// service and the user in place. The import of each of them is verified last.
+func testAccCloudManagedEngineTestCase(t *testing.T, category managedDatabaseCategory, engine string, config func(name, step string) string, user string, checks ...resource.TestCheckFunc) resource.TestCase {
 	name := acctest.RandomWithPrefix(test_prefix)
 	service := "ovh" + category.typeName("") + ".db"
 	checks = append(checks, resource.TestCheckResourceAttr(service, "resource_status", "READY"))
 	for _, attribute := range []string{"region", "version", "plan", "flavor", "nodes_count", "description"} {
 		checks = append(checks, resource.TestCheckResourceAttrPair("data."+service, attribute, service, attribute))
 	}
+	updates := []plancheck.PlanCheck{plancheck.ExpectResourceAction(service, plancheck.ResourceActionUpdate)}
+	imports := []string{service}
+	if user != "" {
+		users := "data." + strings.TrimSuffix(user, ".user") + "s.users"
+		checks = append(checks,
+			resource.TestCheckResourceAttr(user, "status", "READY"),
+			resource.TestCheckResourceAttrSet(user, "password"),
+			resource.TestCheckTypeSetElemAttrPair(users, "users.*.id", user, "id"),
+			resource.TestCheckResourceAttrPair("data."+user, "username", user, "username"),
+		)
+		updates = append(updates,
+			plancheck.ExpectResourceAction(user, plancheck.ResourceActionUpdate),
+			plancheck.ExpectUnknownValue(user, tfjsonpath.New("password")),
+		)
+		imports = append(imports, user)
+	}
+
+	steps := []resource.TestStep{
+		{
+			Config: config(name, "v1"),
+			Check:  resource.ComposeTestCheckFunc(checks...),
+		},
+		{
+			Config:           config(name, "v2"),
+			ConfigPlanChecks: resource.ConfigPlanChecks{PreApply: updates},
+			Check:            resource.TestCheckResourceAttr(service, "description", name+"-v2"),
+		},
+		// The objects can change the service after its own apply, which the import would then report.
+		{RefreshState: true},
+	}
+	for _, address := range imports {
+		steps = append(steps, resource.TestStep{
+			ResourceName:            address,
+			ImportState:             true,
+			ImportStateVerify:       true,
+			ImportStateVerifyIgnore: []string{"password", "password_reset", testAccCloudManagedEngineCapabilities},
+			ImportStateIdFunc:       testAccCloudManagedImportStateIdFunc(address),
+		})
+	}
 
 	return resource.TestCase{
 		PreCheck:                 func() { testAccPreCheckCloudManagedService(t, category, engine) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		CheckDestroy:             testAccCheckCloudManagedServiceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: config(name, "v1"),
-				Check:  resource.ComposeTestCheckFunc(checks...),
-			},
-			{
-				Config: config(name, "v2"),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{plancheck.ExpectResourceAction(service, plancheck.ResourceActionUpdate)},
-				},
-				Check: resource.TestCheckResourceAttr(service, "description", name+"-v2"),
-			},
-			{
-				ResourceName:            service,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{testAccCloudManagedEngineCapabilities},
-				ImportStateIdFunc:       testAccCloudManagedImportStateIdFunc(service),
-			},
-		},
+		Steps:                    steps,
 	}
 }
 
 func testAccCloudManagedDatabaseMongodbConfig(name, step string) string {
-	return testAccCloudManagedServiceConfig(managedDatabaseFamily, "mongodb", name, fmt.Sprintf("  description = %q", name+"-"+step), "") + `
+	return testAccCloudManagedServiceConfig(managedDatabaseFamily, "mongodb", name, fmt.Sprintf("  description = %q", name+"-"+step), "") + fmt.Sprintf(`
+resource "ovh_cloud_managed_database_mongodb_user" "user" {
+  service_name   = ovh_cloud_managed_database.db.service_name
+  service_id     = ovh_cloud_managed_database.db.id
+  name           = "tfacc"
+  roles          = ["readAnyDatabase@admin"]
+  password_reset = %[1]q
+}
+
 data "ovh_cloud_managed_database" "db" {
   service_name = ovh_cloud_managed_database.db.service_name
   engine       = ovh_cloud_managed_database.db.engine
   id           = ovh_cloud_managed_database.db.id
 }
-`
+
+data "ovh_cloud_managed_database_mongodb_users" "users" {
+  service_name = ovh_cloud_managed_database.db.service_name
+  service_id   = ovh_cloud_managed_database.db.id
+  depends_on   = [ovh_cloud_managed_database_mongodb_user.user]
+}
+
+data "ovh_cloud_managed_database_mongodb_user" "user" {
+  service_name = ovh_cloud_managed_database.db.service_name
+  service_id   = ovh_cloud_managed_database.db.id
+  id           = ovh_cloud_managed_database_mongodb_user.user.id
+}
+
+data "ovh_cloud_managed_database_roles" "roles" {
+  service_name = ovh_cloud_managed_database.db.service_name
+  engine       = ovh_cloud_managed_database.db.engine
+  service_id   = ovh_cloud_managed_database.db.id
+}
+`, step)
 }
 
 func TestAccCloudManagedDatabaseMongodb_basic(t *testing.T) {
-	resource.Test(t, testAccCloudManagedEngineTestCase(t, managedDatabaseFamily, "mongodb", testAccCloudManagedDatabaseMongodbConfig,
+	const user = "ovh_cloud_managed_database_mongodb_user.user"
+	resource.Test(t, testAccCloudManagedEngineTestCase(t, managedDatabaseFamily, "mongodb", testAccCloudManagedDatabaseMongodbConfig, user,
 		resource.TestCheckResourceAttrSet("ovh_cloud_managed_database.db", "current_state.endpoints.0.uri"),
+		// The API names a MongoDB user after its authentication database.
+		resource.TestCheckResourceAttr(user, "username", "tfacc@admin"),
+		resource.TestCheckTypeSetElemAttr(user, "roles.*", "readAnyDatabase@admin"),
+		resource.TestCheckResourceAttrSet("data.ovh_cloud_managed_database_roles.roles", "roles.#"),
 	))
 }
 
 func testAccCloudManagedDatabaseValkeyConfig(name, step string) string {
-	return testAccCloudManagedServiceConfig(managedDatabaseFamily, "valkey", name, fmt.Sprintf("  description = %q", name+"-"+step), "") + `
+	// v2 narrows the keys of the user, in place.
+	keys := "*"
+	if step == "v2" {
+		keys = "tfacc:*"
+	}
+	return testAccCloudManagedServiceConfig(managedDatabaseFamily, "valkey", name, fmt.Sprintf("  description = %q", name+"-"+step), "") + fmt.Sprintf(`
+resource "ovh_cloud_managed_database_valkey_user" "user" {
+  service_name   = ovh_cloud_managed_database.db.service_name
+  service_id     = ovh_cloud_managed_database.db.id
+  name           = "tfacc"
+  categories     = ["+@all"]
+  keys           = [%[2]q]
+  password_reset = %[1]q
+}
+
 data "ovh_cloud_managed_database" "db" {
   service_name = ovh_cloud_managed_database.db.service_name
   engine       = ovh_cloud_managed_database.db.engine
   id           = ovh_cloud_managed_database.db.id
 }
-`
+
+data "ovh_cloud_managed_database_valkey_users" "users" {
+  service_name = ovh_cloud_managed_database.db.service_name
+  service_id   = ovh_cloud_managed_database.db.id
+  depends_on   = [ovh_cloud_managed_database_valkey_user.user]
+}
+
+data "ovh_cloud_managed_database_valkey_user" "user" {
+  service_name = ovh_cloud_managed_database.db.service_name
+  service_id   = ovh_cloud_managed_database.db.id
+  id           = ovh_cloud_managed_database_valkey_user.user.id
+}
+`, step, keys)
 }
 
 func TestAccCloudManagedDatabaseValkey_basic(t *testing.T) {
-	resource.Test(t, testAccCloudManagedEngineTestCase(t, managedDatabaseFamily, "valkey", testAccCloudManagedDatabaseValkeyConfig,
+	const user = "ovh_cloud_managed_database_valkey_user.user"
+	resource.Test(t, testAccCloudManagedEngineTestCase(t, managedDatabaseFamily, "valkey", testAccCloudManagedDatabaseValkeyConfig, user,
 		resource.TestCheckResourceAttrSet("ovh_cloud_managed_database.db", "current_state.endpoints.0.uri"),
+		resource.TestCheckResourceAttr(user, "username", "tfacc"),
+		resource.TestCheckResourceAttr("data."+user, "keys.0", "*"),
 	))
 }
 
-func testAccCloudManagedAnalyticsKafkaConfig(name, step string) string {
-	return testAccCloudManagedServiceConfig(managedAnalyticsFamily, "kafka", name, fmt.Sprintf("  description = %q", name+"-"+step), "") + `
+// testAccCloudManagedAnalyticsUserConfig renders a service of an engine of ovh_cloud_managed_analytics_user,
+// Kafka or Kafka Connect, with a user and the data sources that read them back.
+func testAccCloudManagedAnalyticsUserConfig(engine, name, step string) string {
+	return testAccCloudManagedServiceConfig(managedAnalyticsFamily, engine, name, fmt.Sprintf("  description = %q", name+"-"+step), "") + fmt.Sprintf(`
+resource "ovh_cloud_managed_analytics_user" "user" {
+  service_name   = ovh_cloud_managed_analytics.db.service_name
+  engine         = ovh_cloud_managed_analytics.db.engine
+  service_id     = ovh_cloud_managed_analytics.db.id
+  name           = "tfacc"
+  password_reset = %[1]q
+}
+
 data "ovh_cloud_managed_analytics" "db" {
   service_name = ovh_cloud_managed_analytics.db.service_name
   engine       = ovh_cloud_managed_analytics.db.engine
   id           = ovh_cloud_managed_analytics.db.id
+}
+
+data "ovh_cloud_managed_analytics_users" "users" {
+  service_name = ovh_cloud_managed_analytics.db.service_name
+  engine       = ovh_cloud_managed_analytics.db.engine
+  service_id   = ovh_cloud_managed_analytics.db.id
+  depends_on   = [ovh_cloud_managed_analytics_user.user]
+}
+
+data "ovh_cloud_managed_analytics_user" "user" {
+  service_name = ovh_cloud_managed_analytics.db.service_name
+  engine       = ovh_cloud_managed_analytics.db.engine
+  service_id   = ovh_cloud_managed_analytics.db.id
+  id           = ovh_cloud_managed_analytics_user.user.id
+}
+`, step)
+}
+
+func testAccCloudManagedAnalyticsKafkaConfig(name, step string) string {
+	return testAccCloudManagedAnalyticsUserConfig("kafka", name, step) + `
+data "ovh_cloud_managed_analytics_certificates" "certificates" {
+  service_name = ovh_cloud_managed_analytics.db.service_name
+  engine       = ovh_cloud_managed_analytics.db.engine
+  service_id   = ovh_cloud_managed_analytics.db.id
+}
+
+data "ovh_cloud_managed_analytics_kafka_user_access" "access" {
+  service_name = ovh_cloud_managed_analytics.db.service_name
+  service_id   = ovh_cloud_managed_analytics.db.id
+  user_id      = ovh_cloud_managed_analytics_user.user.id
 }
 `
 }
 
 func TestAccCloudManagedAnalyticsKafka_basic(t *testing.T) {
-	resource.Test(t, testAccCloudManagedEngineTestCase(t, managedAnalyticsFamily, "kafka", testAccCloudManagedAnalyticsKafkaConfig,
+	const user = "ovh_cloud_managed_analytics_user.user"
+	resource.Test(t, testAccCloudManagedEngineTestCase(t, managedAnalyticsFamily, "kafka", testAccCloudManagedAnalyticsKafkaConfig, user,
 		resource.TestCheckResourceAttrSet("ovh_cloud_managed_analytics.db", "current_state.endpoints.0.uri"),
+		resource.TestCheckResourceAttr(user, "username", "tfacc"),
+		resource.TestMatchResourceAttr("data.ovh_cloud_managed_analytics_certificates.certificates", "ca", regexp.MustCompile(`^-----BEGIN CERTIFICATE-----`)),
+		resource.TestMatchResourceAttr("data.ovh_cloud_managed_analytics_kafka_user_access.access", "cert", regexp.MustCompile(`^-----BEGIN CERTIFICATE-----`)),
+		resource.TestCheckResourceAttrSet("data.ovh_cloud_managed_analytics_kafka_user_access.access", "key"),
 	))
 }
 
 func testAccCloudManagedAnalyticsOpensearchConfig(name, step string) string {
-	return testAccCloudManagedServiceConfig(managedAnalyticsFamily, "opensearch", name, fmt.Sprintf("  description = %q", name+"-"+step), "") + `
+	// v2 widens the permission of the user, in place.
+	permission := "READ"
+	if step == "v2" {
+		permission = "READ_WRITE"
+	}
+	return testAccCloudManagedServiceConfig(managedAnalyticsFamily, "opensearch", name, fmt.Sprintf("  description = %q", name+"-"+step), "") + fmt.Sprintf(`
+resource "ovh_cloud_managed_analytics_opensearch_user" "user" {
+  service_name   = ovh_cloud_managed_analytics.db.service_name
+  service_id     = ovh_cloud_managed_analytics.db.id
+  name           = "tfacc"
+  acls           = [{ pattern = "logs-*", permission = %[2]q }]
+  password_reset = %[1]q
+}
+
 data "ovh_cloud_managed_analytics" "db" {
   service_name = ovh_cloud_managed_analytics.db.service_name
   engine       = ovh_cloud_managed_analytics.db.engine
   id           = ovh_cloud_managed_analytics.db.id
 }
-`
+
+data "ovh_cloud_managed_analytics_opensearch_users" "users" {
+  service_name = ovh_cloud_managed_analytics.db.service_name
+  service_id   = ovh_cloud_managed_analytics.db.id
+  depends_on   = [ovh_cloud_managed_analytics_opensearch_user.user]
+}
+
+data "ovh_cloud_managed_analytics_opensearch_user" "user" {
+  service_name = ovh_cloud_managed_analytics.db.service_name
+  service_id   = ovh_cloud_managed_analytics.db.id
+  id           = ovh_cloud_managed_analytics_opensearch_user.user.id
+}
+`, step, permission)
 }
 
 func TestAccCloudManagedAnalyticsOpensearch_basic(t *testing.T) {
-	resource.Test(t, testAccCloudManagedEngineTestCase(t, managedAnalyticsFamily, "opensearch", testAccCloudManagedAnalyticsOpensearchConfig,
+	const user = "ovh_cloud_managed_analytics_opensearch_user.user"
+	resource.Test(t, testAccCloudManagedEngineTestCase(t, managedAnalyticsFamily, "opensearch", testAccCloudManagedAnalyticsOpensearchConfig, user,
 		resource.TestCheckResourceAttrSet("ovh_cloud_managed_analytics.db", "current_state.endpoints.0.uri"),
+		resource.TestCheckResourceAttr(user, "username", "tfacc"),
+		resource.TestCheckTypeSetElemNestedAttrs("data."+user, "acls.*", map[string]string{"pattern": "logs-*", "permission": "READ"}),
 	))
 }
 
 func testAccCloudManagedAnalyticsClickhouseConfig(name, step string) string {
-	return testAccCloudManagedServiceConfig(managedAnalyticsFamily, "clickhouse", name, fmt.Sprintf("  description = %q", name+"-"+step), "") + `
+	return testAccCloudManagedServiceConfig(managedAnalyticsFamily, "clickhouse", name, fmt.Sprintf("  description = %q", name+"-"+step), "") + fmt.Sprintf(`
+resource "ovh_cloud_managed_analytics_clickhouse_user" "user" {
+  service_name   = ovh_cloud_managed_analytics.db.service_name
+  service_id     = ovh_cloud_managed_analytics.db.id
+  name           = "tfacc"
+  password_reset = %[1]q
+}
+
 data "ovh_cloud_managed_analytics" "db" {
   service_name = ovh_cloud_managed_analytics.db.service_name
   engine       = ovh_cloud_managed_analytics.db.engine
   id           = ovh_cloud_managed_analytics.db.id
 }
-`
+
+data "ovh_cloud_managed_analytics_clickhouse_users" "users" {
+  service_name = ovh_cloud_managed_analytics.db.service_name
+  service_id   = ovh_cloud_managed_analytics.db.id
+  depends_on   = [ovh_cloud_managed_analytics_clickhouse_user.user]
+}
+
+data "ovh_cloud_managed_analytics_clickhouse_user" "user" {
+  service_name = ovh_cloud_managed_analytics.db.service_name
+  service_id   = ovh_cloud_managed_analytics.db.id
+  id           = ovh_cloud_managed_analytics_clickhouse_user.user.id
+}
+
+data "ovh_cloud_managed_analytics_clickhouse_roles" "roles" {
+  service_name = ovh_cloud_managed_analytics.db.service_name
+  service_id   = ovh_cloud_managed_analytics.db.id
+}
+
+data "ovh_cloud_managed_analytics_clickhouse_role" "role" {
+  service_name = ovh_cloud_managed_analytics.db.service_name
+  service_id   = ovh_cloud_managed_analytics.db.id
+  id           = data.ovh_cloud_managed_analytics_clickhouse_roles.roles.roles[0].id
+}
+
+data "ovh_cloud_managed_analytics_certificates" "certificates" {
+  service_name = ovh_cloud_managed_analytics.db.service_name
+  engine       = ovh_cloud_managed_analytics.db.engine
+  service_id   = ovh_cloud_managed_analytics.db.id
+}
+`, step)
 }
 
 func TestAccCloudManagedAnalyticsClickhouse_basic(t *testing.T) {
-	resource.Test(t, testAccCloudManagedEngineTestCase(t, managedAnalyticsFamily, "clickhouse", testAccCloudManagedAnalyticsClickhouseConfig,
+	const user = "ovh_cloud_managed_analytics_clickhouse_user.user"
+	resource.Test(t, testAccCloudManagedEngineTestCase(t, managedAnalyticsFamily, "clickhouse", testAccCloudManagedAnalyticsClickhouseConfig, user,
 		resource.TestCheckResourceAttrSet("ovh_cloud_managed_analytics.db", "current_state.endpoints.0.uri"),
+		resource.TestCheckResourceAttr(user, "username", "tfacc"),
+		resource.TestCheckResourceAttrSet("data.ovh_cloud_managed_analytics_clickhouse_roles.roles", "roles.#"),
+		resource.TestCheckResourceAttrPair("data.ovh_cloud_managed_analytics_clickhouse_role.role", "name", "data.ovh_cloud_managed_analytics_clickhouse_roles.roles", "roles.0.name"),
+		resource.TestMatchResourceAttr("data.ovh_cloud_managed_analytics_certificates.certificates", "ca", regexp.MustCompile(`^-----BEGIN CERTIFICATE-----`)),
 	))
 }
 
 func testAccCloudManagedDatabaseMysqlConfig(name, step string) string {
-	return testAccCloudManagedServiceConfig(managedDatabaseFamily, "mysql", name, fmt.Sprintf("  description = %q", name+"-"+step), "") + `
+	return testAccCloudManagedServiceConfig(managedDatabaseFamily, "mysql", name, fmt.Sprintf("  description = %q", name+"-"+step), "") + fmt.Sprintf(`
+resource "ovh_cloud_managed_database_user" "user" {
+  service_name   = ovh_cloud_managed_database.db.service_name
+  engine         = ovh_cloud_managed_database.db.engine
+  service_id     = ovh_cloud_managed_database.db.id
+  name           = "tfacc"
+  password_reset = %[1]q
+}
+
 data "ovh_cloud_managed_database" "db" {
   service_name = ovh_cloud_managed_database.db.service_name
   engine       = ovh_cloud_managed_database.db.engine
   id           = ovh_cloud_managed_database.db.id
 }
-`
+
+data "ovh_cloud_managed_database_users" "users" {
+  service_name = ovh_cloud_managed_database.db.service_name
+  engine       = ovh_cloud_managed_database.db.engine
+  service_id   = ovh_cloud_managed_database.db.id
+  depends_on   = [ovh_cloud_managed_database_user.user]
+}
+
+data "ovh_cloud_managed_database_user" "user" {
+  service_name = ovh_cloud_managed_database.db.service_name
+  engine       = ovh_cloud_managed_database.db.engine
+  service_id   = ovh_cloud_managed_database.db.id
+  id           = ovh_cloud_managed_database_user.user.id
+}
+
+data "ovh_cloud_managed_database_certificates" "certificates" {
+  service_name = ovh_cloud_managed_database.db.service_name
+  engine       = ovh_cloud_managed_database.db.engine
+  service_id   = ovh_cloud_managed_database.db.id
+}
+`, step)
 }
 
 func TestAccCloudManagedDatabaseMysql_basic(t *testing.T) {
-	resource.Test(t, testAccCloudManagedEngineTestCase(t, managedDatabaseFamily, "mysql", testAccCloudManagedDatabaseMysqlConfig,
+	const user = "ovh_cloud_managed_database_user.user"
+	resource.Test(t, testAccCloudManagedEngineTestCase(t, managedDatabaseFamily, "mysql", testAccCloudManagedDatabaseMysqlConfig, user,
 		resource.TestCheckResourceAttrSet("ovh_cloud_managed_database.db", "current_state.endpoints.0.uri"),
+		resource.TestCheckResourceAttr(user, "username", "tfacc"),
+		resource.TestMatchResourceAttr("data.ovh_cloud_managed_database_certificates.certificates", "ca", regexp.MustCompile(`^-----BEGIN CERTIFICATE-----`)),
 	))
 }
 
@@ -1588,28 +1816,32 @@ data "ovh_cloud_managed_analytics" "db" {
   engine       = ovh_cloud_managed_analytics.db.engine
   id           = ovh_cloud_managed_analytics.db.id
 }
+
+data "ovh_cloud_managed_analytics_users" "users" {
+  service_name = ovh_cloud_managed_analytics.db.service_name
+  engine       = ovh_cloud_managed_analytics.db.engine
+  service_id   = ovh_cloud_managed_analytics.db.id
+}
 `
 }
 
+// No user resource takes Grafana: the test covers the service and reads its users.
 func TestAccCloudManagedAnalyticsGrafana_basic(t *testing.T) {
-	resource.Test(t, testAccCloudManagedEngineTestCase(t, managedAnalyticsFamily, "grafana", testAccCloudManagedAnalyticsGrafanaConfig,
+	resource.Test(t, testAccCloudManagedEngineTestCase(t, managedAnalyticsFamily, "grafana", testAccCloudManagedAnalyticsGrafanaConfig, "",
 		resource.TestCheckResourceAttrSet("ovh_cloud_managed_analytics.db", "current_state.endpoints.0.uri"),
+		resource.TestCheckResourceAttrSet("data.ovh_cloud_managed_analytics_users.users", "users.#"),
 	))
 }
 
 func testAccCloudManagedAnalyticsKafkaConnectConfig(name, step string) string {
-	return testAccCloudManagedServiceConfig(managedAnalyticsFamily, "kafkaConnect", name, fmt.Sprintf("  description = %q", name+"-"+step), "") + `
-data "ovh_cloud_managed_analytics" "db" {
-  service_name = ovh_cloud_managed_analytics.db.service_name
-  engine       = ovh_cloud_managed_analytics.db.engine
-  id           = ovh_cloud_managed_analytics.db.id
-}
-`
+	return testAccCloudManagedAnalyticsUserConfig("kafkaConnect", name, step)
 }
 
 func TestAccCloudManagedAnalyticsKafkaConnect_basic(t *testing.T) {
-	resource.Test(t, testAccCloudManagedEngineTestCase(t, managedAnalyticsFamily, "kafkaConnect", testAccCloudManagedAnalyticsKafkaConnectConfig,
+	const user = "ovh_cloud_managed_analytics_user.user"
+	resource.Test(t, testAccCloudManagedEngineTestCase(t, managedAnalyticsFamily, "kafkaConnect", testAccCloudManagedAnalyticsKafkaConnectConfig, user,
 		resource.TestCheckResourceAttrSet("ovh_cloud_managed_analytics.db", "current_state.endpoints.0.uri"),
+		resource.TestCheckResourceAttr(user, "username", "tfacc"),
 	))
 }
 
@@ -1623,6 +1855,7 @@ data "ovh_cloud_managed_analytics" "db" {
 `
 }
 
+// No user resource takes Kafka MirrorMaker.
 func TestAccCloudManagedAnalyticsKafkaMirrorMaker_basic(t *testing.T) {
-	resource.Test(t, testAccCloudManagedEngineTestCase(t, managedAnalyticsFamily, "kafkaMirrorMaker", testAccCloudManagedAnalyticsKafkaMirrorMakerConfig))
+	resource.Test(t, testAccCloudManagedEngineTestCase(t, managedAnalyticsFamily, "kafkaMirrorMaker", testAccCloudManagedAnalyticsKafkaMirrorMakerConfig, ""))
 }
