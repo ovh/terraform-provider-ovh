@@ -106,6 +106,8 @@ func TestManagedDatabaseCategories(t *testing.T) {
 		{NewCloudManagedDatabasePostgresqlUserResource, false},
 		{NewCloudManagedAnalyticsUserResource, true},
 		{NewCloudManagedAnalyticsClickhouseDatabaseResource, false},
+		{NewCloudManagedDatabaseMongodbPrometheusResource, false},
+		{NewCloudManagedAnalyticsPrometheusResource, true},
 	} {
 		r := tc.new()
 		var meta fwresource.MetadataResponse
@@ -153,8 +155,8 @@ func TestManagedDatabaseSchemas(t *testing.T) {
 		names["data "+meta.TypeName] = true
 		testManagedDatabaseEngineArgument(t, "data "+meta.TypeName, resp.Schema.Attributes["engine"])
 	}
-	if len(names) != 12+31 {
-		t.Errorf("expected 12 resources and 31 data sources, got %d", len(names))
+	if len(names) != 19+39 {
+		t.Errorf("expected 19 resources and 39 data sources, got %d", len(names))
 	}
 }
 

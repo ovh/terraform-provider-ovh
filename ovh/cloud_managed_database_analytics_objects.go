@@ -26,7 +26,7 @@ import (
 )
 
 // Shared by the resources of the managed database and managed analytics services and of their
-// objects: users, databases and connection pools.
+// objects: users, databases, connection pools, integrations and log subscriptions.
 
 const managedDatabaseObjectTimeout = 20 * time.Minute
 
@@ -199,13 +199,16 @@ func (r *managedDatabaseObjectResource) objectAttributes(object string) map[stri
 }
 
 // importState imports an object from <service_name>/<engine>/<service_id>/<key>, without the engine
-// when the type name holds it.
+// when the type name holds it, and without the key for a Prometheus endpoint, which has none.
 func (r *managedDatabaseObjectResource) importState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse, key string) {
 	format := []string{"service_name"}
 	if !r.named() {
 		format = append(format, "engine")
 	}
-	format = append(format, "service_id", key)
+	format = append(format, "service_id")
+	if key != "" {
+		format = append(format, key)
+	}
 
 	splits := strings.Split(req.ID, "/")
 	if len(splits) != len(format) {
@@ -282,11 +285,11 @@ func retryWhileManagedDatabaseObjectBusy(ctx context.Context, client *ovhwrap.Cl
 	})
 }
 
-// deleteManagedDatabaseObject deletes an object, retrying while the service or the object is busy. An
-// object already gone isn't an error.
-func deleteManagedDatabaseObject(ctx context.Context, client *ovhwrap.Client, endpoint string) error {
+// deleteManagedDatabaseObject deletes an object, retrying while the service or the object is busy, and
+// decodes the answer into res. An object already gone isn't an error.
+func deleteManagedDatabaseObject(ctx context.Context, client *ovhwrap.Client, endpoint string, res any) error {
 	err := retryWhileManagedDatabaseObjectBusy(ctx, client, endpoint, managedDatabaseObjectTimeout, func() error {
-		return client.DeleteWithContext(ctx, endpoint, nil)
+		return client.DeleteWithContext(ctx, endpoint, res)
 	})
 	if helpers.IsNotFound(err) {
 		return nil

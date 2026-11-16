@@ -63,6 +63,12 @@ func TestCloudManagedDatabasePostgresqlObjectDataSources(t *testing.T) {
 			NewCloudManagedDatabasePostgresqlConnectionPoolDataSource, NewCloudManagedDatabasePostgresqlConnectionPoolsDataSource},
 		{"role", "/roles", "id", "r1", `{"id": "r1", "name": "replication", "checksum": "c1", "createdAt": "2026-11-12T10:00:00Z", "updatedAt": "2026-11-12T10:00:00Z"}`, "roles",
 			NewCloudManagedDatabaseRoleDataSource, NewCloudManagedDatabaseRolesDataSource},
+		{"log subscription", "/log/subscription", "id", "s1", `{"subscriptionId": "s1", "kind": "customer_logs", "streamId": "st1", "serviceName": "ldp-xx-12345",
+			"resource": {"name": "` + managedDatabasePostgresqlTestId + `", "type": "postgresql"}, "createdAt": "2026-11-12T10:00:00Z", "updatedAt": "2026-11-12T10:00:00Z"}`, "",
+			NewCloudManagedDatabaseLogSubscriptionDataSource, nil},
+		{"log kind", "/log/kind", "name", "customer_logs", `{"name": "customer_logs", "kindId": "k1", "displayName": "Customer logs", "additionalReturnedFields": ["database"],
+			"createdAt": "2026-11-12T10:00:00Z", "updatedAt": "2026-11-12T10:00:00Z"}`, "",
+			NewCloudManagedDatabaseLogKindDataSource, nil},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			service := map[string]string{"service_name": "pj", "service_id": managedDatabasePostgresqlTestId}
@@ -91,6 +97,33 @@ func TestCloudManagedDatabasePostgresqlObjectDataSources(t *testing.T) {
 			state.GetAttribute(ctx, path.Root(tc.list), &list)
 			if len(list.Elements()) != 1 {
 				t.Errorf("expected 1 element in %s, got %s", tc.list, list)
+			}
+		})
+	}
+}
+
+func TestCloudManagedDatabasePostgresqlNamesDataSources(t *testing.T) {
+	ctx := context.Background()
+	for _, tc := range []struct {
+		name, path, list, answer string
+		arguments                map[string]string
+		new                      func() datasource.DataSource
+	}{
+		{"log subscriptions", "/log/subscription?kind=CUSTOMER_LOGS", "subscription_ids", `["s1", "s2"]`, map[string]string{"kind": "customer_logs"}, NewCloudManagedDatabaseLogSubscriptionsDataSource},
+		{"log kinds", "/log/kind", "names", `["customer_logs", "slowlog"]`, nil, NewCloudManagedDatabaseLogKindsDataSource},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			arguments := map[string]string{"service_name": "pj", "service_id": managedDatabasePostgresqlTestId}
+			for name, value := range tc.arguments {
+				arguments[name] = value
+			}
+			state := managedDatabaseDataSourceTestRead(t, tc.new(), arguments, map[string][]managedDatabaseTestAnswer{
+				"GET " + managedDatabasePostgresqlTestItemPath + tc.path: {{http.StatusOK, tc.answer}},
+			})
+			var list types.List
+			state.GetAttribute(ctx, path.Root(tc.list), &list)
+			if len(list.Elements()) != 2 {
+				t.Errorf("expected 2 elements in %s, got %s", tc.list, list)
 			}
 		})
 	}
@@ -159,6 +192,19 @@ data "ovh_cloud_managed_database_role" "role" {
   service_id   = local.service.service_id
   id           = data.ovh_cloud_managed_database_roles.roles.roles[0].id
 }
+
+data "ovh_cloud_managed_database_log_kinds" "kinds" {
+  service_name = local.service.service_name
+  engine       = local.service.engine
+  service_id   = local.service.service_id
+}
+
+data "ovh_cloud_managed_database_log_kind" "kind" {
+  service_name = local.service.service_name
+  engine       = local.service.engine
+  service_id   = local.service.service_id
+  name         = data.ovh_cloud_managed_database_log_kinds.kinds.names[0]
+}
 `
 }
 
@@ -181,6 +227,7 @@ func TestAccDataSourceCloudManagedDatabasePostgresqlObjects_basic(t *testing.T) 
 					resource.TestCheckResourceAttr("data.ovh_cloud_managed_database_postgresql_connection_pool.pool", "mode", "TRANSACTION"),
 					resource.TestCheckResourceAttrSet("data.ovh_cloud_managed_database_roles.roles", "roles.#"),
 					resource.TestCheckResourceAttrPair("data.ovh_cloud_managed_database_role.role", "name", "data.ovh_cloud_managed_database_roles.roles", "roles.0.name"),
+					resource.TestCheckResourceAttrSet("data.ovh_cloud_managed_database_log_kind.kind", "kind_id"),
 				),
 			},
 		},

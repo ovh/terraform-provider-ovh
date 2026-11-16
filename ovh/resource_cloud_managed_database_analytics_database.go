@@ -164,7 +164,7 @@ func (r *cloudManagedDatabaseDatabaseResource) Delete(ctx context.Context, req r
 	}
 
 	endpoint := r.endpoint(&data) + "/" + url.PathEscape(data.Id.ValueString())
-	if err := deleteManagedDatabaseObject(ctx, r.config.OVHClient, endpoint); err != nil {
+	if err := deleteManagedDatabaseObject(ctx, r.config.OVHClient, endpoint, nil); err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Error calling Delete %s", endpoint), err.Error())
 		return
 	}

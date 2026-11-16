@@ -46,7 +46,12 @@ const (
 
 // timeout returns the duration that timeouts sets for the operation, or def.
 func (m *cloudManagedDatabaseServiceResourceModel) timeout(operation string, def time.Duration) time.Duration {
-	value, _ := m.Timeouts.Attributes()[operation].(types.String)
+	return managedDatabaseTimeout(m.Timeouts, operation, def)
+}
+
+// managedDatabaseTimeout returns the duration that a timeouts argument sets for the operation, or def.
+func managedDatabaseTimeout(timeouts types.Object, operation string, def time.Duration) time.Duration {
+	value, _ := timeouts.Attributes()[operation].(types.String)
 	if value.IsNull() || value.IsUnknown() {
 		return def
 	}
@@ -145,11 +150,12 @@ func (r *cloudManagedDatabaseServiceResource) Schema(ctx context.Context, req re
 				Description:   "Whether the service is protected from deletion. It must be false to destroy the service.",
 				PlanModifiers: []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
 			},
+			// Unknown in the plan of an update when the configuration leaves it unset: the Prometheus resource
+			// can turn it off earlier in the same apply.
 			"prometheus_enabled": schema.BoolAttribute{
-				Optional:      true,
-				Computed:      true,
-				Description:   "Whether the Prometheus endpoint is enabled.",
-				PlanModifiers: []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
+				Optional:    true,
+				Computed:    true,
+				Description: "Whether the Prometheus endpoint is enabled.",
 			},
 			"advanced_configuration": schema.MapAttribute{
 				ElementType: types.StringType,
@@ -628,6 +634,11 @@ func (r *cloudManagedDatabaseServiceResource) ModifyPlan(ctx context.Context, re
 		resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("advanced_configuration"), types.MapUnknown(types.StringType))...)
 		resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("current_tasks"), types.ListUnknown(types.ObjectType{AttrTypes: managedDatabaseTaskAttrTypes()}))...)
 		resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("current_state"), types.ObjectUnknown(managedDatabaseCurrentStateAttrTypes()))...)
+		var prometheus types.Bool
+		resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("prometheus_enabled"), &prometheus)...)
+		if prometheus.IsNull() {
+			resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("prometheus_enabled"), types.BoolUnknown())...)
+		}
 		return
 	}
 
@@ -746,11 +757,15 @@ func (r *cloudManagedDatabaseServiceResource) Update(ctx context.Context, req re
 		}
 	}
 
-	// advanced_configuration is read-only: the PUT sends the current one back.
+	// advanced_configuration is read-only: the PUT sends the current one back, and the current
+	// prometheus_enabled when the configuration leaves it unset.
 	replace := func(service *CloudManagedDatabaseServiceModel) {
-		current := service.AdvancedConfiguration
+		current := *service
 		*service = plan.CloudManagedDatabaseServiceModel
-		service.AdvancedConfiguration = current
+		service.AdvancedConfiguration = current.AdvancedConfiguration
+		if service.PrometheusEnabled.IsUnknown() {
+			service.PrometheusEnabled = current.PrometheusEnabled
+		}
 	}
 	if err := putManagedDatabaseServiceWhenReady(ctx, r.config.OVHClient, endpoint, replace, timeout); err != nil {
 		resp.Diagnostics.AddError("Error updating the service", err.Error())
@@ -936,7 +951,8 @@ func managedDatabaseServiceError(res *CloudManagedDatabaseServiceAPIResponse) er
 }
 
 // managedDatabaseServiceBusyClasses are the 409s the API answers while an operation runs on the
-// service, or on a connection pool, whose status the API doesn't give. Its other 409s, such as
+// service, or on a connection pool, whose status the API doesn't give, and SystemUnavailable, which v1
+// answers for a 5xx of the provider behind the engine. Its other 409s, such as
 // ServiceOnlyOneModification or ServiceLocked, don't end on their own.
 var managedDatabaseServiceBusyClasses = []string{
 	"Client::Conflict::ServiceOperationInProgress",
@@ -944,6 +960,7 @@ var managedDatabaseServiceBusyClasses = []string{
 	"Client::Conflict::PublicAccessChanging",
 	"Client::Conflict::StorageUsageUnknown",
 	"Client::Conflict::ConnectionPoolStatusNotReady",
+	"Client::Conflict::SystemUnavailable",
 }
 
 // managedDatabaseAPIUnavailable is the status a wait gives a read that the API answered with a 5xx or a
