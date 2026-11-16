@@ -275,6 +275,18 @@ In order to run the Acceptance Tests for development, the following environment 
 
 * `OVH_CLOUD_LOADBALANCER_ID_TEST` - The ID of the LoadBalancer to use.
 
+* `OVH_CLOUD_MANAGED_DATABASE_POSTGRESQL_VERSION_TEST` - The version of the PostgreSQL service the `ovh_cloud_managed_database*` resources are tested with.
+
+* `OVH_CLOUD_MANAGED_DATABASE_POSTGRESQL_PLAN_TEST` - The plan of the PostgreSQL service to test.
+
+* `OVH_CLOUD_MANAGED_DATABASE_POSTGRESQL_FLAVOR_TEST` - The node flavor of the PostgreSQL service to test.
+
+* `OVH_CLOUD_MANAGED_DATABASE_POSTGRESQL_REGION_TEST` - The region of the PostgreSQL service to test, in the format of the API v2, such as `eu-west-gra`.
+
+* `OVH_CLOUD_MANAGED_DATABASE_POSTGRESQL_NETWORK_REGION_TEST` - Optional. The region, such as `GRA11`, of a private network that the tests create and attach the PostgreSQL service to. Needed when the project only offers PostgreSQL on a private network.
+
+* `OVH_CLOUD_MANAGED_DATABASE_{MONGODB,MYSQL,VALKEY}_*_TEST`, `OVH_CLOUD_MANAGED_ANALYTICS_{CLICKHOUSE,GRAFANA,KAFKA,KAFKA_CONNECT,KAFKA_MIRROR_MAKER,OPENSEARCH}_*_TEST` - The same `VERSION`, `PLAN`, `FLAVOR`, `REGION` and optional `NETWORK_REGION` variables for the service of each other engine tested, such as `OVH_CLOUD_MANAGED_ANALYTICS_KAFKA_CONNECT_VERSION_TEST`. The tests of an engine are skipped until its four required variables are set. The MongoDB plan defaults to `production`.
+
 * `OVH_CLOUD_PRIVATE_ENDPOINT_SERVICE_TEST` - The name of the service to expose through the private endpoint to test.
 
 * `OVH_CLOUD_PRIVATE_ENDPOINT_TIER_TEST` - The tier of the service to expose through the private endpoint to test.
