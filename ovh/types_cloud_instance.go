@@ -828,49 +828,31 @@ func volumeRoleOrData(role string) string {
 	return role
 }
 
-// volumeForm is the attribute a configuration uses to declare its volumes.
-type volumeForm int
-
-const (
-	volumeFormNone    volumeForm = iota // nothing to go by: import, or no volume
-	volumeFormVolumes                   // volumes
-	volumeFormIds                       // volume_ids (deprecated)
-)
-
-func (p instancePriorSpec) volumeForm() volumeForm {
-	switch {
-	case !p.Volumes.IsNull():
-		return volumeFormVolumes
-	case !p.VolumeIds.IsNull():
-		return volumeFormIds
-	}
-	return volumeFormNone
-}
-
-// setVolumeForms fills the volume attributes from targetSpec. Only the attribute
-// the configuration uses is filled and the other stays null, otherwise the apply
-// result would not match the configuration. With nothing to go by, an import
-// fills volumes. A data source has no configuration and fills both.
+// setVolumeForms fills volumes and the deprecated volume_ids from targetSpec.
+// Both are Optional+Computed views of the same list, so both are always filled.
 //
 // volume_ids is the ids of targetSpec.volumes, boot volume included, in the order
-// the API returns them.
+// the API returns them. With no volume, an attribute the plan set to an empty list
+// stays empty, and is null otherwise.
 func (m *CloudInstanceModel) setVolumeForms(ts *CloudInstanceAPITargetSpec, prior instancePriorSpec) {
-	if ts == nil || len(ts.Volumes) == 0 {
+	if ts == nil {
 		return
 	}
-	form := prior.volumeForm()
-	all := prior.AllVolumeForms
-
-	if all || form == volumeFormVolumes || form == volumeFormNone {
-		m.Volumes = buildInstanceVolumesRootList(ts)
-	}
-	if all || form == volumeFormIds {
-		ids := make([]attr.Value, len(ts.Volumes))
-		for i, v := range ts.Volumes {
-			ids[i] = tfStr(v.Id)
+	if len(ts.Volumes) == 0 {
+		if !prior.Volumes.IsNull() && !prior.Volumes.IsUnknown() {
+			m.Volumes = types.ListValueMust(types.ObjectType{AttrTypes: instanceVolumeRefAttrTypes()}, []attr.Value{})
 		}
-		m.VolumeIds = ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]{ListValue: basetypes.NewListValueMust(ovhtypes.TfStringType{}, ids)}
+		if !prior.VolumeIds.IsNull() && !prior.VolumeIds.IsUnknown() {
+			m.VolumeIds = ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]{ListValue: basetypes.NewListValueMust(ovhtypes.TfStringType{}, []attr.Value{})}
+		}
+		return
 	}
+	m.Volumes = buildInstanceVolumesRootList(ts)
+	ids := make([]attr.Value, len(ts.Volumes))
+	for i, v := range ts.Volumes {
+		ids[i] = tfStr(v.Id)
+	}
+	m.VolumeIds = ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]{ListValue: basetypes.NewListValueMust(ovhtypes.TfStringType{}, ids)}
 }
 
 // buildInstanceVolumesRootList rebuilds the mutable root volumes list from
@@ -1126,9 +1108,6 @@ type instancePriorSpec struct {
 	Shares    types.List
 	Volumes   types.List
 	VolumeIds ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]
-	// AllVolumeForms asks for volumes and volume_ids to be filled together: a
-	// data source has no configuration to follow.
-	AllVolumeForms bool
 }
 
 // priorSpec snapshots the config-shaped values before a merge overwrites them.
@@ -1202,9 +1181,7 @@ func (m *CloudInstanceModel) MergeWith(ctx context.Context, response *CloudInsta
 		m.Networks = buildInstanceNetworksRootList(prior.Networks, ts)
 		m.Shares = buildInstanceSharesRootList(prior.Shares, ts)
 
-		// volumes and volume_ids from targetSpec. They are
-		// Optional (non-Computed): an omitted attribute is null in config, so the
-		// API echoing back an empty array must map to null, not an empty list.
+		// volumes and volume_ids from targetSpec, both Optional+Computed.
 		m.setVolumeForms(ts, prior)
 
 		// security_group_ids is Optional+Computed: an omitted attribute is resolved

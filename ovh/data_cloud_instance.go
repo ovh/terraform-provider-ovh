@@ -62,7 +62,6 @@ func (d *cloudInstanceDataSource) Read(ctx context.Context, req datasource.ReadR
 	}
 
 	prior := data.priorSpec()
-	prior.AllVolumeForms = true
 	data.MergeWith(ctx, &responseData, prior)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

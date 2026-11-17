@@ -1123,8 +1123,8 @@ func TestUnitCloudInstanceVolumesPayload(t *testing.T) {
 	}
 }
 
-// Reading back only fills the attribute the configuration uses, otherwise the
-// apply result would not match the plan. Both are filled for a data source.
+// Volumes and volume_ids are Optional+Computed views of targetSpec.volumes, so
+// reading back always fills both, whichever one the configuration uses.
 func TestUnitCloudInstanceVolumeFormsRoundTrip(t *testing.T) {
 	ctx := context.Background()
 	resp := func() *CloudInstanceAPIResponse {
@@ -1144,37 +1144,20 @@ func TestUnitCloudInstanceVolumeFormsRoundTrip(t *testing.T) {
 		}
 		return out
 	}
-
-	t.Run("config uses volumes", func(t *testing.T) {
-		m := &CloudInstanceModel{Volumes: volumeRefList(map[string]string{"boot": "BOOT"}), VolumeIds: nullCustomStringList()}
-		m.MergeWith(ctx, resp(), m.priorSpec())
-		if !m.VolumeIds.IsNull() || len(m.Volumes.Elements()) != 3 {
-			t.Fatalf("only volumes must be filled: volume_ids=%v volumes=%d", m.VolumeIds, len(m.Volumes.Elements()))
-		}
-	})
-	t.Run("config uses volume_ids", func(t *testing.T) {
-		m := &CloudInstanceModel{VolumeIds: customStringList("boot", "d1", "d2"), Volumes: nullVols}
-		m.MergeWith(ctx, resp(), m.priorSpec())
-		if !reflect.DeepEqual(ids(m.VolumeIds), []string{"boot", "d1", "d2"}) || !m.Volumes.IsNull() {
-			t.Fatalf("volume_ids must hold every id, boot included, in the API order: %v", ids(m.VolumeIds))
-		}
-	})
-	t.Run("import fills volumes", func(t *testing.T) {
-		m := &CloudInstanceModel{Volumes: nullVols, VolumeIds: nullCustomStringList()}
-		m.MergeWith(ctx, resp(), m.priorSpec())
-		if len(m.Volumes.Elements()) != 3 || !m.VolumeIds.IsNull() {
-			t.Fatalf("import must fill volumes only")
-		}
-	})
-	t.Run("data source fills both", func(t *testing.T) {
-		m := &CloudInstanceModel{Volumes: nullVols, VolumeIds: nullCustomStringList()}
-		prior := m.priorSpec()
-		prior.AllVolumeForms = true
-		m.MergeWith(ctx, resp(), prior)
-		if len(m.Volumes.Elements()) != 3 || !reflect.DeepEqual(ids(m.VolumeIds), []string{"boot", "d1", "d2"}) {
-			t.Fatalf("data source: volumes=%d volume_ids=%v", len(m.Volumes.Elements()), ids(m.VolumeIds))
-		}
-	})
+	want := []string{"boot", "d1", "d2"}
+	models := map[string]*CloudInstanceModel{
+		"config uses volumes":    {Volumes: volumeRefList(map[string]string{"boot": "BOOT"}), VolumeIds: nullCustomStringList()},
+		"config uses volume_ids": {VolumeIds: customStringList("boot", "d1", "d2"), Volumes: nullVols},
+		"import or data source":  {Volumes: nullVols, VolumeIds: nullCustomStringList()},
+	}
+	for name, m := range models {
+		t.Run(name, func(t *testing.T) {
+			m.MergeWith(ctx, resp(), m.priorSpec())
+			if len(m.Volumes.Elements()) != 3 || !reflect.DeepEqual(ids(m.VolumeIds), want) {
+				t.Fatalf("both must be filled in the API order: volumes=%d volume_ids=%v", len(m.Volumes.Elements()), ids(m.VolumeIds))
+			}
+		})
+	}
 	t.Run("no volume at all stays null", func(t *testing.T) {
 		m := &CloudInstanceModel{Volumes: nullVols, VolumeIds: nullCustomStringList()}
 		r := resp()
@@ -1247,6 +1230,28 @@ func TestUnitCloudInstanceModifyPlanBootVolume(t *testing.T) {
 	volsD := with(func(c *volumeCfg) { c.volumes = volumeRefList(map[string]string{"b": "", "d": "BOOT"}) })
 	withImage := with(func(c *volumeCfg) { c.image = strVal("img"); c.ids = customStringList("d") })
 
+	// The state holds both views of the volumes, as the resource stores them: the
+	// one the configuration did not set is computed from the API.
+	stored := func(c volumeCfg) volumeCfg {
+		if c.volumes.IsNull() {
+			roles := map[string]string{}
+			for i, ref := range customStringListToRefs(c.ids) {
+				roles[ref.Id] = ""
+				if i == 0 && knownString(c.image) == "" {
+					roles[ref.Id] = "BOOT"
+				}
+			}
+			c.volumes = volumeRefList(roles)
+		}
+		if c.ids.IsNull() {
+			var list []string
+			for _, ref := range volumesToAPI(c.volumes) {
+				list = append(list, ref.Id)
+			}
+			c.ids = customStringList(list...)
+		}
+		return c
+	}
 	cases := []struct {
 		name        string
 		state       volumeCfg
@@ -1263,8 +1268,9 @@ func TestUnitCloudInstanceModifyPlanBootVolume(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			req := fwresource.ModifyPlanRequest{
-				State: tfsdk.State{Schema: sch.Schema, Raw: raw(tc.state)},
-				Plan:  tfsdk.Plan{Schema: sch.Schema, Raw: raw(tc.plan)},
+				State:  tfsdk.State{Schema: sch.Schema, Raw: raw(stored(tc.state))},
+				Plan:   tfsdk.Plan{Schema: sch.Schema, Raw: raw(tc.plan)},
+				Config: tfsdk.Config{Schema: sch.Schema, Raw: raw(tc.plan)},
 			}
 			resp := &fwresource.ModifyPlanResponse{}
 			r.ModifyPlan(ctx, req, resp)

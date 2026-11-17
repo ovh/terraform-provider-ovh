@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -98,34 +97,34 @@ func (r *cloudInstanceResource) ValidateConfig(ctx context.Context, req resource
 }
 
 // ModifyPlan replaces the instance when its boot volume changes: the API only
-// lets the boot volume be chosen at creation. The boot volume is read the same
-// way from the plan and from the state, so moving from volume_ids to volumes is
-// not a change.
+// lets the boot volume be chosen at creation.
+//
+// The planned boot volume comes from the configuration, whichever of volumes or
+// volume_ids it uses; the current one is the BOOT volume of the state. Moving from
+// volume_ids to volumes is therefore not a change. A configuration with neither
+// keeps the volumes as they are.
 func (r *cloudInstanceResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
 		return
 	}
-	read := func(get func(context.Context, path.Path, interface{}) diag.Diagnostics) (string, bool) {
-		var volumes types.List
-		var volumeIds ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]
-		var imageId ovhtypes.TfStringValue
-		resp.Diagnostics.Append(get(ctx, path.Root("volumes"), &volumes)...)
-		resp.Diagnostics.Append(get(ctx, path.Root("volume_ids"), &volumeIds)...)
-		resp.Diagnostics.Append(get(ctx, path.Root("image_id"), &imageId)...)
-		if resp.Diagnostics.HasError() || volumes.IsUnknown() || volumeIds.IsUnknown() || imageId.IsUnknown() {
-			return "", false
-		}
-		return bootVolumeId(volumes, volumeIds, imageId), true
-	}
-	planned, ok := read(req.Plan.GetAttribute)
-	if !ok {
+	var cfgVolumes, stateVolumes types.List
+	var cfgVolumeIds ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]
+	var imageId ovhtypes.TfStringValue
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("volumes"), &cfgVolumes)...)
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("volume_ids"), &cfgVolumeIds)...)
+	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("image_id"), &imageId)...)
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("volumes"), &stateVolumes)...)
+	if resp.Diagnostics.HasError() || cfgVolumes.IsUnknown() || cfgVolumeIds.IsUnknown() || imageId.IsUnknown() {
 		return
 	}
-	prior, ok := read(req.State.GetAttribute)
-	if !ok {
+	if cfgVolumes.IsNull() && cfgVolumeIds.IsNull() {
 		return
 	}
-	if planned != prior {
+	prior := ""
+	if ids := bootVolumeIds(stateVolumes); len(ids) > 0 {
+		prior = ids[0]
+	}
+	if bootVolumeId(cfgVolumes, cfgVolumeIds, imageId) != prior {
 		resp.RequiresReplace = append(resp.RequiresReplace, path.Root("volumes"))
 	}
 }
@@ -254,14 +253,18 @@ func (r *cloudInstanceResource) Schema(ctx context.Context, req resource.SchemaR
 			"volume_ids": schema.ListAttribute{
 				CustomType:          ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
 				Optional:            true,
+				Computed:            true,
 				Description:         instanceDescVolumeIds,
 				MarkdownDescription: instanceDescVolumeIds,
+				PlanModifiers:       []planmodifier.List{derivedVolumeList("volumes")},
 				DeprecationMessage:  "Use volumes, which gives each volume a role. volume_ids alone keeps working: without image_id, its first volume is the boot volume.",
 			},
 			"volumes": schema.ListNestedAttribute{
 				Optional:            true,
+				Computed:            true,
 				Description:         instanceDescVolumes,
 				MarkdownDescription: instanceDescVolumesMd,
+				PlanModifiers:       []planmodifier.List{derivedVolumeList("volume_ids")},
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{
