@@ -363,7 +363,9 @@ resource "ovh_cloud_storage_block_volume_backup" "data" {
 
 `ovh_cloud_project_file_storage_share` → `ovh_cloud_storage_file_share`, and `ovh_cloud_project_file_storage_share_network` → `ovh_cloud_storage_file_share_network`. Import IDs: `<service_name>/<share_id>` and `<service_name>/<share_network_id>`.
 
-The legacy share accepted `network_id` and `subnet_id` inline and created a share network behind the scenes. The new share only takes a `share_network_id`: migrate the share network first (or import the one the legacy share created, whose ID is the legacy computed `share_network_id`), then the share.
+The legacy share accepted `network_id` and `subnet_id` inline and created a share network behind the scenes. An imported share takes a `share_network_id`: migrate the share network first (or import the one the legacy share created, whose ID is the legacy computed `share_network_id`), then the share.
+
+!> The new share also accepts `network = { subnet_id, id }`, which creates a share network the same way, but only at creation: an imported share has no `network`, so setting it on one recreates the share and loses its data. Use it for new shares only.
 
 Share network:
 
@@ -383,7 +385,7 @@ Share:
 | `name` | unchanged, **required** now |
 | (computed `protocol`) | `protocol = "NFS"`, now a **required** argument |
 | `type = "standard-1az"` | `share_type = "STANDARD_1AZ"` |
-| `network_id`, `subnet_id` | removed; use `share_network_id` |
+| `network_id`, `subnet_id` | `share_network_id` for an imported share; `network = { id, subnet_id }` for a new one |
 | `share_network_id` | unchanged |
 | `snapshot_id` | `create_from = { snapshot_id }` |
 | `availability_zone` | unchanged |

@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -15,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/ovh/go-ovh/ovh"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
@@ -25,6 +28,8 @@ var (
 	_ resource.Resource                = (*cloudStorageFileShareResource)(nil)
 	_ resource.ResourceWithConfigure   = (*cloudStorageFileShareResource)(nil)
 	_ resource.ResourceWithImportState = (*cloudStorageFileShareResource)(nil)
+
+	_ resource.ResourceWithConfigValidators = (*cloudStorageFileShareResource)(nil)
 )
 
 func NewCloudStorageFileShareResource() resource.Resource {
@@ -54,6 +59,20 @@ func (r *cloudStorageFileShareResource) Configure(ctx context.Context, req resou
 	}
 
 	r.config = config
+}
+
+func (r *cloudStorageFileShareResource) ConfigValidators(_ context.Context) []resource.ConfigValidator {
+	return []resource.ConfigValidator{
+		resourcevalidator.Conflicting(
+			path.MatchRoot("network"),
+			path.MatchRoot("share_network_id"),
+		),
+		resourcevalidator.AtLeastOneOf(
+			path.MatchRoot("network"),
+			path.MatchRoot("share_network_id"),
+			path.MatchRoot("create_from"),
+		),
+	}
 }
 
 var fileShareMutableAttrs = MutableAttrs{
@@ -122,11 +141,51 @@ func (r *cloudStorageFileShareResource) Schema(ctx context.Context, req resource
 				CustomType:          ovhtypes.TfStringType{},
 				Optional:            true,
 				Computed:            true,
-				Description:         "ID of a pre-existing share network to attach the file share to. Required unless create_from is set; when omitted with create_from, the share network of the snapshot's source file share is used",
-				MarkdownDescription: "ID of a pre-existing share network to attach the file share to. Required unless `create_from` is set; when omitted with `create_from`, the share network of the snapshot's source file share is used",
+				Description:         "ID of a pre-existing share network to attach the file share to. Conflicts with network; one of them is required unless create_from is set. With network, the ID of the share network the API creates. When omitted with create_from, the share network of the snapshot's source file share is used",
+				MarkdownDescription: "ID of a pre-existing share network to attach the file share to. Conflicts with `network`; one of them is required unless `create_from` is set. With `network`, the ID of the share network the API creates. When omitted with `create_from`, the share network of the snapshot's source file share is used",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"network": schema.SingleNestedAttribute{
+				Optional:            true,
+				Computed:            true,
+				Description:         "Private network and subnet the API creates the file share's share network on. Conflicts with share_network_id; one of them is required unless create_from is set. The share network is deleted with the last file share that uses it. When omitted with create_from, the network of the snapshot's source file share is used. Changing this value recreates the resource.",
+				MarkdownDescription: "Private network and subnet the API creates the file share's share network on. Conflicts with `share_network_id`; one of them is required unless `create_from` is set. The share network is deleted with the last file share that uses it. When omitted with `create_from`, the network of the snapshot's source file share is used. **Changing this value recreates the resource.**",
+				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.Object{
+					objectvalidator.AlsoRequires(path.MatchRelative().AtName("subnet_id")),
+				},
+				// RequiresReplace sits on each field, not on the object: an object-level
+				// one would see the unknown computed id and replace when id is omitted.
+				Attributes: map[string]schema.Attribute{
+					"id": schema.StringAttribute{
+						CustomType:          ovhtypes.TfStringType{},
+						Optional:            true,
+						Computed:            true,
+						Description:         "ID of the private network of subnet_id. When omitted, the network of subnet_id is used",
+						MarkdownDescription: "ID of the private network of `subnet_id`. When omitted, the network of `subnet_id` is used",
+						PlanModifiers: []planmodifier.String{
+							stringplanmodifier.UseStateForUnknown(),
+							stringplanmodifier.RequiresReplaceIfConfigured(),
+						},
+					},
+					// Not Required, which AlsoRequires enforces instead: Terraform proposes a
+					// null object when the prior one holds a non-computed attribute, and that
+					// would drop the network a create_from share takes from its source.
+					"subnet_id": schema.StringAttribute{
+						CustomType:          ovhtypes.TfStringType{},
+						Optional:            true,
+						Computed:            true,
+						Description:         "ID of the subnet to create the share network on. Required when network is set",
+						MarkdownDescription: "ID of the subnet to create the share network on. Required when `network` is set",
+						PlanModifiers: []planmodifier.String{
+							stringplanmodifier.RequiresReplace(),
+						},
+					},
 				},
 			},
 			"create_from": schema.SingleNestedAttribute{

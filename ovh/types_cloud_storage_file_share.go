@@ -18,6 +18,7 @@ type CloudStorageFileShareModel struct {
 	ShareType        ovhtypes.TfStringValue `tfsdk:"share_type"`
 	AvailabilityZone ovhtypes.TfStringValue `tfsdk:"availability_zone"`
 	ShareNetworkId   ovhtypes.TfStringValue `tfsdk:"share_network_id"`
+	Network          types.Object           `tfsdk:"network"`
 	Encryption       types.Object           `tfsdk:"encryption"`
 	CreateFrom       types.Object           `tfsdk:"create_from"`
 
@@ -88,6 +89,11 @@ type CloudStorageFileShareAPIShareNetworkRef struct {
 	Id string `json:"id"`
 }
 
+type CloudStorageFileShareAPINetworkRef struct {
+	Id       string `json:"id,omitempty"`
+	SubnetId string `json:"subnetId"`
+}
+
 type CloudStorageFileShareAPITargetSpec struct {
 	Name         string                                   `json:"name,omitempty"`
 	Description  string                                   `json:"description,omitempty"`
@@ -96,6 +102,7 @@ type CloudStorageFileShareAPITargetSpec struct {
 	ShareType    string                                   `json:"shareType,omitempty"`
 	Location     *CloudStorageFileShareAPILocation        `json:"location,omitempty"`
 	ShareNetwork *CloudStorageFileShareAPIShareNetworkRef `json:"shareNetwork,omitempty"`
+	Network      *CloudStorageFileShareAPINetworkRef      `json:"network,omitempty"`
 	Encryption   *CloudStorageFileShareAPIEncryption      `json:"encryption,omitempty"`
 	CreateFrom   *CloudStorageFileShareAPICreateFrom      `json:"createFrom,omitempty"`
 }
@@ -125,6 +132,13 @@ type CloudStorageFileShareUpdatePayload struct {
 func FileShareEncryptionAttrTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"enabled": types.BoolType,
+	}
+}
+
+func FileShareNetworkAttrTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"id":        ovhtypes.TfStringType{},
+		"subnet_id": ovhtypes.TfStringType{},
 	}
 }
 
@@ -179,6 +193,8 @@ func (m *CloudStorageFileShareModel) ToCreate(ctx context.Context) *CloudStorage
 		target.ShareNetwork = &CloudStorageFileShareAPIShareNetworkRef{Id: m.ShareNetworkId.ValueString()}
 	}
 
+	target.Network = m.configuredNetwork()
+
 	if snapshotId := m.createFromSnapshotId(); snapshotId != "" {
 		target.CreateFrom = &CloudStorageFileShareAPICreateFrom{SnapshotId: snapshotId}
 	}
@@ -195,6 +211,21 @@ func (m *CloudStorageFileShareModel) createFromSnapshotId() string {
 		return ""
 	}
 	return snapshotId.ValueString()
+}
+
+func (m *CloudStorageFileShareModel) configuredNetwork() *CloudStorageFileShareAPINetworkRef {
+	if m.Network.IsNull() || m.Network.IsUnknown() {
+		return nil
+	}
+	subnetId, ok := m.Network.Attributes()["subnet_id"].(ovhtypes.TfStringValue)
+	if !ok || subnetId.IsNull() || subnetId.IsUnknown() {
+		return nil
+	}
+	network := &CloudStorageFileShareAPINetworkRef{SubnetId: subnetId.ValueString()}
+	if networkId, ok := m.Network.Attributes()["id"].(ovhtypes.TfStringValue); ok && !networkId.IsNull() && !networkId.IsUnknown() {
+		network.Id = networkId.ValueString()
+	}
+	return network
 }
 
 func (m *CloudStorageFileShareModel) configuredEncryptionEnabled() (bool, bool) {
@@ -312,6 +343,7 @@ func (m *CloudStorageFileShareModel) MergeWith(ctx context.Context, response *Cl
 			m.Region = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Location.Region)}
 			m.AvailabilityZone = ovhtypes.TfStringValue{StringValue: types.StringValue(response.TargetSpec.Location.AvailabilityZone)}
 		}
+		m.Network = buildFileShareNetworkObject(response.TargetSpec.Network)
 
 		if response.TargetSpec.Encryption != nil {
 			m.Encryption = buildFileShareEncryptionObject(response.TargetSpec.Encryption)
@@ -330,6 +362,19 @@ func (m *CloudStorageFileShareModel) MergeWith(ctx context.Context, response *Cl
 			m.CreateFrom = types.ObjectNull(FileShareCreateFromAttrTypes())
 		}
 	}
+}
+
+func buildFileShareNetworkObject(network *CloudStorageFileShareAPINetworkRef) types.Object {
+	if network == nil {
+		return types.ObjectNull(FileShareNetworkAttrTypes())
+	}
+	return types.ObjectValueMust(
+		FileShareNetworkAttrTypes(),
+		map[string]attr.Value{
+			"id":        ovhtypes.TfStringValue{StringValue: types.StringValue(network.Id)},
+			"subnet_id": ovhtypes.TfStringValue{StringValue: types.StringValue(network.SubnetId)},
+		},
+	)
 }
 
 func buildFileShareEncryptionObject(encryption *CloudStorageFileShareAPIEncryption) types.Object {
