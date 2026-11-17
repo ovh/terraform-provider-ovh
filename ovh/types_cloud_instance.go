@@ -620,29 +620,6 @@ func (m *CloudInstanceModel) volumesPayload(create bool) []CloudInstanceAPIVolum
 	return refs
 }
 
-// bootVolumeId is the id of the volume the instance boots from, whichever
-// attribute declares its volumes, or "" when it boots from an image.
-//
-// With volumes it is the entry with the role BOOT. With the deprecated volume_ids
-// it is the first one, when there is no image_id. This reads the same on a plan
-// and on a state, so moving from volume_ids to volumes is not a change of boot
-// volume.
-func bootVolumeId(volumes types.List, volumeIds ovhtypes.TfListNestedValue[ovhtypes.TfStringValue], imageId ovhtypes.TfStringValue) string {
-	if !volumes.IsNull() && !volumes.IsUnknown() {
-		if ids := bootVolumeIds(volumes); len(ids) > 0 {
-			return ids[0]
-		}
-		return ""
-	}
-	if knownString(imageId) != "" {
-		return ""
-	}
-	if refs := customStringListToRefs(volumeIds); len(refs) > 0 {
-		return refs[0].Id
-	}
-	return ""
-}
-
 // ToCreate builds the create payload including all fields (mutable + immutable).
 func (m *CloudInstanceResourceModel) ToCreate() *CloudInstanceCreatePayload {
 	ts := &CloudInstanceAPITargetSpec{

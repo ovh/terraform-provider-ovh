@@ -716,7 +716,7 @@ func TestAccCloudInstance_volumeIdsToVolumes(t *testing.T) {
     { id = ovh_cloud_storage_block_volume.data.id },
   ]`),
 				PlanOnly:    true,
-				ExpectError: regexp.MustCompile(`No boot source`),
+				ExpectError: regexp.MustCompile(`Boot volume cannot become DATA`),
 			},
 			{
 				// Import reads volumes back, with the BOOT role on the boot volume.

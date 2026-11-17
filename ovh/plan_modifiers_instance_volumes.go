@@ -48,18 +48,32 @@ func (m derivedVolumeListModifier) PlanModifyList(ctx context.Context, req planm
 	resp.PlanValue = req.StateValue
 }
 
+// otherChanged tells whether the plan changes the other volume attribute.
+//
+// An other left out of the configuration is unchanged, whatever its plan says:
+// the plan modifiers of both attributes get the same original plan, in which the
+// framework has marked every computed attribute left out of the configuration
+// unknown as soon as anything differs from the state. When the other is
+// configured, its plan is the one to compare: Terraform core has merged it
+// element by element with the state, so a role left out already reads as the
+// stored one, which the configuration alone would not say.
 func (m derivedVolumeListModifier) otherChanged(ctx context.Context, req planmodifier.ListRequest) bool {
-	var plan, state attr.Value
+	var config, plan, state attr.Value
 	if m.other == "volumes" {
-		var p, s types.List
+		var c, p, s types.List
+		req.Config.GetAttribute(ctx, path.Root(m.other), &c)
 		req.Plan.GetAttribute(ctx, path.Root(m.other), &p)
 		req.State.GetAttribute(ctx, path.Root(m.other), &s)
-		plan, state = p, s
+		config, plan, state = c, p, s
 	} else {
-		var p, s ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]
+		var c, p, s ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]
+		req.Config.GetAttribute(ctx, path.Root(m.other), &c)
 		req.Plan.GetAttribute(ctx, path.Root(m.other), &p)
 		req.State.GetAttribute(ctx, path.Root(m.other), &s)
-		plan, state = p, s
+		config, plan, state = c, p, s
+	}
+	if config.IsNull() {
+		return false
 	}
 	return !plan.Equal(state)
 }
@@ -67,8 +81,9 @@ func (m derivedVolumeListModifier) otherChanged(ctx context.Context, req planmod
 // roleDefaultsToData plans the role of a volume the configuration gives none,
 // but only when volumes is set in the configuration.
 //
-// It is DATA, except for the volume the instance boots from: the API keeps the
-// stored BOOT role when an update leaves it out, so it stays BOOT in the plan.
+// It is DATA, except for the volume the instance boots from when no other entry
+// is given BOOT: the API keeps the stored BOOT role when an update leaves it out,
+// so it stays BOOT in the plan.
 // Planning DATA there would be a change the API ignores, and read as a different
 // boot volume it would replace an instance that cannot be recreated.
 //
@@ -104,6 +119,13 @@ func (roleDefaultsToDataModifier) PlanModifyString(ctx context.Context, req plan
 	var stateVolumes types.List
 	if d := req.State.GetAttribute(ctx, path.Root("volumes"), &stateVolumes); d.HasError() {
 		return
+	}
+	// Another configured entry already holds BOOT: the boot moves there, and this
+	// one is a data volume. Keeping it BOOT would send two BOOT roles.
+	for _, ref := range volumesToAPI(volumes) {
+		if ref.Role == instanceVolumeRoleBoot && ref.Id != id.ValueString() {
+			return
+		}
 	}
 	for _, boot := range bootVolumeIds(stateVolumes) {
 		if boot == id.ValueString() {

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	fwresource "github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -1022,9 +1023,11 @@ type volumeCfg struct {
 	// the API could not resolve. stateNoVolumes: volumes is not in the state at all,
 	// as right after an upgrade with -refresh=false.
 	noBootRole, stateNoVolumes bool
-	image                      ovhtypes.TfStringValue
-	ids                        ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]
-	volumes                    types.List
+	// create: no prior state at all, as in the create plan of a replacement.
+	create  bool
+	image   ovhtypes.TfStringValue
+	ids     ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]
+	volumes types.List
 }
 
 func newVolumeCfg() volumeCfg {
@@ -1176,47 +1179,6 @@ func TestUnitCloudInstanceVolumeFormsRoundTrip(t *testing.T) {
 	})
 }
 
-// The boot volume reads the same from a plan and from a state, whichever
-// attribute declares the volumes. Moving from volume_ids to volumes keeps it, so
-// it must not replace the instance; changing it does.
-func TestUnitCloudInstanceBootVolumeId(t *testing.T) {
-	nullVols := types.ListNull(types.ObjectType{AttrTypes: instanceVolumeRefAttrTypes()})
-	nullIds := nullCustomStringList()
-	cases := []struct {
-		name    string
-		volumes types.List
-		ids     ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]
-		image   ovhtypes.TfStringValue
-		want    string
-	}{
-		{"volumes, BOOT entry", volumeRefList(map[string]string{"b": "BOOT", "d": ""}), nullIds, strNull(), "b"},
-		{"volumes, no BOOT", volumeRefList(map[string]string{"d": ""}), nullIds, strNull(), ""},
-		{"volume_ids, no image: first volume", nullVols, customStringList("b", "d"), strNull(), "b"},
-		{"volume_ids with an image: none", nullVols, customStringList("b", "d"), strVal("img"), ""},
-		{"nothing", nullVols, nullIds, strNull(), ""},
-		// volumes decides, even next to an image_id read from a state.
-		{"volumes win over image_id", volumeRefList(map[string]string{"b": "BOOT"}), nullIds, strVal("img"), "b"},
-	}
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			if got := bootVolumeId(tc.volumes, tc.ids, tc.image); got != tc.want {
-				t.Fatalf("bootVolumeId = %q, want %q", got, tc.want)
-			}
-		})
-	}
-
-	// volume_ids = ["b", "d"] -> volumes = [{b BOOT}, {d}] keeps b: no replacement.
-	from := bootVolumeId(nullVols, customStringList("b", "d"), strNull())
-	to := bootVolumeId(volumeRefList(map[string]string{"b": "BOOT", "d": ""}), nullIds, strNull())
-	if from != to {
-		t.Fatalf("moving from volume_ids to volumes changed the boot volume: %q -> %q", from, to)
-	}
-	// Reordering volume_ids changes the first volume, hence the boot volume.
-	if bootVolumeId(nullVols, customStringList("d", "b"), strNull()) == from {
-		t.Fatal("putting another volume first must change the boot volume")
-	}
-}
-
 // ModifyPlan end to end: moving from volume_ids to volumes keeps the boot volume
 // and must not replace the instance, while changing the boot volume must.
 func TestUnitCloudInstanceModifyPlanBootVolume(t *testing.T) {
@@ -1244,6 +1206,15 @@ func TestUnitCloudInstanceModifyPlanBootVolume(t *testing.T) {
 	idsNoRole := with(func(c *volumeCfg) { c.ids = customStringList("b", "d"); c.noBootRole = true })
 	idsUpgrade := with(func(c *volumeCfg) { c.ids = customStringList("b", "d"); c.stateNoVolumes = true })
 	volsNoRole := with(func(c *volumeCfg) { c.volumes = volumeRefList(map[string]string{"b": "", "d": ""}) })
+	createNoRole := with(func(c *volumeCfg) { c.volumes = volumeRefList(map[string]string{"b": "", "d": ""}); c.create = true })
+	createIdsOnly := with(func(c *volumeCfg) { c.ids = customStringList("b", "d"); c.create = true })
+	createRoleBoot := with(func(c *volumeCfg) {
+		c.volumes = volumeRefList(map[string]string{"b": "BOOT", "d": ""})
+		c.create = true
+	})
+	// Finding 3: the boot moves to d, b keeps no role. One BOOT in the config, but
+	// b would be promoted from the state: two BOOT in the plan.
+	volsMoveBootKeepB := with(func(c *volumeCfg) { c.volumes = volumeRefList(map[string]string{"b": "", "d": "BOOT"}) })
 	withImage := with(func(c *volumeCfg) { c.image = strVal("img"); c.ids = customStringList("d") })
 
 	// The state holds both views of the volumes, as the resource stores them: the
@@ -1289,7 +1260,9 @@ func TestUnitCloudInstanceModifyPlanBootVolume(t *testing.T) {
 		{"volumes -> volume_ids, same boot", volsB, idsB, false, false},
 		{"unchanged", volsB, volsB, false, false},
 		{"volumes, another volume becomes BOOT", volsB, volsD, true, false},
-		{"volume_ids, another volume first", idsB, idsDB, true, false},
+		// volume_ids carries no role: the API keeps the stored boot volume, so
+		// reordering it is an update, never a replacement (as before volumes).
+		{"volume_ids, another volume first", idsB, idsDB, false, false},
 		// The API keeps the stored BOOT role, so dropping it on the boot volume
 		// leaves no boot source: an error, never a replacement that cannot be created.
 		{"boot volume turned into DATA", idsB, volsDataOnly, false, true},
@@ -1301,12 +1274,25 @@ func TestUnitCloudInstanceModifyPlanBootVolume(t *testing.T) {
 		{"state without BOOT role, volume_ids", idsNoRole, idsB, false, false},
 		{"state without volumes (upgrade, no refresh), volume_ids", idsUpgrade, idsB, false, false},
 		{"state without BOOT role, volumes without role", idsNoRole, volsNoRole, false, false},
+		// The create plan of a replacement has no state: a role left out cannot be
+		// BOOT, and no image means no boot source, which the API refuses after the
+		// instance is gone. volume_ids keeps its first-volume rule.
+		{"create plan, volumes without role and no image", volumeCfg{}, createNoRole, false, true},
+		{"create plan, volume_ids and no image", volumeCfg{}, createIdsOnly, false, false},
+		{"create plan, volumes with BOOT", volumeCfg{}, createRoleBoot, false, false},
+		// The boot moves to d while b, the current boot, keeps no role: b must not
+		// be promoted to BOOT next to d. A replacement, and a single BOOT.
+		{"boot moves, current boot volume left without role", volsB, volsMoveBootKeepB, true, false},
 		{"image: adding a data volume", withImage, with(func(c *volumeCfg) { c.image = strVal("img"); c.ids = customStringList("d", "e") }), false, false},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
+			stateRaw := raw(stored(tc.state))
+			if tc.plan.create {
+				stateRaw = tftypes.NewValue(sch.Schema.Type().TerraformType(ctx), nil)
+			}
 			req := fwresource.ModifyPlanRequest{
-				State:  tfsdk.State{Schema: sch.Schema, Raw: raw(stored(tc.state))},
+				State:  tfsdk.State{Schema: sch.Schema, Raw: stateRaw},
 				Plan:   tfsdk.Plan{Schema: sch.Schema, Raw: raw(tc.plan)},
 				Config: tfsdk.Config{Schema: sch.Schema, Raw: raw(configOf(tc.plan))},
 			}
@@ -1326,4 +1312,83 @@ func TestUnitCloudInstanceModifyPlanBootVolume(t *testing.T) {
 			}
 		})
 	}
+}
+
+// The volume plan modifiers, called as the framework does: the plan they read
+// already has every computed attribute the configuration leaves out marked
+// unknown, since another attribute differs from the state.
+func TestUnitCloudInstanceVolumePlanModifiers(t *testing.T) {
+	ctx := context.Background()
+	r := &cloudInstanceResource{}
+	var sch fwresource.SchemaResponse
+	r.Schema(ctx, fwresource.SchemaRequest{}, &sch)
+	raw := func(c volumeCfg) tftypes.Value { return instanceConfigRaw(t, sch.Schema, c) }
+	nullVols := types.ListNull(types.ObjectType{AttrTypes: instanceVolumeRefAttrTypes()})
+
+	t.Run("role: current boot volume left without role while another is BOOT", func(t *testing.T) {
+		state := volumeCfg{image: strNull(), ids: customStringList("b"), volumes: volumeRefList(map[string]string{"b": "BOOT"})}
+		cfg := volumeCfg{image: strNull(), ids: nullCustomStringList(), volumes: volumeRefList(map[string]string{"b": "", "d": "BOOT"})}
+		req := planmodifier.StringRequest{
+			Path:        path.Root("volumes").AtListIndex(0).AtName("role"),
+			Config:      tfsdk.Config{Schema: sch.Schema, Raw: raw(cfg)},
+			ConfigValue: types.StringNull(),
+			Plan:        tfsdk.Plan{Schema: sch.Schema, Raw: raw(cfg)},
+			PlanValue:   types.StringUnknown(),
+			State:       tfsdk.State{Schema: sch.Schema, Raw: raw(state)},
+			StateValue:  types.StringValue("BOOT"),
+		}
+		resp := &planmodifier.StringResponse{PlanValue: req.PlanValue}
+		roleDefaultsToData().PlanModifyString(ctx, req, resp)
+		if resp.PlanValue.ValueString() != "DATA" {
+			t.Fatalf("b must become DATA, d is the BOOT volume: got %v", resp.PlanValue)
+		}
+	})
+
+	t.Run("lists: moving to volumes with a role left out, plan merged from the state", func(t *testing.T) {
+		// Step 2 of TestAccCloudInstance_volumeIdsToVolumes: the configuration
+		// leaves the DATA role out, and Terraform core merges the plan element by
+		// element with the state, so the planned volumes already equals the state.
+		// volume_ids, no longer configured, must keep its state value: a no-op.
+		state := volumeCfg{image: strNull(), ids: customStringList("b", "d"), volumes: volumeRefList(map[string]string{"b": "BOOT", "d": "DATA"})}
+		cfg := volumeCfg{image: strNull(), ids: nullCustomStringList(), volumes: volumeRefList(map[string]string{"b": "BOOT", "d": ""})}
+		plan := volumeCfg{image: strNull(),
+			ids:     ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]{ListValue: basetypes.NewListUnknown(ovhtypes.TfStringType{})},
+			volumes: state.volumes}
+		req := planmodifier.ListRequest{
+			Path:        path.Root("volume_ids"),
+			Config:      tfsdk.Config{Schema: sch.Schema, Raw: raw(cfg)},
+			ConfigValue: types.ListNull(ovhtypes.TfStringType{}),
+			Plan:        tfsdk.Plan{Schema: sch.Schema, Raw: raw(plan)},
+			PlanValue:   types.ListUnknown(ovhtypes.TfStringType{}),
+			State:       tfsdk.State{Schema: sch.Schema, Raw: raw(state)},
+			StateValue:  types.ListValueMust(ovhtypes.TfStringType{}, []attr.Value{strVal("b"), strVal("d")}),
+		}
+		resp := &planmodifier.ListResponse{PlanValue: req.PlanValue}
+		derivedVolumeList("volumes").PlanModifyList(ctx, req, resp)
+		if resp.PlanValue.IsUnknown() {
+			t.Fatal("volume_ids must keep its state value: volumes is planned equal to the state")
+		}
+	})
+
+	t.Run("lists: neither in the configuration, both unknown in the plan", func(t *testing.T) {
+		state := volumeCfg{image: strNull(), ids: customStringList("b", "d"), volumes: volumeRefList(map[string]string{"b": "BOOT", "d": ""})}
+		cfg := volumeCfg{image: strNull(), ids: nullCustomStringList(), volumes: nullVols}
+		plan := volumeCfg{image: strNull(),
+			ids:     ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]{ListValue: basetypes.NewListUnknown(ovhtypes.TfStringType{})},
+			volumes: types.ListUnknown(types.ObjectType{AttrTypes: instanceVolumeRefAttrTypes()})}
+		req := planmodifier.ListRequest{
+			Path:        path.Root("volumes"),
+			Config:      tfsdk.Config{Schema: sch.Schema, Raw: raw(cfg)},
+			ConfigValue: nullVols,
+			Plan:        tfsdk.Plan{Schema: sch.Schema, Raw: raw(plan)},
+			PlanValue:   plan.volumes,
+			State:       tfsdk.State{Schema: sch.Schema, Raw: raw(state)},
+			StateValue:  state.volumes,
+		}
+		resp := &planmodifier.ListResponse{PlanValue: req.PlanValue}
+		derivedVolumeList("volume_ids").PlanModifyList(ctx, req, resp)
+		if !resp.PlanValue.Equal(state.volumes) {
+			t.Fatalf("volumes must keep its state value, got %v", resp.PlanValue)
+		}
+	})
 }
