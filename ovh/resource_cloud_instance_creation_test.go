@@ -238,9 +238,22 @@ func TestAccCloudInstance_creationMatrix(t *testing.T) {
 						ImportState:       true,
 						ImportStateVerify: true,
 						ImportStateIdFunc: testAccCloudInstanceImportStateIdFunc(rn),
+						// An import has no configuration to tell which form declared the
+						// volumes, so it fills volumes and never the deprecated volume_ids.
+						// This config uses volume_ids, so both differ by construction.
+						ImportStateVerifyIgnore: importVolumesIgnore(tc.withVolume),
 					},
 				},
 			})
 		})
 	}
+}
+
+// importVolumesIgnore lists the volume attributes an import cannot reproduce for a
+// configuration declaring volume_ids: it fills volumes instead.
+func importVolumesIgnore(withVolume bool) []string {
+	if !withVolume {
+		return nil
+	}
+	return []string{"volume_ids.#", "volume_ids.0", "volumes.#", "volumes.0.%", "volumes.0.id", "volumes.0.role"}
 }
