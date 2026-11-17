@@ -824,7 +824,9 @@ func testAccCloudManagedDatabasePostgresqlConfig(name, attributes, networkAttrib
 
 // testAccCloudManagedServiceConfig renders the service ovh_cloud_managed_<family>.db of the engine with the
 // given attributes and network attributes. When the NETWORK_REGION setting of the engine is set, the
-// service is attached to a private network created in that region, which native services require.
+// service is attached to a private network created in that region, which native services require. The
+// NODES_COUNT setting sets nodes_count, which the API requires on a plan of more than one node,
+// although its spec says it applies the minimum of the plan.
 func testAccCloudManagedServiceConfig(category managedDatabaseCategory, engine, name, attributes, networkAttributes string) string {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
 	setting := func(key string) string {
@@ -851,6 +853,9 @@ resource "ovh_cloud_network_private_vrack_subnet" "subnet" {
 		network = `
     network_id = ovh_cloud_network_private_vrack.network.id
     subnet_id  = ovh_cloud_network_private_vrack_subnet.subnet.id`
+	}
+	if nodesCount := setting("NODES_COUNT"); nodesCount != "" {
+		attributes += "\n  nodes_count = " + nodesCount
 	}
 	if networkAttributes != "" {
 		network += "\n    " + networkAttributes
@@ -881,9 +886,10 @@ resource "ovh%s" "db" {
 	)
 }
 
-// testAccCloudManagedBackupRegions is left out of the import checks of a service: shortly after the
-// service is ready, the API drops the region of the service from these backup regions.
-const testAccCloudManagedBackupRegions = "current_state.engine_capabilities.backup_regions"
+// testAccCloudManagedEngineCapabilities is left out of the import checks of a service, since the API
+// changes them between two reads: it drops the region of the service from the backup regions shortly
+// after the service is ready, and sometimes leaves out the advanced configuration properties.
+const testAccCloudManagedEngineCapabilities = "current_state.engine_capabilities"
 
 // testAccCloudManagedImportStateIdFunc returns the import ID of a service, <service_name>/<engine>/<id>,
 // or of an object of a service, <service_name>/<engine>/<service_id>/<id>: without the engine when the
@@ -934,7 +940,7 @@ func TestAccCloudManagedDatabasePostgresql_basic(t *testing.T) {
 				ResourceName:            testAccCloudManagedDatabasePostgresqlResource,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{testAccCloudManagedBackupRegions},
+				ImportStateVerifyIgnore: []string{testAccCloudManagedEngineCapabilities},
 				ImportStateIdFunc:       testAccCloudManagedImportStateIdFunc(testAccCloudManagedDatabasePostgresqlResource),
 			},
 		},
@@ -1033,7 +1039,7 @@ func testAccCloudManagedEngineTestCase(t *testing.T, category managedDatabaseCat
 				ResourceName:            service,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{testAccCloudManagedBackupRegions},
+				ImportStateVerifyIgnore: []string{testAccCloudManagedEngineCapabilities},
 				ImportStateIdFunc:       testAccCloudManagedImportStateIdFunc(service),
 			},
 		},
