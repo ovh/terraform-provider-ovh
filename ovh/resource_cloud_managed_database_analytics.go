@@ -223,13 +223,10 @@ func (r *cloudManagedDatabaseServiceResource) Schema(ctx context.Context, req re
 						},
 					},
 					"public": schema.BoolAttribute{
-						Optional:    true,
-						Computed:    true,
-						Description: "Whether the service is published on a public address, with a public domain name and TLS. The authorized IPs apply to it too. Changing it recreates the service.",
-						PlanModifiers: []planmodifier.Bool{
-							boolplanmodifier.RequiresReplaceIfConfigured(),
-							boolplanmodifier.UseStateForUnknown(),
-						},
+						Optional:      true,
+						Computed:      true,
+						Description:   "Whether the service is published on a public address, with a public domain name and TLS. The authorized IPs apply to it too. Changing it sends a PATCH request, which a consumer key must allow.",
+						PlanModifiers: []planmodifier.Bool{boolplanmodifier.UseStateForUnknown()},
 					},
 				},
 			},
@@ -666,6 +663,26 @@ func (r *cloudManagedDatabaseServiceResource) Update(ctx context.Context, req re
 	}
 
 	endpoint := r.category.serviceEndpoint(state.ServiceName.ValueString(), state.Engine.ValueString(), state.Id.ValueString())
+
+	// The PUT keeps the public exposure, which a PATCH changes: after the PUT when it publishes the
+	// service and before it when it unpublishes it, so that the public address only ever filters with
+	// the authorized IPs configured along with it.
+	planned := managedDatabaseObjectAs[managedDatabaseNetwork](ctx, plan.Network, &resp.Diagnostics)
+	prior := managedDatabaseObjectAs[managedDatabaseNetwork](ctx, state.Network, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	var public *bool
+	if planned != nil && planned.Public != nil && (prior == nil || !reflect.DeepEqual(prior.Public, planned.Public)) {
+		public = planned.Public
+	}
+	if public != nil && !*public {
+		if err := publishManagedDatabaseServiceWhenReady(ctx, r.config.OVHClient, endpoint, false, managedDatabaseServiceUpdateTimeout); err != nil {
+			resp.Diagnostics.AddError("Error unpublishing the service", err.Error())
+			return
+		}
+	}
+
 	// advanced_configuration is read-only: the PUT sends the current one back.
 	replace := func(service *CloudManagedDatabaseServiceModel) {
 		current := service.AdvancedConfiguration
@@ -675,6 +692,13 @@ func (r *cloudManagedDatabaseServiceResource) Update(ctx context.Context, req re
 	if err := putManagedDatabaseServiceWhenReady(ctx, r.config.OVHClient, endpoint, replace, managedDatabaseServiceUpdateTimeout); err != nil {
 		resp.Diagnostics.AddError("Error updating the service", err.Error())
 		return
+	}
+
+	if public != nil && *public {
+		if err := publishManagedDatabaseServiceWhenReady(ctx, r.config.OVHClient, endpoint, true, managedDatabaseServiceUpdateTimeout); err != nil {
+			resp.Diagnostics.AddError("Error publishing the service", err.Error())
+			return
+		}
 	}
 
 	var res CloudManagedDatabaseServiceAPIResponse
@@ -761,6 +785,21 @@ func putManagedDatabaseServiceWhenReady(ctx context.Context, client *ovhwrap.Cli
 		return client.PutWithContext(ctx, endpoint, body, nil)
 	}); err != nil {
 		return fmt.Errorf("calling Put %s: %w", endpoint, err)
+	}
+	return waitForManagedDatabaseServiceReady(ctx, client, endpoint, timeout)
+}
+
+// publishManagedDatabaseServiceWhenReady waits for the service to be READY, publishes it on a public
+// address or takes it off with a PATCH, and waits for the service to apply it.
+func publishManagedDatabaseServiceWhenReady(ctx context.Context, client *ovhwrap.Client, endpoint string, public bool, timeout time.Duration) error {
+	if err := waitForManagedDatabaseServiceReady(ctx, client, endpoint, timeout); err != nil {
+		return err
+	}
+	body := map[string]any{"targetSpec": map[string]any{"network": map[string]any{"public": public}}}
+	if err := retryWhileManagedDatabaseServiceBusy(ctx, timeout, func() error {
+		return client.PatchWithContext(ctx, endpoint, body, nil)
+	}); err != nil {
+		return fmt.Errorf("calling Patch %s: %w", endpoint, err)
 	}
 	return waitForManagedDatabaseServiceReady(ctx, client, endpoint, timeout)
 }

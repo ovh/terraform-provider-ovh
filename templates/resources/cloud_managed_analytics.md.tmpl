@@ -40,7 +40,7 @@ The [`ovh_cloud_managed_database`](cloud_managed_database.md) resource creates t
   * `subnet_id` - (Optional) ID of the subnet to attach the service to. **Changing this value recreates the resource.**
   * `authorized_ips` - (Optional) IP addresses allowed to connect to the service:
     * `rules` - (Required) Set of allowed CIDR blocks, each with a `cidr` (Required) and a `description` (Optional).
-  * `public` - (Optional) Whether the service is published on a public address, with a public domain name and TLS. The authorized IPs apply to it too. **Changing this value recreates the resource.**
+  * `public` - (Optional) Whether the service is published on a public address, with a public domain name and TLS. The authorized IPs apply to it too. Changing this value sends a `PATCH` request, which a `consumer_key` must allow.
 * `storage` - (Optional) Storage configuration:
   * `size` - (Required) Storage size, with a `unit` (`GB` or `MB`) and a `value`.
 * `fork_source_service_id` - (Optional) ID of the service to create this one from, using one of its backups.

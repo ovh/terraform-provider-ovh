@@ -71,7 +71,8 @@ func newManagedDatabaseServiceTestResource(t *testing.T, category managedDatabas
 
 // newManagedDatabaseTestConfig returns a provider configuration talking to a fake API that serves
 // the answers of each "METHOD path" in turn, the last one repeating, and those of "*" to the requests
-// that have none. The returned function gives the bodies received for a "METHOD path".
+// that have none. The returned function gives the bodies received for a "METHOD path", and for "" the
+// "METHOD path" of every request, in order.
 func newManagedDatabaseTestConfig(t *testing.T, answers map[string][]managedDatabaseTestAnswer) (*Config, func(string) []string) {
 	t.Helper()
 
@@ -96,6 +97,7 @@ func newManagedDatabaseTestConfig(t *testing.T, answers map[string][]managedData
 		}
 		body, _ := io.ReadAll(r.Body)
 		bodies[key] = append(bodies[key], string(body))
+		bodies[""] = append(bodies[""], key)
 		queue := answers[key]
 		if len(queue) == 0 {
 			key, queue = "*", answers["*"]
@@ -270,6 +272,74 @@ func TestCloudManagedDatabaseServiceUpdate(t *testing.T) {
 	}
 }
 
+func TestCloudManagedDatabasePostgresqlUpdatePublic(t *testing.T) {
+	ctx := context.Background()
+	private := managedDatabasePostgresqlTestResponse
+	public := strings.ReplaceAll(private, `"public": false`, `"public": true`)
+	renamed := func(service string) string {
+		return strings.ReplaceAll(service, "testacc-terraform-db", "testacc-terraform-renamed")
+	}
+	for name, tc := range map[string]struct {
+		before, after string
+		public        bool
+		calls         string
+	}{
+		"publish":   {private, renamed(public), true, "PUT PATCH"},
+		"unpublish": {public, renamed(private), false, "PATCH PUT"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			// The waits and the PUT read the service as it was, the read after the update as it is.
+			before := managedDatabaseTestAnswer{http.StatusOK, tc.before}
+			r, bodies := newManagedDatabaseServiceTestResource(t, managedDatabaseFamily, map[string][]managedDatabaseTestAnswer{
+				"GET " + managedDatabasePostgresqlTestItemPath:   {before, before, before, before, before, {http.StatusOK, tc.after}},
+				"PUT " + managedDatabasePostgresqlTestItemPath:   {{http.StatusOK, tc.after}},
+				"PATCH " + managedDatabasePostgresqlTestItemPath: {{http.StatusOK, tc.after}},
+			})
+
+			state := managedDatabasePostgresqlTestState(t)
+			if diags := state.MergeWith(ctx, managedDatabasePostgresqlTestAPIResponse(t, tc.before)); diags.HasError() {
+				t.Fatalf("unexpected diagnostics: %v", diags)
+			}
+			// The description changes too, so that a PUT is sent.
+			plan := state
+			plan.Description = types.StringValue("testacc-terraform-renamed")
+			network := state.Network.Attributes()
+			network["public"] = types.BoolValue(tc.public)
+			plan.Network = types.ObjectValueMust(managedDatabaseNetworkAttrTypes(), network)
+
+			resp := fwresource.UpdateResponse{State: managedDatabasePostgresqlTestResourceState(t, &state)}
+			r.Update(ctx, fwresource.UpdateRequest{
+				Plan:  managedDatabasePostgresqlTestPlan(t, &plan),
+				State: managedDatabasePostgresqlTestResourceState(t, &state),
+			}, &resp)
+			if resp.Diagnostics.HasError() {
+				t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+			}
+
+			var calls []string
+			for _, request := range bodies("") {
+				if method, _, _ := strings.Cut(request, " "); method != http.MethodGet {
+					calls = append(calls, method)
+				}
+			}
+			if got := strings.Join(calls, " "); got != tc.calls {
+				t.Errorf("expected %s, got %s", tc.calls, got)
+			}
+			patches := bodies("PATCH " + managedDatabasePostgresqlTestItemPath)
+			if len(patches) != 1 {
+				t.Fatalf("expected 1 PATCH, got %d", len(patches))
+			}
+			assertManagedDatabaseJSON(t, json.RawMessage(patches[0]), fmt.Sprintf(`{"targetSpec": {"network": {"public": %t}}}`, tc.public))
+
+			var got cloudManagedDatabaseServiceResourceModel
+			resp.Diagnostics.Append(resp.State.Get(ctx, &got)...)
+			if !got.Network.Attributes()["public"].Equal(types.BoolValue(tc.public)) {
+				t.Errorf("unexpected network %s", got.Network)
+			}
+		})
+	}
+}
+
 func TestCloudManagedDatabasePostgresqlPutNoChange(t *testing.T) {
 	// The fake API fails the test on a PUT, which it has no answer for.
 	r, _ := newManagedDatabaseServiceTestResource(t, managedDatabaseFamily, map[string][]managedDatabaseTestAnswer{
@@ -392,7 +462,7 @@ func TestCloudManagedDatabasePostgresqlWaitEngineReady(t *testing.T) {
 // newManagedDatabaseLiveLikeTestAPI returns the endpoint of a fake API holding one PostgreSQL service of
 // project pj as the live API does: its targetSpec gets a maintenance window, a storage and the
 // network when the request leaves them out, and the defaults of the engine in its advanced configuration.
-// The creation ignores the deletion protection.
+// The creation ignores the deletion protection, and a PUT keeps the public exposure, which a PATCH changes.
 // It also returns a function that changes the targetSpec, as done outside of Terraform.
 func newManagedDatabaseLiveLikeTestAPI(t *testing.T) (string, func(func(spec map[string]any))) {
 	t.Helper()
@@ -476,9 +546,26 @@ func newManagedDatabaseLiveLikeTestAPI(t *testing.T) (string, func(func(spec map
 		case r.Method == http.MethodGet:
 			respond(w)
 		case r.Method == http.MethodPut:
+			public := spec["network"].(map[string]any)["public"]
 			if store(w, r) {
+				spec["network"].(map[string]any)["public"] = public
 				respond(w)
 			}
+		case r.Method == http.MethodPatch:
+			var body struct {
+				TargetSpec struct {
+					Network struct {
+						Public bool `json:"public"`
+					} `json:"network"`
+				} `json:"targetSpec"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+				t.Errorf("%s %s: %s", r.Method, r.URL.Path, err)
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			spec["network"].(map[string]any)["public"] = body.TargetSpec.Network.Public
+			respond(w)
 		case r.Method == http.MethodDelete:
 			respond(w)
 			spec = nil
@@ -496,7 +583,8 @@ func newManagedDatabaseLiveLikeTestAPI(t *testing.T) (string, func(func(spec map
 
 // The plan after an apply is empty although the API fills in settings left out of the configuration
 // and adds defaults to the advanced configuration. advanced_configuration is read-only: a property set
-// outside of Terraform shows without a change, and an update sends it back.
+// outside of Terraform shows without a change, and an update sends it back. Publishing the service and
+// taking it off its public address update it in place.
 func TestCloudManagedDatabasePostgresqlLiveLikePlan(t *testing.T) {
 	endpoint, edit := newManagedDatabaseLiveLikeTestAPI(t)
 	config := func(attributes string) string {
@@ -549,6 +637,27 @@ resource "ovh_cloud_managed_database" "db" {
 					},
 				},
 				Check: resource.TestCheckResourceAttr(testAccCloudManagedDatabasePostgresqlResource, "advanced_configuration.pg.log_temp_files", "1024"),
+			},
+			{
+				Config: config("  prometheus_enabled = true\n  network = { public = true }"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(testAccCloudManagedDatabasePostgresqlResource, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.TestCheckResourceAttr(testAccCloudManagedDatabasePostgresqlResource, "network.public", "true"),
+			},
+			{
+				Config: config("  prometheus_enabled = false\n  network = { public = false }"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(testAccCloudManagedDatabasePostgresqlResource, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(testAccCloudManagedDatabasePostgresqlResource, "network.public", "false"),
+					resource.TestCheckResourceAttr(testAccCloudManagedDatabasePostgresqlResource, "prometheus_enabled", "false"),
+				),
 			},
 		},
 	})
@@ -654,14 +763,14 @@ func testAccPreCheckCloudManagedDatabasePostgresql(t *testing.T) {
 	testAccPreCheckCloudManagedService(t, managedDatabaseFamily, "postgresql")
 }
 
-func testAccCloudManagedDatabasePostgresqlConfig(name, attributes, authorizedIps string) string {
-	return testAccCloudManagedServiceConfig(managedDatabaseFamily, "postgresql", name, attributes, authorizedIps)
+func testAccCloudManagedDatabasePostgresqlConfig(name, attributes, networkAttributes string) string {
+	return testAccCloudManagedServiceConfig(managedDatabaseFamily, "postgresql", name, attributes, networkAttributes)
 }
 
 // testAccCloudManagedServiceConfig renders the service ovh_cloud_managed_<family>.db of the engine with the
-// given attributes and authorized IPs. When the NETWORK_REGION setting of the engine is set, the
+// given attributes and network attributes. When the NETWORK_REGION setting of the engine is set, the
 // service is attached to a private network created in that region, which native services require.
-func testAccCloudManagedServiceConfig(category managedDatabaseCategory, engine, name, attributes, authorizedIps string) string {
+func testAccCloudManagedServiceConfig(category managedDatabaseCategory, engine, name, attributes, networkAttributes string) string {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
 	setting := func(key string) string {
 		return testAccCloudManagedServiceSetting(category, engine, key)
@@ -688,8 +797,8 @@ resource "ovh_cloud_network_private_vrack_subnet" "subnet" {
     network_id = ovh_cloud_network_private_vrack.network.id
     subnet_id  = ovh_cloud_network_private_vrack_subnet.subnet.id`
 	}
-	if authorizedIps != "" {
-		network += "\n    authorized_ips = " + authorizedIps
+	if networkAttributes != "" {
+		network += "\n    " + networkAttributes
 	}
 	if network != "" {
 		attributes += "\n  network = {" + network + "\n  }"
@@ -796,7 +905,7 @@ func TestAccCloudManagedDatabasePostgresql_update(t *testing.T) {
   deletion_protected = true
   prometheus_enabled = false
   backup             = { time = "02:00" }
-  maintenance_window = { start_time_utc = "03:00" }`, name), `{ rules = [{ cidr = "203.0.113.0/24", description = "office" }] }`),
+  maintenance_window = { start_time_utc = "03:00" }`, name), `authorized_ips = { rules = [{ cidr = "203.0.113.0/24", description = "office" }] }`),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(testAccCloudManagedDatabasePostgresqlResource, "deletion_protected", "true"),
 					resource.TestCheckResourceAttr(testAccCloudManagedDatabasePostgresqlResource, "backup.time", "02:00"),
@@ -810,7 +919,8 @@ func TestAccCloudManagedDatabasePostgresql_update(t *testing.T) {
   deletion_protected = false
   prometheus_enabled = true
   backup             = { time = "04:00" }
-  maintenance_window = { start_time_utc = "05:00" }`, name), `{ rules = [{ cidr = "203.0.113.0/24", description = "office" }, { cidr = "198.51.100.0/24" }] }`),
+  maintenance_window = { start_time_utc = "05:00" }`, name), `authorized_ips = { rules = [{ cidr = "203.0.113.0/24", description = "office" }, { cidr = "198.51.100.0/24" }] }
+    public         = true`),
 				ConfigPlanChecks: expectUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(testAccCloudManagedDatabasePostgresqlResource, "description", name+"-updated"),
@@ -819,14 +929,17 @@ func TestAccCloudManagedDatabasePostgresql_update(t *testing.T) {
 					resource.TestCheckResourceAttr(testAccCloudManagedDatabasePostgresqlResource, "backup.time", "04:00"),
 					resource.TestCheckResourceAttr(testAccCloudManagedDatabasePostgresqlResource, "maintenance_window.start_time_utc", "05:00"),
 					resource.TestCheckResourceAttr(testAccCloudManagedDatabasePostgresqlResource, "network.authorized_ips.rules.#", "2"),
+					resource.TestCheckResourceAttr(testAccCloudManagedDatabasePostgresqlResource, "network.public", "true"),
 				),
 			},
 			{
-				Config:           testAccCloudManagedDatabasePostgresqlConfig(name, "", `{ rules = [{ cidr = "198.51.100.0/24" }] }`),
+				Config: testAccCloudManagedDatabasePostgresqlConfig(name, "", `authorized_ips = { rules = [{ cidr = "198.51.100.0/24" }] }
+    public         = false`),
 				ConfigPlanChecks: expectUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckNoResourceAttr(testAccCloudManagedDatabasePostgresqlResource, "description"),
 					resource.TestCheckResourceAttr(testAccCloudManagedDatabasePostgresqlResource, "network.authorized_ips.rules.#", "1"),
+					resource.TestCheckResourceAttr(testAccCloudManagedDatabasePostgresqlResource, "network.public", "false"),
 				),
 			},
 		},

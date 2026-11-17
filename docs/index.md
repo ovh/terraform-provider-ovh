@@ -85,7 +85,7 @@ Similarly to OAuth2 method, the endpoint must be configured (either via `endpoin
 
 ### Application Key/Application Secret
 
-The required keys are the `application_key`, the `application_secret`, and the `consumer_key`. These keys can be generated via the [OVHcloud token generation page](https://api.ovh.com/createToken/?GET=/*&POST=/*&PUT=/*&DELETE=/*).
+The required keys are the `application_key`, the `application_secret`, and the `consumer_key`. These keys can be generated via the [OVHcloud token generation page](https://api.ovh.com/createToken/?GET=/*&POST=/*&PUT=/*&PATCH=/*&DELETE=/*).
 
 These parameters can be configured directly in the provider block as shown hereafter.
 

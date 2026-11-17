@@ -94,6 +94,10 @@ func (c *Client) PutUnAuthWithContext(ctx context.Context, url string, reqBody, 
 	return c._CallAPIWithContext(ctx, "PUT", url, reqBody, resType, false)
 }
 
+func (c *Client) PatchWithContext(ctx context.Context, url string, reqBody, resType interface{}) error {
+	return c._CallAPIWithContext(ctx, "PATCH", url, reqBody, resType, true)
+}
+
 func (c *Client) DeleteWithContext(ctx context.Context, url string, resType interface{}) error {
 	return c._CallAPIWithContext(ctx, "DELETE", url, nil, resType, true)
 }
