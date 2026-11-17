@@ -64,18 +64,23 @@ func (m derivedVolumeListModifier) otherChanged(ctx context.Context, req planmod
 	return !plan.Equal(state)
 }
 
-// roleDefaultsToData gives a volume without role the role DATA, but only when
-// volumes is set in the configuration. A schema Default cannot be used: the
-// framework applies it to the elements of volumes taken from the state when the
-// configuration uses volume_ids instead, turning a BOOT volume into DATA in the
-// plan. The plan then differs from the state, and every computed attribute is
-// marked unknown.
+// roleDefaultsToData plans the role of a volume the configuration gives none,
+// but only when volumes is set in the configuration.
+//
+// It is DATA, except for the volume the instance boots from: the API keeps the
+// stored BOOT role when an update leaves it out, so it stays BOOT in the plan.
+// Planning DATA there would be a change the API ignores, and read as a different
+// boot volume it would replace an instance that cannot be recreated.
+//
+// A schema Default cannot be used: the framework applies it to the elements of
+// volumes taken from the state when the configuration uses volume_ids instead,
+// turning a BOOT volume into DATA in the plan.
 func roleDefaultsToData() planmodifier.String { return roleDefaultsToDataModifier{} }
 
 type roleDefaultsToDataModifier struct{}
 
 func (roleDefaultsToDataModifier) Description(context.Context) string {
-	return "Defaults the role of a configured volume to DATA"
+	return "Defaults the role of a configured volume to DATA, or BOOT for the current boot volume"
 }
 
 func (m roleDefaultsToDataModifier) MarkdownDescription(ctx context.Context) string {
@@ -91,6 +96,20 @@ func (roleDefaultsToDataModifier) PlanModifyString(ctx context.Context, req plan
 		return
 	}
 	resp.PlanValue = types.StringValue(instanceVolumeRoleData)
+
+	var id ovhtypes.TfStringValue
+	if d := req.Config.GetAttribute(ctx, req.Path.ParentPath().AtName("id"), &id); d.HasError() || knownString(id) == "" {
+		return
+	}
+	var stateVolumes types.List
+	if d := req.State.GetAttribute(ctx, path.Root("volumes"), &stateVolumes); d.HasError() {
+		return
+	}
+	for _, boot := range bootVolumeIds(stateVolumes) {
+		if boot == id.ValueString() {
+			resp.PlanValue = types.StringValue(instanceVolumeRoleBoot)
+		}
+	}
 }
 
 // keepStateUnlessConfigured keeps the state value of an attribute the

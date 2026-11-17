@@ -688,6 +688,37 @@ func TestAccCloudInstance_volumeIdsToVolumes(t *testing.T) {
 				),
 			},
 			{
+				// The role left out on the boot volume stays BOOT: the API keeps the
+				// stored BOOT role, so this is the same instance, not a replacement
+				// that could never be created (no image_id, no BOOT volume).
+				Config: cfg(`volumes = [
+    { id = ovh_cloud_storage_block_volume.boot.id },
+    { id = ovh_cloud_storage_block_volume.data.id },
+  ]`),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(rn, plancheck.ResourceActionNoop),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					observedRoles,
+					resource.TestCheckResourceAttr(rn, "volumes.0.role", "BOOT"),
+					resource.TestCheckResourceAttr(rn, "volumes.1.role", "DATA"),
+					// Fails if the instance was replaced: its id would change.
+					captureInstanceID(rn, &instanceID),
+				),
+			},
+			{
+				// Turning the boot volume into DATA leaves no boot source: refused at
+				// plan, instead of destroying an instance that cannot be recreated.
+				Config: cfg(`volumes = [
+    { id = ovh_cloud_storage_block_volume.boot.id, role = "DATA" },
+    { id = ovh_cloud_storage_block_volume.data.id },
+  ]`),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile(`No boot source`),
+			},
+			{
 				// Import reads volumes back, with the BOOT role on the boot volume.
 				ResourceName:      rn,
 				ImportState:       true,

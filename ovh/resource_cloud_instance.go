@@ -95,35 +95,53 @@ func (r *cloudInstanceResource) ValidateConfig(ctx context.Context, req resource
 	}
 }
 
-// ModifyPlan replaces the instance when its boot volume changes: the API only
-// lets the boot volume be chosen at creation.
+// ModifyPlan checks the boot source and replaces the instance when its boot
+// volume changes: the API only lets the boot volume be chosen at creation.
 //
-// The planned boot volume comes from the configuration, whichever of volumes or
-// volume_ids it uses; the current one is the BOOT volume of the state. Moving from
-// volume_ids to volumes is therefore not a change. A configuration with neither
-// keeps the volumes as they are.
+// The planned boot volume is the BOOT volume of the plan, or the first of the
+// deprecated volume_ids when there is no image_id. The current one is the BOOT
+// volume of the state. Moving from volume_ids to volumes is therefore not a
+// change. A configuration with neither keeps the volumes as they are.
+//
+// A plan with no boot source at all is an error, not a replacement: the instance
+// would be destroyed and its creation then refused by the API, with no instance
+// left. It happens when the BOOT role of the current boot volume is dropped, which
+// the API itself refuses.
 func (r *cloudInstanceResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
 		return
 	}
-	var cfgVolumes, stateVolumes types.List
+	var cfgVolumes, planVolumes, stateVolumes types.List
 	var cfgVolumeIds ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]
 	var imageId ovhtypes.TfStringValue
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("volumes"), &cfgVolumes)...)
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("volume_ids"), &cfgVolumeIds)...)
+	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("volumes"), &planVolumes)...)
 	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("image_id"), &imageId)...)
 	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("volumes"), &stateVolumes)...)
-	if resp.Diagnostics.HasError() || cfgVolumes.IsUnknown() || cfgVolumeIds.IsUnknown() || imageId.IsUnknown() {
+	if resp.Diagnostics.HasError() || cfgVolumes.IsUnknown() || cfgVolumeIds.IsUnknown() || planVolumes.IsUnknown() || imageId.IsUnknown() {
 		return
 	}
 	if cfgVolumes.IsNull() && cfgVolumeIds.IsNull() {
+		return
+	}
+	// With volumes, the roles that count are the planned ones: a role left out is
+	// resolved by the plan, not read as DATA.
+	planned := bootVolumeId(planVolumes, cfgVolumeIds, imageId)
+	if cfgVolumes.IsNull() {
+		planned = bootVolumeId(cfgVolumes, cfgVolumeIds, imageId)
+	}
+	if planned == "" && knownString(imageId) == "" {
+		resp.Diagnostics.AddAttributeError(path.Root("volumes"), "No boot source",
+			"The instance would have neither an image_id nor a volume with the role BOOT, and the API refuses to create such an instance. "+
+				"The boot volume keeps its BOOT role: leave role out on it, or set it to BOOT. It cannot be turned into a DATA volume.")
 		return
 	}
 	prior := ""
 	if ids := bootVolumeIds(stateVolumes); len(ids) > 0 {
 		prior = ids[0]
 	}
-	if bootVolumeId(cfgVolumes, cfgVolumeIds, imageId) != prior {
+	if planned != prior {
 		resp.RequiresReplace = append(resp.RequiresReplace, path.Root("volumes"))
 	}
 }

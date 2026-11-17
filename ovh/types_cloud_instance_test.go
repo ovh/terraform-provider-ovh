@@ -1228,6 +1228,7 @@ func TestUnitCloudInstanceModifyPlanBootVolume(t *testing.T) {
 	idsDB := with(func(c *volumeCfg) { c.ids = customStringList("d", "b") })
 	volsB := with(func(c *volumeCfg) { c.volumes = volumeRefList(map[string]string{"b": "BOOT", "d": ""}) })
 	volsD := with(func(c *volumeCfg) { c.volumes = volumeRefList(map[string]string{"b": "", "d": "BOOT"}) })
+	volsDataOnly := with(func(c *volumeCfg) { c.volumes = volumeRefList(map[string]string{"b": "DATA", "d": "DATA"}) })
 	withImage := with(func(c *volumeCfg) { c.image = strVal("img"); c.ids = customStringList("d") })
 
 	// The state holds both views of the volumes, as the resource stores them: the
@@ -1257,13 +1258,17 @@ func TestUnitCloudInstanceModifyPlanBootVolume(t *testing.T) {
 		state       volumeCfg
 		plan        volumeCfg
 		wantReplace bool
+		wantError   bool
 	}{
-		{"volume_ids -> volumes, same boot", idsB, volsB, false},
-		{"volumes -> volume_ids, same boot", volsB, idsB, false},
-		{"unchanged", volsB, volsB, false},
-		{"volumes, another volume becomes BOOT", volsB, volsD, true},
-		{"volume_ids, another volume first", idsB, idsDB, true},
-		{"image: adding a data volume", withImage, with(func(c *volumeCfg) { c.image = strVal("img"); c.ids = customStringList("d", "e") }), false},
+		{"volume_ids -> volumes, same boot", idsB, volsB, false, false},
+		{"volumes -> volume_ids, same boot", volsB, idsB, false, false},
+		{"unchanged", volsB, volsB, false, false},
+		{"volumes, another volume becomes BOOT", volsB, volsD, true, false},
+		{"volume_ids, another volume first", idsB, idsDB, true, false},
+		// The API keeps the stored BOOT role, so dropping it on the boot volume
+		// leaves no boot source: an error, never a replacement that cannot be created.
+		{"boot volume turned into DATA", idsB, volsDataOnly, false, true},
+		{"image: adding a data volume", withImage, with(func(c *volumeCfg) { c.image = strVal("img"); c.ids = customStringList("d", "e") }), false, false},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -1274,6 +1279,12 @@ func TestUnitCloudInstanceModifyPlanBootVolume(t *testing.T) {
 			}
 			resp := &fwresource.ModifyPlanResponse{}
 			r.ModifyPlan(ctx, req, resp)
+			if tc.wantError {
+				if !resp.Diagnostics.HasError() || len(resp.RequiresReplace) > 0 {
+					t.Fatalf("want an error and no replacement, got diagnostics=%v replace=%v", resp.Diagnostics, resp.RequiresReplace)
+				}
+				return
+			}
 			if resp.Diagnostics.HasError() {
 				t.Fatal(resp.Diagnostics)
 			}
