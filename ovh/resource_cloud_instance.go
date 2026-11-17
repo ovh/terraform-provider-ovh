@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -156,7 +155,7 @@ func (r *cloudInstanceResource) Schema(ctx context.Context, req resource.SchemaR
 				MarkdownDescription: "Availability zone of the instance (immutable; assigned by the platform if omitted)",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIfConfigured(),
-					stringplanmodifier.UseStateForUnknown(),
+					keepStateUnlessConfigured(),
 				},
 			},
 			"ssh_key_name": schema.StringAttribute{
@@ -192,7 +191,7 @@ func (r *cloudInstanceResource) Schema(ctx context.Context, req resource.SchemaR
 				Computed:            true,
 				Description:         "Image ID to boot from. Omit for a boot-from-volume instance. WARNING: changing it rebuilds the instance and WIPES the root disk",
 				MarkdownDescription: "Image ID to boot from. Omit for a boot-from-volume instance. **WARNING**: changing it rebuilds the instance and **wipes the root disk**",
-				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
+				PlanModifiers:       []planmodifier.String{keepStateUnlessConfigured()},
 			},
 			"power_state": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
@@ -277,7 +276,7 @@ func (r *cloudInstanceResource) Schema(ctx context.Context, req resource.SchemaR
 							CustomType:          ovhtypes.TfStringType{},
 							Optional:            true,
 							Computed:            true,
-							Default:             stringdefault.StaticString(instanceVolumeRoleData),
+							PlanModifiers:       []planmodifier.String{roleDefaultsToData()},
 							Description:         instanceDescVolumeRefRole,
 							MarkdownDescription: instanceDescVolumeRefRole,
 							Validators: []validator.String{
@@ -333,39 +332,41 @@ func (r *cloudInstanceResource) Schema(ctx context.Context, req resource.SchemaR
 				Computed:            true,
 				Description:         instanceDescId,
 				MarkdownDescription: instanceDescId,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"checksum": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Computed:            true,
 				Description:         instanceDescChecksum,
 				MarkdownDescription: instanceDescChecksum,
-				PlanModifiers:       []planmodifier.String{UnknownDuringUpdateStringModifier(instanceMutableAttrs)},
+				PlanModifiers:       []planmodifier.String{instanceKeepStateUnlessUpdate()},
 			},
 			"created_at": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Computed:            true,
 				Description:         instanceDescCreatedAt,
 				MarkdownDescription: instanceDescCreatedAt,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"updated_at": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Computed:            true,
 				Description:         instanceDescUpdatedAt,
 				MarkdownDescription: instanceDescUpdatedAt,
-				PlanModifiers:       []planmodifier.String{UnknownDuringUpdateStringModifier(instanceMutableAttrs)},
+				PlanModifiers:       []planmodifier.String{instanceKeepStateUnlessUpdate()},
 			},
 			"resource_status": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Computed:            true,
 				Description:         instanceDescResourceStatus,
 				MarkdownDescription: instanceDescResourceStatusMd,
-				PlanModifiers:       []planmodifier.String{OutOfSyncPlanModifier()},
+				PlanModifiers:       []planmodifier.String{instanceKeepStateUnlessUpdate(), OutOfSyncPlanModifier()},
 			},
 			"current_state": schema.SingleNestedAttribute{
 				Computed:            true,
 				Description:         instanceDescCurrentState,
 				MarkdownDescription: instanceDescCurrentState,
-				PlanModifiers:       []planmodifier.Object{UnknownDuringUpdateObjectModifier(instanceMutableAttrs)},
+				PlanModifiers:       []planmodifier.Object{instanceKeepStateObject()},
 				Attributes:          instanceCurrentStateSchemaAttributes(),
 			},
 		},

@@ -603,21 +603,21 @@ func testAccCloudInstanceBootFromVolume(t *testing.T, volumesBlock string, withI
 func TestAccCloudInstance_bootFromVolume(t *testing.T) {
 	testAccCloudInstanceBootFromVolume(t, `volume_ids = [ovh_cloud_storage_block_volume.boot.id]`, false,
 		resource.TestCheckResourceAttr("ovh_cloud_instance.test", "volume_ids.#", "1"),
-		resource.TestCheckNoResourceAttr("ovh_cloud_instance.test", "volumes.#"),
+		resource.TestCheckResourceAttr("ovh_cloud_instance.test", "volumes.#", "1"),
 	)
 }
 
 func TestAccCloudInstance_bootFromVolumes(t *testing.T) {
 	testAccCloudInstanceBootFromVolume(t, `volumes = [{ id = ovh_cloud_storage_block_volume.boot.id, role = "BOOT" }]`, true,
 		resource.TestCheckResourceAttr("ovh_cloud_instance.test", "volumes.0.role", "BOOT"),
-		resource.TestCheckNoResourceAttr("ovh_cloud_instance.test", "volume_ids.#"),
+		resource.TestCheckResourceAttr("ovh_cloud_instance.test", "volume_ids.#", "1"),
 	)
 }
 
 // TestAccCloudInstance_volumeIdsToVolumes moves a boot-from-volume instance from
 // the deprecated volume_ids to volumes, with the role BOOT on the same volume. The
-// boot volume does not change, so this must be an in-place update: replacing the
-// instance would be the destructive path ModifyPlan exists to avoid. The roles
+// boot volume does not change, so this must not replace the instance, which is the
+// destructive path ModifyPlan exists to avoid. The roles
 // the API reports must match the configuration, DATA included, so that no plan is
 // left once applied. A last step imports the instance, which fills volumes.
 func TestAccCloudInstance_volumeIdsToVolumes(t *testing.T) {
@@ -656,7 +656,7 @@ func TestAccCloudInstance_volumeIdsToVolumes(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					observedRoles,
 					resource.TestCheckResourceAttr(rn, "volume_ids.#", "2"),
-					resource.TestCheckNoResourceAttr(rn, "volumes.#"),
+					resource.TestCheckResourceAttr(rn, "volumes.#", "2"),
 					captureInstanceID(rn, &instanceID),
 				),
 			},
@@ -666,9 +666,11 @@ func TestAccCloudInstance_volumeIdsToVolumes(t *testing.T) {
     { id = ovh_cloud_storage_block_volume.data.id },
   ]`),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
-					// An update in place, never a replacement.
+					// Never a replacement. volumes already holds the same volumes in
+					// the state, computed from the API while volume_ids was used, so
+					// the migration changes nothing: a no-op.
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(rn, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(rn, plancheck.ResourceActionNoop),
 					},
 					// role is Optional+Computed with a default: once applied, the roles
 					// the API reports must leave nothing to change.
@@ -680,7 +682,7 @@ func TestAccCloudInstance_volumeIdsToVolumes(t *testing.T) {
 					resource.TestCheckResourceAttr(rn, "volumes.#", "2"),
 					resource.TestCheckResourceAttr(rn, "volumes.0.role", "BOOT"),
 					resource.TestCheckResourceAttr(rn, "volumes.1.role", "DATA"),
-					resource.TestCheckNoResourceAttr(rn, "volume_ids.#"),
+					resource.TestCheckResourceAttr(rn, "volume_ids.#", "2"),
 					// Fails if the instance was replaced: its id would change.
 					captureInstanceID(rn, &instanceID),
 				),
