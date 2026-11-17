@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"slices"
 	"strings"
 	"time"
 
@@ -280,8 +281,12 @@ func (r *cloudManagedDatabaseServiceResource) Schema(ctx context.Context, req re
 				Description:   "Creation date of the service.",
 				PlanModifiers: []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
-			"updated_at":      computedString("Last update date of the service."),
-			"resource_status": computedString("Readiness of the service: CREATING, UPDATING, READY, ERROR, OUT_OF_SYNC, DELETING…"),
+			"updated_at": computedString("Last update date of the service."),
+			"resource_status": schema.StringAttribute{
+				Computed:      true,
+				Description:   "Readiness of the service: CREATING, UPDATING, READY, ERROR, OUT_OF_SYNC, DELETING… The next apply updates an OUT_OF_SYNC service, sending its configuration again.",
+				PlanModifiers: []planmodifier.String{OutOfSyncPlanModifier()},
+			},
 			"current_tasks": schema.ListNestedAttribute{
 				Computed:    true,
 				Description: "Asynchronous operations running on the service.",
@@ -561,6 +566,20 @@ func (r *cloudManagedDatabaseServiceResource) ModifyPlan(ctx context.Context, re
 	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
 		return
 	}
+
+	// OutOfSyncPlanModifier plans an update of an OUT_OF_SYNC service, which Terraform doesn't see as a
+	// change: what the API computes is unknown until the PUT, as in any update.
+	var status types.String
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("resource_status"), &status)...)
+	if status.ValueString() == "OUT_OF_SYNC" {
+		resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("checksum"), types.StringUnknown())...)
+		resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("updated_at"), types.StringUnknown())...)
+		resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("advanced_configuration"), types.MapUnknown(types.StringType))...)
+		resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("current_tasks"), types.ListUnknown(types.ObjectType{AttrTypes: managedDatabaseTaskAttrTypes()}))...)
+		resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("current_state"), types.ObjectUnknown(managedDatabaseCurrentStateAttrTypes()))...)
+		return
+	}
+
 	known, err := tftypes.Transform(req.Plan.Raw, func(p *tftypes.AttributePath, v tftypes.Value) (tftypes.Value, error) {
 		if v.IsKnown() {
 			return v, nil
@@ -757,11 +776,12 @@ func (r *cloudManagedDatabaseServiceResource) Delete(ctx context.Context, req re
 	}
 }
 
-// putManagedDatabaseServiceWhenReady waits for the service to be READY, the only status in which it
-// takes a change, then replaces its whole targetSpec with the current one after change, and waits for
-// the service to apply it. Nothing is sent when change changes nothing.
+// putManagedDatabaseServiceWhenReady waits for the service to be READY or OUT_OF_SYNC, the statuses in
+// which it takes a change, then replaces its whole targetSpec with the current one after change, and
+// waits for the service to apply it. Nothing is sent when change changes nothing, unless the service
+// is OUT_OF_SYNC: the same targetSpec brings it back in sync.
 func putManagedDatabaseServiceWhenReady(ctx context.Context, client *ovhwrap.Client, endpoint string, change func(*CloudManagedDatabaseServiceModel), timeout time.Duration) error {
-	if err := waitForManagedDatabaseServiceReady(ctx, client, endpoint, timeout); err != nil {
+	if err := waitForManagedDatabaseServiceReady(ctx, client, endpoint, timeout, "OUT_OF_SYNC"); err != nil {
 		return err
 	}
 	if err := retryWhileManagedDatabaseServiceBusy(ctx, timeout, func() error {
@@ -779,7 +799,7 @@ func putManagedDatabaseServiceWhenReady(ctx context.Context, client *ovhwrap.Cli
 		if diags.HasError() {
 			return fmt.Errorf("%s: %s", diags.Errors()[0].Summary(), diags.Errors()[0].Detail())
 		}
-		if reflect.DeepEqual(body, current) {
+		if reflect.DeepEqual(body, current) && res.ResourceStatus != "OUT_OF_SYNC" {
 			return nil
 		}
 		return client.PutWithContext(ctx, endpoint, body, nil)
@@ -789,10 +809,10 @@ func putManagedDatabaseServiceWhenReady(ctx context.Context, client *ovhwrap.Cli
 	return waitForManagedDatabaseServiceReady(ctx, client, endpoint, timeout)
 }
 
-// publishManagedDatabaseServiceWhenReady waits for the service to be READY, publishes it on a public
-// address or takes it off with a PATCH, and waits for the service to apply it.
+// publishManagedDatabaseServiceWhenReady waits for the service to be READY or OUT_OF_SYNC, publishes it
+// on a public address or takes it off with a PATCH, and waits for the service to apply it.
 func publishManagedDatabaseServiceWhenReady(ctx context.Context, client *ovhwrap.Client, endpoint string, public bool, timeout time.Duration) error {
-	if err := waitForManagedDatabaseServiceReady(ctx, client, endpoint, timeout); err != nil {
+	if err := waitForManagedDatabaseServiceReady(ctx, client, endpoint, timeout, "OUT_OF_SYNC"); err != nil {
 		return err
 	}
 	body := map[string]any{"targetSpec": map[string]any{"network": map[string]any{"public": public}}}
@@ -805,12 +825,13 @@ func publishManagedDatabaseServiceWhenReady(ctx context.Context, client *ovhwrap
 }
 
 // waitForManagedDatabaseServiceReady polls the service until it is READY and so is its engine, the
-// status v1 waits for: resourceStatus can be READY before the engine has provisioned every node. ERROR
-// is terminal and reports the errors of the failed tasks.
-func waitForManagedDatabaseServiceReady(ctx context.Context, client *ovhwrap.Client, endpoint string, timeout time.Duration) error {
+// status v1 waits for: resourceStatus can be READY before the engine has provisioned every node. A
+// status of alsoReady ends the wait too. ERROR is terminal and reports the errors of the failed tasks.
+func waitForManagedDatabaseServiceReady(ctx context.Context, client *ovhwrap.Client, endpoint string, timeout time.Duration, alsoReady ...string) error {
+	pending := []string{"CREATING", "CREATION_PLANNED", "PENDING", "UPDATING", "OUT_OF_SYNC"}
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{"CREATING", "CREATION_PLANNED", "PENDING", "UPDATING", "OUT_OF_SYNC"},
-		Target:  []string{"READY"},
+		Pending: slices.DeleteFunc(pending, func(status string) bool { return slices.Contains(alsoReady, status) }),
+		Target:  append([]string{"READY"}, alsoReady...),
 		Refresh: func() (any, string, error) {
 			res := &CloudManagedDatabaseServiceAPIResponse{}
 			if err := client.GetWithContext(ctx, endpoint, res); err != nil {

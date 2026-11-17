@@ -353,6 +353,25 @@ func TestCloudManagedDatabasePostgresqlPutNoChange(t *testing.T) {
 	}
 }
 
+func TestCloudManagedDatabasePostgresqlPutOutOfSync(t *testing.T) {
+	// The PUT of the same targetSpec brings the OUT_OF_SYNC service back in sync, without waiting for
+	// it to be READY first.
+	outOfSync := managedDatabaseTestAnswer{http.StatusOK, strings.Replace(managedDatabasePostgresqlTestResponse, `"resourceStatus": "READY"`, `"resourceStatus": "OUT_OF_SYNC"`, 1)}
+	r, bodies := newManagedDatabaseServiceTestResource(t, managedDatabaseFamily, map[string][]managedDatabaseTestAnswer{
+		"GET " + managedDatabasePostgresqlTestItemPath: {outOfSync, outOfSync, {http.StatusOK, managedDatabasePostgresqlTestResponse}},
+		"PUT " + managedDatabasePostgresqlTestItemPath: {{http.StatusOK, managedDatabasePostgresqlTestResponse}},
+	})
+	unchanged := func(*CloudManagedDatabaseServiceModel) {}
+	if err := putManagedDatabaseServiceWhenReady(context.Background(), r.config.OVHClient, managedDatabasePostgresqlTestItemPath, unchanged, time.Minute); err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	puts := bodies("PUT " + managedDatabasePostgresqlTestItemPath)
+	if len(puts) != 1 {
+		t.Fatalf("expected 1 PUT, got %d", len(puts))
+	}
+	assertManagedDatabaseJSON(t, json.RawMessage(puts[0]), managedDatabasePostgresqlTestReplace)
+}
+
 func TestCloudManagedDatabasePostgresqlDelete(t *testing.T) {
 	ctx := context.Background()
 	deleting := strings.Replace(managedDatabasePostgresqlTestResponse, `"resourceStatus": "READY"`, `"resourceStatus": "DELETING"`, 1)
@@ -462,9 +481,11 @@ func TestCloudManagedDatabasePostgresqlWaitEngineReady(t *testing.T) {
 // newManagedDatabaseLiveLikeTestAPI returns the endpoint of a fake API holding one PostgreSQL service of
 // project pj as the live API does: its targetSpec gets a maintenance window, a storage and the
 // network when the request leaves them out, and the defaults of the engine in its advanced configuration.
-// The creation ignores the deletion protection, and a PUT keeps the public exposure, which a PATCH changes.
-// It also returns a function that changes the targetSpec, as done outside of Terraform.
-func newManagedDatabaseLiveLikeTestAPI(t *testing.T) (string, func(func(spec map[string]any))) {
+// The creation ignores the deletion protection, and a PUT changes updatedAt but keeps the public
+// exposure, which a PATCH changes.
+// It also returns a function that changes the targetSpec, as done outside of Terraform, and one that
+// makes the service OUT_OF_SYNC until the next PUT.
+func newManagedDatabaseLiveLikeTestAPI(t *testing.T) (string, func(func(spec map[string]any)), func()) {
 	t.Helper()
 
 	delay, minTimeout := managedDatabaseServicePollDelay, managedDatabaseServicePollMinTimeout
@@ -475,6 +496,7 @@ func newManagedDatabaseLiveLikeTestAPI(t *testing.T) (string, func(func(spec map
 
 	var mu sync.Mutex
 	var spec map[string]any
+	status, updatedAt := "READY", "2026-11-12T10:20:00Z"
 	store := func(w http.ResponseWriter, r *http.Request) bool {
 		var body struct {
 			TargetSpec map[string]any `json:"targetSpec"`
@@ -517,6 +539,8 @@ func newManagedDatabaseLiveLikeTestAPI(t *testing.T) (string, func(func(spec map
 			state[key] = value
 		}
 		service["targetSpec"] = spec
+		service["resourceStatus"] = status
+		service["updatedAt"] = updatedAt
 		if err := json.NewEncoder(w).Encode(service); err != nil {
 			t.Error(err)
 		}
@@ -549,6 +573,7 @@ func newManagedDatabaseLiveLikeTestAPI(t *testing.T) (string, func(func(spec map
 			public := spec["network"].(map[string]any)["public"]
 			if store(w, r) {
 				spec["network"].(map[string]any)["public"] = public
+				status, updatedAt = "READY", time.Now().UTC().Format(time.RFC3339Nano)
 				respond(w)
 			}
 		case r.Method == http.MethodPatch:
@@ -578,15 +603,21 @@ func newManagedDatabaseLiveLikeTestAPI(t *testing.T) (string, func(func(spec map
 		defer mu.Unlock()
 		change(spec)
 	}
-	return server.URL + "/1.0", edit
+	outOfSync := func() {
+		mu.Lock()
+		defer mu.Unlock()
+		status = "OUT_OF_SYNC"
+	}
+	return server.URL + "/1.0", edit, outOfSync
 }
 
 // The plan after an apply is empty although the API fills in settings left out of the configuration
 // and adds defaults to the advanced configuration. advanced_configuration is read-only: a property set
 // outside of Terraform shows without a change, and an update sends it back. Publishing the service and
-// taking it off its public address update it in place.
+// taking it off its public address update it in place. An OUT_OF_SYNC service is updated with a PUT,
+// which brings it back in sync.
 func TestCloudManagedDatabasePostgresqlLiveLikePlan(t *testing.T) {
-	endpoint, edit := newManagedDatabaseLiveLikeTestAPI(t)
+	endpoint, edit, outOfSync := newManagedDatabaseLiveLikeTestAPI(t)
 	config := func(attributes string) string {
 		return fmt.Sprintf(`
 provider "ovh" {
@@ -658,6 +689,30 @@ resource "ovh_cloud_managed_database" "db" {
 					resource.TestCheckResourceAttr(testAccCloudManagedDatabasePostgresqlResource, "network.public", "false"),
 					resource.TestCheckResourceAttr(testAccCloudManagedDatabasePostgresqlResource, "prometheus_enabled", "false"),
 				),
+			},
+			{
+				PreConfig: outOfSync,
+				Config:    config("  prometheus_enabled = false\n  network = { public = false }"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(testAccCloudManagedDatabasePostgresqlResource, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.TestCheckResourceAttr(testAccCloudManagedDatabasePostgresqlResource, "resource_status", "READY"),
+			},
+			// A configuration that sets what the API fills in, so that Terraform proposes no change of its own.
+			{
+				PreConfig: outOfSync,
+				Config: config(`  prometheus_enabled = false
+  maintenance_window = { start_time_utc = "07:52" }
+  storage            = { size = { unit = "GB", value = 160 } }
+  network            = { authorized_ips = { rules = [] }, public = false }`),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(testAccCloudManagedDatabasePostgresqlResource, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.TestCheckResourceAttr(testAccCloudManagedDatabasePostgresqlResource, "resource_status", "READY"),
 			},
 		},
 	})

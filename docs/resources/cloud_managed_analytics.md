@@ -67,7 +67,7 @@ The following attributes are exported:
 * `checksum` - Hash of the service, computed by the API.
 * `created_at` - Creation date of the service.
 * `updated_at` - Last update date of the service.
-* `resource_status` - Readiness of the service: `CREATING`, `UPDATING`, `READY`, `ERROR`, `OUT_OF_SYNC`, `DELETING`…
+* `resource_status` - Readiness of the service: `CREATING`, `UPDATING`, `READY`, `ERROR`, `OUT_OF_SYNC`, `DELETING`… The next apply updates an `OUT_OF_SYNC` service, sending its configuration again.
 * `current_tasks` - Asynchronous operations running on the service: `id`, `type`, `status`, `link` and `errors` (each with a `message`).
 * `advanced_configuration` - Advanced configuration properties requested for the service, with the defaults the API adds.
 * `current_state` - Configuration running on the service:
