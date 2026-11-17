@@ -1018,9 +1018,13 @@ type volumeCfg struct {
 	// imageKept: image_id is in the plan, kept from the state, but left out of the
 	// configuration (Optional+Computed, as after an import).
 	imageKept bool
-	image     ovhtypes.TfStringValue
-	ids       ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]
-	volumes   types.List
+	// noBootRole: the state has no BOOT role, as for an instance whose boot volume
+	// the API could not resolve. stateNoVolumes: volumes is not in the state at all,
+	// as right after an upgrade with -refresh=false.
+	noBootRole, stateNoVolumes bool
+	image                      ovhtypes.TfStringValue
+	ids                        ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]
+	volumes                    types.List
 }
 
 func newVolumeCfg() volumeCfg {
@@ -1237,16 +1241,23 @@ func TestUnitCloudInstanceModifyPlanBootVolume(t *testing.T) {
 		c.imageKept = true
 		c.volumes = volumeRefList(map[string]string{"b": "BOOT"})
 	})
+	idsNoRole := with(func(c *volumeCfg) { c.ids = customStringList("b", "d"); c.noBootRole = true })
+	idsUpgrade := with(func(c *volumeCfg) { c.ids = customStringList("b", "d"); c.stateNoVolumes = true })
+	volsNoRole := with(func(c *volumeCfg) { c.volumes = volumeRefList(map[string]string{"b": "", "d": ""}) })
 	withImage := with(func(c *volumeCfg) { c.image = strVal("img"); c.ids = customStringList("d") })
 
 	// The state holds both views of the volumes, as the resource stores them: the
 	// one the configuration did not set is computed from the API.
 	stored := func(c volumeCfg) volumeCfg {
+		if c.stateNoVolumes {
+			c.volumes = types.ListNull(types.ObjectType{AttrTypes: instanceVolumeRefAttrTypes()})
+			return c
+		}
 		if c.volumes.IsNull() {
 			roles := map[string]string{}
 			for i, ref := range customStringListToRefs(c.ids) {
 				roles[ref.Id] = ""
-				if i == 0 && knownString(c.image) == "" {
+				if i == 0 && knownString(c.image) == "" && !c.noBootRole {
 					roles[ref.Id] = "BOOT"
 				}
 			}
@@ -1285,6 +1296,11 @@ func TestUnitCloudInstanceModifyPlanBootVolume(t *testing.T) {
 		// image_id kept from the state next to a BOOT volume: the instance would be
 		// replaced, then created with two boot sources, which the API refuses.
 		{"image kept from state, BOOT volume added", withImage, imageKeptBoot, false, true},
+		// The current boot volume is unknown (no BOOT role in the state): nothing says
+		// the plan changes it, so no replacement, and no error either. The API decides.
+		{"state without BOOT role, volume_ids", idsNoRole, idsB, false, false},
+		{"state without volumes (upgrade, no refresh), volume_ids", idsUpgrade, idsB, false, false},
+		{"state without BOOT role, volumes without role", idsNoRole, volsNoRole, false, false},
 		{"image: adding a data volume", withImage, with(func(c *volumeCfg) { c.image = strVal("img"); c.ids = customStringList("d", "e") }), false, false},
 	}
 	for _, tc := range cases {

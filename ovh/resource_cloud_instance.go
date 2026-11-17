@@ -124,6 +124,19 @@ func (r *cloudInstanceResource) ModifyPlan(ctx context.Context, req resource.Mod
 	if cfgVolumes.IsNull() && cfgVolumeIds.IsNull() {
 		return
 	}
+	// The current boot volume is the BOOT volume of the state. When the state has
+	// none, it is unknown, not "no boot volume": volumes is missing from a state
+	// written before it existed (upgrade with -refresh=false), and the API leaves
+	// the spec unchanged for an instance created outside API v2 whose boot volume
+	// it could not resolve. Nothing then says the plan changes the boot volume, and
+	// it is the API that accepts or refuses it. The checks below are skipped.
+	prior := ""
+	if ids := bootVolumeIds(stateVolumes); len(ids) > 0 {
+		prior = ids[0]
+	}
+	if prior == "" && knownString(imageId) == "" {
+		return
+	}
 	// With volumes, the roles that count are the planned ones: a role left out is
 	// resolved by the plan, not read as DATA.
 	planned := bootVolumeId(planVolumes, cfgVolumeIds, imageId)
@@ -145,10 +158,6 @@ func (r *cloudInstanceResource) ModifyPlan(ctx context.Context, req resource.Mod
 			"The instance would have neither an image_id nor a volume with the role BOOT, and the API refuses to create such an instance. "+
 				"The boot volume keeps its BOOT role: leave role out on it, or set it to BOOT. It cannot be turned into a DATA volume.")
 		return
-	}
-	prior := ""
-	if ids := bootVolumeIds(stateVolumes); len(ids) > 0 {
-		prior = ids[0]
 	}
 	if planned != prior {
 		resp.RequiresReplace = append(resp.RequiresReplace, path.Root("volumes"))
