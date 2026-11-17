@@ -1015,9 +1015,12 @@ func TestUnitCloudInstanceMergeWithVolumeRole(t *testing.T) {
 
 // volumeCfg is the volume-related part of a configuration.
 type volumeCfg struct {
-	image   ovhtypes.TfStringValue
-	ids     ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]
-	volumes types.List
+	// imageKept: image_id is in the plan, kept from the state, but left out of the
+	// configuration (Optional+Computed, as after an import).
+	imageKept bool
+	image     ovhtypes.TfStringValue
+	ids       ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]
+	volumes   types.List
 }
 
 func newVolumeCfg() volumeCfg {
@@ -1229,6 +1232,11 @@ func TestUnitCloudInstanceModifyPlanBootVolume(t *testing.T) {
 	volsB := with(func(c *volumeCfg) { c.volumes = volumeRefList(map[string]string{"b": "BOOT", "d": ""}) })
 	volsD := with(func(c *volumeCfg) { c.volumes = volumeRefList(map[string]string{"b": "", "d": "BOOT"}) })
 	volsDataOnly := with(func(c *volumeCfg) { c.volumes = volumeRefList(map[string]string{"b": "DATA", "d": "DATA"}) })
+	imageKeptBoot := with(func(c *volumeCfg) {
+		c.image = strVal("img")
+		c.imageKept = true
+		c.volumes = volumeRefList(map[string]string{"b": "BOOT"})
+	})
 	withImage := with(func(c *volumeCfg) { c.image = strVal("img"); c.ids = customStringList("d") })
 
 	// The state holds both views of the volumes, as the resource stores them: the
@@ -1253,6 +1261,12 @@ func TestUnitCloudInstanceModifyPlanBootVolume(t *testing.T) {
 		}
 		return c
 	}
+	configOf := func(c volumeCfg) volumeCfg {
+		if c.imageKept {
+			c.image = strNull()
+		}
+		return c
+	}
 	cases := []struct {
 		name        string
 		state       volumeCfg
@@ -1268,6 +1282,9 @@ func TestUnitCloudInstanceModifyPlanBootVolume(t *testing.T) {
 		// The API keeps the stored BOOT role, so dropping it on the boot volume
 		// leaves no boot source: an error, never a replacement that cannot be created.
 		{"boot volume turned into DATA", idsB, volsDataOnly, false, true},
+		// image_id kept from the state next to a BOOT volume: the instance would be
+		// replaced, then created with two boot sources, which the API refuses.
+		{"image kept from state, BOOT volume added", withImage, imageKeptBoot, false, true},
 		{"image: adding a data volume", withImage, with(func(c *volumeCfg) { c.image = strVal("img"); c.ids = customStringList("d", "e") }), false, false},
 	}
 	for _, tc := range cases {
@@ -1275,7 +1292,7 @@ func TestUnitCloudInstanceModifyPlanBootVolume(t *testing.T) {
 			req := fwresource.ModifyPlanRequest{
 				State:  tfsdk.State{Schema: sch.Schema, Raw: raw(stored(tc.state))},
 				Plan:   tfsdk.Plan{Schema: sch.Schema, Raw: raw(tc.plan)},
-				Config: tfsdk.Config{Schema: sch.Schema, Raw: raw(tc.plan)},
+				Config: tfsdk.Config{Schema: sch.Schema, Raw: raw(configOf(tc.plan))},
 			}
 			resp := &fwresource.ModifyPlanResponse{}
 			r.ModifyPlan(ctx, req, resp)

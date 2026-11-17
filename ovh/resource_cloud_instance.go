@@ -103,10 +103,9 @@ func (r *cloudInstanceResource) ValidateConfig(ctx context.Context, req resource
 // volume of the state. Moving from volume_ids to volumes is therefore not a
 // change. A configuration with neither keeps the volumes as they are.
 //
-// A plan with no boot source at all is an error, not a replacement: the instance
-// would be destroyed and its creation then refused by the API, with no instance
-// left. It happens when the BOOT role of the current boot volume is dropped, which
-// the API itself refuses.
+// A plan with no boot source, or with two (an image and a BOOT volume), is an
+// error, not a replacement: the instance would be destroyed and its creation then
+// refused by the API, with no instance left.
 func (r *cloudInstanceResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
 		return
@@ -130,6 +129,16 @@ func (r *cloudInstanceResource) ModifyPlan(ctx context.Context, req resource.Mod
 	planned := bootVolumeId(planVolumes, cfgVolumeIds, imageId)
 	if cfgVolumes.IsNull() {
 		planned = bootVolumeId(cfgVolumes, cfgVolumeIds, imageId)
+	}
+	// ValidateConfig only sees the configured image_id. image_id is Optional+Computed
+	// and kept from the state when left out (after an import, for one), so only the
+	// plan knows an image is still there. The instance would be replaced, then
+	// created with both an image and a BOOT volume, which the API refuses.
+	if planned != "" && knownString(imageId) != "" {
+		resp.Diagnostics.AddAttributeError(path.Root("volumes"), "Two boot sources",
+			"The instance boots from the image "+knownString(imageId)+" and the plan gives the volume "+planned+" the role BOOT: an instance boots from one or the other, and the API refuses both. "+
+				"Set role to DATA on the volume to keep booting from the image.")
+		return
 	}
 	if planned == "" && knownString(imageId) == "" {
 		resp.Diagnostics.AddAttributeError(path.Root("volumes"), "No boot source",
