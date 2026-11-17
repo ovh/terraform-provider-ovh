@@ -558,10 +558,12 @@ func (r *cloudManagedDatabaseServiceResource) ImportState(ctx context.Context, r
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), splits[2])...)
 }
 
-// ModifyPlan keeps the state when the plan only differs from it by unknown values: the update would
-// send the same service. Terraform plans one when the configuration leaves out maintenance_window,
-// network or storage: the API fills in their required attributes, so Terraform proposes null for
-// them, which makes every computed attribute unknown.
+// ModifyPlan keeps the state when the plan only differs from it by unknown values and the
+// configuration has none: the update would send the same service. Terraform plans one when the
+// configuration leaves out maintenance_window, network or storage: the API fills in their required
+// attributes, so Terraform proposes null for them, which makes every computed attribute unknown. An
+// unknown value of the configuration, such as the ID of a subnet being replaced, can change the
+// service.
 func (r *cloudManagedDatabaseServiceResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
 		return
@@ -580,6 +582,9 @@ func (r *cloudManagedDatabaseServiceResource) ModifyPlan(ctx context.Context, re
 		return
 	}
 
+	if !req.Config.Raw.IsFullyKnown() {
+		return
+	}
 	known, err := tftypes.Transform(req.Plan.Raw, func(p *tftypes.AttributePath, v tftypes.Value) (tftypes.Value, error) {
 		if v.IsKnown() {
 			return v, nil

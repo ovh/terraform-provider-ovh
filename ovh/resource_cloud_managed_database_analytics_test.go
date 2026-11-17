@@ -718,6 +718,56 @@ resource "ovh_cloud_managed_database" "db" {
 	})
 }
 
+// A value of the configuration unknown until the apply, such as the ID of a subnet being replaced,
+// stays unknown in the plan: the service is recreated on the new subnet.
+func TestCloudManagedDatabasePostgresqlUnknownConfigPlan(t *testing.T) {
+	endpoint, _, _ := newManagedDatabaseLiveLikeTestAPI(t)
+	config := func(subnet string) string {
+		return fmt.Sprintf(`
+provider "ovh" {
+  endpoint           = %q
+  application_key    = "key"
+  application_secret = "secret"
+  consumer_key       = "consumer"
+}
+
+resource "terraform_data" "subnet" {
+  triggers_replace = %q
+}
+
+resource "ovh_cloud_managed_database" "db" {
+  service_name = "pj"
+  engine       = "postgresql"
+  region       = "eu-west-gra"
+  version      = "17"
+  plan         = "business"
+  flavor       = "b3-8"
+  description  = "testacc-terraform-db"
+  network = {
+    network_id = "net"
+    subnet_id  = terraform_data.subnet.id
+  }
+}
+`, endpoint, subnet)
+	}
+
+	resource.UnitTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{Config: config("subnet-1")},
+			{
+				Config: config("subnet-2"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(testAccCloudManagedDatabasePostgresqlResource, plancheck.ResourceActionReplace),
+					},
+				},
+				Check: resource.TestCheckResourceAttrPair(testAccCloudManagedDatabasePostgresqlResource, "network.subnet_id", "terraform_data.subnet", "id"),
+			},
+		},
+	})
+}
+
 // testSweepCloudManagedServices deletes the services of the engine left by an aborted acceptance run.
 func testSweepCloudManagedServices(region string, category managedDatabaseCategory, engine string) error {
 	client, err := sharedClientForRegion(region)
