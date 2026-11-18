@@ -38,13 +38,14 @@ type CloudManagedDatabaseServiceModel struct {
 	CurrentState   types.Object `tfsdk:"current_state"`
 }
 
-// cloudManagedDatabaseServiceResourceModel adds the arguments that only the creation takes, which
-// the API doesn't return.
+// cloudManagedDatabaseServiceResourceModel adds the arguments the API doesn't return: those that only
+// the creation takes, and the timeouts.
 type cloudManagedDatabaseServiceResourceModel struct {
 	CloudManagedDatabaseServiceModel
 	ForkSourceServiceId   types.String `tfsdk:"fork_source_service_id"`
 	ForkSourceBackupId    types.String `tfsdk:"fork_source_backup_id"`
 	ForkSourcePointInTime types.String `tfsdk:"fork_source_point_in_time"`
+	Timeouts              types.Object `tfsdk:"timeouts"`
 }
 
 // API types mirror the publicCloud.database models, which every engine shares. Their tfsdk tags map

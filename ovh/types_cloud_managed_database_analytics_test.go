@@ -424,6 +424,8 @@ func TestCloudManagedDatabasePostgresqlMergeWith(t *testing.T) {
 	})
 }
 
+var managedDatabaseTimeoutsTestAttrTypes = map[string]attr.Type{"create": types.StringType, "update": types.StringType, "delete": types.StringType}
+
 func managedDatabasePostgresqlTestResourceState(t *testing.T, model *CloudManagedDatabaseServiceModel) tfsdk.State {
 	t.Helper()
 	ctx := context.Background()
@@ -431,7 +433,11 @@ func managedDatabasePostgresqlTestResourceState(t *testing.T, model *CloudManage
 	NewCloudManagedDatabaseResource().Schema(ctx, resource.SchemaRequest{}, &schemaResp)
 	state := tfsdk.State{Schema: schemaResp.Schema, Raw: tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), nil)}
 	if model != nil {
-		if diags := state.Set(ctx, &cloudManagedDatabaseServiceResourceModel{CloudManagedDatabaseServiceModel: *model}); diags.HasError() {
+		resourceModel := cloudManagedDatabaseServiceResourceModel{
+			CloudManagedDatabaseServiceModel: *model,
+			Timeouts:                         types.ObjectNull(managedDatabaseTimeoutsTestAttrTypes),
+		}
+		if diags := state.Set(ctx, &resourceModel); diags.HasError() {
 			t.Fatalf("unexpected diagnostics: %v", diags)
 		}
 	}

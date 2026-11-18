@@ -149,3 +149,20 @@ func TestManagedDatabaseReadForbidden(t *testing.T) {
 		}
 	}
 }
+
+func TestManagedDatabaseStringFormats(t *testing.T) {
+	for _, tc := range []struct {
+		format managedDatabaseStringFormat
+		value  string
+		valid  bool
+	}{
+		{managedDatabaseDuration, "1h30m", true},
+		{managedDatabaseDuration, "40 minutes", false},
+	} {
+		var resp validator.StringResponse
+		tc.format.ValidateString(context.Background(), validator.StringRequest{Path: path.Root("value"), ConfigValue: types.StringValue(tc.value)}, &resp)
+		if resp.Diagnostics.HasError() == tc.valid {
+			t.Errorf("%s %q: expected valid %t, got %v", tc.format.name, tc.value, tc.valid, resp.Diagnostics)
+		}
+	}
+}

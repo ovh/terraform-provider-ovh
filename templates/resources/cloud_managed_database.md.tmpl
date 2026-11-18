@@ -30,7 +30,7 @@ The [`ovh_cloud_managed_analytics`](cloud_managed_analytics.md) resource creates
 * `version` - (Required) Engine version. Available versions are returned by `GET /v2/publicCloud/project/{projectId}/managedDatabase/capabilities/engines`.
 * `plan` - (Required) Plan of the service. Available plans are returned by `GET /v2/publicCloud/project/{projectId}/managedDatabase/capabilities/plans`.
 * `flavor` - (Required) Flavor of the nodes. Available flavors are returned by `GET /v2/publicCloud/project/{projectId}/managedDatabase/capabilities/flavors`.
-* `nodes_count` - (Optional) Number of nodes. Defaults to the minimum of the plan. The range a plan accepts is in `specifications.nodes` of the availability endpoint.
+* `nodes_count` - (Optional) Number of nodes. Set it on a plan of more than one node: without it, the API creates one node, which such a plan refuses. The range a plan accepts is in `specifications.nodes` of the availability endpoint.
 * `description` - (Optional) Description of the service.
 * `deletion_protected` - (Optional) Whether the service is protected from deletion. Set it to `false` and apply before destroying the service.
 * `prometheus_enabled` - (Optional) Whether the Prometheus endpoint is enabled.
@@ -43,13 +43,17 @@ The [`ovh_cloud_managed_analytics`](cloud_managed_analytics.md) resource creates
   * `network_id` - (Optional) ID of the private network to attach the service to. **Changing this value recreates the resource.**
   * `subnet_id` - (Optional) ID of the subnet to attach the service to. **Changing this value recreates the resource.**
   * `authorized_ips` - (Optional) IP addresses allowed to connect to the service:
-    * `rules` - (Required) Set of allowed CIDR blocks, each with a `cidr` (Required) and a `description` (Optional).
+    * `rules` - (Required) Set of allowed CIDR blocks, each with a `cidr` (Required), with no bit set after its prefix length (`/32` for one address), and a `description` (Optional).
   * `public` - (Optional) Whether the service is published on a public address, with a public domain name and TLS. The authorized IPs apply to it too. Changing this value sends a `PATCH` request, which a `consumer_key` must allow.
 * `storage` - (Optional) Storage configuration:
   * `size` - (Required) Storage size, with a `unit` (`GB` or `MB`) and a `value`.
 * `fork_source_service_id` - (Optional) ID of the service to create this one from, using one of its backups.
 * `fork_source_backup_id` - (Optional) ID of the backup to create the service from. Conflicts with `fork_source_point_in_time`. When both are unset, the latest backup of `fork_source_service_id` is used.
 * `fork_source_point_in_time` - (Optional) Point in time to create the service from, in RFC 3339 format, such as `2026-11-12T10:00:00Z`. The source service must have point-in-time recovery enabled. Conflicts with `fork_source_backup_id`.
+* `timeouts` - (Optional) How long to wait for the service, as durations such as `1h30m`:
+  * `create` - (Optional) Wait for the creation of the service. Defaults to `40m`.
+  * `update` - (Optional) Wait for an update of the service. Defaults to `40m`.
+  * `delete` - (Optional) Wait for the deletion of the service. Defaults to `20m`.
 
 The `fork_source_*` arguments are only read at the creation, and the API doesn't return them. Changing one from one value to another recreates the service; setting one after an import, or removing one, only updates the state.
 
@@ -87,7 +91,16 @@ The following attributes are exported:
 
 ## Timeouts
 
-The creation and the update wait up to 40 minutes for the service to be ready, and the deletion up to 20 minutes for it to be deleted.
+The creation and the update wait up to 40 minutes for the service to be ready, and the deletion up to 20 minutes for it to be deleted. The `timeouts` argument sets other durations, such as for a storage upgrade of a large service:
+
+```terraform
+resource "ovh_cloud_managed_database" "service" {
+  # ...
+  timeouts = {
+    update = "2h"
+  }
+}
+```
 
 ## Import
 

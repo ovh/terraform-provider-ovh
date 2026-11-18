@@ -3,8 +3,10 @@ package ovh
 import (
 	"context"
 	"fmt"
+	"net/netip"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -64,6 +66,46 @@ func (r *managedDatabaseConfigured) Configure(ctx context.Context, req resource.
 
 	r.config = config
 }
+
+// managedDatabaseStringFormat validates a string with parse, whose error says what is wrong with it.
+type managedDatabaseStringFormat struct {
+	name  string
+	parse func(string) error
+}
+
+func (v managedDatabaseStringFormat) Description(context.Context) string {
+	return "value must be a valid " + v.name
+}
+
+func (v managedDatabaseStringFormat) MarkdownDescription(ctx context.Context) string {
+	return v.Description(ctx)
+}
+
+func (v managedDatabaseStringFormat) ValidateString(ctx context.Context, req validator.StringRequest, resp *validator.StringResponse) {
+	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
+		return
+	}
+	if err := v.parse(req.ConfigValue.ValueString()); err != nil {
+		resp.Diagnostics.AddAttributeError(req.Path, "Invalid "+v.name, err.Error())
+	}
+}
+
+var managedDatabaseDuration = managedDatabaseStringFormat{"duration", func(s string) error {
+	_, err := time.ParseDuration(s)
+	return err
+}}
+
+// managedDatabaseCIDR is the strict CIDR block that v1 takes: no bit set after the prefix.
+var managedDatabaseCIDR = managedDatabaseStringFormat{"CIDR block", func(s string) error {
+	prefix, err := netip.ParsePrefix(s)
+	if err != nil {
+		return err
+	}
+	if masked := prefix.Masked().String(); masked != s {
+		return fmt.Errorf("%s has bits set after its prefix length: use %s", s, masked)
+	}
+	return nil
+}}
 
 // managedDatabaseEngineArgument returns the engine argument of a resource of several engines.
 func managedDatabaseEngineArgument(engines []string, object string) schema.StringAttribute {

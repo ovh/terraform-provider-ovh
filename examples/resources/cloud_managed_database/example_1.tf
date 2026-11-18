@@ -6,4 +6,5 @@ resource "ovh_cloud_managed_database" "db" {
   version      = "17"
   plan         = "business"
   flavor       = "b3-8"
+  nodes_count  = 2
 }

@@ -15,8 +15,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	fwresource "github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -36,6 +40,10 @@ const (
 	managedDatabasePostgresqlTestBusy             = `{"class": "Client::Conflict::ServiceOperationInProgress", "message": "An operation is in progress"}`
 	managedDatabasePostgresqlTestCreating         = `{"id": "` + managedDatabasePostgresqlTestId + `", "resourceStatus": "CREATING", "targetSpec": {"version": "17", "plan": "business", "flavor": "b3-8"}}`
 )
+
+// managedDatabasePostgresqlTestPut is the PUT of the service of managedDatabasePostgresqlTestResponse, whose
+// backup regions, unchanged, are null.
+var managedDatabasePostgresqlTestPut = strings.Replace(managedDatabasePostgresqlTestReplace, `"regions": ["eu-west-gra"]`, `"regions": null`, 1)
 
 func init() {
 	for _, category := range []managedDatabaseCategory{managedDatabaseFamily, managedAnalyticsFamily} {
@@ -253,7 +261,7 @@ func TestCloudManagedDatabaseServiceUpdate(t *testing.T) {
 			if len(puts) != 2 {
 				t.Fatalf("expected the PUT to be retried once after the 409, got %d PUT", len(puts))
 			}
-			assertManagedDatabaseJSON(t, json.RawMessage(puts[1]), strings.Replace(managedDatabasePostgresqlTestReplace, "testacc-terraform-db", "testacc-terraform-renamed", 1))
+			assertManagedDatabaseJSON(t, json.RawMessage(puts[1]), strings.Replace(managedDatabasePostgresqlTestPut, "testacc-terraform-db", "testacc-terraform-renamed", 1))
 
 			var got cloudManagedDatabaseServiceResourceModel
 			resp.Diagnostics.Append(resp.State.Get(ctx, &got)...)
@@ -361,7 +369,52 @@ func TestCloudManagedDatabasePostgresqlPutOutOfSync(t *testing.T) {
 	if len(puts) != 1 {
 		t.Fatalf("expected 1 PUT, got %d", len(puts))
 	}
-	assertManagedDatabaseJSON(t, json.RawMessage(puts[0]), managedDatabasePostgresqlTestReplace)
+	assertManagedDatabaseJSON(t, json.RawMessage(puts[0]), managedDatabasePostgresqlTestPut)
+}
+
+// The API takes the backup regions it returns back as a change when they are its defaults, which it
+// doesn't store, and a locked or Grafana service refuses that change: the PUT sends them when they
+// change only.
+func TestCloudManagedDatabasePostgresqlPutBackupRegions(t *testing.T) {
+	for name, tc := range map[string]struct {
+		change  func(*CloudManagedDatabaseServiceModel)
+		regions string
+	}{
+		"unchanged": {func(service *CloudManagedDatabaseServiceModel) {
+			service.Description = types.StringValue("testacc-terraform-renamed")
+		}, `null`},
+		"changed": {func(service *CloudManagedDatabaseServiceModel) {
+			service.Backup = types.ObjectValueMust(managedDatabaseBackupAttrTypes(), map[string]attr.Value{
+				"regions": types.ListValueMust(types.StringType, []attr.Value{types.StringValue("eu-west-gra"), types.StringValue("eu-west-sbg")}),
+				"time":    types.StringValue("02:00"),
+			})
+		}, `["eu-west-gra", "eu-west-sbg"]`},
+	} {
+		t.Run(name, func(t *testing.T) {
+			r, bodies := newManagedDatabaseServiceTestResource(t, managedDatabaseFamily, map[string][]managedDatabaseTestAnswer{
+				"GET " + managedDatabasePostgresqlTestItemPath: {{http.StatusOK, managedDatabasePostgresqlTestResponse}},
+				"PUT " + managedDatabasePostgresqlTestItemPath: {{http.StatusOK, managedDatabasePostgresqlTestResponse}},
+			})
+			if err := putManagedDatabaseServiceWhenReady(context.Background(), r.config.OVHClient, managedDatabasePostgresqlTestItemPath, tc.change, time.Minute); err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+			puts := bodies("PUT " + managedDatabasePostgresqlTestItemPath)
+			if len(puts) != 1 {
+				t.Fatalf("expected 1 PUT, got %d", len(puts))
+			}
+			var body struct {
+				TargetSpec struct {
+					Backup struct {
+						Regions json.RawMessage `json:"regions"`
+					} `json:"backup"`
+				} `json:"targetSpec"`
+			}
+			if err := json.Unmarshal([]byte(puts[0]), &body); err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+			assertManagedDatabaseJSON(t, body.TargetSpec.Backup.Regions, tc.regions)
+		})
+	}
 }
 
 // managedDatabasePostgresqlTestSuspended is the service locked by v1.
@@ -369,26 +422,33 @@ var managedDatabasePostgresqlTestSuspended = strings.Replace(managedDatabasePost
 
 func TestCloudManagedDatabasePostgresqlPutSuspended(t *testing.T) {
 	suspended := managedDatabaseTestAnswer{http.StatusOK, managedDatabasePostgresqlTestSuspended}
-	t.Run("change", func(t *testing.T) {
-		// v1 takes some changes of a locked service, such as the storage that unlocks it: the PUT doesn't
-		// wait for READY first, and the wait after it lasts until the service is unlocked.
-		r, bodies := newManagedDatabaseServiceTestResource(t, managedDatabaseFamily, map[string][]managedDatabaseTestAnswer{
-			"GET " + managedDatabasePostgresqlTestItemPath: {suspended, suspended, suspended, {http.StatusOK, managedDatabasePostgresqlTestResponse}},
-			"PUT " + managedDatabasePostgresqlTestItemPath: {{http.StatusOK, managedDatabasePostgresqlTestResponse}},
+	// v1 takes some changes of a locked service: the storage, which unlocks it, and the authorized IPs,
+	// which leave it locked. The PUT doesn't wait for READY first, and the wait after it lasts while the
+	// service is UPDATING.
+	updating := managedDatabaseTestAnswer{http.StatusOK, strings.Replace(managedDatabasePostgresqlTestResponse, `"resourceStatus": "READY"`, `"resourceStatus": "UPDATING"`, 1)}
+	for name, after := range map[string]managedDatabaseTestAnswer{
+		"change that unlocks it":      {http.StatusOK, managedDatabasePostgresqlTestResponse},
+		"change that keeps it locked": suspended,
+	} {
+		t.Run(name, func(t *testing.T) {
+			r, bodies := newManagedDatabaseServiceTestResource(t, managedDatabaseFamily, map[string][]managedDatabaseTestAnswer{
+				"GET " + managedDatabasePostgresqlTestItemPath: {suspended, suspended, updating, after},
+				"PUT " + managedDatabasePostgresqlTestItemPath: {{http.StatusOK, managedDatabasePostgresqlTestResponse}},
+			})
+			rename := func(service *CloudManagedDatabaseServiceModel) {
+				service.Description = types.StringValue("testacc-terraform-renamed")
+			}
+			if err := putManagedDatabaseServiceWhenReady(context.Background(), r.config.OVHClient, managedDatabasePostgresqlTestItemPath, rename, 5*time.Second); err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+			if puts := bodies("PUT " + managedDatabasePostgresqlTestItemPath); len(puts) != 1 {
+				t.Fatalf("expected 1 PUT, got %d", len(puts))
+			}
+			if gets := bodies("GET " + managedDatabasePostgresqlTestItemPath); len(gets) != 4 {
+				t.Errorf("expected the wait after the PUT to last while the service is UPDATING, got %d GET", len(gets))
+			}
 		})
-		rename := func(service *CloudManagedDatabaseServiceModel) {
-			service.Description = types.StringValue("testacc-terraform-renamed")
-		}
-		if err := putManagedDatabaseServiceWhenReady(context.Background(), r.config.OVHClient, managedDatabasePostgresqlTestItemPath, rename, time.Minute); err != nil {
-			t.Fatalf("unexpected error: %s", err)
-		}
-		if puts := bodies("PUT " + managedDatabasePostgresqlTestItemPath); len(puts) != 1 {
-			t.Fatalf("expected 1 PUT, got %d", len(puts))
-		}
-		if gets := bodies("GET " + managedDatabasePostgresqlTestItemPath); len(gets) != 4 {
-			t.Errorf("expected the wait after the PUT to last until the service is READY, got %d GET", len(gets))
-		}
-	})
+	}
 	t.Run("no change", func(t *testing.T) {
 		// Nothing is sent, so the lock isn't waited out.
 		r, _ := newManagedDatabaseServiceTestResource(t, managedDatabaseFamily, map[string][]managedDatabaseTestAnswer{
@@ -420,6 +480,26 @@ func TestCloudManagedDatabasePostgresqlDelete(t *testing.T) {
 	}
 }
 
+// Right after the DELETE, the service can still report any status, ERROR included when its creation
+// failed: only its disappearance ends the wait.
+func TestCloudManagedDatabasePostgresqlDeleteWait(t *testing.T) {
+	for _, status := range []string{"CREATING", "OUT_OF_SYNC", "ERROR"} {
+		t.Run(status, func(t *testing.T) {
+			before := strings.Replace(managedDatabasePostgresqlTestResponse, `"resourceStatus": "READY"`, `"resourceStatus": "`+status+`"`, 1)
+			r, _ := newManagedDatabaseServiceTestResource(t, managedDatabaseFamily, map[string][]managedDatabaseTestAnswer{
+				"DELETE " + managedDatabasePostgresqlTestItemPath: {{http.StatusOK, ""}},
+				"GET " + managedDatabasePostgresqlTestItemPath:    {{http.StatusOK, before}, {http.StatusNotFound, `{"message": "service not found"}`}},
+			})
+			state := managedDatabasePostgresqlTestState(t)
+			resp := fwresource.DeleteResponse{State: managedDatabasePostgresqlTestResourceState(t, &state)}
+			r.Delete(context.Background(), fwresource.DeleteRequest{State: managedDatabasePostgresqlTestResourceState(t, &state)}, &resp)
+			if resp.Diagnostics.HasError() {
+				t.Errorf("unexpected diagnostics: %v", resp.Diagnostics)
+			}
+		})
+	}
+}
+
 func TestCloudManagedDatabasePostgresqlReadNotFound(t *testing.T) {
 	ctx := context.Background()
 	r, _ := newManagedDatabaseServiceTestResource(t, managedDatabaseFamily, map[string][]managedDatabaseTestAnswer{
@@ -434,6 +514,109 @@ func TestCloudManagedDatabasePostgresqlReadNotFound(t *testing.T) {
 	}
 	if !resp.State.Raw.IsNull() {
 		t.Errorf("expected the service to be removed from the state, got %v", resp.State.Raw)
+	}
+}
+
+// The API takes a change of only one of plan/flavor/storage, version and nodes_count per update, and the
+// PUT carries them all: a plan changing more of them is refused before the apply sends anything.
+func TestCloudManagedDatabasePostgresqlPlanOneModification(t *testing.T) {
+	ctx := context.Background()
+	r := &cloudManagedDatabaseServiceResource{category: managedDatabaseFamily}
+	for name, tc := range map[string]struct {
+		change  func(*CloudManagedDatabaseServiceModel)
+		refused bool
+	}{
+		"version": {func(m *CloudManagedDatabaseServiceModel) {
+			m.Version = types.StringValue("18")
+		}, false},
+		"plan and flavor": {func(m *CloudManagedDatabaseServiceModel) {
+			m.Plan, m.Flavor = types.StringValue("production"), types.StringValue("b3-16")
+		}, false},
+		"version and nodes_count": {func(m *CloudManagedDatabaseServiceModel) {
+			m.Version, m.NodesCount = types.StringValue("18"), types.Int64Value(3)
+		}, true},
+		"flavor and version": {func(m *CloudManagedDatabaseServiceModel) {
+			m.Flavor, m.Version = types.StringValue("b3-16"), types.StringValue("18")
+		}, true},
+		"unknown version and nodes_count": {func(m *CloudManagedDatabaseServiceModel) {
+			m.Version, m.NodesCount = types.StringUnknown(), types.Int64Value(3)
+		}, false},
+	} {
+		t.Run(name, func(t *testing.T) {
+			model := managedDatabasePostgresqlTestState(t)
+			planned := model
+			tc.change(&planned)
+			plan := managedDatabasePostgresqlTestPlan(t, &planned)
+			resp := fwresource.ModifyPlanResponse{Plan: plan}
+			r.ModifyPlan(ctx, fwresource.ModifyPlanRequest{
+				State:  managedDatabasePostgresqlTestResourceState(t, &model),
+				Plan:   plan,
+				Config: tfsdk.Config{Schema: plan.Schema, Raw: plan.Raw},
+			}, &resp)
+			if resp.Diagnostics.HasError() != tc.refused {
+				t.Errorf("expected refused %t, got diagnostics %v", tc.refused, resp.Diagnostics)
+			}
+		})
+	}
+}
+
+// The import reads region from the nodes, and leaves it null for a service without any: setting it in
+// the configuration then only updates the state, while changing it recreates the service.
+func TestCloudManagedDatabasePostgresqlRegionAfterImport(t *testing.T) {
+	ctx := context.Background()
+	var schemaResp fwresource.SchemaResponse
+	NewCloudManagedDatabaseResource().Schema(ctx, fwresource.SchemaRequest{}, &schemaResp)
+	model := managedDatabasePostgresqlTestState(t)
+	state := managedDatabasePostgresqlTestResourceState(t, &model)
+	for name, tc := range map[string]struct {
+		state   types.String
+		replace bool
+	}{
+		"imported without region": {types.StringNull(), false},
+		"changed":                 {types.StringValue("eu-west-sbg"), true},
+	} {
+		t.Run(name, func(t *testing.T) {
+			req := planmodifier.StringRequest{
+				State:       state,
+				Plan:        tfsdk.Plan{Schema: state.Schema, Raw: state.Raw},
+				StateValue:  tc.state,
+				PlanValue:   types.StringValue("eu-west-gra"),
+				ConfigValue: types.StringValue("eu-west-gra"),
+			}
+			resp := planmodifier.StringResponse{PlanValue: req.PlanValue}
+			for _, modifier := range schemaResp.Schema.Attributes["region"].(schema.StringAttribute).PlanModifiers {
+				modifier.PlanModifyString(ctx, req, &resp)
+			}
+			if resp.RequiresReplace != tc.replace {
+				t.Errorf("expected RequiresReplace %t, got %t", tc.replace, resp.RequiresReplace)
+			}
+		})
+	}
+}
+
+// The API refuses a CIDR block with bits set after its prefix, such as a bare IP address: the plan
+// refuses it first.
+func TestCloudManagedDatabasePostgresqlAuthorizedIpsCidr(t *testing.T) {
+	ctx := context.Background()
+	var schemaResp fwresource.SchemaResponse
+	NewCloudManagedDatabaseResource().Schema(ctx, fwresource.SchemaRequest{}, &schemaResp)
+	network := schemaResp.Schema.Attributes["network"].(schema.SingleNestedAttribute)
+	ips := network.Attributes["authorized_ips"].(schema.SingleNestedAttribute)
+	cidr := ips.Attributes["rules"].(schema.SetNestedAttribute).NestedObject.Attributes["cidr"].(schema.StringAttribute)
+	for value, valid := range map[string]bool{
+		"203.0.113.0/24": true,
+		"203.0.113.5/32": true,
+		"203.0.113.5":    false,
+		"203.0.113.5/24": false,
+		"office":         false,
+	} {
+		var resp validator.StringResponse
+		for _, v := range cidr.Validators {
+			v.ValidateString(ctx, validator.StringRequest{Path: path.Root("cidr"), ConfigValue: types.StringValue(value)}, &resp)
+		}
+		if resp.Diagnostics.HasError() == valid {
+			t.Errorf("%q: expected valid %t, got %v", value, valid, resp.Diagnostics)
+		}
 	}
 }
 
@@ -478,6 +661,85 @@ func TestCloudManagedDatabasePostgresqlWaitError(t *testing.T) {
 	err := waitForManagedDatabaseServiceReady(context.Background(), r.config.OVHClient, managedDatabasePostgresqlTestItemPath, time.Minute)
 	if err == nil || !strings.Contains(err.Error(), "flavor b3-8 is not available in eu-west-gra") {
 		t.Errorf("expected the error of the failed task, got %v", err)
+	}
+}
+
+// An API failing for a moment, with a 5xx or a 429, doesn't end a wait, which reads the service again.
+func TestCloudManagedDatabasePostgresqlWaitAPIUnavailable(t *testing.T) {
+	ctx := context.Background()
+	for status, waited := range map[int]bool{
+		http.StatusBadGateway:         true,
+		http.StatusServiceUnavailable: true,
+		http.StatusTooManyRequests:    true,
+		http.StatusForbidden:          false,
+	} {
+		t.Run(http.StatusText(status), func(t *testing.T) {
+			r, _ := newManagedDatabaseServiceTestResource(t, managedDatabaseFamily, map[string][]managedDatabaseTestAnswer{
+				"GET " + managedDatabasePostgresqlTestItemPath: {{status, `{"message": "unavailable"}`}, {http.StatusOK, managedDatabasePostgresqlTestResponse}},
+			})
+			err := waitForManagedDatabaseServiceReady(ctx, r.config.OVHClient, managedDatabasePostgresqlTestItemPath, time.Minute)
+			if waited != (err == nil) {
+				t.Errorf("expected the wait to go on %t, got error %v", waited, err)
+			}
+		})
+	}
+	t.Run("deletion", func(t *testing.T) {
+		r, _ := newManagedDatabaseServiceTestResource(t, managedDatabaseFamily, map[string][]managedDatabaseTestAnswer{
+			"DELETE " + managedDatabasePostgresqlTestItemPath: {{http.StatusOK, ""}},
+			"GET " + managedDatabasePostgresqlTestItemPath:    {{http.StatusServiceUnavailable, `{"message": "unavailable"}`}, {http.StatusNotFound, `{"message": "service not found"}`}},
+		})
+		state := managedDatabasePostgresqlTestState(t)
+		resp := fwresource.DeleteResponse{State: managedDatabasePostgresqlTestResourceState(t, &state)}
+		r.Delete(ctx, fwresource.DeleteRequest{State: managedDatabasePostgresqlTestResourceState(t, &state)}, &resp)
+		if resp.Diagnostics.HasError() {
+			t.Errorf("unexpected diagnostics: %v", resp.Diagnostics)
+		}
+	})
+}
+
+// timeouts sets how long each operation waits for the service.
+func TestCloudManagedDatabasePostgresqlTimeouts(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	withStatus := func(status string) managedDatabaseTestAnswer {
+		return managedDatabaseTestAnswer{http.StatusOK, strings.Replace(managedDatabasePostgresqlTestResponse, `"resourceStatus": "READY"`, `"resourceStatus": "`+status+`"`, 1)}
+	}
+	creating := managedDatabaseTestAnswer{http.StatusOK, managedDatabasePostgresqlTestCreating}
+	for operation, answers := range map[string]map[string][]managedDatabaseTestAnswer{
+		"create": {"POST " + managedDatabasePostgresqlTestPath: {creating}, "GET " + managedDatabasePostgresqlTestItemPath: {creating}},
+		"update": {"GET " + managedDatabasePostgresqlTestItemPath: {withStatus("UPDATING")}},
+		"delete": {"DELETE " + managedDatabasePostgresqlTestItemPath: {{http.StatusOK, ""}}, "GET " + managedDatabasePostgresqlTestItemPath: {withStatus("DELETING")}},
+	} {
+		t.Run(operation, func(t *testing.T) {
+			r, _ := newManagedDatabaseServiceTestResource(t, managedDatabaseFamily, answers)
+			model := managedDatabasePostgresqlTestState(t)
+			state := managedDatabasePostgresqlTestResourceState(t, &model)
+			timeouts := map[string]attr.Value{"create": types.StringNull(), "update": types.StringNull(), "delete": types.StringNull()}
+			timeouts[operation] = types.StringValue("50ms")
+			if diags := state.SetAttribute(ctx, path.Root("timeouts"), types.ObjectValueMust(managedDatabaseTimeoutsTestAttrTypes, timeouts)); diags.HasError() {
+				t.Fatalf("unexpected diagnostics: %v", diags)
+			}
+			plan := tfsdk.Plan{Schema: state.Schema, Raw: state.Raw}
+
+			var got string
+			switch operation {
+			case "create":
+				resp := fwresource.CreateResponse{State: managedDatabasePostgresqlTestResourceState(t, nil)}
+				r.Create(ctx, fwresource.CreateRequest{Plan: plan}, &resp)
+				got = fmt.Sprint(resp.Diagnostics)
+			case "update":
+				resp := fwresource.UpdateResponse{State: state}
+				r.Update(ctx, fwresource.UpdateRequest{Plan: plan, State: state}, &resp)
+				got = fmt.Sprint(resp.Diagnostics)
+			case "delete":
+				resp := fwresource.DeleteResponse{State: state}
+				r.Delete(ctx, fwresource.DeleteRequest{State: state}, &resp)
+				got = fmt.Sprint(resp.Diagnostics)
+			}
+			if !strings.Contains(got, "timeout: 50ms") {
+				t.Errorf("expected the wait to time out after 50ms, got %s", got)
+			}
+		})
 	}
 }
 
@@ -552,10 +814,10 @@ func TestCloudManagedDatabaseServiceRetryBusy(t *testing.T) {
 }
 
 // newManagedDatabaseLiveLikeTestAPI returns the endpoint of a fake API holding one PostgreSQL service of
-// project pj as the live API does: its targetSpec gets a maintenance window, a storage and the
+// project pj as the live API does: its targetSpec gets a maintenance window, a storage, a backup and the
 // authorized IPs when the request leaves them out, and the defaults of the engine in its advanced
 // configuration. A PUT changes updatedAt but keeps the private network and the public exposure, which
-// a PATCH changes.
+// a PATCH changes, and the backup regions when it sends them null.
 // It also returns a function that changes the targetSpec, as done outside of Terraform, and one that
 // makes the service OUT_OF_SYNC until the next PUT.
 func newManagedDatabaseLiveLikeTestAPI(t *testing.T) (string, func(func(spec map[string]any)), func()) {
@@ -591,6 +853,7 @@ func newManagedDatabaseLiveLikeTestAPI(t *testing.T) (string, func(func(spec map
 		for key, value := range map[string]any{
 			"maintenanceWindow": map[string]any{"startTimeUtc": "07:52"},
 			"storage":           map[string]any{"size": map[string]any{"unit": "GB", "value": 160}},
+			"backup":            map[string]any{"regions": []any{"eu-west-gra"}, "time": "02:00"},
 			"network":           map[string]any{},
 		} {
 			if spec[key] == nil {
@@ -643,10 +906,13 @@ func newManagedDatabaseLiveLikeTestAPI(t *testing.T) (string, func(func(spec map
 		case r.Method == http.MethodGet:
 			respond(w)
 		case r.Method == http.MethodPut:
-			previous := spec["network"].(map[string]any)
+			previous := spec
 			if store(w, r) {
 				for _, key := range []string{"networkId", "subnetId", "public"} {
-					spec["network"].(map[string]any)[key] = previous[key]
+					spec["network"].(map[string]any)[key] = previous["network"].(map[string]any)[key]
+				}
+				if backup := spec["backup"].(map[string]any); backup["regions"] == nil {
+					backup["regions"] = previous["backup"].(map[string]any)["regions"]
 				}
 				status, updatedAt = "READY", time.Now().UTC().Format(time.RFC3339Nano)
 				respond(w)

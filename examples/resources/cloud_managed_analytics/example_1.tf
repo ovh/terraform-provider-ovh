@@ -6,4 +6,5 @@ resource "ovh_cloud_managed_analytics" "kafka" {
   version      = "3.8"
   plan         = "business"
   flavor       = "b3-8"
+  nodes_count  = 3
 }

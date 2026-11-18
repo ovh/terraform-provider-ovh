@@ -37,11 +37,22 @@ var (
 	_ resource.ResourceWithModifyPlan  = (*cloudManagedDatabaseServiceResource)(nil)
 )
 
+// Defaults of the timeouts argument.
 const (
 	managedDatabaseServiceCreateTimeout = 40 * time.Minute
 	managedDatabaseServiceUpdateTimeout = 40 * time.Minute
 	managedDatabaseServiceDeleteTimeout = 20 * time.Minute
 )
+
+// timeout returns the duration that timeouts sets for the operation, or def.
+func (m *cloudManagedDatabaseServiceResourceModel) timeout(operation string, def time.Duration) time.Duration {
+	value, _ := m.Timeouts.Attributes()[operation].(types.String)
+	if value.IsNull() || value.IsUnknown() {
+		return def
+	}
+	duration, _ := time.ParseDuration(value.ValueString()) // checked by managedDatabaseDuration
+	return duration
+}
 
 // Variables so that the unit tests don't wait.
 var (
@@ -83,6 +94,9 @@ func (r *cloudManagedDatabaseServiceResource) Schema(ctx context.Context, req re
 	computedString := func(description string) schema.StringAttribute {
 		return schema.StringAttribute{Computed: true, Description: description}
 	}
+	timeout := func(description string) schema.StringAttribute {
+		return schema.StringAttribute{Optional: true, Description: description, Validators: []validator.String{managedDatabaseDuration}}
+	}
 
 	resp.Schema = schema.Schema{
 		Description: "Creates a managed " + r.category.family + " service (" + strings.Join(r.category.engines, ", ") + ") in a public cloud project, using the Cloud Databases API v2.",
@@ -101,7 +115,7 @@ func (r *cloudManagedDatabaseServiceResource) Schema(ctx context.Context, req re
 			"region": schema.StringAttribute{
 				Required:      true,
 				Description:   "Region of the nodes, such as eu-west-gra. Changing it recreates the service.",
-				PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
+				PlanModifiers: []planmodifier.String{managedDatabaseCreationOnly},
 			},
 			"version": schema.StringAttribute{
 				Required:    true,
@@ -118,7 +132,7 @@ func (r *cloudManagedDatabaseServiceResource) Schema(ctx context.Context, req re
 			"nodes_count": schema.Int64Attribute{
 				Optional:      true,
 				Computed:      true,
-				Description:   "Number of nodes. Defaults to the minimum of the plan.",
+				Description:   "Number of nodes. Set it on a plan of more than one node: without it, the API creates one node, which such a plan refuses.",
 				PlanModifiers: []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 			},
 			"description": schema.StringAttribute{
@@ -212,7 +226,8 @@ func (r *cloudManagedDatabaseServiceResource) Schema(ctx context.Context, req re
 									Attributes: map[string]schema.Attribute{
 										"cidr": schema.StringAttribute{
 											Required:    true,
-											Description: "CIDR block, such as 203.0.113.0/24.",
+											Description: "CIDR block, with no bit set after its prefix length, such as 203.0.113.0/24, or 203.0.113.5/32 for one address.",
+											Validators:  []validator.String{managedDatabaseCIDR},
 										},
 										"description": schema.StringAttribute{
 											Optional:    true,
@@ -269,6 +284,15 @@ func (r *cloudManagedDatabaseServiceResource) Schema(ctx context.Context, req re
 				Optional:      true,
 				Description:   "Point in time to create the service from, in RFC 3339 format. The source service must have point-in-time recovery enabled. Changing it to another value recreates the service.",
 				PlanModifiers: []planmodifier.String{managedDatabaseCreationOnly},
+			},
+			"timeouts": schema.SingleNestedAttribute{
+				Optional:    true,
+				Description: "How long to wait for the service, as durations such as 1h30m.",
+				Attributes: map[string]schema.Attribute{
+					"create": timeout("Wait for the creation of the service. Defaults to 40m."),
+					"update": timeout("Wait for an update of the service. Defaults to 40m."),
+					"delete": timeout("Wait for the deletion of the service. Defaults to 20m."),
+				},
 			},
 			"id": schema.StringAttribute{
 				Computed:      true,
@@ -558,14 +582,39 @@ func (r *cloudManagedDatabaseServiceResource) ImportState(ctx context.Context, r
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), splits[2])...)
 }
 
-// ModifyPlan keeps the state when the plan only differs from it by unknown values and the
-// configuration has none: the update would send the same service. Terraform plans one when the
-// configuration leaves out maintenance_window, network or storage: the API fills in their required
-// attributes, so Terraform proposes null for them, which makes every computed attribute unknown. An
-// unknown value of the configuration, such as the ID of a subnet being replaced, can change the
-// service.
+// ModifyPlan refuses changes that the API takes one at a time. It keeps the state when the plan only
+// differs from it by unknown values and the configuration has none: the update would send the same
+// service. Terraform plans one when the configuration leaves out maintenance_window, network or
+// storage: the API fills in their required attributes, so Terraform proposes null for them, which makes
+// every computed attribute unknown. An unknown value of the configuration, such as the ID of a subnet
+// being replaced, can change the service.
 func (r *cloudManagedDatabaseServiceResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
+		return
+	}
+
+	// The API takes a change of only one of these groups per update, and the PUT carries them all.
+	var changed []string
+	for _, group := range [][]string{{"plan", "flavor", "storage"}, {"version"}, {"nodes_count"}} {
+		for _, name := range group {
+			attribute := tftypes.NewAttributePath().WithAttributeName(name)
+			planned, _, err := tftypes.WalkAttributePath(req.Plan.Raw, attribute)
+			if err != nil {
+				continue
+			}
+			prior, _, err := tftypes.WalkAttributePath(req.State.Raw, attribute)
+			if err != nil {
+				continue
+			}
+			if value := planned.(tftypes.Value); value.IsFullyKnown() && !value.Equal(prior.(tftypes.Value)) {
+				changed = append(changed, strings.Join(group, "/"))
+				break
+			}
+		}
+	}
+	if len(changed) > 1 {
+		resp.Diagnostics.AddError("Changes to apply one at a time",
+			"The API takes a change of only one of plan/flavor/storage, version and nodes_count per update, and this plan changes "+strings.Join(changed, " and ")+": apply them one after the other.")
 		return
 	}
 
@@ -630,7 +679,7 @@ func (r *cloudManagedDatabaseServiceResource) Create(ctx context.Context, req re
 	}
 
 	endpoint += "/" + url.PathEscape(res.Id)
-	if err := waitForManagedDatabaseServiceReady(ctx, r.config.OVHClient, endpoint, managedDatabaseServiceCreateTimeout); err != nil {
+	if err := waitForManagedDatabaseServiceReady(ctx, r.config.OVHClient, endpoint, data.timeout("create", managedDatabaseServiceCreateTimeout)); err != nil {
 		resp.Diagnostics.AddError("Error waiting for the service to be ready", err.Error())
 		return
 	}
@@ -676,6 +725,7 @@ func (r *cloudManagedDatabaseServiceResource) Update(ctx context.Context, req re
 	}
 
 	endpoint := r.category.serviceEndpoint(state.ServiceName.ValueString(), state.Engine.ValueString(), state.Id.ValueString())
+	timeout := plan.timeout("update", managedDatabaseServiceUpdateTimeout)
 
 	// The PUT keeps the public exposure, which a PATCH changes: after the PUT when it publishes the
 	// service and before it when it unpublishes it, so that the public address only ever filters with
@@ -690,7 +740,7 @@ func (r *cloudManagedDatabaseServiceResource) Update(ctx context.Context, req re
 		public = planned.Public
 	}
 	if public != nil && !*public {
-		if err := publishManagedDatabaseServiceWhenReady(ctx, r.config.OVHClient, endpoint, false, managedDatabaseServiceUpdateTimeout); err != nil {
+		if err := publishManagedDatabaseServiceWhenReady(ctx, r.config.OVHClient, endpoint, false, timeout); err != nil {
 			resp.Diagnostics.AddError("Error unpublishing the service", err.Error())
 			return
 		}
@@ -702,13 +752,13 @@ func (r *cloudManagedDatabaseServiceResource) Update(ctx context.Context, req re
 		*service = plan.CloudManagedDatabaseServiceModel
 		service.AdvancedConfiguration = current
 	}
-	if err := putManagedDatabaseServiceWhenReady(ctx, r.config.OVHClient, endpoint, replace, managedDatabaseServiceUpdateTimeout); err != nil {
+	if err := putManagedDatabaseServiceWhenReady(ctx, r.config.OVHClient, endpoint, replace, timeout); err != nil {
 		resp.Diagnostics.AddError("Error updating the service", err.Error())
 		return
 	}
 
 	if public != nil && *public {
-		if err := publishManagedDatabaseServiceWhenReady(ctx, r.config.OVHClient, endpoint, true, managedDatabaseServiceUpdateTimeout); err != nil {
+		if err := publishManagedDatabaseServiceWhenReady(ctx, r.config.OVHClient, endpoint, true, timeout); err != nil {
 			resp.Diagnostics.AddError("Error publishing the service", err.Error())
 			return
 		}
@@ -732,7 +782,8 @@ func (r *cloudManagedDatabaseServiceResource) Delete(ctx context.Context, req re
 	}
 
 	endpoint := r.category.serviceEndpoint(data.ServiceName.ValueString(), data.Engine.ValueString(), data.Id.ValueString())
-	err := retryWhileManagedDatabaseServiceBusy(ctx, managedDatabaseServiceDeleteTimeout, func() error {
+	timeout := data.timeout("delete", managedDatabaseServiceDeleteTimeout)
+	err := retryWhileManagedDatabaseServiceBusy(ctx, timeout, func() error {
 		return r.config.OVHClient.DeleteWithContext(ctx, endpoint, nil)
 	})
 	if helpers.IsNotFound(err) {
@@ -743,9 +794,10 @@ func (r *cloudManagedDatabaseServiceResource) Delete(ctx context.Context, req re
 		return
 	}
 
-	// The service can still report its previous status right after the DELETE.
+	// The service can still report any status right after the DELETE, ERROR included when its creation
+	// failed: only its disappearance ends the wait.
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{"DELETING", "READY", "SUSPENDED", "UPDATING"},
+		Pending: []string{"CREATING", "CREATION_PLANNED", "PENDING", "UPDATING", "READY", "OUT_OF_SYNC", "SUSPENDED", "ERROR", "DELETING", managedDatabaseAPIUnavailable},
 		Target:  []string{"DELETED"},
 		Refresh: func() (any, string, error) {
 			res := &CloudManagedDatabaseServiceAPIResponse{}
@@ -753,15 +805,15 @@ func (r *cloudManagedDatabaseServiceResource) Delete(ctx context.Context, req re
 			if helpers.IsNotFound(err) {
 				return res, "DELETED", nil
 			}
+			if isManagedDatabaseAPIUnavailable(err) {
+				return res, managedDatabaseAPIUnavailable, nil
+			}
 			if err != nil {
 				return nil, "", err
 			}
-			if res.ResourceStatus == "ERROR" {
-				return res, res.ResourceStatus, managedDatabaseServiceError(res)
-			}
 			return res, res.ResourceStatus, nil
 		},
-		Timeout:    managedDatabaseServiceDeleteTimeout,
+		Timeout:    timeout,
 		Delay:      managedDatabaseServicePollDelay,
 		MinTimeout: managedDatabaseServicePollMinTimeout,
 	}
@@ -776,19 +828,21 @@ func (r *cloudManagedDatabaseServiceResource) Delete(ctx context.Context, req re
 var managedDatabaseServiceChangeable = []string{"OUT_OF_SYNC", "SUSPENDED"}
 
 // putManagedDatabaseServiceWhenReady waits for the service to take a change, then replaces its whole
-// targetSpec with the current one after change, and waits for the service to apply it. Nothing is sent,
-// nor waited for, when change changes nothing, unless the service is OUT_OF_SYNC: the same targetSpec
-// brings it back in sync.
+// targetSpec with the current one after change, and waits for the service to apply it: to be READY, or
+// SUSPENDED again when it was, since the authorized IPs of a locked service change without unlocking it.
+// Nothing is sent, nor waited for, when change changes nothing, unless the service is OUT_OF_SYNC: the
+// same targetSpec brings it back in sync.
 func putManagedDatabaseServiceWhenReady(ctx context.Context, client *ovhwrap.Client, endpoint string, change func(*CloudManagedDatabaseServiceModel), timeout time.Duration) error {
 	if err := waitForManagedDatabaseServiceReady(ctx, client, endpoint, timeout, managedDatabaseServiceChangeable...); err != nil {
 		return err
 	}
-	sent := false
+	sent, suspended := false, false
 	if err := retryWhileManagedDatabaseServiceBusy(ctx, timeout, func() error {
 		var res CloudManagedDatabaseServiceAPIResponse
 		if err := client.GetWithContext(ctx, endpoint, &res); err != nil {
 			return err
 		}
+		suspended = res.ResourceStatus == "SUSPENDED"
 		var service CloudManagedDatabaseServiceModel
 		diags := service.MergeWith(ctx, &res)
 		current, d := service.ToPut(ctx)
@@ -802,6 +856,11 @@ func putManagedDatabaseServiceWhenReady(ctx context.Context, client *ovhwrap.Cli
 		if reflect.DeepEqual(body, current) && res.ResourceStatus != "OUT_OF_SYNC" {
 			return nil
 		}
+		// v1 takes back the default backup regions it returns, which it doesn't store, as a change, which a
+		// locked or Grafana service refuses. Null keeps the regions.
+		if b, c := body.TargetSpec.Backup, current.TargetSpec.Backup; b != nil && c != nil && slices.Equal(b.Regions, c.Regions) {
+			b.Regions = nil
+		}
 		err := client.PutWithContext(ctx, endpoint, body, nil)
 		sent = err == nil
 		return err
@@ -811,7 +870,11 @@ func putManagedDatabaseServiceWhenReady(ctx context.Context, client *ovhwrap.Cli
 	if !sent {
 		return nil
 	}
-	return waitForManagedDatabaseServiceReady(ctx, client, endpoint, timeout)
+	var alsoReady []string
+	if suspended {
+		alsoReady = append(alsoReady, "SUSPENDED")
+	}
+	return waitForManagedDatabaseServiceReady(ctx, client, endpoint, timeout, alsoReady...)
 }
 
 // publishManagedDatabaseServiceWhenReady waits for the service to take a change, publishes it on a
@@ -833,13 +896,16 @@ func publishManagedDatabaseServiceWhenReady(ctx context.Context, client *ovhwrap
 // status v1 waits for: resourceStatus can be READY before the engine has provisioned every node. A
 // status of alsoReady ends the wait too. ERROR is terminal and reported by managedDatabaseServiceError.
 func waitForManagedDatabaseServiceReady(ctx context.Context, client *ovhwrap.Client, endpoint string, timeout time.Duration, alsoReady ...string) error {
-	pending := []string{"CREATING", "CREATION_PLANNED", "PENDING", "UPDATING", "OUT_OF_SYNC", "SUSPENDED"}
+	pending := []string{"CREATING", "CREATION_PLANNED", "PENDING", "UPDATING", "OUT_OF_SYNC", "SUSPENDED", managedDatabaseAPIUnavailable}
 	stateConf := &retry.StateChangeConf{
 		Pending: slices.DeleteFunc(pending, func(status string) bool { return slices.Contains(alsoReady, status) }),
 		Target:  append([]string{"READY"}, alsoReady...),
 		Refresh: func() (any, string, error) {
 			res := &CloudManagedDatabaseServiceAPIResponse{}
 			if err := client.GetWithContext(ctx, endpoint, res); err != nil {
+				if isManagedDatabaseAPIUnavailable(err) {
+					return res, managedDatabaseAPIUnavailable, nil
+				}
 				return nil, "", err
 			}
 			if res.ResourceStatus == "ERROR" {
@@ -876,6 +942,15 @@ var managedDatabaseServiceBusyClasses = []string{
 	"Client::Conflict::ServiceNotReady",
 	"Client::Conflict::PublicAccessChanging",
 	"Client::Conflict::StorageUsageUnknown",
+}
+
+// managedDatabaseAPIUnavailable is the status a wait gives a read that the API answered with a 5xx or a
+// 429, which fail for a moment: the wait reads the service again.
+const managedDatabaseAPIUnavailable = "API_UNAVAILABLE"
+
+func isManagedDatabaseAPIUnavailable(err error) bool {
+	var apiErr *ovh.APIError
+	return errors.As(err, &apiErr) && (apiErr.Code >= http.StatusInternalServerError || apiErr.Code == http.StatusTooManyRequests)
 }
 
 // retryWhileManagedDatabaseServiceBusy retries call while the API answers a 409 of
