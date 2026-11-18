@@ -847,8 +847,17 @@ func waitForManagedDatabaseServiceReady(ctx context.Context, client *ovhwrap.Cli
 	return err
 }
 
-// retryWhileManagedDatabaseServiceBusy retries call while the API answers 409, which it does while
-// another operation runs on the service.
+// managedDatabaseServiceBusyClasses are the 409s the API answers while an operation runs on the
+// service. Its other 409s, such as ServiceOnlyOneModification or ServiceLocked, don't end on their own.
+var managedDatabaseServiceBusyClasses = []string{
+	"Client::Conflict::ServiceOperationInProgress",
+	"Client::Conflict::ServiceNotReady",
+	"Client::Conflict::PublicAccessChanging",
+	"Client::Conflict::StorageUsageUnknown",
+}
+
+// retryWhileManagedDatabaseServiceBusy retries call while the API answers a 409 of
+// managedDatabaseServiceBusyClasses.
 func retryWhileManagedDatabaseServiceBusy(ctx context.Context, timeout time.Duration, call func() error) error {
 	return retry.RetryContext(ctx, timeout, func() *retry.RetryError {
 		err := call()
@@ -856,7 +865,7 @@ func retryWhileManagedDatabaseServiceBusy(ctx context.Context, timeout time.Dura
 		switch {
 		case err == nil:
 			return nil
-		case errors.As(err, &apiErr) && apiErr.Code == http.StatusConflict:
+		case errors.As(err, &apiErr) && apiErr.Code == http.StatusConflict && slices.Contains(managedDatabaseServiceBusyClasses, apiErr.Class):
 			return retry.RetryableError(err)
 		default:
 			return retry.NonRetryableError(err)

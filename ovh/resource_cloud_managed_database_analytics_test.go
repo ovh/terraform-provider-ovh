@@ -470,6 +470,34 @@ func TestCloudManagedDatabasePostgresqlWaitEngineReady(t *testing.T) {
 	}
 }
 
+// Only the 409s of an operation running on the service are retried: the others would answer the same
+// until the timeout.
+func TestCloudManagedDatabaseServiceRetryBusy(t *testing.T) {
+	for class, retried := range map[string]bool{
+		"Client::Conflict::ServiceOperationInProgress": true,
+		"Client::Conflict::ServiceNotReady":            true,
+		"Client::Conflict::ServiceOnlyOneModification": false,
+		"Client::Conflict::ServiceLocked":              false,
+	} {
+		t.Run(class, func(t *testing.T) {
+			calls := 0
+			err := retryWhileManagedDatabaseServiceBusy(context.Background(), time.Minute, func() error {
+				calls++
+				if calls == 1 {
+					return &ovh.APIError{Code: http.StatusConflict, Class: class}
+				}
+				return nil
+			})
+			if retried && (err != nil || calls != 2) {
+				t.Errorf("expected one retry, got %d calls and error %v", calls, err)
+			}
+			if !retried && (err == nil || calls != 1) {
+				t.Errorf("expected the error at once, got %d calls and error %v", calls, err)
+			}
+		})
+	}
+}
+
 // newManagedDatabaseLiveLikeTestAPI returns the endpoint of a fake API holding one PostgreSQL service of
 // project pj as the live API does: its targetSpec gets a maintenance window, a storage and the
 // network when the request leaves them out, and the defaults of the engine in its advanced configuration.
