@@ -1177,6 +1177,33 @@ func TestUnitCloudInstanceVolumeFormsRoundTrip(t *testing.T) {
 			t.Fatal("both must stay null")
 		}
 	})
+
+	// The API does not promise to keep the order of the list: a configured list
+	// must round-trip in its own order, unknown volumes last.
+	volIds := func(l types.List) []string {
+		var out []string
+		for _, e := range l.Elements() {
+			out = append(out, e.(types.Object).Attributes()["id"].(interface{ ValueString() string }).ValueString())
+		}
+		return out
+	}
+	t.Run("API reorder, volumes configured", func(t *testing.T) {
+		// volumeRefList sorts ids: d1, d2 (boot not configured, comes last).
+		m := &CloudInstanceModel{Volumes: volumeRefList(map[string]string{"d2": "", "d1": ""}), VolumeIds: nullCustomStringList()}
+		m.MergeWith(ctx, resp(), m.priorSpec())
+		want := []string{"d1", "d2", "boot"}
+		if !reflect.DeepEqual(volIds(m.Volumes), want) || !reflect.DeepEqual(ids(m.VolumeIds), want) {
+			t.Fatalf("prior order must win: volumes=%v volume_ids=%v", volIds(m.Volumes), ids(m.VolumeIds))
+		}
+	})
+	t.Run("API reorder, volume_ids configured", func(t *testing.T) {
+		m := &CloudInstanceModel{VolumeIds: customStringList("d2", "boot", "gone"), Volumes: nullVols}
+		m.MergeWith(ctx, resp(), m.priorSpec())
+		want := []string{"d2", "boot", "d1"}
+		if !reflect.DeepEqual(volIds(m.Volumes), want) || !reflect.DeepEqual(ids(m.VolumeIds), want) {
+			t.Fatalf("prior order must win, detached volume dropped: volumes=%v volume_ids=%v", volIds(m.Volumes), ids(m.VolumeIds))
+		}
+	})
 }
 
 // ModifyPlan end to end: moving from volume_ids to volumes keeps the boot volume

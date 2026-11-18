@@ -316,8 +316,8 @@ const (
 	instanceDescNetworkRefAutoAssign   = "Attach a public interface with a public IP assigned by the platform. Only valid on an entry with no network_id and no ip, and on at most one entry"
 	instanceDescNetworkRefAutoAssignMd = "Attach a public interface with a public IP assigned by the platform. Only valid on an entry with no `network_id` and no `ip`, and on at most one entry"
 
-	instanceDescVolumes       = "Block-storage volumes attached to the instance, each with its role. Adding or removing an entry attaches or detaches the volume. To boot from a volume, omit image_id and give one entry the role BOOT: the boot volume can only be chosen at creation, cannot be detached, and is kept when the instance is deleted"
-	instanceDescVolumesMd     = "Block-storage volumes attached to the instance, each with its `role`. Adding or removing an entry attaches or detaches the volume. To boot from a volume, omit `image_id` and give one entry the role `BOOT`: the boot volume can only be chosen at creation, cannot be detached, and is kept when the instance is deleted"
+	instanceDescVolumes       = "Block-storage volumes attached to the instance, each with its role. Adding or removing an entry attaches or detaches the volume; when neither volumes nor volume_ids is set, the current attachments are kept as they are, and an empty volumes list detaches every data volume. To boot from a volume, omit image_id and give one entry the role BOOT: the boot volume can only be chosen at creation, cannot be detached, and is kept when the instance is deleted"
+	instanceDescVolumesMd     = "Block-storage volumes attached to the instance, each with its `role`. Adding or removing an entry attaches or detaches the volume; when neither `volumes` nor `volume_ids` is set, the current attachments are kept as they are, and `volumes = []` detaches every data volume. To boot from a volume, omit `image_id` and give one entry the role `BOOT`: the boot volume can only be chosen at creation, cannot be detached, and is kept when the instance is deleted"
 	instanceDescVolumeIds     = "IDs of block-storage volumes attached to the instance. DEPRECATED: use volumes, which carries the role of each volume. Cannot be combined with volumes. Without image_id, the first volume is the boot volume"
 	instanceDescVolumeRefId   = "ID of the block-storage volume"
 	instanceDescVolumeRefRole = "Role of the volume: DATA (default) or BOOT. At most one volume can be BOOT, only when image_id is omitted. Changing which volume is BOOT replaces the instance"
@@ -824,24 +824,71 @@ func (m *CloudInstanceModel) setVolumeForms(ts *CloudInstanceAPITargetSpec, prio
 		}
 		return
 	}
-	m.Volumes = buildInstanceVolumesRootList(ts)
-	ids := make([]attr.Value, len(ts.Volumes))
-	for i, v := range ts.Volumes {
+	volumes := orderInstanceVolumesLikePrior(prior, ts.Volumes)
+	m.Volumes = buildInstanceVolumesRootList(volumes)
+	ids := make([]attr.Value, len(volumes))
+	for i, v := range volumes {
 		ids[i] = tfStr(v.Id)
 	}
 	m.VolumeIds = ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]{ListValue: basetypes.NewListValueMust(ovhtypes.TfStringType{}, ids)}
 }
 
-// buildInstanceVolumesRootList rebuilds the mutable root volumes list from
-// targetSpec. The role is always set: the API echoes every volume with its role,
-// and the attribute defaults to DATA when the configuration leaves it out.
-func buildInstanceVolumesRootList(ts *CloudInstanceAPITargetSpec) types.List {
+// orderInstanceVolumesLikePrior puts the volumes of targetSpec in the order of
+// the prior plan/state list, by id, like networks and shares: the API does not
+// promise to keep the order it was given, and a configured list must round-trip
+// as is. Whichever attribute the prior fills gives the order, volumes first.
+// Volumes the prior does not know come last, in the API order. A null or unknown
+// prior (import) keeps the API order.
+func orderInstanceVolumesLikePrior(prior instancePriorSpec, apiVolumes []CloudInstanceAPIVolumeRef) []CloudInstanceAPIVolumeRef {
+	var priorIds []string
+	switch {
+	case !prior.Volumes.IsNull() && !prior.Volumes.IsUnknown():
+		for _, elem := range prior.Volumes.Elements() {
+			if obj, ok := elem.(types.Object); ok {
+				if id, ok := obj.Attributes()["id"].(interface{ ValueString() string }); ok {
+					priorIds = append(priorIds, id.ValueString())
+				}
+			}
+		}
+	case !prior.VolumeIds.IsNull() && !prior.VolumeIds.IsUnknown():
+		for _, elem := range prior.VolumeIds.Elements() {
+			if id, ok := elem.(ovhtypes.TfStringValue); ok {
+				priorIds = append(priorIds, id.ValueString())
+			}
+		}
+	default:
+		return apiVolumes
+	}
+	byId := make(map[string]int, len(apiVolumes))
+	for i, v := range apiVolumes {
+		byId[v.Id] = i
+	}
+	consumed := make([]bool, len(apiVolumes))
+	out := make([]CloudInstanceAPIVolumeRef, 0, len(apiVolumes))
+	for _, id := range priorIds {
+		if i, ok := byId[id]; ok && !consumed[i] {
+			consumed[i] = true
+			out = append(out, apiVolumes[i])
+		}
+	}
+	for i, v := range apiVolumes {
+		if !consumed[i] {
+			out = append(out, v)
+		}
+	}
+	return out
+}
+
+// buildInstanceVolumesRootList rebuilds the mutable root volumes list. The role
+// is always set: the API echoes every volume with its role, and the attribute
+// defaults to DATA when the configuration leaves it out.
+func buildInstanceVolumesRootList(volumes []CloudInstanceAPIVolumeRef) types.List {
 	objType := types.ObjectType{AttrTypes: instanceVolumeRefAttrTypes()}
-	if ts == nil || len(ts.Volumes) == 0 {
+	if len(volumes) == 0 {
 		return types.ListNull(objType)
 	}
-	items := make([]attr.Value, 0, len(ts.Volumes))
-	for _, v := range ts.Volumes {
+	items := make([]attr.Value, 0, len(volumes))
+	for _, v := range volumes {
 		obj, _ := types.ObjectValue(instanceVolumeRefAttrTypes(), map[string]attr.Value{
 			"id":   tfStr(v.Id),
 			"role": tfStr(volumeRoleOrData(v.Role)),

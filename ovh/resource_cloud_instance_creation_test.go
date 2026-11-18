@@ -244,6 +244,3 @@ func TestAccCloudInstance_creationMatrix(t *testing.T) {
 		})
 	}
 }
-
-// importVolumesIgnore lists the volume attributes an import cannot reproduce for a
-// configuration declaring volume_ids: it fills volumes instead.
