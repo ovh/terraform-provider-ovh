@@ -167,17 +167,21 @@ func (r *cloudInstanceResource) ModifyPlan(ctx context.Context, req resource.Mod
 // relies on the state. It matters most for the create plan of a replacement,
 // which Terraform makes with no prior state once the instance is destroyed. The
 // deprecated volume_ids keeps its rule: its first volume boots.
+//
+// The values come from the configuration: with no state, the plan holds unknown
+// for every Optional+Computed attribute the configuration leaves out, and an
+// unknown image_id would hide the very case this check exists for.
 func (r *cloudInstanceResource) modifyCreatePlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	var volumes types.List
 	var volumeIds ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]
 	var imageId ovhtypes.TfStringValue
-	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("volumes"), &volumes)...)
-	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("volume_ids"), &volumeIds)...)
-	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("image_id"), &imageId)...)
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("volumes"), &volumes)...)
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("volume_ids"), &volumeIds)...)
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("image_id"), &imageId)...)
 	if resp.Diagnostics.HasError() || imageId.IsUnknown() || volumes.IsUnknown() || volumeIds.IsUnknown() {
 		return
 	}
-	if knownString(imageId) != "" || !volumeIds.IsNull() || volumes.IsNull() {
+	if !imageId.IsNull() || !volumeIds.IsNull() || volumes.IsNull() {
 		return
 	}
 	for _, ref := range volumesToAPI(volumes) {

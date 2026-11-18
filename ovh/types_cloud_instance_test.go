@@ -1215,6 +1215,20 @@ func TestUnitCloudInstanceModifyPlanBootVolume(t *testing.T) {
 	r.Schema(ctx, fwresource.SchemaRequest{}, &sch)
 
 	raw := func(c volumeCfg) tftypes.Value { return instanceConfigRaw(t, sch.Schema, c) }
+	// A create plan, as the framework builds it: with no state, every
+	// Optional+Computed attribute the configuration leaves out is unknown.
+	createPlanRaw := func(c volumeCfg) tftypes.Value {
+		if c.image.IsNull() {
+			c.image = ovhtypes.TfStringValue{StringValue: types.StringUnknown()}
+		}
+		if c.ids.IsNull() {
+			c.ids = ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]{ListValue: basetypes.NewListUnknown(ovhtypes.TfStringType{})}
+		}
+		if c.volumes.IsNull() {
+			c.volumes = types.ListUnknown(types.ObjectType{AttrTypes: instanceVolumeRefAttrTypes()})
+		}
+		return raw(c)
+	}
 	with := func(f func(c *volumeCfg)) volumeCfg {
 		c := newVolumeCfg()
 		f(&c)
@@ -1314,13 +1328,14 @@ func TestUnitCloudInstanceModifyPlanBootVolume(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			stateRaw := raw(stored(tc.state))
+			stateRaw, planRaw := raw(stored(tc.state)), raw(tc.plan)
 			if tc.plan.create {
 				stateRaw = tftypes.NewValue(sch.Schema.Type().TerraformType(ctx), nil)
+				planRaw = createPlanRaw(tc.plan)
 			}
 			req := fwresource.ModifyPlanRequest{
 				State:  tfsdk.State{Schema: sch.Schema, Raw: stateRaw},
-				Plan:   tfsdk.Plan{Schema: sch.Schema, Raw: raw(tc.plan)},
+				Plan:   tfsdk.Plan{Schema: sch.Schema, Raw: planRaw},
 				Config: tfsdk.Config{Schema: sch.Schema, Raw: raw(configOf(tc.plan))},
 			}
 			resp := &fwresource.ModifyPlanResponse{}
