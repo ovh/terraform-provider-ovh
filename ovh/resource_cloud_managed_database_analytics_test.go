@@ -364,12 +364,49 @@ func TestCloudManagedDatabasePostgresqlPutOutOfSync(t *testing.T) {
 	assertManagedDatabaseJSON(t, json.RawMessage(puts[0]), managedDatabasePostgresqlTestReplace)
 }
 
+// managedDatabasePostgresqlTestSuspended is the service locked by v1.
+var managedDatabasePostgresqlTestSuspended = strings.Replace(managedDatabasePostgresqlTestResponse, `"resourceStatus": "READY"`, `"resourceStatus": "SUSPENDED"`, 1)
+
+func TestCloudManagedDatabasePostgresqlPutSuspended(t *testing.T) {
+	suspended := managedDatabaseTestAnswer{http.StatusOK, managedDatabasePostgresqlTestSuspended}
+	t.Run("change", func(t *testing.T) {
+		// v1 takes some changes of a locked service, such as the storage that unlocks it: the PUT doesn't
+		// wait for READY first, and the wait after it lasts until the service is unlocked.
+		r, bodies := newManagedDatabaseServiceTestResource(t, managedDatabaseFamily, map[string][]managedDatabaseTestAnswer{
+			"GET " + managedDatabasePostgresqlTestItemPath: {suspended, suspended, suspended, {http.StatusOK, managedDatabasePostgresqlTestResponse}},
+			"PUT " + managedDatabasePostgresqlTestItemPath: {{http.StatusOK, managedDatabasePostgresqlTestResponse}},
+		})
+		rename := func(service *CloudManagedDatabaseServiceModel) {
+			service.Description = types.StringValue("testacc-terraform-renamed")
+		}
+		if err := putManagedDatabaseServiceWhenReady(context.Background(), r.config.OVHClient, managedDatabasePostgresqlTestItemPath, rename, time.Minute); err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+		if puts := bodies("PUT " + managedDatabasePostgresqlTestItemPath); len(puts) != 1 {
+			t.Fatalf("expected 1 PUT, got %d", len(puts))
+		}
+		if gets := bodies("GET " + managedDatabasePostgresqlTestItemPath); len(gets) != 4 {
+			t.Errorf("expected the wait after the PUT to last until the service is READY, got %d GET", len(gets))
+		}
+	})
+	t.Run("no change", func(t *testing.T) {
+		// Nothing is sent, so the lock isn't waited out.
+		r, _ := newManagedDatabaseServiceTestResource(t, managedDatabaseFamily, map[string][]managedDatabaseTestAnswer{
+			"GET " + managedDatabasePostgresqlTestItemPath: {suspended},
+		})
+		unchanged := func(*CloudManagedDatabaseServiceModel) {}
+		if err := putManagedDatabaseServiceWhenReady(context.Background(), r.config.OVHClient, managedDatabasePostgresqlTestItemPath, unchanged, time.Second); err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+	})
+}
+
 func TestCloudManagedDatabasePostgresqlDelete(t *testing.T) {
 	ctx := context.Background()
 	deleting := strings.Replace(managedDatabasePostgresqlTestResponse, `"resourceStatus": "READY"`, `"resourceStatus": "DELETING"`, 1)
 	r, bodies := newManagedDatabaseServiceTestResource(t, managedDatabaseFamily, map[string][]managedDatabaseTestAnswer{
 		"DELETE " + managedDatabasePostgresqlTestItemPath: {{http.StatusConflict, managedDatabasePostgresqlTestBusy}, {http.StatusOK, deleting}},
-		"GET " + managedDatabasePostgresqlTestItemPath:    {{http.StatusOK, deleting}, {http.StatusNotFound, `{"message": "service not found"}`}},
+		"GET " + managedDatabasePostgresqlTestItemPath:    {{http.StatusOK, managedDatabasePostgresqlTestSuspended}, {http.StatusOK, deleting}, {http.StatusNotFound, `{"message": "service not found"}`}},
 	})
 
 	state := managedDatabasePostgresqlTestState(t)
@@ -441,6 +478,22 @@ func TestCloudManagedDatabasePostgresqlWaitError(t *testing.T) {
 	err := waitForManagedDatabaseServiceReady(context.Background(), r.config.OVHClient, managedDatabasePostgresqlTestItemPath, time.Minute)
 	if err == nil || !strings.Contains(err.Error(), "flavor b3-8 is not available in eu-west-gra") {
 		t.Errorf("expected the error of the failed task, got %v", err)
+	}
+}
+
+func TestCloudManagedDatabasePostgresqlWaitErrorLocked(t *testing.T) {
+	// A v1 service being locked is in ERROR with no failed task: the status of its engine says why.
+	r, _ := newManagedDatabaseServiceTestResource(t, managedDatabaseFamily, map[string][]managedDatabaseTestAnswer{
+		"GET " + managedDatabasePostgresqlTestItemPath: {{http.StatusOK, `{
+			"id": "` + managedDatabasePostgresqlTestId + `",
+			"resourceStatus": "ERROR",
+			"currentState": {"status": "LOCKED_PENDING"}
+		}`}},
+	})
+
+	err := waitForManagedDatabaseServiceReady(context.Background(), r.config.OVHClient, managedDatabasePostgresqlTestItemPath, time.Minute)
+	if err == nil || !strings.Contains(err.Error(), "LOCKED_PENDING") {
+		t.Errorf("expected the status of the engine, got %v", err)
 	}
 }
 

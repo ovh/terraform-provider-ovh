@@ -745,7 +745,7 @@ func (r *cloudManagedDatabaseServiceResource) Delete(ctx context.Context, req re
 
 	// The service can still report its previous status right after the DELETE.
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{"DELETING", "READY", "UPDATING"},
+		Pending: []string{"DELETING", "READY", "SUSPENDED", "UPDATING"},
 		Target:  []string{"DELETED"},
 		Refresh: func() (any, string, error) {
 			res := &CloudManagedDatabaseServiceAPIResponse{}
@@ -757,7 +757,7 @@ func (r *cloudManagedDatabaseServiceResource) Delete(ctx context.Context, req re
 				return nil, "", err
 			}
 			if res.ResourceStatus == "ERROR" {
-				return res, res.ResourceStatus, cloudResourceErrorFromTasks("service", res.Id, res.CurrentTasks)
+				return res, res.ResourceStatus, managedDatabaseServiceError(res)
 			}
 			return res, res.ResourceStatus, nil
 		},
@@ -770,14 +770,20 @@ func (r *cloudManagedDatabaseServiceResource) Delete(ctx context.Context, req re
 	}
 }
 
-// putManagedDatabaseServiceWhenReady waits for the service to be READY or OUT_OF_SYNC, the statuses in
-// which it takes a change, then replaces its whole targetSpec with the current one after change, and
-// waits for the service to apply it. Nothing is sent when change changes nothing, unless the service
-// is OUT_OF_SYNC: the same targetSpec brings it back in sync.
+// managedDatabaseServiceChangeable are the statuses besides READY in which the service takes a change.
+// SUSPENDED is a v1 service locked by a full disk or an administrative hold: it takes a plan, flavor or
+// storage upgrade, which unlocks it, and authorized IPs, and refuses other changes with a 409.
+var managedDatabaseServiceChangeable = []string{"OUT_OF_SYNC", "SUSPENDED"}
+
+// putManagedDatabaseServiceWhenReady waits for the service to take a change, then replaces its whole
+// targetSpec with the current one after change, and waits for the service to apply it. Nothing is sent,
+// nor waited for, when change changes nothing, unless the service is OUT_OF_SYNC: the same targetSpec
+// brings it back in sync.
 func putManagedDatabaseServiceWhenReady(ctx context.Context, client *ovhwrap.Client, endpoint string, change func(*CloudManagedDatabaseServiceModel), timeout time.Duration) error {
-	if err := waitForManagedDatabaseServiceReady(ctx, client, endpoint, timeout, "OUT_OF_SYNC"); err != nil {
+	if err := waitForManagedDatabaseServiceReady(ctx, client, endpoint, timeout, managedDatabaseServiceChangeable...); err != nil {
 		return err
 	}
+	sent := false
 	if err := retryWhileManagedDatabaseServiceBusy(ctx, timeout, func() error {
 		var res CloudManagedDatabaseServiceAPIResponse
 		if err := client.GetWithContext(ctx, endpoint, &res); err != nil {
@@ -796,17 +802,22 @@ func putManagedDatabaseServiceWhenReady(ctx context.Context, client *ovhwrap.Cli
 		if reflect.DeepEqual(body, current) && res.ResourceStatus != "OUT_OF_SYNC" {
 			return nil
 		}
-		return client.PutWithContext(ctx, endpoint, body, nil)
+		err := client.PutWithContext(ctx, endpoint, body, nil)
+		sent = err == nil
+		return err
 	}); err != nil {
 		return fmt.Errorf("calling Put %s: %w", endpoint, err)
+	}
+	if !sent {
+		return nil
 	}
 	return waitForManagedDatabaseServiceReady(ctx, client, endpoint, timeout)
 }
 
-// publishManagedDatabaseServiceWhenReady waits for the service to be READY or OUT_OF_SYNC, publishes it
-// on a public address or takes it off with a PATCH, and waits for the service to apply it.
+// publishManagedDatabaseServiceWhenReady waits for the service to take a change, publishes it on a
+// public address or takes it off with a PATCH, and waits for the service to apply it.
 func publishManagedDatabaseServiceWhenReady(ctx context.Context, client *ovhwrap.Client, endpoint string, public bool, timeout time.Duration) error {
-	if err := waitForManagedDatabaseServiceReady(ctx, client, endpoint, timeout, "OUT_OF_SYNC"); err != nil {
+	if err := waitForManagedDatabaseServiceReady(ctx, client, endpoint, timeout, managedDatabaseServiceChangeable...); err != nil {
 		return err
 	}
 	body := map[string]any{"targetSpec": map[string]any{"network": map[string]any{"public": public}}}
@@ -820,9 +831,9 @@ func publishManagedDatabaseServiceWhenReady(ctx context.Context, client *ovhwrap
 
 // waitForManagedDatabaseServiceReady polls the service until it is READY and so is its engine, the
 // status v1 waits for: resourceStatus can be READY before the engine has provisioned every node. A
-// status of alsoReady ends the wait too. ERROR is terminal and reports the errors of the failed tasks.
+// status of alsoReady ends the wait too. ERROR is terminal and reported by managedDatabaseServiceError.
 func waitForManagedDatabaseServiceReady(ctx context.Context, client *ovhwrap.Client, endpoint string, timeout time.Duration, alsoReady ...string) error {
-	pending := []string{"CREATING", "CREATION_PLANNED", "PENDING", "UPDATING", "OUT_OF_SYNC"}
+	pending := []string{"CREATING", "CREATION_PLANNED", "PENDING", "UPDATING", "OUT_OF_SYNC", "SUSPENDED"}
 	stateConf := &retry.StateChangeConf{
 		Pending: slices.DeleteFunc(pending, func(status string) bool { return slices.Contains(alsoReady, status) }),
 		Target:  append([]string{"READY"}, alsoReady...),
@@ -832,7 +843,7 @@ func waitForManagedDatabaseServiceReady(ctx context.Context, client *ovhwrap.Cli
 				return nil, "", err
 			}
 			if res.ResourceStatus == "ERROR" {
-				return res, res.ResourceStatus, cloudResourceErrorFromTasks("service", res.Id, res.CurrentTasks)
+				return res, res.ResourceStatus, managedDatabaseServiceError(res)
 			}
 			if res.ResourceStatus == "READY" && res.CurrentState != nil && res.CurrentState.Status != nil {
 				return res, *res.CurrentState.Status, nil
@@ -844,6 +855,17 @@ func waitForManagedDatabaseServiceReady(ctx context.Context, client *ovhwrap.Cli
 		MinTimeout: managedDatabaseServicePollMinTimeout,
 	}
 	_, err := stateConf.WaitForStateContext(ctx)
+	return err
+}
+
+// managedDatabaseServiceError reports a service in ERROR with the errors of its failed tasks and the
+// status of its engine, which says why when no task failed, such as LOCKED_PENDING for a v1 service
+// being locked.
+func managedDatabaseServiceError(res *CloudManagedDatabaseServiceAPIResponse) error {
+	err := cloudResourceErrorFromTasks("service", res.Id, res.CurrentTasks)
+	if res.CurrentState != nil && res.CurrentState.Status != nil {
+		return fmt.Errorf("%w, engine status %s", err, *res.CurrentState.Status)
+	}
 	return err
 }
 
