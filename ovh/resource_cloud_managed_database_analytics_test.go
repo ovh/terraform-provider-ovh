@@ -500,8 +500,9 @@ func TestCloudManagedDatabaseServiceRetryBusy(t *testing.T) {
 
 // newManagedDatabaseLiveLikeTestAPI returns the endpoint of a fake API holding one PostgreSQL service of
 // project pj as the live API does: its targetSpec gets a maintenance window, a storage and the
-// network when the request leaves them out, and the defaults of the engine in its advanced configuration.
-// A PUT changes updatedAt but keeps the public exposure, which a PATCH changes.
+// authorized IPs when the request leaves them out, and the defaults of the engine in its advanced
+// configuration. A PUT changes updatedAt but keeps the private network and the public exposure, which
+// a PATCH changes.
 // It also returns a function that changes the targetSpec, as done outside of Terraform, and one that
 // makes the service OUT_OF_SYNC until the next PUT.
 func newManagedDatabaseLiveLikeTestAPI(t *testing.T) (string, func(func(spec map[string]any)), func()) {
@@ -537,11 +538,14 @@ func newManagedDatabaseLiveLikeTestAPI(t *testing.T) (string, func(func(spec map
 		for key, value := range map[string]any{
 			"maintenanceWindow": map[string]any{"startTimeUtc": "07:52"},
 			"storage":           map[string]any{"size": map[string]any{"unit": "GB", "value": 160}},
-			"network":           map[string]any{"authorizedIps": map[string]any{"rules": []any{}}},
+			"network":           map[string]any{},
 		} {
 			if spec[key] == nil {
 				spec[key] = value
 			}
+		}
+		if network := spec["network"].(map[string]any); network["authorizedIps"] == nil {
+			network["authorizedIps"] = map[string]any{"rules": []any{}}
 		}
 		return true
 	}
@@ -586,9 +590,11 @@ func newManagedDatabaseLiveLikeTestAPI(t *testing.T) (string, func(func(spec map
 		case r.Method == http.MethodGet:
 			respond(w)
 		case r.Method == http.MethodPut:
-			public := spec["network"].(map[string]any)["public"]
+			previous := spec["network"].(map[string]any)
 			if store(w, r) {
-				spec["network"].(map[string]any)["public"] = public
+				for _, key := range []string{"networkId", "subnetId", "public"} {
+					spec["network"].(map[string]any)[key] = previous[key]
+				}
 				status, updatedAt = "READY", time.Now().UTC().Format(time.RFC3339Nano)
 				respond(w)
 			}
@@ -779,6 +785,54 @@ resource "ovh_cloud_managed_database" "db" {
 					},
 				},
 				Check: resource.TestCheckResourceAttrPair(testAccCloudManagedDatabasePostgresqlResource, "network.subnet_id", "terraform_data.subnet", "id"),
+			},
+		},
+	})
+}
+
+// An update of a service attached to a private network keeps it: the PUT doesn't carry it.
+func TestCloudManagedDatabasePostgresqlPrivateNetworkUpdate(t *testing.T) {
+	endpoint, _, _ := newManagedDatabaseLiveLikeTestAPI(t)
+	config := func(description string) string {
+		return fmt.Sprintf(`
+provider "ovh" {
+  endpoint           = %q
+  application_key    = "key"
+  application_secret = "secret"
+  consumer_key       = "consumer"
+}
+
+resource "ovh_cloud_managed_database" "db" {
+  service_name = "pj"
+  engine       = "postgresql"
+  region       = "eu-west-gra"
+  version      = "17"
+  plan         = "business"
+  flavor       = "b3-8"
+  description  = %q
+  network = {
+    network_id = "net"
+    subnet_id  = "subnet"
+  }
+}
+`, endpoint, description)
+	}
+
+	resource.UnitTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{Config: config("testacc-terraform-db")},
+			{
+				Config: config("testacc-terraform-renamed"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(testAccCloudManagedDatabasePostgresqlResource, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(testAccCloudManagedDatabasePostgresqlResource, "network.network_id", "net"),
+					resource.TestCheckResourceAttr(testAccCloudManagedDatabasePostgresqlResource, "network.subnet_id", "subnet"),
+				),
 			},
 		},
 	})
