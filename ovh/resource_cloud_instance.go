@@ -130,15 +130,35 @@ func (r *cloudInstanceResource) ModifyPlan(ctx context.Context, req resource.Mod
 	}
 
 	// The roles that count are the planned ones: a role left out is resolved by the
-	// plan (BOOT on the current boot volume, DATA otherwise).
-	planned := ""
-	if ids := bootVolumeIds(planVolumes); len(ids) > 0 {
-		planned = ids[0]
+	// plan (BOOT on the current boot volume, DATA otherwise). An unknown role tells
+	// nothing, and the update is left to the API. An unknown id with the role BOOT
+	// is a volume created or replaced in the same apply: a new boot volume for
+	// sure, since the current one has a known id.
+	planned, plannedUnknown, idUnknown := "", false, false
+	for _, ref := range plannedVolumeRefs(planVolumes) {
+		if ref.roleUnknown {
+			return
+		}
+		if ref.idUnknown {
+			idUnknown = true
+		}
+		if ref.role != instanceVolumeRoleBoot || planned != "" || plannedUnknown {
+			continue
+		}
+		if ref.idUnknown {
+			plannedUnknown = true
+		} else {
+			planned = ref.id
+		}
 	}
-	if planned != "" && knownString(planImage) != "" {
+	if (planned != "" || plannedUnknown) && knownString(planImage) != "" {
+		if plannedUnknown {
+			planned = "to be created"
+		}
 		resp.Diagnostics.AddAttributeError(path.Root("volumes"), "Two boot sources",
 			"The instance boots from the image "+knownString(planImage)+" and volumes gives the volume "+planned+" the role BOOT: an instance boots from one or the other, and the API refuses both. "+
-				"Set role to DATA on the volume to keep booting from the image.")
+				"Set role to DATA on the volume to keep booting from the image. The boot source cannot be switched between an image and a volume in place: "+
+				"to boot this instance from the volume, destroy it and create a new instance with no image_id.")
 		return
 	}
 
@@ -148,13 +168,35 @@ func (r *cloudInstanceResource) ModifyPlan(ctx context.Context, req resource.Mod
 	} else if knownString(stateImage) != "" {
 		known = true
 	}
-	if !known || planned == current {
+	if !known {
+		return
+	}
+	if plannedUnknown {
+		resp.RequiresReplace = append(resp.RequiresReplace, path.Root("volumes"))
+		return
+	}
+	if planned == current {
 		return
 	}
 	if planned == "" {
-		resp.Diagnostics.AddAttributeError(path.Root("volumes"), "Boot volume cannot become DATA",
-			"The instance boots from the volume "+current+", which keeps the role BOOT: the API refuses to turn it into a DATA volume. "+
-				"Leave role out on it, or set it to BOOT.")
+		if idUnknown {
+			// The current boot volume may hide behind an unknown id.
+			return
+		}
+		// The API keeps the stored boot volume: it refuses to detach it, and a DATA
+		// role on it is silently turned back into BOOT, which would leave a
+		// permanent diff. Both are refused at plan, each with its own wording.
+		for _, ref := range volumesToAPI(planVolumes) {
+			if ref.Id == current {
+				resp.Diagnostics.AddAttributeError(path.Root("volumes"), "Boot volume cannot become DATA",
+					"The instance boots from the volume "+current+", which keeps the role BOOT: the API ignores a DATA role on it, and the plan would never settle. "+
+						"Leave role out on it, or set it to BOOT.")
+				return
+			}
+		}
+		resp.Diagnostics.AddAttributeError(path.Root("volumes"), "Boot volume cannot be detached",
+			"The instance boots from the volume "+current+", which is missing from volumes: the API refuses to detach the boot volume. "+
+				"Keep an entry for it, with role BOOT or no role. To stop booting from it, destroy the instance and create a new one.")
 		return
 	}
 	resp.RequiresReplace = append(resp.RequiresReplace, path.Root("volumes"))
@@ -184,8 +226,8 @@ func (r *cloudInstanceResource) modifyCreatePlan(ctx context.Context, req resour
 	if !imageId.IsNull() || !volumeIds.IsNull() || volumes.IsNull() {
 		return
 	}
-	for _, ref := range volumesToAPI(volumes) {
-		if ref.Id == "" || ref.Role == instanceVolumeRoleBoot {
+	for _, ref := range plannedVolumeRefs(volumes) {
+		if ref.idUnknown || ref.roleUnknown || ref.role == instanceVolumeRoleBoot {
 			return
 		}
 	}

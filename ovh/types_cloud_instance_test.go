@@ -1239,6 +1239,32 @@ func TestUnitCloudInstanceModifyPlanBootVolume(t *testing.T) {
 	volsB := with(func(c *volumeCfg) { c.volumes = volumeRefList(map[string]string{"b": "BOOT", "d": ""}) })
 	volsD := with(func(c *volumeCfg) { c.volumes = volumeRefList(map[string]string{"b": "", "d": "BOOT"}) })
 	volsDataOnly := with(func(c *volumeCfg) { c.volumes = volumeRefList(map[string]string{"b": "DATA", "d": "DATA"}) })
+	volsDOnlyData := with(func(c *volumeCfg) { c.volumes = volumeRefList(map[string]string{"d": "DATA"}) })
+	// Entries with an unknown id or role, as for a volume created in the same apply.
+	unknownRef := func(role ovhtypes.TfStringValue) attr.Value {
+		obj, _ := types.ObjectValue(instanceVolumeRefAttrTypes(), map[string]attr.Value{"id": ovhtypes.TfStringValue{StringValue: types.StringUnknown()}, "role": role})
+		return obj
+	}
+	withUnknown := func(roles map[string]string, extra ...attr.Value) types.List {
+		items := append(volumeRefList(roles).Elements(), extra...)
+		return types.ListValueMust(types.ObjectType{AttrTypes: instanceVolumeRefAttrTypes()}, items)
+	}
+	newBootVolume := with(func(c *volumeCfg) {
+		c.volumes = withUnknown(map[string]string{"b": "", "d": ""}, unknownRef(strVal("BOOT")))
+	})
+	newDataVolume := with(func(c *volumeCfg) { c.volumes = withUnknown(map[string]string{"b": "BOOT"}, unknownRef(strNull())) })
+	unknownRole := with(func(c *volumeCfg) {
+		c.volumes = withUnknown(map[string]string{"b": "BOOT"}, unknownRef(ovhtypes.TfStringValue{StringValue: types.StringUnknown()}))
+	})
+	createUnknownRole := with(func(c *volumeCfg) {
+		c.volumes = withUnknown(map[string]string{"d": ""}, unknownRef(ovhtypes.TfStringValue{StringValue: types.StringUnknown()}))
+		c.create = true
+	})
+	imageNewBootVolume := with(func(c *volumeCfg) {
+		c.image = strVal("img")
+		c.imageKept = true
+		c.volumes = withUnknown(nil, unknownRef(strVal("BOOT")))
+	})
 	imageKeptBoot := with(func(c *volumeCfg) {
 		c.image = strVal("img")
 		c.imageKept = true
@@ -1253,8 +1279,8 @@ func TestUnitCloudInstanceModifyPlanBootVolume(t *testing.T) {
 		c.volumes = volumeRefList(map[string]string{"b": "BOOT", "d": ""})
 		c.create = true
 	})
-	// Finding 3: the boot moves to d, b keeps no role. One BOOT in the config, but
-	// b would be promoted from the state: two BOOT in the plan.
+	// The boot moves to d while b, the current boot, keeps no role: one BOOT in
+	// the configuration, and b must not be promoted from the state next to it.
 	volsMoveBootKeepB := with(func(c *volumeCfg) { c.volumes = volumeRefList(map[string]string{"b": "", "d": "BOOT"}) })
 	withImage := with(func(c *volumeCfg) { c.image = strVal("img"); c.ids = customStringList("d") })
 
@@ -1295,36 +1321,45 @@ func TestUnitCloudInstanceModifyPlanBootVolume(t *testing.T) {
 		state       volumeCfg
 		plan        volumeCfg
 		wantReplace bool
-		wantError   bool
+		wantError   string
 	}{
-		{"volume_ids -> volumes, same boot", idsB, volsB, false, false},
-		{"volumes -> volume_ids, same boot", volsB, idsB, false, false},
-		{"unchanged", volsB, volsB, false, false},
-		{"volumes, another volume becomes BOOT", volsB, volsD, true, false},
+		{"volume_ids -> volumes, same boot", idsB, volsB, false, ""},
+		{"volumes -> volume_ids, same boot", volsB, idsB, false, ""},
+		{"unchanged", volsB, volsB, false, ""},
+		{"volumes, another volume becomes BOOT", volsB, volsD, true, ""},
 		// volume_ids carries no role: the API keeps the stored boot volume, so
 		// reordering it is an update, never a replacement (as before volumes).
-		{"volume_ids, another volume first", idsB, idsDB, false, false},
+		{"volume_ids, another volume first", idsB, idsDB, false, ""},
 		// The API keeps the stored BOOT role, so dropping it on the boot volume
 		// leaves no boot source: an error, never a replacement that cannot be created.
-		{"boot volume turned into DATA", idsB, volsDataOnly, false, true},
+		{"boot volume turned into DATA", idsB, volsDataOnly, false, "Boot volume cannot become DATA"},
+		{"boot volume removed from volumes", volsB, volsDOnlyData, false, "Boot volume cannot be detached"},
+		// A BOOT volume created in the same apply has an unknown id: a new boot
+		// volume for sure, so a replacement. An unknown DATA volume or an unknown
+		// role says nothing about the boot volume.
+		{"new boot volume created in the same apply", volsB, newBootVolume, true, ""},
+		{"new data volume created in the same apply", volsB, newDataVolume, false, ""},
+		{"unknown role", volsB, unknownRole, false, ""},
+		{"create plan, unknown role and no image", volumeCfg{}, createUnknownRole, false, ""},
+		{"image kept from state, BOOT volume created in the same apply", withImage, imageNewBootVolume, false, "Two boot sources"},
 		// image_id kept from the state next to a BOOT volume: the instance would be
 		// replaced, then created with two boot sources, which the API refuses.
-		{"image kept from state, BOOT volume added", withImage, imageKeptBoot, false, true},
+		{"image kept from state, BOOT volume added", withImage, imageKeptBoot, false, "Two boot sources"},
 		// The current boot volume is unknown (no BOOT role in the state): nothing says
 		// the plan changes it, so no replacement, and no error either. The API decides.
-		{"state without BOOT role, volume_ids", idsNoRole, idsB, false, false},
-		{"state without volumes (upgrade, no refresh), volume_ids", idsUpgrade, idsB, false, false},
-		{"state without BOOT role, volumes without role", idsNoRole, volsNoRole, false, false},
+		{"state without BOOT role, volume_ids", idsNoRole, idsB, false, ""},
+		{"state without volumes (upgrade, no refresh), volume_ids", idsUpgrade, idsB, false, ""},
+		{"state without BOOT role, volumes without role", idsNoRole, volsNoRole, false, ""},
 		// The create plan of a replacement has no state: a role left out cannot be
 		// BOOT, and no image means no boot source, which the API refuses after the
 		// instance is gone. volume_ids keeps its first-volume rule.
-		{"create plan, volumes without role and no image", volumeCfg{}, createNoRole, false, true},
-		{"create plan, volume_ids and no image", volumeCfg{}, createIdsOnly, false, false},
-		{"create plan, volumes with BOOT", volumeCfg{}, createRoleBoot, false, false},
+		{"create plan, volumes without role and no image", volumeCfg{}, createNoRole, false, "No boot source"},
+		{"create plan, volume_ids and no image", volumeCfg{}, createIdsOnly, false, ""},
+		{"create plan, volumes with BOOT", volumeCfg{}, createRoleBoot, false, ""},
 		// The boot moves to d while b, the current boot, keeps no role: b must not
 		// be promoted to BOOT next to d. A replacement, and a single BOOT.
-		{"boot moves, current boot volume left without role", volsB, volsMoveBootKeepB, true, false},
-		{"image: adding a data volume", withImage, with(func(c *volumeCfg) { c.image = strVal("img"); c.ids = customStringList("d", "e") }), false, false},
+		{"boot moves, current boot volume left without role", volsB, volsMoveBootKeepB, true, ""},
+		{"image: adding a data volume", withImage, with(func(c *volumeCfg) { c.image = strVal("img"); c.ids = customStringList("d", "e") }), false, ""},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -1340,9 +1375,12 @@ func TestUnitCloudInstanceModifyPlanBootVolume(t *testing.T) {
 			}
 			resp := &fwresource.ModifyPlanResponse{}
 			r.ModifyPlan(ctx, req, resp)
-			if tc.wantError {
+			if tc.wantError != "" {
 				if !resp.Diagnostics.HasError() || len(resp.RequiresReplace) > 0 {
 					t.Fatalf("want an error and no replacement, got diagnostics=%v replace=%v", resp.Diagnostics, resp.RequiresReplace)
+				}
+				if got := resp.Diagnostics.Errors()[0].Summary(); got != tc.wantError {
+					t.Fatalf("error = %q, want %q", got, tc.wantError)
 				}
 				return
 			}

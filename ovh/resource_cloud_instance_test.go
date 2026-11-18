@@ -549,8 +549,8 @@ func TestAccCloudInstance_powerState(t *testing.T) {
 // read back. The bootable source image is resolved from the reference API.
 //
 // With withImport, a last step imports the instance and verifies the imported
-// state against the applied one. Only an instance declared with volumes can be
-// verified: an import fills volumes, never the deprecated volume_ids.
+// state against the applied one: an import fills both volumes and the deprecated
+// volume_ids, whichever one the configuration declares.
 func testAccCloudInstanceBootFromVolume(t *testing.T, volumesBlock string, withImport bool, extra ...resource.TestCheckFunc) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
 	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
@@ -601,7 +601,7 @@ func testAccCloudInstanceBootFromVolume(t *testing.T, volumesBlock string, withI
 
 // The deprecated volume_ids keeps booting from its first volume.
 func TestAccCloudInstance_bootFromVolume(t *testing.T) {
-	testAccCloudInstanceBootFromVolume(t, `volume_ids = [ovh_cloud_storage_block_volume.boot.id]`, false,
+	testAccCloudInstanceBootFromVolume(t, `volume_ids = [ovh_cloud_storage_block_volume.boot.id]`, true,
 		resource.TestCheckResourceAttr("ovh_cloud_instance.test", "volume_ids.#", "1"),
 		resource.TestCheckResourceAttr("ovh_cloud_instance.test", "volumes.#", "1"),
 	)

@@ -160,6 +160,12 @@ boot volume can only be chosen at creation, cannot be detached, and is kept when
 the instance is deleted. The instance's `current_state.image` stays null for a
 boot-from-volume instance.
 
+The boot source cannot be switched in place between an image and a volume: an
+instance booted from an image keeps booting from it, and the plan refuses a
+`BOOT` volume next to it. To boot an existing instance from a volume, destroy it
+and create a new instance with no `image_id`. Giving the role `BOOT` to another
+volume of a boot-from-volume instance replaces the instance.
+
 ~> **Deprecated:** `volume_ids` keeps working as before: with no `image_id`, its
 first volume is the boot volume. It cannot give a volume a role, so use `volumes`
 instead. The two cannot be combined. Moving a configuration from `volume_ids` to

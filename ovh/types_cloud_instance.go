@@ -572,6 +572,41 @@ func volumesToAPI(list types.List) []CloudInstanceAPIVolumeRef {
 	return out
 }
 
+// plannedVolumeRef is an entry of volumes as planned, with its unknowns kept
+// apart: volumesToAPI reads an unknown id as "" and an unknown role as DATA,
+// which a plan check must not mistake for a value.
+type plannedVolumeRef struct {
+	id, role               string
+	idUnknown, roleUnknown bool
+}
+
+func plannedVolumeRefs(list types.List) []plannedVolumeRef {
+	if list.IsNull() || list.IsUnknown() {
+		return nil
+	}
+	out := make([]plannedVolumeRef, 0, len(list.Elements()))
+	for _, elem := range list.Elements() {
+		obj, ok := elem.(types.Object)
+		if !ok {
+			continue
+		}
+		attrs := obj.Attributes()
+		ref := plannedVolumeRef{role: instanceVolumeRoleData}
+		if v, ok := attrs["id"].(ovhtypes.TfStringValue); ok {
+			ref.idUnknown = v.IsUnknown()
+			ref.id = knownString(v)
+		}
+		if v, ok := attrs["role"].(ovhtypes.TfStringValue); ok {
+			ref.roleUnknown = v.IsUnknown()
+			if r := knownString(v); r != "" {
+				ref.role = r
+			}
+		}
+		out = append(out, ref)
+	}
+	return out
+}
+
 // bootVolumeIds returns the ids of the volumes holding the BOOT role in a root
 // volumes list. Unknown or null entries are skipped.
 func bootVolumeIds(list types.List) []string {
