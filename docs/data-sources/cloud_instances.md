@@ -93,6 +93,7 @@ The following attributes are exported:
       * `id` - Unique identifier of the attached volume.
       * `name` - Display name of the attached volume.
       * `size` - Size of the attached volume, in GB.
+      * `role` - Role of the volume for the instance: `BOOT` for the root volume of an instance booted from a volume, `DATA` for any other volume.
     * `shares` - Observed instance-side share attachments, derived from the Manila access rules that target one of the instance's IPs. Only populated on a single-instance read, so always null here:
       * `id` - Identifier of the attached file storage share.
       * `access_level` - Observed access level of the access rule for this instance (`READ_ONLY` or `READ_WRITE`).

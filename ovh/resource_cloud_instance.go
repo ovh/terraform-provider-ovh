@@ -15,15 +15,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/ovh/go-ovh/ovh"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
 var (
-	_ resource.Resource                = (*cloudInstanceResource)(nil)
-	_ resource.ResourceWithConfigure   = (*cloudInstanceResource)(nil)
-	_ resource.ResourceWithImportState = (*cloudInstanceResource)(nil)
+	_ resource.Resource                   = (*cloudInstanceResource)(nil)
+	_ resource.ResourceWithConfigure      = (*cloudInstanceResource)(nil)
+	_ resource.ResourceWithImportState    = (*cloudInstanceResource)(nil)
+	_ resource.ResourceWithValidateConfig = (*cloudInstanceResource)(nil)
+	_ resource.ResourceWithModifyPlan     = (*cloudInstanceResource)(nil)
 )
 
 func NewCloudInstanceResource() resource.Resource {
@@ -55,8 +58,182 @@ func (r *cloudInstanceResource) Configure(ctx context.Context, req resource.Conf
 
 var instanceMutableAttrs = MutableAttrs{
 	Strings:           []string{"name", "flavor_id", "image_id", "power_state", "user_data"},
-	Lists:             []string{"networks", "shares"},
+	Lists:             []string{"networks", "shares", "volumes"},
 	CustomStringLists: []string{"volume_ids", "security_group_ids"},
+}
+
+// ValidateConfig enforces the volume rules the API would otherwise reject at
+// apply: volumes and the deprecated volume_ids cannot be mixed, at most one volume
+// is BOOT, and an image_id excludes a boot volume.
+func (r *cloudInstanceResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var volumes types.List
+	var volumeIds ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]
+	var imageId ovhtypes.TfStringValue
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("volumes"), &volumes)...)
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("volume_ids"), &volumeIds)...)
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("image_id"), &imageId)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// A null is "not set"; an unknown may still turn out to be set, so only a
+	// known value counts as a conflict.
+	if !volumes.IsNull() && !volumes.IsUnknown() && !volumeIds.IsNull() && !volumeIds.IsUnknown() {
+		resp.Diagnostics.AddAttributeError(path.Root("volumes"), "Conflicting volume attributes",
+			"volumes cannot be combined with volume_ids. Use volumes alone: it gives each volume a role.")
+	}
+	if !volumes.IsUnknown() {
+		boots := bootVolumeIds(volumes)
+		if len(boots) > 1 {
+			resp.Diagnostics.AddAttributeError(path.Root("volumes"), "Several boot volumes",
+				"At most one entry of volumes can have the role BOOT.")
+		}
+		if len(boots) > 0 && knownString(imageId) != "" {
+			resp.Diagnostics.AddAttributeError(path.Root("image_id"), "Two boot sources",
+				"image_id and a volume with the role BOOT are mutually exclusive: an instance boots from one or the other.")
+		}
+	}
+}
+
+// ModifyPlan replaces the instance when volumes gives the BOOT role to another
+// volume: the API only lets the boot volume be chosen at creation.
+//
+// It never plans a replacement it cannot vouch for, since the instance would be
+// destroyed before a creation the API may refuse:
+//
+//   - The deprecated volume_ids never replaces the instance. It carries no role,
+//     and on update the API keeps the stored boot volume, as before volumes
+//     existed.
+//   - The current boot volume must be known: the BOOT volume of the state, or none
+//     when the state has an image_id. A state with neither does not tell (written
+//     before volumes existed, or an instance whose boot volume the API could not
+//     resolve), and the update is left to the API.
+//   - A plan with an image and a BOOT volume, or a known boot volume losing its
+//     BOOT role, is an error: the API refuses both.
+func (r *cloudInstanceResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+	if req.State.Raw.IsNull() {
+		r.modifyCreatePlan(ctx, req, resp)
+		return
+	}
+	var cfgVolumes, planVolumes, stateVolumes types.List
+	var planImage, stateImage ovhtypes.TfStringValue
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("volumes"), &cfgVolumes)...)
+	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("volumes"), &planVolumes)...)
+	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("image_id"), &planImage)...)
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("volumes"), &stateVolumes)...)
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("image_id"), &stateImage)...)
+	if resp.Diagnostics.HasError() || cfgVolumes.IsNull() || cfgVolumes.IsUnknown() || planVolumes.IsUnknown() || planImage.IsUnknown() {
+		return
+	}
+
+	// The roles that count are the planned ones: a role left out is resolved by the
+	// plan (BOOT on the current boot volume, DATA otherwise). An unknown role tells
+	// nothing, and the update is left to the API. An unknown id with the role BOOT
+	// is a volume created or replaced in the same apply: a new boot volume for
+	// sure, since the current one has a known id.
+	planned, plannedUnknown, idUnknown := "", false, false
+	for _, ref := range plannedVolumeRefs(planVolumes) {
+		if ref.roleUnknown {
+			return
+		}
+		if ref.idUnknown {
+			idUnknown = true
+		}
+		if ref.role != instanceVolumeRoleBoot || planned != "" || plannedUnknown {
+			continue
+		}
+		if ref.idUnknown {
+			plannedUnknown = true
+		} else {
+			planned = ref.id
+		}
+	}
+	if (planned != "" || plannedUnknown) && knownString(planImage) != "" {
+		if plannedUnknown {
+			planned = "to be created"
+		}
+		resp.Diagnostics.AddAttributeError(path.Root("volumes"), "Two boot sources",
+			"The instance boots from the image "+knownString(planImage)+" and volumes gives the volume "+planned+" the role BOOT: an instance boots from one or the other, and the API refuses both. "+
+				"Set role to DATA on the volume to keep booting from the image. The boot source cannot be switched between an image and a volume in place: "+
+				"to boot this instance from the volume, destroy it and create a new instance with no image_id.")
+		return
+	}
+
+	current, known := "", false
+	if ids := bootVolumeIds(stateVolumes); len(ids) > 0 {
+		current, known = ids[0], true
+	} else if knownString(stateImage) != "" {
+		known = true
+	}
+	if !known {
+		return
+	}
+	if plannedUnknown {
+		resp.RequiresReplace = append(resp.RequiresReplace, path.Root("volumes"))
+		return
+	}
+	if planned == current {
+		return
+	}
+	if planned == "" {
+		if idUnknown {
+			// The current boot volume may hide behind an unknown id.
+			return
+		}
+		// The API keeps the stored boot volume: it refuses to detach it, and a DATA
+		// role on it is silently turned back into BOOT, which would leave a
+		// permanent diff. Both are refused at plan, each with its own wording.
+		for _, ref := range volumesToAPI(planVolumes) {
+			if ref.Id == current {
+				resp.Diagnostics.AddAttributeError(path.Root("volumes"), "Boot volume cannot become DATA",
+					"The instance boots from the volume "+current+", which keeps the role BOOT: the API ignores a DATA role on it, and the plan would never settle. "+
+						"Leave role out on it, or set it to BOOT.")
+				return
+			}
+		}
+		resp.Diagnostics.AddAttributeError(path.Root("volumes"), "Boot volume cannot be detached",
+			"The instance boots from the volume "+current+", which is missing from volumes: the API refuses to detach the boot volume. "+
+				"Keep an entry for it, with role BOOT or no role. To stop booting from it, destroy the instance and create a new one.")
+		return
+	}
+	resp.RequiresReplace = append(resp.RequiresReplace, path.Root("volumes"))
+}
+
+// modifyCreatePlan checks the boot source of a creation. With no state, a role
+// left out in volumes is DATA, and the only boot sources are image_id and a BOOT
+// entry. A creation with neither is refused by the API: ValidateConfig cannot see
+// it, since image_id is Optional+Computed and may be null in a configuration that
+// relies on the state. It matters most for the create plan of a replacement,
+// which Terraform makes with no prior state once the instance is destroyed. The
+// deprecated volume_ids keeps its rule: its first volume boots.
+//
+// The values come from the configuration: with no state, the plan holds unknown
+// for every Optional+Computed attribute the configuration leaves out, and an
+// unknown image_id would hide the very case this check exists for.
+func (r *cloudInstanceResource) modifyCreatePlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	var volumes types.List
+	var volumeIds ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]
+	var imageId ovhtypes.TfStringValue
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("volumes"), &volumes)...)
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("volume_ids"), &volumeIds)...)
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("image_id"), &imageId)...)
+	if resp.Diagnostics.HasError() || imageId.IsUnknown() || volumes.IsUnknown() || volumeIds.IsUnknown() {
+		return
+	}
+	if !imageId.IsNull() || !volumeIds.IsNull() || volumes.IsNull() {
+		return
+	}
+	for _, ref := range plannedVolumeRefs(volumes) {
+		if ref.idUnknown || ref.roleUnknown || ref.role == instanceVolumeRoleBoot {
+			return
+		}
+	}
+	resp.Diagnostics.AddAttributeError(path.Root("volumes"), "No boot source",
+		"The instance would be created with neither an image_id nor a volume with the role BOOT, which the API refuses. "+
+			"Set image_id, or give the volume to boot from the role BOOT: a role left out is DATA.")
 }
 
 func (r *cloudInstanceResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -86,7 +263,7 @@ func (r *cloudInstanceResource) Schema(ctx context.Context, req resource.SchemaR
 				MarkdownDescription: "Availability zone of the instance (immutable; assigned by the platform if omitted)",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIfConfigured(),
-					stringplanmodifier.UseStateForUnknown(),
+					keepStateUnlessConfigured(),
 				},
 			},
 			"ssh_key_name": schema.StringAttribute{
@@ -122,7 +299,7 @@ func (r *cloudInstanceResource) Schema(ctx context.Context, req resource.SchemaR
 				Computed:            true,
 				Description:         "Image ID to boot from. Omit for a boot-from-volume instance. WARNING: changing it rebuilds the instance and WIPES the root disk",
 				MarkdownDescription: "Image ID to boot from. Omit for a boot-from-volume instance. **WARNING**: changing it rebuilds the instance and **wipes the root disk**",
-				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
+				PlanModifiers:       []planmodifier.String{keepStateUnlessConfigured()},
 			},
 			"power_state": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
@@ -183,8 +360,39 @@ func (r *cloudInstanceResource) Schema(ctx context.Context, req resource.SchemaR
 			"volume_ids": schema.ListAttribute{
 				CustomType:          ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
 				Optional:            true,
+				Computed:            true,
 				Description:         instanceDescVolumeIds,
 				MarkdownDescription: instanceDescVolumeIds,
+				PlanModifiers:       []planmodifier.List{derivedVolumeList("volumes")},
+				DeprecationMessage:  "Use volumes, which gives each volume a role. volume_ids alone keeps working: without image_id, its first volume is the boot volume. Removing the attribute keeps the volumes attached: set volumes = [] to detach every data volume.",
+			},
+			"volumes": schema.ListNestedAttribute{
+				Optional:            true,
+				Computed:            true,
+				Description:         instanceDescVolumes,
+				MarkdownDescription: instanceDescVolumesMd,
+				PlanModifiers:       []planmodifier.List{derivedVolumeList("volume_ids")},
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"id": schema.StringAttribute{
+							CustomType:          ovhtypes.TfStringType{},
+							Required:            true,
+							Description:         instanceDescVolumeRefId,
+							MarkdownDescription: instanceDescVolumeRefId,
+						},
+						"role": schema.StringAttribute{
+							CustomType:          ovhtypes.TfStringType{},
+							Optional:            true,
+							Computed:            true,
+							PlanModifiers:       []planmodifier.String{roleDefaultsToData()},
+							Description:         instanceDescVolumeRefRole,
+							MarkdownDescription: instanceDescVolumeRefRole,
+							Validators: []validator.String{
+								stringvalidator.OneOf(instanceVolumeRoleBoot, instanceVolumeRoleData),
+							},
+						},
+					},
+				},
 			},
 			"security_group_ids": schema.ListAttribute{
 				CustomType:          ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
@@ -232,39 +440,41 @@ func (r *cloudInstanceResource) Schema(ctx context.Context, req resource.SchemaR
 				Computed:            true,
 				Description:         instanceDescId,
 				MarkdownDescription: instanceDescId,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"checksum": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Computed:            true,
 				Description:         instanceDescChecksum,
 				MarkdownDescription: instanceDescChecksum,
-				PlanModifiers:       []planmodifier.String{UnknownDuringUpdateStringModifier(instanceMutableAttrs)},
+				PlanModifiers:       []planmodifier.String{instanceKeepStateUnlessUpdate()},
 			},
 			"created_at": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Computed:            true,
 				Description:         instanceDescCreatedAt,
 				MarkdownDescription: instanceDescCreatedAt,
+				PlanModifiers:       []planmodifier.String{stringplanmodifier.UseStateForUnknown()},
 			},
 			"updated_at": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Computed:            true,
 				Description:         instanceDescUpdatedAt,
 				MarkdownDescription: instanceDescUpdatedAt,
-				PlanModifiers:       []planmodifier.String{UnknownDuringUpdateStringModifier(instanceMutableAttrs)},
+				PlanModifiers:       []planmodifier.String{instanceKeepStateUnlessUpdate()},
 			},
 			"resource_status": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
 				Computed:            true,
 				Description:         instanceDescResourceStatus,
 				MarkdownDescription: instanceDescResourceStatusMd,
-				PlanModifiers:       []planmodifier.String{OutOfSyncPlanModifier()},
+				PlanModifiers:       []planmodifier.String{instanceKeepStateUnlessUpdate(), OutOfSyncPlanModifier()},
 			},
 			"current_state": schema.SingleNestedAttribute{
 				Computed:            true,
 				Description:         instanceDescCurrentState,
 				MarkdownDescription: instanceDescCurrentState,
-				PlanModifiers:       []planmodifier.Object{UnknownDuringUpdateObjectModifier(instanceMutableAttrs)},
+				PlanModifiers:       []planmodifier.Object{instanceKeepStateObject()},
 				Attributes:          instanceCurrentStateSchemaAttributes(),
 			},
 		},
@@ -317,6 +527,7 @@ func instanceCurrentStateSchemaAttributes() map[string]schema.Attribute {
 			"id":   schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescVolumeId, MarkdownDescription: instanceDescVolumeId},
 			"name": schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescVolumeName, MarkdownDescription: instanceDescVolumeName},
 			"size": schema.Int64Attribute{Computed: true, Description: instanceDescVolumeSize, MarkdownDescription: instanceDescVolumeSize},
+			"role": schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescVolumeRole, MarkdownDescription: instanceDescVolumeRole},
 		}}},
 		"shares": schema.ListNestedAttribute{Computed: true, Description: instanceDescCsShares, MarkdownDescription: instanceDescCsShares, NestedObject: schema.NestedAttributeObject{Attributes: map[string]schema.Attribute{
 			"id":           schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescCsShareId, MarkdownDescription: instanceDescCsShareId},

@@ -14,8 +14,8 @@ resource "ovh_cloud_storage_block_volume" "logs" {
   volume_type  = "CLASSIC"
 }
 
-# volume_ids is mutable: adding or removing an id attaches or detaches the
-# volume in place, without recreating the instance.
+# volumes is mutable: adding or removing an entry attaches or detaches the
+# volume in place, without recreating the instance. role defaults to DATA.
 resource "ovh_cloud_instance" "with_volumes" {
   service_name = "<Public cloud project id>"
   region       = "GRA11"
@@ -23,9 +23,9 @@ resource "ovh_cloud_instance" "with_volumes" {
   flavor_id    = "<flavor id>"
   image_id     = "<image id>"
 
-  volume_ids = [
-    ovh_cloud_storage_block_volume.data.id,
-    ovh_cloud_storage_block_volume.logs.id,
+  volumes = [
+    { id = ovh_cloud_storage_block_volume.data.id },
+    { id = ovh_cloud_storage_block_volume.logs.id },
   ]
 
   networks = [

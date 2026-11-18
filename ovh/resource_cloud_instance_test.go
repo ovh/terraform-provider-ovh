@@ -198,9 +198,10 @@ resource "ovh_cloud_instance" "test" {
 }
 
 // testAccCloudInstanceConfigBootFromVolume renders a bootable block volume
-// (created from a Glance image) plus an instance that boots from it: no
-// image_id is set and the volume id is placed in volume_ids.
-func testAccCloudInstanceConfigBootFromVolume(serviceName, region, flavorID, glanceImageID, volName, name string) string {
+// (created from a Glance image) plus an instance that boots from it, with no
+// image_id. volumesBlock is the HCL of the attribute under test: volume_ids
+// (deprecated) or volumes.
+func testAccCloudInstanceConfigBootFromVolume(serviceName, region, flavorID, glanceImageID, volName, name, volumesBlock string) string {
 	return fmt.Sprintf(`
 resource "ovh_cloud_storage_block_volume" "boot" {
   service_name = "%s"
@@ -219,13 +220,52 @@ resource "ovh_cloud_instance" "test" {
   region       = "%s"
   name         = "%s"
   flavor_id    = "%s"
-  volume_ids   = [ovh_cloud_storage_block_volume.boot.id]
+  %s
 
   networks = [
     { auto_assign_public_ip = true },
   ]
 }
-`, serviceName, volName, region, glanceImageID, serviceName, region, name, flavorID)
+`, serviceName, volName, region, glanceImageID, serviceName, region, name, flavorID, volumesBlock)
+}
+
+// testAccCloudInstanceConfigBootAndDataVolumes renders a bootable block volume
+// (created from a Glance image), a data volume, and an instance with no image_id
+// that declares them with volumesBlock (volume_ids or volumes).
+func testAccCloudInstanceConfigBootAndDataVolumes(serviceName, region, flavorID, glanceImageID, bootName, dataName, name, volumesBlock string) string {
+	return fmt.Sprintf(`
+resource "ovh_cloud_storage_block_volume" "boot" {
+  service_name = "%[1]s"
+  name         = "%[2]s"
+  size         = 20
+  region       = "%[3]s"
+  volume_type  = "CLASSIC"
+
+  create_from = {
+    image_id = "%[4]s"
+  }
+}
+
+resource "ovh_cloud_storage_block_volume" "data" {
+  service_name = "%[1]s"
+  name         = "%[5]s"
+  size         = 10
+  region       = "%[3]s"
+  volume_type  = "CLASSIC"
+}
+
+resource "ovh_cloud_instance" "test" {
+  service_name = "%[1]s"
+  region       = "%[3]s"
+  name         = "%[6]s"
+  flavor_id    = "%[7]s"
+  %[8]s
+
+  networks = [
+    { auto_assign_public_ip = true },
+  ]
+}
+`, serviceName, bootName, region, glanceImageID, dataName, name, flavorID, volumesBlock)
 }
 
 // testAccCloudInstanceConfigInvalidPowerState renders a config with an invalid
@@ -503,22 +543,106 @@ func TestAccCloudInstance_powerState(t *testing.T) {
 	})
 }
 
-// TestAccCloudInstance_bootFromVolume creates a bootable block volume and boots
-// an instance from it (no image_id). It asserts image_id is null and no observed
-// image is reported. The bootable source image is resolved from the reference API.
-func TestAccCloudInstance_bootFromVolume(t *testing.T) {
-	// Boot-from-volume is not yet implemented in the public-cloud-apiv2 backend:
-	// instance create always passes imageRef and never builds a block-device
-	// mapping (boot_index=0) from the volumes list, so omitting image_id yields
-	// a 400 "Missing imageRef attribute". Re-enable once the backend supports it.
-	t.Skip("boot-from-volume unsupported by public-cloud-apiv2 backend (create requires imageRef)")
-
+// testAccCloudInstanceBootFromVolume creates a bootable block volume and boots an
+// instance from it (no image_id), declaring the volume with volumesBlock. It
+// asserts image_id is null, no observed image is reported, and the role BOOT is
+// read back. The bootable source image is resolved from the reference API.
+//
+// With withImport, a last step imports the instance and verifies the imported
+// state against the applied one: an import fills both volumes and the deprecated
+// volume_ids, whichever one the configuration declares.
+func testAccCloudInstanceBootFromVolume(t *testing.T, volumesBlock string, withImport bool, extra ...resource.TestCheckFunc) {
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
 	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
 	flavorID := resolveInstanceFlavorID(t, serviceName, region, testAccInstanceFlavorName)
 	glanceImageID := resolveInstanceImageID(t, serviceName, region, testAccInstanceImageName)
 	name := acctest.RandomWithPrefix("test-inst-bfv")
 	volName := acctest.RandomWithPrefix("test-vol-bfv")
+
+	checks := append([]resource.TestCheckFunc{
+		resource.TestCheckResourceAttr("ovh_cloud_instance.test", "name", name),
+		resource.TestCheckResourceAttr("ovh_cloud_instance.test", "resource_status", "READY"),
+		// No image_id was configured: MergeWith stores it as null.
+		resource.TestCheckNoResourceAttr("ovh_cloud_instance.test", "image_id"),
+		// The boot volume shows up in the observed volumes, with its role.
+		resource.TestCheckResourceAttrSet("ovh_cloud_instance.test", "current_state.volumes.0.id"),
+		resource.TestCheckResourceAttr("ovh_cloud_instance.test", "current_state.volumes.0.role", "BOOT"),
+		resource.TestCheckNoResourceAttr("ovh_cloud_instance.test", "current_state.image.id"),
+	}, extra...)
+
+	steps := []resource.TestStep{
+		{
+			Config: testAccCloudInstanceConfigBootFromVolume(serviceName, region, flavorID, glanceImageID, volName, name, volumesBlock),
+			Check:  resource.ComposeTestCheckFunc(checks...),
+			// What the API echoes back must match the configuration, role included.
+			ConfigPlanChecks: resource.ConfigPlanChecks{
+				PostApplyPreRefresh:  []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				PostApplyPostRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+			},
+		},
+	}
+	if withImport {
+		steps = append(steps, resource.TestStep{
+			ResourceName:      "ovh_cloud_instance.test",
+			ImportState:       true,
+			ImportStateVerify: true,
+			ImportStateIdFunc: testAccCloudInstanceImportStateIdFunc("ovh_cloud_instance.test"),
+		})
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloudInstanceE2E(t)
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps:                    steps,
+	})
+}
+
+// The deprecated volume_ids keeps booting from its first volume.
+func TestAccCloudInstance_bootFromVolume(t *testing.T) {
+	testAccCloudInstanceBootFromVolume(t, `volume_ids = [ovh_cloud_storage_block_volume.boot.id]`, true,
+		resource.TestCheckResourceAttr("ovh_cloud_instance.test", "volume_ids.#", "1"),
+		resource.TestCheckResourceAttr("ovh_cloud_instance.test", "volumes.#", "1"),
+	)
+}
+
+func TestAccCloudInstance_bootFromVolumes(t *testing.T) {
+	testAccCloudInstanceBootFromVolume(t, `volumes = [{ id = ovh_cloud_storage_block_volume.boot.id, role = "BOOT" }]`, true,
+		resource.TestCheckResourceAttr("ovh_cloud_instance.test", "volumes.0.role", "BOOT"),
+		resource.TestCheckResourceAttr("ovh_cloud_instance.test", "volume_ids.#", "1"),
+	)
+}
+
+// TestAccCloudInstance_volumeIdsToVolumes moves a boot-from-volume instance from
+// the deprecated volume_ids to volumes, with the role BOOT on the same volume. The
+// boot volume does not change, so this must not replace the instance, which is the
+// destructive path ModifyPlan exists to avoid. The roles
+// the API reports must match the configuration, DATA included, so that no plan is
+// left once applied. A last step imports the instance, which fills volumes.
+func TestAccCloudInstance_volumeIdsToVolumes(t *testing.T) {
+	const rn = "ovh_cloud_instance.test"
+
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+	flavorID := resolveInstanceFlavorID(t, serviceName, region, testAccInstanceFlavorName)
+	glanceImageID := resolveInstanceImageID(t, serviceName, region, testAccInstanceImageName)
+	name := acctest.RandomWithPrefix("test-inst-vol-migr")
+	bootName := acctest.RandomWithPrefix("test-vol-boot")
+	dataName := acctest.RandomWithPrefix("test-vol-data")
+
+	cfg := func(block string) string {
+		return testAccCloudInstanceConfigBootAndDataVolumes(serviceName, region, flavorID, glanceImageID, bootName, dataName, name, block)
+	}
+	observedRoles := resource.ComposeAggregateTestCheckFunc(
+		resource.TestCheckResourceAttr(rn, "resource_status", "READY"),
+		resource.TestCheckNoResourceAttr(rn, "image_id"),
+		resource.TestCheckResourceAttr(rn, "current_state.volumes.#", "2"),
+		resource.TestCheckTypeSetElemNestedAttrs(rn, "current_state.volumes.*", map[string]string{"name": bootName, "role": "BOOT"}),
+		resource.TestCheckTypeSetElemNestedAttrs(rn, "current_state.volumes.*", map[string]string{"name": dataName, "role": "DATA"}),
+	)
+
+	var instanceID string
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -527,18 +651,111 @@ func TestAccCloudInstance_bootFromVolume(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCloudInstanceConfigBootFromVolume(serviceName, region, flavorID, glanceImageID, volName, name),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("ovh_cloud_instance.test", "name", name),
-					resource.TestCheckResourceAttr("ovh_cloud_instance.test", "resource_status", "READY"),
-					// No image_id was configured: MergeWith stores it as null.
-					resource.TestCheckNoResourceAttr("ovh_cloud_instance.test", "image_id"),
-					// The boot volume shows up in the observed volumes.
-					resource.TestCheckResourceAttrSet("ovh_cloud_instance.test", "current_state.volumes.0.id"),
-					// TODO(e2e): confirm the API leaves current_state.image null for
-					// boot-from-volume; if it echoes the source image, relax this.
-					resource.TestCheckNoResourceAttr("ovh_cloud_instance.test", "current_state.image.id"),
+				// With no image_id, the first volume of volume_ids is the boot volume.
+				Config: cfg(`volume_ids = [ovh_cloud_storage_block_volume.boot.id, ovh_cloud_storage_block_volume.data.id]`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					observedRoles,
+					resource.TestCheckResourceAttr(rn, "volume_ids.#", "2"),
+					resource.TestCheckResourceAttr(rn, "volumes.#", "2"),
+					captureInstanceID(rn, &instanceID),
 				),
+			},
+			{
+				Config: cfg(`volumes = [
+    { id = ovh_cloud_storage_block_volume.boot.id, role = "BOOT" },
+    { id = ovh_cloud_storage_block_volume.data.id },
+  ]`),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					// Never a replacement. volumes already holds the same volumes in
+					// the state, computed from the API while volume_ids was used, so
+					// the migration changes nothing: a no-op.
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(rn, plancheck.ResourceActionNoop),
+					},
+					// role is Optional+Computed with a default: once applied, the roles
+					// the API reports must leave nothing to change.
+					PostApplyPreRefresh:  []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+					PostApplyPostRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					observedRoles,
+					resource.TestCheckResourceAttr(rn, "volumes.#", "2"),
+					resource.TestCheckResourceAttr(rn, "volumes.0.role", "BOOT"),
+					resource.TestCheckResourceAttr(rn, "volumes.1.role", "DATA"),
+					resource.TestCheckResourceAttr(rn, "volume_ids.#", "2"),
+					// Fails if the instance was replaced: its id would change.
+					captureInstanceID(rn, &instanceID),
+				),
+			},
+			{
+				// The role left out on the boot volume stays BOOT: the API keeps the
+				// stored BOOT role, so this is the same instance, not a replacement
+				// that could never be created (no image_id, no BOOT volume).
+				Config: cfg(`volumes = [
+    { id = ovh_cloud_storage_block_volume.boot.id },
+    { id = ovh_cloud_storage_block_volume.data.id },
+  ]`),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(rn, plancheck.ResourceActionNoop),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					observedRoles,
+					resource.TestCheckResourceAttr(rn, "volumes.0.role", "BOOT"),
+					resource.TestCheckResourceAttr(rn, "volumes.1.role", "DATA"),
+					// Fails if the instance was replaced: its id would change.
+					captureInstanceID(rn, &instanceID),
+				),
+			},
+			{
+				// Turning the boot volume into DATA leaves no boot source: refused at
+				// plan, instead of destroying an instance that cannot be recreated.
+				Config: cfg(`volumes = [
+    { id = ovh_cloud_storage_block_volume.boot.id, role = "DATA" },
+    { id = ovh_cloud_storage_block_volume.data.id },
+  ]`),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile(`Boot volume cannot become DATA`),
+			},
+			{
+				// Import reads volumes back, with the BOOT role on the boot volume.
+				ResourceName:      rn,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccCloudInstanceImportStateIdFunc(rn),
+			},
+		},
+	})
+}
+
+// The refused combination fails at plan, before any call to the API.
+func TestAccCloudInstance_volumesConflicts(t *testing.T) {
+	cfg := func(block string) string {
+		return fmt.Sprintf(`
+resource "ovh_cloud_instance" "test" {
+  service_name = "xxx"
+  region       = "GRA11"
+  name         = "conflict"
+  flavor_id    = "flavor"
+  %s
+
+  networks = [{ auto_assign_public_ip = true }]
+}
+`, block)
+	}
+	resource.UnitTest(t, resource.TestCase{
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      cfg("volumes = [{ id = \"a\" }]\n  volume_ids = [\"b\"]"),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile(`volumes cannot be combined with volume_ids`),
+			},
+			{
+				Config:      cfg("image_id = \"img\"\n  volumes = [{ id = \"a\", role = \"BOOT\" }]"),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile(`mutually exclusive`),
 			},
 		},
 	})

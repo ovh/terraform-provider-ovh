@@ -9,9 +9,14 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	fwresource "github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
@@ -46,7 +51,7 @@ func TestUnitCloudInstanceModelToCreate(t *testing.T) {
 			SSHKeyName:       strVal("mykey"),
 			GroupId:          strNull(),
 			Networks:         types.ListNull(types.ObjectType{AttrTypes: instanceNetworkRefAttrTypes()}),
-			VolumeIds:        ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]{ListValue: basetypes.NewListNull(ovhtypes.TfStringType{})},
+			Volumes:          types.ListNull(types.ObjectType{AttrTypes: instanceVolumeRefAttrTypes()}),
 			SecurityGroupIds: customStringList("sg-1"),
 			Shares:           types.ListNull(types.ObjectType{AttrTypes: instanceShareRefAttrTypes()}),
 		},
@@ -98,7 +103,7 @@ func TestUnitCloudInstanceModelToUpdate(t *testing.T) {
 			ImageId:          strVal("image-uuid"),
 			PowerState:       strVal("SHUTOFF"),
 			Networks:         types.ListNull(types.ObjectType{AttrTypes: instanceNetworkRefAttrTypes()}),
-			VolumeIds:        ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]{ListValue: basetypes.NewListNull(ovhtypes.TfStringType{})},
+			Volumes:          types.ListNull(types.ObjectType{AttrTypes: instanceVolumeRefAttrTypes()}),
 			SecurityGroupIds: ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]{ListValue: basetypes.NewListNull(ovhtypes.TfStringType{})},
 			Shares:           types.ListNull(types.ObjectType{AttrTypes: instanceShareRefAttrTypes()}),
 		},
@@ -460,8 +465,8 @@ func TestUnitCloudInstanceMergeWithNoTargetSpecTypedNulls(t *testing.T) {
 	if m.Shares.ElementType(ctx) == nil {
 		t.Fatal("shares must carry an element type")
 	}
-	if m.VolumeIds.ElementType(ctx) == nil {
-		t.Fatal("volume_ids must carry an element type")
+	if m.Volumes.ElementType(ctx) == nil {
+		t.Fatal("volumes must carry an element type")
 	}
 	if m.SecurityGroupIds.ElementType(ctx) == nil {
 		t.Fatal("security_group_ids must carry an element type")
@@ -486,12 +491,12 @@ func nullCustomStringList() ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] {
 func TestUnitCloudInstanceSecurityGroupsNullVersusEmpty(t *testing.T) {
 	base := CloudInstanceResourceModel{
 		CloudInstanceModel: CloudInstanceModel{
-			Region:    strVal("GRA11"),
-			Name:      strVal("web-1"),
-			FlavorId:  strVal("flavor-uuid"),
-			Networks:  types.ListNull(types.ObjectType{AttrTypes: instanceNetworkRefAttrTypes()}),
-			VolumeIds: nullCustomStringList(),
-			Shares:    types.ListNull(types.ObjectType{AttrTypes: instanceShareRefAttrTypes()}),
+			Region:   strVal("GRA11"),
+			Name:     strVal("web-1"),
+			FlavorId: strVal("flavor-uuid"),
+			Networks: types.ListNull(types.ObjectType{AttrTypes: instanceNetworkRefAttrTypes()}),
+			Volumes:  types.ListNull(types.ObjectType{AttrTypes: instanceVolumeRefAttrTypes()}),
+			Shares:   types.ListNull(types.ObjectType{AttrTypes: instanceShareRefAttrTypes()}),
 		},
 		UserData: strNull(),
 	}
@@ -649,7 +654,7 @@ func userDataUpdateModel(planned ovhtypes.TfStringValue) *CloudInstanceResourceM
 			Name:             strVal("web-1"),
 			FlavorId:         strVal("flavor-uuid"),
 			Networks:         types.ListNull(types.ObjectType{AttrTypes: instanceNetworkRefAttrTypes()}),
-			VolumeIds:        nullCustomStringList(),
+			Volumes:          types.ListNull(types.ObjectType{AttrTypes: instanceVolumeRefAttrTypes()}),
 			SecurityGroupIds: nullCustomStringList(),
 			Shares:           types.ListNull(types.ObjectType{AttrTypes: instanceShareRefAttrTypes()}),
 		},
@@ -735,7 +740,7 @@ func TestUnitCloudInstanceUpdateBodyCarriesEveryMutableField(t *testing.T) {
 			ImageId:          strVal("image-uuid"),
 			PowerState:       strVal("ACTIVE"),
 			Networks:         networks,
-			VolumeIds:        customStringList("vol-1"),
+			Volumes:          volumeRefList(map[string]string{"vol-1": ""}),
 			SecurityGroupIds: customStringList("sg-1"),
 			Shares:           shares,
 		},
@@ -753,7 +758,7 @@ func TestUnitCloudInstanceUpdateBodyCarriesEveryMutableField(t *testing.T) {
 			ImageId:          strNull(),
 			PowerState:       strNull(),
 			Networks:         types.ListNull(types.ObjectType{AttrTypes: instanceNetworkRefAttrTypes()}),
-			VolumeIds:        nullCustomStringList(),
+			Volumes:          types.ListNull(types.ObjectType{AttrTypes: instanceVolumeRefAttrTypes()}),
 			SecurityGroupIds: emptyCustomStringList(),
 			Shares:           types.ListNull(types.ObjectType{AttrTypes: instanceShareRefAttrTypes()}),
 		},
@@ -772,7 +777,7 @@ func TestUnitCloudInstanceUpdateBodyCarriesEveryMutableField(t *testing.T) {
 				`"flavor":{"id":"flavor-uuid"}`,
 				`"image":{"id":"image-uuid"}`,
 				`"networks":[{"id":"net-1","subnetId":"sub-1"}]`,
-				`"volumes":[{"id":"vol-1"}]`,
+				`"volumes":[{"id":"vol-1","role":"DATA"}]`,
 				`"shares":[{"id":"share-1","accessLevel":"READ_ONLY"}]`,
 				`"powerState":"ACTIVE"`,
 				`"securityGroups":[{"id":"sg-1"}]`,
@@ -940,4 +945,530 @@ func TestUnitCloudInstanceModelsMatchSchemas(t *testing.T) {
 	if dsFields["user_data"] || dsAttrs["user_data"] {
 		t.Fatal("the data source must NOT expose user_data: the API never returns it, so there is nothing to read back")
 	}
+}
+
+// volumeRefList builds a root volumes list from id -> role, in id order. An
+// empty role stands for an omitted one.
+func volumeRefList(roles map[string]string) types.List {
+	ids := make([]string, 0, len(roles))
+	for id := range roles {
+		ids = append(ids, id)
+	}
+	sort.Strings(ids)
+	items := make([]attr.Value, 0, len(ids))
+	for _, id := range ids {
+		role := strNull()
+		if roles[id] != "" {
+			role = strVal(roles[id])
+		}
+		obj, _ := types.ObjectValue(instanceVolumeRefAttrTypes(), map[string]attr.Value{"id": strVal(id), "role": role})
+		items = append(items, obj)
+	}
+	return types.ListValueMust(types.ObjectType{AttrTypes: instanceVolumeRefAttrTypes()}, items)
+}
+
+func TestUnitCloudInstanceVolumesToAPI(t *testing.T) {
+	got := volumesToAPI(volumeRefList(map[string]string{"vol-a": "BOOT", "vol-b": ""}))
+	want := []CloudInstanceAPIVolumeRef{{Id: "vol-a", Role: "BOOT"}, {Id: "vol-b", Role: "DATA"}}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("volumesToAPI = %+v, want %+v", got, want)
+	}
+	if ids := bootVolumeIds(volumeRefList(map[string]string{"vol-a": "BOOT", "vol-b": "DATA"})); !reflect.DeepEqual(ids, []string{"vol-a"}) {
+		t.Fatalf("bootVolumeIds = %v, want [vol-a]", ids)
+	}
+	if volumesToAPI(types.ListNull(types.ObjectType{AttrTypes: instanceVolumeRefAttrTypes()})) != nil {
+		t.Fatal("a null list must give no volumes")
+	}
+}
+
+// A boot-from-volume instance: the API echoes the BOOT volume, image is null,
+// and the role lands in both targetSpec-shaped volumes and current_state.volumes.
+func TestUnitCloudInstanceMergeWithVolumeRole(t *testing.T) {
+	ctx := context.Background()
+	m := &CloudInstanceModel{}
+	resp := &CloudInstanceAPIResponse{
+		Id: "inst-boot",
+		TargetSpec: &CloudInstanceAPITargetSpec{
+			Name:    "boot",
+			Flavor:  &CloudInstanceRef{Id: "f"},
+			Volumes: []CloudInstanceAPIVolumeRef{{Id: "vol-boot", Role: "BOOT"}, {Id: "vol-data"}},
+		},
+		CurrentState: &CloudInstanceAPICurrentState{
+			Volumes: []CloudInstanceAPIVolume{{Id: "vol-boot", Role: "BOOT"}, {Id: "vol-data"}},
+		},
+	}
+	m.MergeWith(ctx, resp, m.priorSpec())
+
+	if got := volumesToAPI(m.Volumes); !reflect.DeepEqual(got, []CloudInstanceAPIVolumeRef{{Id: "vol-boot", Role: "BOOT"}, {Id: "vol-data", Role: "DATA"}}) {
+		t.Fatalf("volumes = %+v", got)
+	}
+	if !m.ImageId.IsNull() {
+		t.Fatalf("image_id = %q, want null", m.ImageId.ValueString())
+	}
+	var roles []string
+	for _, e := range m.CurrentState.Attributes()["volumes"].(types.List).Elements() {
+		roles = append(roles, e.(types.Object).Attributes()["role"].(ovhtypes.TfStringValue).ValueString())
+	}
+	if !reflect.DeepEqual(roles, []string{"BOOT", "DATA"}) {
+		t.Fatalf("current_state.volumes roles = %v, want [BOOT DATA]", roles)
+	}
+}
+
+// volumeCfg is the volume-related part of a configuration.
+type volumeCfg struct {
+	// imageKept: image_id is in the plan, kept from the state, but left out of the
+	// configuration (Optional+Computed, as after an import).
+	imageKept bool
+	// noBootRole: the state has no BOOT role, as for an instance whose boot volume
+	// the API could not resolve. stateNoVolumes: volumes is not in the state at all,
+	// as right after an upgrade with -refresh=false.
+	noBootRole, stateNoVolumes bool
+	// create: no prior state at all, as in the create plan of a replacement.
+	create  bool
+	image   ovhtypes.TfStringValue
+	ids     ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]
+	volumes types.List
+}
+
+func newVolumeCfg() volumeCfg {
+	return volumeCfg{
+		image:   strNull(),
+		ids:     nullCustomStringList(),
+		volumes: types.ListNull(types.ObjectType{AttrTypes: instanceVolumeRefAttrTypes()}),
+	}
+}
+
+func TestUnitCloudInstanceValidateConfigVolumes(t *testing.T) {
+	ctx := context.Background()
+	r := &cloudInstanceResource{}
+	var sch fwresource.SchemaResponse
+	r.Schema(ctx, fwresource.SchemaRequest{}, &sch)
+
+	with := func(f func(c *volumeCfg)) volumeCfg {
+		c := newVolumeCfg()
+		f(&c)
+		return c
+	}
+	cases := []struct {
+		name    string
+		cfg     volumeCfg
+		wantErr bool
+	}{
+		{"nothing", with(func(c *volumeCfg) { c.image = strVal("img") }), false},
+		{"volumes alone", with(func(c *volumeCfg) { c.volumes = volumeRefList(map[string]string{"v1": "BOOT", "v2": ""}) }), false},
+		{"volume_ids alone (deprecated)", with(func(c *volumeCfg) { c.ids = customStringList("v1") }), false},
+		{"volume_ids with an image", with(func(c *volumeCfg) { c.image = strVal("img"); c.ids = customStringList("d1") }), false},
+		{"volumes with volume_ids", with(func(c *volumeCfg) {
+			c.volumes = volumeRefList(map[string]string{"v1": ""})
+			c.ids = customStringList("d1")
+		}), true},
+		{"BOOT volume with an image", with(func(c *volumeCfg) {
+			c.image = strVal("img")
+			c.volumes = volumeRefList(map[string]string{"v1": "BOOT"})
+		}), true},
+		{"two BOOT volumes", with(func(c *volumeCfg) { c.volumes = volumeRefList(map[string]string{"v1": "BOOT", "v2": "BOOT"}) }), true},
+		{"DATA volumes with an image", with(func(c *volumeCfg) {
+			c.image = strVal("img")
+			c.volumes = volumeRefList(map[string]string{"v1": "DATA"})
+		}), false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			cfg := tfsdk.Config{Schema: sch.Schema, Raw: instanceConfigRaw(t, sch.Schema, tc.cfg)}
+			var resp fwresource.ValidateConfigResponse
+			r.ValidateConfig(ctx, fwresource.ValidateConfigRequest{Config: cfg}, &resp)
+			if resp.Diagnostics.HasError() != tc.wantErr {
+				t.Fatalf("error = %v, want %v: %v", resp.Diagnostics.HasError(), tc.wantErr, resp.Diagnostics)
+			}
+		})
+	}
+}
+
+// instanceConfigRaw builds a raw config with only the volume attributes and image_id set.
+func instanceConfigRaw(t *testing.T, sch schema.Schema, c volumeCfg) tftypes.Value {
+	t.Helper()
+	st := tfsdk.State{Schema: sch, Raw: tftypes.NewValue(sch.Type().TerraformType(context.Background()), nil)}
+	ctx := context.Background()
+	for name, v := range map[string]any{"image_id": c.image, "volume_ids": c.ids, "volumes": c.volumes} {
+		if d := st.SetAttribute(ctx, path.Root(name), v); d.HasError() {
+			t.Fatal(d)
+		}
+	}
+	return st.Raw
+}
+
+// The payload follows whichever attribute the configuration uses.
+func TestUnitCloudInstanceVolumesPayload(t *testing.T) {
+	ref := func(id, role string) CloudInstanceAPIVolumeRef { return CloudInstanceAPIVolumeRef{Id: id, Role: role} }
+	nullVols := types.ListNull(types.ObjectType{AttrTypes: instanceVolumeRefAttrTypes()})
+	cases := []struct {
+		name   string
+		model  CloudInstanceModel
+		create bool
+		want   []CloudInstanceAPIVolumeRef
+	}{
+		{"volumes", CloudInstanceModel{Volumes: volumeRefList(map[string]string{"a": "BOOT", "b": ""})}, true,
+			[]CloudInstanceAPIVolumeRef{ref("a", "BOOT"), ref("b", "DATA")}},
+		// Deprecated volume_ids: with no image the first volume was the boot
+		// volume, and the API refuses an instance with no boot source.
+		{"volume_ids, no image, create", CloudInstanceModel{VolumeIds: customStringList("v1", "v2")}, true,
+			[]CloudInstanceAPIVolumeRef{ref("v1", "BOOT"), ref("v2", "")}},
+		{"volume_ids with an image, create", CloudInstanceModel{ImageId: strVal("img"), VolumeIds: customStringList("v1")}, true,
+			[]CloudInstanceAPIVolumeRef{ref("v1", "")}},
+		// On update the role is left out: the API keeps the stored boot volume.
+		{"volume_ids, no image, update", CloudInstanceModel{VolumeIds: customStringList("v1", "v2")}, false,
+			[]CloudInstanceAPIVolumeRef{ref("v1", ""), ref("v2", "")}},
+		{"nothing", CloudInstanceModel{}, true, nil},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			m := tc.model
+			if m.Volumes.ElementType(context.Background()) == nil {
+				m.Volumes = nullVols
+			}
+			if got := m.volumesPayload(tc.create); !reflect.DeepEqual(got, tc.want) {
+				t.Fatalf("payload = %+v, want %+v", got, tc.want)
+			}
+		})
+	}
+}
+
+// Volumes and volume_ids are Optional+Computed views of targetSpec.volumes, so
+// reading back always fills both, whichever one the configuration uses.
+func TestUnitCloudInstanceVolumeFormsRoundTrip(t *testing.T) {
+	ctx := context.Background()
+	resp := func() *CloudInstanceAPIResponse {
+		return &CloudInstanceAPIResponse{
+			Id: "i",
+			TargetSpec: &CloudInstanceAPITargetSpec{
+				Name: "n", Flavor: &CloudInstanceRef{Id: "f"},
+				Volumes: []CloudInstanceAPIVolumeRef{{Id: "boot", Role: "BOOT"}, {Id: "d1"}, {Id: "d2", Role: "DATA"}},
+			},
+		}
+	}
+	nullVols := types.ListNull(types.ObjectType{AttrTypes: instanceVolumeRefAttrTypes()})
+	ids := func(l ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]) []string {
+		var out []string
+		for _, e := range l.Elements() {
+			out = append(out, e.(ovhtypes.TfStringValue).ValueString())
+		}
+		return out
+	}
+	want := []string{"boot", "d1", "d2"}
+	models := map[string]*CloudInstanceModel{
+		"config uses volumes":    {Volumes: volumeRefList(map[string]string{"boot": "BOOT"}), VolumeIds: nullCustomStringList()},
+		"config uses volume_ids": {VolumeIds: customStringList("boot", "d1", "d2"), Volumes: nullVols},
+		"import or data source":  {Volumes: nullVols, VolumeIds: nullCustomStringList()},
+	}
+	for name, m := range models {
+		t.Run(name, func(t *testing.T) {
+			m.MergeWith(ctx, resp(), m.priorSpec())
+			if len(m.Volumes.Elements()) != 3 || !reflect.DeepEqual(ids(m.VolumeIds), want) {
+				t.Fatalf("both must be filled in the API order: volumes=%d volume_ids=%v", len(m.Volumes.Elements()), ids(m.VolumeIds))
+			}
+		})
+	}
+	t.Run("no volume at all stays null", func(t *testing.T) {
+		m := &CloudInstanceModel{Volumes: nullVols, VolumeIds: nullCustomStringList()}
+		r := resp()
+		r.TargetSpec.Volumes = nil
+		m.MergeWith(ctx, r, m.priorSpec())
+		if !m.Volumes.IsNull() || !m.VolumeIds.IsNull() {
+			t.Fatal("both must stay null")
+		}
+	})
+
+	// The API does not promise to keep the order of the list: a configured list
+	// must round-trip in its own order, unknown volumes last.
+	volIds := func(l types.List) []string {
+		var out []string
+		for _, e := range l.Elements() {
+			out = append(out, e.(types.Object).Attributes()["id"].(interface{ ValueString() string }).ValueString())
+		}
+		return out
+	}
+	t.Run("API reorder, volumes configured", func(t *testing.T) {
+		// volumeRefList sorts ids: d1, d2 (boot not configured, comes last).
+		m := &CloudInstanceModel{Volumes: volumeRefList(map[string]string{"d2": "", "d1": ""}), VolumeIds: nullCustomStringList()}
+		m.MergeWith(ctx, resp(), m.priorSpec())
+		want := []string{"d1", "d2", "boot"}
+		if !reflect.DeepEqual(volIds(m.Volumes), want) || !reflect.DeepEqual(ids(m.VolumeIds), want) {
+			t.Fatalf("prior order must win: volumes=%v volume_ids=%v", volIds(m.Volumes), ids(m.VolumeIds))
+		}
+	})
+	t.Run("API reorder, volume_ids configured", func(t *testing.T) {
+		m := &CloudInstanceModel{VolumeIds: customStringList("d2", "boot", "gone"), Volumes: nullVols}
+		m.MergeWith(ctx, resp(), m.priorSpec())
+		want := []string{"d2", "boot", "d1"}
+		if !reflect.DeepEqual(volIds(m.Volumes), want) || !reflect.DeepEqual(ids(m.VolumeIds), want) {
+			t.Fatalf("prior order must win, detached volume dropped: volumes=%v volume_ids=%v", volIds(m.Volumes), ids(m.VolumeIds))
+		}
+	})
+}
+
+// ModifyPlan end to end: moving from volume_ids to volumes keeps the boot volume
+// and must not replace the instance, while changing the boot volume must.
+func TestUnitCloudInstanceModifyPlanBootVolume(t *testing.T) {
+	ctx := context.Background()
+	r := &cloudInstanceResource{}
+	var sch fwresource.SchemaResponse
+	r.Schema(ctx, fwresource.SchemaRequest{}, &sch)
+
+	raw := func(c volumeCfg) tftypes.Value { return instanceConfigRaw(t, sch.Schema, c) }
+	// A create plan, as the framework builds it: with no state, every
+	// Optional+Computed attribute the configuration leaves out is unknown.
+	createPlanRaw := func(c volumeCfg) tftypes.Value {
+		if c.image.IsNull() {
+			c.image = ovhtypes.TfStringValue{StringValue: types.StringUnknown()}
+		}
+		if c.ids.IsNull() {
+			c.ids = ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]{ListValue: basetypes.NewListUnknown(ovhtypes.TfStringType{})}
+		}
+		if c.volumes.IsNull() {
+			c.volumes = types.ListUnknown(types.ObjectType{AttrTypes: instanceVolumeRefAttrTypes()})
+		}
+		return raw(c)
+	}
+	with := func(f func(c *volumeCfg)) volumeCfg {
+		c := newVolumeCfg()
+		f(&c)
+		return c
+	}
+	idsB := with(func(c *volumeCfg) { c.ids = customStringList("b", "d") })
+	idsDB := with(func(c *volumeCfg) { c.ids = customStringList("d", "b") })
+	volsB := with(func(c *volumeCfg) { c.volumes = volumeRefList(map[string]string{"b": "BOOT", "d": ""}) })
+	volsD := with(func(c *volumeCfg) { c.volumes = volumeRefList(map[string]string{"b": "", "d": "BOOT"}) })
+	volsDataOnly := with(func(c *volumeCfg) { c.volumes = volumeRefList(map[string]string{"b": "DATA", "d": "DATA"}) })
+	volsDOnlyData := with(func(c *volumeCfg) { c.volumes = volumeRefList(map[string]string{"d": "DATA"}) })
+	// Entries with an unknown id or role, as for a volume created in the same apply.
+	unknownRef := func(role ovhtypes.TfStringValue) attr.Value {
+		obj, _ := types.ObjectValue(instanceVolumeRefAttrTypes(), map[string]attr.Value{"id": ovhtypes.TfStringValue{StringValue: types.StringUnknown()}, "role": role})
+		return obj
+	}
+	withUnknown := func(roles map[string]string, extra ...attr.Value) types.List {
+		items := append(volumeRefList(roles).Elements(), extra...)
+		return types.ListValueMust(types.ObjectType{AttrTypes: instanceVolumeRefAttrTypes()}, items)
+	}
+	newBootVolume := with(func(c *volumeCfg) {
+		c.volumes = withUnknown(map[string]string{"b": "", "d": ""}, unknownRef(strVal("BOOT")))
+	})
+	newDataVolume := with(func(c *volumeCfg) { c.volumes = withUnknown(map[string]string{"b": "BOOT"}, unknownRef(strNull())) })
+	unknownRole := with(func(c *volumeCfg) {
+		c.volumes = withUnknown(map[string]string{"b": "BOOT"}, unknownRef(ovhtypes.TfStringValue{StringValue: types.StringUnknown()}))
+	})
+	createUnknownRole := with(func(c *volumeCfg) {
+		c.volumes = withUnknown(map[string]string{"d": ""}, unknownRef(ovhtypes.TfStringValue{StringValue: types.StringUnknown()}))
+		c.create = true
+	})
+	imageNewBootVolume := with(func(c *volumeCfg) {
+		c.image = strVal("img")
+		c.imageKept = true
+		c.volumes = withUnknown(nil, unknownRef(strVal("BOOT")))
+	})
+	imageKeptBoot := with(func(c *volumeCfg) {
+		c.image = strVal("img")
+		c.imageKept = true
+		c.volumes = volumeRefList(map[string]string{"b": "BOOT"})
+	})
+	idsNoRole := with(func(c *volumeCfg) { c.ids = customStringList("b", "d"); c.noBootRole = true })
+	idsUpgrade := with(func(c *volumeCfg) { c.ids = customStringList("b", "d"); c.stateNoVolumes = true })
+	volsNoRole := with(func(c *volumeCfg) { c.volumes = volumeRefList(map[string]string{"b": "", "d": ""}) })
+	createNoRole := with(func(c *volumeCfg) { c.volumes = volumeRefList(map[string]string{"b": "", "d": ""}); c.create = true })
+	createIdsOnly := with(func(c *volumeCfg) { c.ids = customStringList("b", "d"); c.create = true })
+	createRoleBoot := with(func(c *volumeCfg) {
+		c.volumes = volumeRefList(map[string]string{"b": "BOOT", "d": ""})
+		c.create = true
+	})
+	// The boot moves to d while b, the current boot, keeps no role: one BOOT in
+	// the configuration, and b must not be promoted from the state next to it.
+	volsMoveBootKeepB := with(func(c *volumeCfg) { c.volumes = volumeRefList(map[string]string{"b": "", "d": "BOOT"}) })
+	withImage := with(func(c *volumeCfg) { c.image = strVal("img"); c.ids = customStringList("d") })
+
+	// The state holds both views of the volumes, as the resource stores them: the
+	// one the configuration did not set is computed from the API.
+	stored := func(c volumeCfg) volumeCfg {
+		if c.stateNoVolumes {
+			c.volumes = types.ListNull(types.ObjectType{AttrTypes: instanceVolumeRefAttrTypes()})
+			return c
+		}
+		if c.volumes.IsNull() {
+			roles := map[string]string{}
+			for i, ref := range customStringListToRefs(c.ids) {
+				roles[ref.Id] = ""
+				if i == 0 && knownString(c.image) == "" && !c.noBootRole {
+					roles[ref.Id] = "BOOT"
+				}
+			}
+			c.volumes = volumeRefList(roles)
+		}
+		if c.ids.IsNull() {
+			var list []string
+			for _, ref := range volumesToAPI(c.volumes) {
+				list = append(list, ref.Id)
+			}
+			c.ids = customStringList(list...)
+		}
+		return c
+	}
+	configOf := func(c volumeCfg) volumeCfg {
+		if c.imageKept {
+			c.image = strNull()
+		}
+		return c
+	}
+	cases := []struct {
+		name        string
+		state       volumeCfg
+		plan        volumeCfg
+		wantReplace bool
+		wantError   string
+	}{
+		{"volume_ids -> volumes, same boot", idsB, volsB, false, ""},
+		{"volumes -> volume_ids, same boot", volsB, idsB, false, ""},
+		{"unchanged", volsB, volsB, false, ""},
+		{"volumes, another volume becomes BOOT", volsB, volsD, true, ""},
+		// volume_ids carries no role: the API keeps the stored boot volume, so
+		// reordering it is an update, never a replacement (as before volumes).
+		{"volume_ids, another volume first", idsB, idsDB, false, ""},
+		// The API keeps the stored BOOT role, so dropping it on the boot volume
+		// leaves no boot source: an error, never a replacement that cannot be created.
+		{"boot volume turned into DATA", idsB, volsDataOnly, false, "Boot volume cannot become DATA"},
+		{"boot volume removed from volumes", volsB, volsDOnlyData, false, "Boot volume cannot be detached"},
+		// A BOOT volume created in the same apply has an unknown id: a new boot
+		// volume for sure, so a replacement. An unknown DATA volume or an unknown
+		// role says nothing about the boot volume.
+		{"new boot volume created in the same apply", volsB, newBootVolume, true, ""},
+		{"new data volume created in the same apply", volsB, newDataVolume, false, ""},
+		{"unknown role", volsB, unknownRole, false, ""},
+		{"create plan, unknown role and no image", volumeCfg{}, createUnknownRole, false, ""},
+		{"image kept from state, BOOT volume created in the same apply", withImage, imageNewBootVolume, false, "Two boot sources"},
+		// image_id kept from the state next to a BOOT volume: the instance would be
+		// replaced, then created with two boot sources, which the API refuses.
+		{"image kept from state, BOOT volume added", withImage, imageKeptBoot, false, "Two boot sources"},
+		// The current boot volume is unknown (no BOOT role in the state): nothing says
+		// the plan changes it, so no replacement, and no error either. The API decides.
+		{"state without BOOT role, volume_ids", idsNoRole, idsB, false, ""},
+		{"state without volumes (upgrade, no refresh), volume_ids", idsUpgrade, idsB, false, ""},
+		{"state without BOOT role, volumes without role", idsNoRole, volsNoRole, false, ""},
+		// The create plan of a replacement has no state: a role left out cannot be
+		// BOOT, and no image means no boot source, which the API refuses after the
+		// instance is gone. volume_ids keeps its first-volume rule.
+		{"create plan, volumes without role and no image", volumeCfg{}, createNoRole, false, "No boot source"},
+		{"create plan, volume_ids and no image", volumeCfg{}, createIdsOnly, false, ""},
+		{"create plan, volumes with BOOT", volumeCfg{}, createRoleBoot, false, ""},
+		// The boot moves to d while b, the current boot, keeps no role: b must not
+		// be promoted to BOOT next to d. A replacement, and a single BOOT.
+		{"boot moves, current boot volume left without role", volsB, volsMoveBootKeepB, true, ""},
+		{"image: adding a data volume", withImage, with(func(c *volumeCfg) { c.image = strVal("img"); c.ids = customStringList("d", "e") }), false, ""},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			stateRaw, planRaw := raw(stored(tc.state)), raw(tc.plan)
+			if tc.plan.create {
+				stateRaw = tftypes.NewValue(sch.Schema.Type().TerraformType(ctx), nil)
+				planRaw = createPlanRaw(tc.plan)
+			}
+			req := fwresource.ModifyPlanRequest{
+				State:  tfsdk.State{Schema: sch.Schema, Raw: stateRaw},
+				Plan:   tfsdk.Plan{Schema: sch.Schema, Raw: planRaw},
+				Config: tfsdk.Config{Schema: sch.Schema, Raw: raw(configOf(tc.plan))},
+			}
+			resp := &fwresource.ModifyPlanResponse{}
+			r.ModifyPlan(ctx, req, resp)
+			if tc.wantError != "" {
+				if !resp.Diagnostics.HasError() || len(resp.RequiresReplace) > 0 {
+					t.Fatalf("want an error and no replacement, got diagnostics=%v replace=%v", resp.Diagnostics, resp.RequiresReplace)
+				}
+				if got := resp.Diagnostics.Errors()[0].Summary(); got != tc.wantError {
+					t.Fatalf("error = %q, want %q", got, tc.wantError)
+				}
+				return
+			}
+			if resp.Diagnostics.HasError() {
+				t.Fatal(resp.Diagnostics)
+			}
+			if got := len(resp.RequiresReplace) > 0; got != tc.wantReplace {
+				t.Fatalf("replace = %v, want %v", got, tc.wantReplace)
+			}
+		})
+	}
+}
+
+// The volume plan modifiers, called as the framework does: the plan they read
+// already has every computed attribute the configuration leaves out marked
+// unknown, since another attribute differs from the state.
+func TestUnitCloudInstanceVolumePlanModifiers(t *testing.T) {
+	ctx := context.Background()
+	r := &cloudInstanceResource{}
+	var sch fwresource.SchemaResponse
+	r.Schema(ctx, fwresource.SchemaRequest{}, &sch)
+	raw := func(c volumeCfg) tftypes.Value { return instanceConfigRaw(t, sch.Schema, c) }
+	nullVols := types.ListNull(types.ObjectType{AttrTypes: instanceVolumeRefAttrTypes()})
+
+	t.Run("role: current boot volume left without role while another is BOOT", func(t *testing.T) {
+		state := volumeCfg{image: strNull(), ids: customStringList("b"), volumes: volumeRefList(map[string]string{"b": "BOOT"})}
+		cfg := volumeCfg{image: strNull(), ids: nullCustomStringList(), volumes: volumeRefList(map[string]string{"b": "", "d": "BOOT"})}
+		req := planmodifier.StringRequest{
+			Path:        path.Root("volumes").AtListIndex(0).AtName("role"),
+			Config:      tfsdk.Config{Schema: sch.Schema, Raw: raw(cfg)},
+			ConfigValue: types.StringNull(),
+			Plan:        tfsdk.Plan{Schema: sch.Schema, Raw: raw(cfg)},
+			PlanValue:   types.StringUnknown(),
+			State:       tfsdk.State{Schema: sch.Schema, Raw: raw(state)},
+			StateValue:  types.StringValue("BOOT"),
+		}
+		resp := &planmodifier.StringResponse{PlanValue: req.PlanValue}
+		roleDefaultsToData().PlanModifyString(ctx, req, resp)
+		if resp.PlanValue.ValueString() != "DATA" {
+			t.Fatalf("b must become DATA, d is the BOOT volume: got %v", resp.PlanValue)
+		}
+	})
+
+	t.Run("lists: moving to volumes with a role left out, plan merged from the state", func(t *testing.T) {
+		// Step 2 of TestAccCloudInstance_volumeIdsToVolumes: the configuration
+		// leaves the DATA role out, and Terraform core merges the plan element by
+		// element with the state, so the planned volumes already equals the state.
+		// volume_ids, no longer configured, must keep its state value: a no-op.
+		state := volumeCfg{image: strNull(), ids: customStringList("b", "d"), volumes: volumeRefList(map[string]string{"b": "BOOT", "d": "DATA"})}
+		cfg := volumeCfg{image: strNull(), ids: nullCustomStringList(), volumes: volumeRefList(map[string]string{"b": "BOOT", "d": ""})}
+		plan := volumeCfg{image: strNull(),
+			ids:     ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]{ListValue: basetypes.NewListUnknown(ovhtypes.TfStringType{})},
+			volumes: state.volumes}
+		req := planmodifier.ListRequest{
+			Path:        path.Root("volume_ids"),
+			Config:      tfsdk.Config{Schema: sch.Schema, Raw: raw(cfg)},
+			ConfigValue: types.ListNull(ovhtypes.TfStringType{}),
+			Plan:        tfsdk.Plan{Schema: sch.Schema, Raw: raw(plan)},
+			PlanValue:   types.ListUnknown(ovhtypes.TfStringType{}),
+			State:       tfsdk.State{Schema: sch.Schema, Raw: raw(state)},
+			StateValue:  types.ListValueMust(ovhtypes.TfStringType{}, []attr.Value{strVal("b"), strVal("d")}),
+		}
+		resp := &planmodifier.ListResponse{PlanValue: req.PlanValue}
+		derivedVolumeList("volumes").PlanModifyList(ctx, req, resp)
+		if resp.PlanValue.IsUnknown() {
+			t.Fatal("volume_ids must keep its state value: volumes is planned equal to the state")
+		}
+	})
+
+	t.Run("lists: neither in the configuration, both unknown in the plan", func(t *testing.T) {
+		state := volumeCfg{image: strNull(), ids: customStringList("b", "d"), volumes: volumeRefList(map[string]string{"b": "BOOT", "d": ""})}
+		cfg := volumeCfg{image: strNull(), ids: nullCustomStringList(), volumes: nullVols}
+		plan := volumeCfg{image: strNull(),
+			ids:     ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]{ListValue: basetypes.NewListUnknown(ovhtypes.TfStringType{})},
+			volumes: types.ListUnknown(types.ObjectType{AttrTypes: instanceVolumeRefAttrTypes()})}
+		req := planmodifier.ListRequest{
+			Path:        path.Root("volumes"),
+			Config:      tfsdk.Config{Schema: sch.Schema, Raw: raw(cfg)},
+			ConfigValue: nullVols,
+			Plan:        tfsdk.Plan{Schema: sch.Schema, Raw: raw(plan)},
+			PlanValue:   plan.volumes,
+			State:       tfsdk.State{Schema: sch.Schema, Raw: raw(state)},
+			StateValue:  state.volumes,
+		}
+		resp := &planmodifier.ListResponse{PlanValue: req.PlanValue}
+		derivedVolumeList("volume_ids").PlanModifyList(ctx, req, resp)
+		if !resp.PlanValue.Equal(state.volumes) {
+			t.Fatalf("volumes must keep its state value, got %v", resp.PlanValue)
+		}
+	})
 }
