@@ -116,6 +116,115 @@ resource "ovh_cloud_instance" "test" {
 	})
 }
 
+// TestAccCloudInstance_volumesInPlace covers the mutable volumes attribute on an
+// image-booted instance: a data volume with no role, a second one added, then an
+// explicit empty list that detaches both. Every step is an in-place update that
+// leaves no diff, with the roles defaulting to DATA and the configured order kept.
+func TestAccCloudInstance_volumesInPlace(t *testing.T) {
+	const rn = "ovh_cloud_instance.test"
+
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+	flavorID := resolveInstanceFlavorID(t, serviceName, region, testAccInstanceFlavorName)
+	imageID := resolveInstanceImageID(t, serviceName, region, testAccInstanceImageName)
+
+	volName1 := acctest.RandomWithPrefix("tf-test-inst-vol1")
+	volName2 := acctest.RandomWithPrefix("tf-test-inst-vol2")
+	name := acctest.RandomWithPrefix("test-inst-vols")
+
+	volumes := fmt.Sprintf(`
+resource "ovh_cloud_storage_block_volume" "vol1" {
+  service_name = "%s"
+  region       = "%s"
+  name         = "%s"
+  size         = 10
+  volume_type  = "CLASSIC"
+}
+
+resource "ovh_cloud_storage_block_volume" "vol2" {
+  service_name = "%s"
+  region       = "%s"
+  name         = "%s"
+  size         = 10
+  volume_type  = "CLASSIC"
+}
+`, serviceName, region, volName1, serviceName, region, volName2)
+
+	instance := func(volumesAttr string) string {
+		return volumes + fmt.Sprintf(`
+resource "ovh_cloud_instance" "test" {
+  service_name = "%s"
+  region       = "%s"
+  name         = "%s"
+  flavor_id    = "%s"
+  image_id     = "%s"
+  volumes      = %s
+
+  networks = [
+    { auto_assign_public_ip = true },
+  ]
+}
+`, serviceName, region, name, flavorID, imageID, volumesAttr)
+	}
+	noDiff := resource.ConfigPlanChecks{
+		PostApplyPreRefresh:  []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+		PostApplyPostRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+	}
+	update := func(rn string) resource.ConfigPlanChecks {
+		c := noDiff
+		c.PreApply = []plancheck.PlanCheck{plancheck.ExpectResourceAction(rn, plancheck.ResourceActionUpdate)}
+		return c
+	}
+
+	var instanceID string
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheckCloudInstanceNet(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:           instance(`[{ id = ovh_cloud_storage_block_volume.vol1.id }]`),
+				ConfigPlanChecks: noDiff,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(rn, "resource_status", "READY"),
+					resource.TestCheckResourceAttr(rn, "volumes.#", "1"),
+					resource.TestCheckResourceAttr(rn, "volumes.0.role", "DATA"),
+					resource.TestCheckResourceAttrPair(rn, "volumes.0.id", "ovh_cloud_storage_block_volume.vol1", "id"),
+					resource.TestCheckResourceAttr(rn, "volume_ids.#", "1"),
+					resource.TestCheckResourceAttr(rn, "current_state.volumes.#", "1"),
+					captureInstanceID(rn, &instanceID),
+				),
+			},
+			{
+				// Attach a second volume in place; the configured order is kept.
+				Config:           instance(`[{ id = ovh_cloud_storage_block_volume.vol1.id }, { id = ovh_cloud_storage_block_volume.vol2.id }]`),
+				ConfigPlanChecks: update(rn),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(rn, "volumes.#", "2"),
+					resource.TestCheckResourceAttrPair(rn, "volumes.0.id", "ovh_cloud_storage_block_volume.vol1", "id"),
+					resource.TestCheckResourceAttrPair(rn, "volumes.1.id", "ovh_cloud_storage_block_volume.vol2", "id"),
+					resource.TestCheckResourceAttr(rn, "volumes.1.role", "DATA"),
+					resource.TestCheckResourceAttr(rn, "volume_ids.#", "2"),
+					resource.TestCheckResourceAttr(rn, "current_state.volumes.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(rn, "current_state.volumes.*", map[string]string{"name": volName2, "role": "DATA"}),
+					captureInstanceID(rn, &instanceID),
+				),
+			},
+			{
+				// An explicit empty list detaches every data volume in place.
+				Config:           instance(`[]`),
+				ConfigPlanChecks: update(rn),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(rn, "volumes.#", "0"),
+					resource.TestCheckResourceAttr(rn, "volume_ids.#", "0"),
+					resource.TestCheckResourceAttr(rn, "current_state.volumes.#", "0"),
+					captureInstanceID(rn, &instanceID),
+				),
+			},
+		},
+	})
+}
+
 // testAccCloudInstanceShareConfig renders a vRack net+subnet, a file share
 // network + file share on that subnet (no companion file_share_acl resource, so
 // the instance owns the share's rules), and an instance on the same subnet

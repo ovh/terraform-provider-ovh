@@ -364,7 +364,7 @@ func (r *cloudInstanceResource) Schema(ctx context.Context, req resource.SchemaR
 				Description:         instanceDescVolumeIds,
 				MarkdownDescription: instanceDescVolumeIds,
 				PlanModifiers:       []planmodifier.List{derivedVolumeList("volumes")},
-				DeprecationMessage:  "Use volumes, which gives each volume a role. volume_ids alone keeps working: without image_id, its first volume is the boot volume.",
+				DeprecationMessage:  "Use volumes, which gives each volume a role. volume_ids alone keeps working: without image_id, its first volume is the boot volume. Removing the attribute keeps the volumes attached: set volumes = [] to detach every data volume.",
 			},
 			"volumes": schema.ListNestedAttribute{
 				Optional:            true,
