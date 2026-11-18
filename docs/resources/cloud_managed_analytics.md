@@ -1,0 +1,121 @@
+---
+subcategory : "Managed Databases"
+---
+
+# ovh_cloud_managed_analytics
+
+Creates a managed analytics service (`clickhouse`, `grafana`, `kafka`, `kafkaConnect`, `kafkaMirrorMaker` or `opensearch`) in a public cloud project, using the Cloud Databases API v2.
+
+## Example Usage
+
+A Kafka service on the public network:
+
+```terraform
+resource "ovh_cloud_managed_analytics" "kafka" {
+  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  engine       = "kafka"
+  description  = "my-kafka"
+  region       = "eu-west-gra"
+  version      = "3.8"
+  plan         = "business"
+  flavor       = "b3-8"
+  nodes_count  = 3
+}
+```
+
+The [`ovh_cloud_managed_database`](cloud_managed_database.md) resource creates the MongoDB, MySQL, PostgreSQL and Valkey services.
+
+## Argument Reference
+
+* `service_name` - (Optional) The ID of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used. **Changing this value recreates the resource.**
+* `engine` - (Required) Engine of the service: `clickhouse`, `grafana`, `kafka`, `kafkaConnect`, `kafkaMirrorMaker` or `opensearch`. **Changing this value recreates the resource.**
+* `region` - (Required) Region of the nodes, in the format of the API v2: `eu-west-gra`, `eu-west-par`… Available regions are returned by `GET /v2/publicCloud/project/{projectId}/managedAnalytics/availability`. **Changing this value recreates the resource.**
+* `version` - (Required) Engine version. Available versions are returned by `GET /v2/publicCloud/project/{projectId}/managedAnalytics/capabilities/engines`.
+* `plan` - (Required) Plan of the service. Available plans are returned by `GET /v2/publicCloud/project/{projectId}/managedAnalytics/capabilities/plans`.
+* `flavor` - (Required) Flavor of the nodes. Available flavors are returned by `GET /v2/publicCloud/project/{projectId}/managedAnalytics/capabilities/flavors`.
+* `nodes_count` - (Optional) Number of nodes. Set it on a plan of more than one node: without it, the API creates one node, which such a plan refuses. The range a plan accepts is in `specifications.nodes` of the availability endpoint.
+* `description` - (Optional) Description of the service.
+* `deletion_protected` - (Optional) Whether the service is protected from deletion. Set it to `false` and apply before destroying the service.
+* `prometheus_enabled` - (Optional) Whether the Prometheus endpoint is enabled.
+* `backup` - (Optional) Backup configuration:
+  * `regions` - (Optional) Regions where the backups are stored.
+  * `time` - (Optional) Time of the daily backup, as `HH:MM` UTC.
+* `maintenance_window` - (Optional) Maintenance window:
+  * `start_time_utc` - (Required) Start time of the maintenance window, as `HH:MM` UTC.
+* `network` - (Optional) Network configuration:
+  * `network_id` - (Optional) ID of the private network to attach the service to. **Changing this value recreates the resource.**
+  * `subnet_id` - (Optional) ID of the subnet to attach the service to. **Changing this value recreates the resource.**
+  * `authorized_ips` - (Optional) IP addresses allowed to connect to the service:
+    * `rules` - (Required) Set of allowed CIDR blocks, each with a `cidr` (Required), with no bit set after its prefix length (`/32` for one address), and a `description` (Optional).
+  * `public` - (Optional) Whether the service is published on a public address, with a public domain name and TLS. The authorized IPs apply to it too. Changing this value sends a `PATCH` request, which a `consumer_key` must allow.
+* `storage` - (Optional) Storage configuration:
+  * `size` - (Required) Storage size, with a `unit` (`GB` or `MB`) and a `value`.
+* `fork_source_service_id` - (Optional) ID of the service to create this one from, using one of its backups.
+* `fork_source_backup_id` - (Optional) ID of the backup to create the service from. Conflicts with `fork_source_point_in_time`. When both are unset, the latest backup of `fork_source_service_id` is used.
+* `fork_source_point_in_time` - (Optional) Point in time to create the service from, in RFC 3339 format, such as `2026-11-12T10:00:00Z`. The source service must have point-in-time recovery enabled. Conflicts with `fork_source_backup_id`.
+* `timeouts` - (Optional) How long to wait for the service, as durations such as `1h30m`:
+  * `create` - (Optional) Wait for the creation of the service. Defaults to `40m`.
+  * `update` - (Optional) Wait for an update of the service. Defaults to `40m`.
+  * `delete` - (Optional) Wait for the deletion of the service. Defaults to `20m`.
+
+The `fork_source_*` arguments are only read at the creation, and the API doesn't return them. Changing one from one value to another recreates the service; setting one after an import, or removing one, only updates the state.
+
+~> **Warning** Only the CIDR blocks of `rules` can connect, from the private network too: `rules = []`, which the API sets when the creation leaves `authorized_ips` out, denies every client.
+
+An optional argument left out takes the value set by the API, and keeps its last value when it is removed from the configuration.
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `id` - ID of the service.
+* `checksum` - Hash of the service, computed by the API.
+* `created_at` - Creation date of the service.
+* `updated_at` - Last update date of the service.
+* `resource_status` - Readiness of the service: `CREATING`, `UPDATING`, `READY`, `ERROR`, `OUT_OF_SYNC`, `DELETING`… The next apply updates an `OUT_OF_SYNC` service, sending its configuration again.
+* `current_tasks` - Asynchronous operations running on the service: `id`, `type`, `status`, `link` and `errors` (each with a `message`).
+* `advanced_configuration` - Advanced configuration properties requested for the service, with the defaults the API adds.
+* `current_state` - Configuration running on the service:
+  * `version`, `plan`, `flavor`, `nodes_count`, `description`, `deletion_protected`, `prometheus_enabled` - Running values of the arguments of the same name.
+  * `advanced_configuration` - Every advanced configuration property of the service.
+  * `status` - Status of the service reported by the engine.
+  * `backup` - Backup configuration: `pitr` (date until which point-in-time recovery is available), `regions`, `retention_days` and `time`.
+  * `maintenance_window` - Maintenance window: `start_time_utc`.
+  * `network` - Network configuration: `network_id`, `subnet_id`, `authorized_ips.rules` (each with a `cidr`, a `description` and a `created_at`) and `public`.
+  * `storage` - Storage configuration: `size` (`unit` and `value`) and `type`.
+  * `endpoints` - Connection endpoints: `component`, `domain`, `path`, `port`, `public` (whether the endpoint uses the public domain name), `scheme`, `ssl`, `ssl_mode` and `uri`.
+  * `nodes` - Nodes of the service: `id`, `name`, `flavor`, `port`, `role`, `status`, `created_at` and `location` (`region` and `availability_zone`).
+  * `capabilities` - Map of the capabilities of the service, such as `USERS` or `CONNECTION_POOLS`, with the state of each action: `create`, `read`, `update` and `delete`, each `ENABLED` or `DISABLED`.
+  * `engine_capabilities` - Capabilities of the engine of the service:
+    * `advanced_configuration_properties` - Advanced configuration properties the engine accepts: `name`, `type` (`BOOLEAN`, `DOUBLE`, `LONG` or `STRING`), `description`, `default`, `minimum`, `maximum`, `values` and `requires_restart`.
+    * `backup_regions` - Regions where the backups can be stored.
+    * `categories` and `commands` - Command categories and commands a user can be given. Valkey only.
+    * `integrations` - Integrations the service can take part in: `type`, `source_engine`, `destination_engine` and `parameters` (each with a `name` and a `type`).
+
+## Timeouts
+
+The creation and the update wait up to 40 minutes for the service to be ready, and the deletion up to 20 minutes for it to be deleted. The `timeouts` argument sets other durations, such as for a storage upgrade of a large service:
+
+```terraform
+resource "ovh_cloud_managed_analytics" "service" {
+  # ...
+  timeouts = {
+    update = "2h"
+  }
+}
+```
+
+## Import
+
+A service can be imported using its `service_name`, `engine` and `id`, separated by "/":
+
+```terraform
+import {
+  to = ovh_cloud_managed_analytics.service
+  id = "<service_name>/<engine>/<id>"
+}
+```
+
+```bash
+$ terraform import ovh_cloud_managed_analytics.service service_name/engine/id
+```

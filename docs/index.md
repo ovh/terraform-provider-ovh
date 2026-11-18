@@ -85,7 +85,7 @@ Similarly to OAuth2 method, the endpoint must be configured (either via `endpoin
 
 ### Application Key/Application Secret
 
-The required keys are the `application_key`, the `application_secret`, and the `consumer_key`. These keys can be generated via the [OVHcloud token generation page](https://api.ovh.com/createToken/?GET=/*&POST=/*&PUT=/*&DELETE=/*).
+The required keys are the `application_key`, the `application_secret`, and the `consumer_key`. These keys can be generated via the [OVHcloud token generation page](https://api.ovh.com/createToken/?GET=/*&POST=/*&PUT=/*&PATCH=/*&DELETE=/*).
 
 These parameters can be configured directly in the provider block as shown hereafter.
 
@@ -274,6 +274,20 @@ In order to run the Acceptance Tests for development, the following environment 
 * `OVH_VRACK_PUBLIC_ROUTING_PRIORITY_AZ_C_TEST` - An AZ of the vRack for the Public Routing Priority to test.
 
 * `OVH_CLOUD_LOADBALANCER_ID_TEST` - The ID of the LoadBalancer to use.
+
+* `OVH_CLOUD_MANAGED_DATABASE_POSTGRESQL_VERSION_TEST` - The version of the PostgreSQL service the `ovh_cloud_managed_database*` resources are tested with.
+
+* `OVH_CLOUD_MANAGED_DATABASE_POSTGRESQL_PLAN_TEST` - The plan of the PostgreSQL service to test.
+
+* `OVH_CLOUD_MANAGED_DATABASE_POSTGRESQL_FLAVOR_TEST` - The node flavor of the PostgreSQL service to test.
+
+* `OVH_CLOUD_MANAGED_DATABASE_POSTGRESQL_REGION_TEST` - The region of the PostgreSQL service to test, in the format of the API v2, such as `eu-west-gra`.
+
+* `OVH_CLOUD_MANAGED_DATABASE_POSTGRESQL_NETWORK_REGION_TEST` - Optional. The region, such as `GRA11`, of a private network that the tests create and attach the PostgreSQL service to. Needed when the project only offers PostgreSQL on a private network.
+
+* `OVH_CLOUD_MANAGED_DATABASE_POSTGRESQL_NODES_COUNT_TEST` - Optional. The number of nodes of the PostgreSQL service to test. Needed by a plan of more than one node: the API doesn't apply the minimum of the plan when it is unset.
+
+* `OVH_CLOUD_MANAGED_DATABASE_{MONGODB,MYSQL,VALKEY}_*_TEST`, `OVH_CLOUD_MANAGED_ANALYTICS_{CLICKHOUSE,GRAFANA,KAFKA,KAFKA_CONNECT,KAFKA_MIRROR_MAKER,OPENSEARCH}_*_TEST` - The same `VERSION`, `PLAN`, `FLAVOR`, `REGION` and optional `NETWORK_REGION` and `NODES_COUNT` variables for the service of each other engine tested, such as `OVH_CLOUD_MANAGED_ANALYTICS_KAFKA_CONNECT_VERSION_TEST`. The tests of an engine are skipped until its four required variables are set. The MongoDB plan defaults to `production`, whose 3 nodes need `NODES_COUNT` set to 3.
 
 * `OVH_CLOUD_PRIVATE_ENDPOINT_SERVICE_TEST` - The name of the service to expose through the private endpoint to test.
 
