@@ -60,6 +60,7 @@ The following attributes are exported:
   * `description` - Backup description.
   * `volume_id` - ID of the backed-up volume.
   * `size` - Size of the backup in GB.
+  * `status` - Backup status (`AVAILABLE`, `CREATING`, `DELETED`, `DELETING`, `ERROR`, `ERROR_DELETING`, `ERROR_RESTORING`, `RESTORING`, `UNMANAGING`).
 
 ## Import
 

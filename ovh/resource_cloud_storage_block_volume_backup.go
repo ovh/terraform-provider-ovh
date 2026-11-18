@@ -184,6 +184,12 @@ func (r *cloudStorageBlockVolumeBackupResource) Schema(ctx context.Context, req 
 						Description:         "Size of the backup in GB",
 						MarkdownDescription: "Size of the backup in GB",
 					},
+					"status": schema.StringAttribute{
+						CustomType:          ovhtypes.TfStringType{},
+						Computed:            true,
+						Description:         "Backup status (AVAILABLE, CREATING, DELETED, DELETING, ERROR, ERROR_DELETING, ERROR_RESTORING, RESTORING, UNMANAGING)",
+						MarkdownDescription: "Backup status (`AVAILABLE`, `CREATING`, `DELETED`, `DELETING`, `ERROR`, `ERROR_DELETING`, `ERROR_RESTORING`, `RESTORING`, `UNMANAGING`)",
+					},
 				},
 			},
 		},
