@@ -53,7 +53,7 @@ The [`ovh_cloud_managed_analytics`](cloud_managed_analytics.md) resource creates
 
 The `fork_source_*` arguments are only read at the creation, and the API doesn't return them. Changing one from one value to another recreates the service; setting one after an import, or removing one, only updates the state.
 
-~> **Warning** `rules = []` removes every restriction: the service then accepts connections from any IP address.
+~> **Warning** Only the CIDR blocks of `rules` can connect, from the private network too: `rules = []`, which the API sets when the creation leaves `authorized_ips` out, denies every client.
 
 An optional argument left out takes the value set by the API, and keeps its last value when it is removed from the configuration.
 

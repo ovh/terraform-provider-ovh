@@ -65,7 +65,7 @@ type managedDatabaseAuthorizedIpsRule struct {
 }
 
 type managedDatabaseAuthorizedIps struct {
-	// No omitempty: an empty list is how every restriction is removed.
+	// No omitempty: an empty list is how every rule is removed.
 	Rules []managedDatabaseAuthorizedIpsRule `json:"rules" tfsdk:"rules"`
 }
 

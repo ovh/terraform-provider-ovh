@@ -207,7 +207,7 @@ func (r *cloudManagedDatabaseServiceResource) Schema(ctx context.Context, req re
 						Attributes: map[string]schema.Attribute{
 							"rules": schema.SetNestedAttribute{
 								Required:    true,
-								Description: "Allowed CIDR blocks. An empty set removes every restriction.",
+								Description: "CIDR blocks allowed to connect, from the private network too. An empty set denies every client.",
 								NestedObject: schema.NestedAttributeObject{
 									Attributes: map[string]schema.Attribute{
 										"cidr": schema.StringAttribute{
