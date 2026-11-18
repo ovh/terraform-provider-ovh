@@ -153,14 +153,10 @@ func TestCloudManagedDatabaseServiceCreate(t *testing.T) {
 		t.Run(tc.engine, func(t *testing.T) {
 			path := tc.category.endpoint("pj", tc.engine)
 			item := path + "/" + managedDatabasePostgresqlTestId
-			// Created without the deletion protection, which the creation ignores: the wait for the creation,
-			// the wait before the PUT and the two attempts of the PUT read it, then the service has it.
-			ready := managedDatabaseTestAnswer{http.StatusOK, managedDatabasePostgresqlTestResponse}
 			protected := strings.Replace(managedDatabasePostgresqlTestResponse, `"deletionProtected": false`, `"deletionProtected": true`, 1)
 			r, bodies := newManagedDatabaseServiceTestResource(t, tc.category, map[string][]managedDatabaseTestAnswer{
 				"POST " + path: {{http.StatusOK, managedDatabasePostgresqlTestCreating}},
-				"GET " + item:  {{http.StatusOK, managedDatabasePostgresqlTestCreating}, ready, ready, ready, ready, {http.StatusOK, protected}},
-				"PUT " + item:  {{http.StatusConflict, managedDatabasePostgresqlTestBusy}, {http.StatusOK, protected}},
+				"GET " + item:  {{http.StatusOK, managedDatabasePostgresqlTestCreating}, {http.StatusOK, protected}},
 			})
 
 			// The plan of a configuration that sets the required attributes, a description and the deletion
@@ -207,12 +203,6 @@ func TestCloudManagedDatabaseServiceCreate(t *testing.T) {
 				"deletionProtected": true
 			}}`)
 
-			puts := bodies("PUT " + item)
-			if len(puts) != 2 {
-				t.Fatalf("expected the PUT to be retried once after the 409, got %d PUT", len(puts))
-			}
-			assertManagedDatabaseJSON(t, json.RawMessage(puts[1]), strings.Replace(managedDatabasePostgresqlTestReplace, `"deletionProtected": false`, `"deletionProtected": true`, 1))
-
 			if !resp.State.Raw.IsFullyKnown() {
 				t.Errorf("expected a fully known state, got %v", resp.State.Raw)
 			}
@@ -231,9 +221,11 @@ func TestCloudManagedDatabaseServiceUpdate(t *testing.T) {
 		t.Run(tc.engine, func(t *testing.T) {
 			item := tc.category.serviceEndpoint("pj", tc.engine, managedDatabasePostgresqlTestId)
 			renamed := strings.ReplaceAll(managedDatabasePostgresqlTestResponse, "testacc-terraform-db", "testacc-terraform-renamed")
+			// A 409 retries the PUT after a new read of the service.
+			current := managedDatabaseTestAnswer{http.StatusOK, managedDatabasePostgresqlTestResponse}
 			r, bodies := newManagedDatabaseServiceTestResource(t, tc.category, map[string][]managedDatabaseTestAnswer{
-				"GET " + item: {{http.StatusOK, managedDatabasePostgresqlTestResponse}, {http.StatusOK, managedDatabasePostgresqlTestResponse}, {http.StatusOK, renamed}},
-				"PUT " + item: {{http.StatusOK, renamed}},
+				"GET " + item: {current, current, current, {http.StatusOK, renamed}},
+				"PUT " + item: {{http.StatusConflict, managedDatabasePostgresqlTestBusy}, {http.StatusOK, renamed}},
 			})
 
 			// advanced_configuration is read-only: the PUT keeps the current one.
@@ -258,10 +250,10 @@ func TestCloudManagedDatabaseServiceUpdate(t *testing.T) {
 			}
 
 			puts := bodies("PUT " + item)
-			if len(puts) != 1 {
-				t.Fatalf("expected 1 PUT, got %d", len(puts))
+			if len(puts) != 2 {
+				t.Fatalf("expected the PUT to be retried once after the 409, got %d PUT", len(puts))
 			}
-			assertManagedDatabaseJSON(t, json.RawMessage(puts[0]), strings.Replace(managedDatabasePostgresqlTestReplace, "testacc-terraform-db", "testacc-terraform-renamed", 1))
+			assertManagedDatabaseJSON(t, json.RawMessage(puts[1]), strings.Replace(managedDatabasePostgresqlTestReplace, "testacc-terraform-db", "testacc-terraform-renamed", 1))
 
 			var got cloudManagedDatabaseServiceResourceModel
 			resp.Diagnostics.Append(resp.State.Get(ctx, &got)...)
@@ -481,8 +473,7 @@ func TestCloudManagedDatabasePostgresqlWaitEngineReady(t *testing.T) {
 // newManagedDatabaseLiveLikeTestAPI returns the endpoint of a fake API holding one PostgreSQL service of
 // project pj as the live API does: its targetSpec gets a maintenance window, a storage and the
 // network when the request leaves them out, and the defaults of the engine in its advanced configuration.
-// The creation ignores the deletion protection, and a PUT changes updatedAt but keeps the public
-// exposure, which a PATCH changes.
+// A PUT changes updatedAt but keeps the public exposure, which a PATCH changes.
 // It also returns a function that changes the targetSpec, as done outside of Terraform, and one that
 // makes the service OUT_OF_SYNC until the next PUT.
 func newManagedDatabaseLiveLikeTestAPI(t *testing.T) (string, func(func(spec map[string]any)), func()) {
@@ -515,9 +506,6 @@ func newManagedDatabaseLiveLikeTestAPI(t *testing.T) (string, func(func(spec map
 		spec = body.TargetSpec
 		spec["advancedConfiguration"] = advanced
 		delete(spec, "region")
-		if r.Method == http.MethodPost {
-			spec["deletionProtected"] = false
-		}
 		for key, value := range map[string]any{
 			"maintenanceWindow": map[string]any{"startTimeUtc": "07:52"},
 			"storage":           map[string]any{"size": map[string]any{"unit": "GB", "value": 160}},

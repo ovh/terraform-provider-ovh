@@ -635,17 +635,6 @@ func (r *cloudManagedDatabaseServiceResource) Create(ctx context.Context, req re
 		return
 	}
 
-	// The creation ignores the deletion protection: a PUT applies it, when the service doesn't have it yet.
-	protect := func(service *CloudManagedDatabaseServiceModel) {
-		if !data.DeletionProtected.IsUnknown() && !data.DeletionProtected.IsNull() {
-			service.DeletionProtected = data.DeletionProtected
-		}
-	}
-	if err := putManagedDatabaseServiceWhenReady(ctx, r.config.OVHClient, endpoint, protect, managedDatabaseServiceCreateTimeout); err != nil {
-		resp.Diagnostics.AddError("Error applying the deletion protection of the service", err.Error())
-		return
-	}
-
 	res = CloudManagedDatabaseServiceAPIResponse{}
 	if err := r.config.OVHClient.GetWithContext(ctx, endpoint, &res); err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Error calling Get %s", endpoint), err.Error())
