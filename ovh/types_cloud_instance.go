@@ -334,6 +334,8 @@ const (
 	instanceDescDsNetworks         = "Requested network interfaces of the instance, as recorded in its target specification"
 	instanceDescDsSecurityGroupIds = "IDs of the security groups applied to the instance's interfaces"
 	instanceDescDsShares           = "File storage shares requested to be attached to the instance"
+	instanceDescDsVolumes          = "Block-storage volumes attached to the instance, each with its role (BOOT for the root volume of an instance booted from a volume, DATA for any other volume)"
+	instanceDescDsVolumeIds        = "IDs of every block-storage volume attached to the instance, the boot volume included. DEPRECATED: use volumes, which carries the role of each volume"
 
 	instanceDescShareRefId            = "Identifier of the file storage share to attach. Adding the reference attaches the share to the instance, removing it detaches it"
 	instanceDescShareRefAccessLevel   = "Access level granted to the instance for this share: READ_ONLY or READ_WRITE. Omit it to let the API apply its default (READ_WRITE)"
