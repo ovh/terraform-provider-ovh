@@ -4,9 +4,12 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"os"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/datasources/cloud_project_rancher"
+	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
 var _ datasource.DataSourceWithConfigure = (*cloudProjectRancherDataSource)(nil)
@@ -54,6 +57,11 @@ func (d *cloudProjectRancherDataSource) Read(ctx context.Context, req datasource
 		return
 	}
 
+	data.ProjectId = cloudProjectRancherProjectIdOrEnv(data.ProjectId, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	// Read API call logic
 	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ProjectId.ValueString()) + "/rancher/" + url.PathEscape(data.Id.ValueString())
 	if err := d.config.OVHClient.Get(endpoint, &data); err != nil {
@@ -63,4 +71,23 @@ func (d *cloudProjectRancherDataSource) Read(ctx context.Context, req datasource
 
 	// Save data into Terraform state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+// cloudProjectRancherProjectIdOrEnv returns the project_id of an
+// ovh_cloud_project_rancher* data source: the configured value, or the
+// OVH_CLOUD_PROJECT_SERVICE environment variable when the attribute is omitted
+// or empty. An error diagnostic is added when neither is set.
+func cloudProjectRancherProjectIdOrEnv(value ovhtypes.TfStringValue, diags *diag.Diagnostics) ovhtypes.TfStringValue {
+	if !value.IsNull() && !value.IsUnknown() && value.ValueString() != "" {
+		return value
+	}
+	if env := os.Getenv("OVH_CLOUD_PROJECT_SERVICE"); env != "" {
+		return ovhtypes.NewTfStringValue(env)
+	}
+	diags.AddError(
+		"Missing project_id",
+		"The project_id attribute is required. Provide it in the data source "+
+			"configuration or set the OVH_CLOUD_PROJECT_SERVICE environment variable.",
+	)
+	return value
 }

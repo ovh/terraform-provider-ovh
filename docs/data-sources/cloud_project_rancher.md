@@ -20,7 +20,10 @@ data "ovh_cloud_project_rancher" "rancher" {
 ### Required
 
 - `id` (String) Unique identifier
-- `project_id` (String) Project ID
+
+### Optional
+
+- `project_id` (String) Project ID. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 
 ### Read-Only
 

@@ -53,6 +53,11 @@ func (d *cloudProjectRancherVersionDataSource) Read(ctx context.Context, req dat
 		return
 	}
 
+	data.ProjectId = cloudProjectRancherProjectIdOrEnv(data.ProjectId, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	// Read API call logic
 	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ProjectId.ValueString()) + "/reference/rancher/version"
 	if err := d.config.OVHClient.Get(endpoint, &data.Versions); err != nil {

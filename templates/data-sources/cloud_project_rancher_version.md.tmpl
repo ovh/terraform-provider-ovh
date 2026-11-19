@@ -16,9 +16,9 @@ Use this datasource to retrieve information about the Managed Rancher available 
 
 ## Schema
 
-### Required
+### Optional
 
-- `project_id` (String) Project ID
+- `project_id` (String) Project ID. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 
 ### Read-Only
 

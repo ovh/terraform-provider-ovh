@@ -53,6 +53,11 @@ func (d *cloudProjectRancherCapabilitiesPlanDataSource) Read(ctx context.Context
 		return
 	}
 
+	data.ProjectId = cloudProjectRancherProjectIdOrEnv(data.ProjectId, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	// Read API call logic
 	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ProjectId.ValueString()) + "/rancher/" + url.PathEscape(data.RancherId.ValueString()) + "/capabilities/plan"
 
