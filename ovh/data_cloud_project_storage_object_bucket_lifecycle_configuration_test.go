@@ -1,12 +1,23 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"testing"
+	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/ovh/go-ovh/ovh"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/ovhwrap"
+	"go.uber.org/ratelimit"
 )
 
 func TestAccCloudProjectStorageLifecycleConfigurationDataSource_basic(t *testing.T) {
@@ -134,4 +145,73 @@ func TestAccCloudProjectStorageLifecycleConfigurationDataSource_noServiceName(t 
 			},
 		},
 	})
+}
+
+// TestCloudProjectStorageLifecycleConfigurationDataSourceRead_serviceName reads
+// the data source without service_name against a fake API: the project comes
+// from OVH_CLOUD_PROJECT_SERVICE, and without it the read fails before any
+// request instead of calling /cloud/project//region/...
+func TestCloudProjectStorageLifecycleConfigurationDataSourceRead_serviceName(t *testing.T) {
+	for _, tt := range []struct {
+		name    string
+		env     string
+		request string
+	}{
+		{"environment variable set", "env-project", "GET /1.0/cloud/project/env-project/region/GRA/storage/my-bucket/lifecycle"},
+		{"environment variable unset", "", ""},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Setenv("OVH_CLOUD_PROJECT_SERVICE", tt.env)
+
+			var requests []string
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/1.0/auth/time" {
+					fmt.Fprint(w, time.Now().Unix())
+					return
+				}
+				requests = append(requests, r.Method+" "+r.URL.Path)
+				fmt.Fprint(w, `{"rules": []}`)
+			}))
+			defer server.Close()
+
+			client, err := ovh.NewClient(server.URL+"/1.0", "key", "secret", "consumer")
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			ctx := context.Background()
+			d := &cloudProjectStorageLifecycleConfigurationDataSource{config: &Config{OVHClient: ovhwrap.NewClient(client, ratelimit.NewUnlimited())}}
+			var schemaResp datasource.SchemaResponse
+			d.Schema(ctx, datasource.SchemaRequest{}, &schemaResp)
+
+			config := tfsdk.State{Schema: schemaResp.Schema, Raw: tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), nil)}
+			config.SetAttribute(ctx, path.Root("region_name"), "GRA")
+			config.SetAttribute(ctx, path.Root("container_name"), "my-bucket")
+
+			resp := datasource.ReadResponse{State: tfsdk.State{Schema: schemaResp.Schema, Raw: config.Raw.Copy()}}
+			d.Read(ctx, datasource.ReadRequest{Config: tfsdk.Config{Schema: schemaResp.Schema, Raw: config.Raw}}, &resp)
+
+			if tt.request == "" {
+				if !resp.Diagnostics.HasError() || resp.Diagnostics.Errors()[0].Summary() != "Missing service_name" {
+					t.Errorf("expected a Missing service_name error, got %v", resp.Diagnostics)
+				}
+				if len(requests) != 0 {
+					t.Errorf("expected no request, got %v", requests)
+				}
+				return
+			}
+
+			if resp.Diagnostics.HasError() {
+				t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+			}
+			if len(requests) != 1 || requests[0] != tt.request {
+				t.Errorf("got requests %v, want [%s]", requests, tt.request)
+			}
+			var serviceName string
+			resp.State.GetAttribute(ctx, path.Root("service_name"), &serviceName)
+			if serviceName != tt.env {
+				t.Errorf("got service_name %q in state, want %q", serviceName, tt.env)
+			}
+		})
+	}
 }
