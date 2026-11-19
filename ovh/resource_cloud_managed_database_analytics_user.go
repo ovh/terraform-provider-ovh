@@ -177,7 +177,7 @@ func (r *managedDatabaseUserResource[M, P]) Schema(ctx context.Context, req reso
 	}
 	attributes["password_reset"] = schema.StringAttribute{
 		Optional:    true,
-		Description: "Arbitrary string to change to reset the password.",
+		Description: "Arbitrary string to change to reset the password. Removing it keeps the password.",
 	}
 	attributes["username"] = schema.StringAttribute{
 		Computed:      true,
@@ -223,7 +223,14 @@ func (r *managedDatabaseUserResource[M, P]) Schema(ctx context.Context, req reso
 	}
 }
 
-// ModifyPlan announces a new password only when password_reset changes, not for a change of the other
+// managedDatabasePasswordResets tells whether the planned password_reset resets the password: a value
+// other than the current one. Removing it keeps the password, which clients use. An unknown value may
+// reset it.
+func managedDatabasePasswordResets(planned, current types.String) bool {
+	return !planned.IsNull() && !planned.Equal(current)
+}
+
+// ModifyPlan announces a new password only when password_reset resets it, not for a change of the other
 // fields.
 func (r *managedDatabaseUserResource[M, P]) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
@@ -232,7 +239,7 @@ func (r *managedDatabaseUserResource[M, P]) ModifyPlan(ctx context.Context, req 
 	var planned, current types.String
 	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("password_reset"), &planned)...)
 	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("password_reset"), &current)...)
-	if planned.Equal(current) {
+	if !managedDatabasePasswordResets(planned, current) {
 		return
 	}
 	resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("password"), types.StringUnknown())...)
@@ -329,7 +336,7 @@ func (r *managedDatabaseUserResource[M, P]) Update(ctx context.Context, req reso
 		}
 	}
 
-	if !model.user().PasswordReset.Equal(current.user().PasswordReset) {
+	if managedDatabasePasswordResets(model.user().PasswordReset, current.user().PasswordReset) {
 		var answer json.RawMessage
 		if err := retryWhileManagedDatabaseObjectBusy(ctx, r.config.OVHClient, endpoint, managedDatabaseObjectTimeout, func() error {
 			return r.config.OVHClient.PostWithContext(ctx, endpoint+"/resetPassword", nil, &answer)
@@ -347,6 +354,9 @@ func (r *managedDatabaseUserResource[M, P]) Update(ctx context.Context, req reso
 			resp.Diagnostics.AddError("Error waiting for the user to be ready", err.Error())
 			return
 		}
+	} else if model.user().Password.IsUnknown() {
+		// A password_reset unknown in the plan, which could have reset the password, turned out null.
+		model.user().Password = current.user().Password
 	}
 
 	r.read(ctx, model, endpoint, &resp.Diagnostics)

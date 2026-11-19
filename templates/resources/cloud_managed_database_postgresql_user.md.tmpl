@@ -21,7 +21,7 @@ The API returns the password only at the creation and when `password_reset` rese
 * `service_name` - (Optional) ID of the public cloud project. If omitted, the OVH_CLOUD_PROJECT_SERVICE environment variable is used. Changing it recreates the user.
 * `service_id` - (Required) ID of the service. Changing it recreates the user.
 * `name` - (Required) Login name of the user. Changing it recreates the user.
-* `password_reset` - (Optional) Arbitrary string to change to reset the password.
+* `password_reset` - (Optional) Arbitrary string to change to reset the password. Removing it keeps the password.
 * `roles` - (Optional) Roles assigned to the user. Available roles are returned by the roles endpoint of the service. Removing it from the configuration keeps the current roles: set `[]` to remove them all.
 
 ## Attributes Reference

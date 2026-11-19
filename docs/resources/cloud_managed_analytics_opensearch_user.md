@@ -33,7 +33,7 @@ The API returns the password only at the creation and when `password_reset` rese
 * `acls` - (Optional) Access rules of the user. Removing it from the configuration keeps the current rules: set `[]` to remove them all.
   * `pattern` - (Required) Pattern of the indexes the rule applies to.
   * `permission` - (Required) Permission on the indexes: ADMIN, DENY, READ, READ_WRITE or WRITE.
-* `password_reset` - (Optional) Arbitrary string to change to reset the password.
+* `password_reset` - (Optional) Arbitrary string to change to reset the password. Removing it keeps the password.
 
 ## Attributes Reference
 

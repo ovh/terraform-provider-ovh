@@ -31,7 +31,7 @@ The API returns the password only at the creation and when `password_reset` rese
 * `engine` - (Required) Engine of the service: mysql. Changing it recreates the user.
 * `service_id` - (Required) ID of the service. Changing it recreates the user.
 * `name` - (Required) Login name of the user. Changing it recreates the user.
-* `password_reset` - (Optional) Arbitrary string to change to reset the password.
+* `password_reset` - (Optional) Arbitrary string to change to reset the password. Removing it keeps the password.
 
 ## Attributes Reference
 

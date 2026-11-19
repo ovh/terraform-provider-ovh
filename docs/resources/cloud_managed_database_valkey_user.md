@@ -35,7 +35,7 @@ The API returns the password only at the creation and when `password_reset` rese
 * `channels` - (Optional) Pub/Sub channels the user can access. Removing it from the configuration keeps the current list: set `[]` to empty it.
 * `commands` - (Optional) Commands the user is allowed or denied, such as +get. Removing it from the configuration keeps the current list: set `[]` to empty it.
 * `keys` - (Optional) Key patterns the user can access. Removing it from the configuration keeps the current list: set `[]` to empty it.
-* `password_reset` - (Optional) Arbitrary string to change to reset the password.
+* `password_reset` - (Optional) Arbitrary string to change to reset the password. Removing it keeps the password.
 
 ## Attributes Reference
 

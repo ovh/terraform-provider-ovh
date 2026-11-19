@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
@@ -123,10 +124,13 @@ func TestCloudManagedDatabasePostgresqlUserModifyPlan(t *testing.T) {
 	ctx := context.Background()
 	r := NewCloudManagedDatabasePostgresqlUserResource().(*managedDatabaseUserResource[managedDatabaseRolesUserModel, *managedDatabaseRolesUserModel])
 	state := managedDatabaseUserTestModel()
+	state.PasswordReset = types.StringValue("v1")
 
 	for name, change := range map[string]func(*managedDatabaseRolesUserModel){
 		"roles":          func(m *managedDatabaseRolesUserModel) { m.Roles = types.SetValueMust(types.StringType, []attr.Value{}) },
 		"password reset": func(m *managedDatabaseRolesUserModel) { m.PasswordReset = types.StringValue("v2") },
+		// Removing password_reset keeps the password that clients use.
+		"password reset removed": func(m *managedDatabaseRolesUserModel) { m.PasswordReset = types.StringNull() },
 	} {
 		t.Run(name, func(t *testing.T) {
 			plan := state
@@ -166,15 +170,21 @@ func TestCloudManagedDatabasePostgresqlUserDelete(t *testing.T) {
 	}
 }
 
+// testAccCloudManagedDatabasePostgresqlUserConfig renders the user tfacc, with password_reset = null,
+// as if removed from the configuration, when passwordReset is "".
 func testAccCloudManagedDatabasePostgresqlUserConfig(name, passwordReset string) string {
+	value := "null"
+	if passwordReset != "" {
+		value = fmt.Sprintf("%q", passwordReset)
+	}
 	return testAccCloudManagedDatabasePostgresqlConfig(name, fmt.Sprintf("  description = %q", name), "") + fmt.Sprintf(`
 resource "ovh_cloud_managed_database_postgresql_user" "user" {
   service_name   = ovh_cloud_managed_database.db.service_name
   service_id     = ovh_cloud_managed_database.db.id
   name           = "tfacc"
-  password_reset = %q
+  password_reset = %s
 }
-`, passwordReset)
+`, value)
 }
 
 func TestAccCloudManagedDatabasePostgresqlUser_basic(t *testing.T) {
@@ -203,6 +213,16 @@ func TestAccCloudManagedDatabasePostgresqlUser_basic(t *testing.T) {
 					},
 				},
 				Check: resource.TestCheckResourceAttrSet(testAccCloudManagedDatabasePostgresqlUserResource, "password"),
+			},
+			{
+				// Removing password_reset keeps the password.
+				Config: testAccCloudManagedDatabasePostgresqlUserConfig(name, ""),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(testAccCloudManagedDatabasePostgresqlUserResource, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(testAccCloudManagedDatabasePostgresqlUserResource, tfjsonpath.New("password"), knownvalue.NotNull()),
+					},
+				},
 			},
 			{
 				ResourceName:            testAccCloudManagedDatabasePostgresqlUserResource,
@@ -435,5 +455,36 @@ func TestCloudManagedDatabasePostgresqlUserNotReady(t *testing.T) {
 	}
 	if deletes := bodies("DELETE " + managedDatabaseUserTestItemPath); len(deletes) != 2 {
 		t.Errorf("expected the DELETE again once the user is READY, got %d DELETE", len(deletes))
+	}
+}
+
+// Removing password_reset sends no reset and keeps the password, also when an unknown password_reset
+// in the plan turns out null.
+func TestCloudManagedDatabasePostgresqlUserResetRemoved(t *testing.T) {
+	ctx := context.Background()
+	r, bodies := newManagedDatabaseUserTestResource(t, map[string][]managedDatabaseTestAnswer{
+		"GET " + managedDatabaseUserTestItemPath: {{http.StatusOK, managedDatabaseUserTestReady}},
+	})
+	state := managedDatabaseUserTestModel()
+	state.PasswordReset = types.StringValue("v1")
+	for name, password := range map[string]types.String{"known": state.Password, "unknown": types.StringUnknown()} {
+		t.Run(name, func(t *testing.T) {
+			plan := state
+			plan.PasswordReset, plan.Password = types.StringNull(), password
+			plan.Status, plan.Checksum = types.StringUnknown(), types.StringUnknown()
+			resp := fwresource.UpdateResponse{State: managedDatabaseObjectTestState(t, r, &state)}
+			r.Update(ctx, fwresource.UpdateRequest{Plan: managedDatabaseObjectTestPlan(t, r, &plan), State: managedDatabaseObjectTestState(t, r, &state)}, &resp)
+			if resp.Diagnostics.HasError() {
+				t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+			}
+			var got managedDatabaseRolesUserModel
+			resp.State.Get(ctx, &got)
+			if got.Password.ValueString() != "secret" || !got.PasswordReset.IsNull() {
+				t.Errorf("expected the password kept and no password_reset, got %s and %s", got.Password, got.PasswordReset)
+			}
+		})
+	}
+	if resets := bodies("POST " + managedDatabaseUserTestItemPath + "/resetPassword"); len(resets) != 0 {
+		t.Errorf("expected no reset, got %d", len(resets))
 	}
 }
