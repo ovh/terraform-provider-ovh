@@ -53,6 +53,11 @@ func (d *cloudProjectFlavorDataSource) Read(ctx context.Context, req datasource.
 		return
 	}
 
+	data.ServiceName = cloudProjectServiceNameOrEnv(data.ServiceName, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	endpoint := "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/flavor/" + url.PathEscape(data.Id.ValueString())
 
 	var flavor CloudProjectFlavorModel

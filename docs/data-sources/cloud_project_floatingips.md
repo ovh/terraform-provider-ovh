@@ -25,7 +25,7 @@ data "ovh_cloud_project_floatingips" "ips" {
 
 The following arguments are supported:
 
-* `service_name` - (Required) The id of the public cloud project
+* `service_name` - (Optional) The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 * `region_name` - (Required) Public cloud region name
 
 ## Attributes Reference

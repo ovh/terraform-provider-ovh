@@ -4,10 +4,8 @@ import (
 	"context"
 	"fmt"
 	"net/url"
-	"os"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 var _ datasource.DataSourceWithConfigure = (*cloudProjectLoadbalancerDataSource)(nil)
@@ -55,8 +53,9 @@ func (d *cloudProjectLoadbalancerDataSource) Read(ctx context.Context, req datas
 		return
 	}
 
-	if data.ServiceName.IsNull() {
-		data.ServiceName.StringValue = basetypes.NewStringValue(os.Getenv("OVH_CLOUD_PROJECT_SERVICE"))
+	data.ServiceName = cloudProjectServiceNameOrEnv(data.ServiceName, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	// Read API call logic

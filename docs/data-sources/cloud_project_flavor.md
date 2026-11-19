@@ -23,8 +23,11 @@ data "ovh_cloud_project_flavor" "flavor" {
 
 ### Required
 
-- `service_name` (String) Service name
 - `id` (String) Flavor ID
+
+### Optional
+
+- `service_name` (String) Service name. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 
 ### Read-Only
 

@@ -25,7 +25,7 @@ data "ovh_cloud_storage_file_shares" "shares" {
 
 ## Argument Reference
 
-* `service_name` - (Required) The id of the public cloud project.
+* `service_name` - (Optional) The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 * `region` - (Optional) If set, only file shares located in this region are returned.
 
 ## Attributes Reference

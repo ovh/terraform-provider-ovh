@@ -24,7 +24,10 @@ data "ovh_cloud_project_ssh_key" "key" {
 ### Required
 
 - `id` (String) SSH key ID
-- `service_name` (String) Service name
+
+### Optional
+
+- `service_name` (String) Service name. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 
 ### Read-Only
 

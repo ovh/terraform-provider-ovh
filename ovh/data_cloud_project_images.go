@@ -53,6 +53,11 @@ func (d *cloudProjectImagesDataSource) Read(ctx context.Context, req datasource.
 		return
 	}
 
+	data.ServiceName = cloudProjectServiceNameOrEnv(data.ServiceName, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	// Add query parameters
 	queryParams := url.Values{}
 	if !data.FlavorType.IsNull() && !data.FlavorType.IsUnknown() {

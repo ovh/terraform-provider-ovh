@@ -55,6 +55,11 @@ func (d *cloudProjectStorageDataSource) Read(ctx context.Context, req datasource
 		return
 	}
 
+	data.ServiceName = cloudProjectServiceNameOrEnv(data.ServiceName, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	queryParams := url.Values{}
 	if !data.Limit.IsNull() && !data.Limit.IsUnknown() {
 		queryParams.Add("limit", strconv.FormatInt(data.Limit.ValueInt64(), 10))

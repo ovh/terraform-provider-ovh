@@ -325,6 +325,11 @@ const (
 	instanceDescUserData   = "Cloud-init user data injected at boot, base64-encoded (standard encoding, 65535 bytes max). Pass it through base64encode(). Write-only: the API accepts it but never returns it, so the value is only ever read back from Terraform state and a change made outside Terraform stays invisible. WARNING: changing this value to another non-empty one reinstalls the instance (rebuild on the current image — the root disk is wiped); setting it to \"\" is an explicit clear and also reinstalls the instance; removing the argument from the configuration only drops it from state, the instance keeps the user data it booted with and is not rebuilt"
 	instanceDescUserDataMd = "Cloud-init user data injected at boot, base64-encoded (standard encoding, 65535 bytes max). Pass it through `base64encode()`. **Write-only**: the API accepts it but never returns it, so the value is only ever read back from Terraform state and a change made outside Terraform stays invisible. **WARNING**: changing this value to another non-empty one **reinstalls the instance** (rebuild on the current image — the root disk is wiped); setting it to `\"\"` is an explicit clear and **also reinstalls the instance**; removing the argument from the configuration only drops it from state, the instance keeps the user data it booted with and is **not** rebuilt"
 
+	// service_name is optional on the data sources: when omitted, they fall back
+	// to the OVH_CLOUD_PROJECT_SERVICE environment variable.
+	instanceDescDsServiceName   = instanceDescServiceName + ". If omitted, the OVH_CLOUD_PROJECT_SERVICE environment variable is used."
+	instanceDescDsServiceNameMd = instanceDescServiceName + ". If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used."
+
 	// Read-only wordings for the data sources, where the root attributes expose
 	// the requested target spec rather than a writable input.
 	instanceDescDsName             = "Instance name"

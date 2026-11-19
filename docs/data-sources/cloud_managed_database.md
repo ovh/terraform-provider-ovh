@@ -18,7 +18,7 @@ data "ovh_cloud_managed_database" "service" {
 
 ## Argument Reference
 
-* `service_name` - (Required) ID of the public cloud project.
+* `service_name` - (Optional) ID of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 * `engine` - (Required) Engine of the service: mongodb, mysql, postgresql, valkey.
 * `id` - (Required) ID of the service.
 

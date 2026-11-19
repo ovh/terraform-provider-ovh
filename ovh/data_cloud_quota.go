@@ -76,8 +76,9 @@ func (d *cloudQuotaDataSource) Schema(_ context.Context, _ datasource.SchemaRequ
 			// Input
 			"service_name": schema.StringAttribute{
 				CustomType:  ovhtypes.TfStringType{},
-				Required:    true,
-				Description: "Service name of the resource representing the id of the cloud project.",
+				Optional:    true,
+				Computed:    true,
+				Description: "Service name of the resource representing the id of the cloud project. If omitted, the OVH_CLOUD_PROJECT_SERVICE environment variable is used.",
 			},
 			"region": schema.StringAttribute{
 				CustomType:  ovhtypes.TfStringType{},
@@ -321,6 +322,11 @@ func (d *cloudQuotaDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	var data CloudQuotaModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	data.ServiceName = cloudProjectServiceNameOrEnv(data.ServiceName, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}

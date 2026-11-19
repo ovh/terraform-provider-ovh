@@ -53,6 +53,11 @@ func (d *cloudInstanceDataSource) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 
+	data.ServiceName = cloudProjectServiceNameOrEnv(data.ServiceName, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/compute/instance/" + url.PathEscape(data.Id.ValueString())
 
 	var responseData CloudInstanceAPIResponse
@@ -70,7 +75,7 @@ func (d *cloudInstanceDataSource) Read(ctx context.Context, req datasource.ReadR
 // resource but service_name+id are the only inputs and everything else is Computed.
 func instanceDataSourceAttributes(ctx context.Context) map[string]schema.Attribute {
 	return map[string]schema.Attribute{
-		"service_name": schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Required: true, Description: instanceDescServiceName, MarkdownDescription: instanceDescServiceName},
+		"service_name": schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Optional: true, Computed: true, Description: instanceDescDsServiceName, MarkdownDescription: instanceDescDsServiceNameMd},
 		"id":           schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Required: true, Description: instanceDescId, MarkdownDescription: instanceDescId},
 
 		"region":            schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescLocationRegion, MarkdownDescription: instanceDescLocationRegion},

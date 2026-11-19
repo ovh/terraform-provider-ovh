@@ -70,7 +70,7 @@ func (d *cloudInstancesDataSource) Schema(ctx context.Context, req datasource.Sc
 	resp.Schema = schema.Schema{
 		Description: "Use this data source to list the instances of a public cloud project. Note: current_state.shares is not populated by the list endpoint; use ovh_cloud_instance for share visibility.",
 		Attributes: map[string]schema.Attribute{
-			"service_name": schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Required: true, Description: instanceDescServiceName, MarkdownDescription: instanceDescServiceName},
+			"service_name": schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Optional: true, Computed: true, Description: instanceDescDsServiceName, MarkdownDescription: instanceDescDsServiceNameMd},
 			"instances": schema.ListNestedAttribute{
 				Computed:            true,
 				Description:         "Instances of the project",
@@ -97,6 +97,11 @@ func (d *cloudInstancesDataSource) Schema(ctx context.Context, req datasource.Sc
 func (d *cloudInstancesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data CloudInstancesModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	data.ServiceName = cloudProjectServiceNameOrEnv(data.ServiceName, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}

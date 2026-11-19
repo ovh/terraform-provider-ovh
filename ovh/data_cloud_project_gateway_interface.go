@@ -53,6 +53,11 @@ func (d *cloudProjectGatewayInterfaceDataSource) Read(ctx context.Context, req d
 		return
 	}
 
+	data.ServiceName = cloudProjectServiceNameOrEnv(data.ServiceName, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	// Read API call logic
 	endpoint := "/cloud/project/" + url.PathEscape(data.ServiceName.ValueString()) +
 		"/region/" + url.PathEscape(data.Region.ValueString()) +

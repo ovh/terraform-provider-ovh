@@ -20,14 +20,11 @@ data "ovh_cloud_project_flavors" "flavors" {
 
 ## Schema
 
-### Required
-
-- `service_name` (String) Service name
-
 ### Optional
 
 - `region` (String) Flavor region
 - `name_filter` (String) Filter flavors using the given name (strict equality, e.g. b3-8)
+- `service_name` (String) Service name. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 
 ### Read-Only
 

@@ -140,7 +140,7 @@ func (d *cloudManagedDatabaseCapabilitiesDataSource) Schema(ctx context.Context,
 	resp.Schema = schema.Schema{
 		Description: "Use this data source to get what managed " + d.category.family + " services a public cloud project can create: engines and their versions, flavors, plans, regions, disk types and options, using the Cloud Databases API v2.",
 		Attributes: map[string]schema.Attribute{
-			"service_name": schema.StringAttribute{Required: true, Description: "ID of the public cloud project."},
+			"service_name": schema.StringAttribute{Optional: true, Computed: true, Description: "ID of the public cloud project. If omitted, the OVH_CLOUD_PROJECT_SERVICE environment variable is used."},
 			"engines": list("Engines.", map[string]schema.Attribute{
 				"name":            managedDatabaseComputedString("Name of the engine."),
 				"description":     managedDatabaseComputedString("Description of the engine."),
@@ -213,6 +213,11 @@ func (d *cloudManagedDatabaseCapabilitiesDataSource) Schema(ctx context.Context,
 func (d *cloudManagedDatabaseCapabilitiesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data cloudManagedDatabaseCapabilitiesModel
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("service_name"), &data.ServiceName)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	data.ServiceName = cloudProjectServiceNameStringOrEnv(data.ServiceName, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}

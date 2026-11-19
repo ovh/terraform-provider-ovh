@@ -45,9 +45,10 @@ func (d *cloudRegionDataSource) Schema(_ context.Context, _ datasource.SchemaReq
 	attributes := cloudRegionDetailAttributes()
 	attributes["service_name"] = schema.StringAttribute{
 		CustomType:          ovhtypes.TfStringType{},
-		Required:            true,
-		Description:         "Service name of the resource representing the id of the cloud project",
-		MarkdownDescription: "Service name of the resource representing the id of the cloud project",
+		Optional:            true,
+		Computed:            true,
+		Description:         "Service name of the resource representing the id of the cloud project. If omitted, the OVH_CLOUD_PROJECT_SERVICE environment variable is used.",
+		MarkdownDescription: "Service name of the resource representing the id of the cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.",
 	}
 	attributes["name"] = schema.StringAttribute{
 		CustomType:          ovhtypes.TfStringType{},
@@ -67,6 +68,11 @@ func (d *cloudRegionDataSource) Read(ctx context.Context, req datasource.ReadReq
 	var data cloudRegionDataSourceModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	data.ServiceName = cloudProjectServiceNameOrEnv(data.ServiceName, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}

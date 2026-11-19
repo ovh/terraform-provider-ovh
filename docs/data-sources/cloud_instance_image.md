@@ -32,7 +32,7 @@ To look an image up by name instead of by id, use
 
 The following arguments are supported:
 
-* `service_name` - (Required) Service name of the resource representing the id of the cloud project.
+* `service_name` - (Optional) Service name of the resource representing the id of the cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 * `id` - (Required) The OpenStack/Glance image ID to look up. Stable within a region and used to reference the image when creating an instance.
 
 ## Attributes Reference

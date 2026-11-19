@@ -18,7 +18,7 @@ data "ovh_cloud_storage_block_volume_backups" "backups" {
 
 ## Argument Reference
 
-* `service_name` - (Required) The id of the public cloud project.
+* `service_name` - (Optional) The id of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 * `region` - (Required) The region where the backups reside.
 * `volume_id` - (Required) The ID of the volume whose backups to list.
 

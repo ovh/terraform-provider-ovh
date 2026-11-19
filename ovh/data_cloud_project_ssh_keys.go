@@ -53,6 +53,11 @@ func (d *cloudProjectSshKeysDataSource) Read(ctx context.Context, req datasource
 		return
 	}
 
+	data.ServiceName = cloudProjectServiceNameOrEnv(data.ServiceName, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	// Read API call logic
 	query := ""
 	if !data.Region.IsNull() && !data.Region.IsUnknown() {
