@@ -1,0 +1,55 @@
+---
+subcategory : "Email Domain"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_email_domain_filter
+
+Manages a filter on a mailbox of an OVHcloud email domain.
+
+A filter tests the headers of incoming mail against its rules and, when **all** of them match, accepts the mail,
+deletes it, redirects it, or moves it to another mailbox. A mailbox's filters apply in order of `priority`.
+
+## Example Usage
+
+{{tffile "examples/resources/email_domain_filter/example_1.tf"}}
+
+Filters belong to a single mailbox, so applying one to every mailbox of a domain is a `for_each`. This one moves mail
+that claims to come from the domain but failed DMARC into a quarantine mailbox:
+
+{{tffile "examples/resources/email_domain_filter/example_2.tf"}}
+
+{{ .SchemaMarkdown | trimspace }}
+
+## Notes
+
+Rules are **ANDed**: a filter applies only when every one of its rules matches, so they form a set with no order.
+
+The creation call carries a single rule, and the others can only be added once the filter exists. Since a filter
+holding only some of its rules matches more mail than intended, the resource creates it **inactive**, adds the other
+rules, checks them, and only then activates it. When the rules of an existing filter change, the new ones are added
+before the old ones are removed, so in between the filter matches only what both versions match. If a step fails once
+the creation has been accepted, the filter is kept in state as tainted, so the next apply replaces it rather than
+colliding with its name.
+
+`action_param` must be a full address. The API accepts a bare local part such as `postmaster`, but resolves it against
+OVHcloud's own mail host rather than the domain, so the matching mail would leave the domain. The resource refuses a
+value without an `@`.
+
+There is no endpoint to change `action` or `action_param`, so changing either replaces the filter. OVHcloud stores
+names lowercased and matches them case-insensitively, so a change of case in `name` is applied in place.
+
+Every change returns a task. The resource waits for its tasks to complete and for the result to show in the API, up to
+ten minutes per step. The mail servers may take a few more minutes to apply it after that.
+
+## Import
+
+A filter can be imported using its `domain`, `account_name` and `name`, separated by slashes. The name comes last and
+may contain spaces:
+
+```bash
+terraform import ovh_email_domain_filter.viruses 'example.com/john.doe/Delete viruses'
+```
