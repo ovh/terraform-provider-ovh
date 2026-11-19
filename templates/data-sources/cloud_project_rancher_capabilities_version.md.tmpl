@@ -16,8 +16,11 @@ List available and current versions for the given managed Rancher service
 
 ### Required
 
-- `project_id` (String) Project ID
 - `rancher_id` (String) Rancher ID
+
+### Optional
+
+- `project_id` (String) Project ID. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 
 ### Read-Only
 

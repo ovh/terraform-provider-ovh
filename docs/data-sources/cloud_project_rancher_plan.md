@@ -16,9 +16,9 @@ data "ovh_cloud_project_rancher_plan" "plans" {
 
 ## Schema
 
-### Required
+### Optional
 
-- `project_id` (String) Project ID
+- `project_id` (String) Project ID. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 
 ### Read-Only
 

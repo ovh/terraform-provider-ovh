@@ -58,9 +58,10 @@ func CloudProjectRancherCapabilitiesPlanDataSourceSchema(ctx context.Context) sc
 		},
 		"project_id": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
-			Required:            true,
-			Description:         "Project ID",
-			MarkdownDescription: "Project ID",
+			Optional:            true,
+			Computed:            true,
+			Description:         "Project ID. If omitted, the OVH_CLOUD_PROJECT_SERVICE environment variable is used.",
+			MarkdownDescription: "Project ID. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.",
 		},
 		"rancher_id": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},

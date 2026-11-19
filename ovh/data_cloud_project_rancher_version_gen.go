@@ -64,9 +64,10 @@ func CloudProjectRancherVersionDataSourceSchema(ctx context.Context) schema.Sche
 		},
 		"project_id": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
-			Required:            true,
-			Description:         "Project ID",
-			MarkdownDescription: "Project ID",
+			Optional:            true,
+			Computed:            true,
+			Description:         "Project ID. If omitted, the OVH_CLOUD_PROJECT_SERVICE environment variable is used.",
+			MarkdownDescription: "Project ID. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.",
 		},
 	}
 
