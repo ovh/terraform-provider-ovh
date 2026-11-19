@@ -7,6 +7,7 @@ import (
 	"slices"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -36,9 +37,55 @@ func managedDatabaseObjectTestState(t *testing.T, r fwresource.Resource, model a
 	return state
 }
 
+func managedDatabaseObjectTestPlan(t *testing.T, r fwresource.Resource, model any) tfsdk.Plan {
+	t.Helper()
+	state := managedDatabaseObjectTestState(t, r, model)
+	return tfsdk.Plan{Schema: state.Schema, Raw: state.Raw}
+}
+
+func TestManagedDatabaseObjectWait(t *testing.T) {
+	config, _ := newManagedDatabaseTestConfig(t, map[string][]managedDatabaseTestAnswer{
+		// A 5xx or a 429 is one more read.
+		"GET /v2/ready":   {{http.StatusOK, `{"status": "CREATING"}`}, {http.StatusServiceUnavailable, `{"message": "unavailable"}`}, {http.StatusOK, `{"status": "READY"}`}},
+		"GET /v2/failed":  {{http.StatusOK, `{"status": "ERROR"}`}},
+		"GET /v2/deleted": {{http.StatusOK, `{"status": "READY"}`}, {http.StatusOK, `{"status": "DELETING"}`}, {http.StatusNotFound, `{"message": "not found"}`}},
+	})
+	ctx := context.Background()
+
+	if err := waitForManagedDatabaseObject(ctx, config.OVHClient, "/v2/ready", false, time.Minute); err != nil {
+		t.Errorf("unexpected error: %s", err)
+	}
+	if err := waitForManagedDatabaseObject(ctx, config.OVHClient, "/v2/failed", false, time.Minute); err == nil {
+		t.Errorf("expected an error for an object in ERROR status")
+	}
+	if err := waitForManagedDatabaseObject(ctx, config.OVHClient, "/v2/deleted", true, time.Minute); err != nil {
+		t.Errorf("unexpected error: %s", err)
+	}
+}
+
 func TestManagedDatabaseCategories(t *testing.T) {
+	ctx := context.Background()
 	if got := managedAnalyticsFamily.serviceEndpoint("pj", "kafka", "s1"); got != "/v2/publicCloud/project/pj/managedAnalytics/kafka/s1" {
 		t.Errorf("unexpected endpoint %s", got)
+	}
+
+	// The engine is an argument, unless the type name holds it.
+	for _, tc := range []struct {
+		new      func() fwresource.Resource
+		argument bool
+	}{
+		{NewCloudManagedDatabaseUserResource, true},
+		{NewCloudManagedDatabasePostgresqlUserResource, false},
+		{NewCloudManagedAnalyticsUserResource, true},
+	} {
+		r := tc.new()
+		var meta fwresource.MetadataResponse
+		r.Metadata(ctx, fwresource.MetadataRequest{ProviderTypeName: "ovh"}, &meta)
+		var resp fwresource.SchemaResponse
+		r.Schema(ctx, fwresource.SchemaRequest{}, &resp)
+		if engine := resp.Schema.Attributes["engine"]; engine.IsRequired() != tc.argument || engine.IsComputed() == tc.argument {
+			t.Errorf("%s: expected engine as argument %t", meta.TypeName, tc.argument)
+		}
 	}
 }
 
@@ -77,8 +124,8 @@ func TestManagedDatabaseSchemas(t *testing.T) {
 		names["data "+meta.TypeName] = true
 		testManagedDatabaseEngineArgument(t, "data "+meta.TypeName, resp.Schema.Attributes["engine"])
 	}
-	if len(names) != 2+4 {
-		t.Errorf("expected 2 resources and 4 data sources, got %d", len(names))
+	if len(names) != 9+25 {
+		t.Errorf("expected 9 resources and 25 data sources, got %d", len(names))
 	}
 }
 
