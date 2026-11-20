@@ -68,6 +68,55 @@ resource "ovh_cloud_project_kube_nodepool" "pool" {
 }
 ```
 
+### Dedicate a node pool to system workloads
+
+MKS system workloads (such as CoreDNS or the CNI components) tolerate taints with the `CriticalAddonsOnly` key. Tainting a node pool with this key therefore reserves it for them.
+
+```terraform
+# Node pool reserved to MKS system workloads
+resource "ovh_cloud_project_kube_nodepool" "system" {
+  service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  kube_id       = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+  name          = "system"
+  flavor_name   = "b3-8"
+  desired_nodes = 2
+  template {
+    metadata {
+      annotations = {}
+      finalizers  = []
+      labels      = {}
+    }
+    spec {
+      unschedulable = false
+      taints = [
+        {
+          effect = "NoSchedule"
+          key    = "CriticalAddonsOnly"
+          value  = "true"
+        }
+      ]
+    }
+  }
+}
+
+# Node pool for your own workloads
+resource "ovh_cloud_project_kube_nodepool" "apps" {
+  service_name  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  kube_id       = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+  name          = "apps"
+  flavor_name   = "b3-16"
+  desired_nodes = 3
+}
+```
+
+A pod of your own can still be scheduled on the `system` node pool by tolerating the taint:
+
+```yaml
+tolerations:
+  - key: CriticalAddonsOnly
+    operator: Exists
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -94,7 +143,7 @@ The following arguments are supported:
     * `finalizers` - Finalizers to apply to each node. A finalizer name must be fully qualified, e.g. kubernetes.io/pv-protection , where you prefix it with hostname of your service which is related to the controller responsible for the finalizer.
     * `labels` - Labels to apply to each node
   * `spec` - Spec of each node in the pool
-    * `taints` - Taints to apply to each node [NodeSpec kubernetes documentation](https://kubernetes.io/docs/reference/kubernetes-api/cluster-resources/node-v1/#NodeSpec)
+    * `taints` - A Kubernetes taint, made of a key, a value and an effect (NoSchedule, PreferNoSchedule or NoExecute). Pods that do not tolerate it are kept off the nodes according to this effect. MKS system workloads tolerate taints with the `CriticalAddonsOnly` key, see [Dedicate a node pool to system workloads](#dedicate-a-node-pool-to-system-workloads).
       * `effect` - mandatory possible values: NoExecute, NoSchedule, PreferNoSchedule
       * `key` - mandatory
       * `value` - (Optional)
