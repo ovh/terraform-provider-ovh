@@ -7,13 +7,19 @@ import (
 	"net/url"
 	"reflect"
 	"slices"
+	"strings"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
-var _ resource.ResourceWithConfigure = (*okmsSecretResource)(nil)
+var (
+	_ resource.ResourceWithConfigure   = (*okmsSecretResource)(nil)
+	_ resource.ResourceWithImportState = (*okmsSecretResource)(nil)
+)
 
 func NewOkmsSecretResource() resource.Resource {
 	return &okmsSecretResource{}
@@ -46,6 +52,18 @@ func (d *okmsSecretResource) Configure(_ context.Context, req resource.Configure
 
 func (d *okmsSecretResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = OkmsSecretResourceSchema(ctx)
+}
+
+func (r *okmsSecretResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	// The path may itself contain slashes: split on the first one only
+	okmsId, secretPath, ok := strings.Cut(req.ID, "/")
+	if !ok || okmsId == "" || secretPath == "" {
+		resp.Diagnostics.AddError("Error importing okms_secret resource.", "ID should be of the format '{okmsId}/{path}'")
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("okms_id"), okmsId)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("path"), secretPath)...)
 }
 
 func (r *okmsSecretResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -87,8 +105,20 @@ func (r *okmsSecretResource) Create(ctx context.Context, req resource.CreateRequ
 func (r *okmsSecretResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var secretFromState, currentSecret OkmsSecretModel
 
-	// Read Terraform prior state data into the model
-	resp.Diagnostics.Append(req.State.Get(ctx, &secretFromState)...)
+	// Right after an import, the state only holds okms_id and path: the version is null
+	// and cannot be read into the model, so the model is built from those two attributes.
+	var version types.Object
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("version"), &version)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if version.IsNull() {
+		resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("okms_id"), &secretFromState.OkmsId)...)
+		resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("path"), &secretFromState.Path)...)
+	} else {
+		// Read Terraform prior state data into the model
+		resp.Diagnostics.Append(req.State.Get(ctx, &secretFromState)...)
+	}
 	if resp.Diagnostics.HasError() {
 		return
 	}
