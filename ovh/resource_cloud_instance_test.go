@@ -61,6 +61,9 @@ func TestAccCloudInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("ovh_cloud_instance.test", "id"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_instance.test", "checksum"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_instance.test", "current_state.power_state"),
+					resource.TestCheckResourceAttr("ovh_cloud_instance.test", "billing.period", "HOURLY"),
+					resource.TestCheckResourceAttr("ovh_cloud_instance.test", "current_state.billing.period", "HOURLY"),
+					resource.TestCheckNoResourceAttr("ovh_cloud_instance.test", "current_state.billing.since"),
 				),
 			},
 			{
@@ -130,6 +133,28 @@ resource "ovh_cloud_instance" "test" {
   ]
 }
 `, serviceName, region, name, flavorID, imageID, powerState)
+}
+
+// testAccCloudInstanceConfigBilling renders an instance config with an explicit
+// billing period (billing omitted entirely when period == "").
+func testAccCloudInstanceConfigBilling(serviceName, region, flavorID, imageID, name, period string) string {
+	billing := ""
+	if period != "" {
+		billing = fmt.Sprintf("\n  billing = {\n    period = %q\n  }\n", period)
+	}
+	return fmt.Sprintf(`
+resource "ovh_cloud_instance" "test" {
+  service_name = "%s"
+  region       = "%s"
+  name         = "%s"
+  flavor_id    = "%s"
+  image_id     = "%s"
+%s
+  networks = [
+    { auto_assign_public_ip = true },
+  ]
+}
+`, serviceName, region, name, flavorID, imageID, billing)
 }
 
 // testAccCloudInstanceConfigAZ renders an instance config, optionally pinning
@@ -919,6 +944,65 @@ func TestAccCloudInstance_validators(t *testing.T) {
 			{
 				Config:      testAccCloudInstanceConfigInvalidAccessLevel(serviceName, region, flavorID, imageID, name),
 				ExpectError: regexp.MustCompile(`must be one of`),
+			},
+			{
+				Config:      testAccCloudInstanceConfigBilling(serviceName, region, flavorID, imageID, name, "WEEKLY"),
+				ExpectError: regexp.MustCompile(`must be one of`),
+			},
+		},
+	})
+}
+
+// TestAccCloudInstance_monthlyBilling moves an hourly instance to monthly
+// billing, then checks that going back to HOURLY is refused at plan. Monthly
+// billing cannot be undone and is billed for the month, so the test only runs
+// when OVH_CLOUD_INSTANCE_MONTHLY_BILLING_TEST is set.
+func TestAccCloudInstance_monthlyBilling(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+	flavorID := resolveInstanceFlavorID(t, serviceName, region, testAccInstanceFlavorName)
+	imageID := resolveInstanceImageID(t, serviceName, region, testAccInstanceImageName)
+	name := acctest.RandomWithPrefix("test-inst-billing")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloudInstanceV2(t)
+			checkEnvOrSkip(t, "OVH_CLOUD_INSTANCE_MONTHLY_BILLING_TEST")
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCloudInstanceConfigBilling(serviceName, region, flavorID, imageID, name, ""),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_instance.test", "billing.period", "HOURLY"),
+					resource.TestCheckResourceAttr("ovh_cloud_instance.test", "current_state.billing.period", "HOURLY"),
+				),
+			},
+			{
+				Config: testAccCloudInstanceConfigBilling(serviceName, region, flavorID, imageID, name, "MONTHLY"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_instance.test", "billing.period", "MONTHLY"),
+					resource.TestCheckResourceAttr("ovh_cloud_instance.test", "resource_status", "READY"),
+					resource.TestCheckResourceAttr("ovh_cloud_instance.test", "current_state.billing.period", "MONTHLY"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_instance.test", "current_state.billing.since"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_instance.test", "current_state.billing.status"),
+				),
+			},
+			{
+				Config:      testAccCloudInstanceConfigBilling(serviceName, region, flavorID, imageID, name, "HOURLY"),
+				PlanOnly:    true,
+				ExpectError: regexp.MustCompile(`Monthly billing cannot be undone`),
+			},
+			{
+				// Leaving billing out keeps the current period: no change.
+				Config:   testAccCloudInstanceConfigBilling(serviceName, region, flavorID, imageID, name, ""),
+				PlanOnly: true,
+			},
+			{
+				ResourceName:      "ovh_cloud_instance.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccCloudInstanceImportStateIdFunc("ovh_cloud_instance.test"),
 			},
 		},
 	})

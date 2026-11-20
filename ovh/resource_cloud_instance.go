@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -60,6 +61,7 @@ var instanceMutableAttrs = MutableAttrs{
 	Strings:           []string{"name", "flavor_id", "image_id", "power_state", "user_data"},
 	Lists:             []string{"networks", "shares", "volumes"},
 	CustomStringLists: []string{"volume_ids", "security_group_ids"},
+	Objects:           []string{"billing"},
 }
 
 // ValidateConfig enforces the volume rules the API would otherwise reject at
@@ -95,8 +97,24 @@ func (r *cloudInstanceResource) ValidateConfig(ctx context.Context, req resource
 	}
 }
 
-// ModifyPlan replaces the instance when volumes gives the BOOT role to another
-// volume: the API only lets the boot volume be chosen at creation.
+// ModifyPlan checks the boot volume, then the billing period, of an update plan.
+func (r *cloudInstanceResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+	if req.State.Raw.IsNull() {
+		r.modifyCreatePlan(ctx, req, resp)
+		return
+	}
+	r.modifyBootVolumePlan(ctx, req, resp)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	r.checkBillingPeriodPlan(ctx, req, resp)
+}
+
+// modifyBootVolumePlan replaces the instance when volumes gives the BOOT role to
+// another volume: the API only lets the boot volume be chosen at creation.
 //
 // It never plans a replacement it cannot vouch for, since the instance would be
 // destroyed before a creation the API may refuse:
@@ -110,14 +128,7 @@ func (r *cloudInstanceResource) ValidateConfig(ctx context.Context, req resource
 //     resolve), and the update is left to the API.
 //   - A plan with an image and a BOOT volume, or a known boot volume losing its
 //     BOOT role, is an error: the API refuses both.
-func (r *cloudInstanceResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	if req.Plan.Raw.IsNull() {
-		return
-	}
-	if req.State.Raw.IsNull() {
-		r.modifyCreatePlan(ctx, req, resp)
-		return
-	}
+func (r *cloudInstanceResource) modifyBootVolumePlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	var cfgVolumes, planVolumes, stateVolumes types.List
 	var planImage, stateImage ovhtypes.TfStringValue
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("volumes"), &cfgVolumes)...)
@@ -200,6 +211,40 @@ func (r *cloudInstanceResource) ModifyPlan(ctx context.Context, req resource.Mod
 		return
 	}
 	resp.RequiresReplace = append(resp.RequiresReplace, path.Root("volumes"))
+}
+
+// instanceReplaceAttrs are the attributes whose change replaces the instance.
+var instanceReplaceAttrs = []string{"service_name", "region", "availability_zone", "ssh_key_name", "group_id"}
+
+// checkBillingPeriodPlan refuses at plan a MONTHLY instance planned back to
+// HOURLY, which the API refuses at apply: monthly billing cannot be undone. A
+// replacement is left alone, as the new instance starts with its own billing;
+// the resource ModifyPlan does not see the replacements the attribute plan
+// modifiers asked for, so it looks for them itself.
+func (r *cloudInstanceResource) checkBillingPeriodPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	if len(resp.RequiresReplace) > 0 {
+		return
+	}
+	var planBilling, stateBilling types.Object
+	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("billing"), &planBilling)...)
+	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("billing"), &stateBilling)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if billingPeriod(stateBilling) != instanceBillingPeriodMonthly || billingPeriod(planBilling) != instanceBillingPeriodHourly {
+		return
+	}
+	for _, name := range instanceReplaceAttrs {
+		var planned, stored ovhtypes.TfStringValue
+		resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root(name), &planned)...)
+		resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root(name), &stored)...)
+		if resp.Diagnostics.HasError() || planned.IsUnknown() || !planned.Equal(stored) {
+			return
+		}
+	}
+	resp.Diagnostics.AddAttributeError(path.Root("billing").AtName("period"), "Monthly billing cannot be undone",
+		"The instance is billed monthly, and the API refuses to move it back to HOURLY. "+
+			"Set billing.period to MONTHLY, or leave billing out to keep the current period.")
 }
 
 // modifyCreatePlan checks the boot source of a creation. With no state, a role
@@ -434,6 +479,24 @@ func (r *cloudInstanceResource) Schema(ctx context.Context, req resource.SchemaR
 					},
 				},
 			},
+			"billing": schema.SingleNestedAttribute{
+				Optional:            true,
+				Computed:            true,
+				Description:         instanceDescBilling,
+				MarkdownDescription: instanceDescBillingMd,
+				PlanModifiers:       []planmodifier.Object{objectplanmodifier.UseStateForUnknown()},
+				Attributes: map[string]schema.Attribute{
+					"period": schema.StringAttribute{
+						CustomType:          ovhtypes.TfStringType{},
+						Required:            true,
+						Description:         instanceDescBillingPeriod,
+						MarkdownDescription: instanceDescBillingPeriodMd,
+						Validators: []validator.String{
+							stringvalidator.OneOf(instanceBillingPeriodHourly, instanceBillingPeriodMonthly),
+						},
+					},
+				},
+			},
 			// Computed envelope
 			"id": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
@@ -540,6 +603,11 @@ func instanceCurrentStateSchemaAttributes() map[string]schema.Attribute {
 		}}},
 		"group": schema.SingleNestedAttribute{Computed: true, Description: instanceDescCsGroup, MarkdownDescription: instanceDescCsGroup, Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescGroupId, MarkdownDescription: instanceDescGroupId},
+		}},
+		"billing": schema.SingleNestedAttribute{Computed: true, Description: instanceDescCsBilling, MarkdownDescription: instanceDescCsBilling, Attributes: map[string]schema.Attribute{
+			"period": schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescCsBillingPeriod, MarkdownDescription: instanceDescCsBillingPeriodMd},
+			"since":  schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescCsBillingSince, MarkdownDescription: instanceDescCsBillingSince},
+			"status": schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescCsBillingStatus, MarkdownDescription: instanceDescCsBillingStatusMd},
 		}},
 	}
 }

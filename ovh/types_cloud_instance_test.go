@@ -1472,3 +1472,175 @@ func TestUnitCloudInstanceVolumePlanModifiers(t *testing.T) {
 		}
 	})
 }
+
+func billingObj(period ovhtypes.TfStringValue) types.Object {
+	return types.ObjectValueMust(instanceBillingSpecAttrTypes(), map[string]attr.Value{"period": period})
+}
+
+// billing is sent only when the plan knows it: an absent key is HOURLY on create
+// and keeps the stored period on update.
+func TestUnitCloudInstanceBillingPayloads(t *testing.T) {
+	cases := []struct {
+		name    string
+		billing types.Object
+		want    string
+	}{
+		{"monthly", billingObj(strVal("MONTHLY")), `"billing":{"period":"MONTHLY"}`},
+		{"hourly", billingObj(strVal("HOURLY")), `"billing":{"period":"HOURLY"}`},
+		{"null", types.ObjectNull(instanceBillingSpecAttrTypes()), ""},
+		{"unknown", types.ObjectUnknown(instanceBillingSpecAttrTypes()), ""},
+		{"zero value", types.Object{}, ""},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			m := CloudInstanceResourceModel{CloudInstanceModel: CloudInstanceModel{
+				Region: strVal("GRA11"), Name: strVal("web-1"), FlavorId: strVal("flavor-uuid"), Billing: tc.billing,
+			}}
+			create, _ := json.Marshal(m.ToCreate().TargetSpec)
+			update, _ := json.Marshal(m.ToUpdate("chk-1", strNull()).TargetSpec)
+			for body, got := range map[string]string{"create": string(create), "update": string(update)} {
+				if tc.want == "" && strings.Contains(got, `"billing"`) {
+					t.Fatalf("%s body must not carry billing: %s", body, got)
+				}
+				if tc.want != "" && !strings.Contains(got, tc.want) {
+					t.Fatalf("%s body must contain %s: %s", body, tc.want, got)
+				}
+			}
+		})
+	}
+}
+
+func TestUnitCloudInstanceMergeWithBilling(t *testing.T) {
+	ctx := context.Background()
+	period := func(o types.Object) string {
+		v, _ := o.Attributes()["period"].(ovhtypes.TfStringValue)
+		return v.ValueString()
+	}
+
+	t.Run("target spec without billing reads as HOURLY", func(t *testing.T) {
+		m := &CloudInstanceModel{Billing: types.ObjectUnknown(instanceBillingSpecAttrTypes())}
+		m.MergeWith(ctx, &CloudInstanceAPIResponse{TargetSpec: &CloudInstanceAPITargetSpec{Name: "n"}}, m.priorSpec())
+		if got := period(m.Billing); got != "HOURLY" {
+			t.Fatalf("billing.period = %q, want HOURLY", got)
+		}
+	})
+
+	t.Run("monthly, observed active", func(t *testing.T) {
+		m := &CloudInstanceModel{}
+		m.MergeWith(ctx, &CloudInstanceAPIResponse{
+			TargetSpec: &CloudInstanceAPITargetSpec{Name: "n", Billing: &CloudInstanceAPIBillingSpec{Period: "MONTHLY"}},
+			CurrentState: &CloudInstanceAPICurrentState{
+				Billing: &CloudInstanceAPIBilling{Period: "MONTHLY", Since: "2026-11-01T00:00:00Z", Status: "ACTIVE"},
+			},
+		}, m.priorSpec())
+		if got := period(m.Billing); got != "MONTHLY" {
+			t.Fatalf("billing.period = %q, want MONTHLY", got)
+		}
+		cs, _ := m.CurrentState.Attributes()["billing"].(types.Object)
+		attrs := cs.Attributes()
+		for name, want := range map[string]string{"period": "MONTHLY", "since": "2026-11-01T00:00:00Z", "status": "ACTIVE"} {
+			if v, _ := attrs[name].(ovhtypes.TfStringValue); v.ValueString() != want {
+				t.Fatalf("current_state.billing.%s = %v, want %s", name, attrs[name], want)
+			}
+		}
+	})
+
+	t.Run("hourly: since and status are null", func(t *testing.T) {
+		m := &CloudInstanceModel{}
+		m.MergeWith(ctx, &CloudInstanceAPIResponse{
+			TargetSpec:   &CloudInstanceAPITargetSpec{Name: "n", Billing: &CloudInstanceAPIBillingSpec{Period: "HOURLY"}},
+			CurrentState: &CloudInstanceAPICurrentState{Billing: &CloudInstanceAPIBilling{Period: "HOURLY"}},
+		}, m.priorSpec())
+		cs, _ := m.CurrentState.Attributes()["billing"].(types.Object)
+		for _, name := range []string{"since", "status"} {
+			if !cs.Attributes()[name].IsNull() {
+				t.Fatalf("current_state.billing.%s must be null for an hourly instance, got %v", name, cs.Attributes()[name])
+			}
+		}
+	})
+
+	t.Run("unreadable billing", func(t *testing.T) {
+		m := &CloudInstanceModel{}
+		m.MergeWith(ctx, &CloudInstanceAPIResponse{
+			TargetSpec:   &CloudInstanceAPITargetSpec{Name: "n"},
+			CurrentState: &CloudInstanceAPICurrentState{},
+		}, m.priorSpec())
+		if cs, _ := m.CurrentState.Attributes()["billing"].(types.Object); !cs.IsNull() {
+			t.Fatalf("current_state.billing must be null, got %v", cs)
+		}
+	})
+
+	t.Run("no target spec: typed null, or the planned value kept", func(t *testing.T) {
+		m := &CloudInstanceModel{}
+		m.MergeWith(ctx, &CloudInstanceAPIResponse{Id: "inst"}, m.priorSpec())
+		if !m.Billing.IsNull() || len(m.Billing.AttributeTypes(ctx)) == 0 {
+			t.Fatalf("billing must be a typed null, got %v", m.Billing)
+		}
+		m = &CloudInstanceModel{Billing: billingObj(strVal("MONTHLY"))}
+		m.MergeWith(ctx, &CloudInstanceAPIResponse{Id: "inst"}, m.priorSpec())
+		if got := period(m.Billing); got != "MONTHLY" {
+			t.Fatalf("billing.period = %q, want the planned MONTHLY", got)
+		}
+	})
+}
+
+// A MONTHLY instance planned back to HOURLY is refused at plan, unless the
+// instance is replaced.
+func TestUnitCloudInstanceModifyPlanBillingPeriod(t *testing.T) {
+	ctx := context.Background()
+	r := &cloudInstanceResource{}
+	var sch fwresource.SchemaResponse
+	r.Schema(ctx, fwresource.SchemaRequest{}, &sch)
+
+	raw := func(region string, billing types.Object) tftypes.Value {
+		t.Helper()
+		st := tfsdk.State{Schema: sch.Schema, Raw: tftypes.NewValue(sch.Schema.Type().TerraformType(ctx), nil)}
+		for name, v := range map[string]any{"region": strVal(region), "billing": billing} {
+			if d := st.SetAttribute(ctx, path.Root(name), v); d.HasError() {
+				t.Fatal(d)
+			}
+		}
+		return st.Raw
+	}
+	monthly, hourly := billingObj(strVal("MONTHLY")), billingObj(strVal("HOURLY"))
+	null := types.ObjectNull(instanceBillingSpecAttrTypes())
+	unknown := types.ObjectUnknown(instanceBillingSpecAttrTypes())
+
+	cases := []struct {
+		name            string
+		state, plan     types.Object
+		region          string
+		wantError       bool
+		configNoBilling bool
+	}{
+		{"monthly -> hourly", monthly, hourly, "GRA11", true, false},
+		{"monthly kept", monthly, monthly, "GRA11", false, false},
+		{"hourly -> monthly", hourly, monthly, "GRA11", false, false},
+		{"monthly, billing unknown", monthly, unknown, "GRA11", false, true},
+		{"state without billing (upgrade, no refresh)", null, hourly, "GRA11", false, false},
+		{"monthly -> hourly with a replacement", monthly, hourly, "SBG5", false, false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			cfg := tc.plan
+			if tc.configNoBilling {
+				cfg = null
+			}
+			req := fwresource.ModifyPlanRequest{
+				State:  tfsdk.State{Schema: sch.Schema, Raw: raw("GRA11", tc.state)},
+				Plan:   tfsdk.Plan{Schema: sch.Schema, Raw: raw(tc.region, tc.plan)},
+				Config: tfsdk.Config{Schema: sch.Schema, Raw: raw(tc.region, cfg)},
+			}
+			resp := &fwresource.ModifyPlanResponse{}
+			r.ModifyPlan(ctx, req, resp)
+			if got := resp.Diagnostics.HasError(); got != tc.wantError {
+				t.Fatalf("error = %v, want %v: %v", got, tc.wantError, resp.Diagnostics)
+			}
+			if tc.wantError {
+				if got := resp.Diagnostics.Errors()[0].Summary(); got != "Monthly billing cannot be undone" {
+					t.Fatalf("error = %q", got)
+				}
+			}
+		})
+	}
+}

@@ -94,6 +94,10 @@ resource "ovh_cloud_instance" "web" {
   image_id     = "<image ID>"
   ssh_key_name = "deploy"
 
+  billing = {
+    period = "HOURLY"
+  }
+
   networks = [
     { auto_assign_public_ip = true },
   ]
@@ -183,7 +187,7 @@ Steps 1 and 5 do not change, except that there are no `import` and `removed` blo
 
 | Legacy | New |
 |---|---|
-| `billing_period` | removed; the new resource bills hourly |
+| `billing_period` (`hourly`, `monthly`) | `billing = { period = "HOURLY" }` or `{ period = "MONTHLY" }`. Omitted, it keeps the current period (`HOURLY` on creation). `HOURLY` to `MONTHLY` is applied in place instead of recreating the instance; `MONTHLY` cannot go back to `HOURLY` |
 | `flavor { flavor_id }` | `flavor_id`; a change resizes in place |
 | `boot_from { image_id }` | `image_id`; a change rebuilds the instance and wipes its root disk |
 | `boot_from { volume_id }` | `volumes = [{ id = "<volume ID>", role = "BOOT" }]` with no `image_id`. `volume_ids = ["<volume ID>"]` with no `image_id` still works but is deprecated |
@@ -207,6 +211,8 @@ Steps 1 and 5 do not change, except that there are no `import` and `removed` blo
 New arguments with no legacy counterpart: `power_state` (`ACTIVE`, `SHUTOFF`, `SHELVED`), `security_group_ids`, `shares`, `volume_ids` for data volumes.
 
 ~> **`user_data` after an import.** The import does not read the existing cloud-init script, so the imported state has no `user_data`. If the new block sets `user_data`, the first `terraform apply` reinstalls the instance and wipes its root disk. Leave `user_data` out of the block until the migration is done, or set it only when a reinstall is acceptable.
+
+~> **Monthly instances.** An instance billed monthly imports with `billing.period = "MONTHLY"`. Write `MONTHLY` or leave `billing` out: `HOURLY` fails at plan, as monthly billing cannot be undone.
 
 ~> **Security groups.** Leaving `security_group_ids` out keeps the project's `default` security group. Setting it to `[]` removes every group and blocks all inbound traffic.
 
@@ -251,6 +257,10 @@ resource "ovh_cloud_instance" "app" {
   flavor_id    = "<flavor ID>"
   image_id     = "<image ID>"
   ssh_key_name = "deploy"
+
+  billing = {
+    period = "HOURLY"
+  }
 
   networks = [
     { auto_assign_public_ip = true },

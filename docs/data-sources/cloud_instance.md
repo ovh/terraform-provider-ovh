@@ -71,6 +71,8 @@ actually observes.
 * `shares` - File storage shares requested to be attached to the instance:
   * `id` - Identifier of the file storage share to attach. Adding the reference attaches the share to the instance, removing it detaches it.
   * `access_level` - Access level granted to the instance for this share: `READ_ONLY` or `READ_WRITE`. Omit it to let the API apply its default (`READ_WRITE`).
+* `billing` - Requested billing of the instance:
+  * `period` - Billing period of the instance: `HOURLY` or `MONTHLY`. An instance moved to monthly billing outside the API reads as `MONTHLY`.
 * `checksum` - Computed hash representing the current target specification value. It implements optimistic concurrency control: the value is echoed back on update and the request is rejected when it no longer matches server-side.
 * `created_at` - Creation date of the instance, as an RFC 3339 timestamp.
 * `updated_at` - Last modification date of the instance, as an RFC 3339 timestamp.
@@ -123,3 +125,7 @@ actually observes.
     * `id` - Security group identifier.
   * `group` - Instance (placement) group the instance belongs to, null when it is not part of any group:
     * `id` - Identifier of the instance (placement) group.
+  * `billing` - Observed billing of the instance, null when the billing could not be read:
+    * `period` - Billing period the instance is billed on (`HOURLY` or `MONTHLY`). `MONTHLY` as soon as a monthly subscription exists for the instance, whatever its status.
+    * `since` - Start of the monthly billing, as an RFC 3339 timestamp. Null for an hourly instance.
+    * `status` - State of the monthly subscription: `ACTIVATION_PENDING` until the billing activates it, then `ACTIVE`. Null for an hourly instance.

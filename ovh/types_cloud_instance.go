@@ -37,6 +37,7 @@ type CloudInstanceModel struct {
 	VolumeIds        ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] `tfsdk:"volume_ids"`
 	SecurityGroupIds ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] `tfsdk:"security_group_ids"`
 	Shares           types.List                                         `tfsdk:"shares"`
+	Billing          types.Object                                       `tfsdk:"billing"`
 
 	// Computed envelope
 	Id             ovhtypes.TfStringValue `tfsdk:"id"`
@@ -83,6 +84,10 @@ type CloudInstanceAPIShareRef struct {
 	AccessLevel string `json:"accessLevel,omitempty"`
 }
 
+type CloudInstanceAPIBillingSpec struct {
+	Period string `json:"period"`
+}
+
 // Target spec sent on create (all settable fields incl. immutable location/ssh/group).
 type CloudInstanceAPITargetSpec struct {
 	Name       string                       `json:"name"`
@@ -99,8 +104,9 @@ type CloudInstanceAPITargetSpec struct {
 	// No omitempty: the API distinguishes null (apply the project's default
 	// security group on create, leave the groups unchanged on update) from an
 	// explicit empty array (apply no security group at all).
-	SecurityGroups []CloudInstanceRef         `json:"securityGroups"`
-	Shares         []CloudInstanceAPIShareRef `json:"shares,omitempty"`
+	SecurityGroups []CloudInstanceRef           `json:"securityGroups"`
+	Shares         []CloudInstanceAPIShareRef   `json:"shares,omitempty"`
+	Billing        *CloudInstanceAPIBillingSpec `json:"billing,omitempty"`
 }
 
 // Update target spec: mutable-only. location, sshKeyName and group are absent
@@ -136,6 +142,8 @@ type CloudInstanceAPIUpdateTargetSpec struct {
 	// Never omitempty: the API reads an absent securityGroups as a clear, which
 	// leaves every port deny-all. [] says that deliberately.
 	SecurityGroups []CloudInstanceRef `json:"securityGroups"`
+	// Another exception to the real PUT: an absent billing keeps the stored period.
+	Billing *CloudInstanceAPIBillingSpec `json:"billing,omitempty"`
 }
 
 // Observed nested objects.
@@ -193,6 +201,12 @@ type CloudInstanceAPIShareState struct {
 	State       string `json:"state,omitempty"`
 }
 
+type CloudInstanceAPIBilling struct {
+	Period string `json:"period"`
+	Since  string `json:"since,omitempty"`
+	Status string `json:"status,omitempty"`
+}
+
 type CloudInstanceAPICurrentState struct {
 	Name           string                         `json:"name,omitempty"`
 	Flavor         *CloudInstanceAPIFlavor        `json:"flavor,omitempty"`
@@ -209,6 +223,7 @@ type CloudInstanceAPICurrentState struct {
 	HostId         string                         `json:"hostId,omitempty"`
 	ProjectId      string                         `json:"projectId,omitempty"`
 	UserId         string                         `json:"userId,omitempty"`
+	Billing        *CloudInstanceAPIBilling       `json:"billing,omitempty"`
 }
 
 type CloudInstanceAPIResponse struct {
@@ -342,6 +357,19 @@ const (
 	instanceDescDsVolumes          = "Block-storage volumes attached to the instance, each with its role (BOOT for the root volume of an instance booted from a volume, DATA for any other volume)"
 	instanceDescDsVolumeIds        = "IDs of every block-storage volume attached to the instance, the boot volume included. DEPRECATED: use volumes, which carries the role of each volume"
 
+	instanceDescBilling         = "Billing of the instance. Omit it to keep the current billing period, HOURLY for a new instance"
+	instanceDescBillingMd       = "Billing of the instance. Omit it to keep the current billing period, `HOURLY` for a new instance"
+	instanceDescBillingPeriod   = "Billing period of the instance: HOURLY or MONTHLY. Moving to MONTHLY is done in place, and is refused by the API when the flavor cannot be billed monthly. Monthly billing cannot be undone: a MONTHLY instance cannot go back to HOURLY. An instance moved to monthly billing outside Terraform reads as MONTHLY"
+	instanceDescBillingPeriodMd = "Billing period of the instance: `HOURLY` or `MONTHLY`. Moving to `MONTHLY` is done in place, and is refused by the API when the flavor cannot be billed monthly. Monthly billing cannot be undone: a `MONTHLY` instance cannot go back to `HOURLY`. An instance moved to monthly billing outside Terraform reads as `MONTHLY`"
+	instanceDescDsBilling       = "Requested billing of the instance"
+
+	instanceDescCsBilling         = "Observed billing of the instance, null when the billing could not be read"
+	instanceDescCsBillingPeriod   = "Billing period the instance is billed on (HOURLY or MONTHLY). MONTHLY as soon as a monthly subscription exists for the instance, whatever its status"
+	instanceDescCsBillingPeriodMd = "Billing period the instance is billed on (`HOURLY` or `MONTHLY`). `MONTHLY` as soon as a monthly subscription exists for the instance, whatever its status"
+	instanceDescCsBillingSince    = "Start of the monthly billing, as an RFC 3339 timestamp. Null for an hourly instance"
+	instanceDescCsBillingStatus   = "State of the monthly subscription: ACTIVATION_PENDING until the billing activates it, then ACTIVE. Null for an hourly instance"
+	instanceDescCsBillingStatusMd = "State of the monthly subscription: `ACTIVATION_PENDING` until the billing activates it, then `ACTIVE`. Null for an hourly instance"
+
 	instanceDescShareRefId            = "Identifier of the file storage share to attach. Adding the reference attaches the share to the instance, removing it detaches it"
 	instanceDescShareRefAccessLevel   = "Access level granted to the instance for this share: READ_ONLY or READ_WRITE. Omit it to let the API apply its default (READ_WRITE)"
 	instanceDescShareRefAccessLevelMd = "Access level granted to the instance for this share: `READ_ONLY` or `READ_WRITE`. Omit it to let the API apply its default (`READ_WRITE`)"
@@ -430,6 +458,20 @@ func instanceVolumeRefAttrTypes() map[string]attr.Type {
 	}
 }
 
+func instanceBillingSpecAttrTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"period": ovhtypes.TfStringType{},
+	}
+}
+
+func instanceBillingStateAttrTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"period": ovhtypes.TfStringType{},
+		"since":  ovhtypes.TfStringType{},
+		"status": ovhtypes.TfStringType{},
+	}
+}
+
 func instanceShareStateAttrTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"id":           ovhtypes.TfStringType{},
@@ -469,6 +511,7 @@ func InstanceCurrentStateAttrTypes() map[string]attr.Type {
 		"host_id":         ovhtypes.TfStringType{},
 		"project_id":      ovhtypes.TfStringType{},
 		"user_id":         ovhtypes.TfStringType{},
+		"billing":         types.ObjectType{AttrTypes: instanceBillingStateAttrTypes()},
 	}
 }
 
@@ -546,6 +589,29 @@ func customStringListToRefs(list ovhtypes.TfListNestedValue[ovhtypes.TfStringVal
 		}
 	}
 	return out
+}
+
+// Billing periods, as the API spells them.
+const (
+	instanceBillingPeriodHourly  = "HOURLY"
+	instanceBillingPeriodMonthly = "MONTHLY"
+)
+
+// billingPeriod reads billing.period, "" when billing or its period is null or unknown.
+func billingPeriod(billing types.Object) string {
+	if billing.IsNull() || billing.IsUnknown() {
+		return ""
+	}
+	v, _ := billing.Attributes()["period"].(ovhtypes.TfStringValue)
+	return knownString(v)
+}
+
+func billingToAPI(billing types.Object) *CloudInstanceAPIBillingSpec {
+	period := billingPeriod(billing)
+	if period == "" {
+		return nil
+	}
+	return &CloudInstanceAPIBillingSpec{Period: period}
 }
 
 // Volume roles, as the API spells them.
@@ -694,6 +760,7 @@ func (m *CloudInstanceResourceModel) ToCreate() *CloudInstanceCreatePayload {
 	ts.Volumes = m.volumesPayload(true)
 	ts.SecurityGroups = customStringListToRefs(m.SecurityGroupIds)
 	ts.Shares = sharesToAPI(m.Shares)
+	ts.Billing = billingToAPI(m.Billing)
 
 	return &CloudInstanceCreatePayload{TargetSpec: ts}
 }
@@ -746,6 +813,7 @@ func (m *CloudInstanceResourceModel) ToUpdate(checksum string, priorUserData ovh
 		// must not be turned into one. security_group_ids is Optional+Computed and
 		// always known at apply, so this is nil only in a degenerate merge.
 		SecurityGroups: customStringListToRefs(m.SecurityGroupIds),
+		Billing:        billingToAPI(m.Billing),
 	}
 
 	if !m.ImageId.IsNull() && !m.ImageId.IsUnknown() && m.ImageId.ValueString() != "" {
@@ -991,6 +1059,37 @@ func buildInstanceSecurityGroupStateList(sgs []CloudInstanceRef) basetypes.ListV
 	return types.ListValueMust(objType, items)
 }
 
+func tfStrOrNull(s string) ovhtypes.TfStringValue {
+	if s == "" {
+		return ovhtypes.TfStringValue{StringValue: types.StringNull()}
+	}
+	return tfStr(s)
+}
+
+// buildInstanceBillingSpecObject reads a null billing as HOURLY, like the API does.
+func buildInstanceBillingSpecObject(b *CloudInstanceAPIBillingSpec) basetypes.ObjectValue {
+	period := instanceBillingPeriodHourly
+	if b != nil && b.Period != "" {
+		period = b.Period
+	}
+	obj, _ := types.ObjectValue(instanceBillingSpecAttrTypes(), map[string]attr.Value{
+		"period": tfStr(period),
+	})
+	return obj
+}
+
+func buildInstanceBillingStateObject(b *CloudInstanceAPIBilling) basetypes.ObjectValue {
+	if b == nil {
+		return types.ObjectNull(instanceBillingStateAttrTypes())
+	}
+	obj, _ := types.ObjectValue(instanceBillingStateAttrTypes(), map[string]attr.Value{
+		"period": tfStr(b.Period),
+		"since":  tfStrOrNull(b.Since),
+		"status": tfStrOrNull(b.Status),
+	})
+	return obj
+}
+
 func buildInstanceGroupObject(g *CloudInstanceRef) basetypes.ObjectValue {
 	if g == nil {
 		return types.ObjectNull(instanceGroupRefAttrTypes())
@@ -1019,6 +1118,7 @@ func buildInstanceCurrentStateObject(ctx context.Context, state *CloudInstanceAP
 		"host_id":         tfStr(state.HostId),
 		"project_id":      tfStr(state.ProjectId),
 		"user_id":         tfStr(state.UserId),
+		"billing":         buildInstanceBillingStateObject(state.Billing),
 	})
 	return obj
 }
@@ -1244,6 +1344,7 @@ func (m *CloudInstanceModel) MergeWith(ctx context.Context, response *CloudInsta
 		if ts.Group != nil && ts.Group.Id != "" {
 			m.GroupId = tfStr(ts.Group.Id)
 		}
+		m.Billing = buildInstanceBillingSpecObject(ts.Billing)
 		m.Networks = buildInstanceNetworksRootList(prior.Networks, ts)
 		m.Shares = buildInstanceSharesRootList(prior.Shares, ts)
 
@@ -1305,6 +1406,12 @@ func (m *CloudInstanceModel) MergeWith(ctx context.Context, response *CloudInsta
 	// expressed.
 	if response.TargetSpec == nil && !priorSecurityGroupIds.IsNull() && !priorSecurityGroupIds.IsUnknown() {
 		m.SecurityGroupIds = priorSecurityGroupIds
+	}
+
+	// billing is Optional+Computed and must be known after apply, and typed even
+	// when the response carried no target spec.
+	if m.Billing.IsUnknown() || len(m.Billing.AttributeTypes(ctx)) == 0 {
+		m.Billing = types.ObjectNull(instanceBillingSpecAttrTypes())
 	}
 
 	// security_group_ids is Optional+Computed and must be known after apply, even
