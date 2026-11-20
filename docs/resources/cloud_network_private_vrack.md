@@ -22,7 +22,7 @@ resource "ovh_cloud_network_private_vrack" "network" {
 
 The following arguments are supported:
 
-* `service_name` - (Required) Service name of the resource representing the id of the cloud project. **Changing this value recreates the resource.**
+* `service_name` - (Optional) Service name of the resource representing the id of the cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used. **Changing this value recreates the resource.**
 * `name` - (Required) Network name.
 * `region` - (Required) Region where the network will be created. **Changing this value recreates the resource.**
 * `description` - (Optional) Network description. **Changing this value recreates the resource.**

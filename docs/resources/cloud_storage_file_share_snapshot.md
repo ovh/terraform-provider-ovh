@@ -30,7 +30,7 @@ resource "ovh_cloud_storage_file_share_snapshot" "snapshot" {
 
 The following arguments are supported:
 
-* `service_name` - (Required) Service name of the resource representing the id of the cloud project. **Changing this value recreates the resource.**
+* `service_name` - (Optional) Service name of the resource representing the id of the cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used. **Changing this value recreates the resource.**
 * `share_id` - (Required) ID of the file share to snapshot. **Changing this value recreates the resource.**
 * `name` - (Optional) Snapshot name.
 * `description` - (Optional) Snapshot description.

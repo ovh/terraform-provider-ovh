@@ -41,7 +41,7 @@ resource "ovh_cloud_network_private_vrack_subnet" "subnet" {
 
 The following arguments are supported:
 
-* `service_name` - (Required) Service name (ID of the cloud project). **Changing this value recreates the resource.**
+* `service_name` - (Optional) Service name of the resource representing the id of the cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used. **Changing this value recreates the resource.**
 * `network_id` - (Required) Network ID of the parent private network. **Changing this value recreates the resource.**
 * `name` - (Required) Subnet name.
 * `cidr` - (Required) CIDR address range for the subnet (e.g. `10.0.0.0/24`). **Changing this value recreates the resource.**

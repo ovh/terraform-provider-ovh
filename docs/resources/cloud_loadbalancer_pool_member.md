@@ -46,7 +46,7 @@ resource "ovh_cloud_loadbalancer_pool_member" "web_backup" {
 
 The following arguments are supported:
 
-* `service_name` - (Required) Service name of the resource representing the id of the cloud project. **Changing this value recreates the resource.**
+* `service_name` - (Optional) Service name of the resource representing the id of the cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used. **Changing this value recreates the resource.**
 * `loadbalancer_id` - (Required) ID of the load balancer. **Changing this value recreates the resource.**
 * `pool_id` - (Required) ID of the pool. **Changing this value recreates the resource.**
 * `address` - (Required) IP address of the member. **Changing this value recreates the resource.**
