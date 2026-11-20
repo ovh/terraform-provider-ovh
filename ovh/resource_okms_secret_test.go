@@ -2,6 +2,7 @@ package ovh
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"regexp"
 	"testing"
@@ -286,6 +287,166 @@ func TestAccOkmsSecretResource_createWithMetadata(t *testing.T) {
 					resource.TestCheckResourceAttr("ovh_okms_secret.test", "metadata.max_versions", "7"),
 					resource.TestCheckResourceAttr("ovh_okms_secret.test", "metadata.deactivate_version_after", "0s"),
 					resource.TestCheckResourceAttr("ovh_okms_secret.test", "metadata.custom_metadata.env", "acc"),
+				),
+			},
+		},
+	})
+}
+
+// Write-only data, checked through the data source with include_data. Its version
+// argument is unknown until the resource is applied, so the data source is read
+// after the secret version exists.
+const testAccOkmsSecretResourceConfigWriteOnly = `
+resource "ovh_okms_secret" "test" {
+	okms_id = "%s"
+	path    = "%s"
+	version = {
+		data_wo         = jsonencode(%s)
+		data_wo_version = %d
+	}
+}
+
+data "ovh_okms_secret" "test" {
+	okms_id      = ovh_okms_secret.test.okms_id
+	path         = ovh_okms_secret.test.path
+	version      = ovh_okms_secret.test.version.id
+	include_data = true
+}
+`
+
+const testAccOkmsSecretResourceConfigData = `
+resource "ovh_okms_secret" "test" {
+	okms_id = "%s"
+	path    = "%s"
+	version = {
+		data = jsonencode(%s)
+	}
+}
+
+data "ovh_okms_secret" "test" {
+	okms_id      = ovh_okms_secret.test.okms_id
+	path         = ovh_okms_secret.test.path
+	version      = ovh_okms_secret.test.version.id
+	include_data = true
+}
+`
+
+// Write-only data is never stored in the state, and a new version is created only
+// when data_wo_version changes.
+func TestAccOkmsSecretResource_writeOnly(t *testing.T) {
+	okmsID := os.Getenv("OVH_OKMS")
+	if okmsID == "" {
+		checkEnvOrSkip(t, "OVH_OKMS")
+	}
+	path := fmt.Sprintf("tfacc-%s", acctest.RandString(6))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheckOkms(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(testAccOkmsSecretResourceConfigWriteOnly, okmsID, path, `{ initial = "v1" }`, 1),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_okms_secret.test", "version.id", "1"),
+					resource.TestCheckResourceAttr("ovh_okms_secret.test", "version.data_wo_version", "1"),
+					resource.TestCheckNoResourceAttr("ovh_okms_secret.test", "version.data"),
+					resource.TestCheckNoResourceAttr("ovh_okms_secret.test", "version.data_wo"),
+					resource.TestCheckResourceAttr("data.ovh_okms_secret.test", "data", `{"initial":"v1"}`),
+				),
+			},
+			{
+				// Same data_wo_version: the new data is not sent
+				Config: fmt.Sprintf(testAccOkmsSecretResourceConfigWriteOnly, okmsID, path, `{ initial = "changed" }`, 1),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_okms_secret.test", "version.id", "1"),
+					resource.TestCheckResourceAttr("data.ovh_okms_secret.test", "data", `{"initial":"v1"}`),
+				),
+			},
+			{
+				Config: fmt.Sprintf(testAccOkmsSecretResourceConfigWriteOnly, okmsID, path, `{ initial = "v2" }`, 2),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_okms_secret.test", "version.id", "2"),
+					resource.TestCheckResourceAttr("ovh_okms_secret.test", "version.data_wo_version", "2"),
+					resource.TestCheckNoResourceAttr("ovh_okms_secret.test", "version.data"),
+					resource.TestCheckResourceAttr("data.ovh_okms_secret.test", "data", `{"initial":"v2"}`),
+				),
+			},
+		},
+	})
+}
+
+// Switching from data to data_wo adopts the current version: nothing is written,
+// and the data leaves the state.
+func TestAccOkmsSecretResource_dataToWriteOnly(t *testing.T) {
+	okmsID := os.Getenv("OVH_OKMS")
+	if okmsID == "" {
+		checkEnvOrSkip(t, "OVH_OKMS")
+	}
+	path := fmt.Sprintf("tfacc-%s", acctest.RandString(6))
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheckOkms(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(testAccOkmsSecretResourceConfigData, okmsID, path, `{ initial = "v1" }`),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_okms_secret.test", "version.id", "1"),
+					resource.TestCheckResourceAttrSet("ovh_okms_secret.test", "version.data"),
+				),
+			},
+			{
+				Config: fmt.Sprintf(testAccOkmsSecretResourceConfigWriteOnly, okmsID, path, `{}`, 1),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_okms_secret.test", "version.id", "1"),
+					resource.TestCheckResourceAttr("ovh_okms_secret.test", "version.data_wo_version", "1"),
+					resource.TestCheckNoResourceAttr("ovh_okms_secret.test", "version.data"),
+					resource.TestCheckResourceAttr("data.ovh_okms_secret.test", "data", `{"initial":"v1"}`),
+				),
+			},
+		},
+	})
+}
+
+// A secret created by Terraform and filled outside of it: the new version is
+// neither read back into the state nor overwritten.
+func TestAccOkmsSecretResource_writeOnlyFilledOutside(t *testing.T) {
+	okmsID := os.Getenv("OVH_OKMS")
+	if okmsID == "" {
+		checkEnvOrSkip(t, "OVH_OKMS")
+	}
+	path := fmt.Sprintf("tfacc-%s", acctest.RandString(6))
+	config := fmt.Sprintf(`
+resource "ovh_okms_secret" "test" {
+	okms_id = "%s"
+	path    = "%s"
+	version = {
+		data_wo         = jsonencode({})
+		data_wo_version = 1
+	}
+}
+`, okmsID, path)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheckOkms(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check:  resource.TestCheckResourceAttr("ovh_okms_secret.test", "version.id", "1"),
+			},
+			{
+				PreConfig: func() {
+					endpoint := "/v2/okms/resource/" + url.PathEscape(okmsID) + "/secret/" + url.PathEscape(path)
+					payload := map[string]any{"version": map[string]any{"data": map[string]any{"filled": "outside"}}}
+					if err := testAccOVHClient.Put(endpoint, payload, nil); err != nil {
+						t.Fatalf("failed to fill the secret outside of Terraform: %s", err)
+					}
+				},
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_okms_secret.test", "metadata.current_version", "2"),
+					resource.TestCheckNoResourceAttr("ovh_okms_secret.test", "version.data"),
 				),
 			},
 		},
