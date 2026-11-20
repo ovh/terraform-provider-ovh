@@ -61,6 +61,12 @@ The following attributes are exported:
   * `volume_id` - ID of the backed-up volume.
   * `size` - Size of the backup in GB.
   * `status` - Backup status (`AVAILABLE`, `CREATING`, `DELETED`, `DELETING`, `ERROR`, `ERROR_DELETING`, `ERROR_RESTORING`, `RESTORING`, `UNMANAGING`).
+  * `volume_type` - Type of the backed-up volume (`CLASSIC`, `HIGH_SPEED`, `HIGH_SPEED_GEN2`). Null when the backup does not record it.
+  * `encryption` - Encryption configuration of the backed-up volume. Null when the backup does not record it:
+    * `enabled` - Whether the backed-up volume is encrypted at rest with LUKS.
+    * `kms` - Customer-managed key (CMK) reference used to encrypt the backed-up volume:
+      * `domain_id` - OKMS domain ID owning the service key.
+      * `service_key_id` - OKMS service key ID used to encrypt the backed-up volume.
 
 ## Import
 

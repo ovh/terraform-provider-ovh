@@ -45,6 +45,8 @@ type CloudStorageBlockVolumeBackupCurrentState struct {
 	VolumeId    string                                 `json:"volumeId,omitempty"`
 	Size        int64                                  `json:"size,omitempty"`
 	Status      string                                 `json:"status,omitempty"`
+	VolumeType  string                                 `json:"volumeType,omitempty"`
+	Encryption  *CloudStorageBlockVolumeEncryption     `json:"encryption,omitempty"`
 }
 
 type CloudStorageBlockVolumeBackupTargetSpec struct {
@@ -106,7 +108,25 @@ func BackupCurrentStateAttrTypes() map[string]attr.Type {
 		"volume_id":   ovhtypes.TfStringType{},
 		"size":        types.Int64Type,
 		"status":      ovhtypes.TfStringType{},
+		"volume_type": ovhtypes.TfStringType{},
+		"encryption":  types.ObjectType{AttrTypes: BlockVolumeEncryptionAttrTypes()},
 	}
+}
+
+// buildBackupEncryptionObject returns a null object when the API reports no encryption for the backup.
+func buildBackupEncryptionObject(encryption *CloudStorageBlockVolumeEncryption) types.Object {
+	if encryption == nil {
+		return types.ObjectNull(BlockVolumeEncryptionAttrTypes())
+	}
+
+	encryptionObject, _ := types.ObjectValue(
+		BlockVolumeEncryptionAttrTypes(),
+		map[string]attr.Value{
+			"enabled": types.BoolValue(encryption.Enabled),
+			"kms":     buildBlockVolumeEncryptionKMSObject(encryption.Kms),
+		},
+	)
+	return encryptionObject
 }
 
 // MergeWith merges API response data into the Terraform model
@@ -138,6 +158,8 @@ func (m *CloudStorageBlockVolumeBackupModel) MergeWith(ctx context.Context, resp
 				"volume_id":   ovhtypes.TfStringValue{StringValue: types.StringValue(response.CurrentState.VolumeId)},
 				"size":        types.Int64Value(response.CurrentState.Size),
 				"status":      ovhtypes.TfStringValue{StringValue: types.StringValue(response.CurrentState.Status)},
+				"volume_type": nullableTfString(response.CurrentState.VolumeType),
+				"encryption":  buildBackupEncryptionObject(response.CurrentState.Encryption),
 			},
 		)
 
