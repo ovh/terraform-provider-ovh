@@ -295,3 +295,31 @@ func TestAccDedicatedServer_eco(t *testing.T) {
 		},
 	})
 }
+
+func TestAccDedicatedServer_vnis(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckOrderDedicatedServer(t)
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: dedicatedServerResourceTestConfig(false),
+				Check: resource.ComposeTestCheckFunc(
+					// Check that VNI-related attributes are present (even if empty)
+					resource.TestCheckResourceAttrSet(
+						"ovh_dedicated_server.server", "ips.#"),
+					// These attributes should be available even if no VNIs are configured
+					resource.TestCheckResourceAttrSet(
+						"ovh_dedicated_server.server", "vnis.#"),
+					resource.TestCheckResourceAttrSet(
+						"ovh_dedicated_server.server", "enabled_vrack_vnis.#"),
+					resource.TestCheckResourceAttrSet(
+						"ovh_dedicated_server.server", "enabled_vrack_aggregation_vnis.#"),
+					resource.TestCheckResourceAttrSet(
+						"ovh_dedicated_server.server", "enabled_public_vnis.#"),
+				),
+			},
+		},
+	})
+}
