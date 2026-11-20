@@ -98,6 +98,22 @@ func fileShareDataSourceAttributes() map[string]schema.Attribute {
 			Computed:    true,
 			Description: "ID of the share network the file share is attached to",
 		},
+		"network": schema.SingleNestedAttribute{
+			Computed:    true,
+			Description: "Private network and subnet the API created the file share's share network on; null when the file share uses a pre-existing share network",
+			Attributes: map[string]schema.Attribute{
+				"id": schema.StringAttribute{
+					CustomType:  ovhtypes.TfStringType{},
+					Computed:    true,
+					Description: "ID of the private network",
+				},
+				"subnet_id": schema.StringAttribute{
+					CustomType:  ovhtypes.TfStringType{},
+					Computed:    true,
+					Description: "ID of the subnet",
+				},
+			},
+		},
 		"encryption": schema.SingleNestedAttribute{
 			Computed:    true,
 			Description: "Encryption configuration of the file share",
@@ -298,6 +314,7 @@ type cloudStorageFileShareDataSourceModel struct {
 	ShareType      ovhtypes.TfStringValue `tfsdk:"share_type"`
 	Location       types.Object           `tfsdk:"location"`
 	ShareNetworkId ovhtypes.TfStringValue `tfsdk:"share_network_id"`
+	Network        types.Object           `tfsdk:"network"`
 	Encryption     types.Object           `tfsdk:"encryption"`
 	Checksum       ovhtypes.TfStringValue `tfsdk:"checksum"`
 	CreatedAt      ovhtypes.TfStringValue `tfsdk:"created_at"`
@@ -364,9 +381,11 @@ func mapFileShareToDataSourceModel(ctx context.Context, v *CloudStorageFileShare
 		if v.TargetSpec.ShareNetwork != nil {
 			data.ShareNetworkId = ovhtypes.TfStringValue{StringValue: types.StringValue(v.TargetSpec.ShareNetwork.Id)}
 		}
+		data.Network = buildFileShareNetworkObject(v.TargetSpec.Network)
 		data.Encryption = buildFileShareEncryptionObject(v.TargetSpec.Encryption)
 	} else {
 		data.Location = types.ObjectNull(fileShareLocationAttrTypes())
+		data.Network = types.ObjectNull(FileShareNetworkAttrTypes())
 		data.Encryption = types.ObjectNull(FileShareEncryptionAttrTypes())
 	}
 

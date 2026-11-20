@@ -25,6 +25,25 @@ resource "ovh_cloud_storage_file_share" "share" {
 }
 ```
 
+### Create on a private subnet
+
+```terraform
+resource "ovh_cloud_storage_file_share" "share_on_subnet" {
+  service_name = "<Public cloud project id>"
+  name         = "my-share-on-subnet"
+  size         = 150
+  region       = "GRA11"
+  protocol     = "NFS"
+  share_type   = "STANDARD_1AZ"
+
+  network = {
+    subnet_id = "<subnet id>"
+  }
+}
+```
+
+With `network`, the API creates a share network on that subnet for the file share, named like the file share, and returns its ID in `share_network_id`. That share network is deleted with the last file share that uses it.
+
 ### Create from a snapshot
 
 ```terraform
@@ -46,7 +65,7 @@ resource "ovh_cloud_storage_file_share" "share_from_snapshot" {
 }
 ```
 
-When `create_from` is set, the new file share takes its `share_type`, `encryption` and, if omitted, `share_network_id` from the snapshot's source file share, and its `size` from the snapshot if omitted. The snapshot must be `available` and in the same `region`.
+When `create_from` is set, the new file share takes its `share_type`, `encryption` and, if omitted, `share_network_id` and `network` from the snapshot's source file share, and its `size` from the snapshot if omitted. The snapshot must be `available` and in the same `region`.
 
 ## Argument Reference
 
@@ -58,7 +77,10 @@ The following arguments are supported:
 * `region` - (Required) Region where the file share will be created. **Changing this value recreates the resource.**
 * `protocol` - (Required) File share protocol (`NFS`). **Changing this value recreates the resource.**
 * `share_type` - (Optional) File share type (e.g. `STANDARD_1AZ`). Required unless `create_from` is set. With `create_from`, the type of the snapshot's source file share is used: leave it unset or set it to that value. **Changing this value recreates the resource.**
-* `share_network_id` - (Optional) ID of a pre-existing share network to attach the file share to. Required unless `create_from` is set. With `create_from`, defaults to the share network of the snapshot's source file share and must be that same share network when set. **Changing this value recreates the resource.**
+* `share_network_id` - (Optional) ID of a pre-existing share network to attach the file share to. Conflicts with `network`; one of them is required unless `create_from` is set. With `network`, it holds the ID of the share network the API creates. With `create_from`, defaults to the share network of the snapshot's source file share and must be that same share network when set. **Changing this value recreates the resource.**
+* `network` - (Optional) Private network and subnet the API creates the file share's share network on. Conflicts with `share_network_id`; one of them is required unless `create_from` is set. The share network is deleted with the last file share that uses it. With `create_from`, defaults to the `network` of the snapshot's source file share and must match it when set; a source file share attached to a pre-existing share network rejects it. **Changing this value recreates the resource.**
+  * `subnet_id` - (Required) ID of the subnet to create the share network on.
+  * `id` - (Optional) ID of the private network of `subnet_id`. When omitted, the network of `subnet_id` is used; when set, it must be that network.
 * `availability_zone` - (Optional) Availability zone where the file share will be created. **Changing this value recreates the resource.**
 * `encryption` - (Optional) Encryption configuration for the file share. Set at creation only. With `create_from`, the encryption of the snapshot's source file share is used: leave it unset or set it to that value; `enabled = true` on a snapshot of an unencrypted file share is rejected. **Changing this value recreates the resource.**
   * `enabled` - (Optional) Whether the file share is encrypted at rest with LUKS.

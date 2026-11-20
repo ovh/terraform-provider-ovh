@@ -36,6 +36,10 @@ func TestCloudStorageFileShareSchemaMatchesAttrTypes(t *testing.T) {
 	if got := resourceResp.Schema.Attributes["create_from"].GetType(); !got.Equal(wantCreateFrom) {
 		t.Errorf("resource create_from type mismatch:\n got: %v\nwant: %v", got, wantCreateFrom)
 	}
+	wantNetwork := types.ObjectType{AttrTypes: FileShareNetworkAttrTypes()}
+	if got := resourceResp.Schema.Attributes["network"].GetType(); !got.Equal(wantNetwork) {
+		t.Errorf("resource network type mismatch:\n got: %v\nwant: %v", got, wantNetwork)
+	}
 
 	var dataSourceResp datasource.SchemaResponse
 	(&cloudStorageFileShareDataSource{}).Schema(ctx, datasource.SchemaRequest{}, &dataSourceResp)
@@ -48,6 +52,9 @@ func TestCloudStorageFileShareSchemaMatchesAttrTypes(t *testing.T) {
 	}
 	if got := dataSourceResp.Schema.Attributes["encryption"].GetType(); !got.Equal(wantEncryption) {
 		t.Errorf("data source encryption type mismatch:\n got: %v\nwant: %v", got, wantEncryption)
+	}
+	if got := dataSourceResp.Schema.Attributes["network"].GetType(); !got.Equal(wantNetwork) {
+		t.Errorf("data source network type mismatch:\n got: %v\nwant: %v", got, wantNetwork)
 	}
 
 	var listResp datasource.SchemaResponse
@@ -310,5 +317,84 @@ func TestCloudStorageFileShareMergeWithOmittedAttachmentsIsEmptyList(t *testing.
 	attachments, ok := model.CurrentState.Attributes()["attachments"].(types.List)
 	if !ok || attachments.IsNull() || len(attachments.Elements()) != 0 {
 		t.Errorf("expected an empty current_state.attachments list, got %v", model.CurrentState.Attributes()["attachments"])
+	}
+}
+
+func fileShareNetwork(networkId ovhtypes.TfStringValue, subnetId string) types.Object {
+	return types.ObjectValueMust(
+		FileShareNetworkAttrTypes(),
+		map[string]attr.Value{"id": networkId, "subnet_id": ovhtypes.NewTfStringValue(subnetId)},
+	)
+}
+
+func TestCloudStorageFileShareToCreateSendsNetworkWithoutUnknownId(t *testing.T) {
+	model := CloudStorageFileShareModel{
+		ShareNetworkId: ovhtypes.TfStringValue{StringValue: types.StringUnknown()},
+		Network:        fileShareNetwork(ovhtypes.TfStringValue{StringValue: types.StringUnknown()}, "subnet-id"),
+	}
+
+	targetSpec := model.ToCreate(context.Background()).TargetSpec
+	if targetSpec.Network == nil || targetSpec.Network.SubnetId != "subnet-id" || targetSpec.Network.Id != "" {
+		t.Errorf("expected network with subnetId only, got %+v", targetSpec.Network)
+	}
+	if targetSpec.ShareNetwork != nil {
+		t.Errorf("expected no shareNetwork, got %+v", targetSpec.ShareNetwork)
+	}
+}
+
+func TestCloudStorageFileShareToCreateSendsConfiguredNetworkId(t *testing.T) {
+	model := CloudStorageFileShareModel{
+		Network: fileShareNetwork(ovhtypes.NewTfStringValue("network-id"), "subnet-id"),
+	}
+
+	targetSpec := model.ToCreate(context.Background()).TargetSpec
+	if targetSpec.Network == nil || targetSpec.Network.Id != "network-id" || targetSpec.Network.SubnetId != "subnet-id" {
+		t.Errorf("expected network with id and subnetId, got %+v", targetSpec.Network)
+	}
+}
+
+func TestCloudStorageFileShareToCreateOmitsUnsetNetwork(t *testing.T) {
+	model := CloudStorageFileShareModel{
+		ShareNetworkId: ovhtypes.NewTfStringValue("share-network-id"),
+		Network:        types.ObjectUnknown(FileShareNetworkAttrTypes()),
+	}
+
+	if network := model.ToCreate(context.Background()).TargetSpec.Network; network != nil {
+		t.Errorf("expected no network, got %+v", network)
+	}
+}
+
+func TestCloudStorageFileShareMergeWithReadsNetworkAndCreatedShareNetwork(t *testing.T) {
+	model := CloudStorageFileShareModel{
+		ShareNetworkId: ovhtypes.TfStringValue{StringValue: types.StringUnknown()},
+		Network:        fileShareNetwork(ovhtypes.TfStringValue{StringValue: types.StringUnknown()}, "subnet-id"),
+	}
+
+	model.MergeWith(context.Background(), &CloudStorageFileShareAPIResponse{
+		TargetSpec: &CloudStorageFileShareAPITargetSpec{
+			Network:      &CloudStorageFileShareAPINetworkRef{Id: "network-id", SubnetId: "subnet-id"},
+			ShareNetwork: &CloudStorageFileShareAPIShareNetworkRef{Id: "created-share-network-id"},
+		},
+	})
+
+	if want := fileShareNetwork(ovhtypes.NewTfStringValue("network-id"), "subnet-id"); !model.Network.Equal(want) {
+		t.Errorf("expected network read from targetSpec, got %v", model.Network)
+	}
+	if model.ShareNetworkId.ValueString() != "created-share-network-id" {
+		t.Errorf("expected share_network_id of the created share network, got %q", model.ShareNetworkId.ValueString())
+	}
+}
+
+func TestCloudStorageFileShareMergeWithoutNetworkIsNull(t *testing.T) {
+	model := CloudStorageFileShareModel{Network: types.ObjectUnknown(FileShareNetworkAttrTypes())}
+
+	model.MergeWith(context.Background(), &CloudStorageFileShareAPIResponse{
+		TargetSpec: &CloudStorageFileShareAPITargetSpec{
+			ShareNetwork: &CloudStorageFileShareAPIShareNetworkRef{Id: "share-network-id"},
+		},
+	})
+
+	if !model.Network.IsNull() {
+		t.Errorf("expected network null, got %v", model.Network)
 	}
 }
