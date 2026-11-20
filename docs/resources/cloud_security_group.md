@@ -46,7 +46,7 @@ The following arguments are supported:
 * `region` - (Required) Region where the security group will be created. **Changing this value recreates the resource.**
 * `name` - (Required) Name of the security group.
 * `description` - (Optional) Description of the security group.
-* `rule` - (Optional) List of security group rules. Each rule supports:
+* `rule` - (Optional) List of security group rules. Rules keep the order they are written in; the API may return them in another order and the provider re-orders them back to the configuration. Each rule supports:
   * `direction` - (Required) Direction of the rule (`INGRESS` or `EGRESS`).
   * `ethernet_type` - (Required) Ether type (`IPV4` or `IPV6`).
   * `protocol` - (Optional) Protocol (`TCP`, `UDP`, `ICMP`, etc.).

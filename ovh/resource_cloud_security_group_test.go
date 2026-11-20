@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 )
 
@@ -440,6 +441,115 @@ resource "ovh_cloud_security_group" "target" {
 						"ovh_cloud_security_group.target", "rule.0.remote_group_id",
 						"ovh_cloud_security_group.source", "id",
 					),
+				),
+			},
+		},
+	})
+}
+
+func testAccCloudSecurityGroupRuleOrderConfig(serviceName, region, name string, withPeer bool) string {
+	peer, peerRule := "", ""
+	if withPeer {
+		peer = fmt.Sprintf(`
+resource "ovh_cloud_security_group" "peer" {
+  service_name = "%s"
+  region       = "%s"
+  name         = "%s-peer"
+}
+`, serviceName, region, name)
+		peerRule = `
+    {
+      direction       = "INGRESS"
+      ethernet_type   = "IPV4"
+      protocol        = "TCP"
+      port_range_min  = 5432
+      port_range_max  = 5432
+      remote_group_id = ovh_cloud_security_group.peer.id
+      description     = "PostgreSQL from peer"
+    },`
+	}
+
+	return fmt.Sprintf(`%s
+resource "ovh_cloud_security_group" "test" {
+  service_name = "%s"
+  region       = "%s"
+  name         = "%s"
+
+  rule = [
+    {
+      direction        = "INGRESS"
+      ethernet_type    = "IPV4"
+      protocol         = "TCP"
+      port_range_min   = 80
+      port_range_max   = 80
+      remote_ip_prefix = "0.0.0.0/0"
+      description      = "HTTP"
+    },%s
+    {
+      direction        = "INGRESS"
+      ethernet_type    = "IPV4"
+      protocol         = "TCP"
+      port_range_min   = 443
+      port_range_max   = 443
+      remote_ip_prefix = "0.0.0.0/0"
+      description      = "HTTPS"
+    },
+    {
+      direction        = "INGRESS"
+      ethernet_type    = "IPV4"
+      protocol         = "TCP"
+      port_range_min   = 22
+      port_range_max   = 22
+      remote_ip_prefix = "0.0.0.0/0"
+      description      = "SSH"
+    }
+  ]
+}
+`, peer, serviceName, region, name, peerRule)
+}
+
+// TestAccCloudSecurityGroup_ruleOrder reproduces issue #1612: Neutron returns the
+// rules in its own order, which the provider must map back to the configuration.
+// Step 2 inserts, mid-list, a rule whose remote_group_id is unknown until apply.
+func TestAccCloudSecurityGroup_ruleOrder(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+
+	name := testAccResourceCloudSecurityGroupNamePrefix + "rule-order"
+	emptyPlanAfterApply := resource.ConfigPlanChecks{
+		PostApplyPostRefresh: []plancheck.PlanCheck{plancheck.ExpectEmptyPlan()},
+	}
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloudSecurityGroup(t)
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:           testAccCloudSecurityGroupRuleOrderConfig(serviceName, region, name, false),
+				ConfigPlanChecks: emptyPlanAfterApply,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_security_group.test", "resource_status", "READY"),
+					resource.TestCheckResourceAttr("ovh_cloud_security_group.test", "rule.#", "3"),
+					resource.TestCheckResourceAttr("ovh_cloud_security_group.test", "rule.0.port_range_min", "80"),
+					resource.TestCheckResourceAttr("ovh_cloud_security_group.test", "rule.1.port_range_min", "443"),
+					resource.TestCheckResourceAttr("ovh_cloud_security_group.test", "rule.2.port_range_min", "22"),
+				),
+			},
+			{
+				Config:           testAccCloudSecurityGroupRuleOrderConfig(serviceName, region, name, true),
+				ConfigPlanChecks: emptyPlanAfterApply,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_security_group.test", "resource_status", "READY"),
+					resource.TestCheckResourceAttr("ovh_cloud_security_group.test", "rule.#", "4"),
+					resource.TestCheckResourceAttr("ovh_cloud_security_group.test", "rule.0.port_range_min", "80"),
+					resource.TestCheckResourceAttrPair(
+						"ovh_cloud_security_group.test", "rule.1.remote_group_id",
+						"ovh_cloud_security_group.peer", "id",
+					),
+					resource.TestCheckResourceAttr("ovh_cloud_security_group.test", "rule.2.port_range_min", "443"),
+					resource.TestCheckResourceAttr("ovh_cloud_security_group.test", "rule.3.port_range_min", "22"),
 				),
 			},
 		},
