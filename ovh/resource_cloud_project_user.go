@@ -154,10 +154,43 @@ func resourceCloudProjectUserImportState(ctx context.Context, d *schema.Resource
 		return nil, fmt.Errorf("Import Id is not service_name/id formatted")
 	}
 
+	config := meta.(*Config)
+	user := &CloudProjectUser{}
+	endpoint := fmt.Sprintf("/cloud/project/%s/user/%s", url.PathEscape(serviceName), url.PathEscape(userId))
+	if err := config.OVHClient.Get(endpoint, user); err != nil {
+		return nil, fmt.Errorf("calling Get %s:\n\t %q", endpoint, err)
+	}
+
 	d.SetId(userId)
 	d.Set("service_name", serviceName)
+	// Sorted, as the API returns roles in no stable order
+	roleNames := cloudProjectUserRoleNames(nil, "", user.Roles)
+	slices.Sort(roleNames)
+	d.Set("role_names", roleNames)
 
 	return []*schema.ResourceData{d}, nil
+}
+
+// cloudProjectUserRoleNames merges roles into current's order, leaving out roleName unless listed
+func cloudProjectUserRoleNames(current []string, roleName string, roles []*CloudProjectUserRole) []string {
+	names := make([]string, 0, len(roles))
+	for _, r := range roles {
+		names = append(names, r.Name)
+	}
+
+	result := []string{}
+	for _, n := range current {
+		if slices.Contains(names, n) && !slices.Contains(result, n) {
+			result = append(result, n)
+		}
+	}
+	for _, n := range names {
+		if slices.Contains(result, n) || (n == roleName && !slices.Contains(current, n)) {
+			continue
+		}
+		result = append(result, n)
+	}
+	return result
 }
 
 func resourceCloudProjectUserUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -181,21 +214,6 @@ func resourceCloudProjectUserUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 
 		log.Printf("[DEBUG] Successfully updated password in state for user %s", userId)
-
-		// Wait for user to be ok after password regeneration
-		log.Printf("[DEBUG] Waiting for User %s to be ok after password regeneration:", userId)
-		stateConf := &resource.StateChangeConf{
-			Pending:    []string{"creating", "deleted", "deleting"},
-			Target:     []string{"ok"},
-			Refresh:    waitForCloudProjectUser(config.OVHClient, serviceName, userId),
-			Timeout:    5 * time.Minute, // Adjust timeout as needed
-			Delay:      5 * time.Second,
-			MinTimeout: 3 * time.Second,
-		}
-		if _, err := stateConf.WaitForState(); err != nil {
-			return fmt.Errorf("waiting for user (%s) to be ok after password regeneration: %s", userId, err)
-		}
-		log.Printf("[DEBUG] User %s is ok after password regeneration", userId)
 	}
 
 	// Update roles if they changed
@@ -232,6 +250,23 @@ func resourceCloudProjectUserUpdate(d *schema.ResourceData, meta interface{}) er
 		if err := config.OVHClient.Put(endpoint, data, r); err != nil {
 			return fmt.Errorf("calling %s with params %s:\n\t %q", endpoint, data, err)
 		}
+	}
+
+	// Wait for user to be ok after password or role update
+	if d.HasChanges("password_reset", "role_name", "role_names") {
+		log.Printf("[DEBUG] Waiting for User %s to be ok after update", userId)
+		stateConf := &resource.StateChangeConf{
+			Pending:    []string{"creating", "deleted", "deleting", "updating"},
+			Target:     []string{"ok"},
+			Refresh:    waitForCloudProjectUser(config.OVHClient, serviceName, userId),
+			Timeout:    5 * time.Minute,
+			Delay:      5 * time.Second,
+			MinTimeout: 3 * time.Second,
+		}
+		if _, err := stateConf.WaitForState(); err != nil {
+			return fmt.Errorf("waiting for user (%s) to be ok after update: %s", userId, err)
+		}
+		log.Printf("[DEBUG] User %s is ok after update", userId)
 	}
 
 	return resourceCloudProjectUserRead(d, meta)
@@ -304,6 +339,11 @@ func resourceCloudProjectUserRead(d *schema.ResourceData, meta interface{}) erro
 	// set resource attributes
 	for k, v := range user.ToMap() {
 		d.Set(k, v)
+	}
+	// Only refresh role_names when in use
+	if _, ok := d.GetOk("role_names"); ok {
+		current, _ := helpers.StringsFromSchema(d, "role_names")
+		d.Set("role_names", cloudProjectUserRoleNames(current, d.Get("role_name").(string), user.Roles))
 	}
 
 	openstackrc := make(map[string]string)

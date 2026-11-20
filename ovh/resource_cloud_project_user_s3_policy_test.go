@@ -14,9 +14,7 @@ const testAccCloudProjectUserS3PolicyConfig_basic = `
 resource "ovh_cloud_project_user" "user" {
   service_name = "%s"
   description  = "my user for acceptance tests"
-  role_names   = [
-    "objectstore_operator"
-  ]
+  role_names   = [%s]
 }
 
 resource "ovh_cloud_project_user_s3_credential" "s3_cred" {
@@ -72,7 +70,7 @@ func TestAccCloudProjectUserS3Policy_basic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(testAccCloudProjectUserS3PolicyConfig_basic, serviceName, policyRWBucket),
+				Config: fmt.Sprintf(testAccCloudProjectUserS3PolicyConfig_basic, serviceName, `"objectstore_operator"`, policyRWBucket),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 					resource.TestCheckResourceAttrWith(resourceName, "policy", func(value string) error {
@@ -84,7 +82,7 @@ func TestAccCloudProjectUserS3Policy_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: fmt.Sprintf(testAccCloudProjectUserS3PolicyConfig_basic, serviceName, policyRWBucketNoUpdate),
+				Config: fmt.Sprintf(testAccCloudProjectUserS3PolicyConfig_basic, serviceName, `"objectstore_operator"`, policyRWBucketNoUpdate),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						ExpectEmptyPlan(),
@@ -97,12 +95,25 @@ func TestAccCloudProjectUserS3Policy_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: fmt.Sprintf(testAccCloudProjectUserS3PolicyConfig_basic, serviceName, policyRWBucketUpdated),
+				Config: fmt.Sprintf(testAccCloudProjectUserS3PolicyConfig_basic, serviceName, `"objectstore_operator"`, policyRWBucketUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 					resource.TestCheckResourceAttrWith(resourceName, "policy", func(value string) error {
 						if !helpers.JSONStringsEqual(value, policyRWBucketUpdated) {
 							return fmt.Errorf("policies are not equal, expected %q, got %q", value, policyRWBucketUpdated)
+						}
+						return nil
+					}),
+				),
+			},
+			{
+				// Roles and policy change in one apply
+				Config: fmt.Sprintf(testAccCloudProjectUserS3PolicyConfig_basic, serviceName, `"objectstore_operator", "compute_operator"`, policyRWBucket),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_project_user.user", "roles.#", "2"),
+					resource.TestCheckResourceAttrWith(resourceName, "policy", func(value string) error {
+						if !helpers.JSONStringsEqual(value, policyRWBucket) {
+							return fmt.Errorf("policies are not equal, expected %q, got %q", value, policyRWBucket)
 						}
 						return nil
 					}),

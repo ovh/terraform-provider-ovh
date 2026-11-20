@@ -98,6 +98,20 @@ func TestAccCloudProjectUser_withRoles(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:            "ovh_cloud_project_user.user",
+				ImportStateIdPrefix:     os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST") + "/",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+			{
+				// Import block must plan no change
+				ResourceName:        "ovh_cloud_project_user.user",
+				ImportStateIdPrefix: os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST") + "/",
+				ImportState:         true,
+				ImportStateKind:     resource.ImportBlockWithID,
+			},
+			{
 				Config: updatedConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
@@ -125,8 +139,17 @@ resource "ovh_cloud_project_user" "user_rotate" {
 }
 `, os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"))
 
+var testAccCloudProjectUserWithRotateAndRolesConfig = fmt.Sprintf(`
+resource "ovh_cloud_project_user" "user_rotate" {
+ service_name = "%s"
+ description  = "my user for acceptance tests with rotation"
+ password_reset =  "2025-05-01"
+ role_names   = ["objectstore_operator"]
+}
+`, os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST"))
+
 func TestAccCloudProjectUser_withRotate(t *testing.T) {
-	var oldPassword, newPassword string
+	var oldPassword, newPassword, rolesPassword string
 	var userId string
 
 	resource.Test(t, resource.TestCase{
@@ -152,6 +175,16 @@ func TestAccCloudProjectUser_withRotate(t *testing.T) {
 					testAccCheckCloudProjectUserPassword("ovh_cloud_project_user.user_rotate", &newPassword), // Store the second password
 					testAccCheckCloudProjectUserId("ovh_cloud_project_user.user_rotate", &userId),            // Same user ID (not recreated)
 					testAccCheckCloudProjectUserDifferentPasswords(&oldPassword, &newPassword),               // Compare first and second passwords
+				),
+			},
+			{
+				// Password reset and role change in one apply
+				Config: testAccCloudProjectUserWithRotateAndRolesConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("ovh_cloud_project_user.user_rotate", "roles.#", "1"),
+					resource.TestCheckResourceAttr("ovh_cloud_project_user.user_rotate", "roles.0.name", "objectstore_operator"),
+					testAccCheckCloudProjectUserPassword("ovh_cloud_project_user.user_rotate", &rolesPassword),
+					testAccCheckCloudProjectUserDifferentPasswords(&newPassword, &rolesPassword),
 				),
 			},
 		},
@@ -245,5 +278,26 @@ func testAccCheckCloudProjectUserId(n string, userId *string) resource.TestCheck
 
 		*userId = rs.Primary.ID
 		return nil
+	}
+}
+
+func TestCloudProjectUserRoleNames(t *testing.T) {
+	roles := []*CloudProjectUserRole{{Name: "administrator"}, {Name: "compute_operator"}, {Name: "objectstore_operator"}}
+
+	cases := []struct {
+		current  []string
+		roleName string
+		want     []string
+	}{
+		{nil, "", []string{"administrator", "compute_operator", "objectstore_operator"}},
+		{[]string{"objectstore_operator", "gone", "administrator"}, "", []string{"objectstore_operator", "administrator", "compute_operator"}},
+		{[]string{"compute_operator"}, "administrator", []string{"compute_operator", "objectstore_operator"}},
+		{[]string{"administrator"}, "administrator", []string{"administrator", "compute_operator", "objectstore_operator"}},
+	}
+	for _, c := range cases {
+		got := cloudProjectUserRoleNames(c.current, c.roleName, roles)
+		if fmt.Sprint(got) != fmt.Sprint(c.want) {
+			t.Errorf("cloudProjectUserRoleNames(%v, %q) = %v, want %v", c.current, c.roleName, got, c.want)
+		}
 	}
 }
