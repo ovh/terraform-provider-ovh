@@ -103,7 +103,7 @@ func instanceDataSourceAttributes(ctx context.Context) map[string]schema.Attribu
 			"access_level": schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescShareRefAccessLevel, MarkdownDescription: instanceDescShareRefAccessLevelMd},
 		}}},
 		"billing": schema.SingleNestedAttribute{Computed: true, Description: instanceDescDsBilling, MarkdownDescription: instanceDescDsBilling, Attributes: map[string]schema.Attribute{
-			"period": schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescBillingPeriod, MarkdownDescription: instanceDescBillingPeriodMd},
+			"period": schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescDsBillingPeriod, MarkdownDescription: instanceDescDsBillingPeriodMd},
 		}},
 		"checksum":        schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescChecksum, MarkdownDescription: instanceDescChecksum},
 		"created_at":      schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescCreatedAt, MarkdownDescription: instanceDescCreatedAt},

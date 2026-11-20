@@ -954,10 +954,11 @@ func TestAccCloudInstance_validators(t *testing.T) {
 }
 
 // TestAccCloudInstance_monthlyBilling moves an hourly instance to monthly
-// billing, then checks that going back to HOURLY is refused at plan. Monthly
+// billing, then checks that the API refuses going back to HOURLY. Monthly
 // billing cannot be undone and is billed for the month, so the test only runs
 // when OVH_CLOUD_INSTANCE_MONTHLY_BILLING_TEST is set.
 func TestAccCloudInstance_monthlyBilling(t *testing.T) {
+	checkEnvOrSkip(t, "OVH_CLOUD_INSTANCE_MONTHLY_BILLING_TEST")
 	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
 	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
 	flavorID := resolveInstanceFlavorID(t, serviceName, region, testAccInstanceFlavorName)
@@ -965,10 +966,7 @@ func TestAccCloudInstance_monthlyBilling(t *testing.T) {
 	name := acctest.RandomWithPrefix("test-inst-billing")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheckCloudInstanceV2(t)
-			checkEnvOrSkip(t, "OVH_CLOUD_INSTANCE_MONTHLY_BILLING_TEST")
-		},
+		PreCheck:                 func() { testAccPreCheckCloudInstanceV2(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -990,8 +988,7 @@ func TestAccCloudInstance_monthlyBilling(t *testing.T) {
 			},
 			{
 				Config:      testAccCloudInstanceConfigBilling(serviceName, region, flavorID, imageID, name, "HOURLY"),
-				PlanOnly:    true,
-				ExpectError: regexp.MustCompile(`Monthly billing cannot be undone`),
+				ExpectError: regexp.MustCompile(`monthly billing cannot be undone`),
 			},
 			{
 				// Leaving billing out keeps the current period: no change.

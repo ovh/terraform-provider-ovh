@@ -97,24 +97,8 @@ func (r *cloudInstanceResource) ValidateConfig(ctx context.Context, req resource
 	}
 }
 
-// ModifyPlan checks the boot volume, then the billing period, of an update plan.
-func (r *cloudInstanceResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	if req.Plan.Raw.IsNull() {
-		return
-	}
-	if req.State.Raw.IsNull() {
-		r.modifyCreatePlan(ctx, req, resp)
-		return
-	}
-	r.modifyBootVolumePlan(ctx, req, resp)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	r.checkBillingPeriodPlan(ctx, req, resp)
-}
-
-// modifyBootVolumePlan replaces the instance when volumes gives the BOOT role to
-// another volume: the API only lets the boot volume be chosen at creation.
+// ModifyPlan replaces the instance when volumes gives the BOOT role to another
+// volume: the API only lets the boot volume be chosen at creation.
 //
 // It never plans a replacement it cannot vouch for, since the instance would be
 // destroyed before a creation the API may refuse:
@@ -128,7 +112,14 @@ func (r *cloudInstanceResource) ModifyPlan(ctx context.Context, req resource.Mod
 //     resolve), and the update is left to the API.
 //   - A plan with an image and a BOOT volume, or a known boot volume losing its
 //     BOOT role, is an error: the API refuses both.
-func (r *cloudInstanceResource) modifyBootVolumePlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+func (r *cloudInstanceResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+	if req.State.Raw.IsNull() {
+		r.modifyCreatePlan(ctx, req, resp)
+		return
+	}
 	var cfgVolumes, planVolumes, stateVolumes types.List
 	var planImage, stateImage ovhtypes.TfStringValue
 	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("volumes"), &cfgVolumes)...)
@@ -211,40 +202,6 @@ func (r *cloudInstanceResource) modifyBootVolumePlan(ctx context.Context, req re
 		return
 	}
 	resp.RequiresReplace = append(resp.RequiresReplace, path.Root("volumes"))
-}
-
-// instanceReplaceAttrs are the attributes whose change replaces the instance.
-var instanceReplaceAttrs = []string{"service_name", "region", "availability_zone", "ssh_key_name", "group_id"}
-
-// checkBillingPeriodPlan refuses at plan a MONTHLY instance planned back to
-// HOURLY, which the API refuses at apply: monthly billing cannot be undone. A
-// replacement is left alone, as the new instance starts with its own billing;
-// the resource ModifyPlan does not see the replacements the attribute plan
-// modifiers asked for, so it looks for them itself.
-func (r *cloudInstanceResource) checkBillingPeriodPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	if len(resp.RequiresReplace) > 0 {
-		return
-	}
-	var planBilling, stateBilling types.Object
-	resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root("billing"), &planBilling)...)
-	resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("billing"), &stateBilling)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	if billingPeriod(stateBilling) != instanceBillingPeriodMonthly || billingPeriod(planBilling) != instanceBillingPeriodHourly {
-		return
-	}
-	for _, name := range instanceReplaceAttrs {
-		var planned, stored ovhtypes.TfStringValue
-		resp.Diagnostics.Append(req.Plan.GetAttribute(ctx, path.Root(name), &planned)...)
-		resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root(name), &stored)...)
-		if resp.Diagnostics.HasError() || planned.IsUnknown() || !planned.Equal(stored) {
-			return
-		}
-	}
-	resp.Diagnostics.AddAttributeError(path.Root("billing").AtName("period"), "Monthly billing cannot be undone",
-		"The instance is billed monthly, and the API refuses to move it back to HOURLY. "+
-			"Set billing.period to MONTHLY, or leave billing out to keep the current period.")
 }
 
 // modifyCreatePlan checks the boot source of a creation. With no state, a role
@@ -709,8 +666,8 @@ func (r *cloudInstanceResource) Update(ctx context.Context, req resource.UpdateR
 	}
 
 	// data holds the prior state: ToUpdate needs it to tell an unchanged user_data
-	// (absent key) from one the config actually moved (rebuild).
-	updatePayload := planData.ToUpdate(currentData.Checksum, data.UserData)
+	// or billing (absent key) from one the config actually moved.
+	updatePayload := planData.ToUpdate(currentData.Checksum, data.UserData, data.Billing)
 
 	var responseData CloudInstanceAPIResponse
 	if err := r.config.OVHClient.Put(endpoint, updatePayload, &responseData); err != nil {

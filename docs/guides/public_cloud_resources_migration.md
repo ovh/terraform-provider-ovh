@@ -187,7 +187,7 @@ Steps 1 and 5 do not change, except that there are no `import` and `removed` blo
 
 | Legacy | New |
 |---|---|
-| `billing_period` (`hourly`, `monthly`) | `billing = { period = "HOURLY" }` or `{ period = "MONTHLY" }`. Omitted, it keeps the current period (`HOURLY` on creation). `HOURLY` to `MONTHLY` is applied in place instead of recreating the instance; `MONTHLY` cannot go back to `HOURLY` |
+| `billing_period` (`hourly`, `monthly`) | `billing = { period = "HOURLY" }` or `{ period = "MONTHLY" }`. Omitted, it keeps the current period on an in-place update, but a new instance, the one a replacement creates included, starts `HOURLY`. `HOURLY` to `MONTHLY` is applied in place instead of recreating the instance; `MONTHLY` cannot go back to `HOURLY`, the API refuses it at apply |
 | `flavor { flavor_id }` | `flavor_id`; a change resizes in place |
 | `boot_from { image_id }` | `image_id`; a change rebuilds the instance and wipes its root disk |
 | `boot_from { volume_id }` | `volumes = [{ id = "<volume ID>", role = "BOOT" }]` with no `image_id`. `volume_ids = ["<volume ID>"]` with no `image_id` still works but is deprecated |
@@ -212,7 +212,7 @@ New arguments with no legacy counterpart: `power_state` (`ACTIVE`, `SHUTOFF`, `S
 
 ~> **`user_data` after an import.** The import does not read the existing cloud-init script, so the imported state has no `user_data`. If the new block sets `user_data`, the first `terraform apply` reinstalls the instance and wipes its root disk. Leave `user_data` out of the block until the migration is done, or set it only when a reinstall is acceptable.
 
-~> **Monthly instances.** An instance billed monthly imports with `billing.period = "MONTHLY"`. Write `MONTHLY` or leave `billing` out: `HOURLY` fails at plan, as monthly billing cannot be undone.
+~> **Monthly instances.** An instance billed monthly imports with `billing.period = "MONTHLY"`. Write `MONTHLY`: `HOURLY` fails at apply, as the API refuses it and monthly billing cannot be undone. Leaving `billing` out keeps `MONTHLY` on an in-place update, but a change that replaces the instance creates a new one billed `HOURLY`.
 
 ~> **Security groups.** Leaving `security_group_ids` out keeps the project's `default` security group. Setting it to `[]` removes every group and blocks all inbound traffic.
 

@@ -477,8 +477,10 @@ resource "ovh_cloud_instance" "grouped" {
 
 An instance is billed hourly unless `billing.period` says `MONTHLY`. Moving an
 existing instance to `MONTHLY` is done in place. Monthly billing cannot be
-undone: once `MONTHLY`, the plan refuses `HOURLY`, and leaving `billing` out
-keeps the current period.
+undone: once `MONTHLY`, the API refuses `HOURLY` and the apply fails. Leaving
+`billing` out keeps the current period on an in-place update, but a change that
+replaces the instance creates a new one billed `HOURLY` unless `billing.period`
+is set in the configuration.
 
 ```terraform
 resource "ovh_cloud_instance" "monthly" {
@@ -531,8 +533,8 @@ The following arguments are supported:
   * `id` - (Required) ID of the block-storage volume.
   * `role` - (Optional) Role of the volume: `DATA` (default) or `BOOT`. At most one volume can be `BOOT`, and only when `image_id` is omitted. The boot volume must be bootable, `available`, not multi-attach and in the region of the instance. It can only be chosen at creation: it cannot be detached, and changing which volume is `BOOT` replaces the instance.
 * `security_group_ids` - (Optional) IDs of security groups applied to all interfaces. Omit it to let the platform apply the project's `default` security group; set an explicit empty list (`[]`) to apply no security group at all (the instance then accepts no inbound traffic).
-* `billing` - (Optional) Billing of the instance. Omit it to keep the current billing period, `HOURLY` for a new instance. An instance moved to monthly billing outside Terraform reads as `MONTHLY`.
-  * `period` - (Required) Billing period of the instance: `HOURLY` or `MONTHLY`. Moving to `MONTHLY` is done in place, and the API refuses it when the flavor cannot be billed monthly. Monthly billing cannot be undone: setting `HOURLY` on a `MONTHLY` instance fails at plan time, unless the instance is replaced.
+* `billing` - (Optional) Billing of the instance. Leaving it out keeps the current billing period on an in-place update, but a new instance, the one a replacement creates included, starts `HOURLY` unless `billing.period` is set. An instance moved to monthly billing outside Terraform reads as `MONTHLY`.
+  * `period` - (Required) Billing period of the instance: `HOURLY` or `MONTHLY`. Moving to `MONTHLY` is done in place, and the API refuses it when the flavor cannot be billed monthly. Monthly billing cannot be undone: the API refuses `HOURLY` on a `MONTHLY` instance, and the apply fails.
 * `shares` - (Optional) Filesystem shares attached to the instance. Each entry supports:
   * `id` - (Required) Identifier of the file storage share to attach. Adding the reference attaches the share to the instance, removing it detaches it.
   * `access_level` - (Optional) Access level granted to the instance for this share: `READ_ONLY` or `READ_WRITE`. Omit it to let the API apply its default (`READ_WRITE`). When omitted, the attribute stays null in state even though the API echoes `READ_WRITE` back, so an omitted level never shows up as drift.

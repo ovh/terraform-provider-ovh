@@ -357,11 +357,13 @@ const (
 	instanceDescDsVolumes          = "Block-storage volumes attached to the instance, each with its role (BOOT for the root volume of an instance booted from a volume, DATA for any other volume)"
 	instanceDescDsVolumeIds        = "IDs of every block-storage volume attached to the instance, the boot volume included. DEPRECATED: use volumes, which carries the role of each volume"
 
-	instanceDescBilling         = "Billing of the instance. Omit it to keep the current billing period, HOURLY for a new instance"
-	instanceDescBillingMd       = "Billing of the instance. Omit it to keep the current billing period, `HOURLY` for a new instance"
-	instanceDescBillingPeriod   = "Billing period of the instance: HOURLY or MONTHLY. Moving to MONTHLY is done in place, and is refused by the API when the flavor cannot be billed monthly. Monthly billing cannot be undone: a MONTHLY instance cannot go back to HOURLY. An instance moved to monthly billing outside Terraform reads as MONTHLY"
-	instanceDescBillingPeriodMd = "Billing period of the instance: `HOURLY` or `MONTHLY`. Moving to `MONTHLY` is done in place, and is refused by the API when the flavor cannot be billed monthly. Monthly billing cannot be undone: a `MONTHLY` instance cannot go back to `HOURLY`. An instance moved to monthly billing outside Terraform reads as `MONTHLY`"
-	instanceDescDsBilling       = "Requested billing of the instance"
+	instanceDescBilling           = "Billing of the instance. Leaving it out keeps the current billing period on an in-place update, but a new instance, the one a replacement creates included, starts HOURLY unless billing.period is set"
+	instanceDescBillingMd         = "Billing of the instance. Leaving it out keeps the current billing period on an in-place update, but a new instance, the one a replacement creates included, starts `HOURLY` unless `billing.period` is set"
+	instanceDescBillingPeriod     = "Billing period of the instance: HOURLY or MONTHLY. Moving to MONTHLY is done in place, and is refused by the API when the flavor cannot be billed monthly. Monthly billing cannot be undone: the API refuses HOURLY on a MONTHLY instance, and the apply fails. An instance moved to monthly billing outside Terraform reads as MONTHLY"
+	instanceDescBillingPeriodMd   = "Billing period of the instance: `HOURLY` or `MONTHLY`. Moving to `MONTHLY` is done in place, and is refused by the API when the flavor cannot be billed monthly. Monthly billing cannot be undone: the API refuses `HOURLY` on a `MONTHLY` instance, and the apply fails. An instance moved to monthly billing outside Terraform reads as `MONTHLY`"
+	instanceDescDsBilling         = "Requested billing of the instance"
+	instanceDescDsBillingPeriod   = "Billing period of the instance: HOURLY or MONTHLY. An instance moved to monthly billing outside the API reads as MONTHLY"
+	instanceDescDsBillingPeriodMd = "Billing period of the instance: `HOURLY` or `MONTHLY`. An instance moved to monthly billing outside the API reads as `MONTHLY`"
 
 	instanceDescCsBilling         = "Observed billing of the instance, null when the billing could not be read"
 	instanceDescCsBillingPeriod   = "Billing period the instance is billed on (HOURLY or MONTHLY). MONTHLY as soon as a monthly subscription exists for the instance, whatever its status"
@@ -614,6 +616,14 @@ func billingToAPI(billing types.Object) *CloudInstanceAPIBillingSpec {
 	return &CloudInstanceAPIBillingSpec{Period: period}
 }
 
+// billingForUpdate leaves an unchanged period out, so the API keeps the stored one.
+func billingForUpdate(planned, prior types.Object) *CloudInstanceAPIBillingSpec {
+	if billingPeriod(planned) == billingPeriod(prior) {
+		return nil
+	}
+	return billingToAPI(planned)
+}
+
 // Volume roles, as the API spells them.
 const (
 	instanceVolumeRoleBoot = "BOOT"
@@ -798,10 +808,10 @@ func userDataForUpdate(planned, prior ovhtypes.TfStringValue) *string {
 
 // ToUpdate builds the update payload with mutable fields only, plus checksum.
 // Every field the API's update model accepts is carried, because a real PUT
-// clears whatever the body omits — except userData, whose absent key still means
-// "keep". priorUserData is the value held in state, needed to resolve that
-// tri-state; everything else comes from the plan.
-func (m *CloudInstanceResourceModel) ToUpdate(checksum string, priorUserData ovhtypes.TfStringValue) *CloudInstanceUpdatePayload {
+// clears whatever the body omits — except userData and billing, whose absent key
+// still means "keep". priorUserData and priorBilling are the values held in
+// state, needed to resolve that; everything else comes from the plan.
+func (m *CloudInstanceResourceModel) ToUpdate(checksum string, priorUserData ovhtypes.TfStringValue, priorBilling types.Object) *CloudInstanceUpdatePayload {
 	ts := &CloudInstanceAPIUpdateTargetSpec{
 		Name:     m.Name.ValueString(),
 		Flavor:   CloudInstanceRef{Id: m.FlavorId.ValueString()},
@@ -813,7 +823,7 @@ func (m *CloudInstanceResourceModel) ToUpdate(checksum string, priorUserData ovh
 		// must not be turned into one. security_group_ids is Optional+Computed and
 		// always known at apply, so this is nil only in a degenerate merge.
 		SecurityGroups: customStringListToRefs(m.SecurityGroupIds),
-		Billing:        billingToAPI(m.Billing),
+		Billing:        billingForUpdate(m.Billing, priorBilling),
 	}
 
 	if !m.ImageId.IsNull() && !m.ImageId.IsUnknown() && m.ImageId.ValueString() != "" {
@@ -1059,13 +1069,6 @@ func buildInstanceSecurityGroupStateList(sgs []CloudInstanceRef) basetypes.ListV
 	return types.ListValueMust(objType, items)
 }
 
-func tfStrOrNull(s string) ovhtypes.TfStringValue {
-	if s == "" {
-		return ovhtypes.TfStringValue{StringValue: types.StringNull()}
-	}
-	return tfStr(s)
-}
-
 // buildInstanceBillingSpecObject reads a null billing as HOURLY, like the API does.
 func buildInstanceBillingSpecObject(b *CloudInstanceAPIBillingSpec) basetypes.ObjectValue {
 	period := instanceBillingPeriodHourly
@@ -1084,8 +1087,8 @@ func buildInstanceBillingStateObject(b *CloudInstanceAPIBilling) basetypes.Objec
 	}
 	obj, _ := types.ObjectValue(instanceBillingStateAttrTypes(), map[string]attr.Value{
 		"period": tfStr(b.Period),
-		"since":  tfStrOrNull(b.Since),
-		"status": tfStrOrNull(b.Status),
+		"since":  nullableTfString(b.Since),
+		"status": nullableTfString(b.Status),
 	})
 	return obj
 }
