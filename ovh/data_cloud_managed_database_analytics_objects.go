@@ -66,6 +66,10 @@ var (
 		category: managedDatabaseFamily, engines: []string{"mongodb"}, suffix: "_mongodb_user", path: "/user", object: "user", objects: "users", attributes: managedDatabaseRolesUserDataAttributes})
 	NewCloudManagedDatabaseValkeyUserDataSource, NewCloudManagedDatabaseValkeyUsersDataSource = newManagedDatabaseObjectDataSources[managedDatabaseValkeyUser](managedDatabaseObjectKind{
 		category: managedDatabaseFamily, engines: []string{"valkey"}, suffix: "_valkey_user", path: "/user", object: "user", objects: "users", attributes: managedDatabaseValkeyUserDataAttributes})
+	NewCloudManagedDatabaseDatabaseDataSource, NewCloudManagedDatabaseDatabasesDataSource = newManagedDatabaseObjectDataSources[managedDatabaseDatabase](managedDatabaseObjectKind{
+		category: managedDatabaseFamily, engines: []string{"mysql", "postgresql"}, suffix: "_database", path: "/database", object: "database", objects: "databases", attributes: managedDatabaseDatabaseDataAttributes})
+	NewCloudManagedDatabasePostgresqlConnectionPoolDataSource, NewCloudManagedDatabasePostgresqlConnectionPoolsDataSource = newManagedDatabaseObjectDataSources[managedDatabaseConnectionPool](managedDatabaseObjectKind{
+		category: managedDatabaseFamily, engines: []string{"postgresql"}, suffix: "_postgresql_connection_pool", path: "/connectionPool", object: "connection pool", objects: "connection_pools", attributes: managedDatabaseConnectionPoolDataAttributes})
 	NewCloudManagedDatabaseRoleDataSource, NewCloudManagedDatabaseRolesDataSource = newManagedDatabaseObjectDataSources[managedDatabaseRole](managedDatabaseObjectKind{
 		category: managedDatabaseFamily, engines: []string{"mongodb", "postgresql"}, suffix: "_role", path: "/roles", object: "role", objects: "roles", attributes: managedDatabaseRoleDataAttributes})
 
@@ -75,6 +79,8 @@ var (
 		category: managedAnalyticsFamily, engines: []string{"clickhouse"}, suffix: "_clickhouse_user", path: "/user", object: "user", objects: "users", attributes: managedDatabaseRolesUserDataAttributes})
 	NewCloudManagedAnalyticsOpensearchUserDataSource, NewCloudManagedAnalyticsOpensearchUsersDataSource = newManagedDatabaseObjectDataSources[managedDatabaseOpensearchUser](managedDatabaseObjectKind{
 		category: managedAnalyticsFamily, engines: []string{"opensearch"}, suffix: "_opensearch_user", path: "/user", object: "user", objects: "users", attributes: managedDatabaseOpensearchUserDataAttributes})
+	NewCloudManagedAnalyticsClickhouseDatabaseDataSource, NewCloudManagedAnalyticsClickhouseDatabasesDataSource = newManagedDatabaseObjectDataSources[managedDatabaseDatabase](managedDatabaseObjectKind{
+		category: managedAnalyticsFamily, engines: []string{"clickhouse"}, suffix: "_clickhouse_database", path: "/database", object: "database", objects: "databases", attributes: managedDatabaseDatabaseDataAttributes})
 	NewCloudManagedAnalyticsClickhouseRoleDataSource, NewCloudManagedAnalyticsClickhouseRolesDataSource = newManagedDatabaseObjectDataSources[managedDatabaseRole](managedDatabaseObjectKind{
 		category: managedAnalyticsFamily, engines: []string{"clickhouse"}, suffix: "_clickhouse_role", path: "/roles", object: "role", objects: "roles", attributes: managedDatabaseRoleDataAttributes})
 )
@@ -121,6 +127,34 @@ func managedDatabaseOpensearchUserDataAttributes() map[string]schema.Attribute {
 		}},
 	}
 	return attributes
+}
+
+func managedDatabaseDatabaseDataAttributes() map[string]schema.Attribute {
+	return map[string]schema.Attribute{
+		"id":         managedDatabaseComputedString("ID of the database."),
+		"name":       managedDatabaseComputedString("Name of the database."),
+		"default":    schema.BoolAttribute{Computed: true, Description: "Whether the database is the default one, created with the service."},
+		"checksum":   managedDatabaseComputedString("Hash of the database, computed by the API."),
+		"created_at": managedDatabaseComputedString("Creation date of the database."),
+		"updated_at": managedDatabaseComputedString("Last update date of the database."),
+	}
+}
+
+func managedDatabaseConnectionPoolDataAttributes() map[string]schema.Attribute {
+	return map[string]schema.Attribute{
+		"id":          managedDatabaseComputedString("ID of the connection pool."),
+		"name":        managedDatabaseComputedString("Name of the connection pool."),
+		"database_id": managedDatabaseComputedString("ID of the database the pool connects to."),
+		"mode":        managedDatabaseComputedString("PgBouncer pooling mode: SESSION, STATEMENT or TRANSACTION."),
+		"size":        schema.Int64Attribute{Computed: true, Description: "Maximum number of server connections in the pool."},
+		"user_id":     managedDatabaseComputedString("ID of the user the pool connects with. Null when the pool uses a system user."),
+		"port":        schema.Int64Attribute{Computed: true, Description: "Port the connection pool listens on."},
+		"ssl_mode":    managedDatabaseComputedString("TLS mode of the connection pool."),
+		"uri":         managedDatabaseComputedString("Connection URI of the connection pool."),
+		"checksum":    managedDatabaseComputedString("Hash of the connection pool, computed by the API."),
+		"created_at":  managedDatabaseComputedString("Creation date of the connection pool."),
+		"updated_at":  managedDatabaseComputedString("Last update date of the connection pool."),
+	}
 }
 
 func managedDatabaseRoleDataAttributes() map[string]schema.Attribute {

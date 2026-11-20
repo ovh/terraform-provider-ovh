@@ -63,6 +63,34 @@ func TestManagedDatabaseObjectWait(t *testing.T) {
 	}
 }
 
+func TestManagedDatabaseObjectImport(t *testing.T) {
+	ctx := context.Background()
+	for _, tc := range []struct {
+		new   func() fwresource.Resource
+		id    string
+		valid bool
+	}{
+		{NewCloudManagedDatabaseDatabaseResource, "pj/postgresql/service/object", true},
+		{NewCloudManagedDatabaseDatabaseResource, "pj/service/object", false},
+		// The type name of a connection pool holds its engine.
+		{NewCloudManagedDatabasePostgresqlConnectionPoolResource, "pj/service/object", true},
+		{NewCloudManagedDatabasePostgresqlConnectionPoolResource, "pj/postgresql/service/object", false},
+	} {
+		r := tc.new()
+		resp := fwresource.ImportStateResponse{State: managedDatabaseObjectTestState(t, r, nil)}
+		r.(fwresource.ResourceWithImportState).ImportState(ctx, fwresource.ImportStateRequest{ID: tc.id}, &resp)
+		if resp.Diagnostics.HasError() == tc.valid {
+			t.Errorf("import ID %q: unexpected diagnostics %v", tc.id, resp.Diagnostics)
+			continue
+		}
+		var engine types.String
+		resp.State.GetAttribute(ctx, path.Root("engine"), &engine)
+		if tc.valid && engine.ValueString() != "postgresql" {
+			t.Errorf("import ID %q: unexpected engine %s", tc.id, engine)
+		}
+	}
+}
+
 func TestManagedDatabaseCategories(t *testing.T) {
 	ctx := context.Background()
 	if got := managedAnalyticsFamily.serviceEndpoint("pj", "kafka", "s1"); got != "/v2/publicCloud/project/pj/managedAnalytics/kafka/s1" {
@@ -77,6 +105,7 @@ func TestManagedDatabaseCategories(t *testing.T) {
 		{NewCloudManagedDatabaseUserResource, true},
 		{NewCloudManagedDatabasePostgresqlUserResource, false},
 		{NewCloudManagedAnalyticsUserResource, true},
+		{NewCloudManagedAnalyticsClickhouseDatabaseResource, false},
 	} {
 		r := tc.new()
 		var meta fwresource.MetadataResponse
@@ -124,8 +153,8 @@ func TestManagedDatabaseSchemas(t *testing.T) {
 		names["data "+meta.TypeName] = true
 		testManagedDatabaseEngineArgument(t, "data "+meta.TypeName, resp.Schema.Attributes["engine"])
 	}
-	if len(names) != 9+25 {
-		t.Errorf("expected 9 resources and 25 data sources, got %d", len(names))
+	if len(names) != 12+31 {
+		t.Errorf("expected 12 resources and 31 data sources, got %d", len(names))
 	}
 }
 

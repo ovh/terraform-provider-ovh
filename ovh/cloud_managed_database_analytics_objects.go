@@ -26,7 +26,7 @@ import (
 )
 
 // Shared by the resources of the managed database and managed analytics services and of their
-// objects: users.
+// objects: users, databases and connection pools.
 
 const managedDatabaseObjectTimeout = 20 * time.Minute
 
@@ -220,9 +220,9 @@ func (r *managedDatabaseObjectResource) importState(ctx context.Context, req res
 	}
 }
 
-// waitForManagedDatabaseObject polls an object that has a status, a user or an integration, until it
-// is READY, or until it is gone when deleted is true. ERROR is terminal. Unlike a service, an object is
-// often ready at once: the first read has no delay.
+// waitForManagedDatabaseObject polls an object until it is READY, or until it is gone when deleted is
+// true. ERROR is terminal. An object the API gives no status, a database or a connection pool, is READY
+// while it exists. Unlike a service, an object is often ready at once: the first read has no delay.
 func waitForManagedDatabaseObject(ctx context.Context, client *ovhwrap.Client, endpoint string, deleted bool, timeout time.Duration) error {
 	pending, target := []string{"CREATING", "UPDATING", managedDatabaseAPIUnavailable}, []string{"READY"}
 	if deleted {
@@ -245,6 +245,9 @@ func waitForManagedDatabaseObject(ctx context.Context, client *ovhwrap.Client, e
 			}
 			if err != nil {
 				return nil, "", err
+			}
+			if res.Status == "" {
+				res.Status = "READY"
 			}
 			if res.Status == "ERROR" {
 				return nil, "", fmt.Errorf("%s is in ERROR status", endpoint)

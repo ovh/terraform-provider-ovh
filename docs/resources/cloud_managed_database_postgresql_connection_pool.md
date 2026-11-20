@@ -1,0 +1,74 @@
+---
+subcategory : "Managed Databases"
+---
+
+# ovh_cloud_managed_database_postgresql_connection_pool
+
+Creates a PgBouncer connection pool in a PostgreSQL service, using the Cloud Databases API v2.
+
+## Example Usage
+
+```terraform
+resource "ovh_cloud_managed_database_database" "app" {
+  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  engine       = "postgresql"
+  service_id   = "yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy"
+  name         = "app"
+}
+
+resource "ovh_cloud_managed_database_postgresql_user" "app" {
+  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  service_id   = "yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy"
+  name         = "app"
+}
+
+resource "ovh_cloud_managed_database_postgresql_connection_pool" "app" {
+  service_name = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  service_id   = "yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy"
+  name         = "app"
+  database_id  = ovh_cloud_managed_database_database.app.id
+  user_id      = ovh_cloud_managed_database_postgresql_user.app.id
+  mode         = "TRANSACTION"
+  size         = 10
+}
+```
+
+Renaming a database or a user that a pool uses replaces it, and Terraform deletes it before the pool moves to the new one. Give such a database or user `lifecycle { create_before_destroy = true }`, so that the pool moves first.
+
+## Argument Reference
+
+* `service_name` - (Optional) ID of the public cloud project. If omitted, the OVH_CLOUD_PROJECT_SERVICE environment variable is used. Changing it recreates the connection pool.
+* `service_id` - (Required) ID of the service. Changing it recreates the connection pool.
+* `name` - (Required) Name of the connection pool. Changing it recreates the connection pool.
+* `database_id` - (Required) ID of the database the pool connects to.
+* `mode` - (Required) PgBouncer pooling mode: SESSION, STATEMENT or TRANSACTION.
+* `size` - (Required) Maximum number of server connections in the pool.
+* `user_id` - (Optional) ID of the user the pool connects with, which can't be the administrator of the service. If omitted, the pool uses a system user.
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `engine` - Engine of the service: postgresql.
+* `id` - ID of the connection pool.
+* `checksum` - Hash of the connection pool, computed by the API.
+* `created_at` - Creation date of the connection pool.
+* `port` - Port the connection pool listens on.
+* `ssl_mode` - TLS mode of the connection pool.
+* `updated_at` - Last update date of the connection pool.
+* `uri` - Connection URI of the connection pool.
+
+## Import
+
+It can be imported using its `service_name`, `service_id` and `id`, separated by "/".
+
+```terraform
+import {
+  to = ovh_cloud_managed_database_postgresql_connection_pool.app
+  id = "<service_name>/<service_id>/<id>"
+}
+```
+
+```bash
+$ terraform import ovh_cloud_managed_database_postgresql_connection_pool.app service_name/service_id/id
+```

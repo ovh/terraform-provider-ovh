@@ -936,12 +936,14 @@ func managedDatabaseServiceError(res *CloudManagedDatabaseServiceAPIResponse) er
 }
 
 // managedDatabaseServiceBusyClasses are the 409s the API answers while an operation runs on the
-// service. Its other 409s, such as ServiceOnlyOneModification or ServiceLocked, don't end on their own.
+// service, or on a connection pool, whose status the API doesn't give. Its other 409s, such as
+// ServiceOnlyOneModification or ServiceLocked, don't end on their own.
 var managedDatabaseServiceBusyClasses = []string{
 	"Client::Conflict::ServiceOperationInProgress",
 	"Client::Conflict::ServiceNotReady",
 	"Client::Conflict::PublicAccessChanging",
 	"Client::Conflict::StorageUsageUnknown",
+	"Client::Conflict::ConnectionPoolStatusNotReady",
 }
 
 // managedDatabaseAPIUnavailable is the status a wait gives a read that the API answered with a 5xx or a
