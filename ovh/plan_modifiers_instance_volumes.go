@@ -175,7 +175,7 @@ func instanceUpdatePlanned(state tfsdk.State, plan tfsdk.Plan, config tfsdk.Conf
 			return true
 		}
 	}
-	attrs := append(append(append([]string{}, instanceMutableAttrs.Strings...), instanceMutableAttrs.Lists...), instanceMutableAttrs.CustomStringLists...)
+	attrs := append(append(append(append([]string{}, instanceMutableAttrs.Strings...), instanceMutableAttrs.Lists...), instanceMutableAttrs.CustomStringLists...), instanceMutableAttrs.Objects...)
 	for _, name := range attrs {
 		p := pm[name]
 		if !p.IsKnown() && cm[name].IsNull() {
