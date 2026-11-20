@@ -150,7 +150,7 @@ The following attributes are exported:
 * `disable_public_networking` - See Argument Reference above.
 * `id` - Managed Kubernetes Service ID
 * `is_up_to_date` - True if all nodes and control-plane are up-to-date.
-* `kubeconfig` - The kubeconfig file. Use this file to connect to your kubernetes cluster.
+* `kubeconfig` - The kubeconfig file. Use this file to connect to your kubernetes cluster. A new kubeconfig is generated when the cluster changed since the previous one, for example after a reset of its kubeconfig.
 * `kubeconfig_attributes` - The kubeconfig file attributes.
   * `host` - The kubernetes API server URL.
   * `cluster_ca_certificate` - The kubernetes API server CA certificate.
@@ -166,6 +166,7 @@ The following attributes are exported:
 * `status` - Cluster status. Should be normally set to 'READY'.
 * `update_policy` - See Argument Reference above.
 * `url` - Management URL of your cluster.
+* `updated_at` - Last update date of the cluster.
 * `version` - See Argument Reference above.
 * `customization_apiserver` - See Argument Reference above.
 * `customization_kube_proxy` - See Argument Reference above.
