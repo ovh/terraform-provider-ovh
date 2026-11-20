@@ -37,11 +37,212 @@ func VrackservicessDataSourceSchema(ctx context.Context) schema.Schema {
 					},
 					"current_state": schema.SingleNestedAttribute{
 						Attributes: map[string]schema.Attribute{
-							"product_status": schema.StringAttribute{
-								CustomType:          ovhtypes.TfStringType{},
+							"bgp": schema.SingleNestedAttribute{
+								Attributes: map[string]schema.Attribute{
+									"allowed_prefixes": schema.SingleNestedAttribute{
+										Attributes: map[string]schema.Attribute{
+											"ipv4": schema.ListAttribute{
+												CustomType:          ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+												Computed:            true,
+												Description:         "Allowed IPv4 prefixes",
+												MarkdownDescription: "Allowed IPv4 prefixes",
+											},
+											"ipv6": schema.ListAttribute{
+												CustomType:          ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+												Computed:            true,
+												Description:         "Allowed IPv6 prefixes",
+												MarkdownDescription: "Allowed IPv6 prefixes",
+											},
+										},
+										CustomType: VrackservicessCurrentStateBgpAllowedPrefixesType{
+											ObjectType: types.ObjectType{
+												AttrTypes: VrackservicessCurrentStateBgpAllowedPrefixesValue{}.AttributeTypes(ctx),
+											},
+										},
+										Computed:            true,
+										Description:         "Allowed prefixes, OVHcloud public IP blocks announced through BGP",
+										MarkdownDescription: "Allowed prefixes, OVHcloud public IP blocks announced through BGP",
+									},
+									"bandwidth": schema.Int64Attribute{
+										CustomType:          ovhtypes.TfInt64Type{},
+										Computed:            true,
+										Description:         "BGP ingress bandwidth in Mbps",
+										MarkdownDescription: "BGP ingress bandwidth in Mbps",
+									},
+									"bgp_range": schema.ListNestedAttribute{
+										NestedObject: schema.NestedAttributeObject{
+											Attributes: map[string]schema.Attribute{
+												"cidr": schema.StringAttribute{
+													CustomType:          ovhtypes.TfStringType{},
+													Computed:            true,
+													Description:         "BGP range CIDR",
+													MarkdownDescription: "BGP range CIDR",
+												},
+												"client_peers": schema.ListAttribute{
+													CustomType:          ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+													Computed:            true,
+													Description:         "Client peer IPs within the BGP range CIDR",
+													MarkdownDescription: "Client peer IPs within the BGP range CIDR",
+												},
+												"configuration_status": schema.SingleNestedAttribute{
+													Attributes: map[string]schema.Attribute{
+														"reason": schema.StringAttribute{
+															CustomType:          ovhtypes.TfStringType{},
+															Computed:            true,
+															Description:         "Reason explaining the BGP range configuration status",
+															MarkdownDescription: "Reason explaining the BGP range configuration status",
+														},
+														"status": schema.StringAttribute{
+															CustomType:          ovhtypes.TfStringType{},
+															Computed:            true,
+															Description:         "BGP range configuration status (`DRAFT`, `READY`)",
+															MarkdownDescription: "BGP range configuration status (`DRAFT`, `READY`)",
+														},
+													},
+													CustomType: VrackservicessCurrentStateBgpBgpRangeConfigurationStatusType{
+														ObjectType: types.ObjectType{
+															AttrTypes: VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue{}.AttributeTypes(ctx),
+														},
+													},
+													Computed:            true,
+													Description:         "BGP range configuration status",
+													MarkdownDescription: "BGP range configuration status",
+												},
+												"infrastructure_peers": schema.ListAttribute{
+													CustomType:          ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+													Computed:            true,
+													Description:         "Infrastructure peer IPs within the BGP range CIDR",
+													MarkdownDescription: "Infrastructure peer IPs within the BGP range CIDR",
+												},
+												"subnet_cidr": schema.StringAttribute{
+													CustomType:          ovhtypes.TfStringType{},
+													Computed:            true,
+													Description:         "Referenced subnet CIDR",
+													MarkdownDescription: "Referenced subnet CIDR",
+												},
+											},
+											CustomType: VrackservicessCurrentStateBgpBgpRangeType{
+												ObjectType: types.ObjectType{
+													AttrTypes: VrackservicessCurrentStateBgpBgpRangeValue{}.AttributeTypes(ctx),
+												},
+											},
+										},
+										CustomType:          ovhtypes.NewTfListNestedType[VrackservicessCurrentStateBgpBgpRangeValue](ctx),
+										Computed:            true,
+										Description:         "BGP ranges",
+										MarkdownDescription: "BGP ranges",
+									},
+									"client_asn": schema.Int64Attribute{
+										CustomType:          ovhtypes.TfInt64Type{},
+										Computed:            true,
+										Description:         "Client ASN",
+										MarkdownDescription: "Client ASN",
+									},
+									"configuration_status": schema.SingleNestedAttribute{
+										Attributes: map[string]schema.Attribute{
+											"reason": schema.StringAttribute{
+												CustomType:          ovhtypes.TfStringType{},
+												Computed:            true,
+												Description:         "Reason for the status. Omitted when status is `READY`",
+												MarkdownDescription: "Reason for the status. Omitted when status is `READY`",
+											},
+											"status": schema.StringAttribute{
+												CustomType:          ovhtypes.TfStringType{},
+												Computed:            true,
+												Description:         "Configuration status (`DRAFT`, `READY`, `SUSPENDED`)",
+												MarkdownDescription: "Configuration status (`DRAFT`, `READY`, `SUSPENDED`)",
+											},
+										},
+										CustomType: VrackservicessCurrentStateBgpConfigurationStatusType{
+											ObjectType: types.ObjectType{
+												AttrTypes: VrackservicessCurrentStateBgpConfigurationStatusValue{}.AttributeTypes(ctx),
+											},
+										},
+										Computed:            true,
+										Description:         "BGP configuration status",
+										MarkdownDescription: "BGP configuration status",
+									},
+									"iam": schema.SingleNestedAttribute{
+										Attributes: map[string]schema.Attribute{
+											"display_name": schema.StringAttribute{
+												CustomType:          ovhtypes.TfStringType{},
+												Computed:            true,
+												Description:         "Resource display name",
+												MarkdownDescription: "Resource display name",
+											},
+											"id": schema.StringAttribute{
+												CustomType:          ovhtypes.TfStringType{},
+												Computed:            true,
+												Description:         "Unique identifier of the resource",
+												MarkdownDescription: "Unique identifier of the resource",
+											},
+											"state": schema.StringAttribute{
+												CustomType:          ovhtypes.TfStringType{},
+												Computed:            true,
+												Description:         "Resource state",
+												MarkdownDescription: "Resource state",
+											},
+											"urn": schema.StringAttribute{
+												CustomType:          ovhtypes.TfStringType{},
+												Computed:            true,
+												Description:         "Unique resource name used in policies",
+												MarkdownDescription: "Unique resource name used in policies",
+											},
+										},
+										CustomType: VrackservicessCurrentStateBgpIamType{
+											ObjectType: types.ObjectType{
+												AttrTypes: VrackservicessCurrentStateBgpIamValue{}.AttributeTypes(ctx),
+											},
+										},
+										Computed:            true,
+										Description:         "IAM resource metadata of the BGP configuration",
+										MarkdownDescription: "IAM resource metadata of the BGP configuration",
+									},
+									"id": schema.StringAttribute{
+										CustomType:          ovhtypes.TfStringType{},
+										Computed:            true,
+										Description:         "BGP identifier",
+										MarkdownDescription: "BGP identifier",
+									},
+									"infrastructure_asn": schema.Int64Attribute{
+										CustomType:          ovhtypes.TfInt64Type{},
+										Computed:            true,
+										Description:         "Infrastructure ASN",
+										MarkdownDescription: "Infrastructure ASN",
+									},
+								},
+								CustomType: VrackservicessCurrentStateBgpType{
+									ObjectType: types.ObjectType{
+										AttrTypes: VrackservicessCurrentStateBgpValue{}.AttributeTypes(ctx),
+									},
+								},
 								Computed:            true,
-								Description:         "Product status of the vRack Services",
-								MarkdownDescription: "Product status of the vRack Services",
+								Description:         "BGP configuration of the vRack Services. Null when the BGP option is not subscribed",
+								MarkdownDescription: "BGP configuration of the vRack Services. Null when the BGP option is not subscribed",
+							},
+							"configuration_status": schema.SingleNestedAttribute{
+								Attributes: map[string]schema.Attribute{
+									"reason": schema.StringAttribute{
+										CustomType:          ovhtypes.TfStringType{},
+										Computed:            true,
+										Description:         "Reason for the status. Omitted when status is `READY`",
+										MarkdownDescription: "Reason for the status. Omitted when status is `READY`",
+									},
+									"status": schema.StringAttribute{
+										CustomType:          ovhtypes.TfStringType{},
+										Computed:            true,
+										Description:         "Configuration status (`DRAFT`, `READY`, `SUSPENDED`)",
+										MarkdownDescription: "Configuration status (`DRAFT`, `READY`, `SUSPENDED`)",
+									},
+								},
+								CustomType: VrackservicessCurrentStateConfigurationStatusType{
+									ObjectType: types.ObjectType{
+										AttrTypes: VrackservicessCurrentStateConfigurationStatusValue{}.AttributeTypes(ctx),
+									},
+								},
+								Computed:            true,
+								Description:         "vRack Services configuration status",
+								MarkdownDescription: "vRack Services configuration status",
 							},
 							"region": schema.StringAttribute{
 								CustomType:          ovhtypes.TfStringType{},
@@ -49,76 +250,16 @@ func VrackservicessDataSourceSchema(ctx context.Context) schema.Schema {
 								Description:         "Region of the vRack Services. List of compatible regions can be retrieved from /reference/region",
 								MarkdownDescription: "Region of the vRack Services. List of compatible regions can be retrieved from /reference/region",
 							},
-							"subnets": schema.ListNestedAttribute{
-								NestedObject: schema.NestedAttributeObject{
-									Attributes: map[string]schema.Attribute{
-										"cidr": schema.StringAttribute{
-											CustomType:          ovhtypes.TfStringType{},
-											Computed:            true,
-											Description:         "IP address range of the subnet in CIDR format",
-											MarkdownDescription: "IP address range of the subnet in CIDR format",
-										},
-										"display_name": schema.StringAttribute{
-											CustomType:          ovhtypes.TfStringType{},
-											Computed:            true,
-											Description:         "Display name of the subnet",
-											MarkdownDescription: "Display name of the subnet",
-										},
-										"service_endpoints": schema.ListNestedAttribute{
-											NestedObject: schema.NestedAttributeObject{
-												Attributes: map[string]schema.Attribute{
-													"endpoints": schema.ListNestedAttribute{
-														NestedObject: schema.NestedAttributeObject{
-															Attributes: map[string]schema.Attribute{
-																"description": schema.StringAttribute{
-																	CustomType:          ovhtypes.TfStringType{},
-																	Computed:            true,
-																	Description:         "IP description defined in the managed service",
-																	MarkdownDescription: "IP description defined in the managed service",
-																},
-																"ip": schema.StringAttribute{
-																	CustomType:          ovhtypes.TfStringType{},
-																	Computed:            true,
-																	Description:         "IP address assigned by OVHcloud",
-																	MarkdownDescription: "IP address assigned by OVHcloud",
-																},
-															},
-															CustomType: VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsType{
-																ObjectType: types.ObjectType{
-																	AttrTypes: VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue{}.AttributeTypes(ctx),
-																},
-															},
-														},
-														CustomType:          ovhtypes.NewTfListNestedType[VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue](ctx),
-														Computed:            true,
-														Description:         "Endpoints representing the IPs assigned to the managed services",
-														MarkdownDescription: "Endpoints representing the IPs assigned to the managed services",
-													},
-													"managed_service_urn": schema.StringAttribute{
-														CustomType:          ovhtypes.TfStringType{},
-														Computed:            true,
-														Description:         "IAM Resource URN of the managed service. Compatible managed service types are listed by /reference/compatibleManagedServiceType call.",
-														MarkdownDescription: "IAM Resource URN of the managed service. Compatible managed service types are listed by /reference/compatibleManagedServiceType call.",
-													},
-												},
-												CustomType: VrackservicessCurrentStateSubnetsServiceEndpointsType{
-													ObjectType: types.ObjectType{
-														AttrTypes: VrackservicessCurrentStateSubnetsServiceEndpointsValue{}.AttributeTypes(ctx),
-													},
-												},
-											},
-											CustomType:          ovhtypes.NewTfListNestedType[VrackservicessCurrentStateSubnetsServiceEndpointsValue](ctx),
-											Computed:            true,
-											Description:         "Service endpoints of the subnet",
-											MarkdownDescription: "Service endpoints of the subnet",
-										},
-										"service_range": schema.SingleNestedAttribute{
+							"services": schema.SingleNestedAttribute{
+								Attributes: map[string]schema.Attribute{
+									"service_range": schema.ListNestedAttribute{
+										NestedObject: schema.NestedAttributeObject{
 											Attributes: map[string]schema.Attribute{
 												"cidr": schema.StringAttribute{
 													CustomType:          ovhtypes.TfStringType{},
 													Computed:            true,
-													Description:         "CIDR dedicated to the subnet's services",
-													MarkdownDescription: "CIDR dedicated to the subnet's services",
+													Description:         "Service range CIDR",
+													MarkdownDescription: "Service range CIDR",
 												},
 												"remaining_ips": schema.Int64Attribute{
 													CustomType:          ovhtypes.TfInt64Type{},
@@ -132,6 +273,84 @@ func VrackservicessDataSourceSchema(ctx context.Context) schema.Schema {
 													Description:         "Number of service range IPs reserved by OVHcloud",
 													MarkdownDescription: "Number of service range IPs reserved by OVHcloud",
 												},
+												"service_endpoints": schema.ListNestedAttribute{
+													NestedObject: schema.NestedAttributeObject{
+														Attributes: map[string]schema.Attribute{
+															"endpoints": schema.ListNestedAttribute{
+																NestedObject: schema.NestedAttributeObject{
+																	Attributes: map[string]schema.Attribute{
+																		"description": schema.StringAttribute{
+																			CustomType:          ovhtypes.TfStringType{},
+																			Computed:            true,
+																			Description:         "IP description defined in the managed service",
+																			MarkdownDescription: "IP description defined in the managed service",
+																		},
+																		"ip": schema.StringAttribute{
+																			CustomType:          ovhtypes.TfStringType{},
+																			Computed:            true,
+																			Description:         "IP address assigned by OVHcloud",
+																			MarkdownDescription: "IP address assigned by OVHcloud",
+																		},
+																	},
+																	CustomType: VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsType{
+																		ObjectType: types.ObjectType{
+																			AttrTypes: VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue{}.AttributeTypes(ctx),
+																		},
+																	},
+																},
+																CustomType:          ovhtypes.NewTfListNestedType[VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue](ctx),
+																Computed:            true,
+																Description:         "Endpoints representing the IPs assigned to the managed services",
+																MarkdownDescription: "Endpoints representing the IPs assigned to the managed services",
+															},
+															"managed_service_urn": schema.StringAttribute{
+																CustomType:          ovhtypes.TfStringType{},
+																Computed:            true,
+																Description:         "IAM Resource URN of the managed service. Compatible managed service types are listed by /reference/compatibleManagedServiceType call.",
+																MarkdownDescription: "IAM Resource URN of the managed service. Compatible managed service types are listed by /reference/compatibleManagedServiceType call.",
+															},
+														},
+														CustomType: VrackservicessCurrentStateServicesServiceRangeServiceEndpointsType{
+															ObjectType: types.ObjectType{
+																AttrTypes: VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue{}.AttributeTypes(ctx),
+															},
+														},
+													},
+													CustomType:          ovhtypes.NewTfListNestedType[VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue](ctx),
+													Computed:            true,
+													Description:         "Service endpoints",
+													MarkdownDescription: "Service endpoints",
+												},
+												"service_endpoints_configuration_status": schema.SingleNestedAttribute{
+													Attributes: map[string]schema.Attribute{
+														"reason": schema.StringAttribute{
+															CustomType:          ovhtypes.TfStringType{},
+															Computed:            true,
+															Description:         "Reason for the status",
+															MarkdownDescription: "Reason for the status",
+														},
+														"status": schema.StringAttribute{
+															CustomType:          ovhtypes.TfStringType{},
+															Computed:            true,
+															Description:         "Configuration status (`DRAFT`, `READY`)",
+															MarkdownDescription: "Configuration status (`DRAFT`, `READY`)",
+														},
+													},
+													CustomType: VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusType{
+														ObjectType: types.ObjectType{
+															AttrTypes: VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue{}.AttributeTypes(ctx),
+														},
+													},
+													Computed:            true,
+													Description:         "Service endpoints configuration status",
+													MarkdownDescription: "Service endpoints configuration status",
+												},
+												"subnet_cidr": schema.StringAttribute{
+													CustomType:          ovhtypes.TfStringType{},
+													Computed:            true,
+													Description:         "Subnet CIDR",
+													MarkdownDescription: "Subnet CIDR",
+												},
 												"used_ips": schema.Int64Attribute{
 													CustomType:          ovhtypes.TfInt64Type{},
 													Computed:            true,
@@ -139,14 +358,47 @@ func VrackservicessDataSourceSchema(ctx context.Context) schema.Schema {
 													MarkdownDescription: "Number of service range IPs assigned to the managed services",
 												},
 											},
-											CustomType: VrackservicessCurrentStateSubnetsServiceRangeType{
+											CustomType: VrackservicessCurrentStateServicesServiceRangeType{
 												ObjectType: types.ObjectType{
-													AttrTypes: VrackservicessCurrentStateSubnetsServiceRangeValue{}.AttributeTypes(ctx),
+													AttrTypes: VrackservicessCurrentStateServicesServiceRangeValue{}.AttributeTypes(ctx),
 												},
 											},
+										},
+										CustomType:          ovhtypes.NewTfListNestedType[VrackservicessCurrentStateServicesServiceRangeValue](ctx),
+										Computed:            true,
+										Description:         "Service ranges",
+										MarkdownDescription: "Service ranges",
+									},
+								},
+								CustomType: VrackservicessCurrentStateServicesType{
+									ObjectType: types.ObjectType{
+										AttrTypes: VrackservicessCurrentStateServicesValue{}.AttributeTypes(ctx),
+									},
+								},
+								Computed:            true,
+								Description:         "Services current state",
+								MarkdownDescription: "Services current state",
+							},
+							"subnets": schema.ListNestedAttribute{
+								NestedObject: schema.NestedAttributeObject{
+									Attributes: map[string]schema.Attribute{
+										"az": schema.StringAttribute{
+											CustomType:          ovhtypes.TfStringType{},
 											Computed:            true,
-											Description:         "Defines a smaller subnet dedicated to the managed services IPs",
-											MarkdownDescription: "Defines a smaller subnet dedicated to the managed services IPs",
+											Description:         "Availability zone of the subnet",
+											MarkdownDescription: "Availability zone of the subnet",
+										},
+										"cidr": schema.StringAttribute{
+											CustomType:          ovhtypes.TfStringType{},
+											Computed:            true,
+											Description:         "IP address range of the subnet in CIDR format",
+											MarkdownDescription: "IP address range of the subnet in CIDR format",
+										},
+										"display_name": schema.StringAttribute{
+											CustomType:          ovhtypes.TfStringType{},
+											Computed:            true,
+											Description:         "Display name of the subnet",
+											MarkdownDescription: "Display name of the subnet",
 										},
 										"vlan": schema.Int64Attribute{
 											CustomType:          ovhtypes.TfInt64Type{},
@@ -277,14 +529,167 @@ func VrackservicessDataSourceSchema(ctx context.Context) schema.Schema {
 					},
 					"target_spec": schema.SingleNestedAttribute{
 						Attributes: map[string]schema.Attribute{
+							"bgp": schema.SingleNestedAttribute{
+								Attributes: map[string]schema.Attribute{
+									"allowed_prefixes": schema.SingleNestedAttribute{
+										Attributes: map[string]schema.Attribute{
+											"ipv4": schema.ListAttribute{
+												CustomType:          ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+												Computed:            true,
+												Description:         "Allowed IPv4 prefixes. Prefix length must be between /24 and /30",
+												MarkdownDescription: "Allowed IPv4 prefixes. Prefix length must be between /24 and /30",
+											},
+											"ipv6": schema.ListAttribute{
+												CustomType:          ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+												Computed:            true,
+												Description:         "Allowed IPv6 prefixes. Prefix length must be /56",
+												MarkdownDescription: "Allowed IPv6 prefixes. Prefix length must be /56",
+											},
+										},
+										CustomType: VrackservicessTargetSpecBgpAllowedPrefixesType{
+											ObjectType: types.ObjectType{
+												AttrTypes: VrackservicessTargetSpecBgpAllowedPrefixesValue{}.AttributeTypes(ctx),
+											},
+										},
+										Computed:            true,
+										Description:         "Allowed prefixes, OVHcloud public IP blocks announced through BGP",
+										MarkdownDescription: "Allowed prefixes, OVHcloud public IP blocks announced through BGP",
+									},
+									"bgp_range": schema.ListNestedAttribute{
+										NestedObject: schema.NestedAttributeObject{
+											Attributes: map[string]schema.Attribute{
+												"cidr": schema.StringAttribute{
+													CustomType:          ovhtypes.TfStringType{},
+													Computed:            true,
+													Description:         "BGP range CIDR, contained in the referenced subnet",
+													MarkdownDescription: "BGP range CIDR, contained in the referenced subnet",
+												},
+												"client_peers": schema.ListAttribute{
+													CustomType:          ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+													Computed:            true,
+													Description:         "Client peer IPs within the BGP range CIDR (1 to 4). Must be of the same IP version as the referenced subnet",
+													MarkdownDescription: "Client peer IPs within the BGP range CIDR (1 to 4). Must be of the same IP version as the referenced subnet",
+												},
+												"infrastructure_peers": schema.ListAttribute{
+													CustomType:          ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+													Computed:            true,
+													Description:         "Infrastructure peer IPs within the BGP range CIDR. Must be of the same IP version as the referenced subnet",
+													MarkdownDescription: "Infrastructure peer IPs within the BGP range CIDR. Must be of the same IP version as the referenced subnet",
+												},
+												"subnet_cidr": schema.StringAttribute{
+													CustomType:          ovhtypes.TfStringType{},
+													Computed:            true,
+													Description:         "Referenced subnet CIDR. The referenced subnet must be untagged (`vlan` must be `null`)",
+													MarkdownDescription: "Referenced subnet CIDR. The referenced subnet must be untagged (`vlan` must be `null`)",
+												},
+											},
+											CustomType: VrackservicessTargetSpecBgpBgpRangeType{
+												ObjectType: types.ObjectType{
+													AttrTypes: VrackservicessTargetSpecBgpBgpRangeValue{}.AttributeTypes(ctx),
+												},
+											},
+										},
+										CustomType:          ovhtypes.NewTfListNestedType[VrackservicessTargetSpecBgpBgpRangeValue](ctx),
+										Computed:            true,
+										Description:         "Target specification of the BGP ranges. At most one BGP range per subnet",
+										MarkdownDescription: "Target specification of the BGP ranges. At most one BGP range per subnet",
+									},
+									"client_asn": schema.Int64Attribute{
+										CustomType:          ovhtypes.TfInt64Type{},
+										Computed:            true,
+										Description:         "Private client ASN. Authorized values: [64512 - 65533]. Default value: 64512",
+										MarkdownDescription: "Private client ASN. Authorized values: [64512 - 65533]. Default value: 64512",
+									},
+									"infrastructure_asn": schema.Int64Attribute{
+										CustomType:          ovhtypes.TfInt64Type{},
+										Computed:            true,
+										Description:         "Private infrastructure ASN. Authorized values: [64513 - 65534]. Default value: 65534",
+										MarkdownDescription: "Private infrastructure ASN. Authorized values: [64513 - 65534]. Default value: 65534",
+									},
+								},
+								CustomType: VrackservicessTargetSpecBgpType{
+									ObjectType: types.ObjectType{
+										AttrTypes: VrackservicessTargetSpecBgpValue{}.AttributeTypes(ctx),
+									},
+								},
+								Computed:            true,
+								Description:         "Target specification of the BGP configuration",
+								MarkdownDescription: "Target specification of the BGP configuration",
+							},
+							"services": schema.SingleNestedAttribute{
+								Attributes: map[string]schema.Attribute{
+									"service_range": schema.ListNestedAttribute{
+										NestedObject: schema.NestedAttributeObject{
+											Attributes: map[string]schema.Attribute{
+												"cidr": schema.StringAttribute{
+													CustomType:          ovhtypes.TfStringType{},
+													Computed:            true,
+													Description:         "Service range CIDR, contained in the referenced subnet",
+													MarkdownDescription: "Service range CIDR, contained in the referenced subnet",
+												},
+												"service_endpoints": schema.ListNestedAttribute{
+													NestedObject: schema.NestedAttributeObject{
+														Attributes: map[string]schema.Attribute{
+															"managed_service_urn": schema.StringAttribute{
+																CustomType:          ovhtypes.TfStringType{},
+																Computed:            true,
+																Description:         "IAM Resource URN of the managed service. Managed service Region must match vRack Services Region. Compatible managed service types are listed by /reference/compatibleManagedServiceType call",
+																MarkdownDescription: "IAM Resource URN of the managed service. Managed service Region must match vRack Services Region. Compatible managed service types are listed by /reference/compatibleManagedServiceType call",
+															},
+														},
+														CustomType: VrackservicessTargetSpecServicesServiceRangeServiceEndpointsType{
+															ObjectType: types.ObjectType{
+																AttrTypes: VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue{}.AttributeTypes(ctx),
+															},
+														},
+													},
+													CustomType:          ovhtypes.NewTfListNestedType[VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue](ctx),
+													Computed:            true,
+													Description:         "Service endpoint target specifications",
+													MarkdownDescription: "Service endpoint target specifications",
+												},
+												"subnet_cidr": schema.StringAttribute{
+													CustomType:          ovhtypes.TfStringType{},
+													Computed:            true,
+													Description:         "Referenced subnet CIDR",
+													MarkdownDescription: "Referenced subnet CIDR",
+												},
+											},
+											CustomType: VrackservicessTargetSpecServicesServiceRangeType{
+												ObjectType: types.ObjectType{
+													AttrTypes: VrackservicessTargetSpecServicesServiceRangeValue{}.AttributeTypes(ctx),
+												},
+											},
+										},
+										CustomType:          ovhtypes.NewTfListNestedType[VrackservicessTargetSpecServicesServiceRangeValue](ctx),
+										Computed:            true,
+										Description:         "Service range target specifications",
+										MarkdownDescription: "Service range target specifications",
+									},
+								},
+								CustomType: VrackservicessTargetSpecServicesType{
+									ObjectType: types.ObjectType{
+										AttrTypes: VrackservicessTargetSpecServicesValue{}.AttributeTypes(ctx),
+									},
+								},
+								Computed:            true,
+								Description:         "Target specification of the services",
+								MarkdownDescription: "Target specification of the services",
+							},
 							"subnets": schema.ListNestedAttribute{
 								NestedObject: schema.NestedAttributeObject{
 									Attributes: map[string]schema.Attribute{
+										"az": schema.StringAttribute{
+											CustomType:          ovhtypes.TfStringType{},
+											Computed:            true,
+											Description:         "Availability zone of the subnet",
+											MarkdownDescription: "Availability zone of the subnet",
+										},
 										"cidr": schema.StringAttribute{
 											CustomType:          ovhtypes.TfStringType{},
 											Computed:            true,
-											Description:         "IP address range of the subnet in CIDR format. Must be a private network address (RFC1918). Authorized range for prefix length: /16 to /24",
-											MarkdownDescription: "IP address range of the subnet in CIDR format. Must be a private network address (RFC1918). Authorized range for prefix length: /16 to /24",
+											Description:         "IP address range of the subnet in CIDR format. Must be a private network address (RFC1918)",
+											MarkdownDescription: "IP address range of the subnet in CIDR format. Must be a private network address (RFC1918)",
 										},
 										"display_name": schema.StringAttribute{
 											CustomType:          ovhtypes.TfStringType{},
@@ -292,50 +697,11 @@ func VrackservicessDataSourceSchema(ctx context.Context) schema.Schema {
 											Description:         "Display name of the subnet. Format must follow `^[ a-zA-Z0-9-_.]{0,40}$`",
 											MarkdownDescription: "Display name of the subnet. Format must follow `^[ a-zA-Z0-9-_.]{0,40}$`",
 										},
-										"service_endpoints": schema.ListNestedAttribute{
-											NestedObject: schema.NestedAttributeObject{
-												Attributes: map[string]schema.Attribute{
-													"managed_service_urn": schema.StringAttribute{
-														CustomType:          ovhtypes.TfStringType{},
-														Computed:            true,
-														Description:         "IAM Resource URN of the managed service. Managed service Region must match vRack Services Region. Compatible managed service types are listed by /reference/compatibleManagedServiceType call",
-														MarkdownDescription: "IAM Resource URN of the managed service. Managed service Region must match vRack Services Region. Compatible managed service types are listed by /reference/compatibleManagedServiceType call",
-													},
-												},
-												CustomType: VrackservicessTargetSpecSubnetsServiceEndpointsType{
-													ObjectType: types.ObjectType{
-														AttrTypes: VrackservicessTargetSpecSubnetsServiceEndpointsValue{}.AttributeTypes(ctx),
-													},
-												},
-											},
-											CustomType:          ovhtypes.NewTfListNestedType[VrackservicessTargetSpecSubnetsServiceEndpointsValue](ctx),
-											Computed:            true,
-											Description:         "Target specification of the Service Endpoints",
-											MarkdownDescription: "Target specification of the Service Endpoints",
-										},
-										"service_range": schema.SingleNestedAttribute{
-											Attributes: map[string]schema.Attribute{
-												"cidr": schema.StringAttribute{
-													CustomType:          ovhtypes.TfStringType{},
-													Computed:            true,
-													Description:         "IP address range dedicated to the subnet's services in CIDR format. Must be a private network address (RFC1918). Must be a sub-network of the subnet. Authorized range for prefix length: /27 to /29",
-													MarkdownDescription: "IP address range dedicated to the subnet's services in CIDR format. Must be a private network address (RFC1918). Must be a sub-network of the subnet. Authorized range for prefix length: /27 to /29",
-												},
-											},
-											CustomType: VrackservicessTargetSpecSubnetsServiceRangeType{
-												ObjectType: types.ObjectType{
-													AttrTypes: VrackservicessTargetSpecSubnetsServiceRangeValue{}.AttributeTypes(ctx),
-												},
-											},
-											Computed:            true,
-											Description:         "Defines a smaller subnet dedicated to the managed service IPs",
-											MarkdownDescription: "Defines a smaller subnet dedicated to the managed service IPs",
-										},
 										"vlan": schema.Int64Attribute{
 											CustomType:          ovhtypes.TfInt64Type{},
 											Computed:            true,
-											Description:         "Unique inner VLAN that allows subnets segregation. Authorized values: [2 - 4094] and `null` (untagged traffic)",
-											MarkdownDescription: "Unique inner VLAN that allows subnets segregation. Authorized values: [2 - 4094] and `null` (untagged traffic)",
+											Description:         "Unique inner VLAN that allows subnets segregation. Authorized values: [2 - 4094] and `null` (untagged traffic). Must be `null` when the subnet is referenced by a BGP range",
+											MarkdownDescription: "Unique inner VLAN that allows subnets segregation. Authorized values: [2 - 4094] and `null` (untagged traffic). Must be `null` when the subnet is referenced by a BGP range",
 										},
 									},
 									CustomType: VrackservicessTargetSpecSubnetsType{
@@ -346,8 +712,8 @@ func VrackservicessDataSourceSchema(ctx context.Context) schema.Schema {
 								},
 								CustomType:          ovhtypes.NewTfListNestedType[VrackservicessTargetSpecSubnetsValue](ctx),
 								Computed:            true,
-								Description:         "Target specification of the subnets. Maximum one subnet per vRack Services",
-								MarkdownDescription: "Target specification of the subnets. Maximum one subnet per vRack Services",
+								Description:         "Target specification of the subnets",
+								MarkdownDescription: "Target specification of the subnets",
 							},
 						},
 						CustomType: VrackservicessTargetSpecType{
@@ -1132,6 +1498,14 @@ func (v VrackservicessValue) String() string {
 func (v VrackservicessValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
+	if v.IsNull() {
+		return types.ObjectNull(v.AttributeTypes(ctx)), diags
+	}
+
+	if v.IsUnknown() {
+		return types.ObjectUnknown(v.AttributeTypes(ctx)), diags
+	}
+
 	objVal, diags := types.ObjectValue(
 		map[string]attr.Type{
 			"checksum":   ovhtypes.TfStringType{},
@@ -1272,22 +1646,40 @@ func (t VrackservicessCurrentStateType) ValueFromObject(ctx context.Context, in 
 
 	attributes := in.Attributes()
 
-	productStatusAttribute, ok := attributes["product_status"]
+	bgpAttribute, ok := attributes["bgp"]
 
 	if !ok {
 		diags.AddError(
 			"Attribute Missing",
-			`product_status is missing from object`)
+			`bgp is missing from object`)
 
 		return nil, diags
 	}
 
-	productStatusVal, ok := productStatusAttribute.(ovhtypes.TfStringValue)
+	bgpVal, ok := bgpAttribute.(VrackservicessCurrentStateBgpValue)
 
 	if !ok {
 		diags.AddError(
 			"Attribute Wrong Type",
-			fmt.Sprintf(`product_status expected to be ovhtypes.TfStringValue, was: %T`, productStatusAttribute))
+			fmt.Sprintf(`bgp expected to be VrackservicessCurrentStateBgpValue, was: %T`, bgpAttribute))
+	}
+
+	configurationStatusAttribute, ok := attributes["configuration_status"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`configuration_status is missing from object`)
+
+		return nil, diags
+	}
+
+	configurationStatusVal, ok := configurationStatusAttribute.(VrackservicessCurrentStateConfigurationStatusValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`configuration_status expected to be VrackservicessCurrentStateConfigurationStatusValue, was: %T`, configurationStatusAttribute))
 	}
 
 	regionAttribute, ok := attributes["region"]
@@ -1306,6 +1698,24 @@ func (t VrackservicessCurrentStateType) ValueFromObject(ctx context.Context, in 
 		diags.AddError(
 			"Attribute Wrong Type",
 			fmt.Sprintf(`region expected to be ovhtypes.TfStringValue, was: %T`, regionAttribute))
+	}
+
+	servicesAttribute, ok := attributes["services"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`services is missing from object`)
+
+		return nil, diags
+	}
+
+	servicesVal, ok := servicesAttribute.(VrackservicessCurrentStateServicesValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`services expected to be VrackservicessCurrentStateServicesValue, was: %T`, servicesAttribute))
 	}
 
 	subnetsAttribute, ok := attributes["subnets"]
@@ -1349,11 +1759,13 @@ func (t VrackservicessCurrentStateType) ValueFromObject(ctx context.Context, in 
 	}
 
 	return VrackservicessCurrentStateValue{
-		ProductStatus: productStatusVal,
-		Region:        regionVal,
-		Subnets:       subnetsVal,
-		VrackId:       vrackIdVal,
-		state:         attr.ValueStateKnown,
+		Bgp:                 bgpVal,
+		ConfigurationStatus: configurationStatusVal,
+		Region:              regionVal,
+		Services:            servicesVal,
+		Subnets:             subnetsVal,
+		VrackId:             vrackIdVal,
+		state:               attr.ValueStateKnown,
 	}, diags
 }
 
@@ -1420,22 +1832,40 @@ func NewVrackservicessCurrentStateValue(attributeTypes map[string]attr.Type, att
 		return NewVrackservicessCurrentStateValueUnknown(), diags
 	}
 
-	productStatusAttribute, ok := attributes["product_status"]
+	bgpAttribute, ok := attributes["bgp"]
 
 	if !ok {
 		diags.AddError(
 			"Attribute Missing",
-			`product_status is missing from object`)
+			`bgp is missing from object`)
 
 		return NewVrackservicessCurrentStateValueUnknown(), diags
 	}
 
-	productStatusVal, ok := productStatusAttribute.(ovhtypes.TfStringValue)
+	bgpVal, ok := bgpAttribute.(VrackservicessCurrentStateBgpValue)
 
 	if !ok {
 		diags.AddError(
 			"Attribute Wrong Type",
-			fmt.Sprintf(`product_status expected to be ovhtypes.TfStringValue, was: %T`, productStatusAttribute))
+			fmt.Sprintf(`bgp expected to be VrackservicessCurrentStateBgpValue, was: %T`, bgpAttribute))
+	}
+
+	configurationStatusAttribute, ok := attributes["configuration_status"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`configuration_status is missing from object`)
+
+		return NewVrackservicessCurrentStateValueUnknown(), diags
+	}
+
+	configurationStatusVal, ok := configurationStatusAttribute.(VrackservicessCurrentStateConfigurationStatusValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`configuration_status expected to be VrackservicessCurrentStateConfigurationStatusValue, was: %T`, configurationStatusAttribute))
 	}
 
 	regionAttribute, ok := attributes["region"]
@@ -1454,6 +1884,24 @@ func NewVrackservicessCurrentStateValue(attributeTypes map[string]attr.Type, att
 		diags.AddError(
 			"Attribute Wrong Type",
 			fmt.Sprintf(`region expected to be ovhtypes.TfStringValue, was: %T`, regionAttribute))
+	}
+
+	servicesAttribute, ok := attributes["services"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`services is missing from object`)
+
+		return NewVrackservicessCurrentStateValueUnknown(), diags
+	}
+
+	servicesVal, ok := servicesAttribute.(VrackservicessCurrentStateServicesValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`services expected to be VrackservicessCurrentStateServicesValue, was: %T`, servicesAttribute))
 	}
 
 	subnetsAttribute, ok := attributes["subnets"]
@@ -1497,11 +1945,13 @@ func NewVrackservicessCurrentStateValue(attributeTypes map[string]attr.Type, att
 	}
 
 	return VrackservicessCurrentStateValue{
-		ProductStatus: productStatusVal,
-		Region:        regionVal,
-		Subnets:       subnetsVal,
-		VrackId:       vrackIdVal,
-		state:         attr.ValueStateKnown,
+		Bgp:                 bgpVal,
+		ConfigurationStatus: configurationStatusVal,
+		Region:              regionVal,
+		Services:            servicesVal,
+		Subnets:             subnetsVal,
+		VrackId:             vrackIdVal,
+		state:               attr.ValueStateKnown,
 	}, diags
 }
 
@@ -1573,22 +2023,31 @@ func (t VrackservicessCurrentStateType) ValueType(ctx context.Context) attr.Valu
 var _ basetypes.ObjectValuable = VrackservicessCurrentStateValue{}
 
 type VrackservicessCurrentStateValue struct {
-	ProductStatus ovhtypes.TfStringValue                                             `tfsdk:"product_status" json:"productStatus"`
-	Region        ovhtypes.TfStringValue                                             `tfsdk:"region" json:"region"`
-	Subnets       ovhtypes.TfListNestedValue[VrackservicessCurrentStateSubnetsValue] `tfsdk:"subnets" json:"subnets"`
-	VrackId       ovhtypes.TfStringValue                                             `tfsdk:"vrack_id" json:"vrackId"`
-	state         attr.ValueState
+	Bgp                 VrackservicessCurrentStateBgpValue                                 `tfsdk:"bgp" json:"bgp"`
+	ConfigurationStatus VrackservicessCurrentStateConfigurationStatusValue                 `tfsdk:"configuration_status" json:"configurationStatus"`
+	Region              ovhtypes.TfStringValue                                             `tfsdk:"region" json:"region"`
+	Services            VrackservicessCurrentStateServicesValue                            `tfsdk:"services" json:"services"`
+	Subnets             ovhtypes.TfListNestedValue[VrackservicessCurrentStateSubnetsValue] `tfsdk:"subnets" json:"subnets"`
+	VrackId             ovhtypes.TfStringValue                                             `tfsdk:"vrack_id" json:"vrackId"`
+	state               attr.ValueState
 }
 
 func (v *VrackservicessCurrentStateValue) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" {
+		v.state = attr.ValueStateNull
+		return nil
+	}
+
 	type JsonVrackservicessCurrentStateValue VrackservicessCurrentStateValue
 
 	var tmp JsonVrackservicessCurrentStateValue
 	if err := json.Unmarshal(data, &tmp); err != nil {
 		return err
 	}
-	v.ProductStatus = tmp.ProductStatus
+	v.Bgp = tmp.Bgp
+	v.ConfigurationStatus = tmp.ConfigurationStatus
 	v.Region = tmp.Region
+	v.Services = tmp.Services
 	v.Subnets = tmp.Subnets
 	v.VrackId = tmp.VrackId
 
@@ -1599,16 +2058,49 @@ func (v *VrackservicessCurrentStateValue) UnmarshalJSON(data []byte) error {
 
 func (v *VrackservicessCurrentStateValue) MergeWith(other *VrackservicessCurrentStateValue) {
 
-	if (v.ProductStatus.IsUnknown() || v.ProductStatus.IsNull()) && !other.ProductStatus.IsUnknown() {
-		v.ProductStatus = other.ProductStatus
+	if v.Bgp.IsUnknown() && !other.Bgp.IsUnknown() {
+		v.Bgp = other.Bgp
+	} else if !other.Bgp.IsUnknown() {
+		v.Bgp.MergeWith(&other.Bgp)
+	}
+
+	if v.ConfigurationStatus.IsUnknown() && !other.ConfigurationStatus.IsUnknown() {
+		v.ConfigurationStatus = other.ConfigurationStatus
+	} else if !other.ConfigurationStatus.IsUnknown() {
+		v.ConfigurationStatus.MergeWith(&other.ConfigurationStatus)
 	}
 
 	if (v.Region.IsUnknown() || v.Region.IsNull()) && !other.Region.IsUnknown() {
 		v.Region = other.Region
 	}
 
+	if v.Services.IsUnknown() && !other.Services.IsUnknown() {
+		v.Services = other.Services
+	} else if !other.Services.IsUnknown() {
+		v.Services.MergeWith(&other.Services)
+	}
+
 	if (v.Subnets.IsUnknown() || v.Subnets.IsNull()) && !other.Subnets.IsUnknown() {
 		v.Subnets = other.Subnets
+	} else if !other.Subnets.IsUnknown() {
+		newSlice := make([]attr.Value, 0)
+		elems := v.Subnets.Elements()
+		newElems := other.Subnets.Elements()
+
+		if len(elems) != len(newElems) {
+			v.Subnets = other.Subnets
+		} else {
+			for idx, e := range elems {
+				tmp := e.(VrackservicessCurrentStateSubnetsValue)
+				tmp2 := newElems[idx].(VrackservicessCurrentStateSubnetsValue)
+				tmp.MergeWith(&tmp2)
+				newSlice = append(newSlice, tmp)
+			}
+
+			v.Subnets = ovhtypes.TfListNestedValue[VrackservicessCurrentStateSubnetsValue]{
+				ListValue: basetypes.NewListValueMust(VrackservicessCurrentStateSubnetsValue{}.Type(context.Background()), newSlice),
+			}
+		}
 	}
 
 	if (v.VrackId.IsUnknown() || v.VrackId.IsNull()) && !other.VrackId.IsUnknown() {
@@ -1622,20 +2114,30 @@ func (v *VrackservicessCurrentStateValue) MergeWith(other *VrackservicessCurrent
 
 func (v VrackservicessCurrentStateValue) Attributes() map[string]attr.Value {
 	return map[string]attr.Value{
-		"productStatus": v.ProductStatus,
-		"region":        v.Region,
-		"subnets":       v.Subnets,
-		"vrackId":       v.VrackId,
+		"bgp":                 v.Bgp,
+		"configurationStatus": v.ConfigurationStatus,
+		"region":              v.Region,
+		"services":            v.Services,
+		"subnets":             v.Subnets,
+		"vrackId":             v.VrackId,
 	}
 }
 func (v VrackservicessCurrentStateValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	attrTypes := make(map[string]tftypes.Type, 4)
+	attrTypes := make(map[string]tftypes.Type, 6)
 
 	var val tftypes.Value
 	var err error
 
-	attrTypes["product_status"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["bgp"] = basetypes.ObjectType{
+		AttrTypes: VrackservicessCurrentStateBgpValue{}.AttributeTypes(ctx),
+	}.TerraformType(ctx)
+	attrTypes["configuration_status"] = basetypes.ObjectType{
+		AttrTypes: VrackservicessCurrentStateConfigurationStatusValue{}.AttributeTypes(ctx),
+	}.TerraformType(ctx)
 	attrTypes["region"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["services"] = basetypes.ObjectType{
+		AttrTypes: VrackservicessCurrentStateServicesValue{}.AttributeTypes(ctx),
+	}.TerraformType(ctx)
 	attrTypes["subnets"] = basetypes.ListType{
 		ElemType: VrackservicessCurrentStateSubnetsValue{}.Type(ctx),
 	}.TerraformType(ctx)
@@ -1645,15 +2147,23 @@ func (v VrackservicessCurrentStateValue) ToTerraformValue(ctx context.Context) (
 
 	switch v.state {
 	case attr.ValueStateKnown:
-		vals := make(map[string]tftypes.Value, 4)
+		vals := make(map[string]tftypes.Value, 6)
 
-		val, err = v.ProductStatus.ToTerraformValue(ctx)
+		val, err = v.Bgp.ToTerraformValue(ctx)
 
 		if err != nil {
 			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
 		}
 
-		vals["product_status"] = val
+		vals["bgp"] = val
+
+		val, err = v.ConfigurationStatus.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["configuration_status"] = val
 
 		val, err = v.Region.ToTerraformValue(ctx)
 
@@ -1662,6 +2172,14 @@ func (v VrackservicessCurrentStateValue) ToTerraformValue(ctx context.Context) (
 		}
 
 		vals["region"] = val
+
+		val, err = v.Services.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["services"] = val
 
 		val, err = v.Subnets.ToTerraformValue(ctx)
 
@@ -1708,18 +2226,42 @@ func (v VrackservicessCurrentStateValue) String() string {
 func (v VrackservicessCurrentStateValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
+	if v.IsNull() {
+		return types.ObjectNull(v.AttributeTypes(ctx)), diags
+	}
+
+	if v.IsUnknown() {
+		return types.ObjectUnknown(v.AttributeTypes(ctx)), diags
+	}
+
 	objVal, diags := types.ObjectValue(
 		map[string]attr.Type{
-			"product_status": ovhtypes.TfStringType{},
-			"region":         ovhtypes.TfStringType{},
-			"subnets":        ovhtypes.NewTfListNestedType[VrackservicessCurrentStateSubnetsValue](ctx),
-			"vrack_id":       ovhtypes.TfStringType{},
+			"bgp": VrackservicessCurrentStateBgpType{
+				basetypes.ObjectType{
+					AttrTypes: VrackservicessCurrentStateBgpValue{}.AttributeTypes(ctx),
+				},
+			},
+			"configuration_status": VrackservicessCurrentStateConfigurationStatusType{
+				basetypes.ObjectType{
+					AttrTypes: VrackservicessCurrentStateConfigurationStatusValue{}.AttributeTypes(ctx),
+				},
+			},
+			"region": ovhtypes.TfStringType{},
+			"services": VrackservicessCurrentStateServicesType{
+				basetypes.ObjectType{
+					AttrTypes: VrackservicessCurrentStateServicesValue{}.AttributeTypes(ctx),
+				},
+			},
+			"subnets":  ovhtypes.NewTfListNestedType[VrackservicessCurrentStateSubnetsValue](ctx),
+			"vrack_id": ovhtypes.TfStringType{},
 		},
 		map[string]attr.Value{
-			"product_status": v.ProductStatus,
-			"region":         v.Region,
-			"subnets":        v.Subnets,
-			"vrack_id":       v.VrackId,
+			"bgp":                  v.Bgp,
+			"configuration_status": v.ConfigurationStatus,
+			"region":               v.Region,
+			"services":             v.Services,
+			"subnets":              v.Subnets,
+			"vrack_id":             v.VrackId,
 		})
 
 	return objVal, diags
@@ -1740,11 +2282,19 @@ func (v VrackservicessCurrentStateValue) Equal(o attr.Value) bool {
 		return true
 	}
 
-	if !v.ProductStatus.Equal(other.ProductStatus) {
+	if !v.Bgp.Equal(other.Bgp) {
+		return false
+	}
+
+	if !v.ConfigurationStatus.Equal(other.ConfigurationStatus) {
 		return false
 	}
 
 	if !v.Region.Equal(other.Region) {
+		return false
+	}
+
+	if !v.Services.Equal(other.Services) {
 		return false
 	}
 
@@ -1769,10 +2319,6075 @@ func (v VrackservicessCurrentStateValue) Type(ctx context.Context) attr.Type {
 
 func (v VrackservicessCurrentStateValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
 	return map[string]attr.Type{
-		"product_status": ovhtypes.TfStringType{},
-		"region":         ovhtypes.TfStringType{},
-		"subnets":        ovhtypes.NewTfListNestedType[VrackservicessCurrentStateSubnetsValue](ctx),
-		"vrack_id":       ovhtypes.TfStringType{},
+		"bgp":                  VrackservicessCurrentStateBgpValue{}.Type(ctx),
+		"configuration_status": VrackservicessCurrentStateConfigurationStatusValue{}.Type(ctx),
+		"region":               ovhtypes.TfStringType{},
+		"services":             VrackservicessCurrentStateServicesValue{}.Type(ctx),
+		"subnets":              ovhtypes.NewTfListNestedType[VrackservicessCurrentStateSubnetsValue](ctx),
+		"vrack_id":             ovhtypes.TfStringType{},
+	}
+}
+
+var _ basetypes.ObjectTypable = VrackservicessCurrentStateBgpType{}
+
+type VrackservicessCurrentStateBgpType struct {
+	basetypes.ObjectType
+}
+
+func (t VrackservicessCurrentStateBgpType) Equal(o attr.Type) bool {
+	other, ok := o.(VrackservicessCurrentStateBgpType)
+
+	if !ok {
+		return false
+	}
+
+	return t.ObjectType.Equal(other.ObjectType)
+}
+
+func (t VrackservicessCurrentStateBgpType) String() string {
+	return "VrackservicessCurrentStateBgpType"
+}
+
+func (t VrackservicessCurrentStateBgpType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	attributes := in.Attributes()
+
+	allowedPrefixesAttribute, ok := attributes["allowed_prefixes"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`allowed_prefixes is missing from object`)
+
+		return nil, diags
+	}
+
+	allowedPrefixesVal, ok := allowedPrefixesAttribute.(VrackservicessCurrentStateBgpAllowedPrefixesValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`allowed_prefixes expected to be VrackservicessCurrentStateBgpAllowedPrefixesValue, was: %T`, allowedPrefixesAttribute))
+	}
+
+	bandwidthAttribute, ok := attributes["bandwidth"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`bandwidth is missing from object`)
+
+		return nil, diags
+	}
+
+	bandwidthVal, ok := bandwidthAttribute.(ovhtypes.TfInt64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`bandwidth expected to be ovhtypes.TfInt64Value, was: %T`, bandwidthAttribute))
+	}
+
+	bgpRangeAttribute, ok := attributes["bgp_range"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`bgp_range is missing from object`)
+
+		return nil, diags
+	}
+
+	bgpRangeVal, ok := bgpRangeAttribute.(ovhtypes.TfListNestedValue[VrackservicessCurrentStateBgpBgpRangeValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`bgp_range expected to be ovhtypes.TfListNestedValue[VrackservicessCurrentStateBgpBgpRangeValue], was: %T`, bgpRangeAttribute))
+	}
+
+	clientAsnAttribute, ok := attributes["client_asn"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`client_asn is missing from object`)
+
+		return nil, diags
+	}
+
+	clientAsnVal, ok := clientAsnAttribute.(ovhtypes.TfInt64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`client_asn expected to be ovhtypes.TfInt64Value, was: %T`, clientAsnAttribute))
+	}
+
+	configurationStatusAttribute, ok := attributes["configuration_status"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`configuration_status is missing from object`)
+
+		return nil, diags
+	}
+
+	configurationStatusVal, ok := configurationStatusAttribute.(VrackservicessCurrentStateBgpConfigurationStatusValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`configuration_status expected to be VrackservicessCurrentStateBgpConfigurationStatusValue, was: %T`, configurationStatusAttribute))
+	}
+
+	iamAttribute, ok := attributes["iam"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`iam is missing from object`)
+
+		return nil, diags
+	}
+
+	iamVal, ok := iamAttribute.(VrackservicessCurrentStateBgpIamValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`iam expected to be VrackservicessCurrentStateBgpIamValue, was: %T`, iamAttribute))
+	}
+
+	idAttribute, ok := attributes["id"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`id is missing from object`)
+
+		return nil, diags
+	}
+
+	idVal, ok := idAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`id expected to be ovhtypes.TfStringValue, was: %T`, idAttribute))
+	}
+
+	infrastructureAsnAttribute, ok := attributes["infrastructure_asn"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`infrastructure_asn is missing from object`)
+
+		return nil, diags
+	}
+
+	infrastructureAsnVal, ok := infrastructureAsnAttribute.(ovhtypes.TfInt64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`infrastructure_asn expected to be ovhtypes.TfInt64Value, was: %T`, infrastructureAsnAttribute))
+	}
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return VrackservicessCurrentStateBgpValue{
+		AllowedPrefixes:     allowedPrefixesVal,
+		Bandwidth:           bandwidthVal,
+		BgpRange:            bgpRangeVal,
+		ClientAsn:           clientAsnVal,
+		ConfigurationStatus: configurationStatusVal,
+		Iam:                 iamVal,
+		Id:                  idVal,
+		InfrastructureAsn:   infrastructureAsnVal,
+		state:               attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVrackservicessCurrentStateBgpValueNull() VrackservicessCurrentStateBgpValue {
+	return VrackservicessCurrentStateBgpValue{
+		state: attr.ValueStateNull,
+	}
+}
+
+func NewVrackservicessCurrentStateBgpValueUnknown() VrackservicessCurrentStateBgpValue {
+	return VrackservicessCurrentStateBgpValue{
+		state: attr.ValueStateUnknown,
+	}
+}
+
+func NewVrackservicessCurrentStateBgpValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (VrackservicessCurrentStateBgpValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
+	ctx := context.Background()
+
+	for name, attributeType := range attributeTypes {
+		attribute, ok := attributes[name]
+
+		if !ok {
+			diags.AddError(
+				"Missing VrackservicessCurrentStateBgpValue Attribute Value",
+				"While creating a VrackservicessCurrentStateBgpValue value, a missing attribute value was detected. "+
+					"A VrackservicessCurrentStateBgpValue must contain values for all attributes, even if null or unknown. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VrackservicessCurrentStateBgpValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
+			)
+
+			continue
+		}
+
+		if !attributeType.Equal(attribute.Type(ctx)) {
+			diags.AddError(
+				"Invalid VrackservicessCurrentStateBgpValue Attribute Type",
+				"While creating a VrackservicessCurrentStateBgpValue value, an invalid attribute value was detected. "+
+					"A VrackservicessCurrentStateBgpValue must use a matching attribute type for the value. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VrackservicessCurrentStateBgpValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
+					fmt.Sprintf("VrackservicessCurrentStateBgpValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
+			)
+		}
+	}
+
+	for name := range attributes {
+		_, ok := attributeTypes[name]
+
+		if !ok {
+			diags.AddError(
+				"Extra VrackservicessCurrentStateBgpValue Attribute Value",
+				"While creating a VrackservicessCurrentStateBgpValue value, an extra attribute value was detected. "+
+					"A VrackservicessCurrentStateBgpValue must not contain values beyond the expected attribute types. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("Extra VrackservicessCurrentStateBgpValue Attribute Name: %s", name),
+			)
+		}
+	}
+
+	if diags.HasError() {
+		return NewVrackservicessCurrentStateBgpValueUnknown(), diags
+	}
+
+	allowedPrefixesAttribute, ok := attributes["allowed_prefixes"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`allowed_prefixes is missing from object`)
+
+		return NewVrackservicessCurrentStateBgpValueUnknown(), diags
+	}
+
+	allowedPrefixesVal, ok := allowedPrefixesAttribute.(VrackservicessCurrentStateBgpAllowedPrefixesValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`allowed_prefixes expected to be VrackservicessCurrentStateBgpAllowedPrefixesValue, was: %T`, allowedPrefixesAttribute))
+	}
+
+	bandwidthAttribute, ok := attributes["bandwidth"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`bandwidth is missing from object`)
+
+		return NewVrackservicessCurrentStateBgpValueUnknown(), diags
+	}
+
+	bandwidthVal, ok := bandwidthAttribute.(ovhtypes.TfInt64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`bandwidth expected to be ovhtypes.TfInt64Value, was: %T`, bandwidthAttribute))
+	}
+
+	bgpRangeAttribute, ok := attributes["bgp_range"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`bgp_range is missing from object`)
+
+		return NewVrackservicessCurrentStateBgpValueUnknown(), diags
+	}
+
+	bgpRangeVal, ok := bgpRangeAttribute.(ovhtypes.TfListNestedValue[VrackservicessCurrentStateBgpBgpRangeValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`bgp_range expected to be ovhtypes.TfListNestedValue[VrackservicessCurrentStateBgpBgpRangeValue], was: %T`, bgpRangeAttribute))
+	}
+
+	clientAsnAttribute, ok := attributes["client_asn"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`client_asn is missing from object`)
+
+		return NewVrackservicessCurrentStateBgpValueUnknown(), diags
+	}
+
+	clientAsnVal, ok := clientAsnAttribute.(ovhtypes.TfInt64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`client_asn expected to be ovhtypes.TfInt64Value, was: %T`, clientAsnAttribute))
+	}
+
+	configurationStatusAttribute, ok := attributes["configuration_status"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`configuration_status is missing from object`)
+
+		return NewVrackservicessCurrentStateBgpValueUnknown(), diags
+	}
+
+	configurationStatusVal, ok := configurationStatusAttribute.(VrackservicessCurrentStateBgpConfigurationStatusValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`configuration_status expected to be VrackservicessCurrentStateBgpConfigurationStatusValue, was: %T`, configurationStatusAttribute))
+	}
+
+	iamAttribute, ok := attributes["iam"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`iam is missing from object`)
+
+		return NewVrackservicessCurrentStateBgpValueUnknown(), diags
+	}
+
+	iamVal, ok := iamAttribute.(VrackservicessCurrentStateBgpIamValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`iam expected to be VrackservicessCurrentStateBgpIamValue, was: %T`, iamAttribute))
+	}
+
+	idAttribute, ok := attributes["id"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`id is missing from object`)
+
+		return NewVrackservicessCurrentStateBgpValueUnknown(), diags
+	}
+
+	idVal, ok := idAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`id expected to be ovhtypes.TfStringValue, was: %T`, idAttribute))
+	}
+
+	infrastructureAsnAttribute, ok := attributes["infrastructure_asn"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`infrastructure_asn is missing from object`)
+
+		return NewVrackservicessCurrentStateBgpValueUnknown(), diags
+	}
+
+	infrastructureAsnVal, ok := infrastructureAsnAttribute.(ovhtypes.TfInt64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`infrastructure_asn expected to be ovhtypes.TfInt64Value, was: %T`, infrastructureAsnAttribute))
+	}
+
+	if diags.HasError() {
+		return NewVrackservicessCurrentStateBgpValueUnknown(), diags
+	}
+
+	return VrackservicessCurrentStateBgpValue{
+		AllowedPrefixes:     allowedPrefixesVal,
+		Bandwidth:           bandwidthVal,
+		BgpRange:            bgpRangeVal,
+		ClientAsn:           clientAsnVal,
+		ConfigurationStatus: configurationStatusVal,
+		Iam:                 iamVal,
+		Id:                  idVal,
+		InfrastructureAsn:   infrastructureAsnVal,
+		state:               attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVrackservicessCurrentStateBgpValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) VrackservicessCurrentStateBgpValue {
+	object, diags := NewVrackservicessCurrentStateBgpValue(attributeTypes, attributes)
+
+	if diags.HasError() {
+		// This could potentially be added to the diag package.
+		diagsStrings := make([]string, 0, len(diags))
+
+		for _, diagnostic := range diags {
+			diagsStrings = append(diagsStrings, fmt.Sprintf(
+				"%s | %s | %s",
+				diagnostic.Severity(),
+				diagnostic.Summary(),
+				diagnostic.Detail()))
+		}
+
+		panic("NewVrackservicessCurrentStateBgpValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
+	}
+
+	return object
+}
+
+func (t VrackservicessCurrentStateBgpType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+	if in.Type() == nil {
+		return NewVrackservicessCurrentStateBgpValueNull(), nil
+	}
+
+	if !in.Type().Equal(t.TerraformType(ctx)) {
+		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
+	}
+
+	if !in.IsKnown() {
+		return NewVrackservicessCurrentStateBgpValueUnknown(), nil
+	}
+
+	if in.IsNull() {
+		return NewVrackservicessCurrentStateBgpValueNull(), nil
+	}
+
+	attributes := map[string]attr.Value{}
+
+	val := map[string]tftypes.Value{}
+
+	err := in.As(&val)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range val {
+		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
+
+		if err != nil {
+			return nil, err
+		}
+
+		attributes[k] = a
+	}
+
+	return NewVrackservicessCurrentStateBgpValueMust(VrackservicessCurrentStateBgpValue{}.AttributeTypes(ctx), attributes), nil
+}
+
+func (t VrackservicessCurrentStateBgpType) ValueType(ctx context.Context) attr.Value {
+	return VrackservicessCurrentStateBgpValue{}
+}
+
+var _ basetypes.ObjectValuable = VrackservicessCurrentStateBgpValue{}
+
+type VrackservicessCurrentStateBgpValue struct {
+	AllowedPrefixes     VrackservicessCurrentStateBgpAllowedPrefixesValue                      `tfsdk:"allowed_prefixes" json:"allowedPrefixes"`
+	Bandwidth           ovhtypes.TfInt64Value                                                  `tfsdk:"bandwidth" json:"bandwidth"`
+	BgpRange            ovhtypes.TfListNestedValue[VrackservicessCurrentStateBgpBgpRangeValue] `tfsdk:"bgp_range" json:"bgpRange"`
+	ClientAsn           ovhtypes.TfInt64Value                                                  `tfsdk:"client_asn" json:"clientAsn"`
+	ConfigurationStatus VrackservicessCurrentStateBgpConfigurationStatusValue                  `tfsdk:"configuration_status" json:"configurationStatus"`
+	Iam                 VrackservicessCurrentStateBgpIamValue                                  `tfsdk:"iam" json:"iam"`
+	Id                  ovhtypes.TfStringValue                                                 `tfsdk:"id" json:"id"`
+	InfrastructureAsn   ovhtypes.TfInt64Value                                                  `tfsdk:"infrastructure_asn" json:"infrastructureAsn"`
+	state               attr.ValueState
+}
+
+func (v *VrackservicessCurrentStateBgpValue) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" {
+		v.state = attr.ValueStateNull
+		return nil
+	}
+
+	type JsonVrackservicessCurrentStateBgpValue VrackservicessCurrentStateBgpValue
+
+	var tmp JsonVrackservicessCurrentStateBgpValue
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		return err
+	}
+	v.AllowedPrefixes = tmp.AllowedPrefixes
+	v.Bandwidth = tmp.Bandwidth
+	v.BgpRange = tmp.BgpRange
+	v.ClientAsn = tmp.ClientAsn
+	v.ConfigurationStatus = tmp.ConfigurationStatus
+	v.Iam = tmp.Iam
+	v.Id = tmp.Id
+	v.InfrastructureAsn = tmp.InfrastructureAsn
+
+	v.state = attr.ValueStateKnown
+
+	return nil
+}
+
+func (v *VrackservicessCurrentStateBgpValue) MergeWith(other *VrackservicessCurrentStateBgpValue) {
+
+	if v.AllowedPrefixes.IsUnknown() && !other.AllowedPrefixes.IsUnknown() {
+		v.AllowedPrefixes = other.AllowedPrefixes
+	} else if !other.AllowedPrefixes.IsUnknown() {
+		v.AllowedPrefixes.MergeWith(&other.AllowedPrefixes)
+	}
+
+	if (v.Bandwidth.IsUnknown() || v.Bandwidth.IsNull()) && !other.Bandwidth.IsUnknown() {
+		v.Bandwidth = other.Bandwidth
+	}
+
+	if (v.BgpRange.IsUnknown() || v.BgpRange.IsNull()) && !other.BgpRange.IsUnknown() {
+		v.BgpRange = other.BgpRange
+	} else if !other.BgpRange.IsUnknown() {
+		newSlice := make([]attr.Value, 0)
+		elems := v.BgpRange.Elements()
+		newElems := other.BgpRange.Elements()
+
+		if len(elems) != len(newElems) {
+			v.BgpRange = other.BgpRange
+		} else {
+			for idx, e := range elems {
+				tmp := e.(VrackservicessCurrentStateBgpBgpRangeValue)
+				tmp2 := newElems[idx].(VrackservicessCurrentStateBgpBgpRangeValue)
+				tmp.MergeWith(&tmp2)
+				newSlice = append(newSlice, tmp)
+			}
+
+			v.BgpRange = ovhtypes.TfListNestedValue[VrackservicessCurrentStateBgpBgpRangeValue]{
+				ListValue: basetypes.NewListValueMust(VrackservicessCurrentStateBgpBgpRangeValue{}.Type(context.Background()), newSlice),
+			}
+		}
+	}
+
+	if (v.ClientAsn.IsUnknown() || v.ClientAsn.IsNull()) && !other.ClientAsn.IsUnknown() {
+		v.ClientAsn = other.ClientAsn
+	}
+
+	if v.ConfigurationStatus.IsUnknown() && !other.ConfigurationStatus.IsUnknown() {
+		v.ConfigurationStatus = other.ConfigurationStatus
+	} else if !other.ConfigurationStatus.IsUnknown() {
+		v.ConfigurationStatus.MergeWith(&other.ConfigurationStatus)
+	}
+
+	if v.Iam.IsUnknown() && !other.Iam.IsUnknown() {
+		v.Iam = other.Iam
+	} else if !other.Iam.IsUnknown() {
+		v.Iam.MergeWith(&other.Iam)
+	}
+
+	if (v.Id.IsUnknown() || v.Id.IsNull()) && !other.Id.IsUnknown() {
+		v.Id = other.Id
+	}
+
+	if (v.InfrastructureAsn.IsUnknown() || v.InfrastructureAsn.IsNull()) && !other.InfrastructureAsn.IsUnknown() {
+		v.InfrastructureAsn = other.InfrastructureAsn
+	}
+
+	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
+		v.state = other.state
+	}
+}
+
+func (v VrackservicessCurrentStateBgpValue) Attributes() map[string]attr.Value {
+	return map[string]attr.Value{
+		"allowedPrefixes":     v.AllowedPrefixes,
+		"bandwidth":           v.Bandwidth,
+		"bgpRange":            v.BgpRange,
+		"clientAsn":           v.ClientAsn,
+		"configurationStatus": v.ConfigurationStatus,
+		"iam":                 v.Iam,
+		"id":                  v.Id,
+		"infrastructureAsn":   v.InfrastructureAsn,
+	}
+}
+func (v VrackservicessCurrentStateBgpValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
+	attrTypes := make(map[string]tftypes.Type, 8)
+
+	var val tftypes.Value
+	var err error
+
+	attrTypes["allowed_prefixes"] = basetypes.ObjectType{
+		AttrTypes: VrackservicessCurrentStateBgpAllowedPrefixesValue{}.AttributeTypes(ctx),
+	}.TerraformType(ctx)
+	attrTypes["bandwidth"] = basetypes.Int64Type{}.TerraformType(ctx)
+	attrTypes["bgp_range"] = basetypes.ListType{
+		ElemType: VrackservicessCurrentStateBgpBgpRangeValue{}.Type(ctx),
+	}.TerraformType(ctx)
+	attrTypes["client_asn"] = basetypes.Int64Type{}.TerraformType(ctx)
+	attrTypes["configuration_status"] = basetypes.ObjectType{
+		AttrTypes: VrackservicessCurrentStateBgpConfigurationStatusValue{}.AttributeTypes(ctx),
+	}.TerraformType(ctx)
+	attrTypes["iam"] = basetypes.ObjectType{
+		AttrTypes: VrackservicessCurrentStateBgpIamValue{}.AttributeTypes(ctx),
+	}.TerraformType(ctx)
+	attrTypes["id"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["infrastructure_asn"] = basetypes.Int64Type{}.TerraformType(ctx)
+
+	objectType := tftypes.Object{AttributeTypes: attrTypes}
+
+	switch v.state {
+	case attr.ValueStateKnown:
+		vals := make(map[string]tftypes.Value, 8)
+
+		val, err = v.AllowedPrefixes.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["allowed_prefixes"] = val
+
+		val, err = v.Bandwidth.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["bandwidth"] = val
+
+		val, err = v.BgpRange.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["bgp_range"] = val
+
+		val, err = v.ClientAsn.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["client_asn"] = val
+
+		val, err = v.ConfigurationStatus.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["configuration_status"] = val
+
+		val, err = v.Iam.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["iam"] = val
+
+		val, err = v.Id.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["id"] = val
+
+		val, err = v.InfrastructureAsn.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["infrastructure_asn"] = val
+
+		if err := tftypes.ValidateValue(objectType, vals); err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		return tftypes.NewValue(objectType, vals), nil
+	case attr.ValueStateNull:
+		return tftypes.NewValue(objectType, nil), nil
+	case attr.ValueStateUnknown:
+		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
+	default:
+		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
+	}
+}
+
+func (v VrackservicessCurrentStateBgpValue) IsNull() bool {
+	return v.state == attr.ValueStateNull
+}
+
+func (v VrackservicessCurrentStateBgpValue) IsUnknown() bool {
+	return v.state == attr.ValueStateUnknown
+}
+
+func (v VrackservicessCurrentStateBgpValue) String() string {
+	return "VrackservicessCurrentStateBgpValue"
+}
+
+func (v VrackservicessCurrentStateBgpValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if v.IsNull() {
+		return types.ObjectNull(v.AttributeTypes(ctx)), diags
+	}
+
+	if v.IsUnknown() {
+		return types.ObjectUnknown(v.AttributeTypes(ctx)), diags
+	}
+
+	objVal, diags := types.ObjectValue(
+		map[string]attr.Type{
+			"allowed_prefixes": VrackservicessCurrentStateBgpAllowedPrefixesType{
+				basetypes.ObjectType{
+					AttrTypes: VrackservicessCurrentStateBgpAllowedPrefixesValue{}.AttributeTypes(ctx),
+				},
+			},
+			"bandwidth":  ovhtypes.TfInt64Type{},
+			"bgp_range":  ovhtypes.NewTfListNestedType[VrackservicessCurrentStateBgpBgpRangeValue](ctx),
+			"client_asn": ovhtypes.TfInt64Type{},
+			"configuration_status": VrackservicessCurrentStateBgpConfigurationStatusType{
+				basetypes.ObjectType{
+					AttrTypes: VrackservicessCurrentStateBgpConfigurationStatusValue{}.AttributeTypes(ctx),
+				},
+			},
+			"iam": VrackservicessCurrentStateBgpIamType{
+				basetypes.ObjectType{
+					AttrTypes: VrackservicessCurrentStateBgpIamValue{}.AttributeTypes(ctx),
+				},
+			},
+			"id":                 ovhtypes.TfStringType{},
+			"infrastructure_asn": ovhtypes.TfInt64Type{},
+		},
+		map[string]attr.Value{
+			"allowed_prefixes":     v.AllowedPrefixes,
+			"bandwidth":            v.Bandwidth,
+			"bgp_range":            v.BgpRange,
+			"client_asn":           v.ClientAsn,
+			"configuration_status": v.ConfigurationStatus,
+			"iam":                  v.Iam,
+			"id":                   v.Id,
+			"infrastructure_asn":   v.InfrastructureAsn,
+		})
+
+	return objVal, diags
+}
+
+func (v VrackservicessCurrentStateBgpValue) Equal(o attr.Value) bool {
+	other, ok := o.(VrackservicessCurrentStateBgpValue)
+
+	if !ok {
+		return false
+	}
+
+	if v.state != other.state {
+		return false
+	}
+
+	if v.state != attr.ValueStateKnown {
+		return true
+	}
+
+	if !v.AllowedPrefixes.Equal(other.AllowedPrefixes) {
+		return false
+	}
+
+	if !v.Bandwidth.Equal(other.Bandwidth) {
+		return false
+	}
+
+	if !v.BgpRange.Equal(other.BgpRange) {
+		return false
+	}
+
+	if !v.ClientAsn.Equal(other.ClientAsn) {
+		return false
+	}
+
+	if !v.ConfigurationStatus.Equal(other.ConfigurationStatus) {
+		return false
+	}
+
+	if !v.Iam.Equal(other.Iam) {
+		return false
+	}
+
+	if !v.Id.Equal(other.Id) {
+		return false
+	}
+
+	if !v.InfrastructureAsn.Equal(other.InfrastructureAsn) {
+		return false
+	}
+
+	return true
+}
+
+func (v VrackservicessCurrentStateBgpValue) Type(ctx context.Context) attr.Type {
+	return VrackservicessCurrentStateBgpType{
+		basetypes.ObjectType{
+			AttrTypes: v.AttributeTypes(ctx),
+		},
+	}
+}
+
+func (v VrackservicessCurrentStateBgpValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
+	return map[string]attr.Type{
+		"allowed_prefixes":     VrackservicessCurrentStateBgpAllowedPrefixesValue{}.Type(ctx),
+		"bandwidth":            ovhtypes.TfInt64Type{},
+		"bgp_range":            ovhtypes.NewTfListNestedType[VrackservicessCurrentStateBgpBgpRangeValue](ctx),
+		"client_asn":           ovhtypes.TfInt64Type{},
+		"configuration_status": VrackservicessCurrentStateBgpConfigurationStatusValue{}.Type(ctx),
+		"iam":                  VrackservicessCurrentStateBgpIamValue{}.Type(ctx),
+		"id":                   ovhtypes.TfStringType{},
+		"infrastructure_asn":   ovhtypes.TfInt64Type{},
+	}
+}
+
+var _ basetypes.ObjectTypable = VrackservicessCurrentStateBgpAllowedPrefixesType{}
+
+type VrackservicessCurrentStateBgpAllowedPrefixesType struct {
+	basetypes.ObjectType
+}
+
+func (t VrackservicessCurrentStateBgpAllowedPrefixesType) Equal(o attr.Type) bool {
+	other, ok := o.(VrackservicessCurrentStateBgpAllowedPrefixesType)
+
+	if !ok {
+		return false
+	}
+
+	return t.ObjectType.Equal(other.ObjectType)
+}
+
+func (t VrackservicessCurrentStateBgpAllowedPrefixesType) String() string {
+	return "VrackservicessCurrentStateBgpAllowedPrefixesType"
+}
+
+func (t VrackservicessCurrentStateBgpAllowedPrefixesType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	attributes := in.Attributes()
+
+	ipv4Attribute, ok := attributes["ipv4"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`ipv4 is missing from object`)
+
+		return nil, diags
+	}
+
+	ipv4Val, ok := ipv4Attribute.(ovhtypes.TfListNestedValue[ovhtypes.TfStringValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`ipv4 expected to be ovhtypes.TfListNestedValue[ovhtypes.TfStringValue], was: %T`, ipv4Attribute))
+	}
+
+	ipv6Attribute, ok := attributes["ipv6"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`ipv6 is missing from object`)
+
+		return nil, diags
+	}
+
+	ipv6Val, ok := ipv6Attribute.(ovhtypes.TfListNestedValue[ovhtypes.TfStringValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`ipv6 expected to be ovhtypes.TfListNestedValue[ovhtypes.TfStringValue], was: %T`, ipv6Attribute))
+	}
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return VrackservicessCurrentStateBgpAllowedPrefixesValue{
+		Ipv4:  ipv4Val,
+		Ipv6:  ipv6Val,
+		state: attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVrackservicessCurrentStateBgpAllowedPrefixesValueNull() VrackservicessCurrentStateBgpAllowedPrefixesValue {
+	return VrackservicessCurrentStateBgpAllowedPrefixesValue{
+		state: attr.ValueStateNull,
+	}
+}
+
+func NewVrackservicessCurrentStateBgpAllowedPrefixesValueUnknown() VrackservicessCurrentStateBgpAllowedPrefixesValue {
+	return VrackservicessCurrentStateBgpAllowedPrefixesValue{
+		state: attr.ValueStateUnknown,
+	}
+}
+
+func NewVrackservicessCurrentStateBgpAllowedPrefixesValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (VrackservicessCurrentStateBgpAllowedPrefixesValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
+	ctx := context.Background()
+
+	for name, attributeType := range attributeTypes {
+		attribute, ok := attributes[name]
+
+		if !ok {
+			diags.AddError(
+				"Missing VrackservicessCurrentStateBgpAllowedPrefixesValue Attribute Value",
+				"While creating a VrackservicessCurrentStateBgpAllowedPrefixesValue value, a missing attribute value was detected. "+
+					"A VrackservicessCurrentStateBgpAllowedPrefixesValue must contain values for all attributes, even if null or unknown. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VrackservicessCurrentStateBgpAllowedPrefixesValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
+			)
+
+			continue
+		}
+
+		if !attributeType.Equal(attribute.Type(ctx)) {
+			diags.AddError(
+				"Invalid VrackservicessCurrentStateBgpAllowedPrefixesValue Attribute Type",
+				"While creating a VrackservicessCurrentStateBgpAllowedPrefixesValue value, an invalid attribute value was detected. "+
+					"A VrackservicessCurrentStateBgpAllowedPrefixesValue must use a matching attribute type for the value. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VrackservicessCurrentStateBgpAllowedPrefixesValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
+					fmt.Sprintf("VrackservicessCurrentStateBgpAllowedPrefixesValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
+			)
+		}
+	}
+
+	for name := range attributes {
+		_, ok := attributeTypes[name]
+
+		if !ok {
+			diags.AddError(
+				"Extra VrackservicessCurrentStateBgpAllowedPrefixesValue Attribute Value",
+				"While creating a VrackservicessCurrentStateBgpAllowedPrefixesValue value, an extra attribute value was detected. "+
+					"A VrackservicessCurrentStateBgpAllowedPrefixesValue must not contain values beyond the expected attribute types. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("Extra VrackservicessCurrentStateBgpAllowedPrefixesValue Attribute Name: %s", name),
+			)
+		}
+	}
+
+	if diags.HasError() {
+		return NewVrackservicessCurrentStateBgpAllowedPrefixesValueUnknown(), diags
+	}
+
+	ipv4Attribute, ok := attributes["ipv4"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`ipv4 is missing from object`)
+
+		return NewVrackservicessCurrentStateBgpAllowedPrefixesValueUnknown(), diags
+	}
+
+	ipv4Val, ok := ipv4Attribute.(ovhtypes.TfListNestedValue[ovhtypes.TfStringValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`ipv4 expected to be ovhtypes.TfListNestedValue[ovhtypes.TfStringValue], was: %T`, ipv4Attribute))
+	}
+
+	ipv6Attribute, ok := attributes["ipv6"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`ipv6 is missing from object`)
+
+		return NewVrackservicessCurrentStateBgpAllowedPrefixesValueUnknown(), diags
+	}
+
+	ipv6Val, ok := ipv6Attribute.(ovhtypes.TfListNestedValue[ovhtypes.TfStringValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`ipv6 expected to be ovhtypes.TfListNestedValue[ovhtypes.TfStringValue], was: %T`, ipv6Attribute))
+	}
+
+	if diags.HasError() {
+		return NewVrackservicessCurrentStateBgpAllowedPrefixesValueUnknown(), diags
+	}
+
+	return VrackservicessCurrentStateBgpAllowedPrefixesValue{
+		Ipv4:  ipv4Val,
+		Ipv6:  ipv6Val,
+		state: attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVrackservicessCurrentStateBgpAllowedPrefixesValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) VrackservicessCurrentStateBgpAllowedPrefixesValue {
+	object, diags := NewVrackservicessCurrentStateBgpAllowedPrefixesValue(attributeTypes, attributes)
+
+	if diags.HasError() {
+		// This could potentially be added to the diag package.
+		diagsStrings := make([]string, 0, len(diags))
+
+		for _, diagnostic := range diags {
+			diagsStrings = append(diagsStrings, fmt.Sprintf(
+				"%s | %s | %s",
+				diagnostic.Severity(),
+				diagnostic.Summary(),
+				diagnostic.Detail()))
+		}
+
+		panic("NewVrackservicessCurrentStateBgpAllowedPrefixesValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
+	}
+
+	return object
+}
+
+func (t VrackservicessCurrentStateBgpAllowedPrefixesType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+	if in.Type() == nil {
+		return NewVrackservicessCurrentStateBgpAllowedPrefixesValueNull(), nil
+	}
+
+	if !in.Type().Equal(t.TerraformType(ctx)) {
+		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
+	}
+
+	if !in.IsKnown() {
+		return NewVrackservicessCurrentStateBgpAllowedPrefixesValueUnknown(), nil
+	}
+
+	if in.IsNull() {
+		return NewVrackservicessCurrentStateBgpAllowedPrefixesValueNull(), nil
+	}
+
+	attributes := map[string]attr.Value{}
+
+	val := map[string]tftypes.Value{}
+
+	err := in.As(&val)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range val {
+		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
+
+		if err != nil {
+			return nil, err
+		}
+
+		attributes[k] = a
+	}
+
+	return NewVrackservicessCurrentStateBgpAllowedPrefixesValueMust(VrackservicessCurrentStateBgpAllowedPrefixesValue{}.AttributeTypes(ctx), attributes), nil
+}
+
+func (t VrackservicessCurrentStateBgpAllowedPrefixesType) ValueType(ctx context.Context) attr.Value {
+	return VrackservicessCurrentStateBgpAllowedPrefixesValue{}
+}
+
+var _ basetypes.ObjectValuable = VrackservicessCurrentStateBgpAllowedPrefixesValue{}
+
+type VrackservicessCurrentStateBgpAllowedPrefixesValue struct {
+	Ipv4  ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] `tfsdk:"ipv4" json:"ipv4"`
+	Ipv6  ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] `tfsdk:"ipv6" json:"ipv6"`
+	state attr.ValueState
+}
+
+func (v *VrackservicessCurrentStateBgpAllowedPrefixesValue) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" {
+		v.state = attr.ValueStateNull
+		return nil
+	}
+
+	type JsonVrackservicessCurrentStateBgpAllowedPrefixesValue VrackservicessCurrentStateBgpAllowedPrefixesValue
+
+	var tmp JsonVrackservicessCurrentStateBgpAllowedPrefixesValue
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		return err
+	}
+	v.Ipv4 = tmp.Ipv4
+	v.Ipv6 = tmp.Ipv6
+
+	v.state = attr.ValueStateKnown
+
+	return nil
+}
+
+func (v *VrackservicessCurrentStateBgpAllowedPrefixesValue) MergeWith(other *VrackservicessCurrentStateBgpAllowedPrefixesValue) {
+
+	if (v.Ipv4.IsUnknown() || v.Ipv4.IsNull()) && !other.Ipv4.IsUnknown() {
+		v.Ipv4 = other.Ipv4
+	}
+
+	if (v.Ipv6.IsUnknown() || v.Ipv6.IsNull()) && !other.Ipv6.IsUnknown() {
+		v.Ipv6 = other.Ipv6
+	}
+
+	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
+		v.state = other.state
+	}
+}
+
+func (v VrackservicessCurrentStateBgpAllowedPrefixesValue) Attributes() map[string]attr.Value {
+	return map[string]attr.Value{
+		"ipv4": v.Ipv4,
+		"ipv6": v.Ipv6,
+	}
+}
+func (v VrackservicessCurrentStateBgpAllowedPrefixesValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
+	attrTypes := make(map[string]tftypes.Type, 2)
+
+	var val tftypes.Value
+	var err error
+
+	attrTypes["ipv4"] = basetypes.ListType{
+		ElemType: types.StringType,
+	}.TerraformType(ctx)
+	attrTypes["ipv6"] = basetypes.ListType{
+		ElemType: types.StringType,
+	}.TerraformType(ctx)
+
+	objectType := tftypes.Object{AttributeTypes: attrTypes}
+
+	switch v.state {
+	case attr.ValueStateKnown:
+		vals := make(map[string]tftypes.Value, 2)
+
+		val, err = v.Ipv4.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["ipv4"] = val
+
+		val, err = v.Ipv6.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["ipv6"] = val
+
+		if err := tftypes.ValidateValue(objectType, vals); err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		return tftypes.NewValue(objectType, vals), nil
+	case attr.ValueStateNull:
+		return tftypes.NewValue(objectType, nil), nil
+	case attr.ValueStateUnknown:
+		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
+	default:
+		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
+	}
+}
+
+func (v VrackservicessCurrentStateBgpAllowedPrefixesValue) IsNull() bool {
+	return v.state == attr.ValueStateNull
+}
+
+func (v VrackservicessCurrentStateBgpAllowedPrefixesValue) IsUnknown() bool {
+	return v.state == attr.ValueStateUnknown
+}
+
+func (v VrackservicessCurrentStateBgpAllowedPrefixesValue) String() string {
+	return "VrackservicessCurrentStateBgpAllowedPrefixesValue"
+}
+
+func (v VrackservicessCurrentStateBgpAllowedPrefixesValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if v.IsNull() {
+		return types.ObjectNull(v.AttributeTypes(ctx)), diags
+	}
+
+	if v.IsUnknown() {
+		return types.ObjectUnknown(v.AttributeTypes(ctx)), diags
+	}
+
+	objVal, diags := types.ObjectValue(
+		map[string]attr.Type{
+			"ipv4": ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+			"ipv6": ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+		},
+		map[string]attr.Value{
+			"ipv4": v.Ipv4,
+			"ipv6": v.Ipv6,
+		})
+
+	return objVal, diags
+}
+
+func (v VrackservicessCurrentStateBgpAllowedPrefixesValue) Equal(o attr.Value) bool {
+	other, ok := o.(VrackservicessCurrentStateBgpAllowedPrefixesValue)
+
+	if !ok {
+		return false
+	}
+
+	if v.state != other.state {
+		return false
+	}
+
+	if v.state != attr.ValueStateKnown {
+		return true
+	}
+
+	if !v.Ipv4.Equal(other.Ipv4) {
+		return false
+	}
+
+	if !v.Ipv6.Equal(other.Ipv6) {
+		return false
+	}
+
+	return true
+}
+
+func (v VrackservicessCurrentStateBgpAllowedPrefixesValue) Type(ctx context.Context) attr.Type {
+	return VrackservicessCurrentStateBgpAllowedPrefixesType{
+		basetypes.ObjectType{
+			AttrTypes: v.AttributeTypes(ctx),
+		},
+	}
+}
+
+func (v VrackservicessCurrentStateBgpAllowedPrefixesValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
+	return map[string]attr.Type{
+		"ipv4": ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+		"ipv6": ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+	}
+}
+
+var _ basetypes.ObjectTypable = VrackservicessCurrentStateBgpBgpRangeType{}
+
+type VrackservicessCurrentStateBgpBgpRangeType struct {
+	basetypes.ObjectType
+}
+
+func (t VrackservicessCurrentStateBgpBgpRangeType) Equal(o attr.Type) bool {
+	other, ok := o.(VrackservicessCurrentStateBgpBgpRangeType)
+
+	if !ok {
+		return false
+	}
+
+	return t.ObjectType.Equal(other.ObjectType)
+}
+
+func (t VrackservicessCurrentStateBgpBgpRangeType) String() string {
+	return "VrackservicessCurrentStateBgpBgpRangeType"
+}
+
+func (t VrackservicessCurrentStateBgpBgpRangeType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	attributes := in.Attributes()
+
+	cidrAttribute, ok := attributes["cidr"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`cidr is missing from object`)
+
+		return nil, diags
+	}
+
+	cidrVal, ok := cidrAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`cidr expected to be ovhtypes.TfStringValue, was: %T`, cidrAttribute))
+	}
+
+	clientPeersAttribute, ok := attributes["client_peers"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`client_peers is missing from object`)
+
+		return nil, diags
+	}
+
+	clientPeersVal, ok := clientPeersAttribute.(ovhtypes.TfListNestedValue[ovhtypes.TfStringValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`client_peers expected to be ovhtypes.TfListNestedValue[ovhtypes.TfStringValue], was: %T`, clientPeersAttribute))
+	}
+
+	configurationStatusAttribute, ok := attributes["configuration_status"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`configuration_status is missing from object`)
+
+		return nil, diags
+	}
+
+	configurationStatusVal, ok := configurationStatusAttribute.(VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`configuration_status expected to be VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue, was: %T`, configurationStatusAttribute))
+	}
+
+	infrastructurePeersAttribute, ok := attributes["infrastructure_peers"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`infrastructure_peers is missing from object`)
+
+		return nil, diags
+	}
+
+	infrastructurePeersVal, ok := infrastructurePeersAttribute.(ovhtypes.TfListNestedValue[ovhtypes.TfStringValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`infrastructure_peers expected to be ovhtypes.TfListNestedValue[ovhtypes.TfStringValue], was: %T`, infrastructurePeersAttribute))
+	}
+
+	subnetCidrAttribute, ok := attributes["subnet_cidr"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`subnet_cidr is missing from object`)
+
+		return nil, diags
+	}
+
+	subnetCidrVal, ok := subnetCidrAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`subnet_cidr expected to be ovhtypes.TfStringValue, was: %T`, subnetCidrAttribute))
+	}
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return VrackservicessCurrentStateBgpBgpRangeValue{
+		Cidr:                cidrVal,
+		ClientPeers:         clientPeersVal,
+		ConfigurationStatus: configurationStatusVal,
+		InfrastructurePeers: infrastructurePeersVal,
+		SubnetCidr:          subnetCidrVal,
+		state:               attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVrackservicessCurrentStateBgpBgpRangeValueNull() VrackservicessCurrentStateBgpBgpRangeValue {
+	return VrackservicessCurrentStateBgpBgpRangeValue{
+		state: attr.ValueStateNull,
+	}
+}
+
+func NewVrackservicessCurrentStateBgpBgpRangeValueUnknown() VrackservicessCurrentStateBgpBgpRangeValue {
+	return VrackservicessCurrentStateBgpBgpRangeValue{
+		state: attr.ValueStateUnknown,
+	}
+}
+
+func NewVrackservicessCurrentStateBgpBgpRangeValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (VrackservicessCurrentStateBgpBgpRangeValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
+	ctx := context.Background()
+
+	for name, attributeType := range attributeTypes {
+		attribute, ok := attributes[name]
+
+		if !ok {
+			diags.AddError(
+				"Missing VrackservicessCurrentStateBgpBgpRangeValue Attribute Value",
+				"While creating a VrackservicessCurrentStateBgpBgpRangeValue value, a missing attribute value was detected. "+
+					"A VrackservicessCurrentStateBgpBgpRangeValue must contain values for all attributes, even if null or unknown. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VrackservicessCurrentStateBgpBgpRangeValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
+			)
+
+			continue
+		}
+
+		if !attributeType.Equal(attribute.Type(ctx)) {
+			diags.AddError(
+				"Invalid VrackservicessCurrentStateBgpBgpRangeValue Attribute Type",
+				"While creating a VrackservicessCurrentStateBgpBgpRangeValue value, an invalid attribute value was detected. "+
+					"A VrackservicessCurrentStateBgpBgpRangeValue must use a matching attribute type for the value. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VrackservicessCurrentStateBgpBgpRangeValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
+					fmt.Sprintf("VrackservicessCurrentStateBgpBgpRangeValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
+			)
+		}
+	}
+
+	for name := range attributes {
+		_, ok := attributeTypes[name]
+
+		if !ok {
+			diags.AddError(
+				"Extra VrackservicessCurrentStateBgpBgpRangeValue Attribute Value",
+				"While creating a VrackservicessCurrentStateBgpBgpRangeValue value, an extra attribute value was detected. "+
+					"A VrackservicessCurrentStateBgpBgpRangeValue must not contain values beyond the expected attribute types. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("Extra VrackservicessCurrentStateBgpBgpRangeValue Attribute Name: %s", name),
+			)
+		}
+	}
+
+	if diags.HasError() {
+		return NewVrackservicessCurrentStateBgpBgpRangeValueUnknown(), diags
+	}
+
+	cidrAttribute, ok := attributes["cidr"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`cidr is missing from object`)
+
+		return NewVrackservicessCurrentStateBgpBgpRangeValueUnknown(), diags
+	}
+
+	cidrVal, ok := cidrAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`cidr expected to be ovhtypes.TfStringValue, was: %T`, cidrAttribute))
+	}
+
+	clientPeersAttribute, ok := attributes["client_peers"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`client_peers is missing from object`)
+
+		return NewVrackservicessCurrentStateBgpBgpRangeValueUnknown(), diags
+	}
+
+	clientPeersVal, ok := clientPeersAttribute.(ovhtypes.TfListNestedValue[ovhtypes.TfStringValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`client_peers expected to be ovhtypes.TfListNestedValue[ovhtypes.TfStringValue], was: %T`, clientPeersAttribute))
+	}
+
+	configurationStatusAttribute, ok := attributes["configuration_status"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`configuration_status is missing from object`)
+
+		return NewVrackservicessCurrentStateBgpBgpRangeValueUnknown(), diags
+	}
+
+	configurationStatusVal, ok := configurationStatusAttribute.(VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`configuration_status expected to be VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue, was: %T`, configurationStatusAttribute))
+	}
+
+	infrastructurePeersAttribute, ok := attributes["infrastructure_peers"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`infrastructure_peers is missing from object`)
+
+		return NewVrackservicessCurrentStateBgpBgpRangeValueUnknown(), diags
+	}
+
+	infrastructurePeersVal, ok := infrastructurePeersAttribute.(ovhtypes.TfListNestedValue[ovhtypes.TfStringValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`infrastructure_peers expected to be ovhtypes.TfListNestedValue[ovhtypes.TfStringValue], was: %T`, infrastructurePeersAttribute))
+	}
+
+	subnetCidrAttribute, ok := attributes["subnet_cidr"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`subnet_cidr is missing from object`)
+
+		return NewVrackservicessCurrentStateBgpBgpRangeValueUnknown(), diags
+	}
+
+	subnetCidrVal, ok := subnetCidrAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`subnet_cidr expected to be ovhtypes.TfStringValue, was: %T`, subnetCidrAttribute))
+	}
+
+	if diags.HasError() {
+		return NewVrackservicessCurrentStateBgpBgpRangeValueUnknown(), diags
+	}
+
+	return VrackservicessCurrentStateBgpBgpRangeValue{
+		Cidr:                cidrVal,
+		ClientPeers:         clientPeersVal,
+		ConfigurationStatus: configurationStatusVal,
+		InfrastructurePeers: infrastructurePeersVal,
+		SubnetCidr:          subnetCidrVal,
+		state:               attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVrackservicessCurrentStateBgpBgpRangeValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) VrackservicessCurrentStateBgpBgpRangeValue {
+	object, diags := NewVrackservicessCurrentStateBgpBgpRangeValue(attributeTypes, attributes)
+
+	if diags.HasError() {
+		// This could potentially be added to the diag package.
+		diagsStrings := make([]string, 0, len(diags))
+
+		for _, diagnostic := range diags {
+			diagsStrings = append(diagsStrings, fmt.Sprintf(
+				"%s | %s | %s",
+				diagnostic.Severity(),
+				diagnostic.Summary(),
+				diagnostic.Detail()))
+		}
+
+		panic("NewVrackservicessCurrentStateBgpBgpRangeValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
+	}
+
+	return object
+}
+
+func (t VrackservicessCurrentStateBgpBgpRangeType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+	if in.Type() == nil {
+		return NewVrackservicessCurrentStateBgpBgpRangeValueNull(), nil
+	}
+
+	if !in.Type().Equal(t.TerraformType(ctx)) {
+		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
+	}
+
+	if !in.IsKnown() {
+		return NewVrackservicessCurrentStateBgpBgpRangeValueUnknown(), nil
+	}
+
+	if in.IsNull() {
+		return NewVrackservicessCurrentStateBgpBgpRangeValueNull(), nil
+	}
+
+	attributes := map[string]attr.Value{}
+
+	val := map[string]tftypes.Value{}
+
+	err := in.As(&val)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range val {
+		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
+
+		if err != nil {
+			return nil, err
+		}
+
+		attributes[k] = a
+	}
+
+	return NewVrackservicessCurrentStateBgpBgpRangeValueMust(VrackservicessCurrentStateBgpBgpRangeValue{}.AttributeTypes(ctx), attributes), nil
+}
+
+func (t VrackservicessCurrentStateBgpBgpRangeType) ValueType(ctx context.Context) attr.Value {
+	return VrackservicessCurrentStateBgpBgpRangeValue{}
+}
+
+var _ basetypes.ObjectValuable = VrackservicessCurrentStateBgpBgpRangeValue{}
+
+type VrackservicessCurrentStateBgpBgpRangeValue struct {
+	Cidr                ovhtypes.TfStringValue                                        `tfsdk:"cidr" json:"cidr"`
+	ClientPeers         ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]            `tfsdk:"client_peers" json:"clientPeers"`
+	ConfigurationStatus VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue `tfsdk:"configuration_status" json:"configurationStatus"`
+	InfrastructurePeers ovhtypes.TfListNestedValue[ovhtypes.TfStringValue]            `tfsdk:"infrastructure_peers" json:"infrastructurePeers"`
+	SubnetCidr          ovhtypes.TfStringValue                                        `tfsdk:"subnet_cidr" json:"subnetCidr"`
+	state               attr.ValueState
+}
+
+func (v *VrackservicessCurrentStateBgpBgpRangeValue) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" {
+		v.state = attr.ValueStateNull
+		return nil
+	}
+
+	type JsonVrackservicessCurrentStateBgpBgpRangeValue VrackservicessCurrentStateBgpBgpRangeValue
+
+	var tmp JsonVrackservicessCurrentStateBgpBgpRangeValue
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		return err
+	}
+	v.Cidr = tmp.Cidr
+	v.ClientPeers = tmp.ClientPeers
+	v.ConfigurationStatus = tmp.ConfigurationStatus
+	v.InfrastructurePeers = tmp.InfrastructurePeers
+	v.SubnetCidr = tmp.SubnetCidr
+
+	v.state = attr.ValueStateKnown
+
+	return nil
+}
+
+func (v *VrackservicessCurrentStateBgpBgpRangeValue) MergeWith(other *VrackservicessCurrentStateBgpBgpRangeValue) {
+
+	if (v.Cidr.IsUnknown() || v.Cidr.IsNull()) && !other.Cidr.IsUnknown() {
+		v.Cidr = other.Cidr
+	}
+
+	if (v.ClientPeers.IsUnknown() || v.ClientPeers.IsNull()) && !other.ClientPeers.IsUnknown() {
+		v.ClientPeers = other.ClientPeers
+	}
+
+	if v.ConfigurationStatus.IsUnknown() && !other.ConfigurationStatus.IsUnknown() {
+		v.ConfigurationStatus = other.ConfigurationStatus
+	} else if !other.ConfigurationStatus.IsUnknown() {
+		v.ConfigurationStatus.MergeWith(&other.ConfigurationStatus)
+	}
+
+	if (v.InfrastructurePeers.IsUnknown() || v.InfrastructurePeers.IsNull()) && !other.InfrastructurePeers.IsUnknown() {
+		v.InfrastructurePeers = other.InfrastructurePeers
+	}
+
+	if (v.SubnetCidr.IsUnknown() || v.SubnetCidr.IsNull()) && !other.SubnetCidr.IsUnknown() {
+		v.SubnetCidr = other.SubnetCidr
+	}
+
+	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
+		v.state = other.state
+	}
+}
+
+func (v VrackservicessCurrentStateBgpBgpRangeValue) Attributes() map[string]attr.Value {
+	return map[string]attr.Value{
+		"cidr":                v.Cidr,
+		"clientPeers":         v.ClientPeers,
+		"configurationStatus": v.ConfigurationStatus,
+		"infrastructurePeers": v.InfrastructurePeers,
+		"subnetCidr":          v.SubnetCidr,
+	}
+}
+func (v VrackservicessCurrentStateBgpBgpRangeValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
+	attrTypes := make(map[string]tftypes.Type, 5)
+
+	var val tftypes.Value
+	var err error
+
+	attrTypes["cidr"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["client_peers"] = basetypes.ListType{
+		ElemType: types.StringType,
+	}.TerraformType(ctx)
+	attrTypes["configuration_status"] = basetypes.ObjectType{
+		AttrTypes: VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue{}.AttributeTypes(ctx),
+	}.TerraformType(ctx)
+	attrTypes["infrastructure_peers"] = basetypes.ListType{
+		ElemType: types.StringType,
+	}.TerraformType(ctx)
+	attrTypes["subnet_cidr"] = basetypes.StringType{}.TerraformType(ctx)
+
+	objectType := tftypes.Object{AttributeTypes: attrTypes}
+
+	switch v.state {
+	case attr.ValueStateKnown:
+		vals := make(map[string]tftypes.Value, 5)
+
+		val, err = v.Cidr.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["cidr"] = val
+
+		val, err = v.ClientPeers.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["client_peers"] = val
+
+		val, err = v.ConfigurationStatus.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["configuration_status"] = val
+
+		val, err = v.InfrastructurePeers.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["infrastructure_peers"] = val
+
+		val, err = v.SubnetCidr.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["subnet_cidr"] = val
+
+		if err := tftypes.ValidateValue(objectType, vals); err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		return tftypes.NewValue(objectType, vals), nil
+	case attr.ValueStateNull:
+		return tftypes.NewValue(objectType, nil), nil
+	case attr.ValueStateUnknown:
+		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
+	default:
+		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
+	}
+}
+
+func (v VrackservicessCurrentStateBgpBgpRangeValue) IsNull() bool {
+	return v.state == attr.ValueStateNull
+}
+
+func (v VrackservicessCurrentStateBgpBgpRangeValue) IsUnknown() bool {
+	return v.state == attr.ValueStateUnknown
+}
+
+func (v VrackservicessCurrentStateBgpBgpRangeValue) String() string {
+	return "VrackservicessCurrentStateBgpBgpRangeValue"
+}
+
+func (v VrackservicessCurrentStateBgpBgpRangeValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if v.IsNull() {
+		return types.ObjectNull(v.AttributeTypes(ctx)), diags
+	}
+
+	if v.IsUnknown() {
+		return types.ObjectUnknown(v.AttributeTypes(ctx)), diags
+	}
+
+	objVal, diags := types.ObjectValue(
+		map[string]attr.Type{
+			"cidr":         ovhtypes.TfStringType{},
+			"client_peers": ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+			"configuration_status": VrackservicessCurrentStateBgpBgpRangeConfigurationStatusType{
+				basetypes.ObjectType{
+					AttrTypes: VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue{}.AttributeTypes(ctx),
+				},
+			},
+			"infrastructure_peers": ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+			"subnet_cidr":          ovhtypes.TfStringType{},
+		},
+		map[string]attr.Value{
+			"cidr":                 v.Cidr,
+			"client_peers":         v.ClientPeers,
+			"configuration_status": v.ConfigurationStatus,
+			"infrastructure_peers": v.InfrastructurePeers,
+			"subnet_cidr":          v.SubnetCidr,
+		})
+
+	return objVal, diags
+}
+
+func (v VrackservicessCurrentStateBgpBgpRangeValue) Equal(o attr.Value) bool {
+	other, ok := o.(VrackservicessCurrentStateBgpBgpRangeValue)
+
+	if !ok {
+		return false
+	}
+
+	if v.state != other.state {
+		return false
+	}
+
+	if v.state != attr.ValueStateKnown {
+		return true
+	}
+
+	if !v.Cidr.Equal(other.Cidr) {
+		return false
+	}
+
+	if !v.ClientPeers.Equal(other.ClientPeers) {
+		return false
+	}
+
+	if !v.ConfigurationStatus.Equal(other.ConfigurationStatus) {
+		return false
+	}
+
+	if !v.InfrastructurePeers.Equal(other.InfrastructurePeers) {
+		return false
+	}
+
+	if !v.SubnetCidr.Equal(other.SubnetCidr) {
+		return false
+	}
+
+	return true
+}
+
+func (v VrackservicessCurrentStateBgpBgpRangeValue) Type(ctx context.Context) attr.Type {
+	return VrackservicessCurrentStateBgpBgpRangeType{
+		basetypes.ObjectType{
+			AttrTypes: v.AttributeTypes(ctx),
+		},
+	}
+}
+
+func (v VrackservicessCurrentStateBgpBgpRangeValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
+	return map[string]attr.Type{
+		"cidr":                 ovhtypes.TfStringType{},
+		"client_peers":         ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+		"configuration_status": VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue{}.Type(ctx),
+		"infrastructure_peers": ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+		"subnet_cidr":          ovhtypes.TfStringType{},
+	}
+}
+
+var _ basetypes.ObjectTypable = VrackservicessCurrentStateBgpBgpRangeConfigurationStatusType{}
+
+type VrackservicessCurrentStateBgpBgpRangeConfigurationStatusType struct {
+	basetypes.ObjectType
+}
+
+func (t VrackservicessCurrentStateBgpBgpRangeConfigurationStatusType) Equal(o attr.Type) bool {
+	other, ok := o.(VrackservicessCurrentStateBgpBgpRangeConfigurationStatusType)
+
+	if !ok {
+		return false
+	}
+
+	return t.ObjectType.Equal(other.ObjectType)
+}
+
+func (t VrackservicessCurrentStateBgpBgpRangeConfigurationStatusType) String() string {
+	return "VrackservicessCurrentStateBgpBgpRangeConfigurationStatusType"
+}
+
+func (t VrackservicessCurrentStateBgpBgpRangeConfigurationStatusType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	attributes := in.Attributes()
+
+	reasonAttribute, ok := attributes["reason"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`reason is missing from object`)
+
+		return nil, diags
+	}
+
+	reasonVal, ok := reasonAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`reason expected to be ovhtypes.TfStringValue, was: %T`, reasonAttribute))
+	}
+
+	statusAttribute, ok := attributes["status"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`status is missing from object`)
+
+		return nil, diags
+	}
+
+	statusVal, ok := statusAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`status expected to be ovhtypes.TfStringValue, was: %T`, statusAttribute))
+	}
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue{
+		Reason: reasonVal,
+		Status: statusVal,
+		state:  attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVrackservicessCurrentStateBgpBgpRangeConfigurationStatusValueNull() VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue {
+	return VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue{
+		state: attr.ValueStateNull,
+	}
+}
+
+func NewVrackservicessCurrentStateBgpBgpRangeConfigurationStatusValueUnknown() VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue {
+	return VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue{
+		state: attr.ValueStateUnknown,
+	}
+}
+
+func NewVrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
+	ctx := context.Background()
+
+	for name, attributeType := range attributeTypes {
+		attribute, ok := attributes[name]
+
+		if !ok {
+			diags.AddError(
+				"Missing VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue Attribute Value",
+				"While creating a VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue value, a missing attribute value was detected. "+
+					"A VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue must contain values for all attributes, even if null or unknown. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
+			)
+
+			continue
+		}
+
+		if !attributeType.Equal(attribute.Type(ctx)) {
+			diags.AddError(
+				"Invalid VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue Attribute Type",
+				"While creating a VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue value, an invalid attribute value was detected. "+
+					"A VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue must use a matching attribute type for the value. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
+					fmt.Sprintf("VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
+			)
+		}
+	}
+
+	for name := range attributes {
+		_, ok := attributeTypes[name]
+
+		if !ok {
+			diags.AddError(
+				"Extra VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue Attribute Value",
+				"While creating a VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue value, an extra attribute value was detected. "+
+					"A VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue must not contain values beyond the expected attribute types. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("Extra VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue Attribute Name: %s", name),
+			)
+		}
+	}
+
+	if diags.HasError() {
+		return NewVrackservicessCurrentStateBgpBgpRangeConfigurationStatusValueUnknown(), diags
+	}
+
+	reasonAttribute, ok := attributes["reason"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`reason is missing from object`)
+
+		return NewVrackservicessCurrentStateBgpBgpRangeConfigurationStatusValueUnknown(), diags
+	}
+
+	reasonVal, ok := reasonAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`reason expected to be ovhtypes.TfStringValue, was: %T`, reasonAttribute))
+	}
+
+	statusAttribute, ok := attributes["status"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`status is missing from object`)
+
+		return NewVrackservicessCurrentStateBgpBgpRangeConfigurationStatusValueUnknown(), diags
+	}
+
+	statusVal, ok := statusAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`status expected to be ovhtypes.TfStringValue, was: %T`, statusAttribute))
+	}
+
+	if diags.HasError() {
+		return NewVrackservicessCurrentStateBgpBgpRangeConfigurationStatusValueUnknown(), diags
+	}
+
+	return VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue{
+		Reason: reasonVal,
+		Status: statusVal,
+		state:  attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVrackservicessCurrentStateBgpBgpRangeConfigurationStatusValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue {
+	object, diags := NewVrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue(attributeTypes, attributes)
+
+	if diags.HasError() {
+		// This could potentially be added to the diag package.
+		diagsStrings := make([]string, 0, len(diags))
+
+		for _, diagnostic := range diags {
+			diagsStrings = append(diagsStrings, fmt.Sprintf(
+				"%s | %s | %s",
+				diagnostic.Severity(),
+				diagnostic.Summary(),
+				diagnostic.Detail()))
+		}
+
+		panic("NewVrackservicessCurrentStateBgpBgpRangeConfigurationStatusValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
+	}
+
+	return object
+}
+
+func (t VrackservicessCurrentStateBgpBgpRangeConfigurationStatusType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+	if in.Type() == nil {
+		return NewVrackservicessCurrentStateBgpBgpRangeConfigurationStatusValueNull(), nil
+	}
+
+	if !in.Type().Equal(t.TerraformType(ctx)) {
+		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
+	}
+
+	if !in.IsKnown() {
+		return NewVrackservicessCurrentStateBgpBgpRangeConfigurationStatusValueUnknown(), nil
+	}
+
+	if in.IsNull() {
+		return NewVrackservicessCurrentStateBgpBgpRangeConfigurationStatusValueNull(), nil
+	}
+
+	attributes := map[string]attr.Value{}
+
+	val := map[string]tftypes.Value{}
+
+	err := in.As(&val)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range val {
+		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
+
+		if err != nil {
+			return nil, err
+		}
+
+		attributes[k] = a
+	}
+
+	return NewVrackservicessCurrentStateBgpBgpRangeConfigurationStatusValueMust(VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue{}.AttributeTypes(ctx), attributes), nil
+}
+
+func (t VrackservicessCurrentStateBgpBgpRangeConfigurationStatusType) ValueType(ctx context.Context) attr.Value {
+	return VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue{}
+}
+
+var _ basetypes.ObjectValuable = VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue{}
+
+type VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue struct {
+	Reason ovhtypes.TfStringValue `tfsdk:"reason" json:"reason"`
+	Status ovhtypes.TfStringValue `tfsdk:"status" json:"status"`
+	state  attr.ValueState
+}
+
+func (v *VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" {
+		v.state = attr.ValueStateNull
+		return nil
+	}
+
+	type JsonVrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue
+
+	var tmp JsonVrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		return err
+	}
+	v.Reason = tmp.Reason
+	v.Status = tmp.Status
+
+	v.state = attr.ValueStateKnown
+
+	return nil
+}
+
+func (v *VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue) MergeWith(other *VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue) {
+
+	if (v.Reason.IsUnknown() || v.Reason.IsNull()) && !other.Reason.IsUnknown() {
+		v.Reason = other.Reason
+	}
+
+	if (v.Status.IsUnknown() || v.Status.IsNull()) && !other.Status.IsUnknown() {
+		v.Status = other.Status
+	}
+
+	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
+		v.state = other.state
+	}
+}
+
+func (v VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue) Attributes() map[string]attr.Value {
+	return map[string]attr.Value{
+		"reason": v.Reason,
+		"status": v.Status,
+	}
+}
+func (v VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
+	attrTypes := make(map[string]tftypes.Type, 2)
+
+	var val tftypes.Value
+	var err error
+
+	attrTypes["reason"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["status"] = basetypes.StringType{}.TerraformType(ctx)
+
+	objectType := tftypes.Object{AttributeTypes: attrTypes}
+
+	switch v.state {
+	case attr.ValueStateKnown:
+		vals := make(map[string]tftypes.Value, 2)
+
+		val, err = v.Reason.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["reason"] = val
+
+		val, err = v.Status.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["status"] = val
+
+		if err := tftypes.ValidateValue(objectType, vals); err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		return tftypes.NewValue(objectType, vals), nil
+	case attr.ValueStateNull:
+		return tftypes.NewValue(objectType, nil), nil
+	case attr.ValueStateUnknown:
+		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
+	default:
+		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
+	}
+}
+
+func (v VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue) IsNull() bool {
+	return v.state == attr.ValueStateNull
+}
+
+func (v VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue) IsUnknown() bool {
+	return v.state == attr.ValueStateUnknown
+}
+
+func (v VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue) String() string {
+	return "VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue"
+}
+
+func (v VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if v.IsNull() {
+		return types.ObjectNull(v.AttributeTypes(ctx)), diags
+	}
+
+	if v.IsUnknown() {
+		return types.ObjectUnknown(v.AttributeTypes(ctx)), diags
+	}
+
+	objVal, diags := types.ObjectValue(
+		map[string]attr.Type{
+			"reason": ovhtypes.TfStringType{},
+			"status": ovhtypes.TfStringType{},
+		},
+		map[string]attr.Value{
+			"reason": v.Reason,
+			"status": v.Status,
+		})
+
+	return objVal, diags
+}
+
+func (v VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue) Equal(o attr.Value) bool {
+	other, ok := o.(VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue)
+
+	if !ok {
+		return false
+	}
+
+	if v.state != other.state {
+		return false
+	}
+
+	if v.state != attr.ValueStateKnown {
+		return true
+	}
+
+	if !v.Reason.Equal(other.Reason) {
+		return false
+	}
+
+	if !v.Status.Equal(other.Status) {
+		return false
+	}
+
+	return true
+}
+
+func (v VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue) Type(ctx context.Context) attr.Type {
+	return VrackservicessCurrentStateBgpBgpRangeConfigurationStatusType{
+		basetypes.ObjectType{
+			AttrTypes: v.AttributeTypes(ctx),
+		},
+	}
+}
+
+func (v VrackservicessCurrentStateBgpBgpRangeConfigurationStatusValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
+	return map[string]attr.Type{
+		"reason": ovhtypes.TfStringType{},
+		"status": ovhtypes.TfStringType{},
+	}
+}
+
+var _ basetypes.ObjectTypable = VrackservicessCurrentStateBgpConfigurationStatusType{}
+
+type VrackservicessCurrentStateBgpConfigurationStatusType struct {
+	basetypes.ObjectType
+}
+
+func (t VrackservicessCurrentStateBgpConfigurationStatusType) Equal(o attr.Type) bool {
+	other, ok := o.(VrackservicessCurrentStateBgpConfigurationStatusType)
+
+	if !ok {
+		return false
+	}
+
+	return t.ObjectType.Equal(other.ObjectType)
+}
+
+func (t VrackservicessCurrentStateBgpConfigurationStatusType) String() string {
+	return "VrackservicessCurrentStateBgpConfigurationStatusType"
+}
+
+func (t VrackservicessCurrentStateBgpConfigurationStatusType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	attributes := in.Attributes()
+
+	reasonAttribute, ok := attributes["reason"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`reason is missing from object`)
+
+		return nil, diags
+	}
+
+	reasonVal, ok := reasonAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`reason expected to be ovhtypes.TfStringValue, was: %T`, reasonAttribute))
+	}
+
+	statusAttribute, ok := attributes["status"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`status is missing from object`)
+
+		return nil, diags
+	}
+
+	statusVal, ok := statusAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`status expected to be ovhtypes.TfStringValue, was: %T`, statusAttribute))
+	}
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return VrackservicessCurrentStateBgpConfigurationStatusValue{
+		Reason: reasonVal,
+		Status: statusVal,
+		state:  attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVrackservicessCurrentStateBgpConfigurationStatusValueNull() VrackservicessCurrentStateBgpConfigurationStatusValue {
+	return VrackservicessCurrentStateBgpConfigurationStatusValue{
+		state: attr.ValueStateNull,
+	}
+}
+
+func NewVrackservicessCurrentStateBgpConfigurationStatusValueUnknown() VrackservicessCurrentStateBgpConfigurationStatusValue {
+	return VrackservicessCurrentStateBgpConfigurationStatusValue{
+		state: attr.ValueStateUnknown,
+	}
+}
+
+func NewVrackservicessCurrentStateBgpConfigurationStatusValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (VrackservicessCurrentStateBgpConfigurationStatusValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
+	ctx := context.Background()
+
+	for name, attributeType := range attributeTypes {
+		attribute, ok := attributes[name]
+
+		if !ok {
+			diags.AddError(
+				"Missing VrackservicessCurrentStateBgpConfigurationStatusValue Attribute Value",
+				"While creating a VrackservicessCurrentStateBgpConfigurationStatusValue value, a missing attribute value was detected. "+
+					"A VrackservicessCurrentStateBgpConfigurationStatusValue must contain values for all attributes, even if null or unknown. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VrackservicessCurrentStateBgpConfigurationStatusValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
+			)
+
+			continue
+		}
+
+		if !attributeType.Equal(attribute.Type(ctx)) {
+			diags.AddError(
+				"Invalid VrackservicessCurrentStateBgpConfigurationStatusValue Attribute Type",
+				"While creating a VrackservicessCurrentStateBgpConfigurationStatusValue value, an invalid attribute value was detected. "+
+					"A VrackservicessCurrentStateBgpConfigurationStatusValue must use a matching attribute type for the value. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VrackservicessCurrentStateBgpConfigurationStatusValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
+					fmt.Sprintf("VrackservicessCurrentStateBgpConfigurationStatusValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
+			)
+		}
+	}
+
+	for name := range attributes {
+		_, ok := attributeTypes[name]
+
+		if !ok {
+			diags.AddError(
+				"Extra VrackservicessCurrentStateBgpConfigurationStatusValue Attribute Value",
+				"While creating a VrackservicessCurrentStateBgpConfigurationStatusValue value, an extra attribute value was detected. "+
+					"A VrackservicessCurrentStateBgpConfigurationStatusValue must not contain values beyond the expected attribute types. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("Extra VrackservicessCurrentStateBgpConfigurationStatusValue Attribute Name: %s", name),
+			)
+		}
+	}
+
+	if diags.HasError() {
+		return NewVrackservicessCurrentStateBgpConfigurationStatusValueUnknown(), diags
+	}
+
+	reasonAttribute, ok := attributes["reason"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`reason is missing from object`)
+
+		return NewVrackservicessCurrentStateBgpConfigurationStatusValueUnknown(), diags
+	}
+
+	reasonVal, ok := reasonAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`reason expected to be ovhtypes.TfStringValue, was: %T`, reasonAttribute))
+	}
+
+	statusAttribute, ok := attributes["status"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`status is missing from object`)
+
+		return NewVrackservicessCurrentStateBgpConfigurationStatusValueUnknown(), diags
+	}
+
+	statusVal, ok := statusAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`status expected to be ovhtypes.TfStringValue, was: %T`, statusAttribute))
+	}
+
+	if diags.HasError() {
+		return NewVrackservicessCurrentStateBgpConfigurationStatusValueUnknown(), diags
+	}
+
+	return VrackservicessCurrentStateBgpConfigurationStatusValue{
+		Reason: reasonVal,
+		Status: statusVal,
+		state:  attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVrackservicessCurrentStateBgpConfigurationStatusValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) VrackservicessCurrentStateBgpConfigurationStatusValue {
+	object, diags := NewVrackservicessCurrentStateBgpConfigurationStatusValue(attributeTypes, attributes)
+
+	if diags.HasError() {
+		// This could potentially be added to the diag package.
+		diagsStrings := make([]string, 0, len(diags))
+
+		for _, diagnostic := range diags {
+			diagsStrings = append(diagsStrings, fmt.Sprintf(
+				"%s | %s | %s",
+				diagnostic.Severity(),
+				diagnostic.Summary(),
+				diagnostic.Detail()))
+		}
+
+		panic("NewVrackservicessCurrentStateBgpConfigurationStatusValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
+	}
+
+	return object
+}
+
+func (t VrackservicessCurrentStateBgpConfigurationStatusType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+	if in.Type() == nil {
+		return NewVrackservicessCurrentStateBgpConfigurationStatusValueNull(), nil
+	}
+
+	if !in.Type().Equal(t.TerraformType(ctx)) {
+		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
+	}
+
+	if !in.IsKnown() {
+		return NewVrackservicessCurrentStateBgpConfigurationStatusValueUnknown(), nil
+	}
+
+	if in.IsNull() {
+		return NewVrackservicessCurrentStateBgpConfigurationStatusValueNull(), nil
+	}
+
+	attributes := map[string]attr.Value{}
+
+	val := map[string]tftypes.Value{}
+
+	err := in.As(&val)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range val {
+		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
+
+		if err != nil {
+			return nil, err
+		}
+
+		attributes[k] = a
+	}
+
+	return NewVrackservicessCurrentStateBgpConfigurationStatusValueMust(VrackservicessCurrentStateBgpConfigurationStatusValue{}.AttributeTypes(ctx), attributes), nil
+}
+
+func (t VrackservicessCurrentStateBgpConfigurationStatusType) ValueType(ctx context.Context) attr.Value {
+	return VrackservicessCurrentStateBgpConfigurationStatusValue{}
+}
+
+var _ basetypes.ObjectValuable = VrackservicessCurrentStateBgpConfigurationStatusValue{}
+
+type VrackservicessCurrentStateBgpConfigurationStatusValue struct {
+	Reason ovhtypes.TfStringValue `tfsdk:"reason" json:"reason"`
+	Status ovhtypes.TfStringValue `tfsdk:"status" json:"status"`
+	state  attr.ValueState
+}
+
+func (v *VrackservicessCurrentStateBgpConfigurationStatusValue) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" {
+		v.state = attr.ValueStateNull
+		return nil
+	}
+
+	type JsonVrackservicessCurrentStateBgpConfigurationStatusValue VrackservicessCurrentStateBgpConfigurationStatusValue
+
+	var tmp JsonVrackservicessCurrentStateBgpConfigurationStatusValue
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		return err
+	}
+	v.Reason = tmp.Reason
+	v.Status = tmp.Status
+
+	v.state = attr.ValueStateKnown
+
+	return nil
+}
+
+func (v *VrackservicessCurrentStateBgpConfigurationStatusValue) MergeWith(other *VrackservicessCurrentStateBgpConfigurationStatusValue) {
+
+	if (v.Reason.IsUnknown() || v.Reason.IsNull()) && !other.Reason.IsUnknown() {
+		v.Reason = other.Reason
+	}
+
+	if (v.Status.IsUnknown() || v.Status.IsNull()) && !other.Status.IsUnknown() {
+		v.Status = other.Status
+	}
+
+	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
+		v.state = other.state
+	}
+}
+
+func (v VrackservicessCurrentStateBgpConfigurationStatusValue) Attributes() map[string]attr.Value {
+	return map[string]attr.Value{
+		"reason": v.Reason,
+		"status": v.Status,
+	}
+}
+func (v VrackservicessCurrentStateBgpConfigurationStatusValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
+	attrTypes := make(map[string]tftypes.Type, 2)
+
+	var val tftypes.Value
+	var err error
+
+	attrTypes["reason"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["status"] = basetypes.StringType{}.TerraformType(ctx)
+
+	objectType := tftypes.Object{AttributeTypes: attrTypes}
+
+	switch v.state {
+	case attr.ValueStateKnown:
+		vals := make(map[string]tftypes.Value, 2)
+
+		val, err = v.Reason.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["reason"] = val
+
+		val, err = v.Status.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["status"] = val
+
+		if err := tftypes.ValidateValue(objectType, vals); err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		return tftypes.NewValue(objectType, vals), nil
+	case attr.ValueStateNull:
+		return tftypes.NewValue(objectType, nil), nil
+	case attr.ValueStateUnknown:
+		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
+	default:
+		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
+	}
+}
+
+func (v VrackservicessCurrentStateBgpConfigurationStatusValue) IsNull() bool {
+	return v.state == attr.ValueStateNull
+}
+
+func (v VrackservicessCurrentStateBgpConfigurationStatusValue) IsUnknown() bool {
+	return v.state == attr.ValueStateUnknown
+}
+
+func (v VrackservicessCurrentStateBgpConfigurationStatusValue) String() string {
+	return "VrackservicessCurrentStateBgpConfigurationStatusValue"
+}
+
+func (v VrackservicessCurrentStateBgpConfigurationStatusValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if v.IsNull() {
+		return types.ObjectNull(v.AttributeTypes(ctx)), diags
+	}
+
+	if v.IsUnknown() {
+		return types.ObjectUnknown(v.AttributeTypes(ctx)), diags
+	}
+
+	objVal, diags := types.ObjectValue(
+		map[string]attr.Type{
+			"reason": ovhtypes.TfStringType{},
+			"status": ovhtypes.TfStringType{},
+		},
+		map[string]attr.Value{
+			"reason": v.Reason,
+			"status": v.Status,
+		})
+
+	return objVal, diags
+}
+
+func (v VrackservicessCurrentStateBgpConfigurationStatusValue) Equal(o attr.Value) bool {
+	other, ok := o.(VrackservicessCurrentStateBgpConfigurationStatusValue)
+
+	if !ok {
+		return false
+	}
+
+	if v.state != other.state {
+		return false
+	}
+
+	if v.state != attr.ValueStateKnown {
+		return true
+	}
+
+	if !v.Reason.Equal(other.Reason) {
+		return false
+	}
+
+	if !v.Status.Equal(other.Status) {
+		return false
+	}
+
+	return true
+}
+
+func (v VrackservicessCurrentStateBgpConfigurationStatusValue) Type(ctx context.Context) attr.Type {
+	return VrackservicessCurrentStateBgpConfigurationStatusType{
+		basetypes.ObjectType{
+			AttrTypes: v.AttributeTypes(ctx),
+		},
+	}
+}
+
+func (v VrackservicessCurrentStateBgpConfigurationStatusValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
+	return map[string]attr.Type{
+		"reason": ovhtypes.TfStringType{},
+		"status": ovhtypes.TfStringType{},
+	}
+}
+
+var _ basetypes.ObjectTypable = VrackservicessCurrentStateBgpIamType{}
+
+type VrackservicessCurrentStateBgpIamType struct {
+	basetypes.ObjectType
+}
+
+func (t VrackservicessCurrentStateBgpIamType) Equal(o attr.Type) bool {
+	other, ok := o.(VrackservicessCurrentStateBgpIamType)
+
+	if !ok {
+		return false
+	}
+
+	return t.ObjectType.Equal(other.ObjectType)
+}
+
+func (t VrackservicessCurrentStateBgpIamType) String() string {
+	return "VrackservicessCurrentStateBgpIamType"
+}
+
+func (t VrackservicessCurrentStateBgpIamType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	attributes := in.Attributes()
+
+	displayNameAttribute, ok := attributes["display_name"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`display_name is missing from object`)
+
+		return nil, diags
+	}
+
+	displayNameVal, ok := displayNameAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`display_name expected to be ovhtypes.TfStringValue, was: %T`, displayNameAttribute))
+	}
+
+	idAttribute, ok := attributes["id"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`id is missing from object`)
+
+		return nil, diags
+	}
+
+	idVal, ok := idAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`id expected to be ovhtypes.TfStringValue, was: %T`, idAttribute))
+	}
+
+	stateAttribute, ok := attributes["state"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`state is missing from object`)
+
+		return nil, diags
+	}
+
+	stateVal, ok := stateAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`state expected to be ovhtypes.TfStringValue, was: %T`, stateAttribute))
+	}
+
+	urnAttribute, ok := attributes["urn"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`urn is missing from object`)
+
+		return nil, diags
+	}
+
+	urnVal, ok := urnAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`urn expected to be ovhtypes.TfStringValue, was: %T`, urnAttribute))
+	}
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return VrackservicessCurrentStateBgpIamValue{
+		DisplayName: displayNameVal,
+		Id:          idVal,
+		State:       stateVal,
+		Urn:         urnVal,
+		state:       attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVrackservicessCurrentStateBgpIamValueNull() VrackservicessCurrentStateBgpIamValue {
+	return VrackservicessCurrentStateBgpIamValue{
+		state: attr.ValueStateNull,
+	}
+}
+
+func NewVrackservicessCurrentStateBgpIamValueUnknown() VrackservicessCurrentStateBgpIamValue {
+	return VrackservicessCurrentStateBgpIamValue{
+		state: attr.ValueStateUnknown,
+	}
+}
+
+func NewVrackservicessCurrentStateBgpIamValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (VrackservicessCurrentStateBgpIamValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
+	ctx := context.Background()
+
+	for name, attributeType := range attributeTypes {
+		attribute, ok := attributes[name]
+
+		if !ok {
+			diags.AddError(
+				"Missing VrackservicessCurrentStateBgpIamValue Attribute Value",
+				"While creating a VrackservicessCurrentStateBgpIamValue value, a missing attribute value was detected. "+
+					"A VrackservicessCurrentStateBgpIamValue must contain values for all attributes, even if null or unknown. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VrackservicessCurrentStateBgpIamValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
+			)
+
+			continue
+		}
+
+		if !attributeType.Equal(attribute.Type(ctx)) {
+			diags.AddError(
+				"Invalid VrackservicessCurrentStateBgpIamValue Attribute Type",
+				"While creating a VrackservicessCurrentStateBgpIamValue value, an invalid attribute value was detected. "+
+					"A VrackservicessCurrentStateBgpIamValue must use a matching attribute type for the value. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VrackservicessCurrentStateBgpIamValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
+					fmt.Sprintf("VrackservicessCurrentStateBgpIamValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
+			)
+		}
+	}
+
+	for name := range attributes {
+		_, ok := attributeTypes[name]
+
+		if !ok {
+			diags.AddError(
+				"Extra VrackservicessCurrentStateBgpIamValue Attribute Value",
+				"While creating a VrackservicessCurrentStateBgpIamValue value, an extra attribute value was detected. "+
+					"A VrackservicessCurrentStateBgpIamValue must not contain values beyond the expected attribute types. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("Extra VrackservicessCurrentStateBgpIamValue Attribute Name: %s", name),
+			)
+		}
+	}
+
+	if diags.HasError() {
+		return NewVrackservicessCurrentStateBgpIamValueUnknown(), diags
+	}
+
+	displayNameAttribute, ok := attributes["display_name"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`display_name is missing from object`)
+
+		return NewVrackservicessCurrentStateBgpIamValueUnknown(), diags
+	}
+
+	displayNameVal, ok := displayNameAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`display_name expected to be ovhtypes.TfStringValue, was: %T`, displayNameAttribute))
+	}
+
+	idAttribute, ok := attributes["id"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`id is missing from object`)
+
+		return NewVrackservicessCurrentStateBgpIamValueUnknown(), diags
+	}
+
+	idVal, ok := idAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`id expected to be ovhtypes.TfStringValue, was: %T`, idAttribute))
+	}
+
+	stateAttribute, ok := attributes["state"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`state is missing from object`)
+
+		return NewVrackservicessCurrentStateBgpIamValueUnknown(), diags
+	}
+
+	stateVal, ok := stateAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`state expected to be ovhtypes.TfStringValue, was: %T`, stateAttribute))
+	}
+
+	urnAttribute, ok := attributes["urn"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`urn is missing from object`)
+
+		return NewVrackservicessCurrentStateBgpIamValueUnknown(), diags
+	}
+
+	urnVal, ok := urnAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`urn expected to be ovhtypes.TfStringValue, was: %T`, urnAttribute))
+	}
+
+	if diags.HasError() {
+		return NewVrackservicessCurrentStateBgpIamValueUnknown(), diags
+	}
+
+	return VrackservicessCurrentStateBgpIamValue{
+		DisplayName: displayNameVal,
+		Id:          idVal,
+		State:       stateVal,
+		Urn:         urnVal,
+		state:       attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVrackservicessCurrentStateBgpIamValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) VrackservicessCurrentStateBgpIamValue {
+	object, diags := NewVrackservicessCurrentStateBgpIamValue(attributeTypes, attributes)
+
+	if diags.HasError() {
+		// This could potentially be added to the diag package.
+		diagsStrings := make([]string, 0, len(diags))
+
+		for _, diagnostic := range diags {
+			diagsStrings = append(diagsStrings, fmt.Sprintf(
+				"%s | %s | %s",
+				diagnostic.Severity(),
+				diagnostic.Summary(),
+				diagnostic.Detail()))
+		}
+
+		panic("NewVrackservicessCurrentStateBgpIamValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
+	}
+
+	return object
+}
+
+func (t VrackservicessCurrentStateBgpIamType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+	if in.Type() == nil {
+		return NewVrackservicessCurrentStateBgpIamValueNull(), nil
+	}
+
+	if !in.Type().Equal(t.TerraformType(ctx)) {
+		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
+	}
+
+	if !in.IsKnown() {
+		return NewVrackservicessCurrentStateBgpIamValueUnknown(), nil
+	}
+
+	if in.IsNull() {
+		return NewVrackservicessCurrentStateBgpIamValueNull(), nil
+	}
+
+	attributes := map[string]attr.Value{}
+
+	val := map[string]tftypes.Value{}
+
+	err := in.As(&val)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range val {
+		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
+
+		if err != nil {
+			return nil, err
+		}
+
+		attributes[k] = a
+	}
+
+	return NewVrackservicessCurrentStateBgpIamValueMust(VrackservicessCurrentStateBgpIamValue{}.AttributeTypes(ctx), attributes), nil
+}
+
+func (t VrackservicessCurrentStateBgpIamType) ValueType(ctx context.Context) attr.Value {
+	return VrackservicessCurrentStateBgpIamValue{}
+}
+
+var _ basetypes.ObjectValuable = VrackservicessCurrentStateBgpIamValue{}
+
+type VrackservicessCurrentStateBgpIamValue struct {
+	DisplayName ovhtypes.TfStringValue `tfsdk:"display_name" json:"displayName"`
+	Id          ovhtypes.TfStringValue `tfsdk:"id" json:"id"`
+	State       ovhtypes.TfStringValue `tfsdk:"state" json:"state"`
+	Urn         ovhtypes.TfStringValue `tfsdk:"urn" json:"urn"`
+	state       attr.ValueState
+}
+
+func (v *VrackservicessCurrentStateBgpIamValue) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" {
+		v.state = attr.ValueStateNull
+		return nil
+	}
+
+	type JsonVrackservicessCurrentStateBgpIamValue VrackservicessCurrentStateBgpIamValue
+
+	var tmp JsonVrackservicessCurrentStateBgpIamValue
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		return err
+	}
+	v.DisplayName = tmp.DisplayName
+	v.Id = tmp.Id
+	v.State = tmp.State
+	v.Urn = tmp.Urn
+
+	v.state = attr.ValueStateKnown
+
+	return nil
+}
+
+func (v *VrackservicessCurrentStateBgpIamValue) MergeWith(other *VrackservicessCurrentStateBgpIamValue) {
+
+	if (v.DisplayName.IsUnknown() || v.DisplayName.IsNull()) && !other.DisplayName.IsUnknown() {
+		v.DisplayName = other.DisplayName
+	}
+
+	if (v.Id.IsUnknown() || v.Id.IsNull()) && !other.Id.IsUnknown() {
+		v.Id = other.Id
+	}
+
+	if (v.State.IsUnknown() || v.State.IsNull()) && !other.State.IsUnknown() {
+		v.State = other.State
+	}
+
+	if (v.Urn.IsUnknown() || v.Urn.IsNull()) && !other.Urn.IsUnknown() {
+		v.Urn = other.Urn
+	}
+
+	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
+		v.state = other.state
+	}
+}
+
+func (v VrackservicessCurrentStateBgpIamValue) Attributes() map[string]attr.Value {
+	return map[string]attr.Value{
+		"displayName": v.DisplayName,
+		"id":          v.Id,
+		"state":       v.State,
+		"urn":         v.Urn,
+	}
+}
+func (v VrackservicessCurrentStateBgpIamValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
+	attrTypes := make(map[string]tftypes.Type, 4)
+
+	var val tftypes.Value
+	var err error
+
+	attrTypes["display_name"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["id"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["state"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["urn"] = basetypes.StringType{}.TerraformType(ctx)
+
+	objectType := tftypes.Object{AttributeTypes: attrTypes}
+
+	switch v.state {
+	case attr.ValueStateKnown:
+		vals := make(map[string]tftypes.Value, 4)
+
+		val, err = v.DisplayName.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["display_name"] = val
+
+		val, err = v.Id.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["id"] = val
+
+		val, err = v.State.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["state"] = val
+
+		val, err = v.Urn.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["urn"] = val
+
+		if err := tftypes.ValidateValue(objectType, vals); err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		return tftypes.NewValue(objectType, vals), nil
+	case attr.ValueStateNull:
+		return tftypes.NewValue(objectType, nil), nil
+	case attr.ValueStateUnknown:
+		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
+	default:
+		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
+	}
+}
+
+func (v VrackservicessCurrentStateBgpIamValue) IsNull() bool {
+	return v.state == attr.ValueStateNull
+}
+
+func (v VrackservicessCurrentStateBgpIamValue) IsUnknown() bool {
+	return v.state == attr.ValueStateUnknown
+}
+
+func (v VrackservicessCurrentStateBgpIamValue) String() string {
+	return "VrackservicessCurrentStateBgpIamValue"
+}
+
+func (v VrackservicessCurrentStateBgpIamValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if v.IsNull() {
+		return types.ObjectNull(v.AttributeTypes(ctx)), diags
+	}
+
+	if v.IsUnknown() {
+		return types.ObjectUnknown(v.AttributeTypes(ctx)), diags
+	}
+
+	objVal, diags := types.ObjectValue(
+		map[string]attr.Type{
+			"display_name": ovhtypes.TfStringType{},
+			"id":           ovhtypes.TfStringType{},
+			"state":        ovhtypes.TfStringType{},
+			"urn":          ovhtypes.TfStringType{},
+		},
+		map[string]attr.Value{
+			"display_name": v.DisplayName,
+			"id":           v.Id,
+			"state":        v.State,
+			"urn":          v.Urn,
+		})
+
+	return objVal, diags
+}
+
+func (v VrackservicessCurrentStateBgpIamValue) Equal(o attr.Value) bool {
+	other, ok := o.(VrackservicessCurrentStateBgpIamValue)
+
+	if !ok {
+		return false
+	}
+
+	if v.state != other.state {
+		return false
+	}
+
+	if v.state != attr.ValueStateKnown {
+		return true
+	}
+
+	if !v.DisplayName.Equal(other.DisplayName) {
+		return false
+	}
+
+	if !v.Id.Equal(other.Id) {
+		return false
+	}
+
+	if !v.State.Equal(other.State) {
+		return false
+	}
+
+	if !v.Urn.Equal(other.Urn) {
+		return false
+	}
+
+	return true
+}
+
+func (v VrackservicessCurrentStateBgpIamValue) Type(ctx context.Context) attr.Type {
+	return VrackservicessCurrentStateBgpIamType{
+		basetypes.ObjectType{
+			AttrTypes: v.AttributeTypes(ctx),
+		},
+	}
+}
+
+func (v VrackservicessCurrentStateBgpIamValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
+	return map[string]attr.Type{
+		"display_name": ovhtypes.TfStringType{},
+		"id":           ovhtypes.TfStringType{},
+		"state":        ovhtypes.TfStringType{},
+		"urn":          ovhtypes.TfStringType{},
+	}
+}
+
+var _ basetypes.ObjectTypable = VrackservicessCurrentStateConfigurationStatusType{}
+
+type VrackservicessCurrentStateConfigurationStatusType struct {
+	basetypes.ObjectType
+}
+
+func (t VrackservicessCurrentStateConfigurationStatusType) Equal(o attr.Type) bool {
+	other, ok := o.(VrackservicessCurrentStateConfigurationStatusType)
+
+	if !ok {
+		return false
+	}
+
+	return t.ObjectType.Equal(other.ObjectType)
+}
+
+func (t VrackservicessCurrentStateConfigurationStatusType) String() string {
+	return "VrackservicessCurrentStateConfigurationStatusType"
+}
+
+func (t VrackservicessCurrentStateConfigurationStatusType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	attributes := in.Attributes()
+
+	reasonAttribute, ok := attributes["reason"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`reason is missing from object`)
+
+		return nil, diags
+	}
+
+	reasonVal, ok := reasonAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`reason expected to be ovhtypes.TfStringValue, was: %T`, reasonAttribute))
+	}
+
+	statusAttribute, ok := attributes["status"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`status is missing from object`)
+
+		return nil, diags
+	}
+
+	statusVal, ok := statusAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`status expected to be ovhtypes.TfStringValue, was: %T`, statusAttribute))
+	}
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return VrackservicessCurrentStateConfigurationStatusValue{
+		Reason: reasonVal,
+		Status: statusVal,
+		state:  attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVrackservicessCurrentStateConfigurationStatusValueNull() VrackservicessCurrentStateConfigurationStatusValue {
+	return VrackservicessCurrentStateConfigurationStatusValue{
+		state: attr.ValueStateNull,
+	}
+}
+
+func NewVrackservicessCurrentStateConfigurationStatusValueUnknown() VrackservicessCurrentStateConfigurationStatusValue {
+	return VrackservicessCurrentStateConfigurationStatusValue{
+		state: attr.ValueStateUnknown,
+	}
+}
+
+func NewVrackservicessCurrentStateConfigurationStatusValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (VrackservicessCurrentStateConfigurationStatusValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
+	ctx := context.Background()
+
+	for name, attributeType := range attributeTypes {
+		attribute, ok := attributes[name]
+
+		if !ok {
+			diags.AddError(
+				"Missing VrackservicessCurrentStateConfigurationStatusValue Attribute Value",
+				"While creating a VrackservicessCurrentStateConfigurationStatusValue value, a missing attribute value was detected. "+
+					"A VrackservicessCurrentStateConfigurationStatusValue must contain values for all attributes, even if null or unknown. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VrackservicessCurrentStateConfigurationStatusValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
+			)
+
+			continue
+		}
+
+		if !attributeType.Equal(attribute.Type(ctx)) {
+			diags.AddError(
+				"Invalid VrackservicessCurrentStateConfigurationStatusValue Attribute Type",
+				"While creating a VrackservicessCurrentStateConfigurationStatusValue value, an invalid attribute value was detected. "+
+					"A VrackservicessCurrentStateConfigurationStatusValue must use a matching attribute type for the value. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VrackservicessCurrentStateConfigurationStatusValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
+					fmt.Sprintf("VrackservicessCurrentStateConfigurationStatusValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
+			)
+		}
+	}
+
+	for name := range attributes {
+		_, ok := attributeTypes[name]
+
+		if !ok {
+			diags.AddError(
+				"Extra VrackservicessCurrentStateConfigurationStatusValue Attribute Value",
+				"While creating a VrackservicessCurrentStateConfigurationStatusValue value, an extra attribute value was detected. "+
+					"A VrackservicessCurrentStateConfigurationStatusValue must not contain values beyond the expected attribute types. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("Extra VrackservicessCurrentStateConfigurationStatusValue Attribute Name: %s", name),
+			)
+		}
+	}
+
+	if diags.HasError() {
+		return NewVrackservicessCurrentStateConfigurationStatusValueUnknown(), diags
+	}
+
+	reasonAttribute, ok := attributes["reason"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`reason is missing from object`)
+
+		return NewVrackservicessCurrentStateConfigurationStatusValueUnknown(), diags
+	}
+
+	reasonVal, ok := reasonAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`reason expected to be ovhtypes.TfStringValue, was: %T`, reasonAttribute))
+	}
+
+	statusAttribute, ok := attributes["status"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`status is missing from object`)
+
+		return NewVrackservicessCurrentStateConfigurationStatusValueUnknown(), diags
+	}
+
+	statusVal, ok := statusAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`status expected to be ovhtypes.TfStringValue, was: %T`, statusAttribute))
+	}
+
+	if diags.HasError() {
+		return NewVrackservicessCurrentStateConfigurationStatusValueUnknown(), diags
+	}
+
+	return VrackservicessCurrentStateConfigurationStatusValue{
+		Reason: reasonVal,
+		Status: statusVal,
+		state:  attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVrackservicessCurrentStateConfigurationStatusValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) VrackservicessCurrentStateConfigurationStatusValue {
+	object, diags := NewVrackservicessCurrentStateConfigurationStatusValue(attributeTypes, attributes)
+
+	if diags.HasError() {
+		// This could potentially be added to the diag package.
+		diagsStrings := make([]string, 0, len(diags))
+
+		for _, diagnostic := range diags {
+			diagsStrings = append(diagsStrings, fmt.Sprintf(
+				"%s | %s | %s",
+				diagnostic.Severity(),
+				diagnostic.Summary(),
+				diagnostic.Detail()))
+		}
+
+		panic("NewVrackservicessCurrentStateConfigurationStatusValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
+	}
+
+	return object
+}
+
+func (t VrackservicessCurrentStateConfigurationStatusType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+	if in.Type() == nil {
+		return NewVrackservicessCurrentStateConfigurationStatusValueNull(), nil
+	}
+
+	if !in.Type().Equal(t.TerraformType(ctx)) {
+		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
+	}
+
+	if !in.IsKnown() {
+		return NewVrackservicessCurrentStateConfigurationStatusValueUnknown(), nil
+	}
+
+	if in.IsNull() {
+		return NewVrackservicessCurrentStateConfigurationStatusValueNull(), nil
+	}
+
+	attributes := map[string]attr.Value{}
+
+	val := map[string]tftypes.Value{}
+
+	err := in.As(&val)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range val {
+		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
+
+		if err != nil {
+			return nil, err
+		}
+
+		attributes[k] = a
+	}
+
+	return NewVrackservicessCurrentStateConfigurationStatusValueMust(VrackservicessCurrentStateConfigurationStatusValue{}.AttributeTypes(ctx), attributes), nil
+}
+
+func (t VrackservicessCurrentStateConfigurationStatusType) ValueType(ctx context.Context) attr.Value {
+	return VrackservicessCurrentStateConfigurationStatusValue{}
+}
+
+var _ basetypes.ObjectValuable = VrackservicessCurrentStateConfigurationStatusValue{}
+
+type VrackservicessCurrentStateConfigurationStatusValue struct {
+	Reason ovhtypes.TfStringValue `tfsdk:"reason" json:"reason"`
+	Status ovhtypes.TfStringValue `tfsdk:"status" json:"status"`
+	state  attr.ValueState
+}
+
+func (v *VrackservicessCurrentStateConfigurationStatusValue) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" {
+		v.state = attr.ValueStateNull
+		return nil
+	}
+
+	type JsonVrackservicessCurrentStateConfigurationStatusValue VrackservicessCurrentStateConfigurationStatusValue
+
+	var tmp JsonVrackservicessCurrentStateConfigurationStatusValue
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		return err
+	}
+	v.Reason = tmp.Reason
+	v.Status = tmp.Status
+
+	v.state = attr.ValueStateKnown
+
+	return nil
+}
+
+func (v *VrackservicessCurrentStateConfigurationStatusValue) MergeWith(other *VrackservicessCurrentStateConfigurationStatusValue) {
+
+	if (v.Reason.IsUnknown() || v.Reason.IsNull()) && !other.Reason.IsUnknown() {
+		v.Reason = other.Reason
+	}
+
+	if (v.Status.IsUnknown() || v.Status.IsNull()) && !other.Status.IsUnknown() {
+		v.Status = other.Status
+	}
+
+	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
+		v.state = other.state
+	}
+}
+
+func (v VrackservicessCurrentStateConfigurationStatusValue) Attributes() map[string]attr.Value {
+	return map[string]attr.Value{
+		"reason": v.Reason,
+		"status": v.Status,
+	}
+}
+func (v VrackservicessCurrentStateConfigurationStatusValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
+	attrTypes := make(map[string]tftypes.Type, 2)
+
+	var val tftypes.Value
+	var err error
+
+	attrTypes["reason"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["status"] = basetypes.StringType{}.TerraformType(ctx)
+
+	objectType := tftypes.Object{AttributeTypes: attrTypes}
+
+	switch v.state {
+	case attr.ValueStateKnown:
+		vals := make(map[string]tftypes.Value, 2)
+
+		val, err = v.Reason.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["reason"] = val
+
+		val, err = v.Status.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["status"] = val
+
+		if err := tftypes.ValidateValue(objectType, vals); err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		return tftypes.NewValue(objectType, vals), nil
+	case attr.ValueStateNull:
+		return tftypes.NewValue(objectType, nil), nil
+	case attr.ValueStateUnknown:
+		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
+	default:
+		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
+	}
+}
+
+func (v VrackservicessCurrentStateConfigurationStatusValue) IsNull() bool {
+	return v.state == attr.ValueStateNull
+}
+
+func (v VrackservicessCurrentStateConfigurationStatusValue) IsUnknown() bool {
+	return v.state == attr.ValueStateUnknown
+}
+
+func (v VrackservicessCurrentStateConfigurationStatusValue) String() string {
+	return "VrackservicessCurrentStateConfigurationStatusValue"
+}
+
+func (v VrackservicessCurrentStateConfigurationStatusValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if v.IsNull() {
+		return types.ObjectNull(v.AttributeTypes(ctx)), diags
+	}
+
+	if v.IsUnknown() {
+		return types.ObjectUnknown(v.AttributeTypes(ctx)), diags
+	}
+
+	objVal, diags := types.ObjectValue(
+		map[string]attr.Type{
+			"reason": ovhtypes.TfStringType{},
+			"status": ovhtypes.TfStringType{},
+		},
+		map[string]attr.Value{
+			"reason": v.Reason,
+			"status": v.Status,
+		})
+
+	return objVal, diags
+}
+
+func (v VrackservicessCurrentStateConfigurationStatusValue) Equal(o attr.Value) bool {
+	other, ok := o.(VrackservicessCurrentStateConfigurationStatusValue)
+
+	if !ok {
+		return false
+	}
+
+	if v.state != other.state {
+		return false
+	}
+
+	if v.state != attr.ValueStateKnown {
+		return true
+	}
+
+	if !v.Reason.Equal(other.Reason) {
+		return false
+	}
+
+	if !v.Status.Equal(other.Status) {
+		return false
+	}
+
+	return true
+}
+
+func (v VrackservicessCurrentStateConfigurationStatusValue) Type(ctx context.Context) attr.Type {
+	return VrackservicessCurrentStateConfigurationStatusType{
+		basetypes.ObjectType{
+			AttrTypes: v.AttributeTypes(ctx),
+		},
+	}
+}
+
+func (v VrackservicessCurrentStateConfigurationStatusValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
+	return map[string]attr.Type{
+		"reason": ovhtypes.TfStringType{},
+		"status": ovhtypes.TfStringType{},
+	}
+}
+
+var _ basetypes.ObjectTypable = VrackservicessCurrentStateServicesType{}
+
+type VrackservicessCurrentStateServicesType struct {
+	basetypes.ObjectType
+}
+
+func (t VrackservicessCurrentStateServicesType) Equal(o attr.Type) bool {
+	other, ok := o.(VrackservicessCurrentStateServicesType)
+
+	if !ok {
+		return false
+	}
+
+	return t.ObjectType.Equal(other.ObjectType)
+}
+
+func (t VrackservicessCurrentStateServicesType) String() string {
+	return "VrackservicessCurrentStateServicesType"
+}
+
+func (t VrackservicessCurrentStateServicesType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	attributes := in.Attributes()
+
+	serviceRangeAttribute, ok := attributes["service_range"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`service_range is missing from object`)
+
+		return nil, diags
+	}
+
+	serviceRangeVal, ok := serviceRangeAttribute.(ovhtypes.TfListNestedValue[VrackservicessCurrentStateServicesServiceRangeValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`service_range expected to be ovhtypes.TfListNestedValue[VrackservicessCurrentStateServicesServiceRangeValue], was: %T`, serviceRangeAttribute))
+	}
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return VrackservicessCurrentStateServicesValue{
+		ServiceRange: serviceRangeVal,
+		state:        attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVrackservicessCurrentStateServicesValueNull() VrackservicessCurrentStateServicesValue {
+	return VrackservicessCurrentStateServicesValue{
+		state: attr.ValueStateNull,
+	}
+}
+
+func NewVrackservicessCurrentStateServicesValueUnknown() VrackservicessCurrentStateServicesValue {
+	return VrackservicessCurrentStateServicesValue{
+		state: attr.ValueStateUnknown,
+	}
+}
+
+func NewVrackservicessCurrentStateServicesValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (VrackservicessCurrentStateServicesValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
+	ctx := context.Background()
+
+	for name, attributeType := range attributeTypes {
+		attribute, ok := attributes[name]
+
+		if !ok {
+			diags.AddError(
+				"Missing VrackservicessCurrentStateServicesValue Attribute Value",
+				"While creating a VrackservicessCurrentStateServicesValue value, a missing attribute value was detected. "+
+					"A VrackservicessCurrentStateServicesValue must contain values for all attributes, even if null or unknown. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VrackservicessCurrentStateServicesValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
+			)
+
+			continue
+		}
+
+		if !attributeType.Equal(attribute.Type(ctx)) {
+			diags.AddError(
+				"Invalid VrackservicessCurrentStateServicesValue Attribute Type",
+				"While creating a VrackservicessCurrentStateServicesValue value, an invalid attribute value was detected. "+
+					"A VrackservicessCurrentStateServicesValue must use a matching attribute type for the value. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VrackservicessCurrentStateServicesValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
+					fmt.Sprintf("VrackservicessCurrentStateServicesValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
+			)
+		}
+	}
+
+	for name := range attributes {
+		_, ok := attributeTypes[name]
+
+		if !ok {
+			diags.AddError(
+				"Extra VrackservicessCurrentStateServicesValue Attribute Value",
+				"While creating a VrackservicessCurrentStateServicesValue value, an extra attribute value was detected. "+
+					"A VrackservicessCurrentStateServicesValue must not contain values beyond the expected attribute types. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("Extra VrackservicessCurrentStateServicesValue Attribute Name: %s", name),
+			)
+		}
+	}
+
+	if diags.HasError() {
+		return NewVrackservicessCurrentStateServicesValueUnknown(), diags
+	}
+
+	serviceRangeAttribute, ok := attributes["service_range"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`service_range is missing from object`)
+
+		return NewVrackservicessCurrentStateServicesValueUnknown(), diags
+	}
+
+	serviceRangeVal, ok := serviceRangeAttribute.(ovhtypes.TfListNestedValue[VrackservicessCurrentStateServicesServiceRangeValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`service_range expected to be ovhtypes.TfListNestedValue[VrackservicessCurrentStateServicesServiceRangeValue], was: %T`, serviceRangeAttribute))
+	}
+
+	if diags.HasError() {
+		return NewVrackservicessCurrentStateServicesValueUnknown(), diags
+	}
+
+	return VrackservicessCurrentStateServicesValue{
+		ServiceRange: serviceRangeVal,
+		state:        attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVrackservicessCurrentStateServicesValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) VrackservicessCurrentStateServicesValue {
+	object, diags := NewVrackservicessCurrentStateServicesValue(attributeTypes, attributes)
+
+	if diags.HasError() {
+		// This could potentially be added to the diag package.
+		diagsStrings := make([]string, 0, len(diags))
+
+		for _, diagnostic := range diags {
+			diagsStrings = append(diagsStrings, fmt.Sprintf(
+				"%s | %s | %s",
+				diagnostic.Severity(),
+				diagnostic.Summary(),
+				diagnostic.Detail()))
+		}
+
+		panic("NewVrackservicessCurrentStateServicesValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
+	}
+
+	return object
+}
+
+func (t VrackservicessCurrentStateServicesType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+	if in.Type() == nil {
+		return NewVrackservicessCurrentStateServicesValueNull(), nil
+	}
+
+	if !in.Type().Equal(t.TerraformType(ctx)) {
+		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
+	}
+
+	if !in.IsKnown() {
+		return NewVrackservicessCurrentStateServicesValueUnknown(), nil
+	}
+
+	if in.IsNull() {
+		return NewVrackservicessCurrentStateServicesValueNull(), nil
+	}
+
+	attributes := map[string]attr.Value{}
+
+	val := map[string]tftypes.Value{}
+
+	err := in.As(&val)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range val {
+		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
+
+		if err != nil {
+			return nil, err
+		}
+
+		attributes[k] = a
+	}
+
+	return NewVrackservicessCurrentStateServicesValueMust(VrackservicessCurrentStateServicesValue{}.AttributeTypes(ctx), attributes), nil
+}
+
+func (t VrackservicessCurrentStateServicesType) ValueType(ctx context.Context) attr.Value {
+	return VrackservicessCurrentStateServicesValue{}
+}
+
+var _ basetypes.ObjectValuable = VrackservicessCurrentStateServicesValue{}
+
+type VrackservicessCurrentStateServicesValue struct {
+	ServiceRange ovhtypes.TfListNestedValue[VrackservicessCurrentStateServicesServiceRangeValue] `tfsdk:"service_range" json:"serviceRange"`
+	state        attr.ValueState
+}
+
+func (v *VrackservicessCurrentStateServicesValue) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" {
+		v.state = attr.ValueStateNull
+		return nil
+	}
+
+	type JsonVrackservicessCurrentStateServicesValue VrackservicessCurrentStateServicesValue
+
+	var tmp JsonVrackservicessCurrentStateServicesValue
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		return err
+	}
+	v.ServiceRange = tmp.ServiceRange
+
+	v.state = attr.ValueStateKnown
+
+	return nil
+}
+
+func (v *VrackservicessCurrentStateServicesValue) MergeWith(other *VrackservicessCurrentStateServicesValue) {
+
+	if (v.ServiceRange.IsUnknown() || v.ServiceRange.IsNull()) && !other.ServiceRange.IsUnknown() {
+		v.ServiceRange = other.ServiceRange
+	} else if !other.ServiceRange.IsUnknown() {
+		newSlice := make([]attr.Value, 0)
+		elems := v.ServiceRange.Elements()
+		newElems := other.ServiceRange.Elements()
+
+		if len(elems) != len(newElems) {
+			v.ServiceRange = other.ServiceRange
+		} else {
+			for idx, e := range elems {
+				tmp := e.(VrackservicessCurrentStateServicesServiceRangeValue)
+				tmp2 := newElems[idx].(VrackservicessCurrentStateServicesServiceRangeValue)
+				tmp.MergeWith(&tmp2)
+				newSlice = append(newSlice, tmp)
+			}
+
+			v.ServiceRange = ovhtypes.TfListNestedValue[VrackservicessCurrentStateServicesServiceRangeValue]{
+				ListValue: basetypes.NewListValueMust(VrackservicessCurrentStateServicesServiceRangeValue{}.Type(context.Background()), newSlice),
+			}
+		}
+	}
+
+	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
+		v.state = other.state
+	}
+}
+
+func (v VrackservicessCurrentStateServicesValue) Attributes() map[string]attr.Value {
+	return map[string]attr.Value{
+		"serviceRange": v.ServiceRange,
+	}
+}
+func (v VrackservicessCurrentStateServicesValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
+	attrTypes := make(map[string]tftypes.Type, 1)
+
+	var val tftypes.Value
+	var err error
+
+	attrTypes["service_range"] = basetypes.ListType{
+		ElemType: VrackservicessCurrentStateServicesServiceRangeValue{}.Type(ctx),
+	}.TerraformType(ctx)
+
+	objectType := tftypes.Object{AttributeTypes: attrTypes}
+
+	switch v.state {
+	case attr.ValueStateKnown:
+		vals := make(map[string]tftypes.Value, 1)
+
+		val, err = v.ServiceRange.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["service_range"] = val
+
+		if err := tftypes.ValidateValue(objectType, vals); err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		return tftypes.NewValue(objectType, vals), nil
+	case attr.ValueStateNull:
+		return tftypes.NewValue(objectType, nil), nil
+	case attr.ValueStateUnknown:
+		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
+	default:
+		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
+	}
+}
+
+func (v VrackservicessCurrentStateServicesValue) IsNull() bool {
+	return v.state == attr.ValueStateNull
+}
+
+func (v VrackservicessCurrentStateServicesValue) IsUnknown() bool {
+	return v.state == attr.ValueStateUnknown
+}
+
+func (v VrackservicessCurrentStateServicesValue) String() string {
+	return "VrackservicessCurrentStateServicesValue"
+}
+
+func (v VrackservicessCurrentStateServicesValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if v.IsNull() {
+		return types.ObjectNull(v.AttributeTypes(ctx)), diags
+	}
+
+	if v.IsUnknown() {
+		return types.ObjectUnknown(v.AttributeTypes(ctx)), diags
+	}
+
+	objVal, diags := types.ObjectValue(
+		map[string]attr.Type{
+			"service_range": ovhtypes.NewTfListNestedType[VrackservicessCurrentStateServicesServiceRangeValue](ctx),
+		},
+		map[string]attr.Value{
+			"service_range": v.ServiceRange,
+		})
+
+	return objVal, diags
+}
+
+func (v VrackservicessCurrentStateServicesValue) Equal(o attr.Value) bool {
+	other, ok := o.(VrackservicessCurrentStateServicesValue)
+
+	if !ok {
+		return false
+	}
+
+	if v.state != other.state {
+		return false
+	}
+
+	if v.state != attr.ValueStateKnown {
+		return true
+	}
+
+	if !v.ServiceRange.Equal(other.ServiceRange) {
+		return false
+	}
+
+	return true
+}
+
+func (v VrackservicessCurrentStateServicesValue) Type(ctx context.Context) attr.Type {
+	return VrackservicessCurrentStateServicesType{
+		basetypes.ObjectType{
+			AttrTypes: v.AttributeTypes(ctx),
+		},
+	}
+}
+
+func (v VrackservicessCurrentStateServicesValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
+	return map[string]attr.Type{
+		"service_range": ovhtypes.NewTfListNestedType[VrackservicessCurrentStateServicesServiceRangeValue](ctx),
+	}
+}
+
+var _ basetypes.ObjectTypable = VrackservicessCurrentStateServicesServiceRangeType{}
+
+type VrackservicessCurrentStateServicesServiceRangeType struct {
+	basetypes.ObjectType
+}
+
+func (t VrackservicessCurrentStateServicesServiceRangeType) Equal(o attr.Type) bool {
+	other, ok := o.(VrackservicessCurrentStateServicesServiceRangeType)
+
+	if !ok {
+		return false
+	}
+
+	return t.ObjectType.Equal(other.ObjectType)
+}
+
+func (t VrackservicessCurrentStateServicesServiceRangeType) String() string {
+	return "VrackservicessCurrentStateServicesServiceRangeType"
+}
+
+func (t VrackservicessCurrentStateServicesServiceRangeType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	attributes := in.Attributes()
+
+	cidrAttribute, ok := attributes["cidr"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`cidr is missing from object`)
+
+		return nil, diags
+	}
+
+	cidrVal, ok := cidrAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`cidr expected to be ovhtypes.TfStringValue, was: %T`, cidrAttribute))
+	}
+
+	remainingIpsAttribute, ok := attributes["remaining_ips"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`remaining_ips is missing from object`)
+
+		return nil, diags
+	}
+
+	remainingIpsVal, ok := remainingIpsAttribute.(ovhtypes.TfInt64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`remaining_ips expected to be ovhtypes.TfInt64Value, was: %T`, remainingIpsAttribute))
+	}
+
+	reservedIpsAttribute, ok := attributes["reserved_ips"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`reserved_ips is missing from object`)
+
+		return nil, diags
+	}
+
+	reservedIpsVal, ok := reservedIpsAttribute.(ovhtypes.TfInt64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`reserved_ips expected to be ovhtypes.TfInt64Value, was: %T`, reservedIpsAttribute))
+	}
+
+	serviceEndpointsAttribute, ok := attributes["service_endpoints"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`service_endpoints is missing from object`)
+
+		return nil, diags
+	}
+
+	serviceEndpointsVal, ok := serviceEndpointsAttribute.(ovhtypes.TfListNestedValue[VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`service_endpoints expected to be ovhtypes.TfListNestedValue[VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue], was: %T`, serviceEndpointsAttribute))
+	}
+
+	serviceEndpointsConfigurationStatusAttribute, ok := attributes["service_endpoints_configuration_status"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`service_endpoints_configuration_status is missing from object`)
+
+		return nil, diags
+	}
+
+	serviceEndpointsConfigurationStatusVal, ok := serviceEndpointsConfigurationStatusAttribute.(VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`service_endpoints_configuration_status expected to be VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue, was: %T`, serviceEndpointsConfigurationStatusAttribute))
+	}
+
+	subnetCidrAttribute, ok := attributes["subnet_cidr"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`subnet_cidr is missing from object`)
+
+		return nil, diags
+	}
+
+	subnetCidrVal, ok := subnetCidrAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`subnet_cidr expected to be ovhtypes.TfStringValue, was: %T`, subnetCidrAttribute))
+	}
+
+	usedIpsAttribute, ok := attributes["used_ips"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`used_ips is missing from object`)
+
+		return nil, diags
+	}
+
+	usedIpsVal, ok := usedIpsAttribute.(ovhtypes.TfInt64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`used_ips expected to be ovhtypes.TfInt64Value, was: %T`, usedIpsAttribute))
+	}
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return VrackservicessCurrentStateServicesServiceRangeValue{
+		Cidr:                                cidrVal,
+		RemainingIps:                        remainingIpsVal,
+		ReservedIps:                         reservedIpsVal,
+		ServiceEndpoints:                    serviceEndpointsVal,
+		ServiceEndpointsConfigurationStatus: serviceEndpointsConfigurationStatusVal,
+		SubnetCidr:                          subnetCidrVal,
+		UsedIps:                             usedIpsVal,
+		state:                               attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVrackservicessCurrentStateServicesServiceRangeValueNull() VrackservicessCurrentStateServicesServiceRangeValue {
+	return VrackservicessCurrentStateServicesServiceRangeValue{
+		state: attr.ValueStateNull,
+	}
+}
+
+func NewVrackservicessCurrentStateServicesServiceRangeValueUnknown() VrackservicessCurrentStateServicesServiceRangeValue {
+	return VrackservicessCurrentStateServicesServiceRangeValue{
+		state: attr.ValueStateUnknown,
+	}
+}
+
+func NewVrackservicessCurrentStateServicesServiceRangeValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (VrackservicessCurrentStateServicesServiceRangeValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
+	ctx := context.Background()
+
+	for name, attributeType := range attributeTypes {
+		attribute, ok := attributes[name]
+
+		if !ok {
+			diags.AddError(
+				"Missing VrackservicessCurrentStateServicesServiceRangeValue Attribute Value",
+				"While creating a VrackservicessCurrentStateServicesServiceRangeValue value, a missing attribute value was detected. "+
+					"A VrackservicessCurrentStateServicesServiceRangeValue must contain values for all attributes, even if null or unknown. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VrackservicessCurrentStateServicesServiceRangeValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
+			)
+
+			continue
+		}
+
+		if !attributeType.Equal(attribute.Type(ctx)) {
+			diags.AddError(
+				"Invalid VrackservicessCurrentStateServicesServiceRangeValue Attribute Type",
+				"While creating a VrackservicessCurrentStateServicesServiceRangeValue value, an invalid attribute value was detected. "+
+					"A VrackservicessCurrentStateServicesServiceRangeValue must use a matching attribute type for the value. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VrackservicessCurrentStateServicesServiceRangeValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
+					fmt.Sprintf("VrackservicessCurrentStateServicesServiceRangeValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
+			)
+		}
+	}
+
+	for name := range attributes {
+		_, ok := attributeTypes[name]
+
+		if !ok {
+			diags.AddError(
+				"Extra VrackservicessCurrentStateServicesServiceRangeValue Attribute Value",
+				"While creating a VrackservicessCurrentStateServicesServiceRangeValue value, an extra attribute value was detected. "+
+					"A VrackservicessCurrentStateServicesServiceRangeValue must not contain values beyond the expected attribute types. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("Extra VrackservicessCurrentStateServicesServiceRangeValue Attribute Name: %s", name),
+			)
+		}
+	}
+
+	if diags.HasError() {
+		return NewVrackservicessCurrentStateServicesServiceRangeValueUnknown(), diags
+	}
+
+	cidrAttribute, ok := attributes["cidr"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`cidr is missing from object`)
+
+		return NewVrackservicessCurrentStateServicesServiceRangeValueUnknown(), diags
+	}
+
+	cidrVal, ok := cidrAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`cidr expected to be ovhtypes.TfStringValue, was: %T`, cidrAttribute))
+	}
+
+	remainingIpsAttribute, ok := attributes["remaining_ips"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`remaining_ips is missing from object`)
+
+		return NewVrackservicessCurrentStateServicesServiceRangeValueUnknown(), diags
+	}
+
+	remainingIpsVal, ok := remainingIpsAttribute.(ovhtypes.TfInt64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`remaining_ips expected to be ovhtypes.TfInt64Value, was: %T`, remainingIpsAttribute))
+	}
+
+	reservedIpsAttribute, ok := attributes["reserved_ips"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`reserved_ips is missing from object`)
+
+		return NewVrackservicessCurrentStateServicesServiceRangeValueUnknown(), diags
+	}
+
+	reservedIpsVal, ok := reservedIpsAttribute.(ovhtypes.TfInt64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`reserved_ips expected to be ovhtypes.TfInt64Value, was: %T`, reservedIpsAttribute))
+	}
+
+	serviceEndpointsAttribute, ok := attributes["service_endpoints"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`service_endpoints is missing from object`)
+
+		return NewVrackservicessCurrentStateServicesServiceRangeValueUnknown(), diags
+	}
+
+	serviceEndpointsVal, ok := serviceEndpointsAttribute.(ovhtypes.TfListNestedValue[VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`service_endpoints expected to be ovhtypes.TfListNestedValue[VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue], was: %T`, serviceEndpointsAttribute))
+	}
+
+	serviceEndpointsConfigurationStatusAttribute, ok := attributes["service_endpoints_configuration_status"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`service_endpoints_configuration_status is missing from object`)
+
+		return NewVrackservicessCurrentStateServicesServiceRangeValueUnknown(), diags
+	}
+
+	serviceEndpointsConfigurationStatusVal, ok := serviceEndpointsConfigurationStatusAttribute.(VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`service_endpoints_configuration_status expected to be VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue, was: %T`, serviceEndpointsConfigurationStatusAttribute))
+	}
+
+	subnetCidrAttribute, ok := attributes["subnet_cidr"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`subnet_cidr is missing from object`)
+
+		return NewVrackservicessCurrentStateServicesServiceRangeValueUnknown(), diags
+	}
+
+	subnetCidrVal, ok := subnetCidrAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`subnet_cidr expected to be ovhtypes.TfStringValue, was: %T`, subnetCidrAttribute))
+	}
+
+	usedIpsAttribute, ok := attributes["used_ips"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`used_ips is missing from object`)
+
+		return NewVrackservicessCurrentStateServicesServiceRangeValueUnknown(), diags
+	}
+
+	usedIpsVal, ok := usedIpsAttribute.(ovhtypes.TfInt64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`used_ips expected to be ovhtypes.TfInt64Value, was: %T`, usedIpsAttribute))
+	}
+
+	if diags.HasError() {
+		return NewVrackservicessCurrentStateServicesServiceRangeValueUnknown(), diags
+	}
+
+	return VrackservicessCurrentStateServicesServiceRangeValue{
+		Cidr:                                cidrVal,
+		RemainingIps:                        remainingIpsVal,
+		ReservedIps:                         reservedIpsVal,
+		ServiceEndpoints:                    serviceEndpointsVal,
+		ServiceEndpointsConfigurationStatus: serviceEndpointsConfigurationStatusVal,
+		SubnetCidr:                          subnetCidrVal,
+		UsedIps:                             usedIpsVal,
+		state:                               attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVrackservicessCurrentStateServicesServiceRangeValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) VrackservicessCurrentStateServicesServiceRangeValue {
+	object, diags := NewVrackservicessCurrentStateServicesServiceRangeValue(attributeTypes, attributes)
+
+	if diags.HasError() {
+		// This could potentially be added to the diag package.
+		diagsStrings := make([]string, 0, len(diags))
+
+		for _, diagnostic := range diags {
+			diagsStrings = append(diagsStrings, fmt.Sprintf(
+				"%s | %s | %s",
+				diagnostic.Severity(),
+				diagnostic.Summary(),
+				diagnostic.Detail()))
+		}
+
+		panic("NewVrackservicessCurrentStateServicesServiceRangeValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
+	}
+
+	return object
+}
+
+func (t VrackservicessCurrentStateServicesServiceRangeType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+	if in.Type() == nil {
+		return NewVrackservicessCurrentStateServicesServiceRangeValueNull(), nil
+	}
+
+	if !in.Type().Equal(t.TerraformType(ctx)) {
+		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
+	}
+
+	if !in.IsKnown() {
+		return NewVrackservicessCurrentStateServicesServiceRangeValueUnknown(), nil
+	}
+
+	if in.IsNull() {
+		return NewVrackservicessCurrentStateServicesServiceRangeValueNull(), nil
+	}
+
+	attributes := map[string]attr.Value{}
+
+	val := map[string]tftypes.Value{}
+
+	err := in.As(&val)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range val {
+		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
+
+		if err != nil {
+			return nil, err
+		}
+
+		attributes[k] = a
+	}
+
+	return NewVrackservicessCurrentStateServicesServiceRangeValueMust(VrackservicessCurrentStateServicesServiceRangeValue{}.AttributeTypes(ctx), attributes), nil
+}
+
+func (t VrackservicessCurrentStateServicesServiceRangeType) ValueType(ctx context.Context) attr.Value {
+	return VrackservicessCurrentStateServicesServiceRangeValue{}
+}
+
+var _ basetypes.ObjectValuable = VrackservicessCurrentStateServicesServiceRangeValue{}
+
+type VrackservicessCurrentStateServicesServiceRangeValue struct {
+	Cidr                                ovhtypes.TfStringValue                                                                          `tfsdk:"cidr" json:"cidr"`
+	RemainingIps                        ovhtypes.TfInt64Value                                                                           `tfsdk:"remaining_ips" json:"remainingIps"`
+	ReservedIps                         ovhtypes.TfInt64Value                                                                           `tfsdk:"reserved_ips" json:"reservedIps"`
+	ServiceEndpoints                    ovhtypes.TfListNestedValue[VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue] `tfsdk:"service_endpoints" json:"serviceEndpoints"`
+	ServiceEndpointsConfigurationStatus VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue          `tfsdk:"service_endpoints_configuration_status" json:"serviceEndpointsConfigurationStatus"`
+	SubnetCidr                          ovhtypes.TfStringValue                                                                          `tfsdk:"subnet_cidr" json:"subnetCidr"`
+	UsedIps                             ovhtypes.TfInt64Value                                                                           `tfsdk:"used_ips" json:"usedIps"`
+	state                               attr.ValueState
+}
+
+func (v *VrackservicessCurrentStateServicesServiceRangeValue) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" {
+		v.state = attr.ValueStateNull
+		return nil
+	}
+
+	type JsonVrackservicessCurrentStateServicesServiceRangeValue VrackservicessCurrentStateServicesServiceRangeValue
+
+	var tmp JsonVrackservicessCurrentStateServicesServiceRangeValue
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		return err
+	}
+	v.Cidr = tmp.Cidr
+	v.RemainingIps = tmp.RemainingIps
+	v.ReservedIps = tmp.ReservedIps
+	v.ServiceEndpoints = tmp.ServiceEndpoints
+	v.ServiceEndpointsConfigurationStatus = tmp.ServiceEndpointsConfigurationStatus
+	v.SubnetCidr = tmp.SubnetCidr
+	v.UsedIps = tmp.UsedIps
+
+	v.state = attr.ValueStateKnown
+
+	return nil
+}
+
+func (v *VrackservicessCurrentStateServicesServiceRangeValue) MergeWith(other *VrackservicessCurrentStateServicesServiceRangeValue) {
+
+	if (v.Cidr.IsUnknown() || v.Cidr.IsNull()) && !other.Cidr.IsUnknown() {
+		v.Cidr = other.Cidr
+	}
+
+	if (v.RemainingIps.IsUnknown() || v.RemainingIps.IsNull()) && !other.RemainingIps.IsUnknown() {
+		v.RemainingIps = other.RemainingIps
+	}
+
+	if (v.ReservedIps.IsUnknown() || v.ReservedIps.IsNull()) && !other.ReservedIps.IsUnknown() {
+		v.ReservedIps = other.ReservedIps
+	}
+
+	if (v.ServiceEndpoints.IsUnknown() || v.ServiceEndpoints.IsNull()) && !other.ServiceEndpoints.IsUnknown() {
+		v.ServiceEndpoints = other.ServiceEndpoints
+	} else if !other.ServiceEndpoints.IsUnknown() {
+		newSlice := make([]attr.Value, 0)
+		elems := v.ServiceEndpoints.Elements()
+		newElems := other.ServiceEndpoints.Elements()
+
+		if len(elems) != len(newElems) {
+			v.ServiceEndpoints = other.ServiceEndpoints
+		} else {
+			for idx, e := range elems {
+				tmp := e.(VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue)
+				tmp2 := newElems[idx].(VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue)
+				tmp.MergeWith(&tmp2)
+				newSlice = append(newSlice, tmp)
+			}
+
+			v.ServiceEndpoints = ovhtypes.TfListNestedValue[VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue]{
+				ListValue: basetypes.NewListValueMust(VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue{}.Type(context.Background()), newSlice),
+			}
+		}
+	}
+
+	if v.ServiceEndpointsConfigurationStatus.IsUnknown() && !other.ServiceEndpointsConfigurationStatus.IsUnknown() {
+		v.ServiceEndpointsConfigurationStatus = other.ServiceEndpointsConfigurationStatus
+	} else if !other.ServiceEndpointsConfigurationStatus.IsUnknown() {
+		v.ServiceEndpointsConfigurationStatus.MergeWith(&other.ServiceEndpointsConfigurationStatus)
+	}
+
+	if (v.SubnetCidr.IsUnknown() || v.SubnetCidr.IsNull()) && !other.SubnetCidr.IsUnknown() {
+		v.SubnetCidr = other.SubnetCidr
+	}
+
+	if (v.UsedIps.IsUnknown() || v.UsedIps.IsNull()) && !other.UsedIps.IsUnknown() {
+		v.UsedIps = other.UsedIps
+	}
+
+	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
+		v.state = other.state
+	}
+}
+
+func (v VrackservicessCurrentStateServicesServiceRangeValue) Attributes() map[string]attr.Value {
+	return map[string]attr.Value{
+		"cidr":                                v.Cidr,
+		"remainingIps":                        v.RemainingIps,
+		"reservedIps":                         v.ReservedIps,
+		"serviceEndpoints":                    v.ServiceEndpoints,
+		"serviceEndpointsConfigurationStatus": v.ServiceEndpointsConfigurationStatus,
+		"subnetCidr":                          v.SubnetCidr,
+		"usedIps":                             v.UsedIps,
+	}
+}
+func (v VrackservicessCurrentStateServicesServiceRangeValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
+	attrTypes := make(map[string]tftypes.Type, 7)
+
+	var val tftypes.Value
+	var err error
+
+	attrTypes["cidr"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["remaining_ips"] = basetypes.Int64Type{}.TerraformType(ctx)
+	attrTypes["reserved_ips"] = basetypes.Int64Type{}.TerraformType(ctx)
+	attrTypes["service_endpoints"] = basetypes.ListType{
+		ElemType: VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue{}.Type(ctx),
+	}.TerraformType(ctx)
+	attrTypes["service_endpoints_configuration_status"] = basetypes.ObjectType{
+		AttrTypes: VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue{}.AttributeTypes(ctx),
+	}.TerraformType(ctx)
+	attrTypes["subnet_cidr"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["used_ips"] = basetypes.Int64Type{}.TerraformType(ctx)
+
+	objectType := tftypes.Object{AttributeTypes: attrTypes}
+
+	switch v.state {
+	case attr.ValueStateKnown:
+		vals := make(map[string]tftypes.Value, 7)
+
+		val, err = v.Cidr.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["cidr"] = val
+
+		val, err = v.RemainingIps.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["remaining_ips"] = val
+
+		val, err = v.ReservedIps.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["reserved_ips"] = val
+
+		val, err = v.ServiceEndpoints.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["service_endpoints"] = val
+
+		val, err = v.ServiceEndpointsConfigurationStatus.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["service_endpoints_configuration_status"] = val
+
+		val, err = v.SubnetCidr.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["subnet_cidr"] = val
+
+		val, err = v.UsedIps.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["used_ips"] = val
+
+		if err := tftypes.ValidateValue(objectType, vals); err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		return tftypes.NewValue(objectType, vals), nil
+	case attr.ValueStateNull:
+		return tftypes.NewValue(objectType, nil), nil
+	case attr.ValueStateUnknown:
+		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
+	default:
+		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
+	}
+}
+
+func (v VrackservicessCurrentStateServicesServiceRangeValue) IsNull() bool {
+	return v.state == attr.ValueStateNull
+}
+
+func (v VrackservicessCurrentStateServicesServiceRangeValue) IsUnknown() bool {
+	return v.state == attr.ValueStateUnknown
+}
+
+func (v VrackservicessCurrentStateServicesServiceRangeValue) String() string {
+	return "VrackservicessCurrentStateServicesServiceRangeValue"
+}
+
+func (v VrackservicessCurrentStateServicesServiceRangeValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if v.IsNull() {
+		return types.ObjectNull(v.AttributeTypes(ctx)), diags
+	}
+
+	if v.IsUnknown() {
+		return types.ObjectUnknown(v.AttributeTypes(ctx)), diags
+	}
+
+	objVal, diags := types.ObjectValue(
+		map[string]attr.Type{
+			"cidr":              ovhtypes.TfStringType{},
+			"remaining_ips":     ovhtypes.TfInt64Type{},
+			"reserved_ips":      ovhtypes.TfInt64Type{},
+			"service_endpoints": ovhtypes.NewTfListNestedType[VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue](ctx),
+			"service_endpoints_configuration_status": VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusType{
+				basetypes.ObjectType{
+					AttrTypes: VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue{}.AttributeTypes(ctx),
+				},
+			},
+			"subnet_cidr": ovhtypes.TfStringType{},
+			"used_ips":    ovhtypes.TfInt64Type{},
+		},
+		map[string]attr.Value{
+			"cidr":                                   v.Cidr,
+			"remaining_ips":                          v.RemainingIps,
+			"reserved_ips":                           v.ReservedIps,
+			"service_endpoints":                      v.ServiceEndpoints,
+			"service_endpoints_configuration_status": v.ServiceEndpointsConfigurationStatus,
+			"subnet_cidr":                            v.SubnetCidr,
+			"used_ips":                               v.UsedIps,
+		})
+
+	return objVal, diags
+}
+
+func (v VrackservicessCurrentStateServicesServiceRangeValue) Equal(o attr.Value) bool {
+	other, ok := o.(VrackservicessCurrentStateServicesServiceRangeValue)
+
+	if !ok {
+		return false
+	}
+
+	if v.state != other.state {
+		return false
+	}
+
+	if v.state != attr.ValueStateKnown {
+		return true
+	}
+
+	if !v.Cidr.Equal(other.Cidr) {
+		return false
+	}
+
+	if !v.RemainingIps.Equal(other.RemainingIps) {
+		return false
+	}
+
+	if !v.ReservedIps.Equal(other.ReservedIps) {
+		return false
+	}
+
+	if !v.ServiceEndpoints.Equal(other.ServiceEndpoints) {
+		return false
+	}
+
+	if !v.ServiceEndpointsConfigurationStatus.Equal(other.ServiceEndpointsConfigurationStatus) {
+		return false
+	}
+
+	if !v.SubnetCidr.Equal(other.SubnetCidr) {
+		return false
+	}
+
+	if !v.UsedIps.Equal(other.UsedIps) {
+		return false
+	}
+
+	return true
+}
+
+func (v VrackservicessCurrentStateServicesServiceRangeValue) Type(ctx context.Context) attr.Type {
+	return VrackservicessCurrentStateServicesServiceRangeType{
+		basetypes.ObjectType{
+			AttrTypes: v.AttributeTypes(ctx),
+		},
+	}
+}
+
+func (v VrackservicessCurrentStateServicesServiceRangeValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
+	return map[string]attr.Type{
+		"cidr":                                   ovhtypes.TfStringType{},
+		"remaining_ips":                          ovhtypes.TfInt64Type{},
+		"reserved_ips":                           ovhtypes.TfInt64Type{},
+		"service_endpoints":                      ovhtypes.NewTfListNestedType[VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue](ctx),
+		"service_endpoints_configuration_status": VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue{}.Type(ctx),
+		"subnet_cidr":                            ovhtypes.TfStringType{},
+		"used_ips":                               ovhtypes.TfInt64Type{},
+	}
+}
+
+var _ basetypes.ObjectTypable = VrackservicessCurrentStateServicesServiceRangeServiceEndpointsType{}
+
+type VrackservicessCurrentStateServicesServiceRangeServiceEndpointsType struct {
+	basetypes.ObjectType
+}
+
+func (t VrackservicessCurrentStateServicesServiceRangeServiceEndpointsType) Equal(o attr.Type) bool {
+	other, ok := o.(VrackservicessCurrentStateServicesServiceRangeServiceEndpointsType)
+
+	if !ok {
+		return false
+	}
+
+	return t.ObjectType.Equal(other.ObjectType)
+}
+
+func (t VrackservicessCurrentStateServicesServiceRangeServiceEndpointsType) String() string {
+	return "VrackservicessCurrentStateServicesServiceRangeServiceEndpointsType"
+}
+
+func (t VrackservicessCurrentStateServicesServiceRangeServiceEndpointsType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	attributes := in.Attributes()
+
+	endpointsAttribute, ok := attributes["endpoints"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`endpoints is missing from object`)
+
+		return nil, diags
+	}
+
+	endpointsVal, ok := endpointsAttribute.(ovhtypes.TfListNestedValue[VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`endpoints expected to be ovhtypes.TfListNestedValue[VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue], was: %T`, endpointsAttribute))
+	}
+
+	managedServiceUrnAttribute, ok := attributes["managed_service_urn"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`managed_service_urn is missing from object`)
+
+		return nil, diags
+	}
+
+	managedServiceUrnVal, ok := managedServiceUrnAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`managed_service_urn expected to be ovhtypes.TfStringValue, was: %T`, managedServiceUrnAttribute))
+	}
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue{
+		Endpoints:         endpointsVal,
+		ManagedServiceUrn: managedServiceUrnVal,
+		state:             attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsValueNull() VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue {
+	return VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue{
+		state: attr.ValueStateNull,
+	}
+}
+
+func NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsValueUnknown() VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue {
+	return VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue{
+		state: attr.ValueStateUnknown,
+	}
+}
+
+func NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
+	ctx := context.Background()
+
+	for name, attributeType := range attributeTypes {
+		attribute, ok := attributes[name]
+
+		if !ok {
+			diags.AddError(
+				"Missing VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue Attribute Value",
+				"While creating a VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue value, a missing attribute value was detected. "+
+					"A VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue must contain values for all attributes, even if null or unknown. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
+			)
+
+			continue
+		}
+
+		if !attributeType.Equal(attribute.Type(ctx)) {
+			diags.AddError(
+				"Invalid VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue Attribute Type",
+				"While creating a VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue value, an invalid attribute value was detected. "+
+					"A VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue must use a matching attribute type for the value. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
+					fmt.Sprintf("VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
+			)
+		}
+	}
+
+	for name := range attributes {
+		_, ok := attributeTypes[name]
+
+		if !ok {
+			diags.AddError(
+				"Extra VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue Attribute Value",
+				"While creating a VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue value, an extra attribute value was detected. "+
+					"A VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue must not contain values beyond the expected attribute types. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("Extra VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue Attribute Name: %s", name),
+			)
+		}
+	}
+
+	if diags.HasError() {
+		return NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsValueUnknown(), diags
+	}
+
+	endpointsAttribute, ok := attributes["endpoints"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`endpoints is missing from object`)
+
+		return NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsValueUnknown(), diags
+	}
+
+	endpointsVal, ok := endpointsAttribute.(ovhtypes.TfListNestedValue[VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`endpoints expected to be ovhtypes.TfListNestedValue[VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue], was: %T`, endpointsAttribute))
+	}
+
+	managedServiceUrnAttribute, ok := attributes["managed_service_urn"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`managed_service_urn is missing from object`)
+
+		return NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsValueUnknown(), diags
+	}
+
+	managedServiceUrnVal, ok := managedServiceUrnAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`managed_service_urn expected to be ovhtypes.TfStringValue, was: %T`, managedServiceUrnAttribute))
+	}
+
+	if diags.HasError() {
+		return NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsValueUnknown(), diags
+	}
+
+	return VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue{
+		Endpoints:         endpointsVal,
+		ManagedServiceUrn: managedServiceUrnVal,
+		state:             attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue {
+	object, diags := NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue(attributeTypes, attributes)
+
+	if diags.HasError() {
+		// This could potentially be added to the diag package.
+		diagsStrings := make([]string, 0, len(diags))
+
+		for _, diagnostic := range diags {
+			diagsStrings = append(diagsStrings, fmt.Sprintf(
+				"%s | %s | %s",
+				diagnostic.Severity(),
+				diagnostic.Summary(),
+				diagnostic.Detail()))
+		}
+
+		panic("NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
+	}
+
+	return object
+}
+
+func (t VrackservicessCurrentStateServicesServiceRangeServiceEndpointsType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+	if in.Type() == nil {
+		return NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsValueNull(), nil
+	}
+
+	if !in.Type().Equal(t.TerraformType(ctx)) {
+		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
+	}
+
+	if !in.IsKnown() {
+		return NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsValueUnknown(), nil
+	}
+
+	if in.IsNull() {
+		return NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsValueNull(), nil
+	}
+
+	attributes := map[string]attr.Value{}
+
+	val := map[string]tftypes.Value{}
+
+	err := in.As(&val)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range val {
+		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
+
+		if err != nil {
+			return nil, err
+		}
+
+		attributes[k] = a
+	}
+
+	return NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsValueMust(VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue{}.AttributeTypes(ctx), attributes), nil
+}
+
+func (t VrackservicessCurrentStateServicesServiceRangeServiceEndpointsType) ValueType(ctx context.Context) attr.Value {
+	return VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue{}
+}
+
+var _ basetypes.ObjectValuable = VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue{}
+
+type VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue struct {
+	Endpoints         ovhtypes.TfListNestedValue[VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue] `tfsdk:"endpoints" json:"endpoints"`
+	ManagedServiceUrn ovhtypes.TfStringValue                                                                                   `tfsdk:"managed_service_urn" json:"managedServiceURN"`
+	state             attr.ValueState
+}
+
+func (v *VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" {
+		v.state = attr.ValueStateNull
+		return nil
+	}
+
+	type JsonVrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue
+
+	var tmp JsonVrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		return err
+	}
+	v.Endpoints = tmp.Endpoints
+	v.ManagedServiceUrn = tmp.ManagedServiceUrn
+
+	v.state = attr.ValueStateKnown
+
+	return nil
+}
+
+func (v *VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue) MergeWith(other *VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue) {
+
+	if (v.Endpoints.IsUnknown() || v.Endpoints.IsNull()) && !other.Endpoints.IsUnknown() {
+		v.Endpoints = other.Endpoints
+	} else if !other.Endpoints.IsUnknown() {
+		newSlice := make([]attr.Value, 0)
+		elems := v.Endpoints.Elements()
+		newElems := other.Endpoints.Elements()
+
+		if len(elems) != len(newElems) {
+			v.Endpoints = other.Endpoints
+		} else {
+			for idx, e := range elems {
+				tmp := e.(VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue)
+				tmp2 := newElems[idx].(VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue)
+				tmp.MergeWith(&tmp2)
+				newSlice = append(newSlice, tmp)
+			}
+
+			v.Endpoints = ovhtypes.TfListNestedValue[VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue]{
+				ListValue: basetypes.NewListValueMust(VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue{}.Type(context.Background()), newSlice),
+			}
+		}
+	}
+
+	if (v.ManagedServiceUrn.IsUnknown() || v.ManagedServiceUrn.IsNull()) && !other.ManagedServiceUrn.IsUnknown() {
+		v.ManagedServiceUrn = other.ManagedServiceUrn
+	}
+
+	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
+		v.state = other.state
+	}
+}
+
+func (v VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue) Attributes() map[string]attr.Value {
+	return map[string]attr.Value{
+		"endpoints":         v.Endpoints,
+		"managedServiceURN": v.ManagedServiceUrn,
+	}
+}
+func (v VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
+	attrTypes := make(map[string]tftypes.Type, 2)
+
+	var val tftypes.Value
+	var err error
+
+	attrTypes["endpoints"] = basetypes.ListType{
+		ElemType: VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue{}.Type(ctx),
+	}.TerraformType(ctx)
+	attrTypes["managed_service_urn"] = basetypes.StringType{}.TerraformType(ctx)
+
+	objectType := tftypes.Object{AttributeTypes: attrTypes}
+
+	switch v.state {
+	case attr.ValueStateKnown:
+		vals := make(map[string]tftypes.Value, 2)
+
+		val, err = v.Endpoints.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["endpoints"] = val
+
+		val, err = v.ManagedServiceUrn.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["managed_service_urn"] = val
+
+		if err := tftypes.ValidateValue(objectType, vals); err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		return tftypes.NewValue(objectType, vals), nil
+	case attr.ValueStateNull:
+		return tftypes.NewValue(objectType, nil), nil
+	case attr.ValueStateUnknown:
+		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
+	default:
+		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
+	}
+}
+
+func (v VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue) IsNull() bool {
+	return v.state == attr.ValueStateNull
+}
+
+func (v VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue) IsUnknown() bool {
+	return v.state == attr.ValueStateUnknown
+}
+
+func (v VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue) String() string {
+	return "VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue"
+}
+
+func (v VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if v.IsNull() {
+		return types.ObjectNull(v.AttributeTypes(ctx)), diags
+	}
+
+	if v.IsUnknown() {
+		return types.ObjectUnknown(v.AttributeTypes(ctx)), diags
+	}
+
+	objVal, diags := types.ObjectValue(
+		map[string]attr.Type{
+			"endpoints":           ovhtypes.NewTfListNestedType[VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue](ctx),
+			"managed_service_urn": ovhtypes.TfStringType{},
+		},
+		map[string]attr.Value{
+			"endpoints":           v.Endpoints,
+			"managed_service_urn": v.ManagedServiceUrn,
+		})
+
+	return objVal, diags
+}
+
+func (v VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue) Equal(o attr.Value) bool {
+	other, ok := o.(VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue)
+
+	if !ok {
+		return false
+	}
+
+	if v.state != other.state {
+		return false
+	}
+
+	if v.state != attr.ValueStateKnown {
+		return true
+	}
+
+	if !v.Endpoints.Equal(other.Endpoints) {
+		return false
+	}
+
+	if !v.ManagedServiceUrn.Equal(other.ManagedServiceUrn) {
+		return false
+	}
+
+	return true
+}
+
+func (v VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue) Type(ctx context.Context) attr.Type {
+	return VrackservicessCurrentStateServicesServiceRangeServiceEndpointsType{
+		basetypes.ObjectType{
+			AttrTypes: v.AttributeTypes(ctx),
+		},
+	}
+}
+
+func (v VrackservicessCurrentStateServicesServiceRangeServiceEndpointsValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
+	return map[string]attr.Type{
+		"endpoints":           ovhtypes.NewTfListNestedType[VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue](ctx),
+		"managed_service_urn": ovhtypes.TfStringType{},
+	}
+}
+
+var _ basetypes.ObjectTypable = VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsType{}
+
+type VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsType struct {
+	basetypes.ObjectType
+}
+
+func (t VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsType) Equal(o attr.Type) bool {
+	other, ok := o.(VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsType)
+
+	if !ok {
+		return false
+	}
+
+	return t.ObjectType.Equal(other.ObjectType)
+}
+
+func (t VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsType) String() string {
+	return "VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsType"
+}
+
+func (t VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	attributes := in.Attributes()
+
+	descriptionAttribute, ok := attributes["description"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`description is missing from object`)
+
+		return nil, diags
+	}
+
+	descriptionVal, ok := descriptionAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`description expected to be ovhtypes.TfStringValue, was: %T`, descriptionAttribute))
+	}
+
+	ipAttribute, ok := attributes["ip"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`ip is missing from object`)
+
+		return nil, diags
+	}
+
+	ipVal, ok := ipAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`ip expected to be ovhtypes.TfStringValue, was: %T`, ipAttribute))
+	}
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue{
+		Description: descriptionVal,
+		Ip:          ipVal,
+		state:       attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValueNull() VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue {
+	return VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue{
+		state: attr.ValueStateNull,
+	}
+}
+
+func NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValueUnknown() VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue {
+	return VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue{
+		state: attr.ValueStateUnknown,
+	}
+}
+
+func NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
+	ctx := context.Background()
+
+	for name, attributeType := range attributeTypes {
+		attribute, ok := attributes[name]
+
+		if !ok {
+			diags.AddError(
+				"Missing VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue Attribute Value",
+				"While creating a VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue value, a missing attribute value was detected. "+
+					"A VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue must contain values for all attributes, even if null or unknown. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
+			)
+
+			continue
+		}
+
+		if !attributeType.Equal(attribute.Type(ctx)) {
+			diags.AddError(
+				"Invalid VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue Attribute Type",
+				"While creating a VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue value, an invalid attribute value was detected. "+
+					"A VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue must use a matching attribute type for the value. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
+					fmt.Sprintf("VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
+			)
+		}
+	}
+
+	for name := range attributes {
+		_, ok := attributeTypes[name]
+
+		if !ok {
+			diags.AddError(
+				"Extra VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue Attribute Value",
+				"While creating a VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue value, an extra attribute value was detected. "+
+					"A VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue must not contain values beyond the expected attribute types. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("Extra VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue Attribute Name: %s", name),
+			)
+		}
+	}
+
+	if diags.HasError() {
+		return NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValueUnknown(), diags
+	}
+
+	descriptionAttribute, ok := attributes["description"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`description is missing from object`)
+
+		return NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValueUnknown(), diags
+	}
+
+	descriptionVal, ok := descriptionAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`description expected to be ovhtypes.TfStringValue, was: %T`, descriptionAttribute))
+	}
+
+	ipAttribute, ok := attributes["ip"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`ip is missing from object`)
+
+		return NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValueUnknown(), diags
+	}
+
+	ipVal, ok := ipAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`ip expected to be ovhtypes.TfStringValue, was: %T`, ipAttribute))
+	}
+
+	if diags.HasError() {
+		return NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValueUnknown(), diags
+	}
+
+	return VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue{
+		Description: descriptionVal,
+		Ip:          ipVal,
+		state:       attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue {
+	object, diags := NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue(attributeTypes, attributes)
+
+	if diags.HasError() {
+		// This could potentially be added to the diag package.
+		diagsStrings := make([]string, 0, len(diags))
+
+		for _, diagnostic := range diags {
+			diagsStrings = append(diagsStrings, fmt.Sprintf(
+				"%s | %s | %s",
+				diagnostic.Severity(),
+				diagnostic.Summary(),
+				diagnostic.Detail()))
+		}
+
+		panic("NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
+	}
+
+	return object
+}
+
+func (t VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+	if in.Type() == nil {
+		return NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValueNull(), nil
+	}
+
+	if !in.Type().Equal(t.TerraformType(ctx)) {
+		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
+	}
+
+	if !in.IsKnown() {
+		return NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValueUnknown(), nil
+	}
+
+	if in.IsNull() {
+		return NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValueNull(), nil
+	}
+
+	attributes := map[string]attr.Value{}
+
+	val := map[string]tftypes.Value{}
+
+	err := in.As(&val)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range val {
+		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
+
+		if err != nil {
+			return nil, err
+		}
+
+		attributes[k] = a
+	}
+
+	return NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValueMust(VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue{}.AttributeTypes(ctx), attributes), nil
+}
+
+func (t VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsType) ValueType(ctx context.Context) attr.Value {
+	return VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue{}
+}
+
+var _ basetypes.ObjectValuable = VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue{}
+
+type VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue struct {
+	Description ovhtypes.TfStringValue `tfsdk:"description" json:"description"`
+	Ip          ovhtypes.TfStringValue `tfsdk:"ip" json:"ip"`
+	state       attr.ValueState
+}
+
+func (v *VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" {
+		v.state = attr.ValueStateNull
+		return nil
+	}
+
+	type JsonVrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue
+
+	var tmp JsonVrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		return err
+	}
+	v.Description = tmp.Description
+	v.Ip = tmp.Ip
+
+	v.state = attr.ValueStateKnown
+
+	return nil
+}
+
+func (v *VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue) MergeWith(other *VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue) {
+
+	if (v.Description.IsUnknown() || v.Description.IsNull()) && !other.Description.IsUnknown() {
+		v.Description = other.Description
+	}
+
+	if (v.Ip.IsUnknown() || v.Ip.IsNull()) && !other.Ip.IsUnknown() {
+		v.Ip = other.Ip
+	}
+
+	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
+		v.state = other.state
+	}
+}
+
+func (v VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue) Attributes() map[string]attr.Value {
+	return map[string]attr.Value{
+		"description": v.Description,
+		"ip":          v.Ip,
+	}
+}
+func (v VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
+	attrTypes := make(map[string]tftypes.Type, 2)
+
+	var val tftypes.Value
+	var err error
+
+	attrTypes["description"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["ip"] = basetypes.StringType{}.TerraformType(ctx)
+
+	objectType := tftypes.Object{AttributeTypes: attrTypes}
+
+	switch v.state {
+	case attr.ValueStateKnown:
+		vals := make(map[string]tftypes.Value, 2)
+
+		val, err = v.Description.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["description"] = val
+
+		val, err = v.Ip.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["ip"] = val
+
+		if err := tftypes.ValidateValue(objectType, vals); err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		return tftypes.NewValue(objectType, vals), nil
+	case attr.ValueStateNull:
+		return tftypes.NewValue(objectType, nil), nil
+	case attr.ValueStateUnknown:
+		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
+	default:
+		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
+	}
+}
+
+func (v VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue) IsNull() bool {
+	return v.state == attr.ValueStateNull
+}
+
+func (v VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue) IsUnknown() bool {
+	return v.state == attr.ValueStateUnknown
+}
+
+func (v VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue) String() string {
+	return "VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue"
+}
+
+func (v VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if v.IsNull() {
+		return types.ObjectNull(v.AttributeTypes(ctx)), diags
+	}
+
+	if v.IsUnknown() {
+		return types.ObjectUnknown(v.AttributeTypes(ctx)), diags
+	}
+
+	objVal, diags := types.ObjectValue(
+		map[string]attr.Type{
+			"description": ovhtypes.TfStringType{},
+			"ip":          ovhtypes.TfStringType{},
+		},
+		map[string]attr.Value{
+			"description": v.Description,
+			"ip":          v.Ip,
+		})
+
+	return objVal, diags
+}
+
+func (v VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue) Equal(o attr.Value) bool {
+	other, ok := o.(VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue)
+
+	if !ok {
+		return false
+	}
+
+	if v.state != other.state {
+		return false
+	}
+
+	if v.state != attr.ValueStateKnown {
+		return true
+	}
+
+	if !v.Description.Equal(other.Description) {
+		return false
+	}
+
+	if !v.Ip.Equal(other.Ip) {
+		return false
+	}
+
+	return true
+}
+
+func (v VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue) Type(ctx context.Context) attr.Type {
+	return VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsType{
+		basetypes.ObjectType{
+			AttrTypes: v.AttributeTypes(ctx),
+		},
+	}
+}
+
+func (v VrackservicessCurrentStateServicesServiceRangeServiceEndpointsEndpointsValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
+	return map[string]attr.Type{
+		"description": ovhtypes.TfStringType{},
+		"ip":          ovhtypes.TfStringType{},
+	}
+}
+
+var _ basetypes.ObjectTypable = VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusType{}
+
+type VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusType struct {
+	basetypes.ObjectType
+}
+
+func (t VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusType) Equal(o attr.Type) bool {
+	other, ok := o.(VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusType)
+
+	if !ok {
+		return false
+	}
+
+	return t.ObjectType.Equal(other.ObjectType)
+}
+
+func (t VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusType) String() string {
+	return "VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusType"
+}
+
+func (t VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	attributes := in.Attributes()
+
+	reasonAttribute, ok := attributes["reason"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`reason is missing from object`)
+
+		return nil, diags
+	}
+
+	reasonVal, ok := reasonAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`reason expected to be ovhtypes.TfStringValue, was: %T`, reasonAttribute))
+	}
+
+	statusAttribute, ok := attributes["status"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`status is missing from object`)
+
+		return nil, diags
+	}
+
+	statusVal, ok := statusAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`status expected to be ovhtypes.TfStringValue, was: %T`, statusAttribute))
+	}
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue{
+		Reason: reasonVal,
+		Status: statusVal,
+		state:  attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValueNull() VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue {
+	return VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue{
+		state: attr.ValueStateNull,
+	}
+}
+
+func NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValueUnknown() VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue {
+	return VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue{
+		state: attr.ValueStateUnknown,
+	}
+}
+
+func NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
+	ctx := context.Background()
+
+	for name, attributeType := range attributeTypes {
+		attribute, ok := attributes[name]
+
+		if !ok {
+			diags.AddError(
+				"Missing VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue Attribute Value",
+				"While creating a VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue value, a missing attribute value was detected. "+
+					"A VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue must contain values for all attributes, even if null or unknown. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
+			)
+
+			continue
+		}
+
+		if !attributeType.Equal(attribute.Type(ctx)) {
+			diags.AddError(
+				"Invalid VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue Attribute Type",
+				"While creating a VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue value, an invalid attribute value was detected. "+
+					"A VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue must use a matching attribute type for the value. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
+					fmt.Sprintf("VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
+			)
+		}
+	}
+
+	for name := range attributes {
+		_, ok := attributeTypes[name]
+
+		if !ok {
+			diags.AddError(
+				"Extra VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue Attribute Value",
+				"While creating a VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue value, an extra attribute value was detected. "+
+					"A VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue must not contain values beyond the expected attribute types. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("Extra VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue Attribute Name: %s", name),
+			)
+		}
+	}
+
+	if diags.HasError() {
+		return NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValueUnknown(), diags
+	}
+
+	reasonAttribute, ok := attributes["reason"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`reason is missing from object`)
+
+		return NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValueUnknown(), diags
+	}
+
+	reasonVal, ok := reasonAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`reason expected to be ovhtypes.TfStringValue, was: %T`, reasonAttribute))
+	}
+
+	statusAttribute, ok := attributes["status"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`status is missing from object`)
+
+		return NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValueUnknown(), diags
+	}
+
+	statusVal, ok := statusAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`status expected to be ovhtypes.TfStringValue, was: %T`, statusAttribute))
+	}
+
+	if diags.HasError() {
+		return NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValueUnknown(), diags
+	}
+
+	return VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue{
+		Reason: reasonVal,
+		Status: statusVal,
+		state:  attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue {
+	object, diags := NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue(attributeTypes, attributes)
+
+	if diags.HasError() {
+		// This could potentially be added to the diag package.
+		diagsStrings := make([]string, 0, len(diags))
+
+		for _, diagnostic := range diags {
+			diagsStrings = append(diagsStrings, fmt.Sprintf(
+				"%s | %s | %s",
+				diagnostic.Severity(),
+				diagnostic.Summary(),
+				diagnostic.Detail()))
+		}
+
+		panic("NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
+	}
+
+	return object
+}
+
+func (t VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+	if in.Type() == nil {
+		return NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValueNull(), nil
+	}
+
+	if !in.Type().Equal(t.TerraformType(ctx)) {
+		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
+	}
+
+	if !in.IsKnown() {
+		return NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValueUnknown(), nil
+	}
+
+	if in.IsNull() {
+		return NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValueNull(), nil
+	}
+
+	attributes := map[string]attr.Value{}
+
+	val := map[string]tftypes.Value{}
+
+	err := in.As(&val)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range val {
+		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
+
+		if err != nil {
+			return nil, err
+		}
+
+		attributes[k] = a
+	}
+
+	return NewVrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValueMust(VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue{}.AttributeTypes(ctx), attributes), nil
+}
+
+func (t VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusType) ValueType(ctx context.Context) attr.Value {
+	return VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue{}
+}
+
+var _ basetypes.ObjectValuable = VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue{}
+
+type VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue struct {
+	Reason ovhtypes.TfStringValue `tfsdk:"reason" json:"reason"`
+	Status ovhtypes.TfStringValue `tfsdk:"status" json:"status"`
+	state  attr.ValueState
+}
+
+func (v *VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" {
+		v.state = attr.ValueStateNull
+		return nil
+	}
+
+	type JsonVrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue
+
+	var tmp JsonVrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		return err
+	}
+	v.Reason = tmp.Reason
+	v.Status = tmp.Status
+
+	v.state = attr.ValueStateKnown
+
+	return nil
+}
+
+func (v *VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue) MergeWith(other *VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue) {
+
+	if (v.Reason.IsUnknown() || v.Reason.IsNull()) && !other.Reason.IsUnknown() {
+		v.Reason = other.Reason
+	}
+
+	if (v.Status.IsUnknown() || v.Status.IsNull()) && !other.Status.IsUnknown() {
+		v.Status = other.Status
+	}
+
+	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
+		v.state = other.state
+	}
+}
+
+func (v VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue) Attributes() map[string]attr.Value {
+	return map[string]attr.Value{
+		"reason": v.Reason,
+		"status": v.Status,
+	}
+}
+func (v VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
+	attrTypes := make(map[string]tftypes.Type, 2)
+
+	var val tftypes.Value
+	var err error
+
+	attrTypes["reason"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["status"] = basetypes.StringType{}.TerraformType(ctx)
+
+	objectType := tftypes.Object{AttributeTypes: attrTypes}
+
+	switch v.state {
+	case attr.ValueStateKnown:
+		vals := make(map[string]tftypes.Value, 2)
+
+		val, err = v.Reason.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["reason"] = val
+
+		val, err = v.Status.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["status"] = val
+
+		if err := tftypes.ValidateValue(objectType, vals); err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		return tftypes.NewValue(objectType, vals), nil
+	case attr.ValueStateNull:
+		return tftypes.NewValue(objectType, nil), nil
+	case attr.ValueStateUnknown:
+		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
+	default:
+		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
+	}
+}
+
+func (v VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue) IsNull() bool {
+	return v.state == attr.ValueStateNull
+}
+
+func (v VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue) IsUnknown() bool {
+	return v.state == attr.ValueStateUnknown
+}
+
+func (v VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue) String() string {
+	return "VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue"
+}
+
+func (v VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if v.IsNull() {
+		return types.ObjectNull(v.AttributeTypes(ctx)), diags
+	}
+
+	if v.IsUnknown() {
+		return types.ObjectUnknown(v.AttributeTypes(ctx)), diags
+	}
+
+	objVal, diags := types.ObjectValue(
+		map[string]attr.Type{
+			"reason": ovhtypes.TfStringType{},
+			"status": ovhtypes.TfStringType{},
+		},
+		map[string]attr.Value{
+			"reason": v.Reason,
+			"status": v.Status,
+		})
+
+	return objVal, diags
+}
+
+func (v VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue) Equal(o attr.Value) bool {
+	other, ok := o.(VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue)
+
+	if !ok {
+		return false
+	}
+
+	if v.state != other.state {
+		return false
+	}
+
+	if v.state != attr.ValueStateKnown {
+		return true
+	}
+
+	if !v.Reason.Equal(other.Reason) {
+		return false
+	}
+
+	if !v.Status.Equal(other.Status) {
+		return false
+	}
+
+	return true
+}
+
+func (v VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue) Type(ctx context.Context) attr.Type {
+	return VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusType{
+		basetypes.ObjectType{
+			AttrTypes: v.AttributeTypes(ctx),
+		},
+	}
+}
+
+func (v VrackservicessCurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
+	return map[string]attr.Type{
+		"reason": ovhtypes.TfStringType{},
+		"status": ovhtypes.TfStringType{},
 	}
 }
 
@@ -1800,6 +8415,24 @@ func (t VrackservicessCurrentStateSubnetsType) ValueFromObject(ctx context.Conte
 	var diags diag.Diagnostics
 
 	attributes := in.Attributes()
+
+	azAttribute, ok := attributes["az"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`az is missing from object`)
+
+		return nil, diags
+	}
+
+	azVal, ok := azAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`az expected to be ovhtypes.TfStringValue, was: %T`, azAttribute))
+	}
 
 	cidrAttribute, ok := attributes["cidr"]
 
@@ -1837,42 +8470,6 @@ func (t VrackservicessCurrentStateSubnetsType) ValueFromObject(ctx context.Conte
 			fmt.Sprintf(`display_name expected to be ovhtypes.TfStringValue, was: %T`, displayNameAttribute))
 	}
 
-	serviceEndpointsAttribute, ok := attributes["service_endpoints"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`service_endpoints is missing from object`)
-
-		return nil, diags
-	}
-
-	serviceEndpointsVal, ok := serviceEndpointsAttribute.(ovhtypes.TfListNestedValue[VrackservicessCurrentStateSubnetsServiceEndpointsValue])
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`service_endpoints expected to be ovhtypes.TfListNestedValue[VrackservicessCurrentStateSubnetsServiceEndpointsValue], was: %T`, serviceEndpointsAttribute))
-	}
-
-	serviceRangeAttribute, ok := attributes["service_range"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`service_range is missing from object`)
-
-		return nil, diags
-	}
-
-	serviceRangeVal, ok := serviceRangeAttribute.(VrackservicessCurrentStateSubnetsServiceRangeValue)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`service_range expected to be VrackservicessCurrentStateSubnetsServiceRangeValue, was: %T`, serviceRangeAttribute))
-	}
-
 	vlanAttribute, ok := attributes["vlan"]
 
 	if !ok {
@@ -1896,12 +8493,11 @@ func (t VrackservicessCurrentStateSubnetsType) ValueFromObject(ctx context.Conte
 	}
 
 	return VrackservicessCurrentStateSubnetsValue{
-		Cidr:             cidrVal,
-		DisplayName:      displayNameVal,
-		ServiceEndpoints: serviceEndpointsVal,
-		ServiceRange:     serviceRangeVal,
-		Vlan:             vlanVal,
-		state:            attr.ValueStateKnown,
+		Az:          azVal,
+		Cidr:        cidrVal,
+		DisplayName: displayNameVal,
+		Vlan:        vlanVal,
+		state:       attr.ValueStateKnown,
 	}, diags
 }
 
@@ -1968,6 +8564,24 @@ func NewVrackservicessCurrentStateSubnetsValue(attributeTypes map[string]attr.Ty
 		return NewVrackservicessCurrentStateSubnetsValueUnknown(), diags
 	}
 
+	azAttribute, ok := attributes["az"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`az is missing from object`)
+
+		return NewVrackservicessCurrentStateSubnetsValueUnknown(), diags
+	}
+
+	azVal, ok := azAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`az expected to be ovhtypes.TfStringValue, was: %T`, azAttribute))
+	}
+
 	cidrAttribute, ok := attributes["cidr"]
 
 	if !ok {
@@ -2004,42 +8618,6 @@ func NewVrackservicessCurrentStateSubnetsValue(attributeTypes map[string]attr.Ty
 			fmt.Sprintf(`display_name expected to be ovhtypes.TfStringValue, was: %T`, displayNameAttribute))
 	}
 
-	serviceEndpointsAttribute, ok := attributes["service_endpoints"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`service_endpoints is missing from object`)
-
-		return NewVrackservicessCurrentStateSubnetsValueUnknown(), diags
-	}
-
-	serviceEndpointsVal, ok := serviceEndpointsAttribute.(ovhtypes.TfListNestedValue[VrackservicessCurrentStateSubnetsServiceEndpointsValue])
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`service_endpoints expected to be ovhtypes.TfListNestedValue[VrackservicessCurrentStateSubnetsServiceEndpointsValue], was: %T`, serviceEndpointsAttribute))
-	}
-
-	serviceRangeAttribute, ok := attributes["service_range"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`service_range is missing from object`)
-
-		return NewVrackservicessCurrentStateSubnetsValueUnknown(), diags
-	}
-
-	serviceRangeVal, ok := serviceRangeAttribute.(VrackservicessCurrentStateSubnetsServiceRangeValue)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`service_range expected to be VrackservicessCurrentStateSubnetsServiceRangeValue, was: %T`, serviceRangeAttribute))
-	}
-
 	vlanAttribute, ok := attributes["vlan"]
 
 	if !ok {
@@ -2063,12 +8641,11 @@ func NewVrackservicessCurrentStateSubnetsValue(attributeTypes map[string]attr.Ty
 	}
 
 	return VrackservicessCurrentStateSubnetsValue{
-		Cidr:             cidrVal,
-		DisplayName:      displayNameVal,
-		ServiceEndpoints: serviceEndpointsVal,
-		ServiceRange:     serviceRangeVal,
-		Vlan:             vlanVal,
-		state:            attr.ValueStateKnown,
+		Az:          azVal,
+		Cidr:        cidrVal,
+		DisplayName: displayNameVal,
+		Vlan:        vlanVal,
+		state:       attr.ValueStateKnown,
 	}, diags
 }
 
@@ -2140,25 +8717,28 @@ func (t VrackservicessCurrentStateSubnetsType) ValueType(ctx context.Context) at
 var _ basetypes.ObjectValuable = VrackservicessCurrentStateSubnetsValue{}
 
 type VrackservicessCurrentStateSubnetsValue struct {
-	Cidr             ovhtypes.TfStringValue                                                             `tfsdk:"cidr" json:"cidr"`
-	DisplayName      ovhtypes.TfStringValue                                                             `tfsdk:"display_name" json:"displayName"`
-	ServiceEndpoints ovhtypes.TfListNestedValue[VrackservicessCurrentStateSubnetsServiceEndpointsValue] `tfsdk:"service_endpoints" json:"serviceEndpoints"`
-	ServiceRange     VrackservicessCurrentStateSubnetsServiceRangeValue                                 `tfsdk:"service_range" json:"serviceRange"`
-	Vlan             ovhtypes.TfInt64Value                                                              `tfsdk:"vlan" json:"vlan"`
-	state            attr.ValueState
+	Az          ovhtypes.TfStringValue `tfsdk:"az" json:"az"`
+	Cidr        ovhtypes.TfStringValue `tfsdk:"cidr" json:"cidr"`
+	DisplayName ovhtypes.TfStringValue `tfsdk:"display_name" json:"displayName"`
+	Vlan        ovhtypes.TfInt64Value  `tfsdk:"vlan" json:"vlan"`
+	state       attr.ValueState
 }
 
 func (v *VrackservicessCurrentStateSubnetsValue) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" {
+		v.state = attr.ValueStateNull
+		return nil
+	}
+
 	type JsonVrackservicessCurrentStateSubnetsValue VrackservicessCurrentStateSubnetsValue
 
 	var tmp JsonVrackservicessCurrentStateSubnetsValue
 	if err := json.Unmarshal(data, &tmp); err != nil {
 		return err
 	}
+	v.Az = tmp.Az
 	v.Cidr = tmp.Cidr
 	v.DisplayName = tmp.DisplayName
-	v.ServiceEndpoints = tmp.ServiceEndpoints
-	v.ServiceRange = tmp.ServiceRange
 	v.Vlan = tmp.Vlan
 
 	v.state = attr.ValueStateKnown
@@ -2168,20 +8748,16 @@ func (v *VrackservicessCurrentStateSubnetsValue) UnmarshalJSON(data []byte) erro
 
 func (v *VrackservicessCurrentStateSubnetsValue) MergeWith(other *VrackservicessCurrentStateSubnetsValue) {
 
+	if (v.Az.IsUnknown() || v.Az.IsNull()) && !other.Az.IsUnknown() {
+		v.Az = other.Az
+	}
+
 	if (v.Cidr.IsUnknown() || v.Cidr.IsNull()) && !other.Cidr.IsUnknown() {
 		v.Cidr = other.Cidr
 	}
 
 	if (v.DisplayName.IsUnknown() || v.DisplayName.IsNull()) && !other.DisplayName.IsUnknown() {
 		v.DisplayName = other.DisplayName
-	}
-
-	if (v.ServiceEndpoints.IsUnknown() || v.ServiceEndpoints.IsNull()) && !other.ServiceEndpoints.IsUnknown() {
-		v.ServiceEndpoints = other.ServiceEndpoints
-	}
-
-	if (v.ServiceRange.IsUnknown() || v.ServiceRange.IsNull()) && !other.ServiceRange.IsUnknown() {
-		v.ServiceRange = other.ServiceRange
 	}
 
 	if (v.Vlan.IsUnknown() || v.Vlan.IsNull()) && !other.Vlan.IsUnknown() {
@@ -2195,34 +8771,36 @@ func (v *VrackservicessCurrentStateSubnetsValue) MergeWith(other *Vrackservicess
 
 func (v VrackservicessCurrentStateSubnetsValue) Attributes() map[string]attr.Value {
 	return map[string]attr.Value{
-		"cidr":             v.Cidr,
-		"displayName":      v.DisplayName,
-		"serviceEndpoints": v.ServiceEndpoints,
-		"serviceRange":     v.ServiceRange,
-		"vlan":             v.Vlan,
+		"az":          v.Az,
+		"cidr":        v.Cidr,
+		"displayName": v.DisplayName,
+		"vlan":        v.Vlan,
 	}
 }
 func (v VrackservicessCurrentStateSubnetsValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	attrTypes := make(map[string]tftypes.Type, 5)
+	attrTypes := make(map[string]tftypes.Type, 4)
 
 	var val tftypes.Value
 	var err error
 
+	attrTypes["az"] = basetypes.StringType{}.TerraformType(ctx)
 	attrTypes["cidr"] = basetypes.StringType{}.TerraformType(ctx)
 	attrTypes["display_name"] = basetypes.StringType{}.TerraformType(ctx)
-	attrTypes["service_endpoints"] = basetypes.ListType{
-		ElemType: VrackservicessCurrentStateSubnetsServiceEndpointsValue{}.Type(ctx),
-	}.TerraformType(ctx)
-	attrTypes["service_range"] = basetypes.ObjectType{
-		AttrTypes: VrackservicessCurrentStateSubnetsServiceRangeValue{}.AttributeTypes(ctx),
-	}.TerraformType(ctx)
 	attrTypes["vlan"] = basetypes.Int64Type{}.TerraformType(ctx)
 
 	objectType := tftypes.Object{AttributeTypes: attrTypes}
 
 	switch v.state {
 	case attr.ValueStateKnown:
-		vals := make(map[string]tftypes.Value, 5)
+		vals := make(map[string]tftypes.Value, 4)
+
+		val, err = v.Az.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["az"] = val
 
 		val, err = v.Cidr.ToTerraformValue(ctx)
 
@@ -2239,22 +8817,6 @@ func (v VrackservicessCurrentStateSubnetsValue) ToTerraformValue(ctx context.Con
 		}
 
 		vals["display_name"] = val
-
-		val, err = v.ServiceEndpoints.ToTerraformValue(ctx)
-
-		if err != nil {
-			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
-		}
-
-		vals["service_endpoints"] = val
-
-		val, err = v.ServiceRange.ToTerraformValue(ctx)
-
-		if err != nil {
-			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
-		}
-
-		vals["service_range"] = val
 
 		val, err = v.Vlan.ToTerraformValue(ctx)
 
@@ -2293,24 +8855,26 @@ func (v VrackservicessCurrentStateSubnetsValue) String() string {
 func (v VrackservicessCurrentStateSubnetsValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
+	if v.IsNull() {
+		return types.ObjectNull(v.AttributeTypes(ctx)), diags
+	}
+
+	if v.IsUnknown() {
+		return types.ObjectUnknown(v.AttributeTypes(ctx)), diags
+	}
+
 	objVal, diags := types.ObjectValue(
 		map[string]attr.Type{
-			"cidr":              ovhtypes.TfStringType{},
-			"display_name":      ovhtypes.TfStringType{},
-			"service_endpoints": ovhtypes.NewTfListNestedType[VrackservicessCurrentStateSubnetsServiceEndpointsValue](ctx),
-			"service_range": VrackservicessCurrentStateSubnetsServiceRangeType{
-				basetypes.ObjectType{
-					AttrTypes: VrackservicessCurrentStateSubnetsServiceRangeValue{}.AttributeTypes(ctx),
-				},
-			},
-			"vlan": ovhtypes.TfInt64Type{},
+			"az":           ovhtypes.TfStringType{},
+			"cidr":         ovhtypes.TfStringType{},
+			"display_name": ovhtypes.TfStringType{},
+			"vlan":         ovhtypes.TfInt64Type{},
 		},
 		map[string]attr.Value{
-			"cidr":              v.Cidr,
-			"display_name":      v.DisplayName,
-			"service_endpoints": v.ServiceEndpoints,
-			"service_range":     v.ServiceRange,
-			"vlan":              v.Vlan,
+			"az":           v.Az,
+			"cidr":         v.Cidr,
+			"display_name": v.DisplayName,
+			"vlan":         v.Vlan,
 		})
 
 	return objVal, diags
@@ -2331,19 +8895,15 @@ func (v VrackservicessCurrentStateSubnetsValue) Equal(o attr.Value) bool {
 		return true
 	}
 
+	if !v.Az.Equal(other.Az) {
+		return false
+	}
+
 	if !v.Cidr.Equal(other.Cidr) {
 		return false
 	}
 
 	if !v.DisplayName.Equal(other.DisplayName) {
-		return false
-	}
-
-	if !v.ServiceEndpoints.Equal(other.ServiceEndpoints) {
-		return false
-	}
-
-	if !v.ServiceRange.Equal(other.ServiceRange) {
 		return false
 	}
 
@@ -2364,1350 +8924,10 @@ func (v VrackservicessCurrentStateSubnetsValue) Type(ctx context.Context) attr.T
 
 func (v VrackservicessCurrentStateSubnetsValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
 	return map[string]attr.Type{
-		"cidr":              ovhtypes.TfStringType{},
-		"display_name":      ovhtypes.TfStringType{},
-		"service_endpoints": ovhtypes.NewTfListNestedType[VrackservicessCurrentStateSubnetsServiceEndpointsValue](ctx),
-		"service_range":     VrackservicessCurrentStateSubnetsServiceRangeValue{}.Type(ctx),
-		"vlan":              ovhtypes.TfInt64Type{},
-	}
-}
-
-var _ basetypes.ObjectTypable = VrackservicessCurrentStateSubnetsServiceEndpointsType{}
-
-type VrackservicessCurrentStateSubnetsServiceEndpointsType struct {
-	basetypes.ObjectType
-}
-
-func (t VrackservicessCurrentStateSubnetsServiceEndpointsType) Equal(o attr.Type) bool {
-	other, ok := o.(VrackservicessCurrentStateSubnetsServiceEndpointsType)
-
-	if !ok {
-		return false
-	}
-
-	return t.ObjectType.Equal(other.ObjectType)
-}
-
-func (t VrackservicessCurrentStateSubnetsServiceEndpointsType) String() string {
-	return "VrackservicessCurrentStateSubnetsServiceEndpointsType"
-}
-
-func (t VrackservicessCurrentStateSubnetsServiceEndpointsType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	attributes := in.Attributes()
-
-	endpointsAttribute, ok := attributes["endpoints"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`endpoints is missing from object`)
-
-		return nil, diags
-	}
-
-	endpointsVal, ok := endpointsAttribute.(ovhtypes.TfListNestedValue[VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue])
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`endpoints expected to be ovhtypes.TfListNestedValue[VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue], was: %T`, endpointsAttribute))
-	}
-
-	managedServiceUrnAttribute, ok := attributes["managed_service_urn"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`managed_service_urn is missing from object`)
-
-		return nil, diags
-	}
-
-	managedServiceUrnVal, ok := managedServiceUrnAttribute.(ovhtypes.TfStringValue)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`managed_service_urn expected to be ovhtypes.TfStringValue, was: %T`, managedServiceUrnAttribute))
-	}
-
-	if diags.HasError() {
-		return nil, diags
-	}
-
-	return VrackservicessCurrentStateSubnetsServiceEndpointsValue{
-		Endpoints:         endpointsVal,
-		ManagedServiceUrn: managedServiceUrnVal,
-		state:             attr.ValueStateKnown,
-	}, diags
-}
-
-func NewVrackservicessCurrentStateSubnetsServiceEndpointsValueNull() VrackservicessCurrentStateSubnetsServiceEndpointsValue {
-	return VrackservicessCurrentStateSubnetsServiceEndpointsValue{
-		state: attr.ValueStateNull,
-	}
-}
-
-func NewVrackservicessCurrentStateSubnetsServiceEndpointsValueUnknown() VrackservicessCurrentStateSubnetsServiceEndpointsValue {
-	return VrackservicessCurrentStateSubnetsServiceEndpointsValue{
-		state: attr.ValueStateUnknown,
-	}
-}
-
-func NewVrackservicessCurrentStateSubnetsServiceEndpointsValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (VrackservicessCurrentStateSubnetsServiceEndpointsValue, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
-	ctx := context.Background()
-
-	for name, attributeType := range attributeTypes {
-		attribute, ok := attributes[name]
-
-		if !ok {
-			diags.AddError(
-				"Missing VrackservicessCurrentStateSubnetsServiceEndpointsValue Attribute Value",
-				"While creating a VrackservicessCurrentStateSubnetsServiceEndpointsValue value, a missing attribute value was detected. "+
-					"A VrackservicessCurrentStateSubnetsServiceEndpointsValue must contain values for all attributes, even if null or unknown. "+
-					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
-					fmt.Sprintf("VrackservicessCurrentStateSubnetsServiceEndpointsValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
-			)
-
-			continue
-		}
-
-		if !attributeType.Equal(attribute.Type(ctx)) {
-			diags.AddError(
-				"Invalid VrackservicessCurrentStateSubnetsServiceEndpointsValue Attribute Type",
-				"While creating a VrackservicessCurrentStateSubnetsServiceEndpointsValue value, an invalid attribute value was detected. "+
-					"A VrackservicessCurrentStateSubnetsServiceEndpointsValue must use a matching attribute type for the value. "+
-					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
-					fmt.Sprintf("VrackservicessCurrentStateSubnetsServiceEndpointsValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
-					fmt.Sprintf("VrackservicessCurrentStateSubnetsServiceEndpointsValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
-			)
-		}
-	}
-
-	for name := range attributes {
-		_, ok := attributeTypes[name]
-
-		if !ok {
-			diags.AddError(
-				"Extra VrackservicessCurrentStateSubnetsServiceEndpointsValue Attribute Value",
-				"While creating a VrackservicessCurrentStateSubnetsServiceEndpointsValue value, an extra attribute value was detected. "+
-					"A VrackservicessCurrentStateSubnetsServiceEndpointsValue must not contain values beyond the expected attribute types. "+
-					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
-					fmt.Sprintf("Extra VrackservicessCurrentStateSubnetsServiceEndpointsValue Attribute Name: %s", name),
-			)
-		}
-	}
-
-	if diags.HasError() {
-		return NewVrackservicessCurrentStateSubnetsServiceEndpointsValueUnknown(), diags
-	}
-
-	endpointsAttribute, ok := attributes["endpoints"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`endpoints is missing from object`)
-
-		return NewVrackservicessCurrentStateSubnetsServiceEndpointsValueUnknown(), diags
-	}
-
-	endpointsVal, ok := endpointsAttribute.(ovhtypes.TfListNestedValue[VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue])
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`endpoints expected to be ovhtypes.TfListNestedValue[VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue], was: %T`, endpointsAttribute))
-	}
-
-	managedServiceUrnAttribute, ok := attributes["managed_service_urn"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`managed_service_urn is missing from object`)
-
-		return NewVrackservicessCurrentStateSubnetsServiceEndpointsValueUnknown(), diags
-	}
-
-	managedServiceUrnVal, ok := managedServiceUrnAttribute.(ovhtypes.TfStringValue)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`managed_service_urn expected to be ovhtypes.TfStringValue, was: %T`, managedServiceUrnAttribute))
-	}
-
-	if diags.HasError() {
-		return NewVrackservicessCurrentStateSubnetsServiceEndpointsValueUnknown(), diags
-	}
-
-	return VrackservicessCurrentStateSubnetsServiceEndpointsValue{
-		Endpoints:         endpointsVal,
-		ManagedServiceUrn: managedServiceUrnVal,
-		state:             attr.ValueStateKnown,
-	}, diags
-}
-
-func NewVrackservicessCurrentStateSubnetsServiceEndpointsValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) VrackservicessCurrentStateSubnetsServiceEndpointsValue {
-	object, diags := NewVrackservicessCurrentStateSubnetsServiceEndpointsValue(attributeTypes, attributes)
-
-	if diags.HasError() {
-		// This could potentially be added to the diag package.
-		diagsStrings := make([]string, 0, len(diags))
-
-		for _, diagnostic := range diags {
-			diagsStrings = append(diagsStrings, fmt.Sprintf(
-				"%s | %s | %s",
-				diagnostic.Severity(),
-				diagnostic.Summary(),
-				diagnostic.Detail()))
-		}
-
-		panic("NewVrackservicessCurrentStateSubnetsServiceEndpointsValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
-	}
-
-	return object
-}
-
-func (t VrackservicessCurrentStateSubnetsServiceEndpointsType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
-	if in.Type() == nil {
-		return NewVrackservicessCurrentStateSubnetsServiceEndpointsValueNull(), nil
-	}
-
-	if !in.Type().Equal(t.TerraformType(ctx)) {
-		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
-	}
-
-	if !in.IsKnown() {
-		return NewVrackservicessCurrentStateSubnetsServiceEndpointsValueUnknown(), nil
-	}
-
-	if in.IsNull() {
-		return NewVrackservicessCurrentStateSubnetsServiceEndpointsValueNull(), nil
-	}
-
-	attributes := map[string]attr.Value{}
-
-	val := map[string]tftypes.Value{}
-
-	err := in.As(&val)
-
-	if err != nil {
-		return nil, err
-	}
-
-	for k, v := range val {
-		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
-
-		if err != nil {
-			return nil, err
-		}
-
-		attributes[k] = a
-	}
-
-	return NewVrackservicessCurrentStateSubnetsServiceEndpointsValueMust(VrackservicessCurrentStateSubnetsServiceEndpointsValue{}.AttributeTypes(ctx), attributes), nil
-}
-
-func (t VrackservicessCurrentStateSubnetsServiceEndpointsType) ValueType(ctx context.Context) attr.Value {
-	return VrackservicessCurrentStateSubnetsServiceEndpointsValue{}
-}
-
-var _ basetypes.ObjectValuable = VrackservicessCurrentStateSubnetsServiceEndpointsValue{}
-
-type VrackservicessCurrentStateSubnetsServiceEndpointsValue struct {
-	Endpoints         ovhtypes.TfListNestedValue[VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue] `tfsdk:"endpoints" json:"endpoints"`
-	ManagedServiceUrn ovhtypes.TfStringValue                                                                      `tfsdk:"managed_service_urn" json:"managedServiceUrn"`
-	state             attr.ValueState
-}
-
-func (v *VrackservicessCurrentStateSubnetsServiceEndpointsValue) UnmarshalJSON(data []byte) error {
-	type JsonVrackservicessCurrentStateSubnetsServiceEndpointsValue VrackservicessCurrentStateSubnetsServiceEndpointsValue
-
-	var tmp JsonVrackservicessCurrentStateSubnetsServiceEndpointsValue
-	if err := json.Unmarshal(data, &tmp); err != nil {
-		return err
-	}
-	v.Endpoints = tmp.Endpoints
-	v.ManagedServiceUrn = tmp.ManagedServiceUrn
-
-	v.state = attr.ValueStateKnown
-
-	return nil
-}
-
-func (v *VrackservicessCurrentStateSubnetsServiceEndpointsValue) MergeWith(other *VrackservicessCurrentStateSubnetsServiceEndpointsValue) {
-
-	if (v.Endpoints.IsUnknown() || v.Endpoints.IsNull()) && !other.Endpoints.IsUnknown() {
-		v.Endpoints = other.Endpoints
-	}
-
-	if (v.ManagedServiceUrn.IsUnknown() || v.ManagedServiceUrn.IsNull()) && !other.ManagedServiceUrn.IsUnknown() {
-		v.ManagedServiceUrn = other.ManagedServiceUrn
-	}
-
-	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
-		v.state = other.state
-	}
-}
-
-func (v VrackservicessCurrentStateSubnetsServiceEndpointsValue) Attributes() map[string]attr.Value {
-	return map[string]attr.Value{
-		"endpoints":         v.Endpoints,
-		"managedServiceUrn": v.ManagedServiceUrn,
-	}
-}
-func (v VrackservicessCurrentStateSubnetsServiceEndpointsValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	attrTypes := make(map[string]tftypes.Type, 2)
-
-	var val tftypes.Value
-	var err error
-
-	attrTypes["endpoints"] = basetypes.ListType{
-		ElemType: VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue{}.Type(ctx),
-	}.TerraformType(ctx)
-	attrTypes["managed_service_urn"] = basetypes.StringType{}.TerraformType(ctx)
-
-	objectType := tftypes.Object{AttributeTypes: attrTypes}
-
-	switch v.state {
-	case attr.ValueStateKnown:
-		vals := make(map[string]tftypes.Value, 2)
-
-		val, err = v.Endpoints.ToTerraformValue(ctx)
-
-		if err != nil {
-			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
-		}
-
-		vals["endpoints"] = val
-
-		val, err = v.ManagedServiceUrn.ToTerraformValue(ctx)
-
-		if err != nil {
-			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
-		}
-
-		vals["managed_service_urn"] = val
-
-		if err := tftypes.ValidateValue(objectType, vals); err != nil {
-			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
-		}
-
-		return tftypes.NewValue(objectType, vals), nil
-	case attr.ValueStateNull:
-		return tftypes.NewValue(objectType, nil), nil
-	case attr.ValueStateUnknown:
-		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
-	default:
-		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
-	}
-}
-
-func (v VrackservicessCurrentStateSubnetsServiceEndpointsValue) IsNull() bool {
-	return v.state == attr.ValueStateNull
-}
-
-func (v VrackservicessCurrentStateSubnetsServiceEndpointsValue) IsUnknown() bool {
-	return v.state == attr.ValueStateUnknown
-}
-
-func (v VrackservicessCurrentStateSubnetsServiceEndpointsValue) String() string {
-	return "VrackservicessCurrentStateSubnetsServiceEndpointsValue"
-}
-
-func (v VrackservicessCurrentStateSubnetsServiceEndpointsValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	objVal, diags := types.ObjectValue(
-		map[string]attr.Type{
-			"endpoints":           ovhtypes.NewTfListNestedType[VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue](ctx),
-			"managed_service_urn": ovhtypes.TfStringType{},
-		},
-		map[string]attr.Value{
-			"endpoints":           v.Endpoints,
-			"managed_service_urn": v.ManagedServiceUrn,
-		})
-
-	return objVal, diags
-}
-
-func (v VrackservicessCurrentStateSubnetsServiceEndpointsValue) Equal(o attr.Value) bool {
-	other, ok := o.(VrackservicessCurrentStateSubnetsServiceEndpointsValue)
-
-	if !ok {
-		return false
-	}
-
-	if v.state != other.state {
-		return false
-	}
-
-	if v.state != attr.ValueStateKnown {
-		return true
-	}
-
-	if !v.Endpoints.Equal(other.Endpoints) {
-		return false
-	}
-
-	if !v.ManagedServiceUrn.Equal(other.ManagedServiceUrn) {
-		return false
-	}
-
-	return true
-}
-
-func (v VrackservicessCurrentStateSubnetsServiceEndpointsValue) Type(ctx context.Context) attr.Type {
-	return VrackservicessCurrentStateSubnetsServiceEndpointsType{
-		basetypes.ObjectType{
-			AttrTypes: v.AttributeTypes(ctx),
-		},
-	}
-}
-
-func (v VrackservicessCurrentStateSubnetsServiceEndpointsValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
-	return map[string]attr.Type{
-		"endpoints":           ovhtypes.NewTfListNestedType[VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue](ctx),
-		"managed_service_urn": ovhtypes.TfStringType{},
-	}
-}
-
-var _ basetypes.ObjectTypable = VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsType{}
-
-type VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsType struct {
-	basetypes.ObjectType
-}
-
-func (t VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsType) Equal(o attr.Type) bool {
-	other, ok := o.(VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsType)
-
-	if !ok {
-		return false
-	}
-
-	return t.ObjectType.Equal(other.ObjectType)
-}
-
-func (t VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsType) String() string {
-	return "VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsType"
-}
-
-func (t VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	attributes := in.Attributes()
-
-	descriptionAttribute, ok := attributes["description"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`description is missing from object`)
-
-		return nil, diags
-	}
-
-	descriptionVal, ok := descriptionAttribute.(ovhtypes.TfStringValue)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`description expected to be ovhtypes.TfStringValue, was: %T`, descriptionAttribute))
-	}
-
-	ipAttribute, ok := attributes["ip"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`ip is missing from object`)
-
-		return nil, diags
-	}
-
-	ipVal, ok := ipAttribute.(ovhtypes.TfStringValue)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`ip expected to be ovhtypes.TfStringValue, was: %T`, ipAttribute))
-	}
-
-	if diags.HasError() {
-		return nil, diags
-	}
-
-	return VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue{
-		Description: descriptionVal,
-		Ip:          ipVal,
-		state:       attr.ValueStateKnown,
-	}, diags
-}
-
-func NewVrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValueNull() VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue {
-	return VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue{
-		state: attr.ValueStateNull,
-	}
-}
-
-func NewVrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValueUnknown() VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue {
-	return VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue{
-		state: attr.ValueStateUnknown,
-	}
-}
-
-func NewVrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
-	ctx := context.Background()
-
-	for name, attributeType := range attributeTypes {
-		attribute, ok := attributes[name]
-
-		if !ok {
-			diags.AddError(
-				"Missing VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue Attribute Value",
-				"While creating a VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue value, a missing attribute value was detected. "+
-					"A VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue must contain values for all attributes, even if null or unknown. "+
-					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
-					fmt.Sprintf("VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
-			)
-
-			continue
-		}
-
-		if !attributeType.Equal(attribute.Type(ctx)) {
-			diags.AddError(
-				"Invalid VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue Attribute Type",
-				"While creating a VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue value, an invalid attribute value was detected. "+
-					"A VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue must use a matching attribute type for the value. "+
-					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
-					fmt.Sprintf("VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
-					fmt.Sprintf("VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
-			)
-		}
-	}
-
-	for name := range attributes {
-		_, ok := attributeTypes[name]
-
-		if !ok {
-			diags.AddError(
-				"Extra VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue Attribute Value",
-				"While creating a VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue value, an extra attribute value was detected. "+
-					"A VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue must not contain values beyond the expected attribute types. "+
-					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
-					fmt.Sprintf("Extra VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue Attribute Name: %s", name),
-			)
-		}
-	}
-
-	if diags.HasError() {
-		return NewVrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValueUnknown(), diags
-	}
-
-	descriptionAttribute, ok := attributes["description"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`description is missing from object`)
-
-		return NewVrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValueUnknown(), diags
-	}
-
-	descriptionVal, ok := descriptionAttribute.(ovhtypes.TfStringValue)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`description expected to be ovhtypes.TfStringValue, was: %T`, descriptionAttribute))
-	}
-
-	ipAttribute, ok := attributes["ip"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`ip is missing from object`)
-
-		return NewVrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValueUnknown(), diags
-	}
-
-	ipVal, ok := ipAttribute.(ovhtypes.TfStringValue)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`ip expected to be ovhtypes.TfStringValue, was: %T`, ipAttribute))
-	}
-
-	if diags.HasError() {
-		return NewVrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValueUnknown(), diags
-	}
-
-	return VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue{
-		Description: descriptionVal,
-		Ip:          ipVal,
-		state:       attr.ValueStateKnown,
-	}, diags
-}
-
-func NewVrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue {
-	object, diags := NewVrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue(attributeTypes, attributes)
-
-	if diags.HasError() {
-		// This could potentially be added to the diag package.
-		diagsStrings := make([]string, 0, len(diags))
-
-		for _, diagnostic := range diags {
-			diagsStrings = append(diagsStrings, fmt.Sprintf(
-				"%s | %s | %s",
-				diagnostic.Severity(),
-				diagnostic.Summary(),
-				diagnostic.Detail()))
-		}
-
-		panic("NewVrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
-	}
-
-	return object
-}
-
-func (t VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
-	if in.Type() == nil {
-		return NewVrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValueNull(), nil
-	}
-
-	if !in.Type().Equal(t.TerraformType(ctx)) {
-		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
-	}
-
-	if !in.IsKnown() {
-		return NewVrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValueUnknown(), nil
-	}
-
-	if in.IsNull() {
-		return NewVrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValueNull(), nil
-	}
-
-	attributes := map[string]attr.Value{}
-
-	val := map[string]tftypes.Value{}
-
-	err := in.As(&val)
-
-	if err != nil {
-		return nil, err
-	}
-
-	for k, v := range val {
-		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
-
-		if err != nil {
-			return nil, err
-		}
-
-		attributes[k] = a
-	}
-
-	return NewVrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValueMust(VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue{}.AttributeTypes(ctx), attributes), nil
-}
-
-func (t VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsType) ValueType(ctx context.Context) attr.Value {
-	return VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue{}
-}
-
-var _ basetypes.ObjectValuable = VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue{}
-
-type VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue struct {
-	Description ovhtypes.TfStringValue `tfsdk:"description" json:"description"`
-	Ip          ovhtypes.TfStringValue `tfsdk:"ip" json:"ip"`
-	state       attr.ValueState
-}
-
-func (v *VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue) UnmarshalJSON(data []byte) error {
-	type JsonVrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue
-
-	var tmp JsonVrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue
-	if err := json.Unmarshal(data, &tmp); err != nil {
-		return err
-	}
-	v.Description = tmp.Description
-	v.Ip = tmp.Ip
-
-	v.state = attr.ValueStateKnown
-
-	return nil
-}
-
-func (v *VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue) MergeWith(other *VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue) {
-
-	if (v.Description.IsUnknown() || v.Description.IsNull()) && !other.Description.IsUnknown() {
-		v.Description = other.Description
-	}
-
-	if (v.Ip.IsUnknown() || v.Ip.IsNull()) && !other.Ip.IsUnknown() {
-		v.Ip = other.Ip
-	}
-
-	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
-		v.state = other.state
-	}
-}
-
-func (v VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue) Attributes() map[string]attr.Value {
-	return map[string]attr.Value{
-		"description": v.Description,
-		"ip":          v.Ip,
-	}
-}
-func (v VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	attrTypes := make(map[string]tftypes.Type, 2)
-
-	var val tftypes.Value
-	var err error
-
-	attrTypes["description"] = basetypes.StringType{}.TerraformType(ctx)
-	attrTypes["ip"] = basetypes.StringType{}.TerraformType(ctx)
-
-	objectType := tftypes.Object{AttributeTypes: attrTypes}
-
-	switch v.state {
-	case attr.ValueStateKnown:
-		vals := make(map[string]tftypes.Value, 2)
-
-		val, err = v.Description.ToTerraformValue(ctx)
-
-		if err != nil {
-			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
-		}
-
-		vals["description"] = val
-
-		val, err = v.Ip.ToTerraformValue(ctx)
-
-		if err != nil {
-			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
-		}
-
-		vals["ip"] = val
-
-		if err := tftypes.ValidateValue(objectType, vals); err != nil {
-			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
-		}
-
-		return tftypes.NewValue(objectType, vals), nil
-	case attr.ValueStateNull:
-		return tftypes.NewValue(objectType, nil), nil
-	case attr.ValueStateUnknown:
-		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
-	default:
-		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
-	}
-}
-
-func (v VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue) IsNull() bool {
-	return v.state == attr.ValueStateNull
-}
-
-func (v VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue) IsUnknown() bool {
-	return v.state == attr.ValueStateUnknown
-}
-
-func (v VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue) String() string {
-	return "VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue"
-}
-
-func (v VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	objVal, diags := types.ObjectValue(
-		map[string]attr.Type{
-			"description": ovhtypes.TfStringType{},
-			"ip":          ovhtypes.TfStringType{},
-		},
-		map[string]attr.Value{
-			"description": v.Description,
-			"ip":          v.Ip,
-		})
-
-	return objVal, diags
-}
-
-func (v VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue) Equal(o attr.Value) bool {
-	other, ok := o.(VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue)
-
-	if !ok {
-		return false
-	}
-
-	if v.state != other.state {
-		return false
-	}
-
-	if v.state != attr.ValueStateKnown {
-		return true
-	}
-
-	if !v.Description.Equal(other.Description) {
-		return false
-	}
-
-	if !v.Ip.Equal(other.Ip) {
-		return false
-	}
-
-	return true
-}
-
-func (v VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue) Type(ctx context.Context) attr.Type {
-	return VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsType{
-		basetypes.ObjectType{
-			AttrTypes: v.AttributeTypes(ctx),
-		},
-	}
-}
-
-func (v VrackservicessCurrentStateSubnetsServiceEndpointsEndpointsValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
-	return map[string]attr.Type{
-		"description": ovhtypes.TfStringType{},
-		"ip":          ovhtypes.TfStringType{},
-	}
-}
-
-var _ basetypes.ObjectTypable = VrackservicessCurrentStateSubnetsServiceRangeType{}
-
-type VrackservicessCurrentStateSubnetsServiceRangeType struct {
-	basetypes.ObjectType
-}
-
-func (t VrackservicessCurrentStateSubnetsServiceRangeType) Equal(o attr.Type) bool {
-	other, ok := o.(VrackservicessCurrentStateSubnetsServiceRangeType)
-
-	if !ok {
-		return false
-	}
-
-	return t.ObjectType.Equal(other.ObjectType)
-}
-
-func (t VrackservicessCurrentStateSubnetsServiceRangeType) String() string {
-	return "VrackservicessCurrentStateSubnetsServiceRangeType"
-}
-
-func (t VrackservicessCurrentStateSubnetsServiceRangeType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	attributes := in.Attributes()
-
-	cidrAttribute, ok := attributes["cidr"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`cidr is missing from object`)
-
-		return nil, diags
-	}
-
-	cidrVal, ok := cidrAttribute.(ovhtypes.TfStringValue)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`cidr expected to be ovhtypes.TfStringValue, was: %T`, cidrAttribute))
-	}
-
-	remainingIpsAttribute, ok := attributes["remaining_ips"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`remaining_ips is missing from object`)
-
-		return nil, diags
-	}
-
-	remainingIpsVal, ok := remainingIpsAttribute.(ovhtypes.TfInt64Value)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`remaining_ips expected to be ovhtypes.TfInt64Value, was: %T`, remainingIpsAttribute))
-	}
-
-	reservedIpsAttribute, ok := attributes["reserved_ips"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`reserved_ips is missing from object`)
-
-		return nil, diags
-	}
-
-	reservedIpsVal, ok := reservedIpsAttribute.(ovhtypes.TfInt64Value)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`reserved_ips expected to be ovhtypes.TfInt64Value, was: %T`, reservedIpsAttribute))
-	}
-
-	usedIpsAttribute, ok := attributes["used_ips"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`used_ips is missing from object`)
-
-		return nil, diags
-	}
-
-	usedIpsVal, ok := usedIpsAttribute.(ovhtypes.TfInt64Value)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`used_ips expected to be ovhtypes.TfInt64Value, was: %T`, usedIpsAttribute))
-	}
-
-	if diags.HasError() {
-		return nil, diags
-	}
-
-	return VrackservicessCurrentStateSubnetsServiceRangeValue{
-		Cidr:         cidrVal,
-		RemainingIps: remainingIpsVal,
-		ReservedIps:  reservedIpsVal,
-		UsedIps:      usedIpsVal,
-		state:        attr.ValueStateKnown,
-	}, diags
-}
-
-func NewVrackservicessCurrentStateSubnetsServiceRangeValueNull() VrackservicessCurrentStateSubnetsServiceRangeValue {
-	return VrackservicessCurrentStateSubnetsServiceRangeValue{
-		state: attr.ValueStateNull,
-	}
-}
-
-func NewVrackservicessCurrentStateSubnetsServiceRangeValueUnknown() VrackservicessCurrentStateSubnetsServiceRangeValue {
-	return VrackservicessCurrentStateSubnetsServiceRangeValue{
-		state: attr.ValueStateUnknown,
-	}
-}
-
-func NewVrackservicessCurrentStateSubnetsServiceRangeValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (VrackservicessCurrentStateSubnetsServiceRangeValue, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
-	ctx := context.Background()
-
-	for name, attributeType := range attributeTypes {
-		attribute, ok := attributes[name]
-
-		if !ok {
-			diags.AddError(
-				"Missing VrackservicessCurrentStateSubnetsServiceRangeValue Attribute Value",
-				"While creating a VrackservicessCurrentStateSubnetsServiceRangeValue value, a missing attribute value was detected. "+
-					"A VrackservicessCurrentStateSubnetsServiceRangeValue must contain values for all attributes, even if null or unknown. "+
-					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
-					fmt.Sprintf("VrackservicessCurrentStateSubnetsServiceRangeValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
-			)
-
-			continue
-		}
-
-		if !attributeType.Equal(attribute.Type(ctx)) {
-			diags.AddError(
-				"Invalid VrackservicessCurrentStateSubnetsServiceRangeValue Attribute Type",
-				"While creating a VrackservicessCurrentStateSubnetsServiceRangeValue value, an invalid attribute value was detected. "+
-					"A VrackservicessCurrentStateSubnetsServiceRangeValue must use a matching attribute type for the value. "+
-					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
-					fmt.Sprintf("VrackservicessCurrentStateSubnetsServiceRangeValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
-					fmt.Sprintf("VrackservicessCurrentStateSubnetsServiceRangeValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
-			)
-		}
-	}
-
-	for name := range attributes {
-		_, ok := attributeTypes[name]
-
-		if !ok {
-			diags.AddError(
-				"Extra VrackservicessCurrentStateSubnetsServiceRangeValue Attribute Value",
-				"While creating a VrackservicessCurrentStateSubnetsServiceRangeValue value, an extra attribute value was detected. "+
-					"A VrackservicessCurrentStateSubnetsServiceRangeValue must not contain values beyond the expected attribute types. "+
-					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
-					fmt.Sprintf("Extra VrackservicessCurrentStateSubnetsServiceRangeValue Attribute Name: %s", name),
-			)
-		}
-	}
-
-	if diags.HasError() {
-		return NewVrackservicessCurrentStateSubnetsServiceRangeValueUnknown(), diags
-	}
-
-	cidrAttribute, ok := attributes["cidr"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`cidr is missing from object`)
-
-		return NewVrackservicessCurrentStateSubnetsServiceRangeValueUnknown(), diags
-	}
-
-	cidrVal, ok := cidrAttribute.(ovhtypes.TfStringValue)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`cidr expected to be ovhtypes.TfStringValue, was: %T`, cidrAttribute))
-	}
-
-	remainingIpsAttribute, ok := attributes["remaining_ips"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`remaining_ips is missing from object`)
-
-		return NewVrackservicessCurrentStateSubnetsServiceRangeValueUnknown(), diags
-	}
-
-	remainingIpsVal, ok := remainingIpsAttribute.(ovhtypes.TfInt64Value)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`remaining_ips expected to be ovhtypes.TfInt64Value, was: %T`, remainingIpsAttribute))
-	}
-
-	reservedIpsAttribute, ok := attributes["reserved_ips"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`reserved_ips is missing from object`)
-
-		return NewVrackservicessCurrentStateSubnetsServiceRangeValueUnknown(), diags
-	}
-
-	reservedIpsVal, ok := reservedIpsAttribute.(ovhtypes.TfInt64Value)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`reserved_ips expected to be ovhtypes.TfInt64Value, was: %T`, reservedIpsAttribute))
-	}
-
-	usedIpsAttribute, ok := attributes["used_ips"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`used_ips is missing from object`)
-
-		return NewVrackservicessCurrentStateSubnetsServiceRangeValueUnknown(), diags
-	}
-
-	usedIpsVal, ok := usedIpsAttribute.(ovhtypes.TfInt64Value)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`used_ips expected to be ovhtypes.TfInt64Value, was: %T`, usedIpsAttribute))
-	}
-
-	if diags.HasError() {
-		return NewVrackservicessCurrentStateSubnetsServiceRangeValueUnknown(), diags
-	}
-
-	return VrackservicessCurrentStateSubnetsServiceRangeValue{
-		Cidr:         cidrVal,
-		RemainingIps: remainingIpsVal,
-		ReservedIps:  reservedIpsVal,
-		UsedIps:      usedIpsVal,
-		state:        attr.ValueStateKnown,
-	}, diags
-}
-
-func NewVrackservicessCurrentStateSubnetsServiceRangeValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) VrackservicessCurrentStateSubnetsServiceRangeValue {
-	object, diags := NewVrackservicessCurrentStateSubnetsServiceRangeValue(attributeTypes, attributes)
-
-	if diags.HasError() {
-		// This could potentially be added to the diag package.
-		diagsStrings := make([]string, 0, len(diags))
-
-		for _, diagnostic := range diags {
-			diagsStrings = append(diagsStrings, fmt.Sprintf(
-				"%s | %s | %s",
-				diagnostic.Severity(),
-				diagnostic.Summary(),
-				diagnostic.Detail()))
-		}
-
-		panic("NewVrackservicessCurrentStateSubnetsServiceRangeValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
-	}
-
-	return object
-}
-
-func (t VrackservicessCurrentStateSubnetsServiceRangeType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
-	if in.Type() == nil {
-		return NewVrackservicessCurrentStateSubnetsServiceRangeValueNull(), nil
-	}
-
-	if !in.Type().Equal(t.TerraformType(ctx)) {
-		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
-	}
-
-	if !in.IsKnown() {
-		return NewVrackservicessCurrentStateSubnetsServiceRangeValueUnknown(), nil
-	}
-
-	if in.IsNull() {
-		return NewVrackservicessCurrentStateSubnetsServiceRangeValueNull(), nil
-	}
-
-	attributes := map[string]attr.Value{}
-
-	val := map[string]tftypes.Value{}
-
-	err := in.As(&val)
-
-	if err != nil {
-		return nil, err
-	}
-
-	for k, v := range val {
-		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
-
-		if err != nil {
-			return nil, err
-		}
-
-		attributes[k] = a
-	}
-
-	return NewVrackservicessCurrentStateSubnetsServiceRangeValueMust(VrackservicessCurrentStateSubnetsServiceRangeValue{}.AttributeTypes(ctx), attributes), nil
-}
-
-func (t VrackservicessCurrentStateSubnetsServiceRangeType) ValueType(ctx context.Context) attr.Value {
-	return VrackservicessCurrentStateSubnetsServiceRangeValue{}
-}
-
-var _ basetypes.ObjectValuable = VrackservicessCurrentStateSubnetsServiceRangeValue{}
-
-type VrackservicessCurrentStateSubnetsServiceRangeValue struct {
-	Cidr         ovhtypes.TfStringValue `tfsdk:"cidr" json:"cidr"`
-	RemainingIps ovhtypes.TfInt64Value  `tfsdk:"remaining_ips" json:"remainingIps"`
-	ReservedIps  ovhtypes.TfInt64Value  `tfsdk:"reserved_ips" json:"reservedIps"`
-	UsedIps      ovhtypes.TfInt64Value  `tfsdk:"used_ips" json:"usedIps"`
-	state        attr.ValueState
-}
-
-func (v *VrackservicessCurrentStateSubnetsServiceRangeValue) UnmarshalJSON(data []byte) error {
-	type JsonVrackservicessCurrentStateSubnetsServiceRangeValue VrackservicessCurrentStateSubnetsServiceRangeValue
-
-	var tmp JsonVrackservicessCurrentStateSubnetsServiceRangeValue
-	if err := json.Unmarshal(data, &tmp); err != nil {
-		return err
-	}
-	v.Cidr = tmp.Cidr
-	v.RemainingIps = tmp.RemainingIps
-	v.ReservedIps = tmp.ReservedIps
-	v.UsedIps = tmp.UsedIps
-
-	v.state = attr.ValueStateKnown
-
-	return nil
-}
-
-func (v *VrackservicessCurrentStateSubnetsServiceRangeValue) MergeWith(other *VrackservicessCurrentStateSubnetsServiceRangeValue) {
-
-	if (v.Cidr.IsUnknown() || v.Cidr.IsNull()) && !other.Cidr.IsUnknown() {
-		v.Cidr = other.Cidr
-	}
-
-	if (v.RemainingIps.IsUnknown() || v.RemainingIps.IsNull()) && !other.RemainingIps.IsUnknown() {
-		v.RemainingIps = other.RemainingIps
-	}
-
-	if (v.ReservedIps.IsUnknown() || v.ReservedIps.IsNull()) && !other.ReservedIps.IsUnknown() {
-		v.ReservedIps = other.ReservedIps
-	}
-
-	if (v.UsedIps.IsUnknown() || v.UsedIps.IsNull()) && !other.UsedIps.IsUnknown() {
-		v.UsedIps = other.UsedIps
-	}
-
-	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
-		v.state = other.state
-	}
-}
-
-func (v VrackservicessCurrentStateSubnetsServiceRangeValue) Attributes() map[string]attr.Value {
-	return map[string]attr.Value{
-		"cidr":         v.Cidr,
-		"remainingIps": v.RemainingIps,
-		"reservedIps":  v.ReservedIps,
-		"usedIps":      v.UsedIps,
-	}
-}
-func (v VrackservicessCurrentStateSubnetsServiceRangeValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	attrTypes := make(map[string]tftypes.Type, 4)
-
-	var val tftypes.Value
-	var err error
-
-	attrTypes["cidr"] = basetypes.StringType{}.TerraformType(ctx)
-	attrTypes["remaining_ips"] = basetypes.Int64Type{}.TerraformType(ctx)
-	attrTypes["reserved_ips"] = basetypes.Int64Type{}.TerraformType(ctx)
-	attrTypes["used_ips"] = basetypes.Int64Type{}.TerraformType(ctx)
-
-	objectType := tftypes.Object{AttributeTypes: attrTypes}
-
-	switch v.state {
-	case attr.ValueStateKnown:
-		vals := make(map[string]tftypes.Value, 4)
-
-		val, err = v.Cidr.ToTerraformValue(ctx)
-
-		if err != nil {
-			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
-		}
-
-		vals["cidr"] = val
-
-		val, err = v.RemainingIps.ToTerraformValue(ctx)
-
-		if err != nil {
-			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
-		}
-
-		vals["remaining_ips"] = val
-
-		val, err = v.ReservedIps.ToTerraformValue(ctx)
-
-		if err != nil {
-			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
-		}
-
-		vals["reserved_ips"] = val
-
-		val, err = v.UsedIps.ToTerraformValue(ctx)
-
-		if err != nil {
-			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
-		}
-
-		vals["used_ips"] = val
-
-		if err := tftypes.ValidateValue(objectType, vals); err != nil {
-			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
-		}
-
-		return tftypes.NewValue(objectType, vals), nil
-	case attr.ValueStateNull:
-		return tftypes.NewValue(objectType, nil), nil
-	case attr.ValueStateUnknown:
-		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
-	default:
-		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
-	}
-}
-
-func (v VrackservicessCurrentStateSubnetsServiceRangeValue) IsNull() bool {
-	return v.state == attr.ValueStateNull
-}
-
-func (v VrackservicessCurrentStateSubnetsServiceRangeValue) IsUnknown() bool {
-	return v.state == attr.ValueStateUnknown
-}
-
-func (v VrackservicessCurrentStateSubnetsServiceRangeValue) String() string {
-	return "VrackservicessCurrentStateSubnetsServiceRangeValue"
-}
-
-func (v VrackservicessCurrentStateSubnetsServiceRangeValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	objVal, diags := types.ObjectValue(
-		map[string]attr.Type{
-			"cidr":          ovhtypes.TfStringType{},
-			"remaining_ips": ovhtypes.TfInt64Type{},
-			"reserved_ips":  ovhtypes.TfInt64Type{},
-			"used_ips":      ovhtypes.TfInt64Type{},
-		},
-		map[string]attr.Value{
-			"cidr":          v.Cidr,
-			"remaining_ips": v.RemainingIps,
-			"reserved_ips":  v.ReservedIps,
-			"used_ips":      v.UsedIps,
-		})
-
-	return objVal, diags
-}
-
-func (v VrackservicessCurrentStateSubnetsServiceRangeValue) Equal(o attr.Value) bool {
-	other, ok := o.(VrackservicessCurrentStateSubnetsServiceRangeValue)
-
-	if !ok {
-		return false
-	}
-
-	if v.state != other.state {
-		return false
-	}
-
-	if v.state != attr.ValueStateKnown {
-		return true
-	}
-
-	if !v.Cidr.Equal(other.Cidr) {
-		return false
-	}
-
-	if !v.RemainingIps.Equal(other.RemainingIps) {
-		return false
-	}
-
-	if !v.ReservedIps.Equal(other.ReservedIps) {
-		return false
-	}
-
-	if !v.UsedIps.Equal(other.UsedIps) {
-		return false
-	}
-
-	return true
-}
-
-func (v VrackservicessCurrentStateSubnetsServiceRangeValue) Type(ctx context.Context) attr.Type {
-	return VrackservicessCurrentStateSubnetsServiceRangeType{
-		basetypes.ObjectType{
-			AttrTypes: v.AttributeTypes(ctx),
-		},
-	}
-}
-
-func (v VrackservicessCurrentStateSubnetsServiceRangeValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
-	return map[string]attr.Type{
-		"cidr":          ovhtypes.TfStringType{},
-		"remaining_ips": ovhtypes.TfInt64Type{},
-		"reserved_ips":  ovhtypes.TfInt64Type{},
-		"used_ips":      ovhtypes.TfInt64Type{},
+		"az":           ovhtypes.TfStringType{},
+		"cidr":         ovhtypes.TfStringType{},
+		"display_name": ovhtypes.TfStringType{},
+		"vlan":         ovhtypes.TfInt64Type{},
 	}
 }
 
@@ -4169,6 +9389,14 @@ func (v VrackservicessCurrentTasksValue) String() string {
 
 func (v VrackservicessCurrentTasksValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
+
+	if v.IsNull() {
+		return types.ObjectNull(v.AttributeTypes(ctx)), diags
+	}
+
+	if v.IsUnknown() {
+		return types.ObjectUnknown(v.AttributeTypes(ctx)), diags
+	}
 
 	objVal, diags := types.ObjectValue(
 		map[string]attr.Type{
@@ -4753,6 +9981,14 @@ func (v VrackservicessIamValue) String() string {
 func (v VrackservicessIamValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
+	if v.IsNull() {
+		return types.ObjectNull(v.AttributeTypes(ctx)), diags
+	}
+
+	if v.IsUnknown() {
+		return types.ObjectUnknown(v.AttributeTypes(ctx)), diags
+	}
+
 	objVal, diags := types.ObjectValue(
 		map[string]attr.Type{
 			"display_name": ovhtypes.TfStringType{},
@@ -4853,6 +10089,42 @@ func (t VrackservicessTargetSpecType) ValueFromObject(ctx context.Context, in ba
 
 	attributes := in.Attributes()
 
+	bgpAttribute, ok := attributes["bgp"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`bgp is missing from object`)
+
+		return nil, diags
+	}
+
+	bgpVal, ok := bgpAttribute.(VrackservicessTargetSpecBgpValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`bgp expected to be VrackservicessTargetSpecBgpValue, was: %T`, bgpAttribute))
+	}
+
+	servicesAttribute, ok := attributes["services"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`services is missing from object`)
+
+		return nil, diags
+	}
+
+	servicesVal, ok := servicesAttribute.(VrackservicessTargetSpecServicesValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`services expected to be VrackservicessTargetSpecServicesValue, was: %T`, servicesAttribute))
+	}
+
 	subnetsAttribute, ok := attributes["subnets"]
 
 	if !ok {
@@ -4876,8 +10148,10 @@ func (t VrackservicessTargetSpecType) ValueFromObject(ctx context.Context, in ba
 	}
 
 	return VrackservicessTargetSpecValue{
-		Subnets: subnetsVal,
-		state:   attr.ValueStateKnown,
+		Bgp:      bgpVal,
+		Services: servicesVal,
+		Subnets:  subnetsVal,
+		state:    attr.ValueStateKnown,
 	}, diags
 }
 
@@ -4944,6 +10218,42 @@ func NewVrackservicessTargetSpecValue(attributeTypes map[string]attr.Type, attri
 		return NewVrackservicessTargetSpecValueUnknown(), diags
 	}
 
+	bgpAttribute, ok := attributes["bgp"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`bgp is missing from object`)
+
+		return NewVrackservicessTargetSpecValueUnknown(), diags
+	}
+
+	bgpVal, ok := bgpAttribute.(VrackservicessTargetSpecBgpValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`bgp expected to be VrackservicessTargetSpecBgpValue, was: %T`, bgpAttribute))
+	}
+
+	servicesAttribute, ok := attributes["services"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`services is missing from object`)
+
+		return NewVrackservicessTargetSpecValueUnknown(), diags
+	}
+
+	servicesVal, ok := servicesAttribute.(VrackservicessTargetSpecServicesValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`services expected to be VrackservicessTargetSpecServicesValue, was: %T`, servicesAttribute))
+	}
+
 	subnetsAttribute, ok := attributes["subnets"]
 
 	if !ok {
@@ -4967,8 +10277,10 @@ func NewVrackservicessTargetSpecValue(attributeTypes map[string]attr.Type, attri
 	}
 
 	return VrackservicessTargetSpecValue{
-		Subnets: subnetsVal,
-		state:   attr.ValueStateKnown,
+		Bgp:      bgpVal,
+		Services: servicesVal,
+		Subnets:  subnetsVal,
+		state:    attr.ValueStateKnown,
 	}, diags
 }
 
@@ -5040,17 +10352,26 @@ func (t VrackservicessTargetSpecType) ValueType(ctx context.Context) attr.Value 
 var _ basetypes.ObjectValuable = VrackservicessTargetSpecValue{}
 
 type VrackservicessTargetSpecValue struct {
-	Subnets ovhtypes.TfListNestedValue[VrackservicessTargetSpecSubnetsValue] `tfsdk:"subnets" json:"subnets"`
-	state   attr.ValueState
+	Bgp      VrackservicessTargetSpecBgpValue                                 `tfsdk:"bgp" json:"bgp"`
+	Services VrackservicessTargetSpecServicesValue                            `tfsdk:"services" json:"services"`
+	Subnets  ovhtypes.TfListNestedValue[VrackservicessTargetSpecSubnetsValue] `tfsdk:"subnets" json:"subnets"`
+	state    attr.ValueState
 }
 
 func (v *VrackservicessTargetSpecValue) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" {
+		v.state = attr.ValueStateNull
+		return nil
+	}
+
 	type JsonVrackservicessTargetSpecValue VrackservicessTargetSpecValue
 
 	var tmp JsonVrackservicessTargetSpecValue
 	if err := json.Unmarshal(data, &tmp); err != nil {
 		return err
 	}
+	v.Bgp = tmp.Bgp
+	v.Services = tmp.Services
 	v.Subnets = tmp.Subnets
 
 	v.state = attr.ValueStateKnown
@@ -5060,8 +10381,39 @@ func (v *VrackservicessTargetSpecValue) UnmarshalJSON(data []byte) error {
 
 func (v *VrackservicessTargetSpecValue) MergeWith(other *VrackservicessTargetSpecValue) {
 
+	if v.Bgp.IsUnknown() && !other.Bgp.IsUnknown() {
+		v.Bgp = other.Bgp
+	} else if !other.Bgp.IsUnknown() {
+		v.Bgp.MergeWith(&other.Bgp)
+	}
+
+	if v.Services.IsUnknown() && !other.Services.IsUnknown() {
+		v.Services = other.Services
+	} else if !other.Services.IsUnknown() {
+		v.Services.MergeWith(&other.Services)
+	}
+
 	if (v.Subnets.IsUnknown() || v.Subnets.IsNull()) && !other.Subnets.IsUnknown() {
 		v.Subnets = other.Subnets
+	} else if !other.Subnets.IsUnknown() {
+		newSlice := make([]attr.Value, 0)
+		elems := v.Subnets.Elements()
+		newElems := other.Subnets.Elements()
+
+		if len(elems) != len(newElems) {
+			v.Subnets = other.Subnets
+		} else {
+			for idx, e := range elems {
+				tmp := e.(VrackservicessTargetSpecSubnetsValue)
+				tmp2 := newElems[idx].(VrackservicessTargetSpecSubnetsValue)
+				tmp.MergeWith(&tmp2)
+				newSlice = append(newSlice, tmp)
+			}
+
+			v.Subnets = ovhtypes.TfListNestedValue[VrackservicessTargetSpecSubnetsValue]{
+				ListValue: basetypes.NewListValueMust(VrackservicessTargetSpecSubnetsValue{}.Type(context.Background()), newSlice),
+			}
+		}
 	}
 
 	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
@@ -5071,15 +10423,23 @@ func (v *VrackservicessTargetSpecValue) MergeWith(other *VrackservicessTargetSpe
 
 func (v VrackservicessTargetSpecValue) Attributes() map[string]attr.Value {
 	return map[string]attr.Value{
-		"subnets": v.Subnets,
+		"bgp":      v.Bgp,
+		"services": v.Services,
+		"subnets":  v.Subnets,
 	}
 }
 func (v VrackservicessTargetSpecValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	attrTypes := make(map[string]tftypes.Type, 1)
+	attrTypes := make(map[string]tftypes.Type, 3)
 
 	var val tftypes.Value
 	var err error
 
+	attrTypes["bgp"] = basetypes.ObjectType{
+		AttrTypes: VrackservicessTargetSpecBgpValue{}.AttributeTypes(ctx),
+	}.TerraformType(ctx)
+	attrTypes["services"] = basetypes.ObjectType{
+		AttrTypes: VrackservicessTargetSpecServicesValue{}.AttributeTypes(ctx),
+	}.TerraformType(ctx)
 	attrTypes["subnets"] = basetypes.ListType{
 		ElemType: VrackservicessTargetSpecSubnetsValue{}.Type(ctx),
 	}.TerraformType(ctx)
@@ -5088,7 +10448,23 @@ func (v VrackservicessTargetSpecValue) ToTerraformValue(ctx context.Context) (tf
 
 	switch v.state {
 	case attr.ValueStateKnown:
-		vals := make(map[string]tftypes.Value, 1)
+		vals := make(map[string]tftypes.Value, 3)
+
+		val, err = v.Bgp.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["bgp"] = val
+
+		val, err = v.Services.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["services"] = val
 
 		val, err = v.Subnets.ToTerraformValue(ctx)
 
@@ -5127,12 +10503,32 @@ func (v VrackservicessTargetSpecValue) String() string {
 func (v VrackservicessTargetSpecValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
+	if v.IsNull() {
+		return types.ObjectNull(v.AttributeTypes(ctx)), diags
+	}
+
+	if v.IsUnknown() {
+		return types.ObjectUnknown(v.AttributeTypes(ctx)), diags
+	}
+
 	objVal, diags := types.ObjectValue(
 		map[string]attr.Type{
+			"bgp": VrackservicessTargetSpecBgpType{
+				basetypes.ObjectType{
+					AttrTypes: VrackservicessTargetSpecBgpValue{}.AttributeTypes(ctx),
+				},
+			},
+			"services": VrackservicessTargetSpecServicesType{
+				basetypes.ObjectType{
+					AttrTypes: VrackservicessTargetSpecServicesValue{}.AttributeTypes(ctx),
+				},
+			},
 			"subnets": ovhtypes.NewTfListNestedType[VrackservicessTargetSpecSubnetsValue](ctx),
 		},
 		map[string]attr.Value{
-			"subnets": v.Subnets,
+			"bgp":      v.Bgp,
+			"services": v.Services,
+			"subnets":  v.Subnets,
 		})
 
 	return objVal, diags
@@ -5153,6 +10549,14 @@ func (v VrackservicessTargetSpecValue) Equal(o attr.Value) bool {
 		return true
 	}
 
+	if !v.Bgp.Equal(other.Bgp) {
+		return false
+	}
+
+	if !v.Services.Equal(other.Services) {
+		return false
+	}
+
 	if !v.Subnets.Equal(other.Subnets) {
 		return false
 	}
@@ -5170,7 +10574,2779 @@ func (v VrackservicessTargetSpecValue) Type(ctx context.Context) attr.Type {
 
 func (v VrackservicessTargetSpecValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
 	return map[string]attr.Type{
-		"subnets": ovhtypes.NewTfListNestedType[VrackservicessTargetSpecSubnetsValue](ctx),
+		"bgp":      VrackservicessTargetSpecBgpValue{}.Type(ctx),
+		"services": VrackservicessTargetSpecServicesValue{}.Type(ctx),
+		"subnets":  ovhtypes.NewTfListNestedType[VrackservicessTargetSpecSubnetsValue](ctx),
+	}
+}
+
+var _ basetypes.ObjectTypable = VrackservicessTargetSpecBgpType{}
+
+type VrackservicessTargetSpecBgpType struct {
+	basetypes.ObjectType
+}
+
+func (t VrackservicessTargetSpecBgpType) Equal(o attr.Type) bool {
+	other, ok := o.(VrackservicessTargetSpecBgpType)
+
+	if !ok {
+		return false
+	}
+
+	return t.ObjectType.Equal(other.ObjectType)
+}
+
+func (t VrackservicessTargetSpecBgpType) String() string {
+	return "VrackservicessTargetSpecBgpType"
+}
+
+func (t VrackservicessTargetSpecBgpType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	attributes := in.Attributes()
+
+	allowedPrefixesAttribute, ok := attributes["allowed_prefixes"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`allowed_prefixes is missing from object`)
+
+		return nil, diags
+	}
+
+	allowedPrefixesVal, ok := allowedPrefixesAttribute.(VrackservicessTargetSpecBgpAllowedPrefixesValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`allowed_prefixes expected to be VrackservicessTargetSpecBgpAllowedPrefixesValue, was: %T`, allowedPrefixesAttribute))
+	}
+
+	bgpRangeAttribute, ok := attributes["bgp_range"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`bgp_range is missing from object`)
+
+		return nil, diags
+	}
+
+	bgpRangeVal, ok := bgpRangeAttribute.(ovhtypes.TfListNestedValue[VrackservicessTargetSpecBgpBgpRangeValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`bgp_range expected to be ovhtypes.TfListNestedValue[VrackservicessTargetSpecBgpBgpRangeValue], was: %T`, bgpRangeAttribute))
+	}
+
+	clientAsnAttribute, ok := attributes["client_asn"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`client_asn is missing from object`)
+
+		return nil, diags
+	}
+
+	clientAsnVal, ok := clientAsnAttribute.(ovhtypes.TfInt64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`client_asn expected to be ovhtypes.TfInt64Value, was: %T`, clientAsnAttribute))
+	}
+
+	infrastructureAsnAttribute, ok := attributes["infrastructure_asn"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`infrastructure_asn is missing from object`)
+
+		return nil, diags
+	}
+
+	infrastructureAsnVal, ok := infrastructureAsnAttribute.(ovhtypes.TfInt64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`infrastructure_asn expected to be ovhtypes.TfInt64Value, was: %T`, infrastructureAsnAttribute))
+	}
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return VrackservicessTargetSpecBgpValue{
+		AllowedPrefixes:   allowedPrefixesVal,
+		BgpRange:          bgpRangeVal,
+		ClientAsn:         clientAsnVal,
+		InfrastructureAsn: infrastructureAsnVal,
+		state:             attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVrackservicessTargetSpecBgpValueNull() VrackservicessTargetSpecBgpValue {
+	return VrackservicessTargetSpecBgpValue{
+		state: attr.ValueStateNull,
+	}
+}
+
+func NewVrackservicessTargetSpecBgpValueUnknown() VrackservicessTargetSpecBgpValue {
+	return VrackservicessTargetSpecBgpValue{
+		state: attr.ValueStateUnknown,
+	}
+}
+
+func NewVrackservicessTargetSpecBgpValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (VrackservicessTargetSpecBgpValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
+	ctx := context.Background()
+
+	for name, attributeType := range attributeTypes {
+		attribute, ok := attributes[name]
+
+		if !ok {
+			diags.AddError(
+				"Missing VrackservicessTargetSpecBgpValue Attribute Value",
+				"While creating a VrackservicessTargetSpecBgpValue value, a missing attribute value was detected. "+
+					"A VrackservicessTargetSpecBgpValue must contain values for all attributes, even if null or unknown. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VrackservicessTargetSpecBgpValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
+			)
+
+			continue
+		}
+
+		if !attributeType.Equal(attribute.Type(ctx)) {
+			diags.AddError(
+				"Invalid VrackservicessTargetSpecBgpValue Attribute Type",
+				"While creating a VrackservicessTargetSpecBgpValue value, an invalid attribute value was detected. "+
+					"A VrackservicessTargetSpecBgpValue must use a matching attribute type for the value. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VrackservicessTargetSpecBgpValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
+					fmt.Sprintf("VrackservicessTargetSpecBgpValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
+			)
+		}
+	}
+
+	for name := range attributes {
+		_, ok := attributeTypes[name]
+
+		if !ok {
+			diags.AddError(
+				"Extra VrackservicessTargetSpecBgpValue Attribute Value",
+				"While creating a VrackservicessTargetSpecBgpValue value, an extra attribute value was detected. "+
+					"A VrackservicessTargetSpecBgpValue must not contain values beyond the expected attribute types. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("Extra VrackservicessTargetSpecBgpValue Attribute Name: %s", name),
+			)
+		}
+	}
+
+	if diags.HasError() {
+		return NewVrackservicessTargetSpecBgpValueUnknown(), diags
+	}
+
+	allowedPrefixesAttribute, ok := attributes["allowed_prefixes"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`allowed_prefixes is missing from object`)
+
+		return NewVrackservicessTargetSpecBgpValueUnknown(), diags
+	}
+
+	allowedPrefixesVal, ok := allowedPrefixesAttribute.(VrackservicessTargetSpecBgpAllowedPrefixesValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`allowed_prefixes expected to be VrackservicessTargetSpecBgpAllowedPrefixesValue, was: %T`, allowedPrefixesAttribute))
+	}
+
+	bgpRangeAttribute, ok := attributes["bgp_range"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`bgp_range is missing from object`)
+
+		return NewVrackservicessTargetSpecBgpValueUnknown(), diags
+	}
+
+	bgpRangeVal, ok := bgpRangeAttribute.(ovhtypes.TfListNestedValue[VrackservicessTargetSpecBgpBgpRangeValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`bgp_range expected to be ovhtypes.TfListNestedValue[VrackservicessTargetSpecBgpBgpRangeValue], was: %T`, bgpRangeAttribute))
+	}
+
+	clientAsnAttribute, ok := attributes["client_asn"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`client_asn is missing from object`)
+
+		return NewVrackservicessTargetSpecBgpValueUnknown(), diags
+	}
+
+	clientAsnVal, ok := clientAsnAttribute.(ovhtypes.TfInt64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`client_asn expected to be ovhtypes.TfInt64Value, was: %T`, clientAsnAttribute))
+	}
+
+	infrastructureAsnAttribute, ok := attributes["infrastructure_asn"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`infrastructure_asn is missing from object`)
+
+		return NewVrackservicessTargetSpecBgpValueUnknown(), diags
+	}
+
+	infrastructureAsnVal, ok := infrastructureAsnAttribute.(ovhtypes.TfInt64Value)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`infrastructure_asn expected to be ovhtypes.TfInt64Value, was: %T`, infrastructureAsnAttribute))
+	}
+
+	if diags.HasError() {
+		return NewVrackservicessTargetSpecBgpValueUnknown(), diags
+	}
+
+	return VrackservicessTargetSpecBgpValue{
+		AllowedPrefixes:   allowedPrefixesVal,
+		BgpRange:          bgpRangeVal,
+		ClientAsn:         clientAsnVal,
+		InfrastructureAsn: infrastructureAsnVal,
+		state:             attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVrackservicessTargetSpecBgpValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) VrackservicessTargetSpecBgpValue {
+	object, diags := NewVrackservicessTargetSpecBgpValue(attributeTypes, attributes)
+
+	if diags.HasError() {
+		// This could potentially be added to the diag package.
+		diagsStrings := make([]string, 0, len(diags))
+
+		for _, diagnostic := range diags {
+			diagsStrings = append(diagsStrings, fmt.Sprintf(
+				"%s | %s | %s",
+				diagnostic.Severity(),
+				diagnostic.Summary(),
+				diagnostic.Detail()))
+		}
+
+		panic("NewVrackservicessTargetSpecBgpValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
+	}
+
+	return object
+}
+
+func (t VrackservicessTargetSpecBgpType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+	if in.Type() == nil {
+		return NewVrackservicessTargetSpecBgpValueNull(), nil
+	}
+
+	if !in.Type().Equal(t.TerraformType(ctx)) {
+		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
+	}
+
+	if !in.IsKnown() {
+		return NewVrackservicessTargetSpecBgpValueUnknown(), nil
+	}
+
+	if in.IsNull() {
+		return NewVrackservicessTargetSpecBgpValueNull(), nil
+	}
+
+	attributes := map[string]attr.Value{}
+
+	val := map[string]tftypes.Value{}
+
+	err := in.As(&val)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range val {
+		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
+
+		if err != nil {
+			return nil, err
+		}
+
+		attributes[k] = a
+	}
+
+	return NewVrackservicessTargetSpecBgpValueMust(VrackservicessTargetSpecBgpValue{}.AttributeTypes(ctx), attributes), nil
+}
+
+func (t VrackservicessTargetSpecBgpType) ValueType(ctx context.Context) attr.Value {
+	return VrackservicessTargetSpecBgpValue{}
+}
+
+var _ basetypes.ObjectValuable = VrackservicessTargetSpecBgpValue{}
+
+type VrackservicessTargetSpecBgpValue struct {
+	AllowedPrefixes   VrackservicessTargetSpecBgpAllowedPrefixesValue                      `tfsdk:"allowed_prefixes" json:"allowedPrefixes"`
+	BgpRange          ovhtypes.TfListNestedValue[VrackservicessTargetSpecBgpBgpRangeValue] `tfsdk:"bgp_range" json:"bgpRange"`
+	ClientAsn         ovhtypes.TfInt64Value                                                `tfsdk:"client_asn" json:"clientAsn"`
+	InfrastructureAsn ovhtypes.TfInt64Value                                                `tfsdk:"infrastructure_asn" json:"infrastructureAsn"`
+	state             attr.ValueState
+}
+
+func (v *VrackservicessTargetSpecBgpValue) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" {
+		v.state = attr.ValueStateNull
+		return nil
+	}
+
+	type JsonVrackservicessTargetSpecBgpValue VrackservicessTargetSpecBgpValue
+
+	var tmp JsonVrackservicessTargetSpecBgpValue
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		return err
+	}
+	v.AllowedPrefixes = tmp.AllowedPrefixes
+	v.BgpRange = tmp.BgpRange
+	v.ClientAsn = tmp.ClientAsn
+	v.InfrastructureAsn = tmp.InfrastructureAsn
+
+	v.state = attr.ValueStateKnown
+
+	return nil
+}
+
+func (v *VrackservicessTargetSpecBgpValue) MergeWith(other *VrackservicessTargetSpecBgpValue) {
+
+	if v.AllowedPrefixes.IsUnknown() && !other.AllowedPrefixes.IsUnknown() {
+		v.AllowedPrefixes = other.AllowedPrefixes
+	} else if !other.AllowedPrefixes.IsUnknown() {
+		v.AllowedPrefixes.MergeWith(&other.AllowedPrefixes)
+	}
+
+	if (v.BgpRange.IsUnknown() || v.BgpRange.IsNull()) && !other.BgpRange.IsUnknown() {
+		v.BgpRange = other.BgpRange
+	} else if !other.BgpRange.IsUnknown() {
+		newSlice := make([]attr.Value, 0)
+		elems := v.BgpRange.Elements()
+		newElems := other.BgpRange.Elements()
+
+		if len(elems) != len(newElems) {
+			v.BgpRange = other.BgpRange
+		} else {
+			for idx, e := range elems {
+				tmp := e.(VrackservicessTargetSpecBgpBgpRangeValue)
+				tmp2 := newElems[idx].(VrackservicessTargetSpecBgpBgpRangeValue)
+				tmp.MergeWith(&tmp2)
+				newSlice = append(newSlice, tmp)
+			}
+
+			v.BgpRange = ovhtypes.TfListNestedValue[VrackservicessTargetSpecBgpBgpRangeValue]{
+				ListValue: basetypes.NewListValueMust(VrackservicessTargetSpecBgpBgpRangeValue{}.Type(context.Background()), newSlice),
+			}
+		}
+	}
+
+	if (v.ClientAsn.IsUnknown() || v.ClientAsn.IsNull()) && !other.ClientAsn.IsUnknown() {
+		v.ClientAsn = other.ClientAsn
+	}
+
+	if (v.InfrastructureAsn.IsUnknown() || v.InfrastructureAsn.IsNull()) && !other.InfrastructureAsn.IsUnknown() {
+		v.InfrastructureAsn = other.InfrastructureAsn
+	}
+
+	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
+		v.state = other.state
+	}
+}
+
+func (v VrackservicessTargetSpecBgpValue) Attributes() map[string]attr.Value {
+	return map[string]attr.Value{
+		"allowedPrefixes":   v.AllowedPrefixes,
+		"bgpRange":          v.BgpRange,
+		"clientAsn":         v.ClientAsn,
+		"infrastructureAsn": v.InfrastructureAsn,
+	}
+}
+func (v VrackservicessTargetSpecBgpValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
+	attrTypes := make(map[string]tftypes.Type, 4)
+
+	var val tftypes.Value
+	var err error
+
+	attrTypes["allowed_prefixes"] = basetypes.ObjectType{
+		AttrTypes: VrackservicessTargetSpecBgpAllowedPrefixesValue{}.AttributeTypes(ctx),
+	}.TerraformType(ctx)
+	attrTypes["bgp_range"] = basetypes.ListType{
+		ElemType: VrackservicessTargetSpecBgpBgpRangeValue{}.Type(ctx),
+	}.TerraformType(ctx)
+	attrTypes["client_asn"] = basetypes.Int64Type{}.TerraformType(ctx)
+	attrTypes["infrastructure_asn"] = basetypes.Int64Type{}.TerraformType(ctx)
+
+	objectType := tftypes.Object{AttributeTypes: attrTypes}
+
+	switch v.state {
+	case attr.ValueStateKnown:
+		vals := make(map[string]tftypes.Value, 4)
+
+		val, err = v.AllowedPrefixes.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["allowed_prefixes"] = val
+
+		val, err = v.BgpRange.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["bgp_range"] = val
+
+		val, err = v.ClientAsn.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["client_asn"] = val
+
+		val, err = v.InfrastructureAsn.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["infrastructure_asn"] = val
+
+		if err := tftypes.ValidateValue(objectType, vals); err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		return tftypes.NewValue(objectType, vals), nil
+	case attr.ValueStateNull:
+		return tftypes.NewValue(objectType, nil), nil
+	case attr.ValueStateUnknown:
+		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
+	default:
+		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
+	}
+}
+
+func (v VrackservicessTargetSpecBgpValue) IsNull() bool {
+	return v.state == attr.ValueStateNull
+}
+
+func (v VrackservicessTargetSpecBgpValue) IsUnknown() bool {
+	return v.state == attr.ValueStateUnknown
+}
+
+func (v VrackservicessTargetSpecBgpValue) String() string {
+	return "VrackservicessTargetSpecBgpValue"
+}
+
+func (v VrackservicessTargetSpecBgpValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if v.IsNull() {
+		return types.ObjectNull(v.AttributeTypes(ctx)), diags
+	}
+
+	if v.IsUnknown() {
+		return types.ObjectUnknown(v.AttributeTypes(ctx)), diags
+	}
+
+	objVal, diags := types.ObjectValue(
+		map[string]attr.Type{
+			"allowed_prefixes": VrackservicessTargetSpecBgpAllowedPrefixesType{
+				basetypes.ObjectType{
+					AttrTypes: VrackservicessTargetSpecBgpAllowedPrefixesValue{}.AttributeTypes(ctx),
+				},
+			},
+			"bgp_range":          ovhtypes.NewTfListNestedType[VrackservicessTargetSpecBgpBgpRangeValue](ctx),
+			"client_asn":         ovhtypes.TfInt64Type{},
+			"infrastructure_asn": ovhtypes.TfInt64Type{},
+		},
+		map[string]attr.Value{
+			"allowed_prefixes":   v.AllowedPrefixes,
+			"bgp_range":          v.BgpRange,
+			"client_asn":         v.ClientAsn,
+			"infrastructure_asn": v.InfrastructureAsn,
+		})
+
+	return objVal, diags
+}
+
+func (v VrackservicessTargetSpecBgpValue) Equal(o attr.Value) bool {
+	other, ok := o.(VrackservicessTargetSpecBgpValue)
+
+	if !ok {
+		return false
+	}
+
+	if v.state != other.state {
+		return false
+	}
+
+	if v.state != attr.ValueStateKnown {
+		return true
+	}
+
+	if !v.AllowedPrefixes.Equal(other.AllowedPrefixes) {
+		return false
+	}
+
+	if !v.BgpRange.Equal(other.BgpRange) {
+		return false
+	}
+
+	if !v.ClientAsn.Equal(other.ClientAsn) {
+		return false
+	}
+
+	if !v.InfrastructureAsn.Equal(other.InfrastructureAsn) {
+		return false
+	}
+
+	return true
+}
+
+func (v VrackservicessTargetSpecBgpValue) Type(ctx context.Context) attr.Type {
+	return VrackservicessTargetSpecBgpType{
+		basetypes.ObjectType{
+			AttrTypes: v.AttributeTypes(ctx),
+		},
+	}
+}
+
+func (v VrackservicessTargetSpecBgpValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
+	return map[string]attr.Type{
+		"allowed_prefixes":   VrackservicessTargetSpecBgpAllowedPrefixesValue{}.Type(ctx),
+		"bgp_range":          ovhtypes.NewTfListNestedType[VrackservicessTargetSpecBgpBgpRangeValue](ctx),
+		"client_asn":         ovhtypes.TfInt64Type{},
+		"infrastructure_asn": ovhtypes.TfInt64Type{},
+	}
+}
+
+var _ basetypes.ObjectTypable = VrackservicessTargetSpecBgpAllowedPrefixesType{}
+
+type VrackservicessTargetSpecBgpAllowedPrefixesType struct {
+	basetypes.ObjectType
+}
+
+func (t VrackservicessTargetSpecBgpAllowedPrefixesType) Equal(o attr.Type) bool {
+	other, ok := o.(VrackservicessTargetSpecBgpAllowedPrefixesType)
+
+	if !ok {
+		return false
+	}
+
+	return t.ObjectType.Equal(other.ObjectType)
+}
+
+func (t VrackservicessTargetSpecBgpAllowedPrefixesType) String() string {
+	return "VrackservicessTargetSpecBgpAllowedPrefixesType"
+}
+
+func (t VrackservicessTargetSpecBgpAllowedPrefixesType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	attributes := in.Attributes()
+
+	ipv4Attribute, ok := attributes["ipv4"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`ipv4 is missing from object`)
+
+		return nil, diags
+	}
+
+	ipv4Val, ok := ipv4Attribute.(ovhtypes.TfListNestedValue[ovhtypes.TfStringValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`ipv4 expected to be ovhtypes.TfListNestedValue[ovhtypes.TfStringValue], was: %T`, ipv4Attribute))
+	}
+
+	ipv6Attribute, ok := attributes["ipv6"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`ipv6 is missing from object`)
+
+		return nil, diags
+	}
+
+	ipv6Val, ok := ipv6Attribute.(ovhtypes.TfListNestedValue[ovhtypes.TfStringValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`ipv6 expected to be ovhtypes.TfListNestedValue[ovhtypes.TfStringValue], was: %T`, ipv6Attribute))
+	}
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return VrackservicessTargetSpecBgpAllowedPrefixesValue{
+		Ipv4:  ipv4Val,
+		Ipv6:  ipv6Val,
+		state: attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVrackservicessTargetSpecBgpAllowedPrefixesValueNull() VrackservicessTargetSpecBgpAllowedPrefixesValue {
+	return VrackservicessTargetSpecBgpAllowedPrefixesValue{
+		state: attr.ValueStateNull,
+	}
+}
+
+func NewVrackservicessTargetSpecBgpAllowedPrefixesValueUnknown() VrackservicessTargetSpecBgpAllowedPrefixesValue {
+	return VrackservicessTargetSpecBgpAllowedPrefixesValue{
+		state: attr.ValueStateUnknown,
+	}
+}
+
+func NewVrackservicessTargetSpecBgpAllowedPrefixesValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (VrackservicessTargetSpecBgpAllowedPrefixesValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
+	ctx := context.Background()
+
+	for name, attributeType := range attributeTypes {
+		attribute, ok := attributes[name]
+
+		if !ok {
+			diags.AddError(
+				"Missing VrackservicessTargetSpecBgpAllowedPrefixesValue Attribute Value",
+				"While creating a VrackservicessTargetSpecBgpAllowedPrefixesValue value, a missing attribute value was detected. "+
+					"A VrackservicessTargetSpecBgpAllowedPrefixesValue must contain values for all attributes, even if null or unknown. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VrackservicessTargetSpecBgpAllowedPrefixesValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
+			)
+
+			continue
+		}
+
+		if !attributeType.Equal(attribute.Type(ctx)) {
+			diags.AddError(
+				"Invalid VrackservicessTargetSpecBgpAllowedPrefixesValue Attribute Type",
+				"While creating a VrackservicessTargetSpecBgpAllowedPrefixesValue value, an invalid attribute value was detected. "+
+					"A VrackservicessTargetSpecBgpAllowedPrefixesValue must use a matching attribute type for the value. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VrackservicessTargetSpecBgpAllowedPrefixesValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
+					fmt.Sprintf("VrackservicessTargetSpecBgpAllowedPrefixesValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
+			)
+		}
+	}
+
+	for name := range attributes {
+		_, ok := attributeTypes[name]
+
+		if !ok {
+			diags.AddError(
+				"Extra VrackservicessTargetSpecBgpAllowedPrefixesValue Attribute Value",
+				"While creating a VrackservicessTargetSpecBgpAllowedPrefixesValue value, an extra attribute value was detected. "+
+					"A VrackservicessTargetSpecBgpAllowedPrefixesValue must not contain values beyond the expected attribute types. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("Extra VrackservicessTargetSpecBgpAllowedPrefixesValue Attribute Name: %s", name),
+			)
+		}
+	}
+
+	if diags.HasError() {
+		return NewVrackservicessTargetSpecBgpAllowedPrefixesValueUnknown(), diags
+	}
+
+	ipv4Attribute, ok := attributes["ipv4"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`ipv4 is missing from object`)
+
+		return NewVrackservicessTargetSpecBgpAllowedPrefixesValueUnknown(), diags
+	}
+
+	ipv4Val, ok := ipv4Attribute.(ovhtypes.TfListNestedValue[ovhtypes.TfStringValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`ipv4 expected to be ovhtypes.TfListNestedValue[ovhtypes.TfStringValue], was: %T`, ipv4Attribute))
+	}
+
+	ipv6Attribute, ok := attributes["ipv6"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`ipv6 is missing from object`)
+
+		return NewVrackservicessTargetSpecBgpAllowedPrefixesValueUnknown(), diags
+	}
+
+	ipv6Val, ok := ipv6Attribute.(ovhtypes.TfListNestedValue[ovhtypes.TfStringValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`ipv6 expected to be ovhtypes.TfListNestedValue[ovhtypes.TfStringValue], was: %T`, ipv6Attribute))
+	}
+
+	if diags.HasError() {
+		return NewVrackservicessTargetSpecBgpAllowedPrefixesValueUnknown(), diags
+	}
+
+	return VrackservicessTargetSpecBgpAllowedPrefixesValue{
+		Ipv4:  ipv4Val,
+		Ipv6:  ipv6Val,
+		state: attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVrackservicessTargetSpecBgpAllowedPrefixesValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) VrackservicessTargetSpecBgpAllowedPrefixesValue {
+	object, diags := NewVrackservicessTargetSpecBgpAllowedPrefixesValue(attributeTypes, attributes)
+
+	if diags.HasError() {
+		// This could potentially be added to the diag package.
+		diagsStrings := make([]string, 0, len(diags))
+
+		for _, diagnostic := range diags {
+			diagsStrings = append(diagsStrings, fmt.Sprintf(
+				"%s | %s | %s",
+				diagnostic.Severity(),
+				diagnostic.Summary(),
+				diagnostic.Detail()))
+		}
+
+		panic("NewVrackservicessTargetSpecBgpAllowedPrefixesValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
+	}
+
+	return object
+}
+
+func (t VrackservicessTargetSpecBgpAllowedPrefixesType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+	if in.Type() == nil {
+		return NewVrackservicessTargetSpecBgpAllowedPrefixesValueNull(), nil
+	}
+
+	if !in.Type().Equal(t.TerraformType(ctx)) {
+		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
+	}
+
+	if !in.IsKnown() {
+		return NewVrackservicessTargetSpecBgpAllowedPrefixesValueUnknown(), nil
+	}
+
+	if in.IsNull() {
+		return NewVrackservicessTargetSpecBgpAllowedPrefixesValueNull(), nil
+	}
+
+	attributes := map[string]attr.Value{}
+
+	val := map[string]tftypes.Value{}
+
+	err := in.As(&val)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range val {
+		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
+
+		if err != nil {
+			return nil, err
+		}
+
+		attributes[k] = a
+	}
+
+	return NewVrackservicessTargetSpecBgpAllowedPrefixesValueMust(VrackservicessTargetSpecBgpAllowedPrefixesValue{}.AttributeTypes(ctx), attributes), nil
+}
+
+func (t VrackservicessTargetSpecBgpAllowedPrefixesType) ValueType(ctx context.Context) attr.Value {
+	return VrackservicessTargetSpecBgpAllowedPrefixesValue{}
+}
+
+var _ basetypes.ObjectValuable = VrackservicessTargetSpecBgpAllowedPrefixesValue{}
+
+type VrackservicessTargetSpecBgpAllowedPrefixesValue struct {
+	Ipv4  ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] `tfsdk:"ipv4" json:"ipv4"`
+	Ipv6  ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] `tfsdk:"ipv6" json:"ipv6"`
+	state attr.ValueState
+}
+
+func (v *VrackservicessTargetSpecBgpAllowedPrefixesValue) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" {
+		v.state = attr.ValueStateNull
+		return nil
+	}
+
+	type JsonVrackservicessTargetSpecBgpAllowedPrefixesValue VrackservicessTargetSpecBgpAllowedPrefixesValue
+
+	var tmp JsonVrackservicessTargetSpecBgpAllowedPrefixesValue
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		return err
+	}
+	v.Ipv4 = tmp.Ipv4
+	v.Ipv6 = tmp.Ipv6
+
+	v.state = attr.ValueStateKnown
+
+	return nil
+}
+
+func (v *VrackservicessTargetSpecBgpAllowedPrefixesValue) MergeWith(other *VrackservicessTargetSpecBgpAllowedPrefixesValue) {
+
+	if (v.Ipv4.IsUnknown() || v.Ipv4.IsNull()) && !other.Ipv4.IsUnknown() {
+		v.Ipv4 = other.Ipv4
+	}
+
+	if (v.Ipv6.IsUnknown() || v.Ipv6.IsNull()) && !other.Ipv6.IsUnknown() {
+		v.Ipv6 = other.Ipv6
+	}
+
+	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
+		v.state = other.state
+	}
+}
+
+func (v VrackservicessTargetSpecBgpAllowedPrefixesValue) Attributes() map[string]attr.Value {
+	return map[string]attr.Value{
+		"ipv4": v.Ipv4,
+		"ipv6": v.Ipv6,
+	}
+}
+func (v VrackservicessTargetSpecBgpAllowedPrefixesValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
+	attrTypes := make(map[string]tftypes.Type, 2)
+
+	var val tftypes.Value
+	var err error
+
+	attrTypes["ipv4"] = basetypes.ListType{
+		ElemType: types.StringType,
+	}.TerraformType(ctx)
+	attrTypes["ipv6"] = basetypes.ListType{
+		ElemType: types.StringType,
+	}.TerraformType(ctx)
+
+	objectType := tftypes.Object{AttributeTypes: attrTypes}
+
+	switch v.state {
+	case attr.ValueStateKnown:
+		vals := make(map[string]tftypes.Value, 2)
+
+		val, err = v.Ipv4.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["ipv4"] = val
+
+		val, err = v.Ipv6.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["ipv6"] = val
+
+		if err := tftypes.ValidateValue(objectType, vals); err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		return tftypes.NewValue(objectType, vals), nil
+	case attr.ValueStateNull:
+		return tftypes.NewValue(objectType, nil), nil
+	case attr.ValueStateUnknown:
+		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
+	default:
+		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
+	}
+}
+
+func (v VrackservicessTargetSpecBgpAllowedPrefixesValue) IsNull() bool {
+	return v.state == attr.ValueStateNull
+}
+
+func (v VrackservicessTargetSpecBgpAllowedPrefixesValue) IsUnknown() bool {
+	return v.state == attr.ValueStateUnknown
+}
+
+func (v VrackservicessTargetSpecBgpAllowedPrefixesValue) String() string {
+	return "VrackservicessTargetSpecBgpAllowedPrefixesValue"
+}
+
+func (v VrackservicessTargetSpecBgpAllowedPrefixesValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if v.IsNull() {
+		return types.ObjectNull(v.AttributeTypes(ctx)), diags
+	}
+
+	if v.IsUnknown() {
+		return types.ObjectUnknown(v.AttributeTypes(ctx)), diags
+	}
+
+	objVal, diags := types.ObjectValue(
+		map[string]attr.Type{
+			"ipv4": ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+			"ipv6": ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+		},
+		map[string]attr.Value{
+			"ipv4": v.Ipv4,
+			"ipv6": v.Ipv6,
+		})
+
+	return objVal, diags
+}
+
+func (v VrackservicessTargetSpecBgpAllowedPrefixesValue) Equal(o attr.Value) bool {
+	other, ok := o.(VrackservicessTargetSpecBgpAllowedPrefixesValue)
+
+	if !ok {
+		return false
+	}
+
+	if v.state != other.state {
+		return false
+	}
+
+	if v.state != attr.ValueStateKnown {
+		return true
+	}
+
+	if !v.Ipv4.Equal(other.Ipv4) {
+		return false
+	}
+
+	if !v.Ipv6.Equal(other.Ipv6) {
+		return false
+	}
+
+	return true
+}
+
+func (v VrackservicessTargetSpecBgpAllowedPrefixesValue) Type(ctx context.Context) attr.Type {
+	return VrackservicessTargetSpecBgpAllowedPrefixesType{
+		basetypes.ObjectType{
+			AttrTypes: v.AttributeTypes(ctx),
+		},
+	}
+}
+
+func (v VrackservicessTargetSpecBgpAllowedPrefixesValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
+	return map[string]attr.Type{
+		"ipv4": ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+		"ipv6": ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+	}
+}
+
+var _ basetypes.ObjectTypable = VrackservicessTargetSpecBgpBgpRangeType{}
+
+type VrackservicessTargetSpecBgpBgpRangeType struct {
+	basetypes.ObjectType
+}
+
+func (t VrackservicessTargetSpecBgpBgpRangeType) Equal(o attr.Type) bool {
+	other, ok := o.(VrackservicessTargetSpecBgpBgpRangeType)
+
+	if !ok {
+		return false
+	}
+
+	return t.ObjectType.Equal(other.ObjectType)
+}
+
+func (t VrackservicessTargetSpecBgpBgpRangeType) String() string {
+	return "VrackservicessTargetSpecBgpBgpRangeType"
+}
+
+func (t VrackservicessTargetSpecBgpBgpRangeType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	attributes := in.Attributes()
+
+	cidrAttribute, ok := attributes["cidr"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`cidr is missing from object`)
+
+		return nil, diags
+	}
+
+	cidrVal, ok := cidrAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`cidr expected to be ovhtypes.TfStringValue, was: %T`, cidrAttribute))
+	}
+
+	clientPeersAttribute, ok := attributes["client_peers"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`client_peers is missing from object`)
+
+		return nil, diags
+	}
+
+	clientPeersVal, ok := clientPeersAttribute.(ovhtypes.TfListNestedValue[ovhtypes.TfStringValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`client_peers expected to be ovhtypes.TfListNestedValue[ovhtypes.TfStringValue], was: %T`, clientPeersAttribute))
+	}
+
+	infrastructurePeersAttribute, ok := attributes["infrastructure_peers"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`infrastructure_peers is missing from object`)
+
+		return nil, diags
+	}
+
+	infrastructurePeersVal, ok := infrastructurePeersAttribute.(ovhtypes.TfListNestedValue[ovhtypes.TfStringValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`infrastructure_peers expected to be ovhtypes.TfListNestedValue[ovhtypes.TfStringValue], was: %T`, infrastructurePeersAttribute))
+	}
+
+	subnetCidrAttribute, ok := attributes["subnet_cidr"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`subnet_cidr is missing from object`)
+
+		return nil, diags
+	}
+
+	subnetCidrVal, ok := subnetCidrAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`subnet_cidr expected to be ovhtypes.TfStringValue, was: %T`, subnetCidrAttribute))
+	}
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return VrackservicessTargetSpecBgpBgpRangeValue{
+		Cidr:                cidrVal,
+		ClientPeers:         clientPeersVal,
+		InfrastructurePeers: infrastructurePeersVal,
+		SubnetCidr:          subnetCidrVal,
+		state:               attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVrackservicessTargetSpecBgpBgpRangeValueNull() VrackservicessTargetSpecBgpBgpRangeValue {
+	return VrackservicessTargetSpecBgpBgpRangeValue{
+		state: attr.ValueStateNull,
+	}
+}
+
+func NewVrackservicessTargetSpecBgpBgpRangeValueUnknown() VrackservicessTargetSpecBgpBgpRangeValue {
+	return VrackservicessTargetSpecBgpBgpRangeValue{
+		state: attr.ValueStateUnknown,
+	}
+}
+
+func NewVrackservicessTargetSpecBgpBgpRangeValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (VrackservicessTargetSpecBgpBgpRangeValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
+	ctx := context.Background()
+
+	for name, attributeType := range attributeTypes {
+		attribute, ok := attributes[name]
+
+		if !ok {
+			diags.AddError(
+				"Missing VrackservicessTargetSpecBgpBgpRangeValue Attribute Value",
+				"While creating a VrackservicessTargetSpecBgpBgpRangeValue value, a missing attribute value was detected. "+
+					"A VrackservicessTargetSpecBgpBgpRangeValue must contain values for all attributes, even if null or unknown. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VrackservicessTargetSpecBgpBgpRangeValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
+			)
+
+			continue
+		}
+
+		if !attributeType.Equal(attribute.Type(ctx)) {
+			diags.AddError(
+				"Invalid VrackservicessTargetSpecBgpBgpRangeValue Attribute Type",
+				"While creating a VrackservicessTargetSpecBgpBgpRangeValue value, an invalid attribute value was detected. "+
+					"A VrackservicessTargetSpecBgpBgpRangeValue must use a matching attribute type for the value. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VrackservicessTargetSpecBgpBgpRangeValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
+					fmt.Sprintf("VrackservicessTargetSpecBgpBgpRangeValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
+			)
+		}
+	}
+
+	for name := range attributes {
+		_, ok := attributeTypes[name]
+
+		if !ok {
+			diags.AddError(
+				"Extra VrackservicessTargetSpecBgpBgpRangeValue Attribute Value",
+				"While creating a VrackservicessTargetSpecBgpBgpRangeValue value, an extra attribute value was detected. "+
+					"A VrackservicessTargetSpecBgpBgpRangeValue must not contain values beyond the expected attribute types. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("Extra VrackservicessTargetSpecBgpBgpRangeValue Attribute Name: %s", name),
+			)
+		}
+	}
+
+	if diags.HasError() {
+		return NewVrackservicessTargetSpecBgpBgpRangeValueUnknown(), diags
+	}
+
+	cidrAttribute, ok := attributes["cidr"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`cidr is missing from object`)
+
+		return NewVrackservicessTargetSpecBgpBgpRangeValueUnknown(), diags
+	}
+
+	cidrVal, ok := cidrAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`cidr expected to be ovhtypes.TfStringValue, was: %T`, cidrAttribute))
+	}
+
+	clientPeersAttribute, ok := attributes["client_peers"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`client_peers is missing from object`)
+
+		return NewVrackservicessTargetSpecBgpBgpRangeValueUnknown(), diags
+	}
+
+	clientPeersVal, ok := clientPeersAttribute.(ovhtypes.TfListNestedValue[ovhtypes.TfStringValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`client_peers expected to be ovhtypes.TfListNestedValue[ovhtypes.TfStringValue], was: %T`, clientPeersAttribute))
+	}
+
+	infrastructurePeersAttribute, ok := attributes["infrastructure_peers"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`infrastructure_peers is missing from object`)
+
+		return NewVrackservicessTargetSpecBgpBgpRangeValueUnknown(), diags
+	}
+
+	infrastructurePeersVal, ok := infrastructurePeersAttribute.(ovhtypes.TfListNestedValue[ovhtypes.TfStringValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`infrastructure_peers expected to be ovhtypes.TfListNestedValue[ovhtypes.TfStringValue], was: %T`, infrastructurePeersAttribute))
+	}
+
+	subnetCidrAttribute, ok := attributes["subnet_cidr"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`subnet_cidr is missing from object`)
+
+		return NewVrackservicessTargetSpecBgpBgpRangeValueUnknown(), diags
+	}
+
+	subnetCidrVal, ok := subnetCidrAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`subnet_cidr expected to be ovhtypes.TfStringValue, was: %T`, subnetCidrAttribute))
+	}
+
+	if diags.HasError() {
+		return NewVrackservicessTargetSpecBgpBgpRangeValueUnknown(), diags
+	}
+
+	return VrackservicessTargetSpecBgpBgpRangeValue{
+		Cidr:                cidrVal,
+		ClientPeers:         clientPeersVal,
+		InfrastructurePeers: infrastructurePeersVal,
+		SubnetCidr:          subnetCidrVal,
+		state:               attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVrackservicessTargetSpecBgpBgpRangeValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) VrackservicessTargetSpecBgpBgpRangeValue {
+	object, diags := NewVrackservicessTargetSpecBgpBgpRangeValue(attributeTypes, attributes)
+
+	if diags.HasError() {
+		// This could potentially be added to the diag package.
+		diagsStrings := make([]string, 0, len(diags))
+
+		for _, diagnostic := range diags {
+			diagsStrings = append(diagsStrings, fmt.Sprintf(
+				"%s | %s | %s",
+				diagnostic.Severity(),
+				diagnostic.Summary(),
+				diagnostic.Detail()))
+		}
+
+		panic("NewVrackservicessTargetSpecBgpBgpRangeValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
+	}
+
+	return object
+}
+
+func (t VrackservicessTargetSpecBgpBgpRangeType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+	if in.Type() == nil {
+		return NewVrackservicessTargetSpecBgpBgpRangeValueNull(), nil
+	}
+
+	if !in.Type().Equal(t.TerraformType(ctx)) {
+		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
+	}
+
+	if !in.IsKnown() {
+		return NewVrackservicessTargetSpecBgpBgpRangeValueUnknown(), nil
+	}
+
+	if in.IsNull() {
+		return NewVrackservicessTargetSpecBgpBgpRangeValueNull(), nil
+	}
+
+	attributes := map[string]attr.Value{}
+
+	val := map[string]tftypes.Value{}
+
+	err := in.As(&val)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range val {
+		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
+
+		if err != nil {
+			return nil, err
+		}
+
+		attributes[k] = a
+	}
+
+	return NewVrackservicessTargetSpecBgpBgpRangeValueMust(VrackservicessTargetSpecBgpBgpRangeValue{}.AttributeTypes(ctx), attributes), nil
+}
+
+func (t VrackservicessTargetSpecBgpBgpRangeType) ValueType(ctx context.Context) attr.Value {
+	return VrackservicessTargetSpecBgpBgpRangeValue{}
+}
+
+var _ basetypes.ObjectValuable = VrackservicessTargetSpecBgpBgpRangeValue{}
+
+type VrackservicessTargetSpecBgpBgpRangeValue struct {
+	Cidr                ovhtypes.TfStringValue                             `tfsdk:"cidr" json:"cidr"`
+	ClientPeers         ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] `tfsdk:"client_peers" json:"clientPeers"`
+	InfrastructurePeers ovhtypes.TfListNestedValue[ovhtypes.TfStringValue] `tfsdk:"infrastructure_peers" json:"infrastructurePeers"`
+	SubnetCidr          ovhtypes.TfStringValue                             `tfsdk:"subnet_cidr" json:"subnetCidr"`
+	state               attr.ValueState
+}
+
+func (v *VrackservicessTargetSpecBgpBgpRangeValue) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" {
+		v.state = attr.ValueStateNull
+		return nil
+	}
+
+	type JsonVrackservicessTargetSpecBgpBgpRangeValue VrackservicessTargetSpecBgpBgpRangeValue
+
+	var tmp JsonVrackservicessTargetSpecBgpBgpRangeValue
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		return err
+	}
+	v.Cidr = tmp.Cidr
+	v.ClientPeers = tmp.ClientPeers
+	v.InfrastructurePeers = tmp.InfrastructurePeers
+	v.SubnetCidr = tmp.SubnetCidr
+
+	v.state = attr.ValueStateKnown
+
+	return nil
+}
+
+func (v *VrackservicessTargetSpecBgpBgpRangeValue) MergeWith(other *VrackservicessTargetSpecBgpBgpRangeValue) {
+
+	if (v.Cidr.IsUnknown() || v.Cidr.IsNull()) && !other.Cidr.IsUnknown() {
+		v.Cidr = other.Cidr
+	}
+
+	if (v.ClientPeers.IsUnknown() || v.ClientPeers.IsNull()) && !other.ClientPeers.IsUnknown() {
+		v.ClientPeers = other.ClientPeers
+	}
+
+	if (v.InfrastructurePeers.IsUnknown() || v.InfrastructurePeers.IsNull()) && !other.InfrastructurePeers.IsUnknown() {
+		v.InfrastructurePeers = other.InfrastructurePeers
+	}
+
+	if (v.SubnetCidr.IsUnknown() || v.SubnetCidr.IsNull()) && !other.SubnetCidr.IsUnknown() {
+		v.SubnetCidr = other.SubnetCidr
+	}
+
+	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
+		v.state = other.state
+	}
+}
+
+func (v VrackservicessTargetSpecBgpBgpRangeValue) Attributes() map[string]attr.Value {
+	return map[string]attr.Value{
+		"cidr":                v.Cidr,
+		"clientPeers":         v.ClientPeers,
+		"infrastructurePeers": v.InfrastructurePeers,
+		"subnetCidr":          v.SubnetCidr,
+	}
+}
+func (v VrackservicessTargetSpecBgpBgpRangeValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
+	attrTypes := make(map[string]tftypes.Type, 4)
+
+	var val tftypes.Value
+	var err error
+
+	attrTypes["cidr"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["client_peers"] = basetypes.ListType{
+		ElemType: types.StringType,
+	}.TerraformType(ctx)
+	attrTypes["infrastructure_peers"] = basetypes.ListType{
+		ElemType: types.StringType,
+	}.TerraformType(ctx)
+	attrTypes["subnet_cidr"] = basetypes.StringType{}.TerraformType(ctx)
+
+	objectType := tftypes.Object{AttributeTypes: attrTypes}
+
+	switch v.state {
+	case attr.ValueStateKnown:
+		vals := make(map[string]tftypes.Value, 4)
+
+		val, err = v.Cidr.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["cidr"] = val
+
+		val, err = v.ClientPeers.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["client_peers"] = val
+
+		val, err = v.InfrastructurePeers.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["infrastructure_peers"] = val
+
+		val, err = v.SubnetCidr.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["subnet_cidr"] = val
+
+		if err := tftypes.ValidateValue(objectType, vals); err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		return tftypes.NewValue(objectType, vals), nil
+	case attr.ValueStateNull:
+		return tftypes.NewValue(objectType, nil), nil
+	case attr.ValueStateUnknown:
+		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
+	default:
+		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
+	}
+}
+
+func (v VrackservicessTargetSpecBgpBgpRangeValue) IsNull() bool {
+	return v.state == attr.ValueStateNull
+}
+
+func (v VrackservicessTargetSpecBgpBgpRangeValue) IsUnknown() bool {
+	return v.state == attr.ValueStateUnknown
+}
+
+func (v VrackservicessTargetSpecBgpBgpRangeValue) String() string {
+	return "VrackservicessTargetSpecBgpBgpRangeValue"
+}
+
+func (v VrackservicessTargetSpecBgpBgpRangeValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if v.IsNull() {
+		return types.ObjectNull(v.AttributeTypes(ctx)), diags
+	}
+
+	if v.IsUnknown() {
+		return types.ObjectUnknown(v.AttributeTypes(ctx)), diags
+	}
+
+	objVal, diags := types.ObjectValue(
+		map[string]attr.Type{
+			"cidr":                 ovhtypes.TfStringType{},
+			"client_peers":         ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+			"infrastructure_peers": ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+			"subnet_cidr":          ovhtypes.TfStringType{},
+		},
+		map[string]attr.Value{
+			"cidr":                 v.Cidr,
+			"client_peers":         v.ClientPeers,
+			"infrastructure_peers": v.InfrastructurePeers,
+			"subnet_cidr":          v.SubnetCidr,
+		})
+
+	return objVal, diags
+}
+
+func (v VrackservicessTargetSpecBgpBgpRangeValue) Equal(o attr.Value) bool {
+	other, ok := o.(VrackservicessTargetSpecBgpBgpRangeValue)
+
+	if !ok {
+		return false
+	}
+
+	if v.state != other.state {
+		return false
+	}
+
+	if v.state != attr.ValueStateKnown {
+		return true
+	}
+
+	if !v.Cidr.Equal(other.Cidr) {
+		return false
+	}
+
+	if !v.ClientPeers.Equal(other.ClientPeers) {
+		return false
+	}
+
+	if !v.InfrastructurePeers.Equal(other.InfrastructurePeers) {
+		return false
+	}
+
+	if !v.SubnetCidr.Equal(other.SubnetCidr) {
+		return false
+	}
+
+	return true
+}
+
+func (v VrackservicessTargetSpecBgpBgpRangeValue) Type(ctx context.Context) attr.Type {
+	return VrackservicessTargetSpecBgpBgpRangeType{
+		basetypes.ObjectType{
+			AttrTypes: v.AttributeTypes(ctx),
+		},
+	}
+}
+
+func (v VrackservicessTargetSpecBgpBgpRangeValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
+	return map[string]attr.Type{
+		"cidr":                 ovhtypes.TfStringType{},
+		"client_peers":         ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+		"infrastructure_peers": ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+		"subnet_cidr":          ovhtypes.TfStringType{},
+	}
+}
+
+var _ basetypes.ObjectTypable = VrackservicessTargetSpecServicesType{}
+
+type VrackservicessTargetSpecServicesType struct {
+	basetypes.ObjectType
+}
+
+func (t VrackservicessTargetSpecServicesType) Equal(o attr.Type) bool {
+	other, ok := o.(VrackservicessTargetSpecServicesType)
+
+	if !ok {
+		return false
+	}
+
+	return t.ObjectType.Equal(other.ObjectType)
+}
+
+func (t VrackservicessTargetSpecServicesType) String() string {
+	return "VrackservicessTargetSpecServicesType"
+}
+
+func (t VrackservicessTargetSpecServicesType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	attributes := in.Attributes()
+
+	serviceRangeAttribute, ok := attributes["service_range"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`service_range is missing from object`)
+
+		return nil, diags
+	}
+
+	serviceRangeVal, ok := serviceRangeAttribute.(ovhtypes.TfListNestedValue[VrackservicessTargetSpecServicesServiceRangeValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`service_range expected to be ovhtypes.TfListNestedValue[VrackservicessTargetSpecServicesServiceRangeValue], was: %T`, serviceRangeAttribute))
+	}
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return VrackservicessTargetSpecServicesValue{
+		ServiceRange: serviceRangeVal,
+		state:        attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVrackservicessTargetSpecServicesValueNull() VrackservicessTargetSpecServicesValue {
+	return VrackservicessTargetSpecServicesValue{
+		state: attr.ValueStateNull,
+	}
+}
+
+func NewVrackservicessTargetSpecServicesValueUnknown() VrackservicessTargetSpecServicesValue {
+	return VrackservicessTargetSpecServicesValue{
+		state: attr.ValueStateUnknown,
+	}
+}
+
+func NewVrackservicessTargetSpecServicesValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (VrackservicessTargetSpecServicesValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
+	ctx := context.Background()
+
+	for name, attributeType := range attributeTypes {
+		attribute, ok := attributes[name]
+
+		if !ok {
+			diags.AddError(
+				"Missing VrackservicessTargetSpecServicesValue Attribute Value",
+				"While creating a VrackservicessTargetSpecServicesValue value, a missing attribute value was detected. "+
+					"A VrackservicessTargetSpecServicesValue must contain values for all attributes, even if null or unknown. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VrackservicessTargetSpecServicesValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
+			)
+
+			continue
+		}
+
+		if !attributeType.Equal(attribute.Type(ctx)) {
+			diags.AddError(
+				"Invalid VrackservicessTargetSpecServicesValue Attribute Type",
+				"While creating a VrackservicessTargetSpecServicesValue value, an invalid attribute value was detected. "+
+					"A VrackservicessTargetSpecServicesValue must use a matching attribute type for the value. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VrackservicessTargetSpecServicesValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
+					fmt.Sprintf("VrackservicessTargetSpecServicesValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
+			)
+		}
+	}
+
+	for name := range attributes {
+		_, ok := attributeTypes[name]
+
+		if !ok {
+			diags.AddError(
+				"Extra VrackservicessTargetSpecServicesValue Attribute Value",
+				"While creating a VrackservicessTargetSpecServicesValue value, an extra attribute value was detected. "+
+					"A VrackservicessTargetSpecServicesValue must not contain values beyond the expected attribute types. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("Extra VrackservicessTargetSpecServicesValue Attribute Name: %s", name),
+			)
+		}
+	}
+
+	if diags.HasError() {
+		return NewVrackservicessTargetSpecServicesValueUnknown(), diags
+	}
+
+	serviceRangeAttribute, ok := attributes["service_range"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`service_range is missing from object`)
+
+		return NewVrackservicessTargetSpecServicesValueUnknown(), diags
+	}
+
+	serviceRangeVal, ok := serviceRangeAttribute.(ovhtypes.TfListNestedValue[VrackservicessTargetSpecServicesServiceRangeValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`service_range expected to be ovhtypes.TfListNestedValue[VrackservicessTargetSpecServicesServiceRangeValue], was: %T`, serviceRangeAttribute))
+	}
+
+	if diags.HasError() {
+		return NewVrackservicessTargetSpecServicesValueUnknown(), diags
+	}
+
+	return VrackservicessTargetSpecServicesValue{
+		ServiceRange: serviceRangeVal,
+		state:        attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVrackservicessTargetSpecServicesValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) VrackservicessTargetSpecServicesValue {
+	object, diags := NewVrackservicessTargetSpecServicesValue(attributeTypes, attributes)
+
+	if diags.HasError() {
+		// This could potentially be added to the diag package.
+		diagsStrings := make([]string, 0, len(diags))
+
+		for _, diagnostic := range diags {
+			diagsStrings = append(diagsStrings, fmt.Sprintf(
+				"%s | %s | %s",
+				diagnostic.Severity(),
+				diagnostic.Summary(),
+				diagnostic.Detail()))
+		}
+
+		panic("NewVrackservicessTargetSpecServicesValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
+	}
+
+	return object
+}
+
+func (t VrackservicessTargetSpecServicesType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+	if in.Type() == nil {
+		return NewVrackservicessTargetSpecServicesValueNull(), nil
+	}
+
+	if !in.Type().Equal(t.TerraformType(ctx)) {
+		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
+	}
+
+	if !in.IsKnown() {
+		return NewVrackservicessTargetSpecServicesValueUnknown(), nil
+	}
+
+	if in.IsNull() {
+		return NewVrackservicessTargetSpecServicesValueNull(), nil
+	}
+
+	attributes := map[string]attr.Value{}
+
+	val := map[string]tftypes.Value{}
+
+	err := in.As(&val)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range val {
+		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
+
+		if err != nil {
+			return nil, err
+		}
+
+		attributes[k] = a
+	}
+
+	return NewVrackservicessTargetSpecServicesValueMust(VrackservicessTargetSpecServicesValue{}.AttributeTypes(ctx), attributes), nil
+}
+
+func (t VrackservicessTargetSpecServicesType) ValueType(ctx context.Context) attr.Value {
+	return VrackservicessTargetSpecServicesValue{}
+}
+
+var _ basetypes.ObjectValuable = VrackservicessTargetSpecServicesValue{}
+
+type VrackservicessTargetSpecServicesValue struct {
+	ServiceRange ovhtypes.TfListNestedValue[VrackservicessTargetSpecServicesServiceRangeValue] `tfsdk:"service_range" json:"serviceRange"`
+	state        attr.ValueState
+}
+
+func (v *VrackservicessTargetSpecServicesValue) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" {
+		v.state = attr.ValueStateNull
+		return nil
+	}
+
+	type JsonVrackservicessTargetSpecServicesValue VrackservicessTargetSpecServicesValue
+
+	var tmp JsonVrackservicessTargetSpecServicesValue
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		return err
+	}
+	v.ServiceRange = tmp.ServiceRange
+
+	v.state = attr.ValueStateKnown
+
+	return nil
+}
+
+func (v *VrackservicessTargetSpecServicesValue) MergeWith(other *VrackservicessTargetSpecServicesValue) {
+
+	if (v.ServiceRange.IsUnknown() || v.ServiceRange.IsNull()) && !other.ServiceRange.IsUnknown() {
+		v.ServiceRange = other.ServiceRange
+	} else if !other.ServiceRange.IsUnknown() {
+		newSlice := make([]attr.Value, 0)
+		elems := v.ServiceRange.Elements()
+		newElems := other.ServiceRange.Elements()
+
+		if len(elems) != len(newElems) {
+			v.ServiceRange = other.ServiceRange
+		} else {
+			for idx, e := range elems {
+				tmp := e.(VrackservicessTargetSpecServicesServiceRangeValue)
+				tmp2 := newElems[idx].(VrackservicessTargetSpecServicesServiceRangeValue)
+				tmp.MergeWith(&tmp2)
+				newSlice = append(newSlice, tmp)
+			}
+
+			v.ServiceRange = ovhtypes.TfListNestedValue[VrackservicessTargetSpecServicesServiceRangeValue]{
+				ListValue: basetypes.NewListValueMust(VrackservicessTargetSpecServicesServiceRangeValue{}.Type(context.Background()), newSlice),
+			}
+		}
+	}
+
+	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
+		v.state = other.state
+	}
+}
+
+func (v VrackservicessTargetSpecServicesValue) Attributes() map[string]attr.Value {
+	return map[string]attr.Value{
+		"serviceRange": v.ServiceRange,
+	}
+}
+func (v VrackservicessTargetSpecServicesValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
+	attrTypes := make(map[string]tftypes.Type, 1)
+
+	var val tftypes.Value
+	var err error
+
+	attrTypes["service_range"] = basetypes.ListType{
+		ElemType: VrackservicessTargetSpecServicesServiceRangeValue{}.Type(ctx),
+	}.TerraformType(ctx)
+
+	objectType := tftypes.Object{AttributeTypes: attrTypes}
+
+	switch v.state {
+	case attr.ValueStateKnown:
+		vals := make(map[string]tftypes.Value, 1)
+
+		val, err = v.ServiceRange.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["service_range"] = val
+
+		if err := tftypes.ValidateValue(objectType, vals); err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		return tftypes.NewValue(objectType, vals), nil
+	case attr.ValueStateNull:
+		return tftypes.NewValue(objectType, nil), nil
+	case attr.ValueStateUnknown:
+		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
+	default:
+		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
+	}
+}
+
+func (v VrackservicessTargetSpecServicesValue) IsNull() bool {
+	return v.state == attr.ValueStateNull
+}
+
+func (v VrackservicessTargetSpecServicesValue) IsUnknown() bool {
+	return v.state == attr.ValueStateUnknown
+}
+
+func (v VrackservicessTargetSpecServicesValue) String() string {
+	return "VrackservicessTargetSpecServicesValue"
+}
+
+func (v VrackservicessTargetSpecServicesValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if v.IsNull() {
+		return types.ObjectNull(v.AttributeTypes(ctx)), diags
+	}
+
+	if v.IsUnknown() {
+		return types.ObjectUnknown(v.AttributeTypes(ctx)), diags
+	}
+
+	objVal, diags := types.ObjectValue(
+		map[string]attr.Type{
+			"service_range": ovhtypes.NewTfListNestedType[VrackservicessTargetSpecServicesServiceRangeValue](ctx),
+		},
+		map[string]attr.Value{
+			"service_range": v.ServiceRange,
+		})
+
+	return objVal, diags
+}
+
+func (v VrackservicessTargetSpecServicesValue) Equal(o attr.Value) bool {
+	other, ok := o.(VrackservicessTargetSpecServicesValue)
+
+	if !ok {
+		return false
+	}
+
+	if v.state != other.state {
+		return false
+	}
+
+	if v.state != attr.ValueStateKnown {
+		return true
+	}
+
+	if !v.ServiceRange.Equal(other.ServiceRange) {
+		return false
+	}
+
+	return true
+}
+
+func (v VrackservicessTargetSpecServicesValue) Type(ctx context.Context) attr.Type {
+	return VrackservicessTargetSpecServicesType{
+		basetypes.ObjectType{
+			AttrTypes: v.AttributeTypes(ctx),
+		},
+	}
+}
+
+func (v VrackservicessTargetSpecServicesValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
+	return map[string]attr.Type{
+		"service_range": ovhtypes.NewTfListNestedType[VrackservicessTargetSpecServicesServiceRangeValue](ctx),
+	}
+}
+
+var _ basetypes.ObjectTypable = VrackservicessTargetSpecServicesServiceRangeType{}
+
+type VrackservicessTargetSpecServicesServiceRangeType struct {
+	basetypes.ObjectType
+}
+
+func (t VrackservicessTargetSpecServicesServiceRangeType) Equal(o attr.Type) bool {
+	other, ok := o.(VrackservicessTargetSpecServicesServiceRangeType)
+
+	if !ok {
+		return false
+	}
+
+	return t.ObjectType.Equal(other.ObjectType)
+}
+
+func (t VrackservicessTargetSpecServicesServiceRangeType) String() string {
+	return "VrackservicessTargetSpecServicesServiceRangeType"
+}
+
+func (t VrackservicessTargetSpecServicesServiceRangeType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	attributes := in.Attributes()
+
+	cidrAttribute, ok := attributes["cidr"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`cidr is missing from object`)
+
+		return nil, diags
+	}
+
+	cidrVal, ok := cidrAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`cidr expected to be ovhtypes.TfStringValue, was: %T`, cidrAttribute))
+	}
+
+	serviceEndpointsAttribute, ok := attributes["service_endpoints"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`service_endpoints is missing from object`)
+
+		return nil, diags
+	}
+
+	serviceEndpointsVal, ok := serviceEndpointsAttribute.(ovhtypes.TfListNestedValue[VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`service_endpoints expected to be ovhtypes.TfListNestedValue[VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue], was: %T`, serviceEndpointsAttribute))
+	}
+
+	subnetCidrAttribute, ok := attributes["subnet_cidr"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`subnet_cidr is missing from object`)
+
+		return nil, diags
+	}
+
+	subnetCidrVal, ok := subnetCidrAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`subnet_cidr expected to be ovhtypes.TfStringValue, was: %T`, subnetCidrAttribute))
+	}
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return VrackservicessTargetSpecServicesServiceRangeValue{
+		Cidr:             cidrVal,
+		ServiceEndpoints: serviceEndpointsVal,
+		SubnetCidr:       subnetCidrVal,
+		state:            attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVrackservicessTargetSpecServicesServiceRangeValueNull() VrackservicessTargetSpecServicesServiceRangeValue {
+	return VrackservicessTargetSpecServicesServiceRangeValue{
+		state: attr.ValueStateNull,
+	}
+}
+
+func NewVrackservicessTargetSpecServicesServiceRangeValueUnknown() VrackservicessTargetSpecServicesServiceRangeValue {
+	return VrackservicessTargetSpecServicesServiceRangeValue{
+		state: attr.ValueStateUnknown,
+	}
+}
+
+func NewVrackservicessTargetSpecServicesServiceRangeValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (VrackservicessTargetSpecServicesServiceRangeValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
+	ctx := context.Background()
+
+	for name, attributeType := range attributeTypes {
+		attribute, ok := attributes[name]
+
+		if !ok {
+			diags.AddError(
+				"Missing VrackservicessTargetSpecServicesServiceRangeValue Attribute Value",
+				"While creating a VrackservicessTargetSpecServicesServiceRangeValue value, a missing attribute value was detected. "+
+					"A VrackservicessTargetSpecServicesServiceRangeValue must contain values for all attributes, even if null or unknown. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VrackservicessTargetSpecServicesServiceRangeValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
+			)
+
+			continue
+		}
+
+		if !attributeType.Equal(attribute.Type(ctx)) {
+			diags.AddError(
+				"Invalid VrackservicessTargetSpecServicesServiceRangeValue Attribute Type",
+				"While creating a VrackservicessTargetSpecServicesServiceRangeValue value, an invalid attribute value was detected. "+
+					"A VrackservicessTargetSpecServicesServiceRangeValue must use a matching attribute type for the value. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VrackservicessTargetSpecServicesServiceRangeValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
+					fmt.Sprintf("VrackservicessTargetSpecServicesServiceRangeValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
+			)
+		}
+	}
+
+	for name := range attributes {
+		_, ok := attributeTypes[name]
+
+		if !ok {
+			diags.AddError(
+				"Extra VrackservicessTargetSpecServicesServiceRangeValue Attribute Value",
+				"While creating a VrackservicessTargetSpecServicesServiceRangeValue value, an extra attribute value was detected. "+
+					"A VrackservicessTargetSpecServicesServiceRangeValue must not contain values beyond the expected attribute types. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("Extra VrackservicessTargetSpecServicesServiceRangeValue Attribute Name: %s", name),
+			)
+		}
+	}
+
+	if diags.HasError() {
+		return NewVrackservicessTargetSpecServicesServiceRangeValueUnknown(), diags
+	}
+
+	cidrAttribute, ok := attributes["cidr"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`cidr is missing from object`)
+
+		return NewVrackservicessTargetSpecServicesServiceRangeValueUnknown(), diags
+	}
+
+	cidrVal, ok := cidrAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`cidr expected to be ovhtypes.TfStringValue, was: %T`, cidrAttribute))
+	}
+
+	serviceEndpointsAttribute, ok := attributes["service_endpoints"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`service_endpoints is missing from object`)
+
+		return NewVrackservicessTargetSpecServicesServiceRangeValueUnknown(), diags
+	}
+
+	serviceEndpointsVal, ok := serviceEndpointsAttribute.(ovhtypes.TfListNestedValue[VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue])
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`service_endpoints expected to be ovhtypes.TfListNestedValue[VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue], was: %T`, serviceEndpointsAttribute))
+	}
+
+	subnetCidrAttribute, ok := attributes["subnet_cidr"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`subnet_cidr is missing from object`)
+
+		return NewVrackservicessTargetSpecServicesServiceRangeValueUnknown(), diags
+	}
+
+	subnetCidrVal, ok := subnetCidrAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`subnet_cidr expected to be ovhtypes.TfStringValue, was: %T`, subnetCidrAttribute))
+	}
+
+	if diags.HasError() {
+		return NewVrackservicessTargetSpecServicesServiceRangeValueUnknown(), diags
+	}
+
+	return VrackservicessTargetSpecServicesServiceRangeValue{
+		Cidr:             cidrVal,
+		ServiceEndpoints: serviceEndpointsVal,
+		SubnetCidr:       subnetCidrVal,
+		state:            attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVrackservicessTargetSpecServicesServiceRangeValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) VrackservicessTargetSpecServicesServiceRangeValue {
+	object, diags := NewVrackservicessTargetSpecServicesServiceRangeValue(attributeTypes, attributes)
+
+	if diags.HasError() {
+		// This could potentially be added to the diag package.
+		diagsStrings := make([]string, 0, len(diags))
+
+		for _, diagnostic := range diags {
+			diagsStrings = append(diagsStrings, fmt.Sprintf(
+				"%s | %s | %s",
+				diagnostic.Severity(),
+				diagnostic.Summary(),
+				diagnostic.Detail()))
+		}
+
+		panic("NewVrackservicessTargetSpecServicesServiceRangeValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
+	}
+
+	return object
+}
+
+func (t VrackservicessTargetSpecServicesServiceRangeType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+	if in.Type() == nil {
+		return NewVrackservicessTargetSpecServicesServiceRangeValueNull(), nil
+	}
+
+	if !in.Type().Equal(t.TerraformType(ctx)) {
+		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
+	}
+
+	if !in.IsKnown() {
+		return NewVrackservicessTargetSpecServicesServiceRangeValueUnknown(), nil
+	}
+
+	if in.IsNull() {
+		return NewVrackservicessTargetSpecServicesServiceRangeValueNull(), nil
+	}
+
+	attributes := map[string]attr.Value{}
+
+	val := map[string]tftypes.Value{}
+
+	err := in.As(&val)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range val {
+		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
+
+		if err != nil {
+			return nil, err
+		}
+
+		attributes[k] = a
+	}
+
+	return NewVrackservicessTargetSpecServicesServiceRangeValueMust(VrackservicessTargetSpecServicesServiceRangeValue{}.AttributeTypes(ctx), attributes), nil
+}
+
+func (t VrackservicessTargetSpecServicesServiceRangeType) ValueType(ctx context.Context) attr.Value {
+	return VrackservicessTargetSpecServicesServiceRangeValue{}
+}
+
+var _ basetypes.ObjectValuable = VrackservicessTargetSpecServicesServiceRangeValue{}
+
+type VrackservicessTargetSpecServicesServiceRangeValue struct {
+	Cidr             ovhtypes.TfStringValue                                                                        `tfsdk:"cidr" json:"cidr"`
+	ServiceEndpoints ovhtypes.TfListNestedValue[VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue] `tfsdk:"service_endpoints" json:"serviceEndpoints"`
+	SubnetCidr       ovhtypes.TfStringValue                                                                        `tfsdk:"subnet_cidr" json:"subnetCidr"`
+	state            attr.ValueState
+}
+
+func (v *VrackservicessTargetSpecServicesServiceRangeValue) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" {
+		v.state = attr.ValueStateNull
+		return nil
+	}
+
+	type JsonVrackservicessTargetSpecServicesServiceRangeValue VrackservicessTargetSpecServicesServiceRangeValue
+
+	var tmp JsonVrackservicessTargetSpecServicesServiceRangeValue
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		return err
+	}
+	v.Cidr = tmp.Cidr
+	v.ServiceEndpoints = tmp.ServiceEndpoints
+	v.SubnetCidr = tmp.SubnetCidr
+
+	v.state = attr.ValueStateKnown
+
+	return nil
+}
+
+func (v *VrackservicessTargetSpecServicesServiceRangeValue) MergeWith(other *VrackservicessTargetSpecServicesServiceRangeValue) {
+
+	if (v.Cidr.IsUnknown() || v.Cidr.IsNull()) && !other.Cidr.IsUnknown() {
+		v.Cidr = other.Cidr
+	}
+
+	if (v.ServiceEndpoints.IsUnknown() || v.ServiceEndpoints.IsNull()) && !other.ServiceEndpoints.IsUnknown() {
+		v.ServiceEndpoints = other.ServiceEndpoints
+	} else if !other.ServiceEndpoints.IsUnknown() {
+		newSlice := make([]attr.Value, 0)
+		elems := v.ServiceEndpoints.Elements()
+		newElems := other.ServiceEndpoints.Elements()
+
+		if len(elems) != len(newElems) {
+			v.ServiceEndpoints = other.ServiceEndpoints
+		} else {
+			for idx, e := range elems {
+				tmp := e.(VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue)
+				tmp2 := newElems[idx].(VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue)
+				tmp.MergeWith(&tmp2)
+				newSlice = append(newSlice, tmp)
+			}
+
+			v.ServiceEndpoints = ovhtypes.TfListNestedValue[VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue]{
+				ListValue: basetypes.NewListValueMust(VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue{}.Type(context.Background()), newSlice),
+			}
+		}
+	}
+
+	if (v.SubnetCidr.IsUnknown() || v.SubnetCidr.IsNull()) && !other.SubnetCidr.IsUnknown() {
+		v.SubnetCidr = other.SubnetCidr
+	}
+
+	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
+		v.state = other.state
+	}
+}
+
+func (v VrackservicessTargetSpecServicesServiceRangeValue) Attributes() map[string]attr.Value {
+	return map[string]attr.Value{
+		"cidr":             v.Cidr,
+		"serviceEndpoints": v.ServiceEndpoints,
+		"subnetCidr":       v.SubnetCidr,
+	}
+}
+func (v VrackservicessTargetSpecServicesServiceRangeValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
+	attrTypes := make(map[string]tftypes.Type, 3)
+
+	var val tftypes.Value
+	var err error
+
+	attrTypes["cidr"] = basetypes.StringType{}.TerraformType(ctx)
+	attrTypes["service_endpoints"] = basetypes.ListType{
+		ElemType: VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue{}.Type(ctx),
+	}.TerraformType(ctx)
+	attrTypes["subnet_cidr"] = basetypes.StringType{}.TerraformType(ctx)
+
+	objectType := tftypes.Object{AttributeTypes: attrTypes}
+
+	switch v.state {
+	case attr.ValueStateKnown:
+		vals := make(map[string]tftypes.Value, 3)
+
+		val, err = v.Cidr.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["cidr"] = val
+
+		val, err = v.ServiceEndpoints.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["service_endpoints"] = val
+
+		val, err = v.SubnetCidr.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["subnet_cidr"] = val
+
+		if err := tftypes.ValidateValue(objectType, vals); err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		return tftypes.NewValue(objectType, vals), nil
+	case attr.ValueStateNull:
+		return tftypes.NewValue(objectType, nil), nil
+	case attr.ValueStateUnknown:
+		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
+	default:
+		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
+	}
+}
+
+func (v VrackservicessTargetSpecServicesServiceRangeValue) IsNull() bool {
+	return v.state == attr.ValueStateNull
+}
+
+func (v VrackservicessTargetSpecServicesServiceRangeValue) IsUnknown() bool {
+	return v.state == attr.ValueStateUnknown
+}
+
+func (v VrackservicessTargetSpecServicesServiceRangeValue) String() string {
+	return "VrackservicessTargetSpecServicesServiceRangeValue"
+}
+
+func (v VrackservicessTargetSpecServicesServiceRangeValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if v.IsNull() {
+		return types.ObjectNull(v.AttributeTypes(ctx)), diags
+	}
+
+	if v.IsUnknown() {
+		return types.ObjectUnknown(v.AttributeTypes(ctx)), diags
+	}
+
+	objVal, diags := types.ObjectValue(
+		map[string]attr.Type{
+			"cidr":              ovhtypes.TfStringType{},
+			"service_endpoints": ovhtypes.NewTfListNestedType[VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue](ctx),
+			"subnet_cidr":       ovhtypes.TfStringType{},
+		},
+		map[string]attr.Value{
+			"cidr":              v.Cidr,
+			"service_endpoints": v.ServiceEndpoints,
+			"subnet_cidr":       v.SubnetCidr,
+		})
+
+	return objVal, diags
+}
+
+func (v VrackservicessTargetSpecServicesServiceRangeValue) Equal(o attr.Value) bool {
+	other, ok := o.(VrackservicessTargetSpecServicesServiceRangeValue)
+
+	if !ok {
+		return false
+	}
+
+	if v.state != other.state {
+		return false
+	}
+
+	if v.state != attr.ValueStateKnown {
+		return true
+	}
+
+	if !v.Cidr.Equal(other.Cidr) {
+		return false
+	}
+
+	if !v.ServiceEndpoints.Equal(other.ServiceEndpoints) {
+		return false
+	}
+
+	if !v.SubnetCidr.Equal(other.SubnetCidr) {
+		return false
+	}
+
+	return true
+}
+
+func (v VrackservicessTargetSpecServicesServiceRangeValue) Type(ctx context.Context) attr.Type {
+	return VrackservicessTargetSpecServicesServiceRangeType{
+		basetypes.ObjectType{
+			AttrTypes: v.AttributeTypes(ctx),
+		},
+	}
+}
+
+func (v VrackservicessTargetSpecServicesServiceRangeValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
+	return map[string]attr.Type{
+		"cidr":              ovhtypes.TfStringType{},
+		"service_endpoints": ovhtypes.NewTfListNestedType[VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue](ctx),
+		"subnet_cidr":       ovhtypes.TfStringType{},
+	}
+}
+
+var _ basetypes.ObjectTypable = VrackservicessTargetSpecServicesServiceRangeServiceEndpointsType{}
+
+type VrackservicessTargetSpecServicesServiceRangeServiceEndpointsType struct {
+	basetypes.ObjectType
+}
+
+func (t VrackservicessTargetSpecServicesServiceRangeServiceEndpointsType) Equal(o attr.Type) bool {
+	other, ok := o.(VrackservicessTargetSpecServicesServiceRangeServiceEndpointsType)
+
+	if !ok {
+		return false
+	}
+
+	return t.ObjectType.Equal(other.ObjectType)
+}
+
+func (t VrackservicessTargetSpecServicesServiceRangeServiceEndpointsType) String() string {
+	return "VrackservicessTargetSpecServicesServiceRangeServiceEndpointsType"
+}
+
+func (t VrackservicessTargetSpecServicesServiceRangeServiceEndpointsType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	attributes := in.Attributes()
+
+	managedServiceUrnAttribute, ok := attributes["managed_service_urn"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`managed_service_urn is missing from object`)
+
+		return nil, diags
+	}
+
+	managedServiceUrnVal, ok := managedServiceUrnAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`managed_service_urn expected to be ovhtypes.TfStringValue, was: %T`, managedServiceUrnAttribute))
+	}
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue{
+		ManagedServiceUrn: managedServiceUrnVal,
+		state:             attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVrackservicessTargetSpecServicesServiceRangeServiceEndpointsValueNull() VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue {
+	return VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue{
+		state: attr.ValueStateNull,
+	}
+}
+
+func NewVrackservicessTargetSpecServicesServiceRangeServiceEndpointsValueUnknown() VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue {
+	return VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue{
+		state: attr.ValueStateUnknown,
+	}
+}
+
+func NewVrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
+	ctx := context.Background()
+
+	for name, attributeType := range attributeTypes {
+		attribute, ok := attributes[name]
+
+		if !ok {
+			diags.AddError(
+				"Missing VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue Attribute Value",
+				"While creating a VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue value, a missing attribute value was detected. "+
+					"A VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue must contain values for all attributes, even if null or unknown. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
+			)
+
+			continue
+		}
+
+		if !attributeType.Equal(attribute.Type(ctx)) {
+			diags.AddError(
+				"Invalid VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue Attribute Type",
+				"While creating a VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue value, an invalid attribute value was detected. "+
+					"A VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue must use a matching attribute type for the value. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
+					fmt.Sprintf("VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
+			)
+		}
+	}
+
+	for name := range attributes {
+		_, ok := attributeTypes[name]
+
+		if !ok {
+			diags.AddError(
+				"Extra VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue Attribute Value",
+				"While creating a VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue value, an extra attribute value was detected. "+
+					"A VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue must not contain values beyond the expected attribute types. "+
+					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
+					fmt.Sprintf("Extra VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue Attribute Name: %s", name),
+			)
+		}
+	}
+
+	if diags.HasError() {
+		return NewVrackservicessTargetSpecServicesServiceRangeServiceEndpointsValueUnknown(), diags
+	}
+
+	managedServiceUrnAttribute, ok := attributes["managed_service_urn"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`managed_service_urn is missing from object`)
+
+		return NewVrackservicessTargetSpecServicesServiceRangeServiceEndpointsValueUnknown(), diags
+	}
+
+	managedServiceUrnVal, ok := managedServiceUrnAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`managed_service_urn expected to be ovhtypes.TfStringValue, was: %T`, managedServiceUrnAttribute))
+	}
+
+	if diags.HasError() {
+		return NewVrackservicessTargetSpecServicesServiceRangeServiceEndpointsValueUnknown(), diags
+	}
+
+	return VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue{
+		ManagedServiceUrn: managedServiceUrnVal,
+		state:             attr.ValueStateKnown,
+	}, diags
+}
+
+func NewVrackservicessTargetSpecServicesServiceRangeServiceEndpointsValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue {
+	object, diags := NewVrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue(attributeTypes, attributes)
+
+	if diags.HasError() {
+		// This could potentially be added to the diag package.
+		diagsStrings := make([]string, 0, len(diags))
+
+		for _, diagnostic := range diags {
+			diagsStrings = append(diagsStrings, fmt.Sprintf(
+				"%s | %s | %s",
+				diagnostic.Severity(),
+				diagnostic.Summary(),
+				diagnostic.Detail()))
+		}
+
+		panic("NewVrackservicessTargetSpecServicesServiceRangeServiceEndpointsValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
+	}
+
+	return object
+}
+
+func (t VrackservicessTargetSpecServicesServiceRangeServiceEndpointsType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+	if in.Type() == nil {
+		return NewVrackservicessTargetSpecServicesServiceRangeServiceEndpointsValueNull(), nil
+	}
+
+	if !in.Type().Equal(t.TerraformType(ctx)) {
+		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
+	}
+
+	if !in.IsKnown() {
+		return NewVrackservicessTargetSpecServicesServiceRangeServiceEndpointsValueUnknown(), nil
+	}
+
+	if in.IsNull() {
+		return NewVrackservicessTargetSpecServicesServiceRangeServiceEndpointsValueNull(), nil
+	}
+
+	attributes := map[string]attr.Value{}
+
+	val := map[string]tftypes.Value{}
+
+	err := in.As(&val)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range val {
+		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
+
+		if err != nil {
+			return nil, err
+		}
+
+		attributes[k] = a
+	}
+
+	return NewVrackservicessTargetSpecServicesServiceRangeServiceEndpointsValueMust(VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue{}.AttributeTypes(ctx), attributes), nil
+}
+
+func (t VrackservicessTargetSpecServicesServiceRangeServiceEndpointsType) ValueType(ctx context.Context) attr.Value {
+	return VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue{}
+}
+
+var _ basetypes.ObjectValuable = VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue{}
+
+type VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue struct {
+	ManagedServiceUrn ovhtypes.TfStringValue `tfsdk:"managed_service_urn" json:"managedServiceURN"`
+	state             attr.ValueState
+}
+
+func (v *VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" {
+		v.state = attr.ValueStateNull
+		return nil
+	}
+
+	type JsonVrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue
+
+	var tmp JsonVrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		return err
+	}
+	v.ManagedServiceUrn = tmp.ManagedServiceUrn
+
+	v.state = attr.ValueStateKnown
+
+	return nil
+}
+
+func (v *VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue) MergeWith(other *VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue) {
+
+	if (v.ManagedServiceUrn.IsUnknown() || v.ManagedServiceUrn.IsNull()) && !other.ManagedServiceUrn.IsUnknown() {
+		v.ManagedServiceUrn = other.ManagedServiceUrn
+	}
+
+	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
+		v.state = other.state
+	}
+}
+
+func (v VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue) Attributes() map[string]attr.Value {
+	return map[string]attr.Value{
+		"managedServiceURN": v.ManagedServiceUrn,
+	}
+}
+func (v VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
+	attrTypes := make(map[string]tftypes.Type, 1)
+
+	var val tftypes.Value
+	var err error
+
+	attrTypes["managed_service_urn"] = basetypes.StringType{}.TerraformType(ctx)
+
+	objectType := tftypes.Object{AttributeTypes: attrTypes}
+
+	switch v.state {
+	case attr.ValueStateKnown:
+		vals := make(map[string]tftypes.Value, 1)
+
+		val, err = v.ManagedServiceUrn.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["managed_service_urn"] = val
+
+		if err := tftypes.ValidateValue(objectType, vals); err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		return tftypes.NewValue(objectType, vals), nil
+	case attr.ValueStateNull:
+		return tftypes.NewValue(objectType, nil), nil
+	case attr.ValueStateUnknown:
+		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
+	default:
+		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
+	}
+}
+
+func (v VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue) IsNull() bool {
+	return v.state == attr.ValueStateNull
+}
+
+func (v VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue) IsUnknown() bool {
+	return v.state == attr.ValueStateUnknown
+}
+
+func (v VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue) String() string {
+	return "VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue"
+}
+
+func (v VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if v.IsNull() {
+		return types.ObjectNull(v.AttributeTypes(ctx)), diags
+	}
+
+	if v.IsUnknown() {
+		return types.ObjectUnknown(v.AttributeTypes(ctx)), diags
+	}
+
+	objVal, diags := types.ObjectValue(
+		map[string]attr.Type{
+			"managed_service_urn": ovhtypes.TfStringType{},
+		},
+		map[string]attr.Value{
+			"managed_service_urn": v.ManagedServiceUrn,
+		})
+
+	return objVal, diags
+}
+
+func (v VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue) Equal(o attr.Value) bool {
+	other, ok := o.(VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue)
+
+	if !ok {
+		return false
+	}
+
+	if v.state != other.state {
+		return false
+	}
+
+	if v.state != attr.ValueStateKnown {
+		return true
+	}
+
+	if !v.ManagedServiceUrn.Equal(other.ManagedServiceUrn) {
+		return false
+	}
+
+	return true
+}
+
+func (v VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue) Type(ctx context.Context) attr.Type {
+	return VrackservicessTargetSpecServicesServiceRangeServiceEndpointsType{
+		basetypes.ObjectType{
+			AttrTypes: v.AttributeTypes(ctx),
+		},
+	}
+}
+
+func (v VrackservicessTargetSpecServicesServiceRangeServiceEndpointsValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
+	return map[string]attr.Type{
+		"managed_service_urn": ovhtypes.TfStringType{},
 	}
 }
 
@@ -5198,6 +13374,24 @@ func (t VrackservicessTargetSpecSubnetsType) ValueFromObject(ctx context.Context
 	var diags diag.Diagnostics
 
 	attributes := in.Attributes()
+
+	azAttribute, ok := attributes["az"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`az is missing from object`)
+
+		return nil, diags
+	}
+
+	azVal, ok := azAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`az expected to be ovhtypes.TfStringValue, was: %T`, azAttribute))
+	}
 
 	cidrAttribute, ok := attributes["cidr"]
 
@@ -5235,42 +13429,6 @@ func (t VrackservicessTargetSpecSubnetsType) ValueFromObject(ctx context.Context
 			fmt.Sprintf(`display_name expected to be ovhtypes.TfStringValue, was: %T`, displayNameAttribute))
 	}
 
-	serviceEndpointsAttribute, ok := attributes["service_endpoints"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`service_endpoints is missing from object`)
-
-		return nil, diags
-	}
-
-	serviceEndpointsVal, ok := serviceEndpointsAttribute.(ovhtypes.TfListNestedValue[VrackservicessTargetSpecSubnetsServiceEndpointsValue])
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`service_endpoints expected to be ovhtypes.TfListNestedValue[VrackservicessTargetSpecSubnetsServiceEndpointsValue], was: %T`, serviceEndpointsAttribute))
-	}
-
-	serviceRangeAttribute, ok := attributes["service_range"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`service_range is missing from object`)
-
-		return nil, diags
-	}
-
-	serviceRangeVal, ok := serviceRangeAttribute.(VrackservicessTargetSpecSubnetsServiceRangeValue)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`service_range expected to be VrackservicessTargetSpecSubnetsServiceRangeValue, was: %T`, serviceRangeAttribute))
-	}
-
 	vlanAttribute, ok := attributes["vlan"]
 
 	if !ok {
@@ -5294,12 +13452,11 @@ func (t VrackservicessTargetSpecSubnetsType) ValueFromObject(ctx context.Context
 	}
 
 	return VrackservicessTargetSpecSubnetsValue{
-		Cidr:             cidrVal,
-		DisplayName:      displayNameVal,
-		ServiceEndpoints: serviceEndpointsVal,
-		ServiceRange:     serviceRangeVal,
-		Vlan:             vlanVal,
-		state:            attr.ValueStateKnown,
+		Az:          azVal,
+		Cidr:        cidrVal,
+		DisplayName: displayNameVal,
+		Vlan:        vlanVal,
+		state:       attr.ValueStateKnown,
 	}, diags
 }
 
@@ -5366,6 +13523,24 @@ func NewVrackservicessTargetSpecSubnetsValue(attributeTypes map[string]attr.Type
 		return NewVrackservicessTargetSpecSubnetsValueUnknown(), diags
 	}
 
+	azAttribute, ok := attributes["az"]
+
+	if !ok {
+		diags.AddError(
+			"Attribute Missing",
+			`az is missing from object`)
+
+		return NewVrackservicessTargetSpecSubnetsValueUnknown(), diags
+	}
+
+	azVal, ok := azAttribute.(ovhtypes.TfStringValue)
+
+	if !ok {
+		diags.AddError(
+			"Attribute Wrong Type",
+			fmt.Sprintf(`az expected to be ovhtypes.TfStringValue, was: %T`, azAttribute))
+	}
+
 	cidrAttribute, ok := attributes["cidr"]
 
 	if !ok {
@@ -5402,42 +13577,6 @@ func NewVrackservicessTargetSpecSubnetsValue(attributeTypes map[string]attr.Type
 			fmt.Sprintf(`display_name expected to be ovhtypes.TfStringValue, was: %T`, displayNameAttribute))
 	}
 
-	serviceEndpointsAttribute, ok := attributes["service_endpoints"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`service_endpoints is missing from object`)
-
-		return NewVrackservicessTargetSpecSubnetsValueUnknown(), diags
-	}
-
-	serviceEndpointsVal, ok := serviceEndpointsAttribute.(ovhtypes.TfListNestedValue[VrackservicessTargetSpecSubnetsServiceEndpointsValue])
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`service_endpoints expected to be ovhtypes.TfListNestedValue[VrackservicessTargetSpecSubnetsServiceEndpointsValue], was: %T`, serviceEndpointsAttribute))
-	}
-
-	serviceRangeAttribute, ok := attributes["service_range"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`service_range is missing from object`)
-
-		return NewVrackservicessTargetSpecSubnetsValueUnknown(), diags
-	}
-
-	serviceRangeVal, ok := serviceRangeAttribute.(VrackservicessTargetSpecSubnetsServiceRangeValue)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`service_range expected to be VrackservicessTargetSpecSubnetsServiceRangeValue, was: %T`, serviceRangeAttribute))
-	}
-
 	vlanAttribute, ok := attributes["vlan"]
 
 	if !ok {
@@ -5461,12 +13600,11 @@ func NewVrackservicessTargetSpecSubnetsValue(attributeTypes map[string]attr.Type
 	}
 
 	return VrackservicessTargetSpecSubnetsValue{
-		Cidr:             cidrVal,
-		DisplayName:      displayNameVal,
-		ServiceEndpoints: serviceEndpointsVal,
-		ServiceRange:     serviceRangeVal,
-		Vlan:             vlanVal,
-		state:            attr.ValueStateKnown,
+		Az:          azVal,
+		Cidr:        cidrVal,
+		DisplayName: displayNameVal,
+		Vlan:        vlanVal,
+		state:       attr.ValueStateKnown,
 	}, diags
 }
 
@@ -5538,25 +13676,28 @@ func (t VrackservicessTargetSpecSubnetsType) ValueType(ctx context.Context) attr
 var _ basetypes.ObjectValuable = VrackservicessTargetSpecSubnetsValue{}
 
 type VrackservicessTargetSpecSubnetsValue struct {
-	Cidr             ovhtypes.TfStringValue                                                           `tfsdk:"cidr" json:"cidr"`
-	DisplayName      ovhtypes.TfStringValue                                                           `tfsdk:"display_name" json:"displayName"`
-	ServiceEndpoints ovhtypes.TfListNestedValue[VrackservicessTargetSpecSubnetsServiceEndpointsValue] `tfsdk:"service_endpoints" json:"serviceEndpoints"`
-	ServiceRange     VrackservicessTargetSpecSubnetsServiceRangeValue                                 `tfsdk:"service_range" json:"serviceRange"`
-	Vlan             ovhtypes.TfInt64Value                                                            `tfsdk:"vlan" json:"vlan"`
-	state            attr.ValueState
+	Az          ovhtypes.TfStringValue `tfsdk:"az" json:"az"`
+	Cidr        ovhtypes.TfStringValue `tfsdk:"cidr" json:"cidr"`
+	DisplayName ovhtypes.TfStringValue `tfsdk:"display_name" json:"displayName"`
+	Vlan        ovhtypes.TfInt64Value  `tfsdk:"vlan" json:"vlan"`
+	state       attr.ValueState
 }
 
 func (v *VrackservicessTargetSpecSubnetsValue) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" {
+		v.state = attr.ValueStateNull
+		return nil
+	}
+
 	type JsonVrackservicessTargetSpecSubnetsValue VrackservicessTargetSpecSubnetsValue
 
 	var tmp JsonVrackservicessTargetSpecSubnetsValue
 	if err := json.Unmarshal(data, &tmp); err != nil {
 		return err
 	}
+	v.Az = tmp.Az
 	v.Cidr = tmp.Cidr
 	v.DisplayName = tmp.DisplayName
-	v.ServiceEndpoints = tmp.ServiceEndpoints
-	v.ServiceRange = tmp.ServiceRange
 	v.Vlan = tmp.Vlan
 
 	v.state = attr.ValueStateKnown
@@ -5566,20 +13707,16 @@ func (v *VrackservicessTargetSpecSubnetsValue) UnmarshalJSON(data []byte) error 
 
 func (v *VrackservicessTargetSpecSubnetsValue) MergeWith(other *VrackservicessTargetSpecSubnetsValue) {
 
+	if (v.Az.IsUnknown() || v.Az.IsNull()) && !other.Az.IsUnknown() {
+		v.Az = other.Az
+	}
+
 	if (v.Cidr.IsUnknown() || v.Cidr.IsNull()) && !other.Cidr.IsUnknown() {
 		v.Cidr = other.Cidr
 	}
 
 	if (v.DisplayName.IsUnknown() || v.DisplayName.IsNull()) && !other.DisplayName.IsUnknown() {
 		v.DisplayName = other.DisplayName
-	}
-
-	if (v.ServiceEndpoints.IsUnknown() || v.ServiceEndpoints.IsNull()) && !other.ServiceEndpoints.IsUnknown() {
-		v.ServiceEndpoints = other.ServiceEndpoints
-	}
-
-	if (v.ServiceRange.IsUnknown() || v.ServiceRange.IsNull()) && !other.ServiceRange.IsUnknown() {
-		v.ServiceRange = other.ServiceRange
 	}
 
 	if (v.Vlan.IsUnknown() || v.Vlan.IsNull()) && !other.Vlan.IsUnknown() {
@@ -5593,34 +13730,36 @@ func (v *VrackservicessTargetSpecSubnetsValue) MergeWith(other *VrackservicessTa
 
 func (v VrackservicessTargetSpecSubnetsValue) Attributes() map[string]attr.Value {
 	return map[string]attr.Value{
-		"cidr":             v.Cidr,
-		"displayName":      v.DisplayName,
-		"serviceEndpoints": v.ServiceEndpoints,
-		"serviceRange":     v.ServiceRange,
-		"vlan":             v.Vlan,
+		"az":          v.Az,
+		"cidr":        v.Cidr,
+		"displayName": v.DisplayName,
+		"vlan":        v.Vlan,
 	}
 }
 func (v VrackservicessTargetSpecSubnetsValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	attrTypes := make(map[string]tftypes.Type, 5)
+	attrTypes := make(map[string]tftypes.Type, 4)
 
 	var val tftypes.Value
 	var err error
 
+	attrTypes["az"] = basetypes.StringType{}.TerraformType(ctx)
 	attrTypes["cidr"] = basetypes.StringType{}.TerraformType(ctx)
 	attrTypes["display_name"] = basetypes.StringType{}.TerraformType(ctx)
-	attrTypes["service_endpoints"] = basetypes.ListType{
-		ElemType: VrackservicessTargetSpecSubnetsServiceEndpointsValue{}.Type(ctx),
-	}.TerraformType(ctx)
-	attrTypes["service_range"] = basetypes.ObjectType{
-		AttrTypes: VrackservicessTargetSpecSubnetsServiceRangeValue{}.AttributeTypes(ctx),
-	}.TerraformType(ctx)
 	attrTypes["vlan"] = basetypes.Int64Type{}.TerraformType(ctx)
 
 	objectType := tftypes.Object{AttributeTypes: attrTypes}
 
 	switch v.state {
 	case attr.ValueStateKnown:
-		vals := make(map[string]tftypes.Value, 5)
+		vals := make(map[string]tftypes.Value, 4)
+
+		val, err = v.Az.ToTerraformValue(ctx)
+
+		if err != nil {
+			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
+		}
+
+		vals["az"] = val
 
 		val, err = v.Cidr.ToTerraformValue(ctx)
 
@@ -5637,22 +13776,6 @@ func (v VrackservicessTargetSpecSubnetsValue) ToTerraformValue(ctx context.Conte
 		}
 
 		vals["display_name"] = val
-
-		val, err = v.ServiceEndpoints.ToTerraformValue(ctx)
-
-		if err != nil {
-			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
-		}
-
-		vals["service_endpoints"] = val
-
-		val, err = v.ServiceRange.ToTerraformValue(ctx)
-
-		if err != nil {
-			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
-		}
-
-		vals["service_range"] = val
 
 		val, err = v.Vlan.ToTerraformValue(ctx)
 
@@ -5691,24 +13814,26 @@ func (v VrackservicessTargetSpecSubnetsValue) String() string {
 func (v VrackservicessTargetSpecSubnetsValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
+	if v.IsNull() {
+		return types.ObjectNull(v.AttributeTypes(ctx)), diags
+	}
+
+	if v.IsUnknown() {
+		return types.ObjectUnknown(v.AttributeTypes(ctx)), diags
+	}
+
 	objVal, diags := types.ObjectValue(
 		map[string]attr.Type{
-			"cidr":              ovhtypes.TfStringType{},
-			"display_name":      ovhtypes.TfStringType{},
-			"service_endpoints": ovhtypes.NewTfListNestedType[VrackservicessTargetSpecSubnetsServiceEndpointsValue](ctx),
-			"service_range": VrackservicessTargetSpecSubnetsServiceRangeType{
-				basetypes.ObjectType{
-					AttrTypes: VrackservicessTargetSpecSubnetsServiceRangeValue{}.AttributeTypes(ctx),
-				},
-			},
-			"vlan": ovhtypes.TfInt64Type{},
+			"az":           ovhtypes.TfStringType{},
+			"cidr":         ovhtypes.TfStringType{},
+			"display_name": ovhtypes.TfStringType{},
+			"vlan":         ovhtypes.TfInt64Type{},
 		},
 		map[string]attr.Value{
-			"cidr":              v.Cidr,
-			"display_name":      v.DisplayName,
-			"service_endpoints": v.ServiceEndpoints,
-			"service_range":     v.ServiceRange,
-			"vlan":              v.Vlan,
+			"az":           v.Az,
+			"cidr":         v.Cidr,
+			"display_name": v.DisplayName,
+			"vlan":         v.Vlan,
 		})
 
 	return objVal, diags
@@ -5729,19 +13854,15 @@ func (v VrackservicessTargetSpecSubnetsValue) Equal(o attr.Value) bool {
 		return true
 	}
 
+	if !v.Az.Equal(other.Az) {
+		return false
+	}
+
 	if !v.Cidr.Equal(other.Cidr) {
 		return false
 	}
 
 	if !v.DisplayName.Equal(other.DisplayName) {
-		return false
-	}
-
-	if !v.ServiceEndpoints.Equal(other.ServiceEndpoints) {
-		return false
-	}
-
-	if !v.ServiceRange.Equal(other.ServiceRange) {
 		return false
 	}
 
@@ -5762,698 +13883,9 @@ func (v VrackservicessTargetSpecSubnetsValue) Type(ctx context.Context) attr.Typ
 
 func (v VrackservicessTargetSpecSubnetsValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
 	return map[string]attr.Type{
-		"cidr":              ovhtypes.TfStringType{},
-		"display_name":      ovhtypes.TfStringType{},
-		"service_endpoints": ovhtypes.NewTfListNestedType[VrackservicessTargetSpecSubnetsServiceEndpointsValue](ctx),
-		"service_range":     VrackservicessTargetSpecSubnetsServiceRangeValue{}.Type(ctx),
-		"vlan":              ovhtypes.TfInt64Type{},
-	}
-}
-
-var _ basetypes.ObjectTypable = VrackservicessTargetSpecSubnetsServiceEndpointsType{}
-
-type VrackservicessTargetSpecSubnetsServiceEndpointsType struct {
-	basetypes.ObjectType
-}
-
-func (t VrackservicessTargetSpecSubnetsServiceEndpointsType) Equal(o attr.Type) bool {
-	other, ok := o.(VrackservicessTargetSpecSubnetsServiceEndpointsType)
-
-	if !ok {
-		return false
-	}
-
-	return t.ObjectType.Equal(other.ObjectType)
-}
-
-func (t VrackservicessTargetSpecSubnetsServiceEndpointsType) String() string {
-	return "VrackservicessTargetSpecSubnetsServiceEndpointsType"
-}
-
-func (t VrackservicessTargetSpecSubnetsServiceEndpointsType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	attributes := in.Attributes()
-
-	managedServiceUrnAttribute, ok := attributes["managed_service_urn"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`managed_service_urn is missing from object`)
-
-		return nil, diags
-	}
-
-	managedServiceUrnVal, ok := managedServiceUrnAttribute.(ovhtypes.TfStringValue)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`managed_service_urn expected to be ovhtypes.TfStringValue, was: %T`, managedServiceUrnAttribute))
-	}
-
-	if diags.HasError() {
-		return nil, diags
-	}
-
-	return VrackservicessTargetSpecSubnetsServiceEndpointsValue{
-		ManagedServiceUrn: managedServiceUrnVal,
-		state:             attr.ValueStateKnown,
-	}, diags
-}
-
-func NewVrackservicessTargetSpecSubnetsServiceEndpointsValueNull() VrackservicessTargetSpecSubnetsServiceEndpointsValue {
-	return VrackservicessTargetSpecSubnetsServiceEndpointsValue{
-		state: attr.ValueStateNull,
-	}
-}
-
-func NewVrackservicessTargetSpecSubnetsServiceEndpointsValueUnknown() VrackservicessTargetSpecSubnetsServiceEndpointsValue {
-	return VrackservicessTargetSpecSubnetsServiceEndpointsValue{
-		state: attr.ValueStateUnknown,
-	}
-}
-
-func NewVrackservicessTargetSpecSubnetsServiceEndpointsValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (VrackservicessTargetSpecSubnetsServiceEndpointsValue, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
-	ctx := context.Background()
-
-	for name, attributeType := range attributeTypes {
-		attribute, ok := attributes[name]
-
-		if !ok {
-			diags.AddError(
-				"Missing VrackservicessTargetSpecSubnetsServiceEndpointsValue Attribute Value",
-				"While creating a VrackservicessTargetSpecSubnetsServiceEndpointsValue value, a missing attribute value was detected. "+
-					"A VrackservicessTargetSpecSubnetsServiceEndpointsValue must contain values for all attributes, even if null or unknown. "+
-					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
-					fmt.Sprintf("VrackservicessTargetSpecSubnetsServiceEndpointsValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
-			)
-
-			continue
-		}
-
-		if !attributeType.Equal(attribute.Type(ctx)) {
-			diags.AddError(
-				"Invalid VrackservicessTargetSpecSubnetsServiceEndpointsValue Attribute Type",
-				"While creating a VrackservicessTargetSpecSubnetsServiceEndpointsValue value, an invalid attribute value was detected. "+
-					"A VrackservicessTargetSpecSubnetsServiceEndpointsValue must use a matching attribute type for the value. "+
-					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
-					fmt.Sprintf("VrackservicessTargetSpecSubnetsServiceEndpointsValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
-					fmt.Sprintf("VrackservicessTargetSpecSubnetsServiceEndpointsValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
-			)
-		}
-	}
-
-	for name := range attributes {
-		_, ok := attributeTypes[name]
-
-		if !ok {
-			diags.AddError(
-				"Extra VrackservicessTargetSpecSubnetsServiceEndpointsValue Attribute Value",
-				"While creating a VrackservicessTargetSpecSubnetsServiceEndpointsValue value, an extra attribute value was detected. "+
-					"A VrackservicessTargetSpecSubnetsServiceEndpointsValue must not contain values beyond the expected attribute types. "+
-					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
-					fmt.Sprintf("Extra VrackservicessTargetSpecSubnetsServiceEndpointsValue Attribute Name: %s", name),
-			)
-		}
-	}
-
-	if diags.HasError() {
-		return NewVrackservicessTargetSpecSubnetsServiceEndpointsValueUnknown(), diags
-	}
-
-	managedServiceUrnAttribute, ok := attributes["managed_service_urn"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`managed_service_urn is missing from object`)
-
-		return NewVrackservicessTargetSpecSubnetsServiceEndpointsValueUnknown(), diags
-	}
-
-	managedServiceUrnVal, ok := managedServiceUrnAttribute.(ovhtypes.TfStringValue)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`managed_service_urn expected to be ovhtypes.TfStringValue, was: %T`, managedServiceUrnAttribute))
-	}
-
-	if diags.HasError() {
-		return NewVrackservicessTargetSpecSubnetsServiceEndpointsValueUnknown(), diags
-	}
-
-	return VrackservicessTargetSpecSubnetsServiceEndpointsValue{
-		ManagedServiceUrn: managedServiceUrnVal,
-		state:             attr.ValueStateKnown,
-	}, diags
-}
-
-func NewVrackservicessTargetSpecSubnetsServiceEndpointsValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) VrackservicessTargetSpecSubnetsServiceEndpointsValue {
-	object, diags := NewVrackservicessTargetSpecSubnetsServiceEndpointsValue(attributeTypes, attributes)
-
-	if diags.HasError() {
-		// This could potentially be added to the diag package.
-		diagsStrings := make([]string, 0, len(diags))
-
-		for _, diagnostic := range diags {
-			diagsStrings = append(diagsStrings, fmt.Sprintf(
-				"%s | %s | %s",
-				diagnostic.Severity(),
-				diagnostic.Summary(),
-				diagnostic.Detail()))
-		}
-
-		panic("NewVrackservicessTargetSpecSubnetsServiceEndpointsValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
-	}
-
-	return object
-}
-
-func (t VrackservicessTargetSpecSubnetsServiceEndpointsType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
-	if in.Type() == nil {
-		return NewVrackservicessTargetSpecSubnetsServiceEndpointsValueNull(), nil
-	}
-
-	if !in.Type().Equal(t.TerraformType(ctx)) {
-		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
-	}
-
-	if !in.IsKnown() {
-		return NewVrackservicessTargetSpecSubnetsServiceEndpointsValueUnknown(), nil
-	}
-
-	if in.IsNull() {
-		return NewVrackservicessTargetSpecSubnetsServiceEndpointsValueNull(), nil
-	}
-
-	attributes := map[string]attr.Value{}
-
-	val := map[string]tftypes.Value{}
-
-	err := in.As(&val)
-
-	if err != nil {
-		return nil, err
-	}
-
-	for k, v := range val {
-		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
-
-		if err != nil {
-			return nil, err
-		}
-
-		attributes[k] = a
-	}
-
-	return NewVrackservicessTargetSpecSubnetsServiceEndpointsValueMust(VrackservicessTargetSpecSubnetsServiceEndpointsValue{}.AttributeTypes(ctx), attributes), nil
-}
-
-func (t VrackservicessTargetSpecSubnetsServiceEndpointsType) ValueType(ctx context.Context) attr.Value {
-	return VrackservicessTargetSpecSubnetsServiceEndpointsValue{}
-}
-
-var _ basetypes.ObjectValuable = VrackservicessTargetSpecSubnetsServiceEndpointsValue{}
-
-type VrackservicessTargetSpecSubnetsServiceEndpointsValue struct {
-	ManagedServiceUrn ovhtypes.TfStringValue `tfsdk:"managed_service_urn" json:"managedServiceUrn"`
-	state             attr.ValueState
-}
-
-func (v *VrackservicessTargetSpecSubnetsServiceEndpointsValue) UnmarshalJSON(data []byte) error {
-	type JsonVrackservicessTargetSpecSubnetsServiceEndpointsValue VrackservicessTargetSpecSubnetsServiceEndpointsValue
-
-	var tmp JsonVrackservicessTargetSpecSubnetsServiceEndpointsValue
-	if err := json.Unmarshal(data, &tmp); err != nil {
-		return err
-	}
-	v.ManagedServiceUrn = tmp.ManagedServiceUrn
-
-	v.state = attr.ValueStateKnown
-
-	return nil
-}
-
-func (v *VrackservicessTargetSpecSubnetsServiceEndpointsValue) MergeWith(other *VrackservicessTargetSpecSubnetsServiceEndpointsValue) {
-
-	if (v.ManagedServiceUrn.IsUnknown() || v.ManagedServiceUrn.IsNull()) && !other.ManagedServiceUrn.IsUnknown() {
-		v.ManagedServiceUrn = other.ManagedServiceUrn
-	}
-
-	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
-		v.state = other.state
-	}
-}
-
-func (v VrackservicessTargetSpecSubnetsServiceEndpointsValue) Attributes() map[string]attr.Value {
-	return map[string]attr.Value{
-		"managedServiceUrn": v.ManagedServiceUrn,
-	}
-}
-func (v VrackservicessTargetSpecSubnetsServiceEndpointsValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	attrTypes := make(map[string]tftypes.Type, 1)
-
-	var val tftypes.Value
-	var err error
-
-	attrTypes["managed_service_urn"] = basetypes.StringType{}.TerraformType(ctx)
-
-	objectType := tftypes.Object{AttributeTypes: attrTypes}
-
-	switch v.state {
-	case attr.ValueStateKnown:
-		vals := make(map[string]tftypes.Value, 1)
-
-		val, err = v.ManagedServiceUrn.ToTerraformValue(ctx)
-
-		if err != nil {
-			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
-		}
-
-		vals["managed_service_urn"] = val
-
-		if err := tftypes.ValidateValue(objectType, vals); err != nil {
-			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
-		}
-
-		return tftypes.NewValue(objectType, vals), nil
-	case attr.ValueStateNull:
-		return tftypes.NewValue(objectType, nil), nil
-	case attr.ValueStateUnknown:
-		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
-	default:
-		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
-	}
-}
-
-func (v VrackservicessTargetSpecSubnetsServiceEndpointsValue) IsNull() bool {
-	return v.state == attr.ValueStateNull
-}
-
-func (v VrackservicessTargetSpecSubnetsServiceEndpointsValue) IsUnknown() bool {
-	return v.state == attr.ValueStateUnknown
-}
-
-func (v VrackservicessTargetSpecSubnetsServiceEndpointsValue) String() string {
-	return "VrackservicessTargetSpecSubnetsServiceEndpointsValue"
-}
-
-func (v VrackservicessTargetSpecSubnetsServiceEndpointsValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	objVal, diags := types.ObjectValue(
-		map[string]attr.Type{
-			"managed_service_urn": ovhtypes.TfStringType{},
-		},
-		map[string]attr.Value{
-			"managed_service_urn": v.ManagedServiceUrn,
-		})
-
-	return objVal, diags
-}
-
-func (v VrackservicessTargetSpecSubnetsServiceEndpointsValue) Equal(o attr.Value) bool {
-	other, ok := o.(VrackservicessTargetSpecSubnetsServiceEndpointsValue)
-
-	if !ok {
-		return false
-	}
-
-	if v.state != other.state {
-		return false
-	}
-
-	if v.state != attr.ValueStateKnown {
-		return true
-	}
-
-	if !v.ManagedServiceUrn.Equal(other.ManagedServiceUrn) {
-		return false
-	}
-
-	return true
-}
-
-func (v VrackservicessTargetSpecSubnetsServiceEndpointsValue) Type(ctx context.Context) attr.Type {
-	return VrackservicessTargetSpecSubnetsServiceEndpointsType{
-		basetypes.ObjectType{
-			AttrTypes: v.AttributeTypes(ctx),
-		},
-	}
-}
-
-func (v VrackservicessTargetSpecSubnetsServiceEndpointsValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
-	return map[string]attr.Type{
-		"managed_service_urn": ovhtypes.TfStringType{},
-	}
-}
-
-var _ basetypes.ObjectTypable = VrackservicessTargetSpecSubnetsServiceRangeType{}
-
-type VrackservicessTargetSpecSubnetsServiceRangeType struct {
-	basetypes.ObjectType
-}
-
-func (t VrackservicessTargetSpecSubnetsServiceRangeType) Equal(o attr.Type) bool {
-	other, ok := o.(VrackservicessTargetSpecSubnetsServiceRangeType)
-
-	if !ok {
-		return false
-	}
-
-	return t.ObjectType.Equal(other.ObjectType)
-}
-
-func (t VrackservicessTargetSpecSubnetsServiceRangeType) String() string {
-	return "VrackservicessTargetSpecSubnetsServiceRangeType"
-}
-
-func (t VrackservicessTargetSpecSubnetsServiceRangeType) ValueFromObject(ctx context.Context, in basetypes.ObjectValue) (basetypes.ObjectValuable, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	attributes := in.Attributes()
-
-	cidrAttribute, ok := attributes["cidr"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`cidr is missing from object`)
-
-		return nil, diags
-	}
-
-	cidrVal, ok := cidrAttribute.(ovhtypes.TfStringValue)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`cidr expected to be ovhtypes.TfStringValue, was: %T`, cidrAttribute))
-	}
-
-	if diags.HasError() {
-		return nil, diags
-	}
-
-	return VrackservicessTargetSpecSubnetsServiceRangeValue{
-		Cidr:  cidrVal,
-		state: attr.ValueStateKnown,
-	}, diags
-}
-
-func NewVrackservicessTargetSpecSubnetsServiceRangeValueNull() VrackservicessTargetSpecSubnetsServiceRangeValue {
-	return VrackservicessTargetSpecSubnetsServiceRangeValue{
-		state: attr.ValueStateNull,
-	}
-}
-
-func NewVrackservicessTargetSpecSubnetsServiceRangeValueUnknown() VrackservicessTargetSpecSubnetsServiceRangeValue {
-	return VrackservicessTargetSpecSubnetsServiceRangeValue{
-		state: attr.ValueStateUnknown,
-	}
-}
-
-func NewVrackservicessTargetSpecSubnetsServiceRangeValue(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) (VrackservicessTargetSpecSubnetsServiceRangeValue, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	// Reference: https://github.com/hashicorp/terraform-plugin-framework/issues/521
-	ctx := context.Background()
-
-	for name, attributeType := range attributeTypes {
-		attribute, ok := attributes[name]
-
-		if !ok {
-			diags.AddError(
-				"Missing VrackservicessTargetSpecSubnetsServiceRangeValue Attribute Value",
-				"While creating a VrackservicessTargetSpecSubnetsServiceRangeValue value, a missing attribute value was detected. "+
-					"A VrackservicessTargetSpecSubnetsServiceRangeValue must contain values for all attributes, even if null or unknown. "+
-					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
-					fmt.Sprintf("VrackservicessTargetSpecSubnetsServiceRangeValue Attribute Name (%s) Expected Type: %s", name, attributeType.String()),
-			)
-
-			continue
-		}
-
-		if !attributeType.Equal(attribute.Type(ctx)) {
-			diags.AddError(
-				"Invalid VrackservicessTargetSpecSubnetsServiceRangeValue Attribute Type",
-				"While creating a VrackservicessTargetSpecSubnetsServiceRangeValue value, an invalid attribute value was detected. "+
-					"A VrackservicessTargetSpecSubnetsServiceRangeValue must use a matching attribute type for the value. "+
-					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
-					fmt.Sprintf("VrackservicessTargetSpecSubnetsServiceRangeValue Attribute Name (%s) Expected Type: %s\n", name, attributeType.String())+
-					fmt.Sprintf("VrackservicessTargetSpecSubnetsServiceRangeValue Attribute Name (%s) Given Type: %s", name, attribute.Type(ctx)),
-			)
-		}
-	}
-
-	for name := range attributes {
-		_, ok := attributeTypes[name]
-
-		if !ok {
-			diags.AddError(
-				"Extra VrackservicessTargetSpecSubnetsServiceRangeValue Attribute Value",
-				"While creating a VrackservicessTargetSpecSubnetsServiceRangeValue value, an extra attribute value was detected. "+
-					"A VrackservicessTargetSpecSubnetsServiceRangeValue must not contain values beyond the expected attribute types. "+
-					"This is always an issue with the provider and should be reported to the provider developers.\n\n"+
-					fmt.Sprintf("Extra VrackservicessTargetSpecSubnetsServiceRangeValue Attribute Name: %s", name),
-			)
-		}
-	}
-
-	if diags.HasError() {
-		return NewVrackservicessTargetSpecSubnetsServiceRangeValueUnknown(), diags
-	}
-
-	cidrAttribute, ok := attributes["cidr"]
-
-	if !ok {
-		diags.AddError(
-			"Attribute Missing",
-			`cidr is missing from object`)
-
-		return NewVrackservicessTargetSpecSubnetsServiceRangeValueUnknown(), diags
-	}
-
-	cidrVal, ok := cidrAttribute.(ovhtypes.TfStringValue)
-
-	if !ok {
-		diags.AddError(
-			"Attribute Wrong Type",
-			fmt.Sprintf(`cidr expected to be ovhtypes.TfStringValue, was: %T`, cidrAttribute))
-	}
-
-	if diags.HasError() {
-		return NewVrackservicessTargetSpecSubnetsServiceRangeValueUnknown(), diags
-	}
-
-	return VrackservicessTargetSpecSubnetsServiceRangeValue{
-		Cidr:  cidrVal,
-		state: attr.ValueStateKnown,
-	}, diags
-}
-
-func NewVrackservicessTargetSpecSubnetsServiceRangeValueMust(attributeTypes map[string]attr.Type, attributes map[string]attr.Value) VrackservicessTargetSpecSubnetsServiceRangeValue {
-	object, diags := NewVrackservicessTargetSpecSubnetsServiceRangeValue(attributeTypes, attributes)
-
-	if diags.HasError() {
-		// This could potentially be added to the diag package.
-		diagsStrings := make([]string, 0, len(diags))
-
-		for _, diagnostic := range diags {
-			diagsStrings = append(diagsStrings, fmt.Sprintf(
-				"%s | %s | %s",
-				diagnostic.Severity(),
-				diagnostic.Summary(),
-				diagnostic.Detail()))
-		}
-
-		panic("NewVrackservicessTargetSpecSubnetsServiceRangeValueMust received error(s): " + strings.Join(diagsStrings, "\n"))
-	}
-
-	return object
-}
-
-func (t VrackservicessTargetSpecSubnetsServiceRangeType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
-	if in.Type() == nil {
-		return NewVrackservicessTargetSpecSubnetsServiceRangeValueNull(), nil
-	}
-
-	if !in.Type().Equal(t.TerraformType(ctx)) {
-		return nil, fmt.Errorf("expected %s, got %s", t.TerraformType(ctx), in.Type())
-	}
-
-	if !in.IsKnown() {
-		return NewVrackservicessTargetSpecSubnetsServiceRangeValueUnknown(), nil
-	}
-
-	if in.IsNull() {
-		return NewVrackservicessTargetSpecSubnetsServiceRangeValueNull(), nil
-	}
-
-	attributes := map[string]attr.Value{}
-
-	val := map[string]tftypes.Value{}
-
-	err := in.As(&val)
-
-	if err != nil {
-		return nil, err
-	}
-
-	for k, v := range val {
-		a, err := t.AttrTypes[k].ValueFromTerraform(ctx, v)
-
-		if err != nil {
-			return nil, err
-		}
-
-		attributes[k] = a
-	}
-
-	return NewVrackservicessTargetSpecSubnetsServiceRangeValueMust(VrackservicessTargetSpecSubnetsServiceRangeValue{}.AttributeTypes(ctx), attributes), nil
-}
-
-func (t VrackservicessTargetSpecSubnetsServiceRangeType) ValueType(ctx context.Context) attr.Value {
-	return VrackservicessTargetSpecSubnetsServiceRangeValue{}
-}
-
-var _ basetypes.ObjectValuable = VrackservicessTargetSpecSubnetsServiceRangeValue{}
-
-type VrackservicessTargetSpecSubnetsServiceRangeValue struct {
-	Cidr  ovhtypes.TfStringValue `tfsdk:"cidr" json:"cidr"`
-	state attr.ValueState
-}
-
-func (v *VrackservicessTargetSpecSubnetsServiceRangeValue) UnmarshalJSON(data []byte) error {
-	type JsonVrackservicessTargetSpecSubnetsServiceRangeValue VrackservicessTargetSpecSubnetsServiceRangeValue
-
-	var tmp JsonVrackservicessTargetSpecSubnetsServiceRangeValue
-	if err := json.Unmarshal(data, &tmp); err != nil {
-		return err
-	}
-	v.Cidr = tmp.Cidr
-
-	v.state = attr.ValueStateKnown
-
-	return nil
-}
-
-func (v *VrackservicessTargetSpecSubnetsServiceRangeValue) MergeWith(other *VrackservicessTargetSpecSubnetsServiceRangeValue) {
-
-	if (v.Cidr.IsUnknown() || v.Cidr.IsNull()) && !other.Cidr.IsUnknown() {
-		v.Cidr = other.Cidr
-	}
-
-	if (v.state == attr.ValueStateUnknown || v.state == attr.ValueStateNull) && other.state != attr.ValueStateUnknown {
-		v.state = other.state
-	}
-}
-
-func (v VrackservicessTargetSpecSubnetsServiceRangeValue) Attributes() map[string]attr.Value {
-	return map[string]attr.Value{
-		"cidr": v.Cidr,
-	}
-}
-func (v VrackservicessTargetSpecSubnetsServiceRangeValue) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {
-	attrTypes := make(map[string]tftypes.Type, 1)
-
-	var val tftypes.Value
-	var err error
-
-	attrTypes["cidr"] = basetypes.StringType{}.TerraformType(ctx)
-
-	objectType := tftypes.Object{AttributeTypes: attrTypes}
-
-	switch v.state {
-	case attr.ValueStateKnown:
-		vals := make(map[string]tftypes.Value, 1)
-
-		val, err = v.Cidr.ToTerraformValue(ctx)
-
-		if err != nil {
-			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
-		}
-
-		vals["cidr"] = val
-
-		if err := tftypes.ValidateValue(objectType, vals); err != nil {
-			return tftypes.NewValue(objectType, tftypes.UnknownValue), err
-		}
-
-		return tftypes.NewValue(objectType, vals), nil
-	case attr.ValueStateNull:
-		return tftypes.NewValue(objectType, nil), nil
-	case attr.ValueStateUnknown:
-		return tftypes.NewValue(objectType, tftypes.UnknownValue), nil
-	default:
-		panic(fmt.Sprintf("unhandled Object state in ToTerraformValue: %s", v.state))
-	}
-}
-
-func (v VrackservicessTargetSpecSubnetsServiceRangeValue) IsNull() bool {
-	return v.state == attr.ValueStateNull
-}
-
-func (v VrackservicessTargetSpecSubnetsServiceRangeValue) IsUnknown() bool {
-	return v.state == attr.ValueStateUnknown
-}
-
-func (v VrackservicessTargetSpecSubnetsServiceRangeValue) String() string {
-	return "VrackservicessTargetSpecSubnetsServiceRangeValue"
-}
-
-func (v VrackservicessTargetSpecSubnetsServiceRangeValue) ToObjectValue(ctx context.Context) (basetypes.ObjectValue, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	objVal, diags := types.ObjectValue(
-		map[string]attr.Type{
-			"cidr": ovhtypes.TfStringType{},
-		},
-		map[string]attr.Value{
-			"cidr": v.Cidr,
-		})
-
-	return objVal, diags
-}
-
-func (v VrackservicessTargetSpecSubnetsServiceRangeValue) Equal(o attr.Value) bool {
-	other, ok := o.(VrackservicessTargetSpecSubnetsServiceRangeValue)
-
-	if !ok {
-		return false
-	}
-
-	if v.state != other.state {
-		return false
-	}
-
-	if v.state != attr.ValueStateKnown {
-		return true
-	}
-
-	if !v.Cidr.Equal(other.Cidr) {
-		return false
-	}
-
-	return true
-}
-
-func (v VrackservicessTargetSpecSubnetsServiceRangeValue) Type(ctx context.Context) attr.Type {
-	return VrackservicessTargetSpecSubnetsServiceRangeType{
-		basetypes.ObjectType{
-			AttrTypes: v.AttributeTypes(ctx),
-		},
-	}
-}
-
-func (v VrackservicessTargetSpecSubnetsServiceRangeValue) AttributeTypes(ctx context.Context) map[string]attr.Type {
-	return map[string]attr.Type{
-		"cidr": ovhtypes.TfStringType{},
+		"az":           ovhtypes.TfStringType{},
+		"cidr":         ovhtypes.TfStringType{},
+		"display_name": ovhtypes.TfStringType{},
+		"vlan":         ovhtypes.TfInt64Type{},
 	}
 }

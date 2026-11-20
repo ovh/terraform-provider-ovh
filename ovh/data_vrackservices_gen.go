@@ -27,11 +27,212 @@ func VrackservicesDataSourceSchema(ctx context.Context) schema.Schema {
 		},
 		"current_state": schema.SingleNestedAttribute{
 			Attributes: map[string]schema.Attribute{
-				"product_status": schema.StringAttribute{
-					CustomType:          ovhtypes.TfStringType{},
+				"bgp": schema.SingleNestedAttribute{
+					Attributes: map[string]schema.Attribute{
+						"allowed_prefixes": schema.SingleNestedAttribute{
+							Attributes: map[string]schema.Attribute{
+								"ipv4": schema.ListAttribute{
+									CustomType:          ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+									Computed:            true,
+									Description:         "Allowed IPv4 prefixes",
+									MarkdownDescription: "Allowed IPv4 prefixes",
+								},
+								"ipv6": schema.ListAttribute{
+									CustomType:          ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+									Computed:            true,
+									Description:         "Allowed IPv6 prefixes",
+									MarkdownDescription: "Allowed IPv6 prefixes",
+								},
+							},
+							CustomType: CurrentStateBgpAllowedPrefixesType{
+								ObjectType: types.ObjectType{
+									AttrTypes: CurrentStateBgpAllowedPrefixesValue{}.AttributeTypes(ctx),
+								},
+							},
+							Computed:            true,
+							Description:         "Allowed prefixes, OVHcloud public IP blocks announced through BGP",
+							MarkdownDescription: "Allowed prefixes, OVHcloud public IP blocks announced through BGP",
+						},
+						"bandwidth": schema.Int64Attribute{
+							CustomType:          ovhtypes.TfInt64Type{},
+							Computed:            true,
+							Description:         "BGP ingress bandwidth in Mbps",
+							MarkdownDescription: "BGP ingress bandwidth in Mbps",
+						},
+						"bgp_range": schema.ListNestedAttribute{
+							NestedObject: schema.NestedAttributeObject{
+								Attributes: map[string]schema.Attribute{
+									"cidr": schema.StringAttribute{
+										CustomType:          ovhtypes.TfStringType{},
+										Computed:            true,
+										Description:         "BGP range CIDR",
+										MarkdownDescription: "BGP range CIDR",
+									},
+									"client_peers": schema.ListAttribute{
+										CustomType:          ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+										Computed:            true,
+										Description:         "Client peer IPs within the BGP range CIDR",
+										MarkdownDescription: "Client peer IPs within the BGP range CIDR",
+									},
+									"configuration_status": schema.SingleNestedAttribute{
+										Attributes: map[string]schema.Attribute{
+											"reason": schema.StringAttribute{
+												CustomType:          ovhtypes.TfStringType{},
+												Computed:            true,
+												Description:         "Reason explaining the BGP range configuration status",
+												MarkdownDescription: "Reason explaining the BGP range configuration status",
+											},
+											"status": schema.StringAttribute{
+												CustomType:          ovhtypes.TfStringType{},
+												Computed:            true,
+												Description:         "BGP range configuration status (`DRAFT`, `READY`)",
+												MarkdownDescription: "BGP range configuration status (`DRAFT`, `READY`)",
+											},
+										},
+										CustomType: CurrentStateBgpBgpRangeConfigurationStatusType{
+											ObjectType: types.ObjectType{
+												AttrTypes: CurrentStateBgpBgpRangeConfigurationStatusValue{}.AttributeTypes(ctx),
+											},
+										},
+										Computed:            true,
+										Description:         "BGP range configuration status",
+										MarkdownDescription: "BGP range configuration status",
+									},
+									"infrastructure_peers": schema.ListAttribute{
+										CustomType:          ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+										Computed:            true,
+										Description:         "Infrastructure peer IPs within the BGP range CIDR",
+										MarkdownDescription: "Infrastructure peer IPs within the BGP range CIDR",
+									},
+									"subnet_cidr": schema.StringAttribute{
+										CustomType:          ovhtypes.TfStringType{},
+										Computed:            true,
+										Description:         "Referenced subnet CIDR",
+										MarkdownDescription: "Referenced subnet CIDR",
+									},
+								},
+								CustomType: CurrentStateBgpBgpRangeType{
+									ObjectType: types.ObjectType{
+										AttrTypes: CurrentStateBgpBgpRangeValue{}.AttributeTypes(ctx),
+									},
+								},
+							},
+							CustomType:          ovhtypes.NewTfListNestedType[CurrentStateBgpBgpRangeValue](ctx),
+							Computed:            true,
+							Description:         "BGP ranges",
+							MarkdownDescription: "BGP ranges",
+						},
+						"client_asn": schema.Int64Attribute{
+							CustomType:          ovhtypes.TfInt64Type{},
+							Computed:            true,
+							Description:         "Client ASN",
+							MarkdownDescription: "Client ASN",
+						},
+						"configuration_status": schema.SingleNestedAttribute{
+							Attributes: map[string]schema.Attribute{
+								"reason": schema.StringAttribute{
+									CustomType:          ovhtypes.TfStringType{},
+									Computed:            true,
+									Description:         "Reason for the status. Omitted when status is `READY`",
+									MarkdownDescription: "Reason for the status. Omitted when status is `READY`",
+								},
+								"status": schema.StringAttribute{
+									CustomType:          ovhtypes.TfStringType{},
+									Computed:            true,
+									Description:         "Configuration status (`DRAFT`, `READY`, `SUSPENDED`)",
+									MarkdownDescription: "Configuration status (`DRAFT`, `READY`, `SUSPENDED`)",
+								},
+							},
+							CustomType: CurrentStateBgpConfigurationStatusType{
+								ObjectType: types.ObjectType{
+									AttrTypes: CurrentStateBgpConfigurationStatusValue{}.AttributeTypes(ctx),
+								},
+							},
+							Computed:            true,
+							Description:         "BGP configuration status",
+							MarkdownDescription: "BGP configuration status",
+						},
+						"iam": schema.SingleNestedAttribute{
+							Attributes: map[string]schema.Attribute{
+								"display_name": schema.StringAttribute{
+									CustomType:          ovhtypes.TfStringType{},
+									Computed:            true,
+									Description:         "Resource display name",
+									MarkdownDescription: "Resource display name",
+								},
+								"id": schema.StringAttribute{
+									CustomType:          ovhtypes.TfStringType{},
+									Computed:            true,
+									Description:         "Unique identifier of the resource",
+									MarkdownDescription: "Unique identifier of the resource",
+								},
+								"state": schema.StringAttribute{
+									CustomType:          ovhtypes.TfStringType{},
+									Computed:            true,
+									Description:         "Resource state",
+									MarkdownDescription: "Resource state",
+								},
+								"urn": schema.StringAttribute{
+									CustomType:          ovhtypes.TfStringType{},
+									Computed:            true,
+									Description:         "Unique resource name used in policies",
+									MarkdownDescription: "Unique resource name used in policies",
+								},
+							},
+							CustomType: CurrentStateBgpIamType{
+								ObjectType: types.ObjectType{
+									AttrTypes: CurrentStateBgpIamValue{}.AttributeTypes(ctx),
+								},
+							},
+							Computed:            true,
+							Description:         "IAM resource metadata of the BGP configuration",
+							MarkdownDescription: "IAM resource metadata of the BGP configuration",
+						},
+						"id": schema.StringAttribute{
+							CustomType:          ovhtypes.TfStringType{},
+							Computed:            true,
+							Description:         "BGP identifier",
+							MarkdownDescription: "BGP identifier",
+						},
+						"infrastructure_asn": schema.Int64Attribute{
+							CustomType:          ovhtypes.TfInt64Type{},
+							Computed:            true,
+							Description:         "Infrastructure ASN",
+							MarkdownDescription: "Infrastructure ASN",
+						},
+					},
+					CustomType: CurrentStateBgpType{
+						ObjectType: types.ObjectType{
+							AttrTypes: CurrentStateBgpValue{}.AttributeTypes(ctx),
+						},
+					},
 					Computed:            true,
-					Description:         "Product status of the vRack Services",
-					MarkdownDescription: "Product status of the vRack Services",
+					Description:         "BGP configuration of the vRack Services. Null when the BGP option is not subscribed",
+					MarkdownDescription: "BGP configuration of the vRack Services. Null when the BGP option is not subscribed",
+				},
+				"configuration_status": schema.SingleNestedAttribute{
+					Attributes: map[string]schema.Attribute{
+						"reason": schema.StringAttribute{
+							CustomType:          ovhtypes.TfStringType{},
+							Computed:            true,
+							Description:         "Reason for the status. Omitted when status is `READY`",
+							MarkdownDescription: "Reason for the status. Omitted when status is `READY`",
+						},
+						"status": schema.StringAttribute{
+							CustomType:          ovhtypes.TfStringType{},
+							Computed:            true,
+							Description:         "Configuration status (`DRAFT`, `READY`, `SUSPENDED`)",
+							MarkdownDescription: "Configuration status (`DRAFT`, `READY`, `SUSPENDED`)",
+						},
+					},
+					CustomType: CurrentStateConfigurationStatusType{
+						ObjectType: types.ObjectType{
+							AttrTypes: CurrentStateConfigurationStatusValue{}.AttributeTypes(ctx),
+						},
+					},
+					Computed:            true,
+					Description:         "vRack Services configuration status",
+					MarkdownDescription: "vRack Services configuration status",
 				},
 				"region": schema.StringAttribute{
 					CustomType:          ovhtypes.TfStringType{},
@@ -39,76 +240,16 @@ func VrackservicesDataSourceSchema(ctx context.Context) schema.Schema {
 					Description:         "Region of the vRack Services. List of compatible regions can be retrieved from /reference/region",
 					MarkdownDescription: "Region of the vRack Services. List of compatible regions can be retrieved from /reference/region",
 				},
-				"subnets": schema.ListNestedAttribute{
-					NestedObject: schema.NestedAttributeObject{
-						Attributes: map[string]schema.Attribute{
-							"cidr": schema.StringAttribute{
-								CustomType:          ovhtypes.TfStringType{},
-								Computed:            true,
-								Description:         "IP address range of the subnet in CIDR format",
-								MarkdownDescription: "IP address range of the subnet in CIDR format",
-							},
-							"display_name": schema.StringAttribute{
-								CustomType:          ovhtypes.TfStringType{},
-								Computed:            true,
-								Description:         "Display name of the subnet",
-								MarkdownDescription: "Display name of the subnet",
-							},
-							"service_endpoints": schema.ListNestedAttribute{
-								NestedObject: schema.NestedAttributeObject{
-									Attributes: map[string]schema.Attribute{
-										"endpoints": schema.ListNestedAttribute{
-											NestedObject: schema.NestedAttributeObject{
-												Attributes: map[string]schema.Attribute{
-													"description": schema.StringAttribute{
-														CustomType:          ovhtypes.TfStringType{},
-														Computed:            true,
-														Description:         "IP description defined in the managed service",
-														MarkdownDescription: "IP description defined in the managed service",
-													},
-													"ip": schema.StringAttribute{
-														CustomType:          ovhtypes.TfStringType{},
-														Computed:            true,
-														Description:         "IP address assigned by OVHcloud",
-														MarkdownDescription: "IP address assigned by OVHcloud",
-													},
-												},
-												CustomType: CurrentStateSubnetsServiceEndpointsEndpointsType{
-													ObjectType: types.ObjectType{
-														AttrTypes: CurrentStateSubnetsServiceEndpointsEndpointsValue{}.AttributeTypes(ctx),
-													},
-												},
-											},
-											CustomType:          ovhtypes.NewTfListNestedType[CurrentStateSubnetsServiceEndpointsEndpointsValue](ctx),
-											Computed:            true,
-											Description:         "Endpoints representing the IPs assigned to the managed services",
-											MarkdownDescription: "Endpoints representing the IPs assigned to the managed services",
-										},
-										"managed_service_urn": schema.StringAttribute{
-											CustomType:          ovhtypes.TfStringType{},
-											Computed:            true,
-											Description:         "IAM Resource URN of the managed service. Compatible managed service types are listed by /reference/compatibleManagedServiceType call.",
-											MarkdownDescription: "IAM Resource URN of the managed service. Compatible managed service types are listed by /reference/compatibleManagedServiceType call.",
-										},
-									},
-									CustomType: CurrentStateSubnetsServiceEndpointsType{
-										ObjectType: types.ObjectType{
-											AttrTypes: CurrentStateSubnetsServiceEndpointsValue{}.AttributeTypes(ctx),
-										},
-									},
-								},
-								CustomType:          ovhtypes.NewTfListNestedType[CurrentStateSubnetsServiceEndpointsValue](ctx),
-								Computed:            true,
-								Description:         "Service endpoints of the subnet",
-								MarkdownDescription: "Service endpoints of the subnet",
-							},
-							"service_range": schema.SingleNestedAttribute{
+				"services": schema.SingleNestedAttribute{
+					Attributes: map[string]schema.Attribute{
+						"service_range": schema.ListNestedAttribute{
+							NestedObject: schema.NestedAttributeObject{
 								Attributes: map[string]schema.Attribute{
 									"cidr": schema.StringAttribute{
 										CustomType:          ovhtypes.TfStringType{},
 										Computed:            true,
-										Description:         "CIDR dedicated to the subnet's services",
-										MarkdownDescription: "CIDR dedicated to the subnet's services",
+										Description:         "Service range CIDR",
+										MarkdownDescription: "Service range CIDR",
 									},
 									"remaining_ips": schema.Int64Attribute{
 										CustomType:          ovhtypes.TfInt64Type{},
@@ -122,6 +263,84 @@ func VrackservicesDataSourceSchema(ctx context.Context) schema.Schema {
 										Description:         "Number of service range IPs reserved by OVHcloud",
 										MarkdownDescription: "Number of service range IPs reserved by OVHcloud",
 									},
+									"service_endpoints": schema.ListNestedAttribute{
+										NestedObject: schema.NestedAttributeObject{
+											Attributes: map[string]schema.Attribute{
+												"endpoints": schema.ListNestedAttribute{
+													NestedObject: schema.NestedAttributeObject{
+														Attributes: map[string]schema.Attribute{
+															"description": schema.StringAttribute{
+																CustomType:          ovhtypes.TfStringType{},
+																Computed:            true,
+																Description:         "IP description defined in the managed service",
+																MarkdownDescription: "IP description defined in the managed service",
+															},
+															"ip": schema.StringAttribute{
+																CustomType:          ovhtypes.TfStringType{},
+																Computed:            true,
+																Description:         "IP address assigned by OVHcloud",
+																MarkdownDescription: "IP address assigned by OVHcloud",
+															},
+														},
+														CustomType: CurrentStateServicesServiceRangeServiceEndpointsEndpointsType{
+															ObjectType: types.ObjectType{
+																AttrTypes: CurrentStateServicesServiceRangeServiceEndpointsEndpointsValue{}.AttributeTypes(ctx),
+															},
+														},
+													},
+													CustomType:          ovhtypes.NewTfListNestedType[CurrentStateServicesServiceRangeServiceEndpointsEndpointsValue](ctx),
+													Computed:            true,
+													Description:         "Endpoints representing the IPs assigned to the managed services",
+													MarkdownDescription: "Endpoints representing the IPs assigned to the managed services",
+												},
+												"managed_service_urn": schema.StringAttribute{
+													CustomType:          ovhtypes.TfStringType{},
+													Computed:            true,
+													Description:         "IAM Resource URN of the managed service. Compatible managed service types are listed by /reference/compatibleManagedServiceType call.",
+													MarkdownDescription: "IAM Resource URN of the managed service. Compatible managed service types are listed by /reference/compatibleManagedServiceType call.",
+												},
+											},
+											CustomType: CurrentStateServicesServiceRangeServiceEndpointsType{
+												ObjectType: types.ObjectType{
+													AttrTypes: CurrentStateServicesServiceRangeServiceEndpointsValue{}.AttributeTypes(ctx),
+												},
+											},
+										},
+										CustomType:          ovhtypes.NewTfListNestedType[CurrentStateServicesServiceRangeServiceEndpointsValue](ctx),
+										Computed:            true,
+										Description:         "Service endpoints",
+										MarkdownDescription: "Service endpoints",
+									},
+									"service_endpoints_configuration_status": schema.SingleNestedAttribute{
+										Attributes: map[string]schema.Attribute{
+											"reason": schema.StringAttribute{
+												CustomType:          ovhtypes.TfStringType{},
+												Computed:            true,
+												Description:         "Reason for the status",
+												MarkdownDescription: "Reason for the status",
+											},
+											"status": schema.StringAttribute{
+												CustomType:          ovhtypes.TfStringType{},
+												Computed:            true,
+												Description:         "Configuration status (`DRAFT`, `READY`)",
+												MarkdownDescription: "Configuration status (`DRAFT`, `READY`)",
+											},
+										},
+										CustomType: CurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusType{
+											ObjectType: types.ObjectType{
+												AttrTypes: CurrentStateServicesServiceRangeServiceEndpointsConfigurationStatusValue{}.AttributeTypes(ctx),
+											},
+										},
+										Computed:            true,
+										Description:         "Service endpoints configuration status",
+										MarkdownDescription: "Service endpoints configuration status",
+									},
+									"subnet_cidr": schema.StringAttribute{
+										CustomType:          ovhtypes.TfStringType{},
+										Computed:            true,
+										Description:         "Subnet CIDR",
+										MarkdownDescription: "Subnet CIDR",
+									},
 									"used_ips": schema.Int64Attribute{
 										CustomType:          ovhtypes.TfInt64Type{},
 										Computed:            true,
@@ -129,14 +348,47 @@ func VrackservicesDataSourceSchema(ctx context.Context) schema.Schema {
 										MarkdownDescription: "Number of service range IPs assigned to the managed services",
 									},
 								},
-								CustomType: CurrentStateSubnetsServiceRangeType{
+								CustomType: CurrentStateServicesServiceRangeType{
 									ObjectType: types.ObjectType{
-										AttrTypes: CurrentStateSubnetsServiceRangeValue{}.AttributeTypes(ctx),
+										AttrTypes: CurrentStateServicesServiceRangeValue{}.AttributeTypes(ctx),
 									},
 								},
+							},
+							CustomType:          ovhtypes.NewTfListNestedType[CurrentStateServicesServiceRangeValue](ctx),
+							Computed:            true,
+							Description:         "Service ranges",
+							MarkdownDescription: "Service ranges",
+						},
+					},
+					CustomType: CurrentStateServicesType{
+						ObjectType: types.ObjectType{
+							AttrTypes: CurrentStateServicesValue{}.AttributeTypes(ctx),
+						},
+					},
+					Computed:            true,
+					Description:         "Services current state",
+					MarkdownDescription: "Services current state",
+				},
+				"subnets": schema.ListNestedAttribute{
+					NestedObject: schema.NestedAttributeObject{
+						Attributes: map[string]schema.Attribute{
+							"az": schema.StringAttribute{
+								CustomType:          ovhtypes.TfStringType{},
 								Computed:            true,
-								Description:         "Defines a smaller subnet dedicated to the managed services IPs",
-								MarkdownDescription: "Defines a smaller subnet dedicated to the managed services IPs",
+								Description:         "Availability zone of the subnet",
+								MarkdownDescription: "Availability zone of the subnet",
+							},
+							"cidr": schema.StringAttribute{
+								CustomType:          ovhtypes.TfStringType{},
+								Computed:            true,
+								Description:         "IP address range of the subnet in CIDR format",
+								MarkdownDescription: "IP address range of the subnet in CIDR format",
+							},
+							"display_name": schema.StringAttribute{
+								CustomType:          ovhtypes.TfStringType{},
+								Computed:            true,
+								Description:         "Display name of the subnet",
+								MarkdownDescription: "Display name of the subnet",
 							},
 							"vlan": schema.Int64Attribute{
 								CustomType:          ovhtypes.TfInt64Type{},
@@ -155,6 +407,12 @@ func VrackservicesDataSourceSchema(ctx context.Context) schema.Schema {
 					Computed:            true,
 					Description:         "Subnets of the current vRack Services",
 					MarkdownDescription: "Subnets of the current vRack Services",
+				},
+				"vrack_id": schema.StringAttribute{
+					CustomType:          ovhtypes.TfStringType{},
+					Computed:            true,
+					Description:         "vRack associated to the vRack Services",
+					MarkdownDescription: "vRack associated to the vRack Services",
 				},
 			},
 			CustomType: VrackServicesCurrentStateType{
@@ -261,14 +519,167 @@ func VrackservicesDataSourceSchema(ctx context.Context) schema.Schema {
 		},
 		"target_spec": schema.SingleNestedAttribute{
 			Attributes: map[string]schema.Attribute{
+				"bgp": schema.SingleNestedAttribute{
+					Attributes: map[string]schema.Attribute{
+						"allowed_prefixes": schema.SingleNestedAttribute{
+							Attributes: map[string]schema.Attribute{
+								"ipv4": schema.ListAttribute{
+									CustomType:          ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+									Computed:            true,
+									Description:         "Allowed IPv4 prefixes. Prefix length must be between /24 and /30",
+									MarkdownDescription: "Allowed IPv4 prefixes. Prefix length must be between /24 and /30",
+								},
+								"ipv6": schema.ListAttribute{
+									CustomType:          ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+									Computed:            true,
+									Description:         "Allowed IPv6 prefixes. Prefix length must be /56",
+									MarkdownDescription: "Allowed IPv6 prefixes. Prefix length must be /56",
+								},
+							},
+							CustomType: TargetSpecBgpAllowedPrefixesType{
+								ObjectType: types.ObjectType{
+									AttrTypes: TargetSpecBgpAllowedPrefixesValue{}.AttributeTypes(ctx),
+								},
+							},
+							Computed:            true,
+							Description:         "Allowed prefixes, OVHcloud public IP blocks announced through BGP",
+							MarkdownDescription: "Allowed prefixes, OVHcloud public IP blocks announced through BGP",
+						},
+						"bgp_range": schema.ListNestedAttribute{
+							NestedObject: schema.NestedAttributeObject{
+								Attributes: map[string]schema.Attribute{
+									"cidr": schema.StringAttribute{
+										CustomType:          ovhtypes.TfStringType{},
+										Computed:            true,
+										Description:         "BGP range CIDR, contained in the referenced subnet",
+										MarkdownDescription: "BGP range CIDR, contained in the referenced subnet",
+									},
+									"client_peers": schema.ListAttribute{
+										CustomType:          ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+										Computed:            true,
+										Description:         "Client peer IPs within the BGP range CIDR (1 to 4). Must be of the same IP version as the referenced subnet",
+										MarkdownDescription: "Client peer IPs within the BGP range CIDR (1 to 4). Must be of the same IP version as the referenced subnet",
+									},
+									"infrastructure_peers": schema.ListAttribute{
+										CustomType:          ovhtypes.NewTfListNestedType[ovhtypes.TfStringValue](ctx),
+										Computed:            true,
+										Description:         "Infrastructure peer IPs within the BGP range CIDR. Must be of the same IP version as the referenced subnet",
+										MarkdownDescription: "Infrastructure peer IPs within the BGP range CIDR. Must be of the same IP version as the referenced subnet",
+									},
+									"subnet_cidr": schema.StringAttribute{
+										CustomType:          ovhtypes.TfStringType{},
+										Computed:            true,
+										Description:         "Referenced subnet CIDR. The referenced subnet must be untagged (`vlan` must be `null`)",
+										MarkdownDescription: "Referenced subnet CIDR. The referenced subnet must be untagged (`vlan` must be `null`)",
+									},
+								},
+								CustomType: TargetSpecBgpBgpRangeType{
+									ObjectType: types.ObjectType{
+										AttrTypes: TargetSpecBgpBgpRangeValue{}.AttributeTypes(ctx),
+									},
+								},
+							},
+							CustomType:          ovhtypes.NewTfListNestedType[TargetSpecBgpBgpRangeValue](ctx),
+							Computed:            true,
+							Description:         "Target specification of the BGP ranges. At most one BGP range per subnet",
+							MarkdownDescription: "Target specification of the BGP ranges. At most one BGP range per subnet",
+						},
+						"client_asn": schema.Int64Attribute{
+							CustomType:          ovhtypes.TfInt64Type{},
+							Computed:            true,
+							Description:         "Private client ASN. Authorized values: [64512 - 65533]. Default value: 64512",
+							MarkdownDescription: "Private client ASN. Authorized values: [64512 - 65533]. Default value: 64512",
+						},
+						"infrastructure_asn": schema.Int64Attribute{
+							CustomType:          ovhtypes.TfInt64Type{},
+							Computed:            true,
+							Description:         "Private infrastructure ASN. Authorized values: [64513 - 65534]. Default value: 65534",
+							MarkdownDescription: "Private infrastructure ASN. Authorized values: [64513 - 65534]. Default value: 65534",
+						},
+					},
+					CustomType: TargetSpecBgpType{
+						ObjectType: types.ObjectType{
+							AttrTypes: TargetSpecBgpValue{}.AttributeTypes(ctx),
+						},
+					},
+					Computed:            true,
+					Description:         "Target specification of the BGP configuration",
+					MarkdownDescription: "Target specification of the BGP configuration",
+				},
+				"services": schema.SingleNestedAttribute{
+					Attributes: map[string]schema.Attribute{
+						"service_range": schema.ListNestedAttribute{
+							NestedObject: schema.NestedAttributeObject{
+								Attributes: map[string]schema.Attribute{
+									"cidr": schema.StringAttribute{
+										CustomType:          ovhtypes.TfStringType{},
+										Computed:            true,
+										Description:         "Service range CIDR, contained in the referenced subnet",
+										MarkdownDescription: "Service range CIDR, contained in the referenced subnet",
+									},
+									"service_endpoints": schema.ListNestedAttribute{
+										NestedObject: schema.NestedAttributeObject{
+											Attributes: map[string]schema.Attribute{
+												"managed_service_urn": schema.StringAttribute{
+													CustomType:          ovhtypes.TfStringType{},
+													Computed:            true,
+													Description:         "IAM Resource URN of the managed service. Managed service Region must match vRack Services Region. Compatible managed service types are listed by /reference/compatibleManagedServiceType call",
+													MarkdownDescription: "IAM Resource URN of the managed service. Managed service Region must match vRack Services Region. Compatible managed service types are listed by /reference/compatibleManagedServiceType call",
+												},
+											},
+											CustomType: TargetSpecServicesServiceRangeServiceEndpointsType{
+												ObjectType: types.ObjectType{
+													AttrTypes: TargetSpecServicesServiceRangeServiceEndpointsValue{}.AttributeTypes(ctx),
+												},
+											},
+										},
+										CustomType:          ovhtypes.NewTfListNestedType[TargetSpecServicesServiceRangeServiceEndpointsValue](ctx),
+										Computed:            true,
+										Description:         "Service endpoint target specifications",
+										MarkdownDescription: "Service endpoint target specifications",
+									},
+									"subnet_cidr": schema.StringAttribute{
+										CustomType:          ovhtypes.TfStringType{},
+										Computed:            true,
+										Description:         "Referenced subnet CIDR",
+										MarkdownDescription: "Referenced subnet CIDR",
+									},
+								},
+								CustomType: TargetSpecServicesServiceRangeType{
+									ObjectType: types.ObjectType{
+										AttrTypes: TargetSpecServicesServiceRangeValue{}.AttributeTypes(ctx),
+									},
+								},
+							},
+							CustomType:          ovhtypes.NewTfListNestedType[TargetSpecServicesServiceRangeValue](ctx),
+							Computed:            true,
+							Description:         "Service range target specifications",
+							MarkdownDescription: "Service range target specifications",
+						},
+					},
+					CustomType: TargetSpecServicesType{
+						ObjectType: types.ObjectType{
+							AttrTypes: TargetSpecServicesValue{}.AttributeTypes(ctx),
+						},
+					},
+					Computed:            true,
+					Description:         "Target specification of the services",
+					MarkdownDescription: "Target specification of the services",
+				},
 				"subnets": schema.ListNestedAttribute{
 					NestedObject: schema.NestedAttributeObject{
 						Attributes: map[string]schema.Attribute{
+							"az": schema.StringAttribute{
+								CustomType:          ovhtypes.TfStringType{},
+								Computed:            true,
+								Description:         "Availability zone of the subnet",
+								MarkdownDescription: "Availability zone of the subnet",
+							},
 							"cidr": schema.StringAttribute{
 								CustomType:          ovhtypes.TfStringType{},
 								Computed:            true,
-								Description:         "IP address range of the subnet in CIDR format. Must be a private network address (RFC1918). Authorized range for prefix length: /16 to /24",
-								MarkdownDescription: "IP address range of the subnet in CIDR format. Must be a private network address (RFC1918). Authorized range for prefix length: /16 to /24",
+								Description:         "IP address range of the subnet in CIDR format. Must be a private network address (RFC1918)",
+								MarkdownDescription: "IP address range of the subnet in CIDR format. Must be a private network address (RFC1918)",
 							},
 							"display_name": schema.StringAttribute{
 								CustomType:          ovhtypes.TfStringType{},
@@ -276,50 +687,11 @@ func VrackservicesDataSourceSchema(ctx context.Context) schema.Schema {
 								Description:         "Display name of the subnet. Format must follow `^[ a-zA-Z0-9-_.]{0,40}$`",
 								MarkdownDescription: "Display name of the subnet. Format must follow `^[ a-zA-Z0-9-_.]{0,40}$`",
 							},
-							"service_endpoints": schema.ListNestedAttribute{
-								NestedObject: schema.NestedAttributeObject{
-									Attributes: map[string]schema.Attribute{
-										"managed_service_urn": schema.StringAttribute{
-											CustomType:          ovhtypes.TfStringType{},
-											Computed:            true,
-											Description:         "IAM Resource URN of the managed service. Managed service Region must match vRack Services Region. Compatible managed service types are listed by /reference/compatibleManagedServiceType call",
-											MarkdownDescription: "IAM Resource URN of the managed service. Managed service Region must match vRack Services Region. Compatible managed service types are listed by /reference/compatibleManagedServiceType call",
-										},
-									},
-									CustomType: TargetSpecSubnetsServiceEndpointsType{
-										ObjectType: types.ObjectType{
-											AttrTypes: TargetSpecSubnetsServiceEndpointsValue{}.AttributeTypes(ctx),
-										},
-									},
-								},
-								CustomType:          ovhtypes.NewTfListNestedType[TargetSpecSubnetsServiceEndpointsValue](ctx),
-								Computed:            true,
-								Description:         "Target specification of the Service Endpoints",
-								MarkdownDescription: "Target specification of the Service Endpoints",
-							},
-							"service_range": schema.SingleNestedAttribute{
-								Attributes: map[string]schema.Attribute{
-									"cidr": schema.StringAttribute{
-										CustomType:          ovhtypes.TfStringType{},
-										Computed:            true,
-										Description:         "IP address range dedicated to the subnet's services in CIDR format. Must be a private network address (RFC1918). Must be a sub-network of the subnet. Authorized range for prefix length: /27 to /29",
-										MarkdownDescription: "IP address range dedicated to the subnet's services in CIDR format. Must be a private network address (RFC1918). Must be a sub-network of the subnet. Authorized range for prefix length: /27 to /29",
-									},
-								},
-								CustomType: TargetSpecSubnetsServiceRangeType{
-									ObjectType: types.ObjectType{
-										AttrTypes: TargetSpecSubnetsServiceRangeValue{}.AttributeTypes(ctx),
-									},
-								},
-								Computed:            true,
-								Description:         "Defines a smaller subnet dedicated to the managed service IPs",
-								MarkdownDescription: "Defines a smaller subnet dedicated to the managed service IPs",
-							},
 							"vlan": schema.Int64Attribute{
 								CustomType:          ovhtypes.TfInt64Type{},
 								Computed:            true,
-								Description:         "Unique inner VLAN that allows subnets segregation. Authorized values: [2 - 4094] and `null` (untagged traffic)",
-								MarkdownDescription: "Unique inner VLAN that allows subnets segregation. Authorized values: [2 - 4094] and `null` (untagged traffic)",
+								Description:         "Unique inner VLAN that allows subnets segregation. Authorized values: [2 - 4094] and `null` (untagged traffic). Must be `null` when the subnet is referenced by a BGP range",
+								MarkdownDescription: "Unique inner VLAN that allows subnets segregation. Authorized values: [2 - 4094] and `null` (untagged traffic). Must be `null` when the subnet is referenced by a BGP range",
 							},
 						},
 						CustomType: TargetSpecSubnetsType{
@@ -330,8 +702,8 @@ func VrackservicesDataSourceSchema(ctx context.Context) schema.Schema {
 					},
 					CustomType:          ovhtypes.NewTfListNestedType[TargetSpecSubnetsValue](ctx),
 					Computed:            true,
-					Description:         "Target specification of the subnets. Maximum one subnet per vRack Services",
-					MarkdownDescription: "Target specification of the subnets. Maximum one subnet per vRack Services",
+					Description:         "Target specification of the subnets",
+					MarkdownDescription: "Target specification of the subnets",
 				},
 			},
 			CustomType: VrackServicesTargetSpecType{
