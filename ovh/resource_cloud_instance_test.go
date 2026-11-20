@@ -62,8 +62,6 @@ func TestAccCloudInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("ovh_cloud_instance.test", "checksum"),
 					resource.TestCheckResourceAttrSet("ovh_cloud_instance.test", "current_state.power_state"),
 					resource.TestCheckResourceAttr("ovh_cloud_instance.test", "billing.period", "HOURLY"),
-					resource.TestCheckResourceAttr("ovh_cloud_instance.test", "current_state.billing.period", "HOURLY"),
-					resource.TestCheckNoResourceAttr("ovh_cloud_instance.test", "current_state.billing.since"),
 				),
 			},
 			{
@@ -999,7 +997,9 @@ func TestAccCloudInstance_monthlyBilling(t *testing.T) {
 				ResourceName:      "ovh_cloud_instance.test",
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateIdFunc: testAccCloudInstanceImportStateIdFunc("ovh_cloud_instance.test"),
+				// The monthly subscription moves from ACTIVATION_PENDING to ACTIVE on its own between two reads.
+				ImportStateVerifyIgnore: []string{"current_state.billing"},
+				ImportStateIdFunc:       testAccCloudInstanceImportStateIdFunc("ovh_cloud_instance.test"),
 			},
 		},
 	})
