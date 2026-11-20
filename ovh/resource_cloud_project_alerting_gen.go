@@ -49,12 +49,6 @@ func CloudProjectAlertingResourceSchema(ctx context.Context) schema.Schema {
 					),
 				},
 			},
-			"email": schema.StringAttribute{
-				CustomType:          ovhtypes.TfStringType{},
-				Required:            true,
-				Description:         "Email to contact",
-				MarkdownDescription: "Email to contact",
-			},
 			"formatted_monthly_threshold": schema.SingleNestedAttribute{
 				Attributes: map[string]schema.Attribute{
 					"currency_code": schema.StringAttribute{
@@ -109,7 +103,6 @@ func CloudProjectAlertingResourceSchema(ctx context.Context) schema.Schema {
 type CloudProjectAlertingModel struct {
 	CreationDate              ovhtypes.TfStringValue         `tfsdk:"creation_date" json:"creationDate"`
 	Delay                     ovhtypes.TfInt64Value          `tfsdk:"delay" json:"delay"`
-	Email                     ovhtypes.TfStringValue         `tfsdk:"email" json:"email"`
 	FormattedMonthlyThreshold FormattedMonthlyThresholdValue `tfsdk:"formatted_monthly_threshold" json:"formattedMonthlyThreshold"`
 	Id                        ovhtypes.TfStringValue         `tfsdk:"id" json:"id"`
 	MonthlyThreshold          ovhtypes.TfInt64Value          `tfsdk:"monthly_threshold" json:"monthlyThreshold"`
@@ -124,10 +117,6 @@ func (v *CloudProjectAlertingModel) MergeWith(other *CloudProjectAlertingModel) 
 
 	if (v.Delay.IsUnknown() || v.Delay.IsNull()) && !other.Delay.IsUnknown() {
 		v.Delay = other.Delay
-	}
-
-	if (v.Email.IsUnknown() || v.Email.IsNull()) && !other.Email.IsUnknown() {
-		v.Email = other.Email
 	}
 
 	if v.FormattedMonthlyThreshold.IsUnknown() && !other.FormattedMonthlyThreshold.IsUnknown() {
@@ -151,9 +140,8 @@ func (v *CloudProjectAlertingModel) MergeWith(other *CloudProjectAlertingModel) 
 }
 
 type CloudProjectAlertingWritableModel struct {
-	Delay            *ovhtypes.TfInt64Value  `tfsdk:"delay" json:"delay,omitempty"`
-	Email            *ovhtypes.TfStringValue `tfsdk:"email" json:"email,omitempty"`
-	MonthlyThreshold *ovhtypes.TfInt64Value  `tfsdk:"monthly_threshold" json:"monthlyThreshold,omitempty"`
+	Delay            *ovhtypes.TfInt64Value `tfsdk:"delay" json:"delay,omitempty"`
+	MonthlyThreshold *ovhtypes.TfInt64Value `tfsdk:"monthly_threshold" json:"monthlyThreshold,omitempty"`
 }
 
 func (v CloudProjectAlertingModel) ToCreate() *CloudProjectAlertingWritableModel {
@@ -161,10 +149,6 @@ func (v CloudProjectAlertingModel) ToCreate() *CloudProjectAlertingWritableModel
 
 	if !v.Delay.IsUnknown() {
 		res.Delay = &v.Delay
-	}
-
-	if !v.Email.IsUnknown() {
-		res.Email = &v.Email
 	}
 
 	if !v.MonthlyThreshold.IsUnknown() {
@@ -179,10 +163,6 @@ func (v CloudProjectAlertingModel) ToUpdate() *CloudProjectAlertingWritableModel
 
 	if !v.Delay.IsUnknown() {
 		res.Delay = &v.Delay
-	}
-
-	if !v.Email.IsUnknown() {
-		res.Email = &v.Email
 	}
 
 	if !v.MonthlyThreshold.IsUnknown() {
