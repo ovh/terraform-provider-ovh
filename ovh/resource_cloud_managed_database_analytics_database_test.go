@@ -3,12 +3,18 @@ package ovh
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	fwresource "github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/ovh/go-ovh/ovh"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/ovhwrap"
+	"go.uber.org/ratelimit"
 )
 
 const (
@@ -84,6 +90,50 @@ func TestCloudManagedDatabasePostgresqlDatabaseCreateFailedButMade(t *testing.T)
 	resp.Diagnostics.Append(resp.State.Get(ctx, &got)...)
 	if got.Id.ValueString() != "d1" {
 		t.Errorf("expected the database d1 of the list, got %s", got.Id)
+	}
+}
+
+// The database can be on any page of the list. The fake API of newManagedDatabaseTestConfig can't send
+// the header of the next page.
+func TestCloudManagedDatabasePostgresqlDatabaseCreateFailedButMadeOnLaterPage(t *testing.T) {
+	ctx := context.Background()
+	mux := http.NewServeMux()
+	mux.HandleFunc("/1.0/auth/time", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, time.Now().Unix())
+	})
+	mux.HandleFunc(managedDatabaseDatabaseTestPath, func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.Method == http.MethodPost:
+			w.WriteHeader(http.StatusNotFound)
+			fmt.Fprint(w, `{"class": "Client::NotFound::BadRequest", "message": "Bad Request"}`)
+		case r.Header.Get("X-Pagination-Cursor") == "":
+			w.Header().Set("X-Pagination-Cursor-Next", "2")
+			fmt.Fprint(w, `[]`)
+		default:
+			fmt.Fprint(w, `[`+managedDatabaseDatabaseTestAnswer+`]`)
+		}
+	})
+	server := httptest.NewServer(mux)
+	t.Cleanup(server.Close)
+	client, err := ovh.NewClient(server.URL+"/1.0", "key", "secret", "consumer")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	r := NewCloudManagedDatabaseDatabaseResource().(*cloudManagedDatabaseDatabaseResource)
+	r.config = &Config{OVHClient: ovhwrap.NewClient(client, ratelimit.NewUnlimited())}
+
+	plan := managedDatabaseDatabaseTestModel()
+	plan.Id, plan.Default, plan.Checksum = types.StringUnknown(), types.BoolUnknown(), types.StringUnknown()
+	plan.CreatedAt, plan.UpdatedAt = types.StringUnknown(), types.StringUnknown()
+	resp := fwresource.CreateResponse{State: managedDatabaseObjectTestState(t, r, nil)}
+	r.Create(ctx, fwresource.CreateRequest{Plan: managedDatabaseObjectTestPlan(t, r, &plan)}, &resp)
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected diagnostics: %v", resp.Diagnostics)
+	}
+	var got CloudManagedDatabaseDatabaseModel
+	resp.Diagnostics.Append(resp.State.Get(ctx, &got)...)
+	if got.Id.ValueString() != "d1" {
+		t.Errorf("expected the database d1 of the second page, got %s", got.Id)
 	}
 }
 

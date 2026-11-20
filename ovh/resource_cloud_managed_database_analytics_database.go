@@ -112,8 +112,8 @@ func (r *cloudManagedDatabaseDatabaseResource) Create(ctx context.Context, req r
 
 // find returns the database of the service with the name, nil when there is none or the list fails.
 func (r *cloudManagedDatabaseDatabaseResource) find(ctx context.Context, endpoint, name string) *managedDatabaseDatabase {
-	var databases []managedDatabaseDatabase
-	if err := r.config.OVHClient.GetWithContext(ctx, endpoint, &databases); err != nil {
+	databases, err := helpers.GetAllPagesV2[managedDatabaseDatabase](ctx, r.config.OVHClient, endpoint)
+	if err != nil {
 		return nil
 	}
 	for _, database := range databases {
