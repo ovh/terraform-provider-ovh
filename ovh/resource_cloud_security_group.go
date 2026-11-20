@@ -302,6 +302,7 @@ func (r *cloudSecurityGroupResource) Create(ctx context.Context, req resource.Cr
 	}
 
 	createPayload := data.ToCreate()
+	plannedRules := data.Rule
 
 	endpoint := "/v2/publicCloud/project/" + url.PathEscape(data.ServiceName.ValueString()) + "/securityGroup"
 
@@ -315,7 +316,7 @@ func (r *cloudSecurityGroupResource) Create(ctx context.Context, req resource.Cr
 	}
 
 	// Save state immediately so the resource ID is tracked even if the workflow fails
-	data.MergeWith(ctx, &responseData)
+	data.MergeWith(ctx, &responseData, plannedRules)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 
 	// Wait for security group to be READY
@@ -338,7 +339,7 @@ func (r *cloudSecurityGroupResource) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
-	data.MergeWith(ctx, &responseData)
+	data.MergeWith(ctx, &responseData, plannedRules)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -366,7 +367,7 @@ func (r *cloudSecurityGroupResource) Read(ctx context.Context, req resource.Read
 		return
 	}
 
-	data.MergeWith(ctx, &responseData)
+	data.MergeWith(ctx, &responseData, data.Rule)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -416,7 +417,7 @@ func (r *cloudSecurityGroupResource) Update(ctx context.Context, req resource.Up
 		return
 	}
 
-	planData.MergeWith(ctx, &responseData)
+	planData.MergeWith(ctx, &responseData, planData.Rule)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &planData)...)
 }

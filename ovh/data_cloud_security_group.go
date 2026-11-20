@@ -292,7 +292,7 @@ func (d *cloudSecurityGroupDataSource) Read(ctx context.Context, req datasource.
 	var m CloudSecurityGroupModel
 	m.ServiceName = data.ServiceName
 	m.Id = data.Id
-	m.MergeWith(ctx, &responseData)
+	m.MergeWith(ctx, &responseData, types.ListNull(types.ObjectType{AttrTypes: SecurityGroupRuleAttrTypes()}))
 
 	locationVal, diags := types.ObjectValue(
 		securityGroupLocationAttrTypes(),

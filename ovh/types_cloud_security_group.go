@@ -2,6 +2,7 @@ package ovh
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -142,43 +143,45 @@ func buildSecurityGroupTargetRules(ruleList types.List) []CloudSecurityGroupAPIT
 		if !ok {
 			continue
 		}
-		attrs := obj.Attributes()
-
-		rule := CloudSecurityGroupAPITargetRule{}
-
-		if v, ok := attrs["direction"].(ovhtypes.TfStringValue); ok && !v.IsNull() && !v.IsUnknown() {
-			rule.Direction = v.ValueString()
-		}
-		if v, ok := attrs["ethernet_type"].(ovhtypes.TfStringValue); ok && !v.IsNull() && !v.IsUnknown() {
-			rule.EthernetType = v.ValueString()
-		}
-		if v, ok := attrs["protocol"].(ovhtypes.TfStringValue); ok && !v.IsNull() && !v.IsUnknown() {
-			rule.Protocol = v.ValueString()
-		}
-		if v, ok := attrs["port_range_min"].(basetypes.Int64Value); ok && !v.IsNull() && !v.IsUnknown() {
-			val := v.ValueInt64()
-			rule.PortRangeMin = &val
-		}
-		if v, ok := attrs["port_range_max"].(basetypes.Int64Value); ok && !v.IsNull() && !v.IsUnknown() {
-			val := v.ValueInt64()
-			rule.PortRangeMax = &val
-		}
-		if v, ok := attrs["remote_group_id"].(ovhtypes.TfStringValue); ok && !v.IsNull() && !v.IsUnknown() {
-			rule.RemoteGroup = &CloudSecurityGroupAPIRemoteGroup{
-				Id: v.ValueString(),
-			}
-		}
-		if v, ok := attrs["remote_ip_prefix"].(ovhtypes.TfStringValue); ok && !v.IsNull() && !v.IsUnknown() {
-			rule.RemoteIpPrefix = v.ValueString()
-		}
-		if v, ok := attrs["description"].(ovhtypes.TfStringValue); ok && !v.IsNull() && !v.IsUnknown() {
-			rule.Description = v.ValueString()
-		}
-
-		rules = append(rules, rule)
+		rules = append(rules, securityGroupTargetRuleFromAttrs(obj.Attributes()))
 	}
 
 	return rules
+}
+
+func securityGroupTargetRuleFromAttrs(attrs map[string]attr.Value) CloudSecurityGroupAPITargetRule {
+	rule := CloudSecurityGroupAPITargetRule{}
+
+	if v, ok := attrs["direction"].(ovhtypes.TfStringValue); ok && !v.IsNull() && !v.IsUnknown() {
+		rule.Direction = v.ValueString()
+	}
+	if v, ok := attrs["ethernet_type"].(ovhtypes.TfStringValue); ok && !v.IsNull() && !v.IsUnknown() {
+		rule.EthernetType = v.ValueString()
+	}
+	if v, ok := attrs["protocol"].(ovhtypes.TfStringValue); ok && !v.IsNull() && !v.IsUnknown() {
+		rule.Protocol = v.ValueString()
+	}
+	if v, ok := attrs["port_range_min"].(basetypes.Int64Value); ok && !v.IsNull() && !v.IsUnknown() {
+		val := v.ValueInt64()
+		rule.PortRangeMin = &val
+	}
+	if v, ok := attrs["port_range_max"].(basetypes.Int64Value); ok && !v.IsNull() && !v.IsUnknown() {
+		val := v.ValueInt64()
+		rule.PortRangeMax = &val
+	}
+	if v, ok := attrs["remote_group_id"].(ovhtypes.TfStringValue); ok && !v.IsNull() && !v.IsUnknown() {
+		rule.RemoteGroup = &CloudSecurityGroupAPIRemoteGroup{
+			Id: v.ValueString(),
+		}
+	}
+	if v, ok := attrs["remote_ip_prefix"].(ovhtypes.TfStringValue); ok && !v.IsNull() && !v.IsUnknown() {
+		rule.RemoteIpPrefix = v.ValueString()
+	}
+	if v, ok := attrs["description"].(ovhtypes.TfStringValue); ok && !v.IsNull() && !v.IsUnknown() {
+		rule.Description = v.ValueString()
+	}
+
+	return rule
 }
 
 // SecurityGroupRuleAttrTypes returns the attribute types for a rule nested object
@@ -392,8 +395,124 @@ func buildSecurityGroupCurrentStateObject(ctx context.Context, state *CloudSecur
 	return obj
 }
 
-// MergeWith merges API response data into the Terraform model
-func (m *CloudSecurityGroupModel) MergeWith(ctx context.Context, response *CloudSecurityGroupAPIResponse) {
+var securityGroupRuleAttrNames = [...]string{"direction", "ethernet_type", "protocol", "port_range_min", "port_range_max", "remote_group_id", "remote_ip_prefix", "description"}
+
+type securityGroupRuleFields [len(securityGroupRuleAttrNames)]string
+
+func securityGroupTargetRuleFields(r CloudSecurityGroupAPITargetRule) securityGroupRuleFields {
+	portMin, portMax, remoteGroupId := "", "", ""
+	if r.PortRangeMin != nil {
+		portMin = strconv.FormatInt(*r.PortRangeMin, 10)
+	}
+	if r.PortRangeMax != nil {
+		portMax = strconv.FormatInt(*r.PortRangeMax, 10)
+	}
+	if r.RemoteGroup != nil {
+		remoteGroupId = r.RemoteGroup.Id
+	}
+	return securityGroupRuleFields{r.Direction, r.EthernetType, r.Protocol, portMin, portMax, remoteGroupId, r.RemoteIpPrefix, r.Description}
+}
+
+// securityGroupRulePattern is a prior rule; fields unknown at plan time (e.g. the
+// ID of a group created in the same apply) match any API value.
+type securityGroupRulePattern struct {
+	fields securityGroupRuleFields
+	known  [len(securityGroupRuleAttrNames)]bool
+	exact  bool
+}
+
+func (p securityGroupRulePattern) matches(fields securityGroupRuleFields) bool {
+	for i := range fields {
+		if p.known[i] && p.fields[i] != fields[i] {
+			return false
+		}
+	}
+	return true
+}
+
+func securityGroupRulePatterns(prior types.List) []securityGroupRulePattern {
+	patterns := make([]securityGroupRulePattern, 0, len(prior.Elements()))
+	for _, elem := range prior.Elements() {
+		obj, ok := elem.(basetypes.ObjectValue)
+		if !ok {
+			continue
+		}
+		attrs := obj.Attributes()
+		p := securityGroupRulePattern{fields: securityGroupTargetRuleFields(securityGroupTargetRuleFromAttrs(attrs))}
+		p.exact = !obj.IsUnknown()
+		for i, name := range securityGroupRuleAttrNames {
+			v, present := attrs[name]
+			p.known[i] = !obj.IsUnknown() && present && !v.IsUnknown()
+			p.exact = p.exact && p.known[i]
+		}
+		patterns = append(patterns, p)
+	}
+	return patterns
+}
+
+// orderSecurityGroupRulesLikePrior re-emits the API rules in the order of the
+// prior plan/state list: the target spec keeps Neutron's rule order, but `rule`
+// is an Optional-only list that must match the config index-for-index.
+// Fully known rules are matched first so a rule with unknown fields cannot take
+// another rule's match. API rules left unmatched are out-of-band drift, appended
+// in API order.
+func orderSecurityGroupRulesLikePrior(prior types.List, apiRules []CloudSecurityGroupAPITargetRule) []CloudSecurityGroupAPITargetRule {
+	// Null/unknown prior is the `terraform import` and data source path: keep the API order.
+	if prior.IsNull() || prior.IsUnknown() {
+		return apiRules
+	}
+	patterns := securityGroupRulePatterns(prior)
+
+	apiFields := make([]securityGroupRuleFields, len(apiRules))
+	free := make(map[securityGroupRuleFields][]int, len(apiRules))
+	for i, r := range apiRules {
+		apiFields[i] = securityGroupTargetRuleFields(r)
+		free[apiFields[i]] = append(free[apiFields[i]], i)
+	}
+
+	consumed := make([]bool, len(apiRules))
+	assigned := make([]int, len(patterns))
+	for pi, p := range patterns {
+		assigned[pi] = -1
+		if !p.exact {
+			continue
+		}
+		if idxs := free[p.fields]; len(idxs) > 0 {
+			assigned[pi] = idxs[0]
+			free[p.fields] = idxs[1:]
+			consumed[idxs[0]] = true
+		}
+	}
+	for pi, p := range patterns {
+		if p.exact {
+			continue
+		}
+		for ai := range apiRules {
+			if !consumed[ai] && p.matches(apiFields[ai]) {
+				assigned[pi] = ai
+				consumed[ai] = true
+				break
+			}
+		}
+	}
+
+	out := make([]CloudSecurityGroupAPITargetRule, 0, len(apiRules))
+	for _, ai := range assigned {
+		if ai >= 0 {
+			out = append(out, apiRules[ai])
+		}
+	}
+	for ai, r := range apiRules {
+		if !consumed[ai] {
+			out = append(out, r)
+		}
+	}
+	return out
+}
+
+// MergeWith merges API response data into the Terraform model. priorRules is
+// the planned (Create/Update) or state (Read) `rule` list whose order is kept.
+func (m *CloudSecurityGroupModel) MergeWith(ctx context.Context, response *CloudSecurityGroupAPIResponse, priorRules types.List) {
 	m.Id = ovhtypes.TfStringValue{StringValue: types.StringValue(response.Id)}
 	m.Checksum = ovhtypes.TfStringValue{StringValue: types.StringValue(response.Checksum)}
 	m.CreatedAt = ovhtypes.TfStringValue{StringValue: types.StringValue(response.CreatedAt)}
@@ -422,6 +541,6 @@ func (m *CloudSecurityGroupModel) MergeWith(ctx context.Context, response *Cloud
 		// Rebuild rule list from targetSpec rules to keep Terraform state in sync.
 		// An empty array from the API is treated like an absent one (null), so an
 		// omitted `rule` config round-trips instead of becoming an empty list.
-		m.Rule = buildSecurityGroupTargetRulesList(response.TargetSpec.Rules)
+		m.Rule = buildSecurityGroupTargetRulesList(orderSecurityGroupRulesLikePrior(priorRules, response.TargetSpec.Rules))
 	}
 }
