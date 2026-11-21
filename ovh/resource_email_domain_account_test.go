@@ -80,35 +80,96 @@ func TestAccEmailDomainAccount_Basic(t *testing.T) {
 			},
 			// Successful creation
 			{
-				Config: testAccEmailDomainAccountConfig(domain, "testaccount", "P@ssw0rd1234!", "Test account", 5368709120),
+				Config: testAccEmailDomainAccountConfig(domain, "testaccount", "P@ssw0rd1234!", "Test account", 5000000000),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("ovh_email_domain_account.test", "domain", domain),
 					resource.TestCheckResourceAttr("ovh_email_domain_account.test", "account_name", "testaccount"),
 					resource.TestCheckResourceAttr("ovh_email_domain_account.test", "password", "P@ssw0rd1234!"),
 					resource.TestCheckResourceAttr("ovh_email_domain_account.test", "description", "Test account"),
-					resource.TestCheckResourceAttr("ovh_email_domain_account.test", "size", "5368709120"),
+					resource.TestCheckResourceAttr("ovh_email_domain_account.test", "size", "5000000000"),
 					resource.TestCheckResourceAttr("ovh_email_domain_account.test", "email", "testaccount@"+domain),
 					resource.TestCheckResourceAttr("ovh_email_domain_account.test", "is_blocked", "false"),
 				),
 			},
 			// Update description
 			{
-				Config: testAccEmailDomainAccountConfig(domain, "testaccount", "P@ssw0rd1234!", "Updated description", 5368709120),
+				Config: testAccEmailDomainAccountConfig(domain, "testaccount", "P@ssw0rd1234!", "Updated description", 5000000000),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("ovh_email_domain_account.test", "description", "Updated description"),
 					resource.TestCheckResourceAttr("ovh_email_domain_account.test", "account_name", "testaccount"),
+					// The id used to be lost on update
+					resource.TestCheckResourceAttr("ovh_email_domain_account.test", "id", domain+"/testaccount"),
 				),
 			},
 			// Update password
 			{
-				Config: testAccEmailDomainAccountConfig(domain, "testaccount", "N3wP@ssw0rd5678!", "Updated description", 5368709120),
+				Config: testAccEmailDomainAccountConfig(domain, "testaccount", "N3wP@ssw0rd5678!", "Updated description", 5000000000),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("ovh_email_domain_account.test", "password", "N3wP@ssw0rd5678!"),
 					resource.TestCheckResourceAttr("ovh_email_domain_account.test", "account_name", "testaccount"),
 				),
 			},
+			// Import: the password is never returned by the API
+			{
+				ResourceName:            "ovh_email_domain_account.test",
+				ImportState:             true,
+				ImportStateId:           domain + "/testaccount",
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
 		},
 	})
+}
+
+// An account managed without a password, as after an import, keeps the one it
+// has: removing the password from the configuration changes nothing upstream,
+// and the account can still be read, updated and imported.
+func TestAccEmailDomainAccount_withoutPassword(t *testing.T) {
+	domain := os.Getenv("OVH_EMAIL_DOMAIN_TEST")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheckEmailDomain(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Creating an account still needs a password
+			{
+				Config:      testAccEmailDomainAccountConfig_noPassword(domain, "testnopassword", "No password"),
+				ExpectError: regexp.MustCompile(`A password is required to create an email account`),
+			},
+			{
+				Config: testAccEmailDomainAccountConfig(domain, "testnopassword", "P@ssw0rd1234!", "No password", 5000000000),
+				Check:  resource.TestCheckResourceAttr("ovh_email_domain_account.test", "password", "P@ssw0rd1234!"),
+			},
+			// Leaving the password out keeps the current one
+			{
+				Config: testAccEmailDomainAccountConfig_noPassword(domain, "testnopassword", "Still no password"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckNoResourceAttr("ovh_email_domain_account.test", "password"),
+					resource.TestCheckResourceAttr("ovh_email_domain_account.test", "description", "Still no password"),
+				),
+			},
+			{
+				ResourceName:      "ovh_email_domain_account.test",
+				ImportState:       true,
+				ImportStateId:     domain + "/testnopassword",
+				ImportStateVerify: true,
+			},
+			// Setting it again changes it
+			{
+				Config: testAccEmailDomainAccountConfig(domain, "testnopassword", "N3wP@ssw0rd5678!", "Still no password", 5000000000),
+				Check:  resource.TestCheckResourceAttr("ovh_email_domain_account.test", "password", "N3wP@ssw0rd5678!"),
+			},
+		},
+	})
+}
+
+func testAccEmailDomainAccountConfig_noPassword(domain, accountName, description string) string {
+	return fmt.Sprintf(`
+resource "ovh_email_domain_account" "test" {
+  domain       = %q
+  account_name = %q
+  description  = %q
+}`, domain, accountName, description)
 }
 
 func testAccEmailDomainAccountConfig_noDomain(accountName, password string) string {
