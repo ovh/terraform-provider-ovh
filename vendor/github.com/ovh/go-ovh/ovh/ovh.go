@@ -28,8 +28,8 @@ const DefaultTimeout = 180 * time.Second
 
 // Endpoints
 const (
-	OvhEU        = "https://eu.api.ovh.com/1.0"
-	OvhCA        = "https://ca.api.ovh.com/1.0"
+	OvhEU        = "https://api.eu.ovhcloud.com/1.0"
+	OvhCA        = "https://api.ca.ovhcloud.com/1.0"
 	OvhUS        = "https://api.us.ovhcloud.com/1.0"
 	KimsufiEU    = "https://eu.api.kimsufi.com/1.0"
 	KimsufiCA    = "https://ca.api.kimsufi.com/1.0"
@@ -53,9 +53,9 @@ var (
 	ErrAPIDown = errors.New("go-ovh: the OVH API is not reachable: failed to get /auth/time response")
 
 	tokensURLs = map[string]string{
-		OvhEU: "https://www.ovh.com/auth/oauth2/token",
-		OvhCA: "https://ca.ovh.com/auth/oauth2/token",
-		OvhUS: "https://us.ovhcloud.com/auth/oauth2/token",
+		OvhEU: "https://auth.eu.ovhcloud.com/oauth2/token",
+		OvhCA: "https://auth.ca.ovhcloud.com/oauth2/token",
+		OvhUS: "https://auth.us.ovhcloud.com/oauth2/token",
 	}
 )
 
@@ -65,7 +65,7 @@ type Client struct {
 	AccessToken string
 
 	// Self generated tokens. Create one by visiting
-	// https://eu.api.ovh.com/createApp/
+	// https://auth.eu.ovhcloud.com/api/createApp
 	// AppKey holds the Application key
 	AppKey string
 
