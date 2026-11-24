@@ -14,6 +14,12 @@ import (
 	"github.com/ovh/terraform-provider-ovh/v2/ovh/ovhwrap"
 )
 
+// IAM mirrors the service displayName asynchronously and can lag well behind
+// the PUT /services call, notably on the US API.
+var errDisplayNameNotPropagated = errors.New("displayName updated but not yet propagated to IAM")
+
+var displayNamePropagationTimeout = 10 * time.Minute
+
 type savingsPlansSubscribable struct {
 	OfferID string `json:"offerId"`
 }
@@ -100,7 +106,7 @@ func serviceUpdateDisplayName(ctx context.Context, config *Config, serviceType, 
 
 	endpoint = "/" + serviceType + "/" + url.PathEscape(serviceName)
 
-	return retry.RetryContext(ctx, 10*time.Minute, func() *retry.RetryError {
+	return retry.RetryContext(ctx, displayNamePropagationTimeout, func() *retry.RetryError {
 		resourceObject := GenericServiceWithIAMInjection{}
 
 		if err := config.OVHClient.GetWithContext(ctx, endpoint, &resourceObject); err != nil {
@@ -108,7 +114,7 @@ func serviceUpdateDisplayName(ctx context.Context, config *Config, serviceType, 
 		}
 
 		if resourceObject.DisplayName != displayName {
-			return retry.RetryableError(errors.New("timeout waiting for displayName to be updated"))
+			return retry.RetryableError(fmt.Errorf("timeout waiting for displayName to be updated: %w", errDisplayNameNotPropagated))
 		}
 
 		return nil

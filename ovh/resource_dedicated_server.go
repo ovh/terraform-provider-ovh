@@ -525,7 +525,11 @@ func (r *dedicatedServerResource) updateDedicatedServerResource(ctx context.Cont
 	if (stateData != nil && stateData.DisplayName.ValueString() != planData.DisplayName.ValueString()) ||
 		(stateData == nil && planData.DisplayName.ValueString() != "") {
 		newDisplayName := planData.DisplayName.ValueString()
-		if err := serviceUpdateDisplayName(ctx, r.config, "dedicated/server", serviceName, newDisplayName); err != nil {
+		err := serviceUpdateDisplayName(ctx, r.config, "dedicated/server", serviceName, newDisplayName)
+		switch {
+		case errors.Is(err, errDisplayNameNotPropagated):
+			diags.AddWarning("display name not yet propagated", err.Error())
+		case err != nil:
 			diags.AddError("failed to update display name", err.Error())
 			return
 		}

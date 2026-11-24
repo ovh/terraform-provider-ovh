@@ -2,6 +2,7 @@ package ovh
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/url"
 
@@ -85,9 +86,18 @@ func resourceDedicatedServerUpdateCreateOrUpdate(ctx context.Context, d *schema.
 		return diag.Errorf("Error calling PUT %s:\n\t %q", endpoint, err)
 	}
 
+	var diags diag.Diagnostics
 	if d.HasChange("display_name") {
 		newDisplayName := d.Get("display_name").(string)
-		if err := serviceUpdateDisplayName(ctx, config, "dedicated/server", serviceName, newDisplayName); err != nil {
+		err := serviceUpdateDisplayName(ctx, config, "dedicated/server", serviceName, newDisplayName)
+		switch {
+		case errors.Is(err, errDisplayNameNotPropagated):
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Warning,
+				Summary:  "display name not yet propagated",
+				Detail:   err.Error(),
+			})
+		case err != nil:
 			return diag.Errorf("failed to update display name: %s", err)
 		}
 	}
@@ -95,7 +105,7 @@ func resourceDedicatedServerUpdateCreateOrUpdate(ctx context.Context, d *schema.
 	//set fake id
 	d.SetId(serviceName)
 
-	return resourceDedicatedServerUpdateRead(ctx, d, meta)
+	return append(diags, resourceDedicatedServerUpdateRead(ctx, d, meta)...)
 }
 
 func resourceDedicatedServerUpdateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
