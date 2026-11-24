@@ -16,6 +16,7 @@ func TestVPSPowerStatesFromV1(t *testing.T) {
 		{"installing", "", "UNKNOWN"},
 		{"rebooting", "", "UNKNOWN"},
 		{"upgrading", "", "UNKNOWN"},
+		{"stopping", "", "UNKNOWN"},
 		{"", "", "UNKNOWN"},
 	}
 

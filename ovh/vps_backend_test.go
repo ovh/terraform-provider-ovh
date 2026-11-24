@@ -19,32 +19,51 @@ import (
 
 const vpsTestId = "vps-1a2b3c4d.vps.ovh.net"
 
-// vpsTestAPI is a fake API v1 serving one VPS, plus GET /v2/location. Each
-// route answers the JSON value stored under its path, or 404 when there is
-// none.
+// vpsTestAPI is a fake API v1 serving VPS, plus GET /v2/location. Each route
+// answers the JSON value stored under its path, a vpsTestStatus error, or 404
+// when there is none.
 type vpsTestAPI struct {
 	mu        sync.Mutex
 	responses map[string]any
 	requests  []string
 }
 
+// vpsTestStatus is an error answer of the fake API.
+type vpsTestStatus struct {
+	code    int
+	message string
+}
+
+// vpsTestExpired is the answer of API v1 on the routes of an expired VPS.
+var vpsTestExpired = vpsTestStatus{code: 460, message: "This service is expired"}
+
 func newVPSTestAPI() *vpsTestAPI {
-	base := "/1.0/vps/" + vpsTestId
-	return &vpsTestAPI{responses: map[string]any{
-		base: map[string]any{
-			"name":        vpsTestId,
-			"displayName": "web-01",
-			"state":       "running",
-			"netbootMode": "local",
-			"vcore":       4,
-			"memoryLimit": 8192,
-			"model":       map[string]any{"name": "vps-2025-model3", "disk": 160, "memory": 8192, "vcore": 4},
-		},
-		base + "/images/current": map[string]any{"id": "3c1e5a4e-8d55-4f39-9b5c-9d9c3a1b2c3d", "name": "Debian 12"},
-		base + "/ips":            []string{"51.75.1.2", "2001:41d0::1"},
-		base + "/datacenter":     map[string]any{"name": "GRA", "longName": "GRA1", "country": "fr"},
-		"/v2/location":           vpsTestLocations,
+	api := &vpsTestAPI{responses: map[string]any{
+		"/1.0/vps":     []string{vpsTestId},
+		"/v2/location": vpsTestLocations,
 	}}
+	api.addVPS(vpsTestId, "web-01")
+	return api
+}
+
+// addVPS serves a running VPS without option under id.
+func (a *vpsTestAPI) addVPS(id, displayName string) {
+	base := "/1.0/vps/" + id
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	a.responses[base] = map[string]any{
+		"name":        id,
+		"displayName": displayName,
+		"state":       "running",
+		"netbootMode": "local",
+		"vcore":       4,
+		"memoryLimit": 8192,
+		"model":       map[string]any{"name": "vps-2025-model3", "disk": 160, "memory": 8192, "vcore": 4},
+	}
+	a.responses[base+"/images/current"] = map[string]any{"id": "3c1e5a4e-8d55-4f39-9b5c-9d9c3a1b2c3d", "name": "Debian 12"}
+	a.responses[base+"/ips"] = []string{"51.75.1.2", "2001:41d0::1"}
+	a.responses[base+"/datacenter"] = map[string]any{"name": "GRA", "longName": "GRA1", "country": "fr"}
+	a.responses[base+"/option"] = []string{}
 }
 
 func (a *vpsTestAPI) set(path string, response any) {
@@ -91,6 +110,11 @@ func (a *vpsTestAPI) backend(t *testing.T) vpsBackend {
 		if r.Method != http.MethodGet || !found {
 			w.WriteHeader(http.StatusNotFound)
 			fmt.Fprint(w, `{"class": "Client::NotFound", "message": "The requested object does not exist"}`)
+			return
+		}
+		if status, ok := response.(vpsTestStatus); ok {
+			w.WriteHeader(status.code)
+			fmt.Fprintf(w, `{"message": %q}`, status.message)
 			return
 		}
 		if err := json.NewEncoder(w).Encode(response); err != nil {
@@ -297,5 +321,196 @@ func TestVPSV1BackendGetImageError(t *testing.T) {
 
 	if srv, diags := backend.Get(context.Background(), vpsTestId); !diags.HasError() {
 		t.Fatalf("expected an error, got %+v", srv)
+	}
+}
+
+// vpsTestBase is the API v1 path of the test VPS.
+const vpsTestBase = "/1.0/vps/" + vpsTestId
+
+func TestVPSV1BackendGetOptions(t *testing.T) {
+	api := newVPSTestAPI()
+	api.set(vpsTestBase+"/option", []string{"automatedBackup", "snapshot"})
+	api.set(vpsTestBase+"/automatedBackup", map[string]any{
+		"state":               "enabled",
+		"schedule":            "03:00:00",
+		"rotation":            7,
+		"serviceResourceName": vpsTestId + "-autobackup",
+	})
+	srv, diags := vpsTestGet(t, api.backend(t))
+
+	if len(diags) != 0 {
+		t.Errorf("unexpected diagnostics: %v", diags)
+	}
+	options := srv.CurrentState.Options
+	autoBackup := options.AutoBackup
+	if !autoBackup.Enabled || autoBackup.Cron == nil || *autoBackup.Cron != "0 3 * * *" || autoBackup.Rotation == nil || *autoBackup.Rotation != 7 {
+		t.Errorf("CurrentState.Options.AutoBackup = {%t, %v, %v}, want {true, 0 3 * * *, 7}", autoBackup.Enabled, autoBackup.Cron, autoBackup.Rotation)
+	}
+	if !options.Snapshot.Enabled {
+		t.Error("CurrentState.Options.Snapshot.Enabled = false, want true")
+	}
+	if options.AdditionalDisks.Enabled || options.AdditionalDisks.Size != nil {
+		t.Errorf("CurrentState.Options.AdditionalDisks = {%t, %v}, want {false, nil}", options.AdditionalDisks.Enabled, options.AdditionalDisks.Size)
+	}
+	if target := srv.TargetSpec.Options.AutoBackup; target == nil || target.Cron != "0 3 * * *" {
+		t.Errorf("TargetSpec.Options.AutoBackup = %+v, want {Cron: 0 3 * * *}", target)
+	}
+	if n := api.count("GET " + vpsTestBase + "/disks"); n != 0 {
+		t.Errorf("GET /disks called %d times without the additionalDisk option", n)
+	}
+}
+
+func TestVPSV1BackendGetNoOption(t *testing.T) {
+	api := newVPSTestAPI()
+	srv, _ := vpsTestGet(t, api.backend(t))
+
+	options := srv.CurrentState.Options
+	if options.AutoBackup.Enabled || options.AutoBackup.Cron != nil || options.AutoBackup.Rotation != nil {
+		t.Errorf("CurrentState.Options.AutoBackup = %+v, want disabled with null fields", options.AutoBackup)
+	}
+	if options.Snapshot.Enabled {
+		t.Error("CurrentState.Options.Snapshot.Enabled = true, want false")
+	}
+	if options.AdditionalDisks.Enabled || options.AdditionalDisks.Size != nil {
+		t.Errorf("CurrentState.Options.AdditionalDisks = %+v, want disabled with null size", options.AdditionalDisks)
+	}
+	if srv.TargetSpec.Options.AutoBackup != nil {
+		t.Errorf("TargetSpec.Options.AutoBackup = %+v, want nil", srv.TargetSpec.Options.AutoBackup)
+	}
+	for _, path := range []string{"/automatedBackup", "/disks"} {
+		if n := api.count("GET " + vpsTestBase + path); n != 0 {
+			t.Errorf("GET %s called %d times without the option", path, n)
+		}
+	}
+}
+
+func TestVPSV1BackendGetAutoBackupDisabled(t *testing.T) {
+	api := newVPSTestAPI()
+	api.set(vpsTestBase+"/option", []string{"automatedBackup"})
+	api.set(vpsTestBase+"/automatedBackup", map[string]any{"state": "disabled", "schedule": "03:00:00", "rotation": 7})
+	srv, _ := vpsTestGet(t, api.backend(t))
+
+	autoBackup := srv.CurrentState.Options.AutoBackup
+	if !autoBackup.Enabled || autoBackup.Cron != nil || autoBackup.Rotation == nil || *autoBackup.Rotation != 7 {
+		t.Errorf("CurrentState.Options.AutoBackup = {%t, %v, %v}, want {true, nil, 7}", autoBackup.Enabled, autoBackup.Cron, autoBackup.Rotation)
+	}
+	if srv.TargetSpec.Options.AutoBackup != nil {
+		t.Errorf("TargetSpec.Options.AutoBackup = %+v, want nil", srv.TargetSpec.Options.AutoBackup)
+	}
+}
+
+func TestVPSV1BackendGetAutoBackupNoSchedule(t *testing.T) {
+	api := newVPSTestAPI()
+	api.set(vpsTestBase+"/option", []string{"automatedBackup"})
+	api.set(vpsTestBase+"/automatedBackup", map[string]any{"state": "enabled", "schedule": nil, "rotation": 7})
+	srv, diags := vpsTestGet(t, api.backend(t))
+
+	if len(diags) != 0 {
+		t.Errorf("unexpected diagnostics: %v", diags)
+	}
+	if cron := srv.CurrentState.Options.AutoBackup.Cron; cron != nil {
+		t.Errorf("CurrentState.Options.AutoBackup.Cron = %q, want nil", *cron)
+	}
+	if srv.TargetSpec.Options.AutoBackup != nil {
+		t.Errorf("TargetSpec.Options.AutoBackup = %+v, want nil", srv.TargetSpec.Options.AutoBackup)
+	}
+}
+
+func TestVPSV1BackendGetAdditionalDisk(t *testing.T) {
+	api := newVPSTestAPI()
+	api.set(vpsTestBase+"/option", []string{"additionalDisk"})
+	api.set(vpsTestBase+"/disks", []int64{746694019, 746694020})
+	api.set(vpsTestBase+"/disks/746694019", map[string]any{"id": 746694019, "type": "primary", "size": 20, "state": "connected"})
+	api.set(vpsTestBase+"/disks/746694020", map[string]any{"id": 746694020, "type": "additional", "size": 50, "state": "connected"})
+	srv, _ := vpsTestGet(t, api.backend(t))
+
+	disks := srv.CurrentState.Options.AdditionalDisks
+	if !disks.Enabled || disks.Size == nil || *disks.Size != 50 {
+		t.Errorf("CurrentState.Options.AdditionalDisks = {%t, %v}, want {true, 50}", disks.Enabled, disks.Size)
+	}
+}
+
+func TestVPSV1BackendGetExpired(t *testing.T) {
+	api := newVPSTestAPI()
+	api.set(vpsTestBase+"/images/current", vpsTestExpired)
+	srv, diags := api.backend(t).Get(context.Background(), vpsTestId)
+
+	if !diags.HasError() {
+		t.Fatalf("expected an error, got %+v", srv)
+	}
+	want := "VPS " + vpsTestId + " is expired"
+	if text := diags.Errors()[0].Summary() + " " + diags.Errors()[0].Detail(); !strings.Contains(text, want) {
+		t.Errorf("error %q does not contain %q", text, want)
+	}
+}
+
+// vpsTestListAPI serves the VPS a, b and c, in this order.
+func vpsTestListAPI() *vpsTestAPI {
+	api := newVPSTestAPI()
+	ids := []string{"vps-aaaaaaaa.vps.ovh.net", "vps-bbbbbbbb.vps.ovh.net", "vps-cccccccc.vps.ovh.net"}
+	for _, id := range ids {
+		api.addVPS(id, strings.TrimSuffix(id, ".vps.ovh.net"))
+	}
+	api.set("/1.0/vps", ids)
+	return api
+}
+
+func vpsTestIds(servers []VPSAPIServer) []string {
+	ids := make([]string, 0, len(servers))
+	for _, srv := range servers {
+		ids = append(ids, srv.Id)
+	}
+	return ids
+}
+
+func TestVPSV1BackendList(t *testing.T) {
+	api := vpsTestListAPI()
+	// b is deleted between GET /vps and its own GET.
+	api.set("/1.0/vps/vps-bbbbbbbb.vps.ovh.net", nil)
+	servers, diags := api.backend(t).List(context.Background())
+
+	if len(diags) != 0 {
+		t.Errorf("unexpected diagnostics: %v", diags)
+	}
+	want := "vps-aaaaaaaa.vps.ovh.net vps-cccccccc.vps.ovh.net"
+	if got := strings.Join(vpsTestIds(servers), " "); got != want {
+		t.Errorf("got %q, want %q", got, want)
+	}
+	if len(servers) == 2 && servers[0].TargetSpec.DisplayName != "vps-aaaaaaaa" {
+		t.Errorf("servers[0].TargetSpec.DisplayName = %q, want vps-aaaaaaaa", servers[0].TargetSpec.DisplayName)
+	}
+}
+
+func TestVPSV1BackendListExpired(t *testing.T) {
+	api := vpsTestListAPI()
+	api.set("/1.0/vps/vps-bbbbbbbb.vps.ovh.net/option", vpsTestExpired)
+	servers, diags := api.backend(t).List(context.Background())
+
+	if diags.HasError() {
+		t.Fatalf("unexpected error: %v", diags)
+	}
+	want := "vps-aaaaaaaa.vps.ovh.net vps-cccccccc.vps.ovh.net"
+	if got := strings.Join(vpsTestIds(servers), " "); got != want {
+		t.Errorf("got %q, want %q", got, want)
+	}
+	warnings := diags.Warnings()
+	if len(warnings) != 1 {
+		t.Fatalf("got %d warnings, want 1: %v", len(warnings), diags)
+	}
+	if text := warnings[0].Summary() + " " + warnings[0].Detail(); !strings.Contains(text, "vps-bbbbbbbb.vps.ovh.net") {
+		t.Errorf("warning %q does not cite the expired VPS", text)
+	}
+}
+
+func TestVPSV1BackendListError(t *testing.T) {
+	api := vpsTestListAPI()
+	api.set("/1.0/vps/vps-bbbbbbbb.vps.ovh.net", vpsTestStatus{code: http.StatusInternalServerError, message: "Failed to fetch sub object"})
+	servers, diags := api.backend(t).List(context.Background())
+
+	if !diags.HasError() {
+		t.Fatalf("expected an error, got %v", vpsTestIds(servers))
+	}
+	if servers != nil {
+		t.Errorf("got %v along with the error, want nil", vpsTestIds(servers))
 	}
 }
