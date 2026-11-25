@@ -252,6 +252,10 @@ provider "ovh" {
 
 * `profile` - (Optional) The name of the OVH configuration profile to use from the `.ovh.conf` file. Uses the `[profile:<name>]` section format. If omitted, the `OVH_PROFILE` environment variable is used.
 
+* `s3_access_key_id` - (Optional) The access key ID of an S3&trade; credential of a public cloud user (`ovh_cloud_project_user_s3_credential`). Only used by the resources that OVHcloud exposes through the S3 API alone: `ovh_cloud_storage_object_bucket_acl` and `ovh_cloud_storage_object_bucket_logging`. If omitted, the `OVH_S3_ACCESS_KEY_ID` environment variable is used.
+
+* `s3_secret_access_key` - (Optional) The secret access key of that S3 credential. If omitted, the `OVH_S3_SECRET_ACCESS_KEY` environment variable is used.
+
 ## Terraform State storage in an OVHcloud Object Storage (S3 compatibility)
 
 In order to store your Terraform states on a High Performance (S3) OVHcloud Object Storage, please follow the [guide](https://help.ovhcloud.com/csm/en-public-cloud-compute-terraform-high-perf-object-storage-backend-state?id=kb_article_view&sysparm_article=KB0051345).
@@ -300,6 +304,8 @@ In order to run the Acceptance Tests for development, the following environment 
 * `OVH_CLOUD_PRIVATE_ENDPOINT_VIP_ADDRESS_TEST` - A free private IP address of the subnet allocation pool, used to test a pinned endpoint address.
 
 * `OVH_CLOUD_PROJECT_SERVICE_TEST` - The ID of your public cloud project.
+
+* `OVH_CLOUD_PROJECT_S3_OWNER_USER_ID_TEST` - The ID of a user of the public cloud project with the `objectstore_operator` role, owner of the buckets created by the object storage bucket tests. The bucket ACL and logging tests need the S3 credential of that user in `OVH_S3_ACCESS_KEY_ID` and `OVH_S3_SECRET_ACCESS_KEY`.
 
 * `OVH_CLOUD_PROJECT_CONTAINERREGISTRY_OIDC_ENDPOINT_TEST` - The OIDC endpoint of the container registry to test.
 

@@ -46,6 +46,10 @@ var (
 
 		// Profile support
 		"profile": "The name of the OVH configuration profile to use from the .ovh.conf file (uses [profile:<name>] section format)",
+
+		// S3 credentials, for what OVHcloud only exposes through the S3 API
+		"s3_access_key_id":     "The access key ID of the S3 credential of a public cloud user, for the bucket ACL and logging resources",
+		"s3_secret_access_key": "The secret access key of the S3 credential of a public cloud user, for the bucket ACL and logging resources",
 	}
 )
 
@@ -115,6 +119,19 @@ func Provider() *schema.Provider {
 				Optional:    true,
 				Description: descriptions["profile"],
 				DefaultFunc: schema.EnvDefaultFunc("OVH_PROFILE", nil),
+			},
+			"s3_access_key_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: descriptions["s3_access_key_id"],
+				DefaultFunc: schema.EnvDefaultFunc("OVH_S3_ACCESS_KEY_ID", nil),
+			},
+			"s3_secret_access_key": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				Description: descriptions["s3_secret_access_key"],
+				DefaultFunc: schema.EnvDefaultFunc("OVH_S3_SECRET_ACCESS_KEY", nil),
 			},
 		},
 
@@ -381,6 +398,12 @@ func ConfigureContextFunc(context context.Context, d *schema.ResourceData) (inte
 	}
 	if v, ok := d.GetOk("profile"); ok {
 		config.Profile = v.(string)
+	}
+	if v, ok := d.GetOk("s3_access_key_id"); ok {
+		config.S3AccessKeyID = v.(string)
+	}
+	if v, ok := d.GetOk("s3_secret_access_key"); ok {
+		config.S3SecretAccessKey = v.(string)
 	}
 	if v, ok := d.GetOk("api_rate_limit"); ok {
 		config.ApiRateLimit = ratelimit.New(v.(int))

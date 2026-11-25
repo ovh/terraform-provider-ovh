@@ -1,6 +1,7 @@
 package ovh
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -47,7 +48,13 @@ type Config struct {
 	// Profile name to load from .ovh.conf
 	Profile string
 
+	// S3 credentials of a public cloud user, for the bucket settings
+	// (ACL, server access logging) OVHcloud only exposes through the S3 API
+	S3AccessKeyID     string
+	S3SecretAccessKey string
+
 	OVHClient     *ovhwrap.Client
+	s3Client      *s3Client
 	authenticated bool
 	authFailed    error
 	lockAuth      *sync.Mutex
@@ -140,6 +147,12 @@ func (c *Config) applyProfile() error {
 	}
 	if c.ClientSecret == "" {
 		c.ClientSecret = getVal("client_secret", "OVH_CLIENT_SECRET")
+	}
+	if c.S3AccessKeyID == "" {
+		c.S3AccessKeyID = getVal("s3_access_key_id", "OVH_S3_ACCESS_KEY_ID")
+	}
+	if c.S3SecretAccessKey == "" {
+		c.S3SecretAccessKey = getVal("s3_secret_access_key", "OVH_S3_SECRET_ACCESS_KEY")
 	}
 
 	return nil
@@ -276,7 +289,22 @@ func (c *Config) load() error {
 	// → logging (logs request/response) → original transport (sends over the wire).
 	httpClient.Transport = newSchemasVersionTransport(newHeadersTransport(c.HttpHeaders, logging.NewTransport("OVH", httpClient.Transport)))
 	c.OVHClient = ovhwrap.NewClient(targetClient, c.ApiRateLimit)
+
+	if c.S3AccessKeyID != "" && c.S3SecretAccessKey != "" {
+		c.s3Client = newS3Client(c.S3AccessKeyID, c.S3SecretAccessKey, targetClient.UserAgent)
+	}
+
 	return nil
+}
+
+// S3Client returns the client for the S3 API, or an error when the provider has no S3 credentials.
+func (c *Config) S3Client() (*s3Client, error) {
+	if c.s3Client == nil {
+		return nil, errors.New("the provider needs the S3 credentials of a public cloud user for this resource, " +
+			"which OVHcloud only exposes through the S3 API: set s3_access_key_id and s3_secret_access_key " +
+			"in the provider configuration, or the OVH_S3_ACCESS_KEY_ID and OVH_S3_SECRET_ACCESS_KEY environment variables")
+	}
+	return c.s3Client, nil
 }
 
 var plateMapping map[string]string = map[string]string{
