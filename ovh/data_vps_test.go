@@ -10,29 +10,30 @@ import (
 
 func TestAccVPSDataSource_basic(t *testing.T) {
 	vps := os.Getenv("OVH_VPS")
-	config := fmt.Sprintf(testAccVPSDatasourceConfig_Basic, vps)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheckVPS(t) },
-		Providers: testAccProviders,
+		PreCheck: func() {
+			testAccPreCheckCredentials(t)
+			checkEnvOrSkip(t, "OVH_VPS")
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: fmt.Sprintf(testAccVPSDataSourceConfig, vps),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						"data.ovh_vps.server", "name", vps),
-					resource.TestCheckResourceAttr(
-						"data.ovh_vps.server", "service_name", vps),
-					resource.TestCheckResourceAttrSet(
-						"data.ovh_vps.server", "urn"),
+					resource.TestCheckResourceAttr("data.ovh_vps.vps", "id", vps),
+					resource.TestCheckResourceAttrSet("data.ovh_vps.vps", "display_name"),
+					resource.TestCheckResourceAttrSet("data.ovh_vps.vps", "current_state.power_state"),
+					resource.TestCheckResourceAttrSet("data.ovh_vps.vps", "current_state.location.region"),
+					resource.TestCheckResourceAttrSet("data.ovh_vps.vps", "current_state.ip_addresses.#"),
 				),
 			},
 		},
 	})
 }
 
-const testAccVPSDatasourceConfig_Basic = `
-data "ovh_vps" "server" {
-  service_name  = "%s"
+const testAccVPSDataSourceConfig = `
+data "ovh_vps" "vps" {
+  id = "%s"
 }
 `
