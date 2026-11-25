@@ -543,3 +543,38 @@ resource "ovh_cloud_storage_object_bucket" "bucket" {
 		},
 	})
 }
+
+// A user without object storage permission cannot own a bucket: the API answers 500, the provider refuses it before.
+func TestAccCloudStorageObjectBucket_ownerWithoutRole(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	region := strings.ToUpper(os.Getenv("OVH_CLOUD_PROJECT_STORAGE_REGION_TEST"))
+	bucketName := acctest.RandomWithPrefix(test_prefix)
+
+	config := fmt.Sprintf(`
+resource "ovh_cloud_project_user" "owner" {
+  service_name = "%s"
+  description  = "%s"
+}
+
+resource "ovh_cloud_storage_object_bucket" "bucket" {
+  service_name  = ovh_cloud_project_user.owner.service_name
+  name          = "%s"
+  region        = "%s"
+  owner_user_id = ovh_cloud_project_user.owner.id
+}
+`, serviceName, bucketName, bucketName, region)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloudStorageObjectBucket(t)
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCloudStorageObjectBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      config,
+				ExpectError: regexp.MustCompile(`has no role with the objectstore_all\s+permission`),
+			},
+		},
+	})
+}
