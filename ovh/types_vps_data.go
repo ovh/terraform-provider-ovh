@@ -33,11 +33,11 @@ type VPSsDataModel struct {
 const (
 	vpsDescId                  = "Identifier of the VPS, equal to its service name"
 	vpsDescDisplayName         = "Name you gave to the VPS"
-	vpsDescPowerState          = "Power state you requested: ACTIVE, RESCUE or SHUTOFF. Null when it cannot be told, such as while the VPS is being installed or rebooted"
+	vpsDescPowerState          = "Power state you requested: ACTIVE, RESCUE or SHUTOFF. Until the VPS API v2 is available, it is read from the current power state, and is null while the VPS is in a transitional state (installing, rebooting...)"
 	vpsDescLocation            = "Location of the VPS"
 	vpsDescRegion              = "OVHcloud region code, such as eu-west-gra. Null when the datacenter of the VPS matches no known region"
 	vpsDescInstallation        = "Installation you requested"
-	vpsDescInstallationFrom    = "Source the VPS is installed from"
+	vpsDescInstallationFrom    = "Source the VPS is installed from. Until the VPS API v2 is available, image_id and image_name are both set from the image installed on the VPS, which current_state.installation.from holds"
 	vpsDescImageId             = "Fixed image build"
 	vpsDescImageName           = "Image name, such as \"Debian 12\". It follows the latest build: a new build does not reinstall the VPS"
 	vpsDescOptions             = "Settings you requested for the options of the VPS, matching current_state.options"

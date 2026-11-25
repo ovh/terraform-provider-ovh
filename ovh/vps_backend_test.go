@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -287,21 +288,115 @@ func TestVPSV1BackendGetNotFound(t *testing.T) {
 	}
 }
 
+// vpsTestLocationsForbidden is the answer of GET /v2/location to a key whose
+// access rules only allow GET /vps/*.
+var vpsTestLocationsForbidden = vpsTestStatus{code: http.StatusForbidden, message: "This call has not been granted"}
+
+// vpsTestRegionWarnings returns the warnings about GET /v2/location.
+func vpsTestRegionWarnings(diags diag.Diagnostics) diag.Diagnostics {
+	var warnings diag.Diagnostics
+	for _, d := range diags.Warnings() {
+		if strings.Contains(d.Detail(), "/v2/location") {
+			warnings = append(warnings, d)
+		}
+	}
+	return warnings
+}
+
+func TestVPSV1BackendGetLocationsForbidden(t *testing.T) {
+	for _, denied := range []vpsTestStatus{
+		{code: http.StatusUnauthorized, message: "This credential is not valid"},
+		vpsTestLocationsForbidden,
+	} {
+		t.Run(strconv.Itoa(denied.code), func(t *testing.T) {
+			api := newVPSTestAPI()
+			api.set("/v2/location", denied)
+			backend := api.backend(t)
+
+			srv, diags := vpsTestGet(t, backend)
+			if srv.CurrentState.Location.Region != nil {
+				t.Errorf("CurrentState.Location.Region = %q, want nil", *srv.CurrentState.Location.Region)
+			}
+			warnings := vpsTestRegionWarnings(diags)
+			if len(warnings) != 1 {
+				t.Fatalf("got %d warnings about GET /v2/location, want 1: %v", len(warnings), diags)
+			}
+			for _, want := range []string{strconv.Itoa(denied.code), denied.message} {
+				if !strings.Contains(warnings[0].Detail(), want) {
+					t.Errorf("warning detail %q does not contain %q", warnings[0].Detail(), want)
+				}
+			}
+
+			// The refusal is kept for the run: the next read does not call it again.
+			vpsTestGet(t, backend)
+			if n := api.count("GET /v2/location"); n != 1 {
+				t.Errorf("GET /v2/location called %d times, want 1", n)
+			}
+		})
+	}
+}
+
 func TestVPSV1BackendGetLocationsError(t *testing.T) {
 	api := newVPSTestAPI()
-	api.set("/v2/location", nil)
+	api.set("/v2/location", vpsTestStatus{code: http.StatusInternalServerError, message: "Internal server error"})
 	backend := api.backend(t)
 
-	srv, diags := backend.Get(context.Background(), vpsTestId)
-	if !diags.HasError() {
-		t.Fatalf("expected an error when GET /v2/location fails, got %+v", srv)
+	// Any other failure fails the read, so that a passing outage does not
+	// write a null region, and is not kept: each read calls it again.
+	for i := range 2 {
+		srv, diags := backend.Get(context.Background(), vpsTestId)
+		if !diags.HasError() {
+			t.Fatalf("read %d: expected an error when GET /v2/location answers 500, got %+v", i+1, srv)
+		}
+		if n := api.count("GET /v2/location"); n != i+1 {
+			t.Errorf("read %d: GET /v2/location called %d times, want %d", i+1, n, i+1)
+		}
 	}
 
-	// The failure is not kept: the next read calls GET /v2/location again.
 	api.set("/v2/location", vpsTestLocations)
-	srv, _ = vpsTestGet(t, backend)
+	srv, _ := vpsTestGet(t, backend)
 	if srv.CurrentState.Location.Region == nil || *srv.CurrentState.Location.Region != "eu-west-gra" {
 		t.Errorf("CurrentState.Location.Region = %v, want eu-west-gra", srv.CurrentState.Location.Region)
+	}
+}
+
+func TestVPSV1BackendListLocationsForbidden(t *testing.T) {
+	api := vpsTestListAPI()
+	api.set("/v2/location", vpsTestLocationsForbidden)
+	servers, diags := api.backend(t).List(context.Background())
+
+	if diags.HasError() {
+		t.Fatalf("unexpected error: %v", diags)
+	}
+	if len(servers) != 3 {
+		t.Fatalf("got %d VPS, want 3", len(servers))
+	}
+	for _, srv := range servers {
+		if srv.CurrentState.Location.Region != nil {
+			t.Errorf("%s: CurrentState.Location.Region = %q, want nil", srv.Id, *srv.CurrentState.Location.Region)
+		}
+	}
+	if n := api.count("GET /v2/location"); n != 1 {
+		t.Errorf("GET /v2/location called %d times for %d VPS, want 1", n, len(servers))
+	}
+	if warnings := vpsTestRegionWarnings(diags); len(warnings) != 1 {
+		t.Errorf("got %d warnings about GET /v2/location, want 1: %v", len(warnings), diags)
+	}
+}
+
+func TestVPSV1BackendGetIPAddressesSorted(t *testing.T) {
+	api := newVPSTestAPI()
+	api.set("/1.0/vps/"+vpsTestId+"/ips", []string{"2001:41d0::10", "51.75.1.10", "2001:41d0::9", "51.75.1.9", "10.0.0.1"})
+	srv, _ := vpsTestGet(t, api.backend(t))
+
+	got := make([]string, 0, len(srv.CurrentState.IpAddresses))
+	for _, ip := range srv.CurrentState.IpAddresses {
+		got = append(got, fmt.Sprintf("%s/%d", ip.Ip, ip.Version))
+	}
+	// IPv4 first, then by address, not by text.
+	want := "10.0.0.1/4 51.75.1.9/4 51.75.1.10/4 2001:41d0::9/6 2001:41d0::10/6"
+	if strings.Join(got, " ") != want {
+		t.Errorf("got %q, want %q", strings.Join(got, " "), want)
 	}
 }
 
@@ -541,11 +636,12 @@ func TestVPSV1BackendListError(t *testing.T) {
 	}
 }
 
-func TestVPSV1BackendListKeepsOrder(t *testing.T) {
+func TestVPSV1BackendListSortedById(t *testing.T) {
 	api := vpsTestListAPI()
-	// Answers arrive in the reverse order of GET /vps.
+	api.set("/1.0/vps", []string{"vps-cccccccc.vps.ovh.net", "vps-aaaaaaaa.vps.ovh.net", "vps-bbbbbbbb.vps.ovh.net"})
+	// Answers arrive in yet another order.
 	api.delays["/1.0/vps/vps-aaaaaaaa.vps.ovh.net"] = 200 * time.Millisecond
-	api.delays["/1.0/vps/vps-bbbbbbbb.vps.ovh.net"] = 100 * time.Millisecond
+	api.delays["/1.0/vps/vps-cccccccc.vps.ovh.net"] = 100 * time.Millisecond
 	servers, diags := api.backend(t).List(context.Background())
 
 	if diags.HasError() {

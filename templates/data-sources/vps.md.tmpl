@@ -20,4 +20,6 @@ The attributes at the root hold the settings you requested for the VPS, and `cur
 
 Reading a VPS that does not exist, or whose service is expired, fails.
 
+Reading the region of the VPS calls `GET /v2/location`. When your credentials are not allowed to call it, `location.region` and `current_state.location.region` are null and the read emits a warning that gives the reason.
+
 When the datacenter of the VPS matches no known region, `location.region` and `current_state.location.region` are null and the read emits a warning that names the datacenter.

@@ -22,6 +22,8 @@ Select the VPS of a region:
 
 ## Notes
 
-The VPS are listed in the order the API returns them. Use `sort(data.ovh_vpss.all.vps[*].id)` for a sorted list of identifiers.
+The VPS are sorted by `id`.
 
 A VPS whose service is expired is left out of the list, with a warning that names it.
+
+Reading the region of the VPS calls `GET /v2/location`. When your credentials are not allowed to call it, `location.region` and `current_state.location.region` are null and the read emits a warning that gives the reason.

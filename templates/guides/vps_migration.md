@@ -48,6 +48,8 @@ The values of `state` map to `current_state.power_state` as follows:
 | `rescued` | `RESCUE` | `RESCUE` |
 | `installing`, `rebooting`, `stopping`, `upgrading`, `maintenance` | `UNKNOWN` | null |
 
+Reading the region calls `GET /v2/location`, which the previous version did not call. When your credentials are not allowed to call it, for instance a consumer key whose access rules only allow `GET /vps/*`, `location.region` and `current_state.location.region` are null and the read emits a warning that gives the reason.
+
 The new data source also exposes attributes that had no equivalent: `installation.from` and `current_state.installation.from` (the image of the VPS), `current_state.model.disk`, `options.auto_backup` and `current_state.options` (automated backup, snapshot and additional disk options).
 
 Before:
@@ -90,7 +92,7 @@ output "vps_region" {
 
 Each element of `vps` now carries the attributes of the `ovh_vps` data source, so reading the details of every VPS no longer needs one `ovh_vps` data source per VPS.
 
-The previous version sorted `result`. The new one lists the VPS in the order the API returns them: use `sort(data.ovh_vpss.all.vps[*].id)` to keep a sorted list. A VPS whose service is expired is left out of the list, with a warning that names it.
+`vps` is sorted by `id`, as `result` was. A VPS whose service is expired is left out of the list, with a warning that names it.
 
 Before:
 
@@ -108,6 +110,6 @@ After:
 data "ovh_vpss" "all" {}
 
 output "vps_ids" {
-  value = sort(data.ovh_vpss.all.vps[*].id)
+  value = data.ovh_vpss.all.vps[*].id
 }
 ```

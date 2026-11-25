@@ -1,11 +1,14 @@
 package ovh
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
 	"net/http"
+	"net/netip"
 	"net/url"
+	"slices"
 	"strconv"
 	"sync"
 
@@ -35,29 +38,37 @@ func newVPSBackend(config *Config) vpsBackend {
 // configuration: every data source read of a provider shares it.
 var vpsLocationCaches sync.Map // *ovhwrap.Client -> *vpsLocationCache
 
-// vpsLocationCache caches GET /v2/location once it succeeded. A failure is not
-// kept: the next call tries again.
+// vpsLocationCache caches the answer of GET /v2/location: the locations, or a
+// refusal (vpsLocationsDenied), which a key whose access rules do not allow the
+// call gets for the whole run, so that it is called once, not once per VPS.
+// Any other failure is not kept: the next call tries again.
 type vpsLocationCache struct {
 	mu        sync.Mutex
+	fetched   bool
 	locations []vpsLocation
+	err       error
 }
 
 func (c *vpsLocationCache) get(ctx context.Context, client *ovhwrap.Client) ([]vpsLocation, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	if c.locations != nil {
-		return c.locations, nil
+	if c.fetched {
+		return c.locations, c.err
 	}
 	locations, err := helpers.GetAllPagesV2[vpsLocation](ctx, client, "/v2/location")
-	if err != nil {
+	if err != nil && !vpsLocationsDenied(err) {
 		return nil, err
 	}
-	if locations == nil {
-		locations = []vpsLocation{}
-	}
-	c.locations = locations
-	return locations, nil
+	c.locations, c.err, c.fetched = locations, err, true
+	return locations, err
+}
+
+// vpsLocationsDenied tells whether GET /v2/location failed because the
+// credentials are not allowed to call it.
+func vpsLocationsDenied(err error) bool {
+	status := vpsAPIStatus(err)
+	return status == http.StatusUnauthorized || status == http.StatusForbidden
 }
 
 // vpsV1StatusExpired is the HTTP status API v1 answers on the routes of an
@@ -133,8 +144,8 @@ func (b *vpsV1Backend) Get(ctx context.Context, id string) (*VPSAPIServer, diag.
 }
 
 // List reads every VPS GET /vps returns, vpsV1ListParallelism at once, and
-// returns them in the order of GET /vps. A VPS deleted meanwhile is left out;
-// an expired one too, with a warning.
+// returns them sorted by id, whatever the order of the API. A VPS deleted
+// meanwhile is left out; an expired one too, with a warning.
 func (b *vpsV1Backend) List(ctx context.Context) ([]VPSAPIServer, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
@@ -183,6 +194,7 @@ func (b *vpsV1Backend) List(ctx context.Context) ([]VPSAPIServer, diag.Diagnosti
 			return nil, diags
 		}
 	}
+	slices.SortFunc(servers, func(a, b VPSAPIServer) int { return cmp.Compare(a.Id, b.Id) })
 	return servers, diags
 }
 
@@ -262,6 +274,8 @@ func (b *vpsV1Backend) installationFrom(ctx context.Context, base string) (VPSAP
 	}, nil
 }
 
+// ipAddresses returns the IP addresses of the VPS, IPv4 first, then sorted by
+// address, whatever the order of the API.
 func (b *vpsV1Backend) ipAddresses(ctx context.Context, base string) ([]VPSAPIIPAddress, error) {
 	var ips []string
 	endpoint := base + "/ips"
@@ -277,11 +291,20 @@ func (b *vpsV1Backend) ipAddresses(ctx context.Context, base string) ([]VPSAPIIP
 		}
 		ipAddresses = append(ipAddresses, VPSAPIIPAddress{Ip: ip, Version: version})
 	}
+	// The addresses were parsed by vpsIPVersion.
+	slices.SortFunc(ipAddresses, func(a, b VPSAPIIPAddress) int {
+		return cmp.Or(
+			cmp.Compare(a.Version, b.Version),
+			netip.MustParseAddr(a.Ip).Compare(netip.MustParseAddr(b.Ip)),
+		)
+	})
 	return ipAddresses, nil
 }
 
-// region returns the region of the VPS, nil with a warning when its datacenter
-// code matches no region.
+// region returns the region of the VPS, nil with a warning when the
+// credentials are not allowed to call GET /v2/location (such as a key whose
+// access rules only allow GET /vps/*) or when the datacenter code matches no
+// region. Any other failure of GET /v2/location is an error.
 func (b *vpsV1Backend) region(ctx context.Context, id, base string) (*string, diag.Diagnostics, error) {
 	var diags diag.Diagnostics
 
@@ -293,7 +316,15 @@ func (b *vpsV1Backend) region(ctx context.Context, id, base string) (*string, di
 
 	locations, err := b.locations.get(ctx, b.client)
 	if err != nil {
-		return nil, diags, fmt.Errorf("calling GET /v2/location: %w", err)
+		if !vpsLocationsDenied(err) {
+			return nil, diags, fmt.Errorf("calling GET /v2/location: %w", err)
+		}
+		// The same for every VPS, so that the diagnostics of a list hold it once.
+		diags.AddWarning(
+			"Cannot read the region of the VPS",
+			fmt.Sprintf("Your credentials are not allowed to call GET /v2/location (%s): the region of the VPS is left empty. Allow GET /v2/location to read it.", err),
+		)
+		return nil, diags, nil
 	}
 
 	region, ok := vpsRegionFromDatacenterCode(datacenter.Name, locations)

@@ -48,7 +48,7 @@ Read-Only:
 - `installation` (Attributes) Installation you requested (see [below for nested schema](#nestedatt--vps--installation))
 - `location` (Attributes) Location of the VPS (see [below for nested schema](#nestedatt--vps--location))
 - `options` (Attributes) Settings you requested for the options of the VPS, matching current_state.options (see [below for nested schema](#nestedatt--vps--options))
-- `power_state` (String) Power state you requested: ACTIVE, RESCUE or SHUTOFF. Null when it cannot be told, such as while the VPS is being installed or rebooted
+- `power_state` (String) Power state you requested: ACTIVE, RESCUE or SHUTOFF. Until the VPS API v2 is available, it is read from the current power state, and is null while the VPS is in a transitional state (installing, rebooting...)
 
 <a id="nestedatt--vps--current_state"></a>
 ### Nested Schema for `vps.current_state`
@@ -150,7 +150,7 @@ Read-Only:
 
 Read-Only:
 
-- `from` (Attributes) Source the VPS is installed from (see [below for nested schema](#nestedatt--vps--installation--from))
+- `from` (Attributes) Source the VPS is installed from. Until the VPS API v2 is available, image_id and image_name are both set from the image installed on the VPS, which current_state.installation.from holds (see [below for nested schema](#nestedatt--vps--installation--from))
 
 <a id="nestedatt--vps--installation--from"></a>
 ### Nested Schema for `vps.installation.from`
@@ -186,6 +186,8 @@ Read-Only:
 
 ## Notes
 
-The VPS are listed in the order the API returns them. Use `sort(data.ovh_vpss.all.vps[*].id)` for a sorted list of identifiers.
+The VPS are sorted by `id`.
 
 A VPS whose service is expired is left out of the list, with a warning that names it.
+
+Reading the region of the VPS calls `GET /v2/location`. When your credentials are not allowed to call it, `location.region` and `current_state.location.region` are null and the read emits a warning that gives the reason.
