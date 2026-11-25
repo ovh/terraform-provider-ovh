@@ -1,0 +1,31 @@
+---
+subcategory : "Account Management (IAM)"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_me_identity_group_membership
+
+Manages the membership of an identity user in an identity group as a standalone resource.
+
+~> **NOTE** This resource is an alternative to the `groups` attribute on `ovh_me_identity_user`.
+Do not use both `ovh_me_identity_group_membership` and the `groups` attribute on `ovh_me_identity_user` for the same user, as they will conflict with each other.
+
+## Example Usage
+
+{{tffile "examples/resources/me_identity_group_membership/example_1.tf"}}
+
+## Argument Reference
+
+* `login` - (Required, Forces new resource) The login of the identity user to add to the group.
+* `group` - (Required, Forces new resource) The name of the identity group to add the user to.
+
+## Import
+
+An identity group membership can be imported using `login/group`:
+
+```bash
+$ terraform import ovh_me_identity_group_membership.example my_login/my_group
+```
