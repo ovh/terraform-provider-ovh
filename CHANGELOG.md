@@ -1,3 +1,103 @@
+## 2.26.0 (November 24, 2026)
+
+🎉 Features:
+
+* New resource: `ovh_cloud_managed_analytics`, to create a ClickHouse, Grafana, Kafka, Kafka Connect, Kafka MirrorMaker or OpenSearch service with the Cloud Databases API v2 ([#1603](https://github.com/ovh/terraform-provider-ovh/pull/1603))
+* New resource: `ovh_cloud_managed_analytics_clickhouse_database` ([#1610](https://github.com/ovh/terraform-provider-ovh/pull/1610))
+* New resource: `ovh_cloud_managed_analytics_clickhouse_user` ([#1609](https://github.com/ovh/terraform-provider-ovh/pull/1609))
+* New resource: `ovh_cloud_managed_analytics_opensearch_user` ([#1609](https://github.com/ovh/terraform-provider-ovh/pull/1609))
+* New resource: `ovh_cloud_managed_analytics_user`, for the Kafka and Kafka Connect services ([#1609](https://github.com/ovh/terraform-provider-ovh/pull/1609))
+* New resource: `ovh_cloud_managed_database`, to create a MongoDB, MySQL, PostgreSQL or Valkey service with the Cloud Databases API v2 ([#1603](https://github.com/ovh/terraform-provider-ovh/pull/1603))
+* New resource: `ovh_cloud_managed_database_database`, for the MySQL and PostgreSQL services ([#1610](https://github.com/ovh/terraform-provider-ovh/pull/1610))
+* New resource: `ovh_cloud_managed_database_mongodb_user` ([#1609](https://github.com/ovh/terraform-provider-ovh/pull/1609))
+* New resource: `ovh_cloud_managed_database_postgresql_connection_pool`, a PgBouncer connection pool ([#1610](https://github.com/ovh/terraform-provider-ovh/pull/1610))
+* New resource: `ovh_cloud_managed_database_postgresql_user` ([#1609](https://github.com/ovh/terraform-provider-ovh/pull/1609))
+* New resource: `ovh_cloud_managed_database_user`, for the MySQL services ([#1609](https://github.com/ovh/terraform-provider-ovh/pull/1609))
+* New resource: `ovh_cloud_managed_database_valkey_user` ([#1609](https://github.com/ovh/terraform-provider-ovh/pull/1609))
+* New resource: `ovh_cloud_storage_object_bucket_lifecycle`, to expire objects, move them to another storage class, clean up noncurrent versions or abort incomplete multipart uploads ([#1582](https://github.com/ovh/terraform-provider-ovh/pull/1582))
+* New resource: `ovh_cloud_storage_object_bucket_replication`, the rules that copy the new objects of a bucket to other buckets of the project ([#1596](https://github.com/ovh/terraform-provider-ovh/pull/1596))
+* New resource: `ovh_cloud_storage_object_bucket_replication_job`, to apply the replication rules of a bucket to the objects already in it ([#1596](https://github.com/ovh/terraform-provider-ovh/pull/1596))
+* New resource: `ovh_email_domain_filter`, to manage the filters of a mailbox ([#1467](https://github.com/ovh/terraform-provider-ovh/pull/1467))
+
+* New datasource: `ovh_cloud_managed_analytics` ([#1603](https://github.com/ovh/terraform-provider-ovh/pull/1603))
+* New datasource: `ovh_cloud_managed_analytics_capabilities`, the engines, versions, plans, flavors and regions a project can create ([#1603](https://github.com/ovh/terraform-provider-ovh/pull/1603))
+* New datasource: `ovh_cloud_managed_analytics_certificates`, the CA certificate of a ClickHouse or Kafka service ([#1609](https://github.com/ovh/terraform-provider-ovh/pull/1609))
+* New datasource: `ovh_cloud_managed_analytics_clickhouse_database` ([#1610](https://github.com/ovh/terraform-provider-ovh/pull/1610))
+* New datasource: `ovh_cloud_managed_analytics_clickhouse_databases` ([#1610](https://github.com/ovh/terraform-provider-ovh/pull/1610))
+* New datasource: `ovh_cloud_managed_analytics_clickhouse_role` ([#1609](https://github.com/ovh/terraform-provider-ovh/pull/1609))
+* New datasource: `ovh_cloud_managed_analytics_clickhouse_roles` ([#1609](https://github.com/ovh/terraform-provider-ovh/pull/1609))
+* New datasource: `ovh_cloud_managed_analytics_clickhouse_user` ([#1609](https://github.com/ovh/terraform-provider-ovh/pull/1609))
+* New datasource: `ovh_cloud_managed_analytics_clickhouse_users` ([#1609](https://github.com/ovh/terraform-provider-ovh/pull/1609))
+* New datasource: `ovh_cloud_managed_analytics_kafka_user_access`, the client certificate and key of a Kafka user ([#1609](https://github.com/ovh/terraform-provider-ovh/pull/1609))
+* New datasource: `ovh_cloud_managed_analytics_opensearch_user` ([#1609](https://github.com/ovh/terraform-provider-ovh/pull/1609))
+* New datasource: `ovh_cloud_managed_analytics_opensearch_users` ([#1609](https://github.com/ovh/terraform-provider-ovh/pull/1609))
+* New datasource: `ovh_cloud_managed_analytics_user` ([#1609](https://github.com/ovh/terraform-provider-ovh/pull/1609))
+* New datasource: `ovh_cloud_managed_analytics_users` ([#1609](https://github.com/ovh/terraform-provider-ovh/pull/1609))
+* New datasource: `ovh_cloud_managed_database` ([#1603](https://github.com/ovh/terraform-provider-ovh/pull/1603))
+* New datasource: `ovh_cloud_managed_database_capabilities`, the engines, versions, plans, flavors and regions a project can create ([#1603](https://github.com/ovh/terraform-provider-ovh/pull/1603))
+* New datasource: `ovh_cloud_managed_database_certificates`, the CA certificate of a MySQL or PostgreSQL service ([#1609](https://github.com/ovh/terraform-provider-ovh/pull/1609))
+* New datasource: `ovh_cloud_managed_database_database` ([#1610](https://github.com/ovh/terraform-provider-ovh/pull/1610))
+* New datasource: `ovh_cloud_managed_database_databases` ([#1610](https://github.com/ovh/terraform-provider-ovh/pull/1610))
+* New datasource: `ovh_cloud_managed_database_mongodb_user` ([#1609](https://github.com/ovh/terraform-provider-ovh/pull/1609))
+* New datasource: `ovh_cloud_managed_database_mongodb_users` ([#1609](https://github.com/ovh/terraform-provider-ovh/pull/1609))
+* New datasource: `ovh_cloud_managed_database_postgresql_connection_pool` ([#1610](https://github.com/ovh/terraform-provider-ovh/pull/1610))
+* New datasource: `ovh_cloud_managed_database_postgresql_connection_pools` ([#1610](https://github.com/ovh/terraform-provider-ovh/pull/1610))
+* New datasource: `ovh_cloud_managed_database_postgresql_user` ([#1609](https://github.com/ovh/terraform-provider-ovh/pull/1609))
+* New datasource: `ovh_cloud_managed_database_postgresql_users` ([#1609](https://github.com/ovh/terraform-provider-ovh/pull/1609))
+* New datasource: `ovh_cloud_managed_database_role` ([#1609](https://github.com/ovh/terraform-provider-ovh/pull/1609))
+* New datasource: `ovh_cloud_managed_database_roles` ([#1609](https://github.com/ovh/terraform-provider-ovh/pull/1609))
+* New datasource: `ovh_cloud_managed_database_user` ([#1609](https://github.com/ovh/terraform-provider-ovh/pull/1609))
+* New datasource: `ovh_cloud_managed_database_users` ([#1609](https://github.com/ovh/terraform-provider-ovh/pull/1609))
+* New datasource: `ovh_cloud_managed_database_valkey_user` ([#1609](https://github.com/ovh/terraform-provider-ovh/pull/1609))
+* New datasource: `ovh_cloud_managed_database_valkey_users` ([#1609](https://github.com/ovh/terraform-provider-ovh/pull/1609))
+* New datasource: `ovh_cloud_storage_object_bucket_lifecycle` ([#1582](https://github.com/ovh/terraform-provider-ovh/pull/1582))
+* New datasource: `ovh_cloud_storage_object_bucket_multipart_uploads`, the incomplete multipart uploads of a bucket ([#1600](https://github.com/ovh/terraform-provider-ovh/pull/1600))
+* New datasource: `ovh_cloud_storage_object_bucket_object`, the metadata of an object ([#1582](https://github.com/ovh/terraform-provider-ovh/pull/1582))
+* New datasource: `ovh_cloud_storage_object_bucket_objects` ([#1582](https://github.com/ovh/terraform-provider-ovh/pull/1582))
+* New datasource: `ovh_cloud_storage_object_bucket_replication` ([#1596](https://github.com/ovh/terraform-provider-ovh/pull/1596))
+* New datasource: `ovh_cloud_storage_object_bucket_replication_destinations`, the buckets that can receive the objects replicated from a bucket ([#1596](https://github.com/ovh/terraform-provider-ovh/pull/1596))
+* New datasource: `ovh_cloud_storage_object_bucket_replication_job` ([#1596](https://github.com/ovh/terraform-provider-ovh/pull/1596))
+* New datasource: `ovh_cloud_storage_object_bucket_replication_jobs` ([#1596](https://github.com/ovh/terraform-provider-ovh/pull/1596))
+
+💪 Improvements:
+
+* `r/ovh_cloud_instance`: Add `volumes`, a list of `{ id, role }` where `role` is `DATA` (default) or `BOOT`, to boot an instance from an existing volume. Changing which volume is `BOOT` replaces the instance, and the plan refuses a `BOOT` volume next to an `image_id`. Moving a configuration from `volume_ids` to `volumes` with the same boot volume does not replace the instance ([#1598](https://github.com/ovh/terraform-provider-ovh/pull/1598))
+* `d/ovh_cloud_instance`: Add `volumes`, with the role of each volume ([#1598](https://github.com/ovh/terraform-provider-ovh/pull/1598))
+* `r/ovh_cloud_instance`, `d/ovh_cloud_instance`, `d/ovh_cloud_instances`: Add `current_state.volumes[].role` ([#1598](https://github.com/ovh/terraform-provider-ovh/pull/1598))
+* `r/ovh_cloud_storage_block_volume_backup`: Add the computed `current_state.status` attribute ([#1577](https://github.com/ovh/terraform-provider-ovh/pull/1577))
+* `d/ovh_cloud_storage_block_volume_backup`, `d/ovh_cloud_storage_block_volume_backups`: Add the computed `status` attribute ([#1577](https://github.com/ovh/terraform-provider-ovh/pull/1577))
+* `r/ovh_cloud_storage_file_share`, `d/ovh_cloud_storage_file_share`, `d/ovh_cloud_storage_file_shares`: Add `current_state.status` and `current_state.attachments`, the instances that declare the share in their `shares` list with their access level ([#1586](https://github.com/ovh/terraform-provider-ovh/pull/1586))
+* `service_name` is now optional and falls back to the `OVH_CLOUD_PROJECT_SERVICE` environment variable, as the other `ovh_cloud_*` data sources already did. This applies to `d/ovh_cloud_gateway`, `d/ovh_cloud_gateways`, `d/ovh_cloud_instance`, `d/ovh_cloud_instance_flavor`, `d/ovh_cloud_instance_flavors`, `d/ovh_cloud_instance_group`, `d/ovh_cloud_instance_groups`, `d/ovh_cloud_instance_image`, `d/ovh_cloud_instance_images`, `d/ovh_cloud_instance_snapshot`, `d/ovh_cloud_instance_snapshots`, `d/ovh_cloud_instances`, `d/ovh_cloud_key_manager_container`, `d/ovh_cloud_key_manager_container_consumer`, `d/ovh_cloud_key_manager_container_consumers`, `d/ovh_cloud_key_manager_containers`, `d/ovh_cloud_key_manager_secret`, `d/ovh_cloud_key_manager_secret_consumer`, `d/ovh_cloud_key_manager_secret_consumers`, `d/ovh_cloud_key_manager_secret_payload`, `d/ovh_cloud_key_manager_secrets`, `d/ovh_cloud_loadbalancer`, `d/ovh_cloud_loadbalancer_l7policies`, `d/ovh_cloud_loadbalancer_l7policy`, `d/ovh_cloud_loadbalancer_listener`, `d/ovh_cloud_loadbalancer_listeners`, `d/ovh_cloud_loadbalancer_pool`, `d/ovh_cloud_loadbalancer_pool_member`, `d/ovh_cloud_loadbalancer_pool_members`, `d/ovh_cloud_loadbalancer_pools`, `d/ovh_cloud_loadbalancers`, `d/ovh_cloud_network_private_vrack`, `d/ovh_cloud_network_private_vrack_subnet`, `d/ovh_cloud_network_private_vrack_subnets`, `d/ovh_cloud_network_private_vracks`, `d/ovh_cloud_private_endpoint`, `d/ovh_cloud_private_endpoint_service_availabilities`, `d/ovh_cloud_private_endpoints`, `d/ovh_cloud_project`, `d/ovh_cloud_project_flavor`, `d/ovh_cloud_project_flavors`, `d/ovh_cloud_project_floatingips`, `d/ovh_cloud_project_gateway`, `d/ovh_cloud_project_gateway_interface`, `d/ovh_cloud_project_image`, `d/ovh_cloud_project_images`, `d/ovh_cloud_project_loadbalancer`, `d/ovh_cloud_project_loadbalancer_flavors`, `d/ovh_cloud_project_loadbalancers`, `d/ovh_cloud_project_network_private`, `d/ovh_cloud_project_network_private_subnets`, `d/ovh_cloud_project_network_privates`, `d/ovh_cloud_project_ssh_key`, `d/ovh_cloud_project_ssh_keys`, `d/ovh_cloud_project_storage`, `d/ovh_cloud_project_storage_object`, `d/ovh_cloud_project_storage_objects`, `d/ovh_cloud_project_storages`, `d/ovh_cloud_project_volume`, `d/ovh_cloud_project_volumes`, `d/ovh_cloud_quota`, `d/ovh_cloud_region`, `d/ovh_cloud_regions`, `d/ovh_cloud_security_group`, `d/ovh_cloud_security_groups`, `d/ovh_cloud_storage_block_volume`, `d/ovh_cloud_storage_block_volume_backup`, `d/ovh_cloud_storage_block_volume_backups`, `d/ovh_cloud_storage_block_volume_snapshot`, `d/ovh_cloud_storage_block_volume_snapshots`, `d/ovh_cloud_storage_block_volumes`, `d/ovh_cloud_storage_file_share`, `d/ovh_cloud_storage_file_share_acl`, `d/ovh_cloud_storage_file_share_acls`, `d/ovh_cloud_storage_file_share_network`, `d/ovh_cloud_storage_file_share_networks`, `d/ovh_cloud_storage_file_share_snapshot`, `d/ovh_cloud_storage_file_share_snapshots`, `d/ovh_cloud_storage_file_shares`, `d/ovh_cloud_storage_object_bucket`, `d/ovh_cloud_storage_object_buckets`, `d/ovh_cloud_storage_swift_container`, `d/ovh_cloud_storage_swift_container_objects`, `d/ovh_cloud_storage_swift_containers` ([#1590](https://github.com/ovh/terraform-provider-ovh/pull/1590))
+* `d/ovh_cloud_project_rancher`, `d/ovh_cloud_project_rancher_capabilities_plan`, `d/ovh_cloud_project_rancher_capabilities_version`, `d/ovh_cloud_project_rancher_plan`, `d/ovh_cloud_project_rancher_version`: `project_id` is now optional and falls back to the `OVH_CLOUD_PROJECT_SERVICE` environment variable ([#1608](https://github.com/ovh/terraform-provider-ovh/pull/1608))
+
+⚠️ Deprecations:
+
+* `r/ovh_cloud_instance`, `d/ovh_cloud_instance`: `volume_ids` is deprecated in favor of `volumes`, which gives each volume a role. It keeps working as before: without `image_id`, its first volume is the boot volume ([#1598](https://github.com/ovh/terraform-provider-ovh/pull/1598))
+* `r/ovh_cloud_project_storage_object_bucket_lifecycle_configuration`: Deprecated in favor of `ovh_cloud_storage_object_bucket_lifecycle` ([#1582](https://github.com/ovh/terraform-provider-ovh/pull/1582))
+* `r/ovh_cloud_project_storage_replication_job`: Deprecated in favor of `ovh_cloud_storage_object_bucket_replication_job` ([#1596](https://github.com/ovh/terraform-provider-ovh/pull/1596))
+
+🐜 Bug fixes:
+
+* `r/ovh_cloud_instance`: Omitting both `volumes` and `volume_ids` now keeps the current attachments. Before, volumes attached outside of Terraform showed as drift, and the next apply detached them. Set `volumes = []` to detach every data volume. The volumes also keep the configured order when the API returns them in another one ([#1598](https://github.com/ovh/terraform-provider-ovh/pull/1598))
+* `r/ovh_cloud_security_group`: Rules keep the order of the configuration, and no longer show as drift when the API returns them in another order ([#1613](https://github.com/ovh/terraform-provider-ovh/pull/1613))
+* `d/ovh_cloud_ssh_key`, `d/ovh_cloud_ssh_keys`: Reading `service_name` from the `OVH_CLOUD_PROJECT_SERVICE` environment variable no longer fails with `Provider produced inconsistent final plan` when the read is deferred to the apply ([#1607](https://github.com/ovh/terraform-provider-ovh/pull/1607))
+* `d/ovh_cloud_project_storage_object_bucket_lifecycle_configuration`: With neither `service_name` nor the `OVH_CLOUD_PROJECT_SERVICE` environment variable set, the data source now fails with a `Missing service_name` error instead of calling the API with an empty project ID ([#1606](https://github.com/ovh/terraform-provider-ovh/pull/1606))
+* `r/ovh_dedicated_server`: A server terminated or expired outside of Terraform is now removed from the state, instead of failing every plan ([#1597](https://github.com/ovh/terraform-provider-ovh/pull/1597))
+* `r/ovh_storage_efs_share`: Creating a share now waits through the `backup_creating` status instead of failing, and `status` lists the `awaiting_replication`, `backup_creating`, `backup_restoring` and `backup_restoring_error` values ([#1595](https://github.com/ovh/terraform-provider-ovh/pull/1595))
+
+📚 Documentation:
+
+* Public Cloud resources migration guide: Map the `replication` block of `ovh_cloud_project_storage` to `ovh_cloud_storage_object_bucket_replication`, `ovh_cloud_project_storage_replication_job` to `ovh_cloud_storage_object_bucket_replication_job`, `ovh_cloud_project_storage_object_bucket_lifecycle_configuration` to `ovh_cloud_storage_object_bucket_lifecycle`, `d/ovh_cloud_project_storage_object(s)` to `d/ovh_cloud_storage_object_bucket_object(s)`, `boot_from { volume_id }` of `ovh_cloud_project_instance` to `volumes`, and `status` of `ovh_cloud_project_volume_backup` and `ovh_cloud_project_file_storage_share` to `current_state.status` ([#1577](https://github.com/ovh/terraform-provider-ovh/pull/1577), [#1582](https://github.com/ovh/terraform-provider-ovh/pull/1582), [#1586](https://github.com/ovh/terraform-provider-ovh/pull/1586), [#1596](https://github.com/ovh/terraform-provider-ovh/pull/1596), [#1598](https://github.com/ovh/terraform-provider-ovh/pull/1598), [#1600](https://github.com/ovh/terraform-provider-ovh/pull/1600))
+* `d/ovh_cloud_project_storage_object`, `d/ovh_cloud_project_storage_objects`, `d/ovh_cloud_project_storage_object_bucket_lifecycle_configuration`: Point to the new `ovh_cloud_storage_object_bucket_*` data sources ([#1582](https://github.com/ovh/terraform-provider-ovh/pull/1582))
+* `provider`: The link to the token generation page now grants `PATCH`, which the `ovh_cloud_managed_*` resources need ([#1603](https://github.com/ovh/terraform-provider-ovh/pull/1603))
+
+⚙️ General:
+
+* Every v2 API call now requests version `1.0` of the schemas through the `X-Schemas-Version` header. Before, only the Public Cloud (`/v2/publicCloud`) calls did ([#1599](https://github.com/ovh/terraform-provider-ovh/pull/1599))
+* Bump `gopkg.in/ini.v1` from 1.67.3 to 1.68.0 ([#1601](https://github.com/ovh/terraform-provider-ovh/pull/1601))
+
+❤️ Thanks for your contributions ❤️
+
 ## 2.25.0 (November 6, 2026)
 
 💪 Improvements:
