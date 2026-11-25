@@ -61,7 +61,7 @@ resource "ovh_cloud_loadbalancer_l7policy" "https_redirect" {
 
 The following arguments are supported:
 
-* `service_name` - (Required) Service name of the resource representing the id of the cloud project. **Changing this value recreates the resource.**
+* `service_name` - (Optional) Service name of the resource representing the id of the cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used. **Changing this value recreates the resource.**
 * `loadbalancer_id` - (Required) ID of the load balancer. **Changing this value recreates the resource.**
 * `listener_id` - (Required) ID of the listener. **Changing this value recreates the resource.**
 * `action` - (Required) Action of the L7 policy (`REDIRECT_PREFIX`, `REDIRECT_TO_POOL`, `REDIRECT_TO_URL`, `REJECT`).

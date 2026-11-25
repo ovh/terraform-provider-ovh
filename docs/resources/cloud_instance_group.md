@@ -79,7 +79,7 @@ resource "ovh_cloud_instance" "replica" {
 
 The following arguments are supported:
 
-* `service_name` - (Required) Service name of the resource representing the id of the cloud project. **Changing this value recreates the resource.**
+* `service_name` - (Optional) Service name of the resource representing the id of the cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used. **Changing this value recreates the resource.**
 * `region` - (Required) Region where the instance group will be created. **Changing this value recreates the resource.**
 * `name` - (Required) Instance group name. **Changing this value recreates the resource.**
 * `policy` - (Required) Placement policy applied to the group's member instances (`AFFINITY`, `ANTI_AFFINITY`). **Changing this value recreates the resource.**

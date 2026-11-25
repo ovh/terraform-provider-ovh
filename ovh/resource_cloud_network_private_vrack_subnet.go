@@ -519,10 +519,13 @@ func CloudNetworkPrivateSubnetResourceSchema(ctx context.Context) schema.Schema 
 		},
 		"service_name": schema.StringAttribute{
 			CustomType:          ovhtypes.TfStringType{},
-			Required:            true,
-			Description:         "Service name",
-			MarkdownDescription: "Service name",
+			Optional:            true,
+			Computed:            true,
+			Description:         "Service name of the resource representing the id of the cloud project. If omitted, the OVH_CLOUD_PROJECT_SERVICE environment variable is used.",
+			MarkdownDescription: "Service name of the resource representing the id of the cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.",
 			PlanModifiers: []planmodifier.String{
+				EnvDefaultString("OVH_CLOUD_PROJECT_SERVICE", true),
+				stringplanmodifier.UseStateForUnknown(),
 				stringplanmodifier.RequiresReplace(),
 			},
 		},

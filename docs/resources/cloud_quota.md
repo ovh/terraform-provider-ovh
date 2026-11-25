@@ -32,7 +32,7 @@ resource "ovh_cloud_quota" "this" {
 
 ## Argument Reference
 
-- `service_name` (Required, ForceNew) — Service name of the cloud project.
+- `service_name` (Optional, ForceNew) — Service name of the cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
 - `prevent_automatic_quota_upgrade` (Required, bool) — When true, automatic
   quota upgrades are disabled for this project.
 - `regions` (Required, list) — Target quota profile per region:

@@ -52,7 +52,7 @@ When `create_from` is set, the new file share takes its `share_type`, `encryptio
 
 The following arguments are supported:
 
-* `service_name` - (Required) Service name of the resource representing the id of the cloud project. **Changing this value recreates the resource.**
+* `service_name` - (Optional) Service name of the resource representing the id of the cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used. **Changing this value recreates the resource.**
 * `name` - (Required) File share name.
 * `size` - (Optional) Size of the file share in GB. Required unless `create_from` is set. With `create_from`, defaults to the snapshot size and must not be smaller than it.
 * `region` - (Required) Region where the file share will be created. **Changing this value recreates the resource.**
