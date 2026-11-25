@@ -47,3 +47,31 @@ func TestVPSRegionFromDatacenterCodeAmbiguous(t *testing.T) {
 		t.Errorf("code %q: got (%q, true), want no region", "ABC", region)
 	}
 }
+
+// vpsTestCatalogDatacenters is the vps_datacenter configuration of plan
+// vps-2025-model1 in the public order catalog (FR, 2026-11-25).
+var vpsTestCatalogDatacenters = []string{"BHS", "DE", "GRA", "SBG", "SGP", "SYD", "UK", "WAW", "YNM", "EU-SOUTH-MIL", "EU-WEST-RBX"}
+
+func TestVPSDatacenterCodeForRegion(t *testing.T) {
+	cases := []struct {
+		region  string
+		allowed []string
+		code    string
+		ok      bool
+	}{
+		{"eu-west-gra", []string{"GRA", "SBG"}, "GRA", true}, // city code
+		{"eu-west-rbx", []string{"EU-WEST-RBX"}, "EU-WEST-RBX", true},
+		{"eu-west-rbx", vpsTestCatalogDatacenters, "EU-WEST-RBX", true}, // region name before city code
+		{"eu-west-lim", vpsTestCatalogDatacenters, "DE", true},          // exception
+		{"eu-west-eri", vpsTestCatalogDatacenters, "UK", true},          // exception
+		{"eu-west-gra", []string{"SBG"}, "", false},                     // not orderable in this plan
+		{"eu-west-xyz", vpsTestCatalogDatacenters, "", false},           // unknown region
+	}
+
+	for _, c := range cases {
+		code, ok := vpsDatacenterCodeForRegion(c.region, vpsTestLocations, c.allowed)
+		if code != c.code || ok != c.ok {
+			t.Errorf("region %q, allowed %v: got (%q, %t), want (%q, %t)", c.region, c.allowed, code, ok, c.code, c.ok)
+		}
+	}
+}

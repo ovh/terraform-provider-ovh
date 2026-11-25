@@ -1,6 +1,9 @@
 package ovh
 
-import "strings"
+import (
+	"slices"
+	"strings"
+)
 
 // vpsLocation is the part of a GET /v2/location item used to find the region
 // of a VPS.
@@ -57,4 +60,31 @@ func vpsRegionFromDatacenterCode(code string, locations []vpsLocation) (region s
 		}
 	}
 	return region, region != ""
+}
+
+// vpsDatacenterCodeForRegion returns the API v1 VPS datacenter code (order
+// configuration vps_datacenter) of a region, among the codes allowed by the
+// plan being ordered.
+//
+// It takes the first allowed candidate, in order: the exception, the region
+// name in upper case, then the city code of the region. ok is false when the
+// region cannot be ordered with these codes.
+func vpsDatacenterCodeForRegion(region string, locations []vpsLocation, allowed []string) (code string, ok bool) {
+	var candidates []string
+	if exceptionCode, found := vpsDatacenterExceptions[region]; found {
+		candidates = append(candidates, exceptionCode)
+	}
+	candidates = append(candidates, strings.ToUpper(region))
+	for _, location := range locations {
+		if location.Name == region && location.CityCode != "" {
+			candidates = append(candidates, location.CityCode)
+		}
+	}
+
+	for _, candidate := range candidates {
+		if slices.Contains(allowed, candidate) {
+			return candidate, true
+		}
+	}
+	return "", false
 }
