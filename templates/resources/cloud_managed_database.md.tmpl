@@ -33,7 +33,7 @@ The [`ovh_cloud_managed_analytics`](cloud_managed_analytics.md) resource creates
 * `nodes_count` - (Optional) Number of nodes. Set it on a plan of more than one node: without it, the API creates one node, which such a plan refuses. The range a plan accepts is in `specifications.nodes` of the availability endpoint.
 * `description` - (Optional) Description of the service.
 * `deletion_protected` - (Optional) Whether the service is protected from deletion. Set it to `false` and apply before destroying the service.
-* `prometheus_enabled` - (Optional) Whether the Prometheus endpoint is enabled.
+* `prometheus_enabled` - (Optional) Whether the Prometheus endpoint is enabled. Leave it unset when the [`ovh_cloud_managed_database_prometheus`](cloud_managed_database_prometheus.md) resource, or [`ovh_cloud_managed_database_mongodb_prometheus`](cloud_managed_database_mongodb_prometheus.md) for MongoDB, enables the endpoint, which also gives its credentials.
 * `backup` - (Optional) Backup configuration:
   * `regions` - (Optional) Regions where the backups are stored.
   * `time` - (Optional) Time of the daily backup, as `HH:MM` UTC.

@@ -24,6 +24,7 @@ import (
 var (
 	_ datasource.DataSourceWithConfigure = (*managedDatabaseObjectDataSource[managedDatabaseUser])(nil)
 	_ datasource.DataSourceWithConfigure = (*managedDatabaseObjectsDataSource[managedDatabaseUser])(nil)
+	_ datasource.DataSourceWithConfigure = (*managedDatabaseNamesDataSource)(nil)
 )
 
 // managedDatabaseRole is the publicCloud.database.Role model.
@@ -35,6 +36,21 @@ type managedDatabaseRole struct {
 	UpdatedAt string `json:"updatedAt" tfsdk:"updated_at"`
 }
 
+// managedDatabaseLogKind is the dbaas.logs.LogKind model.
+type managedDatabaseLogKind struct {
+	AdditionalReturnedFields []string `json:"additionalReturnedFields" tfsdk:"additional_returned_fields"`
+	CreatedAt                string   `json:"createdAt" tfsdk:"created_at"`
+	DisplayName              string   `json:"displayName" tfsdk:"display_name"`
+	KindId                   string   `json:"kindId" tfsdk:"kind_id"`
+	Name                     string   `json:"name" tfsdk:"name"`
+	UpdatedAt                string   `json:"updatedAt" tfsdk:"updated_at"`
+}
+
+var (
+	managedDatabaseAllEngines  = managedDatabaseFamily.engines
+	managedAnalyticsAllEngines = managedAnalyticsFamily.engines
+)
+
 // managedDatabaseObjectKind describes an object of a service for its data sources: the engines that have
 // it, the path of its route, its name and its attributes.
 type managedDatabaseObjectKind struct {
@@ -44,10 +60,14 @@ type managedDatabaseObjectKind struct {
 	path       string
 	object     string
 	objects    string
+	key        string
 	attributes func() map[string]schema.Attribute
 }
 
 func newManagedDatabaseObjectDataSources[T any](kind managedDatabaseObjectKind) (func() datasource.DataSource, func() datasource.DataSource) {
+	if kind.key == "" {
+		kind.key = "id"
+	}
 	return func() datasource.DataSource {
 			return &managedDatabaseObjectDataSource[T]{managedDatabaseObjectKind: kind}
 		}, func() datasource.DataSource {
@@ -72,6 +92,10 @@ var (
 		category: managedDatabaseFamily, engines: []string{"postgresql"}, suffix: "_postgresql_connection_pool", path: "/connectionPool", object: "connection pool", objects: "connection_pools", attributes: managedDatabaseConnectionPoolDataAttributes})
 	NewCloudManagedDatabaseRoleDataSource, NewCloudManagedDatabaseRolesDataSource = newManagedDatabaseObjectDataSources[managedDatabaseRole](managedDatabaseObjectKind{
 		category: managedDatabaseFamily, engines: []string{"mongodb", "postgresql"}, suffix: "_role", path: "/roles", object: "role", objects: "roles", attributes: managedDatabaseRoleDataAttributes})
+	NewCloudManagedDatabaseLogSubscriptionDataSource, _ = newManagedDatabaseObjectDataSources[managedDatabaseLogSubscription](managedDatabaseObjectKind{
+		category: managedDatabaseFamily, engines: managedDatabaseAllEngines, suffix: "_log_subscription", path: "/log/subscription", object: "log subscription", attributes: managedDatabaseLogSubscriptionDataAttributes})
+	NewCloudManagedDatabaseLogKindDataSource, _ = newManagedDatabaseObjectDataSources[managedDatabaseLogKind](managedDatabaseObjectKind{
+		category: managedDatabaseFamily, engines: managedDatabaseAllEngines, suffix: "_log_kind", path: "/log/kind", object: "log kind", key: "name", attributes: managedDatabaseLogKindDataAttributes})
 
 	NewCloudManagedAnalyticsUserDataSource, NewCloudManagedAnalyticsUsersDataSource = newManagedDatabaseObjectDataSources[managedDatabaseUser](managedDatabaseObjectKind{
 		category: managedAnalyticsFamily, engines: []string{"grafana", "kafka", "kafkaConnect"}, suffix: "_user", path: "/user", object: "user", objects: "users", attributes: managedDatabaseUserDataAttributes})
@@ -83,7 +107,27 @@ var (
 		category: managedAnalyticsFamily, engines: []string{"clickhouse"}, suffix: "_clickhouse_database", path: "/database", object: "database", objects: "databases", attributes: managedDatabaseDatabaseDataAttributes})
 	NewCloudManagedAnalyticsClickhouseRoleDataSource, NewCloudManagedAnalyticsClickhouseRolesDataSource = newManagedDatabaseObjectDataSources[managedDatabaseRole](managedDatabaseObjectKind{
 		category: managedAnalyticsFamily, engines: []string{"clickhouse"}, suffix: "_clickhouse_role", path: "/roles", object: "role", objects: "roles", attributes: managedDatabaseRoleDataAttributes})
+	NewCloudManagedAnalyticsLogSubscriptionDataSource, _ = newManagedDatabaseObjectDataSources[managedDatabaseLogSubscription](managedDatabaseObjectKind{
+		category: managedAnalyticsFamily, engines: managedAnalyticsAllEngines, suffix: "_log_subscription", path: "/log/subscription", object: "log subscription", attributes: managedDatabaseLogSubscriptionDataAttributes})
+	NewCloudManagedAnalyticsLogKindDataSource, _ = newManagedDatabaseObjectDataSources[managedDatabaseLogKind](managedDatabaseObjectKind{
+		category: managedAnalyticsFamily, engines: managedAnalyticsAllEngines, suffix: "_log_kind", path: "/log/kind", object: "log kind", key: "name", attributes: managedDatabaseLogKindDataAttributes})
 )
+
+func NewCloudManagedDatabaseLogSubscriptionsDataSource() datasource.DataSource {
+	return &managedDatabaseNamesDataSource{managedDatabaseObjectKind: managedDatabaseObjectKind{category: managedDatabaseFamily, engines: managedDatabaseAllEngines, suffix: "_log_subscriptions", path: "/log/subscription", objects: "IDs of the log subscriptions"}, list: "subscription_ids", filter: "kind"}
+}
+
+func NewCloudManagedDatabaseLogKindsDataSource() datasource.DataSource {
+	return &managedDatabaseNamesDataSource{managedDatabaseObjectKind: managedDatabaseObjectKind{category: managedDatabaseFamily, engines: managedDatabaseAllEngines, suffix: "_log_kinds", path: "/log/kind", objects: "names of the log kinds"}, list: "names"}
+}
+
+func NewCloudManagedAnalyticsLogSubscriptionsDataSource() datasource.DataSource {
+	return &managedDatabaseNamesDataSource{managedDatabaseObjectKind: managedDatabaseObjectKind{category: managedAnalyticsFamily, engines: managedAnalyticsAllEngines, suffix: "_log_subscriptions", path: "/log/subscription", objects: "IDs of the log subscriptions"}, list: "subscription_ids", filter: "kind"}
+}
+
+func NewCloudManagedAnalyticsLogKindsDataSource() datasource.DataSource {
+	return &managedDatabaseNamesDataSource{managedDatabaseObjectKind: managedDatabaseObjectKind{category: managedAnalyticsFamily, engines: managedAnalyticsAllEngines, suffix: "_log_kinds", path: "/log/kind", objects: "names of the log kinds"}, list: "names"}
+}
 
 func managedDatabaseUserDataAttributes() map[string]schema.Attribute {
 	return map[string]schema.Attribute{
@@ -164,6 +208,36 @@ func managedDatabaseRoleDataAttributes() map[string]schema.Attribute {
 		"checksum":   managedDatabaseComputedString("Hash of the role, computed by the API."),
 		"created_at": managedDatabaseComputedString("Creation date of the role."),
 		"updated_at": managedDatabaseComputedString("Last update date of the role."),
+	}
+}
+
+func managedDatabaseLogSubscriptionDataAttributes() map[string]schema.Attribute {
+	return map[string]schema.Attribute{
+		"id":               managedDatabaseComputedString("ID of the subscription."),
+		"kind":             managedDatabaseComputedString("Kind of logs forwarded."),
+		"stream_id":        managedDatabaseComputedString("ID of the Logs Data Platform stream receiving the logs."),
+		"ldp_service_name": managedDatabaseComputedString("Name of the Logs Data Platform service of the stream."),
+		"resource": schema.SingleNestedAttribute{
+			Computed:    true,
+			Description: "Resource the logs come from.",
+			Attributes: map[string]schema.Attribute{
+				"name": managedDatabaseComputedString("Name of the resource."),
+				"type": managedDatabaseComputedString("Type of the resource."),
+			},
+		},
+		"created_at": managedDatabaseComputedString("Creation date of the subscription."),
+		"updated_at": managedDatabaseComputedString("Last update date of the subscription."),
+	}
+}
+
+func managedDatabaseLogKindDataAttributes() map[string]schema.Attribute {
+	return map[string]schema.Attribute{
+		"name":                       managedDatabaseComputedString("Name of the log kind."),
+		"kind_id":                    managedDatabaseComputedString("ID of the log kind."),
+		"display_name":               managedDatabaseComputedString("Display name of the log kind."),
+		"additional_returned_fields": schema.ListAttribute{ElementType: types.StringType, Computed: true, Description: "Log fields the log kind adds."},
+		"created_at":                 managedDatabaseComputedString("Creation date of the log kind."),
+		"updated_at":                 managedDatabaseComputedString("Last update date of the log kind."),
 	}
 }
 
@@ -248,7 +322,8 @@ func (k *managedDatabaseObjectKind) serviceEndpoint(ctx context.Context, config 
 	return k.category.serviceEndpoint(serviceName.ValueString(), engine.ValueString(), serviceId.ValueString())
 }
 
-// managedDatabaseObjectDataSource reads one object of a service, found by its id.
+// managedDatabaseObjectDataSource reads one object of a service, found by its key: its id, or the name
+// of a log kind.
 type managedDatabaseObjectDataSource[T any] struct {
 	managedDatabaseDataSourceConfigured
 	managedDatabaseObjectKind
@@ -263,7 +338,11 @@ func (d *managedDatabaseObjectDataSource[T]) Schema(ctx context.Context, req dat
 	for name, attribute := range d.attributes() {
 		attributes[name] = attribute
 	}
-	attributes["id"] = schema.StringAttribute{Required: true, Description: "ID of the " + d.object + "."}
+	key := "ID"
+	if d.key == "name" {
+		key = "Name"
+	}
+	attributes[d.key] = schema.StringAttribute{Required: true, Description: key + " of the " + d.object + "."}
 	resp.Schema = schema.Schema{
 		Description: d.describe("get a " + d.object),
 		Attributes:  attributes,
@@ -272,13 +351,13 @@ func (d *managedDatabaseObjectDataSource[T]) Schema(ctx context.Context, req dat
 
 func (d *managedDatabaseObjectDataSource[T]) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	service := d.serviceEndpoint(ctx, req.Config, resp)
-	var id types.String
-	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("id"), &id)...)
+	var key types.String
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root(d.key), &key)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	endpoint := service + d.path + "/" + url.PathEscape(id.ValueString())
+	endpoint := service + d.path + "/" + url.PathEscape(key.ValueString())
 	var object T
 	if err := d.config.OVHClient.GetWithContext(ctx, endpoint, &object); err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Error calling Get %s", endpoint), err.Error())
@@ -334,4 +413,63 @@ func (d *managedDatabaseObjectsDataSource[T]) Read(ctx context.Context, req data
 	list, diags := types.ListValueFrom(ctx, types.ObjectType{AttrTypes: managedDatabaseAttrTypes(d.attributes())}, objects)
 	resp.Diagnostics.Append(diags...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(d.objects), list)...)
+}
+
+// managedDatabaseLogSubscriptionsOfKind is the query that lists the subscriptions of a kind of logs. It
+// takes the publicCloud.database.KindEnum value (CUSTOMER_LOGS), while the subscriptions and the log
+// kinds give the name (customer_logs).
+func managedDatabaseLogSubscriptionsOfKind(kind string) string {
+	return "?kind=" + url.QueryEscape(strings.ToUpper(kind))
+}
+
+// managedDatabaseNamesDataSource lists what the API returns as plain strings: the IDs of the log
+// subscriptions, which their kind can filter, and the names of the log kinds.
+type managedDatabaseNamesDataSource struct {
+	managedDatabaseDataSourceConfigured
+	managedDatabaseObjectKind
+	list   string
+	filter string
+}
+
+func (d *managedDatabaseNamesDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + d.category.typeName(d.suffix)
+}
+
+func (d *managedDatabaseNamesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	attributes := d.serviceAttributes()
+	if d.filter != "" {
+		attributes[d.filter] = schema.StringAttribute{Optional: true, Description: "Lists only the subscriptions of this kind of logs."}
+	}
+	attributes[d.list] = schema.ListAttribute{ElementType: types.StringType, Computed: true, Description: "The " + d.objects + "."}
+	resp.Schema = schema.Schema{
+		Description: d.describe("list the " + d.objects),
+		Attributes:  attributes,
+	}
+}
+
+func (d *managedDatabaseNamesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	endpoint := d.serviceEndpoint(ctx, req.Config, resp) + d.path
+	if d.filter != "" {
+		var filter types.String
+		resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root(d.filter), &filter)...)
+		if !filter.IsNull() {
+			endpoint += managedDatabaseLogSubscriptionsOfKind(filter.ValueString())
+		}
+	}
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	names, err := helpers.GetAllPagesV2[string](ctx, d.config.OVHClient, endpoint)
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Error calling Get %s", endpoint), err.Error())
+		return
+	}
+	if names == nil {
+		names = []string{}
+	}
+
+	list, diags := types.ListValueFrom(ctx, types.StringType, names)
+	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(d.list), list)...)
 }

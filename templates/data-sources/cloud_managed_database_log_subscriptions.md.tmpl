@@ -1,0 +1,28 @@
+---
+subcategory : "Managed Databases"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_cloud_managed_database_log_subscriptions (Data Source)
+
+Use this data source to list the IDs of the log subscriptions of a managed database service (mongodb, mysql, postgresql, valkey), using the Cloud Databases API v2.
+
+## Example Usage
+
+{{tffile "examples/data-sources/cloud_managed_database_log_subscriptions/example_1.tf"}}
+
+## Argument Reference
+
+* `service_name` - (Optional) ID of the public cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used.
+* `engine` - (Required) Engine of the service: mongodb, mysql, postgresql, valkey.
+* `service_id` - (Required) ID of the service.
+* `kind` - (Optional) Lists only the subscriptions of this kind of logs.
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `subscription_ids` - The IDs of the log subscriptions.

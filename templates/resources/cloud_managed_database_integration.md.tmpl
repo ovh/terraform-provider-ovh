@@ -1,0 +1,58 @@
+---
+subcategory : "Managed Databases"
+---
+
+{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+
+For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+
+# ovh_cloud_managed_database_integration
+
+Creates an integration with another service in a managed database service (mysql, postgresql, valkey), using the Cloud Databases API v2.
+
+## Example Usage
+
+{{tffile "examples/resources/cloud_managed_database_integration/example_1.tf"}}
+
+The API can't change an integration: changing any argument recreates it. The pairs of engines each type links, and its parameters, are in `current_state.engine_capabilities.integrations` of the service. Some services have no integrations: the API then answers 501 Not Implemented.
+
+`service_id` must be the source or the destination service. Manage each integration from one side only: the API keeps a single integration for a source, a destination and a type.
+
+The API doesn't return the parameters: Terraform keeps those of the configuration and doesn't detect a change made outside of it. An import leaves them unset, and setting them in the configuration afterwards only records them.
+
+## Argument Reference
+
+* `service_name` - (Optional) ID of the public cloud project. If omitted, the OVH_CLOUD_PROJECT_SERVICE environment variable is used. Changing it recreates the integration.
+* `engine` - (Required) Engine of the service: mysql, postgresql, valkey. Changing it recreates the integration.
+* `service_id` - (Required) ID of the service. Changing it recreates the integration.
+* `destination_service_id` - (Required) ID of the destination service. Changing it recreates the integration.
+* `parameters` - (Optional) Parameters of the integration, which depend on its type. The API doesn't return them: a change made outside of Terraform isn't detected, and an import leaves them unset until the configuration sets them, which only records them. Changing them recreates the integration.
+* `source_service_id` - (Required) ID of the source service. Changing it recreates the integration.
+* `type` - (Required) Type of the integration. Changing it recreates the integration.
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `id` - ID of the integration.
+* `checksum` - Hash of the integration, computed by the API.
+* `status` - Readiness of the integration: CREATING, UPDATING, READY, ERROR or DELETING.
+
+## Timeouts
+
+The creation and the deletion wait up to 20 minutes for the integration to be ready or deleted.
+
+## Import
+
+It can be imported using its `service_name`, `engine`, `service_id` and `id`, separated by "/".
+
+```terraform
+import {
+  to = ovh_cloud_managed_database_integration.integration
+  id = "<service_name>/<engine>/<service_id>/<id>"
+}
+```
+
+```bash
+$ terraform import ovh_cloud_managed_database_integration.integration service_name/engine/service_id/id
+```

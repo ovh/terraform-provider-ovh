@@ -287,7 +287,15 @@ In order to run the Acceptance Tests for development, the following environment 
 
 * `OVH_CLOUD_MANAGED_DATABASE_POSTGRESQL_NODES_COUNT_TEST` - Optional. The number of nodes of the PostgreSQL service to test. Needed by a plan of more than one node: the API doesn't apply the minimum of the plan when it is unset.
 
+* `OVH_CLOUD_MANAGED_DATABASE_POSTGRESQL_INTEGRATION_DESTINATION_TEST` - The ID of an existing service that `ovh_cloud_managed_database_integration` integrates the tested PostgreSQL service with.
+
+* `OVH_CLOUD_MANAGED_DATABASE_POSTGRESQL_INTEGRATION_TYPE_TEST` - The type of that integration, such as `GRAFANA_DATASOURCE`, which must link PostgreSQL to the engine of the destination service.
+
+* `OVH_CLOUD_MANAGED_DATABASE_POSTGRESQL_INTEGRATION_PARAMETERS_TEST` - Optional. The parameters of that integration, as a Terraform map such as `{ datasource_name = "pg" }`.
+
 * `OVH_CLOUD_MANAGED_DATABASE_{MONGODB,MYSQL,VALKEY}_*_TEST`, `OVH_CLOUD_MANAGED_ANALYTICS_{CLICKHOUSE,GRAFANA,KAFKA,KAFKA_CONNECT,KAFKA_MIRROR_MAKER,OPENSEARCH}_*_TEST` - The same `VERSION`, `PLAN`, `FLAVOR`, `REGION` and optional `NETWORK_REGION` and `NODES_COUNT` variables for the service of each other engine tested, such as `OVH_CLOUD_MANAGED_ANALYTICS_KAFKA_CONNECT_VERSION_TEST`. The tests of an engine are skipped until its four required variables are set. The MongoDB plan defaults to `production`, whose 3 nodes need `NODES_COUNT` set to 3.
+
+* `OVH_CLOUD_MANAGED_ANALYTICS_KAFKA_INTEGRATION_DESTINATION_TEST`, `OVH_CLOUD_MANAGED_ANALYTICS_KAFKA_INTEGRATION_TYPE_TEST`, `OVH_CLOUD_MANAGED_ANALYTICS_KAFKA_INTEGRATION_PARAMETERS_TEST` - The same integration variables for `ovh_cloud_managed_analytics_integration` and the tested Kafka service, with a type such as `KAFKA_CONNECT`.
 
 * `OVH_CLOUD_PRIVATE_ENDPOINT_SERVICE_TEST` - The name of the service to expose through the private endpoint to test.
 
