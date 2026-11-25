@@ -103,3 +103,7 @@ The following attributes are exported:
       * `id` - Security group identifier.
     * `group` - Instance (placement) group the instance belongs to, null when it is not part of any group:
       * `id` - Identifier of the instance (placement) group.
+    * `billing` - Observed billing of the instance, null when the billing could not be read:
+      * `period` - Billing period the instance is billed on (`HOURLY` or `MONTHLY`). `MONTHLY` as soon as a monthly subscription exists for the instance, whatever its status.
+      * `since` - Start of the monthly billing, as an RFC 3339 timestamp. Null for an hourly instance.
+      * `status` - State of the monthly subscription: `ACTIVATION_PENDING` until the billing activates it, then `ACTIVE`. Null for an hourly instance.

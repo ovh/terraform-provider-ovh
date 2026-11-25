@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -60,6 +61,7 @@ var instanceMutableAttrs = MutableAttrs{
 	Strings:           []string{"name", "flavor_id", "image_id", "power_state", "user_data"},
 	Lists:             []string{"networks", "shares", "volumes"},
 	CustomStringLists: []string{"volume_ids", "security_group_ids"},
+	Objects:           []string{"billing"},
 }
 
 // ValidateConfig enforces the volume rules the API would otherwise reject at
@@ -434,6 +436,24 @@ func (r *cloudInstanceResource) Schema(ctx context.Context, req resource.SchemaR
 					},
 				},
 			},
+			"billing": schema.SingleNestedAttribute{
+				Optional:            true,
+				Computed:            true,
+				Description:         instanceDescBilling,
+				MarkdownDescription: instanceDescBillingMd,
+				PlanModifiers:       []planmodifier.Object{objectplanmodifier.UseStateForUnknown()},
+				Attributes: map[string]schema.Attribute{
+					"period": schema.StringAttribute{
+						CustomType:          ovhtypes.TfStringType{},
+						Required:            true,
+						Description:         instanceDescBillingPeriod,
+						MarkdownDescription: instanceDescBillingPeriodMd,
+						Validators: []validator.String{
+							stringvalidator.OneOf(instanceBillingPeriodHourly, instanceBillingPeriodMonthly),
+						},
+					},
+				},
+			},
 			// Computed envelope
 			"id": schema.StringAttribute{
 				CustomType:          ovhtypes.TfStringType{},
@@ -541,6 +561,11 @@ func instanceCurrentStateSchemaAttributes() map[string]schema.Attribute {
 		"group": schema.SingleNestedAttribute{Computed: true, Description: instanceDescCsGroup, MarkdownDescription: instanceDescCsGroup, Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescGroupId, MarkdownDescription: instanceDescGroupId},
 		}},
+		"billing": schema.SingleNestedAttribute{Computed: true, Description: instanceDescCsBilling, MarkdownDescription: instanceDescCsBilling, Attributes: map[string]schema.Attribute{
+			"period": schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescCsBillingPeriod, MarkdownDescription: instanceDescCsBillingPeriodMd},
+			"since":  schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescCsBillingSince, MarkdownDescription: instanceDescCsBillingSince},
+			"status": schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescCsBillingStatus, MarkdownDescription: instanceDescCsBillingStatusMd},
+		}},
 	}
 }
 
@@ -641,8 +666,8 @@ func (r *cloudInstanceResource) Update(ctx context.Context, req resource.UpdateR
 	}
 
 	// data holds the prior state: ToUpdate needs it to tell an unchanged user_data
-	// (absent key) from one the config actually moved (rebuild).
-	updatePayload := planData.ToUpdate(currentData.Checksum, data.UserData)
+	// or billing (absent key) from one the config actually moved.
+	updatePayload := planData.ToUpdate(currentData.Checksum, data.UserData, data.Billing)
 
 	var responseData CloudInstanceAPIResponse
 	if err := r.config.OVHClient.Put(endpoint, updatePayload, &responseData); err != nil {

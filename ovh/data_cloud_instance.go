@@ -102,6 +102,9 @@ func instanceDataSourceAttributes(ctx context.Context) map[string]schema.Attribu
 			"id":           schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescShareRefId, MarkdownDescription: instanceDescShareRefId},
 			"access_level": schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescShareRefAccessLevel, MarkdownDescription: instanceDescShareRefAccessLevelMd},
 		}}},
+		"billing": schema.SingleNestedAttribute{Computed: true, Description: instanceDescDsBilling, MarkdownDescription: instanceDescDsBilling, Attributes: map[string]schema.Attribute{
+			"period": schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescDsBillingPeriod, MarkdownDescription: instanceDescDsBillingPeriodMd},
+		}},
 		"checksum":        schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescChecksum, MarkdownDescription: instanceDescChecksum},
 		"created_at":      schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescCreatedAt, MarkdownDescription: instanceDescCreatedAt},
 		"updated_at":      schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescUpdatedAt, MarkdownDescription: instanceDescUpdatedAt},
@@ -171,6 +174,11 @@ func instanceCurrentStateDataSourceSchemaAttributes() map[string]schema.Attribut
 		}}},
 		"group": schema.SingleNestedAttribute{Computed: true, Description: instanceDescCsGroup, MarkdownDescription: instanceDescCsGroup, Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescGroupId, MarkdownDescription: instanceDescGroupId},
+		}},
+		"billing": schema.SingleNestedAttribute{Computed: true, Description: instanceDescCsBilling, MarkdownDescription: instanceDescCsBilling, Attributes: map[string]schema.Attribute{
+			"period": schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescCsBillingPeriod, MarkdownDescription: instanceDescCsBillingPeriodMd},
+			"since":  schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescCsBillingSince, MarkdownDescription: instanceDescCsBillingSince},
+			"status": schema.StringAttribute{CustomType: ovhtypes.TfStringType{}, Computed: true, Description: instanceDescCsBillingStatus, MarkdownDescription: instanceDescCsBillingStatusMd},
 		}},
 	}
 }
