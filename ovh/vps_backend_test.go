@@ -26,6 +26,10 @@ type vpsTestAPI struct {
 	mu        sync.Mutex
 	responses map[string]any
 	requests  []string
+	// delays holds the time each path waits before answering.
+	delays map[string]time.Duration
+	// inFlight and maxInFlight count the GET /vps/{serviceName} being served.
+	inFlight, maxInFlight int
 }
 
 // vpsTestStatus is an error answer of the fake API.
@@ -38,10 +42,13 @@ type vpsTestStatus struct {
 var vpsTestExpired = vpsTestStatus{code: 460, message: "This service is expired"}
 
 func newVPSTestAPI() *vpsTestAPI {
-	api := &vpsTestAPI{responses: map[string]any{
-		"/1.0/vps":     []string{vpsTestId},
-		"/v2/location": vpsTestLocations,
-	}}
+	api := &vpsTestAPI{
+		responses: map[string]any{
+			"/1.0/vps":     []string{vpsTestId},
+			"/v2/location": vpsTestLocations,
+		},
+		delays: map[string]time.Duration{},
+	}
 	api.addVPS(vpsTestId, "web-01")
 	return api
 }
@@ -91,6 +98,12 @@ func (a *vpsTestAPI) count(request string) int {
 // backend starts the fake API and returns a v1 backend calling it.
 func (a *vpsTestAPI) backend(t *testing.T) vpsBackend {
 	t.Helper()
+	return newVPSBackend(a.config(t))
+}
+
+// config starts the fake API and returns a provider configuration calling it.
+func (a *vpsTestAPI) config(t *testing.T) *Config {
+	t.Helper()
 	// The client also reads these, and refuses two ways to authenticate.
 	for _, name := range []string{"OVH_CLIENT_ID", "OVH_CLIENT_SECRET", "OVH_ACCESS_TOKEN"} {
 		t.Setenv(name, "")
@@ -101,10 +114,23 @@ func (a *vpsTestAPI) backend(t *testing.T) vpsBackend {
 			fmt.Fprint(w, time.Now().Unix())
 			return
 		}
+		vpsRoute := strings.HasPrefix(r.URL.Path, "/1.0/vps/") && strings.Count(r.URL.Path, "/") == 3
 		a.mu.Lock()
 		a.requests = append(a.requests, r.Method+" "+r.URL.Path)
 		response, found := a.responses[r.URL.Path]
+		delay := a.delays[r.URL.Path]
+		if vpsRoute {
+			a.inFlight++
+			a.maxInFlight = max(a.maxInFlight, a.inFlight)
+		}
 		a.mu.Unlock()
+
+		time.Sleep(delay)
+		if vpsRoute {
+			a.mu.Lock()
+			a.inFlight--
+			a.mu.Unlock()
+		}
 
 		w.Header().Set("Content-Type", "application/json")
 		if r.Method != http.MethodGet || !found {
@@ -127,7 +153,7 @@ func (a *vpsTestAPI) backend(t *testing.T) vpsBackend {
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
-	return newVPSBackend(&Config{OVHClient: ovhwrap.NewClient(client, ratelimit.NewUnlimited())})
+	return &Config{OVHClient: ovhwrap.NewClient(client, ratelimit.NewUnlimited())}
 }
 
 func vpsTestGet(t *testing.T, backend vpsBackend) (*VPSAPIServer, diag.Diagnostics) {
@@ -512,5 +538,68 @@ func TestVPSV1BackendListError(t *testing.T) {
 	}
 	if servers != nil {
 		t.Errorf("got %v along with the error, want nil", vpsTestIds(servers))
+	}
+}
+
+func TestVPSV1BackendListKeepsOrder(t *testing.T) {
+	api := vpsTestListAPI()
+	// Answers arrive in the reverse order of GET /vps.
+	api.delays["/1.0/vps/vps-aaaaaaaa.vps.ovh.net"] = 200 * time.Millisecond
+	api.delays["/1.0/vps/vps-bbbbbbbb.vps.ovh.net"] = 100 * time.Millisecond
+	servers, diags := api.backend(t).List(context.Background())
+
+	if diags.HasError() {
+		t.Fatalf("unexpected error: %v", diags)
+	}
+	want := "vps-aaaaaaaa.vps.ovh.net vps-bbbbbbbb.vps.ovh.net vps-cccccccc.vps.ovh.net"
+	if got := strings.Join(vpsTestIds(servers), " "); got != want {
+		t.Errorf("got %q, want %q", got, want)
+	}
+	if api.maxInFlight < 2 {
+		t.Errorf("at most %d VPS read at once, want them read in parallel", api.maxInFlight)
+	}
+}
+
+func TestVPSV1BackendListParallelLimit(t *testing.T) {
+	api := newVPSTestAPI()
+	ids := make([]string, 0, 20)
+	for i := range 20 {
+		id := fmt.Sprintf("vps-%08d.vps.ovh.net", i)
+		api.addVPS(id, id)
+		api.delays["/1.0/vps/"+id] = 50 * time.Millisecond
+		ids = append(ids, id)
+	}
+	api.set("/1.0/vps", ids)
+	servers, diags := api.backend(t).List(context.Background())
+
+	if diags.HasError() {
+		t.Fatalf("unexpected error: %v", diags)
+	}
+	if got := strings.Join(vpsTestIds(servers), " "); got != strings.Join(ids, " ") {
+		t.Errorf("got %q, want %q", got, strings.Join(ids, " "))
+	}
+	if api.maxInFlight > vpsV1ListParallelism {
+		t.Errorf("%d VPS read at once, want at most %d", api.maxInFlight, vpsV1ListParallelism)
+	}
+	if api.maxInFlight < 2 {
+		t.Errorf("at most %d VPS read at once, want them read in parallel", api.maxInFlight)
+	}
+}
+
+func TestVPSBackendLocationsSharedByProvider(t *testing.T) {
+	api := newVPSTestAPI()
+	config := api.config(t)
+	// Each data source read builds its own backend.
+	vpsTestGet(t, newVPSBackend(config))
+	vpsTestGet(t, newVPSBackend(config))
+
+	if n := api.count("GET /v2/location"); n != 1 {
+		t.Errorf("GET /v2/location called %d times for one provider, want 1", n)
+	}
+
+	// Another provider configuration has its own cache.
+	vpsTestGet(t, newVPSBackend(api.config(t)))
+	if n := api.count("GET /v2/location"); n != 2 {
+		t.Errorf("GET /v2/location called %d times for two providers, want 2", n)
 	}
 }

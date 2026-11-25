@@ -1,159 +1,62 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
-	"net/url"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 )
 
-func dataSourceVPS() *schema.Resource {
-	return &schema.Resource{
-		Read: dataSourceVPSRead,
-		Schema: map[string]*schema.Schema{
-			"service_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			// Here come all the computed items
-			"urn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"state": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"displayname": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"netbootmode": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"slamonitoring": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"keymap": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cluster": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"zone": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"vcore": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"memory": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"offertype": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"model": {
-				Type: schema.TypeMap,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-				Computed: true,
-			},
-			"ips": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"datacenter": {
-				Type: schema.TypeMap,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-				Computed: true,
-			},
-		},
+var _ datasource.DataSourceWithConfigure = (*vpsDataSource)(nil)
+
+func NewVPSDataSource() datasource.DataSource {
+	return &vpsDataSource{}
+}
+
+type vpsDataSource struct {
+	config *Config
+}
+
+func (d *vpsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_vps"
+}
+
+func (d *vpsDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+	config, ok := req.ProviderData.(*Config)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Data Source Configure Type",
+			fmt.Sprintf("Expected *Config, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+		return
+	}
+	d.config = config
+}
+
+func (d *vpsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Description: "Use this data source to retrieve information about a VPS.",
+		Attributes:  vpsDataSourceAttributes(true),
 	}
 }
 
-func dataSourceVPSRead(d *schema.ResourceData, meta interface{}) error {
-	config := meta.(*Config)
-	serviceName := d.Get("service_name").(string)
-	vps := &VPS{}
-	err := config.OVHClient.Get(
-		fmt.Sprintf(
-			"/vps/%s",
-			url.PathEscape(serviceName),
-		),
-		&vps,
-	)
-
-	if err != nil {
-		d.SetId("")
-		return nil
+func (d *vpsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var data VPSDataModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	d.SetId(vps.Name)
-
-	d.Set("urn", vps.URN)
-	d.Set("name", vps.Name)
-	d.Set("zone", vps.Zone)
-	d.Set("state", vps.State)
-	d.Set("vcore", vps.Vcore)
-	d.Set("cluster", vps.Cluster)
-	d.Set("memory", vps.Memory)
-	d.Set("netbootmode", vps.NetbootMode)
-	d.Set("keymap", vps.Keymap)
-	d.Set("offertype", vps.OfferType)
-	d.Set("slamonitoring", vps.SlaMonitorting)
-	d.Set("displayname", vps.DisplayName)
-	var model = make(map[string]string)
-	model["name"] = vps.Model.Name
-	model["offer"] = vps.Model.Offer
-	model["version"] = vps.Model.Version
-	d.Set("model", model)
-	d.Set("type", ovhvps_getType(vps.OfferType, vps.Model.Name, vps.Model.Version))
-
-	ips := []string{}
-	err = config.OVHClient.Get(
-		fmt.Sprintf("/vps/%s/ips", url.PathEscape(d.Id())),
-		&ips,
-	)
-	if err != nil {
-		return err
+	srv, diags := newVPSBackend(d.config).Get(ctx, data.Id.ValueString())
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	d.Set("ips", ips)
-
-	vpsDatacenter := VPSDatacenter{}
-	err = config.OVHClient.Get(
-		fmt.Sprintf("/vps/%s/datacenter", url.PathEscape(d.Id())),
-		&vpsDatacenter,
-	)
-	if err != nil {
-		return err
-	}
-
-	datacenter := make(map[string]string)
-	datacenter["name"] = vpsDatacenter.Name
-	datacenter["longname"] = vpsDatacenter.Longname
-	d.Set("datacenter", datacenter)
-	return nil
+	data.MergeWith(ctx, srv)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

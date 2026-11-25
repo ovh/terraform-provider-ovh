@@ -27,12 +27,45 @@ type vpsBackend interface {
 // newVPSBackend returns the backend the provider uses: API v1 until API v2
 // serves VPS.
 func newVPSBackend(config *Config) vpsBackend {
-	return &vpsV1Backend{client: config.OVHClient}
+	cache, _ := vpsLocationCaches.LoadOrStore(config.OVHClient, &vpsLocationCache{})
+	return &vpsV1Backend{client: config.OVHClient, locations: cache.(*vpsLocationCache)}
+}
+
+// vpsLocationCaches holds one vpsLocationCache per API client, so per provider
+// configuration: every data source read of a provider shares it.
+var vpsLocationCaches sync.Map // *ovhwrap.Client -> *vpsLocationCache
+
+// vpsLocationCache caches GET /v2/location once it succeeded. A failure is not
+// kept: the next call tries again.
+type vpsLocationCache struct {
+	mu        sync.Mutex
+	locations []vpsLocation
+}
+
+func (c *vpsLocationCache) get(ctx context.Context, client *ovhwrap.Client) ([]vpsLocation, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if c.locations != nil {
+		return c.locations, nil
+	}
+	locations, err := helpers.GetAllPagesV2[vpsLocation](ctx, client, "/v2/location")
+	if err != nil {
+		return nil, err
+	}
+	if locations == nil {
+		locations = []vpsLocation{}
+	}
+	c.locations = locations
+	return locations, nil
 }
 
 // vpsV1StatusExpired is the HTTP status API v1 answers on the routes of an
 // expired VPS ("This service is expired").
 const vpsV1StatusExpired = 460
+
+// vpsV1ListParallelism is the number of VPS List reads at once.
+const vpsV1ListParallelism = 8
 
 // errVPSNotFound wraps the error of a VPS whose GET /vps/{serviceName}
 // answers 404.
@@ -41,11 +74,8 @@ var errVPSNotFound = errors.New("VPS not found")
 // vpsV1Backend reads VPS through the API v1 routes /vps/{serviceName}/...
 // API v1 keeps no target: the target specification is the current state.
 type vpsV1Backend struct {
-	client *ovhwrap.Client
-
-	// locations caches GET /v2/location once it succeeded.
-	locationsMu sync.Mutex
-	locations   []vpsLocation
+	client    *ovhwrap.Client
+	locations *vpsLocationCache
 }
 
 // vpsV1 is the part of GET /vps/{serviceName} read by vpsV1Backend.
@@ -102,8 +132,9 @@ func (b *vpsV1Backend) Get(ctx context.Context, id string) (*VPSAPIServer, diag.
 	return srv, diags
 }
 
-// List reads every VPS GET /vps returns, in its order. A VPS deleted meanwhile
-// is left out; an expired one too, with a warning.
+// List reads every VPS GET /vps returns, vpsV1ListParallelism at once, and
+// returns them in the order of GET /vps. A VPS deleted meanwhile is left out;
+// an expired one too, with a warning.
 func (b *vpsV1Backend) List(ctx context.Context) ([]VPSAPIServer, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
@@ -113,10 +144,30 @@ func (b *vpsV1Backend) List(ctx context.Context) ([]VPSAPIServer, diag.Diagnosti
 		return nil, diags
 	}
 
+	type result struct {
+		srv   *VPSAPIServer
+		diags diag.Diagnostics
+		err   error
+	}
+	results := make([]result, len(ids))
+	slots := make(chan struct{}, vpsV1ListParallelism)
+	var wg sync.WaitGroup
+	for i, id := range ids {
+		slots <- struct{}{}
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			defer func() { <-slots }()
+			srv, readDiags, err := b.read(ctx, id)
+			results[i] = result{srv: srv, diags: readDiags, err: err}
+		}()
+	}
+	wg.Wait()
+
 	servers := make([]VPSAPIServer, 0, len(ids))
-	for _, id := range ids {
-		srv, readDiags, err := b.read(ctx, id)
-		diags.Append(readDiags...)
+	for i, id := range ids {
+		srv, err := results[i].srv, results[i].err
+		diags.Append(results[i].diags...)
 		switch {
 		case err == nil:
 			servers = append(servers, *srv)
@@ -240,7 +291,7 @@ func (b *vpsV1Backend) region(ctx context.Context, id, base string) (*string, di
 		return nil, diags, fmt.Errorf("calling GET %s: %w", endpoint, err)
 	}
 
-	locations, err := b.listLocations(ctx)
+	locations, err := b.locations.get(ctx, b.client)
 	if err != nil {
 		return nil, diags, fmt.Errorf("calling GET /v2/location: %w", err)
 	}
@@ -348,26 +399,6 @@ func (b *vpsV1Backend) additionalDiskSize(ctx context.Context, base string) (*in
 		}
 	}
 	return nil, nil
-}
-
-// listLocations returns GET /v2/location, called once per backend. A failure
-// is not kept: the next call tries again.
-func (b *vpsV1Backend) listLocations(ctx context.Context) ([]vpsLocation, error) {
-	b.locationsMu.Lock()
-	defer b.locationsMu.Unlock()
-
-	if b.locations != nil {
-		return b.locations, nil
-	}
-	locations, err := helpers.GetAllPagesV2[vpsLocation](ctx, b.client, "/v2/location")
-	if err != nil {
-		return nil, err
-	}
-	if locations == nil {
-		locations = []vpsLocation{}
-	}
-	b.locations = locations
-	return locations, nil
 }
 
 // vpsNonEmpty returns nil for an empty string, a pointer to it otherwise.

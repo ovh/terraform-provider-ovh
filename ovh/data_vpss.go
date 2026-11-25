@@ -1,43 +1,63 @@
 package ovh
 
 import (
+	"context"
 	"fmt"
-	"sort"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers/hashcode"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 )
 
-func dataSourceVPSs() *schema.Resource {
-	return &schema.Resource{
-		Read: dataSourceVPSsRead,
-		Schema: map[string]*schema.Schema{
-			// Computed
-			"result": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
+var _ datasource.DataSourceWithConfigure = (*vpssDataSource)(nil)
+
+func NewVPSsDataSource() datasource.DataSource {
+	return &vpssDataSource{}
+}
+
+type vpssDataSource struct {
+	config *Config
+}
+
+func (d *vpssDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_vpss"
+}
+
+func (d *vpssDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+	config, ok := req.ProviderData.(*Config)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Data Source Configure Type",
+			fmt.Sprintf("Expected *Config, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+		return
+	}
+	d.config = config
+}
+
+func (d *vpssDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Description: "Use this data source to list the VPS of your account.",
+		Attributes: map[string]schema.Attribute{
+			"vps": schema.ListNestedAttribute{
+				Computed:            true,
+				Description:         "VPS of your account",
+				MarkdownDescription: "VPS of your account",
+				NestedObject:        schema.NestedAttributeObject{Attributes: vpsDataSourceAttributes(false)},
 			},
 		},
 	}
 }
 
-func dataSourceVPSsRead(d *schema.ResourceData, meta interface{}) error {
-	config := meta.(*Config)
-
-	ids := []string{}
-	err := config.OVHClient.Get("/vps", &ids)
-
-	if err != nil {
-		return fmt.Errorf("Error calling /vps:\n\t %q", err)
+func (d *vpssDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	servers, diags := newVPSBackend(d.config).List(ctx)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	// sort.Strings sorts in place, returns nothing
-	sort.Strings(ids)
-
-	d.SetId(hashcode.Strings(ids))
-	d.Set("result", ids)
-	return nil
+	data := newVPSsDataModel(ctx, servers)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

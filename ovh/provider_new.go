@@ -426,6 +426,8 @@ func (p *OvhProvider) DataSources(_ context.Context) []func() datasource.DataSou
 		NewStorageEfsShareAccessPathDataSource,
 		NewVmwareCloudDirectorBackupDataSource,
 		NewVmwareCloudDirectorOrganizationDataSource,
+		NewVPSDataSource,
+		NewVPSsDataSource,
 		NewVrackservicessDataSource,
 		NewVrackservicesDataSource,
 		NewVrackDataSource,
