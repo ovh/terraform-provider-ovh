@@ -398,6 +398,7 @@ type CloudProjectKubeResponse struct {
 	Region                      string                             `json:"region"`
 	Status                      string                             `json:"status"`
 	UpdatePolicy                string                             `json:"updatePolicy"`
+	UpdatedAt                   string                             `json:"updatedAt"`
 	Url                         string                             `json:"url"`
 	Version                     string                             `json:"version"`
 	Plan                        string                             `json:"plan"`
