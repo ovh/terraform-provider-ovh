@@ -310,8 +310,6 @@ The following arguments are supported:
 
 ~> **WARNING** Some customizations may be required on some Operating Systems. [Check how to list the available and required customization(s) for your operating system](https://help.ovhcloud.com/csm/en-dedicated-servers-api-os-installation?id=kb_article_view&sysparm_article=KB0061951#os-inputs) (do not forget to adapt camel case customization name to snake case parameter).
 
-* `properties` - Attribute 'properties' is deprecated and has no effect.
-
 * `storage`: OS reinstallation storage configurations. [More details about disks, hardware/software RAID and partitioning configuration](https://help.ovhcloud.com/csm/en-dedicated-servers-api-partitioning?id=kb_article_view&sysparm_article=KB0043882) (do not forget to adapt camel case parameters to snake case parameters).
   * `disk_group_id`: Disk group id to install the OS to (default is 0, meaning automatic).
   * `erase`: Whether to erase this disk group's data (default is true). Set to false to keep existing data on a disk group not used for the OS installation. Cannot be set to false on the disk group receiving the OS installation, and a given `disk_group_id` cannot be declared more than once.
