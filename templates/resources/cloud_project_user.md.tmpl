@@ -78,3 +78,5 @@ $ terraform apply
 ```
 
 The file `user.tf` will then contain the imported resource's configuration, that can be copied next to the `import` block above. See https://developer.hashicorp.com/terraform/language/import/generating-configuration for more details.
+
+On import, `role_names` is set to all of the user's roles, sorted by name.
