@@ -7,6 +7,7 @@ import (
 	"maps"
 	"math/big"
 	"net/http"
+	"os"
 	"reflect"
 	"strings"
 	"sync"
@@ -18,6 +19,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
+	acc "github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
@@ -970,4 +973,88 @@ func TestVPSResourceCreateRefusesPostOrderSettings(t *testing.T) {
 	if got := api.count("POST /1.0/order/cart"); got != 0 {
 		t.Errorf("POST /order/cart called %d times, want 0", got)
 	}
+}
+
+const testAccVPSResourceConfig = `
+resource "ovh_vps" "vps" {
+  plan_code = %q
+
+  location = {
+    region = %q
+  }
+
+  installation = {
+    from = {
+      image_name = %q
+    }
+  }
+}
+`
+
+// TestAccVPSResource_order orders a VPS, which is billed, then terminates it.
+func TestAccVPSResource_order(t *testing.T) {
+	planCode := os.Getenv("OVH_VPS_PLAN_CODE")
+	region := os.Getenv("OVH_VPS_REGION")
+	imageName := os.Getenv("OVH_VPS_IMAGE_NAME")
+
+	acc.Test(t, acc.TestCase{
+		PreCheck: func() {
+			testAccPreCheckOrderVPS(t)
+			checkEnvOrSkip(t, "OVH_VPS_PLAN_CODE")
+			checkEnvOrSkip(t, "OVH_VPS_REGION")
+			checkEnvOrSkip(t, "OVH_VPS_IMAGE_NAME")
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []acc.TestStep{
+			{
+				Config: fmt.Sprintf(testAccVPSResourceConfig, planCode, region, imageName),
+				Check: acc.ComposeTestCheckFunc(
+					acc.TestCheckResourceAttrSet("ovh_vps.vps", "id"),
+					acc.TestCheckResourceAttrSet("ovh_vps.vps", "order.order_id"),
+					acc.TestCheckResourceAttr("ovh_vps.vps", "plan_code", planCode),
+					acc.TestCheckResourceAttr("ovh_vps.vps", "current_state.location.region", region),
+					acc.TestCheckResourceAttr("ovh_vps.vps", "installation.from.image_name", imageName),
+				),
+			},
+		},
+	})
+}
+
+// TestAccVPSResource_import imports the existing VPS OVH_VPS. The import step
+// does not persist its state (no import state persistence): the test ends
+// with an empty state, so it never terminates the VPS. The configuration is
+// only validated: an import does not plan it.
+func TestAccVPSResource_import(t *testing.T) {
+	vps := os.Getenv("OVH_VPS")
+
+	acc.Test(t, acc.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCredentials(t)
+			checkEnvOrSkip(t, "OVH_VPS")
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []acc.TestStep{
+			{
+				Config:        fmt.Sprintf(testAccVPSResourceConfig, "vps-2025-model1", "eu-west-gra", "Debian 12"),
+				ResourceName:  "ovh_vps.vps",
+				ImportState:   true,
+				ImportStateId: vps,
+				ImportStateCheck: func(states []*terraform.InstanceState) error {
+					if len(states) != 1 {
+						return fmt.Errorf("imported %d resources, want 1", len(states))
+					}
+					attributes := states[0].Attributes
+					if attributes["id"] != vps {
+						return fmt.Errorf("id = %q, want %q", attributes["id"], vps)
+					}
+					for _, name := range []string{"plan_code", "order.duration", "order.pricing_mode", "location.region", "installation.from.image_name", "current_state.power_state"} {
+						if attributes[name] == "" {
+							return fmt.Errorf("%s is not set after the import", name)
+						}
+					}
+					return nil
+				},
+			},
+		},
+	})
 }
