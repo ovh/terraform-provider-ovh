@@ -74,6 +74,7 @@ func (r *vpsResource) Configure(_ context.Context, req resource.ConfigureRequest
 
 func (r *vpsResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		Version:     1,
 		Description: "Orders and manages a VPS.",
 		Attributes:  vpsResourceAttributes(),
 	}
