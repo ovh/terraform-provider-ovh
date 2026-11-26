@@ -4,19 +4,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
+	"maps"
 	"net/url"
-	"time"
+	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/ovh/go-ovh/ovh"
-	"github.com/ovh/terraform-provider-ovh/v2/ovh/helpers"
-	"github.com/ovh/terraform-provider-ovh/v2/ovh/types"
-	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/ovhwrap"
 )
 
 var (
@@ -24,7 +22,8 @@ var (
 	_ resource.ResourceWithImportState = (*vpsResource)(nil)
 )
 
-func NewVpsResource() resource.Resource {
+// NewVPSResource returns the ovh_vps resource.
+func NewVPSResource() resource.Resource {
 	return &vpsResource{}
 }
 
@@ -40,7 +39,6 @@ func (r *vpsResource) Configure(_ context.Context, req resource.ConfigureRequest
 	if req.ProviderData == nil {
 		return
 	}
-
 	config, ok := req.ProviderData.(*Config)
 	if !ok {
 		resp.Diagnostics.AddError(
@@ -49,321 +47,180 @@ func (r *vpsResource) Configure(_ context.Context, req resource.ConfigureRequest
 		)
 		return
 	}
-
 	r.config = config
 }
 
 func (r *vpsResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = VpsResourceSchema(ctx)
+	resp.Schema = schema.Schema{
+		Description: "Orders and manages a VPS.",
+		Attributes:  vpsResourceAttributes(),
+	}
 }
 
+// ImportState imports a VPS by its service name. The Read that follows fills
+// the state.
 func (r *vpsResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	// Here we force the attribute "plan" to an empty array because it won't be fetched by the Read function.
-	// If we don't do this, Terraform always shows a diff on the following plans (null => []), due to the
-	// plan modifier RequiresReplace that initializes the attribute to its zero-value (an empty array).
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("plan"), ovhtypes.TfListNestedValue[PlanValue]{
-		ListValue: basetypes.NewListValueMust(PlanValue{}.Type(ctx), make([]attr.Value, 0)),
-	})...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("service_name"), req.ID)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), req.ID)...)
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *vpsResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data VpsModel
-
-	// Read Terraform plan data into the model
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// Create order and wait for service to be delivered
-	order := data.ToOrder()
-	if err := orderCreate(order, r.config, "vps", true, defaultOrderTimeout); err != nil {
-		resp.Diagnostics.AddError("failed to create order", err.Error())
-	}
-
-	// Find service name from order
-	orderID := order.Order.OrderId.ValueInt64()
-	plans := []PlanValue{}
-	resp.Diagnostics.Append(data.Plan.ElementsAs(ctx, &plans, false)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	serviceName, err := serviceNameFromOrder(r.config.OVHClient, orderID, plans[0].PlanCode.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError("failed to retrieve service name", err.Error())
-	}
-	data.ServiceName = types.TfStringValue{
-		StringValue: basetypes.NewStringValue(serviceName),
-	}
-
-	// Save early data into Terraform state, to make sure a reapply will not reorder a new VPS
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-
-	// Update resource
-	endpoint := "/vps/" + url.PathEscape(data.ServiceName.ValueString())
-	if err := r.config.OVHClient.Put(endpoint, data.ToUpdate(), nil); err != nil {
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("Error calling Put %s", endpoint),
-			err.Error(),
-		)
-		return
-	}
-
-	// Update install options if needed
-	if installOptionsHasBeenSet(data) {
-		endpoint := "/vps/" + url.PathEscape(data.ServiceName.ValueString()) + "/rebuild"
-		if err := r.config.OVHClient.Post(endpoint, data.ToInstallOptions(), nil); err != nil {
-			resp.Diagnostics.AddError(
-				fmt.Sprintf("Error calling Post %s", endpoint),
-				err.Error(),
-			)
-			return
-		}
-
-		// Wait for reinstallation to complete
-		err := r.waitForVPSReinstall(ctx, data.ServiceName.ValueString())
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error fetching updated resource",
-				err.Error(),
-			)
-			return
-		}
-	}
-
-	// Read updated resource
-	responseData, err := r.waitForVPSUpdate(ctx, serviceName, &data)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error fetching updated resource",
-			err.Error(),
-		)
-		return
-	}
-
-	data.MergeWith(responseData)
-	data.ID = data.ServiceName
-
-	// Save data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	resp.Diagnostics.AddError("Not implemented", "Creating a VPS is not implemented yet")
 }
 
 func (r *vpsResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var data VpsModel
-
-	// Read Terraform prior state data into the model
+	var data VPSResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// Read resource
-	responseData, err := r.waitForVPSUpdate(ctx, data.ServiceName.ValueString(), &data)
-	if err != nil {
-		if helpers.IsNotFound(err) {
-			resp.State.RemoveResource(ctx)
-			return
-		}
+	id := data.Id.ValueString()
+	srv, diags, err := vpsV1BackendOf(r.config).read(ctx, id)
+	resp.Diagnostics.Append(diags...)
+	switch {
+	case errors.Is(err, errVPSNotFound):
+		resp.State.RemoveResource(ctx)
+		return
+	case errors.Is(err, errVPSExpired):
 		resp.Diagnostics.AddError(
-			"Error fetching resource",
-			err.Error(),
+			fmt.Sprintf("VPS %s is expired", id),
+			fmt.Sprintf("Renew the VPS to manage it again, or remove it from the state with terraform state rm. It stays in the state, so that Terraform does not order a new VPS: %s", err),
 		)
+		return
+	case err != nil:
+		resp.Diagnostics.AddError(fmt.Sprintf("Error reading VPS %s", id), err.Error())
 		return
 	}
 
-	data.MergeWith(responseData)
+	var billing *ServiceBilling
+	if data.billingNeeded() {
+		billing, err = vpsBillingOf(ctx, r.config.OVHClient, id)
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Error reading the billing of VPS %s", id), err.Error())
+			return
+		}
+	}
 
-	// Save updated data into Terraform state
+	resp.Diagnostics.Append(data.mergeRead(ctx, srv, billing)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *vpsResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data, planData VpsModel
-
-	// Read Terraform plan data into the model
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &planData)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// Read Terraform prior state data into the model
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	// Update resource
-	endpoint := "/vps/" + url.PathEscape(data.ServiceName.ValueString())
-	if err := r.config.OVHClient.Put(endpoint, planData.ToUpdate(), nil); err != nil {
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("Error calling Put %s", endpoint),
-			err.Error(),
-		)
-		return
-	}
-
-	// Update install options if needed
-	if installOptionsHasChanged(planData, data) {
-		errorSummary, errorDetails := validateInstallOptions(planData, data)
-		if errorSummary != "" {
-			resp.Diagnostics.AddError(errorSummary, errorDetails)
-			return
-		}
-
-		endpoint := "/vps/" + url.PathEscape(data.ServiceName.ValueString()) + "/rebuild"
-		if err := r.config.OVHClient.Post(endpoint, planData.ToInstallOptions(), nil); err != nil {
-			resp.Diagnostics.AddError(
-				fmt.Sprintf("Error calling Post %s", endpoint),
-				err.Error(),
-			)
-			return
-		}
-
-		// Wait for reinstallation to complete
-		err := r.waitForVPSReinstall(ctx, data.ServiceName.ValueString())
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error fetching updated resource",
-				err.Error(),
-			)
-			return
-		}
-	}
-
-	// Read updated resource
-	responseData, err := r.waitForVPSUpdate(ctx, data.ServiceName.ValueString(), &planData)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("Error fetching updated resource %s", endpoint),
-			err.Error(),
-		)
-		return
-	}
-
-	responseData.MergeWith(&planData)
-	responseData.MergeWith(&data)
-
-	// Save updated data into Terraform state
-	resp.Diagnostics.Append(resp.State.Set(ctx, &responseData)...)
-}
-
-func (r *vpsResource) waitForVPSReinstall(ctx context.Context, serviceName string) error {
-	var responseData VpsModel
-
-	err := retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
-		// Read updated resource
-		endpoint := "/vps/" + url.PathEscape(serviceName)
-		if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
-			return retry.NonRetryableError(fmt.Errorf("error calling GET %s", endpoint))
-		}
-
-		// Update is succesfull, return
-		if responseData.State.ValueString() != "running" {
-			return retry.RetryableError(errors.New("waiting for vps to finish reinstallation"))
-		}
-
-		return nil
-
-	})
-
-	return err
-}
-
-func installOptionsHasChanged(planData, data VpsModel) bool {
-	return planData.ImageId.ValueString() != data.ImageId.ValueString() ||
-		planData.PublicSSHKey.ValueString() != data.PublicSSHKey.ValueString()
-}
-
-func installOptionsHasBeenSet(data VpsModel) bool {
-	return !data.ImageId.IsNull() || !data.PublicSSHKey.IsNull()
-}
-
-func validateInstallOptions(planData VpsModel, stateData VpsModel) (string, string) {
-	summary := "Invalid VPS install options"
-	// image_id is mandatory to call /vps/{serviceName}/rebuild
-	if installOptionsHasBeenSet(planData) && planData.ImageId.IsNull() {
-		return summary, "To define a public_ssh_key value, you have to also set a value for image_id"
-	}
-
-	detailsNonNull := "You cannot set to null a previously non-null value (%s)"
-	// cannot set to null a previously non-null value
-	if !stateData.ImageId.IsNull() && planData.ImageId.IsNull() {
-		return summary, fmt.Sprintf(detailsNonNull, "image_id")
-	}
-
-	if !stateData.PublicSSHKey.IsNull() && planData.PublicSSHKey.IsNull() {
-		return summary, fmt.Sprintf(detailsNonNull, "public_ssh_key")
-	}
-
-	return "", ""
+	resp.Diagnostics.AddError("Not implemented", "Updating a VPS is not implemented yet")
 }
 
 func (r *vpsResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data VpsModel
-
-	// Read Terraform prior state data into the model
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	serviceName := data.ServiceName.ValueString()
-
-	terminate := func() (string, error) {
-		log.Printf("[DEBUG] Will terminate vps %s", serviceName)
-		endpoint := fmt.Sprintf("/vps/%s/terminate", url.PathEscape(serviceName))
-		if err := r.config.OVHClient.Post(endpoint, nil, nil); err != nil {
-			if errOvh, ok := err.(*ovh.APIError); ok && (errOvh.Code == 404 || errOvh.Code == 460) {
-				return "", nil
-			}
-			return "", fmt.Errorf("calling Post %s:\n\t %q", endpoint, err)
-		}
-		return serviceName, nil
-	}
-
-	confirmTerminate := func(token string) error {
-		log.Printf("[DEBUG] Will confirm termination of vps %s", serviceName)
-		endpoint := fmt.Sprintf("/vps/%s/confirmTermination", url.PathEscape(serviceName))
-		if err := r.config.OVHClient.Post(endpoint, &ConfirmTerminationOpts{Token: token}, nil); err != nil {
-			return fmt.Errorf("calling Post %s:\n\t %q", endpoint, err)
-		}
-		return nil
-	}
-
-	if err := orderDelete(r.config, terminate, confirmTerminate); err != nil {
-		resp.Diagnostics.AddError("failed to delete resource", err.Error())
-		return
-	}
+	resp.Diagnostics.AddError("Not implemented", "Deleting a VPS is not implemented yet")
 }
 
-// waitForVPSUpdate fetches the given VPS 20 times in a loop, sleeping 1 min between each fetch. It is done to ensure that
-// field `netbootMode` has been updated since it is not done synchronously.
-func (r *vpsResource) waitForVPSUpdate(ctx context.Context, serviceName string, planData *VpsModel) (*VpsModel, error) {
-	var responseData VpsModel
+// vpsV1BackendOf returns the API v1 backend: the resource tells a VPS not
+// found from an expired one, which the vpsBackend interface does not.
+func vpsV1BackendOf(config *Config) *vpsV1Backend {
+	return newVPSBackend(config).(*vpsV1Backend)
+}
 
-	err := retry.RetryContext(ctx, 20*time.Minute, func() *retry.RetryError {
-		// Read updated resource
-		endpoint := "/vps/" + url.PathEscape(serviceName)
-		if err := r.config.OVHClient.Get(endpoint, &responseData); err != nil {
-			return retry.NonRetryableError(fmt.Errorf("error calling GET %s: %w", endpoint, err))
-		}
-
-		// Update is succesfull, return
-		if responseData.NetbootMode == planData.NetbootMode ||
-			planData.NetbootMode.IsNull() ||
-			planData.NetbootMode.IsUnknown() {
-			return nil
-		}
-
-		return retry.RetryableError(errors.New("waiting for netbootMode to have its expected value"))
-	})
-
+// vpsBillingOf returns the billing of the VPS: its plan code, and the duration
+// and pricing mode of its renewal.
+func vpsBillingOf(ctx context.Context, client *ovhwrap.Client, id string) (*ServiceBilling, error) {
+	serviceId, err := serviceIdFromResourceName(client, id)
 	if err != nil {
 		return nil, err
 	}
 
-	return &responseData, nil
+	var service Service
+	endpoint := "/services/" + url.PathEscape(strconv.Itoa(serviceId))
+	if err := client.GetWithContext(ctx, endpoint, &service); err != nil {
+		return nil, fmt.Errorf("calling GET %s: %w", endpoint, err)
+	}
+	return &service.Billing, nil
+}
+
+// billingNeeded tells whether the state lacks a value that only the billing
+// of the VPS holds, as after an import.
+func (m *VPSResourceModel) billingNeeded() bool {
+	return m.PlanCode.IsNull() ||
+		vpsAttributeNull(m.Order, "duration") ||
+		vpsAttributeNull(m.Order, "pricing_mode")
+}
+
+// mergeRead sets the model from a VPS read through API v1, and from its
+// billing when not nil. The values API v1 cannot tell apart from the ones the
+// configuration sets (plan code, region, image, installation settings, order)
+// are only filled when null, as after an import.
+func (m *VPSResourceModel) mergeRead(ctx context.Context, srv *VPSAPIServer, billing *ServiceBilling) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	var read VPSDataModel
+	read.MergeWith(ctx, srv)
+
+	m.Id = read.Id
+	m.DisplayName = read.DisplayName
+	// Null in a transitional state (installing, rebooting...): the requested
+	// power state is kept.
+	if !read.PowerState.IsNull() {
+		m.PowerState = read.PowerState
+	}
+	m.Options = read.Options
+	m.CurrentState = read.CurrentState
+
+	if vpsAttributeNull(m.Location, "region") {
+		m.Location = read.Location
+	}
+
+	installation := map[string]attr.Value{
+		"from":                     types.ObjectNull(vpsInstallationFromAttrTypes()),
+		"ssh_key":                  vpsTfStringPtr(nil),
+		"post_installation_script": vpsTfStringPtr(nil),
+		"send_password_by_email":   types.BoolNull(),
+	}
+	if !m.Installation.IsNull() && !m.Installation.IsUnknown() {
+		maps.Copy(installation, m.Installation.Attributes())
+	}
+	if from, _ := installation["from"].(types.Object); vpsAttributeNull(from, "image_id") && vpsAttributeNull(from, "image_name") {
+		installation["from"] = read.Installation.Attributes()["from"]
+	}
+	if installation["send_password_by_email"].IsNull() {
+		installation["send_password_by_email"] = types.BoolValue(true)
+	}
+	var objectDiags diag.Diagnostics
+	m.Installation, objectDiags = types.ObjectValue(vpsResourceInstallationAttrTypes(), installation)
+	diags.Append(objectDiags...)
+
+	if billing == nil {
+		return diags
+	}
+	if m.PlanCode.IsNull() {
+		m.PlanCode = vpsTfStringPtr(vpsNonEmpty(billing.Plan.Code))
+	}
+	order := map[string]attr.Value{
+		"duration":     vpsTfStringPtr(nil),
+		"pricing_mode": vpsTfStringPtr(nil),
+		"order_id":     types.Int64Null(),
+	}
+	if !m.Order.IsNull() && !m.Order.IsUnknown() {
+		maps.Copy(order, m.Order.Attributes())
+	}
+	if order["duration"].IsNull() {
+		order["duration"] = vpsTfStringPtr(vpsNonEmpty(billing.Pricing.Duration))
+	}
+	if order["pricing_mode"].IsNull() {
+		order["pricing_mode"] = vpsTfStringPtr(vpsNonEmpty(billing.Pricing.PricingMode))
+	}
+	m.Order, objectDiags = types.ObjectValue(vpsOrderAttrTypes(), order)
+	diags.Append(objectDiags...)
+
+	return diags
+}
+
+// vpsAttributeNull tells whether the attribute of an object is null, the
+// object being null or unknown included.
+func vpsAttributeNull(object types.Object, name string) bool {
+	if object.IsNull() || object.IsUnknown() {
+		return true
+	}
+	value, ok := object.Attributes()[name]
+	return !ok || value.IsNull()
 }

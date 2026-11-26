@@ -536,7 +536,7 @@ func (p *OvhProvider) Resources(_ context.Context) []func() resource.Resource {
 		NewStorageEfsShareResource,
 		NewStorageEfsShareSnapshotResource,
 		NewStorageEfsShareAclResource,
-		NewVpsResource,
+		NewVPSResource,
 		NewVrackOvhcloudconnectResource,
 		NewVrackDedicatedCloudResource,
 		NewVrackIpv6RoutedSubrangeResource,

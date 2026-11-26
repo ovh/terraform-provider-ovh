@@ -82,6 +82,10 @@ const vpsV1ListParallelism = 8
 // answers 404.
 var errVPSNotFound = errors.New("VPS not found")
 
+// errVPSExpired wraps the error of a VPS whose GET /vps/{serviceName}
+// answers vpsV1StatusExpired.
+var errVPSExpired = errors.New("VPS expired")
+
 // vpsV1Backend reads VPS through the API v1 routes /vps/{serviceName}/...
 // API v1 keeps no target: the target specification is the current state.
 type vpsV1Backend struct {
@@ -199,7 +203,8 @@ func (b *vpsV1Backend) List(ctx context.Context) ([]VPSAPIServer, diag.Diagnosti
 }
 
 // read reads one VPS. The diagnostics only hold warnings; err is the first
-// failure, wrapping errVPSNotFound when GET /vps/{serviceName} answers 404.
+// failure, wrapping errVPSNotFound when GET /vps/{serviceName} answers 404,
+// and errVPSExpired when it answers vpsV1StatusExpired.
 func (b *vpsV1Backend) read(ctx context.Context, id string) (*VPSAPIServer, diag.Diagnostics, error) {
 	var diags diag.Diagnostics
 	base := "/vps/" + url.PathEscape(id)
@@ -208,6 +213,9 @@ func (b *vpsV1Backend) read(ctx context.Context, id string) (*VPSAPIServer, diag
 	if err := b.client.GetWithContext(ctx, base, &vps); err != nil {
 		if vpsAPIStatus(err) == http.StatusNotFound {
 			return nil, diags, fmt.Errorf("%w: GET %s answered: %w", errVPSNotFound, base, err)
+		}
+		if vpsAPIStatus(err) == vpsV1StatusExpired {
+			return nil, diags, fmt.Errorf("%w: GET %s answered: %w", errVPSExpired, base, err)
 		}
 		return nil, diags, fmt.Errorf("calling GET %s: %w", base, err)
 	}
