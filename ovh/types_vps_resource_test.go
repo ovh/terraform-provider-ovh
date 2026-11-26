@@ -387,8 +387,16 @@ func TestVPSCurrentStateUnknownWhenUpdatePlanned(t *testing.T) {
 	}{
 		{"no change", stateValues, stateValues, false},
 		{"display_name changed", with(map[string]attr.Value{"display_name": ovhtypes.NewTfStringValue("web-02")}), with(map[string]attr.Value{"display_name": ovhtypes.NewTfStringValue("web-02")}), true},
-		{"ssh_key set", with(map[string]attr.Value{"installation.ssh_key": ovhtypes.NewTfStringValue("ssh-ed25519 AAAA")}), with(map[string]attr.Value{"installation.ssh_key": ovhtypes.NewTfStringValue("ssh-ed25519 AAAA")}), true},
 		{"only timeouts changed", with(map[string]attr.Value{"timeouts.create": ovhtypes.NewTfStringValue("2h")}), with(map[string]attr.Value{"timeouts.create": ovhtypes.NewTfStringValue("2h")}), false},
+		{"order changed", with(map[string]attr.Value{"order.duration": ovhtypes.NewTfStringValue("P12M"), "order.pricing_mode": ovhtypes.NewTfStringValue("upfront12")}), with(map[string]attr.Value{"order.duration": ovhtypes.NewTfStringValue("P12M"), "order.pricing_mode": ovhtypes.NewTfStringValue("upfront12")}), false},
+		{"send_password_by_email changed", with(map[string]attr.Value{"installation.send_password_by_email": types.BoolValue(false)}), with(map[string]attr.Value{"installation.send_password_by_email": types.BoolValue(false)}), false},
+		// Null in the state after an import: setting it only records it.
+		{"ssh_key set after import", with(map[string]attr.Value{"installation.ssh_key": ovhtypes.NewTfStringValue("ssh-ed25519 AAAA")}), with(map[string]attr.Value{"installation.ssh_key": ovhtypes.NewTfStringValue("ssh-ed25519 AAAA")}), false},
+		{"post_installation_script set after import", with(map[string]attr.Value{"installation.post_installation_script": ovhtypes.NewTfStringValue("#!/bin/sh")}), with(map[string]attr.Value{"installation.post_installation_script": ovhtypes.NewTfStringValue("#!/bin/sh")}), false},
+		{"plan_code set after import", with(map[string]attr.Value{"plan_code": ovhtypes.NewTfStringValue("vps-2025-model1")}), with(map[string]attr.Value{"plan_code": ovhtypes.NewTfStringValue("vps-2025-model1")}), false},
+		{"location.region set after import", with(map[string]attr.Value{"location.region": ovhtypes.NewTfStringValue("eu-west-gra")}), with(map[string]attr.Value{"location.region": ovhtypes.NewTfStringValue("eu-west-gra")}), false},
+		{"power_state changed", with(map[string]attr.Value{"power_state": ovhtypes.NewTfStringValue("SHUTOFF")}), with(map[string]attr.Value{"power_state": ovhtypes.NewTfStringValue("SHUTOFF")}), true},
+		{"image changed", with(map[string]attr.Value{"installation.from.image_name": ovhtypes.NewTfStringValue("Debian 13")}), with(map[string]attr.Value{"installation.from.image_name": ovhtypes.NewTfStringValue("Debian 13")}), true},
 		{
 			"computed left out, marked unknown by the framework",
 			with(map[string]attr.Value{"installation.from.image_id": null, "timeouts.create": ovhtypes.NewTfStringValue("2h")}),
@@ -415,6 +423,43 @@ func TestVPSCurrentStateUnknownWhenUpdatePlanned(t *testing.T) {
 		}
 		if got := resp.PlanValue.IsUnknown(); got != c.wantUnknown {
 			t.Errorf("%s: current_state unknown = %t, want %t", c.name, got, c.wantUnknown)
+		}
+	}
+
+	// No power state in the state, as after an import during a transitional
+	// state: the plan only records the configured one, the next Read reads it.
+	{
+		state := vpsTestPlan(t, with(map[string]attr.Value{"power_state": null}))
+		plan := vpsTestPlan(t, stateValues)
+		req := planmodifier.ObjectRequest{
+			State:      tfsdk.State{Schema: state.Schema, Raw: state.Raw},
+			Plan:       plan,
+			Config:     tfsdk.Config{Schema: plan.Schema, Raw: plan.Raw},
+			StateValue: csState,
+			PlanValue:  csUnknown,
+		}
+		resp := &planmodifier.ObjectResponse{PlanValue: csUnknown}
+		vpsCurrentStatePlanModifier().PlanModifyObject(ctx, req, resp)
+		if resp.PlanValue.IsUnknown() {
+			t.Error("power_state set when the state has none: current_state unknown, want the state")
+		}
+	}
+
+	// A key or a script the state holds: changing it reinstalls the VPS.
+	for _, name := range []string{"installation.ssh_key", "installation.post_installation_script"} {
+		state := vpsTestPlan(t, with(map[string]attr.Value{name: ovhtypes.NewTfStringValue("before")}))
+		plan := vpsTestPlan(t, with(map[string]attr.Value{name: ovhtypes.NewTfStringValue("after")}))
+		req := planmodifier.ObjectRequest{
+			State:      tfsdk.State{Schema: state.Schema, Raw: state.Raw},
+			Plan:       plan,
+			Config:     tfsdk.Config{Schema: plan.Schema, Raw: plan.Raw},
+			StateValue: csState,
+			PlanValue:  csUnknown,
+		}
+		resp := &planmodifier.ObjectResponse{PlanValue: csUnknown}
+		vpsCurrentStatePlanModifier().PlanModifyObject(ctx, req, resp)
+		if !resp.PlanValue.IsUnknown() {
+			t.Errorf("%s changed: current_state = %v, want unknown", name, resp.PlanValue)
 		}
 	}
 

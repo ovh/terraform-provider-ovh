@@ -2,11 +2,16 @@ package ovh
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"maps"
 	"math/big"
 	"net/http"
+	"reflect"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -15,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
+	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
 func TestVpsResourceSchemaModelVersionValidation(t *testing.T) {
@@ -390,5 +396,625 @@ func TestServiceIdFromResourceNameEmpty(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), vpsTestId) {
 		t.Errorf("error %q does not name the resource", err)
+	}
+}
+
+// vpsTestOrderId and vpsTestCartId identify the order of the fake API.
+const (
+	vpsTestOrderId = 99
+	vpsTestCartId  = "cart-1"
+	vpsTestItemId  = 7
+)
+
+// vpsTestFastPolls shortens the waits of the resource for the test.
+func vpsTestFastPolls(t *testing.T) {
+	t.Helper()
+	delay, interval := vpsPollDelay, vpsPollInterval
+	vpsPollDelay, vpsPollInterval = time.Millisecond, time.Millisecond
+	t.Cleanup(func() { vpsPollDelay, vpsPollInterval = delay, interval })
+}
+
+// vpsTestCart holds the bodies of the cart requests of the fake API.
+type vpsTestCart struct {
+	mu             sync.Mutex
+	item           map[string]any
+	configurations []map[string]any
+}
+
+// vpsTestOrderAPI is newVPSTestAPI with the routes of an order of
+// vps-2025-model1 paid by the default payment method and delivered as
+// vpsTestId.
+func vpsTestOrderAPI(t *testing.T) (*vpsTestAPI, *vpsTestCart) {
+	t.Helper()
+	vpsTestFastPolls(t)
+	api := newVPSTestAPI()
+	cart := &vpsTestCart{}
+	decode := func(body []byte) map[string]any {
+		var m map[string]any
+		if err := json.Unmarshal(body, &m); err != nil {
+			t.Errorf("decoding %s: %s", body, err)
+		}
+		return m
+	}
+	orderBase := fmt.Sprintf("/1.0/me/order/%d", vpsTestOrderId)
+	cartBase := "/1.0/order/cart/" + vpsTestCartId
+
+	api.set("/1.0/me", map[string]any{"ovhSubsidiary": "FR"})
+	api.set("/1.0/order/catalog/public/vps", vpsTestCatalog)
+	api.handle("POST /1.0/order/cart", func([]byte) any { return map[string]any{"cartId": vpsTestCartId} })
+	api.handle("POST "+cartBase+"/assign", func([]byte) any { return nil })
+	api.handle("POST "+cartBase+"/vps", func(body []byte) any {
+		cart.mu.Lock()
+		defer cart.mu.Unlock()
+		cart.item = decode(body)
+		return map[string]any{"cartId": vpsTestCartId, "itemId": vpsTestItemId}
+	})
+	api.handle(fmt.Sprintf("POST %s/item/%d/configuration", cartBase, vpsTestItemId), func(body []byte) any {
+		cart.mu.Lock()
+		defer cart.mu.Unlock()
+		cart.configurations = append(cart.configurations, decode(body))
+		return map[string]any{"id": len(cart.configurations)}
+	})
+	api.set("/1.0/me/payment/method", []int64{1})
+	api.handle("POST "+cartBase+"/checkout", func([]byte) any {
+		return map[string]any{"orderId": vpsTestOrderId, "prices": map[string]any{"withoutTax": map[string]any{"value": 5.99}}}
+	})
+	api.handle("POST "+orderBase+"/pay", func([]byte) any { return nil })
+	api.set(orderBase+"/status", "delivered")
+	api.set(orderBase+"/details", []int64{1})
+	api.set(orderBase+"/details/1/extension", map[string]any{"order": map[string]any{"plan": map[string]any{"code": "vps-2025-model1"}}})
+	api.set(orderBase+"/details/1", map[string]any{"domain": vpsTestId, "orderDetailId": 1})
+	return api, cart
+}
+
+// vpsTestPaidOrders is the number of orders paid through the fake API.
+func vpsTestPaidOrders(api *vpsTestAPI) int {
+	return api.count(fmt.Sprintf("POST /1.0/me/order/%d/pay", vpsTestOrderId))
+}
+
+// vpsTestCreateConfig is the configuration of a VPS to create, with overrides
+// (dotted paths).
+func vpsTestCreateConfig(t *testing.T, overrides map[string]attr.Value) tfsdk.Config {
+	t.Helper()
+	values := map[string]attr.Value{
+		"plan_code":                    tfStr("vps-2025-model1"),
+		"location.region":              tfStr("eu-west-gra"),
+		"installation.from.image_name": tfStr("Debian 12"),
+	}
+	maps.Copy(values, overrides)
+	plan := vpsTestPlan(t, values)
+	return tfsdk.Config{Schema: plan.Schema, Raw: plan.Raw}
+}
+
+// vpsTestCreatePlan is the plan of vpsTestCreateConfig as the framework makes
+// it: defaults set, the computed attributes the configuration leaves out
+// unknown.
+func vpsTestCreatePlan(t *testing.T, overrides map[string]attr.Value) tfsdk.Plan {
+	t.Helper()
+	unknown := ovhtypes.TfStringValue{StringValue: types.StringUnknown()}
+	values := map[string]attr.Value{
+		"id":                                  unknown,
+		"plan_code":                           tfStr("vps-2025-model1"),
+		"display_name":                        unknown,
+		"power_state":                         tfStr("ACTIVE"),
+		"location.region":                     tfStr("eu-west-gra"),
+		"installation.from.image_name":        tfStr("Debian 12"),
+		"installation.from.image_id":          unknown,
+		"installation.send_password_by_email": types.BoolValue(true),
+		"options":                             types.ObjectUnknown(vpsOptionsAttrTypes()),
+		"order":                               types.ObjectUnknown(vpsOrderAttrTypes()),
+		"current_state":                       types.ObjectUnknown(vpsCurrentStateAttrTypes()),
+	}
+	maps.Copy(values, overrides)
+	return vpsTestPlan(t, values)
+}
+
+// vpsTestCreate runs the Create of the resource on the plan.
+func vpsTestCreate(t *testing.T, api *vpsTestAPI, plan tfsdk.Plan) *resource.CreateResponse {
+	t.Helper()
+	r := &vpsResource{config: api.config(t)}
+	resp := &resource.CreateResponse{State: tfsdk.State{Schema: plan.Schema, Raw: tftypes.NewValue(plan.Raw.Type(), nil)}}
+	r.Create(context.Background(), resource.CreateRequest{Plan: plan}, resp)
+	return resp
+}
+
+func TestVPSResourceCreate(t *testing.T) {
+	api, cart := vpsTestOrderAPI(t)
+	// Delivered, the VPS is installing for two reads: Create waits for it.
+	gets := 0
+	api.handle("GET "+vpsTestBase, func([]byte) any {
+		gets++
+		state := "running"
+		if gets <= 2 {
+			state = "installing"
+		}
+		return map[string]any{
+			"name": vpsTestId, "displayName": vpsTestId, "state": state, "vcore": 4, "memoryLimit": 8192,
+			"model": map[string]any{"name": "vps-2025-model1", "disk": 160},
+		}
+	})
+
+	resp := vpsTestCreate(t, api, vpsTestCreatePlan(t, nil))
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected create error: %v", resp.Diagnostics)
+	}
+
+	if got, want := cart.item["planCode"], "vps-2025-model1"; got != want {
+		t.Errorf("cart item planCode = %v, want %v", got, want)
+	}
+	if got, want := cart.item["duration"], "P1M"; got != want {
+		t.Errorf("cart item duration = %v, want %v", got, want)
+	}
+	if got, want := cart.item["pricingMode"], "default"; got != want {
+		t.Errorf("cart item pricingMode = %v, want %v", got, want)
+	}
+	configurations := map[string]any{}
+	for _, c := range cart.configurations {
+		configurations[fmt.Sprint(c["label"])] = c["value"]
+	}
+	wantConfigurations := map[string]any{"vps_datacenter": "GRA", "vps_os": "Debian 12"}
+	if !reflect.DeepEqual(configurations, wantConfigurations) {
+		t.Errorf("cart configurations = %v, want %v", configurations, wantConfigurations)
+	}
+	if got := vpsTestPaidOrders(api); got != 1 {
+		t.Errorf("%d orders paid, want 1", got)
+	}
+
+	if !resp.State.Raw.IsFullyKnown() {
+		t.Errorf("the state holds unknown values: %v", resp.State.Raw)
+	}
+	vpsTestCheckValues(t, resp.State.Raw, map[string]string{
+		"id":                                  vpsTestId,
+		"plan_code":                           "vps-2025-model1",
+		"location.region":                     "eu-west-gra",
+		"display_name":                        vpsTestId,
+		"power_state":                         "ACTIVE",
+		"installation.from.image_name":        "Debian 12",
+		"installation.from.image_id":          "<null>",
+		"installation.send_password_by_email": "true",
+		"order.duration":                      "P1M",
+		"order.pricing_mode":                  "default",
+		"order.order_id":                      fmt.Sprint(vpsTestOrderId),
+		"current_state.power_state":           "ACTIVE",
+		"current_state.installation.from.image_name": "Debian 12",
+	})
+	if got := vpsTestBillingCalls(api); got != 0 {
+		t.Errorf("/services called %d times, want 0", got)
+	}
+}
+
+func TestVPSResourceCreateOrderSettings(t *testing.T) {
+	api, cart := vpsTestOrderAPI(t)
+	plan := vpsTestCreatePlan(t, map[string]attr.Value{
+		"order": types.ObjectValueMust(vpsOrderAttrTypes(), map[string]attr.Value{
+			"duration":     tfStr("P12M"),
+			"pricing_mode": tfStr("upfront12"),
+			"order_id":     types.Int64Unknown(),
+		}),
+	})
+	resp := vpsTestCreate(t, api, plan)
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected create error: %v", resp.Diagnostics)
+	}
+	if got, want := cart.item["duration"], "P12M"; got != want {
+		t.Errorf("cart item duration = %v, want %v", got, want)
+	}
+	if got, want := cart.item["pricingMode"], "upfront12"; got != want {
+		t.Errorf("cart item pricingMode = %v, want %v", got, want)
+	}
+	vpsTestCheckValues(t, resp.State.Raw, map[string]string{
+		"order.duration":     "P12M",
+		"order.pricing_mode": "upfront12",
+		"order.order_id":     fmt.Sprint(vpsTestOrderId),
+	})
+}
+
+func TestVPSResourceCreateRegionNotInCatalog(t *testing.T) {
+	api, _ := vpsTestOrderAPI(t)
+	resp := vpsTestCreate(t, api, vpsTestCreatePlan(t, map[string]attr.Value{"location.region": tfStr("eu-west-xyz")}))
+	if !resp.Diagnostics.HasError() {
+		t.Fatal("expected an error for a region the plan cannot be ordered in")
+	}
+	detail := resp.Diagnostics.Errors()[0].Detail()
+	for _, want := range []string{"eu-west-xyz", "eu-west-gra", "eu-west-rbx"} {
+		if !strings.Contains(detail, want) {
+			t.Errorf("detail %q does not list %q", detail, want)
+		}
+	}
+	if got := api.count("POST /1.0/order/cart"); got != 0 {
+		t.Errorf("POST /order/cart called %d times, want 0", got)
+	}
+	if !resp.State.Raw.IsNull() {
+		t.Error("nothing must be saved in the state")
+	}
+}
+
+func TestVPSResourceCreateImageNotInCatalog(t *testing.T) {
+	api, _ := vpsTestOrderAPI(t)
+	resp := vpsTestCreate(t, api, vpsTestCreatePlan(t, map[string]attr.Value{"installation.from.image_name": tfStr("Debian 11")}))
+	if !resp.Diagnostics.HasError() {
+		t.Fatal("expected an error for an image the plan cannot be ordered with")
+	}
+	detail := resp.Diagnostics.Errors()[0].Detail()
+	for _, want := range []string{"Debian 11", "Debian 12", "Ubuntu 24.04"} {
+		if !strings.Contains(detail, want) {
+			t.Errorf("detail %q does not list %q", detail, want)
+		}
+	}
+	if got := api.count("POST /1.0/order/cart"); got != 0 {
+		t.Errorf("POST /order/cart called %d times, want 0", got)
+	}
+}
+
+func TestVPSResourceCreateDeliveryTimeout(t *testing.T) {
+	api, _ := vpsTestOrderAPI(t)
+	api.set(fmt.Sprintf("/1.0/me/order/%d/status", vpsTestOrderId), "delivering")
+	plan := vpsTestCreatePlan(t, map[string]attr.Value{
+		"timeouts": types.ObjectValueMust(vpsTimeoutsAttrTypes(), map[string]attr.Value{
+			"create": tfStr("100ms"),
+			"update": vpsTfStringPtr(nil),
+			"delete": vpsTfStringPtr(nil),
+		}),
+	})
+	resp := vpsTestCreate(t, api, plan)
+	if !resp.Diagnostics.HasError() {
+		t.Fatal("expected an error when the order is not delivered in time")
+	}
+	if detail := resp.Diagnostics.Errors()[0].Detail(); !strings.Contains(detail, "terraform untaint") {
+		t.Errorf("detail %q does not tell to untaint the resource", detail)
+	}
+	if !resp.State.Raw.IsFullyKnown() {
+		t.Errorf("the state holds unknown values: %v", resp.State.Raw)
+	}
+	vpsTestCheckValues(t, resp.State.Raw, map[string]string{
+		"id":             "<null>",
+		"order.order_id": fmt.Sprint(vpsTestOrderId),
+	})
+
+	// Delivered later: the next Read waits for it again, and fills the state.
+	api.set(fmt.Sprintf("/1.0/me/order/%d/status", vpsTestOrderId), "delivered")
+	read := vpsTestRead(t, api, resp.State)
+	if read.Diagnostics.HasError() {
+		t.Fatalf("unexpected read error: %v", read.Diagnostics)
+	}
+	vpsTestCheckValues(t, read.State.Raw, map[string]string{
+		"id":                         vpsTestId,
+		"order.order_id":             fmt.Sprint(vpsTestOrderId),
+		"current_state.display_name": "web-01",
+	})
+	if got := vpsTestPaidOrders(api); got != 1 {
+		t.Errorf("%d orders paid, want 1", got)
+	}
+}
+
+// vpsTestOrderStatusPath is the status route of the order of the fake API.
+var vpsTestOrderStatusPath = fmt.Sprintf("/1.0/me/order/%d/status", vpsTestOrderId)
+
+// vpsTestOrderedState is the state Create leaves when the order of the fake
+// API is not delivered in time: its order id, no id.
+func vpsTestOrderedState(t *testing.T) tfsdk.State {
+	t.Helper()
+	return vpsTestFullState(t, map[string]attr.Value{
+		"id": nil,
+		"order": types.ObjectValueMust(vpsOrderAttrTypes(), map[string]attr.Value{
+			"duration":     tfStr("P1M"),
+			"pricing_mode": tfStr("default"),
+			"order_id":     types.Int64Value(vpsTestOrderId),
+		}),
+	})
+}
+
+// Read never waits: a plan does not block on an order being delivered.
+func TestVPSResourceReadDeliveryStillPending(t *testing.T) {
+	api, _ := vpsTestOrderAPI(t)
+	api.set(vpsTestOrderStatusPath, "delivering")
+	state := vpsTestOrderedState(t)
+	resp := vpsTestRead(t, api, state)
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected read error: %v", resp.Diagnostics)
+	}
+	warnings := resp.Diagnostics.Warnings()
+	if len(warnings) != 1 {
+		t.Fatalf("got %d warnings, want 1: %v", len(warnings), resp.Diagnostics)
+	}
+	if text := warnings[0].Summary() + warnings[0].Detail(); !strings.Contains(text, fmt.Sprint(vpsTestOrderId)) {
+		t.Errorf("warning %q does not name the order", text)
+	}
+	if !resp.State.Raw.Equal(state.Raw) {
+		t.Error("the state must stay unchanged")
+	}
+	if got := api.count("GET " + vpsTestOrderStatusPath); got != 1 {
+		t.Errorf("GET /me/order/{orderId}/status called %d times, want 1", got)
+	}
+}
+
+// Delivered but still installing: Read sets the id and reads the VPS as it is,
+// without waiting for the installation.
+func TestVPSResourceReadDeliveredOrder(t *testing.T) {
+	api, _ := vpsTestOrderAPI(t)
+	api.set(vpsTestBase, map[string]any{
+		"name": vpsTestId, "displayName": vpsTestId, "state": "installing", "vcore": 4, "memoryLimit": 8192,
+		"model": map[string]any{"name": "vps-2025-model1", "disk": 160},
+	})
+	resp := vpsTestRead(t, api, vpsTestOrderedState(t))
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected read error: %v", resp.Diagnostics)
+	}
+	vpsTestCheckValues(t, resp.State.Raw, map[string]string{
+		"id":                        vpsTestId,
+		"order.order_id":            fmt.Sprint(vpsTestOrderId),
+		"power_state":               "ACTIVE",
+		"current_state.power_state": "UNKNOWN",
+	})
+	if got := api.count("GET " + vpsTestOrderStatusPath); got != 1 {
+		t.Errorf("GET /me/order/{orderId}/status called %d times, want 1", got)
+	}
+	if got := api.count("GET " + vpsTestBase); got != 1 {
+		t.Errorf("GET /vps/{serviceName} called %d times, want 1", got)
+	}
+}
+
+// Delivered, but API v1 does not serve the VPS yet: the id is kept, so that the
+// next apply does not order a new VPS.
+func TestVPSResourceReadDeliveredOrderNotReadableYet(t *testing.T) {
+	api, _ := vpsTestOrderAPI(t)
+	api.set(vpsTestBase, nil)
+	resp := vpsTestRead(t, api, vpsTestOrderedState(t))
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected read error: %v", resp.Diagnostics)
+	}
+	if len(resp.Diagnostics.Warnings()) != 1 {
+		t.Errorf("want 1 warning: %v", resp.Diagnostics)
+	}
+	if resp.State.Raw.IsNull() {
+		t.Fatal("the VPS of a delivered order must stay in the state")
+	}
+	vpsTestCheckValues(t, resp.State.Raw, map[string]string{
+		"id":             vpsTestId,
+		"order.order_id": fmt.Sprint(vpsTestOrderId),
+	})
+}
+
+func TestVPSResourceModifyPlanRefusesPostOrderSettings(t *testing.T) {
+	cases := []struct {
+		attribute string
+		value     attr.Value
+		refused   bool
+	}{
+		{"installation.from.image_id", tfStr("11111111-2222-4333-8444-555555555555"), true},
+		{"installation.ssh_key", tfStr("ssh-ed25519 AAAA"), true},
+		{"installation.post_installation_script", tfStr("#!/bin/sh"), true},
+		{"installation.send_password_by_email", types.BoolValue(false), true},
+		{"installation.send_password_by_email", types.BoolValue(true), false},
+		{"power_state", tfStr("SHUTOFF"), true},
+		{"power_state", tfStr("ACTIVE"), false},
+		{"display_name", tfStr("web-01"), true},
+		{"options.auto_backup.cron", tfStr("0 3 * * *"), true},
+		{"order.duration", tfStr("P12M"), false},
+	}
+	ctx := context.Background()
+	r := &vpsResource{}
+	for _, c := range cases {
+		t.Run(fmt.Sprintf("%s=%v", c.attribute, c.value), func(t *testing.T) {
+			config := vpsTestCreateConfig(t, map[string]attr.Value{c.attribute: c.value})
+			plan := tfsdk.Plan{Schema: config.Schema, Raw: config.Raw}
+			null := tftypes.NewValue(config.Raw.Type(), nil)
+
+			// Creation.
+			resp := &resource.ModifyPlanResponse{Plan: plan}
+			r.ModifyPlan(ctx, resource.ModifyPlanRequest{
+				Config: config,
+				Plan:   plan,
+				State:  tfsdk.State{Schema: config.Schema, Raw: null},
+			}, resp)
+			if got := resp.Diagnostics.HasError(); got != c.refused {
+				t.Fatalf("refused = %t, want %t: %v", got, c.refused, resp.Diagnostics)
+			}
+			if c.refused {
+				d := resp.Diagnostics.Errors()[0]
+				if !strings.Contains(d.Detail(), c.attribute) || !strings.Contains(d.Detail(), "create the VPS without it, then set it") {
+					t.Errorf("detail %q does not name %s or the way out", d.Detail(), c.attribute)
+				}
+				if strings.Contains(d.Detail(), "PCINT") {
+					t.Errorf("detail %q names a ticket", d.Detail())
+				}
+			}
+
+			// The VPS exists: nothing to refuse here.
+			state := vpsTestFullState(t, nil)
+			resp = &resource.ModifyPlanResponse{Plan: plan}
+			r.ModifyPlan(ctx, resource.ModifyPlanRequest{Config: config, Plan: plan, State: state}, resp)
+			if resp.Diagnostics.HasError() {
+				t.Errorf("unexpected error when the VPS exists: %v", resp.Diagnostics)
+			}
+		})
+	}
+}
+
+// vpsTestUpdate runs the Update of the resource from the state to the plan,
+// the configuration being the plan.
+func vpsTestUpdate(t *testing.T, api *vpsTestAPI, state tfsdk.State, plan tfsdk.State) *resource.UpdateResponse {
+	t.Helper()
+	r := &vpsResource{config: api.config(t)}
+	resp := &resource.UpdateResponse{State: tfsdk.State{Schema: state.Schema, Raw: state.Raw.Copy()}}
+	r.Update(context.Background(), resource.UpdateRequest{
+		Plan:   tfsdk.Plan{Schema: plan.Schema, Raw: plan.Raw},
+		Config: tfsdk.Config{Schema: plan.Schema, Raw: plan.Raw},
+		State:  state,
+	}, resp)
+	return resp
+}
+
+// vpsTestRequests is the number of requests the fake API got.
+func vpsTestRequests(api *vpsTestAPI) int {
+	api.mu.Lock()
+	defer api.mu.Unlock()
+	return len(api.requests)
+}
+
+func TestVPSResourceUpdateTimeouts(t *testing.T) {
+	api := newVPSTestAPI()
+	state := vpsTestFullState(t, nil)
+	plan := vpsTestFullState(t, map[string]attr.Value{
+		"timeouts": types.ObjectValueMust(vpsTimeoutsAttrTypes(), map[string]attr.Value{
+			"create": tfStr("3h"),
+			"update": vpsTfStringPtr(nil),
+			"delete": vpsTfStringPtr(nil),
+		}),
+	})
+	resp := vpsTestUpdate(t, api, state, plan)
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected update error: %v", resp.Diagnostics)
+	}
+	if !resp.State.Raw.Equal(plan.Raw) {
+		t.Errorf("state = %v, want the plan %v", resp.State.Raw, plan.Raw)
+	}
+	if got := vpsTestRequests(api); got != 0 {
+		t.Errorf("%d API calls, want 0", got)
+	}
+}
+
+func TestVPSResourceUpdateSshKeyAfterImport(t *testing.T) {
+	api := newVPSTestAPI()
+	installation := func(sshKey attr.Value) attr.Value {
+		return types.ObjectValueMust(vpsResourceInstallationAttrTypes(), map[string]attr.Value{
+			"from": types.ObjectValueMust(vpsInstallationFromAttrTypes(), map[string]attr.Value{
+				"image_id":   tfStr("3c1e5a4e-8d55-4f39-9b5c-9d9c3a1b2c3d"),
+				"image_name": tfStr("Debian 12"),
+			}),
+			"ssh_key":                  sshKey,
+			"post_installation_script": vpsTfStringPtr(nil),
+			"send_password_by_email":   types.BoolValue(true),
+		})
+	}
+	state := vpsTestFullState(t, map[string]attr.Value{"installation": installation(vpsTfStringPtr(nil))})
+	plan := vpsTestFullState(t, map[string]attr.Value{"installation": installation(tfStr("ssh-ed25519 AAAA"))})
+	resp := vpsTestUpdate(t, api, state, plan)
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected update error: %v", resp.Diagnostics)
+	}
+	vpsTestCheckValues(t, resp.State.Raw, map[string]string{"installation.ssh_key": "ssh-ed25519 AAAA"})
+	if got := vpsTestRequests(api); got != 0 {
+		t.Errorf("%d API calls, want 0", got)
+	}
+}
+
+func TestVPSResourceUpdateKeepsComputedFromState(t *testing.T) {
+	api := newVPSTestAPI()
+	state := vpsTestFullState(t, nil)
+	plan := vpsTestFullState(t, map[string]attr.Value{
+		"order": types.ObjectValueMust(vpsOrderAttrTypes(), map[string]attr.Value{
+			"duration":     tfStr("P12M"),
+			"pricing_mode": tfStr("default"),
+			"order_id":     types.Int64Unknown(),
+		}),
+	})
+	resp := vpsTestUpdate(t, api, state, plan)
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected update error: %v", resp.Diagnostics)
+	}
+	if !resp.State.Raw.IsFullyKnown() {
+		t.Errorf("the state holds unknown values: %v", resp.State.Raw)
+	}
+	vpsTestCheckValues(t, resp.State.Raw, map[string]string{"order.duration": "P12M", "order.order_id": "42"})
+}
+
+func TestVPSResourceUpdateDisplayName(t *testing.T) {
+	api := newVPSTestAPI()
+	state := vpsTestFullState(t, nil)
+	plan := vpsTestFullState(t, map[string]attr.Value{"display_name": tfStr("web-02")})
+	resp := vpsTestUpdate(t, api, state, plan)
+	if !resp.Diagnostics.HasError() {
+		t.Fatal("expected an error: updating a VPS is not supported yet")
+	}
+	if summary := resp.Diagnostics.Errors()[0].Summary(); summary != "Updating a VPS is not supported yet" {
+		t.Errorf("summary = %q", summary)
+	}
+	if !resp.State.Raw.Equal(state.Raw) {
+		t.Error("the state must stay unchanged")
+	}
+	if got := vpsTestRequests(api); got != 0 {
+		t.Errorf("%d API calls, want 0", got)
+	}
+}
+
+// vpsTestTerminationAPI is newVPSTestAPI with the termination routes of
+// vpsTestId: POST /terminate sends the termination email.
+func vpsTestTerminationAPI(t *testing.T) (*vpsTestAPI, *[]string) {
+	t.Helper()
+	api := newVPSTestAPI()
+	var tokens []string
+	api.set("/1.0/me/notification/email/history", []int64{1})
+	api.set("/1.0/me/notification/email/history/1", map[string]any{"id": 1, "body": "Welcome"})
+	api.handle("POST "+vpsTestBase+"/terminate", func([]byte) any {
+		api.set("/1.0/me/notification/email/history", []int64{1, 2})
+		api.set("/1.0/me/notification/email/history/2", map[string]any{
+			"id":   2,
+			"body": "Termination of " + vpsTestId + ": https://www.ovh.com/manager/#/billing/confirmTerminate?id=abc123&token=tok456 to confirm",
+		})
+		return map[string]any{}
+	})
+	api.handle("POST "+vpsTestBase+"/confirmTermination", func(body []byte) any {
+		var opts ConfirmTerminationOpts
+		_ = json.Unmarshal(body, &opts)
+		tokens = append(tokens, opts.Token)
+		return "terminated"
+	})
+	return api, &tokens
+}
+
+func vpsTestDelete(t *testing.T, api *vpsTestAPI, state tfsdk.State) *resource.DeleteResponse {
+	t.Helper()
+	r := &vpsResource{config: api.config(t)}
+	resp := &resource.DeleteResponse{State: tfsdk.State{Schema: state.Schema, Raw: state.Raw.Copy()}}
+	r.Delete(context.Background(), resource.DeleteRequest{State: state}, resp)
+	return resp
+}
+
+func TestVPSResourceDelete(t *testing.T) {
+	api, tokens := vpsTestTerminationAPI(t)
+	resp := vpsTestDelete(t, api, vpsTestFullState(t, nil))
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected delete error: %v", resp.Diagnostics)
+	}
+	if !reflect.DeepEqual(*tokens, []string{"tok456"}) {
+		t.Errorf("confirmation tokens = %v, want [tok456]", *tokens)
+	}
+}
+
+func TestVPSResourceDeleteExpired(t *testing.T) {
+	api, tokens := vpsTestTerminationAPI(t)
+	api.handle("POST "+vpsTestBase+"/terminate", func([]byte) any { return vpsTestExpired })
+	resp := vpsTestDelete(t, api, vpsTestFullState(t, nil))
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected delete error: %v", resp.Diagnostics)
+	}
+	if len(*tokens) != 0 {
+		t.Errorf("termination confirmed with %v, want no confirmation", *tokens)
+	}
+}
+
+func TestVPSResourceDeleteNotDelivered(t *testing.T) {
+	api, _ := vpsTestTerminationAPI(t)
+	resp := vpsTestDelete(t, api, vpsTestFullState(t, map[string]attr.Value{"id": nil}))
+	if !resp.Diagnostics.HasError() {
+		t.Fatal("expected an error: the VPS of the order is not delivered")
+	}
+	if got := api.count("POST " + vpsTestBase + "/terminate"); got != 0 {
+		t.Errorf("POST /terminate called %d times, want 0", got)
+	}
+}
+
+// A value unknown at plan time, such as a variable from another resource, is
+// refused by Create, before the order.
+func TestVPSResourceCreateRefusesPostOrderSettings(t *testing.T) {
+	api, _ := vpsTestOrderAPI(t)
+	plan := vpsTestCreatePlan(t, map[string]attr.Value{"installation.ssh_key": tfStr("ssh-ed25519 AAAA")})
+	resp := vpsTestCreate(t, api, plan)
+	if !resp.Diagnostics.HasError() {
+		t.Fatal("expected installation.ssh_key to be refused")
+	}
+	if got := api.count("POST /1.0/order/cart"); got != 0 {
+		t.Errorf("POST /order/cart called %d times, want 0", got)
 	}
 }

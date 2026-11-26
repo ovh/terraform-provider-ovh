@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -21,12 +22,15 @@ import (
 const vpsTestId = "vps-1a2b3c4d.vps.ovh.net"
 
 // vpsTestAPI is a fake API v1 serving VPS, plus GET /v2/location. Each route
-// answers the JSON value stored under its path, a vpsTestStatus error, or 404
-// when there is none.
+// answers the JSON value its handler returns, or else the one stored under its
+// path, a vpsTestStatus error, or 404 when there is none.
 type vpsTestAPI struct {
 	mu        sync.Mutex
 	responses map[string]any
-	requests  []string
+	// handlers answers "METHOD path" with the request body, for the routes
+	// that answer another method than GET or change over time.
+	handlers map[string]func(body []byte) any
+	requests []string
 	// delays holds the time each path waits before answering.
 	delays map[string]time.Duration
 	// inFlight and maxInFlight count the GET /vps/{serviceName} being served.
@@ -84,6 +88,17 @@ func (a *vpsTestAPI) set(path string, response any) {
 	a.responses[path] = response
 }
 
+// handle answers request ("METHOD path") with fn, before the stored responses.
+// fn may change the fake API.
+func (a *vpsTestAPI) handle(request string, fn func(body []byte) any) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if a.handlers == nil {
+		a.handlers = map[string]func(body []byte) any{}
+	}
+	a.handlers[request] = fn
+}
+
 func (a *vpsTestAPI) count(request string) int {
 	a.mu.Lock()
 	defer a.mu.Unlock()
@@ -116,8 +131,13 @@ func (a *vpsTestAPI) config(t *testing.T) *Config {
 			return
 		}
 		vpsRoute := strings.HasPrefix(r.URL.Path, "/1.0/vps/") && strings.Count(r.URL.Path, "/") == 3
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			t.Errorf("reading the body of %s %s: %s", r.Method, r.URL.Path, err)
+		}
 		a.mu.Lock()
 		a.requests = append(a.requests, r.Method+" "+r.URL.Path)
+		handler := a.handlers[r.Method+" "+r.URL.Path]
 		response, found := a.responses[r.URL.Path]
 		delay := a.delays[r.URL.Path]
 		if vpsRoute {
@@ -133,8 +153,11 @@ func (a *vpsTestAPI) config(t *testing.T) *Config {
 			a.mu.Unlock()
 		}
 
+		if handler != nil {
+			response, found = handler(body), true
+		}
 		w.Header().Set("Content-Type", "application/json")
-		if r.Method != http.MethodGet || !found {
+		if (r.Method != http.MethodGet && handler == nil) || !found {
 			w.WriteHeader(http.StatusNotFound)
 			fmt.Fprint(w, `{"class": "Client::NotFound", "message": "The requested object does not exist"}`)
 			return

@@ -24,13 +24,21 @@ func vpsRequiresReplaceIfPriorKnown() planmodifier.String {
 	)
 }
 
-// vpsUpdateIgnoredAttributes are the root attributes whose change does not
-// update the VPS.
-var vpsUpdateIgnoredAttributes = map[string]bool{
-	"id":            true,
-	"order":         true,
-	"timeouts":      true,
-	"current_state": true,
+// vpsChangeWithoutEffect tells whether changing the attribute at the dotted
+// path, whose state value is state, leaves the VPS as it is: the change is
+// only recorded in the state. Update and the plan of current_state share it.
+func vpsChangeWithoutEffect(path string, state tftypes.Value) bool {
+	switch path {
+	case "id", "current_state", "order", "timeouts", "installation.send_password_by_email":
+		return true
+	case "plan_code", "location.region", "installation.ssh_key", "installation.post_installation_script", "power_state":
+		// Null after an import or the migration of the state of the former
+		// ovh_vps, or for power_state, read during a transitional state: the
+		// VPS already has a value, which the state did not know. The next Read
+		// reads the power state.
+		return state.IsNull()
+	}
+	return false
 }
 
 // vpsCurrentStatePlanModifier keeps current_state from the state, unless the
@@ -58,43 +66,52 @@ func (vpsCurrentStateModifier) PlanModifyObject(ctx context.Context, req planmod
 	resp.PlanValue = req.StateValue
 }
 
-// vpsUpdatePlanned tells whether the plan changes an attribute of the VPS.
+// vpsUpdatePlanned tells whether the plan changes the VPS, which takes an API
+// call, rather than only the state (vpsChangeWithoutEffect).
 func vpsUpdatePlanned(plan, state, config tftypes.Value) bool {
-	var pm, sm, cm map[string]tftypes.Value
-	if plan.As(&pm) != nil || state.As(&sm) != nil || config.As(&cm) != nil {
-		return true
-	}
-	for name, p := range pm {
-		if !vpsUpdateIgnoredAttributes[name] && vpsValueChanged(p, sm[name], cm[name]) {
-			return true
-		}
-	}
-	return false
+	return vpsValueChanged("", plan, state, config)
 }
 
 // vpsValueChanged compares a plan value with the state value, object attribute
 // by object attribute. Once any attribute differs from the state, the framework
 // marks every computed attribute the configuration leaves out as unknown: such
 // an unknown is not a change the user asked for, so it does not count.
-func vpsValueChanged(plan, state, config tftypes.Value) bool {
+func vpsValueChanged(path string, plan, state, config tftypes.Value) bool {
+	if path != "" && vpsChangeWithoutEffect(path, state) {
+		return false
+	}
 	if !plan.IsKnown() {
 		return !config.IsNull()
 	}
-	if _, ok := plan.Type().(tftypes.Object); !ok || plan.IsNull() || state.IsNull() {
+	if _, ok := plan.Type().(tftypes.Object); !ok || plan.IsNull() {
 		return !plan.Equal(state)
 	}
 
 	var pm, sm, cm map[string]tftypes.Value
-	if plan.As(&pm) != nil || state.As(&sm) != nil {
+	if plan.As(&pm) != nil {
+		return true
+	}
+	if state.IsKnown() && !state.IsNull() && state.As(&sm) != nil {
 		return true
 	}
 	if config.IsKnown() && !config.IsNull() && config.As(&cm) != nil {
 		return true
 	}
 	for name, p := range pm {
-		if vpsValueChanged(p, sm[name], cm[name]) {
+		s, ok := sm[name]
+		if !ok {
+			s = tftypes.NewValue(p.Type(), nil)
+		}
+		if vpsValueChanged(vpsJoinPath(path, name), p, s, cm[name]) {
 			return true
 		}
 	}
 	return false
+}
+
+func vpsJoinPath(path, name string) string {
+	if path == "" {
+		return name
+	}
+	return path + "." + name
 }
