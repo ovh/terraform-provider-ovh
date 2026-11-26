@@ -763,8 +763,10 @@ func TestVPSResourceModifyPlanRefusesPostOrderSettings(t *testing.T) {
 			}
 			if c.refused {
 				d := resp.Diagnostics.Errors()[0]
-				if !strings.Contains(d.Detail(), c.attribute) || !strings.Contains(d.Detail(), "create the VPS without it, then set it") {
-					t.Errorf("detail %q does not name %s or the way out", d.Detail(), c.attribute)
+				// Setting it after the creation is refused too, or only
+				// recorded: the detail does not tell to set it then.
+				if !strings.HasPrefix(d.Detail(), "Setting "+c.attribute) || !strings.HasSuffix(d.Detail(), " when creating a VPS is not supported yet") {
+					t.Errorf("detail %q, want \"Setting %s… when creating a VPS is not supported yet\"", d.Detail(), c.attribute)
 				}
 				if strings.Contains(d.Detail(), "PCINT") {
 					t.Errorf("detail %q names a ticket", d.Detail())

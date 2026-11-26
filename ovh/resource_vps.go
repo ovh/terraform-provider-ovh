@@ -238,7 +238,7 @@ func (m *VPSResourceModel) createRefusals() diag.Diagnostics {
 	refuse := func(p path.Path, name string) {
 		diags.AddAttributeError(p,
 			"Not supported when creating a VPS",
-			fmt.Sprintf("Setting %s when creating a VPS is not supported yet: create the VPS without it, then set it", name),
+			fmt.Sprintf("Setting %s when creating a VPS is not supported yet", name),
 		)
 	}
 	set := func(value attr.Value) bool {
