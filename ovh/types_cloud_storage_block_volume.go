@@ -2,6 +2,7 @@ package ovh
 
 import (
 	"context"
+	"maps"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -139,6 +140,21 @@ func BlockVolumeEncryptionKMSAttrTypes() map[string]attr.Type {
 		"domain_id":      ovhtypes.TfStringType{},
 		"service_key_id": ovhtypes.TfStringType{},
 	}
+}
+
+// The plan leaves enabled and kms unknown when the config omits them; a response
+// without encryption must not keep them unknown after apply.
+func blockVolumeEncryptionWithUnknownsAsNull(encryption types.Object) types.Object {
+	attrs := maps.Clone(encryption.Attributes())
+	if attrs["enabled"].IsUnknown() {
+		attrs["enabled"] = types.BoolNull()
+	}
+	if attrs["kms"].IsUnknown() {
+		attrs["kms"] = types.ObjectNull(BlockVolumeEncryptionKMSAttrTypes())
+	}
+
+	obj, _ := types.ObjectValue(BlockVolumeEncryptionAttrTypes(), attrs)
+	return obj
 }
 
 // buildBlockVolumeEncryptionKMSObject builds the encryption.kms object value from the API
@@ -377,6 +393,8 @@ func (m *CloudStorageBlockVolumeModel) MergeWith(ctx context.Context, response *
 			m.Encryption = encryptionObj
 		} else if m.Encryption.IsUnknown() {
 			m.Encryption = types.ObjectNull(BlockVolumeEncryptionAttrTypes())
+		} else if !m.Encryption.IsNull() {
+			m.Encryption = blockVolumeEncryptionWithUnknownsAsNull(m.Encryption)
 		}
 
 		// Preserve create_from in state if it was set. Unset fields must stay

@@ -8,9 +8,13 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
@@ -156,5 +160,175 @@ func TestCloudStorageBlockVolumeSchema_EncryptionEnabledRequiresReplace(t *testi
 
 	if len(enabledAttr.PlanModifiers) == 0 {
 		t.Fatal("expected encryption.enabled to have RequiresReplace plan modifier")
+	}
+}
+
+func blockVolumeKMSObject(domainID, serviceKeyID string) types.Object {
+	return types.ObjectValueMust(
+		BlockVolumeEncryptionKMSAttrTypes(),
+		map[string]attr.Value{
+			"domain_id":      ovhtypes.NewTfStringValue(domainID),
+			"service_key_id": ovhtypes.NewTfStringValue(serviceKeyID),
+		},
+	)
+}
+
+// Runs the modifiers in schema order, the way the framework chains them on one attribute.
+func planBlockVolumeKMS(t *testing.T, configValue, planValue, stateValue types.Object) (types.Object, bool) {
+	t.Helper()
+
+	r := &cloudStorageBlockVolumeResource{}
+	var schemaResp resource.SchemaResponse
+	r.Schema(context.Background(), resource.SchemaRequest{}, &schemaResp)
+
+	kmsAttr := schemaResp.Schema.Attributes["encryption"].(schema.SingleNestedAttribute).Attributes["kms"].(schema.SingleNestedAttribute)
+	if !kmsAttr.Optional || !kmsAttr.Computed {
+		t.Fatalf("encryption.kms must be Optional+Computed, got Optional=%t Computed=%t", kmsAttr.Optional, kmsAttr.Computed)
+	}
+
+	existingResource := tftypes.NewValue(tftypes.Object{AttributeTypes: map[string]tftypes.Type{}}, map[string]tftypes.Value{})
+	requiresReplace := false
+	for _, modifier := range kmsAttr.PlanModifiers {
+		req := planmodifier.ObjectRequest{
+			Path:        path.Root("encryption").AtName("kms"),
+			ConfigValue: configValue,
+			PlanValue:   planValue,
+			StateValue:  stateValue,
+			Plan:        tfsdk.Plan{Raw: existingResource},
+			State:       tfsdk.State{Raw: existingResource},
+		}
+		resp := &planmodifier.ObjectResponse{PlanValue: planValue}
+		modifier.PlanModifyObject(context.Background(), req, resp)
+		if resp.Diagnostics.HasError() {
+			t.Fatalf("plan modifier failed: %v", resp.Diagnostics)
+		}
+		planValue = resp.PlanValue
+		requiresReplace = requiresReplace || resp.RequiresReplace
+	}
+
+	return planValue, requiresReplace
+}
+
+func TestCloudStorageBlockVolumeSchema_EncryptionKMS(t *testing.T) {
+	keyInState := blockVolumeKMSObject("11111111-1111-1111-1111-111111111111", "22222222-2222-2222-2222-222222222222")
+	otherKey := blockVolumeKMSObject("33333333-3333-3333-3333-333333333333", "44444444-4444-4444-4444-444444444444")
+	kmsNull := types.ObjectNull(BlockVolumeEncryptionKMSAttrTypes())
+	kmsUnknown := types.ObjectUnknown(BlockVolumeEncryptionKMSAttrTypes())
+
+	tests := []struct {
+		name                string
+		configValue         types.Object
+		planValue           types.Object
+		stateValue          types.Object
+		wantPlanValue       types.Object
+		wantRequiresReplace bool
+	}{
+		{
+			name:          "key filled by the API from a source backup or snapshot, omitted in config",
+			configValue:   kmsNull,
+			planValue:     kmsUnknown,
+			stateValue:    keyInState,
+			wantPlanValue: keyInState,
+		},
+		{
+			name:          "no key anywhere",
+			configValue:   kmsNull,
+			planValue:     kmsUnknown,
+			stateValue:    kmsNull,
+			wantPlanValue: kmsNull,
+		},
+		{
+			name:          "configured key unchanged",
+			configValue:   keyInState,
+			planValue:     keyInState,
+			stateValue:    keyInState,
+			wantPlanValue: keyInState,
+		},
+		{
+			name:                "configured key changed",
+			configValue:         otherKey,
+			planValue:           otherKey,
+			stateValue:          keyInState,
+			wantPlanValue:       otherKey,
+			wantRequiresReplace: true,
+		},
+		{
+			name:                "key added to a volume without one",
+			configValue:         otherKey,
+			planValue:           otherKey,
+			stateValue:          kmsNull,
+			wantPlanValue:       otherKey,
+			wantRequiresReplace: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			gotPlanValue, gotRequiresReplace := planBlockVolumeKMS(t, tc.configValue, tc.planValue, tc.stateValue)
+
+			if !gotPlanValue.Equal(tc.wantPlanValue) {
+				t.Fatalf("plan value: got %s, want %s", gotPlanValue, tc.wantPlanValue)
+			}
+			if gotRequiresReplace != tc.wantRequiresReplace {
+				t.Fatalf("requires replace: got %t, want %t", gotRequiresReplace, tc.wantRequiresReplace)
+			}
+		})
+	}
+}
+
+func TestCloudStorageBlockVolumeMergeWith_EncryptionKMS(t *testing.T) {
+	planWithKMSOmitted := types.ObjectValueMust(
+		BlockVolumeEncryptionAttrTypes(),
+		map[string]attr.Value{
+			"enabled": types.BoolValue(true),
+			"kms":     types.ObjectUnknown(BlockVolumeEncryptionKMSAttrTypes()),
+		},
+	)
+	inheritedKey := &CloudStorageBlockVolumeEncryptionKMS{
+		DomainID:     "11111111-1111-1111-1111-111111111111",
+		ServiceKeyID: "22222222-2222-2222-2222-222222222222",
+	}
+
+	tests := []struct {
+		name                 string
+		targetSpecEncryption *CloudStorageBlockVolumeEncryption
+		wantKMS              types.Object
+	}{
+		{
+			name:                 "API returns the inherited key",
+			targetSpecEncryption: &CloudStorageBlockVolumeEncryption{Enabled: true, Kms: inheritedKey},
+			wantKMS:              blockVolumeKMSObject(inheritedKey.DomainID, inheritedKey.ServiceKeyID),
+		},
+		{
+			name:                 "API returns encryption without a key",
+			targetSpecEncryption: &CloudStorageBlockVolumeEncryption{Enabled: true},
+			wantKMS:              types.ObjectNull(BlockVolumeEncryptionKMSAttrTypes()),
+		},
+		{
+			name:                 "API returns no encryption",
+			targetSpecEncryption: nil,
+			wantKMS:              types.ObjectNull(BlockVolumeEncryptionKMSAttrTypes()),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			model := CloudStorageBlockVolumeModel{Encryption: planWithKMSOmitted}
+
+			model.MergeWith(context.Background(), &CloudStorageBlockVolumeAPIResponse{
+				TargetSpec: &CloudStorageBlockVolumeTarget{
+					Location:   &CloudStorageBlockVolumeLocation{Region: "GRA9"},
+					Encryption: tc.targetSpecEncryption,
+				},
+			})
+
+			attrs := model.Encryption.Attributes()
+			if !attrs["kms"].Equal(tc.wantKMS) {
+				t.Fatalf("encryption.kms: got %s, want %s", attrs["kms"], tc.wantKMS)
+			}
+			if !attrs["enabled"].Equal(types.BoolValue(true)) {
+				t.Fatalf("encryption.enabled: got %s, want true", attrs["enabled"])
+			}
+		})
 	}
 }
