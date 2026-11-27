@@ -201,7 +201,7 @@ Check the first `terraform plan` after the migration, and after an import:
 
 - When `plan_code` or `location.region` in your configuration differ from the ones of the VPS, Terraform plans to replace it, which terminates the VPS and orders a new one. This happens when the VPS changed plan since its order, or when the region you wrote is not the one of the VPS. Set them to the values of the state, shown by `terraform state show`.
 - Any other difference, such as `display_name`, `power_state`, `installation.from` or `installation.ssh_key`, is shown as an update in place, and `terraform apply` fails with `Updating a VPS is not supported yet`: this version of the provider does not update a VPS. Set these attributes to the values of the state. `installation.from.image_name` is the image the VPS runs.
-- Changes of `timeouts`, `order` and `installation.send_password_by_email` are only recorded in the state, and so are `installation.ssh_key` and `installation.post_installation_script` when the state has none.
+- Changes of `timeouts`, `order` and `installation.send_password_by_email` are only recorded in the state. So are `installation.ssh_key` and `installation.post_installation_script` when the state has none, since they are never read back, and `plan_code`, `location.region`, `power_state` and `installation.from` when they could not be read from the VPS.
 
 A plan with no change means the configuration matches the VPS.
 
@@ -219,4 +219,4 @@ On an existing VPS, `terraform apply` refuses every change but the ones recorded
 terraform untaint ovh_vps.web
 ```
 
-The next `terraform plan` or `terraform apply` checks the delivery once, without waiting, and fills `id` once the VPS is delivered.
+The same goes when `terraform apply` is interrupted while it waits, or fails on any other error after the payment. The next `terraform plan` or `terraform apply` checks the delivery once, without waiting, and fills `id` once the VPS is delivered. When the order is cancelled, they fail with `VPS order … is cancelled`: remove the resource from the state with `terraform state rm`.

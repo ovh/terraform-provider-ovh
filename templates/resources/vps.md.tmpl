@@ -18,7 +18,7 @@ The attributes at the root hold the settings you requested for the VPS, and `cur
 
 ~> **WARNING** `BANK_ACCOUNT` is not supported anymore, please update your default payment method to `SEPA_DIRECT_DEBIT`.
 
-~> **WARNING** Changing `plan_code` or `location.region` from one value to another terminates the VPS and orders a new one. Check every plan that shows `ovh_vps` must be replaced.
+~> **WARNING** Changing `plan_code` or `location.region` terminates the VPS and orders a new one. This includes the first plan after an import or the migration of the state, when your configuration differs from the values read from the VPS. Check every plan that shows `ovh_vps` must be replaced.
 
 ## Example Usage
 
@@ -30,7 +30,7 @@ The attributes at the root hold the settings you requested for the VPS, and `cur
 
 `terraform apply` orders the VPS with the subsidiary of your account and the default payment method, then waits for its delivery and its installation, for at most `timeouts.create` (60 minutes by default).
 
-Before ordering, `terraform apply` checks in the order catalog that `plan_code` can be ordered in `location.region` with `installation.from.image_name`. When it cannot, the error lists the possible regions or images, and nothing is ordered.
+`terraform plan` checks in the order catalog that `plan_code` can be ordered in `location.region` with `installation.from.image_name`, and `terraform apply` checks it again before ordering, for the values unknown at plan time. When it cannot, the error lists the possible regions or images, and nothing is ordered. A replacement that cannot be ordered thus fails before the VPS is terminated.
 
 `location.region` is an OVHcloud region code, such as `eu-west-gra`, among the regions of `GET /v2/location`.
 
@@ -53,14 +53,19 @@ The order is paid: it is kept in the state, in `order.order_id`, and `terraform 
 terraform untaint ovh_vps.web
 ```
 
-The next `terraform plan` or `terraform apply` checks the delivery of the order once, without waiting. While the order is not delivered, it emits a warning and leaves the state as it is. Once it is delivered, it fills `id` and reads the VPS.
+The same goes when `terraform apply` is interrupted while it waits, or fails on any other error after the payment: the error tells to run `terraform untaint`. While it waits, a transient API error does not end the wait.
+
+The next `terraform plan` or `terraform apply` checks the delivery of the order once, without waiting. While the order is not delivered, it emits a warning and leaves the state as it is. Once it is delivered, it fills `id` and reads the VPS. Until API v1 serves the delivered VPS, the VPS stays in the state, with a warning.
+
+When the order is cancelled, `terraform apply` and `terraform plan` fail with `VPS order … is cancelled`: no VPS will be delivered. Remove the resource from the state with `terraform state rm`, then apply again to order a new VPS.
 
 ## Updating a VPS
 
 This version of the provider does not update a VPS yet. `terraform apply` only records in the state, without calling the API:
 
 - changes of `timeouts`, `order` and `installation.send_password_by_email`;
-- values of `plan_code`, `location.region`, `power_state`, `installation.ssh_key` and `installation.post_installation_script` when the state has none, as after an import or the migration of the state.
+- values of `installation.ssh_key` and `installation.post_installation_script` when the state has none, as after an import: they are never read back;
+- values of `plan_code`, `location.region`, `power_state` and `installation.from` when the state has none, because they could not be read from the VPS.
 
 Any other change, such as `display_name`, `power_state`, `installation` or `options`, is shown as an update in place by `terraform plan`, and `terraform apply` fails with `Updating a VPS is not supported yet`. Set these attributes back to their value in the state.
 
