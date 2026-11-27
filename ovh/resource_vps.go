@@ -166,8 +166,12 @@ func (r *vpsResource) Create(ctx context.Context, req resource.CreateRequest, re
 		resp.Diagnostics.AddError("Error ordering the VPS", err.Error())
 		return
 	}
-	pending := data.installationAfterOrder()
-	if pending {
+	// Terraform installs the VPS: a null key or script in the state means
+	// none. The installation the order does not take is pending until the
+	// reinstallation that applies it.
+	flags := vpsPrivateFlags{installationKnown: true, installationPending: data.installationAfterOrder()}
+	resp.Diagnostics.Append(resp.Private.SetKey(ctx, vpsPrivateInstallationKnown, []byte("true"))...)
+	if flags.installationPending {
 		resp.Diagnostics.Append(resp.Private.SetKey(ctx, vpsPrivateInstallationPending, []byte("true"))...)
 	}
 
@@ -193,7 +197,7 @@ func (r *vpsResource) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	changes := vpsPlannedChanges(plan, data, pending)
+	changes := vpsPlannedChanges(plan, data, flags)
 	if changes.empty() {
 		return
 	}
@@ -281,18 +285,25 @@ func (r *vpsResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 // other one of the former image. While the installation requested at the
 // order is pending, current_state is planned unknown, so that Terraform calls
 // Update, which reinstalls the VPS.
+//
+// When the reinstallation depends on a value unknown at plan time, it warns
+// that the apply may reinstall the VPS, and plans unknown the image the
+// configuration does not set: the plan made at apply time sets it null when it
+// reinstalls the VPS, or keeps it.
 func (r *vpsResource) modifyUpdatePlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	var plan, state, config VPSResourceModel
 	resp.Diagnostics.Append(resp.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
-	pending, diags := vpsInstallationPending(ctx, req.Private)
+	flags, diags := vpsReadPrivate(ctx, req.Private)
 	resp.Diagnostics.Append(diags...)
 	// An order not delivered yet: Update refuses any change.
 	if resp.Diagnostics.HasError() || state.Id.IsNull() {
 		return
 	}
-	if vpsPlannedChanges(plan, state, pending).Rebuild == nil {
+	certain := vpsPlannedChanges(plan, state, flags).Rebuild != nil
+	possible := vpsInstallationChanged(plan.Installation, state.Installation, config.Installation, flags.installationKnown)
+	if !certain && !possible {
 		return
 	}
 
@@ -301,11 +312,15 @@ func (r *vpsResource) modifyUpdatePlan(ctx context.Context, req resource.ModifyP
 		value := vpsAttributeAt(config.Installation, "from", name)
 		return value != nil && !value.IsNull()
 	}
+	other := vpsTfStringPtr(nil)
+	if !certain {
+		other = ovhtypes.TfStringValue{StringValue: types.StringUnknown()}
+	}
 	switch {
 	case configured("image_name") && !configured("image_id"):
-		resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, from.AtName("image_id"), vpsTfStringPtr(nil))...)
+		resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, from.AtName("image_id"), other)...)
 	case configured("image_id") && !configured("image_name"):
-		resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, from.AtName("image_name"), vpsTfStringPtr(nil))...)
+		resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, from.AtName("image_name"), other)...)
 	}
 	resp.Diagnostics.Append(resp.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -313,30 +328,27 @@ func (r *vpsResource) modifyUpdatePlan(ctx context.Context, req resource.ModifyP
 	}
 
 	id := state.Id.ValueString()
-	if pending {
+	switch {
+	case flags.installationPending:
 		resp.Diagnostics.AddWarning("The VPS is reinstalled",
 			"The installation requested when the VPS was ordered is not applied yet: this apply reinstalls the VPS, which erases its disk")
 		resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("current_state"), types.ObjectUnknown(vpsCurrentStateAttrTypes()))...)
-	} else {
+	case certain:
 		resp.Diagnostics.AddWarning("The VPS is reinstalled", fmt.Sprintf("This apply reinstalls VPS %s, which erases its disk", id))
+	default:
+		resp.Diagnostics.AddWarning("The VPS may be reinstalled",
+			fmt.Sprintf("This apply may reinstall VPS %s, which erases its disk: installation depends on values known only at apply time", id))
+		// Update checks the image, if it reinstalls the VPS.
+		return
 	}
 
-	rebuild := vpsPlannedChanges(plan, state, pending).Rebuild
+	rebuild := vpsPlannedChanges(plan, state, flags).Rebuild
 	if r.config == nil || (rebuild.ImageId == nil && rebuild.ImageName == nil) {
 		// An image unknown at plan time is checked by Update.
 		return
 	}
 	_, diags = vpsRebuildImageId(ctx, r.config.OVHClient, id, rebuild)
 	resp.Diagnostics.Append(diags...)
-}
-
-// vpsInstallationPending tells whether the private state holds
-// installation_pending.
-func vpsInstallationPending(ctx context.Context, private interface {
-	GetKey(ctx context.Context, key string) ([]byte, diag.Diagnostics)
-}) (bool, diag.Diagnostics) {
-	value, diags := private.GetKey(ctx, vpsPrivateInstallationPending)
-	return string(value) == "true", diags
 }
 
 // Update applies the changes of the plan through the API v1 actions
@@ -347,13 +359,13 @@ func (r *vpsResource) Update(ctx context.Context, req resource.UpdateRequest, re
 	var plan, data VPSResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-	pending, diags := vpsInstallationPending(ctx, req.Private)
+	flags, diags := vpsReadPrivate(ctx, req.Private)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	changes := vpsPlannedChanges(plan, data, pending)
+	changes := vpsPlannedChanges(plan, data, flags)
 	if changes.empty() {
 		raw, err := vpsResolveUnknowns(req.Plan.Raw, req.State.Raw)
 		if err != nil {

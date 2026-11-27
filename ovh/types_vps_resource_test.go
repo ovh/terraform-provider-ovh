@@ -490,6 +490,26 @@ func TestVPSCurrentStateUnknownWhenUpdatePlanned(t *testing.T) {
 		}
 	}
 
+	// A VPS Terraform installed (installation_known) has no key or script when
+	// the state has none: setting one reinstalls the VPS.
+	for _, name := range []string{"installation.ssh_key", "installation.post_installation_script"} {
+		state := vpsTestPlan(t, stateValues)
+		plan := vpsTestPlan(t, with(map[string]attr.Value{name: ovhtypes.NewTfStringValue("after")}))
+		req := planmodifier.ObjectRequest{
+			State:      tfsdk.State{Schema: state.Schema, Raw: state.Raw},
+			Plan:       plan,
+			Config:     tfsdk.Config{Schema: plan.Schema, Raw: plan.Raw},
+			StateValue: csState,
+			PlanValue:  csUnknown,
+		}
+		vpsTestNewPrivate(t, &req.Private, vpsPrivateInstallationKnown)
+		resp := &planmodifier.ObjectResponse{PlanValue: csUnknown}
+		vpsCurrentStatePlanModifier().PlanModifyObject(ctx, req, resp)
+		if !resp.PlanValue.IsUnknown() {
+			t.Errorf("%s set on a VPS Terraform installed: current_state = %v, want unknown", name, resp.PlanValue)
+		}
+	}
+
 	// Creation: no state, current_state stays unknown.
 	plan := vpsTestPlan(t, stateValues)
 	req := planmodifier.ObjectRequest{

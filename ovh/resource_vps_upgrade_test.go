@@ -398,7 +398,7 @@ func TestVPSResourceMigrationPlansNoChange(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if vpsUpdatePlanned(planned, read.State.Raw, config.Raw) {
+			if vpsUpdatePlanned(planned, read.State.Raw, config.Raw, false) {
 				t.Errorf("the shared rule sees an update in the plan")
 			}
 			if diffs, err := planned.Diff(read.State.Raw); err != nil {

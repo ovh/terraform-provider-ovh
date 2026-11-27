@@ -485,7 +485,7 @@ func vpsTestCreate(t *testing.T, api *vpsTestAPI, plan tfsdk.Plan) *resource.Cre
 	r := &vpsResource{config: api.config(t)}
 	resp := &resource.CreateResponse{State: tfsdk.State{Schema: plan.Schema, Raw: tftypes.NewValue(plan.Raw.Type(), nil)}}
 	// As the framework does.
-	vpsTestNewPrivate(t, &resp.Private, false)
+	vpsTestNewPrivate(t, &resp.Private)
 	r.Create(context.Background(), resource.CreateRequest{Plan: plan}, resp)
 	return resp
 }
@@ -770,12 +770,12 @@ func TestVPSResourceReadDeliveredOrderNotReadableYet(t *testing.T) {
 // the configuration being the plan, without private state.
 func vpsTestUpdate(t *testing.T, api *vpsTestAPI, state tfsdk.State, plan tfsdk.State) *resource.UpdateResponse {
 	t.Helper()
-	return vpsTestUpdatePending(t, api, state, plan, false)
+	return vpsTestUpdatePending(t, api, state, plan)
 }
 
-// vpsTestUpdatePending is vpsTestUpdate, with installation_pending in the
-// private state when pending.
-func vpsTestUpdatePending(t *testing.T, api *vpsTestAPI, state tfsdk.State, plan tfsdk.State, pending bool) *resource.UpdateResponse {
+// vpsTestUpdatePending is vpsTestUpdate, with keys in the private state, such
+// as installation_pending.
+func vpsTestUpdatePending(t *testing.T, api *vpsTestAPI, state tfsdk.State, plan tfsdk.State, keys ...string) *resource.UpdateResponse {
 	t.Helper()
 	r := &vpsResource{config: api.config(t)}
 	req := resource.UpdateRequest{
@@ -783,7 +783,7 @@ func vpsTestUpdatePending(t *testing.T, api *vpsTestAPI, state tfsdk.State, plan
 		Config: tfsdk.Config{Schema: plan.Schema, Raw: plan.Raw},
 		State:  state,
 	}
-	vpsTestNewPrivate(t, &req.Private, pending)
+	vpsTestNewPrivate(t, &req.Private, keys...)
 	// As the framework does.
 	resp := &resource.UpdateResponse{State: tfsdk.State{Schema: state.Schema, Raw: state.Raw.Copy()}, Private: req.Private}
 	r.Update(context.Background(), req, resp)
@@ -1534,6 +1534,7 @@ func TestVPSResourceCreateInterrupted(t *testing.T) {
 	plan := vpsTestCreatePlan(t, nil)
 	r := &vpsResource{config: api.config(t)}
 	resp := &resource.CreateResponse{State: tfsdk.State{Schema: plan.Schema, Raw: tftypes.NewValue(plan.Raw.Type(), nil)}}
+	vpsTestNewPrivate(t, &resp.Private) // as the framework does
 	r.Create(ctx, resource.CreateRequest{Plan: plan}, resp)
 
 	if !resp.Diagnostics.HasError() {

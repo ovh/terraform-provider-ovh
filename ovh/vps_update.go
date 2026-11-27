@@ -2,6 +2,7 @@ package ovh
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/url"
 	"slices"
@@ -22,10 +23,57 @@ import (
 // ordered is not applied: the next plan reinstalls the VPS.
 const vpsPrivateInstallationPending = "installation_pending"
 
+// vpsPrivateInstallationKnown is the key of the resource private state that
+// holds []byte("true") once Terraform installed the VPS: ordered it, or
+// reinstalled it. A null key or script in the state then means none.
+const vpsPrivateInstallationKnown = "installation_known"
+
 // vpsPrivateState is the resource private state of the framework, whose type
 // is internal to it.
 type vpsPrivateState interface {
 	SetKey(ctx context.Context, key string, value []byte) diag.Diagnostics
+}
+
+// vpsPrivateFlags are the markers the private state of the resource holds.
+type vpsPrivateFlags struct {
+	installationPending, installationKnown bool
+}
+
+// vpsReadPrivate reads the markers of a private state, none when it is nil.
+func vpsReadPrivate(ctx context.Context, private interface {
+	GetKey(ctx context.Context, key string) ([]byte, diag.Diagnostics)
+}) (vpsPrivateFlags, diag.Diagnostics) {
+	var flags vpsPrivateFlags
+	var diags diag.Diagnostics
+	for key, flag := range map[string]*bool{
+		vpsPrivateInstallationPending: &flags.installationPending,
+		vpsPrivateInstallationKnown:   &flags.installationKnown,
+	} {
+		value, d := private.GetKey(ctx, key)
+		diags.Append(d...)
+		*flag = string(value) == "true"
+	}
+	return flags, diags
+}
+
+// vpsInstallationChanged tells whether the installation of the plan differs
+// from the state (vpsValueChanged): with a null config, only a known value
+// counts; with the configuration, so does a value unknown at plan time.
+func vpsInstallationChanged(plan, state, config types.Object, installationKnown bool) bool {
+	ctx := context.Background()
+	p, err := plan.ToTerraformValue(ctx)
+	if err != nil {
+		return false
+	}
+	s, err := state.ToTerraformValue(ctx)
+	if err != nil {
+		return false
+	}
+	c, err := config.ToTerraformValue(ctx)
+	if err != nil {
+		return false
+	}
+	return vpsValueChanged("installation", p, s, c, installationKnown)
 }
 
 // vpsChanges are the changes of a VPS a plan applies through the API v1
@@ -74,7 +122,7 @@ func (b *vpsRebuild) body(imageId string) vpsV1RebuildBody {
 // installation.from, ssh_key or post_installation_script change, or when the
 // installation requested at the order is pending; its power state is then
 // applied too.
-func vpsPlannedChanges(plan, state VPSResourceModel, installationPending bool) vpsChanges {
+func vpsPlannedChanges(plan, state VPSResourceModel, flags vpsPrivateFlags) vpsChanges {
 	ctx := context.Background()
 	changed := func(path string, plan, state attr.Value) bool {
 		p, err := plan.ToTerraformValue(ctx)
@@ -86,14 +134,14 @@ func vpsPlannedChanges(plan, state VPSResourceModel, installationPending bool) v
 			return false
 		}
 		// A plan value unknown with a null configuration is not a change.
-		return vpsValueChanged(path, p, s, tftypes.NewValue(p.Type(), nil))
+		return vpsValueChanged(path, p, s, tftypes.NewValue(p.Type(), nil), flags.installationKnown)
 	}
 
 	var changes vpsChanges
 	if changed("display_name", plan.DisplayName, state.DisplayName) {
 		changes.DisplayName = vpsKnownString(plan.DisplayName)
 	}
-	if installationPending || changed("installation", plan.Installation, state.Installation) {
+	if flags.installationPending || changed("installation", plan.Installation, state.Installation) {
 		changes.Rebuild = vpsRebuildOf(plan.Installation)
 	}
 	if changed("options", plan.Options, state.Options) {
@@ -190,7 +238,9 @@ func vpsRebuildImageId(ctx context.Context, client *ovhwrap.Client, id string, r
 // sets its attributes of plan in data; on an error, the steps after it are
 // not done, so that the next plan shows them again. Once all are done, data
 // takes every known value of plan, the changes without effect included. A
-// reinstallation done removes installation_pending from private. data is then
+// reinstallation API v1 accepts and that does not fail, even one still running
+// when the wait ends, sets the installation of plan in data, removes
+// installation_pending from private and sets installation_known. data is then
 // read from the VPS.
 func (r *vpsResource) applyChanges(ctx context.Context, data *VPSResourceModel, plan VPSResourceModel, changes vpsChanges, deadline time.Time, private vpsPrivateState) diag.Diagnostics {
 	diags := r.applySteps(ctx, data, plan, changes, deadline, private)
@@ -233,7 +283,8 @@ func (r *vpsResource) applySteps(ctx context.Context, data *VPSResourceModel, pl
 		body := struct {
 			DisplayName string `json:"displayName"`
 		}{*changes.DisplayName}
-		if err := client.PutWithContext(ctx, base, body, nil); err != nil {
+		err := vpsCallRetryingConflict(ctx, deadline, func() error { return client.PutWithContext(ctx, base, body, nil) })
+		if err != nil {
 			diags.AddError(fmt.Sprintf("Error renaming VPS %s", id), fmt.Sprintf("calling PUT %s: %s", base, err))
 			return diags
 		}
@@ -247,15 +298,27 @@ func (r *vpsResource) applySteps(ctx context.Context, data *VPSResourceModel, pl
 			return diags
 		}
 		task, err := vpsPostAction(ctx, client, base+"/rebuild", changes.Rebuild.body(imageId), deadline)
-		if err == nil {
-			err = vpsWaitTask(ctx, client, id, task, deadline)
-		}
 		if err != nil {
 			diags.AddError(fmt.Sprintf("Error reinstalling VPS %s", id), err.Error())
 			return diags
 		}
+		err = vpsWaitTask(ctx, client, id, task, deadline)
+		var failed *vpsTaskFailedError
+		if errors.As(err, &failed) {
+			diags.AddError(fmt.Sprintf("Error reinstalling VPS %s", id), err.Error())
+			return diags
+		}
+		// Accepted and not failed: the VPS is reinstalled, or being
+		// reinstalled even when the wait ended first. The next plan does not
+		// reinstall it again.
 		data.Installation = plan.Installation
 		diags.Append(private.SetKey(ctx, vpsPrivateInstallationPending, nil)...)
+		diags.Append(private.SetKey(ctx, vpsPrivateInstallationKnown, []byte("true"))...)
+		if err != nil {
+			diags.AddError(fmt.Sprintf("The reinstallation of VPS %s is still running", id),
+				fmt.Sprintf("The state holds the new installation: %s", err))
+			return diags
+		}
 	}
 
 	if changes.Schedule != nil {

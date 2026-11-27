@@ -32,35 +32,59 @@ type vpsV1Power struct {
 	NetbootMode string `json:"netbootMode"` // local or rescue
 }
 
-// vpsPostAction calls POST endpoint with body (none when nil) and returns the
-// task it starts. API v1 answers 409 while another task runs on the VPS: the
-// call is tried again every vpsPollInterval until deadline.
-func vpsPostAction(ctx context.Context, client *ovhwrap.Client, endpoint string, body any, deadline time.Time) (*vpsV1Task, error) {
+// vpsCallRetryingConflict calls call, a call to an API v1 route of a VPS,
+// until it does not answer 409: API v1 answers 409 while another task runs on
+// the VPS. The call is tried again every vpsPollInterval until deadline.
+func vpsCallRetryingConflict(ctx context.Context, deadline time.Time, call func() error) error {
 	for {
-		var task vpsV1Task
-		err := client.PostWithContext(ctx, endpoint, body, &task)
-		if err == nil {
-			return &task, nil
-		}
+		err := call()
 		if vpsAPIStatus(err) != http.StatusConflict {
-			return nil, fmt.Errorf("calling POST %s: %w", endpoint, err)
+			return err
 		}
 		if time.Now().Add(vpsPollInterval).After(deadline) {
-			return nil, fmt.Errorf("calling POST %s: another task still runs on the VPS: %w", endpoint, err)
+			return fmt.Errorf("another task still runs on the VPS: %w", err)
 		}
-		log.Printf("[INFO] calling POST %s: %s, trying again", endpoint, err)
+		log.Printf("[INFO] %s, trying again", err)
 		select {
 		case <-ctx.Done():
-			return nil, fmt.Errorf("calling POST %s: %w", endpoint, ctx.Err())
+			return ctx.Err()
 		case <-time.After(vpsPollInterval):
 		}
 	}
 }
 
+// vpsPostAction calls POST endpoint with body (none when nil) and returns the
+// task it starts, trying again while another task runs on the VPS
+// (vpsCallRetryingConflict).
+func vpsPostAction(ctx context.Context, client *ovhwrap.Client, endpoint string, body any, deadline time.Time) (*vpsV1Task, error) {
+	var task vpsV1Task
+	err := vpsCallRetryingConflict(ctx, deadline, func() error {
+		task = vpsV1Task{}
+		return client.PostWithContext(ctx, endpoint, body, &task)
+	})
+	if err != nil {
+		return nil, fmt.Errorf("calling POST %s: %w", endpoint, err)
+	}
+	return &task, nil
+}
+
+// vpsTaskFailedError is the error of a VPS task that ended in error or was
+// cancelled: a final state.
+type vpsTaskFailedError struct {
+	id       int64
+	taskType string
+	state    string
+}
+
+func (e *vpsTaskFailedError) Error() string {
+	return fmt.Sprintf("VPS task %d (%s) ended in state %s", e.id, e.taskType, e.state)
+}
+
 // vpsWaitTask waits until deadline for task, started on VPS id, to end, then
 // for the VPS to leave its transitional states. A task API v1 no longer knows
 // (404) has ended. A task that ends in error or cancelled is an error; any
-// other state, or a failure to read the task, keeps the wait going.
+// other state, or a failure to read the task, keeps the wait going. A task
+// that ended in error or cancelled is a *vpsTaskFailedError.
 func vpsWaitTask(ctx context.Context, client *ovhwrap.Client, id string, task *vpsV1Task, deadline time.Time) error {
 	endpoint := "/vps/" + url.PathEscape(id) + "/tasks/" + url.PathEscape(strconv.FormatInt(task.Id, 10))
 	conf := &retry.StateChangeConf{
@@ -80,7 +104,7 @@ func vpsWaitTask(ctx context.Context, client *ovhwrap.Client, id string, task *v
 			case "done":
 				return &current, "done", nil
 			case "error", "cancelled":
-				return nil, "", fmt.Errorf("VPS task %d (%s) ended in state %s", task.Id, task.Type, current.State)
+				return nil, "", &vpsTaskFailedError{id: task.Id, taskType: task.Type, state: current.State}
 			}
 			return &current, "pending", nil
 		},
@@ -201,7 +225,8 @@ func vpsSetPowerState(ctx context.Context, client *ovhwrap.Client, id, target st
 		body := struct {
 			NetbootMode string `json:"netbootMode"`
 		}{netboot}
-		if err := client.PutWithContext(ctx, base, body, nil); err != nil {
+		err := vpsCallRetryingConflict(ctx, deadline, func() error { return client.PutWithContext(ctx, base, body, nil) })
+		if err != nil {
 			return fmt.Errorf("calling PUT %s: %w", base, err)
 		}
 		changed = true

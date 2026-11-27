@@ -346,3 +346,35 @@ func TestVPSSetPowerState(t *testing.T) {
 		}
 	})
 }
+
+// API v1 answers 409 while another task runs on the VPS: the change of the
+// netboot mode is tried again.
+func TestVPSSetPowerStateRetriesConflict(t *testing.T) {
+	api := newVPSTestAPI()
+	actions := api.serveActions()
+	calls := 0
+	api.handle("PUT "+vpsTestBase, func(body []byte) any {
+		calls++
+		if calls == 1 {
+			return vpsTestStatus{code: http.StatusConflict, message: "A task is already running"}
+		}
+		actions.add("PUT "+vpsTestBase, body)
+		api.change(vpsTestBase, func(vps map[string]any) { vps["netbootMode"] = "rescue" })
+		return nil
+	})
+	config := vpsTestClient(t, api)
+
+	if err := vpsSetPowerState(context.Background(), config.OVHClient, vpsTestId, "RESCUE", time.Now().Add(time.Minute)); err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	if calls != 2 {
+		t.Errorf("PUT called %d times, want 2", calls)
+	}
+	var got []string
+	for _, request := range actions.list() {
+		got = append(got, strings.Replace(request, vpsTestBase, "", 1))
+	}
+	if want := []string{`PUT  {"netbootMode":"rescue"}`, "POST /reboot"}; !slices.Equal(got, want) {
+		t.Errorf("got requests %q, want %q", got, want)
+	}
+}

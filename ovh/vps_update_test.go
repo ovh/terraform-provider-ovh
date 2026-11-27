@@ -3,6 +3,7 @@ package ovh
 import (
 	"context"
 	"encoding/json"
+	"net/http"
 	"reflect"
 	"slices"
 	"strings"
@@ -10,9 +11,11 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
@@ -67,33 +70,53 @@ func vpsTestUpdateState(t *testing.T, overrides map[string]attr.Value) tfsdk.Sta
 }
 
 // vpsTestNewPrivate sets *field, a resource private state of the framework
-// (whose type is internal to it), to an empty one, holding installation_pending
-// when pending.
-func vpsTestNewPrivate(t *testing.T, field any, pending bool) {
+// (whose type is internal to it), to a new one holding keys, each set to
+// []byte("true").
+func vpsTestNewPrivate(t *testing.T, field any, keys ...string) {
 	t.Helper()
 	v := reflect.ValueOf(field).Elem()
 	v.Set(reflect.New(v.Type().Elem()))
-	if !pending {
-		return
-	}
 	private := v.Interface().(interface {
 		SetKey(context.Context, string, []byte) diag.Diagnostics
 	})
-	if diags := private.SetKey(context.Background(), vpsPrivateInstallationPending, []byte("true")); diags.HasError() {
-		t.Fatalf("setting the private state: %v", diags)
+	for _, key := range keys {
+		if diags := private.SetKey(context.Background(), key, []byte("true")); diags.HasError() {
+			t.Fatalf("setting the private state: %v", diags)
+		}
 	}
 }
 
-// vpsTestPending tells whether a private state holds installation_pending.
-func vpsTestPending(t *testing.T, private interface {
+// vpsTestPrivateGetter is a resource private state of the framework.
+type vpsTestPrivateGetter interface {
 	GetKey(context.Context, string) ([]byte, diag.Diagnostics)
-}) bool {
+}
+
+// vpsTestHasKey tells whether a private state holds key.
+func vpsTestHasKey(t *testing.T, private vpsTestPrivateGetter, key string) bool {
 	t.Helper()
-	value, diags := private.GetKey(context.Background(), vpsPrivateInstallationPending)
+	value, diags := private.GetKey(context.Background(), key)
 	if diags.HasError() {
 		t.Fatalf("reading the private state: %v", diags)
 	}
 	return value != nil
+}
+
+// vpsTestPending tells whether a private state holds installation_pending.
+func vpsTestPending(t *testing.T, private vpsTestPrivateGetter) bool {
+	t.Helper()
+	return vpsTestHasKey(t, private, vpsPrivateInstallationPending)
+}
+
+// vpsTestPrivateKeys returns the keys of the resource a private state holds.
+func vpsTestPrivateKeys(t *testing.T, private vpsTestPrivateGetter) []string {
+	t.Helper()
+	var keys []string
+	for _, key := range []string{vpsPrivateInstallationPending, vpsPrivateInstallationKnown} {
+		if vpsTestHasKey(t, private, key) {
+			keys = append(keys, key)
+		}
+	}
+	return keys
 }
 
 // vpsTestActionBody returns the body of the only request to the action path
@@ -260,7 +283,7 @@ func TestVPSResourceUpdateInstallationPending(t *testing.T) {
 	api, actions := vpsTestUpdateAPI(t)
 	state := vpsTestUpdateState(t, nil)
 
-	resp := vpsTestUpdatePending(t, api, state, state, true)
+	resp := vpsTestUpdatePending(t, api, state, state, vpsPrivateInstallationPending)
 	if resp.Diagnostics.HasError() {
 		t.Fatalf("unexpected update error: %v", resp.Diagnostics)
 	}
@@ -275,7 +298,7 @@ func TestVPSResourceUpdateInstallationPending(t *testing.T) {
 // vpsTestModifyPlanUpdate runs ModifyPlan from the state to the plan of
 // config: config, with the values the plan modifiers would set from the
 // state.
-func vpsTestModifyPlanUpdate(t *testing.T, api *vpsTestAPI, state tfsdk.State, config, plan tfsdk.Plan, pending bool) *resource.ModifyPlanResponse {
+func vpsTestModifyPlanUpdate(t *testing.T, api *vpsTestAPI, state tfsdk.State, config, plan tfsdk.Plan, keys ...string) *resource.ModifyPlanResponse {
 	t.Helper()
 	r := &vpsResource{config: api.config(t)}
 	req := resource.ModifyPlanRequest{
@@ -283,7 +306,7 @@ func vpsTestModifyPlanUpdate(t *testing.T, api *vpsTestAPI, state tfsdk.State, c
 		Plan:   plan,
 		State:  state,
 	}
-	vpsTestNewPrivate(t, &req.Private, pending)
+	vpsTestNewPrivate(t, &req.Private, keys...)
 	resp := &resource.ModifyPlanResponse{Plan: tfsdk.Plan{Schema: plan.Schema, Raw: plan.Raw.Copy()}, Private: req.Private}
 	r.ModifyPlan(context.Background(), req, resp)
 	return resp
@@ -333,7 +356,7 @@ func TestVPSResourceModifyPlanUpdate(t *testing.T) {
 			"post_installation_script": vpsTfStringPtr(nil),
 			"send_password_by_email":   types.BoolValue(true),
 		})})
-		resp := vpsTestModifyPlanUpdate(t, api, state, config, tfsdk.Plan(plan), false)
+		resp := vpsTestModifyPlanUpdate(t, api, state, config, tfsdk.Plan(plan))
 		if !resp.Diagnostics.HasError() {
 			t.Fatal("expected an error: Windows is not available")
 		}
@@ -366,7 +389,7 @@ func TestVPSResourceModifyPlanUpdate(t *testing.T) {
 			"post_installation_script": vpsTfStringPtr(nil),
 			"send_password_by_email":   types.BoolValue(true),
 		})})
-		resp := vpsTestModifyPlanUpdate(t, api, state, config, tfsdk.Plan(plan), false)
+		resp := vpsTestModifyPlanUpdate(t, api, state, config, tfsdk.Plan(plan))
 		if !resp.Diagnostics.HasError() {
 			t.Fatal("expected an error: the image id is not available")
 		}
@@ -384,7 +407,7 @@ func TestVPSResourceModifyPlanUpdate(t *testing.T) {
 		state := vpsTestUpdateState(t, nil)
 		config := vpsTestUpdateConfig(t, map[string]attr.Value{"installation.ssh_key": tfStr(vpsTestSshKey)})
 		plan := vpsTestUpdateState(t, map[string]attr.Value{"installation": vpsTestInstallation(tfStr(vpsTestSshKey))})
-		resp := vpsTestModifyPlanUpdate(t, api, state, config, tfsdk.Plan(plan), false)
+		resp := vpsTestModifyPlanUpdate(t, api, state, config, tfsdk.Plan(plan))
 		if resp.Diagnostics.HasError() {
 			t.Fatalf("unexpected plan error: %v", resp.Diagnostics)
 		}
@@ -416,7 +439,7 @@ func TestVPSResourceModifyPlanUpdate(t *testing.T) {
 			"post_installation_script": vpsTfStringPtr(nil),
 			"send_password_by_email":   types.BoolValue(true),
 		})})
-		resp := vpsTestModifyPlanUpdate(t, api, state, config, tfsdk.Plan(plan), false)
+		resp := vpsTestModifyPlanUpdate(t, api, state, config, tfsdk.Plan(plan))
 		if resp.Diagnostics.HasError() {
 			t.Fatalf("unexpected plan error: %v", resp.Diagnostics)
 		}
@@ -430,7 +453,7 @@ func TestVPSResourceModifyPlanUpdate(t *testing.T) {
 		api, actions := vpsTestUpdateAPI(t)
 		state := vpsTestUpdateState(t, nil)
 		config := vpsTestUpdateConfig(t, nil)
-		resp := vpsTestModifyPlanUpdate(t, api, state, config, tfsdk.Plan(state), true)
+		resp := vpsTestModifyPlanUpdate(t, api, state, config, tfsdk.Plan(state), vpsPrivateInstallationPending)
 		if resp.Diagnostics.HasError() {
 			t.Fatalf("unexpected plan error: %v", resp.Diagnostics)
 		}
@@ -456,7 +479,7 @@ func TestVPSResourceModifyPlanUpdate(t *testing.T) {
 		state := vpsTestUpdateState(t, nil)
 		config := vpsTestUpdateConfig(t, map[string]attr.Value{"display_name": tfStr("web-02")})
 		plan := vpsTestUpdateState(t, map[string]attr.Value{"display_name": tfStr("web-02")})
-		resp := vpsTestModifyPlanUpdate(t, api, state, config, tfsdk.Plan(plan), false)
+		resp := vpsTestModifyPlanUpdate(t, api, state, config, tfsdk.Plan(plan))
 		if len(resp.Diagnostics) != 0 {
 			t.Errorf("unexpected diagnostics: %v", resp.Diagnostics)
 		}
@@ -528,7 +551,7 @@ func TestVPSResourceUpdateNotDelivered(t *testing.T) {
 		api, _ := vpsTestUpdateAPI(t)
 		state := ordered(t, nil)
 		plan := ordered(t, map[string]attr.Value{"display_name": tfStr("web-02")})
-		resp := vpsTestUpdatePending(t, api, state, plan, true)
+		resp := vpsTestUpdatePending(t, api, state, plan, vpsPrivateInstallationPending)
 		if !resp.Diagnostics.HasError() {
 			t.Fatal("expected an error: the VPS is not delivered yet")
 		}
@@ -548,7 +571,7 @@ func TestVPSResourceUpdateNotDelivered(t *testing.T) {
 		state := ordered(t, nil)
 		config := vpsTestUpdateConfig(t, map[string]attr.Value{"installation.ssh_key": tfStr(vpsTestSshKey)})
 		plan := ordered(t, map[string]attr.Value{"installation": vpsTestInstallation(tfStr(vpsTestSshKey))})
-		resp := vpsTestModifyPlanUpdate(t, api, state, config, tfsdk.Plan(plan), true)
+		resp := vpsTestModifyPlanUpdate(t, api, state, config, tfsdk.Plan(plan), vpsPrivateInstallationPending)
 		if len(resp.Diagnostics) != 0 {
 			t.Errorf("unexpected diagnostics: %v", resp.Diagnostics)
 		}
@@ -635,4 +658,328 @@ func TestVPSResourceUpdateOrderOptionsOnlyRecorded(t *testing.T) {
 	if got := vpsTestRequests(api); got != 0 {
 		t.Errorf("%d API calls, want 0", got)
 	}
+}
+
+// vpsTestInstallationWith is vpsTestInstallation with the key and the script
+// given, null when empty.
+func vpsTestInstallationWith(sshKey, script string) attr.Value {
+	value := func(s string) attr.Value {
+		if s == "" {
+			return vpsTfStringPtr(nil)
+		}
+		return tfStr(s)
+	}
+	return types.ObjectValueMust(vpsResourceInstallationAttrTypes(), map[string]attr.Value{
+		"from": types.ObjectValueMust(vpsInstallationFromAttrTypes(), map[string]attr.Value{
+			"image_id":   tfStr(vpsTestDebianId),
+			"image_name": tfStr("Debian 12"),
+		}),
+		"ssh_key":                  value(sshKey),
+		"post_installation_script": value(script),
+		"send_password_by_email":   types.BoolValue(true),
+	})
+}
+
+// A VPS Terraform installed (installation_known) has no key or script when the
+// state has none: setting one reinstalls the VPS. Without the marker, as after
+// an import or the migration of the state, the state does not know: setting
+// one is only recorded (TestVPSResourceUpdateSshKeyAfterImport).
+func TestVPSResourceInstallationKnown(t *testing.T) {
+	reinstallWarning := "This apply reinstalls VPS " + vpsTestId + ", which erases its disk"
+	for _, attribute := range []struct{ name, sshKey, script string }{
+		{"ssh_key", vpsTestSshKey, ""},
+		{"post_installation_script", "", "#!/bin/sh\ntrue\n"},
+	} {
+		t.Run(attribute.name+" added", func(t *testing.T) {
+			api, actions := vpsTestUpdateAPI(t)
+			state := vpsTestUpdateState(t, map[string]attr.Value{"installation": vpsTestInstallationWith("", "")})
+			plan := vpsTestUpdateState(t, map[string]attr.Value{"installation": vpsTestInstallationWith(attribute.sshKey, attribute.script)})
+			config := vpsTestUpdateConfig(t, map[string]attr.Value{
+				"installation.ssh_key":                  vpsTestInstallationWith(attribute.sshKey, attribute.script).(types.Object).Attributes()["ssh_key"],
+				"installation.post_installation_script": vpsTestInstallationWith(attribute.sshKey, attribute.script).(types.Object).Attributes()["post_installation_script"],
+			})
+
+			planResp := vpsTestModifyPlanUpdate(t, api, state, config, tfsdk.Plan(plan), vpsPrivateInstallationKnown)
+			if planResp.Diagnostics.HasError() {
+				t.Fatalf("unexpected plan error: %v", planResp.Diagnostics)
+			}
+			if !slices.ContainsFunc(planResp.Diagnostics.Warnings(), func(d diag.Diagnostic) bool { return strings.Contains(d.Detail(), reinstallWarning) }) {
+				t.Errorf("warnings %v, want %q", planResp.Diagnostics.Warnings(), reinstallWarning)
+			}
+
+			resp := vpsTestUpdatePending(t, api, state, plan, vpsPrivateInstallationKnown)
+			if resp.Diagnostics.HasError() {
+				t.Fatalf("unexpected update error: %v", resp.Diagnostics)
+			}
+			if got := vpsTestActionNames(actions.list()); !slices.Equal(got, []string{"POST /rebuild"}) {
+				t.Errorf("got requests %q, want the reinstallation", got)
+			}
+			if !vpsTestHasKey(t, resp.Private, vpsPrivateInstallationKnown) {
+				t.Error("installation_known is no longer set after the reinstallation")
+			}
+		})
+	}
+
+	t.Run("key removed then added back", func(t *testing.T) {
+		api, actions := vpsTestUpdateAPI(t)
+		withKey := vpsTestUpdateState(t, map[string]attr.Value{"installation": vpsTestInstallationWith(vpsTestSshKey, "")})
+		withoutKey := vpsTestUpdateState(t, map[string]attr.Value{"installation": vpsTestInstallationWith("", "")})
+
+		removed := vpsTestUpdatePending(t, api, withKey, withoutKey, vpsPrivateInstallationKnown)
+		if removed.Diagnostics.HasError() {
+			t.Fatalf("unexpected update error: %v", removed.Diagnostics)
+		}
+		added := vpsTestUpdatePending(t, api, tfsdk.State{Schema: removed.State.Schema, Raw: removed.State.Raw},
+			withKey, vpsTestPrivateKeys(t, removed.Private)...)
+		if added.Diagnostics.HasError() {
+			t.Fatalf("unexpected update error: %v", added.Diagnostics)
+		}
+		requests := actions.list()
+		if got := vpsTestActionNames(requests); !slices.Equal(got, []string{"POST /rebuild", "POST /rebuild"}) {
+			t.Errorf("got requests %q, want a reinstallation without the key, then one with it", got)
+		}
+		if len(requests) == 2 && (strings.Contains(requests[0], "publicSshKey") || !strings.Contains(requests[1], vpsTestSshKey)) {
+			t.Errorf("got requests %q, want the key in the second reinstallation only", requests)
+		}
+	})
+
+	// Created from image_name, the VPS has a null image_id in the state:
+	// setting image_id instead reinstalls it.
+	t.Run("image_id set instead of image_name", func(t *testing.T) {
+		api, actions := vpsTestUpdateAPI(t)
+		from := func(imageId attr.Value) attr.Value {
+			return types.ObjectValueMust(vpsResourceInstallationAttrTypes(), map[string]attr.Value{
+				"from": types.ObjectValueMust(vpsInstallationFromAttrTypes(), map[string]attr.Value{
+					"image_id":   imageId,
+					"image_name": tfStr("Debian 12"),
+				}),
+				"ssh_key":                  vpsTfStringPtr(nil),
+				"post_installation_script": vpsTfStringPtr(nil),
+				"send_password_by_email":   types.BoolValue(true),
+			})
+		}
+		state := vpsTestUpdateState(t, map[string]attr.Value{"installation": from(vpsTfStringPtr(nil))})
+		plan := vpsTestUpdateState(t, map[string]attr.Value{"installation": from(tfStr(vpsTestUbuntuId))})
+		resp := vpsTestUpdatePending(t, api, state, plan, vpsPrivateInstallationKnown)
+		if resp.Diagnostics.HasError() {
+			t.Fatalf("unexpected update error: %v", resp.Diagnostics)
+		}
+		requests := actions.list()
+		if got := vpsTestActionNames(requests); !slices.Equal(got, []string{"POST /rebuild"}) {
+			t.Fatalf("got requests %q, want the reinstallation", got)
+		}
+		vpsTestCheckBody(t, "rebuild", vpsTestActionBody(t, requests, "POST /rebuild"), `{"imageId":"`+vpsTestUbuntuId+`"}`)
+	})
+
+	// The migration of the state of the former ovh_vps sets no marker: a key
+	// the state has none of is only recorded.
+	t.Run("key added after the migration", func(t *testing.T) {
+		api, actions := vpsTestUpdateAPI(t)
+		vpsTestAddService(api)
+		read := vpsTestRead(t, api, vpsTestUpgrade(t, vpsTestV0ImportedState))
+		if read.Diagnostics.HasError() {
+			t.Fatalf("unexpected read error: %v", read.Diagnostics)
+		}
+		state := tfsdk.State{Schema: read.State.Schema, Raw: read.State.Raw}
+		var plan tfsdk.State = tfsdk.State{Schema: state.Schema, Raw: state.Raw.Copy()}
+		if diags := plan.SetAttribute(context.Background(), path.Root("installation").AtName("ssh_key"), tfStr(vpsTestSshKey)); diags.HasError() {
+			t.Fatalf("setting the key: %v", diags)
+		}
+		resp := vpsTestUpdate(t, api, state, plan)
+		if resp.Diagnostics.HasError() {
+			t.Fatalf("unexpected update error: %v", resp.Diagnostics)
+		}
+		if got := actions.list(); len(got) != 0 {
+			t.Errorf("got action requests %q, want none", got)
+		}
+		vpsTestCheckValues(t, resp.State.Raw, map[string]string{"installation.ssh_key": vpsTestSshKey})
+	})
+}
+
+// The acceptance test orders a VPS without key, then adds one: the key
+// reinstalls the VPS.
+func TestVPSResourceCreateThenAddSshKey(t *testing.T) {
+	api, _, actions := vpsTestCreateSettingsAPI(t)
+	created := vpsTestCreate(t, api, vpsTestCreatePlan(t, nil))
+	if created.Diagnostics.HasError() {
+		t.Fatalf("unexpected create error: %v", created.Diagnostics)
+	}
+	keys := vpsTestPrivateKeys(t, created.Private)
+	if !slices.Contains(keys, vpsPrivateInstallationKnown) {
+		t.Fatalf("private keys after the creation %q, want installation_known", keys)
+	}
+
+	state := tfsdk.State{Schema: created.State.Schema, Raw: created.State.Raw}
+	plan := tfsdk.State{Schema: state.Schema, Raw: state.Raw.Copy()}
+	if diags := plan.SetAttribute(context.Background(), path.Root("installation").AtName("ssh_key"), tfStr(vpsTestSshKey)); diags.HasError() {
+		t.Fatalf("setting the key: %v", diags)
+	}
+	config := vpsTestCreateConfig(t, map[string]attr.Value{"installation.ssh_key": tfStr(vpsTestSshKey)})
+
+	planResp := vpsTestModifyPlanUpdate(t, api, state, tfsdk.Plan(config), tfsdk.Plan(plan), keys...)
+	if planResp.Diagnostics.HasError() {
+		t.Fatalf("unexpected plan error: %v", planResp.Diagnostics)
+	}
+	if planResp.Diagnostics.WarningsCount() == 0 {
+		t.Error("the plan does not warn of the reinstallation")
+	}
+	resp := vpsTestUpdatePending(t, api, state, tfsdk.State{Schema: planResp.Plan.Schema, Raw: planResp.Plan.Raw}, keys...)
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected update error: %v", resp.Diagnostics)
+	}
+	if got := vpsTestActionNames(actions.list()); !slices.Equal(got, []string{"POST /rebuild"}) {
+		t.Errorf("got requests %q, want the reinstallation", got)
+	}
+}
+
+// vpsTestCheckPlansConsistent checks that the plan made at apply time keeps
+// every value the plan made at plan time knows, as Terraform requires.
+func vpsTestCheckPlansConsistent(t *testing.T, atPlan, atApply tftypes.Value) {
+	t.Helper()
+	diffs, err := atPlan.Diff(atApply)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, d := range diffs {
+		if d.Value1 != nil && d.Value1.IsFullyKnown() {
+			t.Errorf("inconsistent final plan: %s planned %v, then %v", d.Path, d.Value1, d.Value2)
+		}
+	}
+}
+
+// A value of the installation unknown at plan time may reinstall the VPS: the
+// plan warns, and plans unknown the image the configuration does not set, so
+// that the plan made at apply time is consistent with it.
+func TestVPSResourceModifyPlanUnknownInstallation(t *testing.T) {
+	unknown := ovhtypes.TfStringValue{StringValue: types.StringUnknown()}
+	mayWarning := "This apply may reinstall VPS " + vpsTestId + ", which erases its disk: installation depends on values known only at apply time"
+	installation := func(imageName, sshKey, script attr.Value) attr.Value {
+		return types.ObjectValueMust(vpsResourceInstallationAttrTypes(), map[string]attr.Value{
+			"from": types.ObjectValueMust(vpsInstallationFromAttrTypes(), map[string]attr.Value{
+				"image_id":   tfStr(vpsTestDebianId),
+				"image_name": imageName,
+			}),
+			"ssh_key":                  sshKey,
+			"post_installation_script": script,
+			"send_password_by_email":   types.BoolValue(true),
+		})
+	}
+	oldKey, oldScript := tfStr("ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOld old"), tfStr("#!/bin/sh\nold\n")
+	debian := tfStr("Debian 12")
+
+	for _, tc := range []struct {
+		name string
+		// attribute is the dotted path of the value unknown at plan time.
+		attribute       string
+		known           attr.Value
+		atPlan, atApply attr.Value
+	}{
+		{"ssh_key", "installation.ssh_key", tfStr(vpsTestSshKey),
+			installation(debian, unknown, oldScript), installation(debian, tfStr(vpsTestSshKey), oldScript)},
+		{"post_installation_script", "installation.post_installation_script", tfStr("#!/bin/sh\nnew\n"),
+			installation(debian, oldKey, unknown), installation(debian, oldKey, tfStr("#!/bin/sh\nnew\n"))},
+		{"image_name", "installation.from.image_name", tfStr("Ubuntu 24.04"),
+			installation(unknown, oldKey, oldScript), installation(tfStr("Ubuntu 24.04"), oldKey, oldScript)},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			api, actions := vpsTestUpdateAPI(t)
+			state := vpsTestUpdateState(t, map[string]attr.Value{"installation": installation(debian, oldKey, oldScript)})
+			configAt := func(value attr.Value) tfsdk.Plan {
+				return vpsTestUpdateConfig(t, map[string]attr.Value{
+					"installation.ssh_key":                  oldKey,
+					"installation.post_installation_script": oldScript,
+					tc.attribute:                            value,
+				})
+			}
+
+			atPlan := vpsTestModifyPlanUpdate(t, api, state, configAt(unknown), tfsdk.Plan(vpsTestUpdateState(t, map[string]attr.Value{"installation": tc.atPlan})))
+			if atPlan.Diagnostics.HasError() {
+				t.Fatalf("unexpected plan error: %v", atPlan.Diagnostics)
+			}
+			if !slices.ContainsFunc(atPlan.Diagnostics.Warnings(), func(d diag.Diagnostic) bool { return d.Detail() == mayWarning }) {
+				t.Errorf("warnings %v, want %q", atPlan.Diagnostics.Warnings(), mayWarning)
+			}
+			if got := vpsTestValue(t, atPlan.Plan.Raw, "installation.from.image_id"); got != "<unknown>" {
+				t.Errorf("installation.from.image_id planned %s, want <unknown>", got)
+			}
+
+			atApply := vpsTestModifyPlanUpdate(t, api, state, configAt(tc.known), tfsdk.Plan(vpsTestUpdateState(t, map[string]attr.Value{"installation": tc.atApply})))
+			if atApply.Diagnostics.HasError() {
+				t.Fatalf("unexpected apply plan error: %v", atApply.Diagnostics)
+			}
+			vpsTestCheckPlansConsistent(t, atPlan.Plan.Raw, atApply.Plan.Raw)
+			if got := actions.list(); len(got) != 0 {
+				t.Errorf("got action requests %q, want none", got)
+			}
+		})
+	}
+}
+
+// A reinstallation API v1 accepted runs on, even when its wait ends: the state
+// takes the new installation, and the next plan does not reinstall again.
+func TestVPSResourceUpdateRebuildStillRunning(t *testing.T) {
+	api, actions := vpsTestUpdateAPI(t)
+	api.handle("POST "+vpsTestBase+"/rebuild", func(body []byte) any {
+		actions.add("POST "+vpsTestBase+"/rebuild", body)
+		return api.serveTask(7, "reinstallVm", "doing")
+	})
+	timeouts := types.ObjectValueMust(vpsTimeoutsAttrTypes(), map[string]attr.Value{
+		"create": vpsTfStringPtr(nil),
+		"delete": vpsTfStringPtr(nil),
+		"update": tfStr("200ms"),
+	})
+	state := vpsTestUpdateState(t, map[string]attr.Value{"timeouts": timeouts})
+	plan := vpsTestUpdateState(t, map[string]attr.Value{
+		"timeouts":     timeouts,
+		"installation": vpsTestInstallation(tfStr(vpsTestSshKey)),
+		"power_state":  tfStr("SHUTOFF"),
+	})
+
+	resp := vpsTestUpdatePending(t, api, state, plan, vpsPrivateInstallationPending)
+	if !resp.Diagnostics.HasError() {
+		t.Fatal("expected an error: the reinstallation does not end in time")
+	}
+	if d := resp.Diagnostics.Errors()[0]; !strings.Contains(d.Summary(), "The reinstallation of VPS "+vpsTestId+" is still running") {
+		t.Errorf("error %q: %q, want the reinstallation still running", d.Summary(), d.Detail())
+	}
+	if got := vpsTestActionNames(actions.list()); !slices.Equal(got, []string{"POST /rebuild"}) {
+		t.Errorf("got requests %q, want the reinstallation only", got)
+	}
+	vpsTestCheckValues(t, resp.State.Raw, map[string]string{
+		"installation.ssh_key": vpsTestSshKey,
+		"power_state":          "ACTIVE",
+	})
+	if vpsTestPending(t, resp.Private) {
+		t.Error("installation_pending is still set: the next plan would reinstall the VPS again")
+	}
+	if !vpsTestHasKey(t, resp.Private, vpsPrivateInstallationKnown) {
+		t.Error("installation_known is not set after the reinstallation")
+	}
+}
+
+// API v1 answers 409 while another task runs on the VPS: the rename is tried
+// again.
+func TestVPSResourceUpdateDisplayNameRetriesConflict(t *testing.T) {
+	api, actions := vpsTestUpdateAPI(t)
+	calls := 0
+	api.handle("PUT "+vpsTestBase, func(body []byte) any {
+		calls++
+		if calls == 1 {
+			return vpsTestStatus{code: http.StatusConflict, message: "A task is already running"}
+		}
+		actions.add("PUT "+vpsTestBase, body)
+		api.change(vpsTestBase, func(vps map[string]any) { vps["displayName"] = "web-02" })
+		return nil
+	})
+	state := vpsTestUpdateState(t, nil)
+	plan := vpsTestUpdateState(t, map[string]attr.Value{"display_name": tfStr("web-02")})
+
+	resp := vpsTestUpdate(t, api, state, plan)
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected update error: %v", resp.Diagnostics)
+	}
+	if calls != 2 {
+		t.Errorf("PUT called %d times, want 2", calls)
+	}
+	vpsTestCheckValues(t, resp.State.Raw, map[string]string{"current_state.display_name": "web-02"})
 }

@@ -31,17 +31,24 @@ func vpsRequiresReplaceIfPriorKnown() planmodifier.String {
 // vpsChangeWithoutEffect tells whether changing the attribute at the dotted
 // path, whose state value is state, leaves the VPS as it is: the change is
 // only recorded in the state. Update and the plan of current_state share it.
-func vpsChangeWithoutEffect(path string, state tftypes.Value) bool {
+// installationKnown tells that Terraform installed the VPS (the private state
+// holds installation_known): a null installation value in the state then
+// means none, not one the state does not know.
+func vpsChangeWithoutEffect(path string, state tftypes.Value, installationKnown bool) bool {
 	switch path {
 	case "id", "current_state", "order", "timeouts", "installation.send_password_by_email":
 		return true
-	case "plan_code", "location.region", "installation.ssh_key", "installation.post_installation_script", "power_state",
+	case "installation.ssh_key", "installation.post_installation_script",
 		"installation.from.image_id", "installation.from.image_name":
 		// Null after an import or the migration of the state of the former
-		// ovh_vps, for power_state when read during a transitional state, or
-		// for the image when GET /vps/{serviceName}/images/current does not
-		// find it: the VPS already has a value, which the state did not know.
-		// The next Read reads the power state.
+		// ovh_vps: the key and the script are never read back, and the image
+		// is not when GET /vps/{serviceName}/images/current does not find it.
+		return state.IsNull() && !installationKnown
+	case "plan_code", "location.region", "power_state":
+		// Null after an import or the migration of the state of the former
+		// ovh_vps, or for power_state when read during a transitional state:
+		// the VPS already has a value, which the state did not know. The next
+		// Read reads the power state.
 		return state.IsNull()
 	}
 	return false
@@ -65,7 +72,9 @@ func (vpsCurrentStateModifier) PlanModifyObject(ctx context.Context, req planmod
 	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
 		return
 	}
-	if vpsUpdatePlanned(req.Plan.Raw, req.State.Raw, req.Config.Raw) {
+	flags, diags := vpsReadPrivate(ctx, req.Private)
+	resp.Diagnostics.Append(diags...)
+	if vpsUpdatePlanned(req.Plan.Raw, req.State.Raw, req.Config.Raw, flags.installationKnown) {
 		resp.PlanValue = types.ObjectUnknown(req.PlanValue.AttributeTypes(ctx))
 		return
 	}
@@ -74,16 +83,16 @@ func (vpsCurrentStateModifier) PlanModifyObject(ctx context.Context, req planmod
 
 // vpsUpdatePlanned tells whether the plan changes the VPS, which takes an API
 // call, rather than only the state (vpsChangeWithoutEffect).
-func vpsUpdatePlanned(plan, state, config tftypes.Value) bool {
-	return vpsValueChanged("", plan, state, config)
+func vpsUpdatePlanned(plan, state, config tftypes.Value, installationKnown bool) bool {
+	return vpsValueChanged("", plan, state, config, installationKnown)
 }
 
 // vpsValueChanged compares a plan value with the state value, object attribute
 // by object attribute. Once any attribute differs from the state, the framework
 // marks every computed attribute the configuration leaves out as unknown: such
 // an unknown is not a change the user asked for, so it does not count.
-func vpsValueChanged(path string, plan, state, config tftypes.Value) bool {
-	if path != "" && vpsChangeWithoutEffect(path, state) {
+func vpsValueChanged(path string, plan, state, config tftypes.Value, installationKnown bool) bool {
+	if path != "" && vpsChangeWithoutEffect(path, state, installationKnown) {
 		return false
 	}
 	if !plan.IsKnown() {
@@ -108,7 +117,7 @@ func vpsValueChanged(path string, plan, state, config tftypes.Value) bool {
 		if !ok {
 			s = tftypes.NewValue(p.Type(), nil)
 		}
-		if vpsValueChanged(vpsJoinPath(path, name), p, s, cm[name]) {
+		if vpsValueChanged(vpsJoinPath(path, name), p, s, cm[name], installationKnown) {
 			return true
 		}
 	}
