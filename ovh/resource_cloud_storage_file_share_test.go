@@ -2,12 +2,14 @@ package ovh
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/ovh/go-ovh/ovh"
 )
 
 func TestAccCloudStorageFileShare_basic(t *testing.T) {
@@ -306,6 +308,164 @@ resource "ovh_cloud_storage_file_share" "share" {
 			},
 		},
 	})
+}
+
+func TestAccCloudStorageFileShare_network(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+
+	vrackNetName := acctest.RandomWithPrefix(testAccResourceCloudStorageFileShareVrackSubnetNamePrefix)
+	vrackSubnetName := acctest.RandomWithPrefix(testAccResourceCloudStorageFileShareVrackSubnetNamePrefix)
+	shareName := acctest.RandomWithPrefix(testAccResourceCloudStorageFileShareNamePrefix)
+
+	config := testAccVrackNetworkSubnetConfig(serviceName, region, vrackNetName, vrackSubnetName) + fmt.Sprintf(`
+resource "ovh_cloud_storage_file_share" "share" {
+  service_name = "%s"
+  name         = "%s"
+  size         = 150
+  region       = "%s"
+  protocol     = "NFS"
+  share_type   = "STANDARD_1AZ"
+
+  network = {
+    subnet_id = ovh_cloud_network_private_vrack_subnet.vrack_subnet.id
+  }
+}
+
+data "ovh_cloud_storage_file_share_network" "created" {
+  service_name = "%s"
+  id           = ovh_cloud_storage_file_share.share.share_network_id
+}
+`, serviceName, shareName, region, serviceName)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloud(t)
+			testAccCheckCloudProjectExists(t)
+			testAccPreCheckVRack(t)
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCloudStorageFileShareCreatedShareNetworkDestroyed,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair("ovh_cloud_storage_file_share.share", "network.subnet_id", "ovh_cloud_network_private_vrack_subnet.vrack_subnet", "id"),
+					resource.TestCheckResourceAttrPair("ovh_cloud_storage_file_share.share", "network.id", "ovh_cloud_network_private_vrack.vrack_net", "id"),
+					resource.TestCheckResourceAttrSet("ovh_cloud_storage_file_share.share", "share_network_id"),
+					resource.TestCheckResourceAttrPair("ovh_cloud_storage_file_share.share", "current_state.share_network_id", "ovh_cloud_storage_file_share.share", "share_network_id"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_file_share.share", "resource_status", "READY"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_file_share.share", "current_state.status", "AVAILABLE"),
+					resource.TestCheckResourceAttr("data.ovh_cloud_storage_file_share_network.created", "name", shareName),
+					resource.TestCheckResourceAttrPair("data.ovh_cloud_storage_file_share_network.created", "subnet_id", "ovh_cloud_network_private_vrack_subnet.vrack_subnet", "id"),
+				),
+			},
+			{
+				Config:   config,
+				PlanOnly: true,
+			},
+			{
+				ResourceName:      "ovh_cloud_storage_file_share.share",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccCloudStorageFileShareImportStateIdFunc("ovh_cloud_storage_file_share.share"),
+			},
+		},
+	})
+}
+
+func TestAccCloudStorageFileShare_createFromSnapshotOfNetworkShare(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+
+	vrackNetName := acctest.RandomWithPrefix(testAccResourceCloudStorageFileShareVrackSubnetNamePrefix)
+	vrackSubnetName := acctest.RandomWithPrefix(testAccResourceCloudStorageFileShareVrackSubnetNamePrefix)
+	sourceShareName := acctest.RandomWithPrefix(testAccResourceCloudStorageFileShareNamePrefix)
+	snapshotName := acctest.RandomWithPrefix(testAccResourceCloudStorageFileShareNamePrefix)
+	shareFromSnapshotName := acctest.RandomWithPrefix(testAccResourceCloudStorageFileShareNamePrefix)
+
+	config := testAccVrackNetworkSubnetConfig(serviceName, region, vrackNetName, vrackSubnetName) + fmt.Sprintf(`
+resource "ovh_cloud_storage_file_share" "source" {
+  service_name = "%s"
+  name         = "%s"
+  size         = 150
+  region       = "%s"
+  protocol     = "NFS"
+  share_type   = "STANDARD_1AZ"
+
+  network = {
+    subnet_id = ovh_cloud_network_private_vrack_subnet.vrack_subnet.id
+  }
+}
+
+resource "ovh_cloud_storage_file_share_snapshot" "snapshot" {
+  service_name = "%s"
+  name         = "%s"
+  share_id     = ovh_cloud_storage_file_share.source.id
+}
+
+resource "ovh_cloud_storage_file_share" "share" {
+  service_name = "%s"
+  name         = "%s"
+  region       = "%s"
+  protocol     = "NFS"
+
+  create_from = {
+    snapshot_id = ovh_cloud_storage_file_share_snapshot.snapshot.id
+  }
+}
+`, serviceName, sourceShareName, region, serviceName, snapshotName, serviceName, shareFromSnapshotName, region)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloud(t)
+			testAccCheckCloudProjectExists(t)
+			testAccPreCheckVRack(t)
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckCloudStorageFileShareCreatedShareNetworkDestroyed,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair("ovh_cloud_storage_file_share.share", "network.id", "ovh_cloud_storage_file_share.source", "network.id"),
+					resource.TestCheckResourceAttrPair("ovh_cloud_storage_file_share.share", "network.subnet_id", "ovh_cloud_storage_file_share.source", "network.subnet_id"),
+					resource.TestCheckResourceAttrPair("ovh_cloud_storage_file_share.share", "share_network_id", "ovh_cloud_storage_file_share.source", "share_network_id"),
+					resource.TestCheckResourceAttr("ovh_cloud_storage_file_share.share", "resource_status", "READY"),
+				),
+			},
+			{
+				Config:   config,
+				PlanOnly: true,
+			},
+			{
+				ResourceName:      "ovh_cloud_storage_file_share.share",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccCloudStorageFileShareImportStateIdFunc("ovh_cloud_storage_file_share.share"),
+			},
+		},
+	})
+}
+
+func testAccCheckCloudStorageFileShareCreatedShareNetworkDestroyed(s *terraform.State) error {
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "ovh_cloud_storage_file_share" || rs.Primary.Attributes["network.subnet_id"] == "" {
+			continue
+		}
+
+		shareNetworkId := rs.Primary.Attributes["share_network_id"]
+		endpoint := "/v2/publicCloud/project/" + url.PathEscape(rs.Primary.Attributes["service_name"]) + "/storage/file/network/" + url.PathEscape(shareNetworkId)
+		err := testAccOVHClient.Get(endpoint, &CloudStorageFileShareNetworkAPIResponse{})
+		if err == nil {
+			return fmt.Errorf("share network %s created for file share %s still exists", shareNetworkId, rs.Primary.Attributes["id"])
+		}
+		if errOvh, ok := err.(*ovh.APIError); ok && errOvh.Code == 404 {
+			continue
+		}
+		return fmt.Errorf("error checking share network %s was destroyed: %w", shareNetworkId, err)
+	}
+	return nil
 }
 
 const testAccResourceCloudStorageFileShareNamePrefix = "tf-test-fileshare-v2-"

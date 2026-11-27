@@ -70,3 +70,52 @@ data "ovh_cloud_storage_file_shares" "shares" {
 		},
 	})
 }
+
+func TestAccDataSourceCloudStorageFileShares_network(t *testing.T) {
+	serviceName := os.Getenv("OVH_CLOUD_PROJECT_SERVICE_TEST")
+	region := os.Getenv("OVH_CLOUD_PROJECT_REGION_TEST")
+
+	vrackNetName := acctest.RandomWithPrefix(testAccResourceCloudStorageFileShareVrackSubnetNamePrefix)
+	vrackSubnetName := acctest.RandomWithPrefix(testAccResourceCloudStorageFileShareVrackSubnetNamePrefix)
+	shareName := acctest.RandomWithPrefix(test_prefix)
+
+	config := testAccVrackNetworkSubnetConfig(serviceName, region, vrackNetName, vrackSubnetName) + fmt.Sprintf(`
+resource "ovh_cloud_storage_file_share" "share" {
+  service_name = "%s"
+  name         = "%s"
+  size         = 150
+  region       = "%s"
+  protocol     = "NFS"
+  share_type   = "STANDARD_1AZ"
+
+  network = {
+    subnet_id = ovh_cloud_network_private_vrack_subnet.vrack_subnet.id
+  }
+}
+
+data "ovh_cloud_storage_file_shares" "shares" {
+  service_name = "%s"
+  region       = "%s"
+
+  depends_on = [ovh_cloud_storage_file_share.share]
+}
+`, serviceName, shareName, region, serviceName, region)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckCloud(t)
+			testAccCheckCloudProjectExists(t)
+			testAccPreCheckVRack(t)
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckTypeSetElemAttrPair("data.ovh_cloud_storage_file_shares.shares", "file_shares.*.network.subnet_id", "ovh_cloud_network_private_vrack_subnet.vrack_subnet", "id"),
+					resource.TestCheckTypeSetElemAttrPair("data.ovh_cloud_storage_file_shares.shares", "file_shares.*.share_network_id", "ovh_cloud_storage_file_share.share", "share_network_id"),
+				),
+			},
+		},
+	})
+}

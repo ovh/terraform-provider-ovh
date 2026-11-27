@@ -31,6 +31,9 @@ data "ovh_cloud_storage_file_share" "share" {
   * `region` - Region where the file share resides.
   * `availability_zone` - Availability zone where the file share resides.
 * `share_network_id` - ID of the share network the file share is attached to.
+* `network` - Private network and subnet the API created the file share's share network on; null when the file share uses a pre-existing share network:
+  * `id` - ID of the private network.
+  * `subnet_id` - ID of the subnet.
 * `encryption` - Encryption configuration of the file share:
   * `enabled` - Whether the file share is encrypted at rest with LUKS.
 * `checksum` - Computed hash representing the current target specification value.
