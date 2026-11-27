@@ -175,3 +175,13 @@ type OrderCartCheckoutPrices struct {
 type OrderCartCheckoutPrice struct {
 	Value float64 `json:"value"`
 }
+
+// OrderCartServiceOptionCreateOpts adds an option of a delivered service to a cart
+// (POST /order/cartServiceOption/{product}/{serviceName}).
+type OrderCartServiceOptionCreateOpts struct {
+	CartId      string `json:"cartId"`
+	Duration    string `json:"duration"`
+	PlanCode    string `json:"planCode"`
+	PricingMode string `json:"pricingMode"`
+	Quantity    int    `json:"quantity"`
+}

@@ -39,32 +39,117 @@ Read-Only:
 
 Read-Only:
 
-- `product_status` (String) Product status of the vRack Services
+- `bgp` (Attributes) BGP configuration of the vRack Services. Null when the BGP option is not subscribed (see [below for nested schema](#nestedatt--vrackservicess--current_state--bgp))
+- `configuration_status` (Attributes) vRack Services configuration status (see [below for nested schema](#nestedatt--vrackservicess--current_state--configuration_status))
 - `region` (String) Region of the vRack Services. List of compatible regions can be retrieved from /reference/region
+- `services` (Attributes) Services current state (see [below for nested schema](#nestedatt--vrackservicess--current_state--services))
 - `subnets` (Attributes List) Subnets of the current vRack Services (see [below for nested schema](#nestedatt--vrackservicess--current_state--subnets))
 - `vrack_id` (String) vRack associated to the vRack Services
 
-<a id="nestedatt--vrackservicess--current_state--subnets"></a>
-### Nested Schema for `vrackservicess.current_state.subnets`
+<a id="nestedatt--vrackservicess--current_state--bgp"></a>
+### Nested Schema for `vrackservicess.current_state.bgp`
 
 Read-Only:
 
-- `cidr` (String) IP address range of the subnet in CIDR format
-- `display_name` (String) Display name of the subnet
-- `service_endpoints` (Attributes List) Service endpoints of the subnet (see [below for nested schema](#nestedatt--vrackservicess--current_state--subnets--service_endpoints))
-- `service_range` (Attributes) Defines a smaller subnet dedicated to the managed services IPs (see [below for nested schema](#nestedatt--vrackservicess--current_state--subnets--service_range))
-- `vlan` (Number) Unique inner VLAN that allows subnets segregation
+- `allowed_prefixes` (Attributes) Allowed prefixes, OVHcloud public IP blocks announced through BGP (see [below for nested schema](#nestedatt--vrackservicess--current_state--bgp--allowed_prefixes))
+- `bandwidth` (Number) BGP ingress bandwidth in Mbps
+- `bgp_range` (Attributes List) BGP ranges (see [below for nested schema](#nestedatt--vrackservicess--current_state--bgp--bgp_range))
+- `client_asn` (Number) Client ASN
+- `configuration_status` (Attributes) BGP configuration status (see [below for nested schema](#nestedatt--vrackservicess--current_state--bgp--configuration_status))
+- `iam` (Attributes) IAM resource metadata of the BGP configuration (see [below for nested schema](#nestedatt--vrackservicess--current_state--bgp--iam))
+- `id` (String) BGP identifier
+- `infrastructure_asn` (Number) Infrastructure ASN
 
-<a id="nestedatt--vrackservicess--current_state--subnets--service_endpoints"></a>
-### Nested Schema for `vrackservicess.current_state.subnets.service_endpoints`
+<a id="nestedatt--vrackservicess--current_state--bgp--allowed_prefixes"></a>
+### Nested Schema for `vrackservicess.current_state.bgp.allowed_prefixes`
 
 Read-Only:
 
-- `endpoints` (Attributes List) Endpoints representing the IPs assigned to the managed services (see [below for nested schema](#nestedatt--vrackservicess--current_state--subnets--service_endpoints--endpoints))
+- `ipv4` (List of String) Allowed IPv4 prefixes
+- `ipv6` (List of String) Allowed IPv6 prefixes
+
+
+<a id="nestedatt--vrackservicess--current_state--bgp--bgp_range"></a>
+### Nested Schema for `vrackservicess.current_state.bgp.bgp_range`
+
+Read-Only:
+
+- `cidr` (String) BGP range CIDR
+- `client_peers` (List of String) Client peer IPs within the BGP range CIDR
+- `configuration_status` (Attributes) BGP range configuration status (see [below for nested schema](#nestedatt--vrackservicess--current_state--bgp--bgp_range--configuration_status))
+- `infrastructure_peers` (List of String) Infrastructure peer IPs within the BGP range CIDR
+- `subnet_cidr` (String) Referenced subnet CIDR
+
+<a id="nestedatt--vrackservicess--current_state--bgp--bgp_range--configuration_status"></a>
+### Nested Schema for `vrackservicess.current_state.bgp.bgp_range.configuration_status`
+
+Read-Only:
+
+- `reason` (String) Reason explaining the BGP range configuration status
+- `status` (String) BGP range configuration status (`DRAFT`, `READY`)
+
+
+
+<a id="nestedatt--vrackservicess--current_state--bgp--configuration_status"></a>
+### Nested Schema for `vrackservicess.current_state.bgp.configuration_status`
+
+Read-Only:
+
+- `reason` (String) Reason for the status. Omitted when status is `READY`
+- `status` (String) Configuration status (`DRAFT`, `READY`, `SUSPENDED`)
+
+
+<a id="nestedatt--vrackservicess--current_state--bgp--iam"></a>
+### Nested Schema for `vrackservicess.current_state.bgp.iam`
+
+Read-Only:
+
+- `display_name` (String) Resource display name
+- `id` (String) Unique identifier of the resource
+- `state` (String) Resource state
+- `urn` (String) Unique resource name used in policies
+
+
+
+<a id="nestedatt--vrackservicess--current_state--configuration_status"></a>
+### Nested Schema for `vrackservicess.current_state.configuration_status`
+
+Read-Only:
+
+- `reason` (String) Reason for the status. Omitted when status is `READY`
+- `status` (String) Configuration status (`DRAFT`, `READY`, `SUSPENDED`)
+
+
+<a id="nestedatt--vrackservicess--current_state--services"></a>
+### Nested Schema for `vrackservicess.current_state.services`
+
+Read-Only:
+
+- `service_range` (Attributes List) Service ranges (see [below for nested schema](#nestedatt--vrackservicess--current_state--services--service_range))
+
+<a id="nestedatt--vrackservicess--current_state--services--service_range"></a>
+### Nested Schema for `vrackservicess.current_state.services.service_range`
+
+Read-Only:
+
+- `cidr` (String) Service range CIDR
+- `remaining_ips` (Number) Number of remaining IPs in the service range
+- `reserved_ips` (Number) Number of service range IPs reserved by OVHcloud
+- `service_endpoints` (Attributes List) Service endpoints (see [below for nested schema](#nestedatt--vrackservicess--current_state--services--service_range--service_endpoints))
+- `service_endpoints_configuration_status` (Attributes) Service endpoints configuration status (see [below for nested schema](#nestedatt--vrackservicess--current_state--services--service_range--service_endpoints_configuration_status))
+- `subnet_cidr` (String) Subnet CIDR
+- `used_ips` (Number) Number of service range IPs assigned to the managed services
+
+<a id="nestedatt--vrackservicess--current_state--services--service_range--service_endpoints"></a>
+### Nested Schema for `vrackservicess.current_state.services.service_range.service_endpoints`
+
+Read-Only:
+
+- `endpoints` (Attributes List) Endpoints representing the IPs assigned to the managed services (see [below for nested schema](#nestedatt--vrackservicess--current_state--services--service_range--service_endpoints--endpoints))
 - `managed_service_urn` (String) IAM Resource URN of the managed service. Compatible managed service types are listed by /reference/compatibleManagedServiceType call.
 
-<a id="nestedatt--vrackservicess--current_state--subnets--service_endpoints--endpoints"></a>
-### Nested Schema for `vrackservicess.current_state.subnets.service_endpoints.endpoints`
+<a id="nestedatt--vrackservicess--current_state--services--service_range--service_endpoints--endpoints"></a>
+### Nested Schema for `vrackservicess.current_state.services.service_range.service_endpoints.endpoints`
 
 Read-Only:
 
@@ -73,16 +158,26 @@ Read-Only:
 
 
 
-<a id="nestedatt--vrackservicess--current_state--subnets--service_range"></a>
-### Nested Schema for `vrackservicess.current_state.subnets.service_range`
+<a id="nestedatt--vrackservicess--current_state--services--service_range--service_endpoints_configuration_status"></a>
+### Nested Schema for `vrackservicess.current_state.services.service_range.service_endpoints_configuration_status`
 
 Read-Only:
 
-- `cidr` (String) CIDR dedicated to the subnet's services
-- `remaining_ips` (Number) Number of remaining IPs in the service range
-- `reserved_ips` (Number) Number of service range IPs reserved by OVHcloud
-- `used_ips` (Number) Number of service range IPs assigned to the managed services
+- `reason` (String) Reason for the status
+- `status` (String) Configuration status (`DRAFT`, `READY`)
 
+
+
+
+<a id="nestedatt--vrackservicess--current_state--subnets"></a>
+### Nested Schema for `vrackservicess.current_state.subnets`
+
+Read-Only:
+
+- `az` (String) Availability zone of the subnet
+- `cidr` (String) IP address range of the subnet in CIDR format
+- `display_name` (String) Display name of the subnet
+- `vlan` (Number) Unique inner VLAN that allows subnets segregation
 
 
 
@@ -113,30 +208,73 @@ Read-Only:
 
 Read-Only:
 
-- `subnets` (Attributes List) Target specification of the subnets. Maximum one subnet per vRack Services (see [below for nested schema](#nestedatt--vrackservicess--target_spec--subnets))
+- `bgp` (Attributes) Target specification of the BGP configuration (see [below for nested schema](#nestedatt--vrackservicess--target_spec--bgp))
+- `services` (Attributes) Target specification of the services (see [below for nested schema](#nestedatt--vrackservicess--target_spec--services))
+- `subnets` (Attributes List) Target specification of the subnets (see [below for nested schema](#nestedatt--vrackservicess--target_spec--subnets))
 
-<a id="nestedatt--vrackservicess--target_spec--subnets"></a>
-### Nested Schema for `vrackservicess.target_spec.subnets`
+<a id="nestedatt--vrackservicess--target_spec--bgp"></a>
+### Nested Schema for `vrackservicess.target_spec.bgp`
 
 Read-Only:
 
-- `cidr` (String) IP address range of the subnet in CIDR format. Must be a private network address (RFC1918). Authorized range for prefix length: /16 to /24
-- `display_name` (String) Display name of the subnet. Format must follow `^[ a-zA-Z0-9-_.]{0,40}$`
-- `service_endpoints` (Attributes List) Target specification of the Service Endpoints (see [below for nested schema](#nestedatt--vrackservicess--target_spec--subnets--service_endpoints))
-- `service_range` (Attributes) Defines a smaller subnet dedicated to the managed service IPs (see [below for nested schema](#nestedatt--vrackservicess--target_spec--subnets--service_range))
-- `vlan` (Number) Unique inner VLAN that allows subnets segregation. Authorized values: [2 - 4094] and `null` (untagged traffic)
+- `allowed_prefixes` (Attributes) Allowed prefixes, OVHcloud public IP blocks announced through BGP (see [below for nested schema](#nestedatt--vrackservicess--target_spec--bgp--allowed_prefixes))
+- `bgp_range` (Attributes List) Target specification of the BGP ranges. At most one BGP range per subnet (see [below for nested schema](#nestedatt--vrackservicess--target_spec--bgp--bgp_range))
+- `client_asn` (Number) Private client ASN. Authorized values: [64512 - 65533]. Default value: 64512
+- `infrastructure_asn` (Number) Private infrastructure ASN. Authorized values: [64513 - 65534]. Default value: 65534
 
-<a id="nestedatt--vrackservicess--target_spec--subnets--service_endpoints"></a>
-### Nested Schema for `vrackservicess.target_spec.subnets.service_endpoints`
+<a id="nestedatt--vrackservicess--target_spec--bgp--allowed_prefixes"></a>
+### Nested Schema for `vrackservicess.target_spec.bgp.allowed_prefixes`
+
+Read-Only:
+
+- `ipv4` (List of String) Allowed IPv4 prefixes. Prefix length must be between /24 and /30
+- `ipv6` (List of String) Allowed IPv6 prefixes. Prefix length must be /56
+
+
+<a id="nestedatt--vrackservicess--target_spec--bgp--bgp_range"></a>
+### Nested Schema for `vrackservicess.target_spec.bgp.bgp_range`
+
+Read-Only:
+
+- `cidr` (String) BGP range CIDR, contained in the referenced subnet
+- `client_peers` (List of String) Client peer IPs within the BGP range CIDR (1 to 4). Must be of the same IP version as the referenced subnet
+- `infrastructure_peers` (List of String) Infrastructure peer IPs within the BGP range CIDR. Must be of the same IP version as the referenced subnet
+- `subnet_cidr` (String) Referenced subnet CIDR. The referenced subnet must be untagged (`vlan` must be `null`)
+
+
+
+<a id="nestedatt--vrackservicess--target_spec--services"></a>
+### Nested Schema for `vrackservicess.target_spec.services`
+
+Read-Only:
+
+- `service_range` (Attributes List) Service range target specifications (see [below for nested schema](#nestedatt--vrackservicess--target_spec--services--service_range))
+
+<a id="nestedatt--vrackservicess--target_spec--services--service_range"></a>
+### Nested Schema for `vrackservicess.target_spec.services.service_range`
+
+Read-Only:
+
+- `cidr` (String) Service range CIDR, contained in the referenced subnet
+- `service_endpoints` (Attributes List) Service endpoint target specifications (see [below for nested schema](#nestedatt--vrackservicess--target_spec--services--service_range--service_endpoints))
+- `subnet_cidr` (String) Referenced subnet CIDR
+
+<a id="nestedatt--vrackservicess--target_spec--services--service_range--service_endpoints"></a>
+### Nested Schema for `vrackservicess.target_spec.services.service_range.service_endpoints`
 
 Read-Only:
 
 - `managed_service_urn` (String) IAM Resource URN of the managed service. Managed service Region must match vRack Services Region. Compatible managed service types are listed by /reference/compatibleManagedServiceType call
 
 
-<a id="nestedatt--vrackservicess--target_spec--subnets--service_range"></a>
-### Nested Schema for `vrackservicess.target_spec.subnets.service_range`
+
+
+<a id="nestedatt--vrackservicess--target_spec--subnets"></a>
+### Nested Schema for `vrackservicess.target_spec.subnets`
 
 Read-Only:
 
-- `cidr` (String) IP address range dedicated to the subnet's services in CIDR format. Must be a private network address (RFC1918). Must be a sub-network of the subnet. Authorized range for prefix length: /27 to /29
+- `az` (String) Availability zone of the subnet
+- `cidr` (String) IP address range of the subnet in CIDR format. Must be a private network address (RFC1918)
+- `display_name` (String) Display name of the subnet. Format must follow `^[ a-zA-Z0-9-_.]{0,40}$`
+- `vlan` (Number) Unique inner VLAN that allows subnets segregation. Authorized values: [2 - 4094] and `null` (untagged traffic). Must be `null` when the subnet is referenced by a BGP range

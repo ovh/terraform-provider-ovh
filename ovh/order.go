@@ -339,39 +339,59 @@ func orderCreate(d *OrderModel, config *Config, product string, waitForCompletio
 		}
 	}
 
+	checkout, err := orderCartCheckoutAndPay(config, cart.CartId, product)
+	if err != nil {
+		return err
+	}
+
+	// Wait for order to be completed
+	if waitForCompletion {
+		if err := waitOrderCompletion(config, checkout.OrderID, timeout); err != nil {
+			return fmt.Errorf("waiting for order (%d): %s", checkout.OrderID, err)
+		}
+	}
+
+	d.Order.OrderId = types.TfInt64Value{Int64Value: basetypes.NewInt64Value(checkout.OrderID)}
+
+	return nil
+}
+
+// orderCartCheckoutAndPay checks out the given cart and pays the resulting order
+// with the default payment method, or with the fidelity account for a free order.
+func orderCartCheckoutAndPay(config *Config, cartID, product string) (*OrderCartCheckout, error) {
 	// get defaultPayment
 	paymentIds := []int64{}
-	endpoint = "/me/payment/method?default=true"
+	endpoint := "/me/payment/method?default=true"
 	if err := config.OVHClient.Get(endpoint, &paymentIds); err != nil {
-		return fmt.Errorf("calling Get %s \n\t %q", endpoint, err)
+		return nil, fmt.Errorf("calling Get %s \n\t %q", endpoint, err)
 	}
 
 	fallbackToFidelityAccount := false
 	if len(paymentIds) == 0 {
 		// check if amount of the order is 0€, we can try to use fidelity account to pay order
-		log.Printf("[DEBUG] Will create order %s for cart: %s", product, cart.CartId)
+		log.Printf("[DEBUG] Will create order %s for cart: %s", product, cartID)
 		checkout := &OrderCartCheckout{}
 
-		endpoint = fmt.Sprintf("/order/cart/%s/checkout", url.PathEscape(cart.CartId))
+		endpoint = fmt.Sprintf("/order/cart/%s/checkout", url.PathEscape(cartID))
 		if err := config.OVHClient.Get(endpoint, checkout); err != nil {
-			return fmt.Errorf("calling Get %s:\n\t %q", endpoint, err)
+			return nil, fmt.Errorf("calling Get %s:\n\t %q", endpoint, err)
 		}
 
 		if checkout.Prices.WithoutTax.Value == 0 {
 			fallbackToFidelityAccount = true
 
 		} else {
-			return fmt.Errorf("no default payment found")
+			return nil, fmt.Errorf("no default payment found")
 		}
 	}
 
 	// Create Order
-	log.Printf("[DEBUG] Will create order %s for cart: %s", product, cart.CartId)
+	log.Printf("[DEBUG] Will create order %s for cart: %s", product, cartID)
 	checkout := &OrderCartCheckout{}
 
-	endpoint = fmt.Sprintf("/order/cart/%s/checkout", url.PathEscape(cart.CartId))
+	endpoint = fmt.Sprintf("/order/cart/%s/checkout", url.PathEscape(cartID))
 	if err := config.OVHClient.Post(endpoint, nil, checkout); err != nil {
-		return fmt.Errorf("calling Post %s:\n\t %q", endpoint, err)
+		return nil, fmt.Errorf("calling Post %s:\n\t %q", endpoint, err)
 	}
 
 	// Pay Order
@@ -388,7 +408,7 @@ func orderCreate(d *OrderModel, config *Config, product string, waitForCompletio
 			},
 		}
 		if err := config.OVHClient.Post(endpoint, paymentMethodOpts, nil); err != nil {
-			return fmt.Errorf("calling Post %s:\n\t %q", endpoint, err)
+			return nil, fmt.Errorf("calling Post %s:\n\t %q", endpoint, err)
 		}
 	} else {
 		log.Printf("[DEBUG] Will pay free order %d with fidelityAccount", checkout.OrderID)
@@ -400,21 +420,12 @@ func orderCreate(d *OrderModel, config *Config, product string, waitForCompletio
 			PaymentMean: "fidelityAccount",
 		}
 		if err := config.OVHClient.Post(endpoint, paymentMethodOpts, nil); err != nil {
-			return fmt.Errorf("calling Post %s:\n\t %q", endpoint, err)
+			return nil, fmt.Errorf("calling Post %s:\n\t %q", endpoint, err)
 		}
 
 	}
 
-	// Wait for order to be completed
-	if waitForCompletion {
-		if err := waitOrderCompletion(config, checkout.OrderID, timeout); err != nil {
-			return fmt.Errorf("waiting for order (%d): %s", checkout.OrderID, err)
-		}
-	}
-
-	d.Order.OrderId = types.TfInt64Value{Int64Value: basetypes.NewInt64Value(checkout.OrderID)}
-
-	return nil
+	return checkout, nil
 }
 
 func waitOrderCompletion(config *Config, orderID int64, timeout time.Duration) error {
@@ -477,6 +488,89 @@ func orderRead(orderId string, config *Config) (*MeOrder, []*MeOrderDetail, erro
 
 type TerminateFunc func() (string, error)
 type ConfirmTerminationFunc func(token string) error
+
+// orderServiceOption orders an option on a delivered service and waits for the order completion:
+// cart, POST /order/cartServiceOption/{product}/{serviceName}, option configuration, checkout and
+// payment. The option delivery itself is product specific and left to the caller.
+func orderServiceOption(ctx context.Context, config *Config, product, serviceName, ovhSubsidiary string, option PlanOptionValue) error {
+	if ovhSubsidiary == "" {
+		subsidiary, err := getOVHSubsidiary(ctx, config.OVHClient)
+		if err != nil {
+			return fmt.Errorf("ovh_subsidiary is missing from configuration, and it couldn't be fetched automatically: %w", err)
+		}
+		ovhSubsidiary = subsidiary
+	}
+
+	cart, err := orderCartCreate(config, &OrderCartCreateOpts{OvhSubsidiary: strings.ToUpper(ovhSubsidiary)}, true)
+	if err != nil {
+		return fmt.Errorf("creating order cart: %w", err)
+	}
+
+	params := &OrderCartServiceOptionCreateOpts{
+		CartId:      cart.CartId,
+		Duration:    option.Duration.ValueString(),
+		PlanCode:    option.PlanCode.ValueString(),
+		PricingMode: option.PricingMode.ValueString(),
+		Quantity:    1,
+	}
+	item := &OrderCartItem{}
+	log.Printf("[DEBUG] Will add option %s of %s %s to cart: %s", params.PlanCode, product, serviceName, cart.CartId)
+	endpoint := fmt.Sprintf("/order/cartServiceOption/%s/%s", url.PathEscape(product), url.PathEscape(serviceName))
+	if err := config.OVHClient.Post(endpoint, params, item); err != nil {
+		return fmt.Errorf("calling Post %s with params %v: %w", endpoint, params, err)
+	}
+
+	for _, cfg := range option.Configuration.Elements() {
+		endpoint := fmt.Sprintf("/order/cart/%s/item/%d/configuration", url.PathEscape(cart.CartId), item.ItemId)
+		if err := config.OVHClient.Post(endpoint, cfg, &OrderCartItemConfiguration{}); err != nil {
+			return fmt.Errorf("calling Post %s with params %v: %w", endpoint, cfg, err)
+		}
+	}
+
+	checkout, err := orderCartCheckoutAndPay(config, cart.CartId, product+" option")
+	if err != nil {
+		return err
+	}
+
+	if err := waitOrderCompletion(config, checkout.OrderID, defaultOrderTimeout); err != nil {
+		return fmt.Errorf("waiting for order (%d): %w", checkout.OrderID, err)
+	}
+
+	return nil
+}
+
+// orderTerminateServiceByResourceName terminates, through the generic /services routes, the service
+// holding the given resource name: a product or one of its options (e.g. the BGP option of a
+// vRack Services, named after its BGP identifier).
+func orderTerminateServiceByResourceName(config *Config, resourceName string) error {
+	serviceID, err := serviceIdFromResourceName(config.OVHClient, resourceName)
+	if err != nil {
+		return fmt.Errorf("failed to get service id to terminate service: %w", err)
+	}
+
+	terminate := func() (string, error) {
+		log.Printf("[DEBUG] Will terminate service %s", resourceName)
+		endpoint := fmt.Sprintf("/services/%d/terminate", serviceID)
+		if err := config.OVHClient.Post(endpoint, nil, nil); err != nil {
+			if errOvh, ok := err.(*ovh.APIError); ok && (errOvh.Code == 404 || errOvh.Code == 460) {
+				return "", nil
+			}
+			return "", fmt.Errorf("calling Post %s:\n\t %q", endpoint, err)
+		}
+		return resourceName, nil
+	}
+
+	confirmTerminate := func(token string) error {
+		log.Printf("[DEBUG] Will confirm termination of service %s", resourceName)
+		endpoint := fmt.Sprintf("/services/%d/terminate/confirm", serviceID)
+		if err := config.OVHClient.Post(endpoint, &ConfirmTerminationOpts{Token: token}, nil); err != nil {
+			return fmt.Errorf("calling Post %s:\n\t %q", endpoint, err)
+		}
+		return nil
+	}
+
+	return orderDelete(config, terminate, confirmTerminate)
+}
 
 func orderDeleteFromResource(d *schema.ResourceData, meta interface{}, terminate TerminateFunc, confirm ConfirmTerminationFunc) error {
 	config := meta.(*Config)
