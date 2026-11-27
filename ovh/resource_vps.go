@@ -173,10 +173,15 @@ func (r *vpsResource) Create(ctx context.Context, req resource.CreateRequest, re
 
 	// Saved before the delivery, so that a timeout keeps the order.
 	duration, pricingMode := data.orderTerms()
+	options, ok := vpsAttributeAt(data.Order, "options").(types.List)
+	if !ok || options.IsUnknown() {
+		options = types.ListNull(types.StringType)
+	}
 	data.Order = types.ObjectValueMust(vpsOrderAttrTypes(), map[string]attr.Value{
 		"duration":     tfStr(duration),
 		"pricing_mode": tfStr(pricingMode),
 		"order_id":     types.Int64Value(order.Order.OrderId.ValueInt64()),
+		"options":      options,
 	})
 	resp.Diagnostics.Append(vpsSetState(ctx, &resp.State, &data, tftypes.NewValue(req.Plan.Raw.Type(), nil))...)
 	if resp.Diagnostics.HasError() {
@@ -438,7 +443,7 @@ func (r *vpsResource) orderFor(ctx context.Context, m *VPSResourceModel) (*Order
 		return nil, diags
 	}
 	duration, pricingMode := m.orderTerms()
-	order, orderDiags := vpsOrderModel(ctx, orderable.planCode, orderable.datacenter, orderable.imageName, duration, pricingMode, orderable.subsidiary)
+	order, orderDiags := vpsOrderModel(ctx, orderable.planCode, orderable.datacenter, orderable.imageName, duration, pricingMode, orderable.subsidiary, orderable.options)
 	diags.Append(orderDiags...)
 	return order, diags
 }
@@ -446,6 +451,23 @@ func (r *vpsResource) orderFor(ctx context.Context, m *VPSResourceModel) (*Order
 // vpsOrderable is what the order of a VPS takes, once checked in the catalog.
 type vpsOrderable struct {
 	subsidiary, planCode, datacenter, imageName string
+	options                                     []string
+}
+
+// orderOptions returns the plan codes of order.options that are known; a list
+// unknown at plan time is left to Create.
+func (m *VPSResourceModel) orderOptions() []string {
+	list, ok := vpsAttributeAt(m.Order, "options").(types.List)
+	if !ok || list.IsNull() || list.IsUnknown() {
+		return nil
+	}
+	var options []string
+	for _, element := range list.Elements() {
+		if option, ok := element.(types.String); ok && !option.IsNull() && !option.IsUnknown() {
+			options = append(options, option.ValueString())
+		}
+	}
+	return options
 }
 
 // checkOrderable checks in the order catalog of the subsidiary of the account
@@ -502,10 +524,25 @@ func (r *vpsResource) checkOrderable(ctx context.Context, m *VPSResourceModel) (
 				planCode, imageName, strings.Join(offer.Images, ", ")),
 		)
 	}
+	options := m.orderOptions()
+	var unknown []string
+	for _, option := range options {
+		if !slices.Contains(offer.Options, option) {
+			unknown = append(unknown, fmt.Sprintf("%q", option))
+		}
+	}
+	if len(unknown) > 0 {
+		possible := slices.Sorted(slices.Values(offer.Options))
+		diags.AddAttributeError(path.Root("order").AtName("options"),
+			"Option not available for this plan",
+			fmt.Sprintf("Plan %s cannot be ordered with option %s. Possible options: %s",
+				planCode, strings.Join(unknown, ", "), strings.Join(possible, ", ")),
+		)
+	}
 	if diags.HasError() {
 		return nil, diags
 	}
-	return &vpsOrderable{subsidiary: subsidiary, planCode: planCode, datacenter: datacenter, imageName: imageName}, diags
+	return &vpsOrderable{subsidiary: subsidiary, planCode: planCode, datacenter: datacenter, imageName: imageName, options: options}, diags
 }
 
 // vpsOrderableRegions returns the regions of the datacenter codes, sorted; the
@@ -891,6 +928,7 @@ func (m *VPSResourceModel) mergeRead(ctx context.Context, srv *VPSAPIServer, bil
 		"duration":     vpsTfStringPtr(nil),
 		"pricing_mode": vpsTfStringPtr(nil),
 		"order_id":     types.Int64Null(),
+		"options":      types.ListNull(types.StringType),
 	}
 	if !m.Order.IsNull() && !m.Order.IsUnknown() {
 		maps.Copy(order, m.Order.Attributes())

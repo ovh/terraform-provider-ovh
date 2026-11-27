@@ -201,6 +201,7 @@ func TestVPSResourceSchemaModes(t *testing.T) {
 		"order.duration":                        {false, true, true},
 		"order.pricing_mode":                    {false, true, true},
 		"order.order_id":                        {false, false, true},
+		"order.options":                         {false, true, false},
 		"timeouts":                              {false, true, false},
 		"timeouts.create":                       {false, true, false},
 		"timeouts.update":                       {false, true, false},

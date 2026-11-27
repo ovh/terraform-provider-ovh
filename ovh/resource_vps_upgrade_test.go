@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -162,9 +163,38 @@ func TestUpgradeVPSStateV0Ordered(t *testing.T) {
 		"order.duration":                        "P1M",
 		"order.pricing_mode":                    "default",
 		"order.order_id":                        "42",
+		"order.options":                         "<object>",
 		"timeouts":                              "<null>",
 		"current_state":                         "<null>",
 	})
+	var options []string
+	if diags := state.GetAttribute(context.Background(), path.Root("order").AtName("options"), &options); diags.HasError() {
+		t.Fatalf("reading order.options: %v", diags)
+	}
+	if want := []string{"option-disk-100"}; !slices.Equal(options, want) {
+		t.Errorf("order.options = %q, want %q", options, want)
+	}
+}
+
+// An empty plan_option gives a null order.options.
+func TestUpgradeVPSStateV0NoPlanOption(t *testing.T) {
+	var v0 map[string]any
+	if err := json.Unmarshal([]byte(vpsTestV0OrderedState), &v0); err != nil {
+		t.Fatal(err)
+	}
+	for name, planOption := range map[string]string{"empty": `[]`, "null": `null`} {
+		t.Run(name, func(t *testing.T) {
+			v0["plan_option"] = json.RawMessage(planOption)
+			raw, err := json.Marshal(v0)
+			if err != nil {
+				t.Fatal(err)
+			}
+			vpsTestCheckValues(t, vpsTestUpgrade(t, string(raw)).Raw, map[string]string{
+				"order.order_id": "42",
+				"order.options":  "<null>",
+			})
+		})
+	}
 }
 
 func TestUpgradeVPSStateV0Imported(t *testing.T) {

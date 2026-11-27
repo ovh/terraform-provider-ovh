@@ -515,6 +515,7 @@ func TestVPSResourceUpdateNotDelivered(t *testing.T) {
 				"duration":     tfStr("P1M"),
 				"pricing_mode": tfStr("default"),
 				"order_id":     types.Int64Value(vpsTestOrderId),
+				"options":      types.ListNull(types.StringType),
 			}),
 		}
 		for name, value := range overrides {
@@ -605,5 +606,33 @@ func TestVPSResourceUpdateRebuildKeepsPowerState(t *testing.T) {
 				"installation.ssh_key":      vpsTestSshKey,
 			})
 		})
+	}
+}
+
+// order.options only applies to the order: a change is recorded in the state.
+func TestVPSResourceUpdateOrderOptionsOnlyRecorded(t *testing.T) {
+	api, _ := vpsTestUpdateAPI(t)
+	order := func(options types.List) attr.Value {
+		return types.ObjectValueMust(vpsOrderAttrTypes(), map[string]attr.Value{
+			"duration":     tfStr("P1M"),
+			"pricing_mode": tfStr("default"),
+			"order_id":     types.Int64Value(42),
+			"options":      options,
+		})
+	}
+	state := vpsTestUpdateState(t, map[string]attr.Value{"order": order(types.ListNull(types.StringType))})
+	plan := vpsTestUpdateState(t, map[string]attr.Value{"order": order(types.ListValueMust(types.StringType, []attr.Value{
+		types.StringValue("option-snapshot-2025-model1"),
+	}))})
+
+	resp := vpsTestUpdate(t, api, state, plan)
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected update error: %v", resp.Diagnostics)
+	}
+	if !resp.State.Raw.Equal(plan.Raw) {
+		t.Errorf("state = %v, want the plan %v", resp.State.Raw, plan.Raw)
+	}
+	if got := vpsTestRequests(api); got != 0 {
+		t.Errorf("%d API calls, want 0", got)
 	}
 }

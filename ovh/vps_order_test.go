@@ -31,6 +31,7 @@ var vpsTestCatalog = map[string]any{
 				map[string]any{"name": "vps_install_rtm", "isCustom": false, "isMandatory": false, "values": []string{"if_available", "no"}},
 				map[string]any{"name": "vps_os", "isCustom": false, "isMandatory": false, "values": vpsTestCatalogImages},
 			},
+			"addonFamilies": vpsTestCatalogAddonFamilies,
 		},
 	},
 }
@@ -38,6 +39,32 @@ var vpsTestCatalog = map[string]any{
 // vpsTestCatalogImages is the vps_os configuration of plan vps-2025-model1
 // (FR, 2026-11-25), shortened.
 var vpsTestCatalogImages = []string{"AlmaLinux 9", "Debian 12", "Debian 13", "Ubuntu 24.04", "Windows Server 2025 Standard (Desktop)"}
+
+// vpsTestCatalogAddonFamilies is the addonFamilies of plan vps-2025-model1
+// (FR, 2026-11-27), the cpanel family shortened.
+var vpsTestCatalogAddonFamilies = []any{
+	map[string]any{"name": "cpanel", "exclusive": true, "mandatory": false, "addons": []string{"option-cpanel-200", "option-cpanel-30"}, "default": nil},
+	map[string]any{"name": "os", "exclusive": true, "mandatory": true, "addons": []string{"option-linux", "option-windows-2025-model1"}, "default": nil},
+	map[string]any{"name": "plesk", "exclusive": true, "mandatory": false, "addons": []string{"option-plesk-webadmin", "option-plesk-webhost", "option-plesk-webpro"}, "default": nil},
+	map[string]any{"name": "automatedBackup", "exclusive": true, "mandatory": true, "addons": []string{"option-auto-backup-2025-1-model1", "option-auto-backup-2025-7-model1"}, "default": nil},
+	map[string]any{"name": "additionalDisk", "exclusive": true, "mandatory": false, "addons": []string{
+		"option-additional-disk-2025-10000g", "option-additional-disk-2025-1000g", "option-additional-disk-2025-5000g", "option-additional-disk-2025-100g",
+		"option-additional-disk-2025-200g", "option-additional-disk-2025-500g", "option-additional-disk-2025-50g",
+	}, "default": nil},
+	map[string]any{"name": "snapshot", "exclusive": true, "mandatory": false, "addons": []string{"option-snapshot-2025-model1"}, "default": nil},
+}
+
+// vpsTestCatalogOptions is the plan codes of vpsTestCatalogAddonFamilies, in
+// their order.
+var vpsTestCatalogOptions = []string{
+	"option-cpanel-200", "option-cpanel-30",
+	"option-linux", "option-windows-2025-model1",
+	"option-plesk-webadmin", "option-plesk-webhost", "option-plesk-webpro",
+	"option-auto-backup-2025-1-model1", "option-auto-backup-2025-7-model1",
+	"option-additional-disk-2025-10000g", "option-additional-disk-2025-1000g", "option-additional-disk-2025-5000g", "option-additional-disk-2025-100g",
+	"option-additional-disk-2025-200g", "option-additional-disk-2025-500g", "option-additional-disk-2025-50g",
+	"option-snapshot-2025-model1",
+}
 
 func TestVPSOrderOfferFor(t *testing.T) {
 	api := newVPSTestAPI()
@@ -53,6 +80,9 @@ func TestVPSOrderOfferFor(t *testing.T) {
 	}
 	if !slices.Equal(offer.Images, vpsTestCatalogImages) {
 		t.Errorf("images: got %v, want %v", offer.Images, vpsTestCatalogImages)
+	}
+	if !slices.Equal(offer.Options, vpsTestCatalogOptions) {
+		t.Errorf("options: got %v, want %v", offer.Options, vpsTestCatalogOptions)
 	}
 }
 
@@ -79,7 +109,7 @@ func TestVPSOrderOfferForCatalogError(t *testing.T) {
 }
 
 func TestVPSOrderModel(t *testing.T) {
-	order, diags := vpsOrderModel(context.Background(), "vps-2025-model1", "GRA", "Debian 12", "P1M", "default", "FR")
+	order, diags := vpsOrderModel(context.Background(), "vps-2025-model1", "GRA", "Debian 12", "P1M", "default", "FR", nil)
 	if diags.HasError() {
 		t.Fatalf("unexpected error: %v", diags)
 	}
@@ -111,6 +141,38 @@ func TestVPSOrderModel(t *testing.T) {
 	}
 	if !reflect.DeepEqual(gotValue, wantValue) {
 		t.Errorf("plan:\n got  %s\n want %s", got, want)
+	}
+}
+
+// Each option is ordered once, with the terms of the VPS.
+func TestVPSOrderModelOptions(t *testing.T) {
+	options := []string{"option-auto-backup-2025-7-model1", "option-snapshot-2025-model1"}
+	order, diags := vpsOrderModel(context.Background(), "vps-2025-model1", "GRA", "Debian 12", "P12M", "upfront12", "FR", options)
+	if diags.HasError() {
+		t.Fatalf("unexpected error: %v", diags)
+	}
+	got, err := json.Marshal(order.PlanOption.Elements())
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	var gotValue []map[string]any
+	if err := json.Unmarshal(got, &gotValue); err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	if len(gotValue) != len(options) {
+		t.Fatalf("plan options: got %s, want %d", got, len(options))
+	}
+	for i, option := range gotValue {
+		for name, want := range map[string]any{
+			"planCode":    options[i],
+			"quantity":    float64(1),
+			"duration":    "P12M",
+			"pricingMode": "upfront12",
+		} {
+			if option[name] != want {
+				t.Errorf("plan option %d: %s = %v, want %v (%s)", i, name, option[name], want, got)
+			}
+		}
 	}
 }
 

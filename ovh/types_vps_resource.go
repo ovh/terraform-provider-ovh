@@ -63,6 +63,7 @@ const (
 	vpsDescOrderDuration          = "Duration of the order, in ISO 8601 format, such as P1M for one month. Defaults to P1M"
 	vpsDescOrderPricingMode       = "Pricing mode of the order. Defaults to default"
 	vpsDescOrderId                = "Identifier of the order of the VPS"
+	vpsDescOrderOptions           = "Plan codes of the options ordered with the VPS, such as the automated backup or an additional disk, from the addons of plan_code in the VPS order catalog. Only used when the VPS is ordered: the options of the VPS are read in current_state.options"
 	vpsDescTimeouts               = "How long to wait for the VPS, as durations such as 1h30m"
 	vpsDescTimeoutCreate          = "Wait for the creation of the VPS, from the order to its delivery. Defaults to 60m"
 	vpsDescTimeoutUpdate          = "Wait for the update of the VPS. Defaults to 60m"
@@ -171,6 +172,12 @@ func vpsResourceAttributes() map[string]schema.Attribute {
 			MarkdownDescription: vpsDescOrderId,
 			PlanModifiers:       []planmodifier.Int64{int64planmodifier.UseStateForUnknown()},
 		},
+		"options": schema.ListAttribute{
+			ElementType:         types.StringType,
+			Optional:            true,
+			Description:         vpsDescOrderOptions,
+			MarkdownDescription: vpsDescOrderOptions,
+		},
 	})
 	order.Optional = true
 	order.Computed = true
@@ -263,6 +270,7 @@ func vpsOrderAttrTypes() map[string]attr.Type {
 		"duration":     ovhtypes.TfStringType{},
 		"pricing_mode": ovhtypes.TfStringType{},
 		"order_id":     types.Int64Type,
+		"options":      types.ListType{ElemType: types.StringType},
 	}
 }
 

@@ -119,6 +119,7 @@ Optional:
 Optional:
 
 - `duration` (String) Duration of the order, in ISO 8601 format, such as P1M for one month. Defaults to P1M
+- `options` (List of String) Plan codes of the options ordered with the VPS, such as the automated backup or an additional disk, from the addons of plan_code in the VPS order catalog. Only used when the VPS is ordered: the options of the VPS are read in current_state.options
 - `pricing_mode` (String) Pricing mode of the order. Defaults to default
 
 Read-Only:
@@ -237,6 +238,34 @@ Read-Only:
 `location.region` is an OVHcloud region code, such as `eu-west-gra`, among the regions of `GET /v2/location`.
 
 `order.duration` and `order.pricing_mode` default to `P1M` and `default`. They must come from the same price, see [Choosing the plan, duration and pricing mode of an ordered product](../guides/order_plan).
+
+### Ordering options
+
+`order.options` lists the plan codes of the options ordered with the VPS, among the addons of `plan_code` in the order catalog (`GET /order/catalog/public/vps`, `addonFamilies` of the plan), such as an additional disk or the snapshot option. Each option is ordered once, with the `order.duration` and `order.pricing_mode` of the VPS. `terraform plan` checks them in the catalog, and the error lists the options of the plan.
+
+```terraform
+resource "ovh_vps" "web" {
+  plan_code = "vps-2025-model1"
+
+  location = {
+    region = "eu-west-gra"
+  }
+
+  installation = {
+    from = {
+      image_name = "Debian 12"
+    }
+  }
+
+  order = {
+    options = ["option-snapshot-2025-model1"]
+  }
+}
+```
+
+Every order includes the automated backup with 1 backup kept, at no cost. An option of the same family replaces it, such as `option-auto-backup-2025-7-model1` to keep 7 backups.
+
+Options are only ordered with the VPS: changing `order.options` afterwards is only recorded in the state, and orders nothing. The options of the VPS are read in `current_state.options`.
 
 Every setting is accepted when creating a VPS. The order only takes the plan, the region and the image name: the other settings are applied once the VPS is delivered, in the same `terraform apply`, as an update does (see [Updating a VPS](#updating-a-vps)). `timeouts.create` covers the order, the delivery and these settings.
 

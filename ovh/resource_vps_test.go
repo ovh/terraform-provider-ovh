@@ -79,6 +79,7 @@ func vpsTestFullState(t *testing.T, overrides map[string]attr.Value) tfsdk.State
 			"duration":     tfStr("P1M"),
 			"pricing_mode": tfStr("default"),
 			"order_id":     types.Int64Value(42),
+			"options":      types.ListNull(types.StringType),
 		}),
 		"timeouts": types.ObjectValueMust(vpsTimeoutsAttrTypes(), map[string]attr.Value{
 			"create": tfStr("2h"),
@@ -381,6 +382,7 @@ type vpsTestCart struct {
 	mu             sync.Mutex
 	item           map[string]any
 	configurations []map[string]any
+	options        []map[string]any
 }
 
 // vpsTestOrderAPI is newVPSTestAPI with the routes of an order of
@@ -416,6 +418,12 @@ func vpsTestOrderAPI(t *testing.T) (*vpsTestAPI, *vpsTestCart) {
 		defer cart.mu.Unlock()
 		cart.configurations = append(cart.configurations, decode(body))
 		return map[string]any{"id": len(cart.configurations)}
+	})
+	api.handle("POST "+cartBase+"/vps/options", func(body []byte) any {
+		cart.mu.Lock()
+		defer cart.mu.Unlock()
+		cart.options = append(cart.options, decode(body))
+		return map[string]any{"cartId": vpsTestCartId, "itemId": vpsTestItemId + len(cart.options)}
 	})
 	api.set("/1.0/me/payment/method", []int64{1})
 	api.handle("POST "+cartBase+"/checkout", func([]byte) any {
@@ -554,6 +562,10 @@ func TestVPSResourceCreateOrderSettings(t *testing.T) {
 			"duration":     tfStr("P12M"),
 			"pricing_mode": tfStr("upfront12"),
 			"order_id":     types.Int64Unknown(),
+			"options": types.ListValueMust(types.StringType, []attr.Value{
+				types.StringValue("option-auto-backup-2025-7-model1"),
+				types.StringValue("option-snapshot-2025-model1"),
+			}),
 		}),
 	})
 	resp := vpsTestCreate(t, api, plan)
@@ -565,6 +577,20 @@ func TestVPSResourceCreateOrderSettings(t *testing.T) {
 	}
 	if got, want := cart.item["pricingMode"], "upfront12"; got != want {
 		t.Errorf("cart item pricingMode = %v, want %v", got, want)
+	}
+	// Each option once, with the terms of the VPS, attached to its item.
+	if len(cart.options) != 2 {
+		t.Fatalf("cart options = %v, want 2", cart.options)
+	}
+	for i, want := range []string{"option-auto-backup-2025-7-model1", "option-snapshot-2025-model1"} {
+		option := cart.options[i]
+		if option["planCode"] != want || option["quantity"] != float64(1) || option["duration"] != "P12M" ||
+			option["pricingMode"] != "upfront12" || option["itemId"] != float64(vpsTestItemId) {
+			t.Errorf("cart option %d = %v, want %s once, P12M, upfront12, item %d", i, option, want, vpsTestItemId)
+		}
+	}
+	if got := vpsTestValue(t, resp.State.Raw, "order.options"); got != "<object>" {
+		t.Errorf("order.options = %s, want the list", got)
 	}
 	vpsTestCheckValues(t, resp.State.Raw, map[string]string{
 		"order.duration":     "P12M",
@@ -664,6 +690,7 @@ func vpsTestOrderedState(t *testing.T) tfsdk.State {
 			"duration":     tfStr("P1M"),
 			"pricing_mode": tfStr("default"),
 			"order_id":     types.Int64Value(vpsTestOrderId),
+			"options":      types.ListNull(types.StringType),
 		}),
 	})
 }
@@ -825,6 +852,7 @@ func TestVPSResourceUpdateKeepsComputedFromState(t *testing.T) {
 			"duration":     tfStr("P12M"),
 			"pricing_mode": tfStr("default"),
 			"order_id":     types.Int64Unknown(),
+			"options":      types.ListNull(types.StringType),
 		}),
 	})
 	resp := vpsTestUpdate(t, api, state, plan)
@@ -1661,6 +1689,10 @@ func TestVPSResourceModifyPlanChecksCatalog(t *testing.T) {
 		{"plan_code", tfStr("vps-2025-model9")},
 		{"location.region", tfStr("eu-west-xyz")},
 		{"installation.from.image_name", tfStr("Debian 11")},
+		{"order.options", types.ListValueMust(types.StringType, []attr.Value{
+			types.StringValue("option-snapshot-2025-model1"),
+			types.StringValue("option-unknown"),
+		})},
 	}
 	for _, c := range cases {
 		t.Run(c.attribute, func(t *testing.T) {
@@ -1672,6 +1704,14 @@ func TestVPSResourceModifyPlanChecksCatalog(t *testing.T) {
 			d, ok := resp.Diagnostics.Errors()[0].(diag.DiagnosticWithPath)
 			if !ok || d.Path().String() != c.attribute {
 				t.Errorf("error %v is not on %s", resp.Diagnostics.Errors()[0], c.attribute)
+			}
+			if c.attribute == "order.options" {
+				detail := resp.Diagnostics.Errors()[0].Detail()
+				for _, want := range []string{`"option-unknown"`, "option-auto-backup-2025-7-model1", "option-snapshot-2025-model1"} {
+					if !strings.Contains(detail, want) {
+						t.Errorf("detail %q does not say %s", detail, want)
+					}
+				}
 			}
 			for _, request := range []string{"POST /1.0/order/cart", fmt.Sprintf("POST /1.0/me/order/%d/pay", vpsTestOrderId)} {
 				if got := api.count(request); got != 0 {

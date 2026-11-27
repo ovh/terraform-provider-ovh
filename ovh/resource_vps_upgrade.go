@@ -22,15 +22,16 @@ func (r *vpsResource) UpgradeState(context.Context) map[int64]resource.StateUpgr
 }
 
 // upgradeVPSStateV0 keeps what the former state knows and the new schema holds:
-// the id, the plan code and the terms of the order, the order id, the display
-// name and the installation settings. The other attributes are null: the Read
+// the id, the plan code and the terms of the order, the order id, the plan
+// codes of the options ordered (plan_option), the display name and the
+// installation settings. The other attributes are null: the Read
 // that follows fills them, as after an import.
 func upgradeVPSStateV0(ctx context.Context, req resource.UpgradeStateRequest, resp *resource.UpgradeStateResponse) {
 	var (
 		id, serviceName, displayName, sshKey types.String
 		doNotSendPassword                    types.Bool
 		orderId                              types.Int64
-		plans                                types.List
+		plans, planOptions                   types.List
 	)
 	for p, target := range map[string]any{
 		"id":                   &id,
@@ -39,6 +40,7 @@ func upgradeVPSStateV0(ctx context.Context, req resource.UpgradeStateRequest, re
 		"public_ssh_key":       &sshKey,
 		"do_not_send_password": &doNotSendPassword,
 		"plan":                 &plans,
+		"plan_option":          &planOptions,
 	} {
 		resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root(p), target)...)
 	}
@@ -84,11 +86,26 @@ func upgradeVPSStateV0(ctx context.Context, req resource.UpgradeStateRequest, re
 			"send_password_by_email":   sendPasswordByEmail,
 		})
 	}
-	if !duration.IsNull() || !pricingMode.IsNull() || !orderId.IsNull() {
+	options := types.ListNull(types.StringType)
+	var optionCodes []attr.Value
+	for _, element := range planOptions.Elements() {
+		if option, ok := element.(types.Object); ok && !option.IsNull() {
+			if code := vpsV0PlanString(option, "plan_code"); !code.IsNull() {
+				optionCodes = append(optionCodes, code)
+			}
+		}
+	}
+	if len(optionCodes) > 0 {
+		var d diag.Diagnostics
+		options, d = types.ListValue(types.StringType, optionCodes)
+		resp.Diagnostics.Append(d...)
+	}
+	if !duration.IsNull() || !pricingMode.IsNull() || !orderId.IsNull() || !options.IsNull() {
 		data.Order = vpsObject(&resp.Diagnostics, vpsOrderAttrTypes(), map[string]attr.Value{
 			"duration":     ovhtypes.TfStringValue{StringValue: duration},
 			"pricing_mode": ovhtypes.TfStringValue{StringValue: pricingMode},
 			"order_id":     orderId,
+			"options":      options,
 		})
 	}
 	if resp.Diagnostics.HasError() {

@@ -116,7 +116,7 @@ output "vps_ids" {
 
 ## `ovh_vps` resource
 
-The state of an `ovh_vps` resource is migrated automatically by the first `terraform plan` after the upgrade: the VPS keeps its `id`, its service name, and does not need to be imported again. The migration keeps `id`, `plan_code`, `order.duration`, `order.pricing_mode`, `order.order_id`, `display_name`, `installation.ssh_key` and `installation.send_password_by_email`; the refresh that follows reads the other attributes from the VPS.
+The state of an `ovh_vps` resource is migrated automatically by the first `terraform plan` after the upgrade: the VPS keeps its `id`, its service name, and does not need to be imported again. The migration keeps `id`, `plan_code`, `order.duration`, `order.pricing_mode`, `order.order_id`, `order.options`, `display_name`, `installation.ssh_key` and `installation.send_password_by_email`; the refresh that follows reads the other attributes from the VPS.
 
 | Previous attribute | New attribute |
 |---|---|
@@ -128,7 +128,7 @@ The state of an `ovh_vps` resource is migrated automatically by the first `terra
 | `plan[0].duration`, `plan[0].pricing_mode` | `order.duration`, `order.pricing_mode` |
 | `plan[0].item_id`, `plan[0].quantity` | Removed |
 | `ovh_subsidiary` | Removed: the subsidiary of your account is used |
-| `plan_option` | Removed: this version orders no option. The options of the VPS are read in `current_state.options` |
+| `plan_option` | `order.options`, the plan codes of the options: `plan_option[*].plan_code`. Each option is ordered once, with the duration and pricing mode of the VPS. The options of the VPS are read in `current_state.options` |
 | `order.order_id` | `order.order_id` |
 | `order.date`, `order.expiration_date`, `order.details` | Removed |
 | `display_name` | `display_name` for the name you requested, `current_state.display_name` for the current name |
