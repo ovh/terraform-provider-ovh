@@ -66,12 +66,23 @@ func TestVPSDatacenterCodeForRegion(t *testing.T) {
 		{"eu-west-eri", vpsTestCatalogDatacenters, "UK", true},          // exception
 		{"eu-west-gra", []string{"SBG"}, "", false},                     // not orderable in this plan
 		{"eu-west-xyz", vpsTestCatalogDatacenters, "", false},           // unknown region
+		// A city code shared with another region is refused: GRA reads back
+		// as eu-west-gra, MIL as eu-south-mil.
+		{"eu-west-gra-snc", []string{"GRA"}, "", false},
+		{"eu-south-lz-mil", []string{"MIL"}, "", false},
+		{"eu-south-mil", []string{"MIL"}, "MIL", true},
 	}
 
 	for _, c := range cases {
 		code, ok := vpsDatacenterCodeForRegion(c.region, vpsTestLocations, c.allowed)
 		if code != c.code || ok != c.ok {
 			t.Errorf("region %q, allowed %v: got (%q, %t), want (%q, %t)", c.region, c.allowed, code, ok, c.code, c.ok)
+		}
+		// Both ways agree: the code reads back as the region.
+		if ok {
+			if back, _ := vpsRegionFromDatacenterCode(code, vpsTestLocations); back != c.region {
+				t.Errorf("region %q: code %q reads back as %q", c.region, code, back)
+			}
 		}
 	}
 }

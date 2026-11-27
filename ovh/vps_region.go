@@ -67,8 +67,10 @@ func vpsRegionFromDatacenterCode(code string, locations []vpsLocation) (region s
 // plan being ordered.
 //
 // It takes the first allowed candidate, in order: the exception, the region
-// name in upper case, then the city code of the region. ok is false when the
-// region cannot be ordered with these codes.
+// name in upper case, then the city code of the region. A candidate is only
+// taken when vpsRegionFromDatacenterCode reads it back as the region: a city
+// code shared by several regions orders the one it reads back as. ok is false
+// when the region cannot be ordered with these codes.
 func vpsDatacenterCodeForRegion(region string, locations []vpsLocation, allowed []string) (code string, ok bool) {
 	var candidates []string
 	if exceptionCode, found := vpsDatacenterExceptions[region]; found {
@@ -82,7 +84,10 @@ func vpsDatacenterCodeForRegion(region string, locations []vpsLocation, allowed 
 	}
 
 	for _, candidate := range candidates {
-		if slices.Contains(allowed, candidate) {
+		if !slices.Contains(allowed, candidate) {
+			continue
+		}
+		if back, found := vpsRegionFromDatacenterCode(candidate, locations); found && back == region {
 			return candidate, true
 		}
 	}

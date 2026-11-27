@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/defaults"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -202,7 +203,6 @@ func TestVPSResourceSchemaModes(t *testing.T) {
 		"order.order_id":                        {false, false, true},
 		"timeouts":                              {false, true, false},
 		"timeouts.create":                       {false, true, false},
-		"timeouts.update":                       {false, true, false},
 		"timeouts.delete":                       {false, true, false},
 		"current_state":                         {false, false, true},
 	}
@@ -321,7 +321,6 @@ func TestVPSResourceStringValidators(t *testing.T) {
 		{"power_state", "SHUTOFF", true},
 		{"power_state", "UNKNOWN", false},
 		{"timeouts.create", "1h30m", true},
-		{"timeouts.update", "45m", true},
 		{"timeouts.delete", "30 minutes", false},
 	}
 	for _, c := range cases {
@@ -348,7 +347,7 @@ func TestVPSResourceTimeout(t *testing.T) {
 	}
 
 	m = VPSResourceModel{Timeouts: types.ObjectNull(vpsTimeoutsAttrTypes())}
-	if got := m.timeout("update", time.Hour); got != time.Hour {
+	if got := m.timeout("create", time.Hour); got != time.Hour {
 		t.Errorf("no timeouts: got %s, want the default 1h", got)
 	}
 }
@@ -445,6 +444,30 @@ func TestVPSCurrentStateUnknownWhenUpdatePlanned(t *testing.T) {
 		}
 	}
 
+	// No image in the state, as when GET /vps/{serviceName}/images/current
+	// answers 404: setting it only records it, rather than planning an update
+	// on every plan.
+	for name, stateChanges := range map[string]map[string]attr.Value{
+		"image fields null": {"installation.from.image_name": null, "installation.from.image_id": null},
+		"from null":         {"installation.from": types.ObjectNull(vpsInstallationFromAttrTypes())},
+	} {
+		state := vpsTestPlan(t, with(stateChanges))
+		config := vpsTestPlan(t, with(map[string]attr.Value{"installation.from.image_id": null}))
+		plan := vpsTestPlan(t, with(map[string]attr.Value{"installation.from.image_id": unknown}))
+		req := planmodifier.ObjectRequest{
+			State:      tfsdk.State{Schema: state.Schema, Raw: state.Raw},
+			Plan:       plan,
+			Config:     tfsdk.Config{Schema: config.Schema, Raw: config.Raw},
+			StateValue: csState,
+			PlanValue:  csUnknown,
+		}
+		resp := &planmodifier.ObjectResponse{PlanValue: csUnknown}
+		vpsCurrentStatePlanModifier().PlanModifyObject(ctx, req, resp)
+		if resp.PlanValue.IsUnknown() {
+			t.Errorf("%s: image set when the state has none: current_state unknown, want the state", name)
+		}
+	}
+
 	// A key or a script the state holds: changing it reinstalls the VPS.
 	for _, name := range []string{"installation.ssh_key", "installation.post_installation_script"} {
 		state := vpsTestPlan(t, with(map[string]attr.Value{name: ovhtypes.NewTfStringValue("before")}))
@@ -476,5 +499,66 @@ func TestVPSCurrentStateUnknownWhenUpdatePlanned(t *testing.T) {
 	vpsCurrentStatePlanModifier().PlanModifyObject(ctx, req, resp)
 	if !resp.PlanValue.IsUnknown() {
 		t.Errorf("creation: current_state = %v, want unknown", resp.PlanValue)
+	}
+}
+
+// After an import or the migration of the state, Read fills plan_code and
+// location.region: a configuration that differs replaces the VPS. Their
+// descriptions do not present that change as safe.
+func TestVPSReplaceDescriptionsWarnAfterImport(t *testing.T) {
+	for _, dotted := range []string{"plan_code", "location.region"} {
+		description := vpsTestResourceAttribute(t, dotted).GetDescription()
+		for _, want := range []string{"terminates the VPS and orders a new one", "after an import or the migration of the state"} {
+			if !strings.Contains(description, want) {
+				t.Errorf("%s: description %q does not say %q", dotted, description, want)
+			}
+		}
+		if strings.Contains(description, "as after an import, only changes the state") {
+			t.Errorf("%s: description %q presents a change after an import as safe", dotted, description)
+		}
+	}
+}
+
+// Create leaves image_id null when the configuration sets image_name: only an
+// import or the migration of the state reads both.
+func TestVPSInstallationFromDescription(t *testing.T) {
+	description := vpsTestResourceAttribute(t, "installation.from").GetDescription()
+	if strings.Contains(description, "the other one is set") {
+		t.Errorf("description %q says the other field is always set", description)
+	}
+	if !strings.Contains(description, "After an import or the migration of the state, both are read from the image installed on the VPS") {
+		t.Errorf("description %q does not say when both are read", description)
+	}
+}
+
+// This version does not update a VPS: timeouts has no update.
+func TestVPSResourceTimeoutsCreateDelete(t *testing.T) {
+	timeouts, ok := vpsTestResourceAttribute(t, "timeouts").(schema.SingleNestedAttribute)
+	if !ok {
+		t.Fatal("timeouts is not a nested attribute")
+	}
+	var names []string
+	for name := range timeouts.Attributes {
+		names = append(names, name)
+	}
+	slices.Sort(names)
+	if want := []string{"create", "delete"}; !slices.Equal(names, want) {
+		t.Errorf("timeouts has %v, want %v", names, want)
+	}
+}
+
+// send_password_by_email defaults to true with the framework's booldefault.
+func TestVPSSendPasswordByEmailDefault(t *testing.T) {
+	attribute, ok := vpsTestResourceAttribute(t, "installation.send_password_by_email").(schema.BoolAttribute)
+	if !ok || attribute.Default == nil {
+		t.Fatal("installation.send_password_by_email has no default")
+	}
+	if got, want := reflect.TypeOf(attribute.Default).PkgPath(), "github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"; got != want {
+		t.Errorf("default from package %q, want %q", got, want)
+	}
+	resp := &defaults.BoolResponse{}
+	attribute.Default.DefaultBool(context.Background(), defaults.BoolRequest{}, resp)
+	if !resp.PlanValue.Equal(types.BoolValue(true)) {
+		t.Errorf("default = %v, want true", resp.PlanValue)
 	}
 }

@@ -7,6 +7,7 @@ import (
 	"maps"
 	"math/big"
 	"net/http"
+	"net/url"
 	"os"
 	"reflect"
 	"strings"
@@ -15,6 +16,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -79,7 +81,6 @@ func vpsTestFullState(t *testing.T, overrides map[string]attr.Value) tfsdk.State
 		}),
 		"timeouts": types.ObjectValueMust(vpsTimeoutsAttrTypes(), map[string]attr.Value{
 			"create": tfStr("2h"),
-			"update": vpsTfStringPtr(nil),
 			"delete": vpsTfStringPtr(nil),
 		}),
 	}
@@ -269,7 +270,12 @@ func TestVPSResourceReadTransitionalKeepsPowerState(t *testing.T) {
 
 func TestVPSResourceReadNotFound(t *testing.T) {
 	api := newVPSTestAPI()
-	resp := vpsTestRead(t, api, vpsTestFullState(t, map[string]attr.Value{"id": tfStr("vps-00000000.vps.ovh.net")}))
+	// Imported, so not ordered by Terraform: see
+	// TestVPSResourceReadOrderedNeverReadKept for an ordered VPS never read.
+	resp := vpsTestRead(t, api, vpsTestFullState(t, map[string]attr.Value{
+		"id":    tfStr("vps-00000000.vps.ovh.net"),
+		"order": types.ObjectNull(vpsOrderAttrTypes()),
+	}))
 	if resp.Diagnostics.HasError() {
 		t.Fatalf("unexpected read error: %v", resp.Diagnostics)
 	}
@@ -606,7 +612,6 @@ func TestVPSResourceCreateDeliveryTimeout(t *testing.T) {
 	plan := vpsTestCreatePlan(t, map[string]attr.Value{
 		"timeouts": types.ObjectValueMust(vpsTimeoutsAttrTypes(), map[string]attr.Value{
 			"create": tfStr("100ms"),
-			"update": vpsTfStringPtr(nil),
 			"delete": vpsTfStringPtr(nil),
 		}),
 	})
@@ -747,7 +752,8 @@ func TestVPSResourceModifyPlanRefusesPostOrderSettings(t *testing.T) {
 		{"order.duration", tfStr("P12M"), false},
 	}
 	ctx := context.Background()
-	r := &vpsResource{}
+	api, _ := vpsTestOrderAPI(t)
+	r := &vpsResource{config: api.config(t)}
 	for _, c := range cases {
 		t.Run(fmt.Sprintf("%s=%v", c.attribute, c.value), func(t *testing.T) {
 			config := vpsTestCreateConfig(t, map[string]attr.Value{c.attribute: c.value})
@@ -814,7 +820,6 @@ func TestVPSResourceUpdateTimeouts(t *testing.T) {
 	plan := vpsTestFullState(t, map[string]attr.Value{
 		"timeouts": types.ObjectValueMust(vpsTimeoutsAttrTypes(), map[string]attr.Value{
 			"create": tfStr("3h"),
-			"update": vpsTfStringPtr(nil),
 			"delete": vpsTfStringPtr(nil),
 		}),
 	})
@@ -1005,6 +1010,7 @@ func TestAccVPSResource_order(t *testing.T) {
 			checkEnvOrSkip(t, "OVH_VPS_IMAGE_NAME")
 		},
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		CheckDestroy:             testAccCheckVPSDestroy,
 		Steps: []acc.TestStep{
 			{
 				Config: fmt.Sprintf(testAccVPSResourceConfig, planCode, region, imageName),
@@ -1016,8 +1022,52 @@ func TestAccVPSResource_order(t *testing.T) {
 					acc.TestCheckResourceAttr("ovh_vps.vps", "installation.from.image_name", imageName),
 				),
 			},
+			{
+				// Importing the ordered VPS reads the same values back, but for
+				// what an import cannot read: the order, the timeouts, the
+				// write-only installation settings, and the image id, which
+				// Create leaves null when the configuration sets the image name.
+				ResourceName:      "ovh_vps.vps",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"order.",
+					"timeouts",
+					"installation.from.image_id",
+					"installation.ssh_key",
+					"installation.post_installation_script",
+					"installation.send_password_by_email",
+				},
+			},
 		},
 	})
+}
+
+// testAccCheckVPSDestroy checks that the terminated VPS is gone: GET
+// /vps/{serviceName} answers 404, or 460 for an expired service. The
+// termination may take a few minutes to show.
+func testAccCheckVPSDestroy(s *terraform.State) error {
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "ovh_vps" || rs.Primary.ID == "" {
+			continue
+		}
+		endpoint := "/vps/" + url.PathEscape(rs.Primary.ID)
+		deadline := time.Now().Add(10 * time.Minute)
+		for {
+			err := testAccOVHClient.Get(endpoint, &vpsV1{})
+			if status := vpsAPIStatus(err); status == http.StatusNotFound || status == vpsV1StatusExpired {
+				break
+			}
+			if time.Now().After(deadline) {
+				if err == nil {
+					return fmt.Errorf("VPS %s still exists after its termination", rs.Primary.ID)
+				}
+				return fmt.Errorf("error checking that VPS %s was terminated: %w", rs.Primary.ID, err)
+			}
+			time.Sleep(30 * time.Second)
+		}
+	}
+	return nil
 }
 
 // TestAccVPSResource_import imports the existing VPS OVH_VPS. The import step
@@ -1056,5 +1106,296 @@ func TestAccVPSResource_import(t *testing.T) {
 				},
 			},
 		},
+	})
+}
+
+// vpsTestSequence answers the n-th call with answers[n], then the last answer.
+func vpsTestSequence(answers ...any) func([]byte) any {
+	var mu sync.Mutex
+	n := 0
+	return func([]byte) any {
+		mu.Lock()
+		defer mu.Unlock()
+		answer := answers[min(n, len(answers)-1)]
+		n++
+		return answer
+	}
+}
+
+// vpsTestRunningVPS is GET /vps/{serviceName} of the VPS of the order, running.
+var vpsTestRunningVPS = map[string]any{
+	"name": vpsTestId, "displayName": vpsTestId, "state": "running", "vcore": 4, "memoryLimit": 8192,
+	"model": map[string]any{"name": "vps-2025-model1", "disk": 160},
+}
+
+// Once the order is paid, an API error or a status that is not final is waited
+// for: only the timeout, an interruption or a cancelled order end the wait.
+func TestVPSResourceCreateWaitsThroughTransientErrors(t *testing.T) {
+	api, _ := vpsTestOrderAPI(t)
+	api.handle("GET "+vpsTestOrderStatusPath, vpsTestSequence(
+		vpsTestStatus{code: http.StatusBadGateway, message: "Bad gateway"},
+		"documentsRequested",
+		"delivered",
+	))
+	api.handle("GET "+vpsTestBase, vpsTestSequence(
+		vpsTestStatus{code: http.StatusBadGateway, message: "Bad gateway"},
+		vpsTestStatus{code: http.StatusInternalServerError, message: "Internal server error"},
+		vpsTestRunningVPS,
+	))
+
+	resp := vpsTestCreate(t, api, vpsTestCreatePlan(t, nil))
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected create error: %v", resp.Diagnostics)
+	}
+	vpsTestCheckValues(t, resp.State.Raw, map[string]string{
+		"id":                        vpsTestId,
+		"current_state.power_state": "ACTIVE",
+	})
+}
+
+// A cancelled order is final: no VPS will be delivered, the resource is to be
+// removed from the state.
+func TestVPSResourceCreateOrderCancelled(t *testing.T) {
+	for _, status := range []string{"cancelling", "cancelled"} {
+		t.Run(status, func(t *testing.T) {
+			api, _ := vpsTestOrderAPI(t)
+			api.set(vpsTestOrderStatusPath, status)
+
+			resp := vpsTestCreate(t, api, vpsTestCreatePlan(t, nil))
+			if !resp.Diagnostics.HasError() {
+				t.Fatal("expected an error for a cancelled order")
+			}
+			d := resp.Diagnostics.Errors()[0]
+			if !strings.Contains(d.Summary(), "cancelled") || !strings.Contains(d.Detail(), "terraform state rm") {
+				t.Errorf("error %q: %q does not tell the order is cancelled and to remove the resource from the state", d.Summary(), d.Detail())
+			}
+			if got := api.count("GET " + vpsTestOrderStatusPath); got != 1 {
+				t.Errorf("GET /me/order/{orderId}/status called %d times, want 1: a cancelled order is final", got)
+			}
+			vpsTestCheckValues(t, resp.State.Raw, map[string]string{
+				"id":             "<null>",
+				"order.order_id": fmt.Sprint(vpsTestOrderId),
+			})
+		})
+	}
+}
+
+// Interrupted (Ctrl-C) while waiting, Create tells to untaint the resource.
+func TestVPSResourceCreateInterrupted(t *testing.T) {
+	api, _ := vpsTestOrderAPI(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	calls := 0
+	api.handle("GET "+vpsTestOrderStatusPath, func([]byte) any {
+		calls++
+		if calls == 2 {
+			cancel()
+		}
+		return "checking"
+	})
+
+	plan := vpsTestCreatePlan(t, nil)
+	r := &vpsResource{config: api.config(t)}
+	resp := &resource.CreateResponse{State: tfsdk.State{Schema: plan.Schema, Raw: tftypes.NewValue(plan.Raw.Type(), nil)}}
+	r.Create(ctx, resource.CreateRequest{Plan: plan}, resp)
+
+	if !resp.Diagnostics.HasError() {
+		t.Fatal("expected an error when the wait is interrupted")
+	}
+	if detail := resp.Diagnostics.Errors()[0].Detail(); !strings.Contains(detail, "terraform untaint") {
+		t.Errorf("detail %q does not tell to untaint the resource", detail)
+	}
+	vpsTestCheckValues(t, resp.State.Raw, map[string]string{"order.order_id": fmt.Sprint(vpsTestOrderId)})
+}
+
+// Every error after the payment tells to untaint the resource: otherwise the
+// next apply terminates the VPS and orders a new one.
+func TestVPSResourceCreateErrorsAfterPaymentTellToUntaint(t *testing.T) {
+	cases := map[string]func(api *vpsTestAPI){
+		"order details not readable": func(api *vpsTestAPI) {
+			api.set(fmt.Sprintf("/1.0/me/order/%d/details", vpsTestOrderId), vpsTestStatus{code: http.StatusInternalServerError, message: "Internal server error"})
+		},
+		"VPS not readable once ready": func(api *vpsTestAPI) {
+			api.set(vpsTestBase+"/ips", vpsTestStatus{code: http.StatusInternalServerError, message: "Internal server error"})
+		},
+	}
+	for name, setup := range cases {
+		t.Run(name, func(t *testing.T) {
+			api, _ := vpsTestOrderAPI(t)
+			setup(api)
+			resp := vpsTestCreate(t, api, vpsTestCreatePlan(t, nil))
+			if !resp.Diagnostics.HasError() {
+				t.Fatal("expected an error")
+			}
+			for _, d := range resp.Diagnostics.Errors() {
+				if !strings.Contains(d.Detail(), "terraform untaint") {
+					t.Errorf("error %q: %q does not tell to untaint the resource", d.Summary(), d.Detail())
+				}
+			}
+			if got := vpsTestPaidOrders(api); got != 1 {
+				t.Errorf("%d orders paid, want 1", got)
+			}
+		})
+	}
+}
+
+// Read treats the status of the order as Create does: a cancelled order is an
+// error that tells to remove the resource, an API error a pending delivery.
+func TestVPSResourceReadOrderCancelled(t *testing.T) {
+	api, _ := vpsTestOrderAPI(t)
+	api.set(vpsTestOrderStatusPath, "cancelled")
+	state := vpsTestOrderedState(t)
+	resp := vpsTestRead(t, api, state)
+	if !resp.Diagnostics.HasError() {
+		t.Fatalf("expected an error for a cancelled order, got %v", resp.Diagnostics)
+	}
+	if n := resp.Diagnostics.WarningsCount(); n != 0 {
+		t.Errorf("got %d warnings, want none: %v", n, resp.Diagnostics)
+	}
+	d := resp.Diagnostics.Errors()[0]
+	if !strings.Contains(d.Summary(), "cancelled") || !strings.Contains(d.Detail(), "terraform state rm") {
+		t.Errorf("error %q: %q does not tell the order is cancelled and to remove the resource from the state", d.Summary(), d.Detail())
+	}
+	if !resp.State.Raw.Equal(state.Raw) {
+		t.Error("the state must stay unchanged")
+	}
+}
+
+func TestVPSResourceReadOrderStatusError(t *testing.T) {
+	api, _ := vpsTestOrderAPI(t)
+	api.set(vpsTestOrderStatusPath, vpsTestStatus{code: http.StatusBadGateway, message: "Bad gateway"})
+	state := vpsTestOrderedState(t)
+	resp := vpsTestRead(t, api, state)
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected read error: %v", resp.Diagnostics)
+	}
+	if n := resp.Diagnostics.WarningsCount(); n != 1 {
+		t.Errorf("got %d warnings, want 1: %v", n, resp.Diagnostics)
+	}
+	if !resp.State.Raw.Equal(state.Raw) {
+		t.Error("the state must stay unchanged")
+	}
+}
+
+// A VPS ordered but never read (current_state null) that API v1 does not
+// serve yet stays in the state, Read after Read: removing it would make the
+// next apply order a new VPS.
+func TestVPSResourceReadOrderedNeverReadKept(t *testing.T) {
+	api, _ := vpsTestOrderAPI(t)
+	api.set(vpsTestBase, nil)
+	state := vpsTestOrderedState(t)
+	for i := 1; i <= 2; i++ {
+		resp := vpsTestRead(t, api, state)
+		if resp.Diagnostics.HasError() {
+			t.Fatalf("read %d: unexpected error: %v", i, resp.Diagnostics)
+		}
+		if resp.State.Raw.IsNull() {
+			t.Fatalf("read %d removed the VPS from the state", i)
+		}
+		if n := resp.Diagnostics.WarningsCount(); n != 1 {
+			t.Errorf("read %d: got %d warnings, want 1: %v", i, n, resp.Diagnostics)
+		}
+		vpsTestCheckValues(t, resp.State.Raw, map[string]string{
+			"id":             vpsTestId,
+			"order.order_id": fmt.Sprint(vpsTestOrderId),
+			"current_state":  "<null>",
+		})
+		state = resp.State
+	}
+}
+
+// A VPS read once, then not found, was deleted outside Terraform: Read removes
+// it, even with its order id in the state.
+func TestVPSResourceReadOrderedThenDeletedRemoved(t *testing.T) {
+	api, _ := vpsTestOrderAPI(t)
+	read := vpsTestRead(t, api, vpsTestFullState(t, nil))
+	if read.Diagnostics.HasError() {
+		t.Fatalf("unexpected read error: %v", read.Diagnostics)
+	}
+	if got := vpsTestValue(t, read.State.Raw, "current_state"); got != "<object>" {
+		t.Fatalf("current_state = %s after a read, want an object", got)
+	}
+
+	api.set(vpsTestBase, nil)
+	resp := vpsTestRead(t, api, read.State)
+	if resp.Diagnostics.HasError() {
+		t.Fatalf("unexpected read error: %v", resp.Diagnostics)
+	}
+	if !resp.State.Raw.IsNull() {
+		t.Error("a VPS deleted outside Terraform must be removed from the state")
+	}
+}
+
+// vpsTestModifyPlanCreate runs ModifyPlan for the creation of the VPS of
+// config.
+func vpsTestModifyPlanCreate(t *testing.T, api *vpsTestAPI, config tfsdk.Config) *resource.ModifyPlanResponse {
+	t.Helper()
+	r := &vpsResource{config: api.config(t)}
+	plan := tfsdk.Plan{Schema: config.Schema, Raw: config.Raw}
+	resp := &resource.ModifyPlanResponse{Plan: plan}
+	r.ModifyPlan(context.Background(), resource.ModifyPlanRequest{
+		Config: config,
+		Plan:   plan,
+		State:  tfsdk.State{Schema: config.Schema, Raw: tftypes.NewValue(config.Raw.Type(), nil)},
+	}, resp)
+	return resp
+}
+
+// The plan checks the catalog: a replacement that cannot be ordered fails
+// before Delete terminates the VPS.
+func TestVPSResourceModifyPlanChecksCatalog(t *testing.T) {
+	const catalogRequest = "GET /1.0/order/catalog/public/vps"
+	cases := []struct {
+		attribute string
+		value     attr.Value
+	}{
+		{"plan_code", tfStr("vps-2025-model9")},
+		{"location.region", tfStr("eu-west-xyz")},
+		{"installation.from.image_name", tfStr("Debian 11")},
+	}
+	for _, c := range cases {
+		t.Run(c.attribute, func(t *testing.T) {
+			api, _ := vpsTestOrderAPI(t)
+			resp := vpsTestModifyPlanCreate(t, api, vpsTestCreateConfig(t, map[string]attr.Value{c.attribute: c.value}))
+			if !resp.Diagnostics.HasError() {
+				t.Fatalf("expected an error at plan time for %s", c.attribute)
+			}
+			d, ok := resp.Diagnostics.Errors()[0].(diag.DiagnosticWithPath)
+			if !ok || d.Path().String() != c.attribute {
+				t.Errorf("error %v is not on %s", resp.Diagnostics.Errors()[0], c.attribute)
+			}
+			for _, request := range []string{"POST /1.0/order/cart", fmt.Sprintf("POST /1.0/me/order/%d/pay", vpsTestOrderId)} {
+				if got := api.count(request); got != 0 {
+					t.Errorf("%s called %d times, want 0", request, got)
+				}
+			}
+		})
+	}
+
+	t.Run("orderable", func(t *testing.T) {
+		api, _ := vpsTestOrderAPI(t)
+		resp := vpsTestModifyPlanCreate(t, api, vpsTestCreateConfig(t, nil))
+		if resp.Diagnostics.HasError() {
+			t.Fatalf("unexpected plan error: %v", resp.Diagnostics)
+		}
+		if got := api.count(catalogRequest); got != 1 {
+			t.Errorf("%s called %d times, want 1", catalogRequest, got)
+		}
+		if got := api.count("POST /1.0/order/cart"); got != 0 {
+			t.Errorf("POST /order/cart called %d times, want 0", got)
+		}
+	})
+
+	t.Run("unknown plan code", func(t *testing.T) {
+		api, _ := vpsTestOrderAPI(t)
+		resp := vpsTestModifyPlanCreate(t, api, vpsTestCreateConfig(t, map[string]attr.Value{
+			"plan_code": ovhtypes.TfStringValue{StringValue: types.StringUnknown()},
+		}))
+		if resp.Diagnostics.HasError() {
+			t.Fatalf("unexpected plan error: %v", resp.Diagnostics)
+		}
+		if got := api.count(catalogRequest); got != 0 {
+			t.Errorf("%s called %d times, want 0: Create checks an unknown plan code", catalogRequest, got)
+		}
 	})
 }

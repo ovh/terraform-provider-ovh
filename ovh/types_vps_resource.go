@@ -1,7 +1,6 @@
 package ovh
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -10,7 +9,7 @@ import (
 	dsschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/defaults"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -45,7 +44,6 @@ const (
 	vpsDefaultPricingMode = "default"
 
 	vpsCreateTimeout = 60 * time.Minute
-	vpsUpdateTimeout = 60 * time.Minute
 	vpsDeleteTimeout = 30 * time.Minute
 )
 
@@ -55,7 +53,7 @@ const (
 	vpsDescPlanCode               = "Plan code of the VPS offer, such as vps-2025-model3, from the VPS order catalog. " + vpsRequiresReplaceDescription
 	vpsDescResourceRegion         = "OVHcloud region code, such as eu-west-gra, among the regions of GET /v2/location. " + vpsRequiresReplaceDescription
 	vpsDescResourcePowerState     = "Power state you request: ACTIVE, RESCUE or SHUTOFF. Defaults to ACTIVE. Until the VPS API v2 is available, it is read from the current power state, and keeps its value while the VPS is in a transitional state (installing, rebooting...)"
-	vpsDescResourceInstallFrom    = "Source to install the VPS from. Set exactly one of image_id and image_name: the other one is set from the image installed on the VPS"
+	vpsDescResourceInstallFrom    = "Source to install the VPS from. Set exactly one of image_id and image_name. After an import or the migration of the state, both are read from the image installed on the VPS"
 	vpsDescSshKey                 = "Public SSH key to inject, in OpenSSH public key format"
 	vpsDescPostInstallationScript = "Script run after the installation. Write-only: it is never read back"
 	vpsDescSendPasswordByEmail    = "Send the generated root password to you by email. Default: true"
@@ -65,7 +63,6 @@ const (
 	vpsDescOrderId                = "Identifier of the order of the VPS"
 	vpsDescTimeouts               = "How long to wait for the VPS, as durations such as 1h30m"
 	vpsDescTimeoutCreate          = "Wait for the creation of the VPS, from the order to its delivery. Defaults to 60m"
-	vpsDescTimeoutUpdate          = "Wait for an update of the VPS. Defaults to 60m"
 	vpsDescTimeoutDelete          = "Wait for the termination of the VPS. Defaults to 30m"
 )
 
@@ -134,7 +131,7 @@ func vpsResourceAttributes() map[string]schema.Attribute {
 		"send_password_by_email": schema.BoolAttribute{
 			Optional:            true,
 			Computed:            true,
-			Default:             vpsTrueDefault{},
+			Default:             booldefault.StaticBool(true),
 			Description:         vpsDescSendPasswordByEmail,
 			MarkdownDescription: vpsDescSendPasswordByEmail,
 		},
@@ -176,7 +173,6 @@ func vpsResourceAttributes() map[string]schema.Attribute {
 
 	timeouts := object(vpsDescTimeouts, map[string]schema.Attribute{
 		"create": timeout(vpsDescTimeoutCreate),
-		"update": timeout(vpsDescTimeoutUpdate),
 		"delete": timeout(vpsDescTimeoutDelete),
 	})
 	timeouts.Optional = true
@@ -267,7 +263,6 @@ func vpsOrderAttrTypes() map[string]attr.Type {
 func vpsTimeoutsAttrTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"create": ovhtypes.TfStringType{},
-		"update": ovhtypes.TfStringType{},
 		"delete": ovhtypes.TfStringType{},
 	}
 }
@@ -284,18 +279,4 @@ func (m *VPSResourceModel) timeout(operation string, def time.Duration) time.Dur
 		return def
 	}
 	return duration
-}
-
-// vpsTrueDefault defaults an omitted boolean to true. The vendored framework
-// has no booldefault package.
-type vpsTrueDefault struct{}
-
-var _ defaults.Bool = vpsTrueDefault{}
-
-func (vpsTrueDefault) Description(context.Context) string { return "value defaults to true" }
-
-func (vpsTrueDefault) MarkdownDescription(context.Context) string { return "value defaults to `true`" }
-
-func (vpsTrueDefault) DefaultBool(_ context.Context, _ defaults.BoolRequest, resp *defaults.BoolResponse) {
-	resp.PlanValue = types.BoolValue(true)
 }

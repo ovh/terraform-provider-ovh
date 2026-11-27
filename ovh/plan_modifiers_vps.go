@@ -9,11 +9,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 )
 
-const vpsRequiresReplaceDescription = "Changing it from one value to another terminates the VPS and orders a new one. Setting it when the state has none, as after an import, only changes the state."
+const vpsRequiresReplaceDescription = "Changing it terminates the VPS and orders a new one. " +
+	"This includes the first plan after an import or the migration of the state, when your configuration differs from the value read from the VPS. " +
+	"Only when the value could not be read, and the state has none, setting it is just recorded in the state."
 
 // vpsRequiresReplaceIfPriorKnown replaces the VPS only when the state holds a
-// value and the plan another one. A null state value, as after an import or the
-// migration of the state of the former ovh_vps, never destroys the VPS.
+// value and the plan another one. A null state value, when the value could not
+// be read from the VPS, never destroys the VPS. After an import or the
+// migration of the state, Read fills the value: a configuration that differs
+// replaces the VPS.
 func vpsRequiresReplaceIfPriorKnown() planmodifier.String {
 	return stringplanmodifier.RequiresReplaceIf(
 		func(_ context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
@@ -31,11 +35,13 @@ func vpsChangeWithoutEffect(path string, state tftypes.Value) bool {
 	switch path {
 	case "id", "current_state", "order", "timeouts", "installation.send_password_by_email":
 		return true
-	case "plan_code", "location.region", "installation.ssh_key", "installation.post_installation_script", "power_state":
+	case "plan_code", "location.region", "installation.ssh_key", "installation.post_installation_script", "power_state",
+		"installation.from.image_id", "installation.from.image_name":
 		// Null after an import or the migration of the state of the former
-		// ovh_vps, or for power_state, read during a transitional state: the
-		// VPS already has a value, which the state did not know. The next Read
-		// reads the power state.
+		// ovh_vps, for power_state when read during a transitional state, or
+		// for the image when GET /vps/{serviceName}/images/current does not
+		// find it: the VPS already has a value, which the state did not know.
+		// The next Read reads the power state.
 		return state.IsNull()
 	}
 	return false

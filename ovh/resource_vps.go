@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"maps"
 	"net/http"
 	"net/url"
@@ -88,7 +89,10 @@ func (r *vpsResource) ImportState(ctx context.Context, req resource.ImportStateR
 
 // ModifyPlan refuses, when the VPS is to be created, the settings that only an
 // update of the ordered VPS could apply: an error after the payment would
-// leave a VPS that differs from its configuration.
+// leave a VPS that differs from its configuration. It also checks in the
+// catalog that the VPS can be ordered: Terraform plans a replacement with a
+// null state, and a replacement that cannot be ordered must fail before Delete
+// terminates the VPS. Values unknown at plan time are checked by Create.
 func (r *vpsResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	if !req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
 		return
@@ -99,6 +103,15 @@ func (r *vpsResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanReq
 		return
 	}
 	resp.Diagnostics.Append(config.createRefusals()...)
+
+	known := func(value attr.Value) bool { return value != nil && !value.IsNull() && !value.IsUnknown() }
+	if r.config == nil || !known(config.PlanCode) ||
+		!known(vpsAttributeAt(config.Location, "region")) ||
+		!known(vpsAttributeAt(config.Installation, "from", "image_name")) {
+		return
+	}
+	_, diags := r.checkOrderable(ctx, &config)
+	resp.Diagnostics.Append(diags...)
 }
 
 func (r *vpsResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -135,7 +148,29 @@ func (r *vpsResource) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	resp.Diagnostics.Append(r.deliver(ctx, &data, &resp.State)...)
+	resp.Diagnostics.Append(vpsTellToUntaint(r.deliver(ctx, &data, &resp.State))...)
+}
+
+// vpsTellToUntaint adds vpsDeliveryPendingHint to the errors of diags that do
+// not already tell what to do with the resource. After the payment, Terraform
+// marks the resource as tainted on any error: without terraform untaint, the
+// next apply terminates the VPS and orders a new one.
+func vpsTellToUntaint(diags diag.Diagnostics) diag.Diagnostics {
+	out := make(diag.Diagnostics, 0, len(diags))
+	for _, d := range diags {
+		if d.Severity() != diag.SeverityError ||
+			strings.Contains(d.Detail(), "terraform untaint") || strings.Contains(d.Detail(), "terraform state rm") {
+			out = append(out, d)
+			continue
+		}
+		detail := strings.TrimSpace(d.Detail() + "\n\n" + vpsDeliveryPendingHint)
+		if withPath, ok := d.(diag.DiagnosticWithPath); ok {
+			out = append(out, diag.NewAttributeErrorDiagnostic(withPath.Path(), d.Summary(), detail))
+			continue
+		}
+		out = append(out, diag.NewErrorDiagnostic(d.Summary(), detail))
+	}
+	return out
 }
 
 func (r *vpsResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -162,6 +197,13 @@ func (r *vpsResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 		return
 	}
 	if !found {
+		if data.CurrentState.IsNull() && !vpsAttributeNull(data.Order, "order_id") {
+			// Ordered by Terraform and never read: API v1 does not serve it
+			// yet. Removing it would make the next apply order a new VPS.
+			orderIdValue, _ := vpsAttributeAt(data.Order, "order_id").(types.Int64)
+			resp.Diagnostics.Append(vpsNotReadableYet(orderIdValue.ValueInt64(), data.Id.ValueString()))
+			return
+		}
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -287,6 +329,25 @@ func (m *VPSResourceModel) orderTerms() (duration, pricingMode string) {
 // catalog of the subsidiary of the account, and returns the order of the VPS.
 // Nothing is ordered yet.
 func (r *vpsResource) orderFor(ctx context.Context, m *VPSResourceModel) (*OrderModel, diag.Diagnostics) {
+	orderable, diags := r.checkOrderable(ctx, m)
+	if diags.HasError() {
+		return nil, diags
+	}
+	duration, pricingMode := m.orderTerms()
+	order, orderDiags := vpsOrderModel(ctx, orderable.planCode, orderable.datacenter, orderable.imageName, duration, pricingMode, orderable.subsidiary)
+	diags.Append(orderDiags...)
+	return order, diags
+}
+
+// vpsOrderable is what the order of a VPS takes, once checked in the catalog.
+type vpsOrderable struct {
+	subsidiary, planCode, datacenter, imageName string
+}
+
+// checkOrderable checks in the order catalog of the subsidiary of the account
+// that the plan code of m can be ordered in its region with its image, without
+// ordering. ModifyPlan and Create share it.
+func (r *vpsResource) checkOrderable(ctx context.Context, m *VPSResourceModel) (*vpsOrderable, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	client := r.config.OVHClient
 
@@ -328,11 +389,7 @@ func (r *vpsResource) orderFor(ctx context.Context, m *VPSResourceModel) (*Order
 	if diags.HasError() {
 		return nil, diags
 	}
-
-	duration, pricingMode := m.orderTerms()
-	order, orderDiags := vpsOrderModel(ctx, planCode, datacenter, imageName, duration, pricingMode, subsidiary)
-	diags.Append(orderDiags...)
-	return order, diags
+	return &vpsOrderable{subsidiary: subsidiary, planCode: planCode, datacenter: datacenter, imageName: imageName}, diags
 }
 
 // vpsOrderableRegions returns the regions of the datacenter codes, sorted; the
@@ -363,8 +420,13 @@ func (r *vpsResource) deliver(ctx context.Context, data *VPSResourceModel, state
 		orderIdValue, _ := vpsAttributeAt(data.Order, "order_id").(types.Int64)
 		orderID := orderIdValue.ValueInt64()
 		err := vpsWaitOrderDelivered(ctx, client, orderID, time.Until(deadline))
-		if vpsTimedOut(err) {
+		if vpsWaitStopped(err) {
 			diags.AddError(fmt.Sprintf("VPS order %d is not delivered yet", orderID), vpsDeliveryPendingHint)
+			return diags
+		}
+		var cancelled *vpsOrderCancelledError
+		if errors.As(err, &cancelled) {
+			diags.Append(cancelled.diagnostic())
 			return diags
 		}
 		if err != nil {
@@ -386,7 +448,7 @@ func (r *vpsResource) deliver(ctx context.Context, data *VPSResourceModel, state
 
 	id := data.Id.ValueString()
 	err := vpsWaitReady(ctx, client, id, time.Until(deadline))
-	if vpsTimedOut(err) {
+	if vpsWaitStopped(err) {
 		diags.AddError(fmt.Sprintf("VPS %s is not ready yet", id), vpsDeliveryPendingHint)
 		return diags
 	}
@@ -417,17 +479,22 @@ func (r *vpsResource) checkDelivery(ctx context.Context, data *VPSResourceModel,
 	orderIdValue, _ := vpsAttributeAt(data.Order, "order_id").(types.Int64)
 	orderID := orderIdValue.ValueInt64()
 
-	var status string
-	endpoint := fmt.Sprintf("/me/order/%d/status", orderID)
-	if err := client.GetWithContext(ctx, endpoint, &status); err != nil {
-		diags.AddError(fmt.Sprintf("Error reading VPS order %d", orderID), fmt.Sprintf("calling GET %s: %s", endpoint, err))
+	status, err := vpsOrderStatus(ctx, client, orderID)
+	var cancelled *vpsOrderCancelledError
+	switch {
+	case errors.As(err, &cancelled):
+		diags.Append(cancelled.diagnostic())
 		return diags
-	}
-	if status != "delivered" {
+	case err != nil || status != vpsOrderDelivered:
+		// An API error counts as a delivery still pending, as for Create.
+		state := status
+		if err != nil {
+			state = fmt.Sprintf("not readable (%s)", err)
+		}
 		diags.AddWarning(
 			fmt.Sprintf("VPS order %d is being delivered", orderID),
-			fmt.Sprintf("The order is %s: the VPS is not in the state yet, plan or apply again later. "+
-				"If Terraform marked the resource as tainted, run terraform untaint on it, so that the next apply does not order a new VPS.", status),
+			fmt.Sprintf("The status of the order is %s: the VPS is not in the state yet, plan or apply again later. "+
+				"If Terraform marked the resource as tainted, run terraform untaint on it, so that the next apply does not order a new VPS.", state),
 		)
 		return diags
 	}
@@ -446,13 +513,19 @@ func (r *vpsResource) checkDelivery(ctx context.Context, data *VPSResourceModel,
 	}
 	if !found {
 		// Kept, so that the next apply does not order a new VPS.
-		diags.AddWarning(
-			fmt.Sprintf("VPS %s cannot be read yet", id),
-			fmt.Sprintf("Order %d is delivered, but GET /vps/%s does not find the VPS yet: its id is kept in the state, the next plan reads it.", orderID, id),
-		)
+		diags.Append(vpsNotReadableYet(orderID, id))
 	}
 	diags.Append(state.Set(ctx, data)...)
 	return diags
+}
+
+// vpsNotReadableYet is the warning of a VPS delivered that API v1 does not
+// serve yet: it is kept in the state, never read.
+func vpsNotReadableYet(orderID int64, id string) diag.Diagnostic {
+	return diag.NewWarningDiagnostic(
+		fmt.Sprintf("VPS %s cannot be read yet", id),
+		fmt.Sprintf("Order %d is delivered, but GET /vps/%s does not find the VPS yet: its id is kept in the state, the next plan reads it.", orderID, id),
+	)
 }
 
 // refresh reads the VPS of data.Id and merges it into data. found is false
@@ -490,16 +563,23 @@ func (r *vpsResource) refresh(ctx context.Context, data *VPSResourceModel) (foun
 
 // vpsWaitOrderDelivered waits at most timeout for the order to be delivered.
 func vpsWaitOrderDelivered(ctx context.Context, client *ovhwrap.Client, orderID int64, timeout time.Duration) error {
-	endpoint := fmt.Sprintf("/me/order/%d/status", orderID)
 	conf := &retry.StateChangeConf{
-		Pending: []string{"checking", "delivering"},
-		Target:  []string{"delivered"},
+		Pending: []string{"pending"},
+		Target:  []string{vpsOrderDelivered},
 		Refresh: func() (any, string, error) {
-			var status string
-			if err := client.GetWithContext(ctx, endpoint, &status); err != nil {
-				return nil, "", fmt.Errorf("calling GET %s: %w", endpoint, err)
+			status, err := vpsOrderStatus(ctx, client, orderID)
+			var cancelled *vpsOrderCancelledError
+			switch {
+			case errors.As(err, &cancelled):
+				return nil, "", err
+			case err != nil:
+				// A transient error does not end the wait: the order is paid.
+				log.Printf("[WARN] VPS order %d: %s", orderID, err)
+				return err.Error(), "pending", nil
+			case status == vpsOrderDelivered:
+				return status, status, nil
 			}
-			return status, status, nil
+			return status, "pending", nil
 		},
 		Timeout:      timeout,
 		Delay:        vpsPollDelay,
@@ -520,10 +600,10 @@ func vpsWaitReady(ctx context.Context, client *ovhwrap.Client, id string, timeou
 		Refresh: func() (any, string, error) {
 			var vps vpsV1
 			if err := client.GetWithContext(ctx, endpoint, &vps); err != nil {
-				if vpsAPIStatus(err) == http.StatusNotFound {
-					return vps, "unknown", nil
-				}
-				return nil, "", fmt.Errorf("calling GET %s: %w", endpoint, err)
+				// Not known to API v1 yet (404), or a transient error: the VPS is
+				// paid, so the wait goes on.
+				log.Printf("[WARN] VPS %s: calling GET %s: %s", id, endpoint, err)
+				return vps, "unknown", nil
 			}
 			if target, _ := vpsPowerStatesFromV1(vps.State); target == nil {
 				return vps, "transitional", nil
@@ -538,10 +618,46 @@ func vpsWaitReady(ctx context.Context, client *ovhwrap.Client, id string, timeou
 	return err
 }
 
-// vpsTimedOut tells whether a wait ended on its timeout.
-func vpsTimedOut(err error) bool {
+// vpsWaitStopped tells whether a wait ended on its timeout, or was interrupted.
+func vpsWaitStopped(err error) bool {
 	var timeout *retry.TimeoutError
-	return errors.As(err, &timeout) || errors.Is(err, context.DeadlineExceeded)
+	return errors.As(err, &timeout) || errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled)
+}
+
+// vpsOrderDelivered is the status of a delivered order.
+const vpsOrderDelivered = "delivered"
+
+// vpsOrderCancelledError is the error of an order cancelled, or being
+// cancelled: a final status, the VPS will never be delivered.
+type vpsOrderCancelledError struct {
+	orderID int64
+	status  string
+}
+
+func (e *vpsOrderCancelledError) Error() string {
+	return fmt.Sprintf("VPS order %d is %s", e.orderID, e.status)
+}
+
+func (e *vpsOrderCancelledError) diagnostic() diag.Diagnostic {
+	return diag.NewErrorDiagnostic(
+		fmt.Sprintf("VPS order %d is cancelled", e.orderID),
+		fmt.Sprintf("The status of the order is %s: no VPS will be delivered. "+
+			"Remove the resource from the state with terraform state rm, then apply again to order a new VPS.", e.status),
+	)
+}
+
+// vpsOrderStatus returns the status of the order: a *vpsOrderCancelledError
+// for a cancelled order, the status otherwise.
+func vpsOrderStatus(ctx context.Context, client *ovhwrap.Client, orderID int64) (string, error) {
+	var status string
+	endpoint := fmt.Sprintf("/me/order/%d/status", orderID)
+	if err := client.GetWithContext(ctx, endpoint, &status); err != nil {
+		return "", fmt.Errorf("calling GET %s: %w", endpoint, err)
+	}
+	if status == "cancelled" || status == "cancelling" {
+		return status, &vpsOrderCancelledError{orderID: orderID, status: status}
+	}
+	return status, nil
 }
 
 // vpsSetState sets the state from data, the unknown values replaced by the
