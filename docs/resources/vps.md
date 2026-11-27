@@ -293,7 +293,7 @@ When the order is cancelled, `terraform apply` and `terraform plan` fail with `V
 
 The VPS is delivered and kept in the state, and `terraform apply` fails with an error that tells to run `terraform untaint` on it, as above. Then run `terraform apply` again: the next plan shows the settings left to apply.
 
-A reinstallation requested when the VPS was ordered, and not done yet because the delivery took longer than the timeout or the reinstallation failed, is not lost: the next `terraform plan` shows an update in place, with a warning that the VPS is reinstalled, and `terraform apply` reinstalls it.
+A reinstallation requested when the VPS was ordered, and not done yet because the delivery took longer than the timeout or the reinstallation failed, is not lost: the next `terraform plan` shows an update in place, with a warning that the VPS is reinstalled, and `terraform apply` reinstalls it. To keep the VPS as it is instead, without the pending reinstallation, remove it from the state with `terraform state rm`, then import it with `terraform import`: an import does not resume a pending reinstallation.
 
 ## Updating a VPS
 
@@ -310,6 +310,10 @@ The changes are applied in this order: name, reinstallation, automated backup sc
 
 ~> **WARNING** Changing `installation.from`, `installation.ssh_key` or `installation.post_installation_script` reinstalls the VPS, which erases its disk. `terraform plan` warns `This apply reinstalls VPS …, which erases its disk`. A reinstallation starts the VPS: `power_state` is applied again after it.
 
+When `installation` depends on values known only at apply time, such as a key another resource generates, `terraform plan` warns `This apply may reinstall VPS …, which erases its disk`, and plans unknown the image attribute your configuration leaves out.
+
+When a reinstallation is still running when `timeouts.update` ends, `terraform apply` fails with `The reinstallation of VPS … is still running`: the state holds the new installation, and the next plan does not reinstall the VPS again.
+
 When the plan reinstalls the VPS, `terraform plan` checks that the VPS can be installed from the image, and fails otherwise with an error that lists the images it can be installed from. The VPS is reinstalled from the image your configuration sets: `installation.from.image_name` resolves to the current build of the image, and the attribute your configuration leaves out, `image_id` or `image_name`, is planned null.
 
 `options.auto_backup.cron` is a daily schedule in UTC, `M H * * *`, without leading zeros, such as `0 2 * * *`. Rescheduling a VPS without the automated backup option fails with the error of the API.
@@ -317,8 +321,8 @@ When the plan reinstalls the VPS, `terraform plan` checks that the VPS can be in
 `terraform apply` only records in the state, without calling the API:
 
 - changes of `timeouts`, `order` and `installation.send_password_by_email`: the next reinstallation applies `send_password_by_email`;
-- values of `installation.ssh_key` and `installation.post_installation_script` when the state has none, as after an import: they are never read back;
-- values of `plan_code`, `location.region`, `power_state` and `installation.from` when the state has none, because they could not be read from the VPS.
+- values of `installation.ssh_key`, `installation.post_installation_script` and `installation.from` when the state has none after an import or the migration of the state: the key and the script are never read back, and the image could not be read from the VPS. On a VPS that Terraform ordered or reinstalled, a key, a script or an image the state has none of reinstalls the VPS;
+- values of `plan_code`, `location.region` and `power_state` when the state has none, because they could not be read from the VPS.
 
 When a change fails, the changes after it are not applied. The state keeps the changes done, and the previous values of the others: the next `terraform plan` shows what is left to apply.
 
