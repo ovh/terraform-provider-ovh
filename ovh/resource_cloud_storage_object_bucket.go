@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/ovh/go-ovh/ovh"
+	"github.com/ovh/terraform-provider-ovh/v2/ovh/ovhwrap"
 	ovhtypes "github.com/ovh/terraform-provider-ovh/v2/ovh/types"
 )
 
@@ -493,12 +494,47 @@ func (r *cloudStorageObjectBucketResource) ImportState(ctx context.Context, req 
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), splits[1])...)
 }
 
+// cloudProjectUserObjectStorePermission is the permission of the roles that give a user every right on the
+// object storage of the project (objectstore_operator, administrator...).
+const cloudProjectUserObjectStorePermission = "objectstore_all"
+
+// storageObjectBucketCheckOwner makes sure the user can own a bucket. The API answers 500 to a bucket owned
+// by a user without object storage permission instead of refusing it, so the check happens here.
+func storageObjectBucketCheckOwner(ctx context.Context, client *ovhwrap.Client, serviceName, userId string) error {
+	endpoint := "/cloud/project/" + url.PathEscape(serviceName) + "/user/" + url.PathEscape(userId)
+
+	var user CloudProjectUser
+	if err := client.GetWithContext(ctx, endpoint, &user); err != nil {
+		return fmt.Errorf("error calling Get %s: %w", endpoint, err)
+	}
+
+	for _, role := range user.Roles {
+		for _, permission := range role.Permissions {
+			if permission == cloudProjectUserObjectStorePermission {
+				return nil
+			}
+		}
+	}
+
+	return fmt.Errorf("user %s (%s) has no role with the %s permission, such as objectstore_operator or administrator", userId, user.Username, cloudProjectUserObjectStorePermission)
+}
+
 func (r *cloudStorageObjectBucketResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data CloudStorageObjectBucketModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	if owner := data.OwnerUserId.ValueString(); owner != "" {
+		if err := storageObjectBucketCheckOwner(ctx, r.config.OVHClient, data.ServiceName.ValueString(), owner); err != nil {
+			resp.Diagnostics.AddError(
+				fmt.Sprintf("User %s cannot own bucket %s", owner, data.Name.ValueString()),
+				err.Error(),
+			)
+			return
+		}
 	}
 
 	createPayload := data.ToCreate()

@@ -57,7 +57,7 @@ The following arguments are supported:
 * `service_name` - (Optional) Service name of the resource representing the id of the cloud project. If omitted, the `OVH_CLOUD_PROJECT_SERVICE` environment variable is used. **Changing this value recreates the resource.**
 * `name` - (Required) Bucket name (must be globally unique and DNS-compatible): 3 to 63 characters, lowercase letters, digits, dots and hyphens only, starting and ending with a letter or a digit. **Changing this value recreates the resource.**
 * `region` - (Required) Region identifier where the bucket will be created. Must be upper-case (e.g. `GRA`, `SBG`, `BHS`). **Changing this value recreates the resource.**
-* `owner_user_id` - (Optional) Container owner user ID. **Changing this value recreates the resource.**
+* `owner_user_id` - (Optional) Container owner user ID. The user must have a role with the object storage permission (`objectstore_operator`, `administrator`...), the bucket is refused otherwise. **Changing this value recreates the resource.**
 * `tags` - (Optional) Metadata tags for the bucket, as a map of strings.
 * `encryption` - (Optional) Server-side encryption configuration:
   * `algorithm` - (Required) Encryption algorithm. One of `AES256`, `PLAINTEXT`.
