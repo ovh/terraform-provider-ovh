@@ -24,7 +24,8 @@ The attributes at the root hold the settings you requested for the VPS, and `cur
 
 ```terraform
 resource "ovh_vps" "web" {
-  plan_code = "vps-2025-model1"
+  plan_code    = "vps-2025-model1"
+  display_name = "web"
 
   location = {
     region = "eu-west-gra"
@@ -34,6 +35,7 @@ resource "ovh_vps" "web" {
     from = {
       image_name = "Debian 12"
     }
+    ssh_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExample user@laptop"
   }
 }
 
@@ -69,13 +71,13 @@ output "vps_ipv4" {
 
 Required:
 
-- `from` (Attributes) Source to install the VPS from. Set exactly one of image_id and image_name. After an import or the migration of the state, both are read from the image installed on the VPS (see [below for nested schema](#nestedatt--installation--from))
+- `from` (Attributes) Source to install the VPS from. Set exactly one of image_id and image_name. After an import or the migration of the state, both are read from the image installed on the VPS. Changing it reinstalls the VPS, which erases its disk (see [below for nested schema](#nestedatt--installation--from))
 
 Optional:
 
-- `post_installation_script` (String, Sensitive) Script run after the installation. Write-only: it is never read back
+- `post_installation_script` (String, Sensitive) Script run after the installation. Write-only: it is never read back. Changing it reinstalls the VPS, which erases its disk
 - `send_password_by_email` (Boolean) Send the generated root password to you by email. Default: true
-- `ssh_key` (String) Public SSH key to inject, in OpenSSH public key format
+- `ssh_key` (String) Public SSH key to inject, in OpenSSH public key format. Changing it reinstalls the VPS, which erases its disk
 
 <a id="nestedatt--installation--from"></a>
 ### Nested Schema for `installation.from`
@@ -131,6 +133,7 @@ Optional:
 
 - `create` (String) Wait for the creation of the VPS, from the order to its delivery. Defaults to 60m
 - `delete` (String) Wait for the termination of the VPS. Defaults to 30m
+- `update` (String) Wait for the update of the VPS. Defaults to 60m
 
 
 <a id="nestedatt--current_state"></a>
@@ -229,20 +232,19 @@ Read-Only:
 
 `terraform apply` orders the VPS with the subsidiary of your account and the default payment method, then waits for its delivery and its installation, for at most `timeouts.create` (60 minutes by default).
 
-`terraform plan` checks in the order catalog that `plan_code` can be ordered in `location.region` with `installation.from.image_name`, and `terraform apply` checks it again before ordering, for the values unknown at plan time. When it cannot, the error lists the possible regions or images, and nothing is ordered. A replacement that cannot be ordered thus fails before the VPS is terminated.
+`terraform plan` checks in the order catalog that `plan_code` can be ordered in `location.region`, with `installation.from.image_name` when your configuration sets it, and `terraform apply` checks it again before ordering, for the values unknown at plan time. When it cannot, the error lists the possible regions or images, and nothing is ordered. A replacement that cannot be ordered thus fails before the VPS is terminated.
 
 `location.region` is an OVHcloud region code, such as `eu-west-gra`, among the regions of `GET /v2/location`.
 
 `order.duration` and `order.pricing_mode` default to `P1M` and `default`. They must come from the same price, see [Choosing the plan, duration and pricing mode of an ordered product](../guides/order_plan).
 
-This version of the provider does not support yet, when creating a VPS, the following settings. `terraform plan` refuses them, before any order:
+Every setting is accepted when creating a VPS. The order only takes the plan, the region and the image name: the other settings are applied once the VPS is delivered, in the same `terraform apply`, as an update does (see [Updating a VPS](#updating-a-vps)). `timeouts.create` covers the order, the delivery and these settings.
 
-- `installation.from.image_id`: set `installation.from.image_name`;
-- `installation.ssh_key` and `installation.post_installation_script`;
-- `installation.send_password_by_email = false`;
-- `power_state` other than `ACTIVE`;
-- `display_name`;
-- `options.auto_backup.cron`.
+~> **WARNING** `installation.from.image_id`, `installation.ssh_key`, `installation.post_installation_script` or `installation.send_password_by_email = false` reinstall the VPS once it is delivered, which makes the creation longer.
+
+The order catalog only knows image names. With `installation.from.image_id`, the VPS is ordered with the first image of the catalog that takes no paid option (no Windows image, no variant such as `Debian 12 - Plesk`), then reinstalled from `image_id`. `image_id` can only be checked once the VPS is delivered: when the VPS cannot be installed from it, `terraform apply` fails with an error that lists the images it can be installed from.
+
+`installation.send_password_by_email = false` needs `installation.ssh_key`: without an SSH key, the password is the only way to log in.
 
 ### When the delivery takes longer than the timeout
 
@@ -258,15 +260,40 @@ The next `terraform plan` or `terraform apply` checks the delivery of the order 
 
 When the order is cancelled, `terraform apply` and `terraform plan` fail with `VPS order … is cancelled`: no VPS will be delivered. Remove the resource from the state with `terraform state rm`, then apply again to order a new VPS.
 
+### When a setting fails after the delivery
+
+The VPS is delivered and kept in the state, and `terraform apply` fails with an error that tells to run `terraform untaint` on it, as above. Then run `terraform apply` again: the next plan shows the settings left to apply.
+
+A reinstallation requested when the VPS was ordered, and not done yet because the delivery took longer than the timeout or the reinstallation failed, is not lost: the next `terraform plan` shows an update in place, with a warning that the VPS is reinstalled, and `terraform apply` reinstalls it.
+
 ## Updating a VPS
 
-This version of the provider does not update a VPS yet. `terraform apply` only records in the state, without calling the API:
+`terraform apply` updates the VPS in place, through one API call per change:
 
-- changes of `timeouts`, `order` and `installation.send_password_by_email`;
+| Attribute | What `terraform apply` does |
+|---|---|
+| `display_name` | Renames the VPS |
+| `installation.from`, `installation.ssh_key`, `installation.post_installation_script` | Reinstalls the VPS with the whole `installation`, which erases its disk |
+| `options.auto_backup.cron` | Reschedules the automated backup |
+| `power_state` | Starts or stops the VPS. `RESCUE` sets the rescue netboot mode and reboots the VPS, or starts it when stopped; leaving `RESCUE` sets the local netboot mode back |
+
+The changes are applied in this order: name, reinstallation, automated backup schedule, power state. Each one is waited for before the next one, for at most `timeouts.update` (60 minutes by default). While another task runs on the VPS, the call is tried again until the timeout.
+
+~> **WARNING** Changing `installation.from`, `installation.ssh_key` or `installation.post_installation_script` reinstalls the VPS, which erases its disk. `terraform plan` warns `This apply reinstalls VPS …, which erases its disk`. A reinstallation starts the VPS: `power_state` is applied again after it.
+
+When the plan reinstalls the VPS, `terraform plan` checks that the VPS can be installed from the image, and fails otherwise with an error that lists the images it can be installed from. The VPS is reinstalled from the image your configuration sets: `installation.from.image_name` resolves to the current build of the image, and the attribute your configuration leaves out, `image_id` or `image_name`, is planned null.
+
+`options.auto_backup.cron` is a daily schedule in UTC, `M H * * *`, without leading zeros, such as `0 2 * * *`. Rescheduling a VPS without the automated backup option fails with the error of the API.
+
+`terraform apply` only records in the state, without calling the API:
+
+- changes of `timeouts`, `order` and `installation.send_password_by_email`: the next reinstallation applies `send_password_by_email`;
 - values of `installation.ssh_key` and `installation.post_installation_script` when the state has none, as after an import: they are never read back;
 - values of `plan_code`, `location.region`, `power_state` and `installation.from` when the state has none, because they could not be read from the VPS.
 
-Any other change, such as `display_name`, `power_state`, `installation` or `options`, is shown as an update in place by `terraform plan`, and `terraform apply` fails with `Updating a VPS is not supported yet`. Set these attributes back to their value in the state.
+When a change fails, the changes after it are not applied. The state keeps the changes done, and the previous values of the others: the next `terraform plan` shows what is left to apply.
+
+A VPS whose order is not delivered yet cannot be updated: wait for its delivery, then apply again.
 
 ## Import
 

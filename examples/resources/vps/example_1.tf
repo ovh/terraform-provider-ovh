@@ -1,5 +1,6 @@
 resource "ovh_vps" "web" {
-  plan_code = "vps-2025-model1"
+  plan_code    = "vps-2025-model1"
+  display_name = "web"
 
   location = {
     region = "eu-west-gra"
@@ -9,6 +10,7 @@ resource "ovh_vps" "web" {
     from = {
       image_name = "Debian 12"
     }
+    ssh_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExample user@laptop"
   }
 }
 

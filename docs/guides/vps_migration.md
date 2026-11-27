@@ -200,16 +200,11 @@ resource "ovh_vps" "web" {
 Check the first `terraform plan` after the migration, and after an import:
 
 - When `plan_code` or `location.region` in your configuration differ from the ones of the VPS, Terraform plans to replace it, which terminates the VPS and orders a new one. This happens when the VPS changed plan since its order, or when the region you wrote is not the one of the VPS. Set them to the values of the state, shown by `terraform state show`.
-- Any other difference, such as `display_name`, `power_state`, `installation.from` or `installation.ssh_key`, is shown as an update in place, and `terraform apply` fails with `Updating a VPS is not supported yet`: this version of the provider does not update a VPS. Set these attributes to the values of the state. `installation.from.image_name` is the image the VPS runs.
+- Any other difference, such as `display_name`, `power_state`, `options.auto_backup.cron`, `installation.from` or `installation.ssh_key`, is shown as an update in place, and `terraform apply` applies the change.
+- A difference of `installation.from`, `installation.ssh_key` or `installation.post_installation_script` reinstalls the VPS, which erases its disk: `terraform plan` warns `This apply reinstalls VPS …, which erases its disk`. `installation.from.image_name` is the image the VPS runs: to keep the VPS as it is, set it to the value of the state.
 - Changes of `timeouts`, `order` and `installation.send_password_by_email` are only recorded in the state. So are `installation.ssh_key` and `installation.post_installation_script` when the state has none, since they are never read back, and `plan_code`, `location.region`, `power_state` and `installation.from` when they could not be read from the VPS.
 
 A plan with no change means the configuration matches the VPS.
-
-### What this version does not support yet
-
-When creating a VPS, `terraform plan` refuses, before any order: `installation.from.image_id`, `installation.ssh_key`, `installation.post_installation_script`, `installation.send_password_by_email = false`, a `power_state` other than `ACTIVE`, `display_name` and `options.auto_backup.cron`.
-
-On an existing VPS, `terraform apply` refuses every change but the ones recorded in the state, listed above.
 
 ### After a delivery timeout
 

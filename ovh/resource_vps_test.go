@@ -1224,7 +1224,44 @@ resource "ovh_vps" "vps" {
 }
 `
 
-// TestAccVPSResource_order orders a VPS, which is billed, then terminates it.
+// testAccVPSResourceSshKey is the public part of a key pair made for the test,
+// whose private part was thrown away.
+const testAccVPSResourceSshKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDRXZ5WO8MZFAY4NMQEl28RSDpqhOvuz7RAsK7E8RiF6 tf-acc-vps"
+
+// testAccVPSResourceUpdateConfig is testAccVPSResourceConfig with the settings
+// an update applies. An empty cron or sshKey leaves it out.
+func testAccVPSResourceUpdateConfig(planCode, region, imageName, displayName, powerState, cron, sshKey string) string {
+	options, key := "null", "null"
+	if cron != "" {
+		options = fmt.Sprintf("{\n    auto_backup = {\n      cron = %q\n    }\n  }", cron)
+	}
+	if sshKey != "" {
+		key = fmt.Sprintf("%q", sshKey)
+	}
+	return fmt.Sprintf(`
+resource "ovh_vps" "vps" {
+  plan_code    = %q
+  display_name = %q
+  power_state  = %q
+
+  location = {
+    region = %q
+  }
+
+  installation = {
+    from = {
+      image_name = %q
+    }
+    ssh_key = %s
+  }
+
+  options = %s
+}
+`, planCode, displayName, powerState, region, imageName, key, options)
+}
+
+// TestAccVPSResource_order orders a VPS, which is billed, updates it, then
+// terminates it.
 func TestAccVPSResource_order(t *testing.T) {
 	planCode := os.Getenv("OVH_VPS_PLAN_CODE")
 	region := os.Getenv("OVH_VPS_REGION")
@@ -1266,6 +1303,50 @@ func TestAccVPSResource_order(t *testing.T) {
 					"installation.post_installation_script",
 					"installation.send_password_by_email",
 				},
+			},
+			{
+				Config: testAccVPSResourceUpdateConfig(planCode, region, imageName, "tf-acc-vps-updated", "ACTIVE", "", ""),
+				Check: acc.ComposeTestCheckFunc(
+					acc.TestCheckResourceAttr("ovh_vps.vps", "display_name", "tf-acc-vps-updated"),
+					acc.TestCheckResourceAttr("ovh_vps.vps", "current_state.display_name", "tf-acc-vps-updated"),
+					acc.TestCheckResourceAttr("ovh_vps.vps", "current_state.power_state", "ACTIVE"),
+				),
+			},
+			{
+				Config: testAccVPSResourceUpdateConfig(planCode, region, imageName, "tf-acc-vps-updated", "SHUTOFF", "", ""),
+				Check: acc.ComposeTestCheckFunc(
+					acc.TestCheckResourceAttr("ovh_vps.vps", "power_state", "SHUTOFF"),
+					acc.TestCheckResourceAttr("ovh_vps.vps", "current_state.power_state", "SHUTOFF"),
+				),
+			},
+			{
+				Config: testAccVPSResourceUpdateConfig(planCode, region, imageName, "tf-acc-vps-updated", "ACTIVE", "0 2 * * *", ""),
+				Check: acc.ComposeTestCheckFunc(
+					acc.TestCheckResourceAttr("ovh_vps.vps", "power_state", "ACTIVE"),
+					acc.TestCheckResourceAttr("ovh_vps.vps", "current_state.power_state", "ACTIVE"),
+					acc.TestCheckResourceAttr("ovh_vps.vps", "options.auto_backup.cron", "0 2 * * *"),
+					acc.TestCheckResourceAttr("ovh_vps.vps", "current_state.options.auto_backup.cron", "0 2 * * *"),
+				),
+			},
+			{
+				// Rescue mode: netboot mode rescue, then a reboot.
+				Config: testAccVPSResourceUpdateConfig(planCode, region, imageName, "tf-acc-vps-updated", "RESCUE", "0 2 * * *", ""),
+				Check: acc.ComposeTestCheckFunc(
+					acc.TestCheckResourceAttr("ovh_vps.vps", "power_state", "RESCUE"),
+					acc.TestCheckResourceAttr("ovh_vps.vps", "current_state.power_state", "RESCUE"),
+				),
+			},
+			{
+				// Adding the SSH key reinstalls the VPS, and leaving RESCUE
+				// boots it on its disk.
+				Config: testAccVPSResourceUpdateConfig(planCode, region, imageName, "tf-acc-vps-updated", "ACTIVE", "0 2 * * *", testAccVPSResourceSshKey),
+				Check: acc.ComposeTestCheckFunc(
+					acc.TestCheckResourceAttr("ovh_vps.vps", "installation.ssh_key", testAccVPSResourceSshKey),
+					acc.TestCheckResourceAttr("ovh_vps.vps", "current_state.power_state", "ACTIVE"),
+					acc.TestCheckResourceAttr("ovh_vps.vps", "current_state.installation.from.image_name", imageName),
+					acc.TestCheckResourceAttr("ovh_vps.vps", "current_state.display_name", "tf-acc-vps-updated"),
+					acc.TestCheckResourceAttr("ovh_vps.vps", "current_state.options.auto_backup.cron", "0 2 * * *"),
+				),
 			},
 		},
 	})
