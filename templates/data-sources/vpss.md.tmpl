@@ -2,24 +2,28 @@
 subcategory : "VPS"
 ---
 
-{{/* This template serves as a starting point for documentation generation, and can be customized with hardcoded values and/or doc gen templates.
+# ovh_vpss (Data Source)
 
-For example, the {{ .SchemaMarkdown }} template can be used to replace manual schema documentation if descriptions of schema attributes are added in the provider source code. */ -}}
+Use this data source to list the VPS of your account.
 
-# vpss (Data Source)
+Each element of `vps` has the attributes of the [`ovh_vps`](https://registry.terraform.io/providers/ovh/ovh/latest/docs/data-sources/vps) data source.
 
-Use this data source to get the list of VPS associated with your OVH Account.
+-> **NOTE** The schema of this data source changed in version 3.0.0 of the provider. See the [VPS migration guide](../guides/vps_migration) to update a configuration written for a previous version.
 
 ## Example Usage
 
 {{tffile "examples/data-sources/vpss/example_1.tf"}}
 
-## Argument Reference
+Select the VPS of a region:
 
-This datasource takes no argument.
+{{tffile "examples/data-sources/vpss/example_2.tf"}}
 
-## Attributes Reference
+{{ .SchemaMarkdown | trimspace }}
 
-The following attributes are exported:
+## Notes
 
-* `result` - The list of VPS IDs associated with your OVH Account.
+The VPS are sorted by `id`.
+
+A VPS whose service is expired is left out of the list, with a warning that names it.
+
+Reading the region of the VPS calls `GET /v2/location`. When your credentials are not allowed to call it, `location.region` and `current_state.location.region` are null and the read emits a warning that gives the reason.
