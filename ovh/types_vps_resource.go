@@ -44,18 +44,20 @@ const (
 	vpsDefaultPricingMode = "default"
 
 	vpsCreateTimeout = 60 * time.Minute
+	vpsUpdateTimeout = 60 * time.Minute
 	vpsDeleteTimeout = 30 * time.Minute
 )
 
 // Descriptions of the resource. The ones the data source shares are in
 // types_vps_data.go; these differ from them, or are absent from the data source.
 const (
+	vpsReinstallDescription       = "Changing it reinstalls the VPS, which erases its disk"
 	vpsDescPlanCode               = "Plan code of the VPS offer, such as vps-2025-model3, from the VPS order catalog. " + vpsRequiresReplaceDescription
 	vpsDescResourceRegion         = "OVHcloud region code, such as eu-west-gra, among the regions of GET /v2/location. " + vpsRequiresReplaceDescription
 	vpsDescResourcePowerState     = "Power state you request: ACTIVE, RESCUE or SHUTOFF. Defaults to ACTIVE. Until the VPS API v2 is available, it is read from the current power state, and keeps its value while the VPS is in a transitional state (installing, rebooting...)"
-	vpsDescResourceInstallFrom    = "Source to install the VPS from. Set exactly one of image_id and image_name. After an import or the migration of the state, both are read from the image installed on the VPS"
-	vpsDescSshKey                 = "Public SSH key to inject, in OpenSSH public key format"
-	vpsDescPostInstallationScript = "Script run after the installation. Write-only: it is never read back"
+	vpsDescResourceInstallFrom    = "Source to install the VPS from. Set exactly one of image_id and image_name. After an import or the migration of the state, both are read from the image installed on the VPS. " + vpsReinstallDescription
+	vpsDescSshKey                 = "Public SSH key to inject, in OpenSSH public key format. " + vpsReinstallDescription
+	vpsDescPostInstallationScript = "Script run after the installation. Write-only: it is never read back. " + vpsReinstallDescription
 	vpsDescSendPasswordByEmail    = "Send the generated root password to you by email. Default: true"
 	vpsDescOrder                  = "Order of the VPS. Only used when the VPS is ordered"
 	vpsDescOrderDuration          = "Duration of the order, in ISO 8601 format, such as P1M for one month. Defaults to P1M"
@@ -63,6 +65,7 @@ const (
 	vpsDescOrderId                = "Identifier of the order of the VPS"
 	vpsDescTimeouts               = "How long to wait for the VPS, as durations such as 1h30m"
 	vpsDescTimeoutCreate          = "Wait for the creation of the VPS, from the order to its delivery. Defaults to 60m"
+	vpsDescTimeoutUpdate          = "Wait for the update of the VPS. Defaults to 60m"
 	vpsDescTimeoutDelete          = "Wait for the termination of the VPS. Defaults to 30m"
 )
 
@@ -141,6 +144,8 @@ func vpsResourceAttributes() map[string]schema.Attribute {
 	cron := str(vpsDescAutoBackupCron)
 	cron.Optional = true
 	cron.Computed = true
+	cron.Validators = []validator.String{stringvalidator.RegexMatches(vpsCronPattern,
+		`must be a daily cron expression "M H * * *", with M from 0 to 59 and H from 0 to 23, without leading zeros, such as "0 2 * * *"`)}
 	autoBackup := object(vpsDescAutoBackup, map[string]schema.Attribute{"cron": cron})
 	autoBackup.Optional = true
 	autoBackup.Computed = true
@@ -173,6 +178,7 @@ func vpsResourceAttributes() map[string]schema.Attribute {
 
 	timeouts := object(vpsDescTimeouts, map[string]schema.Attribute{
 		"create": timeout(vpsDescTimeoutCreate),
+		"update": timeout(vpsDescTimeoutUpdate),
 		"delete": timeout(vpsDescTimeoutDelete),
 	})
 	timeouts.Optional = true
@@ -263,6 +269,7 @@ func vpsOrderAttrTypes() map[string]attr.Type {
 func vpsTimeoutsAttrTypes() map[string]attr.Type {
 	return map[string]attr.Type{
 		"create": ovhtypes.TfStringType{},
+		"update": ovhtypes.TfStringType{},
 		"delete": ovhtypes.TfStringType{},
 	}
 }

@@ -27,9 +27,10 @@ import (
 )
 
 var (
-	_ resource.ResourceWithConfigure   = (*vpsResource)(nil)
-	_ resource.ResourceWithImportState = (*vpsResource)(nil)
-	_ resource.ResourceWithModifyPlan  = (*vpsResource)(nil)
+	_ resource.ResourceWithConfigure      = (*vpsResource)(nil)
+	_ resource.ResourceWithImportState    = (*vpsResource)(nil)
+	_ resource.ResourceWithModifyPlan     = (*vpsResource)(nil)
+	_ resource.ResourceWithValidateConfig = (*vpsResource)(nil)
 )
 
 // vpsPollDelay and vpsPollInterval pace the waits for the order and for the
@@ -87,14 +88,37 @@ func (r *vpsResource) ImportState(ctx context.Context, req resource.ImportStateR
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-// ModifyPlan refuses, when the VPS is to be created, the settings that only an
+// ValidateConfig refuses send_password_by_email set to false without an SSH
+// key: API v1 only applies doNotSendPassword with a key, and the password would
+// be the only way to log in.
+func (r *vpsResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	installation := path.Root("installation")
+	var send types.Bool
+	var sshKey ovhtypes.TfStringValue
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, installation.AtName("send_password_by_email"), &send)...)
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, installation.AtName("ssh_key"), &sshKey)...)
+	if resp.Diagnostics.HasError() || send.IsNull() || send.IsUnknown() || send.ValueBool() || !sshKey.IsNull() {
+		return
+	}
+	resp.Diagnostics.AddAttributeError(installation.AtName("send_password_by_email"),
+		"SSH key needed",
+		"Setting send_password_by_email to false needs installation.ssh_key: without an SSH key, the password is the only way to log in",
+	)
+}
+
+// ModifyPlan, when the VPS is to be created, refuses the settings that only an
 // update of the ordered VPS could apply: an error after the payment would
 // leave a VPS that differs from its configuration. It also checks in the
 // catalog that the VPS can be ordered: Terraform plans a replacement with a
 // null state, and a replacement that cannot be ordered must fail before Delete
 // terminates the VPS. Values unknown at plan time are checked by Create.
+// When the VPS exists, see modifyUpdatePlan.
 func (r *vpsResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	if !req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+	if !req.State.Raw.IsNull() {
+		r.modifyUpdatePlan(ctx, req, resp)
 		return
 	}
 	var config VPSResourceModel
@@ -210,24 +234,108 @@ func (r *vpsResource) Read(ctx context.Context, req resource.ReadRequest, resp *
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-// Update records the changes that leave the VPS as it is
-// (vpsChangeWithoutEffect), and refuses any other.
+// modifyUpdatePlan, when the plan reinstalls the VPS, warns that its disk is
+// erased, and checks that the VPS can be installed from the image. The image
+// the configuration does not set (image_id or image_name) is planned null: the
+// VPS is reinstalled from the configured one, and the state does not keep the
+// other one of the former image. While the installation requested at the
+// order is pending, current_state is planned unknown, so that Terraform calls
+// Update, which reinstalls the VPS.
+func (r *vpsResource) modifyUpdatePlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	var plan, state, config VPSResourceModel
+	resp.Diagnostics.Append(resp.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	pending, diags := vpsInstallationPending(ctx, req.Private)
+	resp.Diagnostics.Append(diags...)
+	// An order not delivered yet: Update refuses any change.
+	if resp.Diagnostics.HasError() || state.Id.IsNull() {
+		return
+	}
+	if vpsPlannedChanges(plan, state, pending).Rebuild == nil {
+		return
+	}
+
+	from := path.Root("installation").AtName("from")
+	configured := func(name string) bool {
+		value := vpsAttributeAt(config.Installation, "from", name)
+		return value != nil && !value.IsNull()
+	}
+	switch {
+	case configured("image_name") && !configured("image_id"):
+		resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, from.AtName("image_id"), vpsTfStringPtr(nil))...)
+	case configured("image_id") && !configured("image_name"):
+		resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, from.AtName("image_name"), vpsTfStringPtr(nil))...)
+	}
+	resp.Diagnostics.Append(resp.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	id := state.Id.ValueString()
+	if pending {
+		resp.Diagnostics.AddWarning("The VPS is reinstalled",
+			"The installation requested when the VPS was ordered is not applied yet: this apply reinstalls the VPS, which erases its disk")
+		resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("current_state"), types.ObjectUnknown(vpsCurrentStateAttrTypes()))...)
+	} else {
+		resp.Diagnostics.AddWarning("The VPS is reinstalled", fmt.Sprintf("This apply reinstalls VPS %s, which erases its disk", id))
+	}
+
+	rebuild := vpsPlannedChanges(plan, state, pending).Rebuild
+	if r.config == nil || (rebuild.ImageId == nil && rebuild.ImageName == nil) {
+		// An image unknown at plan time is checked by Update.
+		return
+	}
+	_, diags = vpsRebuildImageId(ctx, r.config.OVHClient, id, rebuild)
+	resp.Diagnostics.Append(diags...)
+}
+
+// vpsInstallationPending tells whether the private state holds
+// installation_pending.
+func vpsInstallationPending(ctx context.Context, private interface {
+	GetKey(ctx context.Context, key string) ([]byte, diag.Diagnostics)
+}) (bool, diag.Diagnostics) {
+	value, diags := private.GetKey(ctx, vpsPrivateInstallationPending)
+	return string(value) == "true", diags
+}
+
+// Update applies the changes of the plan through the API v1 actions
+// (applyChanges), within the update timeout. Changes without effect
+// (vpsChangeWithoutEffect) are only recorded. The state is set even on an
+// error: it holds the steps done.
 func (r *vpsResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	if vpsUpdatePlanned(req.Plan.Raw, req.State.Raw, req.Config.Raw) {
+	var plan, data VPSResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	pending, diags := vpsInstallationPending(ctx, req.Private)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	changes := vpsPlannedChanges(plan, data, pending)
+	if changes.empty() {
+		raw, err := vpsResolveUnknowns(req.Plan.Raw, req.State.Raw)
+		if err != nil {
+			resp.Diagnostics.AddError("Error updating the state of the VPS", err.Error())
+			return
+		}
+		resp.State.Raw = raw
+		return
+	}
+	if data.Id.IsNull() {
 		resp.Diagnostics.AddError(
-			"Updating a VPS is not supported yet",
-			"This version of the provider only records, without calling the API, the changes of timeouts, order, installation.send_password_by_email, "+
-				"and the values the state has none of, as after an import. Set the other attributes back to their value in the state.",
+			"The VPS is not delivered yet",
+			fmt.Sprintf("The VPS of order %s is not delivered yet, so it cannot be updated. "+
+				"Run terraform untaint on the resource if Terraform marked it as tainted, and apply again once the VPS is delivered.",
+				vpsAttributeAt(data.Order, "order_id")),
 		)
 		return
 	}
 
-	raw, err := vpsResolveUnknowns(req.Plan.Raw, req.State.Raw)
-	if err != nil {
-		resp.Diagnostics.AddError("Error updating the state of the VPS", err.Error())
-		return
-	}
-	resp.State.Raw = raw
+	deadline := time.Now().Add(plan.timeout("update", vpsUpdateTimeout))
+	resp.Diagnostics.Append(r.applyChanges(ctx, &data, plan, changes, deadline, resp.Private)...)
+	resp.Diagnostics.Append(vpsSetState(ctx, &resp.State, &data, req.State.Raw)...)
 }
 
 func (r *vpsResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

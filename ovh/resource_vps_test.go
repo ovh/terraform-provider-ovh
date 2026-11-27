@@ -82,6 +82,7 @@ func vpsTestFullState(t *testing.T, overrides map[string]attr.Value) tfsdk.State
 		"timeouts": types.ObjectValueMust(vpsTimeoutsAttrTypes(), map[string]attr.Value{
 			"create": tfStr("2h"),
 			"delete": vpsTfStringPtr(nil),
+			"update": vpsTfStringPtr(nil),
 		}),
 	}
 	for name, value := range overrides {
@@ -613,6 +614,7 @@ func TestVPSResourceCreateDeliveryTimeout(t *testing.T) {
 		"timeouts": types.ObjectValueMust(vpsTimeoutsAttrTypes(), map[string]attr.Value{
 			"create": tfStr("100ms"),
 			"delete": vpsTfStringPtr(nil),
+			"update": vpsTfStringPtr(nil),
 		}),
 	})
 	resp := vpsTestCreate(t, api, plan)
@@ -782,7 +784,12 @@ func TestVPSResourceModifyPlanRefusesPostOrderSettings(t *testing.T) {
 				}
 			}
 
-			// The VPS exists: nothing to refuse here.
+			// The VPS exists: nothing to refuse here. A change of the
+			// installation reinstalls the VPS, from an image it can be
+			// installed from.
+			api.set(vpsTestBase+"/images/available", []string{vpsTestDebianId, vpsTestUbuntuId})
+			api.set(vpsTestBase+"/images/available/"+vpsTestDebianId, map[string]any{"id": vpsTestDebianId, "name": "Debian 12"})
+			api.set(vpsTestBase+"/images/available/"+vpsTestUbuntuId, map[string]any{"id": vpsTestUbuntuId, "name": "Ubuntu 24.04"})
 			state := vpsTestFullState(t, nil)
 			resp = &resource.ModifyPlanResponse{Plan: plan}
 			r.ModifyPlan(ctx, resource.ModifyPlanRequest{Config: config, Plan: plan, State: state}, resp)
@@ -794,16 +801,26 @@ func TestVPSResourceModifyPlanRefusesPostOrderSettings(t *testing.T) {
 }
 
 // vpsTestUpdate runs the Update of the resource from the state to the plan,
-// the configuration being the plan.
+// the configuration being the plan, without private state.
 func vpsTestUpdate(t *testing.T, api *vpsTestAPI, state tfsdk.State, plan tfsdk.State) *resource.UpdateResponse {
 	t.Helper()
+	return vpsTestUpdatePending(t, api, state, plan, false)
+}
+
+// vpsTestUpdatePending is vpsTestUpdate, with installation_pending in the
+// private state when pending.
+func vpsTestUpdatePending(t *testing.T, api *vpsTestAPI, state tfsdk.State, plan tfsdk.State, pending bool) *resource.UpdateResponse {
+	t.Helper()
 	r := &vpsResource{config: api.config(t)}
-	resp := &resource.UpdateResponse{State: tfsdk.State{Schema: state.Schema, Raw: state.Raw.Copy()}}
-	r.Update(context.Background(), resource.UpdateRequest{
+	req := resource.UpdateRequest{
 		Plan:   tfsdk.Plan{Schema: plan.Schema, Raw: plan.Raw},
 		Config: tfsdk.Config{Schema: plan.Schema, Raw: plan.Raw},
 		State:  state,
-	}, resp)
+	}
+	vpsTestNewPrivate(t, &req.Private, pending)
+	// As the framework does.
+	resp := &resource.UpdateResponse{State: tfsdk.State{Schema: state.Schema, Raw: state.Raw.Copy()}, Private: req.Private}
+	r.Update(context.Background(), req, resp)
 	return resp
 }
 
@@ -821,6 +838,7 @@ func TestVPSResourceUpdateTimeouts(t *testing.T) {
 		"timeouts": types.ObjectValueMust(vpsTimeoutsAttrTypes(), map[string]attr.Value{
 			"create": tfStr("3h"),
 			"delete": vpsTfStringPtr(nil),
+			"update": vpsTfStringPtr(nil),
 		}),
 	})
 	resp := vpsTestUpdate(t, api, state, plan)
@@ -878,25 +896,6 @@ func TestVPSResourceUpdateKeepsComputedFromState(t *testing.T) {
 		t.Errorf("the state holds unknown values: %v", resp.State.Raw)
 	}
 	vpsTestCheckValues(t, resp.State.Raw, map[string]string{"order.duration": "P12M", "order.order_id": "42"})
-}
-
-func TestVPSResourceUpdateDisplayName(t *testing.T) {
-	api := newVPSTestAPI()
-	state := vpsTestFullState(t, nil)
-	plan := vpsTestFullState(t, map[string]attr.Value{"display_name": tfStr("web-02")})
-	resp := vpsTestUpdate(t, api, state, plan)
-	if !resp.Diagnostics.HasError() {
-		t.Fatal("expected an error: updating a VPS is not supported yet")
-	}
-	if summary := resp.Diagnostics.Errors()[0].Summary(); summary != "Updating a VPS is not supported yet" {
-		t.Errorf("summary = %q", summary)
-	}
-	if !resp.State.Raw.Equal(state.Raw) {
-		t.Error("the state must stay unchanged")
-	}
-	if got := vpsTestRequests(api); got != 0 {
-		t.Errorf("%d API calls, want 0", got)
-	}
 }
 
 // vpsTestTerminationAPI is newVPSTestAPI with the termination routes of

@@ -2,6 +2,9 @@ package ovh
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"maps"
 	"net/http"
 	"slices"
 	"strconv"
@@ -35,29 +38,78 @@ func (a *vpsTestActions) list() []string {
 
 // serveActions answers the action routes of the VPS: PUT /vps/{sn} (void),
 // and POST start, stop, reboot, rebuild and automatedBackup/reschedule, each
-// with a task done at once. It returns the record of these requests.
+// with a task done at once, whose effect GET then reads. It returns the record
+// of these requests.
 func (a *vpsTestAPI) serveActions() *vpsTestActions {
 	actions := &vpsTestActions{}
 	a.handle("PUT "+vpsTestBase, func(body []byte) any {
 		actions.add("PUT "+vpsTestBase, body)
+		var fields map[string]any
+		_ = json.Unmarshal(body, &fields)
+		a.change(vpsTestBase, func(vps map[string]any) { maps.Copy(vps, fields) })
 		return nil
 	})
+	boot := func(vps map[string]any) {
+		vps["state"] = "running"
+		if vps["netbootMode"] == "rescue" {
+			vps["state"] = "rescued"
+		}
+	}
 	taskId := int64(100)
-	for _, action := range []struct{ path, taskType string }{
-		{"/start", "startVm"},
-		{"/stop", "stopVm"},
-		{"/reboot", "rebootVm"},
-		{"/rebuild", "reinstallVm"},
-		{"/automatedBackup/reschedule", "rescheduleAutoBackup"},
+	for _, action := range []struct {
+		path, taskType string
+		effect         func(body map[string]any)
+	}{
+		{"/start", "startVm", func(map[string]any) { a.change(vpsTestBase, boot) }},
+		{"/stop", "stopVm", func(map[string]any) {
+			a.change(vpsTestBase, func(vps map[string]any) { vps["state"] = "stopped" })
+		}},
+		{"/reboot", "rebootVm", func(map[string]any) { a.change(vpsTestBase, boot) }},
+		{"/rebuild", "reinstallVm", func(body map[string]any) {
+			available, _ := a.get(vpsTestBase + "/images/available/" + fmt.Sprint(body["imageId"])).(map[string]any)
+			// A reinstalled VPS runs, on its disk.
+			a.change(vpsTestBase, func(vps map[string]any) { vps["state"] = "running" })
+			a.change(vpsTestBase+"/images/current", func(image map[string]any) {
+				image["id"] = body["imageId"]
+				image["name"] = available["name"]
+			})
+		}},
+		{"/automatedBackup/reschedule", "rescheduleAutoBackup", func(body map[string]any) {
+			a.change(vpsTestBase+"/automatedBackup", func(backup map[string]any) { backup["schedule"] = body["schedule"] })
+		}},
 	} {
 		taskId++
 		id := taskId
 		a.handle("POST "+vpsTestBase+action.path, func(body []byte) any {
 			actions.add("POST "+vpsTestBase+action.path, body)
+			var fields map[string]any
+			_ = json.Unmarshal(body, &fields)
+			action.effect(fields)
 			return a.serveTask(id, action.taskType, "done")
 		})
 	}
 	return actions
+}
+
+// get returns the response stored under path, nil when there is none.
+func (a *vpsTestAPI) get(path string) any {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	return a.responses[path]
+}
+
+// change applies fn to a copy of the object stored under path, and stores the
+// copy. An object not stored yet starts empty.
+func (a *vpsTestAPI) change(path string, fn func(map[string]any)) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	stored, _ := a.responses[path].(map[string]any)
+	changed := maps.Clone(stored)
+	if changed == nil {
+		changed = map[string]any{}
+	}
+	fn(changed)
+	a.responses[path] = changed
 }
 
 // serveTask serves task id under GET /vps/{sn}/tasks/{id} in the given state,

@@ -203,6 +203,7 @@ func TestVPSResourceSchemaModes(t *testing.T) {
 		"order.order_id":                        {false, false, true},
 		"timeouts":                              {false, true, false},
 		"timeouts.create":                       {false, true, false},
+		"timeouts.update":                       {false, true, false},
 		"timeouts.delete":                       {false, true, false},
 		"current_state":                         {false, false, true},
 	}
@@ -322,6 +323,8 @@ func TestVPSResourceStringValidators(t *testing.T) {
 		{"power_state", "UNKNOWN", false},
 		{"timeouts.create", "1h30m", true},
 		{"timeouts.delete", "30 minutes", false},
+		{"timeouts.update", "45m", true},
+		{"timeouts.update", "an hour", false},
 	}
 	for _, c := range cases {
 		plan := vpsTestPlan(t, map[string]attr.Value{c.attribute: ovhtypes.NewTfStringValue(c.value)})
@@ -531,8 +534,7 @@ func TestVPSInstallationFromDescription(t *testing.T) {
 	}
 }
 
-// This version does not update a VPS: timeouts has no update.
-func TestVPSResourceTimeoutsCreateDelete(t *testing.T) {
+func TestVPSResourceTimeoutsCreateUpdateDelete(t *testing.T) {
 	timeouts, ok := vpsTestResourceAttribute(t, "timeouts").(schema.SingleNestedAttribute)
 	if !ok {
 		t.Fatal("timeouts is not a nested attribute")
@@ -542,8 +544,50 @@ func TestVPSResourceTimeoutsCreateDelete(t *testing.T) {
 		names = append(names, name)
 	}
 	slices.Sort(names)
-	if want := []string{"create", "delete"}; !slices.Equal(names, want) {
+	if want := []string{"create", "delete", "update"}; !slices.Equal(names, want) {
 		t.Errorf("timeouts has %v, want %v", names, want)
+	}
+	if got, want := timeouts.Attributes["update"].GetDescription(), "Wait for the update of the VPS. Defaults to 60m"; got != want {
+		t.Errorf("timeouts.update: description %q, want %q", got, want)
+	}
+
+	var m VPSResourceModel
+	plan := vpsTestPlan(t, map[string]attr.Value{"timeouts.update": ovhtypes.NewTfStringValue("2h")})
+	if diags := plan.Get(context.Background(), &m); diags.HasError() {
+		t.Fatalf("unexpected error: %v", diags)
+	}
+	if got := m.timeout("update", vpsUpdateTimeout); got != 2*time.Hour {
+		t.Errorf("update: got %s, want 2h", got)
+	}
+	if vpsUpdateTimeout != 60*time.Minute {
+		t.Errorf("vpsUpdateTimeout = %s, want 60m", vpsUpdateTimeout)
+	}
+}
+
+func TestVPSResourceSchemaCronFormat(t *testing.T) {
+	for cron, ok := range map[string]bool{
+		"0 2 * * *":   true,
+		"59 23 * * *": true,
+		"0 2 * * 1":   false,
+		"60 2 * * *":  false,
+		"0 24 * * *":  false,
+		"05 2 * * *":  false,
+		"0 2 * *":     false,
+	} {
+		plan := vpsTestPlan(t, map[string]attr.Value{"options.auto_backup.cron": ovhtypes.NewTfStringValue(cron)})
+		diags := vpsTestValidateString(t, tfsdk.Config{Schema: plan.Schema, Raw: plan.Raw}, "options.auto_backup.cron")
+		if diags.HasError() == ok {
+			t.Errorf("%q: errors %v, want ok = %t", cron, diags, ok)
+		}
+	}
+}
+
+// Changing what installs the VPS reinstalls it: the descriptions say so.
+func TestVPSResourceReinstallDescriptions(t *testing.T) {
+	for _, dotted := range []string{"installation.from", "installation.ssh_key", "installation.post_installation_script"} {
+		if description := vpsTestResourceAttribute(t, dotted).GetDescription(); !strings.Contains(description, "Changing it reinstalls the VPS, which erases its disk") {
+			t.Errorf("%s: description %q does not warn of the reinstallation", dotted, description)
+		}
 	}
 }
 
