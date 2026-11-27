@@ -4,7 +4,7 @@ page_title: "Choosing the plan, duration and pricing mode of an ordered product"
 
 # Choosing the plan, duration and pricing mode of an ordered product
 
-Resources that place an order, such as `ovh_vps`, `ovh_dedicated_server`, `ovh_cloud_project` or `ovh_vrack`, take a `plan` block and, for some products, `plan_option` blocks. Each block describes one offer to order:
+Resources that place an order, such as `ovh_dedicated_server`, `ovh_cloud_project` or `ovh_vrack`, take a `plan` block and, for some products, `plan_option` blocks. Each block describes one offer to order:
 
 * `plan_code`: identifier of the offer, e.g. `vps-le-2-2-40`.
 * `duration`: duration of the subscription, in [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601#Durations) format. It is the period billed at each renewal, e.g. `P1M` (one month), `P3M` (three months), `P6M` (six months), `P1Y` (one year) or `P2Y` (two years).
@@ -76,7 +76,7 @@ The same values can be found with the API: [`GET /order/cart/{cartId}/{product}`
 
 ## Use a price in the order
 
-The following example orders a VPS paid upfront for one year:
+The following example orders a dedicated server billed every month. Its options use the same price as its plan:
 
 ```terraform
 data "ovh_me" "my_account" {}
@@ -85,40 +85,53 @@ data "ovh_order_cart" "my_cart" {
   ovh_subsidiary = data.ovh_me.my_account.ovh_subsidiary
 }
 
-data "ovh_order_cart_product_plan" "vps" {
+data "ovh_order_cart_product_plan" "server" {
   cart_id        = data.ovh_order_cart.my_cart.id
   price_capacity = "renew"
-  product        = "vps"
-  plan_code      = "vps-le-2-2-40"
+  product        = "baremetalServers"
+  plan_code      = "24rise01"
 }
 
 locals {
-  vps_price = one([
-    for price in data.ovh_order_cart_product_plan.vps.prices : price
-    if contains(price.capacities, "renew") && price.pricing_mode == "upfront12"
+  server_price = one([
+    for price in data.ovh_order_cart_product_plan.server.prices : price
+    if contains(price.capacities, "renew") && price.duration == "P1M" && price.pricing_mode == "default"
   ])
 }
 
-resource "ovh_vps" "my_vps" {
-  display_name   = "dev_vps"
+resource "ovh_dedicated_server" "server" {
   ovh_subsidiary = data.ovh_me.my_account.ovh_subsidiary
+  os             = "debian12_64"
 
   plan = [
     {
-      duration     = local.vps_price.duration
-      plan_code    = data.ovh_order_cart_product_plan.vps.plan_code
-      pricing_mode = local.vps_price.pricing_mode
+      duration     = local.server_price.duration
+      plan_code    = data.ovh_order_cart_product_plan.server.plan_code
+      pricing_mode = local.server_price.pricing_mode
 
       configuration = [
         {
-          label = "vps_datacenter"
-          value = "WAW"
+          label = "dedicated_datacenter"
+          value = "bhs"
         },
         {
-          label = "vps_os"
-          value = "Debian 13"
+          label = "dedicated_os"
+          value = "none_64.en"
+        },
+        {
+          label = "region"
+          value = "canada"
         }
       ]
+    }
+  ]
+
+  plan_option = [
+    for option in ["ram-32g-rise13", "bandwidth-500-included-rise", "softraid-2x512nvme-rise", "vrack-bandwidth-100-rise-included"] : {
+      duration     = local.server_price.duration
+      plan_code    = option
+      pricing_mode = local.server_price.pricing_mode
+      quantity     = 1
     }
   ]
 }

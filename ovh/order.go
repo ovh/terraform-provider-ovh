@@ -493,6 +493,12 @@ func orderDeleteFromResource(d *schema.ResourceData, meta interface{}, terminate
 }
 
 func orderDelete(config *Config, terminate TerminateFunc, confirm ConfirmTerminationFunc) error {
+	return orderDeleteWithTimeout(config, 30*time.Minute, terminate, confirm)
+}
+
+// orderDeleteWithTimeout is orderDelete, waiting for the termination email at
+// most timeout.
+func orderDeleteWithTimeout(config *Config, timeout time.Duration, terminate TerminateFunc, confirm ConfirmTerminationFunc) error {
 	oldEmailsIds, err := notificationEmailSortedIds(config)
 	if err != nil {
 		return err
@@ -515,7 +521,7 @@ func orderDelete(config *Config, terminate TerminateFunc, confirm ConfirmTermina
 
 	var email *NotificationEmail
 	// wait for email
-	err = resource.Retry(30*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(timeout, func() *resource.RetryError {
 		email, err = getNewNotificationEmail(matches, oldEmailsIds, config)
 		if err != nil {
 			log.Printf("[DEBUG] error while getting email notification. retry: %v", err)

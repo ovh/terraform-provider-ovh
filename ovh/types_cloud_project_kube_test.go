@@ -1022,3 +1022,7 @@ func TestCloudProjectKubeResponse_ToMap_KubeProxyMode(t *testing.T) {
 		})
 	}
 }
+
+func strPtr(s string) *string {
+	return &s
+}
