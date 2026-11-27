@@ -40,6 +40,12 @@ var (
 	vpsPollInterval = 30 * time.Second
 )
 
+// vpsSettingsPendingHint ends the error of a setting Create could not apply
+// once the VPS was delivered.
+const vpsSettingsPendingHint = "The VPS is delivered and kept in the state. " +
+	"Terraform marks the resource as tainted: run terraform untaint on it, so that the next apply does not terminate the VPS and order a new one, " +
+	"then terraform apply to apply the settings left."
+
 // vpsDeliveryPendingHint ends the error of a delivery that did not end in
 // time.
 const vpsDeliveryPendingHint = "The order is paid and kept in the state (order.order_id). " +
@@ -106,13 +112,12 @@ func (r *vpsResource) ValidateConfig(ctx context.Context, req resource.ValidateC
 	)
 }
 
-// ModifyPlan, when the VPS is to be created, refuses the settings that only an
-// update of the ordered VPS could apply: an error after the payment would
-// leave a VPS that differs from its configuration. It also checks in the
-// catalog that the VPS can be ordered: Terraform plans a replacement with a
-// null state, and a replacement that cannot be ordered must fail before Delete
-// terminates the VPS. Values unknown at plan time are checked by Create.
-// When the VPS exists, see modifyUpdatePlan.
+// ModifyPlan, when the VPS is to be created, checks in the catalog that it can
+// be ordered: Terraform plans a replacement with a null state, and a
+// replacement that cannot be ordered must fail before Delete terminates the
+// VPS. Values unknown at plan time are checked by Create. An image_id can only
+// be checked once the VPS is delivered. When the VPS exists, see
+// modifyUpdatePlan.
 func (r *vpsResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	if req.Plan.Raw.IsNull() {
 		return
@@ -126,29 +131,31 @@ func (r *vpsResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	resp.Diagnostics.Append(config.createRefusals()...)
 
 	known := func(value attr.Value) bool { return value != nil && !value.IsNull() && !value.IsUnknown() }
 	if r.config == nil || !known(config.PlanCode) ||
 		!known(vpsAttributeAt(config.Location, "region")) ||
-		!known(vpsAttributeAt(config.Installation, "from", "image_name")) {
+		(!known(vpsAttributeAt(config.Installation, "from", "image_name")) && !known(vpsAttributeAt(config.Installation, "from", "image_id"))) {
 		return
 	}
 	_, diags := r.checkOrderable(ctx, &config)
 	resp.Diagnostics.Append(diags...)
 }
 
+// Create orders the VPS, waits for its delivery, then applies the settings the
+// order does not take (applyChanges), all within the create timeout. The
+// installation settings reinstall the VPS once delivered: installation_pending
+// is set from the order until the reinstallation is done, so that the next
+// plan reinstalls the VPS when Create ends before.
 func (r *vpsResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var data VPSResourceModel
+	var plan, data VPSResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	// The plan holds the values of the variables unknown at plan time.
-	resp.Diagnostics.Append(data.createRefusals()...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	// One deadline for the order, the delivery and the settings.
+	deadline := time.Now().Add(data.timeout("create", vpsCreateTimeout))
 
 	order, diags := r.orderFor(ctx, &data)
 	resp.Diagnostics.Append(diags...)
@@ -158,6 +165,10 @@ func (r *vpsResource) Create(ctx context.Context, req resource.CreateRequest, re
 	if err := orderCreate(order, r.config, "vps", false, 0); err != nil {
 		resp.Diagnostics.AddError("Error ordering the VPS", err.Error())
 		return
+	}
+	pending := data.installationAfterOrder()
+	if pending {
+		resp.Diagnostics.Append(resp.Private.SetKey(ctx, vpsPrivateInstallationPending, []byte("true"))...)
 	}
 
 	// Saved before the delivery, so that a timeout keeps the order.
@@ -172,14 +183,38 @@ func (r *vpsResource) Create(ctx context.Context, req resource.CreateRequest, re
 		return
 	}
 
-	resp.Diagnostics.Append(vpsTellToUntaint(r.deliver(ctx, &data, &resp.State))...)
+	resp.Diagnostics.Append(vpsTellToUntaint(r.deliver(ctx, &data, &resp.State, deadline), vpsDeliveryPendingHint)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	changes := vpsPlannedChanges(plan, data, pending)
+	if changes.empty() {
+		return
+	}
+	prior := resp.State.Raw.Copy()
+	resp.Diagnostics.Append(vpsTellToUntaint(r.applyChanges(ctx, &data, plan, changes, deadline, resp.Private), vpsSettingsPendingHint)...)
+	resp.Diagnostics.Append(vpsSetState(ctx, &resp.State, &data, prior)...)
 }
 
-// vpsTellToUntaint adds vpsDeliveryPendingHint to the errors of diags that do
-// not already tell what to do with the resource. After the payment, Terraform
+// installationAfterOrder tells whether the configuration installs the VPS
+// otherwise than the order does, which takes only an image name: a
+// reinstallation once it is delivered applies it. Values unknown at plan time
+// are known here.
+func (m *VPSResourceModel) installationAfterOrder() bool {
+	set := func(value attr.Value) bool { return value != nil && !value.IsNull() && !value.IsUnknown() }
+	send, _ := vpsAttributeAt(m.Installation, "send_password_by_email").(types.Bool)
+	return set(vpsAttributeAt(m.Installation, "from", "image_id")) ||
+		set(vpsAttributeAt(m.Installation, "ssh_key")) ||
+		set(vpsAttributeAt(m.Installation, "post_installation_script")) ||
+		(set(send) && !send.ValueBool())
+}
+
+// vpsTellToUntaint adds hint, which tells to untaint the resource, to the
+// errors of diags that do not already tell what to do with the resource. After the payment, Terraform
 // marks the resource as tainted on any error: without terraform untaint, the
 // next apply terminates the VPS and orders a new one.
-func vpsTellToUntaint(diags diag.Diagnostics) diag.Diagnostics {
+func vpsTellToUntaint(diags diag.Diagnostics, hint string) diag.Diagnostics {
 	out := make(diag.Diagnostics, 0, len(diags))
 	for _, d := range diags {
 		if d.Severity() != diag.SeverityError ||
@@ -187,7 +222,7 @@ func vpsTellToUntaint(diags diag.Diagnostics) diag.Diagnostics {
 			out = append(out, d)
 			continue
 		}
-		detail := strings.TrimSpace(d.Detail() + "\n\n" + vpsDeliveryPendingHint)
+		detail := strings.TrimSpace(d.Detail() + "\n\n" + hint)
 		if withPath, ok := d.(diag.DiagnosticWithPath); ok {
 			out = append(out, diag.NewAttributeErrorDiagnostic(withPath.Path(), d.Summary(), detail))
 			continue
@@ -381,45 +416,6 @@ func (r *vpsResource) Delete(ctx context.Context, req resource.DeleteRequest, re
 	}
 }
 
-// createRefusals refuses the settings that ordering a VPS cannot apply. Only
-// known values count: a value unknown at plan time is checked again by Create.
-func (m *VPSResourceModel) createRefusals() diag.Diagnostics {
-	var diags diag.Diagnostics
-	refuse := func(p path.Path, name string) {
-		diags.AddAttributeError(p,
-			"Not supported when creating a VPS",
-			fmt.Sprintf("Setting %s when creating a VPS is not supported yet", name),
-		)
-	}
-	set := func(value attr.Value) bool {
-		return value != nil && !value.IsNull() && !value.IsUnknown()
-	}
-
-	installation := path.Root("installation")
-	if set(vpsAttributeAt(m.Installation, "from", "image_id")) {
-		refuse(installation.AtName("from").AtName("image_id"), "installation.from.image_id")
-	}
-	if set(vpsAttributeAt(m.Installation, "ssh_key")) {
-		refuse(installation.AtName("ssh_key"), "installation.ssh_key")
-	}
-	if set(vpsAttributeAt(m.Installation, "post_installation_script")) {
-		refuse(installation.AtName("post_installation_script"), "installation.post_installation_script")
-	}
-	if send, ok := vpsAttributeAt(m.Installation, "send_password_by_email").(types.Bool); ok && set(send) && !send.ValueBool() {
-		refuse(installation.AtName("send_password_by_email"), "installation.send_password_by_email to false")
-	}
-	if set(m.PowerState) && m.PowerState.ValueString() != vpsDefaultPowerState {
-		refuse(path.Root("power_state"), "power_state to "+m.PowerState.ValueString())
-	}
-	if set(m.DisplayName) {
-		refuse(path.Root("display_name"), "display_name")
-	}
-	if set(vpsAttributeAt(m.Options, "auto_backup", "cron")) {
-		refuse(path.Root("options").AtName("auto_backup").AtName("cron"), "options.auto_backup.cron")
-	}
-	return diags
-}
-
 // orderTerms returns the duration and the pricing mode of the order, or their
 // defaults.
 func (m *VPSResourceModel) orderTerms() (duration, pricingMode string) {
@@ -487,7 +483,19 @@ func (r *vpsResource) checkOrderable(ctx context.Context, m *VPSResourceModel) (
 		)
 	}
 	imageName := vpsStringAt(m.Installation, "from", "image_name")
-	if !slices.Contains(offer.Images, imageName) {
+	switch {
+	case imageName == "":
+		// Installed from image_id: the catalog only knows image names.
+		if _, ok := vpsOrderImageForImageId(offer.Images); !ok {
+			diags.AddAttributeError(path.Root("plan_code"),
+				"No image to order this plan with",
+				fmt.Sprintf("The order catalog has no image without paid option for plan %s, to order the VPS with before installing it from image_id. Images of the plan: %s",
+					planCode, strings.Join(offer.Images, ", ")),
+			)
+			break
+		}
+		imageName, _ = vpsOrderImageForImageId(offer.Images)
+	case !slices.Contains(offer.Images, imageName):
 		diags.AddAttributeError(path.Root("installation").AtName("from").AtName("image_name"),
 			"Image not available for this plan",
 			fmt.Sprintf("Plan %s cannot be ordered with image %q. Possible images: %s",
@@ -516,13 +524,12 @@ func vpsOrderableRegions(codes []string, locations []vpsLocation) []string {
 }
 
 // deliver waits for the order of the VPS, then for the VPS to leave its
-// transitional state, and reads it, all within the create timeout. Only Create
-// waits: Read checks the delivery once (checkDelivery). It saves
+// transitional state, and reads it, all before deadline, the one of Create.
+// Only Create waits: Read checks the delivery once (checkDelivery). It saves
 // the state at each step: a timeout keeps the order and the id of the VPS.
-func (r *vpsResource) deliver(ctx context.Context, data *VPSResourceModel, state *tfsdk.State) diag.Diagnostics {
+func (r *vpsResource) deliver(ctx context.Context, data *VPSResourceModel, state *tfsdk.State, deadline time.Time) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := r.config.OVHClient
-	deadline := time.Now().Add(data.timeout("create", vpsCreateTimeout))
 
 	if data.Id.IsNull() || data.Id.IsUnknown() {
 		orderIdValue, _ := vpsAttributeAt(data.Order, "order_id").(types.Int64)

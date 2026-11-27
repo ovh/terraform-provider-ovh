@@ -113,3 +113,22 @@ func TestVPSOrderModel(t *testing.T) {
 		t.Errorf("plan:\n got  %s\n want %s", got, want)
 	}
 }
+
+func TestVPSOrderImageForImageId(t *testing.T) {
+	for _, tc := range []struct {
+		images []string
+		want   string
+		ok     bool
+	}{
+		{[]string{"AlmaLinux 8 - cPanel", "Windows Server 2022", "AlmaLinux 9", "Debian 12"}, "AlmaLinux 9", true},
+		{[]string{"Debian 12 - Plesk", "Debian 12"}, "Debian 12", true},
+		{[]string{"Windows Server 2025 Standard (Desktop)", "Ubuntu 24.04"}, "Ubuntu 24.04", true},
+		{[]string{"AlmaLinux 8 - cPanel", "Windows Server 2022"}, "", false},
+		{nil, "", false},
+	} {
+		got, ok := vpsOrderImageForImageId(tc.images)
+		if got != tc.want || ok != tc.ok {
+			t.Errorf("%q: got %q, %t, want %q, %t", tc.images, got, ok, tc.want, tc.ok)
+		}
+	}
+}

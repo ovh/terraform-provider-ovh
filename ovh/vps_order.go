@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -111,4 +112,18 @@ func vpsOrderModel(ctx context.Context, planCode, datacenterCode, imageName, dur
 			ListValue: basetypes.NewListValueMust(PlanValue{}.Type(ctx), []attr.Value{plan}),
 		},
 	}, diags
+}
+
+// vpsOrderImageForImageId returns the image to order a VPS installed from an
+// image_id with: the order catalog only knows image names, and the VPS is
+// reinstalled from image_id once delivered. It is the first image of the
+// catalog that takes no paid option: Windows images and the variants such as
+// "AlmaLinux 8 - cPanel" or "Debian 12 - Plesk" take a license.
+func vpsOrderImageForImageId(images []string) (string, bool) {
+	for _, image := range images {
+		if !strings.Contains(image, "Windows") && !strings.Contains(image, " - ") {
+			return image, true
+		}
+	}
+	return "", false
 }

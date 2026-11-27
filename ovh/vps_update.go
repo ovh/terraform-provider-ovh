@@ -189,15 +189,20 @@ func vpsRebuildImageId(ctx context.Context, client *ovhwrap.Client, id string, r
 // schedule, power state, each waited for before the next one. Each step done
 // sets its attributes of plan in data; on an error, the steps after it are
 // not done, so that the next plan shows them again. Once all are done, data
-// takes every attribute of plan, the changes without effect included. A
+// takes every known value of plan, the changes without effect included. A
 // reinstallation done removes installation_pending from private. data is then
 // read from the VPS.
 func (r *vpsResource) applyChanges(ctx context.Context, data *VPSResourceModel, plan VPSResourceModel, changes vpsChanges, deadline time.Time, private vpsPrivateState) diag.Diagnostics {
 	diags := r.applySteps(ctx, data, plan, changes, deadline, private)
 	if !diags.HasError() {
-		id, currentState := data.Id, data.CurrentState
-		*data = plan
-		data.Id, data.CurrentState = id, currentState
+		data.PlanCode = vpsPlanned(plan.PlanCode, data.PlanCode)
+		data.DisplayName = vpsPlanned(plan.DisplayName, data.DisplayName)
+		data.PowerState = vpsPlanned(plan.PowerState, data.PowerState)
+		data.Location = vpsPlanned(plan.Location, data.Location)
+		data.Installation = vpsPlanned(plan.Installation, data.Installation)
+		data.Options = vpsPlanned(plan.Options, data.Options)
+		data.Order = vpsPlanned(plan.Order, data.Order)
+		data.Timeouts = vpsPlanned(plan.Timeouts, data.Timeouts)
 	}
 
 	found, refreshDiags := r.refresh(ctx, data)
@@ -206,6 +211,15 @@ func (r *vpsResource) applyChanges(ctx context.Context, data *VPSResourceModel, 
 		diags.AddError(fmt.Sprintf("VPS %s not found", data.Id.ValueString()), "The VPS is not found after its update.")
 	}
 	return diags
+}
+
+// vpsPlanned returns the plan value, or current when it is unknown, as the
+// computed values a creation plan leaves unknown.
+func vpsPlanned[T attr.Value](plan, current T) T {
+	if plan.IsUnknown() {
+		return current
+	}
+	return plan
 }
 
 // applySteps applies the steps of applyChanges, and stops at the first error.
