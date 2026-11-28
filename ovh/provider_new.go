@@ -524,6 +524,7 @@ func (p *OvhProvider) Resources(_ context.Context) []func() resource.Resource {
 		NewMeLogsAuditLogSubscriptionResource,
 		NewOkmsResource,
 		NewOkmsCredentialResource,
+		NewOkmsLogSubscriptionResource,
 		NewOkmsServiceKeyResource,
 		NewOkmsServiceKeyJwkResource,
 		NewOkmsSecretResource,
