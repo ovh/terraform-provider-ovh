@@ -88,6 +88,15 @@ func (p *OvhProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *
 				Optional:    true,
 				Description: descriptions["profile"],
 			},
+			"s3_access_key_id": schema.StringAttribute{
+				Optional:    true,
+				Description: descriptions["s3_access_key_id"],
+			},
+			"s3_secret_access_key": schema.StringAttribute{
+				Optional:    true,
+				Sensitive:   true,
+				Description: descriptions["s3_secret_access_key"],
+			},
 		},
 	}
 }
@@ -224,6 +233,16 @@ func (p *OvhProvider) Configure(ctx context.Context, req provider.ConfigureReque
 		clientConfig.Profile = config.Profile.ValueString()
 	} else if v := os.Getenv("OVH_PROFILE"); v != "" {
 		clientConfig.Profile = v
+	}
+	if !config.S3AccessKeyID.IsNull() {
+		clientConfig.S3AccessKeyID = config.S3AccessKeyID.ValueString()
+	} else {
+		clientConfig.S3AccessKeyID = os.Getenv("OVH_S3_ACCESS_KEY_ID")
+	}
+	if !config.S3SecretAccessKey.IsNull() {
+		clientConfig.S3SecretAccessKey = config.S3SecretAccessKey.ValueString()
+	} else {
+		clientConfig.S3SecretAccessKey = os.Getenv("OVH_S3_SECRET_ACCESS_KEY")
 	}
 	if !config.ApiRateLimit.IsNull() {
 		clientConfig.ApiRateLimit = ratelimit.New(int(config.ApiRateLimit.ValueInt32()))
@@ -444,7 +463,9 @@ func (p *OvhProvider) Resources(_ context.Context) []func() resource.Resource {
 		NewCloudNetworkPrivateVrackSubnetResource,
 		NewCloudQuotaResource,
 		NewCloudStorageObjectBucketResource,
+		NewCloudStorageObjectBucketACLResource,
 		NewCloudStorageObjectBucketLifecycleResource,
+		NewCloudStorageObjectBucketLoggingResource,
 		NewCloudStorageObjectBucketReplicationResource,
 		NewCloudStorageObjectBucketReplicationJobResource,
 		NewCloudStorageSwiftContainerResource,
@@ -557,4 +578,6 @@ type ovhProviderModel struct {
 	IgnoreInitError   types.Bool   `tfsdk:"ignore_init_error"`
 	ApiRateLimit      types.Int32  `tfsdk:"api_rate_limit"`
 	Profile           types.String `tfsdk:"profile"`
+	S3AccessKeyID     types.String `tfsdk:"s3_access_key_id"`
+	S3SecretAccessKey types.String `tfsdk:"s3_secret_access_key"`
 }
